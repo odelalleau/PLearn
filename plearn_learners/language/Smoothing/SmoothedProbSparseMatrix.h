@@ -66,6 +66,7 @@ public:
   SmoothedProbSparseMatrix(int n_rows = 0, int n_cols = 0, string name = "pXY", int mode = ROW_WISE, bool double_access = false);
   void normalizeCondLaplace(ProbSparseMatrix& nXY, bool clear_nXY = false);
   void normalizeCondBackoff(ProbSparseMatrix& nXY, real disc, Vec& bDist,bool clear_nXY,bool shadow);
+  string getClassName() const { return "SmoothedProbSparseMatrix"; }
   real get(int i,int j);
   void write(PStream& out);
   void read(PStream& in);
