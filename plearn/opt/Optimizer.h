@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.h,v 1.19 2004/03/09 18:30:35 tihocan Exp $
+   * $Id: Optimizer.h,v 1.20 2004/07/21 16:30:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,12 +47,12 @@
 #ifndef OPTIMIZER_INC
 #define OPTIMIZER_INC
 
-#include "Func.h"
-#include "Mat.h"
-#include "Measurer.h"
-#include "Object.h"
-#include "VecStatsCollector.h"
-#include "VMat.h"
+#include <plearn/var/Func.h>
+#include <plearn/math/Mat.h>
+#include <plearn/measure/Measurer.h>
+#include <plearn/base/Object.h>
+#include <plearn/math/VecStatsCollector.h>
+#include <plearn/vmat/VMat.h>
 
 namespace PLearn {
 using namespace std;

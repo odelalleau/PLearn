@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io.h,v 1.11 2004/03/04 15:09:18 tihocan Exp $
+   * $Id: pl_io.h,v 1.12 2004/07/21 16:30:51 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -59,7 +59,7 @@
 
 //#include "PStream.h"
 //#include "fileutils.h"
-#include "pl_math.h"        //!< For 'real'.
+#include <plearn/math/pl_math.h>        //!< For 'real'.
 //#include "stringutils.h"
 
 namespace PLearn {

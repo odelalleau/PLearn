@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LLE.h,v 1.3 2004/07/20 22:00:07 tihocan Exp $ 
+   * $Id: LLE.h,v 1.4 2004/07/21 16:30:59 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -45,7 +45,7 @@
 #define LLE_INC
 
 #include "KernelProjection.h"
-#include "LLEKernel.h"
+#include <plearn/ker/LLEKernel.h>
 
 namespace PLearn {
 using namespace std;

@@ -36,15 +36,15 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.26 2004/07/07 17:30:48 tihocan Exp $
+   * $Id: VMatLanguage.cc,v 1.27 2004/07/21 16:30:55 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "VMatLanguage.h"
-#include "stringutils.h"
-#include "fileutils.h"
-#include "getDataSet.h"
-#include "PDate.h"
+#include <plearn/base/stringutils.h>
+#include <plearn/io/fileutils.h>
+#include <plearn/db/getDataSet.h>
+#include <plearn/base/PDate.h>
 
 namespace PLearn {
 using namespace std;

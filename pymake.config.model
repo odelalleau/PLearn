@@ -47,7 +47,7 @@ sourcedirs =   lsdirs(os.path.join(plearndir,'plearn/')) \
              + lsdirs(os.path.join(plearndir,'commands/'))[1:] 
 
 # will be added as list of includes (-I...) to all compilations
-mandatory_includedirs = []
+mandatory_includedirs = [plearndir]
 
 # The platform variable contains the type of platform from which pymake has been invoked. 
 # This is something like 'linux-i386', 'linux-alpha', 'sunos5', 'irix6', 'irix6-n32' etc...

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.h,v 1.9 2004/07/07 17:30:48 tihocan Exp $
+   * $Id: PLearnerOutputVMatrix.h,v 1.10 2004/07/21 16:30:55 chrish42 Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -46,7 +46,7 @@
 
 #include "RowBufferedVMatrix.h"
 #include "VMat.h"
-#include "PLearner.h"
+#include <plearn_learners/generic/PLearner.h>
 
 namespace PLearn {
 using namespace std;

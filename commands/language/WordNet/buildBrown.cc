@@ -1,5 +1,5 @@
-#include "WordNetOntology.h"
-#include "TypesNumeriques.h"
+#include <plearn_learners/language/WordNet/WordNetOntology.h>
+#include <plearn/io/TypesNumeriques.h>
 
 using namespace PLearn;
 

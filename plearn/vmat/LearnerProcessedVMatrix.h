@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LearnerProcessedVMatrix.h,v 1.8 2004/07/09 19:42:23 tihocan Exp $ 
+   * $Id: LearnerProcessedVMatrix.h,v 1.9 2004/07/21 16:30:55 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file LearnerProcessedVMatrix.h */
@@ -42,7 +42,7 @@
 #define LearnerProcessedVMatrix_INC
 
 #include "RowBufferedVMatrix.h"
-#include "PLearner.h"
+#include <plearn_learners/generic/PLearner.h>
 
 namespace PLearn {
 using namespace std;

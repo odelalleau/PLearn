@@ -1,5 +1,5 @@
-#include "general.h"
-#include "stringutils.h"    //!< For pgetline.
+#include <plearn/base/general.h>
+#include <plearn/base/stringutils.h>    //!< For pgetline.
 
 using namespace PLearn;
 

@@ -34,14 +34,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.h,v 1.4 2004/05/28 15:36:46 tihocan Exp $
+   * $Id: LinearRegressor.h,v 1.5 2004/07/21 16:30:58 chrish42 Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.h */
 #ifndef LinearRegressor_INC
 #define LinearRegressor_INC
 
-#include "PLearner.h"
+#include <plearn_learners/generic/PLearner.h>
 
 namespace PLearn {
 using namespace std;

@@ -35,14 +35,14 @@
 
 
 /* *******************************************************
-   * $Id: MatlabInterface.cc,v 1.4 2004/03/04 14:57:40 tihocan Exp $
+   * $Id: MatlabInterface.cc,v 1.5 2004/07/21 16:30:51 chrish42 Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "MatlabInterface.h"
-#include "TypesNumeriques.h" //!< For looksNumeric.
-#include "TmpFilenames.h"
+#include <plearn/io/TypesNumeriques.h> //!< For looksNumeric.
+#include <plearn/io/TmpFilenames.h>
 
 namespace PLearn {
 using namespace std;

@@ -1,7 +1,7 @@
 
-#include "general.h"
-#include "stringutils.h"
-#include "fileutils.h"
+#include <plearn/base/general.h>
+#include <plearn/base/stringutils.h>
+#include <plearn/io/fileutils.h>
 
 #ifdef WIN32 // WIN32 est definie par VC++ 
 #  include <windows.h> 

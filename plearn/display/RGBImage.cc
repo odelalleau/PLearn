@@ -37,14 +37,14 @@
  
 
 /* *******************************************************      
-   * $Id: RGBImage.cc,v 1.4 2004/03/04 14:58:05 tihocan Exp $
+   * $Id: RGBImage.cc,v 1.5 2004/07/21 16:30:51 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include <fstream>
 #include "RGBImage.h"
-#include "TMat_maths.h"
+#include <plearn/math/TMat_maths.h>
 
 namespace PLearn {
 using namespace std;

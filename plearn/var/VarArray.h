@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.h,v 1.16 2004/05/27 15:02:16 monperrm Exp $
+   * $Id: VarArray.h,v 1.17 2004/07/21 16:30:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,8 +46,8 @@
 #ifndef VARARRAY_INC
 #define VARARRAY_INC
 
-#include "general.h"
-#include "Array.h"
+#include <plearn/base/general.h>
+#include <plearn/base/Array.h>
 #include "Variable.h"
 
 namespace PLearn {

@@ -35,53 +35,53 @@
 
 
 /* *******************************************************      
-   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.14 2004/03/01 18:34:18 tihocan Exp $
+   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.15 2004/07/21 16:30:56 chrish42 Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeighborhoodSmoothnessNNet.h */
 
 
-#include "AffineTransformVariable.h"
-#include "AffineTransformWeightPenalty.h"
-#include "BinaryClassificationLossVariable.h"
-#include "ClassificationLossVariable.h"
-#include "ColumnSumVariable.h"
-#include "ConcatColumnsVariable.h"
-#include "ConcatColumnsVMatrix.h"
-#include "CrossEntropyVariable.h"
-#include "DotProductVariable.h"
-#include "ExpVariable.h"
-#include "InvertElementsVariable.h"
-#include "LogVariable.h"
-#include "LiftOutputVariable.h"
-#include "LogSoftmaxVariable.h"
-#include "MinusVariable.h"
-#include "MulticlassLossVariable.h"
-#include "NegateElementsVariable.h"
-#include "NegCrossEntropySigmoidVariable.h"
+#include <plearn/var/AffineTransformVariable.h>
+#include <plearn/var/AffineTransformWeightPenalty.h>
+#include <plearn/var/BinaryClassificationLossVariable.h>
+#include <plearn/var/ClassificationLossVariable.h>
+#include <plearn/var/ColumnSumVariable.h>
+#include <plearn/var/ConcatColumnsVariable.h>
+#include <plearn/vmat/ConcatColumnsVMatrix.h>
+#include <plearn/var/CrossEntropyVariable.h>
+#include <plearn/var/DotProductVariable.h>
+#include <plearn/var/ExpVariable.h>
+#include <plearn/var/InvertElementsVariable.h>
+#include <plearn/var/LogVariable.h>
+#include <plearn/var/LiftOutputVariable.h>
+#include <plearn/var/LogSoftmaxVariable.h>
+#include <plearn/var/MinusVariable.h>
+#include <plearn/var/MulticlassLossVariable.h>
+#include <plearn/var/NegateElementsVariable.h>
+#include <plearn/var/NegCrossEntropySigmoidVariable.h>
 #include "NeighborhoodSmoothnessNNet.h"
-#include "OneHotSquaredLoss.h"
-#include "ProgressBar.h"
-#include "random.h"
-#include "SigmoidVariable.h"
-#include "SoftmaxVariable.h"
-#include "SoftplusVariable.h"
-#include "SumVariable.h"
-#include "SumAbsVariable.h"
-#include "SumOfVariable.h"
-#include "SumOverBagsVariable.h"
-#include "SumSquareVariable.h"
-#include "SubMatVariable.h"
-#include "SubMatTransposeVariable.h"
-#include "SubVMatrix.h"
-#include "TanhVariable.h"
-#include "TimesVariable.h"
-#include "TimesScalarVariable.h"
-#include "TransposeProductVariable.h"
-#include "UnfoldedFuncVariable.h"
-#include "UnfoldedSumOfVariable.h"
-#include "Var_operators.h"
-#include "Var_utils.h"
+#include <plearn/var/OneHotSquaredLoss.h>
+#include <plearn/base/ProgressBar.h>
+#include <plearn/math/random.h>
+#include <plearn/var/SigmoidVariable.h>
+#include <plearn/var/SoftmaxVariable.h>
+#include <plearn/var/SoftplusVariable.h>
+#include <plearn/var/SumVariable.h>
+#include <plearn/var/SumAbsVariable.h>
+#include <plearn/var/SumOfVariable.h>
+#include <plearn/var/SumOverBagsVariable.h>
+#include <plearn/var/SumSquareVariable.h>
+#include <plearn/var/SubMatVariable.h>
+#include <plearn/var/SubMatTransposeVariable.h>
+#include <plearn/vmat/SubVMatrix.h>
+#include <plearn/var/TanhVariable.h>
+#include <plearn/var/TimesVariable.h>
+#include <plearn/var/TimesScalarVariable.h>
+#include <plearn/var/TransposeProductVariable.h>
+#include <plearn/var/UnfoldedFuncVariable.h>
+#include <plearn/var/UnfoldedSumOfVariable.h>
+#include <plearn/var/Var_operators.h>
+#include <plearn/var/Var_utils.h>
 
 //#include "DisplayUtils.h"
 //#include "GradientOptimizer.h"

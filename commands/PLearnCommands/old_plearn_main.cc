@@ -33,24 +33,24 @@
 
 
 /* *******************************************************      
-   * $Id: old_plearn_main.cc,v 1.4 2004/07/09 19:40:48 tihocan Exp $
+   * $Id: old_plearn_main.cc,v 1.5 2004/07/21 16:30:49 chrish42 Exp $
    ******************************************************* */
 
 
 // #include <sstream>
 #include "old_plearn_main.h"
 
-#include "MatIO.h"
-#include "fileutils.h"
-#include "getDataSet.h"
-#include "random.h"
-#include "Learner.h"
-#include "Optimizer.h"
-#include "Kernel.h"
-#include "Experiment.h"
-#include "FileVMatrix.h"
-#include "SquaredErrorCostFunction.h"
-#include "PLMPI.h"
+#include <plearn/io/MatIO.h>
+#include <plearn/io/fileutils.h>
+#include <plearn/db/getDataSet.h>
+#include <plearn/math/random.h>
+#include <plearn_learners/generic/Learner.h>
+#include <plearn/opt/Optimizer.h>
+#include <plearn/ker/Kernel.h>
+#include <plearn_learners/misc/Experiment.h>
+#include <plearn/vmat/FileVMatrix.h>
+#include <plearn/ker/SquaredErrorCostFunction.h>
+#include <plearn/sys/PLMPI.h>
 
 namespace PLearn {
 using namespace std;

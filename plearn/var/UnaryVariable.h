@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnaryVariable.h,v 1.9 2004/02/20 21:11:54 chrish42 Exp $
+   * $Id: UnaryVariable.h,v 1.10 2004/07/21 16:30:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,7 +44,7 @@
 #define UnaryVariable_INC
 
 #include "VarArray.h"
-#include "TMat_maths.h"
+#include <plearn/math/TMat_maths.h>
 
 namespace PLearn {
 using namespace std;

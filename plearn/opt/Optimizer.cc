@@ -37,14 +37,14 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.cc,v 1.27 2004/03/10 12:54:55 tihocan Exp $
+   * $Id: Optimizer.cc,v 1.28 2004/07/21 16:30:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "Optimizer.h"
 //#define DEBUGCG
 #ifdef DEBUGCG
-#include "GhostScript.h"
+#include <plearn/display/GhostScript.h>
 #endif
 
 namespace PLearn {

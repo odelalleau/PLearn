@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.h,v 1.22 2004/04/02 19:27:57 kermorvc Exp $
+   * $Id: WordNetOntology.h,v 1.23 2004/07/21 16:30:57 chrish42 Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -42,8 +42,8 @@
 #define WORD_NET_ONTOLOGY_H
 
 #include "wn.h"
-#include "general.h"
-#include "ShellProgressBar.h"
+#include <plearn/base/general.h>
+#include <plearn_learners/language/Bitext/ShellProgressBar.h>
 #include "Set.h"
 
 // #define NOUN_TYPE 1000

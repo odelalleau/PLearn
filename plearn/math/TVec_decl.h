@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
- * $Id: TVec_decl.h,v 1.14 2004/07/13 14:29:36 chapados Exp $
+ * $Id: TVec_decl.h,v 1.15 2004/07/21 16:30:53 chrish42 Exp $
  * AUTHORS: Pascal Vincent & Yoshua Bengio
  * This file is part of the PLearn library.
  ******************************************************* */
@@ -53,10 +53,10 @@
 #include <functional>
 #include <strstream>
 
-#include "general.h"
-#include "Storage.h"
-#include "Range.h"
-#include "plstreams.h"
+#include <plearn/base/general.h>
+#include <plearn/base/Storage.h>
+#include <plearn/base/Range.h>
+#include <plearn/io/plstreams.h>
 
 namespace PLearn {
 using namespace std;

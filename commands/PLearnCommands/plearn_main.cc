@@ -33,15 +33,15 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_main.cc,v 1.14 2004/05/26 17:59:26 nova77 Exp $
+   * $Id: plearn_main.cc,v 1.15 2004/07/21 16:30:49 chrish42 Exp $
    ******************************************************* */
 
 //#include "general.h"
 #include "plearn_main.h"
 #include "PLearnCommandRegistry.h"
 //#include "stringutils.h"
-#include "random.h"
-#include "PLMPI.h"
+#include <plearn/math/random.h>
+#include <plearn/sys/PLMPI.h>
 //#include "Object.h"
 //#include "RunCommand.h"
 

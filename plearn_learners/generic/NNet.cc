@@ -35,44 +35,44 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.55 2004/05/27 15:02:27 monperrm Exp $
+   * $Id: NNet.cc,v 1.56 2004/07/21 16:30:56 chrish42 Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
 
-#include "AffineTransformVariable.h"
-#include "AffineTransformWeightPenalty.h"
-#include "BinaryClassificationLossVariable.h"
-#include "ClassificationLossVariable.h"
-#include "ConcatColumnsVariable.h"
-#include "CrossEntropyVariable.h"
-#include "ExpVariable.h"
-#include "LiftOutputVariable.h"
-#include "LogSoftmaxVariable.h"
-#include "MarginPerceptronCostVariable.h"
-#include "MulticlassLossVariable.h"
-#include "NegCrossEntropySigmoidVariable.h"
-#include "OneHotSquaredLoss.h"
+#include <plearn/var/AffineTransformVariable.h>
+#include <plearn/var/AffineTransformWeightPenalty.h>
+#include <plearn/var/BinaryClassificationLossVariable.h>
+#include <plearn/var/ClassificationLossVariable.h>
+#include <plearn/var/ConcatColumnsVariable.h>
+#include <plearn/var/CrossEntropyVariable.h>
+#include <plearn/var/ExpVariable.h>
+#include <plearn/var/LiftOutputVariable.h>
+#include <plearn/var/LogSoftmaxVariable.h>
+#include <plearn/var/MarginPerceptronCostVariable.h>
+#include <plearn/var/MulticlassLossVariable.h>
+#include <plearn/var/NegCrossEntropySigmoidVariable.h>
+#include <plearn/var/OneHotSquaredLoss.h>
 // #include "RBFLayerVariable.h" //TODO Put it back when the file exists.
-#include "SigmoidVariable.h"
-#include "SoftmaxVariable.h"
-#include "SoftplusVariable.h"
-#include "SumVariable.h"
-#include "SumAbsVariable.h"
-#include "SumOfVariable.h"
-#include "SumSquareVariable.h"
-#include "TanhVariable.h"
-#include "TransposeProductVariable.h"
-#include "UnaryHardSlopeVariable.h"
-#include "Var_operators.h"
-#include "Var_utils.h"
+#include <plearn/var/SigmoidVariable.h>
+#include <plearn/var/SoftmaxVariable.h>
+#include <plearn/var/SoftplusVariable.h>
+#include <plearn/var/SumVariable.h>
+#include <plearn/var/SumAbsVariable.h>
+#include <plearn/var/SumOfVariable.h>
+#include <plearn/var/SumSquareVariable.h>
+#include <plearn/var/TanhVariable.h>
+#include <plearn/var/TransposeProductVariable.h>
+#include <plearn/var/UnaryHardSlopeVariable.h>
+#include <plearn/var/Var_operators.h>
+#include <plearn/var/Var_utils.h>
 
-#include "ConcatColumnsVMatrix.h"
+#include <plearn/vmat/ConcatColumnsVMatrix.h>
 //#include "DisplayUtils.h"
 //#include "GradientOptimizer.h"
 #include "NNet.h"
-#include "random.h"
-#include "SubVMatrix.h"
+#include <plearn/math/random.h>
+#include <plearn/vmat/SubVMatrix.h>
 
 namespace PLearn {
 using namespace std;

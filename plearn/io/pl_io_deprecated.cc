@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io_deprecated.cc,v 1.4 2004/02/29 16:44:05 nova77 Exp $
+   * $Id: pl_io_deprecated.cc,v 1.5 2004/07/21 16:30:52 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -45,7 +45,7 @@
 /*! \file PLearnLibrary/PLearnCore/pl_io.cc */
 
 #include "pl_io_deprecated.h"
-#include "stringutils.h"
+#include <plearn/base/stringutils.h>
 #include "pl_streambuf.h"
 
 namespace PLearn {

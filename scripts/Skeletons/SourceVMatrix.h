@@ -1,7 +1,7 @@
 #ifndef DERIVEDCLASS_INC
 #define DERIVEDCLASS_INC
 
-#include "SourceVMatrix.h"
+#include <plearn/vmat/SourceVMatrix.h>
 
 namespace PLearn {
 using namespace std;

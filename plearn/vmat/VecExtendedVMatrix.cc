@@ -35,11 +35,11 @@
 
 
 /* *******************************************************      
-   * $Id: VecExtendedVMatrix.cc,v 1.6 2004/07/09 19:42:23 tihocan Exp $
+   * $Id: VecExtendedVMatrix.cc,v 1.7 2004/07/21 16:30:55 chrish42 Exp $
    ******************************************************* */
 
 #include "VecExtendedVMatrix.h"
-#include "TMat.h"
+#include <plearn/math/TMat.h>
 
 namespace PLearn {
 using namespace std;

@@ -34,15 +34,15 @@
 
 
 /* *******************************************************      
-   * $Id: pylearn.cc,v 1.2 2004/07/09 17:26:10 plearner Exp $
+   * $Id: pylearn.cc,v 1.3 2004/07/21 16:30:59 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 // Authors: Pascal Vincent
 
 #include <boost/python.hpp>
 
-#include "Object.h"
-#include "getDataSet.h"
+#include <plearn/base/Object.h>
+#include <plearn/db/getDataSet.h>
 
 using namespace boost::python;
 using namespace std;

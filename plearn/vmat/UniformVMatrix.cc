@@ -35,11 +35,11 @@
 
 
 /* *******************************************************      
-   * $Id: UniformVMatrix.cc,v 1.4 2004/04/05 23:08:23 morinf Exp $
+   * $Id: UniformVMatrix.cc,v 1.5 2004/07/21 16:30:55 chrish42 Exp $
    ******************************************************* */
 
 #include "UniformVMatrix.h"
-#include "random.h"
+#include <plearn/math/random.h>
 
 namespace PLearn {
 using namespace std;

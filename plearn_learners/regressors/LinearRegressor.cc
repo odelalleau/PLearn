@@ -34,12 +34,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.cc,v 1.7 2004/05/28 15:36:46 tihocan Exp $
+   * $Id: LinearRegressor.cc,v 1.8 2004/07/21 16:30:58 chrish42 Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.cc */
 #include "LinearRegressor.h"
-#include "VMat_maths.h"
+#include <plearn/vmat/VMat_maths.h>
 
 namespace PLearn {
 using namespace std;

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.h,v 1.12 2004/06/26 00:24:14 plearner Exp $
+   * $Id: MultiInstanceNNet.h,v 1.13 2004/07/21 16:30:55 chrish42 Exp $
    ******************************************************* */
 
 /*! \file PLearn/plearn_learners/classifiers/MultiInstanceNNet.h */
@@ -43,8 +43,8 @@
 #ifndef MultiInstanceNNet_INC
 #define MultiInstanceNNet_INC
 
-#include "PLearner.h"
-#include "Optimizer.h"
+#include <plearn_learners/generic/PLearner.h>
+#include <plearn/opt/Optimizer.h>
 //#include "Var_all.h"
 
 namespace PLearn {

@@ -37,13 +37,13 @@
  
 
 /* *******************************************************      
-   * $Id: Gnuplot.cc,v 1.10 2004/03/04 14:57:03 tihocan Exp $
+   * $Id: Gnuplot.cc,v 1.11 2004/07/21 16:30:51 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "Gnuplot.h"
-#include "TMat_maths.h"
+#include <plearn/math/TMat_maths.h>
 //#include <sys/types.h>
 //#include <sys/stat.h>
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: IsomapTangentLearner.h,v 1.1 2004/07/08 19:40:53 monperrm Exp $ 
+   * $Id: IsomapTangentLearner.h,v 1.2 2004/07/21 16:30:59 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus
@@ -44,7 +44,7 @@
 #ifndef IsomapTangentLearner_INC
 #define IsomapTangentLearner_INC
 
-#include "PLearner.h"
+#include <plearn_learners/generic/PLearner.h>
 
 
 namespace PLearn {

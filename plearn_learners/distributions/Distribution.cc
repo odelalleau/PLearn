@@ -37,12 +37,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Distribution.cc,v 1.17 2004/06/26 00:24:15 plearner Exp $ 
+   * $Id: Distribution.cc,v 1.18 2004/07/21 16:30:55 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file Distribution.cc */
 #include "Distribution.h"
-#include "NegOutputCostFunction.h"
+#include <plearn/ker/NegOutputCostFunction.h>
 
 namespace PLearn {
 using namespace std;

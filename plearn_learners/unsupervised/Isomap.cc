@@ -33,15 +33,15 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Isomap.cc,v 1.4 2004/07/16 13:12:55 tihocan Exp $ 
+   * $Id: Isomap.cc,v 1.5 2004/07/21 16:30:59 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
 
 /*! \file Isomap.cc */
 
-#include "DistanceKernel.h"
-#include "GeodesicDistanceKernel.h"
+#include <plearn/ker/DistanceKernel.h>
+#include <plearn/ker/GeodesicDistanceKernel.h>
 #include "Isomap.h"
 
 namespace PLearn {

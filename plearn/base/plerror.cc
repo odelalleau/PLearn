@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plerror.cc,v 1.7 2004/02/28 17:58:26 tihocan Exp $
+   * $Id: plerror.cc,v 1.8 2004/07/21 16:30:51 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -47,7 +47,7 @@
 // #include "general.h"
 
 #if USING_MPI
-#include "PLMPI.h"
+#include <plearn/sys/PLMPI.h>
 #endif //USING_MPI
 
 

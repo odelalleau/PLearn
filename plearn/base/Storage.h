@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Storage.h,v 1.13 2004/07/07 14:56:16 ducharme Exp $
+   * $Id: Storage.h,v 1.14 2004/07/21 16:30:50 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -50,9 +50,9 @@
 
 #include <map>
 #include "general.h"
-#include "MemoryMap.h"
+#include <plearn/sys/MemoryMap.h>
 #include "PP.h"
-#include "PStream.h"
+#include <plearn/io/PStream.h>
 //#include "Object.h"
 
 namespace PLearn {

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: Mat.h,v 1.6 2004/04/17 00:44:55 plearner Exp $
+   * $Id: Mat.h,v 1.7 2004/07/21 16:30:53 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,7 @@
 #define MAT_INC
 
 #include "TMat.h"
-#include "MatIO.h"
+#include <plearn/io/MatIO.h>
 
 namespace PLearn {
 using namespace std;

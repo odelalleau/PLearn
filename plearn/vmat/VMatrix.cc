@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.62 2004/07/19 13:24:23 tihocan Exp $
+* $Id: VMatrix.cc,v 1.63 2004/07/21 16:30:55 chrish42 Exp $
 ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -45,11 +45,11 @@
 #include "VMat_maths.h"
 #include "VMatrix.h"
 
-#include "BottomNI.h"
-#include "Kernel.h"
-#include "Func.h"
-#include "stringutils.h"
-#include "TopNI.h"
+#include <plearn/math/BottomNI.h>
+#include <plearn/ker/Kernel.h>
+#include <plearn/var/Func.h>
+#include <plearn/base/stringutils.h>
+#include <plearn/math/TopNI.h>
 
 //#include "VMat.h"
 //#include "TMat_maths.h"

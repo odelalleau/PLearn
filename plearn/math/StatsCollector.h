@@ -33,17 +33,17 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.28 2004/06/26 00:24:14 plearner Exp $
+   * $Id: StatsCollector.h,v 1.29 2004/07/21 16:30:53 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #ifndef StatsCollector_INC
 #define StatsCollector_INC
 
-#include "general.h"
-#include "Object.h"
+#include <plearn/base/general.h>
+#include <plearn/base/Object.h>
 #include "TMat.h"
-#include "RealMapping.h"
+#include <plearn/base/RealMapping.h>
 
 namespace PLearn {
 using namespace std;

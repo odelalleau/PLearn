@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNVMatrix.h,v 1.10 2004/07/07 17:30:48 tihocan Exp $ 
+   * $Id: KNNVMatrix.h,v 1.11 2004/07/21 16:30:55 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -44,7 +44,7 @@
 #ifndef KNNVMatrix_INC
 #define KNNVMatrix_INC
 
-#include "Kernel.h"
+#include <plearn/ker/Kernel.h>
 #include "SourceVMatrix.h"
 
 namespace PLearn {

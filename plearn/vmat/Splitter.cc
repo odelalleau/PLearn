@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Splitter.cc,v 1.7 2004/04/26 13:09:13 tihocan Exp $ 
+   * $Id: Splitter.cc,v 1.8 2004/07/21 16:30:55 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file Splitter.cc */
@@ -41,7 +41,7 @@
 #include "VMat.h"
 #include "ConcatRowsVMatrix.h"
 #include "ConcatColumnsVMatrix.h"
-#include "random.h"
+#include <plearn/math/random.h>
 
 namespace PLearn {
 using namespace std;

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: NaryVariable.h,v 1.9 2004/04/27 16:06:12 morinf Exp $
+   * $Id: NaryVariable.h,v 1.10 2004/07/21 16:30:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,13 +44,13 @@
 #define NaryVariable_INC
 
 #include "VarArray.h"
-#include "TMat.h"
-#include "VMat.h"
+#include <plearn/math/TMat.h>
+#include <plearn/vmat/VMat.h>
 #include "Func.h"
 
 // norman: multi threading unix standard not supported in win32
 #ifndef WIN32
-#include "Popen.h"
+#include <plearn/sys/Popen.h>
 #endif
 
 namespace PLearn {

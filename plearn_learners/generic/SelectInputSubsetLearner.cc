@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SelectInputSubsetLearner.cc,v 1.2 2004/04/14 21:17:31 yoshua Exp $
+   * $Id: SelectInputSubsetLearner.cc,v 1.3 2004/07/21 16:30:56 chrish42 Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -41,8 +41,8 @@
 /*! \file SelectInputSubsetLearner.cc */
 
 #include "SelectInputSubsetLearner.h"
-#include "SelectColumnsVMatrix.h"
-#include "random.h"
+#include <plearn/vmat/SelectColumnsVMatrix.h>
+#include <plearn/math/random.h>
 
 namespace PLearn {
 using namespace std;

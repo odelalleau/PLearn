@@ -36,26 +36,26 @@
 
  
 /*
-* $Id: VMat_maths.cc,v 1.24 2004/07/09 18:24:42 tihocan Exp $
+* $Id: VMat_maths.cc,v 1.25 2004/07/21 16:30:55 chrish42 Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat_maths.h"
-#include "TMat_maths.h"
-#include "IntVecFile.h"
+#include <plearn/math/TMat_maths.h>
+#include <plearn/io/IntVecFile.h>
 #include "MemoryVMatrix.h"
 #include "ShiftAndRescaleVMatrix.h"
 #include "ExtendedVMatrix.h"
-#include "Array.h"
-#include "plapack.h"      //!< For solveLinearSystem.
-#include "random.h"
-#include "TmpFilenames.h"
-#include "fileutils.h"
-#include "PLMPI.h"
+#include <plearn/base/Array.h>
+#include <plearn/math/plapack.h>      //!< For solveLinearSystem.
+#include <plearn/math/random.h>
+#include <plearn/io/TmpFilenames.h>
+#include <plearn/io/fileutils.h>
+#include <plearn/sys/PLMPI.h>
 #include <vector>
-#include "VecStatsCollector.h"
-#include "ConditionalStatsCollector.h"
-#include "stats_utils.h"
-#include "BottomNI.h"
+#include <plearn/math/VecStatsCollector.h>
+#include <plearn/math/ConditionalStatsCollector.h>
+#include <plearn/math/stats_utils.h>
+#include <plearn/math/BottomNI.h>
 
 namespace PLearn {
 using namespace std;

@@ -31,14 +31,14 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StrTableVMatrix.h,v 1.8 2004/03/23 23:08:09 morinf Exp $
+   * $Id: StrTableVMatrix.h,v 1.9 2004/07/21 16:30:55 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #ifndef StrTableVMatrix_H
 #define StrTableVMatrix_H
 
-#include "StringTable.h"
+#include <plearn/base/StringTable.h>
 #include "MemoryVMatrix.h"
 
 namespace PLearn {

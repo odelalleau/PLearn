@@ -33,14 +33,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UniformDistribution.cc,v 1.4 2004/06/21 14:57:01 tihocan Exp $ 
+   * $Id: UniformDistribution.cc,v 1.5 2004/07/21 16:30:56 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
 
 /*! \file UniformDistribution.cc */
 
-#include "random.h"
+#include <plearn/math/random.h>
 #include "UniformDistribution.h"
 
 namespace PLearn {

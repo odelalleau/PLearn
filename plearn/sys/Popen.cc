@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: Popen.cc,v 1.6 2004/02/26 07:38:04 nova77 Exp $
+   * $Id: Popen.cc,v 1.7 2004/07/21 16:30:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,7 +46,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #endif
-#include "stringutils.h"
+#include <plearn/base/stringutils.h>
 #include "Popen.h"
 #include <errno.h>
 

@@ -33,14 +33,14 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.cc,v 1.30 2004/05/11 20:56:37 tihocan Exp $
+   * $Id: WordNetOntology.cc,v 1.31 2004/07/21 16:30:57 chrish42 Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "WordNetOntology.h"
 #include <algo.h>
-#include "stringutils.h"    //!< For underscore_to_space.
+#include <plearn/base/stringutils.h>    //!< For underscore_to_space.
 
 namespace PLearn {
 

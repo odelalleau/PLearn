@@ -33,14 +33,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNVMatrix.cc,v 1.11 2004/07/07 17:30:48 tihocan Exp $ 
+   * $Id: KNNVMatrix.cc,v 1.12 2004/07/21 16:30:55 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
 
 /*! \file KNNVMatrix.cc */
 
-#include "DistanceKernel.h"
+#include <plearn/ker/DistanceKernel.h>
 #include "KNNVMatrix.h"
 #include "SelectRowsVMatrix.h"
 #include "SubVMatrix.h"

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunObject.h,v 1.1 2004/06/21 14:47:57 tihocan Exp $ 
+   * $Id: RunObject.h,v 1.2 2004/07/21 16:30:53 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -44,7 +44,7 @@
 #ifndef RunObject_INC
 #define RunObject_INC
 
-#include "Object.h"
+#include <plearn/base/Object.h>
 
 namespace PLearn {
 using namespace std;

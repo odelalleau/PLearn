@@ -33,16 +33,16 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PCA.cc,v 1.12 2004/07/14 00:24:28 dorionc Exp $ 
+   * $Id: PCA.cc,v 1.13 2004/07/21 16:30:59 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file PCA.cc */
-#include "CenteredVMatrix.h"
-#include "GetInputVMatrix.h"
+#include <plearn/vmat/CenteredVMatrix.h>
+#include <plearn/vmat/GetInputVMatrix.h>
 #include "PCA.h"
-#include "plapack.h"
-#include "random.h"     //!< For fill_random_normal.
-#include "VMat_maths.h"
+#include <plearn/math/plapack.h>
+#include <plearn/math/random.h>     //!< For fill_random_normal.
+#include <plearn/vmat/VMat_maths.h>
 
 namespace PLearn {
 using namespace std;

@@ -34,16 +34,16 @@
 // library, go to the PLearn Web site at www.plearn.org 
 
 /* *******************************************************      
-   * $Id: RealMapping.cc,v 1.19 2004/03/04 15:02:16 tihocan Exp $
+   * $Id: RealMapping.cc,v 1.20 2004/07/21 16:30:50 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "RealMapping.h"
 #include <algorithm>
-#include "fileutils.h"    //!< For peekAfterSkipBlanks.
+#include <plearn/io/fileutils.h>    //!< For peekAfterSkipBlanks.
 //#include <sstream>
 #include "stringutils.h"  //!< For removeblanks.
-#include "PStream.h"
+#include <plearn/io/PStream.h>
 
 namespace PLearn {
 using namespace std;

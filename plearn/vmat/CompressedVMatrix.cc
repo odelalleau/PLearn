@@ -35,10 +35,10 @@
 
 
 /* *******************************************************      
-   * $Id: CompressedVMatrix.cc,v 1.6 2004/07/09 19:42:23 tihocan Exp $
+   * $Id: CompressedVMatrix.cc,v 1.7 2004/07/21 16:30:55 chrish42 Exp $
    ******************************************************* */
 
-#include "VecCompressor.h"
+#include <plearn/math/VecCompressor.h>
 #include "CompressedVMatrix.h"
 
 namespace PLearn {

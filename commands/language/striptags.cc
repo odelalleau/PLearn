@@ -2,8 +2,8 @@
 #include <fstream.h>
 #include <string>
 #include <algorithm>
-#include "general.h"
-#include "stringutils.h"    //!< For split.
+#include <plearn/base/general.h>
+#include <plearn/base/stringutils.h>    //!< For split.
 
 using namespace PLearn;
 

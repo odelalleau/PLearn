@@ -34,15 +34,15 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Grapher.h,v 1.4 2004/06/26 00:24:15 plearner Exp $ 
+   * $Id: Grapher.h,v 1.5 2004/07/21 16:30:57 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file Grapher.h */
 #ifndef GenerateDecisionPlot_INC
 #define GenerateDecisionPlot_INC
 
-#include "Object.h"
-#include "PLearner.h"
+#include <plearn/base/Object.h>
+#include <plearn_learners/generic/PLearner.h>
 
 namespace PLearn {
 using namespace std;

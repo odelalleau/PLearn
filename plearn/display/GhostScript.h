@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GhostScript.h,v 1.9 2004/03/04 14:57:03 tihocan Exp $
+   * $Id: GhostScript.h,v 1.10 2004/07/21 16:30:51 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -52,7 +52,7 @@
 //#include <cstdio>
 //#include <fstream>
 //#include "pl_io.h"
-#include "Mat.h"
+#include <plearn/math/Mat.h>
 
 namespace PLearn {
 using namespace std;

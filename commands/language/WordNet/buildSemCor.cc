@@ -1,4 +1,4 @@
-#include "WordNetOntology.h"
+#include <plearn_learners/language/WordNet/WordNetOntology.h>
 
 using namespace PLearn;
 

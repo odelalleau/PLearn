@@ -37,8 +37,8 @@
 #ifndef SmoothedProbSparseMatrix_INC
 #define SmoothedProbSparseMatrix_INC
 
-#include "ProbSparseMatrix.h"
-#include "TMat.h"
+#include <plearn/math/ProbSparseMatrix.h>
+#include <plearn/math/TMat.h>
 #define PROB_PREC 0.0001
 namespace PLearn {
 using namespace std;

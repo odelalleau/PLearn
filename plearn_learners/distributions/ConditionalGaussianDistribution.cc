@@ -37,9 +37,9 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 #include "ConditionalGaussianDistribution.h"
-#include "plapack.h"
-#include "VMat_maths.h"
-#include "TMat.h"
+#include <plearn/math/plapack.h>
+#include <plearn/vmat/VMat_maths.h>
+#include <plearn/math/TMat.h>
 
 namespace PLearn {
 using namespace std;

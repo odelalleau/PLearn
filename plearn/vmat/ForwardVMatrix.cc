@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
- * $Id: ForwardVMatrix.cc,v 1.10 2004/05/14 02:13:41 tihocan Exp $
+ * $Id: ForwardVMatrix.cc,v 1.11 2004/07/21 16:30:55 chrish42 Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -44,8 +44,8 @@
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
 
 #include "ForwardVMatrix.h"
-#include "Kernel.h"
-#include "Func.h"
+#include <plearn/ker/Kernel.h>
+#include <plearn/var/Func.h>
 
 namespace PLearn {
 using namespace std;

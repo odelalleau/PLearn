@@ -38,7 +38,7 @@
 #ifndef SEQUENTIAL_LEARNER
 #define SEQUENTIAL_LEARNER
 
-#include "PLearner.h"
+#include <plearn_learners/generic/PLearner.h>
 
 namespace PLearn {
 using namespace std;

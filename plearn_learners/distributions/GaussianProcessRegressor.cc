@@ -36,12 +36,12 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianProcessRegressor.cc,v 1.10 2004/07/09 19:42:43 tihocan Exp $
+   * $Id: GaussianProcessRegressor.cc,v 1.11 2004/07/21 16:30:55 chrish42 Exp $
    ******************************************************* */
 
 #include "GaussianProcessRegressor.h"
-#include "pl_erf.h"
-#include "plapack.h"
+#include <plearn/math/pl_erf.h>
+#include <plearn/math/plapack.h>
 
 namespace PLearn {
 using namespace std;

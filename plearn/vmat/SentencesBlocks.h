@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SentencesBlocks.h,v 1.3 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: SentencesBlocks.h,v 1.4 2004/07/21 16:30:55 chrish42 Exp $
    ******************************************************* */
 
 
@@ -45,7 +45,7 @@
 #define SentencesBlocks_INC
 
 #include "VMat.h"
-#include "TVec.h"
+#include <plearn/math/TVec.h>
 
 namespace PLearn {
 using namespace std;

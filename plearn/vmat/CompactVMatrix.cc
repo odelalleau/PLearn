@@ -35,12 +35,12 @@
 
 
 /* *******************************************************      
-   * $Id: CompactVMatrix.cc,v 1.10 2004/07/09 19:42:19 tihocan Exp $
+   * $Id: CompactVMatrix.cc,v 1.11 2004/07/21 16:30:55 chrish42 Exp $
    ******************************************************* */
 
 #include "CompactVMatrix.h"
-#include "TMat_maths.h"
-#include "random.h"
+#include <plearn/math/TMat_maths.h>
+#include <plearn/math/random.h>
 
 namespace PLearn {
 using namespace std;

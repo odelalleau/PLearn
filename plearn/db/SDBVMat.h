@@ -37,9 +37,9 @@
 #ifndef NGSDBVMAT_H
 #define NGSDBVMAT_H
 
-#include "VMat.h"
-#include "RowBufferedVMatrix.h"
-#include "Func.h"
+#include <plearn/vmat/VMat.h>
+#include <plearn/vmat/RowBufferedVMatrix.h>
+#include <plearn/var/Func.h>
 #include "SDBWithStats.h"
 
 namespace PLearn {

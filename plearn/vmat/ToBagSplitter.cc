@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ToBagSplitter.cc,v 1.2 2004/03/20 13:00:19 yoshua Exp $ 
+   * $Id: ToBagSplitter.cc,v 1.3 2004/07/21 16:30:55 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -42,7 +42,7 @@
 
 
 #include "SelectRowsVMatrix.h"
-#include "SumOverBagsVariable.h"  //!< For SumOverBagsVariable::TARGET_COLUMN_LAST.
+#include <plearn/var/SumOverBagsVariable.h>  //!< For SumOverBagsVariable::TARGET_COLUMN_LAST.
 #include "ToBagSplitter.h"
 
 namespace PLearn {

@@ -1,7 +1,7 @@
 #ifndef DERIVEDCLASS_INC
 #define DERIVEDCLASS_INC
 
-#include "Object.h"
+#include <plearn/base/Object.h>
 
 namespace PLearn {
 using namespace std;

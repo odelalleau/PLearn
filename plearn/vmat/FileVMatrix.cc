@@ -35,11 +35,11 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.22 2004/07/07 17:30:48 tihocan Exp $
+   * $Id: FileVMatrix.cc,v 1.23 2004/07/21 16:30:55 chrish42 Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
-#include "fileutils.h"
+#include <plearn/io/fileutils.h>
 
 namespace PLearn {
 using namespace std;

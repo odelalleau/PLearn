@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainValidTestSplitter.cc,v 1.2 2004/03/05 13:53:23 tihocan Exp $ 
+   * $Id: TrainValidTestSplitter.cc,v 1.3 2004/07/21 16:30:55 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -41,7 +41,7 @@
 /*! \file TrainValidTestSplitter.cc */
 
 #include "ConcatRowsVMatrix.h"
-#include "random.h"
+#include <plearn/math/random.h>
 #include "SelectRowsVMatrix.h"
 #include "SubVMatrix.h"
 #include "TrainValidTestSplitter.h"

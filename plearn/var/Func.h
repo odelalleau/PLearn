@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Func.h,v 1.10 2004/05/28 21:55:01 monperrm Exp $
+   * $Id: Func.h,v 1.11 2004/07/21 16:30:54 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -48,10 +48,10 @@
 #ifndef FUNCTION_INC
 #define FUNCTION_INC
 
-#include "general.h"
-#include "PP.h"
-#include "TMat.h"
-#include "VMat.h"
+#include <plearn/base/general.h>
+#include <plearn/base/PP.h>
+#include <plearn/math/TMat.h>
+#include <plearn/vmat/VMat.h>
 #include "Variable.h"
 #include "VarArray.h"
 

@@ -33,17 +33,17 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Experiment.h,v 1.7 2004/06/26 00:24:15 plearner Exp $ 
+   * $Id: Experiment.h,v 1.8 2004/07/21 16:30:57 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file Experiment.h */
 #ifndef Experiment_INC
 #define Experiment_INC
 
-#include "Object.h"
-#include "Learner.h"
-#include "VMat.h"
-#include "Splitter.h"
+#include <plearn/base/Object.h>
+#include <plearn_learners/generic/Learner.h>
+#include <plearn/vmat/VMat.h>
+#include <plearn/vmat/Splitter.h>
 
 namespace PLearn {
 using namespace std;

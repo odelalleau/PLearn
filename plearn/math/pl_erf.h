@@ -38,7 +38,7 @@
 #ifndef PL_ERF_H
 #define PL_ERF_H
 
-#include "general.h"
+#include <plearn/base/general.h>
 
 namespace PLearn {
 using namespace std;

@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.24 2004/07/19 13:45:44 ducharme Exp $
+   * $Id: PLearner.h,v 1.25 2004/07/21 16:30:56 chrish42 Exp $
    ******************************************************* */
 
 
@@ -48,11 +48,11 @@
 #ifndef PLearner_INC
 #define PLearner_INC
 
-#include "Object.h"
-#include "VMat.h"
+#include <plearn/base/Object.h>
+#include <plearn/vmat/VMat.h>
 //#include "Splitter.h"
 //#include "TMat.h"
-#include "VecStatsCollector.h"
+#include <plearn/math/VecStatsCollector.h>
 
 namespace PLearn {
 using namespace std;

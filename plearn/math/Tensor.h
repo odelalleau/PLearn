@@ -35,8 +35,8 @@
 #define TENSOR_INC
 
 #include <iostream.h>
-#include <Storage.h>
-#include <TinyVector.h>
+#include <plearn/base/Storage.h>
+#include <plearn/base/TinyVector.h>
 #include <vector>
 
 using namespace std;

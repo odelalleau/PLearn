@@ -31,15 +31,15 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: FieldConvertCommand.cc,v 1.31 2004/07/14 14:41:12 tihocan Exp $
+ * $Id: FieldConvertCommand.cc,v 1.32 2004/07/21 16:30:49 chrish42 Exp $
  ******************************************************* */
 
 #include "FieldConvertCommand.h"
-#include "getDataSet.h"
-#include "pl_erf.h"       //!< For gauss_01_quantile.
-#include "random.h"
-#include "stringutils.h"
-#include "VMat.h"
+#include <plearn/db/getDataSet.h>
+#include <plearn/math/pl_erf.h>       //!< For gauss_01_quantile.
+#include <plearn/math/random.h>
+#include <plearn/base/stringutils.h>
+#include <plearn/vmat/VMat.h>
 
 #define NORMALIZE 1
 #define MISSING_BIT 2

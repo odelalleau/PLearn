@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: JulianDateCommand.cc,v 1.2 2004/02/20 21:11:40 chrish42 Exp $ 
+   * $Id: JulianDateCommand.cc,v 1.3 2004/07/21 16:30:49 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Rejean Ducharme
@@ -42,9 +42,9 @@
 
 
 #include "JulianDateCommand.h"
-#include "PDate.h"
-#include "stringutils.h"
-#include "plerror.h"
+#include <plearn/base/PDate.h>
+#include <plearn/base/stringutils.h>
+#include <plearn/base/plerror.h>
 
 namespace PLearn {
 using namespace std;

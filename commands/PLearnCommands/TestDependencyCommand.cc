@@ -33,15 +33,15 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TestDependencyCommand.cc,v 1.1 2004/02/21 14:59:22 yoshua Exp $
+   * $Id: TestDependencyCommand.cc,v 1.2 2004/07/21 16:30:49 chrish42 Exp $
    ******************************************************* */
 
 /*! \file TestDependencyCommand.cc */
 #include "TestDependencyCommand.h"
-#include "getDataSet.h"
-#include "stats_utils.h"
-#include "VMat_maths.h"
-#include "procinfo.h"
+#include <plearn/db/getDataSet.h>
+#include <plearn/math/stats_utils.h>
+#include <plearn/vmat/VMat_maths.h>
+#include <plearn/sys/procinfo.h>
 
 namespace PLearn {
 using namespace std;

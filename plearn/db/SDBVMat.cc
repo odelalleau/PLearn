@@ -31,13 +31,13 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-#include "TMat_maths.h"			     // for binary_search
+#include <plearn/math/TMat_maths.h>			     // for binary_search
 //#include "stringutils.h"
 #include "SDBVMat.h"
 
 // norman: profiler deactivated for win32
 #ifndef WIN32
-#include "Profiler.h"
+#include <plearn/sys/Profiler.h>
 #endif
 
 namespace PLearn {

@@ -33,14 +33,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SpectralClustering.cc,v 1.2 2004/07/19 13:32:29 tihocan Exp $ 
+   * $Id: SpectralClustering.cc,v 1.3 2004/07/21 16:30:59 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
 
 /*! \file SpectralClustering.cc */
 
-#include "DivisiveNormalizationKernel.h"
+#include <plearn/ker/DivisiveNormalizationKernel.h>
 #include "SpectralClustering.h"
 
 namespace PLearn {

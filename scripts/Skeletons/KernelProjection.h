@@ -1,7 +1,7 @@
 #ifndef DERIVEDCLASS_INC
 #define DERIVEDCLASS_INC
 
-#include "KernelProjection.h"
+#include <plearn_learners/unsupervised/KernelProjection.h>
 
 namespace PLearn {
 using namespace std;

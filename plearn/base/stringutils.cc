@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.cc,v 1.20 2004/05/05 19:24:09 nova77 Exp $
+   * $Id: stringutils.cc,v 1.21 2004/07/21 16:30:51 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -46,7 +46,7 @@
 #include "general.h"
 
 #if USING_MPI
-#include "PLMPI.h"
+#include <plearn/sys/PLMPI.h>
 #endif //USING_MPI
 
 namespace PLearn {

@@ -32,14 +32,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.h,v 1.18 2004/07/14 17:08:32 dorionc Exp $ 
+   * $Id: VecStatsCollector.h,v 1.19 2004/07/21 16:30:53 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.h */
 #ifndef VecStatsCollector_INC
 #define VecStatsCollector_INC
 
-#include "Object.h"
+#include <plearn/base/Object.h>
 #include "StatsCollector.h"
 
 namespace PLearn {

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdaBoost.h,v 1.3 2004/04/23 02:53:29 yoshua Exp $
+   * $Id: AdaBoost.h,v 1.4 2004/07/21 16:30:55 chrish42 Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -43,7 +43,7 @@
 #ifndef AdaBoost_INC
 #define AdaBoost_INC
 
-#include "PLearner.h"
+#include <plearn_learners/generic/PLearner.h>
 
 namespace PLearn {
 using namespace std;

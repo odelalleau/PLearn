@@ -1,8 +1,8 @@
 #ifndef PROBABILITY_SPARSE_MATRIX_H
 #define PROBABILITY_SPARSE_MATRIX_H
 
-#include "RowMapSparseMatrix.h"
-#include "Object.h"
+#include <plearn/math/RowMapSparseMatrix.h>
+#include <plearn/base/Object.h>
 #include "Set.h"
 
 #define NUMWIDTH 10

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.17 2004/05/31 14:24:36 tihocan Exp $
+   * $Id: pl_math.h,v 1.18 2004/07/21 16:30:53 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,7 +48,7 @@
 #include <cmath>
 #include <cfloat>
 #include <climits>
-#include "plerror.h"
+#include <plearn/base/plerror.h>
 
 namespace PLearn {
 using namespace std;

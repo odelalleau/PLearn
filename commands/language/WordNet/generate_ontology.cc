@@ -1,5 +1,5 @@
-#include "WordNetOntology.h"
-#include "stringutils.h"    //!< For tostring.
+#include <plearn_learners/language/WordNet/WordNetOntology.h>
+#include <plearn/base/stringutils.h>    //!< For tostring.
 
 using namespace PLearn;
 

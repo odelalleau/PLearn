@@ -33,14 +33,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PStreamBuf.h,v 1.6 2004/06/26 00:24:14 plearner Exp $ 
+   * $Id: PStreamBuf.h,v 1.7 2004/07/21 16:30:51 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file PStreamBuf.h */
 #ifndef PStreamBuf_INC
 #define PStreamBuf_INC
 
-#include "PP.h"
+#include <plearn/base/PP.h>
 
 namespace PLearn {
 using namespace std;

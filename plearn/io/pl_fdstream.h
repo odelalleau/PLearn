@@ -45,7 +45,7 @@
 #define pl_fdstream_INC
 
 #include <iostream>
-#include "PP.h"
+#include <plearn/base/PP.h>
 
 namespace PLearn {
 using namespace std;

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: IntVecFile.h,v 1.4 2004/03/04 15:04:50 tihocan Exp $
+   * $Id: IntVecFile.h,v 1.5 2004/07/21 16:30:51 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -50,7 +50,7 @@
 
 //#include <cstdlib>
 //#include "PP.h"
-#include "Mat.h"
+#include <plearn/math/Mat.h>
 
 namespace PLearn {
 using namespace std;

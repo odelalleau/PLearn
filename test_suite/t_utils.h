@@ -8,7 +8,7 @@
 #ifndef _T_UTILS_H__
 #define _T_UTILS_H__
 
-#include "Array.h"
+#include <plearn/base/Array.h>
 
 #ifdef USENAMESPACE
 namespace PLearn {

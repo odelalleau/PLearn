@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: KernelVMatrix.cc,v 1.2 2004/04/05 22:57:33 morinf Exp $
+   * $Id: KernelVMatrix.cc,v 1.3 2004/07/21 16:30:55 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,10 +45,10 @@
 // From Old Kernel.cc: all includes are putted in every file.
 // To be revised manually 
 /*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
+#include <plearn/base/stringutils.h>
+#include <plearn/ker/Kernel.h>
+#include <plearn/math/TMat_maths.h>
+#include <plearn/sys/PLMPI.h>*/
 //////////////////////////
 namespace PLearn {
 using namespace std;

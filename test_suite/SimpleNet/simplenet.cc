@@ -1,13 +1,13 @@
 // Uncommenting this will result ina namespace-reated bug
 // that I scould not explain (Pascal)
 // #include "MatIO.h"
-#include "Var_all.h"
-#include "NaryVariable.h"
-#include "Func.h"
-#include "GradientOptimizer.h"
-#include "VarArray.h"
-#include "databases.h"
-#include "random.h"
+#include <plearn/var/Var_all.h>
+#include <plearn/var/NaryVariable.h>
+#include <plearn/var/Func.h>
+#include <plearn/opt/GradientOptimizer.h>
+#include <plearn/var/VarArray.h>
+#include <plearn/db/databases.h>
+#include <plearn/math/random.h>
 
 using namespace PLearn;
 

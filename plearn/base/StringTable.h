@@ -37,7 +37,7 @@
 #include <vector>
 #include <map>
 #include <list>
-#include "TMat.h"
+#include <plearn/math/TMat.h>
 
 namespace PLearn {
 using namespace std;

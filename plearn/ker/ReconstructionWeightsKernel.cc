@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ReconstructionWeightsKernel.cc,v 1.6 2004/07/21 15:58:39 tihocan Exp $ 
+   * $Id: ReconstructionWeightsKernel.cc,v 1.7 2004/07/21 16:30:52 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -43,7 +43,7 @@
 
 #include "DistanceKernel.h"
 #include "DotProductKernel.h"
-#include "plapack.h"          //!< For solveLinearSystem().
+#include <plearn/math/plapack.h>          //!< For solveLinearSystem().
 #include "ReconstructionWeightsKernel.h"
 
 namespace PLearn {

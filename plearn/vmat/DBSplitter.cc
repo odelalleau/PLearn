@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DBSplitter.cc,v 1.1 2004/07/16 21:58:29 mariusmuja Exp $ 
+   * $Id: DBSplitter.cc,v 1.2 2004/07/21 16:30:55 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Marius Muja
@@ -42,7 +42,7 @@
 
 
 #include "DBSplitter.h"
-#include "getDataSet.h"
+#include <plearn/db/getDataSet.h>
 
 namespace PLearn {
 using namespace std;

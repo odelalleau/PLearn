@@ -39,18 +39,18 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.cc,v 1.19 2004/06/26 00:24:15 plearner Exp $
+   * $Id: Learner.cc,v 1.20 2004/07/21 16:30:56 chrish42 Exp $
    ******************************************************* */
 
 #include "Learner.h"
 //#include "DisplayUtils.h"
-#include "TmpFilenames.h"
+#include <plearn/io/TmpFilenames.h>
 //#include "fileutils.h"
-#include "stringutils.h"
-#include "MPIStream.h"
-#include "FileVMatrix.h"
-#include "RemoveRowsVMatrix.h"
-#include "PLMPI.h"
+#include <plearn/base/stringutils.h>
+#include <plearn/io/MPIStream.h>
+#include <plearn/vmat/FileVMatrix.h>
+#include <plearn/vmat/RemoveRowsVMatrix.h>
+#include <plearn/sys/PLMPI.h>
 
 namespace PLearn {
 using namespace std;

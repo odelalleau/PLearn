@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ShellScript.h,v 1.1 2004/07/19 14:52:59 tihocan Exp $ 
+   * $Id: ShellScript.h,v 1.2 2004/07/21 16:30:53 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -44,7 +44,7 @@
 #ifndef ShellScript_INC
 #define ShellScript_INC
 
-#include "Object.h"
+#include <plearn/base/Object.h>
 
 namespace PLearn {
 using namespace std;

@@ -34,16 +34,16 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AutoRunCommand.cc,v 1.5 2004/02/29 16:44:04 nova77 Exp $ 
+   * $Id: AutoRunCommand.cc,v 1.6 2004/07/21 16:30:49 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file AutoRunCommand.cc */
 
 #include "AutoRunCommand.h"
 #include "RunCommand.h"
-#include "TVec.h"
+#include <plearn/math/TVec.h>
 
-#include "fileutils.h"
+#include <plearn/io/fileutils.h>
 
 // norman: added check for win32
 #ifndef WIN32

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TangentLearner.h,v 1.8 2004/07/19 11:20:24 yoshua Exp $ 
+   * $Id: TangentLearner.h,v 1.9 2004/07/21 16:30:59 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
@@ -44,9 +44,9 @@
 #ifndef TangentLearner_INC
 #define TangentLearner_INC
 
-#include "PLearner.h"
-#include "Func.h"
-#include "Optimizer.h"
+#include <plearn_learners/generic/PLearner.h>
+#include <plearn/var/Func.h>
+#include <plearn/opt/Optimizer.h>
 
 namespace PLearn {
 using namespace std;

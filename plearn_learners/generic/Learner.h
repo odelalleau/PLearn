@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.h,v 1.14 2004/06/26 00:24:15 plearner Exp $
+   * $Id: Learner.h,v 1.15 2004/07/21 16:30:56 chrish42 Exp $
    ******************************************************* */
 
 
@@ -48,11 +48,11 @@
 #ifndef Learner_INC
 #define Learner_INC
 
-#include "Measurer.h"
-#include "Kernel.h"
-#include "VecStatsCollector.h"
-#include "StatsIterator.h"
-#include "VVec.h"
+#include <plearn/measure/Measurer.h>
+#include <plearn/ker/Kernel.h>
+#include <plearn/math/VecStatsCollector.h>
+#include <plearn/math/StatsIterator.h>
+#include <plearn/vmat/VVec.h>
 //#include "TimeMeasurer.h"
 
 namespace PLearn {

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Isomap.h,v 1.1 2004/06/23 16:49:10 tihocan Exp $ 
+   * $Id: Isomap.h,v 1.2 2004/07/21 16:30:59 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -44,7 +44,7 @@
 #ifndef Isomap_INC
 #define Isomap_INC
 
-#include "Kernel.h"
+#include <plearn/ker/Kernel.h>
 #include "KernelPCA.h"
 
 namespace PLearn {

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ReconstructionWeightsKernel.h,v 1.5 2004/07/21 15:58:39 tihocan Exp $ 
+   * $Id: ReconstructionWeightsKernel.h,v 1.6 2004/07/21 16:30:52 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -45,8 +45,8 @@
 #define ReconstructionWeightsKernel_INC
 
 #include "Kernel.h"
-#include "SelectRowsVMatrix.h"
-#include "ShiftAndRescaleVMatrix.h"
+#include <plearn/vmat/SelectRowsVMatrix.h>
+#include <plearn/vmat/ShiftAndRescaleVMatrix.h>
 
 namespace PLearn {
 using namespace std;

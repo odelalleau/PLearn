@@ -37,13 +37,13 @@
  
 
 /* *******************************************************      
-   * $Id: DisplayUtils.cc,v 1.5 2004/02/29 16:44:05 nova77 Exp $
+   * $Id: DisplayUtils.cc,v 1.6 2004/07/21 16:30:51 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "DisplayUtils.h"
-#include "TmpFilenames.h"
+#include <plearn/io/TmpFilenames.h>
 #include <strstream>
 
 #ifdef WIN32

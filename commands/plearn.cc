@@ -33,12 +33,12 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.69 2004/06/15 13:31:53 tihocan Exp $
+   * $Id: plearn.cc,v 1.70 2004/07/21 16:30:49 chrish42 Exp $
    ******************************************************* */
 
 //! All includes should now go into plearn_inc.h.
 #include "plearn_inc.h"
-#include "plearn_main.h"
+#include "PLearnCommands/plearn_main.h"
 
 using namespace PLearn;
 

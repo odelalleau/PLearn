@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: StatsIterator.h,v 1.8 2004/05/14 17:49:13 chrish42 Exp $
+   * $Id: StatsIterator.h,v 1.9 2004/07/21 16:30:53 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,10 +45,10 @@
 #ifndef StatsIterator_INC
 #define StatsIterator_INC
 
-#include "stringutils.h"
-#include "Object.h"
+#include <plearn/base/stringutils.h>
+#include <plearn/base/Object.h>
 #include "Mat.h"
-#include "VMat.h"
+#include <plearn/vmat/VMat.h>
 #include "TMat_maths.h"
 
 namespace PLearn {

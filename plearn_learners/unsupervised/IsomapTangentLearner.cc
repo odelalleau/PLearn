@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: IsomapTangentLearner.cc,v 1.3 2004/07/16 15:24:32 monperrm Exp $ 
+   * $Id: IsomapTangentLearner.cc,v 1.4 2004/07/21 16:30:59 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus
@@ -43,8 +43,8 @@
 
 #include "Isomap.h"
 #include "IsomapTangentLearner.h"
-#include "GeodesicDistanceKernel.h"
-#include "AdditiveNormalizationKernel.h"
+#include <plearn/ker/GeodesicDistanceKernel.h>
+#include <plearn/ker/AdditiveNormalizationKernel.h>
 
 
 namespace PLearn {

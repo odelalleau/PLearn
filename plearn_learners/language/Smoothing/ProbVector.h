@@ -37,7 +37,7 @@
 #ifndef ProbVector_INC
 #define ProbVector_INC
 
-#include "TMat.h"
+#include <plearn/math/TMat.h>
 
 #define DISCOUNT_MASS 0.7
 namespace PLearn {

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: AutoSDBVMatrix.h,v 1.8 2004/07/07 17:29:59 tihocan Exp $
+   * $Id: AutoSDBVMatrix.h,v 1.9 2004/07/21 16:30:51 chrish42 Exp $
    * AUTHOR: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -49,8 +49,8 @@
 
 //#include "general.h"
 #include "SimpleDB.h"
-#include "VMat.h"
-#include "RowBufferedVMatrix.h"
+#include <plearn/vmat/VMat.h>
+#include <plearn/vmat/RowBufferedVMatrix.h>
 //#include <map>
 
 namespace PLearn {

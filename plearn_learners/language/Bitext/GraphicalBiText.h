@@ -1,17 +1,17 @@
-#include "Learner.h"
-#include "WordNetOntology.h"
-#include "random.h"
-#include "TMat_maths.h"
+#include <plearn_learners/generic/Learner.h>
+#include <plearn_learners/language/WordNet/WordNetOntology.h>
+#include <plearn/math/random.h>
+#include <plearn/math/TMat_maths.h>
 #include <time.h>
-#include "ProbSparseMatrix.h"
-#include "SubVMatrix.h"
-#include "TextSenseSequenceVMatrix.h"
-#include "SelectColumnsVMatrix.h"
-#include "DiskVMatrix.h"
-#include "ConcatRowsVMatrix.h"
-#include "SmoothedProbSparseMatrix.h"
-#include "ProbVector.h"
-#include "Splitter.h"
+#include <plearn/math/ProbSparseMatrix.h>
+#include <plearn/vmat/SubVMatrix.h>
+#include <plearn_learners/language/TextSenseSequenceVMatrix.h>
+#include <plearn/vmat/SelectColumnsVMatrix.h>
+#include <plearn/vmat/DiskVMatrix.h>
+#include <plearn/vmat/ConcatRowsVMatrix.h>
+#include <plearn_learners/language/Smoothing/SmoothedProbSparseMatrix.h>
+#include <plearn_learners/language/Smoothing/ProbVector.h>
+#include <plearn/vmat/Splitter.h>
 
 
 #define DISCOUNT_MASS 0.7

@@ -34,8 +34,8 @@
 
 
 #include "EmpiricalDistribution.h"
-#include "random.h"
-#include "VMat_maths.h"
+#include <plearn/math/random.h>
+#include <plearn/vmat/VMat_maths.h>
 
 namespace PLearn {
 using namespace std;

@@ -36,7 +36,7 @@
 
  
 /* *******************************************************      
-   * $Id: TMatRowsAsArraysIterator_decl.h,v 1.1 2004/04/17 00:44:55 plearner Exp $
+   * $Id: TMatRowsAsArraysIterator_decl.h,v 1.2 2004/07/21 16:30:53 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -47,7 +47,7 @@
 #ifndef TMatRowsAsArraysIterator_decl_INC
 #define TMatRowsAsArraysIterator_decl_INC
 
-#include "Array_impl.h"
+#include <plearn/base/Array_impl.h>
 
 namespace PLearn {
 using namespace std;

@@ -34,14 +34,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ClassifierFromDensity.h,v 1.5 2004/06/26 00:24:14 plearner Exp $ 
+   * $Id: ClassifierFromDensity.h,v 1.6 2004/07/21 16:30:55 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file ClassifierFromDensity.h */
 #ifndef ClassifierFromDensity_INC
 #define ClassifierFromDensity_INC
 
-#include "PLearner.h"
+#include <plearn_learners/generic/PLearner.h>
 
 namespace PLearn {
 using namespace std;

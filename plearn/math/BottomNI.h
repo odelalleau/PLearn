@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: BottomNI.h,v 1.3 2004/02/20 21:11:46 chrish42 Exp $
+   * $Id: BottomNI.h,v 1.4 2004/07/21 16:30:53 chrish42 Exp $
    * AUTHORS: Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -48,7 +48,7 @@
 #ifndef BottomNI_INC
 #define BottomNI_INC
 
-#include "general.h"
+#include <plearn/base/general.h>
 #include "TMat.h"
 
 namespace PLearn {

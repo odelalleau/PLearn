@@ -1,7 +1,7 @@
 #ifndef DERIVEDCLASS_INC
 #define DERIVEDCLASS_INC
 
-#include "SourceKernel.h"
+#include <plearn/ker/SourceKernel.h>
 
 namespace PLearn {
 using namespace std;

@@ -35,45 +35,45 @@
 
 
 /* *******************************************************      
- * $Id: NeuralNet.cc,v 1.21 2004/06/26 00:24:15 plearner Exp $
+ * $Id: NeuralNet.cc,v 1.22 2004/07/21 16:30:56 chrish42 Exp $
  ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeuralNet.h */
 
-#include "AffineTransformVariable.h"
-#include "AffineTransformWeightPenalty.h"
-#include "BinaryClassificationLossVariable.h"
-#include "ClassificationLossVariable.h"
-#include "ConcatColumnsVariable.h"
-#include "CrossEntropyVariable.h"
-#include "ExpVariable.h"
-#include "IfThenElseVariable.h"
-#include "LiftOutputVariable.h"
-#include "LogSoftmaxVariable.h"
-#include "MulticlassLossVariable.h"
-#include "NegCrossEntropySigmoidVariable.h"
-#include "OneHotSquaredLoss.h"
-#include "SemiSupervisedProbClassCostVariable.h"
-#include "SigmoidVariable.h"
-#include "SoftmaxVariable.h"
-#include "SoftplusVariable.h"
-#include "SourceVariable.h"
-#include "SubMatVariable.h"
-#include "SumVariable.h"
-#include "SumOfVariable.h"
-#include "SumSquareVariable.h"
-#include "TanhVariable.h"
-#include "TransposeProductVariable.h"
-#include "Var_operators.h"
-#include "Var_utils.h"
-#include "WeightedSumSquareVariable.h"
+#include <plearn/var/AffineTransformVariable.h>
+#include <plearn/var/AffineTransformWeightPenalty.h>
+#include <plearn/var/BinaryClassificationLossVariable.h>
+#include <plearn/var/ClassificationLossVariable.h>
+#include <plearn/var/ConcatColumnsVariable.h>
+#include <plearn/var/CrossEntropyVariable.h>
+#include <plearn/var/ExpVariable.h>
+#include <plearn/var/IfThenElseVariable.h>
+#include <plearn/var/LiftOutputVariable.h>
+#include <plearn/var/LogSoftmaxVariable.h>
+#include <plearn/var/MulticlassLossVariable.h>
+#include <plearn/var/NegCrossEntropySigmoidVariable.h>
+#include <plearn/var/OneHotSquaredLoss.h>
+#include <plearn/var/SemiSupervisedProbClassCostVariable.h>
+#include <plearn/var/SigmoidVariable.h>
+#include <plearn/var/SoftmaxVariable.h>
+#include <plearn/var/SoftplusVariable.h>
+#include <plearn/var/SourceVariable.h>
+#include <plearn/var/SubMatVariable.h>
+#include <plearn/var/SumVariable.h>
+#include <plearn/var/SumOfVariable.h>
+#include <plearn/var/SumSquareVariable.h>
+#include <plearn/var/TanhVariable.h>
+#include <plearn/var/TransposeProductVariable.h>
+#include <plearn/var/Var_operators.h>
+#include <plearn/var/Var_utils.h>
+#include <plearn/var/WeightedSumSquareVariable.h>
 
 #include "NeuralNet.h"
 //#include "DisplayUtils.h"
-#include "random.h"
+#include <plearn/math/random.h>
 //#include "GradientOptimizer.h"
-#include "SemiSupervisedProbClassCostVariable.h"
-#include "IsMissingVariable.h"
+#include <plearn/var/SemiSupervisedProbClassCostVariable.h>
+#include <plearn/var/IsMissingVariable.h>
 
 namespace PLearn {
 using namespace std;

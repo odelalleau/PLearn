@@ -1,7 +1,7 @@
 #ifndef DERIVEDCLASS_INC
 #define DERIVEDCLASS_INC
 
-#include "PDistribution.h"
+#include <plearn_learners/distributions/PDistribution.h>
 
 namespace PLearn {
 using namespace std;

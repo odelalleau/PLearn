@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: Hash.h,v 1.4 2004/05/12 23:06:42 nova77 Exp $
+   * $Id: Hash.h,v 1.5 2004/07/21 16:30:53 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,8 +47,8 @@
 #define MODULE_HASH
 
 #include <cstdlib>
-#include "general.h"
-#include "PP.h"
+#include <plearn/base/general.h>
+#include <plearn/base/PP.h>
 
 namespace PLearn {
 using namespace std;

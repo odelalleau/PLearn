@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: FieldConvertCommand.h,v 1.18 2004/03/26 17:44:53 tihocan Exp $
+ * $Id: FieldConvertCommand.h,v 1.19 2004/07/21 16:30:49 chrish42 Exp $
  ******************************************************* */
 
 #ifndef FieldConvertCommand_INC
@@ -39,7 +39,7 @@
 
 #include "PLearnCommand.h"
 #include "PLearnCommandRegistry.h"
-#include "pl_math.h"    //!< For 'real'.
+#include <plearn/math/pl_math.h>    //!< For 'real'.
 
 namespace PLearn {
 using namespace std;

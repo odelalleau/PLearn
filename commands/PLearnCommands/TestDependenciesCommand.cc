@@ -33,14 +33,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TestDependenciesCommand.cc,v 1.7 2004/02/29 16:44:04 nova77 Exp $ 
+   * $Id: TestDependenciesCommand.cc,v 1.8 2004/07/21 16:30:49 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file TestDependenciesCommand.cc */
 #include "TestDependenciesCommand.h"
-#include "getDataSet.h"
-#include "stats_utils.h"
-#include "VMat_maths.h"
+#include <plearn/db/getDataSet.h>
+#include <plearn/math/stats_utils.h>
+#include <plearn/vmat/VMat_maths.h>
 
 // norman: sorry, no memory check yet!
 #ifdef WIN32
@@ -49,7 +49,7 @@
 #undef min
 #undef max
 #else
-#include "procinfo.h"
+#include <plearn/sys/procinfo.h>
 #endif
 
 namespace PLearn {

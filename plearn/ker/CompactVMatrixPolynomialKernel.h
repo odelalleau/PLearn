@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CompactVMatrixPolynomialKernel.h,v 1.5 2004/04/07 23:15:58 morinf Exp $
+   * $Id: CompactVMatrixPolynomialKernel.h,v 1.6 2004/07/21 16:30:52 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,7 +46,7 @@
 #define CompactVMatrixPolynomialKernel_INC
 
 #include "Kernel.h"
-#include "CompactVMatrix.h"
+#include <plearn/vmat/CompactVMatrix.h>
 
 namespace PLearn {
 using namespace std;

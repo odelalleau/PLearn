@@ -1,7 +1,7 @@
 #ifndef DERIVEDCLASS_INC
 #define DERIVEDCLASS_INC
 
-#include "Splitter.h"
+#include <plearn/vmat/Splitter.h>
 
 namespace PLearn {
 using namespace std;

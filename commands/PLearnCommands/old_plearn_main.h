@@ -33,14 +33,14 @@
 
 
 /* *******************************************************      
-   * $Id: old_plearn_main.h,v 1.2 2004/02/20 21:11:40 chrish42 Exp $
+   * $Id: old_plearn_main.h,v 1.3 2004/07/21 16:30:49 chrish42 Exp $
    ******************************************************* */
 
 #ifndef old_plearn_main_INC
 #define old_plearn_main_INC
 
-#include "general.h"
-#include "TypeFactory.h"
+#include <plearn/base/general.h>
+#include <plearn/base/TypeFactory.h>
 
 namespace PLearn {
 using namespace std;

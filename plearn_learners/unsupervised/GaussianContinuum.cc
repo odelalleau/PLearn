@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussianContinuum.cc,v 1.1 2004/07/19 11:21:57 yoshua Exp $
+   * $Id: GaussianContinuum.cc,v 1.2 2004/07/21 16:30:58 chrish42 Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -42,17 +42,17 @@
 
 
 #include "GaussianContinuum.h"
-#include "LocalNeighborsDifferencesVMatrix.h"
-#include "ProductVariable.h"
-#include "PlusVariable.h"
-#include "Var_operators.h"
-#include "ConcatColumnsVMatrix.h"
-#include "random.h"
-#include "SumOfVariable.h"
-#include "TanhVariable.h"
-#include "DiagonalizedFactorsProductVariable.h"
-#include "random.h"
-#include "plapack.h"
+#include <plearn/vmat/LocalNeighborsDifferencesVMatrix.h>
+#include <plearn/var/ProductVariable.h>
+#include <plearn/var/PlusVariable.h>
+#include <plearn/var/Var_operators.h>
+#include <plearn/vmat/ConcatColumnsVMatrix.h>
+#include <plearn/math/random.h>
+#include <plearn/var/SumOfVariable.h>
+#include <plearn/var/TanhVariable.h>
+#include <plearn/var/DiagonalizedFactorsProductVariable.h>
+#include <plearn/math/random.h>
+#include <plearn/math/plapack.h>
 
 namespace PLearn {
 using namespace std;

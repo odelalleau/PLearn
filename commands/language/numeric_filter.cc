@@ -1,5 +1,5 @@
-#include "general.h"
-#include "TypesNumeriques.h"
+#include <plearn/base/general.h>
+#include <plearn/io/TypesNumeriques.h>
 
 using namespace PLearn;
 

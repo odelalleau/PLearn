@@ -32,14 +32,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: ShellProgressBar.cc,v 1.2 2004/04/05 13:19:57 tihocan Exp $
+ * $Id: ShellProgressBar.cc,v 1.3 2004/07/21 16:30:56 chrish42 Exp $
 ******************************************************* */
 
 
 #include "ShellProgressBar.h"
-#include "stringutils.h" 
+#include <plearn/base/stringutils.h> 
 #include <fstream>
-#include "Popen.h" //!< For execute.
+#include <plearn/sys/Popen.h> //!< For execute.
 
 namespace PLearn {
 using namespace std;

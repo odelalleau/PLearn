@@ -34,14 +34,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: random.cc,v 1.7 2004/04/12 00:36:28 yoshua Exp $
+   * $Id: random.cc,v 1.8 2004/07/21 16:30:53 chrish42 Exp $
    ******************************************************* */
 
 extern "C" {
 #include <ctime>
 }
 
-#include "general.h"
+#include <plearn/base/general.h>
 #include "random.h"
 
 namespace PLearn {

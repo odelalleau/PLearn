@@ -33,38 +33,38 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.44 2004/06/01 13:19:58 tihocan Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.45 2004/07/21 16:30:55 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
 
 /*! \file ConditionalDensityNet.cc */
 
-#include "AffineTransformVariable.h"
-#include "AffineTransformWeightPenalty.h"
+#include <plearn/var/AffineTransformVariable.h>
+#include <plearn/var/AffineTransformWeightPenalty.h>
 #include "ConditionalDensityNet.h"
-#include "ConcatColumnsVariable.h"
-#include "ConcatRowsVariable.h"
-#include "CutBelowThresholdVariable.h"
-#include "DisplayUtils.h"
-#include "DotProductVariable.h"
-#include "IfThenElseVariable.h"
-#include "IsAboveThresholdVariable.h"
-#include "LogVariable.h"
+#include <plearn/var/ConcatColumnsVariable.h>
+#include <plearn/var/ConcatRowsVariable.h>
+#include <plearn/var/CutBelowThresholdVariable.h>
+#include <plearn/display/DisplayUtils.h>
+#include <plearn/var/DotProductVariable.h>
+#include <plearn/var/IfThenElseVariable.h>
+#include <plearn/var/IsAboveThresholdVariable.h>
+#include <plearn/var/LogVariable.h>
 //#include "DilogarithmVariable.h"
-#include "SoftSlopeVariable.h"
-#include "SoftSlopeIntegralVariable.h"
+#include <plearn/var/SoftSlopeVariable.h>
+#include <plearn/var/SoftSlopeIntegralVariable.h>
 //#include "plapack.h"
-#include "SoftplusVariable.h"
-#include "SubMatTransposeVariable.h"
-#include "SubMatVariable.h"
-#include "SumAbsVariable.h"
-#include "SumOfVariable.h"
-#include "SumSquareVariable.h"
-#include "SumVariable.h"
-#include "TanhVariable.h"
-#include "TransposeProductVariable.h"
-#include "random.h"
+#include <plearn/var/SoftplusVariable.h>
+#include <plearn/var/SubMatTransposeVariable.h>
+#include <plearn/var/SubMatVariable.h>
+#include <plearn/var/SumAbsVariable.h>
+#include <plearn/var/SumOfVariable.h>
+#include <plearn/var/SumSquareVariable.h>
+#include <plearn/var/SumVariable.h>
+#include <plearn/var/TanhVariable.h>
+#include <plearn/var/TransposeProductVariable.h>
+#include <plearn/math/random.h>
 
 namespace PLearn {
 using namespace std;

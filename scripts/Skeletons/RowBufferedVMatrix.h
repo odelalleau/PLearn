@@ -1,7 +1,7 @@
 #ifndef DERIVEDCLASS_INC
 #define DERIVEDCLASS_INC
 
-#include "RowBufferedVMatrix.h"
+#include <plearn/vmat/RowBufferedVMatrix.h>
 
 namespace PLearn {
 using namespace std;

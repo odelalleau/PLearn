@@ -34,12 +34,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SpiralDistribution.cc,v 1.9 2004/06/26 00:24:15 plearner Exp $ 
+   * $Id: SpiralDistribution.cc,v 1.10 2004/07/21 16:30:56 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file SpiralDistribution.cc */
 #include "SpiralDistribution.h"
-#include "random.h"
+#include <plearn/math/random.h>
 
 namespace PLearn {
 using namespace std;

@@ -33,12 +33,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyWeightedDistribution.cc,v 1.7 2004/06/26 00:24:15 plearner Exp $ 
+   * $Id: LocallyWeightedDistribution.cc,v 1.8 2004/07/21 16:30:55 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file LocallyWeightedDistribution.cc */
 #include "LocallyWeightedDistribution.h"
-#include "ConcatColumnsVMatrix.h"
+#include <plearn/vmat/ConcatColumnsVMatrix.h>
 
 namespace PLearn {
 using namespace std;

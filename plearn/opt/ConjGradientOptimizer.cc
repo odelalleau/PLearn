@@ -36,12 +36,12 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.54 2004/06/01 13:14:25 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.55 2004/07/21 16:30:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "ConjGradientOptimizer.h"
-#include "TMat_maths_impl.h"
+#include <plearn/math/TMat_maths_impl.h>
 
 namespace PLearn {
 using namespace std;

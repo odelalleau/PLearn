@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: general.h,v 1.14 2004/03/26 19:38:23 ducharme Exp $
+   * $Id: general.h,v 1.15 2004/07/21 16:30:50 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -83,9 +83,9 @@
 #endif
 
 //#include "plerror.h"
-#include "pl_math.h"
+#include <plearn/math/pl_math.h>
 //#include "pl_io.h"
-#include "pl_io_deprecated.h"
+#include <plearn/io/pl_io_deprecated.h>
 //#include "plstreams.h"
 //#include "stringutils.h"
 //#include "pl_hash_fun.h"

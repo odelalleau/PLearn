@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: VVec.h,v 1.11 2004/04/05 23:11:33 morinf Exp $
+   * $Id: VVec.h,v 1.12 2004/07/21 16:30:55 chrish42 Exp $
    ******************************************************* */
 
 
@@ -44,7 +44,7 @@
 #ifndef VVec_INC
 #define VVec_INC
 
-#include "Object.h"
+#include <plearn/base/Object.h>
 #include "VMatrix.h"
 
 namespace PLearn {

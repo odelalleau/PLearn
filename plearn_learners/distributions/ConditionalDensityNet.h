@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.33 2004/06/21 14:53:30 tihocan Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.34 2004/07/21 16:30:55 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -45,7 +45,7 @@
 #define ConditionalDensityNet_INC
 
 #include "PDistribution.h"
-#include "Optimizer.h"
+#include <plearn/opt/Optimizer.h>
 
 namespace PLearn {
 using namespace std;

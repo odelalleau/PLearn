@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UCISpecification.h,v 1.2 2004/07/14 22:37:28 mariusmuja Exp $ 
+   * $Id: UCISpecification.h,v 1.3 2004/07/21 16:30:51 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -44,7 +44,7 @@
 #ifndef UCISpecification_INC
 #define UCISpecification_INC
 
-#include "Object.h"
+#include <plearn/base/Object.h>
 
 namespace PLearn {
 using namespace std;

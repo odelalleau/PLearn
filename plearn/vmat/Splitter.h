@@ -33,15 +33,15 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Splitter.h,v 1.9 2004/04/26 13:09:13 tihocan Exp $ 
+   * $Id: Splitter.h,v 1.10 2004/07/21 16:30:55 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file Splitter.h */
 #ifndef Splitter_INC
 #define Splitter_INC
 
-#include "Object.h"
-#include "Array.h"
+#include <plearn/base/Object.h>
+#include <plearn/base/Array.h>
 #include "VMat.h"
 
 namespace PLearn {

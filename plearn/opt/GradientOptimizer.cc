@@ -37,14 +37,14 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.cc,v 1.31 2004/06/26 00:24:14 plearner Exp $
+   * $Id: GradientOptimizer.cc,v 1.32 2004/07/21 16:30:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "GradientOptimizer.h"
-#include "TMat_maths.h"
-#include "DisplayUtils.h"
-#include "SumOfVariable.h"
+#include <plearn/math/TMat_maths.h>
+#include <plearn/display/DisplayUtils.h>
+#include <plearn/var/SumOfVariable.h>
 
 namespace PLearn {
 using namespace std;

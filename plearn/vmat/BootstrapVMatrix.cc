@@ -33,12 +33,12 @@
 
 
 /* *******************************************************      
-   * $Id: BootstrapVMatrix.cc,v 1.8 2004/06/10 20:09:20 tihocan Exp $
+   * $Id: BootstrapVMatrix.cc,v 1.9 2004/07/21 16:30:55 chrish42 Exp $
    ******************************************************* */
 
 #include "BootstrapVMatrix.h"
-#include "random.h"
-#include "TMat_sort.h"
+#include <plearn/math/random.h>
+#include <plearn/math/TMat_sort.h>
 
 namespace PLearn {
 using namespace std;

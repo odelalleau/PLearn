@@ -34,14 +34,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConstantRegressor.h,v 1.6 2004/03/09 22:20:54 chapados Exp $ 
+   * $Id: ConstantRegressor.h,v 1.7 2004/07/21 16:30:58 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file ConstantRegressor.h */
 #ifndef ConstantRegressor_INC
 #define ConstantRegressor_INC
 
-#include "PLearner.h"
+#include <plearn_learners/generic/PLearner.h>
 
 namespace PLearn {
 using namespace std;

@@ -34,13 +34,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: JulianizeVMatrix.cc,v 1.8 2004/07/16 01:08:16 plearner Exp $ 
+   * $Id: JulianizeVMatrix.cc,v 1.9 2004/07/21 16:30:55 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file JulianizeVMatrix.cc */
 #include "JulianizeVMatrix.h"
-#include "PDate.h"
-#include "PDateTime.h"
+#include <plearn/base/PDate.h>
+#include <plearn/base/PDateTime.h>
 
 namespace PLearn {
 using namespace std;

@@ -38,7 +38,7 @@
 #define SPARSEMATRIX
 
 #include "Mat.h"
-#include "Array.h"
+#include <plearn/base/Array.h>
 
 namespace PLearn {
 using namespace std;

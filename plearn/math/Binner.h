@@ -37,16 +37,16 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Binner.h,v 1.6 2004/06/26 00:24:14 plearner Exp $ 
+   * $Id: Binner.h,v 1.7 2004/07/21 16:30:53 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file Binner.h */
 #ifndef Binner_INC
 #define Binner_INC
 
-#include "Object.h"
-#include "VMat.h"
-#include "RealMapping.h"
+#include <plearn/base/Object.h>
+#include <plearn/vmat/VMat.h>
+#include <plearn/base/RealMapping.h>
 
 namespace PLearn {
 using namespace std;

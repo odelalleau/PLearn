@@ -38,12 +38,12 @@
  
 
 /* *******************************************************      
-   * $Id: AdaptGradientOptimizer.cc,v 1.17 2004/04/21 14:47:48 tihocan Exp $
+   * $Id: AdaptGradientOptimizer.cc,v 1.18 2004/07/21 16:30:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "AdaptGradientOptimizer.h"
-#include "SumOfVariable.h"
+#include <plearn/var/SumOfVariable.h>
 
 namespace PLearn {
 using namespace std;

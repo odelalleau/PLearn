@@ -33,12 +33,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RepeatSplitter.cc,v 1.8 2004/04/28 18:42:49 tihocan Exp $ 
+   * $Id: RepeatSplitter.cc,v 1.9 2004/07/21 16:30:55 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file RepeatSplitter.cc */
 
-#include "random.h"
+#include <plearn/math/random.h>
 #include "RepeatSplitter.h"
 #include "SelectRowsVMatrix.h"
 

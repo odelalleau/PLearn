@@ -32,11 +32,11 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ObjectGenerator.h,v 1.3 2004/06/22 18:27:48 ducharme Exp $
+   * $Id: ObjectGenerator.h,v 1.4 2004/07/21 16:30:53 chrish42 Exp $
    ******************************************************* */
 
-#include "Object.h"
-#include "TVec.h"
+#include <plearn/base/Object.h>
+#include <plearn/math/TVec.h>
 
 #ifndef ObjectGenerator_INC
 #define ObjectGenerator_INC

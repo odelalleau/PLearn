@@ -36,9 +36,9 @@
 
 
 #include "EmbeddedSequentialLearner.h"
-#include "TemporalHorizonVMatrix.h"
-#include "TmpFilenames.h"
-#include "VMat_maths.h"
+#include <plearn/vmat/TemporalHorizonVMatrix.h>
+#include <plearn/io/TmpFilenames.h>
+#include <plearn/vmat/VMat_maths.h>
 
 namespace PLearn {
 using namespace std;

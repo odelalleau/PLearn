@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HistogramDistribution.h,v 1.11 2004/02/20 21:14:46 chrish42 Exp $ 
+   * $Id: HistogramDistribution.h,v 1.12 2004/07/21 16:30:55 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file HistogramDistribution.h */
@@ -41,8 +41,8 @@
 #define HistogramDistribution_INC
 
 #include "PDistribution.h"
-#include "Binner.h"
-#include "Smoother.h"
+#include <plearn/math/Binner.h>
+#include <plearn/math/Smoother.h>
 
 namespace PLearn {
 using namespace std;

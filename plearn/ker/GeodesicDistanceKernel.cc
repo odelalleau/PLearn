@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GeodesicDistanceKernel.cc,v 1.5 2004/07/19 13:25:54 tihocan Exp $ 
+   * $Id: GeodesicDistanceKernel.cc,v 1.6 2004/07/21 16:30:52 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -42,7 +42,7 @@
 
 
 #include "DistanceKernel.h"
-#include "FileVMatrix.h"
+#include <plearn/vmat/FileVMatrix.h>
 #include "GeodesicDistanceKernel.h"
 
 namespace PLearn {

@@ -37,37 +37,37 @@
  
 
 /* *******************************************************      
-   * $Id: RandomVar.cc,v 1.6 2004/07/06 15:53:16 tihocan Exp $
+   * $Id: RandomVar.cc,v 1.7 2004/07/21 16:30:54 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
 
 
 /** RandomVar **/
-#include "AbsVariable.h"
-#include "ConcatColumnsVariable.h"
-#include "ConcatRowsVariable.h"
-#include "DeterminantVariable.h"
-#include "EqualVariable.h"
-#include "ExpVariable.h"
-#include "ExtendedVariable.h"
-#include "LeftPseudoInverseVariable.h"
-#include "LogSumVariable.h"
-#include "LogVariable.h"
-#include "MatrixSumOfVariable.h"
-#include "PowVariable.h"
-#include "ProductVariable.h"
-#include "RightPseudoInverseVariable.h"
-#include "SoftmaxVariable.h"
-#include "SumOfVariable.h"
-#include "SumVariable.h"
+#include <plearn/var/AbsVariable.h>
+#include <plearn/var/ConcatColumnsVariable.h>
+#include <plearn/var/ConcatRowsVariable.h>
+#include <plearn/var/DeterminantVariable.h>
+#include <plearn/var/EqualVariable.h>
+#include <plearn/var/ExpVariable.h>
+#include <plearn/var/ExtendedVariable.h>
+#include <plearn/var/LeftPseudoInverseVariable.h>
+#include <plearn/var/LogSumVariable.h>
+#include <plearn/var/LogVariable.h>
+#include <plearn/var/MatrixSumOfVariable.h>
+#include <plearn/var/PowVariable.h>
+#include <plearn/var/ProductVariable.h>
+#include <plearn/var/RightPseudoInverseVariable.h>
+#include <plearn/var/SoftmaxVariable.h>
+#include <plearn/var/SumOfVariable.h>
+#include <plearn/var/SumVariable.h>
 
-#include "general.h"
+#include <plearn/base/general.h>
 #include "RandomVar.h"
 //#include "NaryVariable.h"
 //#include "ConjugateGradientOptimizer.h" // Not in the PLearn CVS repository.
-#include "plapack.h"
-#include "Var_operators.h"
+#include <plearn/math/plapack.h>
+#include <plearn/var/Var_operators.h>
 //#include <cmath>
 
 namespace PLearn {

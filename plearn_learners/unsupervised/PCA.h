@@ -33,14 +33,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PCA.h,v 1.7 2004/07/14 00:24:28 dorionc Exp $ 
+   * $Id: PCA.h,v 1.8 2004/07/21 16:30:59 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file PCA.h */
 #ifndef PCA_INC
 #define PCA_INC
 
-#include "PLearner.h"
+#include <plearn_learners/generic/PLearner.h>
 
 namespace PLearn {
 using namespace std;

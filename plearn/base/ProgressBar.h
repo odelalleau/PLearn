@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: ProgressBar.h,v 1.7 2004/07/13 20:59:05 tihocan Exp $
+   * $Id: ProgressBar.h,v 1.8 2004/07/21 16:30:50 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -54,7 +54,7 @@
 #include <string>
 //#include <iostream>
 #include "PP.h"
-#include "PStream.h"
+#include <plearn/io/PStream.h>
 
 
 namespace PLearn {

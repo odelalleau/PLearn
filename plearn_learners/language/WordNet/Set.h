@@ -1,7 +1,7 @@
 #ifndef Set_H
 #define Set_H
 
-#include "TMat.h"
+#include <plearn/math/TMat.h>
 
 namespace PLearn {
 using namespace std;

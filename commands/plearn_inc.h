@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.22 2004/07/20 13:08:30 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.23 2004/07/21 16:30:49 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -48,128 +48,128 @@
 /*****************
  * Miscellaneous *
  *****************/
-#include "Grapher.h"
-#include "ShellScript.h"
-#include "RunObject.h"
-#include "UCISpecification.h"
-#include "PTester.h"
+#include <plearn_learners/misc/Grapher.h>
+#include <plearn/misc/ShellScript.h>
+#include <plearn/misc/RunObject.h>
+#include <plearn/db/UCISpecification.h>
+#include <plearn_learners/testers/PTester.h>
 
 /***********
  * Command *
  ***********/
-#include "AutoRunCommand.h"
-#include "FieldConvertCommand.h"
-#include "HelpCommand.h"
-#include "JulianDateCommand.h"
-#include "KolmogorovSmirnovCommand.h"
-#include "LearnerCommand.h"
-#include "ReadAndWriteCommand.h"
-#include "RunCommand.h"
-#include "TestDependenciesCommand.h"
-#include "TestDependencyCommand.h"
-#include "VMatCommand.h"
+#include "PLearnCommands/AutoRunCommand.h"
+#include "PLearnCommands/FieldConvertCommand.h"
+#include "PLearnCommands/HelpCommand.h"
+#include "PLearnCommands/JulianDateCommand.h"
+#include "PLearnCommands/KolmogorovSmirnovCommand.h"
+#include "PLearnCommands/LearnerCommand.h"
+#include "PLearnCommands/ReadAndWriteCommand.h"
+#include "PLearnCommands/RunCommand.h"
+#include "PLearnCommands/TestDependenciesCommand.h"
+#include "PLearnCommands/TestDependencyCommand.h"
+#include "PLearnCommands/VMatCommand.h"
 
 /**********
  * Kernel *
  **********/
-#include "AdditiveNormalizationKernel.h"
-#include "DotProductKernel.h"
-#include "GaussianKernel.h"
-#include "GeodesicDistanceKernel.h"
-#include "LLEKernel.h"
-#include "NegOutputCostFunction.h"
-#include "ReconstructionWeightsKernel.h"
+#include <plearn/ker/AdditiveNormalizationKernel.h>
+#include <plearn/ker/DotProductKernel.h>
+#include <plearn/ker/GaussianKernel.h>
+#include <plearn/ker/GeodesicDistanceKernel.h>
+#include <plearn/ker/LLEKernel.h>
+#include <plearn/ker/NegOutputCostFunction.h>
+#include <plearn/ker/ReconstructionWeightsKernel.h>
 
 /*************
  * Optimizer *
  *************/
-#include "AdaptGradientOptimizer.h"
-#include "ConjGradientOptimizer.h"
-#include "GradientOptimizer.h"
+#include <plearn/opt/AdaptGradientOptimizer.h>
+#include <plearn/opt/ConjGradientOptimizer.h>
+#include <plearn/opt/GradientOptimizer.h>
 
 /************
  * PLearner *
  ************/
-#include "AddCostToLearner.h"
-#include "ClassifierFromDensity.h"
-#include "ConstantRegressor.h"
-#include "LinearRegressor.h"
-#include "MultiInstanceNNet.h"
-#include "NNet.h"
-#include "PCA.h"
-#include "PLS.h"
-#include "StackedLearner.h"
-#include "TestingLearner.h"
+#include <plearn_learners/generic/AddCostToLearner.h>
+#include <plearn_learners/classifiers/ClassifierFromDensity.h>
+#include <plearn_learners/regressors/ConstantRegressor.h>
+#include <plearn_learners/regressors/LinearRegressor.h>
+#include <plearn_learners/classifiers/MultiInstanceNNet.h>
+#include <plearn_learners/generic/NNet.h>
+#include <plearn_learners/unsupervised/PCA.h>
+#include <plearn_learners/regressors/PLS.h>
+#include <plearn_learners/generic/StackedLearner.h>
+#include <plearn_learners/generic/TestingLearner.h>
 // Distribution (deprecated)
-#include "LocallyWeightedDistribution.h"
+#include <plearn_learners/distributions/LocallyWeightedDistribution.h>
 // EmbeddedLearner
-#include "SelectInputSubsetLearner.h"
+#include <plearn_learners/generic/SelectInputSubsetLearner.h>
 // KernelProjection
-#include "Isomap.h"
-#include "KernelPCA.h"
-#include "LLE.h"
-#include "SpectralClustering.h"
+#include <plearn_learners/unsupervised/Isomap.h>
+#include <plearn_learners/unsupervised/KernelPCA.h>
+#include <plearn_learners/unsupervised/LLE.h>
+#include <plearn_learners/unsupervised/SpectralClustering.h>
 // PDistribution
-#include "ConditionalDensityNet.h"
-#include "GaussianDistribution.h"
-#include "ManifoldParzen2.h"
-#include "SpiralDistribution.h"
-#include "UniformDistribution.h"
+#include <plearn_learners/distributions/ConditionalDensityNet.h>
+#include <plearn_learners/distributions/GaussianDistribution.h>
+#include <plearn_learners/distributions/ManifoldParzen2.h>
+#include <plearn_learners/distributions/SpiralDistribution.h>
+#include <plearn_learners/distributions/UniformDistribution.h>
 
 /************
  * Splitter *
  ************/
-#include "DBSplitter.h"
-#include "ExplicitSplitter.h"
-#include "FilterSplitter.h"
-#include "FractionSplitter.h"
-#include "KFoldSplitter.h"
-#include "RepeatSplitter.h"
-#include "SourceVMatrixSplitter.h"
-#include "TestInTrainSplitter.h"
-#include "ToBagSplitter.h"
-#include "TrainTestSplitter.h"
-#include "TrainValidTestSplitter.h"
+#include <plearn/vmat/DBSplitter.h>
+#include <plearn/vmat/ExplicitSplitter.h>
+#include <plearn/vmat/FilterSplitter.h>
+#include <plearn/vmat/FractionSplitter.h>
+#include <plearn/vmat/KFoldSplitter.h>
+#include <plearn/vmat/RepeatSplitter.h>
+#include <plearn/vmat/SourceVMatrixSplitter.h>
+#include <plearn/vmat/TestInTrainSplitter.h>
+#include <plearn/vmat/ToBagSplitter.h>
+#include <plearn/vmat/TrainTestSplitter.h>
+#include <plearn/vmat/TrainValidTestSplitter.h>
 
 /*********************
  * VecStatsCollector *
  *********************/
-#include "LiftStatsCollector.h"
+#include <plearn/math/LiftStatsCollector.h>
 
 /***********
  * VMatrix *
  ***********/
-#include "AsciiVMatrix.h"
-#include "AutoVMatrix.h"
-#include "BatchVMatrix.h"
-#include "BootstrapVMatrix.h"
-#include "CenteredVMatrix.h"
-#include "CompactVMatrix.h"
-#include "CompressedVMatrix.h"
-#include "CumVMatrix.h"
-#include "DatedJoinVMatrix.h"
-#include "FilteredVMatrix.h"
-#include "FinancePreprocVMatrix.h"
-#include "GeneralizedOneHotVMatrix.h"
-#include "GetInputVMatrix.h"
-#include "GramVMatrix.h"
-#include "IndexedVMatrix.h"
-#include "JulianizeVMatrix.h"
-#include "KNNVMatrix.h"
-#include "LocalNeighborsDifferencesVMatrix.h"
-#include "MultiInstanceVMatrix.h"
-#include "OneHotVMatrix.h"
-#include "PairsVMatrix.h"
-#include "PrecomputedVMatrix.h"
-#include "ProcessingVMatrix.h"
-#include "RegularGridVMatrix.h"
-#include "SortRowsVMatrix.h"
-#include "SparseVMatrix.h"
-#include "SubInputVMatrix.h"
-#include "TextSenseSequenceVMatrix.h"
-#include "ThresholdVMatrix.h"
-#include "TransposeVMatrix.h"
-#include "VMatrixFromDistribution.h"
+#include <plearn/vmat/AsciiVMatrix.h>
+#include <plearn/vmat/AutoVMatrix.h>
+#include <plearn/vmat/BatchVMatrix.h>
+#include <plearn/vmat/BootstrapVMatrix.h>
+#include <plearn/vmat/CenteredVMatrix.h>
+#include <plearn/vmat/CompactVMatrix.h>
+#include <plearn/vmat/CompressedVMatrix.h>
+#include <plearn/vmat/CumVMatrix.h>
+#include <plearn/vmat/DatedJoinVMatrix.h>
+#include <plearn/vmat/FilteredVMatrix.h>
+#include <plearn/vmat/FinancePreprocVMatrix.h>
+#include <plearn/vmat/GeneralizedOneHotVMatrix.h>
+#include <plearn/vmat/GetInputVMatrix.h>
+#include <plearn/vmat/GramVMatrix.h>
+#include <plearn/vmat/IndexedVMatrix.h>
+#include <plearn/vmat/JulianizeVMatrix.h>
+#include <plearn/vmat/KNNVMatrix.h>
+#include <plearn/vmat/LocalNeighborsDifferencesVMatrix.h>
+#include <plearn/vmat/MultiInstanceVMatrix.h>
+#include <plearn/vmat/OneHotVMatrix.h>
+#include <plearn/vmat/PairsVMatrix.h>
+#include <plearn/vmat/PrecomputedVMatrix.h>
+#include <plearn/vmat/ProcessingVMatrix.h>
+#include <plearn/vmat/RegularGridVMatrix.h>
+#include <plearn/vmat/SortRowsVMatrix.h>
+#include <plearn/vmat/SparseVMatrix.h>
+#include <plearn/vmat/SubInputVMatrix.h>
+//#include <plearn_learners/language/TextSenseSequenceVMatrix.h>
+#include <plearn/vmat/ThresholdVMatrix.h>
+#include <plearn/vmat/TransposeVMatrix.h>
+#include <plearn/vmat/VMatrixFromDistribution.h>
 
 #endif
 

@@ -36,14 +36,14 @@
 
 
 /* *******************************************************      
-   * $Id: KernelVMatrix.h,v 1.2 2004/04/05 22:57:33 morinf Exp $
+   * $Id: KernelVMatrix.h,v 1.3 2004/07/21 16:30:55 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #ifndef KernelVMatrix_INC
 #define KernelVMatrix_INC
 
-#include "Kernel.h"
+#include <plearn/ker/Kernel.h>
 #include "VMatrix.h"
 
 namespace PLearn {

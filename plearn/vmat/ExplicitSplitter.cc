@@ -33,12 +33,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ExplicitSplitter.cc,v 1.8 2004/04/15 21:27:50 lheureup Exp $ 
+   * $Id: ExplicitSplitter.cc,v 1.9 2004/07/21 16:30:55 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file ExplicitSplitter.cc */
 #include "ExplicitSplitter.h"
-#include "getDataSet.h"
+#include <plearn/db/getDataSet.h>
 
 namespace PLearn {
 using namespace std;

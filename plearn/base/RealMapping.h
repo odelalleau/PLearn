@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: RealMapping.h,v 1.18 2004/02/28 17:54:35 tihocan Exp $
+   * $Id: RealMapping.h,v 1.19 2004/07/21 16:30:50 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -43,7 +43,7 @@
 
 //#include "general.h"
 #include "Object.h"
-#include "TMat.h"
+#include <plearn/math/TMat.h>
 #include <map>
 
 namespace PLearn {

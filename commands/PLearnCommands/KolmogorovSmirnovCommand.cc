@@ -33,13 +33,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KolmogorovSmirnovCommand.cc,v 1.2 2004/02/20 21:11:40 chrish42 Exp $ 
+   * $Id: KolmogorovSmirnovCommand.cc,v 1.3 2004/07/21 16:30:49 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file KolmogorovSmirnovCommand.cc */
 #include "KolmogorovSmirnovCommand.h"
-#include "getDataSet.h"
-#include "stats_utils.h"
+#include <plearn/db/getDataSet.h>
+#include <plearn/math/stats_utils.h>
 
 namespace PLearn {
 using namespace std;

@@ -32,14 +32,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: ShellProgressBar.h,v 1.3 2004/04/05 13:22:21 tihocan Exp $
+ * $Id: ShellProgressBar.h,v 1.4 2004/07/21 16:30:56 chrish42 Exp $
 ******************************************************* */
 
 
 #ifndef ShellProgressBar_H
 #define ShellProgressBar_H
 #include <string>
-#include "pl_math.h" //!< For real.
+#include <plearn/math/pl_math.h> //!< For real.
 
 namespace PLearn {
 using namespace std;

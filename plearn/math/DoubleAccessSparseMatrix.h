@@ -37,7 +37,7 @@
 #ifndef DoubleAccessSparseMatrix_INC
 #define DoubleAccessSparseMatrix_INC
 
-#include "general.h"
+#include <plearn/base/general.h>
 
 namespace PLearn {
 using namespace std;

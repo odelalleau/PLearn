@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianDistribution.cc,v 1.9 2004/05/26 16:06:48 tihocan Exp $
+   * $Id: GaussianDistribution.cc,v 1.10 2004/07/21 16:30:55 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,10 +44,10 @@
 
 #include "GaussianDistribution.h"
 //#include "fileutils.h"
-#include "VMat_maths.h"
-#include "plapack.h"
-#include "distr_maths.h"
-#include "random.h"
+#include <plearn/vmat/VMat_maths.h>
+#include <plearn/math/plapack.h>
+#include <plearn/math/distr_maths.h>
+#include <plearn/math/random.h>
 
 namespace PLearn {
 using namespace std;

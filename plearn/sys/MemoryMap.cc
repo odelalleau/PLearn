@@ -7,7 +7,7 @@
 
 
 #include "MemoryMap.h"
-#include "general.h"
+#include <plearn/base/general.h>
 #include <fcntl.h>
 
 
@@ -31,7 +31,7 @@
 #endif 
 //
 
-#include "general.h"
+#include <plearn/base/general.h>
 
 //#include <sys/stat.h>
 

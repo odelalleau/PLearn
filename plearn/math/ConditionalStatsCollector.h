@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalStatsCollector.h,v 1.5 2004/03/02 22:48:00 plearner Exp $ 
+   * $Id: ConditionalStatsCollector.h,v 1.6 2004/07/21 16:30:53 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -44,9 +44,9 @@
 #ifndef ConditionalStatsCollector_INC
 #define ConditionalStatsCollector_INC
 
-#include "Object.h"
+#include <plearn/base/Object.h>
 #include "TMat.h"
-#include "RealMapping.h"
+#include <plearn/base/RealMapping.h>
 
 namespace PLearn {
 using namespace std;

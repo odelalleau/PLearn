@@ -36,13 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedSumOfVariable.cc,v 1.7 2004/04/27 16:05:33 morinf Exp $
+   * $Id: UnfoldedSumOfVariable.cc,v 1.8 2004/07/21 16:30:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "UnfoldedSumOfVariable.h"
-#include "PLMPI.h"
-#include "DisplayUtils.h"
+#include <plearn/sys/PLMPI.h>
+#include <plearn/display/DisplayUtils.h>
 
 namespace PLearn {
 using namespace std;

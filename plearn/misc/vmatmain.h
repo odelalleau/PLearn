@@ -32,11 +32,11 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.h,v 1.5 2004/07/16 13:09:41 tihocan Exp $
+   * $Id: vmatmain.h,v 1.6 2004/07/21 16:30:53 chrish42 Exp $
    ******************************************************* */
 
-#include "Array.h"
-#include "VMat.h"
+#include <plearn/base/Array.h>
+#include <plearn/vmat/VMat.h>
 
 namespace PLearn {
 using namespace std;

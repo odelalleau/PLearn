@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.cc,v 1.16 2004/07/21 15:59:22 tihocan Exp $ 
+   * $Id: KernelProjection.cc,v 1.17 2004/07/21 16:30:59 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -42,7 +42,7 @@
 
 #include <time.h>               //!< For clock().
 #include "KernelProjection.h"
-#include "plapack.h"            //!< For eigenVecOfSymmMat.
+#include <plearn/math/plapack.h>            //!< For eigenVecOfSymmMat.
 
 namespace PLearn {
 using namespace std;

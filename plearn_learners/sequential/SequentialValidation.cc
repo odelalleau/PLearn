@@ -36,10 +36,10 @@
 
 
 #include "SequentialValidation.h"
-#include "VecStatsCollector.h"
+#include <plearn/math/VecStatsCollector.h>
 //#include "AsciiVMatrix.h"
-#include "FileVMatrix.h"
-#include "PTester.h"  // for using class StatSpec
+#include <plearn/vmat/FileVMatrix.h>
+#include <plearn_learners/testers/PTester.h>  // for using class StatSpec
 
 namespace PLearn {
 using namespace std;

@@ -1,8 +1,8 @@
 #ifndef DERIVEDCLASS_INC
 #define DERIVEDCLASS_INC
 
-#include "PLearnCommand.h"
-#include "PLearnCommandRegistry.h"
+#include <commands/PLearnCommands/PLearnCommand.h>
+#include <commands/PLearnCommands/PLearnCommandRegistry.h>
 
 namespace PLearn {
 using namespace std;

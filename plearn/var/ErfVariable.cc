@@ -36,13 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: ErfVariable.cc,v 1.6 2004/04/27 16:02:26 morinf Exp $
+   * $Id: ErfVariable.cc,v 1.7 2004/07/21 16:30:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "ErfVariable.h"
 #include "ExpVariable.h"
-#include "pl_erf.h"
+#include <plearn/math/pl_erf.h>
 #include "Var_operators.h"
 //#include "Var_utils.h"
 

@@ -36,13 +36,13 @@
  
 
 /* *******************************************************      
- * $Id: AutoVMatrix.cc,v 1.8 2004/05/14 17:49:13 chrish42 Exp $
+ * $Id: AutoVMatrix.cc,v 1.9 2004/07/21 16:30:55 chrish42 Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
 
 #include "AutoVMatrix.h"
-#include "getDataSet.h"
+#include <plearn/db/getDataSet.h>
 
 namespace PLearn {
 using namespace std;

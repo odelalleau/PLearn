@@ -34,17 +34,17 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.39 2004/06/01 13:18:17 tihocan Exp $ 
+ * $Id: GaussMix.cc,v 1.40 2004/07/21 16:30:55 chrish42 Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
-#include "ConcatColumnsVMatrix.h"
+#include <plearn/vmat/ConcatColumnsVMatrix.h>
 #include "GaussMix.h"
-#include "pl_erf.h"   //!< For gauss_log_density_stddev().
-#include "plapack.h"
-#include "random.h"
-#include "SubVMatrix.h"
-#include "VMat_maths.h"
+#include <plearn/math/pl_erf.h>   //!< For gauss_log_density_stddev().
+#include <plearn/math/plapack.h>
+#include <plearn/math/random.h>
+#include <plearn/vmat/SubVMatrix.h>
+#include <plearn/vmat/VMat_maths.h>
 
 namespace PLearn {
 using namespace std;

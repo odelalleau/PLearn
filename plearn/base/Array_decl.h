@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array_decl.h,v 1.3 2004/05/26 17:57:52 nova77 Exp $
+   * $Id: Array_decl.h,v 1.4 2004/07/21 16:30:50 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,7 +54,7 @@
 #include "TypeTraits.h"
 //#include "general.h"
 //#include "fileutils.h"
-#include "TMat_decl.h"
+#include <plearn/math/TMat_decl.h>
 
 #include "ms_hash_wrapper.h"
 namespace PLearn {

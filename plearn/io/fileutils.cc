@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.46 2004/06/18 16:43:33 tihocan Exp $
+   * $Id: fileutils.cc,v 1.47 2004/07/21 16:30:51 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -70,9 +70,9 @@
 #include <strstream>
 
 #include "fileutils.h"
-#include "stringutils.h"
-#include "plerror.h"
-#include "pl_math.h"    //!< For 'real'.
+#include <plearn/base/stringutils.h>
+#include <plearn/base/plerror.h>
+#include <plearn/math/pl_math.h>    //!< For 'real'.
 #include "PStream.h"
 
 namespace PLearn {

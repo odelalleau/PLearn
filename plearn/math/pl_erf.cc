@@ -33,7 +33,7 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-#include "general.h"
+#include <plearn/base/general.h>
 // #include <iostream>
 // #include <cmath>
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.h,v 1.8 2004/07/20 21:58:11 tihocan Exp $ 
+   * $Id: KernelProjection.h,v 1.9 2004/07/21 16:30:59 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -44,8 +44,8 @@
 #ifndef KernelProjection_INC
 #define KernelProjection_INC
 
-#include "PLearner.h"
-#include "Kernel.h"
+#include <plearn_learners/generic/PLearner.h>
+#include <plearn/ker/Kernel.h>
 
 namespace PLearn {
 using namespace std;

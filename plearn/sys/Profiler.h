@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Profiler.h,v 1.3 2004/02/26 07:38:35 nova77 Exp $
+   * $Id: Profiler.h,v 1.4 2004/07/21 16:30:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,9 +51,9 @@
 #endif
 
 #include <sys/times.h>
-#include "general.h"
-#include "plerror.h"
-#include "stringutils.h"
+#include <plearn/base/general.h>
+#include <plearn/base/plerror.h>
+#include <plearn/base/stringutils.h>
 
 namespace PLearn {
 using namespace std;

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.h,v 1.4 2004/05/07 20:24:21 tihocan Exp $ 
+   * $Id: AddCostToLearner.h,v 1.5 2004/07/21 16:30:56 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -44,7 +44,7 @@
 #define AddCostToLearner_INC
 
 #include "PLearner.h"
-#include "Var.h"
+#include <plearn/var/Var.h>
 
 namespace PLearn {
 using namespace std;

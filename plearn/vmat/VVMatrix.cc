@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.cc,v 1.22 2004/06/18 19:13:27 tihocan Exp $
+   * $Id: VVMatrix.cc,v 1.23 2004/07/21 16:30:55 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,10 +44,10 @@
 #include "FileVMatrix.h"
 #include "DiskVMatrix.h"
 #include "JoinVMatrix.h"
-#include "random.h"
-#include "IntVecFile.h"
+#include <plearn/math/random.h>
+#include <plearn/io/IntVecFile.h>
 #include "VMatLanguage.h"
-#include "getDataSet.h"
+#include <plearn/db/getDataSet.h>
 
 #ifdef WIN32
 #include <time.h>

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: EqualConstantVariable.h,v 1.5 2004/04/27 15:59:16 morinf Exp $
+   * $Id: EqualConstantVariable.h,v 1.6 2004/07/21 16:30:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,7 +44,7 @@
 #define EqualConstantVariable_INC
 
 #include "UnaryVariable.h"
-#include "stringutils.h"    //!< For tostring.
+#include <plearn/base/stringutils.h>    //!< For tostring.
 
 namespace PLearn {
 using namespace std;

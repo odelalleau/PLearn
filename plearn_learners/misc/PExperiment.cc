@@ -33,15 +33,15 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PExperiment.cc,v 1.10 2004/06/26 00:24:15 plearner Exp $ 
+   * $Id: PExperiment.cc,v 1.11 2004/07/21 16:30:57 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
-#include "PTester.h"
-#include "pl_io.h"
-#include "VecStatsCollector.h"
-#include "AsciiVMatrix.h"
-#include "FileVMatrix.h"
+#include <plearn_learners/testers/PTester.h>
+#include <plearn/io/pl_io.h>
+#include <plearn/math/VecStatsCollector.h>
+#include <plearn/vmat/AsciiVMatrix.h>
+#include <plearn/vmat/FileVMatrix.h>
 
 namespace PLearn {
 using namespace std;

@@ -1,7 +1,7 @@
 #ifndef DERIVEDCLASS_INC
 #define DERIVEDCLASS_INC
 
-#include "SequentialLearner.h"
+#include <plearn_learners/sequential/SequentialLearner.h>
 
 namespace PLearn {
 using namespace std;

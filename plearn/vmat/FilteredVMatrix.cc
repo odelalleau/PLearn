@@ -33,14 +33,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilteredVMatrix.cc,v 1.9 2004/07/07 17:30:48 tihocan Exp $ 
+   * $Id: FilteredVMatrix.cc,v 1.10 2004/07/21 16:30:55 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
 
 /*! \file FilteredVMatrix.cc */
 
-#include "ProgressBar.h"
+#include <plearn/base/ProgressBar.h>
 #include "FilteredVMatrix.h"
 
 namespace PLearn {

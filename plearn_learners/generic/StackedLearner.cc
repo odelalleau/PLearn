@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.cc,v 1.15 2004/04/19 13:07:02 tihocan Exp $
+   * $Id: StackedLearner.cc,v 1.16 2004/07/21 16:30:56 chrish42 Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -42,8 +42,8 @@
 
 
 #include "StackedLearner.h"
-#include "PLearnerOutputVMatrix.h"
-#include "ShiftAndRescaleVMatrix.h"
+#include <plearn/vmat/PLearnerOutputVMatrix.h>
+#include <plearn/vmat/ShiftAndRescaleVMatrix.h>
 
 namespace PLearn {
 using namespace std;

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TangentLearner.cc,v 1.12 2004/07/19 22:30:55 yoshua Exp $ 
+   * $Id: TangentLearner.cc,v 1.13 2004/07/21 16:30:59 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
@@ -42,19 +42,19 @@
 
 
 #include "TangentLearner.h"
-#include "ProjectionErrorVariable.h"
+#include <plearn/var/ProjectionErrorVariable.h>
 //#include "LocalPCAVMatrix.h"
-#include "LocalNeighborsDifferencesVMatrix.h"
-#include "ProductVariable.h"
-#include "PlusVariable.h"
-#include "Var_operators.h"
-#include "ConcatColumnsVMatrix.h"
-#include "random.h"
-#include "SumOfVariable.h"
-#include "TanhVariable.h"
-#include "DiagonalizedFactorsProductVariable.h"
-#include "random.h"
-#include "plapack.h"
+#include <plearn/vmat/LocalNeighborsDifferencesVMatrix.h>
+#include <plearn/var/ProductVariable.h>
+#include <plearn/var/PlusVariable.h>
+#include <plearn/var/Var_operators.h>
+#include <plearn/vmat/ConcatColumnsVMatrix.h>
+#include <plearn/math/random.h>
+#include <plearn/var/SumOfVariable.h>
+#include <plearn/var/TanhVariable.h>
+#include <plearn/var/DiagonalizedFactorsProductVariable.h>
+#include <plearn/math/random.h>
+#include <plearn/math/plapack.h>
 //#include "TMat_maths_impl.h"
 //#include "TVec_decl.h"
 

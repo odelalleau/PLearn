@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: RGBImage.h,v 1.3 2004/03/04 14:58:37 tihocan Exp $
+   * $Id: RGBImage.h,v 1.4 2004/07/21 16:30:51 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -48,11 +48,11 @@
 #ifndef RGBIMAGE_INC
 #define RGBIMAGE_INC
 
-#include "Array.h"
+#include <plearn/base/Array.h>
 //#include "general.h"
-#include "Object.h"
-#include "Storage.h"
-#include "TMat.h"
+#include <plearn/base/Object.h>
+#include <plearn/base/Storage.h>
+#include <plearn/math/TMat.h>
 //#include "VMat.h"
 
 namespace PLearn {

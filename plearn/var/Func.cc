@@ -37,17 +37,17 @@
  
 
 /* *******************************************************      
-   * $Id: Func.cc,v 1.18 2004/05/28 21:55:01 monperrm Exp $
+   * $Id: Func.cc,v 1.19 2004/07/21 16:30:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "Func.h"
-#include "random.h"
-#include "TMat_maths.h"
+#include <plearn/math/random.h>
+#include <plearn/math/TMat_maths.h>
 #include "Var.h"
 #include "Var_operators.h"
 #include "TimesConstantVariable.h"
-#include "DisplayUtils.h" ////////// to remove
+#include <plearn/display/DisplayUtils.h> ////////// to remove
 
 namespace PLearn {
 using namespace std;

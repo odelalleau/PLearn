@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.cc,v 1.9 2004/05/10 13:02:39 tihocan Exp $ 
+   * $Id: AddCostToLearner.cc,v 1.10 2004/07/21 16:30:56 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -42,12 +42,12 @@
 
 
 #include "AddCostToLearner.h"
-#include "ConcatColumnsVMatrix.h"
-#include "CrossEntropyVariable.h"
-#include "SubVMatrix.h"
-#include "SumOverBagsVariable.h"   //!< For the bag signal constants.
-#include "VarArray.h"
-#include "VecElementVariable.h"
+#include <plearn/vmat/ConcatColumnsVMatrix.h>
+#include <plearn/var/CrossEntropyVariable.h>
+#include <plearn/vmat/SubVMatrix.h>
+#include <plearn/var/SumOverBagsVariable.h>   //!< For the bag signal constants.
+#include <plearn/var/VarArray.h>
+#include <plearn/var/VecElementVariable.h>
 
 namespace PLearn {
 using namespace std;

@@ -30,7 +30,7 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-#include "fileutils.h"      //!< For countNonBlankLinesOfFile.
+#include <plearn/io/fileutils.h>      //!< For countNonBlankLinesOfFile.
 #include "StringTable.h"
 #include "stringutils.h"    //!< For left.
 

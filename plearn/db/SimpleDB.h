@@ -64,11 +64,11 @@
 
 //!  From PLearn
 //#include "general.h"
-#include "stringutils.h"     //!< For slash.
+#include <plearn/base/stringutils.h>     //!< For slash.
 //#include "random.h"
-#include "PDate.h"			     //!<  for PDate
-#include "Hash.h"
-#include "TinyVector.h"
+#include <plearn/base/PDate.h>			     //!<  for PDate
+#include <plearn/math/Hash.h>
+#include <plearn/base/TinyVector.h>
 
 #ifdef WIN32
 // norman: potentially dangerous if there is a function called with the same name in this

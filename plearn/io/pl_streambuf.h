@@ -46,7 +46,7 @@
 //#include <iosfwd>
 #include <iostream>
 //#include "plerror.h"
-#include "PP.h"
+#include <plearn/base/PP.h>
 
 namespace PLearn {
 

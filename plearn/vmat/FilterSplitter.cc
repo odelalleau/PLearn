@@ -33,14 +33,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilterSplitter.cc,v 1.2 2004/04/19 12:40:24 lheureup Exp $ 
+   * $Id: FilterSplitter.cc,v 1.3 2004/07/21 16:30:55 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pierre-Jean L Heureux
 
 /*! \file FilterSplitter.cc */
 
-#include "fileutils.h"   //!< For newFilename.
+#include <plearn/io/fileutils.h>   //!< For newFilename.
 #include "FilterSplitter.h"
 #include "FilteredVMatrix.h"
 

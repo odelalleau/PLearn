@@ -36,13 +36,13 @@
 
 
 /* *******************************************************      
- * $Id: ProjectionErrorVariable.cc,v 1.10 2004/07/19 11:20:24 yoshua Exp $
+ * $Id: ProjectionErrorVariable.cc,v 1.11 2004/07/21 16:30:54 chrish42 Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
 #include "ProjectionErrorVariable.h"
 #include "Var_operators.h"
-#include "plapack.h"
+#include <plearn/math/plapack.h>
 //#include "Var_utils.h"
 
 namespace PLearn {

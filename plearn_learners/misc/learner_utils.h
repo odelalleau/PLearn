@@ -34,14 +34,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: learner_utils.h,v 1.2 2004/02/20 21:14:48 chrish42 Exp $ 
+   * $Id: learner_utils.h,v 1.3 2004/07/21 16:30:57 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file learner_utils.h */
 #ifndef learner_utils_INC
 #define learner_utils_INC
 
-#include "PLearner.h"
+#include <plearn_learners/generic/PLearner.h>
 
 namespace PLearn {
 using namespace std;

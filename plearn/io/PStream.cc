@@ -37,7 +37,7 @@
 #include "PStream.h"
 //#include "stringutils.h"
 //#include "fileutils.h" 
-#include "pl_math.h"
+#include <plearn/math/pl_math.h>
 
 // norman:
 #ifdef WIN32

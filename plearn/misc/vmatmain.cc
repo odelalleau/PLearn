@@ -32,19 +32,19 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.31 2004/07/16 13:09:41 tihocan Exp $
+   * $Id: vmatmain.cc,v 1.32 2004/07/21 16:30:53 chrish42 Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
-#include "general.h"
-#include "StatsCollector.h"
-#include "VMatLanguage.h"
-#include "VVMatrix.h"
-#include "VMat.h"
-#include "TMat_maths.h"
-#include "stringutils.h"
-#include "getDataSet.h"
-#include "Gnuplot.h"
+#include <plearn/base/general.h>
+#include <plearn/math/StatsCollector.h>
+#include <plearn/vmat/VMatLanguage.h>
+#include <plearn/vmat/VVMatrix.h>
+#include <plearn/vmat/VMat.h>
+#include <plearn/math/TMat_maths.h>
+#include <plearn/base/stringutils.h>
+#include <plearn/db/getDataSet.h>
+#include <plearn/display/Gnuplot.h>
 
 // norman: added check
 #ifdef WIN32

@@ -36,11 +36,11 @@
 /*! \file ManifoldParzen2.cc */
 #include "ManifoldParzen2.h"
 
-#include "plapack.h"
-#include "general.h"
-#include "TMat.h"
-#include "TMat_maths.h"
-#include "BottomNI.h"
+#include <plearn/math/plapack.h>
+#include <plearn/base/general.h>
+#include <plearn/math/TMat.h>
+#include <plearn/math/TMat_maths.h>
+#include <plearn/math/BottomNI.h>
 
 namespace PLearn {
 

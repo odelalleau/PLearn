@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TestingLearner.h,v 1.2 2004/07/19 22:47:00 mariusmuja Exp $ 
+   * $Id: TestingLearner.h,v 1.3 2004/07/21 16:30:56 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Marius Muja
@@ -45,7 +45,7 @@
 #define TestingLearner_INC
 
 #include "PLearner.h"
-#include "PTester.h"
+#include <plearn_learners/testers/PTester.h>
 
 namespace PLearn {
 using namespace std;

@@ -38,10 +38,10 @@
 #ifndef SEQUENTIAL_VALIDATION
 #define SEQUENTIAL_VALIDATION
 
-#include "Object.h"
-#include "StatefulLearner.h"
-#include "VMat.h"
-#include "PP.h"
+#include <plearn/base/Object.h>
+#include <plearn_learners/generic/StatefulLearner.h>
+#include <plearn/vmat/VMat.h>
+#include <plearn/base/PP.h>
 
 namespace PLearn {
 using namespace std;

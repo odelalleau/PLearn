@@ -33,14 +33,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HelpCommand.cc,v 1.8 2004/02/20 21:11:40 chrish42 Exp $ 
+   * $Id: HelpCommand.cc,v 1.9 2004/07/21 16:30:49 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file HelpCommand.cc */
 #include "HelpCommand.h"
 #include <iostream>
 //#include "general.h"
-#include "getDataSet.h"
+#include <plearn/db/getDataSet.h>
 
 namespace PLearn {
 using namespace std;

@@ -1,7 +1,7 @@
 #ifndef DERIVEDCLASS_INC
 #define DERIVEDCLASS_INC
 
-#include "Smoother.h"
+#include <plearn/math/Smoother.h>
 
 namespace PLearn {
 using namespace std;

@@ -502,11 +502,13 @@ else:
 
 temp_objs=0
 if 'tmp' in optionargs:
-  objspolicy = 2
-  temp_objs=1
-  local_compilation = 1
-  objsdir = '/tmp/OBJS'
-  optionargs.remove('tmp')
+    objspolicy = 2
+    temp_objs=1
+    local_compilation = 1
+    objsdir = '/tmp/OBJS'
+    optionargs.remove('tmp')
+else:
+    temp_objs = 0
 
   
 
@@ -669,7 +671,7 @@ class FileInfo:
             if os.path.isfile(fullpath):
                 self.includes_from_sourcedirs.append(abspath(fullpath))
             else:
-                for srcdir in sourcedirs:
+                for srcdir in mandatory_includedirs:
                     fullpath = join(srcdir, includefile)
                     if os.path.isfile(fullpath):
                         self.includes_from_sourcedirs.append(abspath(fullpath))
@@ -989,7 +991,7 @@ class FileInfo:
           nice = nice_command + nice_value + ' '
           
         command = nice + compiler + ' ' + compileflags + ' ' + compileroptions + ' ' + string.join(optlib_compopt, ' ')
-        includedirs = [self.filedir] + mandatory_includedirs + sourcedirs + self.get_optional_libraries_includedirs()
+        includedirs = [] + mandatory_includedirs + self.get_optional_libraries_includedirs()
         if includedirs:
             command = command + ' -I' + string.join(includedirs,' -I')
         command = command + ' -o ' + self.corresponding_ofile + ' -c ' + self.filepath        

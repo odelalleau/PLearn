@@ -1,7 +1,7 @@
 #ifndef DERIVEDCLASS_INC
 #define DERIVEDCLASS_INC
 
-#include "VMat.h"
+#include <plearn/vmat/VMat.h>
 
 // **********************************************************
 // **                    W A R N I N G                     **

@@ -33,14 +33,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Smoother.h,v 1.6 2004/06/26 00:24:14 plearner Exp $ 
+   * $Id: Smoother.h,v 1.7 2004/07/21 16:30:53 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file Smoother.h */
 #ifndef Smoother_INC
 #define Smoother_INC
 
-#include "Object.h"
+#include <plearn/base/Object.h>
 #include "TVec.h"
 
 namespace PLearn {

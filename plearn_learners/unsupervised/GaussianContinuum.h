@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussianContinuum.h,v 1.1 2004/07/19 11:21:57 yoshua Exp $
+   * $Id: GaussianContinuum.h,v 1.2 2004/07/21 16:30:59 chrish42 Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -44,9 +44,9 @@
 #ifndef GaussianContinuum_INC
 #define GaussianContinuum_INC
 
-#include "PLearner.h"
-#include "Func.h"
-#include "Optimizer.h"
+#include <plearn_learners/generic/PLearner.h>
+#include <plearn/var/Func.h>
+#include <plearn/opt/Optimizer.h>
 
 namespace PLearn {
 using namespace std;

@@ -33,19 +33,19 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLS.cc,v 1.9 2004/04/27 13:05:14 tihocan Exp $ 
+   * $Id: PLS.cc,v 1.10 2004/07/21 16:30:58 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
 
 /*! \file PLS.cc */
 
-#include "plapack.h"
+#include <plearn/math/plapack.h>
 #include "PLS.h"
-#include "ShiftAndRescaleVMatrix.h"
-#include "SubVMatrix.h"
-#include "TMat_maths_impl.h"    //!< For dist.
-#include "VMat_maths.h"
+#include <plearn/vmat/ShiftAndRescaleVMatrix.h>
+#include <plearn/vmat/SubVMatrix.h>
+#include <plearn/math/TMat_maths_impl.h>    //!< For dist.
+#include <plearn/vmat/VMat_maths.h>
 
 namespace PLearn {
 using namespace std;

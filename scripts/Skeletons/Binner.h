@@ -1,7 +1,7 @@
 #ifndef DERIVEDCLASS_INC
 #define DERIVEDCLASS_INC
 
-#include "Binner.h"
+#include <plearn/math/Binner.h>
 
 namespace PLearn {
 using namespace std;

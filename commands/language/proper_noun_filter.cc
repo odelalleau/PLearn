@@ -1,7 +1,7 @@
-#include "general.h"
+#include <plearn/base/general.h>
 //#include "GrowingStringTable.h"
-#include "stringutils.h"        //!< For pgetline.
-#include "WordNetOntology.h"
+#include <plearn/base/stringutils.h>        //!< For pgetline.
+#include <plearn_learners/language/WordNet/WordNetOntology.h>
 
 using namespace PLearn;
 

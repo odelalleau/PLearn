@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat.h,v 1.20 2004/07/09 17:25:56 plearner Exp $
+   * $Id: VMat.h,v 1.21 2004/07/21 16:30:55 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,8 +48,8 @@
 #define VMat_INC
 
 #include <cstdlib>
-#include "PP.h"
-#include "TMat.h"
+#include <plearn/base/PP.h>
+#include <plearn/math/TMat.h>
 #include "VMField.h"
 #include "VMatrix.h"
 #include "VVec.h"

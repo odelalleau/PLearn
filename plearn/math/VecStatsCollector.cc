@@ -32,13 +32,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.20 2004/06/26 00:24:14 plearner Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.21 2004/07/21 16:30:53 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
 #include "VecStatsCollector.h"
 #include "TMat_maths.h"
-#include "stringutils.h"    //!< For pl_isnumber.
+#include <plearn/base/stringutils.h>    //!< For pl_isnumber.
 
 namespace PLearn {
 using namespace std;

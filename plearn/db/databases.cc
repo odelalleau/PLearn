@@ -36,19 +36,19 @@
 
 
 /* *******************************************************      
-   * $Id: databases.cc,v 1.13 2004/07/14 22:39:22 mariusmuja Exp $
+   * $Id: databases.cc,v 1.14 2004/07/21 16:30:51 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "databases.h"
-#include "ConcatRowsVMatrix.h"
+#include <plearn/vmat/ConcatRowsVMatrix.h>
 #include "NistDB.h"
-#include "random.h"
-#include "RemapLastColumnVMatrix.h"
-#include "ShiftAndRescaleVMatrix.h"
-#include "Splitter.h"
-#include "VMat_maths.h"
+#include <plearn/math/random.h>
+#include <plearn/vmat/RemapLastColumnVMatrix.h>
+#include <plearn/vmat/ShiftAndRescaleVMatrix.h>
+#include <plearn/vmat/Splitter.h>
+#include <plearn/vmat/VMat_maths.h>
 
 namespace PLearn {
 using namespace std;

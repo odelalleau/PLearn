@@ -35,8 +35,8 @@
 #define _GNU_SOURCE 1
 
 #include "SimpleDB.h"
-#include "random.h"
-#include "stringutils.h"  //!< For space_to_underscore.
+#include <plearn/math/random.h>
+#include <plearn/base/stringutils.h>  //!< For space_to_underscore.
 
 namespace PLearn {
 using namespace std;

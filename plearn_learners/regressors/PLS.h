@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLS.h,v 1.3 2004/04/27 13:05:14 tihocan Exp $ 
+   * $Id: PLS.h,v 1.4 2004/07/21 16:30:58 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -43,7 +43,7 @@
 #ifndef PLS_INC
 #define PLS_INC
 
-#include "PLearner.h"
+#include <plearn_learners/generic/PLearner.h>
 
 namespace PLearn {
 using namespace std;

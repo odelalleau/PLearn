@@ -37,15 +37,15 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.h,v 1.15 2004/06/01 13:15:20 tihocan Exp $
+   * $Id: Variable.h,v 1.16 2004/07/21 16:30:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #ifndef Variable_INC
 #define Variable_INC
 
-#include "TMat.h"
-#include "Object.h"
+#include <plearn/math/TMat.h>
+#include <plearn/base/Object.h>
 
 namespace PLearn {
 using namespace std;

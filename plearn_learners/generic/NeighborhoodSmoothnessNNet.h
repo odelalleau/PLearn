@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeighborhoodSmoothnessNNet.h,v 1.9 2004/06/26 00:24:15 plearner Exp $
+   * $Id: NeighborhoodSmoothnessNNet.h,v 1.10 2004/07/21 16:30:56 chrish42 Exp $
    ******************************************************* */
 
 /*! \file PLearn/plearn_learners/classifiers/NeighborhoodSmoothnessNNet.h */
@@ -44,7 +44,7 @@
 #define NeighborhoodSmoothnessNNet_INC
 
 #include "PLearner.h"
-#include "Optimizer.h"
+#include <plearn/opt/Optimizer.h>
 //#include "Var_all.h"
 
 namespace PLearn {

@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: RandomVar.h,v 1.5 2004/02/20 21:11:48 chrish42 Exp $
+   * $Id: RandomVar.h,v 1.6 2004/07/21 16:30:54 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -331,14 +331,14 @@
 #ifndef RANDOMVAR_INC
 #define RANDOMVAR_INC
 
-#include "Optimizer.h"
+#include <plearn/opt/Optimizer.h>
 
 //!  used only for implementing the sampling Var's in the setValueFromParentsValue 
 //!  methods of StochasticRandomVariable's.
 #include "SampleVariable.h"
 
 //!  used only for defining RandomVarVMatrix
-#include "VMat.h"
+#include <plearn/vmat/VMat.h>
 
 namespace PLearn {
 using namespace std;

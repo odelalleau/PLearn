@@ -41,13 +41,13 @@
 #include <set>
 //#include <bitset>
 #include <sstream>
-#include "pl_hash_fun.h"
+#include <plearn/base/pl_hash_fun.h>
 //#include "PP.h"
 #include "PStream_util.h"
-#include "plerror.h"
+#include <plearn/base/plerror.h>
 #include <fstream>
 //#include "TypeTraits.h"
-#include "byte_order.h"
+#include <plearn/base/byte_order.h>
 #include "fileutils.h"
 #include "PStreamBuf.h"
 #include "StdPStreamBuf.h"

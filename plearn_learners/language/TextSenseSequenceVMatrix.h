@@ -3,12 +3,12 @@
 #ifndef TextSenseSequenceVMatrix_INC
 #define TextSenseSequenceVMatrix_INC
 
-#include "RowBufferedVMatrix.h"
-#include "WordNetOntology.h"
-#include "DiskVMatrix.h"
-#include "VMat.h"
-#include "WordNetOntology.h"
-#include "random.h"
+#include <plearn/vmat/RowBufferedVMatrix.h>
+#include "WordNet/WordNetOntology.h"
+#include <plearn/vmat/DiskVMatrix.h>
+#include <plearn/vmat/VMat.h>
+#include "WordNet/WordNetOntology.h"
+#include <plearn/math/random.h>
 
 namespace PLearn {
 using namespace std;

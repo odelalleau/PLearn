@@ -1,4 +1,4 @@
-#include "general.h"
+#include <plearn/base/general.h>
 
 using namespace PLearn;
 

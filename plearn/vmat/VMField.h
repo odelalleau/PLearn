@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
- * $Id: VMField.h,v 1.3 2004/02/20 21:14:44 chrish42 Exp $
+ * $Id: VMField.h,v 1.4 2004/07/21 16:30:55 chrish42 Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -47,8 +47,8 @@
 #ifndef VMField_INC
 #define VMField_INC
 
-#include "general.h"
-#include "PStream.h"
+#include <plearn/base/general.h>
+#include <plearn/io/PStream.h>
 
 namespace PLearn {
 using namespace std;

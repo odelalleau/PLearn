@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: TestMethod.h,v 1.4 2004/02/20 21:14:50 chrish42 Exp $
+   * $Id: TestMethod.h,v 1.5 2004/07/21 16:30:58 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,7 +46,7 @@
 
 //#include "Learner.h"
 //#include "VMat.h"
-#include "Splitter.h"
+#include <plearn/vmat/Splitter.h>
 
 namespace PLearn {
 using namespace std;

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.25 2004/06/01 13:54:07 tihocan Exp $
+   * $Id: stringutils.h,v 1.26 2004/07/21 16:30:51 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -56,7 +56,7 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
-#include "PStream.h"
+#include <plearn/io/PStream.h>
 // #include "TMat.h"
 
 namespace PLearn {

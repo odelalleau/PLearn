@@ -2,7 +2,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include "procinfo.h"
-#include "plerror.h"
+#include <plearn/base/plerror.h>
 
 namespace PLearn {
 

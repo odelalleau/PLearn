@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.49 2004/07/19 13:24:24 tihocan Exp $
+   * $Id: VMatrix.h,v 1.50 2004/07/21 16:30:55 chrish42 Exp $
    ******************************************************* */
 
 
@@ -45,12 +45,12 @@
 
 #include <cstdlib>
 #include <map>
-#include "PP.h"
-#include "TMat.h"
-#include "VarArray.h"
-#include "IntVecFile.h"
-#include "StatsCollector.h"
-#include "TMat_maths_impl.h"
+#include <plearn/base/PP.h>
+#include <plearn/math/TMat.h>
+#include <plearn/var/VarArray.h>
+#include <plearn/io/IntVecFile.h>
+#include <plearn/math/StatsCollector.h>
+#include <plearn/math/TMat_maths_impl.h>
 #include "VMField.h"
 
 namespace PLearn {

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VMatLanguage.h,v 1.15 2004/07/07 17:30:48 tihocan Exp $
+   * $Id: VMatLanguage.h,v 1.16 2004/07/21 16:30:55 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -42,7 +42,7 @@
 
 #include "RowBufferedVMatrix.h"
 #include "VMat.h"
-#include "RealMapping.h"
+#include <plearn/base/RealMapping.h>
 
 
 namespace PLearn {

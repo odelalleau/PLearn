@@ -33,14 +33,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.h,v 1.15 2004/06/21 14:56:02 tihocan Exp $ 
+   * $Id: PDistribution.h,v 1.16 2004/07/21 16:30:56 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.h */
 #ifndef PDistribution_INC
 #define PDistribution_INC
 
-#include "PLearner.h"
+#include <plearn_learners/generic/PLearner.h>
 
 namespace PLearn {
 using namespace std;

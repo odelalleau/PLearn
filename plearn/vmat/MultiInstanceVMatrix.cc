@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MultiInstanceVMatrix.cc,v 1.14 2004/07/07 17:30:48 tihocan Exp $ 
+   * $Id: MultiInstanceVMatrix.cc,v 1.15 2004/07/21 16:30:55 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Norman Casagrande
@@ -44,9 +44,9 @@
 #include <algorithm>
 #include <iterator>
 #include "MultiInstanceVMatrix.h"
-#include "SumOverBagsVariable.h"
-#include "stringutils.h"
-#include "fileutils.h"
+#include <plearn/var/SumOverBagsVariable.h>
+#include <plearn/base/stringutils.h>
+#include <plearn/io/fileutils.h>
 
 namespace PLearn {
 using namespace std;
