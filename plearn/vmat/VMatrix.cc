@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.22 2003/08/05 21:08:54 ducharme Exp $
+* $Id: VMatrix.cc,v 1.23 2003/08/05 21:41:46 chapados Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -119,7 +119,7 @@ Array<VMField>& VMatrix::getFieldInfos() const
 
   int ninfos = fieldinfos.size();
   int w = width();
-  if(ninfos!=w)
+  if(ninfos!=w && w > 0)
     {
       fieldinfos.resize(w);
       for(int j=ninfos; j<w; j++)

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: JulianizeVMatrix.h,v 1.2 2003/07/28 18:42:52 chapados Exp $ 
+   * $Id: JulianizeVMatrix.h,v 1.3 2003/08/05 21:41:46 chapados Exp $ 
    ******************************************************* */
 
 /*! \file JulianizeVMatrix.h */
@@ -147,6 +147,10 @@ protected:
   static int newWidth(VMat und, DateCode dc) {
     return und->width() - dateCodeWidth(dc) + 1;
   }
+
+  // Set the VMFields in this VMatrix from the underlying field names.  All
+  // "date" fields are named "Date", and "date-time" are named "DateTime".
+  void setVMFields();
 };
 
 %> // end of namespace PLearn

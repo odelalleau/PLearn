@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: JulianizeVMatrix.cc,v 1.1 2003/07/28 18:35:43 chapados Exp $ 
+   * $Id: JulianizeVMatrix.cc,v 1.2 2003/08/05 21:41:46 chapados Exp $ 
    ******************************************************* */
 
 /*! \file JulianizeVMatrix.cc */
@@ -59,6 +59,7 @@ JulianizeVMatrix::JulianizeVMatrix(VMat underlying,
     cols_codes_(1), und_row_(underlying.width())
 {
   cols_codes_[0] = make_pair(starting_column, date_code);
+  setVMFields();
 }
 
 
@@ -156,6 +157,36 @@ void JulianizeVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copi
   deepCopyField(und_row_, copies);
   // cols_codes_ already deep-copied since it is an STL vector
 }
+
+void JulianizeVMatrix::setVMFields()
+{
+  Array<VMField>& orig_fields = underlying_->getFieldInfos();
+  int new_field = 0;
+  int cur_field = 0, end_field = orig_fields.size();
+  vector< pair<int,DateCode> >::iterator it = cols_codes_.begin(),
+    end = cols_codes_.end();
+
+  for ( ; cur_field < end_field ; ++cur_field, ++new_field) {
+    // We've got a date field
+    if (it != end && it->first == cur_field) {
+      switch(it->second) {
+      case Date:
+        this->declareField(new_field, "Date", VMField::Date);
+        break;
+      case DateTime:
+        this->declareField(new_field, "DateTime", VMField::Date);
+        break;
+      }
+      cur_field += dateCodeWidth(it->second)-1;
+      ++it;
+    }
+    else {
+      this->declareField(new_field, orig_fields[cur_field].name,
+                         orig_fields[cur_field].fieldtype);
+    }
+  }
+}
+
 
 %> // end of namespace PLearn
 
