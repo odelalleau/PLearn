@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: NaryVariable.cc,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: NaryVariable.cc,v 1.2 2002/09/10 18:48:27 wangxian Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -186,6 +186,8 @@ ConcatRowsVariable::ConcatRowsVariable(const VarArray& vararray)
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(ConcatRowsVariable);
+void ConcatRowsVariable::recomputeSize(int& l, int& w) const
+{ l=varray.sumOfLengths(); w=varray.maxWidth(); }
 
 void ConcatRowsVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -253,6 +255,8 @@ ConcatColumnsVariable::ConcatColumnsVariable(const VarArray& vararray)
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(ConcatColumnsVariable);
+void ConcatColumnsVariable::recomputeSize(int& l, int& w) const
+{ l=varray.maxLength(); w=varray.sumOfWidths(); }
 
 void ConcatColumnsVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -332,6 +336,8 @@ SumOfVariable::SumOfVariable(VMat the_distr, Func the_f, int the_nsamples)
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(SumOfVariable);
+void SumOfVariable::recomputeSize(int& l, int& w) const
+{ l=f->outputs[0]->length(); w=f->outputs[0]->width(); }
 
 void SumOfVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
@@ -553,6 +559,8 @@ ConcatOfVariable::ConcatOfVariable(Variable* the_output, const VarArray& the_inp
 */
 
 IMPLEMENT_NAME_AND_DEEPCOPY(ConcatOfVariable);
+void ConcatOfVariable::recomputeSize(int& l, int& w) const
+{ l=f->outputs[0]->length()*distr->length(); w=f->outputs[0]->width(); }
 
 void ConcatOfVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
@@ -617,6 +625,8 @@ ArgminOfVariable::ArgminOfVariable(Variable* the_v,
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(ArgminOfVariable);
+void ArgminOfVariable::recomputeSize(int& l, int& w) const
+{ l=1; w=1; }
 
 void ArgminOfVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
@@ -687,6 +697,8 @@ MatrixElementsVariable::MatrixElementsVariable
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(MatrixElementsVariable);
+void MatrixElementsVariable::recomputeSize(int& l, int& w) const
+{ l=ni; w=nj; }
 
 void MatrixElementsVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
@@ -794,6 +806,8 @@ VarArrayElementVariable(VarArray& input1, const Var& input2)
 
 IMPLEMENT_NAME_AND_DEEPCOPY(VarArrayElementVariable);
 
+void VarArrayElementVariable::recomputeSize(int& l, int& w) const
+{ l=varray[0]->length(); w=varray[0]->width(); }
 
 void VarArrayElementVariable::fprop()
 {
@@ -832,6 +846,8 @@ IfThenElseVariable::IfThenElseVariable(Var IfVar, Var ThenVar, Var ElseVar)
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(IfThenElseVariable);
+void IfThenElseVariable::recomputeSize(int& l, int& w) const
+{ l=varray[1]->length(); w=varray[1]->width(); }
 
 void IfThenElseVariable::fprop()
 {

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: NaryVariable.h,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: NaryVariable.h,v 1.2 2002/09/10 18:48:28 wangxian Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -105,6 +105,7 @@ public:
   //!  all the variables must have the same number of columns
   ConcatRowsVariable(const VarArray& vararray);
   DECLARE_NAME_AND_DEEPCOPY(ConcatRowsVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -124,6 +125,7 @@ public:
   //!  all the variables must have the same number of rows
   ConcatColumnsVariable(const VarArray& vararray);
   DECLARE_NAME_AND_DEEPCOPY(ConcatColumnsVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -153,6 +155,7 @@ class SumOfVariable: public NaryVariable
     SumOfVariable(VMat the_distr, Func the_f, int the_nsamples=-1);
     
     DECLARE_NAME_AND_DEEPCOPY(SumOfVariable);
+    virtual void recomputeSize(int& l, int& w) const;
     virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
     virtual void fprop();
     virtual void bprop();
@@ -180,6 +183,7 @@ protected:
 public:
     ConcatOfVariable(VMat the_distr, Func the_f);
   DECLARE_NAME_AND_DEEPCOPY(ConcatOfVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
   virtual void fprop();
   virtual void bprop();
@@ -212,6 +216,7 @@ public:
                    Variable* the_values_of_v,
                    const VarArray& the_inputs);
   DECLARE_NAME_AND_DEEPCOPY(ArgminOfVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
   virtual void fprop();
   virtual void bprop();
@@ -243,6 +248,7 @@ public:
                          int number_of_i_values, int number_of_j_values,
                          const VarArray& the_parameters);
   DECLARE_NAME_AND_DEEPCOPY(MatrixElementsVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
   virtual void fprop();
   virtual void bprop();
@@ -261,6 +267,7 @@ protected:
 public:
   VarArrayElementVariable(VarArray& input1, const Var& input2);
   DECLARE_NAME_AND_DEEPCOPY(VarArrayElementVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
@@ -280,6 +287,7 @@ protected:
 public:
   IfThenElseVariable(Var IfVar, Var ThenVar, Var ElseVar);
   DECLARE_NAME_AND_DEEPCOPY(IfThenElseVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
