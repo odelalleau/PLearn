@@ -61,11 +61,6 @@ void EmbeddedSequentialLearner::build_()
     PLERROR("EmbeddedSequentialLearner::build()_ - learner attribute is NULL");
 
   learner->build();
-
-  inputsize_ = learner->inputsize();
-  outputsize_ = learner->outputsize();
-  targetsize_ = learner->targetsize();
-  weightsize_ = learner->targetsize();
 }
 
 void EmbeddedSequentialLearner::build()
@@ -82,25 +77,26 @@ void EmbeddedSequentialLearner::declareOptions(OptionList& ol)
   inherited::declareOptions(ol);
 }
 
-void EmbeddedSequentialLearner::train(VecStatsCollector& train_stats)
+void EmbeddedSequentialLearner::train()
 {
   int t = train_set.length();
   if (t >= last_train_t+train_step)
   {
     VMat aligned_set = new TemporalHorizonVMatrix(train_set, horizon, targetsize()); // last training pair is (t-1-horizon,t-1)
-    int start = max(0,aligned_set.length()-max_train_len);
+    int start = (max_train_len<0) ? 0 : max(0,aligned_set.length()-max_train_len);
     int len = aligned_set.length()-start;
     TmpFilenames tmpfile;
     string index_fname = tmpfile.addFilename();
     VMat aligned_set_non_missing = filter(aligned_set.subMatRows(start,len), index_fname);
     learner->setTrainingSet(aligned_set_non_missing);
-    learner->train(train_stats);
+    learner->setTrainStatsCollector(train_stats);
+    learner->train();
     last_train_t = t;
   }
 }
  
-void EmbeddedSequentialLearner::test(VMat testset, VecStatsCollector& test_stats,
-    VMat testoutputs, VMat testcosts)
+void EmbeddedSequentialLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
+    VMat testoutputs, VMat testcosts) const
 {
   int l = testset.length();
   Vec input, target;
@@ -110,7 +106,7 @@ void EmbeddedSequentialLearner::test(VMat testset, VecStatsCollector& test_stats
   Vec output(testoutputs ?outputsize() :0);
   Vec costs(nTestCosts());
  
-  testset->defineSizes(inputsize(),targetsize(),weightsize());
+  //testset->defineSizes(inputsize(),targetsize(),weightsize());
  
   //test_stats.forget();
  
@@ -134,7 +130,7 @@ void EmbeddedSequentialLearner::test(VMat testset, VecStatsCollector& test_stats
     {
       Vec output = predictions(t);
       learner->computeOutput(input, output);
-      if (testoutputs) testoutputs->putOrAppendRow(t, output);
+      if (testoutputs) testoutputs->appendRow(output);
     }
     if (t>=horizon)
     {
@@ -143,8 +139,8 @@ void EmbeddedSequentialLearner::test(VMat testset, VecStatsCollector& test_stats
       {
         Vec error_t = errors(t);
         learner->computeCostsFromOutputs(dummy_input, output, target, error_t);
-        if (testcosts) testcosts->putOrAppendRow(t, error_t);
-        test_stats.update(error_t);
+        if (testcosts) testcosts->appendRow(error_t);
+        test_stats->update(error_t);
       }
       //learner->computeOutputAndCosts(input, target, weight, output, costs);
       //predictions(t) << output;
@@ -156,7 +152,7 @@ void EmbeddedSequentialLearner::test(VMat testset, VecStatsCollector& test_stats
   }
   last_test_t = testset.length();
 
-  test_stats.finalize();
+  test_stats->finalize();
 
   if (pb)
     delete pb;

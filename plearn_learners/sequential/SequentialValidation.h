@@ -56,9 +56,12 @@ class SequentialValidation: public Object
     int init_train_size; // size of first training set
     VMat dataset; // the training/test set
     PP<SequentialLearner> learner; // the SequentialLearner that will be tested
+    TVec<string> statnames;
     string expdir; // the directory where everything will be saved
+    bool report_stats;
     bool save_final_model;
     bool save_initial_model;
+    bool save_initial_seqval;
     bool save_data_sets;
     bool save_test_outputs;
     bool save_test_costs;

@@ -73,7 +73,7 @@ class EmbeddedSequentialLearner: public SequentialLearner
     virtual void build();
     
     //!  Does the actual training.
-    virtual void train(VecStatsCollector& train_stats);
+    virtual void train();
  
 /*!       *** SUBCLASS WRITING: ***
       The method should:
@@ -81,8 +81,8 @@ class EmbeddedSequentialLearner: public SequentialLearner
         - save the outputs and the costs in the  predictions & errors
           matrices, beginning at position last_call_train_t
 */
-    virtual void test(VMat testset, VecStatsCollector& test_stats,
-        VMat testoutputs=0, VMat testcosts=0);
+    virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
+        VMat testoutputs=0, VMat testcosts=0) const;
 
     //!  Does the necessary operations to transform a shallow copy (this)
     //!  into a deep copy by deep-copying all the members that need to be.

@@ -39,6 +39,7 @@
 #include "VecStatsCollector.h"
 #include "AsciiVMatrix.h"
 #include "FileVMatrix.h"
+#include "PTester.h"  // for using class StatSpec
 
 namespace PLearn <%
 using namespace std;
@@ -47,8 +48,15 @@ using namespace std;
 IMPLEMENT_NAME_AND_DEEPCOPY(SequentialValidation);
 
 SequentialValidation::SequentialValidation()
-  : init_train_size(1), expdir(""), save_final_model(true), save_initial_model(false),
-    save_data_sets(false), save_test_outputs(false), save_test_costs(false),
+  : init_train_size(1),
+    expdir(""),
+    report_stats(true),
+    save_final_model(true),
+    save_initial_model(false),
+    save_initial_seqval(true),
+    save_data_sets(false),
+    save_test_outputs(false),
+    save_test_costs(false),
     save_stat_collectors(false)
 {}
 
@@ -63,6 +71,20 @@ void SequentialValidation::build()
 
 void SequentialValidation::declareOptions(OptionList& ol)
 {
+  declareOption(ol, "report_stats", &SequentialValidation::report_stats, OptionBase::buildoption, "If true, the computed global statistics specified in statnames will be saved in global_stats.pmat \n"
+                  "and the corresponding per-split statistics will be saved in split_stats.pmat \n"
+                  "For reference, all cost names (as given by the learner's getTrainCostNames() and getTestCostNames() ) \n"
+                  "will be reported in files train_cost_names.txt and test_cost_names.txt");
+
+  declareOption(ol, "statnames", &SequentialValidation::statnames, OptionBase::buildoption,
+                  "A list of global statistics we are interested in.\n"
+                  "These are strings of the form S1[S2[dataset.cost_name]] where:\n"
+                  "  - dataset is train or test1 or test2 ... (train being \n"                  "    the first dataset in a split, test1 the second, ...) \n"
+                  "  - cost_name is one of the training or test cost names (depending on dataset) understood \n"
+                  "    by the underlying learner (see its getTrainCostNames and getTestCostNames methods) \n"
+                  "  - S1 and S2 are a statistic, i.e. one of: E (expectation), V(variance), MIN, MAX, STDDEV, ... \n"
+                  "    S2 is computed over the samples of a given dataset split. S1 is over the splits. \n");
+
   declareOption(ol, "expdir", &SequentialValidation::expdir,
     OptionBase::buildoption, "Path of this experiment's directory in which to save all experiment results (will be created if it does not already exist). \n");
 
@@ -80,6 +102,9 @@ void SequentialValidation::declareOptions(OptionList& ol)
 
   declareOption(ol, "save_initial_model", &SequentialValidation::save_initial_model,
     OptionBase::buildoption, "If true, the initial model will be saved in initial_model.psave. \n");
+
+  declareOption(ol, "save_initial_seqval", &SequentialValidation::save_initial_seqval,
+    OptionBase::buildoption, "If true, this SequentialValidation object will be saved in sequential_validation.psave. \n");
 
   declareOption(ol, "save_data_sets", &SequentialValidation::save_data_sets,
     OptionBase::buildoption, "If true, the data sets (train/test) for each split will be saved. \n");
@@ -109,18 +134,19 @@ void SequentialValidation::run()
     PLERROR("No expdir specified for SequentialValidation.");
   if (!learner)
     PLERROR("No learner specified for SequentialValidation.");
-
   if(pathexists(expdir))
     PLERROR("Directory (or file) %s already exists. First move it out of the way.", expdir.c_str());
-
   if(!force_mkdir(expdir))
     PLERROR("Could not create experiment directory %s", expdir.c_str());
 
   // This is to set inputsize() and targetsize()
   learner->setTrainingSet(dataset, false);
 
+  string dir = append_slash(expdir);
+
   // Save this experiment description in the expdir (buildoptions only)
-  PLearn::save(append_slash(expdir)+"sequential_validation.psave", *this, OptionBase::buildoption);
+  if (save_initial_seqval)
+    PLearn::save(dir+"sequential_validation.psave", *this, OptionBase::buildoption);
 
   TVec<string> testcostnames = learner->getTestCostNames();
   TVec<string> traincostnames = learner->getTrainCostNames();
@@ -128,64 +154,72 @@ void SequentialValidation::run()
   // int traincostsize = traincostnames.size();
   int testcostsize = testcostnames.size();
   int outputsize = learner->outputsize();
+  int nstats = statnames.length();
 
-  // stats for a test on one split
+  TVec< PP<VecStatsCollector> > stcol(2);  // one for train and one for test
+
+  // stats for a train on one split
   PP<VecStatsCollector> train_stats = new VecStatsCollector();
   learner->setTrainStatsCollector(train_stats);
+  stcol[0] = train_stats;
 
   // stats for a test on one split
   PP<VecStatsCollector> test_stats = new VecStatsCollector();
+  stcol[1] = test_stats;
 
   // stats over all sequence
-  //VecStatsCollector sequence_stats;
+  PP<VecStatsCollector> sequence_stats = new VecStatsCollector();
 
-  // the vmat in which to save results
-  //VMat results;
+  // Stat specs
+  TVec<StatSpec> statspecs(nstats);
+  for (int k=0; k<nstats; k++)
+    statspecs[k].init(statnames[k], static_cast< PP<PLearner> >(learner));
 
-  saveStringInFile(append_slash(expdir)+"train_cost_names.txt", join(traincostnames,"\n")+"\n");
-  saveStringInFile(append_slash(expdir)+"test_cost_names.txt", join(testcostnames,"\n")+"\n");
+  VMat global_stats_vm;  // the vmat in which to save global result stats specified in statnames
+  VMat split_stats_vm;  // the vmat in which to save per split result stats
 
-  // filename
-  //string fname = append_slash(expdir)+"results.amat";
+  if (report_stats)
+  {
+    saveStringInFile(dir+"train_cost_names.txt", join(traincostnames,"\n")+"\n");
+    saveStringInFile(dir+"test_cost_names.txt", join(testcostnames,"\n")+"\n");
 
-  // fieldnames
-/*
-  TVec<string> fieldnames(1,string("sequence_num"));
-  fieldnames.append(addprepostfix("train.",traincostnames,".mean"));
-  fieldnames.append(addprepostfix("train.",traincostnames,".stddev"));
-  fieldnames.append(addprepostfix("test.",testcostnames,".mean"));
-  fieldnames.append(addprepostfix("test.",testcostnames,".stddev"));
-*/
+    global_stats_vm = new FileVMatrix(dir+"global_stats.pmat", 0, nstats);
+    for(int k=0; k<nstats; k++)
+      global_stats_vm->declareField(k,statspecs[k].statName());
+    global_stats_vm->saveFieldInfos();
 
-  //int nfields = fieldnames.size();
+    split_stats_vm = new FileVMatrix(dir+"split_stats.pmat", 0, 1+nstats);
+    split_stats_vm->declareField(0,"splitnum");
+    for(int k=0; k<nstats; k++)
+      split_stats_vm->declareField(k+1,statspecs[k].intStatName());
+    split_stats_vm->saveFieldInfos();
+  }
 
   // the learner horizon
   int horizon = learner->horizon;
  
-  //results = new AsciiVMatrix(fname, nfields, fieldnames, "# Special values for sequence_num are: -1 -> MEAN; -2 -> STDERROR; -3 -> STDDEV");
-
-  //string learner_expdir = append_slash(expdir)+"subtrain";
-  //learner->setExperimentDirectory(learner_expdir);
-  if (save_initial_model)
-    PLearn::save(append_slash(expdir)+"initial_learner.psave",learner);
-
-  for (int t=init_train_size; t<=dataset.length()-horizon; t++)
+  int splitnum = 0;
+  for (int t=init_train_size; t<=dataset.length()-horizon; t++, splitnum++)
   {
+#ifdef DEBUG
     cout << "SequentialValidation::run() -- sub_train.length = " << t << " et sub_test.length = " << t+horizon << endl;
+#endif
     VMat sub_train = dataset.subMatRows(0,t); // excludes t, last training pair is (t-1-horizon,t-1)
-    //sub_train->defineSizes(dataset->inputsize(), dataset->targetsize(), dataset->weightsize());
     VMat sub_test = dataset.subMatRows(0, t+horizon);
-    //sub_test->defineSizes(dataset->inputsize(), dataset->targetsize(), dataset->weightsize());
 
-    string splitdir = append_slash(expdir)+"train_t="+tostring(t)+"/";
+    string splitdir = dir+"train_t="+tostring(t)+"/";
     if (save_data_sets)
       PLearn::save(splitdir+"training_set.psave", sub_train);
+    if (save_initial_model)
+      PLearn::save(splitdir+"initial_learner.psave",learner);
 
     // Train
     //learner->forget(); // PAS CERTAIN!  Doit-on faire un forget a chaque t?
+    train_stats->forget();
     learner->setTrainingSet(sub_train, false);
     learner->train();
-    //train_stats.finalize();
+    train_stats->finalize();
+
     if (save_stat_collectors)
       PLearn::save(splitdir+"train_stats.psave",train_stats);
     if (save_final_model)
@@ -202,41 +236,40 @@ void SequentialValidation::run()
     if (save_data_sets)
       PLearn::save(splitdir+"test_set.psave", sub_test);
 
+    test_stats->forget();
     learner->test(sub_test, test_stats, test_outputs, test_costs);
-    //test_stats.finalize();
+    test_stats->finalize();
     if (save_stat_collectors)
       PLearn::save(splitdir+"test_stats.psave",test_stats);
 
-/*
-    Vec sequence_res(1,real(t));
-    sequence_res.append(train_stats.getMean());
-    sequence_res.append(train_stats.getStdDev());
-    sequence_res.append(test_stats.getMean());
-    sequence_res.append(test_stats.getStdDev());
+    Vec splitres(1+nstats);
+    splitres[0] = splitnum;
 
-    sequence_stats.update(sequence_res);
-    results->appendRow(sequence_res);
-*/
+    for(int k=0; k<nstats; k++)
+    {
+      StatSpec& sp = statspecs[k];
+      //splitres[k+1] = stcol[sp.setnum]->getStats(sp.costindex).getStat(sp.intstat);
+      splitres[k+1] = stcol[sp.setnum]->stats ? stcol[sp.setnum]->getStats(sp.costindex).getStat(sp.intstat) : MISSING_VALUE;
+    }
+
+    if (split_stats_vm)
+      split_stats_vm->appendRow(splitres);
+
+    sequence_stats->update(splitres.subVec(1,nstats));
   }
 
-/*
-  // MEAN
-  Vec resultrow = sequence_stats.getMean();
-  resultrow[0] = -1;
-  results->appendRow(resultrow);
+  sequence_stats->finalize();
 
-  // STDERROR
-  resultrow << sequence_stats.getStdError();
-  resultrow[0] = -2;
-  results->appendRow(resultrow);
+  Vec global_result(nstats);
+  for (int k=0; k<nstats; k++)
+    global_result[k] = sequence_stats->getStats(k).getStat(statspecs[k].extstat);
 
-  // STDDEV
-  resultrow << sequence_stats.getStdDev();
-  resultrow[0] = -3;
-  results->appendRow(resultrow);
-*/
+  if (global_stats_vm)
+    global_stats_vm->appendRow(global_result);
 
-  //(output summary statistics of test performances in model.errors)
+  if (report_stats)
+    PLearn::save(dir+"global_result.pvec", global_result);
+
 }
 
 %> // end of namespace PLearn

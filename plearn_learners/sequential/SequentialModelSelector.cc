@@ -55,10 +55,12 @@ void SequentialModelSelector::train()
     pb = new ProgressBar("Training SequentialModelSelector learner",train_set.length());
 
   PP<VecStatsCollector> dummy_stats = new VecStatsCollector();
-  int start = MAX(init_train_size+horizon, last_train_t);
+  int start = MAX(init_train_size+horizon, last_train_t+1);
   for (int t=start; t<=train_set.length(); t++)
   {
+#ifdef DEBUG
     cout << "SequentialModelSelector::train() -- sub_train.length = " << t-horizon << " et sub_test.length = " << t << endl;
+#endif
     //int start = max(t-max_train_len,init_train_size-1);
     VMat sub_train = train_set.subMatRows(0,t-horizon); // last training pair is (t-1-2*horizon,t-1-horizon)
     sub_train->setSizes(train_set->inputsize(), train_set->targetsize(), train_set->weightsize());
@@ -75,14 +77,18 @@ void SequentialModelSelector::train()
     }
     // we set the best model for this time step
     best_model[t] = argmin(sequence_costs);
+#ifdef DEBUG
     cout << "SequentialModelSelector::train() -- t = " << t << " et best_model = " << best_model[t] << endl;
+#endif
     if (predictions(t-1-horizon).hasMissing())
     {
       predictions(t-1-horizon) << models[best_model[t]]->predictions(t-1-horizon);
       errors(t-1) << models[best_model[t]]->errors(t-1);
     }
 
+#ifdef DEBUG
     cout << "SequentialModelSelector::train() -- train_set.length = " << t << endl;
+#endif
     // now train with everything that is available
     sub_train = train_set.subMatRows(0,t); // last training pair is (t-1-horizon,t-1)
     for (int i=0; i<models.size(); i++)
@@ -95,8 +101,15 @@ void SequentialModelSelector::train()
     if (pb)
       pb->update(t);
   }
-  last_train_t = train_set.length();
+  last_train_t = MAX(train_set.length(), last_train_t);
+#ifdef DEBUG
   cout << "SequentialModelSelector.last_train_t = " << last_train_t << endl;
+#endif
+
+  string s1 = "seq_model/predictions_train_t=" + tostring(last_train_t);
+  string s2 = "seq_model/errors_train_t=" + tostring(last_train_t);
+  saveAsciiWithoutSize(s1, predictions);
+  saveAsciiWithoutSize(s2, errors);
 
   if (pb)
    delete pb; 
@@ -111,7 +124,9 @@ void SequentialModelSelector::test(VMat test_set, PP<VecStatsCollector> test_sta
 
   PP<VecStatsCollector> dummy_stats = new VecStatsCollector();
   // first test example is the pair (last_call_train_t-1,last_call_train_t-1+horizon)
+#ifdef DEBUG
   cout << "SequentialModelSelector::test() -- test_set.length = " << test_set.length() << endl;
+#endif
   for (int i=0; i<models.size(); i++)
   {
     if (i == best_model[last_train_t])
@@ -119,17 +134,26 @@ void SequentialModelSelector::test(VMat test_set, PP<VecStatsCollector> test_sta
     else
       models[i]->test(test_set, dummy_stats);
   }
-  int start = MAX(init_train_size,last_test_t);
-  start = MAX(last_train_t,start);
+  int start = MAX(init_train_size,last_test_t+1);
+  start = MAX(last_train_t+1,start);
   for (int t=start; t<test_set.length(); t++)
   {
     int best_t = MIN(t, last_train_t);
+#ifdef DEBUG
     cout << "SequentialModelSelector::test() -- t = " << t << ", best_t = " << best_t << " et best_model = " << best_model[best_t] << endl;
+#endif
     predictions(t) << models[best_model[best_t]]->predictions(t);
     errors(t) << models[best_model[best_t]]->errors(t);
   }
-  last_test_t = test_set.length();
+  last_test_t = MAX(test_set.length()-1, last_test_t);
+#ifdef DEBUG
   cout << "SequentialModelSelector.last_test_t = " << last_test_t << endl;
+#endif
+
+  string s1 = "seq_model/predictions_test_t=" + tostring(last_test_t);
+  string s2 = "seq_model/errors_test_t=" + tostring(last_test_t);
+  saveAsciiWithoutSize(s1, predictions);
+  saveAsciiWithoutSize(s2, errors);
 }
 
 void SequentialModelSelector::computeOutput(const Vec& input, Vec& output) const

@@ -86,13 +86,15 @@ void MovingAverage::train()
   static Mat all_targets;
 
   int target_pos = inputsize();
-  int start = MAX(window_length-1, last_train_t);
+  int start = MAX(window_length-1, last_train_t+1);
   if (report_progress)
     pb = new ProgressBar("Training MovingAverage learner", train_set.length()-start);
   //train_stats->forget();
   for (int t=start; t<train_set.length(); t++)
   {
+#ifdef DEBUG
     cout << "MovingAverage::train -- t = " << t << endl;
+#endif
     all_targets = train_set.subMat(t-window_length+1, target_pos, window_length, targetsize());
     columnMean(all_targets,output);
     predictions(t) << output;
@@ -105,12 +107,17 @@ void MovingAverage::train()
         computeCostsFromOutputs(input, out, target, cost);
         errors(t) << cost;
         train_stats->update(cost);
+#ifdef DEBUG
+        cout << "MovingAverage::train update train_stats pour t = " << t << endl;
+#endif
       }
     }
     if (pb) pb->update(t-start);
   }
-  last_train_t = train_set.length();
+  last_train_t = MAX(train_set.length()-1, last_train_t);
+#ifdef DEBUG
   cout << "MovingAverage.last_train_t = " << last_train_t << endl;
+#endif
 
   train_stats->finalize();
 
@@ -128,15 +135,17 @@ void MovingAverage::test(VMat testset, PP<VecStatsCollector> test_stats,
   static Vec cost(targetsize());
   static Mat all_targets;
 
-  int start = MAX(window_length-1, last_test_t);
-  start = MAX(last_train_t,start);
+  int start = MAX(window_length-1, last_test_t+1);
+  start = MAX(last_train_t+1,start);
   int target_pos = inputsize();
   if (report_progress)
     pb = new ProgressBar("Testing MovingAverage learner", testset.length()-start);
   //test_stats->forget();
   for (int t=start; t<testset.length(); t++)
   {
+#ifdef DEBUG
     cout << "MovingAverage::test -- t = " << t << endl;
+#endif
     all_targets = testset.subMat(t-window_length+1, target_pos, window_length, targetsize()).toMat();
     columnMean(all_targets,output);
     predictions(t) << output;
@@ -151,12 +160,17 @@ void MovingAverage::test(VMat testset, PP<VecStatsCollector> test_stats,
         errors(t) << cost;
         if (testcosts) testcosts->appendRow(cost);
         test_stats->update(cost);
+#ifdef DEBUG
+        cout << "MovingAverage::test update test_stats pour t = " << t << endl;
+#endif
       }
     }
     if (pb) pb->update(t-start);
   }
-  last_test_t = testset.length();
+  last_test_t = MAX(testset.length()-1, last_test_t);
+#ifdef DEBUG
   cout << "MovingAverage.last_test_t = " << last_test_t << endl;
+#endif
 
   test_stats->finalize();
 
@@ -166,9 +180,6 @@ void MovingAverage::test(VMat testset, PP<VecStatsCollector> test_stats,
 void MovingAverage::computeCostsFromOutputs(const Vec& inputs, const Vec& outputs,
     const Vec& targets, Vec& costs) const
 {
-  if (cost_funcs.size() != 1)
-    PLERROR("There is only 1 cost_funcs defined yet.");
-
   for (int i=0; i<cost_funcs.size(); i++)
   {
     if (cost_funcs[i]=="mse" || cost_funcs[i]=="MSE")

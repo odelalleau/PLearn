@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.29 2003/06/03 14:52:05 plearner Exp $
+   * $Id: plearn.cc,v 1.30 2003/07/01 18:43:37 ducharme Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -88,6 +88,13 @@
 //#include "HOpt.h"
 // #include "TryAll.h"
 // #include "EarlyStop.h"
+
+// SequentialLearner
+#include "SequentialLearner.h"
+#include "MovingAverage.h"
+#include "EmbeddedSequentialLearner.h"
+#include "SequentialModelSelector.h"
+#include "SequentialValidation.h"
 
 // Commands
 #include "HelpCommand.h"
