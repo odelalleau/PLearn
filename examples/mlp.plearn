@@ -1,0 +1,114 @@
+#!plearn
+
+Experiment( 
+# string: Path of this experiment's directory in which to save all experiment results (will be created if it does not already exist)
+expdir = "mlp";
+
+# VMat: The dataset to use for training/testing (will be split according to what is specified in the testmethod)
+dataset = AutoVMatrix(specification="letters all normalize");
+
+# PP< Splitter >: The splitter to use to generate one or several train/test pairs.
+splitter = TrainTestSplitter(test_fraction=.10) ;
+
+# bool: If false, the models won't be saved.
+save_models = 1  ;
+
+# PP< Learner >: The learner to train/test
+learner = 
+NeuralNet( 
+          # int: dimensionality of input vector 
+          inputsize = 16;
+
+          # int: dimensionality of output 
+          # (for classification the output is typically a vector of class scores
+          # so this is the number of classes)
+          outputsize = 26;  # 26 letters
+
+          # int: dimensionality of target 
+          # (here target is simply the class number between 0 and 9)
+          targetsize = 1;
+
+          # int: number of hidden units in first hidden layer (0 means no hidden layer)
+          nhidden = 100;
+
+          # double: global weight decay for all layers
+          weight_decay = 0;
+
+          # string: what transfer function to use for ouput layer? 
+          # one of: tanh, sigmoid, exp, softmax 
+          # an empty string means no output transfer function 
+          output_transfer_func = "softmax"  ;
+
+          # Array< string >:     a list of cost functions to use
+          # in the form "[ cf1; cf2; cf3; ... ]" where each function is one of: 
+          #   mse (for regression)
+          #   mse_onehot (for classification)
+          #   NLL (negative log likelihood -log(p[c]) for classification) 
+          #   class_error (classification error) 
+          # The first function of the list will be used as 
+          # the objective function to optimize 
+          # (possibly with an added weight decay penalty) 
+          cost_funcs = [ "NLL", "class_error" ];
+
+          # PP< Optimizer >:     specify the optimizer to use
+          optimizer = GradientOptimizer(
+                      # double: the initial learning rate
+                      start_learning_rate = 0.01  ;
+
+                      # double: the learning rate decrease constant
+                      decrease_constant = 0  ;
+
+                      );
+
+          # int: how many samples to use to estimate the avergage gradient before updating the weights
+          # 0 is equivalent to specifying training_set->length() 
+          # NOTE: this overrides the optimizer s 'n_updates' and 'every_iterations'.
+          batch_size = 1;
+
+          # int: how many times the optimizer gets to see the whole training set.
+          nepochs = 100;
+
+          # int:     index of test set (in test_sets) to use for early 
+          #     stopping (-1 means no early-stopping) 
+          earlystop_testsetnum = -1  ;
+
+          # int:     index of statistic (as returned by test) to use
+          earlystop_testresultindex = 0  ;
+          
+          # double:     maximum degradation in error from last best value
+          earlystop_max_degradation = 0  ;
+          
+          # double:     minimum error beyond which we stop
+          earlystop_min_value = -3.4028234663852886e+38  ;
+          
+          # double:     minimum improvement in error otherwise we stop
+          earlystop_min_improvement = 0  ;
+          
+          # bool:     are max_degradation and min_improvement relative?
+          earlystop_relative_changes = 1  ;
+          
+          # bool:     if yes, then return with saved 'best' model
+          earlystop_save_best = 1  ;
+          
+          # int:     ax. nb of steps beyond best found (-1 means ignore) 
+          earlystop_max_degraded_steps = -1  ;
+          
+          # bool:     save learner at each epoch?
+          save_at_every_epoch = 0  ;
+          
+          # string:    The directory in which to save results 
+          expdir = ""  ;
+
+          # Array< Ker >:    The cost functions used by the default useAndCost method 
+          test_costfuncs = 0 [  ];
+
+          # int: ????
+          test_every = 1  ;
+
+          # int: size of blocks over which to perform tests, calling 'apply' if >1, otherwise caling 'use'
+          minibatch_size = 1  ;
+
+          )
+)
+
+
