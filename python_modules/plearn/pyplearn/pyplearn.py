@@ -493,7 +493,7 @@ U{Epytext Markup Language Manual<http://epydoc.sourceforge.net/epytext.html>}
 should not take you more than 15 minutes and you will be ready to document your
 code.
 """
-__cvs_id__ = "$Id: pyplearn.py,v 1.16 2005/02/08 00:39:08 dorionc Exp $"
+__cvs_id__ = "$Id: pyplearn.py,v 1.17 2005/02/09 16:44:00 dorionc Exp $"
 
 import string, types
 import plearn.utilities.metaprog as metaprog
@@ -507,7 +507,7 @@ class plearn_snippet:
     """Objects of this class are used to wrap the parts of the Python code
        that have already be converted to a PLearn string, so they don't
        get the same treatment as Python strings (which will get wrapped in
-       double quotes by _plearn_repr).
+       double quotes by PLearnRepr.repr).
     """
     def __init__(self, s):
         self.s = s
@@ -695,10 +695,11 @@ def TMat(num_rows, num_cols, mat_contents):
     Example: in Python, TMat(2, 3, [1, 2, 3, 4, 5, 6]) gives
     in PLearn: 2 3 [1 2 3 4 5 6]
     """
-    return plearn_snippet(_plearn_repr(num_rows) + ' ' +
-                          _plearn_repr(num_cols) + ' [' +
-                          ', '.join([_plearn_repr(e) for e in mat_contents]) +
-                          ']')
+    return plearn_snippet( PLearnRepr.repr(num_rows) + ' '  +
+                           PLearnRepr.repr(num_cols) + ' [' +
+                          ', '.join([ PLearnRepr.repr(e) for e in mat_contents ]) +
+                          ']'
+                           )
 
 def include(filename, replace_list = []):
     """Includes the contents of a .plearn file.
