@@ -1,4 +1,3 @@
-
 // -*- C++ -*-
 
 // PDistribution.h
@@ -34,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.h,v 1.8 2004/02/20 21:14:46 chrish42 Exp $ 
+   * $Id: PDistribution.h,v 1.9 2004/05/19 17:28:50 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.h */

@@ -1,4 +1,3 @@
-
 // -*- C++ -*-
 
 // PDistribution.cc
@@ -34,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.cc,v 1.12 2004/03/03 18:13:36 yoshua Exp $ 
+   * $Id: PDistribution.cc,v 1.13 2004/05/19 17:28:50 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.cc */
