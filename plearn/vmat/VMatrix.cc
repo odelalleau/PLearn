@@ -33,11 +33,9 @@
 // 
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
-
-
  
-/*
-* $Id: VMatrix.cc,v 1.89 2005/02/03 17:10:22 ducharme Exp $
+/********************************************************
+* $Id: VMatrix.cc,v 1.90 2005/02/04 15:10:59 tihocan Exp $
 ******************************************************* */
 
 #include <plearn/io/load_and_save.h>
@@ -46,67 +44,79 @@
 #include "FileVMatrix.h"
 #include "SubVMatrix.h"
 #include "VMat_computeStats.h"
-#include <plearn/math/random.h>  //!< For uniform_multinomial_sample()
-#include <plearn/base/stringutils.h> // REMOVE as soon as possible
-
+#include <plearn/math/random.h>      //!< For uniform_multinomial_sample()
+#include <plearn/base/tostring.h>
+#include <plearn/base/lexical_cast.h>
+#include <plearn/base/stringutils.h> //!< For pgetline()
 
 namespace PLearn {
 using namespace std;
 
-
+// TODO-PPath   : this class is now PPath compliant
+// TODO-PStream : this class is now PStream compliant
 
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
   VMatrix,
   "Base classes for virtual matrices",
   "VMatrix provides an abstraction for a virtual matrix, namely a matrix wherein\n"
-  "all element access operations are virtual.  This enables a wide variety of\n"
+  "all element access operations are virtual. This enables a wide variety of\n"
   "matrix-like objects to be implemented, from simple data containers (e.g.\n"
   "MemoryVMatrix), to large-scale matrices that don't fit in memory (e.g.\n"
   "FileVMatrix), to on-the-fly calculations that are implemented through \n"
   "various processing VMatrices.\n"
   "\n"
   "For implementers, a simple class to derive from is RowBufferedVMatrix, which\n"
-  "implements most of the functionality of the abstract VMatrix interface in terms\n"
+  "implements most of the functionalities of the abstract VMatrix interface in terms\n"
   "of a few simple virtual functions to be overridden by the user.");
 
 VMatrix::VMatrix()
-  : lockf_(0), length_(-1), width_(-1), mtime_(0), 
-   inputsize_(-1), targetsize_(-1), weightsize_(-1),
-   writable(false)
-{}
+: length_(-1), width_(-1), mtime_(0), 
+  inputsize_(-1), targetsize_(-1), weightsize_(-1),
+  writable(false)
+{
+  lockf_ = 0;
+}
 
 VMatrix::VMatrix(int the_length, int the_width)
-  : lockf_(0), length_(the_length), width_(the_width), mtime_(0), 
-   inputsize_(-1), targetsize_(-1), weightsize_(-1),
-   writable(false),
-   map_sr(TVec<map<string,real> >(the_width)),
-   map_rs(TVec<map<real,string> >(the_width)),
-   fieldstats(0)
-{}
+: length_(the_length), width_(the_width), mtime_(0), 
+  inputsize_(-1), targetsize_(-1), weightsize_(-1),
+  writable(false),
+  map_sr(TVec<map<string,real> >(the_width)),
+  map_rs(TVec<map<real,string> >(the_width)),
+  fieldstats(0)
+{
+  lockf_ = 0;
+}
 
+////////////////////
+// declareOptions //
+////////////////////
 void VMatrix::declareOptions(OptionList & ol)
 {
   declareOption(ol, "writable", &VMatrix::writable, OptionBase::buildoption, "Are write operations permitted?");
   declareOption(ol, "length", &VMatrix::length_, OptionBase::buildoption, 
-                "length of the matrix (number of rows)");
+                "Length of the matrix (number of rows)");
   declareOption(ol, "width", &VMatrix::width_, OptionBase::buildoption, 
-                "width of the matrix (number of columns; -1 indicates this varies from sample to sample...)");
+                "Width of the matrix (number of columns; -1 indicates this varies from sample to sample...)");
   declareOption(ol, "inputsize", &VMatrix::inputsize_, OptionBase::buildoption, 
-                "size of input part (-1 if variable or unspecified, 0 if no input)");
+                "Size of input part (-1 if variable or unspecified, 0 if no input)");
   declareOption(ol, "targetsize", &VMatrix::targetsize_, OptionBase::buildoption, 
-                "size of target part (-1 if variable or unspecified, 0 if no target)");
+                "Size of target part (-1 if variable or unspecified, 0 if no target)");
   declareOption(ol, "weightsize", &VMatrix::weightsize_, OptionBase::buildoption, 
-                "size of weights (-1 if unspecified, 0 if no weight, 1 for sample weight, >1 currently not supported (include it is recommended to include additional info in target. weight is really reserved for a per sample weight)).");
+                "Size of weights (-1 if unspecified, 0 if no weight, 1 for sample weight, >1 currently not supported (include it is recommended to include additional info in target. weight is really reserved for a per sample weight)).");
   declareOption(ol, "metadatadir", &VMatrix::metadatadir, OptionBase::buildoption, 
                 "A directory in which to store meta-information for this matrix \n"
                 "You don't always have to give this explicitly. For ex. if your \n"
-                "vmat is the outer VMatrix in a .vmat file, the metadatadir will \n"
+                "VMat is the outer VMatrix in a .vmat file, the metadatadir will \n"
                 "automatically be set to name_of_vmat_file.metadata/ \n"
                 "And if it is the source inside another VMatrix that sets its \n"
-                "metadatadir, it will often be set from that surrounding vmat's metadata \n");
+                "metadatadir, it will often be set from that surrounding vmat's metadata.\n");
   inherited::declareOptions(ol);
 }
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void VMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
@@ -118,8 +128,12 @@ void VMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(map_rs, copies);
   deepCopyField(fieldinfos, copies);
   deepCopyField(fieldstats, copies);
+  // TODO See if we can deep-copy a PStream (and what it means).
 }
 
+///////////////////
+// getFieldInfos //
+///////////////////
 Array<VMField>& VMatrix::getFieldInfos() const
 {
   if(fieldinfos.size()==0 && hasMetaDataDir())
@@ -141,16 +155,25 @@ Array<VMField>& VMatrix::getFieldInfos() const
   return fieldinfos;
 }
 
-void VMatrix::setFieldInfos(const Array<VMField>& finfo)
+///////////////////
+// setFieldInfos //
+///////////////////
+void VMatrix::setFieldInfos(const Array<VMField>& finfo) const
 {
   fieldinfos=finfo;
 }
 
+///////////////////
+// hasFieldInfos //
+///////////////////
 bool VMatrix::hasFieldInfos() const
 {
   return fieldinfos.size()>0;
 }
 
+///////////////////////////
+// unduplicateFieldNames //
+///////////////////////////
 void VMatrix::unduplicateFieldNames()
 {
   map<string,vector<int> > mp;
@@ -166,6 +189,9 @@ void VMatrix::unduplicateFieldNames()
       }
 }
 
+////////////////
+// fieldNames //
+////////////////
 TVec<string> VMatrix::fieldNames() const
 {
   int d = width();
@@ -175,6 +201,9 @@ TVec<string> VMatrix::fieldNames() const
   return names;
 }
 
+////////////////
+// fieldIndex //
+////////////////
 int VMatrix::fieldIndex(const string& fieldname) const
 {
   Array<VMField>& infos = getFieldInfos(); 
@@ -184,6 +213,9 @@ int VMatrix::fieldIndex(const string& fieldname) const
   return -1;
 }
 
+///////////////////
+// getFieldIndex //
+///////////////////
 int VMatrix::getFieldIndex(const string& fieldname_or_num) const
 {
   int i = fieldIndex(fieldname_or_num);
@@ -194,19 +226,28 @@ int VMatrix::getFieldIndex(const string& fieldname_or_num) const
   return i;
 }
 
+////////////
+// build_ //
+////////////
 void VMatrix::build_()
 {
   if(metadatadir!="")
     setMetaDataDir(metadatadir); // make sure we perform all necessary operations 
 }
 
+///////////
+// build //
+///////////
 void VMatrix::build()
 {
   inherited::build();
   build_();
 }
 
-void VMatrix::printFieldInfo(ostream& out, int fieldnum) const
+////////////////////
+// printFieldInfo //
+////////////////////
+void VMatrix::printFieldInfo(PStream& out, int fieldnum) const
 {
     VMField fi = getFieldInfos(fieldnum);
     StatsCollector& s = getStats(fieldnum);
@@ -237,7 +278,6 @@ void VMatrix::printFieldInfo(ostream& out, int fieldnum) const
         PLERROR("Can't write name of type");
       }  
 
-    out.precision(12);
     out << "nmissing: " << s.nmissing() << '\n';
     out << "nnonmissing: " << s.nnonmissing() << '\n';
     out << "sum: " << s.sum() << '\n';
@@ -246,6 +286,7 @@ void VMatrix::printFieldInfo(ostream& out, int fieldnum) const
     out << "min: " << s.min() << '\n';
     out << "max: " << s.max() << '\n';
 
+    // TODO To remove if we do not use it ?
 #if 0
     if(!s.counts.empty())
       {
@@ -268,12 +309,18 @@ void VMatrix::printFieldInfo(ostream& out, int fieldnum) const
     out << endl << endl;
 }
 
-void VMatrix::printFieldInfo(ostream& out, const string& fieldname_or_num) const
+////////////////////
+// printFieldInfo //
+////////////////////
+void VMatrix::printFieldInfo(PStream& out, const string& fieldname_or_num) const
 {
   printFieldInfo(out, getFieldIndex(fieldname_or_num));  
 }
 
-void VMatrix::printFields(ostream& out) const
+/////////////////
+// printFields //
+/////////////////
+void VMatrix::printFields(PStream& out) const
 { 
   for(int j=0; j<width(); j++)
     {
@@ -282,6 +329,9 @@ void VMatrix::printFields(ostream& out) const
     }
 }
 
+////////////////
+// getExample //
+////////////////
 void VMatrix::getExample(int i, Vec& input, Vec& target, real& weight) 
 {
   if(inputsize_<0)
@@ -305,7 +355,9 @@ void VMatrix::getExample(int i, Vec& input, Vec& target, real& weight)
     weight = get(i,inputsize_+targetsize_);
 }
 
-
+//////////////////
+// computeStats //
+//////////////////
 void VMatrix::computeStats()
 {
   fieldstats = Array<VMFieldStat>(width());
@@ -318,26 +370,28 @@ void VMatrix::computeStats()
     }
 }
 
-void VMatrix::loadStats(const string& filename)
+///////////////
+// loadStats //
+///////////////
+void VMatrix::loadStats(const PPath& filename)
 {
-  ifstream in(filename.c_str());
-  if(!in)
-    PLERROR("In VMatrix::loadStats Couldn't open file %s for reading",filename.c_str());
+  PStream in = openFile(filename, PStream::raw_ascii, "r");
   int nfields;
   in >> nfields;
   if(nfields!=width())
-    PLWARNING("In VMatrix::loadStats nfields differes from VMat width");
+    PLWARNING("In VMatrix::loadStats - nfields differs from VMat width");
 
   fieldstats.resize(nfields);
   for(int j=0; j<fieldstats.size(); j++)
     fieldstats[j].read(in);
 }
 
-void VMatrix::saveStats(const string& filename) const
+///////////////
+// saveStats //
+///////////////
+void VMatrix::saveStats(const PPath& filename) const
 {
-  ofstream out(filename.c_str());
-  if(!out)
-    PLERROR("In VMatrix::saveStats Couldn't open file %s for writing",filename.c_str());
+  PStream out = openFile(filename, PStream::raw_ascii, "w");
   out << fieldstats.size() << endl;
   for(int j=0; j<fieldstats.size(); j++)
   {
@@ -346,18 +400,25 @@ void VMatrix::saveStats(const string& filename) const
   }
 }
 
-
 /// @todo Implementation not done yet. Implement
+// TODO Remove ?
+/*
 string VMatrix::fieldheader(int elementcharwidth)
 {
   return "VMatrix::fieldheader NOT YET IMPLEMENTED";
 }
+*/
 
-
+//////////////////
+// declareField //
+//////////////////
 void VMatrix::declareField(int fieldindex, const string& fieldname, VMField::FieldType fieldtype)
 { getFieldInfos(fieldindex) = VMField(fieldname,fieldtype); }
 
-void VMatrix::declareFieldNames(TVec<string> fnames)
+///////////////////////
+// declareFieldNames //
+///////////////////////
+void VMatrix::declareFieldNames(const TVec<string>& fnames)
 {
   if(fnames.length()!=width())
     PLERROR("In VMatrix::declareFieldNames length of fnames differs from width() of VMatrix");
@@ -365,6 +426,9 @@ void VMatrix::declareFieldNames(TVec<string> fnames)
     declareField(i,fnames[i]);
 }
 
+////////////////////
+// saveFieldInfos //
+////////////////////
 void VMatrix::saveFieldInfos() const
 {
   // check if we need to save the fieldinfos
@@ -376,22 +440,27 @@ void VMatrix::saveFieldInfos() const
   
   // Ensure that the metadatadir exists
   if(!force_mkdir(getMetaDataDir()))
-    PLERROR("In VMatrix::saveFieldInfos could not create directory %s",getMetaDataDir().c_str());
+    PLERROR("In VMatrix::saveFieldInfos could not create directory %s",getMetaDataDir().absolute().c_str());
   
   PPath filename = getMetaDataDir() / "fieldnames";
-  ofstream out(filename.c_str());
-  if(!out)
-    PLERROR("In VMatrix::saveFieldInfos Couldn't open file %s for writing",filename.c_str());    
+  PStream out = openFile(filename, PStream::raw_ascii, "w");
   for(int i= 0; i < fieldinfos.length(); ++i)
     out << fieldinfos[i].name << '\t' << fieldinfos[i].fieldtype << endl;
 }
 
+////////////////////
+// loadFieldInfos //
+////////////////////
 void VMatrix::loadFieldInfos() const
 {
   Array<VMField> current_fieldinfos = getSavedFieldInfos();
-  fieldinfos = current_fieldinfos;
+  setFieldInfos(current_fieldinfos);
+  //fieldinfos = current_fieldinfos;
 }
 
+////////////////////////
+// getSavedFieldInfos //
+////////////////////////
 Array<VMField> VMatrix::getSavedFieldInfos() const
 {
   PPath filename = getMetaDataDir() / "fieldnames";
@@ -401,7 +470,6 @@ Array<VMField> VMatrix::getSavedFieldInfos() const
     return no_fieldinfos;
   }
   PStream in = openFile(filename, PStream::raw_ascii, "r");
-
   int w = width();
   Array<VMField> current_fieldinfos(w);
   for(int i=0; i<w; ++i)
@@ -412,14 +480,16 @@ Array<VMField> VMatrix::getSavedFieldInfos() const
       case 1: current_fieldinfos[i] = VMField(v[0]); break;
       case 2: current_fieldinfos[i] = VMField(v[0], VMField::FieldType(toint(v[1]))); break;
       default: PLERROR("In VMatrix::getSavedFieldInfos Format not recognized in file %s.\n"
-                       "Each line should be '<name> {<type>}'.", filename.c_str());
+                       "Each line should be '<name> {<type>}'.", filename.absolute().c_str());
     }
   }
   return current_fieldinfos;
 }
 
-// comments: see .h
-string VMatrix::resolveFieldInfoLink(PPath target, PPath source)
+//////////////////////////
+// resolveFieldInfoLink //
+//////////////////////////
+string VMatrix::resolveFieldInfoLink(const PPath& target, const PPath& source)
 {
   PPath contents = removeblanks( loadFileAsString(source) );
   if ( contents == source )
@@ -446,35 +516,41 @@ string VMatrix::resolveFieldInfoLink(PPath target, PPath source)
   else return contents;
 }
 
-void VMatrix::setSFIFFilename(int col, string ext, string filepath)
+/////////////////////
+// setSFIFFilename //
+/////////////////////
+void VMatrix::setSFIFFilename(int col, string ext, const PPath& filepath)
 {
   setSFIFFilename(fieldName(col),ext,filepath);
 }
 
-
-void VMatrix::setSFIFFilename(string fieldname, string ext, string filepath)
+void VMatrix::setSFIFFilename(string fieldname, string ext, const PPath& filepath)
 {
   PPath target      = makeFileNameValid(fieldname+ext);
   PPath normalfname = getMetaDataDir() / "FieldInfo" / target;
+  PPath normalfname_lnk = normalfname + ".lnk";
 
-  rm(normalfname+".lnk");
+  rm(normalfname_lnk);
   if(filepath==normalfname || filepath=="")
   {
-    rm(normalfname+".lnk");
+    rm(normalfname_lnk);
     return;
   }
 
   force_mkdir_for_file(normalfname);
-  ofstream o((normalfname+".lnk").c_str());
+  PStream o = openFile(normalfname_lnk, PStream::raw_ascii, "w");
   o<<filepath<<endl;
 }
 
-string VMatrix::getSFIFFilename(int col, string ext)
+/////////////////////
+// getSFIFFilename //
+/////////////////////
+PPath VMatrix::getSFIFFilename(int col, string ext)
 {
   return getSFIFFilename(fieldName(col),ext);
 }
 
-string VMatrix::getSFIFFilename(string fieldname, string ext)
+PPath VMatrix::getSFIFFilename(string fieldname, string ext)
 {
   PPath  target           = makeFileNameValid(fieldname+ext);
   PPath  normalfname      = getMetaDataDir() / "FieldInfo" / target;
@@ -490,6 +566,9 @@ string VMatrix::getSFIFFilename(string fieldname, string ext)
   else return normalfname;
 }
 
+//////////////////
+// isSFIFDirect //
+//////////////////
 bool VMatrix::isSFIFDirect(int col, string ext)
 {
   return isSFIFDirect(fieldName(col), ext);
@@ -497,12 +576,14 @@ bool VMatrix::isSFIFDirect(int col, string ext)
 
 bool VMatrix::isSFIFDirect(string fieldname, string ext)
 {
-  string target      = makeFileNameValid(fieldname+ext);
-  string normalfname = getMetaDataDir() / "FieldInfo" / target;
+  PPath target      = makeFileNameValid(fieldname+ext);
+  PPath normalfname = getMetaDataDir() / "FieldInfo" / target;
   return getSFIFFilename(fieldname,ext) == normalfname;
 }
 
-//! adds a string<->real mapping
+//////////////////////
+// addStringMapping //
+//////////////////////
 void VMatrix::addStringMapping(int col, string str, real val)
 {
   init_map_sr();
@@ -510,6 +591,9 @@ void VMatrix::addStringMapping(int col, string str, real val)
   map_rs[col][val]=str;
 }
 
+//////////////////////
+// addStringMapping //
+//////////////////////
 real VMatrix::addStringMapping(int col, string str)
 {
   init_map_sr();
@@ -527,6 +611,9 @@ real VMatrix::addStringMapping(int col, string str)
   return val;
 }
 
+/////////////////////////////
+// removeAllStringMappings //
+/////////////////////////////
 void VMatrix::removeAllStringMappings()
 {
   init_map_sr();
@@ -537,6 +624,9 @@ void VMatrix::removeAllStringMappings()
     }
 }
 
+////////////////////////////////
+// removeColumnStringMappings //
+////////////////////////////////
 void VMatrix::removeColumnStringMappings(int c)
 {
   init_map_sr();
@@ -549,7 +639,7 @@ void VMatrix::removeColumnStringMappings(int c)
 ///////////////////////////
 void VMatrix::saveAllStringMappings()
 {
-  string fname;
+  PPath fname;
   for(int i=0;i<width();i++)
   {
     fname = getSFIFFilename(i,".smap");
@@ -557,7 +647,10 @@ void VMatrix::saveAllStringMappings()
   }
 }
 
-void VMatrix::saveStringMappings(int col,string fname)
+////////////////////////
+// saveStringMappings //
+////////////////////////
+void VMatrix::saveStringMappings(int col, const PPath& fname)
 {
   map<string, real> the_map = getStringToRealMapping(col);
   if(the_map.size()==0)
@@ -566,20 +659,19 @@ void VMatrix::saveStringMappings(int col,string fname)
     return;
   }
   force_mkdir_for_file(fname);
-  PStream o = openFile(fname,PStream::plearn_ascii,"w");
-  // ofstream o(fname.c_str());
-  if(!o)
-    PLERROR( "File %s can't be opened",fname.c_str());
+  PStream o = openFile(fname, PStream::plearn_ascii, "w");
   for(map<string,real>::iterator it = the_map.begin();it!=the_map.end();++it)
     o << it->first << it->second << endl;
 }
 
-//! removes a string mapping
+/////////////////////////
+// removeStringMapping //
+/////////////////////////
 void VMatrix::removeStringMapping(int col, string str)
 {
   init_map_sr();
   map<string,real>::iterator sriterator;
-// check if the mapping ractually exists
+  // Check if the mapping actually exists.
   if((sriterator = map_sr[col].find(str)) == map_sr[col].end())
     return;
   real val = map_sr[col][str];
@@ -587,7 +679,9 @@ void VMatrix::removeStringMapping(int col, string str)
   map_rs[col].erase(map_rs[col].find(val));
 }
 
-//! overwrite the string<->real mapping with this one (and build the reverse mapping)
+//////////////////////
+// setStringMapping //
+//////////////////////
 void VMatrix::setStringMapping(int col, const map<string,real> & zemap)
 {
   init_map_sr();
@@ -597,7 +691,9 @@ void VMatrix::setStringMapping(int col, const map<string,real> & zemap)
     map_rs[col][it->second]=it->first;
 }
 
-//! deletes all string mapping for column i
+/////////////////////////
+// deleteStringMapping //
+/////////////////////////
 void VMatrix::deleteStringMapping(int col)
 {
   init_map_sr();
@@ -651,7 +747,7 @@ string VMatrix::getString(int row,int col) const
 /////////////////////
 // getRowAsStrings //
 /////////////////////
-void VMatrix::getRowAsStrings(int i, TVec<string> v_str) const {
+void VMatrix::getRowAsStrings(int i, TVec<string>& v_str) const {
   v_str.resize(width());
   for (int j = 0; j < width(); j++)
     v_str[j] = getString(i, j);
@@ -682,6 +778,7 @@ void VMatrix::setMetaDataDir(const PPath& the_metadatadir)
   if(the_metadatadir=="")
     PLERROR("Called setMetaDataDir with an empty string");
   metadatadir = the_metadatadir.absolute() / "";
+  // TODO See why the metadata dir is not created anymore.
 // dorionc
 //!<   if(!force_mkdir(metadatadir))
 //!<     PLERROR("In VMatrix::setMetadataDir could not create directory %s",metadatadir.c_str());
@@ -725,7 +822,7 @@ void VMatrix::setMetaInfoFrom(const VMat& vm)
   if(weightsize_<0)
     weightsize_ = vm->weightsize();
 
-  // copy fieldnames from vm if not set and they look good
+  // Copy fieldnames from vm if not set and they look good
   if(!hasFieldInfos() && (width() == vm->width()) && vm->hasFieldInfos() )
     setFieldInfos(vm->getFieldInfos());
 
@@ -766,16 +863,25 @@ bool VMatrix::looksTheSameAs(const VMat& m) {
       || this->targetsize() != m->targetsize() );
 }
 
+/////////////
+// getHost //
+/////////////
 string getHost()
 {
   return "TODO";
 }
 
+////////////
+// getPid //
+////////////
 int getPid()
 {
   return -999;
 }
 
+/////////////
+// getUser //
+/////////////
 string getUser()
 {
   return "TODO";
@@ -793,7 +899,7 @@ void VMatrix::lockMetaDataDir(time_t max_lock_age, bool verbose) const
   if(!pathexists(metadatadir))
     force_mkdir(metadatadir);
 
-  string lockfile = metadatadir / ".lock";  
+  PPath lockfile = metadatadir / ".lock";  
   while (isfile(lockfile) && (max_lock_age == 0 || mtime(lockfile) + max_lock_age > time(0))) {
     // There is a lock file, and it is not older than 'max_lock_age'.
     string bywho;
@@ -806,10 +912,9 @@ void VMatrix::lockMetaDataDir(time_t max_lock_age, bool verbose) const
       sleep(uniform_multinomial_sample(10) + 1); // Random wait for more safety.
     }
   }
-  lockf_ = fopen(lockfile.c_str(),"w");  
+  lockf_ = openFile(lockfile, PStream::raw_ascii, "w");  
   string lock_content = "host " + getHost() + ", pid " + tostring(getPid()) + ", user " + getUser();
-  fprintf(lockf_, lock_content.c_str());
-  fflush(lockf_);   // Don't close it, because we want to keep the lock.
+  lockf_ << lock_content;
 }
 
 ///////////////////////
@@ -819,15 +924,18 @@ void VMatrix::unlockMetaDataDir() const
 {
   if(lockf_==0)
     PLERROR("In VMatrix::unlockMetaDataDir() was called while no lock is held by this object");
-  fclose(lockf_);
-  
-  string lockfile = metadatadir / ".lock";  
-  rm(lockfile);
   lockf_ = 0;
+  
+  PPath lockfile = metadatadir / ".lock";  
+  rm(lockfile);
 }
 
+////////////////////
+// getMetaDataDir //
+////////////////////
 PPath VMatrix::getMetaDataDir() const
 { 
+  // TODO Remove ?
   //  if(!hasMetaDataDir())
   //  PLERROR("In VMatrix::getMetaDataDir(): metadatadir was not set"); 
   return metadatadir; 
@@ -839,18 +947,21 @@ PPath VMatrix::getMetaDataDir() const
 void VMatrix::loadAllStringMappings()
 {
   // if this is a StrTableVMatrix, smap are already created
+  // TODO WOW ! Please override !!
   if(classname()=="StrTableVMatrix")
     return;
   for(int i=0;i<width();i++)
     loadStringMapping(i);
 }
 
-/// Loads the appropriate string map file for column 'col'
+///////////////////////
+// loadStringMapping //
+///////////////////////
 void VMatrix::loadStringMapping(int col)
 {
   if(!hasMetaDataDir())
     return;
-  string fname = getSFIFFilename(col,".smap");
+  PPath fname = getSFIFFilename(col,".smap");
   init_map_sr();
   force_mkdir( getMetaDataDir() / "FieldInfo" );
 
@@ -860,10 +971,9 @@ void VMatrix::loadStringMapping(int col)
   deleteStringMapping(col);
 
   // smap file exists, open it
-  PStream f = openFile(fname,PStream::plearn_ascii);
-  if(!f)
-    PLERROR( string("File "+fname+" cannot be opened.").c_str());
+  PStream f = openFile(fname, PStream::plearn_ascii);
 
+  // TODO Remove ?
 #if 0
   string pref;
   f>>pref;
@@ -878,8 +988,8 @@ void VMatrix::loadStringMapping(int col)
     f >> s >> val;
     if(f) 
     {
-      map_sr[col][s]= val;
-      map_rs[col][val]=s;
+      map_sr[col][s]   = val;
+      map_rs[col][val] = s;
     }
   }
 }
@@ -887,7 +997,7 @@ void VMatrix::loadStringMapping(int col)
 ////////////////////////////
 // copyStringMappingsFrom //
 ////////////////////////////
-void VMatrix::copyStringMappingsFrom(VMat source) {
+void VMatrix::copyStringMappingsFrom(const VMat& source) {
   if (width_ != source->width()) {
     PLERROR("In VMatrix::copyStringMappingsFrom - The source VMatrix doesn't have the same width");
   }
@@ -909,7 +1019,7 @@ TVec<StatsCollector> VMatrix::getStats() const
     if (isfile(statsfile) && getMtime()<mtime(statsfile))
     {
       if(getMtime()==0)
-        PLWARNING("Warning: using a saved stat file (%s) but mtime is 0.\n(cannot be sure file is up to date)",statsfile.c_str());
+        PLWARNING("Warning: using a saved stat file (%s) but mtime is 0.\n(cannot be sure file is up to date)",statsfile.absolute().c_str());
       PLearn::load(statsfile, field_stats);
     }
     else
@@ -922,6 +1032,9 @@ TVec<StatsCollector> VMatrix::getStats() const
   return field_stats;
 }
 
+////////////////////
+// getBoundingBox //
+////////////////////
 TVec< pair<real,real> > VMatrix::getBoundingBox(real extra_percent) const
 {
   TVec<StatsCollector> stats = getStats();
@@ -952,26 +1065,30 @@ TVec<RealMapping> VMatrix::getRanges()
   return ranges;
 }
 
-/**
-   @todo Eventually to be changed to pure virtual, once get has been implemented in all subclasses.
-   Calls to sample can then be replaced by getRow everywhere.
-*/
+/* TODO Remove
 real VMatrix::get(int i, int j) const
 {
   PLERROR("get(i,j) method not implemented for this VMat (name=%s), please implement.",classname().c_str());
   return 0.0;
 }
+*/
 
+/////////
+// put //
+/////////
 void VMatrix::put(int i, int j, real value)
 {
-  PLERROR("put(i,j,value) method not implemented for this VMat, please implement.");
+  PLERROR("In VMatrix::put - Method not implemented for this VMat, please implement.");
 }
 
+///////////////
+// getColumn //
+///////////////
 void VMatrix::getColumn(int j, Vec v) const
 {
 #ifdef BOUNDCHECK
   if(v.length() != length())
-    PLERROR("In VMatrix::getColumn v must have the same length as the VMatrix");
+    PLERROR("In VMatrix::getColumn - v must have the same length as the VMatrix");
 #endif
   for(int i=0; i<v.length(); i++)
     v[i] = get(i,j);
@@ -986,6 +1103,9 @@ void VMatrix::getSubRow(int i, int j, Vec v) const
     v[k] = get(i,j+k);
 }
 
+///////////////
+// putSubRow //
+///////////////
 void VMatrix::putSubRow(int i, int j, Vec v)
 {
   for(int k=0; k<v.length(); k++)
@@ -1004,6 +1124,9 @@ void VMatrix::getRow(int i, Vec v) const
   getSubRow(i,0,v);
 }
 
+////////////
+// putRow //
+////////////
 void VMatrix::putRow(int i, Vec v)
 {
 #ifdef BOUNDCHECK
@@ -1013,17 +1136,26 @@ void VMatrix::putRow(int i, Vec v)
   putSubRow(i,0,v);
 }
 
+//////////
+// fill //
+//////////
 void VMatrix::fill(real value)
 {
   Vec v(width(), value);
   for (int i=0; i<length(); i++) putRow(i,v);
 }
 
+///////////////
+// appendRow //
+///////////////
 void VMatrix::appendRow(Vec v)
 {
   PLERROR("This method (appendRow) not implemented by VMatrix subclass!");
 }
 
+///////////////
+// insertRow //
+///////////////
 void VMatrix::insertRow(int i, Vec v)
 {
   if (i<0 || i>length_)
@@ -1043,9 +1175,15 @@ void VMatrix::insertRow(int i, Vec v)
   }
 }
 
+///////////
+// flush //
+///////////
 void VMatrix::flush()
 {}
 
+////////////////////
+// putOrAppendRow //
+////////////////////
 void VMatrix::putOrAppendRow(int i, Vec v)
 {
   if(i==length())
@@ -1056,6 +1194,9 @@ void VMatrix::putOrAppendRow(int i, Vec v)
     PLERROR("In putOrAppendRow, index %d out of range",i);
 }
 
+/////////////////
+// forcePutRow //
+/////////////////
 void VMatrix::forcePutRow(int i, Vec v)
 {
   if(i<length())
@@ -1070,6 +1211,9 @@ void VMatrix::forcePutRow(int i, Vec v)
     }
 }
 
+////////////
+// getMat //
+////////////
 void VMatrix::getMat(int i, int j, Mat m) const
 {
 #ifdef BOUNDCHECK
@@ -1078,11 +1222,13 @@ void VMatrix::getMat(int i, int j, Mat m) const
 #endif
   for(int ii=0; ii<m.length(); ii++)
     {
-      Vec v = m(ii);
-      getSubRow(i+ii, j, v);
+      getSubRow(i+ii, j, m(ii));
     }
 }
 
+////////////
+// putMat //
+////////////
 void VMatrix::putMat(int i, int j, Mat m)
 {
 #ifdef BOUNDCHECK
@@ -1091,14 +1237,18 @@ void VMatrix::putMat(int i, int j, Mat m)
 #endif
   for(int ii=0; ii<m.length(); ii++)
     {
-      Vec v = m(ii);
-      putSubRow(i+ii, j, v);
+      putSubRow(i+ii, j, m(ii));
     }
 }
 
+///////////////
+// compacify //
+///////////////
 void VMatrix::compacify() {}
 
-
+///////////
+// toMat //
+///////////
 Mat VMatrix::toMat() const
 {
   Mat m(length(),width());
@@ -1106,6 +1256,9 @@ Mat VMatrix::toMat() const
   return m;
 }
 
+////////////
+// subMat //
+////////////
 VMat VMatrix::subMat(int i, int j, int l, int w)
 { return new SubVMatrix(this,i,j,l,w); }
 
@@ -1151,31 +1304,53 @@ bool VMatrix::find(const Vec& input, real tolerance, int* i) const {
   return false;
 }
 
-void VMatrix::print(ostream& out) const
+//////////////
+// newwrite //
+//////////////
+void VMatrix::newwrite(PStream& out) const
 {
-  Vec v(width());
-  for(int i=0; i<length(); i++) {
-    getRow(i,v);
-    out << v << endl;
+  switch(out.outmode)
+  {
+    case PStream::raw_ascii:
+    case PStream::pretty_ascii:
+      {
+        Vec v(width());
+        for(int i=0; i<length(); i++) {
+          getRow(i,v);
+          out << v << endl;
+        }
+        break;
+      }
+    default:
+      inherited::newwrite(out);
   }
 }
 
+///////
+// ~ //
+///////
 VMatrix::~VMatrix()
 {}
 
+//////////
+// save //
+//////////
 void VMatrix::save(const PPath& filename) const
 {
-  PLWARNING( "This method overloads the Object::save method which is "
-             "deprecated. This method is therefore deprecated and you should call "
-             "directly the savePMAT() method." );
+  PLDEPRECATED( "This method overloads the Object::save method which is "
+                "deprecated. This method is therefore deprecated and you should call "
+                "directly the savePMAT() method." );
   
   savePMAT(filename);
 }
 
+//////////////
+// savePMAT //
+//////////////
 void VMatrix::savePMAT(const PPath& pmatfile) const
 {
   if (width() == -1)
-    PLERROR("In VMat::save Saving in a pmat file is only possible for constant width Distributions (where width()!=-1)");
+    PLERROR("In VMat::save - Saving in a pmat file is only possible for constant width VMats (where width()!=-1)");
 
   int nsamples = length();
 
@@ -1196,6 +1371,9 @@ void VMatrix::savePMAT(const PPath& pmatfile) const
   if (fieldinfos.size() > 0) m.saveFieldInfos();      
 }
 
+//////////////
+// saveDMAT //
+//////////////
 void VMatrix::saveDMAT(const PPath& dmatdir) const
 {
   force_rmdir(dmatdir);  
@@ -1210,7 +1388,6 @@ void VMatrix::saveDMAT(const PPath& dmatdir) const
     getRow(i,v);
     vm.appendRow(v);
     pb(i);
-    //cerr<<i<<" "<<flush;
   }
 }
 
@@ -1221,15 +1398,10 @@ void VMatrix::saveAMAT(const PPath& amatfile, bool verbose, bool no_header, bool
 {
   int l = length();
   int w = width();
-
-  ofstream out(amatfile.c_str());
-  if (!out)
-   PLERROR("In saveAscii could not open file %s for writing",amatfile.c_str());
-
+  PStream out = openFile(amatfile, PStream::raw_ascii, "w");
   if (!no_header) {
     out << "#size: "<< l << ' ' << w << endl;
   }
-  out.precision(15);
   if(w>0 && !no_header)
     {
       out << "#: ";
@@ -1268,10 +1440,9 @@ void VMatrix::saveAMAT(const PPath& amatfile, bool verbose, bool no_header, bool
     delete pb;
 }
 
-/** result += transpose(X).Y
- * Where X = this->subMatColumns(X_startcol,X_ncols)
- * and   Y =  this->subMatColumns(Y_startcol,Y_ncols);
- */
+///////////////////
+// accumulateXtY //
+///////////////////
 void VMatrix::accumulateXtY(int X_startcol, int X_ncols, int Y_startcol, int Y_ncols, 
                             Mat& result, int startrow, int nrows, int ignore_this_row) const
 {
@@ -1287,9 +1458,9 @@ void VMatrix::accumulateXtY(int X_startcol, int X_ncols, int Y_startcol, int Y_n
     }
 }
 
-/** result += transpose(X).Y
- * Where X = this->subMatColumns(X_startcol,X_ncols)
- */
+///////////////////
+// accumulateXtX //
+///////////////////
 void VMatrix::accumulateXtX(int X_startcol, int X_ncols, 
                             Mat& result, int startrow, int nrows, int ignore_this_row) const
 {
@@ -1302,7 +1473,5 @@ void VMatrix::accumulateXtX(int X_startcol, int X_ncols,
       externalProductAcc(result, x,x);
     }
 }
-
-
 
 } // end of namespace PLearn
