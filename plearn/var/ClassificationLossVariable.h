@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ClassificationLossVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: ClassificationLossVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,6 +44,8 @@
 #define ClassificationLossVariable_INC
 
 #include "BinaryVariable.h"
+// For inline function that can return either a ClassificationLossVariable or a MiniBatchClassificationLossVariable
+#include "MiniBatchClassificationLossVariable.h"
 
 namespace PLearn <%
 using namespace std;
@@ -65,6 +67,13 @@ public:
   //! can't bprop through a hard classification error...
   virtual void bprop() {}
 };
+
+inline Var classification_loss(Var network_output, Var classnum)
+{ 
+  if(classnum->isScalar())
+    return new ClassificationLossVariable(network_output, classnum); 
+  else return new MiniBatchClassificationLossVariable(network_output, classnum); 
+}
 
 
 %> // end of namespace PLearn

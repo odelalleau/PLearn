@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ExtendedVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: ExtendedVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -86,6 +86,21 @@ public:
   virtual void symbolicBprop();
   virtual void rfprop();
 };
+
+//!  general extension of a matrix in any direction
+inline Var extend(Var v, int top_extent, int bottom_extent, int left_extent, int right_extent, real fill_value=0.0)
+{ return new ExtendedVariable(v,top_extent,bottom_extent,left_extent,right_extent,fill_value); }
+
+//!  simple extension of a vector (same semantic as old extend, when we only had vectors)
+inline Var extend(Var v, real extension_value = 1.0, int n_extend = 1)
+{ 
+  if(v->isColumnVec())
+    return new ExtendedVariable(v,0,n_extend,0,0,extension_value); 
+  else if(v->isRowVec())
+    return new ExtendedVariable(v,0,0,0,n_extend,extension_value); 
+  PLERROR("In extend(Var v, real extension_value = 1.0, int n_extend = 1) v is not a vector (single row or single column)");
+  return Var();
+}
 
 
 %> // end of namespace PLearn

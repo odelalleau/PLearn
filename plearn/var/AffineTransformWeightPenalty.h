@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: AffineTransformWeightPenalty.h,v 1.3 2003/10/10 17:18:56 yoshua Exp $
+   * $Id: AffineTransformWeightPenalty.h,v 1.4 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -71,6 +71,11 @@ class AffineTransformWeightPenalty: public UnaryVariable
     virtual void bprop();
 };
 
+
+//! weight decay and bias decay terms
+//! This has not been tested yet [Pascal: a tester].
+inline Var affine_transform_weight_penalty(Var transformation, real weight_decay, real bias_decay=0, bool L1_penalty=false)
+{ return new AffineTransformWeightPenalty(transformation, weight_decay, bias_decay, L1_penalty); } 
 
 %> // end of namespace PLearn
 

@@ -36,11 +36,12 @@
 
 
 /* *******************************************************      
-   * $Id: EqualVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
+   * $Id: EqualVariable.cc,v 1.4 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "EqualVariable.h"
+#include "EqualScalarVariable.h"
 
 namespace PLearn <%
 using namespace std;
@@ -85,6 +86,15 @@ void EqualVariable::bprop() {}
 
 void EqualVariable::symbolicBprop() {}
 
+Var isequal(Var v1, Var v2)
+{
+  if(v2->isScalar())
+    return new EqualScalarVariable(v1,v2);
+  else if(v1->isScalar())
+    return new EqualScalarVariable(v2,v1);
+  else
+    return new EqualVariable(v1,v2);
+}
 
 
 %> // end of namespace PLearn

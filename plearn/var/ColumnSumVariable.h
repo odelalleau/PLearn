@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ColumnSumVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: ColumnSumVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -69,6 +69,14 @@ public:
 
 };
 
+
+inline Var columnSum(Var v)
+{ 
+  if(v->isRowVec())
+    return v;
+  else
+    return new ColumnSumVariable(v); 
+}
 
 %> // end of namespace PLearn
 

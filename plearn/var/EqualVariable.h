@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: EqualVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: EqualVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -68,6 +68,16 @@ public:
   virtual void bprop();
   virtual void symbolicBprop();
 };
+
+/*!   First case: v1 and v2 are two vectors of length() l
+     resulting Var is 1 if for all i=0 to l-1,
+     v1->value[i] == v2->value[i], 0 otherwise
+  Second case: one of v1 or v2 is a scalar variable (length() 1)
+  and the other is a vector of length() l
+     resulting Var is a vector of length() l, doing an element-wise comparison
+*/
+
+Var isequal(Var v1, Var v2);
 
 
 %> // end of namespace PLearn

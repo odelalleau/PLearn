@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: IfThenElseVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: IfThenElseVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -73,6 +73,9 @@ public:
   Var& Else() { return varray[2]; }
 };
 
+//!  IT WOULD BE NICE IF WE COULD REDEFINE (:?)
+inline Var ifThenElse(Var If, Var Then, Var Else)
+{ return new IfThenElseVariable(If,Then,Else); }
 
 %> // end of namespace PLearn
 

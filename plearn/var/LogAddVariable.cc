@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: LogAddVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
+   * $Id: LogAddVariable.cc,v 1.4 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -64,13 +64,6 @@ PLEARN_IMPLEMENT_OBJECT(LogAddVariable, "ONE LINE DESCR", "NO HELP");
 void LogAddVariable::recomputeSize(int& l, int& w) const
 { l=input1->length(); w=input1->width(); }
 
-
-
-
-
-
-
-
 void LogAddVariable::fprop()
 {
   apply(input1->value,input2->value,value,logadd);
@@ -89,7 +82,6 @@ void LogAddVariable::bprop()
   apply(grad2, grad2, safeexp);
   input2->gradient += grad2%gradient;
 }
-
 
 void LogAddVariable::symbolicBprop()
 {

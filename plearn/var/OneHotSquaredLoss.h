@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: OneHotSquaredLoss.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: OneHotSquaredLoss.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,7 +44,8 @@
 #define OneHotSquaredLoss_INC
 
 #include "BinaryVariable.h"
-
+// For inline function that can return either a OneHotSquaredLoss or a MatrixOneHotSquaredLoss
+#include "MatrixOneHotSquaredLoss.h"
 namespace PLearn <%
 using namespace std;
 
@@ -74,6 +75,13 @@ public:
   virtual void rfprop();
 };
 
+
+inline Var onehot_squared_loss(Var network_output, Var classnum, real coldval=0., real hotval=1.)
+{ 
+  if (network_output->isVec())  
+  return new OneHotSquaredLoss(network_output, classnum, coldval, hotval);
+  else return new MatrixOneHotSquaredLoss(network_output, classnum, coldval, hotval);
+}
 
 %> // end of namespace PLearn
 

@@ -36,12 +36,12 @@
 
 
 /* *******************************************************      
-   * $Id: MinusVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
+   * $Id: MinusVariable.cc,v 1.4 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "MinusVariable.h"
-#include "Var_utils.h"
+#include "NegateElementsVariable.h"
 
 namespace PLearn <%
 using namespace std;
@@ -59,16 +59,8 @@ MinusVariable::MinusVariable(Variable* input1, Variable* input2)
 
 PLEARN_IMPLEMENT_OBJECT(MinusVariable, "ONE LINE DESCR", "NO HELP");
 
-
 void MinusVariable::recomputeSize(int& l, int& w) const
 { l=input1->length(); w=input1->width(); }
-
-
-
-
-
-
-
 
 void MinusVariable::fprop()
 {
@@ -104,9 +96,8 @@ void MinusVariable::bbprop()
 void MinusVariable::symbolicBprop()
 {
   input1->accg(g);
-  input2->accg(-g);
+  input2->accg(new NegateElementsVariable(g));
 }
-
 
 
 %> // end of namespace PLearn

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: OneHotVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: OneHotVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -75,6 +75,9 @@ public:
   virtual void symbolicBprop();
   virtual void rfprop();
 };
+
+inline Var onehot(int the_length, Var hotindex, real coldvalue=0.0, real hotvalue=1.0)
+{ return new OneHotVariable(the_length, hotindex, coldvalue, hotvalue); }
 
 
 %> // end of namespace PLearn

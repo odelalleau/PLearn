@@ -1,3 +1,4 @@
+
 // -*- C++ -*-
 
 // PLearn (A C++ Machine Learning Library)
@@ -36,39 +37,43 @@
 
 
 /* *******************************************************      
-   * $Id: SignVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
+   * $Id: Var_operators.h,v 1.1 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
-#ifndef SignVariable_INC
-#define SignVariable_INC
+#ifndef Var_operators_INC
+#define Var_operators_INC
 
-#include "UnaryVariable.h"
+#include "Var.h"
 
 namespace PLearn <%
 using namespace std;
 
+Var operator+(Var v, real cte);
+Var operator+(real cte, Var v);
+Var operator+(Var v1, Var v2);
+void operator+=(Var& v1, const Var& v2);
 
-//!  sign(x) = 1 if x>0, -1 if x<0, 0 if x=0, all done element by element.
-class SignVariable: public UnaryVariable
-{
-protected:
-    typedef UnaryVariable inherited;
-  //!  Default constructor for persistence
-  SignVariable() {}
 
-public:
-  SignVariable(Variable* input);
-  PLEARN_DECLARE_OBJECT(SignVariable);
-  virtual void recomputeSize(int& l, int& w) const;
-  
-  
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
-};
+Var operator-(Var v);
+Var operator-(Var v, real cte);
+Var operator-(real cte, Var v);
+Var operator-(Var v1, Var v2);
+void operator-=(Var& v1, const Var& v2);
 
-inline Var sign(Var input) { return new SignVariable(input); }
+// elementwise multiplications
+Var operator*(Var v, real cte);
+Var operator*(real cte, Var v);
+Var operator*(Var v1, Var v2);
+
+// elementwise divisions
+Var operator/(Var v, real cte);
+Var operator/(real cte, Var v);
+Var operator/(Var v1, Var v2);
+
+Var operator==(Var v1, Var v2);
+Var operator!=(Var v1, Var v2);
+Var isdifferent(Var v1, Var v2);
 
 %> // end of namespace PLearn
 

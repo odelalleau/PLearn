@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DuplicateRowVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: DuplicateRowVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -71,6 +71,16 @@ public:
 
 };
 
+
+inline Var duplicateRow(Var v, int the_length)
+{ 
+  if(!v->isRowVec())
+    PLERROR("In duplicateRow: v is not a single-row var");
+  if(the_length==1)
+    return v;
+  else
+    return new DuplicateRowVariable(v,the_length); 
+}
 
 %> // end of namespace PLearn
 

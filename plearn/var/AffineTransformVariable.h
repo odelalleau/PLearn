@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: AffineTransformVariable.h,v 1.6 2003/12/01 23:53:51 yoshua Exp $
+   * $Id: AffineTransformVariable.h,v 1.7 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,6 +44,8 @@
 #define AffineTransformVariable_INC
 
 #include "BinaryVariable.h"
+// For inline function that can return either an AffineTransformVariable or a MatrixAffineTransformVariable
+#include "MatrixAffineTransformVariable.h"
 
 namespace PLearn <%
 using namespace std;
@@ -77,6 +79,13 @@ public:
   virtual void symbolicBprop();
 };
 
+//! first row of transformation is the bias.
+inline Var affine_transform(Var vec, Var transformation)
+{ 
+ if (vec->isVec())
+    return new AffineTransformVariable(vec, transformation); 
+    else return new MatrixAffineTransformVariable(vec, transformation);
+}
 
 %> // end of namespace PLearn
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DuplicateScalarVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: DuplicateScalarVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -73,6 +73,15 @@ public:
 
 };
 
+inline Var duplicateScalar(Var v, int the_length, int the_width)
+{ 
+  if(!v->isScalar())
+    PLERROR("In duplicateScalar: v is not a scalar var");
+  if(the_length*the_width==1)
+    return v;
+  else
+    return new DuplicateScalarVariable(v,the_length,the_width); 
+}
 
 %> // end of namespace PLearn
 

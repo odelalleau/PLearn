@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatOfVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: ConcatOfVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -73,6 +73,14 @@ public:
   virtual void bprop();
   virtual void fbprop();
 };
+
+//!  concatOf
+inline Var concatOf(VMat distr, Func f)
+{ return new ConcatOfVariable(distr,f); }
+
+//!  deprecated old version, do not use!
+inline Var concatOf(Var output, const VarArray& inputs, VMat distr, int nsamples, VarArray parameters=VarArray())
+{ return concatOf(distr,Func(inputs,output)); }
 
 
 %> // end of namespace PLearn

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOfVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: SumOfVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -82,6 +82,21 @@ class SumOfVariable: public NaryVariable
     void printInfo(bool print_gradient);
 };
 
+//!  sumOf
+inline Var sumOf(VMat distr, Func f, int nsamples)
+{ return new SumOfVariable(distr,f,nsamples); }
+
+//!  deprecated old version do not use!
+inline Var sumOf(Var output, const VarArray& inputs, VMat distr, int nsamples, VarArray parameters=VarArray())
+{ return sumOf(distr,Func(inputs,output),nsamples); }
+
+//!  meanOf
+inline Var meanOf(VMat distr, Func f, int nsamples)
+{ return new SumOfVariable(distr,f/nsamples,nsamples); }
+
+//!  deprecated old version do not use!
+inline Var meanOf(Var output, const VarArray& inputs, VMat distr, int nsamples, VarArray parameters=VarArray())
+{ return meanOf(distr, Func(inputs,output), nsamples); }
 
 %> // end of namespace PLearn
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DuplicateColumnVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: DuplicateColumnVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -71,6 +71,15 @@ public:
 
 };
 
+inline Var duplicateColumn(Var v, int the_width)
+{ 
+  if(!v->isColumnVec())
+    PLERROR("In duplicateColumn: v is not a single-column var");
+  if(the_width==1)
+    return v;
+  else
+    return new DuplicateColumnVariable(v,the_width); 
+}
 
 %> // end of namespace PLearn
 

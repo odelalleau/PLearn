@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SquareRootVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: SquareRootVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -68,6 +68,9 @@ public:
   //!  here don't approximate, do d2C/dx^2 = 4 x^2 d2C/dy^2 + 2 dC/dy 
   //virtual void bbprop();  
 };
+
+inline Var squareroot(Var v)
+{ return new SquareRootVariable(v);}
 
 
 %> // end of namespace PLearn

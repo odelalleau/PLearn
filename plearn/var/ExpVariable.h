@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ExpVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: ExpVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -68,6 +68,9 @@ public:
   virtual void symbolicBprop();
   virtual void rfprop();
 };
+
+inline Var exp(Var v)
+{ return new ExpVariable(v); }
 
 
 %> // end of namespace PLearn

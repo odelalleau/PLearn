@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ArgminOfVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: ArgminOfVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -81,6 +81,10 @@ public:
   virtual void bprop();
 };
 
+/*! returns the value of v within the_values_of_v that gives the lowest
+   value of expression (which may depend on inputs). */
+inline Var argminOf(Var v, Var expression, Var values_of_v, VarArray inputs)
+{ return new ArgminOfVariable(v, expression, values_of_v, inputs); }
 
 %> // end of namespace PLearn
 

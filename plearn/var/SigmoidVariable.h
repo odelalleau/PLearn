@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SigmoidVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: SigmoidVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -69,6 +69,15 @@ public:
   virtual void rfprop();
 };
 
+inline Var sigmoid(Var v)
+{ return new SigmoidVariable(v); }
+
+/*!   a soft version of the ordinary max(x1,x2) mathematical operation
+  where the hardness parameter controls how close to an actual max(x1,x2)
+  we are (i.e. as hardness --> infty we quickly get max(x1,x2), but
+  as hardness --> 0 we get the simple average of x1 and x2.
+*/
+Var softmax(Var x1, Var x2, Var hardness);
 
 %> // end of namespace PLearn
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SoftmaxLossVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: SoftmaxLossVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,6 +44,7 @@
 #define SoftmaxLossVariable_INC
 
 #include "BinaryVariable.h"
+#include "MatrixSoftmaxLossVariable.h"
 
 namespace PLearn <%
 using namespace std;
@@ -69,6 +70,13 @@ public:
   virtual void rfprop();
 };
 
+
+inline Var softmax(Var input, Var index)
+{ 
+  if (input->isVec())
+    return new SoftmaxLossVariable(input, index);
+  else return new MatrixSoftmaxLossVariable(input, index);
+}
 
 %> // end of namespace PLearn
 

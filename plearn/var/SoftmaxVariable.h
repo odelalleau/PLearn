@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SoftmaxVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: SoftmaxVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,6 +44,7 @@
 #define SoftmaxVariable_INC
 
 #include "UnaryVariable.h"
+#include "MatrixSoftmaxVariable.h"
 
 namespace PLearn <%
 using namespace std;
@@ -68,6 +69,26 @@ public:
   virtual void symbolicBprop();
   virtual void rfprop();
 };
+
+
+// Now we have a special box!
+inline Var softmax(Var v)
+{
+ if(v->isVec()) 
+   return new SoftmaxVariable(v);
+ else return new MatrixSoftmaxVariable(v);
+}
+
+//* OLD implementation 
+/*
+inline Var old_softmax(Var input)
+{ 
+  //!  This is supposed to be numerically more stable, but is it really backpropable (it would be if dividing by a constnat, but with this max ?)
+  Var maxin = max(input);
+  Var exp_input = exp(input-maxin);
+  return exp_input/sum(exp_input); 
+}
+*/
 
 
 %> // end of namespace PLearn

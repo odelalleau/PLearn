@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PowVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: PowVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -72,6 +72,11 @@ public:
   virtual void symbolicBprop();
 };
 
+inline Var pow(Var v, real power)
+{ return new PowVariable(v,power); }
+
+inline Var sqrt(Var v)
+{ return pow(v,0.5); }
 
 %> // end of namespace PLearn
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: IsAboveThresholdVariable.h,v 1.3 2003/12/08 03:46:31 yoshua Exp $
+   * $Id: IsAboveThresholdVariable.h,v 1.4 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -74,6 +74,15 @@ public:
   virtual void rfprop();
 };
 
+
+inline Var isAboveThreshold(Var v, real threshold=0, real truevalue=1, real falsevalue=0, bool strict=false)
+{ return new IsAboveThresholdVariable(v,threshold,truevalue,falsevalue,strict); }
+
+inline Var operator>=(Var v, real threshold)
+{ return new IsAboveThresholdVariable(v, threshold, 1, 0); }
+
+inline Var operator<=(Var v, real threshold)
+{ return new IsAboveThresholdVariable(v, threshold, 0, 1); }
 
 %> // end of namespace PLearn
 

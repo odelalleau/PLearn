@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixElementsVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: MatrixElementsVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -82,6 +82,10 @@ public:
   virtual void fbprop();
 };
 
+
+inline Var matrixElements(Var expression, const Var& i, const Var& j,
+                             int ni, int nj, const VarArray& parameters)
+{ return new MatrixElementsVariable(expression, i, j, ni, nj, parameters); }
 
 %> // end of namespace PLearn
 

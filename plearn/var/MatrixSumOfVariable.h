@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixSumOfVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: MatrixSumOfVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -83,6 +83,13 @@ class MatrixSumOfVariable: public NaryVariable
     void printInfo(bool print_gradient);
 };
 
+// sumOf with matrix as inputs
+inline Var sumOf(VMat distr, Func f, int nsamples, int input_size)
+{ return new MatrixSumOfVariable(distr,f,nsamples,input_size); }
+
+// meanOf with matrix as inputs
+inline Var meanOf(VMat distr, Func f, int nsamples, int input_size)
+{ return new MatrixSumOfVariable(distr, f/nsamples, nsamples, input_size); }
 
 %> // end of namespace PLearn
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: IsLargerVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: IsLargerVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -68,6 +68,8 @@ public:
   virtual void symbolicBprop(); 
 };
 
+inline Var operator>(Var v1, Var v2)
+{ return new IsLargerVariable(v1, v2); }
 
 %> // end of namespace PLearn
 

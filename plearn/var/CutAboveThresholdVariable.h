@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: CutAboveThresholdVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: CutAboveThresholdVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -69,6 +69,11 @@ public:
   virtual void symbolicBprop();
 };
 
+inline Var cutAboveThreshold(Var v, real threshold)
+{ return new CutAboveThresholdVariable(v,threshold); }
+
+inline Var negative(Var v)
+{ return cutAboveThreshold(v,0.0); }
 
 %> // end of namespace PLearn
 

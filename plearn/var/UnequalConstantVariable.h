@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnequalConstantVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: UnequalConstantVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -72,6 +72,14 @@ public:
   virtual void bprop();
   virtual void symbolicBprop();
 };
+
+//!  result[i] = 1 if v1[i]!=cte, 0 otherwise
+inline Var operator!=(Var v1, real cte)
+{  return new UnequalConstantVariable(v1,cte); }
+
+//!  result[i] = 1 if v1[i]!=cte, 0 otherwise
+inline Var operator!=(real cte, Var v1)
+{  return new UnequalConstantVariable(v1,cte); }
 
 
 %> // end of namespace PLearn

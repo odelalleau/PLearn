@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Func.cc,v 1.9 2003/11/25 03:45:57 yoshua Exp $
+   * $Id: Func.cc,v 1.10 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,6 +45,7 @@
 #include "random.h"
 #include "TMat_maths.h"
 #include "Var.h"
+#include "Var_operators.h"
 #include "TimesConstantVariable.h"
 #include "DisplayUtils.h" ////////// to remove
 

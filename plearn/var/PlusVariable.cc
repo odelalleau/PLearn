@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PlusVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
+   * $Id: PlusVariable.cc,v 1.4 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,7 +44,6 @@
 
 namespace PLearn <%
 using namespace std;
-
 
 /** PlusVariable **/
 
@@ -54,7 +53,6 @@ PlusVariable::PlusVariable(Variable* input1, Variable* input2)
   if(input1->length()!=input2->length() || input1->width()!=input2->width())
     PLERROR("In PlusVariable: input1 and input2 must have exactly the same size");
 }
-
 
 PLEARN_IMPLEMENT_OBJECT(PlusVariable, "ONE LINE DESCR", "NO HELP");
 
@@ -105,7 +103,6 @@ void PlusVariable::symbolicBprop()
   input1->accg(g);
   input2->accg(g);
 }
-
 
 
 %> // end of namespace PLearn

@@ -36,12 +36,12 @@
 
 
 /* *******************************************************      
-   * $Id: SigmoidVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
+   * $Id: SigmoidVariable.cc,v 1.4 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "SigmoidVariable.h"
-#include "Var_utils.h"
+#include "Var_operators.h"
 
 namespace PLearn <%
 using namespace std;
@@ -124,6 +124,16 @@ void SigmoidVariable::rfprop()
   }
 }
 
+/*!   a soft version of the ordinary max(x1,x2) mathematical operation
+  where the hardness parameter controls how close to an actual max(x1,x2)
+  we are (i.e. as hardness --> infty we quickly get max(x1,x2), but
+  as hardness --> 0 we get the simple average of x1 and x2.
+*/
+Var softmax(Var x1, Var x2, Var hardness)
+{
+  Var w=sigmoid(hardness*(x1-x2));
+  return x1*w + x2*(1-w);
+}
 
 
 %> // end of namespace PLearn

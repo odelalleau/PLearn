@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumAbsVariable.h,v 1.1 2003/10/10 17:18:56 yoshua Exp $
+   * $Id: SumAbsVariable.h,v 1.2 2003/12/16 17:44:52 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -69,6 +69,8 @@ public:
   //virtual void rfprop();
 };
 
+inline Var sumabs(Var v)
+{ return new SumAbsVariable(v); }
 
 %> // end of namespace PLearn
 
