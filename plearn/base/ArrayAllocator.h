@@ -32,6 +32,9 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
+/* *******************************************************
+ * * $Id: ArrayAllocator.h,v 1.2 2003/03/06 18:25:59 ducharme Exp $
+ * ******************************************************* */
 
 #ifndef ARRAYALLOCATOR_H
 #define ARRAYALLOCATOR_H

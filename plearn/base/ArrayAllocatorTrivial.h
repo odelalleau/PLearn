@@ -33,6 +33,11 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 
+/* *******************************************************
+ * * $Id: ArrayAllocatorTrivial.h,v 1.2 2003/03/06 18:26:01 ducharme Exp $
+ * ******************************************************* */
+
+
 #ifndef ARRAYALLOCATORTRIVIAL_H
 #define ARRAYALLOCATORTRIVIAL_H
 

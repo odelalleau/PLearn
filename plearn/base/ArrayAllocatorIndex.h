@@ -33,6 +33,10 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 
+/* *******************************************************
+ * * $Id: ArrayAllocatorIndex.h,v 1.2 2003/03/06 18:26:00 ducharme Exp $
+ * ******************************************************* */
+
 
 #ifndef ARRAYALLOCATORINDEX_H
 #define ARRAYALLOCATORINDEX_H
