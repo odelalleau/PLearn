@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EpanechnikovKernel.cc,v 1.1 2004/12/21 02:07:15 chapados Exp $ 
+   * $Id: EpanechnikovKernel.cc,v 1.2 2004/12/21 07:14:57 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -105,20 +105,10 @@ void EpanechnikovKernel::build_()
 //////////////
 real EpanechnikovKernel::evaluate(const Vec& x1, const Vec& x2) const
 {
-  assert(x1.size() == x2.size());
-
-  const int n = x1.size();
-  real value = 0.0;
-  if (n == 0)
-    return value;
-  const real* px1 = x1.data();
-  const real* px2 = x2.data();
-  for (int i=0; i<n; ++i, ++px1, ++px2) {
-    real t = fabs(*px1-*px2) / lambda;
-    if (t <= 1.0)
-      value += 3 * (1-t*t) / 4;
-  }
-  return value;
+  real t = L2distance(x1,x2) / lambda;
+  if (t <= 1.0)
+    return 3 * (1-t*t) / 4;
+  return 0;
 }
 
 /////////////////////////////////
