@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.cc,v 1.5 2004/03/23 17:24:04 tihocan Exp $ 
+   * $Id: AddCostToLearner.cc,v 1.6 2004/03/23 17:46:16 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -167,45 +167,45 @@ void AddCostToLearner::build_()
   int n = costs.length();
   int min_verb = 2;
   bool display = (verbosity >= min_verb);
-  if (n > 0) {
-    if (display) {
-      cout << "Additional costs computed: ";
+  int os = sub_learner->outputsize();
+  sub_learner_output.resize(os);
+  desired_target.resize(os);
+  if (rescale_output || rescale_target) {
+    real from_fac = from_max - from_min;
+    real to_fac = to_max - to_min;
+    fac = to_fac / from_fac;
+  }
+  output_min = -REAL_MAX;
+  output_max = REAL_MAX;
+  if (n > 0 && display) {
+    cout << "Additional costs computed: ";
+  }
+  for (int i = 0; i < n; i++) {
+    switch(costs[i]) {
+      case 1:
+        if (display) cout << "lift_output ";
+        // Output should be positive.
+        output_min = max(output_min, real(0));
+        break;
+      case 2:
+        if (display) cout << "cross_entropy ";
+        // Output should be in [0,1].
+        output_min = max(output_min, real(0));
+        output_max = min(output_max, real(1));
+        {
+          Var zero = var(0);
+          output_var = accessElement(sub_learner_output, zero);
+          target_var = accessElement(desired_target, zero);
+          cross_entropy_var = cross_entropy(output_var, target_var);
+          cross_entropy_prop = propagationPath(cross_entropy_var);
+        }
+        break;
+      default:
+        PLERROR("In AddCostToLearner::build_ - Invalid cost requested");
+        break;
     }
-    int os = sub_learner->outputsize();
-    sub_learner_output.resize(os);
-    desired_target.resize(os);
-    if (rescale_output || rescale_target) {
-      real from_fac = from_max - from_min;
-      real to_fac = to_max - to_min;
-      fac = to_fac / from_fac;
-    }
-    output_min = -REAL_MAX;
-    output_max = REAL_MAX;
-    for (int i = 0; i < n; i++) {
-      switch(costs[i]) {
-        case 1:
-          if (display) cout << "lift_output ";
-          // Output should be positive.
-          output_min = max(output_min, real(0));
-          break;
-        case 2:
-          if (display) cout << "cross_entropy ";
-          // Output should be in [0,1].
-          output_min = max(output_min, real(0));
-          output_max = min(output_max, real(1));
-          {
-            Var zero = var(0);
-            output_var = accessElement(sub_learner_output, zero);
-            target_var = accessElement(desired_target, zero);
-            cross_entropy_var = cross_entropy(output_var, target_var);
-            cross_entropy_prop = propagationPath(cross_entropy_var);
-          }
-          break;
-        default:
-          PLERROR("In AddCostToLearner::build_ - Invalid cost requested");
-          break;
-      }
-    }
+  }
+  if (n > 0 && display) {
     cout << endl;
   }
 }
