@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ExplicitSplitter.cc,v 1.3 2003/06/03 14:52:09 plearner Exp $ 
+   * $Id: ExplicitSplitter.cc,v 1.4 2003/08/04 19:36:50 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file ExplicitSplitter.cc */
@@ -89,7 +89,7 @@ int ExplicitSplitter::nsplits() const
 
 int ExplicitSplitter::nSetsPerSplit() const
 {
-  return splitsets.length();
+  return splitsets.width();
 }
 
 
