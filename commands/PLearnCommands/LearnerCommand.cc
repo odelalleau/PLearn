@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LearnerCommand.cc,v 1.5 2004/06/25 17:02:03 monperrm Exp $ 
+   * $Id: LearnerCommand.cc,v 1.6 2004/07/08 15:41:45 monperrm Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -63,7 +63,7 @@ LearnerCommand::LearnerCommand():
                   "  -> Will train the specified learner on the specified trainset and save the resulting trained learner as trained_learner.psave\n"
                   "learner test <trained_learner.psave> <testset.vmat> <cost.stats> [<outputs.pmat>] [<costs.pmat>]\n"
                   "  -> Tests the specified learner on the testset. Will produce a cost.stats file (viewable with the plearn stats command) and optionally saves individual outputs and costs\n"
-                  "learner compute_outputs <trained_learner.psave> <test_inputs.vmat> <outputs.pmat>\n"
+                  "learner compute_outputs <trained_learner.psave> <test_inputs.vmat> <outputs.pmat> (there is 'learner co' as a shortcut for compute_outputs)\n"
                   // "learner compute_costs <trained_learner.psave> <testset.vmat> <outputs.pmat> <costs.pmat>\n" 
                   "The datasets do not need to be .vmat they can be any valid vmatrix (.amat .pmat .dmat)"
                   ) 
@@ -142,7 +142,7 @@ void LearnerCommand::run(const vector<string>& args)
       else
         PLERROR("LearnerCommand::run you must provide at least 'plearn learner test <trained_learner.psave> <testset.vmat> <cost.stats>'");
     }
-  else if(command=="compute_outputs")
+  else if ((command=="compute_outputs") ||(command=="co"))
     {
       if (args.size()==4)
         compute_outputs(args[1],args[2],args[3]);
