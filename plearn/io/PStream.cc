@@ -168,7 +168,7 @@ streamsize PStream::readUntil(char* buf, streamsize n, const char* stop_chars)
         int c = get();
         if(c==EOF)
           break;
-        if(index(stop_chars, c))
+        if(strchr(stop_chars, c))
           {
             unget();
             break;
@@ -223,7 +223,7 @@ int PStream::smartReadUntilNext(const string& stoppingsymbols, string& character
 void PStream::skipAll(const char* chars_to_skip)
 {
   int c = get();
-  while(c!=EOF && index(chars_to_skip, c))
+  while(c!=EOF && strchr(chars_to_skip, c))
     c = get();
   if(c!=EOF)
     unget();

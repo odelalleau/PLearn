@@ -52,6 +52,8 @@ elif platform=='irix6'  :
     compileflags = '-DSGI -DBIGENDIAN'
 elif platform=='irix6-n32' :
     compileflags = '-DSGI -DBIGENDIAN'
+elif platform=='win32' :
+    compileflags = '-DWIN32 -D_MINGW_ -DBIGENDIAN'
 else:
     print 'Unknown platform: ' + platform
     sys.exit()

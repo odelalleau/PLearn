@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: random.cc,v 1.3 2003/06/03 17:32:54 jkeable Exp $
+   * $Id: random.cc,v 1.4 2003/11/05 22:09:27 ducharme Exp $
    ******************************************************* */
 
 extern "C" {
@@ -676,13 +676,14 @@ static double incbcf(), incbd(), pseries();
 double MAXLOG =  7.09782712893383996732E2;     /* log(MAXNUM) */
 double MINLOG = -7.451332191019412076235E2;     /* log(2**-1075) */
 double MACHEP =  1.11022302462515654042E-16;   /* 2**-53 */
-double pseries( double a, double b, double x );
+//double pseries( double a, double b, double x );
 double incbcf( double a, double b, double x );
 double incbd( double a, double b, double x );
 double big = 4.503599627370496e15;
 double biginv =  2.22044604925031308085e-16;
 
 
+/*
 double incbet(double aa, double bb, double xx )
 {
 double a, b, t, x, xc, w, y;
@@ -711,7 +712,7 @@ if( (bb * xx) <= 1.0 && xx <= 0.95)
 
 w = 1.0 - xx;
 
-/* Reverse a and b if x is greater than the mean. */
+// Reverse a and b if x is greater than the mean.
 if( xx > (aa/(aa+bb)) )
 	{
 	flag = 1;
@@ -734,16 +735,16 @@ if( flag == 1 && (b * x) <= 1.0 && x <= 0.95)
 	goto done;
 	}
 
-/* Choose expansion for better convergence. */
+// Choose expansion for better convergence.
 y = x * (a+b-2.0) - (a-1.0);
 if( y < 0.0 )
 	w = incbcf( a, b, x );
 else
 	w = incbd( a, b, x ) / xc;
 
-/* Multiply w by the factor
-     a      b   _             _     _
-    x  (1-x)   | (a+b) / ( a | (a) | (b) ) .   */
+// Multiply w by the factor
+//   a      b   _             _     _
+//  x  (1-x)   | (a+b) / ( a | (a) | (b) ) .
 
 y = a * log(x);
 t = b * log(xc);
@@ -756,7 +757,7 @@ if( (a+b) < MAXGAM && fabs(y) < MAXLOG && fabs(t) < MAXLOG )
 	t *= gamma(a+b) / (gamma(a) * gamma(b));
 	goto done;
 	}
-/* Resort to logarithms.  */
+// Resort to logarithms.
 y += t + log_gamma(a+b) - log_gamma(a) - log_gamma(b);
 y += log(w/a);
 if( y < MINLOG )
@@ -775,6 +776,7 @@ if( flag == 1 )
 	}
 return( t );
 }
+*/
 
 /* Continued fraction expansion #1
  * for incomplete beta integral
@@ -959,6 +961,7 @@ return(ans);
 /* Power series for incomplete beta integral.
    Use when b*x is small and x not too close to 1.  */
 
+/*
 double pseries( double a, double b, double x )
 {
 double s, t, u, v, n, t1, z, ai;
@@ -998,6 +1001,7 @@ else
 	}
 return(s);
 }
+*/
 
 %> // end of namespace PLearn
 

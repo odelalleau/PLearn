@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: random.h,v 1.3 2003/06/03 17:32:54 jkeable Exp $
+   * $Id: random.h,v 1.4 2003/11/05 22:09:27 ducharme Exp $
    ******************************************************* */
 
 #ifndef RANDOM_H
@@ -60,7 +60,7 @@ real log_beta(real x, real y);
 /*! returns the incomplete beta function B_z(x,y)  (BUGGED?)*/
 real incomplete_beta(real z, real x, real y);
 /*! returns the incomplete beta function B_z(x,y)  */
-double incbet(double x, double y, double z);
+//double incbet(double x, double y, double z);
 
 /*! Student-t cumulative distribution function */
 real student_t_cdf(real t, int nb_degrees_of_freedom);
