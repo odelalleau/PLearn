@@ -1,6 +1,7 @@
 #include "general.h"
 #include "WordNetOntology.h"
 #include "TypesNumeriques.h"
+#include "stringutils.h"      //!< For pgetline.
 
 using namespace PLearn;
 

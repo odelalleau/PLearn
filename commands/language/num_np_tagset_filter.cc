@@ -1,4 +1,5 @@
 #include "general.h"
+#include "stringutils.h"      //!< For pgetline.
 #include "WordNetOntology.h"
 
 using namespace PLearn;

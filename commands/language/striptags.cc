@@ -3,6 +3,7 @@
 #include <string>
 #include <algorithm>
 #include "general.h"
+#include "stringutils.h"    //!< For split.
 
 using namespace PLearn;
 

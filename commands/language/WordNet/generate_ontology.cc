@@ -1,4 +1,5 @@
 #include "WordNetOntology.h"
+#include "stringutils.h"    //!< For tostring.
 
 using namespace PLearn;
 
