@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BootstrapVMatrix.cc,v 1.10 2004/09/09 19:40:49 tihocan Exp $
+   * $Id: BootstrapVMatrix.cc,v 1.11 2004/10/18 23:42:00 tihocan Exp $
    ******************************************************* */
 
 #include "BootstrapVMatrix.h"
@@ -110,7 +110,7 @@ void BootstrapVMatrix::build_()
     else if (seed > 0)
       manual_seed(seed);
     else if (seed != 0)
-      PLERROR("In BootstrapVMatrix::build_ - The seed must be either -1 or > 0");
+      PLERROR("In BootstrapVMatrix::build_ - The seed must be either -1 or >= 0");
     shuffleElements(indices);
     indices = indices.subVec(0,int(frac * source.length()));
     if (!shuffle) {
