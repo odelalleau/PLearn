@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.cc,v 1.10 2004/06/11 13:23:02 tihocan Exp $
+   * $Id: MemoryVMatrix.cc,v 1.11 2004/06/15 20:49:56 tihocan Exp $
    ******************************************************* */
 
 #include "MemoryVMatrix.h"
@@ -48,8 +48,9 @@ using namespace std;
 /** MemoryVMatrix **/
 
 PLEARN_IMPLEMENT_OBJECT(MemoryVMatrix,
-    "ONE LINE DESCR",
-    "NO HELP"
+    "A VMatrix whose data is stored in memory.",
+    "The data can either be given directly by a Mat, or by another VMat that\n"
+    "will be precomputed in memory at build time.\n"
 );
 
 MemoryVMatrix::MemoryVMatrix() : data(Mat())
@@ -63,7 +64,12 @@ MemoryVMatrix::MemoryVMatrix(const Mat& the_data)
 
 void MemoryVMatrix::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "data", &MemoryVMatrix::data, OptionBase::buildoption, "The underlying matrix. \n");
+  declareOption(ol, "data", &MemoryVMatrix::data, OptionBase::buildoption,
+      "The underlying Mat.");
+
+  declareOption(ol, "data_vm", &MemoryVMatrix::data_vm, OptionBase::buildoption,
+      "The underlying VMatrix. Will overwrite 'data' if provided.");
+
   inherited::declareOptions(ol);
 }
 
@@ -77,6 +83,11 @@ void MemoryVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 ////////////
 void MemoryVMatrix::build_()
 {
+  if (data_vm) {
+    // Precompute data from data_vm;
+    data = data_vm->toMat();
+    copySizesFrom(data_vm);
+  }
   if (this->length() >= 0 && this->length() != data.length()) {
     // New length specified.
     data.resize(this->length(), data.width());
@@ -95,6 +106,9 @@ void MemoryVMatrix::build_()
   }
 }
 
+///////////
+// build //
+///////////
 void MemoryVMatrix::build()
 {
   inherited::build();
@@ -172,6 +186,7 @@ real MemoryVMatrix::dot(int i1, int i2, int inputsize) const
     res += v1[k]*v2[k];
   return res;
 }
+
 real MemoryVMatrix::dot(int i, const Vec& v) const
 {
 #ifdef BOUNDCHECK

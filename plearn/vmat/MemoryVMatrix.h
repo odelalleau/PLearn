@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.h,v 1.6 2004/04/05 22:58:23 morinf Exp $
+   * $Id: MemoryVMatrix.h,v 1.7 2004/06/15 20:49:56 tihocan Exp $
    ******************************************************* */
 
 
@@ -56,17 +56,19 @@ class MemoryVMatrix: public VMatrix
 public:
 
   Mat data;
+  VMat data_vm;
 
 private:
+
   //! This does the actual building.
-  // (Please implement in .cc)
   void build_();
 
- //!  necessary for the deepcopy mechanism 
 protected:
+
   static void declareOptions(OptionList& ol);
 
 public:
+
   MemoryVMatrix();
   MemoryVMatrix(const Mat& the_data);
   virtual real get(int i, int j) const;
