@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TQCMachine.cc,v 1.1 2005/02/23 01:31:19 tihocan Exp $ 
+   * $Id: TQCMachine.cc,v 1.2 2005/02/23 21:49:08 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -121,10 +121,11 @@ void TQCMachine::updateFromPLearn(Torch::Object* ptr) {
   else
     PLERROR("In TQCMachine::updateFromPLearn - Torch::QCMachine is an abstract class "
             "and cannot be instantiated");
-  if (options["epsilon_bound"]) qc_machine->bound_eps = epsilon_bound;
-  if (options["n_alpha"])       qc_machine->n_alpha   = n_alpha;
-  PLWARNING("In TQCMachine::updateFromPLearn - Implementation not completed");
+  FROM_P_BASIC(epsilon_bound, epsilon_bound, qc_machine, bound_eps);
+  FROM_P_BASIC(n_alpha,       n_alpha,       qc_machine, n_alpha  );
+
   inherited::updateFromPLearn(qc_machine);
+  // NB: not updating Cup, Cdown, alpha, grad, y, cache.
 }
 
 
@@ -132,9 +133,8 @@ void TQCMachine::updateFromPLearn(Torch::Object* ptr) {
 // updateFromTorch //
 /////////////////////
 void TQCMachine::updateFromTorch() {
-  epsilon_bound = qc_machine->bound_eps;
-  n_alpha       = qc_machine->n_alpha;
-  PLWARNING("In TQCMachine::updateFromTorch - Implementation not completed");
+  FROM_T_BASIC(epsilon_bound, epsilon_bound, qc_machine, bound_eps);
+  FROM_T_BASIC(n_alpha,       n_alpha,       qc_machine, n_alpha  );
   inherited::updateFromTorch();
 }
 
