@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.15 2003/04/25 18:42:49 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.16 2003/04/28 17:08:19 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -287,12 +287,6 @@ public:   // TODO For test purpose... remove later
   // f(x) = cost(params + x*search_direction)
   // in x = alpha
   static real computeDerivative(real alpha, ConjGradientOptimizer* opt);
-
-  // Given an optimizer, compute the gradient of the cost function and
-  // store it in the "gradient" Vec
-  static void computeGradient(
-      Optimizer* opt,
-      const Vec& gradient);
 
   // Given an optimizer, compute the opposite of the gradient of the cost
   // function and store it in the "gradient" Vec

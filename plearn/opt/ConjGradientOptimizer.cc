@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.16 2003/04/25 18:42:48 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.17 2003/04/28 17:08:18 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -240,25 +240,11 @@ real ConjGradientOptimizer::computeDerivative(
     return -dot(opt->search_direction, opt->current_opp_gradient);
   opt->params.copyTo(opt->tmp_storage);
   opt->params.update(alpha, opt->search_direction);
-  computeGradient(opt, opt->delta);
+  Optimizer::computeGradient(opt, opt->delta);
   opt->params.copyFrom(opt->tmp_storage);
   return dot(opt->search_direction, opt->delta);
 }
 
-/////////////////////
-// computeGradient //
-/////////////////////
-void ConjGradientOptimizer::computeGradient(
-    Optimizer* opt,
-    const Vec& gradient) {
-  // Clear all what's left from previous computations
-  opt->proppath.clearGradient();
-  opt->params.clearGradient();
-  opt->cost->gradient[0] = 1;
-  opt->proppath.fbprop();
-  opt->params.copyGradientTo(gradient);
-}
-  
 /////////////////////////////
 // computeOppositeGradient //
 /////////////////////////////
