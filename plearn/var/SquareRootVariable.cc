@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SquareRootVariable.cc,v 1.4 2004/02/20 21:11:53 chrish42 Exp $
+   * $Id: SquareRootVariable.cc,v 1.5 2004/04/27 16:02:26 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,21 +49,22 @@ using namespace std;
 
 /** SquareRootVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(SquareRootVariable,
+                        "ONE LINE DESCR",
+                        "NO HELP");
+
 SquareRootVariable::SquareRootVariable(Variable* input)
-  :UnaryVariable(input, input->length(), input->width()) {}
-
-
-PLEARN_IMPLEMENT_OBJECT(SquareRootVariable, "ONE LINE DESCR", "NO HELP");
+  : inherited(input, input->length(), input->width())
+{}
 
 void SquareRootVariable::recomputeSize(int& l, int& w) const
-{ l=input->length(); w=input->width(); }
-
-
-
-
-
-
-
+{
+    if (input) {
+        l = input->length();
+        w = input->width();
+    } else
+        l = w = 0;
+}
 
 void SquareRootVariable::fprop()
 {
@@ -84,6 +85,7 @@ void SquareRootVariable::bprop()
       rvaluedata[i] = 2*input->valuedata[i]*input->rvaluedata[i];
     }
 }
+
 //!                          2                                -3
 //! d2C/dx2 = d2C/dx2*(dy/dx)  + dC/dy * 1/2 *-1/2 * 1/sqrt(x)
 //! Not verified yet: needs TimesScalarVariable's and DivVariable's fprop and bprop
@@ -99,7 +101,6 @@ void SquareRootVariable::bprop()
 //                                  + (-0.25) * pow( i/sqrt(input_i), 3 ) * gradientdata[i];
 //   }
 // }
-
 
 
 } // end of namespace PLearn

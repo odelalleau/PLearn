@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MaxVariable.h,v 1.4 2004/02/20 21:11:51 chrish42 Exp $
+   * $Id: MaxVariable.h,v 1.5 2004/04/27 16:02:26 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,21 +53,22 @@ using namespace std;
 
 class MaxVariable: public UnaryVariable
 {
-protected:
-    typedef UnaryVariable inherited;
-  //!  Default constructor for persistence
-  MaxVariable() {}
+  typedef UnaryVariable inherited;
 
 public:
+  //!  Default constructor for persistence
+  MaxVariable() {}
   MaxVariable(Variable* input);
+
   PLEARN_DECLARE_OBJECT(MaxVariable);
+
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
 };
+
+DECLARE_OBJECT_PTR(MaxVariable);
 
 inline Var max(Var v)
 { return new MaxVariable(v); }

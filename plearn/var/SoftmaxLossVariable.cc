@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SoftmaxLossVariable.cc,v 1.5 2004/02/20 21:11:53 chrish42 Exp $
+   * $Id: SoftmaxLossVariable.cc,v 1.6 2004/04/27 16:02:26 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,32 +44,39 @@
 #include "RowAtPositionVariable.h"
 #include "SoftmaxLossVariable.h"
 #include "Var_operators.h"
-//#include "Var_utils.h"
 
 namespace PLearn {
 using namespace std;
 
 
 /** SoftmaxLossVariable **/
-PLEARN_IMPLEMENT_OBJECT(SoftmaxLossVariable, "ONE LINE DESCR", "NO HELP");
+
+PLEARN_IMPLEMENT_OBJECT(SoftmaxLossVariable,
+                        "ONE LINE DESCR",
+                        "NO HELP");
 
 SoftmaxLossVariable::SoftmaxLossVariable(Variable* input1, Variable* input2) 
-:BinaryVariable(input1, input2, 1, 1)
+  : inherited(input1, input2, 1, 1)
 {
-  if(!input2->isScalar())
-    PLERROR("In RowAtPositionVariable: position must be a scalar");
+    build_();
 }
 
+void
+SoftmaxLossVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+SoftmaxLossVariable::build_()
+{    
+    if(input2 && !input2->isScalar())
+        PLERROR("In RowAtPositionVariable: position must be a scalar");
+}
 
 void SoftmaxLossVariable::recomputeSize(int& l, int& w) const
 { l=1; w=1; }
-
-
-
-
-
-
-
 
 void SoftmaxLossVariable::fprop()
 {

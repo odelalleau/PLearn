@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: HardSlopeVariable.h,v 1.5 2004/04/23 19:24:05 yoshua Exp $
+   * $Id: HardSlopeVariable.h,v 1.6 2004/04/27 16:02:26 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,8 +46,6 @@
 #include "NaryVariable.h"
 #include "Var_operators.h"
 #include "Var_all.h"
-//#include "pl_math.h"
-//#include "Var_utils.h"
 
 namespace PLearn {
 using namespace std;
@@ -57,21 +55,22 @@ using namespace std;
 // is 0 in [-infty,left], linear in [left,right], and 1 in [right,infty].
 class HardSlopeVariable: public NaryVariable
 {
-protected:
-    typedef NaryVariable inherited;
-  //!  Default constructor for persistence
-  HardSlopeVariable() {}
+  typedef NaryVariable inherited;
 
 public:
+  //!  Default constructor for persistence
+  HardSlopeVariable() {}
   HardSlopeVariable(Variable* x, Variable* left, Variable* right);
+
   PLEARN_DECLARE_OBJECT(HardSlopeVariable);
-  virtual void recomputeSize(int& l, int& w) const;
-  
-  
+
+  virtual void recomputeSize(int& l, int& w) const;  
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
 };
+
+DECLARE_OBJECT_PTR(HardSlopeVariable);
 
 inline Var hard_slope(Var x, Var left, Var right)
 { return new HardSlopeVariable(x,left,right); }
@@ -79,7 +78,7 @@ inline Var hard_slope(Var x, Var left, Var right)
 // derivative of hard_slope wrt x
 inline Var d_hard_slope(Var x, Var left, Var right)
 {
-  return ifThenElse((x>=left)*(x<=right),invertElements(right-left),var(0.0));
+  return ifThenElse((x>=left)*(x<=right), invertElements(right-left), var(0.0));
 }
 
 } // end of namespace PLearn

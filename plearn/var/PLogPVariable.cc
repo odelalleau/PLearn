@@ -36,14 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: PLogPVariable.cc,v 1.5 2004/02/20 21:11:51 chrish42 Exp $
+   * $Id: PLogPVariable.cc,v 1.6 2004/04/27 16:02:26 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "LogVariable.h"
 #include "PLogPVariable.h"
 #include "Var_operators.h"
-//#include "Var_utils.h"
 
 namespace PLearn {
 using namespace std;
@@ -51,21 +50,23 @@ using namespace std;
 
 /** PLogPVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(PLogPVariable,
+                        "Returns the elementwise x*log(x) in a (hopefully!) numerically stable way",
+                        "NO HELP");
+
 PLogPVariable::PLogPVariable(Variable* input)
-  :UnaryVariable(input, input->length(), input->width()) {}
+  : inherited(input, input->length(), input->width())
+{}
 
-
-PLEARN_IMPLEMENT_OBJECT(PLogPVariable, "ONE LINE DESCR", "NO HELP");
 
 void PLogPVariable::recomputeSize(int& l, int& w) const
-{ l=input->length(); w=input->width(); }
-
-
-
-
-
-
-
+{
+    if (input) {
+        l = input->length();
+        w = input->width();
+    } else
+        l = w = 0;
+}
 
 void PLogPVariable::fprop()
 {

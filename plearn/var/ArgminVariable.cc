@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ArgminVariable.cc,v 1.4 2004/02/20 21:11:49 chrish42 Exp $
+   * $Id: ArgminVariable.cc,v 1.5 2004/04/27 16:02:26 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,21 +48,20 @@ using namespace std;
 
 /** ArgminVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(ArgminVariable,
+                        "Compute the index of the minimum value in the input",
+                        "NO HELP");
+
 ArgminVariable::ArgminVariable(Variable* input)
-  :UnaryVariable(input, input->isVec()?1:2, 1) {}
-
-
-PLEARN_IMPLEMENT_OBJECT(ArgminVariable, "ONE LINE DESCR", "NO HELP");
+  : inherited(input, input->isVec()?1:2, 1)
+{}
 
 void ArgminVariable::recomputeSize(int& l, int& w) const
-{ l=input->isVec()?1:2; w=1; }
-
-
-
-
-
-
-
+{
+    if (input)
+        l = input->isVec() ? 1 : 2;
+    w=1;
+}
 
 void ArgminVariable::fprop()
 {

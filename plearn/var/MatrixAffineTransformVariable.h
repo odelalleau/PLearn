@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixAffineTransformVariable.h,v 1.3 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: MatrixAffineTransformVariable.h,v 1.4 2004/04/27 16:02:26 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -56,22 +56,24 @@ using namespace std;
 //! which is equivalent to b + 
 class MatrixAffineTransformVariable: public BinaryVariable
 {
-protected:
-    typedef BinaryVariable inherited;
-  //!  Default constructor for persistence
-  MatrixAffineTransformVariable() {}
+  typedef BinaryVariable inherited;
 
 public:
-  MatrixAffineTransformVariable(Variable* mat, Variable* transformation):
-    BinaryVariable(mat, transformation, transformation->width(), mat->width())
+  //!  Default constructor for persistence
+  MatrixAffineTransformVariable() {}
+  MatrixAffineTransformVariable(Variable* mat, Variable* transformation)
+    : inherited(mat, transformation, transformation->width(), mat->width())
   {}
+
   PLEARN_DECLARE_OBJECT(MatrixAffineTransformVariable);
+
   virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
 };
 
+DECLARE_OBJECT_PTR(MatrixAffineTransformVariable);
 
 } // end of namespace PLearn
 

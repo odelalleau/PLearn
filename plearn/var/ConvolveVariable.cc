@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConvolveVariable.cc,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: ConvolveVariable.cc,v 1.5 2004/04/27 16:02:26 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,26 +46,25 @@ namespace PLearn {
 using namespace std;
 
 
-
-
 /** ConvolveVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(ConvolveVariable,
+                        "A convolve var; equals convolve(input, mask)",
+                        "NO HELP");
+
 ConvolveVariable::ConvolveVariable(Variable* input, Variable* mask)
-  : BinaryVariable(input, mask, input->length()-mask->length()+1, input->width()-mask->width()+1)
+  : inherited(input, mask, input->length()-mask->length()+1, input->width()-mask->width()+1)
 {}
 
 
-PLEARN_IMPLEMENT_OBJECT(ConvolveVariable, "ONE LINE DESCR", "NO HELP");
-
 void ConvolveVariable::recomputeSize(int& l, int& w) const
-{ l=input1->length()-input2->length()+1; w=input1->width()-input2->width()+1; }
-
-
-
-
-
-
-
+{
+    if (input1 && input2) {
+        l = input1->length() - input2->length() + 1;
+        w = input1->width() - input2->width() + 1;
+    } else
+        l = w = 0;
+}
 
 
 void ConvolveVariable::fprop()

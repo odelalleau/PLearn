@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumSquareVariable.cc,v 1.5 2004/02/20 21:11:53 chrish42 Exp $
+   * $Id: SumSquareVariable.cc,v 1.6 2004/04/27 16:02:26 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,21 +50,15 @@ using namespace std;
 
 /** SumSquareVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(SumSquareVariable,
+                        "ONE LINE DESCR",
+                        "NO HELP");
+
 SumSquareVariable::SumSquareVariable(Variable* input)
-  :UnaryVariable(input, 1, 1) {}
-
-
-PLEARN_IMPLEMENT_OBJECT(SumSquareVariable, "ONE LINE DESCR", "NO HELP");
+  : inherited(input, 1, 1) {}
 
 void SumSquareVariable::recomputeSize(int& l, int& w) const
 { l=1; w=1; }
-
-
-
-
-
-
-
 
 void SumSquareVariable::fprop()
 {

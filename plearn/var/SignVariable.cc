@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SignVariable.cc,v 1.4 2004/02/20 21:11:53 chrish42 Exp $
+   * $Id: SignVariable.cc,v 1.5 2004/04/27 16:02:26 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,21 +48,22 @@ using namespace std;
 
 /** SignVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(SignVariable,
+                        "sign(x) = 1 if x>0, -1 if x<0, 0 if x=0, all done element by element.",
+                        "NO HELP");
+
 SignVariable::SignVariable(Variable* input) 
-  :UnaryVariable(input, input->length(), input->width()) {}
-
-
-PLEARN_IMPLEMENT_OBJECT(SignVariable, "ONE LINE DESCR", "NO HELP");
+  : inherited(input, input->length(), input->width())
+{}
 
 void SignVariable::recomputeSize(int& l, int& w) const
-{ l=input->length(); w=input->width(); }
-
-
-
-
-
-
-
+{
+    if (input) {
+        l = input->length();
+        w = input->width();
+    } else
+        l = w = 0;
+}
 
 void SignVariable::fprop()
 {

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SignVariable.h,v 1.4 2004/02/20 21:11:53 chrish42 Exp $
+   * $Id: SignVariable.h,v 1.5 2004/04/27 16:02:26 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,21 +52,22 @@ using namespace std;
 //!  sign(x) = 1 if x>0, -1 if x<0, 0 if x=0, all done element by element.
 class SignVariable: public UnaryVariable
 {
-protected:
-    typedef UnaryVariable inherited;
-  //!  Default constructor for persistence
-  SignVariable() {}
+  typedef UnaryVariable inherited;
 
 public:
+  //!  Default constructor for persistence
+  SignVariable() {}
   SignVariable(Variable* input);
+
   PLEARN_DECLARE_OBJECT(SignVariable);
+
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
 };
+
+DECLARE_OBJECT_PTR(SignVariable);
 
 inline Var sign(Var input) { return new SignVariable(input); }
 

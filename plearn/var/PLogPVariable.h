@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PLogPVariable.h,v 1.4 2004/02/20 21:11:51 chrish42 Exp $
+   * $Id: PLogPVariable.h,v 1.5 2004/04/27 16:02:26 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,21 +53,22 @@ using namespace std;
 //!  This can be used to compute the Entropy for instance
 class PLogPVariable: public UnaryVariable
 {
-protected:
-    typedef UnaryVariable inherited;
-  //!  Default constructor for persistence
-  PLogPVariable() {}
+  typedef UnaryVariable inherited;
 
 public:
+  //!  Default constructor for persistence
+  PLogPVariable() {}
   PLogPVariable(Variable* input);
+
   PLEARN_DECLARE_OBJECT(PLogPVariable);
+
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
 };
+
+DECLARE_OBJECT_PTR(PLogPVariable);
 
 inline Var plogp(Var v)
 { return new PLogPVariable(v); }

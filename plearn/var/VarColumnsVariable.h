@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: VarColumnsVariable.h,v 1.3 2004/02/20 21:11:54 chrish42 Exp $
+   * $Id: VarColumnsVariable.h,v 1.4 2004/04/27 16:02:26 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -55,23 +55,23 @@ using namespace std;
 */
 class VarColumnsVariable: public BinaryVariable
 {
- protected:
-    typedef BinaryVariable inherited;
-  //!  Default constructor for persistence
-  VarColumnsVariable() {}
+  typedef BinaryVariable inherited;
 
  public:
+  //!  Default constructor for persistence
+  VarColumnsVariable() {}
   VarColumnsVariable(Variable *input1, Variable *input2);
+
   PLEARN_DECLARE_OBJECT(VarColumnsVariable);
+
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
   //  virtual void rprop();
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
 };
 
+DECLARE_OBJECT_PTR(VarColumnsVariable);
 
 } // end of namespace PLearn
 

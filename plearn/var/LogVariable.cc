@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: LogVariable.cc,v 1.8 2004/02/23 14:29:30 tihocan Exp $
+   * $Id: LogVariable.cc,v 1.9 2004/04/27 16:02:26 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,15 +50,23 @@ using namespace std;
 
 /** LogVariable **/
 
+
+PLEARN_IMPLEMENT_OBJECT(LogVariable,
+                        "ONE LINE DESCR",
+                        "NO HELP");
+
 LogVariable::LogVariable(Variable* input)
-  :UnaryVariable(input, input->length(), input->width()) {}
-
-
-PLEARN_IMPLEMENT_OBJECT(LogVariable, "ONE LINE DESCR", "NO HELP");
+  : inherited(input, input->length(), input->width())
+{}
 
 void LogVariable::recomputeSize(int& l, int& w) const
-{ l=input->length(); w=input->width(); }
-
+{
+    if (input) {
+        l = input->length();
+        w = input->width();
+    } else
+        l = w = 0;
+}
 
 void LogVariable::fprop()
 {

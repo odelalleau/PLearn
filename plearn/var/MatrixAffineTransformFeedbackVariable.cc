@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixAffineTransformFeedbackVariable.cc,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: MatrixAffineTransformFeedbackVariable.cc,v 1.5 2004/04/27 16:02:26 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,12 +46,16 @@ namespace PLearn {
 using namespace std;
 
 
-PLEARN_IMPLEMENT_OBJECT(MatrixAffineTransformFeedbackVariable, "ONE LINE DESCR", "NO HELP");
-
+PLEARN_IMPLEMENT_OBJECT(MatrixAffineTransformFeedbackVariable,
+                        "Affine transformation of a MATRIX variable.",
+                        "NO HELP");
+/*
 void MatrixAffineTransformFeedbackVariable::recomputeSize(int& l, int& w) const
-{ l=length(), w=width(); }
-
-
+{
+    l = length();
+    w = width();
+}
+*/
 void MatrixAffineTransformFeedbackVariable::fprop()
 {
     Mat&  afftr = matValue;

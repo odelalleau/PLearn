@@ -36,14 +36,12 @@
 
 
 /* *******************************************************      
-   * $Id: TimesConstantVariable.cc,v 1.6 2004/03/04 14:59:35 tihocan Exp $
+   * $Id: TimesConstantVariable.cc,v 1.7 2004/04/27 16:02:26 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "TimesConstantVariable.h"
 #include "Var_operators.h"
-//#include "Var_utils.h"
-#include "stringutils.h"    //!< For tostring.
 
 namespace PLearn {
 using namespace std;
@@ -51,26 +49,22 @@ using namespace std;
 
 /** TimesConstantVariable **/
 
-string TimesConstantVariable::info() const
-{ return string("TimesConstant (* ")+tostring(cst)+")"; }
-
+PLEARN_IMPLEMENT_OBJECT(TimesConstantVariable,
+                        "Multiplies a matrix var by a scalar constant", 
+                        "NO HELP");
 
 TimesConstantVariable::TimesConstantVariable(Variable* input, real c)
-  :UnaryVariable(input, input->length(), input->width()), cst(c) 
+  : inherited(input, input->length(), input->width()), cst(c) 
 {}
 
-
-PLEARN_IMPLEMENT_OBJECT(TimesConstantVariable, "ONE LINE DESCR", "NO HELP");
-
 void TimesConstantVariable::recomputeSize(int& l, int& w) const
-{ l=input->length(); w=input->width(); }
-
-
-
-
-
-
-
+{
+    if (input) {
+        l = input->length();
+        w = input->width();
+    } else
+        l = w = 0;
+}
 
 void TimesConstantVariable::fprop()
 {

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: NegateElementsVariable.h,v 1.4 2004/02/23 14:30:19 tihocan Exp $
+   * $Id: NegateElementsVariable.h,v 1.5 2004/04/27 16:02:26 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,23 +53,25 @@ using namespace std;
 
 class NegateElementsVariable: public UnaryVariable
 {
-protected:
-    typedef UnaryVariable inherited;
-  //!  Default constructor for persistence
-  NegateElementsVariable() {}
+  typedef UnaryVariable inherited;
 
 public:
+  //!  Default constructor for persistence
+  NegateElementsVariable() {}
   NegateElementsVariable(Variable* input);
+
   PLEARN_DECLARE_OBJECT(NegateElementsVariable);
+
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
+    
   virtual void fprop();
   virtual void bprop();
   virtual void bbprop();
   virtual void symbolicBprop();
   virtual void rfprop();
 };
+
+DECLARE_OBJECT_PTR(NegateElementsVariable);
 
 inline Var negateElements(Var v) {
   return new NegateElementsVariable(v);

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOverBagsVariable.cc,v 1.12 2004/02/26 03:01:13 tihocan Exp $
+   * $Id: SumOverBagsVariable.cc,v 1.13 2004/04/27 16:02:26 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -83,16 +83,16 @@ SumOverBagsVariable::SumOverBagsVariable()
 {}
 
 SumOverBagsVariable::SumOverBagsVariable(VMat the_vmat, Func the_f, int max_bagsize, int nsamples, bool the_average, bool the_transpose)
-  :NaryVariable(nonInputParentsOfPath(the_f->inputs,the_f->outputs), 
-                the_f->outputs[0]->length(), 
-                the_f->outputs[0]->width()),
-   vmat(the_vmat), f(the_f),
-   average(the_average),
-   max_bag_size(max_bagsize), n_samples(nsamples),
-   transpose(the_transpose),
-   curpos(0), bag_size(0)
+  : inherited(nonInputParentsOfPath(the_f->inputs,the_f->outputs), 
+              the_f->outputs[0]->length(), 
+              the_f->outputs[0]->width()),
+    vmat(the_vmat), f(the_f),
+    average(the_average),
+    max_bag_size(max_bagsize), n_samples(nsamples),
+    transpose(the_transpose),
+    curpos(0), bag_size(0)
 {
-  build();
+    build();
 }
 
 ///////////
@@ -183,7 +183,13 @@ void SumOverBagsVariable::declareOptions(OptionList& ol)
 // recomputeSize //
 ///////////////////
 void SumOverBagsVariable::recomputeSize(int& l, int& w) const
-{ l=f->outputs[0]->length(); w=f->outputs[0]->width(); }
+{
+    if (f && f->outputs.size()) {
+        l = f->outputs[0]->length();
+        w = f->outputs[0]->width();
+    } else
+        l = w = 0;
+}
 
 
 /////////////////////////////////

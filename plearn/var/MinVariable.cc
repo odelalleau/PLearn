@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MinVariable.cc,v 1.5 2004/02/20 21:11:51 chrish42 Exp $
+   * $Id: MinVariable.cc,v 1.6 2004/04/27 16:02:26 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,29 +44,22 @@
 #include "ElementAtPositionVariable.h"
 #include "MinVariable.h"
 
-//#include "Var_utils.h"
-
 namespace PLearn {
 using namespace std;
 
 
 /** MinVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(MinVariable,
+                        "ONE LINE DESCR",
+                        "NO HELP");
+
 MinVariable::MinVariable(Variable* input)
-  :UnaryVariable(input, 1, 1) {}
+  : inherited(input, 1, 1) {}
 
-
-PLEARN_IMPLEMENT_OBJECT(MinVariable, "ONE LINE DESCR", "NO HELP");
 
 void MinVariable::recomputeSize(int& l, int& w) const
 { l=1; w=1; }
-
-
-
-
-
-
-
 
 void MinVariable::fprop()
 {

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOverBagsVariable.h,v 1.9 2004/02/25 21:38:08 tihocan Exp $
+   * $Id: SumOverBagsVariable.h,v 1.10 2004/04/27 16:02:26 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,15 +51,10 @@ using namespace std;
 
 class SumOverBagsVariable: public NaryVariable
 {
-  protected:
-    //!  protected default constructor for persistence
-    SumOverBagsVariable();
-
-  public:
-
   typedef NaryVariable inherited;
 
-  //protected:
+public:
+//protected:
   VMat vmat;
   Func f;
   bool average;
@@ -83,6 +78,8 @@ class SumOverBagsVariable: public NaryVariable
   int bag_size;
 
   public:
+    //!  protected default constructor for persistence
+    SumOverBagsVariable();
     //! Sum_{bags \in vmat} f(inputs and targets in bag)
     //! By convention a bag is a sequence of rows of the vmat in which the last column of the target
     //! indicates whether the row is the first one (and/or) the last one, with its two least significant bits:
@@ -101,7 +98,9 @@ class SumOverBagsVariable: public NaryVariable
     static const int TARGET_COLUMN_INTERMEDIATE = 0;
 
     PLEARN_DECLARE_OBJECT(SumOverBagsVariable);
+
     virtual void build();
+
     virtual void recomputeSize(int& l, int& w) const;
     virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
     virtual void fprop();
@@ -113,9 +112,11 @@ class SumOverBagsVariable: public NaryVariable
 
     static void declareOptions(OptionList& ol);
 
-  private:
+  protected:
     void build_();
 };
+
+DECLARE_OBJECT_PTR(SumOverBagsVariable);
 
 //!  sumOf
 inline Var sumOverBags(VMat vmat, Func f, int max_bag_size, int nsamples, bool average = false, bool transpose = false)

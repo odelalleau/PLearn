@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixAffineTransformVariable.cc,v 1.3 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: MatrixAffineTransformVariable.cc,v 1.4 2004/04/27 16:02:26 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,10 +49,18 @@ namespace PLearn {
 using namespace std;
 
 
-PLEARN_IMPLEMENT_OBJECT(MatrixAffineTransformVariable, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(MatrixAffineTransformVariable,
+                        "ONE LINE DESCR",
+                        "NO HELP");
 
 void MatrixAffineTransformVariable::recomputeSize(int& l, int& w) const
-{ l=input2->width(), w=input1->width(); }
+{
+    if (input1 && input2) {
+        l = input2->width();
+        w = input1->width();
+    } else
+        l = w = 0;
+}
 
 
 void MatrixAffineTransformVariable::fprop()

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: VarColumnsVariable.cc,v 1.4 2004/02/20 21:11:54 chrish42 Exp $
+   * $Id: VarColumnsVariable.cc,v 1.5 2004/04/27 16:02:26 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,24 +48,23 @@ using namespace std;
 
 /** VarColumnsVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(VarColumnsVariable, "ONE LINE DESCR", "NO HELP");
+
 VarColumnsVariable::VarColumnsVariable(Variable *input1, Variable *input2)
   //  : BinaryVariable(input1, input2, input1->length(), input2->width())
-  : BinaryVariable(input1, input2, input1->length(), input2->length())
+  : inherited(input1, input2, input1->length(), input2->length())
 {
 }
 
 
-PLEARN_IMPLEMENT_OBJECT(VarColumnsVariable, "ONE LINE DESCR", "NO HELP");
-
-
 void VarColumnsVariable::recomputeSize(int& l, int& w) const
-{ l=input1->length(); w=input2->length(); }
-
-
-
-
-
-
+{
+    if (input1 && input2) {
+        l = input1->length();
+        w = input2->length();
+    } else
+        l = w = 0;
+}
 
 
 void VarColumnsVariable::fprop()

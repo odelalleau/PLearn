@@ -36,19 +36,16 @@
 
 
 /* *******************************************************      
-   * $Id: DilogarithmVariable.h,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: DilogarithmVariable.h,v 1.5 2004/04/27 16:02:26 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #ifndef DilogarithmVariable_INC
 #define DilogarithmVariable_INC
 
-#include "DilogarithmVariable.h"
 #include "ExpVariable.h"
 #include "UnaryVariable.h"
 #include "Var_operators.h"
-//#include "pl_math.h"
-//#include "Var_utils.h"
 
 namespace PLearn {
 using namespace std;
@@ -57,21 +54,23 @@ using namespace std;
 //!  This is the primitive of a sigmoid: log(1+exp(x))
 class DilogarithmVariable: public UnaryVariable
 {
-protected:
-    typedef UnaryVariable inherited;
-  //!  Default constructor for persistence
-  DilogarithmVariable() {}
+  typedef UnaryVariable inherited;
 
 public:
+  //!  Default constructor for persistence
+  DilogarithmVariable() {}
   DilogarithmVariable(Variable* input);
+
   PLEARN_DECLARE_OBJECT(DilogarithmVariable);
+
   virtual void recomputeSize(int& l, int& w) const;
-  
   
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
 };
+
+DECLARE_OBJECT_PTR(DilogarithmVariable);
 
 inline Var dilogarithm(Var v)
 { return new DilogarithmVariable(v); }

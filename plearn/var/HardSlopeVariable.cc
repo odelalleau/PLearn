@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: HardSlopeVariable.cc,v 1.2 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: HardSlopeVariable.cc,v 1.3 2004/04/27 16:02:26 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,36 +49,36 @@ using namespace std;
 
 /** HardSlopeVariable **/
 
-HardSlopeVariable::  HardSlopeVariable(Variable* x, Variable* left, Variable* right)
-  :NaryVariable(VarArray(x,left) & Var(right), 
-                x->length()<left->length()?left->length():x->length(), 
-                x->width()<left->width()?left->width():x->width()) 
-{}
-
-
 PLEARN_IMPLEMENT_OBJECT(HardSlopeVariable, 
                         "This Var computes the hard_slope function", 
                         "The hard_slope function is linear by parts function:\n"
                         "0 in [-infty,left], linear in [left,right], and 1 in [right,infty], and continuous.\n"
                         "If the arguments are vectors than the operation is performed element by element on all of them.\n");
 
+HardSlopeVariable::  HardSlopeVariable(Variable* x, Variable* left, Variable* right)
+  : inherited(VarArray(x,left) & Var(right), 
+              x->length()<left->length()?left->length():x->length(), 
+              x->width()<left->width()?left->width():x->width()) 
+{}
+
+
 void HardSlopeVariable::recomputeSize(int& l, int& w) const
 { 
-  l=0; 
-  w=0;
-  for (int i=0;i<3;i++)
-  {
-    if (varray[i]->length()>l) l=varray[i]->length();
-    if (varray[i]->width()>w) w=varray[i]->width();
-  }
-  for (int i=0;i<3;i++)
-  {
-    if (varray[i]->length()!=l || varray[i]->width()!=w)
-    {
-      if (varray[i]->length()!=1 || varray[i]->width()!=1)
-        PLERROR("Each argument of HardSlopeVariable should either have the same length/width as the others or length 1");
+    l = w = 0;
+    if (varray.size() >= 3) {
+        for (int i = 0;i < 3; i++) {
+            if (varray[i]->length()>l)
+                l = varray[i]->length();
+            if (varray[i]->width() > w)
+                w = varray[i]->width();
+        }
+        for (int i = 0;i < 3; i++) {
+            if (varray[i]->length() != l || varray[i]->width() != w) {
+                if (varray[i]->length() != 1 || varray[i]->width() != 1)
+                    PLERROR("Each argument of HardSlopeVariable should either have the same length/width as the others or length 1");
+            }
+        }
     }
-  }
 }
 
 

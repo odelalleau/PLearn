@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixAffineTransformFeedbackVariable.h,v 1.3 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: MatrixAffineTransformFeedbackVariable.h,v 1.4 2004/04/27 16:02:26 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -56,21 +56,23 @@ using namespace std;
 //! which is equivalent to b + 
 class MatrixAffineTransformFeedbackVariable: public BinaryVariable
 {
-protected:
-    typedef BinaryVariable inherited;
-  //!  Default constructor for persistence
-  MatrixAffineTransformFeedbackVariable() {}
+  typedef BinaryVariable inherited;
 
 public:
-  MatrixAffineTransformFeedbackVariable(Variable* g, Variable* input):
-    BinaryVariable(g, input, g->length()+1, input->length())
+  //!  Default constructor for persistence
+  MatrixAffineTransformFeedbackVariable() {}
+  MatrixAffineTransformFeedbackVariable(Variable* g, Variable* input)
+      : inherited(g, input, g->length()+1, input->length())
   {}
+
   PLEARN_DECLARE_OBJECT(MatrixAffineTransformFeedbackVariable);
-  virtual void recomputeSize(int& l, int& w) const;
+
+    //virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
   virtual void bprop() {};
 };
 
+DECLARE_OBJECT_PTR(MatrixAffineTransformFeedbackVariable);
 
 } // end of namespace PLearn
 
