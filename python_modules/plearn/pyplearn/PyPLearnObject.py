@@ -1,5 +1,5 @@
 """ALL DOCUMENTATION IN THIS MODULE MUST BE REVISED!!!"""
-__cvs_id__ = "$Id: PyPLearnObject.py,v 1.6 2005/02/04 19:08:06 dorionc Exp $"
+__cvs_id__ = "$Id: PyPLearnObject.py,v 1.7 2005/02/04 22:37:30 chapados Exp $"
 
 import inspect, types
 
@@ -84,6 +84,11 @@ class _manage_attributes:
             ## Do not use __set_attribute__ in __init__!
             self._init_attribute_protocol( attribute_name, attribute_value )
 
+        ## Ensure that the length of ordered attributes list is
+        ## either zero or equal to the number of attributes
+        assert (len(self.__ordered_attr__) == 0 or
+                len(self.__ordered_attr__) == len(self._list_of_attributes))
+
         ## Overrides may still contain pairs -- attributes with no default
         ## values.
         self.__dict__.update(overrides)
@@ -102,8 +107,10 @@ class _manage_attributes:
         element.  The class will be instanciated with the rest of the tuple
         as __init__ arguments.
         """
-        if not attribute_name in self._list_of_attributes:
+        assert not inspect.isroutine(attribute_value)
+        if len(self.__ordered_attr__) == 0:
             self._list_of_attributes.append(attribute_name)
+            self._list_of_attributes.sort()
         
         if inspect.isclass( attribute_value ):
             attribute_value = attribute_value()
