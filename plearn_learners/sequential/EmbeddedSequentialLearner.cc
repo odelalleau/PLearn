@@ -161,7 +161,10 @@ void EmbeddedSequentialLearner::test(VMat testset, PP<VecStatsCollector> test_st
 }
 
 void EmbeddedSequentialLearner::forget()
-{ learner->forget(); }
+{
+  // BUG? call inherited::forget(); ???
+  learner->forget();
+}
  
 void EmbeddedSequentialLearner::computeOutput(const Vec& input, Vec& output)
 { learner->computeOutput(input, output); }
