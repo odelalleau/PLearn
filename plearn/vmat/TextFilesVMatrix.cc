@@ -31,7 +31,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* *******************************************************      
-   * $Id: TextFilesVMatrix.cc,v 1.2 2005/01/12 14:42:17 tihocan Exp $ 
+   * $Id: TextFilesVMatrix.cc,v 1.3 2005/01/12 19:43:16 plearner Exp $ 
    ******************************************************* */
 
 // Author: Pascal Vincent
@@ -56,7 +56,10 @@ TextFilesVMatrix::TextFilesVMatrix()
 {
 }
 
-PLEARN_IMPLEMENT_OBJECT(TextFilesVMatrix, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(TextFilesVMatrix,
+                        "Parse and represent a text file as a VMatrix",
+                        "NO HELP");
+
 
 void TextFilesVMatrix::getFileAndPos(int i, unsigned char& fileno, int& pos) const
 {
