@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PCA.h,v 1.10 2004/10/26 21:35:13 tihocan Exp $ 
+   * $Id: PCA.h,v 1.11 2005/02/14 14:40:39 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file PCA.h */
@@ -47,10 +47,19 @@ using namespace std;
 
 class PCA: public PLearner
 {
-
 private:
-
   typedef PLearner inherited;
+
+protected:
+
+  // Cache for incremental_algo()
+  VecStatsCollector _incremental_stats;  
+
+  // The following methods correspond to the algo option choices
+  void classical_algo   ( );
+  void incremental_algo ( );
+  void em_algo          ( );
+  void em_orth_algo     ( );
   
 public:
   
@@ -58,7 +67,36 @@ public:
   // * public build options *
   // ************************
 
+  /*!
+    The algorithm used to perform the Principal Component Analysis:
+        - 'classical'   : compute the eigenvectors of the covariance matrix
+        
+        - 'incremental' : Uses the classical algorithm but computes the
+                          covariance matrix in an incremental manner. When
+                          'incremental' is used, a new training set is
+                          assumed to be a superset of the old training set,
+                          i.e. begining with the rows of the old training
+                          set but ending with some new rows. 
+        
+        - 'em'          : EM algorithm from "EM algorithms for PCA and
+                          SPCA" by S. Roweis
+        
+        - 'em_orth'     : a variant of 'em', where orthogonal components
+                          are directly computed          
+  */
   string algo;
+
+  /*!
+    Incremental algorithm option: This option specifies a window over
+    which the PCA should be done. That is, if the length of the training
+    set is greater than 'horizon', the observations that will effectively
+    contribute to the covariance matrix will only be the last 'horizon'
+    ones. All negative values being interpreted as 'keep all observations'.
+
+    Default: -1 (all observations are kept)
+  */
+  int _horizon;
+  
   int ncomponents;  //! The number of principal components to keep (that's also the outputsize)
   real sigmasq;     //! This gets added to the diagonal of the covariance matrix prior to eigen-decomposition
   bool normalize;   //! If true, we divide by sqrt(eigenval) after projecting on the eigenvec.
@@ -96,6 +134,9 @@ public:
   // **** Object methods ****
   // ************************
 
+  //! Set nstages to the training_set length under the 'incremental' algo.
+  virtual void setTrainingSet(VMat training_set, bool call_forget=true);
+  
   //! Simply calls inherited::build() then build_() 
   virtual void build();
 
