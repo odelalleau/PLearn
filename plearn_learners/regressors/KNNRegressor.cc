@@ -33,13 +33,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNRegressor.cc,v 1.1 2004/12/25 07:59:45 chapados Exp $ 
+   * $Id: KNNRegressor.cc,v 1.2 2004/12/28 15:49:39 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
 
 /*! \file KNNRegressor.cc */
 
+#include <assert.h>
 #include <math.h>
 
 #include <plearn/math/TMat_maths.h>

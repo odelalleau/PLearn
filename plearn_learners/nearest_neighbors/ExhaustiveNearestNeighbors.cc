@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ExhaustiveNearestNeighbors.cc,v 1.2 2004/12/21 07:13:15 chapados Exp $ 
+   * $Id: ExhaustiveNearestNeighbors.cc,v 1.3 2004/12/28 15:49:38 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -41,6 +41,7 @@
 /*! \file StatefulLearner.cc */
 
 
+#include <assert.h>
 #include <plearn/base/stringutils.h>
 #include <plearn/ker/DistanceKernel.h>
 #include "ExhaustiveNearestNeighbors.h"

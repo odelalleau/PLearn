@@ -33,12 +33,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GenericNearestNeighbors.cc,v 1.3 2004/12/25 08:03:29 chapados Exp $ 
+   * $Id: GenericNearestNeighbors.cc,v 1.4 2004/12/28 15:49:39 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
 
 /*! \file StatefulLearner.cc */
+
+#include <assert.h>
 
 // From C++ stdlib
 #include <algorithm>

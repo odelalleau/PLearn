@@ -33,15 +33,16 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNClassifier.cc,v 1.3 2004/12/25 08:02:52 chapados Exp $ 
+   * $Id: KNNClassifier.cc,v 1.4 2004/12/28 15:49:31 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
 
 /*! \file KNNClassifier.cc */
 
-#include <math.h>
 
+#include <assert.h>
+#include <math.h>
 #include <plearn_learners/nearest_neighbors/ExhaustiveNearestNeighbors.h>
 #include <plearn/ker/GaussianKernel.h>
 #include "KNNClassifier.h"
