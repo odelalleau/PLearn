@@ -119,7 +119,7 @@ subclass. That format is very alike the __str__ behavior except that the
 L{plearn_options()} are considered to be all attributes whose names do not
 start with an underscore. Those are said public, while any attribute
 starting with at least one underscore is considered internal (protected '_'
-or private '__').
+or private '__')::
 
     obj = Dummy( _internal1 = "internal",
                  _internal2 = "very internal",
@@ -143,7 +143,7 @@ or private '__').
         public2                        = "public again"
         )
 """
-__cvs_id__ = "$Id: PyPLearnObject.py,v 1.14 2005/03/31 15:40:58 dorionc Exp $"
+__cvs_id__ = "$Id: PyPLearnObject.py,v 1.15 2005/04/04 18:48:27 lamblin Exp $"
 
 import inspect, string, types
 
@@ -201,7 +201,7 @@ class _manage_attributes:
 
     This class encapsulates the attributes' related concerns.
 
-        1) The metaclass: This class (and therefore PyPLearnObject) is a
+        1. The metaclass: This class (and therefore PyPLearnObject) is a
         new style class: it uses a metaclass. Here, this metaclass modifies
         the __setattr__ method so that no new attributes can be added to an
         instance after its initialization is done. Each instance will
@@ -233,7 +233,7 @@ class _manage_attributes:
             10 + AffineTransform(pipe_stage, 1, 0)
             ## even though __radd__ is not explicitly defined
         
-        2) The Defaults class: At init, the Defaults class is parsed and
+        2. The Defaults class: At init, the Defaults class is parsed and
         its attributes are used to set default attributes to the new
         instance. The current protocol is to instanciate any classes
         provided as attributes in Defaults or in overrides. The current
@@ -242,7 +242,7 @@ class _manage_attributes:
         B{The Defaults class to use for a new instance may be overriden by
         using the Defaults keyword argument at the instance's initialization}
         
-        3) The __str__ and __repr__ methods are defaulted to return a
+        3. The __str__ and __repr__ methods are defaulted to return a
         string that could be used for serialization purpose (public and
         internal members are wrote to a initialization-like syntax.)
     """
