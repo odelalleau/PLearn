@@ -1,0 +1,15 @@
+#!/bin/bash
+
+cd $PLEARNDIR
+P=`find . -name $1 -print | sed -e 's/^.\///'`
+
+if [ -z $P ]; then
+    cd $LISAPLEARNDIR
+    P=`find . -name $1 -print | sed -e 's/^.\///'`  
+    if [ -z $P ]; then
+	echo "Impossible de trouver $1"
+	exit 1
+    fi
+fi
+
+echo "#include <$P>"

@@ -438,6 +438,7 @@ if 'link' in optionargs:
 else:
     force_link = 0;
 
+
 if 'clean' in optionargs:
     if len(optionargs)!=1 or len(otherargs)==0:
         print 'BAD ARGUMENTS: with -clean, specify one or more directories to clean, but no other -option'
@@ -460,6 +461,14 @@ force_recompilation = 0  # force recompilation of everything?
 if 'force' in optionargs:
     force_recompilation = 1
     optionargs.remove('force')
+
+if 'dist' in optionargs:
+    distribute = 1
+    force_link = 1
+    force_recompilation = 1
+    optionargs.remove('dist')    
+else:
+    distribute = 0
 
 SPC = 0
 if 'spc' in optionargs :
@@ -674,6 +683,7 @@ class FileInfo:
                     # print optlib.name + ' TRIGGERED BY INCLUDE ' + includefile + ' IN ' + self.filepath 
 
             fullpath = join(self.filedir, includefile)
+            
             if os.path.isfile(fullpath):
                 self.includes_from_sourcedirs.append(abspath(fullpath))
             else:
@@ -681,6 +691,7 @@ class FileInfo:
                     fullpath = join(srcdir, includefile)
                     if os.path.isfile(fullpath):
                         self.includes_from_sourcedirs.append(abspath(fullpath))
+
         self.hasmain = FileInfo.hasmain_regexp.search(text)
         if platform!='win32':
           self.hasqobject = FileInfo.qobject_regexp.search(text)
@@ -1003,6 +1014,18 @@ class FileInfo:
         command = command + ' -o ' + self.corresponding_ofile + ' -c ' + self.filepath        
         return command
 
+    def get_rel_dir_file(self):
+        if self.filedir.startswith(os.getcwd()):
+            return ["", self.filebase + self.fileext]
+        includedirs = [] + mandatory_includedirs + self.get_optional_libraries_includedirs()
+        for inc in includedirs:
+            if self.filedir.startswith(inc):
+                rel_dir = self.filedir[len(inc)+1:]
+                return [rel_dir, self.filebase + self.fileext]
+        print "Unable to find where the file is include : " + self.filepath
+        return []
+                
+                
 
     def launch_compilation(self,hostname):
         """Launches the compilation of this .cc file on given host using rsh.
@@ -1214,12 +1237,12 @@ file_info_map = {}
 def file_info(filepath):
     "returns a FileInfo object for this file"
     "parsing the file if necessary, and remembering the result for later buffered reuse"
-    filepath = abspath(filepath)
-    if file_info_map.has_key(filepath):
-        return file_info_map[filepath]
+    absfilepath = abspath(filepath)
+    if file_info_map.has_key(absfilepath):
+        return file_info_map[absfilepath]
     else:
         new_file_info = FileInfo(filepath)
-        file_info_map[filepath] = new_file_info
+        file_info_map[absfilepath] = new_file_info
         new_file_info.analyseFile()
         return new_file_info
 
@@ -1386,6 +1409,73 @@ def mychmod(path,mode):
   if tail:
     mychmod(head,mode)
 
+## this function takes a target, and extract all the sources necessary
+## to compile the target, in a directory call your_target.dist
+## in this directory, there will be a Makefile that is able to compile
+## and link your target
+
+def distribute_source(target, cfiles_to_compile, executables_to_link, linkname):
+    print '+++++ Distributing ';
+    dist_dir = os.path.basename(target) + ".dist";
+    if os.path.isdir(dist_dir):  # make sure the OBJS dir exists, otherwise the command will fail
+        print "Directory " + dist_dir + " already exists"
+        sys.exit(1)
+    os.makedirs(dist_dir)
+    os.makedirs(os.path.join(dist_dir,"OBJS"))
+    makefile = open(os.path.join(dist_dir,"Makefile"),"w")
+    compiler = default_compiler
+    compileroptions = ""
+
+    linker = default_linker
+    linkeroptions = ""
+    so_options = ""
+    if create_so:
+        so_options = " -shared "
+    for opt in options:
+        optdef = pymake_options_defs[opt]
+        if optdef.linkeroptions:
+            linkeroptions = linkeroptions + ' ' + optdef.linkeroptions
+        if optdef.linker:
+            linker = optdef.linker
+
+    for opt in options:
+        optdef = pymake_options_defs[opt]
+        compileroptions = compileroptions + ' ' + optdef.compileroptions
+        if optdef.compiler:
+            compiler = optdef.compiler
+
+    for f in file_info_map.values():
+        [dir_f, file_f] = f.get_rel_dir_file()
+        if not os.path.isdir(os.path.join(dist_dir,dir_f)):
+            os.makedirs(os.path.join(dist_dir,dir_f))
+        shutil.copyfile(f.filepath, os.path.join(dist_dir,dir_f,file_f))
+
+    for ccfile in executables_to_link:
+        objsfilelist = []
+        for lf in ccfile.get_ccfiles_to_link():
+            objsfilelist.append("OBJS/" + os.path.basename(lf.corresponding_ofile))
+
+        command = linker + so_options + ' -o ' + os.path.basename(ccfile.corresponding_output) +\
+                  ' ' + string.join(objsfilelist,' ') + ' ' + \
+                  ccfile.get_optional_libraries_linkeroptions() + ' ' + linkeroptions + ' ' +\
+                  linkeroptions_tail
+        makefile.write(os.path.basename(ccfile.corresponding_output) + " : " + string.join(objsfilelist,' ') + "\n")
+        makefile.write('\t' + command)
+        makefile.write("\n")
+        makefile.write("\n")
+
+    for ccfile in ccfiles_to_compile.keys():
+        [dir_cc, file_cc] = ccfile.get_rel_dir_file()
+                
+        makefile.write('OBJS/' + ccfile.filebase + ".o : " + os.path.join(dir_cc,file_cc) + "\n")
+        makefile.write('\t' + compiler + ' ' + compileflags + ' ' + \
+                       compileroptions + ' -o OBJS/' + ccfile.filebase + ".o -c " + os.path.join(dir_cc,file_cc))
+        makefile.write("\n")
+        makefile.write("\n")
+        
+    makefile.close()
+    
+
 # MAIN PROGRAM
         
 for target in otherargs:
@@ -1430,20 +1520,25 @@ for target in otherargs:
         print '++++ Computing dependencies of '+target+' ...'
         get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_link, linkname)
 
-        print '++++ Compiling...'
-        if platform=='win32':
-            win32_parallel_compile(ccfiles_to_compile.keys())
+        # We dont want to compile. We will extract the necessary file to compile
+        # the target with a makefile
+        if distribute:
+            distribute_source(target, ccfiles_to_compile, executables_to_link, linkname)
         else:
-            parallel_compile(ccfiles_to_compile.keys())
+            print '++++ Compiling...'
+            if platform=='win32':
+                win32_parallel_compile(ccfiles_to_compile.keys())
+            else:
+                parallel_compile(ccfiles_to_compile.keys())
 
-        if force_link or (executables_to_link.keys() and not create_dll):
-            print '++++ Linking', string.join(map(lambda x: x.filebase, executables_to_link.keys()))
-            sequential_link(executables_to_link.keys(),linkname)
+            if force_link or (executables_to_link.keys() and not create_dll):
+                print '++++ Linking', string.join(map(lambda x: x.filebase, executables_to_link.keys()))
+                sequential_link(executables_to_link.keys(),linkname)
 
-        if create_dll:
-            print '++++ Creating DLL of', target
-            sequential_dll(file_info(target))
+            if create_dll:
+                print '++++ Creating DLL of', target
+                sequential_dll(file_info(target))
 
-        if temp_objs:
-            os.system('chmod 777 --silent '+objsdir+'/*')
-            mychmod(objsdir,33279)
+            if temp_objs:
+                os.system('chmod 777 --silent '+objsdir+'/*')
+                mychmod(objsdir,33279)
