@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.46 2005/02/18 17:29:28 tihocan Exp $
+   * $Id: vmatmain.cc,v 1.47 2005/04/06 22:52:59 chapados Exp $
    ******************************************************* */
 
 #include <algorithm>                         // for max
@@ -41,7 +41,9 @@
 
 #include "vmatmain.h"
 #include <plearn/base/general.h>
+#include <plearn/base/stringutils.h>
 #include <plearn/math/StatsCollector.h>
+#include <plearn/vmat/SelectColumnsVMatrix.h>
 #include <plearn/vmat/VMatLanguage.h>
 #include <plearn/vmat/VVMatrix.h>
 #include <plearn/vmat/VMat.h>
@@ -65,6 +67,49 @@
 namespace PLearn {
 using namespace std;
 
+/**
+ * This function converts a VMat to a CSV (comma-separated value) file with
+ * the given name.  One can also specify a list of column names or numbers
+ * to keep, as well as whether any missing values on a row cause that row
+ * to be skipped during export
+ */
+static void save_vmat_as_csv(VMat source, ostream& destination,
+                             bool skip_missings, bool verbose = true)
+{
+  // First, output the fieldnames in quoted CSV format.  Don't forget
+  // to quote the quotes
+  TVec<string> fields = source->fieldNames();
+  for (int i=0, n=fields.size() ; i<n ; ++i) {
+    string curfield = fields[i];
+    search_replace(curfield, "\"", "\\\"");
+    destination << '"' << curfield << '"';
+    if (i < n-1)
+      destination << ',';
+  }
+  destination << "\n";
+
+  ProgressBar* pb = 0;
+  if (verbose)
+    pb = new ProgressBar(cout, "Saving to CSV", source.length());
+  
+  // Next, output each line.  Perform missing-value checks if required.
+  for (int i=0, n=source.length() ; i<n ; ++i) {
+    if (pb)
+      pb->update(i+1);
+    Vec currow = source(i);
+    if (! skip_missings || ! currow.hasMissing()) {
+      for (int j=0, m=currow.size() ; j<m ; ++j) {
+        destination << tostring(currow[j]);  // tostring() ensures correct precision
+        if (j < m-1)
+          destination << ',';
+      }
+      destination << "\n";
+    }
+  }
+  delete pb;
+}
+
+  
 //! Prints where m1 and m2 differ by more than tolerance
 //! returns the number of such differences, or -1 if the sizes differ
 int print_diff(ostream& out, VMat m1, VMat m2, double tolerance, int verbose)
@@ -1431,7 +1476,44 @@ int vmatmain(int argc, char** argv)
       string destination = argv[3];
       VMat vm = getDataSet(source);
 
+      /**
+       * Interpret the following options:
+       *
+       *     --cols=col1,col2,col3,...
+       *           :: keep only the given columns (no space between the commas
+       *              and the columns); columns can be given either as a number
+       *              (zero-based) or a string.  You can also specify a range,
+       *              such as 0-18, or any combination thereof.
+       *
+       *     --skip-missings
+       *           :: if a row (after selecting the appropriate columns)
+       *              contains one or more missing values, skip it during export
+       */
+      TVec<string> columns;
+      bool skip_missings = false;
+      for (int i=4 ; argv[i] ; ++i) {
+        string curopt = argv[i];
+        if (curopt.substr(0,7) == "--cols=") {
+          string columns_str = curopt.substr(7);
+          columns = split(columns_str, ',');
+        }
+        else if (curopt == "--skip-missings")
+          skip_missings = true;
+        else
+          PLWARNING("VMat convert: unrecognized option '%s'; ignoring it...",
+                    curopt.c_str());
+      }
+
+      // If columns specified, select them.  Note: SelectColumnsVMatrix is very
+      // powerful and allows ranges, etc.
+      if (columns.size() > 0)
+        vm = new SelectColumnsVMatrix(vm, columns);
+
       string ext = extract_extension(destination);
+      if (ext != ".csv" && skip_missings)
+        PLWARNING("Option '--skip-missings' not supported for extension '%s'; ignoring it...",
+                  ext.c_str());
+
       if(ext==".amat")
         vm->saveAMAT(destination);
       else if(ext==".pmat")
@@ -1441,14 +1523,7 @@ int vmatmain(int argc, char** argv)
       else if(ext == ".csv")
       {
         ofstream out(destination.c_str());
-        for(int i=0; i < vm.length(); i++)
-        {
-          int last = vm.width()-1;
-          for(int j=0; j < last; j++)
-            out << vm(i, j) << "," << flush;
-          out << vm(i, last) << endl;
-        }
-        out.close();
+        save_vmat_as_csv(vm, out, skip_missings, true /*verbose*/);
       }
       else
       {
