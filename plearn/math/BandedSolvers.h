@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BandedSolvers.h,v 1.1 2004/09/29 16:25:20 chapados Exp $ 
+   * $Id: BandedSolvers.h,v 1.2 2004/10/08 15:48:01 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -102,7 +102,6 @@ void PentadiagonalSolveInPlace(const TVec<T>& y, const TVec<T>& a,
   T hh1=0;
   T hh2=0;
   T hh3=0;
-  T hh4=0;
   T hh5=0;
   T z=0;
   T hb=0;
