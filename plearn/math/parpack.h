@@ -174,6 +174,108 @@ int eigenSparseSymmMat(MatT& A, Vec e_values, Mat e_vectors, long int& n_evalues
 }
 
 
+/*! Same arguments as eigenSparseSymmMat except that A is not symmetric. 
+    We ignore the imaginary part if there is one.
+    See ARPACK/SRC files for more details. 
+    To get the eigen pairs in the same order as in plapack's eigenVecOfSymmMat, 
+    do the same thing as above, but you don't have to swap the eigen vectors
+    and eigen values.
+*/
+template<class MatT>
+int eigenSparseNonSymmMat(MatT& A, Vec e_values, Mat e_vectors, long int& n_evalues,
+		       int max_n_iter=300, bool compute_vectors=true, bool largest_evalues=true,
+		       bool according_to_magnitude=true, bool both_ends=false)
+{
+#ifdef NOARPACK
+  PLERROR("eigenSparseNonSymmMat: ARPACK not available on this system!");
+  return 0;
+#else
+  long int ido=0;
+  char bmat[1];
+  bmat[0] = 'I';
+  char which[2];
+  long int n=A.length();
+  if (e_vectors.length()!=n_evalues || e_vectors.width()!=n)
+    PLERROR("eigenSparseNonSymmMat: expected e_vectors.width(%d)=A.length(%d), e_vectors.length(%d)=e_values.length(%d)",
+	  e_vectors.width(),n,e_vectors.length(),n_evalues);
+  if (both_ends)
+    strncpy(which,"BE",2); //!<  half of the e-values from each end of the spectrum
+  else
+  {
+    which[0]= largest_evalues? 'L' : 'S';
+    which[1]= according_to_magnitude? 'M' : 'R';//according to magnitude or according to real part
+  }
+  real tol=0;
+  long int ncv=MIN(3+int(n_evalues*1.5),n-1);
+  e_vectors.resize(ncv,n); //!<  we need some extra space...
+  long int iparam[11];
+  iparam[0]=1;
+  iparam[2]=max_n_iter;
+  iparam[6]=1;
+  long int ipntr[11];
+  Vec workd(3*n);
+  long int lworkl = 3*(ncv * ncv) + (ncv * 6);
+  Vec workl(lworkl);
+  Vec resid(n);
+  long int info=0;
+  for (;;) {
+#ifdef USEDOUBLE
+    dnaupd_(&ido, bmat, &n, which, &n_evalues, &tol, resid.data(), &ncv, e_vectors.data(), &n,
+            iparam, ipntr, workd.data(), workl.data(), &lworkl, &info, 1, 2);
+#endif
+#ifdef USEFLOAT
+    snaupd_(&ido, bmat, &n, which, &n_evalues, &tol, resid.data(), &ncv, e_vectors.data(), &n,
+            iparam, ipntr, workd.data(), workl.data(), &lworkl, &info, 1, 2);
+#endif
+    if (ido == -1 || ido == 1) {
+      Vec x=workd.subVec(ipntr[0]-1,n);
+      Vec z=workd.subVec(ipntr[1]-1,n);
+      product(A, x, z);
+    } else break;
+  }
+  if (info != 0 && info != 1)
+  {
+    PLWARNING("eigenSparseNonSymmMat: naupd returning error %ld",info);
+    return info;
+  }
+  Vec e_valuesIm(n_evalues+1);
+  Vec workev(3*ncv);
+  if (info > 0)
+  {
+    n_evalues = iparam[4];
+    e_values.resize(n_evalues+1);
+  }
+  e_vectors.resize(n_evalues+1,n);
+  if (n_evalues>0)
+  {
+    long int rvec = compute_vectors;
+    TVec<long int> select(ncv);
+    long int ierr;
+    real sigmai =0;
+    real sigmar =0;
+#ifdef USEDOUBLE
+    dneupd_(&rvec, "A", select.data(), e_values.data(), e_valuesIm.data(), e_vectors.data(), &n,
+            &sigmar, &sigmai, workev.data(), bmat, &n, which, &n_evalues, &tol, 
+            resid.data(), &ncv, e_vectors.data(), &n, iparam, ipntr, workd.data(), 
+            workl.data(), &lworkl, &ierr, 3, 1, 2);
+#endif
+#ifdef USEFLOAT
+    sneupd_(&rvec, "A", select.data(), e_values.data(), e_valuesIm.data(), e_vectors.data(), &n,
+            &sigmar, &sigmai, workev.data(), bmat, &n, which, &n_evalues, &tol, 
+            resid.data(), &ncv, e_vectors.data(), &n, iparam, ipntr, workd.data(), 
+            workl.data(), &lworkl, &ierr, 3, 1, 2);
+#endif
+    if (ierr != 0)
+    {
+      PLWARNING("eigenSparseNonSymmMat: neupd returning error %ld",ierr);
+      return ierr;
+    }
+  }
+#endif
+  return info;
+}
+
+
 %> // end of namespace PLearn
 
 

@@ -42,6 +42,32 @@ using namespace std;
 
 extern "C"
 {  
+  int dnaupd_(long int *, const char *, long int *, const char *, 
+              long int *, double *, double *, long int *, double *, 
+              long int *, long int *, long int *, double *, double *, 
+              long int *, long int *, short, short);
+  
+  int dneupd_(long int *, const char *, long int *, double *, double *, 
+              double *, long int *, double *, double *, double *, 
+              const char *, long int *, const char *, long int *, double *, 
+              double *, 
+              long int *, double *, long int *, long int *, long int *, 
+              double *, double *, long int *, long int *, short, short,
+              short);
+   
+  int snaupd_(long int *, const char *, long int *, const char *, 
+              long int *, float *, float *, long int *, float *, 
+              long int *, long int *, long int *, float *, float *, 
+              long int *, long int *, short, short);
+  
+  int sneupd_(long int *, const char *, long int *, float *, float *, 
+              float *, long int *, float *, float *, float *, 
+              const char *, long int *, const char *, long int *, float *, 
+              float *, 
+              long int *, float *, long int *, long int *, long int *, 
+              float *, float *, long int *, long int *, short, short,
+              short);
+
   int dsaupd_(long int *, const char *, long int *, const char *, 
               long int *, double *, double *, long int *, double *, 
               long int *, long int *, long int *, double *, double *, 
