@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.3
 
-import os, shutil
+import os, shutil, traceback
 from toolkit import *
 from threading import *
 
@@ -178,7 +178,8 @@ class Task(Thread, WithOptions):
             self.dispatch.set_last_finished_task( self.getName() )
             self.dispatch.one_task_is_finished.set()    
             if exception is not None:
-                raise exception
+                #raise exception
+                traceback.print_exc(file=sys.stdout)
 
 class AbsPathTask(Task):
     """Task that must be provided absolute paths.

@@ -1,0 +1,90 @@
+#!/usr/bin/env python2.3
+import os, string, sys, toolkit
+from popen2 import *
+
+external = ['__builtin__', 'os', 'sys', 'string']
+        
+class epydoc_error_block:
+    def __init__(self, line):
+        if not line.startswith('===='):
+            raise ValueError
+        self.block         = line
+        self.header        = ''
+        self.header_closed = False
+
+    def __add__(self, line):
+        if line.startswith('----'):
+            self.header_closed = True            
+        elif not self.header_closed:
+            self.header += line
+
+        self.block += line
+        return self
+
+    def __str__(self):
+        if find_first(self.header, external) is not None:
+            return ''            
+        return self.block
+    
+def build_py_list(namespace, dirc):
+    py_list = [namespace]
+    py_list.extend( ['%s.%s'%(namespace, s[:-3])
+                     for s in os.listdir(dirc)
+                     if s[-3:] == '.py' and s[:-3] != "__init__" ] )
+    return py_list
+
+def build_plearn_py_list():
+    plearndir     = os.getenv( 'PLEARNDIR',
+                               os.path.join(os.getenv('HOME'), 'PLearn') )
+    
+    plearn_py     = os.path.join(plearndir, 'python_modules/plearn/')
+
+    py_list       = build_py_list('plearn', plearn_py)
+
+    ##py_list.extend( external )
+
+    return py_list
+
+def epydoc(py_list):
+    cmd = "epydoc --html %s" % string.join(py_list)
+    print( "+++ %s" % cmd )
+    process = Popen4( cmd )
+    process.wait()
+    errors = parse_epydoc_errors( process.fromchild.readlines() )
+    for block in errors:
+        print block,
+    print
+
+def find_first(s, substrings):
+    for sub in substrings:
+        index = string.find(s, sub)
+        if index != -1:
+            return (sub, index)
+    return None
+
+def parse_epydoc_errors( errors ):
+    blocks        = ['']
+
+    for line in errors:
+        if line.startswith('===='):
+            blocks.append( epydoc_error_block(line) )
+        elif line == '\n':
+            blocks.append('')
+        else:
+            blocks[-1] += line
+        
+    return [ b for b in blocks
+             if str(b) != '' ] 
+     
+def pldoc_help():
+    print
+    print ( "%s will generate, in the current working directory, a directory"
+            "named 'html'. Use your favorite browser to view 'html/index.html'"
+            %sys.argv[0] )
+    print
+    sys.exit()
+
+if "--help" in sys.argv or '-h' in sys.argv:
+    pldoc_help()
+epydoc( build_plearn_py_list() )
+

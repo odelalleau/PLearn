@@ -649,7 +649,7 @@ class ResultsTest(Test):
         compilation.set_option('quote_cmd_line', False)
 
         compilation.run()
-        self.dispatch.shared_files_access.release()
+        self.dispatch.release_shared_files_access(self)
 
         if compilation.failed:
             self.failed = True
@@ -682,7 +682,7 @@ class ResultsTest(Test):
         ## The following is a hack since self.new_results is not known when
         ## build_cmd_line() is called. This must be fixed someday
         self._cmd_line = 'cd %s; %s' % (self.new_results, self._cmd_line)
-        raw_input(self._cmd_line)
+        ##raw_input(self._cmd_line)
 
         return False
 
@@ -770,11 +770,10 @@ class RunTest(ResultsTest):
             self.failed = True 
             return True
 
-        raw_input("ICI1")        
         return ResultsTest._do_not_run(self)
 
     def _local_postprocessing(self):
-        raw_input('Verification')
+        ##raw_input('Verification')
 ##        verif = Verification(self._results_directory, self.new_results)
 
         ## Apply the same path resolving procedure to the new_results
@@ -1284,7 +1283,7 @@ def printErrors(dico):
         vprint(formattedKey + " -> " + dico[key], "Q")
 
 def pytest_version():
-    version_str = '$Id: pytest,v 1.13 2004/08/18 17:01:53 dorionc Exp $'
+    version_str = '$Id: pytest,v 1.14 2004/10/07 15:02:55 dorionc Exp $'
 
     bflag = "pytest,v"
     the_year = time.localtime()[0]
