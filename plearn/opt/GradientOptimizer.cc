@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.cc,v 1.19 2003/05/21 09:53:50 plearner Exp $
+   * $Id: GradientOptimizer.cc,v 1.20 2003/05/21 13:42:11 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -245,7 +245,9 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll)
   else
     params.clearGradient();
 
-  while (stage <= nstages) 
+  int stage_max = stage + nstages; // the stage to reach
+
+  while (stage < stage_max) 
     {
       learning_rate = start_learning_rate/(1.0+decrease_constant*stage);
       proppath.clearGradient();

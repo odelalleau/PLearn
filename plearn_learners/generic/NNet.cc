@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.3 2003/05/21 09:53:50 plearner Exp $
+   * $Id: NNet.cc,v 1.4 2003/05/21 13:42:12 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -370,7 +370,7 @@ void NNet::train(VecStatsCollector& train_stats)
   int initial_stage = stage;
   while(stage<nstages)
     {
-      optimizer->nstages = stage*optstage_per_lstage;
+      optimizer->nstages = optstage_per_lstage;
       optimizer->optimizeN(train_stats);
       ++stage;
       if(pb)
