@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: plstreams.h,v 1.3 2002/08/07 01:49:49 morinf Exp $
+   * $Id: plstreams.h,v 1.4 2002/08/09 17:28:09 zouave Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -56,21 +56,25 @@
 #include <bitset>
 #include <strstream.h>
 #include "plerror.h"
+#include "pl_nullstreambuf.h"
 
 namespace PLearn <%
 using namespace std;
 
 
-extern ofstream& nullout(); //!<  a null ostream: writing to it does nothing
-extern ifstream& nullin(); //!<  a null instream: reading from it does nothing
-extern fstream& nullinout(); //!< a null iostream: reading/writing from/to it does nothing
+// NOTE: For portability, we should define {i|o|io} streams which does nothing
+//       instead of opening (a probably non-existing file) named /dev/null
+extern ostream nullout; //!<  a null ostream: writing to it does nothing
+extern istream nullin; //!<  a null instream: reading from it does nothing
+extern iostream nullinout; //!< a null iostream: reading/writing from/to it does nothing
+
 //!  input streams that can be assigned to.
 class iassignstream : public istream 
 {
 public:
   //!  iassignstream(): istream() {}
-  iassignstream(const istream& in=nullin()): istream(in.rdbuf()) {}
-  iassignstream(const iassignstream& in=nullin()): istream(in.rdbuf()) {}
+  iassignstream(const istream& in=nullin): istream(in.rdbuf()) {}
+  iassignstream(const iassignstream& in): istream(in.rdbuf()) {}
   void operator=(const istream& in) { rdbuf(in.rdbuf()); }
   void operator=(const iassignstream& in) { rdbuf(in.rdbuf()); }
 };
@@ -80,7 +84,7 @@ class oassignstream : public ostream
 {
 public:
   //!  oassignstream(): ostream() {}
-  oassignstream(const ostream& out=nullout()): ostream(out.rdbuf()) {}
+  oassignstream(const ostream& out=nullout): ostream(out.rdbuf()) {}
   oassignstream(const oassignstream& out): ostream(out.rdbuf()) {}
   void operator=(const ostream& out) { rdbuf(out.rdbuf()); }
   void operator=(const oassignstream& out) { rdbuf(out.rdbuf()); }
@@ -90,7 +94,7 @@ public:
 class ioassignstream : public iostream
 {
 public:
-  ioassignstream(const iostream &stream=nullinout()): iostream(stream.rdbuf()) {};
+  ioassignstream(const iostream &stream=nullinout): iostream(stream.rdbuf()) {};
   ioassignstream(const ioassignstream &stream): iostream(stream.rdbuf()) {};
   void operator=(const iostream &stream) { rdbuf(stream.rdbuf()); };
   void operator=(const ioassignstream &stream) { rdbuf(stream.rdbuf()); }; 
@@ -121,7 +125,7 @@ class pl_istream: public iassignstream {
     pl_istream(const pl_istream &in)
         : iassignstream(in), user_flags_(in.user_flags_), flags(in.flags)
         {};
-    pl_istream(const istream &in = nullin())
+    pl_istream(const istream &in = nullin)
         : iassignstream(in), user_flags_(dft_option_flag), flags(0)
         {};
 
@@ -141,7 +145,7 @@ class pl_ostream: public oassignstream {
     pl_ostream(const pl_ostream &out)
         : oassignstream(out), user_flags_(out.user_flags_), flags(out.flags)
         {};
-    pl_ostream(const ostream &out = nullout())
+    pl_ostream(const ostream &out = nullout)
         : oassignstream(out), user_flags_(dft_option_flag), flags(0)
         {};
 
@@ -160,7 +164,7 @@ public:
     pl_stream(const pl_stream &in_out)
         : ioassignstream(in_out), ostr(in_out.ostr), istr(in_out.istr)
         {};
-    pl_stream(const iostream &in_out = nullinout())
+    pl_stream(const iostream &in_out = nullinout)
         : ioassignstream(in_out), ostr(in_out), istr(in_out)
         {};
 
@@ -196,6 +200,7 @@ extern pl_stream_initiate initiate;
 template <class T> inline pl_istream &
 operator>>(pl_istream &in, T &x)
 {
+    in >> raw >> x;
     return in;
 }
 

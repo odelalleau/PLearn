@@ -3,7 +3,7 @@
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
-// Copyright (C) 2002 Frederic Morin
+// Copyright (C) 2002 Xavier Saint-Mleux
 //
 
 // Redistribution and use in source and binary forms, with or without
@@ -35,20 +35,33 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 
-#include "plstreams.h"
+#ifndef pl_nullstreambuf_INC
+#define pl_nullstreambuf_INC
+
+#include <streambuf>
 
 namespace PLearn <%
+
 using namespace std;
 
-static pl_nullstreambuf null_streambuf;
+/*****
+ * pl_nullstreambuf:
+ *  streambuf equivalent of a black hole...
+ */
 
-istream nullin(&null_streambuf);
-ostream nullout(&null_streambuf);
-iostream nullinout(&null_streambuf);
+class pl_nullstreambuf : public streambuf
+{
+ protected:
+  virtual int_type underflow()
+    { return traits_type::eof(); }
+  virtual int_type overflow(int_type meta = traits_type::eof()) 
+    { return meta; }
+ public:
+  pl_nullstreambuf()
+    {}
+};
 
-pl_stream_raw raw;
-pl_stream_clear_flags clear_flags;
-pl_stream_user_flags user_flags;
-pl_stream_initiate initiate;
 
-%> // end of namespace PLearn
+%> // namespace PLearn
+
+#endif //ndef pl_nullstreambuf_INC
