@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.19 2004/03/20 21:00:24 yoshua Exp $
+   * $Id: vmatmain.cc,v 1.20 2004/03/23 22:27:35 nova77 Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -319,7 +319,9 @@ void viewVMat(const VMat& vm)
   int curi = 0;
   int curj = 0;
   int starti = 0;
-  int startj = 0;  
+  int startj = 0;
+  
+  bool onError=false;
 
   map<int,Vec> cached_columns;
 
@@ -406,7 +408,10 @@ void viewVMat(const VMat& vm)
                curi, curj, vm->fieldName(curj).c_str(), strval.c_str(), vm(curi,curj));
 
       refresh();
-      key= getch();
+      if (!onError)
+        key = getch();
+      else
+        onError = false;
 
       switch(key)
         {
@@ -514,6 +519,19 @@ void viewVMat(const VMat& vm)
                 starti = max(0,vm->length()-ni);
             }
           break;
+        case KEY_HOME: 
+          // not working for the moment: see http://dickey.his.com/xterm/xterm.faq.html#xterm_pc_style
+          if(transposed)
+          {
+              curi = 0;
+              starti = 0;
+          }
+          else
+          {
+              curj = 0;
+              startj = 0;
+          }
+          break;
         case '.':
           hide_sameval = !hide_sameval;
           break;
@@ -529,7 +547,9 @@ void viewVMat(const VMat& vm)
         case '/':  // search for value
           {
             echo();
-            mvprintw(LINES-1,0,"Search for value or string                                                                             ");
+            mvprintw(LINES-1,0,"Search for value or string:");
+            // clear the rest of the line
+            clrtoeol();
             move(LINES-1, 28);
             char l[10];
             getnstr(l, 10);
@@ -648,8 +668,16 @@ void viewVMat(const VMat& vm)
           
         default:
           mvprintw(LINES-1,0,"*** Invalid command (type 'h' for help) ***");
+          // clear the rest of the line
+          clrtoeol();
+          
           refresh();
-          sleep(1);
+          
+          // wait until the user type something
+          key = getch();
+          onError = true;
+
+          //sleep(1);
           break;
         }
     }
