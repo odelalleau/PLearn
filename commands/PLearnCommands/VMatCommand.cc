@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMatCommand.cc,v 1.7 2005/01/04 21:24:09 plearner Exp $ 
+   * $Id: VMatCommand.cc,v 1.8 2005/01/18 15:36:39 lheureup Exp $ 
    ******************************************************* */
 
 /*! \file VMatCommand.cc */
@@ -55,8 +55,9 @@ VMatCommand::VMatCommand():
 
       "Usage: vmat info <dataset> \n"
       "       Will info about dataset (size, etc..)\n"
-      "   or: vmat fields <dataset> \n"
-      "       To list the fields with their names \n"
+      "   or: vmat fields <dataset> [name_only] [transpose] \n"
+      "       To list the fields with their names (if 'name_only' is specified, the indexes won't be displayed,\n"
+      "       and if 'transpose' is also added, the fields will be listed on a single line)\n"
       "   or: vmat fieldinfo <dataset> <fieldname_or_num>\n"
       "       To display statistics for that field \n"
       "   or: vmat bbox <dataset> [<extra_percent>] \n"
@@ -64,8 +65,8 @@ VMatCommand::VMatCommand():
       "   or: vmat cat <dataset> [<optional_vpl_filtering_code>]\n"
       "       To display the dataset \n"
       "   or: vmat sascat <dataset.vmat> <dataset.txt>\n"
-      "       To output in <filename.txt> the dataset in SAS-like tab-separated format with field names on the first line\n"
-      "   or: vmat view <dataset> [<line#> [<column#>]]\n"
+      "       To output in <dataset.txt> the dataset in SAS-like tab-separated format with field names on the first line\n"
+      "   or: vmat view <dataset>\n"
       "       Interactive display to browse on the data. \n"
       "   or: vmat stats <dataset> \n"
       "       Will display basic statistics for each field \n"
@@ -81,14 +82,15 @@ VMatCommand::VMatCommand():
       "       Will generate <kvalue> pairs of .vmat that are splitted so they can be used for kfold trainings\n"
       "       The first .vmat-pair will be named <fileprefix>_train_1.vmat (all source_dataset except the first 1/k)\n"
       "       and <fileprefix>_test_1.vmat (the first 1/k of <source_dataset>\n"
-      "   or: vmat diff <dataset1> <dataset2> [tolerance] \n"
-      "       Will report all elements that differ by more than tolerance (defauts to 1e-6) \n"
+      "   or: vmat diff <dataset1> <dataset2> [<tolerance> [<verbose>]]\n"
+      "       Will report all elements that differ by more than tolerance (defauts to 1e-6).\n"
+      "       If verbose==0 then print only total number of differences \n"
       "   or: vmat cdf <dataset> [<dataset> ...] \n"
       "       To interactively display cumulative density function for each field \n"
       "       along with its basic statistics \n"
-      "   or: vmat cond <dataset> <condfield#> \n"
-      "       Interactive display of coditional statistics conditioned on the \n"
-      "       conditioning field <condfield#> \n"
+				  // "   or: vmat cond <dataset> <condfield#> \n"
+				  // "       Interactive display of coditional statistics conditioned on the \n"
+				  // "       conditioning field <condfield#> \n"
       "   or: vmat diststat <dataset> <inputsize>\n"
       "       Will compute and output basic statistics on the euclidean distance \n"
       "       between two consecutive input points \n\n"
