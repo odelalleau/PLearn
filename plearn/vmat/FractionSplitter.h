@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FractionSplitter.h,v 1.5 2004/03/23 23:08:08 morinf Exp $ 
+   * $Id: FractionSplitter.h,v 1.6 2004/03/30 16:47:15 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file FractionSplitter.h */
@@ -47,9 +47,13 @@ using namespace std;
 
 class FractionSplitter: public Splitter
 {
+
+private:
+
   typedef Splitter inherited;
 
 protected:
+
   // *********************
   // * protected options *
   // *********************
@@ -58,10 +62,12 @@ protected:
   // ...
     
 public:
+
   // ************************
   // * public build options *
   // ************************
 
+  bool round_to_closest;
   TMat< pair<real, real> > splits;
 
   // ****************
@@ -78,21 +84,19 @@ public:
   // ******************
 
 private: 
+
   //! This does the actual building. 
-  // (Please implement in .cc)
   void build_();
 
 protected: 
+
   //! Declares this class' options
-  // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
 
 public:
+
   // simply calls inherited::build() then build_() 
   virtual void build();
-
-  //! Provides a help message describing this class
-  static string help();
 
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
@@ -103,7 +107,6 @@ public:
 
   // ********************************
   // *        Splitter methods      *
-  // * (must be implemented in .cc) *
   // ********************************
 
   //! Returns the number of available different "splits"

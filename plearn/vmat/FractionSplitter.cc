@@ -1,4 +1,3 @@
-
 // -*- C++ -*-
 
 // FractionSplitter.cc
@@ -34,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FractionSplitter.cc,v 1.4 2004/02/20 21:14:44 chrish42 Exp $ 
+   * $Id: FractionSplitter.cc,v 1.5 2004/03/30 16:47:15 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file FractionSplitter.cc */
@@ -44,20 +43,23 @@ namespace PLearn {
 using namespace std;
 
 FractionSplitter::FractionSplitter() 
-  :Splitter()
-  /* ### Initialise all fields to their default value */
-{
-  // ...
-
-  // ### You may or may not want to call build_() to finish building the object
-  // build_();
-}
+: Splitter(),
+  round_to_closest(0)
+{}
 
 
-PLEARN_IMPLEMENT_OBJECT(FractionSplitter, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(FractionSplitter,
+    "A Splitter that can extract several subparts of a dataset in each split.",
+    "Ranges of the dataset are specified explicitly as start:end positions,\n"
+    "that can be absolute or relative to the number of samples in the training set.");
 
 void FractionSplitter::declareOptions(OptionList& ol)
 {
+
+  declareOption(ol, "round_to_closest", &FractionSplitter::round_to_closest, OptionBase::buildoption,
+                "If set to 1, then the integer value found when using fractions will\n"
+                "be the closest integer, instead of the integer part.");
+  
   declareOption(ol, "splits", &FractionSplitter::splits, OptionBase::buildoption,
                 "A matrix of start:end pairs. Each row represents a split. \n"
                 "Each start:end element represents a range of samples in the dataset to be splitted. \n"
@@ -72,14 +74,6 @@ void FractionSplitter::declareOptions(OptionList& ol)
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
-}
-
-string FractionSplitter::help()
-{
-  // ### Provide some useful description of what the class is ...
-  return 
-    "FractionSplitter is a splitter for which ranges of the training set are specified explicitly\n"
-    "as start:end positions, that can be absolute or relative to the number of samples in the training set\n";
 }
 
 void FractionSplitter::build_()
@@ -133,20 +127,29 @@ TVec<VMat> FractionSplitter::getSplit(int k)
 
       if(fstart>1) // absolute position
         start = int(fstart);
-      else // relative position
-        start = int(fstart*l);
+      else {// relative position
+        if (round_to_closest) {
+          start = int(fstart*l + 0.5);
+        } else {
+          start = int(fstart*l);
+        }
+      }
 
       if(fend>1) // absolute end position
         end = int(fend);
       else if(fend==1) // until last element inclusive
         end = l;
-      else // relative end position
-        end = int(fend*l);
+      else {// relative end position
+        if (round_to_closest) {
+          end = int(fend*l + 0.5);
+        } else {
+          end = int(fend*l);
+        }
+      }
 
       vms[i] = dataset.subMatRows(start, end-start);
     }
   return vms;
 }
-
 
 } // end of namespace PLearn
