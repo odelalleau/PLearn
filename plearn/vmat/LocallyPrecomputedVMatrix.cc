@@ -33,52 +33,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyPrecomputedVMatrix.cc,v 1.1 2004/11/18 14:31:45 tihocan Exp $ 
+   * $Id: LocallyPrecomputedVMatrix.cc,v 1.2 2004/11/18 14:56:21 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
 
 /*! \file LocallyPrecomputedVMatrix.cc */
-
-
-#define PLEARN_IMPLEMENT_MY_OBJECT(CLASSTYPE, ONELINEDESCR, MULTILINEHELP)    \
-	      string CLASSTYPE::_classname_()                              \
-          { return #CLASSTYPE; }                                           \
-	      string CLASSTYPE::classname() const                          \
-          { return _classname_(); }                                        \
-        OptionList& CLASSTYPE::_getOptionList_()                           \
-          { static OptionList ol;                                          \
-            if(ol.empty())                                                 \
-              declareOptions(ol);                                          \
-            return ol; }                                                   \
-        OptionList& CLASSTYPE::getOptionList() const                       \
-          { return _getOptionList_(); }                                    \
-        Object* CLASSTYPE::_new_instance_for_typemap_()                    \
-          { return new CLASSTYPE(); }                                      \
-        bool CLASSTYPE::_isa_(Object* o)                                   \
-          { return dynamic_cast<CLASSTYPE*>(o) != 0; }                     \
-        CLASSTYPE* CLASSTYPE::deepCopy(CopiesMap& copies) const            \
-          { CopiesMap::iterator it = copies.find(this);                    \
-            if (it != copies.end())                                        \
-              return static_cast<CLASSTYPE*>(it->second);                  \
-            CLASSTYPE* deep_copy =                                         \
-                 new CLASSTYPE(dynamic_cast<const CLASSTYPE&>(*this));     \
-                 cout << "Created CLASSTYPE by copy" << endl;              \
-            copies[this] = deep_copy;                                      \
-            deep_copy->makeDeepCopyFromShallowCopy(copies);                \
-            return deep_copy; }                                            \
-        void CLASSTYPE::_static_initialize_()                              \
-          { TypeFactory::register_type(                                    \
-            #CLASSTYPE,                                                    \
-	          inherited::_classname_(),                                \
-            &CLASSTYPE::_new_instance_for_typemap_,                        \
-            &CLASSTYPE::_getOptionList_,                                   \
-            &CLASSTYPE::_isa_,                                             \
-            ONELINEDESCR,                                                  \
-            MULTILINEHELP  ); }                                            \
-	      StaticInitializer CLASSTYPE::_static_initializer_(&CLASSTYPE::_static_initialize_)
-
-
 
 #include "LocallyPrecomputedVMatrix.h"
 #include <plearn/vmat/FileVMatrix.h>
@@ -93,11 +53,10 @@ LocallyPrecomputedVMatrix::LocallyPrecomputedVMatrix()
 : local_dir("/Tmp"),
   remove_when_done(true)
 {
-  cout << "CREATION OF A LocallyPrecomputedVMatrix" << endl;
   precomp_type = "pmat";
 }
 
-PLEARN_IMPLEMENT_MY_OBJECT(LocallyPrecomputedVMatrix,
+PLEARN_IMPLEMENT_OBJECT(LocallyPrecomputedVMatrix,
     "A VMat that precomputes its source in a local directory.",
     ""
 );
@@ -159,11 +118,9 @@ void LocallyPrecomputedVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////////////////////////
 LocallyPrecomputedVMatrix::~LocallyPrecomputedVMatrix()
 {
-  cout << "DELETION OF A LocallyPrecomputedVMatrix" << endl;
   if (remove_when_done && metadatadir != "") {
     string precomputed_file = precomp_source->getOption("filename");
     precomputed_file = precomputed_file.substr(1, precomputed_file.size() - 2);
-    cout << "precomputed_file = " << precomputed_file << endl;
     // First we delete the precomputed source, so that it does not try to save
     // more stuff in the metadatadir after it has been deleted.
     precomp_source = 0;
