@@ -28,6 +28,7 @@
 using namespace std;
 
 bool isdir(const string& path);
+bool islink(const string& path);
 void makedir(const string& dir);
 int goAndCreateDir(string sourcedir, string destdir, string spc);
 void copyAndLinkObjs(string& sourceOBJdir, string& original_sourcedir, string& destOBJdir);
@@ -61,6 +62,7 @@ int goAndCreateDir(string sourcedir, string destdir, string spc)
 {
   string newSourceDir;
   string newDestDir;
+	string command;
   cout << spc << "Examining dir " << sourcedir << endl;    
   spc += "  ";
 
@@ -83,6 +85,17 @@ int goAndCreateDir(string sourcedir, string destdir, string spc)
     if(s=="." || s=="..")
       continue;
 
+  	if (s.find("OBJS") != string::npos)
+		{
+			if (islink(sourcedir + s))
+			{
+				command = "rm " + sourcedir + s;
+			  system(command.c_str());	
+			}
+			else
+				hasOBJS = true;
+		}
+
     if (!isdir(sourcedir + s))
 		{
       if (s.rfind(".cc") != string::npos)
@@ -90,9 +103,6 @@ int goAndCreateDir(string sourcedir, string destdir, string spc)
 
       continue;
 		}
-
-  	if (s.find("OBJS") != string::npos)
-			hasOBJS = true;
 
     // ignore CVS dirs
     if (s.find("CVS") != string::npos)
@@ -127,7 +137,7 @@ int goAndCreateDir(string sourcedir, string destdir, string spc)
 		 if (!isdir(destdir + "OBJS"))
 		   makedir(destdir + "OBJS");
 			 
-     string command = "ln -s " + destdir + "OBJS " + sourcedir;
+     command = "ln -s " + destdir + "OBJS " + sourcedir;
      system(command.c_str());
    
 	   cout << "done!" << endl;
@@ -165,9 +175,8 @@ void makedir(const string& dir)
     return;
 
   // make the symbolic link of the OBJS directory
-  ostringstream mkdirCommand(ostringstream::out); 
-  mkdirCommand << "mkdir " << dir;
-  system(mkdirCommand.str().c_str());
+	string mkdirCommand = "mkdir " + dir;
+  system(mkdirCommand.c_str());
 }
 
 bool isdir(const string& path)
@@ -182,14 +191,24 @@ bool isdir(const string& path)
 	
 	if (S_ISDIR(statusinfo.st_mode))
 		return true;
-	else if (S_ISLNK(statusinfo.st_mode))
-	{
-	  // if it is a link is better to delete it.
-	  string command = "rm  " + path;
-    system(command.c_str());
-		return false;
-	}
 	else
 		return false;
+}
+
+bool islink(const string& path)
+{
+	struct stat statusinfo;
+	int status;
+
+	status = lstat(path.c_str(), &statusinfo);
+		
+	if (status != 0)
+		return false;
+	
+	if (S_ISLNK(statusinfo.st_mode))
+		return true;
+	else
+		return false;
+
 }
 
