@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.50 2005/02/08 21:38:12 tihocan Exp $
+   * $Id: StatsCollector.cc,v 1.51 2005/02/14 19:50:13 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -345,10 +345,15 @@ void StatsCollector::remove_observation(real val, real weight)
     // assertion is after previous check for nnonmissing_, since the last
     // subtraction of sumsquare might have left sumsquare very slightly
     // negative due to roundoff errors
-    assert( sumsquare_ >= 0 );
+    static const real SQRT_ABSOLUTE_TOLERANCE = sqrt(ABSOLUTE_TOLERANCE);
+    if (-ABSOLUTE_TOLERANCE < sumsquare_ && sumsquare_ < 0.0)
+      sumsquare_ = 0.0;
+    if (-SQRT_ABSOLUTE_TOLERANCE < sumfourth_ && sumfourth_ < 0.0)
+      sumfourth_ = 0.0;
+    assert( sumsquare_ >= 0.0 && sumfourth_ >= 0.0 );
     
     if(maxnvalues>0)
-      PLERROR("The remove observation mecanism is incompatible with maxnvalues.");
+      PLERROR("The remove observation mechanism is incompatible with maxnvalues.");
   }
 }                           
 
