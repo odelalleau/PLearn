@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat.cc,v 1.10 2003/06/12 20:44:57 ducharme Exp $
+* $Id: VMat.cc,v 1.11 2003/12/05 18:57:07 tihocan Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat.h"
@@ -63,6 +63,7 @@ VMat VMat::subMatRows(int i, int l) const
 {
   VMat res = ptr->subMat(i,0,l,width());
   res->defineSizes(ptr->inputsize(), ptr->targetsize(), ptr->weightsize());
+  res->target_is_last = ptr->target_is_last;
   return res;
 }
 

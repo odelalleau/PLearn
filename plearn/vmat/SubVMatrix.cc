@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.cc,v 1.5 2003/08/13 08:13:46 plearner Exp $
+   * $Id: SubVMatrix.cc,v 1.6 2003/12/05 18:57:07 tihocan Exp $
    ******************************************************* */
 
 #include "SubVMatrix.h"
@@ -95,6 +95,7 @@ void SubVMatrix::build_()
     if(inputsize_<0) inputsize_ = parent->inputsize();
     if(targetsize_<0) targetsize_ = parent->targetsize();
     if(weightsize_<0) weightsize_ = parent->weightsize();
+    target_is_last = parent->target_is_last;
   }
   //  cerr << "inputsize: "<<inputsize_ << "  targetsize:"<<targetsize_<<"weightsize:"<<weightsize_<<endl;
 }

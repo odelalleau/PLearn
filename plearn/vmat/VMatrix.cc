@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.33 2003/11/25 14:53:05 tihocan Exp $
+* $Id: VMatrix.cc,v 1.34 2003/12/05 18:57:07 tihocan Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -75,7 +75,8 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(VMatrix, "ONE LINE DESCR", "NO HELP");
 VMatrix::VMatrix()
   : lockf_(0), length_(-1), width_(-1), mtime_(0), 
    inputsize_(-1), targetsize_(-1), weightsize_(-1),
-   writable(false)
+   writable(false),
+   target_is_last(false)
 {}
 
 VMatrix::VMatrix(int the_length, int the_width)
@@ -84,7 +85,8 @@ VMatrix::VMatrix(int the_length, int the_width)
    writable(false),
    map_sr(TVec<map<string,real> >(the_width)),
    map_rs(TVec<map<real,string> >(the_width)),
-   fieldstats(0)
+   fieldstats(0),
+   target_is_last(false)
 {}
 
 void VMatrix::declareOptions(OptionList & ol)
@@ -100,6 +102,8 @@ void VMatrix::declareOptions(OptionList & ol)
                 "size of target part (-1 if variable or unspecified, 0 if no target)");
   declareOption(ol, "weightsize", &VMatrix::weightsize_, OptionBase::buildoption, 
                 "size of weights (-1 if unspecified, 0 if no weight, 1 for sample weight, >1 currently not supported (include it is recommended to include additional info in target. weight is really reserved for a per sample weight).");
+  declareOption(ol, "target_is_last", &VMatrix::target_is_last, OptionBase::buildoption, 
+                "if set to 1, the target is assumed to be in the last column(s), and not just after the inputs");
   declareOption(ol, "metadatadir", &VMatrix::metadatadir, OptionBase::buildoption, 
                 "A directory in which to store meta-information for this matrix \n"
                 "You don't always have to give this explicitly. For ex. if your \n"
@@ -261,7 +265,11 @@ void VMatrix::getExample(int i, Vec& input, Vec& target, real& weight)
   if(targetsize_<0)
     PLERROR("In VMatrix::getExample, targetsize_ not defined for this vmat");
   target.resize(targetsize_);
-  getSubRow(i,inputsize_,target);
+  if (target_is_last) {
+    getSubRow(i,width() - targetsize_,target);
+  } else {
+    getSubRow(i,inputsize_,target);
+  }
 
   if(weightsize_==0)
     weight = 1;
