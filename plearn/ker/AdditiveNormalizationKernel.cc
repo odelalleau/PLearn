@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdditiveNormalizationKernel.cc,v 1.1 2004/04/20 20:37:57 tihocan Exp $ 
+   * $Id: AdditiveNormalizationKernel.cc,v 1.2 2004/04/21 17:38:56 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -122,11 +122,11 @@ void AdditiveNormalizationKernel::build_()
 // computeAverage //
 ////////////////////
 real AdditiveNormalizationKernel::computeAverage(const Vec& x, bool on_row, real squared_norm_of_x) const {
-  Vec k_x;
+  Vec k_x(data->length());
   if (is_symmetric || !on_row) {
-    k_x = source_kernel->evaluate_all_i_x(x, squared_norm_of_x);
+    source_kernel->evaluate_all_i_x(x, k_x, squared_norm_of_x);
   } else {
-    k_x = source_kernel->evaluate_all_x_i(x, squared_norm_of_x);
+    source_kernel->evaluate_all_x_i(x, k_x, squared_norm_of_x);
   }
   return sum(k_x) / real(data->length());
 }
