@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.3 2003/11/17 18:45:01 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.4 2003/11/18 02:55:27 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -253,80 +253,59 @@ ConditionalDensityNet::ConditionalDensityNet()
       /*
        * output density
        */
+      Var max_y = var(maxY);
       Var centers = target-mu;
-      Var centers_M = maxY-mu;
+      Var centers_M = max_y-mu;
       Var pos_a = softplus(a);
       Var pos_b = softplus(b);
       Var pos_c = softplus(c);
-      Var cum_numerator, density_numerator, expectation_numerator, denominator, primitive_steps;
+      Var steps_M, steps_gradient, steps_primitive;
       if (steps_type=="sigmoid_steps")
       {
         Var steps = sigmoid(pos_c*centers);
-        cum_numerator = pos_a + dot(pos_b,steps);
-        inverse_denominator = 1/(pos_a + dot(pos_b,sigmoid(pos_c*centers_M)));
-        density_numerator = dot(pos_b*pos_c,steps*(1-steps));
+        steps_M = sigmoid(pos_c*centers_M);
+        steps_gradient = steps*(1-steps);
         primitive_steps = softplus(pos_c*centers);
       }
       else if (steps_type=="sloped_steps")
       {
-        PLERROR("not implemented yet");
+        Var next_centers = vconcat(new SubMatVariable(centers,1,0,n_output_density_terms,1),(target-max_y));
+        Var scaled_centers = -pos_c*centers;
+        Var scaled_next_centers = -pos_c*next_centers;
+        Var steps = softplus(scaled_centers) - softplus(scaled_next_centers);
+        Var next_centers_M = vconcat(new SubMatVariable(centers_M,1,0,n_output_density_terms,1),var(0.0));
+        steps_M = softplus(-pos_c*centers_M) - softplus(-pos_c*next_centers_M);
+        //primitive_steps = -dilogarithm(-exp(scaled_centers)) +
+        //  dilogarithm(-exp(scaled_next_centers));
       }
       else PLERROR("ConditionalDensityNet::build, steps_type option value unknown: %s",steps_type.c_str());
 
+      Var density_numerator = dot(pos_b*pos_c,steps_gradient);
+      Var inverse_denominator = 1.0/(pos_a + dot(pos_b,steps_M));
+      Var density_numerator = dot(pos_b*pos_c,steps_gradient);
+      Var cum_numerator = pos_a + dot(pos_b,steps);
       cumulative = cum_numerator * inverse_denominator;
       density = density_numerator * inverse_denominator;
-      expectation = (1 - pos_a*inverse_denominator)*maxY - dot(pos_b/pos_c,primitive_steps)*inverse_denominator;
+      expectation = (1 - pos_a*inverse_denominator)*max_y - dot(pos_b/pos_c,primitive_steps)*inverse_denominator;
 
       /*
-       * costfuncs
+       * cost functions:
+       *   training_criterion = log_likelihood_vs_squared_error_balance*neg_log_lik
+       *                      +(1-log_likelihood_vs_squared_error_balance)*squared_err
+       *                      +penalties
+       *   neg_log_lik = -log(1_{target=0} cumulative + 1_{target>0} density)
+       *   squared_err = square(target - expectation)
        */
-      int ncosts = cost_funcs.size();  
-      if(ncosts<=0)
-        PLERROR("In ConditionalDensityNet::build_()  Empty cost_funcs : must at least specify the cost function to optimize!");
-      costs.resize(ncosts);
+      costs.resize(3);
       
-      for(int k=0; k<ncosts; k++)
-        {
-          // create costfuncs and apply individual weights if weightpart > 1
-          if(cost_funcs[k]=="mse")
-            costs[k]= sumsquare(output-target);
-          else if(cost_funcs[k]=="mse_onehot")
-            costs[k] = onehot_squared_loss(output, target);
-          else if(cost_funcs[k]=="NLL") 
-            {
-              if (output->size() == 1) {
-                // Assume sigmoid output here!
-                costs[k] = cross_entropy(output, target);
-              } else {
-                if (output_transfer_func == "log_softmax")
-                  costs[k] = -output[target];
-                else
-                  costs[k] = neg_log_pi(output, target);
-              }
-            } 
-          else if(cost_funcs[k]=="class_error")
-            costs[k] = classification_loss(output, target);
-          else if(cost_funcs[k]=="multiclass_error")
-            costs[k] = multiclass_loss(output, target);
-          else if(cost_funcs[k]=="cross_entropy")
-            costs[k] = cross_entropy(output, target);
-          else if (cost_funcs[k]=="stable_cross_entropy") {
-            costs[k] = stable_cross_entropy(before_transfer_func, target);
-          }
-          else  // Assume we got a Variable name and its options
-            {
-              costs[k]= dynamic_cast<Variable*>(newObject(cost_funcs[k]));
-              if(costs[k].isNull())
-                PLERROR("In ConditionalDensityNet::build_()  unknown cost_func option: %s",cost_funcs[k].c_str());
-              costs[k]->setParents(output & target);
-              costs[k]->build();
-            }
-          
-          // take into account the sampleweight
-          //if(sampleweight)
-          //  costs[k]= costs[k] * sampleweight; // NO, because this is taken into account (more properly) in stats->update
-        }
-      
+      costs[1] = -log(ifThenElse(target>0,density,cumulative));
+      costs[2] = square(target-expectation);
+      if (log_likelihood_vs_squared_error_balance==1)
+        costs[0] = costs[1];
+      else if (log_likelihood_vs_squared_error_balance==0)
+        costs[0] = costs[2];
+      else costs[0] = log_likelihood_vs_squared_error_balance*costs[1]+
+             (1-log_likelihood_vs_squared_error_balance)*costs[2];
 
       /*
        * weight and bias decay penalty
@@ -394,8 +373,14 @@ ConditionalDensityNet::ConditionalDensityNet()
         invars.push_back(input);
         testinvars.push_back(input);
       }
+
+ICI
+
       if(output)
         outvars.push_back(output);
+
+??
+
       if(target)
       {
         invars.push_back(target);
