@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ClassifierFromDensity.cc,v 1.4 2003/08/13 08:13:46 plearner Exp $ 
+   * $Id: ClassifierFromDensity.cc,v 1.5 2003/12/16 14:54:23 plearner Exp $ 
    ******************************************************* */
 
 /*! \file ClassifierFromDensity.cc */
@@ -42,6 +42,8 @@
 #include "ConcatColumnsVMatrix.h"
 #include "VMat_maths.h"
 #include "Kernel.h"
+#include "ClassErrorCostFunction.h"
+#include "NegLogProbCostFunction.h"
 
 namespace PLearn <%
 using namespace std;
