@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
- * $Id: ForwardVMatrix.cc,v 1.9 2004/04/05 22:53:21 morinf Exp $
+ * $Id: ForwardVMatrix.cc,v 1.10 2004/05/14 02:13:41 tihocan Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -129,6 +129,20 @@ map<string,real> ForwardVMatrix::getStringMapping(int col) const
   return map<string,real>();
 
   //  return vm->getStringMapping(col); 
+}
+
+////////////////////////////
+// getStringToRealMapping //
+////////////////////////////
+const map<string,real>& ForwardVMatrix::getStringToRealMapping(int col) const {
+  return vm->getStringToRealMapping(col);
+}
+
+////////////////////////////
+// getRealToStringMapping //
+////////////////////////////
+const map<real,string>& ForwardVMatrix::getRealToStringMapping(int col) const {
+  return vm->getRealToStringMapping(col);
 }
 
 void ForwardVMatrix::computeStats()

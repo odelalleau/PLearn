@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: ForwardVMatrix.h,v 1.7 2004/04/05 22:53:21 morinf Exp $
+   * $Id: ForwardVMatrix.h,v 1.8 2004/05/14 02:13:41 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -84,6 +84,10 @@ public:
 
   //! returns the whole string->value mapping
   map<string,real> getStringMapping(int col) const;
+
+  // Overridden from VMatrix.h to forward to the underlying VMat.
+  virtual const map<string,real>& getStringToRealMapping(int col) const;
+  virtual const map<real,string>& getRealToStringMapping(int col) const;
 
   virtual void computeStats(); 
 
