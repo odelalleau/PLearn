@@ -1085,11 +1085,11 @@ public:
 
   //!  Return the size of a complete row in CHARS!
   size_type size() const {
-    return rawrow.size();
+    return (size_type)rawrow.size();
   }
 	
   size_type max_size() const {
-    return rawrow.size();
+    return (size_type)rawrow.size();
   }
 
   bool empty() const {
@@ -1653,7 +1653,7 @@ void SimpleDB<KT,QR>::closeAllFiles() const
 template <class KT, class QR>
 inline int SimpleDB<KT,QR>::lastSegment() const
 {
-  return allfd.size() - 1;
+  return (int)allfd.size() - 1;
 }
     
     
@@ -1894,9 +1894,6 @@ QR SimpleDB<KT,QR>::findEqualLinear(
   return qr;
 }
 
-<<<<<<< SimpleDB.h
-} // end of namespace PLearn
-
 #ifdef WIN32
 #undef open
 #undef close
@@ -1906,10 +1903,7 @@ QR SimpleDB<KT,QR>::findEqualLinear(
 #undef unlink
 #endif
 
-=======
 } // end of namespace PLearn
-   
->>>>>>> 1.5
 
 #endif
 

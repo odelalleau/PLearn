@@ -109,7 +109,7 @@ using namespace std;
 
     case StringType:
     {
-      int stringlen = strlen(fv.string_val_);
+      int stringlen = (int)strlen(fv.string_val_);
       if (stringlen+1 != precision_)
 	PLERROR("Strings in a database field must contain a terminating null");
       string_val_ = new char[precision_];
