@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.41 2004/11/25 06:06:38 chapados Exp $
+   * $Id: StatsCollector.cc,v 1.42 2004/12/08 19:58:31 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -244,9 +244,6 @@ void StatsCollector::remove_observation(real val, real weight)
     nnonmissing_ -= weight;
     assert( nnonmissing_ >= 0 );
 
-    if(nnonmissing_==0)                      // first value encountered
-      min_ = max_ = first_ = last_ = MISSING_VALUE;
-
     if( !no_removal_warnings )
     {
       if(val == first_)
@@ -269,6 +266,9 @@ void StatsCollector::remove_observation(real val, real weight)
     sumsquare_ -= sqval * weight;    
     assert( sumsquare_ >= 0 );
     
+    if(nnonmissing_==0)                      // first value encountered
+      min_ = max_ = first_ = last_ = MISSING_VALUE;
+
     if(maxnvalues>0)
       PLERROR("The remove observation mecanism is incompatible with maxnvalues.");
   }
