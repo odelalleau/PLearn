@@ -56,13 +56,16 @@ using namespace std;
 
 class SequentialLearner: public PLearner
 {
-  protected:
- 
-    int last_train_t; // last value of train_set.length() for which training was actually done (<= last_call_train_t)
+protected:  
+  int last_train_t; // last value of train_set.length() for which training was actually done (<= last_call_train_t)
   int last_call_train_t; // last value of train_set.length() for which train() was called (may not have done anything)
-    mutable int last_test_t; // last value of test_set.length() for which testing was actually done
-
-  public:
+  mutable int last_test_t; // last value of test_set.length() for which testing was actually done
+public:
+  int get_last_train_t(){ return last_train_t; }
+  int get_last_call_train_t(){ return last_call_train_t; }
+  int get_last_test_t(){ return last_test_t; }
+  
+public:
 
     int max_seq_len; // max length of the VMat that train can contain = max de t ci-haut
     int max_train_len; // max nb of (input,target) pairs actually used for training
