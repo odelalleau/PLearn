@@ -56,6 +56,8 @@ using namespace std;
 
     SequenceVMatrix temp;
 
+    void build_fully_connected_network();
+
   public:
 
     typedef PLearner inherited;
@@ -90,7 +92,8 @@ using namespace std;
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                          const Vec& target, Vec& costs) const;
 
-
+    virtual void computeCostsOnly(const Vec& inputv, const Vec& targetv,  
+				  Vec& costsv) const;
     virtual void run();
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 

@@ -2,7 +2,7 @@
 
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 2004 Jasmin Lapalme
-//
+
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -31,40 +31,37 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
+#ifndef IdentityVariable_INC
+#define IdentityVariable_INC
 
-#ifndef XORSequenceVMatrix_INC
-#define XORSequenceVMatrix_INC
-
-#include "SequenceVMatrix.h"
+#include "UnaryVariable.h"
 
 namespace PLearn {
 using namespace std;
- 
-class XORSequenceVMatrix: public SequenceVMatrix
-{
-  typedef SequenceVMatrix inherited;
-protected:
-  int min_seq_length;
-  int max_seq_length;
-  int xor_length;
-  int* last;
 
-  int get_parity(int, int);
+class IdentityVariable: public UnaryVariable {
+  typedef UnaryVariable inherited;
 
 public:
-  
-  XORSequenceVMatrix();
+  //!  Default constructor for persistence
+  IdentityVariable() {}
+  IdentityVariable(Variable* input);
 
-  PLEARN_DECLARE_OBJECT(XORSequenceVMatrix);
+  PLEARN_DECLARE_OBJECT(IdentityVariable);
 
-  static void declareOptions(OptionList &ol);
-  virtual void build();
-  void build_();
-  virtual void run();
-
+  virtual void recomputeSize(int& l, int& w) const;
+  virtual void fprop();
+  virtual void bprop();
+  virtual void bbprop();
+  virtual void symbolicBprop();
+  virtual void rfprop();
 };
 
-DECLARE_OBJECT_PTR(XORSequenceVMatrix);
+DECLARE_OBJECT_PTR(IdentityVariable);
 
-} // end of namespcae PLearn
-#endif
+inline Var iden(Var v)
+{ return new IdentityVariable(v); }
+
+} // end of namespace PLearn
+
+#endif 

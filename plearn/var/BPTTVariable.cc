@@ -39,6 +39,7 @@
 #include "Var.h"
 #include "TanhVariable.h"
 #include "ExpVariable.h"
+#include "IdentityVariable.h"
 
 namespace PLearn {
   using namespace std;
@@ -161,9 +162,9 @@ namespace PLearn {
       } else if (units_type[i] == "EXP") {
 	squash_units_value[i] = exp(units_value[i]);
       } else if (units_type[i] == "ID") {
-	squash_units_value[i] = units_value[i];
+	squash_units_value[i] = iden(units_value[i]);
       } else 
-	PLERROR("%s is not a valide units_type", units_type[i]);
+	PLERROR("%s is not a valide units_type", units_type[i].c_str());
     }
   }
 
@@ -383,6 +384,7 @@ namespace PLearn {
     if (cost_type == "MSE") {
       return o - t;
     }
+    PLERROR("This cost type is unknown : %s", cost_type.c_str());
     return 0.0;
   }
 
@@ -396,6 +398,7 @@ namespace PLearn {
     if (cost_type == "MSE") {
       return (o - t) * (o - t) / 2.0;
     }
+    PLERROR("This cost type is unknown : %s", cost_type.c_str());
     return 0.0;
   }
 
@@ -463,7 +466,7 @@ namespace PLearn {
   */
   void BPTTVariable::printState() {
     Var weights = varray[0];
-    for (int t = 0; t < neuron_size; t++) {
+    /*    for (int t = 0; t < neuron_size; t++) {
       cout << "t=";
       if (t < 10) cout << " ";
       if (t < 100) cout << " ";
@@ -487,7 +490,7 @@ namespace PLearn {
 	cout << setprecision(3) << neu_gradient[t][n] << " ";
       }
       cout << endl;
-    }
+      }*/
     for (int w = 0; w < links.nrows(); w++) {
       int src_neuron = links(w, 0);
       int dst_neuron = links(w, 1);      

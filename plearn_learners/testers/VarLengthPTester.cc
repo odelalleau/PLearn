@@ -78,7 +78,7 @@ void VarLengthPTester::run()
   bptt_learner->build();
   bptt_learner->forget();
   bptt_learner->run();
-  */  
+  */ 
   
   perform(true);
 }

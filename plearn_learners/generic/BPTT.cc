@@ -71,6 +71,7 @@ PLEARN_IMPLEMENT_OBJECT(BPTT, "Backpropagation through time on a recurrent neura
 BPTT::BPTT() // DEFAULT VALUES FOR ALL OPTIONS
 {
   batch_size = 1;
+  links = TMat<int>(0,3);
 }
 
 BPTT::~BPTT()
@@ -129,15 +130,54 @@ void BPTT::build()
 void BPTT::build_()
 {
   if(inputsize_>=0 && targetsize_>=0 && weightsize_>=0) {
+    if (links.nrows() == 0)
+      build_fully_connected_network();
     weights = Vec(links.nrows(), 0.5);
     bias = Vec(nneuron_input + nneuron_hidden + nneuron_output, 1.0);
     params = VarArray(Var(weights), Var(bias));
     rec_net = new BPTTVariable(params, dynamic_cast<SequenceVMatrix*>((VMatrix*)train_set), batch_size,
 			       links, nneuron_input, nneuron_hidden, nneuron_output, units_type, cost_type);
+    rec_net->printState();
   } else {
     rec_net = 0;
   }
     
+}
+
+void BPTT::build_fully_connected_network() {
+  // Input to hidden links
+  for (int i = 0; i < nneuron_input; i++) {
+    for (int h = nneuron_input; h < nneuron_input + nneuron_hidden; h++) {
+      TVec<int> l = TVec<int>(3);
+      l[0] = i; // src
+      l[1] = h; // dst
+      l[2] = 0; // delay
+      links.appendRow(l);
+    }
+  }
+
+  // Hidden to hidden links
+  for (int h1 = nneuron_input; h1 < nneuron_input + nneuron_hidden; h1++) {
+    for (int h2 = nneuron_input; h2 < nneuron_input + nneuron_hidden; h2++) {
+      TVec<int> l = TVec<int>(3);
+      l[0] = h1; // src
+      l[1] = h2; // dst
+      l[2] = 1; // delay
+      links.appendRow(l);      
+    }
+  }
+
+  // Hidden to output links
+
+  for (int o = nneuron_input + nneuron_hidden; o < nneuron_input + nneuron_hidden + nneuron_output; o++) {
+    for (int h = nneuron_input; h < nneuron_input + nneuron_hidden; h++) {
+      TVec<int> l = TVec<int>(3);
+      l[0] = h; // src
+      l[1] = o; // dst
+      l[2] = 0; // delay
+      links.appendRow(l);            
+    }
+  }
 }
 
 int BPTT::outputsize() const
@@ -206,6 +246,7 @@ void BPTT::train()
 
   int initial_stage = stage;
   bool early_stop=false;
+  real last_value = 0.0;
 
   while(stage<nstages && !early_stop) {
     optimizer->nstages = optstage_per_lstage;
@@ -215,11 +256,22 @@ void BPTT::train()
     train_stats->finalize();
 
     if(verbosity>2) {
-      cout << "Epoch " << stage << " train objective: " << rec_net->value[0] << endl;
+      cout << "Epoch " << stage << " train objective: " << rec_net->value[0];
+      cout << " (" << (rec_net->value[0] - last_value) << ")";
+      cout << endl;
       cout << "Weights : " << weights << endl;
       cout << "Bias : " << bias << endl;
-      cout << "lr : " << rec_net->gradient[0] << endl;
+      last_value = rec_net->value[0];
+    } else if (verbosity == 2) {
+      if ((stage % 50) == 0) {
+	cout << "Epoch " << stage << " train objective: " << rec_net->value[0];
+	cout << " (" << (rec_net->value[0] - last_value) << ")";
+	cout << endl;
+	last_value = rec_net->value[0];
+      }
     }
+    if (rec_net->value[0] < 2.0)
+      break;
     ++stage;
     if(pb)
       pb->update(stage-initial_stage);
@@ -273,7 +325,7 @@ void BPTT::test(VMat testset, PP<VecStatsCollector> test_stats,
       test_stats->update(costs,weight);
     if(pb)
       pb->update(i);
-    if (i < 3) {
+    if (i < 10) {
       cout << "ex " << i << endl;
       printITO(input, target, output, l);
     }
@@ -340,12 +392,24 @@ void BPTT::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv,
   costsv = costsm.toVecCopy();
 }
 
+void BPTT::computeCostsOnly(const Vec& inputv, const Vec& targetv,  
+			    Vec& costsv) const
+{
+  Vec outputv = Vec((inputv.length() / inputsize_) * targetsize_);
+  computeOutput(inputv, outputv);
+  computeCostsFromOutputs(inputv, outputv, targetv, costsv);
+}
+
 /*
 To test the verify gradient
 */
 void BPTT::run() {
-  train();
-  rec_net->verifyGradient();
+  /*  train();
+      rec_net->verifyGradient();*/
+  cout << "I'(-0.5)=" << rec_net->squash_d(0, -0.5) << " I'(0.5)=" << rec_net->squash_d(0, 0.5) << endl;
+  cout << "I'(-0.5)=" << rec_net->squash(0, -0.5) << " I'(0.5)=" << rec_net->squash(0, 0.5) << endl;
+  cout << "T'(-0.5)=" << rec_net->squash_d(1, tanh(-0.5)) << " T'(0.5)=" << rec_net->squash_d(1, tanh(0.5)) << endl;
+  cout << "T'(-0.5)=" << (1.0 - square(tanh(-0.5))) << " T'(0.5)=" << (1.0 - square(tanh(0.5))) << endl;
 }
 
 /*

@@ -2,7 +2,7 @@
 
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 2004 Jasmin Lapalme
-//
+
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -31,40 +31,62 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-
-#ifndef XORSequenceVMatrix_INC
-#define XORSequenceVMatrix_INC
-
-#include "SequenceVMatrix.h"
+#include "IdentityVariable.h"
+#include "Var_operators.h"
 
 namespace PLearn {
 using namespace std;
- 
-class XORSequenceVMatrix: public SequenceVMatrix
-{
-  typedef SequenceVMatrix inherited;
-protected:
-  int min_seq_length;
-  int max_seq_length;
-  int xor_length;
-  int* last;
 
-  int get_parity(int, int);
 
-public:
-  
-  XORSequenceVMatrix();
+/** IdentityVariable **/
 
-  PLEARN_DECLARE_OBJECT(XORSequenceVMatrix);
+PLEARN_IMPLEMENT_OBJECT(IdentityVariable,
+                        "Variable taht computes f(x)=x and f'(x)=1.0",
+                        "NO HELP");
 
-  static void declareOptions(OptionList &ol);
-  virtual void build();
-  void build_();
-  virtual void run();
+IdentityVariable::IdentityVariable(Variable* input) 
+  : inherited(input, input->length(), input->width())
+{}
 
-};
+void IdentityVariable::recomputeSize(int& l, int& w) const {
+  if (input) {
+    l = input->length();
+    w = input->width();
+  } else
+    l = w = 0;
+}
 
-DECLARE_OBJECT_PTR(XORSequenceVMatrix);
+void IdentityVariable::fprop() {
+  int l = nelems();
+  real* inputptr = input->valuedata;
+  real* ptr = valuedata;
+  for(int i=0; i<l; i++)
+    *ptr++ = *inputptr++;
+}
 
-} // end of namespcae PLearn
-#endif
+
+void IdentityVariable::bprop() {
+  int l = nelems();
+  real* inputgradientptr = input->gradientdata;
+  real* gradientptr = gradientdata;
+
+  for(int i=0; i<l; i++)
+    *inputgradientptr++ += *gradientptr++ * 1.0;
+}
+
+void IdentityVariable::bbprop() {
+  PLERROR("bbprop is not implemented for IdentityVariable");
+}
+
+
+void IdentityVariable::symbolicBprop() {
+  PLERROR("symbolicBprop is not implemented for IdentityVariable");
+}
+
+void IdentityVariable::rfprop() {
+  PLERROR("rfprop is not implemented for IdentityVariable");
+}
+
+} // end of namespace PLearn
+
+

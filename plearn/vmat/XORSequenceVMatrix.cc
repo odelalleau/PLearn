@@ -49,7 +49,9 @@ PLEARN_IMPLEMENT_OBJECT(XORSequenceVMatrix, "ONE LINE DESCR", "NO HELP");
 XORSequenceVMatrix::XORSequenceVMatrix()
   :SequenceVMatrix(200)
 {
-  seq_length = 2;  
+  xor_length = 0;  
+  min_seq_length = 5;  
+  max_seq_length = 10;  
 }
 
 ////////////////////
@@ -57,7 +59,8 @@ XORSequenceVMatrix::XORSequenceVMatrix()
 ////////////////////
 void XORSequenceVMatrix::declareOptions(OptionList &ol)
 {
-  declareOption(ol, "seq_length", &XORSequenceVMatrix::seq_length, OptionBase::buildoption, "Length of each sequence");
+  declareOption(ol, "min_seq_length", &XORSequenceVMatrix::min_seq_length, OptionBase::buildoption, "Length of each sequence");
+  declareOption(ol, "max_seq_length", &XORSequenceVMatrix::max_seq_length, OptionBase::buildoption, "Length of each sequence");
   declareOption(ol, "xor_length", &XORSequenceVMatrix::xor_length, OptionBase::buildoption, "Number of byte on which the parity is calculated");
   inherited::declareOptions(ol);
 }
@@ -76,35 +79,29 @@ void XORSequenceVMatrix::build_()
   length_ = nbSeq;
   width_ = inputsize_ + targetsize_ + weightsize_;
   sequences = TVec<Mat>(nbSeq);
-  last = new int[xor_length];
+
   
   for (int i = 0; i < nbSeq; i++) {
+    int seq_length = (int)bounded_uniform(min_seq_length, max_seq_length);
+    int xl = xor_length == 0 ? seq_length : xor_length;
     sequences[i] = Mat(seq_length, 2);
-    for (int j = 0; j < xor_length; j++) {
-      last[j] = uniform_sample() < 0.5 ? 0 : 1;
-      (sequences[i])[j][0] = last[j];
+    for (int j = 0; j < xl; j++) {
+      (sequences[i])[j][0] = uniform_sample() < 0.5 ? 0 : 1;
       (sequences[i])[j][1] = MISSING_VALUE;
     }
-    (sequences[i])[xor_length-1][1] = get_parity();
-    for (int j = xor_length; j < seq_length; j++) {
-      shift();
-      (sequences[i])[j][0] = last[xor_length-1];
-      (sequences[i])[j][1] = get_parity();
+    (sequences[i])[xl-1][1] = get_parity(i, xl-1);
+    for (int j = xl; j < seq_length; j++) {
+      (sequences[i])[j][0] = uniform_sample() < 0.5 ? 0 : 1;
+      (sequences[i])[j][1] = get_parity(i, j);
     }
   }
 }
 
-void XORSequenceVMatrix::shift() {
-  for (int i = 0; i < xor_length - 1; i++) {
-    last[i] = last[i+1];
-  }
-  last[xor_length-1] = uniform_sample() < 0.5 ? 0 : 1;
-}
-
-int XORSequenceVMatrix::get_parity() {
+int XORSequenceVMatrix::get_parity(int s, int pos) {
   int count = 0;
-  for (int i = 0; i < xor_length; i++) {
-    if (last[i] == 1)
+  int xl = xor_length == 0 ? sequences[s].nrows() : xor_length;
+  for (int i = 0; i < xl; i++) {
+    if ((sequences[s])[pos - i][0] == 1)
       count++;
   }
   if ((count % 2) == 0)
