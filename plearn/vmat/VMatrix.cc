@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.58 2004/06/29 13:24:24 tihocan Exp $
+* $Id: VMatrix.cc,v 1.59 2004/06/29 20:02:25 tihocan Exp $
 ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -867,6 +867,9 @@ void VMatrix::getColumn(int j, Vec v) const
     v[i] = get(i,j);
 }
 
+///////////////
+// getSubRow //
+///////////////
 void VMatrix::getSubRow(int i, int j, Vec v) const
 {
   for(int k=0; k<v.length(); k++)
@@ -886,6 +889,9 @@ void VMatrix::putSubRow(int i, int j, Vec v)
     put(i, j+k, v[k]);
 }
 
+////////////
+// getRow //
+////////////
 void VMatrix::getRow(int i, Vec v) const
 {
 #ifdef BOUNDCHECK
@@ -893,6 +899,11 @@ void VMatrix::getRow(int i, Vec v) const
     PLERROR("In VMatrix::getRow(i,v) length of v and width of VMatrix differ");
 #endif
   getSubRow(i,0,v);
+}
+
+Vec& VMatrix::getRow(int i) const
+{
+  return getSubRow(i, 0, width_);
 }
 
 void VMatrix::putRow(int i, Vec v)

@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.45 2004/06/29 13:24:05 tihocan Exp $
+   * $Id: VMatrix.h,v 1.46 2004/06/29 20:02:25 tihocan Exp $
    ******************************************************* */
 
 
@@ -413,6 +413,7 @@ public:
   //!  These methods do not usually need to be overridden in subclasses
   //!  (default versions call getSubRow, which should do just fine)
   virtual void getRow(int i, Vec v) const; //!<  copies row i into v (which must have appropriate length equal to the VMat's width)
+  virtual Vec& getRow(int i) const; //!<  returns a vector containing the row i (it should not be modifed afterwards)
 
   virtual void putRow(int i, Vec v);
   virtual void fill(real value);
