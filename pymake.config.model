@@ -22,8 +22,8 @@ verbose = 1;
 
 # to get a SPC Smart Parallel Compilation, i.e. only on free machine
 SPC = 0;
-SPClistfile = os.environ['PLEARNDIR']+'/scripts/.machines_lisa'
-SPCresultfile = os.environ['PLEARNDIR']+'/.pymake/linux-i386.hosts'
+SPClistfile = plearndir+'/scripts/.machines_lisa'
+SPCresultfile = plearndir+'/.pymake/linux-i386.hosts'
 # depends of your files architecture
 #SPCresultfile = os.environ['HOME']+'/.pymake/linux-i386.hosts'
 
