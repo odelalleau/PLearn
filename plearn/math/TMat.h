@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.26 2003/09/16 23:54:08 chapados Exp $
+   * $Id: TMat.h,v 1.27 2003/10/03 17:18:29 jkeable Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -726,6 +726,10 @@ class TVec
       void print(ostream& out, const string& separator) const; //!<  each value is printed with the given separator string between them
 
       void input(istream& in=cin) const;
+
+      // calls print with cerr, usefull with gdb (> call obj.debugprint() )
+      void debugPrint(){print(cerr);}
+
 
       void operator<<(const string& datastring) const
       {
@@ -1736,6 +1740,10 @@ public:
   //!  C++ stream output
   void print(ostream& out = cout) const;
   void input(istream& in = cin) const;
+
+  // calls print with cerr, usefull with gdb (> call obj.debugprint() )
+  void debugPrint(){print(cerr);}
+
 
   inline void operator<<(const string& datastring) const
   { 

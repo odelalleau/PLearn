@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.18 2003/09/24 15:12:30 chapados Exp $
+   * $Id: StatsCollector.cc,v 1.19 2003/10/03 17:18:29 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -114,7 +114,9 @@ void StatsCollector::declareOptions(OptionList& ol)
 
 void StatsCollector::build_()
 {
-  if(maxnvalues>0)
+  // make sure count.size==0. If not, the object must have been loaded, and FLT_MAX is an existing key
+  // but rounded to some precision, and it would there would be 2 keys approx.=  FLT_MAX
+  if(maxnvalues>0 && counts.size()==0)
     counts[FLT_MAX] = StatsCollectorCounts();
 }
 
@@ -322,6 +324,8 @@ RealMapping StatsCollector::getAllValuesMapping(TVec<double> * fcount) const
   for(map<real,StatsCollectorCounts>::const_iterator it = counts.begin() ;
       it!=counts.end(); ++it, ++i)
   {
+//    cout<<it->first<<" "<<FLT_MAX<<endl;
+
     if(it->first!=FLT_MAX)
       mapping.addMapping(RealRange('[',it->first,it->first,']'),i);
     if(fcount)
