@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// NNet.cc
+// NeighborhoodSmoothnessNNet.cc
 // Copyright (c) 1998-2002 Pascal Vincent
 // Copyright (C) 1999-2002 Yoshua Bengio and University of Montreal
 // Copyright (c) 2002 Jean-Sebastien Senecal, Xavier Saint-Mleux, Rejean Ducharme
@@ -35,50 +35,53 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.37 2004/02/20 15:22:22 yoshua Exp $
+   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.1 2004/02/20 15:22:22 yoshua Exp $
    ******************************************************* */
 
-/*! \file PLearnLibrary/PLearnAlgo/NNet.h */
+/*! \file PLearnLibrary/PLearnAlgo/NeighborhoodSmoothnessNNet.h */
+
 
 #include "AffineTransformVariable.h"
 #include "AffineTransformWeightPenalty.h"
 #include "BinaryClassificationLossVariable.h"
 #include "ClassificationLossVariable.h"
 #include "ConcatColumnsVariable.h"
+#include "ConcatColumnsVMatrix.h"
 #include "CrossEntropyVariable.h"
 #include "ExpVariable.h"
+#include "LogVariable.h"
 #include "LiftOutputVariable.h"
 #include "LogSoftmaxVariable.h"
 #include "MulticlassLossVariable.h"
-#include "NegCrossEntropySigmoidVariable.h"
-#include "OneHotSquaredLoss.h"
+#include "NeighborhoodSmoothnessNNet.h"
+#include "UnfoldedSumOfVariable.h"
+#include "SumOverBagsVariable.h"
+#include "SumSquareVariable.h"
+#include "random.h"
 #include "SigmoidVariable.h"
-#include "SoftmaxVariable.h"
-#include "SoftplusVariable.h"
 #include "SumVariable.h"
 #include "SumAbsVariable.h"
 #include "SumOfVariable.h"
-#include "SumSquareVariable.h"
+#include "SubVMatrix.h"
 #include "TanhVariable.h"
 #include "TransposeProductVariable.h"
 #include "Var_operators.h"
 #include "Var_utils.h"
 
-#include "ConcatColumnsVMatrix.h"
 //#include "DisplayUtils.h"
 //#include "GradientOptimizer.h"
-#include "NNet.h"
-#include "random.h"
-#include "SubVMatrix.h"
 
 namespace PLearn <%
 using namespace std;
 
-PLEARN_IMPLEMENT_OBJECT(NNet, "Ordinary Feedforward Neural Network with 1 or 2 hidden layers", 
-                        "Neural network with many bells and whistles...");
+PLEARN_IMPLEMENT_OBJECT(NeighborhoodSmoothnessNNet, 
+                        "Feedforward neural network whose hidden units are smoothed according to input neighborhood\n",
+                        "TODO"
+                       );
 
-NNet::NNet() // DEFAULT VALUES FOR ALL OPTIONS
+NeighborhoodSmoothnessNNet::NeighborhoodSmoothnessNNet() // DEFAULT VALUES FOR ALL OPTIONS
   :
+  max_n_instances(1),
    nhidden(0),
    nhidden2(0),
    noutputs(0),
@@ -91,63 +94,66 @@ NNet::NNet() // DEFAULT VALUES FOR ALL OPTIONS
    output_layer_weight_decay(0),
    output_layer_bias_decay(0),
    direct_in_to_out_weight_decay(0),
-   classification_regularizer(0),
    L1_penalty(false),
    direct_in_to_out(false),
    output_transfer_func(""),
    interval_minval(0), interval_maxval(1),
+   test_bag_size(0),
    batch_size(1)
 {}
 
-NNet::~NNet()
+NeighborhoodSmoothnessNNet::~NeighborhoodSmoothnessNNet()
 {
 }
 
-void NNet::declareOptions(OptionList& ol)
+void NeighborhoodSmoothnessNNet::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "nhidden", &NNet::nhidden, OptionBase::buildoption, 
+  declareOption(ol, "max_n_instances", &NeighborhoodSmoothnessNNet::max_n_instances, OptionBase::buildoption, 
+                "    maximum number of instances (input vectors x_i) allowed\n");
+
+  declareOption(ol, "nhidden", &NeighborhoodSmoothnessNNet::nhidden, OptionBase::buildoption, 
                 "    number of hidden units in first hidden layer (0 means no hidden layer)\n");
 
-  declareOption(ol, "nhidden2", &NNet::nhidden2, OptionBase::buildoption, 
+  declareOption(ol, "nhidden2", &NeighborhoodSmoothnessNNet::nhidden2, OptionBase::buildoption, 
                 "    number of hidden units in second hidden layer (0 means no hidden layer)\n");
 
-  declareOption(ol, "noutputs", &NNet::noutputs, OptionBase::buildoption, 
+  declareOption(ol, "noutputs", &NeighborhoodSmoothnessNNet::noutputs, OptionBase::buildoption, 
                 "    number of output units. This gives this learner its outputsize.\n"
                 "    It is typically of the same dimensionality as the target for regression problems \n"
                 "    But for classification problems where target is just the class number, noutputs is \n"
                 "    usually of dimensionality number of classes (as we want to output a score or probability \n"
                 "    vector, one per class");
 
-  declareOption(ol, "weight_decay", &NNet::weight_decay, OptionBase::buildoption, 
+  declareOption(ol, "weight_decay", &NeighborhoodSmoothnessNNet::weight_decay, OptionBase::buildoption, 
                 "    global weight decay for all layers\n");
 
-  declareOption(ol, "bias_decay", &NNet::bias_decay, OptionBase::buildoption, 
+  declareOption(ol, "bias_decay", &NeighborhoodSmoothnessNNet::bias_decay, OptionBase::buildoption, 
                 "    global bias decay for all layers\n");
 
-  declareOption(ol, "layer1_weight_decay", &NNet::layer1_weight_decay, OptionBase::buildoption, 
+  declareOption(ol, "layer1_weight_decay", &NeighborhoodSmoothnessNNet::layer1_weight_decay, OptionBase::buildoption, 
                 "    Additional weight decay for the first hidden layer.  Is added to weight_decay.\n");
-  declareOption(ol, "layer1_bias_decay", &NNet::layer1_bias_decay, OptionBase::buildoption, 
+  declareOption(ol, "layer1_bias_decay", &NeighborhoodSmoothnessNNet::layer1_bias_decay, OptionBase::buildoption, 
                 "    Additional bias decay for the first hidden layer.  Is added to bias_decay.\n");
 
-  declareOption(ol, "layer2_weight_decay", &NNet::layer2_weight_decay, OptionBase::buildoption, 
+  declareOption(ol, "layer2_weight_decay", &NeighborhoodSmoothnessNNet::layer2_weight_decay, OptionBase::buildoption, 
                 "    Additional weight decay for the second hidden layer.  Is added to weight_decay.\n");
 
-  declareOption(ol, "layer2_bias_decay", &NNet::layer2_bias_decay, OptionBase::buildoption, 
+  declareOption(ol, "layer2_bias_decay", &NeighborhoodSmoothnessNNet::layer2_bias_decay, OptionBase::buildoption, 
                 "    Additional bias decay for the second hidden layer.  Is added to bias_decay.\n");
 
-  declareOption(ol, "output_layer_weight_decay", &NNet::output_layer_weight_decay, OptionBase::buildoption, 
+  declareOption(ol, "output_layer_weight_decay", &NeighborhoodSmoothnessNNet::output_layer_weight_decay, OptionBase::buildoption, 
                 "    Additional weight decay for the output layer.  Is added to 'weight_decay'.\n");
 
-  declareOption(ol, "output_layer_bias_decay", &NNet::output_layer_bias_decay, OptionBase::buildoption, 
+  declareOption(ol, "output_layer_bias_decay", &NeighborhoodSmoothnessNNet::output_layer_bias_decay, OptionBase::buildoption, 
                 "    Additional bias decay for the output layer.  Is added to 'bias_decay'.\n");
 
-  declareOption(ol, "direct_in_to_out_weight_decay", &NNet::direct_in_to_out_weight_decay, OptionBase::buildoption, 
+  declareOption(ol, "direct_in_to_out_weight_decay", &NeighborhoodSmoothnessNNet::direct_in_to_out_weight_decay, OptionBase::buildoption, 
                 "    Additional weight decay for the direct in-to-out layer.  Is added to 'weight_decay'.\n");
 
-  declareOption(ol, "L1_penalty", &NNet::L1_penalty, OptionBase::buildoption, 
+  declareOption(ol, "L1_penalty", &NeighborhoodSmoothnessNNet::L1_penalty, OptionBase::buildoption, 
                 "    should we use L1 penalty instead of the default L2 penalty on the weights?\n");
 
-  declareOption(ol, "direct_in_to_out", &NNet::direct_in_to_out, OptionBase::buildoption, 
+  declareOption(ol, "direct_in_to_out", &NeighborhoodSmoothnessNNet::direct_in_to_out, OptionBase::buildoption, 
                 "    should we include direct input to output connections?\n");
 
   declareOption(ol, "output_transfer_func", &NNet::output_transfer_func, OptionBase::buildoption, 
@@ -176,27 +182,27 @@ void NNet::declareOptions(OptionList& ol)
   declareOption(ol, "classification_regularizer", &NNet::classification_regularizer, OptionBase::buildoption, 
                 "    used only in the stable_cross_entropy cost function, to fight overfitting (0<=r<1)\n");
 
-  declareOption(ol, "optimizer", &NNet::optimizer, OptionBase::buildoption, 
+  declareOption(ol, "optimizer", &NeighborhoodSmoothnessNNet::optimizer, OptionBase::buildoption, 
                 "    specify the optimizer to use\n");
 
-  declareOption(ol, "batch_size", &NNet::batch_size, OptionBase::buildoption, 
+  declareOption(ol, "batch_size", &NeighborhoodSmoothnessNNet::batch_size, OptionBase::buildoption, 
                 "    how many samples to use to estimate the avergage gradient before updating the weights\n"
-                "    0 is equivalent to specifying training_set->length() \n");
+                "    0 is equivalent to specifying training_set->n_non_missing_rows() \n");
 
-  declareOption(ol, "paramsvalues", &NNet::paramsvalues, OptionBase::learntoption, 
+  declareOption(ol, "paramsvalues", &NeighborhoodSmoothnessNNet::paramsvalues, OptionBase::learntoption, 
                 "    The learned parameter vector\n");
 
   inherited::declareOptions(ol);
 
 }
 
-void NNet::build()
+void NeighborhoodSmoothnessNNet::build()
 {
   inherited::build();
   build_();
 }
 
-void NNet::setTrainingSet(VMat training_set, bool call_forget)
+void NeighborhoodSmoothnessNNet::setTrainingSet(VMat training_set, bool call_forget)
 { 
   bool training_set_has_changed =
     !train_set || train_set->width()!=training_set->width() ||
@@ -211,35 +217,14 @@ void NNet::setTrainingSet(VMat training_set, bool call_forget)
     weightsize_ = train_set->weightsize();
   }
 
-  // THE CODE BELOW SHOULD BE REMOVED: THIS NOT THE PLACE
-  // TO MASSAGE THE DATA SET, IT SHOULD BE DONE WHEN
-  // CONSTRUCTING THE VMAT SENT TO THE LEARNER, NOT
-  // IN THE LEARNER. Yoshua. N.B. ALSO REMOVE THE OPTION IN VMATRIX.
-  // IF THIS IS DONE THEN THE DEFAULT setTrainingSet CAN
-  // BE USED INSTEAD OF REDEFINING IN NNet.
-
-  // Reduce the train_set to the used data.
-  if (train_set->target_is_last) {
-    int useless_size = training_set.width() - targetsize() - inputsize();
-    if (useless_size > 0) {
-      int is = inputsize();
-      int ts = targetsize();
-      int ws = train_set->weightsize();
-      VMat train_input = new SubVMatrix(train_set, 0, 0, train_set.length(), inputsize());
-      VMat train_target = new SubVMatrix(train_set, 0, train_set.width() - targetsize(), train_set.length(), targetsize());
-      train_set = new ConcatColumnsVMatrix(train_input, train_target);
-      train_set->defineSizes(is, ts, ws);
-      train_set->build();
-    }
-  }
-
   if (training_set_has_changed || call_forget)
-    build(); // MODIF FAITE PAR YOSHUA: sinon apres un setTrainingSet le build n'est pas complete dans un NNet train_set = training_set;
-  if (call_forget)
-    forget();
+  {
+    build(); // MODIF FAITE PAR YOSHUA: sinon apres un setTrainingSet le build n'est pas complete dans un NeighborhoodSmoothnessNNet train_set = training_set;
+    if (call_forget) forget();
+  }
 }
 
-void NNet::build_()
+void NeighborhoodSmoothnessNNet::build_()
 {
   /*
    * Create Topology Var Graph
@@ -263,6 +248,7 @@ void NNet::build_()
           w1 = Var(1+inputsize(), nhidden, "w1");      
           output = tanh(affine_transform(output,w1));
           params.append(w1);
+          last_hidden = output;
         }
 
       // second hidden layer
@@ -271,12 +257,15 @@ void NNet::build_()
           w2 = Var(1+nhidden, nhidden2, "w2");
           output = tanh(affine_transform(output,w2));
           params.append(w2);
+          last_hidden = output;
         }
 
-      if (nhidden2>0 && nhidden==0)
-        PLERROR("NNet:: can't have nhidden2 (=%d) > 0 while nhidden=0",nhidden2);
+      if (nhidden==0)
+        PLERROR("NeighborhoodSmoothnessNNet:: there must be hidden units!",nhidden2);
       
+
       // output layer before transfer function
+
       wout = Var(1+output->size(), outputsize(), "wout");
       output = affine_transform(output,wout);
       params.append(wout);
@@ -290,7 +279,7 @@ void NNet::build_()
         }
 
       Var before_transfer_func = output;
-      
+   
       /*
        * output_transfer_func
        */
@@ -325,14 +314,53 @@ void NNet::build_()
        * target and weights
        */
       
-      target = Var(targetsize(), "target");
+      target = Var(targetsize()-1, "target");
       
       if(weightsize_>0)
       {
         if (weightsize_!=1)
-          PLERROR("NNet: expected weightsize to be 1 or 0 (or unspecified = -1, meaning 0), got %d",weightsize_);
+          PLERROR("NeighborhoodSmoothnessNNet: expected weightsize to be 1 or 0 (or unspecified = -1, meaning 0), got %d",weightsize_);
         sampleweight = Var(1, "weight");
       }
+
+      // create penalties
+      penalties.resize(0);  // prevents penalties from being added twice by consecutive builds
+      if(w1 && ((layer1_weight_decay + weight_decay)!=0 || (layer1_bias_decay + bias_decay)!=0))
+        penalties.append(affine_transform_weight_penalty(w1, (layer1_weight_decay + weight_decay), (layer1_bias_decay + bias_decay), L1_penalty));
+      if(w2 && ((layer2_weight_decay + weight_decay)!=0 || (layer2_bias_decay + bias_decay)!=0))
+        penalties.append(affine_transform_weight_penalty(w2, (layer2_weight_decay + weight_decay), (layer2_bias_decay + bias_decay), L1_penalty));
+      if(wout && ((output_layer_weight_decay + weight_decay)!=0 || (output_layer_bias_decay + bias_decay)!=0))
+        penalties.append(affine_transform_weight_penalty(wout, (output_layer_weight_decay + weight_decay), 
+                                                         (output_layer_bias_decay + bias_decay), L1_penalty));
+      if(wdirect && (direct_in_to_out_weight_decay + weight_decay) != 0)
+      {
+        if (L1_penalty)
+          penalties.append(sumabs(wdirect)*(direct_in_to_out_weight_decay + weight_decay));
+        else
+          penalties.append(sumsquare(wdirect)*(direct_in_to_out_weight_decay + weight_decay));
+      }
+
+      // Shared values hack...
+      if(paramsvalues && (paramsvalues.size() == params.nelems()))
+        params << paramsvalues;
+      else
+        {
+          paramsvalues.resize(params.nelems());
+          initializeParams();
+        }
+      params.makeSharedValue(paramsvalues);
+
+      output->setName("element output");
+
+      f = Func(input, output);
+      f_input_to_hidden = Func(input,last_hidden);
+
+      bag_inputs = Var(max_n_instances,inputsize());
+      bag_size = Var(1,1);
+      bag_hidden = unfoldedFuncVariable(bag_inputs,f_input_to_hidden);
+
+      
+
       /*
        * costfuncs
        */
@@ -393,28 +421,6 @@ void NNet::build_()
           //  costs[k]= costs[k] * sampleweight; // NO, because this is taken into account (more properly) in stats->update
         }
       
-
-      /*
-       * weight and bias decay penalty
-       */
-
-      // create penalties
-      penalties.resize(0);  // prevents penalties from being added twice by consecutive builds
-      if(w1 && ((layer1_weight_decay + weight_decay)!=0 || (layer1_bias_decay + bias_decay)!=0))
-        penalties.append(affine_transform_weight_penalty(w1, (layer1_weight_decay + weight_decay), (layer1_bias_decay + bias_decay), L1_penalty));
-      if(w2 && ((layer2_weight_decay + weight_decay)!=0 || (layer2_bias_decay + bias_decay)!=0))
-        penalties.append(affine_transform_weight_penalty(w2, (layer2_weight_decay + weight_decay), (layer2_bias_decay + bias_decay), L1_penalty));
-      if(wout && ((output_layer_weight_decay + weight_decay)!=0 || (output_layer_bias_decay + bias_decay)!=0))
-        penalties.append(affine_transform_weight_penalty(wout, (output_layer_weight_decay + weight_decay), 
-                                                         (output_layer_bias_decay + bias_decay), L1_penalty));
-      if(wdirect && (direct_in_to_out_weight_decay + weight_decay) != 0)
-      {
-        if (L1_penalty)
-          penalties.append(sumabs(wdirect)*(direct_in_to_out_weight_decay + weight_decay));
-        else
-          penalties.append(sumsquare(wdirect)*(direct_in_to_out_weight_decay + weight_decay));
-      }
-
       test_costs = hconcat(costs);
 
       // Apply penalty to cost.
@@ -422,7 +428,7 @@ void NNet::build_()
       // order to keep the same number of costs as if there was a penalty.
       if(penalties.size() != 0) {
         if (weightsize_>0)
-        // only multiply by sampleweight if there are weights
+          // only multiply by sampleweight if there are weights
           training_cost = hconcat(sampleweight*sum(hconcat(costs[0] & penalties))
                                   & (test_costs*sampleweight));
         else {
@@ -431,7 +437,7 @@ void NNet::build_()
       } 
       else {
         if(weightsize_>0) {
-        // only multiply by sampleweight if there are weights
+          // only multiply by sampleweight if there are weights
           training_cost = hconcat(costs[0]*sampleweight & test_costs*sampleweight);
         } else {
           training_cost = hconcat(costs[0] & test_costs);
@@ -440,96 +446,97 @@ void NNet::build_()
       
       training_cost->setName("training_cost");
       test_costs->setName("test_costs");
-      output->setName("output");
-      
-      // Shared values hack...
-      if(paramsvalues && (paramsvalues.size() == params.nelems()))
-        params << paramsvalues;
-      else
-        {
-          paramsvalues.resize(params.nelems());
-          initializeParams();
-        }
-      params.makeSharedValue(paramsvalues);
 
-      // Funcs
-      invars.resize(0);
-      VarArray outvars;
-      VarArray testinvars;
-      if(input)
-      {
-        invars.push_back(input);
-        testinvars.push_back(input);
-      }
-      if(output)
-        outvars.push_back(output);
-      if(target)
-      {
-        invars.push_back(target);
-        testinvars.push_back(target);
-        outvars.push_back(target);
-      }
-      if(sampleweight)
-      {
-        invars.push_back(sampleweight);
-      }
+      invars = bag_inputs & bag_size & target & sampleweight;
+      inputs_and_targets_to_costs = Func(invars,costs);
 
-      f = Func(input, output);
-      test_costf = Func(testinvars, output&test_costs);
-      test_costf->recomputeParents();
-      output_and_target_to_cost = Func(outvars, test_costs); 
-      output_and_target_to_cost->recomputeParents();
+      inputs_and_targets_to_costs->recomputeParents();
+
+      /*  VarArray outvars; DO WE NEED THIS?
+  VarArray testinvars;
+  testinvars.push_back(input);
+  outvars.push_back(output);
+  testinvars.push_back(target);
+  outvars.push_back(target);
+  
+  test_costf = Func(testinvars, output&test_costs);
+  test_costf->recomputeParents();
+  output_and_target_to_cost = Func(outvars, test_costs); 
+  output_and_target_to_cost->recomputeParents();
+      */
     }
 }
 
-int NNet::outputsize() const
+int NeighborhoodSmoothnessNNet::outputsize() const
 { return noutputs; }
 
-TVec<string> NNet::getTrainCostNames() const
+TVec<string> NeighborhoodSmoothnessNNet::getTrainCostNames() const
 {
-  return (cost_funcs[0]+"+penalty") & cost_funcs;
+  TVec<string> names(3);
+  names[0] = "NLL+penalty";
+  names[1] = "NLL";
+  names[2] = "class_error";
+  return names;
 }
 
-TVec<string> NNet::getTestCostNames() const
+TVec<string> NeighborhoodSmoothnessNNet::getTestCostNames() const
 { 
-  return cost_funcs;
+  return getTrainCostNames();
 }
 
 
-void NNet::train()
+void NeighborhoodSmoothnessNNet::train()
 {
-  // NNet nstages is number of epochs (whole passages through the training set)
+  // NeighborhoodSmoothnessNNet nstages is number of epochs (whole passages through the training set)
   // while optimizer nstages is number of weight updates.
   // So relationship between the 2 depends whether we are in stochastic, batch or minibatch mode
 
   if(!train_set)
-    PLERROR("In NNet::train, you did not setTrainingSet");
+    PLERROR("In NeighborhoodSmoothnessNNet::train, you did not setTrainingSet");
     
   if(!train_stats)
-    PLERROR("In NNet::train, you did not setTrainStatsCollector");
-
-  int l = train_set->length();  
+    PLERROR("In NeighborhoodSmoothnessNNet::train, you did not setTrainStatsCollector");
 
   if(f.isNull()) // Net has not been properly built yet (because build was called before the learner had a proper training set)
     build();
 
-  // number of samples seen by optimizer before each optimizer update
-  int nsamples = batch_size>0 ? batch_size : l;
-  Func paramf = Func(invars, training_cost); // parameterized function to optimize
-  Var totalcost = meanOf(train_set, paramf, nsamples);
+  Var totalcost = sumOverBags(train_set, inputs_and_targets_to_costs, max_n_instances, batch_size);
   if(optimizer)
     {
       optimizer->setToOptimize(params, totalcost);  
       optimizer->build();
     }
-  else PLERROR("RecommandationNet::train can't train without setting an optimizer first!");
 
   // number of optimiser stages corresponding to one learner stage (one epoch)
-  int optstage_per_lstage = l/nsamples;
+  int optstage_per_lstage = 0;
+  int n_bags = -1;
+  if (batch_size<=0)
+    optstage_per_lstage = 1;
+  else // must count the nb of bags in the training set
+  {
+    n_bags=0;
+    int l = train_set->length();
+    ProgressBar* pb = 0;
+    if(report_progress)
+      pb = new ProgressBar("Counting nb bags in train_set for NeighborhoodSmoothnessNNet ", l);
+    Vec row(train_set->width());
+    Vec row_target = row.subVec(train_set->inputsize(),train_set->targetsize());
+    for (int i=0;i<l;i++)
+    {
+      train_set->getRow(i,row);
+      if (!row_target.hasMissing())
+        n_bags++;
+      if(pb)
+        pb->update(i);
+    }
+    if(pb)
+      delete pb;
+    optstage_per_lstage = n_bags/batch_size;
+  }
 
   ProgressBar* pb = 0;
   if(report_progress)
-    pb = new ProgressBar("Training NNet from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
+    pb = new ProgressBar("Training NeighborhoodSmoothnessNNet from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
 
   int initial_stage = stage;
   bool early_stop=false;
@@ -552,33 +559,47 @@ void NNet::train()
   if(pb)
     delete pb;
 
-  output_and_target_to_cost->recomputeParents();
-  test_costf->recomputeParents();
+  //output_and_target_to_cost->recomputeParents();
+  //test_costf->recomputeParents();
+
   // cerr << "totalcost->value = " << totalcost->value << endl;
   // cout << "Result for benchmark is: " << totalcost->value << endl;
 }
 
 
-
-void NNet::computeOutput(const Vec& inputv, Vec& outputv) const
+void NeighborhoodSmoothnessNNet::computeOutput(const Vec& inputv, Vec& outputv) const
 {
   f->fprop(inputv,outputv);
 }
 
-void NNet::computeOutputAndCosts(const Vec& inputv, const Vec& targetv, 
+void NeighborhoodSmoothnessNNet::computeOutputAndCosts(const Vec& inputv, const Vec& targetv, 
                                  Vec& outputv, Vec& costsv) const
 {
-  test_costf->fprop(inputv&targetv, outputv&costsv);
+  f->fprop(inputv,outputv); // this is the individual P(y_i|x_i)
+  bag_inputs->matValue(test_bag_size++) << inputv;
+  // UGLY HACK WHICH ASSUMES THAT computeOutputAndCosts WILL BE CALLED
+  // FOR ALL ROWS OF A BAG, OR NOT AT ALL.
+  if (targetv.hasMissing())
+    costsv.fill(MISSING_VALUE);
+  else // end of bag, we have a target and we can compute a cost
+  {
+    bag_size->valuedata[0]=test_bag_size;
+    target->value << targetv;
+    if (weightsize_>0) sampleweight->valuedata[0]=1; // the test weights are known and used higher up
+    inputs_and_targets_to_costs->fproppath.fprop();
+    costsv << costs->value;
+    test_bag_size=0;  // this is where it gets really ugly... (we don't have an explicit synchronization signal for the beginning of each block)
+  }
 }
 
 
-void NNet::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv, 
+void NeighborhoodSmoothnessNNet::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv, 
                                    const Vec& targetv, Vec& costsv) const
 {
-  output_and_target_to_cost->fprop(outputv&targetv, costsv); 
+  //output_and_target_to_cost->fprop(outputv&targetv, costsv); 
 }
 
-void NNet::initializeParams()
+void NeighborhoodSmoothnessNNet::initializeParams()
 {
   if (seed_>=0)
     manual_seed(seed_);
@@ -626,13 +647,13 @@ void NNet::initializeParams()
     optimizer->reset();
 }
 
-void NNet::forget()
+void NeighborhoodSmoothnessNNet::forget()
 {
   if (train_set) initializeParams();
   stage = 0;
 }
 
-void NNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+void NeighborhoodSmoothnessNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(input, copies);
