@@ -15,6 +15,7 @@
 
 #define REL_FEQUAL(a,b) ( FABS((a)-(b)) < (FABS(a)*FLOAT_THRESHOLD) )
 
+using namespace PLearn;
 
 // voir où et comment définir le CHECK_COMPILATION flag ... 
 
@@ -47,12 +48,12 @@ if(__result){ cout << "PASSED" << endl; }\
 else{ cout << "****FAIL****" << endl; }\
 cout << endl << endl;
 
-/*
+
 #ifdef USE_EXCEPTIONS // then it isn't defined in plerror.h ...
 inline void send_file_line(char* file,int line) 
 { cerr<<"At "<<file<<":"<<line; }
 #endif
-*/
+
 
 #define T_ERR(_Type__, _The_Message__)\
 cerr << "\n============================================================" << endl;\
