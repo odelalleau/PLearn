@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.45 2005/01/07 17:52:16 chrish42 Exp $ 
+   * $Id: plearn_inc.h,v 1.46 2005/01/11 20:09:46 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -68,10 +68,10 @@
 #include "PLearnCommands/LearnerCommand.h"
 #include "PLearnCommands/ReadAndWriteCommand.h"
 #include "PLearnCommands/RunCommand.h"
+#include "PLearnCommands/ServerCommand.h"
 #include "PLearnCommands/TestDependenciesCommand.h"
 #include "PLearnCommands/TestDependencyCommand.h"
 #include "PLearnCommands/VMatCommand.h"
-#include "PLearnCommands/ServerCommand.h"
 
 /**************
  * Dictionary *
@@ -190,6 +190,7 @@
 #include <plearn/vmat/CumVMatrix.h>
 #include <plearn/vmat/DatedJoinVMatrix.h>
 #include <plearn/vmat/DictionaryVMatrix.h>
+#include <plearn/vmat/ExtractNNetParamsVMatrix.h>
 #include <plearn/vmat/FilteredVMatrix.h>
 #include <plearn/vmat/FinancePreprocVMatrix.h>
 #include <plearn/vmat/GeneralizedOneHotVMatrix.h>
