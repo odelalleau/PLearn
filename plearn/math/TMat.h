@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.25 2003/09/10 17:43:48 chapados Exp $
+   * $Id: TMat.h,v 1.26 2003/09/16 23:54:08 chapados Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -1932,22 +1932,44 @@ bool operator>=(const TVec<T>& left, const TVec<T>& right)
                             std::greater_equal<T>());
 }
 
+// This is a lexicographical definition for operator<
 template <class T>
 bool operator<(const TVec<T>& left, const TVec<T>& right)
 {
-  // Cannot use the inner product with strict less<T>, because it's more
-  // convenient to define this operator to allow <= for SOME elements, but
-  // < for AT LEAST ONE element.
-  return left <= right && left != right;
+  if (left.size() != right.size())
+    PLERROR("Left and right vectors must have the same size in operator<");
+  int size = left.size();
+  const T* ldata = left.data();
+  const T* rdata = right.data();
+  for ( ; size ; ++ldata, ++rdata, --size) {
+    if (*ldata < *rdata)
+      return true;
+    if (*ldata > *rdata)
+      return false;
+    // Continue loop if both are equal
+  }
+  return false;                              // both vectors are equal at
+                                             // this point; cannot be <
 }
 
+// This is a lexicographical definition for operator>
 template <class T>
 bool operator>(const TVec<T>& left, const TVec<T>& right)
 {
-  // Cannot use the inner product with strict greater<T>, because it's more
-  // convenient to define this operator to allow >= for SOME elements, but
-  // > for AT LEAST ONE element.
-  return left >= right && left != right;
+  if (left.size() != right.size())
+    PLERROR("Left and right vectors must have the same size in operator>");
+  int size = left.size();
+  const T* ldata = left.data();
+  const T* rdata = right.data();
+  for ( ; size ; ++ldata, ++rdata, --size) {
+    if (*ldata < *rdata)
+      return false;
+    if (*ldata > *rdata)
+      return true;
+    // Continue loop if both are equal
+  }
+  return false;                              // both vectors are equal at
+                                             // this point; cannot be >
 }
 
 
