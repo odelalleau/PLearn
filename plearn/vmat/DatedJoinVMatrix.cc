@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DatedJoinVMatrix.cc,v 1.7 2004/03/23 20:21:18 yoshua Exp $
+   * $Id: DatedJoinVMatrix.cc,v 1.8 2004/03/25 18:56:49 yoshua Exp $
    ******************************************************* */
 
 // Authors: *Yoshua Bengio*
@@ -50,7 +50,7 @@ using namespace std;
 
 DatedJoinVMatrix::DatedJoinVMatrix()
   :inherited(),master_date_field_index(-1),slave_date_interval_start_field_index(-1),
-   slave_date_interval_end_field_index(-1), verbosity(0), output_the_slave(0)
+   slave_date_interval_end_field_index(-1), verbosity(0), output_the_slave(false), output_matching_index(false)
 {
 }
 
@@ -66,7 +66,7 @@ PLEARN_IMPLEMENT_OBJECT(DatedJoinVMatrix,
                         "in the master is forced to belong to a date interval in the slave,\n"
                         "as follows: slave_date_start < master_date <= slave_date_end.\n"
                         "If no match is found then the master (or slave) columns are left with missing values.\n"
-                        "If more than one slave row matches, then the one with the earliest\n"
+                        "If more than one slave row matches, then the one with the latest\n"
                         "slave_date_start is used (and a warning is optionally issued). If\n"
                         "no slave_date_start field is provided then no date constraint is\n"
                         "enforced, and the last key-matching slave row is matched to a master row.\n"
@@ -88,15 +88,19 @@ void DatedJoinVMatrix::getRow(int i, Vec v) const
   {
     slave_index = i;
     master_index = slave2master[i];
+    if (output_matching_index)
+      v[0] = *(master_index.begin());
   }
   else
   {
     master_index.push_back(i);
     slave_index = master2slave[i];
+    if (output_matching_index)
+      v[0] = slave_index;
   }
 
-  Vec master_part = v.subVec(0,n_master_fields);
-  Vec slave_part = v.subVec(n_master_fields,n_slave_fields);
+  Vec master_part = v.subVec(output_matching_index,n_master_fields);
+  Vec slave_part = v.subVec(n_master_fields+output_matching_index,n_slave_fields);
 
   if (master_index.size()>0)
   {
@@ -185,7 +189,7 @@ void DatedJoinVMatrix::declareOptions(OptionList& ol)
                 "ALL slave fields should be copied on output.\n"
                 );
 
-  declareOption(ol, "master_field_indices", &DatedJoinVMatrix::slave_field_indices, 
+  declareOption(ol, "master_field_indices", &DatedJoinVMatrix::master_field_indices, 
                 OptionBase::buildoption,
                 "Indices of the fields in the master vmatrix to be copied in result. It is not necessary\n"
                 "to specify them if the slave_field_names are given.\n"
@@ -193,7 +197,7 @@ void DatedJoinVMatrix::declareOptions(OptionList& ol)
                 "ALL master fields should be copied on output.\n"
                 );
 
-  declareOption(ol, "master_field_names", &DatedJoinVMatrix::slave_field_names, 
+  declareOption(ol, "master_field_names", &DatedJoinVMatrix::master_field_names, 
                 OptionBase::buildoption,
                 "Names of the fields in the slave vmatrix to be copied in result. It is not necessary\n"
                 "to specify them if the slave_field_indices are given.\n"
@@ -248,10 +252,17 @@ void DatedJoinVMatrix::declareOptions(OptionList& ol)
                 "2: details about these matches are printed\n"
                 );
 
-  declareOption(ol, "output_the_slave", &DatedJoinVMatrix::verbosity,
+  declareOption(ol, "output_the_slave", &DatedJoinVMatrix::output_the_slave,
                 OptionBase::buildoption,
                 "If true than output the SLAVE rows (with master_fields_* from matching master row)\n"
                 "instead of the MASTER rows (with slave_fields_* from the matching slave row)\n"
+                );
+
+  declareOption(ol, "output_matching_index", &DatedJoinVMatrix::output_matching_index,
+                OptionBase::buildoption,
+                "If true than output an extra variable 'matching_index' which contains the row\n"
+                "index of the matching slave row (if !output_the_slave) or matching master row\n"
+                "if (output_the_slave).\n"
                 );
 
   // Now call the parent class' declareOptions
@@ -351,25 +362,48 @@ void DatedJoinVMatrix::build_()
       n_slave_fields = slave_field_indices.size();
     else
       n_slave_fields = slave->width();
-    width_ = n_master_fields + n_slave_fields;
-    length_ = master.length();
+    width_ = output_matching_index + n_master_fields + n_slave_fields;
+    if (output_the_slave)
+      length_ = slave.length();
+    else
+      length_ = master.length();
 
     //! Copy the appropriate VMFields
     fieldinfos.resize(width_);
     Array<VMField> master_infos = master->getFieldInfos();
     Array<VMField> slave_infos = slave->getFieldInfos();
+    if (output_matching_index)
+      fieldinfos[0].name="matching_index";
     if (master_infos.size() > 0)
-      for (int i=0; i<master.width(); ++i)
-        fieldinfos[i] = master_infos[i];
+    {
+      if (master_field_indices.size()>0)
+        for (int i=0; i<n_master_fields; ++i)
+          fieldinfos[output_matching_index+i] = master_infos[master_field_indices[i]];
+      else
+        for (int i=0; i<n_master_fields; ++i)
+          fieldinfos[output_matching_index+i] = master_infos[i];
+    }
     if (slave_infos.size() > 0)
-      for (int i=0; i<slave_field_indices.size(); ++i)
-      {
-        VMField f=slave_infos[slave_field_indices[i]];
-        if (master->fieldIndex(f.name)>=0)
-          f.name = "slave." + f.name;
-        fieldinfos[master.width()+i] = f;
-      }
-
+    {
+      if (slave_field_indices.size()>0)
+        for (int i=0; i<slave_field_indices.size(); ++i)
+        {
+          VMField f=slave_infos[slave_field_indices[i]];
+          if ((master_field_indices.size()==0 && master->fieldIndex(f.name)>=0)
+              || master_field_names.contains(f.name))
+            f.name = "slave." + f.name;
+          fieldinfos[output_matching_index+n_master_fields+i] = f;
+        }
+      else
+        for (int i=0; i<n_slave_fields; ++i)
+        {
+          VMField f=slave_infos[i];
+          if ((master_field_indices.size()==0 && master->fieldIndex(f.name)>=0)
+              || master_field_names.contains(f.name))
+            f.name = "slave." + f.name;
+          fieldinfos[output_matching_index+n_master_fields+i] = f;
+        }
+    }
     pb=new ProgressBar("DatedJoinVMatrix: matching the master and slave.",master->length());
     // pre-compute the 'match' (N.B. this is expensive...)
     master2slave.resize(master->length());
@@ -392,7 +426,7 @@ void DatedJoinVMatrix::build_()
         PDate master_date;
         if (master_date_field_index>=0)
           master_date = float_to_date(master_row[master_date_field_index]);
-        PDate earliest_match;
+        PDate latest_match;
         int n_matches=0;
         static TVec<int> matches;
         if (verbosity>1) matches.resize(0);
@@ -407,9 +441,9 @@ void DatedJoinVMatrix::build_()
             PDate slave_date_interval_end = float_to_date(slave_row[slave_date_interval_end_field_index]);
             if (master_date>slave_date_interval_start && master_date<=slave_date_interval_end)
             {
-              if (n_matches==0 || slave_date_interval_start < earliest_match)
+              if (n_matches==0 || slave_date_interval_start > latest_match)
               {
-                earliest_match = slave_date_interval_start;
+                latest_match = slave_date_interval_start;
                 matching_slave_row_index = it->second;
               }
               n_matches++;

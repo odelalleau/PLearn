@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DatedJoinVMatrix.h,v 1.7 2004/03/23 23:08:08 morinf Exp $
+   * $Id: DatedJoinVMatrix.h,v 1.8 2004/03/25 18:56:49 yoshua Exp $
    ******************************************************* */
 
 // Authors: *Yoshua Bengio*
@@ -93,6 +93,7 @@ public:
   string slave_date_interval_end_field_name;
   int verbosity;
   bool output_the_slave;
+  bool output_matching_index;
 
   // ****************
   // * Constructors *

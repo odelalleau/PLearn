@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: PP.h,v 1.5 2004/02/20 21:11:42 chrish42 Exp $
+   * $Id: PP.h,v 1.6 2004/03/25 18:56:26 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -229,6 +229,13 @@ public:
 
   static inline unsigned char big_endian_typecode()
   { return 0xFF; }
+};
+
+template <class A, class B>
+class MultiMap : public PPointable
+{
+public:
+  multimap<A,B> map;
 };
 
 
