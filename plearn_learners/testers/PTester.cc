@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.3 2003/08/13 08:13:47 plearner Exp $ 
+   * $Id: PTester.cc,v 1.4 2003/09/10 00:09:13 chapados Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -270,9 +270,11 @@ Vec PTester::perform(bool call_forget)
       train_stats->forget();
       learner->train();
       train_stats->finalize();
-      if(save_stat_collectors)
+      if(splitdir != "" && save_stat_collectors)
         PLearn::save(splitdir+"train_stats.psave",train_stats);
-      if(save_learners)
+//      if (splitdir == "")
+//        PLERROR("PTester::perform : probleme...");
+      if(splitdir != "" && save_learners)
         PLearn::save(splitdir+"final_learner.psave",learner);
 
       for(int setnum=1; setnum<dsets.length(); setnum++)
@@ -284,15 +286,15 @@ Vec PTester::perform(bool call_forget)
             PLearn::save(splitdir+setname+"_set.psave",testset);
           VMat test_outputs;
           VMat test_costs;
-          if(save_test_outputs)
+          if(splitdir != "" && save_test_outputs)
             test_outputs = new FileVMatrix(splitdir+setname+"_outputs.pmat",0,outputsize);
-          if(save_test_costs)
+          if(splitdir != "" && save_test_costs)
             test_costs = new FileVMatrix(splitdir+setname+"_costs.pmat",0,testcostsize);
 
           test_stats->forget();
           learner->test(testset, test_stats, test_outputs, test_costs);      
           test_stats->finalize();
-          if(save_stat_collectors)
+          if(splitdir != "" && save_stat_collectors)
             PLearn::save(splitdir+setname+"_stats.psave",test_stats);
         }
    

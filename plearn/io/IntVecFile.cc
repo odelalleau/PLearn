@@ -37,84 +37,178 @@
  
 
 /* *******************************************************      
-   * $Id: IntVecFile.cc,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: IntVecFile.cc,v 1.2 2003/09/10 00:09:09 chapados Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "IntVecFile.h"
 #include "fileutils.h"
+#include "byte_order.h"
 
 namespace PLearn <%
 using namespace std;
 
-  void IntVecFile::open(const string& the_filename, bool readwrite)
-  {
-    if(f)
-      close();
+const char IntVecFile::signature[] = {
+  0xDE, 0xAD, 0xBE, 0xEF, 0x00               //!< deadbeef, really...
+};
 
-    filename = the_filename;
-    if(readwrite)
-      {
-        f = fopen(filename.c_str(),"a+");
-        if(!f)
-          PLERROR("Couldn't open file %s for read/write",filename.c_str());
-      }
-    else
-      {
-        f = fopen(filename.c_str(),"r");
-        if(!f)
-          PLERROR("Couldn't open file %s for reading",filename.c_str());
-      }
-    length_ = file_size(filename)/sizeof(int);
-  }
+const int IntVecFile::header_size[] = {      //!< in number of ints
+  0,                                         //!< version 0
+  2                                          //!< version 1
+};
 
-  int IntVecFile::get(int i) const
-  {
-#ifdef BOUNDCHECK
-    if(i<0 || i>=length())
-      PLERROR("Out Of Bounds in IntVecFile::get");
-#endif
-    fseek(f,i*sizeof(int),SEEK_SET);
-    return fread_int(f,false);
-  }
 
-  void IntVecFile::put(int i, int value)
-  {
-    fseek(f,i*sizeof(int),SEEK_SET);
-    fwrite_int(f,value,false);
-    if(i>=length_)
-      length_ = i+1;
-  }
+IntVecFile::IntVecFile(const IntVecFile& other)
+  : filename(other.filename), f(0), length_(other.length_),
+    version_number_(other.version_number_), endianness_(other.endianness_)
+{
+  open(filename, false /* readonly */);
+}
 
-  void IntVecFile::close()
-  {
-    if(f)
-      fclose(f);
-    f=NULL;
-  }
-
-  IntVecFile::~IntVecFile()
-  {
+void IntVecFile::open(const string& the_filename, bool readwrite)
+{
+  if(f)
     close();
-  }
 
-  TVec<int> IntVecFile::getVec() const
+  filename = the_filename;
+  bool file_exists = isfile(filename);
+  if(readwrite)
   {
-    int tt;
-    TVec<int> res(length());
-    fseek(f,0,SEEK_SET);
-    if((tt=fread(res.data(), sizeof(int), length(), f))!=length())
-      PLERROR("fread error in IntVecFile::getVec()");
-    return res;
+    f = fopen(filename.c_str(),"a+");
+    if(!f)
+      PLERROR("Couldn't open file %s for read/write",filename.c_str());
   }
-  void IntVecFile::append(const TVec<int>& vec)
+  else
   {
-    fseek(f,0,SEEK_END);
+    f = fopen(filename.c_str(),"r");
+    if(!f)
+      PLERROR("Couldn't open file %s for reading",filename.c_str());
+  }
+  if (file_exists)
+    getVersionAndSize();
+  else
+    writeFileSignature();
+}
+
+int IntVecFile::get(int i) const
+{
+#ifdef BOUNDCHECK
+  if(i<0 || i>=length())
+    PLERROR("Out Of Bounds in IntVecFile::get");
+#endif
+  seek_to_index(i);
+  return fread_int(f, endianness_ == BIG_ENDIAN_ORDER);
+}
+
+void IntVecFile::put(int i, int value)
+{
+  seek_to_index(i);
+  fwrite_int(f, value, endianness_ == BIG_ENDIAN_ORDER);
+  if(i>=length_)
+    length_ = i+1;
+}
+
+void IntVecFile::close()
+{
+  if(f)
+    fclose(f);
+  f=0;
+}
+
+IntVecFile::~IntVecFile()
+{
+  close();
+}
+
+TVec<int> IntVecFile::getVec() const
+{
+  int tt;
+  TVec<int> res(length());
+  seek_to_index(0);
+  if((tt=fread(res.data(), sizeof(int), length(), f)) != length())
+    PLERROR("fread error in IntVecFile::getVec()");
+
+  // Switch byte order if necessary
+  if (byte_order() != endianness_)
+    endianswap(res.data(), length());
+
+  return res;
+}
+void IntVecFile::append(const TVec<int>& vec)
+{
+  seek_to_index(length());
+
+  if (byte_order() != endianness_) {
+    TVec<int> new_vec(vec.length());
+    new_vec << vec;
+    endianswap(new_vec.data(), new_vec.length());
+    fwrite(new_vec.data(), sizeof(int), new_vec.length(), f);
+  }
+  else {
     fwrite(vec.data(), sizeof(int), vec.length(), f);
   }
 
+  length_ += vec.length();
+}
+
+void IntVecFile::writeFileSignature()
+{
+  // This is for a new file.  Assume length 0, version number 1,
+  // file endianness is current-platform endianness
+  length_ = 0;
+  version_number_ = 1;
+  endianness_ = byte_order();
+
+  fseek(f, 0, SEEK_SET);
+  fputs(signature, f);                       //!< write without \0
+  fputc(endianness_, f);
+  fputc(0x00, f);
+  fputc(0x00, f);
+  fputc(char(version_number_), f);
+}
+
+void IntVecFile::getVersionAndSize()
+{
+  if (sizeof(int) != 4)
+    PLERROR("IntVecFile::getVersionAndSize: "
+            "IntVecFile not yet designed to handle sizeof(int) != 4");
+  
+  long the_filesize = filesize(filename);
+  if (the_filesize < long(2*sizeof(int)) /* assume 4 */)
+    goto version0;                           // unbelievable but true!
+
+  fseek(f, 0, SEEK_SET);
+  for (int i=0; i<4; ++i)
+    if (char(fgetc(f)) != signature[i])
+      goto version0;                         //!< unbelievable (bis)
+
+  // Assume new-world file format
+  endianness_ = char(fgetc(f));
+  if (endianness_ != LITTLE_ENDIAN_ORDER &&
+      endianness_ != BIG_ENDIAN_ORDER &&
+      fgetc(f) != 0x00 && fgetc(f) != 0x00)
+    PLERROR("IntVecFile::getVersionAndSize: "
+            "File format error in file %s", filename.c_str());
+
+  version_number_ = (unsigned char)fgetc(f);
+
+  if (version_number_ > 1)
+    PLERROR("IntVecFile::getVersionAndSize: "
+            "File version (%d) is not supported", version_number_);
+
+  length_ = the_filesize / sizeof(int) - header_size[version_number_];
+  return;
+
+ version0:
+  length_ = the_filesize / sizeof(int);
+  version_number_ = 0;
+  endianness_ = 'L';
+}
+
+void IntVecFile::seek_to_index(int i) const
+{
+  fseek(f, (i+header_size[version_number_]) * sizeof(int), SEEK_SET);
+}
+
 %> // end of namespace PLearn
-
-
-

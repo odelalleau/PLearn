@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: IntVecFile.h,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: IntVecFile.h,v 1.2 2003/09/10 00:09:09 chapados Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -55,17 +55,24 @@
 namespace PLearn <%
 using namespace std;
 
-  /*! 
-IntVecFile is a class to handle a simple linear file of integers with random access.
-
-Integers are stored in the file in plain little-endian binary
-representation, with no header at all.  The "length" of the vector is
-inferred directly from the size of the file.
-
-Random access in both read and write are possible. And it is possible to
-write beyond length(), in which case length() will be updated to reflect
-the change
-  */
+/*! IntVecFile is a class to handle a simple linear file of integers with
+ *  random access.
+ *  
+ *  There are two versions of the on-disk file format.  The "old" version
+ *  0, where integers are stored in the file in plain little-endian binary
+ *  representation, with no header at all.  The "length" of the vector is
+ *  inferred directly from the size of the file.
+ *  
+ *  The version 1 has the following layout.  The file starts with the magic
+ *  header {0xDE, 0xAD, 0xBE, 0xEF}.  Following is a single character: 'L'
+ *  for little-endian, and 'B' for big-endian file.  Finally, three bytes
+ *  {0x00, 0x00, 0x01} (version 1) of the file format.  As with version 0,
+ *  the length of the vector is inferred from the size of the file.
+ *  
+ *  Random access in both read and write are possible. And it is possible
+ *  to write beyond length(), in which case length() will be updated to
+ *  reflect the change
+ */
 
 class IntVecFile
 {
@@ -73,14 +80,24 @@ protected:
   string filename;
   FILE* f;
   int length_;
+  int version_number_;                       //!< 0 if old version, 1 if
+                                             //!< current version
+  char endianness_;                          //!< either 'L' or 'B'
+
+  static const char signature[];             //!< magic signature
+  static const int header_size[];            //!< index array by version number
 
 public:
   //!  Default constructor, you must then call open
-  IntVecFile(): filename(""), f(0), length_(-1) 
-  {}
+  IntVecFile()
+    : filename(""), f(0), length_(-1),
+      version_number_(1), endianness_(byte_order()) { }
 
-  IntVecFile(const string& the_filename, bool readwrite=false): f(0)
-  { open(the_filename, readwrite); }
+  IntVecFile(const string& the_filename, bool readwrite=false)
+    : f(0)  { open(the_filename, readwrite); }
+
+  //! The copy constructor opens the file a second time in readonly mode only
+  IntVecFile(const IntVecFile& other);
 
   void open(const string& the_filename, bool readwrite=false);
   void close();
@@ -89,7 +106,6 @@ public:
   void put(int i, int value);
   
   TVec<int> getVec() const;
-  
 
   inline int length() const { return length_; }
   inline int operator[](int i) const { return get(i); }
@@ -97,6 +113,11 @@ public:
   void append(const TVec<int>& vec);
 
   ~IntVecFile();
+
+protected:
+  void writeFileSignature();                 //!< write magic signature
+  void getVersionAndSize();                  //!< store in data members
+  void seek_to_index(int index) const;       //!< seek depending on version
 };
 
 

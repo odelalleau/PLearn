@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
- * $Id: NeuralNet.cc,v 1.15 2003/08/13 08:13:46 plearner Exp $
+ * $Id: NeuralNet.cc,v 1.16 2003/09/10 00:09:12 chapados Exp $
  ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeuralNet.h */
@@ -71,8 +71,8 @@ NeuralNet::NeuralNet()
    iseed(-1),
    semisupervised_flatten_factor(1),
    batch_size(1),
-   saveparams(""),
-   nepochs(10000)
+   nepochs(10000),
+   saveparams("")
 {}
 
 NeuralNet::~NeuralNet()
