@@ -456,7 +456,8 @@ class results( RoutineBasedMode ):
 
 class run( RoutineBasedMode ):    
     def routine_type(self):
-        RunTestRoutine.no_compile_option = options.no_compile
+        if options:
+            RunTestRoutine.no_compile_option = options.no_compile
         return RunTestRoutine
 
     def option_groups(self, parser):
