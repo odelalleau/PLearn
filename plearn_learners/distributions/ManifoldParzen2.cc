@@ -37,9 +37,9 @@
 #include "ManifoldParzen2.h"
 
 #include "plapack.h"
-#include "general.h"
+//#include "general.h"
 #include "TMat.h"
-#include "TMat_maths.h"
+//#include "TMat_maths.h"
 #include "BottomNI.h"
 
 namespace PLearn <%

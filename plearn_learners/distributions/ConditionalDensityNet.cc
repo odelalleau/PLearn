@@ -33,21 +33,20 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.31 2004/02/02 13:13:24 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.32 2004/02/16 21:23:57 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
 
 /*! \file ConditionalDensityNet.cc */
 
-
 #include "ConditionalDensityNet.h"
-#include "random.h"
 #include "DisplayUtils.h"
-#include "DilogarithmVariable.h"
+//#include "DilogarithmVariable.h"
 #include "SoftSlopeVariable.h"
 #include "SoftSlopeIntegralVariable.h"
-#include "plapack.h"
+//#include "plapack.h"
+#include "random.h"
 
 namespace PLearn <%
 using namespace std;

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.22 2004/01/28 14:33:23 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.23 2004/02/16 21:23:57 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -45,7 +45,7 @@
 #define ConditionalDensityNet_INC
 
 #include "PConditionalDistribution.h"
-#include "Var_all.h"
+//#include "Var_all.h"
 #include "Optimizer.h"
 
 namespace PLearn <%

@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianDistribution.cc,v 1.5 2003/12/05 22:13:46 plearner Exp $
+   * $Id: GaussianDistribution.cc,v 1.6 2004/02/16 21:23:57 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -43,7 +43,7 @@
 /*! \file PLearnLibrary/PLearnAlgo/GaussianDistribution.cc */
 
 #include "GaussianDistribution.h"
-#include "fileutils.h"
+//#include "fileutils.h"
 #include "VMat_maths.h"
 #include "plapack.h"
 #include "distr_maths.h"

@@ -33,13 +33,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HistogramDistribution.cc,v 1.10 2003/08/31 14:31:18 yoshua Exp $ 
+   * $Id: HistogramDistribution.cc,v 1.11 2004/02/16 21:23:57 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file HistogramDistribution.cc */
 #include "HistogramDistribution.h"
-#include <algorithm>
-#include <cmath>
+//#include <algorithm>
+//#include <cmath>
 
 namespace PLearn <%
 using namespace std;

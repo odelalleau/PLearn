@@ -40,7 +40,7 @@
 #ifndef ConditionalDistribution_INC
 #define ConditionalDistribution_INC
 
-#include "Learner.h"
+//#include "Learner.h"
 #include "Distribution.h"
 
 namespace PLearn <%
