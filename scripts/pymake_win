@@ -41,7 +41,7 @@ print "pymake 2.0 [ (C) 2001, Pascal Vincent. This is free software distributed 
 # initialise a few variables from the environment
 verbose = 0
 #homedir = os.environ['HOME']
-homedir = 'R:'
+homedir = 'R:/'
 
 platform = sys.platform
 if platform=='linux2':
@@ -71,10 +71,17 @@ nprocesses_per_processor = 1
 rshcommand = 'rsh '
 compileflags = ''
 
+def myjoin(dir,file,file2=""):
+    res= dir + "/" + file
+    if file2=="":
+      return res
+    else:
+      return res + "/" + file2
+
 # a few useful functions
 def abspath(mypath):
     """returns the absolute path of the file, with a hack to remove the leading /export/ that causes problems at DIRO"""    
-    p = os.path.abspath(mypath)    # python 5.1 does not have abspath
+    p = convertWinToLinux(os.path.abspath(mypath))    # python 5.1 does not have abspath
     rmprefix = '/export/'
     lenprefix = len(rmprefix)
     if len(p)>lenprefix:
@@ -91,7 +98,7 @@ def lsdirs(basedir):
     dirs = [ basedir ]
     for dname in os.listdir(basedir):
         if dname!='CVS' and dname!='OBJS' and dname[0]!='.':
-            dname = os.path.join(basedir,dname)
+            dname = myjoin(basedir,dname)
             if os.path.isdir(dname):
                 dirs.append(dname)
                 dirs.extend(lsdirs(dname))
@@ -165,8 +172,8 @@ class OptionalLibrary:
                 return 1
         if include[0]!='/': # look for it in includedirs
             for incldir in self.includedirs:
-                if os.path.isfile(os.path.join(incldir,include)):
-                    # print 'file exists!: ' + os.path.join(incldir,include)
+                if os.path.isfile(myjoin(incldir,include)):
+                    # print 'file exists!: ' + myjoin(incldir,include)
                     # print 'INCLUDE ' + include  + ' TRIGGERED BY INCDIR ' + incldir
                     return 1
         return 0            
@@ -245,12 +252,15 @@ pymakeOption( name = 'opt',
               compileroptions = '-Wall -O9 -funroll-loops -finline -fomit-frame-pointer -fstrength-reduce -ffast-math -fPIC' )
 """
 
+def convertWinToLinux(path):
+    return string.replace(path,"\\","/")
+
 def locateconfigfile():
     """returns the path for the configuration file"""
-    directory = os.getcwd()
+    directory = convertWinToLinux(os.getcwd())
     while os.path.isdir(directory) and os.access(directory,os.W_OK) and directory!='/':
-        fpath = os.path.join(directory,'.pymake/config_win')
-        modelpath = os.path.join(directory,'pymake.config.model')
+        fpath = myjoin(directory,'.pymake/config_win')
+        modelpath = myjoin(directory,'pymake.config.model')
         if os.path.isfile(modelpath) and mtime(modelpath)>mtime(fpath):
             print '*****************************************************'
             if os.path.isfile(fpath):
@@ -260,21 +270,21 @@ def locateconfigfile():
             print '* COPYING MODEL FILE ' + modelpath + ' TO ' + fpath
             print '* PLEASE ADAPT THE CONFIGURATION TO YOUR NEEDS'
             print '*****************************************************'
-            try: os.makedirs(os.path.join(directory,'.pymake'))
+            try: os.makedirs(myjoin(directory,'.pymake'))
             except: pass
             shutil.copyfile(modelpath,fpath)
         if os.path.isfile(fpath):
             return fpath
-        directory = abspath(os.path.join(directory,'..'))
+        directory = convertWinToLinux(myjoin(directory,'..'))
 
     # nothing was found in current directory or its parents, let's look in the homedir 
-    fpath = os.path.join(homedir,'.pymake/config_win')
+    fpath = myjoin(homedir,'.pymake/config_win')
     if not os.path.isfile(fpath):
         print '*****************************************************'
         print '* COULD NOT LOCATE ANY PYMAKE CONFIGURATION FILE.'
         print '* CREATING A DEFAULT CONFIG FILE IN ' + fpath
         print '* PLEASE ADAPT THE CONFIGURATION TO YOUR NEEDS'
-        try: os.makedirs(os.path.join(homedir,'.pymake'))
+        try: os.makedirs(myjoin(homedir,'.pymake'))
         except: pass
         f = open(fpath,'w')
         f.write(default_config_text)
@@ -283,15 +293,15 @@ def locateconfigfile():
 
 def locatehostsfile():
     """returns the path for the .pymake/<platform>.hosts file"""
-    directory = os.getcwd()
+    directory = convertWinToLinux(os.getcwd())
     while os.path.isdir(directory) and os.access(directory,os.W_OK) and directory!='/':
-        fpath = os.path.join(directory,'.pymake/' + platform + '.hosts')
+        fpath = myjoin(directory,'.pymake/' + platform + '.hosts')
         if os.path.isfile(fpath):
             return fpath
-        directory = abspath(os.path.join(directory,'..'))
+        directory =  abspath(myjoin(directory,'..'))
         # print directory
     # nothing was found in current directory or its parents, let's look in the homedir 
-    fpath = os.path.join(homedir,'.pymake/' + platform + '.hosts')
+    fpath = myjoin(homedir,'.pymake/' + platform + '.hosts')
     if os.path.isfile(fpath):
         return fpath
     return ''
@@ -369,12 +379,12 @@ def reportMissingObj(arg, dirpath, names):
     if 'OBJS' in names: names.remove('OBJS')
     if 'CVS' in names: names.remove('CVS')
     for fname in names:
-        fpath = os.path.join(dirpath,fname)
+        fpath = myjoin(dirpath,fname)
         if os.path.isfile(fpath):
             basename, ext = os.path.splitext(fname)
             if ext in ['.cc','.c','.C','.cpp','.CC']:
                 foundobj = 0 # found the .o file?
-                for f in glob.glob(os.path.join(dirpath,'OBJS','*',basename+'.o')):
+                for f in glob.glob(myjoin(dirpath,'OBJS','*',basename+'.o')):
                     if os.path.isfile(f): foundobj = 1
                 if not foundobj:
                     print fpath
@@ -417,7 +427,7 @@ if 'checkobj' in optionargs: # report .cc files without any corresponding .o fil
     else:
         print '>> The following files do not have *any* corresponding .o in OBJS:'
         for dirname in otherargs:
-            os.path.walk(os.path.abspath(dirname),reportMissingObj, '')
+            os.path.walk(convertWinToLinux(os.path.abspath(dirname)),reportMissingObj, '')
     sys.exit()
 
 force_recompilation = 0  # force recompilation of everything?
@@ -451,7 +461,7 @@ if optionargs: # there are remaining optionargs
     sys.exit()
 
 # Building name of object subdirectory
-objsdir = os.path.join('OBJS', platform + '__' + string.join(options,'_'))
+objsdir = myjoin('OBJS', platform + '__' + string.join(options,'_'))
 print '*** Running pymake using following options: ' + string.join(map(lambda o: '-'+o, options))
 
 list_of_hosts = []
@@ -572,12 +582,12 @@ class FileInfo:
                     self.triggered_libraries.append(optlib)
                     # print optlib.name + ' TRIGGERED BY INCLUDE ' + includefile + ' IN ' + self.filepath 
 
-            fullpath = os.path.join(self.filedir, includefile)
+            fullpath = myjoin(self.filedir, includefile)
             if os.path.isfile(fullpath):
                 self.includes_from_sourcedirs.append(abspath(fullpath))
             else:
                 for srcdir in sourcedirs:
-                    fullpath = os.path.join(srcdir, includefile)
+                    fullpath = myjoin(srcdir, includefile)
                     if os.path.isfile(fullpath):
                         self.includes_from_sourcedirs.append(abspath(fullpath))
         self.hasmain = FileInfo.hasmain_regexp.search(text)
@@ -600,7 +610,7 @@ class FileInfo:
             # get the corresponding .cc file's FileInfo (if there is such a file) 
             self.corresponding_ccfile = 0
             for newext in ['.cc','.c','.C','.cpp','.CC']:
-                ccpath = os.path.join(self.filedir, self.filebase + newext)
+                ccpath = myjoin(self.filedir, self.filebase + newext)
                 if mtime(ccpath):
                     self.corresponding_ccfile = file_info(ccpath)
                     break
@@ -608,10 +618,10 @@ class FileInfo:
         elif self.fileext in ['.cc','.c','.C','.cpp','.CC']:
             self.is_ccfile = 1
 
-            self.corresponding_ofile = os.path.join(self.filedir, objsdir, self.filebase+'.o')
+            self.corresponding_ofile = myjoin(self.filedir, objsdir, self.filebase+'.o')
 
             if self.hasmain:
-                self.corresponding_executable = os.path.join(self.filedir, objsdir, self.filebase)
+                self.corresponding_executable = myjoin(self.filedir, objsdir, self.filebase)
 
         else:
             raise 'Attempting to build a FileInfo from a file that is not a .cc or .h or similar file'
@@ -791,7 +801,7 @@ class FileInfo:
     def make_objs_dir(self):
         """ makes the OBJS dir and subdirectory if they don't already exist,
         to hold the corresponding_ofile and corresponding_executable """
-        odir = os.path.join(self.filedir, objsdir)
+        odir = myjoin(self.filedir, objsdir)
         if not os.path.isdir(odir):  # make sure the OBJS dir exists, otherwise the command will fail
             os.makedirs(odir)
         
@@ -803,19 +813,19 @@ class FileInfo:
 		#placed in the OBJS subdirectory of the directory where the source file is.
 		
         if linkname == '':
-            symlinktarget = os.path.join(self.filedir,self.filebase)
+            symlinktarget = myjoin(self.filedir,self.filebase)
         else:
             symlinktarget = linkname
         if os.path.islink(symlinktarget) or os.path.exists(symlinktarget):
             os.remove(symlinktarget)
         if linkname == '':
-            os.symlink(os.path.join(objsdir,self.filebase),symlinktarget)
+            os.symlink(myjoin(objsdir,self.filebase),symlinktarget)
         else:
-			os.symlink(os.path.join(self.filedir+"/"+objsdir,self.filebase),symlinktarget)
+			os.symlink(myjoin(self.filedir+"/"+objsdir,self.filebase),symlinktarget)
 
     def compile_command(self):
         """returns the command line necessary to compile this .cc file"""
-        fname = os.path.join(self.filedir,'.'+self.filebase+'.override_compile_options')
+        fname = myjoin(self.filedir,'.'+self.filebase+'.override_compile_options')
         options_override = {}
         if os.path.isfile(fname):
             f = open(fname,'r')
@@ -853,18 +863,23 @@ class FileInfo:
         quotedcommand = "'cd " + self.filedir + "; " + self.compile_command() + "; echo $?'"
         self.hostname = hostname
         if hostname=='localhost' or hostname==myhostname:
-            self.launched = Popen3('sh -c ' + quotedcommand, 1, 10000)
+            self.launched = popen3('sh -c ' + quotedcommand, -1, 't')
+            #self.launched[0] = res[0]
+            #self.launched[1] = res[1]
+            #self.launched[2] = res[2]
+            #self.launched = Popen3('sh -c ' + quotedcommand, 1, 10000)
         else:
             self.launched = Popen3(rshcommand + ' ' + self.hostname + ' ' + quotedcommand, 1, 10000)
         print '[ LAUNCHED',self.filebase+self.fileext,'on',self.hostname,']'
+        #print "self.launched = ",self.launched
         if verbose:
             print quotedcommand
 
     def update_compilation_messages(self):
         """This method should be called whenever you sense activity on the self.launched streams,
         it will fill errormsgs and warningmsgs"""
-        self.errormsgs.extend(self.launched.fromchild.readlines())
-        self.warningmsgs.extend(self.launched.childerr.readlines())
+        self.errormsgs.extend(self.launched[0].readlines())
+        self.warningmsgs.extend(self.launched[2].readlines())
 
     def finished_compilation(self):
         """You should call this when the compilation process has just finished
@@ -874,8 +889,8 @@ class FileInfo:
         """
         print '[ FINISHED',self.filebase+self.fileext,'on',self.hostname,']'
         print self.compile_command()
-        print self.launched.childerr.read() # print warnings
-        errormsgs = self.launched.fromchild.readlines()
+        print self.launched[2].read() # print warnings
+        errormsgs = self.launched[0].readlines()
         if errormsgs:
             self.compilation_status = int(errormsgs[-1])  # last line was an echo $? (because rsh doesn't transmit the status byte correctly)
             if verbose:
@@ -883,15 +898,15 @@ class FileInfo:
             del errormsgs[-1]
             print string.join(errormsgs,'')
 
-        try:
-            self.launched.wait() # we don't like defunct and zombies around, do we?
-        except OSError:
-            pass # don't know why, but sometimes i get a OSError: [Errno 10] No child processes
+        #try:
+            #self.launched.wait() # we don't like defunct and zombies around, do we?
+        #except OSError:
+        #    pass # don't know why, but sometimes i get a OSError: [Errno 10] No child processes
         
         # don't know if this is useful, but anyway...
-        self.launched.tochild.close()
-        self.launched.fromchild.close()
-        self.launched.childerr.close()
+        self.launched[1].close()
+        self.launched[0].close()
+        self.launched[2].close()
         del self.launched # free up everything
 
     def failed_ccfiles_to_link(self):
@@ -972,7 +987,7 @@ def get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_l
         if os.path.basename(target) not in ['OBJS','CVS']: # skip OBJS and CVS directories    
             print "Entering " + target
             for direntry in os.listdir(target):
-                newtarget = os.path.join(target,direntry)
+                newtarget = myjoin(target,direntry)
                 if os.path.isdir(newtarget) or isccfile(newtarget):
                     get_ccfiles_to_compile_and_link(newtarget,ccfiles_to_compile,executables_to_link, linkname)
 
@@ -1013,48 +1028,11 @@ def pymake(list_of_targets, linkname):
 def parallel_compile(files_to_compile):
     """files_to_compile is a list of FileInfo of .cc files"""
 
-    hostnum = 0
-    outs = {}  # a dictionary indexed by the stdout of the process launched by popen, and containing the corresponding FileInfo object 
-    errs = {}  # a dictionary indexed by the stderrs of the process launched by popen, and containing the corresponding FileInfo object 
     for ccfile in files_to_compile:
         ccfile.make_objs_dir() # make sure the OBJS dir exists, otherwise the command will fail
-        if len(outs) < len(list_of_hosts):
-            if len(files_to_compile)==1: # if there's just one file to compile, we compile it locally to avoid a long "Waiting for NFS to catch up!"
-                hostname = 'localhost'
-            else:
-                hostname = list_of_hosts[hostnum]
-            ccfile.launch_compilation(hostname)
-            outs[ccfile.launched.fromchild] = ccfile  
-            errs[ccfile.launched.childerr] = ccfile  
-            hostnum = hostnum + 1
-        else: # all processes are busy, wait for something to finish...
-            iwtd, owtd, ewtd = select.select(outs.keys()+errs.keys(), [], [])
-            f = iwtd[0] 
-            if errs.has_key(f):
-                info = errs[f]
-            elif outs.has_key(f):
-                info = outs[f]
-            del errs[info.launched.childerr]
-            del outs[info.launched.fromchild]
-            info.finished_compilation() # print error messages, warnings, and get failure/success status
-            hostname = info.hostname
-            ccfile.launch_compilation(hostname)
-            outs[ccfile.launched.fromchild] = ccfile  
-            errs[ccfile.launched.childerr] = ccfile  
+        ccfile.launch_compilation('localhost')
+        ccfile.finished_compilation() # print error messages, warnings, and get failure/success status
 
-    # Now wait until everybody is finished
-    while outs:
-        if len(outs)<=10:
-            print '[ STILL WAITING FOR:',string.join(map( lambda(f): f.filebase+f.fileext + ' on ' + f.hostname, outs.values()), ', '),']\n'
-        iwtd, owtd, ewtd = select.select(outs.keys()+errs.keys(), [], [])
-        f = iwtd[0] 
-        if errs.has_key(f):
-            info = errs[f]
-        elif outs.has_key(f):
-            info = outs[f]
-        del errs[info.launched.childerr]
-        del outs[info.launched.fromchild]
-        info.finished_compilation() # print error messages, warnings, and get failure/success status
 
 # well this one is not 'parallel' right now...
 def sequential_link(executables_to_link, linkname):
