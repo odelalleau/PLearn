@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOverBagsVariable.cc,v 1.6 2004/02/23 23:57:28 tihocan Exp $
+   * $Id: SumOverBagsVariable.cc,v 1.7 2004/02/24 21:11:30 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -122,7 +122,7 @@ void SumOverBagsVariable::build_()
 
     bag_size_vec.resize(1);
     bag_target_and_bag_signal.resize(vmat->targetsize());
-    bag_target = bag_target_and_bag_signal.subVec(0,vmat->targetsize()-1);
+    bag_target.resize(vmat->targetsize() - 1);
     bag_signal = bag_target_and_bag_signal.subVec(vmat->targetsize()-1,1);
     int ws = vmat->weightsize();
     bag_weight.resize(ws);
@@ -229,6 +229,10 @@ void SumOverBagsVariable::fpropOneBag(bool do_bprop)
       }
     else
       vmat->getExample(curpos,input_value,bag_target_and_bag_signal,dummy_weight);
+    if (bag_size == 0) {
+      // It's the first element: we copy the good target.
+      bag_target << bag_target_and_bag_signal.subVec(0, bag_target_and_bag_signal.length() - 1);
+    }
     if (transpose) {
       // Need to put input_value into input_values, because it uses a separate
       // storage.
