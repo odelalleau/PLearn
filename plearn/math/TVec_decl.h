@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TVec_decl.h,v 1.4 2004/05/17 20:59:51 tatien Exp $
+   * $Id: TVec_decl.h,v 1.5 2004/05/17 21:33:10 tatien Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -498,10 +498,7 @@ class TVec
         pair<iterator, iterator> range =
           equal_range(begin(), end(), value);
         
-        if (range.first == range.second)
-          return -1;
-        else
-          return int(range.first - begin());
+        return int(range.first - begin());
       }
   
       inline void insertSorted(T value, bool uniq)
