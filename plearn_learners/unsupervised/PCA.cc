@@ -33,11 +33,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PCA.cc,v 1.10 2004/06/29 13:28:11 tihocan Exp $ 
+   * $Id: PCA.cc,v 1.11 2004/06/30 16:50:35 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PCA.cc */
 #include "CenteredVMatrix.h"
+#include "GetInputVMatrix.h"
 #include "PCA.h"
 #include "plapack.h"
 #include "random.h"     //!< For fill_random_normal.
@@ -55,11 +56,15 @@ PCA::PCA()
 }
 
 PLEARN_IMPLEMENT_OBJECT(PCA, 
-                        "Performs a Principal Component Analysis preprocessing (projecting on the principal directions)", 
-                        "This learner finds the empirical covariance matrix of the input part of the training data"
-                        "and learns to project its input vectors along the principal eigenvectors"
-                        "of that matrix, optionally scaling by the inverse of the square root"
-                        "of the eigenvalues (to obtained 'sphered', i.e. Normal(0,I) data)");
+    "Performs a Principal Component Analysis preprocessing (projecting on the principal directions).",
+    "This learner finds the empirical covariance matrix of the input part of\n"
+    "the training data, and learns to project its input vectors along the\n"
+    "principal eigenvectors of that matrix, optionally scaling by the inverse\n"
+    "of the square root of the eigenvalues (to obtained 'sphered', i.e.\n"
+    "Normal(0,I) data).\n"
+    "Alternative EM algorithms are provided, that may be useful when there is\n"
+    "a lot of data or the dimension is very high.\n"
+);
 
 void PCA::declareOptions(OptionList& ol)
 {
@@ -75,7 +80,9 @@ void PCA::declareOptions(OptionList& ol)
   declareOption(ol, "algo", &PCA::algo, OptionBase::buildoption,
       "The algorithm used to perform the Principal Component Analysis:\n"
       " - 'classical' : compute the eigenvectors of the covariance matrix\n"
-      " - 'em'        : EM algorithm from \"EM algorithms for PCA and SPCA\" by S. Roweis");
+      " - 'em'        : EM algorithm from \"EM algorithms for PCA and SPCA\" by S. Roweis\n"
+      " - 'em_orth'   : a variant of 'em', where orthogonal components are directly computed"
+      );
   
   // saved options
   declareOption(ol, "mu", &PCA::mu, OptionBase::learntoption,
@@ -212,8 +219,7 @@ void PCA::train()
       Mat C(k,p);
       fill_random_normal(C);
       // Center the data.
-      VMat centered_data = new CenteredVMatrix(train_set);
-  //      mu = toreal(centered_data->getOption("mu")); // TODO Use getOption here.
+      VMat centered_data = new CenteredVMatrix(new GetInputVMatrix(train_set));
       Vec sample_mean = static_cast<CenteredVMatrix*>((VMatrix*) centered_data)->getMu();
       mu.resize(sample_mean.length());
       mu << sample_mean;
@@ -228,7 +234,7 @@ void PCA::train()
         pb = new ProgressBar("Training EM PCA", nstages - stage);
       int init_stage = stage;
       while (stage < nstages) {
-        // E-step: X <- Y C (C C')^-1
+        // E-step: X <- Y C' (C C')^-1
         productTranspose(tmp_k_k, C, C);
         matInvert(tmp_k_k, tmp_k_k_2);
         transposeProduct(tmp_p_k, C, tmp_k_k_2);
@@ -261,6 +267,88 @@ void PCA::train()
       product(eigenvecs, true_pca.eigenvecs, C);
       eigenvals.resize(k);
       eigenvals << true_pca.eigenvals;
+    } else if (algo == "em_orth") {
+      int n = train_set->length();
+      int p = train_set->inputsize();
+      int k = ncomponents;
+      // Fill the matrix C with random data.
+      Mat C(k,p);
+      fill_random_normal(C);
+      // Ensure it is orthonormal.
+      GramSchmidtOrthogonalization(C);
+      // Center the data.
+      VMat centered_data = new CenteredVMatrix(new GetInputVMatrix(train_set));
+      Vec sample_mean = static_cast<CenteredVMatrix*>((VMatrix*) centered_data)->getMu();
+      mu.resize(sample_mean.length());
+      mu << sample_mean;
+      Mat Y = centered_data.toMat();
+      Mat Y_copy(n,p);
+      Mat X(n,k);
+      Mat tmp_k_k(k,k);
+      Mat tmp_k_k_2(k,k);
+      Mat tmp_p_k(p,k);
+      Mat tmp_k_n(k,n);
+      Mat tmp_n_1(n,1);
+      Mat tmp_n_p(n,p);
+      Mat X_j, C_j;
+      Mat x_j_prime_x_j(1,1);
+      // Iterate through EM.
+      if (report_progress)
+        pb = new ProgressBar("Training EM PCA", nstages - stage);
+      int init_stage = stage;
+      Y_copy << Y;
+      while (stage < nstages) {
+        Y << Y_copy;
+        for (int j = 0; j < k; j++) {
+          C_j = C.subMatRows(j, 1);
+          X_j = X.subMatColumns(j,1);
+          // E-step: X_j <- Y C_j'
+          productTranspose(X_j, Y, C_j);
+          // M-step: C_j <- (X_j' X_j)^-1 X_j' Y
+          transposeProduct(x_j_prime_x_j, X_j, X_j);
+          transposeProduct(C_j, X_j, Y);
+          C_j /= x_j_prime_x_j(0,0);
+          // Normalize the new direction.
+          PLearn::normalize(C_j, 2.0);
+          // Subtract the component along this new direction, so as to
+          // obtain orthogonal directions.
+          productTranspose(tmp_n_1, Y, C_j);
+          negateElements(Y);
+          productAcc(Y, tmp_n_1, C_j);
+          negateElements(Y);
+        }
+        stage++;
+        if (report_progress)
+          pb->update(stage - init_stage);
+      }
+      // Check orthonormality of C.
+      for (int i = 0; i < k; i++) {
+        for (int j = i; j < k; j++) {
+          real dot_i_j = dot(C(i), C(j));
+          if (i != j) {
+            if (abs(dot_i_j) > 1e-6) {
+              PLWARNING("In PCA::train - It looks like some vectors are not orthogonal");
+            }
+          } else {
+            if (abs(dot_i_j - 1) > 1e-6) {
+              PLWARNING("In PCA::train - It looks like a vector is not normalized");
+            }
+          }
+        }
+      }
+      // Compute the projected data.
+      Y << Y_copy;
+      productTranspose(X, Y, C);
+      // Compute the empirical variance on each projected axis, in order
+      // to obtain the eigenvalues.
+      VMat X_vm(X);
+      Vec mean_proj, var_proj;
+      computeMeanAndVariance(X_vm, mean_proj, var_proj);
+      eigenvals.resize(k);
+      eigenvals << var_proj;
+      // Copy the eigenvectors.
+      eigenvecs.resize(k, p);
+      eigenvecs << C;
     } else {
       PLERROR("In PCA::train - Unknown value for 'algo'");
     }
@@ -294,3 +382,4 @@ void PCA::reconstruct(const Vec& output, Vec& input) const
 }
 
 } // end of namespace PLearn
+
