@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.25 2004/03/25 03:49:28 nova77 Exp $
+   * $Id: vmatmain.cc,v 1.26 2004/04/14 13:03:33 tihocan Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -874,6 +874,27 @@ void viewVMat(const VMat& vm)
         }
         break;
       ///////////////////////////////////////////////////////////////
+      case (int)'x': case (int)'X': 
+        // Hide the currently selected row.
+        {
+          //echo();
+          Vec index(vm_showed.width() - 1);
+          for (int i = 0; i < curj; i++) {
+            index[i] = i;
+          }
+          for (int i = curj + 1; i < vm_showed.width(); i++) {
+            index[i - 1] = i;
+          }
+          vm_showed = vm_showed.columns(index);
+          if (curj>=vm_showed.width()) {
+            curj = vm_showed.width()-1;
+            startj = max(curj-nj + 1, 0);
+          }
+
+          //          noecho();
+        }
+        break;
+      ///////////////////////////////////////////////////////////////
       case (int)'a': case (int)'A': 
         vm_showed = vm;
         break;
@@ -900,6 +921,7 @@ void viewVMat(const VMat& vm)
         mvprintw(vStartHelp++,10," - home: move to the first column");
         mvprintw(vStartHelp++,10," - end: move to the last column");
         mvprintw(vStartHelp++,10," - 'r' or 'R': show only a range or a set of columns");
+        mvprintw(vStartHelp++,10," - 'x' or 'X': hide the currently selected column");
         mvprintw(vStartHelp++,10," - 'a' or 'A': show all the columns");
         mvprintw(vStartHelp++,10," - 'l' or 'L': prompt for a line number and go to that line");
         mvprintw(vStartHelp++,10," - 'c' or 'C': prompt for a column number and go to that column");
