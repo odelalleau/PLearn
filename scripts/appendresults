@@ -1,0 +1,23 @@
+#! /bin/sh
+# Will append the statistics of an experiment to an ascii file (typically a .amat file).
+# Typical usage is to put in the final_commands option of a PTester:
+#   appendresults ${dir} results.amat ${param_1} ${param_2} ... ${param_n}
+
+if [ "$3" = "" ]; then
+  echo Usage: $0 dir output param_1 ... param_n
+  echo See code for more info.
+  exit 127
+fi
+DIR="$1"
+OUTPUT="$2"
+shift
+shift
+PARAMS="$1 "
+shift
+for PARAM in $@; do
+PARAMS="$PARAMS""$PARAM "
+done
+echo -n "$PARAMS" >> $OUTPUT
+plearn vmat cat $DIR/global_stats.pmat "rowindex 1 ==" >> $OUTPUT
+# Old version:
+# saveresults $PARAMS  1 $DIR/global_stats.pmat >> $OUTPUT
