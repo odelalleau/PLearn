@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddLayersNNet.cc,v 1.6 2004/09/14 16:04:56 chrish42 Exp $ 
+   * $Id: AddLayersNNet.cc,v 1.7 2004/10/12 15:43:01 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -260,6 +260,16 @@ Mat AddLayersNNet::getHiddenWeights(int layer) {
   return result;
 }
 
+////////////////////////////
+// getOutputHiddenWeights //
+////////////////////////////
+Mat AddLayersNNet::getOutputHiddenWeights(int layer) {
+  int count = 0;
+  for (int i = 0; i < layer; i++)
+    count += real_parts_size[i];
+  return w1->matValue.subMatRows(count, add_hidden[layer]);
+}
+
 //////////////////////
 // initializeParams //
 //////////////////////
@@ -271,7 +281,6 @@ void AddLayersNNet::initializeParams(bool set_seed) {
     else
       PLearn::seed();
   }
-
   for (int i = 0; i < hidden_weights.size() && i < add_hidden.size(); i++) {
     if (add_hidden[i] > 0) {
       fillWeights(hidden_weights[i], true);

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddLayersNNet.h,v 1.5 2004/09/14 16:04:56 chrish42 Exp $ 
+   * $Id: AddLayersNNet.h,v 1.6 2004/10/12 15:43:01 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -123,6 +123,10 @@ public:
   //! Return the hidden weights for a given hidden layer.
   //! This is not a copy, so they should not be modified.
   Mat getHiddenWeights(int layer);
+
+  //! Return the weights going out of a given added hidden layer.
+  //! This is not a copy, so they should not be modified.
+  Mat getOutputHiddenWeights(int layer);
 
 protected:
 
