@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.6 2003/03/09 22:59:47 yoshua Exp $
+   * $Id: VMatrix.h,v 1.7 2003/03/10 01:51:18 yoshua Exp $
    ******************************************************* */
 
 
@@ -54,7 +54,6 @@
 #include "StatsCollector.h"
 #include "TMat_maths_impl.h"
 #include "VMField.h"
-#include "VVec.h"
 
 namespace PLearn <%
 using namespace std;
@@ -205,10 +204,6 @@ public:
   //!  These methods do not usually need to be overridden in subclasses
   //!  (default versions call getSubRow, which should do just fine)
   virtual void getRow(int i, Vec v) const; //!<  copies row i into v (which must have appropriate length equal to the VMat's width)
-
- //! get virtual row
-    //virtual VVec getVRow(int i) const;
-  virtual void getVRow(int i, VVec v) const;
 
   virtual void putRow(int i, Vec v);
   virtual void fill(real value);

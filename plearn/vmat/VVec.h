@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: VVec.h,v 1.3 2003/03/09 22:59:47 yoshua Exp $
+   * $Id: VVec.h,v 1.4 2003/03/10 01:51:18 yoshua Exp $
    ******************************************************* */
 
 
@@ -45,31 +45,30 @@
 #define VVec_INC
 
 #include "Object.h"
+#include "VMat.h"
 
 namespace PLearn <%
 
-/*! ** VVec ** */
+/*! ** Vvector ** */
 //! A VVec represents an abstract notion of "sample" or "example"
 //! which will allow us to generalize VMatrices to handle objects
 //! that are not conveniently representable with ordinary vectors.
 
-class VVector : public Object
+class VVec : public Object
 {
-    // We leave the actual representation choice to some
-    // underlying virtual matrix:
   public:
 
-    // to keep compatibility with most current code,
-    // VVec's can be converted to Vec's
-    virtual void toVec(Vec row_vec) = 0;
-    virtual int length() const = 0;
-    DECLARE_NAME_AND_DEEPCOPY(VVector);
+  // We leave the actual representation choice to some
+  // underlying virtual matrix:
+  VMat data;
+  int row_index;
+
+  // to keep compatibility with most current code,
+  // VVec's can be converted to Vec's
+  virtual void toVec(Vec row_vec) const { data->getRow(row_index,row_vec); }
+  virtual int length() const { return data->width(); }
+  DECLARE_NAME_AND_DEEPCOPY(VVec);
 };
-
-typedef PP<VVector> VVec;
-
-DECLARE_OBJECT_PP(VVec, VVector);
-
 
 %> // end of namespace PLearn
 

@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.h,v 1.6 2003/03/06 17:40:06 yoshua Exp $
+   * $Id: Learner.h,v 1.7 2003/03/10 01:51:23 yoshua Exp $
    ******************************************************* */
 
 
@@ -51,6 +51,7 @@
 #include "Measurer.h"
 #include "Kernel.h"
 #include "StatsIterator.h"
+#include "VVec.h"
 //#include "TimeMeasurer.h"
 
 namespace PLearn <%
@@ -296,11 +297,7 @@ using namespace std;
 
       //! **Next generation** learners allow inputs to be anything, not just Vec
       Vec vec_input;
-      virtual void computeOutput(const VVec& input, Vec& output) {
-        vec_input.resize(input.length());
-        input.toVec(vec_input);
-        use(vec_input,output);
-      }
+      virtual void computeOutput(const VVec& input, Vec& output);
 
 /*!       ** DEPRECATED ** Do not use! 
       use the setOption and build methods instead

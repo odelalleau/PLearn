@@ -36,12 +36,14 @@
 
  
 /*
-* $Id: VVec.cc,v 1.3 2003/03/09 22:59:47 yoshua Exp $
+* $Id: VVec.cc,v 1.4 2003/03/10 01:51:18 yoshua Exp $
 ******************************************************* */
 
 
 #include "VVec.h"
 
 namespace PLearn <%
+
+IMPLEMENT_NAME_AND_DEEPCOPY(VVec);
 
 %> // end of namespace PLearn

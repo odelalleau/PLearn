@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.cc,v 1.6 2002/12/02 08:46:51 plearner Exp $
+   * $Id: Learner.cc,v 1.7 2003/03/10 01:51:23 yoshua Exp $
    ******************************************************* */
 
 #include "Learner.h"
@@ -603,6 +603,11 @@ void Learner::apply(const VMat& data, VMat outputs)
     return concat(test_statistics.computeStats(costs));
   }
 
+  void Learner::computeOutput(const VVec& input, Vec& output) {
+    vec_input.resize(input.length());
+    input.toVec(vec_input);
+    use(vec_input,output);
+  }
 
 // [PASCAL TODO:] 
 // 1) Handle weights properly
