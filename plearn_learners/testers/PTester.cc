@@ -33,14 +33,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.23 2004/02/11 20:04:14 yoshua Exp $ 
+   * $Id: PTester.cc,v 1.24 2004/02/17 21:07:18 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
 #include "PTester.h"
-#include "pl_io.h"
+//#include "pl_io.h"
 #include "VecStatsCollector.h"
-#include "AsciiVMatrix.h"
+//#include "AsciiVMatrix.h"
 #include "FileVMatrix.h"
 
 namespace PLearn <%
