@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TangentLearner.cc,v 1.14 2004/08/02 16:15:02 monperrm Exp $ 
+   * $Id: TangentLearner.cc,v 1.15 2004/08/09 23:49:50 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
@@ -96,7 +96,7 @@ Mat smartInitialization(VMat v, int n, real c, real regularization)
 TangentLearner::TangentLearner() 
 /* ### Initialize all fields to their default value here */
   : training_targets("local_neighbors"), use_subspace_distance(false), normalize_by_neighbor_distance(true),
-    smart_initialization(0),initialization_regularization(1e-3),
+    ordered_vectors(true), smart_initialization(0),initialization_regularization(1e-3),
     n_neighbors(5), n_dim(1), architecture_type("single_neural_network"), output_type("tangent_plane"),
     n_hidden_units(-1), batch_size(1), norm_penalization(0), svd_threshold(1e-5), 
     projection_error_regularization(0)
@@ -110,8 +110,16 @@ PLEARN_IMPLEMENT_OBJECT(TangentLearner, "Learns local tangent plane of the manif
 			"tangent planes at each point x, given x in R^n. Let f_i(x) be the predicted i-th tangent\n"
 			"vector (in R^n). Then we will optimize the parameters that define the d functions f_i by\n"
       "pushing the f_i so that they span the local tangent directions. Three criteria are\n"
-      "possible, according to the 'training_targets' option:\n"
-			" * If use_subspace_distance,\n"
+      "possible, according to the 'training_targets', 'normalize_by_neighbor_distance' and\n"
+      "'use_subspace_distance' option. The default criterion is the recommanded one, with\n"
+      " training_targets='local_neighbors', normalize_by_neighbor_distance=1,\n"
+      "and use_subspace_distance=0 (it really did not work well in our experiments with\n"
+      "use_subspace_distance=1). This corresponds to the following cost function:\n"
+      "    sum_x sum_j min_w ||t(x,j) - sum_i w_i f_i(x)||^2 / ||t(x,j)||^2\n"
+      "where x is an example, t(x,j) is the difference vector between x and its j-th neighbor,\n"
+      "and the w_i are chosen freely for each j and x and correspond to the weights given to\n"
+      "each basis vector f_i(x) to obtain the projection of t(x,j) on the tangent plane.\n"
+			"More generally, if use_subspace_distance,\n"
       "      criterion = min_{w,u}  || sum_i w_i f_i  -  sum_j u_j t(x,j) ||^2\n"
       "      under the constraint that ||w||=1.\n"
       "   else\n"
@@ -122,6 +130,14 @@ PLEARN_IMPLEMENT_OBJECT(TangentLearner, "Learns local tangent plane of the manif
       "   is defined according to the training_targets option:\n"
 			"    'local_evectors' : local principal components (based on n_neighbors of x)\n"
 			"    'local_neighbors': difference between x and its n_neighbors.\n"
+      "An additional criterion option that applies only to use_subspace_criterion=0 is\n"
+      "the orderered_vectors option, which applies a separate cost to each of the f_i:\n"
+      "the f_1 vector tries to make the projection of t(x,j) on f_1 close to t(x,j), while\n"
+      "the f_2 vector tries to make the projection of t(x,j) on the (f_1,f_2) basis close to t(x,j),\n"
+      "etc... i.e. the gradient on f_i is computed based on a cost that involves only\n"
+      "the projection on the first i vectors. This is analogous to principal component analysis:\n"
+      "the first vector tries to capture as much as possible of the variance, the second as much\n"
+      "as possible of the remaining variance, etc...\n"
       "Different architectures are possible for the f_i(x) (architecture_type option):\n"
       "   - multi_neural_network: one neural net per basis function\n"
       "   - single_neural_network: single neural network with matrix output (one row per basis vector)\n"
@@ -160,6 +176,10 @@ void TangentLearner::declareOptions(OptionList& ol)
 
   declareOption(ol, "normalize_by_neighbor_distance", &TangentLearner::normalize_by_neighbor_distance, 
                 OptionBase::buildoption, "Whether to normalize cost by distance of neighbor.\n");
+
+  declareOption(ol, "ordered_vectors", &TangentLearner::ordered_vectors,
+                OptionBase::buildoption, "Whether to apply a differential cost to each f_i so as to\n"
+                "obtain an ordering similar to the one obtained with principal component analysis.\n");
 
   declareOption(ol, "n_neighbors", &TangentLearner::n_neighbors, OptionBase::buildoption,
 		"Number of nearest neighbors to consider.\n"
@@ -319,7 +339,7 @@ void TangentLearner::build_()
 
     Var proj_err = projection_error(tangent_predictor->outputs[0], tangent_targets, norm_penalization, n, 
                                     normalize_by_neighbor_distance, use_subspace_distance, svd_threshold, 
-                                    projection_error_regularization);
+                                    projection_error_regularization, ordered_vectors);
     projection_error_f = Func(tangent_predictor->outputs[0] & tangent_targets, proj_err);
     cost_of_one_example = Func(tangent_predictor->inputs & tangent_targets, tangent_predictor->parameters, proj_err);
 

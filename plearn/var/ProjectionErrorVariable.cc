@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
- * $Id: ProjectionErrorVariable.cc,v 1.13 2004/08/02 16:17:03 monperrm Exp $
+ * $Id: ProjectionErrorVariable.cc,v 1.14 2004/08/09 23:49:49 yoshua Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -55,15 +55,45 @@ namespace PLearn {
                           "Computes the projection error of a set of vectors on a non-orthogonal basis.\n",
                           "The first input is a set of n_dim vectors (possibly seen as a single vector of their concatenation) f_i, each in R^n\n"
                           "The second input is a set of T vectors (possibly seen as a single vector of their concatenation) t_j, each in R^n\n"
-                          "If !use_subspace_distance, the output is the following:\n"
-                          "    sum_j min_w || t_j - sum_i w_i f_i ||^2\n"
-                          "where w is a local n_dim-vector that is optmized analytically. However, if use_subspace_distance, the output is\n"
-                          "     min_{w,u}  || sum_i w_i f_i  -  sum_j u_j t_j ||^2.\n"
-                          "In any case, if norm_penalization>0, an extra term is added:\n"
-                          "    norm_penalization * sum_i (||f_i||^2 - 1)^2.\n");
+                          "There are several options that control which kind of projection error is actually computed:\n"
+                          "If !use_subspace_distance {the recommended setting}, the output is\n"
+                          "    sum_j min_w || t_j - sum_i w_i f_i ||^2 / ||t_j||^2\n"
+                          "  where the denominator can be eliminated (not recommended) by turning off the\n"
+                          "  normalize_by_neighbor_distance option. In this expression, w is a local\n"
+                          "  n_dim-vector that is optmized analytically.\n"
+                          "  If the 'ordered_vectors' is set, the gradient is not computed truthfully\n"
+                          "  but in such a way as to induce a natural ordering among the vectors f_i.\n"
+                          "  For each f_i, the above criterion is applied using a projection that\n"
+                          "  involves only the first i vectors f_1...f_i. In this way the first vector f_1\n"
+                          "  tries to *explain* the vectors t_j as well as possible with a single dimension,\n"
+                          "  and the vector f_2 learns to *explain* what f_2 did not already predict, etc...\n"
+                          "  When this option is set, we also choose the w_i in the same greedy way, starting\n"
+                          "  from w_1 chosen to minimize the projection error wrt f_1, w_2 chosen to minimize the\n"
+                          "  residual projection error left on f_2, etc... Hence the cost minimized wrt f_k on neighbor j is\n"
+                          "    ||t_j - sum_{i<=k} w_i f_i||^2 / ||t_j||^2\n"
+                          "  (this cost is minimized to choose w_k, and to get a gradient on f_k as well).\n"
+                          "  In that case no SVD is used, instead one obtains an analytic solution for w_k:\n"
+                          "    w_k = (t_j . f_k - sum_{i<k} w_i f_i . f_k)/||f_k||^2.\n"
+                          "  The output produced by fprop is sum_j || t_j - sum_i w_i f_i ||^2 / ||t_j||^2\n"
+                          "  where the w_i are chosen as in the previous equation.\n"
+                          "However, if use_subspace_distance (not recommended), the output is\n"
+                          "     min_{w,u}  || sum_i w_i f_i  -  sum_j u_j t_j ||^2 .\n"
+                          "In both cases, if norm_penalization>0, an extra term is added:\n"
+                          "    norm_penalization * sum_i (||f_i||^2 - 1)^2.\n"
+                          "The 'epsilon' and 'regularization' options are used to regularize the SVD-based matrix\n"
+                          "inversion involved in minimizing for w: only the singular values of F' that are\n"
+                          "above 'epsilon' are inverted (and their singular vectors considered, and then they\n"
+                          "are incremented by 'regularization' before inverting.\n"
+                          );
   
-    ProjectionErrorVariable::ProjectionErrorVariable(Variable* input1, Variable* input2, int n_, bool normalize_by_neighbor_distance_, bool use_subspace_distance_, real norm_penalization_, real epsilon_, real regularization_)
-    : inherited(input1, input2, 1, 1), n(n_), use_subspace_distance(use_subspace_distance_), normalize_by_neighbor_distance(normalize_by_neighbor_distance_), norm_penalization(norm_penalization_), epsilon(epsilon_), regularization(regularization_)
+    ProjectionErrorVariable::ProjectionErrorVariable(Variable* input1, Variable* input2, int n_, 
+                                                     bool normalize_by_neighbor_distance_, 
+                                                     bool use_subspace_distance_, 
+                                                     real norm_penalization_, real epsilon_, 
+                                                     real regularization_, bool ordered_vectors_)
+    : inherited(input1, input2, 1, 1), n(n_), use_subspace_distance(use_subspace_distance_), 
+      normalize_by_neighbor_distance(normalize_by_neighbor_distance_), norm_penalization(norm_penalization_), 
+      epsilon(epsilon_),  regularization(regularization_), orderd_vectors(ordered_vectors_)
   {
     build_();
   }
@@ -181,22 +211,7 @@ namespace PLearn {
     real cost = 0;
     if (use_subspace_distance)
       {
-#if 0        
-        productTranspose(A11,F,F);
-        productTranspose(A12,F,TT);
-        A12 *= -1.0;
-        transpose(A12,A21);
-        productTranspose(A22,TT,TT);
-        if (epsilon>0)
-          for (int i=0;i<A.length();i++)
-            A[i][i] += epsilon;
-        static TVec<int> pivots;
-        wwuu << rhs;
-        // note that A is symmetric, which is not exploited here
-        lapackSolveLinearSystem(A, wwuuM, pivots);
-        // note that A is destroyed here, but wwuu contains the solution
-#else
-        // use SVD of (F' -T') instead.
+        // use SVD of (F' -T')
         FT1 << F;
         multiply(FT2,TT,-1.0);
         lapackSVD(FT, Ut, S, V);
@@ -215,7 +230,7 @@ namespace PLearn {
                   wwuu[i] += V(i,k) * sum_first_elements * coef;
               }
           }
-#endif
+
         static bool debugging=false;
         if (debugging)
           {

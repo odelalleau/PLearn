@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TangentLearner.h,v 1.9 2004/07/21 16:30:59 chrish42 Exp $ 
+   * $Id: TangentLearner.h,v 1.10 2004/08/09 23:49:50 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
@@ -83,6 +83,7 @@ public:
   string training_targets; // "local_evectors", "local_neighbors"
   bool use_subspace_distance;
   bool normalize_by_neighbor_distance;
+  bool ordered_vectors;
   real smart_initialization;
   real initialization_regularization;
   int n_neighbors; // number of neighbors used in local_pca or number of neighbors to predict
