@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.6 2003/06/03 14:52:10 plearner Exp $
+   * $Id: PLearner.h,v 1.7 2003/06/04 02:56:37 plearner Exp $
    ******************************************************* */
 
 
@@ -122,11 +122,11 @@ using namespace std;
     //! This returns the currently set expdir (see setExperimentDirectory)
     string getExperimentDirectory() const { return expdir; }
 
-    //! Returns train_set->inputsize()
-    int inputsize() const;
+    //! Default returns train_set->inputsize()
+    virtual int inputsize() const;
 
-    //! Returns train_set->targetsize()
-    int targetsize() const; 
+    //! Default returns train_set->targetsize()
+    virtual int targetsize() const; 
 
     //! SUBCLASS WRITING: overload this so that it returns 
     //! the size of this learner's output, as a function of 

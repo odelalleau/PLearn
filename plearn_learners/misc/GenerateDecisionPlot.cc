@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GenerateDecisionPlot.cc,v 1.3 2003/06/03 14:52:11 plearner Exp $ 
+   * $Id: GenerateDecisionPlot.cc,v 1.4 2003/06/04 02:56:37 plearner Exp $ 
    ******************************************************* */
 
 /*! \file GenerateDecisionPlot.cc */
@@ -348,6 +348,8 @@ void DX_create_grid_outputs_file(const string& filename, PP<PLearner> learner, V
 {
   ofstream out(filename.c_str());
 
+  double logsum = -FLT_MAX;
+
   int l = dataset.length();
   int inputsize = learner->inputsize();
   int targetsize = learner->targetsize();
@@ -431,6 +433,10 @@ void DX_create_grid_outputs_file(const string& filename, PP<PLearner> learner, V
           for(int j=0; j<outputsize; j++)
             out << output[j] << " ";
           out << "\n";
+          if(logsum==-FLT_MAX)
+            logsum = output[0];
+          else 
+            logsum = logadd(logsum, output[0]);
           pb.update(n++);
         }
     }
@@ -443,6 +449,10 @@ void DX_create_grid_outputs_file(const string& filename, PP<PLearner> learner, V
       << "component \"data\" \"outputs_values\" \n\n\n";
   
   out << "end" << endl;
+
+  double surfelem = deltax*deltay;
+  double surfintegral = exp(logsum)*surfelem;
+  cerr << "Estimated integral over sampled domain: " << surfintegral << endl;
 }
 
 
