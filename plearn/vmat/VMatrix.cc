@@ -37,7 +37,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.78 2004/12/09 19:29:16 tihocan Exp $
+* $Id: VMatrix.cc,v 1.79 2004/12/09 20:03:43 tihocan Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -765,7 +765,7 @@ string getUser()
 /////////////////////
 // lockMetaDataDir //
 /////////////////////
-void VMatrix::lockMetaDataDir() const
+void VMatrix::lockMetaDataDir(time_t max_lock_age, bool verbose) const
 {
   if(!hasMetaDataDir())
     PLERROR("In VMatrix::lockMetaDataDir(): metadatadir was not set");
@@ -774,14 +774,17 @@ void VMatrix::lockMetaDataDir() const
   if(!pathexists(metadatadir))
     force_mkdir(metadatadir);
   string lockfile = append_slash(metadatadir)+".lock";  
-  while (isfile(lockfile)) {
-      string bywho;
-      try{ bywho = loadFileAsString(lockfile); }
-      catch(...) { bywho = "UNKNOWN (could not read .lock file)"; }
+  while (isfile(lockfile) && (max_lock_age == 0 || mtime(lockfile) + max_lock_age > time(0))) {
+    // There is a lock file, and it is not older than 'max_lock_age'.
+    string bywho;
+    try{ bywho = loadFileAsString(lockfile); }
+    catch(...) { bywho = "UNKNOWN (could not read .lock file)"; }
 
+    if (verbose) {
       cerr << "Waiting for .lock in directory " << metadatadir 
-           << " created by " << bywho << endl;
+        << " created by " << bywho << endl;
       sleep(uniform_multinomial_sample(10) + 1); // Random wait for more safety.
+    }
   }
   lockf_ = fopen(lockfile.c_str(),"w");  
   string lock_content = "host " + getHost() + ", pid " + tostring(getPid()) + ", user " + getUser();

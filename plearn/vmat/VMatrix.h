@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.61 2004/11/26 14:48:49 tihocan Exp $
+   * $Id: VMatrix.h,v 1.62 2004/12/09 20:03:43 tihocan Exp $
    ******************************************************* */
 
 
@@ -321,7 +321,11 @@ public:
   //! and will block and wait until the existing .lock is removed before recreating its own.
   //! Throws a PLearnError if called and metadatadir is not set, or lock is already held by this object 
   //! (i.e. this->lockMetaDataDir has already been called previously and no unlockMetaDataDir() was called).
-  void lockMetaDataDir() const;
+  //! If the 'max_lock_age' option is given a value > 0, then the lock file will be ignored (and
+  //! replaced by our own lock file) as soon as its modification date becomes older than 'max_lock_age'
+  //! (in seconds).
+  //! The 'verbose' option can be set to false to prevent useless output.
+  void lockMetaDataDir(time_t max_lock_age = 0, bool verbose = true) const;
 
   //! Removes the .lock file inside the metadatadir.
   //! It will throw a PLearnError if this object did not hold the lock.
