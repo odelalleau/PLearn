@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.44 2003/10/15 20:40:37 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.45 2003/10/16 13:26:43 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -941,7 +941,8 @@ real ConjGradientOptimizer::optimize()
       meancost /= real(every);
       //if (decrease_constant != 0)
       //  cout << "at t=" << t << ", learning rate = " << learning_rate << endl;
-      printStep(cout, t+1, meancost);
+      // TODO put the line below depending on verbosity
+      // printStep(cout, t+1, meancost);
       if (out)
         printStep(out, t+1, meancost);
       bool early_stop_mesure = measure(t+1,meancost); 
@@ -998,7 +999,8 @@ bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
   }
 
   meancost /= real(nstages);
-  printStep(cout, stage, meancost);  
+  // TODO put the line below depending on verbosity
+  // printStep(cout, stage, meancost);  
   early_stop = early_stop || measure(stage+1,meancost);
 
   // TODO Call the Stats collector
