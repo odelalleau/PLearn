@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.cc,v 1.14 2004/12/14 21:55:39 chapados Exp $
+   * $Id: LinearRegressor.cc,v 1.15 2005/02/16 15:15:42 tihocan Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.cc */
@@ -133,6 +133,11 @@ void LinearRegressor::declareOptions(OptionList& ol)
   
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
+
+  // Unused options.
+
+  redeclareOption(ol, "seed", &LinearRegressor::seed_, OptionBase::buildoption,
+      "The random seed is not used in a linear regressor.");
 }
 
 void LinearRegressor::build_()
