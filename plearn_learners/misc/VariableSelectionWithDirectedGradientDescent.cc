@@ -45,12 +45,17 @@
 namespace PLearn {
 using namespace std;
 
+VariableSelectionWithDirectedGradientDescent::VariableSelectionWithDirectedGradientDescent()
+: learning_rate(1e-2)
+{
+}
+
 PLEARN_IMPLEMENT_OBJECT(VariableSelectionWithDirectedGradientDescent,
                        "Variable selection algorithm", 
 		       "Variable selection algorithm using a linear density estimator and\n"
 		       "directed gradient descent to identify most relevant variables.\n"
 		       "\n"
-		       "there are 4 options to set:\n"
+		       "There are 4 options to set:\n"
 		       "   learning_rate, the gradient step to be used by the descent algorithm,\n"
 		       "   nstages, the number of epoch to be performed by the algorithm,\n"
 		       "   verbosity, the level of information you want to get while in progress,\n"
@@ -59,39 +64,39 @@ PLEARN_IMPLEMENT_OBJECT(VariableSelectionWithDirectedGradientDescent,
 		       "If both verbosity > 1 and report_progress is not zero, it works but it is ugly.\n"
 		       "\n"
 		       "The selected variables are returned in the selected_variables vector in\n"
-		       "the order of their selection. The vector is a learnt option of the algorithm.\n");
-
-VariableSelectionWithDirectedGradientDescent::VariableSelectionWithDirectedGradientDescent()
-{
-}
-
-VariableSelectionWithDirectedGradientDescent::~VariableSelectionWithDirectedGradientDescent()
-{
-}
+		       "the order of their selection. The vector is a learnt option of the algorithm.\n"
+           "\n"
+           "The target should be binary, with values 0 and 1.\n"
+);
 
 void VariableSelectionWithDirectedGradientDescent::declareOptions(OptionList& ol)
 { 
   declareOption(ol, "learning_rate", &VariableSelectionWithDirectedGradientDescent::learning_rate, OptionBase::buildoption,
-      "The learning rate of the gradient descent algorithm\n");
-  declareOption(ol, "relevancy_ind", &VariableSelectionWithDirectedGradientDescent::relevancy_ind, OptionBase::learntoption,
-      "The number of variables selected\n");
+      "The learning rate of the gradient descent algorithm.\n");
   declareOption(ol, "input_weights", &VariableSelectionWithDirectedGradientDescent::input_weights, OptionBase::learntoption,
-      "The lerant weights of the linear probability estimator\n");
+      "The lerant weights of the linear probability estimator.\n");
   declareOption(ol, "weights_selected", &VariableSelectionWithDirectedGradientDescent::weights_selected, OptionBase::learntoption,
-      "The vector of identifying the non-zero weights\n");
+      "The vector that identifies the non-zero weights.\n");
   declareOption(ol, "selected_variables", &VariableSelectionWithDirectedGradientDescent::selected_variables, OptionBase::learntoption,
-      "The vector with the selected variables in the order of their selection\n");
+      "The vector with the selected variables in the order of their selection.\n");
+  declareOption(ol, "sorted_weights", &VariableSelectionWithDirectedGradientDescent::sorted_weights, OptionBase::learntoption,
+      "The weight of each variable selected in 'selected_variables': it contains the same\n"
+      "data as 'weights_selected', but may be easier to maniuplated.");
   inherited::declareOptions(ol);
 }
 
 void VariableSelectionWithDirectedGradientDescent::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(learning_rate, copies);
-  deepCopyField(relevancy_ind, copies);
   deepCopyField(input_weights, copies);
   deepCopyField(weights_selected, copies);
   deepCopyField(selected_variables, copies);
+  deepCopyField(sample_input, copies);
+  deepCopyField(sample_target, copies);
+  deepCopyField(sample_weight, copies);
+  deepCopyField(sample_output, copies);
+  deepCopyField(sample_cost, copies);
+  deepCopyField(weights_gradient, copies);
 }
 
 void VariableSelectionWithDirectedGradientDescent::build()
@@ -102,8 +107,14 @@ void VariableSelectionWithDirectedGradientDescent::build()
 
 void VariableSelectionWithDirectedGradientDescent::build_()
 {
-  if (train_set)
-  {
+}
+
+void VariableSelectionWithDirectedGradientDescent::train()
+{
+  if (!train_set)
+    PLERROR("VariableSelectionWithDirectedGradientDescent: the algorithm has not been properly built");
+  if (stage == 0) {
+    // Initialize stuff before training.
     length = train_set->length();
     width = train_set->width();
     if (length < 1)
@@ -120,26 +131,14 @@ void VariableSelectionWithDirectedGradientDescent::build_()
     input_weights.resize(inputsize + 1);
     weights_selected.resize(inputsize + 1);
     weights_gradient.resize(inputsize + 1);
-    selected_variables.resize(inputsize + 1);
     sample_input.resize(inputsize);
     sample_target.resize(1);
     sample_output.resize(1);
     sample_cost.resize(1);
-    for (col = 0; col <= inputsize; col++)
-    {
-      input_weights[col] = 0.0;
-      weights_selected[col] = 0.0;
-      selected_variables[col] = 0.0;
-    }
-    relevancy_ind = 0;
-    stage = 0;
   }
-}
 
-void VariableSelectionWithDirectedGradientDescent::train()
-{
-  if (!train_set)
-    PLERROR("VariableSelectionWithDirectedGradientDescent: the algorithm has not been properly built");
+  input_weights.fill(0);
+  weights_selected.fill(false);
   pb = NULL;
   if (report_progress)
   {
@@ -150,10 +149,7 @@ void VariableSelectionWithDirectedGradientDescent::train()
 */
   for (; stage < nstages; stage++)
   {
-    for (col = 0; col <= inputsize; col ++)
-    {
-      weights_gradient[col] = 0.0;
-    }
+    weights_gradient.fill(0);
 /*
   We compute the train criterion for this stage and compute the weigth gradient.
 */
@@ -165,14 +161,20 @@ void VariableSelectionWithDirectedGradientDescent::train()
       {
         n7_value += input_weights[col] * train_set(row, col);
       }
-      n8_value = train_set(row, inputsize) * n7_value;
+      real target = train_set(row, inputsize);
+#ifdef BOUNDCHECK
+      if (target != 0 && target != 1.0)
+        PLERROR("In VariableSelectionWithDirectedGradientDescent::train - The target should be 0 or 1");
+#endif
+      if (target == 0) target = -1; // We work with -1 and 1 instead.
+      n8_value = target * n7_value;
       n9_value = 1.0 / (1.0 + exp(-n8_value));
       n10_value = -log(n9_value);
       train_criterion += n10_value;
       n10_gradient = 1.0;
       n9_gradient = n10_gradient * (-1.0 / n9_value);
       n8_gradient = n9_gradient * n9_value * 1.0 / (1.0 + exp(n8_value));
-      n7_gradient = n8_gradient * train_set(row, inputsize);
+      n7_gradient = n8_gradient * target;
       for (col = 0; col < inputsize; col++)
       {
         weights_gradient[col] += n7_gradient * train_set(row, col);
@@ -192,17 +194,16 @@ void VariableSelectionWithDirectedGradientDescent::train()
         weights_gradient_max_col = col;
       }
     }
-    if (weights_selected[weights_gradient_max_col] == 0.0)
+    if (!weights_selected[weights_gradient_max_col])
     {
-      selected_variables[relevancy_ind] = weights_gradient_max_col;
-      relevancy_ind += 1;
+      selected_variables.append(weights_gradient_max_col);
       verbose("VariableSelectionWithDirectedGradientDescent: variable " + tostring(weights_gradient_max_col)
               + " was added.", 2);
     }
-    weights_selected[weights_gradient_max_col] = 1.0;
+    weights_selected[weights_gradient_max_col] = true;
     for (col = 1; col < inputsize; col++)
     {
-      input_weights[col] -= learning_rate * weights_gradient[col] * weights_selected[col];
+      input_weights[col] -= learning_rate * weights_gradient[col] * real(weights_selected[col]);
     }
     verbose("VariableSelectionWithDirectedGradientDescent: After " + tostring(stage) + " stages, the train criterion is: "
             + tostring(train_criterion), 3);
@@ -217,6 +218,7 @@ void VariableSelectionWithDirectedGradientDescent::train()
   for (row = 0; row < length; row++)
   {   
     train_set->getExample(row, sample_input, sample_target, sample_weight);
+    if (sample_target[0] == 0) sample_target[0] = -1; // We work with -1 and 1.
     computeOutput(sample_input, sample_output);
     computeCostsFromOutputs(sample_input, sample_output, sample_target, sample_cost);
     train_stats->update(sample_cost);
@@ -226,6 +228,9 @@ void VariableSelectionWithDirectedGradientDescent::train()
   if (report_progress) delete pb;
   verbose("VariableSelectionWithDirectedGradientDescent: After " + tostring(stage) + " stages, average error is: "
           + tostring(train_stats->getMean()), 1);
+  sorted_weights.resize(selected_variables.length());
+  for (int i = 0; i < sorted_weights.length(); i++)
+    sorted_weights[i] = input_weights[selected_variables[i]];
 }
 
 void VariableSelectionWithDirectedGradientDescent::verbose(string the_msg, int the_level)
@@ -236,13 +241,8 @@ void VariableSelectionWithDirectedGradientDescent::verbose(string the_msg, int t
 
 void VariableSelectionWithDirectedGradientDescent::forget()
 {
-  for (col = 0; col <= inputsize; col++)
-  {
-    input_weights[col] = 0.0;
-    weights_selected[col] = 0.0;
-    selected_variables[col] = 0.0;
-  }
-  relevancy_ind = 0;
+  inputsize = -1; // For safety reasons.
+  selected_variables.resize(0);
   stage = 0;
 }
 

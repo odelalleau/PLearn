@@ -59,11 +59,11 @@ private:
   int length;                                 // number of samples in train set
   int width;                                  // number of columns in train set
   
-  int relevancy_ind;
-  double learning_rate;  
+  real learning_rate;  
   Vec input_weights;
-  Vec weights_selected;
-  Vec selected_variables;
+  TVec<bool> weights_selected;
+  TVec<int> selected_variables;
+  Vec sorted_weights;
   
   ProgressBar* pb;
   int row;
@@ -73,27 +73,27 @@ private:
   real sample_weight;
   Vec sample_output;
   Vec sample_cost;  
-  double train_criterion;
-  double n7_value;
-  double n8_value;
-  double n9_value;
-  double n10_value;
-  double n10_gradient;
-  double n9_gradient;
-  double n8_gradient;
-  double n7_gradient;
+  real train_criterion;
+  real n7_value;
+  real n8_value;
+  real n9_value;
+  real n10_value;
+  real n10_gradient;
+  real n9_gradient;
+  real n8_gradient;
+  real n7_gradient;
   Vec weights_gradient;
   int weights_gradient_max_col;
-  double weights_gradient_max;
+  real weights_gradient_max;
   
   
 public:
-                       VariableSelectionWithDirectedGradientDescent();
-  virtual              ~VariableSelectionWithDirectedGradientDescent();
+
+    //! Default constructor.
+    VariableSelectionWithDirectedGradientDescent();
     
     PLEARN_DECLARE_OBJECT(VariableSelectionWithDirectedGradientDescent);
 
-  static  void         declareOptions(OptionList& ol);
   virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
   virtual void         build();
   virtual void         train();
@@ -104,12 +104,17 @@ public:
   virtual void         computeOutput(const Vec& input, Vec& output) const;
   virtual void         computeOutputAndCosts(const Vec& input, const Vec& target, Vec& output, Vec& costs) const;
   virtual void         computeCostsFromOutputs(const Vec& input, const Vec& output, const Vec& target, Vec& costs) const;
+
+protected:
+
+  static  void         declareOptions(OptionList& ol);
+
 private:
           void         build_();
           void         verbose(string the_msg, int the_level);
 };
 
-  DECLARE_OBJECT_PTR(VariableSelectionWithDirectedGradientDescent);
+DECLARE_OBJECT_PTR(VariableSelectionWithDirectedGradientDescent);
 
 } // end of namespace PLearn
 
