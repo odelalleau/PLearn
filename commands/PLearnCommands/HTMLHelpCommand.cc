@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HTMLHelpCommand.cc,v 1.1 2004/11/27 08:54:10 chapados Exp $ 
+   * $Id: HTMLHelpCommand.cc,v 1.2 2004/12/01 08:24:29 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -459,14 +459,11 @@ string HTMLHelpCommand::format_free_text(string text) const
 
     // otherwise, normal processing
     else {
-      // any line that is empty or starts with some whitespace gets
-      // its own <br>; in this context, replace all spaces with &NBSP;
-      if (curline == "")
-        curline = "<br>" + curline;
-      else if (curline[0] == ' ' || curline[0] == '\t') {
+      // any line that is empty or starts with some whitespace gets its own <br>
+      if (removeblanks(curline) == "")
+        curline = "<p>" + curline;
+      else if (curline[0] == ' ' || curline[0] == '\t')
         curline = "<pre>" + curline + "</pre>";
-        // search_replace(curline, " ", "&nbsp;");
-      }
 
       // if we were processing a list, close it first
       if (ul_active) {
@@ -478,6 +475,10 @@ string HTMLHelpCommand::format_free_text(string text) const
     finallines += curline + "\n";
   }
 
+  // Close any pending open blocks
+  if (ul_active)
+    finallines += "</ul>\n";
+  
   // Finally join the lines
   return finallines;
 }
