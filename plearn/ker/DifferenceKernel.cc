@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DifferenceKernel.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
+   * $Id: DifferenceKernel.cc,v 1.5 2004/12/20 15:50:49 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,7 +47,11 @@ namespace PLearn {
 using namespace std;
 
 
-PLEARN_IMPLEMENT_OBJECT(DifferenceKernel, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+  DifferenceKernel,
+  "Kernel whose output is the difference between vector1 and vector2",
+  "Output as follows:\n"
+  "  k(x1,x2) = \sum_i x1[i] - x2[i]");
 real DifferenceKernel::evaluate(const Vec& x1, const Vec& x2) const
 { 
   real result = 0.0;
