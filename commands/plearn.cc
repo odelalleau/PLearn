@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.63 2004/05/19 17:30:06 tihocan Exp $
+   * $Id: plearn.cc,v 1.64 2004/05/20 22:18:18 lapalmej Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -49,6 +49,8 @@
 #include "AutoVMatrix.h"
 #include "BatchVMatrix.h"
 #include "SequenceVMatrix.h"
+#include "XORSequenceVMatrix.h"
+#include "DelaySequenceVMatrix.h"
 #include "IndexedVMatrix.h"
 #include "RegularGridVMatrix.h"
 #include "PrecomputedVMatrix.h"

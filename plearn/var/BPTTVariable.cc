@@ -36,6 +36,9 @@
 #include "PLMPI.h"
 #include "DisplayUtils.h"
 #include "pl_math.h"
+#include "Var.h"
+#include "TanhVariable.h"
+#include "ExpVariable.h"
 
 namespace PLearn {
   using namespace std;
@@ -63,12 +66,16 @@ namespace PLearn {
     
     updateIndexDest();
     updateOrder();
+    buildSquashVar();
+
     if (cost_type == "MSE") {
       resize(1,1);
       gradient[0] = 0.0;
       value[0] = 0.0;
     }
   }
+
+  /* get and set access to all the tables */
 
   real BPTTVariable::get_neuron(int i, int j) {
     return neuron(i, j);
@@ -105,6 +112,11 @@ namespace PLearn {
 
   PLEARN_IMPLEMENT_OBJECT(BPTTVariable, "This var contains all the recurrent network", "This var contains all the recurrent network.");
 
+  /*
+    Topological sort of the node in the network with the links of delay = 0.
+    We assure that we do not calculate the value of a node without knowing the
+    value of each of his ancestor.
+  */
   void BPTTVariable::updateOrder() {
     order = TVec<int>(nunits);
     TVec<int> mark = TVec<int>(nunits, 0); // 0 = unmark, 1 = mark
@@ -115,6 +127,10 @@ namespace PLearn {
       }
     }
   }
+
+  /*
+    Help function for the topological sort
+  */
 
   void BPTTVariable::topsort(int v, TVec<int> mark, int* orderCount) {
     mark[v] = 1;
@@ -130,10 +146,33 @@ namespace PLearn {
     (*orderCount)++;
   }
 
+  /*
+    build the VarArray for the squash function of each node. Like this
+    the test on units_type is done one time and not each node at each time
+    step.
+  */
+  void BPTTVariable::buildSquashVar() {
+    units_value = VarArray(nunits);
+    squash_units_value = VarArray(nunits);
+    for (int i = 0; i < nunits; i++) {
+      units_value[i] = var(0);
+      if (units_type[i] == "TANH") {
+	squash_units_value[i] = tanh(units_value[i]);
+      } else if (units_type[i] == "EXP") {
+	squash_units_value[i] = exp(units_value[i]);
+      } else if (units_type[i] == "ID") {
+	squash_units_value[i] = units_value[i];
+      } else 
+	PLERROR("%s is not a valide units_type", units_type[i]);
+    }
+  }
+
+  /*
+    Create the map of links by the destination neuron.
+    Remember that index[n][0] contains the number of links that comes
+    to the neuron n
+  */
   void BPTTVariable::updateIndexDest() {
-    /* Create the map of links by the destination neuron.
-       Remember that index[n][0] contains the number of links that comes
-       to the neuron n */
     int nr = links.nrows();
     indexDest = TMat<int>(nunits,nr+1, 0);
     for (int i = 0; i < links.nrows(); i++) {
@@ -146,11 +185,11 @@ namespace PLearn {
   }
 
 
-  void BPTTVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
-  {
+  void BPTTVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies) { }
 
-  }
-
+  /*
+    Does the forward pass on nsamples sequences
+  */
   void BPTTVariable::fprop() {
     int l = seqs->getNbSeq() - currpos; // Number of seqs remaining
     int nsamples = batch_size>0 ? batch_size : l;
@@ -173,14 +212,14 @@ namespace PLearn {
 	for (int o = 0; o < nunits; o++) { // Loop on each units(neuron)
 	  int v = order[o];
 	  if (isInput(v) && !is_missing(row[v])) {
-	    set_neuron(t, v, squash(v,row[v] + bias->value[v]));
+	    set_neuron(t, v, row[v]);
 	  } else {
 	    real total = bias->value[v];
 	    for (int e = 1; e <= get_indexDest(v,0); e++) { // Loop on each edge that comes to the neuron
 	      int edge_num = get_indexDest(v,e);
 	      int src_neuron = links(edge_num, 0);
 	      int delay = links(edge_num, 2);
-	      if (t - delay >= 0) {
+	      if (j - delay >= 0) {
 		real w = weights->value[edge_num];
 		real x = get_neuron(t-delay,src_neuron);
 		total += w * x;
@@ -194,6 +233,10 @@ namespace PLearn {
       }
     }
   }
+  
+  /*
+    Compute the output from an input sequence with the learn weights and bias
+  */
 
   void BPTTVariable::computeOutputFromInput(const Mat &input, Mat &output) {
     Var weights = varray[0];
@@ -205,7 +248,7 @@ namespace PLearn {
       for (int o = 0; o < nunits; o++) { // Loop on each units(neuron)
 	int v = order[o];
 	if (isInput(v) && !is_missing(row[v])) {
-	  set_neuron(t, v, squash(v,row[v] + bias->value[v]));
+	  set_neuron(t, v, row[v]);
 	} else {
 	  real total = bias->value[v];
 	  for (int e = 1; e <= get_indexDest(v,0); e++) { // Loop on each edge that comes to the neuron
@@ -227,6 +270,10 @@ namespace PLearn {
     }
   }
 
+  /*
+    Compute the costs of each output units with a specified output and target
+  */
+
   void BPTTVariable::computeCostFromOutput(const Mat &output, const Mat &target, Mat &costs) {
     for (int i = 0; i < output.nrows(); i++) {
       for (int j = 0; j < output.ncols(); j++) {
@@ -235,15 +282,22 @@ namespace PLearn {
     }
   }
 
+  /*
+    We call fbprop() because we cannot do a bprop without doing a fprop before
+  */
   void BPTTVariable::bprop() { fbprop(); }
   
+  /*
+    Calls the fprop and after we calculate the gradient on each node and time step.
+    With that we update the gradient of the weigths and bias.
+  */
   void BPTTVariable::fbprop() {
     fprop();
 
     int l = seqs->getNbSeq() - currpos; // Number of seqs remaining
     int nsamples = batch_size>0 ? batch_size : l;
     int ncol = seqs->inputsize() + seqs->targetsize() + seqs->weightsize();
-    neu_gradient = Mat(neuron_size, nunits, (real)0.0);
+    neu_gradient = Mat(neuron_size, nunits, (real)0.0); // faire clear a la place
 
     Var weights = varray[0];
     int t = neuron_size - 1;
@@ -252,12 +306,12 @@ namespace PLearn {
       int nrow = seqs->getNbRowInSeq(i);
       Mat s = Mat(nrow, ncol);
       seqs->getSeq(i, s);
-      for (int j = s.nrows() - 1; j >= 0; j--) {
+      for (int j = s.nrows() - 1; j >= 0; j--) { // Backward loop on each row
 	Vec row = s(j);
 	for (int o = nunits - 1; o >= 0; o--) { // Backward loop on each units(neuron)
 	  int u = order[o];
 	  if (isOutput(u) && !is_missing(row[u-nunits_hidden])) {
-	    real err = computeGradErr(get_neuron(t, u),row[u-nunits_hidden]);
+	    real err = computeGradErr(get_neuron(t, u),row[u-nunits_hidden]) * gradient[0];
 	    set_gradient(t, u, get_gradient(t, u) + err);
 	  }
 	  real der = squash_d(u, get_neuron(t, u));
@@ -267,7 +321,7 @@ namespace PLearn {
 	    int edge_num = get_indexDest(u,e);
 	    int src_neuron = links(edge_num, 0);
 	    int delay = links(edge_num, 2);
-	    if (t - delay >= 0) {
+	    if (j - delay >= 0) {
 	      real w = weights->value[edge_num];
 	      real old_grad = get_gradient(t - delay, src_neuron);
 	      set_gradient(t - delay, src_neuron, old_grad + w * delta);
@@ -281,10 +335,16 @@ namespace PLearn {
     nextBatch();
   }
 
+  /*
+    update the currpos pointer to the next batch.
+  */
   void BPTTVariable::nextBatch() {
     currpos += batch_size;
   }
 
+  /*
+    Update the gradient of each weight and bias.
+  */
   void BPTTVariable::updateGradient() {
     Var weights = varray[0];
     Var bias = varray[1];
@@ -302,18 +362,23 @@ namespace PLearn {
 	if (t - delay >= 0) {
 	  real g = get_gradient(t, dst_neuron);
 	  real x = get_neuron(t-delay, src_neuron);
-	  weights->gradient[w] += g * x;
+	  if (!is_missing(x))
+	    weights->gradient[w] += g * x;
 	}
       }
       for (int u = 0; u < nunits; u++) {
-	bias->gradient[u] += get_gradient(t, u);
+	if (!isInput(u))
+	  bias->gradient[u] += get_gradient(t, u);
       }      
-    }
-    for (int w = 0; w < links.nrows(); w++) {
-      weights->gradient[w] = weights->gradient[w] * gradient[0];
     }
   }
 
+  /*
+     Compute the gradient on the error with a given output and target.
+     =====
+     The test on the cost_type has to be change for a Var.
+     ====
+  */
   real BPTTVariable::computeGradErr(real o, real t) {
     if (cost_type == "MSE") {
       return o - t;
@@ -321,6 +386,12 @@ namespace PLearn {
     return 0.0;
   }
 
+  /*
+     Compute the error with a given output and target.
+     =====
+     The test on the cost_type has to be change for a Var.
+     ====
+  */
   real BPTTVariable::computeErr(real o, real t) {
     if (cost_type == "MSE") {
       return (o - t) * (o - t) / 2.0;
@@ -328,6 +399,10 @@ namespace PLearn {
     return 0.0;
   }
 
+  /*
+    calculate the overall cost on a row and add it to the total
+    of all the pass in value[0](The output of BPTTVariable)
+  */
   void BPTTVariable::computeCost(int t, Vec row) {
     if (cost_type == "MSE") {
       for (int i = 0; i < seqs->targetsize(); i++) {
@@ -341,24 +416,30 @@ namespace PLearn {
     }
   }
 
+  /*
+    Compute the derivative squash function
+  */
   real BPTTVariable::squash_d(int v, real r) {
-    if (units_type[v] == "TANH")
-      return 1.0 - r * r;
-    else if (units_type[v] == "EXP")
-      return r * (1.0 - r);
-    PLERROR("BPTTVariable : The cost_type %s is unknown", cost_type[v]);
-    return 0.0;    
-  }
-  
-  real BPTTVariable::squash(int v, real r) {
-    if (units_type[v] == "TANH")
-      return tanh(r);
-    else if (units_type[v] == "EXP")
-      return 1.0 / (1.0 + exp(-r));
-    PLERROR("BPTTVariable : The cost_type %s is unknown", cost_type[v]);
-    return 0.0;
+    squash_units_value[v]->value[0] = r;
+    squash_units_value[v]->gradient[0] = 1.0;
+    units_value[v]->gradient[0] = 0.0;
+    squash_units_value[v]->bprop();
+    return units_value[v]->gradient[0];
   }
 
+  /*
+    Compute the squash function
+  */
+  real BPTTVariable::squash(int v, real r) {
+    units_value[v]->value[0] = r;
+    squash_units_value[v]->fprop();
+    return squash_units_value[v]->value[0];
+  }
+
+  /*
+    For own use. Normally the Learner or Optimizer that use this var does it automatically.
+    Update the weights.
+  */
   void BPTTVariable::updateWeights() {
     Var weights = varray[0];
     for (int w = 0; w < links.nrows(); w++) {
@@ -366,13 +447,20 @@ namespace PLearn {
     }    
   }
 
+  /*
+    For own use. Normally the Learner or Optimizer that use this var does it automatically.
+    Update the bias.
+  */
   void BPTTVariable::updateBias() {
     Var bias = varray[1];
     for (int u = 0; u < nunits; u++) {
       bias->value[u] += bias->gradient[u];
     }    
   }
-
+  
+  /*
+    Debug function. Print the state of the Var
+  */
   void BPTTVariable::printState() {
     Var weights = varray[0];
     for (int t = 0; t < neuron_size; t++) {
@@ -404,28 +492,26 @@ namespace PLearn {
       int src_neuron = links(w, 0);
       int dst_neuron = links(w, 1);      
       int delay = links(w, 2);
-      cout << "w(" << src_neuron << "," << dst_neuron << "," << 
+      cout << "w(" << src_neuron << "," << dst_neuron << 
 	delay << ")=" <<  weights->value[w] << endl;
     }
+
     cout << "alpha : " << gradient[0] << endl;
   }  
 
+  /*
+    print the order in witch, the fprop and bprop will see the node.
+  */
   void BPTTVariable::printOrder() {
     for (int i = 0; i < nunits; i++) {
       cout << order[i] << endl;
     }
   }
   
-  void BPTTVariable::symbolicBprop()
-  {
-    
-  }
+  void BPTTVariable::symbolicBprop() {}
   
   
-  void BPTTVariable::rfprop()
-  {
-    
-  }
+  void BPTTVariable::rfprop() {}
   
 } // end of namespace PLearn
 

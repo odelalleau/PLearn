@@ -40,22 +40,18 @@
 namespace PLearn {
 using namespace std;
  
-class XORSequenceVMatrix: public SequenceVMatrix
+class DelaySequenceVMatrix: public SequenceVMatrix
 {
   typedef SequenceVMatrix inherited;
 protected:
+  int delay;
   int seq_length;
-  int xor_length;
-  int* last;
-
-  void shift();
-  int get_parity();
 
 public:
   
-  XORSequenceVMatrix();
+  DelaySequenceVMatrix();
 
-  PLEARN_DECLARE_OBJECT(XORSequenceVMatrix);
+  PLEARN_DECLARE_OBJECT(DelaySequenceVMatrix);
 
   static void declareOptions(OptionList &ol);
   virtual void build();
@@ -64,7 +60,7 @@ public:
 
 };
 
-DECLARE_OBJECT_PTR(XORSequenceVMatrix);
+DECLARE_OBJECT_PTR(DelaySequenceVMatrix);
 
 } // end of namespcae PLearn
 #endif

@@ -68,9 +68,9 @@ void VarLengthPTester::run()
 {
   /*
     To apply the verify gradient to the var
-  
-  BPTT *bptt_learner = dynamic_cast<BPTT*>((PLearner*)learner);
-  PP<VecStatsCollector> stcol = new VecStatsCollector();
+  *
+    BPTT *bptt_learner = dynamic_cast<BPTT*>((PLearner*)learner);
+   PP<VecStatsCollector> stcol = new VecStatsCollector();
   stcol->setFieldNames(bptt_learner->getTrainCostNames());
   PP<VecStatsCollector> train_stats = stcol;
   bptt_learner->setTrainStatsCollector(train_stats);
@@ -78,7 +78,8 @@ void VarLengthPTester::run()
   bptt_learner->build();
   bptt_learner->forget();
   bptt_learner->run();
-  */
+  */  
+  
   perform(true);
 }
 

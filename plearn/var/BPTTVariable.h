@@ -63,9 +63,15 @@ class BPTTVariable: public NaryVariable
   TVec<int> order; // Contains the topological sort of the graph.
                    // This is the order we will calculate each value of each node
 
+  VarArray units_value;        // These VarArray will serve to calculate the results of
+  VarArray squash_units_value; // squashing function for each unit. units_value contains the values to
+                               // squash and squash_units_value will take the value of units_value and
+                               // squash it
+
   void updateIndexDest();
   void updateOrder();
   void topsort(int, TVec<int>, int*);
+  void buildSquashVar();
 
   void computeCost(int, Vec);
 
@@ -82,14 +88,15 @@ class BPTTVariable: public NaryVariable
   void set_indexDest(int, int, int);
   void set_gradient(int, int, real);
 
-  real squash(int, real);
-  real squash_d(int, real);
   real computeGradErr(real, real);
   real computeErr(real, real);
 
   int currpos;
 
   public:
+
+  real squash(int, real);
+  real squash_d(int, real);
 
   TMat<int> links; 
   /* This table has a fixed width of 3 and a length that

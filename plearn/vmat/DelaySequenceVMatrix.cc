@@ -32,43 +32,43 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 
-#include "XORSequenceVMatrix.h"
+#include "DelaySequenceVMatrix.h"
 #include "random.h"
 
 namespace PLearn {
 using namespace std;
 
 
-/** XORSequenceVMatrix **/
+/** DelaySequenceVMatrix **/
 
-PLEARN_IMPLEMENT_OBJECT(XORSequenceVMatrix, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(DelaySequenceVMatrix, "ONE LINE DESCR", "NO HELP");
 
 ////////////////
 // SequenceVMatrix //
 ////////////////
-XORSequenceVMatrix::XORSequenceVMatrix()
+DelaySequenceVMatrix::DelaySequenceVMatrix()
   :SequenceVMatrix(200)
 {
-  seq_length = 2;  
+  delay = 1;
 }
 
 ////////////////////
 // declareOptions //
 ////////////////////
-void XORSequenceVMatrix::declareOptions(OptionList &ol)
+void DelaySequenceVMatrix::declareOptions(OptionList &ol)
 {
-  declareOption(ol, "seq_length", &XORSequenceVMatrix::seq_length, OptionBase::buildoption, "Length of each sequence");
-  declareOption(ol, "xor_length", &XORSequenceVMatrix::xor_length, OptionBase::buildoption, "Number of byte on which the parity is calculated");
+  declareOption(ol, "seq_length", &DelaySequenceVMatrix::seq_length, OptionBase::buildoption, "Length of each sequence");
+  declareOption(ol, "delay", &DelaySequenceVMatrix::delay, OptionBase::buildoption, "The delay before the input comes to the output");
   inherited::declareOptions(ol);
 }
 
-void XORSequenceVMatrix::build()
+void DelaySequenceVMatrix::build()
 {
   inherited::build();
   build_();
 }
 
-void XORSequenceVMatrix::build_()
+void DelaySequenceVMatrix::build_()
 {
   inputsize_ = 1;
   targetsize_ = 1;
@@ -76,43 +76,21 @@ void XORSequenceVMatrix::build_()
   length_ = nbSeq;
   width_ = inputsize_ + targetsize_ + weightsize_;
   sequences = TVec<Mat>(nbSeq);
-  last = new int[xor_length];
   
   for (int i = 0; i < nbSeq; i++) {
     sequences[i] = Mat(seq_length, 2);
-    for (int j = 0; j < xor_length; j++) {
-      last[j] = uniform_sample() < 0.5 ? 0 : 1;
-      (sequences[i])[j][0] = last[j];
+    for (int j = 0; j < delay; j++) {
+      (sequences[i])[j][0] = uniform_sample() < 0.5 ? 0 : 1;
       (sequences[i])[j][1] = MISSING_VALUE;
     }
-    (sequences[i])[xor_length-1][1] = get_parity();
-    for (int j = xor_length; j < seq_length; j++) {
-      shift();
-      (sequences[i])[j][0] = last[xor_length-1];
-      (sequences[i])[j][1] = get_parity();
+    for (int j = delay; j < seq_length; j++) {
+      (sequences[i])[j][0] = uniform_sample() < 0.5 ? 0 : 1;
+      (sequences[i])[j][1] = (sequences[i])[j-delay][0];
     }
   }
 }
 
-void XORSequenceVMatrix::shift() {
-  for (int i = 0; i < xor_length - 1; i++) {
-    last[i] = last[i+1];
-  }
-  last[xor_length-1] = uniform_sample() < 0.5 ? 0 : 1;
-}
-
-int XORSequenceVMatrix::get_parity() {
-  int count = 0;
-  for (int i = 0; i < xor_length; i++) {
-    if (last[i] == 1)
-      count++;
-  }
-  if ((count % 2) == 0)
-    return 0;
-  return 1;
-}
-
-void XORSequenceVMatrix::run()
+void DelaySequenceVMatrix::run()
 {
   Vec input, target;
   real weight;

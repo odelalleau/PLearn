@@ -123,6 +123,9 @@ void BPTT::build()
   build_();
 }
 
+/*
+  build the recurrent network and allocate places for bias and weigths
+*/
 void BPTT::build_()
 {
   if(inputsize_>=0 && targetsize_>=0 && weightsize_>=0) {
@@ -143,6 +146,11 @@ int BPTT::outputsize() const
   return 0;
 }
 
+/*
+  New function for a learner.
+  In sequence we don't know the outputsize with knowing the input.
+  The VMat must be a SequenceVMatrix.
+*/
 int BPTT::outputsize(VMat set) const
 { 
   SequenceVMatrix *seq = dynamic_cast<SequenceVMatrix*>((VMatrix*)set);
@@ -161,7 +169,9 @@ TVec<string> BPTT::getTestCostNames() const
   return TVec<string>(1, "MSE");
 }
 
-
+/*
+  Train the network.
+*/
 void BPTT::train()
 {
   if(!train_set)
@@ -196,25 +206,19 @@ void BPTT::train()
 
   int initial_stage = stage;
   bool early_stop=false;
-  rec_net->gradient[0] = (dynamic_cast<GradientOptimizer*>((Optimizer*)optimizer))->start_learning_rate;
-  cout << rec_net->gradient[0] << endl;
-  rec_net->gradient[0] = - ((dynamic_cast<GradientOptimizer*>((Optimizer*)optimizer))->start_learning_rate);
-  cout << rec_net->gradient[0] << endl;
+
   while(stage<nstages && !early_stop) {
-    /*   optimizer->nstages = optstage_per_lstage;
+    optimizer->nstages = optstage_per_lstage;
     train_stats->forget();
     optimizer->early_stop = false;
     optimizer->optimizeN(*train_stats);
     train_stats->finalize();
-    */
-    rec_net->fbprop();
-    rec_net->updateWeights();
-    rec_net->updateBias();
 
     if(verbosity>2) {
       cout << "Epoch " << stage << " train objective: " << rec_net->value[0] << endl;
       cout << "Weights : " << weights << endl;
       cout << "Bias : " << bias << endl;
+      cout << "lr : " << rec_net->gradient[0] << endl;
     }
     ++stage;
     if(pb)
@@ -227,6 +231,10 @@ void BPTT::train()
     delete pb;
 }
 
+/*
+  Test the network.
+*/
+
 void BPTT::test(VMat testset, PP<VecStatsCollector> test_stats, 
 		VMat testoutputs, VMat testcosts) const
 {
@@ -238,8 +246,6 @@ void BPTT::test(VMat testset, PP<VecStatsCollector> test_stats,
   Vec output(testoutputs ?outputsize(testset) :0);
 
   Vec costs(nTestCosts());
-
-  // testset->defineSizes(inputsize(),targetsize(),weightsize());
 
   if(test_stats)
     test_stats->forget();
@@ -254,39 +260,35 @@ void BPTT::test(VMat testset, PP<VecStatsCollector> test_stats,
     test_stats->update(costs);
   }
 
-  for(int i=0; i<l; i++)
-    {
-      testset.getExample(i, input, target, weight);
-
-      if(testoutputs)
-        {
-          computeOutputAndCosts(input, target, output, costs);
-	  testoutputs->putOrAppendRow(i,output);
-        }
-      else // no need to compute outputs
-        computeCostsOnly(input, target, costs);
-
-      if(testcosts)
-        testcosts->putOrAppendRow(i, costs);
-
-      if(test_stats)
-        test_stats->update(costs,weight);
-
-      if(pb)
-        pb->update(i);
-      if (i < 3) {
-	cout << "ex " << i << endl;
-	printITO(input, target, output, l);
-      }
+  for(int i=0; i<l; i++) {
+    testset.getExample(i, input, target, weight);
+    if(testoutputs) {
+      computeOutputAndCosts(input, target, output, costs);
+      testoutputs->putOrAppendRow(i,output);
+    } else // no need to compute outputs
+      computeCostsOnly(input, target, costs);
+    if(testcosts)
+      testcosts->putOrAppendRow(i, costs);
+    if(test_stats)
+      test_stats->update(costs,weight);
+    if(pb)
+      pb->update(i);
+    if (i < 3) {
+      cout << "ex " << i << endl;
+      printITO(input, target, output, l);
     }
-
+  }
+  
   if(test_stats)
     test_stats->finalize();
 
   if(pb)
     delete pb;
-
 }
+
+/*
+ A nice presentation of the input, target and output.
+*/
 
 void BPTT::printITO(Vec& input, Vec& target, Vec& output, int& l) const {
   int i = 0;
@@ -305,6 +307,17 @@ void BPTT::printITO(Vec& input, Vec& target, Vec& output, int& l) const {
     cout << endl;
   }
 } 
+
+/*
+  For these function (computeOutput, computeCostsFromOutputs), a little hack is
+  done. In the definition of a learner in PLearn, an example is simply a Vector
+  of n input and m targets, but now with sequence an example is a sequence so
+  a matrix. To fit in the function prototype with Vec, we suppose that the
+  vec is a "flat" matrix we can transpose in Matrix of width input
+
+..... to be continue.....
+
+*/
 
 void BPTT::computeOutput(const Vec& inputv, Vec& outputv) const
 {
@@ -327,23 +340,30 @@ void BPTT::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv,
   costsv = costsm.toVecCopy();
 }
 
+/*
+To test the verify gradient
+*/
 void BPTT::run() {
-  rec_net->gradient[0] = 1.0;
-  rec_net->printOrder();
-  cout << rec_net->gradient[0] << endl;
+  train();
   rec_net->verifyGradient();
 }
 
+/*
+  Initialize the parameter
+*/
 void BPTT::initializeParams() {
   // Reset optimizer
   if(optimizer)
     optimizer->reset();
 }
 
+/*
+  Initialize the parameter
+*/
 void BPTT::forget() {
   if (train_set) initializeParams();
   for (int i=0;i<nneuron_input + nneuron_hidden + nneuron_output;i++) {
-    bias[i] = 1.0;
+    bias[i] = 0.0;
     int fanin = rec_net->get_indexDest(i,0);
     real r = 1.0/sqrt((float)fanin);
     for (int l = 1; l <= rec_net->get_indexDest(i,0); l++) {
@@ -351,9 +371,6 @@ void BPTT::forget() {
       weights[nlink] = bounded_uniform(-r,r);
     }
   }
-  cout << "forget()" << endl;
-  cout << "weights : " << weights << endl;
-  cout << "bias : " << bias << endl;
   stage = 0;
 }
 
