@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PExperiment.cc,v 1.6 2003/08/13 08:13:47 plearner Exp $ 
+   * $Id: PExperiment.cc,v 1.7 2003/10/07 20:55:09 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -266,7 +266,7 @@ void PTester::setExperimentDirectory(const string& the_expdir)
 Vec PTester::perform(bool dont_set_training_set)
 {
   if(!learner)
-    PLERROR("No leaner specified for PTester.");
+    PLERROR("No learner specified for PTester.");
   if(!splitter)
     PLERROR("No splitter specified for PTester");
 

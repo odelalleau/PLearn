@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Experiment.cc,v 1.11 2003/08/13 08:13:47 plearner Exp $ 
+   * $Id: Experiment.cc,v 1.12 2003/10/07 20:54:46 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file Experiment.cc */
@@ -102,7 +102,7 @@ void Experiment::run()
   if(expdir=="")
     PLERROR("No expdir specified for Experiment.");
   if(!learner)
-    PLERROR("No leaner specified for Experiment.");
+    PLERROR("No learner specified for Experiment.");
   if(!splitter)
     PLERROR("No splitter specified for Experiment");
 
