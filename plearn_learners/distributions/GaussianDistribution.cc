@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianDistribution.cc,v 1.12 2004/09/27 20:19:29 plearner Exp $
+   * $Id: GaussianDistribution.cc,v 1.13 2005/03/07 15:40:17 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -123,9 +123,19 @@ void GaussianDistribution::train()
     PLERROR("In GaussianDistribution, weightsize can only be 0 or 1");
       
   // cerr << "maxneigval: " << maxneigval << " ";
-  eigenVecOfSymmMat(covarmat, maxneigval, eigenvalues, eigenvectors);
   // cerr << eigenvalues.length() << endl;
   // cerr << "eig V: \n" << V << endl;
+
+  // Compute eigendecomposition only if there is a training set...
+  // Otherwise, just fill the eigen-* matrices to all NaN...
+  if (l > 0)
+    eigenVecOfSymmMat(covarmat, maxneigval, eigenvalues, eigenvectors);
+  else {
+    eigenvalues.resize(maxneigval);
+    eigenvectors.resize(maxneigval, mu.size());
+    eigenvalues.fill(0);
+    eigenvectors.fill(0);
+  }
 }
 
 real GaussianDistribution::log_density(const Vec& x) const 
