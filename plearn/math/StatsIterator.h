@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: StatsIterator.h,v 1.6 2004/02/20 21:11:46 chrish42 Exp $
+   * $Id: StatsIterator.h,v 1.7 2004/04/09 19:21:38 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -347,7 +347,6 @@ class QuantilesStatsIterator: public StatsIterator
 
   protected:
     static void declareOptions(OptionList& ol);
-
 };
 
 DECLARE_OBJECT_PTR(QuantilesStatsIterator);
