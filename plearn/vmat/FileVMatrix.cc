@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.7 2003/08/13 08:13:46 plearner Exp $
+   * $Id: FileVMatrix.cc,v 1.8 2003/09/14 21:51:33 yoshua Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -59,10 +59,18 @@ FileVMatrix::FileVMatrix(const string& filename)
   build_();
 }
 
+static int strlen(char* s) {
+  int n=0;
+  while (s[n]!=0) 
+    n++;
+  return n;
+}
+
 FileVMatrix::FileVMatrix(const string& filename, int the_length, int the_width)
   :VMatrix(the_length, the_width), filename_(abspath(filename))
 {
   force_mkdir_for_file(filename);
+  // cout << "x1 " << strlen("MATRIX 1 12 DOUBLE LITTLE_ENDIAN") << endl;
   f = fopen(filename.c_str(),"w+b");
   if (!f)
     PLERROR("In FileVMatrix constructor, could not open file %s for read/write",filename.c_str());
@@ -95,10 +103,12 @@ FileVMatrix::FileVMatrix(const string& filename, int the_length, int the_width)
 #endif
 #endif
 
+  int pos=strlen(header);
   // Pad the header with whites and terminate it with '\n'
-  for(int pos=strlen(header); pos<DATAFILE_HEADERLENGTH; pos++)
+  for(; pos<DATAFILE_HEADERLENGTH; pos++)
     header[pos] = ' ';
   header[DATAFILE_HEADERLENGTH-1] = '\n';
+  //header[DATAFILE_HEADERLENGTH-1] = '\0';
 
   // write the header to the file
   fwrite(header,DATAFILE_HEADERLENGTH,1,f);
@@ -269,10 +279,14 @@ void FileVMatrix::appendRow(Vec v)
 #endif
 #endif
 
-  for(int pos=strlen(header); pos<DATAFILE_HEADERLENGTH; pos++)
-    header[pos] = ' ';
+  int pos = strlen(header);
+  for(; pos<DATAFILE_HEADERLENGTH; pos++)
+  //for(int pos=strlen(header); pos<DATAFILE_HEADERLENGTH-1; pos++)
+    {
+      header[pos] = ' ';
+    }
   header[DATAFILE_HEADERLENGTH-1] = '\n';
-
+  //header[DATAFILE_HEADERLENGTH-1] = '\0';
   // write the header to the file
   fseek(f,0,SEEK_SET);
   fwrite(header,DATAFILE_HEADERLENGTH,1,f);

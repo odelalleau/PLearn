@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.h,v 1.3 2003/09/10 18:50:54 yoshua Exp $ 
+   * $Id: PTester.h,v 1.4 2003/09/14 21:51:34 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file PTester.h */
@@ -75,7 +75,7 @@ public:
   bool save_test_outputs;
   bool save_test_costs;
   bool provide_learner_expdir;
-  bool train;
+  bool train; // whether or not to train or just test
 
   // ****************
   // * Constructors *

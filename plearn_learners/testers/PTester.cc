@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.5 2003/09/10 18:50:54 yoshua Exp $ 
+   * $Id: PTester.cc,v 1.6 2003/09/14 21:51:34 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -78,7 +78,8 @@ PTester::PTester()
     save_data_sets(false),
     save_test_outputs(false),
     save_test_costs(false),
-    provide_learner_expdir(false)
+    provide_learner_expdir(false),
+    train(true)
 {}
 
   PLEARN_IMPLEMENT_OBJECT(PTester, "Manages a learning experiment, with training and estimation of generalization error.", 
