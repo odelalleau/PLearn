@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.h,v 1.16 2003/10/22 21:31:54 ducharme Exp $ 
+   * $Id: MountLucasIndex.h,v 1.17 2003/10/30 21:45:16 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.h */
@@ -63,13 +63,19 @@ class MountLucasIndex: public FinancialAdvisor
 
     int moving_average_window; // default=12 (1 year)
 
-    // In the rebalancing phase.
-    // We don't rebalance asset k if the relative return is greater than
-    // positive_rebalance_threshold or if it is lower than
-    // negative_rebalance_threshold.  In all case, this is subject to
-    // the condition that position[t] == position[t-1].
-    real positive_rebalance_threshold;
-    real negative_rebalance_threshold;
+    //! During the rebalancing phase.
+    //! We don't rebalance asset k if the relative return is greater than
+    //! positive_rebalance_threshold or if it is lower than
+    //! negative_rebalance_threshold.  In all case, this is subject to
+    //! the condition that position[t] == position[t-1].
+    real positive_rebalance_threshold; // default =  Inf
+    real negative_rebalance_threshold; // default = -Inf
+
+    //! During the next_position phase.
+    //! To have a non-zero (long or a short) position, the moving average
+    //! must be outside these thresholds.
+    real positive_position_threshold; // must be >= 0 (default = 0)
+    real negative_position_threshold; // must be <= 0 (default = 0)
 
   protected:
     TVec<int> position; // long=1, short=-1, no position=0

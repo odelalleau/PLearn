@@ -168,11 +168,13 @@ void SequentialValidation::run()
 
   // stats for a train on one split
   PP<VecStatsCollector> train_stats = new VecStatsCollector();
+  train_stats->setFieldNames(traincostnames);
   learner->setTrainStatsCollector(train_stats);
   stcol[0] = train_stats;
 
   // stats for a test on one split
   PP<VecStatsCollector> test_stats = new VecStatsCollector();
+  test_stats->setFieldNames(testcostnames);
   stcol[1] = test_stats;
 
   // stats over all sequence
@@ -181,7 +183,7 @@ void SequentialValidation::run()
   // Stat specs
   TVec<StatSpec> statspecs(nstats);
   for (int k=0; k<nstats; k++)
-    statspecs[k].init(statnames[k], static_cast< PP<PLearner> >(learner));
+    statspecs[k].init(statnames[k]);
 
   VMat global_stats_vm;  // the vmat in which to save global result stats specified in statnames
   VMat split_stats_vm;  // the vmat in which to save per split result stats
@@ -199,7 +201,7 @@ void SequentialValidation::run()
     split_stats_vm = new FileVMatrix(dir+"sequence_stats.pmat", 0, 1+nstats);
     split_stats_vm->declareField(0,"splitnum");
     for(int k=0; k<nstats; k++)
-      split_stats_vm->declareField(k+1,statspecs[k].intStatName());
+      split_stats_vm->declareField(k+1,statspecs[k].setname + "." + statspecs[k].intstatname);
     split_stats_vm->saveFieldInfos();
   }
 
@@ -256,8 +258,11 @@ void SequentialValidation::run()
     for(int k=0; k<nstats; k++)
     {
       StatSpec& sp = statspecs[k];
-      //splitres[k+1] = stcol[sp.setnum]->getStats(sp.costindex).getStat(sp.intstat);
-      splitres[k+1] = stcol[sp.setnum]->stats ? stcol[sp.setnum]->getStats(sp.costindex).getStat(sp.intstat) : MISSING_VALUE;
+      if (sp.setnum>=stcol.length())
+        PLERROR("SequentialValidation::run, trying to access a test set (test%d) beyond the last one (test%d)",
+            sp.setnum, stcol.length()-1);
+      splitres[k+1] = stcol[sp.setnum]->getStat(sp.intstatname);
+      //splitres[k+1] = stcol[sp.setnum]->stats ? stcol[sp.setnum]->getStats(sp.costindex).getStat(sp.intstat) : MISSING_VALUE;
     }
 
     if (split_stats_vm)

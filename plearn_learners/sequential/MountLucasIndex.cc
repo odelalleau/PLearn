@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.cc,v 1.22 2003/10/22 21:31:54 ducharme Exp $ 
+   * $Id: MountLucasIndex.cc,v 1.23 2003/10/30 21:45:16 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.cc */
@@ -51,7 +51,8 @@ MountLucasIndex::MountLucasIndex()
   : last_day_of_month_column("is_last_day_of_month"), julian_day_column("Date"),
     risk_free_rate_column("risk_free_rate"), sp500_column("S&P500:close:level"),
     moving_average_window(12), positive_rebalance_threshold(INFINITY),
-    negative_rebalance_threshold(-INFINITY), current_month(0),
+    negative_rebalance_threshold(-INFINITY), positive_position_threshold(0),
+    negative_position_threshold(0), current_month(0),
     build_complete(false), trading_begin(false)
 {
 }
@@ -146,6 +147,12 @@ void MountLucasIndex::declareOptions(OptionList& ol)
 
   declareOption(ol, "negative_rebalance_threshold", &MountLucasIndex::negative_rebalance_threshold,
     OptionBase::buildoption, "For negative returns (<1), the threshold under which we don't rebalance the asset. \n");
+
+  declareOption(ol, "positive_position_threshold", &MountLucasIndex::positive_position_threshold,
+    OptionBase::buildoption, "Next position = 1 if the moving average is larger than the threshold. \n");
+
+  declareOption(ol, "negative_position_threshold", &MountLucasIndex::negative_position_threshold,
+    OptionBase::buildoption, "Next position = -1 if the moving average is smaller than the threshold. \n");
 
   declareOption(ol, "moving_average_window", &MountLucasIndex::moving_average_window,
     OptionBase::buildoption, "Thw window length (in month) on which we compute the moving average\n");
@@ -437,7 +444,13 @@ int MountLucasIndex::next_position(int pos, const Mat& unit_asset_value_) const
   moving_average /= (current_month-start);
   //moving_average /= (current_month+1-start);
 
-  return (the_month_unit_asset_value >= moving_average) ? 1 : -1;
+  //return (the_month_unit_asset_value >= moving_average) ? 1 : -1;
+  real relative_difference = (the_month_unit_asset_value-moving_average)/moving_average;
+  if (relative_difference >= positive_position_threshold)
+    return 1;
+  else if (relative_difference < negative_position_threshold)
+    return -1;
+  return 0; //else
 }
 
 void MountLucasIndex::computeOutputAndCosts(const Vec& input,
