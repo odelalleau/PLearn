@@ -1,0 +1,66 @@
+*1 ->StackedLearner(
+base_learners = 1 [ *2 ->PCA(
+ncomponents = 2 ;
+sigmasq = 0 ;
+normalize = 1 ;
+algo = "classical" ;
+horizon = -1 ;
+normalize_warning = 0 ;
+mu = 4 [ 0.0497775999999999913 0.10400086666666665 1.28890380000000082 0.203573999999999977 ] ;
+eigenvals = 2 [ 117.881310376003924 2.48050266940403352 ] ;
+eigenvecs = 2  4  [ 
+-0.0447323220438456542 	-0.075863253726185409 	-0.982297988853390813 	-0.165331325504956245 	
+0.533389571247937955 	-0.280198984783956828 	-0.135043923445805375 	0.786604877273427872 	
+]
+;
+expdir = "PYTEST__PL_stacked_pca_regression_script__RESULTS:expdir/Split0/LearnerExpdir/Base0/" ;
+seed = -1 ;
+stage = 1 ;
+n_examples = 150 ;
+inputsize = 4 ;
+targetsize = 2 ;
+weightsize = 0 ;
+nstages = 1 ;
+report_progress = 1 ;
+verbosity = 1 ;
+oldest_observation = -1  )
+] ;
+combiner = *3 ->LinearRegressor(
+cholesky = 1 ;
+weight_decay = 0 ;
+weights = 3  2  [ 
+16.0069061333333451 	17.6304524666666858 	
+-86.9641131351307166 	-52.7177443722562415 	
+-35.8191768105018866 	-3.76004120862348268 	
+]
+;
+AIC = 6.05769163403523425 ;
+BIC = 6.17811704579908483 ;
+resid_variance = 2 [ 21.4698224052260969 381.110381493482294 ] ;
+expdir = "PYTEST__PL_stacked_pca_regression_script__RESULTS:expdir/Split0/LearnerExpdir/Combiner/" ;
+stage = 0 ;
+n_examples = 150 ;
+inputsize = 2 ;
+targetsize = 2 ;
+weightsize = 0 ;
+nstages = 1 ;
+report_progress = 1 ;
+verbosity = 1  )
+;
+default_operation = "mean" ;
+splitter = *0 ;
+base_train_splitter = *0 ;
+train_base_learners = 1 ;
+normalize_base_learners_output = 0 ;
+precompute_base_learners_output = 1 ;
+put_raw_input = 0 ;
+expdir = "PYTEST__PL_stacked_pca_regression_script__RESULTS:expdir/Split0/LearnerExpdir/" ;
+seed = -1 ;
+stage = 0 ;
+n_examples = 150 ;
+inputsize = 4 ;
+targetsize = 2 ;
+weightsize = 0 ;
+nstages = 1 ;
+report_progress = 1 ;
+verbosity = 1  )
