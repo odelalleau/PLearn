@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.cc,v 1.7 2002/12/12 23:10:05 dorionc Exp $
+   * $Id: stringutils.cc,v 1.8 2002/12/12 23:11:39 dorionc Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -84,8 +84,6 @@ void ProgressBar::close()
   if(closed)
     return;
   closed=true;
-  if(title=="__VOID__")
-    return;
   operator()(maxpos); 
   plugin->killProgressBar(this);
 }              
