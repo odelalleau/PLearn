@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: MPIStream.h,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: MPIStream.h,v 1.2 2003/02/03 22:22:13 zouave Exp $
    * AUTHORS: Pascal Vincent 
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -106,12 +106,12 @@ using namespace std;
   public:
 
     MPIStream()
-      :outbuffer(0)
+      :iostream(0), outbuffer(0)
     {}
 
     //!  The peer number of the other node, and initial size of input-buffer and output buffers
     MPIStream(int the_peerrank, int inbufsize=200, int outbufsize=200)
-      :outbuffer(0)
+      :iostream(0), outbuffer(0)
     { init(the_peerrank, inbufsize, outbufsize); }
 
     //!  This function may be called only once, if the stream was built with the default constructor.
