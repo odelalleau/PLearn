@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TVec_decl.h,v 1.2 2004/05/17 19:55:27 tatien Exp $
+   * $Id: TVec_decl.h,v 1.3 2004/05/17 20:52:15 tatien Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -492,16 +492,16 @@ class TVec
 
       int findSorted(T value)
       {
-        if(length()==0)
+        if (isEmpty())
           return 0;
  
-        T* v = data();
- 
-        // WARNING Someone please implement a real dichotomy search some day!
-        int i=0;
-        while(i<length() && v[i]<value)
-          i++;
-        return i;
+        pair<iterator, iterator> range =
+          equal_range(begin(), end(), value);
+        
+        if (range.first == end())
+          return -1;
+        else
+          return int(range.first - begin());
       }
   
       inline void insertSorted(T value, bool uniq)
