@@ -37,12 +37,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainTestBagsSplitter.cc,v 1.1 2004/03/10 13:55:01 yoshua Exp $
+   * $Id: TrainTestBagsSplitter.cc,v 1.2 2004/03/11 03:25:33 nova77 Exp $
    ******************************************************* */
 
 /*! \file TrainTestBagsSplitter.cc */
 
 #include "TrainTestBagsSplitter.h"
+#include "SumOverBagsVariable.h"
 
 namespace PLearn {
 using namespace std;
@@ -51,7 +52,10 @@ TrainTestBagsSplitter::TrainTestBagsSplitter(real the_test_fraction)
   : append_train(0), test_fraction(the_test_fraction)
 {};
 
-PLEARN_IMPLEMENT_OBJECT(TrainTestBagsSplitter, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(TrainTestBagsSplitter,"Splits a dataset in two parts",
+                        "TrainTestBagsSplitter implements a single split of the dataset into\n"
+                        "a training set and a test set (the test part being the last few samples of the dataset)\n"
+                        "Optionally a third set is provided which is the training set itself (in order to test on it)\n");
 
 void TrainTestBagsSplitter::declareOptions(OptionList& ol)
 {
@@ -64,11 +68,6 @@ void TrainTestBagsSplitter::declareOptions(OptionList& ol)
 
   inherited::declareOptions(ol);
 }
-
-PLEARN_IMPLEMENT_OBJECT(TrainTestBagsSplitter,"Splits a dataset in two parts",
-                        "TrainTestBagsSplitter implements a single split of the dataset into\n"
-                        "a training set and a test set (the test part being the last few samples of the dataset)\n"
-                        "Optionally a third set is provided which is the training set itself (in order to test on it)\n");
 
 void TrainTestBagsSplitter::build_()
 {
@@ -96,6 +95,7 @@ int TrainTestBagsSplitter::nSetsPerSplit() const
 
 TVec<VMat> TrainTestBagsSplitter::getSplit(int k)
 {
+  // soooo.. what is k for? 
   if (k)
     PLERROR("TrainTestBagsSplitter::getSplit() - k cannot be greater than 0");
   
@@ -103,6 +103,16 @@ TVec<VMat> TrainTestBagsSplitter::getSplit(int k)
   
   int l = dataset->length();
   int test_length = int(test_fraction*l);
+
+  Vec v;
+  dataset->getRow(test_length, v);
+  // Goes until it finds the end of the bag
+  while ( v[dataset->width()-1] != SumOverBagsVariable::TARGET_COLUMN_LAST)
+  {
+    ++test_length;
+    dataset->getRow(test_length, v);
+  }
+
   int train_length = l - test_length;
   
   split_[0] = dataset.subMatRows(0, train_length);
