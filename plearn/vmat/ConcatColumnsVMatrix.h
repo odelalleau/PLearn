@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatColumnsVMatrix.h,v 1.6 2004/04/05 23:14:13 morinf Exp $
+   * $Id: ConcatColumnsVMatrix.h,v 1.7 2004/05/21 20:16:08 tihocan Exp $
    ******************************************************* */
 
 
@@ -59,10 +59,14 @@ class ConcatColumnsVMatrix: public RowBufferedVMatrix
   Array<VMat> array;
   
  public:
+
+  bool no_duplicate_fieldnames;
+
   //! The lists of VMFields are appended upon construction.  The case where
   //! some VMat may have some fields and others not is handled properly.
-  ConcatColumnsVMatrix(Array<VMat> the_array=Array<VMat>()) : array(the_array) { if (array.size()) build_(); };
-  ConcatColumnsVMatrix(VMat d1, VMat d2) : array(d1, d2) { build_(); };
+  ConcatColumnsVMatrix(Array<VMat> the_array=Array<VMat>());
+  ConcatColumnsVMatrix(VMat d1, VMat d2);
+
   virtual void getRow(int i, Vec samplevec) const; 
   virtual real getStringVal(int col, const string & str) const;
   //! returns the whole string->value mapping

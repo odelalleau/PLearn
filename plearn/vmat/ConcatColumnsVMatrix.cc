@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatColumnsVMatrix.cc,v 1.7 2004/04/05 23:14:13 morinf Exp $
+   * $Id: ConcatColumnsVMatrix.cc,v 1.8 2004/05/21 20:16:08 tihocan Exp $
    ******************************************************* */
 
 #include "ConcatColumnsVMatrix.h"
@@ -47,9 +47,22 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(ConcatColumnsVMatrix, "ONE LINE DESCR", "NO HELP");
 
+ConcatColumnsVMatrix::ConcatColumnsVMatrix(Array<VMat> the_array)
+: array(the_array),
+  no_duplicate_fieldnames(false)
+{ if (array.size()) build_(); };
+
+ConcatColumnsVMatrix::ConcatColumnsVMatrix(VMat d1, VMat d2)
+: array(d1, d2),
+  no_duplicate_fieldnames(false)
+{ build_(); };
+
+
 void ConcatColumnsVMatrix::declareOptions(OptionList &ol)
 {
   declareOption(ol, "array", &ConcatColumnsVMatrix::array, OptionBase::buildoption, "Array of VMatrices");
+  declareOption(ol, "no_duplicate_fieldnames", &ConcatColumnsVMatrix::no_duplicate_fieldnames, OptionBase::buildoption,
+      "If set to 1, will ensure no fieldnames are duplicated by adding numerical values '.1', '.2', ...");
   inherited::declareOptions(ol);
 }
 
@@ -79,6 +92,7 @@ void ConcatColumnsVMatrix::build_()
   // Copy the original fieldinfos.  Be careful if only some of the
   // matrices have fieldinfos
   fieldinfos.resize(width_);
+  TVec<string> names;
   int fieldindex = 0;
   for (int i=0; i<array.size(); ++i) 
     {
@@ -95,6 +109,9 @@ void ConcatColumnsVMatrix::build_()
             fieldinfos[fieldindex++] = VMField(tostring(fieldindex));
         }
     }
+  if (no_duplicate_fieldnames) {
+    unduplicateFieldNames();
+  }
 }
 
 void ConcatColumnsVMatrix::getRow(int i, Vec samplevec) const
