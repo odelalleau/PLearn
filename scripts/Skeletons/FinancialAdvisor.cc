@@ -35,7 +35,7 @@ void DERIVEDCLASS::train()
 }
 
 void DERIVEDCLASS::test(VMat testset, PP<VecStatsCollector> test_stats,
-                        VMat testoutputs=0, VMat testcosts=0) const
+                        VMat testoutputs, VMat testcosts) const
 {
 #error This function must be overloaded!  
 }
