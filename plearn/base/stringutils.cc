@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.cc,v 1.8 2002/12/12 23:11:39 dorionc Exp $
+   * $Id: stringutils.cc,v 1.9 2003/04/10 18:05:00 jkeable Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -84,7 +84,8 @@ void ProgressBar::close()
   if(closed)
     return;
   closed=true;
-  operator()(maxpos); 
+  if(currentpos<maxpos)
+    operator()(maxpos); 
   plugin->killProgressBar(this);
 }              
 
@@ -119,7 +120,16 @@ void TextProgressBarPlugin::update(ProgressBar * pb,int newpos)
     if(PLMPI::rank==0)
       {
 #endif
-        if(!pb->maxpos)
+        // this handles the case where we reuse the same progress bar
+        if(newpos < pb->currentpos)
+        {
+          pb->currentpos=0;
+          string fulltitle = string(" ") + pb->title + " (" + tostring(pb->maxpos) + ") ";
+          out << "\n[" + center(fulltitle,100,'-') + "]\n[";
+          out.flush();
+        }
+
+        if(!pb->maxpos || newpos>pb->maxpos)
           return;
         int ndots = newpos*100 / pb->maxpos - pb->currentpos*100/pb->maxpos;
         while(ndots--)

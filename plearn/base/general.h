@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: general.h,v 1.6 2003/03/15 00:04:20 plearner Exp $
+   * $Id: general.h,v 1.7 2003/04/10 18:05:00 jkeable Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -248,7 +248,15 @@ inline void clear_1(bool& x) { x = false; }
 // return the name of host, e.g. with getenv("HOSTNAME") or getenv("HOST")
 string hostname();
 
+// static object used to perform PLearn unconditionnal initializations
+class PLearnInit
+{
+public:
+  PLearnInit();
+  ~PLearnInit();
+};
 
+//static PLearnInit _plearn_init_;
 
 %> // end of namespace PLearn
 

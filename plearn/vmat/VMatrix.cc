@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.12 2003/04/09 19:43:44 tihocan Exp $
+* $Id: VMatrix.cc,v 1.13 2003/04/10 18:05:03 jkeable Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -246,58 +246,6 @@ void VMatrix::readFieldInfos(istream& in)
     }
 }
 
-
-void VMatrix::setNotesFName(int col, string name)
-{
-  string normalfname = getMetaDataDir()+"FieldInfo/"+fieldName(col)+".notes";
-  rm(normalfname+".lnk");
-  if(name==normalfname || name=="")
-  {
-    rm(normalfname+".lnk");
-    return;
-  }
-  
-  ofstream o((normalfname+".lnk").c_str());
-  o<<name<<endl;
-}
-
-string VMatrix::getNotesFName(int col)
-{
-  string target = makeFileNameValid(fieldName(col)+".notes");
-  string normalfname = getMetaDataDir()+"FieldInfo/"+target;
-  string defaultlinkfname = getMetaDataDir()+"FieldInfo/__default.lnk";
-  if(isfile(normalfname))
-    return normalfname;
-  else if(isfile(normalfname+".lnk"))
-    return resolveFieldInfoLink(target, normalfname+".lnk");
-  else if(isfile(defaultlinkfname))
-    return resolveFieldInfoLink(target, defaultlinkfname);
-  // assume target is here, but file is empty thus inexistant
-  else return normalfname;
-}
-
-bool VMatrix::isNotesFNameDirect(int col)
-{
-  string target = makeFileNameValid(fieldName(col)+".notes");
-  string normalfname = getMetaDataDir()+"FieldInfo/"+target;
-  return getNotesFName(col) == normalfname;
-}
-
-
-void VMatrix::setSMapFName(int col, string name)
-{
-  string normalfname = getMetaDataDir()+"FieldInfo/"+fieldName(col)+".smap";
-  rm(normalfname+".lnk");
-  if(name==normalfname || name=="")
-  {
-    rm(normalfname+".lnk");
-    return;
-  }
-  
-  ofstream o((normalfname+".lnk").c_str());
-  o<<name<<endl;
-}
-
 // comments: see .h
 string VMatrix::resolveFieldInfoLink(string target, string source)
 {
@@ -321,27 +269,41 @@ string VMatrix::resolveFieldInfoLink(string target, string source)
     return resolveFieldInfoLink(target,contents);
   else return contents;
 }
-      
-string VMatrix::getSMapFName(int col)
+
+void VMatrix::setSFIFFilename(int col, string ext, string name)
 {
-  string target = makeFileNameValid(fieldName(col)+".smap");
+  string normalfname = getMetaDataDir()+"FieldInfo/"+fieldName(col)+ext;
+  rm(normalfname+".lnk");
+  if(name==normalfname || name=="")
+  {
+    rm(normalfname+".lnk");
+    return;
+  }
+  
+  ofstream o((normalfname+".lnk").c_str());
+  o<<name<<endl;
+}
+
+string VMatrix::getSFIFFilename(int col, string ext)
+{
+  string target = makeFileNameValid(fieldName(col)+ext);
   string normalfname = getMetaDataDir()+"FieldInfo/"+target;
   string defaultlinkfname = getMetaDataDir()+"FieldInfo/__default.lnk";
-  if(isfile(normalfname+".lnk"))
-    return resolveFieldInfoLink(target, normalfname+".lnk");
-  else if(isfile(normalfname))
+  if(isfile(normalfname))
     return normalfname;
+  else if(isfile(normalfname+".lnk"))
+    return resolveFieldInfoLink(target, normalfname+".lnk");
   else if(isfile(defaultlinkfname))
     return resolveFieldInfoLink(target, defaultlinkfname);
   // assume target is here, but file is empty thus inexistant
   else return normalfname;
 }
 
-bool VMatrix::isSMapFNameDirect(int col)
+bool VMatrix::isSFIFDirect(int col, string ext)
 {
-  string target = makeFileNameValid(fieldName(col)+".smap");
+  string target = makeFileNameValid(fieldName(col)+ext);
   string normalfname = getMetaDataDir()+"FieldInfo/"+target;
-  return getSMapFName(col) == normalfname;
+  return getSFIFFilename(col,ext) == normalfname;
 }
 
 //! adds a string<->real mapping
@@ -423,7 +385,6 @@ void VMatrix::loadAllStringMappings()
   // if this is a StrTableVMatrix, smap are already created
   if(classname()=="StrTableVMatrix")
     return;
-  cout<<"load all string mapping"<<endl;
   for(int i=0;i<width();i++)
     loadStringMapping(i);
 }
@@ -431,8 +392,8 @@ void VMatrix::loadAllStringMappings()
 // loads the appropriate string map file for column 'col'
 void VMatrix::loadStringMapping(int col)
 {
+  string fname = getSFIFFilename(col,".smap");
   init_map_sr();
-  string fname = getSMapFName(col);
   force_mkdir(getMetaDataDir()+"FieldInfo/");
   deleteStringMapping(col);
   if(!isfile(fname))

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.4 2003/04/09 19:43:41 tihocan Exp $
+   * $Id: getDataSet.cc,v 1.5 2003/04/10 18:05:03 jkeable Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -177,7 +177,7 @@ VMat getDataSet(const string& datasetstring, const string& alias)
     vm->setMetaDataDir("/u/lisa/db/metadata/" + datasetstring);
   }
   
-  //vm->loadAllStringMappings(); // let's comment this until bug fixed by Julien
+  vm->loadAllStringMappings(); // let's comment this until bug fixed by Julien
   vm->setAlias(alias);
   vm->unduplicateFieldNames();
   return vm;

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: general.cc,v 1.3 2002/10/21 01:21:53 plearner Exp $
+   * $Id: general.cc,v 1.4 2003/04/10 18:05:00 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,6 +51,14 @@
 namespace PLearn <%
 using namespace std;
 
+static PLearnInit _plearn_init_;
+
+PLearnInit::PLearnInit()
+{
+  umask(002);
+}
+
+PLearnInit::~PLearnInit(){}
 
 int  file_size(const string& filename)
 {

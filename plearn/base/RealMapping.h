@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: RealMapping.h,v 1.8 2003/03/19 22:49:17 jkeable Exp $
+   * $Id: RealMapping.h,v 1.9 2003/04/10 18:04:59 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -169,6 +169,8 @@ class RealRange
     
     void buildOrderedMapping();
 
+    bool checkConsistency();
+
     void removeMapping(const RealRange& range)
     { 
       mapping_t::iterator it= mapping.find(range);
@@ -236,7 +238,7 @@ class RealRange
     virtual void write(ostream& out) const;
     virtual void read(istream& in);
 
-    int maxMappedToValue();
+    real maxMappedToValue();
 
     //! If all ranges in the mapping are consecutive, return the cut points between different ranges.
     //! e.g.: [0,1[  [1, 5[  [5, 10]  ]10, 15]--> <0,1,5,10,15>.

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org 
 
 /* *******************************************************      
-   * $Id: RealMapping.cc,v 1.6 2003/03/19 22:49:17 jkeable Exp $
+   * $Id: RealMapping.cc,v 1.7 2003/04/10 18:04:59 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -75,7 +75,7 @@ using namespace std;
     return a.first<b.first;
   }
 
-  int RealMapping::maxMappedToValue()
+  real RealMapping::maxMappedToValue()
   {
     real max = -9999999;
     mapping_t::iterator it = mapping.begin();
@@ -243,6 +243,32 @@ Vec RealMapping::getCutPoints() const
   for(int i= 1; it != mapping.end(); ++it, ++i)
     v[i]= it->first.high;
   return v;
+}
+
+// checks that the values which the 'n' ranges are mapped to span from 0..n-1 and that these values are integers
+bool RealMapping::checkConsistency()
+{
+  mapping_t::const_iterator it= mapping.begin();
+  int max = 0;
+  for(;it != mapping.end(); ++it)
+  {
+    if(it->second <0 || it->second - (int)it->second > 0)
+      return false;
+    if(max < it->second)
+      max = it->second;
+  }
+  TVec<int> v(max+1,0);
+
+  for(it=mapping.begin();it != mapping.end(); ++it)
+  {
+    if(v[(int)it->second] != 0)
+      return false;
+    v[(int)it->second]=1;
+  }
+  for(int i=0;i<max;i++)
+    if(v[i]==0)
+      return false;
+  return true;  
 }
 
 %> // end of namespace PLearn

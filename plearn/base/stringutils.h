@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.9 2002/12/12 23:10:06 dorionc Exp $
+   * $Id: stringutils.h,v 1.10 2003/04/10 18:05:00 jkeable Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -278,6 +278,13 @@ public:
 };
 
 // This class will help you display progress of a calculation
+// 
+// Each progressBar you create is connected to the same ProgressBarPlugin object.
+// By default, a  TextProgressBarPlugin that dumps the text in stderr is created and used.
+// 
+// FAQ: 
+// Q #1 : How do I reuse the same progress bar?
+// A #1 : simply call progress_bar(i) again with 'i' from 0..maxpos (The text progress bar plugin will display a new progress bar)
 class ProgressBar
 {
 public:
@@ -295,7 +302,7 @@ public:
   // moves the progressbar up to position newpos
   void operator()(int newpos){plugin->update(this,newpos);}
  
-  // assume plugin always exist (created static in .cc)
+  // this function assumes plugin is always a valid object (it is created statically in the .cc)
   static void setPlugin(ProgressBarPlugin * _plugin){delete plugin;plugin=_plugin;}
 
   // Completes and removes the progressBar 

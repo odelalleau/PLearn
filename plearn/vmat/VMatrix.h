@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.10 2003/04/09 19:43:44 tihocan Exp $
+   * $Id: VMatrix.h,v 1.11 2003/04/10 18:05:03 jkeable Exp $
    ******************************************************* */
 
 
@@ -149,16 +149,26 @@ public:
   void writeFieldInfos(ostream& out) const;
   void readFieldInfos(istream& in);
   
-  // leave name to "" to reset to default notes filename for this field
-  void setNotesFName(int col, string name="");
-  string getNotesFName(int col);
-  bool isNotesFNameDirect(int col);
+  // these 3 functions deal with stringmaps, notes, and binning files (called special field info files, or 'SFIF')
+  // for each field eventually, I (julien) guess all this info should be wrapped (thus saved, and loaded) by the VMField class
 
-  // leave name to "" to reset to default string map filename for this field
-  void setSMapFName(int col, string name="");
-  string getSMapFName(int col);
-  // returns whether pokpok
-  bool isSMapFNameDirect(int col);
+  // SFIFs, are by default located in the directory MyDataset.[amat,vmat,etc].metadata/FieldInfo/ and are named 'fieldname'.[smap,notes,binning,...]. 
+  // in all 3 functions, the parameter ext specifies the extension of the special field info file [smap,notes,binning]
+
+  // setSFIFFilename : sets the SFIF with extensions 'ext' (*WITH* the dot) to some 'string'. if this string is different
+  // from the default filename, the string is actually placed in [dataset].metadata/FieldInfo/fieldname.[ext].lnk
+  // if the 'string' is empty, the default SFIF filename is assumed, which is : [MyDataset].metadata/FieldInfo/fieldname.[ext]
+  void setSFIFFilename(int col, string ext, string name="");
+
+  // getSFIFFilename :If a '*.vmat' dataset uses fields from another dataset, how can we keep the field info dependecy? To resolve 
+  // the issue, if a file named __default.lnk containing path 'P' can be placed in the FieldInfo directory of the .vmat,
+  // the function getSFIFFilename, if the default SFIF file doesn't exist, the function searches for the default filename +'.lnk'. 
+  // if the later neither exists, the __default.lnk file is used if present, and if not, then an empty default file is assumed. 
+  string getSFIFFilename(int col, string ext);
+  
+  // isSFIFDirect : tells whether the SFIF filename is the default filename. (if false, then the field uses the SFIF from another dataset)
+  bool isSFIFDirect(int col, string ext);
+
 
   // string mapping stuff
   ///////////////////////
@@ -251,7 +261,6 @@ public:
   // ** Note 1: that target is assumed to be an inexistant file in the directory where none of the previous 3 can be found (since the file exists only when non-empty)
   // ** Note 2: source may not be target
   string resolveFieldInfoLink(string target, string source);
-
 
   //! Return the time of "last modification" associated with this matrix
   //! The result returned is typically based on mtime of the files contianing 
