@@ -56,21 +56,27 @@ bool Test_TVec::read_write()
   for(j=0; j<arraySize; j++)
     {
       write(os, emptyCtorArray[j]);
+      write(os, "\n");
       emptyCtorArray[j].clear();
       T_ASSERT( emptyCtorArray[j]==0, "1-The vector at position "+ tostring(j) +" should contain only '0's");
       write(os, lengthCtorArray[j]);
+      write(os, "\n");
       lengthCtorArray[j].clear();
       T_ASSERT( lengthCtorArray[j]==0, "2-The vector at position "+ tostring(j) +" should contain only '0's");      
       write(os, valueCtorArray[j]);
+      write(os, "\n");
       valueCtorArray[j].clear();
       T_ASSERT( valueCtorArray[j]==0, "3-The vector at position "+ tostring(j) +" should contain only '0's");
       write(os, stepCtorArray[j]);
+      write(os, "\n");
       stepCtorArray[j].clear();
       T_ASSERT( stepCtorArray[j]==0, "4-The vector at position "+ tostring(j) +" should contain only '0's");
       write(os, dataCtorArray[j]);
+      write(os, "\n");
       dataCtorArray[j].clear();
       T_ASSERT( dataCtorArray[j]==0, "5-The vector at position "+ tostring(j) +" should contain only '0's");
       write(os, copyCtorArray[j]);
+      write(os, "\n");
       copyCtorArray[j].clear();
       T_ASSERT( copyCtorArray[j]==0, "6-The vector at position "+ tostring(j) +" should contain only '0's");
     }
