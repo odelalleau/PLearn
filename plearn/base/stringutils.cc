@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.cc,v 1.16 2004/02/20 21:11:43 chrish42 Exp $
+   * $Id: stringutils.cc,v 1.17 2004/02/26 19:31:17 nova77 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -91,6 +91,8 @@ bool pl_isnumber(const string& str, double* dbl)
   return ((unsigned char)(l-s.c_str())==s.length());
 }
 
+// norman: there is no strtof in .NET
+#ifndef WIN32
 bool pl_isnumber(const string& str, float* dbl) {
   float d;
   string s=removeblanks(str);
@@ -100,6 +102,7 @@ bool pl_isnumber(const string& str, float* dbl) {
   if(dbl!=NULL)*dbl=d;
   return ((unsigned char)(l-s.c_str())==s.length());
 }
+#endif // WIN32
 
 long tolong(const string& s, int base)
   {
@@ -133,7 +136,7 @@ double todouble(const string& s)
 
   string extract_filename(const string& filepath)
   {
-    unsigned int p = filepath.rfind(slash);
+    unsigned int p = (unsigned int)filepath.rfind(slash);
     if (p != string::npos)
       return filepath.substr(p+1,filepath.length()-(p+1));
     else
@@ -142,7 +145,7 @@ double todouble(const string& s)
 
   string extract_directory(const string& filepath)
   {
-    unsigned int p = filepath.rfind(slash);
+    unsigned int p = (unsigned int)filepath.rfind(slash);
     if (p != string::npos)
       return filepath.substr(0,p+1);
     else
@@ -155,7 +158,7 @@ double todouble(const string& s)
   string extract_extension(const string& filepath)
   {
     string filename = extract_filename(filepath);
-    unsigned int p = filename.rfind(".");
+    unsigned int p = (unsigned int)filename.rfind(".");
     if (p != string::npos)
       return filename.substr(p,filename.length()-p);
     else
@@ -165,7 +168,7 @@ double todouble(const string& s)
   string extract_filename_without_extension(const string& filepath)
   {
     string filename = extract_filename(filepath);
-    unsigned int p = filename.rfind(".");
+    unsigned int p = (unsigned int)filename.rfind(".");
     if (p != string::npos)
       return filename.substr(0,p);
     else
@@ -174,7 +177,7 @@ double todouble(const string& s)
 
   string remove_extension(const string& filename)
   {
-    unsigned int p = filename.rfind(".");
+    unsigned int p = (unsigned int)filename.rfind(".");
     if (p != string::npos)
       return filename.substr(0,p);
     else
@@ -222,7 +225,7 @@ string removeblanks(const string& s)
 string removeallblanks(const string& s)
 {
   string res;
-  int l = s.length();
+  int l = (int)s.length();
   for(int i=0; i<l; i++)
     {
       char c = s[i];
@@ -250,7 +253,7 @@ string remove_trailing_slash(const string& s)
 
 string append_slash(const string& path)
 {
-  int l = path.length();
+  int l = (int)path.length();
   if(l>0 && path[l-1]!=slash_char)
     return path+slash;
   else
@@ -299,7 +302,7 @@ string pgetline(istream& in)
 
 bool isBlank(const string& s)
 {
-  int l = s.length();
+  int l = (int)s.length();
   for(int i=0; i<l; i++)
     {
       char c = s[i];
@@ -314,7 +317,7 @@ bool isBlank(const string& s)
 
 bool isParagraphBlank(const string& s)
 {
-  int l = s.length();
+  int l = (int)s.length();
   bool in_comment=false;
   for(int i=0; i<l; i++)
     {
@@ -377,7 +380,7 @@ int search_replace(string& text, const string& searchstr, const string& replaces
 vector<string> split(const string& s, char delimiter)
 {
   vector<string> res;
-  int l = s.length();
+  int l = (int)s.length();
   int beg = 0;
   int end = 0;
   
@@ -484,10 +487,10 @@ void remove_comments(string& text, const string& commentstart)
   unsigned int endpos=0;
   while(endpos!=string::npos)
     {
-      startpos = text.find(commentstart,startpos);
+      startpos = (unsigned int)text.find(commentstart,startpos);
       if(startpos==string::npos)
         break;
-      endpos = text.find_first_of("\n\r",startpos);
+      endpos = (unsigned int)text.find_first_of("\n\r",startpos);
       text.erase(startpos, endpos-startpos);
     }
 }
@@ -574,7 +577,7 @@ vector<string> stringvector(int argc, char** argv)
 string get_option(const vector<string> &command_line, 
                   const string& option, const string& default_value)
 {
-  int n=command_line.size();
+  int n=(int)command_line.size();
   for (int i=0;i<n;i++)
     if (command_line[i]==option && i+1<n) return command_line[i+1];
   return default_value;
@@ -582,7 +585,7 @@ string get_option(const vector<string> &command_line,
 
 bool find(const vector<string> &command_line, const string& option)
 {
-  int n=command_line.size();
+  int n=(int)command_line.size();
   for (int i=0;i<n;i++)
     if (command_line[i]==option) return true;
   return false;
