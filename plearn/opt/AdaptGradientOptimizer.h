@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: AdaptGradientOptimizer.h,v 1.1 2003/05/06 20:40:39 tihocan Exp $
+   * $Id: AdaptGradientOptimizer.h,v 1.2 2003/05/06 21:00:31 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -171,8 +171,6 @@ using namespace std;
     
   public:
 
-    virtual void oldwrite(ostream& out) const;
-    virtual void oldread(istream& in);
     virtual real optimize();
     virtual bool optimizeN(VecStatsCollector& stats_coll);
 
