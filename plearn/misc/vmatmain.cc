@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.12 2004/01/08 14:08:56 plearner Exp $
+   * $Id: vmatmain.cc,v 1.13 2004/01/08 18:55:27 plearner Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -183,13 +183,6 @@ void displayBasicStats(VMat vm)
     }
 }
 
-void printFieldInfo(VMat vm, string fieldname_or_num)
-{
-  int fieldnum = vm->getFieldIndex(fieldname_or_num);
-  cout << "*** Field #" << fieldnum << ": " << vm->fieldName(fieldnum) << " ***\n" << endl;
-  TVec<StatsCollector> stats = vm->getStats();
-  stats[fieldnum].print(cout);
-}
 
 void printDistanceStatistics(VMat vm, int inputsize)
 {
@@ -1000,9 +993,9 @@ int vmatmain(int argc, char** argv)
   else if(command=="fieldinfo")
     {
       string dbname = argv[2];
-      VMat vm = getDataSet(dbname);
       string fieldname_or_num = argv[3];
-      printFieldInfo(vm, fieldname_or_num);
+      VMat vm = getDataSet(dbname);
+      vm->printFieldInfo(cout, fieldname_or_num);
     }
   else if(command=="stats")
     {

@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.30 2004/01/07 22:18:43 ducharme Exp $
+   * $Id: VMatrix.h,v 1.31 2004/01/08 18:55:27 plearner Exp $
    ******************************************************* */
 
 
@@ -94,7 +94,7 @@ protected:
   string alias_;
 
   // New set of statistics fields:
-  TVec<StatsCollector> field_stats;  //!< stats[i] contains stats for field #i 
+  mutable TVec<StatsCollector> field_stats;  //!< stats[i] contains stats for field #i 
 
   // the string mapping for each fields, in both directions
   TVec<map<string,real> > map_sr; 
@@ -180,6 +180,9 @@ public:
   const VMFieldStat& fieldStat(const string& fieldname) const { return fieldStat(fieldIndex(fieldname)); }
 
   void printFields(ostream& out) const;
+  void printFieldInfo(ostream& out, int fieldnum) const;
+  void printFieldInfo(ostream& out, const string& fieldname_or_num) const;
+
   string fieldheader(int elementcharwidth=8);
 
   // loads/saves from/to the metadatadir/fieldnames file
@@ -301,8 +304,11 @@ public:
 
   //! returns the unconditonal statistics for all fields from the stats.psave file 
   //! (if the file does not exist, a default version is automatically created)
-  TVec<StatsCollector> getStats();
+  TVec<StatsCollector> getStats() const;
   
+  StatsCollector& getStats(int fieldnum) const
+  { return getStats()[fieldnum]; }
+
   //! returns the ranges as defined in the ranges.psave file (for all fields)
   //! (if the ranges.psave file does not exist, a reasonable default version is created )
   TVec<RealMapping> getRanges();

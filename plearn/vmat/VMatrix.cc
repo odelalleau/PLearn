@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.36 2003/12/15 14:05:28 plearner Exp $
+* $Id: VMatrix.cc,v 1.37 2004/01/08 18:55:27 plearner Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -205,13 +205,12 @@ void VMatrix::build()
   build_();
 }
 
+void VMatrix::printFieldInfo(ostream& out, int fieldnum) const
+{
+    VMField fi = getFieldInfos(fieldnum);
+    StatsCollector& s = getStats(fieldnum);
 
-void VMatrix::printFields(ostream& out) const
-{ 
-  for(int j=0; j<width(); j++)
-  {
-    VMField fi = getFieldInfos(j);
-    out << "Field #" << j << ":  ";
+    out << "Field #" << fieldnum << ":  ";
     out << fi.name << "\t type: ";
     switch(fi.fieldtype)
       {
@@ -237,32 +236,44 @@ void VMatrix::printFields(ostream& out) const
         PLERROR("Can't write name of type");
       }  
 
-    if(fieldstats.size()>0)
-    {
-      const VMFieldStat& s = fieldStat(j);
-      out << "nmissing: " << s.nmissing() << '\n';
-      out << "nnonmissing: " << s.nnonmissing() << '\n';
-      out << "npositive: " << s.npositive() << '\n';
-      out << "nzero: " << s.nzero() << '\n';
-      out << "nnegative: " << s.nnegative() << '\n';
-      out << "mean: " << s.mean() << '\n';
-      out << "stddev: " << s.stddev() << '\n';
-      out << "min: " << s.min() << '\n';
-      out << "max: " << s.max() << '\n';
-      if(!s.counts.empty())
+    out << "nmissing: " << s.nmissing() << '\n';
+    out << "nnonmissing: " << s.nnonmissing() << '\n';
+    out << "mean: " << s.mean() << '\n';
+    out << "stddev: " << s.stddev() << '\n';
+    out << "min: " << s.min() << '\n';
+    out << "max: " << s.max() << '\n';
+    if(!s.counts.empty())
       {
-        out << "value:counts :   ";
-        map<real,int>::const_iterator it = s.counts.begin();
-        map<real,int>::const_iterator countsend = s.counts.end();
+        out << "\nCOUNTS: \n";
+        map<real,StatsCollectorCounts>::const_iterator it = s.counts.begin();
+        map<real,StatsCollectorCounts>::const_iterator countsend = s.counts.end();
         while(it!=countsend)
-        {
-          out << it->first << ':' << it->second << "  "; 
-          ++it;
+          {
+            real val = it->first;
+            const StatsCollectorCounts& co = it->second;
+            out << "  " << val;
+            string s = getValString(fieldnum, val);          
+            if(s!="")
+              out << " " << s;
+            out << " \t: n=" << co.n << "\t nbelow=" << co.nbelow << "\t sumbelow=" << co.sum << endl; 
+            ++it;
         }
       }
-      out << endl << endl;
+    out << endl << endl;
+}
+
+void VMatrix::printFieldInfo(ostream& out, const string& fieldname_or_num) const
+{
+  printFieldInfo(out, getFieldIndex(fieldname_or_num));  
+}
+
+void VMatrix::printFields(ostream& out) const
+{ 
+  for(int j=0; j<width(); j++)
+    {
+    printFieldInfo(out,j);
+    out << "-----------------------------------------------------" << endl;  
     }
-  }
 }
 
 void VMatrix::getExample(int i, Vec& input, Vec& target, real& weight) 
@@ -709,7 +720,7 @@ void VMatrix::loadStringMapping(int col)
 
 
 //! returns the unconditonal statistics for the given field
-TVec<StatsCollector> VMatrix::getStats()
+TVec<StatsCollector> VMatrix::getStats() const
 {
   if(!field_stats)
   {
@@ -722,7 +733,8 @@ TVec<StatsCollector> VMatrix::getStats()
     }
     else
     {
-      field_stats = PLearn::computeStats(this, 2000);
+      VMat vm = const_cast<VMatrix*>(this);
+      field_stats = PLearn::computeStats(vm, 2000);
       PLearn::save(statsfile, field_stats);
     }
   }

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.27 2003/11/28 21:55:24 yoshua Exp $
+   * $Id: TMat_maths_impl.h,v 1.28 2004/01/08 18:55:27 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -3675,6 +3675,18 @@ void rowSum(const TMat<T>& mat, const TMat<T>& singlecolumn)
     singlecolumn(i,0) = sum(mat(i));
 }
 
+
+template<class T>
+void rowSum(const TMat<T>& mat, const TVec<T>& colvec)
+{
+  #ifdef BOUNDCHECK
+  if(colvec.length()!=mat.length())
+    PLERROR("IN void rowSum(const TMat<T>& mat, const TVec<T>& colvec) colvec must have same length as mat");
+  #endif
+  for(int i=0; i<mat.length(); i++)
+    colvec[i] = sum(mat(i));
+}
+
 template<class T>
 void rowMean(const TMat<T>& mat, const TMat<T>& singlecolumn)
 {
@@ -3725,6 +3737,17 @@ void rowMax(const TMat<T>& mat, const TMat<T>& singlecolumn)
 }
 
 template<class T>
+void rowMax(const TMat<T>& mat, const TVec<T>& colvec)
+{
+  #ifdef BOUNDCHECK
+  if(colvec.length()!=mat.length())
+    PLERROR("IN void rowSum(const TMat<T>& mat, const TVec<T>& colvec) colvec must have same length as mat");
+  #endif
+  for(int i=0; i<mat.length(); i++)
+    colvec[i] = max(mat(i));
+}
+
+template<class T>
 void rowMin(const TMat<T>& mat, const TMat<T>& singlecolumn)
 {
   #ifdef BOUNDCHECK
@@ -3733,6 +3756,18 @@ void rowMin(const TMat<T>& mat, const TMat<T>& singlecolumn)
   #endif
   for(int i=0; i<mat.length(); i++)
     singlecolumn(i,0) = min(mat(i));
+}
+
+
+template<class T>
+void rowMin(const TMat<T>& mat, const TVec<T>& colvec)
+{
+  #ifdef BOUNDCHECK
+  if(colvec.length()!=mat.length())
+    PLERROR("IN void rowSum(const TMat<T>& mat, const TVec<T>& colvec) colvec must have same length as mat");
+  #endif
+  for(int i=0; i<mat.length(); i++)
+    colvec[i] = min(mat(i));
 }
 
 template<class T>

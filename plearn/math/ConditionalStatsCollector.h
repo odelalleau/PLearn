@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalStatsCollector.h,v 1.1 2003/12/15 14:05:27 plearner Exp $ 
+   * $Id: ConditionalStatsCollector.h,v 1.2 2004/01/08 18:55:27 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -82,11 +82,11 @@ public:
     //! the sample weights.
     TVec< TMat<double> > counts;
 
-    //! sums[k](i,j) contains the sum of variable k's values that fell in range i while condvar was in range j
+    //! sums[k](i,j) contains the (possibly weighted) sum of variable k's values that fell in range i while condvar was in range j
     //! (unlike counts, these do not have an extra row and column for misisng value)
     TVec< TMat<double> > sums; 
 
-    //! sums[k](i,j) contains the sum of squares of variable k's values that fell in range i while condvar was in range j
+    //! sumsquares[k](i,j) contains the (possibly weighted) sum of squares of variable k's values that fell in range i while condvar was in range j
     //! (unlike counts, these do not have an extra row and column for misisng value)
     TVec< TMat<double> > sumsquares;
 

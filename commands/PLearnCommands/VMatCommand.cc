@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMatCommand.cc,v 1.1 2003/08/13 08:13:16 plearner Exp $ 
+   * $Id: VMatCommand.cc,v 1.2 2004/01/08 18:55:24 plearner Exp $ 
    ******************************************************* */
 
 /*! \file VMatCommand.cc */
@@ -57,6 +57,8 @@ VMatCommand::VMatCommand():
       "       Will info about dataset (size, etc..)\n"
       "   or: vmat fields <dataset> \n"
       "       To list the fields with their names \n"
+      "   or: vmat fieldinfo <dataset> <fieldname_or_num>\n"
+      "       To display statistics for that field \n"
       "   or: vmat cat <dataset> [<optional_vpl_filtering_code>]\n"
       "       To display the dataset \n"
       "   or: vmat view <dataset> [<line#> [<column#>]]\n"
