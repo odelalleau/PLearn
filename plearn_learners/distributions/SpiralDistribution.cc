@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SpiralDistribution.cc,v 1.4 2004/02/06 00:33:48 yoshua Exp $ 
+   * $Id: SpiralDistribution.cc,v 1.5 2004/02/06 00:34:39 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file SpiralDistribution.cc */
@@ -50,6 +50,7 @@ SpiralDistribution::SpiralDistribution()
     tmin(3),
     tmax(15),
     sigma(0.01),
+    uniformity(1),
     include_t(false)
   {
     // build_();
