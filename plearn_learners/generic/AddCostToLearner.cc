@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.cc,v 1.14 2004/10/26 20:45:18 tihocan Exp $ 
+   * $Id: AddCostToLearner.cc,v 1.15 2004/10/26 20:48:34 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -60,7 +60,7 @@ PLEARN_IMPLEMENT_OBJECT(AddCostToLearner,
     "Feel free to make this class evolve by adding new costs, or rewriting it\n"
     "in a better fashion, because this one is certainly not perfect.\n"
     "To use the lift cost, do the following:\n"
-    " (1) add a cost of type 1 to this object's option 'costs'\n"
+    " (1) add a cost of type 'lift_output' to this object's option 'costs'\n"
     " (2) replace the template_stats_collector of your PTester with one like this:\n"
     "   template_stats_collector =\n"
     "     LiftStatsCollector (\n"
@@ -101,13 +101,13 @@ void AddCostToLearner::declareOptions(OptionList& ol)
       "computation, but is also safer.");
 
   declareOption(ol, "combine_bag_outputs_method", &AddCostToLearner::combine_bag_outputs_method, OptionBase::buildoption,
-      "The method used to combine the individual outputs of the learner_ to\n"
+      "The method used to combine the individual outputs of the sub-learner to\n"
       "obtain a global output on the bag (irrelevant if 'compute_costs_on_bags' == 0):\n"
       " - 1 : o = 1 - (1 - o_1) * (1 - o_2) * .... * (1 - o_n)\n"
       " - 2 : o = max(o_1, o_2, ..., o_n)");
 
   declareOption(ol, "compute_costs_on_bags", &AddCostToLearner::compute_costs_on_bags, OptionBase::buildoption,
-      "If set to 1, then the costs will be computed on bags, but the learner_ will\n"
+      "If set to 1, then the costs will be computed on bags, but the sub-learner will\n"
       "be trained without the bag information (see SumOverBagsVariable for info on bags).");
 
   declareOption(ol, "costs", &AddCostToLearner::costs, OptionBase::buildoption,
@@ -141,9 +141,6 @@ void AddCostToLearner::declareOptions(OptionList& ol)
 
   declareOption(ol, "to_min", &AddCostToLearner::to_min, OptionBase::buildoption,
       "Lower bound of the destination interval [to_min, to_max] (used in rescaling).");
-
-  declareOption(ol, "learner_", &AddCostToLearner::learner_, OptionBase::buildoption,
-      "The learner to which we add the costs.");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -217,7 +214,7 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
                                            const Vec& target, Vec& costs) const
 {
   int n_original_costs = learner_->nTestCosts();
-  // We give only costs.subVec to the learner_ because it may want to resize it.
+  // We give only costs.subVec to the sub-learner because it may want to resize it.
   Vec sub_costs = costs.subVec(0, n_original_costs);
   if (compute_costs_on_bags) {
     learner_->computeCostsFromOutputs(input, output, target.subVec(0, target.length() - 1), sub_costs);
@@ -271,7 +268,7 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
         default:
           PLERROR("In AddCostToLearner::computeCostsFromOutputs - Unknown value for 'combine_bag_outputs_method'");
       }
-      // We re-compute the learner_'s costs with the brand new combined bag output.
+      // We re-compute the sub-learner's costs with the brand new combined bag output.
       learner_->computeCostsFromOutputs(input, combined_output, target.subVec(0, target.length() - 1), sub_costs);
     } else {
       costs.fill(MISSING_VALUE);
