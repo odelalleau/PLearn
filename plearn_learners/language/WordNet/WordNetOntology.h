@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.h,v 1.5 2002/11/05 20:40:35 jauvinc Exp $
+   * $Id: WordNetOntology.h,v 1.6 2002/11/07 23:49:52 jauvinc Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -233,6 +233,7 @@ public:
   Set getSyntacticClassesForWord(int word_id);
   int getSyntacticClassForSense(int sense_id);
   int getPredominentSyntacticClassForWord(int word_id);
+  void getDescendantCategoriesAtLevel(int ss_id, int cur_level, int target_level, Set categories);
 
   bool isWord(int id);
   bool isWord(string word);
@@ -306,8 +307,7 @@ private:
   void reduceWordPolysemy_preserveSenseOverlapping2(int word_id, int level);
   //void getCategoriesAtLevel(int ss_id, int level, set<int>& categories);
   void getCategoriesAtLevel(int ss_id, int cur_level, int target_level, set<int>& categories);
-  void getCategoriesUnderLevel(int ss_id, int cur_level, int target_level, set<int>& categories);
-  void getDescendantCategoriesAtLevel(int ss_id, int cur_level, int target_level, Set categories);
+  void getCategoriesUnderLevel(int ss_id, int cur_level, int target_level, Set categories);
   void removeNonReachableSynsets();
   void visitUpward(Node* node);
 

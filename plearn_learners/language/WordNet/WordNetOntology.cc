@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.cc,v 1.4 2002/11/05 20:40:35 jauvinc Exp $
+   * $Id: WordNetOntology.cc,v 1.5 2002/11/07 23:49:52 jauvinc Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -1794,20 +1794,16 @@ void WordNetOntology::getCategoriesAtLevel(int ss_id, int cur_level, int target_
   }  
 }
 
-void WordNetOntology::getCategoriesUnderLevel(int ss_id, int cur_level, int target_level, set<int>& categories)
+void WordNetOntology::getCategoriesUnderLevel(int ss_id, int cur_level, int target_level, Set categories)
 {
   Node* node = synsets[ss_id];
-  categories.insert(ss_id);
-  if (cur_level == target_level && !isTopLevelCategory(ss_id))
-  {
-    return;
-  } else
+  if (!isTopLevelCategory(ss_id))
+    categories.insert(ss_id);
+  if (cur_level != target_level)
   {
     for (SetIterator it = node->parents.begin(); it != node->parents.end(); ++it)
-    {
-      getCategoriesAtLevel(*it, cur_level + 1, target_level, categories);
-    }
-  }  
+      getCategoriesUnderLevel(*it, cur_level + 1, target_level, categories);
+  }
 }
 
 void WordNetOntology::getDescendantCategoriesAtLevel(int ss_id, int cur_level, int target_level, Set categories)
@@ -1969,50 +1965,23 @@ void WordNetOntology::reduceWordPolysemy_preserveSenseOverlapping2(int word_id, 
 /*
   Set senses = word_to_senses[word_id];
   Set senses_to_be_removed;
-  map<int, <Set> > sense_to_categories_under_level(senses.size());
+  map<int, Set> sense_to_categories_under_level(senses.size());
   if (senses.size() > 1)
   {
     for (SetIterator it = senses.begin(); it != senses.end(); ++it)
     {
       int sense_id = *it;
-      set<int> categories_under_level;
-      getCategoriesAtLevel(sense_id, 0, level, categories_under_level);
+      Set categories_under_level;
+      getCategoriesUnderLevel(sense_id, 0, level, categories_under_level);
       sense_to_categories_under_level[sense_id] = categories_under_level;
-     }
-
-    
-
-
-    for (map<set<int>, Set>::iterator it = categories_to_senses.begin(); it != categories_to_senses.end(); ++it)
-    {
-      Set sense_cluster = it->second;
-      if (sense_cluster.size() > 1)
-      {
-        int sense_cluster_size = sense_cluster.size();
-        int n_sense_removed = 0;
-        for (SetIterator sit = sense_cluster.begin(); sit != sense_cluster.end(); ++sit)
-        {
-          int sense_id = *sit;
-          if (sense_to_words[sense_id].size() < 2 && n_sense_removed < (sense_cluster_size - 1))
-          {
-            senses_to_be_removed.insert(sense_id);
-            sense_to_words[sense_id].remove(word_id);
-            // if a sense doesn't point to any word anymore, erase it from the sense table
-            if (sense_to_words[sense_id].isEmpty())
-              sense_to_words.erase(sense_id);
-            n_sense_removed++;
-          }
-        }
-      }
     }
-
-      if (!senses_to_be_removed.isEmpty())
-      {
-        cout << words[word_id] << endl;
-//       cout << "senses = " << senses; 
-//       cout << ", senses_to_be_removed = " << senses_to_be_removed << endl;
-      }
-
+    
+    if (!senses_to_be_removed.isEmpty())
+    {
+      //cout << words[word_id] << endl;
+      //cout << "senses = " << senses; 
+      //cout << ", senses_to_be_removed = " << senses_to_be_removed << endl;
+    }
     // erase the marked senses
     for (SetIterator it = senses_to_be_removed.begin(); it != senses_to_be_removed.end(); ++it)
     {
