@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_full_inc.h,v 1.1 2005/01/20 21:35:51 tihocan Exp $ 
+   * $Id: plearn_full_inc.h,v 1.2 2005/02/23 01:32:46 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -60,9 +60,9 @@
 /*********
  * Torch *
  *********/
-#include <plearn_learners/classifiers/SVMClassificationTorch.h>
-#include <plearn_torch/TorchKernel.h>
-#include <plearn_torch/TorchDataSet.h>
+//#include <plearn_learners/classifiers/SVMClassificationTorch.h>
+//#include <plearn_torch/TorchKernel.h>
+//#include <plearn_torch/TorchDataSet.h>
 
 #endif
 
