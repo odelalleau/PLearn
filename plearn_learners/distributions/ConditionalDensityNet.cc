@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.37 2004/04/16 17:37:55 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.38 2004/04/16 20:19:19 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -718,6 +718,8 @@ TVec<string> ConditionalDensityNet::getTestCostNames() const
     inherited::build();
     build_();
   }
+
+extern void varDeepCopyField(Var& field, CopiesMap& copies);
 
   void ConditionalDensityNet::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   {
