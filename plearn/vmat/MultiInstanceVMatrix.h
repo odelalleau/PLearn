@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MultiInstanceVMatrix.h,v 1.2 2004/02/25 05:20:34 nova77 Exp $ 
+   * $Id: MultiInstanceVMatrix.h,v 1.3 2004/02/25 05:41:26 nova77 Exp $ 
    ******************************************************* */
 
 // Authors: Norman Casagrande

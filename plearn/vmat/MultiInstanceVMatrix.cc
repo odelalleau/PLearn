@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MultiInstanceVMatrix.cc,v 1.2 2004/02/25 05:20:34 nova77 Exp $ 
+   * $Id: MultiInstanceVMatrix.cc,v 1.3 2004/02/25 05:41:26 nova77 Exp $ 
    ******************************************************* */
 
 // Authors: Norman Casagrande
@@ -99,7 +99,7 @@ void MultiInstanceVMatrix::build_()
   string inp_element;
   int configNum, bagType;
   int i, nComp = 0;
-  int lastColumn = inputsize_ + targetsize_;
+  int lastColumn = inputsize_ + targetsize_ - 1; // -1 because starts from 0!
   real* mat_i = NULL;
 
   int nRows = count(istreambuf_iterator<char>(inFile),
@@ -161,7 +161,10 @@ void MultiInstanceVMatrix::build_()
 
   }
   
-  cout << "Passed!" << endl;
+  //ofstream test("g:/test.txt");
+  //test << data_;
+  //test.close();
+
   this->setMtime(mtime(specification_));
   inFile.close();
 }
