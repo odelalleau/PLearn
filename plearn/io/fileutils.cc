@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.63 2005/02/12 17:13:26 chapados Exp $
+   * $Id: fileutils.cc,v 1.64 2005/02/12 17:46:21 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -1149,7 +1149,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables)
             PStream expr_stream = openString(expr, PStream::raw_ascii);
             string expr_eval =  readAndMacroProcess(expr_stream, variables);
             bool not_done = true;
-            for (unsigned int i = 0; i < comp.size() && not_done; i++) {
+            for (size_t i = 0; i < comp.size() && not_done; i++) {
               PStream comp_stream = openString(comp[i], PStream::raw_ascii);
               string comp_eval = readAndMacroProcess(comp_stream, variables);
               if (expr_eval == comp_eval) {
