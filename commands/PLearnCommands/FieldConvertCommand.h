@@ -3,6 +3,7 @@
 
 #include "PLearnCommand.h"
 #include "PLearnCommandRegistry.h"
+#include "pl_math.h"    //!< For 'real'.
 
 namespace PLearn {
 using namespace std;
@@ -36,7 +37,8 @@ public:
                   "usage : FieldConvert *source=[source dataset] *destination=[new dataset with vmat extension] *target=[field index of target]\n"\
                   "force=[force file] report=[report file] fraction=[if number of unique values is > than 'fraction' * NonMISSING -> the field is continuous. Default=.3] "\
                   "max_pvalue=[maximum pvalue to assume correlation with target, default=0.025] frac_missing_to_skip=[if MISSING >= 'frac_missing_to_skip * number of samples then this field is skipped, default=1.0] "\
-                  "frac_enough=[if a field is discrete, only values represented by at least frac_enough * nSamples elements will be considered, default=0.005]\n"\
+                  "frac_enough=[if a field is discrete, only values represented by at least frac_enough * nSamples elements will be considered, default=0.005] "\
+                  "precompute=[\"none\" | \"pmat\" | ... : possibly add a <PRECOMPUTE> tag in the destination, default=\"none\"]\n"\
                   "\nfields with asterix * are not optional\n"
                   ) 
   {}
@@ -60,11 +62,12 @@ protected:
 
   static PLearnCommandRegistry reg_;
 
-  float UNIQUE_NMISSING_FRACTION_TO_ASSUME_CONTINUOUS;
-  float PVALUE_THRESHOLD;
-  float FRAC_MISSING_TO_SKIP;
-  float FRAC_ENOUGH;
+  real UNIQUE_NMISSING_FRACTION_TO_ASSUME_CONTINUOUS;
+  real PVALUE_THRESHOLD;
+  real FRAC_MISSING_TO_SKIP;
+  real FRAC_ENOUGH;
   string source_fn, desti_fn,force_fn,report_fn;
+  string precompute;
   int target;
   FieldType type;
 };
