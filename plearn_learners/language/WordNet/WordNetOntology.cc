@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.cc,v 1.14 2003/02/15 02:03:57 morinf Exp $
+   * $Id: WordNetOntology.cc,v 1.15 2003/02/15 22:24:24 morinf Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -45,8 +45,8 @@ namespace PLearn {
   using namespace std;
 
 
-//#define FRED_MODIF
-//#define NOWARNING
+#define FRED_MODIF
+#define NOWARNING
 
 WordNetOntology::WordNetOntology()
 {
@@ -443,6 +443,87 @@ void WordNetOntology::extractWord(string original_word, int wn_pos_type, bool tr
 
 }
 
+Node *
+WordNetOntology::findSynsetFromSynsAndGloss(const vector<string> &syns, const string &gloss)
+{
+    for (map<int, Node *>::iterator it = synsets.begin(); it != synsets.end(); ++it) {
+        Node *node = it->second;
+        int id = node->ss_id;
+        if (node->gloss == gloss)
+            if (node->syns == syns)
+                return node;
+    }
+    return NULL;
+}
+
+void
+WordNetOntology::extractTaggedWordFrequencies(map<int, map<int, int> > &word_senses_to_tagged_frequencies)
+{
+    cout << "in WordNetOntology::extractTaggedWordFrequencies()" << endl;
+    vector<int> dbases;
+    dbases.reserve(4);
+    dbases.push_back(NOUN);
+    dbases.push_back(VERB);
+    dbases.push_back(ADJ);
+    dbases.push_back(ADV);
+    int dbases_size = 1;//dbases.size();
+
+    word_senses_to_tagged_frequencies.clear();
+
+    vector<string> syns;
+    string gloss;
+
+    int total_senses_found = 0;
+    ShellProgressBar progress(0, words.size() * dbases_size, "[Extracting word-sense tagged frequencies]", 50);
+    progress.draw();
+    int ws2tf_i = 0;
+
+    // Go through all databases
+    for (int i = 0; i < dbases_size; ++i) {
+        // Go through all words in the ontology
+        for (map<int, string>::iterator w_it = words.begin(); w_it != words.end(); ++w_it) {
+            progress.update(++ws2tf_i);
+            char *cword = cstr(w_it->second);
+            //SynsetPtr ssp = findtheinfo_ds(cword, dbases[i], -HYPERPTR, ALLSENSES);
+            IndexPtr idx;
+            SynsetPtr cursyn;
+            while ((idx = getindex(cword, dbases[i])) != NULL) {
+                cword = NULL;
+                if (idx->tagged_cnt) {
+                    map<int, map<int, int> >::iterator ws2tf_it = word_senses_to_tagged_frequencies.find(w_it->first);
+                    if (ws2tf_it == word_senses_to_tagged_frequencies.end()) {
+                        word_senses_to_tagged_frequencies[w_it->first] = map<int, int>();
+                        ws2tf_it = word_senses_to_tagged_frequencies.find(w_it->first);
+                    }
+                    for (int l = 0; l < idx->sense_cnt; ++l) {
+                        if ((cursyn = read_synset(dbases[i], idx->offset[l], idx->wd)) != NULL) {
+                            int freq = GetTagcnt(idx, l + 1);
+                            wnresults.OutSenseCount[wnresults.numforms]++;
+                            
+                            // Find if synset is in ontology
+                            if (freq) {
+                                syns = getSynsetWords(cursyn);
+                                gloss = cursyn->defn;
+                                Node *node = findSynsetFromSynsAndGloss(syns, gloss);
+                                if (node != NULL) {
+                                    (ws2tf_it->second)[node->ss_id] = freq;
+                                    ++total_senses_found;
+                                }
+                            }
+                            free_synset(cursyn);
+                        }
+                    }
+                }
+                wnresults.numforms++;
+                free_index(idx);
+            } // while()
+            //free_syns(ssp);
+        }
+    }
+    progress.done();
+    cout << "FOUND A GRAND TOTAL OF " << total_senses_found << " senses" << endl;
+}
+
 int WordNetOntology::extractFrequencies(string word, int whichsense, int dbase)
 {
     IndexPtr idx;
@@ -590,7 +671,6 @@ Node* WordNetOntology::extractOntology(SynsetPtr ssp)
   node->key = ssp->hereiam;
   node->key2.set(ssp);
   synsets[node->ss_id] = node;
-  node->key = ssp->hereiam; // FRED MODIF
 /*
   cout << "key = " << node->key << ", " << "pos = " << ssp->pos << ", "
        << "fnum = " << ssp->fnum << endl;

@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.h,v 1.12 2003/02/15 02:03:57 morinf Exp $
+   * $Id: WordNetOntology.h,v 1.13 2003/02/15 22:24:24 morinf Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -302,6 +302,7 @@ public:
   bool containsWord(string word) { return (words_id.find(word) != words_id.end()); }
   bool containsWordId(int id) { return (words.find(id) != words.end()); }
 
+  Node *findSynsetFromSynsAndGloss(const vector<string> &syns, const string &gloss);
   void listMultipleParented2();
   void printSynsetWords2(int ss_id, int n_words = 15);
 
@@ -332,6 +333,7 @@ public:
   void extract(string voc_file, int wn_pos_type);
   void extractWord(string original_word, int wn_pos_type, bool trim_word, bool stem_word, bool remove_underscores);
   bool extractSenses(string original_word, string processed_word, int wn_pos_type);
+  void extractTaggedWordFrequencies(map<int, map<int, int> > &word_senses_to_tagged_frequencies);
   int extractFrequencies(string word, int sense, int wn_pos_type);
   Node* extractOntology(SynsetPtr ssp);
   void extractAncestors(int threshold, bool cut_with_word_coverage = true);
