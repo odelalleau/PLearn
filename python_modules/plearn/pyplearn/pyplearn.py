@@ -493,7 +493,7 @@ U{Epytext Markup Language Manual<http://epydoc.sourceforge.net/epytext.html>}
 should not take you more than 15 minutes and you will be ready to document your
 code.
 """
-__cvs_id__ = "$Id: pyplearn.py,v 1.19 2005/02/15 15:08:33 dorionc Exp $"
+__cvs_id__ = "$Id: pyplearn.py,v 1.20 2005/02/21 16:08:57 dorionc Exp $"
 
 import string, types
 import plearn.utilities.metaprog as metaprog
@@ -849,6 +849,8 @@ def bind_plargs(obj, field_names = None, plarg_names = None):
         ## First set the argument's default value to the one provided
         ## by obj
         default_value  = getattr(obj, field)
+        if isinstance( default_value, object ):
+            continue
         setattr(plarg_defaults, arg_name, str(default_value))
 
         ## binding: Then set the obj value to the one returned by
@@ -856,5 +858,9 @@ def bind_plargs(obj, field_names = None, plarg_names = None):
         ## be set exactly to what it was when this funtion was
         ## entered. Otherwise, it will be set to the user provided value
         provided_value = getattr(plargs, arg_name)
-        cast = type(default_value)
-        setattr(obj, field, cast(provided_value))
+
+        if default_value is None:
+            setattr(obj, field, None)
+        else:           
+            cast = type(default_value)
+            setattr(obj, field, cast(provided_value))

@@ -2,7 +2,7 @@
 
 Note that including this package simply includes the pyplearn module it contains.
 """
-__cvs_id__ = "$Id: __init__.py,v 1.7 2005/02/15 15:08:33 dorionc Exp $"
+__cvs_id__ = "$Id: __init__.py,v 1.8 2005/02/21 16:08:51 dorionc Exp $"
 
 import new, string
 from pyplearn        import *
@@ -18,7 +18,7 @@ class __pyplearn_magic_module:
             raise AttributeError
 
         klass = new.classobj(name, (PyPLearnObject,), {})
-                             
+
         def initfunc(**kwargs):
             return klass(**kwargs)
         
