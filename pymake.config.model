@@ -2,7 +2,7 @@
 
 # Qt Specific stuff
 
-qtdir = '/usr/lib/qt3/'
+qtdir = '/usr/lib/qt-3.1/'
 
 # PLearn specific directories:
 
