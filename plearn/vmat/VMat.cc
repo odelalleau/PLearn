@@ -36,7 +36,7 @@
 
  
 /* *******************************************************
-* $Id: VMat.cc,v 1.16 2004/03/09 14:58:43 tihocan Exp $ *
+* $Id: VMat.cc,v 1.17 2004/06/18 16:49:31 tihocan Exp $ *
 * This file is part of the PLearn library.               *
 ******************************************************** */
 #include "VMat.h"
@@ -118,13 +118,21 @@ void deepCopyField(VMat& field, CopiesMap& copies)
     field = static_cast<VMatrix*>(field->deepCopy(copies));
 }
 
+/////////////////////
+// loadAsciiAsVMat //
+/////////////////////
 VMat loadAsciiAsVMat(const string& filename)
 {
   Mat m;
   TVec<string> fn;
-  loadAscii(filename,m,fn);
-  VMat vm= new MemoryVMatrix(m);
+  TVec< map<string,real> > map_sr;  // String -> real mappings.
+  loadAscii(filename, m, fn, &map_sr);
+  VMat vm = new MemoryVMatrix(m);
   vm->setMtime(mtime(filename));
+  // Set the discovered string -> real mappings.
+  for (int i = 0; i < map_sr.length(); i++) {
+    vm->setStringMapping(i, map_sr[i]);
+  }
   for(int i=0;i<fn.size();i++)
     vm->declareField(i, fn[i]);
   return vm;
