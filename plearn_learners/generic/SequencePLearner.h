@@ -107,7 +107,7 @@ using namespace std;
   DECLARE_OBJECT_PTR(SequencePLearner);
 } // end of namespace PLearn
 
-#include "EMPLearner.h"
+// #include "EMPLearner.h" // Commented out because missing in the PLearn cvs.
 
 #endif
 
