@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.62 2004/11/12 20:12:46 larocheh Exp $
+   * $Id: NNet.cc,v 1.63 2004/11/15 14:38:39 larocheh Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -765,6 +765,7 @@ void NNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   varDeepCopyField(rbf_centers, copies);
   varDeepCopyField(rbf_sigmas, copies);
   varDeepCopyField(junk_prob, copies);
+  varDeepCopyField(alpha_adaboost,copies);
   varDeepCopyField(output, copies);
   varDeepCopyField(predicted_input, copies);
   deepCopyField(costs, copies);
