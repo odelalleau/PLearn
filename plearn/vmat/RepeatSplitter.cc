@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RepeatSplitter.cc,v 1.5 2004/03/12 23:35:06 tihocan Exp $ 
+   * $Id: RepeatSplitter.cc,v 1.6 2004/03/13 02:44:26 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file RepeatSplitter.cc */
@@ -77,7 +77,7 @@ void RepeatSplitter::declareOptions(OptionList& ol)
 
   declareOption(ol, "seed", &RepeatSplitter::seed, OptionBase::buildoption,
                  "Initializes the random number generator (only if shuffle is set to 1).\n"
-                 "If kept to -1, the initialization will depend on the clock.");
+                 "If set to -1, the initialization will depend on the clock.");
 
   declareOption(ol, "shuffle", &RepeatSplitter::shuffle, OptionBase::buildoption,
                  "If set to 1, the dataset will be shuffled differently at each repetition.");
