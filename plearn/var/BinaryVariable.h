@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: BinaryVariable.h,v 1.12 2004/09/14 16:04:38 chrish42 Exp $
+   * $Id: BinaryVariable.h,v 1.13 2005/02/04 15:10:36 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -75,11 +75,11 @@ public:
   virtual void unmarkAncestors();
   virtual VarArray parents();
   void printInfo(bool print_gradient) { 
-    cout << getName() << "[" << (void*)this << "] " << *this
+    pout << getName() << "[" << (void*)this << "] " << *this
          << "(" << (void*)input1 << "," << (void*)input2
          << ") = " << value;
-    if (print_gradient) cout << " gradient=" << gradient;
-    cout << endl; 
+    if (print_gradient) pout << " gradient=" << gradient;
+    pout << endl; 
   }
   virtual void resizeRValue();
 }; 

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: SourceVariable.h,v 1.6 2004/09/14 16:04:38 chrish42 Exp $
+   * $Id: SourceVariable.h,v 1.7 2005/02/04 15:10:36 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -83,9 +83,9 @@ public:
   bool isConstant() { return true; }
 
   void printInfo(bool print_gradient) { 
-    cout << getName() << "[" << (void*)this << "] " << *this << " = " << value;
-    if (print_gradient) cout << " gradient=" << gradient;
-    cout << endl; 
+    pout << getName() << "[" << (void*)this << "] " << *this << " = " << value;
+    if (print_gradient) pout << " gradient=" << gradient;
+    pout << endl; 
   }
 };
 

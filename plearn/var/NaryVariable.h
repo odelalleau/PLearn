@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: NaryVariable.h,v 1.11 2004/09/14 16:04:38 chrish42 Exp $
+   * $Id: NaryVariable.h,v 1.12 2005/02/04 15:10:36 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -87,12 +87,12 @@ public:
   virtual void unmarkAncestors();
   virtual VarArray parents();
   void printInfo(bool print_gradient) { 
-    cout <<  getName() << "[" << (void*)this << "] " << classname() << "(" << (void*)varray[0];
+    pout <<  getName() << "[" << (void*)this << "] " << classname() << "(" << (void*)varray[0];
     for (int i=1;i<varray.size();i++)
-      cout << "," << (void*)varray[i];
-    cout << ") = " << value;
-    if (print_gradient) cout << " gradient=" << gradient;
-    cout << endl; 
+      pout << "," << (void*)varray[i];
+    pout << ") = " << value;
+    if (print_gradient) pout << " gradient=" << gradient;
+    pout << endl; 
   }
   virtual void resizeRValue();
 };
