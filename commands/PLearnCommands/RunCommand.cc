@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunCommand.cc,v 1.15 2004/12/22 16:23:23 chrish42 Exp $ 
+   * $Id: RunCommand.cc,v 1.16 2005/01/13 14:21:31 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file RunCommand.cc */
@@ -58,7 +58,7 @@ void RunCommand::run(const vector<string>& args)
 {
   string scriptfile = args[0];
   if (!file_exists(scriptfile))
-    PLERROR("Non existant script file: %s\n",scriptfile.c_str());
+    PLERROR("Non-existent script file: %s\n",scriptfile.c_str());
 
   map<string, string> vars;
   // populate vars with the arguments passed on the command line
@@ -72,8 +72,6 @@ void RunCommand::run(const vector<string>& args)
           vars[name_val.first] = name_val.second;
         }
     }
-  PStream pout(&cout);
-  //  pout << vars << endl;
 
   const string extension = extract_extension(scriptfile);
   string script;
