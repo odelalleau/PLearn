@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Experiment.cc,v 1.15 2004/02/20 21:14:48 chrish42 Exp $ 
+   * $Id: Experiment.cc,v 1.16 2004/04/02 20:00:53 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file Experiment.cc */
@@ -41,6 +41,7 @@
 //#include "pl_io.h"
 #include "VecStatsCollector.h"
 #include "AsciiVMatrix.h"
+#include "PLMPI.h"
 
 namespace PLearn {
 using namespace std;
