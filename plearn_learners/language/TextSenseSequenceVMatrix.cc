@@ -7,7 +7,7 @@ using namespace std;
 
 
 TextSenseSequenceVMatrix::TextSenseSequenceVMatrix()
-  :inherited(),window_size(0), is_supervised_data(true), res_pos(TVec<int>(0)), rand_syn(false), wno(NULL)
+  :inherited(),window_size(0), is_supervised_data(true), res_pos(TVec<int>(0)), rand_syn(false), wno(NULL), keep_in_sentence(false), undefined_pos_set(false)
   /* ### Initialise all fields to their default value */
 {
 
@@ -85,7 +85,7 @@ void TextSenseSequenceVMatrix::getNewRow(int i, const Vec& v) const
       {
         v[3*context_count] = 0; //oov_tag_id : should'nt be handcoded;              
         v[3*context_count+1] = UNDEFINED_SS_ID;
-        v[3*context_count+2] = UNDEFINED_TYPE;
+        v[3*context_count+2] = undefined_pos_set ? undefined_pos : UNDEFINED_TYPE;
         context_count++;
       }
       else
@@ -100,7 +100,7 @@ void TextSenseSequenceVMatrix::getNewRow(int i, const Vec& v) const
             {
               temp[0] = 0; //oov_tag_id : should'nt be handcoded;
               temp[1] = UNDEFINED_SS_ID;
-              temp[2] = UNDEFINED_TYPE;
+              temp[2] = undefined_pos_set ? undefined_pos : UNDEFINED_TYPE;
             }
             v[3*window_size] = temp[0];                
             v[3*window_size+1] = temp[1];
@@ -113,7 +113,7 @@ void TextSenseSequenceVMatrix::getNewRow(int i, const Vec& v) const
             if(SYNSETTAG_ID == temp[0])
             {
               temp[0] = 0; //oov_tag_id : should'nt be handcoded;
-              temp[1] = UNDEFINED_TYPE;
+              temp[1] = undefined_pos_set ? undefined_pos : UNDEFINED_TYPE;
             }
             v[3*window_size] = temp[0];
             v[3*window_size+1] = UNDEFINED_SS_ID;
@@ -131,7 +131,7 @@ void TextSenseSequenceVMatrix::getNewRow(int i, const Vec& v) const
           {
             temp[0] = 0; //oov_tag_id : should'nt be handcoded;
             temp[1] = UNDEFINED_SS_ID;
-            temp[2] = UNDEFINED_TYPE;
+            temp[2] = undefined_pos_set ? undefined_pos : UNDEFINED_TYPE;
           }
           v[3*context_count] = temp[0];               
           v[3*context_count+1] = temp[1];
@@ -144,7 +144,7 @@ void TextSenseSequenceVMatrix::getNewRow(int i, const Vec& v) const
           if(SYNSETTAG_ID == temp[0])
           {
             temp[0] = 0; //oov_tag_id : should'nt be handcoded;
-            temp[1] = UNDEFINED_TYPE;
+            temp[1] = undefined_pos_set ? undefined_pos : UNDEFINED_TYPE;
           }
           v[3*context_count] = temp[0];
           v[3*context_count+1] = UNDEFINED_SS_ID;
@@ -164,6 +164,8 @@ void TextSenseSequenceVMatrix::getNewRow(int i, const Vec& v) const
   my_current_row_index = i;
   for(int j=0; j<my_current_row.size(); j++)
     my_current_row[j] = v[j];
+
+  if(keep_in_sentence) apply_boundary(v);
 }
 
 int TextSenseSequenceVMatrix::getRestrictedRow(const int i, Vec v) const
@@ -180,7 +182,7 @@ int TextSenseSequenceVMatrix::getRestrictedRow(const int i, Vec v) const
   {
     v[3*j] = 0; //oov_tag_id : should'nt be handcoded;
     v[3*j+1] = UNDEFINED_SS_ID;
-    v[3*j+2] = UNDEFINED_TYPE;
+    v[3*j+2] = undefined_pos_set ? undefined_pos : UNDEFINED_TYPE;
   }
 
   // Fetch target word
@@ -193,7 +195,7 @@ int TextSenseSequenceVMatrix::getRestrictedRow(const int i, Vec v) const
     {
       temp[0] = 0; //oov_tag_id : should'nt be handcoded;
       temp[1] = UNDEFINED_SS_ID;
-      temp[2] = UNDEFINED_TYPE;
+      temp[2] = undefined_pos_set ? undefined_pos : UNDEFINED_TYPE;
     }
     v[3*window_size] = temp[0];
     v[3*window_size+1] = temp[1];
@@ -206,7 +208,7 @@ int TextSenseSequenceVMatrix::getRestrictedRow(const int i, Vec v) const
     if(SYNSETTAG_ID == temp[0])
     {
       temp[0] = 0; //oov_tag_id : should'nt be handcoded;
-      temp[1] = UNDEFINED_TYPE;
+      temp[1] = undefined_pos_set ? undefined_pos : UNDEFINED_TYPE;
     }
     v[3*window_size] = temp[0];
     v[3*window_size+1] = UNDEFINED_SS_ID;
@@ -334,7 +336,42 @@ int TextSenseSequenceVMatrix::getRestrictedRow(const int i, Vec v) const
   for(int j=0; j<my_current_row.size(); j++)
     my_current_row[j] = v[j];
 
+  if(keep_in_sentence) apply_boundary(v);
+
   return context_dist+i == dvm->length() ? context_dist+i : context_dist+i-1;
+}
+
+void TextSenseSequenceVMatrix::apply_boundary(const Vec& v) const
+{
+  // Looking for left boundary
+
+  bool found_boundary = false;
+  for(int i=window_size/2-1; i>=0; i--)
+  {
+    if(v[3*i] == sentence_boundary) found_boundary = true;
+    if(found_boundary)
+    {
+      v[3*i] = 0;
+      v[3*i+1] = UNDEFINED_SS_ID;
+      if(undefined_pos_set) v[3*i+2] = undefined_pos;
+      else v[3*i+2] = UNDEFINED_TYPE;
+    }
+  }
+
+  // Looking for right boundary
+  
+  found_boundary = false;
+  for(int i=window_size/2; i<window_size; i--)
+  {
+    if(v[3*i] == sentence_boundary) found_boundary = true;
+    if(found_boundary)
+    {
+      v[3*i] = 0;
+      v[3*i+1] = UNDEFINED_SS_ID;
+      if(undefined_pos_set) v[3*i+2] = undefined_pos;
+      else v[3*i+2] = UNDEFINED_TYPE;
+    }
+  }
 }
 
 void TextSenseSequenceVMatrix::permute(Vec v) const
@@ -407,6 +444,10 @@ void TextSenseSequenceVMatrix::declareOptions(OptionList& ol)
   declareOption(ol, "res_pos", &TextSenseSequenceVMatrix::res_pos, OptionBase::buildoption,"TVec<int> containing the POSs of the words which should not be included in the target word context");
   declareOption(ol, "dvm", &TextSenseSequenceVMatrix::dvm, OptionBase::buildoption,"VMatrix that contains the triplets word/sense/POS of a corpus");
   declareOption(ol, "rand_syn", &TextSenseSequenceVMatrix::rand_syn, OptionBase::buildoption,"Use same-sense random permutation of words");
+  declareOption(ol, "keep_in_sentence", &TextSenseSequenceVMatrix::keep_in_sentence, OptionBase::buildoption,"Indication that the context must not spread over another sentence");
+  declareOption(ol, "sentence_boundary", &TextSenseSequenceVMatrix::sentence_boundary, OptionBase::buildoption,"Sentence boundary symbol");
+  declareOption(ol, "undefined_pos_set", &TextSenseSequenceVMatrix::undefined_pos_set, OptionBase::buildoption,"Indication that the undefined pos id is defined");
+  declareOption(ol, "undefined_pos", &TextSenseSequenceVMatrix::undefined_pos, OptionBase::buildoption,"Undefined pos id");
   inherited::declareOptions(ol);
 }
 

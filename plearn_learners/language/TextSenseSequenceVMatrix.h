@@ -39,6 +39,14 @@ protected:
   mutable int my_current_row_index;
   //! Elements of the current row
   mutable Vec my_current_row;
+  //! Indication that the context must not spread over another sentence
+  bool keep_in_sentence;
+  //! Sentence boundary symbol
+  int sentence_boundary;
+  //! Indication that the undefined pos id is defined
+  bool undefined_pos_set;
+  //! Undefined pos id
+  int undefined_pos;
 
 public:
 
@@ -57,7 +65,7 @@ public:
     \param that_wno the ontology used as a sense inventory
    */
   TextSenseSequenceVMatrix(VMat that_dvm, int that_window_size, TVec<int> that_res_pos = TVec<int>(0), bool that_rand_syn = false, WordNetOntology *that_wno = NULL)
-    :inherited(that_dvm->length(), 3*(that_window_size+1)),dvm(that_dvm),window_size(that_window_size), is_supervised_data(dvm->width()==3), res_pos(that_res_pos), rand_syn(that_rand_syn), wno(that_wno), my_current_row_index(-3*(that_window_size+1)), my_current_row(3*(that_window_size+1))
+    :inherited(that_dvm->length(), 3*(that_window_size+1)),dvm(that_dvm),window_size(that_window_size), is_supervised_data(dvm->width()==3), res_pos(that_res_pos), rand_syn(that_rand_syn), wno(that_wno), my_current_row_index(-3*(that_window_size+1)), my_current_row(3*(that_window_size+1)), keep_in_sentence(false), undefined_pos_set(false)
   /* ### Initialise all fields to their default value */
 {
   build_();
@@ -74,6 +82,9 @@ private:
   
   //! This permutes randomly the words (target and context) with one of their corresponding synonym.
   void permute(Vec v) const;
+
+  //! This applies the sentence boundary
+  void apply_boundary(const Vec& v) const;
 
 protected: 
   //! Declares this class' options
@@ -108,6 +119,11 @@ public:
   //! Sets the vector of forbidden POS for the context words
   void setRestrictedPOS(TVec<int> that_res_pos){res_pos = that_res_pos;}
 
+  //! Sets the sentence boundary symbol
+  void setSentenceBoundary(int b){keep_in_sentence = true; sentence_boundary = b;}
+
+  //! Sets the undefined pos id
+  void setUndefinedPOSId(int pos_id){undefined_pos_set = true; undefined_pos = pos_id;}
 
   typedef RowBufferedVMatrix inherited;
   //! Declares name and deepCopy methods
