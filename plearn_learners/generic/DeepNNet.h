@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DeepNNet.h,v 1.1 2005/01/18 01:21:01 yoshua Exp $ 
+   * $Id: DeepNNet.h,v 1.2 2005/01/18 04:50:56 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -62,7 +62,15 @@ protected:
   // *********************
 
   // ### declare protected option fields (such as learnt parameters) here
-  // ...
+
+  TVec<TVec<TVec<int> > > sources; // at [l][i] indices of inputs to neuron i of layer l
+  TVec<TVec<Vec > > weights; // at [l][i] input weight vector of neuron i of layer l
+  TVec<Vec> biases; // at [l][i] bias of neuron i of layer l
+
+  // temporary 
+  TVec<Vec> activations; // at [l] output of non-linearity of layer l, including the input AND the output layer
+  TVec<Mat> gradients; // at [l] gradients on all existing and potential connections
+  TVec<Mat> avg_gradients_norm; // at [l] average of norm of gradients on all existing and potential connections
     
 public:
 
@@ -71,7 +79,18 @@ public:
   // ************************
 
   // ### declare public option fields (such as build options) here
-  // ...
+
+  int n_layers; // this counts the output layer but not the input layer
+  int default_n_units_per_hidden_layer; // optionally to initialize n_units_per_layer
+  TVec<int> n_units_per_layer; 
+  real L1_regularizer; // amount of penalty on sum_{l,i,j} |weights[l][i][j]|
+  real initial_learning_rate;
+  real learning_rate_decay;
+  string output_cost; // implies a non-linearity for outputs: "mse" -> linear, "nll" -> softmax
+  bool add_connections; // if true, instanciate potential connections with greater
+  // absolute gradient than the existing connections with the smallest absolute gradient
+  bool remove_connections; // remove the weaker existing connections (smaller absolute value)
+  real initial_sparsity; // initial fraction of weights that are 0
 
   // ****************
   // * Constructors *

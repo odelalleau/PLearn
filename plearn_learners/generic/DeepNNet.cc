@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DeepNNet.cc,v 1.1 2005/01/18 01:21:00 yoshua Exp $ 
+   * $Id: DeepNNet.cc,v 1.2 2005/01/18 04:50:56 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -48,11 +48,16 @@ using namespace std;
 
 DeepNNet::DeepNNet() 
 /* ### Initialize all fields to their default value here */
+  : n_layers(3),
+    n_units_per_layer(10),
+    L1_regularizer(1e-5),
+    initial_learning_rate(1e-4),
+    learning_rate_decay(1e-6),
+    output_cost("mse"),
+    add_connections(true),
+    remove_connections(true),
+    initial_sparsity(0.9);
 {
-  // ...
-
-  // ### You may or may not want to call build_() to finish building the object
-  // build_();
 }
 
 PLEARN_IMPLEMENT_OBJECT(DeepNNet, 
@@ -63,16 +68,40 @@ PLEARN_IMPLEMENT_OBJECT(DeepNNet,
 
 void DeepNNet::declareOptions(OptionList& ol)
 {
-  // ### Declare all of this object's options here
-  // ### For the "flags" of each option, you should typically specify  
-  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-  // ### OptionBase::tuningoption. Another possible flag to be combined with
-  // ### is OptionBase::nosave
+  declareOption(ol, "n_layers", &DeepNNet::n_layers, OptionBase::buildoption,
+                "Number of layers, including the output but not input layer");
 
-  // ### ex:
-  // declareOption(ol, "myoption", &DeepNNet::myoption, OptionBase::buildoption,
-  //               "Help text describing this option");
-  // ...
+  declareOption(ol, "default_n_units_per_hidden_layer", &DeepNNet::default_n_units_per_hidden_layer, 
+                OptionBase::buildoption, "If n_units_per_layer is not specified, it is given by this value for all hidden layers");
+
+  declareOption(ol, "n_units_per_layer", &DeepNNet::n_units_per_layer, OptionBase::buildoption,
+                "Number of units per layer, including the output but not input layer.\n"
+                "The last (output) layer number of units is overridden by the outputsize option");
+
+  declareOption(ol, "L1_regularizer", &DeepNNet::L1_regularizer, OptionBase::buildoption,
+                "amount of penalty on sum_{l,i,j} |weights[l][i][j]|");
+
+  declareOption(ol, "initial_learning_rate", &DeepNNet::initial_learning_rate, OptionBase::buildoption,
+                "learning_rate = initial_learning_rate/(1 + iteration*learning_rate_decay)\n"
+                "where iteration is incremented after each example is presented");
+
+  declareOption(ol, "learning_rate_decay", &DeepNNet::learning_rate_decay, OptionBase::buildoption,
+                "see the comment for initial_learning_rate.");
+
+  declareOption(ol, "output_cost", &DeepNNet::output_cost, OptionBase::buildoption,
+                "String-valued option specifies output non-linearity and cost:\n"
+                "  'mse': mean squared error for regression with linear outputs\n"
+                "  'nll': negative log-likelihood of P(class|input) with softmax outputs");
+
+  declareOption(ol, "add_connections", &DeepNNet::add_connections, OptionBase::buildoption,
+                "whether to add connections when the potential connections average absolute"
+                "gradient becomes larger than that of existing connections");
+
+  declareOption(ol, "remove_connections", &DeepNNet::remove_connections, OptionBase::buildoption,
+                "whether to remove connections when their weight becomes too small");
+
+  declareOption(ol, "initial_sparsity", &DeepNNet::initial_sparsity, OptionBase::buildoption,
+                "initial fraction of weights that are set to 0.");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -87,6 +116,45 @@ void DeepNNet::build_()
   // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
   // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
   // ### You should assume that the parent class' build_() has already been called.
+
+  // these would be -1 if a train_set has not be set already
+  if (inputsize_>=0 && targetsize_>=0 && weightsize_>=0)
+  {
+    activations.resize(n_layers);
+    if (sources.length() != n_layers) // in case we are called after loading the object we don't need to do this:
+    {
+      if (n_units_per_layer.length()==0)
+      {
+        n_units_per_layer.resize(n_layers);
+        for (int l=0;l<n_layers;l++)
+          n_units_per_layer[l] = default_n_units_per_layer;
+      }
+      sources.resize(n_layers);
+      weights.resize(n_layers);
+      biases.resize(n_layers);
+      for (int l=0;l<n_layers;l++)
+      {
+        sources[l].resize(n_units_per_layer[l]);
+        weights[l].resize(n_units_per_layer[l]);
+        biases[l].resize(n_units_per_layer[l]);
+        int n_previous = (l==0)? int((1-initial_sparsity)*inputsize_) :
+          int((1-initial_sparsity)*n_units_per_layer[l-1]);
+        for (int i=0;i<n_units_per_layer[l];i++)
+        {
+          sources[l][i].resize(n_previous);
+          weights[l][i].resize(n_previous);
+        }
+      }
+      initializeParams();
+    }
+    if (add_connections)
+    {
+      gradients.resize(n_layers);
+      avg_gradients_norm.resize(n_layers);
+    }
+
+  }
+
 }
 
 // ### Nothing to add here, simply calls build_
