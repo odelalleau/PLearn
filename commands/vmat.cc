@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmat.cc,v 1.2 2002/10/03 07:35:22 plearner Exp $
+   * $Id: vmat.cc,v 1.3 2003/04/24 22:37:51 yoshua Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -45,5 +45,14 @@
 using namespace PLearn;
 
 int main(int argc, char** argv)
-{ return vmatmain(argc,argv); }
+{ 
+  try {
+    return vmatmain(argc,argv); 
+  } // end of try
+  catch(const PLearnError& e)
+    {
+      cerr << "FATAL ERROR: " << e.message() << endl;
+    }
+  return 0;
+}
   
