@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.cc,v 1.5 2004/02/20 21:14:49 chrish42 Exp $
+   * $Id: LinearRegressor.cc,v 1.6 2004/03/10 18:21:24 tihocan Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.cc */
@@ -120,9 +120,14 @@ PLEARN_IMPLEMENT_OBJECT(LinearRegressor, "Ordinary Least Squares and Ridge Regre
 
 int LinearRegressor::outputsize() const
 {
-  // compute and return the size of this learner's output, (which typically
-  // may depend on its inputsize(), targetsize() and set options)
-  return targetsize();
+  int ts = targetsize();
+  if (ts >= 0) {
+    return ts;
+  } else {
+    // This learner's training set probably hasn't been set yet, so
+    // we don't know the targetsize.
+    return 0;
+  }
 }
 
 void LinearRegressor::forget()
