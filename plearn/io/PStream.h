@@ -293,94 +293,6 @@ public:
   PStream& operator<<(bool x);
  
   /*****
-   * op>> & op<< for generic pointers
-   */
-
-  template <class T> 
-  inline PStream& operator>>(T*& x)
-  {
-    *this >> ws;
-    if (peek() == '*') 
-      {
-        get(); // Eat '*'
-        unsigned int id;
-        *this >> id;
-        if (id==0)
-          x = 0;
-        else if (peek() == '-') 
-          {
-            get(); // Eat '-'
-            char cc = get();
-            if(cc != '>') // Eat '>'
-              PLERROR("In PStream::operator>>(T*&)  Wrong format.  Expecting \"*%d->\" but got \"*%d-%c\".", id, id, cc);
-            *this >> ws;
-            if(!x)
-              x= new T();
-            *this >> *x >> ws;
-            copies_map_in[id]= x;
-          } 
-        else 
-          {
-            // Find it in map and return ptr;
-            map<unsigned int, void *>::iterator it = copies_map_in.find(id);
-            if (it == copies_map_in.end())
-              PLERROR("In PStream::operator>>(T*&) object (ptr) to be read has not been previously defined");
-            x= static_cast<T *>(it->second);
-          }
-      } 
-    else
-      *this >> *x >> ws;
-    
-    return *this;
-  }
-  
-  template <class T> 
-  inline PStream& operator<<(const T*& x)
-  {
-    if(x)
-      {
-        map<void *, unsigned int>::iterator it = copies_map_out.find(const_cast<T*&>(x));
-        if (it == copies_map_out.end()) 
-          {
-            int id = copies_map_out.size()+1;
-            rawout() << '*' << id << "->";
-            copies_map_out[const_cast<T*&>(x)] = id;
-            *this << *x;
-          }
-        else 
-          rawout() << '*' << it->second << ' ';
-      }
-    else
-      rawout() << "*0 ";
-    return *this;
-  }
-
-
-
-  template <class T> 
-  inline PStream& operator>>(PP<T> &o)
-  {
-    T *ptr;
-    if (o.isNull())
-      ptr = 0;
-    else
-      ptr = o;
-    *this >> ptr;
-    o = ptr;
-    return *this;
-  }
-
-  template <class T> 
-  inline PStream& operator<<(const PP<T> &o)
-  {
-    T *ptr = static_cast<T *>(o);
-    *this << const_cast<const T * &>(ptr);
-    return *this;
-  }
-
-  
-
-  /*****
    * operator<<'s and operator>>'s to set flags, etc.
    */
   inline istream& operator>>(pl_stream_raw& raw_) { return rawin(); }
@@ -431,6 +343,94 @@ protected:
   void initInBuf();
 };
 
+
+
+  /*****
+   * op>> & op<< for generic pointers
+   */
+
+  template <class T> 
+  inline PStream& operator>>(PStream& in, T*& x)
+  {
+    in >> ws;
+    if (in.peek() == '*') 
+      {
+        in.get(); // Eat '*'
+        unsigned int id;
+        in >> id;
+        if (id==0)
+          x = 0;
+        else if (in.peek() == '-') 
+          {
+            in.get(); // Eat '-'
+            char cc = in.get();
+            if(cc != '>') // Eat '>'
+              PLERROR("In PStream::operator>>(T*&)  Wrong format.  Expecting \"*%d->\" but got \"*%d-%c\".", id, id, cc);
+            in >> ws;
+            if(!x)
+              x= new T();
+            in >> *x >> ws;
+            in.copies_map_in[id]= x;
+          } 
+        else 
+          {
+            // Find it in map and return ptr;
+            map<unsigned int, void *>::iterator it = in.copies_map_in.find(id);
+            if (it == in.copies_map_in.end())
+              PLERROR("In PStream::operator>>(T*&) object (ptr) to be read has not been previously defined");
+            x= static_cast<T *>(it->second);
+          }
+      } 
+    else
+      in >> *x >> ws;
+    
+    return in;
+  }
+
+
+  template <class T> 
+  inline PStream& operator<<(PStream& out, const T*& x)
+  {
+    if(x)
+      {
+        map<void *, unsigned int>::iterator it = out.copies_map_out.find(const_cast<T*&>(x));
+        if (it == out.copies_map_out.end()) 
+          {
+            int id = out.copies_map_out.size()+1;
+            out.rawout() << '*' << id << "->";
+            out.copies_map_out[const_cast<T*&>(x)] = id;
+            out << *x;
+          }
+        else 
+          out.rawout() << '*' << it->second << ' ';
+      }
+    else
+      out.rawout() << "*0 ";
+    return out;
+  }
+
+  template <class T> 
+  inline PStream& operator>>(istream& in, PP<T> &o)
+  {
+    T *ptr;
+    if (o.isNull())
+      ptr = 0;
+    else
+      ptr = o;
+    in >> ptr;
+    o = ptr;
+    return in;
+  }
+
+  template <class T> 
+  inline PStream& operator<<(ostream& out, const PP<T> &o)
+  {
+    T *ptr = static_cast<T *>(o);
+    out << const_cast<const T * &>(ptr);
+    return out;
+  }
+
+  
 
 
 // Serialization of pairs
@@ -682,7 +682,7 @@ template<class SequenceType>
 void writeSequence(PStream& out, const SequenceType& seq)
 {
   unsigned int n = seq.size();
-  typename SequenceType::iterator it = seq.begin();
+  typename SequenceType::const_iterator it = seq.begin();
   
   switch(out.outmode)
     {

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.10 2002/10/25 23:16:08 plearner Exp $
+   * $Id: Object.h,v 1.11 2002/12/05 01:35:08 jauvinc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -723,6 +723,42 @@ void displayRegisteredSubClassesOf(const string& baseclassname, ostream& out)
           };                                                               \
         DECLARE_TYPE_TRAITS(CLASSNAME)
 
+
+#define DECLARE_TEMPLATE_OBJECT_PTR(CLASSNAME)                            \
+        template<class T> \
+        inline Object *toObjectPtr(const CLASSNAME<T> &o)                     \
+          { return const_cast<CLASSNAME<T> *>(&o); };                         \
+        template<class T> \
+        inline PStream &operator>>(PStream &in, CLASSNAME<T> &o)        \
+          { o.newread(in); return in; };                                   \
+        template<class T> \
+        inline PStream &operator>>(PStream &in, CLASSNAME<T> * &o)      \
+          { if (o) o->newread(in);                                         \
+            else o = static_cast<CLASSNAME<T> *>(readObject(in));             \
+            return in; };                                                  \
+        template<class T> \
+        inline PStream &operator<<(PStream &out, const CLASSNAME<T> &o) \
+          { o.newwrite(out); return out; };                                \
+        template<class T> \
+        inline PStream &operator>>(PStream &in, PP<CLASSNAME<T> > &o)    \
+          { Object *ptr = (CLASSNAME<T> *)o;                                  \
+            in >> ptr;                                                     \
+            o = dynamic_cast<CLASSNAME<T> *>(ptr);                            \
+            return in;                                                     \
+          };                                                   \
+         template<class T>                                    \
+         class TypeTraits< CLASSNAME<T> >                       \
+           {                                                    \
+             public:                                              \
+               static inline string name()                           \
+                 { return string(#CLASSNAME)+"< " + TypeTraits<T>::name()+" >"; }  \
+            static inline unsigned char little_endian_typecode()                    \
+             { return 0xFF; }                                                      \
+            static inline unsigned char big_endian_typecode()                \
+             { return 0xFF; }                                                \
+            };
+
+
 #define DECLARE_OBJECT_PP(PPCLASSNAME, CLASSNAME)                          \
         inline PStream &operator>>(PStream &in, PPCLASSNAME &o)      \
           { Object *ptr;                                                   \
@@ -747,16 +783,24 @@ void displayRegisteredSubClassesOf(const string& baseclassname, ostream& out)
             return ol; }
 
 #define DECLARE_TEMPLATE_NAME_AND_DEEPCOPY(CLASSNAME, TEMPLATETYPE)        \
-        DECLARE_NAME_AND_DEEPCOPY(CLASSNAME<TEMPLATETYPE>)
-#define IMPLEMENT_TEMPLATE_NAME_AND_DEEPCOPY(CLASSNAME, TEMPLATETYPE)      \
-        IMPLEMENT_TEMPLATE_NAME(CLASSNAME, TEMPLATETYPE);                  \
-        IMPLEMENT_TEMPLATE_DEEPCOPY(CLASSNAME, TEMPLATETYPE);              \
-        template <class TEMPLATETYPE> OptionList &                         \
-        CLASSNAME<TEMPLATETYPE>::getOptionList() const                     \
+        OptionList& getOptionList() const                     \
           { static OptionList ol;                                          \
              if (ol.empty())                                               \
                declareOptions(ol);                                         \
-             return ol; }
+             return ol; }                                                  \
+        virtual string classname() const                         \
+          { return string(#CLASSNAME)+"<"+ TypeTraits<TEMPLATETYPE>::name() + ">"; };                       \
+        static Object * _new_instance_for_typemap_()              \
+          { return new CLASSNAME<TEMPLATETYPE>(); }                   \
+        CLASSNAME<TEMPLATETYPE> * deepCopy(CopiesMap &copies) const         \
+          { return implementDeepCopy<CLASSNAME<TEMPLATETYPE> >(copies); } \
+        static TypeRegistrar _register_in_typemap_;
+
+
+
+#define IMPLEMENT_TEMPLATE_NAME_AND_DEEPCOPY(CLASSNAME, TEMPLATETYPE)      \
+        TypeRegistrar CLASSNAME<TEMPLATETYPE>::_register_in_typemap_( \
+	      #CLASSNAME"<"#TEMPLATETYPE">", &CLASSNAME::_new_instance_for_typemap_)
 
 #define DECLARE_ABSTRACT_NAME_AND_DEEPCOPY(CLASSNAME)                      \
         DECLARE_ABSTRACT_NAME(CLASSNAME);                                  \
