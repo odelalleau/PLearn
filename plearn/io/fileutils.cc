@@ -37,33 +37,23 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.57 2005/01/26 16:32:26 dorionc Exp $
+   * $Id: fileutils.cc,v 1.58 2005/01/27 21:39:30 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
 
-#include <time.h>
-#include <sys/stat.h>
-#if !defined(_MSC_VER) && !defined(_MINGW_)
-#include <sys/wait.h>
-#endif
-
-// norman: added win32 specific declarations
+// Win32 specific declarations
 #ifdef WIN32
 #include <direct.h>
-#define	S_ISDIR(m)	(((m) & S_IFMT) == S_IFDIR)
-#define	S_ISREG(m)	(((m) & S_IFMT) == S_IFREG)
-
-#define PL_MAX_FILE_SIZE 1000
 #define chdir _chdir
-#define stat _stat
 #include <Windows.h>
 
 #else
-#include <dirent.h>
+
 #include <unistd.h>
 
 #endif // WIN32
+
 
 #include <strstream>
 
@@ -74,11 +64,17 @@
 #include "PStream.h"
 #include "PPath.h"
 
+#include <plearn/base/PrUtils.h>
+#include <mozilla/nspr/prio.h>
+#include <mozilla/nspr/prtime.h>
+#include <mozilla/nspr/prerror.h>
+
+
 namespace PLearn {
 using namespace std;
 
-string getcwd()
-{
+  string getcwd()
+  {
     char buf[2000];
     // norman: added specific functions for win32
     //         (cannot do the define because getcwd is also
@@ -86,7 +82,7 @@ string getcwd()
 #ifdef WIN32
     _getcwd(buf, 2000);
     // norman: replace the ugly windows backslash with the forward slash
-    for (int i = 0; buf[i] != 0 && i < 2000; ++i) {
+    for (int i = 0; buf[i] != '\0' && i < 2000; ++i) {
       if (buf[i] == '\\')
         buf[i] = '/';
     }
@@ -94,21 +90,21 @@ string getcwd()
     ::getcwd(buf, 2000);
 #endif
     return string(buf);
-}
+  }
 
-int chdir(const string& path) 
-{ 
-  int status = ::chdir(path.c_str()); 
-  if (status!=0)
-    PLERROR("Could not chdir to %s\n",path.c_str());
-  return status;
-}
-
+  int chdir(const string& path) 
+  { 
+    int status = ::chdir(path.c_str()); 
+    if (status!=0)
+      PLERROR("Could not chdir to %s.",path.c_str());
+    return status;
+  }
+  
   string abspath(const string& path)
   {    
     string cwd = getcwd();
     string result;
-    if(isdir(path))
+    if (isdir(path))
       {
         chdir(path);
         result = append_slash(getcwd());
@@ -127,121 +123,74 @@ int chdir(const string& path)
 
   bool pathexists(const string& path)
   {
-    struct stat s;
-	 
-    int status = stat(path.c_str(),&s);
-    if(status!=0)
+    PRFileInfo fi;
+
+    if (PR_GetFileInfo(path.c_str(), &fi) != PR_SUCCESS)
       return false;
-    return S_ISDIR(s.st_mode) | S_ISREG(s.st_mode);
+    else
+      return fi.type == PR_FILE_FILE || fi.type == PR_FILE_DIRECTORY;
   }
 
   bool isdir(const string& path)
   {
-#if defined(_MINGW_) || defined(WIN32) 
-    if (path[path.size()-1] == ':') // c: or C: or r: or R: or...
-      return true;
-#endif
+    PRFileInfo fi;
 
-    struct stat s;
-    int status = stat(path.c_str(),&s);
-    if(status!=0)
+    if (PR_GetFileInfo(path.c_str(), &fi) != PR_SUCCESS)
       return false;
-    return S_ISDIR(s.st_mode);
+    else
+      return fi.type == PR_FILE_DIRECTORY;
   }
 
   bool isfile(const string& path)
   {
-    struct stat s;
-    int status = stat(path.c_str(),&s);
-    if(status!=0)
+    PRFileInfo fi;
+
+    if (PR_GetFileInfo(path.c_str(), &fi) != PR_SUCCESS)
       return false;
-    return S_ISREG(s.st_mode);
+    else
+      return fi.type == PR_FILE_FILE;
   }
 
-  time_t mtime(const string& path)
+  PRTime mtime(const string& path)
   {
-    struct stat s;
-    int status = stat(path.c_str(),&s);
-    if(status!=0)
+    PRFileInfo fi;
+
+    if (PR_GetFileInfo(path.c_str(), &fi) != PR_SUCCESS)
       return 0;
     else
-      return s.st_mtime;
+      return fi.modifyTime;
   }
 
-  // Returns a list of all entries in the given directory (omitting entries "." and "..")
-  // If the direcotry cannot be opened an error is issued.
+  // Returns a list of all entries in the given directory (omitting entries
+  // "." and "..") If the directory cannot be opened an error is issued. 
   // The returned entries are not full paths.
   vector<string> lsdir(const string& dirpath)
   {
     vector<string> list;
 
-#ifdef WIN32
-
-    // Experimental version of directory listing for WIN32
-
-    WIN32_FIND_DATA fileData; 
-    HANDLE hSearch; 
-    bool fFinished = false; 
-    char oldpath[PL_MAX_FILE_SIZE];
-
-    GetCurrentDirectory(FILENAME_MAX, oldpath);
-
-    if (! SetCurrentDirectory(dirpath.c_str()) )
-    {
-      SetCurrentDirectory(oldpath);
-      PLERROR("In lsdir: could not open directory %s",dirpath.c_str());
-    }
-
-    hSearch = FindFirstFile("*", &fileData); 
-    if (hSearch == INVALID_HANDLE_VALUE) 
-    {
-      SetCurrentDirectory(oldpath);
-      PLERROR("In lsdir: could not open directory %s. Invalid Handle Value.",dirpath.c_str());
-    }
-
-    while (!fFinished) 
-    { 
-      string s = fileData.cFileName;
-      if(s!="." && s!="..")
-        list.push_back(s);
-
-      if (!FindNextFile(hSearch, &fileData)) 
-      {
-        if (GetLastError() == ERROR_NO_MORE_FILES) 
-        { 
-          fFinished = true; 
-        } 
-        else 
-        { 
-          printf("Couldn't find next file."); 
-          // strange problem! :)
-        } 
-      }
-    }
-
-     SetCurrentDirectory(oldpath);
-
-#else
-
-    DIR* d = opendir(dirpath.c_str());
-    if(!d)
+    PRDir* d = PR_OpenDir(dirpath.c_str());
+    if (!d)
         PLERROR("In lsdir: could not open directory %s",dirpath.c_str());
-    struct dirent* dent;
-    while( (dent = readdir(d)) != 0)
-      {
-        string s = dent->d_name;
-        if(s!="." && s!="..")
-          list.push_back(s);
-      }
-    closedir(d);
-#endif
+
+    PRDirEntry* dirent = PR_ReadDir(d, PR_SKIP_BOTH);
+    while (dirent) {
+      list.push_back(dirent->name);
+      dirent = PR_ReadDir(d, PR_SKIP_BOTH);
+    }
+    PR_CloseDir(d);
+    
+    if (PR_GetError() != PR_NO_MORE_FILES_ERROR)
+      PLERROR("In lsdir: error while listing directory: %s.",
+              getPrErrorString().c_str());
+
     return list;
   }
 
-
   // Same as lsdir, except dirpath is prepended to the entries' names.
   vector<string> lsdir_fullpath(const string& dirpath)
-  { return addprefix(remove_trailing_slash(dirpath)+slash,lsdir(dirpath)); }
+  {
+    return addprefix(remove_trailing_slash(dirpath)+slash, lsdir(dirpath));
+  }
 
 
   // Forces directory creation if it doesn't already exist. 
@@ -254,12 +203,8 @@ int chdir(const string& path)
     if(isdir(path))
       return true;
 
-#if !defined(_MINGW_) && !defined(WIN32)
-    mode_t mode = S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH;
-#endif
     string pathpart;
-    for (size_t pos = 1; pos != string::npos;)
-    {
+    for (size_t pos = 1; pos != string::npos;) {
       // keep ++pos here!
       ++pos;
       pos = path.find(slash, pos);
@@ -267,90 +212,85 @@ int chdir(const string& path)
         pathpart = path.substr(0, pos);
       else
         pathpart = path;
-				
-      if(!isdir(pathpart))
-      {
-#if !defined(_MINGW_) && !defined(WIN32)
-        if(mkdir(pathpart.c_str(), mode)!=0)
-#else
-        if(mkdir(pathpart.c_str())!=0)
-#endif
+      
+      if(!isdir(pathpart)) {
+        if (PR_MkDir(pathpart.c_str(), 0775) != PR_SUCCESS)
           return false;
       }
     }
-		
+    
     return true;
   }
 
-void force_mkdir_for_file(const string& filepath)
-{
-  string dirpath = extract_directory(filepath);
-  if(!force_mkdir(dirpath))
-    PLERROR("force_mkdir(%s) failed",dirpath.c_str());
-}
 
-  // Forces removal of directory and all its content
+  void force_mkdir_for_file(const string& filepath)
+  {
+    string dirpath = extract_directory(filepath);
+    if (!force_mkdir(dirpath))
+      PLERROR("force_mkdir(%s) failed",dirpath.c_str());
+  }
+
+  // Forces removal of directory and all its subdirectories
   // Return value indicates success (true) or failure (false)
   // If the directory does not exist, false is returned.
   bool force_rmdir(const string& dirname)
   {
-    if(!isdir(dirname))
+    if (!isdir(dirname))
       return false;
-    vector<string> entries = lsdir_fullpath(dirname);
-    vector<string>::const_iterator it = entries.begin();
-    while(it!=entries.end())
-      {
-        if(isdir(*it))
-          {
-            if(!force_rmdir(*it))
-              return false;
-          }
-        else
-          {
-            if(unlink(it->c_str())!=0)
-              return false;
-          }
-        ++it;
+    
+    const vector<string> entries = lsdir_fullpath(dirname);
+    for (vector<string>::const_iterator it = entries.begin();
+         it != entries.end(); ++it) {
+      if (isdir(*it)) {
+        if (!force_rmdir(*it))
+          return false;
       }
-    if(rmdir(dirname.c_str())!=0)
-      return false;
-    return true;
+      else {
+        if (PR_RmDir(it->c_str()) != PR_SUCCESS)
+          return false;
+      }
+    }
 
+    return PR_RmDir(dirname.c_str()) == PR_SUCCESS;
   }
 
+  
   long filesize(const string& filename)
   {
-    FILE *f = fopen(filename.c_str(),"r");
-    long fsize;
-    if (!f)
-      PLERROR("In filesize(const string& filename): cannot open file %s.",filename.c_str());
-    fseek(f,0,SEEK_END);
-    fsize = ftell(f);
-    fclose(f);
-    return fsize;
+    PRFileInfo64 inf;
+
+    if (PR_GetFileInfo64(filename.c_str(), &inf) != PR_SUCCESS)
+      PLERROR("In filesize: error getting file info for %s: %s.",
+              filename.c_str(), getPrErrorString().c_str());
+
+    return inf.size;
   }
 
+  
   string loadFileAsString(const string& filepath)
   {
     long l = filesize(filepath);
     char* buf = new char[l];    
     ifstream in(filepath.c_str());
-    if(in.bad())
-      PLERROR("Cannot load file %s",filepath.c_str());
+    if (in.bad()) {
+      delete[] buf;
+      PLERROR("Cannot load file %s", filepath.c_str());
+    }
     in.read(buf, l);
-    string text(buf,l);
+    string text(buf, l);
     delete[] buf;
     return text;
   }
+
   
-void saveStringInFile(const string& filepath, const string& text)
-{
-  force_mkdir_for_file(filepath);
-  ofstream out(filepath.c_str());
-  if(!out)
-    PLERROR("Couldn't open file %s for writing", filepath.c_str());
-  out << text;
-}
+  void saveStringInFile(const string& filepath, const string& text)
+  {
+    force_mkdir_for_file(filepath);
+    ofstream out(filepath.c_str());
+    if(!out)
+      PLERROR("Couldn't open file %s for writing", filepath.c_str());
+    out << text;
+  }
 
 
   void cp(const string& srcpath, const string& destpath)
@@ -499,8 +439,8 @@ string newFilename(const string directory, const string prefix, bool is_director
     PLERROR("This call is not yet implemented for this platform");
     return "";
 #else
-  string tmpdirname = remove_trailing_slash(directory);
-  int length = tmpdirname.length()+1+prefix.length()+6+1;
+  const string tmpdirname = remove_trailing_slash(directory);
+  const int length = tmpdirname.length() + 1 + prefix.length() + 6 + 1;
   char* tmpfilename = new char[length];
   if (tmpdirname=="") //!<  save in current dir
     sprintf(tmpfilename,"%sXXXXXX",prefix.c_str());
@@ -514,9 +454,7 @@ string newFilename(const string directory, const string prefix, bool is_director
   if (is_directory) {
       // Defeats the purpose of mktemp, but who cares?
       std::remove(tmpfilename);
-      // see <sys/stat.h>, mode= 0666
-      mode_t mode = (S_IRUSR|S_IWUSR|S_IXUSR) | S_IRWXG | S_IRWXO;
-      mkdir(tmpfilename, mode);
+      PR_MkDir(tmpfilename, 0666);
   }
   if(!tmpfilename)
     PLERROR("In newFilename : could not make a new temporary filename");
@@ -1277,11 +1215,7 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
 }
 
 #ifdef WIN32
-#undef S_ISDIR
-#undef S_ISREG
-#undef PL_MAX_FILE_SIZE
 #undef chdir
-#undef stat
 #endif
 
 } // end of namespace PLearn

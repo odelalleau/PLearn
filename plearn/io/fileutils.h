@@ -37,12 +37,12 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.h,v 1.16 2005/01/26 16:32:26 dorionc Exp $
+   * $Id: fileutils.h,v 1.17 2005/01/27 21:39:30 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
 
-// This file contains useful functions for string manipulation
+// This file contains useful functions for file manipulation
 // that are used in the PLearn Library
 
 
@@ -51,17 +51,14 @@
 #ifndef fileutils_INC
 #define fileutils_INC
 
-#include <fstream>
+
+#include <iostream>
 #include <map>
 #include <string>
 #include <vector>
-//#include "general.h"
 
-// norman: set win32 functions
-#ifdef WIN32
-#include <sys/types.h>
-#define stat _stat
-#endif
+#include <mozilla/nspr/prtime.h>
+
 
 namespace PLearn {
 using namespace std;
@@ -86,7 +83,7 @@ using namespace std;
   bool isfile(const string& path);
 
   //! returns the time of last modification of file (or 0 if file does not exist).
-  time_t mtime(const string& path);
+  PRTime mtime(const string& path);
 
   /*! Returns a list of all entries in the given directory (omitting entries "." and "..")
     If the directory cannot be opened an error is issued.
@@ -213,12 +210,7 @@ using namespace std;
     map<string, string> variables;
     return readFileAndMacroProcess(filepath, variables);
   }
-
-#ifdef WIN32
-#undef stat
-#endif
-
+  
 } // end of namespace PLearn
-
 
 #endif
