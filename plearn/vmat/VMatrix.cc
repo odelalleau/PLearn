@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.67 2004/08/06 13:21:44 tihocan Exp $
+* $Id: VMatrix.cc,v 1.68 2004/08/09 16:23:13 tihocan Exp $
 ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -589,6 +589,9 @@ void VMatrix::deleteStringMapping(int col)
   map_rs[col].clear();
 }
 
+//////////////////
+// getValString //
+//////////////////
 string VMatrix::getValString(int col, real val) const
 { 
   if(is_missing(val))
@@ -599,6 +602,9 @@ string VMatrix::getValString(int col, real val) const
   else return map_rs[col][val];
 }
 
+//////////////////
+// getStringVal //
+//////////////////
 real VMatrix::getStringVal(int col,const string & str) const
 {
   if(map_sr.length()==0 || map_sr[col].find(str)==map_sr[col].end())
@@ -611,11 +617,14 @@ real VMatrix::getStringVal(int col,const string & str) const
 ///////////////
 string VMatrix::getString(int row,int col) const
 {
+  static string str;
   real val = get(row,col);
-  init_map_sr();
-  if(map_rs[col].find(val)==map_rs[col].end())
+  str = getValString(col, val);
+  if (str == "")
+    // There is no string mapping associated to this value.
     return tostring(val);
-  else return map_rs[col][val];
+  else
+    return str;
 }
 
 ////////////////////////////
