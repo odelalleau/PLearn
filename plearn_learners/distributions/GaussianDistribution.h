@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianDistribution.h,v 1.6 2004/02/20 21:14:46 chrish42 Exp $
+   * $Id: GaussianDistribution.h,v 1.7 2004/04/01 20:32:27 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -78,6 +78,7 @@ using namespace std;
     PLEARN_DECLARE_OBJECT(GaussianDistribution);
     void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
+    virtual void forget();
     virtual void train();
     virtual double log_density(const Vec& x) const;
 

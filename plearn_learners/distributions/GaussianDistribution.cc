@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianDistribution.cc,v 1.7 2004/02/20 21:14:46 chrish42 Exp $
+   * $Id: GaussianDistribution.cc,v 1.8 2004/04/01 20:32:27 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -91,6 +91,8 @@ void GaussianDistribution::declareOptions(OptionList& ol)
   inherited::declareOptions(ol);
 }                
 
+void GaussianDistribution::forget()
+{ }
 
 void GaussianDistribution::train()
 {
@@ -144,12 +146,14 @@ void GaussianDistribution::generate(Vec& x) const
   int m = mu.length();
   r.resize(n);
   fill_random_normal(r);
-  r *= eigenvalues;
+  for(int i=0; i<n; i++)
+    r[i] *= sqrt(eigenvalues[i]);
   x.resize(m);
   transposeProduct(x,eigenvectors,r);
   r.resize(m);
   fill_random_normal(r,0,gamma);
   x += r;
+  x += mu;
 }
 
 

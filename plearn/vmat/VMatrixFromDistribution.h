@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMatrixFromDistribution.h,v 1.6 2004/03/23 23:08:09 morinf Exp $ 
+   * $Id: VMatrixFromDistribution.h,v 1.7 2004/04/01 20:32:23 plearner Exp $ 
    ******************************************************* */
 
 /*! \file VMatrixFromDistribution.h */
@@ -61,15 +61,15 @@ public:
   // ************************
 
   PP<PDistribution> distr; // the distribution
-  long generator_seed; // the generator_seed to initialize the distribution
+  string mode; // one of "sample" "density" "log_density"
+
+  // for "sample" mode
+  long generator_seed; // the generator_seed to initialize the generator
   int nsamples; // number of samples to draw
 
   // for density mode:
-  bool density_mode;
-  bool logdensity_mode;
   Vec mins,maxs; // the min/max for each dimensions
   int samples_per_dim; // the number of samples per dimensions
-
 
   // ****************
   // * Constructors *
