@@ -1,5 +1,3 @@
-
-
 // -*- C++ -*-
 
 // LocallyWeightedDistribution.h
@@ -35,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyWeightedDistribution.h,v 1.2 2002/10/22 05:00:19 plearner Exp $ 
+   * $Id: LocallyWeightedDistribution.h,v 1.3 2002/10/22 08:46:07 plearner Exp $ 
    ******************************************************* */
 
 /*! \file LocallyWeightedDistribution.h */
@@ -49,10 +47,6 @@ using namespace std;
 
 class LocallyWeightedDistribution: public Distribution
 {
-protected:
-  mutable Vec trainvec; //<! Will contain the current training sample
-  mutable Vec weights; //<! will contain the "localization" weights for the current test point
-
 public:
 
   typedef Distribution inherited;
@@ -109,9 +103,6 @@ public:
 
   //! trains the model
   virtual void train(VMat training_set); 
-
-  //! computes the ouptu of a trained model
-  virtual void use(const Vec& input, Vec& output);
 
   //! return log of probability density log(p(x))
   virtual double log_density(const Vec& x) const;

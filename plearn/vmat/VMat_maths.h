@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat_maths.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: VMat_maths.h,v 1.2 2002/10/22 08:46:07 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -94,6 +94,12 @@ void computeMeanAndVariance(VMat d, Vec& meanvec, Vec& variancevec);
 void computeMeanAndStddev(VMat d, Vec& meanvec, Vec& stddevvec);
 void computeMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat, ostream& logstream=cerr);
 void computeWeightedMeanAndCovar(Vec weights, VMat d, Vec& meanvec, Mat& covarmat);
+
+
+//! Last column of d is supposed to contain the weight for each sample
+//! Samples with a weight less or equal to threshold will be ignored
+//! (returns the sum of all the weights actually used)
+double computeWeightedMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat, double threshold=0);
 
 /*!   Computes conditional mean and variance of each target, conditoned on the
   values of categorical integer input feature.  The basic_stats matrix may

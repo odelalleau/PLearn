@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat_maths.cc,v 1.1 2002/10/03 07:35:28 plearner Exp $
+* $Id: VMat_maths.cc,v 1.2 2002/10/22 08:46:07 plearner Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat_maths.h"
@@ -313,6 +313,56 @@ void computeWeightedMeanAndCovar(Vec weights, VMat d, Vec& meanvec, Mat& covarma
     }
   covarmat *= real(1./weight_sum);
 }
+
+//! Last column of d is supposed to contain the weight for each sample
+//! Samples with a weight less or equal to threshold will be ignored
+//! (returns the sum of all weights actually used)
+double computeWeightedMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat, double threshold)
+{ 
+  static Vec samplevec;
+  static Vec diffvec;
+  int w = d->width()-1;
+  int l = d->length();
+  samplevec.resize(w+1);
+  diffvec.resize(w);
+  Vec input = samplevec.subVec(0,w);
+  real& weight = samplevec[w];
+
+  double weightsum = 0;
+
+  // Compute weighted mean
+  meanvec.resize(w);
+  meanvec.clear();
+  for(int i=0; i<l; i++)
+    {
+      d->getRow(i,samplevec);
+      if(weight>threshold)
+        {
+          multiplyAcc(meanvec, input, weight);
+          weightsum += weight;
+        }
+    }
+
+  meanvec *= real(1./weightsum);
+
+  // Compute weighted covariance matrix
+  covarmat.resize(w,w);
+  covarmat.clear();
+  for(int i=0; i<l; i++)
+    {
+      d->getRow(i,samplevec);
+      if(weight>threshold)
+        {
+          substract(input,meanvec,diffvec);
+          externalProductScaleAcc(covarmat, diffvec,diffvec, weight);
+        }
+    }
+
+  covarmat *= real(1./weightsum);
+
+  return weightsum;
+}
+
 
 //! computes empirical mean and covariance in a single pass
 void computeMeanAndCovar(VMat m, Vec& meanvec, Mat& covarmat, ostream& logstream)

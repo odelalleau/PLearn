@@ -1,10 +1,8 @@
 // -*- C++ -*-4 1999/10/29 20:41:34 dugas
 
 // PLearn (A C++ Machine Learning Library)
-// Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999,2000 Pascal Vincent, Yoshua Bengio and University of Montreal
+// Copyright (C) 2002 Pascal Vincent
 //
-
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -37,8 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianDistribution.h,v 1.1 2002/10/22 05:00:19 plearner Exp $
-   * AUTHORS: Pascal Vincent and Yoshua Bengio
+   * $Id: GaussianDistribution.h,v 1.2 2002/10/22 08:46:07 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,7 +45,7 @@
 #ifndef GaussianDistribution_INC
 #define GaussianDistribution_INC
 
-#include "Learner.h"
+#include "Distribution.h"
 
 namespace PLearn <%
 using namespace std;
@@ -165,21 +162,6 @@ using namespace std;
 
     
 */
-real logOfNormal(const Vec& x, const Vec& mu, const Mat& C);
-
-//! Fits a gaussian to the points in X (computing its mean and covariance
-//! matrix, and adding lambda to the diagonal of that covariance matrix)
-//! Then calls logOfNormal to return log(p(x | the_gaussian))
-real logPFittedGaussian(const Vec& x, const Mat& X, real lambda);
-
-//! returns log P(x|gaussian) with a gaussian represented compactly 
-//! by the first few eigenvalues and eigenvectors of its covariance matrix.
-//! gamma is the "variance" used for all other directions.
-//! Eigenvalues need not be in decreasing order, but as soon as we meet a 0 eigenvalue,
-//! this and all subsequent ones are considered to be equal to gamma.
-real logOfCompactGaussian(const Vec& x, const Vec& mu, 
-                          const Vec& eigenvalues, const Mat& eigenvectors, real gamma=1e-6);
-
 
   // This is a density estimation learner.
   // It uses a compact representation of a Gaussian, by keeping only the k 
@@ -188,7 +170,7 @@ real logOfCompactGaussian(const Vec& x, const Vec& mu,
   // Optionally, a constant sigma is first added to the diagonal of the covariance matrix.
   // The use(x,output) method returns log(p(x)) in output[0]
 
-  class GaussianDistribution: public Learner
+  class GaussianDistribution: public Distribution
   {
   protected:
     static Vec x_minus_mu;
@@ -208,14 +190,14 @@ real logOfCompactGaussian(const Vec& x, const Vec& mu,
     
   public:
     // Build options
-    bool use_svd; // (default: true) should training use a SVD or eigendecomposition of the covariance matrix?
+    bool use_svd; // (default: false) should training use a SVD or eigendecomposition of the covariance matrix?
     int k; // maximum number of eigenvectors to keep
-    double sigma; // (default 0) this is initially added to the diagonal of the covariance matrix
-    double min_eigenval_ratio; // (default .10) only eigenvalues larger than min_eigenval_ratio*largest_eigenval will be kept
-    double min_eigenval; // (default 1e-5) only eigenvalue above this will be kept
+    double sigma; // (default 0) this is initially added to the diagonal of the empirical covariance matrix
+    float ignore_weights_below; //!< When doing a weighted fitting (weightsize==1), points with a weight below this value will be ignored
+
     
   public:
-    GaussianDistribution(int the_inputsize=0);
+    GaussianDistribution();
 
     DECLARE_NAME_AND_DEEPCOPY(GaussianDistribution);
     void makeDeepCopyFromShallowCopy(CopiesMap& copies);

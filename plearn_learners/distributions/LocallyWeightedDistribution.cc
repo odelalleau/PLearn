@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyWeightedDistribution.cc,v 1.2 2002/10/22 05:00:19 plearner Exp $ 
+   * $Id: LocallyWeightedDistribution.cc,v 1.3 2002/10/22 08:46:07 plearner Exp $ 
    ******************************************************* */
 
 /*! \file LocallyWeightedDistribution.cc */
@@ -79,7 +79,12 @@ LocallyWeightedDistribution::LocallyWeightedDistribution()
     // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
     // ### You should assume that the parent class' build_() has already been called.
 
-    outputsize_ = use_returns_what.length();
+    if(weightsize()!=0 && weightsize()!=1)
+      PLERROR("In LocallyWeightedDistribution::build_, weightsize must be 0 or 1");
+
+    localdistr->inputsize_ = inputsize_;
+    localdistr->weightsize_ = 1;
+    localdistr->build();
   }
 
   // ### Nothing to add here, simply calls build_
@@ -92,6 +97,8 @@ void LocallyWeightedDistribution::build()
 
   void LocallyWeightedDistribution::train(VMat training_set)
   { 
+    if(training_set.width() != inputsize()+weightsize())
+      PLERROR("In LocallyWeightedDistribution::train width of training set is different from inputsize()+weightsize()");
     setTrainingSet(training_set);
   }
 
@@ -113,17 +120,32 @@ void LocallyWeightedDistribution::build()
 
 double LocallyWeightedDistribution::log_density(const Vec& x) const
 {
+  static Vec trainsample; //<! Will contain the current training sample
+  static Vec weights; //<! will contain the "localization" weights for the current test point
+
   int l = train_set.length();
-  int w = train_set.width();
+  int w = inputsize();
   weights.resize(l);
-  trainvec.resize(w);
+  trainsample.resize(w+weightsize());
+  Vec input = trainsample.subVec(0,w);
+
   for(int i=0; i<l; i++)
     {
-      train_set->getRow(i,trainvec);
-      weights[i] = weighting_kernel(x,trainvec);
+      train_set->getRow(i,trainsample);
+      real weight = weighting_kernel(x,input);
+      if(weightsize()==1)
+        weight *= trainsample[w];
+      weights[i] = weight;
     }
   
-  VMat weighted_trainset = hconcat(train_set, VMat(columnmatrix(weights)));
+  VMat weight_column(columnmatrix(weights));
+
+  VMat weighted_trainset;
+  if(weightsize()==0) // append weight column    
+    weighted_trainset = hconcat(train_set, weight_column);
+  else // replace last column by weight column
+    weighted_trainset = hconcat(train_set.subMatColumns(0,inputsize()), weight_column);
+
   localdistr->forget();
   localdistr->train(weighted_trainset);
   return localdistr->log_density(x);

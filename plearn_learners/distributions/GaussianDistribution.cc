@@ -1,10 +1,8 @@
 // -*- C++ -*-4 1999/10/29 20:41:34 dugas
 
 // PLearn (A C++ Machine Learning Library)
-// Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999,2000 Pascal Vincent, Yoshua Bengio and University of Montreal
+// Copyright (C) 2002 Pascal Vincent
 //
-
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -37,8 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianDistribution.cc,v 1.1 2002/10/22 05:00:19 plearner Exp $
-   * AUTHORS: Pascal Vincent and Yoshua Bengio
+   * $Id: GaussianDistribution.cc,v 1.2 2002/10/22 08:46:07 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -55,88 +52,6 @@ using namespace std;
 
 #define ZEROGAMMA
 
-real logOfCompactGaussian(const Vec& x, const Vec& mu, 
-                          const Vec& eigenvalues, const Mat& eigenvectors, real gamma)
-{
-  // cerr << "logOfCompact: mu = " << mu << endl;
-
-  int d = x.length();
-  static Vec x_minus_mu;
-  x_minus_mu.resize(d);
-  real* px = x.data();
-  real* pmu = mu.data();
-  real* pxmu = x_minus_mu.data();
-    
-  real sqnorm_xmu = 0;
-  for(int i=0; i<d; i++)
-    {
-      real val = *px++ - *pmu++;
-      sqnorm_xmu += val*val;
-      *pxmu++ = val;
-    }
-    
-  double log_det = 0.;
-  double inv_gamma = 1./gamma;
-  int kk = eigenvalues.length();
-  double q = inv_gamma * sqnorm_xmu;
-  int i;
-  for(i=0; i<kk; i++)
-    {
-      double lambda_i = eigenvalues[i];
-      if(lambda_i==0) // we've reached a 0 eigenvalue, stop computation here.
-        break;
-      log_det += log(lambda_i);
-      q += (1./lambda_i - inv_gamma)*square(dot(eigenvectors(i),x_minus_mu));
-    }
-  if(kk<d)
-    log_det += log(gamma)*(d-i);
-
-  double logp = -0.5*( d*log(2*M_PI) + log_det + q);
-  // cerr << "logOfCompactGaussian q=" << q << " log_det=" << log_det << " logp=" << logp << endl;
-  // exit(0);
-  return real(logp);
-}
-
-real logOfNormal(const Vec& x, const Vec& mu, const Mat& C)
-{
-  int n = x.length();
-  static Vec x_mu;
-  static Vec z;
-  static Vec y;
-  y.resize(n);
-  z.resize(n);
-  x_mu.resize(n);
-  substract(x,mu,x_mu);
-
-  static Mat L;
-  // Perform Cholesky decomposition
-  choleskyDecomposition(C, L);
-
-  // get the log of the determinant: 
-  // det(C) = square(product_i L_ii)
-  double logdet = 0;
-  for(int i=0; i<n; i++)
-    logdet += log(L(i,i));
-  logdet += logdet;
-
-  // Finally find z, such that C.z = x-mu
-  choleskySolve(L, x_mu, z, y);
-
-  double q = dot(x_mu, z);
-  double logp = -0.5*( n*log(2*M_PI) + logdet + q);
-  // cerr << "logOfNormal q=" << q << " logdet=" << logdet << " logp=" << logp << endl;
-  return real(logp);
-}
-
-real logPFittedGaussian(const Vec& x, const Mat& X, real lambda)
-{
-  static Mat C;
-  static Vec mu;
-  computeMeanAndCovar(X, mu, C);
-  addToDiagonal(C, lambda);
-  return logOfNormal(x, mu, C);
-}
-
 IMPLEMENT_NAME_AND_DEEPCOPY(GaussianDistribution);
 
 void GaussianDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
@@ -150,10 +65,9 @@ void GaussianDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 Vec GaussianDistribution::x_minus_mu;
 
-GaussianDistribution::GaussianDistribution(int the_inputsize)
-  :Learner(the_inputsize,0,1), use_svd(true), k(1000), sigma(0), min_eigenval_ratio(0), min_eigenval(1e-5)
+GaussianDistribution::GaussianDistribution()
+  :use_svd(false), k(1000), sigma(0), ignore_weights_below(0)
 {
-  setTestCostFunctions(neg_output_costfunc());
 }
 
 
@@ -166,12 +80,8 @@ void GaussianDistribution::declareOptions(OptionList& ol)
                 "number of eigenvectors to keep");
   declareOption(ol, "sigma", &GaussianDistribution::sigma, OptionBase::buildoption, 
                 "what to add to diagonal of covariance matrices");
-  /*
-  declareOption(ol, "min_eigenval_ratio", &GaussianDistribution::min_eigenval_ratio, OptionBase::buildoption, 
-                "only eigenvalues larger than min_eigenval_ratio*largest_eigenval will be kept");
-  declareOption(ol, "min_eigenval", &GaussianDistribution::min_eigenval, OptionBase::buildoption, 
-                "keep only eigenvalues above this value");
-  */
+  declareOption(ol, "ignore_weights_below", &GaussianDistribution::ignore_weights_below, OptionBase::buildoption, 
+                "When doing a weighted fitting (weightsize==1), points with a weight below this value will be ignored");
 
   // Learnt parameters
   declareOption(ol, "mu", &GaussianDistribution::mu, OptionBase::learntoption, "");
@@ -189,6 +99,9 @@ void GaussianDistribution::train(VMat training_set)
   int l = training_set.length();
   int d = training_set.width();
 
+  if(d!=inputsize()+weightsize())
+    PLERROR("In GaussianDistribution::train width of training_set should be equal to inputsize()+weightsize()");
+
   // these are used in SVD
   static Mat trainmat;
   static Mat U;
@@ -198,6 +111,9 @@ void GaussianDistribution::train(VMat training_set)
 
   if(use_svd) // use svd
     {
+      if(weightsize()!=0)
+        PLERROR("In GaussianDistribution::train use_svd not currently supported with weightsize>0");
+
       trainmat.resize(training_set.length(), training_set.width());
       trainmat << training_set;
       mu.resize(trainmat.width());
@@ -227,51 +143,13 @@ void GaussianDistribution::train(VMat training_set)
       // First get mean and covariance
       // (declared static to avoid repeated dynamic memory allocation)
       static Mat covarmat;
-      computeMeanAndCovar(training_set, mu, covarmat, vlog.rawout());
 
-      /*
-      string cachedir;
-      string metadatadir = training_set->getMetaDataDir();
-      if(!metadatadir.empty())
-        {
-          cachedir = metadatadir + "MODELCACHE/GaussianDistribution/";
-          if(!force_mkdir(cachedir))
-            {
-              PLWARNING("Could not create directory %s",cachedir.c_str());
-              cachedir = "";
-            }
-        }
-      
-      string covarfile;
-      if(!cachedir.empty())
-        covarfile = cachedir+"covar.cache";
-
-      if(isfile(covarfile))
-        {
-          ifstream in(covarfile.c_str());
-          if(!in)
-            PLERROR("Could not open file %s for reading",covarfile.c_str());
-          vlog << "(reading cached mean and covariance from file " << covarfile << ")" << endl;
-          PLearn::binread(in,mu);
-          PLearn::binread(in,covarmat);
-        }
+      if(weightsize()==0)
+        computeMeanAndCovar(training_set, mu, covarmat, vlog.rawout());
+      else if(weightsize()==1)
+        computeWeightedMeanAndCovar(training_set, mu, covarmat, ignore_weights_below);
       else
-        {
-          computeMeanAndCovar(training_set, mu, covarmat, vlog);
-          if(!covarfile.empty())
-            {
-              ofstream out(covarfile.c_str());
-              if(!out)
-                PLWARNING("Could not open file %s for writing",covarfile.c_str());
-              else
-                {
-                  vlog << "(writing mean and covariance to cache file " << covarfile << ")" << endl;
-                  PLearn::binwrite(out,mu);
-                  PLearn::binwrite(out,covarmat);
-                }
-            }
-        }
-      */
+        PLERROR("In GaussianDistribution, weightsize() can only be 0 or 1");
       
       // Possibly, add sigma to the diagonal
       if(sigma!=0)
@@ -365,7 +243,7 @@ double GaussianDistribution::compute_q(const Vec& x) const
   return q;
 }  
 
-double GaussianDistribution::log_p(const Vec& x) const 
+double GaussianDistribution::log_density(const Vec& x) const 
 { 
   double q = compute_q(x);
   double logp = -logcoef - 0.5*q;
@@ -373,17 +251,5 @@ double GaussianDistribution::log_p(const Vec& x) const
   return logp;
 }
 
-void GaussianDistribution::use(const Vec& input, Vec& output)
-{
-#ifdef BOUNDCHECK
-  if(input.length()!=inputsize() || output.length()!=1)
-    PLERROR("In GaussianDistribution::use input.length() should be %d (currently %d) and output.length() should be 1 (currently %d)",inputsize(),input.length(),output.length());
-#endif
-  output[0] = log_p(input);
-}
-/*
-void GaussianDistribution::write(ostream& out) const
-{ PLearn::write(out, *this); }
-*/
 
 %> // end of namespace PLearn

@@ -1,7 +1,7 @@
-// -*- C++ -*-
+// -*- C++ -*-4 1999/10/29 20:41:34 dugas
 
-// plearn.cc
-// Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux, Rejean Ducharme
+// distr_math.h
+// Copyright (C) 2002 Pascal Vincent
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,46 +33,37 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.4 2002/10/22 08:46:07 plearner Exp $
+   * $Id: distr_maths.h,v 1.1 2002/10/22 08:46:07 plearner Exp $
+   * This file is part of the PLearn library.
    ******************************************************* */
 
-#include "plearnmain.h"
 
-// Available Splitters:
-#include "TrainTestSplitter.h"
-#include "KFoldSplitter.h"
+/*! \file PLearnLibrary/PLearnAlgo/distr_maths.h */
 
-// Available VMats:
-#include "AutoVMatrix.h"
+#ifndef distr_maths_INC
+#define distr_maths_INC
 
-// All Available Learners: 
-// #include "KNN.h"
-//#include "Classification1HiddenNN.h"
-//#include "Mixture2.h"
-#include "ClassifierFromDensity.h"
-#include "RegressorFromDensity.h"
-#include "Distribution.h"
-#include "GaussianDistribution.h"
-#include "LocallyWeightedDistribution.h"
-#include "NeuralNet.h"
-#include "GradientOptimizer.h"
-#include "ConstantModel.h"
-#include "MultiLearner.h"
-#include "LinearRegressor.h"
+#include "TMat.h"
 
-#include "EnsembleLearner.h"
+namespace PLearn <%
+using namespace std;
 
-#include "SVM.h"
+real logOfNormal(const Vec& x, const Vec& mu, const Mat& C);
 
-#include "ParzenDensity.h"
-#include "ParzenRegressor.h"
-#include "ManifoldParzenDensity.h"
+//! Fits a gaussian to the points in X (computing its mean and covariance
+//! matrix, and adding lambda to the diagonal of that covariance matrix)
+//! Then calls logOfNormal to return log(p(x | the_gaussian))
+real logPFittedGaussian(const Vec& x, const Mat& X, real lambda);
+
+//! returns log P(x|gaussian) with a gaussian represented compactly 
+//! by the first few eigenvalues and eigenvectors of its covariance matrix.
+//! gamma is the "variance" used for all other directions.
+//! Eigenvalues need not be in decreasing order, but as soon as we meet a 0 eigenvalue,
+//! this and all subsequent ones are considered to be equal to gamma.
+real logOfCompactGaussian(const Vec& x, const Vec& mu, 
+                          const Vec& eigenvalues, const Mat& eigenvectors, real gamma=1e-6);
 
 
-using namespace PLearn;
+%> // end of namespace PLearn
 
-int main(int argc, char** argv)
-{
-  return plearnmain(argc, argv);
-}
-
+#endif
