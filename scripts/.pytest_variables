@@ -1,3 +1,0 @@
-DISABLED = []
-BRANCHES = {'LISAPLEARNDIR': 'LisaPLearn', 'PLEARNDIR': 'PLearn', 'APSTATDIR': 'apstatsoft'}
-BRANCHES_PL = {'LISAPLEARNDIR': 'commands/lplearn', 'PLEARNDIR': 'commands/plearn', 'APSTATDIR': 'commands/aplearn'}

@@ -16,19 +16,20 @@ from plearn.utilities.verbosity        import *
 
 ############################################################
 # Global variables
-execfile(plpath.pytest_variables)
-class __from_file:
-    def __init__(self):
-        self.disabled    = DISABLED
-        self.branches    = BRANCHES
-        self.branches_pl = BRANCHES_PL
-        self.modified    = False
-globalvars.from_file = __from_file()
+
+## execfile(plpath.pytest_variables)
+## class __from_file:
+##     def __init__(self):
+##         self.disabled    = DISABLED
+##         self.branches    = BRANCHES
+##         self.branches_pl = BRANCHES_PL
+##         self.modified    = False
+## globalvars.from_file = __from_file()
 
 globalvars.test_id                        = 0 
 globalvars.stats                          = {}   # Will contain stats about executed tests
-globalvars.branches                       = {}   # Will map all test suites to their plearn main file
-globalvars.pure_branches                  = {}
+## globalvars.branches                       = {}   # Will map all test suites to their plearn main file
+## globalvars.pure_branches                  = {}
 globalvars.pytest_config                  = "pytest.config"
 
 globalvars.objs                           = "OBJS"
@@ -41,7 +42,8 @@ globalvars.forbidden_directories          = [ globalvars.objs,
                                               ".pymake", "Scripts"     ]
 
 print "*** WARNING: The use of forbidden_flag (and therefore the import of IDiff in pytest.__init__ is not clean ***" 
-globalvars.resolving_paths = { plpath.home:"$HOME", plpath.pytest_variables:"$PYTEST_VARIABLES",
+globalvars.resolving_paths = { plpath.home:"$HOME",
+##                               plpath.pytest_variables:"$PYTEST_VARIABLES",
                                globalvars.results_path:"$RESULTS", globalvars.results_on_run:"$RESULTS",
                                forbidden_flag:globalvars.forbidden_directories+[globalvars.results_path, globalvars.results_on_run] }
 
@@ -60,8 +62,8 @@ globalvars.modes_with_config = {
 
 globalvars.management_modes = {
     'add':AddTest,
-    'disable':DisableTest,
-    'restore':RestoreTest
+    'disable' : disable_test,
+    'enable' : enable_test
     }
 
 #####################
@@ -80,13 +82,18 @@ def build_tests(none, dirc, dirlist):
     except KeyError:
         pass
     else:
-        globalvars.test_id += 1
-        globalvars.dispatch.add_task( management(globalvars.dispatch, globalvars.test_id, os.getcwd(), None) )
+        ## globalvars.test_id += 1
+        ## globalvars.dispatch.add_task( management(globalvars.dispatch, globalvars.test_id, os.getcwd(), None) )
+        management(os.getcwd(), globalvars.options.test_name)
         return
 
     if globalvars.pytest_config in dirlist:
-        dis_name = complete_test_name(os.getcwd())
-        if dis_name in globalvars.from_file.disabled:
+        dis_name = plpath.path_in_branches(os.getcwd())
+
+        raw_input(dis_name)
+        raw_input("Verify disabling!!!")
+        ##if dis_name in globalvars.from_file.disabled:
+        if False:
             vprint('+++ %s is disabled.\n'%dis_name, 1)
         else:
             execfile(globalvars.pytest_config)
@@ -281,24 +288,24 @@ def finalName(dir):
     (foo, fName) = plpath.splitprev(dir)
     return fName
 
-def initialize_branches():
-    """Initializes the branches dictionnary mapping all test suites to their .cc file"""
-    for (key, default) in BRANCHES.items():
-        default = os.path.join( plpath.home, default )
-        branch = os.getenv(key, default)
-        branch_ts = os.path.join(branch, "test_suite")
+## def initialize_branches():
+##     """Initializes the branches dictionnary mapping all test suites to their .cc file"""
+##     for (key, default) in BRANCHES.items():
+##         default = os.path.join( plpath.home, default )
+##         branch = os.getenv(key, default)
+##         branch_ts = os.path.join(branch, "test_suite")
 
-        prev, pure_branch = plpath.splitprev(branch)
-        pure_branch = os.path.join(pure_branch, "test_suite")        
+##         prev, pure_branch = plpath.splitprev(branch)
+##         pure_branch = os.path.join(pure_branch, "test_suite")        
 
-        if os.path.exists(branch_ts):
-            globalvars.branches[branch_ts] = os.path.join(branch, BRANCHES_PL[key])
-            globalvars.pure_branches[branch_ts] = pure_branch 
+##         if os.path.exists(branch_ts):
+##             globalvars.branches[branch_ts] = os.path.join(branch, BRANCHES_PL[key])
+##             globalvars.pure_branches[branch_ts] = pure_branch 
 
-        ## This is for intelligent diff matters
-        globalvars.resolving_paths[branch]      = '$'+key
-        globalvars.resolving_paths[branch_ts]   = '$'+key+'_TS'
-        globalvars.resolving_paths[pure_branch] = '$'+key+'_TS'    
+##         ## This is for intelligent diff matters
+##         globalvars.resolving_paths[branch]      = '$'+key
+##         globalvars.resolving_paths[branch_ts]   = '$'+key+'_TS'
+##         globalvars.resolving_paths[pure_branch] = '$'+key+'_TS'    
 
 def isccfile(filepath):
     (base,ext) = os.path.splitext(filepath)
@@ -378,7 +385,7 @@ def printErrors(dico):
         vprint(formattedKey + " -> " + dico[key], "Q")
 
 def pytest_version():
-    version_str = '$Id: pytest,v 1.15 2004/10/13 22:57:13 dorionc Exp $'
+    version_str = '$Id: pytest,v 1.16 2004/10/19 01:34:46 dorionc Exp $'
 
     bflag = "pytest,v"
     the_year = time.localtime()[0]
@@ -407,15 +414,15 @@ def remove_subdirs(absdirs):
         absdirs.remove(r)
     return absdirs
 
-def update_pytest_variables():
-    variables = open(plpath.pytest_variables, 'w')
-    variables.write('%s = %s\n' % ('DISABLED',
-                                   repr(globalvars.from_file.disabled)))
-    variables.write('%s = %s\n' % ('BRANCHES',
-                                   repr(globalvars.from_file.branches)))
-    variables.write('%s = %s\n' % ('BRANCHES_PL',
-                                   repr(globalvars.from_file.branches_pl)))
-    variables.close()
+## def update_pytest_variables():
+##     variables = open(plpath.pytest_variables, 'w')
+##     variables.write('%s = %s\n' % ('DISABLED',
+##                                    repr(globalvars.from_file.disabled)))
+##     variables.write('%s = %s\n' % ('BRANCHES',
+##                                    repr(globalvars.from_file.branches)))
+##     variables.write('%s = %s\n' % ('BRANCHES_PL',
+##                                    repr(globalvars.from_file.branches_pl)))
+##     variables.close()
 
 ###################################################################################
 ## MAIN PROGRAM
@@ -449,17 +456,26 @@ parser.add_mode("add", dispatch_targets,
                 help = short_doc(AddTest),
                 description = doc(AddTest) )
 
+## parser.add_mode("disable", dispatch_targets,
+##                 help = short_doc(DisableTest),
+##                 description = doc(DisableTest) )
+
 parser.add_mode("disable", dispatch_targets,
-                help = short_doc(DisableTest),
-                description = doc(DisableTest) )
+                help = short_doc(disable_test),
+                description = doc(disable_test) )
+
+parser.add_mode("enable", dispatch_targets,
+                help = short_doc(enable_test),
+                description = doc(enable_test) )
+
+## parser.add_mode("restore", dispatch_targets,
+##                 help = short_doc(RestoreTest),
+##                 description = doc(RestoreTest) )
+
 
 ## parser.add_mode("remove", dispatch_targets,
 ##                 help = short_doc(RemoveTest),
 ##                 description = doc(RemoveTest) )
-
-parser.add_mode("restore", dispatch_targets,
-                help = short_doc(RestoreTest),
-                description = doc(RestoreTest) )
 
 ## commit_options = OptionGroup(parser, "Commit Mode Options")
 ## commit_options.add_option("--msg", default='Pytest automatic commit')
@@ -511,6 +527,10 @@ testing_options.add_option( '-n', '--hosts',
                    help='The maximum nuber of hosts to use simultaneously.',
                    default=10 )
 
+testing_options.add_option( '--test-name',
+                            help='Restrict the current mode to the named test.',
+                            default='' )
+
 parser.add_option_group(testing_options)
 
 ############################################################
@@ -523,7 +543,7 @@ globalvars.current_mode                = parser.selected_mode()
 ################## Some preprocessing ######################
 
 # Initializes the branches dictionnary
-initialize_branches()
+##initialize_branches()
 
 ## Managing the verbosity option.
 set_vprint( VerbosityPrint(globalvars.options.verbosity) )
@@ -562,8 +582,8 @@ if kept is not None:
     for k in kept:
         print k
 
-if globalvars.from_file.modified:
-    update_pytest_variables()
+## if globalvars.from_file.modified:
+##     update_pytest_variables()
     
 ############################################################
 ######################         #############################
