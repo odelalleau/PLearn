@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /********************************************************
-* $Id: VMatrix.cc,v 1.91 2005/02/08 21:33:33 tihocan Exp $
+* $Id: VMatrix.cc,v 1.92 2005/02/18 17:15:39 tihocan Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -895,7 +895,7 @@ void VMatrix::lockMetaDataDir(time_t max_lock_age, bool verbose) const
 {
   if(!hasMetaDataDir())
     PLERROR("In VMatrix::lockMetaDataDir(): metadatadir was not set");
-  if(lockf_!=0) // already locked by this object!
+  if(lockf_) // Already locked by this object!
     PLERROR("VMatrix::lockMetaDataDir() called while already locked by this object.");
   if(!pathexists(metadatadir))
     force_mkdir(metadatadir);
@@ -905,17 +905,22 @@ void VMatrix::lockMetaDataDir(time_t max_lock_age, bool verbose) const
     // There is a lock file, and it is not older than 'max_lock_age'.
     string bywho;
     try{ bywho = loadFileAsString(lockfile); }
-    catch(...) { bywho = "UNKNOWN (could not read .lock file)"; }
+    catch(...) {
+      PLERROR("In VMatrix::lockMetaDataDir - Catching exceptions is dangerous in PLearn (memory "
+              "leaks may occur), thus I prefer to stop here. Comment this line if you don't care.");
+      bywho = "UNKNOWN (could not read .lock file)";
+    }
 
     if (verbose) {
-      cerr << "Waiting for .lock in directory " << metadatadir 
-        << " created by " << bywho << endl;
+      perr << "Waiting for .lock in directory " << metadatadir 
+           << " created by " << bywho << endl;
       sleep(uniform_multinomial_sample(10) + 1); // Random wait for more safety.
     }
   }
   lockf_ = openFile(lockfile, PStream::raw_ascii, "w");  
   string lock_content = "host " + getHost() + ", pid " + tostring(getPid()) + ", user " + getUser();
   lockf_ << lock_content;
+  lockf_.flush();
 }
 
 ///////////////////////
@@ -923,12 +928,11 @@ void VMatrix::lockMetaDataDir(time_t max_lock_age, bool verbose) const
 ///////////////////////
 void VMatrix::unlockMetaDataDir() const
 {
-  if(lockf_==0)
+  if(!lockf_)
     PLERROR("In VMatrix::unlockMetaDataDir() was called while no lock is held by this object");
-  lockf_ = 0;
-  
+  lockf_ = 0;   // Release the lock.
   PPath lockfile = metadatadir / ".lock";  
-  rm(lockfile);
+  rm(lockfile); // Remove the file.
 }
 
 ////////////////////
