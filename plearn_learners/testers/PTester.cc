@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.25 2004/02/20 21:14:50 chrish42 Exp $ 
+   * $Id: PTester.cc,v 1.26 2004/03/01 18:36:13 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -198,6 +198,11 @@ Vec PTester::perform(bool call_forget)
   if(!splitter)
     PLERROR("No splitter specified for PTester");
 
+  int nstats = statnames.length();
+  Vec global_result(nstats);
+
+  {
+
   if(expdir!="")
     {
       // Save this tester description in the expdir
@@ -215,7 +220,6 @@ Vec PTester::perform(bool call_forget)
   TVec<string> traincostnames = learner->getTrainCostNames();
 
   int nsets = splitter->nSetsPerSplit();
-  int nstats = statnames.length();
 
   // Stats collectors for individual sets of a split:
   TVec< PP<VecStatsCollector> > stcol(nsets);
@@ -364,8 +368,6 @@ Vec PTester::perform(bool call_forget)
     }
 
 
-  Vec global_result(nstats);
-
   global_statscol->finalize();
   for(int k=0; k<nstats; k++)
     global_result[k] = global_statscol->getStats(k).getStat(statspecs[k].extstat);
@@ -373,6 +375,8 @@ Vec PTester::perform(bool call_forget)
 
   if(global_stats_vm)
     global_stats_vm->appendRow(global_result);
+
+  }
 
   // Perform the final commands provided in final_commands.
   for (int i = 0; i < final_commands.length(); i++) {
