@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.cc,v 1.1 2002/09/05 07:56:29 plearner Exp $
+   * $Id: Learner.cc,v 1.2 2002/09/09 15:57:25 morinf Exp $
    ******************************************************* */
 
 #include "Learner.h"
@@ -115,7 +115,7 @@ string Learner::basename() const
     }
   else if(train_set->getAlias().empty())
     {
-        PLWARNING("The training set has no alias defined for it (you could call setAlias(...)) Using 'unknown' as alias");
+        //PLWARNING("The training set has no alias defined for it (you could call setAlias(...)) Using 'unknown' as alias");
       return expdir + "unknown";
     }
   return expdir+train_set->getAlias();
@@ -760,7 +760,7 @@ Vec Learner::test(VMat test_set, const string& save_test_outputs, const string& 
     costs = new FileVMatrix(save_test_costs, test_set.length(), ncostfuncs);
 
   int l = test_set.length();
-  ProgressBar progbar(vlog, "Testing " + test_set->getAlias(), l);
+  //ProgressBar progbar(vlog, "Testing " + test_set->getAlias(), l);
   // ProgressBar progbar(cerr, "Testing " + test_set->getAlias(), l);
   // ProgressBar progbar(nullout(), "Testing " + test_set->getAlias(), l);
 
@@ -812,7 +812,7 @@ Vec Learner::test(VMat test_set, const string& save_test_outputs, const string& 
                 costs->putRow(i,cost);
               if(!multipass) // stats can be computed in a single pass?
                 test_statistics.update(cost);
-              progbar(i);
+              //progbar(i);
             }
         }
       else // other processes compute output and cost on different rows of the test_set and send them to process 0
@@ -891,7 +891,7 @@ Vec Learner::test(VMat test_set, const string& save_test_outputs, const string& 
           // test_set->getRow(i, sample);
           // useAndCost(input, target, output, cost);
 
-          progbar(i);
+          //progbar(i);
 
         }
 
