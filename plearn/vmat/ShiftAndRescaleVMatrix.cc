@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ShiftAndRescaleVMatrix.cc,v 1.9 2004/07/09 18:20:23 tihocan Exp $
+   * $Id: ShiftAndRescaleVMatrix.cc,v 1.10 2004/07/12 21:32:40 tihocan Exp $
    ******************************************************* */
 
 #include "ShiftAndRescaleVMatrix.h"
@@ -162,8 +162,10 @@ void ShiftAndRescaleVMatrix::build_()
           scale[i]=1;
         }
       invertElements(scale);
-      shift.subVec(n_inputs,shift.length()-n_inputs).fill(0);
-      scale.subVec(n_inputs,shift.length()-n_inputs).fill(1);
+      shift.resize(vm->width());
+      scale.resize(vm->width());
+      shift.subVec(n_inputs, shift.length()-n_inputs).fill(0);
+      scale.subVec(n_inputs, scale.length()-n_inputs).fill(1);
     }
     reset_dimensions();
   }
