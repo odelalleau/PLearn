@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.27 2005/02/07 20:15:15 tihocan Exp $
+   * $Id: pl_math.h,v 1.28 2005/02/08 21:39:07 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -58,13 +58,13 @@ using namespace std;
 #if defined(USEDOUBLE)
 #define real double
 #define REAL_MAX DBL_MAX
-#define REAL_EPSILON FLT_EPSILON
+#define REAL_EPSILON DBL_EPSILON
 #define ABSOLUTE_TOLERANCE 1e-8
 #define RELATIVE_TOLERANCE ABSOLUTE_TOLERANCE
 #elif defined(USEFLOAT)
 #define real float
 #define REAL_MAX FLT_MAX
-#define REAL_EPSILON DBL_EPSILON
+#define REAL_EPSILON FLT_EPSILON
 #define ABSOLUTE_TOLERANCE 1e-6
 #define RELATIVE_TOLERANCE ABSOLUTE_TOLERANCE
 #else
