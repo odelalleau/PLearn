@@ -24,6 +24,7 @@ users_guide: users_guide.tex
 
 users_guide.dvi: users_guide.tex
 	latex users_guide
+	latex users_guide
 
 users_guide.ps: users_guide.dvi
 	dvips -Pcmps -t letter users_guide -o

@@ -2,9 +2,10 @@
 %%
 %%  Copyright (c) 2002 by Pascal Vincent
 %%
-%%  $Id: users_guide.tex,v 1.9 2003/02/10 21:37:57 ducharme Exp $
+%%  $Id: users_guide.tex,v 1.10 2003/02/10 22:15:33 ducharme Exp $
 
 \documentclass[11pt]{book}
+\usepackage{html}               % package for latex2html
 \usepackage{t1enc}              % new font encoding  (hyphenate words w/accents)
 \usepackage{ae}                 % use virtual fonts for getting good PDF
 \usepackage{isolatin1}          % support for French accents
@@ -63,7 +64,9 @@ met:
 \addcontentsline{toc}{chapter}{\numberline{}Table of contents}
 \tableofcontents
 
+\begin{latexonly}
 \cleardoublepage\pagebreak
+\end{latexonly}
 \pagenumbering{arabic}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -427,12 +430,12 @@ correspond to the data-row number in train.objective and
 \subsection{The new plearn program}
 
 After having compiled the plearn.cc program (located at \$PLEARNDIR/command/plearn.cc)
-using the homemade makefile-like command \verb!pymake! (type \verb!pymake! to see all
-the compilation options), type \verb!plearn help! to have a summary of its options.
+using the homemade makefile-like command \verb!pymake! (type \verb!"pymake"! to see all
+the compilation options), type \verb!"plearn help"! to have a summary of its options.
 
 To run \verb!plearn!, you need a script file containing all the parameters of your
 experiment.  That script file MUST contain an \verb!Experiment! object (type
-\verb!plearn help Experiment! for more details).
+\verb!"plearn help Experiment"! for more details).
 
 This is an example of what such a script file looks like (training a simple NeuralNet
 on the Letter dataset):
