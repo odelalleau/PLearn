@@ -502,8 +502,11 @@ else:
 
 if 'tmp' in optionargs:
   objspolicy = 2
+  temp_objs=1
+  local_compilation = 1
   objsdir = '/tmp/OBJS'
   optionargs.remove('tmp')
+
   
 
 # fill the list of options from the optionargs, adding necessary default options (if no option of a group choice was specified)
@@ -719,7 +722,7 @@ class FileInfo:
               self.corresponding_ofile = join(self.filedir, objsdir, self.filebase+'.o')
             elif objspolicy == 2:
               self.corresponding_ofile = join(objsdir, self.filebase+'.o')
-#               print self.corresponding_ofile
+            #print self.corresponding_ofile
               
             if self.hasmain:
                 self.corresponding_output = join(self.filedir, objsdir, self.filebase)
@@ -935,9 +938,9 @@ class FileInfo:
         to hold the corresponding_ofile and corresponding_output """
         odir = join(self.filedir, objsdir)
         if not os.path.isdir(odir):  # make sure the OBJS dir exists, otherwise the command will fail
-          os.makedirs(odir)
-        if objspolicy == 2:
-          os.chmod(odir,33279) #litle hack to be sure that others users will access to /tmp/OBJS for example
+            os.makedirs(odir)
+
+    
         
     def make_symbolic_link(self, linkname):
         """ recreates the symbolic link in filedir pointing to the executable in subdirectory objsdir """
@@ -1034,6 +1037,8 @@ class FileInfo:
         """
         if verbose>=2:
             print '[ FINISHED',self.filebase+self.fileext,'on',self.hostname,']'
+        if  temp_objs:
+            os.chmod(self.corresponding_ofile,33279)
                 
         warningmsgs=''
         errormsgs = ''
@@ -1313,13 +1318,23 @@ def sequential_dll(target_file_info):
         print '[ CREATING DLL',target_file_info.filebase+'.dll',']'
         target_file_info.launch_dll_wrapping()
 
+## hack for compiling in /tmp and others users can overwrite the file
+def mychmod(path,mode):
+  #print path
+  try:
+      os.chmod(path,mode)
+  except: pass
+  (head, tail) = os.path.split(path)
+  if tail:
+    mychmod(head,mode)
+
 # MAIN PROGRAM
 
-ccfiles_to_compile = {}
-executables_to_link = {}    
-
-
 for target in otherargs:
+
+    ccfiles_to_compile = {}
+    executables_to_link = {}
+
     if os.path.isdir(target):
         target_path = os.path.abspath(target)
     else:
@@ -1327,9 +1342,11 @@ for target in otherargs:
         
     configpath = locateconfigfile('config',target_path,default_config_text)    
     execfile(configpath)
+    #print options_choices
     
     # remove duplicates from sourcedirs
     sourcedirs = unique(sourcedirs)
+    
     options = getOptions(options_choices,optionargs)
     
     # Building name of object subdirectory    
@@ -1342,18 +1359,21 @@ for target in otherargs:
     print '*** Running pymake on '+os.path.basename(target)+' using options: ' + string.join(map(lambda o: '-'+o, options))
     print '++++ Computing dependencies of '+target+' ...'
     get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_link, linkname)
+        
+    print '++++ Compiling...'
+    if platform=='win32':
+        win32_parallel_compile(ccfiles_to_compile.keys())
+    else:
+        parallel_compile(ccfiles_to_compile.keys())
 
-print '++++ Compiling...'
-if platform=='win32':
-    win32_parallel_compile(ccfiles_to_compile.keys())
-else:
-    parallel_compile(ccfiles_to_compile.keys())
+    if force_link or (executables_to_link.keys() and not create_dll):
+        print '++++ Linking', string.join(map(lambda x: x.filebase, executables_to_link.keys()))
+        sequential_link(executables_to_link.keys(),linkname)
 
-if force_link or (executables_to_link.keys() and not create_dll):
-    print '++++ Linking', string.join(map(lambda x: x.filebase, executables_to_link.keys()))
-    sequential_link(executables_to_link.keys(),linkname)
+    if create_dll:
+        print '++++ Creating DLL of', target
+        for target in list_of_targets:
+            sequential_dll(file_info(target))
 
-if create_dll:
-    print '++++ Creating DLL of', target
-    for target in list_of_targets:
-        sequential_dll(file_info(target))
+    if temp_objs:
+        mychmod(objsdir,33279)
