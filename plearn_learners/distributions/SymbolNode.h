@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SymbolNode.h,v 1.1 2004/10/08 20:29:20 larocheh Exp $ 
+   * $Id: SymbolNode.h,v 1.2 2004/10/12 18:25:20 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -45,6 +45,7 @@
 #define SymbolNode_INC
 
 #include <plearn/base/Object.h>
+#include <plearn/base/ms_hash_wrapper.h>
 
 namespace PLearn {
 using namespace std;
@@ -65,8 +66,8 @@ protected:
   int frequence;
 
   //! Children and their frequences
-  map<int,PP<SymbolNode> > children;
-  map<int,int> frequencies;
+  hash_map<int,PP<SymbolNode> > children;
+  hash_map<int,int> frequencies;
 
 public:
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SymbolNode.cc,v 1.1 2004/10/08 20:29:20 larocheh Exp $ 
+   * $Id: SymbolNode.cc,v 1.2 2004/10/12 18:25:20 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -100,7 +100,7 @@ void SymbolNode::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 PP<SymbolNode> SymbolNode::add(int child_)
 {
   PP<SymbolNode> cn;
-  map<int,PP<SymbolNode> >::iterator it = children.find(child_);
+  hash_map<int,PP<SymbolNode> >::iterator it = children.find(child_);
   if(it == children.end())
   {
     cn = new SymbolNode(child_);
@@ -125,14 +125,14 @@ TVec<PP<SymbolNode> > SymbolNode::getChildren()
 {
   TVec<PP<SymbolNode> > ret(children.size());
   int i=0;
-  for(map<int,PP<SymbolNode> >::iterator it = children.begin(); it != children.end(); it++)
+  for(hash_map<int,PP<SymbolNode> >::iterator it = children.begin(); it != children.end(); it++)
     ret[i++] = it->second;
   return ret;
 }
 
 int SymbolNode::freq(int symbol)
 {
-  map<int,int>::iterator it = frequencies.find(symbol);
+  hash_map<int,int>::iterator it = frequencies.find(symbol);
   if(it == frequencies.end())
     return 0;
   else
@@ -142,7 +142,7 @@ int SymbolNode::freq(int symbol)
 void SymbolNode::incr(int symbol)
 {
   incr();
-  map<int,int>::iterator it = frequencies.find(symbol);
+  hash_map<int,int>::iterator it = frequencies.find(symbol);
   if(it == frequencies.end())
     frequencies[symbol] = 1;
   else

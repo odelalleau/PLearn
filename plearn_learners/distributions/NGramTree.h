@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NGramTree.h,v 1.1 2004/10/08 20:29:20 larocheh Exp $ 
+   * $Id: NGramTree.h,v 1.2 2004/10/12 18:25:20 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -115,10 +115,10 @@ public:
   //! Sequence is w^i_{i-n+1}, w^i is ignored
   int n_children(TVec<int> sequence);
 
-  //! Gives the number of different symbol in frequencies map of the node corresponding to the given sequence
+  //! Gives the number of different symbols in frequencies map of the nodes corresponding to the given sequence
   //! This could be noted as N+1(w^{i-1}_{i-n+1}*)
   //! Sequence is w^i_{i-n+1}, w^i is ignored
-  int n_freq(TVec<int> sequence);
+  TVec<int> n_freq(TVec<int> sequence);
 
   /* Hugo: not useful
   //! Gives the subtrees of the node corresponding to the given sequence

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NGramTree.cc,v 1.1 2004/10/08 20:29:20 larocheh Exp $ 
+   * $Id: NGramTree.cc,v 1.2 2004/10/12 18:25:20 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -159,18 +159,25 @@ int NGramTree::n_children(TVec<int> sequence)
   return it->n_children();;
 }
 
-int NGramTree::n_freq(TVec<int> sequence)
+TVec<int> NGramTree::n_freq(TVec<int> sequence)
 { 
+  TVec<int> ret(0);
   if(sequence.length()==0)
-    return 0;
+    return ret;
+
+  ret.resize(sequence.length()-1);
+  ret.fill(0);
+
   PP<SymbolNode> it = root;
+  int n=0;
   for(int i=sequence.length()-2; i>=0; i--)
   {
+    ret[n++] = it->n_freq();
     it = it->child(sequence[i]);
     if(!it)
-      return 0;
+      return ret;
   }
-  return it->n_freq();
+  return ret;
 }
 /*
 TVec<PP<NGramTree> > NGramTree::getSubTrees(TVec<int> sequence)

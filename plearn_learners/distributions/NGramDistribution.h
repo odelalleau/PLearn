@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NGramDistribution.h,v 1.1 2004/10/08 20:29:20 larocheh Exp $ 
+   * $Id: NGramDistribution.h,v 1.2 2004/10/12 18:25:20 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -49,6 +49,7 @@
 
 #include <plearn_learners/distributions/PDistribution.h>
 #include <plearn_learners/distributions/NGramTree.h>
+#include <plearn/base/ms_hash_wrapper.h>
 
 namespace PLearn {
 using namespace std;
@@ -91,9 +92,9 @@ public:
 
   PP<NGramTree> tree;
   
-  map<pair<int,int>,int> kneser_b;
-  map<pair<int,int>,bool> kneser_c;
-  int kneser_c_count;
+  TVec<hash_map<int,int> > counts_map;
+  hash_map<int,int> n_1_plus_star_word;
+  int n_1_plus_star_star;
 
   // ****************
   // * Constructors *
