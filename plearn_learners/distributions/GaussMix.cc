@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.13 2004/04/26 19:50:21 yoshua Exp $ 
+ * $Id: GaussMix.cc,v 1.14 2004/04/26 22:03:10 yoshua Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -192,9 +192,9 @@ void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clu
     
   }
 
-  clust.resize(nclust,samples->inputsize());
-  
-  fill_random_normal(clust);
+  // ca na pas de sens de faire ca:
+  //clust.resize(nclust,samples->inputsize());
+  //fill_random_normal(clust);
 
 }
 
@@ -687,17 +687,15 @@ Lh=randn(D*M,K)*sqrt(scale/K);
 //void GaussMix::EM(VMat samples, real relativ_change_stop_value)
 void GaussMix::train()
 {
+  /*
   VMat samples = train_set;
-  real relativ_change_stop_value
+  real relativ_change_stop_value=MISSING_VALUE; // what? should be a field;
   if(type=="Factor")
   {
     EMFactorAnalyser(samples,relativ_change_stop_value);
     return;
   }
 
-  Mat den(52500,4);
-//   Mat den(375000,5);
-  
   bool samples_have_weights = samples->weightsize()>0;
 
   int nsamples=samples.length();
@@ -711,7 +709,7 @@ void GaussMix::train()
   Vec alphas(L);
   Mat weights(nsamples, L);
 
-  kmeans(samples, L, clust_idx, mu, 1);
+  kmeans(samples, L, clust_idx, mu, 2); // do 2 kmeans iterations, should be enough
 
   setMixtureTypeGeneral(L,2,D);
 
@@ -740,52 +738,15 @@ void GaussMix::train()
   
   for(int i=0;i<L;i++)
   {
-    if(samples_have_weights)
-    {
-      samples->getColumn(samples.width()-1,wvec);
-      for(int j=0;j<nsamples;j++)
-        wvec[j] *= weights(j,i);
-      VMat weighted_samples(ConcatColumnsVMatrix(samples.subMatColumns(0,samples->inputsize()), wvec.toMat(nsamples,1)));
-      weighted_samples->defineSizes(samples->inputsize(),0,1);
-      setGaussianGeneralWSamples(i, alphas[i],EM_lambda0,EM_ncomponents,weighted_samples);
-    }
-    else
-    {
-      VMat weighted_samples(ConcatColumnsVMatrix(samples, weights.column(i)));
-      weighted_samples->defineSizes(samples.width(),0,1);
-      setGaussianGeneralWSamples(i, alphas[i],EM_lambda0,EM_ncomponents,weighted_samples);
-    }
+    VMat weighted_samples(ConcatColumnsVMatrix(samples->inputsize()==samples->width()?samples:
+                                               samples.subMatColumns(0,samples->inputsize()), 
+                                               weights.column(i)));
+    weighted_samples->defineSizes(samples->inputsize(),0,1);
+    setGaussianGeneralWSamples(i, alphas[i],EM_lambda0,EM_ncomponents,weighted_samples);
   }
 
-  build();
-
-//  bool converged=false;
-  int count = 20;
-  Mat pok(900,3);
-  for(int i=0;i<900;i++)
-  {
-    pok(i,0)=samples(i,0);
-    pok(i,1)=samples(i,1);
-    pok(i,2)=clust_idx[i];
-  }
-  VMat vpok(pok);
-  vpok->saveAMAT("vpok.amat");
-
-   Vec mu1(2);
-   for(int y=0;y<50;y++)
-     for(int z=0;z<50;z++)
-       {
-         mu1[0]=(float)y*(3.0/5.0);
-         mu1[1]=(float)z*(3.0/5.0);
-         
-         den(y*50+z+(count)*2500,0)=mu1[0];
-         den(y*50+z+(count)*2500,1)=mu1[1];
-         
-         den(y*50+z+(count)*2500,2)=density(mu1);
-         den(y*50+z+(count)*2500,3)=count;
-       }
-
-   
+  // build();
+  itn count=0; // what?
   while(count--)
   {
     cout<<"count:"<<count<<" nll:"<<NLL(samples)<<endl;//<<"mus:"<<endl<<mu<<endl<<"alphas:"<<endl<<alpha<<endl;
@@ -815,7 +776,7 @@ void GaussMix::train()
       sum=0;
       for(int j=0;j<L;j++)
       {
-        sum+=Pxn_alpha[j] = /*alpha[j]**/ exp(logDensityGeneral(input, j));
+        sum+=Pxn_alpha[j] =  exp(logDensityGeneral(input, j)); // * alpha[j]
 //        cout<<i<<" "<<j<<" "<<weights(i,j)<<" "<<exp(logDensityGeneral(samples(i), j))<<endl;
       }
       for(int j=0;j<L;j++)
@@ -868,7 +829,7 @@ void GaussMix::train()
   }
   VMat out(den);
   out->savePMAT("out.pmat");
-
+*/
 }
 
 
