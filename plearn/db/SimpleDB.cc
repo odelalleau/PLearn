@@ -36,6 +36,7 @@
 
 #include "SimpleDB.h"
 #include "random.h"
+#include "stringutils.h"  //!< For space_to_underscore.
 
 namespace PLearn {
 using namespace std;
