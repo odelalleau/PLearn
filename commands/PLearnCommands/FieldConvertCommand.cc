@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: FieldConvertCommand.cc,v 1.34 2004/08/03 16:15:26 tihocan Exp $
+ * $Id: FieldConvertCommand.cc,v 1.35 2004/09/27 13:32:42 tihocan Exp $
  ******************************************************* */
 
 #include "FieldConvertCommand.h"
@@ -39,6 +39,7 @@
 #include <plearn/math/pl_erf.h>       //!< For gauss_01_quantile.
 #include <plearn/math/random.h>
 #include <plearn/base/stringutils.h>
+#include <plearn/vmat/SelectRowsVMatrix.h>
 #include <plearn/vmat/VMat.h>
 
 #define NORMALIZE 1
@@ -99,6 +100,8 @@ FieldConvertCommand::FieldConvertCommand()
                   "                                 this factor] (default = 0.001)\n"
                   "         uniformize            = [0 | 1 | 2: whether fields should be uniformized, 2 meaning all fields and 1 meaning only\n"
                   "                                 fields obviously not following a normal distribution] (default = 0)\n"
+                  "         frac_missing_sample   = [if a sample has more than 'frac_missing_sample' * n_fields missing fields, then this sample\n"
+                  "                                 will be removed from the dataset (before analyzing the dataset's fields] (default = 0)\n"
                   "\n"
                   "where fields with asterix * are not optional\n"
                   ) 
@@ -115,6 +118,7 @@ void FieldConvertCommand::run(const vector<string> & args)
   FRAC_MISSING_TO_SKIP = 1.0;
   FRAC_ENOUGH = 0.005;
   DISCRETE_TOLERANCE = 1e-3;
+  real FRAC_MISSING_SAMPLE = 0;
   target = -1;
   report_fn="FieldConvertReport.txt";
   precompute = "none";
@@ -149,6 +153,8 @@ void FieldConvertCommand::run(const vector<string> & args)
       FRAC_ENOUGH=toreal(val[1]);
     else if(val[0]=="precompute")
       precompute = val[1];
+    else if (val[0] == "frac_missing_sample")
+      FRAC_MISSING_SAMPLE = toreal(val[1]);
     else PLERROR("unknown argument: %s ",val[0].c_str());
   }
   if(source_fn=="")
@@ -158,7 +164,7 @@ void FieldConvertCommand::run(const vector<string> & args)
   if(target==-1)
     PLERROR("you must specify source target field index");
 
- // manual map between field index and types
+  // Manual map between field index and types.
   map<int, FieldType> force;
   map<int, string> additional_proc;
   map<int, int> additional_proc_size;
@@ -166,7 +172,40 @@ void FieldConvertCommand::run(const vector<string> & args)
   real beta_hat,student=-1;
   real correlation = -1;
 
-  VMat vm = getDataSet(source_fn);
+  // Get the dataset.
+  VMat vm_orig = getDataSet(source_fn);
+  VMat vm;
+  int n_removed = 0;
+  TVec<int> to_keep;
+  if (FRAC_MISSING_SAMPLE > 0) {
+    // We may have to remove some samples first.
+    ProgressBar pb("Removing samples with too many missing values", vm_orig->length());
+    int w = vm_orig->width();
+    Vec row(w);
+    int count;
+    int max_count = int(w * FRAC_MISSING_SAMPLE);
+    for (int i = 0; i < vm_orig->length(); i++) {
+      vm_orig->getRow(i, row);
+      count = 0;
+      for (int j = 0; j < w; j++) {
+        if (is_missing(row[j]))
+          count++;
+      }
+      if (count <= max_count)
+        to_keep.append(i);
+      else
+        n_removed++;
+      pb.update(i+1);
+    }
+    pb.close();
+    cout << "Removed " << n_removed << " samples that were missing more than " << max_count << " fields." << endl;
+    if (n_removed > 0)
+      vm = new SelectRowsVMatrix(vm_orig, to_keep);
+    else
+      vm = vm_orig;
+  } else {
+    vm = vm_orig;
+  }
 
   // A vector where we store the indices of the fields to be uniformized.
   TVec<int> need_to_be_uniformized;
@@ -250,7 +289,17 @@ void FieldConvertCommand::run(const vector<string> & args)
     out = new ofstream(desti_fn.c_str());
   }
   ofstream report(report_fn.c_str());
-  *out<<"<SOURCES>\n"+source_fn+"\n</SOURCES>\n<PROCESSING>\n";
+  *out<<"<SOURCES>\n";
+  if (n_removed == 0) {
+    *out << source_fn;
+  } else {
+    *out << "@" << endl
+         << "SelectRowsVMatrix(" << endl
+         << "  source = AutoVMatrix(specification = \"" << source_fn << "\")" << endl
+         << "  indices = [ " << to_keep << " ]" << endl
+         << ")";
+  }
+  *out << "\n</SOURCES>\n<PROCESSING>\n";
 
   // Minimun number of representants of a class to be considered significant.
   int n_enough = (int) (FRAC_ENOUGH * vm->length());
