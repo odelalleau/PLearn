@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.h,v 1.20 2005/02/09 18:21:02 dorionc Exp $ 
+   * $Id: PTester.h,v 1.21 2005/02/21 15:29:02 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PTester.h */
@@ -54,6 +54,11 @@ class PTester: public Object
 private:
 
   typedef Object inherited;
+
+  //! The original statnames option.
+  //! It is private because it is safer to access stats from getStatNames,
+  //! since the 'statmask' option may modify the stats.
+  TVec<string> statnames;
 
 protected:
 
@@ -96,11 +101,6 @@ public:
   //! whether or not to train or just test
   bool train; 
 
-  // TODO Move to protected as soon as Apstat code is fixed.
-  // Protected because it is safer to access it from getStatNames,
-  // since the 'statmask' option may modify the stats.
-  TVec<string> statnames;
- 
   // ****************
   // * Constructors *
   // ****************
