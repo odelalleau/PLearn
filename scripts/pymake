@@ -85,6 +85,20 @@ def abspath(mypath):
             p = '/'+p[lenprefix:]
     return p
 
+def lsdirs(basedir):
+    """returns the recursive list of all subdirectories of the given directory,
+    excluding OBJS and CVS directories and those whose name starts with a dot.
+    The returned list does NOT contain the basedir"""
+    dirs = []
+    for dname in os.listdir(basedir):
+        if dname!='CVS' and dname!='OBJS' and dname[0]!='.':
+            dname = os.path.join(basedir,dname)
+            if os.path.isdir(dname):
+                dirs.append(dname)
+                dirs.extend(lsdirs(dname))
+    return dirs
+
+    
 # This is used for buffering mtime calls
 mtime_map = {}
 

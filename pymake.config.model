@@ -26,39 +26,11 @@ else:
 
 # List of directories in which to look for .h includes and corresponding .cc files to compile and link with your program
 # (no need to include the current directory, it is implicit)
-sourcedirs = [
-#os.path.join(plearndir,'plearn'),
-os.path.join(plearndir,'plearn/base'),
-os.path.join(plearndir,'plearn/db'),
-os.path.join(plearndir,'plearn/display'),
-os.path.join(plearndir,'plearn/io'),
-os.path.join(plearndir,'plearn/ker'),
-os.path.join(plearndir,'plearn/math'),
-os.path.join(plearndir,'plearn/measure'),
-os.path.join(plearndir,'plearn/misc'),
-os.path.join(plearndir,'plearn/opt'),
-os.path.join(plearndir,'plearn/randomvar'),
-os.path.join(plearndir,'plearn/sys'),
-os.path.join(plearndir,'plearn/var'),
-os.path.join(plearndir,'plearn/vmat'),
-os.path.join(plearndir,'plearn_learners'),
-os.path.join(plearndir,'plearn_learners/generic'),
-os.path.join(plearndir,'plearn_learners/testers'),
-os.path.join(plearndir,'plearn_learners/meta'),
-os.path.join(plearndir,'plearn_learners/misc'),
-os.path.join(plearndir,'plearn_learners/classifiers'),
-os.path.join(plearndir,'plearn_learners/distributions'),
-os.path.join(plearndir,'plearn_learners/language'),
-os.path.join(plearndir,'plearn_learners/language/WordNet'),
-os.path.join(plearndir,'plearn_learners/regressors'),
-os.path.join(plearndir,'plearn_learners_experimental'),
-os.path.join(plearndir,'commands/PLearnCommands'),
-
-os.path.join(lisaplearndir,'PLearnLibrary/PLearnCore'),
-os.path.join(lisaplearndir,'PLearnLibrary/PLearnAlgo'),
-os.path.join(lisaplearndir,'PLearnLibrary/PLearnUtil'),
-os.path.join(lisaplearndir,'Databases'),
-]
+sourcedirs =   lsdirs(os.path.join(plearndir,'plearn/')) \
+             + lsdirs(os.path.join(plearndir,'plearn_learners/')) \
+             + lsdirs(os.path.join(plearndir,'commands/')) \
+             + lsdirs(os.path.join(lisaplearndir,'PLearnLibrary/')) \
+             + [ os.path.join(lisaplearndir,'Databases/') ]
 
 # will be added as list of includes (-I...) to all compilations
 mandatory_includedirs = []
@@ -266,7 +238,6 @@ if myhostname[0:4]=='zeus':
 if myhostname[0:6]=='canari':
     nprocesses_per_processor = 2
 
-# APSTAT hack... to avoid swapping on merlin
 if myhostname[0:6]=='merlin':
     nprocesses_per_processor = 1
 
