@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StatefulLearner.h,v 1.3 2004/07/20 20:40:33 chapados Exp $ 
+   * $Id: StatefulLearner.h,v 1.4 2004/07/23 20:24:20 ducharme Exp $ 
    ******************************************************* */
 
 // Authors: Réjean Ducharme
@@ -135,7 +135,7 @@ public:
   virtual void setTestSet(VMat testset);
 
   //! Set the time step at which the current test is perform
-  void setCurrentTestTime(int test_t) { current_test_t = test_t; }
+  virtual void setCurrentTestTime(int test_t);
 };
 
 // Declares a few other classes and functions related to this class.

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StatefulLearner.cc,v 1.3 2004/07/20 20:40:33 chapados Exp $ 
+   * $Id: StatefulLearner.cc,v 1.4 2004/07/23 20:24:20 ducharme Exp $ 
    ******************************************************* */
 
 // Authors: Réjean Ducharme
@@ -109,6 +109,9 @@ void StatefulLearner::setTrainingSet(VMat training_set, bool call_forget)
 
 void StatefulLearner::setTestSet(VMat testset)
 {}
+
+void StatefulLearner::setCurrentTestTime(int test_t)
+{ current_test_t = test_t; }
 
 bool StatefulLearner::isStatefulLearner() const
 { return true; }
