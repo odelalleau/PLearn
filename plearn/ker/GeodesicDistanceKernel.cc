@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GeodesicDistanceKernel.cc,v 1.9 2004/07/22 16:45:09 tihocan Exp $ 
+   * $Id: GeodesicDistanceKernel.cc,v 1.10 2004/07/22 19:09:28 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -128,7 +128,7 @@ void GeodesicDistanceKernel::build_()
 /////////////////////////////////////
 // computeNearestGeodesicNeighbour //
 /////////////////////////////////////
-int GeodesicDistanceKernel::computeNearestGeodesicNeighbour(int i, const Mat& k_xi_x_sorted) const {
+int GeodesicDistanceKernel::computeNearestGeodesicNeighbour(int i, const Mat& k_xi_x_sorted, real* dist_i) const {
   real min = k_xi_x_sorted(0,0) + geo_distances->get(i, int(k_xi_x_sorted(0,1)));
   real dist;
   int indice = 0;
@@ -139,6 +139,8 @@ int GeodesicDistanceKernel::computeNearestGeodesicNeighbour(int i, const Mat& k_
       indice = j;
     }
   }
+  if (dist_i)
+    *dist_i = min;
   return int(k_xi_x_sorted(indice,1));
 }
 
@@ -146,8 +148,9 @@ int GeodesicDistanceKernel::computeNearestGeodesicNeighbour(int i, const Mat& k_
 // computeShortestDistance //
 /////////////////////////////
 real GeodesicDistanceKernel::computeShortestDistance(int i, const Mat& k_xi_x_sorted) const {
-  int indice = computeNearestGeodesicNeighbour(i,k_xi_x_sorted);
-  return k_xi_x_sorted(indice,0) + geo_distances->get(i,indice);
+  static real result;
+  computeNearestGeodesicNeighbour(i, k_xi_x_sorted, &result);
+  return result;
 }
 
 //////////////

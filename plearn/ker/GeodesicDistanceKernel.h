@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GeodesicDistanceKernel.h,v 1.6 2004/07/21 20:10:27 tihocan Exp $ 
+   * $Id: GeodesicDistanceKernel.h,v 1.7 2004/07/22 19:09:28 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -128,7 +128,9 @@ public:
   //!   1. j is among the knn nearest neighbors of the point x from which was
   //!      computed k_xi_x_sorted
   //!   2. it is such that dist(x,j) + geodesic_dist(j,x_i) is minimum
-  int computeNearestGeodesicNeighbour(int i, const Mat& k_xi_x_sorted) const;
+  //! If provided, the 'dist_i' parameter is filled with the geodesic distance
+  //! from x to x_i.
+  int computeNearestGeodesicNeighbour(int i, const Mat& k_xi_x_sorted, real* dist_i = 0) const;
 
   //! Return the shortest distance to i from a point x whose distance
   //! to its knn nearest neighbors in the training set is given by
