@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.53 2004/08/25 21:43:40 kermorvc Exp $
+   * $Id: VMatrix.h,v 1.54 2004/09/08 23:07:52 larocheh Exp $
    ******************************************************* */
 
 
@@ -549,6 +549,8 @@ public:
   //!  compute fprop or fbprop of a sumOf operation
   virtual void evaluateSumOfFprop(Func f, Vec& output_result, int nsamples=-1);
   virtual void evaluateSumOfFbprop(Func f, Vec& output_result, Vec& output_gradient, int nsamples=-1);
+
+  virtual Vec getValues(int row, int col){return Vec(0);};
  
   virtual ~VMatrix();
 };
