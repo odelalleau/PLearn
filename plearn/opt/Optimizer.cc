@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.cc,v 1.26 2004/03/09 18:32:14 tihocan Exp $
+   * $Id: Optimizer.cc,v 1.27 2004/03/10 12:54:55 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -183,8 +183,17 @@ void Optimizer::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   deepCopyField(params, copies);
   deepCopyField(update_for_measure, copies);
   deepCopyField(temp_grad, copies);
-  // The line below was commented, but there was no explaination why.
-  //deepCopyField(measurers, copies);
+  // We can't deep copy measurers, because deepCopy is not implemented for
+  // the Measurer class. However, since nobody should be using measurers
+  // anymore, this probably isn't a real issue.
+  // deepCopyField(measurers, copies);
+  if (measurers.size() > 0) {
+    PLWARNING(
+        "In Optimizer::makeDeepCopyFromShallowCopy - The 'measurers' field "
+        "won't be deep copied, since the deepCopy method is not currently "
+        "implemented in the class Measurer."
+        );
+  }
   build();
 }
 
