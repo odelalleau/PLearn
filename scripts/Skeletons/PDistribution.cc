@@ -62,12 +62,15 @@ void DERIVEDCLASS::build_()
   // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
   // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
   // ### You should assume that the parent class' build_() has already been called.
+
+  // ### If the distribution is conditional, you should finish build_() by:
+  // PDistribution::finishConditionalBuild();
 }
 
 /////////
 // cdf //
 /////////
-double DERIVEDCLASS::cdf(const Vec& x) const
+real DERIVEDCLASS::cdf(const Vec& y) const
 {
   PLERROR("cdf not implemented for DERIVEDCLASS"); return 0;
 }
@@ -80,7 +83,7 @@ void DERIVEDCLASS::expectation(Vec& mu) const
   PLERROR("expectation not implemented for DERIVEDCLASS");
 }
 
-// ### Remove this method, if your distribution does not implement it.
+// ### Remove this method if your distribution does not implement it.
 ////////////
 // forget //
 ////////////
@@ -98,7 +101,7 @@ void DERIVEDCLASS::forget()
 //////////////
 // generate //
 //////////////
-void DERIVEDCLASS::generate(Vec& x) const
+void DERIVEDCLASS::generate(Vec& y) const
 {
   PLERROR("generate not implemented for DERIVEDCLASS");
 }
@@ -111,7 +114,7 @@ void DERIVEDCLASS::generate(Vec& x) const
 /////////////////
 // log_density //
 /////////////////
-double DERIVEDCLASS::log_density(const Vec& x) const
+real DERIVEDCLASS::log_density(const Vec& y) const
 {
   PLERROR("density not implemented for DERIVEDCLASS"); return 0; 
 }
@@ -141,10 +144,17 @@ void DERIVEDCLASS::resetGenerator(long g_seed) const
   PLERROR("resetGenerator not implemented for DERIVEDCLASS");
 }
 
+//////////////
+// setInput //
+//////////////
+void DERIVEDCLASS::setInput(const Vec& input) const {
+  PLERROR("setInput not implemented for DERIVEDCLASS");
+}
+
 /////////////////
 // survival_fn //
 /////////////////
-double DERIVEDCLASS::survival_fn(const Vec& x) const
+real DERIVEDCLASS::survival_fn(const Vec& y) const
 {
   PLERROR("survival_fn not implemented for DERIVEDCLASS"); return 0;
 }
@@ -187,6 +197,16 @@ void DERIVEDCLASS::train()
   train_stats->finalize() // finalize statistics for this epoch
   }
    */
+}
+
+//////////////////////////////////
+// updateFromConditionalSorting //
+//////////////////////////////////
+void DERIVEDCLASS::updateFromConditionalSorting() {
+  // ### Update internal data for new conditional flags.
+  // ### This method would typically call sortFromFlags() to update
+  // ### internal data.
+  PLERROR("updateFromConditionalSorting not implemented for DERIVEDCLASS");
 }
 
 //////////////

@@ -77,26 +77,39 @@ public:
   // **** PDistribution methods ****
   // *******************************
 
-  //! Return log of probability density log(p(x)).
-  virtual double log_density(const Vec& x) const;
+  //! Return log of probability density log(p(y | x)).
+  virtual real log_density(const Vec& x) const;
 
-  //! Return survival fn = P(X>x).
-  virtual double survival_fn(const Vec& x) const;
+  //! Return survival function: P(Y>y | x).
+  virtual real survival_fn(const Vec& y) const;
 
-  //! Return survival fn = P(X<x).
-  virtual double cdf(const Vec& x) const;
+  //! Return cdf: P(Y<y | x).
+  virtual real cdf(const Vec& y) const;
 
-  //! Return E[X].
+  //! Return E[Y | x].
   virtual void expectation(Vec& mu) const;
 
-  //! Return Var[X].
+  //! Return Var[Y | x].
   virtual void variance(Mat& cov) const;
+
+  //! Return a pseudo-random sample generated from the distribution.
+  virtual void generate(Vec& y) const;
 
   //! Reset the random number generator used by generate() using the given seed.
   virtual void resetGenerator(long g_seed) const;
 
-  //! Return a pseudo-random sample generated from the distribution.
-  virtual void generate(Vec& x) const;
+  //! Set the value for the input part of a conditional probability.
+  virtual void setInput(const Vec& input) const;
+
+  //! This method updates the internal data given a new sorting of the variables
+  //! defined by the conditional flags.
+  virtual void updateFromConditionalSorting();
+
+  // ### These methods may be overridden for efficiency purpose:
+  /*
+  //! Return probability density p(y | x)
+  virtual real density(const Vec& y) const;
+  */
 
   // **************************
   // **** PLearner methods ****
