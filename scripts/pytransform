@@ -474,12 +474,13 @@ filepattern = re.compile(r'\.c$|\.cc$|\.cpp$|\.CC$|\.h$|\.hpp$')
 
 def transformAllFiles(list_of_files_and_dirs, transformfunc):
     for fname in list_of_files_and_dirs:
-        if os.path.isdir(fname):
-            flist = map(lambda f,d=fname: os.path.join(d,f),  os.listdir(fname))
-            flist = filter(lambda s: os.path.isdir(s) or filepattern.search(s), flist)
-            transformAllFiles(flist, transformfunc)
-        elif os.path.isfile(fname):
-            transformFile(fname, transformfunc)
+        if not os.path.islink(fname):
+            if os.path.isdir(fname):
+                flist = map(lambda f,d=fname: os.path.join(d,f),  os.listdir(fname))
+                flist = filter(lambda s: os.path.isdir(s) or filepattern.search(s), flist)
+                transformAllFiles(flist, transformfunc)
+            elif os.path.isfile(fname):
+                transformFile(fname, transformfunc)
 
 
 #########################
