@@ -54,20 +54,48 @@ class DuplicateName( PyTestUsageError ):
             self, "Two tests have the same name: %s and %s."
             % ( test1.get_path(), test2.get_path() )
             )        
-        
+
+class Resources:
+    md5_mappings = {}
+
+    def link_resource(cls, path_to_resource, target):
+        link_cmd = "ln -s %s %s" % ( path_to_resource, target )
+        vprint( "Linking resource: %s." % link_cmd, 2 )
+        os.system( link_cmd )
+    link_resource = classmethod(link_resource)
+    
+    ## Class methods
+    def link_resources(cls, location, target, resources): 
+        for resource in resources:
+            if not os.path.isabs( resource ):
+                resource = os.path.join( self.test_directory, resource ) 
+            if not os.path.exists( resource ):
+                raise PyTestUsageError(
+                    "The %s test uses %s as a resource but path doesn't exist."
+                    % ( self.name, resource )
+                    )
+
+            cls.link_resource( resource )
+
+            if toolkit.isvmat( resource ):
+                meta = resource+'.metadata'
+                if os.path.exists( meta ):
+                    cls.link_resource( meta )       
+    link_resources = classmethod(link_resources)
+
 class TestDefaults:
     name            = None
     description     = ''
     program         = None
     arguments       = ''
-    ressources      = []
+    resources      = []
     disabled        = False
 
     __declare_members__ = [ ('name',            types.StringType),
                             ('description',     types.StringType),
                             ('program',         Program),
                             ('arguments',       types.StringType),
-                            ('ressources',      types.ListType),
+                            ('resources',      types.ListType),
                             ('disabled',        types.BooleanType)
                             ]
 
@@ -104,11 +132,11 @@ class Test(FrozenObject):
     for the test to proceed.
     @type arguments: String
 
-    @ivar ressources: A list of ressources that are used by your program either
+    @ivar resources: A list of resources that are used by your program either
     in the command line or directly in the code (plearn or pyplearn files, databases, ...).
     The elements of the list must be string representations of the path, absolute or relative,
-    to the ressource.
-    @type ressources: List of Strings
+    to the resource.
+    @type resources: List of Strings
     """
     
     instances_map    = {}
@@ -134,7 +162,11 @@ class Test(FrozenObject):
                 
         self.set_str_spacer( '\n' )
 
-    def check_name_format(self):
+        if overrides.has_key('ressources'):
+            self.set_attribute('__ressources', None)
+            self.resources = overrides['ressources']
+
+    def sanity_check(self):
         if self.name == '':
             raise PyTestUsageError(                
                 "Test must be named. Directory %s contains an unnamed test." 
@@ -154,6 +186,13 @@ class Test(FrozenObject):
                 "' ', '-', '/', '<', '>'."
                 % self.get_path()
                 )
+
+        if hasattr(self, '__ressources'):
+            raise PyTestUsageError(
+                "The use of Test.ressources is deprecated! Test.resources must "
+                "be used instead. Use the PyTest 'update' mode the correct your "
+                "PyTest config file."
+                )
             
     def compilation_succeeded(self):
         """Forwards compilation status request to the program.
@@ -169,7 +208,7 @@ class Test(FrozenObject):
         B{Note} that the call will raise an exception if the program
         is not compilable.
         """
-        self.check_name_format()        
+        self.sanity_check()        
         self.program.compile()
 
     def ensure_results_directory(self, results):
@@ -209,29 +248,29 @@ class Test(FrozenObject):
 ##                  os.path.exists(disabling_test)       )
         return self.disabled
     
-    def link_ressources(self, test_results):
-        ressources = []
-        ressources.extend( self.ressources )
-        ressources.append( self.program.path )
+    def link_resources(self, test_results):
+        resources = []
+        resources.extend( self.resources )
+        resources.append( self.program.path )
 
-        def single_link(ressource):
-            link_cmd = "ln -s %s %s" % ( ressource, test_results )
-            vprint( "Linking ressource: %s." % link_cmd, 2 )
+        def single_link(resource):
+            link_cmd = "ln -s %s %s" % ( resource, test_results )
+            vprint( "Linking resource: %s." % link_cmd, 2 )
             os.system( link_cmd )
             
-        for ressource in ressources:
-            if not os.path.isabs( ressource ):
-                ressource = os.path.join( self.test_directory, ressource ) 
-            if not os.path.exists( ressource ):
+        for resource in resources:
+            if not os.path.isabs( resource ):
+                resource = os.path.join( self.test_directory, resource ) 
+            if not os.path.exists( resource ):
                 raise PyTestUsageError(
-                    "The %s test uses %s as a ressource but path doesn't exist."
-                    % ( self.name, ressource )
+                    "The %s test uses %s as a resource but path doesn't exist."
+                    % ( self.name, resource )
                     )
 
-            single_link( ressource )
+            single_link( resource )
 
-            if toolkit.isvmat( ressource ):
-                meta = ressource+'.metadata'
+            if toolkit.isvmat( resource ):
+                meta = resource+'.metadata'
                 if os.path.exists( meta ):
                     single_link( meta )
 
@@ -247,7 +286,7 @@ class Test(FrozenObject):
         
     def run(self, results):
         os.putenv("PLEARN_DATE_TIME", "NO")
-        self.check_name_format()
+        self.sanity_check()
 
 
         test_results  = self.test_results( results )
@@ -255,7 +294,7 @@ class Test(FrozenObject):
         if backup is not None:
             vprint("Previous results saved in %s" % backup )
 
-        self.link_ressources( test_results )
+        self.link_resources( test_results )
         run_command   = ( "%s %s >& %s"
                           % ( self.program.get_name(), self.arguments, self.name+'.run_log' )
                           )
@@ -273,10 +312,10 @@ class Test(FrozenObject):
 ##         ## still be available in the backup directory.
 ##         if backup is not None:
 ##             shutil.rmtree( backup )
-        self.unlink_ressources( test_results )
+        self.unlink_resources( test_results )
         os.putenv("PLEARN_DATE_TIME", "YES")
 
-    def unlink_ressources(self, test_results):
+    def unlink_resources(self, test_results):
         dirlist = os.listdir( test_results )
         for f in dirlist:
             path = os.path.join( test_results, f )

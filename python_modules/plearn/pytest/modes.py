@@ -27,14 +27,41 @@ __all__ = [
 
 ## All modes that are completed must, in the class declaration,
 ## 
-__supported_modes = [ 'add',  'commit', 'compile', 'disable', 'enable',
-                      'list', 'ignore', 'results', 'run'                ]
+supported_modes = [ 'add',          'commit', 'compile', 'disable', 'enable',
+                    'light_commit', 'list',   'ignore',  'results', 'run',
+                    'update'
+                    ]
 
 def add_supported_modes( parser ):
-    for mode in __supported_modes:
+    for mode in supported_modes:
         mode_instance = eval( "%s()" % mode )
         parser.add_mode( mode_instance )
-    
+
+def initialize( ):
+    global dispatch, targets
+
+    dispatch = Dispatch(
+        localhost = options.localhost,
+        nb_hosts  = options.hosts
+        )
+
+    ## --all: Run all tests found in subdirectories of directories in
+    ## globalvars.all_roots test_suite branches. If some targets are
+    ## provided, these will be ignored.
+    if options.all:
+        targets           = globalvars.all_roots
+        options.recursive = True
+
+    ## If no targets are provided, the cwd is the default target.
+    if len(targets) == 0:
+        targets.append( os.getcwd() )
+
+    for i,target in enumerate(targets):
+        targets[i] = os.path.abspath(target)
+
+    if options.recursive:
+        targets = plpath.exempt_of_subdirectories( targets )
+
 def print_stats():
     vprint("\n%s" % str(Test.statistics), 0)    
 
@@ -131,6 +158,137 @@ class PyTestMode(Mode):
         
         return testing_options
 
+
+class commit( PyTestMode ):
+    """Commits PyTest's config file and results within the target directory."""
+    def procedure( self ):
+        global targets
+        if len(targets) == 0:
+            targets = [ os.getcwd() ]
+        else:
+            targets = plpath.exempt_of_subdirectories( targets )            
+        self.parse_config_files()
+
+        for (family, tests) in Test.families_map.iteritems():
+            os.chdir( family )
+
+            if not os.path.exists( plpath.cvs_directory ):
+                raise PyTestUsageError(
+                    "The directory in which lies a config file must be added to cvs by user.\n"
+                    "%s was not." % family
+                    )
+
+            config_path = config_file_path()
+
+            cvs.add( config_path )
+            cvs.add( plpath.pytest_dir )
+            cvs.add( Test.expected_results )
+            for test in tests:
+                cvs.recursive_add( test.test_results( Test.expected_results ) )
+
+            cvs.commit( [config_path, plpath.pytest_dir],
+                        'PyTest internal commit'
+                        )            
+
+
+class ignore(PyTestMode):
+    """Causes the target hierarchy to be ignored by PyTest.
+
+    Simply drops a I{pytest.ignore} file that is recognized by PyTest
+    afterwards.
+    """
+    ignore_file               = 'pytest.ignore'
+
+    def is_ignored(directory, dirlist=None):
+        if dirlist == None:
+            dirlist = os.listdir(directory)
+            
+        if ignore.ignore_file in dirlist:
+            return True
+        return False
+    is_ignored = staticmethod(is_ignored)
+
+    def procedure(self):
+        global targets
+        if len(targets) == 0:
+            targets = [ os.getcwd() ]
+        else:
+            targets = plpath.exempt_of_subdirectories( targets )
+
+        for target in targets:
+            os.system("touch %s" % os.path.join( target, ignore.ignore_file ) )
+
+class light_commit( PyTestMode ):
+    """Commits the updated PyTest config file and pytest directory.
+
+    If, for instance, L{update} is used on multiple files, it may be
+    useful to use this light_commit mode to commit the PyTest config
+    file in all targeted directory.
+
+    B{Note that} this mode is intended to be used only when you are
+    sure that the pytest directory and subdirectories where not added
+    or removed any file.
+    """
+    def procedure( self ):
+        initialize()
+        self.parse_config_files()        
+
+        config_path = config_file_path()
+        
+        for (family, tests) in Test.families_map.iteritems():
+            os.chdir( family )
+            vprint("- %s light_commit\n" % os.getcwd(), 1)
+            cvs.commit( [config_path, plpath.pytest_dir],
+                        'PyTest internal commit'         )            
+
+    def option_groups(self, parser):
+        return [ self.testing_options(parser) ]
+            
+class list(PyTestMode):
+    """Lists all tests within target directories."""
+    def procedure(self):
+        initialize()
+        self.parse_config_files()
+
+        formatted_string = lambda n,d: ( "%s Disabled: %s"
+                                         % (string.ljust(n, 25), string.ljust(str(d), 15))
+                                         )
+        for (family, tests) in Test.families_map.iteritems():
+            formatted_strings = []
+
+            for test in tests:
+                if options.disabled and not test.disabled:
+                    continue
+                if options.enabled  and test.disabled:
+                    continue
+                formatted_strings.append(
+                    formatted_string(test.name, test.disabled)
+                    )
+
+            if formatted_strings:
+                vprint( "In %s:\n    %s\n"
+                        % ( family, string.join(formatted_strings, '\n    ') )
+                        )    
+        
+    def option_groups( self, parser ):
+        list_options = OptionGroup( parser, "Mode Specific Options --- %s" % self.classname(),
+                                    "Available under list mode only." )
+
+        list_options.add_option( "-d", "--disabled",
+                                 action="store_true",
+                                 default=False,
+                                 help= "The list provided will contain only disabled tests." 
+                                 )
+
+        list_options.add_option( "-e", "--enabled",
+                                 action="store_true",
+                                 default=False,
+                                 help= "The list provided will contain only enabled tests." 
+                                 )
+
+        return [ self.testing_options(parser), list_options ]
+
+
 class FamilyConfigMode( PyTestMode ):
     def procedure(self):
         initialize()
@@ -191,38 +349,7 @@ class add( FamilyConfigMode ):
     def test_hook(self, test):
         pass
     
-class commit( PyTestMode ):
-    """Commits PyTest's config file and results within the target directory."""
-    def procedure( self ):
-        global targets
-        if len(targets) == 0:
-            targets = [ os.getcwd() ]
-        else:
-            targets = plpath.exempt_of_subdirectories( targets )            
-        self.parse_config_files()
-
-        for (family, tests) in Test.families_map.iteritems():
-            os.chdir( family )
-
-            if not os.path.exists( plpath.cvs_directory ):
-                raise PyTestUsageError(
-                    "The directory in which lies a config file must be added to cvs by user.\n"
-                    "%s was not." % family
-                    )
-
-            config_path = config_file_path()
-
-            cvs.add( config_path )
-            cvs.add( plpath.pytest_dir )
-            cvs.add( Test.expected_results )
-            for test in tests:
-                cvs.recursive_add( test.test_results( Test.expected_results ) )
-
-            cvs.commit( [config_path, plpath.pytest_dir],
-                        'PyTest internal commit'
-                        )            
-
-class disable(FamilyConfigMode):
+class disable( FamilyConfigMode ):
     """Disables targeted tests.
 
     The disabled tests can be restored (L{enable mode<enable>}) afterwards.
@@ -235,6 +362,26 @@ class enable( FamilyConfigMode ):
     def test_hook( self, test ):
         test.disabled = False
 
+class update( FamilyConfigMode ):
+    """Updates the PyTest config file to the current format.
+
+    If the PyTest developers change anything of the PyTest config
+    file, from the docstring to the Test class behavior, the changes
+    will be made taking in considerations that a simple call to the
+    config mode should be enough to migrate an old PyTest config file
+    the new format.
+    """
+    def test_hook( self, test ):
+        """Does nothing.
+
+        Tests are parsed by L{initialize}, called in the
+        FamilyConfigMode template procedure. The PyTest config file
+        docstring is always updated to the Test class' docstring by
+        any FamilyConfigMode. For the Test class' internal behavior,
+        changes will be made to support
+        """
+        pass
+    
 class RoutineBasedMode( PyTestMode ):
 
     def description(self):
@@ -285,100 +432,3 @@ class results( RoutineBasedMode ):
 class run( RoutineBasedMode ):
     def routine_type(self): return RunTestRoutine
 
-def initialize( ):
-    global dispatch, targets
-
-    dispatch = Dispatch(
-        localhost = options.localhost,
-        nb_hosts  = options.hosts
-        )
-
-    ## --all: Run all tests found in subdirectories of directories in
-    ## globalvars.all_roots test_suite branches. If some targets are
-    ## provided, these will be ignored.
-    if options.all:
-        targets           = globalvars.all_roots
-        options.recursive = True
-
-    ## If no targets are provided, the cwd is the default target.
-    if len(targets) == 0:
-        targets.append( os.getcwd() )
-
-    for i,target in enumerate(targets):
-        targets[i] = os.path.abspath(target)
-
-    if options.recursive:
-        targets = plpath.exempt_of_subdirectories( targets )
-
-
-class list(PyTestMode):
-    """Lists all tests within target directories."""
-    def procedure(self):
-        initialize()
-        self.parse_config_files()
-
-        formatted_string = lambda n,d: ( "%s Disabled: %s"
-                                         % (string.ljust(n, 25), string.ljust(str(d), 15))
-                                         )
-        for (family, tests) in Test.families_map.iteritems():
-            formatted_strings = []
-
-            for test in tests:
-                if options.disabled and not test.disabled:
-                    continue
-                if options.enabled  and test.disabled:
-                    continue
-                formatted_strings.append(
-                    formatted_string(test.name, test.disabled)
-                    )
-
-            if formatted_strings:
-                vprint( "In %s:\n    %s\n"
-                        % ( family, string.join(formatted_strings, '\n    ') )
-                        )    
-        
-    def option_groups( self, parser ):
-        list_options = OptionGroup( parser, "Mode Specific Options --- %s" % self.classname(),
-                                    "Available under list mode only." )
-
-        list_options.add_option( "-d", "--disabled",
-                                 action="store_true",
-                                 default=False,
-                                 help= "The list provided will contain only disabled tests." 
-                                 )
-
-        list_options.add_option( "-e", "--enabled",
-                                 action="store_true",
-                                 default=False,
-                                 help= "The list provided will contain only enabled tests." 
-                                 )
-
-        return [ self.testing_options(parser), list_options ]
-
-class ignore(PyTestMode):
-    """Causes the target hierarchy to be ignored by PyTest.
-
-    Simply drops a I{pytest.ignore} file that is recognized by PyTest
-    afterwards.
-    """
-    ignore_file               = 'pytest.ignore'
-
-    def is_ignored(directory, dirlist=None):
-        if dirlist == None:
-            dirlist = os.listdir(directory)
-            
-        if ignore.ignore_file in dirlist:
-            return True
-        return False
-    is_ignored = staticmethod(is_ignored)
-
-    def procedure(self):
-        global targets
-        if len(targets) == 0:
-            targets = [ os.getcwd() ]
-        else:
-            targets = plpath.exempt_of_subdirectories( targets )
-
-        for target in targets:
-            os.system("touch %s" % os.path.join( target, ignore.ignore_file ) )
-        
