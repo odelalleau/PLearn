@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOverBagsVariable.cc,v 1.3 2004/02/20 14:43:12 yoshua Exp $
+   * $Id: SumOverBagsVariable.cc,v 1.4 2004/02/20 14:50:23 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,7 +53,7 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(SumOverBagsVariable, "Variable that sums the value of a Func each time evaluated on a subsequence of a VMat\n", 
                         "returns\n"
-                        "   Sum_{bags \in vmat} f(inputs and targets in bag)\n"
+                        "   Sum_{bags in vmat} f(inputs and targets in bag)\n"
                         "By convention a bag is a sequence of rows of the vmat in which the last column of the target\n"
                         "indicates whether the row is the first one (and/or) the last one, with its two least significant bits:\n"
                         "   last_column_of_target == 1 ==> first row\n"
@@ -100,7 +100,9 @@ void SumOverBagsVariable::build_()
     f->inputs.setDontBpropHere(true);
 
     bag_size_vec.resize(1);
-    bag_target.resize(vmat->targetsize()-1);
+    bag_target_and_bag_signal.resize(vmat->targetsize());
+    bag_target = bag_target_and_bag_signal.subVec(0,vmat->targetsize()-1);
+    bag_signal = bag_target_and_bag_signal.subVec(vmat->targetsize()-1,1);
     bag_weight.resize(vmat->weightsize());
     f_inputs.resize(4);
     f_inputs[0] = input_values.toVec();
@@ -130,7 +132,7 @@ void SumOverBagsVariable::declareOptions(OptionList& ol)
                 "    maximum number of examples in a bag (more than that in vmat will trigger a run-time error).\n");
 
   declareOption(ol, "n_samples", &SumOverBagsVariable::n_samples, OptionBase::buildoption, 
-                "    number of samples to iterate over (1 for online gradient, <=0 for batch).");
+                "    number of bags to iterate over (1 for online gradient, <=0 for batch).");
 
   inherited::declareOptions(ol);
 }
@@ -147,7 +149,9 @@ void SumOverBagsVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& c
   deepCopyField(output_value, copies);
   deepCopyField(input_values, copies);
   deepCopyField(bag_size_vec, copies);
+  deepCopyField(bag_target_and_bag_signal, copies);
   deepCopyField(bag_target, copies);
+  deepCopyField(bag_signal, copies);
   deepCopyField(bag_weight, copies);
   deepCopyField(f_inputs, copies);
   deepCopyField(unused_gradients, copies);
@@ -159,9 +163,9 @@ void SumOverBagsVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& c
 void SumOverBagsVariable::fpropOneBag(bool do_bprop)
 {
   static real dummy_weight=0;
-  bool not_reached_end_of_bag=true;
+  bool reached_end_of_bag=false;
   input_values.resize(max_bag_size,input_values.width());
-  for (bag_size=0;not_reached_end_of_bag;bag_size++)
+  for (bag_size=0;!reached_end_of_bag;bag_size++)
   {
     if (bag_size>=max_bag_size)
       PLERROR("SumOverBagsVariable: bag size=%d > expected max. bag size(%d)",
@@ -170,17 +174,19 @@ void SumOverBagsVariable::fpropOneBag(bool do_bprop)
     if (vmat->weightsize()>0)
       {
         real& weight = bag_weight[0];
-        vmat->getExample(curpos,input_value,bag_target,weight);
+        vmat->getExample(curpos,input_value,bag_target_and_bag_signal,weight);
       }
     else
-      vmat->getExample(curpos,input_value,bag_target,dummy_weight);
-    not_reached_end_of_bag = bag_target.hasMissing();
+      vmat->getExample(curpos,input_value,bag_target_and_bag_signal,dummy_weight);
+    if (bag_size==0 && !(int(bag_signal[0]) & 1))
+      PLERROR("SumOverBagsVariable: data synchronization error, first row of bag has wrong bag signal");
+    reached_end_of_bag = (int(bag_signal[0]) & 2);
     if(++curpos == vmat->length())
     {
       curpos = 0;
-      if (not_reached_end_of_bag)
+      if (!reached_end_of_bag)
         {
-          PLWARNING("SumOverBagsVariable: last bag of VMatrix is not complete");
+          PLERROR("SumOverBagsVariable: last bag of VMatrix is not complete");
           return;
         }
         break;

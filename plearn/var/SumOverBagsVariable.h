@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOverBagsVariable.h,v 1.3 2004/02/20 14:43:12 yoshua Exp $
+   * $Id: SumOverBagsVariable.h,v 1.4 2004/02/20 14:50:23 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -70,7 +70,9 @@ class SumOverBagsVariable: public NaryVariable
   Vec output_value;
   Mat input_values;
   Vec bag_size_vec;
+  Vec bag_target_and_bag_signal;
   Vec bag_target;
+  Vec bag_signal;
   Vec bag_weight;
   Array<Vec> f_inputs; // (matrix of bag inputs, the bag size, the bag target, the bag weight)
   Array<Vec> unused_gradients;
