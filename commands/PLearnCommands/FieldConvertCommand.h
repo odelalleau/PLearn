@@ -23,7 +23,7 @@ public:
                   "4 - constant data : the field is skipped (it is not present in the new dataset)\n"\
                   "5 - unrelevant data : the field is skipped (it is not present in the new dataset)\n"\
                   "\n"\
-                  "When there is ambiguities, messages are displayed for the problematic field(s) and they are skipped. The user must use a 'force' file,\n"\
+                  "When there are ambiguities, messages are displayed for the problematic field(s) and they are skipped. The user must use a 'force' file,\n"\
                   "to explicitely force the types of the ambiguous field(s). The file is made of lines of the following 2 possible formats:\n"\
                   "FIELDNAME=typenumber\n"\
                   "fieldNumberA-fieldNumberB=typenumber   [e.g : 200-204=4, to force a range]\n"\
@@ -32,7 +32,7 @@ public:
                   "(A constant field with NaNs is represented only through a missing bit field in the new dataset)\n"\
                   "the difference between types 4 and 5 is that while type 4 can be detected, type 5 can only be forced.\n"\
                   "A report file is generated and contains the information about the processing for each field.\n"\
-                  "Target index of source needs to be speceified (ie. to perform corelation test). It can be any field of the "\
+                  "Target index of source needs to be specified (ie. to perform corelation test). It can be any field of the "\
                   "source dataset, but will be the last field of the new dataset.*** We assume target is never missing *** \n\n"\
                   "usage : FieldConvert *source=[source dataset] *destination=[new dataset with vmat extension] *target=[field index of target]\n"\
                   "force=[force file] report_file=[report file] fraction=[if number of unique values is > than 'fraction' * NonMISSING -> the field is continuous. Default=.3]\n"\
