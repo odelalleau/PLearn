@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: stats_utils.h,v 1.6 2004/08/03 21:07:46 dorionc Exp $
+   * $Id: stats_utils.h,v 1.7 2005/03/11 19:19:58 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -60,7 +60,11 @@ using namespace std;
 //! matrix size wx by wy upon return. N.B. If x holds in memory
 //! than copying it to a matrix (toMat()) before calling this function will
 //! speed up computation significantly.
-void SpearmanRankCorrelation(const VMat &x, const VMat& y, Mat& r);
+//! If 'ignore_missing' is set to true, rows for which either x or y is missing
+//! will be ignored.
+//! The returned matrix is empty if 'ignore_missing' is false, otherwise it
+//! contains the number of non-missing values for each pair of variables in x and y.
+TMat<int> SpearmanRankCorrelation(const VMat &x, const VMat& y, Mat& r, bool ignore_missing = false);
 
 //! Return P(|R|>|r|) two-sided p-value for the null-hypothesis that
 //! there is no monotonic dependency, with r the observed 
@@ -80,9 +84,10 @@ real testNoCorrelationAsymptotically(real r, int n);
 //! matrix size wx by wy upon return. N.B. If x holds in memory
 //! than copying it to a matrix (toMat()) before calling this function will
 //! speed up computation significantly.
-void testSpearmanRankCorrelationPValues(const VMat &x, const VMat& y, Mat& pvalues);
+//! See 'SpearmanRankCorrelation' for the meaning of 'ignore_missing'.
+void testSpearmanRankCorrelationPValues(const VMat &x, const VMat& y, Mat& pvalues, bool ignore_missing = false);
 //! same as above but return also in r the rank correlations
-void testSpearmanRankCorrelation(const VMat &x, const VMat& y, Mat& r, Mat& pvalues);
+void testSpearmanRankCorrelation(const VMat &x, const VMat& y, Mat& r, Mat& pvalues, bool ignore_missing = false);
 
 //! Returns the max of the difference between the empirical cdf of 2 series of values
 //! Side-effect: the call sorts v1 and v2.
