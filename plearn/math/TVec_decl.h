@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TVec_decl.h,v 1.6 2004/05/19 17:16:51 tatien Exp $
+   * $Id: TVec_decl.h,v 1.7 2004/05/19 17:24:33 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -430,9 +430,14 @@ class TVec
   bool isNotEmpty() const
   { return length_!=0; }
       
-  //!  To allow if(v) statements
-  operator bool() const
-  { return isNotEmpty(); }
+  /*! This method is commented out because it is much too dangerous:
+      it allows a TVec to be converted into an int, which can cause some
+      very weird bugs that the compiler would have caught otherwise.*/
+  /*
+    //!  To allow if(v) statements
+    operator bool() const
+    { return isNotEmpty(); }
+  */
       
   //!  To allow if(!v) statements
   bool operator!() const

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_decl.h,v 1.1 2004/04/17 00:44:55 plearner Exp $
+   * $Id: TMat_decl.h,v 1.2 2004/05/19 17:24:33 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -642,9 +642,14 @@ public:
   bool isNotEmpty() const
   { return length_!=0; }
 
-  //!  To allow if(m) statements
-  inline operator bool() const
-  { return isNotEmpty(); }
+  /*! This method is commented out because it is much too dangerous:
+      it allows a TMat to be converted into an int, which can cause some
+      very weird bugs that the compiler would have caught otherwise.*/
+  /*
+    //!  To allow if(m) statements.
+    inline operator bool() const
+    { return isNotEmpty(); }
+  */
 
   //!  To allow if(!m) statements
   inline bool operator!() const
