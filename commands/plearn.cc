@@ -33,106 +33,12 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.67 2004/06/08 14:10:38 tihocan Exp $
+   * $Id: plearn.cc,v 1.68 2004/06/10 13:15:41 tihocan Exp $
    ******************************************************* */
 
+//! All includes should now go into includes_plearn.h.
+#include "includes_plearn.h"
 #include "plearn_main.h"
-
-// Available Splitters:
-#include "ExplicitSplitter.h"
-#include "FractionSplitter.h"
-#include "KFoldSplitter.h"
-#include "SourceVMatrixSplitter.h"
-#include "TestInTrainSplitter.h"
-#include "TrainTestSplitter.h"
-#include "TrainValidTestSplitter.h"
-
-// Available VMats:
-#include "AutoVMatrix.h"
-#include "BatchVMatrix.h"
-#include "SequenceVMatrix.h"
-#include "XORSequenceVMatrix.h"
-#include "DelaySequenceVMatrix.h"
-#include "IndexedVMatrix.h"
-#include "RegularGridVMatrix.h"
-#include "PrecomputedVMatrix.h"
-#include "SortRowsVMatrix.h"
-#include "VMatrixFromDistribution.h"
-
-// Available Kernels:
-#include "AdditiveNormalizationKernel.h"
-
-// Available Learners: 
-// #include "KNN.h"
-//#include "Classification1HiddenNN.h"
-//#include "Mixture2.h"
-#include "AddCostToLearner.h"
-#include "BPTT.h"
-#include "ClassifierFromDensity.h"
-//#include "RegressorFromDensity.h"
-#include "KernelPCA.h"
-#include "KernelProjection.h"
-#include "NeuralNet.h"
-#include "NNet.h"
-#include "PCA.h"
-#include "PLS.h"
-
-// Available Distributions.
-#include "GaussianDistribution.h"
-#include "LocallyWeightedDistribution.h"
-#include "ManifoldParzen2.h"
-#include "UniformDistribution.h"
-
-// Available Optimizers.
-#include "GradientOptimizer.h"
-#include "AdaptGradientOptimizer.h"
-#include "ConjGradientOptimizer.h"
-// #include "AutoStepGradientOptimizer.h"
-
-// #include "ConstantModel.h"
-// #include "MultiLearner.h"
-// #include "LinearRegressor.h"
-// #include "EnsembleLearner.h"
-
-// #include "SVM.h"
-
-// #include "ParzenDensity.h"
-// #include "ParzenRegressor.h"
-// #include "ManinnnnnnfoldParzenDensity.h"
-
-#include "Experiment.h"
-
-// New generation system
-#include "VarLengthPTester.h"
-#include "NNet.h"
-#include "Grapher.h"
-#include "ConstantRegressor.h"
-#include "MultiInstanceNNet.h"
-#include "MultiInstanceVMatrix.h"
-#include "LiftStatsCollector.h"
-
-// Distributions
-#include "SpiralDistribution.h"
-
-// SequentialLearner
-//#include "SequentialLearner.h"
-//#include "MovingAverage.h"
-//#include "EmbeddedSequentialLearner.h"
-//#include "SequentialModelSelector.h"
-//#include "SequentialValidation.h"
-
-// Commands
-#include "RunCommand.h"
-#include "HelpCommand.h"
-#include "AutoRunCommand.h"
-#include "VMatCommand.h"
-#include "LearnerCommand.h"
-#include "KolmogorovSmirnovCommand.h"
-#include "TestDependenciesCommand.h"
-#include "TestDependencyCommand.h"
-#include "ReadAndWriteCommand.h"
-#include "JulianDateCommand.h"
-#include "FieldConvertCommand.h"
 
 using namespace PLearn;
 

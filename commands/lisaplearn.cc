@@ -1,7 +1,7 @@
 // -*- C++ -*-
 
-// plearn.cc
-// Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux, Rejean Ducharme
+// lisaplearn.cc
+// Copyright (C) 2004 University of Montreal
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,124 +33,13 @@
 
 
 /* *******************************************************      
-   * $Id: lisaplearn.cc,v 1.28 2004/05/28 21:55:01 monperrm Exp $
+   * $Id: lisaplearn.cc,v 1.29 2004/06/10 13:15:41 tihocan Exp $
    ******************************************************* */
 
+//! All includes should now go into includes_plearn.h and includes_lisaplearn.h.
+#include "includes_lisaplearn.h"
+#include "includes_plearn.h"
 #include "plearn_main.h"
-
-// Available Splitters:
-#include "ExplicitSplitter.h"
-#include "FilterSplitter.h"
-#include "FractionSplitter.h"
-#include "KFoldSplitter.h"
-#include "RepeatSplitter.h"
-#include "ToBagSplitter.h"
-#include "TrainTestSplitter.h"
-#include "TrainValidTestSplitter.h"
-
-// Available VMats:
-#include "AutoVMatrix.h"
-#include "BatchVMatrix.h"
-#include "BootstrapVMatrix.h"
-#include "CumVMatrix.h"
-#include "FilteredVMatrix.h"
-#include "IndexedVMatrix.h"
-#include "RegularGridVMatrix.h"
-#include "PrecomputedVMatrix.h"
-#include "ProcessingVMatrix.h"
-#include "SubInputVMatrix.h"
-#include "VMatrixFromDistribution.h"
-
-// Available Kernels:
-#include "GaussianKernel.h"
-#include "DotProductKernel.h"
-
-// Hyper-learning:
-#include "CartesianProductOracle.h"
-#include "EarlyStoppingOracle.h"
-#include "ExplicitListOracle.h"
-#include "HyperLearner.h"
-#include "HyperOptimize.h"
-#include "HyperRetrain.h"
-
-// All Available Learners: 
-// #include "KNN.h"
-//#include "Classification1HiddenNN.h"
-//#include "Mixture2.h"
-#include "../../LisaPLearn/UserExp/ouimema/distances/GeneralizedDistKMethods.h"
-#include "../../LisaPLearn/UserExp/delallea/src/LLE/GeneralizedLLE.h"
-#include "AddCostToLearner.h"
-#include "ClassifierFromDensity.h"
-//#include "RegressorFromDensity.h"
-#include "KernelProjection.h"
-#include "KernelPCA.h"
-#include "LinearRegressor.h"
-#include "LocallyWeightedDistribution.h"
-#include "MultiInstanceNNet.h"
-#include "NeuralNet.h"
-#include "NNet.h"
-#include "PCA.h"
-#include "PLS.h"
-#include "RecommandationNet.h"
-#include "StackedLearner.h"
-#include "UniformizeLearner.h"
-#include "SelectInputSubsetLearner.h"
-#include "GradientOptimizer.h"
-#include "AdaptGradientOptimizer.h"
-#include "ConjGradientOptimizer.h"
-// #include "AutoStepGradientOptimizer.h"
-
-// #include "ConstantModel.h"
-// #include "MultiLearner.h"
-// #include "EnsembleLearner.h"
-
-// #include "SVM.h"
-
-// #include "ParzenDensity.h"
-// #include "ParzenRegressor.h"
-// #include "ManinnnnnnfoldParzenDensity.h"
-
-#include "Experiment.h"
-
-// Available Stat collectors
-#include "LiftStatsCollector.h"
-
-// New generation system
-#include "PTester.h"
-#include "Grapher.h"
-#include "ConstantRegressor.h"
-#include "MultiInstanceVMatrix.h"
-#include "SortRowsVMatrix.h"
-#include "LocalNeighborsDifferencesVMatrix.h"
-
-// Available Distributions
-#include "ConditionalDensityNet.h"
-#include "Distribution.h"
-#include "GaussianDistribution.h"
-#include "SpiralDistribution.h"
-#include "NegOutputCostFunction.h"
-
-// SequentialLearner
-//#include "SequentialLearner.h"
-//#include "MovingAverage.h"
-//#include "EmbeddedSequentialLearner.h"
-//#include "SequentialModelSelector.h"
-//#include "SequentialValidation.h"
-
-#include "GraphicalBiText.h"
-
-// Commands
-#include "RunCommand.h"
-#include "HelpCommand.h"
-#include "AutoRunCommand.h"
-#include "VMatCommand.h"
-#include "LearnerCommand.h"
-#include "KolmogorovSmirnovCommand.h"
-#include "TestDependenciesCommand.h"
-#include "TestDependencyCommand.h"
-#include "ReadAndWriteCommand.h"
-#include "JulianDateCommand.h"
-#include "FieldConvertCommand.h"
 
 using namespace PLearn;
 
