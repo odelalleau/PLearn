@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrPStreamBuf.cc,v 1.3 2005/01/12 17:44:18 chrish42 Exp $ 
+   * $Id: PrPStreamBuf.cc,v 1.4 2005/01/13 21:05:34 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Christian Hudon
@@ -91,7 +91,7 @@ using namespace std;
     else if (!in && out)
       return true;
     else 
-      return eof();
+      return !eof();
   }
 
 } // end of namespace PLearn
