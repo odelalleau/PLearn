@@ -1,5 +1,5 @@
 #!/usr/bin/env python2.3
-import shutil, glob, time, os, string, sys, fpformat, signal, types
+import copy, fpformat, glob, os, shutil, signal, string, sys, time, types
 
 import plearn.utilities.plpath   as plpath
 import plearn.utilities.toolkit  as toolkit
@@ -21,12 +21,13 @@ globalvars.options                        = None
 globalvars.targets                        = None
 globalvars.current_mode                   = None
 globalvars.test_name_default              = '<MANDATORY_TEST_NAME>'
+globalvars.ignore_hierarchy               = 'pytest.ignore'
 
 mode_routine_mappings = {
-    'add'     : AddTestRoutine, ##add_test,
+    'add'     : AddTestRoutine,
     'compile' : CompilationRoutine,
-    'disable' : disable_test,
-    'enable'  : enable_test,
+    'disable' : DisableRoutine,
+    'enable'  : EnableRoutine,
     'results' : ResultsCreationRoutine,
     'run'     : RunTestRoutine#,
 #    'sync'    : SyncTest
@@ -36,14 +37,28 @@ mode_routine_mappings = {
 ## Functions are listed by alphabetical order
 
 def build_tests(mode_name, directory, dirlist):
+    if globalvars.ignore_hierarchy in dirlist:
+        toolkit.exempt_list_of( dirlist, copy.copy(dirlist) )
+        vprint( "Directory %s and subdirectories ignored (%s)."
+                % ( directory, globalvars.ignore_hierarchy )
+                )
+        return
+    
     toolkit.exempt_list_of( dirlist, Routine.forbidden_directories() )
     
     os.chdir(directory)
 
     config = config_file_path()
-    if config in dirlist:
-        execfile(config)
-    
+    try:
+        if config in dirlist:
+            execfile(config)
+    except Exception, e:
+        vprint( "+++ In %s" % os.path.join(directory, config) )
+        if globalvars.options.traceback:
+            raise
+        else:
+            vprint( "%s: %s." % (e.__class__.__name__,e) )
+
     if mode_name == "add":
         Test( name    = globalvars.options.test_name,
               program = GlobalCompilableProgram( name = "plearn")  )        
@@ -85,6 +100,11 @@ def dispatch_targets():
         localhost = globalvars.options.localhost,
         nb_hosts  = globalvars.options.hosts
         )
+
+    ## --traceback: This flag triggers routines to report the traceback of
+    ## PyTestUsageError. By default, only the class's name and meesage
+    ## are reported.
+    Routine.report_traceback = globalvars.options.traceback
     
     ## --all: Run all tests found in subdirectories of directories in
     ## globalvars.all_roots test_suite branches. If some targets are
@@ -130,6 +150,20 @@ def dynamic_version_header():
             0
             )
 
+def ignore_mode():
+    """Causes the target hierarchy to be ignored by PyTest.
+
+    Simply drops a I{pytest.ignore} file that is recognized by PyTest
+    afterwards.
+    """
+    target = None
+    if len(globalvars.targets) == 0:
+        target = os.getcwd()
+    elif len(globalvars.targets) == 1:
+        target = globalvars.targets[0]
+
+    os.system("touch %s" % os.path.join( target, globalvars.ignore_hierarchy ) )
+    
 def mail():
     # Opening the senmail process
     sendmail = Popen3("sendmail -t", True)
@@ -154,7 +188,7 @@ def mail():
     #                      # ( see end of pytest() )
 
 def pytest_version():
-    version_str = '$Id: pytest,v 1.19 2004/10/24 23:24:21 dorionc Exp $'
+    version_str = '$Id: pytest,v 1.20 2004/10/25 15:05:44 dorionc Exp $'
 
     bflag = "pytest,v"
     the_year = time.localtime()[0]
@@ -185,7 +219,7 @@ def remove_subdirs(absdirs):
 
 def testing_options():
     testing_options = OptionGroup( parser, "Testing Options",
-                                   "Available under all modes BUT commit." )
+                                   "Available under all modes BUT commit and ignore." )
     
     testing_options.add_option( "--all",
                                 action="store_true", default=False,
@@ -214,6 +248,13 @@ def testing_options():
     testing_options.add_option( '-n', '--test-name',
                                 help='Restricts the current mode to the named test.',
                                 default=globalvars.test_name_default )
+
+    testing_options.add_option( '--traceback',
+                                action="store_true",
+                                help="This flag triggers routines to report the traceback of "
+                                "PyTestUsageError. By default, only the class's name and meesage "
+                                "are reported.",
+                                default = False )
     
     testing_options.add_option( '-v', "--verbosity",
                                 choices=["0", "1", "2"], default="1",
@@ -245,12 +286,18 @@ for (mode, mode_routine) in mode_routine_mappings.iteritems():
                      option_groups = option_groups
                     )
 
+parser.add_option_group( testing_options() )
+
 parser.add_mode( 'commit', commit_mode,
                  help='Commits PyTest internal modifications (ex: disabled test)',
                  description='Commits PyTest internal modifications (ex: disabled test)',
                  max_targets=0 )
 
-parser.add_option_group( testing_options() )
+parser.add_mode( 'ignore', ignore_mode,
+                 help= toolkit.short_doc( ignore_mode ),
+                 description   = toolkit.doc( ignore_mode ),                 
+                 )
+
 
 ############################################################
 ##################### Parsing Options ######################

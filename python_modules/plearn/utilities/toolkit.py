@@ -5,7 +5,7 @@ submodule. If a considerable number of functions contained in this
 module seems to manage similar tasks, it is probably time to create a
 I{similar_tasks.py} L{utilities} submodule to move those functions to.
 """
-import popen2, string, sys, types
+import os, popen2, string, sys, types
 import epydoc.markup 
 import epydoc.markup.epytext
 
@@ -120,7 +120,13 @@ def isccfile(file_path):
     """True if the extension of I{file_path} is one of I{.cc}, I{.CC}, I{.cpp}, I{.c} or I{.C}."""
     (base,ext) = os.path.splitext(file_path)
     return ext in ['.cc','.CC','.cpp','.c','.C']
-            
+
+def isvmat( file_path ):
+    """True if the extension of I{file_path} is one of I{.amat}, I{.pmat} or I{.vmat}."""
+    (base,ext) = os.path.splitext(file_path)
+    return ext in [ '.amat','.pmat','.vmat' ]
+    
+    
 def last_user_to_commit(file_path):
     """Returns username of the last person to commit the file corresponding to I{file_path}."""
     file_path = os.path.abspath(file_path)

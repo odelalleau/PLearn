@@ -29,7 +29,7 @@ class BasicStats:
                   )
         if self.skipped > 0:
             mystr = '%s    - Skipped: %d\n' % (mystr, self.skipped)
-
+            
         return mystr
         
     def __repr__(self):

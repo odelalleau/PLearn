@@ -1,15 +1,17 @@
 
 import os, shutil, string
 
-from plearn.tasks.Task              import *
-from plearn.utilities.verbosity     import *
-from plearn.utilities.FrozenObject  import *
+import plearn.utilities.toolkit       as     toolkit
+
+from   plearn.tasks.Task              import *
+from   plearn.utilities.verbosity     import *
+from   plearn.utilities.FrozenObject  import *
 
 ## In plearn.pytest
-from threading                      import *
-from programs                       import *
-from BasicStats                     import BasicStats
-from IntelligentDiff                import *          
+from   threading                      import *
+from   programs                       import *
+from   BasicStats                     import BasicStats
+from   IntelligentDiff                import *          
 
 def config_file_path( directory = None ):
     """The path to a pytest configuration file.
@@ -31,42 +33,21 @@ def disable_file_name(directory, test_name=''):
     test = os.path.join(directory, test_name)
     return ( test, test+'.disabled' )
 
-    
-def disable_test(directory, test_name):
-    """Disables an existing test.
-
-    The disabled test can be restored (L{enable test<enable_test>}) afterwards.
-    """   
-    test, dis = disable_file_name(directory, test_name)
-        
-    if os.path.exists( dis ):
-        vprint('%s was already disabled.' % test)
-    else:
-        os.system("touch %s" % dis)
-        vprint('%s is disabled.' % test, 2)
-
-def enable_test(directory, test_name):
-    "Enables a disabled (L{disable test<disable_test>}) test."    
-    test, dis = disable_file_name(directory, test_name)
-
-    if os.path.exists( dis ):
-        os.remove(dis)
-        vprint('%s is enabled.' % test, 2)
-    else:
-        vprint('%s was not disabled.' % test)
-
-class PyTestUsageError(Exception): pass
-
-class DuplicateName( PyTestUsageError ):
-    def __init__(self, test1, test2):
-        self.p1 = test1.get_path()
-        self.p2 = test2.get_path()
+class PyTestUsageError(Exception):  
+    def __init__(self, msg):
+        Test.statistics.skip()
+        self.msg = msg
 
     def __str__(self):
-        return ( "Two tests have the same name: %s and %s."
-                 % ( self.p1, self.p2 )
-                 )
+        return self.msg
     
+class DuplicateName( PyTestUsageError ):
+    def __init__(self, test1, test2):
+        PyTestUsageError.__init__(
+            self, "Two tests have the same name: %s and %s."
+            % ( test1.get_path(), test2.get_path() )
+            )        
+        
 class TestDefaults:
     name            = None
     description     = ''
@@ -82,16 +63,53 @@ class TestDefaults:
                             ('ressources',      types.ListType) ]
 
 class Test(FrozenObject):
-    """Test is a class regrouping the elements that define a test for PyTest."""            
-    instances_map    = {}
-    statistics       = BasicStats("Test statistics")
+    """Test is a class regrouping the elements that define a test for PyTest.
+
+    @cvar name: The name of the Test must uniquely determine the
+    test. Among others, it will be used to identify the test's results
+    ( pytest/*_results/I{name}/ ) and to report test informations.
+    @type name: String
+
+    @cvar description: The description must provide other users an
+    insight of what exactly is the Test testing. You are encouraged
+    to used triple quoted strings for indented multi-lines
+    descriptions.
+    @type description: String
+
+    @cvar program: The proram to be run by the Test. The L{Program}
+    class currently has four subclasses: L{LocalProgram},
+    L{GlobalProgram}, L{LocalCompilableProgram} and
+    L{GlobalCompilableProgram}. The I{Local} prefix specifies that the
+    program executable should be found in the same directory than the
+    I{pytest.config} file, while I{Global} means that the program is a
+    global command. Currently, this mecanism only support commands that
+    are in one of the <plearn_branch>/commands/ directory.
+
+    The I{Compilable} tag specifies that the program must be compiled.
+    The default compiler is L{pymake}, but this behaviour can be changed
+    and/or compile options may be specified.
+
+    @type program: L{Program}
+
+    @cvar arguments: The command line arguments to be passed to the program
+    for the test to proceed.
+    @type arguments: String
+
+    @cvar ressources: A list of ressources that are used by your program either
+    in the command line or directly in the code (plearn or pyplearn files, databases, ...).
+    The elements of the list must be string representations of the path, absolute or relative,
+    to the ressource.
+    @type ressources: List of Strings
+    """
+    
+    instances_map = {}
+    statistics = BasicStats("Test statistics")
     expected_results = os.path.join(plpath.pytest_dir, "expected_results")
-    run_results      = os.path.join(plpath.pytest_dir, "run_results")
-
-
+    run_results = os.path.join(plpath.pytest_dir, "run_results")
+    
     def __init__(self, defaults=TestDefaults, **overrides):
         FrozenObject.__init__(self, defaults, overrides)
-
+        
         if Test.instances_map.has_key( self.name ):
             raise DuplicateName( Test.instances_map[self.name], self )
         else:
@@ -166,14 +184,28 @@ class Test(FrozenObject):
         ressources = []
         ressources.extend( self.ressources )
         ressources.append( self.program.path )
-        
-        for ressource in ressources:
-            if not os.path.isabs( ressource ):
-                ressource = os.path.join( self.test_directory, ressource ) 
 
+        def single_link(ressource):
             link_cmd = "ln -s %s %s" % ( ressource, test_results )
             vprint( "Linking ressource: %s." % link_cmd, 2 )
             os.system( link_cmd )
+            
+        for ressource in ressources:
+            if not os.path.isabs( ressource ):
+                ressource = os.path.join( self.test_directory, ressource ) 
+            if not os.path.exists( ressource ):
+                raise PyTestUsageError(
+                    "The %s test uses %s as a ressource but path doesn't exist."
+                    % ( self.name, ressource )
+                    )
+
+            single_link( ressource )
+
+            if toolkit.isvmat( ressource ):
+                meta = ressource+'.metadata'
+                if os.path.exists( meta ):
+                    single_link( meta )
+
         
     def run(self, results):
         self.check_name_format()
@@ -200,7 +232,7 @@ class Test(FrozenObject):
         os.chdir( test_results )
         os.system(run_command)
         os.chdir( cwd )
-
+        
         ## Forwarding the removal of the old results: if any operation
         ## should cause the crash of PyTest, the old results would
         ## still be available in the backup directory.
@@ -220,6 +252,9 @@ class RoutineDefaults(TaskDefaults):
     test                  = None
     
 class Routine(Task):
+
+    report_traceback = False
+    
     def __init__( self, test,
                   defaults=RoutineDefaults, **overrides ):
         overrides['task_name'] = test.name
@@ -260,12 +295,20 @@ class Routine(Task):
 
     ## Overrides run and succeeded
     def run(self):
-        if self.test.is_disabled():
-            Test.statistics.skip()
-        else:
-            os.chdir( self.test.test_directory )
-            Task.run(self)
-    
+        try:
+            if self.test.is_disabled():
+                vprint("Test %s is disabled." % self.test.name, 1)
+                Test.statistics.skip()
+                self.signal_completion(self)
+            else:
+                os.chdir( self.test.test_directory )
+                Task.run(self)
+        except PyTestUsageError, e: 
+            if Routine.report_traceback:
+                raise
+            else:
+                vprint( "%s: %s." % (e.__class__.__name__,e) )
+            
     def succeeded(self, success):
         Task.succeeded(self, success)
         if success:
@@ -286,11 +329,11 @@ class AddTestRoutine(Routine):
     in python, which means that one can add any comments he wishes and
     may also define own functions if complicated processing is
     requested before defining the test.
-            
-    A user familiar with config files can also pass directly through
-    options in the command line the keyword arguments to fill the
-    L{Test} declaration with.
     """
+##     A user familiar with config files can also pass directly through
+##     options in the command line the keyword arguments to fill the
+##     L{Test} declaration with.
+
     def body_of_task(self):
         config_path  = config_file_path( self.test.program.processing_directory )
         config_file  = None
@@ -299,7 +342,7 @@ class AddTestRoutine(Routine):
         initial_creation = not os.path.exists( config_path )
         if initial_creation:
             config_file = open(config_path, 'w')
-            config_text = ( '"""Pytest config file.\n\n%s\n"""'%Test.__doc__ )
+            config_text = ( '"""Pytest config file.\n\n%s\n"""'% toolkit.doc(Test) )
         else:
             config_file = open(config_path, 'a+')
             
@@ -314,6 +357,34 @@ class CompilationRoutine(Routine):
         if self.compile_program():
             self.succeeded( True )
             
+class DisableRoutine(Routine):
+    """Disables an existing test.
+
+    The disabled test can be restored (L{enable mode<EnableRoutine>}) afterwards.
+    """
+    def body_of_task(self):
+        test, dis = disable_file_name( self.test.test_directory,
+                                       self.test.name            )
+        if os.path.exists( dis ):
+            vprint('%s was already disabled.' % test)
+        else:
+            os.system("touch %s" % dis)
+            vprint('%s is disabled.' % test, 2)
+        self.succeeded( True )
+
+class EnableRoutine(Routine):
+    """Enables a disabled (L{disable test<disable_test>}) test."""
+    def body_of_task(self):
+        test, dis = disable_file_name( self.test.test_directory,
+                                       self.test.name            )
+
+        if os.path.exists( dis ):
+            os.remove(dis)
+            vprint('%s is enabled.' % test, 2)
+        else:
+            vprint('%s was not disabled.' % test)
+        self.succeeded( True )
+    
 class ResultsCreationRoutine(Routine):
     """Generates the expected results target tests.
 
@@ -331,7 +402,8 @@ class ResultsCreationRoutine(Routine):
         compilation_succeeded = self.compile_program()
         if not compilation_succeeded:
             vprint("Results creation bails out.", 1)
-        
+            return
+            
         vprint("\nResults creation:", 1)
         vprint("-----------------", 1)
         
@@ -365,6 +437,7 @@ class RunTestRoutine(Routine):
         compilation_succeeded = self.compile_program()
         if not compilation_succeeded:
             vprint("Running bails out.", 1)
+            return
         
         vprint("\nRunning the test:", 1)
         vprint("-----------------", 1)
