@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrUtils.cc,v 1.3 2005/03/30 17:11:26 chrish42 Exp $ 
+   * $Id: PrUtils.cc,v 1.4 2005/04/01 17:27:01 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Christian Hudon
@@ -52,18 +52,12 @@ using namespace std;
  */
 string getPrErrorString()
 {
-  const int text_length = PR_GetErrorTextLength();
-  if (text_length == 0)
-    {
-      return "";
-    }
-  
-  char* s = new char[text_length+1];
-  PR_GetErrorText(s);
-  
-  string error_string = s;
-  delete[] s;
-  return error_string;
+  // We hardcode the language to English because PR_ErrorToString()
+  // is defined as returning a UTF-8 string. If we restrict ourselves
+  // to ASCII, UTF-8 is the same as ASCII, so by asking for English
+  // messages (which will not use accented letters, etc.) we don't
+  // need to convert the UTF-8 to Latin-1 or something before displaying it.
+  return PR_ErrorToString(PR_GetError(), PR_LANGUAGE_EN);
 } 
 
 
