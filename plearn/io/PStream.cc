@@ -461,7 +461,7 @@ void PStream::readAsciiNum(double &x)
     case 'i':
     case 'I':
       if (get()=='n' && get()=='f')
-        x = 1.0/0.0;
+        x = INFINITY;
       else
         PLERROR("Bug while reading file and expecting a double");
       break ; 
