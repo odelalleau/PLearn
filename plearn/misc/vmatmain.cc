@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.29 2004/06/18 16:44:28 tihocan Exp $
+   * $Id: vmatmain.cc,v 1.30 2004/06/18 19:09:36 tihocan Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -476,7 +476,12 @@ void viewVMat(const VMat& vm)
                 // This is a string. Maybe we want to indent it to the right.
                 // In this case we truncate it to its last characters.
                 if (!indent_strings_left) {
-                  s = s.substr(s.size() - valstrwidth, valstrwidth);
+                  if (s.size() >= (size_t) valstrwidth) {
+                    s = s.substr(s.size() - valstrwidth, valstrwidth);
+                  } else {
+                    string added_spaces((size_t) (valstrwidth - s.size()), ' ');
+                    s = added_spaces + s;
+                  }
                 }
               }
               
