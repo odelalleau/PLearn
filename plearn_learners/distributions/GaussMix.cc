@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.2 2003/06/02 23:41:18 jkeable Exp $ 
+ * $Id: GaussMix.cc,v 1.3 2003/06/04 18:44:53 jkeable Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -187,9 +187,8 @@ void GaussMix::setGaussian(int l, real _alpha, Vec _mu, Vec _lambda, Mat eigenve
   }
   else 
   {
-    cerr<<"prout"<<endl;
     if(Ks[l]!=num_lambda)
-      PLERROR("GaussMix::setGaussian : for the same gaussian, the amount of vectors (length of the 'eigenvecs' matrix) that "\
+      PLERROR("GaussMix::setGaussian : for the same gaussian, the number of vectors (length of the 'eigenvecs' matrix) that "\
               "define a gaussian must not change between calls. ");
   }
   
@@ -239,7 +238,7 @@ void GaussMix::setGaussian(int l, real _alpha, Vec _mu, Mat vecs, Vec diag )
     }
   }
   else if(Ks[l]!=vecs.length())
-    PLERROR("GaussMix::setGaussian : for the same gaussian, the amount of vectors (length of the 'eigenvecs' matrix) that "\
+    PLERROR("GaussMix::setGaussian : for the same gaussian, the number of vectors (length of the 'eigenvecs' matrix) that "\
             "define a gaussian must not change between calls. ");
   
   V.subMatRows(V_idx[l],Ks[l])<<transpose(vecs);
@@ -310,7 +309,7 @@ void GaussMix::build_()
   if(type==General || type==Factor)
   {
     Ks.resize(L);
-    Ks.fill(0.0);
+    Ks.fill(0);
     V_idx.resize(L);
     V.resize(L*avg_K,D);
     inv_lambda_minus_lambda0.resize(L*avg_K,D);
@@ -539,6 +538,17 @@ double GaussMix::logDensityElliptic(const Vec& x, int num) const
  
   return logadd(logs);
 }
+
+
+double logadd2(const Vec& vec) 
+{
+  double *p_x = vec.data();
+  double sum = LOG_INIT;
+  for (int i=0; i<vec.length(); i++, p_x++)
+    sum = logadd(sum, *p_x);
+  return sum;
+}
+
  
 // return log(p(x)) =  logadd {1..l} ( log(alpha[l]) + log_coeff[l] + q[l] )
 double GaussMix::logDensityGeneral(const Vec& x, int num) const
@@ -555,8 +565,8 @@ double GaussMix::logDensityGeneral(const Vec& x, int num) const
     bool galette = Ks[l]<D;
     x_minus_mu = x-mu(l);
     logs[idx]=log(alpha[l]);
+    //
     logs[idx]+= log_coef[l];
-
     // compute q
     Mat subV = V.subMatRows(V_idx[l],Ks[l]);
 
@@ -581,10 +591,9 @@ double GaussMix::logDensityGeneral(const Vec& x, int num) const
     
     for(int i=0; i<Ks[l]; i++)
       logs[idx] -= 0.5*(*ptr_inv_lambda_minus_lambda0++) *square(dot(subV(i),x_minus_mu));
-    
     idx++;
   }
-  return logadd(logs);
+  return logadd2(logs);
 }
  
 double GaussMix::logDensityFactor(const Vec& x, int num) const

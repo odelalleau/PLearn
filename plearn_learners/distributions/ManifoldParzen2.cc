@@ -89,9 +89,6 @@ void ManifoldParzen2::makeDeepCopyFromShallowCopy(map<const void*, void*>& copie
   PLERROR("ManifoldParzen2::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
-
-
-
 // This is an efficient version of the most basic nearest neighbor search, using a Mat and euclidean distance
 void computeNearestNeighbors(Mat dataset, Vec x, Mat& neighbors, int ignore_row=-1)
 {
@@ -102,8 +99,15 @@ void computeNearestNeighbors(Mat dataset, Vec x, Mat& neighbors, int ignore_row=
       neighbs.update(powdistance(dataset(i),x), i);
   neighbs.sort();
   TVec< pair<real,int> > indices = neighbs.getBottomN();
+  int nonzero=0;
   for(int k=0; k<K; k++)
+  {
+    if(indices[k].first>0)
+      nonzero++;
     neighbors(k) << dataset(indices[k].second);
+  }
+  if(nonzero==0)
+    PLERROR("All neighbors had 0 distance. Use more neighbors. (There were %i other patterns with same values)",neighbs.nZeros());
 }
 
 // computes the first components.length() principal components of the rows of datset.
@@ -123,7 +127,7 @@ void computePrincipalComponents(Mat dataset, Vec& eig_values, Mat& eig_vectors)
   int ncomp = eig_values.length(); // number of components we want
   covar.resize(dataset.width(), dataset.width());
   transposeProduct(covar, dataset,dataset);
-  eigenVecOfSymmMat(covar, ncomp,  eig_values, eig_vectors,0.0,1); 
+  eigenVecOfSymmMat(covar, ncomp,  eig_values, eig_vectors); 
 }
 
 void computeLocalPrincipalComponents(Mat& dataset, int which_pattern, Mat& delta_neighbors, Vec& eig_values, Mat& eig_vectors)
