@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLS.h,v 1.1 2004/02/24 21:32:01 tihocan Exp $ 
+   * $Id: PLS.h,v 1.2 2004/03/05 20:07:28 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -62,17 +62,14 @@ protected:
   // *********************
 
   Mat B;
+  int m;
   Vec mean_input;
   Vec mean_target;
+  int p;
   Vec stddev_input;
   Vec stddev_target;
   Mat W;
-  
-  // Fields below are not options.
 
-  int m;  //< Used to store the target size.
-  int p;  //< Used to store the input size.
-    
 public:
 
   // ************************

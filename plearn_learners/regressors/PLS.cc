@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLS.cc,v 1.3 2004/03/05 18:01:17 tihocan Exp $ 
+   * $Id: PLS.cc,v 1.4 2004/03/05 20:07:28 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -49,7 +49,9 @@ namespace PLearn {
 using namespace std;
 
 PLS::PLS() 
-: k(1),
+: m(-1),
+  p(-1),
+  k(1),
   precision(1e-6),
   output_the_score(0),
   output_the_target(1)
@@ -102,36 +104,42 @@ PLEARN_IMPLEMENT_OBJECT(PLS,
 void PLS::declareOptions(OptionList& ol)
 {
   declareOption(ol, "B", &PLS::B, OptionBase::learntoption,
-      "The regression matrix in Y = X.B + E");
+      "The regression matrix in Y = X.B + E.");
 
   declareOption(ol, "k", &PLS::k, OptionBase::buildoption,
-      "The number of components (factors) computed");
+      "The number of components (factors) computed.");
+
+  declareOption(ol, "m", &PLS::m, OptionBase::learntoption,
+      "Used to store the target size.");
 
   declareOption(ol, "mean_input", &PLS::mean_input, OptionBase::learntoption,
-      "The mean of the input data X");
+      "The mean of the input data X.");
 
   declareOption(ol, "mean_target", &PLS::mean_target, OptionBase::learntoption,
-      "The mean of the target data Y");
+      "The mean of the target data Y.");
 
   declareOption(ol, "output_the_score", &PLS::output_the_score, OptionBase::buildoption,
       "If set to 1, then the score (the low-dimensional representation of the input)\n"
-      "will be included in the output (before the target)");
+      "will be included in the output (before the target).");
 
   declareOption(ol, "output_the_target", &PLS::output_the_target, OptionBase::buildoption,
       "If set to 1, then (the prediction of) the target will be included in the\n"
-      "output (after the score)");
+      "output (after the score).");
+
+  declareOption(ol, "p", &PLS::p, OptionBase::learntoption,
+      "Used to store the input size.");
 
   declareOption(ol, "precision", &PLS::precision, OptionBase::buildoption,
-      "The precision to which we compute the eigenvectors");
+      "The precision to which we compute the eigenvectors.");
 
   declareOption(ol, "stddev_input", &PLS::stddev_input, OptionBase::learntoption,
-      "The standard deviation of the input data X");
+      "The standard deviation of the input data X.");
 
   declareOption(ol, "stddev_target", &PLS::stddev_target, OptionBase::learntoption,
-      "The standard deviation of the target data Y");
+      "The standard deviation of the target data Y.");
 
-  declareOption(ol, "W", &PLS::B, OptionBase::learntoption,
-      "The regression matrix in T = X.W");
+  declareOption(ol, "W", &PLS::W, OptionBase::learntoption,
+      "The regression matrix in T = X.W.");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -158,9 +166,6 @@ void PLS::build_()
     stddev_input.resize(p);
     mean_target.resize(m);
     stddev_target.resize(m);
-  } else {
-    this->m = 0;
-    this->p = 0;
   }
   if (!output_the_score && !output_the_target) {
     // Weird, we don't want any output ??
