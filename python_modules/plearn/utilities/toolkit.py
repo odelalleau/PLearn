@@ -5,7 +5,7 @@ submodule. If a considerable number of functions contained in this
 module seems to manage similar tasks, it is probably time to create a
 I{similar_tasks.py} L{utilities} submodule to move those functions to.
 """
-import copy, os, popen2, string, sys, time, types
+import os, popen2, string, sys, time, types
 import epydoc.markup 
 import epydoc.markup.epytext
 
@@ -154,9 +154,8 @@ class default_roperators:
         '__rrshift__', '__rand__', '__rxor__', '__ror__'
         ]
 
-    def __getattr__(self, k):
-        if k in default_roperators._rop_names:
-            rop_name = copy.copy(k)
+    def __getattr__(self, rop_name):
+        if rop_name in default_roperators._rop_names:
             lop_name = rop_name[0:2] + rop_name[3:]            
             lop      = getattr(self, lop_name)            
             return lop

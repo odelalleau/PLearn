@@ -304,7 +304,7 @@ class Test(FrozenObject):
             vprint("Previous results saved in %s" % backup )
 
         self.link_resources( test_results )
-        run_command   = ( "%s %s >& %s"
+        run_command   = ( "./%s %s >& %s"
                           % ( self.program.get_name(), self.arguments, self.name+'.run_log' )
                           )
         

@@ -1,5 +1,5 @@
 
-from toolkit import plural
+from plearn.utilities.toolkit import plural
 
 class BasicStats:
     def __init__(self, test_type):

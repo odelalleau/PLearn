@@ -94,7 +94,7 @@ class IntelligentDiff:
         other_dir = os.path.dirname(other)
         
         ## self.preprocess(other, bench_dir, other_dir)
-        some_diff = toolkit.command_output('diff %s %s' % (bench, other))
+        some_diff = toolkit.command_output('diff -u %s %s' % (bench, other))
         if some_diff:
             self.differences.append( "\n+++ While comparing %s and %s:\n\t%s\n"
                                % (bench, other, string.join(some_diff, "\t"))    )
