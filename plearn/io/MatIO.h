@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: MatIO.h,v 1.22 2004/11/24 18:21:37 tihocan Exp $
+   * $Id: MatIO.h,v 1.23 2005/02/08 21:34:59 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,6 +48,7 @@
 #include "fileutils.h"          //!< For getNextNonBlankLine.
 #include <stdlib.h>             //!< For strtod.
 #include <plearn/base/stringutils.h>        //!< For toint.
+#include <plearn/io/openFile.h>
 
 namespace PLearn {
 using namespace std;
@@ -81,10 +82,10 @@ void loadPMat(const string& filename, TMat<double>& mat);
 //! WARNING: use only for float, double, and int types. Other type are not guaranteed to work
 
 //! intelligent functions that will load a file in almost all ascii formats that ever existed in this lab
-template<class T> void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames, TVec<map<string,real> >* map_sr = 0);
-template<class T> void loadAscii(const string& filename, TMat<T>& mat);
+template<class T> void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, TVec<map<string,real> >* map_sr = 0);
+template<class T> void loadAscii(const PPath& filename, TMat<T>& mat);
 
-void parseSizeFromRemainingLines(const string& filename, ifstream& in, bool& could_be_old_amat, int& length, int& width);
+void parseSizeFromRemainingLines(const PPath& filename, PStream& in, bool& could_be_old_amat, int& length, int& width);
 
 // norman: added another function to solve the internal compiler error of .NET when using
 // default parameter with templates. See old declaration:
@@ -96,7 +97,7 @@ template<class T> void saveAscii(const string& filename, const TMat<T>& mat);
 
 //! first number in file is length
 template<class T> void saveAscii(const string& filename, const TVec<T>& vec);
-template<class T> void loadAscii(const string& filename, TVec<T>& vec);
+template<class T> void loadAscii(const PPath& filename, TVec<T>& vec);
 
 //! Format readable by gnuplot
 void loadGnuplot(const string& filename, Mat& mat);
@@ -110,14 +111,14 @@ void saveGnuplot(const string& filename, const Mat& mat);
   The following two are simply calling the matrix version after transforming 
   the Vec in a one column Mat. See below.
 */
-void matlabSave( const string& dir, const string& plot_title, const Vec& data, 
+void matlabSave( const PPath& dir, const string& plot_title, const Vec& data, 
                  const Vec& add_col, const Vec& bounds, string lengend="", bool save_plot=true);  
-void matlabSave( const string& dir, const string& plot_title, 
+void matlabSave( const PPath& dir, const string& plot_title, 
                  const Vec& xValues,
                  const Vec& yValues, const Vec& add_col, const Vec& bounds, string lengend="", bool save_plot=true);  
 
 //! Simply calls the coming matlabSave function with an empty xValues Vec. See below.
-void matlabSave( const string& dir, const string& plot_title, const Mat& data, 
+void matlabSave( const PPath& dir, const string& plot_title, const Mat& data, 
                  const Vec& add_col, const Vec& bounds, TVec<string> legend=TVec<string>(), bool save_plot=true);
 
 /*! 
@@ -128,7 +129,7 @@ void matlabSave( const string& dir, const string& plot_title, const Mat& data,
   2) If xValues is not empty and its length is not equal to the length of yValues, 
   then its length must be one and the value xValues[0] will be the start index for the xValues.
 */
-void matlabSave( const string& dir, const string& plot_title, 
+void matlabSave( const PPath& dir, const string& plot_title, 
                  const Vec& xValues,
                  const Mat& yValues, const Vec& add_col, const Vec& bounds, TVec<string> legend=TVec<string>(), bool save_plot=true);
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -192,11 +193,9 @@ void loadJPEGrgb(const string& jpeg_filename, Mat& rgbmat, int& row_size, int sc
 // Intelligent function that will load a file in almost all ascii formats that ever existed in this lab.
 // Additionally, if 'map_sr' is provided, it will fill it with the string -> real mappings encountered.
 template<class T>
-void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames, TVec<map<string,real> >* map_sr)
+void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, TVec<map<string,real> >* map_sr)
 {
-  ifstream in(filename.c_str());
-  if(!in)
-    PLERROR("Could not open file %s for reading", filename.c_str());
+  PStream in = openFile(filename, PStream::raw_ascii, "r");
 
   int length = -1;
   int width = -1;
@@ -207,7 +206,7 @@ void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames, T
   
   while(in.peek()=='#')
   {
-    getline(in, line);
+    in.getline(line);
     could_be_old_amat = false;
 
     size_t pos=line.find(":");
@@ -236,14 +235,14 @@ void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames, T
     parseSizeFromRemainingLines(filename, in, could_be_old_amat, length, width);
 
   if(length==-1)
-    PLERROR("In loadAscii: trying to load but couldn't determine file format automatically for %s",filename.c_str());
+    PLERROR("In loadAscii: trying to load but couldn't determine file format automatically for %s",filename.absolute().c_str());
 
   if(width != -1 && width != fieldnames.length())
   {
     if (fieldnames.length() != 0)
       PLWARNING("In loadAscii:  Number of fieldnames (%d) and width (%d) mismatch in file %s.  "
           "Replacing fieldnames by 'Field-0', 'Field-1', ...", 
-          fieldnames.length(), width, filename.c_str());
+          fieldnames.length(), width, filename.absolute().c_str());
     fieldnames.resize(width);
     for(int i= 0; i < width; ++i)
       fieldnames[i]= string("Field-") + tostring(i);
@@ -251,8 +250,8 @@ void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames, T
   
   // We are now more careful about the possibility of the stream being in a
   // bad state. The sequel in.seekg(0); in.clear(); did not seem to do the job.
-  in.close();
-  ifstream loadmat(filename.c_str());
+  in = 0; // Close file.
+  PStream loadmat = openFile(filename, PStream::raw_ascii, "r");
   
   mat.resize(length,width);
   TVec<int> current_map(width);
@@ -322,10 +321,14 @@ void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames, T
           } else
             PLERROR("In loadAscii - You need to provide 'map_sr' if you want to load an ASCII file with strings");
         }
-      }
-      if (!loadmat) {
-        loadmat.clear();
-        mat_i[j] = MISSING_VALUE;
+      } else {
+        PLERROR("In loadAscii - Missing values are not supported anymore (for the moment)");
+        /* Old code, not PStream-compatible.
+        if (!loadmat) {
+          // loadmat.clear();
+          mat_i[j] = MISSING_VALUE;
+        }
+        */
       }
     }
   }
@@ -338,11 +341,9 @@ void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames, T
 //! (entry_name is ignored).
 //! Header must be: #size: length width
 template<class T>
-void loadAsciiSingleBinaryDescriptor(const string& filename, TMat<T>& mat)
+void loadAsciiSingleBinaryDescriptor(const PPath& filename, TMat<T>& mat)
 {
-  ifstream in(filename.c_str());
-  if(!in)
-    PLERROR("In loadAsciiSingleBinaryDescriptor: Could not open file %s for reading", filename.c_str());
+  PStream in = openFile(filename, PStream::raw_ascii, "r");
 
   int length = -1;
   int width = -1;
@@ -352,7 +353,7 @@ void loadAsciiSingleBinaryDescriptor(const string& filename, TMat<T>& mat)
 
   while(in.peek()=='#')
   {
-    getline(in, line);
+    in.getline(line);
  
     size_t pos=line.find(":");
     if(pos!=string::npos)
@@ -396,9 +397,9 @@ void loadAsciiSingleBinaryDescriptor(const string& filename, TMat<T>& mat)
 }
 
 template<class T>
-void loadAscii(const string& filename, TVec<T>& vec)
+void loadAscii(const PPath& filename, TVec<T>& vec)
 {
-  ifstream in(filename.c_str());
+  ifstream in(filename.absolute().c_str());
   if(!in)
     PLERROR("In loadAscii could not open file %s for reading",filename.c_str());
  
@@ -478,7 +479,7 @@ void saveAscii(const string& filename, const TVec<T>& vec)
 }
 
 template<class T>
-void loadAscii(const string& filename, TMat<T>& mat)
+void loadAscii(const PPath& filename, TMat<T>& mat)
 {
   TVec<std::string> fn;
   loadAscii(filename,mat,fn);

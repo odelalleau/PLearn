@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatIO.cc,v 1.16 2004/08/17 19:19:43 tatien Exp $
+   * $Id: MatIO.cc,v 1.17 2005/02/08 21:34:52 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -690,7 +690,7 @@ void loadGnuplot(const string& filename, Mat& mat)
   in.close();
 }
 
-void matlabSave( const string& dir, const string& plot_title, const Vec& data, 
+void matlabSave( const PPath& dir, const string& plot_title, const Vec& data, 
                  const Vec& add_col, const Vec& bounds, string legend, bool save_plot)
 {
   Vec bidon;
@@ -704,7 +704,7 @@ void matlabSave( const string& dir, const string& plot_title, const Vec& data,
              mat, add_col, bounds, legd, save_plot);
 }
 
-void matlabSave( const string& dir, const string& plot_title, 
+void matlabSave( const PPath& dir, const string& plot_title, 
                  const Vec& xValues, 
                  const Vec& yValues, const Vec& add_col, const Vec& bounds, string legend, bool save_plot)
 {
@@ -718,7 +718,7 @@ void matlabSave( const string& dir, const string& plot_title,
              mat, add_col, bounds, legd, save_plot);
 }
 
-void matlabSave( const string& dir, const string& plot_title, const Mat& data, 
+void matlabSave( const PPath& dir, const string& plot_title, const Mat& data, 
                  const Vec& add_col, const Vec& bounds, TVec<string> legend, bool save_plot)
 {
   Vec bid;
@@ -733,19 +733,20 @@ void matlabSave( const string& dir, const string& plot_title, const Mat& data,
   2) If xValues is not empty and its length is not equal to the length of yValues, 
   then its length must be one and the value xValues[0] will be the start index for the xValues.
 */
-void matlabSave( const string& dir, const string& plot_title, 
+void matlabSave( const PPath& dir, const string& plot_title, 
                  const Vec& xValues,
                  const Mat& yValues, const Vec& add_col, const Vec& bounds, TVec<string> legend, bool save_plot)
 {
+  // TODO Use PStream.
   force_mkdir(dir);  
-  string directory = append_slash(abspath(dir));
-  force_mkdir(directory+"Images/");
+  PPath directory = dir.absolute();
+  force_mkdir(directory / "Images" / "");
   
   int w = yValues.width();
 
   ofstream out;
-  string vec_fname = directory + plot_title + ".mmat";
-  out.open(vec_fname.c_str(), ofstream::out | ofstream::trunc);
+  PPath vec_fname = directory / plot_title + ".mmat";
+  out.open(vec_fname.absolute().c_str(), ofstream::out | ofstream::trunc);
 
   real startX = 0.0;
   int xLen = xValues.length(); 
@@ -778,9 +779,9 @@ void matlabSave( const string& dir, const string& plot_title,
   }
   out.close();
   
-  string m_fname = directory + plot_title + ".m";
-  out.open(m_fname.c_str(), ofstream::out | ofstream::trunc);
-  out << "load " << vec_fname << " -ascii"   << endl
+  PPath m_fname = directory / plot_title + ".m";
+  out.open(m_fname.absolute().c_str(), ofstream::out | ofstream::trunc);
+  out << "load " << vec_fname.absolute() << " -ascii"   << endl
       << plot_title << "= sortrows(" << plot_title << ")" << endl
       << "h = plot(" 
 //--- X Values
@@ -832,7 +833,7 @@ void matlabSave( const string& dir, const string& plot_title,
   
   if(save_plot)
     out << "print('-dpsc2', '" 
-        << (directory+"Images/")
+        << (directory / "Images" / "").absolute()
         << plot_title << ".eps')" << endl;
   
   out.close();
@@ -1533,7 +1534,7 @@ void loadJPEGrgb(const string& jpeg_filename, Mat& rgbmat, int& row_size, int sc
   row_size = w;
 }
 
-void parseSizeFromRemainingLines(const string& filename, ifstream& in, bool& could_be_old_amat, int& length, int& width)
+void parseSizeFromRemainingLines(const PPath& filename, PStream& in, bool& could_be_old_amat, int& length, int& width)
 {
   string line;
   getNextNonBlankLine(in,line);
@@ -1568,7 +1569,10 @@ void parseSizeFromRemainingLines(const string& filename, ifstream& in, bool& cou
   if(!could_be_old_amat || nfields1!=2) 
     return;  // could not be an old .amat with first 2 numbers being length width
 
-  // Get to the beggining of the file
+  PLERROR("In parseSizeFromRemainingLines - This part of the code is not PStream compatible yet");
+
+  /* TODO The following code does not work yet with PStream. Fix it!
+  // Get to the beginning of the file
   in.seekg(0);
   in.clear();
 
@@ -1586,6 +1590,7 @@ void parseSizeFromRemainingLines(const string& filename, ifstream& in, bool& cou
     length = int(a);
     width = int(b);
   }
+  */
 }
 
 } // end of namespace PLearn
