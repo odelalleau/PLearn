@@ -13,6 +13,8 @@ using namespace PLearn;
 
 int main()
 {
+
+  // Implantation simplenet de Pascal
   // cout << "tanh: " << ultrafasttanh(1) << " " << fasttanh(1) << " " << tanh(1) << endl;
   
   int nhidden = 100;

@@ -46,13 +46,12 @@ using namespace std;
 
 class ConditionalGaussianDistribution: public ConditionalDistribution
 {
-protected:
+
+public:
 
   Vec mean;
   Mat covariance;
-    
-public:
-
+  
   typedef ConditionalDistribution inherited;
 
   ConditionalGaussianDistribution();
@@ -101,7 +100,7 @@ public:
   //! return a pseudo-random sample generated from the distribution.
   virtual void generate(Vec& x) const;
 
-  virtual void setInput(const Vec& input) const;
+  virtual void setInput(const Vec& input);
   
 };
 

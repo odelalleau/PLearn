@@ -79,7 +79,7 @@ public:
   DECLARE_NAME_AND_DEEPCOPY(ConditionalDistribution);
 
   //! Set the input part before using the inherited methods
-  virtual void setInput(const Vec& input) const;
+  virtual void setInput(const Vec& input);
 };
 
 // Declares a few other classes and functions related to this class

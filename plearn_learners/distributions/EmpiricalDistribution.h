@@ -51,6 +51,8 @@ using namespace std;
   public:
 
     EmpiricalDistribution();
+    
+    EmpiricalDistribution(int inputsize);
 
     DECLARE_NAME_AND_DEEPCOPY(EmpiricalDistribution);
     void makeDeepCopyFromShallowCopy(CopiesMap& copies);

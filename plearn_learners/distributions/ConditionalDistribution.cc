@@ -66,7 +66,7 @@ void ConditionalDistribution::makeDeepCopyFromShallowCopy(map<const void*, void*
 }
 
 
-void ConditionalDistribution::setInput(const Vec& input) const
+void ConditionalDistribution::setInput(const Vec& input)
 { PLERROR("setInput must be implemented for this ConditionalDistribution"); }
 
 

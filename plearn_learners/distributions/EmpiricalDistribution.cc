@@ -51,10 +51,16 @@ void EmpiricalDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 }
 
 
-
 EmpiricalDistribution::EmpiricalDistribution()
   :inherited()
 {
+}
+
+
+EmpiricalDistribution::EmpiricalDistribution(int inputsize)
+  :inherited()
+{
+  inputsize_ = inputsize;
 }
 
 
@@ -67,8 +73,10 @@ void EmpiricalDistribution::declareOptions(OptionList& ol)
 
 void EmpiricalDistribution::train(VMat training_set)
 {
-  data = training_set;
-  inputsize_ = data.width();
+  if(inputsize_ == 0)
+    PLERROR("inputsize_ must be specified before training");
+  data = training_set.subMatColumns(0, inputsize_);
+  targetsize_ = data.width()-inputsize_;
 }
 
 double EmpiricalDistribution::log_density(const Vec& x) const

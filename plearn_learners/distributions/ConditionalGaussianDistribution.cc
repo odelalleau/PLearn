@@ -39,6 +39,7 @@
 #include "ConditionalGaussianDistribution.h"
 #include "plapack.h"
 #include "VMat_maths.h"
+#include "TMat.h"
 
 namespace PLearn <%
 using namespace std;
@@ -65,7 +66,7 @@ void ConditionalGaussianDistribution::declareOptions(OptionList& ol)
 
   declareOption(ol, "covariance", &ConditionalGaussianDistribution::covariance, OptionBase::buildoption,
                 "The covariance of the gaussian distribution \n"
-                "Could be learned on a training set or specified by calling setOption");
+                "Could be learned on a training set or specified manually");
   
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -76,7 +77,7 @@ void ConditionalGaussianDistribution::declareOptions(OptionList& ol)
     // ### Provide some useful description of what the class is ...
     return 
       "ConditionalGaussianDistribution is a gaussian distribution in which the \n."
-      "parameters could be learned or specified manually via setInput and setOption."
+      "parameters could be learned or specified manually."
       + optionHelp();
   }
 
@@ -126,9 +127,10 @@ void ConditionalGaussianDistribution::generate(Vec& x) const
   x = multivariate_normal(mean, covariance);
 }
 
-void ConditionalGaussianDistribution::setInput(const Vec& input) const
+void ConditionalGaussianDistribution::setInput(const Vec& input)
 {
-  mean = input;
+  mean.resize(input.size());
+  mean << input;
 }
 
 %> // end of namespace PLearn
