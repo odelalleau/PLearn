@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.53 2004/04/01 15:52:29 kermorvc Exp $
+   * $Id: plearn.cc,v 1.54 2004/04/14 21:42:45 chrish42 Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -105,7 +105,6 @@
 //#include "SequentialModelSelector.h"
 //#include "SequentialValidation.h"
 
-#include "GraphicalBiText.h"
 // Commands
 #include "RunCommand.h"
 #include "HelpCommand.h"

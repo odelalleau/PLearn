@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: lisaplearn.cc,v 1.16 2004/04/14 21:17:25 yoshua Exp $
+   * $Id: lisaplearn.cc,v 1.17 2004/04/14 21:42:45 chrish42 Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -123,6 +123,8 @@
 //#include "EmbeddedSequentialLearner.h"
 //#include "SequentialModelSelector.h"
 //#include "SequentialValidation.h"
+
+#include "GraphicalBiText.h"
 
 // Commands
 #include "RunCommand.h"
