@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.1 2002/10/03 07:35:28 plearner Exp $
+* $Id: VMatrix.cc,v 1.2 2002/10/17 15:22:54 ducharme Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -271,17 +271,18 @@ void VMatrix::setMetaDataDir(const string& the_metadatadir)
 TVec<StatsCollector> VMatrix::getStats()
 {
   if(!field_stats)
+  {
+    string statsfile = getMetaDataDir() + "/stats.psave";
+    if (isfile(statsfile) && getMtime()<mtime(statsfile))
     {
-      string statsfile = getMetaDataDir() + "/stats.psave";
-      PLWARNING("TVec<StatsCollector> VMatrix::getStats() : stats.psave loading disabled until StatsCollector has option system enabled. Julien");
-      if(0 && isfile(statsfile) && getMtime()<mtime(statsfile))
-        PLearn::load(statsfile, field_stats);
-      else
-        {
-          field_stats = PLearn::computeStats(this, 2000);
-          PLearn::save(statsfile, field_stats);
-        }
+      PLearn::load(statsfile, field_stats);
     }
+    else
+    {
+      field_stats = PLearn::computeStats(this, 2000);
+      PLearn::save(statsfile, field_stats);
+    }
+  }
   return field_stats;
 }
 
@@ -292,10 +293,10 @@ TVec<RealMapping> VMatrix::getRanges()
   if(isfile(rangefile))
     PLearn::load(rangefile, ranges);
   else
-    {
-      ranges = computeRanges(getStats(),std::max(10,length()/200),std::max(10,length()/100) );
-      PLearn::save(rangefile, ranges);
-    }
+  {
+    ranges = computeRanges(getStats(),std::max(10,length()/200),std::max(10,length()/100) );
+    PLearn::save(rangefile, ranges);
+  }
   return ranges;
 }
 
