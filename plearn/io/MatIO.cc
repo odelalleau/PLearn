@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatIO.cc,v 1.13 2004/07/29 15:19:33 plearner Exp $
+   * $Id: MatIO.cc,v 1.14 2004/07/30 13:18:25 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -1075,7 +1075,7 @@ Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols,
     PLERROR("In loadUCIMLDB, to_symbols and to_nsymbols must both be provided (non-null), or both be 0");
 
   /*  first figure out number of columns and number of rows  */
-  int skip_header = false;
+  bool skip_header = false;
   if (header_columns) {
     skip_header = true;
   }
