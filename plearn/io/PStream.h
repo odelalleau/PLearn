@@ -499,6 +499,7 @@ void readMap(PStream& in, MapT& m)
   if(c!='{')
     PLERROR("In readMap(Pstream& in, MapT& m) expected '{' but read %c",c);
   in.skipBlanksAndCommentsAndSeparators();
+  c = in.peek(); // do we have a '}' ?
   while(c!='}')
     {
       pair<typename MapT::key_type, typename MapT::mapped_type> val;
