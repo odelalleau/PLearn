@@ -1,0 +1,211 @@
+// -*- C++ -*-
+
+// PLearn (A C++ Machine Learning Library)
+// Copyright (C) 1998 Pascal Vincent
+// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio, Rejean Ducharme and University of Montreal
+// Copyright (C) 2001-2002 Nicolas Chapados, Ichiro Takeuchi, Jean-Sebastien Senecal
+// Copyright (C) 2002 Xiangdong Wang, Christian Dorion
+
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+// 
+//  1. Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+// 
+//  2. Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//     documentation and/or other materials provided with the distribution.
+// 
+//  3. The name of the authors may not be used to endorse or promote
+//     products derived from this software without specific prior written
+//     permission.
+// 
+// THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+// NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+// TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// 
+// This file is part of the PLearn library. For more information on the PLearn
+// library, go to the PLearn Web site at www.plearn.org
+
+
+/* *******************************************************      
+   * $Id: PrecomputedKernel.cc,v 1.1 2003/12/15 22:08:32 dorionc Exp $
+   * This file is part of the PLearn library.
+   ******************************************************* */
+
+#include "PrecomputedKernel.h"
+
+// From Old Kernel.cc: all includes are putted in every file.
+// To be revised manually 
+#include <cmath>
+#include "stringutils.h"
+#include "Kernel.h"
+#include "TMat_maths.h"
+#include "PLMPI.h"
+//////////////////////////
+namespace PLearn <%
+using namespace std;
+
+
+
+// ** PrecomputedKernel **
+
+PLEARN_IMPLEMENT_OBJECT(PrecomputedKernel, "ONE LINE DESCR", "NO HELP");
+
+// PrecomputedKernel::~PrecomputedKernel()
+// {
+//   if(precomputedK)
+//     delete[] precomputedK;
+// }
+
+void PrecomputedKernel::build_()
+{
+  // If the flag was provided to only one of the kernel or the embedded, 
+  //  the two will be considered sequential
+  is_sequential = is_sequential || ker->is_sequential;
+  ker->is_sequential = is_sequential; 
+}
+
+
+void PrecomputedKernel::build()
+{
+  inherited::build();
+  build_();
+}
+
+
+
+void PrecomputedKernel::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+{
+  Kernel::makeDeepCopyFromShallowCopy(copies);
+  //precomputedK = 0; // not a real deep copy, but this will do for now...
+  deepCopyField(precomputedK, copies);
+}
+
+
+// Old
+// void PrecomputedKernel::setDataForKernelMatrix(VMat the_data)
+// { 
+//   Kernel::setDataForKernelMatrix(the_data);
+//   ker->setDataForKernelMatrix(the_data);
+  
+//   if(precomputedK)
+//     delete[] precomputedK;
+//   int l = data.length();
+//   precomputedK = new float(l*l);
+//   float* Kdata = precomputedK;
+//   for(int i=0; i<l; i++)
+//     {
+//       cerr << "Precomputing Kernel Matrix Row " << i << " of " << l << " ..." << endl;
+//       for(int j=0; j<l; j++)
+//         Kdata[j] = (float)ker->evaluate_i_j(i,j);
+//       Kdata += l;
+//     }
+// }
+
+/*!
+  Given that the matrix is symetric, we reduce the computation from n^2 to
+  (n^2)/2 + n/2 calls to evaluate_i_j. 
+
+  Assume that n is the previous data length and n+1 the new one. 
+    Then the sequential processing (triggered by the 'is_sequential' flag)
+    will allow to reduce the computation from (n+1)^2 to 2n+1 calls to evaluate_i_j.
+    If the matrix is symetric, it goes down from ((n+1)^2)/2 + (n+1)/2 to (n+1) calls. 
+*/
+void PrecomputedKernel::setDataForKernelMatrix(VMat the_data)
+{ 
+  int prev_len = 0;
+  if(data.isNotNull())
+    prev_len = data.length();
+  
+  Kernel::setDataForKernelMatrix(the_data);
+  ker->setDataForKernelMatrix(the_data);
+  
+  int len = data.length();
+  precomputedK.resize(len); //TVec of lines!!!
+  for(int i=0; i < len; i++)
+  {
+    precomputedK[i].resize(len);
+    
+    int j=0;
+    if(is_sequential && i < prev_len)
+      j = prev_len;
+    for(; j < len; j++)
+    {
+      if(is_symmetric && j<i)
+        precomputedK[i][j] = precomputedK[j][i];
+      else
+        precomputedK[i][j] = ker->evaluate_i_j(i,j);
+    }
+  }
+}
+
+
+real PrecomputedKernel::evaluate(const Vec& x1, const Vec& x2) const
+{ return ker->evaluate(x1,x2); }
+
+
+real PrecomputedKernel::evaluate_i_j(int i, int j) const
+{ 
+#ifdef BOUNDCHECK
+  if(precomputedK.isNull())
+    PLERROR("In PrecomputedKernel::evaluate_i_j data must first be set with setDataForKernelMatrix");
+  else if(i<0 || j<0 || i>=data.length() || j>=data.length())
+    PLERROR("In PrecomputedKernel::evaluate_i_j i and j must be between 0 and data.length()");
+#endif
+  return precomputedK[i][j];//[i*data.length()+j];
+}
+
+
+real PrecomputedKernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) const 
+{ return ker->evaluate_i_x(i,x,squared_norm_of_x); }
+
+
+real PrecomputedKernel::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x) const
+{ return ker->evaluate_x_i(x,i,squared_norm_of_x); }
+
+
+void PrecomputedKernel::write(ostream& out) const
+{
+  writeHeader(out,"PrecomputedKernel");
+  inherited::oldwrite(out);
+  ker->write(out);
+  writeFooter(out,"PrecomputedKernel");
+}
+
+
+void PrecomputedKernel::oldread(istream& in)
+{
+  readHeader(in,"PrecomputedKernel");
+  inherited::oldread(in);
+  ker = dynamic_cast<Kernel*>(readObject(in));
+  readFooter(in,"PrecomputedKernel");
+}
+
+/*
+void PrecomputedKernel::readOptionVal(istream& in, const string& optionname)
+{ 
+  if(optionname.length()>4 && optionname.substr(0,4)=="ker.")
+    ker->readOptionVal(in, optionname.substr(4));
+  else
+    inherited::readOptionVal(in, optionname);  
+}
+*/
+void PrecomputedKernel::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "ker", &PrecomputedKernel::ker, OptionBase::buildoption,
+                   "TODO: Some comments");
+    inherited::declareOptions(ol);
+}
+
+
+
+%> // end of namespace PLearn
+
