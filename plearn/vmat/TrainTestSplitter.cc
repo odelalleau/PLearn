@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainTestSplitter.cc,v 1.7 2003/11/27 20:11:16 tihocan Exp $ 
+   * $Id: TrainTestSplitter.cc,v 1.8 2004/01/27 14:15:57 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file TrainTestSplitter.cc */
@@ -57,7 +57,7 @@ void TrainTestSplitter::declareOptions(OptionList& ol)
 {
   declareOption(ol, "append_train", &TrainTestSplitter::append_train, OptionBase::buildoption,
       "if set to 1, the trainset will be appended after the test set (thus each split"
-      " will contain three sets");
+      " will contain three sets)");
 
   declareOption(ol, "test_fraction", &TrainTestSplitter::test_fraction, OptionBase::buildoption,
                 "the fraction of the dataset reserved to the test set");
