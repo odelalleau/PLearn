@@ -13,7 +13,7 @@
 // by a prior agreement signed with ApSTAT Technologies Inc.
 
 /* *******************************************************      
-   * $Id: PyPlearnDriver.cc,v 1.2 2005/01/21 22:21:45 chrish42 Exp $ 
+   * $Id: PyPlearnDriver.cc,v 1.3 2005/01/26 16:32:26 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -23,9 +23,11 @@
 #include "PyPlearnDriver.h"
 #include <plearn/sys/Popen.h>
 #include <plearn/base/general.h>
-#include <plearn/io/fileutils.h>
 #include <plearn/base/plerror.h>
 #include <plearn/base/stringutils.h>
+
+#include <plearn/io/PPath.h>
+#include <plearn/io/fileutils.h>
 
 namespace PLearn {
 using namespace std;

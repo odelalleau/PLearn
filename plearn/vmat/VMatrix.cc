@@ -37,7 +37,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.86 2005/01/26 15:08:20 ducharme Exp $
+* $Id: VMatrix.cc,v 1.87 2005/01/26 16:32:27 dorionc Exp $
 ******************************************************* */
 
 #include <plearn/io/load_and_save.h>
@@ -1167,7 +1167,13 @@ VMatrix::~VMatrix()
 {}
 
 void VMatrix::save(const PPath& filename) const
-{ savePMAT(filename); }
+{
+  PLWARNING( "This method overloads the Object::save method which is "
+             "deprecated. This method is therefore deprecated and you should call "
+             "directly the savePMAT() method." );
+  
+  savePMAT(filename);
+}
 
 void VMatrix::savePMAT(const PPath& pmatfile) const
 {

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.56 2005/01/25 03:15:24 dorionc Exp $
+   * $Id: fileutils.cc,v 1.57 2005/01/26 16:32:26 dorionc Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -72,6 +72,7 @@
 #include <plearn/base/plerror.h>
 #include <plearn/math/pl_math.h>    //!< For 'real'.
 #include "PStream.h"
+#include "PPath.h"
 
 namespace PLearn {
 using namespace std;
@@ -586,14 +587,21 @@ string makeExplicitPath(const string& filename)
 void addFileAndDateVariables(const string& filepath, map<string, string>& variables)
 {
   // Define new local variables
-  const string fpath       = abspath(filepath);
+  variables["HOME"]        = PPath::getenv("HOME");
+  
+  const PPath fpath        = PPath(filepath).absolute();
   variables["FILEPATH"]    = fpath;
-  variables["DIRPATH"]     = remove_trailing_slash(extract_directory(fpath));
-  variables["FILENAME"]    = extract_filename(fpath);
-  variables["FILEBASE"]    = remove_extension(extract_filename(fpath));
-  variables["FILEEXT"]     = extract_extension(fpath);
-  variables["HOME"]        = getenv("HOME");
+  variables["DIRPATH"]     = fpath.dirname();
 
+  const PPath basename     = fpath.basename();
+  variables["FILENAME"]    = basename;
+  variables["FILEBASE"]    = basename.no_extension();
+  variables["FILEEXT"]     = fpath.extension();
+
+  
+  // dorionc: This should soon be deprecated...
+  // PyPLearn should provide date(), time() and date_time() functions so
+  // that these could be removed
   char* date_time_env = getenv("PLEARN_DATE_TIME");
 
   if ( date_time_env 
@@ -634,7 +642,7 @@ string readFileAndMacroProcess(const string& filepath, map<string, string>& vari
   addFileAndDateVariables(filepath, variables);
 
   // Perform actual parsing and macro processing...
-  const string fpath = abspath(filepath);  
+  const PPath fpath = PPath(filepath).absolute();  
   ifstream in(fpath.c_str());
   if (!in)
     PLERROR("In readFileAndMacroProcess, could not open file %s for reading", fpath.c_str());

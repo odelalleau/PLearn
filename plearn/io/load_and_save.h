@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: load_and_save.h,v 1.2 2005/01/14 23:27:18 plearner Exp $ 
+   * $Id: load_and_save.h,v 1.3 2005/01/26 16:32:26 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -57,7 +57,7 @@ using namespace std;
 // ****************************************
 
 template <class T> 
-inline void load(const string &filepath, T &x)
+inline void load(const PPath& filepath, T &x)
 {
 #if STREAMBUFVER == 1
   PStream in = openFile(filepath,PStream::plearn_ascii,"r");
@@ -73,7 +73,7 @@ inline void load(const string &filepath, T &x)
 
 //! If necessary, missing directories along the filepath will be created
 template<class T> 
-inline void save(const string& filepath, const T& x, PStream::mode_t io_formatting=PStream::plearn_ascii)
+inline void save(const PPath& filepath, const T& x, PStream::mode_t io_formatting=PStream::plearn_ascii)
 { 
   force_mkdir_for_file(filepath);
 #if STREAMBUF == 1

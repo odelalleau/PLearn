@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.37 2005/01/14 23:26:35 plearner Exp $
+   * $Id: Object.cc,v 1.38 2005/01/26 16:31:37 dorionc Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -378,17 +378,27 @@ void Object::run()
 void Object::oldread(istream& in)
 { PLERROR("oldread method not implemented for this object"); }
 
-void Object::save(const string& filename) const
-{ PLearn::save(filename, *this); }
+void Object::save(const PPath& filename) const
+{
+  PLWARNING("This method is deprecated. It simply calls the generic PLearn save function "
+            "(that can save any PLearn object): PLearn::save(filename, *this) "
+            "So you should call PLearn::save directly (it's defined in plearn/io/load_and_save.h).");
+  PLearn::save(filename, *this);
+}
 
-void Object::load(const string& filename)
-{ PLearn::load(filename, *this); }
+void Object::load(const PPath& filename)
+{
+  PLWARNING("This method is deprecated. It simply calls the generic PLearn load function "
+            "(that can load any PLearn object): PLearn::load(filename, *this) "
+            "So you should call PLearn::load directly (it's defined in plearn/io/load_and_save.h).");
+  PLearn::load(filename, *this);
+}
 
 Object::~Object()
 {}
 
 
-Object* loadObject(const string &filename)
+Object* loadObject(const PPath &filename)
 {
 #if STREAMBUFVER == 1
   PStream in = openFile(filename, PStream::plearn_ascii, "r");
@@ -403,7 +413,7 @@ Object* loadObject(const string &filename)
   return o;
 }
 
-Object* macroLoadObject(const string &filename, map<string, string>& vars)
+Object* macroLoadObject(const PPath &filename, map<string, string>& vars)
 {
   string script = readFileAndMacroProcess(filename, vars);
   PIStringStream sin(script);
@@ -412,7 +422,7 @@ Object* macroLoadObject(const string &filename, map<string, string>& vars)
   return o;
 }
   
-Object* macroLoadObject(const string &filename)
+Object* macroLoadObject(const PPath &filename)
 {
   map<string, string> vars;
   return macroLoadObject(filename,vars);

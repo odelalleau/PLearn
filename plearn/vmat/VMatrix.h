@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.67 2005/01/26 15:08:20 ducharme Exp $
+   * $Id: VMatrix.h,v 1.68 2005/01/26 16:32:27 dorionc Exp $
    ******************************************************* */
 
 
@@ -364,7 +364,9 @@ public:
   //! The results are cached in file stats#.psave (where # stands for the condfield index)
   // PP<ConditionalStatsCollector> getConditionalStats(int condfield);
 
-  // default version calls savePMAT
+  // This method overloads the Object::save method which is
+  // deprecated. This method is therefore deprecated and you should call
+  // directly the savePMAT() method.
   virtual void save(const PPath& filename) const;
 
   virtual void savePMAT(const PPath& pmatfile) const;

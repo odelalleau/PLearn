@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: openFile.cc,v 1.5 2005/01/14 21:47:25 chrish42 Exp $ 
+   * $Id: openFile.cc,v 1.6 2005/01/26 16:32:26 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent, Christian Hudon
@@ -42,9 +42,8 @@
 
 
 #include "openFile.h"
-#include <plearn/io/PrPStreamBuf.h>
 #include <mozilla/nspr/prio.h>
-
+#include <plearn/io/PrPStreamBuf.h>
 
 namespace PLearn {
 using namespace std;
@@ -52,7 +51,7 @@ using namespace std;
   /** Given a filename, opens the file and returns a PStream that can be
    *  used to read and/or write to the file.
    *
-   *  @param filepath The filename to be opened. Slashes will automatically
+   *  @param filepath_ The filename to be opened. Slashes will automatically
    *  be converted to the path seperator of the underlying OS before
    *  opening the file.
    *
@@ -66,9 +65,11 @@ using namespace std;
    *  file if it exists), or "a" for appending to the file (creating it if
    *  it doesn't exist). The default is to open the file for reading ("r").
    */
-  PStream openFile(const string& filepath, PStream::mode_t io_formatting,
+  PStream openFile(const PPath& filepath_, PStream::mode_t io_formatting,
                    const string& openmode)
   {
+    const char* filepath = filepath_.absolute().c_str();
+    
     PStream st;
 #if STREAMBUFVER == 0
     PLERROR("openFile not implemented for STREAMBUFVER == 0");
@@ -76,23 +77,23 @@ using namespace std;
     PRFileDesc* fd;
     if (openmode == "r")
       {
-        fd = PR_Open(filepath.c_str(), PR_RDONLY, 0666);
+        fd = PR_Open(filepath, PR_RDONLY, 0666);
         if (!fd)
-          PLERROR("openFile(\"%s\",\"%s\") failed.",filepath.c_str(), openmode.c_str());
+          PLERROR("openFile(\"%s\",\"%s\") failed.",filepath, openmode.c_str());
         st = new PrPStreamBuf(fd, 0, true, false);
       }
     else if (openmode == "w")
       {
-        fd = PR_Open(filepath.c_str(), PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0666);
+        fd = PR_Open(filepath, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0666);
         if (!fd)
-          PLERROR("openFile(\"%s\",\"%s\") failed.",filepath.c_str(), openmode.c_str());
+          PLERROR("openFile(\"%s\",\"%s\") failed.",filepath, openmode.c_str());
         st = new PrPStreamBuf(0, fd, false, true);
       }
     else if (openmode == "a")
       {
-        fd = PR_Open(filepath.c_str(), PR_WRONLY | PR_CREATE_FILE | PR_APPEND, 0666);
+        fd = PR_Open(filepath, PR_WRONLY | PR_CREATE_FILE | PR_APPEND, 0666);
         if (!fd)
-          PLERROR("openFile(\"%s\",\"%s\") failed.",filepath.c_str(), openmode.c_str());
+          PLERROR("openFile(\"%s\",\"%s\") failed.",filepath, openmode.c_str());
         st = new PrPStreamBuf(0, fd, false, true);
       }
     else

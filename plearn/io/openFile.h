@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: openFile.h,v 1.3 2005/01/14 21:47:25 chrish42 Exp $ 
+   * $Id: openFile.h,v 1.4 2005/01/26 16:32:26 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -45,12 +45,13 @@
 #define openFile_INC
 
 #include <string>
+#include <plearn/io/PPath.h>
 #include <plearn/io/PStream.h>
 
 namespace PLearn {
 using namespace std;
 
-  PStream openFile(const string& filepath, 
+  PStream openFile(const PPath& filepath_, 
                    PStream::mode_t io_formatting,
                    const string& openmode = "r"); 
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.37 2005/01/06 02:09:37 plearner Exp $
+   * $Id: Object.h,v 1.38 2005/01/26 16:31:37 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,6 +53,7 @@
 #include "Array.h"
 #include "TypeFactory.h"
 #include "Option.h"
+#include <plearn/io/PPath.h>
 
 namespace PLearn {
 using namespace std;
@@ -532,13 +533,13 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
 
     //! This method is deprecated. It simply calls the generic PLearn save function
     //! (that can save any PLearn object): PLearn::save(filename, *this) 
-    //! So you should call PLearn::save directly (it's defined in pl_io.h).
-    virtual void save(const string& filename) const;
+    //! So you should call PLearn::save directly (it's defined in plearn/io/load_and_save.h).
+    virtual void save(const PPath& filename) const;
 
     //! This method is deprecated. It simply calls the generic PLearn load function
     //! (that can load any PLearn object): PLearn::load(filename, *this) 
-    //! So you should call PLearn::load directly (it's defined in pl_io.h).
-    virtual void load(const string& filename);
+    //! So you should call PLearn::load directly (it's defined in plearn/io/load_and_save.h).
+    virtual void load(const PPath& filename);
 
     virtual ~Object();
   };
@@ -588,15 +589,15 @@ template<class T> Object *toIndexedObjectPtr(const T&, int) // Never to be calle
       { PStream in(&in_); return readObject(in); }
 
 //! Loads an object from the given file (no macro-preprocessing is performed)
-Object *loadObject(const string &filename);
+Object* loadObject(const PPath &filename);
 
 //! Same as loadObject but first performs macro-processing on the file
 //! vars may be initialised with the values of some variables
 //! and upon return it will also contain newly $DEFINED variables 
-Object* macroLoadObject(const string &filename, map<string,string>& vars);
+Object* macroLoadObject(const PPath &filename, map<string,string>& vars);
 
 //! same as previous, but no need to pass a variables map
-Object* macroLoadObject(const string &filename);
+Object* macroLoadObject(const PPath &filename);
 
   //! Creates a new object according to the given representation.
   //! This actually calls readObject on an istrstream, so anything

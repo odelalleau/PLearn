@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.cc,v 1.3 2005/01/25 03:15:23 dorionc Exp $ 
+   * $Id: PPath.cc,v 1.4 2005/01/26 16:32:26 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -642,6 +642,16 @@ string PPath::extension() const
     return "";
   return substr(begext+1, length());
 }
+
+PPath PPath::no_extension () const
+{
+  unsigned int begext = find('.');
+  if ( begext == npos ||
+       begext == length()-1 )
+    return *this;
+  return substr(0, begext);
+}
+
 
 // // Returns a ppath shorter than 256 character and exempt of any of the
 // // following chars: "*?'\"${}[]@ ,()"  --- replaced by underscores. 

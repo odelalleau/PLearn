@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.h,v 1.15 2004/08/26 21:03:51 chrish42 Exp $
+   * $Id: fileutils.h,v 1.16 2005/01/26 16:32:26 dorionc Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -65,7 +65,7 @@
 
 namespace PLearn {
 using namespace std;
-
+  
   //! returns the absolute path to the current working directory as a string
   string getcwd();
 

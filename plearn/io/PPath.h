@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.h,v 1.3 2005/01/25 03:15:23 dorionc Exp $ 
+   * $Id: PPath.h,v 1.4 2005/01/26 16:32:26 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent, Christian Dorion, Nicolas Chapados
@@ -57,6 +57,9 @@
 namespace PLearn {
 using namespace std;
 
+// Forward declaration
+class PStream;  
+  
 /*! This class is meant to manage paths homogeneously under any OS and to ease path manipulations.
 
 This class inherits from string (www.sgi.com/tech/stl/basic_string.html),
@@ -348,6 +351,12 @@ public:
     the last dot. Otherwise, it returns "".
   */
   string    extension () const;
+
+  /*!  If this path contains a dot, return a path made from the substring
+    that comes before the last dot. Otherwise, it returns a copy of this
+    path.
+  */
+  PPath     no_extension () const;
 
 //   /*! Migrated from fileutils.{h,cc}
 // 
