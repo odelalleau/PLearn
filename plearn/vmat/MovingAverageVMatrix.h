@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// CumVMatrix.h
+// MovingAverageVMatrix.h
 //
 // Copyright (C) 2004 Yoshua Bengio 
 // 
@@ -33,23 +33,23 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CumVMatrix.h,v 1.2 2004/03/14 22:27:45 yoshua Exp $ 
+   * $Id: MovingAverageVMatrix.h,v 1.1 2004/03/14 22:27:45 yoshua Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
 
-/*! \file CumVMatrix.h */
+/*! \file MovingAverageVMatrix.h */
 
 
-#ifndef CumVMatrix_INC
-#define CumVMatrix_INC
+#ifndef MovingAverageVMatrix_INC
+#define MovingAverageVMatrix_INC
 
 #include "SourceVMatrix.h"
 
 namespace PLearn {
 using namespace std;
 
-class CumVMatrix: public SourceVMatrix
+class MovingAverageVMatrix: public SourceVMatrix
 {
 public:
   typedef SourceVMatrix inherited;
@@ -59,11 +59,13 @@ protected:
   // * protected options *
   // *********************
 
-  Mat accumulated_columns;
+  Mat sums; // at (i,j), sum from the beginning of the source vmatrix at column j, up to row i
+  Mat ma;  // moving average of width window_sizes[j] = (sums(i,j)-sums(i-window_sizes[j]))/window_sizes[j]
+  TMat<int> nnonmissing; // at (i,j): nb of non-missing encountered in the source vmatrix at column j, up to row i
   Vec row;
   Vec previous_sourcerow;
   TVec<int> columns;
-  bool average;
+  int max_window_size;
 
 public:
 
@@ -72,7 +74,9 @@ public:
   // ************************
 
   // ### declare public option fields (such as build options) here
-  TVec<string> columns_to_accumulate;
+  TVec<string> columns_to_average;
+  TVec<int> window_sizes;
+  bool centered_windows;
 
   // ****************
   // * Constructors *
@@ -80,7 +84,7 @@ public:
 
   // Default constructor, make sure the implementation in the .cc
   // initializes all fields to reasonable default values.
-  CumVMatrix();
+  MovingAverageVMatrix();
 
   // ******************
   // * Object methods *
@@ -107,10 +111,10 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(CumVMatrix);
+  PLEARN_DECLARE_OBJECT(MovingAverageVMatrix);
 
 };
-DECLARE_OBJECT_PTR(CumVMatrix);
+DECLARE_OBJECT_PTR(MovingAverageVMatrix);
 
 } // end of namespace PLearn
 #endif

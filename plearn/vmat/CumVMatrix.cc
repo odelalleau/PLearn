@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CumVMatrix.cc,v 1.2 2004/03/09 12:50:38 yoshua Exp $ 
+   * $Id: CumVMatrix.cc,v 1.3 2004/03/14 22:27:45 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -48,7 +48,7 @@ using namespace std;
 
 
 CumVMatrix::CumVMatrix()
-  :inherited()
+  :inherited(), average(false)
   /* ### Initialise all fields to their default value */
 {
   // ...
@@ -83,8 +83,17 @@ void CumVMatrix::getRow(int i, Vec v) const
         accumulated_columns(k+1,j) = accumulated_columns(k,j) + previous_sourcerow[columns[j]];
     }
   }
-  for (int j=0;j<columns_to_accumulate.length();j++)
-    row[sourcerow.length()+j]=accumulated_columns(i,j);
+  if (average)
+  {
+    real normalization = 1.0 / (i+1);
+    for (int j=0;j<columns_to_accumulate.length();j++)
+      row[sourcerow.length()+j]=normalization*accumulated_columns(i,j);
+  }
+  else
+  {
+    for (int j=0;j<columns_to_accumulate.length();j++)
+      row[sourcerow.length()+j]=accumulated_columns(i,j);
+  }
   v << row;
 }
 
@@ -98,6 +107,9 @@ void CumVMatrix::declareOptions(OptionList& ol)
 
   declareOption(ol, "columns_to_accumulate", &CumVMatrix::columns_to_accumulate, OptionBase::buildoption,
                 "Names of the columns to accumulate.");
+
+  declareOption(ol, "average", &CumVMatrix::average, OptionBase::buildoption,
+                "whether to report the sum (default, when average=false) or the average");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
