@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.cc,v 1.11 2004/02/25 04:00:59 yoshua Exp $
+   * $Id: MultiInstanceNNet.cc,v 1.12 2004/02/25 13:10:26 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/MultiInstanceNNet.h */
@@ -355,7 +355,7 @@ void MultiInstanceNNet::build_()
       else
         invars = bag_inputs & bag_size & target;
 
-      inputs_and_targets_to_costs = Func(invars,hconcat(costs));
+      inputs_and_targets_to_costs = Func(invars,test_costs);
 
       inputs_and_targets_to_costs->recomputeParents();
 
@@ -376,7 +376,10 @@ TVec<string> MultiInstanceNNet::getTrainCostNames() const
 
 TVec<string> MultiInstanceNNet::getTestCostNames() const
 { 
-  return getTrainCostNames();
+  TVec<string> names(2);
+  names[0] = "NLL";
+  names[1] = "class_error";
+  return names;
 }
 
 
