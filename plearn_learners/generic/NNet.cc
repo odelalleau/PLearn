@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.64 2004/11/24 18:40:49 tihocan Exp $
+   * $Id: NNet.cc,v 1.65 2004/12/21 06:03:31 chapados Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -119,132 +119,145 @@ NNet::~NNet()
 void NNet::declareOptions(OptionList& ol)
 {
   declareOption(ol, "nhidden", &NNet::nhidden, OptionBase::buildoption, 
-                "    number of hidden units in first hidden layer (0 means no hidden layer)\n");
+                "Number of hidden units in first hidden layer (0 means no hidden layer)\n");
 
   declareOption(ol, "nhidden2", &NNet::nhidden2, OptionBase::buildoption, 
-                "    number of hidden units in second hidden layer (0 means no hidden layer)\n");
+                "Number of hidden units in second hidden layer (0 means no hidden layer)\n");
 
   declareOption(ol, "noutputs", &NNet::noutputs, OptionBase::buildoption, 
-                "    number of output units. This gives this learner its outputsize.\n"
-                "    It is typically of the same dimensionality as the target for regression problems \n"
-                "    But for classification problems where target is just the class number, noutputs is \n"
-                "    usually of dimensionality number of classes (as we want to output a score or probability \n"
-                "    vector, one per class)");
+                "Number of output units. This gives this learner its outputsize.\n"
+                "It is typically of the same dimensionality as the target for regression problems \n"
+                "But for classification problems where target is just the class number, noutputs is \n"
+                "usually of dimensionality number of classes (as we want to output a score or probability \n"
+                "vector, one per class)");
 
   declareOption(ol, "weight_decay", &NNet::weight_decay, OptionBase::buildoption, 
-                "    global weight decay for all layers\n");
+                "Global weight decay for all layers\n");
 
   declareOption(ol, "bias_decay", &NNet::bias_decay, OptionBase::buildoption, 
-                "    global bias decay for all layers\n");
+                "Global bias decay for all layers\n");
 
   declareOption(ol, "layer1_weight_decay", &NNet::layer1_weight_decay, OptionBase::buildoption, 
-                "    Additional weight decay for the first hidden layer.  Is added to weight_decay.\n");
+                "Additional weight decay for the first hidden layer.  Is added to weight_decay.\n");
 
   declareOption(ol, "layer1_bias_decay", &NNet::layer1_bias_decay, OptionBase::buildoption, 
-                "    Additional bias decay for the first hidden layer.  Is added to bias_decay.\n");
+                "Additional bias decay for the first hidden layer.  Is added to bias_decay.\n");
 
   declareOption(ol, "layer2_weight_decay", &NNet::layer2_weight_decay, OptionBase::buildoption, 
-                "    Additional weight decay for the second hidden layer.  Is added to weight_decay.\n");
+                "Additional weight decay for the second hidden layer.  Is added to weight_decay.\n");
 
   declareOption(ol, "layer2_bias_decay", &NNet::layer2_bias_decay, OptionBase::buildoption, 
-                "    Additional bias decay for the second hidden layer.  Is added to bias_decay.\n");
+                "Additional bias decay for the second hidden layer.  Is added to bias_decay.\n");
 
   declareOption(ol, "output_layer_weight_decay", &NNet::output_layer_weight_decay, OptionBase::buildoption, 
-                "    Additional weight decay for the output layer.  Is added to 'weight_decay'.\n");
+                "Additional weight decay for the output layer.  Is added to 'weight_decay'.\n");
 
   declareOption(ol, "output_layer_bias_decay", &NNet::output_layer_bias_decay, OptionBase::buildoption, 
-                "    Additional bias decay for the output layer.  Is added to 'bias_decay'.\n");
+                "Additional bias decay for the output layer.  Is added to 'bias_decay'.\n");
 
   declareOption(ol, "direct_in_to_out_weight_decay", &NNet::direct_in_to_out_weight_decay, OptionBase::buildoption, 
-                "    Additional weight decay for the direct in-to-out layer.  Is added to 'weight_decay'.\n");
+                "Additional weight decay for the direct in-to-out layer.  Is added to 'weight_decay'.\n");
 
   declareOption(ol, "L1_penalty", &NNet::L1_penalty, OptionBase::buildoption, 
-                "    should we use L1 penalty instead of the default L2 penalty on the weights?\n");
+                "should we use L1 penalty instead of the default L2 penalty on the weights?\n");
 
   declareOption(ol, "fixed_output_weights", &NNet::fixed_output_weights, OptionBase::buildoption, 
-                "    If true then the output weights are not learned. They are initialized to +1 or -1 randomly.\n");
+                "If true then the output weights are not learned. They are initialized to +1 or -1 randomly.\n");
 
   declareOption(ol, "input_reconstruction_penalty", &NNet::input_reconstruction_penalty, OptionBase::buildoption,
-                "    if >0 then a set of weights will be added from a hidden layer to predict (reconstruct) the inputs\n"
-                "    and the total loss will include an extra term that is the squared input reconstruction error,\n"
-                "    multiplied by the input_reconstruction_penalty factor.\n");
+                "If >0 then a set of weights will be added from a hidden layer to predict (reconstruct) the inputs\n"
+                "and the total loss will include an extra term that is the squared input reconstruction error,\n"
+                "multiplied by the input_reconstruction_penalty factor.\n");
 
   declareOption(ol, "direct_in_to_out", &NNet::direct_in_to_out, OptionBase::buildoption, 
-                "    should we include direct input to output connections?\n");
+                "should we include direct input to output connections?\n");
 
   declareOption(ol, "rbf_layer_size", &NNet::rbf_layer_size, OptionBase::buildoption,
-                "    If non-zero, add an extra layer which computes N(h(x);mu_i,sigma_i) (Gaussian density) for the\n"
-                "    i-th output unit with mu_i a free vector and sigma_i a free scalar, and h(x) the vector of\n"
-                "    activations of the 'representation' output, i.e. what would be the output layer otherwise. The\n"
-                "    given non-zero value is the number of these 'representation' outputs. Typically this\n"
-                "    makes sense for classification problems, with a softmax output_transfer_func. If the\n"
-                "    first_class_is_junk option is set then the first output (first class) does not get a\n"
-                "    Gaussian density but just a 'pseudo-uniform' density (the single free parameter is the\n"
-                "    value of that density) and in a softmax it makes sure that when h(x) is far from the\n"
-                "    centers mu_i for all the other classes then the last class gets the strongest posterior probability.\n");
+                "If non-zero, add an extra layer which computes N(h(x);mu_i,sigma_i) (Gaussian density) for the\n"
+                "i-th output unit with mu_i a free vector and sigma_i a free scalar, and h(x) the vector of\n"
+                "activations of the 'representation' output, i.e. what would be the output layer otherwise. The\n"
+                "given non-zero value is the number of these 'representation' outputs. Typically this\n"
+                "makes sense for classification problems, with a softmax output_transfer_func. If the\n"
+                "first_class_is_junk option is set then the first output (first class) does not get a\n"
+                "Gaussian density but just a 'pseudo-uniform' density (the single free parameter is the\n"
+                "value of that density) and in a softmax it makes sure that when h(x) is far from the\n"
+                "centers mu_i for all the other classes then the last class gets the strongest posterior probability.\n");
 
   declareOption(ol, "first_class_is_junk", &NNet::first_class_is_junk, OptionBase::buildoption, 
-                "    This option is used only when rbf_layer_size>0. If true then the first class is\n"
-                "    treated differently and gets a pre-transfer-function value that is a learned constant, whereas\n"
-                "    the others get a normal centered at mu_i.\n");
+                "This option is used only when rbf_layer_size>0. If true then the first class is\n"
+                "treated differently and gets a pre-transfer-function value that is a learned constant, whereas\n"
+                "the others get a normal centered at mu_i.\n");
 
   declareOption(ol, "output_transfer_func", &NNet::output_transfer_func, OptionBase::buildoption, 
-                "    what transfer function to use for ouput layer? \n"
-                "    one of: tanh, sigmoid, exp, softplus, softmax, log_softmax \n"
-                "    or interval(<minval>,<maxval>), which stands for\n"
-                "    <minval>+(<maxval>-<minval>)*sigmoid(.).\n"
-                "    An empty string or \"none\" means no output transfer function \n");
+                "what transfer function to use for ouput layer? One of: \n"
+                "  - \"tanh\" \n"
+                "  - \"sigmoid\" \n"
+                "  - \"exp\" \n"
+                "  - \"softplus\" \n"
+                "  - \"softmax\" \n"
+                "  - \"log_softmax\" \n"
+                "  - \"interval(<minval>,<maxval>)\", which stands for\n"
+                "          <minval>+(<maxval>-<minval>)*sigmoid(.).\n"
+                "An empty string or \"none\" means no output transfer function \n");
 
   declareOption(ol, "hidden_transfer_func", &NNet::hidden_transfer_func, OptionBase::buildoption, 
-                "    what transfer function to use for hidden units? \n"
-                "    one of: linear, tanh, sigmoid, exp, softplus, softmax, log_softmax, hard_slope or symm_hard_slope\n");
+                "What transfer function to use for hidden units? One of \n"
+                "  - \"linear\" \n"
+                "  - \"tanh\" \n"
+                "  - \"sigmoid\" \n"
+                "  - \"exp\" \n"
+                "  - \"softplus\" \n"
+                "  - \"softmax\" \n"
+                "  - \"log_softmax\" \n"
+                "  - \"hard_slope\" \n"
+                "  - \"symm_hard_slope\" \n");
 
   declareOption(ol, "cost_funcs", &NNet::cost_funcs, OptionBase::buildoption, 
-                "    a list of cost functions to use\n"
-                "    in the form \"[ cf1; cf2; cf3; ... ]\" where each function is one of: \n"
-                "      mse (for regression)\n"
-                "      mse_onehot (for classification)\n"
-                "      NLL (negative log likelihood -log(p[c]) for classification) \n"
-                "      class_error (classification error) \n"
-                "      binary_class_error (classification error for a 0-1 binary classifier)\n"
-                "      multiclass_error\n"
-                "      cross_entropy (for binary classification)\n"
-                "      stable_cross_entropy (more accurate backprop and possible regularization, for binary classification)\n"
-                "      margin_perceptron_cost (a hard version of the cross_entropy, uses the 'margin' option)\n"
-                "      lift_output (not a real cost function, just the output for lift computation)\n"
-                "      conf_rated_adaboost_cost (for confidence rated Adaboost)\n"
-                "      gradient_adaboost_cost (also for confidence rated Adaboost)\n"
-                "    The first function of the list will be used as \n"
-                "    the objective function to optimize \n"
-                "    (possibly with an added weight decay penalty) \n");
+                "A list of cost functions to use\n"
+                "in the form \"[ cf1; cf2; cf3; ... ]\" where each function is one of: \n"
+                "  - \"mse\" (for regression)\n"
+                "  - \"mse_onehot\" (for classification)\n"
+                "  - \"NLL\" (negative log likelihood -log(p[c]) for classification) \n"
+                "  - \"class_error\" (classification error) \n"
+                "  - \"binary_class_error\" (classification error for a 0-1 binary classifier)\n"
+                "  - \"multiclass_error\" \n"
+                "  - \"cross_entropy\" (for binary classification)\n"
+                "  - \"stable_cross_entropy\" (more accurate backprop and possible regularization, for binary classification)\n"
+                "  - \"margin_perceptron_cost\" (a hard version of the cross_entropy, uses the 'margin' option)\n"
+                "  - \"lift_output\" (not a real cost function, just the output for lift computation)\n"
+                "  - \"conf_rated_adaboost_cost\" (for confidence rated Adaboost)\n"
+                "  - \"gradient_adaboost_cost\" (also for confidence rated Adaboost)\n"
+                "The FIRST function of the list will be used as \n"
+                "the objective function to optimize \n"
+                "(possibly with an added weight decay penalty) \n");
   
   declareOption(ol, "classification_regularizer", &NNet::classification_regularizer, OptionBase::buildoption, 
-                "    used only in the stable_cross_entropy cost function, to fight overfitting (0<=r<1)\n");
+                "Used only in the stable_cross_entropy cost function, to fight overfitting (0<=r<1)\n");
 
   declareOption(ol, "margin", &NNet::margin, OptionBase::buildoption, 
-                "    margin requirement, used only with the margin_perceptron_cost cost function.\n"
-                "    It should be positive, and larger values regularize more.\n");
+                "Margin requirement, used only with the margin_perceptron_cost cost function.\n"
+                "It should be positive, and larger values regularize more.\n");
 
   declareOption(ol, "do_not_change_params", &NNet::do_not_change_params, OptionBase::buildoption, 
-      "If set to 1, the weights won't be loaded nor initialized at build time.");
+                "If set to 1, the weights won't be loaded nor initialized at build time.");
 
   declareOption(ol, "optimizer", &NNet::optimizer, OptionBase::buildoption, 
-                "    specify the optimizer to use\n");
+                "Specify the optimizer to use\n");
 
   declareOption(ol, "batch_size", &NNet::batch_size, OptionBase::buildoption, 
-                "    how many samples to use to estimate the avergage gradient before updating the weights\n"
-                "    0 is equivalent to specifying training_set->length() \n");
+                "How many samples to use to estimate the avergage gradient before updating the weights\n"
+                "0 is equivalent to specifying training_set->length() \n");
 
   declareOption(ol, "initialization_method", &NNet::initialization_method, OptionBase::buildoption, 
-                "    The method used to initialize the weights:\n"
-                "     - normal_linear  = a normal law with variance 1/n_inputs\n"
-                "     - normal_sqrt    = a normal law with variance 1/sqrt(n_inputs)\n"
-                "     - uniform_linear = a uniform law in [-1/n_inputs, 1/n_inputs]\n"
-                "     - uniform_sqrt   = a uniform law in [-1/sqrt(n_inputs), 1/sqrt(n_inputs)]\n"
-                "     - zero           = all weights are set to 0\n");
+                "The method used to initialize the weights:\n"
+                " - \"normal_linear\"  = a normal law with variance 1/n_inputs\n"
+                " - \"normal_sqrt\"    = a normal law with variance 1/sqrt(n_inputs)\n"
+                " - \"uniform_linear\" = a uniform law in [-1/n_inputs, 1/n_inputs]\n"
+                " - \"uniform_sqrt\"   = a uniform law in [-1/sqrt(n_inputs), 1/sqrt(n_inputs)]\n"
+                " - \"zero\"           = all weights are set to 0\n");
 
   declareOption(ol, "paramsvalues", &NNet::paramsvalues, OptionBase::learntoption, 
-                "    The learned parameter vector\n");
+                "The learned parameter vector\n");
 
   inherited::declareOptions(ol);
 
