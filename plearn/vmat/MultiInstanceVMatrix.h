@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MultiInstanceVMatrix.h,v 1.1 2004/02/24 20:44:27 nova77 Exp $ 
+   * $Id: MultiInstanceVMatrix.h,v 1.2 2004/02/25 05:20:34 nova77 Exp $ 
    ******************************************************* */
 
 // Authors: Norman Casagrande
@@ -46,21 +46,22 @@
 
 #include <vector>
 #include <utility>
-#include "MemoryVMatrix.h"
+#include "RowBufferedVMatrix.h"
 
 namespace PLearn {
 using namespace std;
 
-class MultiInstanceVMatrix: public MemoryVMatrix
+class MultiInstanceVMatrix: public RowBufferedVMatrix
 {
 public:
-  typedef MemoryVMatrix inherited;
+  typedef RowBufferedVMatrix inherited;
 
 protected:
 
-  string specification_;  // The file name
-  vector< pair<string, int> > names_;
+  Mat         data_;
+  string      specification_;  // The file name
   vector<int> configs_;
+  vector< pair<string, int> > names_;
 
 public:
 

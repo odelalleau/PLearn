@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// MultiInstanceVMatrix.cc KNN VMatrix!
+// MultiInstanceVMatrix.cc
 //
 // Copyright (C) 2004 Norman Casagrande 
 // 
@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MultiInstanceVMatrix.cc,v 1.1 2004/02/24 20:44:27 nova77 Exp $ 
+   * $Id: MultiInstanceVMatrix.cc,v 1.2 2004/02/25 05:20:34 nova77 Exp $ 
    ******************************************************* */
 
 // Authors: Norman Casagrande
@@ -43,14 +43,16 @@
 #include <map>
 #include <algorithm>
 #include <iterator>
-#include <sstream>
 #include "MultiInstanceVMatrix.h"
+#include "SumOverBagsVariable.h"
+#include "stringutils.h"
+#include "fileutils.h"
 
 namespace PLearn {
 using namespace std;
 
 MultiInstanceVMatrix::MultiInstanceVMatrix()
-  :inherited(), specification_("")
+  :inherited(), data_(Mat())
 {
   // ### You may or may not want to call build_() to finish building the object
   //build_();
@@ -68,7 +70,7 @@ PLEARN_IMPLEMENT_OBJECT(MultiInstanceVMatrix, "Matrix designed for multi instanc
 void MultiInstanceVMatrix::getRow(int i, Vec v) const
 {
   // for the moment just call the super method
-  inherited::getRow(i, v);
+  //inherited::getRow(i, v);
 }
 
 void MultiInstanceVMatrix::declareOptions(OptionList& ol)
@@ -84,6 +86,9 @@ void MultiInstanceVMatrix::build_()
 {
   //this->setMetaDataDir(filename_ + ".metadata"); 
 
+  // To be used in the end.. it is about 5 secs slower in debug
+  //int nRows = countNonBlankLinesOfFile(specification_);
+
   ifstream inFile(specification_.c_str());
   if(!inFile)
     PLERROR("In MultiInstanceVMatrix could not open file %s for reading", specification_.c_str());
@@ -92,41 +97,67 @@ void MultiInstanceVMatrix::build_()
   string newName;
   string aLine;
   string inp_element;
-  int configNum;
-  int i;
-  real* mat_i;
+  int configNum, bagType;
+  int i, nComp = 0;
+  int lastColumn = inputsize_ + targetsize_;
+  real* mat_i = NULL;
 
   int nRows = count(istreambuf_iterator<char>(inFile),
                     istreambuf_iterator<char>(), '\n');
 
-  data.resize(nRows, inputsize_ + targetsize_);
-  stringstream ss (stringstream::in | stringstream::out);
+  inFile.seekg(0);
+
+  // Check the number of columns
+  getline(inFile, aLine, '\n');
+  int nFields = (int)split(aLine).size();
+  if ( (nFields-1) != inputsize_ + targetsize_)
+  {
+    PLERROR("Either inputsize or targetsize are different from the specified file!\n"
+            " Got %d+%d (inputsize+targetsize) = %d, and found %d!", 
+            inputsize_, targetsize_, inputsize_+targetsize_, nFields - 1);
+  }
+
+  data_.resize(nRows, inputsize_ + targetsize_);
 
   inFile.seekg(0);
 
   for (int lineNum = 0; !inFile.eof() && lineNum < nRows; ++lineNum)
   {
-    getline(inFile, aLine, '\n');
-    ss << aLine;
-
     // first column: name of the compound
-    ss >> newName;
+    inFile >> newName;
     if (newName != lastName)
     {
       lastName = newName;
       names_.push_back( make_pair(newName, lineNum) );
+      bagType = SumOverBagsVariable::TARGET_COLUMN_FIRST;
+
+      if (mat_i != NULL)
+      {
+        if (nComp > 1)
+          mat_i[lastColumn] = SumOverBagsVariable::TARGET_COLUMN_LAST;
+        else
+          mat_i[lastColumn] = SumOverBagsVariable::TARGET_COLUMN_SINGLE;
+      }
+      nComp = 0;
     }
+    else
+    {
+      bagType = SumOverBagsVariable::TARGET_COLUMN_INTERMEDIATE;
+    }
+    nComp++;
 
     // next column: the number of the compound
-    ss >> configNum;
+    inFile >> configNum;
+
     configs_.push_back(configNum);
     
-    mat_i = data[lineNum];
-    for(i = 0; i < inputsize_ + targetsize_; i++)
+    mat_i = data_[lineNum];
+    for(i = 0; i < inputsize_ + targetsize_ - 1; i++)
     {
-      ss >> inp_element;
+      inFile >> inp_element;
       mat_i[i] = strtod(inp_element.c_str(), 0);
     }
+    mat_i[lastColumn] = bagType;
 
   }
   
