@@ -37,8 +37,7 @@ DERIVEDCLASS::DERIVEDCLASS()
   {
     // ### Provide some useful description of what the class is ...
     return 
-      "DERIVEDCLASS implements a ..."
-      + optionHelp();
+      "DERIVEDCLASS implements a ...\n";
   }
 
   void DERIVEDCLASS::build_()

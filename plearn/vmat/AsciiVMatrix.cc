@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AsciiVMatrix.cc,v 1.6 2003/05/07 05:39:18 plearner Exp $ 
+   * $Id: AsciiVMatrix.cc,v 1.7 2003/05/21 22:51:02 plearner Exp $ 
    ******************************************************* */
 
 /*! \file AsciiVMatrix.cc */
@@ -163,7 +163,7 @@ void AsciiVMatrix::build_()
           int width_ndigits = (int)log(real(width)) + 1;
           string remain = removenewline(line.substr(pos+1));
           int length_ndigits = remain.length() - width_ndigits - 1;
-          length_max = (int)pow(10.0,real(length_ndigits)) - 1;
+          length_max = (int)pow(10.0,double(length_ndigits)) - 1;
         }
       }
       *file >> ws;
@@ -200,7 +200,7 @@ void AsciiVMatrix::build_()
           getline(*file, line);
           int width_ndigits = (int)log(real(width)) + 1;
           int max_length_ndigits = line.length() - width_ndigits - 1;
-          length_max = (int)pow(10.0,real(max_length_ndigits)) - 1;
+          length_max = (int)pow(10.0,double(max_length_ndigits)) - 1;
         }
       }
 
