@@ -308,7 +308,7 @@ pymakeOption( name = 'throwerrors',
 pymakeOption( name = 'exiterrors',
               description = 'PLERROR will not throw exceptions, but write the error message and exit' )
 
-nprocesses_per_processor = 2
+nprocesses_per_processor = 1
 
 # LISA hack to set the number of processes per processor on a 'machine name' basis
 if myhostname[0:5]=='troll':
@@ -321,6 +321,3 @@ if myhostname[0:7]=='frontal':
     nprocesses_per_processor = 4
 if myhostname[0:6]=='merlin':
     nprocesses_per_processor = 1
-
-
-
