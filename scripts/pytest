@@ -5,7 +5,6 @@ import plearn.utilities.plpath   as plpath
 import plearn.utilities.toolkit  as toolkit
 
 from plearn.pytest                       import *
-from plearn.tasks.dispatch               import *
 from plearn.utilities.verbosity          import *
 from plearn.utilities.global_variables   import *
 
@@ -16,52 +15,11 @@ from plearn.utilities.global_variables   import *
 globalvars.all_roots                      = [ plpath.plearndir,
                                               plpath.lisaplearndir,
                                               plpath.apstatdir      ]
-globalvars.dispatch                       = None
-globalvars.options                        = None
-globalvars.targets                        = None
-globalvars.current_mode                   = None
 globalvars.test_name_default              = '<MANDATORY_TEST_NAME>'
 globalvars.ignore_hierarchy               = 'pytest.ignore'
 
-mode_routine_mappings = {
-    'add'     : AddTestRoutine,
-    'compile' : CompilationRoutine,
-    'disable' : DisableRoutine,
-    'enable'  : EnableRoutine,
-    'results' : ResultsCreationRoutine,
-    'run'     : RunTestRoutine#,
-#    'sync'    : SyncTest
-    }
-
 #####################
 ## Functions are listed by alphabetical order
-
-def build_tests(mode_name, directory, dirlist):
-    if globalvars.ignore_hierarchy in dirlist:
-        toolkit.exempt_list_of( dirlist, copy.copy(dirlist) )
-        vprint( "Directory %s and subdirectories ignored (%s)."
-                % ( directory, globalvars.ignore_hierarchy )
-                )
-        return
-    
-    toolkit.exempt_list_of( dirlist, Routine.forbidden_directories() )
-    
-    os.chdir(directory)
-
-    config = config_file_path()
-    try:
-        if config in dirlist:
-            execfile(config)
-    except Exception, e:
-        vprint( "+++ In %s" % os.path.join(directory, config) )
-        if globalvars.options.traceback:
-            raise
-        else:
-            vprint( "%s: %s." % (e.__class__.__name__,e) )
-
-    if mode_name == "add":
-        Test( name    = globalvars.options.test_name,
-              program = GlobalCompilableProgram( name = "plearn")  )        
 
 def check_directory(dirc):
     absdir = os.path.abspath(dirc)
@@ -78,67 +36,19 @@ def commit_mode():
     sys.exit()
     
 def common_preprocessing():
-    if globalvars.options.mail != None:
-        globalvars.options.savelog = mailing_log
+    if modes.options.mail != None:
+        modes.options.savelog = mailing_log
 
-    if globalvars.options.savelog:
-        savelog_file = open(globalvars.options.savelog,'w')
+    if modes.options.savelog:
+        savelog_file = open(modes.options.savelog,'w')
           
-    if globalvars.options.mail:
-        if globalvars.current_mode.name != "compilePLL":
+    if modes.options.mail:
+        if modes.current_mode.name != "compilePLL":
             vprint("The mail option is only supported under the compilePLL mode", 0)
             sys.exit()
-        if globalvars.options.savelog:
+        if modes.options.savelog:
             vprint("Mail and savelog options are not compatible", 0)
             sys.exit()
-
-def dispatch_targets():
-    if globalvars.current_mode.name == 'commit':
-        globalvars.options.localhost = True        
-
-    globalvars.dispatch = Dispatch(
-        localhost = globalvars.options.localhost,
-        nb_hosts  = globalvars.options.hosts
-        )
-
-    ## --traceback: This flag triggers routines to report the traceback of
-    ## PyTestUsageError. By default, only the class's name and meesage
-    ## are reported.
-    Routine.report_traceback = globalvars.options.traceback
-    
-    ## --all: Run all tests found in subdirectories of directories in
-    ## globalvars.all_roots test_suite branches. If some targets are
-    ## provided, these will be ignored.
-    if globalvars.options.all:
-        globalvars.targets           = globalvars.all_roots
-        globalvars.options.recursive = True
-
-    ## If no targets are provided, the cwd is the default target.
-    if len(globalvars.targets) == 0:
-        globalvars.targets.append( os.getcwd() )
-
-    if globalvars.options.recursive:
-        globalvars.targets = remove_subdirs(globalvars.targets)
-        
-    for target in globalvars.targets:
-        if globalvars.options.recursive:
-            os.path.walk(target, build_tests, globalvars.current_mode.name)
-        else:
-            build_tests(globalvars.current_mode.name, target, os.listdir(target))
-
-    test_instances = None
-    if ( globalvars.options.test_name != globalvars.test_name_default
-         or globalvars.current_mode.name == 'add' ):
-        test_instances = [( globalvars.options.test_name,
-                            Test.instances_map[globalvars.options.test_name]
-                            )]
-    else:
-        test_instances = Test.instances_map.items()
-    
-    for (test_name, test) in test_instances:
-        RoutineType = mode_routine_mappings[globalvars.current_mode.name]
-        globalvars.dispatch.add_task( RoutineType(test) )
-    globalvars.dispatch.run()
 
 def dynamic_version_header():
     # Dynamic version header
@@ -157,13 +67,13 @@ def ignore_mode():
     afterwards.
     """
     target = None
-    if len(globalvars.targets) == 0:
+    if len(modes.targets) == 0:
         target = os.getcwd()
-    elif len(globalvars.targets) == 1:
-        target = globalvars.targets[0]
+    elif len(modes.targets) == 1:
+        target = modes.targets[0]
 
     os.system("touch %s" % os.path.join( target, globalvars.ignore_hierarchy ) )
-    
+        
 def mail():
     # Opening the senmail process
     sendmail = Popen3("sendmail -t", True)
@@ -171,11 +81,11 @@ def mail():
     # "Header" of the mail
     sendmail.tochild.write("From: PyTest -compilePLL -mail\n")
     sendmail.tochild.write("Subject: PyTest -- List of files that did not compile\n")
-    sendmail.tochild.write("To: " + globalvars.options.mail + "\n")
+    sendmail.tochild.write("To: " + modes.options.mail + "\n")
 
     # Changing the mode of the savelog_file from write to read
     savelog_file.close()
-    savelog_file = open(globalvars.options.savelog, "r")
+    savelog_file = open(modes.options.savelog, "r")
 
     # "Body" of the mail
     sendmail.tochild.write(savelog_file.read() + "\n")
@@ -184,11 +94,11 @@ def mail():
     # "Closing" the mail mode
     sendmail.tochild.close()
     savelog_file.close()
-    globalvars.options.savelog = None # that way the file isn't closed twice
+    modes.options.savelog = None # that way the file isn't closed twice
     #                      # ( see end of pytest() )
-
+        
 def pytest_version():
-    version_str = '$Id: pytest,v 1.20 2004/10/25 15:05:44 dorionc Exp $'
+    version_str = '$Id: pytest,v 1.21 2004/10/26 20:01:30 dorionc Exp $'
 
     bflag = "pytest,v"
     the_year = time.localtime()[0]
@@ -200,22 +110,6 @@ def pytest_version():
 
 def quiet_sys(cmdString):
     os.system(cmdString + " > /dev/null")
-
-def remove_subdirs(absdirs):
-    ldirs = len(absdirs)
-    to_remove = []
-    for i in range(ldirs):
-        for j in range(ldirs):
-            if i==j:
-                continue
-            if string.find(absdirs[i], absdirs[j]) != -1:
-                vprint("%s is a subdirectory of %s: ignored."
-                       % (absdirs[i], absdirs[j]), 2)
-                to_remove.append(absdirs[i])
-
-    for r in to_remove:
-        absdirs.remove(r)
-    return absdirs
 
 def testing_options():
     testing_options = OptionGroup( parser, "Testing Options",
@@ -274,17 +168,29 @@ parser = ModeAndOptionParser( usage = "%prog mode [options] target*",
                               version = "%prog " + pytest_version(),
                               with_config_mode=False )
 
-for (mode, mode_routine) in mode_routine_mappings.iteritems():
-    option_groups = []
-##     if mode == 'add':
-##         raw_input("Add command line options...")
-        ##option_groups = [ get_add_options(parser) ]
-                  
-    parser.add_mode( mode, dispatch_targets,
+for (mode, mode_routine) in modes.routine_mappings.iteritems():
+    option_groups = []                  
+    parser.add_mode( mode, modes.generic_processing,
                      help          = toolkit.short_doc(mode_routine),
                      description   = toolkit.doc(mode_routine),
                      option_groups = option_groups
                     )
+
+parser.add_mode( 'disable', modes.disable,
+                 help          = toolkit.short_doc( modes.disable ),
+                 description   = toolkit.doc( modes.disable )
+                 )
+
+parser.add_mode( 'enable', modes.enable,
+                 help          = toolkit.short_doc( modes.enable ),
+                 description   = toolkit.doc( modes.enable )
+                 )
+
+parser.add_mode( 'list', modes.list,
+                 help           = toolkit.short_doc( modes.list ),
+                 description    = toolkit.doc( modes.list ),
+                 option_groups = [ modes.list_options( parser ) ]
+                 )
 
 parser.add_option_group( testing_options() )
 
@@ -302,16 +208,16 @@ parser.add_mode( 'ignore', ignore_mode,
 ############################################################
 ##################### Parsing Options ######################
 
-globalvars.options, globalvars.targets = parser.parse_args()
-globalvars.current_mode                = parser.selected_mode()
+modes.options, modes.targets = parser.parse_args()
+modes.current_mode           = parser.selected_mode()
 
 ############################################################
 ################## Some preprocessing ######################
 
 ## Managing the verbosity option.
-set_verbosity( globalvars.options.verbosity )
+set_verbosity( modes.options.verbosity )
 
-if globalvars.options.mail is not None:
+if modes.options.mail is not None:
     ## vprint.keep_output()
     raise NotImplementedError
 
@@ -325,17 +231,13 @@ dynamic_version_header()
 
 try:
     parser.launch_selected_mode()    
-    while globalvars.current_mode.isAlive():
+    while modes.current_mode.isAlive():
         time.sleep(0.2)
         
 except KeyboardInterrupt, kex:
     print "Interupted by user."
     sys.exit()
 
-############################################################
-################## Some postprocessing #####################
-
-vprint("\n%s" % str(Test.statistics), 0)    
 vprint("Quitting PyTest.", 1)
 kept = vprint.close()    
 if kept is not None:
