@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: JoinVMatrix.cc,v 1.6 2004/03/23 23:08:08 morinf Exp $
+   * $Id: JoinVMatrix.cc,v 1.7 2004/04/05 22:55:52 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,22 +48,46 @@ PLEARN_IMPLEMENT_OBJECT(JoinVMatrix, "ONE LINE DESCR", "NO HELP");
 JoinVMatrix::JoinVMatrix(VMat mas,VMat sla,TVec<int> mi,TVec<int> si)
   : inherited(mas.length(),mas.width()),master(mas),slave(sla),master_idx(mi),slave_idx(si)
 {
-  if(master_idx.size()!=slave_idx.size())
-    PLERROR("JoinVMatrix : master and slave field correspondance don't have same dimensions ");
+    build();
+}
 
-  for(int j=0;j<width();j++)
-      declareField(j,mas->fieldName(j), VMField::UnknownType);
+void
+JoinVMatrix::build()
+{
+    inherited::build();
+    build_();
+}
 
-  temp.resize(slave.width());
-  tempkey.resize(master_idx.size());
+void
+JoinVMatrix::build_()
+{
+  if (master && slave) {
+    if(master_idx.size()!=slave_idx.size())
+      PLERROR("JoinVMatrix : master and slave field correspondance don't have same dimensions ");
+
+    for(int j=0;j<width();j++)
+      declareField(j, master->fieldName(j), VMField::UnknownType);
+
+    temp.resize(slave.width());
+    tempkey.resize(master_idx.size());
   
-  for(int i=0;i<slave.length();i++)
-    {
+    for(int i=0;i<slave.length();i++) {
       slave->getRow(i,temp);
       for(int j=0;j<slave_idx.size();j++)
         tempkey[j]=temp[slave_idx[j]];
       mp.insert(make_pair(tempkey,i));
     }
+  }
+}
+
+void
+JoinVMatrix::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "master", &JoinVMatrix::master, OptionBase::buildoption, "");
+    declareOption(ol, "slave", &JoinVMatrix::slave, OptionBase::buildoption, "");
+    declareOption(ol, "master_idx", &JoinVMatrix::master_idx, OptionBase::buildoption, "");
+    declareOption(ol, "slave_idx", &JoinVMatrix::slave_idx, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
 }
 
 void JoinVMatrix::addStatField(const string & statis,const string & namefrom,const string & nameto)
