@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TObject.h,v 1.3 2005/02/23 21:50:50 tihocan Exp $ 
+   * $Id: TObject.h,v 1.4 2005/02/24 14:09:45 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -49,12 +49,29 @@
 
 // Define macros to ease the task of writing updateFromPLearn() and updateFromTorch()
 
+// Simple case (int, real, ...):
+// class ThisClass {
+//   real MEMBER;                      // Declared as OPTION.
+//   Torch::TorchClass* TORCH_OBJECT
+// ...
+// class TorchClass {
+//   real TORCH_MEMBER;
+// ...
 #define FROM_P_BASIC(OPTION, MEMBER, TORCH_OBJECT, TORCH_MEMBER)      \
     if (options[#OPTION]) TORCH_OBJECT->TORCH_MEMBER = this->MEMBER;
     
 #define FROM_T_BASIC(OPTION, MEMBER, TORCH_OBJECT, TORCH_MEMBER)      \
     if (options[#OPTION]) this->MEMBER = TORCH_OBJECT->TORCH_MEMBER;
 
+// Simple vector (int*, real*, ...):
+// class ThisClass {
+//   TVec<real> TVEC;                  // Declared as OPTION.
+//   Torch::TorchClass* TORCH_OBJECT
+// ...
+// class TorchClass {
+//   real* TORCH_PTR;
+//   int TORCH_LENGTH;    // Number of elements stored in TORCH_PTR.
+// ...
 #define FROM_P_TVEC(OPTION, TVEC, TORCH_OBJECT, TORCH_PTR, TORCH_LENGTH)  \
     if (options[#OPTION]) {                                               \
       TORCH_OBJECT->TORCH_PTR    = this->TVEC ? this->TVEC->data() : 0;   \
@@ -70,6 +87,15 @@
         this->TVEC.resize(0);                                                     \
     }
 
+// Pointer to a Torch object:
+// class ThisClass {
+//   PP<OBJ_CLASS> OBJ;               // Declared as OPTION.
+//   Torch::TorchClass* TORCH_OBJECT
+// ...
+// class TorchClass {
+//   OtherTorchClass* TORCH_PTR;
+// ...
+// Here, OBJ_CLASS == TOtherTorchCLass and OBJ->OBJ_PTR has type OtherTorchClass*
 #define FROM_P_OBJ(OPTION, OBJ, OBJ_PTR, OBJ_CLASS, TORCH_OBJECT, TORCH_PTR)  \
     if (options[#OPTION])                                                     \
       TORCH_OBJECT->TORCH_PTR = this->OBJ ? this->OBJ->OBJ_PTR : 0;
