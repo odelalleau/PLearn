@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatColumnsVMatrix.cc,v 1.2 2003/03/19 23:15:21 jkeable Exp $
+   * $Id: ConcatColumnsVMatrix.cc,v 1.3 2003/05/15 13:00:26 tihocan Exp $
    ******************************************************* */
 
 #include "ConcatColumnsVMatrix.h"
@@ -70,7 +70,7 @@ void ConcatColumnsVMatrix::build_()
   for(int i=0; i<array.size(); i++)
     {
       if(array[i]->length()!=length_)
-        PLERROR("ConcatColumnsVMatrix: Problem concatenating to VMatrices with differnet lengths");
+        PLERROR("ConcatColumnsVMatrix: Problem concatenating to VMatrices with different lengths");
       if(array[i]->width() == -1)
         PLERROR("In ConcatColumnsVMatrix constructor. Non-fixed width distribution not supported");
       width_ += array[i]->width();
