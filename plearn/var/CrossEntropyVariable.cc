@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: CrossEntropyVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
+   * $Id: CrossEntropyVariable.cc,v 1.4 2003/10/28 20:35:55 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -55,7 +55,7 @@ CrossEntropyVariable::CrossEntropyVariable(Variable* netout, Variable* target)
   :BinaryVariable(netout,target,1,1)
 {
   if(netout->size() != target->size())
-    PLERROR("In CrossEntropyVariable: netout and target must the same size");
+    PLERROR("In CrossEntropyVariable: netout and target must have the same size");
 }
 
 
