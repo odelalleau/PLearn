@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.52 2005/02/15 15:37:40 chapados Exp $
+   * $Id: StatsCollector.cc,v 1.53 2005/02/18 15:18:19 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -283,8 +283,15 @@ void StatsCollector::update(real val, real weight)
       if(int(counts.size())<=maxnvalues) // Still remembering new unseen values
       {
         it = counts.find(val);
-        if(it==counts.end())
-          counts[val].id=counts.size()-1;
+        if(it==counts.end()) {
+          // Create a new entry.
+          // Note that doing this in a single operation is not recommended.
+          // Indeed, depending on the compiler, counts.size() may differ by 1
+          // because the [] operator may be called before or after. That's why
+          // we explicitely call counts.size() first.
+          int id = counts.size() - 1;
+          counts[val].id = id;
+        }
         counts[val].n += weight;
       }
       else // We've filled up counts already
