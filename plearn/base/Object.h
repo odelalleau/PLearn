@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.9 2002/10/25 05:37:42 plearner Exp $
+   * $Id: Object.h,v 1.10 2002/10/25 23:16:08 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,6 +50,7 @@
 #include <set>
 #include "general.h"
 #include "PP.h"
+#include "TypeTraits.h"
 #include "TypeFactory.h"
 #include "Array.h"
 #include "stringutils.h"
@@ -728,8 +729,9 @@ void displayRegisteredSubClassesOf(const string& baseclassname, ostream& out)
             in >> ptr;                                                     \
             o = dynamic_cast<CLASSNAME *>(ptr);                            \
             return in; };                                                  \
-        inline PStream &operator<<(PStream &out, const PPCLASSNAME &o) \
-          { out << static_cast<const PP<CLASSNAME> &>(o); return out; };
+        inline PStream &operator<<(PStream &out, const PPCLASSNAME &o)    \
+          { out << static_cast<const PP<CLASSNAME> &>(o); return out; };  \
+        DECLARE_TYPE_TRAITS(PPCLASSNAME);
 
 #define DECLARE_NAME_AND_DEEPCOPY(CLASSNAME)                               \
         DECLARE_NAME(CLASSNAME);                                           \

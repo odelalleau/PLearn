@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: NaryVariable.h,v 1.4 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: NaryVariable.h,v 1.5 2002/10/25 23:16:08 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -59,6 +59,7 @@ class NaryVariable: public Variable
 protected:
   //!  Default constructor for persistence
   NaryVariable() {}
+  static void declareOptions(OptionList & ol);
   
 public: // Temporarily public for GradientOptimizer hack (speed contest, Pascal)
   VarArray varray;

@@ -1,11 +1,9 @@
 // -*- C++ -*-
 
-// PLearn (A C++ Machine Learning Library)
-// Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio, Rejean Ducharme and University of Montreal
-// Copyright (C) 2001-2002 Nicolas Chapados, Ichiro Takeuchi, Jean-Sebastien Senecal
-// Copyright (C) 2002 Xiangdong Wang, Christian Dorion
-
+// ReadAndWriteCommand.cc
+// 
+// Copyright (C) 2002 Pascal Vincent
+// 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -34,62 +32,38 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-
 /* *******************************************************      
-   * $Id: BinaryVariable.h,v 1.7 2002/10/25 23:16:08 plearner Exp $
-   * This file is part of the PLearn library.
+   * $Id: ReadAndWriteCommand.cc,v 1.1 2002/10/25 23:16:08 plearner Exp $ 
    ******************************************************* */
 
-#ifndef BinaryVariable_INC
-#define BinaryVariable_INC
-
-#include "VarArray.h"
-#include "TMat_maths.h"
+/*! \file ReadAndWriteCommand.cc */
+#include "ReadAndWriteCommand.h"
+#include "PStream.h"
+#include "Object.h"
 
 namespace PLearn <%
 using namespace std;
 
+//! This allows to register the 'ReadAndWriteCommand' command in the command registry
+PLearnCommandRegistry ReadAndWriteCommand::reg_(new ReadAndWriteCommand);
 
-class BinaryVariable: public Variable
+//! The actual implementation of the 'ReadAndWriteCommand' command 
+void ReadAndWriteCommand::run(const vector<string>& args)
 {
-  typedef Variable inherited;
-
-protected:
-  BinaryVariable() {}
-  static void declareOptions(OptionList & ol);
-  
-protected:
-  Var input1;
-  Var input2;
-
-public:
-  BinaryVariable(Variable* v1, Variable* v2, int thelength, int thewidth);
-  DECLARE_ABSTRACT_NAME_AND_DEEPCOPY(BinaryVariable);
-
-  virtual void setParents(const VarArray& parents);
-
-  virtual void deepRead(istream& in, DeepReadMap& old2new);
-  virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
-  virtual bool markPath();
-  virtual void buildPath(VarArray& proppath);
-  virtual VarArray sources();
-  virtual VarArray random_sources();
-  virtual VarArray ancestors();
-  virtual void unmarkAncestors();
-  virtual VarArray parents();
-  void printInfo(bool print_gradient) { 
-    cout << getName() << "[" << (void*)this << "] " << *this
-         << "(" << (void*)input1 << "," << (void*)input2
-         << ") = " << value;
-    if (print_gradient) cout << " gradient=" << gradient;
-    cout << endl; 
-  }
-  virtual void resizeRValue();
-}; 
-
+  if(args.size()!=2)
+    PLERROR("read_and_write takes 2 arguments");
+  string source = args[0];
+  string dest = args[1];
+  PIFStream in(source);
+  if(!in)
+    PLERROR("Could not open file %s for reading",source.c_str());
+  PP<Object> o;
+  in >> o;
+  POFStream out(dest);
+  if(!out)
+    PLERROR("Could not open file %s for writing",dest.c_str());
+  out << *o;
+}
 
 %> // end of namespace PLearn
-
-#endif 
 

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.4 2002/10/03 07:35:27 plearner Exp $
+   * $Id: Kernel.h,v 1.5 2002/10/25 23:16:08 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -139,7 +139,6 @@ public:
 };
 
 DECLARE_OBJECT_PTR(Kernel);
-DECLARE_TYPE_TRAITS(Ker);
 DECLARE_OBJECT_PP(Ker, Kernel);
 
 //! This class implements an Ln distance (defaults to L2 i.e. euclidean distance).

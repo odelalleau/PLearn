@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: NaryVariable.cc,v 1.4 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: NaryVariable.cc,v 1.5 2002/10/25 23:16:08 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -63,6 +63,15 @@ NaryVariable::NaryVariable(const VarArray& the_varray, int thelength, int thewid
 
 
 IMPLEMENT_ABSTRACT_NAME_AND_DEEPCOPY(NaryVariable);
+
+
+void NaryVariable::declareOptions(OptionList& ol)
+{
+  declareOption(ol, "varray", &NaryVariable::varray, OptionBase::buildoption, 
+                "The array of parent variables that this one depends on\n");
+
+  inherited::declareOptions(ol);
+}
 
 
 void NaryVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnaryVariable.h,v 1.6 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: UnaryVariable.h,v 1.7 2002/10/25 23:16:09 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,12 +51,14 @@ using namespace std;
 
 class UnaryVariable: public Variable
 {
+public:
   typedef Variable inherited;
 
 protected:
   //!  Default constructor for persistence
   UnaryVariable() {}
-  
+  static void declareOptions(OptionList & ol);
+
 protected:
   Var input;
 

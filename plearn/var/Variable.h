@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.h,v 1.4 2002/10/25 03:21:00 plearner Exp $
+   * $Id: Variable.h,v 1.5 2002/10/25 23:16:09 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -102,12 +102,16 @@ void deepWrite(ostream& out, DeepWriteSet& already_saved, const Var& v);
 
 class Variable: public Object
 {
+public:
   typedef Object inherited;
+
 protected:
   //!  Default constructor for persistence
   Variable() : varnum(++nvars), marked(), varname(), allows_partial_update(),
                gradient_status(), valuedata(), gradientdata(), min_value(),
                max_value(), dont_bprop_here(false) {}
+
+  static void declareOptions(OptionList & ol);
   
   friend class Var;
   friend class RandomVariable;
@@ -177,19 +181,10 @@ public:
   //! parent's size, much as fprop propagates the values
   void sizeprop();
 
-  //! Calls sizeprop, then fprop
-  inline void sizefprop()
-  { sizeprop(); fprop(); }
-
   //! set this Variable's parents.  To use with default constructor.
   virtual void setParents(const VarArray& parents);
 
-  /*! 
-    Variable(const Vec& the_value);
-    Variable(const Vec& the_value, const Vec& the_gradient);
-    Variable(const Mat& the_value, const Mat& the_gradient);
-  */
-
+  //! Copy constructor
   Variable(const Variable& v);
 
 private:
@@ -209,6 +204,11 @@ public:
   //!  compute output given input
   virtual void fprop() =0;
   //!  compute dC/dinput given dC/doutput
+
+  //! Calls sizeprop, then fprop
+  inline void sizefprop()
+  { sizeprop(); fprop(); }
+
   virtual void bprop() =0;
   //!  compute an approximation to diag(d^2/dinput^2) given diag(d^2/doutput^2), 
   //!  with diag(d^2/dinput^2) ~=~ (doutput/dinput)' diag(d^2/doutput^2) (doutput/dinput)
@@ -392,7 +392,6 @@ public:
 
 DECLARE_OBJECT_PTR(Variable);
 DECLARE_OBJECT_PP(Var, Variable);
-
 
 // set value += gradient and clears the gradient
 inline void Variable::updateAndClear()

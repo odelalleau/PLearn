@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: BinaryVariable.cc,v 1.8 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: BinaryVariable.cc,v 1.9 2002/10/25 23:16:08 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -65,12 +65,16 @@ BinaryVariable::BinaryVariable(Variable* v1, Variable* v2, int thelength,int the
 
 IMPLEMENT_ABSTRACT_NAME_AND_DEEPCOPY(BinaryVariable);
 
-
-
-void BinaryVariable::sizeprop()
+void BinaryVariable::declareOptions(OptionList& ol)
 {
-}
+  declareOption(ol, "input1", &BinaryVariable::input1, OptionBase::buildoption, 
+                "The first parent variable that this one depends on\n");
 
+  declareOption(ol, "input2", &BinaryVariable::input2, OptionBase::buildoption, 
+                "The second parent variable that this one depends on\n");
+
+  inherited::declareOptions(ol);
+}
 
 void BinaryVariable::setParents(const VarArray& parents)
 {

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.cc,v 1.2 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: Variable.cc,v 1.3 2002/10/25 23:16:09 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -205,10 +205,27 @@ Variable::Variable(const Variable& v)
 {}
 
 
+void Variable::declareOptions(OptionList& ol)
+{
+  declareOption(ol, "varname", &Variable::varname, OptionBase::buildoption, 
+                "An (optional) name for the variable\n");
+
+  declareOption(ol, "value", &Variable::matValue, OptionBase::learntoption, 
+                "Current value of the varable\n");
+
+  /*
+  declareOption(ol, "gradient", &Variable::matGradient, OptionBase::learntoption, 
+                "Current gradient of the variable\n");
+  */
+
+  inherited::declareOptions(ol);
+}
+
 void Variable::build_()
 { 
   int l, w;
-  recomputeSize(l, w); 
+  recomputeSize(l, w);
+  resize(l,w);
 }
 
 void Variable::build()

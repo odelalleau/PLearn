@@ -1,11 +1,9 @@
 // -*- C++ -*-
 
-// PLearn (A C++ Machine Learning Library)
-// Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio, Rejean Ducharme and University of Montreal
-// Copyright (C) 2001-2002 Nicolas Chapados, Ichiro Takeuchi, Jean-Sebastien Senecal
-// Copyright (C) 2002 Xiangdong Wang, Christian Dorion
-
+// ReadAndWriteCommand.h
+// 
+// Copyright (C) 2002 Pascal Vincent
+// 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -34,62 +32,40 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-
 /* *******************************************************      
-   * $Id: BinaryVariable.h,v 1.7 2002/10/25 23:16:08 plearner Exp $
-   * This file is part of the PLearn library.
+   * $Id: ReadAndWriteCommand.h,v 1.1 2002/10/25 23:16:08 plearner Exp $ 
    ******************************************************* */
 
-#ifndef BinaryVariable_INC
-#define BinaryVariable_INC
+/*! \file ReadAndWriteCommand.h */
+#ifndef ReadAndWriteCommand_INC
+#define ReadAndWriteCommand_INC
 
-#include "VarArray.h"
-#include "TMat_maths.h"
+#include "PLearnCommand.h"
+#include "PLearnCommandRegistry.h"
 
 namespace PLearn <%
 using namespace std;
 
-
-class BinaryVariable: public Variable
+class ReadAndWriteCommand: public PLearnCommand
 {
-  typedef Variable inherited;
-
-protected:
-  BinaryVariable() {}
-  static void declareOptions(OptionList & ol);
-  
-protected:
-  Var input1;
-  Var input2;
-
 public:
-  BinaryVariable(Variable* v1, Variable* v2, int thelength, int thewidth);
-  DECLARE_ABSTRACT_NAME_AND_DEEPCOPY(BinaryVariable);
+  ReadAndWriteCommand():
+    PLearnCommand("read_and_write",
 
-  virtual void setParents(const VarArray& parents);
+                  "Used to check (debug) the serialization system",
 
-  virtual void deepRead(istream& in, DeepReadMap& old2new);
-  virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
-  virtual bool markPath();
-  virtual void buildPath(VarArray& proppath);
-  virtual VarArray sources();
-  virtual VarArray random_sources();
-  virtual VarArray ancestors();
-  virtual void unmarkAncestors();
-  virtual VarArray parents();
-  void printInfo(bool print_gradient) { 
-    cout << getName() << "[" << (void*)this << "] " << *this
-         << "(" << (void*)input1 << "," << (void*)input2
-         << ") = " << value;
-    if (print_gradient) cout << " gradient=" << gradient;
-    cout << endl; 
-  }
-  virtual void resizeRValue();
-}; 
+                  "read_and_write <sourcefile> <destfile> \n"
+                  "Reads an Object (in PLearn serialization format) from the <sourcefile> and writes it to the <destfile>\n"
+                  )
+  {}
+                    
+  virtual void run(const vector<string>& args);
 
+protected:
+  static PLearnCommandRegistry reg_;
+};
 
+  
 %> // end of namespace PLearn
 
-#endif 
-
+#endif

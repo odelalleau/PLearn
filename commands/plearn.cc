@@ -33,11 +33,10 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.10 2002/10/25 06:49:18 plearner Exp $
+   * $Id: plearn.cc,v 1.11 2002/10/25 23:16:00 plearner Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
-
 
 // Available Splitters:
 #include "TrainTestSplitter.h"
@@ -71,8 +70,11 @@
 #include "ParzenRegressor.h"
 #include "ManifoldParzenDensity.h"
 
-// #include "ViewCommand.h"
 #include "Experiment.h"
+
+
+// Commands
+#include "ReadAndWriteCommand.h"
 
 
 using namespace PLearn;

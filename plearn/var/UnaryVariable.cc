@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnaryVariable.cc,v 1.10 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: UnaryVariable.cc,v 1.11 2002/10/25 23:16:08 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -63,6 +63,13 @@ UnaryVariable::UnaryVariable(Variable* v, int thelength, int thewidth)
 
 IMPLEMENT_ABSTRACT_NAME_AND_DEEPCOPY(UnaryVariable);
 
+void UnaryVariable::declareOptions(OptionList& ol)
+{
+  declareOption(ol, "input", &UnaryVariable::input, OptionBase::buildoption, 
+                "The parent variable that this one depends on\n");
+
+  inherited::declareOptions(ol);
+}
 
 void UnaryVariable::deepRead(istream& in, DeepReadMap& old2new)
 {

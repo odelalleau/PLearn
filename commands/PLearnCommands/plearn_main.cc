@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_main.cc,v 1.2 2002/10/25 03:21:00 plearner Exp $
+   * $Id: plearn_main.cc,v 1.3 2002/10/25 23:16:08 plearner Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -49,6 +49,7 @@
 #include "VMatrix.h"
 #include "Optimizer.h"
 #include "Kernel.h"
+#include "Variable.h"
 
 namespace PLearn <%
 using namespace std;
@@ -83,7 +84,7 @@ int plearn_main(int argc, char** argv)
                 "for any instantiable PLearn object xxx \n\n"
                 "In addition you can get a list of all instantiable subclasses of the following \n"
                 "base classes yyy by typing 'plearn help yyy \n':"
-                "   Learner, Splitter, VMatrix, Optimizer, Kernel \n\n"
+                "   Learner, Splitter, VMatrix, Optimizer, Kernel, Variable \n\n"
                 "Finally 'plearn help datasets' will print some help on datasets\n" << endl;
             }
           else
@@ -103,6 +104,8 @@ int plearn_main(int argc, char** argv)
                 displayRegisteredSubClassesOf<Splitter>("Splitter", cout);
               else if(aboutwhat=="VMatrix")
                 displayRegisteredSubClassesOf<VMatrix>("VMatrix", cout);
+              else if(aboutwhat=="Variable")
+                displayRegisteredSubClassesOf<Variable>("Variable", cout);
               else
                 displayObjectHelp(cout, aboutwhat);
             }
