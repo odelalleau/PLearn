@@ -1,4 +1,4 @@
-import inspect
+import inspect, types
 
 ##########################################
 ### Helper functions 
@@ -12,6 +12,18 @@ def frozen(set):
         else:
             raise AttributeError("You cannot add attributes to %s" % self)
     return set_attr
+
+class MandatoryOverrideError(ValueError):
+    def __init__(self, frozen_object, attribute_name):
+        self.frozen_object
+        self.attribute_name = attribute_name
+
+    def __str__(self):
+        classname = self.frozen_object.classname()
+        return ( "The %s.%s value must be overriden in the keyword "
+                 "arguments provided to the %s constructor."
+                 %(classname, self.attribute_name, classname)
+                 )
 
 ##########################################
 ### Main class
@@ -48,6 +60,7 @@ class FrozenObject:
         """
         self._frozen = False
 
+        self._defaults = defaults        
         if defaults is not None:
             defaults_dict = dict( [(x,y) for (x,y) in inspect.getmembers(defaults)
                                    if not(x[0:2] == "__" and x[-2:]=="__")        ] )
@@ -62,9 +75,27 @@ class FrozenObject:
     class __metaclass__(type):
         __setattr__=frozen(type.__setattr__)
 
+    def classname(self):
+        """Simple shortcut method to get the classname of an instance object.
+
+        @returns: The class' name as a string.
+        """
+        return self.__class__.__name__
+
     def set_attribute(self, key, value):
         self._frozen = False
         setattr(self, key, value)
         self._frozen = True
-        
 
+    def mandatory_override(self, attribute_name):
+        if getattr(self, attribute_name) is None:
+            raise MandatoryOverrideError(self, attribute_name)
+
+    def type_check(self, attribute_name, expected_type):
+        att = getattr(self, attribute_name)
+        if not isinstance(att, expected_type):
+            raise TypeError(
+                "The %s.%s type is expected to be %s but currently is %s."
+                % (self.classname(),   attribute_name,
+                   str(expected_type), type(att)      )
+                )

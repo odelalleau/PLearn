@@ -31,9 +31,14 @@ variable, if it exists. Otherwise, it is set to os.path.join(home, 'apstatsoft')
 @var plearn_scripts: Simply os.path.join( plearndir, 'scripts' ).
 @type plearn_scripts: String
 
-@var pytest_variables: The paths to the user-specific pytest
-variables file. The value is set to os.path.join( plearn_scripts, '.pytest_variables' ).
-@type pytest_variables: String
+@var  pymake_objs: The name of the directory used by pymake to store
+compilation results.
+@type pymake_objs: String.
+
+@var  cvs_directory: The name of the directory used by cvs to store its
+internal state.
+@type cvs_directory: String.
+
 """
 import os, string
 
@@ -52,7 +57,8 @@ plbranches             = { plearndir     : 'PLearn',
 
 plearn_scripts         = os.path.join( plearndir, 'scripts' )
 
-pytest_variables       = os.path.join( plearn_scripts, '.pytest_variables' )
+pymake_objs            = "OBJS"
+cvs_directory          = "CVS"
 
 
 def user_independant_path(directory):
@@ -150,7 +156,7 @@ def path_in_branch(plbranch, directory, prepend_branch=True):
     return d[len(plearndir):]
 
 def plcommand(command_name):
-    """The path to the command named I{command_name} within its plearn branch. 
+    """The absolute path to the command named I{command_name}.
 
     @param command_name: The name of a command the user expect to be
     found in the 'commands' directory of one of the plearn branches.
