@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BootstrapVMatrix.cc,v 1.11 2004/10/18 23:42:00 tihocan Exp $
+   * $Id: BootstrapVMatrix.cc,v 1.12 2005/02/02 14:16:54 tihocan Exp $
    ******************************************************* */
 
 #include "BootstrapVMatrix.h"
@@ -78,7 +78,7 @@ void BootstrapVMatrix::declareOptions(OptionList &ol)
         "If set to 1, the indices will be shuffled instead of being sorted.");
 
     declareOption(ol, "frac", &BootstrapVMatrix::frac, OptionBase::buildoption,
-        "The fraction of elements we keep (default = 0.6667).");
+        "The fraction of elements we keep.");
 
     declareOption(ol, "seed", &BootstrapVMatrix::seed, OptionBase::buildoption,
         "The random generator seed (-1 = initialized from clock, 0 = no initialization).");
