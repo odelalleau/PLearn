@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
- * $Id: TVec_decl.h,v 1.18 2004/10/13 01:15:58 chapados Exp $
+ * $Id: TVec_decl.h,v 1.19 2004/10/22 15:56:02 ducharme Exp $
  * AUTHORS: Pascal Vincent & Yoshua Bengio
  * This file is part of the PLearn library.
  ******************************************************* */
@@ -693,10 +693,9 @@ public:
     }
 
   //!  return the set of indices whose corresponding values are "element". 
-  //! TODO Olivier: hmm, looks like it should return TVec<int>, no ? (same for other find methods)
-  TVec<T> findIndices(const T& element)
+  TVec<int> findIndices(const T& element)
     {
-      TVec<T> indices(0);
+      TVec<int> indices(0);
       if (!isEmpty())
       {
         T *v = data();
@@ -707,9 +706,9 @@ public:
       return indices;
     }
  
-  TVec<T> findIndices(const TVec<T>& elements)
+  TVec<int> findIndices(const TVec<T>& elements)
     {
-      TVec<T> indices(0);
+      TVec<int> indices(0);
       if (!isEmpty())
       {
         T *v = data();
@@ -736,9 +735,9 @@ public:
       return -1;
     }
 
-  TVec<T> find(TVec<T> elements)
+  TVec<int> find(TVec<T> elements)
     {
-      TVec<T> indices(elements.length(),-1);
+      TVec<int> indices(elements.length(),-1);
       if (length()==0) return indices;
       T *v = data();
       for (int i=0, m=elements.length(); i<m; i++)
