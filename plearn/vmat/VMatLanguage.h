@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VMatLanguage.h,v 1.4 2003/03/19 23:15:32 jkeable Exp $
+   * $Id: VMatLanguage.h,v 1.5 2003/05/14 21:15:32 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,7 +50,7 @@ using namespace std;
 
 /* The VMatLanguage object contains a VPL bytecode program that can be applied to a row of a VMat.
    
-   The VPL Language is described somewhere. 
+   The VPL Language is described in /u/jkeable/visu/help/vpl.html. 
 
    By the way, the define statements in the VPL language can be recursive. Cool!
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.cc,v 1.3 2003/05/14 19:10:06 tihocan Exp $
+   * $Id: VVMatrix.cc,v 1.4 2003/05/14 21:15:32 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -323,6 +323,7 @@ string VVMatrix::getPrecomputedDataName()
 VMat VVMatrix::createPreproVMat(const string & filename)
 {
   string in=loadFileAsString(filename);
+  remove_comments(in);
   unsigned int idx_source  =  in.find("<SOURCES>");
   unsigned int idx_prefilter= in.find("<PREFILTER>");
   unsigned int idx_postfilter=in.find("<POSTFILTER>");
@@ -338,7 +339,7 @@ VMat VVMatrix::createPreproVMat(const string & filename)
   VMatLanguage::output_preproc = in.find("<DEBUG>")!=string::npos;
 
   if( VMatLanguage::output_preproc )
-    cerr<<"DEBUG is on (remove <DEBUG> in .vmat to turn off)"<<endl;
+    cerr<<"DEBUG is on (remove <DEBUG> in "+filename+" to turn it off)"<<endl;
 
   string meta_data_dir=remove_trailing_slash(filename)+".metadata";
   force_mkdir(meta_data_dir);
@@ -374,7 +375,7 @@ VMat VVMatrix::createPreproVMat(const string & filename)
     }
   
   // if index_section is true, then this dataset needs a file containing the index of the rows to keep
-  bool index_section =  idx_prefilter!=string::npos || idx_postfilter!=string::npos || idx_shuffle!=string::npos ;
+  bool index_section = idx_prefilter!=string::npos || idx_postfilter!=string::npos || idx_shuffle!=string::npos ;
 
   // if true, index file lacks or is out of date
   bool must_regen_index = index_section &&  
@@ -399,14 +400,15 @@ VMat VVMatrix::createPreproVMat(const string & filename)
         sec[1] = ' ';  // remove the special character indicating the new syntax
         source = dynamic_cast<VMatrix*>(newObject(sec));
         if(source.isNull()) {
-          PLERROR("In VVMatrix::createPreproVMat %s is not a valid VMatrix subclass",sec.c_str());
+          PLERROR("In VVMatrix::createPreproVMat '%s' is not a valid VMatrix subclass",sec.c_str());
         }
       } else {
-      
-        vector<vector<string> > mstr = extractSourceMatrix(sec,filename);
 
+        vector<vector<string> > mstr = extractSourceMatrix(sec,filename);      
+        Array<VMat> vmrows(mstr.size());
         // we need to build a VMat that is the concatenation of the datasets contained in 'mstr'
         for(unsigned int i=0;i<mstr.size();i++)
+
         {
           Array<VMat> ar(mstr[i].size());
           for(unsigned int j=0;j<mstr[i].size();j++)
@@ -445,17 +447,15 @@ VMat VVMatrix::createPreproVMat(const string & filename)
                 break;
             }
           }
-          VMat vmrow = ar.size()==1?ar[0]:hconcat(ar);
-          if(vmrow.length()==-1)
+          // if we have more than one filename in this row, we use hconcat to consolidate 'ar'.
+          vmrows[i] = ar.size()==1?ar[0]:hconcat(ar);
+          if(vmrows[i].length()==-1)
             PLERROR("Trying to hconcat matrix with different lengths! File is %s",filename.c_str());
-          if(i==0)
-            source = vmrow;
-          else
-            source=vconcat(source,vmrow);
         }
 
-        if(mstr.size()==0)
-          PLERROR("No source matrix found in <SOURCES> section! File is %s",filename.c_str());
+      source = vconcat(vmrows);
+      if(mstr.size()==0)
+        PLERROR("No source matrix found in <SOURCES> section! File is %s",filename.c_str());
       }
     }
   else PLERROR("Need at least a <SOURCES> section ! File is %s",filename.c_str());
@@ -544,6 +544,7 @@ void VVMatrix::build_()
 {
   setMetaDataDir(makeExplicitPath(the_filename+".metadata"));
   force_mkdir(getMetaDataDir());
+
 
   the_mat=createPreproVMat(the_filename);
   setMtime(the_mat->getMtime());

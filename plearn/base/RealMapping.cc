@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org 
 
 /* *******************************************************      
-   * $Id: RealMapping.cc,v 1.8 2003/05/13 18:06:57 dorionc Exp $
+   * $Id: RealMapping.cc,v 1.9 2003/05/14 21:15:16 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -258,7 +258,6 @@ bool RealMapping::checkConsistency()
       max = (int)it->second;
   }
   TVec<int> v(max+1,0);
-
   for(it=mapping.begin();it != mapping.end(); ++it)
   {
     if(v[(int)it->second] != 0)
@@ -270,5 +269,9 @@ bool RealMapping::checkConsistency()
       return false;
   return true;  
 }
+
+bool RealRange::operator<(const RealRange& x) const
+     { return high < x.low || high == x.low && rightbracket == x.leftbracket; }
+
 
 %> // end of namespace PLearn

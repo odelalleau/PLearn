@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: DiskVMatrix.cc,v 1.3 2003/04/29 21:33:43 plearner Exp $
+   * $Id: DiskVMatrix.cc,v 1.4 2003/05/14 21:15:32 jkeable Exp $
    ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -240,6 +240,7 @@ DiskVMatrix::~DiskVMatrix()
   for(int i=0; i<dataf.size(); i++)
     delete dataf[i];
   delete indexf;
+  saveFieldInfos();
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(DiskVMatrix);

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVMatrix.cc,v 1.2 2003/03/19 23:15:22 jkeable Exp $
+   * $Id: ConcatRowsVMatrix.cc,v 1.3 2003/05/14 21:15:32 jkeable Exp $
    ******************************************************* */
 
 #include "ConcatRowsVMatrix.h"
@@ -63,7 +63,7 @@ void ConcatRowsVMatrix::build_()
 {
   int n = array.size();
   if (n < 1)
-    PLERROR("ConcatRowsVMatrix expects >= 1 underlying-array, got 0");
+    PLERROR("ConcatRowsVMatrix expects underlying-array of length >= 1, got 0");
 
   // Copy the field names
   fieldinfos = array[0]->getFieldInfos();

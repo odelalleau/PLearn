@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.12 2003/04/29 21:33:45 plearner Exp $
+   * $Id: VMatrix.h,v 1.13 2003/05/14 21:15:32 jkeable Exp $
    ******************************************************* */
 
 
@@ -128,6 +128,7 @@ public:
   inline int weightsize() { return weightsize_; }
 
   // Field types...
+  void setFieldInfos(const Array<VMField>& finfo);
   Array<VMField>& getFieldInfos() const;
   VMField& getFieldInfos(int fieldindex) const { return getFieldInfos()[fieldindex]; }
   void declareField(int fieldindex, const string& fieldname, VMField::FieldType fieldtype=VMField::UnknownType);
@@ -147,29 +148,37 @@ public:
   void saveFieldInfos() const;
   void loadFieldInfos() const;
   
-  // these 3 functions deal with stringmaps, notes, and binning files (called special field info files, or 'SFIF')
-  // for each field eventually, I (julien) guess all this info should be wrapped (thus saved, and loaded) by the VMField class
+  // these 3 functions deal with stringmaps, notes, and binning files (all three called special field info files, or 'SFIF')
+  // for each field eventually, I (julien) guess all this info should be wrapped (thus saved, and loaded) in the VMField class
 
-  // SFIFs, are by default located in the directory MyDataset.[amat,vmat,etc].metadata/FieldInfo/ and are named 'fieldname'.[smap,notes,binning,...]. 
-  // in all 3 functions, the parameter ext specifies the extension of the special field info file [smap,notes,binning]
+  // SFIFs, are by default located in the directory MyDataset.{amat,vmat,etc}.metadata/FieldInfo/ and are named 'fieldname'.{smap,notes,binning,...}. 
+  // In all 3 functions, the parameter ext (given **with** the dot) specifies the extension of the special field info file [smap,notes,binning], and col
+  // is the column index you refer to.
 
-  // setSFIFFilename : sets the SFIF with extensions 'ext' (*WITH* the dot) to some 'string'. if this string is different
-  // from the default filename, the string is actually placed in [dataset].metadata/FieldInfo/fieldname.[ext].lnk
+  // setSFIFFilename : sets the SFIF with extensions 'ext' to some 'string'. if this string is different
+  // from the default filename, the string is actually placed in a new file called [dataset].metadata/FieldInfo/fieldname.[ext].lnk
   // if the 'string' is empty, the default SFIF filename is assumed, which is : [MyDataset].metadata/FieldInfo/fieldname.[ext]
   void setSFIFFilename(int col, string ext, string name="");
 
-  // getSFIFFilename :If a '*.vmat' dataset uses fields from another dataset, how can we keep the field info dependecy? To resolve 
-  // the issue, if a file named __default.lnk containing path 'P' can be placed in the FieldInfo directory of the .vmat,
-  // the function getSFIFFilename, if the default SFIF file doesn't exist, the function searches for the default filename +'.lnk'. 
-  // if the later neither exists, the __default.lnk file is used if present, and if not, then an empty default file is assumed. 
+  // getSFIFFilename :If a '*.vmat' dataset uses fields from another dataset, how can we keep the field info dependency? To resolve 
+  // this issue, a file named __default.lnk containing path 'P' can be placed in the FieldInfo directory of the .vmat. Here's how 
+  // the function getSFIFFilename search for a file : if the default SFIF file doesn't exist, it will then search for the default filename +'.lnk'. 
+  // if the later neither exists, the __default.lnk file is used if present, and if not, then an empty (thus inexistent) file (with
+  // SFIF default filename) is assumed. 
   string getSFIFFilename(int col, string ext);
   
-  // isSFIFDirect : tells whether the SFIF filename is the default filename. (if false, then the field uses the SFIF from another dataset)
+  // isSFIFDirect : tells whether the SFIF filename is the default filename. (if false, means the field uses the SFIF from another dataset)
   bool isSFIFDirect(int col, string ext);
 
 
   // string mapping stuff
   ///////////////////////
+
+  // save all string mapings (one .smap file for each field)
+  void saveAllStringMappings();
+  
+  // save a single field's string mapping in file 'fname'
+  void saveStringMappings(int col,string fname);
 
   //! adds a string<->real mapping
   void addStringMapping(int col, string str, real val);
@@ -178,7 +187,13 @@ public:
   //! if the string doesn'a already have an associated value, it will be associated with value -100-number_of_strings_already_in_the_map
   real addStringMapping(int col, string str);
 
-  //! removes a string mapping
+  //! remove all string mappings
+  void removeAllStringMappings();
+
+  //! remove all string mappings of a given field 
+  void removeColumnStringMappings(int c);
+
+  //! removes a single string mapping
   void removeStringMapping(int col, string str);
 
   //! overwrite the string<->real mapping with this one (and build the reverse mapping)

@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.16 2003/05/12 20:04:15 ducharme Exp $
+* $Id: VMatrix.cc,v 1.17 2003/05/14 21:15:32 jkeable Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -104,6 +104,11 @@ Array<VMField>& VMatrix::getFieldInfos() const
     }
 
   return fieldinfos;
+}
+
+void VMatrix::setFieldInfos(const Array<VMField>& finfo)
+{
+  fieldinfos=finfo;
 }
 
 void VMatrix::unduplicateFieldNames()
@@ -227,6 +232,8 @@ void VMatrix::declareField(int fieldindex, const string& fieldname, VMField::Fie
 
 void VMatrix::saveFieldInfos() const
 {
+  if(fieldinfos.size()==0)
+    return;
   string filename = append_slash(getMetaDataDir()) + "fieldnames";
   ofstream out(filename.c_str());
   if(!out)
@@ -341,6 +348,49 @@ real VMatrix::addStringMapping(int col, string str)
   return val;
 }
 
+void VMatrix::removeAllStringMappings()
+{
+  init_map_sr();
+  for(int i=0;i<width();i++)
+    {
+      map_sr[i].clear();
+      map_rs[i].clear();
+    }
+}
+
+void VMatrix::removeColumnStringMappings(int c)
+{
+  init_map_sr();
+  map_sr[c].clear();
+  map_rs[c].clear();
+}
+
+void VMatrix::saveAllStringMappings()
+{
+  string fname;
+  for(int i=0;i<width();i++)
+  {
+    fname = getSFIFFilename(i,".smap");
+    saveStringMappings(i,fname);
+  }
+}
+
+void VMatrix::saveStringMappings(int col,string fname)
+{
+  if(map_sr[col].size()==0)
+  {
+    rm(fname);
+    return;
+  }
+  //POFStream o(fname.c_str());
+  ofstream o(fname.c_str());
+  if(o.bad())
+    PLERROR( "File %s can't be opened",fname.c_str());
+  for(map<string,real>::iterator it = map_sr[col].begin();it!=map_sr[col].end();++it)
+    o<<it->first<<" "<<it->second<<endl;
+  o.close();
+}
+
 //! removes a string mapping
 void VMatrix::removeStringMapping(int col, string str)
 {
@@ -426,7 +476,6 @@ void VMatrix::loadStringMapping(int col)
 
   if(!isfile(fname))
   {
-    // try to create empty file to check consistency of path
 //     ofstream o(fname.c_str());
 //     if(o.bad())
 //       PLERROR( string("\nEmpty new file "+fname+" could not be created.\n (This is ony done to check consistency of path. File is deleted afterward.)").c_str());
@@ -698,6 +747,7 @@ void VMatrix::savePMAT(const string& pmatfile) const
   int nsamples = length();
 
   FileVMatrix m(pmatfile,nsamples,width());
+  m.setFieldInfos(getFieldInfos());
   Vec tmpvec(width());
 
   ProgressBar pb(cout, "Saving to pmat", nsamples);
@@ -721,6 +771,7 @@ void VMatrix::saveDMAT(const string& dmatdir) const
 {
   force_rmdir(dmatdir);  
   DiskVMatrix vm(dmatdir,width());
+  vm.setFieldInfos(getFieldInfos());
   Vec v(width());
 
   ProgressBar pb(cout, "Saving to dmat", length());

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.12 2003/05/01 22:39:14 plearner Exp $
+   * $Id: TMat.h,v 1.13 2003/05/14 21:15:31 jkeable Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -213,7 +213,7 @@ class TVec
         {
           offset_ = 0;
           length_ = newlength;
-          Storage<T>* s = new Storage<T>(newlength);          
+          Storage<T>* s = new Storage<T>(newlength + extrabytes);          
           storage = s;
         }
         else

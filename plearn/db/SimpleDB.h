@@ -1651,7 +1651,8 @@ using namespace std;
     }
     else if (i > 26)
       PLERROR("Too many segments in the database.");
-    fullpath += ".sdb";
+    if(fullpath.find(".sdb")==string::npos)
+      fullpath += ".sdb";
     return fullpath;
   }
     

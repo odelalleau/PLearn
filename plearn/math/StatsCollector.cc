@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.8 2003/05/07 05:39:17 plearner Exp $
+   * $Id: StatsCollector.cc,v 1.9 2003/05/14 21:15:31 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -250,33 +250,34 @@ void StatsCollector::update(real val)
     int cnt = nnonmissing_ - count2 + count;
     
     // If the bin we're about to add is short of less then tolerance*100% of continuous_mincount elements, 
-    // OR if the last we added is a discrete point, we append it 
-
-    if( ((real)cnt/(real)continuous_mincount)>(1.-tolerance) || (m.first.low == m.first.high))
+    // OR if the last we added is a discrete point AND the max is not already in the last range, we append it 
+    if(m.first.high<max_)
     {
-      // don't join last bin with last-but-one bin
-      mapping.addMapping(RealRange('[',m.first.high,max_,']'), mapto++);
-      if(fcount)
-        fcount->append(cnt);
-    }
-    else
-    {
-      // otherwise, we can join it with the previous
-      mapping.removeMapping(m.first);
-      mapping.addMapping(RealRange(m.first.leftbracket, m.first.low, max_, ']'), m.second);
-      if(fcount)
+      if( ((real)cnt/(real)continuous_mincount)>(1.-tolerance) || (m.first.low == m.first.high))
       {
-        int v =  fcount->back();
-        fcount->pop_back();
-        fcount->append(v+cnt);
+        // don't join last bin with last-but-one bin
+        mapping.addMapping(RealRange(m.first.leftbracket,m.first.high,max_,']'), mapto++);
+        if(fcount)
+          fcount->append(cnt);
       }
-    }   
-
+      else
+      {
+        // otherwise, we can join it with the previous
+        mapping.removeMapping(m.first);
+        mapping.addMapping(RealRange(m.first.leftbracket, m.first.low, max_, ']'), m.second);
+        if(fcount)
+        {
+          int v =  fcount->back();
+          fcount->pop_back();
+          fcount->append(v+cnt);
+        }
+      }   
+    }
     return mapping;
   }
 
 
-  RealMapping StatsCollector::getAllValuesMapping(TVec<int> * fcount) const
+RealMapping StatsCollector::getAllValuesMapping(TVec<int> * fcount) const
   {
     RealMapping mapping;
     int i=0;

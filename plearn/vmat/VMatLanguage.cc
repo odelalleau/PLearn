@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.4 2003/03/19 23:15:31 jkeable Exp $
+   * $Id: VMatLanguage.cc,v 1.5 2003/05/14 21:15:32 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -356,18 +356,21 @@ using namespace std;
     program.resize(0);
     mappings.resize(0);
     
+    // first, warn user if a fieldname appears twice or more in the source matrix
     for(int i=0;i<vmsource.width();i++)
       {
-        // first warn for duplicate fieldnames
         if(defines.find(string("@")+vmsource->fieldName(i)) != defines.end())
           PLERROR("fieldname %s is duplicate in processed matrix",(string("@")+vmsource->fieldName(i)).c_str());
         defines[string("@")+vmsource->fieldName(i)]=string("%")+tostring(i);
       }
-    fieldnames.clear();
 
+    // the filednames parameter is an output vector in which we put the fieldnames of the final VMat
+    fieldnames.clear();
     preprocess(in, defines, processed_sourcecode, fieldnames);
+
     if(output_preproc)
       cerr<<"Preprocessed code:"<<endl<<processed_sourcecode<<endl;
+      cerr<<"FieldNames : "<<endl<<fieldnames<<endl;
     generateCode(processed_sourcecode);
   }
 

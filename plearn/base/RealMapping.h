@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: RealMapping.h,v 1.9 2003/04/10 18:04:59 jkeable Exp $
+   * $Id: RealMapping.h,v 1.10 2003/05/14 21:15:16 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -124,8 +124,7 @@ class RealRange
 */
 
     // modified by Julien
-    inline bool operator<(const RealRange& x) const
-      { return low < x.low || (low == x.low && leftbracket == '[' && x.leftbracket == ']'); }
+    bool operator<(const RealRange& x) const;
 
     bool operator==(const RealRange& rr) const;
   };

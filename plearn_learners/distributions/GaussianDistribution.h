@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianDistribution.h,v 1.2 2002/10/22 08:46:07 plearner Exp $
+   * $Id: GaussianDistribution.h,v 1.3 2003/05/14 21:15:32 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,7 +51,7 @@ namespace PLearn <%
 using namespace std;
 
 
-  /*
+ /*
     // *****************************
     // * Using eigen decomposition *
     // *****************************

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.4 2003/04/29 21:33:45 plearner Exp $
+   * $Id: FileVMatrix.cc,v 1.5 2003/05/14 21:15:32 jkeable Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -173,6 +173,7 @@ void FileVMatrix::declareOptions(OptionList & ol)
 
 FileVMatrix::~FileVMatrix()
 { 
+  saveFieldInfos();
   if(f)
     fclose(f); 
 }
@@ -279,6 +280,5 @@ void FileVMatrix::flush()
 {
   fflush(f);
 }
-
 
 %> // end of namespcae PLearn
