@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DivisiveNormalizationKernel.cc,v 1.1 2004/06/03 13:47:35 tihocan Exp $ 
+   * $Id: DivisiveNormalizationKernel.cc,v 1.2 2004/06/10 20:08:34 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -53,6 +53,14 @@ DivisiveNormalizationKernel::DivisiveNormalizationKernel()
 : data_will_change(false),
   remove_bias(false)
 {}
+
+DivisiveNormalizationKernel::DivisiveNormalizationKernel(Ker the_source, bool the_remove_bias)
+: data_will_change(false),
+  remove_bias(the_remove_bias)
+{
+  source_kernel = the_source;
+  build();
+}
 
 PLEARN_IMPLEMENT_OBJECT(DivisiveNormalizationKernel,
     "Divisive normalization of an underlying kernel.",

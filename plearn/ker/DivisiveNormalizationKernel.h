@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DivisiveNormalizationKernel.h,v 1.1 2004/06/03 13:47:35 tihocan Exp $ 
+   * $Id: DivisiveNormalizationKernel.h,v 1.2 2004/06/10 20:08:34 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -88,6 +88,9 @@ public:
 
   //! Default constructor.
   DivisiveNormalizationKernel();
+
+  //! Created from an existing kernel.
+  DivisiveNormalizationKernel(Ker the_source, bool the_remove_bias = false);
 
   // ************************
   // * SourceKernel methods *
