@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.47 2005/01/12 14:45:15 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.48 2005/01/13 14:20:58 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -155,6 +155,7 @@
 #include <plearn_learners/unsupervised/LLE.h>
 #include <plearn_learners/unsupervised/PCA.h>
 #include <plearn_learners/unsupervised/SpectralClustering.h>
+#include <plearn_learners/unsupervised/UniformizeLearner.h>
 
 // PDistribution
 #include <plearn_learners/distributions/ConditionalDensityNet.h>
