@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLS.cc,v 1.7 2004/03/20 21:00:24 yoshua Exp $ 
+   * $Id: PLS.cc,v 1.8 2004/04/22 20:58:17 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -260,10 +260,12 @@ void PLS::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   // ### that you wish to be deepCopied rather than 
   // ### shallow-copied.
   // ### ex:
-  // deepCopyField(trainvec, copies);
-
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("PLS::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+  deepCopyField(B, copies);
+  deepCopyField(mean_input, copies);
+  deepCopyField(mean_target, copies);
+  deepCopyField(stddev_input, copies);
+  deepCopyField(stddev_target, copies);
+  deepCopyField(W, copies);
 }
 
 ///////////////////////
