@@ -81,6 +81,8 @@ void SequentialLearner::declareOptions(OptionList& ol)
 
   declareOption(ol, "horizon", &SequentialLearner::horizon,
     OptionBase::buildoption, " by how much to offset the target columns wrt the input columns \n");
+
+  inherited::declareOptions(ol);
 }
 
 void SequentialLearner::forget()

@@ -78,6 +78,8 @@ void EmbeddedSequentialLearner::declareOptions(OptionList& ol)
 {
   declareOption(ol, "learner", &EmbeddedSequentialLearner::learner,
     OptionBase::buildoption, "The underlying learner \n");
+
+  inherited::declareOptions(ol);
 }
 
 void EmbeddedSequentialLearner::train(VecStatsCollector& train_stats)
@@ -106,7 +108,7 @@ void EmbeddedSequentialLearner::test(VMat testset, VecStatsCollector& test_stats
   real weight;
  
   Vec output(testoutputs ?outputsize() :0);
-  Vec costs(nTrainCosts());
+  Vec costs(nTestCosts());
  
   testset->defineSizes(inputsize(),targetsize(),weightsize());
  

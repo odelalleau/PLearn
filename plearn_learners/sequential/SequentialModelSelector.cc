@@ -188,6 +188,8 @@ void SequentialModelSelector::declareOptions(OptionList& ol)
 
   declareOption(ol, "cost_type", &SequentialModelSelector::cost_type,
     OptionBase::buildoption, " the type of cost to be used to select best model \n");
+
+  inherited::declareOptions(ol);
 }
 
 real SequentialModelSelector::sequenceCost(const Vec& sequence_errors)

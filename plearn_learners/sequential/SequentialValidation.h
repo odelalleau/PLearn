@@ -57,8 +57,8 @@ class SequentialValidation: public Object
     VMat dataset; // the training/test set
     PP<SequentialLearner> learner; // the SequentialLearner that will be tested
     string expdir; // the directory where everything will be saved
-    bool save_models;
-    bool save_initial_models;
+    bool save_final_model;
+    bool save_initial_model;
     bool save_test_outputs;
     bool save_test_costs;
 

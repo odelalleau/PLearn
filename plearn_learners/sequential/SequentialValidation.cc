@@ -47,7 +47,7 @@ using namespace std;
 IMPLEMENT_NAME_AND_DEEPCOPY(SequentialValidation);
 
 SequentialValidation::SequentialValidation()
-  : init_train_size(1), expdir(""), save_models(true), save_initial_models(false),
+  : init_train_size(1), expdir(""), save_final_model(true), save_initial_model(false),
     save_test_outputs(false), save_test_costs(false)
 {}
 
@@ -74,10 +74,10 @@ void SequentialValidation::declareOptions(OptionList& ol)
   declareOption(ol, "init_train_size", &SequentialValidation::init_train_size,
     OptionBase::buildoption, "Size of the first training set. \n");
 
-  declareOption(ol, "save_models", &SequentialValidation::save_models,
+  declareOption(ol, "save_final_model", &SequentialValidation::save_final_model,
     OptionBase::buildoption, "If true, the final model will be saved in model.psave \n");
 
-  declareOption(ol, "save_initial_models", &SequentialValidation::save_initial_models,
+  declareOption(ol, "save_initial_model", &SequentialValidation::save_initial_model,
     OptionBase::buildoption, "If true, the initial model will be saved in initial_model.psave. \n");
 
   declareOption(ol, "save_test_outputs", &SequentialValidation::save_test_outputs,
@@ -85,6 +85,8 @@ void SequentialValidation::declareOptions(OptionList& ol)
 
   declareOption(ol, "save_test_costs", &SequentialValidation::save_test_costs,
     OptionBase::buildoption, "If true, the costs of the tests will be saved in test_costs.pmat \n");
+
+  inherited::declareOptions(ol);
 }
 
 string SequentialValidation::help()
@@ -149,7 +151,7 @@ void SequentialValidation::run()
 
   string learner_expdir = append_slash(expdir)+"subtrain";
   learner->setExperimentDirectory(learner_expdir);
-  if (save_initial_models)
+  if (save_initial_model)
     PLearn::save(learner_expdir+"/initial.psave",learner);
 
   for (int t=init_train_size; t<=dataset.length()-horizon; t++)
@@ -169,6 +171,8 @@ void SequentialValidation::run()
       test_outputs = new FileVMatrix(learner_expdir+"/test_outputs.pmat",0,outputsize);
     if (save_test_costs)
       test_costs = new FileVMatrix(learner_expdir+"/test_costs.pmat",0,testcostsize);
+    if (save_final_model)
+      PLearn::save(learner_expdir+"final_learner.psave",learner);
 
     test_stats.forget();
     learner->test(sub_test, test_stats, test_outputs, test_costs);

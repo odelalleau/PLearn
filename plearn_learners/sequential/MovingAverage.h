@@ -38,7 +38,7 @@
 #ifndef MOVING_AVERAGE
 #define MOVING_AVERAGE
 
-#include "PLearner.h"
+#include "SequentialLearner.h"
 
 namespace PLearn <%
 using namespace std;

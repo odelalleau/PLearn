@@ -76,6 +76,8 @@ void MovingAverage::declareOptions(OptionList& ol)
 
   declareOption(ol, "cost_funcs", &MovingAverage::cost_funcs,
     OptionBase::buildoption, "a list of cost functions to use \n");
+
+  inherited::declareOptions(ol);
 }
 
 void MovingAverage::train(VecStatsCollector& train_stats)
@@ -90,13 +92,17 @@ void MovingAverage::train(VecStatsCollector& train_stats)
   {
     all_targets = train_set.subMat(t-window_length, target_pos, window_length+1, targetsize());
     columnMean(all_targets,output);
-    prediction(t) << output;
+    predictions(t) << output;
     if (t >= horizon)
     {
-      output = prediction(t-horizon);
-      computeCostsFromOutputs(input, output, target, cost);
-      error(t-horizon) << cost;
-      train_stats.update(cost);
+      output = predictions(t-horizon);
+      train_set->getSubRow(t, target_pos, target);
+      if (!target.hasMissing() && !output.hasMissing())
+      {
+        computeCostsFromOutputs(input, output, target, cost);
+        errors(t) << cost;
+        train_stats.update(cost);
+      }
     }
     if (pb) pb->update(t-start);
   }
@@ -108,11 +114,38 @@ void MovingAverage::train(VecStatsCollector& train_stats)
 }
  
 void MovingAverage::test(VMat testset, VecStatsCollector& test_stats,
-    VMat testoutputs=0, VMat testcosts=0)
+    VMat testoutputs, VMat testcosts)
 {
   ProgressBar* pb;
+
+  int start = MAX(window_length-1, last_test_t);
+  start = MAX(last_train_t-1,start);
+  int target_pos = inputsize();
   if (report_progress)
-    pb = new ProgressBar("Training MovingAverage learner", train_set.length());
+    pb = new ProgressBar("Testing MovingAverage learner", testset.length()-start);
+  for (int t=start; t<testset.length(); t++)
+  {
+    all_targets = testset.subMat(t-window_length, target_pos, window_length+1, targetsize());
+    columnMean(all_targets,output);
+    predictions(t) << output;
+    if (testoutputs) testoutputs->putOrAppendRow(t, output);
+    if (t >= horizon)
+    {
+      output = predictions(t-horizon);
+      testset->getSubRow(t, target_pos, target);
+      if (!target.hasMissing() && !output.hasMissing())
+      {
+        computeCostsFromOutputs(input, output, target, cost);
+        errors(t) << cost;
+        if (testcosts) testcosts->putOrAppendRow(t, cost);
+        test_stats.update(cost);
+      }
+    }
+    if (pb) pb->update(t-start);
+  }
+  last_test_t = testset.length();
+
+  test_stats.finalize();
 
   if (pb) delete pb;
 }
@@ -125,16 +158,10 @@ void MovingAverage::computeCostsFromOutputs(const Vec& inputs, const Vec& output
 
   for (int i=0; i<cost_funcs.size(); i++)
   {
-    switch (cost_funcs[i])
-    {
-      case "mse":
-      case "MSE":
-        costs << square(outputs-targets);
-        break;
-      case default:
-        PLERROR("This cost_funcs is not implemented.");
-        break;
-    }
+    if (cost_funcs[i]=="mse" || cost_funcs[i]=="MSE")
+      costs << square(outputs-targets);
+    else
+      PLERROR("This cost_funcs is not implemented.");
   }
 }
 
