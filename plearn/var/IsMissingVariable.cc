@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: IsMissingVariable.cc,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: IsMissingVariable.cc,v 1.3 2003/11/10 22:03:37 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,7 +53,7 @@ string IsMissingVariable::info() const
 
 
 IsMissingVariable::IsMissingVariable(Variable* input1, bool parall)
-    : UnaryVariable(input1, input1->length(), parall?input1->width():1), parallel(parall)
+    : UnaryVariable(input1, parall?input1->length():1, parall?input1->width():1), parallel(parall)
 {}
 
   
