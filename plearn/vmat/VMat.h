@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat.h,v 1.11 2003/05/26 04:12:43 plearner Exp $
+   * $Id: VMat.h,v 1.12 2003/06/12 20:44:59 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -75,7 +75,8 @@ public:
   Vec getColumn(int i) const { Vec v(ptr->length()); ptr->getColumn(i,v); return v; }
 
   VMat subMat(int i, int j, int l, int w) const { return ptr->subMat(i,j,l,w); }
-  VMat subMatRows(int i, int l) const { return ptr->subMat(i,0,l,width()); }
+  VMat subMatRows(int i, int l) const;
+  //VMat subMatRows(int i, int l) const { return ptr->subMat(i,0,l,width()); }
   VMat subMatColumns(int j, int w) const { return ptr->subMat(0,j,length(),w); }
 
   inline void getExample(int i, Vec& input, Vec& target, real& weight)

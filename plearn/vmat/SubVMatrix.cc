@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.cc,v 1.3 2003/06/03 14:52:09 plearner Exp $
+   * $Id: SubVMatrix.cc,v 1.4 2003/06/12 20:44:56 ducharme Exp $
    ******************************************************* */
 
 #include "SubVMatrix.h"
@@ -90,12 +90,12 @@ void SubVMatrix::build_()
     for(int j=0; j<width_; j++)
       fieldinfos[j] = parent->getFieldInfos()[jstart+j];
 
- if(inputsize_<0)
-    inputsize_ = parent->inputsize();
-  if(targetsize_<0)
-    targetsize_ = parent->targetsize();
-  if(weightsize_<0)
-    weightsize_ = parent->weightsize();
+  if (width_ == parent->width())
+  {
+    if(inputsize_<0) inputsize_ = parent->inputsize();
+    if(targetsize_<0) targetsize_ = parent->targetsize();
+    if(weightsize_<0) weightsize_ = parent->weightsize();
+  }
   //  cerr << "inputsize: "<<inputsize_ << "  targetsize:"<<targetsize_<<"weightsize:"<<weightsize_<<endl;
 }
 

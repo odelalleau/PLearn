@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.9 2003/06/09 21:01:21 ducharme Exp $
+   * $Id: PLearner.h,v 1.10 2003/06/12 20:45:20 ducharme Exp $
    ******************************************************* */
 
 
@@ -102,11 +102,8 @@ using namespace std;
     virtual ~PLearner();
 
     //! Declares the train_set
-    //! Then calls build() and forget()
-    void setTrainingSet(VMat training_set);
-
-    //! Declares the train_set WITHOUT calling build() and forget()
-    void setOnlyTrainingSet(VMat training_set);
+    //! Then calls build() and forget() if necessary
+    void setTrainingSet(VMat training_set, bool call_forget=true);
 
     //! Returns the current train_set
     inline VMat getTrainingSet() const { return train_set; }

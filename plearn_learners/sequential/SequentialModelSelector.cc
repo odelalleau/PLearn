@@ -52,24 +52,24 @@ void SequentialModelSelector::train()
 {
   ProgressBar* pb;
   if (report_progress)
-    pb = new ProgressBar("Training learner",train_set.length());
+    pb = new ProgressBar("Training SequentialModelSelector learner",train_set.length());
 
   PP<VecStatsCollector> dummy_stats = new VecStatsCollector();
   //best_model.resize(train_set.length());
   for (int t=init_train_size+horizon; t<=train_set.length(); t++)
   {
-    int start = max(t-max_train_len,init_train_size-1);
+    //int start = max(t-max_train_len,init_train_size-1);
     VMat sub_train = train_set.subMatRows(0,t-horizon); // last training pair is (t-1-2*horizon,t-1-horizon)
     sub_train->setSizes(train_set->inputsize(), train_set->targetsize(), train_set->weightsize());
     VMat sub_test  = train_set.subMatRows(0,t); // last test pair is (t-1-horizon,t-1) (input,target)
     sub_test->setSizes(train_set->inputsize(), train_set->targetsize(), train_set->weightsize());
     for (int i=0; i<models.size(); i++)
     {
-      models[i]->setOnlyTrainingSet(sub_train);
+      models[i]->setTrainingSet(sub_train, false);
       models[i]->setTrainStatsCollector(dummy_stats);
       models[i]->train();
       models[i]->test(sub_test, dummy_stats); // last cost computed goes at t-1, last prediction at t-1-horizon
-      Vec sequence_errors = models[i]->errors.subMat(start+horizon,cost_index,t-start-horizon,1).toVecCopy();  // VERIFIER LES INDICES!!!
+      Vec sequence_errors = models[i]->errors.subMat(t-1-horizon,cost_index,horizon,1).toVecCopy();
       sequence_costs[i] = sequenceCost(sequence_errors);
     }
     // we set the best model for this time step
@@ -83,7 +83,7 @@ void SequentialModelSelector::train()
     // now train with everything that is available
     for (int i=0; i<models.size(); i++)
     {
-      models[i]->setOnlyTrainingSet(train_set);
+      models[i]->setTrainingSet(train_set, false);
       if (i == best_model[t])
       {
         models[i]->setTrainStatsCollector(train_stats);

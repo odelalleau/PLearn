@@ -117,7 +117,7 @@ void SequentialValidation::run()
     PLERROR("Could not create experiment directory %s", expdir.c_str());
 
   // This is to set inputsize() and targetsize()
-  learner->setOnlyTrainingSet(dataset);
+  learner->setTrainingSet(dataset, false);
 
   // Save this experiment description in the expdir (buildoptions only)
   PLearn::save(append_slash(expdir)+"sequential_validation.psave", *this, OptionBase::buildoption);
@@ -172,9 +172,9 @@ void SequentialValidation::run()
   for (int t=init_train_size; t<=dataset.length()-horizon; t++)
   {
     VMat sub_train = dataset.subMatRows(0,t); // excludes t, last training pair is (t-1-horizon,t-1)
-    sub_train->defineSizes(dataset->inputsize(), dataset->targetsize(), dataset->weightsize());
+    //sub_train->defineSizes(dataset->inputsize(), dataset->targetsize(), dataset->weightsize());
     VMat sub_test = dataset.subMatRows(0, t+horizon);
-    sub_test->defineSizes(dataset->inputsize(), dataset->targetsize(), dataset->weightsize());
+    //sub_test->defineSizes(dataset->inputsize(), dataset->targetsize(), dataset->weightsize());
 
     string splitdir = append_slash(expdir)+"train_t="+tostring(t)+"/";
     if (save_data_sets)
@@ -182,7 +182,7 @@ void SequentialValidation::run()
 
     // Train
     //learner->forget(); // PAS CERTAIN!  Doit-on faire un forget a chaque t?
-    learner->setOnlyTrainingSet(sub_train);
+    learner->setTrainingSet(sub_train, false);
     learner->train();
     //train_stats.finalize();
     if (save_stat_collectors)

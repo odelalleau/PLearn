@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.11 2003/06/11 20:32:54 ducharme Exp $
+   * $Id: PLearner.cc,v 1.12 2003/06/12 20:45:20 ducharme Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -147,17 +147,14 @@ void PLearner::setExperimentDirectory(const string& the_expdir)
     }
 }
 
-void PLearner::setTrainingSet(VMat training_set)
+void PLearner::setTrainingSet(VMat training_set, bool call_forget)
 { 
   train_set = training_set;
-  train_set->setSizes(training_set->inputsize(), training_set->targetsize(), training_set->weightsize());
-  build(); forget();
-}
-
-void PLearner::setOnlyTrainingSet(VMat training_set)
-{ 
-  train_set = training_set;
-  train_set->setSizes(training_set->inputsize(), training_set->targetsize(), training_set->weightsize());
+  if (call_forget)
+  {
+    build();
+    forget();
+  }
 }
 
 //! Returns train_set->inputsize()
