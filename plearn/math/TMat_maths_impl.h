@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.52 2004/06/25 18:15:28 dpopovici Exp $
+   * $Id: TMat_maths_impl.h,v 1.53 2004/06/26 15:10:58 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -5319,19 +5319,19 @@ void classification_confusion_matrix(TMat<T> outputs, TMat<T> target_classes, TM
   }
 }
 
-// Orthonormalize in-place the rows of the given matrix, using successive
-// projections on the orthogonal subspace of the previously found
-// basis. The resulting matrix has the following properties:
-//  - its rows spans the same space as A
-//  - its rows are orthogonal (dot product = 0)
-//  - its rows are of norm 1
-// However, it may happen that the original rows of A were not linearly
-// independent. In that case the, algorithm returns the number of rows
-// that were successfully obtained (and the user should probably 
-// then do A = A.subMatRows(0,result) to obtain the basis).
-// The tolerance argument is the minimum value of the norm
-// of a row when projected orthogonal to the previous ones for this row
-// to contribute to the basis.
+//! Orthonormalize in-place the rows of the given matrix, using successive
+//! projections on the orthogonal subspace of the previously found
+//! basis. The resulting matrix has the following properties:
+//!  - its rows spans the same space as A
+//!  - its rows are orthogonal (dot product = 0)
+//!  - its rows are of norm 1
+//! However, it may happen that the original rows of A were not linearly
+//! independent. In that case the, algorithm returns the number of rows
+//! that were successfully obtained (and the user should probably 
+//! then do A = A.subMatRows(0,result) to obtain the basis).
+//! The tolerance argument is the minimum value of the norm
+//! of a row when projected orthogonal to the previous ones for this row
+//! to contribute to the basis.
 template<class T>
 int GramSchmidtOrthogonalization(TMat<T> A, T tolerance=1e-6)
 {
