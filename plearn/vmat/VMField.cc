@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMField.cc,v 1.4 2004/10/22 18:48:01 ducharme Exp $
+* $Id: VMField.cc,v 1.5 2005/02/04 15:10:46 tihocan Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMField.h"
@@ -97,7 +97,7 @@ void VMFieldStat::update(real val)
   }
 }                           
 
-void VMFieldStat::write(ostream& out) const
+void VMFieldStat::write(PStream& out) const
 {
   out << nmissing_ << ' ' 
     << nnonmissing_ << ' '
@@ -119,7 +119,7 @@ void VMFieldStat::write(ostream& out) const
   }
 }
 
-void VMFieldStat::read(istream& in)
+void VMFieldStat::read(PStream& in)
 {
   in >> nmissing_ >> nnonmissing_ >> npositive_ >> nnegative_ 
     >> sum_ >> sumsquare_ >> min_ >> max_ ;

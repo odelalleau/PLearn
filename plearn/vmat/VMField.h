@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
- * $Id: VMField.h,v 1.5 2004/10/22 18:48:01 ducharme Exp $
+ * $Id: VMField.h,v 1.6 2005/02/04 15:10:46 tihocan Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -121,8 +121,8 @@ public:
 
   void update(real val);
       
-  void write(ostream& out) const;
-  void read(istream& in);
+  void write(PStream& out) const;
+  void read(PStream& in);
 };
 
 } // end of namespace PLearn
