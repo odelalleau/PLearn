@@ -33,26 +33,32 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AsciiVMatrix.cc,v 1.15 2004/09/27 20:19:27 plearner Exp $ 
+   * $Id: AsciiVMatrix.cc,v 1.16 2005/02/08 21:39:34 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file AsciiVMatrix.cc */
+
 #include "AsciiVMatrix.h"
 #include <plearn/base/stringutils.h>
+#include <plearn/io/fileutils.h>      //!< For isfile()
+#include <plearn/io/openFile.h>
 
 namespace PLearn {
 using namespace std;
 
 
-PLEARN_IMPLEMENT_OBJECT(AsciiVMatrix, "ONE LINE DESCR", "AsciiVMatrix implements a file in ascii format");
+PLEARN_IMPLEMENT_OBJECT(AsciiVMatrix,
+    "AsciiVMatrix implements a file in ASCII format",
+    ""
+);
 
 AsciiVMatrix::AsciiVMatrix()
-  :file(0), readwritemode(false), newfile(true),
+  :readwritemode(false), newfile(true),
    rewrite_length(true)
 {}
 
 AsciiVMatrix::AsciiVMatrix(const string& fname, bool readwrite)
-  :filename(fname), file(0), readwritemode(readwrite), newfile(false),
+  :filename(fname), readwritemode(readwrite), newfile(false),
    rewrite_length(true)
 {
   build();
@@ -61,22 +67,22 @@ AsciiVMatrix::AsciiVMatrix(const string& fname, bool readwrite)
 AsciiVMatrix::AsciiVMatrix(const string& fname, int the_width, 
                const TVec<string>& the_fieldnames, 
                const string& comment)
-  :inherited(0,the_width), filename(fname), file(0), 
+  :inherited(0,the_width), filename(fname), 
    readwritemode(true), newfile(true), rewrite_length(true)
 {
   inherited::build();
 
   if (isfile(filename))
     PLERROR("In AsciiVMatrix constructor: filename %s already exists",filename.c_str());
-  file = new fstream();
-  file->open(filename.c_str(), fstream::in | fstream::out | fstream::trunc);
-  if (!file->is_open())
-    PLERROR("In AsciiVMatrix constructor: could not open file %s for reading",filename.c_str());
+  file = openFile(filename, PStream::raw_ascii, "w");
+  // TODO Is this really the same as old code ?
+  // file->open(filename.c_str(), fstream::in | fstream::out | fstream::trunc);
   
-  *file << "#size: ";
-  vmatlength_pos = file->tellp();
+  file << "#size: ";
+  PLERROR("In AsciiVMatrix::AsciiVMatrix - Code is not yet PStram compatible");
+  // vmatlength_pos = file.tellp(); // TODO See how to do this with PStreams.
   length_max = 9999999;  // = 10 000 000 - 1
-  *file << "0 " << width() << "      " << endl;
+  file << "0 " << width() << "      " << endl;
 
   
   if(the_fieldnames.length()>0)
@@ -84,23 +90,23 @@ AsciiVMatrix::AsciiVMatrix(const string& fname, int the_width,
       if(the_fieldnames.length()!=the_width)
         PLERROR("In AsciiVMatrix constructor: number of given fieldnames (%d) differs from given width (%d)",
                 the_fieldnames.length(), the_width);
-      *file << "#: ";
+      file << "#: ";
       for(int k=0; k<the_width; k++)
         {
           string field_k = space_to_underscore(the_fieldnames[k]);
           declareField(k, field_k);
-          *file << field_k << ' ';
+          file << field_k << ' ';
         }
-      *file << endl;
+      file << endl;
     }
 
   if(comment!="")
     {
       if(comment[0]!='#')
         PLERROR("In AsciiVMatrix constructor: comment must start with a #");
-      *file << comment;
+      file << comment;
       if(comment[comment.length()-1]!='\n')
-        *file << endl;
+        file << endl;
     }
 
 }
@@ -119,22 +125,22 @@ void AsciiVMatrix::build_()
   {
     if (!isfile(filename))
       PLERROR("In AsciiVMatrix constructor (with specified width), filename %s does not exists",filename.c_str());
-    file = new fstream();
-    file->open(filename.c_str(), fstream::in | fstream::out);
-    if (!file->is_open())
-      PLERROR("In AsciiVMatrix constructor, could not open file %s for reading",filename.c_str());
+    file = openFile(filename, PStream::raw_ascii, "w");
+    // TODO Is this really the same as the old code ?
+    // file->open(filename.c_str(), fstream::in | fstream::out);
 
     // read the matrix in old or new format
     int length = -1;
     int width = -1;
     bool could_be_old_amat = true;
-    file->seekg(0,fstream::beg);
-    *file >> ws;
+    // file->seekg(0,fstream::beg); // TODO Will it work without this ?
+    file >> ws;
     string line;  
-    while (file->peek()=='#')
+    while (file.peek()=='#')
     {
-      streampos old_pos = file->tellg();
-      getline(*file, line);
+      PLERROR("In AsciiVMatrix::build_ - Code is not PStream-compatible yet");
+      // streampos old_pos = file.tellg(); // TODO See how to do this with PStreams.
+      file.getline(line);
       could_be_old_amat = false;  
       size_t pos=line.find(":");
       if (pos!=string::npos)
@@ -149,16 +155,17 @@ void AsciiVMatrix::build_()
           width = toint(dim[1]);
 
           // we set vmatlength_pos
-          streampos current_pos = file->tellg();
-          file->seekg(old_pos);
-          char c = file->get();
+          // streampos current_pos = file.tellg(); // TODO See how to do this with PStreams.
+          PLERROR("In AsciiVMatrix::build_ - Code is not PStream-compatible yet");
+          // file->seekg(old_pos); // TODO How to do this with PStreams ?
+          char c = file.get();
           while (c != ':')
           {
-            c = file->get();
+            c = file.get();
           }
-          c = file->get();
-          vmatlength_pos = file->tellp();
-          file->seekg(current_pos);
+          c = file.get();
+          // vmatlength_pos = file.tellp(); // TODO See how to do this with PStreams.
+          //file.seekg(current_pos); // TODO How to do this with PStreams ?
 
           // we set length_max
           int width_ndigits = (int)log(real(width)) + 1;
@@ -167,15 +174,15 @@ void AsciiVMatrix::build_()
           length_max = (int)pow(10.0,double(length_ndigits)) - 1;
         }
       }
-      *file >> ws;
+      file >> ws;
     }
 
     if (length==-1)  // still looking for size info...
     {
       string line;
-      getNextNonBlankLine(*file,line);
+      getNextNonBlankLine(file,line);
       int nfields1 = (int)split(line).size();
-      getNextNonBlankLine(*file,line);
+      getNextNonBlankLine(file,line);
       if (line=="") // only one line, no length nor width info
       {
         length=1;
@@ -188,17 +195,18 @@ void AsciiVMatrix::build_()
       real a, b;
       if (could_be_old_amat && nfields1==2) // could be an old .amat with first 2 numbers being length width
       {
-        file->seekg(0,fstream::beg);
-        file->clear();
-        vmatlength_pos = file->tellp();
-        *file >> a >> b;
+        PLERROR("In AsciiVMatrix::build_ - Code is not PStream-compatible yet");
+        // file.seekg(0,fstream::beg); // TODO How to do this with PStreams ?
+        // file.clear(); // TODO Same question
+        // vmatlength_pos = file.tellp(); // TODO See how to do this with PStreams.
+        file >> a >> b;
         if (guesslength == int(a)+1 && real(int(a))==a && real(int(b))==b && a>0 && b>0 && int(b)==nfields2) // it's clearly an old .amat
         {
           length = int(a);
           width = int(b);
 
-          file->seekg(vmatlength_pos);
-          getline(*file, line);
+          // file.seekg(vmatlength_pos); // TODO How to do this with PStreams ?
+          file.getline(line);
           int width_ndigits = (int)log(real(width)) + 1;
           int max_length_ndigits = (int)line.length() - width_ndigits - 1;
           length_max = (int)pow(10.0,double(max_length_ndigits)) - 1;
@@ -226,22 +234,23 @@ void AsciiVMatrix::build_()
     width_ = width;
 
     // build the vector of position of the begining of the lines
-    file->seekg(0,fstream::beg);
-    file->clear();
+    PLERROR("In AsciiVMatrix::build_ - Code is not PStream-compatible yet");
+    // file.seekg(0,fstream::beg); // TODO How to do this with PStreams ?
+    // file.clear();
     if (could_be_old_amat && rewrite_length)
     {
       string line;
-      getline(*file, line);
+      file.getline(line);
     }
     pos_rows.clear();
-    while (!file->eof())
+    while (!file.eof())
     {
-      *file >> ws;
-      if (file->peek()!='#' && file->peek()!=EOF) pos_rows.push_back(file->tellg());
+      file >> ws;
+      // if (file.peek()!='#' && file.peek()!=EOF) pos_rows.push_back(file.tellg()); // TODO See how to do this with PStreams.
       string line;
-      getline(*file, line);
+      file.getline(line);
     }
-    file->clear();
+    // file.clear(); // TODO See how to do this with PStreams.
     if ((int)pos_rows.size() != length)
       PLERROR("In AsciiVMatrix: the matrix has not the rigth size");
   }
@@ -256,9 +265,9 @@ void AsciiVMatrix::getNewRow(int i, const Vec& v) const
     PLERROR("In AsciiVMatrix::getNewRow, length of v (%d) does not match matrix width (%d)",v.length(),width());
 #endif
 
-  file->seekg(pos_rows[i]);
+  // file.seekg(pos_rows[i]); // TODO How to do this with PStreams ?
   for (int j=0; j<width(); j++)
-    *file >> v[j];
+    file >> v[j];
 }
 
 void AsciiVMatrix::appendRow(Vec v)
@@ -273,20 +282,20 @@ void AsciiVMatrix::appendRow(Vec v)
     PLERROR("AsciiVMatrix::appendRow aborted: the vmat was opened in read only format.");
 
   // write the Vec at the end of the file
-  file->seekp(0,fstream::end);
-  pos_rows.push_back(file->tellg());
+  // file.seekp(0,fstream::end); // TODO How to do this with PStreams ?
+  // pos_rows.push_back(file.tellg()); // TODO How to do this with PStreams ?
 
-  file->precision(15);
+  // file.precision(15); // TODO See what it means to remove it.
   for (int i=0; i<v.length(); i++)
-    *file << v[i] << ' ';
-  *file << endl;
+    file << v[i] << ' ';
+  file << endl;
 
   // update the length
   length_++;
   if (rewrite_length)
     {
-      file->seekp(vmatlength_pos);
-      *file << length() << " " << width();
+     // file->seekp(vmatlength_pos); // TODO How to do this with PStreams ?
+      file << length() << " " << width();
     }
 }
 
@@ -305,14 +314,7 @@ void AsciiVMatrix::declareOptions(OptionList& ol)
 }
 
 AsciiVMatrix::~AsciiVMatrix()
-{
-  if (file)
-    {
-      if(file->is_open()) 
-        file->close();
-      delete file;
-    }
-}
+{}
 
 } // end of namespace PLearn
 

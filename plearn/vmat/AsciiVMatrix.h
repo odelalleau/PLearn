@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AsciiVMatrix.h,v 1.12 2004/07/08 15:10:25 tihocan Exp $ 
+   * $Id: AsciiVMatrix.h,v 1.13 2005/02/08 21:39:35 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file AsciiVMatrix.h */
@@ -52,7 +52,7 @@ class AsciiVMatrix: public RowBufferedVMatrix
 
 protected:
   string filename;
-  mutable fstream* file;
+  mutable PStream file;
   vector<streampos> pos_rows;
   streampos vmatlength_pos;
   bool readwritemode;
