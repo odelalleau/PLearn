@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.3 2004/06/23 16:49:24 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.4 2004/06/26 15:04:08 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -141,6 +141,7 @@
 #include "AutoVMatrix.h"
 #include "BatchVMatrix.h"
 #include "BootstrapVMatrix.h"
+#include "CenteredVMatrix.h"
 #include "CumVMatrix.h"
 #include "DelaySequenceVMatrix.h"
 #include "FilteredVMatrix.h"
