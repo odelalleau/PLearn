@@ -38,8 +38,6 @@ shift
 
 # Make the .vmat.
 echo "# Wrapper to visualize the results stored in $MATNAME.amat." > $MATNAME.vmat
-echo "<SOURCES>" >> $MATNAME.vmat
-echo "@" >> $MATNAME.vmat
 echo "SortRowsVMatrix(" >> $MATNAME.vmat
 echo "  source =" >> $MATNAME.vmat
 echo "    AutoVMatrix(specification = \"$MATNAME.amat\")" >> $MATNAME.vmat
@@ -47,7 +45,6 @@ echo "  sort_columns = [" >> $MATNAME.vmat
 echo "    # Add here the columns you want to get sorted." >> $MATNAME.vmat
 echo "  ]" >> $MATNAME.vmat
 echo ")" >> $MATNAME.vmat
-echo "</SOURCES>" >> $MATNAME.vmat
 
 # Make the .amat.
 echo "# Data collected from PLearn experiments, to be visualized through $MATNAME.vmat." > $MATNAME.amat
