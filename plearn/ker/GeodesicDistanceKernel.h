@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GeodesicDistanceKernel.h,v 1.3 2004/07/09 22:30:36 monperrm Exp $ 
+   * $Id: GeodesicDistanceKernel.h,v 1.4 2004/07/15 14:25:28 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -129,16 +129,16 @@ public:
   //! neighbors in the second column.
   void computeNearestNeighbors(const Vec& x, Mat& k_xi_x_sorted) const;
 
-  //! retourne l'indice de l'exemple du dataset qui minimise la distance geodesique
-  //! entre i et le x qui a servi à calculer  k_xi_x
+  //! Return the index j of the data point which satisfies:
+  //!   1. j is among the knn nearest neighbors of the point x from which was
+  //!      computed k_xi_x_sorted
+  //!   2. it is such that dist(x,j) + geodesic_dist(j,x_i) is minimum
   int computeNearestGeodesicNeighbour(int i, const Mat& k_xi_x_sorted) const;
 
   //! Return the shortest distance to i from a point x whose distance
   //! to its knn nearest neighbors in the training set is given by
   //! the matrix 'k_xi_x_sorted'.
   real computeShortestDistance(int i, const Mat& k_xi_x_sorted) const;
-
-  real evaluate_i_x(int i, const Vec& x, const Mat& k_xi_x_sorted, bool powdistance=false) const; 
 
   //! Compute K(x1,x2).
   virtual real evaluate(const Vec& x1, const Vec& x2) const;
@@ -148,6 +148,10 @@ public:
   virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const;
 
   virtual real evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x=-1, bool first_time = false) const;
+
+  //! Evaluate K(x_i,x) where x is not given explicitly, but only by the
+  //! (sorted) distances to all training points.
+  virtual real evaluate_i_x_from_distances(int i, const Mat& k_xi_x_sorted) const; 
 
   //! Overridden to precompute inter-points geodesic distance.
   virtual void setDataForKernelMatrix(VMat the_data);
