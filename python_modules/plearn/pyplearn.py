@@ -46,7 +46,7 @@ class plearn_ref(object):
 
     _bindings = {}
     _bindings_referenced = {}
-    _last_binding_index = -1
+    _last_binding_index = 0
     
     def bind(cls, name, x):
         if name in cls._bindings:
@@ -60,8 +60,8 @@ class plearn_ref(object):
     def value(self):
         """Called by _plearn_repr to return the PLearn representation
            of the variable binding. On the first call, it will return something
-           like *0 -> PLearnStuff(blah). On subsequent calls it will return
-           only a PLearn reference: *0;
+           like *1 -> PLearnStuff(blah). On subsequent calls it will return
+           only a PLearn reference: *1;
         """
         name = self.name
         x = self._bindings[name]
@@ -94,8 +94,10 @@ def _plearn_repr(x):
         return x.s
     elif isinstance(x, plearn_ref):
         return x.value()
-    elif callable(x):
-        return _plearn_repr( x() )
+    elif is None:
+        return "*0;"
+    elif hasattr(x, 'plearn_repr'):
+        return _plearn_repr(x.plearn_repr())
     else:
         raise TypeError('Does not know how to handle type %s' % type(x))
 
@@ -104,7 +106,7 @@ def bind(name, value):
     plearn_ref.bind(name, value)
 
 def ref(name):
-    """Makes a reference (either "*0 -> foo" or "*0;") to the value
+    """Makes a reference (either "*1 -> foo" or "*1;") to the value
        associated with name by a previous bind call."""
     return plearn_ref(name)
 
