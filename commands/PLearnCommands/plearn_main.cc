@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_main.cc,v 1.5 2002/12/02 08:46:50 plearner Exp $
+   * $Id: plearn_main.cc,v 1.6 2003/01/29 04:26:58 plearner Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -79,7 +79,13 @@ int plearn_main(int argc, char** argv)
               cerr << endl;
               cerr << "Type 'plearn help xxx' to get detailed help on command xxx \n\n" 
                 "You may also run plearn with the name of a plearn script file as argument\n"
-                "A plearn script file must contain at least one runnable PLearn object\n"
+                "A plearn script file should have a name ending in .plearn\n"
+                "It can use macro variable definitions and expansion. Macro commands start by a $\n"
+                "ex: $DEFINE{toto=[1,2,3,4]}  ${toto}  $INCLUDE{otherfile.pscript} \n"
+                "Macro variable definitions can also be provided on the command line in the form \n"
+                "varname=varvalue with each such pair separated by a blank, thus\n"
+                "allowing for scripts with arguments\n\n"
+                "A plearn script must contain at least one runnable PLearn object\n"
                 "Typical runnable PLearn objects are 'Experiment' and 'ComparisonExperiment'\n\n"
                 "You can type 'plearn help xxx' to get a description and the list of build options\n"
                 "for any instantiable PLearn object xxx \n\n"
@@ -124,15 +130,19 @@ int plearn_main(int argc, char** argv)
               cerr << "Type plearn with no argument to see the help." << endl;
               exit(0);
             }
-      
-          string script = loadFileAsString(command);
+
           map<string, string> vars;
-
-          // initialize ${1} ... ${n} variables as the arguments that follow
-          for(int k=2; k<argc; k++)
-            vars[tostring(k-1)] = string(argv[k]);
-
-          macro_process(script, vars);
+          // populate vars with the arguments passed on the command line
+          for(int i=2; i<argc; i++)
+            {
+              string option = argv[i];
+              pair<string,string> name_val = split_on_first(option, "=");
+              vars[name_val.first] = name_val.second;
+            }
+          PStream pout(&cout);
+          pout << vars << endl;
+      
+          string script = readFileAndMacroProcess(command, vars);
           PIStringStream in(script);
 
           while(in)

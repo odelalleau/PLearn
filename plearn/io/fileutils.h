@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.h,v 1.2 2002/11/30 04:27:33 plearner Exp $
+   * $Id: fileutils.h,v 1.3 2003/01/29 04:27:00 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -124,8 +124,8 @@ using namespace std;
 
 
 //! Reads while the characters read exactly match those in s
-//! Returns true if all characters in s matched with those in the stream
-bool readWhileMatches(istream& in, const string& s);
+//! Will throw a PLERROR exception as soon as it doesn't match
+void readWhileMatches(istream& in, const string& s);
 
   // skips everything until '\n' (also consumes the '\n')
   void skipRestOfLine(istream& in);
@@ -158,7 +158,14 @@ bool readWhileMatches(istream& in, const string& s);
 
   string makeFileNameValid(const string& filename);
 
-void macro_process(string& text, map<string, string> variables);
+//! Will return the text, macro processed, with each instance of ${varname} in the text that corresponds to a key in the given map 
+//! replaced by its associated value. 
+//! Also every $DEFINE{varname=... } in the text will add a new varname entry in the map.  (The DEFINE macro will be discarded)
+//! Also every $INCLUDE{filepath} will be replaced in place by the text of the file it includes
+string readAndMacroProcess(istream& in, map<string, string>& variables);
+
+//! Same as readAndMacroProcess, but takes a filename instead of an istream
+string readFileAndMacroProcess(const string& fname, map<string, string>& variables);
 
 
 %> // end of namespace PLearn

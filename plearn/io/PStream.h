@@ -201,6 +201,9 @@ public:
   inline int get() { return pin->get(); }
   inline PStream& get(char& c) { pin->get(c); return *this; }
 
+  inline PStream& getline(string& line, char delimitor='\n')
+  { std::getline(*pin, line, delimitor); return *this; }
+
   //   inline int peek() { return pin->peek(); }
   // The previous implementation does not seem to work, so we use this [Pascal]:
   

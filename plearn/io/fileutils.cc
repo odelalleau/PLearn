@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.5 2002/11/30 04:27:33 plearner Exp $
+   * $Id: fileutils.cc,v 1.6 2003/01/29 04:27:00 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -265,25 +265,26 @@ int chdir(const string& path)
 
 
 //! Reads while the characters read exactly match those in s
-//! Returns true if all characters in s matched with those in the stream
-bool readWhileMatches(istream& in, const string& s)
-{
+//! Will throw a PLERROR exception as soon as it doesn't match
+void readWhileMatches(istream& in, const string& s){
   int i = 0;
   int c;
   c = in.get();
   int n = s.length();
   while(c!=EOF)
     {
-      if(s[i++]!=c)
+      if(s[i]!=c)
         {
           in.unget();  // match failed, unget that last character
-          return false;
+          PLERROR("In readWhileMatches. Failure while matching %s: "
+                  "at position %d expected a '%c', but read a '%c'",s.c_str(),i,s[i],c);
         }
+      ++i;
       if(i==n) // passed through the whole string 
-        return true;
+        return;
       c = in.get();
     }
-  return false;
+  PLERROR("In readWhileMatches, met EOF while matching %s", s.c_str());
 }
 
 // reads everything until '\n' (also consumes the '\n')
@@ -447,158 +448,100 @@ string makeFileNameValid(const string& path)
 }
   
 
-//! Will return the text, macro processed, with each instance of ${varname} in the text that corresponds to a key in the given map 
-//! replaced by its associated value. 
-//! Also every $DEFINE{varname=... } in the text will add a new varname entry in the map.  (The DEFINE macro will be discarded)
-//! Also every $INCLUDE{filepath} will be replaced in place by the text of the file it includes
-
-void macro_process(string& text, map<string, string> variables)
-{
-  string::size_type startpos = 0;
- 
-  // First process all the INCLUDE macro commands recursively
-  string includecommand = "$INCLUDE{";
-  startpos = text.find(includecommand,0);
-  while(startpos!=string::npos)
-    {
-      string::size_type p = startpos + includecommand.length();
-      string::size_type pend = text.find("}",p);
-      string fname = text.substr(p,pend-p);
-      string includedtext = loadFileAsString(fname);
-      text.replace(startpos, pend+1-startpos, includedtext);
-      startpos = text.find(includecommand,startpos);
-    }
-      
-  // Then process all the DEFINE macro commands
-  string definecommand = "$DEFINE{";
-  startpos = text.find(definecommand,0);
-  while(startpos!=string::npos)
-    {
-      string::size_type p = startpos + definecommand.length();
-      while(isspace(text[p]))
-        ++p;
-      string::size_type pend = p;
-      while(!isspace(text[pend]) && text[pend]!='=')
-        ++pend;
-      string varname = text.substr(p, pend-p);
-      p = pend;
-      while(isspace(text[p])) // skip blanks
-        ++p;
-      if(text[p]!='=') 
-        PLERROR("In macro_process wrong syntax for DEFINE: expecting a '=' between varname and value, read a '%c'",text[p]);
-      ++p; // skip '='
-      while(isspace(text[p])) // skip blanks
-        ++p;
-      int nbrace = 1; // one opening brace
-      pend = p;
-      for(;;)
-        {
-          char c = text[pend];
-          if(c=='{')
-            ++nbrace;
-          else if(c=='}')
-            {
-              --nbrace;
-              if(nbrace==0)
-                break;
-            }
-          ++pend;
-        }
-      string varval = text.substr(p, pend-p);
-      variables[varname] = varval;
-      
-      ++pend; // one after the closing brace
-      text.erase(startpos, pend-startpos); // erase the DEFINE statement   
-      startpos = text.find(definecommand,startpos);
-    }
-
-  // Finally replace all the ${varname} by their value
-  int n = 0;
-  do
-    {
-      n = 0;
-      map<string, string>::iterator it = variables.begin();
-      map<string, string>::iterator itend = variables.end();
-      while(it!=itend)
-        {
-          n += search_replace(text, string("${") + it->first + "}", it->second);
-          ++it;
-        }
-    } while(n>0);
-}
-
-
-/*
 string readFileAndMacroProcess(const string& fname, map<string, string>& variables)
 {
-  string text = "";
-  int c = 0;
   ifstream in(fname.c_str());
   if(!in)
-    PLERROR("In readFileAndMacriProcess, could not open file %s for reading", fname.c_str());
-
-  while( (c=in.get()) != EOF)
-    {
-      if(c=='I') // could be INCLUDE
-        {
-          in.unget(c);
-          if(readWhileMatches(in,"INCLUDE(\""))
-            {
-              string fname;
-              getline(in, fname, '"');
-              c = in.get();
-              if(c!=')')
-                PLERROR("Syntax for INCLUDE macro command must be INCLUDE(\"file_path\")  but read a '%c' instead of a paren after the closing quote",c);
-              text += readFileAndMacro
-            }
-        }
-      else if(c=='D') // could be DEFINE
-        {
-          in.unget(c);
-        }
-          
-          streampos pos = in.tellg();
-          char w[6]; // read rest of expected 'DEFINE' word
-          in.read(w,6);
-          if(word
-
-          c == in.get()
-          ;
-      if(c=='D') // could be DEFINE
-      text.push_back(c);
+    PLERROR("In readFileAndMacroProcess, could not open file %s for reading", fname.c_str());
+  return readAndMacroProcess(in, variables);
 }
 
-*/
+string readAndMacroProcess(istream& in, map<string, string>& variables)
+{
+  string text; // the processed text to return
+  string chunk;
 
+  while(in)
+    {
+      getline(in, chunk, '$');
+      text += chunk;
+      int c = in.peek();
+      if(c==EOF)
+        break;
 
+      switch(c)
+        {
+        case '{':  // expand a defined variable ${varname}
+          {
+            string varname; // name of a variable
+            in.get(); // skip '{'
+            getline(in,varname,'}');
+            varname = removeblanks(varname);
+            map<string, string>::iterator it = variables.find(varname);
+            if(it==variables.end())
+              PLERROR("Macro variable ${%s} undefined", varname.c_str());
+            istrstream varin(it->second.c_str());
+            text += readAndMacroProcess(varin, variables);
+          }
+          break;
+
+        case 'I': // it's an INCLUDE{filepath}
+          {
+            string includefile; // path of the file in a $INCLUDE{...} directive
+            readWhileMatches(in, "INCLUDE{");
+            getline(in,includefile,'}');
+            includefile = removeblanks(includefile);
+            string dirname = extract_directory(includefile);
+            string filename = extract_filename(includefile);
+            string olddir = getcwd();
+            chdir(dirname);
+            text += readFileAndMacroProcess(filename, variables);
+            chdir(olddir);
+          }
+          break;
+
+        case 'D': // it's a DEFINE{ varname = ... }
+          {
+            string varname; // name of a variable
+            string vardef; // definition of a variable
+            readWhileMatches(in, "DEFINE{");
+            getline(in,varname, '=');
+            varname = removeblanks(varname);
+            skipBlanksAndComments(in);
+            smartReadUntilNext(in, "}", vardef);
+            variables[varname] = vardef;
+          }
+          break;
+
+        default:
+          PLERROR("In readAndMacroProcess: only supported macro commands are \n"
+                  "$DEFINE{varname=...} $INCLUDE{filepath} and ${varname} for macro expansion."
+                  "But I read $%c !!",c);
+        }
+    }
+  return text;
+}
 
 %> // end of namespace PLearn
 
 
+// int main()
 /*
-
-int main//()  
 {
-  while(cin)
-    {
-      cout << "Please enter a path: ";
-      string path;
-      cin >> path;
-      cout << "pathexists: " << pathexists(path) << endl;
-      cout << "isfile: " << isfile(path) << endl;
-      cout << "isdir: " << isdir(path) << endl;
-      if(isdir(path))
-        {
-          cout << "lsdir(path): " << lsdir(path) << endl;
-          cout << "lsdir_fullpath(path): " << lsdir_fullpath(path) << endl;
-        }
-    }
+  using namespace PLearn;
+  
+  map<string, string> variables;
+  string text =  readFileAndMacroProcess("essai.plearn", variables);
+  
+  cout << "TEXT:" << endl;
+  cout << text << endl;
+
+  cout << "\nVARIABLES:" << endl;
+
+  PStream pout(&cout);
+  pout << variables << endl;
+
   return 0;
 }
-
 */
-
-
-
-
 
