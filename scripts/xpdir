@@ -2,9 +2,22 @@
 import getopt, new, os, sys
 from plearn.xperiments.Xperiment import *
 
+def duplicates( targets, options, xperiments ):
+    while xperiments:
+        exp = xperiments.pop()
+        duplicates = []
+        for x in xperiments:
+            if x == exp:
+                duplicates.append( x.path )
+        if duplicates:
+            print exp
+            print "Duplicated by", " ".join(duplicates)
+            print
+
 def listdir( targets, options, xperiments ):
     print "\n","\n".join([ str(x) for x in xperiments ])
-
+    print "(%d experiments)" % len(xperiments)
+    
 def mkdir( targets, options, xperiments ):    
     for exp in xperiments:
         if exp.infos:
@@ -23,26 +36,22 @@ def running( targets, options, xperiments ):
     for exp in experiments:
         if not exp.infos:
             print exp
+
+def parse_mode( targets, supported_modes, default_mode ):
+    if targets:
+        candidate_mode = targets[0]
+        for mode in supported_modes:
+            if candidate_mode == mode.__name__:                
+                del targets[0]
+                return mode
+    return default_mode
             
-    
 ### Main program
-mode    = listdir
 targets = sys.argv[1:]
-if targets:    
-    if targets[0] == "listdir":    
-        mode = listdir
-        del targets[0]
-        
-    elif targets[0] == "mkdir":    
-        mode = mkdir
-        del targets[0]
-        
-    elif targets[0] == "running":    
-        mode = running
-        del targets[0]        
+mode    = parse_mode( targets, [ duplicates, listdir, mkdir, running ], listdir )
 
 class __options: pass
-options = new.instance( __options, {"name" : None } )
+options = new.instance( __options, {"name" : None, "cache": None, "load" : None } )
 
 if "--name" in targets:
     index = targets.index("--name")
@@ -51,6 +60,29 @@ if "--name" in targets:
     options.name = targets[index]
     del targets[index]
 
+if "--cache" in targets:
+    index = targets.index("--cache")
+    del targets[index]
+    
+    options.cache = targets[index]
+    del targets[index]
+
+if "--load" in targets:
+    index = targets.index("--load")
+    del targets[index]
+    
+    options.load = targets[index]
+    del targets[index]
+
 ### Starting the selected mode
-experiments = Xperiment.load_experiments( targets )
+
+if options.load is None:
+    experiments = Xperiment.load_experiments( targets )
+else:
+    Xperiment.load_filed_experiments( options.load )
+    experiments = Xperiment.match( targets )
+    
 mode( targets, options, experiments )
+
+if options.cache is not None:
+    Xperiment.save_cache( options.cache )
