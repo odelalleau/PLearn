@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MultiInstanceVMatrix.cc,v 1.7 2004/03/11 03:42:45 nova77 Exp $ 
+   * $Id: MultiInstanceVMatrix.cc,v 1.8 2004/03/12 23:33:54 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Norman Casagrande
@@ -89,6 +89,9 @@ void MultiInstanceVMatrix::getRow(int i, Vec v) const
 
 void MultiInstanceVMatrix::declareOptions(OptionList& ol)
 {
+  declareOption(ol, "source_targetsize", &MultiInstanceVMatrix::source_targetsize, OptionBase::buildoption,
+      "The source targetsize");
+
   declareOption(ol, "filename", &MultiInstanceVMatrix::filename_, OptionBase::buildoption,
                 "This is the name of the ascii 'mimat' format filename. It is a supervised learning dataset\n"
                 "in which each input object can come in several instances (e.g. conformations) and the target is given to the\n"
@@ -116,6 +119,9 @@ void MultiInstanceVMatrix::build_()
   if(!inFile)
     PLERROR("In MultiInstanceVMatrix could not open file %s for reading", filename_.c_str());
 
+  inFile.seekg(0);
+  skipBlanksAndComments(inFile);
+
   string lastName = "";
   string newName;
   string aLine;
@@ -125,15 +131,10 @@ void MultiInstanceVMatrix::build_()
 
   real* mat_i = NULL;
 
-  int nRows = count(istreambuf_iterator<char>(inFile),
-                    istreambuf_iterator<char>(), '\n');
-
   // one more column for the bag signal 
   targetsize_ = source_targetsize + 1;
 
-  inFile.seekg(0);
-
-  // Check the number of columns
+ // Check the number of columns
   getline(inFile, aLine, '\n');
   vector<string> entries = split(aLine);
   int nFields = (int)entries.size();
@@ -149,12 +150,19 @@ void MultiInstanceVMatrix::build_()
 
   int lastColumn = inputsize_ + source_targetsize; 
 
+  inFile.seekg(0);
+  skipBlanksAndComments(inFile);
+
+  int nRows = count(istreambuf_iterator<char>(inFile),
+                    istreambuf_iterator<char>(), '\n');
+
+  inFile.seekg(0);
+  skipBlanksAndComments(inFile);
+
   data_.resize(nRows, inputsize_ + targetsize_);
 
   width_ = inputsize_ + targetsize_;
   length_ = nRows;
-
-  inFile.seekg(0);
 
   for (int lineNum = 0; !inFile.eof() && lineNum < nRows; ++lineNum)
   {
