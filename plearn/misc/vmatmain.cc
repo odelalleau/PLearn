@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.42 2005/01/18 18:56:15 lheureup Exp $
+   * $Id: vmatmain.cc,v 1.43 2005/01/20 21:48:42 tihocan Exp $
    ******************************************************* */
 
 #include <algorithm>                         // for max
@@ -887,23 +887,15 @@ void viewVMat(const VMat& vm)
 
             if (fname[0] == '\0')
               strcpy(fname, "outCol.txt");
+            string filename = fname;
 
             mvprintw(LINES-1,0,"Writing file '%s'...", fname);
             clrtoeol();
             refresh();
 
-            ofstream outFile(fname, ios::out);
-
-            for (Vec::iterator it = indexs.begin(); it != indexs.end(); ++it)
-            {
-              outFile << vm_showed->fieldName((int)*it) << '\t';
-            }
-            outFile << endl;
-
             // Save the selected columns to the desired file, keeping the string values
             // if 'view_strings' is currently true (can be toggled with 's'/'S' keys).
-            vm_showed.columns(indexs).print(outFile, view_strings);
-            outFile.close();
+            vm_showed.columns(indexs)->saveAMAT(filename, false, false, view_strings);
 
             mvprintw(LINES-1,0,"*** Output written on: %s ***", fname);
             clrtoeol();

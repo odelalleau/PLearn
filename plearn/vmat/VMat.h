@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat.h,v 1.23 2005/01/17 15:46:26 tihocan Exp $
+   * $Id: VMat.h,v 1.24 2005/01/20 21:49:05 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -128,7 +128,7 @@ public:
 */
   void precompute(const string& pmatfile, bool use_existing_file=false);
 
-  inline void print(ostream& out, bool save_strings = false) const { ptr->print(out, save_strings); }
+  inline void print(ostream& out) const { ptr->print(out); }
 
   ~VMat();
 };

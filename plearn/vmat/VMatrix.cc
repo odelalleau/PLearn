@@ -37,7 +37,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.83 2005/01/17 15:45:52 tihocan Exp $
+* $Id: VMatrix.cc,v 1.84 2005/01/20 21:49:12 tihocan Exp $
 ******************************************************* */
 
 #include <plearn/io/load_and_save.h>
@@ -639,10 +639,10 @@ string VMatrix::getString(int row,int col) const
     return str;
 }
 
-//////////////////
-// getRowString //
-//////////////////
-void VMatrix::getRowString(int i, TVec<string> v_str) const {
+/////////////////////
+// getRowAsStrings //
+/////////////////////
+void VMatrix::getRowAsStrings(int i, TVec<string> v_str) const {
   v_str.resize(width());
   for (int j = 0; j < width(); j++)
     v_str[j] = getString(i, j);
@@ -1128,20 +1128,12 @@ bool VMatrix::find(const Vec& input, real tolerance, int* i) const {
   return false;
 }
 
-void VMatrix::print(ostream& out, bool save_strings) const
+void VMatrix::print(ostream& out) const
 {
-  if (save_strings) {
-    TVec<string> v_str(width());
-    for(int i=0; i<length(); i++) {
-      getRowString(i, v_str);
-      out << v_str << endl;
-    }
-  } else {
-    Vec v(width());
-    for(int i=0; i<length(); i++) {
-      getRow(i,v);
-      out << v << endl;
-    }
+  Vec v(width());
+  for(int i=0; i<length(); i++) {
+    getRow(i,v);
+    out << v << endl;
   }
 }
 
@@ -1196,7 +1188,7 @@ void VMatrix::saveDMAT(const string& dmatdir) const
 //////////////
 // saveAMAT //
 //////////////
-void VMatrix::saveAMAT(const string& amatfile, bool verbose, bool no_header) const
+void VMatrix::saveAMAT(const string& amatfile, bool verbose, bool no_header, bool save_strings) const
 {
   int l = length();
   int w = width();
@@ -1218,22 +1210,32 @@ void VMatrix::saveAMAT(const string& amatfile, bool verbose, bool no_header) con
       out << "\n";
     }
 
-  Vec v(w);
-
   ProgressBar* pb = 0;
   if (verbose)
     pb = new ProgressBar(cout, "Saving to amat", length());
 
-  for(int i=0;i<l;i++)
+  if (save_strings) {
+    TVec<string> v(w);
+    for (int i = 0; i < l; i++) {
+      getRowAsStrings(i, v);
+      out << v << endl;
+      if (verbose)
+        pb->update(i+1);
+    }
+
+  } else {
+    Vec v(w);
+    for(int i=0;i<l;i++)
     {
       getRow(i,v);
       for(int j=0; j<w; j++)
         out << v[j] << ' ';
       out << "\n";
       if (verbose)
-         pb->update(i);
+        pb->update(i + 1);
     }
-  if (verbose)
+  }
+  if (pb)
     delete pb;
 }
 

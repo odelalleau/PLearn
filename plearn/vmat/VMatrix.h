@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.64 2005/01/17 15:45:53 tihocan Exp $
+   * $Id: VMatrix.h,v 1.65 2005/01/20 21:49:12 tihocan Exp $
    ******************************************************* */
 
 
@@ -295,7 +295,7 @@ public:
   virtual string getString(int row, int col) const;
 
   //! Copy row i (converted to string values, using string mappings when they exist) into v.
-  virtual void getRowString(int i, TVec<string> v_str) const;
+  virtual void getRowAsStrings(int i, TVec<string> v_str) const;
 
   //! Return the dimension of the values for a certain field, -1 if continuous  
   virtual int getDimension(int row, int col) const;
@@ -367,10 +367,15 @@ public:
 
   virtual void savePMAT(const string& pmatfile) const;
   virtual void saveDMAT(const string& dmatdir) const;
+
   //! Save the content of the matrix in the AMAT ASCII format into a file.
   //! If 'no_header' is set to 'true', then the AMAT header won't be saved,
   //! which can be useful to export data to other applications.
-  virtual void saveAMAT(const string& amatfile, bool verbose=true, bool no_header = false) const;
+  //! If 'save_strings' is set to 'true', then the string mappings will be used
+  //! so as to save strings where they exist (instead of saving the corresponding
+  //! real value).
+  virtual void saveAMAT(const string& amatfile, bool verbose = true,
+                        bool no_header = false, bool save_strings = false) const;
 
   inline int width() const 
   { 
@@ -504,9 +509,7 @@ public:
   operator Mat() const { return toMat(); }
 
   //! Output the content of the VMat in the stream 'out'.
-  //! If 'save_strings' is set to true, then the string mappings will be taken
-  //! into account so as to save strings where they exist.
-  void print(ostream& out, bool save_strings = false) const;
+  void print(ostream& out) const;
 
   // virtual void oldwrite(ostream& out) const;
   // virtual void oldread(istream& in);
