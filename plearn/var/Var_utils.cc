@@ -36,12 +36,19 @@
 
 
 /* *******************************************************      
-   * $Id: Var_utils.cc,v 1.1 2003/12/16 17:44:52 plearner Exp $
+   * $Id: Var_utils.cc,v 1.2 2004/02/17 21:05:19 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
+#include "AbsVariable.h"
+#include "ColumnIndexVariable.h"
+#include "ExpVariable.h"
+#include "LogVariable.h"
+#include "PLogPVariable.h"
+#include "PowVariable.h"
+#include "SumVariable.h"
 #include "Var_utils.h"
-#include "Var_all.h"
+//#include "Var_all.h"
 #include "Var_operators.h"
 
 namespace PLearn <%

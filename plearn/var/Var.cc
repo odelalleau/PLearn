@@ -37,11 +37,11 @@
  
 
 /* *******************************************************      
-   * $Id: Var.cc,v 1.5 2004/01/20 00:23:57 yoshua Exp $
+   * $Id: Var.cc,v 1.6 2004/02/17 21:05:19 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
-#include "general.h"
+//#include "general.h"
 #include "Var.h"
 
 namespace PLearn <%

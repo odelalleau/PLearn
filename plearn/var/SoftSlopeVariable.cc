@@ -36,12 +36,12 @@
 
 
 /* *******************************************************      
-   * $Id: SoftSlopeVariable.cc,v 1.4 2003/12/08 03:46:31 yoshua Exp $
+   * $Id: SoftSlopeVariable.cc,v 1.5 2004/02/17 21:05:19 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "SoftSlopeVariable.h"
-#include "Var_utils.h"
+//#include "Var_utils.h"
 
 namespace PLearn <%
 using namespace std;

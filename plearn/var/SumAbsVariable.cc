@@ -36,12 +36,14 @@
 
 
 /* *******************************************************      
-   * $Id: SumAbsVariable.cc,v 1.1 2003/10/10 17:18:56 yoshua Exp $
+   * $Id: SumAbsVariable.cc,v 1.2 2004/02/17 21:05:19 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
+#include "AbsVariable.h"
 #include "SumAbsVariable.h"
-#include "Var_utils.h"
+#include "Var_operators.h"
+//#include "Var_utils.h"
 
 namespace PLearn <%
 using namespace std;

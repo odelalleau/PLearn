@@ -36,12 +36,14 @@
 
 
 /* *******************************************************      
-   * $Id: LogAddVariable.cc,v 1.4 2003/12/16 17:44:52 plearner Exp $
+   * $Id: LogAddVariable.cc,v 1.5 2004/02/17 21:05:19 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
+#include "ExpVariable.h"
 #include "LogAddVariable.h"
-#include "Var_utils.h"
+#include "Var_operators.h"
+//#include "Var_utils.h"
 
 namespace PLearn <%
 using namespace std;

@@ -36,16 +36,19 @@
 
 
 /* *******************************************************      
-   * $Id: DilogarithmVariable.h,v 1.2 2003/12/08 03:46:31 yoshua Exp $
+   * $Id: DilogarithmVariable.h,v 1.3 2004/02/17 21:03:20 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #ifndef DilogarithmVariable_INC
 #define DilogarithmVariable_INC
 
+#include "DilogarithmVariable.h"
+#include "ExpVariable.h"
 #include "UnaryVariable.h"
-#include "pl_math.h"
-#include "Var_utils.h"
+#include "Var_operators.h"
+//#include "pl_math.h"
+//#include "Var_utils.h"
 
 namespace PLearn <%
 using namespace std;

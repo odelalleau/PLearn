@@ -36,12 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: SumSquareVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
+   * $Id: SumSquareVariable.cc,v 1.4 2004/02/17 21:05:19 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "SumSquareVariable.h"
-#include "Var_utils.h"
+#include "Var_operators.h"
+//#include "Var_utils.h"
 
 namespace PLearn <%
 using namespace std;

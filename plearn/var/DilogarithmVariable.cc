@@ -36,12 +36,12 @@
 
 
 /* *******************************************************      
-   * $Id: DilogarithmVariable.cc,v 1.3 2004/01/16 02:07:59 yoshua Exp $
+   * $Id: DilogarithmVariable.cc,v 1.4 2004/02/17 21:05:19 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "DilogarithmVariable.h"
-#include "Var_utils.h"
+//#include "Var_utils.h"
 
 namespace PLearn <%
 using namespace std;

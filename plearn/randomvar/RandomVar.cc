@@ -37,20 +37,38 @@
  
 
 /* *******************************************************      
-   * $Id: RandomVar.cc,v 1.3 2003/03/18 18:29:56 ducharme Exp $
+   * $Id: RandomVar.cc,v 1.4 2004/02/17 21:01:55 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
 
 
 /** RandomVar **/
+#include "AbsVariable.h"
+#include "ConcatColumnsVariable.h"
+#include "ConcatRowsVariable.h"
+#include "DeterminantVariable.h"
+#include "EqualVariable.h"
+#include "ExpVariable.h"
+#include "ExtendedVariable.h"
+#include "LeftPseudoInverseVariable.h"
+#include "LogSumVariable.h"
+#include "LogVariable.h"
+#include "MatrixSumOfVariable.h"
+#include "PowVariable.h"
+#include "ProductVariable.h"
+#include "RightPseudoInverseVariable.h"
+#include "SoftmaxVariable.h"
+#include "SumOfVariable.h"
+#include "SumVariable.h"
+
 #include "general.h"
 #include "RandomVar.h"
-#include "NaryVariable.h"
+//#include "NaryVariable.h"
 #include "ConjugateGradientOptimizer.h"
 #include "plapack.h"
-#include "Var_utils.h"
-#include <cmath>
+#include "Var_operators.h"
+//#include <cmath>
 
 namespace PLearn <%
 using namespace std;

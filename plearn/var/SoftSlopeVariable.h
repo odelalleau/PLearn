@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SoftSlopeVariable.h,v 1.3 2003/12/05 22:41:41 yoshua Exp $
+   * $Id: SoftSlopeVariable.h,v 1.4 2004/02/17 21:03:20 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,8 +44,10 @@
 #define SoftSlopeVariable_INC
 
 #include "NaryVariable.h"
-#include "pl_math.h"
-#include "Var_utils.h"
+#include "SigmoidVariable.h"
+#include "Var_operators.h"
+//#include "pl_math.h"
+//#include "Var_utils.h"
 
 namespace PLearn <%
 using namespace std;

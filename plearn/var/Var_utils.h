@@ -36,15 +36,16 @@
 
 
 /* *******************************************************      
-   * $Id: Var_utils.h,v 1.8 2003/12/16 17:44:52 plearner Exp $
+   * $Id: Var_utils.h,v 1.9 2004/02/17 21:03:20 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #ifndef Var_utils_INC
 #define Var_utils_INC
 
-#include "Var_all.h"
-#include "Var_operators.h"
+//#include "Var_all.h"
+//#include "Var_operators.h"
+#include "Var.h"
 
 namespace PLearn <%
 using namespace std;

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: HardSlopeVariable.h,v 1.1 2003/11/30 05:34:29 yoshua Exp $
+   * $Id: HardSlopeVariable.h,v 1.2 2004/02/17 21:03:20 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,8 +44,10 @@
 #define HardSlopeVariable_INC
 
 #include "NaryVariable.h"
-#include "pl_math.h"
-#include "Var_utils.h"
+#include "Var_operators.h"
+#include "Var_all.h"
+//#include "pl_math.h"
+//#include "Var_utils.h"
 
 namespace PLearn <%
 using namespace std;
