@@ -1038,8 +1038,10 @@ class FileInfo:
         if verbose>=2:
             print '[ FINISHED',self.filebase+self.fileext,'on',self.hostname,']'
         if  temp_objs:
-            os.chmod(self.corresponding_ofile,33279)
-                
+            try:
+                os.chmod(self.corresponding_ofile,33279)
+            except: pass
+
         warningmsgs=''
         errormsgs = ''
         if platform=='win32':
