@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RegularGridVMatrix.h,v 1.5 2004/04/05 23:01:30 morinf Exp $ 
+   * $Id: RegularGridVMatrix.h,v 1.6 2004/06/29 19:54:43 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file RegularGridVMatrix.h */
@@ -89,7 +89,7 @@ protected:
 
 public:
   //!  This is the only method requiring implementation
-  virtual void getRow(int i, Vec v) const;
+  virtual void getNewRow(int i, Vec& v) const;
 
   // simply calls inherited::build() then build_() 
   virtual void build();

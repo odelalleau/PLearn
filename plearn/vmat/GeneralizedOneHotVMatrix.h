@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: GeneralizedOneHotVMatrix.h,v 1.4 2004/04/05 22:54:05 morinf Exp $
+   * $Id: GeneralizedOneHotVMatrix.h,v 1.5 2004/06/29 19:52:56 tihocan Exp $
    ******************************************************* */
 
 
@@ -80,7 +80,7 @@ class GeneralizedOneHotVMatrix: public RowBufferedVMatrix
 
   virtual void build();
 
-  virtual void getRow(int i, Vec samplevec) const;
+  virtual void getNewRow(int i, Vec& samplevec) const;
   virtual void reset_dimensions() 
     { 
       distr->reset_dimensions(); 

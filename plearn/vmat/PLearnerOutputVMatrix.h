@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.h,v 1.7 2004/04/05 22:59:17 morinf Exp $
+   * $Id: PLearnerOutputVMatrix.h,v 1.8 2004/06/29 19:54:43 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -106,7 +106,7 @@ protected:
 
 public:
   //!  This is the only method requiring implementation
-  virtual void getRow(int i, Vec v) const;
+  virtual void getNewRow(int i, Vec& v) const;
 
   // simply calls inherited::build() then build_() 
   virtual void build();

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CenteredVMatrix.h,v 1.2 2004/06/29 13:22:55 tihocan Exp $ 
+   * $Id: CenteredVMatrix.h,v 1.3 2004/06/29 19:50:35 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -104,7 +104,7 @@ public:
   Vec getMu() const;
 
   //! This is the only method requiring implementation.
-  virtual void getRow(int i, Vec v) const;
+  virtual void getNewRow(int i, Vec& v) const;
 
   // Simply calls inherited::build() then build_().
   virtual void build();

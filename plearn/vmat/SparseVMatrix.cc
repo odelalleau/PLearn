@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SparseVMatrix.cc,v 1.4 2004/04/05 23:05:54 morinf Exp $
+   * $Id: SparseVMatrix.cc,v 1.5 2004/06/29 19:55:54 tihocan Exp $
    ******************************************************* */
 
 #include "SparseVMatrix.h"
@@ -133,13 +133,13 @@ SparseVMatrix::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-void SparseVMatrix::getRow(int i, Vec v) const
+void SparseVMatrix::getNewRow(int i, Vec& v) const
 {
 #ifdef BOUNDCHECK
   if(i<0 || i>=length())
-    PLERROR("In SparseVMatrix::getRow, row number i=%d OUT OF BOUNDS (matrix is %dx%d)",i,length(),width());
+    PLERROR("In SparseVMatrix::getNewRow, row number i=%d OUT OF BOUNDS (matrix is %dx%d)",i,length(),width());
   if(v.length()!=width())
-    PLERROR("In SparseVMatrix::getRow, length of v (%d) is different from width of VMatris (%d)",v.length(),width());
+    PLERROR("In SparseVMatrix::getNewRow, length of v (%d) is different from width of VMatris (%d)",v.length(),width());
 #endif
 
   if(nelements==0)

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FinancePreprocVMatrix.cc,v 1.9 2004/04/05 22:52:53 morinf Exp $ 
+   * $Id: FinancePreprocVMatrix.cc,v 1.10 2004/06/29 19:52:56 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file FinancePreprocVMatrix.cc */
@@ -73,7 +73,7 @@ FinancePreprocVMatrix::FinancePreprocVMatrix(VMat vm, TVec<string> the_asset_nam
   build();
 }
 
-void FinancePreprocVMatrix::getRow(int i, Vec v) const
+void FinancePreprocVMatrix::getNewRow(int i, Vec& v) const
 {
   v.resize(width());
   Vec row_buffer = v.subVec(0, underlying.width());

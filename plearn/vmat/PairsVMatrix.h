@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: PairsVMatrix.h,v 1.4 2004/04/05 22:59:40 morinf Exp $
+   * $Id: PairsVMatrix.h,v 1.5 2004/06/29 19:54:43 tihocan Exp $
    ******************************************************* */
 
 
@@ -78,7 +78,7 @@ class PairsVMatrix: public RowBufferedVMatrix
 
   virtual void build();
 
-  virtual void getRow(int ij, Vec samplevec) const;
+  virtual void getNewRow(int ij, Vec& samplevec) const;
   virtual void reset_dimensions() { PLERROR("PairsVMatrix::reset_dimensions() not implemented"); }
 private:
   void build_();

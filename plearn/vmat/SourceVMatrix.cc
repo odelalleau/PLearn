@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrix.cc,v 1.9 2004/06/11 19:09:36 tihocan Exp $ 
+   * $Id: SourceVMatrix.cc,v 1.10 2004/06/29 19:57:21 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -173,11 +173,11 @@ void SourceVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   deepCopyField(source, copies);
 }
 
-////////////
-// getRow //
-////////////
-void SourceVMatrix::getRow(int i, Vec v) const {
-  PLERROR("In SourceVMatrix::getRow - getRow not implemented for this subclass of SourceVMatrix");
+///////////////
+// getNewRow //
+///////////////
+void SourceVMatrix::getNewRow(int i, Vec& v) const {
+  PLERROR("In SourceVMatrix::getNewRow - getNewRow not implemented for this subclass of SourceVMatrix");
 }
 
 } // end of namespace PLearn

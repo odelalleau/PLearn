@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: DiskVMatrix.cc,v 1.15 2004/05/14 17:49:14 chrish42 Exp $
+   * $Id: DiskVMatrix.cc,v 1.16 2004/06/29 19:51:32 tihocan Exp $
    ******************************************************* */
 
 #include <errno.h>
@@ -230,13 +230,13 @@ void DiskVMatrix::declareOptions(OptionList &ol)
   inherited::declareOptions(ol);
 }
 
-void DiskVMatrix::getRow(int i, Vec v) const
+void DiskVMatrix::getNewRow(int i, Vec& v) const
 { 
 #ifdef BOUNDCHECK
   if(i<0 || i>length())
-    PLERROR("In DiskVMatrix::getRow, bad row number %d",i);
+    PLERROR("In DiskVMatrix::getNewRow, bad row number %d",i);
   if(v.length() != width())
-    PLERROR("In DiskVMatrix::getRow, length of v (%d) does not match matrix width (%d)",v.length(),width());
+    PLERROR("In DiskVMatrix::getNewRow, length of v (%d) does not match matrix width (%d)",v.length(),width());
 #endif
 
   unsigned char filenum;

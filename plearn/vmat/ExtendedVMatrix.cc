@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ExtendedVMatrix.cc,v 1.4 2004/04/05 22:52:26 morinf Exp $
+   * $Id: ExtendedVMatrix.cc,v 1.5 2004/06/29 19:51:32 tihocan Exp $
    ******************************************************* */
 
 #include "ExtendedVMatrix.h"
@@ -87,13 +87,13 @@ ExtendedVMatrix::build_()
 {
 }
 
-void ExtendedVMatrix::getRow(int i, Vec v) const
+void ExtendedVMatrix::getNewRow(int i, Vec& v) const
 {
 #ifdef BOUNDCHECK
   if(i<0 || i>=length())
-    PLERROR("In ExtendedVMatrix::getRow OUT OF BOUNDS");
+    PLERROR("In ExtendedVMatrix::getNewRow OUT OF BOUNDS");
   if(v.length() != width())
-    PLERROR("In ExtendedVMatrix::getRow v.length() must be equal to the VMat's width");
+    PLERROR("In ExtendedVMatrix::getNewRow v.length() must be equal to the VMat's width");
 #endif
 
   if(i<top_extent || i>=length()-bottom_extent)

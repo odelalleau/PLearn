@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: CompactVMatrix.h,v 1.5 2004/04/05 22:48:54 morinf Exp $
+   * $Id: CompactVMatrix.h,v 1.6 2004/06/29 19:50:35 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -156,7 +156,7 @@ class CompactVMatrix : public RowBufferedVMatrix
     TVec<int>& permutation_vector() { return variables_permutation; }
     
     //!  decoding (v may be one-hot depending on one_hot_encoding flag)
-    virtual void getRow(int i, Vec v) const;
+    virtual void getNewRow(int i, Vec& v) const;
     //!  encoding (v is not one-hot, and the variables in v are in the "original" order
 
     //!  return the square difference between row i and row j, excluding n_last columns

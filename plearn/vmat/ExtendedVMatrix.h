@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ExtendedVMatrix.h,v 1.4 2004/04/05 22:52:26 morinf Exp $
+   * $Id: ExtendedVMatrix.h,v 1.5 2004/06/29 19:51:32 tihocan Exp $
    ******************************************************* */
 
 
@@ -85,7 +85,7 @@ public:
 
   virtual void build();
 
-  virtual void getRow(int i, Vec v) const;
+  virtual void getNewRow(int i, Vec& v) const;
   virtual void reset_dimensions() 
     { 
       distr->reset_dimensions(); 

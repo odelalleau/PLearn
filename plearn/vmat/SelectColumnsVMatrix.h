@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectColumnsVMatrix.h,v 1.7 2004/06/10 16:12:40 tihocan Exp $
+   * $Id: SelectColumnsVMatrix.h,v 1.8 2004/06/29 20:00:58 tihocan Exp $
    ******************************************************* */
 
 
@@ -85,7 +85,7 @@ public:
 
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;
-  void getRow(int i, Vec v) const { getSubRow(i, 0, v); }
+  void getNewRow(int i, Vec& v) const { getSubRow(i, 0, v); }
   virtual void reset_dimensions() 
   { 
     source->reset_dimensions(); length_=source->length(); 

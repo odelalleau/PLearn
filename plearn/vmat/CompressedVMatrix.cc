@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CompressedVMatrix.cc,v 1.4 2004/04/05 22:49:18 morinf Exp $
+   * $Id: CompressedVMatrix.cc,v 1.5 2004/06/29 19:50:35 tihocan Exp $
    ******************************************************* */
 
 #include "VecCompressor.h"
@@ -82,13 +82,13 @@ CompressedVMatrix::CompressedVMatrix(VMat m, size_t memory_alloc)
     }
 }
 
-void CompressedVMatrix::getRow(int i, Vec v) const
+void CompressedVMatrix::getNewRow(int i, Vec& v) const
 {
 #ifdef BOUNDCHECK
   if(v.length() != width_)
-    PLERROR("In CompressedVMatrix::getRow length of v and width of matrix do not match");
+    PLERROR("In CompressedVMatrix::getNewRow length of v and width of matrix do not match");
   if(i<0 || i>=length_)
-    PLERROR("In CompressedVMatrix::getRow OUT OF BOUNDS row index");
+    PLERROR("In CompressedVMatrix::getNewRow OUT OF BOUNDS row index");
 #endif
   VecCompressor::uncompressVec(rowstarts[i],v);
 }

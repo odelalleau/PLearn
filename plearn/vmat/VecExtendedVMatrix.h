@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: VecExtendedVMatrix.h,v 1.4 2004/04/05 23:12:21 morinf Exp $
+   * $Id: VecExtendedVMatrix.h,v 1.5 2004/06/29 19:55:55 tihocan Exp $
    ******************************************************* */
 
 
@@ -78,7 +78,7 @@ public:
 
   virtual void build();
 
-  virtual void getRow(int i, Vec v) const;
+  virtual void getNewRow(int i, Vec& v) const;
   virtual void reset_dimensions() {
     underlying_->reset_dimensions();
     width_ = underlying_.width() + extend_data_.length();

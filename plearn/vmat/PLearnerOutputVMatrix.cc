@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.cc,v 1.11 2004/05/27 13:06:58 tihocan Exp $
+   * $Id: PLearnerOutputVMatrix.cc,v 1.12 2004/06/29 19:54:43 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -73,7 +73,7 @@ PLEARN_IMPLEMENT_OBJECT(PLearnerOutputVMatrix,
                         "  - optionally, the raw input part of the original data,\n"
                         "  - all the non-input columns of the original data.");
 
-void PLearnerOutputVMatrix::getRow(int i, Vec v) const
+void PLearnerOutputVMatrix::getNewRow(int i, Vec& v) const
 {
   int c=0;
   if (learners_need_train) {

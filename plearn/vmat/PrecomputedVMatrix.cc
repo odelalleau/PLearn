@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrecomputedVMatrix.cc,v 1.7 2004/04/01 14:56:35 plearner Exp $ 
+   * $Id: PrecomputedVMatrix.cc,v 1.8 2004/06/29 19:54:43 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -60,7 +60,7 @@ PLEARN_IMPLEMENT_OBJECT(PrecomputedVMatrix,
                         "in a dmat or pmat file. The name of the disk file is obtained from the metadatadir option\n"
                         "followed by precomp.dmat or precomp.pmat");
 
-void PrecomputedVMatrix::getRow(int i, Vec v) const
+void PrecomputedVMatrix::getNewRow(int i, Vec& v) const
 {
   if(precomp_source.isNull())
     PLERROR("Source has not been precomputed. Did you properly set the MetaDataDir?");

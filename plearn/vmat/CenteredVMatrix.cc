@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CenteredVMatrix.cc,v 1.2 2004/06/29 13:22:55 tihocan Exp $ 
+   * $Id: CenteredVMatrix.cc,v 1.3 2004/06/29 19:50:35 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -120,10 +120,10 @@ Vec CenteredVMatrix::getMu() const {
   return mu;
 }
 
-////////////
-// getRow //
-////////////
-void CenteredVMatrix::getRow(int i, Vec v) const
+///////////////
+// getNewRow //
+///////////////
+void CenteredVMatrix::getNewRow(int i, Vec& v) const
 {
   source->getRow(i, v);
   v -= mu;

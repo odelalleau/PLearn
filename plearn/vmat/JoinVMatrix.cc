@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: JoinVMatrix.cc,v 1.8 2004/05/22 23:52:08 yoshua Exp $
+   * $Id: JoinVMatrix.cc,v 1.9 2004/06/29 19:52:56 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -123,7 +123,7 @@ void JoinVMatrix::addStatField(const string & statis,const string & namefrom,con
   else PLERROR("Unknown statistic in JOIN operation : %s",statis.c_str());
 }
 
-void JoinVMatrix::getRow(int idx, Vec v) const
+void JoinVMatrix::getNewRow(int idx, Vec& v) const
 {
   real nonmiss;
   master->getRow(idx,v.subVec(0,master.width()));

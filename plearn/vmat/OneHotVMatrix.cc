@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: OneHotVMatrix.cc,v 1.4 2004/04/05 22:59:00 morinf Exp $
+   * $Id: OneHotVMatrix.cc,v 1.5 2004/06/29 19:54:43 tihocan Exp $
    ******************************************************* */
 
 #include "OneHotVMatrix.h"
@@ -83,13 +83,13 @@ OneHotVMatrix::declareOptions(OptionList &ol)
   inherited::declareOptions(ol);
 }
 
-void OneHotVMatrix::getRow(int i, Vec samplevec) const
+void OneHotVMatrix::getNewRow(int i, Vec& samplevec) const
 {
 #ifdef BOUNDCHECK
   if(i<0 || i>=length())
-    PLERROR("In OneHotVMatrix::getRow OUT OF BOUNDS");
+    PLERROR("In OneHotVMatrix::getNewRow OUT OF BOUNDS");
   if(samplevec.length()!=width())
-    PLERROR("In OneHotVMatrix::getRow samplevec.length() must be equal to the VMat's width");
+    PLERROR("In OneHotVMatrix::getNewRow samplevec.length() must be equal to the VMat's width");
 #endif
   Vec input = samplevec.subVec(0,width()-nclasses);
   Vec target = samplevec.subVec(width()-nclasses,nclasses);

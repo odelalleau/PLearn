@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RowsSubVMatrix.cc,v 1.3 2004/04/05 23:03:05 morinf Exp $ 
+   * $Id: RowsSubVMatrix.cc,v 1.4 2004/06/29 19:54:43 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -61,7 +61,7 @@ RowsSubVMatrix::RowsSubVMatrix(VMat the_source, int the_startrow, int the_length
 
 PLEARN_IMPLEMENT_OBJECT(RowsSubVMatrix, "ONE LINE DESCRIPTION", "MULTI-LINE \nHELP");
 
-void RowsSubVMatrix::getRow(int i, Vec v) const
+void RowsSubVMatrix::getNewRow(int i, Vec& v) const
 {
   source->getRow(startrow+i,v);
 }

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VMatLanguage.h,v 1.13 2004/04/27 05:50:59 plearner Exp $
+   * $Id: VMatLanguage.h,v 1.14 2004/06/29 19:55:55 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -150,7 +150,7 @@ DECLARE_OBJECT_PTR(VMatLanguage);
 
     virtual void build();
 
-    virtual void getRow(int i, Vec v) const;
+    virtual void getNewRow(int i, Vec& v) const;
   protected:
       void build_();
   };

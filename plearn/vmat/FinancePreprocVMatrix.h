@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FinancePreprocVMatrix.h,v 1.8 2004/04/05 22:52:53 morinf Exp $ 
+   * $Id: FinancePreprocVMatrix.h,v 1.9 2004/06/29 19:52:56 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file FinancePreprocVMatrix.h */
@@ -116,7 +116,7 @@ protected:
   void setVMFields();
 
 public:
-  virtual void getRow(int i, Vec v) const;
+  virtual void getNewRow(int i, Vec& v) const;
 
   // simply calls inherited::build() then build_() 
   virtual void build();

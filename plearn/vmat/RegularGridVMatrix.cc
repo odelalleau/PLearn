@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RegularGridVMatrix.cc,v 1.3 2004/04/05 23:01:30 morinf Exp $ 
+   * $Id: RegularGridVMatrix.cc,v 1.4 2004/06/29 19:54:43 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file RegularGridVMatrix.cc */
@@ -62,13 +62,13 @@ RegularGridVMatrix::RegularGridVMatrix(TVec<int> the_dimensions, TVec< pair<real
 PLEARN_IMPLEMENT_OBJECT(RegularGridVMatrix, "ONE LINE DESCR", 
                         "RegularGridVMatrix represents the list of coordinates along a regularly spaced grid.");
 
-void RegularGridVMatrix::getRow(int i, Vec v) const
+void RegularGridVMatrix::getNewRow(int i, Vec& v) const
 {
   int d = width();
   if(v.length()!=d)
-    PLERROR("In RegularGridVMatrix::getRow, size of v (%d) differs from vmat width (%d)",v.length(), d);
+    PLERROR("In RegularGridVMatrix::getNewRow, size of v (%d) differs from vmat width (%d)",v.length(), d);
   if(i<0 || i>=length())
-    PLERROR("In RegularGridVMatrix::getRow, row %d out of range [0,%d]",i, length()-1);
+    PLERROR("In RegularGridVMatrix::getNewRow, row %d out of range [0,%d]",i, length()-1);
   int idx = i;
   for(int k=d-1; k>=0; k--)
     {

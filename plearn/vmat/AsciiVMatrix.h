@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AsciiVMatrix.h,v 1.10 2004/04/05 23:14:13 morinf Exp $ 
+   * $Id: AsciiVMatrix.h,v 1.11 2004/06/29 19:49:20 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file AsciiVMatrix.h */
@@ -90,7 +90,7 @@ protected:
 
 public:
   //!  This is the only method requiring implementation
-  virtual void getRow(int i, Vec v) const;
+  virtual void getNewRow(int i, Vec& v) const;
 
   //! Append a row at the end of the file
   virtual void appendRow(Vec v);

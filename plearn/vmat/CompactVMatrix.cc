@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CompactVMatrix.cc,v 1.8 2004/04/05 22:48:54 morinf Exp $
+   * $Id: CompactVMatrix.cc,v 1.9 2004/06/29 19:50:35 tihocan Exp $
    ******************************************************* */
 
 #include "CompactVMatrix.h"
@@ -285,13 +285,13 @@ void CompactVMatrix::setOneHotMode(bool on)
     width_ = n_variables;
 }
 
-void CompactVMatrix::getRow(int i, Vec v) const
+void CompactVMatrix::getNewRow(int i, Vec& v) const
 {
 #ifdef BOUNDCHECK
   if (i<0 || i>=length_)
-    PLERROR("CompactVMatrix::getRow, row %d out of bounds [0,%d]",i,length_-1);
+    PLERROR("CompactVMatrix::getNewRow, row %d out of bounds [0,%d]",i,length_-1);
   if (v.length()!=width_)
-    PLERROR("CompactVMatrix::getRow, length of v (%d) should be equal to width of VMat (%d)",v.length(),width());
+    PLERROR("CompactVMatrix::getNewRow, length of v (%d) should be equal to width of VMat (%d)",v.length(),width());
 #endif
   unsigned char* encoded_row = &data.data[i*row_n_bytes];
   real* vp=v.data();
@@ -415,7 +415,7 @@ real CompactVMatrix::dot(int i, const Vec& v) const
 {
 #ifdef BOUNDCHECK
   if (i<0 || i>=length_)
-    PLERROR("CompactVMatrix::getRow, row %d out of bounds [0,%d]",i,length_-1);
+    PLERROR("CompactVMatrix::dot, row %d out of bounds [0,%d]",i,length_-1);
 #endif
 
   if(v.length()!=width()-n_last)

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: VecExtendedVMatrix.cc,v 1.4 2004/04/05 23:12:21 morinf Exp $
+   * $Id: VecExtendedVMatrix.cc,v 1.5 2004/06/29 19:55:55 tihocan Exp $
    ******************************************************* */
 
 #include "VecExtendedVMatrix.h"
@@ -83,13 +83,13 @@ VecExtendedVMatrix::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-void VecExtendedVMatrix::getRow(int i, Vec v) const
+void VecExtendedVMatrix::getNewRow(int i, Vec& v) const
 {
 #ifdef BOUNDCHECK
   if(i<0 || i>=length())
-    PLERROR("In VecExtendedVMatrix::getRow OUT OF BOUNDS");
+    PLERROR("In VecExtendedVMatrix::getNewRow OUT OF BOUNDS");
   if(v.length() != width())
-    PLERROR("In VecExtendedVMatrix::getRow v.length() must be equal to the VMat's width");
+    PLERROR("In VecExtendedVMatrix::getNewRow v.length() must be equal to the VMat's width");
 #endif
 
   Vec subv = v.subVec(0,underlying_->width());

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: AutoSDBVMatrix.h,v 1.6 2004/03/03 14:10:02 tihocan Exp $
+   * $Id: AutoSDBVMatrix.h,v 1.7 2004/06/29 19:48:45 tihocan Exp $
    * AUTHOR: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -157,7 +157,7 @@ class AutoSDBVMatrix: public RowBufferedVMatrix
 public:
   AutoSDBVMatrix(const string& dbname);
 
-  virtual void getRow(int i, Vec v) const;  
+  virtual void getNewRow(int i, Vec& v) const;  
 
   //! Returns the number of string fields (these will not be used in getRow!)
   inline int nstrings() { return sdb_.width() - width(); }

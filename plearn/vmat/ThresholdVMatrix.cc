@@ -54,13 +54,13 @@ ThresholdVMatrix::ThresholdVMatrix(VMat the_underlying_distr, real threshold_, r
     hot_value(the_hot_value), gt_threshold(gt_threshold_)
 {}
 
-void ThresholdVMatrix::getRow(int i, Vec v) const
+void ThresholdVMatrix::getNewRow(int i, Vec& v) const
 {
 #ifdef BOUNDCHECK
   if(i<0 || i>=length())
-    PLERROR("In ThresholdVMatrix::getRow OUT OF BOUNDS");
+    PLERROR("In ThresholdVMatrix::getNewRow OUT OF BOUNDS");
   if(v.length()!=width())
-    PLERROR("In ThresholdVMatrix::getRow v.length() must be equal to the VMat's width");
+    PLERROR("In ThresholdVMatrix::getNewRow v.length() must be equal to the VMat's width");
 #endif
   underlying_distr->getRow(i,v);
   int p= v.size()-1;

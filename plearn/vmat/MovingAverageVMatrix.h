@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MovingAverageVMatrix.h,v 1.2 2004/03/23 23:08:08 morinf Exp $
+   * $Id: MovingAverageVMatrix.h,v 1.3 2004/06/29 19:52:56 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -101,7 +101,7 @@ protected:
 
 public:
   //!  This is the only method requiring implementation
-  virtual void getRow(int i, Vec v) const;
+  virtual void getNewRow(int i, Vec& v) const;
 
   // simply calls inherited::build() then build_() 
   virtual void build();

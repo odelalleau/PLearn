@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CumVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $ 
+   * $Id: CumVMatrix.h,v 1.4 2004/06/29 19:50:35 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -87,17 +87,16 @@ public:
 
 private: 
   //! This does the actual building. 
-  // (Please implement in .cc)
   void build_();
 
 protected: 
   //! Declares this class' options
-  // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
 
 public:
+
   //!  This is the only method requiring implementation
-  virtual void getRow(int i, Vec v) const;
+  virtual void getNewRow(int i, Vec& v) const;
 
   // simply calls inherited::build() then build_() 
   virtual void build();

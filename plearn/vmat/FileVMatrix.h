@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.h,v 1.11 2004/06/25 13:00:44 tihocan Exp $
+   * $Id: FileVMatrix.h,v 1.12 2004/06/29 19:51:32 tihocan Exp $
    ******************************************************* */
 
 
@@ -76,7 +76,7 @@ public:
   FileVMatrix(const string& filename, int the_length, int the_width); //!<  create a new matrix file
   FileVMatrix(const string& filename, int the_length, const TVec<string>& fieldnames); //!<  create a new matrix file
 
-  virtual void getRow(int i, Vec v) const;
+  virtual void getNewRow(int i, Vec& v) const;
 
   //! Re-write the header with all current field values.
   virtual void updateHeader();

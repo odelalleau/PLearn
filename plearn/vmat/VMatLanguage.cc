@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.24 2004/06/14 19:34:29 plearner Exp $
+   * $Id: VMatLanguage.cc,v 1.25 2004/06/29 19:55:55 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -799,10 +799,10 @@ void VMatLanguage::run(int rowindex, const Vec& result) const
   run(myvec, result, rowindex);
 }
   
-  void  PreprocessingVMatrix::getRow(int i, Vec v) const
-  {
-    program.run(i,v);
-  }
+void  PreprocessingVMatrix::getNewRow(int i, Vec& v) const
+{
+  program.run(i,v);
+}
 
 PLEARN_IMPLEMENT_OBJECT(PreprocessingVMatrix, "ONE LINE DESCR", "NO HELP");
 

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: RemapLastColumnVMatrix.cc,v 1.4 2004/04/05 23:01:57 morinf Exp $
+   * $Id: RemapLastColumnVMatrix.cc,v 1.5 2004/06/29 19:54:43 tihocan Exp $
    ******************************************************* */
 
 #include "RemapLastColumnVMatrix.h"
@@ -89,13 +89,13 @@ RemapLastColumnVMatrix::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-void RemapLastColumnVMatrix::getRow(int i, Vec samplevec) const
+void RemapLastColumnVMatrix::getNewRow(int i, Vec& samplevec) const
 {
 #ifdef BOUNDCHECK
   if(i<0 || i>=length())
-    PLERROR("In RemapLastColumnVMatrix::getRow OUT OF BOUNDS");
+    PLERROR("In RemapLastColumnVMatrix::getNewRow OUT OF BOUNDS");
   if(samplevec.length()!=width())
-    PLERROR("In RemapLastColumnVMatrix::getRow samplevec.length() must be equal to the VMat's width");
+    PLERROR("In RemapLastColumnVMatrix::getNewRow samplevec.length() must be equal to the VMat's width");
 #endif
   if(mapping.isEmpty()) // use if-then-else mapping
   {

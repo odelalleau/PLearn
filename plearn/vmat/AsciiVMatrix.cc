@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AsciiVMatrix.cc,v 1.12 2004/05/04 21:15:52 nova77 Exp $ 
+   * $Id: AsciiVMatrix.cc,v 1.13 2004/06/29 19:49:20 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file AsciiVMatrix.cc */
@@ -246,13 +246,13 @@ void AsciiVMatrix::build_()
   }
 }
 
-void AsciiVMatrix::getRow(int i, Vec v) const
+void AsciiVMatrix::getNewRow(int i, Vec& v) const
 {
 #ifdef BOUNDCHECK
   if(i<0 || i>length())
-    PLERROR("In AsciiVMatrix::getRow, bad row number %d",i);
+    PLERROR("In AsciiVMatrix::getNewRow, bad row number %d",i);
   if(v.length() != width())
-    PLERROR("In AsciiVMatrix::getRow, length of v (%d) does not match matrix width (%d)",v.length(),width());
+    PLERROR("In AsciiVMatrix::getNewRow, length of v (%d) does not match matrix width (%d)",v.length(),width());
 #endif
 
   file->seekg(pos_rows[i]);

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: RemapLastColumnVMatrix.h,v 1.4 2004/04/05 23:01:57 morinf Exp $
+   * $Id: RemapLastColumnVMatrix.h,v 1.5 2004/06/29 19:54:43 tihocan Exp $
    ******************************************************* */
 
 
@@ -88,7 +88,7 @@ class RemapLastColumnVMatrix: public RowBufferedVMatrix
 
     virtual void build();
 
-    virtual void getRow(int i, Vec samplevec) const;
+    virtual void getNewRow(int i, Vec& samplevec) const;
     virtual void reset_dimensions() 
     { 
       underlying_distr->reset_dimensions(); 

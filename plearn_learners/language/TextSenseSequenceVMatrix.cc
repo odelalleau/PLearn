@@ -20,7 +20,7 @@ PLEARN_IMPLEMENT_OBJECT(TextSenseSequenceVMatrix,
                         "representation of a target word and its context.",
                         "");
 
-void TextSenseSequenceVMatrix::getRow(int i, Vec v) const
+void TextSenseSequenceVMatrix::getNewRow(int i, Vec& v) const
 {
 
   if(res_pos.size() != 0)
@@ -32,7 +32,7 @@ void TextSenseSequenceVMatrix::getRow(int i, Vec v) const
   if(i >= dvm->length() || i < 0)
     PLERROR("In TextSenseSequenceVMatrix: requesting %dth row of matrix of length %d", i, dvm->length());
   if(v.length() != 3*(window_size+1))
-    PLERROR("In TextSenseSequenceVMatrix: getRow v.length() must be equal to VMat's width");
+    PLERROR("In TextSenseSequenceVMatrix: getNewRow v.length() must be equal to VMat's width");
 
   // Fetch context already in memory
 

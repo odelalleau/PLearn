@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SparseVMatrix.h,v 1.4 2004/04/05 23:05:54 morinf Exp $
+   * $Id: SparseVMatrix.h,v 1.5 2004/06/29 19:55:54 tihocan Exp $
    ******************************************************* */
 
 
@@ -97,7 +97,7 @@ public:
 
   virtual void build();
 
-  virtual void getRow(int i, Vec v) const;
+  virtual void getNewRow(int i, Vec& v) const;
   virtual real dot(int i1, int i2, int inputsize) const;
   virtual real dot(int i, const Vec& v) const;
 

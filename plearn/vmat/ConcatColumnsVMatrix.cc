@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatColumnsVMatrix.cc,v 1.9 2004/05/31 13:41:30 chapados Exp $
+   * $Id: ConcatColumnsVMatrix.cc,v 1.10 2004/06/29 19:50:35 tihocan Exp $
    ******************************************************* */
 
 #include "ConcatColumnsVMatrix.h"
@@ -114,10 +114,10 @@ void ConcatColumnsVMatrix::build_()
   }
 }
 
-void ConcatColumnsVMatrix::getRow(int i, Vec samplevec) const
+void ConcatColumnsVMatrix::getNewRow(int i, Vec& samplevec) const
 {
   if (length_==-1)
-    PLERROR("In ConcatColumnsVMatrix::getRow(int i, Vec samplevec) not supported for distributions with different (or infinite) lengths\nCall sample without index instead");
+    PLERROR("In ConcatColumnsVMatrix::getNewRow(int i, Vec samplevec) not supported for distributions with different (or infinite) lengths\nCall sample without index instead");
   samplevec.resize(width_);
   int pos = 0;
   for(int n=0; n<array.size(); n++)

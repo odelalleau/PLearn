@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DatedJoinVMatrix.cc,v 1.8 2004/03/25 18:56:49 yoshua Exp $
+   * $Id: DatedJoinVMatrix.cc,v 1.9 2004/06/29 19:51:31 tihocan Exp $
    ******************************************************* */
 
 // Authors: *Yoshua Bengio*
@@ -78,7 +78,7 @@ PLEARN_IMPLEMENT_OBJECT(DatedJoinVMatrix,
                         "then the SUM of the master fields is computed (i.e. be careful that their sum is meaningful)\n"
                         );
 
-void DatedJoinVMatrix::getRow(int i, Vec v) const
+void DatedJoinVMatrix::getNewRow(int i, Vec& v) const
 {
   if (!master || !slave || slave_key_indices.length()==0) // etc...
     PLERROR("DatedJoinVMatrix: object was not build properly!");

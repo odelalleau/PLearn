@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsVMatrix.h,v 1.9 2004/06/10 16:11:50 tihocan Exp $
+   * $Id: SelectRowsVMatrix.h,v 1.10 2004/06/29 19:55:53 tihocan Exp $
    ******************************************************* */
 
 
@@ -77,7 +77,7 @@ public:
   //! Here the indices will be copied locally into an integer vector
   SelectRowsVMatrix(VMat the_source, Vec the_indices);
   
-    PLEARN_DECLARE_OBJECT(SelectRowsVMatrix);
+  PLEARN_DECLARE_OBJECT(SelectRowsVMatrix);
 
   static void declareOptions(OptionList &ol);
 
@@ -86,7 +86,7 @@ public:
 
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;
-  void getRow(int i, Vec v) const { getSubRow(i, 0, v); }
+  void getNewRow(int i, Vec& v) const { getSubRow(i, 0, v); }
   virtual real getStringVal(int col, const string & str) const;
   virtual string getValString(int col, real val) const;
   virtual string getString(int row,int col) const;

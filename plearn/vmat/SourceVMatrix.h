@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrix.h,v 1.7 2004/06/11 19:09:36 tihocan Exp $ 
+   * $Id: SourceVMatrix.h,v 1.8 2004/06/29 19:57:21 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -129,7 +129,7 @@ public:
   virtual void setMetaDataDir(const string& the_metadatadir);
 
   //! Must be implemented in subclasses: default version returns an error.
-  virtual void getRow(int i, Vec v) const;
+  virtual void getNewRow(int i, Vec& v) const;
 
   // simply calls inherited::build() then build_() 
   virtual void build();

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: AutoSDBVMatrix.cc,v 1.6 2004/03/04 14:53:01 tihocan Exp $
+   * $Id: AutoSDBVMatrix.cc,v 1.7 2004/06/29 19:48:45 tihocan Exp $
    * AUTHOR: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -82,13 +82,13 @@ AutoSDBVMatrix::AutoSDBVMatrix(const string& dbname)
     }
 }
 
-void AutoSDBVMatrix::getRow(int i, Vec v) const
+void AutoSDBVMatrix::getNewRow(int i, Vec& v) const
 {
   sdb_.getInRow(i, row_);
   Row::const_iterator it = row_.begin();
   int w = width();
   if(w!=v.length())
-    PLERROR("In AutoSDBVMatrix::getRow length of v must be width of VMatrix");
+    PLERROR("In AutoSDBVMatrix::getNewRow length of v must be width of VMatrix");
 
   int j=0;
   while(j<w)

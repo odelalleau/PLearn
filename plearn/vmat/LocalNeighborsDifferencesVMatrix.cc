@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocalNeighborsDifferencesVMatrix.cc,v 1.1 2004/05/28 21:55:02 monperrm Exp $ 
+   * $Id: LocalNeighborsDifferencesVMatrix.cc,v 1.2 2004/06/29 19:52:56 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus
@@ -61,10 +61,10 @@ PLEARN_IMPLEMENT_OBJECT(LocalNeighborsDifferencesVMatrix,
                         "between one of the nearest neighbors of x in the source and x itself.\n"
                         );
 
-void LocalNeighborsDifferencesVMatrix::getRow(int i, Vec v) const
+void LocalNeighborsDifferencesVMatrix::getNewRow(int i, Vec& v) const
 {
   if (width_<0)
-    PLERROR("LocalNeighborsDifferencesVMatrix::getRow called but build was not done yet");
+    PLERROR("LocalNeighborsDifferencesVMatrix::getNewRow called but build was not done yet");
   v.resize(width_);
   Mat differences = v.toMat(n_neighbors,source->width());
   static Vec neighbor_row, ith_row;

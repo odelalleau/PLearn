@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: JoinVMatrix.h,v 1.8 2004/04/05 22:55:52 morinf Exp $
+   * $Id: JoinVMatrix.h,v 1.9 2004/06/29 19:52:56 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -84,7 +84,7 @@ public:
   JoinVMatrix(){};
   JoinVMatrix(VMat mas,VMat sla,TVec<int> mi, TVec<int> si);
   void addStatField(const string & statis,const string & namefrom,const string & nameto);
-  virtual void getRow(int idx, Vec v) const;
+  virtual void getNewRow(int idx, Vec& v) const;
 
   PLEARN_DECLARE_OBJECT(JoinVMatrix);
   static void declareOptions(OptionList &ol);

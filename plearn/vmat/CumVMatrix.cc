@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CumVMatrix.cc,v 1.3 2004/03/14 22:27:45 yoshua Exp $ 
+   * $Id: CumVMatrix.cc,v 1.4 2004/06/29 19:50:35 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -62,7 +62,7 @@ PLEARN_IMPLEMENT_OBJECT(CumVMatrix, "Add columns that a cumulated values of give
                         "a cum-<column-name> column is created which will contain the sum from row 0\n"
                         "to the current row of <column-name>.\n");
 
-void CumVMatrix::getRow(int i, Vec v) const
+void CumVMatrix::getNewRow(int i, Vec& v) const
 {
   source->getRow(i,sourcerow);
   if (is_missing(accumulated_columns(i,0)))

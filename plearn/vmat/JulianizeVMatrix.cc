@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: JulianizeVMatrix.cc,v 1.5 2004/04/05 22:56:15 morinf Exp $ 
+   * $Id: JulianizeVMatrix.cc,v 1.6 2004/06/29 19:52:56 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file JulianizeVMatrix.cc */
@@ -72,7 +72,7 @@ JulianizeVMatrix::JulianizeVMatrix(VMat underlying,
 }
 
 
-void JulianizeVMatrix::getRow(int i, Vec v) const
+void JulianizeVMatrix::getNewRow(int i, Vec& v) const
 {
   underlying_->getRow(i, und_row_);
   v.resize(width());

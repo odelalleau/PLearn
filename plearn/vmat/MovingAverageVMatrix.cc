@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MovingAverageVMatrix.cc,v 1.1 2004/03/14 22:27:45 yoshua Exp $
+   * $Id: MovingAverageVMatrix.cc,v 1.2 2004/06/29 19:52:56 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -63,7 +63,7 @@ PLEARN_IMPLEMENT_OBJECT(MovingAverageVMatrix, "Perform moving average of given c
                         "created which will contain at row t the moving average from row t-<windowsize>+1\n"
                         "to t inclusively of <column-name>.\n");
 
-void MovingAverageVMatrix::getRow(int i, Vec v) const
+void MovingAverageVMatrix::getNewRow(int i, Vec& v) const
 {
   source->getRow(i,sourcerow);
   int max_target = centered_windows?min(i+max_window_size/2,length()-1):i;

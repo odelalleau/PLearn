@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: UniformizeVMatrix.cc,v 1.4 2004/04/05 23:08:50 morinf Exp $
+   * $Id: UniformizeVMatrix.cc,v 1.5 2004/06/29 19:55:55 tihocan Exp $
    ******************************************************* */
 
 #include "UniformizeVMatrix.h"
@@ -95,13 +95,13 @@ UniformizeVMatrix::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-void UniformizeVMatrix::getRow(int i, Vec v) const
+void UniformizeVMatrix::getNewRow(int i, Vec& v) const
 {
 #ifdef BOUNDCHECK
   if(i<0 || i>=length())
-    PLERROR("In UniformizeVMatrix::getRow OUT OF BOUNDS");
+    PLERROR("In UniformizeVMatrix::getNewRow OUT OF BOUNDS");
   if(v.length() != width())
-    PLERROR("In UniformizeVMatrix::getRow v.length() must be equal to the VMat's width");
+    PLERROR("In UniformizeVMatrix::getNewRow v.length() must be equal to the VMat's width");
 #endif
 
   distr->getRow(i, v);

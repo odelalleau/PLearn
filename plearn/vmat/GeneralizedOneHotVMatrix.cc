@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: GeneralizedOneHotVMatrix.cc,v 1.4 2004/04/05 22:54:05 morinf Exp $
+   * $Id: GeneralizedOneHotVMatrix.cc,v 1.5 2004/06/29 19:52:56 tihocan Exp $
    ******************************************************* */
 
 #include "GeneralizedOneHotVMatrix.h"
@@ -89,13 +89,13 @@ GeneralizedOneHotVMatrix::declareOptions(OptionList &ol)
   inherited::declareOptions(ol);
 }
 
-void GeneralizedOneHotVMatrix::getRow(int i, Vec v) const
+void GeneralizedOneHotVMatrix::getNewRow(int i, Vec& v) const
 {
 #ifdef BOUNDCHECK
   if(i<0 || i>=length())
-    PLERROR("In OneHotVMatrix::getRow OUT OF BOUNDS");
+    PLERROR("In OneHotVMatrix::getNewRow OUT OF BOUNDS");
   if(v.length()!=width())
-    PLERROR("In GeneralizedOneHotVMatrix::getRow v.length() must be equal to the VMat's width");
+    PLERROR("In GeneralizedOneHotVMatrix::getNewRow v.length() must be equal to the VMat's width");
 #endif
 
   Vec input(distr->width());

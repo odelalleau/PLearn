@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: UniformizeVMatrix.h,v 1.4 2004/04/05 23:08:50 morinf Exp $
+   * $Id: UniformizeVMatrix.h,v 1.5 2004/06/29 19:55:55 tihocan Exp $
    ******************************************************* */
 
 
@@ -85,7 +85,7 @@ public:
 
   virtual void build();
 
-  virtual void getRow(int i, Vec v) const;
+  virtual void getNewRow(int i, Vec& v) const;
   virtual void reset_dimensions()
     { distr->reset_dimensions(); width_=distr->width(); length_=distr->length(); }
 private:

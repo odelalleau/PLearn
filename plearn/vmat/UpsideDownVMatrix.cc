@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UpsideDownVMatrix.cc,v 1.4 2004/04/05 23:09:23 morinf Exp $ 
+   * $Id: UpsideDownVMatrix.cc,v 1.5 2004/06/29 19:55:55 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -59,7 +59,7 @@ UpsideDownVMatrix::UpsideDownVMatrix(VMat the_source)
 
 PLEARN_IMPLEMENT_OBJECT(UpsideDownVMatrix, "ONE LINE DESCRIPTION", "MULTI-LINE \nHELP");
 
-void UpsideDownVMatrix::getRow(int i, Vec v) const
+void UpsideDownVMatrix::getNewRow(int i, Vec& v) const
 {
   source->getRow(length_-(i+1),v);
 }

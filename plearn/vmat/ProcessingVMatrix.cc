@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ProcessingVMatrix.cc,v 1.6 2004/04/10 06:55:38 plearner Exp $ 
+   * $Id: ProcessingVMatrix.cc,v 1.7 2004/06/29 19:54:43 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -59,7 +59,7 @@ ProcessingVMatrix::ProcessingVMatrix()
 
 PLEARN_IMPLEMENT_OBJECT(ProcessingVMatrix, "ONE LINE DESCRIPTION", "MULTI-LINE \nHELP");
 
-void ProcessingVMatrix::getRow(int i, Vec v) const
+void ProcessingVMatrix::getNewRow(int i, Vec& v) const
 {
   program.run(i,v);
 }
