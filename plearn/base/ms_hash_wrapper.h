@@ -38,21 +38,20 @@
 
 #ifdef __GNUC__ // Look below after the macros for the end of this
 
-#if __GNUC__<3 
-
-#  include <hash_set> //to get stl_hash_fun.h ... (template<> class hash)
-#  include <hash_map> //to get stl_hash_fun.h ... (template<> class hash)
-  using namespace std;
-#define __NMSPACE__ std
-
-#else
+#if __GNUC__ < 3 
+#error GNUC < 3 is not supported!!
+#endif 
 
 #  include <ext/hash_set> //to get stl_hash_fun.h ... (template<> class hash)
 #  include <ext/hash_map> //to get stl_hash_fun.h ... (template<> class hash)
-  using namespace __gnu_cxx;
-#define __NMSPACE__ __gnu_cxx
 
-#endif // __GNUC__<3
+#	if __GNUC__ == 3 && __GNUC_MINOR__ == 0         // GCC 3.0
+#		define __NMSPACE__ std
+#  else                                            // GCC 3.1 or later
+#		define __NMSPACE__ __gnu_cxx
+#  endif
+
+//using namespace __NMSPACE__;
 
 // Three original cases for hash specialization and declaration:
 
