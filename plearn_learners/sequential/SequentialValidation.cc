@@ -196,7 +196,7 @@ void SequentialValidation::run()
       global_stats_vm->declareField(k,statspecs[k].statName());
     global_stats_vm->saveFieldInfos();
 
-    split_stats_vm = new FileVMatrix(dir+"split_stats.pmat", 0, 1+nstats);
+    split_stats_vm = new FileVMatrix(dir+"sequence_stats.pmat", 0, 1+nstats);
     split_stats_vm->declareField(0,"splitnum");
     for(int k=0; k<nstats; k++)
       split_stats_vm->declareField(k+1,statspecs[k].intStatName());

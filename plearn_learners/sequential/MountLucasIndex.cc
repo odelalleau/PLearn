@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.cc,v 1.17 2003/10/15 21:06:31 ducharme Exp $ 
+   * $Id: MountLucasIndex.cc,v 1.18 2003/10/16 20:51:37 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.cc */
@@ -55,8 +55,8 @@ MountLucasIndex::MountLucasIndex()
 
 void MountLucasIndex::build()
 {
-  inherited::build();
   build_();
+  inherited::build();
 }
 
 void MountLucasIndex::build_()
@@ -89,7 +89,7 @@ void MountLucasIndex::build_()
     last_day_of_month_index = train_set->fieldIndex(last_day_of_month_column);
     julian_day_index = train_set->fieldIndex(julian_day_column);
     risk_free_rate_index = train_set->fieldIndex(risk_free_rate_column);
-    sp500_index = train_set->fieldIndex(sp500_column);
+    //sp500_index = train_set->fieldIndex(sp500_column);
     build_complete = true;
   }
 
@@ -109,11 +109,12 @@ void MountLucasIndex::forget()
   last_tradable_price.fill(MISSING_VALUE);
   next_to_last_tradable_price.fill(MISSING_VALUE);
 
-  s=0,s2=0,sf=0,sf2=0,sp=0,sp2=0;
-  ns=0;
-  last_sp500 = MISSING_VALUE, last_month_sp500 = MISSING_VALUE;
   current_month = 0;
   index_value[0] = 1000.0;
+
+  //s=0,s2=0,sf=0,sf2=0,sp=0,sp2=0;
+  //ns=0;
+  //last_sp500 = MISSING_VALUE, last_month_sp500 = MISSING_VALUE;
 }
 
 void MountLucasIndex::declareOptions(OptionList& ol)
@@ -133,8 +134,8 @@ void MountLucasIndex::declareOptions(OptionList& ol)
   declareOption(ol, "risk_free_rate_column", &MountLucasIndex::risk_free_rate_column,
     OptionBase::buildoption, "The risk free rate column (in the input data) \n");
 
-  declareOption(ol, "sp500_column", &MountLucasIndex::sp500_column,
-    OptionBase::buildoption, "The S&P500 column (in the input data) \n");
+  //declareOption(ol, "sp500_column", &MountLucasIndex::sp500_column,
+  //  OptionBase::buildoption, "The S&P500 column (in the input data) \n");
 
   declareOption(ol, "transaction_multiplicative_cost", &MountLucasIndex::transaction_multiplicative_cost,
     OptionBase::buildoption, "transaction_multiplicative_cost \n");
@@ -152,13 +153,11 @@ void MountLucasIndex::train()
     last_day_of_month_index = train_set->fieldIndex(last_day_of_month_column);
     julian_day_index = train_set->fieldIndex(julian_day_column);
     risk_free_rate_index = train_set->fieldIndex(risk_free_rate_column);
-    sp500_index = train_set->fieldIndex(sp500_column);
+    //sp500_index = train_set->fieldIndex(sp500_column);
     build_complete = true;
   }
 
-  tbill_return.resize(index_value.size());
-  mlm_return.resize(index_value.size(),2);
-  mlm_index.resize(index_value.size(),4);
+  //tbill_return.resize(index_value.size());
 
   //int start_t = last_train_t+1;
   int start_t = MAX(last_train_t+1,last_test_t+1);
@@ -178,16 +177,11 @@ void MountLucasIndex::train()
   last_call_train_t = train_set.length()-1;
   if (pb) delete pb;
 
-  //mlm_index.resize(current_month,mlm_index.width());
-  saveAscii("MLMIndex.amat", mlm_index);
 /*
   //index_value.resize(current_month,1);
   //saveAscii("MLMIndex.avec", index_value);
   //cout << "Rendement du MLM Index = " << exp(log(index_value[current_month-1]/index_value[0])/(current_month/12.0)) << endl;
   cout << "Rendement du MLM Index = " << exp(log(index_value[current_month-1]/index_value[0])/(ns/12.0)) << endl;
-
-  //mlm_return.resize(current_month,2);
-  saveAscii("MLM_return.amat", mlm_return);
 
   //tbill_return.resize(current_month);
   //saveAscii("TBill_return.avec", tbill_return);
@@ -226,20 +220,16 @@ void MountLucasIndex::test(VMat testset, PP<VecStatsCollector> test_stats,
 
 /*
   //index_value.resize(current_month,1);
-  mlm_index.resize(current_month,mlm_index.width());
-  saveAscii("MLMIndex.amat", mlm_index);
   //saveAscii("MLMIndex.avec", index_value);
   //cout << "Rendement du MLM Index = " << exp(log(index_value[current_month-1]/index_value[0])/(current_month/12.0)) << endl;
   cout << "Rendement du MLM Index = " << exp(log(index_value[current_month-1]/index_value[0])/(ns/12.0)) << endl;
-
-  mlm_return.resize(current_month,2);
-  saveAscii("MLM_return.amat", mlm_return);
 
   //tbill_return.resize(current_month);
   //saveAscii("TBill_return.avec", tbill_return);
   //cout << "Rendement du TBill = " << exp(log(tbill_return[current_month-1]/tbill_return[17])/((current_month-17)/12.0)) << endl;
 */
 
+/*
   real r = s/ns;
   real v = s2/ns - r*r;
   cout << "Moyenne  de log(1+r) = " << r << endl;
@@ -256,7 +246,6 @@ void MountLucasIndex::test(VMat testset, PP<VecStatsCollector> test_stats,
   real vp = sp2/ns - rp*rp;
   cout << "Average S&P500 annual return (composed monthly) = " << exp(rp*12) << endl;
   cout << "Sharpe Ratio of S&P500 monthly log-returns = " << rp/sqrt(vp) << endl << endl;
-/*
 */
 }
 
@@ -267,8 +256,9 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
   Vec rate_return(nb_commodities);
   int julian_day = (int)input[julian_day_index];
   real risk_free_rate = input[risk_free_rate_index];
-  real sp500 = input[sp500_index];
+  //real sp500 = input[sp500_index];
   int n_traded=0;
+  int cost_name_pos = 0;
 
   for (int i=0; i<nb_commodities; i++)
   {
@@ -278,19 +268,16 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
       last_tradable_price[i] = price[i];
     }
   }
-  if (!is_missing(sp500)) last_sp500 = sp500;
+  //if (!is_missing(sp500)) last_sp500 = sp500;
 
   if (is_last_day_of_month)
   {
     PDate julian_date(julian_day);
     int this_year = julian_date.year;
     int this_month = julian_date.month;
-    int this_day = julian_date.day;
+    //int this_day = julian_date.day;
     real risk_free_rate_return=0;
-    mlm_return(current_month,0) = this_year;
-    mlm_index(current_month,0) = this_year;
-    mlm_index(current_month,1) = this_month;
-    mlm_index(current_month,2) = this_day;
+    real monthly_return = MISSING_VALUE;
     if (current_month == 0)
     {
       // next-to-last trading day of the month
@@ -300,9 +287,7 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
       // last trading day of the month
       unit_asset_value.fill(1000.0); // arbitrary initial value
       index_value[0] = 1000.0; // MLM Index initial value
-      tbill_return[0] = 1000.0; // MLM Index initial value
-      mlm_return(0,1) = 0;
-      mlm_index(current_month,3) = 1000.0;
+      //tbill_return[0] = 1000.0; // MLM Index initial value
       last_month_last_price << last_tradable_price;
       last_month_risk_free_rate = risk_free_rate;
     }
@@ -337,37 +322,39 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
       if (n_traded>0)
       {
         risk_free_rate_return = exp(log(last_month_risk_free_rate + 1.0)/12.0) - 1.0;
-        real delta = mean_with_missing(rate_return) + risk_free_rate_return;
-        real log_return = log(1+delta);
+        monthly_return = mean_with_missing(rate_return) + risk_free_rate_return;
+/*
+        real log_return = log(1.0+monthly_return);
         real sp500_return = log(last_sp500/last_month_sp500);
         s += log_return;
         s2 += log_return*log_return;
         sp += sp500_return;
         sp2 += sp500_return*sp500_return;
         ns++;
-        if (is_missing(delta)) PLWARNING("delta=nan"); //delta = 0.0; // first year
-        index_value[current_month] = index_value[current_month-1]*(1.0 + delta);
-        mlm_return(current_month,1) = delta*100.0;
+*/
+        if (is_missing(monthly_return)) PLWARNING("monthly_return=nan"); //monthly_return = 0.0; // first year
+        index_value[current_month] = index_value[current_month-1]*(1.0 + monthly_return);
       }
       else 
       {
         index_value[current_month] = index_value[current_month-1];
-        mlm_return(current_month,1) = 0;
       }
-      mlm_index(current_month,3) = index_value[current_month];
       last_month_risk_free_rate = risk_free_rate;
-      tbill_return[current_month] = is_missing(risk_free_rate_return) ? tbill_return[current_month-1] : tbill_return[current_month-1]*(1.0+risk_free_rate_return);
+      //tbill_return[current_month] = is_missing(risk_free_rate_return) ? tbill_return[current_month-1] : tbill_return[current_month-1]*(1.0+risk_free_rate_return);
     }
-    errors(t,0) = index_value[current_month];
-    //errors(current_month,0) = index_value[current_month];
-    real total_return_with_transaction_fees = 0;
+    errors(t,cost_name_pos++) = index_value[current_month];
+    errors(t,cost_name_pos++) = monthly_return;
+    errors(t,cost_name_pos++) = log(1.0+monthly_return);
+    //real total_return_with_transaction_fees = 0;
     for (int i=0; i<nb_commodities; i++)
     {
-      real old_relative_position = (is_long_position[i]?1.0:-1.0);
+      errors(t,cost_name_pos++) = log(1.0+rate_return[i]);
+      //real old_relative_position = (is_long_position[i]?1.0:-1.0);
       bool next_pos = next_position(i, next_to_last_unit_asset_value);
       real new_relative_position = (next_pos?1.0:-1.0);
       if (current_month>0 && tradable_commodity[i])
       {
+/*
         real old_position_in_dollars = old_relative_position * index_value[current_month-1];
         real new_position_in_dollars = new_relative_position * index_value[current_month];
         real transaction_amount;
@@ -378,22 +365,24 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
         real return_with_transaction_fees = rate_return[i] + risk_free_rate_return - transaction_multiplicative_cost*fabs(transaction_amount/old_position_in_dollars);
         if (!is_missing(return_with_transaction_fees))
           total_return_with_transaction_fees += return_with_transaction_fees;
+*/
         predictions(t,i) = new_relative_position*index_value[current_month]/(n_traded*last_tradable_price[i]);
-        //predictions(current_month,i) = new_relative_position*index_value[current_month]/(n_traded*last_tradable_price[i]);
       }
       else
+      {
         predictions(t,i) = 0.0;
-        //predictions(current_month,i) = 0.0;
+      }
       is_long_position[i] = next_pos;
     }
+/*
     if (current_month>0 && n_traded>0)
     {
       total_return_with_transaction_fees = log(1+total_return_with_transaction_fees/n_traded);
       sf += total_return_with_transaction_fees; 
       sf2 += total_return_with_transaction_fees*total_return_with_transaction_fees;
     }
-    last_month_sp500 = last_sp500;
-    //if (testoutputs) testoutputs->appendRow(predictions(current_month));
+*/
+    //last_month_sp500 = last_sp500;
     ++current_month;
     
     // at the end of the year, choose which commodity will be included in the index the next year
@@ -409,12 +398,20 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
   else if (t > 0)
   {
     predictions(t) << predictions(t-1);
-    errors(t,0) = errors(t-1,0);
+    errors(t,cost_name_pos++) = errors(t-1,0);
+    errors(t,cost_name_pos++) = MISSING_VALUE;
+    errors(t,cost_name_pos++) = MISSING_VALUE;
+    for (int i=0; i<nb_commodities; i++)
+      errors(t,cost_name_pos++) = MISSING_VALUE;
   }
   else // t==0
   {
     predictions(0) = 0.0;
-    errors(0,0) = 1000.0;
+    errors(0,cost_name_pos++) = 1000.0;
+    errors(0,cost_name_pos++) = MISSING_VALUE;
+    errors(0,cost_name_pos++) = MISSING_VALUE;
+    for (int i=0; i<nb_commodities; i++)
+      errors(0,cost_name_pos++) = MISSING_VALUE;
   }
 
   if (testoutputs) testoutputs->appendRow(predictions(t));
@@ -450,8 +447,16 @@ void MountLucasIndex::computeCostsFromOutputs(const Vec& input,
 
 TVec<string> MountLucasIndex::getTrainCostNames() const
 {
-  TVec<string> dummy_string(1, "MLM_Index_Value");
-  return dummy_string;
+  TVec<string> cost_names(1, "MLM_Index_Value");
+  cost_names.append("MLM_monthly_return");     // r
+  cost_names.append("MLM_monthly_log_return"); // log(1+r)
+  //! The individual returns
+  for (int i=0; i<nb_commodities; i++)
+  {
+    string name = commodity_price_columns[i]+"_monthly_log_return";
+    cost_names.append(name);
+  }
+  return cost_names;
 }
 
 TVec<string> MountLucasIndex::getTestCostNames() const

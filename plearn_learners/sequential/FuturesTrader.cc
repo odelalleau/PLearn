@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.cc,v 1.19 2003/10/15 21:19:39 dorionc Exp $ 
+   * $Id: FuturesTrader.cc,v 1.20 2003/10/16 20:51:37 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.cc */
@@ -163,20 +163,23 @@ void FuturesTrader::trader_test(int t, VMat testset, PP<VecStatsCollector> test_
       }
 
       // Checkout if a margin call is needed
-      check_margin(k, t);
+      //check_margin(k, t); PAS D'APPELS DE MARGE POUR L'INSTANT!!!
     }
   }
 
   transaction_costs[t] = transaction_cost;
-  absolute_return_t += previous_value_t * (1.0 + daily_risk_free_return) - transaction_cost;
+  absolute_return_t += previous_value_t*daily_risk_free_return - transaction_cost;
   real relative_return_t = daily_risk_free_return + (relative_sum-transaction_cost)/previous_value_t;
 
   real monthly_turnover = sum(transaction_costs,true)/(sum(portfolio_value,true)/12.0);
   Vec update = advisor->errors(t).copy();
   real log_return = log(1.0+relative_return_t);
+  real tbill_log_return = log(1.0+daily_risk_free_return);
   update.append(absolute_return_t);
   update.append(log_return);
   update.append(monthly_turnover);
+  update.append(tbill_log_return);
+  update.append(log_return - tbill_log_return);
   if(sp500 != "")
   {
     real sp500_log_return = log(sp500_price(t)/sp500_price(t-horizon));
@@ -240,10 +243,12 @@ TVec<string> FuturesTrader::getTrainCostNames() const
   cost_names.append("absolute_return");
   cost_names.append("log_return");
   cost_names.append("turnover");
+  cost_names.append("tbill_log_return"); // model(log_Rt) - TBILL(log_Rt)
+  cost_names.append("relative_tbill_log_return"); // model(log_Rt) - TBILL(log_Rt)
   if (sp500.size() > 0)
   {
     cost_names.append("sp500_log_return");
-    cost_names.append("relative_log_return"); // model(log_Rt) - SP500(log_Rt)
+    cost_names.append("relative_sp500_log_return"); // model(log_Rt) - SP500(log_Rt)
   }
 
   return cost_names;
