@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.15 2003/11/21 16:20:43 tihocan Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.16 2004/02/13 20:35:29 plearner Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -65,6 +65,9 @@ void VecStatsCollector::declareOptions(OptionList& ol)
                 "the stats for each element");
   declareOption(ol, "cov", &VecStatsCollector::cov, OptionBase::learntoption,
                 "the uncentered covariance matrix (mean not subtracted): X'.X");
+
+  declareOption(ol, "fieldnames", &VecStatsCollector::fieldnames, OptionBase::buildoption,
+                "Names of the fields of the vector");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);

@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.43 2004/01/30 18:06:10 lheureup Exp $
+   * $Id: plearn.cc,v 1.44 2004/02/13 20:35:27 plearner Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -49,6 +49,7 @@
 #include "IndexedVMatrix.h"
 #include "BatchVMatrix.h"
 #include "RegularGridVMatrix.h"
+#include "VMatrixFromDistribution.h"
 
 
 // All Available Learners: 
@@ -87,6 +88,9 @@
 #include "Grapher.h"
 #include "ConstantRegressor.h"
 
+// Distributions
+#include "SpiralDistribution.h"
+
 // SequentialLearner
 #include "SequentialLearner.h"
 #include "MovingAverage.h"
@@ -99,6 +103,7 @@
 #include "HelpCommand.h"
 #include "AutoRunCommand.h"
 #include "VMatCommand.h"
+#include "LearnerCommand.h"
 #include "KolmogorovSmirnovCommand.h"
 #include "TestDependenciesCommand.h"
 #include "ReadAndWriteCommand.h"

@@ -1,9 +1,8 @@
-
 // -*- C++ -*-
 
-// TestCommand.h
+// LearnerCommand.h
 //
-// Copyright (C) 2003  Pascal Vincent 
+// Copyright (C) 2004 Pascal Vincent 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -34,12 +33,16 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TestCommand.h,v 1.1 2003/05/23 13:53:16 plearner Exp $ 
+   * $Id: LearnerCommand.h,v 1.1 2004/02/13 20:35:29 plearner Exp $ 
    ******************************************************* */
 
-/*! \file TestCommand.h */
-#ifndef TestCommand_INC
-#define TestCommand_INC
+// Authors: Pascal Vincent
+
+/*! \file LearnerCommand.h */
+
+
+#ifndef LearnerCommand_INC
+#define LearnerCommand_INC
 
 #include "PLearnCommand.h"
 #include "PLearnCommandRegistry.h"
@@ -47,20 +50,15 @@
 namespace PLearn <%
 using namespace std;
 
-class TestCommand: public PLearnCommand
+class LearnerCommand: public PLearnCommand
 {
 public:
-  TestCommand():
-    PLearnCommand(">>>> INSERT COMMAND NAME HERE",
-
-                  ">>>> INSERT A SHORT ONE LINE DESCRIPTION HERE",
-
-                  ">>>> INSERT SYNTAX AND \n"
-                  "FULL DETAILED HELP HERE \n"
-                  ) 
-  {}
-                    
+  LearnerCommand();                    
   virtual void run(const vector<string>& args);
+
+  static void train(const string& learner_spec_file, const string& trainset_spec, const string& save_learner_file);
+  static void test(const string& trained_learner_file, const string& testset_spec, const string& stats_file, const string& outputs_file, const string& costs_file);
+  static void compute_outputs(const string& trained_learner_file, const string& test_inputs_spec, const string& outputs_file);
 
 protected:
   static PLearnCommandRegistry reg_;

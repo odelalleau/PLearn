@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.h,v 1.14 2003/11/04 18:12:53 tihocan Exp $ 
+   * $Id: VecStatsCollector.h,v 1.15 2004/02/13 20:35:29 plearner Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.h */
@@ -49,7 +49,6 @@ class VecStatsCollector: public Object
 {    
 
 protected: 
-  TVec<string> fieldnames;
 
 public:
 
@@ -61,6 +60,9 @@ public:
 
   //! maximum number of different values to keep track of for each element
   int maxnvalues; //! (default: 0, meaning we only keep track of global statistics)
+
+  //! names of the fields of the update vector
+  TVec<string> fieldnames;
 
   //! Should we compute and keep X'.X ?
   bool compute_covariance; //! (default false)
