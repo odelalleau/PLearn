@@ -1,5 +1,20 @@
 #!python
 
+
+#############################################################################################################
+## WARNING                                                                                                  #
+#  if you add options don't forget to add in the pymake file                                                #
+#       optionargs.remove('myoption')                                                                       #
+#  If you don't, because of the follwing pymake command                                                     #
+#       #Building name of object subdirectory                                                               #
+#       objsdir = join('OBJS', platform + '__' + string.join(options,'_'))                                  #
+#       print '*** Running pymake using following options: ' + string.join(map(lambda o: '-'+o, options))   #
+# you will create useless OBJS repertory                                                                    #
+# (unless the option change the resulting OBJS files)                                                       #
+#############################################################################################################
+
+
+
 # Qt Specific stuff
 
 qtdir = '/usr/lib/qt-3.1/'
