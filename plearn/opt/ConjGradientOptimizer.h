@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.11 2003/04/23 18:34:33 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.12 2003/04/24 14:30:13 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -70,6 +70,7 @@ class ConjGradientOptimizer : public Optimizer {
   // The various formulas available to find the new search direction
   enum FindNewDirectionType {
     CONJPOMDP,
+    DaiYuan,
     FletcherReeves,
     HestenesStiefel,
     PolakRibiere
@@ -204,6 +205,13 @@ private:
       void (*grad)(Optimizer*, const Vec& gradient),
       ConjGradientOptimizer* opt);
 
+  // The Dai-Yuan formula proposed in
+  // "A nonlinear conjugate gradient method with a strong gloval convergence
+  // property" by Dai, Yuan (1999)
+  void daiYuan (
+      void (*grad)(Optimizer*, const Vec&),
+      ConjGradientOptimizer* opt);
+
   // The Fletcher-Reeves formula used to find the new direction
   // h(n) = -g(n) + norm2(g(n)) / norm2(g(n-1)) * h(n-1)
   static void fletcherReeves (
@@ -274,6 +282,14 @@ public:   // TODO For test purpose... remove later
       real f0, real f1, real g0, real g1,
       real& a, real& b, real& c, real& d);
 
+
+  // The main function for the Dai-Yuan formula
+  // (see the conjugate gradient formulas)
+  static real daiYuanMain (
+      Vec new_gradient,
+      Vec old_gradient,
+      Vec old_search_direction,
+      Vec tmp_storage);
 
   // Find the minimum of the cubic interpolation of function f, with g=df/dx,
   // in the interval [mini, maxi], given values at points p1 and p2

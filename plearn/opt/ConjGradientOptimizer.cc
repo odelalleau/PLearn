@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.11 2003/04/23 18:00:19 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.12 2003/04/24 14:30:12 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -307,6 +307,40 @@ void ConjGradientOptimizer::cubicInterpol(
   a = g0 + g1 - 2*(f1 - f0);
 }
 
+/////////////
+// dayYuan //
+/////////////
+void ConjGradientOptimizer::daiYuan (
+    void (*grad)(Optimizer*, const Vec&),
+    ConjGradientOptimizer* opt) {
+  // delta = opposite gradient
+  (*grad)(opt, opt->delta);
+  real gamma = daiYuanMain(
+      opt->delta, opt->current_opp_gradient, opt->search_direction,
+      opt->tmp_storage);
+  for (int i=0; i<opt->search_direction.length(); i++) {
+    opt->search_direction[i] = 
+      opt->delta[i] + gamma * opt->search_direction[i];
+  }
+  opt->current_opp_gradient << opt->delta;
+}
+
+/////////////////
+// daiYuanMain //
+/////////////////
+real ConjGradientOptimizer::daiYuanMain (
+    Vec new_gradient,
+    Vec old_gradient,
+    Vec old_search_direction,
+    Vec tmp_storage) {
+  real norm_grad = pownorm(new_gradient);
+  for (int i=0; i<old_gradient.length(); i++) {
+    tmp_storage[i] = -new_gradient[i] + old_gradient[i];
+  }
+  real gamma = norm_grad / dot(old_search_direction, tmp_storage);
+  return gamma;
+}
+
 ///////////////////
 // findDirection //
 ///////////////////
@@ -317,12 +351,15 @@ bool ConjGradientOptimizer::findDirection() {
       isFinished = conjpomdp(computeOppositeGradient, this);
       break;
     case 1:
-      fletcherReeves(computeOppositeGradient, this);
+      daiYuan(computeOppositeGradient, this);
       break;
     case 2:
-      hestenesStiefel(computeOppositeGradient, this);
+      fletcherReeves(computeOppositeGradient, this);
       break;
     case 3:
+      hestenesStiefel(computeOppositeGradient, this);
+      break;
+    case 4:
       polakRibiere(computeOppositeGradient, this);
       break;
   }
@@ -605,7 +642,7 @@ void ConjGradientOptimizer::hestenesStiefel (
   for (i=0; i<opt->current_opp_gradient.length(); i++) {
     opt->current_opp_gradient[i] = opt->delta[i] - opt->current_opp_gradient[i];
   }
-  real gamma = dot(opt->delta, opt->current_opp_gradient) / dot(opt->search_direction, opt->current_opp_gradient);
+  real gamma = -dot(opt->delta, opt->current_opp_gradient) / dot(opt->search_direction, opt->current_opp_gradient);
   for (i=0; i<opt->search_direction.length(); i++) {
     opt->search_direction[i] = opt->delta[i] + gamma * opt->search_direction[i];
   }
