@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TSVMClassification.cc,v 1.3 2005/02/23 21:53:52 tihocan Exp $ 
+   * $Id: TSVMClassification.cc,v 1.4 2005/02/24 14:12:33 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -41,9 +41,12 @@
 /*! \file TSVMClassification.cc */
 
 
+#include <plearn/vmat/GetInputVMatrix.h>
+#include <plearn/vmat/SelectRowsVMatrix.h>
 #include "TSVMClassification.h"
 #include <plearn_torch/TDataSet.h>
 #include <plearn_torch/TKernel.h>
+#include <plearn_torch/TorchDataSetFromVMat.h>
 #include <plearn_torch/TSequence.h>
 #include <torch/SVMClassification.h>
 
@@ -55,6 +58,7 @@ TSVMClassification::TSVMClassification()
   C(100),
   cache_size(50)
 {
+  sv_save = "vmat";
 }
 
 PLEARN_IMPLEMENT_OBJECT(TSVMClassification,
@@ -80,24 +84,18 @@ void TSVMClassification::declareOptions(OptionList& ol)
 
   // Hide some parent's options.
 
-  declareOption(ol, "sv_sequences", &TSVMClassification::sv_sequences, OptionBase::nosave,
-      "This is just a subset of the dataset. Thus we do not need to save it explicitely,\n"
-      "since it can be constructed from 'data' and 'support_vectors'.");
+  redeclareOption(ol, "sv_sequences", &TSVMClassification::sv_sequences, OptionBase::nosave,
+      "No need for this because sv_save == 'vmat'.");
+
+  redeclareOption(ol, "sv_save", &TSVMClassification::sv_save, OptionBase::nosave,
+      "It is set automatically to 'vmat' because we use a subset of the training set.");
 
 }
 
 void TSVMClassification::build_()
 {
-  // ### This method should do the real building of the object,
-  // ### according to set 'options', in *any* situation. 
-  // ### Typical situations include:
-  // ###  - Initial building of an object from a few user-specified options
-  // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-  // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-  // ### You should assume that the parent class' build_() has already been called.
 }
 
-// ### Nothing to add here, simply calls build_
 void TSVMClassification::build()
 {
   inherited::build();
@@ -134,6 +132,15 @@ void TSVMClassification::updateFromPLearn(Torch::Object* ptr) {
   FROM_P_TVEC (C_j,        C_j,        svm_class, Cuser, n_alpha    );
 
   if (options["data"] && options["support_vectors"] && data) {
+    sv_sequences_vmat =
+      new SelectRowsVMatrix(
+          new GetInputVMatrix(
+            ((Torch::TorchDataSetFromVMat*) data->dataset)->vmat),
+          support_vectors                                         );
+  } else
+    sv_sequences_vmat = 0;
+  /*
+  if (options["data"] && options["support_vectors"] && data && false) {
     // Build sv_sequences from the dataset and the support vectors.
     // TODO Do something cleaner !
     int n = support_vectors.length();
@@ -156,6 +163,7 @@ void TSVMClassification::updateFromPLearn(Torch::Object* ptr) {
       frames_buf += dat->inputs->getFramesSpace();
     }
   }
+  */
 
   inherited::updateFromPLearn(svm_class);
   // NB: not updating sequences_buffer, frames_buffer.
@@ -169,7 +177,12 @@ void TSVMClassification::updateFromTorch() {
   FROM_T_BASIC(C,          C,          svm_class, C_cst             );
   FROM_T_TVEC (C_j,        C_j,        svm_class, Cuser, n_alpha    );
 
+  // There is actually no need to update the VMat 'sv_sequences_vmat' since
+  // it can be obtained automatically from the dataset and the indices.
+  string sv_save_backup = sv_save;
+  sv_save = "no";
   inherited::updateFromTorch();
+  sv_save = sv_save_backup;
 }
 
 } // end of namespace PLearn
