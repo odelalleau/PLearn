@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.cc,v 1.12 2003/01/31 16:28:25 morinf Exp $
+   * $Id: WordNetOntology.cc,v 1.13 2003/01/31 16:29:07 morinf Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -632,13 +632,7 @@ Node* WordNetOntology::extractOntology(SynsetPtr ssp)
     if (parent_node == NULL) // create new synset Node
     {
       parent_node = extractOntology(ssp);
-<<<<<<< WordNetOntology.cc
-      parent_node->key = ssp->hereiam; // FRED MODIF
-//      cout << "key = " << node->key << ", " << "pos = " << ssp->pos << ", "
-//           << "fnum = " << ssp->fnum << endl;
-=======
       parent_node->key = ssp->hereiam;
->>>>>>> 1.11
     }
     
     node->parents.insert(parent_node->ss_id);
