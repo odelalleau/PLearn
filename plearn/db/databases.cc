@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: databases.cc,v 1.10 2004/07/09 20:16:11 tihocan Exp $
+   * $Id: databases.cc,v 1.11 2004/07/12 17:48:23 mariusmuja Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -912,8 +912,9 @@ void loadUCISet(VMat& data, string file, PP<UCISpecification> uci_spec) {
     if (ts == -1) {
       PLERROR("In loadUCISet - We don't know how many columns to move");
     }
-    if (uci_spec->weightsize > 0)
+    if (uci_spec->weightsize > 0) {
       PLERROR("In loadUCISet - Damnit, I don't like weights");
+    }
     the_data.resize(the_data.length(), the_data.width() + ts);
     Vec row;
     for (int i = 0; i < the_data.length(); i++) {
@@ -924,7 +925,24 @@ void loadUCISet(VMat& data, string file, PP<UCISpecification> uci_spec) {
   }
   data = VMat(the_data);
   data->defineSizes(uci_spec->inputsize, uci_spec->targetsize, uci_spec->weightsize);
-  // TODO Free the symbols stuff and turn them into regular string <-> real mappings.
+  
+  
+  // Add symbol mappings
+  for (int j=0;j<data->width();j++) {
+    for (int k=0;k<to_n_symbols[j];k++) {
+      data->addStringMapping(j,string(to_symbols[j][k]),real(max_in_col[j]+k+1));
+    }
+  }
+  
+  // Free up the symbols
+  for (int i=0; i<data->width(); i++) 
+  {
+    for (int j=0; j<to_n_symbols[i]; j++)
+      free(to_symbols[i][j]);
+    free(to_symbols[i]);
+  }
+  free(to_symbols);
+  free(to_n_symbols);
 }
 
 } // end of namespace PLearn
