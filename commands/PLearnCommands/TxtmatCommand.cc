@@ -1,8 +1,9 @@
+
 // -*- C++ -*-
 
-// ServerCommand.cc
+// TxtmatCommand.h
 //
-// Copyright (C) 2005 Pascal Vincent 
+// Copyright (C) 2003-2004 ApSTAT Technologies Inc. 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -32,51 +33,40 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
-   * $Id: ServerCommand.cc,v 1.3 2005/01/11 23:43:40 plearner Exp $ 
-   ******************************************************* */
-
 // Authors: Pascal Vincent
 
-/*! \file ServerCommand.cc */
+/* *******************************************************      
+   * $Id: TxtmatCommand.cc,v 1.1 2005/01/11 23:43:40 plearner Exp $ 
+   ******************************************************* */
 
+/*! \file TxtmatCommand.h */
+#ifndef TxtmatCommand_INC
+#define TxtmatCommand_INC
 
-#include "ServerCommand.h"
-#include "plearn/misc/PLearnServer.h"
+#include <commands/PLearnCommands/PLearnCommand.h>
+#include <commands/PLearnCommands/PLearnCommandRegistry.h>
+#include <apstatlib/vmat/TextFilesVMatrix.h>
+
 
 namespace PLearn {
 using namespace std;
 
-//! This allows to register the 'ServerCommand' command in the command registry
-PLearnCommandRegistry ServerCommand::reg_(new ServerCommand);
-
-ServerCommand::ServerCommand():
-    PLearnCommand("server",
-
-                  "Launches plearn in computation server mode",
-
-                  "server\n"
-                  "  Launches plearn in stdin/stdout server mode, \n"
-                  "  listening for commands on standard in \n"
-                  "  and outputing results on standard out. \n"
-                  " \n"
-                  "server [<listen_port>] \n"
-                  "  Launches plearn in TCP server mode, (not yet implemented) \n"
-                  "  Will initially output to stdout: hostname port \n"
-                  "  and wait for a connection on the given TCP port. \n"
-                  "  All i/o for commands are then done through that connection. \n"
-                  " \n"
-                  )
-  {}
-
-//! The actual implementation of the 'ServerCommand' command 
-void ServerCommand::run(const vector<string>& args)
+class TxtmatCommand: public PLearnCommand
 {
-  cerr << "Type ? to get some help." << endl;
-  PStream io(&std::cin, &std::cout);
-  PLearnServer server(io);
-  server.run();
-}
+public:
+  TxtmatCommand();
+                    
+  virtual void run(const vector<string>& args);
 
+  //! curses interactive viewing
+  static void view(PP<TextFilesVMatrix> vm, int lin=0, int col=0);
+  static void checkstuff(PP<TextFilesVMatrix> vm);
+
+protected:
+  static PLearnCommandRegistry reg_;
+};
+
+  
 } // end of namespace PLearn
 
+#endif
