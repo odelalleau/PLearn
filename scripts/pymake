@@ -1079,6 +1079,8 @@ class FileInfo:
     def launch_linking(self):
         corresponding_output = self.corresponding_output
         self.corresponding_output = self.corresponding_output+".new"
+        try: os.remove(self.corresponding_output)
+        except: pass
         command = self.link_command()
         if verbose>=3:
 	        print command
