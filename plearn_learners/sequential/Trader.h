@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.h,v 1.2 2003/09/27 04:05:24 dorionc Exp $ 
+ * $Id: Trader.h,v 1.3 2003/09/28 21:40:46 dorionc Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -77,6 +77,9 @@ protected:
   
   //! List of indices associated with the price fields in the VMat
   TVec<int> assets_price_indices;
+
+  //! The k element is the last time at which asset k had a non-missing price
+  TMat<int> last_valid_price;
   
   //! List of indices associated with the tradable flag fields in the VMat
   TVec<int> assets_tradable_indices;
@@ -198,9 +201,8 @@ public:
   //! This parses the train_set VMat to get the infos on the assets
   void assets_info();
   
-  //! Returns the price of the given asset at a given *TEST* time. 
-  inline real price(int k, int t) const
-    { return internal_data_set(t, assets_price_indices[k]); }
+  //! Returns the price of the given asset at a given time. 
+  real price(int k, int t) const;
   
   //******************
   //! Returns the return on the given asset at a given time. 

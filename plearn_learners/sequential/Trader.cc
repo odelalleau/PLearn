@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.cc,v 1.2 2003/09/27 04:05:24 dorionc Exp $ 
+ * $Id: Trader.cc,v 1.3 2003/09/28 21:40:46 dorionc Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -79,6 +79,8 @@ void Trader::build_()
   
   // Gestion of the list of names
   assets_info();
+  last_valid_price.resize(max_seq_len, assets_names.length());
+  last_valid_price.fill(-1);
   
   if( stop_loss_active ){
     if(stop_loss_horizon < 1 || stop_loss_threshold == -INFINITY)
@@ -164,7 +166,7 @@ void Trader::assets_info()
   assets_tradable_indices.resize(assets_names.length());
   int asset_index = 0;
   if(first_asset_is_cash){
-    assets_price_indices[0] = internal_data_set->fieldIndex(risk_free_rate);
+    assets_price_indices[0] = internal_data_set->fieldIndex(risk_free_rate);    
     assets_tradable_indices[0] = -1;
     asset_index++;
   }
@@ -260,6 +262,33 @@ void Trader::declareOptions(OptionList& ol)
                 "Whether or not the assets names should be parse by the assets_info method");
   
   inherited::declareOptions(ol);
+}
+
+real Trader::price(int k, int t) const
+{ 
+  real price_ = internal_data_set(t, assets_price_indices[k]); 
+  if(is_missing(price_))
+  {
+    // This test also ensures an end the recursive call that may follow...
+    if(t==0)
+      PLERROR("price(%d, %d): The model tries to trade on an asset on which we had no valid price yet", k,t);
+
+    // The method price was not called at t-1 for assset k
+    // The call to 'price(k, t-1)' ensures that the last_valid_price matrix is properly filled
+    if( last_valid_price(t-1, k) == -1 )
+      price_ = price(k, t-1); 
+    else
+      price_ = internal_data_set(last_valid_price(t-1, k), assets_price_indices[k]);  
+
+    // Update the field last_valid_price with the last one for asset k
+    last_valid_price(t, k) = last_valid_price(t-1, k);
+  }
+  else
+  {
+    // The price is valid and we must update
+    last_valid_price(t, k) = t;
+  }
+  return price_;
 }
 
 void Trader::setTrainingSet(VMat training_set, bool call_forget/*=true*/)
