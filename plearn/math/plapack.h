@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plapack.h,v 1.18 2004/05/19 17:26:29 tihocan Exp $
+   * $Id: plapack.h,v 1.19 2004/05/28 21:55:01 monperrm Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -369,6 +369,8 @@ void generalizedEigenVecOfSymmMat(TMat<num_t>& m1, TMat<num_t>& m2, int itype, i
 
 /*! Performs the SVD decomposition A = U.S.Vt
   See SVD(...) for more details.
+
+CAREFUL: the 'At' matrix argument is changed in the process!
 
 This is a straight forward call to the lapack function.
 As fortran uses column-major matrices, and we use row-major matrices,

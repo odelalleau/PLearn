@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Func.cc,v 1.17 2004/05/27 15:02:07 monperrm Exp $
+   * $Id: Func.cc,v 1.18 2004/05/28 21:55:01 monperrm Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -74,13 +74,13 @@ Func::Func(const VarArray& the_inputs, const VarArray& the_outputs)
 }
 */
 
-Vec Func::operator()(const Vec& input)
+Vec Func::operator()(const Vec& input) const
 { return ptr->operator()(input); }
 
-real Func::operator()(const Vec& input1, const Vec& input2)
+real Func::operator()(const Vec& input1, const Vec& input2) const
 { return ptr->operator()(input1, input2); }
 
-VarArray Func::operator()(const VarArray& new_inputs)
+VarArray Func::operator()(const VarArray& new_inputs) const
 { return ptr->operator()(new_inputs); }
 
 Func operator/(Func f, real value)
@@ -196,21 +196,21 @@ void Function::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   deepCopyField(parameters, copies);
 }
 
-void Function::fprop(const Vec& in, const Vec& out)
+void Function::fprop(const Vec& in, const Vec& out) const
 {
   inputs << in;
   fproppath.fprop();
   outputs >> out;
 }
 
-void Function::fprop(const Array<Vec>& in, const Array<Vec>& out)
+void Function::fprop(const Array<Vec>& in, const Array<Vec>& out) const
 {
   inputs << in;
   fproppath.fprop();
   outputs >> out;
 }
 
-real Function::operator()(const Vec& input1, const Vec& input2)
+real Function::operator()(const Vec& input1, const Vec& input2) const
 {
   if(inputs.size()!=2 || outputsize!=1)
     PLERROR("You can only call real Function::operator()(const Vec& input1, const Vec& input2) for a function that has 2 input Vars and a single scalar output Var"); 
@@ -370,7 +370,7 @@ Func Function::differentiate()
   return df;
 }
 
-Vec Function::operator()(const Vec& input)
+Vec Function::operator()(const Vec& input) const
 { 
   Vec output(outputsize);
   fprop(input,output); 
@@ -379,7 +379,7 @@ Vec Function::operator()(const Vec& input)
 
 // new version that uses the new deepCopy system
 
-VarArray Function::operator()(const VarArray& new_inputs)
+VarArray Function::operator()(const VarArray& new_inputs) const
 {
   CopiesMap copies;
 
@@ -411,7 +411,7 @@ VarArray Function::operator()(const VarArray& new_inputs)
 
 // Old Version that uses the old clone system
 /*
-VarArray Function::operator()(const VarArray& new_inputs)
+VarArray Function::operator()(const VarArray& new_inputs) const
 {
   for(int i=0; i<inputs.size(); i++)
     {

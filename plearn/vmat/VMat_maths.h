@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat_maths.h,v 1.14 2004/05/28 15:35:50 tihocan Exp $
+   * $Id: VMat_maths.h,v 1.15 2004/05/28 21:55:02 monperrm Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -258,6 +258,8 @@ VMat temporalThreshold(VMat distr, int threshold_date, bool is_before,
 //! Compute the correlations between each of the columns of x and each of the 
 //! columns of y. The results are in the x.width() by y.width() matrix r.
 void correlations(const VMat& x, const VMat& y, Mat& r, Mat& pvalues);
+
+void computeNearestNeighbors(VMat dataset, Vec x, TVec<int>& neighbors, int ignore_row=-1);
 
 } // end of namespace PLearn
 

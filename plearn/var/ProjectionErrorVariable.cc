@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ProjectionErrorVariable.cc,v 1.1 2004/05/27 15:03:06 monperrm Exp $
+   * $Id: ProjectionErrorVariable.cc,v 1.2 2004/05/28 21:55:01 monperrm Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -137,8 +137,11 @@ void ProjectionErrorVariable::fprop()
   //    w_j = B t_j is our solution.
   //
   Mat F = input1->matValue;
+  static Mat F_copy;
+  F_copy.resize(F.length(),F.width());
+  F_copy << F;
   // N.B. this is the SVD of F'
-  lapackSVD(F, Ut, S, V);
+  lapackSVD(F_copy, Ut, S, V);
   VVt.clear();
   for (int i=0;i<n_dim;i++)
   {
@@ -149,7 +152,7 @@ void ProjectionErrorVariable::fprop()
       externalProductScaleAcc(VVt, Vi, Vi, 1.0 / (s_i * s_i));
     }
   }
-  productAcc(B,VVt,F);
+  product(B,VVt,F);
   //  now we have B, we can compute the w's and the cost
   real cost = 0;
   for(int j=0; j<T;j++)
@@ -186,7 +189,7 @@ void ProjectionErrorVariable::bprop()
     for (int i=0;i<n_dim;i++)
     {
       Vec df_i = input1->matGradient(i); // n-vector
-      multiplyAcc(df_i, fw_minus_tj, gradient[0] * wj[i]);
+      multiplyAcc(df_i, fw_minus_tj, gradient[0] * wj[i]*2);
     }
   }
 }

@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: lisaplearn.cc,v 1.27 2004/05/27 13:02:59 tihocan Exp $
+   * $Id: lisaplearn.cc,v 1.28 2004/05/28 21:55:01 monperrm Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -121,6 +121,7 @@
 #include "ConstantRegressor.h"
 #include "MultiInstanceVMatrix.h"
 #include "SortRowsVMatrix.h"
+#include "LocalNeighborsDifferencesVMatrix.h"
 
 // Available Distributions
 #include "ConditionalDensityNet.h"

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Func.h,v 1.9 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: Func.h,v 1.10 2004/05/28 21:55:01 monperrm Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -71,15 +71,15 @@ public:
 
   Func(const VarArray& the_inputs, const VarArray& parameters_to_optimize,const VarArray& the_outputs);
 
-  Vec operator()(const Vec& input);
+  Vec operator()(const Vec& input) const;
 
-  real operator()(const Vec& input1, const Vec& input2);
+  real operator()(const Vec& input1, const Vec& input2) const;
 
 /*!     builds a whole new Var graph modeled after the current one
     but starting from new_inputs (instead of inputs) 
     the resulting new_outputs var array is returned by the call
 */
-  VarArray operator()(const VarArray& new_inputs);
+  VarArray operator()(const VarArray& new_inputs) const;
 };
 
 class Function: public Object
@@ -87,14 +87,14 @@ class Function: public Object
 public:
 
   // Build options:
-  VarArray inputs;
-  VarArray parameters;  //!< nonInputSources
-  VarArray outputs;
+  mutable VarArray inputs;
+  mutable VarArray parameters;  //!< nonInputSources
+  mutable VarArray outputs;
 
   // Other variables
   int inputsize;
   int outputsize;
-  VarArray fproppath;
+  mutable VarArray fproppath;
   VarArray bproppath;
   VarArray parentspath; //!<  path on which to do a fprop to update the values of all the non-input direct parents on the fproppath (this will be called by method recomputeParents() )
 
@@ -140,8 +140,8 @@ public:
   // **** Function methods ****
   // **************************
 
-  void fprop(const Vec& in, const Vec& out);
-  void fprop(const Array<Vec>& in, const Array<Vec>& out);
+  void fprop(const Vec& in, const Vec& out) const;
+  void fprop(const Array<Vec>& in, const Array<Vec>& out) const;
 
 /*!   when put_gradient_on_first_element_only, a gradient of 1 is put
       in only the first element of the output gradient this is a hack
@@ -168,8 +168,8 @@ public:
 */
   Func differentiate();
 
-  Vec operator()(const Vec& input);
-  real operator()(const Vec& input1, const Vec& input2);
+  Vec operator()(const Vec& input) const;
+  real operator()(const Vec& input1, const Vec& input2) const;
 
 /*!       builds a whole new Var graph modeled after the current one but
       starting from new_inputs (instead of inputs) the resulting
@@ -179,7 +179,7 @@ public:
       variables in the path are shared).
 */
 
-  VarArray operator()(const VarArray& new_inputs);
+  VarArray operator()(const VarArray& new_inputs) const;
 
   //!  take the values given in the in Vec
   void verifyGradient(const Vec& in, real step=0.01);

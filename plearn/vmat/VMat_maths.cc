@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat_maths.cc,v 1.21 2004/05/28 15:35:50 tihocan Exp $
+* $Id: VMat_maths.cc,v 1.22 2004/05/28 21:55:02 monperrm Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat_maths.h"
@@ -55,6 +55,7 @@
 #include "VecStatsCollector.h"
 #include "ConditionalStatsCollector.h"
 #include "stats_utils.h"
+#include "BottomNI.h"
 
 namespace PLearn {
 using namespace std;
@@ -1263,6 +1264,30 @@ void correlations(const VMat& x, const VMat& y, Mat& r, Mat& pvalues)
 
 }
 
+// This is an efficient version of the most basic nearest neighbor search, using a Mat and euclidean distance
+void computeNearestNeighbors(VMat dataset, Vec x, TVec<int>& neighbors, int ignore_row)
+{
+  int K = neighbors.length(); // how many neighbors do we want?
+  BottomNI<real> neighbs(K);
+  Vec row(dataset->width());
+  for(int i=0; i<dataset->length(); i++)
+    if(i!=ignore_row)
+    {
+      dataset->getRow(i,row);
+      neighbs.update(powdistance(row,x), i);
+    }
+  neighbs.sort();
+  TVec< pair<real,int> > indices = neighbs.getBottomN();
+  int nonzero=0;
+  for(int k=0; k<K; k++)
+  {
+    if(indices[k].first>0)
+      nonzero++;
+    neighbors[k] = indices[k].second;
+  }
+  if(nonzero==0)
+    PLERROR("All neighbors had 0 distance. Use more neighbors. (There were %i other patterns with same values)",neighbs.nZeros());
+}
 
 
 } // end of namespace PLearn
