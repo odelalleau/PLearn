@@ -66,40 +66,37 @@ public:
   int get_last_test_t(){ return last_test_t; }
   
 public:
-
-    int max_seq_len; // max length of the VMat that train can contain = max de t ci-haut
-    int max_train_len; // max nb of (input,target) pairs actually used for training
-    int train_step; // how often we have to re-train a model, (default = 1 = after every time step)
-    int horizon; // by how much to offset the target columns wrt the input columns (default = 1)
-    int outputsize_;
-
-    // these two fields are used by other classes such as SequentialModelSelector
-    // and SequentialValidation and they are filled when the method test is called 
-    Mat predictions; // each element indexed by (time_index, output_index), there are (max_seq_len,outputsize) elements.
-    // initial values may be 'missing value' 
-    Mat errors; // each element indexed by (time_index, cost_index), there are (max_seq_len,nCosts) elements.
   
-  //! This field is mainly used in financial learner such as FuturesTrader to get AND modify portofolios' positions during test
-  mutable Mat state;
-
-  private:
-    //! This does the actual building
-    void build_();
-
-  protected:
-    //! Declare this class' options
-    static void declareOptions(OptionList& ol);
-
+  int max_seq_len; // max length of the VMat that train can contain = max de t ci-haut
+  int max_train_len; // max nb of (input,target) pairs actually used for training
+  int train_step; // how often we have to re-train a model, (default = 1 = after every time step)
+  int horizon; // by how much to offset the target columns wrt the input columns (default = 1)
+  int outputsize_;
+  
+  // these two fields are used by other classes such as SequentialModelSelector
+  // and SequentialValidation and they are filled when the method test is called 
+  Mat predictions; // each element indexed by (time_index, output_index), there are (max_seq_len,outputsize) elements.
+  // initial values may be 'missing value' 
+  Mat errors; // each element indexed by (time_index, cost_index), there are (max_seq_len,nCosts) elements.
+  
+private:
+  //! This does the actual building
+  void build_();
+  
+protected:
+  //! Declare this class' options
+  static void declareOptions(OptionList& ol);
+  
   public:
-
-    //! Constructor
-    SequentialLearner();
-
-    //! simply calls inherited::build() then build_()
-    virtual void build();
-
-    //! Default behaviour: return train_set->targetsize()
-    virtual int outputsize() const;
+  
+  //! Constructor
+  SequentialLearner();
+  
+  //! simply calls inherited::build() then build_()
+  virtual void build();
+  
+  //! Default behaviour: return train_set->targetsize()
+  virtual int outputsize() const;
   
 /*!       *** SUBCLASS WRITING: ***
       Does the actual training. Subclasses must implement this method.

@@ -34,14 +34,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.h,v 1.9 2003/09/23 21:07:02 ducharme Exp $ 
+   * $Id: MountLucasIndex.h,v 1.10 2003/09/24 19:22:43 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.h */
 #ifndef MountLucasIndex_INC
 #define MountLucasIndex_INC
 
-#include "SequentialLearner.h"
+#include "FinancialAdvisor.h"
 
 namespace PLearn <%
 using namespace std;
@@ -51,7 +51,7 @@ using namespace std;
 //! Series: The MLM Index (Special Report #3)".  We can find this report on their
 //! web page : http://www.mtlucas.com/research.htm
 
-class MountLucasIndex: public SequentialLearner
+class MountLucasIndex: public FinancialAdvisor
 {
   public:
     TVec<string> commodity_price_columns; // the commodity price columns in the input data
@@ -133,7 +133,7 @@ class MountLucasIndex: public SequentialLearner
 
     //!  Does the necessary operations to transform a shallow copy (this)
     //!  into a deep copy by deep-copying all the members that need to be.
-    typedef SequentialLearner inherited;
+    typedef FinancialAdvisor inherited;
     PLEARN_DECLARE_OBJECT(MountLucasIndex);
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 };

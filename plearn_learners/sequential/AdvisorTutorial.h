@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdvisorTutorial.h,v 1.1 2003/09/17 15:48:00 dorionc Exp $ 
+   * $Id: AdvisorTutorial.h,v 1.2 2003/09/24 19:22:43 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -44,12 +44,12 @@
 #ifndef BidSL_INC
 #define BidSL_INC
 
-#include "SequentialLearner.h"
+#include "FinancialAdvisor.h"
 
 namespace PLearn <%
 using namespace std;
 
-class AdvisorTutorial: public SequentialLearner
+class AdvisorTutorial: public FinancialAdvisor
 {
   protected:
  
@@ -96,9 +96,9 @@ class AdvisorTutorial: public SequentialLearner
 
     //!  Does the necessary operations to transform a shallow copy (this)
     //!  into a deep copy by deep-copying all the members that need to be.
-  typedef SequentialLearner inherited;
-    PLEARN_DECLARE_OBJECT(AdvisorTutorial);
-    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+  typedef FinancialAdvisor inherited;
+  PLEARN_DECLARE_OBJECT(AdvisorTutorial);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 };
 
 //! Declares a few other classes and functions related to this class
