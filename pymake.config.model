@@ -173,7 +173,6 @@ options_choices = [
   [ 'double', 'float' ],
   [ 'throwerrors', 'exiterrors' ], 
   [ 'blas', 'p3blas','p4blas','athlonblas','pentiumblas', 'noblas', 'veclib', 'scs'],
-  [ 'nospc','spc']
 ]
 
 
@@ -320,9 +319,6 @@ pymakeOption( name = 'throwerrors',
 
 pymakeOption( name = 'exiterrors',
               description = 'PLERROR will not throw exceptions, but write the error message and exit' )
-
-pymakeOption( name = 'nospc',
-              description = 'Don''t use Smart Parallel Compilation')
 
 pymakeOption( name = 'spc',
               description = 'Use of Smart Parallel Compilation')

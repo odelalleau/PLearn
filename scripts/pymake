@@ -442,9 +442,6 @@ while i < len(args):
     i = i + 1
 #/JF
 
-if 'spc' in optionargs or SPC:
-    print '*** Running pymake using Smart Parallel Compilation'
-    os.system('pyfreemachines '+SPClistfile+' '+SPCresultfile)
 
 if 'clean' in optionargs:
     if len(optionargs)!=1 or len(otherargs)==0:
@@ -469,6 +466,11 @@ if 'force' in optionargs:
     force_recompilation = 1
     optionargs.remove('force')
 
+if 'spc' in optionargs or SPC:
+    print '*** Running pymake using Smart Parallel Compilation'
+    os.system('pyfreemachines '+SPClistfile+' '+SPCresultfile)
+    optionargs.remove('spc')
+    
 local_compilation = 0 # do we want to do everything locally?
 if platform=='win32':
   local_compilation = 1 # in windows, we ALWAYS work locally
