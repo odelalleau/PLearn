@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DistanceKernel.cc,v 1.9 2004/08/04 14:34:10 lheureup Exp $
+   * $Id: DistanceKernel.cc,v 1.10 2004/08/05 13:48:42 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -89,13 +89,19 @@ real DistanceKernel::evaluate(const Vec& x1, const Vec& x2) const {
 real DistanceKernel::evaluate_i_j(int i, int j) const {
   static real d;
   if (n == 2.0) {
+    if (i == j)
+      // The case 'i == j' can cause precision issues because of the optimized
+      // formula below. Thus we make sure we always return 0.
+      return 0;
     d = squarednorms[i] + squarednorms[j] - 2 * data->dot(i, j, data_inputsize);
     if (d < 0) {
       // This can happen (especially when compiled in -opt) if the two points
       // are the same, and the distance should be zero.
       if (d < -1e-2)
         // That should not happen.
-        PLERROR("In DistanceKernel::evaluate_i_j - Found a (significantly) negative distance (%f) for %d %d", d,i,j);
+        PLERROR("In DistanceKernel::evaluate_i_j - Found a (significantly) negative distance (%f), "
+            "i = %d, j = %d, squarednorms[i] = %f, squarednorms[j] = %f, dot = %f",
+            d, i, j, squarednorms[i], squarednorms[j], data->dot(i, j, data_inputsize));
       d = 0;
     }
     if (pow_distance)
@@ -115,8 +121,9 @@ void DistanceKernel::setDataForKernelMatrix(VMat the_data)
   inherited::setDataForKernelMatrix(the_data);
   if (n == 2.0) {
     squarednorms.resize(data.length());
-    for(int index=0; index<data.length(); index++)
+    for(int index=0; index<data.length(); index++) {
       squarednorms[index] = data->dot(index, index, data_inputsize);
+    }
   }
 }
 
