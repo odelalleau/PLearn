@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.h,v 1.8 2003/04/29 19:44:49 tihocan Exp $
+   * $Id: GradientOptimizer.h,v 1.9 2003/04/30 13:30:03 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -175,8 +175,8 @@ using namespace std;
   private:
 
     // Basic learning rate adaptation
-    // If grad(i) > 0 : lr(i) = lr(i) * adapt_coeff1
-    // else           : lr(i) = lr(i) * adapt_coeff2
+    // If grad(i) > 0 : lr(i) = lr(i) + lr(i) * adapt_coeff1
+    // else           : lr(i) = lr(i) - lr(i) * adapt_coeff2
     void adaptLearningRateBasic(
         Vec learning_rates,
         Vec old_params,

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.cc,v 1.10 2003/04/29 21:01:41 tihocan Exp $
+   * $Id: GradientOptimizer.cc,v 1.11 2003/04/30 13:30:03 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -222,8 +222,18 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
 
   for (; !early_stop && stage<nstages; stage++) {
 
-    learning_rate = start_learning_rate/(1.0+decrease_constant*stage);
-    // TODO Make it work with ALAP !
+    // Take into account the learning rate decrease
+    // TODO Incorporate it into other learning rate adaptation kinds ?
+    switch (learning_rate_adaptation) {
+      case 0:
+        learning_rate = start_learning_rate/(1.0+decrease_constant*stage);
+        break;
+      case 1:
+        break;
+      case 2:
+        break;
+    }
+
     proppath.clearGradient();
     if (adapt)
       cost->gradient[0] = -1.;
@@ -446,9 +456,9 @@ void GradientOptimizer::adaptLearningRateBasic(
       u = old_evol[j];
       old_evol[j] = array[i]->valuedata[j-k] - old_params[j];
       if (u * old_evol[j] > 0)
-        learning_rates[j] *= adapt_coeff1;
+        learning_rates[j] += learning_rates[j] * adapt_coeff1;
       else if (u * old_evol[j] < 0)
-        learning_rates[j] *= adapt_coeff2;
+        learning_rates[j] -= learning_rates[j] * adapt_coeff2;
       if (learning_rates[j] < min_learning_rate) {
         learning_rates[j] = min_learning_rate;
         nb_min++;
