@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StatefulLearner.cc,v 1.7 2005/02/01 16:23:22 chapados Exp $ 
+   * $Id: StatefulLearner.cc,v 1.8 2005/03/07 20:48:46 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Réjean Ducharme
@@ -91,10 +91,12 @@ void StatefulLearner::resetInternalState()
 
 void StatefulLearner::computeOutput(const Vec& input, Vec& output) const
 {
-  PLWARNING("You called StatefulLearner::computeOutput(...), are you sure you don't want to use computeOutputAndCosts(...) instead???");
+  // PLWARNING("You called StatefulLearner::computeOutput(...), are you sure you don't want to use computeOutputAndCosts(...) instead???");
 
-  static Vec tmp_target;
-  static Vec tmp_costs;
+  // These cannot be static because of potential re-entrancy problem upon
+  // recursive calls
+  Vec tmp_target(targetsize());
+  Vec tmp_costs(nTestCosts());
   tmp_target.resize(targetsize());
   tmp_costs.resize(nTestCosts());
   computeOutputAndCosts(input, tmp_target, output, tmp_costs);
