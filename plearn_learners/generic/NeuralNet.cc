@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeuralNet.cc,v 1.4 2002/10/21 05:18:59 plearner Exp $
+   * $Id: NeuralNet.cc,v 1.5 2003/01/27 22:01:58 wangxian Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeuralNet.h */
@@ -361,6 +361,7 @@ void NeuralNet::train(VMat training_set)
   output_and_target_to_cost->recomputeParents();
   costf->recomputeParents();
   cerr << "totalcost->value = " << totalcost->value << endl;
+  cout << "Result for benchmark is: " << totalcost->value << endl;
   setTrainCost(totalcost->value);
 }
 
