@@ -929,7 +929,9 @@ class FileInfo:
         to hold the corresponding_ofile and corresponding_output """
         odir = join(self.filedir, objsdir)
         if not os.path.isdir(odir):  # make sure the OBJS dir exists, otherwise the command will fail
-            os.makedirs(odir)
+          os.makedirs(odir)
+        if objspolicy == 2:
+          os.chmod(odir,33279) #litle hack to be sure that others users will access to /tmp/OBJS for example
         
     def make_symbolic_link(self, linkname):
         """ recreates the symbolic link in filedir pointing to the executable in subdirectory objsdir """
