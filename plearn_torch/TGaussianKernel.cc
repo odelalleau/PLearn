@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TGaussianKernel.cc,v 1.2 2005/02/23 16:34:49 tihocan Exp $ 
+   * $Id: TGaussianKernel.cc,v 1.3 2005/02/23 21:48:58 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -55,7 +55,8 @@ TGaussianKernel::TGaussianKernel()
 
 PLEARN_IMPLEMENT_OBJECT(TGaussianKernel,
     "Interface between PLearn and a Torch GaussianKernel object",
-    ""
+    "For the ease of use, we allow one to define either the original 'g' options,\n"
+    "or alternatively to define the kernel bandwidth 'sigma'.\n"
 );
 
 void TGaussianKernel::declareOptions(OptionList& ol)
@@ -121,9 +122,8 @@ void TGaussianKernel::updateFromPLearn(Torch::Object* ptr) {
   }
   if (g >= 0)
     gaussian_kernel->g = g;
-  else {
+  else
     gaussian_kernel->g = 1.0 / (sigma * sigma);
-  }
 
   inherited::updateFromPLearn(gaussian_kernel);
 }
@@ -135,6 +135,7 @@ void TGaussianKernel::updateFromTorch() {
   if (gaussian_kernel->g == 0)
     g = 0;
   else {
+    assert( gaussian_kernel->g > 0 );
     sigma = 1.0 / sqrt(gaussian_kernel->g);
     if (g >= 0)
       g = gaussian_kernel->g;
