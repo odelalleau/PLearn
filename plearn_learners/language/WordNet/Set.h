@@ -1,0 +1,138 @@
+#ifndef SET_H
+#define SET_H
+
+#include "pl_io.h"
+
+namespace PLearn {
+
+class PPointableSet : public set<int>, public PPointable
+{
+public:
+  PPointableSet() {}
+  virtual ~PPointableSet() {}
+};
+
+typedef PPointableSet::iterator SetIterator;
+
+class Set : public PP<PPointableSet>
+{
+
+public:
+
+  Set() : PP<PPointableSet>(new PPointableSet) {}
+  Set(PPointableSet* p) : PP<PPointableSet>(p) {}
+
+  bool contains(int i) { return ptr->find(i) != ptr->end(); }
+  void insert(int i) { ptr->insert(i); }
+  int size() { return ptr->size(); }
+  bool isEmpty() { return (ptr->size() == 0); }
+  void remove(int i) { ptr->erase(i); }
+  void clear() { ptr->clear(); }
+  
+  void merge(Set s) 
+  {
+    Set res;
+    set_union(begin(), end(),
+              s.begin(), s.end(),
+              insert_iterator<PPointableSet>(*res, res.begin()));
+    *ptr = *res;
+  }
+
+  void difference(Set s)
+  {
+    Set res;
+    set_difference(begin(), end(),
+                   s.begin(), s.end(),
+                   insert_iterator<PPointableSet>(*res, res.begin()));
+    *ptr = *res;
+  }
+
+  void intersection(Set s)
+  {
+    Set res;
+    set_intersection(begin(), end(),
+                     s.begin(), s.end(),
+                     insert_iterator<PPointableSet>(*res, res.begin()));
+    *ptr = *res;
+  }
+
+  SetIterator begin() { return ptr->begin(); }
+  SetIterator end() { return ptr->end(); }
+  
+  bool operator==(Set& s) { return *ptr == *s.ptr; }
+  bool operator!=(Set& s) { return *ptr != *s.ptr; }
+
+};
+
+inline void merge(Set a, Set b, Set res)
+{
+  set_union(a.begin(), a.end(),
+            b.begin(), b.end(),
+            insert_iterator<PPointableSet>(*res, res.begin()));
+}
+
+inline void difference(Set a, Set b, Set res)
+{
+  set_difference(a.begin(), a.end(),
+                 b.begin(), b.end(),
+                 insert_iterator<PPointableSet>(*res, res.begin()));
+}
+
+inline void intersection(Set a, Set b, Set res)
+{
+  set_intersection(a.begin(), a.end(),
+                   b.begin(), b.end(),
+                   insert_iterator<PPointableSet>(*res, res.begin()));
+}
+
+inline ostream& operator<<(ostream& out, Set s)
+{
+  for(SetIterator it = s.begin(); it != s.end(); ++it)
+  {
+    out << *it << " ";
+  }
+  return out;
+}
+
+}
+
+// inline pl_ostream& operator<<(pl_ostream& out, Set& s)
+// {
+//   int l = s.size(); 
+//   out << l;
+//   if (out.flags.test(plf_binary)) {
+//     for(SetIterator it = s.begin(); it != s.end(); ++it)
+//       PLearn::binwrite(out,*it);
+//   }
+//   else {
+//     out << raw << '\n';
+//     for(SetIterator it = s.begin(); it != s.end(); ++it)
+//       out << *it << " ";
+//     out << raw << '\n';
+//   }
+//   return out;
+// }
+
+// inline pl_istream& operator>>(pl_istream& in, Set& s)
+// {
+//   int l;
+//   s.clear();
+//   in >> l;
+//   int v=0;
+//   if (in.flags.test(plf_binary)) {
+//     for (int i=0;i<l;i++)
+//     {
+//       PLearn::binread(in,v);
+//       s.insert(v);
+//     }
+//   }
+//   else {
+//     for (int i=0;i<l;i++)
+//     {
+//       in >> v;
+//       s.insert(v);
+//     }
+//   }
+// }
+
+#endif

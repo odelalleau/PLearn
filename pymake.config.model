@@ -45,6 +45,7 @@ os.path.join(plearndir,'plearn_learners/misc'),
 os.path.join(plearndir,'plearn_learners/classifiers'),
 os.path.join(plearndir,'plearn_learners/densities'),
 os.path.join(plearndir,'plearn_learners/language'),
+os.path.join(plearndir,'plearn_learners/language/WordNet'),
 os.path.join(plearndir,'plearn_learners/regressors'),
 os.path.join(plearndir,'plearn_learners_experimental'),
 
