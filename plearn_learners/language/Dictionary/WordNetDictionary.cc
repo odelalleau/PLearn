@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: WordNetDictionary.cc,v 1.4 2004/09/14 18:52:56 kermorvc Exp $ 
+   * $Id: WordNetDictionary.cc,v 1.5 2004/10/01 20:07:05 kermorvc Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
@@ -70,7 +70,7 @@ WordNetDictionary::WordNetDictionary(string ontology_name,bool up_mode, bool ste
 {
   setStemMode(stem);
   setUpdateMode(up_mode);
-  ontology_file_name=ontology_name;
+  ontology_file_name=abspath(ontology_name);
 }
 
   
