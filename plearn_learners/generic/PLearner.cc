@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.19 2003/10/10 21:10:17 ducharme Exp $
+   * $Id: PLearner.cc,v 1.20 2003/10/18 23:20:12 yoshua Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -136,11 +136,9 @@ void PLearner::setExperimentDirectory(const string& the_expdir)
 void PLearner::setTrainingSet(VMat training_set, bool call_forget)
 { 
   train_set = training_set;
+  build(); // MODIF FAITE PAR YOSHUA: sinon apres un setTrainingSet le build n'est pas complete dans un NNet train_set = training_set;
   if (call_forget)
-  {
-    build();
     forget();
-  }
 }
 
 //! Returns train_set->inputsize()
