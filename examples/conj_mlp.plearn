@@ -55,6 +55,7 @@ NNet(
                       stop_epsilon = 0.0001;
                       tau1 = 2  ;
                       restart_coeff = 0.2  ;
+                      compute_cost = 0 ;
                       )
 
           # int: how many samples to use to estimate the avergage gradient before updating the weights
