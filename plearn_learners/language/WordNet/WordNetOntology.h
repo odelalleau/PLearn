@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.h,v 1.19 2003/10/14 14:35:35 larocheh Exp $
+   * $Id: WordNetOntology.h,v 1.20 2003/11/28 17:15:53 larocheh Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -65,6 +65,8 @@
 #define NUMERIC_TYPE 8
 #define PROPER_NOUN_TYPE 9
 
+#define SYNSETTAG_ID -2
+
 #define UNDEFINED_SS_ID -1
 #define ROOT_SS_ID 0
 #define SUPER_UNKNOWN_SS_ID 1 // 'unknown' means "out of WordNet"
@@ -79,6 +81,23 @@
 #define STOP_SS_ID 10
 #define BOS_SS_ID 11
 #define EOS_SS_ID 12
+
+#define UNDEFINED_OFFSET -1
+#define ROOT_OFFSET -2
+#define SUPER_UNKNOWN_OFFSET -3 // 'unknown' means "out of WordNet"
+#define NOUN_OFFSET -4
+#define VERB_OFFSET -5
+#define ADJ_OFFSET -6
+#define ADV_OFFSET -7
+#define OOV_OFFSET -8 // out-of-vocabulary
+#define PROPER_NOUN_OFFSET -9
+#define NUMERIC_OFFSET -10
+#define PUNCTUATION_OFFSET -11
+#define STOP_OFFSET -12
+#define BOS_OFFSET -13
+#define EOS_OFFSET -14
+
+#define SUPER_FNUM -1
 
 #define NULL_TAG "<null>"
 
@@ -125,8 +144,8 @@ void replaceChars(string& str, string char_to_replace, string replacing_char);
 
 struct Node
 {
-  Node() { ss_id = UNDEFINED_SS_ID; is_unknown = true; visited = false; }
-  Node(int id) { ss_id = id; is_unknown = true; visited = false; }
+  Node() { ss_id = UNDEFINED_SS_ID; is_unknown = true; visited = false; fnum = SUPER_FNUM; hereiam = 0;}
+  Node(int id) { ss_id = id; is_unknown = true; visited = false; fnum = SUPER_FNUM; hereiam = 0;}
   int ss_id;
   Set types;
   string gloss;
@@ -136,6 +155,8 @@ struct Node
   bool is_unknown;
   //int level;
   bool visited;
+  long hereiam;
+  int fnum;
 };
 
 class WordNetOntology
@@ -166,7 +187,7 @@ protected:
   map<int, Set> word_to_high_level_senses;
   map<pair<int, int>, int> word_sense_to_unique_id;
   map<int, Set> word_to_under_target_level_high_level_senses; // BIG HACK!!!
-  map<string,int> sense_key_to_ss_id;
+  map< pair<int, string>,int> sense_key_to_ss_id;
   map<pair<int,int>, string> ws_id_to_sense_key;
 
   int word_index; // unique id for words
@@ -239,7 +260,7 @@ public:
 
   // main access methods
   string getSenseKey(int word_id, int ss_id);
-  int getSynsetIDForSenseKey(string sense_key);
+  int getSynsetIDForSenseKey(int word_id, string sense_key);
   int getWordId(string word);
   string getWord(int id);
   int getWordSenseIdForWnsn(string word, int wn_pos_type, int wnsn);
@@ -289,7 +310,7 @@ public:
   bool containsWord(string word) { return (words_id.find(word) != words_id.end()); }
   bool containsWordId(int id) { return (words.find(id) != words.end()); }
 
-  Node *findSynsetFromSynsAndGloss(const vector<string> &syns, const string &gloss);
+  Node *findSynsetFromSynsAndGloss(const vector<string> &syns, const string &gloss, const long offset, const int fnum);
   void removeNonReachableSynsets();
 
   void print(bool print_ontology = true);

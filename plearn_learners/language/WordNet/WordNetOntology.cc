@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.cc,v 1.25 2003/10/14 14:35:35 larocheh Exp $
+   * $Id: WordNetOntology.cc,v 1.26 2003/11/28 17:15:53 larocheh Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -142,6 +142,7 @@ void  WordNetOntology::createBaseSynsets()
   root_node->syns.push_back("ROOT");
   root_node->types.insert(UNDEFINED_TYPE);
   root_node->gloss = "(root concept)";
+  root_node->hereiam = ROOT_OFFSET;
   synsets[ROOT_SS_ID] = root_node;
   //root_node->visited = true;
 
@@ -150,6 +151,7 @@ void  WordNetOntology::createBaseSynsets()
   unk_node->syns.push_back("SUPER_UNKNOWN");
   unk_node->types.insert(UNDEFINED_TYPE);
   unk_node->gloss = "(super-unknown concept)";
+  unk_node->hereiam = SUPER_UNKNOWN_OFFSET;
   synsets[SUPER_UNKNOWN_SS_ID] = unk_node;
   //unk_node->visited = true;
 
@@ -162,6 +164,7 @@ void  WordNetOntology::createBaseSynsets()
   oov_node->syns.push_back("OOV");
   oov_node->types.insert(UNDEFINED_TYPE);
   oov_node->gloss = "(out-of-vocabulary)";
+  oov_node->hereiam = OOV_OFFSET;
   synsets[OOV_SS_ID] = oov_node;
   //oov_node->visited = true;
 
@@ -174,6 +177,7 @@ void  WordNetOntology::createBaseSynsets()
   proper_node->syns.push_back("PROPER NOUN");
   proper_node->types.insert(UNDEFINED_TYPE);
   proper_node->gloss = "(proper noun)";
+  proper_node->hereiam = PROPER_NOUN_OFFSET;
   synsets[PROPER_NOUN_SS_ID] = proper_node;
   //proper_node->visited = true;
 
@@ -181,6 +185,7 @@ void  WordNetOntology::createBaseSynsets()
   num_node->syns.push_back("NUMERIC");
   num_node->types.insert(UNDEFINED_TYPE);
   num_node->gloss = "(numeric)";
+  num_node->hereiam = NUMERIC_OFFSET;
   synsets[NUMERIC_SS_ID] = num_node;
   //num_node->visited = true;
 
@@ -188,6 +193,7 @@ void  WordNetOntology::createBaseSynsets()
   punct_node->syns.push_back("PUNCTUATION");
   punct_node->types.insert(UNDEFINED_TYPE);
   punct_node->gloss = "(punctuation)";
+  punct_node->hereiam = PUNCTUATION_OFFSET;
   synsets[PUNCTUATION_SS_ID] = punct_node;
   //punct_node->visited = true;
 
@@ -195,18 +201,21 @@ void  WordNetOntology::createBaseSynsets()
   stop_node->syns.push_back("STOP");
   stop_node->types.insert(UNDEFINED_TYPE);
   stop_node->gloss = "(stop)";
+  stop_node->hereiam = STOP_OFFSET;
   synsets[STOP_SS_ID] = stop_node;
 
   Node* bos_node = new Node(BOS_SS_ID);
   bos_node->syns.push_back("BOS");
   bos_node->types.insert(UNDEFINED_TYPE);
   bos_node->gloss = "(BOS)";
+  bos_node->hereiam = BOS_OFFSET;
   synsets[BOS_SS_ID] = bos_node;
 
   Node* eos_node = new Node(EOS_SS_ID);
   eos_node->syns.push_back("EOS");
   eos_node->types.insert(UNDEFINED_TYPE);
   eos_node->gloss = "(EOS)";
+  eos_node->hereiam = EOS_OFFSET;
   synsets[EOS_SS_ID] = eos_node;
 
   // link them <-> SUPER-UNKNOWN
@@ -228,6 +237,7 @@ void  WordNetOntology::createBaseSynsets()
   noun_node->syns.push_back("NOUN");
   noun_node->types.insert(UNDEFINED_TYPE);
   noun_node->gloss = "(noun concept)";
+  noun_node->hereiam = NOUN_OFFSET;
   synsets[NOUN_SS_ID] = noun_node;
   //noun_node->visited = true;
 
@@ -235,6 +245,7 @@ void  WordNetOntology::createBaseSynsets()
   verb_node->syns.push_back("VERB");
   verb_node->types.insert(UNDEFINED_TYPE);
   verb_node->gloss = "(verb concept)";
+  verb_node->hereiam = VERB_OFFSET;
   synsets[VERB_SS_ID] = verb_node;
   //verb_node->visited = true;
 
@@ -242,6 +253,7 @@ void  WordNetOntology::createBaseSynsets()
   adj_node->syns.push_back("ADJECTIVE");
   adj_node->types.insert(UNDEFINED_TYPE);
   adj_node->gloss = "(adjective concept)";
+  adj_node->hereiam = ADJ_OFFSET;
   synsets[ADJ_SS_ID] = adj_node;
   //adj_node->visited = true;
   
@@ -249,6 +261,7 @@ void  WordNetOntology::createBaseSynsets()
   adv_node->syns.push_back("ADVERB");
   adv_node->types.insert(UNDEFINED_TYPE);
   adv_node->gloss = "(adverb concept)";
+  adv_node->hereiam = ADV_OFFSET;
   synsets[ADV_SS_ID] = adv_node;
   //adv_node->visited = true;
   
@@ -458,12 +471,13 @@ void WordNetOntology::extractWord(string original_word, int wn_pos_type, bool tr
 
 }
 
+
 Node *
-WordNetOntology::findSynsetFromSynsAndGloss(const vector<string> &syns, const string &gloss)
+WordNetOntology::findSynsetFromSynsAndGloss(const vector<string> &syns, const string &gloss, const long offset, const int fnum)
 {
     for (map<int, Node *>::iterator it = synsets.begin(); it != synsets.end(); ++it) {
         Node *node = it->second;
-        if ((node->gloss == gloss) && (node->syns == syns))
+        if ((node->gloss == gloss) && (node->syns == syns) && (node->hereiam == offset) && (node->fnum == fnum))
             return node;
     }
     return NULL;
@@ -490,6 +504,8 @@ WordNetOntology::extractTaggedWordFrequencies(map<int, map<int, int> > &word_sen
     word_senses_to_tagged_frequencies.clear();
     vector<string> syns;
     string gloss;
+    long offset;
+    int fnum;
 
     int total_senses_found = 0;
     ShellProgressBar progress(0, words.size() * dbases_size, "[Extracting word-sense tagged frequencies]", 50);
@@ -527,7 +543,10 @@ WordNetOntology::extractTaggedWordFrequencies(map<int, map<int, int> > &word_sen
                                 //       this is not useful...
                                 syns = getSynsetWords(cursyn);
                                 gloss = string(cursyn->defn);
-                                Node *node = findSynsetFromSynsAndGloss(syns, gloss);
+                                offset = cursyn->hereiam;
+                                fnum = cursyn->fnum;
+                                
+                                Node *node = findSynsetFromSynsAndGloss(syns, gloss, offset, fnum);
                                 if (node != NULL) {
                                     (ws2tf_it->second)[node->ss_id] = freq;
                                     ++total_senses_found;
@@ -582,6 +601,7 @@ int WordNetOntology::extractFrequencies(string word, int whichsense, int dbase)
 
 bool WordNetOntology::extractSenses(string original_word, string processed_word, int wn_pos_type)
 {
+
   //char* cword = const_cast<char*>(processed_word.c_str());
   char* cword = cstr(processed_word);
   SynsetPtr ssp = NULL;
@@ -658,12 +678,22 @@ bool WordNetOntology::extractSenses(string original_word, string processed_word,
       word_to_senses[word_id].insert(node->ss_id);
       sense_to_words[node->ss_id].insert(word_id);
 
-      //cout << "wnsn: " << wnsn << endl;
       char *charsk = WNSnsToStr(idx, wnsn);
       string sense_key(charsk);
-      sense_key_to_ss_id[sense_key] = node->ss_id;
+
+      
+
+      pair<int, string> ss(word_id,sense_key);
+      if (sense_key_to_ss_id.find(ss) == sense_key_to_ss_id.end())
+        sense_key_to_ss_id[ss] = node->ss_id;
       pair<int, int> ws(word_id, node->ss_id);
-      ws_id_to_sense_key[ws] = sense_key;
+
+      //cout << sense_key << "word_id: " << word_id << "synset " << node->ss_id << endl;
+
+      // e.g. green%1:13:00:: and greens%1:13:00:: 
+      // correspond to the same synset
+      if (ws_id_to_sense_key.find(ws) == ws_id_to_sense_key.end())
+        ws_id_to_sense_key[ws] = sense_key;
 
       // warning : should check if inserting a given sense twice (vector)
       // (should not happen if vocabulary contains only unique values)
@@ -702,6 +732,8 @@ Node* WordNetOntology::extractOntology(SynsetPtr ssp)
   removeDelimiters(defn, "*", "%");
   removeDelimiters(defn, "|", "/");
   node->gloss = defn;
+  node->hereiam = ssp->hereiam;
+  node->fnum = ssp->fnum;
   node->is_unknown = false;
   synsets[node->ss_id] = node;
 
@@ -860,10 +892,12 @@ int WordNetOntology::getWordSenseIdForSenseKey(string lemma, string lexsn, strin
     vector<string> synset_words = getSynsetWords(ssp);
     string gloss = ssp->defn;
     int word_id = words_id[word];
+    long offset = ssp->hereiam;
+    int fnum = ssp->fnum;
     for (SetIterator it = word_to_senses[word_id].begin(); it != word_to_senses[word_id].end(); ++it)
     {
       Node* node = synsets[*it];
-      if (node->syns == synset_words && node->gloss == gloss)
+      if (node->syns == synset_words && node->gloss == gloss && node->hereiam == offset && node->fnum == fnum)
         return node->ss_id;
     }
   }
@@ -880,6 +914,7 @@ void WordNetOntology::processUnknownWord(int word_id)
     unk_node->syns.push_back("UNKNOWN_SENSE_" + tostring(unknown_sense_id));
     unk_node->gloss = "(unknown sense " + tostring(unknown_sense_id) + ")";
     unk_node->types.insert(UNDEFINED_TYPE);
+    unk_node->hereiam = EOS_OFFSET - unknown_sense_id - 1;
     synsets[unk_node->ss_id] = unk_node;
    
     // link UNKNOWN <-> SUPER-UNKNOWN
@@ -1002,10 +1037,12 @@ Node* WordNetOntology::checkForAlreadyExtractedSynset(SynsetPtr ssp)
 {
   vector<string> syns = getSynsetWords(ssp);
   string gloss = ssp->defn;
+  long offset = ssp->hereiam;
+  int fnum = ssp->fnum;
   for (map<int, Node*>::iterator it = synsets.begin(); it != synsets.end(); ++it)
   {
     Node* node = it->second;
-    if (node->syns == syns && node->gloss == gloss)
+    if (node->syns == syns && node->gloss == gloss && node->hereiam == offset && node->fnum == fnum)
     {
       return node;
     }
@@ -1065,7 +1102,7 @@ void WordNetOntology::printSynset(int ss_id, int indent_level)
   cout << " (" << ss_id << ")" << endl;
   ////cout << " " << synsets[ss_id]->gloss;
   for (int i = 0; i < indent_level; i++) cout << "    "; // indent
-  cout << "gloss = " << synsets[ss_id]->gloss << endl;
+  cout << "fnum: " << synsets[ss_id]->fnum << "synset offset: " << synsets[ss_id]->hereiam << " gloss = " << synsets[ss_id]->gloss << endl;
   //cout << "syns = " << synsets[ss_id]->syns << endl;
 //   cout << " {";
 //   for (SetIterator it = synsets[ss_id]->types.begin(); it != synsets[ss_id]->types.end(); ++it)
@@ -1138,6 +1175,9 @@ void WordNetOntology::save(string synset_file, string ontology_file)
     {
       of_synsets << *iit << "|";
     }
+    of_synsets << "*|";
+    of_synsets << node->fnum << "|";
+    of_synsets << node->hereiam << "|";
     of_synsets << endl;
   }
   of_synsets.close();
@@ -1221,11 +1261,15 @@ void WordNetOntology::load(string voc_file, string synset_file, string ontology_
     if (line == "") continue;
     if (line[0] == '#') continue;
     vector<string> tokens = split(line, "*");
-    if (tokens.size() != 3)
+    if (tokens.size() != 3 && tokens.size() != 4)
       PLERROR("the synset file has not the expected format, line %d = '%s'", line_no, line.c_str());
+    if(tokens.size() == 3 && line_no == 1)
+      PLWARNING("The synset file doesn't contain enough information for correct representation of the synsets!");
     ss_id = toint(tokens[0]);
     vector<string> type_tokens = split(tokens[1], "|");
     vector<string> ss_tokens = split(tokens[2], "|");
+    vector<string> offset_tokens;
+    if(tokens.size() == 4) offset_tokens = split(tokens[3],"|");
     Node* node = new Node(ss_id);
     for (unsigned int i = 0; i < type_tokens.size(); i++)
       node->types.insert(toint(type_tokens[i]));
@@ -1237,6 +1281,11 @@ void WordNetOntology::load(string voc_file, string synset_file, string ontology_
         if (startsWith(ss_tokens[i], "UNKNOWN_SENSE_"))
           unknown_sense_index = toint(ss_tokens[i].substr(14, ss_tokens[i].size())) + 1;
       node->syns.push_back(ss_tokens[i]);
+    }
+    if(tokens.size() == 4)
+    {
+      node->fnum = toint(offset_tokens[0]);
+      node->hereiam = tolong(offset_tokens[1]);
     }
     synsets[node->ss_id] = node;
   }
@@ -1322,7 +1371,8 @@ void WordNetOntology::load(string voc_file, string synset_file, string ontology_
     vector<string> tokens = split(line, " ");
     if(tokens.size() != 3)
       PLERROR("sense_key_file %s not compatible", sense_key_file.c_str());
-    sense_key_to_ss_id[tokens[0]] = toint(tokens[2]);
+    pair<int, string> ss(toint(tokens[1]), tokens[0]);
+    sense_key_to_ss_id[ss] = toint(tokens[2]);
     pair<int, int> ws(toint(tokens[1]), toint(tokens[2]));
     ws_id_to_sense_key[ws] = tokens[0];
   }
@@ -1528,9 +1578,10 @@ string WordNetOntology::getSenseKey(int word_id, int ss_id)
 
 }
 
-int WordNetOntology::getSynsetIDForSenseKey(string sense_key)
+int WordNetOntology::getSynsetIDForSenseKey(int word_id, string sense_key)
 {
-  map<string, int>::iterator it = sense_key_to_ss_id.find(sense_key);
+  pair<int, string> ss(word_id,sense_key);
+  map< pair<int, string>, int>::iterator it = sense_key_to_ss_id.find(ss);
   if(it == sense_key_to_ss_id.end())
     return -1;
   else
