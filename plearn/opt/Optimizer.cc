@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.cc,v 1.15 2003/05/22 18:26:45 tihocan Exp $
+   * $Id: Optimizer.cc,v 1.16 2003/06/13 14:45:25 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -254,7 +254,28 @@ void Optimizer::collectGradientStats(Vec gradient) {
   static VMat tmp_mat2;
   static VMat tmp_mat3;
   static VMat change_sign_grad_mean;
+  static VMat abs_grad_per_lr;
   static bool first_time = true;
+  static int n_lr = 50; // how many different learning rates we consider
+  static Vec nchange;   // the number of times a gradient has changed sign
+  static Array<VecStatsCollector> stat_per_lr(n_lr);
+  static Vec temp_per_lr(n_lr);
+  static Vec store_grad(1);
+
+  if (first_time) {
+    first_time = false;
+    grad_mean = new AsciiVMatrix("grad_mean.amat", params.nelems());
+    grad_var = new AsciiVMatrix("grad_var.amat", params.nelems());
+    abs_grad_mean = new AsciiVMatrix("abs_grad_mean.amat", params.nelems());
+    abs_grad_var = new AsciiVMatrix("abs_grad_var.amat", params.nelems());
+    sign_grad_mean = new AsciiVMatrix("sign_grad_mean.amat", params.nelems());
+    sign_grad_var = new AsciiVMatrix("sign_grad_var.amat", params.nelems());
+    sign_mean_grad = new AsciiVMatrix("sign_mean_grad.amat", params.nelems());
+    change_sign_grad_mean = new AsciiVMatrix("change_sign_grad_mean.amat", params.nelems());
+    abs_grad_per_lr = new AsciiVMatrix("abs_grad_per_lr.amat", n_lr);
+    nchange.resize(params.nelems());
+    nchange.clear();
+  }
 
   // Store gradient
   grad.update(gradient);
@@ -264,7 +285,7 @@ void Optimizer::collectGradientStats(Vec gradient) {
     temp_grad[i] = abs(gradient[i]);
   }
   abs_grad.update(temp_grad);
-  
+
   // Store sign(gradient)
   for (int i=0; i<gradient.length(); i++) {
     if (gradient[i] > 0) {
@@ -277,19 +298,6 @@ void Optimizer::collectGradientStats(Vec gradient) {
 
   if ((stage+1) % nstages_per_epoch == 0) {
     // One epoch has just been completed
-    if (first_time) {
-      // This means it is the first epoch
-      first_time = false;
-      grad_mean = new AsciiVMatrix("grad_mean.amat", params.nelems());
-      grad_var = new AsciiVMatrix("grad_var.amat", params.nelems());
-      abs_grad_mean = new AsciiVMatrix("abs_grad_mean.amat", params.nelems());
-      abs_grad_var = new AsciiVMatrix("abs_grad_var.amat", params.nelems());
-      sign_grad_mean = new AsciiVMatrix("sign_grad_mean.amat", params.nelems());
-      sign_grad_var = new AsciiVMatrix("sign_grad_var.amat", params.nelems());
-      sign_mean_grad = new AsciiVMatrix("sign_mean_grad.amat", params.nelems());
-      change_sign_grad_mean = new AsciiVMatrix("change_sign_grad_mean.amat", params.nelems());
-    }
-
     temp_grad << grad.getMean();
 
     grad_mean->appendRow(temp_grad); 
@@ -307,6 +315,21 @@ void Optimizer::collectGradientStats(Vec gradient) {
         temp_grad[i] = -1;
     }
     sign_mean_grad->appendRow(temp_grad);
+
+    // Stats per learning_rate
+    int pos = grad_mean.length()-1;
+    for (int i=0; i<params.nelems(); i++) {
+      store_grad[0] = abs(grad_mean(pos,i));
+      stat_per_lr[int(nchange[i])].update(store_grad);
+    }
+    for (int i=0; i<n_lr; i++) {
+      Vec m = stat_per_lr[i].getMean();
+      if (m.length() > 0)
+        temp_per_lr[i] = m[0];
+      else
+        temp_per_lr[i] = 0;
+    }
+    abs_grad_per_lr->appendRow(temp_per_lr);
     
     // Compare two consecutive updates
     int k = sign_mean_grad.length();
@@ -322,6 +345,7 @@ void Optimizer::collectGradientStats(Vec gradient) {
       } else {
         // Opposite direction
         nb_change++;
+        nchange[i]++;
         temp_grad[i] = 1;
         if (k > 3 && (tmp_mat(0,i) != tmp_mat2(0,i) || tmp_mat2(0,i) != tmp_mat3(0,i))) {
           nb_consec++;
