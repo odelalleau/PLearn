@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.41 2004/12/03 14:11:26 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.42 2004/12/21 07:15:37 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -83,7 +83,9 @@
  * Kernel *
  **********/
 #include <plearn/ker/AdditiveNormalizationKernel.h>
+#include <plearn/ker/DistanceKernel.h>
 #include <plearn/ker/DotProductKernel.h>
+#include <plearn/ker/EpanechnikovKernel.h>
 #include <plearn/ker/GaussianKernel.h>
 #include <plearn/ker/GeodesicDistanceKernel.h>
 #include <plearn/ker/LLEKernel.h>
@@ -100,36 +102,49 @@
 /************
  * PLearner *
  ************/
+
+// Classifiers
 #include <plearn_learners/classifiers/AdaBoost.h>
 #include <plearn_learners/classifiers/BinaryStump.h>
 #include <plearn_learners/classifiers/ClassifierFromDensity.h>
+#include <plearn_learners/classifiers/KNNClassifier.h>
 #include <plearn_learners/classifiers/MultiInstanceNNet.h>
 //#include <plearn_learners/classifiers/OverlappingAdaBoost.h> // Does not currently compile.
+
+// Generic
 #include <plearn_learners/generic/AddCostToLearner.h>
 #include <plearn_learners/generic/AddLayersNNet.h>
 #include <plearn_learners/generic/NNet.h>
+#include <plearn_learners/generic/SelectInputSubsetLearner.h>
 #include <plearn_learners/generic/StackedLearner.h>
 #include <plearn_learners/generic/TestingLearner.h>
+
+// Regressors
 #include <plearn_learners/regressors/ConstantRegressor.h>
 #include <plearn_learners/regressors/LinearRegressor.h>
 #include <plearn_learners/regressors/PLS.h>
 #include <plearn_learners/regressors/RankLearner.h>
-#include <plearn_learners/unsupervised/PCA.h>
+
 // Distribution (deprecated)
 #include <plearn_learners/distributions/LocallyWeightedDistribution.h>
-// EmbeddedLearner
-#include <plearn_learners/generic/SelectInputSubsetLearner.h>
-// KernelProjection
+
+// Unsupervised/KernelProjection
 #include <plearn_learners/unsupervised/Isomap.h>
 #include <plearn_learners/unsupervised/KernelPCA.h>
 #include <plearn_learners/unsupervised/LLE.h>
+#include <plearn_learners/unsupervised/PCA.h>
 #include <plearn_learners/unsupervised/SpectralClustering.h>
+
 // PDistribution
 #include <plearn_learners/distributions/ConditionalDensityNet.h>
 #include <plearn_learners/distributions/GaussianDistribution.h>
 #include <plearn_learners/distributions/ManifoldParzen2.h>
 #include <plearn_learners/distributions/SpiralDistribution.h>
 #include <plearn_learners/distributions/UniformDistribution.h>
+
+// Nearest-Neighbors
+#include <plearn_learners/nearest_neighbors/ExhaustiveNearestNeighbors.h>
+#include <plearn_learners/nearest_neighbors/GenericNearestNeighbors.h>
 
 /************
  * Splitter *
@@ -185,8 +200,8 @@
 #include <plearn/vmat/LocallyPrecomputedVMatrix.h>
 #include <plearn/vmat/MultiInstanceVMatrix.h>
 #include <plearn/vmat/OneHotVMatrix.h>
-#include <plearn/vmat/PairsVMatrix.h>
 #include <plearn/vmat/PLearnerOutputVMatrix.h>
+#include <plearn/vmat/PairsVMatrix.h>
 #include <plearn/vmat/PrecomputedVMatrix.h>
 #include <plearn/vmat/ProcessingVMatrix.h>
 #include <plearn/vmat/RankedVMatrix.h>
