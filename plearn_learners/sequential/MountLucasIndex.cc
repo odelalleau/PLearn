@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.cc,v 1.21 2003/10/21 20:47:35 ducharme Exp $ 
+   * $Id: MountLucasIndex.cc,v 1.22 2003/10/22 21:31:54 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.cc */
@@ -50,8 +50,9 @@ PLEARN_IMPLEMENT_OBJECT(MountLucasIndex, "ONE LINE DESCR", "NO HELP");
 MountLucasIndex::MountLucasIndex()
   : last_day_of_month_column("is_last_day_of_month"), julian_day_column("Date"),
     risk_free_rate_column("risk_free_rate"), sp500_column("S&P500:close:level"),
-    moving_average_window(12), positive_rebalance_threshold(1.2),
-    negative_rebalance_threshold(0.8), current_month(0), build_complete(false)
+    moving_average_window(12), positive_rebalance_threshold(INFINITY),
+    negative_rebalance_threshold(-INFINITY), current_month(0),
+    build_complete(false), trading_begin(false)
 {
 }
 
@@ -82,6 +83,7 @@ void MountLucasIndex::build_()
   last_tradable_price.resize(nb_commodities);
   next_to_last_tradable_price.resize(nb_commodities);
   last_month_portfolio.resize(nb_commodities);
+  last_month_predictions.resize(nb_commodities);
 
   if (train_set)
   {
@@ -102,19 +104,21 @@ void MountLucasIndex::forget()
 {
   inherited::forget();
 
-  position.fill(0); // default value is long position
+  position.fill(0); // default value is no position
   tradable_commodity.fill(false);
   next_to_last_unit_asset_value.fill(MISSING_VALUE);
   unit_asset_value.fill(MISSING_VALUE);
   index_value.fill(MISSING_VALUE);
   last_tradable_price.fill(MISSING_VALUE);
   next_to_last_tradable_price.fill(MISSING_VALUE);
-  last_month_portfolio.fill(MISSING_VALUE);
+  last_month_portfolio.fill(0.0);
+  last_month_predictions.fill(0);
 
   last_sp500 = MISSING_VALUE, last_month_sp500 = MISSING_VALUE;
+  trading_begin = false;
 
   current_month = 0;
-  index_value[0] = 1000.0;
+  index_value[0] = 1000.0; // default initial value
 }
 
 void MountLucasIndex::declareOptions(OptionList& ol)
@@ -142,9 +146,6 @@ void MountLucasIndex::declareOptions(OptionList& ol)
 
   declareOption(ol, "negative_rebalance_threshold", &MountLucasIndex::negative_rebalance_threshold,
     OptionBase::buildoption, "For negative returns (<1), the threshold under which we don't rebalance the asset. \n");
-
-  declareOption(ol, "transaction_multiplicative_cost", &MountLucasIndex::transaction_multiplicative_cost,
-    OptionBase::buildoption, "transaction_multiplicative_cost \n");
 
   declareOption(ol, "moving_average_window", &MountLucasIndex::moving_average_window,
     OptionBase::buildoption, "Thw window length (in month) on which we compute the moving average\n");
@@ -234,10 +235,10 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
     int this_year = julian_date.year;
     int this_month = julian_date.month;
     //int this_day = julian_date.day;
-    real risk_free_rate_return=0;
+    real risk_free_rate_return=MISSING_VALUE;
     real monthly_return = MISSING_VALUE;
     real sp500_log_return = MISSING_VALUE;
-    Vec no_rebalancing_assets; // empty for the moment
+    real mean_return = MISSING_VALUE; // sum_i w_i*r_i / sum_i w_i
     if (current_month == 0)
     {
       // next-to-last trading day of the month
@@ -260,12 +261,15 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
       {
         if (tradable_commodity[i])
         {
+          if (!trading_begin)
+            last_month_portfolio.fill(1.0); // hack: only the first time!
+          trading_begin = true;
           this_value[i] = last_value[i]*(next_to_last_tradable_price[i]/last_month_next_to_last_price[i]);
           if (is_missing(this_value[i])) this_value[i] = last_value[i];
           rate_return[i] = (last_tradable_price[i]/last_month_last_price[i] - 1.0);
           rate_return[i] *= real(position[i]);
           unit_asset_value[i] *= last_tradable_price[i]/last_month_last_price[i];
-          if (position[i] != 0) n_traded++;
+          //if (position[i] != 0) n_traded++;
         }
         else
         {
@@ -278,13 +282,12 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
         last_month_last_price[i] = last_tradable_price[i];
       }
 
-      if (n_traded>0)
+      if (trading_begin)
       {
         risk_free_rate_return = exp(log(last_month_risk_free_rate + 1.0)/12.0) - 1.0;
-        monthly_return = mean_with_missing(rate_return) + risk_free_rate_return;
-        // ajouter une methode qui calcule
-        // monthly_return = sum_i (w_i * r_i) / sum_i (w_i)
-        // monthly_return = computeMonthlyReturn(rate_return,last_month_portfolio);
+        //mean_return = mean(rate_return,true);
+        mean_return = weighted_mean(rate_return,last_month_portfolio,true);
+        monthly_return = mean_return + risk_free_rate_return;
         if (is_missing(monthly_return)) PLWARNING("monthly_return=nan");
         sp500_log_return = log(last_sp500/last_month_sp500);
         index_value[current_month] = index_value[current_month-1]*(1.0 + monthly_return);
@@ -295,6 +298,71 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
       }
       last_month_risk_free_rate = risk_free_rate;
     }
+
+    // rebalancing
+    Vec w(nb_commodities, 0.0);
+    if (trading_begin)
+    {
+      TVec<bool> rebalancing(nb_commodities, false);
+      TVec<int> next_pos(nb_commodities, 0);
+      real total_amount = initial_investment*index_value[current_month]/1000.0;
+      for (int i=0; i<nb_commodities; i++)
+      {
+        if (current_month>0 && tradable_commodity[i])
+        {
+          next_pos[i] = next_position(i, next_to_last_unit_asset_value);
+          if (next_pos[i] == position[i])
+          {
+            real relative_return = (1.0+rate_return[i])/(1.0+mean_return);
+            // no rebalancing
+            if (relative_return>positive_rebalance_threshold || relative_return<negative_rebalance_threshold)
+            {
+              w[i] = last_month_predictions[i];
+              total_amount -= abs(w[i])*last_tradable_price[i];
+              //n_traded--;
+            }
+            else
+            {
+              position[i] = next_pos[i];
+              if (position[i] != 0) n_traded++;
+              rebalancing[i] = true;
+            }
+          }
+          else
+          {
+            position[i] = next_pos[i];
+            if (position[i] != 0) n_traded++;
+            rebalancing[i] = true;
+          }
+        }
+      }
+      for (int i=0; i<nb_commodities; i++)
+      {
+        if (current_month>0 && tradable_commodity[i] && rebalancing[i])
+        {
+          if (n_traded == 0)
+            PLERROR("n_traded == 0");
+          w[i] = real(position[i])*total_amount/(n_traded*last_tradable_price[i]);
+        }
+      }
+    }
+/*
+    // rebalancing
+    for (int i=0; i<nb_commodities; i++)
+    {
+      position[i] = next_position(i, next_to_last_unit_asset_value);
+      if (current_month>0 && tradable_commodity[i])
+      {
+        w[i] = real(position[i])*initial_investment*index_value[current_month]/(n_traded*last_tradable_price[i]*1000.0);
+      }
+      else
+      {
+        w[i] = 0.0;
+      }
+    }
+*/
+    last_month_sp500 = last_sp500;
+
     real log_return = log(1.0+monthly_return);
     real tbill_log_return = log(1.0+risk_free_rate_return);
     errors(t,cost_name_pos++) = index_value[current_month];
@@ -307,17 +375,12 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
     for (int i=0; i<nb_commodities; i++)
     {
       errors(t,cost_name_pos++) = log(1.0+rate_return[i]);
-      position[i] = next_position(i, next_to_last_unit_asset_value);
-      if (current_month>0 && tradable_commodity[i])
-      {
-        predictions(t,i) = real(position[i])*initial_investment*index_value[current_month]/(n_traded*last_tradable_price[i]*1000.0);
-      }
-      else
-      {
-        predictions(t,i) = 0.0;
-      }
+      predictions(t,i) = w[i];
+      last_month_predictions[i] = w[i];
+      real portfolio = abs(w[i])*last_tradable_price[i];
+      last_month_portfolio[i] = !is_missing(portfolio) ? portfolio : 0.0;
     }
-    last_month_sp500 = last_sp500;
+
     ++current_month;
     
     // at the end of the year, choose which commodity will be included in the index the next year
@@ -430,6 +493,7 @@ void MountLucasIndex::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(last_tradable_price, copies);
   deepCopyField(next_to_last_tradable_price, copies);
   deepCopyField(last_month_portfolio, copies);
+  deepCopyField(last_month_predictions, copies);
 }
 
 %> // end of namespace PLearn

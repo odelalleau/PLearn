@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.24 2003/10/10 21:10:08 ducharme Exp $
+   * $Id: TMat_maths_impl.h,v 1.25 2003/10/22 21:31:51 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -255,6 +255,7 @@ T product(const TVec<T>& vec)
   return T(res);
 }
 
+/*
 template<class T>
 T mean(const TVec<T>& vec)
 {
@@ -268,33 +269,34 @@ T mean(const TVec<T>& vec)
     res += v[i];
   return T(res/vec.length());
 }
+*/
 
 //! if ignore_missing==true, then the mean is computed by ignoring the
 //! possible MISSING_VALUE in the Vec.
 //! if ignore_missing==false, then MISSING_VALUE is returned if one
 //! element of the Vec is MISSING_VALUE.
 template<class T>
-T mean_with_missing(const TVec<T>& vec, bool ignore_missing=true)
+T mean(const TVec<T>& vec, bool ignore_missing=false)
 {
   #ifdef BOUNDCHECK
   if(vec.length()==0)
     PLERROR("IN T mean(const TVec<T>& vec) vec has zero length");
   #endif
   double res = 0.0;
-  int n_non_missing = 0;
+  int n = 0;
   T* v = vec.data();
   for(int i=0; i<vec.length(); i++)
   {
     if (!is_missing(v[i]))
     {
       res += v[i];
-      n_non_missing++;
+      n++;
     }
     else if (!ignore_missing) return MISSING_VALUE;
   }
 
-  if (n_non_missing == 0) return MISSING_VALUE;
-  return T(res/double(n_non_missing));
+  if (n == 0) return MISSING_VALUE;
+  return T(res/double(n));
 }
 
 template<class T>
@@ -332,20 +334,27 @@ T geometric_mean(const TVec<T>& vec)
 }
 
 template<class T>
-T weighted_mean(const TVec<T>& vec, const TVec<T>& weights)
+T weighted_mean(const TVec<T>& vec, const TVec<T>& weights, bool ignore_missing=false)
 {
   #ifdef BOUNDCHECK
   if(vec.length()!=weights.length() || vec.length() == 0)
     PLERROR("IN T weighted_mean(const TVec<T>& vec, const TVec<T>& weights) vec and weights must have equal (non-zero) lengths");
   #endif
   double res = 0.0;
+  T sum_weights = 0.0;
   T* v = vec.data();
   T* w = weights.data();
   for(int i=0; i<vec.length(); i++)
-    res += v[i] * w[i];
-  T sum_weights = sum(weights);
+  {
+    if (!is_missing(v[i]))
+    {
+      res += v[i] * w[i];
+      sum_weights += w[i];
+    }
+    else if (!ignore_missing) return MISSING_VALUE;
+  }
   if (sum_weights == 0)
-    PLERROR("IN T weighted_mean(const TVec<T>& vec, const TVec<T>& weights) sum(weights) == 0");
+    PLERROR("IN T weighted_mean: sum(weights) == 0");
   return T(res/sum_weights);
 }
 

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.h,v 1.15 2003/10/21 20:47:35 ducharme Exp $ 
+   * $Id: MountLucasIndex.h,v 1.16 2003/10/22 21:31:54 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.h */
@@ -60,14 +60,13 @@ class MountLucasIndex: public FinancialAdvisor
     string julian_day_column; // the julian day number column in the input data
     string risk_free_rate_column; // the risk free rate column in the input data
     string sp500_column;
-    real transaction_multiplicative_cost;
 
     int moving_average_window; // default=12 (1 year)
 
     // In the rebalancing phase.
     // We don't rebalance asset k if the relative return is greater than
     // positive_rebalance_threshold or if it is lower than
-    // positive_rebalance_threshold.  In all case, this is subject to
+    // negative_rebalance_threshold.  In all case, this is subject to
     // the condition that position[t] == position[t-1].
     real positive_rebalance_threshold;
     real negative_rebalance_threshold;
@@ -93,9 +92,11 @@ class MountLucasIndex: public FinancialAdvisor
     Vec last_tradable_price;
     Vec next_to_last_tradable_price;
     Vec last_month_portfolio;
+    Vec last_month_predictions;
 
     mutable real last_month_risk_free_rate;
     mutable real last_sp500, last_month_sp500;
+    mutable bool trading_begin; // =true the first time we can trade
 
   private:
     //! This does the actual building
