@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.25 2003/05/12 16:55:48 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.26 2003/05/16 15:44:01 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -316,22 +316,23 @@ bool ConjGradientOptimizer::findDirection() {
   bool isFinished = false;
   real gamma;
   switch (find_new_direction_formula) {
-    case 0:
+    case 1:
       gamma = conjpomdp(computeOppositeGradient, this);
       break;
-    case 1:
+    case 2:
       gamma = daiYuan(computeOppositeGradient, this);
       break;
-    case 2:
+    case 3:
       gamma = fletcherReeves(computeOppositeGradient, this);
       break;
-    case 3:
+    case 4:
       gamma = hestenesStiefel(computeOppositeGradient, this);
       break;
-    case 4:
+    case 5:
       gamma = polakRibiere(computeOppositeGradient, this);
       break;
     default:
+      cout << "Warning ! Invalid conjugate gradient formula !" << endl;
       gamma = 0;
       break;
   }
@@ -636,13 +637,14 @@ real ConjGradientOptimizer::hestenesStiefel (
 bool ConjGradientOptimizer::lineSearch() {
   real step;
   switch (line_search_algo) {
-    case 0:
+    case 1:
       step = fletcherSearch();
       break;
-    case 1:
+    case 2:
       step = gSearch(computeOppositeGradient);
       break;
     default:
+      cout << "Warning ! Invalid conjugate gradient line search algorithm !" << endl;
       step = 0;
       break;
   }
