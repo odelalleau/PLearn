@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: pl_math.h,v 1.2 2002/08/05 02:46:35 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,6 +47,7 @@
 
 #include <cmath>
 #include <cfloat>
+#include <climits>
 #include "plerror.h"
 
 namespace PLearn <%
@@ -54,10 +55,12 @@ using namespace std;
 
 #ifdef USEDOUBLE
 #define real double
+#define MAXREAL DOUBLE_MAX
 #endif
 
 #ifdef USEFLOAT
 #define real float
+#define MAXREAL FLOAT_MAX
 #endif
 
 union _plearn_nan_type { unsigned char c[4]; float d; };
@@ -145,8 +148,8 @@ extern _plearn_nan_type plearn_nan;
 
 #ifdef LINUX
 #define DOUBLE_TO_INT(in,out) __asm__ __volatile__ ("fistpl %0" : "=m" (out) : "t" (in) : "st")  
-#else
-#define DOUBLE_TO_INT(in, out)  out = int(in)
+#else#
+define DOUBLE_TO_INT(in, out)  out = int(in)
 #endif
 
   extern float tanhtable[TANHTABLESIZE];
