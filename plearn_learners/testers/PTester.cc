@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.51 2005/01/28 17:43:04 plearner Exp $ 
+   * $Id: PTester.cc,v 1.52 2005/01/30 18:27:33 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -300,16 +300,25 @@ void PTester::build_()
     build_();
   }
 
+/////////
+// run //
+/////////
 void PTester::run()
 {
   perform(true);
 }
 
+////////////////////////////
+// setExperimentDirectory //
+////////////////////////////
 void PTester::setExperimentDirectory(const string& the_expdir) 
 { 
   expdir = PPath(the_expdir) / "";
 }
 
+/////////////
+// perform //
+/////////////
 Vec PTester::perform(bool call_forget)
 {
   if(!learner)
