@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubMatVariable.cc,v 1.7 2004/05/26 20:07:58 tihocan Exp $
+   * $Id: SubMatVariable.cc,v 1.8 2004/05/26 20:13:50 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -197,8 +197,5 @@ void SubMatVariable::rfprop()
     }
 }
 
-
-
 } // end of namespace PLearn
-
 
