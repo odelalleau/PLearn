@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.45 2005/01/18 16:02:54 tihocan Exp $
+   * $Id: StatsCollector.cc,v 1.46 2005/01/27 19:30:57 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -62,6 +62,8 @@ PLEARN_IMPLEMENT_OBJECT(
   "  - V              Sample variance\n"
   "  - STDDEV         Sample standard deviation\n"
   "  - STDERROR       Standard error of the sample mean\n"
+  "  - SKEW           Skewness == E(X-mu)^3 / sigma^3\n"
+  "  - KURT           Excess Kurtosis == E(X-mu)^4 / sigma^4 - 3\n"
   "  - MIN            Minimum value\n"
   "  - MAX            Maximum value\n"
   "  - RANGE          The range, i.e. MAX - MIN\n"
@@ -99,13 +101,28 @@ PLEARN_IMPLEMENT_OBJECT(
   "      that the formulas on the web site and in the python script are different).\n"
   "  - LIFT(f) actually returns - 100 * LIFT(f), so that lower means better, and it is\n"
   "    scaled by 100, as it is common practice.\n"
+  "  - The skewness and kurtosis are computed in terms of UNCENTERED ACCUMULATORS,\n"
+  "    i.e. sum{(x-a)^n}, where a is the first observation encountered, and n is some integer\n"
+  "  - For the skewness, defined as skewness == E(X-mu)^3 / sigma^3, we compute the top\n"
+  "    term as\n"
+  "\n"
+  "        (x-a)^3+(3(x-a)^2+(a-mu)(3(x-a)+a-mu))(a-mu)\n"
+  "\n"
+  "  - Likewise for the kurtosis, defined as kurtosis == E(x-mu)^4 / sigma^4 - 3, \n"
+  "    (note that this is the EXCESS kurtosis, whose value is 0 for a \n"
+  "    normal distribution), we compute the top term as\n"
+  "\n"
+  "        (x-a)^4+(4(x-a)^3+(6(x-a)^2+(a-mu)(4(x-a)+a-mu))(a-mu))(a-mu)\n"
+  "\n"
+  "  - (Nicolas remercie Dieu et Wolfram pour Mathematica)."
   );
   
 
 StatsCollector::StatsCollector(int the_maxnvalues)
   : maxnvalues(the_maxnvalues), no_removal_warnings(false),
     nmissing_(0.), nnonmissing_(0.), 
-    sum_(0.), sumsquare_(0.), 
+    sum_(0.), sumsquare_(0.),
+    sumcube_(0.), sumfourth_(0.),
     min_(MISSING_VALUE), max_(MISSING_VALUE),
     first_(MISSING_VALUE), last_(MISSING_VALUE),
     more_than_maxnvalues(false),
@@ -160,9 +177,13 @@ void StatsCollector::declareOptions(OptionList& ol)
   declareOption(ol, "nnonmissing_", &StatsCollector::nnonmissing_, OptionBase::learntoption,
                 "number of non missing value ");
   declareOption(ol, "sum_", &StatsCollector::sum_, OptionBase::learntoption,
-                "sum of all values");
+                "sum of all (values-first_observation)");
   declareOption(ol, "sumsquare_", &StatsCollector::sumsquare_, OptionBase::learntoption,
-                "sum of square of all values ");
+                "sum of square of all (values-first_observation)");
+  declareOption(ol, "sumcube_", &StatsCollector::sumcube_, OptionBase::learntoption,
+                "sum of cube of all (values-first_observation)");
+  declareOption(ol, "sumfourth_", &StatsCollector::sumfourth_, OptionBase::learntoption,
+                "sum of fourth power of all (values-first_observation)");
   declareOption(ol, "min_", &StatsCollector::min_, OptionBase::learntoption,
                 "the min");
   declareOption(ol, "max_", &StatsCollector::max_, OptionBase::learntoption,
@@ -215,6 +236,8 @@ void StatsCollector::forget()
     nnonmissing_ = 0.;
     sum_ = 0.;
     sumsquare_ = 0.;
+    sumcube_ = 0.;
+    sumfourth_ = 0.;
     min_ = MISSING_VALUE;
     max_ = MISSING_VALUE;
     first_ = last_ = MISSING_VALUE;
@@ -244,8 +267,10 @@ void StatsCollector::update(real val, real weight)
       max_ = val;
     nnonmissing_ += weight;
     double sqval = (val-first_)*(val-first_);
-    sum_ += (val-first_) * weight;
-    sumsquare_ += sqval * weight;
+    sum_       += (val-first_)       * weight;
+    sumsquare_ += sqval              * weight;
+    sumcube_   += sqval*(val-first_) * weight;
+    sumfourth_ += sqval*sqval        * weight;
     
     if(maxnvalues>0)  // also remembering statistics inside values ranges
     {
@@ -304,15 +329,16 @@ void StatsCollector::remove_observation(real val, real weight)
                    "StatsCollector::max() may not be valid anymore." );
     }
 
-    sum_ -= (val-first_) * weight;
-
     double sqval = (val-first_)*(val-first_);
-    sumsquare_ -= sqval * weight;    
+    sum_       -= (val-first_)       * weight;
+    sumsquare_ -= sqval              * weight;
+    sumcube_   -= sqval*(val-first_) * weight;
+    sumfourth_ -= sqval*sqval        * weight;
 
     if(nnonmissing_==0) {
       // first value encountered
       min_ = max_ = first_ = last_ = MISSING_VALUE;
-      sum_ = sumsquare_ = 0.0;
+      sum_ = sumsquare_ = sumcube_ = sumfourth_ = 0.0;
     }
 
     // assertion is after previous check for nnonmissing_, since the last
@@ -734,6 +760,8 @@ real StatsCollector::getStat(const string& statname) const
     statistics["V"]           = STATFUN(&StatsCollector::variance);
     statistics["STDDEV"]      = STATFUN(&StatsCollector::stddev);
     statistics["STDERROR"]    = STATFUN(&StatsCollector::stderror);
+    statistics["SKEW"]        = STATFUN(&StatsCollector::skewness);
+    statistics["KURT"]        = STATFUN(&StatsCollector::kurtosis);
     statistics["MIN"]         = STATFUN(&StatsCollector::min);
     statistics["MAX"]         = STATFUN(&StatsCollector::max);
     statistics["RANGE"]       = STATFUN(&StatsCollector::range);
@@ -783,10 +811,46 @@ real StatsCollector::getStat(const string& statname) const
   return 0;
 }
 
+//////////////
+// skewness //
+//////////////
+real StatsCollector::skewness() const
+{
+  // numerator
+  double diff = first_ - mean();
+  double numerator = sumcube_/nnonmissing_ +
+    (3*sumsquare_/nnonmissing_ + diff*(3*(sum_/nnonmissing_) + diff))*diff;
+
+  // denominator
+  double denominator = stddev();
+  denominator *= denominator * denominator;
+  return numerator / denominator;
+}
+
+//////////////
+// kurtosis //
+//////////////
+real StatsCollector::kurtosis() const
+{
+  // numerator
+  double diff = first_ - mean();
+  double numerator = sumfourth_/nnonmissing_ +
+    (4*sumcube_/nnonmissing_ +
+     (6*sumsquare_/nnonmissing_ + diff*(4*sum_/nnonmissing_+diff)) * diff)
+    * diff;
+
+  // denominator
+  double denominator = stddev();
+  denominator *= denominator;
+  denominator *= denominator;
+  return numerator / denominator - 3.0;
+}
+
 //////////
 // lift //
 //////////
-real StatsCollector::lift(int k, int& n_pos_in_k, int n_pos_in_k_minus_1, real pos_fraction) const {
+real StatsCollector::lift(int k, int& n_pos_in_k, int n_pos_in_k_minus_1, real pos_fraction) const
+{
   if (more_than_maxnvalues)
     PLWARNING("In StatsCollector::lift - You need to increase 'maxnvalues' to get an accurate statistic");
   if (k <= 0)
@@ -808,7 +872,8 @@ real StatsCollector::lift(int k, int& n_pos_in_k, int n_pos_in_k_minus_1, real p
 ///////////////
 // nips_lift //
 ///////////////
-real StatsCollector::nips_lift() const {
+real StatsCollector::nips_lift() const
+{
   if (more_than_maxnvalues)
     PLWARNING("In StatsCollector::nips_lift - You need to increase 'maxnvalues' to get an accurate statistic");
   if (!sorted)
@@ -828,7 +893,8 @@ real StatsCollector::nips_lift() const {
 //////////////////////////////
 // sort_values_by_magnitude //
 //////////////////////////////
-void StatsCollector::sort_values_by_magnitude() const {
+void StatsCollector::sort_values_by_magnitude() const
+{
   sorted_values.resize(0, 2);
   Vec to_add(2);
   real val;

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.34 2005/01/14 20:49:28 tihocan Exp $
+   * $Id: StatsCollector.h,v 1.35 2005/01/27 19:30:56 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -80,185 +80,188 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
 */
 class StatsCollector: public Object
 {
+  typedef Object inherited;
 
-  private:
+public:
 
-    typedef Object inherited;
-
-  public:
-
-    PLEARN_DECLARE_OBJECT(StatsCollector);
+  PLEARN_DECLARE_OBJECT(StatsCollector);
       
-  public:
+public:
 
-    // ** Build options **
+  // ** Build options **
 
-    //! maximum number of different values to keep track of in counts
-    //! (if 0, we will only keep track of global statistics)
-    int maxnvalues; 
+  //! maximum number of different values to keep track of in counts
+  //! (if 0, we will only keep track of global statistics)
+  int maxnvalues; 
 
-    /**
-     * If the remove_observation mecanism is used and the removed
-     * value is equal to one of first_, last_, min_ or max_, the default
-     * behavior is to warn the user.
-     * 
-     * If one want to disable this feature, he may set
-     * no_removal_warnings to true.
-     *
-     * Default: false (0).
-     */
-    bool no_removal_warnings;
+  /**
+   * If the remove_observation mecanism is used and the removed
+   * value is equal to one of first_, last_, min_ or max_, the default
+   * behavior is to warn the user.
+   * 
+   * If one want to disable this feature, he may set
+   * no_removal_warnings to true.
+   *
+   * Default: false (0).
+   */
+  bool no_removal_warnings;
 
-    // ** Learnt options **
+  // ** Learnt options **
 
-    double nmissing_;      //!< (weighted) number of missing values
-    double nnonmissing_;   //!< (weighted) number of non missing value 
-    double sum_;           //!< sum of all (values-first_
-    double sumsquare_;     //!< sum of square of all (values-first_)
-    real min_;             //!< the min
-    real max_;             //!< the max
-    real first_;           //!< first encountered nonmissing observation
-    real last_;            //!< last encountered nonmissing observation
-    bool more_than_maxnvalues;
+  double nmissing_;      //!< (weighted) number of missing values
+  double nnonmissing_;   //!< (weighted) number of non missing value 
+  double sum_;           //!< sum of all (values-first_)
+  double sumsquare_;     //!< sum of square of all (values-first_)
+  double sumcube_;       //!< sum of cube of all (values-first_)
+  double sumfourth_;     //!< sum of fourth-power of all (values-first_)
+  real min_;             //!< the min
+  real max_;             //!< the max
+  real first_;           //!< first encountered nonmissing observation
+  real last_;            //!< last encountered nonmissing observation
+  bool more_than_maxnvalues;
 
-    //! will contain up to maxnvalues values and associated Counts
-    //! as well as a last element which maps FLT_MAX, so that we don't miss anything
-    //! (empty if maxnvalues=0)
-    map<real,StatsCollectorCounts> counts; 
+  //! will contain up to maxnvalues values and associated Counts
+  //! as well as a last element which maps FLT_MAX, so that we don't miss anything
+  //! (empty if maxnvalues=0)
+  map<real,StatsCollectorCounts> counts; 
 
-  protected:
+protected:
 
-    //! Used to store the sorted values (after taking their absolute value),
-    //! with their target value (1 or 0) in the second column.
-    mutable Mat sorted_values;
+  //! Used to store the sorted values (after taking their absolute value),
+  //! with their target value (1 or 0) in the second column.
+  mutable Mat sorted_values;
 
-    //! Set to 1 when the values stored in 'counts' are sorted and stored in 'sorted_values'.
-    mutable bool sorted;
+  //! Set to 1 when the values stored in 'counts' are sorted and stored in 'sorted_values'.
+  mutable bool sorted;
       
-  private:
+private:
 
   //! This does the actual building.
   void build_();
 
-  protected: 
+protected: 
 
-    //! Declares this class' options
-    static void declareOptions(OptionList& ol);
+  //! Declares this class' options
+  static void declareOptions(OptionList& ol);
 
-    //! Sort values stored in 'counts' by magnitude, so as to fill 'sorted_values'.
-    void sort_values_by_magnitude() const;
+  //! Sort values stored in 'counts' by magnitude, so as to fill 'sorted_values'.
+  void sort_values_by_magnitude() const;
 
-  public:
+public:
 
-    StatsCollector(int the_maxnvalues=0);
+  StatsCollector(int the_maxnvalues=0);
       
-    real n() const { return nmissing_ + nnonmissing_; } //!< number of samples seen with update (length of VMat for ex.)
-    real nmissing() const { return nmissing_; }
-    real nnonmissing() const { return nnonmissing_; }
-    real sum() const { return real(sum_+nnonmissing_*first_); }
-    //real sumsquare() const { return real(sumsquare_); }
-    real sumsquare() const { return real(sumsquare_+2*first_*sum()-first_*first_*nnonmissing_); }
-    real min() const { return min_; }
-    real max() const { return max_; }
-    real range() const { return max_ - min_; }
-    real mean() const { return real(sum()/nnonmissing_); }
-    //real variance() const { return real((sumsquare_ - square(sum_)/nnonmissing_)/(nnonmissing_-1)); }
-    real variance() const { return real((sumsquare_ - square(sum_)/nnonmissing_)/(nnonmissing_-1)); }
-    real stddev() const { return sqrt(variance()); }
-    real stderror() const { return sqrt(variance()/nnonmissing()); }
-    real first_obs() const { return first_; }
-    real last_obs() const { return last_; }
-    real sharperatio() const { return mean()/stddev(); }
-    real zstat() const { return mean()/stderror(); }
-    real zpr1t() const;                      //!< one-tailed P(zstat())
-    real zpr2t() const;                      //!< two-tailed P(zstat())
-    real iqr() const { return pseudo_quantile(0.75) - pseudo_quantile(0.25); }
-    real prr() const { return pseudo_quantile(0.99) - pseudo_quantile(0.01); }
-    //! Return LIFT(k/n). 'n_pos_in_k' is filled with the number of positive examples
-    //! in the first k examples. If provided, 'n_pos_in_k_minus_1' must be the number
-    //! of positive examples in the first (k-1) examples. If provided, pos_fraction
-    //! must be the average fraction of positive examples in the dataset (= n+ / n).
-    real lift(int k, int& n_pos_in_k, int n_pos_in_k_minus_1 = -1, real pos_fraction = -1) const;
-    real nips_lift() const;   //!< NIPS_LIFT statistic (see help)
+  real n() const { return nmissing_ + nnonmissing_; } //!< number of samples seen with update (length of VMat for ex.)
+  real nmissing() const { return nmissing_; }
+  real nnonmissing() const { return nnonmissing_; }
+  real sum() const { return real(sum_+nnonmissing_*first_); }
+  //real sumsquare() const { return real(sumsquare_); }
+  real sumsquare() const { return real(sumsquare_+2*first_*sum()-first_*first_*nnonmissing_); }
+  real min() const { return min_; }
+  real max() const { return max_; }
+  real range() const { return max_ - min_; }
+  real mean() const { return real(sum()/nnonmissing_); }
+  //real variance() const { return real((sumsquare_ - square(sum_)/nnonmissing_)/(nnonmissing_-1)); }
+  real variance() const { return real((sumsquare_ - square(sum_)/nnonmissing_)/(nnonmissing_-1)); }
+  real stddev() const { return sqrt(variance()); }
+  real skewness() const;
+  real kurtosis() const;
+  real stderror() const { return sqrt(variance()/nnonmissing()); }
+  real first_obs() const { return first_; }
+  real last_obs() const { return last_; }
+  real sharperatio() const { return mean()/stddev(); }
+  real zstat() const { return mean()/stderror(); }
+  real zpr1t() const;                      //!< one-tailed P(zstat())
+  real zpr2t() const;                      //!< two-tailed P(zstat())
+  real iqr() const { return pseudo_quantile(0.75) - pseudo_quantile(0.25); }
+  real prr() const { return pseudo_quantile(0.99) - pseudo_quantile(0.01); }
+  //! Return LIFT(k/n). 'n_pos_in_k' is filled with the number of positive examples
+  //! in the first k examples. If provided, 'n_pos_in_k_minus_1' must be the number
+  //! of positive examples in the first (k-1) examples. If provided, pos_fraction
+  //! must be the average fraction of positive examples in the dataset (= n+ / n).
+  real lift(int k, int& n_pos_in_k, int n_pos_in_k_minus_1 = -1, real pos_fraction = -1) const;
+  real nips_lift() const;   //!< NIPS_LIFT statistic (see help)
     
-    //! currently understood statnames are :
-    //!   - E (mean)
-    //!   - V (variance)
-    //!   - STDDEV, STDERROR
-    //!   - MIN, MAX
-    //!   - SUM, SUMSQ
-    //!   - FIRST, LAST
-    //!   - N, NMISSING, NNONMISING
-    //!   - SHARPERATIO
-    //!   - ZSTAT, PZ
-    //!   - PSEUDOQ(q)    (q is a fraction between 0 and 1)
-    //    - IQR           (inter-quartile range)
-    //!   - PRR           (pseudo robust range)
-    real getStat(const string& statname) const;
+  //! currently understood statnames are :
+  //!   - E (mean)
+  //!   - V (variance)
+  //!   - STDDEV, STDERROR
+  //!   - MIN, MAX
+  //!   - SUM, SUMSQ
+  //!   - FIRST, LAST
+  //!   - N, NMISSING, NNONMISING
+  //!   - SHARPERATIO
+  //!   - ZSTAT, PZ
+  //!   - PSEUDOQ(q)    (q is a fraction between 0 and 1)
+  //!   - IQR           (inter-quartile range)
+  //!   - PRR           (pseudo robust range)
+  //!   - SKEW          (skewness == E(X-mu)^3 / sigma^3)
+  //!   - KURT          (kurtosis == E(X-mu)^4 / sigma^4 - 3)
+  real getStat(const string& statname) const;
 
-    //! simply calls inherited::build() then build_()
-    virtual void build();
+  //! simply calls inherited::build() then build_()
+  virtual void build();
 
-    //! clears all statistics, allowing to restart collecting them
-    void forget();
+  //! clears all statistics, allowing to restart collecting them
+  void forget();
 
-    //! update statistics with next value val of sequence 
-    void update(real val, real weight = 1.0);
+  //! update statistics with next value val of sequence 
+  void update(real val, real weight = 1.0);
 
-    /** 
-     * update statistics as if an observation of value val was removed
-     * of the observation sequence.
-     */
-    void remove_observation(real val, real weight = 1.0);
+  /** 
+   * update statistics as if an observation of value val was removed
+   * of the observation sequence.
+   */
+  void remove_observation(real val, real weight = 1.0);
 
-    //! finishes whatever computation are needed after all updates have been made
-    void finalize() {}
+  //! finishes whatever computation are needed after all updates have been made
+  void finalize() {}
 
-    map<real,StatsCollectorCounts> * getCounts(){return &counts;}
-    int getMaxNValues(){return maxnvalues;}
+  map<real,StatsCollectorCounts> * getCounts(){return &counts;}
+  int getMaxNValues(){return maxnvalues;}
 
-    //! returns a Mat with x,y coordinates for plotting the cdf
-    //! only if normalized will the cdf go to 1, otherwise it will go to nsamples
-    Mat cdf(bool normalized=true) const;
+  //! returns a Mat with x,y coordinates for plotting the cdf
+  //! only if normalized will the cdf go to 1, otherwise it will go to nsamples
+  Mat cdf(bool normalized=true) const;
 
-    /**
-     * Return the position of the pseudo-quantile Q.  This is derived from
-     * the bin-mapping, so maxnvalues must be greater than zero for this
-     * function to return something meaningful
-     */
-    real pseudo_quantile(real q) const;
+  /**
+   * Return the position of the pseudo-quantile Q.  This is derived from
+   * the bin-mapping, so maxnvalues must be greater than zero for this
+   * function to return something meaningful
+   */
+  real pseudo_quantile(real q) const;
 
-    //! fix 'id' attribute of all StatCollectorCounts so that increasing ids correspond to increasing real values
-    //! *** NOT TESTED YET
-    void sortIds();
+  //! fix 'id' attribute of all StatCollectorCounts so that increasing ids correspond to increasing real values
+  //! *** NOT TESTED YET
+  void sortIds();
 
-    //! returns a mapping that maps values to a bin number
-    //! (from 0 to mapping.length()-1)
-    //! The mapping will leave missing values as MISSING_VALUE
-    //! And values outside the [min, max] range will be mapped to -1
-    //! Tolerance is used to test wheter we join the two last bins or not.
-    //! If last be is short of more then tolerance*100%
-    //! of continuous_mincount elements, we join it with the previous bin.
-    RealMapping getBinMapping(double discrete_mincount,
-                              double continuous_mincount,
-                              real tolerance=.1,
-                              TVec<double>* fcount=0) const;
+  //! returns a mapping that maps values to a bin number
+  //! (from 0 to mapping.length()-1)
+  //! The mapping will leave missing values as MISSING_VALUE
+  //! And values outside the [min, max] range will be mapped to -1
+  //! Tolerance is used to test wheter we join the two last bins or not.
+  //! If last be is short of more then tolerance*100%
+  //! of continuous_mincount elements, we join it with the previous bin.
+  RealMapping getBinMapping(double discrete_mincount,
+                            double continuous_mincount,
+                            real tolerance=.1,
+                            TVec<double>* fcount=0) const;
 
-    RealMapping getAllValuesMapping(TVec<double>* fcount=0) const;
-    //! Same as getAllValuesMapping, except we can specify a bool vector,
-    //! that indicates whether the k-th range should be included or not.
-    //! The boolean 'ignore_other' indicates whether a value not appearing
-    //! in the mapping should be mapped to itself (false), or to -1 (true).
-    //! We can also give a 'tolerance': in this case, each mapping will
-    //! be expanded by '-epsilon' below and '+epsilon' above, with
-    //! epsilon = tolerance * mean(difference between two consecutive values).
-    //! If two consecutive mappings have a non-empty intersection after
-    //! the expansion, they will be merged.
-    RealMapping getAllValuesMapping(TVec<bool>* to_be_included, TVec<double>* fcount=0, bool ignore_other = false, real tolerance = 0) const;
+  RealMapping getAllValuesMapping(TVec<double>* fcount=0) const;
+  //! Same as getAllValuesMapping, except we can specify a bool vector,
+  //! that indicates whether the k-th range should be included or not.
+  //! The boolean 'ignore_other' indicates whether a value not appearing
+  //! in the mapping should be mapped to itself (false), or to -1 (true).
+  //! We can also give a 'tolerance': in this case, each mapping will
+  //! be expanded by '-epsilon' below and '+epsilon' above, with
+  //! epsilon = tolerance * mean(difference between two consecutive values).
+  //! If two consecutive mappings have a non-empty intersection after
+  //! the expansion, they will be merged.
+  RealMapping getAllValuesMapping(TVec<bool>* to_be_included, TVec<double>* fcount=0, bool ignore_other = false, real tolerance = 0) const;
 
-    virtual void oldwrite(ostream& out) const;
-    virtual void oldread(istream& in);
-    virtual void print(ostream& out) const;
+  virtual void oldwrite(ostream& out) const;
+  virtual void oldread(istream& in);
+  virtual void print(ostream& out) const;
 
 };
 
