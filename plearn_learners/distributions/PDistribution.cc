@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.cc,v 1.23 2004/09/27 20:19:29 plearner Exp $ 
+   * $Id: PDistribution.cc,v 1.24 2005/01/14 16:34:45 larocheh Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.cc */
@@ -260,11 +260,19 @@ void PDistribution::computeOutput(const Vec& input, Vec& output) const
 void PDistribution::computeCostsFromOutputs(const Vec& input, const Vec& output, 
     const Vec& target, Vec& costs) const
 {
-  if(outputs_def[0] != 'l')
-    PLERROR("In PDistribution::computeCostsFromOutputs currently can only 'compute' \n"
-        "negative log likelihood from log likelihood returned as first output \n");
   costs.resize(1);
-  costs[0] = -output[0];
+  if(outputs_def[0] == 'l')
+  {
+    costs[0] = -output[0];
+  }
+  else if(outputs_def[0] == 'd')
+  {
+    costs[0] = -log(output[0]);
+  }
+  else
+    PLERROR("In PDistribution::computeCostsFromOutputs currently can only 'compute' \n"
+        "negative log likelihood from log likelihood or density returned as first output \n");
+
 }                                
 
 /////////////////////////////////
