@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.h,v 1.21 2004/09/03 14:01:17 tihocan Exp $
+   * $Id: NNet.h,v 1.22 2004/09/07 20:32:31 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -164,7 +164,38 @@ public:
 
 protected:
   static void declareOptions(OptionList& ol);
-  void initializeParams();
+
+  //! Initialize the parameters. If 'set_seed' is set to false, the seed
+  //! will not be set in this method (it will be assumed to be already
+  //! initialized according to the 'seed' option).
+  virtual void initializeParams(bool set_seed = true);
+
+  //! Return a variable that is the hidden layer corresponding to given
+  //! input and weights.
+  Var hiddenLayer(const Var& input, const Var& weights);
+
+  //! Build the output of the neural network, from the given input.
+  //! The hidden layer is also made available in the 'hidden_layer' parameter.
+  //! The output before the transfer function is applied is also made
+  //! available in the 'before_transfer_func' parameter.
+  void buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& before_transfer_func);
+
+  //! Builds the target and sampleweight variables.
+  void buildTargetAndWeight();
+
+  //! Build the costs variable from other variables.
+  void buildCosts(const Var& output, const Var& target, const Var& hidden_layer, const Var& before_transfer_func);
+
+  //! Build the various functions used in the network.
+  void buildFuncs(const Var& the_input, const Var& the_output, const Var& the_target, const Var& the_sampleweight);
+
+  //! Fill a matrix of weights according to the 'initialization_method' specified.
+  //! The 'clear_first_row' boolean indicates whether we should fill the first
+  //! row with zeros.
+  void fillWeights(const Var& weights, bool clear_first_row);
+
+  //! Fill the costs penalties.
+  virtual void buildPenalties(const Var& hidden_layer);
 
 };
 

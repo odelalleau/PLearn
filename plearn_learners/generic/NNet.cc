@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.57 2004/09/03 16:42:31 tihocan Exp $
+   * $Id: NNet.cc,v 1.58 2004/09/07 20:32:30 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -106,7 +106,7 @@ NNet::NNet() // DEFAULT VALUES FOR ALL OPTIONS
    hidden_transfer_func("tanh"),
    interval_minval(0), interval_maxval(1),
    batch_size(1),
-   initialization_method("normal_linear")
+   initialization_method("uniform_linear")
 {}
 
 NNet::~NNet()
@@ -229,8 +229,11 @@ void NNet::declareOptions(OptionList& ol)
 
   declareOption(ol, "initialization_method", &NNet::initialization_method, OptionBase::buildoption, 
                 "    The method used to initialize the weights:\n"
-                "     - normal_linear = a normal law with variance 1 / n_inputs\n"
-                "     - normal_sqrt   = a normal law with variance 1 / sqrt(n_inputs)\n");
+                "     - normal_linear = a normal law with variance 1/n_inputs\n"
+                "     - normal_sqrt   = a normal law with variance 1/sqrt(n_inputs)\n"
+                "     - uniform_linear = a uniform law in [-1/n_inputs, 1/n_inputs]\n"
+                "     - uniform_sqrt   = a uniform law in [-1/sqrt(n_inputs), 1/sqrt(n_inputs)]\n"
+                "     - zero          = all weights are set to 0\n");
 
   declareOption(ol, "paramsvalues", &NNet::paramsvalues, OptionBase::learntoption, 
                 "    The learned parameter vector\n");
@@ -239,12 +242,18 @@ void NNet::declareOptions(OptionList& ol)
 
 }
 
+///////////
+// build //
+///////////
 void NNet::build()
 {
   inherited::build();
   build_();
 }
 
+////////////
+// build_ //
+////////////
 void NNet::build_()
 {
   /*
@@ -255,470 +264,445 @@ void NNet::build_()
   // It's the only one who knows the inputsize and targetsize anyway...
 
   if(inputsize_>=0 && targetsize_>=0 && weightsize_>=0)
+  {
+
+    // Initialize the input.
+    input = Var(inputsize(), "input");
+
+    params.resize(0);
+    Var hidden_layer;
+    Var before_transfer_func;
+
+    // Build main network graph.
+    buildOutputFromInput(input, hidden_layer, before_transfer_func);
+
+    // Build target and weight variables.
+    buildTargetAndWeight();
+
+    // Build costs.
+    buildCosts(output, target, hidden_layer, before_transfer_func);
+
+    // Shared values hack...
+    if((bool)paramsvalues && (paramsvalues.size() == params.nelems()))
+      params << paramsvalues;
+    else
     {
+      paramsvalues.resize(params.nelems());
+      initializeParams();
+      if(optimizer)
+        optimizer->reset();
+    }
+    params.makeSharedValue(paramsvalues);
 
-      
-      // init. basic vars
-      input = Var(inputsize(), "input");
-      output = input;
-      params.resize(0);
-      Var hidden_layer;
+    // Build functions.
+    buildFuncs(input, output, target, sampleweight);
 
-      // first hidden layer
-      if(nhidden>0)
-        {
-          w1 = Var(1+inputsize(), nhidden, "w1");      
-          hidden_layer = affine_transform(output,w1); 
-          params.append(w1);
-          if(hidden_transfer_func=="linear")
-            output = hidden_layer;
-          else if(hidden_transfer_func=="tanh")
-            output = tanh(hidden_layer);
-          else if(hidden_transfer_func=="sigmoid")
-            output = sigmoid(hidden_layer);
-          else if(hidden_transfer_func=="softplus")
-            output = softplus(hidden_layer);
-          else if(hidden_transfer_func=="exp")
-            output = exp(hidden_layer);
-          else if(hidden_transfer_func=="softmax")
-            output = softmax(hidden_layer);
-          else if (hidden_transfer_func == "log_softmax")
-            output = log_softmax(hidden_layer);
-          else if(hidden_transfer_func=="hard_slope")
-            output = unary_hard_slope(hidden_layer,0,1);
-          else if(hidden_transfer_func=="symm_hard_slope")
-            output = unary_hard_slope(hidden_layer,-1,1);
-          else
-            PLERROR("In NNet::build_()  unknown hidden_transfer_func option: %s",hidden_transfer_func.c_str());
-        }
+  }
+}
 
-      // second hidden layer
-      if(nhidden2>0)
-        {
-          w2 = Var(1+nhidden, nhidden2, "w2");
-          output = affine_transform(output,w2);
-          params.append(w2);
-          if(hidden_transfer_func=="linear")
-            output = output;
-          else if(hidden_transfer_func=="tanh")
-            output = tanh(output);
-          else if(hidden_transfer_func=="sigmoid")
-            output = sigmoid(output);
-          else if(hidden_transfer_func=="softplus")
-            output = softplus(output);
-          else if(hidden_transfer_func=="exp")
-            output = exp(output);
-          else if(hidden_transfer_func=="softmax")
-            output = softmax(output);
-          else if (hidden_transfer_func == "log_softmax")
-            output = log_softmax(output);
-          else if(hidden_transfer_func=="hard_slope")
-            output = unary_hard_slope(output,0,1);
-          else if(hidden_transfer_func=="symm_hard_slope")
-            output = unary_hard_slope(output,-1,1);
-          else
-            PLERROR("In NNet::build_()  unknown hidden_transfer_func option: %s",hidden_transfer_func.c_str());
-        }
+////////////////
+// buildCosts //
+////////////////
+void NNet::buildCosts(const Var& the_output, const Var& the_target, const Var& hidden_layer, const Var& before_transfer_func) {
+  int ncosts = cost_funcs.size();  
+  if(ncosts<=0)
+    PLERROR("In NNet::buildCosts - Empty cost_funcs : must at least specify the cost function to optimize!");
+  costs.resize(ncosts);
 
-      if (nhidden2>0 && nhidden==0)
-        PLERROR("NNet:: can't have nhidden2 (=%d) > 0 while nhidden=0",nhidden2);
-
-      if (rbf_layer_size>0)
-      {
-        if (first_class_is_junk)
-        {
-          rbf_centers = Var(outputsize()-1, rbf_layer_size, "rbf_centers");
-          rbf_sigmas = Var(outputsize()-1, "rbf_sigmas");
-          PLERROR("In NNet.cc, the code needs to be completed, rbf_layer isn't declared and thus it doesn't compile with the line below");
-          // TODO (Also put back the corresponding include).
-//          output = hconcat(rbf_layer(output,rbf_centers,rbf_sigmas)&junk_prob);
-          params.append(junk_prob);
-        }
+  for(int k=0; k<ncosts; k++)
+  {
+    // create costfuncs and apply individual weights if weightpart > 1
+    if(cost_funcs[k]=="mse")
+      costs[k]= sumsquare(the_output-the_target);
+    else if(cost_funcs[k]=="mse_onehot")
+      costs[k] = onehot_squared_loss(the_output, the_target);
+    else if(cost_funcs[k]=="NLL") 
+    {
+      if (the_output->size() == 1) {
+        // Assume sigmoid output here!
+        costs[k] = cross_entropy(the_output, the_target);
+      } else {
+        if (output_transfer_func == "log_softmax")
+          costs[k] = -the_output[the_target];
         else
-        {
-          rbf_centers = Var(outputsize(), rbf_layer_size, "rbf_centers");
-          rbf_sigmas = Var(outputsize(), "rbf_sigmas");
-          PLERROR("In NNet.cc, the code needs to be completed, rbf_layer isn't declared and thus it doesn't compile with the line below");
-//          output = rbf_layer(output,rbf_centers,rbf_sigmas);
-        }
-        params.append(rbf_centers);
-        params.append(rbf_sigmas);
+          costs[k] = neg_log_pi(the_output, the_target);
       }
-
-      // output layer before transfer function
-      wout = Var(1+output->size(), outputsize(), "wout");
-      output = affine_transform(output,wout);
-      if (!fixed_output_weights)
-        params.append(wout);
-      else
-      {
-        outbias = Var(output->size(),"outbias");
-        output = output + outbias;
-        params.append(outbias);
+    } 
+    else if(cost_funcs[k]=="class_error")
+      costs[k] = classification_loss(the_output, the_target);
+    else if(cost_funcs[k]=="binary_class_error")
+      costs[k] = binary_classification_loss(the_output, the_target);
+    else if(cost_funcs[k]=="multiclass_error")
+      costs[k] = multiclass_loss(the_output, the_target);
+    else if(cost_funcs[k]=="cross_entropy")
+      costs[k] = cross_entropy(the_output, the_target);
+    else if (cost_funcs[k]=="stable_cross_entropy") {
+      Var c = stable_cross_entropy(before_transfer_func, the_target);
+      costs[k] = c;
+      if (classification_regularizer) {
+        // There is a regularizer to add to the cost function.
+        dynamic_cast<NegCrossEntropySigmoidVariable*>((Variable*) c)->
+          setRegularizer(classification_regularizer);
       }
-
-      // direct in-to-out layer
-      if(direct_in_to_out)
-        {
-          wdirect = Var(inputsize(), outputsize(), "wdirect");// Var(1+inputsize(), outputsize(), "wdirect");
-          output += transposeProduct(wdirect, input);// affine_transform(input,wdirect);
-          params.append(wdirect);
-        }
-
-      Var before_transfer_func = output;
-      
-      /*
-       * output_transfer_func
-       */
-      size_t p=0;
-      if(output_transfer_func!="" && output_transfer_func!="none")
-        {
-          if(output_transfer_func=="tanh")
-            output = tanh(output);
-          else if(output_transfer_func=="sigmoid")
-            output = sigmoid(output);
-          else if(output_transfer_func=="softplus")
-            output = softplus(output);
-          else if(output_transfer_func=="exp")
-            output = exp(output);
-          else if(output_transfer_func=="softmax")
-            output = softmax(output);
-          else if (output_transfer_func == "log_softmax")
-            output = log_softmax(output);
-          else if ((p=output_transfer_func.find("interval"))!=string::npos)
-          {
-            size_t q = output_transfer_func.find(",");
-            interval_minval = atof(output_transfer_func.substr(p+1,q-(p+1)).c_str());
-            size_t r = output_transfer_func.find(")");
-            interval_maxval = atof(output_transfer_func.substr(q+1,r-(q+1)).c_str());
-            output = interval_minval + (interval_maxval - interval_minval)*sigmoid(output);
-          }
-          else
-            PLERROR("In NNet::build_()  unknown output_transfer_func option: %s",output_transfer_func.c_str());
-        }
-
-      /*
-       * target and weights
-       */
-      
-      target = Var(targetsize(), "target");
-      
-      if(weightsize_>0)
-      {
-        if (weightsize_!=1)
-          PLERROR("NNet: expected weightsize to be 1 or 0 (or unspecified = -1, meaning 0), got %d",weightsize_);
-        sampleweight = Var(1, "weight");
-      }
-      /*
-       * costfuncs
-       */
-      int ncosts = cost_funcs.size();  
-      if(ncosts<=0)
-        PLERROR("In NNet::build_()  Empty cost_funcs : must at least specify the cost function to optimize!");
-      costs.resize(ncosts);
-      
-      for(int k=0; k<ncosts; k++)
-        {
-          // create costfuncs and apply individual weights if weightpart > 1
-          if(cost_funcs[k]=="mse")
-            costs[k]= sumsquare(output-target);
-          else if(cost_funcs[k]=="mse_onehot")
-            costs[k] = onehot_squared_loss(output, target);
-          else if(cost_funcs[k]=="NLL") 
-            {
-              if (output->size() == 1) {
-                // Assume sigmoid output here!
-                costs[k] = cross_entropy(output, target);
-              } else {
-                if (output_transfer_func == "log_softmax")
-                  costs[k] = -output[target];
-                else
-                  costs[k] = neg_log_pi(output, target);
-              }
-            } 
-          else if(cost_funcs[k]=="class_error")
-            costs[k] = classification_loss(output, target);
-          else if(cost_funcs[k]=="binary_class_error")
-            costs[k] = binary_classification_loss(output, target);
-          else if(cost_funcs[k]=="multiclass_error")
-            costs[k] = multiclass_loss(output, target);
-          else if(cost_funcs[k]=="cross_entropy")
-            costs[k] = cross_entropy(output, target);
-          else if (cost_funcs[k]=="stable_cross_entropy") {
-            Var c = stable_cross_entropy(before_transfer_func, target);
-            costs[k] = c;
-            if (classification_regularizer) {
-              // There is a regularizer to add to the cost function.
-              dynamic_cast<NegCrossEntropySigmoidVariable*>((Variable*) c)->
-                setRegularizer(classification_regularizer);
-            }
-          }
-          else if (cost_funcs[k]=="margin_perceptron_cost")
-            costs[k] = margin_perceptron_cost(output,target,margin);
-          else if (cost_funcs[k]=="lift_output")
-            costs[k] = lift_output(output, target);
-          else  // Assume we got a Variable name and its options
-            {
-              costs[k]= dynamic_cast<Variable*>(newObject(cost_funcs[k]));
-              if(costs[k].isNull())
-                PLERROR("In NNet::build_()  unknown cost_func option: %s",cost_funcs[k].c_str());
-              costs[k]->setParents(output & target);
-              costs[k]->build();
-            }
-          
-          // take into account the sampleweight
-          //if(sampleweight)
-          //  costs[k]= costs[k] * sampleweight; // NO, because this is taken into account (more properly) in stats->update
-        }
-      
-
-      /*
-       * weight and bias decay penalty
-       */
-
-      // create penalties
-      penalties.resize(0);  // prevents penalties from being added twice by consecutive builds
-      if(w1 && ((layer1_weight_decay + weight_decay)!=0 || (layer1_bias_decay + bias_decay)!=0))
-        penalties.append(affine_transform_weight_penalty(w1, (layer1_weight_decay + weight_decay), (layer1_bias_decay + bias_decay), L1_penalty));
-      if(w2 && ((layer2_weight_decay + weight_decay)!=0 || (layer2_bias_decay + bias_decay)!=0))
-        penalties.append(affine_transform_weight_penalty(w2, (layer2_weight_decay + weight_decay), (layer2_bias_decay + bias_decay), L1_penalty));
-      if(wout && ((output_layer_weight_decay + weight_decay)!=0 || (output_layer_bias_decay + bias_decay)!=0))
-        penalties.append(affine_transform_weight_penalty(wout, (output_layer_weight_decay + weight_decay), 
-                                                         (output_layer_bias_decay + bias_decay), L1_penalty));
-      if(wdirect && (direct_in_to_out_weight_decay + weight_decay) != 0)
-      {
-        if (L1_penalty)
-          penalties.append(sumabs(wdirect)*(direct_in_to_out_weight_decay + weight_decay));
-        else
-          penalties.append(sumsquare(wdirect)*(direct_in_to_out_weight_decay + weight_decay));
-      }
-
-      if (input_reconstruction_penalty>0)
-        {
-          wrec = Var(hidden_layer->size(),inputsize(),"wrec");
-          predicted_input = transposeProduct(wrec, hidden_layer);
-          params.append(wrec);
-          penalties.append(input_reconstruction_penalty*sumsquare(predicted_input - input));
-        }
-
-      test_costs = hconcat(costs);
-
-      // Apply penalty to cost.
-      // If there is no penalty, we still add costs[0] as the first cost, in
-      // order to keep the same number of costs as if there was a penalty.
-      if(penalties.size() != 0) {
-        if (weightsize_>0)
-        // only multiply by sampleweight if there are weights
-          training_cost = hconcat(sampleweight*sum(hconcat(costs[0] & penalties))
-                                  & (test_costs*sampleweight));
-        else {
-          training_cost = hconcat(sum(hconcat(costs[0] & penalties)) & test_costs);
-        }
-      } 
-      else {
-        if(weightsize_>0) {
-        // only multiply by sampleweight if there are weights
-          training_cost = hconcat(costs[0]*sampleweight & test_costs*sampleweight);
-        } else {
-          training_cost = hconcat(costs[0] & test_costs);
-        }
-      }
-      
-      training_cost->setName("training_cost");
-      test_costs->setName("test_costs");
-      output->setName("output");
-      
-      // Shared values hack...
-      if((bool)paramsvalues && (paramsvalues.size() == params.nelems()))
-        params << paramsvalues;
-      else
-        {
-          paramsvalues.resize(params.nelems());
-          initializeParams();
-        }
-      params.makeSharedValue(paramsvalues);
-
-      // Funcs
-      invars.resize(0);
-      VarArray outvars;
-      VarArray testinvars;
-      if(input)
-      {
-        invars.push_back(input);
-        testinvars.push_back(input);
-      }
-      if(output)
-        outvars.push_back(output);
-      if(target)
-      {
-        invars.push_back(target);
-        testinvars.push_back(target);
-        outvars.push_back(target);
-      }
-      if(sampleweight)
-      {
-        invars.push_back(sampleweight);
-      }
-
-      f = Func(input, output);
-      test_costf = Func(testinvars, output&test_costs);
-      test_costf->recomputeParents();
-      output_and_target_to_cost = Func(outvars, test_costs); 
-      output_and_target_to_cost->recomputeParents();
     }
-}
-
-int NNet::outputsize() const
-{ return noutputs; }
-
-TVec<string> NNet::getTrainCostNames() const
-{
-  return (cost_funcs[0]+"+penalty") & cost_funcs;
-}
-
-TVec<string> NNet::getTestCostNames() const
-{ 
-  return cost_funcs;
-}
-
-
-void NNet::train()
-{
-  // NNet nstages is number of epochs (whole passages through the training set)
-  // while optimizer nstages is number of weight updates.
-  // So relationship between the 2 depends whether we are in stochastic, batch or minibatch mode
-
-  if(!train_set)
-    PLERROR("In NNet::train, you did not setTrainingSet");
-    
-  if(!train_stats)
-    PLERROR("In NNet::train, you did not setTrainStatsCollector");
-
-  int l = train_set->length();  
-
-  if(f.isNull()) // Net has not been properly built yet (because build was called before the learner had a proper training set)
-    build();
-
-  // number of samples seen by optimizer before each optimizer update
-  int nsamples = batch_size>0 ? batch_size : l;
-  Func paramf = Func(invars, training_cost); // parameterized function to optimize
-  Var totalcost = meanOf(train_set, paramf, nsamples);
-  if(optimizer)
+    else if (cost_funcs[k]=="margin_perceptron_cost")
+      costs[k] = margin_perceptron_cost(the_output,the_target,margin);
+    else if (cost_funcs[k]=="lift_output")
+      costs[k] = lift_output(the_output, the_target);
+    else  // Assume we got a Variable name and its options
     {
-      optimizer->setToOptimize(params, totalcost);  
-      optimizer->build();
+      costs[k]= dynamic_cast<Variable*>(newObject(cost_funcs[k]));
+      if(costs[k].isNull())
+        PLERROR("In NNet::build_()  unknown cost_func option: %s",cost_funcs[k].c_str());
+      costs[k]->setParents(the_output & the_target);
+      costs[k]->build();
     }
-  else PLERROR("RecommandationNet::train can't train without setting an optimizer first!");
 
-  // number of optimizer stages corresponding to one learner stage (one epoch)
-  int optstage_per_lstage = l/nsamples;
+    // take into account the sampleweight
+    //if(sampleweight)
+    //  costs[k]= costs[k] * sampleweight; // NO, because this is taken into account (more properly) in stats->update
+  }
 
-  ProgressBar* pb = 0;
-  if(report_progress)
-    pb = new ProgressBar("Training NNet from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
 
-  int initial_stage = stage;
-  bool early_stop=false;
-  while(stage<nstages && !early_stop)
-    {
-      optimizer->nstages = optstage_per_lstage;
-      train_stats->forget();
-      optimizer->early_stop = false;
-      optimizer->optimizeN(*train_stats);
-      train_stats->finalize();
-      if(verbosity>2)
-        cout << "Epoch " << stage << " train objective: " << train_stats->getMean() << endl;
-      ++stage;
-      if(pb)
-        pb->update(stage-initial_stage);
+  /*
+   * weight and bias decay penalty
+   */
+
+  // create penalties
+  buildPenalties(hidden_layer);
+  test_costs = hconcat(costs);
+
+  // Apply penalty to cost.
+  // If there is no penalty, we still add costs[0] as the first cost, in
+  // order to keep the same number of costs as if there was a penalty.
+  if(penalties.size() != 0) {
+    if (weightsize_>0)
+      // only multiply by sampleweight if there are weights
+      training_cost = hconcat(sampleweight*sum(hconcat(costs[0] & penalties))
+          & (test_costs*sampleweight));
+    else {
+      training_cost = hconcat(sum(hconcat(costs[0] & penalties)) & test_costs);
     }
-  if(verbosity>1)
-    cout << "EPOCH " << stage << " train objective: " << train_stats->getMean() << endl;
+  } 
+  else {
+    if(weightsize_>0) {
+      // only multiply by sampleweight if there are weights
+      training_cost = hconcat(costs[0]*sampleweight & test_costs*sampleweight);
+    } else {
+      training_cost = hconcat(costs[0] & test_costs);
+    }
+  }
 
-  if(pb)
-    delete pb;
+  training_cost->setName("training_cost");
+  test_costs->setName("test_costs");
+  the_output->setName("output");
+}
 
-  output_and_target_to_cost->recomputeParents();
+////////////////
+// buildFuncs //
+////////////////
+void NNet::buildFuncs(const Var& the_input, const Var& the_output, const Var& the_target, const Var& the_sampleweight) {
+  invars.resize(0);
+  VarArray outvars;
+  VarArray testinvars;
+  if (the_input)
+  {
+    invars.push_back(the_input);
+    testinvars.push_back(the_input);
+  }
+  if (the_output)
+    outvars.push_back(the_output);
+  if(the_target)
+  {
+    invars.push_back(the_target);
+    testinvars.push_back(the_target);
+    outvars.push_back(the_target);
+  }
+  if(the_sampleweight)
+  {
+    invars.push_back(the_sampleweight);
+  }
+  f = Func(the_input, the_output);
+  test_costf = Func(testinvars, the_output&test_costs);
   test_costf->recomputeParents();
-  // cerr << "totalcost->value = " << totalcost->value << endl;
-  // cout << "Result for benchmark is: " << totalcost->value << endl;
+  output_and_target_to_cost = Func(outvars, test_costs); 
+  output_and_target_to_cost->recomputeParents();
 }
 
+//////////////////////////
+// buildOutputFromInput //
+//////////////////////////
+void NNet::buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& before_transfer_func) {
+  output = the_input;
+  // first hidden layer
+  if(nhidden>0)
+  {
+    w1 = Var(1 + the_input->size(), nhidden, "w1");      
+    params.append(w1);
+    hidden_layer = hiddenLayer(output, w1);
+    output = hidden_layer;
+    // TODO BEWARE! This is not the same 'hidden_layer' as before.
+  }
 
+  // second hidden layer
+  if(nhidden2>0)
+  {
+    w2 = Var(1+nhidden, nhidden2, "w2");
+    params.append(w2);
+    output = hiddenLayer(output, w2);
+  }
 
-void NNet::computeOutput(const Vec& inputv, Vec& outputv) const
-{
-  f->fprop(inputv,outputv);
+  if (nhidden2>0 && nhidden==0)
+    PLERROR("NNet:: can't have nhidden2 (=%d) > 0 while nhidden=0",nhidden2);
+
+  if (rbf_layer_size>0)
+  {
+    if (first_class_is_junk)
+    {
+      rbf_centers = Var(outputsize()-1, rbf_layer_size, "rbf_centers");
+      rbf_sigmas = Var(outputsize()-1, "rbf_sigmas");
+      PLERROR("In NNet.cc, the code needs to be completed, rbf_layer isn't declared and thus it doesn't compile with the line below");
+      // TODO (Also put back the corresponding include).
+      //          output = hconcat(rbf_layer(output,rbf_centers,rbf_sigmas)&junk_prob);
+      params.append(junk_prob);
+    }
+    else
+    {
+      rbf_centers = Var(outputsize(), rbf_layer_size, "rbf_centers");
+      rbf_sigmas = Var(outputsize(), "rbf_sigmas");
+      PLERROR("In NNet.cc, the code needs to be completed, rbf_layer isn't declared and thus it doesn't compile with the line below");
+      //          output = rbf_layer(output,rbf_centers,rbf_sigmas);
+    }
+    params.append(rbf_centers);
+    params.append(rbf_sigmas);
+  }
+
+  // output layer before transfer function
+  wout = Var(1 + output->size(), outputsize(), "wout");
+  output = affine_transform(output, wout);
+  if (!fixed_output_weights)
+    params.append(wout);
+  else
+  {
+    outbias = Var(output->size(),"outbias");
+    output = output + outbias;
+    params.append(outbias);
+  }
+
+  // direct in-to-out layer
+  if(direct_in_to_out)
+  {
+    wdirect = Var(the_input->size(), outputsize(), "wdirect");
+    output += transposeProduct(wdirect, the_input);
+    params.append(wdirect);
+    if (nhidden <= 0)
+      PLERROR("In NNet::buildOutputFromInput - It seems weird to use direct in-to-out connections if there is no hidden layer anyway");
+  }
+
+  before_transfer_func = output;
+
+  /*
+   * output_transfer_func
+   */
+  size_t p=0;
+  if(output_transfer_func!="" && output_transfer_func!="none")
+  {
+    if(output_transfer_func=="tanh")
+      output = tanh(output);
+    else if(output_transfer_func=="sigmoid")
+      output = sigmoid(output);
+    else if(output_transfer_func=="softplus")
+      output = softplus(output);
+    else if(output_transfer_func=="exp")
+      output = exp(output);
+    else if(output_transfer_func=="softmax")
+      output = softmax(output);
+    else if (output_transfer_func == "log_softmax")
+      output = log_softmax(output);
+    else if ((p=output_transfer_func.find("interval"))!=string::npos)
+    {
+      size_t q = output_transfer_func.find(",");
+      interval_minval = atof(output_transfer_func.substr(p+1,q-(p+1)).c_str());
+      size_t r = output_transfer_func.find(")");
+      interval_maxval = atof(output_transfer_func.substr(q+1,r-(q+1)).c_str());
+      output = interval_minval + (interval_maxval - interval_minval)*sigmoid(output);
+    }
+    else
+      PLERROR("In NNet::build_()  unknown output_transfer_func option: %s",output_transfer_func.c_str());
+  }
 }
 
-void NNet::computeOutputAndCosts(const Vec& inputv, const Vec& targetv, 
-                                 Vec& outputv, Vec& costsv) const
-{
-  test_costf->fprop(inputv&targetv, outputv&costsv);
+////////////////////
+// buildPenalties //
+////////////////////
+void NNet::buildPenalties(const Var& hidden_layer) {
+  penalties.resize(0);  // prevents penalties from being added twice by consecutive builds
+  if(w1 && ((layer1_weight_decay + weight_decay)!=0 || (layer1_bias_decay + bias_decay)!=0))
+    penalties.append(affine_transform_weight_penalty(w1, (layer1_weight_decay + weight_decay), (layer1_bias_decay + bias_decay), L1_penalty));
+  if(w2 && ((layer2_weight_decay + weight_decay)!=0 || (layer2_bias_decay + bias_decay)!=0))
+    penalties.append(affine_transform_weight_penalty(w2, (layer2_weight_decay + weight_decay), (layer2_bias_decay + bias_decay), L1_penalty));
+  if(wout && ((output_layer_weight_decay + weight_decay)!=0 || (output_layer_bias_decay + bias_decay)!=0))
+    penalties.append(affine_transform_weight_penalty(wout, (output_layer_weight_decay + weight_decay), 
+          (output_layer_bias_decay + bias_decay), L1_penalty));
+  if(wdirect && (direct_in_to_out_weight_decay + weight_decay) != 0)
+  {
+    if (L1_penalty)
+      penalties.append(sumabs(wdirect)*(direct_in_to_out_weight_decay + weight_decay));
+    else
+      penalties.append(sumsquare(wdirect)*(direct_in_to_out_weight_decay + weight_decay));
+  }
+  if (input_reconstruction_penalty>0)
+  {
+    wrec = Var(hidden_layer->size(),input->size(),"wrec");
+    predicted_input = transposeProduct(wrec, hidden_layer);
+    params.append(wrec);
+    penalties.append(input_reconstruction_penalty*sumsquare(predicted_input - input));
+  }
 }
 
+//////////////////////////
+// buildTargetAndWeight //
+//////////////////////////
+void NNet::buildTargetAndWeight() {
+  target = Var(targetsize(), "target");
+  if(weightsize_>0)
+  {
+    if (weightsize_!=1)
+      PLERROR("In NNet::buildTargetAndWeight - Expected weightsize to be 1 or 0 (or unspecified = -1, meaning 0), got %d",weightsize_);
+    sampleweight = Var(1, "weight");
+  }
+}
 
+/////////////////////////////
+// computeCostsFromOutputs //
+/////////////////////////////
 void NNet::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv, 
                                    const Vec& targetv, Vec& costsv) const
 {
   output_and_target_to_cost->fprop(outputv&targetv, costsv); 
 }
 
-void NNet::initializeParams()
+///////////////////
+// computeOutput //
+///////////////////
+void NNet::computeOutput(const Vec& inputv, Vec& outputv) const
 {
-  if (seed_>=0)
-    manual_seed(seed_);
-  else
-    PLearn::seed();
+  f->fprop(inputv,outputv);
+}
 
-  //real delta = 1./sqrt(inputsize());
-  real delta = 0;
-  if (initialization_method == "normal_linear") {
-    delta = 1.0 / inputsize();
-  } else if (initialization_method == "normal_sqrt") {
-    delta = 1.0 / sqrt(real(inputsize()));
-  } else {
-    PLERROR("In NNet::initializeParams - Unknown value for 'initialization_method'");
+///////////////////////////
+// computeOutputAndCosts //
+///////////////////////////
+void NNet::computeOutputAndCosts(const Vec& inputv, const Vec& targetv, 
+                                 Vec& outputv, Vec& costsv) const
+{
+  test_costf->fprop(inputv&targetv, outputv&costsv);
+}
+
+/////////////////
+// fillWeights //
+/////////////////
+void NNet::fillWeights(const Var& weights, bool clear_first_row) {
+  if (initialization_method == "zero") {
+    weights->value->clear();
+    return;
+  }
+  real delta;
+  int is = weights.length();
+  if (clear_first_row)
+    is--; // -1 to get the same result as before.
+  if (initialization_method.find("linear") != string::npos)
+    delta = 1.0 / real(is);
+  else
+    delta = 1.0 / sqrt(real(is));
+  if (initialization_method.find("normal") != string::npos)
+    fill_random_normal(weights->value, 0, delta);
+  else
+    fill_random_uniform(weights->value, -delta, delta);
+  if (clear_first_row)
+    weights->matValue(0).clear();
+}
+
+////////////
+// forget //
+////////////
+void NNet::forget()
+{
+  if (train_set) initializeParams();
+  if(optimizer)
+    optimizer->reset();
+  stage = 0;
+}
+
+///////////////////////
+// getTrainCostNames //
+///////////////////////
+TVec<string> NNet::getTrainCostNames() const
+{
+  return (cost_funcs[0]+"+penalty") & cost_funcs;
+}
+
+//////////////////////
+// getTestCostNames //
+//////////////////////
+TVec<string> NNet::getTestCostNames() const
+{ 
+  return cost_funcs;
+}
+
+/////////////////
+// hiddenLayer //
+/////////////////
+Var NNet::hiddenLayer(const Var& input, const Var& weights) {
+  Var hidden = affine_transform(input, weights); 
+  Var result;
+  if(hidden_transfer_func=="linear")
+    result = hidden;
+  else if(hidden_transfer_func=="tanh")
+    result = tanh(hidden);
+  else if(hidden_transfer_func=="sigmoid")
+    result = sigmoid(hidden);
+  else if(hidden_transfer_func=="softplus")
+    result = softplus(hidden);
+  else if(hidden_transfer_func=="exp")
+    result = exp(hidden);
+  else if(hidden_transfer_func=="softmax")
+    result = softmax(hidden);
+  else if (hidden_transfer_func == "log_softmax")
+    result = log_softmax(hidden);
+  else if(hidden_transfer_func=="hard_slope")
+    result = unary_hard_slope(hidden,0,1);
+  else if(hidden_transfer_func=="symm_hard_slope")
+    result = unary_hard_slope(hidden,-1,1);
+  else
+    PLERROR("In NNet::hiddenLayer - Unknown hidden_transfer_func option: %s",hidden_transfer_func.c_str());
+  return result;
+}
+
+//////////////////////
+// initializeParams //
+//////////////////////
+void NNet::initializeParams(bool set_seed)
+{
+  if (set_seed) {
+    if (seed_>=0)
+      manual_seed(seed_);
+    else
+      PLearn::seed();
   }
 
-  /*
-  if(direct_in_to_out)
-    {
-      fill_random_uniform(wdirect->value, -delta, +delta);
-      //fill_random_normal(wdirect->value, 0, delta);
-      //wdirect->matValue(0).clear();
+  if(nhidden>0) {
+    fillWeights(w1, true);
+    if(direct_in_to_out) {
+      fillWeights(wdirect, false);
     }
-  */
-  if(nhidden>0)
-    {
-      fill_random_uniform(w1->value, -delta, +delta);
-      //fill_random_normal(w1->value, 0, delta);
-      if(direct_in_to_out)
-      {
-        fill_random_uniform(wdirect->value, -delta, +delta);
-        //fill_random_normal(wdirect->value, 0, 0.01*delta);
-        wdirect->matValue(0).clear();
-      }
-      if (initialization_method == "normal_linear") {
-        delta = 1.0 / real(nhidden);
-      } else if (initialization_method == "normal_sqrt") {
-        delta = 1.0 / sqrt(real(nhidden));
-      }
-      w1->matValue(0).clear();
-    }
-  if(nhidden2>0)
-    {
-      fill_random_uniform(w2->value, -delta, +delta);
-      //fill_random_normal(w2->value, 0, delta);
-      if (initialization_method == "normal_linear") {
-        delta = 1.0 / real(nhidden2);
-      } else if (initialization_method == "normal_sqrt") {
-        delta = 1.0 / sqrt(real(nhidden2));
-      }
-      w2->matValue(0).clear();
-    }
-  if (fixed_output_weights)
-  {
+  }
+
+  if(nhidden2>0) {
+    fillWeights(w2, true);
+  }
+
+  if (fixed_output_weights) {
     static Vec values;
     if (values.size()==0)
       {
@@ -729,27 +713,17 @@ void NNet::initializeParams()
     fill_random_discrete(wout->value, values);
     wout->matValue(0).clear();
   }
-  else
-  {
-    fill_random_uniform(wout->value, -delta, +delta);
-    //fill_random_normal(wout->value, 0, delta);
-    wout->matValue(0).clear();
+  else {
+    fillWeights(wout, true);
   }
-
-  // Reset optimizer
-  if(optimizer)
-    optimizer->reset();
-}
-
-void NNet::forget()
-{
-  if (train_set) initializeParams();
-  stage = 0;
 }
 
 //! To use varDeepCopyField.
 extern void varDeepCopyField(Var& field, CopiesMap& copies);
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void NNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
@@ -778,6 +752,78 @@ void NNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(test_costf, copies);
   deepCopyField(output_and_target_to_cost, copies);
   deepCopyField(optimizer, copies);
+}
+
+////////////////
+// outputsize //
+////////////////
+int NNet::outputsize() const {
+  return noutputs;
+}
+
+///////////
+// train //
+///////////
+void NNet::train()
+{
+  // NNet nstages is number of epochs (whole passages through the training set)
+  // while optimizer nstages is number of weight updates.
+  // So relationship between the 2 depends whether we are in stochastic, batch or minibatch mode
+
+  if(!train_set)
+    PLERROR("In NNet::train, you did not setTrainingSet");
+    
+  if(!train_stats)
+    PLERROR("In NNet::train, you did not setTrainStatsCollector");
+
+  int l = train_set->length();  
+
+  if(f.isNull()) // Net has not been properly built yet (because build was called before the learner had a proper training set)
+    build();
+
+  // number of samples seen by optimizer before each optimizer update
+  int nsamples = batch_size>0 ? batch_size : l;
+  Func paramf = Func(invars, training_cost); // parameterized function to optimize
+  Var totalcost = meanOf(train_set, paramf, nsamples);
+  if(optimizer)
+    {
+      optimizer->setToOptimize(params, totalcost);  
+      optimizer->build();
+    }
+  else PLERROR("NNet::train can't train without setting an optimizer first!");
+
+  // number of optimizer stages corresponding to one learner stage (one epoch)
+  int optstage_per_lstage = l/nsamples;
+
+  ProgressBar* pb = 0;
+  if(report_progress)
+    pb = new ProgressBar("Training " + classname() + " from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
+
+  int initial_stage = stage;
+  bool early_stop=false;
+  while(stage<nstages && !early_stop)
+    {
+      optimizer->nstages = optstage_per_lstage;
+      train_stats->forget();
+      optimizer->early_stop = false;
+      optimizer->optimizeN(*train_stats);
+      train_stats->finalize();
+      if(verbosity>2)
+        cout << "Epoch " << stage << " train objective: " << train_stats->getMean() << endl;
+      ++stage;
+      if(pb)
+        pb->update(stage-initial_stage);
+    }
+  if(verbosity>1)
+    cout << "EPOCH " << stage << " train objective: " << train_stats->getMean() << endl;
+
+  if(pb)
+    delete pb;
+
+  output_and_target_to_cost->recomputeParents();
+  test_costf->recomputeParents();
+  // cerr << "totalcost->value = " << totalcost->value << endl;
+  // cout << "Result for benchmark is: " << totalcost->value << endl;
 }
 
 } // end of namespace PLearn
