@@ -1308,7 +1308,11 @@ executables_to_link = {}
 
 
 for target in otherargs:
-    configpath = locateconfigfile('config',os.path.dirname(abspath(target)),default_config_text)
+    if os.path.isdir(target):
+        target_path = os.path.abspath(target)
+    else:
+        target_path = os.path.dirname(os.path.abspath(target))
+    configpath = locateconfigfile('config',target_path,default_config_text)
     
     execfile(configpath)
     # remove duplicates from sourcedirs
