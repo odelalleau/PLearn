@@ -37,13 +37,21 @@
  
 
 /* *******************************************************      
-   * $Id: GhostScript.cc,v 1.7 2004/02/20 21:11:44 chrish42 Exp $
+   * $Id: GhostScript.cc,v 1.8 2004/02/26 04:08:34 nova77 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
 
-
 #include "GhostScript.h"
+
+#ifdef WIN32
+#include <io.h>
+// norman: potentially dangerous if there is a function called with the same name in this
+//         file. Beware!
+#define popen _popen
+#define pclose _pclose
+#define fileno _fileno
+#endif
 
 namespace PLearn {
 using namespace std;
@@ -75,6 +83,7 @@ using namespace std;
     static char command_string[1000];
     // sprintf(command_string,"gs -sDEVICE=x11 -g%d%c%d - > /dev/null",width,'x',height);
     sprintf(command_string,"gs -sDEVICE=x11 -g%d%c%d > /dev/null",width,'x',height);
+
     gs_cstream = popen(command_string,"w");
     togs.attach(fileno(gs_cstream));
     togs.outmode=PStream::raw_ascii;
@@ -337,7 +346,11 @@ void GhostScript::multilineShow(real x, real y, const string& text, real newline
     togs << x << ' ' << y << ' ' << r << " 0 360 arc fill" << endl; 
   }
 
-
-
+#ifdef WIN32
+#undef _fileno
+#undef _popen
+#undef _pclose
+#endif
 
 } // end of namespace PLearn
+

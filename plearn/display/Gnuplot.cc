@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Gnuplot.cc,v 1.8 2004/02/20 21:11:44 chrish42 Exp $
+   * $Id: Gnuplot.cc,v 1.9 2004/02/26 04:09:44 nova77 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -46,6 +46,16 @@
 #include "TMat_maths.h"
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#ifdef WIN32
+#include <io.h>
+// norman: potentially dangerous if there is a function called with the same name in this
+//         file. Beware!
+#define chmod _chmod
+#define fileno _fileno
+#define popen _popen
+#define pclose _pclose
+#endif
 
 namespace PLearn {
 using namespace std;
@@ -457,8 +467,11 @@ void Gnuplot::export_ps(string psfname, string psoptions)
             << "set terminal x11" << endl;
 }
   
-
+#ifdef WIN32
+#undef _chmod
+#undef _fileno
+#undef _popen
+#undef _pclose
+#endif
 
 } // end of namespace PLearn
-
-

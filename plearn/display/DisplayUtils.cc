@@ -1,5 +1,5 @@
 // -*- C++ -*-
-
+ 
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: DisplayUtils.cc,v 1.3 2004/02/20 21:11:44 chrish42 Exp $
+   * $Id: DisplayUtils.cc,v 1.4 2004/02/26 04:08:34 nova77 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -45,6 +45,11 @@
 #include "DisplayUtils.h"
 #include "TmpFilenames.h"
 #include <strstream>
+
+#ifdef WIN32
+#include <io.h>
+#define unlink _unlink
+#endif
 
 namespace PLearn {
 using namespace std;
@@ -759,5 +764,8 @@ void displayDecisionSurface(GhostScript& gs, real destx, real desty, real destwi
     gs.grestore();
   }
 
+#ifdef WIN32
+#undef unlink
+#endif
 
 } // end of namespace PLearn
