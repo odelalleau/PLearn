@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.cc,v 1.5 2004/04/21 17:24:33 tihocan Exp $ 
+   * $Id: KernelProjection.cc,v 1.6 2004/05/07 19:10:01 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -59,7 +59,6 @@ KernelProjection::KernelProjection()
   normalize(false)
   
 {
-  kernel = new GaussianKernel();
 }
 
 PLEARN_IMPLEMENT_OBJECT(KernelProjection,
@@ -230,10 +229,10 @@ int KernelProjection::outputsize() const
 void KernelProjection::setTrainingSet(VMat training_set, bool call_forget) {
   inherited::setTrainingSet(training_set, call_forget);
   n_examples = training_set->length();
-  kernel->setDataForKernelMatrix(training_set);
-  // If we save this learner then load it again, we want the kernel to remember
-  // its dataset. Thus we must use the 'specify_dataset' option.
+  // Save the dataset in the kernel, because it may be needed after we reload
+  // the learner.
   kernel->specify_dataset = training_set;
+  kernel->build();
 }
 
 ///////////
@@ -247,6 +246,9 @@ void KernelProjection::train()
   }
   Mat gram(n_examples,n_examples);
   // (1) Compute the Gram matrix.
+  if (report_progress) {
+    kernel->report_progress = true;
+  }
   kernel->computeGramMatrix(gram);
   // (2) Compute its eigenvectors and eigenvalues.
   eigenVecOfSymmMat(gram, n_comp, eigenvalues, eigenvectors);
