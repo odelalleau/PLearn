@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.28 2004/06/14 19:34:29 plearner Exp $
+   * $Id: vmatmain.cc,v 1.29 2004/06/18 16:44:28 tihocan Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -385,8 +385,10 @@ void viewVMat(const VMat& vm)
 
   VMat vm_showed = vm;
   
-  int key= 0;
-  bool view_strings= true;
+  int key = 0;
+  bool view_strings = true;
+  // If 'indent_strings_left' is set to false, then strings will be indented to the right.
+  bool indent_strings_left = true;
   bool hide_sameval = false; // if true, values that are the same as the one of the previous vmat line will not be displayed, (three dot will be displayed instead).
   bool transposed = false;
   
@@ -468,8 +470,15 @@ void viewVMat(const VMat& vm)
             {
               real val = v[j];
               string s = vm_showed->getValString(j,val);
-              if(!view_strings || s=="")
+              if (!view_strings || s == "")
                 s = tostring(val);
+              else {
+                // This is a string. Maybe we want to indent it to the right.
+                // In this case we truncate it to its last characters.
+                if (!indent_strings_left) {
+                  s = s.substr(s.size() - valstrwidth, valstrwidth);
+                }
+              }
               
               if(transposed)
                 y = 1+(j-startj);
@@ -484,7 +493,7 @@ void viewVMat(const VMat& vm)
               if(hide_sameval && i>starti && (val==oldv[j] || is_missing(val)&&is_missing(oldv[j])) )
                 mvprintw(y, x, valstrformat, "...");                
               else
-                mvprintw(y, x, valstrformat,s.substr(0,valstrwidth).c_str());
+                mvprintw(y, x, valstrformat, s.substr(0,valstrwidth).c_str());
 
               attroff(A_REVERSE);
             }
@@ -894,10 +903,27 @@ void viewVMat(const VMat& vm)
         vm_showed = vm;
         break;
       ///////////////////////////////////////////////////////////////
-      case (int)'s': case (int)'S': 
-        view_strings = !view_strings;
+      case (int)'s':
+        if (indent_strings_left)
+          // Toggle display.
+          view_strings = !view_strings;
+        else {
+          // Do not remove display if we only asked to change indentation.
+          indent_strings_left = true;
+          if (!view_strings)
+            view_strings = true;
+        }
         break;
-
+      case (int)'S': 
+        // Same as above, except we indent to the right.
+        if (!indent_strings_left)
+          view_strings = !view_strings;
+        else {
+          indent_strings_left = false;
+          if (!view_strings)
+            view_strings = true;
+        }
+        break;
       ///////////////////////////////////////////////////////////////
       case (int)'h': case (int)'H':
         erase();
@@ -920,7 +946,7 @@ void viewVMat(const VMat& vm)
         mvprintw(vStartHelp++,10," - 'a' or 'A': show all the columns");
         mvprintw(vStartHelp++,10," - 'l' or 'L': prompt for a line number and go to that line");
         mvprintw(vStartHelp++,10," - 'c' or 'C': prompt for a column number and go to that column");
-        mvprintw(vStartHelp++,10," - 's' or 'S': toggle display string fields as strings or numbers");
+        mvprintw(vStartHelp++,10," - 's' or 'S': toggle display string fields as strings or numbers ('S' = right indentation)");
         mvprintw(vStartHelp++,10," - 't' or 'T': toggle transposed display mode");
         mvprintw(vStartHelp++,10," - 'e' or 'E': export a range or a set of columns to file");
         mvprintw(vStartHelp++,10," - '.'       : toggle displaying of ... for values that do not change");
