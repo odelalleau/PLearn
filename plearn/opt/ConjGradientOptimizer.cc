@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.9 2003/04/23 15:08:50 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.10 2003/04/23 16:31:33 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -212,6 +212,8 @@ IMPLEMENT_NAME_AND_DEEPCOPY(ConjGradientOptimizer);
 real ConjGradientOptimizer::computeCostValue(
     real alpha,
     ConjGradientOptimizer* opt) {
+  if (alpha == 0)
+    return opt->cost->value[0];
   opt->params.copyTo(opt->tmp_storage);
   opt->params.update(alpha, opt->search_direction);
   opt->proppath.fprop();
@@ -226,6 +228,8 @@ real ConjGradientOptimizer::computeCostValue(
 real ConjGradientOptimizer::computeDerivative(
     real alpha,
     ConjGradientOptimizer* opt) {
+  if (alpha == 0)
+    return -dot(opt->search_direction, opt->current_opp_gradient);
   opt->params.copyTo(opt->tmp_storage);
   opt->params.update(alpha, opt->search_direction);
   computeGradient(opt, opt->delta);
@@ -329,32 +333,32 @@ bool ConjGradientOptimizer::findDirection() {
 // findMinWithCubicInterpol //
 //////////////////////////////
 real ConjGradientOptimizer::findMinWithCubicInterpol (
-    real (*f)(real, ConjGradientOptimizer* opt),
-    real (*g)(real, ConjGradientOptimizer* opt),
-    ConjGradientOptimizer* opt,
     real p1,
     real p2,
     real mini,
-    real maxi) {
+    real maxi,
+    real f0,
+    real f1,
+    real g0,
+    real g1) {
   // We prefer p2 > p1 and maxi > mini
+  real tmp;
   if (p2 < p1) {
-    real tmp = p2;
+    tmp = p2;
     p2 = p1;
     p1 = tmp;
   }
   if (maxi < mini) {
-    real tmp = maxi;
+    tmp = maxi;
     maxi = mini;
     mini = tmp;
   }
   // cout << "Finding min : p1 = " << p1 << " , p2 = " << p2 << " , mini = " << mini << " , maxi = " << maxi << endl;
-  real f0 = (*f)(p1, opt);
-  real f1 = (*f)(p2, opt);
   // The derivatives must be multiplied by (p2-p1), because we write :
   // x = p1 + z*(p2-p1)
   // with z in [0,1]  =>  df/dz = (p2-p1)*df/dx
-  real g0 = (*g)(p1, opt) * (p2-p1);
-  real g1 = (*g)(p2, opt) * (p2-p1);
+  g0 = g0 * (p2-p1);
+  g1 = g1 * (p2-p1);
   real a, b, c, d;
   // Store the interpolation coefficients in a,b,c,d
   cubicInterpol(f0, f1, g0, g1, a, b, c, d);
@@ -428,16 +432,20 @@ real ConjGradientOptimizer::fletcherSearchMain (
     real alpha1,
     real mu) {
   
-  // TODO Optimize this function so that it doesn't compute twice the same things
   // Initialization
-  if (mu == FLT_MAX)
-    mu = (fmax - (*f)(0, opt)) / (rho * (*g)(0, opt));
-  if (alpha1 == FLT_MAX)
-    alpha1 = mu / 100; // My own heuristic
   real alpha0 = 0;
-  real alpha2, f0, f1, g0, a1, a2, b1, b2;
+  // f0 = f(0), f_0 = f(alpha0), f_1 = f(alpha1)
+  // g0 = g(0), g_0 = g(alpha0), g_1 = g(alaph1)
+  // (for the bracketing phase)
+  real alpha2, f0, f_1, f_0, g0, g_1, g_0, a1, a2, b1, b2;
   f0 = (*f)(0, opt);
   g0 = (*g)(0, opt);
+  f_0 = f0;
+  g_0 = g0;
+  if (mu == FLT_MAX)
+    mu = (fmax - f0) / (rho * g0);
+  if (alpha1 == FLT_MAX)
+    alpha1 = mu / 100; // My own heuristic
   if (g0 >= 0) {
     cout << "Warning : df/dx(0) >= 0 !" << endl;
     return 0;
@@ -451,64 +459,86 @@ real ConjGradientOptimizer::fletcherSearchMain (
       cout << "Warning : alpha1 == alpha2 == mu during bracketing" << endl;
       return alpha1;
     }
-    f1 = (*f)(alpha1, opt);
-    if (f1 <= fmax)
+    f_1 = (*f)(alpha1, opt);
+    if (f_1 <= fmax)
       return alpha1;
-    if (f1 > f0 + alpha1 * rho * g0 || f1 > (*f)(alpha0, opt)) {
+    if (f_1 > f0 + alpha1 * rho * g0 || f_1 > f_0) {
       // NB: in Fletcher's book, there is a typo in the test above
       a1 = alpha0;
       b1 = alpha1;
       isBracketed = true;
-      // cout << "Bracketing done : f1 = " << f1 << " , alpha1 = " << alpha1 << " , f0 = " << f0 << " , g0 = " << g0 << endl;
+      // cout << "Bracketing done : f_1 = " << f_1 << " , alpha1 = " << alpha1 << " , f0 = " << f0 << " , g0 = " << g0 << endl;
     } else {
-      if (abs((*g)(alpha1, opt)) < -sigma * g0) {
-        // cout << "Low gradient : g=" << abs((*g)(alpha1, opt)) << " < " << (-sigma * g0) << endl;
+      g_1 = (*g)(alpha1, opt);
+      if (abs(g_1) < -sigma * g0) {
+        // cout << "Low gradient : g=" << abs(g1) << " < " << (-sigma * g0) << endl;
         return alpha1;
       }
-      if ((*g)(alpha1, opt) >= 0) {
+      if (g_1 >= 0) {
         a1 = alpha1;
         b1 = alpha0;
+        real tmp = f_0;
+        f_0 = f_1;
+        f_1 = tmp;
+        tmp = g_0;
+        g_0 = g_1;
+        g_1 = tmp;
         isBracketed = true;
       } else {
         if (mu <= 2*alpha1 - alpha0)
           alpha2 = mu;
         else
           alpha2 = findMinWithCubicInterpol(
-              f, g, opt, 
               alpha1, alpha0,
-              2*alpha1 - alpha0, min(mu, alpha1 + tau1 * (alpha1 - alpha0)));
+              2*alpha1 - alpha0, min(mu, alpha1 + tau1 * (alpha1 - alpha0)),
+              f_1, f_0, g_1, g_0);
       }
     }
+    if (!isBracketed) {
       alpha0 = alpha1;
       alpha1 = alpha2;
+      f_0 = f_1;
+      g_0 = g_1;
+    }
   }
 
   // Splitting
+  // NB: At this point, f_0 = f(a1), f_1 = f(b1) (and the same for g)
+  //     and we'll keep it this way
+  //     We then use f1 = f(alpha1) and g1 = g(alpha1)
+  real f1,g1;
   while (true) {
     // cout << "Splitting : alpha1 = " << alpha1 << endl << "            a1 = " << a1 << endl << "            b1 = " << b1 << endl;
     // cout << "Interval : [" << a1 + tau2 * (b1-a1) << " , " << b1 - tau3 * (b1-a1) << "]" << endl;
     alpha1 = findMinWithCubicInterpol(
-        f, g, opt,
         a1, b1,
-        a1 + tau2 * (b1-a1), b1 - tau3 * (b1-a1));
+        a1 + tau2 * (b1-a1), b1 - tau3 * (b1-a1),
+        f_0, f_1, g_0, g_1);
     f1 = (*f)(alpha1, opt);
-    if ((a1 - alpha1) * (*g)(a1, opt) <= epsilon) {
-      // cout << "Early stop : a1 = " << a1 << " , alpha1 = " << alpha1 << " , g(a1) = " << (*g)(a1,opt) << " , epsilon = " << epsilon << endl;
+    if ((a1 - alpha1) * g_0 <= epsilon) {
+      // cout << "Early stop : a1 = " << a1 << " , alpha1 = " << alpha1 << " , g(a1) = " << g_0 << " , epsilon = " << epsilon << endl;
       return a1;
     }
-    if (f1 > f0 + rho * alpha1 * g0 || f1 >= (*f)(a1, opt)) {
+    g1 = (*g)(alpha1, opt);
+    if (f1 > f0 + rho * alpha1 * g0 || f1 >= f_0) {
      a2 = a1;
      b2 = alpha1;
+     f_1 = f1; // to keep f_1 = f(b1) in the next iteration
+     g_1 = g1; // to keep g_1 = g(b1) in the next iteration
     } else {
-      if (abs((*g)(alpha1, opt)) <= -sigma * g0) {
-        // cout << "Found what we were looking for : g(alpha1)=" << abs((*g)(alpha1, opt)) << " < " << -sigma * g0 << " with g0 = " << g0 << endl;
+      if (abs(g1) <= -sigma * g0) {
+        // cout << "Found what we were looking for : g(alpha1)=" << abs(g1) << " < " << -sigma * g0 << " with g0 = " << g0 << endl;
         return alpha1;
       }
-      a2 = alpha1;
-      if ((b1 - a1) * (*g)(alpha1, opt) >= 0)
+      if ((b1 - a1) * g1 >= 0) {
         b2 = a1;
-      else
+        f_1 = f_0; // to keep f_1 = f(b1) in the next iteration
+        g_1 = g_0; // to keep g_1 = g(b1) in the next iteration
+      } else
         b2 = b1;
+      a2 = alpha1;
+      f_0 = f1; // to keep f_0 = f(a1) in the next iteration
+      g_0 = g1; // to keep g_0 = g(a1) in the next iteration
     }
     a1 = a2;
     b1 = b2;

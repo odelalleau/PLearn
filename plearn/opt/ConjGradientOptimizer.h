@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.8 2003/04/23 14:51:47 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.9 2003/04/23 16:31:34 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -279,13 +279,14 @@ public:   // TODO For test purpose... remove later
   // Find the minimum of the cubic interpolation of function f, with g=df/dx,
   // in the interval [mini, maxi], given values at points p1 and p2
   static real findMinWithCubicInterpol (
-      real (*f)(real, ConjGradientOptimizer* opt),
-      real (*g)(real, ConjGradientOptimizer* opt),
-      ConjGradientOptimizer* opt,
       real p1,
       real p2,
       real mini,
-      real maxi);
+      real maxi,
+      real f0,
+      real f1,
+      real g0,
+      real g1);
 
   // The main function for Fletcher's line search algorithm
   // We keep all the parameters, so that it can be used separately
