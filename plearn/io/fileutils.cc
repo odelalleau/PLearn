@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.44 2004/06/04 13:13:33 tihocan Exp $
+   * $Id: fileutils.cc,v 1.45 2004/06/10 19:19:19 dorionc Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -600,6 +600,7 @@ string readFileAndMacroProcess(const string& filepath, map<string, string>& vari
   variables["FILENAME"] = extract_filename(fpath);
   variables["FILEBASE"] = remove_extension(extract_filename(fpath));
   variables["FILEEXT"] = extract_extension(fpath);
+  variables["HOME"] = getenv("HOME");
 
   // Compute DATE, TIME, and DATETIME variables
   time_t curtime = time(NULL);
