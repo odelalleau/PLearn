@@ -108,7 +108,9 @@ def cluster_command( raw_command, logdir_path = None, format = Cluster.Defaults.
     return cluster_cmd
 
 def count_expdirs( expdir_pattern = Cluster.Defaults.expdir_pattern ):
-    xpdirs = command_output( 'ls -1 | grep "%s"' % expdir_pattern )
+    xpdirs = [ exp for exp in os.listdir( os.getcwd() )
+               if re.search( self.regexp, exp ) is not None
+               ]
     return len(xpdirs)
 
 def machines_used_by_user():
