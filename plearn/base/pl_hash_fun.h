@@ -35,7 +35,11 @@
 #ifndef pl_hash_fun_H
 #define pl_hash_fun_H
 
-#include <hash_set> //to get stl_hash_fun.h ... (template<> class hash)
+#if __GNUC__ < 3
+#  include <hash_set> //to get stl_hash_fun.h ... (template<> class hash)
+#else
+#  include <ext/hash_set> //to get stl_hash_fun.h ... (template<> class hash)
+#endif
 #include <string>
 
 namespace PLearn <%
