@@ -80,15 +80,26 @@ using namespace std;
 
     RowMapSparseMatrix(string filename) { load(filename); }
 
-    RowMapSparseMatrix(const Mat& m) : rows(m.length()), _width(m.width()), save_binary(true)
+    RowMapSparseMatrix(const Mat& m, bool fill_all=true) : rows(m.length()), _width(m.width()), save_binary(true)
     {
-      for (int i=0;i<length();i++)
-      {
-        real* r=m[i];
-        map<int,T>& row_i=rows[i];
-        for (int j=0;j<width();j++)
-          row_i[j]=T(r[j]);
-      }
+      if (fill_all)
+	for (int i=0;i<length();i++)
+	{
+	  real* r=m[i];
+	  map<int,T>& row_i=rows[i];
+	  for (int j=0;j<width();j++)
+	    row_i[j]=T(r[j]);
+	}
+      else
+ 	for (int i=0;i<length();i++)
+	{
+	  real* r=m[i];
+	  map<int,T>& row_i=rows[i];
+	  for (int j=0;j<width();j++){
+	    if(T(r[j])!=0)
+	      row_i[j]=T(r[j]);
+	  }
+	}
     }
 
     //!  Accepts a FORTRAN formatted sparse matrix as an initializer.
