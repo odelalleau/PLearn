@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: DiskVMatrix.cc,v 1.4 2003/05/14 21:15:32 jkeable Exp $
+   * $Id: DiskVMatrix.cc,v 1.5 2003/07/24 00:48:52 ducharme Exp $
    ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -70,7 +70,7 @@ void DiskVMatrix::readRow(istream& in, const Vec& v)
 
 void DiskVMatrix::build()
 {
-  inherited::build();
+  parentclass::build();
   build_();
 }
 
@@ -156,7 +156,7 @@ void DiskVMatrix::build_()
 void DiskVMatrix::declareOptions(OptionList &ol)
 {
   declareOption(ol, "dirname", &DiskVMatrix::dirname, OptionBase::buildoption, "Directory name of the.dmat");
-  inherited::declareOptions(ol);
+  parentclass::declareOptions(ol);
 }
 
 void DiskVMatrix::getRow(int i, Vec v) const
@@ -209,14 +209,14 @@ void DiskVMatrix::appendRow(Vec v)
   f->seekp(0,ios::end);
   unsigned int position = f->tellp();
   if(position>500000000L)
-    {
-      filenum++;
-      string filename = dirname + "/" + tostring(filenum) + ".data";
-      f = new fstream();
-      f->open(filename.c_str(), ios::in | ios::out);
-      dataf.append(f);
-      position = 0;
-    }
+  {
+    filenum++;
+    string filename = dirname + "/" + tostring(filenum) + ".data";
+    f = new fstream();
+    f->open(filename.c_str(), ios::in | ios::out | ios::trunc | ios::binary);
+    dataf.append(f);
+    position = 0;
+  }
   binwrite_compressed(*f,v.data(),v.length());
   indexf->seekp(0,ios::end);
   indexf->put((unsigned char)filenum);
@@ -243,7 +243,7 @@ DiskVMatrix::~DiskVMatrix()
   saveFieldInfos();
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(DiskVMatrix);
+PLEARN_IMPLEMENT_OBJECT_METHODS(DiskVMatrix, "DiskVMatrix", RowBufferedVMatrix);
 
 
 %> // end of namespcae PLearn

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: DiskVMatrix.h,v 1.2 2003/04/29 21:33:44 plearner Exp $
+   * $Id: DiskVMatrix.h,v 1.3 2003/07/24 00:48:53 ducharme Exp $
    ******************************************************* */
 
 
@@ -54,7 +54,6 @@ using namespace std;
 //!  Each row is compressed/decompressed through the methods of VecCompressor
 class DiskVMatrix: public RowBufferedVMatrix
 {
-  typedef RowBufferedVMatrix inherited;
 protected:
   mutable fstream * indexf;
   mutable Array<fstream*> dataf;
@@ -92,7 +91,7 @@ public:
   virtual void build();
   void build_();
 
-  DECLARE_NAME_AND_DEEPCOPY(DiskVMatrix);
+  PLEARN_DECLARE_OBJECT_METHODS(DiskVMatrix, "DiskVMatrix", RowBufferedVMatrix);
 
   static void declareOptions(OptionList & ol);
   
@@ -101,5 +100,5 @@ public:
 
 DECLARE_OBJECT_PTR(DiskVMatrix);
 
-%> // end of namespcae PLearn
+%> // end of namespace PLearn
 #endif
