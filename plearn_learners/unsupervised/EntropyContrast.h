@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: EntropyContrast.h,v 1.2 2004/08/16 19:45:08 dpopovici Exp $ 
+ * $Id: EntropyContrast.h,v 1.3 2004/08/17 16:25:57 mariusmuja Exp $ 
  ******************************************************* */
 
 /*! \file EntropyContrast.h */
@@ -144,7 +144,6 @@ namespace PLearn {
     // * public build options *
     // ************************
 
-    string constr_type ; 
     string cost_real ; 
     string cost_gen ; 
     string cost_extra; 
