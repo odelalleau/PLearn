@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOverBagsVariable.cc,v 1.2 2004/02/19 15:25:31 yoshua Exp $
+   * $Id: SumOverBagsVariable.cc,v 1.3 2004/02/20 14:43:12 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,12 +51,24 @@ using namespace std;
 
 /** SumOverBagsVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(SumOverBagsVariable, "Variable that sums the value of a Func evaluated on each row of a VMat\n", 
-                        "However, unlike the SumOfVariable, it does so by unfolding the Func (up to given maximum number\n"
-                        "of times 'max_bag_size'), and it allows that number to be variable. Each of the unfolded Func\n"
-                        "is applied on a different row of the input VMat. The number of rows to sum is specified on the\n"
-                        "fly by the target: all the rows in a bag except the last one have missing values in their\n"
-                        "target sub-field.");
+PLEARN_IMPLEMENT_OBJECT(SumOverBagsVariable, "Variable that sums the value of a Func each time evaluated on a subsequence of a VMat\n", 
+                        "returns\n"
+                        "   Sum_{bags \in vmat} f(inputs and targets in bag)\n"
+                        "By convention a bag is a sequence of rows of the vmat in which the last column of the target\n"
+                        "indicates whether the row is the first one (and/or) the last one, with its two least significant bits:\n"
+                        "   last_column_of_target == 1 ==> first row\n"
+                        "   last_column_of_target == 2 ==> last row\n"
+                        "   last_column_of_target == 0 ==> intermediate row\n"
+                        "   last_column_of_target == 1+2==3 ==> single-row bag (both first and last).\n"
+                        "The option n_samples controls how many terms in the sum are considered at a time:\n"
+                        "   n_samples <= 0: sum over the whole vmat (e.g. for batch gradient computation)\n"
+                        "   n_samples = 1: sum over a single bag at a time (e.g. for stochastic gradient)\n"
+                        "                  where each fprop or fbprop advances to the next bag\n"
+                        "   otherwise: sum over n_samples bags at a time (e.g. for min-batch training)\n"
+                        "The last column of the target is not given in the call to f, but a bag_size input is provided instead.\n"
+                        "The inputs to f are: (matrix of bag inputs, the bag size, the bag target, the bag weight).\n"
+                        );
+
 
 SumOverBagsVariable::SumOverBagsVariable(VMat the_vmat, Func the_f, int max_bagsize, int nsamples)
   :NaryVariable(nonInputParentsOfPath(the_f->inputs,the_f->outputs), 
@@ -88,7 +100,7 @@ void SumOverBagsVariable::build_()
     f->inputs.setDontBpropHere(true);
 
     bag_size_vec.resize(1);
-    bag_target.resize(vmat->targetsize());
+    bag_target.resize(vmat->targetsize()-1);
     bag_weight.resize(vmat->weightsize());
     f_inputs.resize(4);
     f_inputs[0] = input_values.toVec();
@@ -103,13 +115,16 @@ void SumOverBagsVariable::build_()
 void SumOverBagsVariable::declareOptions(OptionList& ol)
 {
   declareOption(ol, "f", &SumOverBagsVariable::f, OptionBase::buildoption, 
-                "    Func that is applied on each bag, whose input is a matrix that is the\n"
-                "    concatenation of the vmat VMatrix rows of the bag. Its output is a vector\n"
-                "    that is sum over 1 or more (n_samples) bags in the vmat.");
+                "    Func that is applied on each bag, whose input is the following array of Vars:\n"
+                "    (matrix of bag inputs, the bag size, the bag target, the bag weight).\n");
 
   declareOption(ol, "vmat", &SumOverBagsVariable::vmat, OptionBase::buildoption, 
                 "    VMatrix that contains the data, with multiple consecutive rows forming one bag.\n"
-                "    The last row of a bag has a non-missing target value.\n");
+                "    The last column of the target indicates the beginning and end of each bag, as follows:\n"
+                "   last_column_of_target == 1 ==> first row\n"
+                "   last_column_of_target == 2 ==> last row\n"
+                "   last_column_of_target == 0 ==> intermediate row\n"
+                "   last_column_of_target == 1+2==3 ==> single-row bag (both first and last).\n");
 
   declareOption(ol, "max_bag_size", &SumOverBagsVariable::max_bag_size, OptionBase::buildoption, 
                 "    maximum number of examples in a bag (more than that in vmat will trigger a run-time error).\n");

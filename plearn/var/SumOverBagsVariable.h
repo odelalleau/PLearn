@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOverBagsVariable.h,v 1.2 2004/02/19 15:25:31 yoshua Exp $
+   * $Id: SumOverBagsVariable.h,v 1.3 2004/02/20 14:43:12 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -80,9 +80,14 @@ class SumOverBagsVariable: public NaryVariable
 
   public:
     //! Sum_{bags \in vmat} f(inputs and targets in bag)
-    //! By convention a bag is a sequence of rows of the vmat whose target is missing
-    //! except for the last row of the bag. The input to f is a VarArray whose
-    //! elements are the following: matrix of bag inputs, the bag size, the bag target, the bag weight.
+    //! By convention a bag is a sequence of rows of the vmat in which the last column of the target
+    //! indicates whether the row is the first one (and/or) the last one, with its two least significant bits:
+    //!   last_column_of_target == 1 ==> first row
+    //!   last_column_of_target == 2 ==> last row
+    //!   last_column_of_target == 0 ==> intermediate row
+    //!   last_column_of_target == 1+2==3 ==> single-row bag (both first and last)
+    //! the last column of the target is not given in the call to f, but a bag_size input is provided instead.
+    //! The inputs to f are: (matrix of bag inputs, the bag size, the bag target, the bag weight).
     SumOverBagsVariable(VMat the_vmat, Func the_f, int maxbagsize, int nsamples);
     
     PLEARN_DECLARE_OBJECT(SumOverBagsVariable);

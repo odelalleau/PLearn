@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.cc,v 1.7 2004/02/19 22:03:27 yoshua Exp $
+   * $Id: MultiInstanceNNet.cc,v 1.8 2004/02/20 14:43:18 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/MultiInstanceNNet.h */
@@ -482,7 +482,6 @@ void MultiInstanceNNet::computeOutputAndCosts(const Vec& inputv, const Vec& targ
     costsv.fill(MISSING_VALUE);
   else // end of bag, we have a target and we can compute a cost
   {
-    test_bag_size++;
     bag_size->valuedata[0]=test_bag_size;
     target->value << targetv;
     if (weightsize_>0) sampleweight->valuedata[0]=1; // the test weights are known and used higher up
