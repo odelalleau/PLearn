@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: HardSlopeVariable.h,v 1.4 2004/04/11 19:51:02 yoshua Exp $
+   * $Id: HardSlopeVariable.h,v 1.5 2004/04/23 19:24:05 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -63,7 +63,7 @@ protected:
   HardSlopeVariable() {}
 
 public:
-  HardSlopeVariable(Variable* x, Variable* smoothness, Variable* left, Variable* right);
+  HardSlopeVariable(Variable* x, Variable* left, Variable* right);
   PLEARN_DECLARE_OBJECT(HardSlopeVariable);
   virtual void recomputeSize(int& l, int& w) const;
   
