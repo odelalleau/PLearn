@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.61 2004/09/13 13:29:16 tihocan Exp $
+   * $Id: NNet.cc,v 1.62 2004/11/12 20:12:46 larocheh Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -50,6 +50,8 @@
 #include <plearn/var/LiftOutputVariable.h>
 #include <plearn/var/LogSoftmaxVariable.h>
 #include <plearn/var/MarginPerceptronCostVariable.h>
+#include <plearn/var/ConfRatedAdaboostCostVariable.h>
+#include <plearn/var/GradientAdaboostCostVariable.h>
 #include <plearn/var/MulticlassLossVariable.h>
 #include <plearn/var/NegCrossEntropySigmoidVariable.h>
 #include <plearn/var/OneHotSquaredLoss.h>
@@ -210,6 +212,8 @@ void NNet::declareOptions(OptionList& ol)
                 "      stable_cross_entropy (more accurate backprop and possible regularization, for binary classification)\n"
                 "      margin_perceptron_cost (a hard version of the cross_entropy, uses the 'margin' option)\n"
                 "      lift_output (not a real cost function, just the output for lift computation)\n"
+                "      conf_rated_adaboost_cost (for confidence rated Adaboost)\n"
+                "      gradient_adaboost_cost (also for confidence rated Adaboost)\n"
                 "    The first function of the list will be used as \n"
                 "    the objective function to optimize \n"
                 "    (possibly with an added weight decay penalty) \n");
@@ -342,6 +346,20 @@ void NNet::buildCosts(const Var& the_output, const Var& the_target, const Var& h
       costs[k] = multiclass_loss(the_output, the_target);
     else if(cost_funcs[k]=="cross_entropy")
       costs[k] = cross_entropy(the_output, the_target);
+    else if(cost_funcs[k]=="conf_rated_adaboost_cost")
+    {
+      if(output_transfer_func != "sigmoid")
+        PLWARNING("In NNet:buildCosts(): conf_rated_adaboost_cost expects an output in (0,1)");
+      alpha_adaboost = Var(1,1); alpha_adaboost->value[0] = 1.0;
+      params.append(alpha_adaboost);
+      costs[k] = conf_rated_adaboost_cost(the_output, the_target, alpha_adaboost);
+    }
+    else if(cost_funcs[k]=="gradient_adaboost_cost")
+    {
+      if(output_transfer_func != "sigmoid")
+        PLWARNING("In NNet:buildCosts(): gradient_adaboost_cost expects an output in (0,1)");
+      costs[k] = gradient_adaboost_cost(the_output, the_target);
+    }
     else if (cost_funcs[k]=="stable_cross_entropy") {
       Var c = stable_cross_entropy(before_transfer_func, the_target);
       costs[k] = c;

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.h,v 1.24 2004/09/13 13:29:16 tihocan Exp $
+   * $Id: NNet.h,v 1.25 2004/11/12 20:12:47 larocheh Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -70,6 +70,7 @@ protected:
   Var rbf_centers; // n_classes (or n_classes-1) x rbf_layer_size = mu_i of RBF gaussians
   Var rbf_sigmas; // n_classes (or n_classes-1) entries (sigma's of the RBFs)
   Var junk_prob; // scalar background (junk) probability, if first_class_is_junk
+  Var alpha_adaboost;
   Var output;
   Var predicted_input;
   VarArray costs; // all costs of interest
