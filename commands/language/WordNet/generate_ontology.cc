@@ -44,8 +44,8 @@ int main(int argc, char** argv)
     if (print)
       ontology.print(true);
 
-    cout << "extracting word categories" << endl;
-    ontology.extractWordCategoriesAtLevel(4, 2);
+//      cout << "extracting word categories" << endl;
+//      ontology.extractWordCategoriesAtLevel(4, 2, 1, 1);
 
   } else
   {
