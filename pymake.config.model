@@ -148,7 +148,7 @@ linkeroptions_tail = '-lm'
 # First option that appears in each group is the default, and is assumed if you don't specify any option from that group
 options_choices = [
   [ 'g++', 'g++3', 'icc', 'mpi', 'purify' ],
-  [ 'dbg', 'opt', 'pintel', 'gprof', 'safeopt', 'checkopt' ],
+  [ 'dbg', 'opt', 'pintel', 'gprof', 'safegprof', 'safeopt', 'checkopt' ],
   [ 'double', 'float' ],
   [ 'throwerrors', 'exiterrors' ], 
   [ 'blas', 'p3blas','p4blas','athlonblas','pentiumblas', 'noblas', 'veclib', 'scs'],
@@ -160,7 +160,7 @@ options_choices = [
 pymakeOption( name = 'g++',
               description = 'compiling with g++, with no MPI support',
               compiler = 'g++',
-              compileroptions = '-Wno-deprecated -pedantic -DUSING_MPI=0 -Wno-long-long -Wno-long-double',
+              compileroptions = '-Wno-deprecated -pedantic -DUSING_MPI=0 -Wno-long-long',
               linker = 'g++' )
 
 pymakeOption( name = 'g++3',
@@ -204,28 +204,34 @@ pymakeOption( name = 'dbg',
 
 if usingIntelCompiler:
     pymakeOption( name = 'opt',
-                  description = 'optimized mode',
+                  description = 'optimized for intel compiler',
                   compileroptions = '-Wall -O3 -funroll-loops' )
 else:
     pymakeOption( name = 'opt',
-                  description = 'optimized for intel compiler',
-				    			compileroptions = '-O3');
+                  description = 'optimized mode',
+                  compileroptions = '-Wall -O3');
 
 pymakeOption( name = 'pintel',
               description = 'parallelized for intel compiler',
-							compileroptions = '-O3 -parallel');
+              compileroptions = '-O3 -parallel');
 
 pymakeOption( name = 'safeopt',
               description = 'safe optimized mode',
-              compileroptions = '-Wall -O -DBOUNDCHECK' )
+              compileroptions = '-Wall -O3 -DBOUNDCHECK' )
 
 pymakeOption( name = 'checkopt',
               description = 'safe optimized mode',
               compileroptions = '-Wall -O3 -funroll-loops' )
 
+### Same optimization options as -opt
 pymakeOption( name = 'gprof',
               description = 'optimized mode with profiler support (-pg)',
-              compileroptions = '-Wall -O3 -funroll-loops -fstrength-reduce -ffast-math -pg',
+              compileroptions = '-Wall -O3 -pg',
+              linkeroptions = '-pg' )
+
+pymakeOption( name = 'safegprof',
+              description = 'safe optimized mode with profiler support (-pg)',
+              compileroptions = '-Wall -O3 -DBOUNDCHECK -pg',
               linkeroptions = '-pg' )
 
 lapack_linkeroptions = '-llapack'
