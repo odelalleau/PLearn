@@ -54,7 +54,7 @@ def mail():
     #                      # ( see end of pytest() )
         
 def pytest_version():
-    version_str = '$Id: pytest,v 1.24 2004/12/10 16:26:25 dorionc Exp $'
+    version_str = '$Id: pytest,v 1.25 2004/12/10 19:39:05 dorionc Exp $'
 
     bflag = "pytest,v"
     the_year = time.localtime()[0]
@@ -97,9 +97,8 @@ modes.current_mode           = parser.selected_mode
 ## Managing the verbosity option.
 if hasattr(modes.options, 'verbosity'):
     set_vprint( VerbosityPrint( verbosity        = modes.options.verbosity,
-                                default_priority = 0,
-                                report_directory = 'pytest_report'
-                                ))
+                                default_priority = 0
+                                ) )
 
 if ( hasattr(modes.options, 'mail')
      and modes.options.mail is not None ):
