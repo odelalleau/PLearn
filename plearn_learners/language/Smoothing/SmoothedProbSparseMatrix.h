@@ -49,7 +49,7 @@ protected:
   // 1 : laplace
   // 2 : discount - backoff
   // 3 :  discount - backoff non shadowing
-  int smoothingMethod;  
+  int smoothingMethod =0;  
   // Precomputed nomalization sum;
   Vec normalizationSum;
   // Backoff distribution

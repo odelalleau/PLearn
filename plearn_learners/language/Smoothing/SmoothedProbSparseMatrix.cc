@@ -198,7 +198,10 @@ real SmoothedProbSparseMatrix::get(int i, int j)
     PLERROR("SmoothedProbSparseMatrix.get : out-of-bound access to (%d, %d), dims = (%d, %d)", i, j, height, width);
 #endif
 
-  
+  // If the matrix is not yet smoothed
+  if(smoothingMethod==0){
+    return ProbSparseMatrix::get(i,j);
+  }
   if (mode == ROW_WISE){
     map<int, real>& row_i = rows[i];
     map<int, real>::iterator it = row_i.find(j);
