@@ -39,7 +39,6 @@
 #include "Var.h"
 #include "TanhVariable.h"
 #include "ExpVariable.h"
-#include "IdentityVariable.h"
 
 namespace PLearn {
   using namespace std;
