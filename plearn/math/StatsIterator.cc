@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: StatsIterator.cc,v 1.8 2004/09/14 16:04:37 chrish42 Exp $
+   * $Id: StatsIterator.cc,v 1.9 2005/02/08 21:38:30 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -76,6 +76,7 @@ void StatsIterator::oldwrite(ostream& out) const
   writeFooter(out,"StatsIterator");
 }
 
+/* TODO Remove (deprecated)
 void StatsIterator::oldread(istream& in)
 {
   readHeader(in,"StatsIterator");
@@ -83,6 +84,7 @@ void StatsIterator::oldread(istream& in)
   readField(in,"result",result);
   readFooter(in,"StatsIterator");
 }
+*/
 
 // ***********************
 // ** MeanStatsIterator ** 
@@ -128,6 +130,7 @@ void MeanStatsIterator::oldwrite(ostream& out) const
   writeFooter(out,"MeanStatsIterator");
 }
 
+/* TODO Remove (deprecated)
 void MeanStatsIterator::oldread(istream& in)
 {
   readHeader(in,"MeanStatsIterator");
@@ -135,6 +138,7 @@ void MeanStatsIterator::oldread(istream& in)
   readField(in,"nsamples",nsamples);
   readFooter(in,"MeanStatsIterator");
 }
+*/
 
 // ***********************
 // ** ExpMeanStatsIterator ** 
@@ -179,6 +183,7 @@ void ExpMeanStatsIterator::oldwrite(ostream& out) const
   writeFooter(out,"ExpMeanStatsIterator");
 }
 
+/* TODO Remove (deprecated)
 void ExpMeanStatsIterator::oldread(istream& in)
 {
   readHeader(in,"ExpMeanStatsIterator");
@@ -186,6 +191,7 @@ void ExpMeanStatsIterator::oldread(istream& in)
   readField(in,"nsamples",nsamples);
   readFooter(in,"ExpMeanStatsIterator");
 }
+*/
 
 // *************************
 // ** StddevStatsIterator ** 
@@ -255,6 +261,7 @@ void StddevStatsIterator::oldwrite(ostream& out) const
   writeFooter(out,"StddevStatsIterator");
 }
 
+/* TODO Remove (deprecated)
 void StddevStatsIterator::oldread(istream& in)
 {
   readHeader(in,"StddevStatsIterator");
@@ -264,6 +271,7 @@ void StddevStatsIterator::oldread(istream& in)
   readField(in,"nsamples",nsamples);
   readFooter(in,"StddevStatsIterator");
 }
+*/
 
 // *************************
 // ** StderrStatsIterator ** 
@@ -331,6 +339,7 @@ void StderrStatsIterator::oldwrite(ostream& out) const
   writeFooter(out,"StderrStatsIterator");
 }
 
+/* TODO Remove (deprecated)
 void StderrStatsIterator::oldread(istream& in)
 {
   readHeader(in,"StderrStatsIterator");
@@ -340,6 +349,7 @@ void StderrStatsIterator::oldread(istream& in)
   readField(in,"nsamples",nsamples);
   readFooter(in,"StderrStatsIterator");
 }
+*/
 
 // *************************
 // ** SharpeRatioStatsIterator ** 
@@ -408,6 +418,7 @@ void SharpeRatioStatsIterator::oldwrite(ostream& out) const
   writeFooter(out,"SharpeRatioStatsIterator");
 }
 
+/* TODO Remove (deprecated)
 void SharpeRatioStatsIterator::oldread(istream& in)
 {
   readHeader(in,"SharpeRatioStatsIterator");
@@ -417,6 +428,7 @@ void SharpeRatioStatsIterator::oldread(istream& in)
   readField(in,"nnonzero",nnonzero);
   readFooter(in,"SharpeRatioStatsIterator");
 }
+*/
 
 // ***********************
 // ** MinStatsIterator ** 
@@ -453,12 +465,14 @@ void MinStatsIterator::oldwrite(ostream& out) const
   writeFooter(out,"MinStatsIterator");
 }
 
+/* TODO Remove (deprecated)
 void MinStatsIterator::oldread(istream& in)
 {
   readHeader(in,"MinStatsIterator");
   inherited::oldread(in);
   readFooter(in,"MinStatsIterator");
 }
+*/
 
 // ***********************
 // ** MaxStatsIterator ** 
@@ -497,12 +511,14 @@ void MaxStatsIterator::oldwrite(ostream& out) const
   writeFooter(out,"MaxStatsIterator");
 }
 
+/* TODO Remove (deprecated)
 void MaxStatsIterator::oldread(istream& in)
 {
   readHeader(in,"MaxStatsIterator");
   inherited::oldread(in);
   readFooter(in,"MaxStatsIterator");
 }
+*/
 
 
 // ***********************
@@ -607,6 +623,7 @@ void LiftStatsIterator::oldwrite(ostream& out) const
   writeFooter(out,"LiftStatsIterator");
 }
 
+/* TODO Remove (deprecated)
 void LiftStatsIterator::oldread(istream& in)
 {
   readHeader(in,"LiftStatsIterator");
@@ -618,6 +635,7 @@ void LiftStatsIterator::oldread(istream& in)
   readField(in,"targets",targets);
   readFooter(in,"LiftStatsIterator");
 }
+*/
 
 // ****************************
 // ** QuantilesStatsIterator **
@@ -708,6 +726,7 @@ void QuantilesStatsIterator::oldwrite(ostream& out) const
   writeFooter(out,"QuantilesStatsIterator");
 }
 
+/* TODO Remove (deprecated)
 void QuantilesStatsIterator::oldread(istream& in)
 {
   readHeader(in,"QuantilesStatsIterator");
@@ -716,6 +735,7 @@ void QuantilesStatsIterator::oldread(istream& in)
   readField(in,"quantiles",quantiles);
   readFooter(in,"QuantilesStatsIterator");
 }
+*/
 
 // ******************
 // ** StatsItArray **

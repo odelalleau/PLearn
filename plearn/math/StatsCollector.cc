@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.49 2005/02/04 15:10:01 tihocan Exp $
+   * $Id: StatsCollector.cc,v 1.50 2005/02/08 21:38:12 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -721,6 +721,7 @@ void StatsCollector::oldwrite(ostream& out) const
   writeFooter(out,"StatsCollector");
 }
 
+/* TODO Remove (deprecated)
 void StatsCollector::oldread(istream& in)
 {
   int version = readHeader(in,"StatsCollector");
@@ -753,6 +754,7 @@ void StatsCollector::oldread(istream& in)
   }
   readFooter(in,"StatsCollector");
 }
+*/
 
 
 /////////////

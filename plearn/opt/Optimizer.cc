@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.cc,v 1.30 2004/11/24 18:24:19 tihocan Exp $
+   * $Id: Optimizer.cc,v 1.31 2005/02/08 21:38:56 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -128,6 +128,7 @@ void Optimizer::oldwrite(ostream& out) const
   writeFooter(out, "Optimizer");
 }
 
+/* TODO Remove (deprecated)
 void Optimizer::oldread(istream& in)
 {
   int ver = readHeader(in, "Optimizer");
@@ -137,6 +138,7 @@ void Optimizer::oldread(istream& in)
   readField(in, "every_iterations", every);
   readFooter(in, "Optimizer");
 }
+*/
 
 void Optimizer::setToOptimize(VarArray the_params, Var the_cost)
 {

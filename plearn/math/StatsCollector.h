@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.36 2005/02/04 15:10:01 tihocan Exp $
+   * $Id: StatsCollector.h,v 1.37 2005/02/08 21:38:29 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -260,7 +260,9 @@ public:
   RealMapping getAllValuesMapping(TVec<bool>* to_be_included, TVec<double>* fcount=0, bool ignore_other = false, real tolerance = 0) const;
 
   virtual void oldwrite(ostream& out) const;
+  /* TODO Remove (deprecated)
   virtual void oldread(istream& in);
+  */
 
   //! Overridden to have a fancy output for raw_ascii and pretty_ascii modes.
   virtual void newwrite(PStream& out) const;

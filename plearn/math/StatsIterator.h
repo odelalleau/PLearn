@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: StatsIterator.h,v 1.10 2004/09/14 16:04:37 chrish42 Exp $
+   * $Id: StatsIterator.h,v 1.11 2005/02/08 21:38:43 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -96,7 +96,9 @@ public:
     
     virtual void build() {}
     virtual void oldwrite(ostream& out) const;
+    /* TODO Remove (deprecate)
     virtual void oldread(istream& in);
+    */
 
   protected:
     static void declareOptions(OptionList& ol);
@@ -120,7 +122,9 @@ public:
   PLEARN_DECLARE_OBJECT(MeanStatsIterator);
 
     virtual void oldwrite(ostream& out) const;
+    /* TODO Remove (deprecated)
     virtual void oldread(istream& in);
+    */
 
   protected:
     static void declareOptions(OptionList& ol);
@@ -145,7 +149,9 @@ public:
   PLEARN_DECLARE_OBJECT(ExpMeanStatsIterator);
 
     virtual void oldwrite(ostream& out) const;
+    /* TODO Remove (deprecated)
     virtual void oldread(istream& in);
+    */
 
   protected:
     static void declareOptions(OptionList& ol);
@@ -172,7 +178,9 @@ public:
   virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   virtual void oldwrite(ostream& out) const;
+  /* TODO Remove (deprecated)
   virtual void oldread(istream& in);
+  */
 
   protected:
     static void declareOptions(OptionList& ol);
@@ -199,7 +207,9 @@ public:
   virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   virtual void oldwrite(ostream& out) const;
+  /* TODO Remove (deprecated)
   virtual void oldread(istream& in);
+  */
 
   protected:
     static void declareOptions(OptionList& ol);
@@ -232,7 +242,9 @@ public:
   virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   virtual void oldwrite(ostream& out) const;
+  /* TODO Remove (deprecated)
   virtual void oldread(istream& in);
+  */
 
   protected:
     static void declareOptions(OptionList& ol);
@@ -253,7 +265,9 @@ public:
   PLEARN_DECLARE_OBJECT(MinStatsIterator);
 
     virtual void oldwrite(ostream& out) const;
+    /* TODO Remove (deprecated)
     virtual void oldread(istream& in);
+    */
 
   protected:
     static void declareOptions(OptionList& ol);
@@ -274,7 +288,9 @@ public:
   PLEARN_DECLARE_OBJECT(MaxStatsIterator);
 
     virtual void oldwrite(ostream& out) const;
+    /* TODO Remove (deprecated)
     virtual void oldread(istream& in);
+    */
 
   protected:
     static void declareOptions(OptionList& ol);
@@ -310,7 +326,9 @@ public:
   virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
     virtual void oldwrite(ostream& out) const;
+    /* TODO Remove (deprecated)
     virtual void oldread(istream& in);
+    */
 
   protected:
     static void declareOptions(OptionList& ol);
@@ -343,7 +361,9 @@ class QuantilesStatsIterator: public StatsIterator
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
     virtual void oldwrite(ostream& out) const;
+    /* TODO Remove (deprecated)
     virtual void oldread(istream& in);
+    */
 
   protected:
     static void declareOptions(OptionList& ol);

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.h,v 1.21 2004/09/14 16:04:37 chrish42 Exp $
+   * $Id: Optimizer.h,v 1.22 2005/02/08 21:38:59 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -157,9 +157,11 @@ using namespace std;
       void verifyGradient(real step);
 
     virtual void oldwrite(ostream& out) const;
+    /* TODO Remove (deprecated)
     virtual void oldread(istream& in);
+    */
       
-      virtual ~Optimizer();
+    virtual ~Optimizer();
 
   protected:
     static void declareOptions(OptionList& ol);
