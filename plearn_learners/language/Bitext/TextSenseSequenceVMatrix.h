@@ -8,7 +8,7 @@
 #include "WordNetOntology.h"
 #include "random.h"
 
-namespace PLearn {
+namespace PLearn <%
 using namespace std;
 
 class TextSenseSequenceVMatrix: public RowBufferedVMatrix
@@ -78,13 +78,11 @@ public:
 
   void setOntology(WordNetOntology *that_wno){wno = that_wno;}
 
-
-
   typedef RowBufferedVMatrix inherited;
   //! Declares name and deepCopy methods
   PLEARN_DECLARE_OBJECT(TextSenseSequenceVMatrix);
 
 };
 
-} // end of namespace PLearn
+%> // end of namespace PLearn
 #endif

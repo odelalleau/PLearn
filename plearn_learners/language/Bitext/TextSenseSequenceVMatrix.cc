@@ -1,7 +1,7 @@
 
 #include "TextSenseSequenceVMatrix.h"
 
-namespace PLearn {
+namespace PLearn <%
 using namespace std;
 
 
@@ -292,7 +292,7 @@ int TextSenseSequenceVMatrix::getRestrictedRow(const int i, Vec v) const
   // Looking for next non-overlapping context
 
   context_found = 0; 
-  while(context_found != window_size+1 && context_dist+i < dvm->length())
+  while(context_found != window_size/2+1 && context_dist+i < dvm->length())
   {
     if(is_supervised_data)
     {
@@ -500,10 +500,5 @@ void TextSenseSequenceVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void
   //PLERROR("TextSenseSequenceVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
-
-
-
-
-
-} // end of namespace PLearn
+%> // end of namespace PLearn
 
