@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.h,v 1.4 2003/08/13 08:13:46 plearner Exp $ 
+   * $Id: PDistribution.h,v 1.5 2003/08/31 14:31:18 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.h */
@@ -103,7 +103,6 @@ public:
   //  If your class is not instantiatable (it has pure virtual methods)
   // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
   PLEARN_DECLARE_OBJECT(PDistribution);
-
 
   // **************************
   // **** PLearner methods ****

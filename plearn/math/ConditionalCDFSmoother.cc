@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalCDFSmoother.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $ 
+   * $Id: ConditionalCDFSmoother.cc,v 1.4 2003/08/31 14:31:18 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file ConditionalCDFSmoother.cc */
@@ -47,73 +47,44 @@
 namespace PLearn <%
 using namespace std;
 
-ConditionalCDFSmoother::ConditionalCDFSmoother() 
-  :Smoother() 
-/* ### Initialise all fields to their default value */
-  {
-    // ...
-
-    // ### You may or may not want to call build_() to finish building the object
-    // build_();
-  }
+ConditionalCDFSmoother::ConditionalCDFSmoother() {}
 
 ConditionalCDFSmoother::ConditionalCDFSmoother(PP<HistogramDistribution>& prior_cdf_) 
   :Smoother(), prior_cdf(prior_cdf_)
 {}
 
 
-  PLEARN_IMPLEMENT_OBJECT(ConditionalCDFSmoother, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(ConditionalCDFSmoother, 
+                        "Smoother that combines a detailed prior curve with a rough input curve.\n",
+                        "This smoother is meant to smooth conditional distribution functions, using\n"
+                        "a high-resolution prior cdf provided as a HistogramDistribution. Its 'smooth'\n"
+                        "function takes a lower-resolution curve and smooths it using the prior\n"
+                        "to fill the gaps.");
 
-  void ConditionalCDFSmoother::declareOptions(OptionList& ol)
-  {
-    declareOption(ol, "prior_cdf", &ConditionalCDFSmoother::prior_cdf, OptionBase::buildoption,
-		  "Prior CDF used to smooth other functions");
+void ConditionalCDFSmoother::declareOptions(OptionList& ol)
+{
+  declareOption(ol, "prior_cdf", &ConditionalCDFSmoother::prior_cdf, OptionBase::buildoption,
+                "Prior CDF used to smooth other functions");
 
-    // Now call the parent class' declareOptions
-    inherited::declareOptions(ol);
-  }
+  // Now call the parent class' declareOptions
+  inherited::declareOptions(ol);
+}
 
-  string ConditionalCDFSmoother::help()
-  {
-    // ### Provide some useful description of what the class is ...
-    return 
-      "ConditionalCDFSmoother implements a ..."
-      + optionHelp();
-  }
+void ConditionalCDFSmoother::build_()
+{
+}
 
-  void ConditionalCDFSmoother::build_()
-  {
-    // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation. 
-    // ### Typical situations include:
-    // ###  - Initial building of an object from a few user-specified options
-    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-    // ### You should assume that the parent class' build_() has already been called.
-  }
+void ConditionalCDFSmoother::build()
+{
+  inherited::build();
+  build_();
+}
 
-  // ### Nothing to add here, simply calls build_
-  void ConditionalCDFSmoother::build()
-  {
-    inherited::build();
-    build_();
-  }
-
-
-  void ConditionalCDFSmoother::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
-  {
-    Object::makeDeepCopyFromShallowCopy(copies);
-
-    // ### Call deepCopyField on all "pointer-like" fields 
-    // ### that you wish to be deepCopied rather than 
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("ConditionalCDFSmoother::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
-  }
-
+void ConditionalCDFSmoother::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+{
+  Object::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(prior_cdf, copies);
+}
 
 real ConditionalCDFSmoother::smooth(const Vec& source_function, Vec& smoothed_function, 
 		      Vec bin_positions, Vec dest_bin_positions) const

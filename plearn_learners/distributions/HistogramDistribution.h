@@ -33,21 +33,21 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HistogramDistribution.h,v 1.9 2003/08/13 08:13:46 plearner Exp $ 
+   * $Id: HistogramDistribution.h,v 1.10 2003/08/31 14:31:18 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file HistogramDistribution.h */
 #ifndef HistogramDistribution_INC
 #define HistogramDistribution_INC
 
-#include "Distribution.h"
+#include "PDistribution.h"
 #include "Binner.h"
 #include "Smoother.h"
 
 namespace PLearn <%
 using namespace std;
 
-class HistogramDistribution: public Distribution
+class HistogramDistribution: public PDistribution
 {
 protected:
   // *********************
@@ -66,15 +66,15 @@ public:
   Vec survival_values;
 
   //! this Binner is used to do binning at training time.
-  PP<Binner> the_binner;
+  PP<Binner> binner;
 
   //! this Smoother is used at training time.
-  PP<Smoother> the_smoother;
+  PP<Smoother> smoother;
 
-  bool smooth_density; //if false, smoothing is done on survival
+  //! whether to smooth the density or the survival function
+  bool smooth_density_instead_of_survival_fn;
 
-
-  typedef Distribution inherited;
+  typedef PDistribution inherited;
 
   // ************************
   // * public build options *
@@ -92,8 +92,8 @@ public:
   HistogramDistribution();
 
   //! This constructor calls train as part of the construction process.
-  //! The use function can then be used right away.
-  HistogramDistribution(VMat data, PP<Binner> the_binner_= 0, PP<Smoother> the_smoother_= 0, bool smooth_density_= true);
+  //! The computeOutput function can then be used right away.
+  HistogramDistribution(VMat data, PP<Binner> binner_= 0, PP<Smoother> smoother_= 0);
 
   // ******************
   // * Object methods *
@@ -113,9 +113,6 @@ public:
   // simply calls inherited::build() then build_() 
   virtual void build();
 
-  //! Provides a help message describing this class
-  static string help();
-
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
@@ -127,10 +124,10 @@ public:
   // *******************
 
   //! trains the model
-  virtual void train(VMat training_set); 
+  virtual void train();
 
-  //! computes the ouptut of a trained model
-  virtual void use(const Vec& input, Vec& output);
+  //! computes the output of a trained model
+  virtual void computeOutput(const Vec& input, Vec& output);
 
   // ************************
   // * Distribution methods *
@@ -150,10 +147,10 @@ public:
   virtual double cdf(const Vec& x) const;
 
   //! return E[X] 
-  virtual double expectation() const;
+  virtual void expectation(Vec& mu) const;
 
   //! return Var[X]
-  virtual double variance() const;
+  virtual void variance(Mat& cov) const;
 
   //! return P(x0 < X < x1)
   virtual double prob_in_range(const Vec& x0, const Vec& x1) const;

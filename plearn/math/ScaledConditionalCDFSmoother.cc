@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: ScaledConditionalCDFSmoother.cc,v 1.5 2003/08/28 20:53:21 yoshua Exp $ 
+ * $Id: ScaledConditionalCDFSmoother.cc,v 1.6 2003/08/31 14:31:18 yoshua Exp $ 
  ******************************************************* */
 
 /*! \file ScaledConditionalCDFSmoother.cc */
@@ -49,7 +49,7 @@ namespace PLearn <%
 using namespace std;
 
 ScaledConditionalCDFSmoother::ScaledConditionalCDFSmoother() 
-  :ConditionalCDFSmoother(), scale_with_input(false)
+  :ConditionalCDFSmoother(), preserve_relative_density(true)
 {
 }
 
@@ -143,9 +143,9 @@ real ScaledConditionalCDFSmoother::smooth(const Vec& source_function, Vec& smoot
         next_ratio=  source_function[i+1]/prior_cdf->survival_fn(v1);
       
       cout  << source_function[i] << '\t'  << prev_ratio  << '\t' << next_ratio << '\t' << v0[0] << '\t' << v1[0] << endl;
-      real slope = scale_with_input? 0 : 
+      real slope = !preserve_relative_density? 0 : 
         ((source_function[i+1]-source_function[i])/(prior_cdf->survival_fn(v1)-prior_cdf->survival_fn(v0)));
-      real absisse = scale_with_input? 0 : 
+      real absisse = !preserve_relative_density? 0 : 
         (source_function[i] - slope * prior_cdf->survival_fn(v0));
       while(j < smoothed_function.size() && dest_bin_positions[j+1] <= bin_positions[i+1])
         {
@@ -155,7 +155,7 @@ real ScaledConditionalCDFSmoother::smooth(const Vec& source_function, Vec& smoot
           // the reason it seems wrong is that smoothed_function[j_final] should be equal
           // to source_function[i+1], but it is not, currently.
           // smoothed_function[j]= prior_cdf->survival_fn(v) * (prev_ratio + (v[0]-v0[0])*next_ratio/(v1[0]-v0[0]));
-          if (scale_with_input)
+          if (!preserve_relative_density)
             smoothed_function[j]= prior_cdf->survival_fn(v) * 
               (prev_ratio + (v[0]-v0[0])*(next_ratio-prev_ratio)/(v1[0]-v0[0]));
           else // scale with bin number, i.e. warped with density
