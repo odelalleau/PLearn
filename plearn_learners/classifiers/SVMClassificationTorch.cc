@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SVMClassificationTorch.cc,v 1.2 2005/01/24 14:29:35 tihocan Exp $ 
+   * $Id: SVMClassificationTorch.cc,v 1.3 2005/01/25 14:34:35 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -52,7 +52,8 @@ using namespace std;
 ////////////////////////////
 SVMClassificationTorch::SVMClassificationTorch() 
 : C_cst(100),
-  cache_size_in_megs(50)
+  cache_size_in_megs(50),
+  output_the_class(true)
 {
   allocator = new Torch::Allocator;
   inputs = 0;
@@ -62,6 +63,8 @@ PLEARN_IMPLEMENT_OBJECT(SVMClassificationTorch,
     "PLearn interface to the Torch SVMClassification class.",
     "THIS CLASS SHOULD NOT BE USED YET, IT IS STILL IN DEVELOPMENT."
 );
+
+// TODO Note that only binary (how to extend ?)
 
 ////////////////////
 // declareOptions //
@@ -83,6 +86,9 @@ void SVMClassificationTorch::declareOptions(OptionList& ol)
 
   declareOption(ol, "cache_size", &SVMClassificationTorch::cache_size_in_megs, OptionBase::buildoption,
       "Cache size (in Mo)");
+
+  declareOption(ol, "output_the_class", &SVMClassificationTorch::output_the_class, OptionBase::buildoption,
+      "If set to 1, the output is either -1 or 1, otherwise, it is a real value (and class = sign)");
 
   // Learnt options.
 
@@ -145,6 +151,12 @@ void SVMClassificationTorch::computeOutput(const Vec& input, Vec& output) const
   inputs->copyFrom(input.data());
   svm->forward(inputs);
   svm->outputs->copyTo(output.data());
+  if (output_the_class)
+    for (int i = 0; i < output.length(); i++)
+      if (output[i] > 0)
+        output[i] = 1;
+      else
+        output[i] = -1;
 }    
 
 ////////////
@@ -203,7 +215,7 @@ void SVMClassificationTorch::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////////
 int SVMClassificationTorch::outputsize() const
 {
-  return targetsize();
+  return 1;
 }
 
 ////////////////////

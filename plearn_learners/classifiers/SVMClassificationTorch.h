@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SVMClassificationTorch.h,v 1.1 2005/01/20 21:36:30 tihocan Exp $ 
+   * $Id: SVMClassificationTorch.h,v 1.2 2005/01/25 14:34:35 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -90,6 +90,7 @@ public:
   real C_cst;
   real cache_size_in_megs;
   Ker kernel;
+  bool output_the_class;
 
   // ****************
   // * Constructors *
