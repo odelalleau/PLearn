@@ -1,7 +1,7 @@
-__cvs_id__ = "$Id: __init__.py,v 1.13 2005/01/25 03:15:57 dorionc Exp $"
+__cvs_id__ = "$Id: __init__.py,v 1.14 2005/02/04 19:09:00 dorionc Exp $"
                             
 ### The versionning tools are now properly enabled.
-import os, time
+import os, sys, time
 import modes
 from   plearn.utilities.verbosity    import *
 from   ModeAndOptionParser           import ModeAndOptionParser, OptionGroup
@@ -80,7 +80,7 @@ def main( pytest_version ):
     ################## Some preprocessing ######################
     
     ## Managing the verbosity option.
-    if hasattr(modes.options, 'verbosity'):
+    if hasattr(modes.options, 'verbosity'):        
         set_vprint( VerbosityPrint( verbosity        = modes.options.verbosity,
                                     default_priority = 0
                                     ) )

@@ -1,7 +1,7 @@
 """Metaprogramming tools.
 
 """
-__cvs_id__ = "$Id: metaprog.py,v 1.2 2004/12/21 15:31:50 dorionc Exp $"
+__cvs_id__ = "$Id: metaprog.py,v 1.3 2005/02/04 19:09:01 dorionc Exp $"
 
 import inspect, string, types
 import plearn.utilities.toolkit   as     toolkit
@@ -23,8 +23,7 @@ def instance_to_string(obj, obj_members=None, sp=' '):
         obj_members = public_members(obj)
     
     members = []
-    for member in obj_members:
-        value = getattr(obj, member)            
+    for (member, value) in obj_members.iteritems():
         if isinstance(value, types.StringType):
             members.append( '%s = %s' % (member, toolkit.quote(value)) )
         else:

@@ -1,15 +1,15 @@
-__cvs_id__ = "$Id: Bindings.py,v 1.2 2004/12/21 15:31:50 dorionc Exp $"
+__cvs_id__ = "$Id: Bindings.py,v 1.3 2005/02/04 19:09:01 dorionc Exp $"
 
 from toolkit import quote_if, doc
 
-class dictionary_emulator_metaclass( type ):
-    """To emulate the Python dictionaries behavior.
+## class dictionary_emulator_metaclass( type ):
+##     """To emulate the Python dictionaries behavior.
 
-    Any class having this class as metaclass must provide any of its
-    instance with a member I{internal_dictionary}.
-    """
-    def __init__(cls, name, bases, dict):
-        super(dictionary_emulator_metaclass, cls).__init__(name, bases, dict)
+##     Any class having this class as metaclass must provide any of its
+##     instance with a member I{internal_dictionary}.
+##     """
+##     def __init__(cls, name, bases, dict):
+##         super(dictionary_emulator_metaclass, cls).__init__(name, bases, dict)
         
 class Bindings( dict ):
     """Acts like a Python dictionary but keeps the addition order."""

@@ -1,14 +1,27 @@
 """ALL DOCUMENTATION IN THIS MODULE MUST BE REVISED!!!"""
-__cvs_id__ = "$Id: PyPLearnObject.py,v 1.5 2004/12/21 15:31:15 dorionc Exp $"
+__cvs_id__ = "$Id: PyPLearnObject.py,v 1.6 2005/02/04 19:08:06 dorionc Exp $"
 
 import inspect, types
 
 from   pyplearn                   import *
+from   plearn.utilities.toolkit   import no_none
 import plearn.utilities.metaprog  as     metaprog
+
+__all__ = [ "PyPLearnObject", "PyPLearnList", "frozen_metaclass" ]
 
 ##########################################
 ### Helper functions 
 ##########################################
+
+def builtin_predicate( name ):
+    return name.startswith('__') and name.endswith('__')
+
+def public_attribute_predicate( name, value ):
+    return not ( name.startswith("_")
+                 or inspect.ismethod(value)
+                 or inspect.isfunction(value)
+                 or inspect.isclass(value)
+                 )
 
 def frozen(set):
     "Raise an error when trying to set an undeclared name."
@@ -19,14 +32,109 @@ def frozen(set):
             raise AttributeError("You cannot add attributes to %s" % self)
     return set_attr
 
+##########################################
+### Helper classes
+##########################################
 class frozen_metaclass( type ):
+    _frozen     = True
     __setattr__ = frozen(type.__setattr__)
-    
+    def __init__(cls, name, bases, dict):
+        cls._frozen     = True
+        cls.__setattr__ = frozen(object.__setattr__)
+ 
+class _manage_attributes:
+    """
 
+    ATTRIBUTES SHOULD EXCLUDE function and classes!!!
+    """
+    __metaclass__ = frozen_metaclass
+
+    class Defaults:
+        pass
+
+    def __init__(self, **overrides):
+        ## Managing frozen behavior
+        self._frozen = False
+        
+        if overrides.has_key( "Defaults" ):
+            self.Defaults = overrides.pop( "Defaults" )
+            assert inspect.isclass( self.Defaults )
+
+        ## Managing the attribute ordering protocol 
+        self._list_of_attributes = []
+        if overrides.has_key('__ordered_attr__'):
+            self._list_of_attributes.extend( overrides['__ordered_attr__'] )
+        elif hasattr(self.Defaults, '__ordered_attr__'):
+            self._list_of_attributes.extend( self.Defaults.__ordered_attr__ )
+
+        ## Attributes defined in default
+        default_attributes = inspect.getmembers( self.Defaults )
+
+        ## Setting appropriate values for all default and overriden attributes
+        for (attribute_name, attribute_value) in default_attributes:
+
+            ## Builtin attributes are neglected
+            if builtin_predicate( attribute_name ):
+                continue
+
+            ## The override dominates the default value
+            if overrides.has_key( attribute_name ):
+                attribute_value = overrides.pop( attribute_name )
+
+            ## Do not use __set_attribute__ in __init__!
+            self._init_attribute_protocol( attribute_name, attribute_value )
+
+        ## Overrides may still contain pairs -- attributes with no default
+        ## values.
+        self.__dict__.update(overrides)
+
+        ## Managing frozen behavior
+        self._frozen = self.__class__._frozen
+
+    def _init_attribute_protocol( self, attribute_name, attribute_value ):
+        """Used in __init__() to initialize attributes.
+        
+        The current protocol is to instanciate any classes provided as
+        attributes in Defaults or in overrides. The current version uses no
+        arguments at instanciation.
+
+        The next version will manage tuples having a class as first
+        element.  The class will be instanciated with the rest of the tuple
+        as __init__ arguments.
+        """
+        if not attribute_name in self._list_of_attributes:
+            self._list_of_attributes.append(attribute_name)
+        
+        if inspect.isclass( attribute_value ):
+            attribute_value = attribute_value()
+    
+        self.__dict__[attribute_name] = attribute_value        
+            
+    def attribute_pairs(self):
+        return [ ( att_name, getattr(self, att_name) )
+                 for att_name in self._list_of_attributes
+                 ]
+
+    def attribute_names( self ):
+        return copy.deepcopy( self._list_of_attributes )
+        
+
+    def public_attribute_pairs(self):
+        return [ ( att_name, getattr(self, att_name) )
+                 for att_name in self._list_of_attributes
+                 if not att_name.startswith('_')
+                 ]
+
+    def public_attribute_names( self ):
+        return [ att_name
+                 for att_name in self._list_of_attributes
+                 if not att_name.startswith('_')
+                 ]
+            
 ##########################################
 ### Main class
 ##########################################
-class PyPLearnObject:
+class PyPLearnObject( _manage_attributes ):
     """Class from which to derive python objects that emulate PLearn ones.
 
     This abstract class is to be the superclass of any python object
@@ -48,10 +156,6 @@ class PyPLearnObject:
     Indeed, out of this method, the PLearnObject are frozen to avoid
     accidental external manipulations.
     """
-
-    ## See set_attribute()
-    _frozen = True
-
     def classname(cls):
         """Classmethod to access the class name.
 
@@ -65,7 +169,7 @@ class PyPLearnObject:
     
     ###########################################################
     ### PyPLearnObject constructor
-    def __init__(self, defaults=None, **overrides):
+    def __init__(self, **overrides):
         """PyPLearnObject constructor.
         
         Previously, the syntax was::
@@ -75,7 +179,7 @@ class PyPLearnObject:
         
             class Inherited( PyPLearnObject ):            
                 def __init__(self, defaults=InheritedDefaults, **overrides):
-                    PyPLearnObject.__init__(self, defaults, overrides)
+                    PLearnObject.__init__(self, defaults, overrides)
                     some_other_things()
         
         where the double stars before I{overrides} were only in the
@@ -90,61 +194,17 @@ class PyPLearnObject:
                     some_default_int = 10
                     
                 def __init__(self, defaults=None, **override):
-                    L{PyPLearnObject}.__init__(self, defaults, **overrides)
+                    PyPLearnObject.__init__(self, defaults, **overrides)
                     some_other_things()
         
         Note the double stars before I{overrides} both in the
         declaration AND the forwarding.  Also, the I{defaults}
         argument takes I{None} as default instead of a classname.
         """
-
-        ## See set_attribute()
-        self._frozen = False
-
-        to_declare = self.use_defaults(defaults)
-
-        if overrides is not None:
-            self.__dict__.update( overrides )
-        
-        if to_declare:
-            self.declare_members( to_declare )
-
-        ## See set_str_spacer()
-        self.__str_spacer = ' '
-
-        ## See set_attribute()
-        self._frozen = self.__class__._frozen 
-
-    ###########################################################
-    ### PyPLearnObject feature: classes for default values
-    def use_defaults(self, defaults):
-        if defaults is None:
-            if ( hasattr(self, 'Defaults') and
-                 inspect.isclass(self.Defaults) ):
-                defaults = self.Defaults
-            else:
-                return ## No defaults: nothing to do
-
-        to_declare    = []
-        defaults_dict = {}
-        members_list  = inspect.getmembers(defaults)
-        for (x,y) in members_list:
-            if not( x[0:2] == "__" and x[-2:]=="__" ):
-                self.__dict__[x] = y
-                
-            ## Special PyPLearnObject features
-            elif x == '__declare_members__':
-                ## No: some members are not declared yet
-                ## self.declare_members(y)
-                to_declare = y
-        return to_declare
-        
-    ###########################################################
-    ### PyPLearnObject feature: as a frozen object
-    __setattr__   = frozen(object.__setattr__)
-    __metaclass__ = frozen_metaclass
+        _manage_attributes.__init__(self, _str_spacer = ' ', **overrides)
 
     def set_attribute(self, key, value):
+        raise DeprecationWarning
         self._frozen = False
         setattr(self, key, value)
         self._frozen = True
@@ -182,39 +242,15 @@ class PyPLearnObject:
         return eval("pl.%s( **self.plearn_options() )" % self.classname())
 
     ###########################################################
-    ### PyPLearnObject feature: __declare_members__ 
     def __str__(self):
-        members = self.classmembers()
-        if len(members) == 0:
-            members = metaprog.public_members( self )
-        return metaprog.instance_to_string(self, members, self.__str_spacer) 
+        return metaprog.instance_to_string(self, dict(self.attribute_pairs()), self._str_spacer) 
 
     def __repr__(self):
         return str(self)
     
     def set_str_spacer(self, sp):
-        self.__str_spacer = sp
+        self._str_spacer = sp
 
-    def classmembers(self):
-        if hasattr(self, '__member'):
-            return self.__members
-        return []
-
-    def declare_members(self, declared_members):
-        self.__members = []
-        for (att, typ) in declared_members:
-            self.__members.append(att)
-            if typ is not None:
-                self.type_check(att, typ)
-
-    def type_check(self, attribute_name, expected_type):
-        att = getattr(self, attribute_name)
-        if not isinstance(att, expected_type):
-            raise TypeError(
-                "The %s.%s type is expected to be %s but currently is %s."
-                % (self.classname(),   attribute_name,
-                   str(expected_type), type(att)      )
-                )
     ###########################################################                
 
     def __lshift__(self, other):
@@ -255,6 +291,58 @@ class PyPLearnObject:
         self._frozen = frozen
         return self
 
+
+class PyPLearnList( PyPLearnObject ):
+    """Emulates a TVec of PyPLearnObject.
+    
+    This class is to be used whenever the members must be considered
+    as the elements of a list. Hence, the plearn_repr() returns a list
+    representation.
+
+    If the order of the members in the plearn_repr is considered
+    important, it must be imposed by the order of the member names
+    appearance in the __declare_members__ list. See the PyPLearnObject
+    class declaration for more information on __declare_members__ and the
+    protocol associated with it.
+    """
+    def __len__(self):
+        return len( self.__member_pairs() )
+
+    def __getitem__( self, key ):
+        return getattr( self, key )
+
+    def __setitem__( self, key, value ):
+        setattr( self, key, value )
+
+    def __delitem__( self, key ):
+        setattr( self, key, None )
+
+    class _iterator:
+        def __init__(self, pairs):
+            self.pos   = -1
+            self.end   = len(pairs)
+            self.pairs = pairs
+
+        def __iter__(self):
+            return self
+
+        def next(self):
+            self.pos += 1
+            if self.pos == self.end:
+                raise StopIteration
+
+            ## Returning the value
+            current_pair = self.pairs[self.pos]
+            return current_pair[1]
+        
+    def __iter__(self):        
+        return self._iterator( self.public_attribute_pairs() )
+        
+    def plearn_repr(self):
+        return self.to_list()
+
+    def to_list(self):
+        return no_none([ elem for elem in iter(self) ])
 
 
 ##########################################

@@ -5,7 +5,7 @@ submodule. If a considerable number of functions contained in this
 module seems to manage similar tasks, it is probably time to create a
 I{similar_tasks.py} L{utilities} submodule to move those functions to.
 """
-__cvs_id__ = "$Id: toolkit.py,v 1.19 2004/12/22 20:40:31 dorionc Exp $"
+__cvs_id__ = "$Id: toolkit.py,v 1.20 2005/02/04 19:09:01 dorionc Exp $"
 import inspect, os, popen2, random, string, sys, time, types
 
 __epydoc_is_available = None
@@ -78,6 +78,38 @@ def command_output(command):
     process.wait()
     return process.fromchild.readlines()
 
+def cross_product( list1,  list2,
+                   joinfct = lambda i,j: (i, j) ):
+    """Returns the cross product of I{list1} and I{list2}.
+
+    The default behavior is to return pairs made for elements in list1 and list2::
+
+       cross_product( ['a', 'b'], [1, 2, 3] )
+       ### [('a', 1), ('b', 1), ('a', 2), ('b', 2), ('a', 3), ('b', 3)]
+
+    but one can specify the I{joinfct} to obtain a different behavior::
+    
+       cross_product( ['a', 'b'], [1, 2, 3], joinfct = lambda s,i: '%s_%d' % (s, i) )
+       ### ['a_1', 'b_1', 'a_2', 'b_2', 'a_3', 'b_3']
+
+    @param list1: First elements of the cross-product pairs (inner-loop).
+    @type  list1: List
+
+    @param list2: Second elements of the cross-product pairs (outer-loop).
+    @type  list2: List
+
+    @param joinfct: The pairing procedure.
+    @type  joinfct: Any function-like object accepting two arguments.
+
+    @returns: The list of joinfct-paired cross-product elements.
+    """
+    cross = []
+    for elem2 in list2:
+        cross.extend([ joinfct(elem1, elem2)
+                       for elem1 in list1
+                       ])
+    return cross
+
 def date_time_string():
     t = time.localtime()
     return ( str(t[0]) + "_" + str(t[1]) + "_" + str(t[2])
@@ -137,6 +169,27 @@ def exempt_list_of(list, undesired_values):
     for undesired in undesired_values:
         if undesired in list:
             list.remove(undesired)
+
+def find_one(s, substrings):
+    """Searches string I{s} for any string in I{substrings}.
+
+    The I{substrings} list is iterated using iter(substrings).
+
+    @param  s: The string to parse.
+    @type   s: String
+
+    @param  substrings: The strings to look for in s
+    @type   substrings: List of strings
+
+    @returns: A pair formed of the first substring found in I{s} and its
+    position in I{s}. If none of I{substrings} is found, None is
+    returned. 
+    """
+    for sub in iter(substrings):
+        index = string.find(s, sub)
+        if index != -1:
+            return (sub, index)
+    return None
 
 def isccfile(file_path):
     """True if the extension of I{file_path} is one of I{.cc}, I{.CC}, I{.cpp}, I{.c} or I{.C}."""
@@ -292,6 +345,22 @@ class default_roperators(object):
     __metaclass__ = default_roperators_metaclass
                 
 if __name__ == "__main__":
+
+    def header( s ):
+        print "==========\n\n",s,"\n----------"
+
+    def eval_test( as_str ):
+        print "\n",as_str
+        print "###",eval( as_str )
+        print
+
+    header( "cross_product" )
+    eval_test( "cross_product( ['a', 'b'], [1, 2, 3] )" )
+    eval_test( "cross_product( ['a', 'b'], [1, 2, 3], "
+               "joinfct = lambda s,i: '%s_%d' % (s, i) )"
+               )
+    
+    sys.exit()
 
     ### TBMoved in formatting.py
     ###raw_input( len(parse_indent('   allo')) )

@@ -493,7 +493,7 @@ U{Epytext Markup Language Manual<http://epydoc.sourceforge.net/epytext.html>}
 should not take you more than 15 minutes and you will be ready to document your
 code.
 """
-__cvs_id__ = "$Id: pyplearn.py,v 1.13 2004/12/21 15:31:15 dorionc Exp $"
+__cvs_id__ = "$Id: pyplearn.py,v 1.14 2005/02/04 19:08:06 dorionc Exp $"
 
 import types
 import plearn.utilities.metaprog as metaprog
@@ -625,7 +625,9 @@ def _plearn_repr(x):
     elif hasattr(x, 'plearn_repr') and callable(getattr(x, 'plearn_repr')):
         return _plearn_repr(x.plearn_repr())
     else:
-        raise TypeError('Does not know how to handle type %s' % type(x))
+        raise TypeError( 'Does not know how to handle type %s (x = %s)'
+                         % ( type(x), str(x) )
+                         )
 
 def TMat(num_rows, num_cols, mat_contents):
     """Instances of this class represent a PLearn TMat.
