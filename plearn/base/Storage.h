@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Storage.h,v 1.16 2004/09/14 16:04:35 chrish42 Exp $
+   * $Id: Storage.h,v 1.17 2004/10/13 13:34:00 chapados Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -53,6 +53,12 @@
 #include <plearn/sys/MemoryMap.h>
 #include "PP.h"
 #include <plearn/io/PStream.h>
+
+//! A define used to debug Storage::resize.
+//! Compile with this symbol defined to enable it.
+#ifdef DEBUG_PLEARN_STORAGE_RESIZE
+#  include <plearn/sys/procinfo.h>
+#endif
 //#include "Object.h"
 
 namespace PLearn {
@@ -247,6 +253,10 @@ public:
         }
       else if (newlength > length()) //!<  growing
         {
+#ifdef DEBUG_PLEARN_STORAGE_RESIZE
+          int mem_before = getProcessDataMemory();
+          int length_before = length();
+#endif
           try 
           {
             T* newdata = new T[newlength];
@@ -267,6 +277,17 @@ public:
           {
             PLERROR("OUT OF MEMORY in Storage::resize, trying to allocate %d elements",newlength);
           }
+#ifdef DEBUG_PLEARN_STORAGE_RESIZE
+          int mem_after = getProcessDataMemory();
+          if (mem_after - mem_before > 256*1024)
+            cerr << "Storage::resize: for storage at "
+                 << hex << this << dec
+                 << " fromsize=" << length_before << " tosize=" << newlength
+                 << " : memusage " << (mem_before/1024) << " kB  ==>  "
+                 << (mem_after/1024) << " kB" << endl;
+          if (mem_after - mem_before > 10000*1024)
+            PLWARNING("Storage::resize: memory usage increased by more than 10000 kB");
+#endif
         }
       else //!<  newlength<length() (shrinking)
       {
