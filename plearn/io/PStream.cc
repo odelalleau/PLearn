@@ -1141,6 +1141,29 @@ PStream& PStream::operator<<(const string &x)
   return *this;
 }
 
+/*
+PStream& PStream::operator<<(bool x) 
+{ 
+  switch(outmode)
+  {
+    case raw_binary:
+    case raw_ascii:
+    case plearn_ascii:
+    case pretty_ascii:
+      if(x)
+        put('1');
+      else
+        put('0');
+      put(' ');
+      break;
+    default:
+      PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");
+      break;
+  }
+  return *this;
+}
+*/
+
 PStream& PStream::operator<<(int x) 
 { 
   switch(outmode)

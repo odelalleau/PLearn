@@ -532,6 +532,9 @@ public:
   PStream& operator<<(char x); 
   PStream& operator<<(signed char x);
   PStream& operator<<(unsigned char x);
+
+  // PStream& operator<<(bool x);  // If you uncomment this, be prepared to get mysterious mesages of problems with const bool resolutions
+  // As it currently stands, bool will be converted to 0 or 1 int and operator<<(int) will get called.
   PStream& operator<<(int x);
   PStream& operator<<(unsigned int x);
   PStream& operator<<(long x);

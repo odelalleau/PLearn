@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.58 2004/11/26 17:32:55 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.59 2004/11/26 20:32:21 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -375,7 +375,7 @@ real ConjGradientOptimizer::daiYuan (
 ///////////////////
 bool ConjGradientOptimizer::findDirection() {
   bool isFinished = false;
-  real gamma;
+  real gamma = 0;
   switch (find_new_direction_formula) {
     case 1:
       gamma = conjpomdp(computeOppositeGradient, this);
