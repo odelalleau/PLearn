@@ -611,14 +611,22 @@ void writeMap(PStream& out, const MapT& m)
   typename MapT::const_iterator itend = m.end();
 
   out.put('{');
-  while(it!=itend)
+  if(!m.empty())
+  {
+    // write the first item
+    out << it->first;
+    out.write(": ");
+    out << it->second;
+    ++it;
+    while(it!=itend)
     {
+      out.write(", ");
       out << it->first;
       out.write(": ");
       out << it->second;
-      out.write(", ");
       ++it;
     }
+  }
   out.put('}');    
 }
 
