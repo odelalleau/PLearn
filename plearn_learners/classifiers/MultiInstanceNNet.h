@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.h,v 1.6 2004/02/20 21:14:45 chrish42 Exp $
+   * $Id: MultiInstanceNNet.h,v 1.7 2004/02/23 01:28:27 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearn/plearn_learners/classifiers/MultiInstanceNNet.h */
@@ -65,7 +65,7 @@ using namespace std;
     Var bag_size; // filled up by SumOverBagsVariable
     Var bag_inputs; // filled up by SumOverBagsVariable
     Var bag_output; // P(y=1|bag_inputs)
-    mutable int test_bag_size; // BECAUSE OF UGLY HACK IN computOutputAndCost (look at it, it's worth it!)
+
     Func inputs_and_targets_to_costs; // (bag inputs and targets) -> bag NLL
     Func input_to_logP0; // single input x -> log P(y=0|x)
     Var nll;
@@ -89,7 +89,7 @@ using namespace std;
     typedef PLearner inherited;
 
     // Build options inherited from learner:
-    // inputsize, outputszie, targetsize, experiment_name, save_at_every_epoch 
+    // inputsize, outputsize, targetsize, experiment_name, save_at_every_epoch 
 
     // Build options:    
     int max_n_instances; // maximum number of instances (input vectors x_i) allowed
@@ -112,6 +112,7 @@ using namespace std;
     bool L1_penalty; // default: false
     bool direct_in_to_out; // should we include direct input to output connecitons? default: false
     real interval_minval, interval_maxval; // if output_transfer_func = interval(minval,maxval), these are the interval bounds
+    mutable int test_bag_size; // counting the number of instances in a test bag
 
     // Build options related to the optimization:
     PP<Optimizer> optimizer; // the optimizer to use (no default)

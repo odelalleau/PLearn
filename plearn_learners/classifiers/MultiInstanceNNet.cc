@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.cc,v 1.9 2004/02/20 21:14:45 chrish42 Exp $
+   * $Id: MultiInstanceNNet.cc,v 1.10 2004/02/23 01:28:27 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/MultiInstanceNNet.h */
@@ -90,6 +90,14 @@ PLEARN_IMPLEMENT_OBJECT(MultiInstanceNNet,
                         "bounded a-priori (max_n_instances). The gradient is computed for a whole bag\n"
                         "at a time. The architectural parameters and hyper-parameters of the model\n"
                         "are otherwise the same as for the generic NNet class.\n"
+                        "The bags within each data set are specified with a 2nd target column\n"
+                        "(the first column is 0, 1 or missing; it should not be missing for the\n"
+                        "last column of the bag). The second target column should be 0,1,2, or 3:\n"
+                        "  1: first row of a bag\n"
+                        "  2: last row of a bag\n"
+                        "  3: simultaneously first and last, there is only one row in this bag\n"
+                        "  0: intermediate row of a bag\n"
+                        "following the protocol expected by the SumOverBagsVariable.\n"
                        );
 
 MultiInstanceNNet::MultiInstanceNNet() // DEFAULT VALUES FOR ALL OPTIONS
@@ -228,6 +236,10 @@ void MultiInstanceNNet::build_()
       output = input;
       params.resize(0);
 
+      if (targetsize()!=2)
+        PLERROR("MultiInstanceNNet:: expected the data to have 2 target columns, got %d",
+                targetsize());
+
       // first hidden layer
       if(nhidden>0)
         {
@@ -270,7 +282,7 @@ void MultiInstanceNNet::build_()
        * target and weights
        */
       
-      target = Var(targetsize(), "target");
+      target = Var(1, "target");
       
       if(weightsize_>0)
       {
@@ -351,18 +363,6 @@ void MultiInstanceNNet::build_()
 
       inputs_and_targets_to_costs->recomputeParents();
 
-      /*  VarArray outvars; DO WE NEED THIS?
-  VarArray testinvars;
-  testinvars.push_back(input);
-  outvars.push_back(output);
-  testinvars.push_back(target);
-  outvars.push_back(target);
-  
-  test_costf = Func(testinvars, output&test_costs);
-  test_costf->recomputeParents();
-  output_and_target_to_cost = Func(outvars, test_costs); 
-  output_and_target_to_cost->recomputeParents();
-      */
     }
 }
 
@@ -419,12 +419,13 @@ void MultiInstanceNNet::train()
     if(report_progress)
       pb = new ProgressBar("Counting nb bags in train_set for MultiInstanceNNet ", l);
     Vec row(train_set->width());
-    Vec row_target = row.subVec(train_set->inputsize(),train_set->targetsize());
-    for (int i=0;i<l;i++)
-    {
+    int tag_column = train_set->inputsize() + train_set->targetsize() - 1;
+    for (int i=0;i<l;i++) {
       train_set->getRow(i,row);
-      if (!row_target.hasMissing())
+      if (row[tag_column] == 1) {
+        // 1 indicates the beginning of a new bag.
         n_bags++;
+      }
       if(pb)
         pb->update(i);
     }
@@ -474,20 +475,23 @@ void MultiInstanceNNet::computeOutput(const Vec& inputv, Vec& outputv) const
 void MultiInstanceNNet::computeOutputAndCosts(const Vec& inputv, const Vec& targetv, 
                                  Vec& outputv, Vec& costsv) const
 {
-  f->fprop(inputv,outputv); // this is the individual P(y_i|x_i)
+  f->fprop(inputv,outputv); // this is the individual P(y_i|x_i), MAYBE UNNECESSARY CALCULATION
+  // since the outputs will be re-computed when doing the fprop below at the end of the bag
+  // (but if we want to provide them after each call...). The solution would
+  // be to do like in computeCostsFromOutputs, keeping track of the outputs.
+  int bag_signal = int(targetv[1]);
+  if (bag_signal & 1) // first instance, start counting
+    test_bag_size=0;
   bag_inputs->matValue(test_bag_size++) << inputv;
-  // UGLY HACK WHICH ASSUMES THAT computeOutputAndCosts WILL BE CALLED
-  // FOR ALL ROWS OF A BAG, OR NOT AT ALL.
-  if (targetv.hasMissing())
+  if (!(bag_signal & 2)) // not reached the last instance
     costsv.fill(MISSING_VALUE);
   else // end of bag, we have a target and we can compute a cost
   {
     bag_size->valuedata[0]=test_bag_size;
-    target->value << targetv;
+    target->valuedata[0] = targetv[0];
     if (weightsize_>0) sampleweight->valuedata[0]=1; // the test weights are known and used higher up
     inputs_and_targets_to_costs->fproppath.fprop();
-    costsv << costs->value;
-    test_bag_size=0;  // this is where it gets really ugly... (we don't have an explicit synchronization signal for the beginning of each block)
+    costs.copyTo(costsv);
   }
 }
 
@@ -495,7 +499,25 @@ void MultiInstanceNNet::computeOutputAndCosts(const Vec& inputv, const Vec& targ
 void MultiInstanceNNet::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv, 
                                    const Vec& targetv, Vec& costsv) const
 {
-  //output_and_target_to_cost->fprop(outputv&targetv, costsv); 
+  static Vec instance_logP0;
+  instance_logP0.resize(max_n_instances);
+  int bag_signal = int(targetv[1]);
+  if (bag_signal & 1) // first instance, start counting
+    test_bag_size=0;
+  instance_logP0[test_bag_size++] = safeflog(1-outputv[0]);
+  if (!(bag_signal & 2)) // not reached the last instance
+    costsv.fill(MISSING_VALUE);
+  else // end of bag, we have a target and we can compute a cost
+  {
+    real bag_P0 = safeexp(sum(instance_logP0));
+    int classe = int(targetv[0]);
+    int predicted_classe = (bag_P0>0.5)?0:1;
+    real nll = (classe==0)?safeflog(bag_P0):safeflog(1-bag_P0);
+    int classification_error = (classe != predicted_classe);
+    costsv[0] = nll + training_cost->value[0]-training_cost->value[1];
+    costsv[1] = nll;
+    costsv[2] = classification_error;
+  }
 }
 
 void MultiInstanceNNet::initializeParams()
