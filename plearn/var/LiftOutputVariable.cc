@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: LiftOutputVariable.cc,v 1.1 2003/11/20 15:29:16 tihocan Exp $
+   * $Id: LiftOutputVariable.cc,v 1.2 2003/11/25 21:59:10 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -74,7 +74,7 @@ void LiftOutputVariable::recomputeSize(int& l, int& w) const
 ///////////
 void LiftOutputVariable::fprop()
 {
-  real output = sigmoid(input1->valuedata[0]);
+  real output = input1->valuedata[0];
   real target = input2->valuedata[0];
   if (target == 1.0) {
     if (output == 0.0) {
