@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.h,v 1.15 2003/02/18 22:29:38 morinf Exp $
+   * $Id: WordNetOntology.h,v 1.16 2003/05/26 20:37:25 jauvinc Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -45,16 +45,25 @@
 #include "general.h"
 #include "ShellProgressBar.h"
 #include "Set.h"
-#include "PLMPI.h"
 
-#define NOUN_TYPE 1000
-#define VERB_TYPE 1001
-#define ADJ_TYPE 1002
-#define ADV_TYPE 1003
-#define UNDEFINED_TYPE 1004
-#define ALL_WN_TYPE 1005
-#define NUMERIC_TYPE 1006
-#define PROPER_NOUN_TYPE 1007
+// #define NOUN_TYPE 1000
+// #define VERB_TYPE 1001
+// #define ADJ_TYPE 1002
+// #define ADV_TYPE 1003
+// #define UNDEFINED_TYPE 1004
+// #define ALL_WN_TYPE 1005
+// #define NUMERIC_TYPE 1006
+// #define PROPER_NOUN_TYPE 1007
+
+#define NOUN_TYPE 1
+#define VERB_TYPE 2
+#define ADJ_TYPE 3
+#define ADV_TYPE 4
+#define ADJ_SATELLITE_TYPE 5
+#define ALL_WN_TYPE 6
+#define UNDEFINED_TYPE 7
+#define NUMERIC_TYPE 8
+#define PROPER_NOUN_TYPE 9
 
 #define UNDEFINED_SS_ID -1
 #define ROOT_SS_ID 0
@@ -97,7 +106,7 @@
 //     category : concepts (forming an ontology DAG)
 //     synset : sense U category
 //
-namespace PLearn {
+namespace PLearn <%
 
 // utils
 string trimWord(string word);
@@ -109,7 +118,8 @@ bool isAlpha(char c);
 bool isLegalPunct(char c);
 char* cstr(string& s);
 void removeDelimiters(string& s, char delim, char replace);
-
+bool startsWith(string& base, string s);
+void replaceChars(string& str, char char_to_replace, char replacing_char);
 
 // ontology DAG node
 
@@ -154,6 +164,8 @@ protected:
   map<int, int> word_to_predominent_pos;
   map<int, bool> word_is_in_wn;
   map<int, Set> word_to_high_level_senses;
+  map<pair<int, int>, int> word_sense_to_unique_id;
+  map<int, Set> word_to_under_target_level_high_level_senses; // BIG HACK!!!
 
   int word_index; // unique id for words
   int synset_index; // unique id for synsets
@@ -178,6 +190,7 @@ protected:
   bool are_descendants_extracted;
   bool are_predominent_pos_extracted;
   bool are_word_high_level_senses_extracted;
+  bool are_word_sense_unique_ids_computed;
 
   int n_word_high_level_senses;
 
@@ -216,7 +229,9 @@ public:
   int getWordId(string word);
   string getWord(int id);
   int getWordSenseIdForWnsn(string word, int wn_pos_type, int wnsn);
-  int getWordSenseIdForSenseKey(string lemma, string lexsn);
+  int getWordSenseIdForSenseKey(string lemma, string lexsn, string word);
+  int getWordSenseUniqueId(int word, int sense);
+  int getWordSenseUniqueIdSize();
   Set getWordSenses(int id);
   Set getWordHighLevelSenses(int id);
   Set getWordNounSenses(int id);
@@ -278,7 +293,8 @@ public:
   void intersectAncestorsAndSenses(Set categories, Set senses);
   void reducePolysemy(int level);
   void extractPredominentSyntacticClasses();
-  int extractWordHighLevelSenses(int noun_depth, int verb_depth, int adj_depth, int adv_depth, int unk_depth);
+  void extractWordHighLevelSenses(int noun_depth, int verb_depth, int adj_depth, int adv_depth, int unk_depth);
+  void extractWordNounAndVerbHighLevelSenses(int noun_depth, int verb_depth);
   
   // integrity verifications
   void detectWordsWithoutOntology();
@@ -293,12 +309,9 @@ public:
   void extractAncestors(int threshold, bool cut_with_word_coverage = true);
   void extractAncestors(Node* node, Set ancestors, int level, int level_threshold);
   void extractAncestors(Node* node, Set ancestors, int word_coverage_threshold);
-
-protected:
   void extractDescendants(Node* node, Set sense_descendants, Set word_descendants);
-private:
   void extractDescendants();
-
+  void computeWordSenseUniqueIds();
   void init(bool differentiate_unknown_words = true);
   void createBaseSynsets();
   void processUnknownWord(int word_id);
@@ -310,7 +323,6 @@ private:
   //void setLevels(int ss_id, int level);
   Node* checkForAlreadyExtractedSynset(SynsetPtr ssp);
   vector<string> getSynsetWords(SynsetPtr ssp);
-  void printOntology(Node* node, int level = 0);
   bool catchSpecialTags(string word);
   void reduceWordPolysemy(int word_id, int level);
   void reduceWordPolysemy_preserveSenseOverlapping(int word_id, int level);
@@ -319,10 +331,124 @@ private:
   void getCategoriesAtLevel(int ss_id, int cur_level, int target_level, set<int>& categories);
   void getCategoriesUnderLevel(int ss_id, int cur_level, int target_level, Set categories);
   void visitUpward(Node* node);
-public:
   void unvisitDownward(Node *node);
+  void unvisitAll();
+  void printOntology(Node* node, int level = 0);
+
+  // ATTENTION: il y a un systeme de mapping word->senses temporaire
+  // et base sur TVec<int>, qui sert uniquement dans le contexte de la WSD 
+  // (SemiSupervisedSparseDataNeuralNet). Le but a moyen terme est de remplacer 
+  // tous les mappings bases sur Set dans WordNetOntology pour les faire reposer 
+  // sur TVec<int>, plus PLearn-compliant.
+  map<int, TVec<int> > temp_word_to_senses;
+  map<int, TVec<int> > temp_word_to_noun_senses;
+  map<int, TVec<int> > temp_word_to_verb_senses;
+  map<int, TVec<int> > temp_word_to_adj_senses;
+  map<int, TVec<int> > temp_word_to_adv_senses;
+  map<int, TVec<int> > temp_word_to_high_level_senses;
+
+  void fillTempWordToSensesTVecMap()
+  {
+    for (map<int, Set>::iterator it = word_to_senses.begin(); it != word_to_senses.end(); ++it)
+    {
+      int w = it->first;
+      Set senses = it->second;
+      for (SetIterator sit = senses.begin(); sit != senses.end(); ++sit)
+        temp_word_to_senses[w].push_back(*sit);
+    }
+
+    for (map<int, Set>::iterator it = word_to_noun_senses.begin(); it != word_to_noun_senses.end(); ++it)
+    {
+      int w = it->first;
+      Set senses = it->second;
+      for (SetIterator sit = senses.begin(); sit != senses.end(); ++sit)
+        temp_word_to_noun_senses[w].push_back(*sit);
+    }
+
+    for (map<int, Set>::iterator it = word_to_verb_senses.begin(); it != word_to_verb_senses.end(); ++it)
+    {
+      int w = it->first;
+      Set senses = it->second;
+      for (SetIterator sit = senses.begin(); sit != senses.end(); ++sit)
+        temp_word_to_verb_senses[w].push_back(*sit);
+    }
+
+    for (map<int, Set>::iterator it = word_to_adj_senses.begin(); it != word_to_adj_senses.end(); ++it)
+    {
+      int w = it->first;
+      Set senses = it->second;
+      for (SetIterator sit = senses.begin(); sit != senses.end(); ++sit)
+        temp_word_to_adj_senses[w].push_back(*sit);
+    }
+
+    for (map<int, Set>::iterator it = word_to_adv_senses.begin(); it != word_to_adv_senses.end(); ++it)
+    {
+      int w = it->first;
+      Set senses = it->second;
+      for (SetIterator sit = senses.begin(); sit != senses.end(); ++sit)
+        temp_word_to_adv_senses[w].push_back(*sit);
+    }
+  }
+
+  TVec<int> getSensesForWord(int w) { return temp_word_to_senses[w]; }
+
+  void fillTempWordToHighLevelSensesTVecMap()
+  {
+    for (map<int, string>::iterator it = words.begin(); it != words.end(); ++it)
+    {
+      int w = it->first;
+      Set hl_senses = getWordHighLevelSenses(w);
+      for (SetIterator sit = hl_senses.begin(); sit != hl_senses.end(); ++sit)
+        temp_word_to_high_level_senses[w].push_back(*sit);
+    }
+  }
+  TVec<int> getHighLevelSensesForWord(int w) { return temp_word_to_high_level_senses[w]; }
+
+  TVec<int> getSecondLevelSensesForWord(int w)
+  {
+    Set sl_senses;
+    Set senses = word_to_senses[w];
+    for (SetIterator sit = senses.begin(); sit != senses.end(); ++sit)
+    {
+      int s = *sit;
+      Node* node = synsets[s];
+      for (SetIterator ssit = node->parents.begin(); ssit != node->parents.end(); ++ssit)
+      {
+        sl_senses.insert(*ssit);
+      }
+    }
+    TVec<int> sl_senses_vec;
+    for (SetIterator slit = sl_senses.begin(); slit != sl_senses.end(); ++slit)
+      sl_senses_vec.push_back(*slit);
+    return sl_senses_vec;
+  }
+
+  TVec<int> getThirdLevelSensesForWord(int w) 
+  {
+    Set tl_senses;
+    Set senses = word_to_senses[w];
+    for (SetIterator sit = senses.begin(); sit != senses.end(); ++sit)
+    {
+      int s = *sit;
+      Node* node = synsets[s];
+      for (SetIterator slit = node->parents.begin(); slit != node->parents.end(); ++slit)
+      {
+        int sl_sense = *slit;
+        Node* node = synsets[sl_sense];
+        for (SetIterator tlit = node->parents.begin(); tlit != node->parents.end(); ++tlit)
+        {
+          tl_senses.insert(*tlit);
+        }
+      }
+    }
+    TVec<int> tl_senses_vec;
+    for (SetIterator tlit = tl_senses.begin(); tlit != tl_senses.end(); ++tlit)
+      tl_senses_vec.push_back(*tlit);
+    return tl_senses_vec;
+  }
+
 };
 
-}
+%>
 
 #endif

@@ -1,7 +1,10 @@
-#ifndef SET_H
-#define SET_H
+#ifndef Set_H
+#define Set_H
 
-namespace PLearn {
+#include "TMat.h"
+
+namespace PLearn <%
+using namespace std;
 
 class PPointableSet : public set<int>, public PPointable
 {
@@ -108,8 +111,6 @@ inline ostream& operator<<(ostream& out, Set s)
   return out;
 }
 
-}
-
 //include "pl_io.h"
 // inline pl_ostream& operator<<(pl_ostream& out, Set& s)
 // {
@@ -149,5 +150,7 @@ inline ostream& operator<<(ostream& out, Set s)
 //     }
 //   }
 // }
+
+%>
 
 #endif
