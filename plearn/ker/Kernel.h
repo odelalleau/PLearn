@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.10 2004/01/07 22:18:42 ducharme Exp $
+   * $Id: Kernel.h,v 1.11 2004/01/21 14:16:04 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -139,6 +139,8 @@ public:
   real operator()(const Vec& x1, const Vec& x2) const
     { return ptr->evaluate(x1,x2); }
 };
+
+DECLARE_OBJECT_PP(Ker, Kernel);
 
 template <>
 inline
