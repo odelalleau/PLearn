@@ -1,4 +1,20 @@
+"""
+Pyplearn is a python preprocessor for .plearn files.
+
+We use Python function definitions, loops and variables to ease the building
+of .plearn files with lots of repetition. Because of the (almost) compatible
+syntaxes of PLearn and Python, one can write the contents of a Python function
+that generates PLearn pretty much as straight PLearn.
+"""
+
+
+
 class plearn_snippet:
+    """Objects of this class are used to wrap the parts of the Python code
+       that have already be converted to a PLearn string, so they don't
+       get the same treatment as Python strings (which will get wrapped in
+       double quotes by _plearn_repr).
+    """
     def __init__(self, s):
         self.s = s
 
@@ -7,6 +23,8 @@ class plearn_snippet:
 
 
 class DuplicateBindingError(Exception):
+    """This exception is raised when attemping to bind more than one PLearn
+    expression to the same variable name."""
     def __init__(self, binding_name):
         self.binding_name = binding_name
 
@@ -14,6 +32,8 @@ class DuplicateBindingError(Exception):
         return "Binding '%s' already defined." % self.binding_name
 
 class UnknownAgrumentError(Exception):
+    """This exception is raised when attempting to use a PLearn argument that
+    was not defined, either on the command-line or with plarg_defaults."""
     def __init__(self, arg_name):
         self.arg_name = arg_name
 
@@ -21,21 +41,28 @@ class UnknownAgrumentError(Exception):
         return "Unknown pyplearn argument: '%s'." % self.arg_name
 
 class plearn_ref(object):
+    """This class keeps in memory all the bindings done by bind. An
+    instance of this class represents a specific binding."""
 
     _bindings = {}
     _bindings_referenced = {}
     _last_binding_index = -1
     
-    def bind(klass, name, x):
-        if name in klass._bindings:
+    def bind(cls, name, x):
+        if name in cls._bindings:
             raise DuplicateBindingError(name)
-        klass._bindings[name] = x
+        cls._bindings[name] = x
     bind = classmethod(bind)
 
     def __init__(self, name):
         self.name = name
 
     def value(self):
+        """Called by _plearn_repr to return the PLearn representation
+           of the variable binding. On the first call, it will return something
+           like *0 -> PLearnStuff(blah). On subsequent calls it will return
+           only a PLearn reference: *0;
+        """
         name = self.name
         x = self._bindings[name]
         if name in self._bindings_referenced:
@@ -63,7 +90,7 @@ def _plearn_repr(x):
         return '{' + ', '.join(dict_items) + '}'
     elif isinstance(x, tuple) and len(x) == 2:
         print x
-        return '(' + _plearn_repr(x[0]) + ':' + _plearn_repr(x[1]) + ')'
+        return  _plearn_repr(x[0]) + ':' + _plearn_repr(x[1])
     elif isinstance(x, plearn_snippet):
         return x.s
     elif isinstance(x, plearn_ref):
@@ -71,17 +98,32 @@ def _plearn_repr(x):
     else:
         raise TypeError('Does not know how to handle type %s' % type(x))
 
-def ref(name):
-    return plearn_ref(name)
-
 def bind(name, value):
+    """Binds name to the PLearn expression contained in value."""
     plearn_ref.bind(name, value)
 
-def TMat(x, y, mat):
-    return plearn_snippet(_plearn_repr(x) + ' ' + _plearn_repr(y) + ' [' +
-                          ', '.join([_plearn_repr(e) for e in mat]) +']')
+def ref(name):
+    """Makes a reference (either "*0 -> foo" or "*0;") to the value
+       associated with name by a previous bind call."""
+    return plearn_ref(name)
+
+def TMat(num_rows, num_cols, mat_contents):
+    """Instances of this class represent a PLearn TMat.
+
+    num_rows and num_cols are the number of rows and columns of the matrix.
+    The contents of the matrix is given to mat_contents as a Python list.
+
+    Example: in Python, TMat(2, 3, [1, 2, 3, 4, 5, 6]) gives
+             in PLearn: 2 3 [1 2 3 4 5 6]
+    """
+    return plearn_snippet(_plearn_repr(num_rows) + ' ' +
+                          _plearn_repr(num_cols) + ' [' +
+                          ', '.join([_plearn_repr(e) for e in mat_contents]) +
+                          ']')
 
 class _plargs_storage_fallback:
+    """A singleton instance of this class is instanciated by the package
+    to store the default values for PLearn command-line variables."""
     pass
 plarg_defaults = _plargs_storage_fallback()
 
@@ -98,15 +140,23 @@ class _plargs_storage_readonly:
 plargs = _plargs_storage_readonly()
 
 def _parse_plargs(args):
+    """Parses PLearn command-line arguments (which look like foo=1 bar=2)
+    and stores the value of the arguments as attributes to plargs."""
     for a in args:
         k, v = a.split('=', 1)
         plargs.__dict__[k] = plearn_snippet(v)
 
 
 class _pyplearn_magic_module(object):
+    """An instance of this class (instanciated as pl) is used to provide
+    the magic behavior whereas bits of Python code like:
+    pl.SequentialAdvisorSelector(comparison_type='foo", etc.) become
+    a string that can be fed to PLearn instead of a .plearn file."""
     indent = ' ' * 4
     
     def add_indent(self, s):
+        """Adds a level of indentation to the (potentially multi-line) strings
+        passed as s."""
         s = s.strip()
         if not '\n' in s:
             # Single-line expression, no need to add any tabs
