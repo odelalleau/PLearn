@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plapack.h,v 1.17 2004/04/27 13:03:03 tihocan Exp $
+   * $Id: plapack.h,v 1.18 2004/05/19 17:26:29 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -141,7 +141,7 @@ void lapackEIGEN(const TMat<num_t>& A, TVec<num_t>& eigenvals, TMat<num_t>& eige
   
   num_t* Z = 0;
   int LDZ = 1;
-  if(eigenvecs)
+  if(eigenvecs.isNotEmpty())
     {
       Z = eigenvecs.data();
       LDZ = eigenvecs.mod();
@@ -417,12 +417,12 @@ void lapackSVD(const TMat<num_t>& At, TMat<num_t>& Ut, TVec<num_t>& S, TMat<num_
   num_t* U = 0;
   num_t* VT = 0;
 
-  if(V)
+  if(V.isNotEmpty())
     {
       LDVT = V.mod();
       VT = V.data();
     }
-  if(Ut)
+  if(Ut.isNotEmpty())
     {
       LDU = Ut.mod();
       U = Ut.data();

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatRowVariable.cc,v 1.5 2004/04/27 16:03:35 morinf Exp $
+   * $Id: MatRowVariable.cc,v 1.6 2004/05/19 17:26:30 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -83,7 +83,7 @@ MatRowVariable::declareOptions(OptionList &ol)
 void
 MatRowVariable::recomputeSize(int& l, int& w) const
 {
-    if (m)
+    if (m.isNotEmpty())
         l=m.width();
     w = 1;
 }

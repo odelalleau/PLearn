@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat_maths.cc,v 1.19 2004/05/19 13:06:32 tihocan Exp $
+* $Id: VMat_maths.cc,v 1.20 2004/05/19 17:26:30 tihocan Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat_maths.h"
@@ -271,7 +271,7 @@ Array<Mat> computeConditionalMeans(VMat trainset, int targetsize, Mat& basic_sta
     for(int j=0; j<inputsize; j++)
     {
       Mat& m = a[j];
-      if(m) 
+      if(m.isNotEmpty()) 
       {
         int k = int(input[j]-basic_stats(MIN_ROW,j));
         Vec m_k = m(k);
@@ -290,7 +290,7 @@ Array<Mat> computeConditionalMeans(VMat trainset, int targetsize, Mat& basic_sta
   for(int j=0; j<inputsize; j++)
   {
     Mat& m = a[j];
-    if(m)
+    if(m.isNotEmpty())
     {
       for(int k=0; k<m.length(); k++)
       {
