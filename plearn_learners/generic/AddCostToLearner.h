@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.h,v 1.9 2004/10/26 20:45:20 tihocan Exp $ 
+   * $Id: AddCostToLearner.h,v 1.10 2004/10/26 21:10:11 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -169,6 +169,10 @@ public:
   //! Computes the costs from already computed output. 
   virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                        const Vec& target, Vec& costs) const;
+
+  //! Overridden to use default PLearner behavior.
+  virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
+                                           Vec& output, Vec& costs) const;
 
   //! Returns the names of the costs computed by computeCostsFromOutpus (and thus the test method).
   virtual TVec<string> getTestCostNames() const;

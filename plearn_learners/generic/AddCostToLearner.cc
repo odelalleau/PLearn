@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.cc,v 1.15 2004/10/26 20:48:34 tihocan Exp $ 
+   * $Id: AddCostToLearner.cc,v 1.16 2004/10/26 21:10:07 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -56,6 +56,7 @@ PLEARN_IMPLEMENT_OBJECT(AddCostToLearner,
     "A PLearner that just adds additional costs to another PLearner.",
     "In addition, this learner can be used to compute costs on bags instead of\n"
     "individual samples, using the option 'compute_costs_on_bags'.\n"
+    "Note that for now, the added costs are only added as test costs.\n"
     "\n"
     "Feel free to make this class evolve by adding new costs, or rewriting it\n"
     "in a better fashion, because this one is certainly not perfect.\n"
@@ -371,6 +372,15 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
   }
 }                                
 
+///////////////////////////
+// computeOutputAndCosts //
+///////////////////////////
+void AddCostToLearner::computeOutputAndCosts(const Vec& input, const Vec& target,
+                                 Vec& output, Vec& costs) const {
+  PLearner::computeOutputAndCosts(input, target, output, costs);
+}
+
+
 ////////////
 // forget //
 ////////////
@@ -397,7 +407,7 @@ TVec<string> AddCostToLearner::getTestCostNames() const
 ///////////////////////
 TVec<string> AddCostToLearner::getTrainCostNames() const
 {
-  // The added costs are only test costs.
+  // The added costs are only test costs (so far).
   return learner_->getTrainCostNames();
 }
 
