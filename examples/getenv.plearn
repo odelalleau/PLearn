@@ -1,0 +1,11 @@
+# Illustrate the use of the GETENV macro.
+
+$ECHO{The PLearn directory is: $GETENV{PLEARNDIR}}
+
+RunObject( 
+# PP< UNKNOWN_TYPE_NAME >: The underlying object to be built.
+underlying_object = *0  ;
+# string: Save the object with this name
+save_object_name = ""  ;
+);
+
