@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixElementsVariable.cc,v 1.5 2004/03/09 18:33:14 tihocan Exp $
+   * $Id: MatrixElementsVariable.cc,v 1.6 2004/03/10 00:26:53 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -77,6 +77,8 @@ PLEARN_IMPLEMENT_OBJECT(MatrixElementsVariable, "ONE LINE DESCR", "NO HELP");
 void MatrixElementsVariable::recomputeSize(int& l, int& w) const
 { l=ni; w=nj; }
 
+
+extern void varDeepCopyField(Var& field, CopiesMap& copies);
 
 void MatrixElementsVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
