@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.64 2005/02/12 17:46:21 tihocan Exp $
+   * $Id: fileutils.cc,v 1.65 2005/02/15 16:11:34 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -67,6 +67,7 @@
 #include <mozilla/nspr/prio.h>
 #include <mozilla/nspr/prtime.h>
 #include <mozilla/nspr/prerror.h>
+#include <mozilla/nspr/prlong.h>
 
 namespace PLearn {
 using namespace std;
@@ -128,14 +129,22 @@ bool isfile(const PPath& path)
 ///////////
 // mtime //
 ///////////
-PRTime mtime(const PPath& path)
+time_t mtime(const PPath& path)
 {
   PRFileInfo fi;
 
   if (PR_GetFileInfo(path.absolute().c_str(), &fi) != PR_SUCCESS)
     return 0;
-  else
-    return fi.modifyTime;
+  else {
+    // The NSPR PRTime is number of microseconds since the epoch, while
+    // time_t is the number of seconds since the (same) epoch.
+    // Translate from the former to the later by dividing by 1e6, using
+    // NSPR long long manipulation macros to be extra safe.
+    PRInt64 time_t_compatible_value;
+    PRInt64 one_million = LL_INIT(0, 1000000);
+    LL_DIV(time_t_compatible_value, fi.modifyTime, one_million);
+    return (time_t)time_t_compatible_value;
+  }
 }
 
 ///////////

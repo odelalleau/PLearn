@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.h,v 1.19 2005/02/12 17:13:27 chapados Exp $
+   * $Id: fileutils.h,v 1.20 2005/02/15 16:11:35 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -55,8 +55,6 @@
 #include <map>
 #include <string>
 #include <vector>
-
-#include <mozilla/nspr/prtime.h>
 
 #include "PPath.h"
 #include "PStream.h"
@@ -77,7 +75,7 @@ using namespace std;
   bool isfile(const PPath& path);
 
   //! Returns the time of last modification of file (or 0 if file does not exist).
-  PRTime mtime(const PPath& path);
+  time_t mtime(const PPath& path);
 
   /*! Returns a list of all entries in the given directory (omitting entries "." and "..")
       If the directory cannot be opened an error is issued.
