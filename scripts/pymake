@@ -38,6 +38,8 @@ from popen2 import *
 
 print "pymake 2.0 [ (C) 2001, Pascal Vincent. This is free software distributed under a BSD type license. Report problems to vincentp@iro.umontreal.ca ]"
 
+usingIntelCompiler = 0
+
 # initialise a few variables from the environment
 platform = sys.platform
 if platform=='linux2':
@@ -492,6 +494,10 @@ for choice in options_choices:
             nmatches = nmatches+1
     if nmatches<1:
         options.append(choice[0])
+
+#if options_choices[0][0] == 'icc'
+if options[0] == 'icc':
+    usingIntelCompiler = 1
 
 if optionargs: # there are remaining optionargs
     print 'Invalid options: ' + string.join(map(lambda s: '-'+s, optionargs))

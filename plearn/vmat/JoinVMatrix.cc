@@ -33,11 +33,11 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: JoinVMatrix.cc,v 1.7 2004/04/05 22:55:52 morinf Exp $
+   * $Id: JoinVMatrix.cc,v 1.8 2004/05/22 23:52:08 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
-#include <JoinVMatrix.h>
+#include "JoinVMatrix.h"
 
 namespace PLearn {
 using namespace std;
