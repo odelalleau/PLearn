@@ -8,6 +8,9 @@ using namespace std;
 
 class DERIVEDCLASS: public Splitter
 {
+public:
+  typedef Splitter inherited;
+
 protected:
   // *********************
   // * protected options *
@@ -17,9 +20,6 @@ protected:
   // ...
     
 public:
-
-  
-  typedef Splitter inherited;
 
   // ************************
   // * public build options *

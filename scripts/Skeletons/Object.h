@@ -8,6 +8,9 @@ using namespace std;
 
 class DERIVEDCLASS: public Object
 {
+public:
+  typedef Object inherited;
+
 protected:
   // *********************
   // * protected options *
@@ -49,8 +52,6 @@ protected:
   static void declareOptions(OptionList& ol);
 
 public:
-
-  typedef Object inherited;
   // Declares other standard object methods
   //  If your class is not instantiatable (it has pure virtual methods)
   // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 

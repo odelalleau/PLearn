@@ -4,7 +4,7 @@ namespace PLearn <%
 using namespace std;
 
 DERIVEDCLASS::DERIVEDCLASS() 
-  :Object()
+  : inherited()
 /* ### Initialise all fields to their default value */
   {
     // ...

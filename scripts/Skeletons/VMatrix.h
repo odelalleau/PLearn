@@ -16,6 +16,9 @@ using namespace std;
 
 class DERIVEDCLASS: public VMatrix
 {
+public:
+  typedef VMatrix inherited;
+
 protected:
   // *********************
   // * protected options *
@@ -59,8 +62,6 @@ protected:
   static void declareOptions(OptionList& ol);
 
 public:
-
-  typedef VMatrix inherited;
 
   // ************************
   // **** Object methods ****

@@ -8,6 +8,9 @@ using namespace std;
 
 class DERIVEDCLASS: public Smoother
 {
+public:
+  typedef Smoother inherited;
+  
 protected:
   // *********************
   // * protected options *
@@ -17,9 +20,6 @@ protected:
   // ...
     
 public:
-
-  typedef Smoother inherited;
-  
 
   // ************************
   // * public build options *

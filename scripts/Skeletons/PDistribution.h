@@ -8,6 +8,9 @@ using namespace std;
 
 class DERIVEDCLASS: public PDistribution
 {
+public:
+  typedef PDistribution inherited;  
+
 protected:
   // *********************
   // * protected options *
@@ -17,8 +20,6 @@ protected:
   // ...
     
 public:
-
-  typedef PDistribution inherited;  
 
   // ************************
   // * public build options *
