@@ -1,0 +1,117 @@
+// -*- C++ -*-
+
+// AsciiVMatrix.h
+// 
+// Copyright (C) 2003 Rejean Ducharme
+// ...
+// Copyright (C) 2003 Rejean Ducharme
+// 
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+// 
+//  1. Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+// 
+//  2. Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//     documentation and/or other materials provided with the distribution.
+// 
+//  3. The name of the authors may not be used to endorse or promote
+//     products derived from this software without specific prior written
+//     permission.
+// 
+// THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+// NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+// TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// 
+// This file is part of the PLearn library. For more information on the PLearn
+// library, go to the PLearn Web site at www.plearn.org
+
+/* *******************************************************      
+   * $Id: AsciiVMatrix.h,v 1.1 2003/02/18 16:30:29 ducharme Exp $ 
+   ******************************************************* */
+
+/*! \file AsciiVMatrix.h */
+#ifndef AsciiVMatrix_INC
+#define AsciiVMatrix_INC
+
+#include "RowBufferedVMatrix.h"
+#include "fstream.h"
+
+namespace PLearn <%
+using namespace std;
+
+class AsciiVMatrix: public RowBufferedVMatrix
+{
+protected:
+  string filename;
+  mutable fstream* file;
+  vector<streampos> pos_rows;
+  vector<string> comments;
+  streampos vmatlength_pos;
+  bool readwritemode;
+  bool newfile;
+
+public:
+
+  typedef RowBufferedVMatrix inherited;
+
+  // ******************
+  // *  Constructors  *
+  // ******************
+  AsciiVMatrix() : inherited() {}  //!<  default constructor (for consistency)
+
+  // Open an existing file.
+  // If readwrite==false, the appendRow method sends an error.
+  // If readwrite==true (the default), the file is open in read/write mode.
+  AsciiVMatrix(const string& fname, bool readwrite=true);
+
+  // Open a new file (in read/write mode).
+  // If a file of the same name already exist, an error is sent!
+  // The width of the matrix to be writen must be set.
+  AsciiVMatrix(const string& fname, int the_width, const vector<string>& the_comment=vector<string>());
+
+private: 
+  //! This does the actual building. 
+  void build_();
+
+protected: 
+  //! Declares this class' options
+  static void declareOptions(OptionList& ol);
+
+public:
+  //!  This is the only method requiring implementation
+  virtual void getRow(int i, Vec v) const;
+
+  //! Append a row at the end of the file
+  virtual void appendRow(Vec v);
+
+  //! These methods send an error message since, by choice,
+  //! we accept only to append row at the end of the file
+  virtual void put(int i, int j, real value);
+  virtual void putSubRow(int i, int j, Vec v);
+  virtual void putRow(int i, Vec v);
+
+  // simply calls inherited::build() then build_() 
+  virtual void build();
+
+  //! Provides a help message describing this class
+  virtual string help() const;
+
+  virtual ~AsciiVMatrix();
+
+  //! Declares name and deepCopy methods
+  DECLARE_NAME_AND_DEEPCOPY(AsciiVMatrix);
+
+};
+
+%> // end of namespace PLearn
+#endif
+
