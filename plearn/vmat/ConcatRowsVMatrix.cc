@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVMatrix.cc,v 1.14 2004/11/04 14:57:13 tihocan Exp $
+   * $Id: ConcatRowsVMatrix.cc,v 1.15 2004/11/24 18:32:57 tihocan Exp $
    ******************************************************* */
 
 #include "ConcatRowsVMatrix.h"
@@ -66,7 +66,7 @@ ConcatRowsVMatrix::ConcatRowsVMatrix(TVec<VMat> the_array)
 {
   if (array.size() > 0)
     build_();
-};
+}
 
 ConcatRowsVMatrix::ConcatRowsVMatrix(VMat d1, VMat d2)
 : fill_missing(false),
@@ -77,7 +77,7 @@ ConcatRowsVMatrix::ConcatRowsVMatrix(VMat d1, VMat d2)
   array[0] = d1;
   array[1] = d2;
   build_();
-};
+}
 
 ////////////////////
 // declareOptions //
