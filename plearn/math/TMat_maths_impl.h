@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.50 2004/06/16 18:31:15 tihocan Exp $
+   * $Id: TMat_maths_impl.h,v 1.51 2004/06/23 20:19:58 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -149,6 +149,24 @@ void squareElements(const TVec<T>& x)
       *ptr *= *ptr;
       ++ptr;
     }
+}
+
+//! squares the elements of m in place
+template<class T>
+void squareElements(const TMat<T>& m)
+{
+  if (m.size()==0) return;
+  if(m.isCompact()) {
+    typename TMat<T>::compact_iterator it = m.compact_begin();
+    typename TMat<T>::compact_iterator itend = m.compact_end();
+    for(; it != itend; ++it)
+      *it = square(*it);
+  } else {
+    typename TMat<T>::iterator it = m.begin();
+    typename TMat<T>::iterator itend = m.end();
+    for(; it != itend; ++it)
+      *it = square(*it);
+  }
 }
 
 //! returns the sum of squared elements
