@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.38 2004/11/11 14:04:23 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.39 2004/11/18 14:31:25 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -176,6 +176,7 @@
 #include <plearn/vmat/JulianizeVMatrix.h>
 #include <plearn/vmat/KNNVMatrix.h>
 #include <plearn/vmat/LocalNeighborsDifferencesVMatrix.h>
+#include <plearn/vmat/LocallyPrecomputedVMatrix.h>
 #include <plearn/vmat/MultiInstanceVMatrix.h>
 #include <plearn/vmat/OneHotVMatrix.h>
 #include <plearn/vmat/PairsVMatrix.h>
