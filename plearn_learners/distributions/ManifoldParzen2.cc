@@ -99,6 +99,27 @@ void ManifoldParzen2::declareOptions(OptionList& ol)
 
    // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
+
+  // Hide unused parent's options.
+
+  redeclareOption(ol,"L", &ManifoldParzen2::L, OptionBase::nosave,
+      "Automatically set (to train_set->length()).");
+
+  redeclareOption(ol,"type", &ManifoldParzen2::type, OptionBase::nosave,
+      "Automatically set (to 'general').");
+
+  redeclareOption(ol,"n_eigen", &ManifoldParzen2::n_eigen, OptionBase::nosave,
+      "Automatically set.");
+
+  redeclareOption(ol,"alpha_min", &ManifoldParzen2::alpha_min, OptionBase::nosave,
+      "Not used.");
+
+  redeclareOption(ol,"sigma_min", &ManifoldParzen2::sigma_min, OptionBase::nosave,
+      "Not used.");
+
+  redeclareOption(ol,"kmeans_iterations", &ManifoldParzen2::kmeans_iterations, OptionBase::nosave,
+      "Not used.");
+
 }
 
 void ManifoldParzen2::build_()
@@ -106,7 +127,7 @@ void ManifoldParzen2::build_()
 
 void ManifoldParzen2::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  PLearner::makeDeepCopyFromShallowCopy(copies);
+  inherited::makeDeepCopyFromShallowCopy(copies);
 
   // ### Call deepCopyField on all "pointer-like" fields 
   // ### that you wish to be deepCopied rather than 
@@ -183,6 +204,7 @@ void ManifoldParzen2::train()
   type = "general";
   L = l;
   D = ncomponents;
+  n_eigen = ncomponents;
   GaussMix::build();
   resizeStuffBeforeTraining();
 //  setMixtureTypeGeneral(l, ncomponents, w); // TODO Remove this line when it works.
