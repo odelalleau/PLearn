@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.cc,v 1.15 2004/07/20 21:58:11 tihocan Exp $ 
+   * $Id: KernelProjection.cc,v 1.16 2004/07/21 15:59:22 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -228,6 +228,7 @@ void KernelProjection::computeOutput(const Vec& input, Vec& output) const
     }
   } else if (normalize == 2) {
     output << result;
+    output *= sqrt(real(n_examples));
   } else {
     PLERROR("In KernelProjection::computeOutput - Wrong value for 'normalize')");
   }
