@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.cc,v 1.10 2005/02/14 18:15:23 tihocan Exp $ 
+   * $Id: PPath.cc,v 1.11 2005/02/15 18:18:34 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -450,6 +450,7 @@ void PPath::resolveDoubleDots() {
   // "/..foo"      -> "/..foo"
   // "foo../"      -> "foo../"
   // "../../../foo"-> "../../../foo"
+  // "foo/../../.."-> "foo/../../.."
 
   // We only care about "/.." when it is followed by a slash or it ends the path.
   // The path made of the substring until the '/' must not be a root directory.
@@ -467,8 +468,9 @@ void PPath::resolveDoubleDots() {
         // We need to make sure we are not trying to go up on a root directory.
         if (PPath(substr(0, pos_sdd + 1)).isRoot())
           PLERROR("In PPath::resolveDots - '%s' is invalid", c_str());
-        // Check if we are in the case "../.."
-        if (pos_sdd == 2 && substr(0,2) == "..")
+        if (   (pos_sdd == 2 && substr(0,2) == "..")
+            || (pos_sdd == 1 && operator[](0) == '.'))
+          // We are in the case "../.." or "./.."
           next = pos_sdd + 3;
         else {
           // We are in the case "foo/.."
