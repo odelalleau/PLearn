@@ -73,6 +73,7 @@ compileflags = compileflags + ' -DDBDIR=\\"' + dbdir + '\\"'
 
 optionalLibrary( name = 'xml',
                  includedirs = [os.path.join(libdir,'xml/gcc_3.2/xerces-c-src2_1_0/include'), 
+                                os.path.join(libdir,'xml/gcc_3.2/xerces-c-src2_1_0/include/xercesc'), 
                                 os.path.join(libdir,'xml/gcc_3.2/xml-xalan/c/src')],
                  linkeroptions = (' -Xlinker -rpath -Xlinker ' +
                                   os.path.join(libdir,'xml/gcc_3.2/xerces-c-src2_1_0/lib') +
