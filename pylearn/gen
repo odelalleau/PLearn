@@ -1,0 +1,22 @@
+#!/usr/bin/python
+
+import os
+
+top_dirs = [os.path.join("..", d) for d in ['plearn', 'plearn_learners']]
+
+include_dirs = []
+for top_dir in top_dirs:
+    include_dirs.extend([os.path.join(top_dir, d) for d in os.listdir(top_dir)
+                         if os.path.isdir(os.path.join(top_dir, d)) and d != 'CVS'])
+
+
+include_directive = []
+for d in include_dirs:
+    include_directive.append('-I')
+    include_directive.append(d)
+
+print ' '.join(include_directive)
+os.execv('/usr/local/bin/pyste', ['pyste', '--debug', '--module=plearn', '-D', 'USEDOUBLE'] +
+         include_directive + ['plearn.pyste'])
+
+#pyste --module=plearn -I ../plearn plearn.pyste

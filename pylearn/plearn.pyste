@@ -1,0 +1,4 @@
+plearn_object = Class("PLearn::Object", "Object.h")
+set_policy(plearn_object._getOptionList_, return_value_policy(reference_existing_object))
+set_policy(plearn_object._new_instance_for_typemap_, return_value_policy(manage_new_object))
+
