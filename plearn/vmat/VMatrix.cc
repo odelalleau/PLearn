@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.65 2004/07/21 20:33:33 tihocan Exp $
+* $Id: VMatrix.cc,v 1.66 2004/08/05 19:23:14 tihocan Exp $
 ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -193,6 +193,8 @@ int VMatrix::getFieldIndex(const string& fieldname_or_num) const
   int i = fieldIndex(fieldname_or_num);
   if(i==-1)
     i = toint(fieldname_or_num);
+  if (i < 0 || i >= width())
+    PLERROR("In VMatrix::getFieldIndex - Asked for an unvalid column number");
   return i;
 }
 
