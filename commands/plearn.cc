@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.59 2004/05/11 13:05:28 tihocan Exp $
+   * $Id: plearn.cc,v 1.60 2004/05/12 16:51:41 lapalmej Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -48,6 +48,7 @@
 // Available VMats:
 #include "AutoVMatrix.h"
 #include "BatchVMatrix.h"
+#include "SequenceVMatrix.h"
 #include "IndexedVMatrix.h"
 #include "RegularGridVMatrix.h"
 #include "PrecomputedVMatrix.h"
@@ -71,6 +72,7 @@
 #include "LocallyWeightedDistribution.h"
 #include "NeuralNet.h"
 #include "NNet.h"
+#include "BPTT.h"
 #include "PCA.h"
 #include "PLS.h"
 #include "GradientOptimizer.h"

@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: SequenceVMatrix.cc,v 1.2 2004/05/12 16:36:17 lapalmej Exp $
+   * $Id: SequenceVMatrix.cc,v 1.3 2004/05/12 16:52:14 lapalmej Exp $
    ******************************************************* */
 
 #include "SequenceVMatrix.h"
