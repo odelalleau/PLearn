@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BootstrapVMatrix.h,v 1.1 2003/11/27 14:27:58 tihocan Exp $
+   * $Id: BootstrapVMatrix.h,v 1.2 2003/11/29 17:39:22 tihocan Exp $
    ******************************************************* */
 
 
@@ -47,8 +47,6 @@
 namespace PLearn <%
 using namespace std;
  
-//!  selects samples from a sub-distribution
-//!  according to given vector of indices
 class BootstrapVMatrix: public SelectRowsVMatrix
 {
 
@@ -62,6 +60,9 @@ public:
 public:
 
   BootstrapVMatrix();
+  
+  //! Construct a boostrap of another VMatrix.
+  BootstrapVMatrix(VMat m, real frac);
 
   PLEARN_DECLARE_OBJECT(BootstrapVMatrix);
 

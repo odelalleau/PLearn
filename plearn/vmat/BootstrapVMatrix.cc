@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BootstrapVMatrix.cc,v 1.1 2003/11/27 14:27:58 tihocan Exp $
+   * $Id: BootstrapVMatrix.cc,v 1.2 2003/11/29 17:39:22 tihocan Exp $
    ******************************************************* */
 
 #include "BootstrapVMatrix.h"
@@ -51,8 +51,17 @@ PLEARN_IMPLEMENT_OBJECT(BootstrapVMatrix,
     "The only option to specify is \"distr\"(and possibly \"frac\")."
 );
 
+//////////////////////
+// BootstrapVMatrix //
+//////////////////////
 BootstrapVMatrix::BootstrapVMatrix() : frac(0.6667)
 {}
+
+BootstrapVMatrix::BootstrapVMatrix(VMat m, real frac) {
+  this->frac = frac;
+  this->distr = m;
+  build();
+}
 
 void BootstrapVMatrix::declareOptions(OptionList &ol)
 {
