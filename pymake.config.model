@@ -53,9 +53,10 @@ mandatory_includedirs = [plearndir]
 # This is something like 'linux-i386', 'linux-alpha', 'sunos5', 'irix6', 'irix6-n32' etc...
 # Feel free to use it to adapt configuration to that platform.
 
+
 # (sys.byteorder does not exist in older versions of python)
 if platform=='linux-i386':
-    compileflags = '-DLINUX -DLITTLEENDIAN -ftemplate-depth-100'
+    compileflags = '-DLINUX -DLITTLEENDIAN'
 #    compileflags = '-DLINUX -DLITTLEENDIAN -mcpu=i686 -march=i686 -ftemplate-depth-100'
 elif platform=='linux-ppc':
     compileflags = '-DLINUXPPC -DBIGENDIAN'
@@ -82,6 +83,9 @@ else:
 # If the DBDIR environment variable is not defined, we use the default "/u/lisa/Database"
 dbdir = os.environ.get('DBDIR','/u/lisa/Database')
 compileflags = compileflags + ' -DDBDIR=\\"' + dbdir + '\\"' 
+# If the METADATADIR environment variable is not defined, we use the default "/u/lisa/db/metadata"
+metadatadir = os.environ.get('METADATADIR','/u/lisa/db/metadata')
+compileflags = compileflags + ' -DMETADATADIR=\\"' + metadatadir + '\\"' 
 
 # Add available external libraries In the order in which the linkeroptions
 # must appear on the linker command line (typically most basic libraries
@@ -200,7 +204,7 @@ options_choices = [
   [ 'dbg', 'opt', 'pintel', 'gprof', 'safegprof', 'safeopt', 'checkopt' ],
   [ 'double', 'float' ],
   [ 'throwerrors', 'exiterrors' ], 
-  [ 'blas', 'p3blas','p4blas','athlonblas','pentiumblas', 'noblas', 'veclib', 'scs'],
+  [ 'blas', 'p3blas','p4blas','athlonblas','pentiumblas', 'mammouthblas', 'noblas', 'veclib', 'scs'],
 ]
 
 
@@ -209,32 +213,32 @@ options_choices = [
 pymakeOption( name = 'g++',
               description = 'compiling with g++, with no MPI support',
               compiler = 'g++',
-              compileroptions = '-Wno-deprecated -pedantic -DUSING_MPI=0 -Wno-long-long',
+              compileroptions = '-Wno-deprecated -pedantic -DUSING_MPI=0 -Wno-long-long -ftemplate-depth-100',
               linker = 'g++' )
 
 pymakeOption( name = 'g++3',
               description = 'compiling with g++3 (version 3.0), with no MPI support',
               compiler = 'g++3',
-              compileroptions = '-Wno-deprecated -pedantic -DUSING_MPI=0 ',
+              compileroptions = '-Wno-deprecated -pedantic -DUSING_MPI=0  -ftemplate-depth-100',
               linker = 'g++3' )
 
-pymakeOption( name = 'icc',
+pymakeOption( name = 'icc',   # For C++, it is actually icpc
               description = 'compiling with Intel Compiler (version 8.0), with no MPI support',
-              compiler = 'icc -w',
+              compiler = 'icpc -w1 -wd981 -wd383 -wd869 -wd444 -wd810 -wd1418 -wd654',
               compileroptions = '-DUSING_MPI=0 ',
-              linker = 'icc'
+              linker = 'icpc  '
 						)
 
 pymakeOption( name = 'mpi',
               description = 'compiling and linking with MPI support (and USING_MPI=1)',
               compiler = 'mpiCC',               
-              compileroptions = '-DUSING_MPI=1',
+              compileroptions = '-DUSING_MPI=1 -ftemplate-depth-100',
               linker = 'mpiCC' )
 
 pymakeOption( name = 'purify',
               description = 'compiling and linking with purify g++',
               compiler = 'purify g++',               
-              compileroptions = '-DUSING_MPI=0',
+              compileroptions = '-DUSING_MPI=0 -ftemplate-depth-100',
               linker = 'purify g++' )
 
 pymakeOption( name = 'dbg',
@@ -323,6 +327,11 @@ pymakeOption( name = 'p4blas',
               description = 'compilation and linking BLAS for Intel Pentium 4 processor',
               compileroptions = '-D USE_BLAS_SPECIALISATIONS',
               linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl_p4 -lmkl_vml_p4 -lpthread -lg2c')
+
+pymakeOption( name = 'mammouthblas',
+    description = 'compilation and linking BLAS for P4 Mammouth-Serie cluster',
+    compileroptions = '-D USE_BLAS_SPECIALISATIONS',
+    linkeroptions = '-L/opt/mkl/lib/32 -lmkl_p4 -lmkl_vml_p4 -lpthread -lmkl_lapack')
 
 pymakeOption( name = 'veclib',
               description = "Apple's vecLib library, a version of the BLAS library for the G4 and G5 under OS X",
