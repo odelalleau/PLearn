@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.12 2003/12/01 23:53:51 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.13 2003/12/02 14:02:02 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -75,14 +75,12 @@ protected:
   Var a, pos_a; // output parameter, scalar constant part
   Var b, pos_b; // output parameters, step height parameters
   Var c, pos_c; // output parameters, step smoothing parameters
-  Var mu; // output parameters, step location parameters
   Var density;
   Var cumulative;
   Var expected_value;
   Vec target_dependent_outputs;
     VarArray costs; // all costs of interest
     VarArray penalties;
-  VarArray y_values; // values at which output probability curve is sampled
     Var training_cost; // weighted scalar costs[0] including penalties
     Var test_costs; // hconcat(costs)
 
@@ -108,6 +106,8 @@ protected:
 
 public:
 
+  VarArray y_values; // values at which output probability curve is sampled
+  Var mu; // output parameters, step location parameters
     mutable Func f; // input -> output
     mutable Func test_costf; // input & target -> output & test_costs
     mutable Func output_and_target_to_cost; // output & target -> cost

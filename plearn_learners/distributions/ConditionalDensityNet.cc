@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.15 2003/12/01 23:53:51 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.16 2003/12/02 14:02:01 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -270,8 +270,8 @@ ConditionalDensityNet::ConditionalDensityNet()
       if (nhidden==-1) 
         // special code meaning that the inputs should be ignored, only use biases
       {
-        wout = Var(n_output_parameters, 1, "wout");
-        output = wout; // transpose(wout);
+        wout = Var(1, n_output_parameters, "wout");
+        output = transpose(wout);
       }
       // output layer before transfer function
       else
