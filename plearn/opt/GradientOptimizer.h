@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.h,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: GradientOptimizer.h,v 1.2 2003/04/11 22:00:43 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -65,9 +65,9 @@ using namespace std;
     public:
       //!  gradient descent specific parameters
       //!  (directly modifiable by the user)
-      real learning_rate; //courant learning rate
+      real learning_rate; // current learning rate
 
-    // Options (also available through setOption)
+      // Options (also available through setOption)
       real start_learning_rate;
       real decrease_constant;
     
