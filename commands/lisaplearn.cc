@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: lisaplearn.cc,v 1.18 2004/04/16 21:30:51 nova77 Exp $
+   * $Id: lisaplearn.cc,v 1.19 2004/04/16 21:43:55 nova77 Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -55,21 +55,9 @@
 #include "IndexedVMatrix.h"
 #include "RegularGridVMatrix.h"
 #include "PrecomputedVMatrix.h"
-<<<<<<< lisaplearn.cc
-<<<<<<< lisaplearn.cc
-#include "PLearnerOutputVMatrix.h"
-#include "SubInputVMatrix.h"
-=======
-#include "CumVMatrix.h"
->>>>>>> 1.7
-=======
 #include "ProcessingVMatrix.h"
-<<<<<<< lisaplearn.cc
->>>>>>> 1.9
-=======
 #include "SubInputVMatrix.h"
 #include "VMatrixFromDistribution.h"
->>>>>>> 1.11
 
 // Hyper-learning:
 #include "CartesianProductOracle.h"
@@ -124,11 +112,7 @@
 #include "Grapher.h"
 #include "ConstantRegressor.h"
 #include "MultiInstanceVMatrix.h"
-<<<<<<< lisaplearn.cc
-#include "LiftStatsCollector.h"
-=======
 #include "SortRowsVMatrix.h"
->>>>>>> 1.9
 
 // Distributions
 #include "SpiralDistribution.h"
