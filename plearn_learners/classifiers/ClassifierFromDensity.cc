@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ClassifierFromDensity.cc,v 1.8 2004/05/21 19:36:42 yoshua Exp $ 
+   * $Id: ClassifierFromDensity.cc,v 1.9 2004/05/25 01:17:38 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file ClassifierFromDensity.cc */
@@ -49,7 +49,7 @@ namespace PLearn {
 using namespace std;
 
 ClassifierFromDensity::ClassifierFromDensity() 
-  :nclasses(-1)
+  :nclasses(-1), output_log_probabilities(0), normalize_probabilities(1)
   {
     // build_();
   }
@@ -65,6 +65,10 @@ ClassifierFromDensity::ClassifierFromDensity()
                   "You may also specify just one that will be replicated as many times as there are classes.");
     declareOption(ol, "log_priors", &ClassifierFromDensity::log_priors, OptionBase::buildoption,
                   "The log of the class prior probabilities");
+    declareOption(ol, "output_log_probabilities", &ClassifierFromDensity::output_log_probabilities, OptionBase::buildoption,
+                  "Whether computeOutput yields log-probabilities or probabilities (of classes given inputs)");
+    declareOption(ol, "normalize_probabilities", &ClassifierFromDensity::normalize_probabilities, OptionBase::buildoption,
+                  "Whether to normalize the probabilities (if not just compute likelihood * prior for each class)");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -112,6 +116,7 @@ int ClassifierFromDensity::outputsize() const
 
 void ClassifierFromDensity::forget()
 {
+  stage=0;
   for(int c=0; c<estimators.length(); c++)
     estimators[c]->forget();
 }
@@ -181,20 +186,27 @@ void ClassifierFromDensity::computeOutput(const Vec& input, Vec& output) const
       estimators[c]->computeOutput(input, logprobvec);
       double logprob_c = logprob + log_priors[c]; // multiply p by the prior
       output[c] = logprob_c;
-      if(c==0)
-        log_of_sumprob = logprob_c;
-      else
-        log_of_sumprob = logadd(log_of_sumprob, logprob_c);
+      if (normalize_probabilities)
+      {
+        if(c==0)
+          log_of_sumprob = logprob_c;
+        else
+          log_of_sumprob = logadd(log_of_sumprob, logprob_c);
+      }
     }      
 
   // cerr << "unnormalized logprob: " << output << endl;
   // cerr << "log of sumprob: " << log_of_sumprob << endl;
-      
-  output -= real(log_of_sumprob); // divide by the sum
-      
+
+  if (normalize_probabilities)
+    output -= real(log_of_sumprob); // divide by the sum
+  else if (nclasses==2)
+    output[1] -= output[0];
+
   // make it probabilities rather than log probabilities...
-  exp(output, output);
-      
+  if (!output_log_probabilities)
+    exp(output, output);
+
   // cout << "output: " << output << endl;
   // cout << "argmax: " << argmax(output) << endl;
 }

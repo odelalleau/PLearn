@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.33 2004/05/21 17:19:33 yoshua Exp $ 
+ * $Id: GaussMix.cc,v 1.34 2004/05/25 01:17:54 yoshua Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -267,12 +267,19 @@ real GaussMix::computeLogLikelihood(const Vec& x, int j) const {
     x_centered -= mu(j);
     squared_norm_x_centered = pownorm(x_centered);
     real var_min = sigma_min*sigma_min;
-    one_over_lambda0 = 1.0 / max(var_min,eigenvalues(j, n_eigen_computed - 1));
+    real lambda0 = max(var_min,eigenvalues(j, n_eigen_computed - 1));
+    if (lambda0 <= 0)
+      PLERROR("GaussMix::computeLogLikelihood(x,%d), var_min=%g, lambda0=%g\n",j,var_min,lambda0);
+    one_over_lambda0 = 1.0 / lambda0;
     // t -= 0.5  * 1/lambda_0 * ||x - mu||^2
     t -= 0.5 * one_over_lambda0 * squared_norm_x_centered;
     for (int k = 0; k < n_eigen_computed - 1; k++) {
       // t -= 0.5 * (1/lambda_k - 1/lambda_0) * ((x - mu)'.v_k)^2
-      t -= 0.5 * (1 / max(var_min,eigenvalues(j, k)) - one_over_lambda0) * square(dot(eigenvectors[j](k), x_centered));
+      real lambda=max(var_min,eigenvalues(j, k));
+      if (lambda<=0)
+        PLERROR("GaussMix::computeLogLikelihood(x,%d), var_min=%g, lambda(%d)=%g\n",j,var_min,k,lambda);
+      if (lambda > lambda0)
+        t -= 0.5 * (1.0/lambda  - one_over_lambda0) * square(dot(eigenvectors[j](k), x_centered));
     }
     return t;
   } else {
@@ -341,14 +348,14 @@ void GaussMix::forget()
 {
   stage = 0;
   // Free memory.
-  mu = Mat();
+  /*  mu = Mat();
   posteriors = Mat();
   alpha = Vec();
   sigma = Vec();
   diags = Mat();
   eigenvectors = TVec<Mat>();
   eigenvalues = Mat();
-  log_coeff = Vec();
+  log_coeff = Vec();*/
 }
 
 //////////////
@@ -710,6 +717,8 @@ void GaussMix::updateSampleWeights() {
 real GaussMix::log_density(const Vec& x) const
 { 
   static Vec log_likelihood;
+  if (stage==0)
+    PLERROR("GaussMix::log_density was called while model was not trained");
   log_likelihood.resize(L);
   // First we need to compute the likelihood P(x | j).
   for (int j = 0; j < L; j++) {
