@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.34 2004/05/25 01:17:54 yoshua Exp $ 
+ * $Id: GaussMix.cc,v 1.35 2004/05/26 16:11:30 tihocan Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -54,6 +54,7 @@ using namespace std;
 //////////////
 GaussMix::GaussMix() 
 : PDistribution(),
+  is_resized_from_options(false),
   alpha_min(1e-5),
   epsilon(1e-6),
   kmeans_iterations(3),
@@ -65,26 +66,25 @@ GaussMix::GaussMix()
   nstages = 10;
 }
 
-
 PLEARN_IMPLEMENT_OBJECT(GaussMix, 
-                        "Gaussian Mixture, either set non-parametrically or trained by EM.", 
-                        "GaussMix implements a mixture of L gaussians.\n"
-                        "There are 4 possible parametrization types:\n"
-                        " - spherical : gaussians have covar matrix = diag(sigma). Parameter used : sigma.\n"
-                        " - diagonal  : gaussians have covar matrix = diag(sigma_i). Parameters used : diags.\n"
-                        " - general   : gaussians have an unconstrained covariance matrix.\n"
-                        "               The user specifies the number 'n_eigen' of eigenvectors kept when\n"
-                        "               decomposing the covariance matrix. The remaining eigenvectors are\n"
-                        "               considered as having a fixed eigenvalue equal to the next highest\n"
-                        "               eigenvalue in the decomposition.\n"
-                        " - factor    : (not implemented!) as in the general case, the gaussians are defined\n"
-                        "               with K<=D vectors (through KxD matrix 'V'), but these need not be\n"
-                        "               orthogonal/orthonormal.\n"
-                        "               The covariance matrix used will be V(t)V + psi with psi a D-vector\n"
-                        "               (through parameter diags).\n"
-                        "2 parameters are common to all 4 types :\n"
-                        " - alpha : the ponderation factor of the gaussians\n"
-                        " - mu    : their centers\n"
+    "Gaussian mixture, either set non-parametrically or trained by EM.", 
+    "GaussMix implements a mixture of L gaussians.\n"
+    "There are 4 possible parametrization types:\n"
+    " - spherical : gaussians have covar matrix = diag(sigma). Parameter used : sigma.\n"
+    " - diagonal  : gaussians have covar matrix = diag(sigma_i). Parameters used : diags.\n"
+    " - general   : gaussians have an unconstrained covariance matrix.\n"
+    "               The user specifies the number 'n_eigen' of eigenvectors kept when\n"
+    "               decomposing the covariance matrix. The remaining eigenvectors are\n"
+    "               considered as having a fixed eigenvalue equal to the next highest\n"
+    "               eigenvalue in the decomposition.\n"
+    " - factor    : (not implemented!) as in the general case, the gaussians are defined\n"
+    "               with K<=D vectors (through KxD matrix 'V'), but these need not be\n"
+    "               orthogonal/orthonormal.\n"
+    "               The covariance matrix used will be V(t)V + psi with psi a D-vector\n"
+    "               (through parameter diags).\n"
+    "2 parameters are common to all 4 types :\n"
+    " - alpha : the ponderation factor of the gaussians\n"
+    " - mu    : their centers\n"
 );
 
 ////////////////////
@@ -146,8 +146,17 @@ void GaussMix::declareOptions(OptionList& ol)
   declareOption(ol, "log_coeff", &GaussMix::log_coeff, OptionBase::learntoption,
                 "The log of the constant part in the p(x) equation: log(1/sqrt(2*pi^D * Det(C))).");
 
+  declareOption(ol, "log_p_j_x", &GaussMix::log_p_j_x, OptionBase::learntoption,
+                "The log of p(j|x), where x is the input part.");
+
+  declareOption(ol, "log_p_x_j_alphaj", &GaussMix::log_p_x_j_alphaj, OptionBase::learntoption,
+                "The log of p(x|j) * alpha_j, where x is the input part.");
+
   declareOption(ol, "mu", &GaussMix::mu, OptionBase::learntoption,
                 "These are the centers of each Gaussian, stored in rows.");
+
+  declareOption(ol, "mu_y_x", &GaussMix::mu, OptionBase::learntoption,
+                "The expectation E[Y | x) for each Gaussian.");
 
   declareOption(ol, "n_eigen_computed", &GaussMix::n_eigen_computed, OptionBase::learntoption,
                 "The actual number of principal components computed when type == 'general'.");
@@ -155,8 +164,11 @@ void GaussMix::declareOptions(OptionList& ol)
   declareOption(ol, "nsamples", &GaussMix::nsamples, OptionBase::learntoption,
                 "The number of samples in the training set.");
 
+  declareOption(ol, "p_j_x", &GaussMix::p_j_x, OptionBase::learntoption,
+                "The probability p(j|x), where x is the input part (is computed by exp(log_p_j_x).");
+
   declareOption(ol, "posteriors", &GaussMix::posteriors, OptionBase::learntoption,   // TODO Remove from options (too much space on disk).
-                "The posterior probabilities P(j | x_i), where j is the index of a Gaussian,\n"
+                "The posterior probabilities P(j | s_i), where j is the index of a Gaussian,\n"
                 "and i is the index of a sample.");
 
   declareOption(ol, "sigma", &GaussMix::sigma, OptionBase::learntoption,
@@ -176,6 +188,7 @@ void GaussMix::declareOptions(OptionList& ol)
 ///////////
 void GaussMix::build()
 {
+  is_resized_from_options = false;
   inherited::build();
   build_();
 }
@@ -184,7 +197,9 @@ void GaussMix::build()
 // build_ //
 ////////////
 void GaussMix::build_()
-{}
+{
+  resizeStuffFromOptions();
+}
 
 ////////////////////////////////
 // computeMeansAndCovariances //
@@ -235,11 +250,31 @@ void GaussMix::computeMeansAndCovariances() {
 //////////////////////////
 // computeLogLikelihood //
 //////////////////////////
-real GaussMix::computeLogLikelihood(const Vec& x, int j) const {
+real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const {
+  static real p, sig;
+  static Vec mu_y;  // The corresponding mean.
+  static int size;  // The length of y (a target, or an input).
+  static int start; // n_input if y is a target, and 0 otherwise.
+  static Vec eigenvals; // A pointer to the adequate eigenvalues.
+  static Mat eigenvecs; // A pointer to the adequate eigenvectors.
+  if (type == "spherical" || type == "diagonal") {
+    // Both types are very similar.
+    if (is_input) {
+      mu_y = mu(j).subVec(0, n_input);
+      size = n_input;
+      start  = 0;
+    } else {
+      mu_y = mu(j).subVec(n_input, n_target);
+      size = n_target;
+      start = n_input;
+    }
+  }
   if (type == "spherical") {
-    real p = 0.0;
-    for (int k = 0; k < D; k++) {
-      p += gauss_log_density_stddev(x[k], mu(j, k), max(sigma_min, sigma[j]));
+    // x ~= N(mu_x, sigma)
+    // y|x ~= N(mu_y, sigma)
+    p = 0.0;
+    for (int k = 0; k < size; k++) {
+      p += gauss_log_density_stddev(y[k], mu_y[k], max(sigma_min, sigma[j]));
 #ifdef BOUNDCHECK
       if (isnan(p)) {
         PLWARNING("In GaussMix::computeLogLikelihood - Density is nan");
@@ -248,44 +283,74 @@ real GaussMix::computeLogLikelihood(const Vec& x, int j) const {
     }
     return p;
   } else if (type == "diagonal") {
-    real p = 0.0;
-    real sig;
-    for (int k = 0; k < D; k++) {
-      sig = diags(k,j);
-      p += gauss_log_density_stddev(x[k], mu(j, k), max(sigma_min, sig));
+    p = 0.0;
+    for (int k = 0; k < size; k++) {
+      sig = diags(k + start,j);
+      p += gauss_log_density_stddev(y[k], mu_y[k], max(sigma_min, sig));
     }
     return p;
   } else if (type == "general") {
-    // We store log(p(x | j)) in the variable t.
+    if (n_margin > 0)
+      PLERROR("In GaussMix::computeLogLikelihood - Marginalization not implemented for the general type");
+    // We store log(p(y | x,j)) in the variable t.
     static real t;
-    static Vec x_centered; // Storing x - mu(j).
-    static real squared_norm_x_centered;
+    static Vec y_centered; // Storing y - mu(j).
+    static real squared_norm_y_centered;
     static real one_over_lambda0;
+    static real lambda0;
+    static real lambda;
+    static int n_eig;
+    if (is_input) {
+      mu_y = mu(j).subVec(0, n_input);
+      size = n_input;
+      eigenvals = eigenvalues_x(j);
+      eigenvecs = eigenvectors_x[j];
+      n_eig = n_input;
+    } else {
+      size = n_target;
+      if (n_input > 0) {
+        // y|x ~= N(mu_y + K2 K1^-1 (x - mu_x), K3 - K2 K1^-1 K2')
+        mu_y = mu_y_x(j);
+        size = n_target;
+        eigenvals = eigenvalues_y_x(j);
+        eigenvecs = eigenvectors_y_x[j];
+        n_eig = n_target;
+      } else {
+        mu_y = mu(j);
+        eigenvals = eigenvalues(j);
+        eigenvecs = eigenvectors[j];
+        n_eig = n_eigen_computed;
+      }
+    }
     t = log_coeff[j];
-    x_centered.resize(D);
-    x_centered << x;
-    x_centered -= mu(j);
-    squared_norm_x_centered = pownorm(x_centered);
+    y_centered.resize(size);
+    y_centered << y;
+    y_centered -= mu_y;
+    squared_norm_y_centered = pownorm(y_centered);
     real var_min = sigma_min*sigma_min;
-    real lambda0 = max(var_min,eigenvalues(j, n_eigen_computed - 1));
+    lambda0 = max(var_min, eigenvals[n_eig - 1]);
+#ifdef BOUNDCHECK
     if (lambda0 <= 0)
-      PLERROR("GaussMix::computeLogLikelihood(x,%d), var_min=%g, lambda0=%g\n",j,var_min,lambda0);
+      PLERROR("GaussMix::computeLogLikelihood(y,%d), var_min=%g, lambda0=%g\n",j,var_min,lambda0);
+#endif
     one_over_lambda0 = 1.0 / lambda0;
-    // t -= 0.5  * 1/lambda_0 * ||x - mu||^2
-    t -= 0.5 * one_over_lambda0 * squared_norm_x_centered;
-    for (int k = 0; k < n_eigen_computed - 1; k++) {
-      // t -= 0.5 * (1/lambda_k - 1/lambda_0) * ((x - mu)'.v_k)^2
-      real lambda=max(var_min,eigenvalues(j, k));
+    // t -= 0.5  * 1/lambda_0 * ||y - mu||^2
+    t -= 0.5 * one_over_lambda0 * squared_norm_y_centered;
+    for (int k = 0; k < n_eig - 1; k++) {
+      // t -= 0.5 * (1/lambda_k - 1/lambda_0) * ((y - mu)'.v_k)^2
+      lambda = max(var_min, eigenvals[k]);
+#ifdef BOUNDCHECK
       if (lambda<=0)
-        PLERROR("GaussMix::computeLogLikelihood(x,%d), var_min=%g, lambda(%d)=%g\n",j,var_min,k,lambda);
+        PLERROR("GaussMix::computeLogLikelihood(y,%d), var_min=%g, lambda(%d)=%g\n",j,var_min,k,lambda);
+#endif
       if (lambda > lambda0)
-        t -= 0.5 * (1.0/lambda  - one_over_lambda0) * square(dot(eigenvectors[j](k), x_centered));
+        t -= 0.5 * (1.0 / lambda - one_over_lambda0) * square(dot(eigenvecs(k), y_centered));
     }
     return t;
   } else {
     PLERROR("In GaussMix::computeLogLikelihood - Not implemented for this type of Gaussian");
+    return 0;
   }
-  return 0;
 }
 
 ///////////////////////
@@ -299,7 +364,7 @@ void GaussMix::computePosteriors() {
   real log_sum_likelihood;
   for (int i = 0; i < nsamples; i++) {
     train_set->getSubRow(i, 0, sample);
-    // First we need to compute the likelihood P(x_i | j).
+    // First we need to compute the likelihood P(s_i | j).
     for (int j = 0; j < L; j++) {
       log_likelihood[j] = computeLogLikelihood(sample, j) + log(alpha[j]);
 #ifdef BOUNDCHECK
@@ -310,7 +375,7 @@ void GaussMix::computePosteriors() {
     }
     log_sum_likelihood = logadd(log_likelihood);
     for (int j = 0; j < L; j++) {
-      // Compute the posterior P(j | x_i) = P(x_i | j) * alpha_i / (sum_i ")
+      // Compute the posterior P(j | s_i) = P(s_i | j) * alpha_i / (sum_i ")
       posteriors(i, j) = exp(log_likelihood[j] - log_sum_likelihood);
     }
   }
@@ -341,21 +406,44 @@ bool GaussMix::computeWeights() {
   return replaced_gaussian;
 }
 
+/////////////////
+// expectation //
+/////////////////
+void GaussMix::expectation(Vec& result) const
+{ 
+  // NB: 'mu' has been renamed into 'result' to avoid confusion with other 'mu'.
+  static Vec mu_y;
+  result.resize(n_target);
+  if (type == "spherical" || type == "diagonal") {
+    // The expectation is the same in the 'spherical' and 'diagonal' cases.
+    result.clear();
+    for (int j = 0; j < L; j++) {
+      result += mu(j).subVec(n_input, n_target) * p_j_x[j];
+    }
+  } else if (type == "general") {
+    if (n_margin > 0)
+      PLERROR("In GaussMix::expectation - Marginalization not implemented");
+    result.clear();
+    bool is_simple = (n_input == 0 && n_margin == 0);
+    for (int j = 0; j < L; j++) {
+      if (is_simple) {
+        mu_y = mu(j).subVec(0, n_target);
+      } else {
+        mu_y = mu_y_x(j);
+      }
+      result += mu_y * p_j_x[j];
+    }
+  } else {
+    PLERROR("In GaussMix::expectation - Not implemented for this type");
+  }
+}
+
 ////////////
 // forget //
 ////////////
 void GaussMix::forget()
 {
   stage = 0;
-  // Free memory.
-  /*  mu = Mat();
-  posteriors = Mat();
-  alpha = Vec();
-  sigma = Vec();
-  diags = Mat();
-  eigenvectors = TVec<Mat>();
-  eigenvalues = Mat();
-  log_coeff = Vec();*/
 }
 
 //////////////
@@ -369,38 +457,57 @@ void GaussMix::generate(Vec& x) const
 //////////////////////////
 // generateFromGaussian //
 //////////////////////////
-void GaussMix::generateFromGaussian(Vec& x, int given_gaussian) const {
+void GaussMix::generateFromGaussian(Vec& s, int given_gaussian) const {
   int j;    // The index of the Gaussian to use.
-  if (given_gaussian < 0)
-    j = multinomial_sample(alpha);
-  else
+  static Vec mu_y;
+  if (given_gaussian < 0) {
+    j = multinomial_sample(p_j_x);
+  } else {
     j = given_gaussian % alpha.length();
-  x.resize(D);
+  }
+  s.resize(n_target);
   if (type == "spherical") {
-    for (int k = 0; k < D; k++) {
-      x[k] = gaussian_mu_sigma(mu(j, k), sigma[j]);
+    mu_y = mu(j).subVec(n_input, n_target);
+    for (int k = 0; k < n_target; k++) {
+      s[k] = gaussian_mu_sigma(mu_y[k], sigma[j]);
     }
   } else if (type == "diagonal") {
-    for (int k = 0; k < D; k++) {
-      x[k] = gaussian_mu_sigma(mu(j, k), diags(k,j));
+    mu_y = mu(j).subVec(n_input, n_target);
+    for (int k = 0; k < n_target; k++) {
+      s[k] = gaussian_mu_sigma(mu_y[k], diags(k + n_input,j));
     }
   } else if (type == "general") {
+    if (n_margin > 0)
+      PLERROR("In GaussMix::generateFromGaussian - Marginalization not implemented for the general type");
     static Vec norm;
     static real lambda0;
-    norm.resize(n_eigen_computed - 1);
+    static int n_eig;
+    static Vec eigenvals;
+    static Mat eigenvecs;
+    static Vec mu_y;
+    if (n_input == 0) {
+      n_eig = n_eigen_computed;
+      eigenvals = eigenvalues(j);
+      eigenvecs = eigenvectors[j];
+      mu_y = mu(j).subVec(0, n_target);
+    } else {
+      n_eig = n_target;
+      eigenvals = eigenvalues_y_x(j);
+      eigenvecs = eigenvectors_y_x[j];
+      mu_y = mu_y_x(j);
+    }
+    norm.resize(n_eig - 1);
     fill_random_normal(norm);
     real var_min = sigma_min*sigma_min;
-    lambda0 = max(var_min,eigenvalues(j, n_eigen_computed - 1));
-    x.fill(0);
-    for (int k = 0; k < n_eigen_computed - 1; k++) {
-      x += sqrt(max(var_min,eigenvalues(j,k)) - lambda0) * norm[k] * eigenvectors[j](k);
+    lambda0 = max(var_min, eigenvals[n_eig - 1]);
+    s.fill(0);
+    for (int k = 0; k < n_eig - 1; k++) {
+      s += sqrt(max(var_min, eigenvals[k]) - lambda0) * norm[k] * eigenvecs(k);
     }
-    norm.resize(D);
+    norm.resize(n_target);
     fill_random_normal(norm);
-    x += norm * sqrt(lambda0);
-    x += mu(j);
-  } else if(type[0]=='F') {
-//    generateFactor(x,given_gaussian);
+    s += norm * sqrt(lambda0);
+    s += mu_y;
   } else {
     PLERROR("In GaussMix::generate - Unknown mixture type");
   }
@@ -454,7 +561,6 @@ void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clu
     bool ok=false;
     while(!ok)
     {
-      
       ok=true;
       val = rand() % nsamples;
       for(int j=0;j<nclust && start_idx[j]!=-1.0;j++)
@@ -504,11 +610,36 @@ void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clu
   }
 }
 
+/////////////////
+// log_density //
+/////////////////
+real GaussMix::log_density(const Vec& y) const
+{ 
+  // TODO There is some code duplication with computePosteriors.
+  static Vec log_likelihood;
+#ifdef BOUNDCHECK
+  if (stage == 0)
+    PLERROR("GaussMix::log_density was called while model was not trained");
+#endif
+  log_likelihood.resize(L);
+  // First we need to compute the likelihood p(y | x,j) * p(j | x).
+  for (int j = 0; j < L; j++) {
+    log_likelihood[j] = computeLogLikelihood(y, j) + log_p_j_x[j];
+#ifdef BOUNDCHECK
+    if (isnan(log_likelihood[j])) {
+      PLWARNING("In GaussMix::log_density - computeLogLikelihood returned nan");
+    }
+#endif
+  }
+  return logadd(log_likelihood);
+}
+
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
 void GaussMix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
+  inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(eigenvalues,copies);
   deepCopyField(eigenvectors,copies);
   deepCopyField(diags,copies);
@@ -519,7 +650,7 @@ void GaussMix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   deepCopyField(alpha,copies);
   deepCopyField(mu,copies);
   deepCopyField(sigma,copies);
-  inherited::makeDeepCopyFromShallowCopy(copies);
+  PLERROR("In GaussMix::makeDeepCopyFromShallowCopy - Need to complete the implementation");
 }
 
 /////////////////////
@@ -592,29 +723,24 @@ void GaussMix::resetGenerator(long g_seed) const
   manual_seed(g_seed);  
 }
 
-/////////////////
-// resizeStuff //
-/////////////////
-void GaussMix::resizeStuff() {
+///////////////////////////////
+// resizeStuffBeforeTraining //
+///////////////////////////////
+void GaussMix::resizeStuffBeforeTraining() {
   nsamples = train_set->length();
-  alpha.resize(L);
   D = train_set->inputsize();
   initial_weights.resize(nsamples);
   mu.resize(L,D);
   posteriors.resize(nsamples, L);
   updated_weights.resize(L, nsamples);
   // Those are not used for every type:
-  sigma.resize(0);
   diags.resize(0,0);
-  eigenvectors.resize(0);
   eigenvalues.resize(0,0);
-  log_coeff.resize(0);
+  eigenvalues_x.resize(0,0);
+  eigenvalues_y_x.resize(0,0);
   if (type == "diagonal") {
     diags.resize(D,L);
-  } else if (type == "factor") {
   } else if (type == "general") {
-    eigenvectors.resize(L);
-    log_coeff.resize(L);
     if (n_eigen == -1 || n_eigen == D) {
       // We need to compute all eigenvectors.
       n_eigen_computed = D;
@@ -626,9 +752,99 @@ void GaussMix::resizeStuff() {
     }
     eigenvalues.resize(L, n_eigen_computed);
   } else if (type == "spherical") {
-    sigma.resize(L);
+    // Nothing more to resize.
   } else {
-    PLERROR("In GaussMix::train - Unknown value for the 'type' option");
+    PLERROR("In GaussMix::resizeStuffBeforeTraining - Not implemented for this type");
+  }
+}
+
+////////////////////////////
+// resizeStuffFromOptions //
+////////////////////////////
+void GaussMix::resizeStuffFromOptions() {
+  if (is_resized_from_options) {
+    // Already resized correctly.
+    return;
+  }
+  alpha.resize(L);
+  log_p_x_j_alphaj.resize(L);
+  log_p_j_x.resize(L);
+  p_j_x.resize(L);
+  // Those are not used for every type:
+  cov_x.resize(0);
+  cov_y_x.resize(0);
+  eigenvectors.resize(0);
+  eigenvectors_x.resize(0);
+  eigenvectors_y_x.resize(0);
+  full_cov.resize(0);
+  log_coeff.resize(0);
+  sigma.resize(0);
+  y_x_mat.resize(0);
+  if (type == "spherical") {
+    sigma.resize(L);
+  } else if (type == "diagonal") {
+    // Nothing to resize here.
+  } else if (type == "general") {
+    cov_x.resize(L);
+    cov_y_x.resize(L);
+    eigenvectors.resize(L);
+    eigenvectors_x.resize(L);
+    eigenvectors_y_x.resize(L);
+    full_cov.resize(L);
+    log_coeff.resize(L);
+    y_x_mat.resize(L);
+  } else {
+    PLERROR("In GaussMix::resizeStuffFromOptions - Not implemented for this type");
+  }
+  is_resized_from_options = true;
+}
+
+//////////////
+// setInput //
+//////////////
+void GaussMix::setInput(const Vec& input) const {
+  static Vec x_minus_mu_x;
+  static Vec mu_target;
+  // We need to compute:
+  // p(j | x) = p(x | j) p(j) / p(x)
+  if (stage == 0) {
+    // Cannot make any computation yet.
+    return;
+  }
+  if (n_input == 0) {
+    // No input part.
+    for (int j = 0; j < L; j++) {
+      log_p_j_x[j] = log(alpha[j]);
+    }
+    p_j_x << alpha;
+    return;
+  }
+  if (type == "spherical") {
+    // Nothing special to do.
+  } else if (type == "diagonal") {
+    // Nothing special to do.
+  } else if (type == "general") {
+    // We need to compute E[Y|x,j].
+    x_minus_mu_x.resize(n_input);
+    for (int j = 0; j < L; j++) {
+      x_minus_mu_x << input;
+      x_minus_mu_x -= mu(j).subVec(0, n_input);
+      mu_target = mu_y_x(j);
+      product(mu_target, y_x_mat[j], x_minus_mu_x);
+      mu_target += mu(j).subVec(n_input, n_target);
+    }
+  } else {
+    PLERROR("In GaussMix::setInput - Not implemented for this type");
+  }
+  for (int j = 0; j < L; j++) {
+    log_p_x_j_alphaj[j] = computeLogLikelihood(input, j, true) + log(alpha[j]);
+  }
+  real log_p_x = logadd(log_p_x_j_alphaj);
+  real t;
+  for (int j = 0; j < L; j++) {
+    t = log_p_x_j_alphaj[j] - log_p_x;
+    log_p_j_x[j] = t;
+    p_j_x[j] = exp(t);
   }
 }
 
@@ -650,8 +866,12 @@ void GaussMix::train()
     PLERROR("In GaussMix::train - No training set specified");
   }
 
+  // When training, we want to learn the full joint distribution.
+  TVec<int> old_flags;
+  bool restore_flags = ensureFullJointDistribution(old_flags);
+
   // Make sure everything is the right size.
-  resizeStuff();
+  resizeStuffBeforeTraining();
 
   if (stage == 0) {
     // Copy the sample weights.
@@ -671,7 +891,7 @@ void GaussMix::train()
     kmeans(train_set, L, clust_idx, mu, kmeans_iterations);
     posteriors.fill(0);
     for (int i = 0; i < nsamples; i++) {
-      // Initially, P(j | x_i) = 0 if x_i is not in the j-th cluster,
+      // Initially, P(j | s_i) = 0 if s_i is not in the j-th cluster,
       // and 1 otherwise.
       posteriors(i, clust_idx[i]) = 1;
     }
@@ -702,6 +922,102 @@ void GaussMix::train()
   }
   if (pb)
     delete pb;
+  // Restore conditional flags if necessary.
+  if (restore_flags) {
+    setConditionalFlags(old_flags);
+  }
+  // Computations related to the input part.
+  setInput(input_part);
+}
+
+//////////////////////////////////
+// updateFromConditionalSorting //
+//////////////////////////////////
+void GaussMix::updateFromConditionalSorting() {
+  static Mat inv_cov_x, tmp_cov, work_mat1, work_mat2;
+  static Vec eigenvals;
+  // Update the centers of the Gaussians.
+  sortFromFlags(mu);
+  if (type == "spherical") {
+    // Nothing more to do.
+  } else if (type == "diagonal") {
+    sortFromFlags(diags, false, true);
+  } else if (type == "general") {
+    if (n_margin > 0) {
+      PLERROR("In GaussMix::updateFromConditionalSorting - Marginalization not implemented for the general type");
+    }
+    if ((n_input == 0 && n_margin == 0) || stage == 0) {
+      // Nothing to do.
+      return;
+    }
+    if (!is_resized_from_options) {
+      resizeStuffFromOptions();
+    }
+    tmp_cov.resize(D,D);
+    real var_min = square(sigma_min);
+    real lambda0;
+    eigenvalues_x.resize(L, n_input);
+    eigenvalues_y_x.resize(L, n_target);
+    inv_cov_x.resize(n_input, n_input);
+    mu_y_x.resize(L, n_target);
+    work_mat1.resize(n_target, n_input);
+    work_mat2.resize(n_target, n_target);
+    for (int j = 0; j < L; j++) {
+      // Update the eigenvectors.
+      sortFromFlags(eigenvectors[j]);
+      // Compute the mean and covariance of x and y|x for the j-th Gaussian (we
+      // will need them to compute the likelihood).
+      // First we compute the joint covariance matrix from the eigenvectors and
+      // eigenvalues:
+      // full_cov = sum_k (lambda_k - lambda0) v_k v_k' + lambda0.I
+      full_cov[j].resize(D,D);
+      tmp_cov = full_cov[j];
+      eigenvals = eigenvalues(j);
+      lambda0 = max(var_min, eigenvals[n_eigen_computed - 1]);
+      tmp_cov.clear();
+      for (int k = 0; k < n_eigen_computed - 1; k++) {
+        tmp_cov += (max(var_min, eigenvals[k]) - lambda0) *
+          product(columnmatrix(eigenvectors[j](k)),
+                  rowmatrix(eigenvectors[j](k)));
+      }
+      for (int i = 0; i < D; i++) {
+        tmp_cov(i,i) += lambda0;
+      }
+      // Extract the covariance of the input x.
+      cov_x[j] = full_cov[j].subMat(0, 0, n_input, n_input);
+      // Compute its SVD.
+      eigenvectors_x[j].resize(n_input, n_input);
+      eigenvals = eigenvalues_x(j);
+      eigenVecOfSymmMat(cov_x[j], n_input, eigenvals, eigenvectors_x[j]);
+      // And its inverse (we'll need it for the covariance of y|x).
+      inv_cov_x.clear();
+      lambda0 = max(var_min, eigenvals[n_input - 1]);
+      real one_over_lambda0 = 1 / lambda0;
+      for (int k = 0; k < n_input - 1; k++) {
+        inv_cov_x += (1 / max(var_min, eigenvals[k]) - one_over_lambda0) *
+          product(columnmatrix(eigenvectors_x[j](k)),
+                  rowmatrix(eigenvectors_x[j](k)));
+      }
+      for (int i = 0; i < n_input; i++) {
+        inv_cov_x(i,i) += one_over_lambda0;
+      }
+      // Compute the covariance of y|x.
+      cov_y_x[j].resize(n_target, n_target);
+      cov_y_x[j] << full_cov[j].subMat(n_input, n_input, n_target, n_target);
+      tmp_cov = full_cov[j].subMat(n_input, 0, n_target, n_input);
+      product(work_mat1, tmp_cov, inv_cov_x);
+      productTranspose(work_mat2, work_mat1, tmp_cov);
+      cov_y_x[j] -= work_mat2;
+      y_x_mat[j].resize(n_target, n_input);
+      y_x_mat[j] << work_mat1;
+      // And its SVD.
+      eigenvectors_y_x[j].resize(n_target, n_target);
+      eigenvals = eigenvalues_y_x(j);
+      eigenVecOfSymmMat(cov_y_x[j], n_target, eigenvals, eigenvectors_y_x[j]);
+    }
+  } else {
+    PLERROR("In GaussMix::updateFromConditionalSorting - Not implemented for this type");
+  }
 }
 
 /////////////////////////
@@ -714,42 +1030,28 @@ void GaussMix::updateSampleWeights() {
   }
 }
 
-real GaussMix::log_density(const Vec& x) const
-{ 
-  static Vec log_likelihood;
-  if (stage==0)
-    PLERROR("GaussMix::log_density was called while model was not trained");
-  log_likelihood.resize(L);
-  // First we need to compute the likelihood P(x | j).
-  for (int j = 0; j < L; j++) {
-    log_likelihood[j] = computeLogLikelihood(x, j) + log(alpha[j]);
-#ifdef BOUNDCHECK
-    if (isnan(log_likelihood[j])) {
-      PLWARNING("In GaussMix::log_density - computeLogLikelihood returned nan");
-    }
-#endif
-  }
-  return logadd(log_likelihood);
-}
-
+/////////////////
+// survival_fn //
+/////////////////
 real GaussMix::survival_fn(const Vec& x) const
 { 
    PLERROR("survival_fn not implemented for GaussMix"); return 0.0; 
 }
 
+/////////
+// cdf //
+/////////
 real GaussMix::cdf(const Vec& x) const
 { 
   PLERROR("cdf not implemented for GaussMix"); return 0.0; 
 }
 
-Vec GaussMix::expectation() const
+//////////////
+// variance //
+//////////////
+void GaussMix::variance(Mat& cov) const
 { 
-  PLERROR("expectation not implemented for GaussMix"); return Vec(); 
-}
-
-Mat GaussMix::variance() const
-{ 
-  PLERROR("variance not implemented for GaussMix"); return Mat(); 
+  PLERROR("variance not implemented for GaussMix");
 }
 
 } // end of namespace PLearn
