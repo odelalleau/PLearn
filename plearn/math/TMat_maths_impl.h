@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.58 2004/07/19 11:20:23 yoshua Exp $
+   * $Id: TMat_maths_impl.h,v 1.59 2004/07/22 14:00:31 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -3429,14 +3429,21 @@ template<class T>
     return tr;
   }
 
-  //!  Applies a regularizer : diag(A) + (tolerance * trace(A))
+//!  Applies a regularizer : diag(A) += (tolerance * trace(A))
 template<class T>
-  void regularizeMatrix(const TMat<T>& mat, T tolerance)
-  {
-    T reg = tolerance * trace(mat);
-    for (int i = 0; i < mat.length(); i++)
-      mat(i, i) += reg;
+void regularizeMatrix(const TMat<T>& mat, T tolerance)
+{
+  static T reg;
+  static T* k;
+  static int shift;
+  reg = tolerance * trace(mat);
+  k = mat.data();
+  shift = mat.mod() + 1;
+  for (int i = 0; i < mat.length(); i++) {
+    *k += reg;
+    k += shift;
   }
+}
 
 
 template<class T>
