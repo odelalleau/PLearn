@@ -170,7 +170,7 @@ pymakeOption( name = 'g++3',
 
 pymakeOption( name = 'icc',
               description = 'compiling with Intel Compiler (version 8.0), with no MPI support',
-              compiler = 'icc',
+              compiler = 'icc -w',
               compileroptions = '-DUSING_MPI=0 ',
               linker = 'icc'
 						)
