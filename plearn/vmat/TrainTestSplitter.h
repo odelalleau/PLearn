@@ -2,9 +2,9 @@
 
 // TrainTestSplitter.h
 // 
-// Copyright (C) *YEAR* *AUTHOR(S)* 
-// ...
-// Copyright (C) *YEAR* *AUTHOR(S)* 
+// Copyright (C) 1998 Pascal Vincent
+// Copyright (C) 1999,2000 Pascal Vincent, Yoshua Bengio and University of Montreal
+// Copyright (C) 2002 Frederic Morin
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainTestSplitter.h,v 1.1 2002/09/10 22:24:18 plearner Exp $ 
+   * $Id: TrainTestSplitter.h,v 1.2 2002/09/11 21:27:44 morinf Exp $ 
    ******************************************************* */
 
 /*! \file TrainTestSplitter.h */

@@ -1,8 +1,6 @@
-
-
 // -*- C++ -*-
 
-// TrainTestSplitter.cc
+// KFoldSplitter.h
 // 
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999,2000 Pascal Vincent, Yoshua Bengio and University of Montreal
@@ -37,66 +35,87 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainTestSplitter.cc,v 1.2 2002/09/11 21:27:44 morinf Exp $ 
+   * $Id: KFoldSplitter.h,v 1.1 2002/09/11 21:27:44 morinf Exp $ 
    ******************************************************* */
 
-/*! \file TrainTestSplitter.cc */
-#include "TrainTestSplitter.h"
+/*! \file KFoldSplitter.h */
+#ifndef KFoldSplitter_INC
+#define KFoldSplitter_INC
+
+#include "Splitter.h"
 
 namespace PLearn <%
 using namespace std;
 
-TrainTestSplitter::TrainTestSplitter(real the_test_fraction)
-  : test_fraction(the_test_fraction)
-{};
-
-IMPLEMENT_NAME_AND_DEEPCOPY(TrainTestSplitter);
-
-void TrainTestSplitter::declareOptions(OptionList& ol)
+class KFoldSplitter: public Splitter
 {
-  declareOption(ol, "test_fraction", &TrainTestSplitter::test_fraction, OptionBase::buildoption,
-                "Defined the fraction of the dataset reserved to the test set");
-  inherited::declareOptions(ol);
-}
+protected:
+    // *********************
+    // * protected options *
+    // *********************
 
-string TrainTestSplitter::help() const
-{
-  // ### Provide some useful description of what the class is ...
-  return 
-    "TrainTestSplitter implements a single split of the dataset into a training-set and a test-set (the test part being the last few samples of the dataset)"
-    + optionHelp();
-}
+    // ### declare protected option fields (such as learnt parameters) here
+    // ...
+    
+public:
 
-void TrainTestSplitter::build_()
-{
-}
+    typedef Splitter inherited;
 
-// ### Nothing to add here, simply calls build_
-void TrainTestSplitter::build()
-{
-  inherited::build();
-  build_();
-}
+    // ************************
+    // * public build options *
+    // ************************
 
-int TrainTestSplitter::nsplits() const
-{
-  return 1; // only one split
-}
+    int K; // the number of splits
 
-Array<VMat> TrainTestSplitter::getSplit(int k)
-{
-  if (k)
-    PLERROR("TrainTestSplitter::getSplit() - k cannot be greater than 0");
+    // ****************
+    // * Constructors *
+    // ****************
+
+    // Default constructor, make sure the implementation in the .cc
+    // initializes all fields to reasonable default values.
+    KFoldSplitter(int k = 5);
+
+  // ******************
+  // * Object methods *
+  // ******************
+
+private: 
+    //! This does the actual building. 
+    // (Please implement in .cc)
+    void build_();
+
+protected: 
+    //! Declares this class' options
+    // (Please implement in .cc)
+    static void declareOptions(OptionList& ol);
+
+public:
+    // simply calls inherited::build() then build_() 
+    virtual void build();
+
+    //! Provides a help message describing this class
+    virtual string help() const;
+
+    //! Declares name and deepCopy methods
+    DECLARE_NAME_AND_DEEPCOPY(KFoldSplitter);
+
+
+    // ********************************
+    // *        Splitter methods      *
+    // * (must be implemented in .cc) *
+    // ********************************
+
+    //! Returns the number of available different "splits"
+    virtual int nsplits() const;
+
+    //! Returns split number i
+    virtual Array<VMat> getSplit(int i=0);
+
+};
+
+// Declares a few other classes and functions related to this class
+DECLARE_OBJECT_PTR(KFoldSplitter);
   
-  Array<VMat> split_(2);
-  int l = dataset->length();
-  int test_length = int(test_fraction*l);
-  int train_length = l - test_length;
-  
-  split_[0] = dataset.subMatRows(0, train_length);
-  split_[1] = dataset.subMatRows(train_length, test_length);
-  return split_;
-}
-
-
 %> // end of namespace PLearn
+
+#endif // KFoldSplitter_INC

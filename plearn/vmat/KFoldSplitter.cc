@@ -2,7 +2,7 @@
 
 // -*- C++ -*-
 
-// TrainTestSplitter.cc
+// KFoldSplitter.cc
 // 
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999,2000 Pascal Vincent, Yoshua Bengio and University of Montreal
@@ -37,65 +37,65 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainTestSplitter.cc,v 1.2 2002/09/11 21:27:44 morinf Exp $ 
+   * $Id: KFoldSplitter.cc,v 1.1 2002/09/11 21:27:42 morinf Exp $ 
    ******************************************************* */
 
-/*! \file TrainTestSplitter.cc */
-#include "TrainTestSplitter.h"
+/*! \file SequentialSplitter.cc */
+#include "KFoldSplitter.h"
 
 namespace PLearn <%
 using namespace std;
 
-TrainTestSplitter::TrainTestSplitter(real the_test_fraction)
-  : test_fraction(the_test_fraction)
+KFoldSplitter::KFoldSplitter(int k)
+    : K(k)
 {};
 
-IMPLEMENT_NAME_AND_DEEPCOPY(TrainTestSplitter);
+IMPLEMENT_NAME_AND_DEEPCOPY(KFoldSplitter);
 
-void TrainTestSplitter::declareOptions(OptionList& ol)
+void KFoldSplitter::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "test_fraction", &TrainTestSplitter::test_fraction, OptionBase::buildoption,
-                "Defined the fraction of the dataset reserved to the test set");
-  inherited::declareOptions(ol);
+    declareOption(ol, "K", &KFoldSplitter::K, OptionBase::buildoption,
+                  "split dataset in K parts");
+    inherited::declareOptions(ol);
 }
 
-string TrainTestSplitter::help() const
+string KFoldSplitter::help() const
 {
-  // ### Provide some useful description of what the class is ...
-  return 
-    "TrainTestSplitter implements a single split of the dataset into a training-set and a test-set (the test part being the last few samples of the dataset)"
-    + optionHelp();
+    // ### Provide some useful description of what the class is ...
+    return 
+        "KFoldSplitter implements K splits of the dataset into a training-set and a test-set"
+        + optionHelp();
 }
 
-void TrainTestSplitter::build_()
+void KFoldSplitter::build_()
 {
 }
 
 // ### Nothing to add here, simply calls build_
-void TrainTestSplitter::build()
+void KFoldSplitter::build()
 {
-  inherited::build();
-  build_();
+    inherited::build();
+    build_();
 }
 
-int TrainTestSplitter::nsplits() const
+int KFoldSplitter::nsplits() const
 {
-  return 1; // only one split
+    return K;
 }
 
-Array<VMat> TrainTestSplitter::getSplit(int k)
+Array<VMat> KFoldSplitter::getSplit(int k)
 {
-  if (k)
-    PLERROR("TrainTestSplitter::getSplit() - k cannot be greater than 0");
-  
-  Array<VMat> split_(2);
-  int l = dataset->length();
-  int test_length = int(test_fraction*l);
-  int train_length = l - test_length;
-  
-  split_[0] = dataset.subMatRows(0, train_length);
-  split_[1] = dataset.subMatRows(train_length, test_length);
-  return split_;
+    if (k >= K)
+        PLERROR("KFoldSplitter::getSplit() - k (%d) cannot be greater than K (%d)", k, K);
+
+    int n_data = dataset->length();
+    real test_fraction = K > 0 ? (n_data/(real)K) : 0;
+    if ((int)(n_data * test_fraction) < 1)
+        test_fraction = 1; // leave-one-out cross-validation
+
+    Array<VMat> split_(2);
+    split(dataset, test_fraction, split_[0], split_[1], k);
+    return split_;
 }
 
 
