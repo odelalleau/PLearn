@@ -5,7 +5,7 @@ submodule. If a considerable number of functions contained in this
 module seems to manage similar tasks, it is probably time to create a
 I{similar_tasks.py} L{utilities} submodule to move those functions to.
 """
-import inspect, os, popen2, string, sys, time, types
+import inspect, os, popen2, random, string, sys, time, types
 
 try:
     import epydoc.markup 
@@ -63,6 +63,11 @@ def date_time_string():
     return ( str(t[0]) + "_" + str(t[1]) + "_" + str(t[2])
              + "_" +
              str(t[3]) + ":" + str(t[4]) + ":" + str(t[5]) )
+
+def date_time_random_string():
+    s = date_time_string()
+    s += "_%d" % random.randint(1e03, 1e09)    
+    return s
 
 def doc(obj, short=False):
     docstr = obj.__doc__    

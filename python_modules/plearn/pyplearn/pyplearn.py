@@ -494,6 +494,7 @@ should not take you more than 15 minutes and you will be ready to document your
 code.
 """
 import types
+import plearn.utilities.metaprog as metaprog
 
 __all__ = [ 'PyPlearnError', 'ref', 'bind', 'bindref', 'plvar', 'TMat',
             'plargs', 'plarg_defaults', 'bind_plargs',
@@ -723,7 +724,7 @@ def _parse_plargs(args):
         k, v = a.split('=', 1)
         plargs.__dict__[k] = v
 
-def bind_plargs(obj, field_names, plarg_names = None):
+def bind_plargs(obj, field_names = None, plarg_names = None):
     """Binds some command line arguments to the fields of an object.
 
     In short, given::
@@ -761,6 +762,9 @@ def bind_plargs(obj, field_names, plarg_names = None):
     to None, the I{field_names} values will be used.
     @type  plarg_names: List of strings.    
     """
+    if field_names is None:
+        field_names = metaprog.public_members(obj).keys()
+    
     if plarg_names is None:
         plarg_names = field_names
 

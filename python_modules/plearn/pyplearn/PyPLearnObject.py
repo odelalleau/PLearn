@@ -1,8 +1,8 @@
 """ALL DOCUMENTATION IN THIS MODULE MUST BE REVISED!!!"""
-import inspect, string, types
+import inspect
 
-from   pyplearn                 import *
-import plearn.utilities.toolkit as     toolkit
+from   pyplearn                   import *
+import plearn.utilities.metaprog  as     metaprog
 
 ##########################################
 ### Helper functions 
@@ -19,42 +19,6 @@ def frozen(set):
 
 class frozen_metaclass( type ):
     __setattr__ = frozen(type.__setattr__)
-    
-def members( instance, predicate=(lambda x,y: True) ):
-    return dict([ (x,y)
-                  for (x,y) in inspect.getmembers(instance)
-                  if predicate(x, y)
-                  ])
-
-def public_members( instance ):
-    predicate = lambda x,y: not ( x.startswith("_")
-                                  or inspect.ismethod(y)
-                                  or inspect.isfunction(y)
-                                  or inspect.isclass(y)
-                                  )
-
-    return members( instance, predicate )
-
-def instance_to_string(obj, obj_members, sp=' '):
-    members = []
-    for member in obj_members:
-        value = getattr(obj, member)            
-        if isinstance(value, types.StringType):
-            members.append( '%s = %s' % (member, toolkit.quote(value)) )
-        else:
-            members.append( '%s = %s' % (member,value) )
-
-    indent = ''
-    if sp == '\n':
-        indent = '    '
-
-    return ( "%s(%s%s%s%s)"
-             % ( obj.classname(),
-                 sp, indent,
-                 string.join(members, ',%s%s'%(sp, indent)),
-                 sp
-                 )
-             )
     
 
 ##########################################
@@ -201,7 +165,7 @@ class PyPLearnObject:
         @return: Dictionnary of all members of this instance that are
         considered to be plearn options.
         """
-        return public_members( self )
+        return metaprog.public_members( self )
         
     def plearn_repr(self):
         """Any object overloading this method will be recognized by the pyplearn_driver
@@ -220,8 +184,8 @@ class PyPLearnObject:
     def __str__(self):
         members = self.classmembers()
         if len(members) == 0:
-            members = public_members( self )
-        return instance_to_string(self, members, self.__str_spacer) 
+            members = metaprog.public_members( self )
+        return metaprog.instance_to_string(self, members, self.__str_spacer) 
 
     def __repr__(self):
         return str(self)
@@ -263,10 +227,10 @@ class PyPLearnObject:
         self._frozen = False
         
         ## The default values for this instance
-        defaults  = public_members(cls.Defaults)
+        defaults  = metaprog.public_members(cls.Defaults)
 
         ## The current values for the other object
-        othervals = public_members( other )
+        othervals = metaprog.public_members( other )
 
         ## For each public members
         for (member, otherval) in othervals.iteritems():

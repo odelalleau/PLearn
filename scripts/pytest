@@ -12,6 +12,7 @@ from plearn.utilities.global_variables   import *
 ############################################################
 # Module variables
 
+version_str = '$Id: pytest,v 1.27 2004/12/15 00:58:20 dorionc Exp $'
 globalvars.all_roots                      = [ plpath.plearndir,
                                               plpath.lisaplearndir,
                                               plpath.apstatdir      ]
@@ -23,7 +24,7 @@ def dynamic_version_header():
     c = lambda s: toolkit.centered_square( s, 70 ) 
 
     vprint( "\n%s\n%s\n%s\n"
-            % ( c("PyTest -- version " + pytest_version()),
+            % ( c("PyTest -- version " + pytest_version(version_str)),
                 c("(c) 2004 Christian Dorion"),
                 c("Report problems to dorionc@apstat.com") ),
             1
@@ -53,21 +54,21 @@ def mail():
     modes.options.savelog = None # that way the file isn't closed twice
     #                      # ( see end of pytest() )
         
-def pytest_version():
-    version_str = '$Id: pytest,v 1.26 2004/12/13 19:33:31 dorionc Exp $'
+## def pytest_version():
+##     version_str = '$Id: pytest,v 1.27 2004/12/15 00:58:20 dorionc Exp $'
 
-    bflag = "pytest,v"
-    the_year = time.localtime()[0]
+##     bflag = "pytest,v"
+##     the_year = time.localtime()[0]
 
-    begin = string.find(version_str, bflag) + len(bflag)
-    end = string.find(version_str, str(the_year))
+##     begin = string.find(version_str, bflag) + len(bflag)
+##     end = string.find(version_str, str(the_year))
 
-    return string.strip( version_str[begin:end] )
+##     return string.strip( version_str[begin:end] )
 
 ###################################################################################
 ## MAIN PROGRAM
 parser = ModeAndOptionParser( usage = "%prog mode [options] target*",
-                              version = "%prog " + pytest_version()   )
+                              version = "%prog " + pytest_version(version_str)   )
 
 parser.add_option( '-v', "--verbosity",
                    choices=["0", "1", "2", "3"], default="1",
