@@ -33,15 +33,16 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SelectInputSubsetLearner.cc,v 1.1 2004/04/13 00:44:18 yoshua Exp $
+   * $Id: SelectInputSubsetLearner.cc,v 1.2 2004/04/14 21:17:31 yoshua Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
 
 /*! \file SelectInputSubsetLearner.cc */
 
-
 #include "SelectInputSubsetLearner.h"
+#include "SelectColumnsVMatrix.h"
+#include "random.h"
 
 namespace PLearn {
 using namespace std;
@@ -70,7 +71,7 @@ void SelectInputSubsetLearner::declareOptions(OptionList& ol)
   declareOption(ol, "random_fraction", &SelectInputSubsetLearner::random_fraction, OptionBase::buildoption,
                 "Fraction of the original inputs that is randomly selected.\n"
                 "If 0 then the selected_inputs option should be set.\n"
-                "If greater than 0 then the selected_inputs will be OVERRIDEN (with randomly chosen indices)\n");
+                "If selected_inputs is provided (length>0) then this option is ignored.\n");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -78,15 +79,16 @@ void SelectInputSubsetLearner::declareOptions(OptionList& ol)
 
 void SelectInputSubsetLearner::build_()
 {
-  if (random_fraction>0 && learner_ && learner_->inputsize()>0)
+  if (random_fraction>0 && learner_ && inputsize_>0 && selected_inputs.length()==0)
   {
-    int n_selected = rint(random_fraction*learner_->inputsize());
-    selected_inputs.resize(learner_->inputsize());
+    int n_selected = int(rint(random_fraction*inputsize_));
+    selected_inputs.resize(inputsize_);
     for (int i=0;i<n_selected;i++) 
-      selected_input[i]=i;
+      selected_inputs[i]=i;
     shuffleElements(selected_inputs);
     selected_inputs.resize(n_selected);
   }
+  learner_inputs.resize(selected_inputs.length());
 }
 
 // ### Nothing to add here, simply calls build_
@@ -106,26 +108,50 @@ void SelectInputSubsetLearner::makeDeepCopyFromShallowCopy(map<const void*, void
   // ### shallow-copied.
   // ### ex:
   deepCopyField(selected_inputs, copies);
+  deepCopyField(all_indices, copies);
+  deepCopyField(learner_inputs, copies);
 }
+
+int SelectInputSubsetLearner::inputsize() const
+{ return inputsize_; }
 
 
 void SelectInputSubsetLearner::computeOutput(const Vec& input, Vec& output) const
 {
-  // Compute the output from the input
-  // int nout = outputsize();
-  // output.resize(nout);
-  // ...
+  for (int i=0;i<learner_inputs.length();i++)
+    learner_inputs[i] = input[selected_inputs[i]];
+  learner_->computeOutput(learner_inputs,output);
 }    
 
 void SelectInputSubsetLearner::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                            const Vec& target, Vec& costs) const
 {
-// Compute the costs from *already* computed output. 
-// ...
+  // Compute the costs from *already* computed output. 
+  for (int i=0;i<learner_inputs.length();i++)
+    learner_inputs[i] = input[selected_inputs[i]];
+  learner_->computeCostsFromOutputs(learner_inputs,output,target,costs);
 }                                
 
-void SelectInputSubsetLearner::setTrainingSet(VMat training_set, bool call_forget=true)
+void SelectInputSubsetLearner::computeOutputAndCosts(const Vec& input, const Vec& target,
+                                                     Vec& output, Vec& costs) const
+{ 
+  for (int i=0;i<learner_inputs.length();i++)
+    learner_inputs[i] = input[selected_inputs[i]];
+  learner_->computeOutputAndCosts(learner_inputs, target, output, costs); 
+}
+
+void SelectInputSubsetLearner::setTrainingSet(VMat training_set, bool call_forget)
 {
+  inherited::setTrainingSet(training_set,call_forget);
+  int n_other_columns = training_set->width()-inputsize();
+  all_indices.resize(selected_inputs.length()+n_other_columns);
+  for (int i=0;i<selected_inputs.length();i++)
+    all_indices[i]=selected_inputs[i];
+  for (int j=0;j<n_other_columns;j++)
+    all_indices[selected_inputs.length()+j]=inputsize()+j;
+  VMat vm = new SelectColumnsVMatrix(training_set,all_indices);
+  vm->defineSizes(selected_inputs.length(),training_set->targetsize(),training_set->weightsize());
+  learner_->setTrainingSet(vm,call_forget);
 }
 
 } // end of namespace PLearn

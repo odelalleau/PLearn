@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SelectInputSubsetLearner.h,v 1.1 2004/04/13 00:44:18 yoshua Exp $
+   * $Id: SelectInputSubsetLearner.h,v 1.2 2004/04/14 21:17:32 yoshua Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -44,7 +44,7 @@
 #ifndef SelectInputSubsetLearner_INC
 #define SelectInputSubsetLearner_INC
 
-#include "PLearner.h"
+#include "EmbeddedLearner.h"
 
 namespace PLearn {
 using namespace std;
@@ -61,6 +61,8 @@ protected:
   // *********************
   // * protected options *
   // *********************
+  Vec learner_inputs;
+  TVec<int> all_indices; // indices of selected inputs + indices of the target and weight and other columns
 
   // ### declare protected option fields (such as learnt parameters) here
     
@@ -126,6 +128,8 @@ public:
   // **** PLearner methods ****
   // **************************
 
+  virtual int inputsize() const;
+
   //! Computes the output from the input.
   virtual void computeOutput(const Vec& input, Vec& output) const;
 
@@ -133,6 +137,9 @@ public:
   virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                        const Vec& target, Vec& costs) const;
                                 
+
+  virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
+                                     Vec& output, Vec& costs) const;
 
   virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
