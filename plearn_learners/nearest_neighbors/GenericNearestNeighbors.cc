@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GenericNearestNeighbors.cc,v 1.7 2005/04/04 02:24:07 yoshua Exp $ 
+   * $Id: GenericNearestNeighbors.cc,v 1.8 2005/04/04 14:41:19 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -157,7 +157,7 @@ void GenericNearestNeighbors::build_()
             "\"copy_input\", \"copy_target\", \"copy_weight\", \"copy_index\" "
             "must be specified (i.e. true)");
   if (!distance_kernel)
-    // default is ordinary Euclidean distance (i.e. square root of sum of square differences)
+    // Default is ordinary Euclidean squared distance (i.e. sum of square differences).
     distance_kernel = new DistanceKernel(2,true)
 }
 
