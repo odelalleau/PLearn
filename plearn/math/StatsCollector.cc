@@ -35,12 +35,13 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.37 2004/08/11 12:22:44 tihocan Exp $
+   * $Id: StatsCollector.cc,v 1.38 2004/09/22 21:47:02 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "StatsCollector.h"
 #include "TMat_maths.h"
+#include "pl_erf.h"
 
 namespace PLearn {
 using namespace std;
@@ -57,7 +58,7 @@ PLEARN_IMPLEMENT_OBJECT(
   "  - E              Sample mean\n"
   "  - V              Sample variance\n"
   "  - STDDEV         Sample standard deviation\n"
-  "  - STDERROR       Standard error of the mean\n"
+  "  - STDERROR       Standard error of the sample mean\n"
   "  - MIN            Minimum value\n"
   "  - MAX            Maximum value\n"
   "  - SUM            Sum of observations \n"
@@ -67,7 +68,10 @@ PLEARN_IMPLEMENT_OBJECT(
   "  - N              Total number of observations\n"
   "  - NMISSING       Number of missing observations\n"
   "  - NNONMISSING    Number of non-missing observations\n"
-  "  - SHARPERATIO    Mean divided by standard deviation\n");
+  "  - SHARPERATIO    Mean divided by standard deviation\n"
+  "  - ZSTAT          Z-statistic of the sample mean estimator\n"
+  "  - PZ1t           One-tailed probability of the Z-Statistic\n"
+  "  - PZ2t           Two-tailed probability of the Z-Statistic\n" );
   
 
 StatsCollector::StatsCollector(int the_maxnvalues)
@@ -576,6 +580,9 @@ real StatsCollector::getStat(const string& statname) const
     statistics["NMISSING"]    = STATFUN(&StatsCollector::nmissing);
     statistics["NNONMISSING"] = STATFUN(&StatsCollector::nnonmissing);
     statistics["SHARPERATIO"] = STATFUN(&StatsCollector::sharperatio);
+    statistics["ZSTAT"]       = STATFUN(&StatsCollector::zstat);
+    statistics["PZ1t"]        = STATFUN(&StatsCollector::zpr1t);
+    statistics["PZ2t"]        = STATFUN(&StatsCollector::zpr2t);
     init = true;
   }
   
@@ -597,6 +604,20 @@ TVec<RealMapping> computeRanges(TVec<StatsCollector> stats, int discrete_mincoun
   for(int k=0; k<n; k++)
     ranges[k] = stats[k].getBinMapping(discrete_mincount, continuous_mincount);
   return ranges;
+}
+
+real StatsCollector::zpr1t() const
+{
+  real m = mean(), v = variance();
+  if (is_missing(m) || is_missing(v))
+    return MISSING_VALUE;
+  else
+    return p_value(mean(), variance()/nnonmissing());
+}
+
+real StatsCollector::zpr2t() const
+{
+  return 2 * zpr1t();
 }
 
 } // end of namespace PLearn

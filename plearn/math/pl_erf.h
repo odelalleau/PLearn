@@ -91,7 +91,9 @@ real gauss_density_var(real x, real mu, real var);
 inline real gauss_density_stddev(real x, real mu, real sigma)
 { return gauss_01_density((x-mu)/sigma); }
 
-// returns p-value for mu, v/n
+// returns p-value for mu under a normal distribution given the squared
+// standard error v/n, where v is the variance of the observations and n is
+// the number of observations.
 real p_value(real mu, real vn);
 
 

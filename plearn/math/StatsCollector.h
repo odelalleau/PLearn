@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.29 2004/07/21 16:30:53 chrish42 Exp $
+   * $Id: StatsCollector.h,v 1.30 2004/09/22 21:47:02 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -142,7 +142,10 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     real first_obs() const { return first_; }
     real last_obs() const { return last_; }
     real sharperatio() const { return mean()/stddev(); }
-
+    real zstat() const { return mean()/stderror(); }
+    real zpr1t() const;                      //!< one-tailed P(zstat())
+    real zpr2t() const;                      //!< two-tailed P(zstat())
+    
     //! currently understood statnames are :
     //!   - E (mean)
     //!   - V (variance)
@@ -152,6 +155,7 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     //!   - FIRST, LAST
     //!   - N, NMISSING, NNONMISING
     //!   - SHARPERATIO
+    //!   - ZSTAT, PZ
     real getStat(const string& statname) const;
 
     //! simply calls inherited::build() then build_()
