@@ -1,956 +1,74 @@
 #!/usr/bin/env python2.3
 
 ### pytest is meant to manage all the TestSuite execution.
-## import os, string, sys, fpformat
-import shutil, glob, time, os, string, sys, fpformat
+import shutil, glob, time, os, string, sys, fpformat, signal, types
 from popen2 import *
 from operator import *
 
-from dispatch import *
-from CompilableProgram import *
-from IntelligentDiff import *
-from ModeAndOptionParser import *
+import plearn.utilities.plpath as plpath
 
-############################################################
-# DEFINES
-HOME                          = os.getenv('HOME')
-PYTEST_VARIABLES              = os.path.join(os.environ["PLEARNDIR"], "scripts/", '.pytest_variables')
-execfile(PYTEST_VARIABLES)
+from plearn.pytest                     import *
+from plearn.tasks.dispatch             import *
 
-PYTEST_CONFIG                 = "pytest.config"
-CVS                           = "CVS"
-OBJS                          = "OBJS"
-RESULTS_PATH                  = "Results"
-RESULTS_ON_RUN                = "ResultsOnRun"
+from plearn.utilities.global_variables import globalvars
+from plearn.utilities.verbosity        import *
 
-FORBIDDEN_DIRECTORIES = [ OBJS, "BACKUP", CVS, ".pymake", "Scripts"  ]
 
 ############################################################
 # Global variables
-test_id                        = 0 
-stats                          = {}   # Will contain stats about executed tests
-branches                       = {}   # Will map all test suites to their plearn main file
-pure_branches                  = {}
-global_programs                = {}   # Will contain CompilableFile objects 
-pytest_variables_were_modified = False
-resolving_paths = { HOME:"$HOME", PYTEST_VARIABLES:"$PYTEST_VARIABLES",
-                    RESULTS_PATH:"$RESULTS", RESULTS_ON_RUN:"$RESULTS",
-                    forbidden_flag:FORBIDDEN_DIRECTORIES+[RESULTS_PATH, RESULTS_ON_RUN] }
-
-################################################
-## Classes
-
-## class Diff:    
-##     def __call__(self, bench, run):
-##         self.bench = bench
-##         self.run   = run
-##         self.preprocessing()
-##         return command_output('diff %s %s'%(self.bench, self.run))
-
-##     def resolve_results_path(self):
-##         f = command_output('cat %s'%self.run)
-
-##         resolved = open(self.run, 'w')
-##         for line in f:
-##             resolved.write( string.replace(line,  RESULTS_ON_RUN, RESULTS_PATH) )
-##         resolved.close()
-
-##     PREPROCESSING = {'.psave':resolve_results_path}
-##     def preprocessing(self):
-##         keys = self.PREPROCESSING.keys()
-##         for key in keys:
-##             if string.find(self.bench, key) != -1:
-##                 preproc = self.PREPROCESSING[key]
-##                 preproc(self)                
-##                 return
-                
-
-defined_test = None
-class DefineTest(WithOptions):
-    """Small class managing the configuration provided in the config file.
-    """
-
-    # The following dictionaries are lists of options that may be provided
-    # to the DefineTest constructor. NOTE THAT the DefineTest constructor ONLY accepts
-    # keyword arguments, that is that you must provide the options the following manner, e.g.
-    #            DefineTest( local_pymake_name='bid',
-    #                        pymake_options='-g++ -dbg' )
-    # where the order DOES NOT matter.
-
-    # Defining the program name. These are MUTUALLY EXCLUSIVE OPTIONS.
-    #  - 'local' means that the program is located in the current directory
-    #  - 'global' means that the program is accessible in the user's path (shell variable).
-    #  - A 'pymake_name' means that the program must be compiled with pymake prior to be ran
-    #    while a simple 'prog_name' may be any shell or python script/command you like.
-    # The argument must be a string.
-    PROG_NAME = { 'local_prog_name':None,
-                  'global_prog_name':None,
-                  'local_pymake_name':None,
-                  'global_pymake_name':None }
-
-    # The 'X_options' can be provided only if the PROG_NAME is a 'X_name' and will be used to invoke
-    # the compilation process. Must be a string or a list of strings. If it's a list, the test will be
-    # repeated for every options configuration in the list. These are MUTUALLY EXCLUSIVE OPTIONS.
-    COMPILE_OPTIONS = { 'pymake_options': None }
-
-    # The argument string (or list of strings) to provide the PROG_NAME. Again,
-    # if the it is a list, the test will be repeated (for every options configuration in
-    # the COMPILE_OPTIONS list) for every arguments configuration in the 'test_args'
-    # list.
-    # 
-    # The 'local_files' (array of strings) in the 'test_arguments' MUST be highlighted.
-    # For example
-    #            DefineTest( local_pymake_name='bid',
-    #                        pymake_options='-g++ -dbg' 
-    #                        test_args='--db data.amat --log log.txt',
-    #                        local_files=['data.amat'] )
-    # means that the data.amat file is located in the test's directory. Note that
-    # local_files='data.amat' would also be understood by pytest.
-    ARGUMENTS = { 'test_args':'',
-                  'local_files':[]}
-
-    # An array (or a single file name [string]) 'related_files' are to be managed (added or commited)
-    # under pytest's cvs mode.  NOTE that if you do not include local_files, these will still be
-    # considered.
-    CVS_FILES = { 'related_files':[] }
-
-    def __init__(self, **kwargs):
-        WithOptions.__init__(self)
-        
-        self.define_options(self.PROG_NAME)
-        self.define_options(self.COMPILE_OPTIONS)
-        self.define_options(self.ARGUMENTS)
-        self.define_options(self.CVS_FILES)
-
-        # This class and the Test class may be merged in the future.
-        # For consistency:
-        self.define_options(Task.OPTIONS)
-
-        if len(kwargs) > 0:
-            self.set_options(kwargs)
-            
-            self.set_prog_name()
-            self.set_compile_options()
-            self.set_arguments()
-            self.set_cvs()
-            self.add_tests()
-
-    def __str__(self):
-        return ("DefineTest( " +
-                "PROG_NAME= '" + self.prog_name + "', " +
-                "COMPILE_OPTIONS= " + str(self.compile_options) + ", " +
-                "ARGUMENTS= " + str(self.arguments) + ", " +
-                "CVS_FILES= " + str(self.cvs_files) + ") ")
-
-    def __repr__(self):
-        return str(self)
-
-    def add_tests(self):
-        arg_pairs = []
-        if current_mode.name in ['commit']:
-            arg_pairs.append((None, None))
-        else:
-            for copt in self.compile_options:
-                for args in self.arguments:
-                    arg_pairs.append((copt, args))
-
-        for (copt, args) in arg_pairs:
-            dispatch.add_task( defineTest(os.getcwd(), self.prog_name,
-                                          copt, args,
-                                          self.cvs_files, self.compiler) )
-
-    def check_string_types(self, opt_name, error_msg):
-        option = self.get_option(opt_name)
-        if isinstance(option, types.StringType):
-            self.set_option(opt_name, [option])
-        elif not isinstance(option, type([])):
-            raise TypeError("The type of '%s' (%s) is not valid.\n%s"
-                            % (opt_name, type(self._test_args), error_msg)           )        
-
-    def set_arguments(self):
-        """                    
-        The argument string (or list of strings) to provide the PROG_NAME. Again,
-        if the it is a list, the test will be repeated (for every options configuration in
-        the COMPILE_OPTIONS list) for every arguments configuration in the 'test_args'
-        list.
-        
-        The 'local_files' (array of strings) in the 'test_arguments' MUST be highlighted.
-        For example
-                   DefineTest( local_pymake_name='bid',
-                               pymake_options='-g++ -dbg' 
-                               test_args='--db data.amat --log log.txt',
-                               local_files=['data.amat'] )
-        means that the data.amat file is located in the test's directory. Note that
-        local_files='data.amat' would also be understood by pytest.
-        
-        ARGUMENTS = { 'test_args':'',
-                      'local_files':[]}
-        """
-        self.check_string_types('test_args', self.set_arguments.__doc__)
-        self.check_string_types('local_files', self.set_arguments.__doc__)
-
-        self.arguments = []
-        for args in self._test_args:
-            for f in self._local_files:
-                if f not in self._related_files:
-                    self._related_files.append(f)
-                args = string.replace(args, f, os.path.abspath(f))
-            self.arguments.append(args)
-            
-        if self.arguments == []:
-            self.arguments = ['']
-        
-    def set_compile_options(self):
-        """
-        The 'X_options' can be provided only if the PROG_NAME is a 'X_name' and will be used to invoke
-        the compilation process. Must be a string or a list of strings. If it's a list, the test will be
-        repeated for every options configuration in the list. These are MUTUALLY EXCLUSIVE OPTIONS.
-
-        COMPILE_OPTIONS = { 'pymake_options': None }
-        """
-        if self.compiler != 'pymake' and self._pymake_options is not None:
-            raise ValueError("Provided pymake options while the compiler is %s\n%s"
-                             % (self.compiler, self.set_compile_options.__doc__)  )
-
-        if self._pymake_options is not None:
-            self.check_string_types('pymake_options', self.set_compile_options.__doc__)
-        else:
-            self._pymake_options = ['']
-            
-        self.compile_options = self._pymake_options
-
-    def set_compiler(self, prog_name_type):
-        self.compiler = None
-        if string.find(prog_name_type, 'pymake'):
-            self.compiler = 'pymake'
-        
-    def set_cvs(self):
-        """
-        An array (or a single file name [string]) 'related_files' are to be managed (added or commited)
-        under pytest's cvs mode. NOTE that if you do not include local_files, these will still be
-        considered.
-        CVS_FILES = { 'related_files':[] }
-        """
-        self.check_string_types('related_files', self.set_cvs.__doc__)
-        self.cvs_files = self.get_option('related_files')
-        
-    def set_prog_name(self):
-        """
-        Defining the program name. These are MUTUALLY EXCLUSIVE OPTIONS.
-          - 'local' means that the program is located in the current directory
-          - 'global' means that the program is accessible in the user's path (shell variable).
-          - A 'pymake_name' means that the program must be compiled with pymake prior to be ran
-            while a simple 'prog_name' may be any shell or python script/command you like.
-        The argument must be a string.
-        
-        PROG_NAME = { 'local_prog_name':None,
-                      'global_prog_name':None,
-                      'local_pymake_name':None,
-                      'global_pymake_name':None }
-        """
-        count = 0
-        possible_names = self.PROG_NAME.keys()
-        for possible in possible_names:
-            provided = self.get_option(possible)
-            if provided is not None:          
-                if not isinstance(provided, types.StringType):
-                    raise TypeError("The provided '%s' should be a string.\n%s"
-                                    %(possible, self.set_prog_name.__doc__)   )
-                count += 1
-                self.prog_name = provided
-                self.local_prog = (string.find(possible, 'local') != -1)
-                self.set_compiler(provided)
-                
-        if count != 1:
-            raise ValueError("Exactly one of %s must be provided.\n%s"
-                             % (str(possible_names), self.set_prog_name.__doc__)      )
-
-        if not self.local_prog:
-            add_global_program(os.getcwd(), self.prog_name)
-                
-class FormatError(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return `self.value`
-
-        
-## __test_levels_count_ = 0
-## class TestLevel:
-##     def __init__(self):
-##         self.level = __test_levels_count_
-##         __test_levels_count_++
-    
-class BasicStats:
-    def __init__(self, test_type):
-        self.nb_of_tests = 0
-
-        self.succeeded = 0
-        self.skipped   = 0
-        self.failed    = []
-
-        self.test_type = test_type
-        
-    def __str__(self):
-        nfailed = len(self.failed)
-##         if nfailed+self.succeeded != self.nb_of_tests:
-##             raise RuntimeError('Some tests were not logged.')
-        
-        if self.nb_of_tests == 0:
-            return ("No %s runned!" % self.test_type)
-        
-        mystr = ( '+++ %s success: %d / %d\n'
-                  '    Failure%s: %s\n'
-                  % (self.test_type, 
-                     self.succeeded, self.nb_of_tests,
-                     plural(nfailed), str(self.failed))
-                  )
-        if self.skipped > 0:
-            mystr = '%s    Skipped: %d\n' % (mystr, self.skipped)
-
-        return mystr
-        
-    def __repr__(self):
-        return str(self)
-
-    def success(self):
-        self.succeeded += 1
-
-    def skip(self):
-        self.skipped += 1
-
-    def failure(self, name):
-        self.failed.append( name )
-
-    def new_test(self):
-        self.nb_of_tests += 1
-
-def defineTest(directory, prog_name, copt, args, cvs_files, compiler):    
-    mode_test = MODES_WITH_CONFIG[current_mode.name]
-
-    global test_id
-    test_id += 1
-    test = mode_test( dispatch, test_id, directory, None,
-                      prog_name, copt, args, cvs_files, compiler)
-
-    global stats
-    if not stats.has_key(test.classname()):
-        stats[test.classname()] = BasicStats(test.classname())
-    stats[test.classname()].new_test()
-
-    return test
-
-class Test(Task):    
-    def __init__(self, dispatch, test_id, directory, parent,
-                 prog_name=None, compile_options=None, arguments=None, cvs_files=None, compiler=None):
-        os.chdir( test_suite_dir(directory) )
-
-        self.prog_name = prog_name
-        self.compile_options = compile_options
-        self.arguments = arguments
-        self.cvs_files = cvs_files
-        self.compiler = compiler
-
-        Task.__init__(self, dispatch, test_id,
-                      self.build_cmd_line(directory, prog_name, compile_options,
-                                          arguments, cvs_files, compiler))
-
-        self.directory = directory
-        self.set_option('parent_name',parent)
-        self.set_option('quote_cmd_line', True)
-
-        # The results directory will be built for the given options
-        if self.prog_name is not None:
-            self.set_results_directory()
-
-    def _failed(self):
-        if MANAGEMENT_MODES.has_key(current_mode.name):
-            return
-        stats[self.classname()].failure( complete_test_name(self.directory) )
-
-    def _succeeded(self):
-        if MANAGEMENT_MODES.has_key(current_mode.name):
-            return
-        stats[self.classname()].success()
-        
-    def build_cmd_line( self, directory, prog_name,
-                        compile_options, arguments, cvs_files, compiler ):
-        raise NotImplementedError("%s.build_cmd_line() was not implemented.\n"
-                                  "(Test.build_cmd_line() is abstract)" % self.classname())
-
-    def set_results_directory(self):
-        self._results_base = os.path.join(self.directory, RESULTS_PATH)
-
-        args = string.replace(self.arguments, self.directory, '')
-        if len(args) != 0 and args[0] == '/':
-            args = args[1:]
-        
-        res_dir = self._results_base
-        for s in [self.prog_name,self.compile_options,args]:
-            s = string.replace(s, ' ', '_')
-            s = string.replace(s, '-', '_')
-            s = string.replace(s, '/', '_')
-            res_dir = os.path.join(res_dir, s)
-        self.set_option('results_directory', res_dir)
-
-class AddTest(Test):
-    """Enables pytest to run the tests in a given directory.
-
-    A directory is considered to be a test directory as soon as it
-    contains a pytest.config file. Therefore, this mode simply drops
-    a config file with some explanation how to instanciate the
-    DefineTest objects within the file.
-
-    The config file is executed within the pytest script. So, it IS
-    in python, which means that one can add any comments he wishes
-    (each line preceded by at least one #) and may also define is one
-    functions if complicated processing is requested before defining
-    the test. NOTE however that, if you do so, it is strongly suggested
-    to preceed the name of anything you define with two underscores at
-    to end the name with a trailing underscore, e.g
-
-              def __user_defined_bla_(...)
-
-    A user familiar with config files can also pass directly through
-    options in the command line the keyword arguments to fill the
-    DefineTest declaration with.
-    """
-    
-    def __init__(self, dispatch, test_id, directory, parent):
-        Test.__init__(self, dispatch, test_id, directory, parent)
-        
-    def _do_not_run(self):
-        if os.path.exists(self.config):
-            print("%s exists: no tests to add"
-                  % relative_path(self.config) )
-            return True
-
-        if os.path.exists(self.disabled):
-            print("%s exists: remove the file manually before adding tests or use the restore mode."
-                  % relative_path(self.disabled) )
-            return True
-
-        text = ( DefineTest.set_prog_name.__doc__       +
-                 DefineTest.set_compile_options.__doc__ +
-                 DefineTest.set_arguments.__doc__       +
-                 DefineTest.set_cvs.__doc__             )
-        text_lines = string.split(text, '\n')
-
-        config_lines = []
-        for line in text_lines:
-            config_lines.append('## ' + string.lstrip(line))
-
-        option_lines = []
-        for option in add_options.option_list:
-            name = option.dest
-            val = getattr(options, name)
-            if isinstance(val, type('')):
-                val = quote(val)
-            if val is not None:
-                option_lines.append( '%s=%s,' % (name, str(val)) )
-
-        opt_text = ''
-        if option_lines:
-            option_lines[-1] = string.rstrip(option_lines[-1], ',')
-            opt_text = string.join(option_lines, '\n')
-        
-        config_text = string.join(config_lines, '\n')
-        config_text += """\nDefineTest(
-        %s
-        )        
-        """%opt_text
-        
-        conf = open(self.config, 'w')
-        conf.write(config_text)
-        conf.close()
-        return True
-
-
-    def build_cmd_line(self, directory, prog_name, compile_options, arguments, cvs_files, compiler):
-        self.config = os.path.join(directory, PYTEST_CONFIG)
-        self.disabled = os.path.join(directory, DISABLED_PYTEST_CONFIG)
-
-        return '' 
-
-class CompileTest(Test):
-    """Launches the compilation of all target tests' compilable files.
-    """
-    def __init__(self, dispatch, test_id, directory, parent,
-                 prog_name, compile_options, arguments, cvs_files, compiler):
-        Test.__init__(self, dispatch, test_id, directory, parent,
-                      prog_name, compile_options, arguments, cvs_files, compiler)
-        self.set_option('results_directory', None)
-        self.set_option('log_file', prog_name + ".compile_log")
-
-    ###############################################
-    ## Protected Methods
-    ###############################################
-
-    def _do_not_run(self):
-        if self.global_prog:
-            to_compile = self.global_prog.launch_compilation()
-            if not to_compile:
-                if ( self.global_prog.status() ==
-                     CompilableProgram.FAILED   ):
-                    self.failed = True
-                stats[self.classname()].skip()
-                self.skipped = True
-                return True
-        return False
-
-    def _link_n_dir(self):
-        if self.global_prog:
-            return (self.prog_name, os.path.dirname( self.prog_name ))
-        return ( os.path.join(self.directory, self.prog_name),
-                 self.directory )
-
-    def _local_postprocessing(self):
-        link = False
-        directory = None
-
-        link, directory = self._link_n_dir()
-        if ( os.path.islink(link)
-             and os.path.exists(os.path.join(directory,os.readlink(link))) ):
-            vprint("*** Compilation Test PASSED ***", 2)
-            return
-
-        #raw_input('will fail')
-        self.failed = True
-    
-    def _failed(self):
-        fail_msg = ("*** " + os.path.join( relative_path(self.directory), self.prog_name) +
-                    " Compilation Test FAILED")
-        fail_msg += (": Compilation log wrote to file " + self._log_file)
-        fail_msg += (" ***")
-        vprint(fail_msg, 0)
-
-        if self.global_prog and not self.skipped:
-            self.global_prog.compilation_failed()        
-        Test._failed(self)
-
-    def _succeeded(self):
-        if self.global_prog and not self.skipped:
-            self.global_prog.compilation_succeeded()
-        Test._succeeded(self)
-
-    ###############################################
-    ## Public Methods
-    ###############################################
-    
-    def build_cmd_line(self, directory, prog_name, compile_options, arguments, cvs_files, compiler):
-        if global_programs.has_key( prog_name ):
-            self.prog_name = global_programs[prog_name].global_prog_name
-            self.global_prog = global_programs[prog_name]
-        else:
-            self.global_prog = False
-        self.skipped = False
-
-        if compiler == 'pymake':
-            return ("cd %s; pymake %s %s" % (directory, self.prog_name, compile_options))
-        raise NotImplementedError("Unknown compiler %s" % compiler)
-
-class DisableTest(Test):
-    """Makes a directory unrunable. 
-
-    The disabled test can be restored (restore mode) afterwards.
-    """
-    def __init__(self, dispatch, test_id, directory, parent):
-        Test.__init__(self, dispatch, test_id, directory, parent)
-        
-        dis_name = complete_test_name(directory)
-        if dis_name in DISABLED:
-            vprint('%s already disabled.' % dis_name)
-        else:
-            DISABLED.append(dis_name)
-            global pytest_variables_were_modified
-            pytest_variables_were_modified = True
-            
-    def _do_not_run(self):
-        return True
-    
-    def build_cmd_line(self, directory, prog_name, compile_options, arguments, cvs_files, compiler):
-        return ''
-
-## class RemoveTest(CommitTest):
-##     """Definitively removes a test (also does cvs management).
-
-##     The removed test will have its files moved to 'REMOVED_test' directory
-##     which you shall remove manually.
-##     """
-
-##     def _action(self, path):
-##         print path
-##         move_to  = self._removed_path(path)
-##         if os.path.isdir(path):
-##             if not os.path.exists(move_to):
-##                 os.mkdir(move_to)
-##         else:
-##             os.system( string.join(['mv', path, move_to]) )
-##             cvs_remove( path )
-
-##     def _removed_path(self, path):
-##         path_end = path[len(relative_path(self.directory))+1:]
-##         rel_rem  = relative_path(self.removed_test)
-##         rem_path = os.path.join( rel_rem, path_end )        
-##         return rem_path
-        
-##     def build_cmd_line(self, directory, prog_name, compile_options, arguments, cvs_files, compiler):
-##         CommitTest.build_cmd_line(self, directory, prog_name, compile_options, arguments, cvs_files, compiler)
-
-##         (self.previous, test) = splitprev(directory)
-##         print (self.previous, test)
-##         self.removed_test = os.path.join(self.previous, 'REMOVED_'+test)
-
-class ResultsTest(Test):
-    """Creates a results directory in every target test directories.
-
-    Before a test can be ran, it must defines its expected results. In the
-    current context, all outputs (standard output and files) of a test are
-    stored by the results mode in a 'Results' directory.
-
-    The run mode will thereafter be able to compare results obtained on a
-    new run to the ones kept in the results directory.
-
-    Note that the add mode (config file) must have been invoked on a given
-    test before the results can be created.
-
-    DO NOT MODIFY the results directory manually.
-    """
-    def __init__(self, dispatch, test_id, directory, parent,
-                 prog_name, compile_options, arguments, cvs_files, compiler):
-        Test.__init__(self, dispatch, test_id, directory, parent,
-                      prog_name, compile_options, arguments, cvs_files, compiler)
-
-        self.set_option('log_file', self.prog_name + ".run_log")
-        self.new_results = self._results_directory
-
-        self.success_msg = "*** Results were created successfully ***\n"
-        self.failure_msg = ( "*** %s test didn't create new results (prior results kept, if any) ***\n"
-                             % self.prog_name )
-
-    ###############################################
-    ## Protected Methods
-    ###############################################
-
-    def _previously_compile(self):
-        """_previously_compile()
-        -> compilation_passed : [boolean]
-        """
-        global stats
-        if not stats.has_key('CompileTest'):
-            stats['CompileTest'] = BasicStats('CompileTest')
-        stats['CompileTest'].new_test()
-
-        compilation = CompileTest( self.dispatch,
-                                   self._id+1000, self.directory, None,
-                                   self.prog_name, self.compile_options,
-                                   self.arguments, self.cvs_files, self.compiler )
-        compilation.set_option('signal_completion', False)
-        compilation.set_option('quote_cmd_line', False)
-
-        compilation.run()
-        self.dispatch.release_shared_files_access(self)
-
-        if compilation.failed:
-            self.failed = True
-            return False
-        return True
-
-    def _do_not_run(self):
-        # Prior to the results generation, the program
-        if self.compiler is not None:
-            compilation_passed = self._previously_compile()
-            if not compilation_passed:
-                vprint("ResultsTest will be SKIPPED due to compilation errors.", 0)
-                return True
-
-        self.bak = ''
-
-        if os.path.exists(self.new_results):
-            self.bak = self.new_results + ".BAK"
-            os.system("cp -R " + self.new_results + " " + self.bak)
-            keepOnly(self.new_results, CVS)
-        else:
-            os.makedirs(self.new_results)
-
-        # Does linking to allow the test to be executed in results path 
-        source = os.path.join(self.directory, self.prog_name)                               
-        dest = os.path.join(self.new_results, self.prog_name)
-
-        os.symlink(source, dest)
-
-        ## The following is a hack since self.new_results is not known when
-        ## build_cmd_line() is called. This must be fixed someday
-        self._cmd_line = 'cd %s; %s' % (self.new_results, self._cmd_line)
-        ##raw_input(self._cmd_line)
-
-        return False
-
-    def _local_postprocessing(self):
-        if self.bak and os.path.exists(self.bak):
-            shutil.rmtree( self.bak )
-        vprint(self.success_msg, 1)
-
-        ## This must be done here: It is tempting to let the results as they are and
-        ## wait the comparison to modify them at the same time than the 'run' results,
-        ## but this would not work if the results were generated by one user and
-        ## the test ran by another. Indeed, the home path, that could be saved in the
-        ## results, would be highly difficult to trace once in another user's account.
-        os.path.walk(self.new_results, path_resolve_dir, resolving_paths)
-
-    def _failed(self):
-        vprint(self.failure_msg, 1)
-        Test._failed(self)
-        
-    ###############################################
-    ## Public Methods
-    ###############################################
-    
-    def build_cmd_line(self, directory, prog_name, compile_options, arguments, cvs_files, compiler):
-        return ("%s %s" % (prog_name, arguments))
-
-class RestoreTest(Test):
-    """Restores a disabled test.
-    """
-    def __init__(self, dispatch, test_id, directory, parent):
-        Test.__init__(self, dispatch, test_id, directory, parent)
-        
-        dis_name = complete_test_name(directory)
-        if dis_name in DISABLED:
-            DISABLED.remove(dis_name)
-            global pytest_variables_were_modified
-            pytest_variables_were_modified = True            
-        else:
-            vprint('%s was not disabled.' % dis_name)
-
-    def _do_not_run(self):
-        return True
-    
-    def build_cmd_line(self, directory, prog_name, compile_options, arguments, cvs_files, compiler):
-        return ''
-    
-class RunTest(ResultsTest):
-    """Compares new results to expected ones.
-    
-    NOTE THAT, before a test can be ran, it must defines its expected results. In the
-    current context, all outputs (standard output and files) of a test are
-    stored by the results mode in a 'Results' directory.
-
-    The run mode will thereafter be able to compare results obtained on a
-    new run to the ones kept in the results directory.
-
-    Note that the add mode (config file) must have been invoked on a given
-    test before the results can be created.
-
-    DO NOT MODIFY the results directory manually.
-    """
-    def __init__(self, dispatch, test_id, directory, parent,
-                 prog_name, compile_options, arguments, cvs_files, compiler):
-        ResultsTest.__init__(self, dispatch, test_id, directory, parent,
-                      prog_name, compile_options, arguments, cvs_files, compiler)
-
-##         self.new_results = os.path.join(self.directory, RESULTS_ON_RUN, self.prog_name)
-        self.new_results = string.replace(self._results_directory, RESULTS_PATH, RESULTS_ON_RUN)
-##         raw_input(self._results_directory)
-##         raw_input(self.new_results)
-        
-
-        self.success_msg = "*** RunTest PASSED ***\n"
-        self.failure_msg = ( "*** RunTest FAILED: logged in %s ***"
-                             % self._log_file )
-        
-    ###############################################
-    ## Protected Methods
-    ###############################################
-
-    def _do_not_run(self):
-        if not os.path.exists( self._results_directory ):
-            vprint("Must call pytest results mode for %s before running the test."
-                   % os.path.join(self.directory, self.prog_name), 0)
-            self.failed = True 
-            return True
-
-        return ResultsTest._do_not_run(self)
-
-    def _local_postprocessing(self):
-        ##raw_input('Verification')
-##        verif = Verification(self._results_directory, self.new_results)
-
-        ## Apply the same path resolving procedure to the new_results
-        ## than the one that was applyed to the the expected results
-        ## See the ResultsTest._local_postprocessing method for more
-        ## comments.
-        os.path.walk(self.new_results, path_resolve_dir, resolving_paths)
-        
-        verif = IntelligentDiff(self._results_directory, self.new_results,
-                                FORBIDDEN_DIRECTORIES, vprint)
-        diffs = verif.get_differences()
-        if diffs == []:
-#        if self._successful_verification():
-            shutil.rmtree( self.new_results )
-
-            run_results, last = splitprev(self.new_results) 
-            if len(os.listdir(run_results)) == 0:
-                shutil.rmtree( run_results )
-                
-            if self.bak and os.path.exists(self.bak):
-                shutil.rmtree( self.bak )
-            vprint(self.success_msg, 1)
-        else:
-            self.failed = True
-            map(lambda err: vprint(err, 1), diffs)
-        
-class SyncTest(Test):
-    """Manages to add and commit files relative to a test."""
-    
-    def __examine(self, p):
-        path = relative_path(p)
-        if os.path.exists(path):
-            vprint('Pytest examines %s' % path, 2)
-        return self._action(path)
-    
-    def __commit_sub_routine(self, root, directory, dirlist):
-        remove_forbidden_dirs(dirlist, FORBIDDEN_DIRECTORIES)
-        os.system('rm *~ .*~ *.o *.pyc *.class ./~* #*# core* -f')
-
-        self.__examine(directory)
-        
-        for name in dirlist:
-            relname = os.path.join(directory, name)
-            if ( os.path.exists(relname) and
-                 not os.path.islink(relname) ):
-                self.__examine( relname )
-
-    def _action(self, path):
-        cvs_add(path)
-
-    def _do_not_run(self):
-        directory_when_called = os.getcwd()
-        os.chdir(test_suite_dir(self.directory))
-
-        self.__examine(self.directory)        
-        self.__examine(self.config)
-
-        if os.path.exists( self._results_directory ):
-            self.__examine(self._results_base)
-            os.path.walk( self._results_base, self.__commit_sub_routine,
-                          relative_path(self._results_directory)   )
-        
-        for relf in self.cvs_files:
-            rfname = os.path.join(self.directory, relf)
-            if os.path.isdir(rfname):
-                os.path.walk( rfname, self.__commit_sub_routine,
-                              relative_path(self.directory)    )
-            else:
-                self.__examine(rfname)
-            
-        cvs_commit( relative_path(self.directory), 'Pytest sync mode commit.' )
-        os.chdir(directory_when_called)
-        return True
-
-        ##################################################################################
-        # The current implementation of the CommitTest do not use parallel hosts.
-        # No command are launched on another host, so this method always returns True,
-        # meaning that the parallel processing should not be ran.
-        return True
-
-    def build_cmd_line(self, directory, prog_name, compile_options, arguments, cvs_files, compiler):
-        self.config = os.path.join(directory, PYTEST_CONFIG)
-        return ''
-
-## class Verification:
-##     """
-##     Class that manages every details of the comparison of the
-##     expected results with the results obtained by run.
-##     """
-##     def __init__(self, expected_res, current_res):
-##         self.RES_OK      = True
-##         self.current_res = current_res
-##         self.diff        = Diff()
-##         raw_input('init: %s' % expected_res)
-##         os.path.walk(expected_res, self.compare_dir, '')
-        
-##     def tf(self, fpath):
-##         """tf for twin file"""
-##         #raw_input(fpath)
-##         #twin = os.path.join(self.current_res, fpath)
-##         twin = string.replace(fpath, RESULTS_PATH, RESULTS_ON_RUN)
-##         #raw_input(twin)
-##         return twin
-
-##     def compare_dir(self, arg, dirpath, dirlist):
-##         remove_forbidden_dirs(dirlist, FORBIDDEN_DIRECTORIES)
-##         raw_input("dirpath: " + dirpath + ", current: " + os.getcwd())
-##         raw_input(dirlist)
-##         for fname in dirlist:
-##             fname = os.path.join( dirpath, fname )
-##             twin = self.tf(fname)
-
-##             # debug: raw_input("fname: " + fname + ", twin: " + twin)
-            
-##             if os.path.islink(twin):
-##                 #if not os.readlink(fname) == os.readlink(twin):
-##                 vprint("link: " + str(fname), 2)
-                
-##                 # TBAdded: the link created by pymake is relative, mine absolute ...
-##                 #if not os.readlink(fname) == os.readlink( twin ):
-##                 #    print os.readlink(fname)
-##                 #    print os.readlink( twin )
-##                 #    self.RES_OK = False
-##                 #    break
-
-##             # Important: isfile MUST be in elif AFTER islink because isfile follows links!
-##             elif os.path.isfile(twin):
-##                 vprint("comparing file:\n\t" + fname + "\n and \n\t" + twin, 2)
-##                 if self.are_diff(fname, twin):
-##                     vprint("%s & %s: Files are different!"%(fname, twin), 1)
-##                     self.RES_OK = False
-##                     break
-
-##             else: #if not os.path.isdir(fname):
-##                 vprint("The " + twin + " file is missing", 1)
-##                 self.RES_OK = False
-##                 break
-            
-##     def are_diff(self, bench, run):
-##         """
-##         Method that simply calls the diff prgm in the shell, generating a file.
-##         If the file is empty, it assumes that there was no content difference
-##         between file1 && file2. The methods then returns False and removes
-##         the empty file. If the file isn't empty, it returns True and lets the
-##         diff file in the RESULTS_ON_RUN path
-##         """
-##         errors = self.diff(bench, run)
-
-##         if len(errors) != 0:
-##             vprint("Errors occurred in diff:", 0)
-##             map(lambda err: vprint("\t%s"%err, 1), errors)
-
-##             f = open('%s.diff_log'%run, 'w')
-##             map(lambda err: f.write(err), errors)
-
-##             return True        
-##         return False
+execfile(plpath.pytest_variables)
+class __from_file:
+    def __init__(self):
+        self.disabled    = DISABLED
+        self.branches    = BRANCHES
+        self.branches_pl = BRANCHES_PL
+        self.modified    = False
+globalvars.from_file = __from_file()
+
+globalvars.test_id                        = 0 
+globalvars.stats                          = {}   # Will contain stats about executed tests
+globalvars.branches                       = {}   # Will map all test suites to their plearn main file
+globalvars.pure_branches                  = {}
+globalvars.pytest_config                  = "pytest.config"
+
+globalvars.objs                           = "OBJS"
+globalvars.cvs_directory                  = "CVS"
+globalvars.results_path                   = "Results"
+globalvars.results_on_run                 = "ResultsOnRun"
+globalvars.forbidden_directories          = [ globalvars.objs,
+                                              "BACKUP",
+                                              globalvars.cvs_directory,
+                                              ".pymake", "Scripts"     ]
+
+print "*** WARNING: The use of forbidden_flag (and therefore the import of IDiff in pytest.__init__ is not clean ***" 
+globalvars.resolving_paths = { plpath.home:"$HOME", plpath.pytest_variables:"$PYTEST_VARIABLES",
+                               globalvars.results_path:"$RESULTS", globalvars.results_on_run:"$RESULTS",
+                               forbidden_flag:globalvars.forbidden_directories+[globalvars.results_path, globalvars.results_on_run] }
+
+globalvars.dispatch                       = None
+globalvars.options                        = None
+globalvars.targets                        = None
+globalvars.current_mode                   = None
+
+## Should be moved to a field in a Mode's subclass.
+globalvars.modes_with_config = {
+    'compile':CompileTest,
+    'results':ResultsTest,
+    'run':RunTest,
+    'sync':SyncTest
+    }
+
+globalvars.management_modes = {
+    'add':AddTest,
+    'disable':DisableTest,
+    'restore':RestoreTest
+    }
 
 #####################
 ## Functions are listed by alphabetical order
 
-def add_global_program(test_directory, prog_name):
-    """Properly adds a CompilableProgram object to global_programs.
-
-    The only global compilable programs currently supported are the branches
-    plearn mains.
-    """
-    ts_dir = test_suite_dir(test_directory)
-    plearn = branches[ts_dir]
-    if string.find(plearn, prog_name) == -1:
-        raise ValueError('The %s global_pymake_prog is not supported yet.'%prog_name)
-    
-    global_programs[prog_name] = CompilableProgram(plearn)
-
 def build_tests(none, dirc, dirlist):
-    global test_id
-    remove_forbidden_dirs(dirlist, FORBIDDEN_DIRECTORIES+[RESULTS_PATH, RESULTS_ON_RUN])
+    remove_forbidden_dirs(dirlist, globalvars.forbidden_directories+[globalvars.results_path, globalvars.results_on_run])
 
 ##     raw_input(("dirc:", dirc))
 ##     raw_input(("dirlist:", dirlist))
@@ -958,20 +76,20 @@ def build_tests(none, dirc, dirlist):
 
     management = None
     try:
-        management = MANAGEMENT_MODES[current_mode.name]
+        management = globalvars.management_modes[globalvars.current_mode.name]
     except KeyError:
         pass
     else:
-        test_id += 1
-        dispatch.add_task( management(dispatch, test_id, os.getcwd(), None) )
+        globalvars.test_id += 1
+        globalvars.dispatch.add_task( management(globalvars.dispatch, globalvars.test_id, os.getcwd(), None) )
         return
 
-    if PYTEST_CONFIG in dirlist:
+    if globalvars.pytest_config in dirlist:
         dis_name = complete_test_name(os.getcwd())
-        if dis_name in DISABLED:
+        if dis_name in globalvars.from_file.disabled:
             vprint('+++ %s is disabled.\n'%dis_name, 1)
         else:
-            execfile(PYTEST_CONFIG)
+            execfile(globalvars.pytest_config)
     else:
         vprint("%s SKIPPED: no config file (See add and restore modes)"
                % relative_path(dirc), 2)
@@ -985,25 +103,23 @@ def check_directory(dirc):
     return absdir
 
 def commit_mode():
-    pdir, pvar = splitprev(PYTEST_VARIABLES)
+    pdir, pvar = plpath.splitprev(plpath.pytest_variables)
     os.chdir(pdir)
     cvs_commit(pvar, 'Pytest internal commit')
     sys.exit()
     
 def common_preprocessing():
-    global savelog_file
-    
-    if options.mail != None:
-        options.savelog = mailing_log
+    if globalvars.options.mail != None:
+        globalvars.options.savelog = mailing_log
 
-    if options.savelog:
-        savelog_file = open(options.savelog,'w')
+    if globalvars.options.savelog:
+        savelog_file = open(globalvars.options.savelog,'w')
           
-    if options.mail:
-        if current_mode.name != "compilePLL":
+    if globalvars.options.mail:
+        if globalvars.current_mode.name != "compilePLL":
             vprint("The mail option is only supported under the compilePLL mode", 0)
             sys.exit()
-        if options.savelog:
+        if globalvars.options.savelog:
             vprint("Mail and savelog options are not compatible", 0)
             sys.exit()
         
@@ -1027,7 +143,7 @@ def compilePLL():
     sys.exit()
     
     recursiveOptionNotSupported("CompilePLL")
-    if len(targets) != 0:
+    if len(globalvars.targets) != 0:
         vprint("*** Can not provide any file or directory with compilePLL mode! ***", 0)
         sys.exit()
 
@@ -1051,26 +167,24 @@ def compilePLL():
     os.system("pytest -run -all -Q > /tmp/.run_all")
     f = open("/tmp/.run_all",'r')
     output = f.read()
-    stats_index = string.find(output, stats.log_header)
-    vprint( output[stats_index+len(stats.log_header) :
+    stats_index = string.find(output, globalvars.stats.log_header)
+    vprint( output[stats_index+len(globalvars.stats.log_header) :
                    len(output)-len("Quitting pytest ...\n")], 1)
     os.remove("/tmp/.run_all")
 
-    if options.mail:
+    if globalvars.options.mail:
         mail()
         return
 
 def compilePLLSubRoutine(options_and_dicoOfErrors, path, dirList):
     remove_forbidden_dirs(dirlist,
-                          FORBIDDEN_DIRECTORIES+["TestSuite", RESULTS_PATH, RESULTS_ON_RUN])
+                          globalvars.forbidden_directories+["TestSuite",
+                                                            globalvars.results_path,
+                                                            globalvars.results_on_run])
     path = os.path.abspath(path)
     os.chdir(path)
     compileCurrentDirectory(options_and_dicoOfErrors[0])
     myCheckObj( path, options_and_dicoOfErrors[1] )
-
-def complete_test_name(directory):
-    return os.path.join( pure_branches[test_suite_dir(directory)],
-                         relative_path(directory) )
 
 def cvs_add(file):
     status = cvs_query("status", file, "Status: ")
@@ -1129,84 +243,67 @@ def cvs_remove(file):
     map(lambda err: vprint(err, 1), errors)
     return True
 
-dispatch = None
 def dispatch_targets():
-    global dispatch 
-    dispatch = Dispatch()
-    set_dispatch_verbosity_object(vprint)
-    
-    if current_mode.name == 'commit':
-        dispatch.set_option('localhost', True)        
+    globalvars.dispatch = Dispatch()
+    if globalvars.current_mode.name == 'commit':
+        globalvars.dispatch.set_option('localhost', True)        
     else: 
-        dispatch.set_option('localhost', options.localhost)
-        dispatch.set_option('nb_hosts', options.hosts)
+        globalvars.dispatch.set_option('localhost', globalvars.options.localhost)
+        globalvars.dispatch.set_option('nb_hosts', globalvars.options.hosts)
 
     ## --all:
     ## Run all tests in all test_suite branches. If some targets are
     ## provided, these will be ignored.
-    global targets
-    if options.all:
-        targets = branches.keys()
-        options.recursive = True
+    if globalvars.options.all:
+        globalvars.targets = globalvars.branches.keys()
+        globalvars.options.recursive = True
 
     ## If no targets are provided, the cwd is the default target.
-    if len(targets) == 0:
-        targets.append( check_directory(os.getcwd()) )
+    if len(globalvars.targets) == 0:
+        globalvars.targets.append( check_directory(os.getcwd()) )
     else:
-        targets = map(check_directory, targets)
+        globalvars.targets = map(check_directory, globalvars.targets)
 
-    if options.recursive:
-        targets = remove_subdirs(targets)
+    if globalvars.options.recursive:
+        globalvars.targets = remove_subdirs(globalvars.targets)
         
-    #raw_input(("targets:", targets))
+    #raw_input(("globalvars.targets:", globalvars.targets))
 
-    for target in targets:
-        if options.recursive:
+    for target in globalvars.targets:
+        if globalvars.options.recursive:
             os.path.walk(target, build_tests, None)
         else:
             build_tests(None, target, os.listdir(target))
 
-    dispatch.run()
+    globalvars.dispatch.run()
     
 def finalName(dir):
-    (foo, fName) = splitprev(dir)
+    (foo, fName) = plpath.splitprev(dir)
     return fName
 
 def initialize_branches():
     """Initializes the branches dictionnary mapping all test suites to their .cc file"""
-    global branches
     for (key, default) in BRANCHES.items():
-        default = os.path.join( os.getenv('HOME'), default )
+        default = os.path.join( plpath.home, default )
         branch = os.getenv(key, default)
         branch_ts = os.path.join(branch, "test_suite")
 
-        prev, pure_branch = splitprev(branch)
+        prev, pure_branch = plpath.splitprev(branch)
         pure_branch = os.path.join(pure_branch, "test_suite")        
 
         if os.path.exists(branch_ts):
-            branches[branch_ts] = os.path.join(branch, BRANCHES_PL[key])
-            pure_branches[branch_ts] = pure_branch 
+            globalvars.branches[branch_ts] = os.path.join(branch, BRANCHES_PL[key])
+            globalvars.pure_branches[branch_ts] = pure_branch 
 
         ## This is for intelligent diff matters
-        resolving_paths[branch]      = '$'+key
-        resolving_paths[branch_ts]   = '$'+key+'_TS'
-        resolving_paths[pure_branch] = '$'+key+'_TS'
+        globalvars.resolving_paths[branch]      = '$'+key
+        globalvars.resolving_paths[branch_ts]   = '$'+key+'_TS'
+        globalvars.resolving_paths[pure_branch] = '$'+key+'_TS'    
 
 def isccfile(filepath):
     (base,ext) = os.path.splitext(filepath)
     return ext in ['.cc','.CC','.cpp','.c','.C']
             
-def keepOnly( dir, toKeep, otherAction=str ):
-    dirList = os.listdir(dir)
-    for file in dirList:
-        if file != toKeep:
-            fpath = os.path.join(dir, file)
-            if os.path.isdir(fpath):
-                keepOnly(fpath, toKeep, otherAction)
-            else:
-                os.remove(fpath)
-                otherAction(fpath)
-        
 def lastUserWhoDidCommit(fpath):
     fpath = os.path.abspath(fpath)
     (dir, fname) = os.path.split(fpath)
@@ -1220,26 +317,24 @@ def lastUserWhoDidCommit(fpath):
     return author
 
 ## def lock():
-##     if os.path.exists(RESULTS_PATH):
-##         # os.system("chmod u=rX -R " + RESULTS_PATH)
+##     if os.path.exists(globalvars.results_path):
+##         # os.system("chmod u=rX -R " + globalvars.results_path)
 ##         # (by Pascal: commented out because locking result directories
 ##         # prevents cvs from updating their content...
 ##         pass
 
 def mail():
-    global savelog_file
-
     # Opening the senmail process
     sendmail = Popen3("sendmail -t", True)
 
     # "Header" of the mail
     sendmail.tochild.write("From: Pytest -compilePLL -mail\n")
     sendmail.tochild.write("Subject: Pytest -- List of files that did not compile\n")
-    sendmail.tochild.write("To: " + options.mail + "\n")
+    sendmail.tochild.write("To: " + globalvars.options.mail + "\n")
 
     # Changing the mode of the savelog_file from write to read
     savelog_file.close()
-    savelog_file = open(options.savelog, "r")
+    savelog_file = open(globalvars.options.savelog, "r")
 
     # "Body" of the mail
     sendmail.tochild.write(savelog_file.read() + "\n")
@@ -1248,21 +343,21 @@ def mail():
     # "Closing" the mail mode
     sendmail.tochild.close()
     savelog_file.close()
-    options.savelog = None # that way the file isn't closed twice
+    globalvars.options.savelog = None # that way the file isn't closed twice
     #                      # ( see end of pytest() )
 
 # Only called in 'compilePLL' mode
 def myCheckObj(dirpath, dicoOfErrors):
     names = os.listdir(dirpath)
-    if OBJS in names: names.remove(OBJS)
-    if CVS in names: names.remove(CVS)
+    if globalvars.objs in names: names.remove(globalvars.objs)
+    if globalvars.cvs_directory in names: names.remove(globalvars.cvs_directory)
     for fname in names:
         fpath = os.path.join(dirpath,fname)
         if os.path.isfile(fpath):
             basename, ext = os.path.splitext(fname)
             if ext in ['.cc','.c','.C','.cpp','.CC']:
                 foundobj = 0 # found the .o file?
-                for f in glob.glob(os.path.join(dirpath,'OBJS','*',basename+'.o')):
+                for f in glob.glob(os.path.join(dirpath, globalvars.objs,'*',basename+'.o')):
                     if os.path.isfile(f): foundobj = 1
                 if not foundobj:
                     dicoOfErrors[fpath] = lastUserWhoDidCommit(fpath)
@@ -1283,7 +378,7 @@ def printErrors(dico):
         vprint(formattedKey + " -> " + dico[key], "Q")
 
 def pytest_version():
-    version_str = '$Id: pytest,v 1.14 2004/10/07 15:02:55 dorionc Exp $'
+    version_str = '$Id: pytest,v 1.15 2004/10/13 22:57:13 dorionc Exp $'
 
     bflag = "pytest,v"
     the_year = time.localtime()[0]
@@ -1295,16 +390,6 @@ def pytest_version():
 
 def quiet_sys(cmdString):
     os.system(cmdString + " > /dev/null")
-
-def relative_path(path):
-    tsdir = test_suite_dir(path)
-    if string.find(path, tsdir) == -1:
-        raise FormatError(path + " must begin with %s" % tsdir)
-
-    rel_path = path[len(tsdir):]
-    if len(rel_path) != 0 and rel_path[0] == '/':
-        rel_path = rel_path[1:]
-    return  rel_path
 
 def remove_subdirs(absdirs):
     ldirs = len(absdirs)
@@ -1322,30 +407,14 @@ def remove_subdirs(absdirs):
         absdirs.remove(r)
     return absdirs
 
-def splitprev(dir):
-    if dir[len(dir)-1] == "/":
-        dir.pop()
-    return os.path.split(dir)
-
-
-def test_suite_dir(path=None):
-    if path is None:
-        return branches.keys()
-
-    # Otherwise, find to which branch the path belongs
-    abspath = os.path.abspath(path)
-    tsuites = branches.keys()
-    for branch in tsuites:
-        if string.find(abspath, branch) != -1:
-            return branch
-    
-    return None    
-
 def update_pytest_variables():
-    variables = open(PYTEST_VARIABLES, 'w')
-    variables.write('%s = %s\n' % ('DISABLED', repr(DISABLED)))
-    variables.write('%s = %s\n' % ('BRANCHES', repr(BRANCHES)))
-    variables.write('%s = %s\n' % ('BRANCHES_PL', repr(BRANCHES_PL)))
+    variables = open(plpath.pytest_variables, 'w')
+    variables.write('%s = %s\n' % ('DISABLED',
+                                   repr(globalvars.from_file.disabled)))
+    variables.write('%s = %s\n' % ('BRANCHES',
+                                   repr(globalvars.from_file.branches)))
+    variables.write('%s = %s\n' % ('BRANCHES_PL',
+                                   repr(globalvars.from_file.branches_pl)))
     variables.close()
 
 ###################################################################################
@@ -1371,8 +440,10 @@ parser.add_mode("sync", dispatch_targets, "Testing mode",
                 help = short_doc(SyncTest),
                 description = doc(SyncTest) )
 
-# Management modes 
-add_options = DefineTest().command_line_options(parser)
+# Management modes
+add_options = get_add_options(parser)
+globalvars.add_options = add_options
+
 parser.add_mode("add", dispatch_targets,
                 option_groups = [add_options],
                 help = short_doc(AddTest),
@@ -1445,23 +516,8 @@ parser.add_option_group(testing_options)
 ############################################################
 ##################### Parsing Options ######################
 
-options, targets = parser.parse_args()
-current_mode = parser.selected_mode()
-
-############################################################
-############### defineTest dictionnaries ###################
-
-MODES_WITH_CONFIG = { #'commit':CommitTest,
-                      #'remove':RemoveTest,
-                      'compile':CompileTest,
-                      'results':ResultsTest,
-                      'run':RunTest,
-                      'sync':SyncTest
-                      }
-
-MANAGEMENT_MODES = { 'add':AddTest,
-                     'disable':DisableTest,
-                     'restore':RestoreTest }
+globalvars.options, globalvars.targets = parser.parse_args()
+globalvars.current_mode                = parser.selected_mode()
 
 ############################################################
 ################## Some preprocessing ######################
@@ -1470,9 +526,9 @@ MANAGEMENT_MODES = { 'add':AddTest,
 initialize_branches()
 
 ## Managing the verbosity option.
-vprint = Verbosity(options.verbosity)
+set_vprint( VerbosityPrint(globalvars.options.verbosity) )
 
-if options.mail is not None:
+if globalvars.options.mail is not None:
     vprint.keep_output()
 
 # Dynamic version header
@@ -1483,12 +539,20 @@ vprint("\n[ Pytest version " + pytest_version() + " (c) 2004 Christian Dorion ]\
 ############################################################
 # Launching the selected mode: The main part of the program
 ############################################################
-parser.launch_selected_mode()
+
+try:
+    parser.launch_selected_mode()    
+    while globalvars.current_mode.isAlive():
+        time.sleep(0.2)
+        
+except KeyboardInterrupt, kex:
+    print "Interupted by user."
+    sys.exit()
 
 ############################################################
 ################## Some postprocessing #####################
 
-for (ttype, bstats) in stats.items():
+for (ttype, bstats) in globalvars.stats.items():
     vprint(bstats, 0)
     
 vprint("Quitting pytest.", 1)
@@ -1498,7 +562,7 @@ if kept is not None:
     for k in kept:
         print k
 
-if pytest_variables_were_modified:
+if globalvars.from_file.modified:
     update_pytest_variables()
     
 ############################################################

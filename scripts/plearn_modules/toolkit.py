@@ -197,40 +197,6 @@ class Bindings:
     def values(self):
         return copy.deepcopy(self.__values)
     
-    
-class Verbosity:
-
-    def __init__(self, verbosity, default_priority=0):
-        self.verbosity = int(verbosity)
-        self.default_priority = default_priority
-
-    def __call__(self, msg, priority=None):
-        if priority is None:
-            priority = self.default_priority
-
-        if self.verbosity >= priority:
-            if hasattr(self, 'file'):
-                self.file.write(msg)
-
-            if hasattr(self, 'output'):
-                self.output.append( msg )
-                
-            print msg
-            
-    def add_file(self, file_name):
-        if file_name:
-            self.file = open(file_name, 'w')
-
-    def close(self):
-        if hasattr(self, 'file'):
-            self.file.close()
-        if hasattr(self, 'output'):            
-            return self.output
-        return None
-
-    def keep_output(self):
-        self.output = []
-
 class WithOptions:
 
     PRIVATE   = '__'

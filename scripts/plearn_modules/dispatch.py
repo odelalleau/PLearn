@@ -492,7 +492,7 @@ class PLTask(AbsPathTask):
 
 ###############################################################
 ### Management of KeyboadInterrupt within threads #############
-### reuires the following                         #############
+### requires the following                         #############
 __dispatch_end = Event()
 def wait_for_dispatch_to_end():
     __dispatch_end.wait()
