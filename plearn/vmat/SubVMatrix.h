@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.h,v 1.3 2003/08/13 08:13:46 plearner Exp $
+   * $Id: SubVMatrix.h,v 1.4 2004/01/26 14:13:03 tihocan Exp $
    ******************************************************* */
 
 
@@ -58,6 +58,11 @@ protected:
   int jstart;
 
 public:
+  
+  //! Build options.
+  real fistart;
+  real flength;
+  
   //! The appropriate VMFields of the parent VMat are copied upon
   //! construction
   SubVMatrix();

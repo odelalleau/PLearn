@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.cc,v 1.6 2003/12/05 18:57:07 tihocan Exp $
+   * $Id: SubVMatrix.cc,v 1.7 2004/01/26 14:13:03 tihocan Exp $
    ******************************************************* */
 
 #include "SubVMatrix.h"
@@ -50,11 +50,14 @@ PLEARN_IMPLEMENT_OBJECT(SubVMatrix, "ONE LINE DESCR", "NO HELP");
 
 SubVMatrix::SubVMatrix()
   :istart(0), 
-   jstart(0)
+   jstart(0),
+   fistart(-1),
+   flength(-1)
 {}
 
 SubVMatrix::SubVMatrix(VMat the_parent, int the_istart, int the_jstart, int the_length, int the_width)
-  :VMatrix(the_length, the_width), parent(the_parent), istart(the_istart), jstart(the_jstart)
+  :VMatrix(the_length, the_width), parent(the_parent), istart(the_istart), jstart(the_jstart),
+   fistart(-1), flength(-1)
 {
   build_();
 }
@@ -64,6 +67,10 @@ void SubVMatrix::declareOptions(OptionList &ol)
   declareOption(ol, "parent", &SubVMatrix::parent, OptionBase::buildoption, "Source VMatrix");
   declareOption(ol, "istart", &SubVMatrix::istart, OptionBase::buildoption, "Start i coordinate");
   declareOption(ol, "jstart", &SubVMatrix::jstart, OptionBase::buildoption, "Start j coordinate");
+  declareOption(ol, "fistart", &SubVMatrix::fistart, OptionBase::buildoption,
+      "If provided, will override istart to fistart * parent.length()");
+  declareOption(ol, "flength", &SubVMatrix::flength, OptionBase::buildoption,
+      "If provided, will override length to flength * parent.length()");
   inherited::declareOptions(ol);
 }
 
@@ -75,6 +82,13 @@ void SubVMatrix::build()
 
 void SubVMatrix::build_()
 {
+  int pl = parent.length();
+  if (fistart >= 0) {
+    istart = int(fistart * pl);
+  }
+  if (flength >= 0) {
+    length_ = int(flength * pl);
+  }
   if(length_<0)
     length_ = parent->length() - istart;
 
