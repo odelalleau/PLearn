@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.h,v 1.25 2004/09/08 19:53:08 larocheh Exp $
+   * $Id: WordNetOntology.h,v 1.26 2004/10/06 21:13:08 kermorvc Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -260,15 +260,15 @@ public:
   void loadPredominentSyntacticClasses(string file);
 
   // main access methods
-  string getSenseKey(int word_id, int ss_id);
-  int getSynsetIDForSenseKey(int word_id, string sense_key);
-  int getWordId(string word);
-  string getWord(int id);
+  string getSenseKey(int word_id, int ss_id)const;
+  int getSynsetIDForSenseKey(int word_id, string sense_key)const;
+  int getWordId(string word)const;
+  string getWord(int id)const;
   int getWordSenseIdForWnsn(string word, int wn_pos_type, int wnsn);
   int getWordSenseIdForSenseKey(string lemma, string lexsn, string word);
   int getWordSenseUniqueId(int word, int sense);
   int getWordSenseUniqueIdSize();
-  Set getWordSenses(int id);
+  Set getWordSenses(int id)const;
   Set getWordHighLevelSenses(int id);
   Set getWordNounSenses(int id);
   Set getWordVerbSenses(int id);
@@ -276,13 +276,14 @@ public:
   Set getWordAdvSenses(int id);
   Set getWordsForSense(int id);
   Set getSynsetAncestors(int id, int max_level = -1);
+  Set getSynsetAncestors(int id, int max_level =-1)const;
   Set getSynsetParents(int id);
   Set getWordAncestors(int id, int max_level = -1);
   Set getSynsetSenseDescendants(int id);
   Set getSynsetWordDescendants(int id);
   Node* getSynset(int id);
   Node* getRootSynset() { return synsets[ROOT_SS_ID]; }
-  Set getAllWords();
+  Set getAllWords()const;
   Set getAllSenses();
   Set getAllCategories();
   int getVocSize() { return words.size(); }
@@ -296,18 +297,18 @@ public:
   void getDownToUpParentCategoriesAtLevel(int ss_id, int target_level, Set categories, int cur_level = 0);
   
   
-  bool isWord(int id);
+  bool isWord(int id)const;
   bool isWord(string word);
   bool isSense(int id); // is a correct sens id
   bool isPureSense(int id);// is a synset but not a category
   bool isCategory(int id); // = isSynset
   bool isPureCategory(int id);// is a synset but not a sense 
-  bool isSynset(int id); // is a synset (sense or category)
+  bool isSynset(int id)const; // is a synset (sense or category)
   bool isWordUnknown(string word);
   bool isWordUnknown(int id);
   bool isSynsetUnknown(int id);
   bool isInWordNet(string word, bool trim_word = true, bool stem_word = true, bool remove_undescores = false);
-  bool isInWordNet(int word_id);
+  bool isInWordNet(int word_id)const;
   bool hasSenseInWordNet(string word, int wn_pos_type);
   bool isTopLevelCategory(int ss_id);
   bool containsWord(string word) { return (words_id.find(word) != words_id.end()); }
@@ -435,7 +436,7 @@ public:
     }
   }
 
-  TVec<int> getSensesForWord(int w) { return temp_word_to_senses[w]; }
+  TVec<int> getSensesForWord(int w) const{ return temp_word_to_senses.find(w)->second; }
 
   void fillTempWordToHighLevelSensesTVecMap()
   {

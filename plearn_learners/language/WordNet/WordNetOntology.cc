@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.cc,v 1.31 2004/07/21 16:30:57 chrish42 Exp $
+   * $Id: WordNetOntology.cc,v 1.32 2004/10/06 21:13:08 kermorvc Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -1388,7 +1388,7 @@ void WordNetOntology::load(string voc_file, string synset_file, string ontology_
   if_synsets.close();
   if_ontology.close();
 }
-
+ 
 void WordNetOntology::load(string voc_file, string synset_file, string ontology_file, string sense_key_file)
 {
   load(voc_file, synset_file, ontology_file);
@@ -1554,6 +1554,25 @@ Set WordNetOntology::getSynsetAncestors(int id, int max_level)
   }
 }
 
+// Const version
+Set WordNetOntology::getSynsetAncestors(int id, int max_level)const
+{
+  if (are_ancestors_extracted)
+  {
+    if (!isSynset(id))
+    {
+#ifndef NOWARNING
+      PLWARNING("asking for a non-synset id (%d)", id);
+#endif
+    }
+    return synset_to_ancestors.find(id)->second;
+  } else
+  {
+     PLERROR("You must extract ancestors before calling getSynsetAncestors const ");
+  }
+}
+
+
 Set  WordNetOntology::getSynsetParents(int id)
 {
   return  synsets[id]->parents;
@@ -1596,7 +1615,7 @@ Set WordNetOntology::getWordAncestors(int id, int max_level)
   }
 }
 
-bool WordNetOntology::isInWordNet(int word_id)
+bool WordNetOntology::isInWordNet(int word_id)const
 {
 #ifndef NOWARNING
   if (!isWord(word_id))
@@ -1605,34 +1624,36 @@ bool WordNetOntology::isInWordNet(int word_id)
     return false;
   }
 #endif
-  return word_is_in_wn[word_id];
+  return word_is_in_wn.find(word_id)->second;
 }
 
-string WordNetOntology::getSenseKey(int word_id, int ss_id)
+string WordNetOntology::getSenseKey(int word_id, int ss_id)const
 {
   pair<int, int> ws(word_id, ss_id);
-  if (ws_id_to_sense_key.find(ws) == ws_id_to_sense_key.end())
+  if (ws_id_to_sense_key.find(ws) == ws_id_to_sense_key.end()){
+    PLWARNING("getSenseKey: can't find sense key word %d ss_id %d",word_id,ss_id);
     return "";
-  return ws_id_to_sense_key[ws];
+  }
+  return ws_id_to_sense_key.find(ws)->second;
 
 }
 
-int WordNetOntology::getSynsetIDForSenseKey(int word_id, string sense_key)
+int WordNetOntology::getSynsetIDForSenseKey(int word_id, string sense_key)const
 {
   pair<int, string> ss(word_id,sense_key);
-  map< pair<int, string>, int>::iterator it = sense_key_to_ss_id.find(ss);
+  map< pair<int, string>, int>::const_iterator it = sense_key_to_ss_id.find(ss);
   if(it == sense_key_to_ss_id.end())
     return -1;
   else
     return it->second;
 }
 
-int WordNetOntology::getWordId(string word)
+int WordNetOntology::getWordId(string word)const
 {
-  map<string, int>::iterator it = words_id.find(word);
+  map<string, int>::const_iterator it = words_id.find(word);
   if (it == words_id.end())
   {
-    map<string, int>::iterator iit = words_id.find(OOV_TAG);
+    map<string, int>::const_iterator iit = words_id.find(OOV_TAG);
     if (iit == words_id.end())
       return -1;
     else
@@ -1652,7 +1673,7 @@ int WordNetOntology::getWordId(string word)
 //   return words_id[word];
 }
 
-string WordNetOntology::getWord(int id)
+string WordNetOntology::getWord(int id)const
 {
 #ifndef NOWARNING
   if (!isWord(id))
@@ -1661,10 +1682,10 @@ string WordNetOntology::getWord(int id)
     return NULL_TAG;
   }
 #endif
-  return words[id];
+  return words.find(id)->second;
 }
 
-Set WordNetOntology::getWordSenses(int id)
+Set WordNetOntology::getWordSenses(int id)const
 {
 #ifndef NOWARNING
   if (!isWord(id))
@@ -1673,7 +1694,12 @@ Set WordNetOntology::getWordSenses(int id)
     return Set();
   }
 #endif
-  return word_to_senses[id];
+  map<int, Set>::const_iterator it = word_to_senses.find(id);
+  if(it==word_to_senses.end()){
+    return Set();
+  }else{
+    return it->second;
+  }
 }
 
 Set WordNetOntology::getWordHighLevelSenses(int id)
@@ -1939,7 +1965,7 @@ void WordNetOntology::printDescendants()
 */
 }
 
-bool WordNetOntology::isWord(int id)
+bool WordNetOntology::isWord(int id)const
 {
   return (words.find(id) != words.end());
 }
@@ -1969,7 +1995,7 @@ bool WordNetOntology::isPureCategory(int id)
   return (isCategory(id) && !isSense(id));
 }
 
-bool WordNetOntology::isSynset(int id)
+bool WordNetOntology::isSynset(int id)const
 {
   return (synsets.find(id) != synsets.end());
 }
@@ -1987,11 +2013,10 @@ int WordNetOntology::overlappingSynsets(int ss_id1, int ss_id2)
   return overlap.size();
 }
 
-Set WordNetOntology::getAllWords()
+Set WordNetOntology::getAllWords()const
 {
   Set all_words;
-  for (map<int, string>::iterator it = words.begin(); it != words.end(); ++it)
-  {
+  for (map<int, string>::const_iterator it = words.begin(); it != words.end(); ++it){
     all_words.insert(it->first);
   }
   return all_words;
