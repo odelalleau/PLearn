@@ -1,5 +1,4 @@
-__cvs_id__ = "$Id: IntelligentDiff.py,v 1.10 2004/12/21 15:31:49 dorionc Exp $"
-
+__cvs_id__ = "$Id: IntelligentDiff.py,v 1.11 2004/12/21 16:22:39 dorionc Exp $"
 
 import copy, os, string
 
@@ -8,11 +7,6 @@ from   programs                      import PyTestUsageError
 import plearn.utilities.plpath       as     plpath
 import plearn.utilities.toolkit      as     toolkit
 from   plearn.utilities.verbosity    import *
-
-import plearn.utilities.versionning  as     versionning
-versionning.declare_module( __name__,
-    "$Id: IntelligentDiff.py,v 1.10 2004/12/21 15:31:49 dorionc Exp $"
-    )
 
 class Resources:
     md5_mappings    = {}

@@ -1,4 +1,4 @@
-__cvs_id__ = "$Id: modes.py,v 1.14 2004/12/21 15:31:49 dorionc Exp $"
+__cvs_id__ = "$Id: modes.py,v 1.15 2004/12/21 16:22:39 dorionc Exp $"
 
 import copy
 import plearn.utilities.cvs                as     cvs
@@ -13,11 +13,6 @@ from   plearn.utilities.cvs                import *
 from   plearn.utilities.toolkit            import *
 from   plearn.utilities.verbosity          import *
 from   plearn.utilities.global_variables   import *
-
-import plearn.utilities.versionning        as     versionning
-versionning.declare_module( __name__,
-    "$Id: modes.py,v 1.14 2004/12/21 15:31:49 dorionc Exp $"
-    )
 
 current_mode    = None
 

@@ -1,4 +1,4 @@
-__cvs_id__ = "$Id: programs.py,v 1.7 2004/12/21 15:31:49 dorionc Exp $"
+__cvs_id__ = "$Id: programs.py,v 1.8 2004/12/21 16:22:39 dorionc Exp $"
 
 import os, string, types
 import plearn.utilities.plpath         as     plpath
@@ -6,11 +6,6 @@ import plearn.utilities.toolkit        as     toolkit
 
 from   plearn.utilities.verbosity      import vprint
 from   plearn.utilities.FrozenObject   import FrozenObject
-
-import plearn.utilities.versionning    as     versionning
-versionning.declare_module( __name__,
-    "$Id: programs.py,v 1.7 2004/12/21 15:31:49 dorionc Exp $"
-    )
 
 class PyTestUsageError(Exception): 
     def __init__(self, msg):

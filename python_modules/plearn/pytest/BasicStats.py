@@ -1,12 +1,7 @@
-__cvs_id__ = "$Id: BasicStats.py,v 1.8 2004/12/21 15:31:49 dorionc Exp $"
+__cvs_id__ = "$Id: BasicStats.py,v 1.9 2004/12/21 16:22:39 dorionc Exp $"
 
 from plearn.utilities.toolkit        import plural
 from plearn.utilities.verbosity      import vprint
-
-import plearn.utilities.versionning  as     versionning
-versionning.project_module( "PyTest", __name__,
-                            "$Id: BasicStats.py,v 1.8 2004/12/21 15:31:49 dorionc Exp $"
-                            )
 
 class BasicStats:
     """Basic test routine statistics.

@@ -33,6 +33,8 @@
 #  library, go to the PLearn Web site at www.plearn.org
 
 # Author: Pascal Vincent
+__cvs_id__ = "$Id: upackage.py,v 1.8 2004/12/21 16:23:47 dorionc Exp $"
+
 
 import sys
 import os

@@ -1,3 +1,5 @@
+__cvs_id__ = "$Id: mnd.py,v 1.2 2004/12/21 16:23:47 dorionc Exp $"
+
 from Numeric import *
 from LinearAlgebra import *
 from math import pi

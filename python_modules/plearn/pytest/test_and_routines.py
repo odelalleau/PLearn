@@ -1,6 +1,6 @@
-__cvs_id__ = "$Id: test_and_routines.py,v 1.17 2004/12/21 15:31:49 dorionc Exp $"
+__cvs_id__ = "$Id: test_and_routines.py,v 1.18 2004/12/21 16:25:36 dorionc Exp $"
 
-import os, string
+import os, shutil, string
 
 import plearn.utilities.cvs           as     cvs
 import plearn.utilities.toolkit       as     toolkit

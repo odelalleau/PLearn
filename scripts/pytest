@@ -1,4 +1,29 @@
 #!/usr/bin/env python2.3
+__cvs_id__ = '$Id: pytest,v 1.29 2004/12/21 16:23:47 dorionc Exp $'
+
+## This statement changes the behavior of the import statement
+from plearn.utilities.versionning import *
+
+## Since the main file of the project is the one importing versionning, the
+## builtin import statement was in effect when it was loaded. Therefore, it
+## must declare itself as a module after the project declaration
+project = declare_project("PyTest")
+project.declare_module(__name__, __cvs_id__)
+project.neglect_module( "plearn.utilities.cvs" )
+project.neglect_module( "plearn.utilities.global_variables" )
+
+
+### When an official build will be ready...
+## official_build( "PyTest",
+##                 build_version = [1, 0],
+##                 fixlevels     = [5, 28, 89]
+##                 )
+
+## Shorthand
+def pytest_version(extended=False): return project_version("PyTest", extended)
+
+########################################################################
+## The project is now declared, imports will be managed properly.
 import copy, fpformat, glob, os, shutil, signal, string, sys, time, types
 
 import plearn.utilities.plpath   as plpath
@@ -8,10 +33,8 @@ from plearn.pytest                       import *
 from plearn.utilities.verbosity          import *
 from plearn.utilities.global_variables   import *
 
-declare_pytest_cvs_id( '$Id: pytest,v 1.28 2004/12/15 14:30:03 dorionc Exp $' )
-
-############################################################
-# Module variables
+########################################################################
+## Module variables
 
 globalvars.all_roots                      = [ plpath.plearndir,
                                               plpath.lisaplearndir,
@@ -55,7 +78,7 @@ def mail():
     #                      # ( see end of pytest() )
         
 ## def pytest_version():
-##     version_str = '$Id: pytest,v 1.28 2004/12/15 14:30:03 dorionc Exp $'
+##     version_str = '$Id: pytest,v 1.29 2004/12/21 16:23:47 dorionc Exp $'
 
 ##     bflag = "pytest,v"
 ##     the_year = time.localtime()[0]

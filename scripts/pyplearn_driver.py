@@ -1,4 +1,5 @@
 #!/usr/bin/python2.3
+__cvs_id__ = "$Id: pyplearn_driver.py,v 1.6 2004/12/21 16:23:47 dorionc Exp $"
 
 from plearn.pyplearn import *
 
