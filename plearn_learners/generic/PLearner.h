@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.23 2004/07/14 00:24:28 dorionc Exp $
+   * $Id: PLearner.h,v 1.24 2004/07/19 13:45:44 ducharme Exp $
    ******************************************************* */
 
 
@@ -323,6 +323,14 @@ public:
   //! returns the index of the given cost in the vector of traincosts (objectives)
   //! calls PLERROR (throws a PLearnException) if requested cost is not found.
   int getTrainCostIndex(const string& costname) const;
+
+  //! If any, reset the internal state
+  //! Default: do nothing
+  virtual void resetInternalState();
+
+  //! Does this PLearner has an internal state?
+  //! Default: false
+  virtual bool isStatefulLearner() const;
 
 protected:
 

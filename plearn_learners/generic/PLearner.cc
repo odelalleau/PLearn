@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.33 2004/06/29 13:26:08 tihocan Exp $
+   * $Id: PLearner.cc,v 1.34 2004/07/19 13:45:44 ducharme Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -351,7 +351,11 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
 
 }
 
+void PLearner::resetInternalState()
+{}
 
+bool PLearner::isStatefulLearner() const
+{ return false; }
 
 
 } // end of namespace PLearn
