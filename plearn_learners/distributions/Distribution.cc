@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Distribution.cc,v 1.11 2003/12/16 14:54:24 plearner Exp $ 
+   * $Id: Distribution.cc,v 1.12 2004/01/27 13:16:42 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file Distribution.cc */
@@ -51,7 +51,10 @@ Distribution::Distribution()
   :Learner(0,1,1), use_returns_what("l")
 {
     // cost function is -log_density
-    setTestCostFunctions(neg_output_costfunc());
+
+  // CAN'T FIND neg_output_costfunc, so comment this
+  // setTestCostFunctions(neg_output_costfunc());
+  PLERROR("Please update PLearn until neg_output_costfunc is defined, then uncomment previous line and recompile.");
 }
 
 

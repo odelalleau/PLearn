@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.h,v 1.6 2003/11/19 15:07:08 yoshua Exp $ 
+   * $Id: PDistribution.h,v 1.7 2004/01/27 13:16:42 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.h */
@@ -112,15 +112,7 @@ public:
   // **** PLearner methods ****
   // **************************
 
-  //! default returns train_set->inputsize()
-  //! This is not appropriate if your distribution has no train_set
-  //! and should in that case be verloaded to return somethingmeaningful.
-  virtual int inputsize() const;
-  
-  //! returns 0
-  virtual int targetsize() const; 
-
-  //! returns outputs_def.length()
+  //! returned value depends on outputs_def
   virtual int outputsize() const;
 
   //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)

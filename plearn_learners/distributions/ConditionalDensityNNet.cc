@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.27 2004/01/20 21:17:41 yoshua Exp $ 
+   * $Id: ConditionalDensityNNet.cc,v 1.1 2004/01/27 13:16:42 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -252,7 +252,7 @@ ConditionalDensityNet::ConditionalDensityNet()
   // Don't do anything if we don't have a train_set
   // It's the only one who knows the inputsize and targetsize anyway...
 
-  if(train_set)  
+    if(inputsize_>=0 && targetsize_>=0 && weightsize_>=0)
     {
       lower_bound = 0;
       upper_bound = maxY;
@@ -314,9 +314,12 @@ ConditionalDensityNet::ConditionalDensityNet()
       
       target = Var(targetsize(), "target");
       
-      if(train_set->hasWeights())
+      if(weightsize_>0)
+      {
+        if (weightsize_!=1)
+          PLERROR("ConditionalDensityNet: expected weightsize to be 1 or 0 (or unspecified = -1, meaning 0), got %d",weightsize_);
         sampleweight = Var(1, "weight");
-
+      }
       // output = parameters of the Y distribution
       
       int i=0;
@@ -328,15 +331,21 @@ ConditionalDensityNet::ConditionalDensityNet()
       //c = new SubMatVariable(output,0,i,1,n_output_density_terms);
       c = new SubMatVariable(output,i,0,n_output_density_terms,1);
       c->setName("c");
-      if (mu_is_fixed)
-        //mu = Var(1,n_output_density_terms);
-        mu = Var(n_output_density_terms,1);
-      else
-      {
-        i+=n_output_density_terms;
-        //mu = new SubMatVariable(output,0,i,1,n_output_density_terms);
-        mu = new SubMatVariable(output,i,0,n_output_density_terms,1);
-      }
+
+      // we don't want to clear mu if this build is called
+      // just after a load(), because mu is a learnt option
+      if (!mu || (mu->length()!=n_output_density_terms && train_set))
+        {
+          if (mu_is_fixed)
+            //mu = Var(1,n_output_density_terms);
+            mu = Var(n_output_density_terms,1);
+          else
+            {
+              i+=n_output_density_terms;
+              //mu = new SubMatVariable(output,0,i,1,n_output_density_terms);
+              mu = new SubMatVariable(output,i,0,n_output_density_terms,1);
+            }
+        }
       mu->setName("mu");
 
       /*
@@ -349,7 +358,11 @@ ConditionalDensityNet::ConditionalDensityNet()
       centers_M = max_y-mu;
       unconditional_cdf.resize(n_output_density_terms);
       if (unconditional_delta_cdf)
-        unconditional_delta_cdf->resize(n_output_density_terms,1);
+        {
+          // don't clear it if this build is called just after a load
+          if (unconditional_delta_cdf.length()!=n_output_density_terms)
+            unconditional_delta_cdf->resize(n_output_density_terms,1);
+        }
       else
         unconditional_delta_cdf = Var(n_output_density_terms,1);
       initial_hardnesses = var(initial_hardness) / (mu - left_side);
@@ -450,7 +463,7 @@ ConditionalDensityNet::ConditionalDensityNet()
       cumulative->setName("cumulative");
       density->setName("density");
       lhopital->setName("lhopital");
-
+    
       /*
        * cost functions:
        *   training_criterion = log_likelihood_vs_squared_error_balance*neg_log_lik
@@ -470,7 +483,7 @@ ConditionalDensityNet::ConditionalDensityNet()
         costs[0] = costs[2];
       else costs[0] = log_likelihood_vs_squared_error_balance*costs[1]+
              (1-log_likelihood_vs_squared_error_balance)*costs[2];
-
+    
       // for debugging
       //costs[0] = mass_cost + pos_y_cost;
       //costs[1] = mass_cost;
@@ -502,23 +515,22 @@ ConditionalDensityNet::ConditionalDensityNet()
       // apply penalty to cost
       if(penalties.size() != 0) {
         // only multiply by sampleweight if there are weights
-        if (train_set->hasWeights()) {
+        if (weightsize_>0)
           training_cost = hconcat(sampleweight*sum(hconcat(costs[0] & penalties))
                                   & (test_costs*sampleweight));
-        }
         else {
           training_cost = hconcat(sum(hconcat(costs[0] & penalties)) & test_costs);
         }
       }
       else {
         // only multiply by sampleweight if there are weights
-        if(train_set->hasWeights()) {
+        if(weightsize_>0) {
           training_cost = test_costs*sampleweight;
         } else {
           training_cost = test_costs;
         }
       }
-      
+  
       training_cost->setName("training_cost");
       test_costs->setName("test_costs");
       output->setName("output");
@@ -544,11 +556,11 @@ ConditionalDensityNet::ConditionalDensityNet()
       cdf_f = Func(output_and_target,cumulative);
       mean_f = Func(output,expected_value);
       density_f = Func(output_and_target,density);
-
+  
       // Funcs
-      VarArray invars;
       VarArray outvars;
       VarArray testinvars;
+      invars.resize(0);
       if(input)
       {
         invars.push_back(input);
@@ -568,7 +580,7 @@ ConditionalDensityNet::ConditionalDensityNet()
       {
         invars.push_back(sampleweight);
       }
-
+  
       VarArray outputs_array;
 
       for (unsigned int i=0;i<outputs_def.length();i++)
@@ -619,18 +631,9 @@ ConditionalDensityNet::ConditionalDensityNet()
 
       if (use_paramsvalues)
         test_costf->recomputeParents();
-      // The total training cost
-      int l = train_set->length();
-      int nsamples = batch_size>0 ? batch_size : l;
-      Func paramf = Func(invars, training_cost); // parameterized function to optimize
-      totalcost = meanOf(train_set, paramf, nsamples);
-      if(optimizer)
-        {
-          optimizer->setToOptimize(params, totalcost);  
-          optimizer->build();
-        }
     }
   }
+
 
 void ConditionalDensityNet::computeOutput(const Vec& inputv, Vec& outputv) const
 {
@@ -697,6 +700,7 @@ TVec<string> ConditionalDensityNet::getTestCostNames() const
   deepCopyField(penalties, copies);
   deepCopyField(training_cost, copies);
   deepCopyField(test_costs, copies);
+  deepCopyField(invars, copies);
   deepCopyField(params, copies);
   deepCopyField(paramsvalues, copies);
   deepCopyField(centers, copies);
@@ -919,15 +923,18 @@ void ConditionalDensityNet::train()
   if(!train_stats)
     PLERROR("In ConditionalDensityNet::train, you did not setTrainStatsCollector");
 
-  int l = train_set->length();  
-
   if(f.isNull()) // Net has not been properly built yet (because build was called before the learner had a proper training set)
     build();
 
-
-
-  // number of samples seen by optimizer before each optimizer update
+  int l = train_set->length();
   int nsamples = batch_size>0 ? batch_size : l;
+  Func paramf = Func(invars, training_cost); // parameterized function to optimize
+  Var totalcost = meanOf(train_set, paramf, nsamples);
+  if(optimizer)
+    {
+      optimizer->setToOptimize(params, totalcost);  
+      optimizer->build();
+    }
 
   // number of optimiser stages corresponding to one learner stage (one epoch)
   int optstage_per_lstage = l/nsamples;
@@ -971,11 +978,20 @@ void ConditionalDensityNet::train()
   {
     cdf = sc.cdf();
     int k=3;
-    
+    real mean_y = sc.mean();
+
+    real current_mean_fraction = 0;
+    real prev_cdf = unconditional_p0;
+    real prev_y = 0;
     for (int j=0;j<n_output_density_terms;j++)
       {
-        real target_fraction = unconditional_p0+(1-unconditional_p0)*(j+1.0)/n_output_density_terms;
-        for (;k<cdf.length() && cdf(k,1)<target_fraction;k++);
+        real target_fraction = mean_y*(j+1.0)/n_output_density_terms;
+        for (;k<cdf.length() && current_mean_fraction < target_fraction;k++)
+        {
+          current_mean_fraction += (cdf(k,0)+prev_y)*0.5*(cdf(k,1)-prev_cdf);
+          prev_cdf = cdf(k,1);
+          prev_y = cdf(k,0);
+        }
         if (j==n_output_density_terms-1)
           {
             mu_values[j]=maxY;

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.19 2004/01/20 18:28:10 yoshua Exp $ 
+   * $Id: ConditionalDensityNNet.h,v 1.1 2004/01/27 13:16:42 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -84,6 +84,7 @@ protected:
     Var training_cost; // weighted scalar costs[0] including penalties
     Var test_costs; // hconcat(costs)
 
+      VarArray invars;
     VarArray params;  // all arameter input vars
 
 public :
