@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RepeatSplitter.h,v 1.2 2003/11/27 20:12:48 tihocan Exp $ 
+   * $Id: RepeatSplitter.h,v 1.3 2004/01/27 14:15:41 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file RepeatSplitter.h */
@@ -48,16 +48,17 @@ using namespace std;
 
 class RepeatSplitter: public Splitter
 {
+
 public:
+
   typedef Splitter inherited;
 
 protected:
+
   // *********************
   // * protected options *
   // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
-  
   //! A matrix where the i-th row is the vector of the indices of the i-th
   //! shuffled matrix (used only when shuffle = 1).
   TMat<int> indices;
@@ -71,7 +72,6 @@ public:
   // * public build options *
   // ************************
 
-  // ### declare public option fields (such as build options) here
   int n;
   int shuffle;
   PP<Splitter> to_repeat;
@@ -80,8 +80,6 @@ public:
   // * Constructors *
   // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
   RepeatSplitter();
 
 
@@ -89,7 +87,7 @@ public:
   // * Object methods *
   // ******************
 
-  //! Sets the dataset on which the splits are to be based
+  //! Set the dataset on which the splits are to be based.
   virtual void setDataSet(VMat the_dataset);
 
 private: 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RepeatSplitter.cc,v 1.2 2003/11/27 20:12:48 tihocan Exp $ 
+   * $Id: RepeatSplitter.cc,v 1.3 2004/01/27 14:15:41 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file RepeatSplitter.cc */
@@ -49,15 +49,16 @@ using namespace std;
 // RepeatSplitter //
 ////////////////////
 RepeatSplitter::RepeatSplitter() 
-  :Splitter(),
-  last_n(-1),
-  n(0),
-  shuffle(0)
-  /* ### Initialise all fields to their default value */
+  : last_n(-1),
+    n(0),
+    shuffle(0)
 {
 }
 
-PLEARN_IMPLEMENT_OBJECT(RepeatSplitter, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(RepeatSplitter, 
+  "Repeat a given splitter a certain amount of times, with the possibility to\n"
+  "shuffle randomly the dataset each time",
+  "NO HELP");
 
 ////////////////////
 // declareOptions //
@@ -65,13 +66,13 @@ PLEARN_IMPLEMENT_OBJECT(RepeatSplitter, "ONE LINE DESCR", "NO HELP");
 void RepeatSplitter::declareOptions(OptionList& ol)
 {
   declareOption(ol, "n", &RepeatSplitter::n, OptionBase::buildoption,
-                 "How many times we want to repeat it");
+                 "How many times we want to repeat.");
 
   declareOption(ol, "shuffle", &RepeatSplitter::shuffle, OptionBase::buildoption,
-                 "If set to 1, the dataset will be shuffled differently at each repetition");
+                 "If set to 1, the dataset will be shuffled differently at each repetition.");
 
   declareOption(ol, "to_repeat", &RepeatSplitter::to_repeat, OptionBase::buildoption,
-                 "The splitter we want to repeat");
+                 "The splitter we want to repeat.");
 
   inherited::declareOptions(ol);
 }
