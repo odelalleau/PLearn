@@ -36,12 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: SumOfVariable.cc,v 1.6 2003/09/21 18:46:17 yoshua Exp $
+   * $Id: SumOfVariable.cc,v 1.7 2004/01/20 00:23:57 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "SumOfVariable.h"
 #include "PLMPI.h"
+#include "DisplayUtils.h"
 
 namespace PLearn <%
 using namespace std;
@@ -186,7 +187,9 @@ void SumOfVariable::fbprop()
       input_value.resize(distr->width());
       distr->getRow(curpos, input_value);
       input_value.resize(distr->inputsize()+distr->targetsize()+distr->weightsize());
-      //displayFunction(f, true, false, 250);
+      static bool display_fn=false;
+      if (display_fn)
+        displayFunction(f, true, false, 250);
       f->fbprop(input_value, output_value, input_gradient, gradient);
       value += output_value;
       if(++curpos == distr->length()) 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.17 2004/01/17 20:01:46 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.18 2004/01/20 00:23:58 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -78,7 +78,7 @@ protected:
   Var density;
   Var cumulative;
   Var expected_value;
-  Vec target_dependent_outputs;
+
     VarArray costs; // all costs of interest
     VarArray penalties;
     Var training_cost; // weighted scalar costs[0] including penalties
@@ -86,7 +86,9 @@ protected:
 
     VarArray params;  // all arameter input vars
 
-    Vec paramsvalues; // values of all parameters
+public :
+  Vec paramsvalues; // values of all parameters
+protected:
 
    Var centers, centers_M, steps, steps_M, steps_0, steps_gradient, steps_integral, delta_steps, cum_numerator, cum_denominator;
 
@@ -111,11 +113,12 @@ public:
     mutable Func f; // input -> output
     mutable Func test_costf; // input & target -> output & test_costs
     mutable Func output_and_target_to_cost; // output & target -> cost
-  mutable Func debug_f;
+
   mutable Func cdf_f; // target -> cumulative
   mutable Func mean_f; // output -> expected value
   mutable Func density_f; // target -> density
   mutable Func in2distr_f; // input -> parameters of output distr
+
   Var totalcost;
   Var mass_cost;
   Var pos_y_cost;

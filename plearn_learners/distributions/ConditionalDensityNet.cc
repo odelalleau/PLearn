@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.23 2004/01/17 20:01:46 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.24 2004/01/20 00:23:58 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -107,7 +107,7 @@ ConditionalDensityNet::ConditionalDensityNet()
                           "   Z = sum_i s(b_i) (g(y,theta,i)-g(0,theta,i))\n"
                           "The current implementation considers two choices for g:\n"
                           "  - sigmoid_steps: g(y,theta,i) = sigmoid(h*s(c_i)*(y-mu_i)/(mu_{i+1}-mu_i))\n"
-                          "  - sloped_steps: g(y,theta,i) = s(h*s(c_i)*(mu_i-y))-s(s(c_i)*(mu_i-y)/(mu_{i+1}-mu_i))\n"
+                          "  - sloped_steps: g(y,theta,i) = 1 + s(s(c_i)*(mu_i-y))-s(s(c_i)*(mu_{i+1}-y))/(s(c_i)*(mu_{i+1}-mu_i))\n"
                           "where h is the 'initial_hardness' option.\n"
                           "The density is analytically obtained using the derivative g' of g and\n"
                           "expected value is analytically obtained using the primitive G of g.\n"
@@ -347,7 +347,10 @@ ConditionalDensityNet::ConditionalDensityNet()
       centers = target-mu; 
       centers_M = max_y-mu;
       unconditional_cdf.resize(n_output_density_terms);
-      unconditional_delta_cdf = Var(n_output_density_terms,1);
+      if (unconditional_delta_cdf)
+        unconditional_delta_cdf->resize(n_output_density_terms,1);
+      else
+        unconditional_delta_cdf = Var(n_output_density_terms,1);
       initial_hardnesses = var(initial_hardness) / (mu - left_side);
       pos_b = softplus(b)*unconditional_delta_cdf; 
       pos_c = softplus(c)*initial_hardnesses; 
@@ -533,7 +536,9 @@ ConditionalDensityNet::ConditionalDensityNet()
         }
       params.makeSharedValue(paramsvalues);
 
-      debug_f = Func(params,sum(output));
+      cdf_f = Func(target,cumulative);
+      mean_f = Func(output,expected_value);
+      density_f = Func(target,density);
 
       cdf_f = Func(target,cumulative);
       mean_f = Func(output,expected_value);
@@ -678,19 +683,52 @@ TVec<string> ConditionalDensityNet::getTestCostNames() const
   deepCopyField(wdirect, copies);
   deepCopyField(output, copies);
   deepCopyField(outputs, copies);
+  deepCopyField(a, copies);
+  deepCopyField(pos_a, copies);
+  deepCopyField(b, copies);
+  deepCopyField(pos_b, copies);
+  deepCopyField(c, copies);
+  deepCopyField(pos_c, copies);
+  deepCopyField(density, copies);
+  deepCopyField(cumulative, copies);
+  deepCopyField(expected_value, copies);
   deepCopyField(costs, copies);
   deepCopyField(penalties, copies);
   deepCopyField(training_cost, copies);
   deepCopyField(test_costs, copies);
   deepCopyField(params, copies);
   deepCopyField(paramsvalues, copies);
+  deepCopyField(centers, copies);
+  deepCopyField(centers_M, copies);
+  deepCopyField(steps, copies);
+  deepCopyField(steps_0, copies);
+  deepCopyField(steps_gradient, copies);
+  deepCopyField(steps_integral, copies);
+  deepCopyField(delta_steps, copies);
+  deepCopyField(cum_numerator, copies);
+  deepCopyField(cum_denominator, copies);
+  deepCopyField(unconditional_cdf, copies);
+  deepCopyField(unconditional_delta_cdf, copies);
+  deepCopyField(initial_hardnesses, copies);
+  deepCopyField(prev_centers, copies);
+  deepCopyField(prev_centers_M, copies);
+  deepCopyField(scaled_prev_centers, copies);
+  deepCopyField(scaled_prev_centers_M, copies);
+  deepCopyField(minus_prev_centers_0, copies);
+  deepCopyField(minus_scaled_prev_centers_0, copies);
+  deepCopyField(y_values, copies);
+  deepCopyField(mu, copies);
   deepCopyField(f, copies);
   deepCopyField(test_costf, copies);
+  deepCopyField(output_and_target_to_cost, copies);
+  deepCopyField(cdf_f, copies);
+  deepCopyField(mean_f, copies);
+  deepCopyField(density_f, copies);
+  deepCopyField(in2distr_f, copies);
+  deepCopyField(totalcost, copies);
+  deepCopyField(mass_cost, copies);
+  deepCopyField(pos_y_cost, copies);
   deepCopyField(optimizer, copies);
-  deepCopyField(unconditional_delta_cdf, copies);
-  deepCopyField(unconditional_cdf, copies);
-  deepCopyField(mu, copies);
-  deepCopyField(y_values,copies);
   inherited::makeDeepCopyFromShallowCopy(copies);
   }
 
@@ -701,7 +739,10 @@ void ConditionalDensityNet::setInput(const Vec& in) const
   if (!f)
     PLERROR("ConditionalDensityNet:setInput: build was not completed (maybe because training set was not provided)!");
 #endif
-  f->fprop(in,output->value);
+  in2distr_f->fprop(in,output->value);
+  cdf_f->recomputeParents();
+  density_f->recomputeParents();
+  mean_f->recomputeParents();
 }
 
 double ConditionalDensityNet::log_density(const Vec& y) const
@@ -741,9 +782,12 @@ void ConditionalDensityNet::resetGenerator(long g_seed) const
 
 void ConditionalDensityNet::generate(Vec& y) const
 { 
-  Vec out(outputsize());
-  f->fprop(input->value,out);  
   real u = uniform_sample();
+  if (u<pos_a->value[0]) // mass point
+    {
+      y[0]=0;
+      return;
+    }
   // then find y s.t. P(Y<y|x) = u by binary search
   real y0=0;
   real y2=maxY;
@@ -797,7 +841,7 @@ void ConditionalDensityNet::initializeParams()
         fill_random_normal(wdirect->value, 0, 0.01*delta);
         wdirect->matValue(0).clear();
       }
-      delta = 0.1/nhidden;
+      delta = 0.5/nhidden;
       w1->matValue(0).clear();
     }
   if(nhidden2>0)
@@ -831,6 +875,8 @@ void ConditionalDensityNet::initializeParams()
     c_[i] = inverse_softplus(1.0);
   }
 
+  if (centers_initialization!="data")
+    unconditional_delta_cdf->value.fill(1.0/n_output_density_terms);
   real *dcdf = unconditional_delta_cdf->valuedata;
   if (separate_mass_point)
     a_[0] = unconditional_p0>0?inverse_sigmoid(unconditional_p0):-50;
@@ -1027,8 +1073,6 @@ void ConditionalDensityNet::train()
       //if (stage==nstages-1 && verify_gradient)
       if (verify_gradient)
       {
-        cout << "DEBUG_F" << endl;
-        debug_f->verifyGradient(0.001);
         if (batch_size == 0)
         {
           cout << "OPTIMIZER" << endl;

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Var.cc,v 1.4 2003/09/17 15:27:30 yoshua Exp $
+   * $Id: Var.cc,v 1.5 2004/01/20 00:23:57 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,8 +54,7 @@ void deepCopyField(Var& field, CopiesMap& copies)
   if (field)
     field = field->deepCopy(copies);
   else cout << "empty var!" << endl;
-}  
-*/
+}*/
 
 void varDeepCopyField(Var& field, CopiesMap& copies)
 {

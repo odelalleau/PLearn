@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Var.h,v 1.9 2003/09/17 15:27:30 yoshua Exp $
+   * $Id: Var.h,v 1.10 2004/01/20 00:23:57 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -69,8 +69,14 @@ inline ostream& operator<<(ostream& out, const Var& v)
 inline Var var(real init_value) { Var v(1); v=init_value; return v; }
 
 
-//template <> 
-//void deepCopyField(Var& field, CopiesMap& copies); // bug, n'est pas appele!
+template <> 
+inline void deepCopyField(Var& field, CopiesMap& copies)
+{
+  //cout << "in deepCopyField(Var,.) for Var at " << (void*)field << endl;
+  if (field)
+    field = field->deepCopy(copies);
+  //else cout << "empty var!" << endl;
+}
 
 %> // end of namespace PLearn
 
