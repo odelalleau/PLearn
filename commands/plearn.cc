@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.19 2003/05/05 21:18:05 plearner Exp $
+   * $Id: plearn.cc,v 1.20 2003/05/06 20:58:43 tihocan Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -45,7 +45,6 @@
 
 // Available VMats:
 #include "AutoVMatrix.h"
-
 
 // New generation system
 #include "PExperiment.h"
@@ -64,6 +63,7 @@
 #include "NeuralNet.h"
 #include "NNet.h"
 #include "GradientOptimizer.h"
+#include "AdaptGradientOptimizer.h"
 #include "ConjGradientOptimizer.h"
 // #include "AutoStepGradientOptimizer.h"
 
