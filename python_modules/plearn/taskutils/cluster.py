@@ -29,19 +29,24 @@ class Cluster(PyPLearnObject):
             raw_command = self.join_prog_and_arguments( program_call, arguments )
             cluster_cmd = cluster_command( raw_command, self.logdir_path, self.command_format )
 
-            print "Launching %s on cluster" % raw_command
-            os.system( cluster_cmd )
+            print "Launching: %s\n--" % raw_command
+            os.system( "%s &" % cluster_cmd )
+            print cluster
 
             ## This hack is a turnaround to the cluster command bug of
             ## possibly returning before the task is actually launched
             if self.wait_for_expdir_creation:
                 current_count = count_expdirs( self.expdir_pattern )
                 while current_count == expdir_count:
+                    print ".",
                     time.sleep(2)
                     current_count = count_expdirs( self.expdir_pattern )
+                print
 
-                    
+            message = "Using %d machines or more; waiting ." % self.max_nmachines
             while ( machines_used_by_user() >= self.max_nmachines ):
+                print message,
+                message = "."
                 time.sleep( self.sleep_time )
             print
 
