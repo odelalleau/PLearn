@@ -37,14 +37,13 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.53 2004/12/10 17:14:51 tihocan Exp $
+   * $Id: fileutils.cc,v 1.54 2005/01/18 18:45:11 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include <time.h>
 #include <sys/stat.h>
-//#include <sys/types.h>
 #if !defined(_MSC_VER) && !defined(_MINGW_)
 #include <sys/wait.h>
 #endif
@@ -66,7 +65,6 @@
 
 #endif // WIN32
 
-//#include <sstream>
 #include <strstream>
 
 #include "fileutils.h"
@@ -261,9 +259,9 @@ int chdir(const string& path)
     string pathpart;
     for (size_t pos = 1; pos != string::npos;)
     {
-			// keep ++pos here!
-		  ++pos;
-			pos = path.find(slash, pos);
+      // keep ++pos here!
+      ++pos;
+      pos = path.find(slash, pos);
       if( pos != string::npos )
         pathpart = path.substr(0, pos);
       else
@@ -422,7 +420,7 @@ void readWhileMatches(istream& in, const string& s){
   PLERROR("In readWhileMatches, met EOF while matching %s", s.c_str());
 }
 
-// reads everything until '\n' (also consumes the '\n')
+/// Reads everything until '\n' (also consumes the '\n')
 void skipRestOfLine(istream& in)
 {
   int c=in.get();
@@ -1267,8 +1265,6 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
         }
     }
 
-  // cerr << "MACRO PROCESSEd TEXT: \n" << text << endl;
-
   return text;
 }
 
@@ -1281,24 +1277,3 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
 #endif
 
 } // end of namespace PLearn
-
-// int main()
-/*
-{
-  using namespace PLearn;
-  
-  map<string, string> variables;
-  string text =  readFileAndMacroProcess("essai.plearn", variables);
-  
-  cout << "TEXT:" << endl;
-  cout << text << endl;
-
-  cout << "\nVARIABLES:" << endl;
-
-  PStream pout(&cout);
-  pout << variables << endl;
-
-  return 0;
-}
-*/
-
