@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.14 2003/04/24 18:03:42 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.15 2003/04/25 14:27:40 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -356,7 +356,6 @@ bool ConjGradientOptimizer::findDirection() {
   }
   if (abs(dot(delta, current_opp_gradient)) > restart_coeff * pownorm(delta)) {
     cout << "Restart triggered !" << endl;
-    cout << "grad_norm = " << pownorm(delta) << endl;
     gamma = 0;
   }
   updateSearchDirection(gamma);
@@ -427,7 +426,7 @@ real ConjGradientOptimizer::fletcherReeves (
 ////////////////////
 // fletcherSearch //
 ////////////////////
-void ConjGradientOptimizer::fletcherSearch (real mu) {
+real ConjGradientOptimizer::fletcherSearch (real mu) {
   real alpha = fletcherSearchMain (
       computeCostValue,
       computeDerivative,
@@ -441,7 +440,7 @@ void ConjGradientOptimizer::fletcherSearch (real mu) {
       tau3,
       starting_step_size,
       mu);
-  params.update(alpha, search_direction);
+  return alpha;
 }
 
 ////////////////////////
@@ -579,7 +578,7 @@ real ConjGradientOptimizer::fletcherSearchMain (
 /////////////
 // gSearch //
 /////////////
-void ConjGradientOptimizer::gSearch (void (*grad)(Optimizer*, const Vec&)) {
+real ConjGradientOptimizer::gSearch (void (*grad)(Optimizer*, const Vec&)) {
 
   real step = starting_step_size;
   real sp, sm, pp, pm;
@@ -623,8 +622,9 @@ void ConjGradientOptimizer::gSearch (void (*grad)(Optimizer*, const Vec&)) {
   else
     step = (sm+sp) / 2;
 
+  // Restore the original parameters value
   params.copyFrom(tmp_storage);
-  params.update(step, search_direction);
+  return step;
 }
 
 /////////////////////
@@ -646,16 +646,18 @@ real ConjGradientOptimizer::hestenesStiefel (
 ////////////////
 // lineSearch //
 ////////////////
-real ConjGradientOptimizer::lineSearch() {
+bool ConjGradientOptimizer::lineSearch() {
+  real step;
   switch (line_search_algo) {
     case 0:
-      fletcherSearch();
+      step = fletcherSearch();
       break;
     case 1:
-      gSearch(computeOppositeGradient);
+      step = gSearch(computeOppositeGradient);
       break;
   }
-  return cost->value[0];
+  params.update(step, search_direction);
+  return (step == 0);
 }
 
 //////////////
@@ -773,12 +775,11 @@ real ConjGradientOptimizer::optimize()
     cout << "cost = " << cost->value[0] << " " << cost->value[1] << " " << cost->value[2] << endl;
     
     // Make a line search along the current search direction
-    current_cost = lineSearch();
+    early_stop = lineSearch();
+    current_cost = cost->value[0];
     
     // Find the new search direction
-    early_stop = findDirection();
-    if (early_stop)
-      cout << "Gradient is almost 0, we can stop" << endl;
+    early_stop = early_stop || findDirection();
 
     last_improvement = last_cost - current_cost;
     last_cost = current_cost;

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.13 2003/04/24 15:41:38 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.14 2003/04/25 14:27:41 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -189,8 +189,8 @@ private:
   bool findDirection();
 
   // Search the minimum in the current search direction
-  // Return the value of the minimum found
-  real lineSearch();
+  // Return true iif no improvement was possible (and we can stop here)
+  bool lineSearch();
 
   // Update the search_direction by
   // search_direction = delta + gamma * search_direction
@@ -248,17 +248,18 @@ private:
   // when moving in the direction "search_direction".
   // It must not update "current_opp_gradient" (that is done in the Conjugate
   // Gradient formulas).
+  // It must return the optimal step found to minimize the gradient.
 
   // The GSearch algorithm as described in
   // "Direct Gradient-Based Reinforcement Learning:
   // II. Gradient Ascent Algorithms and Experiments"
   // by J.Baxter, L. Weaver, P. Bartlett.
-  void gSearch (void (*grad)(Optimizer*, const Vec&));
+  real gSearch (void (*grad)(Optimizer*, const Vec&));
 
   // The line search algorithm described in
   // "Practical Methods of Optimization, 2nd Ed", by Fletcher (1987)
   // (this function actually just calls fletcherSearchMain)
-  void fletcherSearch (real mu = FLT_MAX);
+  real fletcherSearch (real mu = FLT_MAX);
 
   
   //--------------------------- UTILITY FUNCTIONS ----------------------------
