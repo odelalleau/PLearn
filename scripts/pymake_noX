@@ -88,12 +88,14 @@ def convertWinToLinux(path):
   else:
     return path
 
-def join(dir,file,file2=""):
+def join(dir,file,file2="",file3=""):
   """simply call os.path.join and convertWinToLinux"""
   if file2=='':
-      res = convertWinToLinux(os.path.join(dir, file))
+    res = convertWinToLinux(os.path.join(dir, file))
+  elif file3=='':
+    res = convertWinToLinux(os.path.join(dir, file, file2))
   else:
-      res = convertWinToLinux(os.path.join(dir, file, file2))
+    res = convertWinToLinux(os.path.join(dir, file, file2, file3))
   return res
 
 def abspath(mypath):
@@ -347,6 +349,7 @@ def printusage():
     print '  -checkobj: will report all source files that don\'t have *any* correponding .o in OBJS.'
     print '             This processes recursively from  given directories and is typically called'
     print '             after a pymake -clean, and a pymake . to get the list of files that failed to compile.'
+    print '  -so: create a shared object (.so) instead of an executable file.'
     print '  -dll: create a dll instead of an executable file.'
     print '        It probably works ONLY on Windows with MinGW installed.'
     print
@@ -458,10 +461,19 @@ if 'local' in optionargs:
     local_compilation = 1
     optionargs.remove('local')
 
+create_so = 0 # do we want to create a .so instead of an executable file
+if 'so' in optionargs:
+    create_so = 1
+    optionargs.remove('so')
+
 create_dll = 0 # do we want to create a dll instead of an executable file
 if 'dll' in optionargs:
     create_dll = 1
     optionargs.remove('dll')
+
+if create_so and create_dll:
+    print 'Error: cannot create a DLL and a Shared Object at the same time.  Remove "-dll" or "-so" option.'
+    sys.exit()
 
 # fill the list of options from the optionargs, adding necessary default options (if no option of a group choice was specified)
 options = []
@@ -567,11 +579,13 @@ class FileInfo:
     .cc files will also have the following fields
       - corresponding_ofile: full path of corresponding .o file    
       - hasmain: true if the sourcefile has a main function
-      If hasmain is true, then the following fields will also be set:
-        - corresponding_executable: full path of corresponding executable (in the same directory as the obj)
-      If create_dll is true, then the following fields will also be set:
-        - corresponding_dll_file: full path of corresponding dll file
-        - corresponding_def_file: full path of corresponding def file
+      If hasmain is true, then the following field will also be set:
+        - corresponding_output: full path of corresponding executable (in the same directory as the obj)
+      If create_dll is true, then the following fields will be set:
+        - corresponding_output: full path of corresponding dll file (in the same directory as the source file)
+        - corresponding_def_file: full path of corresponding def file (in the same directory as the source file)
+      If create_so is true, then the following field will be set:
+        - corresponding_output: full path of corresponding .so file (in the same directory as the source obj)
 
 
     These attributes should not be accessed directly, but through their get method
@@ -672,10 +686,12 @@ class FileInfo:
             self.corresponding_ofile = join(self.filedir, objsdir, self.filebase+'.o')
 
             if self.hasmain:
-                self.corresponding_executable = join(self.filedir, objsdir, self.filebase)
+                self.corresponding_output = join(self.filedir, objsdir, self.filebase)
             if create_dll:
-                self.corresponding_dll_file = join(self.filedir, self.filebase+'.dll')
+                self.corresponding_output = join(self.filedir, self.filebase+'.dll')
                 self.corresponding_def_file = join(self.filedir, self.filebase+'.def')
+            if create_so:
+                self.corresponding_output = join(self.filedir, objsdir, 'lib'+self.filebase+'.so')
 
         else:
             raise 'Attempting to build a FileInfo from a file that is not a .cc or .h or similar file'
@@ -707,10 +723,10 @@ class FileInfo:
                     include.collect_ccfiles_to_link(ccfiles_to_link, visited_hfiles)
 
     def get_ccfiles_to_link(self):
-        """returns the list of FileInfos of all .cc files that need to be linked together to produce the corresponding_executable"""        
+        """returns the list of FileInfos of all .cc files that need to be linked together to produce the corresponding_output"""        
         if not hasattr(self,"ccfiles_to_link"):
             #if not self.hasmain or not self.is_ccfile:
-            if (not self.hasmain and not create_dll) or not self.is_ccfile:
+            if (not self.hasmain and not create_dll and not create_so) or not self.is_ccfile:
                 raise "called get_ccfiles_to_link on a file that is not a .cc file or that does not contain a main()" 
             self.ccfiles_to_link = []
             visited_hfiles = []
@@ -806,7 +822,7 @@ class FileInfo:
                 linkeroptions = linkeroptions + '-L'+qtdir + 'lib/ -lqt'
             else:
                 linkeroptions = linkeroptions + '-L'+qtdir + 'lib/ -lqt-mt'
-                
+            
         return linkeroptions
         
     def get_depmtime(self):
@@ -842,28 +858,12 @@ class FileInfo:
             print "OSError... (probably NFS latency); Will be retrying"
             return 0
 
-    def corresponding_executable_is_up_to_date(self):
-        """returns true if the corresponding executable is up to date, false if it needs relinking"""
-        if not os.path.exists(self.corresponding_executable):
+    def corresponding_output_is_up_to_date(self):
+        """returns true if the corresponding executable is up to date, false if it needs rebuilding"""
+        if not os.path.exists(self.corresponding_output):
             return 0
         else:
-            exec_mtime = os.path.getmtime(self.corresponding_executable)
-            ccfilelist = self.get_ccfiles_to_link()
-            for ccfile in ccfilelist:
-                if not os.path.exists(ccfile.corresponding_ofile):
-                    return 0
-                ofile_mtime = os.path.getmtime(ccfile.corresponding_ofile)
-                if ccfile.get_depmtime()>ofile_mtime or ofile_mtime>exec_mtime:
-                    return 0
-            return 1
-
-    def corresponding_dll_file_is_up_to_date(self):
-        """returns true if the corresponding .dll file is up to date,
-        false if it needs rewrapping."""
-        if not os.path.exists(self.corresponding_dll_file):
-            return 0
-        else:
-            exec_mtime = os.path.getmtime(self.corresponding_dll_file)
+            exec_mtime = os.path.getmtime(self.corresponding_output)
             ccfilelist = self.get_ccfiles_to_link()
             for ccfile in ccfilelist:
                 if not os.path.exists(ccfile.corresponding_ofile):
@@ -884,7 +884,7 @@ class FileInfo:
 
     def make_objs_dir(self):
         """ makes the OBJS dir and subdirectory if they don't already exist,
-        to hold the corresponding_ofile and corresponding_executable """
+        to hold the corresponding_ofile and corresponding_output """
         odir = join(self.filedir, objsdir)
         if not os.path.isdir(odir):  # make sure the OBJS dir exists, otherwise the command will fail
             os.makedirs(odir)
@@ -1023,6 +1023,9 @@ class FileInfo:
 
         linker = default_linker
         linkeroptions = ""
+        so_options = ""
+        if create_so:
+            so_options = " -shared "
         for opt in options:
             optdef = pymake_options_defs[opt]
             if optdef.linkeroptions:
@@ -1030,7 +1033,7 @@ class FileInfo:
             if optdef.linker:
                 linker = optdef.linker
 
-        command = linker + ' -o ' + self.corresponding_executable + ' ' + string.join(objsfilelist,' ') + ' ' + self.get_optional_libraries_linkeroptions() + ' ' + linkeroptions + ' ' + linkeroptions_tail
+        command = linker + so_options + ' -o ' + self.corresponding_output + ' ' + string.join(objsfilelist,' ') + ' ' + self.get_optional_libraries_linkeroptions() + ' ' + linkeroptions + ' ' + linkeroptions_tail
 
         # print "CALLED link_command WITH optional_libraries_linkeroptions of: ", self.get_optional_libraries_linkeroptions()        
         return command
@@ -1038,8 +1041,6 @@ class FileInfo:
     def launch_linking(self):
         command = self.link_command()
         print command
-        if os.path.exists(self.corresponding_executable):
-            os.unlink(self.corresponding_executable)
         os.system(command)
 
     def dll_command(self):
@@ -1054,7 +1055,7 @@ class FileInfo:
           linkeroptions = '--def='+self.corresponding_def_file
         linkeroptions = linkeroptions + ' ' + dllwrap_basic_options
 
-        command = dll_wrapper + ' ' + linkeroptions + ' -o ' + self.corresponding_dll_file + ' ' + string.join(objsfilelist,' ')
+        command = dll_wrapper + ' ' + linkeroptions + ' -o ' + self.corresponding_output + ' ' + string.join(objsfilelist,' ')
 
         return command
 
@@ -1120,11 +1121,8 @@ def get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_l
             print "Warning: bad target", target
         else:
             info = file_info(cctarget)
-            if info.hasmain or create_dll:
-                if info.hasmain and not force_recompilation and info.corresponding_executable_is_up_to_date():
-                    info.make_symbolic_link(linkname) # remake the correct symbolic link
-                    print 'Target',info.filebase,'is up to date.'
-                elif not force_recompilation and create_dll and info.corresponding_dll_file_is_up_to_date():
+            if info.hasmain or create_dll or create_so:
+                if not force_recompilation and info.corresponding_output_is_up_to_date() and not create_dll and not create_so:
                     info.make_symbolic_link(linkname) # remake the correct symbolic link
                     print 'Target',info.filebase,'is up to date.'
                 else:
@@ -1225,7 +1223,7 @@ def sequential_link(executables_to_link, linkname):
             ccfile.nfs_wait_for_all_linkable_ofiles()            
             print '[ LINKING',ccfile.filebase,']'
             ccfile.launch_linking()
-            if platform!='win32':
+            if platform!='win32' and not create_so:
                 ccfile.make_symbolic_link(linkname)            
 
 def sequential_dll(target_file_info):

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.cc,v 1.11 2004/02/26 03:36:34 tihocan Exp $
+   * $Id: SubVMatrix.cc,v 1.12 2004/04/28 13:53:01 lheureup Exp $
    ******************************************************* */
 
 #include "SubVMatrix.h"
@@ -79,8 +79,8 @@ SubVMatrix::SubVMatrix(VMat the_parent, real the_fistart, int the_jstart, real t
 void SubVMatrix::declareOptions(OptionList &ol)
 {
   declareOption(ol, "parent", &SubVMatrix::parent, OptionBase::buildoption, "Source VMatrix");
-  declareOption(ol, "istart", &SubVMatrix::istart, OptionBase::buildoption, "Start i coordinate");
-  declareOption(ol, "jstart", &SubVMatrix::jstart, OptionBase::buildoption, "Start j coordinate");
+  declareOption(ol, "istart", &SubVMatrix::istart, OptionBase::buildoption, "Start i coordinate(row wise)");
+  declareOption(ol, "jstart", &SubVMatrix::jstart, OptionBase::buildoption, "Start j coordinate(column wise)");
   declareOption(ol, "fistart", &SubVMatrix::fistart, OptionBase::buildoption,
       "If provided, will override istart to fistart * parent.length()");
   declareOption(ol, "flength", &SubVMatrix::flength, OptionBase::buildoption,
