@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.8 2004/07/06 13:01:38 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.9 2004/07/07 17:28:55 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -136,6 +136,7 @@
 #include "BootstrapVMatrix.h"
 #include "CenteredVMatrix.h"
 #include "CumVMatrix.h"
+#include "DatedJoinVMatrix.h"
 #include "FilteredVMatrix.h"
 #include "GetInputVMatrix.h"
 #include "IndexedVMatrix.h"
