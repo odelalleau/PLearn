@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedFuncVariable.h,v 1.4 2004/02/22 17:44:35 yoshua Exp $
+   * $Id: UnfoldedFuncVariable.h,v 1.5 2004/02/23 23:59:35 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,12 +53,13 @@ class UnfoldedFuncVariable: public NaryVariable
 {
 protected:
     //!  protected default constructor for persistence
-  UnfoldedFuncVariable() {}
+  UnfoldedFuncVariable();
 
 public:
   //protected:
   Var input_matrix;
   Func f;
+  bool transpose;
 
   TVec<VarArray> inputs; // all the input Var's
   TVec<Var> outputs; // and the corresponding output Var's, 
@@ -66,7 +67,7 @@ public:
 
 public:
   //! concatenate_{i=0 to n_unfold} f(i-th row of input_matrix)
-  UnfoldedFuncVariable(Var inputmatrix, Func the_f);
+  UnfoldedFuncVariable(Var inputmatrix, Func the_f, bool transpose);
     
   PLEARN_DECLARE_OBJECT(UnfoldedFuncVariable);
   virtual void build();
@@ -83,8 +84,8 @@ private:
   void build_();
 };
 
-inline Var unfoldedFuncOf(Var input_matrix, Func f)
-{ return new UnfoldedFuncVariable(input_matrix,f); }
+inline Var unfoldedFuncOf(Var input_matrix, Func f, bool transpose = false)
+{ return new UnfoldedFuncVariable(input_matrix, f, transpose); }
 
 } // end of namespace PLearn
 

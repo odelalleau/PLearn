@@ -36,13 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedFuncVariable.cc,v 1.3 2004/02/23 14:31:40 tihocan Exp $
+   * $Id: UnfoldedFuncVariable.cc,v 1.4 2004/02/23 23:59:35 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "UnfoldedFuncVariable.h"
-#include "PLMPI.h"
-#include "DisplayUtils.h"
+//#include "PLMPI.h"
+//#include "DisplayUtils.h"
 
 namespace PLearn {
 using namespace std;
@@ -57,11 +57,17 @@ PLEARN_IMPLEMENT_OBJECT(UnfoldedFuncVariable, "Variable that puts in the rows of
                         "is created that maps (using the Func as a template) each input row to each output row.\n"
                         "The parents of this variable include the non-input parents of the Func.\n");
 
-UnfoldedFuncVariable::UnfoldedFuncVariable(Var inputmatrix, Func the_f)
+UnfoldedFuncVariable::UnfoldedFuncVariable()
+  : transpose(0)
+  {}
+
+UnfoldedFuncVariable::UnfoldedFuncVariable(Var inputmatrix, Func the_f, bool the_transpose)
   :NaryVariable(nonInputParentsOfPath(the_f->inputs,the_f->outputs) & inputmatrix, 
-                inputmatrix->length(),the_f->outputs[0]->length()*the_f->outputs[0]->width()),
+                transpose ? the_f->outputs[0]->length()*the_f->outputs[0]->width() : inputmatrix->length(),
+                transpose ? inputmatrix->width() : the_f->outputs[0]->length()*the_f->outputs[0]->width()),
    input_matrix(inputmatrix), 
-   f(the_f)
+   f(the_f),
+   transpose(the_transpose)
 {
   build();
 }
@@ -77,7 +83,7 @@ void UnfoldedFuncVariable::build_()
   if(f->outputs.size()!=1)
     PLERROR("In UnfoldedFuncVariable: function must have a single variable output (maybe you can vconcat the vars into a single one prior to calling sumOf, if this is really what you want)");
   f->inputs.setDontBpropHere(true);
-  int n_unfold=input_matrix->length();
+  int n_unfold = transpose ? input_matrix->width() : input_matrix->length();
   inputs.resize(n_unfold);
   outputs.resize(n_unfold);
   f_paths.resize(n_unfold);
@@ -100,11 +106,23 @@ void UnfoldedFuncVariable::declareOptions(OptionList& ol)
   declareOption(ol, "input_matrix", &UnfoldedFuncVariable::input_matrix, OptionBase::buildoption, 
                 "    Var that contains the data, with multiple consecutive rows forming one bag.\n");
 
+  declareOption(ol, "transpose", &UnfoldedFuncVariable::transpose, OptionBase::buildoption, 
+                "    If set to 1, then instead puts in the columns of the output matrix the values\n"
+                "    of f at the columns of the input matrix.");
+
   inherited::declareOptions(ol);
 }
 
-void UnfoldedFuncVariable::recomputeSize(int& l, int& w) const
-{ l=input_matrix->length(); w=f->outputs[0]->length()*f->outputs[0]->width(); }
+
+void UnfoldedFuncVariable::recomputeSize(int& l, int& w) const {
+  w=f->outputs[0]->length()*f->outputs[0]->width();
+  if (transpose) {
+    l = w;
+    w =input_matrix->width();
+  } else {
+    l=input_matrix->length();
+  }
+}
 
 
 void UnfoldedFuncVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
@@ -120,19 +138,25 @@ void UnfoldedFuncVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& 
 
 void UnfoldedFuncVariable::fprop()
 {
-  int n_unfold = input_matrix->length();
-  for (int i=0;i<n_unfold;i++)
-    {
-      inputs[i] << input_matrix->matValue(i);
-      f_paths[i].fprop();
+  int n_unfold = transpose ? input_matrix->width() : input_matrix->length();
+  for (int i=0;i<n_unfold;i++) {
+    inputs[i] << transpose ? input_matrix->matValue.column(i) : input_matrix->matValue(i);
+    f_paths[i].fprop();
+    if (transpose) {
+      matValue.column(i) << outputs[i]->value;
+    } else {
       matValue(i) << outputs[i]->value;
     }
+  }
 }
 
 
 void UnfoldedFuncVariable::bprop()
 { 
-  int n_unfold = input_matrix->length();
+  int n_unfold = transpose ? input_matrix->width() : input_matrix->length();
+  if (transpose) {
+    PLWARNING("In UnfoldedFuncVariable::bprop - Not sure backprop is correct with tranpose == 1");
+  }
   for (int i=0;i<n_unfold;i++)
     {
       f_paths[i].clearGradient();
@@ -144,7 +168,7 @@ void UnfoldedFuncVariable::bprop()
 
 void UnfoldedFuncVariable::printInfo(bool print_gradient)
 {
-  int n_unfold = input_matrix->length();
+  int n_unfold = transpose ? input_matrix->width() : input_matrix->length();
   for (int i=0;i<n_unfold;i++)
     f_paths[i].printInfo(print_gradient);
   cout << info() << " : " << getName() << "[" << (void*)this << "]" 
@@ -154,7 +178,6 @@ void UnfoldedFuncVariable::printInfo(bool print_gradient)
   if (print_gradient) cout << " gradient=" << gradient;
   cout << endl; 
 }
-
 
 
 } // end of namespace PLearn
