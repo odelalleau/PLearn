@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DeepNNet.cc,v 1.9 2005/01/27 19:41:33 yoshua Exp $ 
+   * $Id: DeepNNet.cc,v 1.10 2005/01/28 18:03:47 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -57,6 +57,9 @@ DeepNNet::DeepNNet()
     initial_learning_rate(1e-4),
     learning_rate_decay(1e-6),
     layerwise_learning_rate_adaptation(0),
+    normalize_per_unit(0),
+    normalize_percentage(0),
+    normalize_activations(0),
     output_cost("mse"),
     add_connections(true),
     remove_connections(true),
@@ -101,6 +104,15 @@ void DeepNNet::declareOptions(OptionList& ol)
                 OptionBase::buildoption, "if 0 use stochastic gradient as usual, otherwise correct the\n"
                 "learning rates layerwise by multiplying by the ratio of average gradient norm\n"
                 "of the top layer by the i-th layer, to the power layerwise_learning_rate_adaptation.");
+
+  declareOption(ol, "normalize_per_unit", &DeepNNet::normalize_per_unit,
+                OptionBase::buildoption, "Try balancing the norm of the weight gradient vectors per unit, rather than per weight\n");
+
+  declareOption(ol, "normalize_percentage", &DeepNNet::normalize_percentage,
+                OptionBase::buildoption, "Try balancing the ratio the gradient to the weight squared, rather than the norm of the gradient\n");
+
+  declareOption(ol, "normalize_activations", &DeepNNet::normalize_activations,
+                OptionBase::buildoption, "Try balancing the norm of the gradient on the activations, per layer\n");
 
   declareOption(ol, "output_cost", &DeepNNet::output_cost, OptionBase::buildoption,
                 "String-valued option specifies output non-linearity and cost:\n"
@@ -417,6 +429,17 @@ void DeepNNet::train()
 
       learning_rate = initial_learning_rate / (1 + t*learning_rate_decay);
 
+      if (layerwise_learning_rate_adaptation>0 && normalize_activations)
+      {
+	int l=n_layers-1;
+	Vec ag = activations_gradients[n_layers-1];
+	real& gn = layerwise_gradient_norm[l];
+	for (int i=0;i<n_outputs;i++)
+	{
+	  real g = ag[i];
+	  gn += g*g;
+	}
+      }
       for (int l=n_layers-1;l>=0;l--)
       {
         Vec biases_l = biases[l];
@@ -451,22 +474,33 @@ void DeepNNet::train()
             weights_i[k] -= layer_learning_rate * (grad + L1_regularizer*sign_w);
             if (l>0)   // THE IF COULD BE FACTORED OUT (more ugly but more efficient)
 	      previous_layer_gradient[j] += g_i * w;
-	    if (layerwise_learning_rate_adaptation>0)  // THE IF COULD BE FACTORED OUT (more ugly but more efficient)
-	      layerwise_gradient_norm[l] += grad*grad;
+	    if (layerwise_learning_rate_adaptation>0 && !normalize_activations)  // THE IF COULD BE FACTORED OUT (more ugly but more efficient)
+	      {
+		if (normalize_percentage)
+		  layerwise_gradient_norm[l] += grad*grad/(w*w);
+		else
+		  layerwise_gradient_norm[l] += grad*grad;
+	      }
           }
         }
         if (l>0)
           for (int j=0;j<n_previous;j++) 
           {
             real a = previous_layer[j];
-            previous_layer_gradient[j] = previous_layer_gradient[j] * (1 - a*a);
+	    real& g = previous_layer_gradient[j];
+            g *= (1 - a*a);
+	    if (layerwise_learning_rate_adaptation>0 && normalize_activations)
+	      layerwise_gradient_norm[l-1] += g*g;
           }
       }
       if (layerwise_learning_rate_adaptation>0)
       {
 	for (int l=0;l<n_layers;l++)
 	{
-	  layerwise_gradient_norm[l] /= n_weights_of_layer[l];
+	  if (normalize_activations || normalize_per_unit)
+	    layerwise_gradient_norm[l] /= n_units_per_layer[l]; // maybe we want larger weights, hence larger gradients where there are less terms in the sum, i.e. less weights
+	  else // normalize per weight
+	    layerwise_gradient_norm[l] /= n_weights_of_layer[l];
 	  layerwise_gradient_norm_ma[l] = (1-learning_rate) * layerwise_gradient_norm_ma[l] + learning_rate * layerwise_gradient_norm[l];
 	  layerwise_lr_factor[l] = pow(layerwise_gradient_norm_ma[n_layers-1]/layerwise_gradient_norm_ma[l],
 				       0.5*layerwise_learning_rate_adaptation);

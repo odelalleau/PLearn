@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DeepNNet.h,v 1.7 2005/01/26 21:20:34 yoshua Exp $ 
+   * $Id: DeepNNet.h,v 1.8 2005/01/28 18:03:47 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -93,6 +93,9 @@ public:
   real initial_learning_rate;
   real learning_rate_decay;
   real layerwise_learning_rate_adaptation; 
+  bool normalize_per_unit;
+  bool normalize_percentage;
+  bool normalize_activations;
   string output_cost; // implies a non-linearity for outputs: "mse" -> linear, "nll" -> softmax
   bool add_connections; // if true, instanciate potential connections with greater
   // average gradient than the existing connections with the smallest average gradient
