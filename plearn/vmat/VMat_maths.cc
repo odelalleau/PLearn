@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat_maths.cc,v 1.8 2003/09/20 20:56:31 yoshua Exp $
+* $Id: VMat_maths.cc,v 1.9 2003/10/15 18:08:51 yoshua Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat_maths.h"
@@ -352,7 +352,8 @@ void computeInputMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat)
     multiplyAcc(meanvec,input,weight);
     externalProductScaleAcc(covarmat, input, input, weight);
   }
-  meanvec /= weightsum;
+  meanvec *= 1/weightsum;
+  covarmat *= 1/weightsum;
   externalProductScaleAcc(covarmat, meanvec, meanvec, real(-1));
 }
 

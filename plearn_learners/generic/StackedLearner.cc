@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.cc,v 1.6 2003/10/05 16:59:43 yoshua Exp $
+   * $Id: StackedLearner.cc,v 1.7 2003/10/15 18:09:17 yoshua Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -180,21 +180,16 @@ void StackedLearner::setTrainingSet(VMat training_set, bool call_forget)
       VMat lower_trainset = sets[0];
       VMat upper_trainset = sets[1];
       for (int i=0;i<base_learners.length();i++)
-        base_learners[i]->setTrainingSet(lower_trainset);
+        base_learners[i]->setTrainingSet(lower_trainset,call_forget && train_base_learners);
       if (combiner)
-        combiner->setTrainingSet(new PLearnerOutputVMatrix(upper_trainset, base_learners, put_raw_input));
+        combiner->setTrainingSet(new PLearnerOutputVMatrix(upper_trainset, base_learners, put_raw_input),call_forget);
     }
   } else
   {
     for (int i=0;i<base_learners.length();i++)
-      base_learners[i]->setTrainingSet(training_set,false);
+      base_learners[i]->setTrainingSet(training_set,call_forget && train_base_learners);
     if (combiner)
-      combiner->setTrainingSet(new PLearnerOutputVMatrix(training_set, base_learners, put_raw_input));
-  }
-  if (call_forget)
-  {
-    build();
-    forget();
+      combiner->setTrainingSet(new PLearnerOutputVMatrix(training_set, base_learners, put_raw_input),call_forget);
   }
 }
 
