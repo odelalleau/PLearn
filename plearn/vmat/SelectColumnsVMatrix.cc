@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectColumnsVMatrix.cc,v 1.7 2004/07/07 13:55:22 tihocan Exp $
+   * $Id: SelectColumnsVMatrix.cc,v 1.8 2004/08/05 13:49:26 tihocan Exp $
    ******************************************************* */
 
 #include "SelectColumnsVMatrix.h"
@@ -48,11 +48,21 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(SelectColumnsVMatrix,
     "Selects variables from a source matrix according to given vector of indices.",
-    ""
+    "Alternatively, the variables can be given by their names."
 );
 
+//////////////////////////
+// SelectColumnsVMatrix //
+//////////////////////////
 SelectColumnsVMatrix::SelectColumnsVMatrix()
 {}
+
+SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source, TVec<string> the_fields)
+: fields(the_fields)
+{
+  source = the_source;
+  build_();
+}
 
 SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source, TVec<int> the_indices)
 : indices(the_indices)

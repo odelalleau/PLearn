@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectColumnsVMatrix.h,v 1.10 2004/07/07 17:30:48 tihocan Exp $
+   * $Id: SelectColumnsVMatrix.h,v 1.11 2004/08/05 13:49:26 tihocan Exp $
    ******************************************************* */
 
 
@@ -71,6 +71,10 @@ public:
   //! Default constructor.
   SelectColumnsVMatrix();
   
+  //! The appropriate fieldinfos are copied upon construction.
+  //! Here the indices will be shared for efficiency. But you should not modify them afterwards!
+  SelectColumnsVMatrix(VMat the_source, TVec<string> the_fields);
+
   //! The appropriate fieldinfos are copied upon construction
   //! Here the indices will be shared for efficiency. But you should not modify them afterwards!
   SelectColumnsVMatrix(VMat the_source, TVec<int> the_indices);
