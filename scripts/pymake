@@ -427,7 +427,7 @@ if local_compilation:
 else:
     hostspath = locatehostsfile()
     if hostspath:
-        print '*** Paralel compilation using list of hosts from file: ' + hostspath
+        print '*** Parallel compilation using list of hosts from file: ' + hostspath
         f = open(hostspath,'r')
         list_of_hosts = filter(lambda s: s and s[0]!='#', map(string.strip,f.readlines()))
         f.close()
