@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.45 2004/02/26 03:38:02 tihocan Exp $
+* $Id: VMatrix.cc,v 1.46 2004/02/28 18:10:48 tihocan Exp $
 ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -915,22 +915,28 @@ Mat VMatrix::toMat() const
 VMat VMatrix::subMat(int i, int j, int l, int w)
 { return new SubVMatrix(this,i,j,l,w); }
 
+/////////
+// dot //
+/////////
 real VMatrix::dot(int i1, int i2, int inputsize) const
 { 
-  real res = 0.;
-  for(int k=0; k<inputsize; k++)
-    res += get(i1,k)*get(i2,k);
-  return res;
+  dotrow_1.resize(inputsize);
+  dotrow_2.resize(inputsize);
+  getSubRow(i1, 0, dotrow_1);
+  getSubRow(i2, 0, dotrow_2);
+  return PLearn::dot(dotrow_1, dotrow_2);
 }
 
 real VMatrix::dot(int i, const Vec& v) const
 {
-  real res = 0.;
-  for(int k=0; k<v.length(); k++)
-    res += get(i,k) * v[k];
-  return res;
+  dotrow_1.resize(v.length());
+  getSubRow(i, 0, dotrow_1);
+  return PLearn::dot(dotrow_1, v);
 }
 
+////////////
+// getRow //
+////////////
 void VMatrix::getRow(int i, VarArray& inputs) const
 { 
   Vec v(width());

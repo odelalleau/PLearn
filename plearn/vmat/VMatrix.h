@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.35 2004/02/26 03:38:02 tihocan Exp $
+   * $Id: VMatrix.h,v 1.36 2004/02/28 18:10:48 tihocan Exp $
    ******************************************************* */
 
 
@@ -73,6 +73,10 @@ protected:
   int length_;
   int width_;
   time_t mtime_; // time of "last modification" of files containing the data
+
+  //! Used in the default dot(i,j) method to store the i-th and j-th rows.
+  mutable Vec dotrow_1;
+  mutable Vec dotrow_2;
 
   // For training/testing data sets we assume each row is composed of 3 parts
   // An input part, a target part, and a weight part
