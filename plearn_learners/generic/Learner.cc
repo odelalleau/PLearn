@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.cc,v 1.15 2004/02/20 21:14:46 chrish42 Exp $
+   * $Id: Learner.cc,v 1.16 2004/02/26 18:07:52 nova77 Exp $
    ******************************************************* */
 
 #include "Learner.h"
@@ -105,7 +105,8 @@ void Learner::outputResultLineToFile(const string & fname, const Vec& results,bo
 #else
   ofstream teststream(fname.c_str(),ios_base::out|(append?ios_base::app:static_cast<_Ios_Openmode>(0)));
 #endif
-#if __GNUC__ < 3
+  // norman: added WIN32 check
+#if __GNUC__ < 3 && !defined(WIN32)
   if(teststream.tellp()==0)
 #else
   if(teststream.tellp() == streampos(0))
@@ -299,7 +300,8 @@ void Learner::openTrainObjectiveStream()
   ostream& out = *train_objective_stream;
   if(out.bad())
     PLERROR("could not open file %s for appending",filename.c_str());
-#if __GNUC__ < 3
+  // norman: added WIN32 check
+#if __GNUC__ < 3 && !defined(WIN32)
   if(out.tellp()==0)
 #else
   if(out.tellp() == streampos(0))
@@ -330,7 +332,8 @@ void Learner::openTestResultsStreams()
       ostream& out = *test_results_streams[k];
       if(out.bad())
         PLERROR("In Learner::openTestResultsStreams could not open file %s for appending",filename.c_str());
-#if __GNUC__ < 3
+  // norman: added WIN32 check
+#if __GNUC__ < 3 && !defined(WIN32)
       if(out.tellp() == 0)
 #else
       if(out.tellp() == streampos(0))
@@ -570,7 +573,8 @@ void Learner::apply(const VMat& data, VMat outputs)
 
   void Learner::computeLeaveOneOutCosts(const VMat& data, VMat costsmat, CostFunc costf)
   {
-    if(costsmat.length() != data.length() | costsmat.width()!=1)
+    // norman: added parenthesis to clarify precendence
+    if( (costsmat.length() != data.length()) | costsmat.width()!=1)
       PLERROR("In Learner::computeLeaveOneOutCosts bad dimensions for costsmat VMat");
     Vec testsample(inputsize()+targetsize());
     Vec testinput = testsample.subVec(0,inputsize());

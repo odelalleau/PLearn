@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
- * $Id: NeuralNet.cc,v 1.19 2004/02/20 21:14:46 chrish42 Exp $
+ * $Id: NeuralNet.cc,v 1.20 2004/02/26 18:07:52 nova77 Exp $
  ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeuralNet.h */
@@ -388,7 +388,9 @@ void NeuralNet::build_()
   cost->setName("cost");
   output->setName("output");
 
-  if(paramsvalues && (paramsvalues.size() == params.nelems()))
+  // norman: ambiguous conversion (bool or char*?)
+  //if(paramsvalues && (paramsvalues.size() == params.nelems()))
+  if((bool)(paramsvalues) && (paramsvalues.size() == params.nelems()))
     {
       params << paramsvalues;
       initial_paramsvalues.resize(paramsvalues.length());

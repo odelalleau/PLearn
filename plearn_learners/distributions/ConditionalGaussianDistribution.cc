@@ -124,7 +124,13 @@ Mat ConditionalGaussianDistribution::variance() const
 
 void ConditionalGaussianDistribution::generate(Vec& x) const
 {
+  // norman: WARNING! Function not found in lapack library for windows!!
+
+#ifdef WIN32
+  PLERROR("multivariate_normal for Vec not found in lapack library for windows!");
+#else
   x = multivariate_normal(mean, covariance);
+#endif
 }
 
 void ConditionalGaussianDistribution::setInput(const Vec& input)

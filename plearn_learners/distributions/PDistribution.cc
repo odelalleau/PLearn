@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.cc,v 1.10 2004/02/20 21:14:46 chrish42 Exp $ 
+   * $Id: PDistribution.cc,v 1.11 2004/02/26 18:04:45 nova77 Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.cc */
@@ -159,7 +159,9 @@ void PDistribution::train()
 
 void PDistribution::computeOutput(const Vec& input, Vec& output) const
 {
-  int l = outputs_def.length();
+  // norman: method length returns always size_type
+  //int l = outputs_def.length();
+  int l = (int)outputs_def.length();
   for(int i=0; i<l; i++)
     {
       switch(outputs_def[i])

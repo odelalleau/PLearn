@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.34 2004/02/20 21:14:45 chrish42 Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.35 2004/02/26 18:04:45 nova77 Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -557,7 +557,7 @@ ConditionalDensityNet::ConditionalDensityNet()
       output->setName("output");
       
       // Shared values hack...
-      bool use_paramsvalues=paramsvalues && (paramsvalues.size() == params.nelems());
+      bool use_paramsvalues=(bool)paramsvalues && (paramsvalues.size() == params.nelems());
       if(use_paramsvalues)
       {
         params << paramsvalues;
