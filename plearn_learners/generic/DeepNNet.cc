@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DeepNNet.cc,v 1.6 2005/01/21 21:16:12 yoshua Exp $ 
+   * $Id: DeepNNet.cc,v 1.7 2005/01/25 14:52:29 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -156,6 +156,15 @@ void DeepNNet::build_()
         avg_weight_gradients[l].resize(n_units_per_layer[l+1],n_units_per_layer[l]);
     }
 
+    if (layerwise_learning_rate_adaptation>0)
+    {
+      layerwise_lr_factor.resize(n_layers);
+      layerwise_gradient_norm_ma.resize(n_layers);
+      layerwise_gradient_norm.resize(n_layers);
+      n_weights_of_layer.resize(n_layers);
+      layerwise_lr_factor.fill(1.0);
+      layerwise_gradient_norm_ma.clear();
+    }
     bool do_initialize = false;
 
     if (sources.length() != n_layers) // in case we are called after loading the object we don't need to do this:
@@ -256,6 +265,12 @@ void DeepNNet::initializeParams(bool set_seed)
         fill_random_uniform(weights[l][i],-delta,delta);
       }
     }
+    if (layerwise_learning_rate_adaptation>0)
+    {
+      n_weights_of_layer[l]=0;
+      for (int i=0;i<n_next;i++)
+	n_weights_of_layer[l] += sources[l][i].length();
+    }
   }
 }
 
@@ -274,9 +289,13 @@ void DeepNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(sources, copies);
   deepCopyField(weights, copies);
   deepCopyField(biases, copies);
+  deepCopyField(layerwise_lr_factor, copies);
   deepCopyField(activations, copies);
   deepCopyField(activations_gradients, copies);
   deepCopyField(avg_weight_gradients, copies);
+  deepCopyField(layerwise_gradient_norm_ma, copies);
+  deepCopyField(layerwise_gradient_norm, copies);
+  deepCopyField(n_weights_of_layer, copies);
   deepCopyField(n_units_per_layer, copies);
   deepCopyField(output_cost, copies);
 }
@@ -348,7 +367,10 @@ void DeepNNet::train()
   {
     // clear statistics of previous epoch
     train_stats->forget();
-          
+
+    if (layerwise_learning_rate_adaptation>0)
+      layerwise_gradient_norm.clear();
+
     // train for 1 stage, and update train_stats,
     for (int ex=0;ex<n_examples;ex++, t++)
     {
@@ -397,6 +419,10 @@ void DeepNNet::train()
           previous_layer_gradient = activations_gradients[l-1];
           previous_layer_gradient.clear();
         }
+	real layer_learning_rate = learning_rate;
+	if (layerwise_learning_rate_adaptation>0)
+	  layer_learning_rate *= layerwise_lr_factor[l];
+
         for (int i=0;i<n_next;i++)
         {
           TVec<int> sources_i = sources[l][i];
@@ -409,8 +435,12 @@ void DeepNNet::train()
             real w = weights_i[k];
             int j=sources_i[k];
             real sign_w = (w>0)?1:-1;
-            weights_i[k] -= learning_rate * (g_i * previous_layer[j] + L1_regularizer*sign_w);
-            if (l>0) previous_layer_gradient[j] += g_i * w;
+	    real grad = g_i * previous_layer[j];
+            weights_i[k] -= layer_learning_rate * (grad + L1_regularizer*sign_w);
+            if (l>0)   // THE IF COULD BE FACTORED OUT (more ugly but more efficient)
+	      previous_layer_gradient[j] += g_i * w;
+	    if (layerwise_learning_rate_adaptation>0)  // THE IF COULD BE FACTORED OUT (more ugly but more efficient)
+	      layerwise_gradient_norm[l] += grad*grad;
           }
         }
         if (l>0)
@@ -420,7 +450,16 @@ void DeepNNet::train()
             previous_layer_gradient[j] = previous_layer_gradient[j] * (1 - a*a);
           }
       }
-
+      if (layerwise_learning_rate_adaptation>0)
+      {
+	for (int l=0;l<n_layers;l++)
+	{
+	  layerwise_gradient_norm[l] /= n_weights_of_layer[l];
+	  layerwise_gradient_norm_ma[l] = (1-learning_rate) * layerwise_gradient_norm_ma[l] + learning_rate * layerwise_gradient_norm[l];
+	  layerwise_lr_factor[l] = pow(layerwise_gradient_norm_ma[n_layers-1]/layerwise_gradient_norm_ma[l],
+				       0.5*layerwise_learning_rate_adaptation);
+	}
+      }
       train_stats->update(train_costs);
     }
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DeepNNet.h,v 1.5 2005/01/21 20:26:15 yoshua Exp $ 
+   * $Id: DeepNNet.h,v 1.6 2005/01/25 14:52:29 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -66,11 +66,15 @@ protected:
   TVec<TVec<TVec<int> > > sources; // at [l][i] indices of inputs to neuron i of layer l
   TVec<TVec<Vec > > weights; // at [l][i] input weight vector of neuron i of layer l
   TVec<Vec> biases; // at [l][i] bias of neuron i of layer l
-
+  Vec layerwise_lr_factor; // at [l] the multiplicative factor on the weights
+  
   // temporary 
   mutable TVec<Vec> activations; // at [l] output of non-linearity of layer l, including the input AND the output layer
   TVec<Vec> activations_gradients; // gradients of the above (for hidden and output layers, NOT the input layer)
   TVec<Mat> avg_weight_gradients; // at [l] average of norm of gradients on all existing and potential connections
+  Vec layerwise_gradient_norm_ma; // at [l] moving average of the norm of the weight gradient on that layer
+  Vec layerwise_gradient_norm; // at [l] sum of the weight gradient squared, on that layer
+  TVec<int> n_weights_of_layer; // number of weights in layer l
   real learning_rate;
     
 public:
