@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.h,v 1.10 2003/09/24 19:22:43 dorionc Exp $ 
+   * $Id: MountLucasIndex.h,v 1.11 2003/10/01 21:31:43 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.h */
@@ -59,6 +59,7 @@ class MountLucasIndex: public FinancialAdvisor
     string last_day_of_month_column; // the last_day_of_month column in the input data
     string julian_day_column; // the julian day number column in the input data
     string risk_free_rate_column; // the risk free rate column in the input data
+    string sp500_column;
     real transaction_multiplicative_cost;
 
   protected:
@@ -74,6 +75,7 @@ class MountLucasIndex: public FinancialAdvisor
     int last_day_of_month_index; // the index corresponding to last_day_of_month_column
     int julian_day_index; // the index corresponding to julian_day_column
     int risk_free_rate_index; // the index corresponding to risk_free_rate_column
+    int sp500_index;
     bool build_complete;
 
     Vec last_month_last_price;
@@ -85,8 +87,9 @@ class MountLucasIndex: public FinancialAdvisor
     Vec tbill_return;
     Mat mlm_return;
     Mat mlm_index;
-    mutable real s,s2,sf,sf2;
+    mutable real s,s2,sf,sf2,sp,sp2;
     mutable int ns;
+    mutable real last_sp500, last_month_sp500;
  
   private:
     //! This does the actual building

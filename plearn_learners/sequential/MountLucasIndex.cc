@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.cc,v 1.14 2003/09/29 21:02:47 ducharme Exp $ 
+   * $Id: MountLucasIndex.cc,v 1.15 2003/10/01 21:31:43 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.cc */
@@ -89,6 +89,7 @@ void MountLucasIndex::build_()
     last_day_of_month_index = train_set->fieldIndex(last_day_of_month_column);
     julian_day_index = train_set->fieldIndex(julian_day_column);
     risk_free_rate_index = train_set->fieldIndex(risk_free_rate_column);
+    sp500_index = train_set->fieldIndex(sp500_column);
     build_complete = true;
   }
 
@@ -108,8 +109,9 @@ void MountLucasIndex::forget()
   last_tradable_price.fill(MISSING_VALUE);
   next_to_last_tradable_price.fill(MISSING_VALUE);
 
-  s=0,s2=0,sf=0,sf2=0;
+  s=0,s2=0,sf=0,sf2=0,sp=0,sp2=0;
   ns=0;
+  last_sp500 = MISSING_VALUE, last_month_sp500 = MISSING_VALUE;
   current_month = 0;
   index_value[0] = 1000.0;
 }
@@ -130,6 +132,9 @@ void MountLucasIndex::declareOptions(OptionList& ol)
 
   declareOption(ol, "risk_free_rate_column", &MountLucasIndex::risk_free_rate_column,
     OptionBase::buildoption, "The risk free rate column (in the input data) \n");
+
+  declareOption(ol, "sp500_column", &MountLucasIndex::sp500_column,
+    OptionBase::buildoption, "The S&P500 column (in the input data) \n");
 
   declareOption(ol, "transaction_multiplicative_cost", &MountLucasIndex::transaction_multiplicative_cost,
     OptionBase::buildoption, "transaction_multiplicative_cost \n");
@@ -231,16 +236,22 @@ void MountLucasIndex::test(VMat testset, PP<VecStatsCollector> test_stats,
   //tbill_return.resize(current_month);
   //saveAscii("TBill_return.avec", tbill_return);
   //cout << "Rendement du TBill = " << exp(log(tbill_return[current_month-1]/tbill_return[17])/((current_month-17)/12.0)) << endl;
+*/
 
   real r = s/ns;
   real v = s2/ns - r*r;
   cout << "Average annual return (composed monthly) = " << exp(r*12) << endl;
-  cout << "Sharpe Ratio of monthly log-returns = " << r/sqrt(v) << endl;
+  cout << "Sharpe Ratio of monthly log-returns = " << r/sqrt(v) << endl << endl;
+
   real rf = sf/ns;
-  cout << "Average annual return (composed monthly) with transaction fees = " << exp(rf*12) << endl;
   real vf = sf2/ns - rf*rf;
-  cout << "Sharpe Ratio of monthly log-returns with transaction fees = " << rf/sqrt(vf) << endl;
-*/
+  cout << "Average annual return (composed monthly) with transaction fees = " << exp(rf*12) << endl;
+  cout << "Sharpe Ratio of monthly log-returns with transaction fees = " << rf/sqrt(vf) << endl << endl;
+
+  real rp = sp/ns;
+  real vp = sp2/ns - rp*rp;
+  cout << "Average S&P500 annual return (composed monthly) = " << exp(rp*12) << endl;
+  cout << "Sharpe Ratio of S&P500 monthly log-returns = " << rp/sqrt(vp) << endl << endl;
 }
 
 void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, VMat testcosts) const
@@ -250,6 +261,7 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
   Vec rate_return(nb_commodities);
   int julian_day = (int)input[julian_day_index];
   real risk_free_rate = input[risk_free_rate_index];
+  real sp500 = input[sp500_index];
   int n_traded=0;
 
   for (int i=0; i<nb_commodities; i++)
@@ -260,6 +272,7 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
       last_tradable_price[i] = price[i];
     }
   }
+  if (!is_missing(sp500)) last_sp500 = sp500;
 
   if (is_last_day_of_month)
   {
@@ -320,8 +333,11 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
         risk_free_rate_return = exp(log(last_month_risk_free_rate + 1.0)/12.0) - 1.0;
         real delta = mean_with_missing(rate_return) + risk_free_rate_return;
         real log_return = log(1+delta);
+        real sp500_return = log(last_sp500/last_month_sp500);
         s += log_return;
         s2 += log_return*log_return;
+        sp += sp500_return;
+        sp2 += sp500_return*sp500_return;
         ns++;
         if (is_missing(delta)) PLWARNING("delta=nan"); //delta = 0.0; // first year
         index_value[current_month] = index_value[current_month-1]*(1.0 + delta);
@@ -348,7 +364,11 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
       {
         real old_position_in_dollars = old_relative_position * index_value[current_month-1];
         real new_position_in_dollars = new_relative_position * index_value[current_month];
-        real transaction_amount = old_position_in_dollars*(1+rate_return[i])+fabs(old_position_in_dollars)*(1+risk_free_rate_return) - new_position_in_dollars;
+        real transaction_amount;
+        if (this_month%3 == 0) //rollover month
+          transaction_amount = fabs(old_position_in_dollars)*(1+rate_return[i])+fabs(old_position_in_dollars)*(1+risk_free_rate_return) + fabs(new_position_in_dollars);
+        else
+          transaction_amount = old_position_in_dollars*(1+rate_return[i])+fabs(old_position_in_dollars)*(1+risk_free_rate_return) - new_position_in_dollars;
         real return_with_transaction_fees = rate_return[i] + risk_free_rate_return - transaction_multiplicative_cost*fabs(transaction_amount/old_position_in_dollars);
         if (!is_missing(return_with_transaction_fees))
           total_return_with_transaction_fees += return_with_transaction_fees;
@@ -364,8 +384,9 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
     {
       total_return_with_transaction_fees = log(1+total_return_with_transaction_fees/n_traded);
       sf += total_return_with_transaction_fees; 
-      sf2 += total_return_with_transaction_fees*total_return_with_transaction_fees; 
+      sf2 += total_return_with_transaction_fees*total_return_with_transaction_fees;
     }
+    last_month_sp500 = last_sp500;
     //if (testoutputs) testoutputs->appendRow(predictions(current_month));
     ++current_month;
     

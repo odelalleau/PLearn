@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.cc,v 1.9 2003/09/29 21:02:46 ducharme Exp $ 
+   * $Id: FuturesTrader.cc,v 1.10 2003/10/01 21:31:43 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.cc */
@@ -68,7 +68,7 @@ void FuturesTrader::build_()
 void FuturesTrader::trader_test( int t, VMat testset, 
                                  real& absolute_return_t, real& relative_return_t) const
 {
-  absolute_return_t = relative_return_t = 0;
+  absolute_return_t = 0;
   
   real value_t = 0;
   real relative_sum = 0;
@@ -79,9 +79,9 @@ void FuturesTrader::trader_test( int t, VMat testset,
     if (w_kt != 0.0)
     {
       real p_kt = price(k, t);
-      real v_kt = w_kt * p_kt;
+      real v_kt = abs(w_kt) * p_kt;
       value_t += v_kt;
-      relative_sum += v_kt * relative_return(k, t);
+      relative_sum += v_kt * (relative_return(k, t)-1.0) * (w_kt>0?1.0:-1.0);
 
       // Update of the portfolio return, adding the k^th assets return
       absolute_return_t += w_kt * absolute_return(k, t);
@@ -98,7 +98,9 @@ void FuturesTrader::trader_test( int t, VMat testset,
     // weight(k,t+1) += absolute_return_t;   ???
   }
   
-  relative_return_t = relative_sum/value_t;
+  relative_return_t = 1 + relative_sum/value_t;
+  if (relative_return_t < 0)
+    PLWARNING("Rendement negatif -> %g", relative_return_t);
 }
 
 void FuturesTrader::computeOutputAndCosts(const Vec& input,

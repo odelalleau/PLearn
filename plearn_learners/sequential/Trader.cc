@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.cc,v 1.5 2003/09/30 19:49:57 ducharme Exp $ 
+ * $Id: Trader.cc,v 1.6 2003/10/01 21:31:43 ducharme Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -440,13 +440,16 @@ void Trader::test(VMat testset, PP<VecStatsCollector> test_stats,
   
   real average = internal_stats.stats[rt].mean(); 
   real sigmasquare = internal_stats.stats[rt].variance();
+  real average_rel = internal_stats.stats[log_rel_rt].mean(); 
+  average_rel = exp(252.0*average_rel);
   
   cout << "***** ***** *****" << endl
        << "Test: " << endl
 #if defined(VERBOSE) || defined(VERBOSE_TEST)
        << "\t weights:\n" << portfolios << endl
 #endif
-       << "\t Average Return:\t" << average << endl
+       << "\t Average Absolute Return:\t" << average << endl
+       << "\t Average Annual Relative Return:\t" << average_rel << endl
        << "\t Empirical Variance:\t" << sigmasquare << endl
        << "\t Sharpe Ratio:\t\t" << average/sqrt(sigmasquare) << endl;
   if(sp500 != "")
