@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.17 2003/09/23 01:27:30 yoshua Exp $
+   * $Id: PLearner.cc,v 1.18 2003/09/23 13:12:59 yoshua Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -56,7 +56,7 @@ using namespace std;
 
 PLearner::PLearner()
   :
-   seed(-1), 
+   seed_(-1), 
    stage(0), nstages(1),
    report_progress(true),
    verbosity(1)
@@ -86,7 +86,7 @@ void PLearner::declareOptions(OptionList& ol)
                 "reporting are handled at the level of the PTester class rather than \n"
                 "at the learner's. \n");
 
-  declareOption(ol, "seed", &PLearner::seed, OptionBase::buildoption, 
+  declareOption(ol, "seed", &PLearner::seed_, OptionBase::buildoption, 
                 "The initial seed for the random number generator used to initialize this learner's parameters\n"
                 "as typically done in the forget() method... \n"
                 "If -1 is provided, then a 'random' seed is chosen based on time of day, insuring that\n"

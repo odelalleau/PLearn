@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.13 2003/09/23 01:27:30 yoshua Exp $
+   * $Id: NNet.cc,v 1.14 2003/09/23 13:12:59 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -455,10 +455,10 @@ void NNet::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv,
 
 void NNet::initializeParams()
 {
-  if (seed>0)
-    manual_seed(seed);
+  if (seed_>0)
+    manual_seed(seed_);
   else
-    PLearn::seed(seed);
+    PLearn::seed();
 
   //real delta = 1./sqrt(inputsize());
   real delta = 1./inputsize();
