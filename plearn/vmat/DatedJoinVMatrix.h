@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DatedJoinVMatrix.h,v 1.4 2004/03/19 18:36:57 yoshua Exp $
+   * $Id: DatedJoinVMatrix.h,v 1.5 2004/03/22 18:14:15 yoshua Exp $
    ******************************************************* */
 
 // Authors: *Yoshua Bengio*
@@ -63,9 +63,11 @@ protected:
   // * protected options *
   // *********************
 
-  Vec slave_row;
+  Vec slave_row, master_row;
   Array<real> key;
   Maptype mp; // maps a key to a list of row indices in the slave
+  TVec<int> master2slave, slave2master; // maps indices in one db to the other and vice-versa
+  int n_master_fields, n_slave_fields; // number of fields of master and slave to copy in result
 
 public:
 
@@ -80,6 +82,8 @@ public:
   TVec<string> slave_key_names;
   TVec<int> slave_field_indices;
   TVec<string> slave_field_names;
+  TVec<int> master_field_indices;
+  TVec<string> master_field_names;
   int master_date_field_index;
   string master_date_field_name;
   int slave_date_interval_start_field_index;
@@ -87,6 +91,7 @@ public:
   string slave_date_interval_start_field_name;
   string slave_date_interval_end_field_name;
   int verbosity;
+  bool output_the_slave;
 
   // ****************
   // * Constructors *
