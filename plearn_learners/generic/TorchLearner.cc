@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TorchLearner.cc,v 1.2 2005/02/23 16:32:46 tihocan Exp $ 
+   * $Id: TorchLearner.cc,v 1.3 2005/02/24 14:10:36 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -112,12 +112,8 @@ void TorchLearner::build_()
   // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
   // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
   // ### You should assume that the parent class' build_() has already been called.
-  if (trainer) {
-    trainer->machine = machine;
-    trainer->build();
-  }
-  if (machine && machine->outputs)
-    outputsize_ = machine->outputs->frame_size;
+  if (machine && machine->machine->outputs)
+    outputsize_ = machine->machine->outputs->frame_size;
   // Initialize the inputs sequence.
   if (inputsize_ >= 0 && (!inputs || inputs->frame_size != inputsize_)) {
     allocator->free(inputs); // Free old input sequence.
@@ -143,7 +139,7 @@ void TorchLearner::computeOutput(const Vec& input, Vec& output) const
   output.resize(outputsize_);
   inputs->copyFrom(input.data());
   machine->forward(inputs);
-  machine->outputs->copyTo(output.data());
+  machine->machine->outputs->copyTo(output.data());
 }    
 
 ////////////
@@ -197,10 +193,10 @@ int TorchLearner::outputsize() const
   // Compute and return the size of this learner's output, (which typically
   // may depend on its inputsize(), targetsize() and set options).
   assert( machine );
-  assert( outputsize_ >= 0 || machine->outputs );
+  assert( outputsize_ >= 0 || machine->machine->outputs );
   if (outputsize_ >=0)
     return outputsize_;
-  return machine->outputs->frame_size;
+  return machine->machine->outputs->frame_size;
 }
 
 ////////////////////
@@ -226,9 +222,9 @@ void TorchLearner::train()
     PLERROR("In TorchLearner::train - You must set both the 'trainer' and 'machine' options "
             "before calling train()");
   trainer->train((TTorchDataSetFromVMat*) torch_train_set);
-  if (machine->outputs)
+  if (machine->machine->outputs)
     // Update outputsize_
-    outputsize_ = machine->outputs->frame_size;
+    outputsize_ = machine->machine->outputs->frame_size;
   stage = 1;
 }
 
