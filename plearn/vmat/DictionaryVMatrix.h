@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DictionaryVMatrix.h,v 1.5 2004/09/08 23:52:49 larocheh Exp $ 
+   * $Id: DictionaryVMatrix.h,v 1.6 2004/09/09 22:24:42 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Christopher Kermorvant
@@ -46,12 +46,7 @@
 
 #include <plearn/vmat/RowBufferedVMatrix.h>
 #include <plearn/base/stringutils.h>
-#include <plearn_learners/language/Dictionary.h>
-
-// Attribute types
-#define TEXT_FILE 0
-#define WORD_ONTOLOGY 1
-#define SENSE_ONTOLOGY 2
+#include <plearn_learners/language/Dictionary/Dictionary.h>
 
 // number of attributes of dictionary specifications
 #define DIC_SPECIFICATION_SIZE 3
@@ -63,15 +58,7 @@ class DictionaryVMatrix: public RowBufferedVMatrix
 {
 
 private:
-  //! The Wordnet ontology  used to extract word and sense attributes
-  WordNetOntology *ontology;
-  //! The dictionaries, one for each attributes
-  TVec< Dictionary > dictionaries;
-  //! Store the index of the word attribute. This is needed for word sense extraction 
-  //! since the sense attribute depends on the word
-  int word_attribute_index;
-    //Mapping POS to WordNet POS index
-  map<string, int> WNPosIndex;
+  
   //! Number of attributes in the input text file (\t separated)
   int attributes_number;
   typedef RowBufferedVMatrix inherited;
@@ -89,25 +76,17 @@ public:
   // * public build options *
   // ************************
 
-  // ### declare public option fields (such as build options) here
-  // ...
   //! The text input file which is processed with dictionaries 
   string input_file;
-  //! The file which specifies the type and path to the dictionaries, one specification per line
-  //! dic_type dic_path (tab separated)
-  //! with dic_type is a value in : 
-  //! TEXT_FILE : 0
-  //! WORD_ONTOLOGY : 1
-  //! SENSE_ONTOLOGY : 2
-  string dic_specification_file;
-  //! The dictionary for each attribute
-  TVec< TVec<string> > dic_specification;
-  //! Use wordnet stemmer
-  bool use_wordnet_stemmer;
-  //! Transform word to lower case
-  bool use_lower_case;
-  //! Index of the pos attribute if exists in [0..attribute_number-1]
-  int pos_attribute_index;
+
+  //! The dictionaries, one for each attributes
+  TVec< PP<Dictionary> > dictionaries;
+  
+  //! The options fields of every dictionaries
+  TVec< TVec <int> > option_fields;
+
+  //! String delimiters for input file fields
+  string delimiters;
 
   // ****************
   // * Constructors *
@@ -144,6 +123,8 @@ protected:
   virtual string getValString(int col, real val) const;
   
   virtual int getDimension(int row, int col) const;
+
+  virtual Vec getValues(int row, int col) const;
 
 public:
 
