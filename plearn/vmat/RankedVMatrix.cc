@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RankedVMatrix.cc,v 1.2 2004/10/29 21:16:09 tihocan Exp $ 
+   * $Id: RankedVMatrix.cc,v 1.3 2004/11/10 15:06:51 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -171,15 +171,9 @@ void RankedVMatrix::getNewRow(int i, const Vec& v) const
 void RankedVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
-
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("RankedVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+  deepCopyField(index_to_rank, copies);
+  deepCopyField(sorted_targets, copies);
+  deepCopyField(reference, copies);
 }
 
 } // end of namespace PLearn

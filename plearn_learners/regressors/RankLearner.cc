@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RankLearner.cc,v 1.3 2004/11/05 16:08:37 tihocan Exp $ 
+   * $Id: RankLearner.cc,v 1.4 2004/11/10 15:06:07 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -234,12 +234,11 @@ TVec<string> RankLearner::getTrainCostNames() const
 void RankLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-
-  // ### ex:
-  // deepCopyField(trainvec, copies);
-
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("RankLearner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+  deepCopyField(sorted_targets, copies);
+  deepCopyField(last_output, copies);
+  deepCopyField(learner_output, copies);
+  deepCopyField(learner_target, copies);
+  deepCopyField(ranked_trainset, copies);
 }
 
 ////////////////
