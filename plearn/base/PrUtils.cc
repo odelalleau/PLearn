@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrUtils.cc,v 1.2 2005/01/12 21:00:52 chrish42 Exp $ 
+   * $Id: PrUtils.cc,v 1.3 2005/03/30 17:11:26 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Christian Hudon
@@ -55,7 +55,7 @@ string getPrErrorString()
   const int text_length = PR_GetErrorTextLength();
   if (text_length == 0)
     {
-      return "[No error]";
+      return "";
     }
   
   char* s = new char[text_length+1];
