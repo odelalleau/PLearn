@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.41 2004/06/16 18:29:31 tihocan Exp $
+   * $Id: VMatrix.h,v 1.42 2004/06/17 15:33:12 monperrm Exp $
    ******************************************************* */
 
 
@@ -334,7 +334,7 @@ public:
 
   virtual void savePMAT(const string& pmatfile) const;
   virtual void saveDMAT(const string& dmatdir) const;
-  virtual void saveAMAT(const string& amatfile) const;
+  virtual void saveAMAT(const string& amatfile, bool verbose=true) const;
 
   inline int width() const { return width_; }
   inline int length() const { return length_; }

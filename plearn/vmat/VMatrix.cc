@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.53 2004/06/16 18:29:31 tihocan Exp $
+* $Id: VMatrix.cc,v 1.54 2004/06/17 15:33:12 monperrm Exp $
 ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -1063,7 +1063,7 @@ void VMatrix::saveDMAT(const string& dmatdir) const
   }
 }
 
-void VMatrix::saveAMAT(const string& amatfile) const
+void VMatrix::saveAMAT(const string& amatfile,bool verbose) const
 {
   int l = length();
   int w = width();
@@ -1085,7 +1085,9 @@ void VMatrix::saveAMAT(const string& amatfile) const
 
   Vec v(w);
 
-  ProgressBar pb(cout, "Saving to amat", length());
+  ProgressBar* pb = 0;
+  if (verbose)
+    pb = new ProgressBar(cout, "Saving to amat", length());
 
   for(int i=0;i<l;i++)
     {
@@ -1093,7 +1095,8 @@ void VMatrix::saveAMAT(const string& amatfile) const
       for(int j=0; j<w; j++)
         out << v[j] << ' ';
       out << "\n";
-      pb(i);
+      if (verbose)
+         pb->update(i);
     }
 }
 
