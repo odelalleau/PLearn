@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SpiralDistribution.cc,v 1.5 2004/02/06 00:34:39 yoshua Exp $ 
+   * $Id: SpiralDistribution.cc,v 1.6 2004/02/06 00:45:46 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file SpiralDistribution.cc */
@@ -139,8 +139,9 @@ void SpiralDistribution::generate(Vec& v) const
   v.resize(inputsize());
   
   real x, y;
-  real u =  bounded_uniform(tmin,tmax);
+  real u =  bounded_uniform(0,1);
   real t = (uniformity==1)?u:pow(u,uniformity);
+  t = tmin+(tmax-tmin)*t;
   curve(t,x,y);
   x += gaussian_mu_sigma(0, sigma);
   y += gaussian_mu_sigma(0, sigma);
