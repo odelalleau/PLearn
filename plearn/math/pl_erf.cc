@@ -184,7 +184,6 @@ real gauss_01_quantile(real q) {
     else
       b=c;
   }
-  return 0; // never reached
 }
 
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ClassErrorCostFunction.cc,v 1.6 2004/09/27 20:19:27 plearner Exp $
+   * $Id: ClassErrorCostFunction.cc,v 1.7 2004/11/23 21:27:27 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -80,7 +80,6 @@ real ClassErrorCostFunction::evaluate(const Vec& output, const Vec& target) cons
       trueclass = argmax(target);
     return argmax(output)==trueclass ?0. :1.;
   }
-  return 1.; // to make the compiler happy
 }
 
 void
