@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.18 2004/01/20 00:23:58 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.19 2004/01/20 18:28:10 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -118,7 +118,8 @@ public:
   mutable Func mean_f; // output -> expected value
   mutable Func density_f; // target -> density
   mutable Func in2distr_f; // input -> parameters of output distr
-
+  VarArray output_and_target;
+  Vec output_and_target_values;
   Var totalcost;
   Var mass_cost;
   Var pos_y_cost;

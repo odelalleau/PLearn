@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.25 2004/01/20 01:03:42 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.26 2004/01/20 18:28:10 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -121,7 +121,7 @@ ConditionalDensityNet::ConditionalDensityNet()
                           "And the expected value of Y is obtained using the primitive: (separate_mass_point=false)\n"
                           "   E[Y|theta] = (1/Z)*s(a)*M + sum_i u_i s(b_i)(G(M,theta,i)-G(0,theta,i)))\n"
                           "or for separate_mass_point=true:\n"
-                          "   E[Y|theta] = (sigmoid(a)-(1-sigmoid(a)*(1/Z)*sum_i u_i s(b_i)g(0,theta,i))*M + (1-sigmoid(a))*(1/Z)*sum_i u_i s(b_i)(G(M,theta,i)-G(0,theta,0))\n"
+                          "   E[Y|theta] = M - ((sigmoid(a)-(1-sigmoid(a)*(1/Z)*sum_i u_i s(b_i)g(0,theta,i))*M + (1-sigmoid(a))*(1/Z)*sum_i u_i s(b_i)(G(M,theta,i)-G(0,theta,0)))\n"
                           "Training the model can be done by maximum likelihood (minimizing the log of the\n"
                           "density) or by minimizing the average of squared error (y-E[Y|theta])^2\n"
                           "or a combination of the two (with the max_likelihood_vs_squared_error_balance option).\n"
@@ -393,8 +393,8 @@ ConditionalDensityNet::ConditionalDensityNet()
         density = density_numerator * inverse_denominator; // this is the conditional density for Y>0
         // apply l'hopital rule if pos_c --> 0 to avoid blow-up (N.B. lim_{pos_c->0} pos_b/pos_c*steps_integral = pos_b*delta_steps)
         lhopital = ifThenElse(isAboveThreshold(pos_c,1e-20),steps_integral,delta_steps); 
-        expected_value = (pos_a-(1-pos_a)*inverse_denominator*dot(pos_b,steps_0))*max_y + 
-          (1-pos_a)*dot(pos_b,lhopital)*inverse_denominator;
+        expected_value = max_y - ((pos_a-(1-pos_a)*inverse_denominator*dot(pos_b,steps_0))*max_y + 
+          (1-pos_a)*dot(pos_b,lhopital)*inverse_denominator);
         mass_cost = -log(ifThenElse(isAboveThreshold(target,0.0,1,0,true),(1-pos_a),pos_a)); 
         pos_y_cost = ifThenElse(isAboveThreshold(target,0.0,1,0,true),-log(density),var(0.0)); 
         nll = -log(ifThenElse(isAboveThreshold(target,0.0,1,0,true),density*(1-pos_a),pos_a));
@@ -536,13 +536,13 @@ ConditionalDensityNet::ConditionalDensityNet()
         }
       params.makeSharedValue(paramsvalues);
 
-      cdf_f = Func(target,cumulative);
-      mean_f = Func(output,expected_value);
-      density_f = Func(target,density);
+      VarArray output_and_target = output & target;
+      output_and_target_values.resize(output.length()+target.length());
+      output_and_target.makeSharedValue(output_and_target_values);
 
-      cdf_f = Func(target,cumulative);
+      cdf_f = Func(output_and_target,cumulative);
       mean_f = Func(output,expected_value);
-      density_f = Func(target,density);
+      density_f = Func(output_and_target,density);
 
       // Funcs
       VarArray invars;
@@ -725,6 +725,8 @@ TVec<string> ConditionalDensityNet::getTestCostNames() const
   deepCopyField(mean_f, copies);
   deepCopyField(density_f, copies);
   deepCopyField(in2distr_f, copies);
+  deepCopyField(output_and_target, copies);
+  deepCopyField(output_and_target_values, copies);
   deepCopyField(totalcost, copies);
   deepCopyField(mass_cost, copies);
   deepCopyField(pos_y_cost, copies);
@@ -740,15 +742,13 @@ void ConditionalDensityNet::setInput(const Vec& in) const
     PLERROR("ConditionalDensityNet:setInput: build was not completed (maybe because training set was not provided)!");
 #endif
   in2distr_f->fprop(in,output->value);
-  cdf_f->recomputeParents();
-  density_f->recomputeParents();
-  mean_f->recomputeParents();
 }
 
 double ConditionalDensityNet::log_density(const Vec& y) const
 { 
   Vec d(1);
-  density_f->fprop(y,d);
+  target->value << y;
+  density_f->fprop(output_and_target_values,d);
   return log(d[0]);
 }
 
@@ -761,7 +761,8 @@ double ConditionalDensityNet::survival_fn(const Vec& y) const
 double ConditionalDensityNet::cdf(const Vec& y) const
 { 
   Vec cum(1);
-  cdf_f->fprop(y,cum);
+  target->value << y;
+  cdf_f->fprop(output_and_target_values,cum);
   return cum[0];
 }
 
@@ -821,7 +822,7 @@ void ConditionalDensityNet::initializeParams()
     PLearn::seed();
 
   //real delta = 1./sqrt(inputsize());
-  real delta = 3.0/inputsize();
+  real delta = 1.0/inputsize();
   /*
   if(direct_in_to_out)
     {
@@ -841,7 +842,7 @@ void ConditionalDensityNet::initializeParams()
         fill_random_normal(wdirect->value, 0, 0.01*delta);
         wdirect->matValue(0).clear();
       }
-      delta = 4.0/nhidden;
+      delta = 1.0/nhidden;
       w1->matValue(0).clear();
     }
   if(nhidden2>0)
@@ -855,81 +856,27 @@ void ConditionalDensityNet::initializeParams()
   //fill_random_uniform(wout->value, -delta, +delta);
   fill_random_normal(wout->value, 0, delta);
   Mat a_weights = wout->matValue.column(0);
-  a_weights *= 3.0; // to get more dynamic range
-  Vec output_biases = wout->matValue(0);
-  int i=0;
-  Vec a_ = output_biases.subVec(i++,1);
-  Vec b_ = output_biases.subVec(i,n_output_density_terms); i+=n_output_density_terms;
-  Vec c_ = output_biases.subVec(i,n_output_density_terms); i+=n_output_density_terms;
-  Vec mu_;
-  Vec sc(n_output_density_terms);
-  if (mu_is_fixed)
-    mu_ = mu->value;
-  else
-    mu_ = output_biases.subVec(i,n_output_density_terms); i+=n_output_density_terms;
-  b_.fill(inverse_softplus(1.0));
-  initialize_mu(mu_);
-  for (int i=0;i<n_output_density_terms;i++)
-  {
-    real prev_mu = i==0?0:mu_[i-1];
-    real delta = mu_[i]-prev_mu;
-    sc[i] = delta>0?initial_hardness/delta:-50;
-    c_[i] = inverse_softplus(1.0);
-  }
+  // a_weights *= 3.0; // to get more dynamic range
 
   if (centers_initialization!="data")
-    unconditional_delta_cdf->value.fill(1.0/n_output_density_terms);
-  real *dcdf = unconditional_delta_cdf->valuedata;
-  if (separate_mass_point)
-    a_[0] = unconditional_p0>0?inverse_sigmoid(unconditional_p0):-50;
-  else if (dcdf[0]==0)
-    a_[0]=unconditional_p0>0?inverse_softplus(unconditional_p0):-50;
-  else
   {
-    real s=0;
-    if (steps_type=="sigmoid_steps")
-      for (int i=0;i<n_output_density_terms;i++)
-        s+=dcdf[i]*(unconditional_p0*sigmoid(sc[i]*(maxY-mu_[i]))-sigmoid(-sc[i]*mu_[i]));
+    Vec output_biases = wout->matValue(0);
+    Vec mu_;
+    int i=0;
+    Vec a_ = output_biases.subVec(i++,1);
+    Vec b_ = output_biases.subVec(i,n_output_density_terms); i+=n_output_density_terms;
+    Vec c_ = output_biases.subVec(i,n_output_density_terms); i+=n_output_density_terms;
+    if (mu_is_fixed)
+      mu_ = mu->value;
     else
-      for (int i=0;i<n_output_density_terms;i++)
-      {
-        real prev_mu = i==0?0:mu_[i-1];
-        real ss1 = soft_slope(maxY,sc[i],prev_mu,mu_[i]);
-        real ss2 = soft_slope(0,sc[i],prev_mu,mu_[i]);
-        s+=dcdf[i]*(unconditional_p0*ss1 - ss2);
-      }
-    real sa=s/(1-unconditional_p0);
-    a_[0]=sa>0?inverse_softplus(sa):-50;
-
-    /*
-    Mat At(n_output_density_terms,n_output_density_terms); // transpose of the linear system matrix
-    Mat rhs(1,n_output_density_terms); // right hand side of the linear system
-    // solve the system to find b's that make the unconditional fit the observed data
-    //  sum_j sb_j dcdf_j (cdf_j step_j(maxY) - step_j(mu_i)) = sa (1 - cdf_i)
-    //
-    for (int i=0;i<n_output_density_terms;i++)
-    {
-      real* Ati = At[i];
-      real prev_mu = i==0?0:mu_[i-1];
-      for (int j=0;j<n_output_density_terms;j++)
-      {
-        if (steps_type=="sigmoid_steps")
-          Ati[j] = dcdf[i]*(unconditional_cdf[j]*sigmoid(initial_hardness*(maxY-mu_[i]))-
-                           sigmoid(initial_hardness*(mu_[j]-mu_[i])));
-        else
-          Ati[j] = dcdf[i]*(unconditional_cdf[j]*soft_slope(maxY,initial_hardness,prev_mu,mu_[i])-
-                            soft_slope(mu_[j],initial_hardness,prev_mu,mu_[i]));
-      }
-      rhs[0][i] = sa*(1-unconditional_cdf[i]);
-    }
-    TVec<int> pivots(n_output_density_terms);
-    int status = lapackSolveLinearSystem(At,rhs,pivots);
-    if (status==0)
-      for (int i=0;i<n_output_density_terms;i++)
-        b_[i] = inverse_softplus(rhs[0][i]);
-    else
-      PLWARNING("ConditionalDensityNet::initializeParams() Could not invert matrix to obtain exact init. of b");
-    */
+      mu_ = output_biases.subVec(i,n_output_density_terms); i+=n_output_density_terms;
+    initialize_mu(mu_);
+    b_.fill(inverse_softplus(1.0));
+    c_.fill(inverse_softplus(1.0));
+    if (separate_mass_point)
+      a_[0] = unconditional_p0>0?inverse_sigmoid(unconditional_p0):-50;
+    else a_[0] = -50;
+    unconditional_delta_cdf->value.fill((1.0-unconditional_p0)/n_output_density_terms);
   }
 
   // Reset optimizer
@@ -1048,7 +995,82 @@ void ConditionalDensityNet::train()
   for (int i=1;i<n_output_density_terms;i++)
     unconditional_delta_cdf->valuedata[i]=unconditional_cdf[i]-unconditional_cdf[i-1];
 
-  initializeParams();
+  // initialize biases based on unconditional distribution
+  Vec output_biases = wout->matValue(0);
+  int i=0;
+  Vec a_ = output_biases.subVec(i++,1);
+  Vec b_ = output_biases.subVec(i,n_output_density_terms); i+=n_output_density_terms;
+  Vec c_ = output_biases.subVec(i,n_output_density_terms); i+=n_output_density_terms;
+  Vec mu_;
+  Vec s_c(n_output_density_terms);
+  if (mu_is_fixed)
+    mu_ = mu->value;
+  else
+    mu_ = output_biases.subVec(i,n_output_density_terms); i+=n_output_density_terms;
+  b_.fill(inverse_softplus(1.0));
+  initialize_mu(mu_);
+  for (int i=0;i<n_output_density_terms;i++)
+  {
+    real prev_mu = i==0?0:mu_[i-1];
+    real delta = mu_[i]-prev_mu;
+    s_c[i] = delta>0?initial_hardness/delta:-50;
+    c_[i] = inverse_softplus(1.0);
+  }
+
+  if (centers_initialization!="data")
+    unconditional_delta_cdf->value.fill(1.0/n_output_density_terms);
+  real *dcdf = unconditional_delta_cdf->valuedata;
+  if (separate_mass_point)
+    a_[0] = unconditional_p0>0?inverse_sigmoid(unconditional_p0):-50;
+  else if (dcdf[0]==0)
+    a_[0]=unconditional_p0>0?inverse_softplus(unconditional_p0):-50;
+  else
+  {
+    real s=0;
+    if (steps_type=="sigmoid_steps")
+      for (int i=0;i<n_output_density_terms;i++)
+        s+=dcdf[i]*(unconditional_p0*sigmoid(s_c[i]*(maxY-mu_[i]))-sigmoid(-s_c[i]*mu_[i]));
+    else
+      for (int i=0;i<n_output_density_terms;i++)
+      {
+        real prev_mu = i==0?0:mu_[i-1];
+        real ss1 = soft_slope(maxY,s_c[i],prev_mu,mu_[i]);
+        real ss2 = soft_slope(0,s_c[i],prev_mu,mu_[i]);
+        s+=dcdf[i]*(unconditional_p0*ss1 - ss2);
+      }
+    real sa=s/(1-unconditional_p0);
+    a_[0]=sa>0?inverse_softplus(sa):-50;
+
+    /*
+    Mat At(n_output_density_terms,n_output_density_terms); // transpose of the linear system matrix
+    Mat rhs(1,n_output_density_terms); // right hand side of the linear system
+    // solve the system to find b's that make the unconditional fit the observed data
+    //  sum_j sb_j dcdf_j (cdf_j step_j(maxY) - step_j(mu_i)) = sa (1 - cdf_i)
+    //
+    for (int i=0;i<n_output_density_terms;i++)
+    {
+      real* Ati = At[i];
+      real prev_mu = i==0?0:mu_[i-1];
+      for (int j=0;j<n_output_density_terms;j++)
+      {
+        if (steps_type=="sigmoid_steps")
+          Ati[j] = dcdf[i]*(unconditional_cdf[j]*sigmoid(initial_hardness*(maxY-mu_[i]))-
+                           sigmoid(initial_hardness*(mu_[j]-mu_[i])));
+        else
+          Ati[j] = dcdf[i]*(unconditional_cdf[j]*soft_slope(maxY,initial_hardness,prev_mu,mu_[i])-
+                            soft_slope(mu_[j],initial_hardness,prev_mu,mu_[i]));
+      }
+      rhs[0][i] = sa*(1-unconditional_cdf[i]);
+    }
+    TVec<int> pivots(n_output_density_terms);
+    int status = lapackSolveLinearSystem(At,rhs,pivots);
+    if (status==0)
+      for (int i=0;i<n_output_density_terms;i++)
+        b_[i] = inverse_softplus(rhs[0][i]);
+    else
+      PLWARNING("ConditionalDensityNet::initializeParams() Could not invert matrix to obtain exact init. of b");
+    */
+  }
   test_costf->recomputeParents();
 
       // debugging
