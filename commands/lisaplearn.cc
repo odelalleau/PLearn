@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: lisaplearn.cc,v 1.1 2004/03/05 14:25:07 tihocan Exp $
+   * $Id: lisaplearn.cc,v 1.2 2004/03/05 18:34:43 tihocan Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -49,6 +49,7 @@
 #include "AutoVMatrix.h"
 #include "IndexedVMatrix.h"
 #include "BatchVMatrix.h"
+#include "FilteredVMatrix.h"
 #include "RegularGridVMatrix.h"
 #include "VMatrixFromDistribution.h"
 #include "PrecomputedVMatrix.h"
@@ -64,6 +65,7 @@
 // #include "KNN.h"
 //#include "Classification1HiddenNN.h"
 //#include "Mixture2.h"
+#include "AddCostToLearner.h"
 #include "ClassifierFromDensity.h"
 //#include "RegressorFromDensity.h"
 #include "Distribution.h"
@@ -90,6 +92,9 @@
 // #include "ManinnnnnnfoldParzenDensity.h"
 
 #include "Experiment.h"
+
+// Stat collectors:
+#include "LiftStatsCollector.h"
 
 // New generation system
 #include "PTester.h"
