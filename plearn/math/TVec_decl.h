@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TVec_decl.h,v 1.1 2004/04/17 00:44:55 plearner Exp $
+   * $Id: TVec_decl.h,v 1.2 2004/05/17 19:55:27 tatien Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -687,24 +687,30 @@ class TVec
       TVec<T> findIndices(const T& element)
       {
         TVec<T> indices(0);
+        if (!isEmpty())
+        {
         T *v = data();
         for (int i=0; i<length(); i++)
           if (v[i]==element)
             indices.append(i);
+        }
         return indices;
       }
  
       TVec<T> findIndices(const TVec<T>& elements)
       {
         TVec<T> indices(0);
-        T *v = data();
-        for (int i=0; i<length(); i++)
-          for (int j=0, m=elements.length(); j<m; j++)
-            if (v[i] == elements[j])
-            {
-              indices.append(i);
-              break;
-            }
+        if (!isEmpty())
+        {
+          T *v = data();
+          for (int i=0; i<length(); i++)
+            for (int j=0, m=elements.length(); j<m; j++)
+              if (v[i] == elements[j])
+              {
+                indices.append(i);
+                break;
+              }
+        }
         return indices;
       }
  
