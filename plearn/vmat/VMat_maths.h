@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat_maths.h,v 1.16 2004/07/09 18:21:47 tihocan Exp $
+   * $Id: VMat_maths.h,v 1.17 2004/07/09 18:24:42 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -85,7 +85,7 @@ class VecStatsCollector;
 Mat computeBasicStats(VMat m);
 
 //! Retirns the unconditional statistics of each field
-TVec<StatsCollector> computeStats(VMat m, int maxnvalues);
+TVec<StatsCollector> computeStats(VMat m, int maxnvalues, bool report_progress = true);
 
 void computeStats(VMat m, VecStatsCollector& st, bool report_progress = true);
 

@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat_maths.cc,v 1.23 2004/07/09 18:21:47 tihocan Exp $
+* $Id: VMat_maths.cc,v 1.24 2004/07/09 18:24:42 tihocan Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat_maths.h"
@@ -199,30 +199,35 @@ void computeStats(VMat m, VecStatsCollector& st, bool report_progress)
     pbar = new ProgressBar("Computing statistics", l);
   for(int i=0; i<l; i++)
     {
-      if (report_progress)
-        pbar->update(i);
       m->getRow(i,v);
       st.update(v);
+      if (report_progress)
+        pbar->update(i);
     }
   if (pbar)
     delete pbar;
   st.finalize();
 }
 
-TVec<StatsCollector> computeStats(VMat m, int maxnvalues)
+TVec<StatsCollector> computeStats(VMat m, int maxnvalues, bool report_progress)
 {
   int w = m.width();
   int l = m.length();
   TVec<StatsCollector> stats(w, StatsCollector(maxnvalues));
   Vec v(w);
-  ProgressBar pbar(cerr, "computing statistics", l);
+  ProgressBar* pbar = 0;
+  if (report_progress)
+    pbar = new ProgressBar("Computing statistics", l);
   for(int i=0; i<l; i++)
     {
       m->getRow(i,v);
       for(int j=0; j<w; j++)
         stats[j].update(v[j]);
-      pbar(i);
+      if (report_progress)
+        pbar->update(i);
     }
+  if (pbar)
+    delete pbar;
   return stats;
 }
 
