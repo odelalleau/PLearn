@@ -2,7 +2,7 @@
 %%
 %%  Copyright (c) 2002 by Pascal Vincent
 %%
-%%  $Id: users_guide.tex,v 1.10 2003/02/10 22:15:33 ducharme Exp $
+%%  $Id: users_guide.tex,v 1.11 2003/05/08 17:06:08 plearner Exp $
 
 \documentclass[11pt]{book}
 \usepackage{html}               % package for latex2html
@@ -11,10 +11,10 @@
 \usepackage{isolatin1}          % support for French accents
 
 %%%%%%%%% Definitions %%%%%%%%%%%%
-\newcommand{\PLearn}{\bf \it PLearn}
-\newcommand{\Object}{\bf Object} 
-\newcommand{\Learner}{\bf Learner} 
-\newcommand{\PPointable}{\bf PPointable} 
+\newcommand{\PLearn}{{\bf \it PLearn}}
+\newcommand{\Object}{{\bf Object}} 
+\newcommand{\Learner}{{\bf Learner}} 
+\newcommand{\PPointable}{{\bf PPointable}} 
 
 \parskip=2mm
 \parindent=0mm
@@ -74,10 +74,66 @@ met:
 \chapter{Installation and Setup}
 \label{chap:label}
 
-In order to install the PLearn software library and tools on your machine,
-you must make sure that cvs (http://www.cvshome.org) is already installed.
-(For a quick tutorial on how to use cvs, see
-http://plearn.sourceforge.net/plearncvs.html).
+\section{Requirements}
+
+{\bf Note:} most of the tools and libraries required for PLearn are already
+installed on typical Linux (or other unix-like) systems, or are easy to
+install with ready-made packages (such as RPMs). 
+
+\subsection{Basic tools}
+
+To be able to download, compile and use PLearn, you need the following
+tools to be installed on your system:
+\begin{itemize}
+\item {\bf cvs} (http://www.cvshome.org)
+\item {\bf g++} (http://gcc.gnu.org). We recomend using the latest
+version, but it should work with 2.96 and above.
+\item {\bf python} (http://www.python.org). Version 1.5.2 or above (may
+work with older versions, but no guarantee).
+\item It is highly recomended to also have the {\bf blas} and {\bf lapack}
+libraries installed. There are standard packages (RPMS\ldots) for most
+Linux disttributions.
+\end{itemize}
+
+\subsection{Useful external tools}
+
+A number of additional tools are often used as external programs, mostly for
+display purpose, and may want to have them installed: 
+\begin{itemize}
+\item {\bf gs} (ghostscript) and {\bf gv} (ghostview)
+\item {\bf gnuplot}
+\item a {\bf Java} compiler and interpretor
+\end{itemize}
+
+\subsection{Additional tools for develolpers}
+
+In addition, if you wish to develop new learning algorithms, or otherwise
+ contribute to the librery, the following tools will be useful:
+\begin{itemize}
+\item {\bf ssh} for write access to the SourceForge CVS repository.
+\item {\bf gdb} for basic debugging (or a {\em better} debugger if you have one!)
+\item {\bf valgrind} a wonderful free tool for memory-bug hunting.
+\item {\bf perl} for running perl scripts
+\item {\bf LaTeX, pdflatex, dvips, latex2html, doxygen} to re-generate the documentation. 
+\end{itemize}
+
+\subsection{Optional libraries}
+
+Moreover, the following (optional) libraries are required by some classes and programs:
+\begin{itemize}
+\item The very well designed {\bf boost} library (http://www.boost.org)
+\item The libraries of {\bf WordNet} for work on language models.
+\end{itemize}
+
+
+\section{Downloading PLearn}
+
+PLearn is hosted on SourceForge, and the latest version is always available through CVS acces.
+For a quick tutorial on how to use cvs, see http://plearn.sourceforge.net/plearncvs.html
+
+You should download the PLearn source tree using one of the following methods:
+
+\subsection{Anonymous (read-only) CVS access }
 
 You then can download the PLearn library through anonymous (pserver) cvs
 using the following instructions:
@@ -89,349 +145,129 @@ using the following instructions:
 \end{verbatim}
 and press the [enter] key when asked for a password.
 
-The PLearn library should now be installed.  If you want to use it
-(which should be the case!), a few things need to be set.  First, you
-should add the following lines to your .cshrc file:
+\subsection{Developer CVS access}
 
-\begin{verbatim}
-  setenv PLEARNDIR /path_of_plearn_library/PLearn
-  set path = ( $path $PLEARNDIR/scripts $PLEARNDIR/commands )
-\end{verbatim}
-
-The only thing you have to check now, is if you have all the tools to
-compile the library (since there is no binaries available).  For that purpose,
-you need to have g++ (or gcc) installed (available at http://gcc.gnu.org).
-We suggest that you use the newest version available, or at least 2.96 or higher.
-Also, instead of using the far-from-user-friendly Makefile, we wrote our own
-version, called pymake.  However, this has been written using the script language
-python (version 1.5.2 or higher, available at http://www.python.org).
-
-In a pain-in-the-neck-world, none of the above utilities (cvs, gcc, python)
-are on your machine and you have to do some extra work.  But for the common user,
-all the job has already been done by your system administrator and all you have
-to do is download the PLearn library, add 2 lines to your .cshrc file, and
-that's it!!
-
-
-\chapter{Using PLearn commands}
-
-\section{Directory and file structure for datasets}
-
-Dataset root directory:
-{\tt /home/db}
-
-\subsection{Dataset formats}
-
-The following dataset formats are understood by any command that expects a dataset (and by the getDataSet(\ldots) function).
-
-\subsubsection{.amat}
-
-Ascii data file
-
-The new format includes a one or two lines starting with \verb!###! which have a special meaning:  
-The (optional) first line will contain length and width of the matrix
-The (optional) second line will contain the field names separated by \verb!|!
-Regular comment lines start with a single \verb!#!.
-
-\begin{verbatim}
-# Characteristics of a population of 534
-### 534 3
-###   age    |   height (cm)  |  weight (in kg) 
-...
-\end{verbatim}
-
-\subsubsection{.pmat}
-
-PLearn native binary format.
-Fieldnames can be specified in an associated .pmat.fieldnames file
-
-\subsubsection{.sdb}
-
-Any simpledb can be automatically seen as a numeric vmat dataset. 
-String fields are removed.
-
-\subsubsection{.dmat/}
-
-Directory containing compressed data.
-
-Contains:
+If you are going to contribute to PLearn on SourceForge (http://www.sourceforge.org):
 \begin{itemize}
-\item 0.data, 1.data, 2.data
-\item indexfile
-\item fieldnames
+\item If you don't have one already, create a SourceForge account for yourself
+\item Send me (plearner@sourceforge.org) your account login, so that I can add you to the developer list.
+\item Make sure the {\tt CVS\_RSH} environment variable is set to {\tt ssh} in your .cshrc or .bashrc
+\item Check-out PLearn as follows:
+\begin{verbatim}
+cvs -d :ext:your_sourceforge_login@cvs.plearn.sourceforge.net:/cvsroot/plearn co PLearn
+\end{verbatim}
 \end{itemize}
 
-\subsubsection{.vmat}
 
-File containing a description of a virtual dataset. The next section goes into more details.
 
-\subsection{The vmat file format}
+\section{Compiling PLearn programs}
 
-A .vmat is a text specification of a dataset built from the composition of source data, possibly with operations applied to it. The description is made through a set of sections (all optional except SOURCES) enclosed in xml-like tags.
 
-There is a program named vmat (although it handles many dataset formats) that can be used to perform useful tasks with datasets. Two of them are relevant here. 
-
-Calling \verb!vmat gendef datasetname 10 20! will first generate a stats.def file in the metadata directory of the dataset containing a define for each field for each supported statistic. Then it will generate files bins10.def and bins20.def containing defines that can be used to bin the fields (with 10 and 20 bins). These defines can then be used (with INCLUDE) in the VPL code.
-
-Use \verb!vmat genvmat datasetname (binned\{num\} | onehot\{num\} | normalized)! to generate automatically a vmat that will do the same operation on all fields.
-
-Here's an example of a .vmat file:
-\begin{verbatim}
-<SOURCES>
-/u/Gaston/some_source.amat /u/Gaston/some_source3.sdb
-</SOURCES>
-
-<PREFILTER>
-INCLUDE /u/Gaston/some_source.amat.metadata/stats.def
-@some_field @some_field.mean >=
-</PREFILTER>
-
-# this is a comment
-
-<JOIN>
-/u/jkeable/PLearn/UserExp/jkeable/joinVMatrix/slave.amat
-[id,val] == [id,val1]
-MEAN(claim) :claim.mean
-</JOIN>
-
-<PROCESSING>
-%0 %1 + :my_sum
-# this is another comment
-[%2:@claim.mean]
-</PROCESSING>
-
-<POSTFILTER>
-@claim.mean isnan not
-</POSTFILTER>
-
-<PRECOMPUTE> dmat </PRECOMPUTE>
-\end{verbatim}
-
-\subsubsection{SOURCES}
-The SOURCES section is the only one that is not optional. It describes the source dataset(s) (in any format) that the vmat will be built from. In its most complex form, the syntax of the specification is a matrix of NxM dataset strings. The datasets are first concatenated horizontally, then vertically. Thus, all datasets on a same row must have the same length, and the results of all horizontal concatenation, the same width.
-
-\subsubsection{PREFILTER and POSTFILTER}
-
-Those sections are use to perform filtering at different stages of the vmat construction. Prefiltering is made after processing of the SOURCES section, while the postfiltering is made after the JOIN and PROCESSING section are executed. 
-
-The syntax of the filtering operations is VPL, which is a postfix language described further down. After execution of the code, a value must remain on the execution stack. If it non zero, the row will be kept, otherwise, it is rejected.
-
-\subsubsection{JOIN}
-
-This section is used to perform a pseudo-join operation between a master and a slave table. At this time, a standard join operation (cartesian product) is not possible. Instead, slave rows matching a master row are used to compute statistics appended to the master row. The syntax is:
-
-\begin{verbatim}
-slave_dataset
-[master_field1,...,master_fieldN] == [slave_field1,...,slave_fieldN]
-STATISTIC1(slavefield1) :newfield_name1
-STATISTIC2(slavefield2) :newfield_name2
-...
-\end{verbatim}
-where STATISTIC is one of: {COUNT | NNONMISSING | NMISSING | SUM | SUMSQUARE | MEAN | VARIANCE | STDDEV | STDERR | MIN | MAX}. 
-
-Note that you can repeat the operation multiple times in a single JOIN section.
-
-\subsubsection{PROCESSING}
-Use this section to modify or create new fields in the dataset (e.g: binning operations, onehot conversions, etc..). The processing is specified with VPL, described later.
-
-As soon as you declare a PROCESSING section, all fields resulting from previous operations (sources concatenation, join operations) are not included automatically in the resulting matrix (obviously, you can still refer to them), so it is empty unless you declare them manually. In the small example given above, the operations done are the replacement of the first two fields by their sum, and then the remaining fields are appended in the resulting matrix with the second line. See VPL section for more details.
-
-\subsubsection{PRECOMPUTE}
-When you need speed, use this section to create a precomputed version of you vmat. This version will be computed the first time the vmat is loaded. You specify the type of file you want the precomputed version to be saved to (dmat or pmat). See example above.
-
-The synchronization of the precomputed version is ensured through an almost-intelligent mechanism that checks the date of sources recursively. Note: we decided that include files (e.g: statistics) that are out of date issue a warning, but will not force recomputation. This could be changed. 
-
-\subsubsection{DEBUG}
-Including this section will force output of preprocessed VPL to stderr.
-
-\subsection{The VPL language}
-VPL (vmat processing language) is a home brewed mini-language in postfix notation. As of today, it is used is the \{PRE,POST\}FILT\-ERING and PROCESSING sections of a .vmat file. It supports INCLUDEs instructions and DEFINEs (dumb named string constants). It can handle reals as well as dates (format is: CYYMMDD, where C is 0 (1900-1999) or 1 (2000-2099). The language will not be extensively described here. For more info, you can look at
-plearn/vmat/VMatLanguage.*. 
-
-A VPL code snippet is always applied to the row of a VMatrix, and can only refer to data of that row. The result of the execution will be a vector, which is the execution stack at code termination. 
-
-When you use VPL in a PROCESSING section, each field you declare must have its associated fieldname declaration. The compiler will ensure that the size of the result vector and the number of declared fieldnames match. This doesn't apply in the filtering sections since the result is always a single value. 
-
-To declare a fieldname, use a colon with the name immediately after. To batch-declare fieldnames, use eg.:myfield:1:10. This will declare fields myfield1 up to myfield10.
-
-There are two notations to refer to a field value: the @ symbol followed by the fieldname, or \% followed by the field number.
-
-To batch-copy fields, use the following syntax: [field1:fieldn] (fields can be in @ or \% notation).
-
-Here's a real-life example of a PROCESSING section:
-
-\begin{verbatim}
-<PROCESSING>
-@lease_indicator 88 == 1 0 ifelse :lease_indicator
-@rate_class 1 - 7 onehot :rate_class:0:6
-@collision_deductible { 2->1; 4->2; 5->3; 6->4; 7->5; 
-[8 8]->6; MISSING->0; OTHER->0 }
-7 onehot :collision_deductible:0:6
-@roadstar_indicator 89 == 1 0 ifelse :roadstar_indicator
-<\PROCESSING>
-\end{verbatim}
-
-\subsection{Preprogrammed datasets}
-
+First, you should edit your .cshrc or .bashrc and 
 \begin{itemize}
-\item 2d
-\item letters -> Letter Image Recognition data
-\item breast -> The Wisconsin Breast Cancer problem
-\item usps
-\item mnist
+\item Set the {\tt PLEARNDIR} environment variable to the path of the PLearn directory. 
+(csh ex: \verb!setenv PLEARNDIR ${HOME}/PLearn!)
+\item Append \verb!$PLEARNDIR/scripts! and \verb!$PLEARNDIR/commands! to your path.
 \end{itemize}
 
-\section{The metadata directory}
+We have our own make system based on a python script (pymake) that
+automatically parses source files for dependencies and determines what to
+compile, and what to link (including optional libraries), and is able to
+run parallel compilation on several machines.  It is easily
+customizable.
 
-A metadata directory is associated with each dataset.  For the datasets
-corresponding to a file ({\tt .amat, .pmat, .vmat}) or directory ({\tt .dmat/}) the
-associated metadata directory is obtained by appending {\tt .metadata/} to the
-file or directory name.
-
-A metadata directory will typically contain the following cache directories to avoid recomputing costly things
-
-\begin{itemize}
-\item \verb!STATSCACHE/! contains cached statistics
-\item \verb!MODELCACHE/<classname>/! contains any pertinent cached data computed on this dataset by objects of class \verb!<classname>!
-\end{itemize}
-
-In addition, the {\tt .metadata} directory associated with a {\tt .vmat} may contain
-\begin{itemize}
-\item {\tt precomputed.dmat/} or {\tt precomputed.pmat} if the {\tt .vmat} description specified \verb!<PRECOMPUTE>!
-\item {\tt source.index} containing row indexes in the source (resulting from \verb!<PREFILTER>!, \verb!<POSTFILTER>!, \verb!<SHUFFLE>!)
-\end{itemize}
-
-\section{Directory and file structure for experiments}
-
+Simply try the following:
 \begin{verbatim}
-/home/exp/<project>/<task>/
-  - dataset.aliases
-  - model.aliases
-   
-.../modelalias/
-  # for normal train/test
-  <trainalias>.<testalias>.results
-  <trainalias>.psave                   # best model so far
-  <trainalias>.epoch<epoch>.psave
-  <trainalias>.epoch<epoch>.<testalias>.outputs
-  <trainalias>.epoch<epoch>.<testalias>.costs
-
-  # For bootstrap ( <i> is the index of the trainset variant )
-  <trainalias>.bs_<bsparams>_<i>.<testalias>.results
-  <trainalias>.bs_<bsparams>.testalias.results.summary
-  <trainalias>.bs_<bsparams>_<i>.psave   # best model so far
-  <trainalias>.bs_<bsparams>_<i>.epoch<epoch>.psave
-  <trainalias>.bs_<bsparams>_<i>.epoch<epoch>.<testalias>.outputs
-  <trainalias>.bs_<bsparams>_<i>.epoch<epoch>.<testalias>.costs
-
-  # For k-fold  ( <i> is the index of the trainset variant )
-  <trainalias>.kf_<k>_<i>.<testalias>.results
-  <trainalias>.kf_<k>.testalias.results.summary
-  <trainalias>.kf_<k>_<i>.psave   # best model so far
-  <trainalias>.kf_<k>_<i>.epoch<epoch>.psave
-  <trainalias>.kf_<k>_<i>.epoch<epoch>.<testalias>.outputs
-  <trainalias>.kf_<k>_<i>.epoch<epoch>.<testalias>.costs
-  
-  # For sequential validation  ( <i> is the index of the trainset variant )
-  <trainalias>.sv_<svparams>_<i>.<testalias>.results
-  <trainalias>.sv_<svparams>.testalias.results.summary
-  <trainalias>.sv_<svparams>_<i>.psave   # best model so far
-  <trainalias>.sv_<svparams>_<i>.epoch<epoch>.psave
-  <trainalias>.sv_<svparams>_<i>.epoch<epoch>.<testalias>.outputs
-  <trainalias>.sv_<svparams>_<i>.epoch<epoch>.<testalias>.costs
+cd PLearn/commands
+pymake plearn
 \end{verbatim}
 
-And from the old\_plearn command....:
+If it doesn't work, you may have to adapt the configuration file to your system
+(PLearn/.pymake/config)
+
+
+\chapter{Overview of the system}
+
+PLearn is above all a C++ Library for research in the field of Machine
+Learning. But it also comes with a set of tools and programs, that allow
+you to easily carry out experiments.
+
+\section{The plearn program}
+
+The {\tt plearn} program is to be found in PLearn/commands and is used to
+\begin{itemize}
+\item either run a .plearn script 
+\item or run a plearn command
+\end{itemize}
+
+Plearn scripts are essentially text files ending in .plearn that describe
+a learning experiment to be performed.
+
+Plearn commands are typically little tools that allow you to manipulate or examine
+datasets or result files, but they can also launch more evolved interactive programs.
+
+The {\tt plearn} program has a simple yet very useful command-line help system.
+Type \verb!plearn help! to have an overview.
+
+
+\section{The .plearn object file format}
+
+PLearn uses the same simple file format, both to describe experiments to be
+performed (in .plearn scripts), and to save and restore objects
+such as a trained neural-network (in .psave files).
+
+Essentially these files contain the specifications of PLearn objects. For ex. a
+typical .plearn script will contain the specification of an Experiment
+object that fully describes the experiment to be performed.
+
+Objects are specified by the name of their type, followed by a list of
+\verb!option = value! pairs. For ex:
 
 \begin{verbatim}
-The 'plearn' program is designed to strongly encourage the following
-directory and file structure for carrying experiments.  Suppose we have a
-root "experiment" directory, EXP, that is to contain all the results of all
-the experiments on all projects ever carried.
+WondefulObject(                   # some comment here
+  critical_value = 3.5;    
+  save_results_in = "here/there/results.txt";
+);  # end of object specification
+\end{verbatim}  
 
-Here is the recommended structure:
+Any sequence of spaces, newlines, tabs, comma, or semicolon is considered a
+separator. So colons and semicolons are just there to ease the reading,
+spaces would work just as well.
 
-EXP/PROJECT/TASK/DATA-REPRESENTATION/MODELALIAS
-|___________________________________|
-                 |
-            SPECDIR (will typically contain 'dataset.aliases', specifying datasets 
-                                            and 'model.aliases' specifying learners with learneroptions)
+Comments start with a \verb!#! and continue until the end of the line.
 
-PROJECT is the name of the higher level project, regarding a particular set
+The following table sums up the formats that can be used for the values of
+an option of a given type
 
-TASK should represent a particular learning task for which you wish to
-     assess different methods (ex: condprob_of_claim)
+\begin{table}[h]
+\caption{ Ascii format for given data-types }
+\label{tab:ascii-format-ex}
+\begin{tabular}{|l|l|} \hline 
+{\bf Data type}         & {\bf Format example} \\ \hline
+Any subclass of Object & {\tt ObjectType( option1 = value1, option2 = value2, ... )} \\ \hline
+integer                 & {\tt -365} \\ \hline
+floating number         & {\tt -3.2e-4} \\ \hline
+string                  & {\tt "any string"} \\ \hline
+character               & {\tt 'x'} \\ \hline
+1D sequences            & {\tt [ 10, 20, 30, 40 ] } \\ 
+                        & {\tt [ 10 20 30 40 ] } \\
+                        & {\tt 4 [ 10 20 30 40 ] } \\ 
+                        & {\tt 4 [ "aa", "bb", "cc", "dd" ] } \\ \hline
+2D matrices             & \verb!3 2 [ 1 2  10 20  30 40 ]!    \\ \hline
+pairs                   & {\tt 1 : "one" }  \\ \hline
+maps                    & \verb!{ 1:"one", 2 :"two", 3: "three" }! \\ \hline
+pointers to new object  & \verb!*1 -> ObjType( ... )! \\ \hline
+reference to pointer    & \verb!*1;! \\ \hline
+\end{tabular}
+\begin{center}
+\end{center}
+\end{table}
 
-DATA-REPRESENTATION is the notion of using different data representations
-                    (to suit underlying learner) for a task. (ex:
-                    onehot_inputs_integer_target)
-
-The directory organization down to DATA-REPRESENTATION is only
-indicative. You may name the directories as you please (including the
-DATA-REPRESENTATION directory), add or omit hierarchy levels, etc...
-
-The organization below DATA-REPRESENTATION is however enforced by the
-'plearn' program.  DATA-REPRESENTATION *must* contain a 'dataset.aliases'
-file defining the datasets to be used (in that representation). Everything
-below DATA-REPRESENTATION will use those datasets. 
-
-Because it contains the actual dataset specification in dataset.aliases 
-and models specifications in model.aliases
-we also call EXP/PROJECT/TASK/DATA-REPRESENTATION/
-             |___________________________________|
-                              |
-                           SPECDIR
-
-Ex of dataset.aliases file:
-train /home/db/finance/stock3proj/discreterepr_trainset
-valid /home/db/finance/stock3proj/discreterepr_testset1
-test /home/db/finance/stock3proj/discreterepr_testset2
-
-An alias for 'train' is mandatory. You can give aliases to any number of
-other datasets ('valid' and 'test' are customary but you could also use
-'test1' 'testsomemore' 'strangetestset' etc...)
-The actual dataset specification can be any string understood by getDataSet.
+Note for strings: unquoted strings, while not recommended are also supported. They are read until
+a separator (blank, comma, \ldots) or opening or closing symbol (parenthesis, bracket, \ldots) is met.
 
 
-The model.aliases file should contain one line for each
-learnertype+learnerparams you are considering. The line starts for an
-'alias' for that particular learnertype+learnerparams combination. That
-alias, which will also be the name of its result directory, must be
-followed by a learner classname, and a semi-column separated string of
-options of the form optionname=optionvalue, in the format understood by
-that learner's setOption method.
-
-Formally, that is: 
-<alias> <classname> <option1=...; option2=...; ...>
-ex: knn5 KNN inputsize=210; k=5 
-
-The following files will typically be created consequently by the 'plearn' program
-in the corresponding <alias> directory.
-
-- train.objective   
-  Ascii file reporting the cost as it is optimized by the learner (and other possible costs)
-- model#.psave        
-  Contains the saved model (at 'epoch' #, see below).
-- <datasetalias>.results 
-  Ascii file reporting the average costs achieved by the model on the 
-  specified dataset (also includes stderr, min, max of those costs)
-- model#.<datasetalias>.outputs.pmat 
-  The individual outputs of the model obtained on the specified dataset
-- model#.<datasetalias>.costs.pmat
-  The individual costs of the model obtained on the specified dataset
-
-For learners performing iterative optimization (or some form of incremental
-learning) and able to save and test intermediate models, the # stands for
-the 'epoch' number of the model saved (starting at 0).  It will also
-correspond to the data-row number in train.objective and
-<datasetalias>.results
-\end{verbatim}
-
-\subsection{The new plearn program}
-
-After having compiled the plearn.cc program (located at \$PLEARNDIR/command/plearn.cc)
-using the homemade makefile-like command \verb!pymake! (type \verb!"pymake"! to see all
-the compilation options), type \verb!"plearn help"! to have a summary of its options.
+\section{An example experiment}
 
 To run \verb!plearn!, you need a script file containing all the parameters of your
 experiment.  That script file MUST contain an \verb!Experiment! object (type
@@ -478,8 +314,8 @@ and a testset), a \verb!learner! (a NeuralNet in the example above), and a boole
 specifying if you wish to save your trained learner (\verb!save_models!).
 
 Also, as we can see in the example, all the attributes that have simple types
-(int, bool, string) are written in the form: \verb!attribute = value;! (note that
-the ";" at the end is very important).  On the other hand, if the attribute is an
+(int, bool, string) are written in the form: \verb!attribute = value;!  
+On the other hand, if the attribute is an
 object type (learner, dataset, optimizer, etc.), then the attribute is declared
 like:
 \begin{verbatim}
@@ -490,7 +326,192 @@ attribute = object_type(
 \end{verbatim}
 where the same rules applies for all the fields within the object.
 
-\chapter{File formats}
+
+
+\chapter{Dataset formats}
+
+The following dataset formats are understood by any command that expects a dataset (and by the getDataSet(\ldots) function).
+
+\section{.amat}
+
+Ascii data file.
+
+The new format is as follows:
+The size of the matrix is indicated by a line starting with \verb!#size:! and followed by length (number of rows) and width (number of columns)
+An optional line starting with \verb!#:! gives the names of the fields (the columns)
+Regular comment lines start with a single \verb!#!.
+
+ex:
+
+\begin{verbatim}
+# Characteristics of a population of 534
+#size: 534 3
+#:  age height weight
+     33  1.72   71
+    25  1.80   80
+\end{verbatim}
+
+\section{.pmat}
+
+PLearn native binary format.
+
+\section{.sdb}
+
+Any simpledb can be automatically seen as a numeric vmat dataset. 
+String fields are removed.
+
+\section{.dmat/}
+
+Directory containing compressed data.
+
+Contains:
+\begin{itemize}
+\item 0.data, 1.data, 2.data
+\item indexfile
+\item fieldnames
+\end{itemize}
+
+\section{.vmat}
+
+File containing a description of a virtual dataset.
+
+A .vmat is a text specification of a dataset built from the composition of source data, possibly with operations applied to it. The description is made through a set of sections (all optional except SOURCES) enclosed in xml-like tags.
+
+There is a program named vmat (although it handles many dataset formats) that can be used to perform useful tasks with datasets. Two of them are relevant here. 
+
+Calling \verb!vmat gendef datasetname 10 20! will first generate a stats.def file in the metadata directory of the dataset containing a define for each field for each supported statistic. Then it will generate files bins10.def and bins20.def containing defines that can be used to bin the fields (with 10 and 20 bins). These defines can then be used (with INCLUDE) in the VPL code.
+
+Use \verb!vmat genvmat datasetname (binned\{num\} | onehot\{num\} | normalized)! to generate automatically a vmat that will do the same operation on all fields.
+
+Here's an example of a .vmat file:
+\begin{verbatim}
+<SOURCES>
+/u/Gaston/some_source.amat /u/Gaston/some_source3.sdb
+</SOURCES>
+
+<PREFILTER>
+INCLUDE /u/Gaston/some_source.amat.metadata/stats.def
+@some_field @some_field.mean >=
+</PREFILTER>
+
+# this is a comment
+
+<JOIN>
+/u/jkeable/PLearn/UserExp/jkeable/joinVMatrix/slave.amat
+[id,val] == [id,val1]
+MEAN(claim) :claim.mean
+</JOIN>
+
+<PROCESSING>
+%0 %1 + :my_sum
+# this is another comment
+[%2:@claim.mean]
+</PROCESSING>
+
+<POSTFILTER>
+@claim.mean isnan not
+</POSTFILTER>
+
+<PRECOMPUTE> dmat </PRECOMPUTE>
+\end{verbatim}
+
+\subsection{SOURCES}
+The SOURCES section is the only one that is not optional. It describes the source dataset(s) (in any format) that the vmat will be built from. In its most complex form, the syntax of the specification is a matrix of NxM dataset strings. The datasets are first concatenated horizontally, then vertically. Thus, all datasets on a same row must have the same length, and the results of all horizontal concatenation, the same width.
+
+\subsection{PREFILTER and POSTFILTER}
+
+Those sections are use to perform filtering at different stages of the vmat construction. Prefiltering is made after processing of the SOURCES section, while the postfiltering is made after the JOIN and PROCESSING section are executed. 
+
+The syntax of the filtering operations is VPL, which is a postfix language described further down. After execution of the code, a value must remain on the execution stack. If it non zero, the row will be kept, otherwise, it is rejected.
+
+\subsection{JOIN}
+
+This section is used to perform a pseudo-join operation between a master and a slave table. At this time, a standard join operation (cartesian product) is not possible. Instead, slave rows matching a master row are used to compute statistics appended to the master row. The syntax is:
+
+\begin{verbatim}
+slave_dataset
+[master_field1,...,master_fieldN] == [slave_field1,...,slave_fieldN]
+STATISTIC1(slavefield1) :newfield_name1
+STATISTIC2(slavefield2) :newfield_name2
+...
+\end{verbatim}
+where STATISTIC is one of: {COUNT | NNONMISSING | NMISSING | SUM | SUMSQUARE | MEAN | VARIANCE | STDDEV | STDERR | MIN | MAX}. 
+
+Note that you can repeat the operation multiple times in a single JOIN section.
+
+\subsection{PROCESSING}
+Use this section to modify or create new fields in the dataset (e.g: binning operations, onehot conversions, etc..). The processing is specified with VPL, described later.
+
+As soon as you declare a PROCESSING section, all fields resulting from previous operations (sources concatenation, join operations) are not included automatically in the resulting matrix (obviously, you can still refer to them), so it is empty unless you declare them manually. In the small example given above, the operations done are the replacement of the first two fields by their sum, and then the remaining fields are appended in the resulting matrix with the second line. See VPL section for more details.
+
+\subsection{PRECOMPUTE}
+When you need speed, use this section to create a precomputed version of you vmat. This version will be computed the first time the vmat is loaded. You specify the type of file you want the precomputed version to be saved to (dmat or pmat). See example above.
+
+The synchronization of the precomputed version is ensured through an almost-intelligent mechanism that checks the date of sources recursively. Note: we decided that include files (e.g: statistics) that are out of date issue a warning, but will not force recomputation. This could be changed. 
+
+\subsection{DEBUG}
+Including this section will force output of preprocessed VPL to stderr.
+
+\subsection{The VPL language}
+VPL (vmat processing language) is a home brewed mini-language in postfix notation. As of today, it is used is the \{PRE,POST\}FILT\-ERING and PROCESSING sections of a .vmat file. It supports INCLUDEs instructions and DEFINEs (dumb named string constants). It can handle reals as well as dates (format is: CYYMMDD, where C is 0 (1900-1999) or 1 (2000-2099). The language will not be extensively described here. For more info, you can look at
+plearn/vmat/VMatLanguage.*. 
+
+A VPL code snippet is always applied to the row of a VMatrix, and can only refer to data of that row. The result of the execution will be a vector, which is the execution stack at code termination. 
+
+When you use VPL in a PROCESSING section, each field you declare must have its associated fieldname declaration. The compiler will ensure that the size of the result vector and the number of declared fieldnames match. This doesn't apply in the filtering sections since the result is always a single value. 
+
+To declare a fieldname, use a colon with the name immediately after. To batch-declare fieldnames, use eg.:myfield:1:10. This will declare fields myfield1 up to myfield10.
+
+There are two notations to refer to a field value: the @ symbol followed by the fieldname, or \% followed by the field number.
+
+To batch-copy fields, use the following syntax: [field1:fieldn] (fields can be in @ or \% notation).
+
+Here's a real-life example of a PROCESSING section:
+
+\begin{verbatim}
+<PROCESSING>
+@lease_indicator 88 == 1 0 ifelse :lease_indicator
+@rate_class 1 - 7 onehot :rate_class:0:6
+@collision_deductible { 2->1; 4->2; 5->3; 6->4; 7->5; 
+[8 8]->6; MISSING->0; OTHER->0 }
+7 onehot :collision_deductible:0:6
+@roadstar_indicator 89 == 1 0 ifelse :roadstar_indicator
+<\PROCESSING>
+\end{verbatim}
+
+\section{Preprogrammed datasets}
+
+\begin{itemize}
+\item 2d
+\item letters -> Letter Image Recognition data
+\item breast -> The Wisconsin Breast Cancer problem
+\item usps
+\item mnist
+\end{itemize}
+
+
+\section{The metadata directory}
+
+A metadata directory is associated with each dataset.  For the datasets
+corresponding to a file ({\tt .amat, .pmat, .vmat}) or directory ({\tt .dmat/}) the
+associated metadata directory is obtained by appending {\tt .metadata/} to the
+file or directory name.
+
+A metadata directory will typically contain the following cache directories to avoid recomputing costly things
+
+\begin{itemize}
+\item \verb!STATSCACHE/! contains cached statistics
+\item \verb!MODELCACHE/<classname>/! contains any pertinent cached data computed on this dataset by objects of class \verb!<classname>!
+\end{itemize}
+
+In addition, the {\tt .metadata} directory associated with a {\tt .vmat} may contain
+\begin{itemize}
+\item {\tt precomputed.dmat/} or {\tt precomputed.pmat} if the {\tt .vmat} description specified \verb!<PRECOMPUTE>!
+\item {\tt source.index} containing row indexes in the source (resulting from \verb!<PREFILTER>!, \verb!<POSTFILTER>!, \verb!<SHUFFLE>!)
+\end{itemize}
+
+
+\chapter{Appendix A: File formats}
 
 \section{The .plearn and .psave format}
 
@@ -657,6 +678,7 @@ row-major mode for 2D).  Notice that a sequence of a base type, may be
 saved as a {\em generic} sequence (with the {\em element-type} byte {\tt 0xFF})
 
 
+
 \begin{tabular}{|l|l|l|} \hline
 Type of sequence         & Header byte & Followed by \\ \hline
 Generic on little-endian & 0x12        & size as 4-byte little-endian int, \\
@@ -670,6 +692,138 @@ Sequence of a base-type  & 0x15        & size as 4-byte big-endian int, \\
 on big-endian            &             & base-type given by header byte in previous \\
                          &             & table, followed by binary dump of elements \\ \hline
 \end{tabular}
+
+
+
+
+
+\chapter{(DEPRECATED) Directory and file structure for old experiments}
+
+This is the structure with the old experiment system. And it's deprecated. 
+
+\begin{verbatim}
+/home/exp/<project>/<task>/
+  - dataset.aliases
+  - model.aliases
+   
+.../modelalias/
+  # for normal train/test
+  <trainalias>.<testalias>.results
+  <trainalias>.psave                   # best model so far
+  <trainalias>.epoch<epoch>.psave
+  <trainalias>.epoch<epoch>.<testalias>.outputs
+  <trainalias>.epoch<epoch>.<testalias>.costs
+
+  # For bootstrap ( <i> is the index of the trainset variant )
+  <trainalias>.bs_<bsparams>_<i>.<testalias>.results
+  <trainalias>.bs_<bsparams>.testalias.results.summary
+  <trainalias>.bs_<bsparams>_<i>.psave   # best model so far
+  <trainalias>.bs_<bsparams>_<i>.epoch<epoch>.psave
+  <trainalias>.bs_<bsparams>_<i>.epoch<epoch>.<testalias>.outputs
+  <trainalias>.bs_<bsparams>_<i>.epoch<epoch>.<testalias>.costs
+
+  # For k-fold  ( <i> is the index of the trainset variant )
+  <trainalias>.kf_<k>_<i>.<testalias>.results
+  <trainalias>.kf_<k>.testalias.results.summary
+  <trainalias>.kf_<k>_<i>.psave   # best model so far
+  <trainalias>.kf_<k>_<i>.epoch<epoch>.psave
+  <trainalias>.kf_<k>_<i>.epoch<epoch>.<testalias>.outputs
+  <trainalias>.kf_<k>_<i>.epoch<epoch>.<testalias>.costs
+  
+  # For sequential validation  ( <i> is the index of the trainset variant )
+  <trainalias>.sv_<svparams>_<i>.<testalias>.results
+  <trainalias>.sv_<svparams>.testalias.results.summary
+  <trainalias>.sv_<svparams>_<i>.psave   # best model so far
+  <trainalias>.sv_<svparams>_<i>.epoch<epoch>.psave
+  <trainalias>.sv_<svparams>_<i>.epoch<epoch>.<testalias>.outputs
+  <trainalias>.sv_<svparams>_<i>.epoch<epoch>.<testalias>.costs
+\end{verbatim}
+
+And from the old\_plearn command....:
+
+\begin{verbatim}
+The 'plearn' program is designed to strongly encourage the following
+directory and file structure for carrying experiments.  Suppose we have a
+root "experiment" directory, EXP, that is to contain all the results of all
+the experiments on all projects ever carried.
+
+Here is the recommended structure:
+
+EXP/PROJECT/TASK/DATA-REPRESENTATION/MODELALIAS
+|___________________________________|
+                 |
+            SPECDIR (will typically contain 'dataset.aliases', specifying datasets 
+                                            and 'model.aliases' specifying learners with learneroptions)
+
+PROJECT is the name of the higher level project, regarding a particular set
+
+TASK should represent a particular learning task for which you wish to
+     assess different methods (ex: condprob_of_claim)
+
+DATA-REPRESENTATION is the notion of using different data representations
+                    (to suit underlying learner) for a task. (ex:
+                    onehot_inputs_integer_target)
+
+The directory organization down to DATA-REPRESENTATION is only
+indicative. You may name the directories as you please (including the
+DATA-REPRESENTATION directory), add or omit hierarchy levels, etc...
+
+The organization below DATA-REPRESENTATION is however enforced by the
+'plearn' program.  DATA-REPRESENTATION *must* contain a 'dataset.aliases'
+file defining the datasets to be used (in that representation). Everything
+below DATA-REPRESENTATION will use those datasets. 
+
+Because it contains the actual dataset specification in dataset.aliases 
+and models specifications in model.aliases
+we also call EXP/PROJECT/TASK/DATA-REPRESENTATION/
+             |___________________________________|
+                              |
+                           SPECDIR
+
+Ex of dataset.aliases file:
+train /home/db/finance/stock3proj/discreterepr_trainset
+valid /home/db/finance/stock3proj/discreterepr_testset1
+test /home/db/finance/stock3proj/discreterepr_testset2
+
+An alias for 'train' is mandatory. You can give aliases to any number of
+other datasets ('valid' and 'test' are customary but you could also use
+'test1' 'testsomemore' 'strangetestset' etc...)
+The actual dataset specification can be any string understood by getDataSet.
+
+
+The model.aliases file should contain one line for each
+learnertype+learnerparams you are considering. The line starts for an
+'alias' for that particular learnertype+learnerparams combination. That
+alias, which will also be the name of its result directory, must be
+followed by a learner classname, and a semi-column separated string of
+options of the form optionname=optionvalue, in the format understood by
+that learner's setOption method.
+
+Formally, that is: 
+<alias> <classname> <option1=...; option2=...; ...>
+ex: knn5 KNN inputsize=210; k=5 
+
+The following files will typically be created consequently by the 'plearn' program
+in the corresponding <alias> directory.
+
+- train.objective   
+  Ascii file reporting the cost as it is optimized by the learner (and other possible costs)
+- model#.psave        
+  Contains the saved model (at 'epoch' #, see below).
+- <datasetalias>.results 
+  Ascii file reporting the average costs achieved by the model on the 
+  specified dataset (also includes stderr, min, max of those costs)
+- model#.<datasetalias>.outputs.pmat 
+  The individual outputs of the model obtained on the specified dataset
+- model#.<datasetalias>.costs.pmat
+  The individual costs of the model obtained on the specified dataset
+
+For learners performing iterative optimization (or some form of incremental
+learning) and able to save and test intermediate models, the # stands for
+the 'epoch' number of the model saved (starting at 0).  It will also
+correspond to the data-row number in train.objective and
+<datasetalias>.results
+\end{verbatim}
 
 
 \chapter*{License}
@@ -709,4 +863,3 @@ modification, are permitted provided that the following conditions are met:
 \end{verbatim}
 
 \end{document}
-

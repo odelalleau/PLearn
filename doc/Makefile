@@ -1,10 +1,10 @@
-all: guides.all doxygen
+all: guides.html doxygen
 
 # publish it all on the sourceforge web
 publish:
 	rsync -v -rlt -e ssh --cvs-exclude --delete --delete-excluded --modify-window=10 `pwd`/ plearner@plearn.sourceforge.net:/home/groups/p/pl/plearn/htdocs
 
-guides.all: guides.html guides.pdf guides.ps
+guides.all: guides.ps guides.pdf guides.html 
 
 doxygen:
 
@@ -41,6 +41,7 @@ programmers_guide: programmers_guide.tex
 
 programmers_guide.dvi: programmers_guide.tex
 	latex programmers_guide
+	latex programmers_guide
 
 programmers_guide.ps: programmers_guide.dvi
 	dvips -Pcmps -t letter programmers_guide -o
@@ -57,6 +58,7 @@ tools_guide: tools_guide.tex
 	latex2html -split 3 -show_section_numbers -local_icons tools_guide.tex
 
 tools_guide.dvi: tools_guide.tex
+	latex tools_guide
 	latex tools_guide
 
 tools_guide.ps: tools_guide.dvi

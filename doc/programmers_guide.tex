@@ -2,7 +2,7 @@
 %%
 %%  Copyright (c) 1998-2002 by Pascal Vincent
 %%
-%%  $Id: programmers_guide.tex,v 1.1 2002/09/04 23:42:04 plearner Exp $
+%%  $Id: programmers_guide.tex,v 1.2 2003/05/08 17:06:08 plearner Exp $
 
 \documentclass[11pt]{book}
 \usepackage{t1enc}              % new font encoding  (hyphenate words w/accents)
@@ -10,11 +10,13 @@
 \usepackage{isolatin1}		% support for French accents
 
 %%%%%%%%% Definitions %%%%%%%%%%%%
-\newcommand{\PLearn}{\bf \it PLearn}
-\newcommand{\Object}{\bf Object} 
-\newcommand{\Learner}{\bf Learner} 
-\newcommand{\PPointable}{\bf PPointable} 
+\newcommand{\PLearn}{{\bf \it PLearn}}
+\newcommand{\Object}{{\bf Object}} 
+\newcommand{\Learner}{{\bf Learner}} 
+\newcommand{\PPointable}{{\bf PPointable}} 
 
+\parskip=2mm
+\parindent=0mm
 
 \begin{document}
 
@@ -318,7 +320,7 @@ cout << "dz/du = " << u->gradient << endl;
 \chapter{How to subclass a PLearn Object}
 
 Almost all non-strictly-concrete classes (i.e. those with virtual methods)
-in \PLearn derive from \Object. This includes the \Learner base class.
+in PLearn derive from Object. This includes the Learner base class.
 \Object allows an easy support for a number of useful generic facilities:
 \begin{itemize}
 \item automatic memory management (through reference counted smart pointers: \Object derives from \PPointable)
