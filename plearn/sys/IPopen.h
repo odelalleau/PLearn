@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: IPopen.h,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: IPopen.h,v 1.2 2002/08/08 22:54:05 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,25 +45,30 @@
 #include <unistd.h>
 #include "PP.h"
 
+#ifndef _MINGW_
 #include <unistd.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <netdb.h>
-
+#endif
 
 namespace PLearn <%
 using namespace std;
 
+#ifndef _MINGW_
     class IPServer {
     public:
-        IPServer(int port_no, int max_connections)
-	    { DelayedConstructor(port_no, max_connections); };
-	IPServer(int max_connections_)
-	    { DelayedConstructor(ip_port, max_connections_); };
-	IPServer()
-	    { DelayedConstructor(ip_port, max_connections); };
+        IPServer(int port_no, int max_connections) {
+            DelayedConstructor(port_no, max_connections);
+        };
+        IPServer(int max_connections_) {
+            DelayedConstructor(ip_port, max_connections_);
+        };
+        IPServer() {
+            DelayedConstructor(ip_port, max_connections);
+        };
         ~IPServer() {
             shutdown(socket_fd, 2);
             close(socket_fd);
@@ -79,8 +84,8 @@ using namespace std;
         int port;
         struct sockaddr_in address;
     private:
-	void DelayedConstructor(int port_no, int max_connections_) {
-	    port = port_no;
+        void DelayedConstructor(int port_no, int max_connections_) {
+            port = port_no;
 
             int addr_len = sizeof(struct sockaddr_in);
             
@@ -96,11 +101,11 @@ using namespace std;
             listen(socket_fd, max_connections);
             int nodelay = 1;
             setsockopt(socket_fd, IPPROTO_TCP, TCP_NODELAY, (char *)nodelay, sizeof(int));
-	}
+        }
     public:
-	static int ip_port;
-	static int max_connections;
-	static void set_ip_port(int port_no, int max_connections_ = 100) { IPServer::ip_port = port_no; IPServer::max_connections = max_connections_; };
+        static int ip_port;
+        static int max_connections;
+        static void set_ip_port(int port_no, int max_connections_ = 100) { IPServer::ip_port = port_no; IPServer::max_connections = max_connections_; };
     }; // class IPServer
 
 
@@ -142,6 +147,8 @@ using namespace std;
         PLERROR("Wrong number of arguments");
         return -1; // Dummy return value
     }
+
+#endif // ~_MINGW_
 
 %> // end of namespace PLearn
 

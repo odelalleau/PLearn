@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLMPI.h,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: PLMPI.h,v 1.2 2002/08/08 22:54:05 morinf Exp $
    * AUTHORS: Pascal Vincent 
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -308,7 +308,7 @@ public:
     if(PLMPI::rank==0)
       fstreambase::open(name, mode, prot); 
     else
-      ios::rdbuf(nullout().rdbuf());
+      ios::rdbuf(nullout.rdbuf());
   }
 
 };
@@ -331,8 +331,8 @@ inline void PLMPI::init(int* argc, char*** argv)
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
     if(rank!=0)
       {
-        cout.rdbuf(nullout().rdbuf());
-        cin.rdbuf(nullin().rdbuf());
+        cout.rdbuf(nullout.rdbuf());
+        cin.rdbuf(nullin.rdbuf());
       }
 #endif
   }

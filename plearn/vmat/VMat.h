@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat.h,v 1.2 2002/07/31 01:41:35 morinf Exp $
+   * $Id: VMat.h,v 1.3 2002/08/08 22:54:39 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -409,7 +409,6 @@ public:
   virtual ~VMatrix();
 };
 
-DECLARE_OBJECT_PTR(VMatrix);
 
 class RowBufferedVMatrix: public VMatrix
 {
@@ -498,11 +497,8 @@ public:
   ~VMat();
 };
 
-inline pl_istream &operator>>(pl_istream &in, VMat &o)
-{ in >> static_cast<PP<VMatrix> &>(o); return in; };
-
-inline pl_ostream &operator<<(pl_ostream &out, const VMat &o)
-{ out << static_cast<const PP<VMatrix> &>(o); return out; };
+DECLARE_OBJECT_PTR(VMatrix);
+DECLARE_OBJECT_PP(VMat, VMatrix);
 
 inline void operator<<(const Mat& dest, const VMatrix& src)
 {

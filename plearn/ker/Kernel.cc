@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: Kernel.cc,v 1.2 2002/08/08 22:53:14 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -904,7 +904,8 @@ real LogOfGaussianDensityKernel::evaluate(const Vec& x1, const Vec& x2) const
   // cerr << "sigmasq " << sigmasq << endl;
   double q = powdistance(x1, x2, real(2.0))/sigmasq;
   // cerr << "log of gauss kernel q = " << q << endl; 
-  double logp = -0.5 * ( q + x1.length()*( log(2*M_PI) + log(sigmasq)) ); 
+  //double logp = -0.5 * ( q + x1.length()*( log(2*M_PI) + log(sigmasq)) ); 
+  double logp = -0.5 * ( q + x1.length()*( log(2*Pi) + log(sigmasq)) ); 
   // cerr << "logp = " << logp << endl;
   // exit(0);
   return real(logp);

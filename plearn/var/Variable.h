@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.h,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: Variable.h,v 1.2 2002/08/08 22:54:25 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -96,12 +96,6 @@ public:
   void operator=(const Vec& v);
   void operator=(const Mat& m);
 };
-
-inline pl_istream &operator>>(pl_istream &in, Var &o)
-{ in >> static_cast<PP<Variable> &>(o); return in; };
-
-inline pl_ostream &operator<<(pl_ostream &out, const Var &o)
-{ out << static_cast<const PP<Variable> &>(o); return out; };
 
 void deepRead(istream& in, DeepReadMap& old2new, Var& v);
 void deepWrite(ostream& out, DeepWriteSet& already_saved, const Var& v);
@@ -392,6 +386,9 @@ public:
 
   virtual void resizeRValue();
 };
+
+DECLARE_OBJECT_PTR(Variable);
+DECLARE_OBJECT_PP(Var, Variable);
 
 
 // set value += gradient and clears the gradient

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: Kernel.h,v 1.2 2002/08/08 22:53:14 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -122,7 +122,6 @@ public:
   virtual ~Kernel();
 };
 
-  DECLARE_OBJECT_PTR(Kernel);
 
 /*!   *******
   * Ker *
@@ -139,13 +138,9 @@ public:
     { return ptr->evaluate(x1,x2); }
 };
 
+DECLARE_OBJECT_PTR(Kernel);
 DECLARE_TYPE_TRAITS(Ker);
-
-inline pl_istream &operator>>(pl_istream &in, Ker &o)
-{ in >> static_cast<PP<Kernel> &>(o); return in; };
-
-inline pl_ostream &operator<<(pl_ostream &out, const Ker &o)
-{ out << static_cast<const PP<Kernel> &>(o); return out; };
+DECLARE_OBJECT_PP(Ker, Kernel);
 
 //! This class implements an Ln distance (defaults to L2 i.e. euclidean distance).
 class DistanceKernel: public Kernel

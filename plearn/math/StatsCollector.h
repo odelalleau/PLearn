@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: StatsCollector.h,v 1.2 2002/08/08 22:53:22 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -115,6 +115,8 @@ using namespace std;
     virtual void print(ostream& out) const;
   };
 
+  DECLARE_OBJECT_PTR(StatsCollector);
+
   //!  this class holds counts of co-occurences of variables within specific ranges
   class ConditionalStatsCollector: public Object
   {
@@ -168,6 +170,8 @@ using namespace std;
     int findrange(int varindex, real val) const;
 
   };
+
+  DECLARE_OBJECT_PTR(ConditionalStatsCollector);
 
 TVec<RealMapping> computeRanges(TVec<StatsCollector> stats, int discrete_mincount, int continuous_mincount);
 

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Func.h,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: Func.h,v 1.2 2002/08/08 22:54:25 morinf Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -81,12 +81,6 @@ public:
 */
   VarArray operator()(const VarArray& new_inputs);
 };
-
-inline pl_istream &operator>>(pl_istream &in, Func &o)
-{ in >> static_cast<PP<Function> &>(o); return in; };
-
-inline pl_ostream &operator<<(pl_ostream &out, const Func &o)
-{ out << static_cast<const PP<Function> &>(o); return out; };
 
 class Function: public Object
 {
@@ -176,6 +170,10 @@ public:
   // The value of H * r computed by rfprop or Hessian should be the same.
   void verifyrfprop(const Vec& in, real step=0.01);
 };
+
+DECLARE_OBJECT_PTR(Function);
+DECLARE_OBJECT_PP(Func, Function);
+
 
 inline void deepRead(istream& in, DeepReadMap& old2new, Func& f)
 { Object* f_ptr; deepRead(in, old2new, f_ptr); f = (Function*)f_ptr; }

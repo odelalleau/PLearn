@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: IPopen.cc,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: IPopen.cc,v 1.2 2002/08/08 22:54:05 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -41,14 +41,13 @@
 #if !defined(_MSC_VER) && !defined(_MINGW_)
 #include <sys/wait.h>
 #endif
-#include <unistd.h>
 #include "stringutils.h"
 #include "IPopen.h"
-#include <sys/socket.h>
 
 namespace PLearn <%
 using namespace std;
 
+#ifndef _MINGW_
     // Default values for static (state) variables
     int IPServer::ip_port = 15000;
     int IPServer::max_connections = 100;
@@ -131,4 +130,6 @@ using namespace std;
         PLERROR("Connection to server failed");
         return -1; // Never reached
     }
+#endif // ~_MINGW_
+
 %> // end of namespace PLearn

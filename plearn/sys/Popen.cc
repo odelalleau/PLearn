@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: Popen.cc,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: Popen.cc,v 1.2 2002/08/08 22:54:05 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,6 +51,23 @@
 namespace PLearn <%
 using namespace std;
 
+#ifdef _MINGW_
+void Popen::launch(const string& command)
+{ PLERROR("Popen - Not implemented for this platform"); }
+
+void Popen::launch(const string& command, const vector<string>& commandoptions)
+{ PLERROR("Popen - Not implemented for this platform"); }
+
+int Popen::wait()
+{ PLERROR("Popen - Not implemented for this platform"); return 0; }
+
+Popen::~Popen()
+{}
+
+vector<string> execute(const string& command)
+{ vector<string> results; PLERROR("Popen - Not implemented for this platform"); return results; }
+
+#else
 
   void Popen::launch(const string& command)
   {
@@ -61,6 +78,7 @@ using namespace std;
       cout << "Popen launches:" << endl << command << endl;
     int tocommand[2];
     int fromcommand[2];
+
     pipe(tocommand);
     pipe(fromcommand);
     pid = fork();
@@ -161,6 +179,7 @@ using namespace std;
     return result;
   }
 
+#endif
 %> // end of namespace PLearn
 
 

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: RealMapping.h,v 1.1 2002/07/30 09:01:26 plearner Exp $
+   * $Id: RealMapping.h,v 1.2 2002/08/08 22:52:37 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -140,6 +140,7 @@ using namespace std;
     virtual void read(istream& in);
   };
 
+  DECLARE_OBJECT_PTR(RealMapping);
 
 %> // end of namespace PLearn
 

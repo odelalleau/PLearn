@@ -22,8 +22,8 @@
 #if !defined (_MINGW_)
 #include <varargs.h>
 #else
-#include <windef.h>
-#include <winbase.h>
+//#include <windef.h>
+//#include <winbase.h>
 #endif
 
 #endif 
@@ -49,6 +49,10 @@ static int fileSize(const char *filename)
 ///////////////////////////////////////////
 void * memoryMap(const char *filename, tFileHandle & file_handle, bool readonly, int offset_, int length)
  {
+#ifdef _MINGW_
+     PLERROR("memoryMap() - Not supported for MINGW");
+     return 0;
+#else
   if ((file_handle = (tFileHandle)CreateFile( filename, 
                                  readonly ? GENERIC_READ: GENERIC_READ | GENERIC_WRITE, 
                                  readonly ? FILE_SHARE_READ : 0,
@@ -79,11 +83,16 @@ void * memoryMap(const char *filename, tFileHandle & file_handle, bool readonly,
         PLERROR("In Storage: Could not open specified memory-mapping file for reading");
         return 0; // to keep the compiler quiet
        }
+#endif
  }
 
 ///////////////////////////////////////////
 bool memoryUnmap(void * p, tFileHandle file_handle)
  {   
+#ifdef _MINGW_
+     PLERROR("memoryUnmap - Not supported for MINGW");
+     return false;
+#else
   // first parameter: start address of byte range to flush
   // second parameter: number of bytes in range (0==flush all bytes)
   // flush==(linux)msync(...)
@@ -95,6 +104,7 @@ bool memoryUnmap(void * p, tFileHandle file_handle)
         return b;
        }
   else return false;
+#endif
  }
 
 
@@ -128,12 +138,8 @@ void * MemoryMap(const char *filename,tFileHandle & handle, bool read_only,  off
 //void FreeMemoryMap(void * data, tFileHandle handle, int length)
 void memoryUnmap(void * data, tFileHandle handle, int length)
  {
-#if defined(_MINGW_)
-	PLERROR("memoryUnmap(): Not ported for MinGW");
-#else
-  msync((char*)data, length, MS_SYNC);
-  munmap((char *)data, length);
-#endif
+   msync((char*)data, length, MS_SYNC);
+   munmap((char *)data, length);
    close(handle);
  }
 
