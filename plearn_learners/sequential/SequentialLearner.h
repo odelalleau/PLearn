@@ -99,7 +99,7 @@ class SequentialLearner: public PLearner
       The method should upon entry, call setTrainingSet(training_set);
       The method should:
         - do nothing if we already called it with this value of train.length
-          or a value between [train.length()-train_step+1,train.length]
+          or a value between [last_train_t-train_step+1,last_train_t]
         - if not, train and update the value of last_train_t
         - in either case, update the value of last_call_train_t
 */
