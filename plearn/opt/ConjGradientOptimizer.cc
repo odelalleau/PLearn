@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.34 2003/10/03 12:52:14 yoshua Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.35 2003/10/03 14:00:39 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -269,9 +269,9 @@ real ConjGradientOptimizer::conjpomdp (
     ConjGradientOptimizer* opt) {
   int i;
   // delta = Gradient
-  (*grad)(opt, opt->delta);
+  (*grad)(opt, opt->delta); // EST-CE VRAIMENT NECESSAIRE?
   real norm_g = pownorm(opt->current_opp_gradient);
-  // g <- delta - g (g = current_opp_gradient)
+  // tmp_storage <- delta - g (g = current_opp_gradient)
   for (i=0; i<opt->current_opp_gradient.length(); i++) {
     opt->tmp_storage[i] = opt->delta[i]-opt->current_opp_gradient[i];
   }
