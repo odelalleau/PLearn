@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.cc,v 1.17 2004/05/27 14:26:09 tihocan Exp $ 
+   * $Id: PDistribution.cc,v 1.18 2004/05/31 12:59:14 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.cc */
@@ -337,7 +337,12 @@ void PDistribution::initializeForConditional() {
 void PDistribution::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-  PLERROR("In PDistribution::makeDeepCopyFromShallowCopy - Make sure the implementation is correct");
+  deepCopyField(cond_sort, copies);
+  deepCopyField(cond_swap, copies);
+  deepCopyField(input_part, copies);
+  deepCopyField(target_part, copies);
+  deepCopyField(conditional_flags, copies);
+  deepCopyField(provide_input, copies);
 }
 
 ////////////////
