@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.16 2003/12/05 18:18:06 plearner Exp $
+   * $Id: stringutils.h,v 1.17 2004/02/06 21:12:42 ducharme Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -46,7 +46,7 @@
 // that are used in the PLearn Library
 
 
-/*! \file PLearnLibrary/PLearnCore/stringutils.h */
+/*! \file PLearn/plearn/base/stringutils.h */
 
 #ifndef stringutils_INC
 #define stringutils_INC
@@ -61,6 +61,14 @@
 namespace PLearn <%
 using namespace std;
   
+#if defined(_MINGW_) || defined(WIN32)
+#define slash "\\"
+#define slash_char '\\'
+#else
+#define slash "/"
+#define slash_char '/'
+#endif
+
   //!  converts anything to a string (same output as with cout << x)
   template<class T> string tostring(const T& x);
 

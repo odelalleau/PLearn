@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDate.cc,v 1.4 2003/10/22 20:04:33 tihocan Exp $
+   * $Id: PDate.cc,v 1.5 2004/02/06 21:12:42 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -136,8 +136,8 @@ void PDate::setMissing()
   
 string PDate::info() const
 {
-  return tostring(year)+"/"+
-    right(tostring(int(month)), 2, '0') +"/"+
+  return tostring(year)+slash+
+    right(tostring(int(month)), 2, '0') +slash+
     right(tostring(int(day)),   2, '0');
 }
 

@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.39 2004/01/29 18:13:02 plearner Exp $
+* $Id: VMatrix.cc,v 1.40 2004/02/06 21:12:49 ducharme Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -406,13 +406,13 @@ string VMatrix::resolveFieldInfoLink(string target, string source)
   if(isdir(contents))
   {
     //just in case it lacks a slash..
-    contents+="/";
+    contents+=slash;
     if(isfile(contents+target+".lnk"))
       return resolveFieldInfoLink(target,contents+target+".lnk");
     else if(isfile(contents+target))
       return contents+target;
-    else if(isfile(contents+"/__default.lnk"))
-      return resolveFieldInfoLink(target,contents+"/__default.lnk");
+    else if(isfile(contents+slash+"__default.lnk"))
+      return resolveFieldInfoLink(target,contents+slash+"__default.lnk");
     // assume target is there, but file is empty thus inexistant
     else return contents+target;
   }
@@ -430,7 +430,7 @@ void VMatrix::setSFIFFilename(int col, string ext, string filepath)
 void VMatrix::setSFIFFilename(string fieldname, string ext, string filepath)
 {
   string target = makeFileNameValid(fieldname+ext);
-  string normalfname = getMetaDataDir()+"FieldInfo/"+target;
+  string normalfname = getMetaDataDir()+"FieldInfo"+slash+target;
   rm(normalfname+".lnk");
   if(filepath==normalfname || filepath=="")
   {
@@ -451,8 +451,8 @@ string VMatrix::getSFIFFilename(int col, string ext)
 string VMatrix::getSFIFFilename(string fieldname, string ext)
 {
   string target = makeFileNameValid(fieldname+ext);
-  string normalfname = getMetaDataDir()+"FieldInfo/"+target;
-  string defaultlinkfname = getMetaDataDir()+"FieldInfo/__default.lnk";
+  string normalfname = getMetaDataDir()+"FieldInfo"+slash+target;
+  string defaultlinkfname = getMetaDataDir()+"FieldInfo"+slash+"__default.lnk";
   if(isfile(normalfname))
     return normalfname;
   else if(isfile(normalfname+".lnk"))
@@ -471,7 +471,7 @@ bool VMatrix::isSFIFDirect(int col, string ext)
 bool VMatrix::isSFIFDirect(string fieldname, string ext)
 {
   string target = makeFileNameValid(fieldname+ext);
-  string normalfname = getMetaDataDir()+"FieldInfo/"+target;
+  string normalfname = getMetaDataDir()+"FieldInfo"+slash+target;
   return getSFIFFilename(fieldname,ext) == normalfname;
 }
 
@@ -693,7 +693,7 @@ void VMatrix::loadStringMapping(int col)
     return;
   string fname = getSFIFFilename(col,".smap");
   init_map_sr();
-  force_mkdir(getMetaDataDir()+"FieldInfo/");
+  force_mkdir(getMetaDataDir()+"FieldInfo"+slash);
   deleteStringMapping(col);
 
   if(!isfile(fname))
@@ -734,7 +734,7 @@ TVec<StatsCollector> VMatrix::getStats() const
 {
   if(!field_stats)
   {
-    string statsfile = getMetaDataDir() + "/stats.psave";
+    string statsfile = getMetaDataDir() + slash+"stats.psave";
     if (isfile(statsfile) && getMtime()<mtime(statsfile))
     {
       if(getMtime()==0)
@@ -754,7 +754,7 @@ TVec<StatsCollector> VMatrix::getStats() const
 TVec<RealMapping> VMatrix::getRanges()
 {
   TVec<RealMapping> ranges;
-  string rangefile = getMetaDataDir() + "/ranges.psave";
+  string rangefile = getMetaDataDir() + slash+"ranges.psave";
   if(isfile(rangefile))
     PLearn::load(rangefile, ranges);
   else
@@ -771,8 +771,8 @@ PP<ConditionalStatsCollector> VMatrix::getConditionalStats(int condfield)
 {
   PP<ConditionalStatsCollector> condst;
   TVec<RealMapping> ranges = getRanges();
-  string condstatfile = getMetaDataDir() + "/stats" + tostring(condfield) + ".psave";      
-  string rangefile = getMetaDataDir() + "/ranges.psave";
+  string condstatfile = getMetaDataDir() + slash+"stats" + tostring(condfield) + ".psave";      
+  string rangefile = getMetaDataDir() + slash+"ranges.psave";
   cerr <<  "rangefile: " << mtime(rangefile) << " condstatfile: " << mtime(condstatfile) << endl;
   if(mtime(rangefile)>mtime(condstatfile))
     {

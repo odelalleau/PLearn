@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.cc,v 1.9 2003/11/21 17:14:34 tihocan Exp $
+   * $Id: VVMatrix.cc,v 1.10 2004/02/06 21:12:49 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -106,7 +106,7 @@ vector<vector<string> > VVMatrix::extractSourceMatrix(const string & str,const s
       for(unsigned int j=0;j<mstr[i].size();j++)
         {
           string srcstr = removeblanks(mstr[i][j]);
-          if(srcstr[0]!='/')
+          if(srcstr[0]!=slash_char)
             {
               string potential_dir = extract_directory(filename);
               unsigned int p = srcstr.find(":");
@@ -144,7 +144,7 @@ time_t VVMatrix::getDateOfVMat(const string& filename)
             if(vecstr.size()==2 || vecstr.size()==4)
               {
                 // also check for date of possible IntVecFile
-                if(vecstr[1][0]!='/')
+                if(vecstr[1][0]!=slash_char)
                   vecstr[1]=extract_directory(filename)+vecstr[1];
                 if((tmp=mtime(vecstr[1])) > latest)
                   latest=tmp;
@@ -205,7 +205,7 @@ void VVMatrix::generateVMatIndex(VMat source, const string& meta_data_dir,
                        unsigned int idx_join,unsigned int cidx_join)
 {
   VMat tmpsource = source;
-  rm(meta_data_dir+"/source.indexes");     
+  rm(meta_data_dir+slash+"source.indexes");     
 
   if(idx_prefilter!=string::npos)
     {
@@ -215,7 +215,7 @@ void VVMatrix::generateVMatIndex(VMat source, const string& meta_data_dir,
         PLERROR("Cannot find closing tag </PREFILTER>. File is %s",filename.c_str());
       string code=in.substr(idx_prefilter,cidx_prefilter-idx_prefilter);
       cout<<"Prefiltering.. "<<endl;
-      tmpsource = buildFilteredVMatFromVPL(tmpsource,code,meta_data_dir+"/incomplete.source.prefilter.indexes",date_of_code);
+      tmpsource = buildFilteredVMatFromVPL(tmpsource,code,meta_data_dir+slash+"incomplete.source.prefilter.indexes",date_of_code);
     }
 
   if(idx_join!=string::npos)
@@ -244,27 +244,27 @@ void VVMatrix::generateVMatIndex(VMat source, const string& meta_data_dir,
         PLERROR("Cannot find closing tag </POSTFILTER>. File is %s",filename.c_str());
       string code=in.substr(idx_postfilter,cidx_postfilter-idx_postfilter);
       cout<<"Postfiltering.. "<<endl;
-      tmpsource = buildFilteredVMatFromVPL(tmpsource,code,meta_data_dir+"/incomplete.source.postfilter.indexes",date_of_code);
+      tmpsource = buildFilteredVMatFromVPL(tmpsource,code,meta_data_dir+slash+"incomplete.source.postfilter.indexes",date_of_code);
     }
 
   // combines pre and postfilter index file in a single one
-  if(isfile(meta_data_dir+"/incomplete.source.prefilter.indexes"))
-    if(isfile(meta_data_dir+"/incomplete.source.postfilter.indexes"))
+  if(isfile(meta_data_dir+slash+"incomplete.source.prefilter.indexes"))
+    if(isfile(meta_data_dir+slash+"incomplete.source.postfilter.indexes"))
       {
-        IntVecFile ivf(meta_data_dir+"/source.indexes",true);        
-        IntVecFile preivf(meta_data_dir+"/incomplete.source.prefilter.indexes");
-        IntVecFile postivf(meta_data_dir+"/incomplete.source.postfilter.indexes");
+        IntVecFile ivf(meta_data_dir+slash+"source.indexes",true);        
+        IntVecFile preivf(meta_data_dir+slash+"incomplete.source.prefilter.indexes");
+        IntVecFile postivf(meta_data_dir+slash+"incomplete.source.postfilter.indexes");
         for(int i=0;i<postivf.length();i++)
           ivf.append(preivf[postivf[i]]);
       }
     else
-      mv(meta_data_dir+"/incomplete.source.prefilter.indexes "
-         +meta_data_dir+"/source.indexes");
+      mv(meta_data_dir+slash+"incomplete.source.prefilter.indexes "
+         +meta_data_dir+slash+"source.indexes");
       
   else
-    if(isfile(meta_data_dir+"/incomplete.source.postfilter.indexes"))
-      mv(meta_data_dir+"/incomplete.source.postfilter.indexes "
-         +meta_data_dir+"/source.indexes");
+    if(isfile(meta_data_dir+slash+"incomplete.source.postfilter.indexes"))
+      mv(meta_data_dir+slash+"incomplete.source.postfilter.indexes "
+         +meta_data_dir+slash+"source.indexes");
   
   if(idx_shuffle!=string::npos)
     {
@@ -282,30 +282,30 @@ void VVMatrix::generateVMatIndex(VMat source, const string& meta_data_dir,
         }
       // if a source.indexes file exists, shuffle it, otherwise, create it
       TVec<int> idx;
-      if(isfile(meta_data_dir+"/source.indexes"))
+      if(isfile(meta_data_dir+slash+"source.indexes"))
         {
-          IntVecFile ivf(meta_data_dir+"/source.indexes");
+          IntVecFile ivf(meta_data_dir+slash+"source.indexes");
           idx=ivf.getVec();
         }
       else idx=TVec<int>(0,tmpsource->length()-1,1);
       shuffleElements(idx);
-      rm(meta_data_dir+"/source.indexes");
-      IntVecFile newivf(meta_data_dir+"/source.indexes",true);
+      rm(meta_data_dir+slash+"source.indexes");
+      IntVecFile newivf(meta_data_dir+slash+"source.indexes",true);
       newivf.append(idx);
     } 
   // remove intermediate files
-  rm(meta_data_dir+"/incomplete.source.prefilter.indexes");
-  rm(meta_data_dir+"/incomplete.source.postfilter.indexes");
+  rm(meta_data_dir+slash+"incomplete.source.prefilter.indexes");
+  rm(meta_data_dir+slash+"incomplete.source.postfilter.indexes");
 }
 
 bool VVMatrix::isPrecomputedAndUpToDate()
 {
   string meta_data_dir=remove_trailing_slash(the_filename)+".metadata";
-  if(isfile(meta_data_dir+"/precomputed.pmat") && 
-     mtime(meta_data_dir+"/precomputed.pmat") > getMtime())
+  if(isfile(meta_data_dir+slash+"precomputed.pmat") && 
+     mtime(meta_data_dir+slash+"precomputed.pmat") > getMtime())
     return true;
-  if(pathexists(meta_data_dir+"/precomputed.dmat/") && 
-     mtime(meta_data_dir+"/precomputed.dmat/indexfile") > getMtime())
+  if(pathexists(meta_data_dir+slash+"precomputed.dmat"+slash) && 
+     mtime(meta_data_dir+slash+"precomputed.dmat"+slash+"indexfile") > getMtime())
     return true;
   return false;
 }
@@ -313,10 +313,10 @@ bool VVMatrix::isPrecomputedAndUpToDate()
 string VVMatrix::getPrecomputedDataName()
 {
   string meta_data_dir=remove_trailing_slash(the_filename)+".metadata";
-  if(isfile(meta_data_dir+"/precomputed.pmat"))
-    return meta_data_dir+"/precomputed.pmat";
-  if(pathexists(meta_data_dir+"/precomputed.dmat/"))
-    return meta_data_dir+"/precomputed.dmat";
+  if(isfile(meta_data_dir+slash+"precomputed.pmat"))
+    return meta_data_dir+slash+"precomputed.pmat";
+  if(pathexists(meta_data_dir+slash+"precomputed.dmat"+slash))
+    return meta_data_dir+slash+"precomputed.dmat";
   return "** no precomputed data found **";
 }
 
@@ -346,28 +346,28 @@ VMat VVMatrix::createPreproVMat(const string & filename)
   time_t date_of_code = getDateOfVMat(filename);
 
   // remove pollution : all stuff that has possibly been interrupted during computation
-  rm (meta_data_dir+"/incomplete.*");
+  rm (meta_data_dir+slash+"incomplete.*");
 
-  if(isfile(meta_data_dir+"/precomputed.pmat"))
+  if(isfile(meta_data_dir+slash+"precomputed.pmat"))
     {
       // precomputed version exist in pmat format,
       // so we use it *if it is up to date*
-      if(mtime(meta_data_dir+"/precomputed.pmat") > date_of_code)
+      if(mtime(meta_data_dir+slash+"precomputed.pmat") > date_of_code)
         {
-          source=new FileVMatrix(meta_data_dir+"/precomputed.pmat");
+          source=new FileVMatrix(meta_data_dir+slash+"precomputed.pmat");
           source->setMetaDataDir(meta_data_dir);
           source->setMtime(date_of_code);
           return source;
         }
     }
 
-  if(pathexists(meta_data_dir+"/precomputed.dmat/"))
+  if(pathexists(meta_data_dir+slash+"precomputed.dmat"+slash))
     {
       // precomputed version exist in DiskVMatrix format,
       // so we use it *if it is up to date*
-      if(mtime(meta_data_dir+"/precomputed.dmat/indexfile") > date_of_code)
+      if(mtime(meta_data_dir+slash+"precomputed.dmat"+slash+"indexfile") > date_of_code)
         {
-          source = new DiskVMatrix(meta_data_dir+"/precomputed.dmat/");
+          source = new DiskVMatrix(meta_data_dir+slash+"precomputed.dmat"+slash);
           source->setMetaDataDir(meta_data_dir);
           source->setMtime(date_of_code);
           return source;
@@ -379,11 +379,11 @@ VMat VVMatrix::createPreproVMat(const string & filename)
 
   // if true, index file lacks or is out of date
   bool must_regen_index = index_section &&  
-    (!isfile(meta_data_dir+"/source.indexes") || date_of_code > mtime(meta_data_dir+"/source.indexes"));
+    (!isfile(meta_data_dir+slash+"source.indexes") || date_of_code > mtime(meta_data_dir+slash+"source.indexes"));
 
   // erase obsolete source.index if necessary
-  if(isfile(meta_data_dir+"/source.indexes") && !index_section)
-    rm (meta_data_dir+"/source.indexes");
+  if(isfile(meta_data_dir+slash+"source.indexes") && !index_section)
+    rm (meta_data_dir+slash+"source.indexes");
 
   if(idx_source!=string::npos)
     {
@@ -429,7 +429,7 @@ VMat VVMatrix::createPreproVMat(const string & filename)
                 break;
               case 2: // we have an intVecFile specification
                 // prefix with the path to the current vmat
-                if(vecstr[1][0]!='/')
+                if(vecstr[1][0]!=slash_char)
                   vecstr[1]=extract_directory(filename)+vecstr[1];
                 ar[j]=new SelectRowsFileIndexVMatrix(ar[j],vecstr[1]);
                 break;
@@ -437,7 +437,7 @@ VMat VVMatrix::createPreproVMat(const string & filename)
                 ar[j]=ar[j].subMatRows(toint(vecstr[1]),toint(vecstr[2]));
                 break;
               case 4: // intVecFile + submatRows
-                if(vecstr[1][0]!='/')
+                if(vecstr[1][0]!=slash_char)
                   vecstr[1]=extract_directory(filename)+vecstr[1];
                 ar[j]=new SelectRowsFileIndexVMatrix(ar[j],vecstr[1]);
                 ar[j]=ar[j].subMatRows(toint(vecstr[2]),toint(vecstr[3]));
@@ -484,8 +484,8 @@ VMat VVMatrix::createPreproVMat(const string & filename)
     }
 
   // if source.index exists at this point, we need to apply it
-  if(isfile(meta_data_dir+"/source.indexes"))
-    source = new SelectRowsFileIndexVMatrix(source,meta_data_dir+"/source.indexes");
+  if(isfile(meta_data_dir+slash+"source.indexes"))
+    source = new SelectRowsFileIndexVMatrix(source,meta_data_dir+slash+"source.indexes");
 
   // next lines handle precomputation of matrix
   if(idx_precompute!=string::npos)
@@ -497,38 +497,38 @@ VMat VVMatrix::createPreproVMat(const string & filename)
       precomp=removeblanks(in.substr(idx_precompute,cidx_precompute-idx_precompute));
       if(precomp ==  "dmat")
         {
-          cout<<"Rendering DMAT : "<<meta_data_dir+"/precomputed.dmat/"<<endl;
-          source->saveDMAT(meta_data_dir+"/incomplete.precomputed.dmat/");
+          cout<<"Rendering DMAT : "<<meta_data_dir+slash+"precomputed.dmat"+slash<<endl;
+          source->saveDMAT(meta_data_dir+slash+"incomplete.precomputed.dmat"+slash);
           int cnt=0;
-          if (isdir(meta_data_dir+"/precomputed.dmat/")) {
+          if (isdir(meta_data_dir+slash+"precomputed.dmat"+slash)) {
             while(cnt++ < 5 &&
-                  !force_rmdir(meta_data_dir+"/precomputed.dmat/"))
+                  !force_rmdir(meta_data_dir+slash+"precomputed.dmat"+slash))
             {
               cerr<<"Could not rm -rf '"+meta_data_dir+
-                "/precomputed.dmat/'. Maybe 'Stale NFS file handle' curse again. Retrying in 2 sec."
+                slash+"precomputed.dmat/'. Maybe 'Stale NFS file handle' curse again. Retrying in 2 sec."
                   <<endl;
               sleep(2);
             }
           }
 
-          mvforce(meta_data_dir+"/incomplete.precomputed.dmat/ "+meta_data_dir+"/precomputed.dmat/");
-          if(pathexists(meta_data_dir+"/incomplete.precomputed.dmat.metadata/"))
+          mvforce(meta_data_dir+slash+"incomplete.precomputed.dmat"+slash+" "+meta_data_dir+slash+"precomputed.dmat"+slash);
+          if(pathexists(meta_data_dir+slash+"incomplete.precomputed.dmat.metadata"+slash))
           {
-            rm(meta_data_dir+"/precomputed.dmat.metadata/");
-            mvforce(meta_data_dir+"/incomplete.precomputed.dmat.metadata/ "+meta_data_dir+"/precomputed.dmat.metadata/");
+            rm(meta_data_dir+slash+"precomputed.dmat.metadata"+slash);
+            mvforce(meta_data_dir+slash+"incomplete.precomputed.dmat.metadata"+slash+" "+meta_data_dir+slash+"precomputed.dmat.metadata"+slash);
           }
-          source=new DiskVMatrix(meta_data_dir+"/precomputed.dmat/");
+          source=new DiskVMatrix(meta_data_dir+slash+"precomputed.dmat"+slash);
         }
       else if(precomp ==  "pmat")
         {
-          cout<<"Rendering PMAT : "<<meta_data_dir+"/precomputed.pmat"<<endl;
-          source->savePMAT(meta_data_dir+"/incomplete.precomputed.pmat");
-          mvforce(meta_data_dir+"/incomplete.precomputed.pmat "+meta_data_dir+"/precomputed.pmat");
+          cout<<"Rendering PMAT : "<<meta_data_dir+slash+"precomputed.pmat"<<endl;
+          source->savePMAT(meta_data_dir+slash+"incomplete.precomputed.pmat");
+          mvforce(meta_data_dir+slash+"incomplete.precomputed.pmat "+meta_data_dir+slash+"precomputed.pmat");
 // Seems to be useless now (TODO: remove ?)
-//          mvforce(meta_data_dir+"/incomplete.precomputed.pmat.fieldnames "+meta_data_dir+"/precomputed.pmat.fieldnames");
-          if(pathexists(meta_data_dir+"/incomplete.precomputed.pmat.metadata/"))
-            mvforce(meta_data_dir+"/incomplete.precomputed.pmat.metadata/ "+meta_data_dir+"/precomputed.pmat.metadata/");
-          source=new FileVMatrix(meta_data_dir+"/precomputed.pmat");
+//          mvforce(meta_data_dir+slash+"incomplete.precomputed.pmat.fieldnames "+meta_data_dir+slash+"precomputed.pmat.fieldnames");
+          if(pathexists(meta_data_dir+slash+"incomplete.precomputed.pmat.metadata"+slash))
+            mvforce(meta_data_dir+slash+"incomplete.precomputed.pmat.metadata"+slash+" "+meta_data_dir+slash+"precomputed.pmat.metadata"+slash);
+          source=new FileVMatrix(meta_data_dir+slash+"precomputed.pmat");
         }
       else if(precomp!="")
         PLERROR("Unsupported precomputing format : %s.  File is %s", precomp.c_str(),filename.c_str());

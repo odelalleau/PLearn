@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.cc,v 1.13 2003/08/26 18:45:44 plearner Exp $
+   * $Id: stringutils.cc,v 1.14 2004/02/06 21:12:42 ducharme Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -123,7 +123,7 @@ double todouble(const string& s)
 
   string extract_filename(const string& filepath)
   {
-    unsigned int p = filepath.rfind("/");
+    unsigned int p = filepath.rfind(slash);
     if (p != string::npos)
       return filepath.substr(p+1,filepath.length()-(p+1));
     else
@@ -132,11 +132,14 @@ double todouble(const string& s)
 
   string extract_directory(const string& filepath)
   {
-    unsigned int p = filepath.rfind("/");
+    unsigned int p = filepath.rfind(slash);
     if (p != string::npos)
       return filepath.substr(0,p+1);
     else
-      return "./";
+    {
+      string dot = ".";
+      return dot+slash;
+    }
   }
   
   string extract_extension(const string& filepath)
@@ -230,7 +233,7 @@ string removenewline(const string& s)
 string remove_trailing_slash(const string& s)
 {
   int pos = int(s.length())-1;
-  while( s[pos]=='/' && pos>=0 )
+  while( s[pos]==slash_char && pos>=0 )
     pos--;
   return s.substr(0,pos+1);
 }
@@ -238,8 +241,8 @@ string remove_trailing_slash(const string& s)
 string append_slash(const string& path)
 {
   int l = path.length();
-  if(l>0 && path[l-1]!='/')
-    return path+'/';
+  if(l>0 && path[l-1]!=slash_char)
+    return path+slash;
   else
     return path;
 }

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrix.cc,v 1.3 2003/12/05 22:13:45 plearner Exp $ 
+   * $Id: SourceVMatrix.cc,v 1.4 2004/02/06 21:12:49 ducharme Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -63,7 +63,7 @@ void SourceVMatrix::setMetaDataDir(const string& the_metadatadir)
 {
   inherited::setMetaDataDir(the_metadatadir);
   if(!source->hasMetaDataDir())
-    source->setMetaDataDir(the_metadatadir+"/Source/");
+    source->setMetaDataDir(the_metadatadir+slash+"Source"+slash);
 
   // Set mapping and info files from source if not set
   if(hasFieldInfos())

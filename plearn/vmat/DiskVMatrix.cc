@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: DiskVMatrix.cc,v 1.8 2004/01/21 22:06:40 ducharme Exp $
+   * $Id: DiskVMatrix.cc,v 1.9 2004/02/06 21:12:49 ducharme Exp $
    ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -131,7 +131,7 @@ void DiskVMatrix::build_()
     else // read-only
       omode = "rb";
 
-    string indexfname = dirname+"/indexfile";
+    string indexfname = dirname+slash+"indexfile";
     indexf = fopen(indexfname.c_str(), omode.c_str());
     if(!indexf)
       PLERROR("In DiskVMatrix constructor, could not open file %s in specified mode", indexfname.c_str());
@@ -166,14 +166,14 @@ void DiskVMatrix::build_()
         endianswap(&width_);
       }
     int k=0;
-    string fname = dirname+"/"+tostring(k)+".data";
+    string fname = dirname+slash+tostring(k)+".data";
     while(isfile(fname))
     {
       FILE* f = fopen(fname.c_str(), omode.c_str());
       if(!f)
         PLERROR("In DiskVMatrix constructor, could not open file %s in specified mode", fname.c_str());
       dataf.append(f);
-      fname = dirname+"/"+tostring(++k)+".data";
+      fname = dirname+slash+tostring(++k)+".data";
     }
     // Stuff related to RowBufferedVMatrix, for consistency
     current_row_index = -1;
@@ -199,7 +199,7 @@ void DiskVMatrix::build_()
     if(!force_mkdir(dirname)) // force directory creation 
       PLERROR("In DiskVMatrix constructor (with specified width), could not create directory %s  Error was: %s",dirname.c_str(), strerror(errno));
 
-    string indexfname = dirname + "/indexfile";
+    string indexfname = dirname + slash + "indexfile";
     indexf = fopen(indexfname.c_str(),"w+b");
 
     char header[4];
@@ -211,7 +211,7 @@ void DiskVMatrix::build_()
     fwrite((char*)&length_,sizeof(int),1,indexf);
     fwrite((char*)&width_,sizeof(int),1,indexf);
   
-    string fname = dirname + "/0.data";
+    string fname = dirname + slash + "0.data";
     FILE* f = fopen(fname.c_str(), "w+b");
     dataf.append(f);
   }
@@ -270,7 +270,7 @@ void DiskVMatrix::appendRow(Vec v)
   {
     fflush(f);
     filenum++;
-    string filename = dirname + "/" + tostring(filenum) + ".data";
+    string filename = dirname + slash + tostring(filenum) + ".data";
     f = fopen(filename.c_str(), "w+b");
     dataf.append(f);
     position = 0;

@@ -1197,7 +1197,7 @@ SimpleDB<KT,QR>::SimpleDB(string rootname, string the_path,
     table_size_multiplier(1.8), indexes(), verbose(the_verbose)
 {
   if (path != "")
-    path += "/";
+    path += slash;
   string fullpath = path + name + ".sdb";
 
   switch (access_type) {

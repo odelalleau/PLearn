@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.17 2003/11/27 21:02:57 chapados Exp $
+   * $Id: fileutils.cc,v 1.18 2004/02/06 21:12:49 ducharme Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -106,6 +106,10 @@ int chdir(const string& path)
 
   bool isdir(const string& path)
   {
+#ifdef _MINGW_
+    if (path[path.size()-1] == ':') // c: or C: or r: or R: or...
+      return true;
+#endif
     struct stat s;
     int status = stat(path.c_str(),&s);
     if(status!=0)
@@ -155,7 +159,7 @@ int chdir(const string& path)
 
   // Same as lsdir, except dirpath is prepended to the entries' names.
   vector<string> lsdir_fullpath(const string& dirpath)
-  { return addprefix(remove_trailing_slash(dirpath)+"/",lsdir(dirpath)); }
+  { return addprefix(remove_trailing_slash(dirpath)+slash,lsdir(dirpath)); }
 
 
   // Forces directory creation if it doesn't already exist. 
@@ -176,7 +180,7 @@ int chdir(const string& path)
     do
       {
         pos++;
-        pos = path.find("/",pos);
+        pos = path.find(slash,pos);
         if(pos>=0)
           pathpart = path.substr(0,pos);
         else
@@ -463,8 +467,11 @@ void touch(const string& file)
 string makeExplicitPath(const string& filename)
 {
   string fn = removeblanks(filename);
-  if(fn!="" && fn[0]!='/' && fn[0]!='.')
-    return "./"+fn;
+  if(fn!="" && fn[0]!=slash_char && fn[0]!='.')
+  {
+    string dot = ".";
+    return dot+slash+fn;
+  }
   return fn;
 }
   

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.11 2003/10/30 22:16:52 plearner Exp $
+   * $Id: getDataSet.cc,v 1.12 2004/02/06 21:12:49 ducharme Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -94,8 +94,8 @@ time_t getDataSetDate(const string& datasetstring, const string& alias)
       else // it's a directory
         {
           // is it the directory of a DiskVMatrix?
-          if(isfile(datasetstring+"/indexfile") && isfile(datasetstring+"/0.data"))
-            return mtime(datasetstring+"/indexfile");
+          if(isfile(datasetstring+slash+"indexfile") && isfile(datasetstring+slash+"0.data"))
+            return mtime(datasetstring+slash+"indexfile");
           else
             PLERROR("In getDataSetDate: datasetstring is a directory of unknown format"); 
         }
@@ -153,7 +153,7 @@ VMat getDataSet(const string& datasetstring, const string& alias)
       else // it's a directory
         {
           // is it the directory of a DiskVMatrix?
-          if(isfile(datasetstring+"/indexfile") && isfile(datasetstring+"/0.data"))
+          if(isfile(datasetstring+slash+"indexfile") && isfile(datasetstring+slash+"0.data"))
             {
               vm = new DiskVMatrix(datasetstring);
             }
@@ -222,7 +222,8 @@ string locateDatasetAliasesDir(const string& dir_or_file_path)
   if(!pathexists(dir_or_file_path))
     PLERROR("In getDatasetAliases argument '%s' is not an existing directory or file!", dir_or_file_path.c_str());
   string dirname = extract_directory(abspath(dir_or_file_path));
-  while(dirname!="/" && dirname!="./" && !isfile(dirname + "dataset.aliases"))
+  string dot = ".";
+  while(dirname!=slash && dirname!=dot+slash && !isfile(dirname + "dataset.aliases"))
     dirname = extract_directory(remove_trailing_slash(dirname));
 
   if(isfile(dirname+"dataset.aliases"))
