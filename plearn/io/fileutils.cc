@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.51 2004/11/18 14:29:20 tihocan Exp $
+   * $Id: fileutils.cc,v 1.52 2004/11/24 18:09:42 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -816,7 +816,25 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
                 break;
               }
 
-            case 'I':
+            case 'G': // it's a GETENV{expression}
+              {
+                string expr;
+                readWhileMatches(in, "GETENV");
+                bool syntax_ok = true;
+                int c = in.get();
+                if(c == '{')
+                  smartReadUntilNext(in, "}", expr, true);
+                else
+                  syntax_ok = false;
+                if (!syntax_ok)
+                  PLERROR("$GETENV syntax is: $GETENV{expr}");
+                istrstream expr_stream(expr.c_str());
+                string var = getenv(readAndMacroProcess(expr_stream, variables).c_str());
+                text += var;
+              }
+              break;
+
+             case 'I':
               {
                 int next = in.get();
                 next = in.peek();   // Next character.
@@ -1240,7 +1258,7 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
 
             default:
               PLERROR("In readAndMacroProcess: only supported macro commands are \n"
-                      "${varname}, $CHAR, $DEFINE, $DIVIDE, $ECHO, $EVALUATE, $IF, $INCLUDE, $INT, $ISDEFINED, $ISEQUAL, $ISHIGHER, $MINUS, $PLUS, $OR, $SWITCH, $TIMES, $UNDEFINE."
+                      "${varname}, $CHAR, $DEFINE, $DIVIDE, $ECHO, $EVALUATE, $GETENV, $IF, $INCLUDE, $INT, $ISDEFINED, $ISEQUAL, $ISHIGHER, $MINUS, $PLUS, $OR, $SWITCH, $TIMES, $UNDEFINE."
                       "But I read $%c !!",c);
             }
         }
