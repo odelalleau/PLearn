@@ -35,11 +35,11 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVMatrix.h,v 1.9 2004/07/20 15:42:38 tatien Exp $
+   * $Id: ConcatRowsVMatrix.h,v 1.10 2004/08/05 13:47:29 tihocan Exp $
    ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file ConcatRowsVMatrix.h */
 
 #ifndef ConcatRowsVMatrix_INC
 #define ConcatRowsVMatrix_INC
@@ -60,25 +60,34 @@ class ConcatRowsVMatrix: public VMatrix
 {
   typedef VMatrix inherited;
 
- protected:
-  Array<VMat> array;
+protected:
 
-  //!  returns the index of the correct VMat in the array and the row
-  //!  number in this VMat that correspond to row i in the ConcatRowsVMat
-  void getpositions(int i, int& whichvm, int& rowofvm) const; 
+  TVec<VMat> array;
 
- public:
+  //! A vector containing the final VMat to concatenate.
+  //! These are either the same as the ones in 'array', or a selection
+  //! of their fields when the 'only_common_fields' option is true.
+  TVec<VMat> to_concat;
+
+public:
+
+  bool only_common_fields;
+
   //! The fields names are copied from the FIRST VMat
-  ConcatRowsVMatrix(Array<VMat> the_array = Array<VMat>()) : array(the_array) { if (array.size()) build_(); };
-  ConcatRowsVMatrix(VMat d1, VMat d2) : array(d1, d2) { build_(); };
+  ConcatRowsVMatrix(TVec<VMat> the_array = TVec<VMat>());
+  ConcatRowsVMatrix(VMat d1, VMat d2);
 
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;
+  //! Warning : the string map used is the one from the first of the concatenated matrices
   virtual real getStringVal(int col, const string & str) const;
+  //! Warning : the string map used is the one from the first of the concatenated matrices
   virtual string getValString(int col, real val) const;
+  //! Warning : the string map used is the one from the first of the concatenated matrices
   virtual string getString(int row,int col) const;
-  // this function does not really makes sense since there could be as much mapping as the number of VMatrices composing this ConcatRowsVMatrix
-  // It will return the first's mapping
+  //! This function does not really makes sense since there could be as many mappings
+  //! as the number of VMatrices composing this ConcatRowsVMatrix.
+  //! It will return the first's mapping.
   const map<string,real>& getStringToRealMapping(int col) const;
 
   virtual void reset_dimensions() 
@@ -99,10 +108,23 @@ class ConcatRowsVMatrix: public VMatrix
   virtual void putMat(int i, int j, Mat m);
 
   PLEARN_DECLARE_OBJECT(ConcatRowsVMatrix);
-  static void declareOptions(OptionList &ol);
   virtual void build();
+
+  //! Transforms a shallow copy into a deep copy.
+  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+
+protected:
+
+  //!  Returns the index of the correct VMat in the array and the row
+  //!  number in this VMat that correspond to row i in the ConcatRowsVMat.
+  void getpositions(int i, int& whichvm, int& rowofvm) const; 
+
+  static void declareOptions(OptionList &ol);
+
 private:
+
   void build_();
+
 };
 
 DECLARE_OBJECT_PTR(ConcatRowsVMatrix);
