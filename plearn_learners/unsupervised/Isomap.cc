@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Isomap.cc,v 1.5 2004/07/21 16:30:59 chrish42 Exp $ 
+   * $Id: Isomap.cc,v 1.6 2004/07/22 19:10:02 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -61,8 +61,12 @@ Isomap::Isomap()
 
 PLEARN_IMPLEMENT_OBJECT(Isomap,
     "Performs ISOMAP dimensionality reduction.",
-    "Be careful that in 'knn', we count each point as being one of its nearest\n"
-    "neighbors, thus for instance to consider 10 neighbors, use knn = 11.\n"
+    "Be careful that when looking for the 'knn' nearest neighbors of a point x,\n"
+    "we consider all points from the training data D, including x itself if it\n"
+    "belongs to D. Thus, to obtain the same result as with the classical ISOMAP\n"
+    "algorithm, one should use one more neighbor.\n"
+    "Note also that when used out-of-sample, this will result in a different output\n"
+    "than an algorithm applying the same formula, but considering one less neighbor.\n"
 );
 
 ////////////////////
