@@ -36,11 +36,12 @@
 
 
 /* *******************************************************      
-   * $Id: UnequalConstantVariable.cc,v 1.4 2004/02/20 21:11:54 chrish42 Exp $
+   * $Id: UnequalConstantVariable.cc,v 1.5 2004/03/04 14:59:35 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "UnequalConstantVariable.h"
+#include "stringutils.h"    //!< For tostring.
 
 namespace PLearn {
 using namespace std;

@@ -36,13 +36,14 @@
 
 
 /* *******************************************************      
-   * $Id: TimesConstantVariable.cc,v 1.5 2004/02/20 21:11:54 chrish42 Exp $
+   * $Id: TimesConstantVariable.cc,v 1.6 2004/03/04 14:59:35 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "TimesConstantVariable.h"
 #include "Var_operators.h"
 //#include "Var_utils.h"
+#include "stringutils.h"    //!< For tostring.
 
 namespace PLearn {
 using namespace std;
