@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: YMDDatedVMatrix.cc,v 1.5 2004/05/04 21:15:52 nova77 Exp $
+   * $Id: YMDDatedVMatrix.cc,v 1.6 2004/06/29 19:31:27 tihocan Exp $
    ******************************************************* */
 
 #include "YMDDatedVMatrix.h"
@@ -75,7 +75,7 @@ YMDDatedVMatrix::build()
 
 void YMDDatedVMatrix::build_()
 {
-  if ( data.isNotNull() && years && months && days && !day_of_ith_pos.isEmpty()) {
+  if ( data.isNotNull() && years.isNotEmpty() && months.isNotEmpty() && days.isNotEmpty() && !day_of_ith_pos.isEmpty()) {
     // check that the dates are in increasing chronological order and
     // compute the pos_of_ith_{year,month,day} vectors
     if (years.length()!=data->length() ||
