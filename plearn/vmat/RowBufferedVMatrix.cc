@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: RowBufferedVMatrix.cc,v 1.5 2004/06/22 18:22:15 tatien Exp $
+   * $Id: RowBufferedVMatrix.cc,v 1.6 2004/06/25 13:03:45 tihocan Exp $
    ******************************************************* */
 
 #include "RowBufferedVMatrix.h"
@@ -46,7 +46,9 @@ using namespace std;
 
 /** RowBufferedVMatrix **/
 
-PLEARN_IMPLEMENT_ABSTRACT_OBJECT(RowBufferedVMatrix, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(RowBufferedVMatrix,
+    "A base class for VMatrices that keep the last row(s) in a buffer for faster access.",
+    "");
 
 RowBufferedVMatrix::RowBufferedVMatrix(int the_length, int the_width)
   :VMatrix(the_length, the_width), 
@@ -62,9 +64,8 @@ real RowBufferedVMatrix::get(int i, int j) const
 {
   if(current_row_index!=i)
     {
-      if(current_row.length() != width())
-        current_row.resize(width());
-      getRow(i,current_row);
+      current_row.resize(width_);
+      getRow(i, current_row);
       current_row_index = i;
     }
   return current_row[j];
@@ -74,21 +75,32 @@ void RowBufferedVMatrix::getSubRow(int i, int j, Vec v) const
 {
   if(current_row_index!=i)
     {
-      if(current_row.length() != width())
-        current_row.resize(width());
+      current_row.resize(width_);
       getRow(i,current_row);
       current_row_index = i;
     }
   v.copyFrom(current_row.data()+j, v.length());
 }
 
+Vec& RowBufferedVMatrix::getSubRow(int i, int j, int j_length) const {
+  static Vec result;
+  if (current_row_index != i) {
+    current_row.resize(width_);
+    getRow(i, current_row);
+  }
+  if (j == 0 && j_length == width_) {
+    return current_row;
+  } else {
+    result = current_row.subVec(j, j_length);
+    return result;
+  }
+}
+
 real RowBufferedVMatrix::dot(int i1, int i2, int inputsize) const
 {
-  int w = width();
-  if(current_row.length()!=w)
-    current_row.resize(w);
-  if(other_row.length()!=w)
-    other_row.resize(w);
+  int w = width_;
+  current_row.resize(w);
+  other_row.resize(w);
 
   if(i1==current_row_index)
     {
