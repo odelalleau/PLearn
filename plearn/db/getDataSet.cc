@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.26 2004/09/27 20:19:26 plearner Exp $
+   * $Id: getDataSet.cc,v 1.27 2004/11/18 14:30:28 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -157,7 +157,8 @@ VMat getDataSet(const string& datasetstring, const string& alias)
             vm = loadAsciiAsVMat(datasetstring);
           else 
             PLERROR("Unknown extension for vmatrix: %s", ext.c_str());
-          vm->setMetaDataDir(extract_directory(datasetstring) + extract_filename(datasetstring) + ".metadata");
+          if (!vm->hasMetaDataDir())
+            vm->setMetaDataDir(extract_directory(datasetstring) + extract_filename(datasetstring) + ".metadata");
         }
       else // it's a directory
       {
