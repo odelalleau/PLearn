@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.7 2003/08/13 08:13:46 plearner Exp $ 
+ * $Id: GaussMix.cc,v 1.8 2003/10/14 01:14:37 yoshua Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -64,17 +64,29 @@ void GaussMix::declareOptions(OptionList& ol)
                 "number of gaussians in mixture.");
   
   declareOption(ol,"type", &GaussMix::type, OptionBase::buildoption,
-                "A string :  Unknown, Spherical, Diagonal, General, Factor");
+                "A string :  Unknown, Spherical, Diagonal, General, Factor\n"
+                "This is the type of Covariance matrix for each Gaussian.\n"
+                "   - Unknown: ? \n"
+                "   - Spherical: Sigma = sigma * I = spherical covariance matrix.\n"
+                "   - Diagonal: Sigma = diagonal covariance matrix\n"
+                "   - General: ? \n"
+                "   - Factor: represented by Ks[i] principal components\n"
+                );
 
   declareOption(ol, "alpha", &GaussMix::alpha, OptionBase::buildoption,
-                "Coefficients of each gaussian. (E.g: 1/number_of_gaussians)");
+                "Coefficients of each gaussian. (E.g: 1/number_of_gaussians)\n"
+                "They sum to 1 and are positive and can be interpreted as prior P(gaussian i)\n"
+                );
 
   declareOption(ol, "mu", &GaussMix::mu, OptionBase::buildoption,
-                "A LxD matrix containing the centers of The vertical concatenation of all the K[i] x D matrix, (each contains the K[i] vectors of gaussian i.) ");
+                "These are the centers of each Gaussian, stored as a LxD matrix\n"
+                "with the centers of the vertical concatenation of all the K[i] x D matrix,\n"
+                "(each contains the K[i] vectors of gaussian i.) ");
 
   declareOption(ol, "sigma", &GaussMix::sigma, OptionBase::buildoption,
-                "Spherical : the sigma for each gaussian\n"\
-                "Diagonal : not used"\
+                "This is one way to represent the covariance or part of it, depending on type:\n"
+                " - Spherical : the sigma for each spherical gaussian, in all directions\n"
+                " - Diagonal : not used"\
                 "General : for the l-th gaussian, the eigenvalue (a.k.a lambda0) used for all D-Ks[l] dimensions");
 
   declareOption(ol, "diags", &GaussMix::diags, OptionBase::buildoption,
