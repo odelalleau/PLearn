@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.26 2005/02/07 19:05:19 tihocan Exp $
+   * $Id: pl_math.h,v 1.27 2005/02/07 20:15:15 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -82,30 +82,6 @@ extern _plearn_nan_type plearn_nan;
 #define MISSING_VALUE (plearn_nan.d)
 #endif
   
-//! Test float equality (correctly deals with 'nan' and 'inf' values).
-bool is_equal(real a, real b, real absolute_tolerance_threshold = 1.0, 
-              real absolute_tolerance = ABSOLUTE_TOLERANCE,
-              real relative_tolerance = RELATIVE_TOLERANCE);
-
-//! Test float equality (but does not deal with 'nan' and 'inf' values).
-//! This function is faster than the 'is_equal' function.
-inline bool fast_is_equal(real a, real b, real absolute_tolerance_threshold = 1.0, 
-                          real absolute_tolerance = ABSOLUTE_TOLERANCE,
-                          real relative_tolerance = RELATIVE_TOLERANCE)
-{
-  // Check for 'nan' or 'inf' values in debug mode.
-#ifdef BOUNDCHECK
-  if (isnan(a) || isinf(a) || isnan(b) || isinf(b))
-    PLERROR("In fast_is_equal - Either 'a' or 'b' is 'nan' or 'inf'");
-#endif
-  real a_abs = fabs(a);
-  real b_abs = fabs(b);
-  if (a_abs < absolute_tolerance_threshold && b_abs < absolute_tolerance_threshold)
-    return (fabs(a-b) <= absolute_tolerance);
-  real diff_abs = fabs(a - b);
-  return diff_abs <= relative_tolerance*a_abs && diff_abs <= relative_tolerance*b_abs;
-}
-
 using namespace std;
 
 using std::log;
@@ -186,6 +162,36 @@ inline real negative(real a) { if (a<0) return a; return 0; }
 #if defined(DARWIN)
 #define isnan(x) __isnan(x)
 #endif
+
+//! Test float equality (correctly deals with 'nan' and 'inf' values).
+bool is_equal(real a, real b, real absolute_tolerance_threshold = 1.0, 
+              real absolute_tolerance = ABSOLUTE_TOLERANCE,
+              real relative_tolerance = RELATIVE_TOLERANCE);
+
+//! Test float equality (but does not deal with 'nan' and 'inf' values).
+//! This function is faster than the 'is_equal' function.
+inline bool fast_is_equal(real a, real b, real absolute_tolerance_threshold = 1.0, 
+                          real absolute_tolerance = ABSOLUTE_TOLERANCE,
+                          real relative_tolerance = RELATIVE_TOLERANCE)
+{
+  // Check for 'nan' or 'inf' values in debug mode.
+#ifdef BOUNDCHECK
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:279)  // Get rid of compiler warning.
+#endif
+  if (isnan(a) || isinf(a) || isnan(b) || isinf(b))
+    PLERROR("In fast_is_equal - Either 'a' or 'b' is 'nan' or 'inf'");
+#ifdef __INTEL_COMPILER
+#pragma warning(default:279)
+#endif
+#endif
+  real a_abs = fabs(a);
+  real b_abs = fabs(b);
+  if (a_abs < absolute_tolerance_threshold && b_abs < absolute_tolerance_threshold)
+    return (fabs(a-b) <= absolute_tolerance);
+  real diff_abs = fabs(a - b);
+  return diff_abs <= relative_tolerance*a_abs && diff_abs <= relative_tolerance*b_abs;
+}
 
   template<class T>
   inline T square(const T& x)
