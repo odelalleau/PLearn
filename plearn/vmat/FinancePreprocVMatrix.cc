@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FinancePreprocVMatrix.cc,v 1.1 2003/09/03 21:01:00 ducharme Exp $ 
+   * $Id: FinancePreprocVMatrix.cc,v 1.2 2003/09/04 14:45:54 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file FinancePreprocVMatrix.cc */
@@ -99,11 +99,11 @@ void FinancePreprocVMatrix::getRow(int i, Vec v) const
       for (int k=0; k<prices_tag.size(); k++)
       {
         int index = price_index[price_pos++];
-        int prices_length = MAX(max_moving_average_window, i+1);
+        int prices_length = MIN(max_moving_average_window, i+1);
         int prices_start = i+1 - prices_length;
         Vec prices(prices_length);
-        for (int l=prices_start; l<prices_length; l++)
-          prices[l] = underlying->get(l,index);
+        for (int l=0; l<prices_length; l++)
+          prices[l] = underlying->get(l+prices_start,index);
 
         for (int l=0; l<moving_average_window.size(); l++)
         {
@@ -208,7 +208,7 @@ void FinancePreprocVMatrix::setVMFields()
       {
         for (int k=0; k<moving_average_window.size(); k++)
         {
-          string moving_average_name_col = asset_name[i]+":"+prices_tag[j]+":"+tostring(moving_average_window[k]);
+          string moving_average_name_col = asset_name[i]+":"+prices_tag[j]+":moving_average:w="+tostring(moving_average_window[k]);
           declareField(pos++, moving_average_name_col, VMField::DiscrGeneral);
         }
       }

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FinancePreprocVMatrix.h,v 1.1 2003/09/03 21:01:00 ducharme Exp $ 
+   * $Id: FinancePreprocVMatrix.h,v 1.2 2003/09/04 14:45:54 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file FinancePreprocVMatrix.h */
@@ -87,7 +87,7 @@ public:
       bool add_last_day=false, bool add_moving_average_stats=false,
       int threshold=20, TVec<string> the_price_tags=TVec<string>(),
       TVec<int> moving_average_window_length=TVec<int>(),
-      string the_volume_tag="volume", string the_date_tag="Date");
+      string the_volume_tag="volume:level", string the_date_tag="Date");
 
   // ******************
   // * Object methods *
