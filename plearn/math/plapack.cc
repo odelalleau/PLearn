@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: plapack.cc,v 1.8 2004/02/20 21:11:47 chrish42 Exp $
+   * $Id: plapack.cc,v 1.9 2004/06/21 21:12:32 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,7 +51,7 @@ int eigen_SymmMat(Mat& in, Vec& e_value, Mat& e_vector, int& n_evalues_found,
 {
   PLWARNING("eigen_SymmMat is deprecated: use eigenVecOfSymmMat or lapackEIGEN instead");
 
-#ifdef NOLAPACK
+#ifndef USE_BLAS_SPECIALISATIONS
   PLERROR("eigen_SymmMat: LAPACK not available on this system!");
   return 0;
 #else
@@ -218,7 +218,7 @@ int eigen_SymmMat_decreasing(Mat& in, Vec& e_value, Mat& e_vector, int& n_evalue
 
 int matInvert(Mat& in, Mat& inverse)
 {
-#ifdef NOLAPACK
+#ifndef USE_BLAS_SPECIALISATIONS
   PLERROR("eigen_SymmMat: LAPACK not available on this system!");
   return 0;
 #else
@@ -298,7 +298,7 @@ int lapackSolveLinearSystem(Mat& At, Mat& Bt, TVec<int>& pivots)
 #endif
 
   int INFO;
-#ifdef NOLAPACK
+#ifndef USE_BLAS_SPECIALISATIONS
   PLERROR("lapackSolveLinearSystem: can't be called unless PLearn linked with LAPACK");
 #else
   int N = At.width();
