@@ -34,8 +34,9 @@ public:
   // * Constructors *
   // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
+  //! Default constructor.
+  // ### Make sure the implementation in the .cc
+  // ### initializes all fields to reasonable default values.
   DERIVEDCLASS();
 
 
@@ -49,14 +50,14 @@ private:
   void build_();
 
 protected: 
-  //! Declares this class' options
+  //! Declares this class' options.
   // (PLEASE IMPLEMENT IN .cc)
   static void declareOptions(OptionList& ol);
 
 public:
-  // Declares other standard object methods
-  //  If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
+  // Declares other standard object methods.
+  // ### If your class is not instantiatable (it has pure virtual methods)
+  // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
   PLEARN_DECLARE_OBJECT(DERIVEDCLASS);
 
   // simply calls inherited::build() then build_() 

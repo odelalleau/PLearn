@@ -2,7 +2,7 @@
 
 // ConditionalDensityNet.h
 //
-// Copyright (C) 2003 *AUTHOR(S)* 
+// Copyright (C) 2004 Université de Montréal
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.32 2004/06/01 13:19:58 tihocan Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.33 2004/06/21 14:53:30 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -58,11 +58,11 @@ private:
   typedef PDistribution inherited;  
 
 protected:
+
   // *********************
   // * protected options *
   // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
   Var input;  // Var(inputsize())
   Var target; // Var(targetsize()-weightsize())
   Var sampleweight; // Var(1) if train_set->hasWeights()
@@ -94,7 +94,7 @@ public :
    
 protected:
 
-   Var centers, centers_M, steps, steps_M, steps_0, steps_gradient, steps_integral, delta_steps, cum_numerator, cum_denominator;
+  Var centers, centers_M, steps, steps_M, steps_0, steps_gradient, steps_integral, delta_steps, cum_numerator, cum_denominator;
 
   // the cond. distribution step multiplicative parameters 
   // are relative to the unconditional cdf step heights, at the mu positions, contained in this source var
@@ -134,7 +134,6 @@ public:
 
   // ***** OPTIONS PASTED FROM NNET ************** 
 
-  // ### declare public option fields (such as build options) here
   int nhidden;    // number of hidden units in first hidden layer (default:0)
   int nhidden2;   // number of hidden units in second hidden layer (default:0)
 
@@ -213,9 +212,9 @@ public:
   ConditionalDensityNet();
 
 
-  // ******************
+  // *************************
   // * PDistribution methods *
-  // ******************
+  // *************************
 
 private: 
 
@@ -244,11 +243,11 @@ public:
   // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
   PLEARN_DECLARE_OBJECT(ConditionalDensityNet);
 
-  // **************************
-  // **** PDistribution methods ****
-  // **************************
+  // ******************************
+  // **** PDistribution methods ***
+  // ******************************
 
-  //! Set the input part before using the inherited methods
+  //! Set the value for the input part of a conditional probability.
   virtual void setInput(const Vec& input) const;
 
   // **************************
