@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.cc,v 1.11 2003/05/26 04:12:42 plearner Exp $
+   * $Id: stringutils.cc,v 1.12 2003/06/30 17:32:27 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -465,13 +465,16 @@ string join(const vector<string>& s, const string& separator)
 {
   string result;
   vector<string>::const_iterator it = s.begin();
-  for(;;)
+  if(it!=s.end())
     {
-      result += *it;
-      ++it;
-      if(it==s.end())
-        break;
-      result += separator;
+      for(;;)
+        {
+          result += *it;
+          ++it;
+          if(it==s.end())
+            break;
+          result += separator;
+        }
     }
   return result;
 }

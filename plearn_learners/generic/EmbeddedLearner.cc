@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.cc,v 1.6 2003/05/22 20:45:20 ducharme Exp $ 
+   * $Id: EmbeddedLearner.cc,v 1.7 2003/06/30 17:32:30 plearner Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.cc */
@@ -53,8 +53,6 @@ EmbeddedLearner::EmbeddedLearner()
 
 void EmbeddedLearner::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "learner", &EmbeddedLearner::learner, OptionBase::buildoption,
-                  "The underlying learner");
     inherited::declareOptions(ol);
 }
 
@@ -69,15 +67,10 @@ string EmbeddedLearner::help()
 
 void EmbeddedLearner::build_()
 {
-    if (learner.isNull())
-        PLERROR("EmbeddedLearner::_build() - learner attribute is NULL");
+    if (!learner_)
+        PLERROR("EmbeddedLearner::_build() - learner_ attribute is NULL");
 
-    learner->build();
-
-    inputsize_ = learner->inputsize();
-    outputsize_ = learner->outputsize();
-    targetsize_ = learner->targetsize();
-    weightsize_ = learner->targetsize();
+    learner_->build();
 }
 
 void EmbeddedLearner::build()
@@ -87,38 +80,41 @@ void EmbeddedLearner::build()
 }
 
    
- void EmbeddedLearner::forget()
-{ learner->forget(); }
+void EmbeddedLearner::forget()
+{ learner_->forget(); }
 
- void EmbeddedLearner::train(VecStatsCollector& train_stats)
-{ learner->train(train_stats); }
-    
- void EmbeddedLearner::computeOutput(const VVec& input, Vec& output)
-{ learner->computeOutput(input, output); }
+int EmbeddedLearner::inputsize() const
+{ return learner_->inputsize(); }
 
- void EmbeddedLearner::computeCostsFromOutputs(const VVec& input, const Vec& output, 
-                                         const VVec& target, const VVec& weight,
-                                         Vec& costs)
-{ learner->computeCostsFromOutputs(input, output, target, weight, costs); }
+int EmbeddedLearner::targetsize() const
+{ return learner_->targetsize(); }
 
-                                
- void EmbeddedLearner::computeOutputAndCosts(const VVec& input, VVec& target, const VVec& weight,
-                                       Vec& output, Vec& costs)
-{ learner->computeOutputAndCosts(input, target, weight, output, costs); }
+int EmbeddedLearner::outputsize() const
+{ return learner_->outputsize(); }
 
- void EmbeddedLearner::computeCostsOnly(const VVec& input, VVec& target, VVec& weight, 
-                              Vec& costs)
-{ learner->computeCostsOnly(input, target, weight, costs); }
-    
-void EmbeddedLearner::test(VMat testset, VecStatsCollector& test_stats, 
-                         VMat testoutputs, VMat testcosts)
-{ learner->test(testset, test_stats, testoutputs, testcosts); }
+void EmbeddedLearner::train()
+{ learner_->train(); }
 
+
+void EmbeddedLearner::computeOutput(const Vec& input, Vec& output) const
+{ learner_->computeOutput(input, output); }
+
+void EmbeddedLearner::computeCostsFromOutputs(const Vec& input, const Vec& output, 
+                                              const Vec& target, Vec& costs) const
+{ learner_->computeCostsFromOutputs(input, output, target, costs); }
+                                                      
+void EmbeddedLearner::computeOutputAndCosts(const Vec& input, const Vec& target,
+                                       Vec& output, Vec& costs) const
+{ learner_->computeOutputAndCosts(input, target, output, costs); }
+
+void EmbeddedLearner::computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const
+{ learner_->computeCostsOnly(input, target, costs); }
+      
 TVec<string> EmbeddedLearner::getTestCostNames() const
-{ return learner->getTestCostNames(); }
+{ return learner_->getTestCostNames(); }
 
 TVec<string> EmbeddedLearner::getTrainCostNames() const
-{ return learner->getTrainCostNames(); }
+{ return learner_->getTrainCostNames(); }
 
 void EmbeddedLearner::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
@@ -127,7 +123,7 @@ void EmbeddedLearner::makeDeepCopyFromShallowCopy(map<const void*, void*>& copie
     // ### Call deepCopyField on all "pointer-like" fields 
     // ### that you wish to be deepCopied rather than 
     // ### shallow-copied.
-    deepCopyField(learner, copies);    
+    deepCopyField(learner_, copies);    
 }
 
 %> // end of namespace PLearn

@@ -34,11 +34,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ClassifierFromDensity.cc,v 1.1 2003/06/06 05:23:52 plearner Exp $ 
+   * $Id: ClassifierFromDensity.cc,v 1.2 2003/06/30 17:32:30 plearner Exp $ 
    ******************************************************* */
 
 /*! \file ClassifierFromDensity.cc */
 #include "ClassifierFromDensity.h"
+#include "ConcatColumnsVMatrix.h"
 #include "VMat_maths.h"
 
 namespace PLearn <%
@@ -145,7 +146,21 @@ void ClassifierFromDensity::train()
         {
           if(verbosity>=1)
             cerr << ">>> Training class " << c;
-          VMat set_c = train_set.rows(indices[c]).subMatColumns(0,inputsize());
+          VMat set_c = train_set.rows(indices[c]);
+          int in_sz = set_c->inputsize();
+          int targ_sz = set_c->targetsize();
+          int we_sz = set_c->weightsize();
+          // removing target from set
+          if(we_sz==0)
+            {
+              set_c = set_c.subMatColumns(0,in_sz);
+              set_c->setSizes(in_sz, 0, 0);
+            }
+          else // argh, there are some weights...
+            {
+              set_c = hconcat(set_c.subMatColumns(0,in_sz), set_c.subMatColumns(in_sz+targ_sz,we_sz));
+              set_c->setSizes(in_sz,0,we_sz);
+            }
           if(expd!="")
             estimators[c]->setExperimentDirectory(expd+"Class"+tostring(c));
           if(verbosity>=1)

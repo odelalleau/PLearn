@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plapack.h,v 1.12 2003/06/04 18:59:57 jkeable Exp $
+   * $Id: plapack.h,v 1.13 2003/06/30 17:32:30 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -293,7 +293,10 @@ void lapackSVD(const TMat<num_t>& At, TMat<num_t>& Ut, TVec<num_t>& S, TMat<num_
   lapack_Xgesdd_(&JOBZ, &M, &N, At.data(), &LDA, S.data(), U, &LDU, VT, &LDVT, WORK.data(), &LWORK, IWORK.data(), &INFO );
 
   if(INFO!=0)
-    PLERROR("In lapackSVD, problem when calling sgesdd_ to perform computation, returned INFO = %d",INFO); 
+    {      
+      cerr << At << endl;
+      PLERROR("In lapackSVD, problem when calling sgesdd_ to perform computation, returned INFO = %d",INFO); 
+    }
 }
 
 //! Performs the SVD decomposition A = U.S.Vt

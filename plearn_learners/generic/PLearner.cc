@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.12 2003/06/12 20:45:20 ducharme Exp $
+   * $Id: PLearner.cc,v 1.13 2003/06/30 17:32:30 plearner Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -84,23 +84,6 @@ void PLearner::declareOptions(OptionList& ol)
                 "should not create *any* file. Note that, anyway, most file creation and \n"
                 "reporting are handled at the level of the PTester class rather than \n"
                 "at the learner's. \n");
-
-  declareOption(ol, "train_set", &PLearner::train_set, OptionBase::buildoption,
-                "The dataset this learner is trained on. \n"
-                "You don't have to set this option, if your learner \n"
-                "is embedded in an Experiment or similar class, \n"
-                "as the Experiment will set the train_set it wants to use.\n"
-                "Data-sets are seen as matrices whose columns or fields are layed out as \n"
-                "follows: a number of input fields, followed by (optional) target fields, \n"
-                "followed by a (optional) weight field (to weigh each example).\n"
-                "The sizes of those areas are given by the VMatrix options \n"
-                "inputsize targetsize, and weightsize, which are typically used by the \n"
-                "learner upon building\n");
-
-  declareOption(ol, "train_stats", &PLearner::train_stats, OptionBase::buildoption,
-                "The stats_collector responsible for collecting train cost statistics during training. \n"
-                "You don't have to provide this manually. It is typically set by some external \n"
-                "training harness that wants to collect some stats. \n");
 
   declareOption(ol, "seed", &PLearner::seed, OptionBase::buildoption, 
                 "The initial seed for the random number generator used to initialize this learner's parameters\n"

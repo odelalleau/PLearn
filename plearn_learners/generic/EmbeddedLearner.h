@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.h,v 1.5 2003/05/07 05:39:18 plearner Exp $ 
+   * $Id: EmbeddedLearner.h,v 1.6 2003/06/30 17:32:30 plearner Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.h */
@@ -50,21 +50,12 @@ using namespace std;
 
 class EmbeddedLearner: public PLearner
 {
-    typedef PLearner inherited;
 protected:
-    // *********************
-    // * protected options *
-    // *********************
-    
-    // ### declare protected option fields (such as learnt parameters) here
-    // ...
-    
-public:
-    // ************************
-    // * public build options *
-    // ************************
+    PP<PLearner> learner_;
 
-    PP<PLearner> learner;
+public:
+
+    typedef PLearner inherited;
 
     // ****************
     // * Constructors *
@@ -104,26 +95,26 @@ public:
     // * PLearner methods *
     // *******************
     
-    virtual void forget();
+  virtual int inputsize() const;
+  
+  virtual int targetsize() const; 
+  
+  virtual int outputsize() const;
 
-    virtual void train(VecStatsCollector& train_stats);
-    
-    virtual void computeOutput(const VVec& input, Vec& output);
+  virtual void forget();
 
-    virtual void computeCostsFromOutputs(const VVec& input, const Vec& output, 
-                                         const VVec& target, const VVec& weight,
-                                         Vec& costs);
+    virtual void train();
 
+    virtual void computeOutput(const Vec& input, Vec& output) const;
+
+    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
+                                         const Vec& target, Vec& costs) const;
                                 
-    virtual void computeOutputAndCosts(const VVec& input, VVec& target, const VVec& weight,
-                                       Vec& output, Vec& costs);
+    virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
+                                       Vec& output, Vec& costs) const;
 
-    virtual void computeCostsOnly(const VVec& input, VVec& target, VVec& weight, 
-                              Vec& costs);
-    
-    virtual void test(VMat testset, VecStatsCollector& test_stats, 
-                         VMat testoutputs=0, VMat testcosts=0);
-
+    virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
+      
     virtual TVec<string> getTestCostNames() const;
 
     virtual TVec<string> getTrainCostNames() const;
