@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.cc,v 1.9 2002/12/05 21:13:18 jauvinc Exp $
+   * $Id: WordNetOntology.cc,v 1.10 2002/12/10 06:35:25 jauvinc Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -91,7 +91,7 @@ void WordNetOntology::init(bool the_differentiate_unknown_words)
   adj_count = 0;
   adv_count = 0;
 
-  synset_index = STOP_SS_ID + 1; // first synset id
+  synset_index = EOS_SS_ID + 1; // first synset id
   word_index = 0;
   unknown_sense_index = 0;
 
