@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GenericNearestNeighbors.h,v 1.2 2004/12/21 07:13:15 chapados Exp $ 
+   * $Id: GenericNearestNeighbors.h,v 1.3 2004/12/25 08:03:29 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -64,7 +64,11 @@ namespace PLearn {
  *
  * - The input vector from the training set (option "copy_input")
  * - The target vector from the training set (option "copy_target")
- * - The weight from the training set (option "copy_weight")
+ * - The weight from the training set (option "copy_weight"); note that
+ *   if the training set DOES NOT contain a weight, but copy_weight is
+ *   set to 'true', then a weight of 1.0 is always inserted.  This
+ *   simplifies client code who may then assume that a weight is always
+ *   present if requested
  * - The index (row number) of the example from the training set (option
  *   "copy_weight")
  *
@@ -100,7 +104,8 @@ public:
   //! (Default = true)
   bool copy_target;
 
-  //! If true, the output contains a copy of the found weight, if any.
+  //! If true, the output contains a copy of the found weight.  If no
+  //! weight is present in the training set, a weight of 1.0 is put.
   //! (Default = true)
   bool copy_weight;
 

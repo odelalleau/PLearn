@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GenericNearestNeighbors.cc,v 1.2 2004/12/21 07:13:15 chapados Exp $ 
+   * $Id: GenericNearestNeighbors.cc,v 1.3 2004/12/25 08:03:29 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -69,7 +69,11 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
   "\n"
   "- The input vector from the training set (option \"copy_input\")\n"
   "- The target vector from the training set (option \"copy_target\")\n"
-  "- The weight from the training set (option \"copy_weight\")\n"
+  "- The weight from the training set (option \"copy_weight\"); note that\n"
+  "  if the training set DOES NOT contain a weight, but copy_weight is\n"
+  "  set to 'true', then a weight of 1.0 is always inserted.  This\n"
+  "  simplifies client code who may then assume that a weight is always\n"
+  "  present if requested\n"
   "- The index (row number) of the example from the training set (option\n"
   "  \"copy_weight\")\n"
   "\n"
@@ -114,7 +118,8 @@ void GenericNearestNeighbors::declareOptions(OptionList& ol)
   declareOption(
     ol, "copy_weight", &GenericNearestNeighbors::copy_weight,
     OptionBase::buildoption,
-    "If true, the output contains a copy of the found weight, if any.\n"
+    "If true, the output contains a copy of the found weight.  If no\n"
+    "weight is present in the training set, a weight of 1.0 is put.\n"
     "(Default = true)");
 
   declareOption(
@@ -165,7 +170,7 @@ int GenericNearestNeighbors::outputsize() const
   if (copy_target)
     base_outputsize += train_set->targetsize();
   if (copy_weight)
-    base_outputsize += train_set->weightsize();
+    base_outputsize += 1;
   if (copy_index)
     base_outputsize += 1;
 
@@ -204,10 +209,13 @@ void GenericNearestNeighbors::constructOutputVector(const TVec<int>& indexes,
     currow_data += targetsize;
     
     if(copy_weight) {
-      copy(currow_data, currow_data+weightsize, output_data);
-      output_data += weightsize;
+      if(weightsize) {
+        copy(currow_data, currow_data+weightsize, output_data);
+        output_data += weightsize;
+      }
+      else
+        *output_data++ = 1.0;
     }
-    currow_data += weightsize;
 
     if (copy_index)
       *output_data++ = real(indexes[i]);
