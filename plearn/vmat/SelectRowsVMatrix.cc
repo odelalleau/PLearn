@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsVMatrix.cc,v 1.9 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: SelectRowsVMatrix.cc,v 1.10 2004/02/26 03:36:34 tihocan Exp $
    ******************************************************* */
 
 #include "SelectRowsVMatrix.h"
@@ -129,7 +129,6 @@ void SelectRowsVMatrix::build_()
   inputsize_ = distr->inputsize();
   targetsize_ = distr->targetsize();
   weightsize_ = distr->weightsize();
-  target_is_last = distr->target_is_last;
   fieldinfos = distr->fieldinfos;
 }
 

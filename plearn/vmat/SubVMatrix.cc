@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.cc,v 1.10 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: SubVMatrix.cc,v 1.11 2004/02/26 03:36:34 tihocan Exp $
    ******************************************************* */
 
 #include "SubVMatrix.h"
@@ -123,7 +123,6 @@ void SubVMatrix::build_()
     if(inputsize_<0) inputsize_ = parent->inputsize();
     if(targetsize_<0) targetsize_ = parent->targetsize();
     if(weightsize_<0) weightsize_ = parent->weightsize();
-    target_is_last = parent->target_is_last;
   } else {
     // The width has changed: if no sizes are specified,
     // we assume it's all input and no target.
