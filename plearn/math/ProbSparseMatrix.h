@@ -38,7 +38,7 @@
 #define ProbSparseMatrix_INC
 
 #include "DoubleAccessSparseMatrix.h"
-
+#include "TMat.h"
 namespace PLearn {
 using namespace std;
 
@@ -66,6 +66,12 @@ public:
   void normalizeJoint();
 
   string getClassName() const { return "ProbSparseMatrix"; }
+
+  void iterativeProportionalFittingStep( ProbSparseMatrix& p, Vec& lineMarginal, Vec& colMarginal);
+
+  real euclidianDistance( ProbSparseMatrix &p);
+
+  void add( ProbSparseMatrix& p, ProbSparseMatrix& q);
 
 };
 
