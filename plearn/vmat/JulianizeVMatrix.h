@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: JulianizeVMatrix.h,v 1.9 2004/06/29 19:52:56 tihocan Exp $ 
+   * $Id: JulianizeVMatrix.h,v 1.10 2004/07/09 19:42:23 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file JulianizeVMatrix.h */
@@ -128,9 +128,10 @@ protected:
   //! Declares this class' options.  No options are currently supported
   static void declareOptions(OptionList& ol);
 
-public:
   //!  Implement the base class abstract member function
-  virtual void getNewRow(int i, Vec& v) const;
+  virtual void getNewRow(int i, const Vec& v) const;
+
+public:
 
   // simply calls inherited::build() then build_() 
   virtual void build();

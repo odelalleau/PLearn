@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: VecExtendedVMatrix.h,v 1.5 2004/06/29 19:55:55 tihocan Exp $
+   * $Id: VecExtendedVMatrix.h,v 1.6 2004/07/09 19:42:23 tihocan Exp $
    ******************************************************* */
 
 
@@ -74,11 +74,16 @@ public:
   VecExtendedVMatrix(VMat underlying, Vec extend_data);
 
   PLEARN_DECLARE_OBJECT(VecExtendedVMatrix);
+
+protected:
+
   static void declareOptions(OptionList &ol);
+  virtual void getNewRow(int i, const Vec& v) const;
+
+public:
 
   virtual void build();
 
-  virtual void getNewRow(int i, Vec& v) const;
   virtual void reset_dimensions() {
     underlying_->reset_dimensions();
     width_ = underlying_.width() + extend_data_.length();

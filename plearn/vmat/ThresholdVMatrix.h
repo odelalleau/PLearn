@@ -70,7 +70,7 @@ class ThresholdVMatrix: public RowBufferedVMatrix
 
   ThresholdVMatrix(VMat the_underlying_distr, real threshold_, real the_cold_value=0.0, real the_hot_value=1.0,
 		  bool gt_threshold_= true);
-  virtual void getNewRow(int i, Vec& v) const;
+  virtual void getNewRow(int i, const Vec& v) const;
   virtual void reset_dimensions() 
     { 
       underlying_distr->reset_dimensions(); 

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: UniformizeVMatrix.h,v 1.5 2004/06/29 19:55:55 tihocan Exp $
+   * $Id: UniformizeVMatrix.h,v 1.6 2004/07/09 19:42:23 tihocan Exp $
    ******************************************************* */
 
 
@@ -81,11 +81,16 @@ public:
                     real the_a=0.0, real the_b=1.0);
 
   PLEARN_DECLARE_OBJECT(UniformizeVMatrix);
+
+protected:
+
   static void declareOptions(OptionList &ol);
+  virtual void getNewRow(int i, const Vec& v) const;
+
+public:
 
   virtual void build();
 
-  virtual void getNewRow(int i, Vec& v) const;
   virtual void reset_dimensions()
     { distr->reset_dimensions(); width_=distr->width(); length_=distr->length(); }
 private:

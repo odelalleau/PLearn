@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: OneHotVMatrix.cc,v 1.5 2004/06/29 19:54:43 tihocan Exp $
+   * $Id: OneHotVMatrix.cc,v 1.6 2004/07/09 19:42:23 tihocan Exp $
    ******************************************************* */
 
 #include "OneHotVMatrix.h"
@@ -83,7 +83,7 @@ OneHotVMatrix::declareOptions(OptionList &ol)
   inherited::declareOptions(ol);
 }
 
-void OneHotVMatrix::getNewRow(int i, Vec& samplevec) const
+void OneHotVMatrix::getNewRow(int i, const Vec& samplevec) const
 {
 #ifdef BOUNDCHECK
   if(i<0 || i>=length())

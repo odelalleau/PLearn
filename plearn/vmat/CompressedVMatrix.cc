@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CompressedVMatrix.cc,v 1.5 2004/06/29 19:50:35 tihocan Exp $
+   * $Id: CompressedVMatrix.cc,v 1.6 2004/07/09 19:42:23 tihocan Exp $
    ******************************************************* */
 
 #include "VecCompressor.h"
@@ -82,7 +82,7 @@ CompressedVMatrix::CompressedVMatrix(VMat m, size_t memory_alloc)
     }
 }
 
-void CompressedVMatrix::getNewRow(int i, Vec& v) const
+void CompressedVMatrix::getNewRow(int i, const Vec& v) const
 {
 #ifdef BOUNDCHECK
   if(v.length() != width_)

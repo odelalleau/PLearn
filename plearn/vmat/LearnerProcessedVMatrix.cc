@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LearnerProcessedVMatrix.cc,v 1.5 2004/06/29 19:52:56 tihocan Exp $ 
+   * $Id: LearnerProcessedVMatrix.cc,v 1.6 2004/07/09 19:42:23 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file LearnerProcessedVMatrix.cc */
@@ -54,7 +54,7 @@ LearnerProcessedVMatrix::LearnerProcessedVMatrix()
   build_();
 }
 
-void LearnerProcessedVMatrix::getNewRow(int i, Vec& v) const
+void LearnerProcessedVMatrix::getNewRow(int i, const Vec& v) const
 {
   static Vec sv;
   sv.resize(source.width());

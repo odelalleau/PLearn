@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CompactVMatrix.cc,v 1.9 2004/06/29 19:50:35 tihocan Exp $
+   * $Id: CompactVMatrix.cc,v 1.10 2004/07/09 19:42:19 tihocan Exp $
    ******************************************************* */
 
 #include "CompactVMatrix.h"
@@ -285,7 +285,7 @@ void CompactVMatrix::setOneHotMode(bool on)
     width_ = n_variables;
 }
 
-void CompactVMatrix::getNewRow(int i, Vec& v) const
+void CompactVMatrix::getNewRow(int i, const Vec& v) const
 {
 #ifdef BOUNDCHECK
   if (i<0 || i>=length_)

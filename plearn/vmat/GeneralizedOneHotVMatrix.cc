@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: GeneralizedOneHotVMatrix.cc,v 1.5 2004/06/29 19:52:56 tihocan Exp $
+   * $Id: GeneralizedOneHotVMatrix.cc,v 1.6 2004/07/09 19:42:23 tihocan Exp $
    ******************************************************* */
 
 #include "GeneralizedOneHotVMatrix.h"
@@ -89,7 +89,7 @@ GeneralizedOneHotVMatrix::declareOptions(OptionList &ol)
   inherited::declareOptions(ol);
 }
 
-void GeneralizedOneHotVMatrix::getNewRow(int i, Vec& v) const
+void GeneralizedOneHotVMatrix::getNewRow(int i, const Vec& v) const
 {
 #ifdef BOUNDCHECK
   if(i<0 || i>=length())

@@ -54,7 +54,7 @@ ThresholdVMatrix::ThresholdVMatrix(VMat the_underlying_distr, real threshold_, r
     hot_value(the_hot_value), gt_threshold(gt_threshold_)
 {}
 
-void ThresholdVMatrix::getNewRow(int i, Vec& v) const
+void ThresholdVMatrix::getNewRow(int i, const Vec& v) const
 {
 #ifdef BOUNDCHECK
   if(i<0 || i>=length())

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: JulianizeVMatrix.cc,v 1.6 2004/06/29 19:52:56 tihocan Exp $ 
+   * $Id: JulianizeVMatrix.cc,v 1.7 2004/07/09 19:42:23 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file JulianizeVMatrix.cc */
@@ -72,10 +72,9 @@ JulianizeVMatrix::JulianizeVMatrix(VMat underlying,
 }
 
 
-void JulianizeVMatrix::getNewRow(int i, Vec& v) const
+void JulianizeVMatrix::getNewRow(int i, const Vec& v) const
 {
   underlying_->getRow(i, und_row_);
-  v.resize(width());
 
   Vec::iterator
     src_beg = und_row_.begin(),

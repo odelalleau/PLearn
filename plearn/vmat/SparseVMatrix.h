@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SparseVMatrix.h,v 1.5 2004/06/29 19:55:54 tihocan Exp $
+   * $Id: SparseVMatrix.h,v 1.6 2004/07/09 19:42:23 tihocan Exp $
    ******************************************************* */
 
 
@@ -93,11 +93,16 @@ public:
   SparseVMatrix(const string& filename);
 
   PLEARN_DECLARE_OBJECT(SparseVMatrix);
+
+protected:
+
   static void declareOptions(OptionList &ol);
+  virtual void getNewRow(int i, const Vec& v) const;
+
+public:
 
   virtual void build();
 
-  virtual void getNewRow(int i, Vec& v) const;
   virtual real dot(int i1, int i2, int inputsize) const;
   virtual real dot(int i, const Vec& v) const;
 

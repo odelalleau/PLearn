@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SparseVMatrix.cc,v 1.5 2004/06/29 19:55:54 tihocan Exp $
+   * $Id: SparseVMatrix.cc,v 1.6 2004/07/09 19:42:23 tihocan Exp $
    ******************************************************* */
 
 #include "SparseVMatrix.h"
@@ -133,7 +133,7 @@ SparseVMatrix::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-void SparseVMatrix::getNewRow(int i, Vec& v) const
+void SparseVMatrix::getNewRow(int i, const Vec& v) const
 {
 #ifdef BOUNDCHECK
   if(i<0 || i>=length())

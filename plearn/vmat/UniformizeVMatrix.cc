@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: UniformizeVMatrix.cc,v 1.5 2004/06/29 19:55:55 tihocan Exp $
+   * $Id: UniformizeVMatrix.cc,v 1.6 2004/07/09 19:42:23 tihocan Exp $
    ******************************************************* */
 
 #include "UniformizeVMatrix.h"
@@ -95,7 +95,7 @@ UniformizeVMatrix::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-void UniformizeVMatrix::getNewRow(int i, Vec& v) const
+void UniformizeVMatrix::getNewRow(int i, const Vec& v) const
 {
 #ifdef BOUNDCHECK
   if(i<0 || i>=length())

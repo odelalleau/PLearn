@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: VecExtendedVMatrix.cc,v 1.5 2004/06/29 19:55:55 tihocan Exp $
+   * $Id: VecExtendedVMatrix.cc,v 1.6 2004/07/09 19:42:23 tihocan Exp $
    ******************************************************* */
 
 #include "VecExtendedVMatrix.h"
@@ -83,7 +83,7 @@ VecExtendedVMatrix::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-void VecExtendedVMatrix::getNewRow(int i, Vec& v) const
+void VecExtendedVMatrix::getNewRow(int i, const Vec& v) const
 {
 #ifdef BOUNDCHECK
   if(i<0 || i>=length())

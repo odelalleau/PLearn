@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CompressedVMatrix.h,v 1.5 2004/06/29 19:50:35 tihocan Exp $
+   * $Id: CompressedVMatrix.h,v 1.6 2004/07/09 19:42:23 tihocan Exp $
    ******************************************************* */
 
 
@@ -100,8 +100,13 @@ using namespace std;
 
     PLEARN_DECLARE_OBJECT(CompressedVMatrix);
 
+  protected:
+    
+    virtual void getNewRow(int i, const Vec& v) const;
+
+  public :
+
     virtual ~CompressedVMatrix();
-    virtual void getNewRow(int i, Vec& v) const;
     virtual void appendRow(Vec v);
 
     //!  returns the number of bytes allocated for the data 

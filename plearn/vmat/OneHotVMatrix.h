@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: OneHotVMatrix.h,v 1.5 2004/06/29 19:54:43 tihocan Exp $
+   * $Id: OneHotVMatrix.h,v 1.6 2004/07/09 19:42:23 tihocan Exp $
    ******************************************************* */
 
 
@@ -82,11 +82,16 @@ class OneHotVMatrix: public RowBufferedVMatrix
   OneHotVMatrix(VMat the_underlying_distr, int the_nclasses, real the_cold_value=0.0, real the_host_value=1.0);
 
   PLEARN_DECLARE_OBJECT(OneHotVMatrix);
+
+ protected: 
+
+  virtual void getNewRow(int i, const Vec& samplevec) const;
   static void declareOptions(OptionList &ol);
+
+ public:
 
   virtual void build();
 
-  virtual void getNewRow(int i, Vec& samplevec) const;
   virtual void reset_dimensions() 
     { 
       underlying_distr->reset_dimensions(); 

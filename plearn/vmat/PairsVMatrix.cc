@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: PairsVMatrix.cc,v 1.5 2004/06/29 19:54:43 tihocan Exp $
+   * $Id: PairsVMatrix.cc,v 1.6 2004/07/09 19:42:23 tihocan Exp $
    ******************************************************* */
 
 #include "PairsVMatrix.h"
@@ -78,11 +78,10 @@ PairsVMatrix::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 }
 
-void PairsVMatrix::getNewRow(int ij, Vec& samplevec) const
+void PairsVMatrix::getNewRow(int ij, const Vec& samplevec) const
 {
   //ij = ij%length_;
   ij %= length_;
-  samplevec.resize(width_);
   real* data = samplevec.data();
   real* data_i = data1[ij/data2.length()];
   real* data_j = data2[ij%data2.length()];
