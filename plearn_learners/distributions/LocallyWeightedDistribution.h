@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyWeightedDistribution.h,v 1.7 2004/06/26 00:24:15 plearner Exp $ 
+   * $Id: LocallyWeightedDistribution.h,v 1.8 2004/07/21 20:23:38 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file LocallyWeightedDistribution.h */
@@ -47,9 +47,16 @@ using namespace std;
 
 class LocallyWeightedDistribution: public Distribution
 {
-public:
+
+private:
 
   typedef Distribution inherited;
+
+  //! Global storage to save memory allocations.
+  mutable Vec trainsample, weights;
+
+public:
+
 
   // ************************
   // * public build options *

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.cc,v 1.17 2004/07/21 16:30:59 chrish42 Exp $ 
+   * $Id: KernelProjection.cc,v 1.18 2004/07/21 20:28:13 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -200,9 +200,6 @@ void KernelProjection::computeCostsFromOutputs(const Vec& input, const Vec& outp
 ///////////////////
 void KernelProjection::computeOutput(const Vec& input, Vec& output) const
 {
-  static Vec k_x_xi;
-  static Mat result;
-  static Mat used_eigenvectors;
   static real* result_ptr;
   if (first_output) {
     // Initialize k_x_xi, used_eigenvectors and result correctly.

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConstantRegressor.cc,v 1.7 2004/02/20 21:14:49 chrish42 Exp $ 
+   * $Id: ConstantRegressor.cc,v 1.8 2004/07/21 20:26:52 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file ConstantRegressor.cc */
@@ -118,10 +118,10 @@ void ConstantRegressor::train()
   // The role of the train method is to bring the learner up to stage==nstages,
   // updating train_stats with training costs measured on-line in the process.
 
-  static Vec input;  // static so we don't reallocate/deallocate memory each time...
-  static Vec target;
-  static Vec train_costs;
-  static Vec sum_of_weighted_targets;
+  Vec input;  // Not static because God knows who may be using a ConstantRegressor.
+  Vec target;
+  Vec train_costs;
+  Vec sum_of_weighted_targets;
   real weight;
   train_costs.resize(1);
   input.resize(inputsize());    // the train_set's inputsize()

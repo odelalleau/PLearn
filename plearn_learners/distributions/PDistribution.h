@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.h,v 1.16 2004/07/21 16:30:56 chrish42 Exp $ 
+   * $Id: PDistribution.h,v 1.17 2004/07/21 20:24:07 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.h */
@@ -51,6 +51,10 @@ class PDistribution: public PLearner
 private:
 
   typedef PLearner inherited;
+
+  //! Global storage to save memory allocations.
+  mutable Vec store_expect, store_result;
+  mutable Mat store_cov;
 
 protected:
 

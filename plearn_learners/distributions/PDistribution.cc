@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.cc,v 1.20 2004/06/21 14:56:02 tihocan Exp $ 
+   * $Id: PDistribution.cc,v 1.21 2004/07/21 20:24:07 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.cc */
@@ -167,17 +167,13 @@ void PDistribution::build_()
 ///////////////////
 void PDistribution::computeOutput(const Vec& input, Vec& output) const
 {
-  static Vec expect;
-  static Mat cov;
-  static int k,l;
-  static Vec y;
   need_set_input = splitCond(input);
   if (need_set_input) {
     // There is an input part, and it is not the same as in the previous call.
     setInput(input_part);
   }
-  l = (int) outputs_def.length();
-  k = 0;
+  int l = (int) outputs_def.length();
+  int k = 0;
   for(int i=0; i<l; i++)
   {
     switch(outputs_def[i])
@@ -195,13 +191,13 @@ void PDistribution::computeOutput(const Vec& input, Vec& output) const
         output[k++] = survival_fn(target_part);
         break;
       case 'e':
-        expect = output.subVec(k, n_target);
-        expectation(expect);
+        store_expect = output.subVec(k, n_target);
+        expectation(store_expect);
         k += n_target;
         break;
       case 'v':
-        cov = output.subVec(k, square(n_target)).toMat(n_target, n_target);
-        variance(cov);
+        store_cov = output.subVec(k, square(n_target)).toMat(n_target, n_target);
+        variance(store_cov);
         k += square(n_target);
         break;
       case 'E':
@@ -215,39 +211,39 @@ void PDistribution::computeOutput(const Vec& input, Vec& output) const
       case 'C':
       case 'S':
         real t;
-        y.resize(1);
-        y[0] = lower_bound;
+        store_result.resize(1);
+        store_result[0] = lower_bound;
         for (int j = 0; j < n_curve_points; j++) {
           switch(outputs_def[i]) {
             case 'L':
-              t = log_density(y);
+              t = log_density(store_result);
               break;
             case 'D':
-              t = density(y);
+              t = density(store_result);
               break;
             case 'C':
-              t = cdf(y);
+              t = cdf(store_result);
               break;
             case 'S':
-              t = survival_fn(y);
+              t = survival_fn(store_result);
               break;
             case 'E':
-              setInput(y);
-              expectation(expect);
-              t = expect[0];
+              setInput(store_result);
+              expectation(store_expect);
+              t = store_expect[0];
               break;
             case 'V':
-              setInput(y);
-              cov = expect.toMat(1,1);
-              variance(cov);
-              t = expect[0];
+              setInput(store_result);
+              store_cov = store_expect.toMat(1,1);
+              variance(store_cov);
+              t = store_expect[0];
               break;
             default:
               PLERROR("In PDistribution::computeOutput - This should never happen");
               t = 0; // To make the compiler happy.
           }
           output[j + k] = t;
-          y[0] += delta_curve;
+          store_result[0] += delta_curve;
         }
         k += n_curve_points;
         break;
@@ -324,7 +320,7 @@ TVec<string> PDistribution::getTrainCostNames() const
 ///////////////
 void PDistribution::generateN(const Mat& Y) const
 {
-  static Vec v;
+  Vec v;
   if (Y.width()!=inputsize())
     PLERROR("In PDistribution::generateN  matrix width (%d) differs from inputsize() (%d)", Y.width(), inputsize());
   int N = Y.length();  
@@ -341,6 +337,9 @@ void PDistribution::generateN(const Mat& Y) const
 void PDistribution::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(store_expect, copies);
+  deepCopyField(store_result, copies);
+  deepCopyField(store_cov, copies);
   deepCopyField(cond_sort, copies);
   deepCopyField(cond_swap, copies);
   deepCopyField(input_part, copies);

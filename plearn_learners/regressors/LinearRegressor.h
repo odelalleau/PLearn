@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.h,v 1.5 2004/07/21 16:30:58 chrish42 Exp $
+   * $Id: LinearRegressor.h,v 1.6 2004/07/21 20:27:27 tihocan Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.h */
@@ -48,7 +48,16 @@ using namespace std;
 
 class LinearRegressor: public PLearner
 {
+
+private:
+    
   typedef PLearner inherited;
+
+  // Global storage used to save memory allocations.
+  mutable Vec extendedinput; //!<  length 1+inputsize(), first element is 1.0 (used by the use method)
+  mutable Vec input; //!<  extendedinput.subVec(1,inputsize())
+  Vec target;
+  Vec train_costs;
 
 protected:
   // local variables

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.h,v 1.9 2004/07/21 16:30:59 chrish42 Exp $ 
+   * $Id: KernelProjection.h,v 1.10 2004/07/21 20:28:13 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -56,6 +56,11 @@ class KernelProjection: public PLearner
 private:
 
   typedef PLearner inherited;
+
+  //! Global storage to save memory allocations.
+  mutable Vec k_x_xi;
+  mutable Mat result;
+  mutable Mat used_eigenvectors;
   
 protected:
 

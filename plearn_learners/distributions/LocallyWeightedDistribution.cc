@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyWeightedDistribution.cc,v 1.8 2004/07/21 16:30:55 chrish42 Exp $ 
+   * $Id: LocallyWeightedDistribution.cc,v 1.9 2004/07/21 20:23:38 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file LocallyWeightedDistribution.cc */
@@ -112,12 +112,10 @@ void LocallyWeightedDistribution::build()
 
 double LocallyWeightedDistribution::log_density(const Vec& x) const
 {
-  static Vec trainsample; //<! Will contain the current training sample
-  static Vec weights; //<! will contain the "localization" weights for the current test point
-
   int l = train_set.length();
   int w = inputsize();
   weights.resize(l);
+  // 'weights' will contain the "localization" weights for the current test point.
   trainsample.resize(w+weightsize());
   Vec input = trainsample.subVec(0,w);
 

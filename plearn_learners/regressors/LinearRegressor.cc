@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.cc,v 1.8 2004/07/21 16:30:58 chrish42 Exp $
+   * $Id: LinearRegressor.cc,v 1.9 2004/07/21 20:27:27 tihocan Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.cc */
@@ -112,14 +112,17 @@ PLEARN_IMPLEMENT_OBJECT(LinearRegressor, "Ordinary Least Squares and Ridge Regre
   void LinearRegressor::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   {
     inherited::makeDeepCopyFromShallowCopy(copies);
-
     // ### Call deepCopyField on all "pointer-like" fields 
     // ### that you wish to be deepCopied rather than 
     // ### shallow-copied.
     // ### ex:
-    deepCopyField(weights, copies);
+    deepCopyField(extendedinput, copies);
+    deepCopyField(input, copies);
+    deepCopyField(target, copies);
+    deepCopyField(train_costs, copies);
     deepCopyField(XtX, copies);
     deepCopyField(XtY, copies);
+    deepCopyField(weights, copies);
   }
 
 
@@ -143,10 +146,6 @@ void LinearRegressor::forget()
   sum_gammas = 0;
 }
     
-static Vec extendedinput; //!<  length 1+inputsize(), first element is 1.0 (used by the use method)
-static Vec input; //!<  extendedinput.subVec(1,inputsize())
-static Vec target;
-static Vec train_costs;
 
 void LinearRegressor::train()
 {
