@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedFuncVariable.h,v 1.1 2004/02/19 21:49:45 yoshua Exp $
+   * $Id: UnfoldedFuncVariable.h,v 1.2 2004/02/20 17:08:31 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -83,7 +83,7 @@ private:
   void build_();
 };
 
-inline Var unfoldedSumOf(Var input_matrix, Func f)
+inline Var unfoldedFuncOf(Var input_matrix, Func f)
 { return new UnfoldedFuncVariable(input_matrix,f); }
 
 %> // end of namespace PLearn
