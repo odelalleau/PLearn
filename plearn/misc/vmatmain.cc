@@ -32,8 +32,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.35 2004/08/16 15:45:34 dorionc Exp $
+   * $Id: vmatmain.cc,v 1.36 2004/11/20 01:52:54 chapados Exp $
    ******************************************************* */
+
+#include <algorithm>                         // for max
+#include <iostream>
+#include <iomanip>                           // for setw and such
 
 #include "vmatmain.h"
 #include <plearn/base/general.h>
@@ -176,18 +180,32 @@ void displayBasicStats(VMat vm)
   int nfields = vm.width();
   TVec<StatsCollector> stats = vm->getStats();        
 
-  cout << "# \t fieldname \t mean \t stddev \t min \t max \t count \t nmissing \t stderr" << endl; 
+  // find longest field name
+  size_t fieldlen = 0;
+  for (int k=0; k<nfields; ++k)
+    fieldlen = max(fieldlen, vm->fieldName(k).size());
+  fieldlen++;
+  
+  cout << std::left << setw(6)  << "# "
+       << setw(fieldlen) << " fieldname " << std::right
+       << setw(15) << " mean "
+       << setw(15) << " stddev "
+       << setw(15) << " min "
+       << setw(15) << " max "
+       << setw(15) << " count "
+       << setw(15) << " nmissing "
+       << setw(15) << " stderr" << endl; 
   for(int k=0; k<nfields; k++)
     {
-      cout << k << " \t" 
-           << vm->fieldName(k) << " \t" 
-           << stats[k].mean() << " \t"
-           << stats[k].stddev() << " \t"
-           << stats[k].min() << " \t"
-           << stats[k].max() << " \t"
-           << stats[k].n() << " \t"
-           << stats[k].nmissing() << " \t"
-           << stats[k].stderror() << " \t"
+      cout << std::left << setw(6)  << k << " " 
+           << setw(fieldlen) << vm->fieldName(k) << " " << std::right
+           << setw(15) << stats[k].mean() << " " 
+           << setw(15) << stats[k].stddev() << " "
+           << setw(15) << stats[k].min() << " " 
+           << setw(15) << stats[k].max() << " " 
+           << setw(15) << stats[k].n() << " " 
+           << setw(15) << stats[k].nmissing() << " " 
+           << setw(15) << stats[k].stderror() << " " 
            << endl;
     }
 }
