@@ -1,0 +1,5 @@
+mse+penalty
+mse
+aic
+bic
+mabic
