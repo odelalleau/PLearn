@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SortRowsVMatrix.cc,v 1.5 2004/06/10 16:15:31 tihocan Exp $
+   * $Id: SortRowsVMatrix.cc,v 1.6 2004/07/14 20:53:38 tihocan Exp $
    ******************************************************* */
 
 #include "SubVMatrix.h"
@@ -48,9 +48,9 @@ using namespace std;
 /** SortRowsVMatrix **/
 
 PLEARN_IMPLEMENT_OBJECT(SortRowsVMatrix, 
-    "Sort the samples of a VMatrix according to one (or more) given columns.\n"
-    "The implementation is not efficient at all, feel free to improve it !",
-    "NO HELP");
+    "Sort the samples of a VMatrix according to one (or more) given columns.",
+    "The implementation is not efficient at all, feel free to improve it !"
+);
 
 SortRowsVMatrix::SortRowsVMatrix() 
   : increasing_order(1)
@@ -90,6 +90,16 @@ void SortRowsVMatrix::build()
 ////////////
 void SortRowsVMatrix::build_()
 {
+  // Check we don't try to sort twice by the same column (this can be confusing).
+  if (sort_columns.isNotEmpty()) {
+    for (int i = 0; i < sort_columns.length(); i++) {
+      for (int j = i + 1; j < sort_columns.length(); j++) {
+        if (sort_columns[j] == sort_columns[i]) {
+          PLERROR("In SortRowsVMatrix::build_ - You have a duplicated index in the 'sort_columns' vector");
+        }
+      }
+    }
+  }
   // Construct the indices vector.
   if (source) {
     indices = TVec<int>(0, source.length()-1, 1);
