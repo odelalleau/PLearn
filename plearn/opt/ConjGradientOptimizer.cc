@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.46 2003/10/21 16:55:08 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.47 2003/10/22 14:28:51 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -248,6 +248,25 @@ PLEARN_IMPLEMENT_OBJECT(ConjGradientOptimizer, "ONE LINE DESCR", "NO HELP");
 /******************************
  * MAIN METHODS AND FUNCTIONS *
  ******************************/
+
+////////////
+// build_ //
+////////////
+void ConjGradientOptimizer::build_() {
+  // Make sure the internal datas have the right size
+  if (params.nelems() > 0) {
+    current_opp_gradient.resize(params.nelems());
+    search_direction.resize(params.nelems());
+    tmp_storage.resize(params.nelems());
+    delta.resize(params.nelems());
+    if (cost.length() > 0) {
+      meancost.resize(cost->size());
+    }
+  }
+  early_stop = false;
+  last_improvement = 0.1; // may only influence the speed of first iteration
+  current_step_size = starting_step_size;
+}
 
 //////////////////////////////
 // computeCostAndDerivative //
@@ -748,7 +767,7 @@ bool ConjGradientOptimizer::lineSearch() {
   }
   if (step < 0)
     cout << "Ouch, negative step !" << endl;
-  if (step!=0) params.update(step, search_direction);
+  if (step != 0) params.update(step, search_direction);
   if (step == 0)
     cout << "No more progress made by the line search, stopping" << endl;
   return (step == 0);
