@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.2 2002/08/05 02:46:35 yoshua Exp $
+   * $Id: pl_math.h,v 1.3 2002/08/05 14:59:00 wangxian Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -148,8 +148,8 @@ extern _plearn_nan_type plearn_nan;
 
 #ifdef LINUX
 #define DOUBLE_TO_INT(in,out) __asm__ __volatile__ ("fistpl %0" : "=m" (out) : "t" (in) : "st")  
-#else#
-define DOUBLE_TO_INT(in, out)  out = int(in)
+#else
+#define DOUBLE_TO_INT(in, out)  out = int(in)
 #endif
 
   extern float tanhtable[TANHTABLESIZE];
