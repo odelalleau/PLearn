@@ -1,0 +1,75 @@
+*1 ->VecStatsCollector(
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+fieldnames = 5 [ "mse+penalty" "mse" "aic" "bic" "mabic" ] ;
+compute_covariance = 0 ;
+epsilon = 0 ;
+stats = 5 [ StatsCollector(
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 1 ;
+sum_ = 0 ;
+sumsquare_ = 0 ;
+min_ = 59179.2899731113575 ;
+max_ = 59179.2899731113575 ;
+first_ = 59179.2899731113575 ;
+last_ = 59179.2899731113575 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 1 ;
+sum_ = 0 ;
+sumsquare_ = 0 ;
+min_ = 59179.2899731113575 ;
+max_ = 59179.2899731113575 ;
+first_ = 59179.2899731113575 ;
+last_ = 59179.2899731113575 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 1 ;
+sum_ = 0 ;
+sumsquare_ = 0 ;
+min_ = 6.05769163403523425 ;
+max_ = 6.05769163403523425 ;
+first_ = 6.05769163403523425 ;
+last_ = 6.05769163403523425 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 1 ;
+sum_ = 0 ;
+sumsquare_ = 0 ;
+min_ = 6.17811704579908483 ;
+max_ = 6.17811704579908483 ;
+first_ = 6.17811704579908483 ;
+last_ = 6.17811704579908483 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 1 ;
+sum_ = 0 ;
+sumsquare_ = 0 ;
+min_ = 6.11790433991715954 ;
+max_ = 6.11790433991715954 ;
+first_ = 6.11790433991715954 ;
+last_ = 6.11790433991715954 ;
+counts = {};
+more_than_maxnvalues = 1  )
+] ;
+cov = 0  0  [ 
+]
+ )
