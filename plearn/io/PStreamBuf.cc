@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PStreamBuf.cc,v 1.8 2005/01/14 19:40:49 plearner Exp $ 
+   * $Id: PStreamBuf.cc,v 1.9 2005/02/12 02:17:58 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PStreamBuf.cc */
@@ -178,6 +178,8 @@ void PStreamBuf::unread(const char* p, streamsize n)
 
 void PStreamBuf::putback(char c)
 {
+  if (c == EOF)
+    return;
   if(inbuf_p<=inbuf)
     PLERROR("Cannot putback('%c') Input buffer bound reached (you may want to increase the unget_capacity)",c);
   
