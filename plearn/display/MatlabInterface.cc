@@ -35,13 +35,13 @@
 
 
 /* *******************************************************
-   * $Id: MatlabInterface.cc,v 1.3 2004/02/20 21:11:44 chrish42 Exp $
+   * $Id: MatlabInterface.cc,v 1.4 2004/03/04 14:57:40 tihocan Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "MatlabInterface.h"
-#include "TypesNumeriques.h"
+#include "TypesNumeriques.h" //!< For looksNumeric.
 #include "TmpFilenames.h"
 
 namespace PLearn {
