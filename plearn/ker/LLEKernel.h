@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LLEKernel.h,v 1.1 2004/07/15 21:06:35 tihocan Exp $ 
+   * $Id: LLEKernel.h,v 1.2 2004/07/19 13:26:42 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -82,6 +82,7 @@ public:
 
   int knn;
   real reconstruct_coeff;
+  real regularizer;
 
   // ****************
   // * Constructors *
@@ -134,15 +135,17 @@ public:
 
   virtual real evaluate_i_j(int i, int j) const;
 
+  virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const;
+
+  virtual real evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x=-1, bool first_time = false) const;
+
   virtual void setDataForKernelMatrix(VMat the_data);
 
   // *** SUBCLASS WRITING: ***
   // While in general not necessary, in case of particular needs 
   // (efficiency concerns for ex) you may also want to overload
   // some of the following methods:
-  // virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const;
   // virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const;
-  // virtual real evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x=-1, bool first_time = false) const;
   // virtual real evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x=-1, bool first_time = false) const;
   // virtual void computeGramMatrix(Mat K) const;
   // virtual void addDataForKernelMatrix(const Vec& newRow);

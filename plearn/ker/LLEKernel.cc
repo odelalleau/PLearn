@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LLEKernel.cc,v 1.1 2004/07/15 21:06:35 tihocan Exp $ 
+   * $Id: LLEKernel.cc,v 1.2 2004/07/19 13:26:42 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -53,12 +53,9 @@ LLEKernel::LLEKernel()
 : build_in_progress(false),
   reconstruct_ker(new ReconstructionWeightsKernel()),
   knn(5),
-  reconstruct_coeff(1e6)
+  reconstruct_coeff(1e6),
+  regularizer(1e-6)
 {
-  // ...
-
-  // ### You may or may not want to call build_() to finish building the object
-  // build_();
 }
 
 PLEARN_IMPLEMENT_OBJECT(LLEKernel,
@@ -82,17 +79,14 @@ PLEARN_IMPLEMENT_OBJECT(LLEKernel,
 ////////////////////
 void LLEKernel::declareOptions(OptionList& ol)
 {
-  // ### Declare all of this object's options here
-  // ### For the "flags" of each option, you should typically specify  
-  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-  // ### OptionBase::tuningoption. Another possible flag to be combined with
-  // ### is OptionBase::nosave
-
   declareOption(ol, "knn", &LLEKernel::knn, OptionBase::buildoption,
       "The number of nearest neighbors considered.");
 
   declareOption(ol, "reconstruct_coeff", &LLEKernel::reconstruct_coeff, OptionBase::buildoption,
       "The weight of K' in the weighted sum of K' and K''.");
+
+  declareOption(ol, "regularizer", &LLEKernel::regularizer, OptionBase::buildoption,
+      "The regularization factor used to make the linear systems stable.");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -113,13 +107,7 @@ void LLEKernel::build()
 ////////////
 void LLEKernel::build_()
 {
-  // ### This method should do the real building of the object,
-  // ### according to set 'options', in *any* situation. 
-  // ### Typical situations include:
-  // ###  - Initial building of an object from a few user-specified options
-  // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-  // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-  // ### You should assume that the parent class' build_() has already been called.
+  reconstruct_ker->regularizer = this->regularizer;
   reconstruct_ker->knn = this->knn;
   reconstruct_ker->report_progress = this->report_progress;
   reconstruct_ker->build();
@@ -135,7 +123,7 @@ void LLEKernel::build_()
 // evaluate //
 //////////////
 real LLEKernel::evaluate(const Vec& x1, const Vec& x2) const {
-  PLERROR("In LLEKernel::evaluate - Not implemented yet");
+  // Calling evaluate means neither x1 nor x2 is in the training set.
   return 0;
 }
 
@@ -158,6 +146,20 @@ real LLEKernel::evaluate_i_j(int i, int j) const {
     }
     return reconstruct_ker->evaluate_i_j(i,j) + reconstruct_ker->evaluate_i_j(j,i) - sum;
   }
+}
+
+//////////////////
+// evaluate_i_x //
+//////////////////
+real LLEKernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) const {
+  return reconstruct_coeff * reconstruct_ker->evaluate_x_i(x, i, squared_norm_of_x);
+}
+
+////////////////////////
+// evaluate_i_x_again //
+////////////////////////
+real LLEKernel::evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x, bool first_time) const {
+  return reconstruct_coeff * reconstruct_ker->evaluate_x_i_again(x, i, squared_norm_of_x, first_time);
 }
 
 /////////////////////////////////
