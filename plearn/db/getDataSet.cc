@@ -36,26 +36,26 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.13 2004/02/20 21:11:44 chrish42 Exp $
+   * $Id: getDataSet.cc,v 1.14 2004/03/03 14:12:19 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
 
-#include "getDataSet.h"
-#include "VMat.h"
-#include "MatIO.h"
+//#include "MatIO.h"
 #include "AutoSDBVMatrix.h"
-#include "stringutils.h"
-#include "fileutils.h"
-#include "FileVMatrix.h"
+//#include "stringutils.h"
+//#include "fileutils.h"
+#include "ConcatRowsVMatrix.h"      //< For vconcat.
+#include "databases.h"              //< For loadClassificationDataset.
 #include "DiskVMatrix.h"
-#include "ConcatRowsVMatrix.h"
-#include "ConcatColumnsVMatrix.h"
-#include "SubVMatrix.h"
-#include "VVMatrix.h"
+#include "FileVMatrix.h"
+#include "getDataSet.h"
+//#include "ConcatColumnsVMatrix.h"
+//#include "SubVMatrix.h"
 #include "StrTableVMatrix.h"
-#include "databases.h"
 #include "StringTable.h"
+#include "VMat.h"
+#include "VVMatrix.h"
 
 namespace PLearn {
 using namespace std;

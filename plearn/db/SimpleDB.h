@@ -43,10 +43,10 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include <iomanip>
+//#include <iomanip>
 #include <stdexcept>         //!< for logic_error
 #include <typeinfo>
-#include <algorithm>
+//#include <algorithm>
 
 // norman: added check for WIN32
 #ifndef WIN32
@@ -59,13 +59,13 @@
 #include <fcntl.h>			     //!<  for open
 #include <errno.h>			     //!<  for errno
 #include <stdlib.h>			     //!<  for ptrdiff_t
-#include <ctype.h>
+//#include <ctype.h>
 
 
 //!  From PLearn
-#include "general.h"
-#include "stringutils.h"
-#include "random.h"
+//#include "general.h"
+//#include "stringutils.h"
+//#include "random.h"
 #include "PDate.h"			     //!<  for PDate
 #include "Hash.h"
 #include "TinyVector.h"

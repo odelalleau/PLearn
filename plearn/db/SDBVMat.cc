@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 #include "TMat_maths.h"			     // for binary_search
-#include "stringutils.h"
+//#include "stringutils.h"
 #include "SDBVMat.h"
 
 // norman: profiler deactivated for win32

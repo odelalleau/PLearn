@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: SDBWithStats.h,v 1.3 2004/02/29 16:44:05 nova77 Exp $
+   * $Id: SDBWithStats.h,v 1.4 2004/03/03 14:11:01 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -48,7 +48,7 @@
 #ifndef SDBWithStats_INC
 #define SDBWithStats_INC
 
-#include "general.h"
+//#include "general.h"
 #include "SimpleDB.h"
 #include <map>
 
