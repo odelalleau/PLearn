@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.cc,v 1.5 2002/11/07 23:49:52 jauvinc Exp $
+   * $Id: WordNetOntology.cc,v 1.6 2002/11/14 20:08:08 jauvinc Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -1341,6 +1341,18 @@ Set WordNetOntology::getWordSenses(int id)
   return word_to_senses[id];
 }
 
+Set WordNetOntology::getWordCategories(int id)
+{
+#ifndef NOWARNING
+  if (!isWord(id))
+  {
+    PLWARNING("asking for a non-word id (%d)", id);
+    return Set();
+  }
+#endif
+  return word_to_categories_at_level[id];
+}
+
 Set WordNetOntology::getWordNounSenses(int id)
 {
 #ifndef NOWARNING
@@ -1809,17 +1821,14 @@ void WordNetOntology::getCategoriesUnderLevel(int ss_id, int cur_level, int targ
 void WordNetOntology::getDescendantCategoriesAtLevel(int ss_id, int cur_level, int target_level, Set categories)
 {
   Node* node = synsets[ss_id];
+  if (cur_level < target_level && isSense(ss_id))
+    categories.insert(ss_id);
   if (cur_level == target_level)
     categories.insert(ss_id);
   else
   {
-    if (node->children.isEmpty())
-      categories.insert(ss_id);
-    else
-    {
-      for (SetIterator it = node->children.begin(); it != node->children.end(); ++it)
-        getDescendantCategoriesAtLevel(*it, cur_level + 1, target_level, categories);
-    }
+    for (SetIterator it = node->children.begin(); it != node->children.end(); ++it)
+      getDescendantCategoriesAtLevel(*it, cur_level + 1, target_level, categories);
   }  
 }
 
@@ -2202,6 +2211,63 @@ bool WordNetOntology::isTopLevelCategory(int ss_id)
           ss_id == NUMERIC_SS_ID || ss_id == PUNCTUATION_SS_ID ||
           ss_id == STOP_SS_ID || ss_id == UNDEFINED_SS_ID ||
           ss_id == BOS_SS_ID || ss_id == EOS_SS_ID);
+}
+
+int WordNetOntology::extractWordCategoriesAtLevel(int noun_depth, int verb_depth)
+{
+  Set noun_categories;
+  getDescendantCategoriesAtLevel(NOUN_SS_ID, 0, noun_depth, noun_categories);
+  //cout << "|noun categories| = " << noun_categories.size() << endl;
+  for (SetIterator sit = noun_categories.begin(); sit != noun_categories.end(); ++sit)
+  {
+    int ss_id = *sit;
+    Set word_descendants = getSynsetWordDescendants(ss_id);
+    for (SetIterator wit = word_descendants.begin(); wit != word_descendants.end(); ++wit)
+    {
+      int word_id = *wit;
+      word_to_categories_at_level[word_id].insert(ss_id);
+    }
+  }
+  Set verb_categories;
+  getDescendantCategoriesAtLevel(VERB_SS_ID, 0, verb_depth, verb_categories);
+  //cout << "|verb categories| = " << verb_categories.size() << endl;
+  for (SetIterator sit = verb_categories.begin(); sit != verb_categories.end(); ++sit)
+  {
+    int ss_id = *sit;
+    Set word_descendants = getSynsetWordDescendants(ss_id);
+    for (SetIterator wit = word_descendants.begin(); wit != word_descendants.end(); ++wit)
+    {
+      int word_id = *wit;
+      word_to_categories_at_level[word_id].insert(ss_id);
+    }
+  }
+  Set word_descendants = getSynsetWordDescendants(ADJ_SS_ID);
+  for (SetIterator wit = word_descendants.begin(); wit != word_descendants.end(); ++wit)
+  {
+    int word_id = *wit;
+    word_to_categories_at_level[word_id].insert(ADJ_SS_ID);
+  }
+  word_descendants = getSynsetWordDescendants(ADV_SS_ID);
+  for (SetIterator wit = word_descendants.begin(); wit != word_descendants.end(); ++wit)
+  {
+    int word_id = *wit;
+    word_to_categories_at_level[word_id].insert(ADV_SS_ID);
+  }
+  word_descendants = getSynsetWordDescendants(SUPER_UNKNOWN_SS_ID);
+  for (SetIterator wit = word_descendants.begin(); wit != word_descendants.end(); ++wit)
+  {
+    int word_id = *wit;
+    word_to_categories_at_level[word_id].insert(SUPER_UNKNOWN_SS_ID);
+  }
+
+  for (map<int, string>::iterator it = words.begin(); it != words.end(); ++it)
+  {
+    int word_id = it->first;
+    if (word_to_categories_at_level[word_id].size() == 0)
+      PLWARNING("no category for word '%s' (%d)", words[word_id].c_str(), word_id);
+  }
+
+  return (noun_categories.size() + verb_categories.size() + 3);
 }
 
 // {non-letters}word{non-letters} -> word

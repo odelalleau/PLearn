@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.h,v 1.6 2002/11/07 23:49:52 jauvinc Exp $
+   * $Id: WordNetOntology.h,v 1.7 2002/11/14 20:08:08 jauvinc Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -151,6 +151,7 @@ protected:
   map<int, vector<int> > word_to_adv_wnsn;
   map<int, int> word_to_predominent_pos;
   map<int, bool> word_is_in_wn;
+  map<int, Set> word_to_categories_at_level;
 
   int word_index; // unique id for words
   int synset_index; // unique id for synsets
@@ -212,6 +213,7 @@ public:
   int getWordSenseIdForWnsn(string word, int wn_pos_type, int wnsn);
   int getWordSenseIdForSenseKey(string lemma, string lexsn);
   Set getWordSenses(int id);
+  Set getWordCategories(int id);
   Set getWordNounSenses(int id);
   Set getWordVerbSenses(int id);
   Set getWordAdjSenses(int id);
@@ -266,12 +268,10 @@ public:
 
   int overlappingSynsets(int ss_id1, int ss_id2);
   bool areOverlappingSynsets(int ss_id1, int ss_id2) { return (overlappingSynsets(ss_id1, ss_id2) > 1); }
-
   void intersectAncestorsAndSenses(Set categories, Set senses);
-
   void reducePolysemy(int level);
-
   void extractPredominentSyntacticClasses();
+  int extractWordCategoriesAtLevel(int noun_depth, int verb_depth);
 
   // integrity verifications
   void detectWordsWithoutOntology();
