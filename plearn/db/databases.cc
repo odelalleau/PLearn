@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: databases.cc,v 1.2 2003/08/08 20:45:54 yoshua Exp $
+   * $Id: databases.cc,v 1.3 2003/11/11 22:10:02 ducharme Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -173,13 +173,16 @@ void remapClassnums(VMat& data, real remap_minval_to, real remap_maxval_to)
     }
 }
 
+#define DB_DIR "DBDIR"
+const static string dbdir_name = DB_DIR;
+
 VMat loadBreastCancerWisconsin(bool normalize, bool uniq)
 {
   Mat data;
   if(uniq)
-    loadAscii(DBDIR "/Breast/breast-cancer-wisconsin-uniq.amat",data);
+    loadAscii(dbdir_name+ "/Breast/breast-cancer-wisconsin-uniq.amat",data);
   else
-    loadAscii(DBDIR "/Breast/breast-cancer-wisconsin.amat",data);
+    loadAscii(dbdir_name+ "/Breast/breast-cancer-wisconsin.amat",data);
   if(normalize)
     {
       Mat datainput = data.subMatColumns(0,data.width()-1);
@@ -193,9 +196,9 @@ int loadBreastCancer(VMat& training_set, VMat& validation_set, VMat& test_set, i
 {
   Mat data;
   if(uniq)
-    loadAscii(DBDIR "/Breast/breast-cancer-wisconsin-uniq.amat",data);
+    loadAscii(dbdir_name + "/Breast/breast-cancer-wisconsin-uniq.amat",data);
   else
-    loadAscii(DBDIR "/Breast/breast-cancer-wisconsin.amat",data);
+    loadAscii(dbdir_name + "/Breast/breast-cancer-wisconsin.amat",data);
   
   shuffleRows(data);
   
@@ -216,7 +219,7 @@ int loadBreastCancer(VMat& training_set, VMat& validation_set, VMat& test_set, i
   
 VMat loadPimaIndians(bool normalize)
 {
-  Mat data = loadUCIMLDB(DBDIR "/UCI_MLDB/pima-indians-diabetes/pima-indians-diabetes.data");
+  Mat data = loadUCIMLDB(dbdir_name + "/UCI_MLDB/pima-indians-diabetes/pima-indians-diabetes.data");
   if(normalize)
     {
       Mat datainput = data.subMatColumns(0,data.width()-1);
@@ -229,7 +232,7 @@ VMat loadPimaIndians(bool normalize)
 VMat loadHousing(bool normalize)
 {
   Mat data;
-  loadGnuplot(DBDIR "/UCI_MLDB/housing/housing.data", data);
+  loadGnuplot(dbdir_name + "/UCI_MLDB/housing/housing.data", data);
   Mat inputs = data.subMatColumns(0,13);
   Mat targets = data.subMatColumns(13,1);
   if (normalize)
@@ -244,7 +247,7 @@ VMat loadHousing(bool normalize)
 
 VMat loadSonar()
 {
-  Mat data = loadUCIMLDB(DBDIR "/UCI_MLDB/undocumented/connectionist-bench/sonar/sonar.all-data");
+  Mat data = loadUCIMLDB(dbdir_name + "/UCI_MLDB/undocumented/connectionist-bench/sonar/sonar.all-data");
   shuffleRows(data);
   // no need to normalize
   return VMat(data);
@@ -252,7 +255,7 @@ VMat loadSonar()
 
 VMat loadIonosphere()
 {
-  Mat data = loadUCIMLDB(DBDIR "/UCI_MLDB/ionosphere/ionosphere.data");
+  Mat data = loadUCIMLDB(dbdir_name + "/UCI_MLDB/ionosphere/ionosphere.data");
   shuffleRows(data);
   // no need to normalize
   return VMat(data);
@@ -261,7 +264,7 @@ VMat loadIonosphere()
 VMat loadDiabetes(bool normalize)
 {
   Mat data;
-  loadAscii(DBDIR "/Diabetes/diabetes.amat",data);
+  loadAscii(dbdir_name + "/Diabetes/diabetes.amat",data);
 
   if(normalize)
     {
@@ -275,7 +278,7 @@ VMat loadDiabetes(bool normalize)
 int loadDiabetes(VMat& training_set, VMat& validation_set, VMat& test_set, int ntrain, int nvalid)
 {
   Mat data;
-  loadAscii(DBDIR "/Diabetes/diabetes.amat",data);
+  loadAscii(dbdir_name + "/Diabetes/diabetes.amat",data);
 
   shuffleRows(data);
 
@@ -297,7 +300,7 @@ int loadDiabetes(VMat& training_set, VMat& validation_set, VMat& test_set, int n
 int loadATT800(VMat& training_set, VMat& test_set)
 {
   Mat data;
-  loadAscii(DBDIR "/ATT800/att800.amat",data);
+  loadAscii(dbdir_name + "/ATT800/att800.amat",data);
 
   // preprocessing the data:
   Mat durations = data.subMatColumns(0,12);
@@ -345,7 +348,7 @@ int loadATT800(VMat& training_set, VMat& test_set)
 VMat loadLetters(bool normalize)
 {
   Mat letters;
-  loadAscii(DBDIR "/Letter/letter.amat",letters);
+  loadAscii(dbdir_name + "/Letter/letter.amat",letters);
 
   if(normalize)
     {
@@ -368,7 +371,7 @@ VMat loadLetters(const char* class0, const char* class1, bool normalize)
     letter_classnum[class1[i]-'A'] = 1;
 
   Mat letters;
-  loadAscii(DBDIR "/Letter/letter.amat",letters);
+  loadAscii(dbdir_name + "/Letter/letter.amat",letters);
 
   int nkeptsamples = 0;
   for(int i=0; i<letters.length(); i++)
@@ -407,7 +410,7 @@ int loadLetters(VMat& training_set, VMat& validation_set, VMat& test_set, char* 
     letter_classnum[which_letters[i]-'A'] = classnum++;
 
   Mat letters;
-  loadAscii(DBDIR "/Letter/letter.amat",letters);
+  loadAscii(dbdir_name + "/Letter/letter.amat",letters);
 
   Mat keptletters(letters.length(),letters.width());
   int k=0;
@@ -459,7 +462,7 @@ VMat loadLetters(int n_letters, bool do_shuffle)
     letter_classnum[letter++] = classnum++;
 
   Mat letters;
-  loadAscii(DBDIR "/Letter/letter.amat",letters);
+  loadAscii(dbdir_name + "/Letter/letter.amat",letters);
 
   Mat keptletters(letters.length(),letters.width());
   int k=0;
@@ -513,12 +516,12 @@ void loadCorelDatamat(int classnum, Mat& train, Mat& valid, Mat& test)
 
   // Load train
   {
-    sprintf(filename,DBDIR "/Corel/train/size%d",classnum);
+    sprintf(filename,(dbdir_name + "/Corel/train/size%d").c_str(),classnum);
     ifstream sizein(filename);
     sizein >> len;
     Mat datamat(len, width);
 
-    sprintf(filename,DBDIR "/Corel/train/histo%d",classnum);
+    sprintf(filename,(dbdir_name + "/Corel/train/histo%d").c_str(),classnum);
     ifstream datain(filename);
 #ifdef USEFLOAT
     datain.read((char*)datamat.data(), len*width*4);
@@ -537,12 +540,12 @@ void loadCorelDatamat(int classnum, Mat& train, Mat& valid, Mat& test)
 
   // Load valid
   {
-    sprintf(filename,DBDIR "/Corel/valid/size%d",classnum);
+    sprintf(filename,(dbdir_name + "/Corel/valid/size%d").c_str(),classnum);
     ifstream sizein(filename);
     sizein >> len;
     Mat datamat(len, width);
 
-    sprintf(filename,DBDIR "/Corel/valid/histo%d",classnum);
+    sprintf(filename,(dbdir_name + "/Corel/valid/histo%d").c_str(),classnum);
     ifstream datain(filename);
 #ifdef USEFLOAT
     datain.read((char*)datamat.data(), len*width*4);
@@ -562,12 +565,12 @@ void loadCorelDatamat(int classnum, Mat& train, Mat& valid, Mat& test)
 
   // Load test
   {
-    sprintf(filename,DBDIR "/Corel/test/size%d",classnum);
+    sprintf(filename,(dbdir_name + "/Corel/test/size%d").c_str(),classnum);
     ifstream sizein(filename);
     sizein >> len;
     Mat datamat(len, width);
 
-    sprintf(filename,DBDIR "/Corel/test/histo%d",classnum);
+    sprintf(filename,(dbdir_name + "/Corel/test/histo%d").c_str(),classnum);
     ifstream datain(filename);
 #ifdef USEFLOAT
     datain.read((char*)datamat.data(), len*width*4);
@@ -662,7 +665,7 @@ void loadCallxx(int year, VMat& d)
 {
   Mat data;
   char filename[1000];
-  sprintf(filename,DBDIR "/Finance/call%d.stc.data",year);
+  sprintf(filename,(dbdir_name + "/Finance/call%d.stc.data").c_str(),year);
   loadAscii(filename, data);
   d = VMat(data);
 }
@@ -677,25 +680,25 @@ void loadUSPS(VMat& trainset, VMat& testset, bool use_smooth)
 
   if(use_smooth)
     {
-      traininputs = loadSNMat(DBDIR "/usps/train-patterns-smoo.mat");
-      testinputs = loadSNMat(DBDIR "/usps/test-patterns-smoo.mat");
+      traininputs = loadSNMat(dbdir_name + "/usps/train-patterns-smoo.mat");
+      testinputs = loadSNMat(dbdir_name + "/usps/test-patterns-smoo.mat");
     }
   else
     {
-      traininputs = loadSNMat(DBDIR "/usps/ocr16-train.mat");
-      testinputs = loadSNMat(DBDIR "/usps/ocr16-test.mat");      
+      traininputs = loadSNMat(dbdir_name + "/usps/ocr16-train.mat");
+      testinputs = loadSNMat(dbdir_name + "/usps/ocr16-test.mat");      
     }
   //traininputs += 1.0;
   //traininputs /= 2.0;
   //testinputs += 1.0;
   //testinputs /= 2.0;
 
-  traindesired = loadSNMat(DBDIR "/usps/train-desired.mat");
+  traindesired = loadSNMat(dbdir_name + "/usps/train-desired.mat");
   Mat trainclasses(traininputs.length(),1);
   for(int i=0; i<traindesired.length(); i++)
     trainclasses(i,0) = argmax(traindesired(i));
 
-  testdesired = loadSNMat(DBDIR "/usps/test-desired.mat");
+  testdesired = loadSNMat(dbdir_name + "/usps/test-desired.mat");
   Mat testclasses(testinputs.length(),1);
   for(int i=0; i<testdesired.length(); i++)
     testclasses(i,0) = argmax(testdesired(i));
@@ -710,14 +713,14 @@ VMat loadUSPS(bool use_smooth)
   Mat traindesired;
 
   if(use_smooth)
-    traininputs = loadSNMat(DBDIR "/usps/patterns-smoo.mat");
+    traininputs = loadSNMat(dbdir_name + "/usps/patterns-smoo.mat");
   else
-    traininputs = loadSNMat(DBDIR "/usps/ocr16.pat");
+    traininputs = loadSNMat(dbdir_name + "/usps/ocr16.pat");
         
   traininputs += real(1.0);
   traininputs /= real(2.0);
 
-  traindesired = loadSNMat(DBDIR "/usps/desired.mat");
+  traindesired = loadSNMat(dbdir_name + "/usps/desired.mat");
   Mat trainclasses(traininputs.length(),1);
   for(int i=0; i<traindesired.length(); i++)
     trainclasses(i,0) = argmax(traindesired(i));
@@ -730,7 +733,7 @@ VMat loadUSPS(bool use_smooth)
 void loadLetters(int& inputsize, int& nclasses, VMat& trainset, VMat& testset)
 {
   Mat letters;
-  loadAscii(DBDIR "/Letter/letter.amat",letters);
+  loadAscii(dbdir_name + "/Letter/letter.amat",letters);
   inputsize = letters.width()-1;
   nclasses = 26;
   trainset = VMat(letters.subMatRows(0,16000));
