@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.5 2004/02/20 22:26:54 tihocan Exp $
+   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.6 2004/02/23 14:35:15 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeighborhoodSmoothnessNNet.h */
@@ -134,9 +134,6 @@ void NeighborhoodSmoothnessNNet::declareOptions(OptionList& ol)
 
   declareOption(ol, "sne_weight", &NeighborhoodSmoothnessNNet::sne_weight, OptionBase::buildoption, 
                 "    The weight of the SNE cost in the total cost optimized.");
-
-  declareOption(ol, "knn", &NeighborhoodSmoothnessNNet::knn, OptionBase::buildoption, 
-                "    The number of nearest neighbours considered (including the point itself).");
 
   declareOption(ol, "kernel_input", &NeighborhoodSmoothnessNNet::kernel_input, OptionBase::buildoption, 
                 "    The kernel used to compute the similarity between inputs.");
@@ -248,8 +245,6 @@ void NeighborhoodSmoothnessNNet::build_()
   if(inputsize_>=0 && targetsize_>=0 && weightsize_>=0)
   {
 
-    int knn = max_n_instances;
-      
     // init. basic vars
     int true_inputsize = inputsize() - 1;
     Var input_and_pij = Var(inputsize(), "input_and_pij");
@@ -376,7 +371,7 @@ void NeighborhoodSmoothnessNNet::build_()
 
       bag_inputs = Var(max_n_instances, inputsize());
       bag_size = Var(1,1);
-      bag_hidden = unfoldedFuncOf(subMat(bag_inputs, 0, 0, bag_input.length(), true_inputsize), f_input_to_hidden);
+      bag_hidden = unfoldedFuncOf(subMat(bag_inputs, 0, 0, bag_inputs.length(), true_inputsize), f_input_to_hidden);
       p_ij = subMat(bag_inputs, 1, true_inputsize, bag_inputs->length() - 1, 1);
 
       // The q_ij function.
@@ -654,7 +649,7 @@ void NeighborhoodSmoothnessNNet::initializeParams()
   else
     PLearn::seed();
 
-  real delta = 1. / (inputsize() - (knn - 1));
+  real delta = 1. / (inputsize() - (max_n_instances - 1));
   /*
   if(direct_in_to_out)
     {

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeighborhoodSmoothnessNNet.h,v 1.4 2004/02/20 21:14:46 chrish42 Exp $
+   * $Id: NeighborhoodSmoothnessNNet.h,v 1.5 2004/02/23 14:35:15 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearn/plearn_learners/classifiers/NeighborhoodSmoothnessNNet.h */
@@ -102,7 +102,6 @@ using namespace std;
     int nhidden2;   // number of hidden units in second hidden layer (default:0)
     int noutputs;   // number of output units (outputsize)
 
-    int knn;
     Ker kernel_input;
     real sigma_hidden;
     real sne_weight;
