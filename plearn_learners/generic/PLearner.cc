@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.29 2004/02/23 14:35:49 tihocan Exp $
+   * $Id: PLearner.cc,v 1.30 2004/04/20 20:44:07 tihocan Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -149,13 +149,7 @@ void PLearner::setTrainingSet(VMat training_set, bool call_forget)
 { 
   // YB: je ne suis pas sur qu'il soit necessaire de faire un build si la LONGUEUR du train_set a change? 
   // les methodes non-parametriques qui utilisent la longueur devrait faire leur "resize" dans train, pas dans build.
-  bool training_set_has_changed =
-       !train_set
-    || train_set->width()      != training_set->width()
-    || train_set->length()     != training_set->length()
-    || train_set->inputsize()  != training_set->inputsize()
-    || train_set->weightsize() != training_set->weightsize()
-    || train_set->targetsize() != training_set->targetsize();
+  bool training_set_has_changed = !train_set || !(train_set->looksTheSameAs(training_set));
   train_set = training_set;
   if (training_set_has_changed)
   {
