@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GeodesicDistanceKernel.cc,v 1.10 2004/07/22 19:09:28 tihocan Exp $ 
+   * $Id: GeodesicDistanceKernel.cc,v 1.11 2004/07/23 13:43:58 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -128,12 +128,12 @@ void GeodesicDistanceKernel::build_()
 /////////////////////////////////////
 // computeNearestGeodesicNeighbour //
 /////////////////////////////////////
-int GeodesicDistanceKernel::computeNearestGeodesicNeighbour(int i, const Mat& k_xi_x_sorted, real* dist_i) const {
-  real min = k_xi_x_sorted(0,0) + geo_distances->get(i, int(k_xi_x_sorted(0,1)));
+int GeodesicDistanceKernel::computeNearestGeodesicNeighbour(int i, const Mat& distances_xi_x_sorted, real* dist_i) const {
+  real min = distances_xi_x_sorted(0,0) + geo_distances->get(i, int(distances_xi_x_sorted(0,1)));
   real dist;
   int indice = 0;
   for (int j = 1; j < knn; j++) {
-    dist = k_xi_x_sorted(j,0) + geo_distances->get(i, int(k_xi_x_sorted(j,1)));
+    dist = distances_xi_x_sorted(j,0) + geo_distances->get(i, int(distances_xi_x_sorted(j,1)));
     if (dist < min) {
       min = dist;
       indice = j;
@@ -141,15 +141,15 @@ int GeodesicDistanceKernel::computeNearestGeodesicNeighbour(int i, const Mat& k_
   }
   if (dist_i)
     *dist_i = min;
-  return int(k_xi_x_sorted(indice,1));
+  return int(distances_xi_x_sorted(indice,1));
 }
 
 /////////////////////////////
 // computeShortestDistance //
 /////////////////////////////
-real GeodesicDistanceKernel::computeShortestDistance(int i, const Mat& k_xi_x_sorted) const {
+real GeodesicDistanceKernel::computeShortestDistance(int i, const Mat& distances_xi_x_sorted) const {
   static real result;
-  computeNearestGeodesicNeighbour(i, k_xi_x_sorted, &result);
+  computeNearestGeodesicNeighbour(i, distances_xi_x_sorted, &result);
   return result;
 }
 
@@ -157,14 +157,14 @@ real GeodesicDistanceKernel::computeShortestDistance(int i, const Mat& k_xi_x_so
 // evaluate //
 //////////////
 real GeodesicDistanceKernel::evaluate(const Vec& x1, const Vec& x2) const {
-  distance_kernel->computeNearestNeighbors(x1, k_xi_x_sorted1, knn);
-  distance_kernel->computeNearestNeighbors(x2, k_xi_x_sorted2, knn);
+  distance_kernel->computeNearestNeighbors(x1, dist_xi_x_sorted1, knn);
+  distance_kernel->computeNearestNeighbors(x2, dist_xi_x_sorted2, knn);
   real min = REAL_MAX;
   real dist;
   for (int j = 0; j < knn; j++) {
     for (int k = 0; k < knn; k++) {
-      dist = k_xi_x_sorted1(j,0) + k_xi_x_sorted2(k,0)
-        + geo_distances->get(int(k_xi_x_sorted1(j,1)), int(k_xi_x_sorted2(k,1)));
+      dist = dist_xi_x_sorted1(j,0) + dist_xi_x_sorted2(k,0)
+        + geo_distances->get(int(dist_xi_x_sorted1(j,1)), int(dist_xi_x_sorted2(k,1)));
       if (dist < min) {
         min = dist;
       }
@@ -198,11 +198,11 @@ real GeodesicDistanceKernel::evaluate_i_x(int i, const Vec& x, real squared_norm
 /////////////////////////////////
 // evaluate_i_x_from_distances //
 /////////////////////////////////
-real GeodesicDistanceKernel::evaluate_i_x_from_distances(int i, const Mat& k_xi_x_sorted) const {
+real GeodesicDistanceKernel::evaluate_i_x_from_distances(int i, const Mat& distances_xi_x_sorted) const {
   if (pow_distance) {
-    return square(computeShortestDistance(i, k_xi_x_sorted));
+    return square(computeShortestDistance(i, distances_xi_x_sorted));
   } else {
-    return computeShortestDistance(i, k_xi_x_sorted);
+    return computeShortestDistance(i, distances_xi_x_sorted);
   }
 }
 
@@ -211,12 +211,12 @@ real GeodesicDistanceKernel::evaluate_i_x_from_distances(int i, const Mat& k_xi_
 ////////////////////////
 real GeodesicDistanceKernel::evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x, bool first_time) const {
   if (first_time) {
-    distance_kernel->computeNearestNeighbors(x, k_xi_x_sorted, knn);
+    distance_kernel->computeNearestNeighbors(x, dist_xi_x_sorted, knn);
   }
   if (pow_distance) {
-    return square(computeShortestDistance(i, k_xi_x_sorted));
+    return square(computeShortestDistance(i, dist_xi_x_sorted));
   } else {
-    return computeShortestDistance(i, k_xi_x_sorted);
+    return computeShortestDistance(i, dist_xi_x_sorted);
   }
 }
 

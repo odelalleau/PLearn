@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GeodesicDistanceKernel.h,v 1.7 2004/07/22 19:09:28 tihocan Exp $ 
+   * $Id: GeodesicDistanceKernel.h,v 1.8 2004/07/23 13:43:58 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -57,7 +57,7 @@ private:
   typedef Kernel inherited;
 
   //! Used to store data and save memory allocation.
-  mutable Mat k_xi_x_sorted1, k_xi_x_sorted2, k_xi_x_sorted;
+  mutable Mat dist_xi_x_sorted1, dist_xi_x_sorted2, dist_xi_x_sorted;
   
 protected:
 
@@ -120,22 +120,24 @@ public:
   // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS.
   PLEARN_DECLARE_OBJECT(GeodesicDistanceKernel);
 
-  // **************************
+  // ************************
   // **** Kernel methods ****
-  // **************************
+  // ************************
 
   //! Return the index j of the data point which satisfies:
   //!   1. j is among the knn nearest neighbors of the point x from which was
-  //!      computed k_xi_x_sorted
+  //!      computed 'distances_xi_x_sorted'
   //!   2. it is such that dist(x,j) + geodesic_dist(j,x_i) is minimum
   //! If provided, the 'dist_i' parameter is filled with the geodesic distance
   //! from x to x_i.
-  int computeNearestGeodesicNeighbour(int i, const Mat& k_xi_x_sorted, real* dist_i = 0) const;
+  int computeNearestGeodesicNeighbour(int i, const Mat& distances_xi_x_sorted, real* dist_i = 0) const;
 
-  //! Return the shortest distance to i from a point x whose distance
-  //! to its knn nearest neighbors in the training set is given by
-  //! the matrix 'k_xi_x_sorted'.
-  real computeShortestDistance(int i, const Mat& k_xi_x_sorted) const;
+  //! Return the shortest (geodesic) distance to i from a point x whose
+  //! (non-geodesic) distance to its knn nearest neighbors in the training
+  //! set is given by the matrix 'distances_xi_x_sorted', whose first column
+  //! should contain the sorted distances, and whose second column should
+  //! contain the corresponding indices.
+  real computeShortestDistance(int i, const Mat& distances_xi_x_sorted) const;
 
   //! Compute K(x1,x2).
   virtual real evaluate(const Vec& x1, const Vec& x2) const;
@@ -147,8 +149,8 @@ public:
   virtual real evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x=-1, bool first_time = false) const;
 
   //! Evaluate K(x_i,x) where x is not given explicitly, but only by the
-  //! (sorted) distances to all training points.
-  virtual real evaluate_i_x_from_distances(int i, const Mat& k_xi_x_sorted) const; 
+  //! (sorted and non-geodesic) distances to all training points.
+  virtual real evaluate_i_x_from_distances(int i, const Mat& distances_xi_x_sorted) const; 
 
   //! Overridden to precompute inter-points geodesic distance.
   virtual void setDataForKernelMatrix(VMat the_data);
