@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.43 2004/11/23 21:38:24 tihocan Exp $ 
+   * $Id: PTester.cc,v 1.44 2004/12/20 21:01:24 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -215,15 +215,6 @@ void PTester::declareOptions(OptionList& ol)
 
 void PTester::build_()
 {
-  if(expdir!="")
-    {
-      if(pathexists(expdir))
-        PLERROR("Directory (or file) %s already exists. First move it out of the way.",expdir.c_str());
-      if(!force_mkdir(expdir))
-        PLERROR("In PTester Could not create experiment directory %s",expdir.c_str());
-      expdir = abspath(expdir);
-    }
-
   statnames_processed.resize(statnames.length());
   statnames_processed << statnames;
   if (statmask) {
@@ -306,14 +297,7 @@ void PTester::run()
 
 void PTester::setExperimentDirectory(const string& the_expdir) 
 { 
-  if(the_expdir=="")
-    expdir = "";
-  else
-    {
-      if(!force_mkdir(the_expdir))
-        PLERROR("In PTester::setExperimentDirectory Could not create experiment directory %s",the_expdir.c_str());
-      expdir = abspath(the_expdir);
-    }
+  expdir = the_expdir;
 }
 
 Vec PTester::perform(bool call_forget)
@@ -330,11 +314,17 @@ Vec PTester::perform(bool call_forget)
   {
 
   if(expdir!="")
-    {
-      // Save this tester description in the expdir
-      if(save_initial_tester)
-        PLearn::save(append_slash(expdir)+"tester.psave", *this);
-    }
+  {
+    if(pathexists(expdir))
+      PLERROR("Directory (or file) %s already exists. First move it out of the way.",expdir.c_str());
+    if(!force_mkdir(expdir))
+      PLERROR("In PTester Could not create experiment directory %s",expdir.c_str());
+    expdir = abspath(expdir);
+    
+    // Save this tester description in the expdir
+    if(save_initial_tester)
+      PLearn::save(append_slash(expdir)+"tester.psave", *this);
+  }
 
   splitter->setDataSet(dataset);
 
