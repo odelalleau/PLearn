@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.49 2005/01/20 21:40:23 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.50 2005/01/27 14:26:47 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -165,6 +165,7 @@
 // PDistribution
 #include <plearn_learners/distributions/ConditionalDensityNet.h>
 #include <plearn_learners/distributions/GaussianDistribution.h>
+#include <plearn_learners/distributions/GaussianContinuumDistribution.h>
 #include <plearn_learners/distributions/ManifoldParzen2.h>
 #include <plearn_learners/distributions/SpiralDistribution.h>
 #include <plearn_learners/distributions/UniformDistribution.h>
