@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.29 2005/02/18 14:15:45 tihocan Exp $
+   * $Id: pl_math.h,v 1.30 2005/03/31 16:21:23 lapalmej Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -161,6 +161,7 @@ inline real negative(real a) { if (a<0) return a; return 0; }
 
 #if defined(DARWIN)
 #define isnan(x) __isnan(x)
+#define isinf(x) __isinf(x)
 #endif
 
 //! Test float equality (correctly deals with 'nan' and 'inf' values).
