@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.h,v 1.3 2003/09/17 15:41:38 dorionc Exp $ 
+   * $Id: FuturesTrader.h,v 1.4 2003/09/22 18:34:21 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.h */
@@ -53,11 +53,6 @@ protected:
   // * protected options *
   // *********************
   
-  /*! 
-    The names of the assets contained in the train_set
-    as parsed by the assets(...) method. 
-  */
-  TVec<string> assets_names;
   int nb_assets;               //!< Simply assets_names.length()
   
   //! List of indices associated with the price fields in the VMat
@@ -81,8 +76,8 @@ protected:
   //Dans le stats collector mutable Vec test_Rt;                 //!< The return on each test period
   mutable Vec stop_loss_values;        //!< Will be used to keep track of the losses/gains
 
-  real& test_weights(int k, int t) const { return advisor->state(t, k); }
-  
+  real& test_weights(int k, int t) const { return advisor->state(t-horizon, k); }
+
 public:
   typedef SequentialLearner inherited;
 
@@ -162,15 +157,33 @@ public:
   */
   string sp500;
 
+  /*! 
+    The names of the assets contained in the train_set
+    as parsed by the assets(...) method. 
+    Default: TVec<string>()
+  */
+  TVec<string> assets_names;
+
+  /*!
+    If true, the assets_names will be deduced by parsing by the
+    assets_info method.
+    Default: false
+  */
+  bool deduce_assets_names;
+
+private:
+  bool build_complete;
+
   //**************
   // Methods     *   
   //**************
 
   //! This parses the train_set VMat to get the infos on the assets
   static void assets_info(const VMat& vmat, TVec<string>& names,
-                          bool the_first_asset_is_cash,  const string& risk_free_rate_,
-                          TVec<int>& price_indices,      const string& price_tag_,
-                          TVec<int>& tradable_indices,   const string& tradable_tag_);
+      bool the_first_asset_is_cash,  const string& risk_free_rate_,
+      TVec<int>& price_indices,      const string& price_tag_,
+      TVec<int>& tradable_indices,   const string& tradable_tag_,
+      bool deduce_assets_names_);
 
   //! Returns the price of the given asset at a given *TEST* time. 
   inline real price(int k, int t) const

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.cc,v 1.3 2003/09/17 15:41:38 dorionc Exp $ 
+   * $Id: FuturesTrader.cc,v 1.4 2003/09/22 18:34:21 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.cc */
@@ -54,7 +54,8 @@ FuturesTrader::FuturesTrader():
   additive_cost(0.0), multiplicative_cost(0.0),
   rebalancing_threshold(0.0), 
   stop_loss_active(false), stop_loss_horizon(-1), stop_loss_threshold(-INFINITY),
-  sp500("")
+  sp500(""), assets_names(TVec<string>()), deduce_assets_names(false),
+  build_complete(false)
 {}
 
 void FuturesTrader::setTrainingSet(VMat training_set, bool call_forget/*=true*/)
@@ -64,9 +65,10 @@ void FuturesTrader::setTrainingSet(VMat training_set, bool call_forget/*=true*/)
 }
 
 void FuturesTrader::assets_info(const VMat& vmat, TVec<string>& names,
-                                bool the_first_asset_is_cash,  const string& risk_free_rate_,
-                                TVec<int>& price_indices,      const string& price_tag_,
-                                TVec<int>& tradable_indices,   const string& tradable_tag_)
+    bool the_first_asset_is_cash,  const string& risk_free_rate_,
+    TVec<int>& price_indices,      const string& price_tag_,
+    TVec<int>& tradable_indices,   const string& tradable_tag_,
+    bool deduce_assets_names_)
 {
   if(vmat.isNull())
     return;
@@ -74,23 +76,26 @@ void FuturesTrader::assets_info(const VMat& vmat, TVec<string>& names,
   if(the_first_asset_is_cash)
     names.append("Cash");
 
-  Array<VMField> finfo = vmat->getFieldInfos();  
-  int pos=-1;
-  string current="";
-  string last=""; 
-  for(int info=0; info < finfo.size(); info++)
+  if (deduce_assets_names_)
   {
-    pos = finfo[info].name.find_first_of(":");
-    if( pos == -1 )
-      continue;
-    
-    current = finfo[info].name.substr(0, pos);
-    if(current == last)
-      continue;
-    
-    names.append(current);
-    last = current;
-  } 
+    Array<VMField> finfo = vmat->getFieldInfos();  
+    int pos=-1;
+    string current_name="";
+    for(int info=0; info < finfo.size(); info++)
+    {
+      pos = finfo[info].name.find_first_of(":");
+      if( pos == -1 )
+        continue;
+
+      current_name = finfo[info].name.substr(0, pos);
+      if (names.find(current_name) != -1) // already found
+        continue;
+
+      names.append(current_name);
+    }
+  }
+  else if (names.isEmpty())
+    PLERROR("The field name 'assets_names' has not been set and 'deduce_assets_names' is false");
 
   // Building a list of the indices needed to access the prices in the VMat
   price_indices.resize(names.length());
@@ -119,17 +124,19 @@ void FuturesTrader::build_()
     return;
   
   // Gestion of the list of names
-  if(assets_names.length() != 0)
+  if(assets_names.isNotEmpty())
   {
-    PLWARNING("Multiple call to FuturesTrader::build_");
-    assets_names.clear();
+    //PLWARNING("Multiple call to FuturesTrader::build_");
+    if (deduce_assets_names)
+      assets_names.clear();
     assets_price_indices.clear();
     assets_tradable_indices.clear();
   }
   assets_info(train_set, assets_names,
               first_asset_is_cash, risk_free_rate,
               assets_price_indices, price_tag,
-              assets_tradable_indices, tradable_tag);
+              assets_tradable_indices, tradable_tag,
+              deduce_assets_names);
   cout << assets_names << endl; //TMP
 
   nb_assets = assets_names.length();
@@ -151,11 +158,18 @@ void FuturesTrader::build_()
   }
   
   // Sync with the advisor
+  if (horizon!=advisor->horizon && advisor->horizon!=1)
+    PLERROR("Problem with the field name 'horizon'");
   advisor->horizon = horizon;
+  if (max_seq_len == -1)
+    PLERROR("The field name 'max_seq_len' has not been set");
   advisor->max_seq_len = max_seq_len;
   advisor->outputsize_ = nb_assets;
   advisor->build();
+
   forget();
+
+  build_complete = true;
 }
 
 void FuturesTrader::forget()
@@ -244,32 +258,42 @@ void FuturesTrader::declareOptions(OptionList& ol)
                 "If the user wants the test method to compute the model log-returns correlation\n"
                 "with the S&P500 index, he only needs to provide the sp500 field name in the vmat");
   
+  declareOption(ol, "assets_names", &FuturesTrader::assets_names,
+                OptionBase::buildoption,
+                "The name of all the assets");
+
+  declareOption(ol, "deduce_assets_names", &FuturesTrader::deduce_assets_names,
+                OptionBase::buildoption,
+                "Whether or not the assets names should be parse by the assets_info method");
+
   inherited::declareOptions(ol);
 }
 
 /*!
   The advisior->train method is assumed to compute and set the advisor->state up to the 
-   (last_call_train_t+horizon)^th row. If (last_train_t < last_call_train_t), the 
-   advisor should have copy state[last_train_t+horizon] to the 
+   (last_call_train_t)^th row. If (last_train_t < last_call_train_t), the 
+   advisor should have copy state[last_train_t] to the 
    (last_call_train_t - last_train_t) following lines
 */
 void FuturesTrader::train()
 {
+  if (!build_complete) build_();
+
   advisor->train();
   last_call_train_t = advisor->get_last_call_train_t();
   last_train_t = advisor->get_last_train_t();
   if(last_call_train_t != train_set.length()-1)
     PLERROR("The FuturesTrader::advisor did not set its last_call_train_t properly.");
-  if( is_missing( advisor->state(last_call_train_t+horizon, 0) ) )
+  if( is_missing( advisor->state(last_call_train_t, 0) ) )
     PLERROR("The advisior->train method is assumed to compute and set the advisor->state up to the\n\t" 
-            "(last_call_train_t+horizon)^th row. If (last_train_t < last_call_train_t), the\n\t"
-            "advisor should have copy state[last_train_t+horizon] to the\n\t"
+            "(last_call_train_t)^th row. If (last_train_t < last_call_train_t), the\n\t"
+            "advisor should have copy state[last_train_t] to the\n\t"
             "(last_call_train_t - last_train_t) following lines\n\t");
 }
 
 /*!
   The advisior->test method is assumed to compute and set the advisor->state up to its 
-   (last_test_t+horizon)^th row.
+   (last_test_t)^th row.
 */
 void FuturesTrader::test(VMat testset, PP<VecStatsCollector> test_stats,
                          VMat testoutputs/*=0*/, VMat testcosts/*=0*/) const
@@ -313,8 +337,8 @@ void FuturesTrader::test(VMat testset, PP<VecStatsCollector> test_stats,
   
   
   //  The advisor first start with last_test_t, takes positions 
-  //  w_{t+h} (where t=last_test_t) according to the information it is
-  //  provided. The advisor MUST store the positions in the row t+h of
+  //  w_t (where t=last_test_t) according to the information it is
+  //  provided. The advisor MUST store the positions in the row t of
   //  its state matrix. Afterwards, the returns on the w_t portfolio are 
   //  computed and managed. 
   //
@@ -335,10 +359,10 @@ void FuturesTrader::test(VMat testset, PP<VecStatsCollector> test_stats,
     //  before advisor goes forward
     // In the length position of the subMat, we use t+1 because we want the
     //  matrix to contain info at times 0, ..., t; these are on t+1 rows
-    advisor->test(testset.subMat(0, 0, t+1, testset.width()), test_stats, testoutputs, testcosts);
+    advisor->test(testset.subMatRows(0, t+1), test_stats, testoutputs, testcosts);
     if( is_missing(advisor->state(t, 0)) )
       PLERROR("The advisior->test method is assumed to compute and set the advisor->state up to its\n\t"
-              "(last_test_t+horizon)^th row.");
+              "(last_test_t)^th row.");
 
     // Clearing sums
     value_t = 0;
@@ -409,12 +433,6 @@ void FuturesTrader::test(VMat testset, PP<VecStatsCollector> test_stats,
 
 real FuturesTrader::delta(int k, int t) const
 {
-//OLD
-//   // For now, the initial testing portfolio is considered to be of weights 0
-//   real prev_wkt = 0.0;
-//   if(t > 0)
-//     prev_wkt = test_weights(k, t-1);
-
   // Should not be called on the cash
   if(first_asset_is_cash && k==0)
     PLERROR("*** INTERNAL *** call to delta(%d, %d) with first_asset_is_cash set as true", k, t);
@@ -424,11 +442,10 @@ real FuturesTrader::delta(int k, int t) const
   //  very first time that test is called... For now it is neglected... 
   real current_wkt = test_weights(k, t);
   
+  // We are sure that the test_weights(k, t+1) is available since the advisor did set it state field up to last_test_t, if horizon is at least 1.
   if( stop_loss(k, t) )
     return current_wkt;
-  
-  // We are sure that the test_weights(k, t+1) is available since the advisor did set it state field up to last_test_t+horizon, where horizon 
-  //  is at least 1.
+
   real delta_ = test_weights(k, t+1) - current_wkt;
   if(fabs(delta_) < rebalancing_threshold){
     test_weights(k, t+1) = current_wkt;             // Rebalancing isn't needed
@@ -451,10 +468,13 @@ bool FuturesTrader::stop_loss(int k, int t) const
   if(t-very_first_test_t+1 > stop_loss_horizon)
     stop_loss_values[k] -= absolute_return(k, t-stop_loss_horizon) * test_weights(k, t-stop_loss_horizon);    
   
-  // Here, if |test_weights(k, t)| < rebalancing_threshold , the effect will be conterbalanced
-  //  by the delta method: Is it a problem???
   if( stop_loss_values[k]/stop_loss_horizon < stop_loss_threshold )
-  { 
+  {
+    if(first_asset_is_cash){
+      // Since we didn't follow the recommendation of the advisor (sell or buy), the cash position 
+      //  will be affected. Didn't buy: delta_>0; didn't sell: delta_<0.
+      test_weights(0, t+1) += test_weights(k,t+1) * price(k, t); 
+    }
     test_weights(k, t+1) = 0.0;             // Selling or covering short sales.
     // Une autre question... Idealement il faudrait  avoir une facon de determiner pendant combien
     // de temps on n'echange plus sur un asset suite a un stop_loss..

@@ -68,7 +68,7 @@ void SequentialLearner::build_()
               "nTestCosts() returns 0 but errors will later be assumed to have nonzero width.");
     errors.resize(max_seq_len, nTestCosts());
     
-    state.resize(max_seq_len+horizon, outputsize());
+    state.resize(max_seq_len, outputsize());
     state.fill(MISSING_VALUE);
     //forget();
   }  
@@ -104,6 +104,7 @@ void SequentialLearner::forget()
 {
   if (predictions) predictions.fill(MISSING_VALUE);
   if (errors) errors.fill(MISSING_VALUE);
+  if (state) state.fill(MISSING_VALUE);
   last_train_t = -1;
   last_test_t = -1;
 }

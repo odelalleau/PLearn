@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.cc,v 1.11 2003/09/17 21:14:37 ducharme Exp $ 
+   * $Id: MountLucasIndex.cc,v 1.12 2003/09/22 18:34:21 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.cc */
@@ -166,11 +166,14 @@ void MountLucasIndex::train()
   {
     train_set->getExample(t, input, target, w);
     TrainTestCore(input);
+    state(t) << predictions(current_month);
+    last_train_t = t;
     if (pb) pb->update(t-start_t);
   }
-  last_train_t = train_set.length()-1;
+  last_call_train_t = train_set.length()-1;
   if (pb) delete pb;
 
+/*
   //index_value.resize(current_month,1);
   //mlm_index.resize(current_month,mlm_index.width());
   //saveAscii("MLMIndex.amat", mlm_index);
@@ -193,6 +196,7 @@ void MountLucasIndex::train()
   cout << "Average annual return (composed monthly) with transaction fees = " << exp(rf*12) << endl;
   real vf = sf2/ns - rf*rf;
   cout << "Sharpe Ratio of monthly log-returns with transaction fees = " << rf/sqrt(vf) << endl;
+*/
 }
 
 void MountLucasIndex::test(VMat testset, PP<VecStatsCollector> test_stats,
@@ -209,6 +213,7 @@ void MountLucasIndex::test(VMat testset, PP<VecStatsCollector> test_stats,
   {
     testset->getExample(t, input, target, w);
     TrainTestCore(input, testoutputs, testcosts);
+    state(t) << predictions(current_month);
     if (pb) pb->update(t-start_t);
   }
   last_test_t = testset.length()-1;
@@ -334,7 +339,6 @@ void MountLucasIndex::TrainTestCore(const Vec& input, VMat testoutputs, VMat tes
       tbill_return[current_month] = is_missing(risk_free_rate_return) ? tbill_return[current_month-1] : tbill_return[current_month-1]*(1.0+risk_free_rate_return);
     }
     errors(current_month,0) = index_value[current_month];
-    real mean_unit_asset_value = mean(unit_asset_value);
     real total_return_with_transaction_fees = 0;
     for (int i=0; i<nb_commodities; i++)
     {
