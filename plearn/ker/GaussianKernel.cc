@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianKernel.cc,v 1.8 2004/05/11 20:53:37 tihocan Exp $
+   * $Id: GaussianKernel.cc,v 1.9 2004/06/16 18:25:35 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -107,15 +107,6 @@ void GaussianKernel::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies
   deepCopyField(squarednorms,copies);
 }
 
-
-void GaussianKernel::setDataForKernelMatrix(VMat the_data)
-{ 
-  inherited::setDataForKernelMatrix(the_data);
-
-  squarednorms.resize(data.length());
-  for(int index=0; index<data.length(); index++)
-    squarednorms[index] = data->dot(index,index, data_inputsize);
-}
 
 void GaussianKernel::addDataForKernelMatrix(const Vec& newRow)
 {
@@ -231,6 +222,16 @@ real GaussianKernel::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x) c
   return evaluateFromDotAndSquaredNorm(squared_norm_of_x,data->dot(i,x),squarednorms[i]); 
 }
 
+////////////////////////////
+// setDataForKernelMatrix //
+////////////////////////////
+void GaussianKernel::setDataForKernelMatrix(VMat the_data)
+{ 
+  inherited::setDataForKernelMatrix(the_data);
+  squarednorms.resize(data.length());
+  for(int index=0; index<data.length(); index++)
+    squarednorms[index] = data->dot(index,index, data_inputsize);
+}
 
 ///////////////////
 // setParameters //
