@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.cc,v 1.9 2004/02/20 21:11:54 chrish42 Exp $
+   * $Id: Variable.cc,v 1.10 2004/02/24 22:34:51 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -208,7 +208,7 @@ void Variable::declareOptions(OptionList& ol)
                 "An (optional) name for the variable\n");
 
   declareOption(ol, "value", &Variable::matValue, OptionBase::learntoption, 
-                "Current value of the varable\n");
+                "Current value of the variable\n");
 
   /*
   declareOption(ol, "gradient", &Variable::matGradient, OptionBase::learntoption, 
