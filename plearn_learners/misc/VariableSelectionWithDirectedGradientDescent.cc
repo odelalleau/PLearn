@@ -307,7 +307,11 @@ void VariableSelectionWithDirectedGradientDescent::computeCostsFromOutputs(const
                                    const Vec& targetv, Vec& costsv) const
 {
   if (is_missing(outputv[0]))
-    return MISSING_VALUE;
+  {
+    costsv[0] = MISSING_VALUE;
+    return;
+  // ???  return MISSING_VALUE;
+  }
   // Note that the "2 * target - 1" operation is only here to transform a 0/1
   // target into -1/1.
   costsv[0] = -log(1.0 / (1.0 + exp(-(2.0 * targetv[0] - 1) * outputv[0])));;
