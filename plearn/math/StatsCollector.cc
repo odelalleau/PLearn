@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.5 2002/11/05 16:30:34 zouave Exp $
+   * $Id: StatsCollector.cc,v 1.6 2003/03/26 20:45:44 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -64,7 +64,7 @@ int sortIdComparator(const void* i1, const void* i2)
 }
 
 //! fix 'id' attribute of all StatCollectorCounts so that increasing ids correspond to increasing real values
-//! *** NOT TESTED YET
+//! *** NOT TESTED YET (Julien)
 void StatsCollector::sortIds()
 {
   PairRealSCCType* allreals= new PairRealSCCType[counts.size()];
@@ -172,7 +172,7 @@ void StatsCollector::update(real val)
       }
   }                           
 
-  RealMapping StatsCollector::getBinMapping(int discrete_mincount, int continuous_mincount) const
+  RealMapping StatsCollector::getBinMapping(int discrete_mincount, int continuous_mincount, real tolerance, TVec<int> * fcount) const
   {
     real mapto=0.;
     RealMapping mapping;
@@ -180,22 +180,38 @@ void StatsCollector::update(real val)
     map<real,StatsCollectorCounts>::const_iterator it = counts.begin();
     int nleft = counts.size()-1; // loop on all but last
 
-    int count = 0;
+    if(fcount)
+    {
+      (*fcount) = TVec<int>();
+      // ouch, assume discrete_mincount == continuous_mincount
+      fcount->resize(0,2*nnonmissing_ / discrete_mincount);
+      fcount->append(nmissing_);
+      fcount->append(0);
+    }
+
+    int count = 0,count2=0;
     real low = min_;
     real high = min_;
     bool low_has_been_appended = false;
+    ProgressBar pb("Computing PseudoQ Mapping...",counts.size()-1);
+
     while(nleft--)
       {
         high = it->first;
+        pb(counts.size()-1-nleft);
         count += it->second.nbelow;
+        count2 += it->second.nbelow;
         // cerr << "it->first:"<<it->first<<" nbelow:"<<it->second.nbelow<<" n:"<<it->second.n<<endl;
         if(count>=continuous_mincount)
           {
             // append continuous range
             mapping.addMapping(RealRange(low_has_been_appended?']':'[',low, high, '['), mapto++);
+            if(fcount)
+              fcount->append(count);
             low = high;
             low_has_been_appended = false;
             count = 0;
+
           }
 
         if(it->second.n >= discrete_mincount)
@@ -203,16 +219,24 @@ void StatsCollector::update(real val)
             if(count>0) // then append the previous continuous range
               {
                 mapping.addMapping(RealRange(low_has_been_appended?']':'[',low, high, '['), mapto++);
+                if(fcount)
+                  fcount->append(count);
                 count = 0;
               }
             // append discrete point
             mapping.addMapping(RealRange('[',high,high,']'), mapto++);
+            if(fcount)
+              fcount->append(it->second.n + count);
+            count2+=it->second.n;
+            count=0;
             low = high;
             low_has_been_appended = true;
           }
         else
-          count += it->second.n;
-
+        {
+            count2+=it->second.n;      
+            count += it->second.n;
+        }
         ++it;
       }
 
@@ -221,30 +245,63 @@ void StatsCollector::update(real val)
 
     // make sure we include max_
     pair<RealRange, real> m = mapping.lastMapping();
-    if(m.first.low == m.first.high)
+
+    // cnt is the number of elements that would be in the last bin
+    int cnt = nnonmissing_ - count2 + count;
+    
+    // If the bin we're about to add is short of less then tolerance*100% of continuous_mincount elements, 
+    // OR if the last we added is a discrete point, we append it 
+
+    if( ((real)cnt/(real)continuous_mincount)>(1.-tolerance) || (m.first.low == m.first.high))
+    {
+      // don't join last bin with last-but-one bin
+      mapping.addMapping(RealRange('[',m.first.high,max_,']'), mapto++);
+      if(fcount)
+        fcount->append(cnt);
+    }
+    else
+    {
+      // otherwise, we can join it with the previous
+      mapping.removeMapping(m.first);
+      mapping.addMapping(RealRange(m.first.leftbracket, m.first.low, max_, ']'), m.second);
+      if(fcount)
       {
-        // we appended a single point, let's append a range until max
-        mapping.addMapping(RealRange(']',m.first.high,max_,']'), mapto++);
+        int v =  fcount->back();
+        fcount->pop_back();
+        fcount->append(v+cnt);
       }
-    else // we appended a real range, let's extend it until max_
-      {
-	mapping.removeMapping(m.first);
-	mapping.addMapping(RealRange(m.first.leftbracket, m.first.low, max_, ']'), m.second);
-	/*
-        m.first.high = max_;
-        m.first.rightbracket = ']';
-	*/
-      }      
+    }   
 
     return mapping;
   }
 
-  RealMapping StatsCollector::getAllValuesMapping() const
+
+  RealMapping StatsCollector::getAllValuesMapping(TVec<int> * fcount) const
   {
     RealMapping mapping;
     int i=0;
+    if(fcount)
+    {
+      (*fcount) = TVec<int>();
+      fcount->resize(0,counts.size()+2);
+      fcount->append(nmissing_);
+      fcount->append(0);
+    }
+
+    int count=0;
+    
     for(map<real,StatsCollectorCounts>::const_iterator it = counts.begin();it!=counts.end();++it,++i)
-      mapping.addMapping(RealRange('[',it->first,it->first,']'),i);
+    {
+      if(it->first!=FLT_MAX)
+        mapping.addMapping(RealRange('[',it->first,it->first,']'),i);
+      if(fcount)
+      {
+        count+=it->second.n;       
+        fcount->append(it->second.n);
+      }
+    }
+    if(fcount)
+      (*fcount)[1] = nnonmissing_ - count;
     return mapping;
   }    
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.6 2002/10/15 17:30:38 jkeable Exp $
+   * $Id: StatsCollector.h,v 1.7 2003/03/26 20:45:45 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -135,6 +135,7 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     void forget();
 
     map<real,StatsCollectorCounts> * getCounts(){return &counts;}
+    int getMaxNValues(){return maxnvalues;}
 
     //! returns a Mat with x,y coordinates for plotting the cdf
     //! only if normalized will the cdf go to 1, otherwise it will go to nsamples
@@ -147,9 +148,11 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     //! returns a mapping that maps values to a bin number (from 0 to mapping.length()-1)
     //! The mapping will leave missing values as MISSING_VALUE
     //! And values outside the [min, max] range will be mapped to -1
-    RealMapping getBinMapping(int discrete_mincount, int continuous_mincount) const;
+    //! Tolerance is used to test wheter we join the two last bins or not. If last be is short of more then tolerance*100%
+    //! of continuous_mincount elements, we join it with the previous bin.
+    RealMapping getBinMapping(int discrete_mincount, int continuous_mincount, real tolerance=.1, TVec<int>* fcount=NULL) const;
 
-    RealMapping getAllValuesMapping() const;
+    RealMapping getAllValuesMapping(TVec<int> * fcount=NULL) const;
 
     virtual void oldwrite(ostream& out) const;
     virtual void oldread(istream& in);
