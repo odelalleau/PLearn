@@ -26,8 +26,8 @@ protected:
   bool rand_syn;
   TVec<TVec<pair<int, real> > > word_given_sense_priors;
   WordNetOntology *wno;
-  int my_current_row_index;
-  Vec my_current_row;
+  mutable int my_current_row_index;
+  mutable Vec my_current_row;
 
 public:
 
@@ -39,7 +39,7 @@ public:
   // initializes all fields to reasonable default values.
   TextSenseSequenceVMatrix();
   TextSenseSequenceVMatrix(VMat that_dvm, int that_window_size, TVec<int> that_res_pos = TVec<int>(0), bool that_rand_syn = false, WordNetOntology *that_wno = NULL)
-    :inherited(that_dvm->length(), 3*(that_window_size+1)),dvm(that_dvm),window_size(that_window_size), is_supervised_data(dvm->width()==3), res_pos(that_res_pos), rand_syn(that_rand_syn), wno(that_wno)
+    :inherited(that_dvm->length(), 3*(that_window_size+1)),dvm(that_dvm),window_size(that_window_size), is_supervised_data(dvm->width()==3), res_pos(that_res_pos), rand_syn(that_rand_syn), wno(that_wno), my_current_row_index(-3*(that_window_size+1)), my_current_row(3*(that_window_size+1))
   /* ### Initialise all fields to their default value */
 {
   build_();
