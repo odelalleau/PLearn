@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.40 2005/02/04 15:08:59 tihocan Exp $
+   * $Id: Object.cc,v 1.41 2005/02/23 21:10:13 chapados Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -128,22 +128,34 @@ void Object::readOptionVal(PStream &in, const string &optionname)
       size_t lb_pos = optionname.find('[');
       size_t rb_pos = optionname.find(']');
       size_t dot_pos = optionname.find('.');
-      if (rb_pos != string::npos) 
-        {
-          if (lb_pos == string::npos)
-            PLERROR("Object::readOptionVal() - Unmatched brackets");
-          string optname = optionname.substr(0, lb_pos);
-          if (dot_pos == string::npos || rb_pos < dot_pos) 
+      if (rb_pos != string::npos) {
+        if (lb_pos == string::npos)
+          PLERROR("Object::readOptionVal() - Unmatched brackets");
+        string optname = optionname.substr(0, lb_pos);
+
+        // Found no dot, or a right bracket before a dot
+        if (dot_pos == string::npos || rb_pos < dot_pos) {
+          string index = optionname.substr(lb_pos + 1, rb_pos - lb_pos - 1);
+          for (OptionList::iterator it = options.begin(); it != options.end(); ++it)
+            if ((*it)->optionname() == optname) 
             {
-              int i = toint(optionname.substr(lb_pos + 1, rb_pos - lb_pos - 1));
-              for (OptionList::iterator it = options.begin(); it != options.end(); ++it)
-                if ((*it)->optionname() == optname) 
-                  {
-                    (*it)->getIndexedObject(this, i)->readOptionVal(in, optionname.substr(rb_pos + 2));
-                    return;
-                  }
+              // There are two cases here: either there is a dot located
+              // immediately after the right bracket, or there is no dot.
+              // If there is a dot, the option HAS to be an Object
+              if (dot_pos != string::npos && dot_pos == rb_pos+1) {
+                int i = toint(index);
+                (*it)->getIndexedObject(this, i)->readOptionVal(
+                  in, optionname.substr(dot_pos + 1));
+              }
+              else if (dot_pos == string::npos)
+                (*it)->readIntoIndex(this, in, index);
+              else
+                PLERROR("Object::readOptionVal() - unknown option format '%s'",
+                        optionname.c_str());
+              return;
             }
-        } 
+        }
+      }
       else if (lb_pos != string::npos)
         PLERROR("Object::readOptionVal() - Unmatched brackets");
 
@@ -187,19 +199,34 @@ Object::writeOptionVal(PStream &out, const string &optionname) const
     size_t rb_pos = optionname.find(']');
     size_t dot_pos = optionname.find('.');
     if (rb_pos != string::npos) {
-        if (lb_pos == string::npos)
-            PLERROR("Object::writeOptionVal() - Unmatched brackets");
-        string optname = optionname.substr(0, lb_pos);
-        if (dot_pos == string::npos || rb_pos < dot_pos) {
-            int i = toint(optionname.substr(lb_pos + 1, rb_pos - lb_pos - 1));
-            for (OptionList::iterator it = options.begin(); it != options.end(); ++it)
-                if ((*it)->optionname() == optname) {
-                    (*it)->getIndexedObject(this, i)->writeOptionVal(out, optionname.substr(rb_pos + 2));
-                    return;
-                }
-        }
-    } else if (lb_pos != string::npos)
+      if (lb_pos == string::npos)
         PLERROR("Object::writeOptionVal() - Unmatched brackets");
+      string optname = optionname.substr(0, lb_pos);
+
+      // Found no dot, or a right bracket before a dot
+      if (dot_pos == string::npos || rb_pos < dot_pos) {
+        string index = optionname.substr(lb_pos + 1, rb_pos - lb_pos - 1);
+        for (OptionList::iterator it = options.begin(); it != options.end(); ++it)
+          if ((*it)->optionname() == optname) {
+            // There are two cases here: either there is a dot located
+            // immediately after the right bracket, or there is no dot.  If
+            // there is a dot, the option HAS to be an Object
+            if (dot_pos != string::npos && dot_pos == rb_pos+1) {
+              int i = toint(index);
+              (*it)->getIndexedObject(this, i)->writeOptionVal(
+                out, optionname.substr(dot_pos + 1));
+            }
+            else if (dot_pos == string::npos)
+              (*it)->writeAtIndex(this, out, index);
+            else
+              PLERROR("Object::writeOptionVal() - unknown option format '%s'",
+                      optionname.c_str());
+            return;
+          }
+      }
+    }
+    else if (lb_pos != string::npos)
+      PLERROR("Object::writeOptionVal() - Unmatched brackets");
 
     // No brackets, look for a dot
     if (dot_pos != string::npos) {
