@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FinancePreprocVMatrix.h,v 1.2 2003/09/04 14:45:54 ducharme Exp $ 
+   * $Id: FinancePreprocVMatrix.h,v 1.3 2003/09/23 21:06:53 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file FinancePreprocVMatrix.h */
@@ -56,19 +56,23 @@ public:
   bool add_tradable; //! do we include the information telling if this day is tradable or not
   bool add_last_day_of_month; //! do we include the information about the last tradable day of the month
   bool add_moving_average; //! do we include the moving average statistics on the price_tag indexes
+  bool add_rollover_info; //! add a column with '1' when the rollover occur (new expiration date)
   int min_volume_threshold; //! tradable = 1 if volume>min_volume_threshold
   TVec<string> prices_tag; //! all the price tags on which we want to compute the moving average (e.g. close:level)
   TVec<int> moving_average_window; //! the window size of the moving average
   string volume_tag; //! "volume" by default
   string date_tag; //! "Date" by default.  Only used if add_last_day_of_month==true
+  string expiration_tag; //! "expiration-date" by default.  Only used if add_rollover_info==true
 
 protected:
 
   TVec<int> volume_index; //! the indexes (in the vmat) of all the volume columns
   TVec<int> price_index; //! the indexes of all the prices on which we want to compute some stats
-  Vec row_buffer; //! a row buffer for the getRow method
+  TVec<int> expiration_index; //! the index of the expiration-date (related to the expiration_tag)
   Vec last_day_of_month_index; //! the index of all the last tradable day of the month, base on the date column of the underlying matrix
   int max_moving_average_window; //! the maximum value of moving_average_window
+  TVec< TVec<int> > rollover_date; //! the position (date) of all rollover
+  Vec row_buffer; //! a row buffer for the getRow method
 
 public:
 
@@ -83,11 +87,12 @@ public:
   //! Simple constructor: takes as input only the underlying matrix,
   //! the number of assets and the threshold on the volume.
   FinancePreprocVMatrix(VMat vm, TVec<string> the_asset_names,
-      bool add_tradable_info=true,
-      bool add_last_day=false, bool add_moving_average_stats=false,
+      bool add_tradable_info=true, bool add_last_day=false,
+      bool add_moving_average_stats=false, bool add_roll_over_info=false,
       int threshold=20, TVec<string> the_price_tags=TVec<string>(),
       TVec<int> moving_average_window_length=TVec<int>(),
-      string the_volume_tag="volume:level", string the_date_tag="Date");
+      string the_volume_tag="volume:level", string the_date_tag="Date",
+      string the_expiration_tag="expiration-date");
 
   // ******************
   // * Object methods *
@@ -107,7 +112,6 @@ protected:
 
 public:
   virtual void getRow(int i, Vec v) const;
-  //virtual real get(int i, int j) const;
 
   // simply calls inherited::build() then build_() 
   virtual void build();

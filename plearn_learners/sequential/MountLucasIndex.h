@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.h,v 1.8 2003/09/17 21:14:37 ducharme Exp $ 
+   * $Id: MountLucasIndex.h,v 1.9 2003/09/23 21:07:02 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.h */
@@ -93,7 +93,7 @@ class MountLucasIndex: public SequentialLearner
     void build_();
 
     //! The core implementation of the train and test methods
-    void TrainTestCore(const Vec& input, VMat testoutputs=0, VMat testcosts=0) const;
+    void TrainTestCore(const Vec& input, int t, VMat testoutputs=0, VMat testcosts=0) const;
 
   protected:
     //! Declare this class' options

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FinancePreprocVMatrix.cc,v 1.2 2003/09/04 14:45:54 ducharme Exp $ 
+   * $Id: FinancePreprocVMatrix.cc,v 1.3 2003/09/23 21:06:53 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file FinancePreprocVMatrix.cc */
@@ -47,21 +47,23 @@ using namespace std;
 
 FinancePreprocVMatrix::FinancePreprocVMatrix()
   :inherited(), add_tradable(false), add_last_day_of_month(false),
-  add_moving_average(false)
+add_moving_average(false), add_rollover_info(false)
 {}
 
 FinancePreprocVMatrix::FinancePreprocVMatrix(VMat vm, TVec<string> the_asset_names,
     bool add_tradable_info, bool add_last_day, bool add_moving_average_stats,
-    int threshold, TVec<string> the_price_tags,
+    bool add_roll_over_info, int threshold, TVec<string> the_price_tags,
     TVec<int> moving_average_window_length,
-    string the_volume_tag, string the_date_tag)
-  :inherited(vm->length(), vm->width()+(add_tradable_info?the_asset_names.size():0) + (add_last_day?1:0) + (add_moving_average_stats?the_asset_names.size()*the_price_tags.size()*moving_average_window_length.size():0)),
+    string the_volume_tag, string the_date_tag, string the_expiration_tag)
+  :inherited(vm->length(), vm->width()+(add_tradable_info?the_asset_names.size():0) + (add_last_day?1:0) + (add_moving_average_stats?the_asset_names.size()*the_price_tags.size()*moving_average_window_length.size():0)+(add_roll_over_info?the_asset_names.size():0)),
    underlying(vm), asset_name(the_asset_names),
    add_tradable(add_tradable_info), add_last_day_of_month(add_last_day),
    add_moving_average(add_moving_average_stats),
+   add_rollover_info(add_roll_over_info),
    min_volume_threshold(threshold), prices_tag(the_price_tags),
    moving_average_window(moving_average_window_length),
    volume_tag(the_volume_tag), date_tag(the_date_tag),
+   expiration_tag(the_expiration_tag), rollover_date(asset_name.size()),
    row_buffer(vm->width())
 {
   build();
@@ -109,35 +111,20 @@ void FinancePreprocVMatrix::getRow(int i, Vec v) const
         {
           int start = MAX(prices.length()-moving_average_window[l], 0);
           int len = prices.length() - start;
-          v[pos++] = mean(prices.subVec(start,len));
+          v[pos++] = mean_with_missing(prices.subVec(start,len));
         }
       }
     }
   }
-}
 
-/*
-real FinancePreprocVMatrix::get(int i, int j) const
-{
-  if (j < underlying.width())
-    return underlying->get(i,j);
-  else if (j < underlying.width()+name_col.size())
+  if (add_rollover_info)
   {
-    pair<string,int> this_name_col = name_col[j - underlying.width()];
-    real volume = underlying->get(i, this_name_col.second);
-    if (!is_missing(volume) && (int)volume>=min_volume_threshold)
-      return 1.0;
-    else
-      return 0.0;
-  }
-  else
-  {
-    if (!add_last_day_of_month)
-      PLERROR("Out of bound!");
-    return last_day_of_month_index.contains(i) ? 1.0 : 0.0;
+    for (int k=0; k<asset_name.size(); ++k, ++pos)
+    {
+      v[pos] = (rollover_date[k].find(i)==-1 ? 0.0 : 1.0);
+    }
   }
 }
-*/
 
 void FinancePreprocVMatrix::declareOptions(OptionList& ol)
 {
@@ -153,6 +140,9 @@ void FinancePreprocVMatrix::declareOptions(OptionList& ol)
   declareOption(ol, "add_moving_average", &FinancePreprocVMatrix::add_moving_average, OptionBase::buildoption,
                 "Do we include the moving average statistics on the price_tag indexes.");
 
+  declareOption(ol, "add_rollover_info", &FinancePreprocVMatrix::add_rollover_info, OptionBase::buildoption,
+                "Do we include the boolean information on whether or not this is a new time series (new expiration date).");
+
   declareOption(ol, "min_volume_threshold", &FinancePreprocVMatrix::min_volume_threshold, OptionBase::buildoption,
                 "The threshold saying if the asset is tradable or not.");
 
@@ -167,6 +157,9 @@ void FinancePreprocVMatrix::declareOptions(OptionList& ol)
 
   declareOption(ol, "date_tag", &FinancePreprocVMatrix::date_tag, OptionBase::buildoption,
                 "The fieldInfo name of the date column.");
+
+  declareOption(ol, "expiration_tag", &FinancePreprocVMatrix::expiration_tag, OptionBase::buildoption,
+                "The fieldInfo name of the expiration-date column.");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -212,6 +205,15 @@ void FinancePreprocVMatrix::setVMFields()
           declareField(pos++, moving_average_name_col, VMField::DiscrGeneral);
         }
       }
+    }
+  }
+
+  if (add_rollover_info)
+  {
+    for (int i=0; i<asset_name.size(); ++i)
+    {
+      string name = asset_name[i]+":rollover";
+      declareField(pos++, name, VMField::DiscrGeneral);
     }
   }
 }
@@ -266,6 +268,29 @@ void FinancePreprocVMatrix::build_()
     }
   }
 
+  if (add_rollover_info)
+  {
+    expiration_index.resize(nb_assets);
+    for (int i=0; i<nb_assets; i++)
+    {
+      string expiration_name_col = asset_name[i]+":"+expiration_tag;
+      expiration_index[i] = underlying->fieldIndex(expiration_name_col);
+
+      rollover_date[i].resize(0);
+      real last_expiration_date = underlying->get(0,expiration_index[i]);
+      for (int j=1; j<underlying.length(); j++)
+      {
+        real expiration_date = underlying->get(j,expiration_index[i]);
+        if (!is_missing(expiration_date) && expiration_date!=last_expiration_date)
+        {
+          if (!is_missing(last_expiration_date))
+            rollover_date[i].append(j);
+          last_expiration_date = expiration_date;
+        }
+      }
+    }
+  }
+
   setVMFields();
   saveFieldInfos();
 }
@@ -286,7 +311,8 @@ void FinancePreprocVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>&
   deepCopyField(asset_name, copies);
   deepCopyField(volume_index, copies);
   deepCopyField(price_index, copies);
-  deepCopyField(last_day_of_month_index, copies);
+  deepCopyField(price_index, copies);
+  deepCopyField(expiration_index, copies);
 }
 
 %> // end of namespace PLearn

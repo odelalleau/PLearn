@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.cc,v 1.12 2003/09/22 18:34:21 ducharme Exp $ 
+   * $Id: MountLucasIndex.cc,v 1.13 2003/09/23 21:07:02 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.cc */
@@ -165,8 +165,7 @@ void MountLucasIndex::train()
   for (int t=start_t; t<train_set.length(); t++)
   {
     train_set->getExample(t, input, target, w);
-    TrainTestCore(input);
-    state(t) << predictions(current_month);
+    TrainTestCore(input, t);
     last_train_t = t;
     if (pb) pb->update(t-start_t);
   }
@@ -212,8 +211,7 @@ void MountLucasIndex::test(VMat testset, PP<VecStatsCollector> test_stats,
   for (int t=start_t; t<testset.length(); t++)
   {
     testset->getExample(t, input, target, w);
-    TrainTestCore(input, testoutputs, testcosts);
-    state(t) << predictions(current_month);
+    TrainTestCore(input, t, testoutputs, testcosts);
     if (pb) pb->update(t-start_t);
   }
   last_test_t = testset.length()-1;
@@ -233,7 +231,6 @@ void MountLucasIndex::test(VMat testset, PP<VecStatsCollector> test_stats,
   //tbill_return.resize(current_month);
   //saveAscii("TBill_return.avec", tbill_return);
   //cout << "Rendement du TBill = " << exp(log(tbill_return[current_month-1]/tbill_return[17])/((current_month-17)/12.0)) << endl;
-*/
 
   real r = s/ns;
   real v = s2/ns - r*r;
@@ -243,9 +240,10 @@ void MountLucasIndex::test(VMat testset, PP<VecStatsCollector> test_stats,
   cout << "Average annual return (composed monthly) with transaction fees = " << exp(rf*12) << endl;
   real vf = sf2/ns - rf*rf;
   cout << "Sharpe Ratio of monthly log-returns with transaction fees = " << rf/sqrt(vf) << endl;
+*/
 }
 
-void MountLucasIndex::TrainTestCore(const Vec& input, VMat testoutputs, VMat testcosts) const
+void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, VMat testcosts) const
 {
   bool is_last_day_of_month = bool(input[last_day_of_month_index]);
   Vec price = input(commodity_price_index);
@@ -367,6 +365,7 @@ void MountLucasIndex::TrainTestCore(const Vec& input, VMat testoutputs, VMat tes
     }
     if (testoutputs) testoutputs->appendRow(predictions(current_month));
     if (testcosts) testcosts->appendRow(errors(current_month));
+    state(t) << predictions(current_month);
     ++current_month;
     
     // at the end of the year, choose which commodity will be included in the index the next year
@@ -379,6 +378,8 @@ void MountLucasIndex::TrainTestCore(const Vec& input, VMat testoutputs, VMat tes
       }
     }
   }
+  else
+    state(t) << predictions(MAX(0,current_month-1));
 }
 
 bool MountLucasIndex::next_position(int pos, const Mat& unit_asset_value_) const
