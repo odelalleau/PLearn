@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.h,v 1.18 2003/08/18 21:39:57 jauvinc Exp $
+   * $Id: WordNetOntology.h,v 1.19 2003/10/14 14:35:35 larocheh Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -117,7 +117,7 @@ bool isDigit(char c);
 bool isAlpha(char c);
 bool isLegalPunct(char c);
 char* cstr(string& s);
-void removeDelimiters(string& s, char delim, char replace);
+void removeDelimiters(string& s, string delim, string replace);
 bool startsWith(string& base, string s);
 void replaceChars(string& str, string char_to_replace, string replacing_char);
 
@@ -166,6 +166,8 @@ protected:
   map<int, Set> word_to_high_level_senses;
   map<pair<int, int>, int> word_sense_to_unique_id;
   map<int, Set> word_to_under_target_level_high_level_senses; // BIG HACK!!!
+  map<string,int> sense_key_to_ss_id;
+  map<pair<int,int>, string> ws_id_to_sense_key;
 
   int word_index; // unique id for words
   int synset_index; // unique id for synsets
@@ -219,13 +221,25 @@ public:
                   bool pre_compute_descendants,
                   int word_coverage_threshold = -1);
 
+  WordNetOntology(string voc_file,                         // init the system and load an ontology, 
+                  string synset_file,                      // given a voc file, a synset file and an ontology file
+                  string ontology_file,
+                  string sense_key_file,
+                  bool pre_compute_ancestors,
+                  bool pre_compute_descendants,
+                  int word_coverage_threshold = -1);
+
   void save(string synset_file, string ontology_file);
   void save(string voc_file);
+  void save(string synset_file, string ontology_file, string sense_key_file);
   void load(string voc_file, string synset_file, string ontology_file);
+  void load(string voc_file, string synset_file, string ontology_file, string sense_key_file);
   void savePredominentSyntacticClasses(string file);
   void loadPredominentSyntacticClasses(string file);
 
   // main access methods
+  string getSenseKey(int word_id, int ss_id);
+  int getSynsetIDForSenseKey(string sense_key);
   int getWordId(string word);
   string getWord(int id);
   int getWordSenseIdForWnsn(string word, int wn_pos_type, int wnsn);
