@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: QuadraticUtilityCostFunction.h,v 1.3 2004/04/05 19:15:27 tihocan Exp $
+   * $Id: QuadraticUtilityCostFunction.h,v 1.4 2004/04/07 23:17:33 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,34 +54,33 @@ using namespace std;
 */
 class QuadraticUtilityCostFunction : public Kernel
 {
-
-private:
-
   typedef Kernel inherited;
 		
-  protected:
+protected:
     real risk_aversion;
     ProfitFunc profit_function;
+public:
     QuadraticUtilityCostFunction(){}
-  public:
     QuadraticUtilityCostFunction(real the_risk_aversion, CostFunc the_profit)
       : risk_aversion(the_risk_aversion), profit_function(the_profit)
     {}
 
     PLEARN_DECLARE_OBJECT(QuadraticUtilityCostFunction);
     
-    virtual string info() const;
+    virtual string info() const
+        { return "quadratic_risk"; }
+
     virtual real evaluate(const Vec& output, const Vec& target) const; 
-    //virtual void readOptionVal(istream& in, const string& optionname);
-    static void declareOptions(OptionList &ol);
-    virtual void write(ostream& out) const;
-    virtual void oldread(istream& in);
+
+protected:
 /*!       Recognized option: "risk_aversion".
       ALSO: options of the form "profit_function.XXX" are passed to the
       profit_function kernel as "XXX".
 */
-    
+    static void declareOptions(OptionList &ol);    
 };
+
+DECLARE_OBJECT_PTR(QuadraticUtilityCostFunction);
 
 inline CostFunc quadratic_risk(real risk_aversion, CostFunc profit_function)
 {

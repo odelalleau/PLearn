@@ -36,26 +36,16 @@
 
 
 /* *******************************************************      
-   * $Id: QuadraticUtilityCostFunction.cc,v 1.3 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: QuadraticUtilityCostFunction.cc,v 1.4 2004/04/07 23:17:33 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "QuadraticUtilityCostFunction.h"
 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
-
 PLEARN_IMPLEMENT_OBJECT(QuadraticUtilityCostFunction, "ONE LINE DESCR", "NO HELP");
-
-string QuadraticUtilityCostFunction::info() const { return "quadratic_risk"; }
-
 
 real QuadraticUtilityCostFunction::evaluate(const Vec& output, const Vec& target) const
 {
@@ -63,42 +53,13 @@ real QuadraticUtilityCostFunction::evaluate(const Vec& output, const Vec& target
   return  -profit + risk_aversion*profit*profit;
 }
 
-
-void QuadraticUtilityCostFunction::write(ostream& out) const
-{
-  writeHeader(out,"QuadraticUtilityCostFunction");
-  writeField(out,"risk_aversion",risk_aversion);
-  writeField(out,"profit_function",profit_function);
-  writeFooter(out,"QuadraticUtilityCostFunction");
-}
-
-void QuadraticUtilityCostFunction::oldread(istream& in)
-{
-  readHeader(in,"QuadraticUtilityCostFunction");
-  readField(in,"risk_aversion",risk_aversion);
-  readField(in,"profit_function",profit_function);
-  readFooter(in,"QuadraticUtilityCostFunction");
-}
-
-
-// recognized option is "risk_aversion"
-/*
-void QuadraticUtilityCostFunction::readOptionVal(istream& in, const string& optionname)
-{
-  if (optionname=="risk_aversion")
-    PLearn::read(in,risk_aversion);
-  else
-    inherited::readOptionVal(in, optionname);  
-}
-*/
 void QuadraticUtilityCostFunction::declareOptions(OptionList &ol)
 {
     declareOption(ol, "risk_aversion", &QuadraticUtilityCostFunction::risk_aversion, OptionBase::buildoption,
                   "TODO: Some comments");
+    declareOption(ol, "profit_function", &QuadraticUtilityCostFunction::profit_function, OptionBase::buildoption, "");
     inherited::declareOptions(ol);
 }
-
-
 
 } // end of namespace PLearn
 
