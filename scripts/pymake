@@ -496,7 +496,7 @@ if create_so and create_dll:
 #if options_choices[0][0] == 'icc'
 if 'icc' in optionargs:
     usingIntelCompiler = 1
-    optionargs.remove('icc')
+    #optionargs.remove('icc')
 else:
     usingIntelCompiler = 0
 
