@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: AdaptGradientOptimizer.cc,v 1.2 2003/05/20 15:40:38 tihocan Exp $
+   * $Id: AdaptGradientOptimizer.cc,v 1.3 2003/05/21 20:02:25 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -163,6 +163,9 @@ void AdaptGradientOptimizer::adaptLearningRateALAP1(
 }
 
 static bool first_time = true;
+static Vec old_mean_gradient;
+static VecStatsCollector store_gradient;
+// TODO Remove later (?)
 
 ////////////////////////////
 // adaptLearningRateBasic //
@@ -171,13 +174,14 @@ void AdaptGradientOptimizer::adaptLearningRateBasic(
     Vec learning_rates,
     Vec old_params,
     Vec old_evol) {
-/*  // TODO Remove later
-  static VMat lrates;
+  // TODO Remove later
+//  static VMat lrates;
   if (first_time) {
     first_time = false;
-    lrates = new AsciiVMatrix("lrates.amat", params.nelems());
+    old_mean_gradient.resize(params.nelems());
+ //   lrates = new AsciiVMatrix("lrates.amat", params.nelems());
   }
-  lrates->appendRow(learning_rates); */
+//  lrates->appendRow(learning_rates);
   Var* array = params->data();
   int j = 0;
   int k;
@@ -189,15 +193,52 @@ void AdaptGradientOptimizer::adaptLearningRateBasic(
   real lr_moy = 0;
   real lr_max = 0;
   real lr_mean = 0;
+  Vec tmp_grad_stuff(params.nelems());
+  tmp_grad_stuff << old_mean_gradient;
+//  old_mean_gradient << store_gradient.getMean();
+//  store_gradient.forget();
   for (int i=0; i<params.size(); i++) {
     k = j;
     for (; j<k+array[i]->nelems(); j++) {
       u = old_evol[j];
-      old_evol[j] = array[i]->valuedata[j-k] - old_params[j];
+ /*     real x2 = array[i]->valuedata[j-k]; // the new parameter
+      real x1 = old_params[j];            // the old parameter
+      real g2 = old_mean_gradient[j];     // the new gradient
+      real g1 = tmp_grad_stuff[j];        // the old gradient
+      if (g2 == g1)
+        cout << "Warning ! g2 == g1 !" << endl; */
+      real diff = array[i]->valuedata[j-k] - old_params[j];
+      if (diff > 0) {
+        // the parameter has increased
+        if (u > 0) {
+          old_evol[j]++;
+        } else {
+          old_evol[j] = +1;
+        }
+      } else if (diff < 0) {
+        // the parameter has decreased
+        if (u < 0) {
+          old_evol[j]--;
+        } else {
+          old_evol[j] = -1;
+        }
+      } else {
+        // there has been no change
+        old_evol[j] = 0;
+      }
+      real coeff = min(10.0, abs(old_evol[j]));
+//      old_evol[j] = array[i]->valuedata[j-k] - old_params[j];
       if (u * old_evol[j] > 0)
-        learning_rates[j] += learning_rates[j] * adapt_coeff1;
-      else if (u * old_evol[j] < 0)
+        learning_rates[j] += learning_rates[j] * adapt_coeff1; // * coeff;
+      else if (u * old_evol[j] < 0) {
+//        learning_rates[j] = (x2 - x1) / (g2 - g1) / 18000;
+//        cout << learning_rates[j] << endl;
+//        if (g2 * g1 >0)
+//          cout << "Warning ! g2 and g1 have same sign !" << endl;
         learning_rates[j] -= learning_rates[j] * adapt_coeff2;
+//        array[i]->valuedata[j-k] = old_params[j];
+//        old_evol[j] = 0;
+      }
       real min_lr = min_learning_rate / (1 + stage * decrease_constant);
       real max_lr = max_learning_rate / (1 + stage * decrease_constant);
       if (learning_rates[j] < min_lr) {
@@ -237,6 +278,7 @@ real AdaptGradientOptimizer::optimize()
   PLERROR("In AdaptGradientOptimizer::optimize Deprecated, use OptimizeN !");
   return 0;
 }
+
 
 ///////////////
 // optimizeN //
@@ -285,6 +327,7 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
     // TODO Put back in the switch below when no more gradient stats
     // are collected ?
     params.copyGradientTo(gradient);
+//    store_gradient.update(gradient);
     //collectGradientStats(gradient);
     
     // Move along the chosen direction
@@ -336,6 +379,8 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
         params[i]->defineGradientLocation(oldgradientlocations[i]);
     }
 
+  if (early_stop)
+    cout << "Early Stopping !" << endl;
   return early_stop;
 }
 
