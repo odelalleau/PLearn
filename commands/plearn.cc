@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.51 2004/03/05 14:32:50 tihocan Exp $
+   * $Id: plearn.cc,v 1.52 2004/03/05 18:35:35 tihocan Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -58,6 +58,7 @@
 // #include "KNN.h"
 //#include "Classification1HiddenNN.h"
 //#include "Mixture2.h"
+#include "AddCostToLearner.h"
 #include "ClassifierFromDensity.h"
 //#include "RegressorFromDensity.h"
 #include "Distribution.h"
