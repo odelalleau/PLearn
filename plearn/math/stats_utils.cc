@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: stats_utils.cc,v 1.4 2004/01/13 22:38:52 yoshua Exp $
+   * $Id: stats_utils.cc,v 1.5 2004/02/07 14:35:46 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -151,6 +151,7 @@ real max_cdf_diff(Vec& v1, Vec& v2)
 
   for(;;)
     {
+
       if(v1[i1]<v2[i2])
         {
           i1++;
@@ -163,6 +164,12 @@ real max_cdf_diff(Vec& v1, Vec& v2)
           if(i2==n2)
             break;
         }
+
+      if ((i1>0 && v1[i1]==v1[i1-1]) ||
+          (i2>0 && v2[i2]==v2[i2-1]) ||
+          (v1[i1]<v2[i2] && v1[i1+1]<v2[i2]))
+        continue; // to deal with discrete-valued variables: only look at "changing-value" places
+
       real F1 = inv_n1*i1;
       real F2 = inv_n2*i2;
       real diff = fabs(F1-F2);
@@ -192,7 +199,7 @@ real max_cdf_diff(Vec& v1, Vec& v2)
      Let F_1(x) the empirical cumulative distribution of D_1 of size N_1, and
      let F_2(x) the empirical cumulative distribution of D_2 of size N_2. Then
 
-       D = max_x | F_1(x) - F_2 |
+       D = max_x | F_1(x) - F_2(x) |
 
      and the effective N is N_1 N_2 / (N_1 + N_2).
 

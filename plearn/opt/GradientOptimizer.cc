@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.cc,v 1.26 2004/01/28 14:33:16 yoshua Exp $
+   * $Id: GradientOptimizer.cc,v 1.27 2004/02/07 14:35:49 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -83,8 +83,17 @@ void GradientOptimizer::declareOptions(OptionList& ol)
     declareOption(ol, "start_learning_rate", &GradientOptimizer::start_learning_rate, OptionBase::buildoption, 
                   "    the initial learning rate\n");
 
+    declareOption(ol, "learning_rate", &GradientOptimizer::learning_rate, OptionBase::learntoption, 
+                  "    the current learning rate\n");
+
     declareOption(ol, "decrease_constant", &GradientOptimizer::decrease_constant, OptionBase::buildoption, 
                   "    the learning rate decrease constant \n");
+
+    declareOption(ol, "lr_schedule", &GradientOptimizer::lr_schedule, OptionBase::buildoption, 
+                  "Fixed schedule instead of decrease_constant. This matrix has 2 columns: iteration_threshold \n"
+                  "and learning_rate_factor. As soon as the iteration number goes above the iteration_threshold,\n"
+                  "the corresponding learning_rate_factor is applied (multiplied) to the start_learning_rate to\n"
+                  "obtain the learning_rate.\n");
 
     inherited::declareOptions(ol);
 }
@@ -258,9 +267,19 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll)
 
   int stage_max = stage + nstages; // the stage to reach
 
+  int current_schedule = 0;
+  int n_schedules = lr_schedule.length();
+  if (n_schedules>0)
+    while (current_schedule+1 < n_schedules && stage > lr_schedule(current_schedule,0)) current_schedule++;
   while (stage < stage_max) 
     {
-      learning_rate = start_learning_rate/(1.0+decrease_constant*stage);
+      if (n_schedules>0)
+        {
+          while (current_schedule+1 < n_schedules && stage > lr_schedule(current_schedule,0)) current_schedule++;
+          learning_rate = start_learning_rate * lr_schedule(current_schedule,1);
+        }
+      else
+        learning_rate = start_learning_rate/(1.0+decrease_constant*stage);
       proppath.clearGradient();
       cost->gradient[0] = -learning_rate;
       proppath.fbprop(); 

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.h,v 1.13 2003/08/13 08:13:17 plearner Exp $
+   * $Id: GradientOptimizer.h,v 1.14 2004/02/07 14:35:49 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -70,6 +70,12 @@ using namespace std;
       // Options (also available through setOption)
       real start_learning_rate;
       real decrease_constant;
+
+    // optionally the user can instead of using the decrease_constant
+    // use a fixed schedule. This matrix has 2 columns: iteration_threshold and learning_rate_factor
+    // As soon as the iteration number goes above the iteration_threshold, the corresponding learning_rate_factor
+    // is applied (multiplied) to the start_learning_rate to obtain the learning_rate.
+    Mat lr_schedule;
     
       GradientOptimizer(real the_start_learning_rate=0.01, 
                         real the_decrease_constant=0,
