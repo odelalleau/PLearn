@@ -137,6 +137,14 @@ public:
   // ** this particular subclass.
   //
 
+  //! Returns a vector containing part of the row i.
+  //! This vector should not be modifed afterwards (it may not be a copy).
+  // virtual Vec& getSubRow(int i, int j, int j_length) const;
+
+  //! Returns a vector containing the row i.
+  //! This vector should not be modifed afterwards (it may not be a copy).
+  // virtual Vec& getRow(int i) const;
+
   //! default version returns a SubVMatrix referencing the current VMatrix
   //! however this can be overridden to provide more efficient shortcuts 
   //! (see MemoryVMatrix::subMat and SubVMatrix::subMat for examples)
