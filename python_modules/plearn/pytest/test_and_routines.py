@@ -24,7 +24,6 @@ __all__ = [
     ## Classes
     'Test', 
     'Routine',
-##    'AddTestRoutine',
     'CompilationRoutine', 'ResultsCreationRoutine', 'RunTestRoutine'
     ]
 
@@ -388,75 +387,12 @@ class Routine(Task):
         else:
             Test.statistics.failure( self.test.get_path() )
 
-class AddTestRoutine(Routine):
-    """Adds a test in a given directory.
-    
-    A directory is considered to be a test directory as soon as it
-    contains a I{pytest.config} file. Therefore, this mode simply
-    drops a config file with some explanation how to instanciate the
-    L{Test} objects within the file. If a I{pytest.config} file
-    already exists, it is appended a new L{Test} template.
-    
-    The config file is executed within the pytest script. So, it B{is}
-    in python, which means that one can add any comments he wishes and
-    may also define own functions if complicated processing is
-    requested before defining the test.
-    """
-##     A user familiar with config files can also pass directly through
-##     options in the command line the keyword arguments to fill the
-##     L{Test} declaration with.
-
-    def body_of_task(self):
-        config_path  = config_file_path( self.test.program.processing_directory )
-        config_file  = None
-        config_text  = ''
-    
-        initial_creation = not os.path.exists( config_path )
-        if initial_creation:
-            config_file = open(config_path, 'w')
-            config_text = ( '"""Pytest config file.\n\n%s\n"""'% toolkit.doc(Test) )
-        else:
-            config_file = open(config_path, 'a+')
-            
-        config_text += str( self.test ) + '\n'
-        config_file.write(config_text)
-        config_file.close()
-        self.succeeded(True)
-    
 class CompilationRoutine(Routine):
     """Launches the compilation of target tests' compilable files."""    
     def body_of_task(self):
         if self.compile_program():
             self.succeeded( True )
             
-class DisableRoutine(Routine):
-    """Disables an existing test.
-
-    The disabled test can be restored (L{enable mode<EnableRoutine>}) afterwards.
-    """
-    def body_of_task(self):
-        test, dis = disable_file_name( self.test.test_directory,
-                                       self.test.name            )
-        if os.path.exists( dis ):
-            vprint('%s was already disabled.' % test)
-        else:
-            os.system("touch %s" % dis)
-            vprint('%s is disabled.' % test, 2)
-        self.succeeded( True )
-
-class EnableRoutine(Routine):
-    """Enables a disabled (L{disable test<disable_test>}) test."""
-    def body_of_task(self):
-        test, dis = disable_file_name( self.test.test_directory,
-                                       self.test.name            )
-
-        if os.path.exists( dis ):
-            os.remove(dis)
-            vprint('%s is enabled.' % test, 2)
-        else:
-            vprint('%s was not disabled.' % test)
-        self.succeeded( True )
-    
 class ResultsCreationRoutine(Routine):
     """Generates the expected results target tests.
 

@@ -26,7 +26,7 @@ variable, if it exists. Otherwise, it is set to os.path.join(home, 'apstatsoft')
 @type apstatdir: String
 
 @var plbranches: We call plearn branches the PLearn, LisaPLearn and apstatsoft libraries.
-@type plearndir: Dictionnary; branch path (string) to branch name (string).
+@type plbranches: Dictionnary; branch path (string) to branch name (string).
 
 @var plearn_scripts: Simply os.path.join( plearndir, 'scripts' ).
 @type plearn_scripts: String
@@ -77,8 +77,8 @@ special_directories    = [ pymake_objs,   pymake_hidden,
 def exempt_of_subdirectories( directories ):
     """Remove any path in list that is a subdirectory of some other directory in the list.
 
-    @param list: The list exempt.
-    @type  list: ListType
+    @param directories: The list exempt.
+    @type  directories: ListType
     """    
     ldirs = len(directories)
     to_remove = []

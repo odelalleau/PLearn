@@ -358,7 +358,7 @@ class disable( FamilyConfigMode ):
         test.disabled = True
 
 class enable( FamilyConfigMode ):
-    """Enables disabled (L{disable mode<mode_disable>}) tests."""
+    """Enables disabled (L{disable mode<disable>}) tests."""
     def test_hook( self, test ):
         test.disabled = False
 

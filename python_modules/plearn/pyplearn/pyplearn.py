@@ -650,6 +650,9 @@ class _plargs_storage_readonly:
         raise AttributeError('Cannot modify plargs')
 
     def __getattr__(self, k):
+        if k.startswith('__'):
+           raise AttributeError
+
         try:
             return getattr(plarg_defaults, k)
         except AttributeError:
@@ -663,6 +666,44 @@ def _parse_plargs(args):
         k, v = a.split('=', 1)
         plargs.__dict__[k] = v
 
+def bind_plargs(obj, field_names, plarg_names = None):
+    """Binds some command line arguments to the fields of an object.
+    
+    @param obj: Either a class (fields => static members) or an
+    instance from which to get the default values for plarg_defaults
+    and in which to set the user provided values.
+    @type  obj: Class or instance.
+
+    @param field_names: The name of the fields within I{obj}.
+    @type  field_names: List of strings.
+
+    @param plarg_names: The desired names for the plargs. If it is let
+    to None, the I{field_names} values will be used.
+    @type  plarg_names: List of strings.    
+    """
+    casts = { types.IntType     : int ,
+              types.FloatType    : float ,
+              types.StringType  : str
+              }
+    
+    if plarg_names is None:
+        plarg_names = field_names
+
+    for i, field in enumerate(field_names):
+        arg_name = plarg_names[i]
+        
+        ## First set the argument's default value to the one provided
+        ## by obj
+        default_value  = getattr(obj, field)
+        setattr( plarg_defaults, arg_name, str(default_value) )
+
+        ## binding: Then set the obj value to the one returned by
+        ## plarg. If it was not provided by the user, the value will
+        ## be set exactly to what it was when this funtion was
+        ## entered. Otherwise, it will be set to the user provided value
+        provided_value = getattr(plargs, arg_name)
+        cast           = casts[ type(default_value) ]
+        setattr( obj, field, cast(provided_value) )
 
 class _pyplearn_magic_module:
     """An instance of this class (instanciated as pl) is used to provide
