@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.cc,v 1.5 2003/04/28 17:08:57 tihocan Exp $
+   * $Id: GradientOptimizer.cc,v 1.6 2003/04/28 17:49:15 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -325,12 +325,13 @@ real GradientOptimizer::optimize()
             learning_rates,
             old_gradient,
             gradient);
+          params.update(learning_rates, gradient); 
           break;
         case 2:
-          adaptLearningRateALAP1(learning_rates, old_gradient, gradient);
+          adaptLearningRateALAP1(old_gradient, gradient);
+          params.update(learning_rate, gradient);
           break;
       }
-      params.update(learning_rates, gradient); 
       old_gradient << gradient;
       params.clearGradient();
     } else if (!stochastic_hack) {
@@ -352,12 +353,8 @@ real GradientOptimizer::optimize()
 // adaptLearningRateALAP1 //
 ////////////////////////////
 void GradientOptimizer::adaptLearningRateALAP1(
-    Vec learning_rates,
     Vec old_gradient,
     Vec new_gradient) {
-  // TODO It would be more efficient to use a single value
-  // instead of an array, since all cells contain the same
-  // learning rate...
   int j = 0; // the current index in learning_rates
   int k;
   real prod = 0;
@@ -368,18 +365,11 @@ void GradientOptimizer::adaptLearningRateALAP1(
       prod += old_gradient[j] * new_gradient[j];
     }
   }
-  real lr = learning_rates[0] + adapt_coeff1 * prod;
-  if (lr < min_learning_rate) {
-    lr = min_learning_rate;
-  } else if (lr > max_learning_rate) {
-    lr = max_learning_rate;
-  }
-  j = 0;
-  for (int i=0; i<params.size(); i++) {
-    k = j;
-    for (; j<k+array[i]->nelems(); j++) {
-      learning_rates[j] = lr;
-    }
+  learning_rate = learning_rate + adapt_coeff1 * prod;
+  if (learning_rate < min_learning_rate) {
+    learning_rate = min_learning_rate;
+  } else if (learning_rate > max_learning_rate) {
+    learning_rate = max_learning_rate;
   }
 }
 
