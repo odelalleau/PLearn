@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.cc,v 1.25 2004/03/09 18:30:13 tihocan Exp $
+   * $Id: Optimizer.cc,v 1.26 2004/03/09 18:32:14 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -184,7 +184,7 @@ void Optimizer::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   deepCopyField(update_for_measure, copies);
   deepCopyField(temp_grad, copies);
   // The line below was commented, but there was no explaination why.
-  deepCopyField(measurers, copies);
+  //deepCopyField(measurers, copies);
   build();
 }
 
