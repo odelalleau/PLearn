@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.h,v 1.23 2004/09/09 14:15:11 tihocan Exp $
+   * $Id: NNet.h,v 1.24 2004/09/13 13:29:16 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -119,6 +119,8 @@ public:
   string output_transfer_func; // tanh, sigmoid, softplus, softmax, etc...  (default: "" means no transfer function)
   string hidden_transfer_func; // tanh, sigmoid, softplus, softmax, etc...  (default: "tanh" means no transfer function)
   real interval_minval, interval_maxval; // if output_transfer_func = interval(minval,maxval), these are the interval bounds
+
+  bool do_not_change_params;
 
   //! a list of cost functions to use in the form "[ cf1; cf2; cf3; ... ]"
   // where the cost functions can be one of mse, mse_onehot, NLL,

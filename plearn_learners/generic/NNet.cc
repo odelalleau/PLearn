@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.60 2004/09/09 14:28:55 tihocan Exp $
+   * $Id: NNet.cc,v 1.61 2004/09/13 13:29:16 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -105,6 +105,7 @@ NNet::NNet() // DEFAULT VALUES FOR ALL OPTIONS
    output_transfer_func(""),
    hidden_transfer_func("tanh"),
    interval_minval(0), interval_maxval(1),
+   do_not_change_params(false),
    batch_size(1),
    initialization_method("uniform_linear")
 {}
@@ -220,6 +221,9 @@ void NNet::declareOptions(OptionList& ol)
                 "    margin requirement, used only with the margin_perceptron_cost cost function.\n"
                 "    It should be positive, and larger values regularize more.\n");
 
+  declareOption(ol, "do_not_change_params", &NNet::do_not_change_params, OptionBase::buildoption, 
+      "If set to 1, the weights won't be loaded nor initialized at build time.");
+
   declareOption(ol, "optimizer", &NNet::optimizer, OptionBase::buildoption, 
                 "    specify the optimizer to use\n");
 
@@ -283,16 +287,18 @@ void NNet::build_()
     buildCosts(output, target, hidden_layer, before_transfer_func);
 
     // Shared values hack...
-    if((bool)paramsvalues && (paramsvalues.size() == params.nelems()))
-      params << paramsvalues;
-    else
-    {
-      paramsvalues.resize(params.nelems());
-      initializeParams();
-      if(optimizer)
-        optimizer->reset();
+    if (!do_not_change_params) {
+      if((bool)paramsvalues && (paramsvalues.size() == params.nelems()))
+        params << paramsvalues;
+      else
+      {
+        paramsvalues.resize(params.nelems());
+        initializeParams();
+        if(optimizer)
+          optimizer->reset();
+      }
+      params.makeSharedValue(paramsvalues);
     }
-    params.makeSharedValue(paramsvalues);
 
     // Build functions.
     buildFuncs(input, output, target, sampleweight);
