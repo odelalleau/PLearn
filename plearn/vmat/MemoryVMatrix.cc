@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.cc,v 1.6 2004/03/05 15:45:48 plearner Exp $
+   * $Id: MemoryVMatrix.cc,v 1.7 2004/03/16 14:15:30 tihocan Exp $
    ******************************************************* */
 
 #include "MemoryVMatrix.h"
@@ -69,8 +69,19 @@ void MemoryVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   deepCopyField(data, copies);
 }
 
+////////////
+// build_ //
+////////////
 void MemoryVMatrix::build_()
 {
+  if (this->length() >= 0 && this->length() != data.length()) {
+    // New length specified.
+    data.resize(this->length(), data.width());
+  }
+  if (this->width() >= 0 && this->width() != data.width()) {
+    // New width specified.
+    data.resize(data.length(), this->width());
+  }
 }
 
 void MemoryVMatrix::build()
