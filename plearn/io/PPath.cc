@@ -33,13 +33,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.cc,v 1.18 2005/02/17 17:23:10 tihocan Exp $ 
+   * $Id: PPath.cc,v 1.19 2005/02/18 18:34:04 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
 
 /*! \file PPath.cc */
-
 
 #include "PPath.h"
 #include <ctype.h>
@@ -587,11 +586,11 @@ void PPath::parseProtocol()
 //////////////
 // absolute //
 //////////////
-PPath PPath::absolute() const
+PPath PPath::absolute(bool add_protocol) const
 {
-  if (protocol() != FILE_PROTOCOL)
+  if (!add_protocol && protocol() != FILE_PROTOCOL)
     PLERROR("In PPath::absolute - The absolute() method is only meant for "
-            "the FILE_PROTOCOL protocol");
+            "the FILE_PROTOCOL protocol when 'add_protocol' is false");
 
   PPath abspath;
 
@@ -599,8 +598,9 @@ PPath PPath::absolute() const
   if ( isEmpty() || isAbsPath() )
     abspath = PPath( *this );
 
-  // File protocol (unspecified); relative file path
-  // ==> relative path (current working directory of the process).
+  // This is necessarily a file protocol (because other protocols require
+  // an absolute path).
+  // ===> we concatenate the current working directory of the process.
   else
   {
     assert( _protocol.empty() );
@@ -609,9 +609,14 @@ PPath PPath::absolute() const
 
   // Remove useless trailing slash.
   abspath.removeTrailingSlash();
-  // Remove protocol if necessary.
-  if (!_protocol.empty())
-    abspath = abspath.removeProtocol();
+  // Add / remove protocol if required.
+  if (add_protocol)
+    abspath = abspath.addProtocol();
+  else
+    // There can be a protocol in abspath only if there is one in *this.
+    if (!_protocol.empty())
+      abspath = abspath.removeProtocol();
+
   return abspath;
 }
 
@@ -782,7 +787,7 @@ bool PPath::operator==(const PPath& other) const
   // Otherwise they must point to the same absolute file or directory.
   // Note that the absolute() method already removes the trailing slash.
   return (   !strcmp(c_str(), other.c_str())
-          || !strcmp(absolute().c_str(), other.absolute().c_str()));
+          || !strcmp(absolute(true).c_str(), other.absolute(true).c_str()));
 }
 
 ////////

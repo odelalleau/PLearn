@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.h,v 1.8 2005/02/17 17:23:19 tihocan Exp $ 
+   * $Id: PPath.h,v 1.9 2005/02/18 18:34:04 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent, Christian Dorion, Nicolas Chapados
@@ -264,7 +264,11 @@ public:
 
   //! Returns an absolute path in the form appropriate for the OS.
   //! The returned path never ends with a slash unless it is a root directory.
-  PPath absolute() const;   
+  //!  - if 'add_protocol' is false, then only the FILE_PROTOCOL is allowed
+  //!    and the protocol will be systematically removed,
+  //!  - if 'add_protocol' is true, then all protocols are allowed and the
+  //!    protocol will be systematically added.
+  PPath absolute(bool add_protocol = false) const;
 
   //! Returns a PPath in the canonical (serialized form).
   //! It is a string because it needs to be converted to a system-dependent
@@ -321,6 +325,11 @@ public:
   bool   operator== (const char*   other) const  { return operator==(string(other)); }
   bool   operator== (const string& other) const;
   bool   operator== (const PPath&  other) const;
+
+  //! The operator '!=' is defined as the contrary of '=='.
+  inline bool operator!= (const char*    other) const { return !(operator==(string(other))); }
+  inline bool operator!= (const string&  other) const { return !(operator==(other));         }
+  inline bool operator!= (const PPath&   other) const { return !(operator==(other));         }
 
   /*!
     Return a PPath pointing to the parent directory of the PPath, assuming the
