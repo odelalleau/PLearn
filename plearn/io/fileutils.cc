@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.26 2004/03/04 03:30:10 nova77 Exp $
+   * $Id: fileutils.cc,v 1.27 2004/03/04 04:28:21 nova77 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -361,7 +361,23 @@ void saveStringInFile(const string& filepath, const string& text)
   void rm(const string& file)
   {
 #ifdef WIN32
-    DeleteFile(file.c_str());
+    // For the moment works ONLY with files!!!
+    if ( !DeleteFile(file.c_str()) )
+    {
+      DWORD errorCode = GetLastError(); 
+      LPVOID lpMsgBuf;
+      FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER |
+        FORMAT_MESSAGE_FROM_SYSTEM,
+        NULL, errorCode,
+        MAKELANGID(LANG_NEUTRAL,
+        SUBLANG_DEFAULT),
+        (LPTSTR) &lpMsgBuf, 0,
+         NULL );
+
+      // Comment because it works only with files..
+      //PLERROR("Cannot delete file %s. %s", file.c_str(), lpMsgBuf);
+      LocalFree( lpMsgBuf );
+    }
 #else
     string command = "\\rm -rf " + file;
     system(command.c_str());
