@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.28 2005/02/08 21:34:29 tihocan Exp $
+   * $Id: FileVMatrix.cc,v 1.29 2005/02/18 17:13:39 tihocan Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -132,7 +132,7 @@ void FileVMatrix::build_()
     fclose(f);
   }
   if (track_ref && old_filename != "") {
-    count_refs[old_filename]--;
+    count_refs[old_filename.absolute()]--;
   }
 
   char header[DATAFILE_HEADERLENGTH];
@@ -249,10 +249,11 @@ void FileVMatrix::build_()
   }
 
   if (track_ref) {
-    if (count_refs.find(filename_) != count_refs.end())
-      count_refs[filename_]++;
+    string abs = filename_.absolute();
+    if (count_refs.find(abs) != count_refs.end())
+      count_refs[abs]++;
     else
-      count_refs[filename_] = 1;
+      count_refs[abs] = 1;
     old_filename = filename_;
   } else {
     old_filename = "";
@@ -267,10 +268,11 @@ map<string, int> FileVMatrix::count_refs;
 ///////////////
 // countRefs //
 ///////////////
-int FileVMatrix::countRefs(const string& filename) {
-  if (count_refs.find(filename) == count_refs.end())
+int FileVMatrix::countRefs(const PPath& filename) {
+  string abs = filename.absolute();
+  if (count_refs.find(abs) == count_refs.end())
     return 0;
-  return count_refs[filename];
+  return count_refs[abs];
 }
 
 ////////////////////

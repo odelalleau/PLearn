@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.h,v 1.17 2005/02/08 21:34:30 tihocan Exp $
+   * $Id: FileVMatrix.h,v 1.18 2005/02/18 17:13:39 tihocan Exp $
    ******************************************************* */
 
 
@@ -102,8 +102,8 @@ public:
 
   virtual void build();
 
-  //! Return count_refs[filename].
-  static int countRefs(const string& filename);
+  //! Return count_refs[filename.absolute()].
+  static int countRefs(const PPath& filename);
 
   PLEARN_DECLARE_OBJECT(FileVMatrix);
 
