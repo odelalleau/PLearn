@@ -33,15 +33,16 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.cc,v 1.1 2004/04/05 14:30:34 tihocan Exp $ 
+   * $Id: KernelProjection.cc,v 1.2 2004/04/05 18:18:51 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
 
 /*! \file KernelProjection.cc */
 
-#include "GaussianKernel.h"   //!< For the default kernel.
+#include "GaussianKernel.h"     //!< For the default kernel.
 #include "KernelProjection.h"
+#include "plapack.h"            //!< For eigenVecOfSymmMat.
 
 namespace PLearn {
 using namespace std;
@@ -50,13 +51,19 @@ using namespace std;
 // KernelProjection //
 //////////////////////
 KernelProjection::KernelProjection() 
-: n_comp(1)
+: n_comp_kept(-1),
+  first_output(true),
+  free_extra_components(true),
+  min_eigenvalue(-REAL_MAX),
+  n_comp(1),
+  normalize(false)
+  
 {
   kernel = new GaussianKernel();
 }
 
 PLEARN_IMPLEMENT_OBJECT(KernelProjection,
-    "Implements dimensionality reduction by using eigenfunctions of a kernel.", 
+    "Performs dimensionality reduction by learning eigenfunctions of a kernel.", 
     ""
 );
 
@@ -70,6 +77,29 @@ void KernelProjection::declareOptions(OptionList& ol)
 
   declareOption(ol, "n_comp", &KernelProjection::n_comp, OptionBase::buildoption,
       "Number of components computed.");
+
+  declareOption(ol, "normalize", &KernelProjection::normalize, OptionBase::buildoption,
+      "If set to 1, the resulting embedding will have variance 1 on each coordinate,\n"
+      "otherwise the variance will be the corresponding eigenvalue.");
+
+  declareOption(ol, "min_eigenvalue", &KernelProjection::min_eigenvalue, OptionBase::buildoption,
+      "Any component associated with an eigenvalue <= min_eigenvalue will be discarded.");
+
+  declareOption(ol, "free_extra_components", &KernelProjection::free_extra_components, OptionBase::buildoption,
+      "If set to 1, components computed but not kept won't be available after training.");
+
+  declareOption(ol, "eigenvalues", &KernelProjection::eigenvalues, OptionBase::learntoption,
+      "The eigenvalues of the Gram matrix.");
+
+  declareOption(ol, "eigenvectors", &KernelProjection::eigenvectors, OptionBase::learntoption,
+      "The eigenvectors of the Gram matrix.");
+
+  declareOption(ol, "n_comp_kept", &KernelProjection::n_comp_kept, OptionBase::learntoption,
+      "The actual number of components actually kept in the output (we may discard\n"
+      "some because of low eigenvalues).");
+
+  declareOption(ol, "n_examples", &KernelProjection::n_examples, OptionBase::learntoption,
+      "The number of points in the training set.");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -89,8 +119,11 @@ void KernelProjection::build()
 ////////////
 void KernelProjection::build_()
 {
+  if (n_comp_kept == -1) {
+    n_comp_kept = n_comp;
+  }
+  first_output = true;  // Safer.
 }
-
 
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
@@ -115,7 +148,7 @@ void KernelProjection::makeDeepCopyFromShallowCopy(map<const void*, void*>& copi
 ////////////////
 int KernelProjection::outputsize() const
 {
-  return n_comp;
+  return n_comp_kept;
 }
 
 ////////////
@@ -132,6 +165,12 @@ void KernelProjection::forget()
          - stage = 0
     */
   stage = 0;
+  n_comp_kept = n_comp;
+  n_examples = 0;
+  first_output = true;
+  // Free memory.
+  eigenvectors = Mat();
+  eigenvalues = Vec();
 }
     
 ///////////
@@ -139,53 +178,62 @@ void KernelProjection::forget()
 ///////////
 void KernelProjection::train()
 {
-    // The role of the train method is to bring the learner up to stage==nstages,
-    // updating train_stats with training costs measured on-line in the process.
-
-    /* TYPICAL CODE:
-
-      static Vec input  // static so we don't reallocate/deallocate memory each time...
-      static Vec target
-      input.resize(inputsize())    // the train_set's inputsize()
-      target.resize(targetsize())  // the train_set's targetsize()
-      real weight
-
-      if(!train_stats)  // make a default stats collector, in case there's none
-         train_stats = new VecStatsCollector()
-
-      if(nstages<stage) // asking to revert to a previous stage!
-         forget()  // reset the learner to stage=0
-
-      while(stage<nstages)
-        {
-          // clear statistics of previous epoch
-          train_stats->forget() 
-          
-          //... train for 1 stage, and update train_stats,
-          // using train_set->getSample(input, target, weight)
-          // and train_stats->update(train_costs)
-          
-          ++stage
-          train_stats->finalize() // finalize statistics for this epoch
-        }
-    */
   if (stage == 0) {
     PLWARNING("In KernelProjection::train - Learner has already been trained");
     return;
   }
+  Mat gram(n_examples,n_examples);
+  // (1) Compute the Gram matrix.
+  kernel->computeGramMatrix(gram);
+  // (2) Compute its eigenvectors and eigenvalues.
+  eigenVecOfSymmMat(gram, n_comp, eigenvalues, eigenvectors);
+  // (3) Discard low eigenvalues.
+  int p = 0;
+  while (p < n_comp && eigenvalues[p] > min_eigenvalue)
+    p++;
+  n_comp_kept = p;
+  // (4) Optionally remove the discarded components.
+  if (free_extra_components) {
+    eigenvalues.resize(n_comp_kept);
+    eigenvectors.resize(n_comp_kept, eigenvectors.width());
+  }
+  // All done!
+  first_output = true;
   stage = 1;
 }
-
 
 ///////////////////
 // computeOutput //
 ///////////////////
 void KernelProjection::computeOutput(const Vec& input, Vec& output) const
 {
-  // Compute the output from the input
-  // int nout = outputsize();
-  // output.resize(nout);
-  // ...
+  static Vec k_x_xi;
+  static Mat result;
+  static Mat used_eigenvectors;
+  if (first_output) {
+    // Initialize k_x_xi, used_eigenvectors and result correctly.
+    k_x_xi.resize(n_examples);
+    used_eigenvectors = eigenvectors.subMatRows(0, n_comp_kept);
+    result.resize(n_comp_kept,1);
+    first_output = false;
+  }
+  // Compute the K(x,x_i).
+  for (int i = 0; i < n_examples; i++) {
+    k_x_xi[i] = kernel->evaluate_i_x(i, input);
+  }
+  // Compute the output.
+  rowSum(used_eigenvectors * k_x_xi, result);
+  output.resize(n_comp_kept);
+  real* result_ptr = result[0];
+  if (normalize) {
+    for (int i = 0; i < n_comp_kept; i++) {
+      output[i] = *(result_ptr++) / eigenvalues[i];
+    }
+  } else {
+    for (int i = 0; i < n_comp_kept; i++) {
+      output[i] = *(result_ptr++) / sqrt(eigenvalues[i]);
+    }
+  }
 }    
 
 /////////////////////////////
@@ -221,6 +269,18 @@ TVec<string> KernelProjection::getTrainCostNames() const
   // ...
   TVec<string> t;
   return t;
+}
+
+////////////////////
+// setTrainingSet //
+////////////////////
+void KernelProjection::setTrainingSet(VMat training_set, bool call_forget) {
+  inherited::setTrainingSet(training_set, call_forget);
+  n_examples = training_set->length();
+  kernel->setDataForKernelMatrix(training_set);
+  // If we save this learner then load it again, we want the kernel to remember
+  // its dataset. Thus we must use the 'specify_dataset' option.
+  kernel->specify_dataset = training_set;
 }
 
 } // end of namespace PLearn

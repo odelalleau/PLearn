@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.h,v 1.1 2004/04/05 14:30:34 tihocan Exp $ 
+   * $Id: KernelProjection.h,v 1.2 2004/04/05 18:18:51 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -62,8 +62,15 @@ protected:
   // * protected options *
   // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
+  Vec eigenvalues;
+  Mat eigenvectors;
+  int n_comp_kept;
+  int n_examples;
+
+  // Fields below are not options.
+
+  //! A boolean indicating we haven't performed any output yet.
+  mutable bool first_output;
     
 public:
 
@@ -71,8 +78,11 @@ public:
   // * public build options *
   // ************************
 
+  bool free_extra_components;
   Ker kernel;
+  real min_eigenvalue;
   int n_comp;
+  bool normalize;
 
   // ****************
   // * Constructors *
@@ -125,11 +135,9 @@ public:
   //! And sets 'stage' back to 0 (this is the stage of a fresh learner!).
   virtual void forget();
 
-    
   //! The role of the train method is to bring the learner up to stage==nstages,
   //! updating the train_stats collector with training costs measured on-line in the process.
   virtual void train();
-
 
   //! Computes the output from the input.
   virtual void computeOutput(const Vec& input, Vec& output) const;
@@ -138,13 +146,15 @@ public:
   virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                        const Vec& target, Vec& costs) const;
                                 
-
   //! Returns the names of the costs computed by computeCostsFromOutpus (and thus the test method).
   virtual TVec<string> getTestCostNames() const;
 
   //! Returns the names of the objective costs that the train method computes and 
   //! for which it updates the VecStatsCollector train_stats.
   virtual TVec<string> getTrainCostNames() const;
+
+  //! Overridden to forward to the kernel.
+  virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
 
   // *** SUBCLASS WRITING: ***
