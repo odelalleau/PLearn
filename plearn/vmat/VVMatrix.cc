@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.cc,v 1.25 2004/08/06 13:23:13 tihocan Exp $
+   * $Id: VVMatrix.cc,v 1.26 2004/08/09 16:16:39 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -60,7 +60,10 @@
 namespace PLearn {
 using namespace std;
 
-PLEARN_IMPLEMENT_OBJECT(VVMatrix, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(VVMatrix,
+    "A VMat that reads a '.vmat' file.",
+    ""
+);
 
 ////////////////////
 // declareOptions //
