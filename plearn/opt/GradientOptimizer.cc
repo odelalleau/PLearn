@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.cc,v 1.22 2003/08/13 08:13:17 plearner Exp $
+   * $Id: GradientOptimizer.cc,v 1.23 2003/10/19 20:02:54 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -259,7 +259,10 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll)
       learning_rate = start_learning_rate/(1.0+decrease_constant*stage);
       proppath.clearGradient();
       cost->gradient[0] = -learning_rate;
-      proppath.fbprop(); //displayVarGraph(proppath, true, 333);
+      proppath.fbprop(); 
+      static bool display_var_graph=false;
+      if (display_var_graph)
+        displayVarGraph(proppath, true, 333);
 
       // set params += -learning_rate * params.gradient
       if(!stochastic_hack)
