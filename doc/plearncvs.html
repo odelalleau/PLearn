@@ -1,0 +1,270 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.51 [en] (X11; U; Linux 2.2.5-22 i686) [Netscape]">
+   <title>Five minute guide to using cvs with PLearn</title>
+</head>
+<body text="#000000" bgcolor="#FFFFFF">
+
+<h1>
+Five minute guide to using cvs with PLearn</h1>
+
+<h3>
+1. Initial setup</h3>
+If you have been given a <i>username</i> and a <i>password</i> to access
+the PLearn CVS repository, first login into the server:
+<br><tt>% cvs -d :pserver:</tt><i>username</i><tt>@cvs.iro.umontreal.ca:/home/cvs/cvslisa/cvsroot
+login</tt>
+<br>Enter your <i>password </i>when prompted.
+<br>Then <tt>cd</tt> to the directory where your local copy of the PLearn
+directory is to be created and issue the following command:
+<br>% <tt>cvs -d :pserver:</tt><i>username</i><tt>@cvs.iro.umontreal.ca:/home/cvs/cvslisa/cvsroot
+checkout PLearn</tt>
+<br>Finally to clean up empty directories, you can do:
+<br><tt>% cd PLearn</tt>
+<br><tt>% cvs update -d -P</tt>
+<br>&nbsp;
+<h3>
+2. General cvs usage policy for the PLearn project</h3>
+Sharing a code base with others requires a little discipline on the part
+of everybody for things go smoothly.
+<br>Here's our policiy, in short don't bother to much about the log messages
+but:
+<br>&nbsp;
+<li>
+commit very often</li>
+
+<li>
+update even more often</li>
+
+<li>
+commit all source files (<tt>*.cc</tt>, <tt>*.h</tt>) and <tt>Makefiles</tt>
+(don't be afraid to use <tt>cvs add</tt> !!), but NO binary files (in general
+don't do <tt>cvs add *</tt> !!).</li>
+
+<li>
+don't commit code that doesn't compile (but commit it as soon as it does
+compile!)</li>
+
+<br>&nbsp;
+<p>&nbsp;
+<p>This <i>``commit often, update more often''</i> policy will ensure that
+the repository and your local copy keep in sync, this way merging conflicts
+are rare, and the few that occur are easy to solve.
+<br>&nbsp;
+<h3>
+3. Command summary for everyday use</h3>
+Here is a summary of the few commands used for the every day operations
+with the PLearn CVS.
+<br>Whenever I write <tt>cd PLearn</tt>, I mean <i>``go inside your local
+working copy of the PLearn directory that you checked out with cvs''</i>,
+wherever that might be.
+<br>&nbsp;
+<table BORDER COLS=3 WIDTH="100%" NOSAVE >
+<tr>
+<td><i><u>OPERATION</u></i></td>
+
+<td><i><u>COMMANDS</u></i></td>
+
+<td><i><u>REMARKS</u></i></td>
+</tr>
+
+<tr>
+<td><b>Updating your local copy</b></td>
+
+<td><b><tt>% cd PLearn</tt></b>
+<br><b><tt>% cvs update -d -P</tt></b><b><tt></tt></b>
+<p><tt>Be CAREFUL to use <font color="#FF0000">LOWERCASE -d</font> and
+<font color="#FF0000">UPPERCASE -P</font> (or you'll run into trouble!)</tt></td>
+
+<td>If cvs reported any conflict while merging other's changes into files
+that you also changed (files marked in the cvs output with a ``C''), you'll
+have to edit the files by hand to resolve them.</td>
+</tr>
+
+<tr>
+<td><b>Commiting your changes</b></td>
+
+<td>First update your local copy:
+<br><b><tt>% cd PLearn</tt></b>
+<br><b><tt>% cvs update -d -P</tt></b>
+<p>Resolve any conflict, make sure that you have issued a
+<br><tt>cvs add</tt> for every new directory and source file you have added
+(see below), check that everything compiles, and then do:
+<br><b><tt>% cd PLearn</tt></b>
+<br><b><tt>% cvs commit</tt></b>
+<br><b><tt>&nbsp;</tt></b></td>
+
+<td>If there's no problem, you'll be asked to enter a log message with
+your favorite text editor (<tt>$EDITOR</tt>)
+<p>cvs won't let you commit anything if your copy is not up to date or
+if there are files with unresolved conflicts from the last update.
+<br>&nbsp;</td>
+</tr>
+
+<tr>
+<td><b>Creating a new sub-directory</b></td>
+
+<td>Whenever you create a new directory in the hierarchy under cvs control
+do the following:
+<br><b><tt>% mkdir my_new_directory</tt></b>
+<br><b><tt>% cvs add my_new_directory</tt></b>
+<br><b><tt>% cd my_new_directory</tt></b></td>
+
+<td>Note: the directory in which you create this sub-directory must already
+be under cvs.</td>
+</tr>
+
+<tr>
+<td><b>Adding files</b></td>
+
+<td>To add a bunch of files that you have just created do&nbsp;
+<br>(for example)
+<p><b><tt>% cvs add *.cc *.h Makefile</tt></b>
+<br><b><tt>% cvs commit</tt></b></td>
+
+<td>Note: the directory in which you create these files must already have
+been added by a cvs add command.</td>
+</tr>
+
+<tr>
+<td><b>Removing files</b></td>
+
+<td><b><tt>% cvs remove -f file1 file2 file3</tt></b>
+<br><b><tt>% cvs commit</tt></b></td>
+
+<td>All <tt>cvs add</tt> and <tt>cvs remove</tt> commands only <i>schedule</i>
+the additions or removals.&nbsp; These will be taken into account in the
+cvs repository only after you do a <tt>cvs commit</tt>.</td>
+</tr>
+
+<tr>
+<td><b>Removing a directory</b></td>
+
+<td>To remove a directory:
+<li>
+remove all files in it using <tt>cvs remove -f</tt></li>
+
+<li>
+then do a <tt>rm -r </tt>of the directory.</li>
+</td>
+
+<td>...</td>
+</tr>
+
+<tr>
+<td><b>Moving or renaming files or directories</b></td>
+
+<td><b>Don't use the mv command !!!</b>
+<br>If you really have to rename or move files or directories around, use
+<tt>cp</tt>
+to copy them to the new location (or new name), and use <tt>cvs remove</tt>
+to remove the old version and <tt>cvs add</tt> to add the new one.</td>
+
+<td>You may however use mv to move your local copy of the PLearn directory,
+just not the subdirectories inside it.</td>
+</tr>
+
+<tr>
+<td><b>Checking who committed modifications and what they were...</b></td>
+
+<td>To check who and when commits were made and get corresponding revision
+numbers:
+<br><b><tt><font size=-1>% cvs log &lt;file></font></tt></b>
+<br>To see what has changed between two different revisions:
+<br><b><tt><font size=-1>% cvs diff -r &lt;first rev#> -r &lt;second rev#>
+&lt;file></font></tt></b></td>
+
+<td>...</td>
+</tr>
+
+<tr>
+<td><b>Unremoving a file,&nbsp;</b>
+<br><b>or (generally) reverting to an older revision</b></td>
+
+<td>
+<li>
+Do a <b>cvs log &lt;file> </b>and get the latest revision number (that's
+the "dead" revision if you're unremoving), and the older revision number
+to which you want to revert (for ex. the next to last revision).</li>
+
+<li>
+Do <b>cvs update -j &lt;latest rev#> -j &lt;older rev#> &lt;file></b></li>
+
+<li>
+edit as you like if you wish and commit the file</li>
+
+<br>&nbsp;
+<p>&nbsp;
+<p>Another (slightly more dirty) way to unremove a file is to checkout
+the older revision without the sticky tag and readd the file
+<li>
+<b><tt><font size=-1>cvs update -p -r &lt;older rev#> &lt;file> > &lt;file></font></tt></b></li>
+
+<li>
+<b><tt><font size=-1>cvs add &lt;file></font></tt></b>&nbsp;</li>
+</td>
+
+<td>...</td>
+</tr>
+
+<tr>
+<td><b>Checking out an older version (revision) of a file</b></td>
+
+<td>To check it out <i>without</i> setting the sticky tag:
+<br><b><tt><font size=-1>% cvs update -p -r &lt;rev #> &lt;file> > &lt;newfilename></font></tt></b>
+<p>To check it out and set the sticky tag:
+<br><b><tt>% cvs update -r &lt;rev #> &lt;file></tt></b>
+<br>You'll then want to get rid of the sticky tag at some point...
+<br>&nbsp;</td>
+
+<td>When you retrieve an older version of a file (with <tt><font size=-1>cvs
+update -r </font></tt>or <tt><font size=-1>-D</font></tt>), cvs normally
+associates a <i>sticky tag </i>to it, so that subsequent updates won't
+overwrite it with the latest version of that file (your old version will
+"stick" around!).</td>
+</tr>
+
+<tr>
+<td><b>Getting rid of sticky tags&nbsp;</b>
+<br>(it also retrieves the latest version in the repository!!!)</td>
+
+<td><b><tt>% cvs update -A &lt;file></tt></b></td>
+
+<td>When you retrieve an older version of a file (with <tt><font size=-1>cvs
+update -r </font></tt>or <tt><font size=-1>-D</font></tt>), cvs associates
+a <i>sticky tag </i>to it, so that subsequent updates won't overwrite it
+with the latest version of that file (your old version will "stick" around!).&nbsp;
+<br>If you <i>do</i> want to overwrite it with the latest version and get
+rid of the <i>sticky tag</i> do as instructed here.</td>
+</tr>
+
+<tr>
+<td><b>Adding binary files</b></td>
+
+<td>
+<li>
+To add a binary file use <b><tt>cvs add -kb &lt;file></tt></b></li>
+
+<li>
+If you <i>forgot</i> the <b>-kb</b> when adding the file (and you've comitted
+it), you can do the following to set the binary flag: <b>cvs admin -kb
+&lt;file>;&nbsp; cvs update -A &lt;file>; cvs commit -m "made it binary"
+&lt;file></b></li>
+</td>
+
+<td>&nbsp;If you forgot the -kb when adding the file on a non-unix system,
+you'll have to copy a good copy of the file from outside CVS after the
+<b>update
+-A </b>and before the <b>commit.</b></td>
+</tr>
+</table>
+
+<h3>
+4. Additional information about cvs</h3>
+If you want to know more about cvs, take a look at the <a href="http://www.loria.fr/~molli/cvs/doc/cvs_toc.html">following
+page.</a>
+<br>&nbsp;
+</body>
+</html>
