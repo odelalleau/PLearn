@@ -59,6 +59,7 @@ PLEARN_IMPLEMENT_OBJECT(
 
 SequentialValidation::SequentialValidation()
   : init_train_size(1),
+    train_step(1),
     last_test_time(-1),
     expdir(""),
     report_stats(true),
@@ -135,6 +136,11 @@ void SequentialValidation::declareOptions(OptionList& ol)
     "the method setTestStartTime() is called on the learner with init_train_size\n"
     "as argument.");
 
+  declareOption(
+    ol, "train_step", &SequentialValidation::train_step,
+    OptionBase::buildoption,
+    "At how many timesteps must we retrain? (default: 1)");
+  
   declareOption(
     ol, "last_test_time", &SequentialValidation::last_test_time,
     OptionBase::buildoption,
@@ -335,6 +341,10 @@ void SequentialValidation::run()
   Vec input, target;
   Vec output(learner->outputsize());
   Vec costs(learner->nTestCosts());
+
+  // We shall keep track of "training_time_step" separately of t, which is
+  // the test time step
+  int next_training_time_step = init_train_size;
   
   for (int t=init_train_size; t <= maxt; t++, splitnum++)
   {
@@ -344,11 +354,8 @@ void SequentialValidation::run()
     if (report_memory_usage)
       reportMemoryUsage(t);
 
-    // Compute training set.  Don't compute test set right away in case
-    // it's a complicated structure that cannot co-exist with an
-    // instantiated training set
-    VMat sub_train = trainVMat(t);
-    PPath splitdir = expdir / "train_t="+tostring(t);
+    // Create splitdirs
+    PPath splitdir = expdir / "test_t="+tostring(t);
     if (save_data_sets                 ||
         save_initial_model             ||
         save_stat_collectors           ||
@@ -356,23 +363,33 @@ void SequentialValidation::run()
         measure_after_train.size() > 0 ||
         measure_after_test.size()  > 0  )
       force_mkdir(splitdir);
-    if (save_data_sets)
-      PLearn::save(splitdir / "training_set.psave", sub_train);
-    if (save_initial_model)
-      PLearn::save(splitdir / "initial_learner.psave",learner);
+    
+    // TRAIN only if we arrive at the "next scheduled training time step"
+    if (t == next_training_time_step) {
+      next_training_time_step += train_step;
+    
+      // Compute training set.  Don't compute test set right away in case
+      // it's a complicated structure that cannot co-exist with an
+      // instantiated training set
+      VMat sub_train = trainVMat(t);
+      if (save_data_sets)
+        PLearn::save(splitdir / "training_set.psave", sub_train);
+      if (save_initial_model)
+        PLearn::save(splitdir / "initial_learner.psave",learner);
 
-    // TRAIN
-    train_stats->forget();
-    learner->setTrainingSet(sub_train, false);
-    learner->train();
-    train_stats->finalize();
+      // TRAIN
+      train_stats->forget();
+      learner->setTrainingSet(sub_train, false);
+      learner->train();
+      train_stats->finalize();
 
-    // Save post-train stuff
-    if (save_stat_collectors)
-      PLearn::save(splitdir / "train_stats.psave",train_stats);
-    if (save_final_model)
-      PLearn::save(splitdir / "final_learner.psave",learner);
-    measureOptions(measure_after_train, splitdir);
+      // Save post-train stuff
+      if (save_stat_collectors)
+        PLearn::save(splitdir / "train_stats.psave",train_stats);
+      if (save_final_model)
+        PLearn::save(splitdir / "final_learner.psave",learner);
+      measureOptions(measure_after_train, splitdir);
+    }
 
     // TEST: simply use computeOutputAndCosts for 1 observation in this
     // implementation
