@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: VMatrixFromDistribution.cc,v 1.8 2004/04/05 23:11:11 morinf Exp $ 
+ * $Id: VMatrixFromDistribution.cc,v 1.9 2004/05/20 17:04:42 tihocan Exp $ 
  ******************************************************* */
 
 /*! \file VMatrixFromDistribution.cc */
@@ -45,21 +45,15 @@ using namespace std;
 
 VMatrixFromDistribution::VMatrixFromDistribution() 
   :mode("sample"), generator_seed(0), nsamples(0)
-  /* ### Initialise all fields to their default value */
+  /* ### Initialize all fields to their default value */
 {
-  // ...
-
   samples_per_dim = 10;
-
-  // ### You may or may not want to call build_() to finish building the object
-  // build_();
 }
 
 PLEARN_IMPLEMENT_OBJECT(VMatrixFromDistribution, "A VMatrix built from sampling a distribution", 
-                        "VMatrixFromDistribution implements a vmatrix whose data rows are drawn from a distribution\n"
-                        "or that contains the density or log density sampled on a grid (depending on \"mode\".\n"
+                        "VMatrixFromDistribution implements a VMatrix whose data rows are drawn from a distribution\n"
+                        "or that contains the density or log density sampled on a grid (depending on \"mode\").\n"
                         "The matrix is computed in memory at build time\n");
-
 
 void VMatrixFromDistribution::declareOptions(OptionList& ol)
 {

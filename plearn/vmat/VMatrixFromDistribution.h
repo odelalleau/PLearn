@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMatrixFromDistribution.h,v 1.8 2004/04/05 23:11:10 morinf Exp $ 
+   * $Id: VMatrixFromDistribution.h,v 1.9 2004/05/20 17:04:42 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file VMatrixFromDistribution.h */
@@ -49,13 +49,18 @@ using namespace std;
 
 class VMatrixFromDistribution: public VMatrix
 {
+  
+private:
+  
   typedef VMatrix inherited;
+
 protected:
   
   //! Will hold the data sampled from the distribution
   Mat data;  
     
 public:
+
   // ************************
   // * public build options *
   // ************************
@@ -84,10 +89,12 @@ public:
   // ******************
 
 private: 
+
   //! This does the actual building. 
   void build_();
 
 protected: 
+
   //! Declares this class' options
   static void declareOptions(OptionList& ol);
 
@@ -99,10 +106,7 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   // Declares other standard object methods
-  //  If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
   PLEARN_DECLARE_OBJECT(VMatrixFromDistribution);
-
 
   // ******************
   // * VMatrix methods *
