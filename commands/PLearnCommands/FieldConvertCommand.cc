@@ -59,6 +59,7 @@ void FieldConvertCommand::run(const vector<string> & args)
   map<int,FieldType> force;
 
   real beta_hat,student=-1;
+  real correlation = -1;
 
   VMat vm = getDataSet(source_fn);
  
@@ -161,6 +162,11 @@ void FieldConvertCommand::run(const vector<string> & args)
       else if((count >= MIN( UNIQUE_NMISSING_FRACTION_TO_ASSUME_CONTINUOUS * sc[i].nnonmissing(), 2000)) 
           && vm->getStringToRealMapping(i).size()==0)
         type=continuous;
+      // Test whether there are only 2 unique values: in this case, we don't
+      // need a one hot, and we can consider it as continuous.
+      else if (count == 2) {
+        type = continuous;
+      }
       else {
         // if there are fractional parts, assume continuous
         for(int j=0;j<vm->length();j++)
@@ -183,6 +189,7 @@ void FieldConvertCommand::run(const vector<string> & args)
         real xmean = sc[i].mean();
         real ymean = sc[target].mean();
         real x_minus_xmean_square=0;
+        real y_minus_ymean_square=0;
 
         int len_nm = (int)sc[i].nnonmissing();
         int len = vm->length();
@@ -197,10 +204,15 @@ void FieldConvertCommand::run(const vector<string> & args)
           if(!is_missing(x[j]))
           {
             real xdiff = x[j] - xmean;
-            beta_hat += xdiff * (y[j] - ymean);
+            real ydiff = y[j] - ymean;
+            beta_hat += xdiff * ydiff;
             x_minus_xmean_square += xdiff * xdiff;
+            y_minus_ymean_square += ydiff * ydiff;
           }
           
+        // Correlation^2 = sum_xy^2 / (sum_xx * sum_yy).
+        correlation = fabs(beta_hat) / sqrt(x_minus_xmean_square * y_minus_ymean_square);
+
         beta_hat /= x_minus_xmean_square;
 
         // compute sigma-hat
@@ -310,7 +322,7 @@ void FieldConvertCommand::run(const vector<string> & args)
     if(action==0)report<<"~~user intervention required :"<<message;
     if(action&NORMALIZE)report<<"NORMALIZE ";
     if(action&ONEHOT)report<<"ONEHOT("<<count<<") ";
-    if(type==discrete_corr)report<<"correl: "<<beta_hat<<" 2tail-student:"<<student<<" ";
+    if(type==discrete_corr)report<<"correl: "<<correlation<<" 2tail-student:"<<student<<" ";
     if(action&MISSING_BIT)report<<"MISSING_BIT ";
     if(action&SKIP)report<<"SKIP ";
     report<<endl;
