@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: Popen.h,v 1.3 2004/02/20 21:11:49 chrish42 Exp $
+   * $Id: Popen.h,v 1.4 2004/02/26 07:38:04 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -66,7 +66,11 @@ using namespace std;
     bool process_alive;
 
   public:
+
+// norman: pid_t not supported
+#ifndef WIN32
     pid_t pid;
+#endif
     
     int fdin;
     int fdout;    

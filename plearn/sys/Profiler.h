@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Profiler.h,v 1.2 2004/02/20 21:11:49 chrish42 Exp $
+   * $Id: Profiler.h,v 1.3 2004/02/26 07:38:35 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -43,6 +43,12 @@
 #define PROFILER_INC
 
 #define PROFILE
+
+#ifdef WIN32
+// For the moment I put a compiler error
+// but I could throw a PERROR..
+#error Profiler is not working on WIN32
+#endif
 
 #include <sys/times.h>
 #include "general.h"

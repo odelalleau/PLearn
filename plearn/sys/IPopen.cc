@@ -33,12 +33,12 @@
  
 
 /* *******************************************************      
-   * $Id: IPopen.cc,v 1.4 2004/02/20 21:11:49 chrish42 Exp $
+   * $Id: IPopen.cc,v 1.5 2004/02/26 07:38:03 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include <sys/types.h>
-#if !defined(_MSC_VER) && !defined(_MINGW_)
+#if !defined(_MSC_VER) && !defined(_MINGW_) && !(defined WIN32)
 #include <sys/wait.h>
 #endif
 #include "stringutils.h"

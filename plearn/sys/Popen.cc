@@ -36,15 +36,16 @@
  
 
 /* *******************************************************      
-   * $Id: Popen.cc,v 1.5 2004/02/20 21:11:49 chrish42 Exp $
+   * $Id: Popen.cc,v 1.6 2004/02/26 07:38:04 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include <sys/types.h>
-#if !defined(_MSC_VER) && !defined(_MINGW_)
+// norman: added win32
+#if !defined(_MSC_VER) && !defined(_MINGW_) && !defined(WIN32)
 #include <sys/wait.h>
-#endif
 #include <unistd.h>
+#endif
 #include "stringutils.h"
 #include "Popen.h"
 #include <errno.h>
@@ -52,7 +53,7 @@
 namespace PLearn {
 using namespace std;
 
-#ifdef _MINGW_
+#if defined(_MINGW_) || defined(WIN32)
 void Popen::launch(const string& command)
 { PLERROR("Popen - Not implemented for this platform"); }
 

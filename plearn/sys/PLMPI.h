@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLMPI.h,v 1.5 2004/02/20 21:11:49 chrish42 Exp $
+   * $Id: PLMPI.h,v 1.6 2004/02/26 07:38:04 nova77 Exp $
    * AUTHORS: Pascal Vincent 
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -54,8 +54,9 @@
 #include "Mat.h"
 #include "plerror.h"
 #include "plstreams.h"
-#include "iostream.h"
-#include "fstream.h"
+// norman: changed to standard calls
+#include <iostream>
+#include <fstream>
 
 namespace PLearn {
 using namespace std;

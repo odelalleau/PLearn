@@ -19,7 +19,7 @@
 // OUINNEDOZE
 
 //#define _X86_
-#if !defined (_MINGW_)
+#if !defined (_MINGW_) && !defined(WIN32)
 #include <varargs.h>
 #else
 //#include <windef.h>
@@ -49,7 +49,7 @@ static int fileSize(const char *filename)
 ///////////////////////////////////////////
 void * memoryMap(const char *filename, tFileHandle & file_handle, bool readonly, int offset_, int length)
  {
-#ifdef _MINGW_
+#if defined(_MINGW_) || defined(WIN32)
      PLERROR("memoryMap() - Not supported for MINGW");
      return 0;
 #else
@@ -89,7 +89,7 @@ void * memoryMap(const char *filename, tFileHandle & file_handle, bool readonly,
 ///////////////////////////////////////////
 bool memoryUnmap(void * p, tFileHandle file_handle)
  {   
-#ifdef _MINGW_
+#if defined(_MINGW_) || defined(WIN32)
      PLERROR("memoryUnmap - Not supported for MINGW");
      return false;
 #else
