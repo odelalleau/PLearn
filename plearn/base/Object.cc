@@ -37,15 +37,15 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.24 2004/02/29 02:06:16 nova77 Exp $
+   * $Id: Object.cc,v 1.25 2004/03/02 22:48:00 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "Object.h"
 //#include "stringutils.h"
-//#include "fileutils.h"
-//#include "TypeFactory.h"
+#include "fileutils.h"
+#include "TypeFactory.h"
 //#include <iostream>
 
 #include <algorithm>
@@ -338,6 +338,20 @@ Object* loadObject(const string &filename)
     return o;
 }
 
+Object* macroLoadObject(const string &filename, map<string, string>& vars)
+{
+  string script = readFileAndMacroProcess(filename, vars);
+  PIStringStream sin(script);
+  Object* o = readObject(sin);
+  o->build();
+  return o;
+}
+  
+Object* macroLoadObject(const string &filename)
+{
+  map<string, string> vars;
+  return macroLoadObject(filename,vars);
+}
 
 Object* readObject(PStream &in, unsigned int id)
 {

@@ -319,7 +319,7 @@ WARN_LOGFILE           =
 INPUT                  = ../plearn \
                          ../plearn_learners \
                          ../plearn_learners_experimental \
-			 ../commands
+			                   ../commands
 
 # If the value of the INPUT tag contains directories, you can use the 
 # FILE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp 

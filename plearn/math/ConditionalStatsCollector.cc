@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalStatsCollector.cc,v 1.4 2004/02/20 21:11:46 chrish42 Exp $ 
+   * $Id: ConditionalStatsCollector.cc,v 1.5 2004/03/02 22:48:00 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -197,11 +197,11 @@ void ConditionalStatsCollector::update(const Vec& v, real weight)
       minima_condvar.resize(nvars);
       maxima.resize(nvars);
       maxima_condvar.resize(nvars);
-      int nranges_condvar = ranges[condvar].length();
+      int nranges_condvar = ranges[condvar].length()+1; // +1 for missing values
       for(int k=0; k<nvars; k++)
         {        
-          int nranges_k = ranges[k].length();
-          counts[k].resize(nranges_k+1, nranges_condvar+1);
+          int nranges_k = ranges[k].length()+1; // +1 for missing values
+          counts[k].resize(nranges_k, nranges_condvar);
           counts[k].fill(0);
           sums[k].resize(nranges_k, nranges_condvar);
           sums[k].fill(0);

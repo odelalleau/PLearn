@@ -2,7 +2,7 @@
 %%
 %%  Copyright (c) 2002 by Pascal Vincent
 %%
-%%  $Id: users_guide.tex,v 1.12 2003/11/26 15:56:22 lheureup Exp $
+%%  $Id: users_guide.tex,v 1.13 2004/03/02 22:47:56 plearner Exp $
 
 \documentclass[11pt]{book}
 \usepackage{html}               % package for latex2html
@@ -522,6 +522,7 @@ element: space, tab, newline, carriage-return, comma and semicolon. They
 are essentially ignored. Binary serialized things should always start with
 a non-printable ascii character.
 
+
 \subsection{TVec and TMat}
 
 TVec and TMat will be serialized differently depending on the {\em
@@ -529,8 +530,8 @@ implicit\_storage} flag of the PStream they are being written to.
 
 If {\em implicit\_storage} is set, then serialization won't write the actual
 whole structure of the TVec or TMat, but will only save the size information
-and elements as a 1D or 2D {\em sequence} (see \ref{ascii_sequence} and
-\ref{binary_sequence}), ex:
+and elements as a 1D or 2D {\em sequence} (see \ref{ascii-sequence} and
+\ref{binary-sequence}), ex:
 
 \begin{verbatim}
 4 [ 1.2 3.5 2.8 5.2 ]
@@ -610,7 +611,7 @@ double         & big-endian    & 0x11        & 8 \\ \hline
 booleans are represented the same way in binary mode as in ascii mode: with the character 0 (for false) or 1 (for true).
 
 \subsection{Ascii PLearn format for a sequence}
-\label{ascii_sequence}
+\label{ascii-sequence}
 
 We consider both one-dimensional sequences ( array, vector, \ldots) which only have a length,
 and two-dimensional sequences which have a length and a width.
@@ -645,7 +646,7 @@ completely ignored (skipped), so you may format the data as you wish.
 Notice that it's also possible to make a 1D sequence of 1D sequences, but that's different from a 2D sequence.
 
 \subsection{Binary PLearn format for a sequence}
-\label{binary_sequence}
+\label{binary-sequence}
 
 We consider both one-dimensional sequences ( array, vector, \ldots) which only have a length,
 and two-dimensional sequences which have a length and a width.

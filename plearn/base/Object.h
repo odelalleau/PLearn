@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.25 2004/02/28 17:53:01 tihocan Exp $
+   * $Id: Object.h,v 1.26 2004/03/02 22:48:00 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,7 +46,8 @@
 #ifndef Object_INC
 #define Object_INC
 
-//#include <map>
+#include <map>
+#include <string>
 //#include <set>
 //#include "general.h"
 #include "PP.h"
@@ -588,8 +589,16 @@ template<class T> Object *toIndexedObjectPtr(const T&, int) // Never to be calle
   inline Object *readObject(istream &in_)
       { PStream in(&in_); return readObject(in); };
 
-  //!  Same as previously, but takes a filename rather than a istream
-  Object *loadObject(const string &filename);
+//! Loads an object from the given file (no macro-preprocessing is performed)
+Object *loadObject(const string &filename);
+
+//! Same as loadObject but first performs macro-processing on the file
+//! vars may be initialised with the values of some variables
+//! and upon return it will also contain newly $DEFINED variables 
+Object* macroLoadObject(const string &filename, map<string,string>& vars);
+
+//! same as previous, but no need to pass a variables map
+Object* macroLoadObject(const string &filename);
 
   //! Creates a new object according to the given representation.
   //! This actually calls readObject on an istrstream, so anything

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalStatsCollector.h,v 1.4 2004/02/20 21:11:46 chrish42 Exp $ 
+   * $Id: ConditionalStatsCollector.h,v 1.5 2004/03/02 22:48:00 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -83,35 +83,35 @@ public:
     TVec< TMat<double> > counts;
 
     //! sums[k](i,j) contains the (possibly weighted) sum of variable k's values that fell in range i while condvar was in range j
-    //! (unlike counts, these do not have an extra row and column for misisng value)
+    //! counts[k] has one more row and column than there are mapping ranges: the last ones counting "MISSING_VALUE" occurences.
     TVec< TMat<double> > sums; 
 
     //! sums_condvar[k](i,j) contains the (possibly weighted) sum of variable condvar's values that fell in range i while variable k was in range j
-    //! (unlike counts, these do not have an extra row and column for misisng value)
+    //! counts[k] has one more row and column than there are mapping ranges: the last ones counting "MISSING_VALUE" occurences.
     TVec< TMat<double> > sums_condvar; 
 
     //! sumsquares[k](i,j) contains the (possibly weighted) sum of squares of variable k's values that fell in range i while condvar was in range j
-    //! (unlike counts, these do not have an extra row and column for misisng value)
+    //! counts[k] has one more row and column than there are mapping ranges: the last ones counting "MISSING_VALUE" occurences.
     TVec< TMat<double> > sumsquares;
 
     //! sumsquares_condvar[k](i,j) contains the (possibly weighted) sum of squares of condvar's values that fell in range i while variable k was in range j
-    //! (unlike counts, these do not have an extra row and column for misisng value)
+    //! counts[k] has one more row and column than there are mapping ranges: the last ones counting "MISSING_VALUE" occurences.
     TVec< TMat<double> > sumsquares_condvar;
 
     //! minima[k](i,j) contains the min of variable k's values that fell in range i while condvar was in range j
-    //! (unlike counts, these do not have an extra row and column for misisng value)
+    //! counts[k] has one more row and column than there are mapping ranges: the last ones counting "MISSING_VALUE" occurences.
     TVec< TMat<double> > minima; 
 
     //! minima_condvar[k](i,j) contains the min of variable condvar's values that fell in range i while variable k was in range j
-    //! (unlike counts, these do not have an extra row and column for misisng value)
+    //! counts[k] has one more row and column than there are mapping ranges: the last ones counting "MISSING_VALUE" occurences.
     TVec< TMat<double> > minima_condvar; 
 
     //! maxima[k](i,j) contains the max of variable k's values that fell in range i while condvar was in range j
-    //! (unlike counts, these do not have an extra row and column for misisng value)
+    //! counts[k] has one more row and column than there are mapping ranges: the last ones counting "MISSING_VALUE" occurences.
     TVec< TMat<double> > maxima; 
 
     //! maxima_condvar[k](i,j) contains the max of variable condvar's values that fell in range i while variable k was in range j
-    //! (unlike counts, these do not have an extra row and column for misisng value)
+    //! counts[k] has one more row and column than there are mapping ranges: the last ones counting "MISSING_VALUE" occurences.
     TVec< TMat<double> > maxima_condvar; 
 
   // ****************
