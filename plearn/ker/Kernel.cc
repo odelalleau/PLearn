@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.25 2004/05/17 14:48:06 ouimema Exp $
+   * $Id: Kernel.cc,v 1.26 2004/05/17 15:12:54 ouimema Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -394,9 +394,8 @@ real Kernel::test(VMat d, real threshold, real sameness_below_threshold, real sa
 //////////////////////////////////////////////
 Mat Kernel::computeKNNeighbourMatrixFromDistanceMatrix(const Mat& D, int knn, bool insure_self_first_neighbour, bool report_progress)
 {
-  // TODO Make it possible to only compute the k nearest neighbours.
   int npoints = D.length();
-  Mat neighbours(npoints, npoints);  
+  Mat neighbours(npoints, knn);  
   Mat tmpsort(npoints,2);
 
   ProgressBar* pb = 0;
@@ -416,7 +415,7 @@ Mat Kernel::computeKNNeighbourMatrixFromDistanceMatrix(const Mat& D, int knn, bo
         tmpsort(i,0) = -FLT_MAX;
 
       partialSortRows(tmpsort, knn);
-      neighbours(i) << tmpsort.column(1);
+      neighbours(i) << tmpsort.column(1).subMatRows(0,knn);
       if (pb)
         pb->update(i);
     }
