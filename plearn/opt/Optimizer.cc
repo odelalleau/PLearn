@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.cc,v 1.20 2003/10/07 15:07:58 tihocan Exp $
+   * $Id: Optimizer.cc,v 1.21 2003/10/08 18:29:11 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -398,9 +398,9 @@ real Optimizer::collectGradientStats(Vec gradient) {
 /////////////////
 // computeCost //
 /////////////////
-void Optimizer::computeCost() {
+/*void Optimizer::computeCost() {
   cout << "Warning: In Optimizer::computeCost This optimizer doesn't implement this method" << endl;
-}
+}*/
     
 /////////////////////
 // computeGradient //
