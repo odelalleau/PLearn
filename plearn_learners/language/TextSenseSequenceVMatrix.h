@@ -26,6 +26,8 @@ protected:
   bool rand_syn;
   TVec<TVec<pair<int, real> > > word_given_sense_priors;
   WordNetOntology *wno;
+  int my_current_row_index;
+  Vec my_current_row;
 
 public:
 

@@ -36,14 +36,14 @@ void TextSenseSequenceVMatrix::getNewRow(int i, Vec& v) const
 
   // Fetch context already in memory
 
-  if(i == current_row_index)
+  if(i == my_current_row_index)
   {
-    for(int j=0; j<current_row.size(); j++)
-      v[j] = current_row[j];
+    for(int j=0; j<my_current_row.size(); j++)
+      v[j] = my_current_row[j];
     if(dvm->width() == 3 && rand_syn)
       permute(v);
-    for(int j=0; j<current_row.size(); j++)
-      current_row[j] = v[j];
+    for(int j=0; j<my_current_row.size(); j++)
+      my_current_row[j] = v[j];
     return;
   }
 
@@ -54,29 +54,29 @@ void TextSenseSequenceVMatrix::getNewRow(int i, Vec& v) const
   while(context_dist <= window_size/2)
   {
     int context_dist_i = context_dist+i;
-    int dist_current_row_index = (context_dist_i) - current_row_index;
-    if(current_row_index != -1 && dist_current_row_index >= - window_size/2 && dist_current_row_index <= window_size/2)
+    int dist_my_current_row_index = (context_dist_i) - my_current_row_index;
+    if(my_current_row_index != -1 && dist_my_current_row_index >= - window_size/2 && dist_my_current_row_index <= window_size/2)
     {
       int index = -1;
-      if(dist_current_row_index == 0)
+      if(dist_my_current_row_index == 0)
         index = window_size;
-      if(dist_current_row_index < 0)
-        index = window_size/2 + dist_current_row_index;
-      if(dist_current_row_index > 0)
-        index = window_size/2 + dist_current_row_index - 1;
+      if(dist_my_current_row_index < 0)
+        index = window_size/2 + dist_my_current_row_index;
+      if(dist_my_current_row_index > 0)
+        index = window_size/2 + dist_my_current_row_index - 1;
       
       if(context_dist != 0)
       {
-        v[3*context_count] = current_row[3*index];
-        v[3*context_count+1] = current_row[3*index+1];
-        v[3*context_count+2] = current_row[3*index+2];
+        v[3*context_count] = my_current_row[3*index];
+        v[3*context_count+1] = my_current_row[3*index+1];
+        v[3*context_count+2] = my_current_row[3*index+2];
         context_count++;
       }
       else
       {
-        v[3*window_size] = current_row[3*index];
-        v[3*window_size+1] = current_row[3*index+1];
-        v[3*window_size+2] = current_row[3*index+2];
+        v[3*window_size] = my_current_row[3*index];
+        v[3*window_size+1] = my_current_row[3*index+1];
+        v[3*window_size+2] = my_current_row[3*index+2];
       }
     }
     else
@@ -160,9 +160,9 @@ void TextSenseSequenceVMatrix::getNewRow(int i, Vec& v) const
   if(dvm->width() == 3 && rand_syn)
     permute(v);
   
-  current_row_index = i;
-  for(int j=0; j<current_row.size(); j++)
-    current_row[j] = v[j];
+  my_current_row_index = i;
+  for(int j=0; j<my_current_row.size(); j++)
+    my_current_row[j] = v[j];
 }
 
 int TextSenseSequenceVMatrix::getRestrictedRow(const int i, Vec v) const
@@ -171,7 +171,7 @@ int TextSenseSequenceVMatrix::getRestrictedRow(const int i, Vec v) const
   if(i >= dvm->length() || i < 0)
     PLERROR("In TextSenseSequenceVMatrix: requesting %dth row of matrix of length %d", i, dvm.length());
   if(v.length() != 3*(window_size+1))
-    PLERROR("In TextSenseSequenceVMatrix: getRow v.length() must be equal to VMat's width");
+    PLERROR("In TextSenseSequenceVMatrix: getRestrictedRow v.length() must be equal to VMat's width");
   
   // Initialization of context
   
@@ -329,9 +329,9 @@ int TextSenseSequenceVMatrix::getRestrictedRow(const int i, Vec v) const
   if(dvm->width() == 3 && rand_syn)
     permute(v);
 
-  current_row_index = i;
-  for(int j=0; j<current_row.size(); j++)
-    current_row[j] = v[j];
+  my_current_row_index = i;
+  for(int j=0; j<my_current_row.size(); j++)
+    my_current_row[j] = v[j];
 
   return context_dist+i == dvm->length() ? context_dist+i : context_dist+i-1;
 }
