@@ -1,4 +1,4 @@
-__cvs_id__ = "$Id: modes.py,v 1.19 2005/03/11 02:49:05 dorionc Exp $"
+__cvs_id__ = "$Id: modes.py,v 1.20 2005/03/11 03:08:04 dorionc Exp $"
 
 import copy, shutil
 import plearn.utilities.version_control as version_control
@@ -7,7 +7,7 @@ import plearn.utilities.toolkit         as toolkit
 
 from Test                       import *
 from programs                   import *
-from test_and_routines          import *
+from routines                   import *
 from ModeAndOptionParser        import *
 from plearn.utilities.toolkit   import *
 from plearn.utilities.verbosity import *
