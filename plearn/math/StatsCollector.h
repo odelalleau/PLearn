@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.25 2004/02/20 21:11:46 chrish42 Exp $
+   * $Id: StatsCollector.h,v 1.26 2004/03/09 16:41:28 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -123,6 +123,7 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
 
   public:
 
+
     StatsCollector(int the_maxnvalues=0);
       
     real n() const { return nmissing_ + nnonmissing_; } //!< number of samples seen with update (length of VMat for ex.)
@@ -203,6 +204,14 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
 
   DECLARE_OBJECT_PTR(StatsCollector);
 
+  //! Apparently needed to specialize this method, otherwise it was the generic
+  //! deepCopyField from CopiesMap.h that was called when deep copying a
+  //! TVec<StatsCollector>.
+  template <>
+  inline void deepCopyField(StatsCollector& field, CopiesMap& copies)
+  {
+    field.makeDeepCopyFromShallowCopy(copies);
+  }
 
 TVec<RealMapping> computeRanges(TVec<StatsCollector> stats, int discrete_mincount, int continuous_mincount);
 
