@@ -37,7 +37,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.88 2005/01/28 17:43:03 plearner Exp $
+* $Id: VMatrix.cc,v 1.89 2005/02/03 17:10:22 ducharme Exp $
 ******************************************************* */
 
 #include <plearn/io/load_and_save.h>
@@ -400,15 +400,13 @@ Array<VMField> VMatrix::getSavedFieldInfos() const
     Array<VMField> no_fieldinfos(0);
     return no_fieldinfos;
   }
-  ifstream in(filename.c_str());
-  if(!in)
-    PLERROR("In VMatrix::getSavedFieldInfos Couldn't open file %s for reading",filename.c_str());    
+  PStream in = openFile(filename, PStream::raw_ascii, "r");
 
   int w = width();
   Array<VMField> current_fieldinfos(w);
   for(int i=0; i<w; ++i)
   {
-    vector<string> v(split(pgetline(in)));
+    vector<string> v(split(in.getline()));
     switch(v.size())
     {
       case 1: current_fieldinfos[i] = VMField(v[0]); break;
