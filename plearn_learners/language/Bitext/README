@@ -1,0 +1,38 @@
+
+
+1) Download and compile GIZA++
+	http://www.isi.edu/~och/GIZA++.html
+
+2) Train the translation model :
+	
+	2.1) Prepare the training and testing files : one sentence per line, in English (.e) and French (.f)
+		GIZA++/plain2snt.out train.e train.f
+		GIZA++/plain2snt.out test.e test.f
+
+	2.2) Train the model
+		GIZA++ -S train.e.vcb -T train.f.vcb -C train.etrain.f.snt -TC test.etest.f.snt -p0 0.98 -o EF >& GIZA++.log
+
+	2.3) Do the same in the other direction :
+		GIZA++/plain2snt.out train.f train.e
+		GIZA++/plain2snt.out test.f test.e
+		GIZA++ -S train.f.vcb -T train.e.vcb -C train.ftrain.e.snt -TC test.ftest.e.snt -p0 0.98 -o FE >& GIZA++fe.log
+
+3) Construct the word to word alignment
+	
+	bi_align_sentence2word EF.A3.final FE.A3.final > EF.FE.A3.final.word2
+	grep -v NULL  EF.FE.A3.final.word2 >  EF.FE.A3.final.word2.noNull
+	
+	
+4) Purge the translation pairs. This step is needed to define the source and target vocabulary of the bitext model. Not all the English and French words are considered in the model. 
+	src.voc contains the english words to disambiguate
+	EF.FE.A3.final.word2.tgt.voc contains the french translations of the words in src.vc
+	EF.FE.A3.final.word2.src.voc contains the english translations of  EF.FE.A3.final.word2.tgt.voc
+	
+
+	select_trans_per_src  src.voc EF.FE.A3.final.word2 0.02	
+	select_trans_per_src  src.voc EF.FE.A3.final.word2 0.02 > EF.FE.A3.final.word2.tgt.voc
+	select_trans_per_tgt EF.FE.A3.final.word2.tgt.voc EF.FE.A3.final.word2 0.02 > EF.FE.A3.final.word2.src.voc
+
+	
+			
+	

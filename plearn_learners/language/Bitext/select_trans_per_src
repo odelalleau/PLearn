@@ -1,0 +1,63 @@
+#!/usr/bin/perl
+## -*-perl-*-
+
+
+use Text::Unaccent;
+
+$THRES = 0;
+
+$NSFIC = shift;
+$NIFIC = shift;
+$THRES = shift;
+$POS = shift;
+if (!defined($NSFIC)&& !defined($NIFIC)){die "usage :select_trans_per_src src_voc  in_file percent_threshold POS\n";}
+    
+    
+if (defined($POS)){
+    print STDERR "Use POS restiction\n";
+    $pos_prune = 1;
+}else{
+    print STDERR "Don't use POS restiction\n";
+    $pos_prune = 0;
+}
+
+open ( SFIC, "<$NSFIC") or die "ARG!, impossible d'ouvrir le fichier $NSFIC : $! \n";
+open ( IFIC, "<$NIFIC") or die "ARG!, impossible d'ouvrir le fichier $NIFIC : $! \n";
+
+# load voc
+print STDERR "Loading source voc :";
+$svoc=0;
+while (<SFIC>){
+    m/(\S+)/;
+    $SVOC{$1}=1;
+    $svoc++;
+}
+print STDERR $svoc," words\n";
+
+
+while (<IFIC>){
+    chomp;
+    if($pos_prune){
+	m/(\S*)\s(\S*)\s(\S*)\s(\S*)/;
+	next if ($4 ne "NN" && $4 ne "NNS");
+	next if($2 ne "NOM");
+	$var = $1."/".$3;
+	$eng = $3;
+    }else{
+	m/(\S*)\s(\S*)/;
+	$var = $1."/".$2;
+	$eng = $2;
+    }
+    next if (!exists($SVOC{$eng}));
+    $FREQ{$eng}++;
+    $FREQCOUPLE{$var}++;
+}
+
+
+foreach $couple (keys %FREQCOUPLE){
+    @tab = split("/",$couple);
+    if($FREQCOUPLE{$couple}/$FREQ{$tab[1]}>$THRES){
+	print "$tab[0]\n";
+    }
+}
+

@@ -1,0 +1,128 @@
+#!/usr/bin/perl
+## -*-perl-*-
+
+use Shell qw(wc);
+
+$NALIGN = shift;
+$NALIGN2 = shift;
+$NSFIC = shift;
+$NTFIC =  shift;
+
+$prune=0;
+
+if (!defined($NALIGN)|| !defined($NALIGN2)) {
+    print"usage : align_sentence2word alignement alignement2 [source.voc target.voc]\n";
+    print"  \t compute word-to-word alignement from sentence alignment in both directions (source->target and target->source)\n";
+    print"\t source.voc target.voc are optional and used only to restrict the vocabulary\n";
+    die;
+}
+
+if(defined($NSFIC) && defined($NTFIC)){
+# Load source vocabulary in hash table
+# format : one wor per line
+    $nvoc=0;
+    open ( SFIC, "<$NSFIC") or die "cannot open file ", $NSFIC, ": ", $!,"\n";
+    while  (<SFIC>){
+	
+	m/(\S+)/;
+	$SVOC{$1}=1;
+	$nvoc++;
+    }
+    print STDERR $nvoc," word in source vocabulary\n";
+    
+# Load target vocabulary in hash table
+    $nvoc=0;
+    open ( TFIC, "<$NTFIC") or die "cannot open file ", $NTFIC, ": ", $!,"\n";
+    while  (<TFIC>){
+	
+	m/(\d+)\s(.+)\s()/;
+	$TVOC{$2}=$1;
+	$nvoc++;
+    }
+    print STDERR $nvoc," word in target vocabulary\n";
+}
+
+# Translate alignment
+print STDERR "translating...\n";
+open ( ALIGN, "<$NALIGN") or die "cannot open file $NALIGN : $! \n";
+open ( ALIGN2, "<$NALIGN2") or die "cannot open file $NALIGN2 : $! \n";
+
+$nalign=0;
+while  (<ALIGN>){
+    # flag : do we print at least on translation ?
+    $out_flg=0;
+    if (m/\#/){
+	$_ =<ALIGN2>;
+	$nalign++;
+	# read target sentence in file 1
+	$_ = <ALIGN>;
+	@TARGET = split ;
+	#print @TARGET,"\n";
+	# read target sentence in file 2
+       	$_ =<ALIGN2>;
+	@TARGET2 = split;
+	
+	
+	# read source sentence in file 1
+       	$_ = <ALIGN>;
+	while (m/([^\s]*)\s\(\{(\s(\d+\s)*)\}\)/g){
+	   
+	   # print "v1 =",$1,"/v2 =",$2," /v3 =",$3,"/\n";
+	    $v2=$2;
+	    @tseq = split(/ /,$v2);
+	    #print @tseq;
+	    foreach $word (@tseq){
+		next if ($word eq '');
+		$tword = $TARGET[scalar($word)-1];
+		push (@{$SOURCE{$1}},$tword);
+                #print $tword," ",$1,"\n";
+		if ($prune){
+		    if (!exists $SVOC{$1}){
+			print STDERR "SRC $1 does not exist\n";
+			next;
+		    }
+		    if (!exists $TVOC{$tword}){
+			print STDERR "TGT $tword does not exist\n";
+			next;
+		    }
+		}
+		#print $TVOC{$TARGET[scalar($word)-1]}," ",$SVOC{$1},"\n";
+		#print $tword," ",$1,"\n";
+	    }
+	}
+	
+	$_ = <ALIGN2>;
+	while (m/([^\s]*)\s\(\{(\s(\d+\s)*)\}\)/g){
+	    $v2=$2;
+	    @tseq = split(/ /,$v2);
+	    foreach $word (@tseq){
+		next if ($word eq '');
+		$tword = $TARGET2[scalar($word)-1];
+		if ($prune){
+		    if (!exists $SVOC{$1}){
+			print STDERR "SRC $1 does not exist\n";
+			next;
+ 		    }
+		    if (!exists $TVOC{$tword}){
+			print STDERR "TGT $tword does not exist\n";
+			next;
+		    }
+		}
+		#print $tword," ",$1,"\n";
+		foreach $t (@{$SOURCE{$tword}}){
+		   
+		    if ($t eq $1){
+			print $1," ",$tword,"\n";
+			$out_flg=1;
+			last;
+		    }
+		}
+	    }
+	}
+	undef %SOURCE;
+	#undef %TARGET2;
+    }
+    #if($out_flg){print ". .\n";}
+}
+print STDERR $nalign," alignments translated\n"
+    
