@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussMix.h,v 1.12 2004/05/17 20:58:20 tihocan Exp $ 
+   * $Id: GaussMix.h,v 1.13 2004/05/18 13:46:56 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file GaussMix.h */
@@ -135,6 +135,8 @@ protected:
   Vec alpha;
   TVec<Mat> covariance;
   int D;
+  //! a LxD matrix of diagonals (type == 'diagonal' -> the diagonal of the covar matrix. type == 'factor' -> noise on each dimension of feature space) // TODO Remove
+  Mat diags;
   Mat mu;  
   int nsamples;
   Mat posteriors;
@@ -144,8 +146,6 @@ protected:
   // Fields below are not options.
   // TODO See which should be build options, and if they are all needed.
 
-  //! a LxD matrix of diagonals (type == 'diagonal' -> the diagonal of the covar matrix. type == 'factor' -> noise on each dimension of feature space)
-  Mat diags;
 
   bool global_lambda0;
 

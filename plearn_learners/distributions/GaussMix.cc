@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.18 2004/05/17 20:58:19 tihocan Exp $ 
+ * $Id: GaussMix.cc,v 1.19 2004/05/18 13:46:56 tihocan Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -72,12 +72,12 @@ PLEARN_IMPLEMENT_OBJECT(GaussMix, "Gaussian Mixture, either set non-parametrical
                         "alpha : the ponderation factor of that gaussian\n"
                         "mu : its center\n"
                         "There are 4 possible parametrization types.:\n"
-                        "Spherical : gaussians have covar matrix = diag(sigma). parameter used : sigma.\n"
-                        "Diagonal : gaussians have covar matrix = diag(sigma_i). parameters used : diags.\n"
-                        "General : gaussians have an unconstrained covariance matrix. User provides the K<=D greatest eigenvalues\n"
+                        " - spherical : gaussians have covar matrix = diag(sigma). parameter used : sigma.\n"
+                        " - diagonal : gaussians have covar matrix = diag(sigma_i). parameters used : diags.\n"
+                        " - general : gaussians have an unconstrained covariance matrix. User provides the K<=D greatest eigenvalues\n"
                         "          (through parameter lambda) and their corresponding eigenvectors (through matrix V)\n"
                         "          of the covariance matrix. For the remaining D-K eigenvectors, a user-given eigenvalue (through sigma) is assumed\n"
-                        "Factor : as in the general case, the gaussians are defined with K<=D vectors (through KxD matrix 'V'), but these need not be orthogonal/orthonormal.\n"
+                        " - factor : as in the general case, the gaussians are defined with K<=D vectors (through KxD matrix 'V'), but these need not be orthogonal/orthonormal.\n"
                         "         The covariance matrix used will be V(t)V + psi with psi a D-vector (through parameter diags).\n");
 
 ////////////////////
@@ -116,28 +116,32 @@ void GaussMix::declareOptions(OptionList& ol)
   declareOption(ol,"D", &GaussMix::D, OptionBase::learntoption,
                 "Number of dimensions in input space.");
     
+  declareOption(ol,"diags", &GaussMix::diags, OptionBase::learntoption,
+                "The element (i,j) is the stddev of Gaussian j on the i-th dimension.");
+    
   declareOption(ol, "mu", &GaussMix::mu, OptionBase::learntoption,
                 "These are the centers of each Gaussian, stored in rows.");
 
   declareOption(ol, "nsamples", &GaussMix::nsamples, OptionBase::learntoption,
                 "The number of samples in the training set.");
 
-  declareOption(ol, "posteriors", &GaussMix::posteriors, OptionBase::learntoption,
+  declareOption(ol, "posteriors", &GaussMix::posteriors, OptionBase::learntoption,   // TODO Remove from options (too much space on disk).
                 "The posterior probabilities P(j | x_i), where j is the index of a Gaussian,\n"
                 "and i is the index of a sample.");
 
   declareOption(ol, "sigma", &GaussMix::sigma, OptionBase::learntoption,
                 "This is one way to represent the covariance or part of it, depending on type:\n"
-                " - Spherical : the sigma for each spherical gaussian, in all directions\n"
-                " - Diagonal : not used"\
+                " - spherical : the sigma for each spherical gaussian, in all directions\n"
+                " - diagonal : not used"\
                 "General : for the l-th gaussian, the eigenvalue (a.k.a lambda0) used for all D-Ks[l] dimensions");
   //TODO Redo the help on sigma.
 
   // TODO What to do with these options.
   
+  /*
   declareOption(ol, "diags", &GaussMix::diags, OptionBase::buildoption,
                 "diagonal : a L x D matrix where row 'l' is the diagonal of the covariance matrix of gaussian l\n"\
-                "factor : a L x D matrix where row 'l' is psi (the output noise) ** note that after calling build(), the rows of diags are inverted (diags(i,j)=1/diags(i,j)");
+                "factor : a L x D matrix where row 'l' is psi (the output noise) ** note that after calling build(), the rows of diags are inverted (diags(i,j)=1/diags(i,j)"); */ // TODO Put back some of those comments.
 
   declareOption(ol, "lambda", &GaussMix::lambda, OptionBase::buildoption,
                 "General : The concatenation of all vectors of length K[l] containing the eigenvalues of the l-th gaussian.");
@@ -311,8 +315,15 @@ void GaussMix::computeMeansAndCovariances() {
       Vec center = mu(j);
       computeInputMeanAndVariance(weighted_train_set, center, variance);
       sigma[j] = sqrt(mean(variance));   // TODO See if harmonic mean is needed ?
+    } else if (type == "diagonal") {
+      Vec variance(D);
+      Vec center = mu(j);
+      computeInputMeanAndVariance(weighted_train_set, center, variance);
+      for (int i = 0; i < D; i++) {
+        diags(i,j) = sqrt(variance[i]);
+      }
     } else {
-      PLERROR("In GaussMix::computeCovariances - Not implemented for this type of Gaussian");
+      PLERROR("In GaussMix::computeMeansAndCovariances - Not implemented for this type of Gaussian");
     }
     // TODO Implement them all.
   }
@@ -326,6 +337,12 @@ real GaussMix::computePrior(Vec& x, int j) {
     real p = 1.0;
     for (int k = 0; k < D; k++) {
       p *= gauss_density(x[k], mu(j, k), sigma[j]);
+    }
+    return p;
+  } else if (type == "diagonal") {
+    real p = 1.0;
+    for (int k = 0; k < D; k++) {
+      p *= gauss_density(x[k], mu(j, k), diags(k,j));
     }
     return p;
   } else {
@@ -382,6 +399,7 @@ void GaussMix::forget()
   posteriors = Mat();
   alpha = Vec();
   sigma = Vec();
+  diags = Mat();
 
   // Below is old stuff. See what to do with this !
   /*
@@ -406,17 +424,20 @@ void GaussMix::generate(Vec& x) const
 // generateFromGaussian //
 //////////////////////////
 void GaussMix::generateFromGaussian(Vec& x, int given_gaussian) const {
-  int l;    // The index of the Gaussian to use.
+  int j;    // The index of the Gaussian to use.
   if (given_gaussian < 0)
-    l = multinomial_sample(alpha);
+    j = multinomial_sample(alpha);
   else
-    l = given_gaussian % alpha.length();
+    j = given_gaussian % alpha.length();
   x.resize(D);
   if (type == "spherical") {
     for (int k = 0; k < D; k++) {
-      x[k] = gaussian_mu_sigma(mu(l, k), sigma[l]);
+      x[k] = gaussian_mu_sigma(mu(j, k), sigma[j]);
     }
-  } else if(type[0]=='D') {
+  } else if (type == "diagonal") {
+    for (int k = 0; k < D; k++) {
+      x[k] = gaussian_mu_sigma(mu(j, k), diags(k,j));
+    }
 //    generateDiagonal(x,given_gaussian);
   } else if(type[0]=='G') {
 //    generateGeneral(x,given_gaussian);
@@ -548,8 +569,12 @@ void GaussMix::train()
   posteriors.resize(nsamples, L);
   alpha.resize(L);
   nsamples = train_set->length();
+  // Those are not used for every type:
+  sigma.resize(0);
+  diags.resize(0,0);
   if (type == "unknown") {
   } else if (type == "diagonal") {
+    diags.resize(D,L);
   } else if (type == "factor") {
   } else if (type == "general") {
   } else if (type == "spherical") {
