@@ -4,7 +4,6 @@
 #include <plearn_learners/generic/PLearner.h>
 
 namespace PLearn {
-using namespace std;
 
 class DERIVEDCLASS: public PLearner
 {
@@ -108,12 +107,12 @@ public:
 
   //! Returns the names of the costs computed by computeCostsFromOutpus (and thus the test method).
   // (PLEASE IMPLEMENT IN .cc)
-  virtual TVec<string> getTestCostNames() const;
+  virtual TVec<std::string> getTestCostNames() const;
 
   //! Returns the names of the objective costs that the train method computes and 
   //! for which it updates the VecStatsCollector train_stats.
   // (PLEASE IMPLEMENT IN .cc)
-  virtual TVec<string> getTrainCostNames() const;
+  virtual TVec<std::string> getTrainCostNames() const;
 
 
   // *** SUBCLASS WRITING: ***

@@ -4,7 +4,6 @@
 #include <plearn_learners/unsupervised/KernelProjection.h>
 
 namespace PLearn {
-using namespace std;
 
 class DERIVEDCLASS: public KernelProjection
 {

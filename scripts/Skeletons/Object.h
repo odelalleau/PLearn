@@ -4,7 +4,6 @@
 #include <plearn/base/Object.h>
 
 namespace PLearn {
-using namespace std;
 
 class DERIVEDCLASS: public Object
 {

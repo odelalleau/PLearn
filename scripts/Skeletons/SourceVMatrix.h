@@ -4,7 +4,6 @@
 #include <plearn/vmat/SourceVMatrix.h>
 
 namespace PLearn {
-using namespace std;
 
 class DERIVEDCLASS: public SourceVMatrix
 {

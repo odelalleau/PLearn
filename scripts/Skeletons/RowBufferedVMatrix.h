@@ -4,7 +4,6 @@
 #include <plearn/vmat/RowBufferedVMatrix.h>
 
 namespace PLearn {
-using namespace std;
 
 class DERIVEDCLASS: public RowBufferedVMatrix
 {

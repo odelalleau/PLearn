@@ -4,7 +4,6 @@
 #include <plearn_learners/distributions/PDistribution.h>
 
 namespace PLearn {
-using namespace std;
 
 class DERIVEDCLASS: public PDistribution
 {

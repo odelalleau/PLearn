@@ -4,7 +4,6 @@
 #include "TraderVariable.h"
 
 namespace PLearn {
-using namespace std;
 
 class DERIVEDCLASS: public TraderVariable
 {

@@ -4,7 +4,6 @@
 #include <plearn/math/Smoother.h>
 
 namespace PLearn {
-using namespace std;
 
 class DERIVEDCLASS: public Smoother
 {

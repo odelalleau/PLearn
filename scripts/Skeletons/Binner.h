@@ -4,7 +4,6 @@
 #include <plearn/math/Binner.h>
 
 namespace PLearn {
-using namespace std;
 
 class DERIVEDCLASS: public Binner
 {

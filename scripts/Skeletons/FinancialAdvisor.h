@@ -4,7 +4,6 @@
 #include "FinancialAdvisor.h"
 
 namespace PLearn {
-using namespace std;
 
 class DERIVEDCLASS: public FinancialAdvisor
 {
@@ -42,7 +41,7 @@ public:
                     VMat testoutputs=0, VMat testcosts=0) const;
 
   // This function must be overloaded!  
-  virtual TVec<string> getTrainCostNames() const;
+  virtual TVec<std::string> getTrainCostNames() const;
 
   // This function must be overloaded!
   virtual void computeOutputAndCosts(const Vec& input, const Vec& target,

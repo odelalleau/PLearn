@@ -12,7 +12,6 @@
 // **********************************************************
 
 namespace PLearn {
-using namespace std;
 
 class DERIVEDCLASS: public VMatrix
 {

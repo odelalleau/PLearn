@@ -4,7 +4,6 @@
 // Put includes here
 
 namespace PLearn {
-using namespace std;
 
 // Put global function declarations here
 

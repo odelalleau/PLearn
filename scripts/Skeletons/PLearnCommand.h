@@ -5,13 +5,12 @@
 #include <commands/PLearnCommands/PLearnCommandRegistry.h>
 
 namespace PLearn {
-using namespace std;
 
 class DERIVEDCLASS: public PLearnCommand
 {
 public:
   DERIVEDCLASS();                    
-  virtual void run(const vector<string>& args);
+  virtual void run(const std::vector<std::string>& args);
 
 protected:
   static PLearnCommandRegistry reg_;

@@ -4,7 +4,6 @@
 #include <plearn/ker/SourceKernel.h>
 
 namespace PLearn {
-using namespace std;
 
 class DERIVEDCLASS: public SourceKernel
 {

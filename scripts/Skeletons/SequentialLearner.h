@@ -4,7 +4,6 @@
 #include <plearn_learners/sequential/SequentialLearner.h>
 
 namespace PLearn {
-using namespace std;
 
 class DERIVEDCLASS: public SequentialLearner
 {
@@ -49,8 +48,8 @@ public:
 
   virtual void forget();
 
-  virtual TVec<string> getTrainCostNames() const;
-  virtual TVec<string> getTestCostNames() const;
+  virtual TVec<std::string> getTrainCostNames() const;
+  virtual TVec<std::string> getTestCostNames() const;
 
   //!  Does the necessary operations to transform a shallow copy (this)
   //!  into a deep copy by deep-copying all the members that need to be.

@@ -4,7 +4,6 @@
 #include <plearn/vmat/Splitter.h>
 
 namespace PLearn {
-using namespace std;
 
 class DERIVEDCLASS: public Splitter
 {
