@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.45 2004/06/10 19:19:19 dorionc Exp $
+   * $Id: fileutils.cc,v 1.46 2004/06/18 16:43:33 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -658,7 +658,10 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
               {
                 string varname; // name of a variable
                 in.get(); // skip '{'
-                getline(in,varname,'}');
+                smartReadUntilNext(in, "}", varname, true);
+                // Maybe there are macros to process to obtain the real name of the variable.
+                istrstream varname_stream(varname.c_str());
+                varname = readAndMacroProcess(varname_stream, variables);
                 varname = removeblanks(varname);
                 map<string, string>::iterator it = variables.find(varname);
                 if(it==variables.end())
@@ -692,7 +695,7 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
                 next = in.peek();   // Next character.
                 switch(next) {
 
-                  case 'E':   // it's a DEFINE{ varname }{ ... }
+                  case 'E':   // it's a DEFINE{varname}{expr}
                     {
                       string varname; // name of a variable
                       string vardef; // definition of a variable
@@ -744,22 +747,52 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
                 break;
               }
 
-            case 'E': // it's an ECHO{expression}
+            case 'E':
               {
-                string expr;
-                readWhileMatches(in, "ECHO");
-                bool syntax_ok = true;
-                int c = in.get();
-                if(c == '{')
-                  smartReadUntilNext(in, "}", expr, true);
-                else
-                  syntax_ok = false;
-                if (!syntax_ok)
-                  PLERROR("$ECHO syntax is: $ECHO{expr}");
-                istrstream expr_stream(expr.c_str());
-                cout << readAndMacroProcess(expr_stream, variables) << endl;
+                int next = in.get();
+                next = in.peek();   // Next character.
+                switch(next) {
+
+                  case 'C': // it's an ECHO{expr}
+                    {
+                      string expr;
+                      readWhileMatches(in, "CHO");
+                      bool syntax_ok = true;
+                      int c = in.get();
+                      if(c == '{')
+                        smartReadUntilNext(in, "}", expr, true);
+                      else
+                        syntax_ok = false;
+                      if (!syntax_ok)
+                        PLERROR("$ECHO syntax is: $ECHO{expr}");
+                      istrstream expr_stream(expr.c_str());
+                      cout << readAndMacroProcess(expr_stream, variables) << endl;
+                    }
+                    break;
+
+                  case 'V': // it's an EVALUATE{varname}
+                    {
+                      string expr;
+                      readWhileMatches(in, "VALUATE");
+                      bool syntax_ok = true;
+                      int c = in.get();
+                      if(c == '{')
+                        smartReadUntilNext(in, "}", expr, true);
+                      else
+                        syntax_ok = false;
+                      if (!syntax_ok)
+                        PLERROR("$EVALUATE syntax is: $EVALUATE{varname}");
+                      istrstream expr_stream(expr.c_str());
+                      string varname = readAndMacroProcess(expr_stream, variables);
+                      string to_evaluate = variables[varname];
+                      istrstream to_evaluate_stream(to_evaluate.c_str());
+                      string evaluated = readAndMacroProcess(to_evaluate_stream, variables);
+                      variables[varname] = evaluated;
+                    }
+                    break;
+                }
+                break;
               }
-              break;
 
             case 'I':
               {
@@ -1162,9 +1195,30 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
               }
               break;
 
+            case 'U': // it's an UNDEFINE{varname}
+              {
+                string expr;
+                readWhileMatches(in, "UNDEFINE");
+                bool syntax_ok = true;
+                int c = in.get();
+                if(c == '{')
+                  smartReadUntilNext(in, "}", expr, true);
+                else
+                  syntax_ok = false;
+                if (!syntax_ok)
+                  PLERROR("$UNDEFINE syntax is: $UNDEFINE{expr}");
+                istrstream expr_stream(expr.c_str());
+                string varname = readAndMacroProcess(expr_stream, variables);
+                while (variables.count(varname) > 0) {
+                  // This loop is probably not necessary, but just in case...
+                  variables.erase(varname);
+                }
+              }
+              break;
+
             default:
               PLERROR("In readAndMacroProcess: only supported macro commands are \n"
-                      "${varname}, $CHAR, $DEFINE, $DIVIDE, $ECHO, $IF, $INCLUDE, $INT, $ISDEFINED, $ISEQUAL, $ISHIGHER, $MINUS, $PLUS, $OR, $SWITCH, $TIMES."
+                      "${varname}, $CHAR, $DEFINE, $DIVIDE, $ECHO, $EVALUATE, $IF, $INCLUDE, $INT, $ISDEFINED, $ISEQUAL, $ISHIGHER, $MINUS, $PLUS, $OR, $SWITCH, $TIMES, $UNDEFINE."
                       "But I read $%c !!",c);
             }
         }
