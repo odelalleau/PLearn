@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.14 2003/10/29 16:55:49 plearner Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.15 2003/11/21 16:20:43 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -97,8 +97,15 @@ double VecStatsCollector::getStat(const string& statspec)
 int VecStatsCollector::getFieldNum(const string& fieldname_or_num) const
 { 
   int num = fieldnames.find(fieldname_or_num); 
-  if(num<0) // not found
-    num = toint(fieldname_or_num); // suppose it's an integer
+  if(num<0) {
+    // not found
+    if (pl_isnumber(fieldname_or_num)) {
+      num = toint(fieldname_or_num);
+    } else {
+      // Unknown field.
+      num = -1;
+    }
+  }
   return num;
 }
 
