@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.54 2004/06/17 15:33:12 monperrm Exp $
+* $Id: VMatrix.cc,v 1.55 2004/06/18 13:04:54 tihocan Exp $
 ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -1063,7 +1063,7 @@ void VMatrix::saveDMAT(const string& dmatdir) const
   }
 }
 
-void VMatrix::saveAMAT(const string& amatfile,bool verbose) const
+void VMatrix::saveAMAT(const string& amatfile, bool verbose) const
 {
   int l = length();
   int w = width();
@@ -1098,6 +1098,8 @@ void VMatrix::saveAMAT(const string& amatfile,bool verbose) const
       if (verbose)
          pb->update(i);
     }
+  if (verbose)
+    delete pb;
 }
 
     // This will compute for this vmat m a result vector (whose length must be tha same as m's)
