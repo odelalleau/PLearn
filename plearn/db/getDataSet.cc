@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.19 2004/03/12 23:32:02 tihocan Exp $
+   * $Id: getDataSet.cc,v 1.20 2004/06/18 16:39:19 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -139,8 +139,8 @@ VMat getDataSet(const string& datasetstring, const string& alias)
             } 
           }
           else if(ext==".amat") {
-            // TODO only check the extension is .bin.amat ?
-            if (datasetstring.find(".bin.", 0, 5) != string::npos){
+            // Check if the extension is ".bin.amat".
+            if (datasetstring.find(".bin.", ((unsigned int) datasetstring.size()) - 9) != string::npos){
               Mat tempMat;
               loadAsciiSingleBinaryDescriptor(datasetstring,tempMat);
               vm = VMat(tempMat);
@@ -153,7 +153,7 @@ VMat getDataSet(const string& datasetstring, const string& alias)
           else if(ext==".sdb")
             vm = new AutoSDBVMatrix(remove_extension(datasetstring));            
           else if(ext==".mat")
-            vm=loadAsciiAsVMat(datasetstring);
+            vm = loadAsciiAsVMat(datasetstring);
           else 
             PLERROR("Unknown extension for vmatrix: %s", ext.c_str());
           vm->setMetaDataDir(extract_directory(datasetstring) + extract_filename(datasetstring) + ".metadata");
