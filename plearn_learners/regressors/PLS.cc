@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLS.cc,v 1.2 2004/02/26 03:39:57 tihocan Exp $ 
+   * $Id: PLS.cc,v 1.3 2004/03/05 18:01:17 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -359,7 +359,7 @@ void PLS::train()
 
   // Iterate k times to find the k first factors.
   ProgressBar* pb = 0;
-  if(verbosity >= 1) {
+  if(report_progress) {
     pb = new ProgressBar("Computing the components", k);
   }
   for (int h = 0; h < this->k; h++) {
