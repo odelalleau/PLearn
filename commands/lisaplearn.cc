@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: lisaplearn.cc,v 1.24 2004/05/11 20:51:27 tihocan Exp $
+   * $Id: lisaplearn.cc,v 1.25 2004/05/13 13:08:34 tihocan Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -51,6 +51,7 @@
 // Available VMats:
 #include "AutoVMatrix.h"
 #include "BatchVMatrix.h"
+#include "BootstrapVMatrix.h"
 #include "CumVMatrix.h"
 #include "FilteredVMatrix.h"
 #include "IndexedVMatrix.h"
