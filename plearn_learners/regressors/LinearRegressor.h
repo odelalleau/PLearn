@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.h,v 1.7 2004/09/14 16:04:58 chrish42 Exp $
+   * $Id: LinearRegressor.h,v 1.8 2004/09/20 05:24:04 chapados Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.h */
@@ -66,6 +66,12 @@ protected:
   real sum_squared_y; //!< can be re-used if train is called several times on the same data set
   real sum_gammas; //!< sum of weights if weighted error, also for re-using training set with different weight decays
 
+  //! The Akaike Information Criterion computed at training time
+  real AIC;
+
+  //! The Bayesian Information Criterion computed at training time
+  real BIC;
+  
   // *********************
   // * protected options *
   // *********************
@@ -105,6 +111,11 @@ protected:
   //! Declares this class' options
   static void declareOptions(OptionList& ol);
 
+  //! Utility function to compute the AIC, BIC criteria from the
+  //! squared error of the trained  model.  Store the result in
+  //! AIC and BIC members of the object.
+  void computeInformationCriteria(real squared_error, int n);
+  
 public:
 
   // ************************
@@ -139,13 +150,11 @@ public:
   //! a possibly lengthy pass through the data. This is particarly useful when doing hyper-parameter
   //! optimization of the weight_decay.
   virtual void forget();
-
     
   //! The role of the train method is to bring the learner up to stage==nstages,
   //! updating the train_stats collector with training costs measured on-line in the process.
   //! See the forget() comment.
   virtual void train();
-
 
   //! Computes the output from the input
   //! output = weights * (1, input)
@@ -155,7 +164,6 @@ public:
   virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                        const Vec& target, Vec& costs) const;
                                 
-
   //! Returns the names of the costs computed by computeCostsFromOutpus (and thus the test method)
   virtual TVec<string> getTestCostNames() const;
 
@@ -163,21 +171,10 @@ public:
   //! for which it updates the VecStatsCollector train_stats
   virtual TVec<string> getTrainCostNames() const;
 
-
-  // *** SUBCLASS WRITING: ***
-  // While in general not necessary, in case of particular needs 
-  // (efficiency concerns for ex) you may also want to overload
-  // some of the following methods:
-  // virtual void computeOutputAndCosts(const Vec& input, const Vec& target, Vec& output, Vec& costs) const;
-  // virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
-  // virtual void test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs=0, VMat testcosts=0) const;
-  // virtual int nTestCosts() const;
-  // virtual int nTrainCosts() const;
-
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(LinearRegressor);
+DECLARE_OBJECT_PTR(LinearRegressor);
   
 } // end of namespace PLearn
 

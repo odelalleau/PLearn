@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.cc,v 1.10 2004/09/14 16:04:58 chrish42 Exp $
+   * $Id: LinearRegressor.cc,v 1.11 2004/09/20 05:24:04 chapados Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.cc */
@@ -46,84 +46,98 @@ using namespace std;
 
 /* ### Initialise all fields to their default value here */
 LinearRegressor::LinearRegressor()
-: cholesky(true),
-  weight_decay(0)
-{}
+: sum_squared_y(MISSING_VALUE),
+  sum_gammas(MISSING_VALUE),
+  AIC(MISSING_VALUE),
+  BIC(MISSING_VALUE),
+  weights_norm(MISSING_VALUE),
+  cholesky(true),
+  weight_decay(0)  
+{ }
 
-PLEARN_IMPLEMENT_OBJECT(LinearRegressor, "Ordinary Least Squares and Ridge Regression, optionally weighted", 
-                        "This class performs OLS (Ordinary Least Squares) and Ridge Regression, optionally on weighted\n"
-                        "data, by solving the linear equation (X'W X + weight_decay*n_examples*I) theta = X'W Y\n"
-                        "where X is the (n_examples x (1+inputsize)) matrix of extended inputs (with a 1 in the first column),\n"
-                        "Y is the (n_example x targetsize), W is a diagonal matrix of weights (one per example)\n"
-                        "{the identity matrix if weightsize()==0 in the training set}, and theta is the resulting\n"
-                        "set of parameters. W_{ii} is obtained from the weight column of the training set, if any.\n"
-                        "This column must have width 0 (no weight) or 1.\n"
-                        "A prediction (computeOutput) is obtained from an input vector as follows:\n"
-                        "   output = theta * (1,input)\n"
-                        "The criterion that is minimized by solving the above linear system is the squared loss"
-                        "plus squared norm penalty (weight_decay*sum_{ij} theta_{ij}^2) PER EXAMPLE. This class also measures"
-                        "the ordinary squared loss (||output-theta||^2). The two costs are named 'mse+penalty' and 'mse' respectively.\n"
-                        "Training has two steps: (1) computing X'W X and X' W Y, (2) solving the linear system.\n"
-                        "The first step takes time O(n_examples*inputsize^2 + n_examples*inputsize*outputsize).\n"
-                        "The second step takes time O(inputsize^3).\n"
-                        "If train() is called repeatedly with different values of weight_decay, without intervening\n"
-                        "calls to forget(), then the first step will be done only once, and only the second step\n"
-                        "is repeated.\n");
+PLEARN_IMPLEMENT_OBJECT(
+  LinearRegressor,
+  "Ordinary Least Squares and Ridge Regression, optionally weighted", 
+  "This class performs OLS (Ordinary Least Squares) and Ridge Regression, optionally on weighted\n"
+  "data, by solving the linear equation (X'W X + weight_decay*n_examples*I) theta = X'W Y\n"
+  "where X is the (n_examples x (1+inputsize)) matrix of extended inputs (with a 1 in the first column),\n"
+  "Y is the (n_example x targetsize), W is a diagonal matrix of weights (one per example)\n"
+  "{the identity matrix if weightsize()==0 in the training set}, and theta is the resulting\n"
+  "set of parameters. W_{ii} is obtained from the weight column of the training set, if any.\n"
+  "This column must have width 0 (no weight) or 1.\n"
+  "A prediction (computeOutput) is obtained from an input vector as follows:\n"
+  "   output = theta * (1,input)\n"
+  "The criterion that is minimized by solving the above linear system is the squared loss"
+  "plus squared norm penalty (weight_decay*sum_{ij} theta_{ij}^2) PER EXAMPLE. This class also measures"
+  "the ordinary squared loss (||output-theta||^2). The two costs are named 'mse+penalty' and 'mse' respectively.\n"
+  "Training has two steps: (1) computing X'W X and X' W Y, (2) solving the linear system.\n"
+  "The first step takes time O(n_examples*inputsize^2 + n_examples*inputsize*outputsize).\n"
+  "The second step takes time O(inputsize^3).\n"
+  "If train() is called repeatedly with different values of weight_decay, without intervening\n"
+  "calls to forget(), then the first step will be done only once, and only the second step\n"
+  "is repeated.\n"
+  "\n"
+  "The Akaike Information Criterion (AIC) and Bayerian Information Criterion (BIC)\n"
+  "are computed on the training set.  They are output as both training and test costs,\n"
+  "with respective cost-names \"aic\" and \"bic\".  Their arithmetic mean is also output\n"
+  "under costname \"mabic\".  Since these criteria are TRAINING concepts,  the\n"
+  "test costs that are output are CONSTANT and equal to the training costs.\n"
+  );
 
-  void LinearRegressor::declareOptions(OptionList& ol)
-  {
-    // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-    // ### OptionBase::tuningoption. Another possible flag to be combined with
-    // ### is OptionBase::nosave
-    declareOption(ol, "cholesky", &LinearRegressor::cholesky, OptionBase::buildoption, 
-                  "Whether to use the Cholesky decomposition or not, when solving the linear system.");
+void LinearRegressor::declareOptions(OptionList& ol)
+{
+  // ### Declare all of this object's options here
+  // ### For the "flags" of each option, you should typically specify  
+  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+  // ### OptionBase::tuningoption. Another possible flag to be combined with
+  // ### is OptionBase::nosave
+  declareOption(ol, "cholesky", &LinearRegressor::cholesky, OptionBase::buildoption, 
+                "Whether to use the Cholesky decomposition or not, when solving the linear system. Default=1 (true)");
 
-    declareOption(ol, "weight_decay", &LinearRegressor::weight_decay, OptionBase::buildoption, 
-                  "The weight decay is the factor that multiplies the squared norm of the parameters in the loss function\n");
+  declareOption(ol, "weight_decay", &LinearRegressor::weight_decay, OptionBase::buildoption, 
+                "The weight decay is the factor that multiplies the squared norm of the parameters in the loss function\n");
 
-    declareOption(ol, "weights", &LinearRegressor::weights, OptionBase::learntoption, 
-                  "The weight matrix, which are the parameters computed by training the regressor.\n");
+  declareOption(ol, "weights", &LinearRegressor::weights, OptionBase::learntoption, 
+                "The weight matrix, which are the parameters computed by training the regressor.\n");
 
-    // Now call the parent class' declareOptions
-    inherited::declareOptions(ol);
-  }
+  // Now call the parent class' declareOptions
+  inherited::declareOptions(ol);
+}
 
-  void LinearRegressor::build_()
-  {
-    // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation. 
-    // ### Typical situations include:
-    // ###  - Initial building of an object from a few user-specified options
-    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-    // ### You should assume that the parent class' build_() has already been called.
-  }
+void LinearRegressor::build_()
+{
+  // ### This method should do the real building of the object,
+  // ### according to set 'options', in *any* situation. 
+  // ### Typical situations include:
+  // ###  - Initial building of an object from a few user-specified options
+  // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
+  // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
+  // ### You should assume that the parent class' build_() has already been called.
+}
 
-  // ### Nothing to add here, simply calls build_
-  void LinearRegressor::build()
-  {
-    inherited::build();
-    build_();
-  }
+// ### Nothing to add here, simply calls build_
+void LinearRegressor::build()
+{
+  inherited::build();
+  build_();
+}
 
 
-  void LinearRegressor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
-  {
-    inherited::makeDeepCopyFromShallowCopy(copies);
-    // ### Call deepCopyField on all "pointer-like" fields 
-    // ### that you wish to be deepCopied rather than 
-    // ### shallow-copied.
-    // ### ex:
-    deepCopyField(extendedinput, copies);
-    deepCopyField(input, copies);
-    deepCopyField(target, copies);
-    deepCopyField(train_costs, copies);
-    deepCopyField(XtX, copies);
-    deepCopyField(XtY, copies);
-    deepCopyField(weights, copies);
-  }
+void LinearRegressor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+  inherited::makeDeepCopyFromShallowCopy(copies);
+  // ### Call deepCopyField on all "pointer-like" fields 
+  // ### that you wish to be deepCopied rather than 
+  // ### shallow-copied.
+  // ### ex:
+  deepCopyField(extendedinput, copies);
+  deepCopyField(input, copies);
+  deepCopyField(target, copies);
+  deepCopyField(train_costs, copies);
+  deepCopyField(XtX, copies);
+  deepCopyField(XtY, copies);
+  deepCopyField(weights, copies);
+}
 
 
 int LinearRegressor::outputsize() const
@@ -145,7 +159,7 @@ void LinearRegressor::forget()
   sum_squared_y = 0;
   sum_gammas = 0;
 }
-    
+  
 
 void LinearRegressor::train()
 {
@@ -156,40 +170,49 @@ void LinearRegressor::train()
   target.resize(targetsize());  // the train_set's targetsize()
   weights.resize(extendedinput.length(),target.length());
   if (recompute_XXXY)
-    {
-      XtX.resize(extendedinput.length(),extendedinput.length());
-      XtY.resize(extendedinput.length(),target.length());
-    }
+  {
+    XtX.resize(extendedinput.length(),extendedinput.length());
+    XtY.resize(extendedinput.length(),target.length());
+  }
   if(!train_stats)  // make a default stats collector, in case there's none
     train_stats = new VecStatsCollector();
 
   train_stats->forget(); 
 
   real squared_error=0;
-  train_costs.resize(2);
 
   if (train_set->weightsize()<=0)
-    {
-      squared_error =
-        linearRegression(train_set.subMatColumns(0, inputsize()), 
-                         train_set.subMatColumns(inputsize(), outputsize()), 
-                         weight_decay*train_set.length(), weights, 
-                         !recompute_XXXY, XtX, XtY,sum_squared_y,true, 0, cholesky);
-    }
+  {
+    squared_error =
+      linearRegression(train_set.subMatColumns(0, inputsize()), 
+                       train_set.subMatColumns(inputsize(), outputsize()), 
+                       weight_decay*train_set.length(), weights, 
+                       !recompute_XXXY, XtX, XtY,sum_squared_y, true, 0,
+                       cholesky);
+  }
   else if (train_set->weightsize()==1)
-    {
-      squared_error =
-        weightedLinearRegression(train_set.subMatColumns(0, inputsize()), 
-                                 train_set.subMatColumns(inputsize(), outputsize()),
-                                 train_set.subMatColumns(inputsize()+outputsize(),1), weight_decay*train_set.length(), weights,
-                                 !recompute_XXXY, XtX, XtY,sum_squared_y,sum_gammas,true, 0, cholesky);
-    }
-  else PLERROR("LinearRegressor: expected dataset's weightsize to be either 1 or 0, got %d\n",train_set->weightsize());
+  {
+    squared_error = weightedLinearRegression(
+      train_set.subMatColumns(0, inputsize()), 
+      train_set.subMatColumns(inputsize(), outputsize()),
+      train_set.subMatColumns(inputsize()+outputsize(),1),
+      weight_decay*train_set.length(), weights,
+      !recompute_XXXY, XtX, XtY,sum_squared_y,sum_gammas, true, 0, cholesky);
+  }
+  else PLERROR("LinearRegressor: expected dataset's weightsize to be either 1 or 0, got %d\n",
+               train_set->weightsize());
 
+  // Update the AIC and BIC criteria
+  computeInformationCriteria(squared_error, train_set.length());
+  
   Mat weights_excluding_biases = weights.subMatRows(1,inputsize());
   weights_norm = dot(weights_excluding_biases,weights_excluding_biases);
+  train_costs.resize(5);
   train_costs[0] = squared_error + weight_decay*weights_norm;
   train_costs[1] = squared_error;
+  train_costs[2] = AIC;
+  train_costs[3] = BIC;
+  train_costs[4] = (AIC+BIC)/2;
   train_stats->update(train_costs);
   train_stats->finalize(); 
 }
@@ -210,15 +233,21 @@ void LinearRegressor::computeOutput(const Vec& actual_input, Vec& output) const
   transposeProduct(output,weights,extendedinput);
 }    
 
-void LinearRegressor::computeCostsFromOutputs(const Vec& actual_input, const Vec& output, 
-                                              const Vec& target, Vec& costs) const
+void LinearRegressor::computeCostsFromOutputs(
+  const Vec& /*input*/, const Vec& output, const Vec& target, Vec& costs) const
 {
   // Compute the costs from *already* computed output. 
-  costs.resize(2);
+  costs.resize(5);
   real squared_loss = powdistance(output,target);
   costs[0] = squared_loss + weight_decay*weights_norm;
   costs[1] = squared_loss;
-}                                
+
+  // The AIC/BIC/MABIC costs are computed at TRAINING-TIME and remain
+  // constant thereafter.  Simply append the already-computed costs.
+  costs[2] = AIC;
+  costs[3] = BIC;
+  costs[4] = (AIC+BIC)/2;
+}
 
 TVec<string> LinearRegressor::getTestCostNames() const
 {
@@ -227,14 +256,27 @@ TVec<string> LinearRegressor::getTestCostNames() const
 
 TVec<string> LinearRegressor::getTrainCostNames() const
 {
-  // Return the names of the objective costs that the train method computes and 
-  // for which it updates the VecStatsCollector train_stats
-  TVec<string> names(2);
-  names[0] = "mse+penalty";
-  names[1] = "mse";
+  // Return the names of the objective costs that the train method computes
+  // and for which it updates the VecStatsCollector train_stats
+  TVec<string> names;
+  names.push_back("mse+penalty");
+  names.push_back("mse");
+  names.push_back("aic");
+  names.push_back("bic");
+  names.push_back("mabic");
   return names;
 }
 
+void LinearRegressor::computeInformationCriteria(real squared_error, int n)
+{
+  // AIC = ln(squared_error/n) + 2*M/n
+  // BIC = ln(squared_error/n) + M*ln(n)/n,
+  // where M is the number of parameters
 
+  real M = weights.length() * weights.width();
+  real lnsqerr = log(squared_error/n);
+  AIC = lnsqerr + 2*M/n;
+  BIC = lnsqerr + M*log(real(n))/n;
+}
 
 } // end of namespace PLearn
