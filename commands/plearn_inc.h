@@ -33,17 +33,24 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.48 2005/01/13 14:20:58 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.49 2005/01/20 21:40:23 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
 
 /*! \file plearn_inc.h */
 
-/*! Include here all classes available in the PLearn CVS repository */
+/*! Include here all classes available in the PLearn CVS repository 
+    that do NOT depend upon fancy external libraries.
+ */
 
 #ifndef plearn_inc_INC
 #define plearn_inc_INC
+
+// Version number.
+#define PLEARN_MAJOR_VERSION 0
+#define PLEARN_MINOR_VERSION 92
+#define PLEARN_FIXLEVEL 0
 
 /*****************
  * Miscellaneous *
@@ -62,7 +69,6 @@
 #include <commands/PLearnCommands/AutoRunCommand.h>
 #include <commands/PLearnCommands/FieldConvertCommand.h>
 #include <commands/PLearnCommands/HelpCommand.h>
-#include <commands/PLearnCommands/HTMLHelpCommand.h>
 #include <commands/PLearnCommands/JulianDateCommand.h>
 #include <commands/PLearnCommands/KolmogorovSmirnovCommand.h>
 #include <commands/PLearnCommands/LearnerCommand.h>
@@ -71,7 +77,6 @@
 #include <commands/PLearnCommands/ServerCommand.h>
 #include <commands/PLearnCommands/TestDependenciesCommand.h>
 #include <commands/PLearnCommands/TestDependencyCommand.h>
-#include <commands/PLearnCommands/VMatCommand.h>
 //#include <commands/PLearnCommands/TxtmatCommand.h>
 
 
