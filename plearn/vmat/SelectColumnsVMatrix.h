@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectColumnsVMatrix.h,v 1.14 2004/10/26 14:19:00 tihocan Exp $
+   * $Id: SelectColumnsVMatrix.h,v 1.15 2004/11/04 14:58:37 tihocan Exp $
    ******************************************************* */
 
 
@@ -62,10 +62,12 @@ private:
   
 public:
 
-  //! Public build options
+  // Public build options.
+
   bool extend_with_missing;
   TVec<int> indices;
   TVec<string> fields;
+  bool fields_partial_match;
 
 public:
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectColumnsVMatrix.cc,v 1.11 2004/10/26 14:19:00 tihocan Exp $
+   * $Id: SelectColumnsVMatrix.cc,v 1.12 2004/11/04 14:58:37 tihocan Exp $
    ******************************************************* */
 
 #include "SelectColumnsVMatrix.h"
@@ -57,12 +57,14 @@ PLEARN_IMPLEMENT_OBJECT(SelectColumnsVMatrix,
 // SelectColumnsVMatrix //
 //////////////////////////
 SelectColumnsVMatrix::SelectColumnsVMatrix()
-: extend_with_missing(false)
+: extend_with_missing(false),
+  fields_partial_match(false)
 {}
 
 SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source, TVec<string> the_fields, bool the_extend_with_missing)
 : extend_with_missing(the_extend_with_missing),
-  fields(the_fields)
+  fields(the_fields),
+  fields_partial_match(false)
 {
   source = the_source;
   build_();
@@ -70,14 +72,16 @@ SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source, TVec<string> the_fie
 
 SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source, TVec<int> the_indices)
 : extend_with_missing(false),
-  indices(the_indices)
+  indices(the_indices),
+  fields_partial_match(false)
 {
   source = the_source;
   build_();
 }
 
 SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source, Vec the_indices)
-: extend_with_missing(false)
+: extend_with_missing(false),
+  fields_partial_match(false)
 {
   source = the_source;
   indices.resize(the_indices.length());
@@ -120,6 +124,9 @@ void SelectColumnsVMatrix::declareOptions(OptionList &ol)
   declareOption(ol, "fields", &SelectColumnsVMatrix::fields, OptionBase::buildoption,
       "The names of the fields to extract (will override 'indices' if provided).");
 
+  declareOption(ol, "fields_partial_match", &SelectColumnsVMatrix::fields_partial_match, OptionBase::buildoption,
+      "If set to 1, then a field will be kept iff it contains one of the strings from 'fields'.");
+
   declareOption(ol, "indices", &SelectColumnsVMatrix::indices, OptionBase::buildoption,
       "The array of column indices to extract.");
 
@@ -158,13 +165,25 @@ void SelectColumnsVMatrix::build_()
     if (fields.isNotEmpty()) {
       // Find out the indices from the fields.
       indices.resize(0);
-      for (int i = 0; i < fields.length(); i++) {
-        string the_field = fields[i];
-        int the_index = source->fieldIndex(the_field);
-        if (!extend_with_missing && the_index == -1)
-          // This field does not exist in the source VMat.
-          PLERROR("In SelectColumnsVMatrix::build_ - Unknown field (%s) in source VMat (you may want to use the 'extend_with_missing' option)", the_field.c_str());
-        indices.append(the_index);
+      if (!fields_partial_match) {
+        for (int i = 0; i < fields.length(); i++) {
+          string the_field = fields[i];
+          int the_index = source->fieldIndex(the_field);
+          if (!extend_with_missing && the_index == -1)
+            // This field does not exist in the source VMat.
+            PLERROR("In SelectColumnsVMatrix::build_ - Unknown field (%s) in source VMat (you may want to use the 'extend_with_missing' option)", the_field.c_str());
+          indices.append(the_index);
+        }
+      } else {
+        // We need to check whether or not we should add each field.
+        TVec<string> source_fields = source->fieldNames();
+        for (int i = 0; i < source_fields.length(); i++)
+          for (int j = 0; j < fields.length(); j++)
+            if (source_fields[i].find(fields[j]) != string::npos) {
+              // We want to add this field.
+              indices.append(i);
+              break;
+            }
       }
     }
     width_ = indices.length();
