@@ -262,7 +262,7 @@ public:
 #if STREAMBUFVER == 0 
     return (*this)->rawin()->eof(); 
 #elif STREAMBUFVER == 1
-    return const_cast<PStream*>(this)->peek()==EOF;
+    return ptr->eof();
 #endif
   }
 
@@ -282,7 +282,7 @@ public:
   { return *(ptr->rawin()); }   
 #else
   bool good() const
-  { return !eof(); }
+  { return ptr->good(); }
 
   operator bool() const
     { return good(); }
@@ -303,7 +303,7 @@ public:
   inline PStream& get(char& c) 
   { 
 #if STREAMBUFVER == 1 
-    c = (char) ptr->get();
+    c = (char)ptr->get();
 #else
     ptr->rawin()->get(c); 
 #endif
@@ -316,9 +316,9 @@ public:
 #if STREAMBUFVER == 1 
     line.clear();
     int c = get();
-    while(c!=EOF && c!=delimitor)
+    while (c != EOF && c != delimitor)
       {
-        line+=(char)c;
+        line += (char)c;
         c = get();
       }
 #else

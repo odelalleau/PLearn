@@ -33,13 +33,15 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.45 2004/12/22 19:38:16 chrish42 Exp $ 
+   * $Id: PTester.cc,v 1.46 2005/01/07 23:51:56 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
 
 #include <plearn/io/load_and_save.h>
-//#include <plearn/io/openString.h>
+#if STREAMBUFVER == 1
+#include <plearn/io/openString.h>
+#endif
 #include <plearn/math/VecStatsCollector.h>
 #include <plearn/vmat/FileVMatrix.h>
 #include <assert.h>

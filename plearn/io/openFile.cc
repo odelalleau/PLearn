@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: openFile.cc,v 1.1 2004/08/31 17:20:36 plearner Exp $ 
+   * $Id: openFile.cc,v 1.2 2005/01/07 23:51:22 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -55,7 +55,7 @@
 namespace PLearn {
 using namespace std;
 
-// Put function implementations here.
+  /// @todo Switch to PrPStreamBuf to get Windows implementation.
   PStream openFile(const string& filepath, const string& openmode, PStream::mode_t io_formatting)
   {
     PStream st;

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StdPStreamBuf.h,v 1.2 2004/08/31 17:22:40 plearner Exp $ 
+   * $Id: StdPStreamBuf.h,v 1.3 2005/01/07 23:51:22 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -137,6 +137,7 @@ public:
   inline pl_streambuf* pl_rdbuf() { return the_inbuf; }
 #endif 
 
+  virtual bool good() const;
 };
 
 } // end of namespace PLearn

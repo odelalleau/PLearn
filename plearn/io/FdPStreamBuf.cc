@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FdPStreamBuf.cc,v 1.2 2004/12/22 19:38:13 chrish42 Exp $ 
+   * $Id: FdPStreamBuf.cc,v 1.3 2005/01/07 23:51:22 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -82,4 +82,12 @@ using namespace std;
     // fsync(out);
   }
 
+  bool FdPStreamBuf::good() const
+  {
+    if (is_readable)
+      return !eof();
+    else
+      return is_writable;
+  }
+  
 } // end of namespace PLearn

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PStreamBuf.h,v 1.9 2004/12/22 19:38:14 chrish42 Exp $ 
+   * $Id: PStreamBuf.h,v 1.10 2005/01/07 23:51:22 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file PStreamBuf.h */
@@ -130,13 +130,13 @@ private:
 
 public:
 
-  inline bool isReadable() const
+  bool isReadable() const
   { return is_readable; }
 
-  inline bool isWritable() const
+  bool isWritable() const
   { return is_writable; }
 
-  inline int get()
+  int get()
   {
     if(inbuf_p<inbuf_end || refill_in_buf())
       return *inbuf_p++;
@@ -147,7 +147,7 @@ public:
   //! character c will be returned by the next get()
   void putback(char c);
 
-  inline int peek()
+  int peek()
   {
     if(inbuf_p<inbuf_end || refill_in_buf())
       return *inbuf_p;
@@ -163,7 +163,7 @@ public:
 
   void flush();
 
-  inline void put(char c)
+  void put(char c)
   {
 #ifdef BOUNDCHECK
   if(!isWritable())
@@ -180,6 +180,15 @@ public:
   }
 
   void write(const char* p, streamsize n);
+
+  /// Checks if the streambuf is valid and can be written to or read from.
+  virtual bool good() const =0;
+
+  /// Checks if we reached the end of the file.
+  virtual bool eof() const
+  {
+    return const_cast<PStreamBuf*>(this)->peek() == EOF;
+  }
   
 };
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrPStreamBuf.h,v 1.1 2004/12/22 19:38:14 chrish42 Exp $ 
+   * $Id: PrPStreamBuf.h,v 1.2 2005/01/07 23:51:22 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Christian Hudon
@@ -82,6 +82,9 @@ protected:
   //! writes exactly n characters from p (unbuffered, must flush)
   virtual void write_(const char* p, streamsize n);
 
+  virtual bool good() const;
+
+  virtual bool eof() const;
 };
 
 } // end of namespace PLearn

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StdPStreamBuf.cc,v 1.3 2004/12/22 19:38:14 chrish42 Exp $ 
+   * $Id: StdPStreamBuf.cc,v 1.4 2005/01/07 23:51:22 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -137,12 +137,14 @@ void StdPStreamBuf::initInBuf()
   void StdPStreamBuf::setIn(istream* pin_, bool own_pin_)
   {
 #if STREAMBUFVER == 0
-    if(pin && original_bufin) pin->rdbuf(original_bufin);
-    if(own_pin) delete pin;
+    if (pin && original_bufin)
+      pin->rdbuf(original_bufin);
+    if (own_pin)
+      delete pin;
     pin = pin_;
     own_pin = own_pin_;
     the_fdbuf = 0;
-    if(pin)
+    if (pin)
       {
         original_bufin = pin->rdbuf();
         initInBuf();
@@ -150,7 +152,8 @@ void StdPStreamBuf::initInBuf()
     else
       original_bufin = 0;
 #else
-    if(own_pin) delete pin;
+    if (own_pin)
+      delete pin;
     pin = pin_;
     own_pin = own_pin_;
 #endif
@@ -160,16 +163,18 @@ void StdPStreamBuf::initInBuf()
   void StdPStreamBuf::setOut(ostream* pout_, bool own_pout_)
   {
 #if STREAMBUFVER == 0
-    if(pout && original_bufout) pout->rdbuf(original_bufout);
-    if(own_pout) delete pout;
+    if (pout && original_bufout) pout->rdbuf(original_bufout);
+    if (own_pout)
+      delete pout;
     pout= pout_;
     own_pout = own_pout_;
-    if(pout)
+    if (pout)
       original_bufout= pout->rdbuf();
     else
       original_bufout=0;      
 #else
-    if(own_pout) delete pout;
+    if (own_pout)
+      delete pout;
     pout= pout_;
     own_pout = own_pout_;
 #endif    
@@ -183,14 +188,14 @@ void StdPStreamBuf::initInBuf()
   {
     the_fdbuf= new pl_fdstreambuf(fd, pl_dftbuflen);
     the_inbuf= new pl_streambuf(*the_fdbuf);
-    if(pin)
+    if (pin)
       pin->rdbuf(the_inbuf);
     else
       {
         own_pin= true;
         pin= new istream(the_inbuf);
       }
-    if(pout) 
+    if (pout) 
       pout->rdbuf(the_fdbuf);
     else
       {
@@ -202,7 +207,7 @@ void StdPStreamBuf::initInBuf()
 
   StdPStreamBuf::streamsize StdPStreamBuf::read_(char* p, streamsize n)
   {
-    if(pin==0)
+    if (pin==0)
       PLERROR("StdPStreamBuf::read_ with pin==0");
     return pin->readsome(p,n);
   }
@@ -210,10 +215,22 @@ void StdPStreamBuf::initInBuf()
   //! writes exactly n characters from p (unbuffered, must flush)
   void StdPStreamBuf::write_(const char* p, streamsize n)
   {
-    if(pout==0)      
+    if (pout==0)      
       PLERROR("StdPStreamBuf::write_ with pout==0");
     pout->write(p,n);
     pout->flush();
+  }
+
+  bool StdPStreamBuf::good() const
+  {
+    if (is_readable && is_writable)
+      return !eof() && pout->good();
+    else if (is_readable && !is_writable)
+      return !eof();
+    else if (!is_readable && is_writable)
+      return pout->good();
+    else
+      return false;
   }
 
 } // end of namespace PLearn

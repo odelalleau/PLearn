@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StringPStreamBuf.cc,v 1.2 2004/12/22 19:38:14 chrish42 Exp $ 
+   * $Id: StringPStreamBuf.cc,v 1.3 2005/01/07 23:51:22 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -90,4 +90,12 @@ using namespace std;
       st->operator+=(*p++);
   }
 
+  bool StringPStreamBuf::good() const
+  {
+    if (is_readable)
+      return !eof();
+    else
+      return true;
+  }
+  
 } // end of namespace PLearn

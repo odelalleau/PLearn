@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilePStreamBuf.h,v 1.3 2004/09/14 16:04:35 chrish42 Exp $ 
+   * $Id: FilePStreamBuf.h,v 1.4 2005/01/07 23:51:22 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -111,6 +111,7 @@ public:
   // (PLEASE IMPLEMENT IN .cc)
   virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
+  virtual bool eof() const;
 };
 
 // Declares a few other classes and functions related to this class

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilePStreamBuf.cc,v 1.4 2004/12/22 19:38:13 chrish42 Exp $ 
+   * $Id: FilePStreamBuf.cc,v 1.5 2005/01/07 23:51:22 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -141,4 +141,12 @@ FilePStreamBuf::FilePStreamBuf()
     build();
   }
 
+  bool FilePStreamBuf::good() const
+  {
+    if (is_readable)
+      return !eof();
+    else
+      return is_writable;
+  }
+  
 } // end of namespace PLearn
