@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalGaussMix.cc,v 1.4 2004/05/21 13:14:52 tihocan Exp $ 
+   * $Id: ConditionalGaussMix.cc,v 1.5 2004/05/21 16:07:25 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -274,7 +274,7 @@ void ConditionalGaussMix::setInput(const Vec& input) const {
     if (type == "spherical") {
       real p = 0.0;
       for (int k = 0; k < d_x; k++) {
-        p += gauss_log_density(input[k], mu_x(j, k), sigma[j]);
+        p += gauss_log_density_stddev(input[k], mu_x(j, k), sigma[j]);
 #ifdef BOUNDCHECK
         if (isnan(p)) {
           PLWARNING("In ConditionalGaussMix::setInput - Density is nan");
