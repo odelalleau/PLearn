@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.cc,v 1.7 2003/10/15 18:09:17 yoshua Exp $
+   * $Id: StackedLearner.cc,v 1.8 2003/11/29 17:43:23 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -49,7 +49,9 @@ using namespace std;
 
 StackedLearner::StackedLearner() 
 /* ### Initialise all fields to their default value here */
-  : train_base_learners(true),  put_raw_input(false)
+  :
+  base_train_splitter(0),
+  train_base_learners(true),  put_raw_input(false)
   {
   }
 
@@ -86,6 +88,13 @@ StackedLearner::StackedLearner()
                   "and which data subset(s) goes to training the combiner. If not provided then the\n"
                   "same data is used to train and test both levels. If provided, in each split, there should be\n"
                   "two sets: the set on which to train the first level and the set on which to train the second one\n");
+
+    declareOption(ol, "base_train_splitter", &StackedLearner::base_train_splitter, OptionBase::buildoption,
+                  "This splitter can be used to split the training set into different training sets for each base learner\n"
+                  "If it is not set, the same training set will be applied to the base learners.\n"
+                  "If \"splitter\" is also used, it will be applied first to determine the training set used by base_train_splitter.\n"
+                  "The splitter should give as many splits as base learners, and each split should contain one set.");
+
     declareOption(ol, "train_base_learners", &StackedLearner::train_base_learners, OptionBase::buildoption,
                   "whether to train the base learners in the method train (otherwise they should be\n"
                   "initialized properly at construction / setOption time)\n");
@@ -179,17 +188,30 @@ void StackedLearner::setTrainingSet(VMat training_set, bool call_forget)
       TVec<VMat> sets = splitter->getSplit();
       VMat lower_trainset = sets[0];
       VMat upper_trainset = sets[1];
-      for (int i=0;i<base_learners.length();i++)
-        base_learners[i]->setTrainingSet(lower_trainset,call_forget && train_base_learners);
+      if (base_train_splitter) {
+        base_train_splitter->setDataSet(lower_trainset);
+      } else {
+        for (int i=0;i<base_learners.length();i++)
+          base_learners[i]->setTrainingSet(lower_trainset,call_forget && train_base_learners);
+      }
       if (combiner)
         combiner->setTrainingSet(new PLearnerOutputVMatrix(upper_trainset, base_learners, put_raw_input),call_forget);
     }
   } else
   {
-    for (int i=0;i<base_learners.length();i++)
-      base_learners[i]->setTrainingSet(training_set,call_forget && train_base_learners);
+    if (base_train_splitter) {
+      base_train_splitter->setDataSet(training_set);
+    } else {
+      for (int i=0;i<base_learners.length();i++)
+        base_learners[i]->setTrainingSet(training_set,call_forget && train_base_learners);
+    }
     if (combiner)
       combiner->setTrainingSet(new PLearnerOutputVMatrix(training_set, base_learners, put_raw_input),call_forget);
+  }
+  if (base_train_splitter) {
+    for (int i=0;i<base_learners.length();i++) {
+      base_learners[i]->setTrainingSet(base_train_splitter->getSplit(i)[0],call_forget && train_base_learners);
+    }
   }
 }
 
@@ -202,12 +224,12 @@ void StackedLearner::train()
     if (train_base_learners)
       for (int i=0;i<base_learners.length();i++)
       {
-        VecStatsCollector stats;
-        base_learners[i]->setTrainStatsCollector(&stats);
+        PP<VecStatsCollector> stats = new VecStatsCollector();
+        base_learners[i]->setTrainStatsCollector(stats);
         if (expdir!="")
           base_learners[i]->setExperimentDirectory(expdir+"Base"+tostring(i));
         base_learners[i]->train();
-        stats.finalize(); // WE COULD OPTIONALLY SAVE THEM AS WELL!
+        stats->finalize(); // WE COULD OPTIONALLY SAVE THEM AS WELL!
       }
     if (combiner)
     {

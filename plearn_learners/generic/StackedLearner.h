@@ -33,10 +33,10 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.h,v 1.5 2003/10/02 15:19:39 yoshua Exp $
+   * $Id: StackedLearner.h,v 1.6 2003/11/29 17:43:23 tihocan Exp $
    ******************************************************* */
 
-// Authors: Yoshua Bengio
+// Authors: Yoshua Bengio, Olivier Delalleau
 
 /*! \file StackedLearner.h */
 
@@ -85,6 +85,11 @@ public:
   //! This can be 
   //! and which data subset(s) goes to training the combiner.
   PP<Splitter> splitter;
+
+  //! This can be used to split the training set into different training sets
+  //! for each base learner. If it is not set, the same training set will be
+  //! applied to the base learners.
+  PP<Splitter> base_train_splitter;
 
   //! whether to train the base learners in the method train (otherwise they should be
   //! initialized at construction / setOption time)
