@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.cc,v 1.12 2005/02/17 17:36:21 tihocan Exp $
+   * $Id: pl_math.cc,v 1.13 2005/02/18 14:14:04 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,8 +52,6 @@ using namespace std;
 _plearn_nan_type plearn_nan = {{ 0x7f, 0xc0, 0, 0 }};
 # endif
 # ifdef LITTLEENDIAN
-// TODO This line removes the compilation warning, but does it still work ?
-// _plearn_nan_type plearn_nan = {{ 0, 0, 0xc0, 0x7f }};
 _plearn_nan_type plearn_nan = { 0, 0, 0xc0, 0x7f };
 # endif
 
