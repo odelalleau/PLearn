@@ -174,7 +174,7 @@ options_choices = [
 pymakeOption( name = 'g++',
               description = 'compiling with g++, with no MPI support',
               compiler = 'g++',
-              compileroptions = '-Wno-deprecated -pedantic-errors -DUSING_MPI=0 ',
+              compileroptions = '-Wno-deprecated -pedantic -DUSING_MPI=0 ',
               linker = 'g++' )
 
 pymakeOption( name = 'mpi',
