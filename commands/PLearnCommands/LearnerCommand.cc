@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LearnerCommand.cc,v 1.3 2004/02/20 21:11:40 chrish42 Exp $ 
+   * $Id: LearnerCommand.cc,v 1.4 2004/06/11 17:40:25 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -75,6 +75,8 @@ void LearnerCommand::train(const string& learner_spec_file, const string& trains
   PP<PLearner> learner;
   PLearn::load(learner_spec_file,learner);
   VMat trainset = getDataSet(trainset_spec);
+  PP<VecStatsCollector> train_stats = new VecStatsCollector();
+  learner->setTrainStatsCollector(train_stats);
   learner->setTrainingSet(trainset);
   learner->train();
   PLearn::save(save_learner_file, learner);  
