@@ -1,6 +1,5 @@
 #!python
 
-
 #############################################################################################################
 ## WARNING                                                                                                  #
 #  if you add options don't forget to add in the pymake file                                                #
