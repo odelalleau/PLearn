@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: FieldConvertCommand.h,v 1.14 2004/03/11 19:11:28 tihocan Exp $
+ * $Id: FieldConvertCommand.h,v 1.15 2004/03/12 14:50:28 tihocan Exp $
  ******************************************************* */
 
 #ifndef FieldConvertCommand_INC
@@ -55,6 +55,7 @@ public:
                   "The nature of each field of the original dataset is automatically detected, and determines the approriate treatment.\n"\
                   "The possible field types with the corresponding treatment can be one of :\n"\
                   "continuous      - quantitative data (data is real): the field is replaced by the normalized data (minus means, divided by stddev)\n"\
+                  "binary          - binary discrete data (is processed as a continuous field)\n"\
                   "discrete_uncorr - discrete integers (qualitative data, e.g : postal codes, categories) not corr. with target: the field is replaced by a group of fields in a one-hot fashion.\n"\
                   "discrete_corr   - discrete integers, correlated with target : both the normalised and the onehot versions of the field are used in the new dataset\n"\
                   "constant        - constant data : the field is skipped (it is not present in the new dataset)\n"\
@@ -81,6 +82,7 @@ public:
                     
   //! The available types for a field.
   enum FieldType {
+    binary,
     constant,
     continuous,
     discrete_corr,

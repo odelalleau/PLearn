@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: FieldConvertCommand.cc,v 1.20 2004/03/12 14:04:29 tihocan Exp $
+ * $Id: FieldConvertCommand.cc,v 1.21 2004/03/12 14:50:28 tihocan Exp $
  ******************************************************* */
 
 #include "FieldConvertCommand.h"
@@ -218,7 +218,8 @@ void FieldConvertCommand::run(const vector<string> & args)
           && vm->getStringToRealMapping(i).size()==0)
         type=continuous;
       // Test whether there are only 2 unique values: in this case, we don't
-      // need a one hot, and we can consider it as continuous.
+      // need a one hot, and we set it to binary (which will be processed the
+      // same as continuous).
       else if (count == 2) {
         Vec counts(2);
         int k = 0;
@@ -226,7 +227,7 @@ void FieldConvertCommand::run(const vector<string> & args)
           counts[k++] = it->second.n;
         }
         if (counts[0] >= n_enough && counts[1] >= n_enough) {
-          type = continuous;
+          type = binary;
         } else {
           // Not enough representants for one of the classes.
           type = skip;
@@ -497,6 +498,10 @@ void FieldConvertCommand::run(const vector<string> & args)
 
     // now find out which actions to perform according to type 
 
+    // We treat 'binary' as 'continuous'.
+    if (type == binary)
+      type = continuous;
+
     if(type==unknown)
       cout<<tostring(i)+" ("+vm->fieldName(i)+") "<<message<<endl;
     else if(type==continuous)
@@ -646,6 +651,8 @@ PLearn::FieldConvertCommand::FieldType FieldConvertCommand::stringToFieldType(st
     return discrete_corr;
   else if (s.find("constant") != string::npos)
     return constant;
+  else if (s.find("binary") != string::npos)
+    return binary;
   else if (s.find("skip") != string::npos)
     return skip;
   else {
