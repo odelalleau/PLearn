@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.33 2005/02/22 17:44:55 chapados Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.34 2005/02/22 17:52:40 chapados Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -308,7 +308,8 @@ Vec VecStatsCollector::getAllStats(const string& statname) const
 void VecStatsCollector::getAllStats(const string& statname,
                                     Vec& result) const
 {
-  result.resize(stats.size());
+  const int n = stats.size();
+  result.resize(n);
   for (int i=0; i<n; ++i)
     result[i] = getStats(i).getStat(statname);
 }
