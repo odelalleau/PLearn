@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.h,v 1.6 2003/11/29 17:43:23 tihocan Exp $
+   * $Id: StackedLearner.h,v 1.7 2004/02/17 14:52:47 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio, Olivier Delalleau
@@ -45,6 +45,7 @@
 #define StackedLearner_INC
 
 #include "PLearner.h"
+#include "Splitter.h"
 
 namespace PLearn <%
 using namespace std;
