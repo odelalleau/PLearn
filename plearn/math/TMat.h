@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.33 2004/02/28 18:06:14 tihocan Exp $
+   * $Id: TMat.h,v 1.34 2004/03/09 16:42:19 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -1795,6 +1795,13 @@ inline TVec<T> deepCopy(const TVec<T> source, CopiesMap copies)
   return source.deepCopy(copies);
 }
 
+template <class T>
+inline void deepCopyField(TVec<T>& field, CopiesMap& copies)
+{
+  field.makeDeepCopyFromShallowCopy(copies);
+}
+
+
 template<class T>
 void swap( TVec<T>& a, TVec<T>& b)
 { swap_ranges(a.begin(), a.end(), b.begin()); }
@@ -2018,6 +2025,11 @@ template <class T> inline TMat<T>
 deepCopy(const TMat<T> source, CopiesMap copies)
 { return source.deepCopy(copies); }
 
+template <class T>
+inline void deepCopyField(TMat<T>& field, CopiesMap& copies)
+{
+  field.makeDeepCopyFromShallowCopy(copies);
+}
 
 template<class T>
 void clear(const TMat<T>& x)
