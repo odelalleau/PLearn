@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TangentLearner.cc,v 1.15 2004/08/09 23:49:50 yoshua Exp $ 
+   * $Id: TangentLearner.cc,v 1.16 2004/08/10 21:29:46 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
@@ -96,7 +96,7 @@ Mat smartInitialization(VMat v, int n, real c, real regularization)
 TangentLearner::TangentLearner() 
 /* ### Initialize all fields to their default value here */
   : training_targets("local_neighbors"), use_subspace_distance(false), normalize_by_neighbor_distance(true),
-    ordered_vectors(true), smart_initialization(0),initialization_regularization(1e-3),
+    ordered_vectors(false), smart_initialization(0),initialization_regularization(1e-3),
     n_neighbors(5), n_dim(1), architecture_type("single_neural_network"), output_type("tangent_plane"),
     n_hidden_units(-1), batch_size(1), norm_penalization(0), svd_threshold(1e-5), 
     projection_error_regularization(0)

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ProjectionErrorVariable.h,v 1.10 2004/08/10 13:49:07 yoshua Exp $
+   * $Id: ProjectionErrorVariable.h,v 1.11 2004/08/10 21:29:45 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -64,13 +64,13 @@ public:
   int n; // dimension of the vectors
   bool use_subspace_distance; // use subspace distance instead of distance to targets
   bool normalize_by_neighbor_distance; // normalize projection error by neighbor distance
-  bool ordered_vectors; // use greedy sequential projections to order the f_i's
   real norm_penalization; // penalize sum_i (||f_i||^2 - 1)^2
   real epsilon; // cut-off of singular values to regularize linear system solution
   real regularization; // add to the diagonal of the system matrix for regularization
+  bool ordered_vectors; // use greedy sequential projections to order the f_i's
   int n_dim; // nb of vectors in f
   int T; // nb of vectors in t
-  Vec S, fw, norm_err, ww, uu, wwuu, rhs, Tu, one_over_norm_T;
+  Vec S, fw, norm_err, ww, uu, wwuu, rhs, Tu, one_over_norm_T, norm_f;
   Mat F, TT, dF, Ut, V, B, VVt, A, A11, A12, A21, A22, wwuuM, FT, FT1, FT2;
   Mat fw_minus_t;
   Mat w; // weights in the above minimization, in each row for each t_j
@@ -78,7 +78,7 @@ public:
 
   //!  Default constructor for persistence
   ProjectionErrorVariable() {}
-  ProjectionErrorVariable(Variable* input1, Variable* input2, int n=-1, bool normalize_by_neighbor_distance = true, bool use_subspace_distance=false, real norm_penalization=1.0, real epsilon=1e-6, real regularization=0);
+  ProjectionErrorVariable(Variable* input1, Variable* input2, int n=-1, bool normalize_by_neighbor_distance = true, bool use_subspace_distance=false, real norm_penalization=1.0, real epsilon=1e-6, real regularization=0, bool ordered_vectors=true);
 
   PLEARN_DECLARE_OBJECT(ProjectionErrorVariable);
 

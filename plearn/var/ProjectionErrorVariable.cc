@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
- * $Id: ProjectionErrorVariable.cc,v 1.14 2004/08/09 23:49:49 yoshua Exp $
+ * $Id: ProjectionErrorVariable.cc,v 1.15 2004/08/10 21:29:45 yoshua Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -93,7 +93,7 @@ namespace PLearn {
                                                      real regularization_, bool ordered_vectors_)
     : inherited(input1, input2, 1, 1), n(n_), use_subspace_distance(use_subspace_distance_), 
       normalize_by_neighbor_distance(normalize_by_neighbor_distance_), norm_penalization(norm_penalization_), 
-      epsilon(epsilon_),  regularization(regularization_), orderd_vectors(ordered_vectors_)
+      epsilon(epsilon_),  regularization(regularization_), ordered_vectors(ordered_vectors_)
   {
     build_();
   }
@@ -140,10 +140,17 @@ namespace PLearn {
         PLERROR("ProjectErrorVariable: n_dim should be less than data dimension n");
       if (!use_subspace_distance)
         {
-          V.resize(n_dim,n_dim);
-          Ut.resize(n,n);
-          B.resize(n_dim,n);
-          VVt.resize(n_dim,n_dim);
+          if (ordered_vectors)
+            {
+              norm_f.resize(n_dim);
+            }
+          else
+            {
+              V.resize(n_dim,n_dim);
+              Ut.resize(n,n);
+              B.resize(n_dim,n);
+              VVt.resize(n_dim,n_dim);
+            }
           fw_minus_t.resize(T,n);
           w.resize(T,n_dim);
           one_over_norm_T.resize(T);
@@ -191,7 +198,7 @@ namespace PLearn {
     //    |-TF'   TT'| |u|   | 0 |
     //  in (w,u), and then scale both down by ||w|| so as to enforce ||w||=1.
     //
-    // ELSE
+    // ELSE IF !ordered_vectors
     //  We need to solve the system 
     //     F F' w_j = F t_j
     //  for each t_j in order to find the solution w of
@@ -203,6 +210,11 @@ namespace PLearn {
     //    B = V S^{-2} V' F = V S^{-1} U'
     //  and
     //    w_j = B t_j is our solution.
+    // ELSE (ordered_vectors && !use_subspace_distance)
+    //  for each j
+    //   for each k
+    //     w_{jk} = (t_j . f_k - sum_{i<k} w_i f_i . f_k)/||f_k||^2
+    //  cost = sum_j || t_j - sum_i w_i f_i||^2 / ||t_j||^2
     // ENDIF
     //
     // if  norm_penalization>0 then also add the following term:
@@ -259,6 +271,40 @@ namespace PLearn {
         cost = pownorm(fw);
       }
     else // PART THAT IS REALLY USED STARTS HERE
+      if (ordered_vectors)
+      {
+        // compute 1/||f_k||^2 into norm_f
+        for (int k=0;k<n_dim;k++)
+        {
+          Vec fk = F(k);
+          norm_f[k] = 1.0/pownorm(fk);
+        }
+        for(int j=0; j<T;j++)
+          {
+            Vec tj = TT(j);
+            Vec wj = w(j);
+            // w_{jk} = (t_j . f_k - sum_{i<k} w_i f_i . f_k)/||f_k||^2            
+            for (int k=0;k<n_dim;k++)
+            {
+              Vec fk = F(k);
+              real s = dot(tj,fk); 
+              for (int i=0;i<k;i++)
+                s -= wj[i] * dot(F(i),fk);
+              wj[k] = s * norm_f[k];
+            }
+            transposeProduct(fw, F, wj); // fw = sum_i w_ji f_i = z_m
+            Vec fw_minus_tj = fw_minus_t(j);
+            substract(fw,tj,fw_minus_tj); // -z_n = z_m - z
+            if (normalize_by_neighbor_distance) // THAT'S THE ONE WHICH WORKS WELL:
+              {
+                one_over_norm_T[j] = 1.0/pownorm(tj); // = 1/||z||
+                cost += sumsquare(fw_minus_tj)*one_over_norm_T[j]; // = ||z_n||^2 / ||z||^2
+              }
+            else
+              cost += sumsquare(fw_minus_tj);
+          }
+      }
+      else
       {
         static Mat F_copy;
         F_copy.resize(F.length(),F.width());
@@ -324,6 +370,9 @@ namespace PLearn {
     // IF use_subspace_distance
     //   dcost/dF = w (F'w - T'u)'
     //
+    // ELSE IF ordered_vectors
+    //   dcost_k/df_k = sum_j 2(sum_{i<=k} w_i f_i  - t_j) w_k/||t_j||
+    // 
     // ELSE
     //   dcost/dfw = 2 (fw - t_j)/||t_j||
     //   dfw/df_i = w_i 
@@ -348,6 +397,27 @@ namespace PLearn {
               multiplyAcc(df_i, F(i), gradient[0]*norm_penalization*2*norm_err[i]);
           }
       }
+    else if (ordered_vectors)
+      {
+        for (int j=0;j<T;j++)
+        {
+          fw.clear();
+          Vec wj = w(j);
+          Vec fw_minus_tj = fw_minus_t(j); // n-vector
+          Vec tj = TT(j);
+          for (int k=0;k<n_dim;k++)
+          {
+            Vec f_k = F(k); // n-vector
+            Vec df_k = dF(k); // n-vector
+            multiplyAcc(fw,f_k,wj[k]);
+            substract(fw,tj,fw_minus_tj);
+            if (normalize_by_neighbor_distance)
+              multiplyAcc(df_k,fw_minus_tj,gradient[0] * wj[k] * 2 * one_over_norm_T[j]/real(T));
+            else
+              multiplyAcc(df_k,fw_minus_tj,gradient[0] * wj[k] * 2/real(T));
+          }
+        }
+      }
     else
       {
         for (int j=0;j<T;j++)
@@ -361,7 +431,6 @@ namespace PLearn {
                   multiplyAcc(df_i, fw_minus_tj, gradient[0] * wj[i]*2*one_over_norm_T[j]/real(T));
                 else
                   multiplyAcc(df_i, fw_minus_tj, gradient[0] * wj[i]*2/real(T));
-//                 df_i/=real(T);
                 if (norm_penalization>0)
                   multiplyAcc(df_i, F(i), gradient[0]*norm_penalization*2*norm_err[i]/real(T));
               }
