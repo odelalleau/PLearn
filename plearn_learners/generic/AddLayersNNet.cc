@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddLayersNNet.cc,v 1.3 2004/09/09 14:15:38 tihocan Exp $ 
+   * $Id: AddLayersNNet.cc,v 1.4 2004/09/09 19:41:08 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -273,12 +273,10 @@ void AddLayersNNet::initializeParams(bool set_seed) {
 void AddLayersNNet::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-
-  // ### ex:
-  // deepCopyField(trainvec, copies);
-
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("AddLayersNNet::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+  deepCopyField(real_parts_size, copies);
+  deepCopyField(hidden_weights, copies);
+  deepCopyField(add_hidden, copies);
+  deepCopyField(parts_size, copies);
 }
 
 } // end of namespace PLearn
