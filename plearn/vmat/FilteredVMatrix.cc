@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilteredVMatrix.cc,v 1.16 2005/01/25 03:15:46 dorionc Exp $ 
+   * $Id: FilteredVMatrix.cc,v 1.17 2005/02/24 16:34:02 lheureup Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -74,6 +74,8 @@ PLEARN_IMPLEMENT_OBJECT(FilteredVMatrix, "A filtered view of its source vmatrix"
 void FilteredVMatrix::openIndex()
 {
   string idxfname = getMetaDataDir() / "filtered.idx";
+  if(!force_mkdir(getMetaDataDir()))
+     PLERROR("In FilteredVMatrix::openIndex could not create directory %s",getMetaDataDir().absolute().c_str());
 
   if(file_exists(idxfname) && mtime(idxfname)>=getMtime())
     indexes.open(idxfname);
