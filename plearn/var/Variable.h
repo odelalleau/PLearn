@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.h,v 1.18 2004/09/14 16:04:38 chrish42 Exp $
+   * $Id: Variable.h,v 1.19 2005/01/11 20:03:13 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -99,7 +99,9 @@ public:
 
 class Variable: public Object
 {
-public:
+
+private:
+
   typedef Object inherited;
 
 protected:
