@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.cc,v 1.7 2004/03/17 14:21:24 tihocan Exp $
+   * $Id: PLearnerOutputVMatrix.cc,v 1.8 2004/03/29 18:41:56 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -48,7 +48,9 @@ using namespace std;
 
 
 PLearnerOutputVMatrix::PLearnerOutputVMatrix()
-  :inherited(), put_raw_input(false)
+ :inherited(),
+  put_raw_input(false),
+  train_learners(false)
   /* ### Initialise all fields to their default value */
 {
 }
@@ -97,10 +99,15 @@ void PLearnerOutputVMatrix::declareOptions(OptionList& ol)
 
    declareOption(ol, "data", &PLearnerOutputVMatrix::data, OptionBase::buildoption,
                  "The original data set (a VMat)");
+
    declareOption(ol, "learners", &PLearnerOutputVMatrix::learners, OptionBase::buildoption,
                  "The vector of PLearners which will be applied to the data set");
+
    declareOption(ol, "put_raw_input", &PLearnerOutputVMatrix::put_raw_input, OptionBase::buildoption,
-                 "whether to include in the input part of this VMatrix the raw data input part");
+                 "Whether to include in the input part of this VMatrix the raw data input part");
+
+   declareOption(ol, "train_learners", &PLearnerOutputVMatrix::train_learners, OptionBase::buildoption,
+                "If set to 1, the learners will be train on 'data' before computing the output");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -110,6 +117,13 @@ void PLearnerOutputVMatrix::build_()
 {
   if (data && learners.length()>0 && learners[0])
   {
+    if (train_learners) {
+      // First train the learners.
+      for (int i = 0; i < learners.length(); i++) {
+        learners[i]->setTrainingSet(data);
+        learners[i]->train();
+      }
+    }
     row.resize(data->width());
     learner_input = row.subVec(0,data->inputsize());
     learner_target = row.subVec(data->inputsize(),data->targetsize());
