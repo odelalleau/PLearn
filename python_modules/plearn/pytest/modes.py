@@ -136,6 +136,19 @@ class PyTestMode(Mode):
                                     default='' )
 
         return target_options
+
+
+##    def global_options(self, parser):
+##        global_options = OptionGroup( parser, "Global Options", "" )
+
+##        global_options.add_option( '--traceback',
+##                                    action="store_true",
+##                                    help="This flag triggers routines to report the traceback of "
+##                                    "PyTestUsageError. By default, only the class's name and meesage "
+##                                    "are reported.",
+##                                    default = False )
+        
+##         return global_options
         
     def testing_options(self, parser):
         testing_options = OptionGroup( parser, "Testing Options", "" )
@@ -149,13 +162,6 @@ class PyTestMode(Mode):
         testing_options.add_option( '--hosts', 
                                     help='The maximum nuber of hosts to use simultaneously.',
                                     default=10 )
-
-        testing_options.add_option( '--traceback',
-                                    action="store_true",
-                                    help="This flag triggers routines to report the traceback of "
-                                    "PyTestUsageError. By default, only the class's name and meesage "
-                                    "are reported.",
-                                    default = False )
         
         return testing_options
 
