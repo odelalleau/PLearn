@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DotProductKernel.cc,v 1.2 2004/01/27 14:14:21 tihocan Exp $
+   * $Id: DotProductKernel.cc,v 1.3 2004/01/27 21:56:58 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -64,11 +64,11 @@ real DotProductKernel::evaluate_i_j(int i, int j) const
 
 
 real DotProductKernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) const 
-{ return data->dot(i,x,data_inputsize); } 
+{ return data->dot(i,x); } 
 
 
 real DotProductKernel::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x) const
-{ return data->dot(i,x,data_inputsize); } 
+{ return data->dot(i,x); } 
 
 
 void DotProductKernel::write(ostream& out) const

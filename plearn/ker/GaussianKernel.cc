@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianKernel.cc,v 1.2 2004/01/26 14:09:03 tihocan Exp $
+   * $Id: GaussianKernel.cc,v 1.3 2004/01/27 21:57:25 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -135,7 +135,7 @@ real GaussianKernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) c
 //        << "b-> minus_one_over_sigmasquare: " << minus_one_over_sigmasquare << endl
 //        << "a*b: " << sqnorm_of_diff*minus_one_over_sigmasquare << endl
 //        << "res: " << exp(sqnorm_of_diff*minus_one_over_sigmasquare) << endl; 
-  return evaluateFromDotAndSquaredNorm(squarednorms[i],data->dot(i,x,data_inputsize),squared_norm_of_x); 
+  return evaluateFromDotAndSquaredNorm(squarednorms[i],data->dot(i,x),squared_norm_of_x); 
 }
 
 
@@ -143,7 +143,7 @@ real GaussianKernel::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x) c
 { 
   if(squared_norm_of_x<0.)
     squared_norm_of_x = pownorm(x);
-  return evaluateFromDotAndSquaredNorm(squared_norm_of_x,data->dot(i,x,data_inputsize),squarednorms[i]); 
+  return evaluateFromDotAndSquaredNorm(squared_norm_of_x,data->dot(i,x),squarednorms[i]); 
 }
 
 
