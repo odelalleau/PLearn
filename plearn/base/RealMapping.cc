@@ -34,13 +34,13 @@
 // library, go to the PLearn Web site at www.plearn.org 
 
 /* *******************************************************      
-   * $Id: RealMapping.cc,v 1.17 2004/02/28 17:54:35 tihocan Exp $
+   * $Id: RealMapping.cc,v 1.18 2004/02/29 02:06:16 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "RealMapping.h"
 //#include "fileutils.h"
-//#include <algorithm>
+#include <algorithm>
 //#include <sstream>
 #include "PStream.h"
 

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.40 2004/02/27 22:55:35 nova77 Exp $
+   * $Id: TMat_maths_impl.h,v 1.41 2004/02/29 02:06:19 nova77 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -46,6 +46,8 @@
 
 #ifndef TMat_maths_impl_H
 #define TMat_maths_impl_H
+
+#include <algorithm>
 
 namespace PLearn {
 using namespace std;

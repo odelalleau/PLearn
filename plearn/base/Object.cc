@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.23 2004/02/28 17:53:51 tihocan Exp $
+   * $Id: Object.cc,v 1.24 2004/02/29 02:06:16 nova77 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -47,6 +47,8 @@
 //#include "fileutils.h"
 //#include "TypeFactory.h"
 //#include <iostream>
+
+#include <algorithm>
 
 namespace PLearn {
 using namespace std;
