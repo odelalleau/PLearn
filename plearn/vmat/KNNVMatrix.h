@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNVMatrix.h,v 1.3 2004/02/20 21:14:44 chrish42 Exp $ 
+   * $Id: KNNVMatrix.h,v 1.4 2004/02/20 22:28:05 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -44,6 +44,7 @@
 #ifndef KNNVMatrix_INC
 #define KNNVMatrix_INC
 
+#include "Kernel.h"
 #include "SourceVMatrix.h"
 
 namespace PLearn {
@@ -62,7 +63,13 @@ protected:
   // * protected options *
   // *********************
 
+  // Fields below are not options.
+
+  //! Store the nearest neighbours of each point.
   Mat nn;
+
+  //! Store the pij weights, if a kernel_pij is provided.
+  Mat pij;
     
 public:
 
@@ -70,6 +77,7 @@ public:
   // * public build options *
   // ************************
 
+  Ker kernel_pij;
   int knn;
 
   // ****************
@@ -95,8 +103,9 @@ protected:
   static void declareOptions(OptionList& ol);
 
   //! Return the index in the source matrix of the sample number i in
-  //! this matrix.
-  inline int getSourceIndexOf(int i) const;
+  //! this matrix. Also return in i_n the neighbour rank, and in i_ref
+  //! the reference point.
+  inline int getSourceIndexOf(int i, int& i_ref, int& i_n) const;
 
   //! Return the tag of the sample number p in a bag:
   //!   p == 0      => 1
@@ -129,16 +138,6 @@ public:
   // **************************
   // **** VMatrix methods ****
   // **************************
-
-  //! get element at i-th row, j-th column
-  //! (Please implement in .cc)
-  virtual real get(int i, int j) const;
-
-  //! get part or all of the i-th, starting at the j-th column,
-  //! with v.length() elements; these elements are put in v.
-  //! (Please implement in .cc)
-  //! (default version repeatedly calls get(i,j) which may have a significant overhead)
-  virtual void getSubRow(int i, int j, Vec v) const;
 
   //! Needed because it's a SourceVMatrix.
   virtual void getRow(int i, Vec v) const;
