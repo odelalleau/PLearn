@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: AutoVMatrix.h,v 1.10 2005/01/25 03:15:46 dorionc Exp $
+   * $Id: AutoVMatrix.h,v 1.11 2005/02/03 17:13:41 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -68,12 +68,13 @@ public:
   // ************************
 
   PPath specification; // the specification of the vmat (typically a file or directory path)
+  bool load_data_in_memory; // convert VMat in a MemoryVMatrix (default=false);
 
   // ****************
   // * Constructors *
   // ****************
 
-  AutoVMatrix(const PPath& the_specification="");
+  AutoVMatrix(const PPath& the_specification="", bool load_in_memory=false);
 
 private: 
 

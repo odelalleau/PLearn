@@ -36,12 +36,13 @@
  
 
 /* *******************************************************      
- * $Id: AutoVMatrix.cc,v 1.14 2005/01/25 03:15:46 dorionc Exp $
+ * $Id: AutoVMatrix.cc,v 1.15 2005/02/03 17:13:41 ducharme Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
 
 #include "AutoVMatrix.h"
+#include "MemoryVMatrix.h"
 #include <plearn/db/getDataSet.h>
 #include <plearn/db/databases.h>
 
@@ -54,8 +55,8 @@ PLEARN_IMPLEMENT_OBJECT(AutoVMatrix,
     "will be a wrapper around the appropriate VMatrix type, simply forwarding calls to it.\n"
     "AutoVMatrix can be used to access the UCI databases.\n");
 
-AutoVMatrix::AutoVMatrix(const PPath& the_specification)
-  :specification(the_specification)
+AutoVMatrix::AutoVMatrix(const PPath& the_specification, bool load_in_memory)
+  :specification(the_specification), load_data_in_memory(load_in_memory)
 { build_(); }
 
 void AutoVMatrix::declareOptions(OptionList& ol)
@@ -63,6 +64,9 @@ void AutoVMatrix::declareOptions(OptionList& ol)
   declareOption(ol, "specification", &AutoVMatrix::specification, OptionBase::buildoption,
                 "This is any string understood by getDataSet. Typically a file or directory path.\n"
                  + loadUCIDatasetsHelp());
+  declareOption(ol, "load_in_memory", &AutoVMatrix::load_data_in_memory, OptionBase::buildoption,
+                "Boolean value to specify if we want to store data in memory (in a MemoryVMatrix)."
+                "Default=false.\n");
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
 
@@ -74,6 +78,12 @@ void AutoVMatrix::build_()
 {
   if(specification=="")
     setVMat(VMat());
+  else if (load_data_in_memory)
+  {
+    VMat data = getDataSet(specification);
+    VMat memdata = new MemoryVMatrix(data);
+    setVMat(memdata);
+  }
   else
     setVMat(getDataSet(specification));
 }
