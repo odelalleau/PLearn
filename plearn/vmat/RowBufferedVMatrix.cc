@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: RowBufferedVMatrix.cc,v 1.11 2004/09/14 16:04:39 chrish42 Exp $
+   * $Id: RowBufferedVMatrix.cc,v 1.12 2004/11/10 16:24:39 tihocan Exp $
    ******************************************************* */
 
 #include "RowBufferedVMatrix.h"
@@ -161,7 +161,7 @@ real RowBufferedVMatrix::dot(int i, const Vec& v) const
     {
       current_row.resize(width_);
       getNewRow(i,current_row);
-      i = current_row_index;
+      current_row_index = i;
     }
   return PLearn::dot(current_row.subVec(0,v.length()),v);
 }
