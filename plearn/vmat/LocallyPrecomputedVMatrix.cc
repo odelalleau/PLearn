@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyPrecomputedVMatrix.cc,v 1.5 2004/12/10 16:22:08 tihocan Exp $ 
+   * $Id: LocallyPrecomputedVMatrix.cc,v 1.6 2004/12/10 17:14:13 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -113,7 +113,9 @@ void LocallyPrecomputedVMatrix::build()
 void LocallyPrecomputedVMatrix::build_()
 {
   if (metadatadir == "") {
-    force_mkdir(local_dir);
+    bool made_dir = force_mkdir(local_dir);
+    if (!made_dir)
+      PLERROR("In LocallyPrecomputedVMatrix::build_ - Could not create dir: %s", local_dir.c_str());
     metadatadir = newFilename(local_dir, "locally_precomputed_", true);
     if (sequential_access) {
       // If necessary, wait until we are allowed to start the precomputation.
