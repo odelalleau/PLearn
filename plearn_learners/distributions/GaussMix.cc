@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.20 2004/05/18 16:12:17 tihocan Exp $ 
+ * $Id: GaussMix.cc,v 1.21 2004/05/18 18:28:39 tihocan Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -59,6 +59,7 @@ GaussMix::GaussMix()
   epsilon(1e-6),
   kmeans_iterations(3),
   L(1),
+  n_eigen(-1),
   sigma_min(1e-5),
   type("unknown")
 {
@@ -104,6 +105,11 @@ void GaussMix::declareOptions(OptionList& ol)
                 "   - factor    : represented by Ks[i] principal components\n");
                 // TODO Finish this help.
 
+  declareOption(ol,"n_eigen", &GaussMix::n_eigen, OptionBase::buildoption,
+                "If type == 'general', the number of eigenvectors used for the covariance matrix.\n"
+                "The remaining eigenvectors will be given an eigenvalue equal to the next highest\n"
+                "eigenvalue. If set to -1, all eigenvectors will be kept.");
+  
   declareOption(ol,"alpha_min", &GaussMix::alpha_min, OptionBase::buildoption,
                 "The minimum weight for each Gaussian.");
   
@@ -122,8 +128,13 @@ void GaussMix::declareOptions(OptionList& ol)
                 "Coefficients of each gaussian.\n"
                 "They sum to 1 and are positive: they can be interpreted as prior P(gaussian i).\n");
 
-  declareOption(ol, "covariance", &GaussMix::covariance, OptionBase::learntoption,
-                "The covariance matrix of each Gaussian.");
+  declareOption(ol, "eigenvalues", &GaussMix::eigenvalues, OptionBase::learntoption,
+                "The eigenvalues associated to the principal eigenvectors (element (j,k) is the\n"
+                "k-th eigenvalue of the j-th Gaussian.");
+
+  declareOption(ol, "eigenvectors", &GaussMix::eigenvectors, OptionBase::learntoption,
+                "The principal eigenvectors of each Gaussian (for the 'general' type). They are\n"
+                "stored in rows of the matrices.");
 
   declareOption(ol,"D", &GaussMix::D, OptionBase::learntoption,
                 "Number of dimensions in input space.");
@@ -131,8 +142,14 @@ void GaussMix::declareOptions(OptionList& ol)
   declareOption(ol,"diags", &GaussMix::diags, OptionBase::learntoption,
                 "The element (i,j) is the stddev of Gaussian j on the i-th dimension.");
     
+  declareOption(ol, "log_coeff", &GaussMix::log_coeff, OptionBase::learntoption,
+                "The log of the constant part in the p(x) equation: log(1/sqrt(2*pi^D * Det(C))).");
+
   declareOption(ol, "mu", &GaussMix::mu, OptionBase::learntoption,
                 "These are the centers of each Gaussian, stored in rows.");
+
+  declareOption(ol, "n_eigen_computed", &GaussMix::n_eigen_computed, OptionBase::learntoption,
+                "The actual number of principal components computed when type == 'general'.");
 
   declareOption(ol, "nsamples", &GaussMix::nsamples, OptionBase::learntoption,
                 "The number of samples in the training set.");
@@ -144,8 +161,8 @@ void GaussMix::declareOptions(OptionList& ol)
   declareOption(ol, "sigma", &GaussMix::sigma, OptionBase::learntoption,
                 "This is one way to represent the covariance or part of it, depending on type:\n"
                 " - spherical : the sigma for each spherical gaussian, in all directions\n"
-                " - diagonal : not used"\
-                "General : for the l-th gaussian, the eigenvalue (a.k.a lambda0) used for all D-Ks[l] dimensions");
+                " - diagonal  : not usedi\n"
+                " - general   : for the l-th gaussian, the eigenvalue (a.k.a lambda0) used for all D-Ks[l] dimensions");
   //TODO Redo the help on sigma.
 
   // TODO What to do with these options.
@@ -344,6 +361,12 @@ void GaussMix::computeMeansAndCovariances() {
       for (int i = 0; i < D; i++) {
         diags(i,j) = sqrt(variance[i]);
       }
+    } else if (type == "general") {
+      Mat covar(D,D);
+      Vec center = mu(j);
+      computeInputMeanAndCovar(weighted_train_set, center, covar);
+      Vec eigenvals = eigenvalues(j); // The eigenvalues vector of the j-th Gaussian.
+      eigenVecOfSymmMat(covar, n_eigen_computed, eigenvals, eigenvectors[j]);
     } else {
       PLERROR("In GaussMix::computeMeansAndCovariances - Not implemented for this type of Gaussian");
     }
@@ -381,6 +404,12 @@ real GaussMix::computeLikehood(Vec& x, int j) {
       }
     }
     return p;
+  } else if (type == "general") {
+    // First we project the input 'x' in the basis where the covariance is
+    // diagonal, by y = eigenvectors[j] . x
+    static Vec y;
+    y.resize(n_eigen_computed);
+    transposeProduct(y, eigenvectors[j], x);
   } else {
     PLERROR("In GaussMix::computeLikehood - Not implemented for this type of Gaussian");
   }
@@ -459,6 +488,9 @@ void GaussMix::forget()
   alpha = Vec();
   sigma = Vec();
   diags = Mat();
+  eigenvectors = Mat();
+  eigenvalues = Mat();
+  log_coeff = Vec();
 
   // Below is old stuff. See what to do with this !
   /*
@@ -596,6 +628,36 @@ void GaussMix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 }
 
 /////////////////////
+// precomputeStuff //
+/////////////////////
+void GaussMix::precomputeStuff() {
+  if (type == "spherical") {
+    // Nothing to do.
+  } else if (type == "diagonal") {
+    // Nothing to do.
+  } else if (type == "general") {
+    // Precompute the log_coeff.
+    for (int j = 0; j < L; j++) {
+      real log_det = 0;
+      for (int k = 0; k < n_eigen_computed; k++) {
+#ifdef BOUNDCHECK
+        if (eigenvalues(j,k) < epsilon) {
+          PLWARNING("In GaussMix::precomputeStuff - An eigenvalue is near zero");
+        }
+#endif
+        log_det += log(eigenvalues(j,k));
+      }
+      if(D - n_eigen_computed > 0) {
+        log_det += log(eigenvalues(j, n_eigen_computed - 1)) * (D - n_eigen_computed);
+      }
+      log_coeff[j] = - 0.5 * (D * log(2*3.141549) + log_det );
+    }
+  } else {
+    PLERROR("In GaussMix::precomputeStuff - Not implemented for this type");
+  }
+}
+
+/////////////////////
 // replaceGaussian //
 /////////////////////
 void GaussMix::replaceGaussian(int j) {
@@ -658,11 +720,26 @@ void GaussMix::train()
   // Those are not used for every type:
   sigma.resize(0);
   diags.resize(0,0);
+  eigenvectors.resize(0);
+  eigenvalues.resize(0,0);
+  log_coeff.resize(0);
   if (type == "unknown") {
   } else if (type == "diagonal") {
     diags.resize(D,L);
   } else if (type == "factor") {
   } else if (type == "general") {
+    eigenvectors.resize(L);
+    log_coeff.resize(L);
+    if (n_eigen == -1 || n_eigen == D) {
+      // We need to compute all eigenvectors.
+      n_eigen_computed = D;
+    } else {
+      n_eigen_computed = n_eigen + 1;
+    }
+    for (int i = 0; i < L; i++) {
+      eigenvectors[i].resize(n_eigen_computed, D);
+    }
+    eigenvalues.resize(L, n_eigen_computed);
   } else if (type == "spherical") {
     sigma.resize(L);
   } else {
@@ -681,6 +758,7 @@ void GaussMix::train()
     }
     computeWeights();
     computeMeansAndCovariances();
+    precomputeStuff();
   }
 
   Vec sample(D);
@@ -691,6 +769,7 @@ void GaussMix::train()
       replaced_gaussian = computeWeights();
     } while (replaced_gaussian);
     computeMeansAndCovariances();
+    precomputeStuff();
     stage++;
   }
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussMix.h,v 1.14 2004/05/18 16:12:17 tihocan Exp $ 
+   * $Id: GaussMix.h,v 1.15 2004/05/18 18:28:39 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file GaussMix.h */
@@ -133,11 +133,15 @@ protected:
   // *********************
 
   Vec alpha;
-  TVec<Mat> covariance;
+  Mat eigenvalues;
+  TVec<Mat> eigenvectors;
   int D;
   //! a LxD matrix of diagonals (type == 'diagonal' -> the diagonal of the covar matrix. type == 'factor' -> noise on each dimension of feature space) // TODO Remove
   Mat diags;
+  //! length == L. the log of the constant part in the p(x) equation : log(1/sqrt(2*pi^D * Det(C))) // TODO Remove
+  Vec log_coeff;
   Mat mu;  
+  int n_eigen_computed;
   int nsamples;
   Mat posteriors;
   //! a length==L vector of sigmas (** or lambda0) // TODO Remove
@@ -166,9 +170,6 @@ protected:
 
   real relativ_change_stop_value;
 
-  //! length == L. the log of the constant part in the p(x) equation : log(1/sqrt(2*pi^D * Det(C)))
-  Vec log_coef;
-
   //! precomputed (I+V(t)DV)^-1. Used for factor gaussians. 
   //! stored as a vector which is the flattened view of all L 'Ks[i] x Ks[i]' matrices. 
   Vec inv_ivtdv;
@@ -196,6 +197,7 @@ public:
   real epsilon;
   int kmeans_iterations;
   int L;
+  int n_eigen;
   real sigma_min;
   string type;
 
@@ -229,6 +231,9 @@ protected:
   //! Generate a sample x from the given Gaussian. If 'given_gaussian' is equal
   //! to -1, then a random Gaussian will be chosen according to the weights alpha.
   virtual void generateFromGaussian(Vec& x, int given_gaussian) const;
+
+  //! Precompute stuff specific to each Gaussian, given its current paremeters.
+  virtual void precomputeStuff();
 
   //! Replace the j-th Gaussian with another one (probably because that one is
   //! not appropriate). The new one is centered on a random point sampled from
