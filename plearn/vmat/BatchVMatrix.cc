@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BatchVMatrix.cc,v 1.4 2004/03/25 20:34:36 tihocan Exp $
+   * $Id: BatchVMatrix.cc,v 1.5 2004/04/05 22:46:32 morinf Exp $
    ******************************************************* */
 
 #include "BatchVMatrix.h"
@@ -41,7 +41,7 @@
 namespace PLearn {
 using namespace std;
 
-PLEARN_IMPLEMENT_OBJECT(BatchVMatrix, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(BatchVMatrix, "ONE LINE DESCR", "VMat class that replicates small parts of a matrix (mini-batches), so that each mini-batch appears twice (consecutively).");
 
 ////////////////////
 // declareOptions //
@@ -53,17 +53,6 @@ void BatchVMatrix::declareOptions(OptionList& ol)
   declareOption(ol, "batch_size", &BatchVMatrix::batch_size, OptionBase::buildoption,
       "    The size of each mini-batch\n");
   inherited::declareOptions(ol);
-}
-
-//////////
-// help //
-//////////
-string BatchVMatrix::help()
-{
-  return 
-    "    VMat class that replicates small parts of a matrix (mini-batches), so that\n\
-    each mini-batch appears twice (consecutively).\n"
-    + optionHelp();
 }
 
 /////////////////////////////////

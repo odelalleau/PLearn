@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BatchVMatrix.h,v 1.4 2004/03/23 23:08:08 morinf Exp $
+   * $Id: BatchVMatrix.h,v 1.5 2004/04/05 22:46:32 morinf Exp $
    ******************************************************* */
 
 
@@ -70,8 +70,6 @@ public:
 
   static void declareOptions(OptionList& ol);
     
-  static string help();
-
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
@@ -84,6 +82,8 @@ private:
   void build_();
 
 };
+
+DECLARE_OBJECT_PTR(BatchVMatrix);
 
 } // end of namespcae PLearn
 #endif
