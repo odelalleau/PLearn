@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_specialisation.h,v 1.5 2004/02/20 21:11:46 chrish42 Exp $
+   * $Id: TMat_maths_specialisation.h,v 1.6 2004/02/26 07:18:26 nova77 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -387,7 +387,7 @@ inline real dot_product(real s,real* x,real* y,int n)
 	return s;
 }
 
-#ifndef SGI
+#if defined(SGI) || defined(WIN32)
 #include "sse.h"
 #endif //ndef SGI
 
