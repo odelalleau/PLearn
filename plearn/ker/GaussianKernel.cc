@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianKernel.cc,v 1.13 2004/09/27 20:19:27 plearner Exp $
+   * $Id: GaussianKernel.cc,v 1.14 2004/12/24 07:25:36 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -60,7 +60,9 @@ PLEARN_IMPLEMENT_OBJECT(GaussianKernel,
 GaussianKernel::GaussianKernel()
 : scale_by_sigma(false),
   sigma(1)
-{}
+{
+  build_();
+}
 
 GaussianKernel::GaussianKernel(real the_sigma)
 : scale_by_sigma(false),
