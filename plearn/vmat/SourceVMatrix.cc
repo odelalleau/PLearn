@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrix.cc,v 1.15 2004/10/06 21:12:26 larocheh Exp $ 
+   * $Id: SourceVMatrix.cc,v 1.16 2004/11/26 14:48:49 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -113,51 +113,12 @@ void SourceVMatrix::build_()
   */
 }
 
+///////////////////////////
+// setMetaInfoFromSource //
+///////////////////////////
 void SourceVMatrix::setMetaInfoFromSource()
 {
-  setMtime(max(getMtime(),source->getMtime()));
-
-  // copy length and width from source if not set
-  if(length_<0)
-    length_ = source->length();
-  if(width_<0)
-    width_ = source->width();
-
-  // copy sizes from source if not set
-  if(inputsize_<0)
-    inputsize_ = source->inputsize();
-  if(targetsize_<0)
-    targetsize_ = source->targetsize();
-  if(weightsize_<0)
-    weightsize_ = source->weightsize();
-
-  // copy fieldnames from source if not set and they look good
-  if(!hasFieldInfos() && (width() == source->width()) && source->hasFieldInfos() )
-    setFieldInfos(source->getFieldInfos());
-
-  // Copy String/Real mappings if not set.
-  if (map_rs.length() == 0) {
-    map_rs.resize(width_);
-    for (int j = 0; j < width_; j++) {
-      if (j < source->width()) {
-        map_rs[j] = source->getRealToStringMapping(j);
-      } else {
-        // Empty map.
-        map_rs[j] = map<real,string>();
-      }
-    }
-  }
-  if (map_sr.length() == 0) {
-    map_sr.resize(width_);
-    for (int j = 0; j < width_; j++) {
-      if (j < source->width()) {
-        map_sr[j] = source->getStringToRealMapping(j);
-      } else {
-        // Empty map.
-        map_sr[j] = map<string,real>();
-      }
-    }
-  }
+  setMetaInfoFrom(source);
 }
 
 // ### Nothing to add here, simply calls build_

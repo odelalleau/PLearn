@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.60 2004/10/22 18:51:08 ducharme Exp $
+   * $Id: VMatrix.h,v 1.61 2004/11/26 14:48:49 tihocan Exp $
    ******************************************************* */
 
 
@@ -140,10 +140,16 @@ public:
 
   //! Copy the values of inputsize, targetsize and weightsize from the source
   //! matrix m.
-  void copySizesFrom(VMat m);
+  void copySizesFrom(const VMat& m);
+
+  //! Sets all meta info (length_, width_, inputsize_, targetsize_, weightsize_,
+  //! fieldnames, ...) that is not already set, by copying it from the source's
+  //! Vmat vm. Modification time is also set to the latest of the current mtime
+  //! of this vmat and of the mtime of the source.
+  virtual void setMetaInfoFrom(const VMat& vm);
 
   //! Return true iif it looks like the same matrix, i.e. it has same sizes, width and length.
-  bool looksTheSameAs(VMat m);
+  bool looksTheSameAs(const VMat& m);
   
   inline int inputsize() const { return inputsize_; }
   inline int targetsize() const { return targetsize_; }

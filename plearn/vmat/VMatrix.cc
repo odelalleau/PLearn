@@ -37,7 +37,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.75 2004/11/24 18:37:41 tihocan Exp $
+* $Id: VMatrix.cc,v 1.76 2004/11/26 14:48:49 tihocan Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -400,7 +400,6 @@ Array<VMField> VMatrix::getSavedFieldInfos() const
                        "Each line should be '<name> {<type>}'.", filename.c_str());
     }
   }
-
   return current_fieldinfos;
 }
 
@@ -644,6 +643,9 @@ const map<real,string>& VMatrix::getRealToStringMapping(int col) const {
   return map_rs[col];
 }
 
+////////////////////
+// setMetaDataDir //
+////////////////////
 void VMatrix::setMetaDataDir(const string& the_metadatadir) 
 { 
   if(the_metadatadir=="")
@@ -654,23 +656,76 @@ void VMatrix::setMetaDataDir(const string& the_metadatadir)
   metadatadir = abspath(metadatadir);
 }
 
-//! Return the dimension of the column col, -1 if continuous 
+//////////////////
+// getDimension //
+//////////////////
 int VMatrix::getDimension(int row, int col) const
 {
+  //! Return the dimension of the column col, -1 if continuous 
   return -1;
 }  
 
 ///////////////////
 // copySizesFrom //
 ///////////////////
-void VMatrix::copySizesFrom(VMat m) {
+void VMatrix::copySizesFrom(const VMat& m) {
   defineSizes(m->inputsize(), m->targetsize(), m->weightsize());
+}
+
+/////////////////////
+// setMetaInfoFrom //
+/////////////////////
+void VMatrix::setMetaInfoFrom(const VMat& vm)
+{
+  setMtime(max(getMtime(),vm->getMtime()));
+
+  // copy length and width from vm if not set
+  if(length_<0)
+    length_ = vm->length();
+  if(width_<0)
+    width_ = vm->width();
+
+  // copy sizes from vm if not set
+  if(inputsize_<0)
+    inputsize_ = vm->inputsize();
+  if(targetsize_<0)
+    targetsize_ = vm->targetsize();
+  if(weightsize_<0)
+    weightsize_ = vm->weightsize();
+
+  // copy fieldnames from vm if not set and they look good
+  if(!hasFieldInfos() && (width() == vm->width()) && vm->hasFieldInfos() )
+    setFieldInfos(vm->getFieldInfos());
+
+  // Copy String/Real mappings if not set.
+  if (map_rs.length() == 0) {
+    map_rs.resize(width_);
+    for (int j = 0; j < width_; j++) {
+      if (j < vm->width()) {
+        map_rs[j] = vm->getRealToStringMapping(j);
+      } else {
+        // Empty map.
+        map_rs[j] = map<real,string>();
+      }
+    }
+  }
+  if (map_sr.length() == 0) {
+    map_sr.resize(width_);
+    for (int j = 0; j < width_; j++) {
+      if (j < vm->width()) {
+        map_sr[j] = vm->getStringToRealMapping(j);
+      } else {
+        // Empty map.
+        map_sr[j] = map<string,real>();
+      }
+    }
+  }
 }
  
 ////////////////////
 // looksTheSameAs //
 ////////////////////
-bool VMatrix::looksTheSameAs(VMat m) {
+bool VMatrix::looksTheSameAs(const VMat& m) {
   return !(
          this->width()      != m->width()
       || this->length()     != m->length()

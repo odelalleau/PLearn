@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrix.h,v 1.12 2004/10/06 21:12:26 larocheh Exp $ 
+   * $Id: SourceVMatrix.h,v 1.13 2004/11/26 14:48:49 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -111,13 +111,10 @@ protected:
   // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
 
-  //! Sets all meta info (length_, width_, inputsize_, targetsize_, weightsize_, fieldnames, ...)
-  //! that is not already set, by copying it from the source's 
-  //! Modification time is also set to the latest of the current mtime of this vmat and of the mtime of the source.
-  /*! This method is mostly to simplify writing subclass' build_ method,
-    which may call it after first setting the fields that it doesn't want
-    copied from the source.
-   */
+  //! Call setMetaInfoFrom(source) to get all unset meta info from 'source'.
+  //! This method is mostly to simplify writing subclass' build_ method,
+  //! which may call it after first setting the fields that it doesn't want
+  //! copied from the source.
   void setMetaInfoFromSource();
 
   //! Must be implemented in subclasses: default version returns an error.
