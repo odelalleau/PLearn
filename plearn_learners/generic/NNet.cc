@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.51 2004/04/23 13:15:16 tihocan Exp $
+   * $Id: NNet.cc,v 1.52 2004/04/23 13:27:38 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -53,7 +53,7 @@
 #include "MulticlassLossVariable.h"
 #include "NegCrossEntropySigmoidVariable.h"
 #include "OneHotSquaredLoss.h"
-#include "RBFLayerVariable.h"
+// #include "RBFLayerVariable.h" //TODO Put it back when the file exists.
 #include "SigmoidVariable.h"
 #include "SoftmaxVariable.h"
 #include "SoftplusVariable.h"
@@ -330,6 +330,7 @@ void NNet::build_()
           rbf_centers = Var(outputsize()-1, rbf_layer_size, "rbf_centers");
           rbf_sigmas = Var(outputsize()-1, "rbf_sigmas");
           PLERROR("In NNet.cc, the code needs to be completed, rbf_layer isn't declared and thus it doesn't compile with the line below");
+          // TODO (Also put back the corresponding include).
 //          output = hconcat(rbf_layer(output,rbf_centers,rbf_sigmas)&junk_prob);
           params.append(junk_prob);
         }
