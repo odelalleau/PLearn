@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ReconstructionWeightsKernel.h,v 1.3 2004/07/20 13:01:14 tihocan Exp $ 
+   * $Id: ReconstructionWeightsKernel.h,v 1.4 2004/07/20 19:29:10 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -59,6 +59,11 @@ private:
 
   //! True iff build() has been called but build_() has not been called yet.
   bool build_in_progress;
+
+  //! True iff the 'setDataForKernelMatrix' method has been called since last
+  //! time we called 'reconstruct'. This is necessary to ensure everything
+  //! is correctly initialized in the 'reconstruct' method.
+  mutable bool new_data;
   
 protected:
 
@@ -153,6 +158,8 @@ public:
 
   virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const;
 
+  virtual real evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x=-1, bool first_time = false) const;
+
   virtual void setDataForKernelMatrix(VMat the_data);
 
   //! Return sum_k K(x_k, x_i) * K(x_k, x_j).
@@ -168,7 +175,6 @@ public:
   // (efficiency concerns for ex) you may also want to overload
   // some of the following methods:
   // virtual real evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x=-1, bool first_time = false) const;
-  // virtual real evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x=-1, bool first_time = false) const;
   // virtual void computeGramMatrix(Mat K) const;
   // virtual void addDataForKernelMatrix(const Vec& newRow);
   // virtual void setParameters(Vec paramvec);

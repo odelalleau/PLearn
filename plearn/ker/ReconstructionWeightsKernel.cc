@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ReconstructionWeightsKernel.cc,v 1.4 2004/07/20 13:01:14 tihocan Exp $ 
+   * $Id: ReconstructionWeightsKernel.cc,v 1.5 2004/07/20 19:29:10 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -55,10 +55,12 @@ using namespace std;
 /////////////////////////////////
 ReconstructionWeightsKernel::ReconstructionWeightsKernel() 
 : build_in_progress(false),
+  new_data(true),
   knn(5),
   regularizer(1e-6)
 {
   is_symmetric = false;
+  sub_data = new SelectRowsVMatrix();
 }
 
 PLEARN_IMPLEMENT_OBJECT(ReconstructionWeightsKernel,
@@ -318,6 +320,30 @@ real ReconstructionWeightsKernel::evaluate_x_i(const Vec& x, int i, real squared
     reconstruct(x, neighbors_of_x, w);
     return w[i_is_a_neighbor];
   }
+  // TODO Use evaluate_x_i_again to avoid some code duplication.
+}
+
+////////////////////////
+// evaluate_x_i_again //
+////////////////////////
+real ReconstructionWeightsKernel::evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x, bool first_time) const {
+  static Vec w;
+  static TVec<int> neighbors_of_x;
+  static int n_j;
+  static Mat k_xi_x_sorted;
+  if (first_time) {
+    neighbors_of_x.resize(knn);
+    // Find nearest neighbors of x.
+    dist_ker->computeNearestNeighbors(x, k_xi_x_sorted, knn);
+    neighbors_of_x << k_xi_x_sorted.subMat(0, 1, knn, 1);
+    // Find reconstruction weights.
+    reconstruct(x, neighbors_of_x, w);
+  }
+  n_j = neighbors_of_x.find(i);
+  if (n_j == -1)
+    // The point i is not a neighbor of x.
+    return 0;
+  return w[n_j];
 }
 
 /////////////////////////////////
@@ -344,27 +370,29 @@ void ReconstructionWeightsKernel::reconstruct(const Vec& x, const TVec<int>& nei
   static int k_neighb;
   static Mat local_gram;
   static Vec ones;
-  static ShiftAndRescaleVMatrix centered_neighborhood;
+  static PP<ShiftAndRescaleVMatrix> centered_neighborhood;
   k_neighb = neighbors.length();
   w.resize(k_neighb);
-  if (ones.length() != k_neighb) {
+  if (new_data || ones.length() != k_neighb) {
     // This is the first execution.
     ones.resize(k_neighb);
     ones.fill(1);
     local_gram.resize(k_neighb, k_neighb);
-    centered_neighborhood.no_scale = true;
-    centered_neighborhood.negate_shift = true;
-    centered_neighborhood.automatic = false;
-    centered_neighborhood.vm = (SelectRowsVMatrix*) sub_data;
+    centered_neighborhood = new ShiftAndRescaleVMatrix();
+    centered_neighborhood->no_scale = true;
+    centered_neighborhood->negate_shift = true;
+    centered_neighborhood->automatic = false;
+    centered_neighborhood->vm = (SelectRowsVMatrix*) sub_data;
+    new_data = false;
   }
   // Center data on x.
   sub_data->indices = neighbors;
   sub_data->build();
-  centered_neighborhood.shift = x;
-  centered_neighborhood.build();
+  centered_neighborhood->shift = x;
+  centered_neighborhood->build();
   // TODO Get rid of this expensive build.
   // Compute the local Gram matrix.
-  dp_ker->setDataForKernelMatrix(&centered_neighborhood);
+  dp_ker->setDataForKernelMatrix((ShiftAndRescaleVMatrix*) centered_neighborhood);
   dp_ker->computeGramMatrix(local_gram);
   // Add regularization on the diagonal.
   regularizeMatrix(local_gram, regularizer);
@@ -384,7 +412,8 @@ void ReconstructionWeightsKernel::setDataForKernelMatrix(VMat the_data) {
     return;
   inherited::setDataForKernelMatrix(the_data);
   dist_ker->setDataForKernelMatrix(the_data);
-  sub_data = new SelectRowsVMatrix(the_data, TVec<int>());
+  sub_data->source = the_data;
+  new_data = true;
   computeWeights();
 }
 
