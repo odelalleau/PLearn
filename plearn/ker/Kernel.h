@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.28 2004/05/29 18:18:18 tihocan Exp $
+   * $Id: Kernel.h,v 1.29 2004/06/03 13:48:49 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -144,11 +144,11 @@ public:
   void apply(VMat m, const Vec& x, Vec& result) const; //!<  result[i]=K(m[i],x)
   void apply(Vec x, VMat m, Vec& result) const; //!<  result[i]=K(x,m[i])
 
-  //! Fill k_xi_x with K(x_i, x), for all i from 0 to k_xi_x.length().
-  void evaluate_all_i_x(const Vec& x, Vec& k_xi_x, real squared_norm_of_x=-1) const;
+  //! Fill k_xi_x with K(x_i, x), for all i from istart to istart + k_xi_x.length() - 1.
+  void evaluate_all_i_x(const Vec& x, Vec& k_xi_x, real squared_norm_of_x=-1, int istart = 0) const;
 
-  //! Fill k_x_xi with K(x, x_i), for all i from 0 to k_x_xi.length().
-  void evaluate_all_x_i(const Vec& x, Vec& k_x_xi, real squared_norm_of_x=-1) const;
+  //! Fill k_x_xi with K(x, x_i), for all i from istart to istart + k_x_xi.length() - 1.
+  void evaluate_all_x_i(const Vec& x, Vec& k_x_xi, real squared_norm_of_x=-1, int istart = 0) const;
 
   inline real operator()(const Vec& x1, const Vec& x2) const
     { return evaluate(x1,x2); }
