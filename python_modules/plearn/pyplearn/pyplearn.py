@@ -495,7 +495,7 @@ code.
 """
 import types
 
-__all__ = [ 'PyPlearnError', 'ref', 'bind', 'plvar', 'TMat',
+__all__ = [ 'PyPlearnError', 'ref', 'bind', 'bindref', 'plvar', 'TMat',
             'plargs', 'plarg_defaults', 'bind_plargs',
             'pl', 'include']
 
@@ -564,6 +564,11 @@ def ref(name):
     """Makes a reference (with "*1;") to the value associated with name by a previous bind call."""
     return plearn_snippet('*' + _plearn_repr(_name_to_id[name]) + ';')
 
+def bindref(name,x):
+    """Perform a bind, and return the ref(); convenient for functional-style programming"""
+    bind(name,x)
+    return ref(name)
+
 def plvar(variable_name):
     """Emulates the behavior of the plearn ${variable_name} statement.
 
@@ -625,7 +630,7 @@ def TMat(num_rows, num_cols, mat_contents):
                           ', '.join([_plearn_repr(e) for e in mat_contents]) +
                           ']')
 
-def include(filename):
+def include(filename, replace_list = []):
     """Includes the contents of a .plearn file.
     
     This function allows to do both the followings:
@@ -676,6 +681,8 @@ def include(filename):
     f = open(filename, 'U')
     try:
         include_contents = f.read()
+        for (search,replace) in replace_list:
+            include_contents = include_contents.replace(search,replace)
     finally:
         f.close()
     return plearn_snippet(include_contents)
