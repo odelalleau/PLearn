@@ -69,10 +69,15 @@ class BPTTVariable: public NaryVariable
                                // squash it
   TVec<VarArray> squash_proppath;
 
+  Var output_value, target_value;
+  Var costs_value, grad_costs_value;
+  VarArray costs_proppath, grad_costs_proppath;
+
   void updateIndexDest();
   void updateOrder();
   void topsort(int, TVec<int>, int*);
   void buildSquashVar();
+  void buildCostVar();
 
   void computeCost(int, Vec);
 
@@ -89,12 +94,13 @@ class BPTTVariable: public NaryVariable
   void set_indexDest(int, int, int);
   void set_gradient(int, int, real);
 
-  real computeGradErr(real, real);
-  real computeErr(real, real);
 
   int currpos;
 
   public:
+
+  real computeGradErr(real, real);
+  real computeErr(real, real);
 
   real squash(int, real);
   real squash_d(int, real);

@@ -31,71 +31,77 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-#ifndef BPTT_INC
-#define BPTT_INC
+#ifndef SEQUENCEPLEARNER_INC
+#define SEQUENCEPLEARNER_INC
 
-#include "SequencePLearner.h"
-#include "BPTTVariable.h"
-#include "Optimizer.h"
+#include "PLearner.h"
+#include "SequenceVMatrix.h"
 
 namespace PLearn {
 using namespace std;
 
-  class BPTT: public SequencePLearner
+ class SequencePLearner: public PLearner
   {
   protected:
-    BPTTVariable* rec_net;
-    Vec weights, bias;
-    TMat<int> links;
-    int nneuron_input; // number of input neuron
-    int nneuron_hidden; // number of hidden neuron
-    int nneuron_output; // number of output neuron
-    TVec<string> units_type;
-
-    string cost_type; // Function to minimize
-
-    void build_default_units_type();
-    void build_fully_connected_network();
+    VarArray params;
 
   public:
 
-    typedef SequencePLearner inherited;
+    typedef PLearner inherited;
 
-    PP<Optimizer> optimizer; // the optimizer to use (no default)
+    int batch_size; // how many samples to use to estimate gradient before an update
+                    // 0 means the whole training set (default: 1)
 
   private:
     void build_();
 
   public:
 
-    BPTT();
-    virtual ~BPTT();
-    PLEARN_DECLARE_OBJECT(BPTT);
+    SequencePLearner();
+    virtual ~SequencePLearner();
+    PLEARN_DECLARE_ABSTRACT_OBJECT(SequencePLearner);
 
     virtual void build();
-    virtual void forget(); // simply calls initializeParams()
+    virtual void forget()=0;
 
-    virtual TVec<string> getTrainCostNames() const;
-    virtual TVec<string> getTestCostNames() const;
+    virtual int outputsize() const;
+    virtual int outputsize(VMat) const; // Give the outputsize depending on the VMat(must be a SequenceVMatrix) set
+    virtual TVec<string> getTrainCostNames() const =0;
+    virtual TVec<string> getTestCostNames() const =0;
 
-    virtual void train();
+    virtual void train()=0;
 
     // The vec version of compute function cannot be use in a Sequence learner
-    virtual void computeOutput(const Mat&, Mat&) const;
+    virtual void computeOutput(const Vec&, Vec&) const;
     
-    virtual void computeCostsFromOutputs(const Mat&, const Mat&, const Mat&, Mat&) const;
+    // SUB-CLASS WRITTING
+    virtual void computeOutput(const Mat&, Mat&) const =0;
+    
+    virtual void computeCostsFromOutputs(const Vec&, const Vec&, const Vec&, Vec&) const;
+
+    // SUB-CLASS WRITTING
+    virtual void computeCostsFromOutputs(const Mat&, const Mat&, const Mat&, Mat&) const =0;
+
+    virtual void computeCostsOnly(const Vec&, const Vec&, Vec&) const;
+    virtual void computeCostsOnly(const Mat&, const Mat&, Mat&) const;
+
+    virtual void computeOutputAndCosts(const Vec&, const Vec&, Vec&, Vec&) const;
+    virtual void computeOutputAndCosts(const Mat&, const Mat&, Mat&, Mat&) const;
+
 
     virtual void run();
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
+    virtual void test(VMat testset, PP<VecStatsCollector> test_stats, 
+                      VMat testoutputs=0, VMat testcosts=0) const;
+    virtual void test(SequenceVMat testset, PP<VecStatsCollector> test_stats, 
+                      SequenceVMat testoutputs, SequenceVMat testcosts) const;
+
   protected:
     static void declareOptions(OptionList& ol);
-    void initializeParams();
 
   };
-
-  DECLARE_OBJECT_PTR(BPTT);
-
+  DECLARE_OBJECT_PTR(SequencePLearner);
 } // end of namespace PLearn
 
 #endif

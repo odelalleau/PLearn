@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: SequenceVMatrix.cc,v 1.5 2004/05/26 00:00:23 lapalmej Exp $
+   * $Id: SequenceVMatrix.cc,v 1.6 2004/05/26 21:21:57 lapalmej Exp $
    ******************************************************* */
 
 #include "SequenceVMatrix.h"
@@ -51,20 +51,22 @@ PLEARN_IMPLEMENT_OBJECT(SequenceVMatrix, "ONE LINE DESCR", "NO HELP");
 ////////////////
 SequenceVMatrix::SequenceVMatrix()
 {
-  SequenceVMatrix(0,0);
+  init(0,0);
 }
 
-SequenceVMatrix::SequenceVMatrix(int nbSequences, int the_width) {
-  nbSeq = nbSequences;
-  sequences = TVec<Mat>(nbSeq);
+SequenceVMatrix::SequenceVMatrix(int nbSequences, int the_width):
+  VMatrix(nbSequences, the_width)
+{
+  init(nbSequences, the_width);
+}
+
+void SequenceVMatrix::init(int nbSequences, int the_width) {
+  sequences = TVec<Mat>(nbSequences);
   inputsize_ = 0;
   targetsize_ = 0;
   weightsize_ = 0;
   width_ = the_width;
-  length_ = nbSeq;
-  cout << "w" << width_ << endl;
-  cout << "l" << length() << endl;
-  cout << "s" << nbSeq << endl;
+  length_ = getNbSeq();
 }
 
 ////////////////////
@@ -72,7 +74,6 @@ SequenceVMatrix::SequenceVMatrix(int nbSequences, int the_width) {
 ////////////////////
 void SequenceVMatrix::declareOptions(OptionList &ol)
 {
-  declareOption(ol, "nbSeq", &SequenceVMatrix::nbSeq, OptionBase::buildoption, "Sequence number");
   declareOption(ol, "sequences", &SequenceVMatrix::sequences, OptionBase::buildoption, "Sequences Matrix");
   inherited::declareOptions(ol);
 }
@@ -85,7 +86,7 @@ void SequenceVMatrix::build()
 
 void SequenceVMatrix::build_()
 {
-  length_ = nbSeq;
+  length_ = getNbSeq();
   width_ = inputsize_ + targetsize_ + weightsize_;
 }
 
@@ -122,11 +123,20 @@ void SequenceVMatrix::getExample(int i, Mat& input, Mat& target) {
 }
 
 void SequenceVMatrix::putOrAppendSequence(int i, Mat m) {
-  if (i >= nbSeq) {
+  int w = width();
+#ifdef BOUNDCHECK
+  if (getNbSeq() != 0 && w != m.width())
+    PLERROR("In SequenceVMatrix::putOrAppendSequence the Mat must have the same width has the other sequences");
+#endif
+  if (i >= getNbSeq()) {
     sequences.resize(i+1);
-    nbSeq = i + 1;
     length_ = i + 1;
+    width_ = m.width();
   }
+#ifdef BOUNDCHECK
+  if (width() == 0)
+    PLERROR("In SequenceVMatrix::putOrAppendSequence the VMat has a width=0");
+#endif
   sequences[i] = Mat(m.length(), m.width());
   putSeq(i, m);
 }
@@ -162,9 +172,11 @@ void SequenceVMatrix::putMat(int i, int j, Mat m)
 
 VMat SequenceVMatrix::subMat(int i, int j, int l, int w)
 {
-  SequenceVMat subseq = new SequenceVMatrix(l, w);
+  SequenceVMatrix* subseq = new SequenceVMatrix(l, w);
+  //  subseq->width_ = w;
   for (int s = 0; s < l; s++) {
-    subseq->sequences[s] = sequences[i+s].subMat(0, j, sequences[i+s].nrows(), w);
+    subseq->sequences[s] = Mat(sequences[i+s].nrows(), w);
+    subseq->sequences[s] << sequences[i+s].subMat(0, j, sequences[i+s].nrows(), w);
   }
   return VMat(subseq);
 }
@@ -193,7 +205,7 @@ void SequenceVMatrix::putSeq(int i, Mat m)
 
 int SequenceVMatrix::getNbSeq() const
 {
-  return nbSeq;
+  return sequences.size();
 }
 
 /*
@@ -212,6 +224,21 @@ int SequenceVMatrix::getNbRowInSeq(int i) const
   return ((Mat)sequences[i]).nrows();
 }
 
+void SequenceVMatrix::print() {
+  cout << "[ ";
+  for (int i = 0; i < 1; i++) {
+    cout << "[ ";
+    for (int j = 0; j < sequences[i].nrows(); j++) {
+      for (int k = 0; k < sequences[i].width(); k++) {
+	cout << (sequences[i])[j][k] << " ";
+      }
+      cout << endl;
+    }
+    cout << "]" << endl;
+  }
+  cout << "]" << endl;
+}
+
 void SequenceVMatrix::run()
 {
   Mat input, target;
@@ -227,23 +254,36 @@ void SequenceVMatrix::run()
 SequenceVMat operator&(const SequenceVMat& s1, const SequenceVMat& s2) {
 #ifdef BOUNDCHECK
   if (s1->getNbSeq() != s2->getNbSeq())
-    PLERROR("In operator& : the two SequenceVMat must have the same number of row");
+    PLERROR("In operator& : the two SequenceVMat must have the same number of sequence");
 #endif
-  SequenceVMat new_seq = new SequenceVMatrix(s1->getNbSeq(), s1->width() + s2->width());
+  int w1 = s1->width();
+  int w2 = s2->width();
+  SequenceVMat new_seq = new SequenceVMatrix(s1->getNbSeq(), w1 + w2);
 
   for (int i = 0; i < s1->getNbSeq(); i++) {
-    Mat m1 = Mat(s1->getNbRowInSeq(i), s1->width());
-    Mat m2 = Mat(s2->getNbRowInSeq(i), s2->width());
+#ifdef BOUNDCHECK
+    if (s1->getNbRowInSeq(i) != s2->getNbRowInSeq(i))
+      PLERROR("In operator& : each sequence must have the same number of row");
+#endif
+    int nrow = s1->getNbRowInSeq(i);
+    Mat m1 = Mat(nrow, w1);
+    Mat m2 = Mat(nrow, w2);
+    Mat m3 = Mat(nrow, w1 + w2);
     s1->getSeq(i, m1);
     s2->getSeq(i, m2);
-    m1.resize(s1->getNbRowInSeq(i), s1->width() + s2->width());
-    for (int j = 0; j < s1->getNbRowInSeq(i); j++) {
-      for (int k = 0; k < s2->width(); k++) {
-	m1[j][s1->width()+k] = m2[j][k];
+
+    for (int j = 0; j < nrow; j++) {
+      for (int k = 0; k < w1; k++) {
+	m3[j][k] = m1[j][k];
+      }
+      for (int k = 0; k < w2; k++) {
+	m3[j][w1+k] = m2[j][k];
       }
     }
-    new_seq->putOrAppendSequence(i, m1);
+    new_seq->putOrAppendSequence(i, m3);
   }
+
+
   return new_seq;
 }
 

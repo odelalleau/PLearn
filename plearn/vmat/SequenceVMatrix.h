@@ -47,7 +47,8 @@ class SequenceVMatrix: public VMatrix
 protected:
   //! Build options.
   TVec<Mat> sequences;
-  int nbSeq;
+
+  void init(int nbSequences, int the_width);
 
 public:
   
@@ -77,6 +78,8 @@ public:
   int getNbRowInSeqs(int, int) const;
 
   void putOrAppendSequence(int, Mat);
+
+  void print();
 
   virtual void run();
 

@@ -73,11 +73,10 @@ void DelaySequenceVMatrix::build_()
   inputsize_ = 1;
   targetsize_ = 1;
   weightsize_ = 0;
-  length_ = nbSeq;
   width_ = inputsize_ + targetsize_ + weightsize_;
-  sequences = TVec<Mat>(nbSeq);
+  sequences = TVec<Mat>(length_);
   
-  for (int i = 0; i < nbSeq; i++) {
+  for (int i = 0; i < getNbSeq(); i++) {
     sequences[i] = Mat(seq_length, 2);
     for (int j = 0; j < delay; j++) {
       (sequences[i])[j][0] = uniform_sample() < 0.5 ? 0 : 1;

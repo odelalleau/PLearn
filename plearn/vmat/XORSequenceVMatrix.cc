@@ -76,12 +76,12 @@ void XORSequenceVMatrix::build_()
   inputsize_ = 1;
   targetsize_ = 1;
   weightsize_ = 0;
-  length_ = nbSeq;
+
   width_ = inputsize_ + targetsize_ + weightsize_;
-  sequences = TVec<Mat>(nbSeq);
+  sequences = TVec<Mat>(length_);
 
   
-  for (int i = 0; i < nbSeq; i++) {
+  for (int i = 0; i < getNbSeq(); i++) {
     int seq_length = (int)bounded_uniform(min_seq_length, max_seq_length);
     int xl = xor_length == 0 ? seq_length : xor_length;
     sequences[i] = Mat(seq_length, 2);

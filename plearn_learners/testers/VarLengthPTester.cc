@@ -122,8 +122,6 @@ Vec VarLengthPTester::perform(bool call_forget)
       if (testset->length()==0) {
 	PLWARNING("PTester:: test set is of length 0, costs will be set to -1");
       }
-      cout << test_costs->getNbSeq() << endl;
-      cout << test_costs->length() << endl;
 
       bptt_learner->test(testset, test_stats, test_outputs, test_costs);
       save(testset, test_outputs, test_costs, setnum);
@@ -136,12 +134,14 @@ Vec VarLengthPTester::perform(bool call_forget)
 void VarLengthPTester::save(SequenceVMat test_set, SequenceVMat test_outputs,
 			    SequenceVMat test_costs, int nsetnum) {
   force_mkdir(expdir);
+
   SequenceVMat all = test_set & test_outputs & test_costs;
   int nligne = all->getNbRowInSeqs(0, all->getNbSeq()) + all->getNbSeq();
-  Vec sep = Vec(all->getNbSeq(), -1.0);
-  FileVMatrix file = FileVMatrix(append_slash(expdir) + "out" + tostring(nsetnum) + ".pmat", nligne, all->width());
+  Vec sep = Vec(all->width(), -1.0);
+  FileVMatrix file = FileVMatrix(append_slash(expdir) + "out" + tostring(nsetnum) + ".pmat", 0, all->width());
   for (int i = 0; i < all->getNbSeq(); i++) {
     Mat seq = Mat(all->getNbRowInSeq(i), all->width());
+    all->getSeq(i, seq);
     for (int j = 0; j < seq.nrows(); j++) {
       Vec row = seq(j);
       file.appendRow(row);

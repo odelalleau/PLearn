@@ -39,6 +39,8 @@
 #include "Var.h"
 #include "TanhVariable.h"
 #include "ExpVariable.h"
+#include "Var_operators.h"
+#include "SquareVariable.h"
 
 namespace PLearn {
   using namespace std;
@@ -67,6 +69,7 @@ namespace PLearn {
     updateIndexDest();
     updateOrder();
     buildSquashVar();
+    buildCostVar();
 
     if (cost_type == "MSE") {
       resize(1,1);
@@ -165,11 +168,23 @@ namespace PLearn {
       } else if (units_type[i] == "ID") {
 	squash_units_value[i] = units_value[i];
       } else 
-	PLERROR("%s is not a valide units_type", units_type[i].c_str());
+	PLERROR("%s is not a valid units_type", units_type[i].c_str());
       squash_proppath[i] = propagationPath(units_value[i], squash_units_value[i]);
     }
   }
 
+  void BPTTVariable::buildCostVar() {
+    output_value = var(0);
+    target_value = var(0);
+    if (cost_type == "MSE") {
+      costs_value = square(output_value - target_value) / 2;
+      grad_costs_value = output_value - target_value;
+    } else {
+      PLERROR("%s is not a valid cost_type", cost_type.c_str());
+    }
+    costs_proppath = propagationPath(output_value, costs_value);
+    grad_costs_proppath = propagationPath(output_value, grad_costs_value);
+  }
   /*
     Create the map of links by the destination neuron.
     Remember that index[n][0] contains the number of links that comes
@@ -383,11 +398,12 @@ namespace PLearn {
      ====
   */
   real BPTTVariable::computeGradErr(real o, real t) {
-    if (cost_type == "MSE") {
-      return o - t;
-    }
-    PLERROR("This cost type is unknown : %s", cost_type.c_str());
-    return 0.0;
+    output_value = o;
+    target_value = t;
+    grad_costs_proppath.clearGradient();
+    grad_costs_proppath.fprop();
+    
+    return grad_costs_value->value[0];
   }
 
   /*
@@ -397,11 +413,12 @@ namespace PLearn {
      ====
   */
   real BPTTVariable::computeErr(real o, real t) {
-    if (cost_type == "MSE") {
-      return (o - t) * (o - t) / 2.0;
-    }
-    PLERROR("This cost type is unknown : %s", cost_type.c_str());
-    return 0.0;
+    output_value = o;
+    target_value = t;
+    costs_proppath.clearGradient();
+    costs_proppath.fprop();
+
+    return costs_value->value[0];
   }
 
   /*
