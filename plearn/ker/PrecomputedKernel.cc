@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PrecomputedKernel.cc,v 1.3 2004/02/23 20:33:38 dorionc Exp $
+   * $Id: PrecomputedKernel.cc,v 1.4 2004/03/12 19:03:47 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -80,7 +80,7 @@ void PrecomputedKernel::build()
 void PrecomputedKernel::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   Kernel::makeDeepCopyFromShallowCopy(copies);
-  //precomputedK = 0; // not a real deep copy, but this will do for now...
+  deepCopyField(ker, copies);
   deepCopyField(precomputedK, copies);
 }
 

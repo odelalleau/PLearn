@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.16 2004/02/28 20:51:45 tihocan Exp $
+   * $Id: Kernel.cc,v 1.17 2004/03/12 19:03:47 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -100,6 +100,13 @@ void Kernel::build_() {
   if (specify_dataset) {
     this->setDataForKernelMatrix(specify_dataset);
   }
+}
+
+void makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+  inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(data, copies);
+  deepCopyField(specify_dataset, copies);
 }
 
 ////////////////////////////

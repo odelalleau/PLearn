@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PrecomputedKernel.h,v 1.4 2004/02/23 20:33:38 dorionc Exp $
+   * $Id: PrecomputedKernel.h,v 1.5 2004/03/12 19:03:47 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -57,7 +57,6 @@ class PrecomputedKernel: public Kernel
   
 protected:
   Ker ker; //!<  the real underlying kernel
-  //float* precomputedK; //!<  the precomputed kernel matrix
   TVec<Vec> precomputedK; //!<  the precomputed kernel matrix
 
   /* *******************

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.19 2004/02/28 18:05:01 tihocan Exp $
+   * $Id: Kernel.h,v 1.20 2004/03/12 19:03:47 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -148,6 +148,7 @@ public:
   virtual void oldread(istream& in);
   virtual ~Kernel();
 
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 private:
 
   virtual void build_();
