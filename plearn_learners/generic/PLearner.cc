@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.42 2004/10/24 22:49:24 dorionc Exp $
+   * $Id: PLearner.cc,v 1.43 2004/11/23 21:34:18 tihocan Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -328,9 +328,6 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
 
   // testset->defineSizes(inputsize(),targetsize(),weightsize());
 
-  if(test_stats)
-    test_stats->forget();
-
   ProgressBar* pb = NULL;
   if(report_progress) 
     pb = new ProgressBar("Testing learner",l);
@@ -358,12 +355,9 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
       if(test_stats)
         test_stats->update(costs,weight);
 
-      if(pb)
+      if(report_progress)
         pb->update(i);
     }
-
-  if(test_stats)
-    test_stats->finalize();
 
   if(pb)
     delete pb;
