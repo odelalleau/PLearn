@@ -2,7 +2,7 @@
 %%
 %%  Copyright (c) 1998-2002 by Pascal Vincent
 %%
-%%  $Id: programmers_guide.tex,v 1.3 2003/06/03 14:52:07 plearner Exp $
+%%  $Id: programmers_guide.tex,v 1.4 2004/05/10 16:25:05 tatien Exp $
 
 \documentclass[11pt]{book}
 \usepackage{t1enc}              % new font encoding  (hyphenate words w/accents)
@@ -408,7 +408,7 @@ o->setOption("height","1.72");
 o->build();  // finalize building
 \end{verbatim}
 
-{\tt setOption} did not necessarily have to be called on a {\tt PP<Object>}, we might as well have manipulated a {\tt Person} instance directly. This was just to illustrate how {\tt setOption} can be used even when you don<t have access to the undelying true class of your instance.
+{\tt setOption} did not necessarily have to be called on a {\tt PP<Object>}, we might as well have manipulated a {\tt Person} instance directly. This was just to illustrate how {\tt setOption} can be used even when you don't have access to the undelying true class of your instance.
 
 Note that {\tt setOption} takes 2 strings: the name of the option, and its value serialised in string form. Strings are universal because anything can be represented (serialised) as a string. Actually setOption calls a lower-level method called {\tt readOptionVal} which reads the option value from a stream (a string stream in this case\ldots) rather than a string. Similarly there is a {\tt getOption} method which returns a string representation of a named option, and whose implementation suimply calls {\tt writeOptionVal} on a string stream.
 
