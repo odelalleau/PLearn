@@ -149,7 +149,7 @@ public:
   virtual void build();
 
   //! Redefines so that it ALSO calls the method on all the learners in the TVec models
-  virtual void setExperimentDirectory(const string& _expdir);
+  virtual void setExperimentDirectory(const PPath& _expdir);
   
   virtual void train();
  

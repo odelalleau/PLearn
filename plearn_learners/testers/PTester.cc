@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.52 2005/01/30 18:27:33 tihocan Exp $ 
+   * $Id: PTester.cc,v 1.53 2005/02/09 00:57:29 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -311,9 +311,9 @@ void PTester::run()
 ////////////////////////////
 // setExperimentDirectory //
 ////////////////////////////
-void PTester::setExperimentDirectory(const string& the_expdir) 
+void PTester::setExperimentDirectory(const PPath& the_expdir) 
 { 
-  expdir = PPath(the_expdir) / "";
+  expdir = the_expdir / "";
 }
 
 /////////////

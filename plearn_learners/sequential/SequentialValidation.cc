@@ -447,7 +447,7 @@ void SequentialValidation::run()
   reportStats(global_result);
 }
 
-void SequentialValidation::setExperimentDirectory(const string& _expdir)
+void SequentialValidation::setExperimentDirectory(const PPath& _expdir)
 {
   expdir = _expdir;
   if(provide_learner_expdir)

@@ -52,7 +52,7 @@ SequentialModelSelector::SequentialModelSelector():
   comparison_window(-1)
 {}
 
-void SequentialModelSelector::setExperimentDirectory(const string& _expdir)
+void SequentialModelSelector::setExperimentDirectory(const PPath& _expdir)
 {
   int nb_models = models.length();
   checkModelNames();

@@ -156,7 +156,7 @@ public:
   //! Simply calls inherited::build() then build_()
   virtual void build();
   
-  virtual void setExperimentDirectory(const string& _expdir);
+  virtual void setExperimentDirectory(const PPath& _expdir);
 
   //! The main method;  runs the experiment
   virtual void run();
