@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.h,v 1.4 2003/06/03 14:52:10 plearner Exp $
+   * $Id: NNet.h,v 1.5 2003/08/03 20:32:38 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -99,6 +99,7 @@ using namespace std;
     bool global_weight_decay; // default: false
     bool direct_in_to_out; // should we include direct input to output connecitons? default: false
     string output_transfer_func; // tanh, sigmoid, softplus, softmax  (default: "" means no transfer function)
+    real interval_minval, interval_maxval; // if output_transfer_func = interval(minval,maxval), these are the interval bounds
 
     //! a list of cost functions to use in the form "[ cf1; cf2; cf3; ... ]"
     // where the cost functions can be one of mse, mse_onehot, NLL,

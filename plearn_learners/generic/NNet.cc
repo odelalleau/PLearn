@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.7 2003/06/26 19:47:51 ducharme Exp $
+   * $Id: NNet.cc,v 1.8 2003/08/03 20:32:38 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -68,6 +68,7 @@ NNet::NNet()
    direct_in_to_out_weight_decay(0),
    direct_in_to_out(false),
    output_transfer_func(""),
+   interval_minval(0), interval_maxval(1),
    batch_size(1)
 {}
 
@@ -121,8 +122,10 @@ void NNet::declareOptions(OptionList& ol)
 
   declareOption(ol, "output_transfer_func", &NNet::output_transfer_func, OptionBase::buildoption, 
                 "    what transfer function to use for ouput layer? \n"
-                "    one of: tanh, sigmoid, exp, softmax \n"
-                "    an empty string means no output transfer function \n");
+                "    one of: tanh, sigmoid, exp, softplus, softmax \n"
+                "    or interval(<minval>,<maxval>), which stands for\n"
+                "    <minval>+(<maxval>-<minval>)*sigmoid(.).\n"
+                "    An empty string means no output transfer function \n");
 
   declareOption(ol, "cost_funcs", &NNet::cost_funcs, OptionBase::buildoption, 
                 "    a list of cost functions to use\n"
@@ -203,6 +206,7 @@ void NNet::build_()
       /*
        * output_transfer_func
        */
+      unsigned int p=0;
       if(output_transfer_func!="")
         {
           if(output_transfer_func=="tanh")
@@ -217,6 +221,14 @@ void NNet::build_()
             output = softmax(output);
           else if (output_transfer_func == "log_softmax")
             output = log_softmax(output);
+          else if ((p=output_transfer_func.find("interval"))!=string::npos)
+          {
+            unsigned int q = output_transfer_func.find(",");
+            interval_minval = atof(output_transfer_func.substr(p+1,q-(p+1)).c_str());
+            unsigned int r = output_transfer_func.find(")");
+            interval_maxval = atof(output_transfer_func.substr(q+1,r-(q+1)).c_str());
+            output = interval_minval + (interval_maxval - interval_minval)*sigmoid(output);
+          }
           else
             PLERROR("In NNet::build_()  unknown output_transfer_func option: %s",output_transfer_func.c_str());
         }
