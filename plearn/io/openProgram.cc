@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: openProgram.cc,v 1.1 2005/01/11 22:30:38 chrish42 Exp $ 
+   * $Id: openProgram.cc,v 1.2 2005/01/11 22:51:19 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Christian Hudon
@@ -47,6 +47,7 @@
 namespace PLearn {
 using namespace std;
 
+  /// @note Do not use yet. Still in development. The interface will change.
   PStream openProgram(const string& command)
   {
     Popen popen(command);
