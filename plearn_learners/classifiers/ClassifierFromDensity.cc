@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ClassifierFromDensity.cc,v 1.16 2005/03/07 15:38:48 chapados Exp $ 
+   * $Id: ClassifierFromDensity.cc,v 1.17 2005/03/08 16:48:16 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file ClassifierFromDensity.cc */
@@ -69,6 +69,9 @@ PLEARN_IMPLEMENT_OBJECT(
 ////////////////////
 void ClassifierFromDensity::declareOptions(OptionList& ol)
 {
+
+  // Build options.
+
   declareOption(ol, "nclasses", &ClassifierFromDensity::nclasses, OptionBase::buildoption,
       "The number of classes");
 
@@ -76,14 +79,16 @@ void ClassifierFromDensity::declareOptions(OptionList& ol)
       "The array of density estimators, one for each class. \n"
       "You may also specify just one that will be replicated as many times as there are classes.");
 
-  declareOption(ol, "log_priors", &ClassifierFromDensity::log_priors, OptionBase::buildoption,
-      "The log of the class prior probabilities");
-
   declareOption(ol, "output_log_probabilities", &ClassifierFromDensity::output_log_probabilities, OptionBase::buildoption,
       "Whether computeOutput yields log-probabilities or probabilities (of classes given inputs)");
  
   declareOption(ol, "normalize_probabilities", &ClassifierFromDensity::normalize_probabilities, OptionBase::buildoption,
       "Whether to normalize the probabilities (if not just compute likelihood * prior for each class)");
+
+  // Learnt options.
+
+  declareOption(ol, "log_priors", &ClassifierFromDensity::log_priors, OptionBase::learntoption,
+      "The log of the class prior probabilities");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -166,7 +171,7 @@ void ClassifierFromDensity::train()
     for(int c=0; c<nclasses; c++)
     {
       if(verbosity>=1)
-        cout << ">>> Training class " << c;
+        pout << ">>> Training class " << c;
       VMat set_c = train_set.rows(indices[c]);
       int in_sz = set_c->inputsize();
       int targ_sz = set_c->targetsize();
@@ -185,7 +190,7 @@ void ClassifierFromDensity::train()
       if (expd!="")
         estimators[c]->setExperimentDirectory(expd / "Class" / tostring(c));
       if (verbosity>=1)
-        cout << " ( " << set_c.length() << " samples)" << endl;
+        pout << " ( " << set_c.length() << " samples)" << endl;
       estimators[c]->setTrainingSet(set_c);
       PP<VecStatsCollector> train_stats = new VecStatsCollector();
       train_stats->setFieldNames(estimators[c]->getTrainCostNames());
@@ -193,6 +198,8 @@ void ClassifierFromDensity::train()
       estimators[c]->train();
     }
     stage = 1; // trained!
+    if (verbosity >= 2)
+      pout << ">>> Training is over" << endl;
   }
 }
 
