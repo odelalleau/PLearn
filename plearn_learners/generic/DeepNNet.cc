@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DeepNNet.cc,v 1.8 2005/01/26 21:20:32 yoshua Exp $ 
+   * $Id: DeepNNet.cc,v 1.9 2005/01/27 19:41:33 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -135,6 +135,12 @@ void DeepNNet::declareOptions(OptionList& ol)
   declareOption(ol, "biases", &DeepNNet::biases, OptionBase::learntoption, 
                 "The learned biases at each layer\n"
                 "(biases[l] = vector of biases of neurons at layer l");
+
+  declareOption(ol, "layerwise_lr_factor", &DeepNNet::layerwise_lr_factor, OptionBase::learntoption, 
+                "The multiplicative factor for the learning rate at each layer");
+
+  declareOption(ol, "layerwise_gradient_norm_ma", &DeepNNet::layerwise_gradient_norm_ma, OptionBase::learntoption, 
+                "The (moving) average of squared gradients at each layer");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
