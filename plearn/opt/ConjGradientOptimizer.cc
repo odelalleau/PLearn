@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.26 2003/05/16 15:44:01 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.27 2003/05/21 16:22:20 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -63,10 +63,10 @@ ConjGradientOptimizer::ConjGradientOptimizer(
     int n_updates, const string& filename, 
     int every_iterations)
   :inherited(n_updates, filename, every_iterations),
-  starting_step_size(the_starting_step_size), restart_coeff(the_restart_coeff),
-  epsilon(the_epsilon),
   line_search_algo(2),
   find_new_direction_formula(1),
+  starting_step_size(the_starting_step_size), restart_coeff(the_restart_coeff),
+  epsilon(the_epsilon),
   sigma(the_sigma), rho(the_rho), fmax(the_fmax),
   stop_epsilon(the_stop_epsilon), tau1(the_tau1), tau2(the_tau2),
   tau3(the_tau3)  {}
@@ -338,16 +338,20 @@ bool ConjGradientOptimizer::findDirection() {
   }
   // It is suggested to keep gamma >= 0
   if (gamma < 0) {
-    cout << "gamma < 0 ! gamma = " << gamma << " ==> Restarting" << endl;
+    // cout << "gamma < 0 ! gamma = " << gamma << " ==> Restarting" << endl;
     gamma = 0;
   }
   if (abs(dot(delta, current_opp_gradient)) > restart_coeff * pownorm(delta)) {
-    cout << "Restart triggered !" << endl;
+    // cout << "Restart triggered !" << endl;
     gamma = 0;
   }
   updateSearchDirection(gamma);
   // If the gradient is very small, we can stop !
-  isFinished = pownorm(current_opp_gradient) < 0.0000001;
+//  isFinished = pownorm(current_opp_gradient) < 0.0000001;
+  // TODO This may lead to an erroneous early stop. To investigate ?
+  isFinished = false;
+  if (isFinished)
+    cout << "Gradient is small enough, time to stop" << endl;
   return isFinished;
 }
 
@@ -649,6 +653,8 @@ bool ConjGradientOptimizer::lineSearch() {
       break;
   }
   params.update(step, search_direction);
+  if (step == 0)
+    cout << "No more progress made by the line search, stopping" << endl;
   return (step == 0);
 }
 
@@ -801,8 +807,6 @@ real ConjGradientOptimizer::optimize()
       meancost.clear();
     }
   }
-  if (early_stop)
-    cout << "Early Stopping !" << endl;
   return lastmeancost[0];
 }
 
@@ -833,9 +837,13 @@ bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stat_coll) {
     
   }
 
-  cout << stage << " : " << meancost/nstages << endl;
+  meancost /= real(nstages);
+  cout << stage << " : " << meancost << endl;
+  early_stop = early_stop || measure(stage+1,meancost);
 
   // TODO Call the Stats collector
+  if (early_stop)
+    cout << "Early Stopping !" << endl;
   return early_stop;
 }
 
