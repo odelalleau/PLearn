@@ -33,21 +33,21 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.cc,v 1.23 2004/07/21 16:30:55 chrish42 Exp $
+   * $Id: VVMatrix.cc,v 1.24 2004/07/26 20:12:44 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
-#include "VVMatrix.h"
-#include "SelectRowsFileIndexVMatrix.h"
-#include "ConcatRowsVMatrix.h"
-#include "ConcatColumnsVMatrix.h"
-#include "FileVMatrix.h"
-#include "DiskVMatrix.h"
-#include "JoinVMatrix.h"
-#include <plearn/math/random.h>
-#include <plearn/io/IntVecFile.h>
-#include "VMatLanguage.h"
 #include <plearn/db/getDataSet.h>
+#include <plearn/io/IntVecFile.h>
+#include <plearn/math/random.h>
+#include "ConcatColumnsVMatrix.h"
+#include "ConcatRowsVMatrix.h"
+#include "DiskVMatrix.h"
+#include "FileVMatrix.h"
+#include "JoinVMatrix.h"
+#include "SelectRowsFileIndexVMatrix.h"
+#include "VMatLanguage.h"
+#include "VVMatrix.h"
 
 #ifdef WIN32
 #include <time.h>
@@ -59,6 +59,18 @@
 
 namespace PLearn {
 using namespace std;
+
+PLEARN_IMPLEMENT_OBJECT(VVMatrix, "ONE LINE DESCR", "NO HELP");
+
+////////////////////
+// declareOptions //
+////////////////////
+void VVMatrix::declareOptions(OptionList &ol)
+{
+  declareOption(ol, "filename", &VVMatrix::the_filename, OptionBase::buildoption, "Path to the .vmat file");
+  inherited::declareOptions(ol);
+}
+
 
 // vmat genfilterindex source.pmat toto.pvm toto.indexes
  
@@ -616,12 +628,6 @@ void VVMatrix::build_()
   }
 }
 
-void VVMatrix::declareOptions(OptionList &ol)
-{
-  declareOption(ol, "filename", &VVMatrix::the_filename, OptionBase::buildoption, "Path to the .vmat file");
-  inherited::declareOptions(ol);
-}
-
 // string maps are those loaded from the .vmat metadatadir, not those of the source vmatrix anymore
 // could be changed..
 
@@ -644,8 +650,12 @@ void VVMatrix::declareOptions(OptionList &ol)
 // }
   
 
-PLEARN_IMPLEMENT_OBJECT(VVMatrix, "ONE LINE DESCR", "NO HELP");
-
-
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
+void VVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies) {
+  inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(the_mat, copies);
+}
 
 } // end of namespace PLearn

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.cc,v 1.13 2004/05/14 02:14:41 tihocan Exp $
+   * $Id: SubVMatrix.cc,v 1.14 2004/07/26 20:10:43 tihocan Exp $
    ******************************************************* */
 
 #include "SubVMatrix.h"
@@ -208,6 +208,9 @@ VMat SubVMatrix::subMat(int i, int j, int l, int w)
   return parent->subMat(istart+i,jstart+j,l,w);
 }
 
+/////////
+// dot //
+/////////
 real SubVMatrix::dot(int i1, int i2, int inputsize) const
 {
   if(jstart==0)
@@ -222,6 +225,14 @@ real SubVMatrix::dot(int i, const Vec& v) const
     return parent->dot(istart+i,v);
   else
     return VMatrix::dot(i,v);
+}
+
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
+void SubVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies) {
+  inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(parent, copies);
 }
 
 } // end of namespcae PLearn

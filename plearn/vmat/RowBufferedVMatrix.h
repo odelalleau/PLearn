@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: RowBufferedVMatrix.h,v 1.10 2004/07/07 17:30:48 tihocan Exp $
+   * $Id: RowBufferedVMatrix.h,v 1.11 2004/07/26 20:10:19 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -81,6 +81,9 @@ public:
 
   virtual real dot(int i1, int i2, int inputsize) const;
   virtual real dot(int i, const Vec& v) const;
+
+  //! Transforms a shallow copy into a deep copy
+  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   PLEARN_DECLARE_ABSTRACT_OBJECT(RowBufferedVMatrix);
 };

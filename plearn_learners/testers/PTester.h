@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.h,v 1.14 2004/07/26 14:34:14 tihocan Exp $ 
+   * $Id: PTester.h,v 1.15 2004/07/26 20:13:52 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PTester.h */
@@ -41,9 +41,9 @@
 #define PTester_INC
 
 #include <plearn/base/Object.h>
-#include <plearn_learners/generic/PLearner.h>
-#include <plearn/vmat/VMat.h>
 #include <plearn/vmat/Splitter.h>
+#include <plearn/vmat/VMat.h>
+#include <plearn_learners/generic/PLearner.h>
 
 namespace PLearn {
 using namespace std;
@@ -57,8 +57,8 @@ private:
 
 protected:
 
- // Learnt options.
-
+  //! The 'real' statnames: these are obtained from 'statnames' by a
+  //! processing at build time, taking into account the 'statmask' option.
   TVec<string> statnames_processed;
 
 public:
@@ -151,7 +151,12 @@ public:
   //! Returns a vector of test statistics corresponding to the requested statnames
   Vec perform(bool call_forget=true);
 
+  //! Transforms a shallow copy into a deep copy
+  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+
 };
+
+DECLARE_OBJECT_PTR(PTester);
 
 
 //! The specification of a statistic to compute (as can be specified as a string in PTester)
@@ -180,9 +185,6 @@ private:
   void parseStatname(const string& statname);
 };
 
-// Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(PTester);
-  
 } // end of namespace PLearn
 
 #endif

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.h,v 1.9 2004/04/05 23:14:13 morinf Exp $
+   * $Id: SubVMatrix.h,v 1.10 2004/07/26 20:10:43 tihocan Exp $
    ******************************************************* */
 
 
@@ -51,6 +51,9 @@ using namespace std;
  
 class SubVMatrix: public VMatrix
 {
+
+private:
+
   typedef VMatrix inherited;
 
 public:
@@ -81,11 +84,20 @@ public:
 
   virtual void reset_dimensions();
 
+  //! Transforms a shallow copy into a deep copy.
+  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+
   PLEARN_DECLARE_OBJECT(SubVMatrix);
-  static void declareOptions(OptionList &ol);
   virtual void build();
+
+protected:
+
+  static void declareOptions(OptionList &ol);
+
 private:
+
   void build_();
+
 };
 
 DECLARE_OBJECT_PTR(SubVMatrix);

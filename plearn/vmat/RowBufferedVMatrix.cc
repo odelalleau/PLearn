@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: RowBufferedVMatrix.cc,v 1.9 2004/07/21 16:30:55 chrish42 Exp $
+   * $Id: RowBufferedVMatrix.cc,v 1.10 2004/07/26 20:10:19 tihocan Exp $
    ******************************************************* */
 
 #include "RowBufferedVMatrix.h"
@@ -164,6 +164,15 @@ real RowBufferedVMatrix::dot(int i, const Vec& v) const
       i = current_row_index;
     }
   return PLearn::dot(current_row.subVec(0,v.length()),v);
+}
+
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
+void RowBufferedVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies) {
+  inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(current_row, copies);
+  deepCopyField(other_row, copies);
 }
 
 } // end of namespcae PLearn
