@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.9 2003/11/21 12:52:46 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.10 2003/11/21 18:43:06 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -43,6 +43,7 @@
 
 #include "ConditionalDensityNet.h"
 #include "random.h"
+#include "DisplayUtils.h"
 
 namespace PLearn <%
 using namespace std;
@@ -410,34 +411,36 @@ ConditionalDensityNet::ConditionalDensityNet()
         invars.push_back(sampleweight);
       }
 
-      VarArray outputs_array(outputs_def.length());
-      int j=0;
+      VarArray outputs_array;
+
       for (unsigned int i=0;i<outputs_def.length();i++)
       {
         if (outputs_def[i]=='e')
-          outputs_array[j++] = expected_value;
+          outputs_array &= expected_value;
         else if (outputs_def[i]=='S' || outputs_def[i]=='C' ||
                  outputs_def[i]=='L' || outputs_def[i]=='D')
         {
-          Func prob_f(target,outputs_def[i]=='S'?(var(1.0)-cumulative):
+          Func prob_f(target&output,outputs_def[i]=='S'?(var(1.0)-cumulative):
                       (outputs_def[i]=='C'?cumulative:
                        (outputs_def[i]=='D'?density:log(density))));
           VarArray y_values(n_curve_points);
           real delta = maxY/(n_curve_points-1);
           for (int i=0;i<n_curve_points;i++)
           {
-            y_values[i]->value[0] = i*delta;
-            outputs_array[j++] = prob_f(y_values[i])[0];
+            y_values[i] = var(i*delta);
+            y_values[i]->setName("y"+tostring(i));
+            outputs_array &= prob_f(y_values[i] & output);
           }
         } else PLERROR("ConditionalDensityNet::build: can't handle outputs_def with option value = %c",outputs_def[i]);
       }
       outputs = hconcat(outputs_array);
-      //? target_dependent_outputs.resize(test_costs->size()+2);
       f = Func(input, outputs);
+      fill_random_uniform(input->value,-1,1);
+      f->fprop(input->value,outputs->value);
+      displayVarGraph(outputs,true);
+      displayFunction(f,true);
       test_costf = Func(testinvars, outputs&test_costs);
       test_costf->recomputeParents();
-      output_and_target_to_cost = Func(outvars, test_costs&density&cumulative); 
-      output_and_target_to_cost->recomputeParents();
 
       // The total training cost
       int l = train_set->length();
@@ -513,7 +516,6 @@ TVec<string> ConditionalDensityNet::getTestCostNames() const
   deepCopyField(paramsvalues, copies);
   deepCopyField(f, copies);
   deepCopyField(test_costf, copies);
-  deepCopyField(output_and_target_to_cost, copies);
   deepCopyField(optimizer, copies);
     inherited::makeDeepCopyFromShallowCopy(copies);
 
@@ -691,7 +693,6 @@ void ConditionalDensityNet::train()
   if(pb)
     delete pb;
 
-  output_and_target_to_cost->recomputeParents();
   test_costf->recomputeParents();
 }
 
