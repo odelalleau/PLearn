@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: EntropyContrast.cc,v 1.1 2004/08/16 18:23:44 dpopovici Exp $ 
+ * $Id: EntropyContrast.cc,v 1.2 2004/08/16 18:31:23 mariusmuja Exp $ 
  ******************************************************* */
 
 /*! \file EntropyContrast.cc */
@@ -197,13 +197,13 @@ namespace PLearn {
 /////////////////////////////////////////////////
 /// Given the output of the NNet it updates the running averages(mu, variance) 
 /////////////////////////////////////////////////
-  void EntropyContrast::update_mu_sigma_f(const Vec &  f_x,Vec & mu, Vec &sigma) 
+  void EntropyContrast::update_mu_sigma_f(const Vec & f_x,Vec & mu, Vec &sigma) 
   {
     // :update mu_f_hat 
-    mu_f = mu_f * alpha  + f_x * (1-alpha) ; 
+    mu = mu * alpha  + f_x * (1-alpha) ; 
     
     // :update sigma_f_hat
-    sigma_f = alpha * (sigma_f) + (1-alpha) * square(f_x - mu_f)  ;
+    sigma = alpha * (sigma) + (1-alpha) * square(f_x - mu)  ;
 
   }
     
@@ -586,7 +586,7 @@ namespace PLearn {
         if(constr_type == "NNcontinuous")          
         {
           get_NNcontinuous_output(x,f_x,z_x) ; // this also computes the value of the hidden units , which will be needed when we compute all the gradiants 
-          update_mu_sigma_f(f_x,mu_f,sigma_f) ; 
+         update_mu_sigma_f(f_x,mu_f,sigma_f) ; 
 
           if (cost_real == "constraint_variance")
             update_mu_sigma_f(square(f_x),mu_f_square,sigma_f_square) ; 
