@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.31 2003/07/03 23:31:37 plearner Exp $
+   * $Id: plearn.cc,v 1.32 2003/07/08 16:59:51 plearner Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -55,7 +55,7 @@
 //#include "Classification1HiddenNN.h"
 //#include "Mixture2.h"
 #include "ClassifierFromDensity.h"
-#include "RegressorFromDensity.h"
+//#include "RegressorFromDensity.h"
 #include "Distribution.h"
 #include "GaussianDistribution.h"
 #include "LocallyWeightedDistribution.h"
@@ -66,17 +66,16 @@
 #include "ConjGradientOptimizer.h"
 // #include "AutoStepGradientOptimizer.h"
 
-#include "ConstantModel.h"
-#include "MultiLearner.h"
-#include "LinearRegressor.h"
-
-#include "EnsembleLearner.h"
+// #include "ConstantModel.h"
+// #include "MultiLearner.h"
+// #include "LinearRegressor.h"
+// #include "EnsembleLearner.h"
 
 // #include "SVM.h"
 
-#include "ParzenDensity.h"
-#include "ParzenRegressor.h"
-#include "ManifoldParzenDensity.h"
+// #include "ParzenDensity.h"
+// #include "ParzenRegressor.h"
+// #include "ManifoldParzenDensity.h"
 
 #include "Experiment.h"
 

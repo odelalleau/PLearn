@@ -9,9 +9,6 @@ qtdir = '/usr/lib/qt3/'
 # If the PLEARNDIR environment variable is not defined, we use the default "$HOME/PLearn/"
 plearndir = os.environ.get('PLEARNDIR', os.path.join(homedir,'PLearn'))
 
-# If the LISAPLEARNDIR environment variable is not defined, we use the default "$HOME/LisaPLearn/"
-lisaplearndir = os.environ.get('LISAPLEARNDIR', os.path.join(homedir,'LisaPLearn'))
-
 libdir = '/u/lisa/local/'+platform+'/lib'
 
 if string.find(sys.version, 'Mandrake Linux 8.2')>=0:
@@ -32,9 +29,7 @@ else:
 # (no need to include the current directory, it is implicit)
 sourcedirs =   lsdirs(os.path.join(plearndir,'plearn/')) \
              + lsdirs(os.path.join(plearndir,'plearn_learners/')) \
-             + lsdirs(os.path.join(plearndir,'commands/'))[1:] \
-             + lsdirs(os.path.join(lisaplearndir,'PLearnLibrary/')) \
-             + lsdirs(os.path.join(lisaplearndir,'Databases/')) 
+             + lsdirs(os.path.join(plearndir,'commands/'))[1:] 
 
 # will be added as list of includes (-I...) to all compilations
 mandatory_includedirs = []
@@ -103,11 +98,6 @@ optionalLibrary( name = 'xml',
 #                 compileroptions = '-DwxINSTALL_PREFIX=\"/u/lisa/local/linux-i386/\"  -D__WXGTK__ -DGTK_NO_CHECK_CASTS -D_REENTRANT -MMD -Wno-long-long',
 #                 linkeroptions = '/u/lisa/local/linux-i386/Install/wxWindows/wxGTK-2.2.9/lib/libwx_gtk-2.2.so.6.2.6 -L/usr/lib -L/usr/X11R6/lib -lgtk -lgdk -rdynamic -lgmodule -lgthread -lglib -lpthread -ldl -lXi -lXext -lX11 -lm  -lpng -ljpeg -ltiff  -ldl -lpthread -lz -lm' )
 
-
-optionalLibrary( name = 'minigoose',        
-                 includedirs = os.path.join(lisaplearndir,'Contrib/minigoose'), 
-                 triggers = 'specfns_protos.h',
-                 linkeroptions = '-L'+lisaplearndir+'/Contrib/minigoose -lminigoose' )
 
 optionalLibrary( name = 'arpack',
                  triggers = 'arpack_proto.h',
