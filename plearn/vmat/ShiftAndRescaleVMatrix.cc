@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ShiftAndRescaleVMatrix.cc,v 1.4 2003/08/28 13:29:54 tihocan Exp $
+   * $Id: ShiftAndRescaleVMatrix.cc,v 1.5 2003/09/02 14:40:36 tihocan Exp $
    ******************************************************* */
 
 #include "ShiftAndRescaleVMatrix.h"
@@ -50,7 +50,7 @@ PLEARN_IMPLEMENT_OBJECT(ShiftAndRescaleVMatrix, "ONE LINE DESCR", "NO HELP");
 
 ShiftAndRescaleVMatrix::
 ShiftAndRescaleVMatrix(VMat underlying_vm, Vec the_shift, Vec the_scale)
-  : shift(the_shift), scale(the_scale), n_train(0), n_inputs(-1)
+  : shift(the_shift), scale(the_scale), n_train(0), n_inputs(-1), automatic(0)
 {
   vm = underlying_vm;
   build_();
