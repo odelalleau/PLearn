@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.23 2004/03/24 18:52:35 nova77 Exp $
+   * $Id: vmatmain.cc,v 1.24 2004/03/25 00:41:33 nova77 Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -51,6 +51,7 @@
 #include "curses.h"
 #undef min
 #undef max
+#undef clear // I want to use a clear and it is already defined in curses.h
 
 #else
 #include <curses.h>
@@ -289,12 +290,100 @@ int findNextIndexOfValue(VMat m, int col, real value, int startrow=0)
 }
 */
 
+// returns false if the input is invalid and write in strReason the reason
+bool getList(char* str, int curj, const VMat& vm, Vec& outList, char* strReason)
+{
+  vector<string>columnList;
+  if (str[0] == '\0')
+  {
+    // nothing was inserted, then gets the current column
+    char strj[10];
+    sprintf(strj, "%d\0", curj);
+    columnList.push_back(strj);				
+  }
+  else
+  {
+    columnList = split(str, " -,", true);
+  }
+
+  vector<string>::iterator vsIt;
+
+  // checks for errors
+  bool invalidInput = false;
+  int colVal = 0;
+  char separator = 0;
+
+  for (vsIt = columnList.begin(); vsIt != columnList.end(); vsIt++)
+  {
+    if (pl_isnumber(*vsIt))
+    {
+      if (colVal > toint(*vsIt) && separator == '-')
+      {
+        invalidInput = true;
+        strcpy(strReason, "Second element in range smaller than the first");
+        break;
+      }
+      colVal = toint(*vsIt);
+      if (colVal < 0 || colVal >= vm->width())
+      {
+        invalidInput = true;
+        strcpy(strReason, "Invalid column number");
+        break;
+      }
+    }
+    else
+    {
+      // there was already a separator!
+      if (separator == '-')
+      {
+        invalidInput = true;
+        strcpy(strReason, "Too many '-' separators");
+        break;
+      }
+
+      separator = (*vsIt)[0];
+      if (separator != '-' &&
+        separator != ',')
+      {
+        invalidInput = true;
+        strcpy(strReason, "Invalid column separator");
+        break;
+      }
+    }
+  }
+
+  outList.clear();
+  if (separator == '-')
+  {
+    int start = toint(columnList.front());
+    int end = toint(columnList.back());
+    for (int colIdx = start; colIdx <= end; ++colIdx)
+      outList.push_back(colIdx);
+  }
+  else if (separator == ',')
+  {
+    for (vsIt = columnList.begin(); vsIt != columnList.end(); ++vsIt)
+    {
+      if (pl_isnumber(*vsIt))
+        outList.push_back(toint(*vsIt));
+    }
+  }
+  else if (separator == 0)
+  {
+    outList.push_back(toint(columnList.front()));
+  }
+
+  return invalidInput;
+}
+
 void viewVMat(const VMat& vm)
 {
   initscr();
   cbreak();
   noecho();
   keypad(stdscr,TRUE);
+
+  VMat vm_showed = vm;
   
   int key= 0;
   bool view_strings= true;
@@ -337,15 +426,15 @@ void viewVMat(const VMat& vm)
       int nj = transposed ? LINES-3 : (COLS-leftcolwidth)/valwidth;
       int ni = transposed ? (COLS-leftcolwidth)/valwidth : LINES-4;
 
-      int endj = min(vm->width(), startj+nj);
-      int endi = min(vm->length(), starti+ni);
+      int endj = min(vm_showed->width(), startj+nj);
+      int endi = min(vm_showed->length(), starti+ni);
 
       int x=0, y=0; // (curses coordinates are (y,x) )
 
       // print field names 
       for(int j=startj; j<endj; j++)
       {
-          string s = vm->fieldName(j);
+          string s = vm_showed->fieldName(j);
           // if(j==curj)
           //  attron(A_REVERSE);
           if(transposed)
@@ -360,8 +449,8 @@ void viewVMat(const VMat& vm)
           // attroff(A_REVERSE);
         }
 
-      Vec v(vm.width());
-      Vec oldv(vm.width());
+      Vec v(vm_showed.width());
+      Vec oldv(vm_showed.width());
 
       for(int i=starti; i<endi; i++)
         { 
@@ -378,12 +467,12 @@ void viewVMat(const VMat& vm)
               mvprintw(y,x,"%d",i);
             }
           
-          vm->getRow(i,v);
+          vm_showed->getRow(i,v);
           
           for(int j=startj; j<endj; j++)
             {
               real val = v[j];
-              string s = vm->getValString(j,val);
+              string s = vm_showed->getValString(j,val);
               if(!view_strings || s=="")
                 s = tostring(val);
               
@@ -405,10 +494,11 @@ void viewVMat(const VMat& vm)
           oldv << v;          
         }
 
-      string strval = vm->getString(curi, curj);
+      string strval = vm_showed->getString(curi, curj);
+      mvprintw(0,0,"Range[%d-%d]", 0, vm_showed.width()-1);
       mvprintw(LINES-1,0," %dx%d   line= %d   col= %d     %s = %s (%f)", 
-               vm->length(), vm->width(),
-               curi, curj, vm->fieldName(curj).c_str(), strval.c_str(), vm(curi,curj));
+               vm_showed->length(), vm_showed->width(),
+               curi, curj, vm_showed->fieldName(curj).c_str(), strval.c_str(), vm_showed(curi,curj));
 
       refresh();
       if (!onError)
@@ -439,14 +529,14 @@ void viewVMat(const VMat& vm)
       case KEY_RIGHT: 
         if(transposed)
         {
-          if(curi<vm->length()-1)
+          if(curi<vm_showed->length()-1)
             ++curi;
           if(curi>=starti+ni)
             ++starti;
         }
         else
         {
-          if(curj<vm->width()-1)
+          if(curj<vm_showed->width()-1)
             ++curj;
           if(curj>=startj+nj)
             ++startj;
@@ -473,14 +563,14 @@ void viewVMat(const VMat& vm)
       case KEY_DOWN: 
         if(transposed)
         {
-          if(curj<vm->width()-1)
+          if(curj<vm_showed->width()-1)
             ++curj;
           if(curj>=startj+nj)
             ++startj;
         }
         else
         {
-          if(curi<vm->length()-1)
+          if(curi<vm_showed->length()-1)
             ++curi;
           if(curi>=starti+ni)
             ++starti;
@@ -513,19 +603,19 @@ void viewVMat(const VMat& vm)
         {
           curj += nj;
           startj += nj;
-          if(curj>=vm->width())
-            curj = vm->width()-1;
-          if(startj>vm->width()-nj)
-            startj = max(0,vm->width()-nj);
+          if(curj>=vm_showed->width())
+            curj = vm_showed->width()-1;
+          if(startj>vm_showed->width()-nj)
+            startj = max(0,vm_showed->width()-nj);
         }
         else
         {
           curi += ni;
           starti += ni;
-          if(curi>=vm->length())
-            curi = vm->length()-1;
-          if(starti>vm->length()-ni)
-            starti = max(0,vm->length()-ni);
+          if(curi>=vm_showed->length())
+            curi = vm_showed->length()-1;
+          if(starti>vm_showed->length()-ni)
+            starti = max(0,vm_showed->length()-ni);
         }
         break;
       ///////////////////////////////////////////////////////////////
@@ -547,12 +637,12 @@ void viewVMat(const VMat& vm)
         // not working on unix for the moment: see http://dickey.his.com/xterm/xterm.faq.html#xterm_pc_style
         if(transposed)
         {
-          curi = vm->length()-1;
+          curi = vm_showed->length()-1;
           starti = curi;
         }
         else
         {
-          curj = vm->width()-1;
+          curj = vm_showed->width()-1;
           startj = curj;
         }
         break;
@@ -567,8 +657,8 @@ void viewVMat(const VMat& vm)
         ni = transposed ? (COLS-leftcolwidth)/valwidth : LINES-4;
         starti = max(0,curi-ni/2);
         startj = max(0,curj-nj/2);
-        //endj = min(vm->width(), startj+nj);
-        //endi = min(vm->length(), starti+ni);
+        //endj = min(vm_showed->width(), startj+nj);
+        //endi = min(vm_showed->length(), starti+ni);
         break;
       ///////////////////////////////////////////////////////////////
       case '/':  // search for value
@@ -582,10 +672,10 @@ void viewVMat(const VMat& vm)
           char l[10];
           getnstr(l, 10);
           string searchme = removeblanks(l);
-          real searchval = vm(curi,curj);
+          real searchval = vm_showed(curi,curj);
           if(searchme!="")
           { 
-            searchval = vm->getStringVal(curj, searchme);
+            searchval = vm_showed->getStringVal(curj, searchme);
             if(is_missing(searchval))
             {
               searchval = toreal(searchme);
@@ -604,8 +694,8 @@ void viewVMat(const VMat& vm)
             // clear the rest of the line
             clrtoeol();
             refresh();
-            cached.resize(vm->length());
-            vm->getColumn(curj,cached);                
+            cached.resize(vm_showed->length());
+            vm_showed->getColumn(curj,cached);                
             cached_columns[curj] = cached;
           }
 
@@ -613,9 +703,9 @@ void viewVMat(const VMat& vm)
           clrtoeol();
           refresh();
           ++curi; // start searching from next row
-          while(curi<vm->length() && cached[curi]!=searchval)
+          while(curi<vm_showed->length() && cached[curi]!=searchval)
             ++curi;
-          if(curi>=vm->length())
+          if(curi>=vm_showed->length())
             curi = 0;
           ni = transposed ? (COLS-leftcolwidth)/valwidth : LINES-4;
           starti = max(0,curi-ni/2);
@@ -631,7 +721,7 @@ void viewVMat(const VMat& vm)
           move(LINES-1, (int)strlen(strmsg));
           char l[10];
           getnstr(l, 10);
-          if(l[0] == '\0' || !pl_isnumber(l) || toint(l) < 0 || toint(l)>=vm->length())
+          if(l[0] == '\0' || !pl_isnumber(l) || toint(l) < 0 || toint(l)>=vm_showed->length())
           {
             mvprintw(LINES-1,0,"*** Invalid line number ***");
             clrtoeol();
@@ -658,7 +748,7 @@ void viewVMat(const VMat& vm)
           move(LINES-1, (int)strlen(strmsg));
           char c[10];
           getnstr(c, 10);
-          if(c[0] == '\0' || !pl_isnumber(c) || toint(c) < 0 || toint(c)>=vm->width())
+          if(c[0] == '\0' || !pl_isnumber(c) || toint(c) < 0 || toint(c)>=vm_showed->width())
           {
             mvprintw(LINES-1,0,"*** Invalid column number ***");
             clrtoeol();
@@ -680,7 +770,7 @@ void viewVMat(const VMat& vm)
         {
           echo();
           char strmsg[100];
-			 sprintf(strmsg, "Enter column(s) or range (ex: 7;1-20;7,8,12) to export (enter=%d): ", curj);
+          sprintf(strmsg, "Enter column(s) or range (ex: 7;1-20;7,8,12) to export (enter=%d): ", curj);
           mvprintw(LINES-1,0,strmsg);
           clrtoeol();
 
@@ -688,65 +778,9 @@ void viewVMat(const VMat& vm)
           char c[50];
           getnstr(c, 50);
 
-			 vector<string>columnList;
-			 if (c[0] == '\0')
-			 {
-				// nothing was inserted, then gets the current column
-				// (note: I am reusing strmsg because I don't want to waste space by allocating a new string)
-				sprintf(strmsg, "%d\0", curj);
-				columnList.push_back(strmsg);				
-			 }
-			 else
-			 {
-				columnList = split(c, " -,", true);
-			 }
-
-          vector<string>::iterator vsIt;
+          Vec indexs;
           char strReason[100] = {"\0"};
-
-          // checks for errors
-          bool invalidInput = false;
-          int colVal = 0;
-          char separator = 0;
-
-          for (vsIt = columnList.begin(); vsIt != columnList.end(); vsIt++)
-          {
-            if (pl_isnumber(*vsIt))
-            {
-              if (colVal > toint(*vsIt) && separator == '-')
-              {
-                invalidInput = true;
-                strcpy(strReason, "Second element in range smaller than the first");
-                break;
-              }
-              colVal = toint(*vsIt);
-              if (colVal < 0 || colVal >= vm->width())
-              {
-                invalidInput = true;
-                strcpy(strReason, "Invalid column number");
-                break;
-              }
-            }
-            else
-            {
-              // there was already a separator!
-              if (separator == '-')
-              {
-                invalidInput = true;
-                strcpy(strReason, "Too many '-' separators");
-                break;
-              }
-
-              separator = (*vsIt)[0];
-              if (separator != '-' &&
-                separator != ',')
-              {
-                invalidInput = true;
-                strcpy(strReason, "Invalid column separator");
-                break;
-              }
-            }
-          }
+          bool invalidInput = getList(c, curj, vm_showed, indexs, strReason);
 
           if (invalidInput)
           {
@@ -768,40 +802,18 @@ void viewVMat(const VMat& vm)
             char fname[200];
             getnstr(fname, 200);
 
-				if (fname[0] == '\0')
-				  strcpy(fname, "outCol.txt");
+            if (fname[0] == '\0')
+              strcpy(fname, "outCol.txt");
 
             ofstream outFile(fname, ios::out);
 
-            Vec indexs;
-
-            if (separator == '-')
-            {
-              int start = toint(columnList.front());
-              int end = toint(columnList.back());
-              for (int colIdx = start; colIdx <= end; ++colIdx)
-                indexs.push_back(colIdx);
-            }
-            else if (separator == ',')
-            {
-              for (vsIt = columnList.begin(); vsIt != columnList.end(); ++vsIt)
-              {
-                if (pl_isnumber(*vsIt))
-                  indexs.push_back(toint(*vsIt));
-              }
-            }
-            else if (separator == 0)
-            {
-              indexs.push_back(toint(columnList.front()));
-            }
-
             for (Vec::iterator it = indexs.begin(); it != indexs.end(); ++it)
             {
-              outFile << vm->fieldName((int)*it) << '\t';
+              outFile << vm_showed->fieldName((int)*it) << '\t';
             }
             outFile << endl;
 
-            outFile << vm.columns(indexs);
+            outFile << vm_showed.columns(indexs);
             outFile.close();
 
             mvprintw(LINES-1,0,"*** Output written on: %s ***", fname);
@@ -815,7 +827,49 @@ void viewVMat(const VMat& vm)
           noecho();
         }
         break;
+      ///////////////////////////////////////////////////////////////
+      case (int)'r': case (int)'R': 
+        {
+          echo();
+          char strmsg[100];
+          sprintf(strmsg, "Enter column(s) or range (ex: 7;1-20;7,8,12) to view (enter=%d): ", curj);
+          mvprintw(LINES-1,0,strmsg);
+          clrtoeol();
 
+          move(LINES-1, (int)strlen(strmsg));
+          char c[50];
+          getnstr(c, 50);
+
+          Vec indexs;
+          char strReason[100] = {"\0"};
+          bool invalidInput = getList(c, curj, vm_showed, indexs, strReason);
+
+          if (invalidInput)
+          {
+            mvprintw(LINES-1,0,"*** Invalid input: %s ***", strReason);
+            clrtoeol();
+            refresh();
+            // wait until the user types something
+            key = getch();
+            onError = true;
+          }
+          else
+          {
+            vm_showed = vm_showed.columns(indexs);
+            if (curj>vm_showed.width())
+            {
+              curj=vm_showed.width()-1;
+              startj = curj;
+            }
+          }
+
+          noecho();
+        }
+        break;
+      ///////////////////////////////////////////////////////////////
+      case (int)'a': case (int)'A': 
+        vm_showed = vm;
+        break;
       ///////////////////////////////////////////////////////////////
       case (int)'s': case (int)'S': 
         view_strings = !view_strings;
@@ -838,11 +892,13 @@ void viewVMat(const VMat& vm)
         mvprintw(vStartHelp++,10," - page down: move down one screen");
         mvprintw(vStartHelp++,10," - home: move to the first column");
         mvprintw(vStartHelp++,10," - end: move to the last column");
+        mvprintw(vStartHelp++,10," - 'r' or 'R': show only a range or a set of columns");
+        mvprintw(vStartHelp++,10," - 'a' or 'a': show all the columns");
         mvprintw(vStartHelp++,10," - 'l' or 'L': prompt for a line number and go to that line");
         mvprintw(vStartHelp++,10," - 'c' or 'C': prompt for a column number and go to that column");
         mvprintw(vStartHelp++,10," - 's' or 'S': toggle display string fields as strings or numbers");
         mvprintw(vStartHelp++,10," - 't' or 'T': toggle transposed display mode");
-        mvprintw(vStartHelp++,10," - 'e' or 'E': export columns to file");
+        mvprintw(vStartHelp++,10," - 'e' or 'E': export a range or a set of columns to file");
         mvprintw(vStartHelp++,10," - '.'       : toggle displaying of ... for values that do not change");
         mvprintw(vStartHelp++,10," - '/'       : search for a value of the current field");
         mvprintw(vStartHelp++,10," - 'h' or 'H': display this screen");
@@ -855,6 +911,8 @@ void viewVMat(const VMat& vm)
         break;
 
       case (int)'q': case (int)'Q': 
+        mvprintw(LINES-1,0," ");
+        clrtoeol();
         break;
 
       ///////////////////////////////////////////////////////////////
