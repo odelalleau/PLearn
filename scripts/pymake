@@ -500,6 +500,12 @@ if 'icc' in optionargs:
 else:
     usingIntelCompiler = 0
 
+if 'tmp' in optionargs:
+  objspolicy = 2
+  objsdir = '/tmp/OBJS'
+  optionargs.remove('tmp')
+  
+
 # fill the list of options from the optionargs, adding necessary default options (if no option of a group choice was specified)
 def getOptions(options_choices,optionargs):
     options = []
