@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.36 2004/11/24 18:22:07 tihocan Exp $
+   * $Id: Kernel.cc,v 1.37 2005/03/03 20:21:37 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -654,10 +654,10 @@ Mat Kernel::estimateHistograms(Mat input_and_class, real minval, real maxval, in
       if(otherclass_mindist>=minval && otherclass_mindist<maxval)
         histo_min_other[int((otherclass_mindist-minval)/binwidth)]++;
     }
-  histo_mean_same /= sum(histo_mean_same);
-  histo_min_same /= sum(histo_min_same);
-  histo_mean_other /= sum(histo_mean_other);
-  histo_min_other /= sum(histo_min_other);
+  histo_mean_same /= sum(histo_mean_same, false);
+  histo_min_same /= sum(histo_min_same, false);
+  histo_mean_other /= sum(histo_mean_other, false);
+  histo_min_other /= sum(histo_min_other, false);
   return histo;
 }
 

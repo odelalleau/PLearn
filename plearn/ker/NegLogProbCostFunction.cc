@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: NegLogProbCostFunction.cc,v 1.6 2004/09/27 20:19:27 plearner Exp $
+   * $Id: NegLogProbCostFunction.cc,v 1.7 2005/03/03 20:24:06 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -121,7 +121,7 @@ real NegLogProbCostFunction::evaluate(const Vec& output, const Vec& target) cons
         prob = smoothmap(outputdata[desired_class])/outputsum;
       }
       else
-        prob = output[desired_class]/sum(output);
+        prob = output[desired_class]/sum(output, false);
     }
   }
   return -safeflog(prob);
