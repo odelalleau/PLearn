@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.h,v 1.5 2004/06/23 20:21:10 tihocan Exp $ 
+   * $Id: KernelProjection.h,v 1.6 2004/07/09 22:22:15 monperrm Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -63,8 +63,6 @@ protected:
   // * protected options *
   // *********************
 
-  Vec eigenvalues;
-  Mat eigenvectors;
   int n_comp_kept;
   int n_examples;
 
@@ -89,7 +87,14 @@ public:
   int n_comp;
   int n_comp_for_cost;
   bool normalize;
+  
+  // ************************
+  // * public learnt options *
+  // ************************
 
+  Vec eigenvalues;
+  Mat eigenvectors;
+  
   // ****************
   // * Constructors *
   // ****************
