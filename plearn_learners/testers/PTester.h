@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.h,v 1.19 2005/02/09 00:57:30 tihocan Exp $ 
+   * $Id: PTester.h,v 1.20 2005/02/09 18:21:02 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file PTester.h */
@@ -141,7 +141,7 @@ public:
   void setExperimentDirectory(const PPath& the_expdir);
   
   //! This returns the currently set expdir (see setExperimentDirectory)
-  string getExperimentDirectory() const { return expdir; }
+  PPath getExperimentDirectory() const { return expdir; }
 
 
   //! Return the statnames (potentially modified by statmask, if provided).

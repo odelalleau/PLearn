@@ -35,7 +35,7 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperCommand.h,v 1.4 2005/02/08 21:42:57 tihocan Exp $ 
+   * $Id: HyperCommand.h,v 1.5 2005/02/09 18:21:01 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file HyperCommand.h */
@@ -102,7 +102,7 @@ public:
 
   virtual void setExperimentDirectory(const PPath& the_expdir);
 
-  string getExperimentDirectory() const
+  PPath getExperimentDirectory() const
   { return expdir; }
 
   //! Executes the command, returning the resulting costvec of its optimization 

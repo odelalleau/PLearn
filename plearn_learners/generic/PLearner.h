@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.32 2005/02/08 21:42:48 tihocan Exp $
+   * $Id: PLearner.h,v 1.33 2005/02/09 18:20:12 dorionc Exp $
    ******************************************************* */
 
 
@@ -160,7 +160,7 @@ public:
   virtual void setExperimentDirectory(const PPath& the_expdir);
 
   //! This returns the currently set expdir (see setExperimentDirectory)
-  string getExperimentDirectory() const { return expdir; }
+  PPath getExperimentDirectory() const { return expdir; }
 
   //! Default returns train_set->inputsize()
   virtual int inputsize() const;
