@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PCA.cc,v 1.21 2005/03/03 23:50:14 dorionc Exp $ 
+   * $Id: PCA.cc,v 1.22 2005/03/23 17:26:31 chapados Exp $ 
    ******************************************************* */
 
 /*! \file PCA.cc */
@@ -274,6 +274,8 @@ void PCA::classical_algo( )
 
   Mat covarmat;
   computeInputMeanAndCovar(train_set, mu, covarmat);
+  if (mu.hasMissing() || covarmat.hasMissing())
+    PLERROR("PCA::classical_algo: missing values encountered in training set\n");
   if (pb)
     pb->update(1);
   
@@ -321,6 +323,8 @@ void PCA::incremental_algo()
 
     // Stores the new observation
     observation << train_set( obs );
+    if (observation.hasMissing())
+      PLERROR("PCA::incremental_algo: missing values encountered in training set\n");
       
     // This adds the contribution of the new observation
     _incremental_stats.update( observation );
