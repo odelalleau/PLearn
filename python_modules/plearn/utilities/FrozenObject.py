@@ -75,8 +75,10 @@ class FrozenObject:
         
         self.__members    = []
         self.__str_spacer = ' '
-        self._defaults    = defaults
-        members_list      = inspect.getmembers(defaults)
+
+        self._defaults = defaults
+        
+        members_list       = inspect.getmembers(defaults)
         declared_members   = []
         
         if defaults is not None:

@@ -21,6 +21,7 @@ def option_name(option):
     oname += option.dest
     return string.replace(oname, '_', '-')
 
+
 class ModeDefaults: pass
 
 class Mode(Thread, FrozenObject):

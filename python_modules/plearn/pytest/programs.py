@@ -1,5 +1,6 @@
-import os, types
+import os, string, types
 import plearn.utilities.plpath         as     plpath
+import plearn.utilities.toolkit        as     toolkit
 
 from   plearn.utilities.verbosity      import vprint
 from   plearn.utilities.FrozenObject   import FrozenObject
@@ -45,6 +46,13 @@ class Program(FrozenObject):
 class GlobalProgram(Program):
     def get_path(self):
         command_path = plpath.plcommand(self.name)
+
+        if command_path is None:
+            path = toolkit.command_output( "which %s"%self.name )[0]
+            path = string.rstrip(path, ' \n')
+            if os.path.exists(path):
+                command_path = os.path.abspath(path)
+        
         if command_path is None:
             raise PyTestUsageError(
                 "The only GlobalProgram and GlobalCompilableProgram currently "
