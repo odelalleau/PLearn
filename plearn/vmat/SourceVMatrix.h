@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrix.h,v 1.5 2004/03/23 23:08:08 morinf Exp $ 
+   * $Id: SourceVMatrix.h,v 1.6 2004/06/10 16:11:13 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -63,13 +63,18 @@ class SourceVMatrix: public RowBufferedVMatrix
   typedef RowBufferedVMatrix inherited;
 
 protected:
+
   // *********************
   // * protected options *
   // *********************
 
+  // Fields below are not options.
+
+  //! To be used in subclasses for convenience.
   Vec sourcerow;
 
 public:
+
   // ************************
   // * public build options *
   // ************************
@@ -120,7 +125,8 @@ public:
     the source will be set also for this vmatrix. */
   virtual void setMetaDataDir(const string& the_metadatadir);
 
-  virtual void getRow(int i, Vec v) const = 0;
+  //! Must be implemented in subclasses: default version returns an error.
+  virtual void getRow(int i, Vec v) const;
 
   // simply calls inherited::build() then build_() 
   virtual void build();
