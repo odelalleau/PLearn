@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Distribution.cc,v 1.4 2002/11/05 16:30:34 zouave Exp $ 
+   * $Id: Distribution.cc,v 1.5 2002/12/18 21:56:54 zouave Exp $ 
    ******************************************************* */
 
 /*! \file Distribution.cc */
@@ -171,6 +171,9 @@ double Distribution::expectation() const
 
 double Distribution::variance() const
 { PLERROR("variance not implemented for this Distribution"); return 0; }
+
+void Distribution::generate(Vec& x) const
+{ PLERROR("generate not implemented for this Distribution"); return 0; }
 
 
 

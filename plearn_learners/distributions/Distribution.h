@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Distribution.h,v 1.3 2002/10/22 05:00:19 plearner Exp $ 
+   * $Id: Distribution.h,v 1.4 2002/12/18 21:56:54 zouave Exp $ 
    ******************************************************* */
 
 /*! \file Distribution.h */
@@ -136,6 +136,9 @@ public:
 
   //! return Var[X]
   virtual double variance() const;
+
+  //! return a pseudo-random sample generated from the distribution.
+  virtual void generate(Vec& x) const;
    
 };
 
