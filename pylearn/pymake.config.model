@@ -1,0 +1,18 @@
+#!python
+
+homedir = os.environ.get('HOME')
+
+# If the PLEARNDIR environment variable is not defined, we use the default "$HOME/PLearn/"
+plearndir = os.environ.get('PLEARNDIR', os.path.join(homedir,'PLearn'))
+
+# "include" PLearn config
+plearnconfig = os.path.join(plearndir, '.pymake/config')
+plearnconfig_model = os.path.join(plearndir, 'pymake.config.model')
+
+if(mtime(plearnconfig_model) > mtime(plearnconfig)):
+    execfile(plearnconfig_model)  # model is more recent: using model
+else:
+    execfile(plearnconfig)  # personal version is more recent, use it
+
+mandatory_includedirs += ['/usr/include/python2.3']
+
