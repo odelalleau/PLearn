@@ -19,10 +19,16 @@ else:
 
 nice_value = '1'
 
-# to get more or less verbosity (currently verbose in {0,1})
-verbose = 1;
+# to get more or less verbosity (currently verbose in {1,2,3,4})
+# 1 -> get *** Running ... / ++++ Computing
+# 2 -> get Launched / Finished / Still waiting
+# 3 -> get lauched command (default)
+# 4 -> get extra information
+verbose = 3;
 
 # to get a SPC Smart Parallel Compilation, i.e. only on free machine
+# pymake -spc
+# or switch SPC=1 to always perform SPC
 SPC = 0;
 SPClistfile = plearndir+'/scripts/.machines_lisa'
 SPCresultfile = plearndir+'/.pymake/linux-i386.hosts'
@@ -167,6 +173,7 @@ options_choices = [
   [ 'double', 'float' ],
   [ 'throwerrors', 'exiterrors' ], 
   [ 'blas', 'p3blas','p4blas','athlonblas','pentiumblas', 'noblas', 'veclib', 'scs'],
+  [ 'nospc','spc']
 ]
 
 
@@ -314,6 +321,13 @@ pymakeOption( name = 'throwerrors',
 pymakeOption( name = 'exiterrors',
               description = 'PLERROR will not throw exceptions, but write the error message and exit' )
 
+pymakeOption( name = 'nospc',
+              description = 'Don''t use Smart Parallel Compilation')
+
+pymakeOption( name = 'spc',
+              description = 'Use of Smart Parallel Compilation')
+              
+              
 nprocesses_per_processor = 1
 
 # LISA hack to set the number of processes per processor on a 'machine name' basis
