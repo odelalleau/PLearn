@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.12 2004/07/08 21:30:44 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.13 2004/07/09 19:40:10 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -137,20 +137,29 @@
 #include "BatchVMatrix.h"
 #include "BootstrapVMatrix.h"
 #include "CenteredVMatrix.h"
+#include "CompactVMatrix.h"
+#include "CompressedVMatrix.h"
 #include "CumVMatrix.h"
 #include "DatedJoinVMatrix.h"
 #include "FilteredVMatrix.h"
+#include "FinancePreprocVMatrix.h"
+#include "GeneralizedOneHotVMatrix.h"
 #include "GetInputVMatrix.h"
 #include "GramVMatrix.h"
 #include "IndexedVMatrix.h"
+#include "JulianizeVMatrix.h"
 #include "KNNVMatrix.h"
 #include "LocalNeighborsDifferencesVMatrix.h"
 #include "MultiInstanceVMatrix.h"
+#include "OneHotVMatrix.h"
+#include "PairsVMatrix.h"
 #include "PrecomputedVMatrix.h"
 #include "ProcessingVMatrix.h"
 #include "RegularGridVMatrix.h"
 #include "SortRowsVMatrix.h"
+#include "SparseVMatrix.h"
 #include "SubInputVMatrix.h"
+#include "ThresholdVMatrix.h"
 #include "TransposeVMatrix.h"
 #include "VMatrixFromDistribution.h"
 
