@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.32 2004/01/13 22:38:52 yoshua Exp $
+   * $Id: TMat_maths_impl.h,v 1.33 2004/01/14 14:24:28 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -129,10 +129,10 @@ template<class T>
 T sumabs(const TVec<T>& x)
 {
   T* v = x.data();
-  T res = square(v[0]);
+  T res = (T)(fabs((real)v[0]));
   int l = x.length();
   for(int i=1; i<l; i++)
-    res += fabs(v[i]);
+    res += (T)(fabs((real)v[i]));
   return res;
 }
 
