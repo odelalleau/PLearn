@@ -17,35 +17,7 @@ from plearn.utilities.verbosity        import *
 ############################################################
 # Global variables
 
-## execfile(plpath.pytest_variables)
-## class __from_file:
-##     def __init__(self):
-##         self.disabled    = DISABLED
-##         self.branches    = BRANCHES
-##         self.branches_pl = BRANCHES_PL
-##         self.modified    = False
-## globalvars.from_file = __from_file()
-
-globalvars.test_id                        = 0 
 globalvars.stats                          = {}   # Will contain stats about executed tests
-## globalvars.branches                       = {}   # Will map all test suites to their plearn main file
-## globalvars.pure_branches                  = {}
-globalvars.pytest_config                  = "pytest.config"
-
-globalvars.objs                           = "OBJS"
-globalvars.cvs_directory                  = "CVS"
-globalvars.results_path                   = "Results"
-globalvars.results_on_run                 = "ResultsOnRun"
-globalvars.forbidden_directories          = [ globalvars.objs,
-                                              "BACKUP",
-                                              globalvars.cvs_directory,
-                                              ".pymake", "Scripts"     ]
-
-print "*** WARNING: The use of forbidden_flag (and therefore the import of IDiff in pytest.__init__ is not clean ***" 
-globalvars.resolving_paths = { plpath.home:"$HOME",
-##                               plpath.pytest_variables:"$PYTEST_VARIABLES",
-                               globalvars.results_path:"$RESULTS", globalvars.results_on_run:"$RESULTS",
-                               forbidden_flag:globalvars.forbidden_directories+[globalvars.results_path, globalvars.results_on_run] }
 
 globalvars.dispatch                       = None
 globalvars.options                        = None
@@ -61,45 +33,13 @@ globalvars.modes_with_config = {
     }
 
 globalvars.management_modes = {
-    'add':AddTest,
+    'add': add_test, ##AddTest,
     'disable' : disable_test,
     'enable' : enable_test
     }
 
 #####################
 ## Functions are listed by alphabetical order
-
-def build_tests(none, dirc, dirlist):
-    remove_forbidden_dirs(dirlist, globalvars.forbidden_directories+[globalvars.results_path, globalvars.results_on_run])
-
-##     raw_input(("dirc:", dirc))
-##     raw_input(("dirlist:", dirlist))
-    os.chdir(dirc)
-
-    management = None
-    try:
-        management = globalvars.management_modes[globalvars.current_mode.name]
-    except KeyError:
-        pass
-    else:
-        ## globalvars.test_id += 1
-        ## globalvars.dispatch.add_task( management(globalvars.dispatch, globalvars.test_id, os.getcwd(), None) )
-        management(os.getcwd(), globalvars.options.test_name)
-        return
-
-    if globalvars.pytest_config in dirlist:
-        dis_name = plpath.path_in_branches(os.getcwd())
-
-        raw_input(dis_name)
-        raw_input("Verify disabling!!!")
-        ##if dis_name in globalvars.from_file.disabled:
-        if False:
-            vprint('+++ %s is disabled.\n'%dis_name, 1)
-        else:
-            execfile(globalvars.pytest_config)
-    else:
-        vprint("%s SKIPPED: no config file (See add and restore modes)"
-               % relative_path(dirc), 2)
 
 def check_directory(dirc):
     absdir = os.path.abspath(dirc)
@@ -146,6 +86,8 @@ def compileCurrentDirectory(options = ''):
             
 
 def compilePLL():
+    raise DeprecationWarning
+
     raw_input(("compilePLL:bid, dirpath, dirlist"))
     sys.exit()
     
@@ -184,10 +126,11 @@ def compilePLL():
         return
 
 def compilePLLSubRoutine(options_and_dicoOfErrors, path, dirList):
+    raise DeprecationWarning
     remove_forbidden_dirs(dirlist,
-                          globalvars.forbidden_directories+["TestSuite",
-                                                            globalvars.results_path,
-                                                            globalvars.results_on_run])
+                          forbidden_directories+["TestSuite",
+                                                 globalvars.results_path,
+                                                 globalvars.results_on_run])
     path = os.path.abspath(path)
     os.chdir(path)
     compileCurrentDirectory(options_and_dicoOfErrors[0])
@@ -278,34 +221,15 @@ def dispatch_targets():
 
     for target in globalvars.targets:
         if globalvars.options.recursive:
-            os.path.walk(target, build_tests, None)
+            os.path.walk(target, build_tests, globalvars.current_mode.name)
         else:
-            build_tests(None, target, os.listdir(target))
+            build_tests(globalvars.current_mode.name, target, os.listdir(target))
 
     globalvars.dispatch.run()
     
 def finalName(dir):
     (foo, fName) = plpath.splitprev(dir)
     return fName
-
-## def initialize_branches():
-##     """Initializes the branches dictionnary mapping all test suites to their .cc file"""
-##     for (key, default) in BRANCHES.items():
-##         default = os.path.join( plpath.home, default )
-##         branch = os.getenv(key, default)
-##         branch_ts = os.path.join(branch, "test_suite")
-
-##         prev, pure_branch = plpath.splitprev(branch)
-##         pure_branch = os.path.join(pure_branch, "test_suite")        
-
-##         if os.path.exists(branch_ts):
-##             globalvars.branches[branch_ts] = os.path.join(branch, BRANCHES_PL[key])
-##             globalvars.pure_branches[branch_ts] = pure_branch 
-
-##         ## This is for intelligent diff matters
-##         globalvars.resolving_paths[branch]      = '$'+key
-##         globalvars.resolving_paths[branch_ts]   = '$'+key+'_TS'
-##         globalvars.resolving_paths[pure_branch] = '$'+key+'_TS'    
 
 def isccfile(filepath):
     (base,ext) = os.path.splitext(filepath)
@@ -322,13 +246,6 @@ def lastUserWhoDidCommit(fpath):
         author = a
     
     return author
-
-## def lock():
-##     if os.path.exists(globalvars.results_path):
-##         # os.system("chmod u=rX -R " + globalvars.results_path)
-##         # (by Pascal: commented out because locking result directories
-##         # prevents cvs from updating their content...
-##         pass
 
 def mail():
     # Opening the senmail process
@@ -385,7 +302,7 @@ def printErrors(dico):
         vprint(formattedKey + " -> " + dico[key], "Q")
 
 def pytest_version():
-    version_str = '$Id: pytest,v 1.16 2004/10/19 01:34:46 dorionc Exp $'
+    version_str = '$Id: pytest,v 1.17 2004/10/20 22:46:46 dorionc Exp $'
 
     bflag = "pytest,v"
     the_year = time.localtime()[0]
@@ -413,16 +330,6 @@ def remove_subdirs(absdirs):
     for r in to_remove:
         absdirs.remove(r)
     return absdirs
-
-## def update_pytest_variables():
-##     variables = open(plpath.pytest_variables, 'w')
-##     variables.write('%s = %s\n' % ('DISABLED',
-##                                    repr(globalvars.from_file.disabled)))
-##     variables.write('%s = %s\n' % ('BRANCHES',
-##                                    repr(globalvars.from_file.branches)))
-##     variables.write('%s = %s\n' % ('BRANCHES_PL',
-##                                    repr(globalvars.from_file.branches_pl)))
-##     variables.close()
 
 ###################################################################################
 ## MAIN PROGRAM
@@ -453,8 +360,8 @@ globalvars.add_options = add_options
 
 parser.add_mode("add", dispatch_targets,
                 option_groups = [add_options],
-                help = short_doc(AddTest),
-                description = doc(AddTest) )
+                help = short_doc(add_test),
+                description = doc(add_test) )
 
 ## parser.add_mode("disable", dispatch_targets,
 ##                 help = short_doc(DisableTest),
