@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.cc,v 1.13 2005/02/16 21:35:07 tihocan Exp $ 
+   * $Id: PPath.cc,v 1.14 2005/02/16 21:55:38 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -230,8 +230,13 @@ void PPath::ensureMappings()
     while (ppath_config) {
       ppath_config >> next_metaprotocol >> next_metapath;
       if (next_metaprotocol.empty())
-        // Nothing left to read.
-        break;
+        if (ppath_config)
+          PLERROR("In PPath::ensureMappings - Error while parsing PPath config file (%s): read "
+                  "a blank line before reaching the end of the file",
+                   config_file_path.absolute().c_str());
+        else
+          // Nothing left to read.
+          break;
       // Make sure we managed to read the metapath associated with the metaprotocol.
       if (next_metapath.empty())
         PLERROR("In PPath::ensureMappings - Error in PPath config file (%s): could not read the "
