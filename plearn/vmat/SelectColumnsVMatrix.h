@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectColumnsVMatrix.h,v 1.5 2004/03/23 23:08:08 morinf Exp $
+   * $Id: SelectColumnsVMatrix.h,v 1.6 2004/04/05 23:03:28 morinf Exp $
    ******************************************************* */
 
 
@@ -77,7 +77,6 @@ public:
   PLEARN_DECLARE_OBJECT(SelectColumnsVMatrix);
 
   static void declareOptions(OptionList &ol);
-  static string help();
   virtual void build();
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
@@ -93,10 +92,11 @@ public:
   }
 
 private:
-
   void build_();
 
 };
+
+DECLARE_OBJECT_PTR(SelectColumnsVMatrix);
 
 } // end of namespcae PLearn
 #endif

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectColumnsVMatrix.cc,v 1.4 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: SelectColumnsVMatrix.cc,v 1.5 2004/04/05 23:03:28 morinf Exp $
    ******************************************************* */
 
 #include "SelectColumnsVMatrix.h"
@@ -46,7 +46,10 @@ using namespace std;
 
 /** SelectColumnsVMatrix **/
 
-PLEARN_IMPLEMENT_OBJECT(SelectColumnsVMatrix, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(SelectColumnsVMatrix, "ONE LINE DESCR",
+                        "    VMat class that selects variables from a sub-distribution\n"
+                        "according to given vector of indices.\n");
+
 
 SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_distr, TVec<int> the_indices)
   : VMatrix(the_distr->length(), the_indices.length()),
@@ -114,24 +117,15 @@ void SelectColumnsVMatrix::build()
 ////////////
 void SelectColumnsVMatrix::build_()
 {
-  length_ = distr->length();
   width_ = indices.length();
-  // Copy the appropriate VMFields
-  fieldinfos.resize(width());
-  if (distr->getFieldInfos().size() > 0)
-    for (int i=0; i<width(); ++i)
-      fieldinfos[i] = distr->getFieldInfos()[indices[i]];
-}
-
-//////////
-// help //
-//////////
-string SelectColumnsVMatrix::help()
-{
-  return
-    "    VMat class that selects variables from a sub-distribution\n\
-    according to given vector of indices.\n"
-    + optionHelp();
+  if (distr) {
+    length_ = distr->length();
+    // Copy the appropriate VMFields
+    fieldinfos.resize(width());
+    if (distr->getFieldInfos().size() > 0)
+      for (int i=0; i<width(); ++i)
+        fieldinfos[i] = distr->getFieldInfos()[indices[i]];
+  }
 }
 
 } // end of namespcae PLearn
