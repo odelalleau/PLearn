@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.cc,v 1.5 2003/04/25 18:43:10 tihocan Exp $
+   * $Id: VarArray.cc,v 1.6 2003/04/25 21:00:21 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -834,7 +834,7 @@ bool VarArray::update(Vec step_sizes, Vec direction)
     if (!array[i].isNull()) {
       hit = hit ||
         array[i]->update(
-            step_sizes[i], 
+            step_sizes.subVec(pos, array[i]->nelems()), 
             direction.subVec(pos, array[i]->nelems()));
     }
   }
