@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.20 2003/11/27 15:04:35 lheureup Exp $ 
+   * $Id: PTester.cc,v 1.21 2004/01/20 19:15:55 thibodea Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -330,6 +330,8 @@ Vec PTester::perform(bool call_forget)
             test_costs = new FileVMatrix(splitdir+setname+"_costs.pmat",0,testcostsize);
       
           test_stats->forget();
+          if (testset->length()==0)
+            PLERROR("PTester:: test set % is of length 0!",setname.c_str());
           learner->test(testset, test_stats, test_outputs, test_costs);      
           test_stats->finalize();
           if(splitdir != "" && save_stat_collectors)
