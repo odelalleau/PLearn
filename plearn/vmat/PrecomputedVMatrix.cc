@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrecomputedVMatrix.cc,v 1.10 2004/09/14 16:04:39 chrish42 Exp $ 
+   * $Id: PrecomputedVMatrix.cc,v 1.11 2005/01/25 03:15:46 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -44,6 +44,7 @@
 #include "PrecomputedVMatrix.h"
 #include "DiskVMatrix.h"
 #include "FileVMatrix.h"
+#include <plearn/io/PPath.h>
 
 namespace PLearn {
 using namespace std;
@@ -85,55 +86,61 @@ void PrecomputedVMatrix::declareOptions(OptionList& ol)
   inherited::declareOptions(ol);
 }
 
-void PrecomputedVMatrix::setMetaDataDir(const string& the_metadatadir)
+void PrecomputedVMatrix::setMetaDataDir(const PPath& the_metadatadir)
 {
   inherited::setMetaDataDir(the_metadatadir);
-  if(hasMetaDataDir()) // don't do anything if the meta-data-dir is not yet set.
+  if ( hasMetaDataDir() ) // don't do anything if the meta-data-dir is not yet set.
     usePrecomputed();
 }
 
 void PrecomputedVMatrix::usePrecomputed()
 {
-  string mdir = append_slash(getMetaDataDir());
-  if(precomp_type=="dmat")
+  PPath mdir = getMetaDataDir();
+  
+  if ( precomp_type == "dmat" )
+  {
+    PPath dmatdir  = mdir / "precomp.dmat";
+    bool recompute = true;
+    
+    if ( isdir(dmatdir) )
     {
-      string dmatdir = mdir + "precomp.dmat";
-      bool recompute = true;
-      if(isdir(dmatdir))
-        {
-          precomp_source = new DiskVMatrix(dmatdir);
-          if(precomp_source->getMtime() >= source->getMtime())
-            recompute = false;
-        }
-      if(recompute)
-        {
-          force_rmdir(dmatdir);
-          source->saveDMAT(dmatdir);
-          precomp_source = new DiskVMatrix(dmatdir);
-        }
-      length_ = precomp_source->length();
+      precomp_source = new DiskVMatrix(dmatdir);
+      if(precomp_source->getMtime() >= source->getMtime())
+        recompute = false;
     }
-  else if(precomp_type=="pmat")
+
+    if(recompute)
     {
-      string pmatfile = mdir + "precomp.pmat";
-      bool recompute = true;
-      if(isfile(pmatfile))
-        {
-          precomp_source = new FileVMatrix(pmatfile);
-          if(precomp_source->getMtime() >= source->getMtime())
-            recompute = false;
-        }
-      if(recompute)
-        {
-          rm(pmatfile);
-          source->savePMAT(pmatfile);
-          precomp_source = new FileVMatrix(pmatfile);
-        }
-      length_ = precomp_source->length();
+      force_rmdir(dmatdir);
+      source->saveDMAT(dmatdir);
+      precomp_source = new DiskVMatrix(dmatdir);
     }
+    length_ = precomp_source->length();
+  }
+
+  else if ( precomp_type == "pmat" )
+  {
+    PPath pmatfile = mdir / "precomp.pmat";
+    bool recompute = true;
+
+    if ( isfile(pmatfile) )
+    {
+      precomp_source = new FileVMatrix(pmatfile);
+      if(precomp_source->getMtime() >= source->getMtime())
+        recompute = false;
+    }
+
+    if(recompute)
+    {
+      rm(pmatfile);
+      source->savePMAT(pmatfile);
+      precomp_source = new FileVMatrix(pmatfile);
+    }
+    length_ = precomp_source->length();
+  }
+  
   else
     PLERROR("Invalid precomp_type=%s. Must be one of: dmat, pmat.",precomp_type.c_str());
-  
 }
 
 void PrecomputedVMatrix::build_()

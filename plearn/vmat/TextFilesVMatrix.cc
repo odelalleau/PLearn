@@ -31,7 +31,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* *******************************************************      
-   * $Id: TextFilesVMatrix.cc,v 1.3 2005/01/12 19:43:16 plearner Exp $ 
+   * $Id: TextFilesVMatrix.cc,v 1.4 2005/01/25 03:15:47 dorionc Exp $ 
    ******************************************************* */
 
 // Author: Pascal Vincent
@@ -39,6 +39,7 @@
 /*! \file TextFilesVMatrix.cc */
 #include <plearn/base/PDate.h>
 #include <plearn/base/ProgressBar.h>
+#include <plearn/base/stringutils.h>
 #include <plearn/io/load_and_save.h>
 #include "TextFilesVMatrix.h"
 
@@ -87,8 +88,8 @@ void TextFilesVMatrix::buildIdx()
   if(idxfile)
     fclose(idxfile);
 
-  idxfile = fopen((getMetaDataDir()+"txtmat.idx").c_str(),"wb");
-  FILE* logfile = fopen((getMetaDataDir()+"txtmat.idx.log").c_str(),"a");
+  idxfile = fopen(( getMetaDataDir()/"txtmat.idx").c_str(),"wb");
+  FILE* logfile = fopen((getMetaDataDir()/"txtmat.idx.log").c_str(),"a");
 
 
   // write endianness
@@ -188,8 +189,8 @@ void TextFilesVMatrix::build_()
   mapfiles.fill(0);
 
   setMetaDataDir(metadatapath);
-  string metadir = getMetaDataDir();
-  string idxfname = metadir+"txtmat.idx";
+  PPath metadir = getMetaDataDir();
+  PPath idxfname = metadir/"txtmat.idx";
 
   setColumnNamesAndWidth();
 
@@ -346,7 +347,7 @@ void TextFilesVMatrix::generateMapCounts()
   for(int k=0; k<n; k++)
     {
       if(!counts[k].empty())
-        PLearn::save(getMetaDataDir()+"counts/"+fieldspec[k].first+".count",counts[k]);
+        PLearn::save( getMetaDataDir() / "counts" / fieldspec[k].first+".count", counts[k] );
     }
   
 }

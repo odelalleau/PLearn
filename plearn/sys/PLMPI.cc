@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLMPI.cc,v 1.5 2005/01/07 17:58:50 chrish42 Exp $
+   * $Id: PLMPI.cc,v 1.6 2005/01/25 03:15:35 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -71,6 +71,8 @@ int PLMPI::tag = 2909;
 
 void PLMPI::init(int* argc, char*** argv)
   {
+#ifndef WIN32
+    
 #if STREAMBUFVER == 0
     mycout(&cout);//.rdbuf(cout.rdbuf());
     mycerr(&cerr);//.rdbuf(cerr.rdbuf());
@@ -91,6 +93,8 @@ void PLMPI::init(int* argc, char*** argv)
         cin.rdbuf(nullin.rdbuf());
       }
 #endif
+
+#endif // WIN32
   }
 
 void PLMPI::finalize()

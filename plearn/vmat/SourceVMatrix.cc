@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrix.cc,v 1.16 2004/11/26 14:48:49 tihocan Exp $ 
+   * $Id: SourceVMatrix.cc,v 1.17 2005/01/25 03:15:47 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -63,26 +63,29 @@ PLEARN_IMPLEMENT_OBJECT(SourceVMatrix,
     ""
 );
 
-void SourceVMatrix::setMetaDataDir(const string& the_metadatadir)
+void SourceVMatrix::setMetaDataDir(const PPath& the_metadatadir)
 {
   inherited::setMetaDataDir(the_metadatadir);
+  
   if(!source->hasMetaDataDir())
-    source->setMetaDataDir(the_metadatadir+slash+"Source"+slash);
+    source->setMetaDataDir(the_metadatadir/"Source");
 
   // Set mapping and info files from source if not set
   if(hasFieldInfos())
+  {
+    for(int j=0; j<width_; j++)
     {
-      for(int j=0; j<width_; j++)
-        {
-          string fnam = fieldName(j);
-          if(!file_exists(getSFIFFilename(fnam,".smap")) && file_exists(source->getSFIFFilename(fnam,".smap")))            
-            setSFIFFilename(fnam, ".smap", source->getSFIFFilename(fnam,".smap"));
-          if(!file_exists(getSFIFFilename(fnam,".notes")) && file_exists(source->getSFIFFilename(fnam,".notes")))            
-            setSFIFFilename(fnam, ".notes", source->getSFIFFilename(fnam,".notes"));
-          if(!file_exists(getSFIFFilename(fnam,".binning")) && file_exists(source->getSFIFFilename(fnam,".binning")))            
-            setSFIFFilename(fnam, ".binning", source->getSFIFFilename(fnam,".binning"));
-        }
+      string fnam = fieldName(j);
+      if(!file_exists(getSFIFFilename(fnam,".smap")) && file_exists(source->getSFIFFilename(fnam,".smap")))            
+        setSFIFFilename(fnam, ".smap", source->getSFIFFilename(fnam,".smap"));
+
+      if(!file_exists(getSFIFFilename(fnam,".notes")) && file_exists(source->getSFIFFilename(fnam,".notes")))            
+        setSFIFFilename(fnam, ".notes", source->getSFIFFilename(fnam,".notes"));
+
+      if(!file_exists(getSFIFFilename(fnam,".binning")) && file_exists(source->getSFIFFilename(fnam,".binning")))            
+        setSFIFFilename(fnam, ".binning", source->getSFIFFilename(fnam,".binning"));
     }
+  }
 }
 
 void SourceVMatrix::declareOptions(OptionList& ol)

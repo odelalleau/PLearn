@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.h,v 1.2 2005/01/18 17:09:08 dorionc Exp $ 
+   * $Id: PPath.h,v 1.3 2005/01/25 03:15:23 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent, Christian Dorion, Nicolas Chapados
@@ -87,18 +87,18 @@ metaprocol. For instance,
   HOME:foo/bar
 
 maps to /home/dorionc/foo/bar for me, while it could map to
-/u/bengioy/foo/bar for Yoshua and to C:\\foo\bar for some Windows
+/u/bengioy/foo/bar for Yoshua and to R:\\foo\bar for some Windows
 user. Note that the canonical form of a path ALWAYS USES slash chars ('/')
 while the absolute() representation uses the appropriate of slash ('/') or
-backslash ('\').
+backslash ('\'). Hence, you should never care for windows' ugly '\' and always use
+slash char '/' (this pretty much deprecates the usage of stringutils' slash
+slash_char global variables):
 
-  Posix Example:
-     // Under posix (e.g. linux) nothing prevents a file path from
-     // containing a '\'
-     PPath('./foo//ba\r') == 'foo/ba\r'
+  // Under DOS the following is true.
+  PPath("C:/foo/bar") == "C:\\foo\bar" 
 
 Also note that . and .. directories are elegantly resolved by PPath so that
-/home/dorion/./foo/bar and /home/dorion/foo/bar resolve to the same
+/home/dorionc/./foo/bar and /home/dorionc/foo/bar resolve to the same
 representation (HOME:foo/bar).
 
   Examples:
@@ -121,9 +121,9 @@ What more?
 
 Among other useful methods defined by PPath, the operator/(const PPath&) is
 probably the most useful. It's usage will get your code rid of the
-inelegant 'append_slash'
+stringutils' inelegant 'append_slash'
 
-  Examples:
+  Examples:  
       // All the following asserts are true.
       PPath('')                      == ''                                             
       
@@ -133,6 +133,16 @@ inelegant 'append_slash'
       
       PPath('foo/bar/') / 'file.cc'  == 'foo/bar/file.cc'          
 
+      // And note that given those...
+      PPath foo = "foo", bar = "bar/";
+
+      // ... both the following prints "foo/bar/toto".
+      // One must admit the second looks nicer ;)
+      cout << append_slash( append_slash( append_slash(foo)+bar ) ) + "toto" << endl;
+      cout << foo / bar / "toto" << endl;
+      
+      
+      
 Finally, note that PPath also provide some useful static methods like
 PPath::home, PPath::getenv (with a default value!) and PPath::getcwd.
 */

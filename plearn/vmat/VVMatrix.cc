@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.cc,v 1.27 2004/09/14 16:04:40 chrish42 Exp $
+   * $Id: VVMatrix.cc,v 1.28 2005/01/25 03:15:47 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -364,12 +364,12 @@ VMat VVMatrix::createPreproVMat(const string & filename)
   if( VMatLanguage::output_preproc )
     cerr<<"DEBUG is on (remove <DEBUG> in "+filename+" to turn it off)"<<endl;
 
-  string meta_data_dir=remove_trailing_slash(filename)+".metadata";
+  PPath meta_data_dir = remove_trailing_slash(filename)+".metadata";
   force_mkdir(meta_data_dir);
   time_t date_of_code = getDateOfVMat(filename);
 
   // remove pollution : all stuff that has possibly been interrupted during computation
-  rm (meta_data_dir+slash+"incomplete.*");
+  rm ( meta_data_dir / "incomplete.*" );
 
   bool sizes_spec = false;
   int inputsize = -1;
@@ -392,28 +392,28 @@ VMat VVMatrix::createPreproVMat(const string & filename)
       weightsize = toint(sizes[2]);
     }
 
-  if(isfile(meta_data_dir+slash+"precomputed.pmat"))
+  if(isfile(meta_data_dir / "precomputed.pmat"))
     {
       // Precomputed version exist in pmat format.
       // If it seems old, we display a warning (one may still want to use it
       // if he knows the changes made to the vmat code do not alter the data).
-      if(mtime(meta_data_dir+slash+"precomputed.pmat") < date_of_code) {
+      if(mtime(meta_data_dir / "precomputed.pmat") < date_of_code) {
         PLWARNING("In VVMatrix::createPreproVMat - The precomputed data (in %s) is older than current code, you may want to recompute again", meta_data_dir.c_str());
       }
-      source = new FileVMatrix(meta_data_dir+slash+"precomputed.pmat");
+      source = new FileVMatrix(meta_data_dir / "precomputed.pmat");
       source->setMetaDataDir(meta_data_dir);
       source->setMtime(date_of_code);
       source->defineSizes(inputsize, targetsize, weightsize);
       return source;
     }
 
-  if(pathexists(meta_data_dir+slash+"precomputed.dmat"+slash))
+  if( pathexists(meta_data_dir / "precomputed.dmat") )
     {
       // precomputed version exist in DiskVMatrix format,
       // so we use it *if it is up to date*
-      if(mtime(meta_data_dir+slash+"precomputed.dmat"+slash+"indexfile") > date_of_code)
+      if ( mtime(meta_data_dir/"precomputed.dmat/indexfile") > date_of_code )
         {
-          source = new DiskVMatrix(meta_data_dir+slash+"precomputed.dmat"+slash);
+          source = new DiskVMatrix(meta_data_dir/"precomputed.dmat");
           source->setMetaDataDir(meta_data_dir);
           source->setMtime(date_of_code);
           source->defineSizes(inputsize, targetsize, weightsize);
@@ -426,11 +426,11 @@ VMat VVMatrix::createPreproVMat(const string & filename)
 
   // if true, index file lacks or is out of date
   bool must_regen_index = index_section &&  
-    (!isfile(meta_data_dir+slash+"source.indexes") || date_of_code > mtime(meta_data_dir+slash+"source.indexes"));
+    (!isfile(meta_data_dir/"source.indexes") || date_of_code > mtime(meta_data_dir/"source.indexes"));
 
   // erase obsolete source.index if necessary
-  if(isfile(meta_data_dir+slash+"source.indexes") && !index_section)
-    rm (meta_data_dir+slash+"source.indexes");
+  if(isfile(meta_data_dir/"source.indexes") && !index_section)
+    rm (meta_data_dir/"source.indexes");
 
   if(idx_source!=string::npos)
     {
@@ -531,8 +531,8 @@ VMat VVMatrix::createPreproVMat(const string & filename)
     }
 
   // if source.index exists at this point, we need to apply it
-  if(isfile(meta_data_dir+slash+"source.indexes"))
-    source = new SelectRowsFileIndexVMatrix(source,meta_data_dir+slash+"source.indexes");
+  if(isfile(meta_data_dir/"source.indexes"))
+    source = new SelectRowsFileIndexVMatrix(source,meta_data_dir/"source.indexes");
 
   // next lines handle precomputation of matrix
   if(idx_precompute!=string::npos)
@@ -544,12 +544,12 @@ VMat VVMatrix::createPreproVMat(const string & filename)
       precomp=removeblanks(in.substr(idx_precompute,cidx_precompute-idx_precompute));
       if(precomp ==  "dmat")
         {
-          cout<<"Rendering DMAT : "<<meta_data_dir+slash+"precomputed.dmat"+slash<<endl;
-          source->saveDMAT(meta_data_dir+slash+"incomplete.precomputed.dmat"+slash);
+          cout << "Rendering DMAT : " << meta_data_dir/"precomputed.dmat" << endl;
+          source->saveDMAT(meta_data_dir/"incomplete.precomputed.dmat");
           int cnt=0;
-          if (isdir(meta_data_dir+slash+"precomputed.dmat"+slash)) {
+          if (isdir(meta_data_dir/"precomputed.dmat")) {
             while(cnt++ < 5 &&
-                  !force_rmdir(meta_data_dir+slash+"precomputed.dmat"+slash))
+                  !force_rmdir(meta_data_dir/"precomputed.dmat"))
             {
               cerr<<"Could not rm -rf '"+meta_data_dir+
                 slash+"precomputed.dmat/'. Maybe 'Stale NFS file handle' curse again. Retrying in 2 sec."
@@ -558,27 +558,29 @@ VMat VVMatrix::createPreproVMat(const string & filename)
             }
           }
 
-          mvforce(meta_data_dir+slash+"incomplete.precomputed.dmat"+slash+" "+meta_data_dir+slash+"precomputed.dmat"+slash);
-          if(pathexists(meta_data_dir+slash+"incomplete.precomputed.dmat.metadata"+slash))
+          mvforce(meta_data_dir/"incomplete.precomputed.dmat " + meta_data_dir/"precomputed.dmat");
+          if(pathexists(meta_data_dir/"incomplete.precomputed.dmat.metadata"))
           {
-            rm(meta_data_dir+slash+"precomputed.dmat.metadata"+slash);
-            mvforce(meta_data_dir+slash+"incomplete.precomputed.dmat.metadata"+slash+" "+meta_data_dir+slash+"precomputed.dmat.metadata"+slash);
+            rm(meta_data_dir/"precomputed.dmat.metadata");
+            mvforce( meta_data_dir/"incomplete.precomputed.dmat.metadata " +
+                     meta_data_dir/"precomputed.dmat.metadata");
           }
-          source=new DiskVMatrix(meta_data_dir+slash+"precomputed.dmat"+slash);
+          source=new DiskVMatrix(meta_data_dir/"precomputed.dmat");
         }
       else if(precomp ==  "pmat")
         {
           cout<<"Rendering PMAT : "<<meta_data_dir+slash+"precomputed.pmat"<<endl;
           source->savePMAT(meta_data_dir+slash+"incomplete.precomputed.pmat");
-          mvforce(meta_data_dir+slash+"incomplete.precomputed.pmat "+meta_data_dir+slash+"precomputed.pmat");
-// Seems to be useless now (TODO: remove ?)
-//          mvforce(meta_data_dir+slash+"incomplete.precomputed.pmat.fieldnames "+meta_data_dir+slash+"precomputed.pmat.fieldnames");
-          if(pathexists(meta_data_dir+slash+"incomplete.precomputed.pmat.metadata"+slash))
-            mvforce(meta_data_dir+slash+"incomplete.precomputed.pmat.metadata"+slash+" "+meta_data_dir+slash+"precomputed.pmat.metadata"+slash);
+          mvforce( meta_data_dir/"incomplete.precomputed.pmat " +
+                   meta_data_dir/"precomputed.pmat");
+          if(pathexists(meta_data_dir/"incomplete.precomputed.pmat.metadata"))
+            mvforce( meta_data_dir/"incomplete.precomputed.pmat.metadata " +
+                     meta_data_dir/"precomputed.pmat.metadata" );
+          
           // Save the string mappings.
           source->setMetaDataDir(meta_data_dir);
           source->saveAllStringMappings();
-          source = new FileVMatrix(meta_data_dir+slash+"precomputed.pmat");
+          source = new FileVMatrix(meta_data_dir/"precomputed.pmat");
           source->setMetaDataDir(meta_data_dir);
           source->setMtime(date_of_code);
           source->defineSizes(inputsize, targetsize, weightsize);
@@ -606,8 +608,8 @@ void VVMatrix::build()
 void VVMatrix::build_()
 {
   if (the_filename != "") {
-    setMetaDataDir(makeExplicitPath(the_filename+".metadata"));
-    force_mkdir(getMetaDataDir());
+    setMetaDataDir( makeExplicitPath(the_filename+".metadata") );
+    force_mkdir( getMetaDataDir() );
 
     code = readFileAndMacroProcess(the_filename);
     if(removeblanks(code)[0]=='<') // old xml-like format 

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: DiskVMatrix.cc,v 1.19 2004/09/27 20:19:27 plearner Exp $
+   * $Id: DiskVMatrix.cc,v 1.20 2005/01/25 03:15:46 dorionc Exp $
    ******************************************************* */
 
 #include <errno.h>
@@ -128,14 +128,14 @@ void DiskVMatrix::build_()
     if(!isdir(dirname))
       PLERROR("In DiskVMatrix constructor, directory %s could not be found",dirname.c_str());
     setMetaDataDir(dirname + ".metadata"); 
-    setMtime(mtime(append_slash(dirname)+"indexfile"));
+    setMtime( mtime( dirname/"indexfile" ) );
     string omode;
     if(writable)
       omode = "r+b";
     else // read-only
       omode = "rb";
 
-    string indexfname = dirname+slash+"indexfile";
+    string indexfname = dirname/"indexfile";
     indexf = fopen(indexfname.c_str(), omode.c_str());
     if(!indexf)
       PLERROR("In DiskVMatrix constructor, could not open file %s in specified mode", indexfname.c_str());
@@ -170,14 +170,14 @@ void DiskVMatrix::build_()
         endianswap(&width_);
       }
     int k=0;
-    string fname = dirname+slash+tostring(k)+".data";
+    string fname = dirname/tostring(k)+".data";
     while(isfile(fname))
     {
       FILE* f = fopen(fname.c_str(), omode.c_str());
       if(!f)
         PLERROR("In DiskVMatrix constructor, could not open file %s in specified mode", fname.c_str());
       dataf.append(f);
-      fname = dirname+slash+tostring(++k)+".data";
+      fname = dirname/(tostring(++k)+".data");
     }
     // Stuff related to RowBufferedVMatrix, for consistency
     current_row_index = -1;
@@ -198,14 +198,14 @@ void DiskVMatrix::build_()
     if(isdir(dirname))
       PLERROR("In DiskVMatrix constructor (with specified width), directory %s already exists",dirname.c_str());
     setMetaDataDir(dirname + ".metadata");
-    setMtime(mtime(append_slash(dirname)+"indexfile"));
+    setMtime(mtime( dirname/"indexfile" ));
 
     if(isfile(dirname)) // patch for running mkstemp (TmpFilenames)
       unlink(dirname.c_str());
     if(!force_mkdir(dirname)) // force directory creation 
       PLERROR("In DiskVMatrix constructor (with specified width), could not create directory %s  Error was: %s",dirname.c_str(), strerror(errno));
 
-    string indexfname = dirname + slash + "indexfile";
+    string indexfname = dirname/"indexfile";
     indexf = fopen(indexfname.c_str(),"w+b");
 
     char header[4];
@@ -217,7 +217,7 @@ void DiskVMatrix::build_()
     fwrite((char*)&length_,sizeof(int),1,indexf);
     fwrite((char*)&width_,sizeof(int),1,indexf);
   
-    string fname = dirname + slash + "0.data";
+    string fname = dirname/"0.data";
     FILE* f = fopen(fname.c_str(), "w+b");
     dataf.append(f);
   }
@@ -276,7 +276,7 @@ void DiskVMatrix::appendRow(Vec v)
   {
     fflush(f);
     filenum++;
-    string filename = dirname + slash + tostring(filenum) + ".data";
+    string filename = dirname / (tostring(filenum) + ".data");
     f = fopen(filename.c_str(), "w+b");
     dataf.append(f);
     position = 0;

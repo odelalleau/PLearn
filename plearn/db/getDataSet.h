@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.h,v 1.3 2004/07/21 16:30:51 chrish42 Exp $
+   * $Id: getDataSet.h,v 1.4 2005/01/25 03:15:21 dorionc Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -66,7 +66,9 @@ time_t getDataSetDate(const string& datasetstring, const string& alias="");
   alias is a short name that can be used as part of a filename containing results related to the dataset
   ( it's set using the VMat's setAlias method, and code that wishes to use it can acces it by calling getAlias)
  */
+VMat getDataSet(const char*   datasetstring, const string& alias="");
 VMat getDataSet(const string& datasetstring, const string& alias="");
+VMat getDataSet(const PPath&  datasetpath,   const string& alias="");
 
 //! Looks for 'dataset.aliases' file in specified directory and its parent directories;
 //! Returns the directory containing dataset.aliases (returned string will be terminated 

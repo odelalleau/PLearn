@@ -25,7 +25,7 @@
 // PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 // 
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: AutoVMatrix.h,v 1.9 2004/09/14 16:04:38 chrish42 Exp $
+   * $Id: AutoVMatrix.h,v 1.10 2005/01/25 03:15:46 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -67,13 +67,13 @@ public:
   // * public build options *
   // ************************
 
-  string specification; // the specification of the vmat (typically a file or directory path)
+  PPath specification; // the specification of the vmat (typically a file or directory path)
 
   // ****************
   // * Constructors *
   // ****************
 
-  AutoVMatrix(const string& the_specification="");
+  AutoVMatrix(const PPath& the_specification="");
 
 private: 
 

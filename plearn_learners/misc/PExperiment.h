@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PExperiment.h,v 1.10 2004/07/21 16:30:57 chrish42 Exp $ 
+   * $Id: PExperiment.h,v 1.11 2005/01/25 03:15:53 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file PTester.h */
@@ -44,6 +44,7 @@
 #include <plearn_learners/generic/PLearner.h>
 #include <plearn/vmat/VMat.h>
 #include <plearn/vmat/Splitter.h>
+#include <plearn/io/PPath.h>
 
 namespace PLearn {
 using namespace std;
@@ -62,7 +63,7 @@ public:
   // See declareOptions method in .cc for the role of these options.
 
   //! Path of this experiment's directory in which to save all experiment results (will be created if it does not already exist)
-  string expdir;  
+  PPath expdir;  
   PP<PLearner> learner;
   PP<Splitter> splitter;
   TVec<string> statnames;

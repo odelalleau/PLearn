@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.49 2005/01/20 21:31:34 larocheh Exp $ 
+   * $Id: PTester.cc,v 1.50 2005/01/25 03:15:55 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -48,6 +48,9 @@
 #include <plearn/vmat/FileVMatrix.h>
 #include <assert.h>
 #include "PTester.h"
+
+#include <plearn/base/stringutils.h> 
+
 
 namespace PLearn {
 using namespace std;
@@ -304,7 +307,7 @@ void PTester::run()
 
 void PTester::setExperimentDirectory(const string& the_expdir) 
 { 
-  expdir = the_expdir;
+  expdir = PPath(the_expdir) / "";
 }
 
 Vec PTester::perform(bool call_forget)
@@ -326,11 +329,11 @@ Vec PTester::perform(bool call_forget)
       PLERROR("Directory (or file) %s already exists. First move it out of the way.",expdir.c_str());
     if(!force_mkdir(expdir))
       PLERROR("In PTester Could not create experiment directory %s",expdir.c_str());
-    expdir = abspath(expdir);
+    expdir = expdir.absolute() / "";
     
     // Save this tester description in the expdir
     if(save_initial_tester)
-      PLearn::save(append_slash(expdir)+"tester.psave", *this);
+      PLearn::save( expdir / "tester.psave", *this);
   }
 
   splitter->setDataSet(dataset);
@@ -404,15 +407,15 @@ Vec PTester::perform(bool call_forget)
   VMat split_stats_vm;   // the vmat in which to save per split result stats
   if(expdir!="" && report_stats)
     {
-      saveStringInFile(expdir+"train_cost_names.txt", join(traincostnames,"\n")+"\n"); 
-      saveStringInFile(expdir+"test_cost_names.txt", join(testcostnames,"\n")+"\n"); 
+      saveStringInFile(expdir/"train_cost_names.txt", join(traincostnames,"\n")+"\n"); 
+      saveStringInFile(expdir/"test_cost_names.txt", join(testcostnames,"\n")+"\n"); 
 
-      global_stats_vm = new FileVMatrix(expdir+"global_stats.pmat", 1, nstats);
+      global_stats_vm = new FileVMatrix(expdir/"global_stats.pmat", 1, nstats);
       for(int k=0; k<nstats; k++)
         global_stats_vm->declareField(k,statspecs[k].statName());
       global_stats_vm->saveFieldInfos();
 
-      split_stats_vm = new FileVMatrix(expdir+"split_stats.pmat", 0, 1+nstats);
+      split_stats_vm = new FileVMatrix(expdir/"split_stats.pmat", 0, 1+nstats);
       split_stats_vm->declareField(0,"splitnum");
       for(int k=0; k<nstats; k++)
         split_stats_vm->declareField(k+1,statspecs[k].setname + "." + statspecs[k].intstatname);
@@ -421,19 +424,19 @@ Vec PTester::perform(bool call_forget)
 
   for(int splitnum=0; splitnum<nsplits; splitnum++)
     {
-      string splitdir;
+      PPath splitdir;
       if(expdir!="")
-        splitdir = append_slash(append_slash(expdir)+"Split"+tostring(splitnum));
+        splitdir = expdir / ("Split"+tostring(splitnum));
 
       TVec<VMat> dsets = splitter->getSplit(splitnum);
       VMat trainset = dsets[0];
       if(splitdir!="" && save_data_sets)
-        PLearn::save(splitdir+"training_set.psave",trainset);
+        PLearn::save(splitdir/"training_set.psave",trainset);
 
       if(train && provide_learner_expdir)
       {  
         if(splitdir!="")
-          learner->setExperimentDirectory(append_slash(splitdir+"LearnerExpdir"));
+          learner->setExperimentDirectory( splitdir/"LearnerExpdir/" );
         else
           learner->setExperimentDirectory("");
       }
@@ -448,15 +451,15 @@ Vec PTester::perform(bool call_forget)
       if (train)
         {
           if(splitdir!="" && save_initial_learners)
-            PLearn::save(splitdir+"initial_learner.psave",learner);
+            PLearn::save(splitdir/"initial_learner.psave",learner);
       
           train_stats->forget();
           learner->train();
           train_stats->finalize();
           if(splitdir != "" && save_stat_collectors)
-            PLearn::save(splitdir+"train_stats.psave",train_stats);
+            PLearn::save(splitdir/"train_stats.psave",train_stats);
           if(splitdir != "" && save_learners)
-            PLearn::save(splitdir+"final_learner.psave",learner);
+            PLearn::save(splitdir/"final_learner.psave",learner);
         }
       else
         learner->build();
@@ -466,17 +469,17 @@ Vec PTester::perform(bool call_forget)
           PP<VecStatsCollector> test_stats = stcol[setnum];
           string setname = "test"+tostring(setnum);
           if(splitdir!="" && save_data_sets)
-            PLearn::save(splitdir+setname+"_set.psave",testset);
+            PLearn::save(splitdir/(setname+"_set.psave"),testset);
           VMat test_outputs;
           VMat test_costs;
           VMat test_confidence;
           force_mkdir(splitdir);
           if(splitdir != "" && save_test_outputs)
-            test_outputs = new FileVMatrix(splitdir+setname+"_outputs.pmat",0,outputsize);
+            test_outputs = new FileVMatrix(splitdir/(setname+"_outputs.pmat"),0,outputsize);
           if(splitdir != "" && save_test_costs)
-            test_costs = new FileVMatrix(splitdir+setname+"_costs.pmat",0,testcostsize);
+            test_costs = new FileVMatrix(splitdir/(setname+"_costs.pmat"),0,testcostsize);
           if(splitdir != "" && save_test_confidence)
-            test_confidence = new FileVMatrix(splitdir+setname+"_confidence.pmat",
+            test_confidence = new FileVMatrix(splitdir/(setname+"_confidence.pmat"),
                                               0,2*outputsize);
           
           bool reset_stats = (acc.find(setnum) == -1);
@@ -493,7 +496,7 @@ Vec PTester::perform(bool call_forget)
           if (reset_stats)
             test_stats->finalize();
           if(splitdir != "" && save_stat_collectors)
-            PLearn::save(splitdir+setname+"_stats.psave",test_stats);
+            PLearn::save(splitdir/(setname+"_stats.psave"),test_stats);
 
           computeConfidence(testset, test_confidence);
         }

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_impl.h,v 1.14 2004/09/14 16:04:37 chrish42 Exp $
+   * $Id: TMat_impl.h,v 1.15 2005/01/25 03:15:33 dorionc Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -401,6 +401,22 @@ TMatColRowsIterator<T> TMat<T>::col_end(int column) {
   return TMatColRowsIterator<T>(data()+length_*mod_+column, mod_);
 }
 
+template<class T>
+bool TMat<T>::operator==(const TMat<T>& other) const
+{
+  if ( length() != other.length() || width() != other.width() )
+    return false;
+  
+  iterator it       = begin();
+  iterator end_     = end();
+  iterator other_it = other.begin();
+
+  for(; it != end_; ++it, ++other_it)
+    if(*it != *other_it)
+      return false;
+  
+  return true;
+}
 
 
 
@@ -840,6 +856,7 @@ inline string join(const TVec<string>& s, const string& separator)
   }
   return result;
 }
+
 
 
 

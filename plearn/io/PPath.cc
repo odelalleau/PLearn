@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.cc,v 1.2 2005/01/18 17:09:10 dorionc Exp $ 
+   * $Id: PPath.cc,v 1.3 2005/01/25 03:15:23 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -293,7 +293,6 @@ void PPath::resolveSlashChars( )
     }
 
 #if defined(WIN32)
-#error \ == /: overload operator==    
     // Under DOS, the previous if statement manages canonical '/' (that are
     // forbidden in dos file paths). This if statement prevents multiple
     // backslashes.
@@ -528,7 +527,7 @@ PPath PPath::canonical() const
     if ( metaprotocol.length() > 0 )
     {
       if ( canonic_path.length() == metapath.length() )
-        canonic_path.replace( 0, metapath.length(), metaprotocol );
+        canonic_path.replace( 0, metapath.length(), metaprotocol+':' );
 
       // Replace the '/' by a ':' (metapath never contain trailingSlash --
       // see ensureMappings)
@@ -702,7 +701,7 @@ string PPath::extension() const
 #if defined(WIN32)
 PPath PPath::drive() const
 {
-  if ( find(':') == 2 && isalpha(*this[0]) )
+  if ( find(':') == 1 && isalpha( c_str()[0] ) )
     return PPath(substr(0, 2));
   return PPath("");
 }

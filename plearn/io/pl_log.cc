@@ -33,10 +33,10 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: pl_log.cc,v 1.2 2004/12/01 17:30:29 dorionc Exp $ 
+   * $Id: pl_log.cc,v 1.3 2005/01/25 03:15:24 dorionc Exp $ 
    ******************************************************* */
 
-// Authors: Nicolas Chapados
+// Authors: Nicolas Chapados, Christian Dorion
 
 /*! \file pl_log.cc */
 
@@ -48,12 +48,12 @@
 namespace PLearn {
 using namespace std;
 
-PL_Log::PL_Log()
+PL_Log::PL_Log( )
   : runtime_verbosity(PL_LOG_MAXVERBOSITY),
     output_stream(&cout, false),
     null_stream(new ofstream("/dev/null"), true),
     logger_count(0)
-{ }
+{}
 
 PStream& PL_Log::logger(int requested_verbosity)
 {
@@ -100,8 +100,11 @@ PStream& plsep(PStream& p)
 
 PStream& operator<<(PStream& p, PL_Log::Heading heading)
 {
-  string msg = "#####  "+tostring(PL_Log::instance().loggerCount())
-    + (heading.h.size() > 0? (": "+heading.h) : string("")) + "  ";
+  // The loggerCount is likely to change in test even if nothing more is
+  // printed... PyTest dislikes. 
+  //   string msg = "#####  " + tostring(PL_Log::instance().loggerCount())
+  //     + (heading.h.size() > 0? (": "+heading.h) : string("")) + "  ";
+  string msg = "#####  " + (heading.h.size() > 0? (heading.h + "  ") : string(""));
   string rest(max(75-int(msg.size()),5),'#');
   return p << endl << (msg + rest) << endl;
 }

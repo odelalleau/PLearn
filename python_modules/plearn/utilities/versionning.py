@@ -1,4 +1,4 @@
-import string, time
+import copy, string, time
 
 BUILTIN_IMPORT_FUNCTION = __import__
 PROJECTS                = {}
@@ -10,7 +10,7 @@ def official_build(project_name, build_version, fixlevels):
     PROJECTS[project_name].official_build(build_version, fixlevels)
 
 def declare_module(module_name, cvs_id):
-    """cvs_id = \"$Id: versionning.py,v 1.2 2005/01/05 19:23:21 dorionc Exp $\"
+    """cvs_id = \"$Id: versionning.py,v 1.3 2005/01/25 03:15:59 dorionc Exp $\"
     """
     ## print "declare_module: %s" % module_name
     for project in PROJECTS.itervalues():
@@ -35,7 +35,7 @@ __builtin__.__import__ = versionned_import
 __all__ = [ "declare_project", "official_build", "project_version", 
             ]
 
-declare_module( __name__, "$Id: versionning.py,v 1.2 2005/01/05 19:23:21 dorionc Exp $" )
+declare_module( __name__, "$Id: versionning.py,v 1.3 2005/01/25 03:15:59 dorionc Exp $" )
 
 class PythonProject:
     def __init__(self, name):
@@ -44,8 +44,9 @@ class PythonProject:
 
         self.name           = name
         self.modules        = {}
-        self.build_versions = []
+        self.build_versions = [([0, 0],[0, 0])]  
         self.neglected      = []
+        self._version       = None
         PROJECTS[name]      = self
         
     def declare_module(self, module_name, cvs_id):
@@ -77,11 +78,14 @@ class PythonProject:
         self.neglected.append(module_name)
         
     def official_build(self, build_version, fixlevels):
-        assert len(build_version) <= 3
-        assert len(fixlevels)     == 3
+        assert len(build_version) == 2
+        assert len(fixlevels)     == 2
         self.build_versions.append( (build_version, fixlevels) )
         
     def version(self, extended):
+        if self._version:
+            return self._version
+
         minv = [0, 1e06]
         maxv = [0, -1]
         sumv = 0
@@ -110,9 +114,10 @@ class PythonProject:
             if extended:
                 formatted_names.append( formatter(module_name,vtup) )
                 
-        fixlevels     = [minv[1], maxv[1], sumv]
+        ## fixlevels     = [minv[1], maxv[1], sumv]
+        fixlevels     = [maxv[1], sumv]
         version_tuple = self.version_tuple( fixlevels )         
-        version_str   = string.join( [str(v) for v in version_tuple], '.' )
+        self._version = string.join( [str(v) for v in version_tuple], '.' )
 
         if extended:
             formatted_names.sort()
@@ -124,7 +129,7 @@ class PythonProject:
                    % ( string.join(formatted_names, "\n    "),
                        self.name, version_str
                        )
-        return version_str
+        return self._version
 
     def version_tuple(self, fixlevels):
         last_build = None
@@ -133,11 +138,8 @@ class PythonProject:
                 fixlevels[i] = v - fix[i]
             last_build = bversion
 
-        vtuple = [0]        
-        if last_build is not None:
-            vtuple = last_build
-        if fixlevels != [0, 0, 0]: ## This is a little hackish... TBM
+	vtuple = copy.copy(last_build)
+        if fixlevels != [0, 0]: ## This is a little hackish... TBM
             vtuple += fixlevels
-            
         return vtuple
 

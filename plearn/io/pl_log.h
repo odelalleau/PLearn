@@ -33,10 +33,10 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: pl_log.h,v 1.3 2004/12/01 17:30:29 dorionc Exp $ 
+   * $Id: pl_log.h,v 1.4 2005/01/25 03:15:25 dorionc Exp $ 
    ******************************************************* */
 
-// Authors: Nicolas Chapados
+// Authors: Nicolas Chapados, Christian Dorion
 
 /*! \file pl_log.h */
 
@@ -88,7 +88,10 @@ public:
 
   //! Return the actual output PStream
   PStream outputStream() const              { return output_stream; }
-   
+
+  //! Changes the output_stream outmode
+  void outmode(PStream::mode_t outmode_) { output_stream.outmode = outmode_; }
+  
   //! Underlying logging function.  If "requested_verbosity" is less than
   //! or equal to verbosity, then output_stream is returned; otherwise
   //! null_stream is returned.

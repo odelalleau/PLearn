@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.h,v 1.17 2004/10/21 18:25:11 chapados Exp $ 
+   * $Id: PTester.h,v 1.18 2005/01/25 03:15:56 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file PTester.h */
@@ -71,7 +71,7 @@ public:
 
   //! Path of this tester's experiment directory in which to save all tester results (will be created if it does not already exist)
   VMat dataset;
-  string expdir;  
+  PPath expdir;  
   TVec<string> final_commands;
   PP<VecStatsCollector> global_template_stats_collector;
   PP<PLearner> learner;

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.29 2004/12/07 22:39:24 chapados Exp $
+   * $Id: getDataSet.cc,v 1.30 2005/01/25 03:15:21 dorionc Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -106,6 +106,16 @@ time_t getDataSetDate(const string& datasetstring, const string& alias)
   // Otherwise, it could be a preprogrammed dataset, or just about anything...
   // we don't really know. So we return 0.
   return 0;
+}
+
+VMat getDataSet(const char*   datasetstring, const string& alias)
+{
+  return getDataSet(string(datasetstring), alias);
+}
+
+VMat getDataSet(const PPath&  datasetpath,   const string& alias)
+{
+  return getDataSet(string(datasetpath.absolute()), alias);
 }
 
 VMat getDataSet(const string& datasetstring, const string& alias)

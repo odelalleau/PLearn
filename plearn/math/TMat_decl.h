@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
- * $Id: TMat_decl.h,v 1.6 2004/09/27 20:19:27 plearner Exp $
+ * $Id: TMat_decl.h,v 1.7 2005/01/25 03:15:26 dorionc Exp $
  * AUTHORS: Pascal Vincent & Yoshua Bengio
  * This file is part of the PLearn library.
  ******************************************************* */
@@ -534,23 +534,8 @@ public:
       return result;
     }
 
-  inline bool operator==(const TMat<T>& other) const
-    {
-      if(length() != other.length() || width() != other.width())
-        return false;
-
-      iterator it = begin();
-      iterator end = end();
-      iterator otherIt = other.begin();
-      for(; it != end; ++it)
-        if(*it == *otherIt)
-          ++otherIt;
-        else
-          return false;
-
-      return true;
-    }
-
+  inline bool operator==(const TMat<T>& other) const;
+  
   template<class I>
   inline TMat<T> operator()(const TVec<I>& rows, const TVec<I>& columns) const
     {

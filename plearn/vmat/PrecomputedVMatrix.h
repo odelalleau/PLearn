@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrecomputedVMatrix.h,v 1.8 2004/09/14 16:04:39 chrish42 Exp $ 
+   * $Id: PrecomputedVMatrix.h,v 1.9 2005/01/25 03:15:46 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -90,7 +90,7 @@ protected:
 
 public:
 
-  virtual void setMetaDataDir(const string& the_metadatadir);
+  virtual void setMetaDataDir(const PPath& the_metadatadir);
 
   // simply calls inherited::build() then build_() 
   virtual void build();

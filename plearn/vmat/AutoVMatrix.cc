@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
- * $Id: AutoVMatrix.cc,v 1.13 2004/09/20 16:47:53 mariusmuja Exp $
+ * $Id: AutoVMatrix.cc,v 1.14 2005/01/25 03:15:46 dorionc Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -54,7 +54,7 @@ PLEARN_IMPLEMENT_OBJECT(AutoVMatrix,
     "will be a wrapper around the appropriate VMatrix type, simply forwarding calls to it.\n"
     "AutoVMatrix can be used to access the UCI databases.\n");
 
-AutoVMatrix::AutoVMatrix(const string& the_specification)
+AutoVMatrix::AutoVMatrix(const PPath& the_specification)
   :specification(the_specification)
 { build_(); }
 

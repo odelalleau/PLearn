@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ProcessingVMatrix.cc,v 1.9 2004/09/14 16:04:39 chrish42 Exp $ 
+   * $Id: ProcessingVMatrix.cc,v 1.10 2005/01/25 03:15:46 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -89,7 +89,7 @@ void ProcessingVMatrix::build_()
   sourcevec.resize(source->width());
 }
 
-void ProcessingVMatrix::setMetaDataDir(const string& the_metadatadir)
+void ProcessingVMatrix::setMetaDataDir(const PPath& the_metadatadir)
 {
   inherited::setMetaDataDir(the_metadatadir);
   length_ = source->length();

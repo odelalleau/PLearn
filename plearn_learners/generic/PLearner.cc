@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.43 2004/11/23 21:34:18 tihocan Exp $
+   * $Id: PLearner.cc,v 1.44 2005/01/25 03:15:49 dorionc Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -147,7 +147,7 @@ void PLearner::setExperimentDirectory(const string& the_expdir)
     {
       if(!force_mkdir(the_expdir))
         PLERROR("In PLearner::setExperimentDirectory Could not create experiment directory %s",the_expdir.c_str());
-      expdir = abspath(the_expdir);
+      expdir = PPath(the_expdir).absolute() / "";
     }
 }
 
@@ -195,11 +195,11 @@ int PLearner::targetsize() const
 void PLearner::build_()
 {
   if(expdir!="")
-    {
-      if(!force_mkdir(expdir))
-        PLERROR("In PLearner Could not create experiment directory %s",expdir.c_str());
-      expdir = abspath(expdir);
-    }
+  {
+    if(!force_mkdir(expdir))
+      PLERROR("In PLearner Could not create experiment directory %s",expdir.c_str());
+    expdir = expdir.absolute() / "";
+  }
 }
 
 void PLearner::build()

@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.65 2005/01/20 21:49:12 tihocan Exp $
+   * $Id: VMatrix.h,v 1.66 2005/01/25 03:15:47 dorionc Exp $
    ******************************************************* */
 
 
@@ -50,9 +50,11 @@
 #include <plearn/math/StatsCollector.h>
 #include "VMField.h"
 
-#include <plearn/base/stringutils.h>
 #include <plearn/math/TMat_maths_impl.h>
 
+#include <plearn/io/PPath.h>
+#include <plearn/base/tostring.h>           // Move in .cc as soon as possible
+#include <plearn/base/lexical_cast.h>  // Move in .cc as soon as possible
 
 namespace PLearn {
 using namespace std;
@@ -98,7 +100,7 @@ protected:
 
   //! Path of directory (possibly relative to DBDIR) that will contain meta information 
   //! on this dataset (fieldnames, cached statistics, etc...) and possibly the data itself.
-  string metadatadir; 
+  PPath metadatadir; 
 
   // [DEPRECATED] contains a short name that can be used as part of a filename for results associated with this dataset.
   string alias_;
@@ -310,13 +312,13 @@ public:
   //! this should be called by the build method of every VMatrix that has a metadatadir
   //! It will create said directory if it doesn's already exist.
   //! Throws a PLERROR if called with an empty string
-  virtual void setMetaDataDir(const string& the_metadatadir);
+  virtual void setMetaDataDir(const PPath& the_metadatadir);
 
   //! Returns true if a metadatadir was set
   bool hasMetaDataDir() const { return metadatadir!=""; }
 
   //! Throws a PLERROR if no metadatadir was set.
-  string getMetaDataDir() const; 
+  PPath getMetaDataDir() const; 
 
   //! Locks the metadata directory by creating a .lock file inside it.
   //! If such a file already exists, it is interpreted as being locked by some other process:
@@ -363,10 +365,10 @@ public:
   // PP<ConditionalStatsCollector> getConditionalStats(int condfield);
 
   // default version calls savePMAT
-  virtual void save(const string& filename) const;
+  virtual void save(const PPath& filename) const;
 
-  virtual void savePMAT(const string& pmatfile) const;
-  virtual void saveDMAT(const string& dmatdir) const;
+  virtual void savePMAT(const PPath& pmatfile) const;
+  virtual void saveDMAT(const PPath& dmatdir) const;
 
   //! Save the content of the matrix in the AMAT ASCII format into a file.
   //! If 'no_header' is set to 'true', then the AMAT header won't be saved,
@@ -374,7 +376,7 @@ public:
   //! If 'save_strings' is set to 'true', then the string mappings will be used
   //! so as to save strings where they exist (instead of saving the corresponding
   //! real value).
-  virtual void saveAMAT(const string& amatfile, bool verbose = true,
+  virtual void saveAMAT(const PPath& amatfile, bool verbose = true,
                         bool no_header = false, bool save_strings = false) const;
 
   inline int width() const 
@@ -407,7 +409,7 @@ public:
 
   // ** Note 1: that target is assumed to be an inexistant file in the directory where none of the previous 3 can be found (since the file exists only when non-empty)
   // ** Note 2: source may not be target
-  string resolveFieldInfoLink(string target, string source);
+  string resolveFieldInfoLink(PPath target, PPath source);
 
   //! Return the time of "last modification" associated with this matrix
   //! The result returned is typically based on mtime of the files contianing 

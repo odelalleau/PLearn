@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: ForwardVMatrix.h,v 1.12 2005/01/24 14:29:03 tihocan Exp $
+   * $Id: ForwardVMatrix.h,v 1.13 2005/01/25 03:15:46 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -92,11 +92,11 @@ public:
   virtual void computeStats(); 
 
   // default version calls savePMAT
-  virtual void save(const string& filename) const;
+  virtual void save(const PPath& filename) const;
 
-  virtual void savePMAT(const string& pmatfile) const;
-  virtual void saveDMAT(const string& dmatdir) const;
-  virtual void saveAMAT(const string& amatfile, bool verbose = true,
+  virtual void savePMAT(const PPath& pmatfile) const;
+  virtual void saveDMAT(const PPath& dmatdir) const;
+  virtual void saveAMAT(const PPath& amatfile, bool verbose = true,
                         bool no_header = false, bool save_strings = false) const;
 
   //!  This method must be implemented in all subclasses

@@ -34,18 +34,18 @@
 #  library, go to the PLearn Web site at www.plearn.org
 
 import sys, os, string, popen2
-import plearn.utilities.plpath  as plpath 
+import plearn.utilities.ppath   as ppath 
 import plearn.utilities.toolkit as toolkit
 from time import time, localtime
 
 args = sys.argv[:]
 del args[0] # ignore program name
 
-homedir = os.environ['HOME']
-plearndir = os.environ.get('PLEARNDIR', os.path.join(homedir,'PLearn'))
+homedir               = ppath.ppath('HOME')
+plearndir             = ppath.ppath('PLEARNDIR')
 
-# Management of multiple Skeletons directory
-##baseclasses = [ s[:-2] for s in toolkit.listdirs(plpath.skeleton_directories) if s[-2:]=='.h' ]
+default_skeleton_dir  = os.path.join( plearndir, 'scripts/Skeletons' )
+skeleton_directories  = string.split( os.getenv('SKELETONS_PATH', default_skeleton_dir), ':' )
 
 class Baseclasses:
     def __init__(self, directories):
@@ -64,7 +64,7 @@ class Baseclasses:
                     baseclass = fname[:-2]
                     self.dir_to_classes[ directory ].append( baseclass )
                     self.classes_to_dir[ baseclass ] = directory
-
+                    
     def classes(self, directory=None):
         if self.dir_to_classes.has_key( directory ):
             return self.dir_to_classes[directory]
@@ -92,7 +92,7 @@ class Baseclasses:
     def __contains__(self, some_class):
         return self.classes_to_dir.has_key(some_class)
     
-baseclasses = Baseclasses( plpath.skeleton_directories )
+baseclasses = Baseclasses( skeleton_directories )
 usage = """
 Usage: pyskeleton <base_class> <name_of_your_derived_class>
        Will generate skeletons .h and .cc files for your new class, 
@@ -129,7 +129,7 @@ def locate_header_file():
         if os.path.isfile(modelpath):
             return modelpath
         directory = abspath(os.path.join(directory,'..'))
-    return os.path.join(plpath.plearn_scripts, plpath.skeldir, '.pyskeleton_header')
+    return os.path.join( default_skeleton_dir, '.pyskeleton_header' )
 
 
 def fingername():

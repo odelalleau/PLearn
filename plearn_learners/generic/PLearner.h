@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.30 2004/11/23 21:49:57 tihocan Exp $
+   * $Id: PLearner.h,v 1.31 2005/01/25 03:15:50 dorionc Exp $
    ******************************************************* */
 
 
@@ -51,6 +51,7 @@
 #include <plearn/base/Object.h>
 #include <plearn/vmat/VMat.h>
 #include <plearn/math/VecStatsCollector.h>
+#include <plearn/io/PPath.h>
 
 namespace PLearn {
 using namespace std;
@@ -82,7 +83,7 @@ public:
   //! should not create *any* file. Note that, anyway, most file creation and
   //! reporting are handled at the level of the PTester class rather than
   //! at the learner's.
-  string expdir; 
+  PPath expdir; 
 
   long seed_; //!< the seed used for the random number generator in initializing the learner (see forget() method).
   int stage; //!< The current training stage, since last fresh initialization (forget()):
@@ -358,13 +359,6 @@ public:
   //!  Does the necessary operations to transform a shallow copy (this)
   //!  into a deep copy by deep-copying all the members that need to be.
   PLEARN_DECLARE_ABSTRACT_OBJECT(PLearner);
-
-  /*!
-    Leads the PLearner to save some data in a matlab 'readable' format. 
-    The data will be saved in expdir/matlab_subdir
-    through the global matlabSave function (MatIO.h).
-  */
-  virtual void matlabSave(const string& matlab_subdir){}
 };
 
 DECLARE_OBJECT_PTR(PLearner);

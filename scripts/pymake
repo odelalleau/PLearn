@@ -493,9 +493,16 @@ else:
 SPC = 0
 if 'spc' in optionargs :
     SPC = 1
-    plearndir = os.environ.get('PLEARNDIR')
+
+    ########################
+    ### The presence of this PLearn specific variable is against the Pymake design:
+    ###  Anything that is specific to our library should be done in the config file!
+    ### REMOVE THIS FROM HERE!
+    # New: The ppath configuration file contains all PLearn relative settings
+    from plearn.utilities.ppath import ppath
+    plearndir = ppath('PLEARNDIR')
     if not plearndir:
-        print 'Error: First set the PLEARNDIR environment variable in order to get the pyfreemachines script'
+        print 'Error: PLEARNDIR is necessary in order to get the pyfreemachines script'
         sys.exit();
     else:
         try: os.makedirs(join(homedir,'.pymake'))

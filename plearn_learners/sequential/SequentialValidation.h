@@ -42,6 +42,7 @@
 #include <plearn_learners/generic/StatefulLearner.h>
 #include <plearn/vmat/VMat.h>
 #include <plearn/base/PP.h>
+#include <plearn/io/PPath.h>
 
 namespace PLearn {
 using namespace std;
@@ -76,7 +77,7 @@ public:
   TVec<string> timewise_statnames;
 
   //! the directory where everything will be saved
-  string expdir;
+  PPath expdir;
   
   bool report_stats;
   bool save_final_model;

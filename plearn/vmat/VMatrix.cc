@@ -37,7 +37,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.84 2005/01/20 21:49:12 tihocan Exp $
+* $Id: VMatrix.cc,v 1.85 2005/01/25 03:15:47 dorionc Exp $
 ******************************************************* */
 
 #include <plearn/io/load_and_save.h>
@@ -47,6 +47,8 @@
 #include "SubVMatrix.h"
 #include "VMat_computeStats.h"
 #include <plearn/math/random.h>  //!< For uniform_multinomial_sample()
+
+#include <plearn/base/stringutils.h> // REMOVE as soon as possible
 
 
 namespace PLearn {
@@ -123,7 +125,7 @@ Array<VMField>& VMatrix::getFieldInfos() const
 {
   if(fieldinfos.size()==0 && hasMetaDataDir())
     {
-      string fname =  append_slash(getMetaDataDir()) + "fieldnames";
+      PPath fname =  getMetaDataDir() / "fieldnames";
       if(isfile(fname)) // file exists
         loadFieldInfos();
     }
@@ -372,8 +374,12 @@ void VMatrix::saveFieldInfos() const
   Array<VMField> current_fieldinfos = getSavedFieldInfos();
   if (current_fieldinfos==fieldinfos)
     return;
-
-  string filename = append_slash(getMetaDataDir()) + "fieldnames";
+  
+  // Ensure that the metadatadir exists
+  if(!force_mkdir(getMetaDataDir()))
+    PLERROR("In VMatrix::saveFieldInfos could not create directory %s",getMetaDataDir().c_str());
+  
+  PPath filename = getMetaDataDir() / "fieldnames";
   ofstream out(filename.c_str());
   if(!out)
     PLERROR("In VMatrix::saveFieldInfos Couldn't open file %s for writing",filename.c_str());    
@@ -389,7 +395,7 @@ void VMatrix::loadFieldInfos() const
 
 Array<VMField> VMatrix::getSavedFieldInfos() const
 {
-  string filename = append_slash(getMetaDataDir()) + "fieldnames";
+  PPath filename = getMetaDataDir() / "fieldnames";
   if (!isfile(filename)) // no current fieldinfos saved
   {
     Array<VMField> no_fieldinfos(0);
@@ -416,26 +422,30 @@ Array<VMField> VMatrix::getSavedFieldInfos() const
 }
 
 // comments: see .h
-string VMatrix::resolveFieldInfoLink(string target, string source)
+string VMatrix::resolveFieldInfoLink(PPath target, PPath source)
 {
-  string contents = removeblanks(loadFileAsString(source));
-  if(contents==source)
+  PPath contents = removeblanks( loadFileAsString(source) );
+  if ( contents == source )
     return "ERROR";
-  if(isdir(contents))
+
+  if( isdir(contents) )
   {
-    //just in case it lacks a slash..
-    contents+=slash;
-    if(isfile(contents+target+".lnk"))
-      return resolveFieldInfoLink(target,contents+target+".lnk");
-    else if(isfile(contents+target))
-      return contents+target;
-    else if(isfile(contents+slash+"__default.lnk"))
-      return resolveFieldInfoLink(target,contents+slash+"__default.lnk");
+    if ( isfile(contents/target+".lnk") )
+      return resolveFieldInfoLink(target,contents/target+".lnk");
+
+    else if ( isfile(contents/target) ) 
+      return contents/target;
+    
+    else if( isfile(contents/"__default.lnk") )
+      return resolveFieldInfoLink(target, contents/"__default.lnk");
+    
     // assume target is there, but file is empty thus inexistant
-    else return contents+target;
+    else return contents/target;
   }
-  else if(contents.substr(contents.size()-4,4)==".lnk")
+  
+  else if( contents.extension() == "lnk" )
     return resolveFieldInfoLink(target,contents);
+
   else return contents;
 }
 
@@ -447,8 +457,9 @@ void VMatrix::setSFIFFilename(int col, string ext, string filepath)
 
 void VMatrix::setSFIFFilename(string fieldname, string ext, string filepath)
 {
-  string target = makeFileNameValid(fieldname+ext);
-  string normalfname = getMetaDataDir()+"FieldInfo"+slash+target;
+  PPath target      = makeFileNameValid(fieldname+ext);
+  PPath normalfname = getMetaDataDir() / "FieldInfo" / target;
+
   rm(normalfname+".lnk");
   if(filepath==normalfname || filepath=="")
   {
@@ -468,9 +479,10 @@ string VMatrix::getSFIFFilename(int col, string ext)
 
 string VMatrix::getSFIFFilename(string fieldname, string ext)
 {
-  string target = makeFileNameValid(fieldname+ext);
-  string normalfname = getMetaDataDir()+"FieldInfo"+slash+target;
-  string defaultlinkfname = getMetaDataDir()+"FieldInfo"+slash+"__default.lnk";
+  PPath  target           = makeFileNameValid(fieldname+ext);
+  PPath  normalfname      = getMetaDataDir() / "FieldInfo" / target;
+  string defaultlinkfname = getMetaDataDir() / "FieldInfo" / "__default.lnk";
+
   if(isfile(normalfname))
     return normalfname;
   else if(isfile(normalfname+".lnk"))
@@ -488,8 +500,8 @@ bool VMatrix::isSFIFDirect(int col, string ext)
 
 bool VMatrix::isSFIFDirect(string fieldname, string ext)
 {
-  string target = makeFileNameValid(fieldname+ext);
-  string normalfname = getMetaDataDir()+"FieldInfo"+slash+target;
+  string target      = makeFileNameValid(fieldname+ext);
+  string normalfname = getMetaDataDir() / "FieldInfo" / target;
   return getSFIFFilename(fieldname,ext) == normalfname;
 }
 
@@ -668,14 +680,15 @@ const map<real,string>& VMatrix::getRealToStringMapping(int col) const {
 ////////////////////
 // setMetaDataDir //
 ////////////////////
-void VMatrix::setMetaDataDir(const string& the_metadatadir) 
+void VMatrix::setMetaDataDir(const PPath& the_metadatadir) 
 { 
   if(the_metadatadir=="")
     PLERROR("Called setMetaDataDir with an empty string");
-  metadatadir = the_metadatadir; 
-  if(!force_mkdir(metadatadir))
-    PLERROR("In VMatrix::setMetadataDir could not create directory %s",metadatadir.c_str());
-  metadatadir = abspath(metadatadir);
+  metadatadir = the_metadatadir.absolute() / "";
+// dorionc
+//!<   if(!force_mkdir(metadatadir))
+//!<     PLERROR("In VMatrix::setMetadataDir could not create directory %s",metadatadir.c_str());
+//!<   metadatadir = abspath(metadatadir);
 }
 
 //////////////////
@@ -782,7 +795,8 @@ void VMatrix::lockMetaDataDir(time_t max_lock_age, bool verbose) const
     PLERROR("VMatrix::lockMetaDataDir() called while already locked by this object.");
   if(!pathexists(metadatadir))
     force_mkdir(metadatadir);
-  string lockfile = append_slash(metadatadir)+".lock";  
+
+  string lockfile = metadatadir / ".lock";  
   while (isfile(lockfile) && (max_lock_age == 0 || mtime(lockfile) + max_lock_age > time(0))) {
     // There is a lock file, and it is not older than 'max_lock_age'.
     string bywho;
@@ -809,12 +823,13 @@ void VMatrix::unlockMetaDataDir() const
   if(lockf_==0)
     PLERROR("In VMatrix::unlockMetaDataDir() was called while no lock is held by this object");
   fclose(lockf_);
-  string lockfile = append_slash(metadatadir)+".lock";  
+  
+  string lockfile = metadatadir / ".lock";  
   rm(lockfile);
   lockf_ = 0;
 }
 
-string VMatrix::getMetaDataDir() const
+PPath VMatrix::getMetaDataDir() const
 { 
   //  if(!hasMetaDataDir())
   //  PLERROR("In VMatrix::getMetaDataDir(): metadatadir was not set"); 
@@ -840,18 +855,10 @@ void VMatrix::loadStringMapping(int col)
     return;
   string fname = getSFIFFilename(col,".smap");
   init_map_sr();
-  force_mkdir(getMetaDataDir()+"FieldInfo"+slash);
+  force_mkdir( getMetaDataDir() / "FieldInfo" );
 
   if(!isfile(fname))
-  {
-#if 0
-    ofstream o(fname.c_str());
-    if(o.bad())
-      PLERROR( string("\nEmpty new file "+fname+" could not be created.\n (This is ony done to check consistency of path. File is deleted afterward.)").c_str());
-    rm(fname);
-#endif
     return;
-  }
   
   deleteStringMapping(col);
 
@@ -901,7 +908,7 @@ TVec<StatsCollector> VMatrix::getStats() const
 {
   if(!field_stats)
   {
-    string statsfile = getMetaDataDir() + slash+"stats.psave";
+    PPath statsfile = getMetaDataDir() / "stats.psave";
     if (isfile(statsfile) && getMtime()<mtime(statsfile))
     {
       if(getMtime()==0)
@@ -937,7 +944,7 @@ TVec< pair<real,real> > VMatrix::getBoundingBox(real extra_percent) const
 TVec<RealMapping> VMatrix::getRanges()
 {
   TVec<RealMapping> ranges;
-  string rangefile = getMetaDataDir() + slash+"ranges.psave";
+  PPath rangefile = getMetaDataDir() / "ranges.psave";
   if(isfile(rangefile))
     PLearn::load(rangefile, ranges);
   else
@@ -1140,10 +1147,10 @@ void VMatrix::print(ostream& out) const
 VMatrix::~VMatrix()
 {}
 
-void VMatrix::save(const string& filename) const
+void VMatrix::save(const PPath& filename) const
 { savePMAT(filename); }
 
-void VMatrix::savePMAT(const string& pmatfile) const
+void VMatrix::savePMAT(const PPath& pmatfile) const
 {
   if (width() == -1)
     PLERROR("In VMat::save Saving in a pmat file is only possible for constant width Distributions (where width()!=-1)");
@@ -1167,7 +1174,7 @@ void VMatrix::savePMAT(const string& pmatfile) const
   if (fieldinfos.size() > 0) m.saveFieldInfos();      
 }
 
-void VMatrix::saveDMAT(const string& dmatdir) const
+void VMatrix::saveDMAT(const PPath& dmatdir) const
 {
   force_rmdir(dmatdir);  
   DiskVMatrix vm(dmatdir,width());
@@ -1188,7 +1195,7 @@ void VMatrix::saveDMAT(const string& dmatdir) const
 //////////////
 // saveAMAT //
 //////////////
-void VMatrix::saveAMAT(const string& amatfile, bool verbose, bool no_header, bool save_strings) const
+void VMatrix::saveAMAT(const PPath& amatfile, bool verbose, bool no_header, bool save_strings) const
 {
   int l = length();
   int w = width();

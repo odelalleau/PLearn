@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TextFilesVMatrix.h,v 1.1 2005/01/11 23:35:08 plearner Exp $ 
+   * $Id: TextFilesVMatrix.h,v 1.2 2005/01/25 03:15:47 dorionc Exp $ 
    ******************************************************* */
 
 // Author: Pascal Vincent
@@ -91,7 +91,7 @@ public:
   // * public build options *
   // ************************
 
-  string metadatapath; //<! the path to the .metadata directory 
+  PPath metadatapath; //<! the path to the .metadata directory 
   
   TVec<string> txtfilenames;
 
@@ -162,7 +162,7 @@ public:
   real getMapping(int fieldnum, const string& strval) const;
 
   string getMapFilePath(int fieldnum) const
-  { return getMetaDataDir()+"mappings/"+fieldspec[fieldnum].first+".map"; }
+  { return getMetaDataDir()/"mappings"/fieldspec[fieldnum].first+".map"; }
 
   //! Returns the raw text rows
   string getTextRow(int i) const;

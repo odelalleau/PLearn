@@ -1,8 +1,8 @@
-__cvs_id__ = "$Id: modes.py,v 1.15 2004/12/21 16:22:39 dorionc Exp $"
+__cvs_id__ = "$Id: modes.py,v 1.16 2005/01/25 03:15:57 dorionc Exp $"
 
-import copy
+import copy, shutil
 import plearn.utilities.cvs                as     cvs
-import plearn.utilities.plpath             as     plpath
+import plearn.utilities.ppath              as     ppath
 import plearn.utilities.toolkit            as     toolkit
 
 from   programs                            import *
@@ -12,7 +12,7 @@ from   plearn.tasks.dispatch               import *
 from   plearn.utilities.cvs                import *
 from   plearn.utilities.toolkit            import *
 from   plearn.utilities.verbosity          import *
-from   plearn.utilities.global_variables   import *
+## from   plearn.utilities.global_variables   import *
 
 current_mode    = None
 
@@ -30,8 +30,8 @@ __all__ = [
 ## All modes that are completed must, in the class declaration,
 ## 
 supported_modes = [ 'add',          'commit', 'compile', 'disable', 'enable',
-                    'light_commit', 'list',   'ignore',  'results', 'run',
-                    'update'
+                    'light_commit', 'list',   'ignore',  'prune',   'results',
+                    'run',          'update'
                     ]
 
 def add_supported_modes( parser ):
@@ -48,7 +48,7 @@ class PyTestMode(Mode):
             ignored_directories.append( directory )
             return
 
-        toolkit.exempt_list_of( dirlist, plpath.special_directories )    
+        toolkit.exempt_list_of( dirlist, ppath.special_directories )    
         os.chdir(directory)
 
         config = config_file_path()
@@ -71,7 +71,7 @@ class PyTestMode(Mode):
         ## globalvars.all_roots test_suite branches. If some targets are
         ## provided, these will be ignored.
         if options.all:
-            targets           = globalvars.all_roots
+            targets           = plbranches  ## globalvars.all_roots
             options.recursive = True
 
         ## If no targets are provided, the cwd is the default target.
@@ -82,7 +82,7 @@ class PyTestMode(Mode):
             targets[i] = os.path.abspath(target)
 
         if options.recursive:
-            targets = plpath.exempt_of_subdirectories( targets )
+            targets = ppath.exempt_of_subdirectories( targets )
     initialize = classmethod(initialize)
 
     def parse_config_files(cls):
@@ -178,13 +178,13 @@ class commit( PyTestMode ):
         if len(targets) == 0:
             targets = [ os.getcwd() ]
         else:
-            targets = plpath.exempt_of_subdirectories( targets )            
+            targets = ppath.exempt_of_subdirectories( targets )            
         self.parse_config_files()
 
         for (family, tests) in Test.families_map.iteritems():
             os.chdir( family )
 
-            if not os.path.exists( plpath.cvs_directory ):
+            if not os.path.exists( ppath.cvs_directory ):
                 raise PyTestUsageError(
                     "The directory in which lies a config file must be added to cvs by user.\n"
                     "%s was not." % family
@@ -193,12 +193,12 @@ class commit( PyTestMode ):
             config_path = config_file_path()
 
             cvs.add( config_path )
-            cvs.add( plpath.pytest_dir )
+            cvs.add( ppath.pytest_dir )
             cvs.add( Test.expected_results )
             for test in tests:
                 cvs.recursive_add( test.test_results( Test.expected_results ) )
 
-            cvs.commit( [config_path, plpath.pytest_dir],
+            cvs.commit( [config_path, ppath.pytest_dir],
                         'PyTest internal commit'
                         )            
 
@@ -225,7 +225,7 @@ class ignore(PyTestMode):
         if len(targets) == 0:
             targets = [ os.getcwd() ]
         else:
-            targets = plpath.exempt_of_subdirectories( targets )
+            targets = ppath.exempt_of_subdirectories( targets )
 
         for target in targets:
             os.system("touch %s" % os.path.join( target, ignore.ignore_file ) )
@@ -250,7 +250,7 @@ class light_commit( PyTestMode ):
         for (family, tests) in Test.families_map.iteritems():
             os.chdir( family )
             vprint("- %s light_commit\n" % os.getcwd(), 1)
-            cvs.commit( [config_path, plpath.pytest_dir],
+            cvs.commit( [config_path, ppath.pytest_dir],
                         'PyTest internal commit'         )            
 
     def option_groups(self, parser):
@@ -300,6 +300,33 @@ class list(PyTestMode):
 
         return [ self.target_options(parser), list_options ]
 
+
+class prune( PyTestMode ):
+    """Removes all pytest directories within given test directories."""
+    def procedure(self):
+        self.initialize()
+        self.parse_config_files()
+
+        answer = ""
+        while not answer in ['yes', 'no']:
+            answer = raw_input( "This mode removes all pytest directories within "
+                                "given test directories. Are you sure you want to "
+                                "continue (yes or no): " )
+
+        if answer == "no":
+            print "\nMode prune interrupter by user."
+            return
+
+        
+        for (family, tests) in Test.families_map.iteritems():
+            fam_pytest_dir = os.path.join( family, "pytest" )
+            
+            if os.path.exists(fam_pytest_dir):
+                os.chdir( family )
+                shutil.rmtree( "pytest" )
+
+    def option_groups(self, parser):
+        return [ self.target_options(parser) ]
 
 class FamilyConfigMode( PyTestMode ):
     def procedure(self):

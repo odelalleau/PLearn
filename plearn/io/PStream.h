@@ -776,37 +776,37 @@ void readMap(PStream& in, MapT& m)
   in.get(); // eat the '}'  
 }
 
-template<class Key, class Value>
-inline PStream& operator<<(PStream& out, const map<Key, Value>& m)
+template<class Key, class Value, class Compare, class Alloc>
+inline PStream& operator<<(PStream& out, const map<Key, Value, Compare, Alloc>& m)
 { writeMap(out, m); return out; }
 
-template<class Key, class Value>
-inline PStream& operator>>(PStream& in, map<Key, Value>& m)
+template<class Key, class Value, class Compare, class Alloc>
+inline PStream& operator>>(PStream& in, map<Key, Value, Compare, Alloc>& m)
 { readMap(in, m); return in; }
 
-template<class Key, class Value>
-inline PStream& operator<<(PStream& out, const multimap<Key, Value>& m)
+template<class Key, class Value, class Compare, class Alloc>
+inline PStream& operator<<(PStream& out, const multimap<Key, Value, Compare, Alloc>& m)
 { writeMap(out, m); return out; }
 
-template<class Key, class Value>
-inline PStream& operator>>(PStream& in, multimap<Key, Value>& m)
+template<class Key, class Value, class Compare, class Alloc>
+inline PStream& operator>>(PStream& in, multimap<Key, Value, Compare, Alloc>& m)
 { readMap(in, m); return in; }
 
 
-template<class Key, class Value>
-inline PStream& operator<<(PStream& out, const hash_map<Key, Value>& m)
+template<class Key, class Value, class Compare, class Alloc>
+inline PStream& operator<<(PStream& out, const hash_map<Key, Value, Compare, Alloc>& m)
 { writeMap(out, m); return out; }
 
-template<class Key, class Value>
-inline PStream& operator>>(PStream& in, hash_map<Key, Value>& m)
+template<class Key, class Value, class Compare, class Alloc>
+inline PStream& operator>>(PStream& in, hash_map<Key, Value, Compare, Alloc>& m)
 { readMap(in, m); return in; }
 
-template<class Key, class Value>
-inline PStream& operator<<(PStream& out, const hash_multimap<Key, Value>& m)
+template<class Key, class Value, class Compare, class Alloc>
+inline PStream& operator<<(PStream& out, const hash_multimap<Key, Value, Compare, Alloc>& m)
 { writeMap(out, m); return out; }
 
-template<class Key, class Value>
-inline PStream& operator>>(PStream& in, hash_multimap<Key, Value>& m)
+template<class Key, class Value, class Compare, class Alloc>
+inline PStream& operator>>(PStream& in, hash_multimap<Key, Value, Compare, Alloc>& m)
 { readMap(in, m); return in; }
 
 

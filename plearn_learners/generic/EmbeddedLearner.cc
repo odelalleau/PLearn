@@ -34,12 +34,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.cc,v 1.20 2004/11/05 14:21:19 tihocan Exp $ 
+   * $Id: EmbeddedLearner.cc,v 1.21 2005/01/25 03:15:48 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.cc */
 #include "EmbeddedLearner.h"
 #include <assert.h>
+
+#include <plearn/base/stringutils.h>
 
 namespace PLearn {
 using namespace std;

@@ -1,8 +1,8 @@
-__cvs_id__ = "$Id: cvs.py,v 1.2 2004/12/21 15:31:50 dorionc Exp $"
+__cvs_id__ = "$Id: cvs.py,v 1.3 2005/01/25 03:15:58 dorionc Exp $"
 
 import os, popen2, string, types
 
-from plearn.utilities.plpath    import cvs_directory
+from plearn.utilities.ppath     import cvs_directory
 from plearn.utilities.verbosity import vprint
 
 def add( path ):

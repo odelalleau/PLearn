@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FdPStreamBuf.h,v 1.4 2005/01/14 19:40:49 plearner Exp $ 
+   * $Id: FdPStreamBuf.h,v 1.5 2005/01/25 03:15:22 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -43,6 +43,11 @@
 
 #ifndef FdPStreamBuf_INC
 #define FdPStreamBuf_INC
+
+#ifdef WIN32
+// This file does not compile under windows and should not be used anyways.
+
+#else // POSIX
 
 #include "PStreamBuf.h"
 
@@ -82,4 +87,5 @@ protected:
 
 } // end of namespace PLearn
 
+#endif // WIN32 vs POSIX
 #endif

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrix.h,v 1.13 2004/11/26 14:48:49 tihocan Exp $ 
+   * $Id: SourceVMatrix.h,v 1.14 2005/01/25 03:15:47 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -126,7 +126,7 @@ public:
   /*! If there are fields that have no corresponding .smap .notes or .binning info files
     but the source has those files for a field with the same name, then those of
     the source will be set also for this vmatrix. */
-  virtual void setMetaDataDir(const string& the_metadatadir);
+  virtual void setMetaDataDir(const PPath& the_metadatadir);
 
   // simply calls inherited::build() then build_() 
   virtual void build();

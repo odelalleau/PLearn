@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LearnerCommand.cc,v 1.12 2005/01/17 15:49:00 tihocan Exp $ 
+   * $Id: LearnerCommand.cc,v 1.13 2005/01/25 03:15:17 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -46,6 +46,7 @@
 #include <plearn/vmat/FileVMatrix.h>
 #include <plearn/db/getDataSet.h>
 #include <plearn/io/load_and_save.h>
+#include <plearn/base/lexical_cast.h>
 
 namespace PLearn {
 using namespace std;

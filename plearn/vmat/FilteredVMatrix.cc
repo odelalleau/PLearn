@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilteredVMatrix.cc,v 1.15 2004/11/03 19:26:39 tihocan Exp $ 
+   * $Id: FilteredVMatrix.cc,v 1.16 2005/01/25 03:15:46 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -54,12 +54,13 @@ FilteredVMatrix::FilteredVMatrix()
 {
 }
 
-FilteredVMatrix::FilteredVMatrix(VMat the_source, const string& program_string, const string& the_metadatadir, bool the_report_progress)
+FilteredVMatrix::FilteredVMatrix( VMat the_source, const string& program_string,
+                                  const PPath& the_metadatadir, bool the_report_progress)
   : SourceVMatrix(the_source),
     report_progress(the_report_progress),
     prg(program_string)
 {
-  metadatadir = append_slash(the_metadatadir);
+  metadatadir = the_metadatadir;
   build_();
 }
 
@@ -72,7 +73,7 @@ PLEARN_IMPLEMENT_OBJECT(FilteredVMatrix, "A filtered view of its source vmatrix"
 
 void FilteredVMatrix::openIndex()
 {
-  string idxfname = getMetaDataDir()+"filtered.idx";
+  string idxfname = getMetaDataDir() / "filtered.idx";
 
   if(file_exists(idxfname) && mtime(idxfname)>=getMtime())
     indexes.open(idxfname);
@@ -102,7 +103,7 @@ void FilteredVMatrix::openIndex()
   length_ = indexes.length();
 }
 
-void FilteredVMatrix::setMetaDataDir(const string& the_metadatadir)
+void FilteredVMatrix::setMetaDataDir(const PPath& the_metadatadir)
 {
   inherited::setMetaDataDir(the_metadatadir);
   if (build_complete) {

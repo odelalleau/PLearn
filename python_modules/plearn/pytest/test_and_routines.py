@@ -1,4 +1,4 @@
-__cvs_id__ = "$Id: test_and_routines.py,v 1.18 2004/12/21 16:25:36 dorionc Exp $"
+__cvs_id__ = "$Id: test_and_routines.py,v 1.19 2005/01/25 03:15:57 dorionc Exp $"
 
 import os, shutil, string
 
@@ -112,9 +112,9 @@ class Test(FrozenObject):
     instances_map    = {}
     families_map     = {}
     
-    statistics = BasicStats("Test statistics")
-    expected_results = os.path.join(plpath.pytest_dir, "expected_results")
-    run_results = os.path.join(plpath.pytest_dir, "run_results")
+    statistics       = BasicStats("Test statistics")
+    expected_results = os.path.join(ppath.pytest_dir, "expected_results")
+    run_results      = os.path.join(ppath.pytest_dir, "run_results")
 
     def current_stats(cls):
         return cls.statistics.current_stats()
@@ -122,7 +122,13 @@ class Test(FrozenObject):
     
     def __init__(self, defaults=TestDefaults, **overrides):
         FrozenObject.__init__(self, defaults, overrides)        
+
         self.set_attribute( 'test_directory', os.getcwd() )
+
+        metaprotocol = string.replace( "PYTEST__%s__RESULTS" %
+                                       self.name, ':', '_'
+                                       )
+        self.set_attribute( 'metaprotocol', metaprotocol )
 
         if Test.instances_map.has_key( self.name ):
             raise DuplicateName( Test.instances_map[self.name], self )
@@ -178,9 +184,8 @@ class Test(FrozenObject):
         self.program.compile()
 
     def ensure_results_directory(self, results):
-        backup = None
         if os.path.exists( results ):
-            if os.path.exists( os.path.join(results, plpath.cvs_directory) ):
+            if os.path.exists( os.path.join(results, ppath.cvs_directory) ):
                 answer = None
                 while not answer in ['yes', 'no']:
                     answer = raw_input( "Results %s already are under version control! Are you sure\n"
@@ -220,45 +225,84 @@ class Test(FrozenObject):
         return self.disabled
 
     def test_results(self, results):
-        if results not in [Test.expected_results, Test.run_results]:
-            raise ValueError(
-                "%s.run expects its results argument to be either "
-                "%s.expected_results or %s.run_results"
-                % (self.classname(), self.classname(), self.classname())
-                )
+        if results in [Test.expected_results, Test.run_results]:
+            return os.path.join( results, self.name )
+        return results
+##     def test_results(self, results):
+##         if results not in [Test.expected_results, Test.run_results]:
+##             raise ValueError(
+##                 "%s.run expects its results argument to be either "
+##                 "%s.expected_results or %s.run_results"
+##                 % (self.classname(), self.classname(), self.classname())
+##                 )
         
-        return os.path.join( results, self.name )
+##         return os.path.join( results, self.name )
         
-    def run(self, results):
-        os.putenv("PLEARN_DATE_TIME", "NO")
+    def link_resources(self, results):
+        """Sets up all appropriate links and environment variables required by a test.
+
+        @param results: Either Test.expected_results or Test.run_results
+        (checked in test_results()).
+
+        @returns: Returns the test's results directory path.
+        @rtype: StringType.
+        """
         self.sanity_check()
 
+        ## Validates the results value and return this test's results path.
+        test_results = self.test_results( results )        
+        self.ensure_results_directory( test_results )
 
-        test_results  = self.test_results( results )
-        backup        = self.ensure_results_directory( test_results )
-
-        self.link_resources( test_results )
-        run_command   = ( "./%s %s >& %s"
-                          % ( self.program.get_name(), self.arguments, self.name+'.run_log' )
-                          )
-        vprint(run_command, 2)
-
-        cwd = os.getcwd()
-        os.chdir( test_results )
-        os.system(run_command)
-        os.chdir( cwd )
-        
-        Resources.unlink_resources( test_results )
-        os.putenv("PLEARN_DATE_TIME", "YES")
-
-    def link_resources(self, target_directory):
+        ## Link 'physical' resources
         resources = []
         resources.extend( self.resources )
         resources.append( self.program.path )        
-        Resources.link_resources( self.test_directory, resources, target_directory )
+        Resources.link_resources( self.test_directory, resources, test_results )
 
-    def unlink_resources(self, target_directory):
-        Resources.unlink_resources( target_directory )
+        ## What remains of this method is used to make the following
+        ## binding visible to the test program. It must be removed after
+        ## the test ran (done in unlink_resources()).        
+        metapath = os.path.abspath(test_results)
+        ppath.add_binding(self.metaprotocol, metapath)
+
+        ## This PLEARN_CONFIGS directory specific to this test::
+        ##     - It must not be in the test_results (diff...) BUT;
+        ##     - It must not be in a directory shared with other test's (multithread access...)
+        internal_plearn_configs =\
+            os.path.join( os.path.abspath(results), ## It must not be in the test_results 
+
+                          ".plearn_%s" % self.name  ## It must not be in a
+                                                    ## directory shared
+                                                    ## with other test's
+                          )
+
+        ## Ensure that the directory exists
+        if not os.path.exists( internal_plearn_configs ):
+            os.mkdir( internal_plearn_configs )
+
+        ## Create a new ppath.config file
+        internal_ppath_config = os.path.join( internal_plearn_configs, "ppath.config" )
+        internal_config_file  = open(internal_ppath_config, "w")
+
+        ## This method writes the previously defined and the added
+        ## metaprotocol to the internal_ppath_config
+        ppath.write_bindings( internal_config_file.write )
+
+        ## This process now consider the internal_plearn_configs
+        os.putenv( "PLEARN_CONFIGS",   internal_plearn_configs )
+        os.putenv( "PLEARN_DATE_TIME", "NO"  )
+
+        ## Returns the test's results directory path
+        return test_results
+
+    def unlink_resources(self, test_results):
+        """Removes links made by and environment variables set by I{link_resources}.
+
+        @param test_results: B{Must} be the value returned by I{link_resources}.
+        """
+        Resources.unlink_resources( test_results )
+        ppath.remove_binding(self.metaprotocol)
+        os.putenv( "PLEARN_DATE_TIME", "YES" )
 
 class RoutineDefaults(TaskDefaults):
     test                  = None
@@ -337,8 +381,58 @@ class CompilationRoutine(Routine):
     def body_of_task(self):
         if self.compile_program():
             self.set_status( "Succeeded" )
-            
-class ResultsCreationRoutine(Routine):
+
+
+class ResultsRelatedRoutine(Routine):
+    """Base class for ResultsCreationRoutine && RunTestRoutine.
+
+    Subclasses should only implement status hook and there body_of_task
+    should look like::
+
+        def body_of_task(self):
+            self.run_test( APPROPRIATE_DIRECTORY )
+    """
+    
+    no_compile_option = False
+
+    def compiled(self):    
+        if not self.__class__.no_compile_option:
+            compilation_succeeded = self.compile_program()
+            if not compilation_succeeded:
+                vprint("%s bails out." % self.classname(), 2)
+                return False
+        return True
+
+    def run_test(self, results):
+        if not self.compiled():
+            return
+
+        vprint("\nRunning program:", 2)
+        vprint("----------------", 2)
+
+        test_results  = self.test.link_resources( results )
+
+        run_command   = ( "./%s %s >& %s"
+                          % ( self.test.program.get_name(), self.test.arguments, self.test.name+'.run_log' )
+                          )
+        
+        vprint(run_command, 2)
+
+        ## Run the test from inside the test_results directory and return
+        ## to the cwd
+        cwd = os.getcwd()
+        os.chdir( test_results )
+        os.system(run_command)
+        os.chdir( cwd )
+
+        ## Set the status and quit
+        self.status_hook()
+        self.test.unlink_resources( test_results )
+
+    def status_hook(self):
+        raise NotImplementedError
+        
+class ResultsCreationRoutine(ResultsRelatedRoutine):
     """Generates the expected results target tests.
 
     Before a test can be ran, it must defines its expected results. In the
@@ -352,29 +446,13 @@ class ResultsCreationRoutine(Routine):
     B{Do not modify} the results directory manually.
     """
 
-    no_compile_option = False
-    
     def body_of_task(self):
-        if not ResultsCreationRoutine.no_compile_option:
-            compilation_succeeded = self.compile_program()
-            if not compilation_succeeded:
-                vprint("Results creation bails out.", 2)
-                return
-            
-        vprint("\nResults creation:", 2)
-        vprint("-----------------", 2)
-        
-        self.test.run( Test.expected_results )
+        self.run_test( Test.expected_results )
 
-        mappings = { os.path.abspath(Test.expected_results): "$RESULTS" }
-        mappings.update( plpath.env_mappings )
-        mappings.update( Resources.name_resolution )
-        plpath.process_with_mappings( Test.expected_results, mappings )
-        
-        vprint("", 2)
+    def status_hook(self):
         self.set_status( "Succeeded" )
 
-class RunTestRoutine(Routine):        
+class RunTestRoutine(ResultsRelatedRoutine):        
     """Compares current results to expected ones.
     
     B{Note that}, before a test can be ran, it must defines its
@@ -387,9 +465,9 @@ class RunTestRoutine(Routine):
 
     B{Do not modify} the results directory manually.
     """
-
-    no_compile_option = False
-
+    def body_of_task(self):        
+        self.run_test( Test.run_results )
+    
     def preprocessing(self):
         self.set_attribute( "expected_results",
                             self.test.test_results( Test.expected_results ) )
@@ -402,24 +480,8 @@ class RunTestRoutine(Routine):
                 "prior to any use of the 'run' mode."
                 % self.test.get_path()
                 )
-    
-    def body_of_task(self):        
-        if not RunTestRoutine.no_compile_option:
-            compilation_succeeded = self.compile_program()
-            if not compilation_succeeded:
-                vprint("Running bails out.", 2)
-                return
-        
-        vprint("\nRunning the test:", 2)
-        vprint("-----------------", 2)
-        
-        self.test.run( Test.run_results )
 
-        mappings = { os.path.abspath(Test.run_results): "$RESULTS" }
-        mappings.update( plpath.env_mappings )
-        mappings.update( Resources.name_resolution )
-        plpath.process_with_mappings( Test.run_results, mappings )
-
+    def status_hook(self):
         idiff  =  IntelligentDiff( self.test )
         diffs  =  idiff.diff( self.expected_results, self.run_results )
         if diffs == []:
@@ -429,3 +491,4 @@ class RunTestRoutine(Routine):
                                         self.test.get_name()+'.failed' )
             toolkit.lines_to_file( diffs, report_path )
             self.set_status( "Failed" )
+        

@@ -1,11 +1,53 @@
-__cvs_id__ = "$Id: programs.py,v 1.8 2004/12/21 16:22:39 dorionc Exp $"
+__cvs_id__ = "$Id: programs.py,v 1.9 2005/01/25 03:15:57 dorionc Exp $"
 
 import os, string, types
-import plearn.utilities.plpath         as     plpath
+import plearn.utilities.ppath          as     ppath
 import plearn.utilities.toolkit        as     toolkit
 
 from   plearn.utilities.verbosity      import vprint
 from   plearn.utilities.FrozenObject   import FrozenObject
+
+########################################
+##  Helper Functions  ##################
+########################################
+
+## Hardcoded branch management:
+## 
+## @var plbranches: We call plearn branches the PLearn, LisaPLearn and apstatsoft libraries.
+##
+## The plbranches format is old and is inspired from a removed module
+## (plpath). It may well be inappropriate: rethink all this when the
+## branches will be moved to a config file.
+plbranches = []
+for mpath in ["PLEARNDIR", "APSTATDIR", "LISAPLEARNDIR"]:
+    try:
+        plbranches.append( ppath.ppath(mpath) )
+    except:
+        pass
+
+def plcommand(command_name):
+    """The absolute path to the command named I{command_name}.
+
+    @param command_name: The name of a command the user expect to be
+    found in the 'commands' directory of one of the plearn branches.
+    @type  command_name: String
+
+    @return: A string representing the path to the command. The
+    function returns None if the command is not found.
+    """
+    command_path = None
+    for plbranch in plbranches:
+        cmd_path = os.path.join(plbranch, 'commands', command_name)
+        path     = cmd_path+'.cc'
+        if os.path.exists( path ):
+            command_path = cmd_path
+            break
+
+    return command_path
+
+########################################
+##  Helper Classes  ####################
+########################################
 
 class PyTestUsageError(Exception): 
     def __init__(self, msg):
@@ -52,7 +94,7 @@ class Program(FrozenObject):
 
 class GlobalProgram(Program):
     def get_path(self):
-        command_path = plpath.plcommand(self.name)
+        command_path = plcommand(self.name)
 
         if command_path is None:
             path = toolkit.command_output( "which %s"%self.name )[0]
@@ -122,6 +164,7 @@ class Compilable:
 
         assert isinstance(status, type(True))
         Compilable.compilation_status[self.path] = status
+        return status
     
     def compile(self):
         if Compilable.compilation_status.has_key(self.path):
@@ -130,10 +173,14 @@ class Compilable:
         directory_when_called = os.getcwd()
         os.chdir( self.processing_directory )
 
-        if not os.path.exists( plpath.pytest_dir ):
-            os.makedirs( plpath.pytest_dir )
+        if not os.path.exists( ppath.pytest_dir ):
+            os.makedirs( ppath.pytest_dir )
+
+        ## Remove the symbolic link
+        if os.path.islink( self.path ):
+            os.remove(self.path)
             
-        log_file_name = os.path.join(plpath.pytest_dir,self.name + '.compilation_log')
+        log_file_name = os.path.join(ppath.pytest_dir,self.name + '.compilation_log')
         compile_cmd   = ( "%s %s %s >& %s"
                           % ( self.compiler, self.compile_options,
                               self.path,     log_file_name         )

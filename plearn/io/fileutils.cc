@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.55 2005/01/19 14:02:10 tihocan Exp $
+   * $Id: fileutils.cc,v 1.56 2005/01/25 03:15:24 dorionc Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -525,10 +525,10 @@ string newFilename(const string directory, const string prefix, bool is_director
 
 string makeFileNameValid(const string& path)
 {
-  string dirname = extract_directory(path);
+  string dirname  = extract_directory(path);
   string filename = extract_filename_without_extension(path);
-  string ext= extract_extension(path);
-  string ret=path;
+  string ext      = extract_extension(path);
+  string ret      = path;
   if(filename.length() + ext.length() > 256)
     {
       int j= 0;

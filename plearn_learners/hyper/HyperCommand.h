@@ -35,7 +35,7 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperCommand.h,v 1.2 2005/01/12 14:42:53 tihocan Exp $ 
+   * $Id: HyperCommand.h,v 1.3 2005/01/25 03:15:51 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file HyperCommand.h */
@@ -44,6 +44,7 @@
 
 #include <plearn/base/Object.h>
 #include <plearn_learners/generic/PLearner.h>
+#include <plearn/io/PPath.h>
 
 namespace PLearn {
 using namespace std;
@@ -61,7 +62,7 @@ private:
 protected:
 
   HyperLearner* hlearner;   //!< A 'real' pointer to avoid cycles (and memory leaks)
-  string expdir; //<! where to report results
+  PPath expdir; //<! where to report results
 
 public:
 

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: DiskVMatrix.h,v 1.12 2004/07/07 17:30:48 tihocan Exp $
+   * $Id: DiskVMatrix.h,v 1.13 2005/01/25 03:15:46 dorionc Exp $
    ******************************************************* */
 
 
@@ -66,7 +66,7 @@ protected:
 public:
 
   // Build options
-  string dirname;
+  PPath dirname;
   //bool readwritemode;
   double tolerance;    // the error tolerance for storing doubles as floats
   

@@ -1,10 +1,10 @@
-__cvs_id__ = "$Id: IntelligentDiff.py,v 1.11 2004/12/21 16:22:39 dorionc Exp $"
+__cvs_id__ = "$Id: IntelligentDiff.py,v 1.12 2005/01/25 03:15:56 dorionc Exp $"
 
 import copy, os, string
 
 from   programs                      import PyTestUsageError
 
-import plearn.utilities.plpath       as     plpath
+import plearn.utilities.ppath        as     ppath
 import plearn.utilities.toolkit      as     toolkit
 from   plearn.utilities.verbosity    import *
 
@@ -14,7 +14,8 @@ class Resources:
 
     def memorize(cls, abspath, fname):
         if not cls.name_resolution.has_key(abspath):
-            cls.name_resolution[abspath] = "$RESOURCES{%s}"%fname        
+            ## cls.name_resolution[abspath] = "$RESOURCES{%s}"%fname
+            cls.name_resolution[abspath] = fname        
     memorize = classmethod(memorize)                                
 
     def single_link(cls, path_to, resource, target_dir, must_exist=True):
@@ -95,7 +96,7 @@ class IntelligentDiff:
         ## At least one is not 
         if bench_is:
             self.differences.append(
-                "%s is a directory while %s is not." % (bench, other)
+                "%s is a directory while %s is not.\n" % (bench, other)
                 )
             
         elif other_is:
@@ -103,7 +104,7 @@ class IntelligentDiff:
                 vprint("Empty directory %s was skipped." % other, 2)
             else:
                 self.differences.append(
-                    "%s is a directory while %s is not." % (other, bench) )
+                    "%s is a directory while %s is not.\n" % (other, bench) )
                 
         else: ## Both are not
             return False        
@@ -115,7 +116,7 @@ class IntelligentDiff:
             vprint("%s is link: diff will be skipped."%other, 2)
         elif os.path.islink(bench):
             self.differences.append(
-                "%s is a link while %s is not." % (bench, other) )
+                "%s is a link while %s is not.\n" % (bench, other) )
         else:
             return False
         return True
@@ -130,11 +131,11 @@ class IntelligentDiff:
         ## At least one is not 
         if bench_is:
             self.differences.append(
-                "%s is a file while %s is not." % (bench, other) )
+                "%s is a file while %s is not.\n" % (bench, other) )
 
         elif other_is:
             self.differences.append(
-                "%s is a file while %s is not." % (other, bench) )
+                "%s is a file while %s is not.\n" % (other, bench) )
 
         else: ## Both are not
             return False
@@ -158,7 +159,7 @@ class IntelligentDiff:
     def diff_directories(self, bench, other):
         other_list = os.listdir( other )
         toolkit.exempt_list_of( other_list,
-                                plpath.special_directories )
+                                ppath.special_directories )
         
         for of_name in other_list:
             bf = os.path.join(bench, of_name)
