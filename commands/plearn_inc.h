@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.36 2004/10/27 13:21:26 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.37 2004/11/01 14:14:10 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -49,6 +49,8 @@
  * Miscellaneous *
  *****************/
 #include <plearn_learners/misc/Grapher.h>
+#include <plearn/math/ManualBinner.h>
+#include <plearn/math/SoftHistogramBinner.h>
 #include <plearn/misc/ShellScript.h>
 #include <plearn/misc/RunObject.h>
 #include <plearn/db/UCISpecification.h>
@@ -110,6 +112,7 @@
 #include <plearn_learners/regressors/ConstantRegressor.h>
 #include <plearn_learners/regressors/LinearRegressor.h>
 #include <plearn_learners/regressors/PLS.h>
+#include <plearn_learners/regressors/RankLearner.h>
 #include <plearn_learners/unsupervised/PCA.h>
 // Distribution (deprecated)
 #include <plearn_learners/distributions/LocallyWeightedDistribution.h>
@@ -130,6 +133,8 @@
 /************
  * Splitter *
  ************/
+#include <plearn/vmat/BinSplitter.h>
+#include <plearn/vmat/ConcatSetsSplitter.h>
 #include <plearn/vmat/DBSplitter.h>
 #include <plearn/vmat/ExplicitSplitter.h>
 #include <plearn/vmat/FilterSplitter.h>
