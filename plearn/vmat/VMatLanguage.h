@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VMatLanguage.h,v 1.9 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: VMatLanguage.h,v 1.10 2004/02/26 20:12:04 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -140,12 +140,12 @@ public:
     {
       program.compileString(program_string,fieldnames);
   
-      fieldinfos.resize(fieldnames.size());
+      fieldinfos.resize((int)fieldnames.size());
       for(unsigned int j=0; j<fieldnames.size(); j++)
         fieldinfos[j] = VMField(fieldnames[j]);
 
       sourcevec.resize(source->width());
-      width_ = fieldnames.size();
+      width_ = (int)fieldnames.size();
       length_ = source.length();
       
     }
