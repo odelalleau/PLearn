@@ -62,6 +62,7 @@ public:
   int init_train_size;
 
   //! At how many timesteps must we retrain?  (default: 1)
+  //! If this is zero, train() is never called.
   int train_step;
   
   //! The last time-step to use for testing (Default = -1, i.e. use all data)
@@ -135,6 +136,11 @@ protected:
   //! Utility method to report the amount of memory used at timestep t
   virtual void reportMemoryUsage(int t);
 
+  //! Utility method that returns true if train() should be called
+  //! at timestep t.  By default, this is determined from the
+  //! 'train_step' option, but can be redefined in derived classes
+  virtual bool shouldTrain(int t);
+  
   //! Utility method to return the training VMatrix at timestep t
   //! (i.e. all timesteps 0..t-1, t excluded)
   virtual VMat trainVMat(int t);
@@ -166,6 +172,8 @@ public:
   
   //!  Does the necessary operations to transform a shallow copy (this)
   //!  into a deep copy by deep-copying all the members that need to be.
+  void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+  
   PLEARN_DECLARE_OBJECT(SequentialValidation);
 };
   

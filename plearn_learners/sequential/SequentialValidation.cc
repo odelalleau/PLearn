@@ -342,10 +342,6 @@ void SequentialValidation::run()
   Vec output(learner->outputsize());
   Vec costs(learner->nTestCosts());
 
-  // We shall keep track of "training_time_step" separately of t, which is
-  // the test time step
-  int next_training_time_step = init_train_size;
-  
   for (int t=init_train_size; t <= maxt; t++, splitnum++)
   {
 #ifdef DEBUG
@@ -364,10 +360,8 @@ void SequentialValidation::run()
         measure_after_test.size()  > 0  )
       force_mkdir(splitdir);
     
-    // TRAIN only if we arrive at the "next scheduled training time step"
-    if (t == next_training_time_step) {
-      next_training_time_step += train_step;
-    
+    // TRAIN only if we arrive at an allowed training time-step
+    if (shouldTrain(t)) {
       // Compute training set.  Don't compute test set right away in case
       // it's a complicated structure that cannot co-exist with an
       // instantiated training set
@@ -496,20 +490,30 @@ void SequentialValidation::reportMemoryUsage(int t)
   system(method1.c_str());
   system(method2.c_str());
 }
-  
+
+bool SequentialValidation::shouldTrain(int t)
+{
+  if (train_step <= 0)
+    return false;
+  return (t - init_train_size) % train_step == 0;
+}
+
 VMat SequentialValidation::trainVMat(int t)
 {
   // exclude t, last training pair is (t-2,t-1)
+  assert( dataset );
   return dataset.subMatRows(0,t);
 }
 
 VMat SequentialValidation::testVMat(int t)
 {
+  assert( dataset );
   return dataset.subMatRows(0,t+1);
 }
 
 int SequentialValidation::maxTimeStep() const
 {
+  assert( dataset );
   return dataset.length();
 }
 
@@ -524,6 +528,18 @@ void SequentialValidation::measureOptions(
     out << optvalue;
   }
 }
+
+void SequentialValidation::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+  inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(dataset,             copies);
+  deepCopyField(learner,             copies);
+  deepCopyField(statnames,           copies);
+  deepCopyField(timewise_statnames,  copies);
+  deepCopyField(measure_after_train, copies);
+  deepCopyField(measure_after_test,  copies);
+}
+
 
 } // end of namespace PLearn
 
