@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TangentLearner.cc,v 1.11 2004/07/19 14:55:29 yoshua Exp $ 
+   * $Id: TangentLearner.cc,v 1.12 2004/07/19 22:30:55 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
@@ -52,7 +52,7 @@
 #include "random.h"
 #include "SumOfVariable.h"
 #include "TanhVariable.h"
-//#include "DiagonalizedFactorsProductVariable.h"
+#include "DiagonalizedFactorsProductVariable.h"
 #include "random.h"
 #include "plapack.h"
 //#include "TMat_maths_impl.h"
@@ -268,7 +268,7 @@ void TangentLearner::build_()
         c = Var(n_hidden_units,1,"c");
         V = Var(n_hidden_units,n,"V");
         Var a = tanh(c + product(V,x));
-        Var tangent_plane; // = diagonalized_factors_product(W,1-a*a,V); 
+        Var tangent_plane = diagonalized_factors_product(W,1-a*a,V); 
         tangent_predictor = Func(x, W & c & V, tangent_plane);
         embedding = product(W,a);
         if (output_type=="tangent_plane")
