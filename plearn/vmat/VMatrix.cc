@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.32 2003/10/31 20:50:42 plearner Exp $
+* $Id: VMatrix.cc,v 1.33 2003/11/25 14:53:05 tihocan Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -104,7 +104,7 @@ void VMatrix::declareOptions(OptionList & ol)
                 "A directory in which to store meta-information for this matrix \n"
                 "You don't always have to give this explicitly. For ex. if your \n"
                 "vmat is the outer VMatrix in a .vmat file, the metadatadir will \n"
-                "automatically be set to name_ov_vmat_file.metadata/ \n"
+                "automatically be set to name_of_vmat_file.metadata/ \n"
                 "And if it is the source inside another VMatrix that sets its \n"
                 "metadatadir, it will often be set from that surrounding vmat's metadata \n");
   inherited::declareOptions(ol);
