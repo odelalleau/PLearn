@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussianContinuumDistribution.cc,v 1.1 2005/01/27 14:17:38 tihocan Exp $
+   * $Id: GaussianContinuumDistribution.cc,v 1.2 2005/02/07 14:57:38 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -1262,7 +1262,13 @@ void GaussianContinuumDistribution::build()
   build_();
 }
 
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:1419)  // Get rid of compiler warning.
+#endif
 extern void varDeepCopyField(Var& field, CopiesMap& copies);
+#ifdef __INTEL_COMPILER
+#pragma warning(default:1419)
+#endif
 
 void GaussianContinuumDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {  inherited::makeDeepCopyFromShallowCopy(copies);
