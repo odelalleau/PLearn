@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.22 2004/03/24 18:41:40 nova77 Exp $
+   * $Id: vmatmain.cc,v 1.23 2004/03/24 18:52:35 nova77 Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -325,6 +325,8 @@ void viewVMat(const VMat& vm)
   bool onError=false;
 
   map<int,Vec> cached_columns;
+
+  try {
 
   while(key != 'q' && key != 'Q')
     {
@@ -871,6 +873,13 @@ void viewVMat(const VMat& vm)
         break;
       }
     }
+  } // end try
+  catch(const PLearnError& e)
+  {
+	 endwin();
+	 throw(e);
+  }
+  
 
   endwin();
 }
@@ -1055,7 +1064,7 @@ void viewVMat(const VMat& vm, int lin, int col)
 	  sleep(1);
 	  break;
 	}
-    }
+  }
   
   endwin();
 }
