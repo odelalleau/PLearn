@@ -134,7 +134,7 @@ def _parse_plargs(args):
     and stores the value of the arguments as attributes to plargs."""
     for a in args:
         k, v = a.split('=', 1)
-        plargs.__dict__[k] = plearn_snippet(v)
+        plargs.__dict__[k] = v
 
 
 class _pyplearn_magic_module(object):
