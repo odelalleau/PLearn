@@ -36,6 +36,7 @@
 
 
 #include "PStream_util.h"
+#include "pl_nullstreambuf.h"
 #include <iostream>
 
 
