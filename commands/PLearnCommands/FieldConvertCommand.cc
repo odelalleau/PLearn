@@ -31,14 +31,15 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: FieldConvertCommand.cc,v 1.38 2004/10/19 17:12:08 tihocan Exp $
+ * $Id: FieldConvertCommand.cc,v 1.39 2005/02/04 15:08:37 tihocan Exp $
  ******************************************************* */
 
 #include "FieldConvertCommand.h"
+#include <plearn/base/stringutils.h>
 #include <plearn/db/getDataSet.h>
+#include <plearn/io/openFile.h>
 #include <plearn/math/pl_erf.h>       //!< For gauss_01_quantile.
 #include <plearn/math/random.h>
-#include <plearn/base/stringutils.h>
 #include <plearn/vmat/SelectRowsVMatrix.h>
 #include <plearn/vmat/VMat.h>
 
@@ -278,29 +279,29 @@ void FieldConvertCommand::run(const vector<string> & args)
   TVec<StatsCollector> sc;
   sc = vm->getStats();
 
-  ofstream* out;
-  ofstream* out_uni = 0;
-  string filename_non_uni = desti_fn + ".non_uniformized.vmat";
+  PStream out;
+  PStream out_uni;
+  PPath filename_non_uni = desti_fn + ".non_uniformized.vmat";
   if (uniformize > 0) {
     // We write two files: the one with the preprocessing and another one with
     // the uniformization.
-    out = new ofstream(filename_non_uni.c_str());
-    out_uni = new ofstream(desti_fn.c_str());
+    out = openFile(filename_non_uni, PStream::raw_ascii, "w");
+    out_uni = openFile(desti_fn, PStream::raw_ascii, "w");
   } else {
-    out = new ofstream(desti_fn.c_str());
+    out = openFile(desti_fn, PStream::raw_ascii, "w");
   }
-  ofstream report(report_fn.c_str());
-  *out<<"<SOURCES>\n";
+  PStream report = openFile(report_fn, PStream::raw_ascii, "w");
+  out<<"<SOURCES>\n";
   if (n_removed == 0) {
-    *out << source_fn;
+    out << source_fn;
   } else {
-    *out << "@" << endl
-         << "SelectRowsVMatrix(" << endl
-         << "  source = AutoVMatrix(specification = \"" << source_fn << "\")" << endl
-         << "  indices = [ " << to_keep << " ]" << endl
-         << ")";
+    out << "@" << endl
+        << "SelectRowsVMatrix(" << endl
+        << "  source = AutoVMatrix(specification = \"" << source_fn << "\")" << endl
+        << "  indices = [ " << to_keep << " ]" << endl
+        << ")";
   }
-  *out << "\n</SOURCES>\n<PROCESSING>\n";
+  out << "\n</SOURCES>\n<PROCESSING>\n";
 
   // Minimun number of representants of a class to be considered significant.
   int n_enough = (int) (FRAC_ENOUGH * vm->length());
@@ -549,7 +550,7 @@ void FieldConvertCommand::run(const vector<string> & args)
     if(action&NORMALIZE)
     {
 
-      *out << "@" << vm->fieldName(i) << " ";
+      out << "@" << vm->fieldName(i) << " ";
       // Replace Nans by either the most frequent value or the mean.
       if(sc[i].nmissing()>0)
       {
@@ -570,7 +571,7 @@ void FieldConvertCommand::run(const vector<string> & args)
           // cout << i << ": maxi >= 10, and missingval = " << missingval << endl;
         }
         
-        *out << "isnan " << missingval << " @" << vm->fieldName(i) << " ifelse ";
+        out << "isnan " << missingval << " @" << vm->fieldName(i) << " ifelse ";
       }
 
       // Uniformize all fields when 'uniformize' is set to 2.
@@ -596,7 +597,7 @@ void FieldConvertCommand::run(const vector<string> & args)
         action ^= NORMALIZE;    // Remove the 'normalize' action.
         action |= UNIFORMIZE;   // And add the 'uniformize' one.
         apply_normalization = false;
-        *out << ":" << vm->fieldName(i) << endl;
+        out << ":" << vm->fieldName(i) << endl;
         need_to_be_uniformized.append(inputsize);
       }
 
@@ -604,7 +605,7 @@ void FieldConvertCommand::run(const vector<string> & args)
       if (apply_normalization) {
         real mu = sc[i].mean();
         real sigma = sc[i].stddev();
-        *out << mu << " - " << sigma << " / :" << vm->fieldName(i)<<"\n";
+        out << mu << " - " << sigma << " / :" << vm->fieldName(i)<<"\n";
       }
 
       // Increase the counter of inputs.
@@ -641,7 +642,7 @@ void FieldConvertCommand::run(const vector<string> & args)
           tol = DISCRETE_TOLERANCE;
         }
         RealMapping rm = sc[i].getAllValuesMapping(&to_be_included, 0, true, tol);
-        *out << "@"<<vm->fieldName(i) <<" " << rm << " "
+        out << "@"<<vm->fieldName(i) <<" " << rm << " "
           << rm.size() << " onehot :"
           << vm->fieldName(i)<<"_:0:"<< (rm.size() - 1) << endl;
 /*        out << "@"<<vm->fieldName(i) <<" " << sc[i].getAllValuesMapping(&to_be_included, 0, true) << " "
@@ -653,7 +654,7 @@ void FieldConvertCommand::run(const vector<string> & args)
 
     if(action&MISSING_BIT)
     {
-      *out<<"@"<<vm->fieldName(i)<<" isnan 1 0 ifelse :"<<vm->fieldName(i)<<"_mbit\n";      
+      out<<"@"<<vm->fieldName(i)<<" isnan 1 0 ifelse :"<<vm->fieldName(i)<<"_mbit\n";      
       inputsize++;
     }
 
@@ -672,7 +673,7 @@ void FieldConvertCommand::run(const vector<string> & args)
     if (action&SKIP) report<<"SKIP ";
     if (additional_proc[i] != "") {
       // There is an additional processing to add after this field.
-      *out << additional_proc[i] << endl;
+      out << additional_proc[i] << endl;
       inputsize += additional_proc_size[i];
       report << "ADD_PROC ";
     }
@@ -685,10 +686,10 @@ void FieldConvertCommand::run(const vector<string> & args)
   delete pb;
 
   // Add the target.
-  *out << "%" << target << " :target\n</PROCESSING>"<<endl;
+  out << "%" << target << " :target\n</PROCESSING>"<<endl;
 
   // Add the sizes.
-  *out << endl  << "<SIZES>"  << endl
+  out << endl  << "<SIZES>"  << endl
                 << inputsize  << endl // inputsize
                 << "1"        << endl // targetsize
                 << "0"        << endl // weightsize
@@ -707,49 +708,40 @@ void FieldConvertCommand::run(const vector<string> & args)
       scale[need_to_be_uniformized[i]] = 2;
     }
     // Write the .vmat file.
-    *out_uni << "# Preprocessed VMat" << endl;
-    *out_uni << "<SOURCES>" << endl;
-    *out_uni << "@" << endl
-             << "ShiftAndRescaleVMatrix(" << endl
-             << "  automatic = 0" << endl
-             << "  shift = [" << shift << "]" << endl
-             << "  scale = [" << scale << "]" << endl
-             << "  underlying_vmat =" << endl;
-    *out_uni << "   PLearnerOutputVMatrix(" << endl;
-    *out_uni << "     train_learners = 1" << endl;
-    *out_uni << "     data = AutoVMatrix(specification = \"" << filename_non_uni << "\")" << endl;
-    *out_uni << "     learners = [" << endl;
-    *out_uni << "       UniformizeLearner(" << endl;
-    *out_uni << "         which_fieldnums = ";
-    *out_uni << "[ " << need_to_be_uniformized << "]" << endl;
-    *out_uni << "       )" << endl;
-    *out_uni << "     ]" << endl;
-    *out_uni << "   )" << endl
-             << ")" << endl;
-    *out_uni << "</SOURCES>" << endl << endl;
-    *out_uni << "<SIZES>"  << endl
-             << inputsize  << endl // inputsize
-             << "1"        << endl // targetsize
-             << "0"        << endl // weightsize
-             << "</SIZES>" << endl;
+    out_uni << "# Preprocessed VMat" << endl;
+    out_uni << "<SOURCES>" << endl;
+    out_uni << "@" << endl
+            << "ShiftAndRescaleVMatrix(" << endl
+            << "  automatic = 0" << endl
+            << "  shift = [" << shift << "]" << endl
+            << "  scale = [" << scale << "]" << endl
+            << "  underlying_vmat =" << endl;
+    out_uni << "   PLearnerOutputVMatrix(" << endl;
+    out_uni << "     train_learners = 1" << endl;
+    out_uni << "     data = AutoVMatrix(specification = \"" << filename_non_uni << "\")" << endl;
+    out_uni << "     learners = [" << endl;
+    out_uni << "       UniformizeLearner(" << endl;
+    out_uni << "         which_fieldnums = ";
+    out_uni << "[ " << need_to_be_uniformized << "]" << endl;
+    out_uni << "       )" << endl;
+    out_uni << "     ]" << endl;
+    out_uni << "   )" << endl
+            << ")" << endl;
+    out_uni << "</SOURCES>" << endl << endl;
+    out_uni << "<SIZES>"  << endl
+            << inputsize  << endl // inputsize
+            << "1"        << endl // targetsize
+            << "0"        << endl // weightsize
+            << "</SIZES>" << endl;
   }
 
   // Possibly add the <PRECOMPUTE> tag.
   if (precompute != "none") {
-    *out << endl << "<PRECOMPUTE>" << endl << precompute << endl << "</PRECOMPUTE>" << endl;
+    out << endl << "<PRECOMPUTE>" << endl << precompute << endl << "</PRECOMPUTE>" << endl;
     if (uniformize > 0) {
-      *out_uni << endl << "<PRECOMPUTE>" << endl << precompute << endl << "</PRECOMPUTE>" << endl;
+      out_uni << endl << "<PRECOMPUTE>" << endl << precompute << endl << "</PRECOMPUTE>" << endl;
     }
   }
-
-  // Free stuff.
-  out->close();
-  delete out;
-  if (uniformize > 0) {
-    out_uni->close();
-    delete out_uni;
-  }
-
 }
 
 ///////////////////////

@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: FieldConvertCommand.h,v 1.19 2004/07/21 16:30:49 chrish42 Exp $
+ * $Id: FieldConvertCommand.h,v 1.20 2005/02/04 15:08:38 tihocan Exp $
  ******************************************************* */
 
 #ifndef FieldConvertCommand_INC
@@ -40,6 +40,7 @@
 #include "PLearnCommand.h"
 #include "PLearnCommandRegistry.h"
 #include <plearn/math/pl_math.h>    //!< For 'real'.
+#include <plearn/io/PPath.h>
 
 namespace PLearn {
 using namespace std;
@@ -76,7 +77,7 @@ protected:
   real PVALUE_THRESHOLD;
   real FRAC_MISSING_TO_SKIP;
   real FRAC_ENOUGH;
-  string source_fn, desti_fn,force_fn,report_fn;
+  PPath source_fn, desti_fn,force_fn,report_fn;
   string precompute;
   int target;
   FieldType type;
