@@ -260,7 +260,7 @@ public:
   { return *(ptr->rawin()); }   
 #else
   bool good() const
-  { return ptr->good(); }
+  { return ptr && ptr->good(); }
 
   operator bool() const
     { return good(); }
