@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat_maths.cc,v 1.6 2003/08/15 17:18:03 yoshua Exp $
+* $Id: VMat_maths.cc,v 1.7 2003/09/20 20:33:35 yoshua Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat_maths.h"
@@ -800,7 +800,7 @@ Mat linearRegression(VMat inputs, VMat outputs, real weight_decay)
 
 real weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas, real weight_decay, Mat theta_t, 
                               bool use_precomputed_XtX_XtY, Mat XtX, Mat XtY, real& sum_squared_Y,
-                              bool return_squared_loss, int verbose_every)
+                              real& sum_gammas, bool return_squared_loss, int verbose_every)
 {
   int inputsize = inputs.width();
   int targetsize = outputs.width();
@@ -810,6 +810,7 @@ real weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas, real weigh
     PLERROR("linearRegression: theta_t(%d,%d) should be (%dx%d)",
             theta_t.length(),theta_t.width(),inputsize+1,targetsize);
 
+  int l=X.length();
   if(!use_precomputed_XtX_XtY) // then compute them
   {
     XtX.clear();
@@ -821,7 +822,6 @@ real weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas, real weigh
     Vec x(X.width());
     Vec y(Y.width());
     real gamma_i;
-    int l=X.length();
     for(int i=0; i<l; i++)
     {
       X->getRow(i,x);
@@ -829,7 +829,8 @@ real weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas, real weigh
       gamma_i = gammas(i,0);
       externalProductScaleAcc(XtX, x,x,gamma_i);
       externalProductScaleAcc(XtY, x,y,gamma_i);
-      sum_squared_Y += dot(y,y);
+      sum_squared_Y += gamma_i * dot(y,y);
+      sum_gammas += gamma_i;
     }
   }
 
@@ -843,14 +844,14 @@ real weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas, real weigh
   real squared_loss=0;
   if (return_squared_loss)
   {
-    // squared loss = sum_{ij} theta_{ij} (X'W X theta')_{ij} + sum_{t,i} Y_{ti}^2 - 2 sum_{ij} theta_{ij} (X'W Y)_{ij}
+    // squared loss = sum_{ij} theta_{ij} (X'W X theta')_{ij} + sum_{t,i} gamma_t*Y_{ti}^2 - 2 sum_{ij} theta_{ij} (X'W Y)_{ij}
     Mat M(inputsize+1,targetsize);
     product(M,XtX,theta_t);
     squared_loss += dot(M,theta_t); // 
     squared_loss += sum_squared_Y;
     squared_loss -= 2*dot(XtY,theta_t);
   }
-  return squared_loss;
+  return squared_loss/l;
 }
 
 //!  Version that does all the memory allocations of XtX, XtY and theta_t. Returns theta_t

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.h,v 1.1 2003/08/26 23:24:13 chapados Exp $
+   * $Id: LinearRegressor.h,v 1.2 2003/09/20 20:33:35 yoshua Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.h */
@@ -55,6 +55,7 @@ protected:
   Mat XtX; //!<  can be re-used if train is called several times on the same data set
   Mat XtY; //!<  can be re-used if train is called several times on the same data set
   real sum_squared_y; //!< can be re-used if train is called several times on the same data set
+  real sum_gammas; //!< sum of weights if weighted error, also for re-using training set with different weight decays
 
   // *********************
   // * protected options *

@@ -1,9 +1,8 @@
-
 // -*- C++ -*-
 
 // StackedLearner.cc
 //
-// Copyright (C) 2003  Pascal Vincent 
+// Copyright (C) 2003 Yoshua Bengio 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -34,10 +33,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.cc,v 1.2 2003/08/13 08:13:46 plearner Exp $ 
+   * $Id: StackedLearner.cc,v 1.3 2003/09/20 20:33:35 yoshua Exp $
    ******************************************************* */
 
+// Authors: Yoshua Bengio
+
 /*! \file StackedLearner.cc */
+
+
 #include "StackedLearner.h"
 
 namespace PLearn <%
@@ -52,7 +55,7 @@ StackedLearner::StackedLearner()
     // build_();
   }
 
-  PLEARN_IMPLEMENT_OBJECT(StackedLearner, "ONE LINE DESCR", "NO HELP");
+  PLEARN_IMPLEMENT_OBJECT(StackedLearner, "ONE LINE DESCRIPTION", "MULTI-LINE \nHELP");
 
   void StackedLearner::declareOptions(OptionList& ol)
   {
@@ -69,13 +72,6 @@ StackedLearner::StackedLearner()
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
-  }
-
-  string StackedLearner::help()
-  {
-    // ### Provide some useful description of what the class is ...
-    return 
-      "StackedLearner implements a ...\n";
   }
 
   void StackedLearner::build_()

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.h,v 1.6 2003/08/13 08:13:46 plearner Exp $
+   * $Id: NNet.h,v 1.7 2003/09/20 20:33:35 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -62,8 +62,10 @@ using namespace std;
     Var wdirect; // bias and weights for direct in-to-out connection
 
     Var output;
-    VarArray costs; // al costs of interest
-    Var cost; // cost for one (input,target)
+    VarArray costs; // all costs of interest
+    VarArray penalties;
+    Var training_cost; // weighted scalar costs[0] including penalties
+    Var test_costs; // hconcat(costs)
 
     VarArray params;  // all arameter input vars
 
@@ -71,7 +73,7 @@ using namespace std;
 
   public:
     mutable Func f; // input -> output
-    mutable Func costf; // input & target -> output & cost
+    mutable Func test_costf; // input & target -> output & test_costs
     mutable Func output_and_target_to_cost; // output & target -> cost
 
   public:

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat_maths.h,v 1.5 2003/08/15 17:18:03 yoshua Exp $
+   * $Id: VMat_maths.h,v 1.6 2003/09/20 20:33:35 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -192,7 +192,8 @@ Mat transposeProduct(VMat m);
   The n+1 is due to the inclusion of the bias terms in the matrices (first row of theta_t)
   If use_precomputed_XtX_XtY is false, then they are computed. Otherwise
   they are used as they are (typically passed precomputed from a previous
-  call made with a possibly different weight_decay)
+  call made with a possibly different weight_decay).
+  Returns average of squared loss.
 */
 real linearRegression(VMat inputs, VMat outputs, real weight_decay, Mat theta_t, 
                       bool use_precomputed_XtX_XtY, Mat XtX, Mat XtY, real& sum_squared_Y,
@@ -202,10 +203,11 @@ real linearRegression(VMat inputs, VMat outputs, real weight_decay, Mat theta_t,
 //!  Version that does all the memory allocations of XtX, XtY and theta_t. Returns theta_t
 Mat linearRegression(VMat inputs, VMat outputs, real weight_decay);
 
-//!  Linear regression where each input point is given a different importance weight (the gammas)
+//! Linear regression where each input point is given a different importance weight (the gammas);
+//! returns weighted average of squared loss
 real weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas,
                               real weight_decay, Mat theta_t, bool use_precomputed_XtX_XtY, Mat XtX,
-                              Mat XtY, real& sum_squared_Y, bool return_squared_loss=false, 
+                              Mat XtY, real& sum_squared_Y, real& sum_gammas, bool return_squared_loss=false, 
                               int verbose_computation_every=0);
 
 /*!   Rebalance the input VMatrix so that each class has a probability 1/nclasses.

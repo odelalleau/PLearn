@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.cc,v 1.2 2003/09/10 18:50:51 yoshua Exp $
+   * $Id: LinearRegressor.cc,v 1.3 2003/09/20 20:33:35 yoshua Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.cc */
@@ -130,6 +130,7 @@ void LinearRegressor::forget()
   XtX.resize(0,XtX.width());
   XtY.resize(0,XtY.width());
   sum_squared_y = 0;
+  sum_gammas = 0;
 }
     
 static Vec extendedinput; //!<  length 1+inputsize(), first element is 1.0 (used by the use method)
@@ -171,15 +172,15 @@ void LinearRegressor::train()
       squared_error =
         weightedLinearRegression(train_set.subMatColumns(0, inputsize()), 
                                  train_set.subMatColumns(inputsize(), outputsize()),
-                                 train_set.lastColumn(), weight_decay*train_set.length(), weights,
-                                 !recompute_XXXY, XtX, XtY,sum_squared_y,true);
+                                 train_set.subMatColumns(inputsize()+outputsize(),1), weight_decay*train_set.length(), weights,
+                                 !recompute_XXXY, XtX, XtY,sum_squared_y,sum_gammas,true);
     }
   else PLERROR("LinearRegressor: expected dataset's weightsize to be either 1 or 0, got %d\n",train_set->weightsize());
 
   Mat weights_excluding_biases = weights.subMatRows(1,inputsize());
   weights_norm = dot(weights_excluding_biases,weights_excluding_biases);
-  train_costs[0] = (squared_error + weight_decay*train_set.length()*weights_norm)/train_set.length();
-  train_costs[1] = squared_error/train_set.length();
+  train_costs[0] = squared_error + weight_decay*weights_norm;
+  train_costs[1] = squared_error;
   train_stats->update(train_costs);
   train_stats->finalize(); 
 }

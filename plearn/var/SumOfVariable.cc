@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOfVariable.cc,v 1.4 2003/08/13 08:13:17 plearner Exp $
+   * $Id: SumOfVariable.cc,v 1.5 2003/09/20 20:33:35 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,9 +54,10 @@ SumOfVariable::SumOfVariable(VMat the_distr, Func the_f, int the_nsamples)
   :NaryVariable(nonInputParentsOfPath(the_f->inputs,the_f->outputs), 
                 the_f->outputs[0]->length(), 
                 the_f->outputs[0]->width()),
-  distr(the_distr), f(the_f), nsamples(the_nsamples), curpos(0),
-  input_value(the_distr->width()), input_gradient(the_distr->width()),
-  output_value(the_f->outputs[0]->size())
+   distr(the_distr), f(the_f), nsamples(the_nsamples), curpos(0),
+   input_value(the_distr->inputsize()+the_distr->targetsize()+the_distr->weightsize()), 
+   input_gradient(the_distr->inputsize()+the_distr->targetsize()+the_distr->weightsize()), 
+   output_value(the_f->outputs[0]->size())
 {
   if(f->outputs.size()!=1)
     PLERROR("In SumOfVariable: function must have a single variable output (maybe you can vconcat the vars into a single one prior to calling sumOf, if this is really what you want)");
@@ -67,7 +68,7 @@ SumOfVariable::SumOfVariable(VMat the_distr, Func the_f, int the_nsamples)
 }
 
 
-PLEARN_IMPLEMENT_OBJECT(SumOfVariable, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(SumOfVariable, "Variable that sums the value of a Func evaluated on each row of a VMat", "NO HELP");
 
 void SumOfVariable::recomputeSize(int& l, int& w) const
 { l=f->outputs[0]->length(); w=f->outputs[0]->width(); }

@@ -1,9 +1,8 @@
-
 // -*- C++ -*-
 
 // StackedLearner.h
 //
-// Copyright (C) 2003  Pascal Vincent 
+// Copyright (C) 2003 Yoshua Bengio 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -34,10 +33,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.h,v 1.2 2003/08/13 08:13:46 plearner Exp $ 
+   * $Id: StackedLearner.h,v 1.3 2003/09/20 20:33:35 yoshua Exp $
    ******************************************************* */
 
+// Authors: Yoshua Bengio
+
 /*! \file StackedLearner.h */
+
+
 #ifndef StackedLearner_INC
 #define StackedLearner_INC
 
@@ -48,13 +51,27 @@ using namespace std;
 
 class StackedLearner: public PLearner
 {
+protected:
+  // *********************
+  // * protected options *
+  // *********************
+
+  // ### declare protected option fields (such as learnt parameters) here
+  // ...
+    
 public:
+
+  typedef PLearner inherited;
   
+
   // ************************
   // * public build options *
   // ************************
 
-  TVec< PP<PLearner> > learners;
+  // ### declare public option fields (such as build options) here
+
+  PP<PLearner> learner1;
+  PP<PLearner> learner2;
 
   // ****************
   // * Constructors *
@@ -87,9 +104,6 @@ public:
 
   //! simply calls inherited::build() then build_() 
   virtual void build();
-
-  //! Provides a help message describing this class
-  static string help();
 
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);

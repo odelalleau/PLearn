@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.11 2003/09/17 15:27:30 yoshua Exp $
+   * $Id: NNet.cc,v 1.12 2003/09/20 20:33:35 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -280,8 +280,8 @@ void NNet::build_()
             }
           
           // take into account the sampleweight
-          if(sampleweight)
-            costs[k]= costs[k] * sampleweight;
+          //if(sampleweight)
+          //  costs[k]= costs[k] * sampleweight; // NO, because this is taken into account (more properly) in stats->update
         }
       
 
@@ -290,7 +290,6 @@ void NNet::build_()
        */
 
       // create penalties
-      VarArray penalties;
       if(w1 && ((layer1_weight_decay + weight_decay)!=0 || (layer1_bias_decay + bias_decay)!=0))
         penalties.append(affine_transform_weight_penalty(w1, (layer1_weight_decay + weight_decay), (layer1_bias_decay + bias_decay)));
       if(w2 && ((layer2_weight_decay + weight_decay)!=0 || (layer2_bias_decay + bias_decay)!=0))
@@ -299,15 +298,18 @@ void NNet::build_()
         penalties.append(affine_transform_weight_penalty(wout, (output_layer_weight_decay + weight_decay), (output_layer_bias_decay + bias_decay)));
       if(wdirect && (direct_in_to_out_weight_decay + weight_decay) != 0)
         penalties.append(sumsquare(wdirect)*(direct_in_to_out_weight_decay + weight_decay));
-      
+
+      test_costs = hconcat(costs);
+
       // apply penalty to cost
       if(penalties.size() != 0)
-        cost = hconcat( sum(hconcat(costs[0] & penalties)) & costs );
+        training_cost = hconcat(sum(hconcat((costs[0]*sampleweight) & penalties)) & (test_costs*sampleweight));
       else    
-        cost = hconcat(costs[0] & costs);
+        training_cost = test_costs*sampleweight;
+
       
-      
-      cost->setName("cost");
+      training_cost->setName("training_cost");
+      test_costs->setName("test_costs");
       output->setName("output");
       
       // Shared values hack...
@@ -323,31 +325,35 @@ void NNet::build_()
       // Funcs
       VarArray invars;
       VarArray outvars;
+      VarArray testinvars;
       if(input)
+      {
         invars.push_back(input);
+        testinvars.push_back(input);
+      }
       if(output)
         outvars.push_back(output);
       if(target)
       {
         invars.push_back(target);
+        testinvars.push_back(target);
         outvars.push_back(target);
       }
       if(sampleweight)
       {
         invars.push_back(sampleweight);
-        outvars.push_back(sampleweight);
       }
 
       f = Func(input, output);
-      costf = Func(invars, output&cost);
-      costf->recomputeParents();
-      output_and_target_to_cost = Func(outvars, cost); 
+      test_costf = Func(testinvars, output&test_costs);
+      test_costf->recomputeParents();
+      output_and_target_to_cost = Func(outvars, test_costs); 
       output_and_target_to_cost->recomputeParents();
 
-      // The total cost
+      // The total training cost
       int l = train_set->length();
       int nsamples = batch_size>0 ? batch_size : l;
-      Func paramf = Func(invars, cost); // parameterized function to optimize
+      Func paramf = Func(invars, training_cost); // parameterized function to optimize
       Var totalcost = meanOf(train_set, paramf, nsamples);
 
       if(optimizer)
@@ -363,11 +369,16 @@ int NNet::outputsize() const
 
 TVec<string> NNet::getTrainCostNames() const
 {
-  return (cost_funcs[0]+"+penalty") & cost_funcs;
+  if (penalties.size() > 0)
+    return (cost_funcs[0]+"+penalty") & cost_funcs;
+  else
+    return cost_funcs;
 }
 
 TVec<string> NNet::getTestCostNames() const
-{ return getTrainCostNames(); }
+{ 
+  return cost_funcs;
+}
 
 
 void NNet::train()
@@ -417,7 +428,7 @@ void NNet::train()
     delete pb;
 
   output_and_target_to_cost->recomputeParents();
-  costf->recomputeParents();
+  test_costf->recomputeParents();
   // cerr << "totalcost->value = " << totalcost->value << endl;
   // cout << "Result for benchmark is: " << totalcost->value << endl;
 }
@@ -432,7 +443,7 @@ void NNet::computeOutput(const Vec& inputv, Vec& outputv) const
 void NNet::computeOutputAndCosts(const Vec& inputv, const Vec& targetv, 
                                  Vec& outputv, Vec& costsv) const
 {
-  costf->fprop(inputv&targetv, outputv&costsv);
+  test_costf->fprop(inputv&targetv, outputv&costsv);
 }
 
 
@@ -505,11 +516,13 @@ void NNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(wdirect, copies);
   deepCopyField(output, copies);
   deepCopyField(costs, copies);
-  deepCopyField(cost, copies);
+  deepCopyField(penalties, copies);
+  deepCopyField(training_cost, copies);
+  deepCopyField(test_costs, copies);
   deepCopyField(params, copies);
   deepCopyField(paramsvalues, copies);
   deepCopyField(f, copies);
-  deepCopyField(costf, copies);
+  deepCopyField(test_costf, copies);
   deepCopyField(output_and_target_to_cost, copies);
   deepCopyField(optimizer, copies);
 }

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: DisplayUtils.h,v 1.2 2002/11/22 19:40:18 ducharme Exp $
+   * $Id: DisplayUtils.h,v 1.3 2003/09/20 20:33:32 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -77,7 +77,7 @@ void displayHistogram(Gnuplot& gs, Mat dataColumn,
 
 /*! * VarGraph * */
 
-  void displayVarGraph(const VarArray& outputs, bool display_values=false, real boxwidth=100, const char* the_filename=0, bool must_wait=true, VarArray display_only_these=VarArray());
+  void displayVarGraph(const VarArray& outputs, bool display_values=false, real boxwidth=100, const char* the_filename=0, bool must_wait=true, VarArray display0_only_these=VarArray());
   void displayFunction(Func f, bool display_values=false, bool display_differentiation=false, real boxwidth=100, const char* the_filename=0, bool must_wait=true);
 
 

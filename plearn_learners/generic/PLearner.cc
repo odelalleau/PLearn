@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.15 2003/08/13 08:13:46 plearner Exp $
+   * $Id: PLearner.cc,v 1.16 2003/09/20 20:33:35 yoshua Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -282,9 +282,8 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
       if(testcosts)
         testcosts->putOrAppendRow(i, costs);
 
-      // Pascal TODO: incorporate weight in statscollector!!!!
       if(test_stats)
-        test_stats->update(costs);
+        test_stats->update(costs,weight);
 
       if(pb)
         pb->update(i);
