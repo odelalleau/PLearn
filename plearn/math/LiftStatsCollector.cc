@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.cc,v 1.9 2004/02/20 21:11:46 chrish42 Exp $
+ * $Id: LiftStatsCollector.cc,v 1.10 2004/03/04 18:05:34 tihocan Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -285,6 +285,12 @@ void LiftStatsCollector::update(const Vec& x, real w)
     n_first_updates.resize(MAX(1000,10*n_first_updates.length()), 2);
   }
   real output_val = x[output_column_index];
+  if (is_missing(output_val)) {
+    // Missing value: we just discard it.
+    is_finalized = false;
+    inherited::update(x,w);
+    return;
+  }
   real target = -1;
   switch(sign_trick) {
     case 0:
@@ -308,7 +314,7 @@ void LiftStatsCollector::update(const Vec& x, real w)
   }
   n_first_updates(nstored, 1) = target;
   if (target != 0 && target != 1) {
-    PLERROR("In LiftStatsCollector::update Target must be 0 or 1 !");
+    PLERROR("In LiftStatsCollector::update - Target must be 0 or 1 !");
   }
   nsamples++;
   nstored++;
