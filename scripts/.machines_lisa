@@ -1,0 +1,104 @@
+#LISA
+
+#black.iro.umontreal.ca machine ou il n'y a pas g++
+#clyb10.iro.umontreal.ca  dead au 10/06/2004
+clyb11.iro.umontreal.ca
+clyb12.iro.umontreal.ca
+clyb13.iro.umontreal.ca
+clyb14.iro.umontreal.ca
+clyb15.iro.umontreal.ca
+clyb16.iro.umontreal.ca
+clyb17.iro.umontreal.ca
+clyb18.iro.umontreal.ca
+clyb19.iro.umontreal.ca
+curie.iro.umontreal.ca
+dirac.iro.umontreal.ca
+einstein.iro.umontreal.ca
+euclide.iro.umontreal.ca
+fermi.iro.umontreal.ca
+lhmm.iro.umontreal.ca
+lisa11.iro.umontreal.ca
+lisa12.iro.umontreal.ca
+lisa13.iro.umontreal.ca
+lisa14.iro.umontreal.ca
+lisa15.iro.umontreal.ca
+lisa16.iro.umontreal.ca
+lisa17.iro.umontreal.ca
+lisa18.iro.umontreal.ca
+lisa21.iro.umontreal.ca
+lisa22.iro.umontreal.ca
+lisa23.iro.umontreal.ca
+lisa24.iro.umontreal.ca
+lisa25.iro.umontreal.ca
+lisa26.iro.umontreal.ca
+lisa27.iro.umontreal.ca
+lisa28.iro.umontreal.ca
+lisa31.iro.umontreal.ca
+lisa32.iro.umontreal.ca
+lisa33.iro.umontreal.ca
+lisa34.iro.umontreal.ca
+lisa35.iro.umontreal.ca
+lisa36.iro.umontreal.ca
+lisa37.iro.umontreal.ca
+lisa38.iro.umontreal.ca
+lknn.iro.umontreal.ca
+lmfa.iro.umontreal.ca
+lmlp.iro.umontreal.ca
+lsom.iro.umontreal.ca
+lsvm.iro.umontreal.ca
+#neumann.iro.umontreal.ca existe plus
+#opter.iro.umontreal.ca c'est une 64 bit je crois
+#pauli.iro.umontreal.ca pas de pauli car sinon ca fait ramer les acces disques de tout le monde
+planck.iro.umontreal.ca
+#popper.iro.umontreal.ca probleme de compilation aussi
+
+
+# CLUSTER
+cite00.iro.umontreal.ca
+cite01.iro.umontreal.ca
+cite02.iro.umontreal.ca
+cite03.iro.umontreal.ca
+cite04.iro.umontreal.ca
+cite05.iro.umontreal.ca
+cite06.iro.umontreal.ca
+cite0a.iro.umontreal.ca
+cite0b.iro.umontreal.ca
+cite0c.iro.umontreal.ca
+#cite0d.iro.umontreal.ca dead au 10/06/2004
+cite0e.iro.umontreal.ca
+cite0f.iro.umontreal.ca
+cite0g.iro.umontreal.ca
+cite0h.iro.umontreal.ca
+#clac00.iro.umontreal.ca je ne sais pas pourquoi mais on n'a pas acces a cette machine 
+clac11.iro.umontreal.ca
+clac12.iro.umontreal.ca
+clac13.iro.umontreal.ca
+clac14.iro.umontreal.ca
+clac15.iro.umontreal.ca
+clac16.iro.umontreal.ca
+clac17.iro.umontreal.ca
+clac18.iro.umontreal.ca
+clac21.iro.umontreal.ca
+clac22.iro.umontreal.ca
+clac23.iro.umontreal.ca
+clac24.iro.umontreal.ca
+clac25.iro.umontreal.ca
+clac26.iro.umontreal.ca
+clac27.iro.umontreal.ca
+clac28.iro.umontreal.ca
+clac31.iro.umontreal.ca
+#clac32.iro.umontreal.ca dead au 10/06/2004
+clac33.iro.umontreal.ca
+clac34.iro.umontreal.ca
+clac35.iro.umontreal.ca
+clac36.iro.umontreal.ca
+clac37.iro.umontreal.ca
+clac38.iro.umontreal.ca
+clac41.iro.umontreal.ca
+clac42.iro.umontreal.ca
+clac43.iro.umontreal.ca
+clac44.iro.umontreal.ca
+clac45.iro.umontreal.ca
+clac46.iro.umontreal.ca
+clac47.iro.umontreal.ca
+clac48.iro.umontreal.ca
