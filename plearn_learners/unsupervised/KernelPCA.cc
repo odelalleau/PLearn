@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelPCA.cc,v 1.1 2004/05/07 19:01:58 tihocan Exp $ 
+   * $Id: KernelPCA.cc,v 1.2 2004/05/11 20:59:08 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -41,7 +41,6 @@
 /*! \file KernelPCA.cc */
 
 #include "AdditiveNormalizationKernel.h"
-#include "GaussianKernel.h"
 #include "KernelPCA.h"
 
 namespace PLearn {
