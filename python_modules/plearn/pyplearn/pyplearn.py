@@ -360,7 +360,7 @@ to enable the very useful I{python-mode} tools and highlighting.
 X{Extending the pyplearn toolkit}
 =================================
 
-Most of the current (and, I hope, future) modules essentially have the
+Most of the current (and, we hope, future) modules essentially have the
 same shape which is::
     
     ## <module_name>.py
@@ -448,11 +448,11 @@ The basic rules for documenting python code are the following:
             \"""
             if not isinstance(a_string, types.StringType):
                 raise TypeError(\"Note that you are not forced to always check the type of args. \"
-                                \"For instance, I won't check the type of 'n'.\")
+                                \"For instance, we won't check the type of 'n'.\")
             return [ a_string for i in range(0, n) ]
                  
-    where the last triple quotes are on there own line. Remark that I
-    bolded the names of the arguments and that I documented their use
+    where the last triple quotes are on there own line. Remark that we
+    bolded the names of the arguments and that we documented their use
     according to I{epytext} standards.
              
 Once you know that, reading the

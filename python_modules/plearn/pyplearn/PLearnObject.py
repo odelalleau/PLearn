@@ -1,9 +1,9 @@
 """Contains the PLearnObject class from which to derive python objects that emulate PLearn ones.
 
-X{Tutorial: using PLearnObject}
+X{Tutorial: Using PLearnObject}
 ===============================
 
-
+Coming soon...
 """
 import inspect
 
