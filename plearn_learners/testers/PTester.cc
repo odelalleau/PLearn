@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.32 2004/07/20 13:25:54 tihocan Exp $ 
+   * $Id: PTester.cc,v 1.33 2004/07/20 13:27:35 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -181,7 +181,7 @@ void PTester::build_()
       temp[1-d].resize(0);      
       
       for (int j=0;j<statmask[i].length();j++) {
-        string mask = stasmask[i][j];
+        string mask = statmask[i][j];
         size_t pos;
         if ((pos=mask.find('*'))==string::npos) {
           PLWARNING("In PTester::build_ : the %s element of statmask does not contain a '*'",mask.c_str());
