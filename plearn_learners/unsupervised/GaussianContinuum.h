@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussianContinuum.h,v 1.3 2004/08/06 14:27:13 larocheh Exp $
+   * $Id: GaussianContinuum.h,v 1.4 2004/08/17 15:28:21 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -43,10 +43,11 @@
 
 #ifndef GaussianContinuum_INC
 #define GaussianContinuum_INC
-
+#include <plearn/io/PStream.h>
 #include <plearn_learners/generic/PLearner.h>
 #include <plearn/var/Func.h>
 #include <plearn/opt/Optimizer.h>
+#include <plearn_learners/distributions/PDistribution.h>
 
 namespace PLearn {
 using namespace std;
@@ -60,16 +61,39 @@ private:
   
 protected:
   // NON-OPTION FIELDS
-
+  int n;
   Func cost_of_one_example;
   Func verify_gradient_func;
+  Var x, noise_var; // input vector
   Var b, W, c, V, muV, smV, smb, snV, snb; // explicit view of the parameters (also in parameters field).
   //Var W_src, c_src, V_src, muV_src, smV_src, smb_src, snV_src, snb_src; 
   //VarArray mu_neighbors, sm_neighbors, sn_neighbors, hidden_neighbors, input_neighbors, index_neighbors, tangent_plane_neighbors;
   Var tangent_targets; // target for the tangent vectors for one example 
   Var tangent_plane;
-  Var mu, sm, sn; // parameters of the conditional models
+  Var mu, sm, sn, mu_noisy; // parameters of the conditional models
   Var p_x, p_target, p_neighbors, target_index, neigbor_indexes;
+  Var sum_nll;
+
+  PP<PDistribution> dist;
+
+  // Random walk fields
+  Array<VMat> ith_step_generated_set;
+
+  // p(x) computation fields
+  VMat train_and_generated_set;
+  TMat<int> train_nearest_neighbors;
+  TMat<int> validation_nearest_neighbors;
+  TVec< Mat > Bs, Fs;
+  Mat mus;
+  Vec sms;
+  Vec sns;
+
+  Mat Ut_svd, V_svd;  // for SVD computation
+  Vec S_svd;      // idem
+  Vec z, zm, zn, x_minus_neighbor, w;
+  Vec t_row, neighbor_row;
+
+  real best_validation_cost;
 
   // *********************
   // * protected options *
@@ -86,14 +110,38 @@ public:
 
   // ### declare public option fields (such as build options) here
 
-  int n_neighbors; // number of neighbors used in local_pca or number of neighbors to predict
+  bool use_noise;
+  real noise;
+  string noise_type;
+  int n_random_walk_step;
+  int n_random_walk_per_point;
+  bool save_image_mat;
+  VMat image_points_vmat;
+  Mat image_points_mat;
+  Mat image_prob_mat;
+  TMat<int> image_nearest_neighbors;
+  real upper_y;
+  real lower_y;
+  real upper_x;
+  real lower_x;
+  int points_per_dim;
+  real min_sigma;
+  real min_diff;
+  bool print_parameters;
+  bool sm_bigger_than_sn;
+  bool use_best_model;
+  int n_neighbors; // number of neighbors used for gradient descent
+  int n_neighbors_density; // number of neighbors for the p(x) density estimation
   int n_dim; // number of reduced dimensions (number of tangent vectors to compute)
+  int compute_cost_every_n_epochs;
   string variances_transfer_function; // "square", "exp" or "softplus"
   PP<Optimizer> optimizer; // to estimate the function that predicts local tangent vectors given the input
   Var embedding;
   Func output_f;
+  Func output_f_all;
   Func predictor; // predicts everything about the gaussian
   Func projection_error_f; // map output to projection error
+  Func noisy_data;
 
   // manual construction of the tangent_predictor
   string architecture_type; // "neural_network" or "linear" or "" or "embedding_neural_nework" or "embedding_quadratic" 
@@ -125,6 +173,12 @@ private:
   //! This does the actual building. 
   // (Please implement in .cc)
   void build_();
+
+  void compute_train_and_validation_costs();
+
+  void make_random_walk();
+
+  void get_image_matrix(Mat& image, VMat image_points_vmat, int begin, string file_path);
 
 protected: 
   
