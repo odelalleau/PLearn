@@ -54,6 +54,8 @@ void MovingAverage::build_()
     PLERROR("In MovingAverage::build_()  Empty cost_funcs : must at least specify one cost function!");
   if (window_length < 1)
     PLERROR("In MovingAverage::build_()  window_length has not been set!");
+
+  max_train_len = window_length;
 }
 
 void MovingAverage::build()
@@ -95,11 +97,11 @@ void MovingAverage::train()
     predictions(t) << output;
     if (t >= horizon)
     {
-      output = predictions(t-horizon);
+      Vec out = predictions(t-horizon);
       train_set->getSubRow(t, target_pos, target);
-      if (!target.hasMissing() && !output.hasMissing())
+      if (!target.hasMissing() && !out.hasMissing())
       {
-        computeCostsFromOutputs(input, output, target, cost);
+        computeCostsFromOutputs(input, out, target, cost);
         errors(t) << cost;
         train_stats->update(cost);
       }
@@ -125,7 +127,7 @@ void MovingAverage::test(VMat testset, PP<VecStatsCollector> test_stats,
   static Mat all_targets;
 
   int start = MAX(window_length-1, last_test_t);
-  start = MAX(last_train_t-1,start);
+  start = MAX(last_train_t,start);
   int target_pos = inputsize();
   if (report_progress)
     pb = new ProgressBar("Testing MovingAverage learner", testset.length()-start);
@@ -138,11 +140,11 @@ void MovingAverage::test(VMat testset, PP<VecStatsCollector> test_stats,
     if (testoutputs) testoutputs->appendRow(output);
     if (t >= horizon)
     {
-      output = predictions(t-horizon);
+      Vec out = predictions(t-horizon);
       testset->getSubRow(t, target_pos, target);
-      if (!target.hasMissing() && !output.hasMissing())
+      if (!target.hasMissing() && !out.hasMissing())
       {
-        computeCostsFromOutputs(input, output, target, cost);
+        computeCostsFromOutputs(input, out, target, cost);
         errors(t) << cost;
         if (testcosts) testcosts->appendRow(cost);
         test_stats->update(cost);

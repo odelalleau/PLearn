@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.9 2003/06/06 05:23:52 plearner Exp $
+   * $Id: PLearner.cc,v 1.10 2003/06/09 21:01:21 ducharme Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -151,6 +151,11 @@ void PLearner::setTrainingSet(VMat training_set)
 { 
   train_set = training_set; 
   build(); forget();
+}
+
+void PLearner::setOnlyTrainingSet(VMat training_set)
+{ 
+  train_set = training_set; 
 }
 
 //! Returns train_set->inputsize()

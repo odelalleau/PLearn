@@ -117,7 +117,7 @@ void SequentialValidation::run()
     PLERROR("Could not create experiment directory %s", expdir.c_str());
 
   // This is to set inputsize() and targetsize()
-  learner->setTrainingSet(dataset);
+  learner->setOnlyTrainingSet(dataset);
 
   // Save this experiment description in the expdir (buildoptions only)
   PLearn::save(append_slash(expdir)+"sequential_validation.psave", *this, OptionBase::buildoption);
@@ -181,8 +181,8 @@ void SequentialValidation::run()
       PLearn::save(splitdir+"training_set.psave", sub_train);
 
     // Train
-    learner->forget(); // PAS CERTAIN!  Doit-on faire un forget a chaque t?
-    learner->setTrainingSet(sub_train);
+    //learner->forget(); // PAS CERTAIN!  Doit-on faire un forget a chaque t?
+    learner->setOnlyTrainingSet(sub_train);
     learner->train();
     //train_stats.finalize();
     if (save_stat_collectors)

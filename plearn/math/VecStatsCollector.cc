@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.7 2003/06/03 20:54:24 ducharme Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.8 2003/06/09 21:00:56 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -121,7 +121,7 @@ void VecStatsCollector::update(const Vec& x)
             cov(i,j)+=x[i]*x[j];
     }
     else*/ 
-  externalProductAcc(cov, x, x);
+    externalProductAcc(cov, x, x);
 }
 
 //! calls update on all rows of m
@@ -133,9 +133,7 @@ void VecStatsCollector::update(const Mat& m)
 }
 
 void VecStatsCollector::build_()
-{
-  if (!cov) cov.resize(0,0);
-}
+{}
 
 void VecStatsCollector::build()
 {

@@ -58,16 +58,10 @@ class SequentialModelSelector: public SequentialLearner
 
     typedef SequentialLearner inherited;
 
-    enum CostType
-    {
-      SumCost = 0,
-      SharpeRatio // not yet defined
-    };
-
     TVec< PP<SequentialLearner> > models;  // list of all the models
     int init_train_size; // size of first training set
     int cost_index; // which element of costs vector is used to select best model
-    CostType cost_type; // the type of cost to be used to select the best model
+    string cost_type; // the type of cost to be used to select the best model
 
   private:
     //! This does the actual building
@@ -88,20 +82,20 @@ class SequentialModelSelector: public SequentialLearner
     //! simply calls inherited::build() then build_()
     virtual void build();
     
-    virtual void train(VecStatsCollector& train_stats);
+    virtual void train();
  
-    virtual void test(VMat testset, VecStatsCollector& test_stats,
-        VMat testoutputs=0, VMat testcosts=0);
+    virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
+        VMat testoutputs=0, VMat testcosts=0) const;
 
-    virtual void computeOutput(const Vec& input, Vec& output);
+    virtual void computeOutput(const Vec& input, Vec& output) const;
 
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
-        const Vec& target, Vec& costs);
+        const Vec& target, Vec& costs) const;
 
     virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
-        Vec& output, Vec& costs);
+        Vec& output, Vec& costs) const;
  
-    virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs);
+    virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
 
     //! This should return the names of the costs computed by computeCostsFromOutputs
     virtual TVec<string> getTestCostNames() const;

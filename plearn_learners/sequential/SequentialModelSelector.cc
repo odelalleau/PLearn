@@ -45,16 +45,16 @@ using namespace std;
 IMPLEMENT_NAME_AND_DEEPCOPY(SequentialModelSelector);
 
 SequentialModelSelector::SequentialModelSelector()
-  : init_train_size(1), cost_index(0), cost_type(SumCost)
+  : init_train_size(1), cost_index(0), cost_type("SumCost")
 {}
 
-void SequentialModelSelector::train(VecStatsCollector& train_stats)
+void SequentialModelSelector::train()
 {
   ProgressBar* pb;
   if (report_progress)
     pb = new ProgressBar("Training learner",train_set.length());
 
-  VecStatsCollector dummy_stats;
+  PP<VecStatsCollector> dummy_stats = new VecStatsCollector();
   best_model.resize(train_set.length());
   for (int t=init_train_size+horizon; t<=train_set.length(); t++)
   {
@@ -64,7 +64,7 @@ void SequentialModelSelector::train(VecStatsCollector& train_stats)
     for (int i=0; i<models.size(); i++)
     {
       models[i]->setTrainingSet(sub_train);
-      models[i]->train(dummy_stats);
+      models[i]->train();
       models[i]->test(sub_test, dummy_stats); // last cost computed goes at t-1, last prediction at t-1-horizon
       Vec sequence_errors = models[i]->errors.subMat(start+horizon,cost_index,t-start-horizon,1).toVecCopy();  // VERIFIER LES INDICES!!!
       sequence_costs[i] = sequenceCost(sequence_errors);
@@ -82,9 +82,10 @@ void SequentialModelSelector::train(VecStatsCollector& train_stats)
     {
       models[i]->setTrainingSet(train_set);
       if (i == best_model[t])
-        models[i]->train(train_stats);
+        //models[i]->train(train_stats);
+        models[i]->train();
       else
-        models[i]->train(dummy_stats);
+        models[i]->train();
     }
 
     if (pb)
@@ -96,14 +97,14 @@ void SequentialModelSelector::train(VecStatsCollector& train_stats)
    delete pb; 
 }
 
-void SequentialModelSelector::test(VMat test_set, VecStatsCollector& test_stats,
-    VMat testoutputs, VMat testcosts)
+void SequentialModelSelector::test(VMat test_set, PP<VecStatsCollector> test_stats,
+    VMat testoutputs, VMat testcosts) const
 {
   ProgressBar* pb;
   if (report_progress)
     pb = new ProgressBar("Testing learner",test_set.length());
 
-  VecStatsCollector dummy_stats;
+  PP<VecStatsCollector> dummy_stats = new VecStatsCollector();
   // first test example is the pair (last_call_train_t-1,last_call_train_t-1+horizon)
   for (int i=0; i<models.size(); i++)
   {
@@ -127,24 +128,25 @@ void SequentialModelSelector::test(VMat test_set, VecStatsCollector& test_stats,
   last_test_t = test_set.length();
 }
 
-void SequentialModelSelector::computeOutput(const Vec& input, Vec& output)
+void SequentialModelSelector::computeOutput(const Vec& input, Vec& output) const
 {
   models[best_model[last_train_t]]->computeOutput(input, output);
 }
 
-void SequentialModelSelector::computeCostsFromOutputs(const Vec& input, const Vec& output, const Vec& target, Vec& costs)
+void SequentialModelSelector::computeCostsFromOutputs(const Vec& input,
+    const Vec& output, const Vec& target, Vec& costs) const
 {
   models[best_model[last_train_t]]->computeCostsFromOutputs(input, output, target, costs);
 }
 
 void SequentialModelSelector::computeOutputAndCosts(const Vec& input,
-    const Vec& target, Vec& output, Vec& costs)
+    const Vec& target, Vec& output, Vec& costs) const
 {
   models[best_model[last_train_t]]->computeOutputAndCosts(input, target, output, costs);
 }
  
 void SequentialModelSelector::computeCostsOnly(const Vec& input,
-    const Vec& target, Vec& costs)
+    const Vec& target, Vec& costs) const
 {
   models[best_model[last_train_t]]->computeCostsOnly(input, target, costs);
 }
@@ -196,20 +198,12 @@ real SequentialModelSelector::sequenceCost(const Vec& sequence_errors)
 {
   real cost_sequence = 0;
 
-  switch (cost_type)
-  {
-    case SumCost:
-      cost_sequence = sum(sequence_errors);
-      break;
-
-    case SharpeRatio:
-      PLERROR("SharpeRatio cost_type not defined!");
-      break;
-
-    default:
-      PLERROR("Invalid cost_type!");
-      break;
-  }
+  if (cost_type == "SumCost")
+    cost_sequence = sum(sequence_errors);
+  else if (cost_type == "SharpeRatio")
+    PLERROR("SharpeRatio cost_type not defined!");
+  else
+    PLERROR("Invalid cost_type!");
 
   return cost_sequence;
 }
