@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: databases.cc,v 1.17 2004/08/04 14:10:42 mariusmuja Exp $
+   * $Id: databases.cc,v 1.18 2004/09/20 16:24:47 mariusmuja Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -837,6 +837,8 @@ void loadClassificationDataset(const string& datasetname, int& inputsize, int& n
       db_dir = db_spec;
     }
     loadUCI(trainset, testset, allset, db_dir, id, normalizeinputs,type);
+    inputsize = allset->inputsize();
+    
   }
   else
     PLERROR("Unknown dbname %s",dbname.c_str());
@@ -980,9 +982,9 @@ void loadUCIAMat(VMat& data, string file, PP<UCISpecification> uci_spec)
     for(int i=is;i<is+ts;i++) {
       data->setStringMapping(i,sym[i-is]);
     }
-    
-    
   }
+
+  data->defineSizes(uci_spec->inputsize, uci_spec->targetsize, uci_spec->weightsize);
 }
 
 ////////////////
