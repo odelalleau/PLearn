@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TMachine.h,v 1.1 2005/02/23 01:31:19 tihocan Exp $ 
+   * $Id: TMachine.h,v 1.2 2005/02/23 21:49:49 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -67,15 +67,10 @@ public:
   //! The underlying Torch Machine object.
   Torch::Machine* machine;
   
-  //! The outputs of the machine.
-  Torch::Sequence* outputs;
-
   // ************************
   // * public build options *
   // ************************
 
-  // ### declare public option fields (such as build options) here
-  // ...
 
   // ****************
   // * Constructors *
@@ -112,15 +107,9 @@ public:
   //! Reset the machine.
   void reset();
 
-  /**
-      The trainer has to call this function when changing
-      the dataset.
-   */
-  void setDataSet(Torch::DataSet *dataset_);
-
   //! Given a sequence, update #outputs#.
   //! In general, there is no need to override this method, however this may
-  //! be needed if after calling forward there is more to update than 'outputs'.
+  //! be needed if after calling forward there is a need to update the machine.
   virtual void forward(Torch::Sequence* sequence);
 
   //! Update the underlying Torch object from this object's options.
