@@ -4,25 +4,35 @@ import plearn.utilities.plpath as plpath
 from plearn.utilities.global_variables  import *
 from plearn.utilities.verbosity         import vprint
 
-from __init__                           import test_suite_dir
 from plearn.tasks.Task                  import Task
 
 from BasicStats                         import BasicStats
 from CompilableProgram                  import *
 from IntelligentDiff                    import *          
 
+raw_input("ResultsOnRun are not removed...")
+
 __all__ = [ "add_global_program", "complete_test_name", "define_test",
             "get_add_options", "relative_path",
             "DefineTest",
-            "Test",        "AddTest",     "CompileTest", "DisableTest",
-            "ResultsTest", "RestoreTest", "RunTest",     "SyncTest"    ]
+            "Test",        "AddTest",     "CompileTest",
+##            "DisableTest",
+            "ResultsTest",
+##            "RestoreTest",
+            "RunTest",     "SyncTest",
+##
+## NEW!
+            "disable_test", "enable_test"
+
+            ]
 
 global_programs = {}
 
-## vprint          = None
-## def set_tests_verbosity(vpr):
-##     global vprint 
-##     vprint = vpr
+#######################################################################
+supported_programs = {
+    'plearn' : os.path.join( plpath.plearndir, "commands", 'plearn' )
+    }
+#######################################################################
 
 def add_global_program(test_directory, prog_name):
     """Properly adds a CompilableProgram object to global_programs.
@@ -30,14 +40,23 @@ def add_global_program(test_directory, prog_name):
     The only global compilable programs currently supported are the branches
     plearn mains.
     """
-    ts_dir = test_suite_dir(test_directory)
-    plearn = globalvars.branches[ts_dir]
-    if string.find(plearn, prog_name) == -1:
-        raise ValueError('The %s global_pymake_prog is not supported yet.'%prog_name)
+##     ts_dir = test_suite_dir(test_directory)
+##     plearn = globalvars.branches[ts_dir]
+##     if string.find(plearn, prog_name) == -1:
+##         raise ValueError('The %s global_pymake_prog is not supported yet.'%prog_name)
+
+    print
+    print test_directory, prog_name
+    raw_input("Update the global programs management!!!")
+    plearn = supported_programs[prog_name]
     
     global_programs[prog_name] = CompilableProgram(plearn)
 
 def complete_test_name(directory):
+    raise DeprecationWarning
+    raw_input( os.path.join( globalvars.pure_branches[test_suite_dir(directory)],
+                         relative_path(directory) ) )
+    
     return os.path.join( globalvars.pure_branches[test_suite_dir(directory)],
                          relative_path(directory) )
 
@@ -53,6 +72,37 @@ def define_test(directory, prog_name, copt, args, cvs_files, compiler):
     globalvars.stats[test.classname()].new_test()
 
     return test
+
+def disable_file_name(directory, test_name=''):
+    if test_name == '':
+        test_name = 'pytest'
+
+    test = os.path.join(directory, test_name)
+    return ( test, test+'.disabled' )
+
+    
+def disable_test(directory, test_name):
+    """Disables an existing test.
+
+    The disabled test can be restored (L{enable test<enable_test>}) afterwards.
+    """   
+    test, dis = disable_file_name(directory, test_name)
+        
+    if os.path.exists( dis ):
+        vprint('%s was already disabled.' % test)
+    else:
+        os.system("touch %s" % dis)
+        vprint('%s is disabled.' % test, 2)
+
+def enable_test(directory, test_name):
+    "Enables a disabled (L{disable test<disable_test>}) test."    
+    test, dis = disable_file_name(directory, test_name)
+
+    if os.path.exists( dis ):
+        os.remove(dis)
+        vprint('%s is enabled.' % test, 2)
+    else:
+        vprint('%s was not disabled.' % test)
 
 def get_add_options(parser):
     return DefineTest().command_line_options(parser)
@@ -275,7 +325,11 @@ class DefineTest(WithOptions):
 class Test(Task):    
     def __init__(self, dispatch, test_id, directory, parent,
                  prog_name=None, compile_options=None, arguments=None, cvs_files=None, compiler=None):
-        os.chdir( test_suite_dir(directory) )
+        ## os.chdir( test_suite_dir(directory) )
+        os.chdir( directory )
+
+        self.name = "TBADDED"
+        raw_input( "Test.name = %s" % self.name )
 
         self.prog_name = prog_name
         self.compile_options = compile_options
@@ -298,7 +352,7 @@ class Test(Task):
     def _failed(self):
         if globalvars.management_modes.has_key(globalvars.current_mode.name):
             return
-        globalvars.stats[self.classname()].failure( complete_test_name(self.directory) )
+        globalvars.stats[self.classname()].failure( plpath.path_in_branches(self.directory) )
 
     def _succeeded(self):
         if globalvars.management_modes.has_key(globalvars.current_mode.name):
@@ -357,11 +411,6 @@ class AddTest(Test):
                   % relative_path(self.config) )
             return True
 
-        current_test_name = complete_test_name(self.directory)
-        if current_test_name in globalvars.from_file.disabled:
-            vprint("Can not add %s: it is disabled... Restore it first!")
-            return True
-
         text = ( DefineTest.set_prog_name.__doc__       +
                  DefineTest.set_compile_options.__doc__ +
                  DefineTest.set_arguments.__doc__       +
@@ -388,10 +437,7 @@ class AddTest(Test):
             opt_text = string.join(option_lines, '\n')
         
         config_text = string.join(config_lines, '\n')
-        config_text += """\nDefineTest(
-        %s
-        )        
-        """%opt_text
+        config_text += "\nDefineTest(\n%s\n)\n"%opt_text
         
         conf = open(self.config, 'w')
         conf.write(config_text)
@@ -480,26 +526,26 @@ class CompileTest(Test):
             return ("cd %s; pymake %s %s" % (directory, self.prog_name, compile_options))
         raise NotImplementedError("Unknown compiler %s" % compiler)
 
-class DisableTest(Test):
-    """Makes a directory unrunable. 
+## class DisableTest(Test):
+##     """Makes a directory unrunable. 
 
-    The disabled test can be restored (restore mode) afterwards.
-    """
-    def __init__(self, dispatch, test_id, directory, parent):
-        Test.__init__(self, dispatch, test_id, directory, parent)
+##     The disabled test can be restored (restore mode) afterwards.
+##     """
+##     def __init__(self, dispatch, test_id, directory, parent):
+##         Test.__init__(self, dispatch, test_id, directory, parent)
         
-        dis_name = complete_test_name(directory)
-        if dis_name in globalvars.from_file.disabled:
-            vprint('%s already disabled.' % dis_name)
-        else:
-            globalvars.from_file.disabled.append(dis_name)
-            globalvars.from_file.modified = True
+##         dis_name = plpath.path_in_branches(directory)
+##         if dis_name in globalvars.from_file.disabled:
+##             vprint('%s already disabled.' % dis_name)
+##         else:
+##             globalvars.from_file.disabled.append(dis_name)
+##             globalvars.from_file.modified = True
             
-    def _do_not_run(self):
-        return True
+##     def _do_not_run(self):
+##         return True
     
-    def build_cmd_line(self, directory, prog_name, compile_options, arguments, cvs_files, compiler):
-        return ''
+##     def build_cmd_line(self, directory, prog_name, compile_options, arguments, cvs_files, compiler):
+##         return ''
 
 ## class RemoveTest(CommitTest):
 ##     """Definitively removes a test (also does cvs management).
@@ -638,24 +684,24 @@ class ResultsTest(Test):
     def build_cmd_line(self, directory, prog_name, compile_options, arguments, cvs_files, compiler):
         return ("%s %s" % (prog_name, arguments))
 
-class RestoreTest(Test):
-    """Restores a disabled test.
-    """
-    def __init__(self, dispatch, test_id, directory, parent):
-        Test.__init__(self, dispatch, test_id, directory, parent)
+## class RestoreTest(Test):
+##     """Restores a disabled test.
+##     """
+##     def __init__(self, dispatch, test_id, directory, parent):
+##         Test.__init__(self, dispatch, test_id, directory, parent)
         
-        dis_name = complete_test_name(directory)
-        if dis_name in globalvars.from_file.disabled:
-            globalvars.from_file.disabled.remove(dis_name)
-            globalvars.from_file.modified = True            
-        else:
-            vprint('%s was not disabled.' % dis_name)
+##         dis_name = plpath.path_in_branches(directory)
+##         if dis_name in globalvars.from_file.disabled:
+##             globalvars.from_file.disabled.remove(dis_name)
+##             globalvars.from_file.modified = True            
+##         else:
+##             vprint('%s was not disabled.' % dis_name)
 
-    def _do_not_run(self):
-        return True
+##     def _do_not_run(self):
+##         return True
     
-    def build_cmd_line(self, directory, prog_name, compile_options, arguments, cvs_files, compiler):
-        return ''
+##     def build_cmd_line(self, directory, prog_name, compile_options, arguments, cvs_files, compiler):
+##         return ''
     
 class RunTest(ResultsTest):
     """Compares new results to expected ones.
