@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LLEKernel.cc,v 1.2 2004/07/19 13:26:42 tihocan Exp $ 
+   * $Id: LLEKernel.cc,v 1.3 2004/07/19 14:53:45 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -152,14 +152,28 @@ real LLEKernel::evaluate_i_j(int i, int j) const {
 // evaluate_i_x //
 //////////////////
 real LLEKernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) const {
-  return reconstruct_coeff * reconstruct_ker->evaluate_x_i(x, i, squared_norm_of_x);
+    static int j;
+  if (isInData(x, &j)) {
+    return evaluate_i_j(i, j);
+  } else {
+    return reconstruct_coeff * reconstruct_ker->evaluate_x_i(x, i, squared_norm_of_x);
+  }
 }
 
 ////////////////////////
 // evaluate_i_x_again //
 ////////////////////////
 real LLEKernel::evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x, bool first_time) const {
-  return reconstruct_coeff * reconstruct_ker->evaluate_x_i_again(x, i, squared_norm_of_x, first_time);
+  static int j;
+  static bool is_training_point;
+  if (first_time) {
+    is_training_point = isInData(x, &j);
+  }
+  if (is_training_point) {
+    return evaluate_i_j(i, j);
+  } else {
+    return reconstruct_coeff * reconstruct_ker->evaluate_x_i_again(x, i, squared_norm_of_x, first_time);
+  }
 }
 
 /////////////////////////////////
