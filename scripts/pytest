@@ -379,10 +379,15 @@ def cvs_commit(files):
            priority = "Q")
 
 def cvs_query(option, fname, lookingFor, delim = "\n"):
+    #print fname
     cvsProcess = Popen3("cvs " + option + " " + fname, true)
     lines = cvsProcess.fromchild.readlines()
+    #print lines
     for line in lines :
+        #print line
         index = string.find(line, lookingFor)
+        #print("string.find(" + line + ", " + lookingFor + ") : ")
+        #print index
         if index != -1:
             result = line[index+len(lookingFor):]
             result = result[:string.find(result, delim)]
