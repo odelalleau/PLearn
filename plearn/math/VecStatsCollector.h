@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.h,v 1.6 2003/05/07 05:39:17 plearner Exp $ 
+   * $Id: VecStatsCollector.h,v 1.7 2003/05/26 04:12:43 plearner Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.h */
@@ -97,6 +97,9 @@ public:
   //! updates the statistics when seeing x
   void update(const Vec& x);
   
+  //! calls update on all rows of m
+  void update(const Mat& m);
+
   //! finishes whatever computation are needed after all updates have been made
   void finalize();
 

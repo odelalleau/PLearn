@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.9 2003/05/13 05:55:32 plearner Exp $
+   * $Id: fileutils.cc,v 1.10 2003/05/26 04:12:42 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -186,6 +186,14 @@ int chdir(const string& path)
     return true;
   }
 
+void force_mkdir_for_file(const string& filepath)
+{
+  string dirpath = extract_directory(filepath);
+  if(!force_mkdir(dirpath))
+    PLERROR("force_mkdir(%s) failed",dirpath.c_str());
+}
+
+
   // Forces removal of directory and all its content
   // Return value indicates success (true) or failure (false)
   // If the directory does not exist, false is returned.
@@ -227,19 +235,29 @@ int chdir(const string& path)
     return fsize;
   }
 
-  string loadFileAsString(const string& filename)
+  string loadFileAsString(const string& filepath)
   {
-    long l = filesize(filename);
+    long l = filesize(filepath);
     char* buf = new char[l];    
-    ifstream in(filename.c_str());
+    ifstream in(filepath.c_str());
     if(in.bad())
-      PLERROR("Cannot load file %s",filename.c_str());
+      PLERROR("Cannot load file %s",filepath.c_str());
     in.read(buf, l);
     string text(buf,l);
     delete[] buf;
     return text;
   }
   
+void saveStringInFile(const string& filepath, const string& text)
+{
+  force_mkdir_for_file(filepath);
+  ofstream out(filepath.c_str());
+  if(!out)
+    PLERROR("Couldn't open file %s for writing", filepath.c_str());
+  out << text;
+}
+
+
   void cp(const string& srcpath, const string& destpath)
   {
     string command = "\\cp -R " + srcpath + " " + destpath;

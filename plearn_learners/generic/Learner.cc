@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.cc,v 1.11 2003/05/22 14:34:26 wangxian Exp $
+   * $Id: Learner.cc,v 1.12 2003/05/26 04:12:43 plearner Exp $
    ******************************************************* */
 
 #include "Learner.h"
@@ -1006,6 +1006,9 @@ void Learner::newtrain(VecStatsCollector& stats)
 void Learner::newtest(VMat testset, VecStatsCollector& test_stats, 
              VMat testoutputs, VMat testcosts)
 {
+PLERROR("Learner::newtrain not yet implemented");
+
+/*
   int l = testset.length();
   VVec input;
   VVec target;
@@ -1037,6 +1040,8 @@ void Learner::newtest(VMat testset, VecStatsCollector& test_stats,
     }
 
   test_stats.finalize();
+
+*/
 }
 
 

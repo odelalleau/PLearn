@@ -1,0 +1,76 @@
+
+GenerateDecisionPlot( 
+    # string: Name of the .dx data file to generate
+    dxfilename = "decisionsurf.dx"  ;
+
+    # VMat: Dataset to train the learner on, and to include in the generated file
+    dataset = AutoVMatrix(specification = "circles.amat") ;
+    
+    # int: Number of x sample coordinates (grid)
+    nx = 200  ;
+
+    # int: Number of y sample coordinates (grid)
+    ny = 200  ;
+
+    # string: (Optionally) save trained learner in this file (.psave)
+    save_learner_as = "nnet.psave"  ;
+    
+    # PP< PLearner >: The learner to train/test
+    learner = NNet( 
+    # int:     number of hidden units in first hidden layer (0 means no hidden layer)
+    nhidden = 2;
+
+    # double:     global weight decay for all layers
+    weight_decay = 0  ;
+
+    # string:     what transfer function to use for ouput layer? 
+    #     one of: tanh, sigmoid, exp, softmax 
+    #     an empty string means no output transfer function 
+    output_transfer_func = "sigmoid"  ;
+    
+    # Array< string >:     a list of cost functions to use
+    #     in the form "[ cf1; cf2; cf3; ... ]" where each function is one of: 
+    #       mse (for regression)
+    #       mse_onehot (for classification)
+    #       NLL (negative log likelihood -log(p[c]) for classification) 
+    #       class_error (classification error) 
+    #     The first function of the list will be used as 
+    #     the objective function to optimize 
+    #     (possibly with an added weight decay penalty) 
+    cost_funcs = [ mse_onehot NLL class_error ]  ;
+
+    # PP< Optimizer >:     specify the optimizer to use
+    optimizer = GradientOptimizer(
+    # double: the initial learning rate
+    start_learning_rate = 0.01  ;
+
+    # double: the learning rate decrease constant
+    decrease_constant = 0  ;
+    )
+
+    # int: dimensionality of input vector (should be same as in trainset)
+    inputsize = 2;
+
+    # int: dimensionality of target (should be same as in trainset)
+    targetsize = 1;
+    
+    # int: dimensionality of the output vectors produced by this learner
+    outputsize = 2;
+    
+    # long: The initial seed for the random number generator used to initialize this learner's parameters
+    # as typically done in the forget() method... 
+    # With a given seed, forget() should always initialize the parameters to the same values.
+    seed = 0  ;
+
+    # int: Stage until which train() should train this learner and return.
+    nstages = 10000  ;
+
+    verbosity = 2;
+    );
+
+);
+
+
+
+
+

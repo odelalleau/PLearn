@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat_maths.cc,v 1.3 2003/03/18 18:29:56 ducharme Exp $
+* $Id: VMat_maths.cc,v 1.4 2003/05/26 04:12:43 plearner Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat_maths.h"
@@ -75,6 +75,27 @@ void computeWeightedMean(Vec weights, VMat d, Vec& meanvec)
   meanvec /= sum(weights);
 }
 
+
+void computeRange(VMat d, Vec& minvec, Vec& maxvec)
+{
+  int l = d.length();
+  int w = d.width();
+  minvec.resize(w);
+  maxvec.resize(w);
+  minvec.fill(FLT_MAX);
+  maxvec.fill(-FLT_MAX);
+
+  Vec v(w);
+  for(int i=0; i<l; i++)
+    {
+      d->getRow(i,v);
+      for(int j=0; j<w; j++)
+        {
+          minvec[j] = min(v[j],minvec[j]);
+          maxvec[j] = max(v[j],maxvec[j]);
+        }
+    }
+}
 
 void computeMean(VMat d, Vec& meanvec)
 {

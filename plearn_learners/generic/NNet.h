@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.h,v 1.2 2003/05/07 05:39:19 plearner Exp $
+   * $Id: NNet.h,v 1.3 2003/05/26 04:12:43 plearner Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -75,12 +75,6 @@ using namespace std;
     Func costf; // input & target -> output & cost
     Func output_and_target_to_cost; // output & target -> cost
 
-  protected:
-    Vec input_;
-    Vec target_;
-    Vec weight_;
-
-
   public:
 
     typedef PLearner inherited;
@@ -89,6 +83,7 @@ using namespace std;
     // inputsize, outputszie, targetsize, experiment_name, save_at_every_epoch 
 
     // Build options:
+    int weightpart; // number of components in target that are actually weights
     int nhidden;    // number of hidden units in first hidden layer (default:0)
     int nhidden2;   // number of hidden units in second hidden layer (default:0)
 
@@ -142,14 +137,13 @@ using namespace std;
 
     virtual void train(VecStatsCollector& train_stats);
 
-    virtual void computeOutput(const VVec& inputv, Vec& outputv);
+    virtual void computeOutput(const Vec& input, Vec& output);
     
-    virtual void computeOutputAndCosts(const VVec& inputv, VVec& targetv, const VVec& weightv,
-                               Vec& outputv, Vec& costsv);
+    virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
+                                       Vec& output, Vec& costs);
 
-    virtual void computeCostsFromOutputs(const VVec& inputv, const Vec& outputv, 
-                                 const VVec& targetv, const VVec& weightv,
-                                 Vec& costsv);
+    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
+                                         const Vec& target, Vec& costs);
 
 
     virtual void makeDeepCopyFromShallowCopy(CopiesMap &copies);

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.12 2003/05/21 09:53:50 plearner Exp $
+   * $Id: stringutils.h,v 1.13 2003/05/26 04:12:42 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -55,7 +55,6 @@
 #include <vector>
 #include <iostream>
 #include <iomanip>
-#include "PStream.h"
 
 //!  to be replaced ultimately by the use of sstream, but including it currently produces a thousand warnings... [Pascal]
 #include <strstream.h>
@@ -63,16 +62,6 @@
 namespace PLearn <%
 using namespace std;
   
-  //! read from a string instead of a stream...
-/*
-  template<class T>
-  void read(const string& stringval, T& x)
-  {
-    istrstream in_(stringval.c_str());
-    read(in,x);
-  }
-*/
-
   //!  converts anything to a string (same output as with cout << x)
   template<class T> string tostring(const T& x);
 
@@ -146,6 +135,13 @@ int search_replace(string& text, const string& searchstr, const string& replaces
     otherwise (the default) they are removed.
 */
   vector<string> split(const string& s, const string& delimiters=" \t\n\r", bool keepdelimiters=false);
+
+/*!     Split the string on the first occurence of a delimiter and returns 
+  what was left of the delimitor and what was right of it.
+  If no delimitor character is found, the original string is returned 
+  as left, and "" is returned in right
+*/
+void split_on_first(const string& s, const string& delimiters, string& left, string& right);
 
 /*!     Split the string on the first occurence of a delimiter; return a pair with
     the two split parts.  If the splitting character is not found, the
@@ -251,76 +247,6 @@ vector<string> remove(const vector<string> &v, string element);
 
   //!  ------------------------------------------------------------------
 
-/////////////////////////////////////////////////////////////////////////////////////
-// Please, put me in my own file !!
-
-class ProgressBar;
-
-// base class for pb plugins
-class ProgressBarPlugin
-{
-public:
-  ProgressBarPlugin(){}
-  virtual void addProgressBar(ProgressBar * pb){};
-  virtual void killProgressBar(ProgressBar * pb){};
-  virtual void update(ProgressBar * pb, int newpos){};
-};
-
-class TextProgressBarPlugin : public ProgressBarPlugin
-{
-  PStream out;
-public:
-  virtual void addProgressBar(ProgressBar * pb);
-  virtual void update(ProgressBar * pb, int newpos);
-
-  TextProgressBarPlugin(ostream& _out);
-  TextProgressBarPlugin(PStream& _out);
-  
-  virtual ~TextProgressBarPlugin(){}
-
-};
-
-// This class will help you display progress of a calculation
-// 
-// Each progressBar you create is connected to the same ProgressBarPlugin object.
-// By default, a  TextProgressBarPlugin that dumps the text in stderr is created and used.
-// 
-// FAQ: 
-// Q #1 : How do I reuse the same progress bar?
-// A #1 : simply call progress_bar(i) again with 'i' from 0..maxpos (The text progress bar plugin will display a new progress bar)
-class ProgressBar
-{
-public:
-  string title;
-  int currentpos; // current position
-  int maxpos;
-
-  // creates a new progressbar with the given title and maxpos
-  // *** Note, for now, ignore the stream (someday, remove this argument for 
-  // every progressBar creation in PLearn)
-  ProgressBar(string _title, int the_maxpos);
-  ProgressBar(ostream& _out,string _title, int the_maxpos);
-  ProgressBar(PStream& _out,string _title, int the_maxpos);
-  
-  // moves the progressbar up to position newpos
-  void operator()(int newpos){plugin->update(this,newpos);}
- 
-  void update(int newpos){plugin->update(this,newpos);}
-
-  // this function assumes plugin is always a valid object (it is created statically in the .cc)
-  static void setPlugin(ProgressBarPlugin * _plugin){delete plugin;plugin=_plugin;}
-
-  // Completes and removes the progressBar 
-  void close();
-  
-  // calls close() if not already done
-  ~ProgressBar();
-private:
-  bool closed;
-  static ProgressBarPlugin * plugin;
-};
-
-////////////////////////////////////////////////////////////////
 
 /*! ******************
     * Implementation *

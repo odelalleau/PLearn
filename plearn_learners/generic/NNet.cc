@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.4 2003/05/21 13:42:12 tihocan Exp $
+   * $Id: NNet.cc,v 1.5 2003/05/26 04:12:43 plearner Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -53,7 +53,8 @@ using namespace std;
 IMPLEMENT_NAME_AND_DEEPCOPY(NNet);
 
 NNet::NNet()
-  :nhidden(0),
+  :weightpart(0),
+   nhidden(0),
    nhidden2(0),
    weight_decay(0),
    bias_decay(0),
@@ -148,11 +149,6 @@ void NNet::build()
 
 void NNet::build_()
 {
-  // Resize temporary vecs:
-  input_.resize(inputsize());
-  target_.resize(targetsize());
-  weight_.resize(weightsize());
-
   /*
    * Create Topology Var Graph
    */
@@ -215,20 +211,20 @@ void NNet::build_()
   /*
    * target & weights
    */
-  if(weightsize() != 0 && weightsize() != 1 && targetsize()/2 != weightsize())
+  if(weightpart != 0 && weightpart != 1 && targetsize()/2 != weightpart)
     PLERROR("In NNet::build_()  weightsize must be either:\n"
         "\t0: no weights on costs\n"
         "\t1: single weight applied on total cost\n"
         "\ttargetsize/2: vector of weights applied individually to each component of the cost\n"
-        "weightsize= %d; targetsize= %d.", weightsize(), targetsize());
+        "weightsize= %d; targetsize= %d.", weightpart, targetsize());
 
 
   target_and_weights= Var(targetsize(), "target_and_weights");
-  target = new SubMatVariable(target_and_weights, 0, 0, targetsize()-weightsize(), 1);
+  target = new SubMatVariable(target_and_weights, 0, 0, targetsize()-weightpart, 1);
   target->setName("target");
-  if(0 < weightsize())
+  if(0 < weightpart)
     {
-    costweights = new SubMatVariable(target_and_weights, targetsize()-weightsize(), 0, weightsize(), 1);
+    costweights = new SubMatVariable(target_and_weights, targetsize()-weightpart, 0, weightpart, 1);
     costweights->setName("costweights");
     }
   /*
@@ -241,9 +237,9 @@ void NNet::build_()
 
   for(int k=0; k<ncosts; k++)
     {
-      // create costfuncs and apply individual weights if weightsize() > 1
+      // create costfuncs and apply individual weights if weightpart > 1
       if(cost_funcs[k]=="mse")
-        if(weightsize() < 2)
+        if(weightpart < 2)
           costs[k]= sumsquare(output-target);
         else
           costs[k]= weighted_sumsquare(output-target, costweights);
@@ -257,12 +253,12 @@ void NNet::build_()
       } else if(cost_funcs[k]=="class_error")
           costs[k] = classification_loss(output, target);
       else if(cost_funcs[k]=="multiclass_error")
-        if(weightsize() < 2)
+        if(weightpart < 2)
           costs[k] = multiclass_loss(output, target);
         else
           PLERROR("In NNet::build()  weighted multiclass error cost not implemented.");
       else if(cost_funcs[k]=="cross_entropy")
-        if(weightsize() < 2)
+        if(weightpart < 2)
           costs[k] = cross_entropy(output, target);
         else
           PLERROR("In NNet::build()  weighted cross entropy cost not implemented.");
@@ -271,15 +267,15 @@ void NNet::build_()
 	  costs[k]= dynamic_cast<Variable*>(newObject(cost_funcs[k]));
 	  if(costs[k].isNull())
 	     PLERROR("In NNet::build_()  unknown cost_func option: %s",cost_funcs[k].c_str());
-	  if(weightsize() < 2)
+	  if(weightpart < 2)
 	    costs[k]->setParents(output & target);
 	  else
 	    costs[k]->setParents(output & target & costweights);
 	  costs[k]->build();
 	}
 
-      // apply a single global weight if weightsize() == 1
-      if(1 == weightsize())
+      // apply a single global weight if weightpart == 1
+      if(1 == weightpart)
         costs[k]= costs[k] * costweights;
     }
 
@@ -372,10 +368,14 @@ void NNet::train(VecStatsCollector& train_stats)
     {
       optimizer->nstages = optstage_per_lstage;
       optimizer->optimizeN(train_stats);
+      if(verbosity>2)
+        cerr << "Epoch " << stage << " train objective: " << train_stats.getMean() << endl;
       ++stage;
       if(pb)
         pb->update(stage-initial_stage);
     }
+  if(verbosity>1)
+    cerr << "EPOCH " << stage << " train objective: " << train_stats.getMean() << endl;
 
   if(pb)
     delete pb;
@@ -428,30 +428,22 @@ void NNet::initializeParams()
   wout->matValue(0).clear();
 }
 
-void NNet::computeOutput(const VVec& inputv, Vec& outputv)
+void NNet::computeOutput(const Vec& inputv, Vec& outputv)
 {
-  inputv >> input_;
-  f->fprop(input_,outputv);
+  f->fprop(inputv,outputv);
 }
 
-void NNet::computeOutputAndCosts(const VVec& inputv, VVec& targetv, const VVec& weightv,
-                                       Vec& outputv, Vec& costsv)
+void NNet::computeOutputAndCosts(const Vec& inputv, const Vec& targetv, 
+                                 Vec& outputv, Vec& costsv)
 {
-  inputv >> input_;
-  targetv >> target_;
-  weightv >> weight_;
-  costf->fprop(input_&target_, outputv&costsv);
+  costf->fprop(inputv&targetv, outputv&costsv);
 }
 
 
-void NNet::computeCostsFromOutputs(const VVec& inputv, const Vec& outputv, 
-                                         const VVec& targetv, const VVec& weightv,
-                                         Vec& costsv)
+void NNet::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv, 
+                                   const Vec& targetv, Vec& costsv)
 {
-  // inputv >> input_;
-  targetv >> target_;
-  weightv >> weight_;
-  output_and_target_to_cost->fprop(outputv&target_, costsv); 
+  output_and_target_to_cost->fprop(outputv&targetv, costsv); 
 }
 
 void NNet::forget()

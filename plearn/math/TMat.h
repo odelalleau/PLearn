@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.14 2003/05/20 15:42:12 plearner Exp $
+   * $Id: TMat.h,v 1.15 2003/05/26 04:12:43 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -461,7 +461,7 @@ class TVec
       { fill(f); }
   
       inline void clear() const
-      { clear_n(data(),length()); }
+      { if(data()) clear_n(data(),length()); }
 
       //!  inserts element at position (actually between values at position-1 and posiion). Length is increased by 1.
       inline void insert(int position, T value)

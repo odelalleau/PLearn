@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOfVariable.cc,v 1.2 2003/01/08 21:33:03 ducharme Exp $
+   * $Id: SumOfVariable.cc,v 1.3 2003/05/26 04:12:43 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -134,6 +134,7 @@ void SumOfVariable::fbprop()
   if(nsamples==1)
   {
     distr->getRow(curpos, input_value);
+
     //displayFunction(f, true, false, 250);
     f->fbprop(input_value, value, input_gradient, gradient);
     //displayFunction(f, true, false, 250);

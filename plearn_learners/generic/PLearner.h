@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.4 2003/05/21 09:53:50 plearner Exp $
+   * $Id: PLearner.h,v 1.5 2003/05/26 04:12:43 plearner Exp $
    ******************************************************* */
 
 
@@ -77,10 +77,10 @@ using namespace std;
     //! Data-sets are seen as matrices whose columns or fields are layed out as
     //! follows: a number of input fields, followed by (optional) target fields, 
     //! followed by (optional) weight fields (to weigh each example).
-    int inputsize_;  //!<  number of input fields in the dataset 
-    int targetsize_; //!<  columns followed by targetsize() columns.
-    int weightsize_; //<!  number of weight fields (typically 0 or 1)
-    int outputsize_; //!<  the use() method produces an output vector of size outputsize().
+    int inputsize_;  //!<  same as in train VMatrix
+    int targetsize_; //!<  same as in train VMatrix
+    int weightsize_; //!<  same as in train VMatrix
+    int outputsize_; //!<  the computeOutput method produces an output vector of size outputsize().
     long seed;   //!< the seed used for the random number generator in initializing the learner (see forget() method).
     int stage;
     int nstages;
@@ -91,6 +91,12 @@ using namespace std;
 
     PLearner();
     virtual ~PLearner();
+
+    int inputsize() const { return inputsize_; }
+    int targetsize() const { return targetsize_; }
+    bool weightsize() const { return weightsize_; }
+    inline bool isWeighted() const { return weightsize_>0; }
+    int outputsize() const { return outputsize_; }
 
     //! The experiment directory is the directory in which files 
     //! related to this model are to be saved.     
@@ -128,10 +134,9 @@ using namespace std;
     virtual void build();
 
     //!  Simple accessor methods: (do NOT overload! Set inputsize_ and outputsize_ instead)
-    inline int inputsize() const { return inputsize_; }
-    inline int targetsize() const { return targetsize_; }
-    inline int outputsize() const { return outputsize_; }
-    inline int weightsize() const { return weightsize_; }
+    // inline int inputsize() const { return inputsize_; }
+    // inline int targetsize() const { return targetsize_; }
+    // virtual int outputsize() const { return outputsize_; }
 
     /*!       *** SUBCLASS WRITING: ***
       This method should be called AFTER or inside the build method,
@@ -152,28 +157,27 @@ using namespace std;
     */
     virtual void train(VecStatsCollector& train_stats) =0;
 
+
     //! *** SUBCLASS WRITING: ***
     //! This should be defined in subclasses to compute the output from the input
-    virtual void computeOutput(const VVec& input, Vec& output) =0;
+    virtual void computeOutput(const Vec& input, Vec& output) =0;
 
     //! *** SUBCLASS WRITING: ***
     //! This should be defined in subclasses to compute the weighted costs from
     //! already computed output.
-    virtual void computeCostsFromOutputs(const VVec& input, const Vec& output, 
-                                         const VVec& target, const VVec& weight,
-                                         Vec& costs) =0;
+    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
+                                         const Vec& target, Vec& costs) =0;
                                 
     //! Default calls computeOutput and computeCostsFromOutputs
     //! You may overload this if you have a more efficient way to 
     //! compute both output and weighted costs at the same time.
-    virtual void computeOutputAndCosts(const VVec& input, VVec& target, const VVec& weight,
+    virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
                                        Vec& output, Vec& costs);
 
     //! Default calls computeOutputAndCosts
     //! This may be overloaded if there is a more efficient way to compute the costs
     //! directly, without computing the whole output vector.
-    virtual void computeCostsOnly(const VVec& input, VVec& target, VVec& weight, 
-                              Vec& costs);
+    virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs);
     
   
     //! Performs test on testset, updating test cost statistics,

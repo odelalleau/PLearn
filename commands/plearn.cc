@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.27 2003/05/22 16:24:58 tihocan Exp $
+   * $Id: plearn.cc,v 1.28 2003/05/26 04:12:41 plearner Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -49,12 +49,6 @@
 #include "IndexedVMatrix.h"
 #include "BatchVMatrix.h"
 
-// New generation system
-#include "PExperiment.h"
-#include "NNet.h"
-#include "HyperLearner.h"
-#include "TryAll.h"
-// #include "EarlyStop.h"
 
 // All Available Learners: 
 // #include "KNN.h"
@@ -86,6 +80,14 @@
 
 #include "Experiment.h"
 
+// New generation system
+#include "PExperiment.h"
+#include "GenerateDecisionPlot.h"
+#include "NNet.h"
+//#include "HyperLearner.h"
+//#include "HOpt.h"
+// #include "TryAll.h"
+// #include "EarlyStop.h"
 
 // Commands
 #include "HelpCommand.h"

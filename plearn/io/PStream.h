@@ -1043,6 +1043,39 @@ template <class T> inline PStream &
 operator<<(PStream &out, const set<T> &v)
 { writeSet(out, v); return out; }
 
+
+
+// ****************************************
+// *** Generic save and load operations ***
+// ****************************************
+
+template <class T> 
+inline void load(const string &filepath, T &x, OBflag_t flags = dft_option_flag)
+{
+    ifstream in_(filepath.c_str());
+    if (!in_)
+        PLERROR("Could not open file \"%s\" for reading", filepath.c_str());
+    PStream in(&in_);
+    in.option_flags_in = flags;
+    in >> x;
+}
+
+//! If necessary, missing directories along the filepath will be created
+template<class T> 
+inline void save(const string& filepath, const T& x, OBflag_t flags = dft_option_flag)
+{ 
+  force_mkdir_for_file(filepath);
+
+  ofstream out_(filepath.c_str()); 
+  if(!out_)
+    PLERROR("Could not open file %s for writing",filepath.c_str());
+  
+  PStream out(&out_);
+  out << option_flags(flags);
+  out << x;
+}
+
+
 // **** Useful PStream classes... ****
 // (these can be used similarly to  ifstream, ofstream...)
 

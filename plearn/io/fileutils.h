@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.h,v 1.4 2003/03/19 23:15:10 jkeable Exp $
+   * $Id: fileutils.h,v 1.5 2003/05/26 04:12:42 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -97,39 +97,47 @@ using namespace std;
 */
   bool force_mkdir(const string& dirname);
 
+//! Extracts the directory part of the filepath and calls force_mkdir
+//! Calls PLERROR in case of failure.
+void force_mkdir_for_file(const string& filepath);
+
 /*!     Forces removal of directory and all its content
     Return value indicates success (true) or failure (false)
     If the directory does not exist, false is returned.
 */
   bool force_rmdir(const string& dirname);
 
-  // Returns the length of a file, measured in bytes.
+  //! Returns the length of a file, measured in bytes.
   long filesize(const string& filename);
 
-  // Returns the whole content of the file as a string
-  string loadFileAsString(const string& filename);
+  //! Returns the whole content of the file as a string
+  string loadFileAsString(const string& filepath);
 
-  // calls system with cp -R to recursively copy source to destination
+//! Writes the raw string into the given file
+//! Intermediate directories in filepath are created if necessary
+void saveStringInFile(const string& filepath, const string& text);
+
+  //! calls system with cp -R to recursively copy source to destination
   void cp(const string& srcpath, const string& destpath);
 
-  // calls system rm command with string file as parameters
+  //! calls system rm command with string file as parameters
   void rm(const string& file);
 
-  // calls system mv command with string file as parameters
+  //! calls system mv command with string file as parameters
   void mv(const string& file);
 
-  // calls system mv command with string file as parameters
-  // will not prompt before overwriting
+  //! calls system mv command with string file as parameters
+  //! will not prompt before overwriting
   void mvforce(const string& file);
 
-  // trivial unix touch
+  //! trivial unix touch
   void touch(const string& file);
 
 //! Reads while the characters read exactly match those in s
 //! Will throw a PLERROR exception as soon as it doesn't match
 void readWhileMatches(istream& in, const string& s);
 
-  // skips everything until '\n' (also consumes the '\n')
+  //! skips everything until '\n' (also consumes the '\n')
   void skipRestOfLine(istream& in);
 
   //! will skip all blanks (white space, newline and #-style comments) 
@@ -151,16 +159,16 @@ void readWhileMatches(istream& in, const string& s);
   //! The closingsymbol is read and returned, but not appended to characters_read.
   int smartReadUntilNext(istream& in, string closingsymbols, string& characters_read);
   
-  // peeks the first char after removal of blanks
+  //! peeks the first char after removal of blanks
   inline char peekAfterSkipBlanks(istream& in) { while(isspace(in.get())); in.unget();return in.peek(); }
 
-  // Returns a temporary file (or directory) name suitable
-  // for a unique (one time) use.
+  //! Returns a temporary file (or directory) name suitable
+  //! for a unique (one time) use.
   string newFilename(const string directory="/tmp/", const string prefix="", bool is_directory=false);
 
   string makeFileNameValid(const string& filename);
 
-// returns "./"+filename if filename is relative to current dir
+//! returns "./"+filename if filename is relative to current dir
   string makeExplicitPath(const string& filename);
 
 //! Will return the text, macro processed, with each instance of ${varname} in the text that corresponds to a key in the given map 

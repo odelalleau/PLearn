@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io_deprecated.h,v 1.1 2002/09/26 05:06:53 plearner Exp $
+   * $Id: pl_io_deprecated.h,v 1.2 2003/05/26 04:12:43 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -252,6 +252,50 @@ inline void readNewline(istream& in)
       } 
     else x=default_value; 
   }
+
+
+// **********************************************************
+// deepWrite and deepRead are deprecated. Do not use them. 
+// Send your objects to a PStream instead.
+// **********************************************************
+
+  //!  deepWrite and deepRead for a few basic types
+  typedef map<unsigned long, void*> DeepReadMap;
+  typedef set<void*> DeepWriteSet;
+  inline void deepWrite(ostream& out, DeepWriteSet& already_saved, char x) { write(out,x); }
+  inline void deepRead(istream& in, DeepReadMap& old2new, char& x) { read(in,x); }
+  inline void deepWrite(ostream& out, DeepWriteSet& already_saved, int x) { write(out,x); }
+  inline void deepRead(istream& in, DeepReadMap& old2new, int& x) { read(in,x); }
+  inline void deepWrite(ostream& out, DeepWriteSet& already_saved, unsigned int x) { write(out,x); }
+  inline void deepRead(istream& in, DeepReadMap& old2new, unsigned int& x) { read(in,x); }
+  inline void deepWrite(ostream& out, DeepWriteSet& already_saved, unsigned long x) { write(out,x); }
+  inline void deepRead(istream& in, DeepReadMap& old2new, unsigned long& x) { read(in,x); }
+  inline void deepWrite(ostream& out, DeepWriteSet& already_saved, long int x) { write(out,x); }
+  inline void deepRead(istream& in, DeepReadMap& old2new, long int& x) { read(in,x); }
+  inline void deepWrite(ostream& out, DeepWriteSet& already_saved, bool x) { write(out,x); }
+  inline void deepRead(istream& in, DeepReadMap& old2new, bool& x) { read(in,x); }
+  inline void deepWrite(ostream& out, DeepWriteSet& already_saved, float x) { write(out,x); }
+  inline void deepRead(istream& in, DeepReadMap& old2new, float& x) { read(in,x); }
+  inline void deepWrite(ostream& out, DeepWriteSet& already_saved, double x) { write(out,x); }
+  inline void deepRead(istream& in, DeepReadMap& old2new, double& x) { read(in,x); }
+  template<class A,class B>
+  inline void deepWrite(ostream& out, DeepWriteSet& already_saved, pair<A,B> x) { write(out,x); }
+  template<class A,class B>
+  inline void deepRead(istream& in, DeepReadMap& old2new, pair<A,B>& x) { read(in,x); }
+  inline void deepWrite(ostream& out, DeepWriteSet& already_saved, const char* x) { write(out,x); }
+  inline void deepRead(istream& in, DeepReadMap& old2new, char*& x) { read(in,x); }
+  inline void deepWrite(ostream& out, DeepWriteSet& already_saved, const string& x) { write(out,x); }
+  inline void deepRead(istream& in, DeepReadMap& old2new, string& x) { read(in,x); }
+
+  template<class T>
+  inline void deepWrite(ostream& out, T& x)
+  { DeepWriteSet already_saved; deepWrite(out, already_saved, x); out.flush(); }
+
+  template<class T>
+  inline void deepRead(istream& in, T& x)
+  { DeepReadMap old2new; deepRead(in, old2new, x); }
+
+
 
 
 %> // end of namespace PLearn

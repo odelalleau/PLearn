@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.5 2003/05/21 09:53:50 plearner Exp $
+   * $Id: PLearner.cc,v 1.6 2003/05/26 04:12:43 plearner Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -57,7 +57,6 @@ using namespace std;
 PLearner::PLearner()
   :inputsize_(0), 
    targetsize_(0), 
-   weightsize_(0), 
    outputsize_(0), 
    seed(0), 
    stage(0), nstages(1),
@@ -84,25 +83,23 @@ string PLearner::help()
 void PLearner::declareOptions(OptionList& ol)
 {
   declareOption(ol, "inputsize", &PLearner::inputsize_, OptionBase::buildoption, 
-                "dimensionality of input vector \n");
+                "dimensionality of input vector (should be same as in trainset)\n");
 
   declareOption(ol, "targetsize", &PLearner::targetsize_, OptionBase::buildoption, 
-                "dimensionality of target \n");
+                "dimensionality of target (should be same as in trainset)\n");
 
   declareOption(ol, "weightsize", &PLearner::weightsize_, OptionBase::buildoption, 
-                "dimensionality of weights \n"
-                "This is usually 0 (no weight) or 1 (1 weight per sample). Special loss functions may be able to give a meaning\n"
-                "to weightsize>1. Not all learners support weights.");
+                "Should be the same as in trainset: dimensionality of weights (0 unweighted, 1 weighted) \n");
 
   declareOption(ol, "outputsize", &PLearner::outputsize_, OptionBase::buildoption, 
-                "dimensionality of output \n");
+                "dimensionality of the output vectors produced by this learner\n");
 
   declareOption(ol, "seed", &PLearner::seed, OptionBase::buildoption, 
                 "The initial seed for the random number generator used to initialize this learner's parameters\n"
                 "as typically done in the forget() method... \n"
                 "With a given seed, forget() should always initialize the parameters to the same values.");
 
-  declareOption(ol, "stage", &PLearner::stage, OptionBase::buildoption, 
+  declareOption(ol, "stage", &PLearner::stage, OptionBase::learntoption, 
                 "The current training stage: 0 means untrained, n often means after n epochs or optimization steps, etc...\n"
                 "The true meaning is learner-dependant.");
 
@@ -167,33 +164,33 @@ int PLearner::getTrainCostIndex(const string& costname) const
   return -1;
 }
                                 
-void PLearner::computeOutputAndCosts(const VVec& input, VVec& target, const VVec& weight,
-                           Vec& output, Vec& costs)
+void PLearner::computeOutputAndCosts(const Vec& input, const Vec& target, 
+                                     Vec& output, Vec& costs)
 {
   computeOutput(input, output);
-  computeCostsFromOutputs(input, output, target, weight, costs);
+  computeCostsFromOutputs(input, output, target, costs);
 }
 
-void PLearner::computeCostsOnly(const VVec& input, VVec& target, VVec& weight, 
-                  Vec& costs)
+void PLearner::computeCostsOnly(const Vec& input, const Vec& target,  
+                                Vec& costs)
 {
   static Vec tmp_output;
   tmp_output.resize(outputsize());
-  computeOutputAndCosts(input, target, weight, tmp_output, costs);
+  computeOutputAndCosts(input, target, tmp_output, costs);
 }
 
 void PLearner::test(VMat testset, VecStatsCollector& test_stats, 
              VMat testoutputs, VMat testcosts)
 {
   int l = testset.length();
-  VVec input;
-  VVec target;
-  VVec weight;
+  Vec input;
+  Vec target;
+  real weight;
 
   Vec output(testoutputs ?outputsize() :0);
   Vec costs(nTrainCosts());
 
-  testset->defineSizes(inputsize(),targetsize(),weightsize());
+  // testset->defineSizes(inputsize(),targetsize(),weightsize());
 
   test_stats.forget();
 
@@ -204,15 +201,15 @@ void PLearner::test(VMat testset, VecStatsCollector& test_stats,
 
   for(int i=0; i<l; i++)
     {
-      testset.getSample(i, input, target, weight);
+      testset.getExample(i, input, target, weight);
 
       if(testoutputs)
         {
-          computeOutputAndCosts(input, target, weight, output, costs);
+          computeOutputAndCosts(input, target, output, costs);
           testoutputs->putOrAppendRow(i,output);
         }
       else // no need to compute outputs
-        computeCostsOnly(input, target, weight, costs);
+        computeCostsOnly(input, target, costs);
 
       if(testcosts)
         testcosts->putOrAppendRow(i, costs);

@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.5 2003/05/07 05:39:17 plearner Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.6 2003/05/26 04:12:43 plearner Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -122,6 +122,14 @@ void VecStatsCollector::update(const Vec& x)
     }
     else*/ 
   externalProductAcc(cov, x, x);
+}
+
+//! calls update on all rows of m
+void VecStatsCollector::update(const Mat& m)
+{
+  int l = m.length();
+  for(int i=0; i<l; i++)
+    update(m(i));
 }
 
 void VecStatsCollector::forget()

@@ -37,9 +37,9 @@
  
 
 /* *******************************************************      
-   * $Id: VMat.h,v 1.10 2003/04/06 23:22:38 plearner Exp $
+   * $Id: VMat.h,v 1.11 2003/05/26 04:12:43 plearner Exp $
    * This file is part of the PLearn library.
-z   ******************************************************* */
+   ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -78,10 +78,8 @@ public:
   VMat subMatRows(int i, int l) const { return ptr->subMat(i,0,l,width()); }
   VMat subMatColumns(int j, int w) const { return ptr->subMat(0,j,length(),w); }
 
-  //! Gets sample #i (simply sets VVecs to look at input, target and weight part of row i)
-  //! uses inputsize_, targetsize_ and weightsize_ fields to fill the VVecs, 
-  //! so make sure they have been correctly defined (possibly by calling VMatrix::defineSizes(...)
-  void getSample(int i, VVec& input, VVec& target, VVec& weight);
+  inline void getExample(int i, Vec& input, Vec& target, real& weight)
+    { ptr->getExample(i, input, target, weight); }
 
   VMat row(int i) const { return subMatRows(i,1); }
   VMat firstRow() const { return row(0); }

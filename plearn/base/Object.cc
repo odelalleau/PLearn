@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.17 2003/05/22 06:21:23 plearner Exp $
+   * $Id: Object.cc,v 1.18 2003/05/26 04:12:42 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -106,46 +106,64 @@ void Object::print(ostream& out) const
 
 void Object::readOptionVal(PStream &in, const string &optionname)
 {
-    OptionList &options = getOptionList();
-    for (OptionList::iterator it = options.begin(); it != options.end(); ++it) {
-        if ((*it)->optionname() == optionname) {
-            (*it)->read(this, in);
-            return;
+  try 
+    {
+      OptionList &options = getOptionList();
+      for (OptionList::iterator it = options.begin(); it != options.end(); ++it) 
+        {
+          if ((*it)->optionname() == optionname) 
+            {
+              (*it)->read(this, in);
+              return;
+            }
         }
-    }
-    // Found no options matching 'optionname'. First look for brackets. If there
-    // are brackets, they must be located before any dot.
-    size_t lb_pos = optionname.find('[');
-    size_t rb_pos = optionname.find(']');
-    size_t dot_pos = optionname.find('.');
-    if (rb_pos != string::npos) {
-        if (lb_pos == string::npos)
+
+      // Found no options matching 'optionname'. First look for brackets. If there
+      // are brackets, they must be located before any dot.
+      size_t lb_pos = optionname.find('[');
+      size_t rb_pos = optionname.find(']');
+      size_t dot_pos = optionname.find('.');
+      if (rb_pos != string::npos) 
+        {
+          if (lb_pos == string::npos)
             PLERROR("Object::readOptionVal() - Unmatched brackets");
-        string optname = optionname.substr(0, lb_pos);
-        if (dot_pos == string::npos || rb_pos < dot_pos) {
-            int i = toint(optionname.substr(lb_pos + 1, rb_pos - lb_pos - 1));
-            for (OptionList::iterator it = options.begin(); it != options.end(); ++it)
-                if ((*it)->optionname() == optname) {
+          string optname = optionname.substr(0, lb_pos);
+          if (dot_pos == string::npos || rb_pos < dot_pos) 
+            {
+              int i = toint(optionname.substr(lb_pos + 1, rb_pos - lb_pos - 1));
+              for (OptionList::iterator it = options.begin(); it != options.end(); ++it)
+                if ((*it)->optionname() == optname) 
+                  {
                     (*it)->getIndexedObject(this, i)->readOptionVal(in, optionname.substr(rb_pos + 2));
                     return;
-                }
-        }
-    } else if (lb_pos != string::npos)
+                  }
+            }
+        } 
+      else if (lb_pos != string::npos)
         PLERROR("Object::readOptionVal() - Unmatched brackets");
 
-    // No brackets, look for a dot
-    if (dot_pos != string::npos) {
-        // Found a dot, assume it's a field with an Object * field
-        string optname = optionname.substr(0, dot_pos);
-        string optoptname = optionname.substr(dot_pos + 1);
-        for (OptionList::iterator it = options.begin(); it != options.end(); ++it)
-            if ((*it)->optionname() == optname) {
+      // No brackets, look for a dot
+      if (dot_pos != string::npos) 
+        {
+          // Found a dot, assume it's a field with an Object * field
+          string optname = optionname.substr(0, dot_pos);
+          string optoptname = optionname.substr(dot_pos + 1);
+          for (OptionList::iterator it = options.begin(); it != options.end(); ++it)
+            if ((*it)->optionname() == optname) 
+              {
                 (*it)->getAsObject(this)->readOptionVal(in, optoptname);
                 return;
-            }
+              }
+        }
     }
-    // There are bigger problems in the world but still it isn't always funny
-    PLERROR("Object::readOptionVal() - Unknown option \"%s\"", optionname.c_str());
+  catch(const PLearnError& e)
+    { 
+      PLERROR("Problem while attempting to read value of option %s of a %s:\n %s", 
+              optionname.c_str(), classname().c_str(), e.message().c_str()); 
+    }
+
+  // There are bigger problems in the world but still it isn't always funny
+  PLERROR("There is no option named %s in a %s", optionname.c_str(),classname().c_str());
 }
 
 void

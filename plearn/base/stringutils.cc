@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.cc,v 1.10 2003/04/29 21:33:37 plearner Exp $
+   * $Id: stringutils.cc,v 1.11 2003/05/26 04:12:42 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -51,100 +51,6 @@
 
 namespace PLearn <%
 using namespace std;
-
-/////////////////////////////////////////////////////////////////////////////////////
-// Please, put me in my own file !!
-
-ProgressBarPlugin * ProgressBar::plugin = new TextProgressBarPlugin(cerr);
-
-ProgressBar::ProgressBar(string _title, int the_maxpos)
-  :title(_title),currentpos(0), maxpos(the_maxpos),closed(false)
-{
-  plugin->addProgressBar(this);
-}
-
-ProgressBar::ProgressBar(ostream& _out,string _title, int the_maxpos)
-  :title(_title),currentpos(0), maxpos(the_maxpos),closed(false)
-{
-  plugin->addProgressBar(this);
-}
-ProgressBar::ProgressBar(PStream& _out,string _title, int the_maxpos)
-  :title(_title),currentpos(0), maxpos(the_maxpos),closed(false)
-{
-  plugin->addProgressBar(this);
-}
-
-ProgressBar::~ProgressBar() 
-{
-  close();
-}
-
-void ProgressBar::close()
-{ 
-  if(closed)
-    return;
-  closed=true;
-  if(currentpos<maxpos)
-    operator()(maxpos); 
-  plugin->killProgressBar(this);
-}              
-
-TextProgressBarPlugin::TextProgressBarPlugin(ostream& _out)
-  :out(&_out)
-{
-  out.outmode=PStream::raw_ascii;
-}
-
-TextProgressBarPlugin::TextProgressBarPlugin(PStream& _out)
-  :out(_out)
-{
-}
-
-void TextProgressBarPlugin::addProgressBar(ProgressBar * pb)
-{
-#if USING_MPI
-  if(PLMPI::rank==0)
-  {
-#endif
-    string fulltitle = string(" ") + pb->title + " (" + tostring(pb->maxpos) + ") ";
-    out << "[" + center(fulltitle,100,'-') + "]\n[";
-    out.flush();
-#if USING_MPI
-  }
-#endif
-}
-
-void TextProgressBarPlugin::update(ProgressBar * pb,int newpos)
-{
-#if USING_MPI
-    if(PLMPI::rank==0)
-      {
-#endif
-        // this handles the case where we reuse the same progress bar
-        if(newpos < pb->currentpos)
-        {
-          pb->currentpos=0;
-          string fulltitle = string(" ") + pb->title + " (" + tostring(pb->maxpos) + ") ";
-          out << "\n[" + center(fulltitle,100,'-') + "]\n[";
-          out.flush();
-        }
-
-        if(!pb->maxpos || newpos>pb->maxpos)
-          return;
-        int ndots = newpos*100 / pb->maxpos - pb->currentpos*100/pb->maxpos;
-        while(ndots--)
-          out << '.';
-        out.flush();
-        pb->currentpos = newpos;
-        if(pb->currentpos==pb->maxpos)
-          out << "]" << endl;
-#if USING_MPI
-      }
-#endif
-}
-
-//////////////////////////////////////////////////////////////////////////////////////
-
 
 
 string left(const string& s, unsigned int width, char padding)
@@ -514,15 +420,31 @@ vector<string> split(const string& s, const string& delimiters, bool keep_delimi
 
 */
 
-pair<string,string> split_on_first(const string& s,
-                                   const string& delimiters)
+
+void split_on_first(const string& s,
+                    const string& delimiters, string& left, string& right)
 {
   string::size_type pos = s.find_first_of(delimiters);
   if (pos != string::npos)
-    return make_pair(s.substr(0,pos),s.substr(pos+1));
+    {
+      left = s.substr(0,pos);
+      right = s.substr(pos+1);
+    }
   else
-    return make_pair(s,string(""));
+    {
+      left = s;
+      right = "";
+    }
 }
+
+pair<string,string> split_on_first(const string& s,
+                                   const string& delimiters)
+{
+  string left, right;
+  split_on_first(s, delimiters, left, right);
+  return make_pair(left,right);
+}
+
 
 void remove_comments(string& text, const string& commentstart)
 {

@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.16 2003/05/22 06:21:36 plearner Exp $
+   * $Id: VMatrix.h,v 1.17 2003/05/26 04:12:43 plearner Exp $
    ******************************************************* */
 
 
@@ -88,7 +88,7 @@ protected:
   //! on this dataset (fieldnames, cached statistics, etc...) and possibly the data itself.
   string metadatadir; 
 
-  // contains a short name that can be used as part of a filename for results associated with this dataset.
+  // [DEPRECATED] contains a short name that can be used as part of a filename for results associated with this dataset.
   string alias_;
 
   // New set of statistics fields:
@@ -104,7 +104,9 @@ public:
     Array<VMFieldStat> fieldstats;
 
   VMatrix()
-    :length_(-1), width_(-1), mtime_(0),writable(false)
+    :length_(-1), width_(-1), mtime_(0), 
+     inputsize_(-1), targetsize_(-1), weightsize_(-1),
+     writable(false)
     {}
 
   VMatrix(int the_length, int the_width)
@@ -119,13 +121,35 @@ public:
 
   void init_map_sr() { if (map_sr.length()==0) { map_sr.resize(width()); map_rs.resize(width()); } }
 
+  // Data-set info
   // Sample parts sizes
+  
+
   inline void defineSizes(int inputsize, int targetsize, int weightsize)
   { inputsize_ = inputsize, targetsize_ = targetsize, weightsize_ = weightsize; }
   
-  inline int inputsize() { return inputsize_; }
-  inline int targetsize() { return targetsize_; }
-  inline int weightsize() { return weightsize_; }
+  inline int inputsize() const { return inputsize_; }
+  inline int targetsize() const { return targetsize_; }
+  inline int weightsize() const { return weightsize_; }
+  inline bool isWeighted() const { return weightsize_>0; }
+
+  //! Default version calls getSubRow based on inputsize_ targetsize_ and weightsize_
+  //! But exotic subclasses may construct, input, target and weight however they please.
+  //! If not a weighted matrix, weight should be set to default value 1.
+  virtual void getExample(int i, Vec& input, Vec& target, real& weight);
+
+  /*! NOTE: How to handle exotic cases of data-sets whose input or target are not standard Vecs:
+    The idea is to still have the getExample build and return Vecs, but the representation of these Vecs 
+    will have a special format, detected and understood by a specialised Learner or specialised Variables:
+       Hack: format des Vec compris par un Learner:
+           Si v[0] == SPECIAL_FORMAT
+              v[1] indique le format de ce qui suit (v[2] ...):
+                   0 sparse vec de la forme: length nvals i val i val ...
+                   1 pointeur vers un Object de la forme: ptr  (cast du float ou du double)
+                   2 tenseur plein de la forme: rank size_1...size_n val ... 
+                   3 tenseur sparse de la forme: rank size_1...size_n nvals i_1...i_n val i1...i_n val ...
+  */
+  #define SPECIAL_FORMAT ((real)3.1e36))
 
   // Field types...
   void setFieldInfos(const Array<VMField>& finfo);

@@ -35,10 +35,11 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.5 2003/05/14 21:15:32 jkeable Exp $
+   * $Id: FileVMatrix.cc,v 1.6 2003/05/26 04:12:43 plearner Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
+#include "fileutils.h"
 
 namespace PLearn <%
 using namespace std;
@@ -61,6 +62,7 @@ FileVMatrix::FileVMatrix(const string& filename)
 FileVMatrix::FileVMatrix(const string& filename, int the_length, int the_width)
   :VMatrix(the_length, the_width), filename_(abspath(filename))
 {
+  force_mkdir_for_file(filename);
   f = fopen(filename.c_str(),"w+b");
   if (!f)
     PLERROR("In FileVMatrix constructor, could not open file %s for read/write",filename.c_str());

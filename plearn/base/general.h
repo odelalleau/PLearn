@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: general.h,v 1.8 2003/05/07 05:39:16 plearner Exp $
+   * $Id: general.h,v 1.9 2003/05/26 04:12:42 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -91,6 +91,10 @@
 #include "pl_hash_fun.h"
 #include "TypeTraits.h"
 #include "CopiesMap.h"
+
+// Include directive to be removed ultimately
+#include "ProgressBar.h"
+
 
 //!  Size of header (in bytes) for native PLearn 
 //!  data files (.pmat and .pvec)

@@ -1,8 +1,9 @@
+
 // -*- C++ -*-
 
-// PExperiment.h
-// 
-// Copyright (C) 2002 Pascal Vincent, Frederic Morin
+// GenerateDecisionPlot.h
+//
+// Copyright (C) 2003  Pascal Vincent 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,23 +34,29 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PExperiment.h,v 1.3 2003/05/26 04:12:43 plearner Exp $ 
+   * $Id: GenerateDecisionPlot.h,v 1.1 2003/05/26 04:12:43 plearner Exp $ 
    ******************************************************* */
 
-/*! \file PExperiment.h */
-#ifndef PExperiment_INC
-#define PExperiment_INC
+/*! \file GenerateDecisionPlot.h */
+#ifndef GenerateDecisionPlot_INC
+#define GenerateDecisionPlot_INC
 
 #include "Object.h"
 #include "PLearner.h"
-#include "VMat.h"
-#include "Splitter.h"
 
 namespace PLearn <%
 using namespace std;
 
-class PExperiment: public Object
-{    
+class GenerateDecisionPlot: public Object
+{
+protected:
+  // *********************
+  // * protected options *
+  // *********************
+
+  // ### declare protected option fields (such as learnt parameters) here
+  // ...
+    
 public:
 
   typedef Object inherited;
@@ -57,31 +64,21 @@ public:
   // ************************
   // * public build options *
   // ************************
-  
-  // See declareOptions method in .cc for the role of these options.
 
-  //! Path of this experiment's directory in which to save all experiment results (will be created if it does not already exist)
-  string expdir;  
-  PP<PLearner> learner;
+  string dxfilename;
   VMat dataset;
-  PP<Splitter> splitter;
-  TVec<string> statnames;
-  bool report_stats;
-  bool save_initial_experiment;
-  bool save_stat_collectors;
-  bool save_learners;
-  bool save_initial_learners;
-  bool save_data_sets;
-  bool save_test_outputs;
-  bool save_test_costs;
-  bool provide_learner_expdir;
+  PP<PLearner> learner;
+  int nx;
+  int ny;
+  string save_learner_as;
 
   // ****************
   // * Constructors *
   // ****************
 
-  // Default constructor
-  PExperiment();
+  // Default constructor, make sure the implementation in the .cc
+  // initializes all fields to reasonable default values.
+  GenerateDecisionPlot();
 
 
   // ******************
@@ -99,29 +96,25 @@ protected:
   static void declareOptions(OptionList& ol);
 
 public:
+  //! Overload this for runnable objects (default method issues a runtime error)
+  virtual void run();
+
   // simply calls inherited::build() then build_() 
   virtual void build();
 
   //! Provides a help message describing this class
   static string help();
 
+  //! Transforms a shallow copy into a deep copy
+  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+
   //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(PExperiment);
-
-  //! runs the experiment
-  virtual void run();
-
-  //! performs the experiment, and returns the global stats specified in statnames
-  //! If dont_set_training_set is set to true AND the splitter returns only one split,
-  //! then we *don't* call setTrainingSet() and a forget() on the learner prior to training it:
-  //! we assume the training set is already set. This is useful for continuation of an incremental  training
-  //! (such as after increasing the number of epochs (nstages) ). 
-  Vec perform(bool dont_set_training_set=false);
+  PLEARN_DECLARE_OBJECT_METHODS(GenerateDecisionPlot, "GenerateDecisionPlot", Object);
 
 };
 
 // Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(PExperiment);
+  DECLARE_OBJECT_PTR(GenerateDecisionPlot);
   
 %> // end of namespace PLearn
 

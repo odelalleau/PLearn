@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.19 2003/05/22 06:21:36 plearner Exp $
+* $Id: VMatrix.cc,v 1.20 2003/05/26 04:12:43 plearner Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -75,8 +75,16 @@ IMPLEMENT_ABSTRACT_NAME_AND_DEEPCOPY(VMatrix);
 void VMatrix::declareOptions(OptionList & ol)
 {
 //  declareOption(ol, "writable", &VMatrix::writable, OptionBase::buildoption, "Are write operations permitted?");
-  declareOption(ol, "length", &VMatrix::length_, OptionBase::buildoption, "length of the matrix");
-  declareOption(ol, "width", &VMatrix::width_, OptionBase::buildoption, "width of the matrix");
+  declareOption(ol, "length", &VMatrix::length_, OptionBase::buildoption, 
+                "length of the matrix (number of rows)");
+  declareOption(ol, "width", &VMatrix::width_, OptionBase::buildoption, 
+                "width of the matrix (number of columns; -1 indicates this varies from sample to sample...)");
+  declareOption(ol, "inputsize", &VMatrix::inputsize_, OptionBase::buildoption, 
+                "size of input part (-1 if variable or unspecified, 0 if no input)");
+  declareOption(ol, "targetsize", &VMatrix::targetsize_, OptionBase::buildoption, 
+                "size of target part (-1 if variable or unspecified, 0 if no target)");
+  declareOption(ol, "weightsize", &VMatrix::weightsize_, OptionBase::buildoption, 
+                "size of weights (-1 if unspecified, 0 if no weight, 1 for sample weight, >1 currently not supported (include it is recommended to include additional info in target. weight is really reserved for a per sample weight).");
 }
 
 void VMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
@@ -193,6 +201,28 @@ void VMatrix::printFields(ostream& out) const
     }
   }
 }
+
+void VMatrix::getExample(int i, Vec& input, Vec& target, real& weight) 
+{
+  if(inputsize_<0)
+    PLERROR("In VMatrix::getExample, inputsize_ not defined for this vmat");
+  input.resize(inputsize_);             
+  getSubRow(i,0,input);
+  if(targetsize_<0)
+    PLERROR("In VMatrix::getExample, targetsize_ not defined for this vmat");
+  target.resize(targetsize_);
+  getSubRow(i,inputsize_,target);
+
+  if(weightsize_==0)
+    weight = 1;
+  else if(weightsize_<0)
+    PLERROR("In VMatrix::getExample, weightsize_ not defined for this vmat");
+  else if(weightsize_>1)
+    PLERROR("In VMatrix::getExample, weightsize_ >1 not supported by this call");
+  else
+    weight = get(i,inputsize_+targetsize_);
+}
+
 
 void VMatrix::computeStats()
 {
