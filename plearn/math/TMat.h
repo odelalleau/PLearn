@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.30 2004/02/20 21:11:46 chrish42 Exp $
+   * $Id: TMat.h,v 1.31 2004/02/26 04:39:36 nova77 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -107,8 +107,11 @@ class TVec
       inline iterator end() const 
       { return begin()+length(); }
 
-    inline TVec(const vector<T> & vec)
-      :length_(vec.size()), offset_(0),
+      // norman: added explicit cast before vec.size()
+      //         but beware if you're creating a constructor for storage that takes size_type
+      //         because int could be different from size_type!
+      inline TVec(const vector<T> & vec)
+       :length_((int)vec.size()), offset_(0),
        storage(new Storage<T>(vec.size()))
        {
          for(int i=0;i<length_;i++)
@@ -200,7 +203,10 @@ class TVec
       //!  used by Hash  (VERY DIRTY: TO BE REMOVED [Pascal])
       inline operator char*() const { if(isNull()) return 0; else return (char*)data(); }
 
-      inline const size_t byteLength() const { return length()*sizeof(T); }
+      // norman: removed const. With inline is useless (and .NET doesn't like it)
+      // Old code:
+      //inline const size_t byteLength() const { return length()*sizeof(T); }
+      inline size_t byteLength() const { return length()*sizeof(T); }
 
 /*!     Resizes the TVector to a new length
         The underlying storage is never shrunk and
@@ -575,6 +581,17 @@ class TVec
       {
 #ifdef BOUNDCHECK
         if(i<0 || i>=length())
+          PLERROR("OUT OF BOUND ACCESS %d IN TVec(%d)::operator[]",i,length());
+#endif
+        return storage->data[i+offset_]; 
+      }
+
+      // norman: added operator[] for unsigned int
+      inline T& operator[](unsigned int i) const
+      {
+#ifdef BOUNDCHECK
+        // norman: added explicit cast
+        if(i<0 || i>=(unsigned int)length())
           PLERROR("OUT OF BOUND ACCESS %d IN TVec(%d)::operator[]",i,length());
 #endif
         return storage->data[i+offset_]; 
