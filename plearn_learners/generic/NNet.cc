@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.58 2004/09/07 20:32:30 tihocan Exp $
+   * $Id: NNet.cc,v 1.59 2004/09/09 14:15:11 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -653,29 +653,31 @@ TVec<string> NNet::getTestCostNames() const
 /////////////////
 // hiddenLayer //
 /////////////////
-Var NNet::hiddenLayer(const Var& input, const Var& weights) {
+Var NNet::hiddenLayer(const Var& input, const Var& weights, string transfer_func) {
   Var hidden = affine_transform(input, weights); 
   Var result;
-  if(hidden_transfer_func=="linear")
+  if (transfer_func == "default")
+    transfer_func = hidden_transfer_func;
+  if(transfer_func=="linear")
     result = hidden;
-  else if(hidden_transfer_func=="tanh")
+  else if(transfer_func=="tanh")
     result = tanh(hidden);
-  else if(hidden_transfer_func=="sigmoid")
+  else if(transfer_func=="sigmoid")
     result = sigmoid(hidden);
-  else if(hidden_transfer_func=="softplus")
+  else if(transfer_func=="softplus")
     result = softplus(hidden);
-  else if(hidden_transfer_func=="exp")
+  else if(transfer_func=="exp")
     result = exp(hidden);
-  else if(hidden_transfer_func=="softmax")
+  else if(transfer_func=="softmax")
     result = softmax(hidden);
-  else if (hidden_transfer_func == "log_softmax")
+  else if (transfer_func == "log_softmax")
     result = log_softmax(hidden);
-  else if(hidden_transfer_func=="hard_slope")
+  else if(transfer_func=="hard_slope")
     result = unary_hard_slope(hidden,0,1);
-  else if(hidden_transfer_func=="symm_hard_slope")
+  else if(transfer_func=="symm_hard_slope")
     result = unary_hard_slope(hidden,-1,1);
   else
-    PLERROR("In NNet::hiddenLayer - Unknown hidden_transfer_func option: %s",hidden_transfer_func.c_str());
+    PLERROR("In NNet::hiddenLayer - Unknown value for transfer_func: %s",transfer_func.c_str());
   return result;
 }
 

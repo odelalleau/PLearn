@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.h,v 1.22 2004/09/07 20:32:31 tihocan Exp $
+   * $Id: NNet.h,v 1.23 2004/09/09 14:15:11 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -171,8 +171,9 @@ protected:
   virtual void initializeParams(bool set_seed = true);
 
   //! Return a variable that is the hidden layer corresponding to given
-  //! input and weights.
-  Var hiddenLayer(const Var& input, const Var& weights);
+  //! input and weights. If the 'default' transfer_func is used, we use the
+  //! hidden_transfer_func option.
+  Var hiddenLayer(const Var& input, const Var& weights, string transfer_func = "default");
 
   //! Build the output of the neural network, from the given input.
   //! The hidden layer is also made available in the 'hidden_layer' parameter.
