@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array_decl.h,v 1.4 2004/07/21 16:30:50 chrish42 Exp $
+   * $Id: Array_decl.h,v 1.5 2004/08/04 13:28:17 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -248,13 +248,17 @@ class Array: public TVec<T>
         out << array[i] << endl;
     }
 
-  int findFirstOccurence(const T& elem)
+    int findFirstOccurence(const T& elem)
     {
       for(int i=0;i<this->array_size;i++)
         if(elem==this->array[i])
           return i;
       return -1;
     }
+
+    //! Deep copy of an array is not the same as for a TVec, because
+    //! the shallow copy automatically creates a new storage.
+    void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
 
     // DEPRECATED! Call PStream& << arr instead (This is for backward compatibility only)
