@@ -34,13 +34,14 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperLearner.cc,v 1.1 2005/01/11 23:22:44 plearner Exp $
+   * $Id: HyperLearner.cc,v 1.2 2005/01/12 14:43:14 tihocan Exp $
    ******************************************************* */
 // Author: Pascal Vincent
 
 #include "HyperLearner.h"
-#include <plearn/vmat/FileVMatrix.h>
 #include <plearn/base/stringutils.h>
+#include <plearn/io/load_and_save.h>
+#include <plearn/vmat/FileVMatrix.h>
 
 namespace PLearn {
 

@@ -31,7 +31,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* *******************************************************      
-   * $Id: TextFilesVMatrix.cc,v 1.1 2005/01/11 23:35:08 plearner Exp $ 
+   * $Id: TextFilesVMatrix.cc,v 1.2 2005/01/12 14:42:17 tihocan Exp $ 
    ******************************************************* */
 
 // Author: Pascal Vincent
@@ -39,6 +39,7 @@
 /*! \file TextFilesVMatrix.cc */
 #include <plearn/base/PDate.h>
 #include <plearn/base/ProgressBar.h>
+#include <plearn/io/load_and_save.h>
 #include "TextFilesVMatrix.h"
 
 namespace PLearn {
