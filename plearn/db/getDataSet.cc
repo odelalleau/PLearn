@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.35 2005/02/18 17:09:55 tihocan Exp $
+   * $Id: getDataSet.cc,v 1.36 2005/02/21 03:34:05 chapados Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -57,6 +57,7 @@
 #include <plearn/vmat/VVMatrix.h>
 #include <plearn/io/MatIO.h>
 #include <plearn/io/PyPlearnDriver.h>
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;
@@ -264,8 +265,9 @@ VMat getDataSet(const string& datasetstring, const string& alias)
   vm->unduplicateFieldNames();
 
   if(vm->inputsize()<0 && vm->targetsize()<0 && vm->weightsize()<0) {
-    PLWARNING("In getDataSet - The loaded VMat has no inputsize, targetsize "
-              "or weightsize specified, setting them to (%d,0,0)", vm->width());
+    DBG_LOG << "In getDataSet - The loaded VMat has no inputsize, targetsize "
+            << "or weightsize specified, setting them to (" << vm->width() << ",0,0)"
+            << endl;
     vm->defineSizes(vm->width(),0,0);
   }
 
