@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.h,v 1.10 2004/07/19 22:48:06 mariusmuja Exp $ 
+   * $Id: PTester.h,v 1.11 2004/07/20 13:24:59 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PTester.h */
@@ -50,14 +50,18 @@ using namespace std;
 
 class PTester: public Object
 {    
-protected:
 
-  TVec<string> statnames_from_mask;
-    
-  
-public:
+private:
 
   typedef Object inherited;
+
+protected:
+
+  // Learnt options.
+
+  TVec<string> statnames_from_mask;
+
+public:
 
   // ************************
   // * public build options *
@@ -82,7 +86,7 @@ public:
   bool save_test_outputs;
   PP<Splitter> splitter;
   TVec<string> statnames;
-  TVec<TVec<string> > statsmask;
+  TVec<TVec<string> > statmask;
   PP<VecStatsCollector> template_stats_collector;
   bool train; // whether or not to train or just test
 
@@ -125,6 +129,7 @@ public:
   string getExperimentDirectory() const { return expdir; }
 
 
+  //! Return the statnames.
   TVec<string> getStatNames();
     
 
