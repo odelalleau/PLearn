@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AsciiVMatrix.cc,v 1.1 2003/02/18 16:30:28 ducharme Exp $ 
+   * $Id: AsciiVMatrix.cc,v 1.2 2003/02/18 21:57:04 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file AsciiVMatrix.cc */
@@ -55,7 +55,7 @@ AsciiVMatrix::AsciiVMatrix(const string& fname, bool readwrite)
 
 AsciiVMatrix::AsciiVMatrix(const string& fname, int the_width, const vector<string>& the_comments)
   :inherited(0,the_width), filename(fname), comments(the_comments),
-   readwritemode(true), newfile(true)
+   readwritemode(true), newfile(true), old_vmat_format(false)
 {
   build();
 }
@@ -75,7 +75,7 @@ void AsciiVMatrix::build_()
     if (isfile(filename))
       PLERROR("In AsciiVMatrix constructor: filename %s already exists",filename.c_str());
     file = new fstream();
-    file->open(filename.c_str(), ios::in | ios::out | ios::trunc);
+    file->open(filename.c_str(), fstream::in | fstream::out | fstream::trunc);
   if (!file->is_open())
     PLERROR("In AsciiVMatrix constructor: could not open file %s for reading",filename.c_str());
 
@@ -96,52 +96,65 @@ void AsciiVMatrix::build_()
     if (!isfile(filename))
       PLERROR("In AsciiVMatrix constructor (with specified width), filename %s does not exists",filename.c_str());
     file = new fstream();
-    file->open(filename.c_str(), ios::in | ios::out);
+    file->open(filename.c_str(), fstream::in | fstream::out);
     if (!file->is_open())
       PLERROR("In AsciiVMatrix constructor, could not open file %s for reading",filename.c_str());
 
     // read the matrix in old or new format
     int length = -1;
     int width = -1;
-    bool could_be_old_amat=true; // true while there is still a chance that this be an "old" amat format (length and width in first row with no starting #size:) 
+    old_vmat_format = true;
+    file->seekg(0,fstream::beg);
     *file >> ws;
     string line;  
     while (file->peek()=='#')
     {
+      streampos old_pos = file->tellg();
       getline(*file, line);
-      could_be_old_amat = false;  
       unsigned int pos=line.find(":");
       if (pos!=string::npos)
       {
         string sub=line.substr(0,pos);
         if (sub=="#size") // we've found the dimension specification line
         {
+          old_vmat_format = false;  
           string siz=removeblanks((line.substr(pos)).substr(1));
           vector<string> dim = split(siz," ");
           if (dim.size()!=2)  PLERROR("I need exactly 2 dimensions for matrix");
           length = toint(dim[0]);
           width = toint(dim[1]);
+
+          // we set vmatlength_pos to the correct value
+          streampos current_pos = file->tellg();
+          file->seekg(old_pos);
+          string dummy;
+          *file >> dummy;
+          *file >> ws;
+          vmatlength_pos = file->tellp();
+          file->seekg(current_pos);
         }
+        /*
         else if (sub=="#") // we've found the fieldnames specification line
         {
           string fnl=line.substr(pos).substr(1);
           TVec<string> fieldnames = split(fnl," ");
           width=fieldnames.size();
         }
+        */
       }
       *file >> ws;
     }
 
     if (length==-1)  // still looking for size info...
     {
+      old_vmat_format = true;  
       string line;
       getNextNonBlankLine(*file,line);
       if (line=="")
       {
         width=length=0;
-        file->seekg(0);
+        file->seekg(0,fstream::beg);
         file->clear();
-        could_be_old_amat=false;
       }
       int nfields1 = split(line).size();
       getNextNonBlankLine(*file,line);
@@ -149,16 +162,16 @@ void AsciiVMatrix::build_()
       {
         length=1;
         width=nfields1;
-        file->seekg(0);
+        file->seekg(0,fstream::beg);
         file->clear();
-        could_be_old_amat=false;
+        old_vmat_format = false;
       }
       int nfields2 = split(line).size();
       int guesslength = countNonBlankLinesOfFile(filename);
       real a, b;
-      if (could_be_old_amat && nfields1==2) // could be an old .amat with first 2 numbers being length width
+      if (old_vmat_format && nfields1==2) // could be an old .amat with first 2 numbers being length width
       {
-        file->seekg(0);
+        file->seekg(0,fstream::beg);
         file->clear();
         *file >> a >> b;
         if (guesslength == int(a)+1 && real(int(a))==a && real(int(b))==b && a>0 && b>0 && int(b)==nfields2) // it's clearly an old .amat
@@ -203,11 +216,11 @@ void AsciiVMatrix::build_()
     while (!file->eof())
     {
       pos_rows.push_back(file->tellg());
-      cout << "build : pos = " << pos_rows.back() << endl;
       string line;
       getline(*file, line);
       *file >> ws;
     }
+    file->clear();
     if (pos_rows.size() != (unsigned int)length)
       PLERROR("In AsciiVMatrix: the matrix has not the rigth size");
   }
@@ -223,35 +236,36 @@ void AsciiVMatrix::getRow(int i, Vec v) const
 #endif
 
   file->seekg(pos_rows[i]);
-  cout << "getRow : pos = " << pos_rows[i] << endl;
-  cout << "v avant = " << v << endl;
   for (int j=0; j<width(); j++)
     *file >> v[j];
-  cout << "v apres = " << v << endl;
 }
 
 void AsciiVMatrix::appendRow(Vec v)
 {
-  // write the Vec at the end of the file
-  file->seekp(0,ios::end);
-  pos_rows.push_back(file->tellg());
-  cout << "appendRow : pos = " << pos_rows.back() << endl;
-  for (int i=0; i<v.length(); i++)
-    *file << v[i] << " ";
-  *file << endl;
+  if (readwritemode)
+  {
+    // write the Vec at the end of the file
+    file->seekp(0,fstream::end);
+    pos_rows.push_back(file->tellg());
+    for (int i=0; i<v.length(); i++)
+      *file << v[i] << " ";
+    *file << endl;
 
-  // update the length
-  length_++;
-  file->seekp(vmatlength_pos);
-  *file << length();
+    // update the length
+    length_++;
+    file->seekp(vmatlength_pos);
+    *file << length();
+  }
+  else
+    PLWARNING("AsciiVMatrix::appendRow aborted: the vmat has been open in read only format.");
 }
 
 void AsciiVMatrix::put(int i, int j, real value)
-{ PLERROR("In AsciiVMatrix::put not accepted."); }
+{ PLERROR("In AsciiVMatrix::put not permitted."); }
 void AsciiVMatrix::putSubRow(int i, int j, Vec v)
-{ PLERROR("In AsciiVMatrix::putSubRow not accepted."); }
+{ PLERROR("In AsciiVMatrix::putSubRow not permitted."); }
 void AsciiVMatrix::putRow(int i, Vec v)
-{ PLERROR("In AsciiVMatrix::putRow not accepted."); }
+{ PLERROR("In AsciiVMatrix::putRow not permitted."); }
 
 void AsciiVMatrix::declareOptions(OptionList& ol)
 {
