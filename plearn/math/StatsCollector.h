@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.33 2004/11/25 06:06:38 chapados Exp $
+   * $Id: StatsCollector.h,v 1.34 2005/01/14 20:49:28 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -78,15 +78,18 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     "The first maxnvalues encountered values will be used as points to define\n"
     "the ranges, so to get reasonable results, your sequence should be iid, and NOT sorted!"
 */
-  class StatsCollector: public Object
-  {
-  public:
+class StatsCollector: public Object
+{
+
+  private:
+
     typedef Object inherited;
+
+  public:
+
     PLEARN_DECLARE_OBJECT(StatsCollector);
       
   public:
-
-    typedef Object inherited;
 
     // ** Build options **
 
@@ -116,23 +119,36 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     real max_;             //!< the max
     real first_;           //!< first encountered nonmissing observation
     real last_;            //!< last encountered nonmissing observation
+    bool more_than_maxnvalues;
 
     //! will contain up to maxnvalues values and associated Counts
     //! as well as a last element which maps FLT_MAX, so that we don't miss anything
     //! (empty if maxnvalues=0)
     map<real,StatsCollectorCounts> counts; 
+
+  protected:
+
+    //! Used to store the sorted values (after taking their absolute value),
+    //! with their target value (1 or 0) in the second column.
+    mutable Mat sorted_values;
+
+    //! Set to 1 when the values stored in 'counts' are sorted and stored in 'sorted_values'.
+    mutable bool sorted;
       
   private:
+
   //! This does the actual building.
-  // (Please implement in .cc)
   void build_();
 
   protected: 
+
     //! Declares this class' options
     static void declareOptions(OptionList& ol);
 
-  public:
+    //! Sort values stored in 'counts' by magnitude, so as to fill 'sorted_values'.
+    void sort_values_by_magnitude() const;
 
+  public:
 
     StatsCollector(int the_maxnvalues=0);
       
@@ -158,6 +174,12 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     real zpr2t() const;                      //!< two-tailed P(zstat())
     real iqr() const { return pseudo_quantile(0.75) - pseudo_quantile(0.25); }
     real prr() const { return pseudo_quantile(0.99) - pseudo_quantile(0.01); }
+    //! Return LIFT(k/n). 'n_pos_in_k' is filled with the number of positive examples
+    //! in the first k examples. If provided, 'n_pos_in_k_minus_1' must be the number
+    //! of positive examples in the first (k-1) examples. If provided, pos_fraction
+    //! must be the average fraction of positive examples in the dataset (= n+ / n).
+    real lift(int k, int& n_pos_in_k, int n_pos_in_k_minus_1 = -1, real pos_fraction = -1) const;
+    real nips_lift() const;   //!< NIPS_LIFT statistic (see help)
     
     //! currently understood statnames are :
     //!   - E (mean)
@@ -238,7 +260,7 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     virtual void oldread(istream& in);
     virtual void print(ostream& out) const;
 
-  };
+};
 
   DECLARE_OBJECT_PTR(StatsCollector);
 

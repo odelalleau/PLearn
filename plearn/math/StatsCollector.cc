@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.43 2004/12/14 18:28:00 chapados Exp $
+   * $Id: StatsCollector.cc,v 1.44 2005/01/14 20:49:28 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -80,6 +80,25 @@ PLEARN_IMPLEMENT_OBJECT(
   "                   NOTE that bin counting must be enabled, i.e. maxnvalues > 0\n"
   "  - IQR            The interquartile range, i.e. PSEUDOQ(0.75) - PSEUDOQ(0.25)\n"
   "  - PRR            The pseudo robust range, i.e. PSEUDOQ(0.99) - PSEUDOQ(0.01)\n"
+  "  - LIFT(f)        Lift computed at fraction f (0 <= f <= 1)\n"
+  "  - NIPS_LIFT      Lift cost as computed in NIPS'2004 challenge\n"
+  "\n"
+  "Notes:\n"
+  "  - When computing LIFT-related statistics, all values encountered need to be stored\n"
+  "    which means that 'maxnavalues' should be set to a high value. Also, a value should\n"
+  "    be positive when the real target is the class of interest (positive example), and\n"
+  "    negative otherwise, the magnitude being the estimated likelihood of the example.\n"
+  "  - Formulas to compute LIFT-related statistics. Let n+ = number of positive examples,\n"
+  "    n = total number of examples, v_i the value assigned to example i, and assume\n"
+  "    examples are sorted by order of magnitude |v_i|:\n"
+  "    LIFT(f) = sum_{k=1}^{fn} 1_{v_i > 0} / (f * n+)\n"
+  "    NIPS_LIFT = (A_I - A) / (A_I - 1), with\n"
+  "      A = sum_{k=1}^n LIFT(k/n) / n\n"
+  "      A_I = (n / n+ - 1) / 2 * (n+ / n + 1) + 1\n"
+  "      (NIPS_LIFT = 1 <=> random, > 1 <=> worse than random, ~= 0 <=> good)\n"
+  "      See http://predict.kyb.tuebingen.mpg.de/pages/evaluation.php for details.\n"
+  "  - LIFT(f) actually returns - 100 * LIFT(f), so that lower means better, and it is\n"
+  "    scaled by 100, as it is common practice.\n"
   );
   
 
@@ -88,7 +107,9 @@ StatsCollector::StatsCollector(int the_maxnvalues)
     nmissing_(0.), nnonmissing_(0.), 
     sum_(0.), sumsquare_(0.), 
     min_(MISSING_VALUE), max_(MISSING_VALUE),
-    first_(MISSING_VALUE), last_(MISSING_VALUE)
+    first_(MISSING_VALUE), last_(MISSING_VALUE),
+    more_than_maxnvalues(false),
+    sorted(false)
 {
   build_();
 }
@@ -154,25 +175,40 @@ void StatsCollector::declareOptions(OptionList& ol)
                 "will contain up to maxnvalues values and associated Counts\n"
                 "as well as a last element which maps FLT_MAX, so that we don't miss anything\n"
                 "(remains empty if maxnvalues=0)");
+  declareOption(ol, "more_than_maxnvalues", &StatsCollector::more_than_maxnvalues, OptionBase::learntoption,
+      "Set to 1 when more than 'maxnvalues' are seen. This is to warn the user when computing\n"
+      "statistics that may be inaccurate when not all values are kept (e.g., LIFT).");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
 }
 
+////////////
+// build_ //
+////////////
 void StatsCollector::build_()
 {
-  // make sure count.size==0. If not, the object must have been loaded, and FLT_MAX is an existing key
+  // make sure counts.size==0. If not, the object must have been loaded, and FLT_MAX is an existing key
   // but rounded to some precision, and there would be 2 keys approx.=  FLT_MAX
   if(maxnvalues>0 && counts.size()==0)
     counts[FLT_MAX] = StatsCollectorCounts();
+  // If no values are kept, then we always see more than 0 values.
+  if (maxnvalues == 0)
+    more_than_maxnvalues = true;
 }
 
+///////////
+// build //
+///////////
 void StatsCollector::build()
 {
   inherited::build();
   build_();
 }
 
+////////////
+// forget //
+////////////
 void StatsCollector::forget()
 {
     nmissing_ = 0.;
@@ -182,10 +218,15 @@ void StatsCollector::forget()
     min_ = MISSING_VALUE;
     max_ = MISSING_VALUE;
     first_ = last_ = MISSING_VALUE;
+    more_than_maxnvalues = (maxnvalues == 0);
+    sorted = false;
     counts.clear();
     build_();
 }
 
+////////////
+// update //
+////////////
 void StatsCollector::update(real val, real weight)
 {
   if(is_missing(val))
@@ -208,6 +249,7 @@ void StatsCollector::update(real val, real weight)
     
     if(maxnvalues>0)  // also remembering statistics inside values ranges
     {
+      sorted = false;
       map<real,StatsCollectorCounts>::iterator it;        
       if(int(counts.size())<=maxnvalues) // Still remembering new unseen values
       {
@@ -223,6 +265,7 @@ void StatsCollector::update(real val, real weight)
           it->second.n += weight;
         else // found the value just above val (possibly FLT_MAX)
         {
+          more_than_maxnvalues = true;
           it->second.nbelow += weight;
           it->second.sum += val * weight;
           it->second.sumsquare += val*val * weight;
@@ -241,6 +284,7 @@ void StatsCollector::remove_observation(real val, real weight)
   }
   else
   {
+    sorted = false;
     nnonmissing_ -= weight;
     assert( nnonmissing_ >= 0 );
 
@@ -511,6 +555,9 @@ RealMapping StatsCollector::getAllValuesMapping(TVec<bool>* to_be_included,
   return mapping;
 }
 
+/////////
+// cdf //
+/////////
 Mat StatsCollector::cdf(bool normalized) const
 {
   int l = 2*(int)counts.size();
@@ -671,6 +718,9 @@ void StatsCollector::oldread(istream& in)
 }
 
 
+/////////////
+// getStat //
+/////////////
 //! Returns the index in the vector returned by getAllStats of the stat with the given name.
 //! Currently available names are E (mean) V (variance) STDDEV MIN MAX STDERROR SHARPERATIO
 //! Will call PLERROR statname is invalid
@@ -700,10 +750,11 @@ real StatsCollector::getStat(const string& statname) const
     statistics["PZ2t"]        = STATFUN(&StatsCollector::zpr2t);
     statistics["IQR"]         = STATFUN(&StatsCollector::iqr);
     statistics["PRR"]         = STATFUN(&StatsCollector::prr);
+    statistics["NIPS_LIFT"]   = STATFUN(&StatsCollector::nips_lift);
     init = true;
   }
 
-  // Special case :: interpret the PSEUDOQ(xx) form
+  // Special case :: interpret the PSEUDOQ(xx) and LIFT(xxx) forms
   if (statname.substr(0,7) == "PSEUDOQ") {
     PIStringStream in(statname);
     string dummy;
@@ -712,6 +763,15 @@ real StatsCollector::getStat(const string& statname) const
     in.smartReadUntilNext(")", quantile_str);
     real q = toreal(quantile_str);
     return pseudo_quantile(q);
+  } else if (statname.substr(0, 5) == "LIFT(") {
+    PIStringStream in(statname);
+    string dummy;
+    in.smartReadUntilNext("(", dummy);
+    string fraction_str;
+    in.smartReadUntilNext(")", fraction_str);
+    real fraction = toreal(fraction_str);
+    int dummy_int;
+    return -100 * lift(int(floor(fraction * nnonmissing())), dummy_int);
   }
   
   map<string,STATFUN>::iterator fun = statistics.find(statname);
@@ -723,7 +783,70 @@ real StatsCollector::getStat(const string& statname) const
   return 0;
 }
 
+//////////
+// lift //
+//////////
+real StatsCollector::lift(int k, int& n_pos_in_k, int n_pos_in_k_minus_1, real pos_fraction) const {
+  if (more_than_maxnvalues)
+    PLWARNING("In StatsCollector::lift - You need to increase 'maxnvalues' to get an accurate statistic");
+  if (k <= 0)
+    PLERROR("In StatsCollector::lift - It makes no sense to compute a lift with k <= 0");
+  if (!sorted)
+    sort_values_by_magnitude();
+  if (n_pos_in_k_minus_1 < 0)
+    // We are not given the number of positive examples in the first (k-1)
+    // examples, thus we need to compute it ourselves.
+    n_pos_in_k = int(floor(PLearn::sum(sorted_values.subMat(0, 1, k, 1))));
+  else
+    n_pos_in_k = n_pos_in_k_minus_1 + int(sorted_values(k - 1, 1));
+  if (pos_fraction < 0)
+    // We are not given the fraction of positive examples.
+    pos_fraction = int(floor(PLearn::sum(sorted_values.column(1)))) / real(sorted_values.length());
+  return real(n_pos_in_k) / (k * pos_fraction);
+}
 
+///////////////
+// nips_lift //
+///////////////
+real StatsCollector::nips_lift() const {
+  if (more_than_maxnvalues)
+    PLWARNING("In StatsCollector::nips_lift - You need to increase 'maxnvalues' to get an accurate statistic");
+  if (!sorted)
+    sort_values_by_magnitude();
+  real n_total = real(sorted_values.length());
+  real pos_fraction = int(floor(PLearn::sum(sorted_values.column(1)))) / n_total;
+  int n_pos_in_k_minus_1 = -1;
+  real result = 0;
+  for (int k = 0; k < sorted_values.length(); k++)
+    result += lift(k + 1, n_pos_in_k_minus_1, n_pos_in_k_minus_1, pos_fraction);
+  result /= n_total;
+  real max_performance = 0.5 * (1 / pos_fraction - 1) * (pos_fraction + 1) + 1;
+  result = (max_performance - result) / (max_performance - 1.0);
+  return result;
+}
+
+//////////////////////////////
+// sort_values_by_magnitude //
+//////////////////////////////
+void StatsCollector::sort_values_by_magnitude() const {
+  sorted_values.resize(0, 2);
+  Vec to_add(2);
+  real val;
+  for (map<real,StatsCollectorCounts>::const_iterator it = counts.begin();
+       it != counts.end(); it++) {
+    val = it->first;
+    to_add[0] = fabs(val);
+    to_add[1] = val > 0 ? 1 : 0;
+    for (int i = 0; i < it->second.n; i++)
+      sorted_values.appendRow(to_add);
+  }
+  sortRows(sorted_values, 0, false); // Sort by decreasing order of first column.
+  sorted = true;
+}
+
+///////////////////
+// computeRanges //
+///////////////////
 TVec<RealMapping> computeRanges(TVec<StatsCollector> stats, int discrete_mincount, int continuous_mincount)
 {
   TVec<RealMapping> ranges;
