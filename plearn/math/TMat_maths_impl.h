@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.38 2004/02/25 03:22:13 dorionc Exp $
+   * $Id: TMat_maths_impl.h,v 1.39 2004/02/26 04:38:26 nova77 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -1208,17 +1208,30 @@ TVec<T> operator/(T v1, const TVec<T>& v2)
   return v;
 }
 
-template<class T>
-TVec<T> operator/(const TVec<T>& v1, T scalar)
+// norman: changed to unharmful declaration (see below old style)
+template<class T1, class T2>
+TVec<T1> operator/(const TVec<T1>& v1, T2 scalar)
 {
-  TVec<T> v(v1.length());
-  multiply(v1,T(1.0)/scalar,v);
+  TVec<T1> v(v1.length());
+  multiply(v1,T1(1.0)/(T1)scalar,v);
   return v;
 }
 
-template<class T>
-inline TVec<T> operator/(const TVec<T>& v1, int scalar)
-{ return v1/T(scalar); }
+// norman: harmful declarations
+//         Replaced with a better declaration above
+//template<class T>
+//TVec<T> operator/(const TVec<T>& v1, T scalar)
+//{
+//  TVec<T> v(v1.length());
+//  multiply(v1,T(1.0)/scalar,v);
+//  return v;
+//}
+
+// norman: This will cause problems if T = int (recursive declaration)
+//         Replaced with a better declaration above
+//template<class T>
+//TVec<T> operator/(const TVec<T>& v1, int scalar)
+//{ return v1/T(scalar); }
 
 template<class T>
 T logadd(const TVec<T>& vec) 
