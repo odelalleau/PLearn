@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.28 2003/09/16 20:41:05 chapados Exp $
+* $Id: VMatrix.cc,v 1.29 2003/10/08 23:01:57 plearner Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -113,7 +113,7 @@ void VMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 
 Array<VMField>& VMatrix::getFieldInfos() const
 {
-  if(fieldinfos.size()==0)
+  if(fieldinfos.size()==0 && hasMetaDataDir())
     {
       string fname =  append_slash(getMetaDataDir()) + "fieldnames";
       if(isfile(fname)) // file exists
@@ -135,6 +135,11 @@ Array<VMField>& VMatrix::getFieldInfos() const
 void VMatrix::setFieldInfos(const Array<VMField>& finfo)
 {
   fieldinfos=finfo;
+}
+
+bool VMatrix::hasFieldInfos() const
+{
+  return fieldinfos.size()>0;
 }
 
 void VMatrix::unduplicateFieldNames()
@@ -365,23 +370,35 @@ string VMatrix::resolveFieldInfoLink(string target, string source)
   else return contents;
 }
 
-void VMatrix::setSFIFFilename(int col, string ext, string name)
+void VMatrix::setSFIFFilename(int col, string ext, string filepath)
 {
-  string normalfname = getMetaDataDir()+"FieldInfo/"+fieldName(col)+ext;
+  setSFIFFilename(fieldName(col),ext,filepath);
+}
+
+
+void VMatrix::setSFIFFilename(string fieldname, string ext, string filepath)
+{
+  string target = makeFileNameValid(fieldname+ext);
+  string normalfname = getMetaDataDir()+"FieldInfo/"+target;
   rm(normalfname+".lnk");
-  if(name==normalfname || name=="")
+  if(filepath==normalfname || filepath=="")
   {
     rm(normalfname+".lnk");
     return;
   }
   
   ofstream o((normalfname+".lnk").c_str());
-  o<<name<<endl;
+  o<<filepath<<endl;
 }
 
 string VMatrix::getSFIFFilename(int col, string ext)
 {
-  string target = makeFileNameValid(fieldName(col)+ext);
+  return getSFIFFilename(fieldName(col),ext);
+}
+
+string VMatrix::getSFIFFilename(string fieldname, string ext)
+{
+  string target = makeFileNameValid(fieldname+ext);
   string normalfname = getMetaDataDir()+"FieldInfo/"+target;
   string defaultlinkfname = getMetaDataDir()+"FieldInfo/__default.lnk";
   if(isfile(normalfname))
@@ -396,9 +413,14 @@ string VMatrix::getSFIFFilename(int col, string ext)
 
 bool VMatrix::isSFIFDirect(int col, string ext)
 {
-  string target = makeFileNameValid(fieldName(col)+ext);
+  return isSFIFDirect(fieldName(col), ext);
+}
+
+bool VMatrix::isSFIFDirect(string fieldname, string ext)
+{
+  string target = makeFileNameValid(fieldname+ext);
   string normalfname = getMetaDataDir()+"FieldInfo/"+target;
-  return getSFIFFilename(col,ext) == normalfname;
+  return getSFIFFilename(fieldname,ext) == normalfname;
 }
 
 //! adds a string<->real mapping
@@ -531,11 +553,21 @@ string VMatrix::getString(int row,int col) const
 
 void VMatrix::setMetaDataDir(const string& the_metadatadir) 
 { 
+  if(the_metadatadir=="")
+    PLERROR("Called setMetaDataDir with an empty string");
   metadatadir = the_metadatadir; 
   if(!force_mkdir(metadatadir))
     PLERROR("In VMatrix::setMetadataDir could not create directory %s",metadatadir.c_str());
   metadatadir = abspath(metadatadir);
 }
+
+string VMatrix::getMetaDataDir() const
+{ 
+  //  if(!hasMetaDataDir())
+  //  PLERROR("In VMatrix::getMetaDataDir(): metadatadir was not set"); 
+  return metadatadir; 
+}
+
 
 void VMatrix::loadAllStringMappings()
 {

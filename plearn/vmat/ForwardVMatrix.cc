@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
- * $Id: ForwardVMatrix.cc,v 1.6 2003/08/13 08:13:46 plearner Exp $
+ * $Id: ForwardVMatrix.cc,v 1.7 2003/10/08 23:01:56 plearner Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -70,9 +70,14 @@ void ForwardVMatrix::setVMat(VMat the_vm)
       if(weightsize_<0)
         weightsize_ = vm->weightsize();
       setMtime(vm->getMtime());
-      setMetaDataDir(vm->getMetaDataDir());
+      if(vm->hasMetaDataDir())
+        setMetaDataDir(vm->getMetaDataDir());
       setAlias(vm->getAlias());
       //  field_stats = vm->field_stats;
+
+      // copy fieldnames from vm if not set and they look good
+      if(!hasFieldInfos() && (width() == vm->width()) && vm->hasFieldInfos() )
+        setFieldInfos(vm->getFieldInfos());
     }
   else
     {

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.11 2003/08/20 19:18:59 yoshua Exp $
+   * $Id: VMatLanguage.cc,v 1.12 2003/10/08 23:01:57 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -82,6 +82,8 @@ using namespace std;
   // returns the preprocessed sourcecode along with the defines and the fieldnames it generated
   void VMatLanguage::preprocess(istream& in, map<string, string>& defines,  string& processed_sourcecode, vector<string>& fieldnames)
   {
+    // PStream pout(&cout);
+    // pout << defines << endl;
     char buf[500];
     string token;
     unsigned int spos;

@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.23 2003/09/16 20:41:05 chapados Exp $
+   * $Id: VMatrix.h,v 1.24 2003/10/08 23:01:57 plearner Exp $
    ******************************************************* */
 
 
@@ -151,6 +151,9 @@ public:
 
   // Field types...
   void setFieldInfos(const Array<VMField>& finfo);
+  //! returns true if fieldinfos have been set
+  bool hasFieldInfos() const;
+  //! If no fieldnames have been set, will set default field names to "0", "1", "2", ... i.e. their column index.
   Array<VMField>& getFieldInfos() const;
   VMField& getFieldInfos(int fieldindex) const { return getFieldInfos()[fieldindex]; }
   void declareField(int fieldindex, const string& fieldname, VMField::FieldType fieldtype=VMField::UnknownType);
@@ -180,7 +183,8 @@ public:
   // setSFIFFilename : sets the SFIF with extensions 'ext' to some 'string'. if this string is different
   // from the default filename, the string is actually placed in a new file called [dataset].metadata/FieldInfo/fieldname.[ext].lnk
   // if the 'string' is empty, the default SFIF filename is assumed, which is : [MyDataset].metadata/FieldInfo/fieldname.[ext]
-  void setSFIFFilename(int col, string ext, string name="");
+  void setSFIFFilename(int col, string ext, string filepath="");
+  void setSFIFFilename(string fieldname, string ext, string filepath="");
 
   // getSFIFFilename :If a '*.vmat' dataset uses fields from another dataset, how can we keep the field info dependency? To resolve 
   // this issue, a file named __default.lnk containing path 'P' can be placed in the FieldInfo directory of the .vmat. Here's how 
@@ -188,10 +192,11 @@ public:
   // if the later neither exists, the __default.lnk file is used if present, and if not, then an empty (thus inexistent) file (with
   // SFIF default filename) is assumed. 
   string getSFIFFilename(int col, string ext);
+  string getSFIFFilename(string fieldname, string ext);
   
   // isSFIFDirect : tells whether the SFIF filename is the default filename. (if false, means the field uses the SFIF from another dataset)
   bool isSFIFDirect(int col, string ext);
-
+  bool isSFIFDirect(string fieldname, string ext);
 
   // string mapping stuff
   ///////////////////////
@@ -255,8 +260,14 @@ public:
 
   //! this should be called by the build method of every VMatrix that has a metadatadir
   //! It will create said directory if it doesn's already exist.
+  //! Throws a PLERROR if called with an empty string
   virtual void setMetaDataDir(const string& the_metadatadir);
-  string getMetaDataDir() const { return metadatadir; }
+
+  //! Returns true if a metadatadir was set
+  bool hasMetaDataDir() const { return metadatadir!=""; }
+
+  //! Throws a PLERROR if no metadatadir was set.
+  string getMetaDataDir() const; 
 
   //! returns the 'alias' for this dataset. The alias is a short name that 
   //! can be used as part of a filename containing results related to this VMat.

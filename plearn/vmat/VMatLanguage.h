@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VMatLanguage.h,v 1.6 2003/08/13 08:13:46 plearner Exp $
+   * $Id: VMatLanguage.h,v 1.7 2003/10/08 23:01:57 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -87,11 +87,19 @@ public:
 
     void run(int rowindex, const Vec& result) const;
 
+    inline void setSource(VMat the_source) 
+    { 
+      vmsource = the_source;
+      // program must be compiled with the right source in place...
+      program.resize(0);
+    }
+
     // from the outside, use the next 3 high-level functions
     /////////////////////////////////////////////////////////
 
-    // takes a string, filename, or istream and generate the bytecode from it
+    //! takes a string, filename, or istream and generate the bytecode from it
     //! On exit, fieldnames will contain fieldnames of the resulting matrix
+    //! The source vmat must be set before compiling a VPL program. 
     void compileStream(istream &in, vector<string>& fieldnames);
     void compileString(const string & code, vector<string>& fieldnames);
     void compileFile(const string & filename, vector<string>& fieldnames);
