@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.65 2004/12/21 06:03:31 chapados Exp $
+   * $Id: NNet.cc,v 1.66 2005/02/03 17:12:09 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -590,8 +590,8 @@ void NNet::buildPenalties(const Var& hidden_layer) {
   }
   if (input_reconstruction_penalty>0)
   {
-    wrec = Var(hidden_layer->size(),input->size(),"wrec");
-    predicted_input = transposeProduct(wrec, hidden_layer);
+    wrec = Var(1 + hidden_layer->size(),input->size(),"wrec");
+    predicted_input = affine_transform(hidden_layer, wrec);
     params.append(wrec);
     penalties.append(input_reconstruction_penalty*sumsquare(predicted_input - input));
   }
