@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdaBoost.cc,v 1.1 2005/01/06 18:45:11 larocheh Exp $
+   * $Id: AdaBoost.cc,v 1.2 2005/01/07 17:54:50 chrish42 Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -46,6 +46,7 @@
 #include <plearn/vmat/SelectRowsVMatrix.h>
 #include <plearn/vmat/MemoryVMatrix.h>
 #include <plearn/math/random.h>
+#include <plearn/io/load_and_save.h>
 
 namespace PLearn {
 using namespace std;
