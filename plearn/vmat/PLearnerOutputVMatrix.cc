@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.cc,v 1.15 2004/09/18 16:54:21 larocheh Exp $
+   * $Id: PLearnerOutputVMatrix.cc,v 1.16 2004/10/12 17:34:12 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -50,6 +50,7 @@ using namespace std;
 PLearnerOutputVMatrix::PLearnerOutputVMatrix()
  :inherited(),
   put_raw_input(false),
+  put_non_input(true),
   train_learners(false),
   compute_output_once(false)
   /* ### Initialize all fields to their default value */
@@ -59,6 +60,7 @@ PLearnerOutputVMatrix::PLearnerOutputVMatrix
 (VMat data_,TVec<PP<PLearner> > learners_, bool put_raw_input_, bool train_learners_, bool compute_output_once_) 
 : data(data_),learners(learners_),
   put_raw_input(put_raw_input_),
+  put_non_input(true),
   train_learners(train_learners_),
   compute_output_once(compute_output_once_)
 {
@@ -73,7 +75,7 @@ PLEARN_IMPLEMENT_OBJECT(PLearnerOutputVMatrix,
                         "always in the input part of the new VMatrix. The order of the elements of a new row is as follows:\n"
                         "  - the outputs of the learners (concatenated) when applied on the input part of the original data,\n"
                         "  - optionally, the raw input part of the original data,\n"
-                        "  - all the non-input columns of the original data.");
+                        "  - optionally, all the non-input columns of the original data");
 
 void PLearnerOutputVMatrix::getNewRow(int i, const Vec& v) const
 {
@@ -109,9 +111,13 @@ void PLearnerOutputVMatrix::getNewRow(int i, const Vec& v) const
     v.subVec(c,learner_input->length()) << learner_input;
     c+=learner_input->length();
   }
-  v.subVec(c,non_input_part_of_data_row.length()) << non_input_part_of_data_row;
+  if (put_non_input)
+    v.subVec(c,non_input_part_of_data_row.length()) << non_input_part_of_data_row;
 }
 
+////////////////////
+// declareOptions //
+////////////////////
 void PLearnerOutputVMatrix::declareOptions(OptionList& ol)
 {
   // ### Declare all of this object's options here
@@ -129,6 +135,9 @@ void PLearnerOutputVMatrix::declareOptions(OptionList& ol)
    declareOption(ol, "put_raw_input", &PLearnerOutputVMatrix::put_raw_input, OptionBase::buildoption,
                  "Whether to include in the input part of this VMatrix the raw data input part");
 
+   declareOption(ol, "put_non_input", &PLearnerOutputVMatrix::put_non_input, OptionBase::buildoption,
+                 "Whether to include in this VMatrix the original target and weights.");
+
    declareOption(ol, "train_learners", &PLearnerOutputVMatrix::train_learners, OptionBase::buildoption,
                 "If set to 1, the learners will be train on 'data' before computing the output");
 
@@ -139,6 +148,9 @@ void PLearnerOutputVMatrix::declareOptions(OptionList& ol)
   inherited::declareOptions(ol);
 }
 
+////////////
+// build_ //
+////////////
 void PLearnerOutputVMatrix::build_()
 {
   if (data && learners.length()>0 && learners[0])
@@ -191,14 +203,20 @@ void PLearnerOutputVMatrix::build_()
       inputsize_ += learners[i]->outputsize();
     if (put_raw_input) 
       inputsize_ += data->inputsize();
-    targetsize_ = data->targetsize();
-    weightsize_ = data->weightsize();
+    if (put_non_input) {
+      targetsize_ = data->targetsize();
+      weightsize_ = data->weightsize();
+      width_ = inputsize_ + targetsize_ + weightsize_;
+    } else {
+      targetsize_ = 0;
+      weightsize_ = 0;
+      width_ = inputsize_;
+    }
     length_ = data->length();
-    width_ = data->width() - data->inputsize() + inputsize_;
 
     // Set field info.
     fieldinfos.resize(width_);
-    if (data->getFieldInfos().size() >= data->inputsize() + data->targetsize()) {
+    if (put_non_input && data->getFieldInfos().size() >= data->inputsize() + data->targetsize()) {
       // We can retrieve the information for the target columns.
       for (int i = 0; i < data->targetsize(); i++) {
         fieldinfos[i + this->inputsize()] = data->getFieldInfos()[i + data->inputsize()];
@@ -207,7 +225,9 @@ void PLearnerOutputVMatrix::build_()
   }
 }
 
-// ### Nothing to add here, simply calls build_
+///////////
+// build //
+///////////
 void PLearnerOutputVMatrix::build()
 {
   inherited::build();
@@ -217,13 +237,14 @@ void PLearnerOutputVMatrix::build()
 void PLearnerOutputVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-
   deepCopyField(row, copies);
   deepCopyField(learner_input, copies);
   deepCopyField(learners_output, copies);
   deepCopyField(learner_target, copies);
   deepCopyField(non_input_part_of_data_row, copies);
-  deepCopyField(compute_output_once, copies);
+  deepCopyField(complete_learners_output, copies);
+  deepCopyField(data, copies);
+  deepCopyField(learners, copies);
 }
 
 } // end of namespace PLearn

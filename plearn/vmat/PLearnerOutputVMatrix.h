@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.h,v 1.12 2004/09/18 16:54:21 larocheh Exp $
+   * $Id: PLearnerOutputVMatrix.h,v 1.13 2004/10/12 17:34:12 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -80,6 +80,7 @@ public:
   VMat data; // whose input field will be applied to learner in order to obtain new input part of this VMatrix
   TVec<PP<PLearner> > learners; // the outputs of the learners will be concatenated
   bool put_raw_input; // if true not only the learner output but also the raw data input are in the input part of the VMatrix
+  bool put_non_input;
   bool train_learners;
   bool compute_output_once;
   // ****************
