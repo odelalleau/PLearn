@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddLayersNNet.cc,v 1.8 2004/10/12 17:32:54 tihocan Exp $ 
+   * $Id: AddLayersNNet.cc,v 1.9 2004/11/03 14:06:40 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -245,6 +245,9 @@ void AddLayersNNet::build_()
 ////////////////////
 void AddLayersNNet::buildPenalties(const Var& hidden_layer) {
   inherited::buildPenalties(hidden_layer);
+  if (hidden_weights.length() != parts_size.length())
+    // The hidden weights have not yet been correctly initialized.
+    return;
   for (int i = 0; i < parts_size.length(); i++) {
     if (add_hidden[i] > 0 && (weight_decay > 0 || bias_decay > 0)) {
       penalties.append(affine_transform_weight_penalty(hidden_weights[i], weight_decay, bias_decay, L1_penalty));
