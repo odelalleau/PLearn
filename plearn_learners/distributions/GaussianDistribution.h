@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianDistribution.h,v 1.7 2004/04/01 20:32:27 plearner Exp $
+   * $Id: GaussianDistribution.h,v 1.8 2004/05/26 16:06:48 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -80,7 +80,7 @@ using namespace std;
 
     virtual void forget();
     virtual void train();
-    virtual double log_density(const Vec& x) const;
+    virtual real log_density(const Vec& x) const;
 
     //! Resets the random number generator used by generate using the given seed
     virtual void resetGenerator(long g_seed) const;

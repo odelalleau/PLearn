@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UniformDistribution.cc,v 1.2 2004/05/21 13:16:08 tihocan Exp $ 
+   * $Id: UniformDistribution.cc,v 1.3 2004/05/26 16:05:57 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -118,7 +118,7 @@ void UniformDistribution::build_()
 /////////
 // cdf //
 /////////
-double UniformDistribution::cdf(const Vec& x) const
+real UniformDistribution::cdf(const Vec& x) const
 {
   PLERROR("cdf not implemented for UniformDistribution"); return 0;
 }
@@ -152,7 +152,7 @@ int UniformDistribution::inputsize() const {
 /////////////////
 // log_density //
 /////////////////
-double UniformDistribution::log_density(const Vec& x) const
+real UniformDistribution::log_density(const Vec& x) const
 {
   PLERROR("density not implemented for UniformDistribution"); return 0; 
 }
@@ -185,7 +185,7 @@ void UniformDistribution::resetGenerator(long g_seed) const
 /////////////////
 // survival_fn //
 /////////////////
-double UniformDistribution::survival_fn(const Vec& x) const
+real UniformDistribution::survival_fn(const Vec& x) const
 {
   PLERROR("survival_fn not implemented for UniformDistribution"); return 0;
 }

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UniformDistribution.h,v 1.2 2004/05/21 13:16:08 tihocan Exp $ 
+   * $Id: UniformDistribution.h,v 1.3 2004/05/26 16:05:57 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -116,13 +116,13 @@ public:
   virtual int inputsize() const;
 
   //! Return log of probability density log(p(x)).
-  virtual double log_density(const Vec& x) const;
+  virtual real log_density(const Vec& x) const;
 
   //! Return survival fn = P(X>x).
-  virtual double survival_fn(const Vec& x) const;
+  virtual real survival_fn(const Vec& x) const;
 
   //! Return survival fn = P(X<x).
-  virtual double cdf(const Vec& x) const;
+  virtual real cdf(const Vec& x) const;
 
   //! Return E[X].
   virtual void expectation(Vec& mu) const;

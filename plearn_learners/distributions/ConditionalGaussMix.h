@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalGaussMix.h,v 1.4 2004/05/21 13:14:52 tihocan Exp $ 
+   * $Id: ConditionalGaussMix.h,v 1.5 2004/05/26 16:06:48 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -138,13 +138,13 @@ public:
   virtual void setInput(const Vec& input) const;
 
   //! Return log of probability density log(p(y | x)).
-  virtual double log_density(const Vec& y) const;
+  virtual real log_density(const Vec& y) const;
 
   //! Return survival fn = P(Y>y | x).
-  virtual double survival_fn(const Vec& y) const;
+  virtual real survival_fn(const Vec& y) const;
 
   //! Return survival fn = P(Y<y | x).
-  virtual double cdf(const Vec& y) const;
+  virtual real cdf(const Vec& y) const;
 
   //! Return E[Y | x].
   virtual void expectation(Vec& mu) const;

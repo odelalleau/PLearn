@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianDistribution.cc,v 1.8 2004/04/01 20:32:27 plearner Exp $
+   * $Id: GaussianDistribution.cc,v 1.9 2004/05/26 16:06:48 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -128,7 +128,7 @@ void GaussianDistribution::train()
   // cerr << "eig V: \n" << V << endl;
 }
 
-double GaussianDistribution::log_density(const Vec& x) const 
+real GaussianDistribution::log_density(const Vec& x) const 
 { 
   return logOfCompactGaussian(x, mu, eigenvalues, eigenvectors, gamma, true);
 }

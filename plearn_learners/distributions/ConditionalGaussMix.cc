@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalGaussMix.cc,v 1.5 2004/05/21 16:07:25 tihocan Exp $ 
+   * $Id: ConditionalGaussMix.cc,v 1.6 2004/05/26 16:06:48 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -148,7 +148,7 @@ void ConditionalGaussMix::build_()
 /////////
 // cdf //
 /////////
-double ConditionalGaussMix::cdf(const Vec& x) const
+real ConditionalGaussMix::cdf(const Vec& x) const
 {
   PLERROR("cdf not implemented for ConditionalGaussMix"); return 0;
 }
@@ -205,7 +205,7 @@ void ConditionalGaussMix::generate(Vec& x) const
 /////////////////
 // log_density //
 /////////////////
-double ConditionalGaussMix::log_density(const Vec& x) const
+real ConditionalGaussMix::log_density(const Vec& x) const
 {
   PLERROR("density not implemented for ConditionalGaussMix"); return 0; 
 }
@@ -303,7 +303,7 @@ void ConditionalGaussMix::setTrainingSet(VMat training_set, bool call_forget) {
 /////////////////
 // survival_fn //
 /////////////////
-double ConditionalGaussMix::survival_fn(const Vec& x) const
+real ConditionalGaussMix::survival_fn(const Vec& x) const
 {
   PLERROR("survival_fn not implemented for ConditionalGaussMix"); return 0;
 }
