@@ -380,15 +380,15 @@ void FieldConvertCommand::run(const vector<string> & args)
 // stringToFieldType //
 ///////////////////////
 PLearn::FieldConvertCommand::FieldType FieldConvertCommand::stringToFieldType(string s) {
-  if (s == "continuous")
+  if (s.find("continuous") != string::npos)
     return continuous;
-  else if (s == "discrete_uncorr")
+  else if (s.find("discrete_uncorr")!= string::npos )
     return discrete_uncorr;
-  else if (s == "discrete_corr")
+  else if (s.find("discrete_corr") != string::npos)
     return discrete_corr;
-  else if (s == "constant")
+  else if (s.find("constant") != string::npos)
     return constant;
-  else if (s == "skip")
+  else if (s.find("skip") != string::npos)
     return skip;
   else {
     PLERROR("In FieldConvertCommand::stringToFieldType Unknown field type: %s",s.c_str());
