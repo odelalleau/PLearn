@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.cc,v 1.29 2004/02/18 21:06:31 dorionc Exp $ 
+   * $Id: FuturesTrader.cc,v 1.30 2004/02/19 16:39:42 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.cc */
@@ -132,7 +132,6 @@ real FuturesTrader::transactionCost(bool monthly_call, const int& k, const int& 
 
   // Daily Transaction Costs: No additive_cost on a null delta since there will be no transaction
   real delta_ = delta(k, t);  
-  PLWARNING("delta(k=%d, t=%d) = %f", k, t, delta_);
   if( delta_ == 0.0 ) //To change for 0 when will pass to units!!!
     return 0.0;
   
@@ -192,7 +191,7 @@ void FuturesTrader::assetwise_management(const int& k, const int& t, const real&
 
   real t_cost = transactionCost(monthly_call, k, t);
   transaction_cost += t_cost;
-  assetwise[k] += absolute_return_on_asset_k_at_t - t_cost;
+  assetwise[k] = absolute_return_on_asset_k_at_t - t_cost;
   
   if(margin_management)
   {
@@ -203,35 +202,39 @@ void FuturesTrader::assetwise_management(const int& k, const int& t, const real&
 
 real FuturesTrader::time_step_relative_return(Vec& assetwise, const real& previous_value, const real& risk_free_return) const
 {
-//   cout << "assetwise: " << assetwise << endl
-//        << "previous_value: " << previous_value << endl
-//        << "risk_free_return: " << risk_free_return << endl
-//        << endl;
-  
+  // If only nan values are encountered, we know that 
+  //  the portfolio was empty. Therefore, we shall not add 
+  //  the risk_free_return to relative_return 
+  bool traded = false;
   real relative_return = 0.0;
+  
   if(previous_value != 0.0)
-  {
-    relative_return = sum(assetwise)/previous_value;
-    
-    // This could have been done before:
-    //      assetwise /= previous_value;
-    //      relative_return = sum(assetwise);
-    // But precision would have been lowered.
+  {    
     assetwise /= previous_value;
+
+    real* a = assetwise.data();
+    for(int k=0; k < assetwise.length(); k++)
+    {
+      if (!is_missing(a[k])) 
+      {
+        // There was at least one asset traded.
+        traded = true;
+        relative_return += a[k];
+        
+        // Assetwise returns are added the risk free rate on their margin cash counterpart
+        a[k] += risk_free_return;
+      }
+      else 
+        a[k] = 0.0; // Overwritting the missing value with zero return
+    }
   }
   else
-    assetwise.fill(0.0); // We will consider only the risk_free_return
+    assetwise.fill(0.0);
   
-
   // Adding the return on cash position
-  assetwise += risk_free_return;
-  relative_return += risk_free_return;
+  if(traded)
+    relative_return += risk_free_return;
   
-//   cout << "assetwise: " << assetwise << endl
-//        << "previous_value: " << previous_value << endl
-//        << "risk_free_return: " << risk_free_return << endl
-//        << endl;
-
   return relative_return;
 }
 
@@ -248,8 +251,14 @@ real FuturesTrader::last_month_relative_return(const int& t) const
   
   real last_month_risk_free_return = exp(log(risk_free(last_day_of_previous_month) + 1.0)/12.0) - 1.0;
 //    cout << "monthly_risk_free_return: " << monthly_risk_free_return << endl;
-  
-  Vec assetwise_ret(25, 0.0);
+
+  /*!
+    The missing value will be overwritten in assetwise_management if and only if 
+    the asset was traded. Therefore, time_step_relative_return can make the difference 
+    between a zero return traded asset and an asset which was not traded at all.
+  */
+  Vec assetwise_ret(nb_assets, MISSING_VALUE);
+
   real last_month_value=0.0; 
   real last_month_absolute_return=0.0;
   real last_month_transaction_cost=0.0;
@@ -287,7 +296,13 @@ void FuturesTrader::trader_test(int t, VMat testset, PP<VecStatsCollector> test_
   portfolio_value[t] = 0;
   real previous_value_t = 0;
   real absolute_return_t = 0;
-  Vec assetwise_lret(nb_assets, 0.0);
+
+  /*!
+    The missing value will be overwritten in assetwise_management if and only if 
+    the asset was traded. Therefore, time_step_relative_return can make the difference 
+    between a zero return traded asset and an asset which was not traded at all.
+  */
+  Vec assetwise_lret(nb_assets, MISSING_VALUE); 
   
   real daily_risk_free_return = exp(log(1.0+risk_free(t-horizon))/252.0) - 1.0;
   if (is_missing(daily_risk_free_return))

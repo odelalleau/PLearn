@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FinancialAdvisor.h,v 1.5 2004/02/17 17:58:23 tihocan Exp $ 
+   * $Id: FinancialAdvisor.h,v 1.6 2004/02/19 16:39:42 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -44,8 +44,7 @@
 #ifndef FinancialAdvisor_INC
 #define FinancialAdvisor_INC
 
-#include "SequentialLearner.h"
-//#include "Trader.h"
+#include "Trader.h"
 
 namespace PLearn <%
 using namespace std;
