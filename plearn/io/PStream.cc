@@ -595,8 +595,6 @@ PStream& PStream::operator>>(char *x)
     case PStream::plearn_ascii:
     case PStream::plearn_binary:
     {
-      if(!x)
-        PLERROR("In PStream::operator>>(char*) character array must already be allocated to put the read string in");
       skipBlanksAndComments();
       int c = peek();
       int i=0; // pos within the string
@@ -607,8 +605,22 @@ PStream& PStream::operator>>(char *x)
         while(c!='"' && c!=EOF)
         {
           if(c=='\\') // escaped character
-            c = get();
-          x[i++]= static_cast<char>(c);
+            {
+              c = get();
+              switch (c)
+                {
+                case 'n':
+                  x[i++] = '\n';
+                  break;
+
+                default:
+                  x[i++] = static_cast<char>(c);
+                  break;
+                }
+            }
+          else
+            x[i++]= static_cast<char>(c);
+
           c = get();
         }
         if(c==EOF)
@@ -671,8 +683,22 @@ PStream& PStream::operator>>(string& x)
         while(c!='"' && c!=EOF)
         {
           if(c=='\\') // escaped character
-            c = get();
-          x+= static_cast<char>(c);
+            {
+              c = get();
+              switch (c)
+                {
+                case 'n':
+                  x += '\n';
+                  break;
+
+                default:
+                  x += static_cast<char>(c);
+                  break;
+                }
+            }
+          else
+            x += static_cast<char>(c);
+
           c = get();
         }
         if(c==EOF)
