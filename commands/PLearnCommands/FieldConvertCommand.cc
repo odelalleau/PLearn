@@ -21,7 +21,7 @@ void FieldConvertCommand::run(const vector<string> & args)
   // set default values
   UNIQUE_NMISSING_FRACTION_TO_ASSUME_CONTINUOUS = 0.3f;
   PVALUE_THRESHOLD = 0.025f;
-  FRAC_MISSING_TO_SKIP = 0.9f;
+  FRAC_MISSING_TO_SKIP = 1.0f;
   FRAC_ENOUGH = 0.005f;
   target = -1;
   report_fn="FieldConvertReport.txt";
@@ -335,22 +335,20 @@ void FieldConvertCommand::run(const vector<string> & args)
       for (int j = 0; j < count; j++) {
         to_be_included[j] = true;
       }
-      for(map<real,StatsCollectorCounts>::iterator it = sc[i].getCounts()->begin(); it!=sc[i].getCounts()->end(); ++it) {
-        if (it->first!=FLT_MAX) {
-          if (it->second.n < n_enough) {
-            to_be_included[k] = false;
-            n_discarded++;
-            // cout << "Field " << i << ": value " << it->first
-            //     << " discarded (n = " << it->second.n << ")." << endl;
-          }
-          k++;
+      for(map<real,StatsCollectorCounts>::iterator it = sc[i].getCounts()->begin(); k<((int)sc[i].getCounts()->size()) - 1; ++it) {
+        if (it->second.n < n_enough) {
+          to_be_included[k] = false;
+          n_discarded++;
+          // cout << "Field " << i << ": value " << it->first
+          //     << " discarded (n = " << it->second.n << ")." << endl;
         }
+        k++;
       }
       if (n_discarded <= count - 1) {
         // We only consider this field if there is at least 1 class left.
         out << "@"<<vm->fieldName(i) <<" " << sc[i].getAllValuesMapping(&to_be_included) << " "
-            << count - n_discarded << " onehot :"
-            << vm->fieldName(i)<<":0:"<<(count - 1 - n_discarded) << endl;
+          << count - n_discarded << " onehot :"
+          << vm->fieldName(i)<<":0:"<<(count - 1 - n_discarded) << endl;
       }
     }
 
