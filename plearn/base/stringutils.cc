@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.cc,v 1.21 2004/07/21 16:30:51 chrish42 Exp $
+   * $Id: stringutils.cc,v 1.22 2004/08/19 17:23:33 tatien Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -522,7 +522,7 @@ vector<string> remove(const vector<string> &v, string element)
   return res;
 }
 
-int findit(const vector<string> &v, string element)
+int findpos(const vector<string> &v, string element)
 {
   for (size_t i=0;i<v.size();i++)
     if (v[i]==element) return (int)i;
