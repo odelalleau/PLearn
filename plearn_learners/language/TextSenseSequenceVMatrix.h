@@ -80,10 +80,10 @@ protected:
   // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
 
-public:
   //!  This is the only method requiring implementation
-  virtual void getNewRow(int i, Vec& v) const;
+  virtual void getNewRow(int i, const Vec& v) const;
 
+public:
   //! This restricts the extraction of the context to the words that don't have their POS in res_pos and returns the position of the next non-overlapping context
   int getRestrictedRow(int i, Vec v) const;
 

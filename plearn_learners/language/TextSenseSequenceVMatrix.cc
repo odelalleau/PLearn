@@ -21,7 +21,7 @@ PLEARN_IMPLEMENT_OBJECT(TextSenseSequenceVMatrix,
                         "representation of a target word and its context.",
                         "");
 
-void TextSenseSequenceVMatrix::getNewRow(int i, Vec& v) const
+void TextSenseSequenceVMatrix::getNewRow(int i, const Vec& v) const
 {
 
   if(res_pos.size() != 0)
