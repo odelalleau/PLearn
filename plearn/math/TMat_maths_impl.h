@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.49 2004/05/28 13:04:37 tihocan Exp $
+   * $Id: TMat_maths_impl.h,v 1.50 2004/06/16 18:31:15 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -693,11 +693,12 @@ void normalize(const TVec<T>& vec, double n)
 template<class T>
 T powdistance(const TVec<T>& vec1, const TVec<T>& vec2, double n)
 {
+  static T result, diff;
 #ifdef BOUNDCHECK
   if(vec1.length() != vec2.length())
     PLERROR("In weighted_powdistance: vec1, vec2 should have the same length");
 #endif
-  T result = 0.0;
+  result = 0.0;
   T* v1 = vec1.data();
   T* v2 = vec2.data();
   int length = vec1.length();
@@ -705,7 +706,7 @@ T powdistance(const TVec<T>& vec1, const TVec<T>& vec2, double n)
     {
       for(int i=0; i<length; i++)
         {
-          T diff = v1[i]-v2[i];
+          diff = *v1++ - *v2++;
           if(diff>=0)
             result += diff;
           else
@@ -716,7 +717,7 @@ T powdistance(const TVec<T>& vec1, const TVec<T>& vec2, double n)
     {
       for(int i=0; i<length; i++)
         {
-          T diff = v1[i]-v2[i];
+          diff = *v1++ - *v2++;
           result += diff*diff;
         }
     }
@@ -724,7 +725,7 @@ T powdistance(const TVec<T>& vec1, const TVec<T>& vec2, double n)
     {
       for(int i=0; i<length; i++)
         {
-          T diff = v1[i]-v2[i];
+          diff = *v1++ - *v2++;
           if(diff<0)
             diff = -diff;
           result += mypow(diff,n);
