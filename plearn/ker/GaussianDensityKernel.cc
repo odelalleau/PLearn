@@ -36,28 +36,20 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianDensityKernel.cc,v 1.3 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: GaussianDensityKernel.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "GaussianDensityKernel.h"
 
-// From Old Kernel.cc: all includes are putted in every file.
-// To be revised manually 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
 
 PLEARN_IMPLEMENT_OBJECT(GaussianDensityKernel, "ONE LINE DESCR", "NO HELP");
+
 real GaussianDensityKernel::evaluate(const Vec& x1, const Vec& x2) const
 { return exp(-real(0.5)*powdistance(x1, x2, real(2.0))/(sigma*sigma) - x1.length()*(0.5*Log2Pi + log(sigma))); }
-
 
 void GaussianDensityKernel::declareOptions(OptionList& ol)
 {
@@ -65,17 +57,6 @@ void GaussianDensityKernel::declareOptions(OptionList& ol)
                 "The width of the Gaussian");
   inherited::declareOptions(ol);
 }
-
-
-void GaussianDensityKernel::oldread(istream& in)
-{
-  readHeader(in,"GaussianDensityKernel");
-  inherited::oldread(in);
-  readField(in,"sigma",sigma);
-  readFooter(in,"GaussianDensityKernel");
-}
-
-
 
 } // end of namespace PLearn
 

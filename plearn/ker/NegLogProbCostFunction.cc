@@ -36,25 +36,19 @@
 
 
 /* *******************************************************      
-   * $Id: NegLogProbCostFunction.cc,v 1.3 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: NegLogProbCostFunction.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "NegLogProbCostFunction.h"
-
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"*/
 #include "PLMPI.h"
-//////////////////////////
+
 namespace PLearn {
 using namespace std;
 
 
 
 PLEARN_IMPLEMENT_OBJECT(NegLogProbCostFunction, "ONE LINE DESCR", "NO HELP");
-string NegLogProbCostFunction::info() const { return "negative_log_probability"; }
 
 
 #define smoothmap sigmoid
@@ -132,35 +126,6 @@ real NegLogProbCostFunction::evaluate(const Vec& output, const Vec& target) cons
   return -safeflog(prob);
 }
 
-
-void NegLogProbCostFunction::write(ostream& out) const
-{
-  writeHeader(out,"NegLogProbCostFunction");
-  writeField(out,"normalize",normalize);
-  writeField(out,"smooth_map_outputs",smooth_map_outputs);
-  writeFooter(out,"NegLogProbCostFunction");
-}
-
-void NegLogProbCostFunction::oldread(istream& in)
-{
-  readHeader(in,"NegLogProbCostFunction");
-  readField(in,"normalize",normalize);
-  readField(in,"smooth_map_outputs",smooth_map_outputs);
-  readFooter(in,"NegLogProbCostFunction");
-}
-// recognized options are "normalize" and "smooth_map_outputs"
-
-/*
-void NegLogProbCostFunction::readOptionVal(istream& in, const string& optionname)
-{
-  if (optionname=="normalize")
-    PLearn::read(in,normalize);
-  if (optionname=="smooth_map_outputs")
-    PLearn::read(in,smooth_map_outputs);
-  else
-    inherited::readOptionVal(in, optionname);  
-}
-*/
 void NegLogProbCostFunction::declareOptions(OptionList &ol)
 {
     declareOption(ol, "normalize", &NegLogProbCostFunction::normalize, OptionBase::buildoption,
@@ -168,9 +133,7 @@ void NegLogProbCostFunction::declareOptions(OptionList &ol)
     declareOption(ol, "smooth_map_outputs", &NegLogProbCostFunction::smooth_map_outputs, OptionBase::buildoption,
                   "TODO: Some comments");
     inherited::declareOptions(ol);
-}   
-
-
+}
 
 } // end of namespace PLearn
 

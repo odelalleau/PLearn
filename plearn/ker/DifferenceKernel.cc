@@ -36,21 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: DifferenceKernel.cc,v 1.3 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: DifferenceKernel.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "DifferenceKernel.h"
 #include "SelectedOutputCostFunction.h"
 
-// From Old Kernel.cc: all includes are putted in every file.
-// To be revised manually 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
@@ -62,20 +54,6 @@ real DifferenceKernel::evaluate(const Vec& x1, const Vec& x2) const
   for(int i=0; i<x1.length(); i++)
     result += x1[i]-x2[i];
   return result;
-}
-
-void DifferenceKernel::write(ostream& out) const
-{
-  writeHeader(out,"DifferenceKernel"); 
-  inherited::oldwrite(out);
-  writeFooter(out,"DifferenceKernel");
-}
-
-void DifferenceKernel::oldread(istream& in)
-{
-  readHeader(in,"DifferenceKernel");
-  inherited::oldread(in);
-  readFooter(in,"DifferenceKernel");
 }
 
 CostFunc output_minus_target(int singleoutputindex)

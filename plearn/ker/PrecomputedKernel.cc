@@ -36,18 +36,12 @@
 
 
 /* *******************************************************      
-   * $Id: PrecomputedKernel.cc,v 1.5 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: PrecomputedKernel.cc,v 1.6 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "PrecomputedKernel.h"
 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
@@ -153,38 +147,10 @@ real PrecomputedKernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x
 real PrecomputedKernel::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x) const
 { return ker->evaluate_x_i(x,i,squared_norm_of_x); }
 
-
-void PrecomputedKernel::write(ostream& out) const
-{
-  writeHeader(out,"PrecomputedKernel");
-  inherited::oldwrite(out);
-  ker->write(out);
-  writeFooter(out,"PrecomputedKernel");
-}
-
-
-void PrecomputedKernel::oldread(istream& in)
-{
-  readHeader(in,"PrecomputedKernel");
-  inherited::oldread(in);
-  ker = dynamic_cast<Kernel*>(readObject(in));
-  readFooter(in,"PrecomputedKernel");
-}
-
-/*
-void PrecomputedKernel::readOptionVal(istream& in, const string& optionname)
-{ 
-  if(optionname.length()>4 && optionname.substr(0,4)=="ker.")
-    ker->readOptionVal(in, optionname.substr(4));
-  else
-    inherited::readOptionVal(in, optionname);  
-}
-*/
 void PrecomputedKernel::declareOptions(OptionList &ol)
 {
     declareOption(ol, "ker", &PrecomputedKernel::ker, OptionBase::buildoption,
-                   "The underlying kernel.");
-
+                   "The underlying kernel.");    
     inherited::declareOptions(ol);
 }
 

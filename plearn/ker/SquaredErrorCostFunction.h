@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SquaredErrorCostFunction.h,v 1.4 2004/04/05 19:15:27 tihocan Exp $
+   * $Id: SquaredErrorCostFunction.h,v 1.5 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,9 +54,6 @@ using namespace std;
 
 class SquaredErrorCostFunction: public Kernel
 {
-
-private:
-
   typedef Kernel inherited;
 		
 protected:
@@ -75,15 +72,17 @@ public:
     : targetindex(-1), classification(true), hotvalue(hot_value), coldvalue(cold_value) {};
 
   PLEARN_DECLARE_OBJECT(SquaredErrorCostFunction);
-  virtual string info() const;
+
+  virtual string info() const
+        { return "squared_error"; }
+
   virtual real evaluate(const Vec& output, const Vec& target) const; 
-    //virtual void readOptionVal(istream& in, const string& optionname);
-  virtual void write(ostream& out) const;
-  virtual void oldread(istream& in);
-  //!  recognized option is "targetindex"
-  
+
+protected:
+  //!  recognized option is "targetindex"  
   static void declareOptions(OptionList &ol);
 };
+
 DECLARE_OBJECT_PTR(SquaredErrorCostFunction);
 
 inline CostFunc squared_classification_error(real hot_value=0.8, real cold_value=0.2)

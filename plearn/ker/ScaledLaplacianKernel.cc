@@ -36,45 +36,23 @@
 
 
 /* *******************************************************      
-   * $Id: ScaledLaplacianKernel.cc,v 1.3 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: ScaledLaplacianKernel.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "ScaledLaplacianKernel.h"
 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
 
 PLEARN_IMPLEMENT_OBJECT(ScaledLaplacianKernel, "ONE LINE DESCR", "NO HELP");
+
 void ScaledLaplacianKernel::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   Kernel::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(phi, copies);
 }
-
-void ScaledLaplacianKernel::write(ostream& out) const
-{
-  writeHeader(out,"ScaledLaplacianKernel");
-  inherited::oldwrite(out);
-  writeField(out,"phi",phi);
-  writeFooter(out,"ScaledLaplacianKernel");
-}
-
-void ScaledLaplacianKernel::oldread(istream& in)
-{
-  readHeader(in,"ScaledLaplacianKernel");
-  inherited::oldread(in);
-  readField(in,"phi",phi);
-  readFooter(in,"ScaledLaplacianKernel");
-}
-
 
 real ScaledLaplacianKernel::evaluate(const Vec& x1, const Vec& x2) const
 { 
@@ -92,7 +70,6 @@ real ScaledLaplacianKernel::evaluate(const Vec& x1, const Vec& x2) const
     summ += fabs(v1[i]-v2[i])*ph[i];
   return exp(-summ);
 }
-
 
 
 } // end of namespace PLearn

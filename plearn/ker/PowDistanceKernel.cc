@@ -36,18 +36,12 @@
 
 
 /* *******************************************************      
-   * $Id: PowDistanceKernel.cc,v 1.3 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: PowDistanceKernel.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "PowDistanceKernel.h"
 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
@@ -55,47 +49,16 @@ using namespace std;
 // ** PowDistanceKernel **
 
 PLEARN_IMPLEMENT_OBJECT(PowDistanceKernel, "ONE LINE DESCR", "NO HELP");
-string PowDistanceKernel::info() const { return "(L"+tostring(n)+")^"+tostring(n); }
 
 real PowDistanceKernel::evaluate(const Vec& x1, const Vec& x2) const
 { return powdistance(x1, x2, n); }
 
-
-void PowDistanceKernel::write(ostream& out) const
-{
-  writeHeader(out,"PowDistanceKernel");
-  inherited::oldwrite(out);
-	writeField(out,"n",n);
-  writeFooter(out,"PowDistanceKernel");
-}
-
-
-void PowDistanceKernel::oldread(istream& in)
-{
-  readHeader(in,"PowDistanceKernel");
-  inherited::oldread(in);
-  readField(in,"n",n);
-  readFooter(in,"PowDistanceKernel");
-}
-
-
-/*
-void PowDistanceKernel::readOptionVal(istream& in, const string& optionname)
-{
-  if (optionname=="n")
-    PLearn::read(in, n);
-  else
-    inherited::readOptionVal(in, optionname);  
-}
-*/
 void PowDistanceKernel::declareOptions(OptionList &ol)
 {
     declareOption(ol, "n", &PowDistanceKernel::n, OptionBase::buildoption,
                   "TODO: Give some comments");
     inherited::declareOptions(ol);
 }
-
-
 
 } // end of namespace PLearn
 

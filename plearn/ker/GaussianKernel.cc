@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianKernel.cc,v 1.6 2004/02/28 18:03:19 tihocan Exp $
+   * $Id: GaussianKernel.cc,v 1.7 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -176,16 +176,6 @@ void GaussianKernel::setParameters(Vec paramvec)
 { 
   PLWARNING("In GaussianKernel: setParameters is deprecated, use setOption instead");
   sigma = paramvec[0]; 
-  minus_one_over_sigmasquare = -1.0/(sigma*sigma);
-}
-
-
-void GaussianKernel::oldread(istream& in)
-{
-  readHeader(in,"GaussianKernel");
-  inherited::oldread(in);
-  readField(in,"sigma",sigma);
-  readFooter(in,"GaussianKernel");
   minus_one_over_sigmasquare = -1.0/(sigma*sigma);
 }
 

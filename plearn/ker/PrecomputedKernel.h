@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PrecomputedKernel.h,v 1.5 2004/03/12 19:03:47 dorionc Exp $
+   * $Id: PrecomputedKernel.h,v 1.6 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -92,13 +92,11 @@ public:
   virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const; //!<  returns evaluate(data(i),x)
   virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const; //!<  returns evaluate(x,data(i))
 
-  //virtual void readOptionVal(istream& in, const string& optionname);
+protected:
   static void declareOptions(OptionList &ol);
-  virtual void write(ostream& out) const;
-  virtual void oldread(istream& in);  
 };
-DECLARE_OBJECT_PTR(PrecomputedKernel);
 
+DECLARE_OBJECT_PTR(PrecomputedKernel);
 
 } // end of namespace PLearn
 

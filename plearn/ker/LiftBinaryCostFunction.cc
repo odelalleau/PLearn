@@ -36,26 +36,17 @@
 
 
 /* *******************************************************      
-   * $Id: LiftBinaryCostFunction.cc,v 1.3 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: LiftBinaryCostFunction.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "LiftBinaryCostFunction.h"
 
-// From Old Kernel.cc: all includes are putted in every file.
-// To be revised manually 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
 
 PLEARN_IMPLEMENT_OBJECT(LiftBinaryCostFunction, "ONE LINE DESCR", "NO HELP");
-string LiftBinaryCostFunction::info() const { return "lift_binary_function"; }
 
 real LiftBinaryCostFunction::evaluate(const Vec& output, const Vec& target) const
 {
@@ -82,39 +73,12 @@ real LiftBinaryCostFunction::evaluate(const Vec& output, const Vec& target) cons
   return 0.0;  // to make the compiler happy...
 }
 
-
-void LiftBinaryCostFunction::write(ostream& out) const
-{
-  writeHeader(out,"LiftBinaryCostFunction");
-  writeField(out,"make_positive_output",make_positive_output);
-  writeFooter(out,"LiftBinaryCostFunction");
-}
-
-void LiftBinaryCostFunction::oldread(istream& in)
-{
-  readHeader(in,"LiftBinaryCostFunction");
-  readField(in,"make_positive_output",make_positive_output);
-  readFooter(in,"LiftBinaryCostFunction");
-}
-// recognized option is "norm_to_use"
-
-/*
-void LiftBinaryCostFunction::readOptionVal(istream& in, const string& optionname)
-{
-  if (optionname=="make_positive_output")
-    PLearn::read(in,make_positive_output);
-  else
-    inherited::readOptionVal(in, optionname);  
-}
-*/
 void LiftBinaryCostFunction::declareOptions(OptionList &ol)
 {
     declareOption(ol, "make_positive_output", &LiftBinaryCostFunction::make_positive_output, OptionBase::buildoption,
                    "TODO: Some comments");
     inherited::declareOptions(ol);
 }
-
-
 
 } // end of namespace PLearn
 

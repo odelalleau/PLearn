@@ -36,53 +36,20 @@
 
 
 /* *******************************************************      
-   * $Id: NormalizedDotProductKernel.cc,v 1.3 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: NormalizedDotProductKernel.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "NormalizedDotProductKernel.h"
 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
 
 PLEARN_IMPLEMENT_OBJECT(NormalizedDotProductKernel, "ONE LINE DESCR", "NO HELP");
+
 real NormalizedDotProductKernel::evaluate(const Vec& x1, const Vec& x2) const
 { return dot(x1,x2)/(norm(x1,norm_to_use)*norm(x2,norm_to_use)); }
-
-
-void NormalizedDotProductKernel::write(ostream& out) const
-{
-  writeHeader(out,"NormalizedDotProductKernel");
-  inherited::oldwrite(out);
-  writeField(out,"norm_to_use",norm_to_use);
-  writeFooter(out,"NormalizedDotProductKernel");
-}
-
-void NormalizedDotProductKernel::oldread(istream& in)
-{
-  readHeader(in,"NormalizedDotProductKernel");
-  inherited::oldread(in);
-  readField(in,"norm_to_use",norm_to_use);
-  readFooter(in,"NormalizedDotProductKernel");
-}
-// recognized option is "norm_to_use"
-
-/*
-void NormalizedDotProductKernel::readOptionVal(istream& in, const string& optionname)
-{
-  if (optionname=="norm_to_use")
-    PLearn::read(in, norm_to_use); 
-  else
-    inherited::readOptionVal(in, optionname);  
-}
-*/
 
 void NormalizedDotProductKernel::declareOptions(OptionList &ol)
 {
@@ -90,8 +57,6 @@ void NormalizedDotProductKernel::declareOptions(OptionList &ol)
                   "TODO: Some comments");
     inherited::declareOptions(ol);
 }
-
-
 
 } // end of namespace PLearn
 

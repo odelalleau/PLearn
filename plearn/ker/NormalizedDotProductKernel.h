@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: NormalizedDotProductKernel.h,v 1.2 2004/02/20 21:11:45 chrish42 Exp $
+   * $Id: NormalizedDotProductKernel.h,v 1.3 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,23 +52,25 @@ using namespace std;
 
 class NormalizedDotProductKernel: public Kernel
 {
-		typedef Kernel inherited;
+    typedef Kernel inherited;
 		
- protected:
-  real norm_to_use;
- public:
-  NormalizedDotProductKernel(real the_norm=2.0): norm_to_use(the_norm) {}
-  PLEARN_DECLARE_OBJECT(NormalizedDotProductKernel);
-  virtual real evaluate(const Vec& x1, const Vec& x2) const;
-    //virtual void readOptionVal(istream& in, const string& optionname);
-    static void declareOptions(OptionList &ol);
-  virtual void write(ostream& out) const;
-  virtual void oldread(istream& in);
-  //!  recognized option is "norm_to_use"
-  
-};
-DECLARE_OBJECT_PTR(NormalizedDotProductKernel);
+protected:
+    real norm_to_use;
 
+public:
+    NormalizedDotProductKernel(real the_norm=2.0)
+        : norm_to_use(the_norm) {}
+
+    PLEARN_DECLARE_OBJECT(NormalizedDotProductKernel);
+
+    virtual real evaluate(const Vec& x1, const Vec& x2) const;
+
+protected:
+    //!  recognized option is "norm_to_use"
+    static void declareOptions(OptionList &ol);  
+};
+
+DECLARE_OBJECT_PTR(NormalizedDotProductKernel);
 
 } // end of namespace PLearn
 

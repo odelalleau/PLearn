@@ -36,25 +36,18 @@
 
 
 /* *******************************************************      
-   * $Id: GeneralizedDistanceRBFKernel.cc,v 1.3 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: GeneralizedDistanceRBFKernel.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "GeneralizedDistanceRBFKernel.h"
 
-// From Old Kernel.cc: all includes are putted in every file.
-// To be revised manually 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
 
 PLEARN_IMPLEMENT_OBJECT(GeneralizedDistanceRBFKernel, "ONE LINE DESCR", "NO HELP");
+
 real GeneralizedDistanceRBFKernel::evaluate(const Vec& x1, const Vec& x2) const
 { 
 #ifdef BOUNDCHECK
@@ -69,46 +62,6 @@ real GeneralizedDistanceRBFKernel::evaluate(const Vec& x1, const Vec& x2) const
 }
 
 
-
-void GeneralizedDistanceRBFKernel::write(ostream& out) const
-{
-  writeHeader(out,"GeneralizedDistanceRBFKernel");
-  inherited::oldwrite(out);
-  writeField(out,"phi",phi);
-  writeField(out,"a",a);
-  writeField(out,"b",b);
-  writeField(out,"c",c);
-  writeFooter(out,"GeneralizedDistanceRBFKernel");
-}
-
-void GeneralizedDistanceRBFKernel::oldread(istream& in)
-{
-  readHeader(in,"GeneralizedDistanceRBFKernel");
-  inherited::oldread(in);
-  readField(in,"phi",phi);
-  readField(in,"a",a);
-  readField(in,"b",b);
-  readField(in,"c",c);
-  readFooter(in,"GeneralizedDistanceRBFKernel");
-}
-
-
-// recognized options are "phi", "a", "b" and "c"
-/*
-void GeneralizedDistanceRBFKernel::readOptionVal(istream& in, const string& optionname)
-{
-  if (optionname=="phi")
-    PLearn::read(in, phi); 
-  if (optionname=="a")
-    PLearn::read(in, a); 
-  if (optionname=="b")
-    PLearn::read(in, b); 
-  if (optionname=="c")
-    PLearn::read(in, c); 
-  else
-    inherited::readOptionVal(in, optionname);  
-}
-*/
 void GeneralizedDistanceRBFKernel::declareOptions(OptionList &ol)
 {
     declareOption(ol, "phi", &GeneralizedDistanceRBFKernel::phi, OptionBase::buildoption,
@@ -121,7 +74,6 @@ void GeneralizedDistanceRBFKernel::declareOptions(OptionList &ol)
                   "TODO: Some comments");
     inherited::declareOptions(ol);
 }
-
 
 
 } // end of namespace PLearn

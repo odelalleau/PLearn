@@ -36,18 +36,12 @@
 
 
 /* *******************************************************      
-   * $Id: NegOutputCostFunction.cc,v 1.3 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: NegOutputCostFunction.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "NegOutputCostFunction.h"
 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
@@ -59,22 +53,6 @@ PLEARN_IMPLEMENT_OBJECT(NegOutputCostFunction, "ONE LINE DESCR", "NO HELP");
 
 real NegOutputCostFunction::evaluate(const Vec& output, const Vec& target) const
 { return -output[0]; }
-
-
-void NegOutputCostFunction::write(ostream& out) const
-{
-  writeHeader(out,"NegOutputCostFunction");
-  writeFooter(out,"NegOutputCostFunction");
-}
-
-
-void NegOutputCostFunction::oldread(istream& in)
-{
-  readHeader(in,"NegOutputCostFunction");
-  readFooter(in,"NegOutputCostFunction");
-}
-
-
 
 } // end of namespace PLearn
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: NegLogProbCostFunction.h,v 1.3 2004/04/05 19:15:27 tihocan Exp $
+   * $Id: NegLogProbCostFunction.h,v 1.4 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -61,38 +61,37 @@ using namespace std;
 
 class NegLogProbCostFunction: public Kernel
 {
-
-private:
-
-  typedef Kernel inherited;
+    typedef Kernel inherited;
 		
- public:
-  bool normalize;
-  bool smooth_map_outputs;
+public:
+    bool normalize;
+    bool smooth_map_outputs;
 #if USING_MPI
     int out_start;
     int out_end;
 #endif
- public:
+public:
 #if USING_MPI
-  NegLogProbCostFunction(bool do_normalize=false, bool do_smooth_map_outputs=false,
-                         int outstart=-1, int outend=-1)
-    :normalize(do_normalize), smooth_map_outputs(do_smooth_map_outputs),
-    out_start(outstart), out_end(outend) {}
+    NegLogProbCostFunction(bool do_normalize=false, bool do_smooth_map_outputs=false,
+                           int outstart=-1, int outend=-1)
+        :normalize(do_normalize), smooth_map_outputs(do_smooth_map_outputs),
+         out_start(outstart), out_end(outend) {}
 #else
-  NegLogProbCostFunction(bool do_normalize=false, bool do_smooth_map_outputs=false)
-    :normalize(do_normalize), smooth_map_outputs(do_smooth_map_outputs) {}
+    NegLogProbCostFunction(bool do_normalize=false, bool do_smooth_map_outputs=false)
+        : normalize(do_normalize), smooth_map_outputs(do_smooth_map_outputs) {}
 #endif
-  PLEARN_DECLARE_OBJECT(NegLogProbCostFunction);
-  virtual string info() const;
-  virtual real evaluate(const Vec& output, const Vec& target) const;
-  //virtual void readOptionVal(istream& in, const string& optionname);
-  static void declareOptions(OptionList &ol);
-  virtual void write(ostream& out) const;
-  virtual void oldread(istream& in);
-  //!  recognized options are "normalize" and "smooth_map_outputs"
-  
+    PLEARN_DECLARE_OBJECT(NegLogProbCostFunction);
+
+    virtual string info() const
+        { return "negative_log_probability"; }
+
+    virtual real evaluate(const Vec& output, const Vec& target) const;
+
+protected:
+    //!  recognized options are "normalize" and "smooth_map_outputs"  
+    static void declareOptions(OptionList &ol);
 };
+
 DECLARE_OBJECT_PTR(NegLogProbCostFunction);
 
 //!  negative log conditional probability 

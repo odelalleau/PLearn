@@ -36,23 +36,18 @@
 
 
 /* *******************************************************      
-   * $Id: ClassDistanceProportionCostFunction.cc,v 1.3 2004/04/02 19:56:53 tihocan Exp $
+   * $Id: ClassDistanceProportionCostFunction.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "ClassDistanceProportionCostFunction.h"
 
-//#include <cmath>
-//#include "stringutils.h"
-//#include "Kernel.h"
-//#include "TMat_maths.h"
-//#include "PLMPI.h"
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
 
 PLEARN_IMPLEMENT_OBJECT(ClassDistanceProportionCostFunction, "ONE LINE DESCR", "NO HELP");
+
 real ClassDistanceProportionCostFunction::evaluate(const Vec& output, const Vec& target) const
 {
   if (output.length()==1)
@@ -70,20 +65,6 @@ real ClassDistanceProportionCostFunction::evaluate(const Vec& output, const Vec&
   output[trueclass] = trueclass_score;
   return trueclass_score/(trueclass_score+otherclass_score);
 }
-
-
-void ClassDistanceProportionCostFunction::write(ostream& out) const
-{
-  writeHeader(out,"ClassDistanceProportionCostFunction"); 
-  writeFooter(out,"ClassDistanceProportionCostFunction");
-}
-
-void ClassDistanceProportionCostFunction::oldread(istream& in)
-{
-  readHeader(in,"ClassDistanceProportionCostFunction");
-  readFooter(in,"ClassDistanceProportionCostFunction");
-}
-
 
 
 } // end of namespace PLearn

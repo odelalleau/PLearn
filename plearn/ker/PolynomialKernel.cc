@@ -36,24 +36,19 @@
 
 
 /* *******************************************************      
-   * $Id: PolynomialKernel.cc,v 1.3 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: PolynomialKernel.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "PolynomialKernel.h"
 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
 
 
 PLEARN_IMPLEMENT_OBJECT(PolynomialKernel, "ONE LINE DESCR", "NO HELP");
+
 real PolynomialKernel::evaluate(const Vec& x1, const Vec& x2) const
 { return evaluateFromDot(dot(x1,x2)); }
 
@@ -66,37 +61,6 @@ real PolynomialKernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x)
 real PolynomialKernel::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x) const
 { return evaluateFromDot(data->dot(i,x)); } 
 
-
-void PolynomialKernel::write(ostream& out) const
-{
-  writeHeader(out,"PolynomialKernel");
-  inherited::oldwrite(out);
-	writeField(out,"n",n);
-  writeField(out,"beta",beta);
-  writeFooter(out,"PolynomialKernel");
-}
-
-void PolynomialKernel::oldread(istream& in)
-{
-  readHeader(in,"PolynomialKernel");
-  inherited::oldread(in);
-  readField(in,"n",n);
-  readField(in,"beta",beta);
-  readFooter(in,"PolynomialKernel");
-}
-// recognized options are "n" and "beta"
-
-/*
-void PolynomialKernel::readOptionVal(istream& in, const string& optionname)
-{
-  if (optionname=="n")
-    PLearn::read(in,n);
-  if (optionname=="beta")
-    PLearn::read(in,beta);
-  else
-    inherited::readOptionVal(in, optionname);  
-}
-*/
 void PolynomialKernel::declareOptions(OptionList &ol)
 {
     declareOption(ol, "n", &PolynomialKernel::n, OptionBase::buildoption,
@@ -105,8 +69,6 @@ void PolynomialKernel::declareOptions(OptionList &ol)
                   "TODO: Some comments");
     inherited::declareOptions(ol);
 }
-
-
 
 } // end of namespace PLearn
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MulticlassErrorCostFunction.h,v 1.3 2004/04/05 19:15:27 tihocan Exp $
+   * $Id: MulticlassErrorCostFunction.h,v 1.4 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -56,25 +56,20 @@ using namespace std;
 
 class MulticlassErrorCostFunction: public Kernel
 {
-
-private:
-
   typedef Kernel inherited;
 		
  public:
   MulticlassErrorCostFunction() {}
 
   PLEARN_DECLARE_OBJECT(MulticlassErrorCostFunction);
-  virtual string info() const;
-  virtual real evaluate(const Vec& output, const Vec& target) const;
-    //virtual void readOptionVal(istream& in, const string& optionname);
-  virtual void write(ostream& out) const;
-  virtual void oldread(istream& in);
-  
-  //static void declareOptions(OptionList &ol);
-};
-DECLARE_OBJECT_PTR(MulticlassErrorCostFunction);
 
+  virtual string info() const
+    { return "multiclass_error"; }
+
+  virtual real evaluate(const Vec& output, const Vec& target) const;
+};
+
+DECLARE_OBJECT_PTR(MulticlassErrorCostFunction);
 
 } // end of namespace PLearn
 

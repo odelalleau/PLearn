@@ -36,39 +36,21 @@
 
 
 /* *******************************************************      
-   * $Id: DistanceKernel.cc,v 1.3 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: DistanceKernel.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "DistanceKernel.h"
 #include "SelectedOutputCostFunction.h"
 
-// From Old Kernel.cc: all includes are putted in every file.
-// To be revised manually 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
 
 PLEARN_IMPLEMENT_OBJECT(DistanceKernel, "ONE LINE DESCR", "NO HELP");
-string DistanceKernel::info() const { return "L"+tostring(n); }
 
 real DistanceKernel::evaluate(const Vec& x1, const Vec& x2) const
 { return dist(x1, x2, n); }
-
-
-void DistanceKernel::oldread(istream& in)
-{
-  readHeader(in,"DistanceKernel");
-  inherited::oldread(in);
-  readField(in,"n",n);
-  readFooter(in,"DistanceKernel");
-}
 
 
 void DistanceKernel::declareOptions(OptionList& ol)

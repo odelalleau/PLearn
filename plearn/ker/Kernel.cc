@@ -36,19 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.20 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: Kernel.cc,v 1.21 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "Kernel.h"
 #include "ProgressBar.h"
 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
@@ -477,7 +471,7 @@ Mat Kernel::estimateHistograms(Mat input_and_class, real minval, real maxval, in
   return histo;
 }
 
-
+/*
 void
 Kernel::oldwrite(ostream& out) const
 {
@@ -494,6 +488,7 @@ Kernel::oldread(istream& in)
 	readField(in,"is_symmetric",is_symmetric);
 	readFooter(in,"Kernel");
 }
+*/
 
 // last column of data is supposed to be a classnum
 // returns a matrix of (index1, index2, distance)

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DifferenceKernel.h,v 1.3 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: DifferenceKernel.h,v 1.4 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,15 +54,16 @@ using namespace std;
 //!  returns sum_i[x1_i-x2_i]
 class DifferenceKernel: public Kernel
 {
-		typedef Kernel inherited;
+    typedef Kernel inherited;
 		
 public:
-  DifferenceKernel() {}
-  PLEARN_DECLARE_OBJECT(DifferenceKernel);
-  virtual real evaluate(const Vec& x1, const Vec& x2) const;
-  virtual void write(ostream& out) const;
-  virtual void oldread(istream& in);
+    DifferenceKernel() {}
+
+    PLEARN_DECLARE_OBJECT(DifferenceKernel);
+
+    virtual real evaluate(const Vec& x1, const Vec& x2) const;
 };
+
 DECLARE_OBJECT_PTR(DifferenceKernel);
 
 inline CostFunc output_minus_target(int singleoutputindex=-1);

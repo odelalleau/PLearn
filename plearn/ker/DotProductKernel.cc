@@ -36,25 +36,18 @@
 
 
 /* *******************************************************      
-   * $Id: DotProductKernel.cc,v 1.5 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: DotProductKernel.cc,v 1.6 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "DotProductKernel.h"
 
-// From Old Kernel.cc: all includes are putted in every file.
-// To be revised manually 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
 
 PLEARN_IMPLEMENT_OBJECT(DotProductKernel, "ONE LINE DESCR", "NO HELP");
+
 real DotProductKernel::evaluate(const Vec& x1, const Vec& x2) const
 { return dot(x1,x2); }
 
@@ -69,23 +62,6 @@ real DotProductKernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x)
 
 real DotProductKernel::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x) const
 { return data->dot(i,x); } 
-
-
-void DotProductKernel::write(ostream& out) const
-{
-  writeHeader(out,"DotProductKernel");
-  inherited::oldwrite(out);
-	writeFooter(out,"DotProductKernel");
-}
-
-void DotProductKernel::oldread(istream& in)
-{
-  readHeader(in,"DotProductKernel");
-  inherited::oldread(in);
-  readFooter(in,"DotProductKernel");
-}
-
-
 
 } // end of namespace PLearn
 

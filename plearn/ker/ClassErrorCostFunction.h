@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ClassErrorCostFunction.h,v 1.3 2004/04/05 19:15:27 tihocan Exp $
+   * $Id: ClassErrorCostFunction.h,v 1.4 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -63,9 +63,6 @@ using namespace std;
 */
 class ClassErrorCostFunction: public Kernel
 {
-
-private:
-
   typedef Kernel inherited;
 
   protected:
@@ -85,15 +82,17 @@ private:
     :output_is_classnum(the_output_is_classnum) {}
 
   PLEARN_DECLARE_OBJECT(ClassErrorCostFunction);
-  virtual string info() const;
+
+  virtual string info() const
+    { return "class_error"; }
+
   virtual real evaluate(const Vec& output, const Vec& target) const;
-    //virtual void readOptionVal(istream& in, const string& optionname);
-  virtual void write(ostream& out) const;
-  virtual void oldread(istream& in);
-  //!  recognized option is "output_is_classnum"
-  
+
+protected:
+  //!  recognized option is "output_is_classnum"  
   static void declareOptions(OptionList &ol);
 };
+
 DECLARE_OBJECT_PTR(ClassErrorCostFunction);
 
 inline CostFunc class_error(bool output_is_classnum=false) 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DistanceKernel.h,v 1.4 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: DistanceKernel.h,v 1.5 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,23 +51,25 @@ using namespace std;
 //! This class implements an Ln distance (defaults to L2 i.e. euclidean distance).
 class DistanceKernel: public Kernel
 {
-		typedef Kernel inherited;
-		
-  protected:
-    real n;  //!<  1 for L1, 2 for L2, etc...
-  public:
-
-    DistanceKernel(real the_Ln=2):
-      n(the_Ln) {}
-
-    PLEARN_DECLARE_OBJECT(DistanceKernel);
-  virtual string info() const;
-  virtual real evaluate(const Vec& x1, const Vec& x2) const;
-  virtual void oldread(istream& in);
+    typedef Kernel inherited;
 
 protected:
-  static void declareOptions(OptionList& ol);
+    real n;  //!<  1 for L1, 2 for L2, etc...
+public:
+
+    DistanceKernel(real the_Ln=2)
+        : n(the_Ln) {}
+    
+    PLEARN_DECLARE_OBJECT(DistanceKernel);
+
+    virtual string info() const
+        { return "L"+tostring(n); }
+
+    virtual real evaluate(const Vec& x1, const Vec& x2) const;
+protected:
+    static void declareOptions(OptionList& ol);
 };
+
 DECLARE_OBJECT_PTR(DistanceKernel);
 
 inline CostFunc absolute_deviation(int singleoutputindex=-1);

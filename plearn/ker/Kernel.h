@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.22 2004/04/05 19:14:47 tihocan Exp $
+   * $Id: Kernel.h,v 1.23 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -147,8 +147,8 @@ public:
   Mat estimateHistograms(Mat input_and_class, real minval, real maxval, int nbins) const;
   real test(VMat d, real threshold, real sameness_below_threshold, real sameness_above_threshold) const;
   virtual void build();
-  virtual void oldwrite(ostream& out) const;
-  virtual void oldread(istream& in);
+    //virtual void oldwrite(ostream& out) const;
+    //virtual void oldread(istream& in);
   virtual ~Kernel();
 
   virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);

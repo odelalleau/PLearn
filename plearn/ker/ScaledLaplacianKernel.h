@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ScaledLaplacianKernel.h,v 1.2 2004/02/20 21:11:45 chrish42 Exp $
+   * $Id: ScaledLaplacianKernel.h,v 1.3 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,25 +53,24 @@ using namespace std;
 //!  returns exp(-(sum_i[abs(x1_i - x2_i)*phi_i]))
 class ScaledLaplacianKernel: public Kernel
 {
-		typedef Kernel inherited;
+    typedef Kernel inherited;
 		
- protected:
-   ScaledLaplacianKernel() : phi() {}
- protected:
-  Vec phi;
- public:
-  ScaledLaplacianKernel(Vec the_phi)
-    :phi(the_phi)
-    {}
+protected:
+    Vec phi;
+public:
+    ScaledLaplacianKernel()
+        : phi() {}
+    ScaledLaplacianKernel(Vec the_phi)
+        : phi(the_phi)
+        {}
 
-  PLEARN_DECLARE_OBJECT(ScaledLaplacianKernel);
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
-  virtual real evaluate(const Vec& x1, const Vec& x2) const;
-  virtual void write(ostream& out) const;
-  virtual void oldread(istream& in);
+    PLEARN_DECLARE_OBJECT(ScaledLaplacianKernel);
+
+    virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+    virtual real evaluate(const Vec& x1, const Vec& x2) const;
 };
-DECLARE_OBJECT_PTR(ScaledLaplacianKernel);
 
+DECLARE_OBJECT_PTR(ScaledLaplacianKernel);
 
 } // end of namespace PLearn
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ClassDistanceProportionCostFunction.h,v 1.3 2004/04/05 19:15:27 tihocan Exp $
+   * $Id: ClassDistanceProportionCostFunction.h,v 1.4 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -63,18 +63,16 @@ using namespace std;
 */
 class ClassDistanceProportionCostFunction: public Kernel
 {
-
-private:
-
   typedef Kernel inherited;
 
 public:
   ClassDistanceProportionCostFunction() {}
+
   PLEARN_DECLARE_OBJECT(ClassDistanceProportionCostFunction);
+
   virtual real evaluate(const Vec& output, const Vec& target) const;
-  virtual void write(ostream& out) const;
-  virtual void oldread(istream& in);
 };
+
 DECLARE_OBJECT_PTR(ClassDistanceProportionCostFunction);
 
 //!  if outputs are neg distances to each class: dist_to_correct_class/(dist_to_correct_class+dist_to_closest_other_class)

@@ -36,18 +36,12 @@
 
 
 /* *******************************************************      
-   * $Id: MulticlassErrorCostFunction.cc,v 1.3 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: MulticlassErrorCostFunction.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "MulticlassErrorCostFunction.h"
 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
@@ -55,7 +49,6 @@ using namespace std;
 // **** MulticlassErrorCostFunction ****
 
 PLEARN_IMPLEMENT_OBJECT(MulticlassErrorCostFunction, "ONE LINE DESCR", "NO HELP");
-string MulticlassErrorCostFunction::info() const { return "multiclass_error"; }
 
 real MulticlassErrorCostFunction::evaluate(const Vec& output, const Vec& target) const
 {
@@ -71,21 +64,6 @@ real MulticlassErrorCostFunction::evaluate(const Vec& output, const Vec& target)
   }
   return cost;
 }
-
-
-void MulticlassErrorCostFunction::write(ostream& out) const
-{
-  writeHeader(out,"MulticlassErrorCostFunction");
-  writeFooter(out,"MulticlassErrorCostFunction");
-}
-
-void MulticlassErrorCostFunction::oldread(istream& in)
-{
-  readHeader(in,"MulticlassErrorCostFunction");
-  readFooter(in,"MulticlassErrorCostFunction");
-}
-
-
 
 } // end of namespace PLearn
 

@@ -36,28 +36,17 @@
 
 
 /* *******************************************************      
-   * $Id: DirectNegativeCostFunction.cc,v 1.3 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: DirectNegativeCostFunction.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "DirectNegativeCostFunction.h"
 
-// From Old Kernel.cc: all includes are putted in every file.
-// To be revised manually 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
 
 PLEARN_IMPLEMENT_OBJECT(DirectNegativeCostFunction, "ONE LINE DESCR", "NO HELP");
-
-string DirectNegativeCostFunction::info() const { return "direct_negative_cost_function"; }
-
 
 real DirectNegativeCostFunction::evaluate(const Vec& output, const Vec& target) const
 {
@@ -65,21 +54,6 @@ real DirectNegativeCostFunction::evaluate(const Vec& output, const Vec& target) 
     PLERROR("Output should be a scalar");
   return -output[0];
 }
-
-
-void DirectNegativeCostFunction::write(ostream& out) const
-{
-  writeHeader(out,"DirectNegativeCostFunction");
-  writeFooter(out,"DirectNegativeCostFunction");
-}
-
-void DirectNegativeCostFunction::oldread(istream& in)
-{
-  readHeader(in,"DirectNegativeCostFunction");
-  readFooter(in,"DirectNegativeCostFunction");
-}
-
-
 
 } // end of namespace PLearn
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SigmoidalKernel.h,v 1.2 2004/02/20 21:11:45 chrish42 Exp $
+   * $Id: SigmoidalKernel.h,v 1.3 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,29 +49,28 @@ namespace PLearn {
 using namespace std;
 
 
-
 //!  returns sigmoid(c*x1.x2)
 class SigmoidalKernel: public Kernel
 {
-		typedef Kernel inherited;
-		
- protected:
-   SigmoidalKernel() : c() {}
- protected:
-  real c; //!<  smoothing constant
- public:
-  SigmoidalKernel(real the_c): c(the_c) {}
-  PLEARN_DECLARE_OBJECT(SigmoidalKernel);
-  virtual real evaluate(const Vec& x1, const Vec& x2) const; 
-    //virtual void readOptionVal(istream& in, const string& optionname);
-    static void declareOptions(OptionList &ol);
-  virtual void write(ostream& out) const;
-  virtual void oldread(istream& in);
-  //!  recognized option is "c"
-  
-};
-DECLARE_OBJECT_PTR(SigmoidalKernel);
+    typedef Kernel inherited;
 
+protected:
+    real c; //!<  smoothing constant
+
+ public:
+    SigmoidalKernel() : c() {}
+    SigmoidalKernel(real the_c): c(the_c) {}
+
+    PLEARN_DECLARE_OBJECT(SigmoidalKernel);
+
+    virtual real evaluate(const Vec& x1, const Vec& x2) const; 
+
+protected:
+    //!  recognized option is "c"
+    static void declareOptions(OptionList &ol);
+};
+
+DECLARE_OBJECT_PTR(SigmoidalKernel);
 
 } // end of namespace PLearn
 

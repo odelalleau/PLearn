@@ -36,60 +36,28 @@
 
 
 /* *******************************************************      
-   * $Id: SigmoidalKernel.cc,v 1.3 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: SigmoidalKernel.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "SigmoidalKernel.h"
 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
 
 PLEARN_IMPLEMENT_OBJECT(SigmoidalKernel, "ONE LINE DESCR", "NO HELP");
+
 real SigmoidalKernel::evaluate(const Vec& x1, const Vec& x2) const
 { return sigmoid(c*dot(x1,x2)); }
 
-
-void SigmoidalKernel::write(ostream& out) const
-{
-  writeHeader(out,"SigmoidalKernel");
-  inherited::oldwrite(out);
-	writeField(out,"c",c);
-  writeFooter(out,"SigmoidalKernel");
-}
-
-void SigmoidalKernel::oldread(istream& in)
-{
-  readHeader(in,"SigmoidalKernel");
-  inherited::oldread(in);
-  readField(in,"c",c);
-  readFooter(in,"SigmoidalKernel");
-}
 // recognized option is "c"
-
-/*
-void SigmoidalKernel::readOptionVal(istream& in, const string& optionname)
-{
-  if (optionname=="c")
-    PLearn::read(in,c);
-  else
-    inherited::readOptionVal(in, optionname);  
-}
-*/
 void SigmoidalKernel::declareOptions(OptionList &ol)
 {
     declareOption(ol, "c", &SigmoidalKernel::c, OptionBase::buildoption,
                   "TODO: Some comments");
     inherited::declareOptions(ol);
 }
-
 
 
 } // end of namespace PLearn

@@ -36,20 +36,12 @@
 
 
 /* *******************************************************      
-   * $Id: ClassErrorCostFunction.cc,v 1.3 2004/04/02 19:56:53 tihocan Exp $
+   * $Id: ClassErrorCostFunction.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "ClassErrorCostFunction.h"
 
-// From Old Kernel.cc: all includes are putted in every file.
-// To be revised manually 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
@@ -57,7 +49,6 @@ using namespace std;
 // **** ClassErrorCostFunction ****
 
 PLEARN_IMPLEMENT_OBJECT(ClassErrorCostFunction, "ONE LINE DESCR", "NO HELP");
-string ClassErrorCostFunction::info() const { return "class_error"; }
 
 real ClassErrorCostFunction::evaluate(const Vec& output, const Vec& target) const
 {
@@ -90,31 +81,6 @@ real ClassErrorCostFunction::evaluate(const Vec& output, const Vec& target) cons
   return 1.; // to make the compiler happy
 }
 
-
-void ClassErrorCostFunction::write(ostream& out) const
-{
-  writeHeader(out,"ClassErrorCostFunction");
-  writeField(out,"output_is_classnum",output_is_classnum);
-  writeFooter(out,"ClassErrorCostFunction");
-}
-
-void ClassErrorCostFunction::oldread(istream& in)
-{
-  readHeader(in,"ClassErrorCostFunction");
-  readField(in,"output_is_classnum",output_is_classnum);
-  readFooter(in,"ClassErrorCostFunction");
-}
-// recognized option is "norm_to_use"
-
-/*
-void ClassErrorCostFunction::readOptionVal(istream& in, const string& optionname)
-{
-  if (optionname=="output_is_classnum")
-    PLearn::read(in,output_is_classnum);
-  else
-    inherited::readOptionVal(in, optionname);  
-}
-*/
 void
 ClassErrorCostFunction::declareOptions(OptionList &ol)
 {

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PolynomialKernel.h,v 1.2 2004/02/20 21:11:45 chrish42 Exp $
+   * $Id: PolynomialKernel.h,v 1.3 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,34 +53,33 @@ using namespace std;
 //!  returns (beta*dot(x1,x2)+1)^n
 class PolynomialKernel: public Kernel
 {
-		typedef Kernel inherited;
-		
- protected:
-  PolynomialKernel() : n(), beta() {}
- public:
-  int n; //!<  degree of polynomial
-  real beta; //!<  a normalization constant for numerical stability
- public:
-  PolynomialKernel(int degree, real the_beta=1.0)
-    : n(degree), beta(the_beta) {}
-  PLEARN_DECLARE_OBJECT(PolynomialKernel);
+    typedef Kernel inherited;
+
+public:
+    int n; //!<  degree of polynomial
+    real beta; //!<  a normalization constant for numerical stability
+public:
+    PolynomialKernel()
+        : n(), beta() {}
+    PolynomialKernel(int degree, real the_beta=1.0)
+        : n(degree), beta(the_beta) {}
+
+    PLEARN_DECLARE_OBJECT(PolynomialKernel);
 
     inline real evaluateFromDot(real dot_product) const
     { return ipow(beta*dot_product+1.0, n); }
 
-  virtual real evaluate(const Vec& x1, const Vec& x2) const; 
-  virtual real evaluate_i_j(int i, int j) const; //!<  returns evaluate(data(i),data(j))
-  virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const; //!<  returns evaluate(data(i),x)
-  virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const; //!<  returns evaluate(x,data(i))
-    //virtual void readOptionVal(istream& in, const string& optionname);
-    static void declareOptions(OptionList &ol);
-  virtual void write(ostream& out) const;
-  virtual void oldread(istream& in);
-  //!  recognized options are "n"  and "beta"
-  
-};
-DECLARE_OBJECT_PTR(PolynomialKernel);
+    virtual real evaluate(const Vec& x1, const Vec& x2) const; 
+    virtual real evaluate_i_j(int i, int j) const; //!<  returns evaluate(data(i),data(j))
+    virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const; //!<  returns evaluate(data(i),x)
+    virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const; //!<  returns evaluate(x,data(i))
 
+protected:
+    //!  recognized options are "n"  and "beta"
+    static void declareOptions(OptionList &ol);  
+};
+
+DECLARE_OBJECT_PTR(PolynomialKernel);
 
 } // end of namespace PLearn
 

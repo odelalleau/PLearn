@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: LaplacianKernel.h,v 1.2 2004/02/20 21:11:45 chrish42 Exp $
+   * $Id: LaplacianKernel.h,v 1.3 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,28 +53,27 @@ using namespace std;
 //!  returns exp(-phi*(sum_i[abs(x1_i - x2_i)]))
 class LaplacianKernel: public Kernel
 {
-		typedef Kernel inherited;
-		
- protected:
-   LaplacianKernel() : phi() {}
- protected:
-  real phi;
- public:
-  LaplacianKernel(real the_phi)
-    :phi(the_phi)
+    typedef Kernel inherited;
+
+protected:
+    real phi;
+public:
+    LaplacianKernel()
+        : phi() {}
+    LaplacianKernel(real the_phi)
+        : phi(the_phi)
     {}
 
-  PLEARN_DECLARE_OBJECT(LaplacianKernel);
-  virtual real evaluate(const Vec& x1, const Vec& x2) const;
-    //virtual void readOptionVal(istream& in, const string& optionname);
-    static void declareOptions(OptionList &ol);
-  virtual void write(ostream& out) const;
-  virtual void oldread(istream& in);
-  //!  recognized option is "phi"
-  
-};
-DECLARE_OBJECT_PTR(LaplacianKernel);
+    PLEARN_DECLARE_OBJECT(LaplacianKernel);
 
+    virtual real evaluate(const Vec& x1, const Vec& x2) const;
+
+protected:
+    //!  recognized option is "phi"
+    static void declareOptions(OptionList &ol);
+};
+
+DECLARE_OBJECT_PTR(LaplacianKernel);
 
 } // end of namespace PLearn
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DotProductKernel.h,v 1.2 2004/02/20 21:11:45 chrish42 Exp $
+   * $Id: DotProductKernel.h,v 1.3 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,20 +53,20 @@ using namespace std;
 //!  returns <x1,x2>
 class DotProductKernel: public Kernel
 {
-		typedef Kernel inherited;
-		
+    typedef Kernel inherited;
+
  public:
-  DotProductKernel() {}
+    DotProductKernel() {}
+
   PLEARN_DECLARE_OBJECT(DotProductKernel);
+
   virtual real evaluate(const Vec& x1, const Vec& x2) const;  
   virtual real evaluate_i_j(int i, int j) const; //!<  returns evaluate(data(i),data(j))
   virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const; //!<  returns evaluate(data(i),x)
   virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const; //!<  returns evaluate(x,data(i))
-  virtual void write(ostream& out) const;
-  virtual void oldread(istream& in);
 };
-DECLARE_OBJECT_PTR(DotProductKernel);
 
+DECLARE_OBJECT_PTR(DotProductKernel);
 
 } // end of namespace PLearn
 

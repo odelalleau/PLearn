@@ -36,61 +36,28 @@
 
 
 /* *******************************************************      
-   * $Id: SigmoidPrimitiveKernel.cc,v 1.3 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: SigmoidPrimitiveKernel.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "SigmoidPrimitiveKernel.h"
 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
 
 PLEARN_IMPLEMENT_OBJECT(SigmoidPrimitiveKernel, "ONE LINE DESCR", "NO HELP");
+
 real SigmoidPrimitiveKernel::evaluate(const Vec& x1, const Vec& x2) const
 { return log(1.0+exp(c*dot(x1,x2))); }
 
-
-void SigmoidPrimitiveKernel::write(ostream& out) const
-{
-  writeHeader(out,"SigmoidPrimitiveKernel");
-  inherited::oldwrite(out);
-	writeField(out,"c",c);
-  writeFooter(out,"SigmoidPrimitiveKernel");
-}
-
-void SigmoidPrimitiveKernel::oldread(istream& in)
-{
-  readHeader(in,"SigmoidPrimitiveKernel");
-  inherited::oldread(in);
-  readField(in,"c",c);
-  readFooter(in,"SigmoidPrimitiveKernel");
-}
 // recognized option is "c"
-
-/*
-void SigmoidPrimitiveKernel::readOptionVal(istream& in, const string& optionname)
-{
-  if (optionname=="c")
-    PLearn::read(in,c);
-  else
-    inherited::readOptionVal(in, optionname);  
-}
-*/
 void SigmoidPrimitiveKernel::declareOptions(OptionList &ol)
 {
     declareOption(ol, "c", &SigmoidPrimitiveKernel::c, OptionBase::buildoption,
                   "TODO: Some comments");
     inherited::declareOptions(ol);
 }
-
-
 
 } // end of namespace PLearn
 

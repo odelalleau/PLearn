@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: GeneralizedDistanceRBFKernel.h,v 1.2 2004/02/20 21:11:45 chrish42 Exp $
+   * $Id: GeneralizedDistanceRBFKernel.h,v 1.3 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,28 +54,26 @@ using namespace std;
 //!  returns exp(-phi*(sum_i[abs(x1_i^a - x2_i^a)^b])^c)
 class GeneralizedDistanceRBFKernel: public Kernel
 {
-		typedef Kernel inherited;
-		
- protected:
-   GeneralizedDistanceRBFKernel() : phi(), a(), b(), c() {}
- protected:
-  real phi, a, b, c;
- public:
-  GeneralizedDistanceRBFKernel(real the_phi, real the_a, real the_b, real the_c)
-    :phi(the_phi), a(the_a), b(the_b), c(the_c)
-    {}
+    typedef Kernel inherited;
 
-  PLEARN_DECLARE_OBJECT(GeneralizedDistanceRBFKernel);
-  virtual real evaluate(const Vec& x1, const Vec& x2) const;
-    //virtual void readOptionVal(istream& in, const string& optionname);
-    static void declareOptions(OptionList &ol);
-  virtual void write(ostream& out) const;
-  virtual void oldread(istream& in);
-  //!  recognized options are "phi", "a", "b" and "c"
-  
+protected:
+    real phi, a, b, c;
+
+public:
+    GeneralizedDistanceRBFKernel() : phi(), a(), b(), c() {}
+    GeneralizedDistanceRBFKernel(real the_phi, real the_a, real the_b, real the_c)
+        : phi(the_phi), a(the_a), b(the_b), c(the_c)
+        {}
+    
+    PLEARN_DECLARE_OBJECT(GeneralizedDistanceRBFKernel);
+    
+    virtual real evaluate(const Vec& x1, const Vec& x2) const;
+protected:
+    //!  recognized options are "phi", "a", "b" and "c"
+    static void declareOptions(OptionList &ol);  
 };
-DECLARE_OBJECT_PTR(GeneralizedDistanceRBFKernel);
 
+DECLARE_OBJECT_PTR(GeneralizedDistanceRBFKernel);
 
 } // end of namespace PLearn
 

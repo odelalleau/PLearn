@@ -36,25 +36,18 @@
 
 
 /* *******************************************************      
-   * $Id: LaplacianKernel.cc,v 1.3 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: LaplacianKernel.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "LaplacianKernel.h"
 
-// From Old Kernel.cc: all includes are putted in every file.
-// To be revised manually 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
 
 PLEARN_IMPLEMENT_OBJECT(LaplacianKernel, "ONE LINE DESCR", "NO HELP");
+
 real LaplacianKernel::evaluate(const Vec& x1, const Vec& x2) const
 { 
 #ifdef BOUNDCHECK
@@ -71,41 +64,12 @@ real LaplacianKernel::evaluate(const Vec& x1, const Vec& x2) const
   return exp(-phi*summ);
 }
 
-
-void LaplacianKernel::write(ostream& out) const
-{
-  writeHeader(out,"LaplacianKernel");
-  inherited::oldwrite(out);
-  writeField(out,"phi",phi);
-  writeFooter(out,"LaplacianKernel");
-}
-
-void LaplacianKernel::oldread(istream& in)
-{
-  readHeader(in,"LaplacianKernel");
-  inherited::oldread(in);
-  readField(in,"phi",phi);
-  readFooter(in,"LaplacianKernel");
-}
-// recognized option is "phi"
-
-/*
-void LaplacianKernel::readOptionVal(istream& in, const string& optionname)
-{
-  if (optionname=="phi")
-    PLearn::read(in, phi); 
-  else
-    inherited::readOptionVal(in, optionname);  
-}
-*/
 void LaplacianKernel::declareOptions(OptionList &ol)
 {
     declareOption(ol, "phi", &LaplacianKernel::phi, OptionBase::buildoption,
                   "TODO: Some comments");
     inherited::declareOptions(ol);
 }
-
-
 
 } // end of namespace PLearn
 

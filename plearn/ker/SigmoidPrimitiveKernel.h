@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SigmoidPrimitiveKernel.h,v 1.2 2004/02/20 21:11:45 chrish42 Exp $
+   * $Id: SigmoidPrimitiveKernel.h,v 1.3 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,25 +53,27 @@ using namespace std;
 //!  returns log(1+exp(c*x1.x2)) = primitive of sigmoidal kernel
 class SigmoidPrimitiveKernel: public Kernel
 {
-		typedef Kernel inherited;
-		
- protected:
-   SigmoidPrimitiveKernel() : c() {}
- protected:
-  real c; //!<  smoothing constant
- public:
-  SigmoidPrimitiveKernel(real the_c): c(the_c) {}
-  PLEARN_DECLARE_OBJECT(SigmoidPrimitiveKernel);
-  virtual real evaluate(const Vec& x1, const Vec& x2) const;  
-  virtual void write(ostream& out) const;
-  virtual void oldread(istream& in);
-    //virtual void readOptionVal(istream& in, const string& optionname);
-    static void declareOptions(OptionList &ol);
-  //!  recognized option is "c"
-  
-};
-DECLARE_OBJECT_PTR(SigmoidPrimitiveKernel);
+    typedef Kernel inherited;
 
+protected:
+    real c; //!<  smoothing constant
+
+public:
+    SigmoidPrimitiveKernel()
+        : c() {}
+    SigmoidPrimitiveKernel(real the_c)
+        : c(the_c) {}
+
+    PLEARN_DECLARE_OBJECT(SigmoidPrimitiveKernel);
+
+    virtual real evaluate(const Vec& x1, const Vec& x2) const;  
+
+protected:
+  //!  recognized option is "c"
+    static void declareOptions(OptionList &ol);
+};
+
+DECLARE_OBJECT_PTR(SigmoidPrimitiveKernel);
 
 } // end of namespace PLearn
 

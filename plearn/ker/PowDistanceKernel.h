@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PowDistanceKernel.h,v 1.2 2004/02/20 21:11:45 chrish42 Exp $
+   * $Id: PowDistanceKernel.h,v 1.3 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,27 +52,30 @@ using namespace std;
 
 class PowDistanceKernel: public Kernel
 {
-		typedef Kernel inherited;
-		
- protected:
-   PowDistanceKernel() : n() {}
- protected:
-  real n;  //!<  1 for L1, 2 for L2, etc...
- public:
-  PowDistanceKernel(real the_Ln):
-    n(the_Ln) {}
-  PLEARN_DECLARE_OBJECT(PowDistanceKernel);
-  virtual string info() const;
-  virtual real evaluate(const Vec& x1, const Vec& x2) const;
-    //virtual void readOptionVal(istream& in, const string& optionname);
-    static void declareOptions(OptionList &ol);
-  virtual void write(ostream& out) const;
-  virtual void oldread(istream& in);
-  //!  recognized option is "n" 
-  
-};
-DECLARE_OBJECT_PTR(PowDistanceKernel);
+    typedef Kernel inherited;
 
+ protected:
+    real n;  //!<  1 for L1, 2 for L2, etc...
+
+ public:
+    PowDistanceKernel()
+        : n() {}
+    PowDistanceKernel(real the_Ln)
+        : n(the_Ln) {}
+
+    PLEARN_DECLARE_OBJECT(PowDistanceKernel);
+
+    virtual string info() const
+        { return "(L"+tostring(n)+")^"+tostring(n); }
+
+    virtual real evaluate(const Vec& x1, const Vec& x2) const;
+
+protected:
+    //!  recognized option is "n" 
+    static void declareOptions(OptionList &ol);
+};
+
+DECLARE_OBJECT_PTR(PowDistanceKernel);
 
 } // end of namespace PLearn
 

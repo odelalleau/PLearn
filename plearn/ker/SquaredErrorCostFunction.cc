@@ -36,25 +36,18 @@
 
 
 /* *******************************************************      
-   * $Id: SquaredErrorCostFunction.cc,v 1.3 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: SquaredErrorCostFunction.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "SelectedOutputCostFunction.h"
 #include "SquaredErrorCostFunction.h"
 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
 
 PLEARN_IMPLEMENT_OBJECT(SquaredErrorCostFunction, "ONE LINE DESCR", "NO HELP");
-string SquaredErrorCostFunction::info() const { return "squared_error"; }
 
 real SquaredErrorCostFunction::evaluate(const Vec& output, const Vec& target) const
 {
@@ -87,48 +80,6 @@ real SquaredErrorCostFunction::evaluate(const Vec& output, const Vec& target) co
   return result;
 }
 
-
-void SquaredErrorCostFunction::write(ostream& out) const
-{
-  writeHeader(out,"SquaredErrorCostFunction");
-  writeField(out,"targetindex",targetindex);
-  writeField(out, "classification", classification);
-  writeField(out, "coldvalue", coldvalue);
-  writeField(out, "hotvalue", hotvalue);
-  writeFooter(out,"SquaredErrorCostFunction");
-}
-
-
-void SquaredErrorCostFunction::oldread(istream& in)
-{
-  readHeader(in,"SquaredErrorCostFunction");
-  readField(in,"targetindex",targetindex);
-  if (in.peek() != '<') {
-    // Newly added stuff, hack
-    readField(in, "classification", classification); 
-    readField(in, "coldvalue", coldvalue);
-    readField(in, "hotvalue", hotvalue);
-  }
-  readFooter(in,"SquaredErrorCostFunction");
-
-  if (hotvalue == -1)
-    classification = true;
-}
-
-/*
-// recognized option is "norm_to_use"
-void SquaredErrorCostFunction::readOptionVal(istream& in, const string& optionname)
-{
-  if (optionname=="targetindex")
-    PLearn::read(in,targetindex);
-  if (optionname == "hotvalue")
-    PLearn::read(in,hotvalue);
-  if (optionname == "coldvalue")
-    PLearn::read(in,coldvalue);
-  else
-    inherited::readOptionVal(in, optionname);  
-}
-*/
 void SquaredErrorCostFunction::declareOptions(OptionList &ol)
 {
     declareOption(ol, "targetindex", &SquaredErrorCostFunction::targetindex, OptionBase::buildoption, "Index of target");

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianKernel.h,v 1.5 2004/04/05 19:15:27 tihocan Exp $
+   * $Id: GaussianKernel.h,v 1.6 2004/04/07 23:15:17 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,37 +53,25 @@ using namespace std;
 //!  returns exp(-norm_2(x1-x2)^2/sigma^2)
 class GaussianKernel: public Kernel
 {
-
-private:
-
   typedef Kernel inherited;
 		
-protected:
-  static void declareOptions(OptionList& ol);
-
 public:
-
   //! Build options below.
   real sigma;
-
 protected:
-
   real minus_one_over_sigmasquare;
-
   //! Learnt options below.
   Vec squarednorms; //!<  squarednorms of the rows of the data VMat (data is a member of Kernel)
-
-private:
-  void build_();
 	 
  public:
-  virtual void build();
-
-  GaussianKernel(real the_sigma=1):
-    sigma(the_sigma)
+  GaussianKernel(real the_sigma=1)
+    : sigma(the_sigma)
   { build_(); }
 
   PLEARN_DECLARE_OBJECT(GaussianKernel);
+
+  virtual void build();
+
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   inline real evaluateFromSquaredNormOfDifference(real sqnorm_of_diff) const;
@@ -103,11 +91,15 @@ private:
   virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const; //!<  returns evaluate(x,data(i))
 
   virtual void setParameters(Vec paramvec);
-  virtual void oldread(istream& in);
-  
-};
-DECLARE_OBJECT_PTR(GaussianKernel);
 
+protected:
+  static void declareOptions(OptionList& ol);  
+
+private:
+  void build_();
+};
+
+DECLARE_OBJECT_PTR(GaussianKernel);
 
 } // end of namespace PLearn
 
