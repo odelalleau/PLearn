@@ -41,16 +41,6 @@ nice_value = '1'
 # 4 -> get extra information
 verbose = 3;
 
-# to get a SPC Smart Parallel Compilation, i.e. only on free machine
-# pymake -spc
-# or switch SPC=1 to always perform SPC
-SPC = 0;
-SPClistfile = plearndir+'/scripts/.machines_lisa'
-SPCresultfile = plearndir+'/.pymake/SPC.hosts'
-# depends of your files architecture
-#SPCresultfile = os.environ['HOME']+'/.pymake/SPC.hosts'
-
-
 # List of directories in which to look for .h includes and corresponding .cc files to compile and link with your program
 # (no need to include the current directory, it is implicit)
 sourcedirs =   lsdirs(os.path.join(plearndir,'plearn/')) \
