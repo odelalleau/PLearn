@@ -70,7 +70,7 @@ public:
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(DERIVEDCLASS);
+DECLARE_OBJECT_PTR(DERIVEDCLASS);
   
 } // end of namespace PLearn
 
