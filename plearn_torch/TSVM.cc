@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TSVM.cc,v 1.5 2005/02/24 14:11:42 tihocan Exp $ 
+   * $Id: TSVM.cc,v 1.6 2005/02/24 15:35:41 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -60,7 +60,12 @@ TSVM::TSVM()
 
 PLEARN_IMPLEMENT_OBJECT(TSVM,
     "Interface between PLearn and a Torch SVM object",
-    "This is NOT a transductive SVM."
+    "The 'sv_save' option determines how support vectors will be saved. The most\n"
+    "flexible way is 'default', but it will waste a lot of space if there are\n"
+    "many support vectors, in which case it is advised to use 'vmat' in order to\n"
+    "save them as a VMatrix, which could be efficiently serialized (e.g. if it is\n"
+    "defined as a subset of the dataset, as in TSVMClassification).\n"
+    "NB: this is NOT a transductive SVM.\n"
 );
 
 void TSVM::declareOptions(OptionList& ol)
