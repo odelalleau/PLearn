@@ -33,14 +33,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilteredVMatrix.cc,v 1.2 2003/11/04 18:34:37 plearner Exp $ 
+   * $Id: FilteredVMatrix.cc,v 1.3 2004/01/15 20:08:03 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
 
 /*! \file FilteredVMatrix.cc */
 
-
+#include "ProgressBar.h"
 #include "FilteredVMatrix.h"
 
 namespace PLearn <%
@@ -70,8 +70,10 @@ void FilteredVMatrix::openIndex()
       int l = source.length();
       Vec result(1);
       indexes.open(idxfname,true);
+      ProgressBar pb("Filtering source vmat", l);
       for(int i=0; i<l; i++)
         {
+          pb.update(i);
           program.run(i,result);
           if(result[0]!=0)
             indexes.append(i);
