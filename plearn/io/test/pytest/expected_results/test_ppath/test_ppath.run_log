@@ -1,0 +1,63 @@
+
+#####  Asserts  ###########################################################
+
+
+#####  The special dirnames . and ..  #####################################
+
+PPath('./foo/bar') == 'foo/bar'                             True
+
+PPath('foo/./bar') == 'foo/bar'                             True
+
+PPath('foo/../bar') == 'bar'                                True
+
+PPath('./foo/bar/../bar/../../foo/./bar') == 'foo/bar'      True
+
+PPath('././foo/bar') / PPath('../bar/../../foo/./bar') == 'foo/bar'
+
+                                                            True
+
+
+#####  Operators  #########################################################
+
+PPath('') == ''                                             True
+
+PPath('foo/bar') / '' == 'foo/bar/'                         True
+
+PPath('foo/bar') / 'file.cc' == 'foo/bar/file.cc'           True
+
+PPath('foo/bar/') / 'file.cc' == 'foo/bar/file.cc'          True
+
+
+#####  Methods up and dirname  ############################################
+
+PPath('foo.cc').up()                                        FATAL ERROR: Can't go up on this path.
+
+PPath('foo.cc').dirname() == ''                             True
+
+PPath('foo/bar').up() == 'foo'                              True
+
+PPath('foo/bar').dirname() == 'foo'                         True
+
+PPath('foo/bar/').up() == 'foo'                             True
+
+PPath('foo/bar/').dirname() == 'foo/bar'                    True
+
+PPath('foo/bar/hi.cc').up() == 'foo'                        True
+
+PPath('foo/bar/hi.cc').dirname() == 'foo/bar'               True
+
+
+#####  Platform dependant tests.  #########################################
+
+PPath('./foo//bar\toto')
+  DOS: == 'foo/bar/toto'      POSIX: Rejected               True
+
+isabs()
+  DOS: r:/dorionc             POSIX: /home/dorionc          True
+
+absolute('/home/dorionc') == ...
+  DOS: r:/dorionc             POSIX: /home/dorionc          True
+
+absolute('/home/dorionc').drive() == ...
+  DOS: r                      POSIX:                        True
+
