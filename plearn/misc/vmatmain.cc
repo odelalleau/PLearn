@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.16 2004/03/05 21:44:44 tihocan Exp $
+   * $Id: vmatmain.cc,v 1.17 2004/03/10 12:53:47 tihocan Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -894,8 +894,8 @@ int vmatmain(int argc, char** argv)
     cerr << 
       "Usage: vmat info <dataset> \n"
       "       Will info about dataset (size, etc..)\n"
-      "   or: vmat fields <dataset> \n"
-      "       To list the fields with their names \n"
+      "   or: vmat fields <dataset> [name_only]\n"
+      "       To list the fields with their names (if 'name_only' is specified, the index won't be displayed)\n"
       "   or: vmat fieldinfo <dataset> <fieldname_or_num>\n"
       "       To display statistics for that field \n"
       "   or: vmat cat <dataset> [<optional_vpl_filtering_code>]\n"
@@ -999,11 +999,21 @@ int vmatmain(int argc, char** argv)
     }
   else if(command=="fields")
     {
+      bool add_info = true;
+      if (argc >= 4) {
+        add_info = !(string(argv[3]) == "name_only");
+      }
       string dbname = argv[2];
       VMat vm = getDataSet(dbname);
-      cout<<"FieldNames: "<<endl;
-      for(int i=0;i<vm.width();i++)
-        cout<<i<<": "<<vm->fieldName(i)<<endl;
+      if (add_info) {
+        cout<<"FieldNames: "<<endl;
+      }
+      for(int i=0;i<vm.width();i++) {
+        if (add_info) {
+          cout << i << ": ";
+        }
+        cout << vm->fieldName(i) << endl;
+      }
     }
   else if(command=="fieldinfo")
     {
