@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.37 2004/02/20 21:11:46 chrish42 Exp $
+   * $Id: TMat_maths_impl.h,v 1.38 2004/02/25 03:22:13 dorionc Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -467,8 +467,26 @@ T maxabs(const TVec<T>& vec)
   return maxval;
 }
 
+// template<class T>
+// T minabs(const TVec<T>& vec)
+// {
+//   #ifdef BOUNDCHECK
+//   if(vec.length()==0)
+//     PLERROR("IN T minabs(const TVec<T>& vec) vec has zero length");
+//   #endif
+//   T* v = vec.data();
+//   T minval = fabs(v[0]);
+//   for(int i=1; i<vec.length(); i++)
+//     {
+//       T a=fabs(v[i]);
+//       if(a<minval)
+//         minval = a;
+//     }
+//   return minval;
+// }
+
 template<class T>
-T minabs(const TVec<T>& vec)
+T minabs(const TVec<T>& vec, int& index = int())
 {
   #ifdef BOUNDCHECK
   if(vec.length()==0)
@@ -480,10 +498,15 @@ T minabs(const TVec<T>& vec)
     {
       T a=fabs(v[i]);
       if(a<minval)
+      {
+        index = i;
         minval = a;
+      }
     }
+  
   return minval;
 }
+
 
 template<class T>
 int argmax(const TVec<T>& vec)
@@ -505,23 +528,86 @@ int argmax(const TVec<T>& vec)
 }
 
 template<class T>
+int argmax(const TVec<T>& vec, bool ignore_missing)
+{
+#ifdef BOUNDCHECK
+  if(vec.length()==0)
+    PLERROR("IN int argmax(const TVec<T>& vec) vec has zero length");
+#endif
+  T* v = vec.data();
+  int indexmax = -1;
+  T maxval = MISSING_VALUE;
+
+  for(int i=0; i<vec.length(); i++)
+  {
+    if( is_missing(v[i]) )
+    {
+      if(ignore_missing) continue;
+      else PLERROR("argmax(const TVec<T>& vec, bool ignore_missing) encountered a MISSING_VALUE\n"
+                   "at index %d and ignore_missing is false.", i);
+    }
+
+    if( indexmax == -1 || 
+        v[i] > maxval   )
+    {
+      maxval = v[i];
+      indexmax = i;
+    }
+  }
+  return indexmax;
+}
+
+
+template<class T>
 int argmin(const TVec<T>& vec)
 {
-  #ifdef BOUNDCHECK
+#ifdef BOUNDCHECK
   if(vec.length()==0)
     PLERROR("IN int argmin(const TVec<T>& vec) vec has zero length");
-  #endif
+#endif
   T* v = vec.data();
   int indexmin = 0;
   T minval = v[0];
   for(int i=1; i<vec.length(); i++)
     if(v[i]<minval)
-      {
-        minval = v[i];
-        indexmin = i;
-      }
+    {
+      minval = v[i];
+      indexmin = i;
+    }
   return indexmin;
 }
+
+template<class T>
+int argmin(const TVec<T>& vec, bool ignore_missing)
+{
+#ifdef BOUNDCHECK
+  if(vec.length()==0)
+    PLERROR("IN int argmin(const TVec<T>& vec) vec has zero length");
+#endif
+  T* v = vec.data();
+  int indexmin = -1;
+  T minval = MISSING_VALUE;
+
+  for(int i=0; i<vec.length(); i++)
+  {
+    if( is_missing(v[i]) )
+    {
+      if(ignore_missing) continue;
+      else PLERROR("argmin(const TVec<T>& vec, bool ignore_missing) encountered a MISSING_VALUE\n"
+                   "at index %d and ignore_missing is false.", i);
+    }
+
+    if( indexmin == -1 || 
+        v[i] < minval   )
+    {
+      minval = v[i];
+      indexmin = i;
+    }
+  }
+  return indexmin;
+}
+
+
 
 template<class T>
 T pownorm(const TVec<T>& vec, double n)
