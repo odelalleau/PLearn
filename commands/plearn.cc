@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.66 2004/05/26 16:48:34 tihocan Exp $
+   * $Id: plearn.cc,v 1.67 2004/06/08 14:10:38 tihocan Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -42,6 +42,8 @@
 #include "ExplicitSplitter.h"
 #include "FractionSplitter.h"
 #include "KFoldSplitter.h"
+#include "SourceVMatrixSplitter.h"
+#include "TestInTrainSplitter.h"
 #include "TrainTestSplitter.h"
 #include "TrainValidTestSplitter.h"
 
