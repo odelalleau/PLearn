@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SoftSlopeVariable.h,v 1.2 2003/11/28 21:55:26 yoshua Exp $
+   * $Id: SoftSlopeVariable.h,v 1.3 2003/12/05 22:41:41 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -85,7 +85,27 @@ inline Var d_soft_slope(Var x, Var smoothness, Var left, Var right)
 // limit of soft_slope when smoothness-->0
 inline Var soft_slope_limit(Var x, Var smoothness, Var left, Var right)
 {
-  return var(0.5);
+  int l=0; 
+  int w=0;
+  if (x->length()>l) l=x->length();
+  if (x->width()>w) w=x->width();
+  if (smoothness->length()>l) l=smoothness->length();
+  if (smoothness->width()>w) w=smoothness->width();
+  if (left->length()>l) l=left->length();
+  if (left->width()>w) w=left->width();
+  if (right->length()>l) l=right->length();
+  if (right->width()>w) w=right->width();
+  if (x->length()>l && l!=x->length()) PLERROR("soft_slope_limit: Each argument should have the same size or size 1");
+  if (x->width()>w && w!=x->width()) PLERROR("soft_slope_limit: Each argument should have the same size or size 1");
+  if (smoothness->length()>l && l!=smoothness->length())  PLERROR("soft_slope_limit: Each argument should have the same size or size 1");
+  if (smoothness->width()>w && w!=smoothness->width())  PLERROR("soft_slope_limit: Each argument should have the same size or size 1");
+  if (left->length()>l && l!=left->length())  PLERROR("soft_slope_limit: Each argument should have the same size or size 1");
+  if (left->width()>w && w!=left->width())  PLERROR("soft_slope_limit: Each argument should have the same size or size 1");
+  if (right->length()>l && l!=right->length())  PLERROR("soft_slope_limit: Each argument should have the same size or size 1");
+  if (right->width()>w && w!=right->width())  PLERROR("soft_slope_limit: Each argument should have the same size or size 1");
+  Var res(l,w);
+  res->value.fill(0.5);
+  return res;
 }
 
 %> // end of namespace PLearn
