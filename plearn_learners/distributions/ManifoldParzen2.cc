@@ -44,9 +44,11 @@
 
 namespace PLearn {
 
-PLEARN_IMPLEMENT_OBJECT(ManifoldParzen2,
-    "ManifoldParzen implements a manifold Parzen.",
-    ""
+PLEARN_IMPLEMENT_OBJECT(ManifoldParzen2, 
+                        "Manifold Parzen density estimate ", 
+                        "Parzen Window algorithm, where the covariance matrices of the gaussians are\n"
+                        "computed using a knn kernel estimate. Also, only the ncomponents principal\n"
+                        "eigen vector and eigen values of the covariance matrices are stored.\n"
 );
 
 /////////////////////
@@ -74,6 +76,30 @@ void ManifoldParzen2::build()
 }
 
 // TODO Hide the options from GaussMix that are overwritten.
+
+////////////////////
+// declareOptions //
+////////////////////
+void ManifoldParzen2::declareOptions(OptionList& ol)
+{
+  declareOption(ol,"nneighbors", &ManifoldParzen2::nneighbors, OptionBase::buildoption,
+                "Number of neighbors for covariance matrix estimation.");
+  
+  declareOption(ol,"ncomponents", &ManifoldParzen2::ncomponents, OptionBase::buildoption,
+                "Number of components to store from the PCA.");
+  
+  declareOption(ol,"use_last_eigenval", &ManifoldParzen2::use_last_eigenval, OptionBase::buildoption,
+                "Indication that the last eigenvalue should be used for the remaining directions' variance.");
+
+  declareOption(ol,"global_lambda0", &ManifoldParzen2::global_lambda0, OptionBase::buildoption,
+                "If use_last_eigenvalue is false, used value for the variance of the remaining directions");
+  
+  declareOption(ol,"scale_factor", &ManifoldParzen2::scale_factor, OptionBase::buildoption,
+                "Scale factor");
+
+   // Now call the parent class' declareOptions
+  inherited::declareOptions(ol);
+}
 
 void ManifoldParzen2::build_()
 {}
@@ -213,6 +239,7 @@ void ManifoldParzen2::train()
 //    setGaussianGeneral(i, 1.0/l, center, eigvals.subVec(0,eigvals.length()-1), components_eigenvecs.subMatRows(0,eigvals.length()-1), lambda0);
   }
   stage = 1;
+  precomputeStuff();
   build();
 }
 

@@ -44,7 +44,7 @@ using namespace std;
 class ManifoldParzen2 : public GaussMix
 {
 
-protected:
+public:
   // *********************
   // * protected options *
   // *********************
@@ -59,7 +59,6 @@ protected:
   bool use_last_eigenval;
   real scale_factor;
   double global_lambda0;
-public:
 
   typedef GaussMix inherited;
 
@@ -83,6 +82,11 @@ public:
   // ******************
 
   ManifoldParzen2(int the_nneighbors, int the_ncomponents, bool use_last_eigenvalue=true, real scale_factor=1);
+
+protected:
+
+  //! Declares this class' options
+  static void declareOptions(OptionList& ol);
   
 private: 
   //! This does the actual building. 
