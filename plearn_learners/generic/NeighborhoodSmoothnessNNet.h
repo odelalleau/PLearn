@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeighborhoodSmoothnessNNet.h,v 1.7 2004/02/24 21:20:47 tihocan Exp $
+   * $Id: NeighborhoodSmoothnessNNet.h,v 1.8 2004/02/28 20:28:28 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearn/plearn_learners/classifiers/NeighborhoodSmoothnessNNet.h */
@@ -50,9 +50,11 @@
 namespace PLearn {
 using namespace std;
 
-  class NeighborhoodSmoothnessNNet: public PLearner
-  {
+class NeighborhoodSmoothnessNNet: public PLearner
+{
+
   protected:
+
     Var input;  // Var(inputsize())
     Var target; // Var(targetsize()-weightsize())
     Var sampleweight; // Var(1) if train_set->hasWeights()
@@ -75,13 +77,12 @@ using namespace std;
     Var test_costs; // hconcat(costs)
     VarArray invars;
     VarArray params;  // all arameter input vars
-
     Vec paramsvalues; // values of all parameters
 
-    Mat p_ij_mat;   // The precomputed p_ij.
     Var p_ij;       // The probabilities p_ij on the inputs.
 
   public:
+
     mutable Func f; // input -> output
     Func f_input_to_hidden; // input -> hidden
     mutable Func test_costf; // input & target -> output & test_costs
@@ -132,6 +133,7 @@ using namespace std;
                     // 0 means the whole training set (default: 1)
 
   private:
+
     void build_();
 
   public:
@@ -164,7 +166,6 @@ using namespace std;
 
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                          const Vec& target, Vec& costs) const;
-
 
     virtual void makeDeepCopyFromShallowCopy(CopiesMap &copies);
 
