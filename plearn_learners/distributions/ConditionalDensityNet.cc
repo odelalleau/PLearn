@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.38 2004/04/16 20:19:19 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.39 2004/05/26 18:38:44 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -721,8 +721,8 @@ TVec<string> ConditionalDensityNet::getTestCostNames() const
 
 extern void varDeepCopyField(Var& field, CopiesMap& copies);
 
-  void ConditionalDensityNet::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
-  {
+void ConditionalDensityNet::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+{
   varDeepCopyField(input, copies);
   varDeepCopyField(target, copies);
   varDeepCopyField(sampleweight, copies);
@@ -782,7 +782,7 @@ extern void varDeepCopyField(Var& field, CopiesMap& copies);
   varDeepCopyField(pos_y_cost, copies);
   deepCopyField(optimizer, copies);
   inherited::makeDeepCopyFromShallowCopy(copies);
-  }
+}
 
 
 void ConditionalDensityNet::setInput(const Vec& in) const
@@ -794,7 +794,7 @@ void ConditionalDensityNet::setInput(const Vec& in) const
   in2distr_f->fprop(in,output->value);
 }
 
-double ConditionalDensityNet::log_density(const Vec& y) const
+real ConditionalDensityNet::log_density(const Vec& y) const
 { 
   Vec d(1);
   target->value << y;
@@ -802,13 +802,13 @@ double ConditionalDensityNet::log_density(const Vec& y) const
   return log(d[0]);
 }
 
-double ConditionalDensityNet::survival_fn(const Vec& y) const
+real ConditionalDensityNet::survival_fn(const Vec& y) const
 { 
   return 1-cdf(y);
 }
 
 // must be called after setInput
-double ConditionalDensityNet::cdf(const Vec& y) const
+real ConditionalDensityNet::cdf(const Vec& y) const
 { 
   Vec cum(1);
   target->value << y;

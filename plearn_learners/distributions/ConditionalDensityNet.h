@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.25 2004/04/16 17:37:55 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.26 2004/05/26 18:38:44 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -250,13 +250,13 @@ public:
   // **************************
 
   //! return log of probability density log(p(x))
-  virtual double log_density(const Vec& x) const;
+  virtual real log_density(const Vec& x) const;
 
   //! return survival fn = P(X>x)
-  virtual double survival_fn(const Vec& x) const;
+  virtual real survival_fn(const Vec& x) const;
 
   //! return survival fn = P(X<=x)
-  virtual double cdf(const Vec& x) const;
+  virtual real cdf(const Vec& x) const;
 
   //! return E[X] 
   virtual void expectation(Vec& mu) const;
