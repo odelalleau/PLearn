@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StatefulLearner.h,v 1.4 2004/07/23 20:24:20 ducharme Exp $ 
+   * $Id: StatefulLearner.h,v 1.5 2004/08/18 22:18:23 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Réjean Ducharme
@@ -51,15 +51,18 @@ using namespace std;
 
 class StatefulLearner: public PLearner
 {
-private:
-
   typedef PLearner inherited;
 
 protected:
-
-  //! Time step at which the current test is perform
+  //! Time step at which the current test is performed.
   //! This can be useful when entering computeOutputAndCosts(...) method.
-  int current_test_t;
+  //! NOTE: it is the responsibility of each derived class to increment
+  //! this counter upon processing computeOutputAndCosts.
+  mutable int current_test_t;
+
+public:
+  //! "Suggested" time-step at which testing should start
+  int test_start_time;
   
 public:
 
@@ -100,6 +103,9 @@ public:
   //! implementation here performs a no-op.  This allows derived classes
   //! to write inherited::forget() without fear.
   virtual void forget() = 0;
+
+  //! This method resets current_test_t to test_start_time
+  virtual void resetInternalState();
   
   //! Computes the output from the input.
   //! Simply calls computeOutputAndCosts(...)
@@ -133,9 +139,6 @@ public:
   //! Set the dataset of an AssetManager (if any) to this testset
   //! Default: do nothing!
   virtual void setTestSet(VMat testset);
-
-  //! Set the time step at which the current test is perform
-  virtual void setCurrentTestTime(int test_t);
 };
 
 // Declares a few other classes and functions related to this class.

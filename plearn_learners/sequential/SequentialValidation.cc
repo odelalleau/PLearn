@@ -245,8 +245,9 @@ void SequentialValidation::run()
     }
   }
 
-  // some learner parameters
+  // Ensure correct build and reset internal state
   learner->build();
+  learner->resetInternalState();
   
   VMat test_outputs;
   VMat test_costs;
@@ -296,7 +297,7 @@ void SequentialValidation::run()
     dataset.getExample(t, input, target, weight);
     test_stats->forget();
     learner->setTestSet(sub_test);           // temporary hack
-    learner->setCurrentTestTime(t);          // temporary hack
+//    learner->setCurrentTestTime(t);          // temporary hack
     learner->computeOutputAndCosts(input, target, output, costs);
     test_stats->update(costs);
     test_stats->finalize();

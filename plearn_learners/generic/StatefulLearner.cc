@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StatefulLearner.cc,v 1.4 2004/07/23 20:24:20 ducharme Exp $ 
+   * $Id: StatefulLearner.cc,v 1.5 2004/08/18 22:18:23 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Réjean Ducharme
@@ -46,14 +46,23 @@
 namespace PLearn {
 using namespace std;
 
-StatefulLearner::StatefulLearner() : current_test_t(-1)
+StatefulLearner::StatefulLearner()
+  : current_test_t(-1), test_start_time(-1)
 {}
 
-PLEARN_IMPLEMENT_ABSTRACT_OBJECT(StatefulLearner, "PLearner with an internal state", "PLearner with an internal state.\n"
-                                                  "It replaces, for efficacity and compatibility reasons, SequentialLearner.");
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
+  StatefulLearner,
+  "PLearner with an internal state",
+  "PLearner with an internal state.\n"
+  "It replaces, for efficiency and compatibility reasons, SequentialLearner.");
 
 void StatefulLearner::declareOptions(OptionList& ol)
 {
+  declareOption(
+    ol, "test_start_time", &StatefulLearner::test_start_time,
+    OptionBase::buildoption,
+    "Initial time at which testing should be started.");
+
   inherited::declareOptions(ol);
 }
 
@@ -74,6 +83,11 @@ void StatefulLearner::makeDeepCopyFromShallowCopy(map<const void*, void*>& copie
 
 void StatefulLearner::forget()
 { /* empty */ }
+
+void StatefulLearner::resetInternalState()
+{
+  current_test_t = test_start_time;
+}
 
 void StatefulLearner::computeOutput(const Vec& input, Vec& output) const
 {
@@ -109,9 +123,6 @@ void StatefulLearner::setTrainingSet(VMat training_set, bool call_forget)
 
 void StatefulLearner::setTestSet(VMat testset)
 {}
-
-void StatefulLearner::setCurrentTestTime(int test_t)
-{ current_test_t = test_t; }
 
 bool StatefulLearner::isStatefulLearner() const
 { return true; }
