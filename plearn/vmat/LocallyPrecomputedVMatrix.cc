@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyPrecomputedVMatrix.cc,v 1.11 2005/02/21 15:23:53 tihocan Exp $ 
+   * $Id: LocallyPrecomputedVMatrix.cc,v 1.12 2005/02/21 16:54:02 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -68,6 +68,10 @@ PLEARN_IMPLEMENT_OBJECT(LocallyPrecomputedVMatrix,
     "disk usage. This is achieved thanks to a system lock file in the metadatadir of\n"
     "the source VMat. Because it may happen that a lock file remains after an experiment\n"
     "crashed, it will be ignored when it gets older than 'max_wait' minutes.\n"
+    "The default behavior (which can be modified through this VMat's options) is to\n"
+    "automatically delete the precomputed file when it is not used anymore (actually,\n"
+    "the whole metadata directory will be deleted, so you should not store important\n"
+    "informations in it).\n"
 );
 
 ////////////////////
