@@ -21,7 +21,7 @@ qtdir = '/usr/lib/qt-3.1/'
 # PLearn specific directories:
 
 # If the PLEARNDIR environment variable is not defined, we use the default "$HOME/PLearn/"
-plearndir = os.environ.get('PLEARNDIR', os.path.join(homedir,'PLearn'))
+plearndir = os.environ.get('PLEARNDIR', join(homedir,'PLearn'))
 
 libdir = '/u/lisa/local/'+platform+'/lib'
 
