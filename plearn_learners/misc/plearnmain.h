@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearnmain.h,v 1.1 2002/09/05 07:56:30 plearner Exp $
+   * $Id: plearnmain.h,v 1.2 2002/10/03 07:35:28 plearner Exp $
    ******************************************************* */
 
 #include "general.h"
@@ -53,6 +53,7 @@ void displayRegisteredSubClassesOf(const string& baseclassname, ostream& out)
   TypeMap::const_iterator itend = tmap.end();
   while(it!=itend)
     {
+      // cerr << it->first << endl;
       Object* o = (*(it->second))();
       if(dynamic_cast<T*>(o))
         out << it->first << endl;

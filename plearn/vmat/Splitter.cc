@@ -33,15 +33,69 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Splitter.cc,v 1.1 2002/09/10 22:24:18 plearner Exp $ 
+   * $Id: Splitter.cc,v 1.2 2002/10/03 07:35:28 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Splitter.cc */
 #include "Splitter.h"
+#include "VMat.h"
+#include "ConcatRowsVMatrix.h"
+#include "ConcatColumnsVMatrix.h"
+#include "random.h"
 
 namespace PLearn <%
 using namespace std;
 
 IMPLEMENT_ABSTRACT_NAME_AND_DEEPCOPY(Splitter);
+
+// Useful splitting functions
+
+void split(VMat d, real test_fraction, VMat& train, VMat& test, int i)
+{
+  int ntest = int( test_fraction>=1.0 ?test_fraction :test_fraction*d.length() );
+  int ntrain_before_test = d.length()-(i+1)*ntest;
+  int ntrain_after_test = i*ntest;
+
+  test = d.subMatRows(ntrain_before_test, ntest);
+  if(ntrain_after_test == 0)
+    train = d.subMatRows(0,ntrain_before_test);
+  else if(ntrain_before_test==0)
+    train = d.subMatRows(ntest, ntrain_after_test);
+  else
+    train =  vconcat( d.subMatRows(0,ntrain_before_test), 
+                      d.subMatRows(ntrain_before_test+ntest, ntrain_after_test) );
+}
+
+Vec randomSplit(VMat d, real test_fraction, VMat& train, VMat& test)
+{
+  int ntest = int( test_fraction>=1.0 ?test_fraction :test_fraction*d.length() );
+  int ntrain = d.length()-ntest;
+  Vec indices(0, d.length()-1, 1); // Range-vector
+  shuffleElements(indices);
+  train = d.rows(indices.subVec(0,ntrain));
+  test = d.rows(indices.subVec(ntrain,ntest));
+  return indices;
+}
+
+void split(VMat d, real validation_fraction, real test_fraction, VMat& train, VMat& valid, VMat& test,bool do_shuffle)
+{
+  int ntest = int( test_fraction>=1.0 ?test_fraction :test_fraction*d.length() );
+  int nvalid = int( validation_fraction>=1.0 ?validation_fraction :validation_fraction*d.length() );
+  int ntrain = d.length()-(ntest+nvalid);
+  Vec indices(0, d.length()-1, 1); // Range-vector
+  if (do_shuffle){
+    cout<<"shuffle !"<<endl;
+    shuffleElements(indices);
+  }
+  train = d.rows(indices.subVec(0,ntrain));
+  valid = d.rows(indices.subVec(ntrain,nvalid));
+  test = d.rows(indices.subVec(ntrain+nvalid,ntest));
+  cout<<"n_train : "<<ntrain<<endl<<"n_valid : "<<nvalid<<endl<<"n_test : "<<(d.length()-ntrain+nvalid)<<endl;
+}    
+
+void randomSplit(VMat d, real validation_fraction, real test_fraction, VMat& train, VMat& valid, VMat& test)
+{
+  split(d,validation_fraction,test_fraction,train,valid,test,true);
+}
 
 %> // end of namespace PLearn

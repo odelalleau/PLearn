@@ -33,13 +33,14 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VMatLanguage.h,v 1.2 2002/08/21 18:40:42 jkeable Exp $
+   * $Id: VMatLanguage.h,v 1.3 2002/10/03 07:35:28 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #ifndef VMatLanguage_INC
 #define VMatLanguage_INC
 
+#include "RowBufferedVMatrix.h"
 #include "VMat.h"
 #include "RealMapping.h"
 

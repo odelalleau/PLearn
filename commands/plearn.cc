@@ -33,11 +33,15 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.1 2002/09/04 23:44:39 plearner Exp $
+   * $Id: plearn.cc,v 1.2 2002/10/03 07:35:21 plearner Exp $
    ******************************************************* */
 
 
 #include "plearnmain.h"
+
+// Available Splitters:
+#include "TrainTestSplitter.h"
+#include "KFoldSplitter.h"
 
 // All Available Learners: 
 #include "KNN.h"

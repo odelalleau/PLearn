@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Splitter.h,v 1.1 2002/09/10 22:24:18 plearner Exp $ 
+   * $Id: Splitter.h,v 1.2 2002/10/03 07:35:28 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Splitter.h */
@@ -99,6 +99,32 @@ public:
 
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(Splitter);
+
+
+// A few useful function for splitting the datasets... (can be called in Splitter subclasses
+
+/*!   Splits the dataset d into a train and a test subset
+  If test_fraction is <1.0 then the size of the test subset is set to be ntest = int(test_fraction*d.length())
+  If test_fraction is >=1.0 then ntest = int(test_fraction)
+  Last argument i allows to get the ith split of a K-fold cross validation
+  i = 0 corresponds to having the last ntest samples used as the test set
+  i = 1 means having the ntest samples before those as the test set, etc...
+*/
+void split(VMat d, real test_fraction, VMat& train, VMat& test, int i=0);
+
+//!  Splits the dataset d into 3 subsets 
+void split(VMat d, real validation_fraction, real test_fraction, VMat& train, VMat& valid, VMat& test,bool do_shuffle=false);
+                                    
+/*!   Splits the dataset d into a train and a test subset
+  randomly picking which samples should be in each subset.
+  (test_fraction has the same meaning a sabove).
+  Return the permuted indices (the last ntest of which are the test indices
+  and the remainder are the train indices).
+*/
+Vec randomSplit(VMat d, real test_fraction, VMat& train, VMat& test);
+
+//!  Splits the dataset d into 3 subsets (similar to above)
+void randomSplit(VMat d, real validation_fraction, real test_fraction, VMat& train, VMat& valid, VMat& test);
 
   
 %> // end of namespace PLearn

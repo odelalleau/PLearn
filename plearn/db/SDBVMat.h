@@ -38,6 +38,7 @@
 #define NGSDBVMAT_H
 
 #include "VMat.h"
+#include "RowBufferedVMatrix.h"
 #include "Func.h"
 #include "SDBWithStats.h"
 

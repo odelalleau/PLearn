@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.3 2002/09/17 01:27:33 zouave Exp $
+   * $Id: Kernel.h,v 1.4 2002/10/03 07:35:27 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -206,36 +206,6 @@ class DotProductKernel: public Kernel
 };
 
 DECLARE_OBJECT_PTR(DotProductKernel);
-
-/*!   behaves like PolynomialKernel except that the x1 and x2 vectors
-  actually only contain INDICES of the rows of a CompactVMatrix,
-  and the square difference is performed efficiently, taking
-  advantage of the discrete nature of many fields.
-*/
-class CompactVMatrixPolynomialKernel: public Kernel
-{
-		typedef Kernel inherited;
-		
- protected:
-  CompactVMatrixPolynomialKernel() : n(), beta() {}
-  protected:
-    int n; //!<  degree of polynomial
-    real beta; //!<  a normalization constant for numerical stability
-    PP<CompactVMatrix> m;
-  public:
-    CompactVMatrixPolynomialKernel(int degree, PP<CompactVMatrix>& vm, real the_beta=1.0)
-      : n(degree), beta(the_beta), m(vm) {}
-    DECLARE_NAME_AND_DEEPCOPY(CompactVMatrixPolynomialKernel);
-    virtual real evaluate(const Vec& x1, const Vec& x2) const;    
-    //virtual void readOptionVal(istream& in, const string& optionname);
-    static void declareOptions(OptionList &ol);
-    virtual void write(ostream& out) const;
-    virtual void oldread(istream& in);
-    //!  recognized options are "n"  and "beta"
-    
-};
-
-DECLARE_OBJECT_PTR(CompactVMatrixPolynomialKernel);
 
 //!  returns (beta*dot(x1,x2)+1)^n
 class PolynomialKernel: public Kernel
@@ -429,36 +399,6 @@ public:
 };
 
 DECLARE_OBJECT_PTR(PrecomputedKernel);
-
-/*!   behaves like GaussianKernel except that the x1 and x2 vectors
-  actually only contain INDICES of the rows of a CompactVMatrix,
-  and the square difference is performed efficiently, taking
-  advantage of the discrete nature of many fields.
-*/
-class CompactVMatrixGaussianKernel: public Kernel
-{
-		typedef Kernel inherited;
-		
- protected:
-  CompactVMatrixGaussianKernel() : sigma(), m(0) {}
- protected:
-  real sigma;
-  PP<CompactVMatrix> m;
- public:
-  CompactVMatrixGaussianKernel(real the_sigma,PP<CompactVMatrix>& vm)
-    : sigma(the_sigma), m(vm) {}
-  DECLARE_NAME_AND_DEEPCOPY(CompactVMatrixGaussianKernel);
-  virtual real evaluate(const Vec& x1, const Vec& x2) const;
-  virtual void setParameters(Vec paramvec);
-    //virtual void readOptionVal(istream& in, const string& optionname);
-    static void declareOptions(OptionList &ol);
-  virtual void write(ostream& out) const;
-  virtual void oldread(istream& in);
-  //!  recognized option is "sigma"
-  
-};
-
-DECLARE_OBJECT_PTR(CompactVMatrixGaussianKernel);
 
 
 //!  returns exp(-sum_i[(phi_i*(x1_i - x2_i))^2]/sigma^2)

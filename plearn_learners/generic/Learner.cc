@@ -39,17 +39,17 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.cc,v 1.3 2002/09/17 01:27:34 zouave Exp $
+   * $Id: Learner.cc,v 1.4 2002/10/03 07:35:28 plearner Exp $
    ******************************************************* */
 
 #include "Learner.h"
 #include "TmpFilenames.h"
 #include "fileutils.h"
 #include "stringutils.h"
-#if USING_MPI
-#include "PLMPI.h"
 #include "MPIStream.h"
-#endif
+#include "FileVMatrix.h"
+#include "RemoveRowsVMatrix.h"
+#include "PLMPI.h"
 
 namespace PLearn <%
 using namespace std;

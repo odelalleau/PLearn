@@ -1,5 +1,3 @@
-
-
 // -*- C++ -*-
 
 // KFoldSplitter.cc
@@ -37,11 +35,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KFoldSplitter.cc,v 1.1 2002/09/11 21:27:42 morinf Exp $ 
+   * $Id: KFoldSplitter.cc,v 1.2 2002/10/03 07:35:28 plearner Exp $ 
    ******************************************************* */
 
 /*! \file SequentialSplitter.cc */
 #include "KFoldSplitter.h"
+#include "VMat_maths.h"
 
 namespace PLearn <%
 using namespace std;

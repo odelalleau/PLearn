@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.6 2002/09/26 21:14:18 plearner Exp $
+   * $Id: Object.cc,v 1.7 2002/10/03 07:35:27 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -86,11 +86,33 @@ OptionList& Object::getOptionList() const
   return options;
 }
 
-/*! Warning: the values printed as "default", if they had not a string
-representation specified explicitly when calling declareOption(...), will
-be printed as the current instance's value.  So they'll correspond to the
-actual "defaults" only when invoked on an instance freshly constructed with
-the default constructor...  */
+string Object::optionHelp() const
+  {
+    string res = "BUILD OPTIONS FOR CLASS " + classname() + ", with default values (includes options inherited from  parent classes): \n\n";
+
+    res += classname() + "( \n";
+    OptionList& options = getOptionList();    
+    for( OptionList::iterator it = options.begin(); it!=options.end(); ++it )
+      {
+        OptionBase::flag_t flags = (*it)->flags();
+        if(flags & OptionBase::buildoption)
+          {
+            string descr = (*it)->description();
+            string optname = (*it)->optionname();
+            string opttype = (*it)->optiontype();
+            string defaultval = (*it)->defaultval(); 
+            if(defaultval=="")
+              defaultval = (*it)->writeIntoString(this);
+            // string holderclass = (*it)->optionHolderClassName(this);
+            res += addprefix("# ", opttype + ": " + descr);
+            res += optname + " = " + defaultval + " ;\n\n";
+          }
+      }
+    res += ");\n\n";
+    return res;
+  }
+
+/* old optionhelp code
 string Object::optionHelp(bool buildoptions_only) const
   {
     string res = "OPTIONS FOR CLASS " + classname() + " (including options inherited from  parent classes): \n";
@@ -128,6 +150,7 @@ string Object::optionHelp(bool buildoptions_only) const
       }
     return res;
   }
+*/
 
 void Object::setOption(const string& optionname, const string& value)
 {

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.5 2002/09/17 01:27:33 zouave Exp $
+   * $Id: stringutils.h,v 1.6 2002/10/03 07:35:27 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -162,9 +162,23 @@ using namespace std;
   inline vector<string> addpostfix(const vector<string>& names, const string& postfix)
   { return addprepostfix("", names, postfix); }
 
-  //!  makes a C++ style vector of strings from a C style vectr of strings
-  //!  Note: this may be useful in conjunction with get_option.
-  vector<string> stringvector(int argc, char** argv);
+//! Returns a string with the prefix prepended and the postfix appended 
+//! to each *line* of the text string.
+string addprepostfix(const string& prefix, const string& text, const string& postfix);
+
+//! Returns a string with the prefix prepended
+//! to each *line* of the text string.
+inline string addprefix(const string& prefix, const string& text)
+{ return addprepostfix(prefix, text, ""); }
+
+//! Returns a string with the postfix appended 
+//! to each *line* of the text string.
+inline string addpostfix(const string& text, const string& postfix)
+{ return addprepostfix("", text, postfix); }
+
+//!  makes a C++ style vector of strings from a C style vectr of strings
+//!  Note: this may be useful in conjunction with get_option.
+vector<string> stringvector(int argc, char** argv);
 
 /*!     The command_line is made of pairs of the form
        option value

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Experiment.cc,v 1.3 2002/09/26 21:14:18 plearner Exp $ 
+   * $Id: Experiment.cc,v 1.4 2002/10/03 07:35:28 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Experiment.cc */
@@ -112,7 +112,7 @@ void Experiment::run()
 
   POFStream resout(append_slash(expdir)+"results.summary");
   resout.setMode(PStream::raw_ascii);
-  resout << "#: RESULT ";
+  resout << "#: result_type ";
   for(int k=0; k<ntestcosts; k++)
     resout << testresnames[k] << "  ";
   resout << endl;
@@ -134,9 +134,9 @@ void Experiment::run()
       teststats.update(testres);
     }
 
-  resout << "MEAN   " << teststats.getMean() << endl;
-  resout << "STDDEV " << teststats.getStdDev() << endl;
+  resout << "STDDEV   " << teststats.getStdDev() << endl;
   resout << "STDERROR " << teststats.getStdError() << endl;
+  resout << "MEAN     " << teststats.getMean() << endl;
 }
 
 %> // end of namespace PLearn

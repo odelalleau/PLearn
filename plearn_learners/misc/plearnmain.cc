@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearnmain.cc,v 1.3 2002/09/26 05:06:53 plearner Exp $
+   * $Id: plearnmain.cc,v 1.4 2002/10/03 07:35:28 plearner Exp $
    ******************************************************* */
 
 
@@ -48,6 +48,7 @@
 #include "Optimizer.h"
 #include "Kernel.h"
 #include "Experiment.h"
+#include "FileVMatrix.h"
 
 namespace PLearn <%
 using namespace std;
@@ -467,7 +468,7 @@ void displayObjectHelp(ostream& out, const string& classname, bool fulloptions)
   else
     {
       if(fulloptions)
-        out << obj->optionHelp(false);
+        out << obj->optionHelp();
       else
         out << obj->help();
       delete obj;
@@ -512,8 +513,6 @@ void usage()
        << "   Will print a list of available optimizers\n"
        << " * plearn help <object-type> \n"
        << "   Will display help (mostly about available options) for that object-type\n"
-       << " * plearn help <object-type> -alloptions \n"
-       << "   Will display all available options for that class (not only buildoptions) \n"
        << endl;
   exit(0);
 }
@@ -577,13 +576,10 @@ int plearnmain(int argc, char** argv)
         displayRegisteredSubClassesOf<Optimizer>("Optimizer", cout);
       else if(aboutwhat=="Kernel")
         displayRegisteredSubClassesOf<Kernel>("Kernel", cout);
+      else if(aboutwhat=="Splitter")
+        displayRegisteredSubClassesOf<Splitter>("Splitter", cout);
       else
-        {
-          if(argc==4 && string(argv[3])=="-alloptions")
-            displayObjectHelp(cout, aboutwhat, true);
-          else
-            displayObjectHelp(cout, aboutwhat);
-        }
+        displayObjectHelp(cout, aboutwhat);
     }
   else if(command=="listmodels")
   {
@@ -599,7 +595,7 @@ int plearnmain(int argc, char** argv)
     for(unsigned int i=0;i<ali.size();i++)
       cout<<ali[i]<<endl;
   }
-  else // we suppose it's a filename of a .psave file containing Objects to be run
+  else // we suppose it's a filename of a .psave or .pexp file containing Objects to be run
     {
       PIFStream in(command);
       if(!in)

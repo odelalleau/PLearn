@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.6 2002/09/26 21:14:18 plearner Exp $
+   * $Id: Object.h,v 1.7 2002/10/03 07:35:27 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -151,14 +151,12 @@ using namespace std;
 */
     virtual void print(ostream& out) const; 
 
-    //! Returns a help string with the list of options
+    //! Returns a help string with the list of build options
     //! for this object (includes inherited options from parent classes)
-    //! If buildoptions_only is true (the default) then only the options with the buildoption flag
-    //! set will be returned. Otherwise all options will be returned.
     /*! Warning: the values printed as "default" are the current instance's values, so they
       correspond to the actual "defaults" only when invoked on an instance freshly constructed
       with the default constructor... */
-    string optionHelp(bool buildoptions_only = true) const;
+    string optionHelp() const;
 
     //! Reads and sets the value for the specified option from the specified stream
     /*! Subclasses should overload this, typically following this pattern:

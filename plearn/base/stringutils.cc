@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.cc,v 1.3 2002/09/17 01:27:33 zouave Exp $
+   * $Id: stringutils.cc,v 1.4 2002/10/03 07:35:27 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -511,6 +511,24 @@ vector<string> addprepostfix(const string& prefix, const vector<string>& names, 
       ++newit;
     }
   return newnames;
+}
+
+string addprepostfix(const string& prefix, const string& text, const string& postfix)
+{
+  string::size_type startpos = 0;
+  string::size_type endpos = 0;
+  string txt = removenewline(text);
+  string res;
+  while(endpos!=string::npos)
+    {
+      endpos = txt.find_first_of("\n",startpos);
+      if(endpos!=string::npos)
+        res += prefix + txt.substr(startpos, endpos-startpos) + postfix + "\n";
+      else
+        res += prefix + txt.substr(startpos) + postfix + "\n";
+      startpos = endpos + 1;
+    }
+  return res;
 }
 
 vector<string> stringvector(int argc, char** argv)

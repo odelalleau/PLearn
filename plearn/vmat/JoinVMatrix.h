@@ -33,19 +33,22 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: JoinVMatrix.h,v 1.2 2002/09/17 01:27:34 zouave Exp $
+   * $Id: JoinVMatrix.h,v 1.3 2002/10/03 07:35:28 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #ifndef JOINVMATRIX_H
 #define JOINVMATRIX_H
 
+#include "RowBufferedVMatrix.h"
 #include "VMat.h"
+
 #if __GNUC__ < 3
 #  include <hash_map>
 #else
 #  include <ext/hash_map>
 #endif
+
 #include <vector>
 
 namespace PLearn <%

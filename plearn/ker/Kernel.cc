@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.2 2002/08/08 22:53:14 morinf Exp $
+   * $Id: Kernel.cc,v 1.3 2002/10/03 07:35:27 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -385,53 +385,6 @@ void DotProductKernel::oldread(istream& in)
   readFooter(in,"DotProductKernel");
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(CompactVMatrixPolynomialKernel);
-real CompactVMatrixPolynomialKernel::evaluate(const Vec& x1, const Vec& x2) const
-{ // return ipow(beta*dot(x1,x2)+1.0, n);
-  real dot_product=0;
-  if (m)
-    dot_product=m->dotProduct(int(x1[0]),int(x2[0]));
-  else
-    dot_product=dot(x1,x2);
-  return ipow(beta*dot_product+1.0, n);
-}
-
-void CompactVMatrixPolynomialKernel::write(ostream& out) const
-{
-  writeHeader(out,"CompactVMatrixPolynomialKernel");
-  inherited::oldwrite(out);
-  writeField(out,"n",n);
-  writeField(out,"beta",beta);
-  writeFooter(out,"CompactVMatrixPolynomialKernel");
-}
-void CompactVMatrixPolynomialKernel::oldread(istream& in)
-{
-  readHeader(in,"CompactVMatrixPolynomialKernel");
-  inherited::oldread(in);
-  readField(in,"n",n);
-  readField(in,"beta",beta);
-  readFooter(in,"CompactVMatrixPolynomialKernel");
-}
-// recognized options are "n" and "beta"
-/*
-void CompactVMatrixPolynomialKernel::readOptionVal(istream& in, const string& optionname)
-{
-  if (optionname=="n")
-    PLearn::read(in,n);
-  if (optionname=="beta")
-    PLearn::read(in,beta);
-  else
-    inherited::readOptionVal(in, optionname);  
-}
-*/
-void CompactVMatrixPolynomialKernel::declareOptions(OptionList &ol)
-{
-    declareOption(ol, "n", &CompactVMatrixPolynomialKernel::n, OptionBase::buildoption,
-                  "TODO: Some comments");
-    declareOption(ol, "beta", &CompactVMatrixPolynomialKernel::beta, OptionBase::buildoption,
-                  "TODO: Some comments");
-    inherited::declareOptions(ol);
-}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(PolynomialKernel);
 real PolynomialKernel::evaluate(const Vec& x1, const Vec& x2) const
@@ -764,73 +717,6 @@ void PrecomputedKernel::declareOptions(OptionList &ol)
 {
     declareOption(ol, "ker", &PrecomputedKernel::ker, OptionBase::buildoption,
                    "TODO: Some comments");
-    inherited::declareOptions(ol);
-}
-
-
-// ** CompactVMatrixGaussianKernel **
-
-IMPLEMENT_NAME_AND_DEEPCOPY(CompactVMatrixGaussianKernel);
-real CompactVMatrixGaussianKernel::evaluate(const Vec& x1, const Vec& x2) const
-{ 
-  // return exp(-powdistance(x1, x2, 2.0)/(sigma*sigma)); 
-  real sqdiff=0;
-  if (m)
-  {
-    sqdiff=m->squareDifference(int(x1[0]),int(x2[0]));
-/*
-#ifdef BOUNDCHECK
-    m->setNormalMode();
-    int actual_n_inputs = m->width()-1;
-    Vec actual_x1(actual_n_inputs);
-    Vec actual_x2(actual_n_inputs);
-    m->getRow(int(x1[0]),actual_x1);
-    m->getRow(int(x2[0]),actual_x2);
-    m->setIndicesMode();
-    real actual_sqdiff= powdistance(actual_x1, actual_x2, 2.0);
-    if (fabs(sqdiff-actual_sqdiff)>0.1)
-      PLWARNING("something wrong in CompactVMatrixGaussianKernel");
-#endif
-*/
-  }
-  else
-    sqdiff= powdistance(x1, x2, real(2.0));
-  return exp(-sqdiff/(sigma*sigma));
-  
-}
-
-void CompactVMatrixGaussianKernel::setParameters(Vec paramvec)
-{ sigma = paramvec[0]; }
-
-
-void CompactVMatrixGaussianKernel::write(ostream& out) const
-{
-  writeHeader(out,"CompactVMatrixGaussianKernel");
-  inherited::oldwrite(out);
-  writeField(out,"sigma",sigma);
-  writeFooter(out,"CompactVMatrixGaussianKernel");
-}
-void CompactVMatrixGaussianKernel::oldread(istream& in)
-{
-  readHeader(in,"CompactVMatrixGaussianKernel");
-  inherited::oldread(in);
-  readField(in,"sigma",sigma);
-  readFooter(in,"CompactVMatrixGaussianKernel");
-}
-// recognized option is "sigma"
-/*
-void CompactVMatrixGaussianKernel::readOptionVal(istream& in, const string& optionname)
-{
-  if (optionname=="sigma")
-    PLearn::read(in, sigma);
-  else
-    inherited::readOptionVal(in, optionname);  
-}
-*/
-void CompactVMatrixGaussianKernel::declareOptions(OptionList &ol)
-{
-    declareOption(ol, "sigma", &CompactVMatrixGaussianKernel::sigma, OptionBase::buildoption,
-                  "TODO: Some comments");
     inherited::declareOptions(ol);
 }
 

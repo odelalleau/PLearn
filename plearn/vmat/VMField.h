@@ -1,0 +1,150 @@
+// -*- C++ -*-
+
+// PLearn (A C++ Machine Learning Library)
+// Copyright (C) 1998 Pascal Vincent
+// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
+//
+
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+// 
+//  1. Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+// 
+//  2. Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//     documentation and/or other materials provided with the distribution.
+// 
+//  3. The name of the authors may not be used to endorse or promote
+//     products derived from this software without specific prior written
+//     permission.
+// 
+// THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+// NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+// TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// 
+// This file is part of the PLearn library. For more information on the PLearn
+// library, go to the PLearn Web site at www.plearn.org
+
+
+ 
+
+/* *******************************************************      
+ * $Id: VMField.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+ * This file is part of the PLearn library.
+ ******************************************************* */
+
+
+/*! \file PLearnLibrary/PLearnCore/VMField.h */
+
+#ifndef VMField_INC
+#define VMField_INC
+
+#include "general.h"
+#include "PStream.h"
+
+namespace PLearn <%
+using namespace std;
+
+//!  a VMField contains a fieldname and a fieldtype
+class VMField
+{
+public:
+
+  enum FieldType 
+    {
+      UnknownType = 0,
+      Continuous,
+      DiscrGeneral,
+      DiscrMonotonic,
+      DiscrFloat,
+      Date
+    };
+
+  string name;
+  FieldType fieldtype;
+
+  VMField(const string& the_name="", FieldType the_fieldtype=UnknownType);
+    
+  void print(ostream& out) const;
+  void write(ostream& out) const;
+  void read(istream& in);
+};
+
+inline ostream& operator<<(ostream& out, const VMField& f) { f.print(out); return out; }
+
+inline void write(ostream& out, const VMField& f) { f.write(out); }
+inline void read(istream& in, VMField& f) { f.read(in); }
+
+inline PStream &operator<<(PStream &out, const VMField &f)
+{ f.write(out.rawout()); return out; };
+
+inline PStream &operator>>(PStream &in, VMField &f)
+{ f.read(in.rawin()); return in; };
+
+//!  this class holds simple statistics about a field
+class VMFieldStat
+{
+protected:
+  int nmissing_;  //!<  number of missing values
+  int nnonmissing_;  //!<  number of non-missing values
+  int npositive_; //!<  number of values >0
+  int nnegative_; //!<  number of values <0
+  double sum_;    //!<  sum of all non missing values
+  double sumsquare_; //!<  sum of square of all non missing values
+  real min_;       //!<  minimum value
+  real max_;       //!<  maximum value
+      
+  //!  maximum number of different discrete values to keep track of
+  int maxndiscrete; 
+
+public:
+      
+  //!  counts of discrete values. If the size of counts exceeds maxndiscrete
+  //!  maxndiscrete is set to -1, counts is erased, and we stop counting!
+  map<real,int> counts;
+      
+  VMFieldStat(int the_maxndiscrete=255);
+      
+  int count() const { return nmissing_ + nnonmissing_; } //!<  should be equal to length of VMField
+  int nmissing() const { return nmissing_; }
+  int nnonmissing() const { return nnonmissing_; }
+  int npositive() const { return npositive_; }
+  int nnegative() const { return nnegative_; }
+  int nzero() const { return nnonmissing_ - (npositive_+nnegative_); }
+  real sum() const { return real(sum_); }
+  real sumsquare() const { return real(sumsquare_); }
+  real min() const { return min_; }
+  real max() const { return max_; }
+  real mean() const { return real(sum_/nnonmissing_); }
+  real variance() const { return real((sumsquare_ - square(sum_)/nnonmissing_)/(nnonmissing_-1)); }
+  real stddev() const { return sqrt(variance()); }
+
+  real prob(real value) { return counts[value]/real(nnonmissing()); }
+
+  void update(real val);
+      
+  void write(ostream& out) const;
+  void read(istream& in);
+};
+
+inline void write(ostream& out, const VMFieldStat& f) { f.write(out); }
+inline void read(istream& in, VMFieldStat& f) { f.read(in); }
+
+inline PStream &operator<<(PStream &out, const VMFieldStat &f)
+{ f.write(out.rawout()); return out; };
+
+inline PStream &operator>>(PStream &in, VMFieldStat &f)
+{ f.read(in.rawin()); return in; };
+
+%> // end of namespace PLearn
+
+#endif
+
