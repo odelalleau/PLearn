@@ -44,11 +44,19 @@
 
 namespace PLearn {
 
-PLEARN_IMPLEMENT_OBJECT(ManifoldParzen2, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(ManifoldParzen2,
+    "ManifoldParzen implements a manifold Parzen.",
+    ""
+);
 
-
+/////////////////////
+// ManifoldParzen2 //
+/////////////////////
 ManifoldParzen2::ManifoldParzen2()
-  : nneighbors(4),ncomponents(1),use_last_eigenval(true)
+: nneighbors(4),
+  ncomponents(1),
+  use_last_eigenval(true),
+  scale_factor(1)
 {}
 
 ManifoldParzen2::ManifoldParzen2(int the_nneighbors, int the_ncomponents, bool use_last_eigenvalue, real the_scale_factor)
@@ -63,17 +71,10 @@ void ManifoldParzen2::build()
   build_();
 }
 
+// TODO Hide the options from GaussMix that are overwritten.
 
 void ManifoldParzen2::build_()
 {}
-
-string ManifoldParzen2::help()
-{
-  // ### Provide some useful description of what the class is ...
-  return 
-    "ManifoldParzen implements a manifold parzen. That's about it for now." 
-    + optionHelp();
-}
 
 void ManifoldParzen2::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
@@ -151,7 +152,11 @@ void ManifoldParzen2::train()
   int l = train_set.length();
   int w = train_set.width();
   
-  setMixtureTypeGeneral(l, ncomponents, w);
+  type = "general";
+  L = l;
+  D = ncomponents;
+  resizeStuff();
+//  setMixtureTypeGeneral(l, ncomponents, w); // TODO Remove this line when it works.
 
   // storage for neighbors
   Mat delta_neighbors(nneighbors, w);
@@ -194,8 +199,15 @@ void ManifoldParzen2::train()
     }
     else lambda0 = global_lambda0;
 
-    setGaussianGeneral(i, 1.0/l, center, eigvals.subVec(0,eigvals.length()-1), components_eigenvecs.subMatRows(0,eigvals.length()-1), lambda0);
-    }
+    alpha[i] = 1.0 / l;
+    n_eigen = eigvals.length() - 1;
+    resizeStuff();
+    mu(i) << center;
+    eigenvalues(i) << eigvals;
+    eigenvalues(i, n_eigen_computed - 1) = lambda0;
+    eigenvectors[i] << components_eigenvecs;
+//    setGaussianGeneral(i, 1.0/l, center, eigvals.subVec(0,eigvals.length()-1), components_eigenvecs.subMatRows(0,eigvals.length()-1), lambda0);
+  }
   build();
 }
 
