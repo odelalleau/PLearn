@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PCA.cc,v 1.3 2003/10/02 14:25:42 yoshua Exp $ 
+   * $Id: PCA.cc,v 1.4 2003/10/02 14:46:24 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file PCA.cc */
@@ -117,12 +117,9 @@ void PCA::train()
 {
   static Mat covarmat;
 
-  if(train_set->targetsize()!=0)
-    PLERROR("In PCA::train this is an unsupervised learner. It cannot handle targets");
-
   if(stage<1)
     {
-      computeInputMeanAndCovar(train_set, mu, covarmat);
+      computeInputMeanAndCovar(train_set.subMatColumns(0,train_set->inputsize()), mu, covarmat);
       eigenVecOfSymmMat(covarmat, ncomponents, eigenvals, eigenvecs);      
       stage = 1;
     }
