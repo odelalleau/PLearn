@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.34 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: VMatrix.h,v 1.35 2004/02/26 03:38:02 tihocan Exp $
    ******************************************************* */
 
 
@@ -112,8 +112,6 @@ public:
   VMatrix();
 
   VMatrix(int the_length, int the_width);
-
-  bool target_is_last;  //< build option
 
   // simply calls inherited::build() then build_() 
   virtual void build();
