@@ -37,7 +37,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.74 2004/10/22 18:51:08 ducharme Exp $
+* $Id: VMatrix.cc,v 1.75 2004/11/24 18:37:41 tihocan Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -501,7 +501,7 @@ real VMatrix::addStringMapping(int col, string str)
     val = it->second;
   else // str not found in map: add a new mapping
     {
-      val = -100 - m.size();
+      val = - m.size() - 100;
       addStringMapping(col, str, val);
     }
   return val;

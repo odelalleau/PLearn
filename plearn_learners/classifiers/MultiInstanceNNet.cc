@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.cc,v 1.29 2004/07/21 20:14:37 tihocan Exp $
+   * $Id: MultiInstanceNNet.cc,v 1.30 2004/11/24 18:38:50 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/MultiInstanceNNet.h */
@@ -602,7 +602,13 @@ void MultiInstanceNNet::forget()
 }
 
 //! To use varDeepCopyField.
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:1419)  // Get rid of compiler warning.
+#endif
 extern void varDeepCopyField(Var& field, CopiesMap& copies);
+#ifdef __INTEL_COMPILER
+#pragma warning(default:1419)
+#endif
 
 void MultiInstanceNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {

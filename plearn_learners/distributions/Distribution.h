@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Distribution.h,v 1.12 2004/09/14 16:04:55 chrish42 Exp $ 
+   * $Id: Distribution.h,v 1.13 2004/11/24 18:39:12 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file Distribution.h */
@@ -48,6 +48,10 @@
 
 namespace PLearn {
 using namespace std;
+
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:654)  // Get rid of compiler warning.
+#endif
 
 class Distribution: public Learner
 {
@@ -143,5 +147,9 @@ public:
   DECLARE_OBJECT_PTR(Distribution);
   
 } // end of namespace PLearn
+
+#ifdef __INTEL_COMPILER
+#pragma warning(default:654)
+#endif
 
 #endif

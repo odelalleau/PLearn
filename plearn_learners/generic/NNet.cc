@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.63 2004/11/15 14:38:39 larocheh Exp $
+   * $Id: NNet.cc,v 1.64 2004/11/24 18:40:49 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -745,7 +745,14 @@ void NNet::initializeParams(bool set_seed)
 }
 
 //! To use varDeepCopyField.
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:1419)  // Get rid of compiler warning.
+#endif
 extern void varDeepCopyField(Var& field, CopiesMap& copies);
+#ifdef __INTEL_COMPILER
+#pragma warning(default:1419)
+#endif
+
 
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //

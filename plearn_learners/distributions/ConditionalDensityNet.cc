@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.46 2004/09/14 16:04:40 chrish42 Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.47 2004/11/24 18:38:30 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -741,7 +741,14 @@ void ConditionalDensityNet::build()
   build_();
 }
 
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:1419)  // Get rid of compiler warning.
+#endif
 extern void varDeepCopyField(Var& field, CopiesMap& copies);
+#ifdef __INTEL_COMPILER
+#pragma warning(default:1419)
+#endif
+
 
 void ConditionalDensityNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
@@ -935,7 +942,7 @@ void ConditionalDensityNet::initializeParams()
     }
   //fill_random_uniform(wout->value, -delta, +delta);
   fill_random_normal(wout->value, 0, delta);
-  Mat a_weights = wout->matValue.column(0);
+  // Mat a_weights = wout->matValue.column(0); // Does not seem to be used anymore.
   // a_weights *= 3.0; // to get more dynamic range
 
   if (centers_initialization!="data")

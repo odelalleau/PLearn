@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyWeightedDistribution.h,v 1.9 2004/09/14 16:04:55 chrish42 Exp $ 
+   * $Id: LocallyWeightedDistribution.h,v 1.10 2004/11/24 18:40:15 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file LocallyWeightedDistribution.h */
@@ -44,6 +44,10 @@
 
 namespace PLearn {
 using namespace std;
+
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:654)  // Get rid of compiler warning.
+#endif
 
 class LocallyWeightedDistribution: public Distribution
 {
@@ -117,5 +121,9 @@ public:
   DECLARE_OBJECT_PTR(LocallyWeightedDistribution);
   
 } // end of namespace PLearn
+
+#ifdef __INTEL_COMPILER
+#pragma warning(default:654)
+#endif
 
 #endif

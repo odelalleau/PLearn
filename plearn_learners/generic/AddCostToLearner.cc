@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.cc,v 1.19 2004/11/16 19:59:30 tihocan Exp $ 
+   * $Id: AddCostToLearner.cc,v 1.20 2004/11/24 18:40:31 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -413,7 +413,13 @@ TVec<string> AddCostToLearner::getTrainCostNames() const
 }
 
 //! To use varDeepCopyField.
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:1419)  // Get rid of compiler warning.
+#endif
 extern void varDeepCopyField(Var& field, CopiesMap& copies);
+#ifdef __INTEL_COMPILER
+#pragma warning(default:1419)
+#endif
 
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
