@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UnconditionalDistribution.cc,v 1.1 2004/06/21 14:48:32 tihocan Exp $ 
+   * $Id: UnconditionalDistribution.cc,v 1.2 2004/07/21 19:11:59 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -96,22 +96,22 @@ void UnconditionalDistribution::declareOptions(OptionList& ol)
       "Note that the upper case letters only work for SCALAR variables."
       );
 
-  redeclareOption(ol, "conditional_flags", &PDistribution::conditional_flags, OptionBase::nosave,
+  redeclareOption(ol, "conditional_flags", &UnconditionalDistribution::conditional_flags, OptionBase::nosave,
       "Unused in unconditional distributions.");
 
-  redeclareOption(ol, "provide_input", &PDistribution::provide_input, OptionBase::nosave,
+  redeclareOption(ol, "provide_input", &UnconditionalDistribution::provide_input, OptionBase::nosave,
       "Unused in unconditional distributions.");
 
-  redeclareOption(ol, "cond_sort",  &PDistribution::cond_sort, OptionBase::nosave,
+  redeclareOption(ol, "cond_sort",  &UnconditionalDistribution::cond_sort, OptionBase::nosave,
       "Unused in unconditional distributions.");
 
-  redeclareOption(ol, "n_input",  &PDistribution::n_input, OptionBase::nosave,
+  redeclareOption(ol, "n_input",  &UnconditionalDistribution::n_input, OptionBase::nosave,
       "Unused in unconditional distributions.");
 
-  redeclareOption(ol, "n_target",  &PDistribution::n_target, OptionBase::nosave,
+  redeclareOption(ol, "n_target",  &UnconditionalDistribution::n_target, OptionBase::nosave,
       "Unused in unconditional distributions.");
 
-  redeclareOption(ol, "n_margin",  &PDistribution::n_margin, OptionBase::nosave,
+  redeclareOption(ol, "n_margin",  &UnconditionalDistribution::n_margin, OptionBase::nosave,
       "Unused in unconditional distributions.");
 
 }
