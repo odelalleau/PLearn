@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.33 2004/09/15 13:47:43 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.34 2004/09/24 13:22:55 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -98,6 +98,7 @@
  * PLearner *
  ************/
 #include <plearn_learners/classifiers/AdaBoost.h>
+#include <plearn_learners/classifiers/BinaryStump.h>
 #include <plearn_learners/classifiers/ClassifierFromDensity.h>
 #include <plearn_learners/classifiers/MultiInstanceNNet.h>
 //#include <plearn_learners/classifiers/OverlappingAdaBoost.h> // Does not currently compile.
