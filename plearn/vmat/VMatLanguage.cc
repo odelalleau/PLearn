@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.5 2003/05/14 21:15:32 jkeable Exp $
+   * $Id: VMatLanguage.cc,v 1.6 2003/05/23 21:37:13 genji256 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -580,7 +580,12 @@ using namespace std;
           case 32: //daydiff
             b= pstack.pop();
             a= pstack.pop();
-            pstack.push(float_to_date(a)-float_to_date(b));
+            if (!isnan(a) && !isnan(b)) {
+              pstack.push(float_to_date(a)-float_to_date(b));
+            }
+            else {
+              pstack.push(MISSING_VALUE)
+            }
             break;
           case 33: //monthdiff
             b= pstack.pop();
