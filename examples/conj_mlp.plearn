@@ -2,7 +2,7 @@
 
 PTester( 
 # string: Path of this experiment's directory in which to save all experiment results (will be created if it does not already exist)
-expdir = "conj_mlp";
+expdir = "expdir-conj_mlp";
 
 # VMat: The dataset to use for training/testing (will be split according to what is specified in the testmethod)
 dataset = AutoVMatrix(specification="letters all normalize");
