@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.cc,v 1.13 2004/02/25 16:23:47 yoshua Exp $
+   * $Id: MultiInstanceNNet.cc,v 1.14 2004/02/25 18:09:52 nova77 Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/MultiInstanceNNet.h */
@@ -301,7 +301,7 @@ void MultiInstanceNNet::build_()
       }
 
       // Shared values hack...
-      if(paramsvalues && (paramsvalues.size() == params.nelems()))
+      if((bool)paramsvalues && (paramsvalues.size() == params.nelems()))
         params << paramsvalues;
       else
         {
