@@ -105,7 +105,7 @@ void displayObjectHelp(ostream& out, const string& classname)
   TypeMap::const_iterator itend = type_map.end();
 
   if(it==itend)
-    PLERROR("Learner type %s unknown.\n"
+    PLERROR("Object type %s unknown.\n"
             "Did you #include it, does it call the IMPLEMENT_NAME_AND_DEEPCOPY macro?\n"
             "and has it indeed been linked with your program?", classname.c_str());
 

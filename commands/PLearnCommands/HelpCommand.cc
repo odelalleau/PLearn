@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HelpCommand.cc,v 1.1 2003/05/07 05:39:16 plearner Exp $ 
+   * $Id: HelpCommand.cc,v 1.2 2003/05/13 05:55:28 plearner Exp $ 
    ******************************************************* */
 
 /*! \file HelpCommand.cc */
@@ -83,7 +83,7 @@ void HelpCommand::helpScripts()
     "for any PLearn object xxx linked with the program\n"
     "\n"
     "A plearn script can use macro variable definitions and expansion. Macro commands start by a $\n"
-    "ex: $DEFINE{toto=[1,2,3,4]}  ${toto}  $INCLUDE{otherfile.pscript} \n"
+    "ex: $DEFINE{toto}{[1,2,3,4]}  ${toto}  $INCLUDE{otherfile.pscript} \n"
     "Macro variable definitions can also be provided on the command line in the form \n"
     "varname=varvalue with each such pair separated by a blank, thus\n"
     "allowing for scripts with arguments\n\n"

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.14 2003/05/07 05:39:16 plearner Exp $
+   * $Id: Object.cc,v 1.15 2003/05/13 05:55:32 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -53,22 +53,11 @@ using namespace std;
 Object::Object()
 {}
 
-Object* Object::deepCopy(map<const void*, void*>& copies) const
-{ 
-  PLERROR("deepCopy method not implemented for this object"); 
-  return 0;
-}
+PLEARN_IMPLEMENT_OBJECT_METHODS(Object, "Object", Object);   
 
 // by default, do nothing...
 void Object::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {}
-
-OptionList& Object::getOptionList() const
-{
-  static OptionList options;
-  PLERROR("You must redefine getOptionList() in all instantiable subclasses");
-  return options;
-}
 
 string Object::optionHelp() 
 { return ""; }
@@ -104,13 +93,6 @@ void Object::build_()
 
 void Object::build()
 {}
-
-string Object::_classname_()
-{ return "Object"; }
-// { return string(typeid(*this).name()); } // it would be nice to use this some day, rather than having to redefine classname() in every class
-
-string Object::classname() const
-{ return _classname_(); }
 
 string Object::info() const { return classname(); }
 
@@ -208,11 +190,6 @@ Object::writeOptionVal(PStream &out, const string &optionname) const
 }
 
 
-
-
-
-
-
 string Object::getOptionsToSave(OBflag_t option_flags) const
 {
   string res = "";
@@ -303,10 +280,10 @@ void Object::read(istream& in_)
     }
 }
 
-int Object::call(const string& methodname, int nargs, istream& in_parameters, ostream& out_results)
-{ 
-  PLERROR("call method not implemented for this object"); 
-  return -1;
+
+void Object::call(const string& methodname, int nargs, PStream& in_parameters, PStream& out_results)
+{
+  PLERROR("In Object::call no method named %s supported by this object's call method.", methodname.c_str());
 }
 
 void Object::run()
@@ -316,10 +293,10 @@ void Object::oldread(istream& in)
 { PLERROR("oldread method not implemented for this object"); }
 
 void Object::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{ PLERROR("deepWrite method not implemented for this object"); }
+{ PLERROR("DEPRECATED deepWrite method not implemented for this object. You should no longer call it anyway. It's DEPRECATED!"); }
 
 void Object::deepRead(istream& in, DeepReadMap& old2new)
-{ PLERROR("deepRead method not implemented for this object"); }
+{ PLERROR("DEPRECATED deepRead method not implemented for this object. You should no longer call it anyway. It's DEPRECATED!"); }
 
 void Object::save(const string& filename) const
 { PLearn::save(filename, *this); }

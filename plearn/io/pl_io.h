@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io.h,v 1.3 2002/11/30 04:27:33 plearner Exp $
+   * $Id: pl_io.h,v 1.4 2003/05/13 05:55:32 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -926,8 +926,8 @@ inline void read(istream& in, const T& x, OBflag_t option_flag)
 */
 
 // **********************************************************
-// **** DEEPWRITE AND DEEPREAD (use only if necessary!) *****
-// ****      THIS SYSTEM IS LIKELY TO CHANGE SOON       *****
+// deepWrite and deepRead are deprecated. Do not use them. 
+// Send your objects to a PStream instead.
 // **********************************************************
 
   //!  deepWrite and deepRead for a few basic types

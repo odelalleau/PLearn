@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.8 2003/03/19 23:15:10 jkeable Exp $
+   * $Id: fileutils.cc,v 1.9 2003/05/13 05:55:32 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -523,14 +523,16 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
           }
           break;
 
-        case 'D': // it's a DEFINE{ varname = ... }
+        case 'D': // it's a DEFINE{ varname }{ ... }
           {
             string varname; // name of a variable
             string vardef; // definition of a variable
             readWhileMatches(in, "DEFINE{");
-            getline(in,varname, '=');
+            getline(in,varname, '}');
             varname = removeblanks(varname);
             skipBlanksAndComments(in);
+            if(in.get()!='{')
+              PLERROR("Bad syntax in .plearn DEFINE macro: correct syntax is $DEFINE{name}{definition}");
             smartReadUntilNext(in, "}", vardef);
             variables[varname] = vardef;
           }
