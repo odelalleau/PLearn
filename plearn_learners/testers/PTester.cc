@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.48 2005/01/10 20:09:29 chrish42 Exp $ 
+   * $Id: PTester.cc,v 1.49 2005/01/20 21:31:34 larocheh Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -430,8 +430,13 @@ Vec PTester::perform(bool call_forget)
       if(splitdir!="" && save_data_sets)
         PLearn::save(splitdir+"training_set.psave",trainset);
 
-      if(splitdir!="" && train && provide_learner_expdir)
-        learner->setExperimentDirectory(append_slash(splitdir+"LearnerExpdir"));
+      if(train && provide_learner_expdir)
+      {  
+        if(splitdir!="")
+          learner->setExperimentDirectory(append_slash(splitdir+"LearnerExpdir"));
+        else
+          learner->setExperimentDirectory("");
+      }
 
       learner->setTrainingSet(trainset, call_forget && train);
       if(dsets.size()>1)
