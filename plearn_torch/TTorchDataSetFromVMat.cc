@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TTorchDataSetFromVMat.cc,v 1.1 2005/02/23 01:31:19 tihocan Exp $ 
+   * $Id: TTorchDataSetFromVMat.cc,v 1.2 2005/02/23 16:38:04 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -145,12 +145,7 @@ void TTorchDataSetFromVMat::updateFromPLearn(Torch::Object* ptr) {
       allocator->free(torch_dataset_from_vmat);
     torch_dataset_from_vmat = new(allocator) Torch::TorchDataSetFromVMat(vmat);
   }
-  cout << "Youp: " << torch_dataset_from_vmat->n_real_examples << endl;
-
   inherited::updateFromPLearn(torch_dataset_from_vmat);
-
-  cout << "Youk: " << torch_dataset_from_vmat->n_real_examples << endl;
-
 }
 
 /////////////////////

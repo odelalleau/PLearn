@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TorchDataSetFromVMat.cc,v 1.1 2005/02/23 01:32:10 tihocan Exp $ 
+   * $Id: TorchDataSetFromVMat.cc,v 1.2 2005/02/23 16:38:29 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -62,7 +62,6 @@ TorchDataSetFromVMat::TorchDataSetFromVMat(PLearn::VMat vm) {
   real_current_example_index = -1;
   pre_processes = new(allocator) PreProcessingList;
   DataSet::init(vmat->length(), n_inputs, n_targets);
-  message("%d, %d, %d", vmat->length(), this->n_examples, this->n_real_examples);
 }
 
 ///////////////////////
