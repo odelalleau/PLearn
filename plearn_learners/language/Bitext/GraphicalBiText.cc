@@ -1467,14 +1467,14 @@ void GraphicalBiText::update_WSD_model(string name)
 void GraphicalBiText::senseTagBitext(string name)
 {
   TVec<int> e_senses;
-  int i,j,k,ie,maxs,e,f,wb,we;
-  real proba=0,ps;
+  int i,k,ie,e,f;
+  real proba=0;
   int sent_b,sent_e;
-  int nbsent=0;
-  SetIterator ssit;
+  //  int nbsent=0;
+  //SetIterator ssit;
   
   // "." denotes the end of the sentence
-  int point_index = source_word_to_id[tostring(".")];
+  //int point_index = source_word_to_id[tostring(".")];
   sent_b = 0;
   sent_e = 0;
   i =0;
@@ -1484,7 +1484,7 @@ void GraphicalBiText::senseTagBitext(string name)
   ofstream out_bi (filename.c_str());
   if (!out_bi.is_open()){ PLERROR("error while out_bi");}
 
-  ShellProgressBar progress(0, train_bitext_src.size()- 1, "Updating_WSD_model ", 50);  
+  ShellProgressBar progress(0, train_bitext_src.size()- 1, "SenseTagBitext", 50);  
   progress.init();
   progress.draw();
   
@@ -1557,7 +1557,7 @@ void GraphicalBiText::sensetag_valid_bitext(string name)
 real GraphicalBiText::compute_efs_likelihood(int e,int f, int se)
 {
   
-  int s,c,i;
+  int s,c;
   real pws;
   real post;
   real like=0;
@@ -1681,10 +1681,10 @@ void GraphicalBiText::test_WSD(VMat test_set, string name, TVec<string> v,bool s
   real nb_corrects=0;
   real nb_correctrandom=0;
   real nb_correctwn=0;
-    real nb_undefs=0;
+  real nb_undefs=0;
   real max,maxb,maxs,p,pupbi,ps,q,qb;
   int nbMap=0;
-
+  
   // Vec for detailed scores
   Vec dMatch( source_wsd_voc_size);
   Vec dMatchBi(source_wsd_voc_size);
@@ -1699,7 +1699,7 @@ void GraphicalBiText::test_WSD(VMat test_set, string name, TVec<string> v,bool s
   Set source_words;
   SetIterator ssit;
 
-
+  string filename;
   real context_coeff;
   TVec<int> e_senses;
   int e_senses_size;
@@ -1717,7 +1717,7 @@ void GraphicalBiText::test_WSD(VMat test_set, string name, TVec<string> v,bool s
   progress.init(); 
   progress.draw();  
 #ifdef PRINT_WSD 
-  string filename = output_dir+"/out_wsd"+name;
+  filename = output_dir+"/out_wsd"+name;
   ofstream out_wsd (filename.c_str());
   if (!out_wsd.is_open()){ PLERROR("error while opening out_wsd");}
 #endif
@@ -1908,7 +1908,7 @@ void GraphicalBiText::test_WSD(VMat test_set, string name, TVec<string> v,bool s
   
   //#ifdef PRINT_WSD 
   // open out_answers file
-   filename = output_dir+"out_score_"+name;
+  filename = output_dir+"out_score_"+name;
   ofstream out_score (filename.c_str());
   if (!out_score.is_open()){ PLERROR("error while opening out_score");}
   source_words = ontology.getAllWords();
@@ -1926,14 +1926,15 @@ void GraphicalBiText::test_WSD(VMat test_set, string name, TVec<string> v,bool s
   out_score <<"#WSD "+name+" NaiveBayes correct :"<<nb_correct<<" / "<<nb_supervised<< " = " << nb_correct/nb_supervised*100  << " % - " << nb_undef << " undefined"  <<endl;
   out_score <<"#WSD "+name+" Bitext correct :"<< nb_correctb<<" / "<<nb_supervised<< " = " << nb_correctb/nb_supervised*100  << " % - " << nb_undefb << " undefined  - " <<nb_single<< " single sense words "<< nb_unknown << " unknown words " <<endl;
   out_score.close();
+#ifdef PRINT_WSD 
   out_wsd.close();
-
+#endif   
 }
 
 real GraphicalBiText::compute_BN_likelihood(int e,int f, bool update, real nb)
 {
   // nb is used to update the model with nb times the same observed data
-  int s,c,se,i;
+  int s,c,se;
   real p,pws;
   real like=0;
   real post,sumpost;
