@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.cc,v 1.3 2003/11/05 17:27:12 tihocan Exp $
+ * $Id: LiftStatsCollector.cc,v 1.4 2003/11/05 17:46:29 tihocan Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -58,6 +58,7 @@ LiftStatsCollector::LiftStatsCollector()
   npos(0),
   lift_fraction(0.1),
   output_column(0),
+  sign_trick(0),
   target_column(1)
 {
 }
@@ -79,12 +80,18 @@ PLEARN_IMPLEMENT_OBJECT(
 void LiftStatsCollector::declareOptions(OptionList& ol)
 {
 
-  // TODO implement a sign trick
   declareOption(ol, "lift_fraction", &LiftStatsCollector::lift_fraction, OptionBase::buildoption,
       "    the % of samples to consider (default = 0.1)\n");
 
   declareOption(ol, "output_column", &LiftStatsCollector::output_column, OptionBase::buildoption,
       "    the column in which is the output value (default = 0)\n");
+
+  declareOption(ol, "sign_trick", &LiftStatsCollector::sign_trick, OptionBase::buildoption,
+      "    if set to 1, then you won't have to specify a target column: if the output is\n"
+      "    negative, the target will be assumed to be 0, and 1 otherwise - and in both cases\n"
+      "    we only consider the absolute value of the output\n"
+      "    (default = 0)\n"
+  );
 
   declareOption(ol, "target_column", &LiftStatsCollector::target_column, OptionBase::buildoption,
       "    the column in which is the target value (default = 1)\n");
@@ -107,6 +114,10 @@ void LiftStatsCollector::build()
 ////////////
 void LiftStatsCollector::build_()
 {
+  if (sign_trick == 1) {
+    cout << "Warning, the sign trick has been implemented but not tested. If it works, "
+      "you can remove this warning, and if it doesn't, you can fix it ;)" << endl;
+  }
 }
 
 /////////////////
@@ -229,8 +240,26 @@ void LiftStatsCollector::update(const Vec& x, real w)
   if (nstored == n_first_updates.length()) {
     n_first_updates.resize(MAX(1000,10*n_first_updates.length()), 2);
   }
-  n_first_updates(nstored, 0) = x[output_column];
-  n_first_updates(nstored, 1) = x[target_column];
+  real output_val = x[output_column];
+  switch(sign_trick) {
+    case 0:
+      // Normal behavior.
+      n_first_updates(nstored, 0) = output_val;
+      n_first_updates(nstored, 1) = x[target_column];
+      break;
+    case 1:
+      // Sign trick.
+      n_first_updates(nstored, 0) = FABS(output_val);
+      if (output_val <= 0) {
+        n_first_updates(nstored, 1) = 0;
+      } else {
+        n_first_updates(nstored, 1) = 1;
+      }
+      break;
+    default:
+      PLERROR("Wrong value for sign_trick in LiftStatsCollector");
+      break;
+  }
   if (x[target_column] != 0 && x[target_column] != 1) {
     PLERROR("In LiftStatsCollector::update Target must be 0 or 1 !");
   }

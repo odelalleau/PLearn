@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.h,v 1.3 2003/11/05 17:27:12 tihocan Exp $
+ * $Id: LiftStatsCollector.h,v 1.4 2003/11/05 17:46:29 tihocan Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -86,6 +86,7 @@ public:
 
   real lift_fraction;
   int output_column;
+  int sign_trick;
   int target_column;
 
   // ****************
