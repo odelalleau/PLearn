@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PStreamBuf.h,v 1.8 2004/08/31 17:22:40 plearner Exp $ 
+   * $Id: PStreamBuf.h,v 1.9 2004/12/22 19:38:14 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file PStreamBuf.h */
@@ -68,13 +68,20 @@ public:
   // ****************
 
   //! Default constructor
-  PStreamBuf(bool is_readable_, bool is_writable_, streamsize inbuf_capacity=1000, streamsize outbuf_capacity=1000, streamsize unget_capacity=100);
+  PStreamBuf(bool is_readable_, bool is_writable_,
+             streamsize inbuf_capacity=1, streamsize outbuf_capacity=0,
+             streamsize unget_capacity=default_ungetsize);
 
-  void setBufferCapacities(streamsize inbuf_capacity, streamsize outbuf_capacity, streamsize unget_capacity);
+  void setBufferCapacities(streamsize inbuf_capacity,
+                           streamsize outbuf_capacity,
+                           streamsize unget_capacity);
 
   virtual ~PStreamBuf();
 
 protected:
+
+  /// Default size for unget buffer for PStreamBuf and its subclasses.
+  static const streamsize default_ungetsize = 100;
 
   bool is_readable;
   bool is_writable;
@@ -164,9 +171,9 @@ public:
 #endif
   if(outbuf_chunksize>0) // buffered
     {
-      *outbuf_p++ = c;
       if(outbuf_p==outbuf_end)
         flush();
+      *outbuf_p++ = c;
     }
   else // unbuffered
     write_(&c,1);

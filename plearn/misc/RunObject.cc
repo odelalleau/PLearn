@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunObject.cc,v 1.3 2004/10/08 18:11:13 kermorvc Exp $ 
+   * $Id: RunObject.cc,v 1.4 2004/12/22 19:38:15 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -42,6 +42,7 @@
 
 
 #include "RunObject.h"
+#include <plearn/io/load_and_save.h>
 
 namespace PLearn {
 using namespace std;
@@ -80,7 +81,8 @@ void RunObject::build()
 {
   inherited::build();
   build_();
-  if(save_object_name!="")PLearn::save(save_object_name,underlying_object);
+  if (save_object_name != "")
+    PLearn::save(save_object_name, underlying_object);
 }
 
 void RunObject::makeDeepCopyFromShallowCopy(CopiesMap& copies)

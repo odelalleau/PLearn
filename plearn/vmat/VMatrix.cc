@@ -37,9 +37,10 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.79 2004/12/09 20:03:43 tihocan Exp $
+* $Id: VMatrix.cc,v 1.80 2004/12/22 19:38:15 chrish42 Exp $
 ******************************************************* */
 
+#include <plearn/io/load_and_save.h>
 #include "VMatrix.h"
 #include "DiskVMatrix.h"
 #include "FileVMatrix.h"

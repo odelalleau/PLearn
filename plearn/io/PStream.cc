@@ -33,10 +33,7 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-//#include <iomanip>
 #include "PStream.h"
-//#include "stringutils.h"
-//#include "fileutils.h" 
 #include <plearn/math/pl_math.h>
 
 // norman:
@@ -70,6 +67,14 @@ PStream& ws(PStream& in)
 #if STREAMBUFVER == 0
 PStream::PStream()
   :inherited(new StdPStreamBuf),
+     inmode(plearn_ascii), 
+     outmode(plearn_ascii), 
+     implicit_storage(true), compression_mode(compr_none)
+  {}
+
+#else
+PStream::PStream()
+  :inherited(0),
      inmode(plearn_ascii), 
      outmode(plearn_ascii), 
      implicit_storage(true), compression_mode(compr_none)

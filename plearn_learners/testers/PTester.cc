@@ -33,10 +33,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.44 2004/12/20 21:01:24 dorionc Exp $ 
+   * $Id: PTester.cc,v 1.45 2004/12/22 19:38:16 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
+
+#include <plearn/io/load_and_save.h>
+//#include <plearn/io/openString.h>
 #include <plearn/math/VecStatsCollector.h>
 #include <plearn/vmat/FileVMatrix.h>
 #include <assert.h>
@@ -631,7 +634,11 @@ void StatSpec::parseStatname(const string& statname)
 
 void StatSpec::parseStatname(const string& statname)
 {
+#if STREAMBUFVER == 1
+  PStream in = openString(statname, PStream::plearn_ascii);
+#else
   PIStringStream in(removeblanks(statname));
+#endif
   if(in.smartReadUntilNext("[", extstat)==EOF)
     PLERROR("No opening bracket found in statname %s", statname.c_str());
   string token;

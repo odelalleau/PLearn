@@ -160,10 +160,7 @@ public:
 
 public:  
 
-
-#if STREAMBUFVER == 0
   PStream();
-#endif
 
   //! constructor from a PStreamBuf
   PStream(streambuftype* sb);
@@ -283,6 +280,12 @@ public:
   //! DEPRECATED access to underlying istream
   inline istream& _do_not_use_this_method_rawin_() 
   { return *(ptr->rawin()); }   
+#else
+  bool good() const
+  { return !eof(); }
+
+  operator bool() const
+    { return good(); }
 #endif
   
   /******
@@ -379,7 +382,6 @@ public:
 #if STREAMBUFVER == 1 
     ptr->read(s,n);
     return *this;
-
 #else
     // The following line does not Work!!!! [Pascal]
     //    ptr->rawin()->read(s,n);
@@ -398,8 +400,13 @@ public:
   inline PStream& read(string& s, streamsize n) 
   {
     char* buf = new char[n];
+#if STREAMBUFVER == 1
+    streamsize nread = ptr->read(buf, n);
+    s.assign(buf, nread);
+#else
     read(buf, n);
-    s.assign(buf,n);
+    s.assign(buf, n);
+#endif
     delete[] buf;
     return *this;
   }
@@ -1259,7 +1266,5 @@ public:
 
 
 } // namespace PLearn
-
-#include <plearn/io/load_and_save.h>
 
 #endif //ndef PStream_INC

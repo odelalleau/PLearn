@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StdPStreamBuf.cc,v 1.2 2004/08/31 17:22:40 plearner Exp $ 
+   * $Id: StdPStreamBuf.cc,v 1.3 2004/12/22 19:38:14 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -113,8 +113,11 @@ using namespace std;
         if(pout) pout->rdbuf(original_bufout);
       }
 #endif
-    if(own_pin && pin) delete pin; // delete pin if we created it
-    if(own_pout && pout) delete pout; // delete pout if we created it
+    flush();
+    if (own_pin && pin)
+      delete pin; // delete pin if we created it
+    if (own_pout && pout)
+      delete pout; // delete pout if we created it
   }
 
 #if STREAMBUFVER == 0

@@ -1,8 +1,8 @@
 // -*- C++ -*-
 
-// FdPStreamBuf.cc
+// openSocket.h
 //
-// Copyright (C) 2004 Pascal Vincent 
+// Copyright (C) 2004 Christian Hudon 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,53 +33,31 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FdPStreamBuf.cc,v 1.2 2004/12/22 19:38:13 chrish42 Exp $ 
+   * $Id: openSocket.h,v 1.1 2004/12/22 19:38:14 chrish42 Exp $
    ******************************************************* */
 
-// Authors: Pascal Vincent
+// Authors: Christian Hudon
 
-/*! \file FdPStreamBuf.cc */
+/*! \file openSocket.h */
 
 
-#include "FdPStreamBuf.h"
-#include <unistd.h>
+#ifndef openSocket_INC
+#define openSocket_INC
+
+#include <string>
+#include <plearn/io/PStream.h>
 
 namespace PLearn {
 using namespace std;
 
-  FdPStreamBuf::FdPStreamBuf(int in_fd, int out_fd,
-                             bool own_in_, bool own_out_)
-    :PStreamBuf(in_fd>=0, out_fd>=0, 4096, 4096, default_ungetsize), 
-     in(in_fd), out(out_fd), own_in(own_in_), own_out(own_out_)
-  {}
+  /*! Opens a socket and returns an attached PStream.
+    io_formatting will typically be PStream::raw_ascii or PStream::plearn_ascii
+  */
+PStream openSocket(const string& hostname, int port,
+                   PStream::mode_t io_formatting,
+                   const int timeout=10);
 
-  FdPStreamBuf::~FdPStreamBuf()
-  {
-    flush();
-    if(in>=0 && own_in)
-      {
-        ::close(in);
-        in = -1;
-      }
-    if(out>=0 && own_out)
-      {
-        ::close(out);
-        out = -1;
-      }
-  }
-
-  FdPStreamBuf::streamsize FdPStreamBuf::read_(char* p, streamsize n)
-  {
-    return ::read(in, p, n);
-  }
-
-  //! writes exactly n characters from p (unbuffered, must flush)
-  void FdPStreamBuf::write_(const char* p, streamsize n)
-  {
-    streamsize nwritten = ::write(out, p, n);
-    if(nwritten!=n)
-      PLERROR("In FdPStreamBuf::write_ failed to write the requested number of bytes");
-    // fsync(out);
-  }
 
 } // end of namespace PLearn
+
+#endif

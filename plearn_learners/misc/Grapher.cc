@@ -34,11 +34,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Grapher.cc,v 1.10 2004/09/27 20:19:30 plearner Exp $ 
+   * $Id: Grapher.cc,v 1.11 2004/12/22 19:38:16 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file Grapher.cc */
 #include "Grapher.h"
+#include <plearn/io/load_and_save.h>
 #include <plearn/math/VecStatsCollector.h>
 #include <plearn/vmat/VMat_basic_stats.h>
 #include <plearn/display/GhostScript.h>

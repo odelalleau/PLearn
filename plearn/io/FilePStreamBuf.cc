@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilePStreamBuf.cc,v 1.3 2004/09/14 16:04:35 chrish42 Exp $ 
+   * $Id: FilePStreamBuf.cc,v 1.4 2004/12/22 19:38:13 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -63,6 +63,7 @@ FilePStreamBuf::FilePStreamBuf()
 
   FilePStreamBuf::~FilePStreamBuf()
   {
+    flush();
     if(f)
       fclose(f);      
   }

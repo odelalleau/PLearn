@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PStreamBuf.cc,v 1.6 2004/11/24 18:21:41 tihocan Exp $ 
+   * $Id: PStreamBuf.cc,v 1.7 2004/12/22 19:38:14 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file PStreamBuf.cc */
@@ -52,87 +52,80 @@ PStreamBuf::PStreamBuf(bool is_readable_, bool is_writable_,
    inbuf(0), inbuf_p(0), inbuf_end(0),
    outbuf_chunksize(0),
    outbuf(0), outbuf_p(0), outbuf_end(0)
-  {
-    setBufferCapacities(inbuf_capacity, outbuf_capacity, unget_capacity);    
-  }
+{
+  setBufferCapacities(inbuf_capacity, outbuf_capacity, unget_capacity);
+}
 
 PStreamBuf::~PStreamBuf() 
 {
-  if(inbuf)
+  if (inbuf)
     delete[] inbuf;
-  if(outbuf)
+  if (outbuf)
+    delete[] outbuf;
+}
+
+void PStreamBuf::setBufferCapacities(streamsize inbuf_capacity,
+                                     streamsize outbuf_capacity, streamsize unget_capacity)
+{
+  if (inbuf_capacity < 1)
+    inbuf_capacity = 1;
+  if (unget_capacity < 1)
+    unget_capacity = 1;
+  ungetsize = unget_capacity;
+  inbuf_chunksize = inbuf_capacity;
+  outbuf_chunksize = outbuf_capacity;
+    
+  if (inbuf)
+    delete[] inbuf;
+  if (ungetsize + inbuf_chunksize <= 0)
+    inbuf = inbuf_p = inbuf_end = 0;
+  else
+    {
+      inbuf = new char[ungetsize+inbuf_chunksize];
+      inbuf_p = inbuf+ungetsize;
+      inbuf_end = inbuf_p;
+    }
+
+  if (outbuf)
     {
       flush();
       delete[] outbuf;
     }
+  if (outbuf_chunksize <= 0)
+    outbuf = outbuf_p = outbuf_end = 0;
+  else
+    {
+      outbuf = new char[outbuf_chunksize];
+      outbuf_p = outbuf;
+      outbuf_end = outbuf+outbuf_chunksize;
+    }
 }
 
-  void PStreamBuf::setBufferCapacities(streamsize inbuf_capacity, streamsize outbuf_capacity, streamsize unget_capacity)
-  {
-    /* Useless comparisons since they are unsigned integers.
-    if(inbuf_capacity<0 || unget_capacity<0 || outbuf_capacity<0)
-      PLERROR("In PStreamBuf::setBufferCapacities all capacities must be >=0");
-      */
+PStreamBuf::streamsize PStreamBuf::read_(char* p, streamsize n)
+{
+  PLERROR("read_ not implemented for this PStreamBuf");
+  return 0;
+}
 
-    if(inbuf_capacity<1)
-      inbuf_capacity = 1;
-    if(unget_capacity<1)
-      unget_capacity = 1;
-    ungetsize = unget_capacity;
-    inbuf_chunksize = inbuf_capacity;
-    outbuf_chunksize = outbuf_capacity;
-    
-    if(inbuf)
-      delete[] inbuf;
-    if(ungetsize+inbuf_chunksize<=0)
-      inbuf = inbuf_p = inbuf_end = 0;
-    else
-      {
-        inbuf = new char[ungetsize+inbuf_chunksize];
-        inbuf_p = inbuf+ungetsize;
-        inbuf_end = inbuf_p;
-      }
-
-    if(outbuf)
-      {
-        flush();
-        delete[] outbuf;
-      }
-    if(outbuf_chunksize<=0)
-      outbuf = outbuf_p = outbuf_end = 0;
-    else
-      {
-        outbuf = new char[outbuf_chunksize];
-        outbuf_p = outbuf;
-        outbuf_end = outbuf+outbuf_chunksize;
-      }
-  }
-
- PStreamBuf::streamsize PStreamBuf::read_(char* p, streamsize n)
- {
-   PLERROR("read_ not implemented for this PStremBuf");
-   return 0;
- }
-
-  //! writes exactly n characters from p (unbuffered, must flush)
-  //! Default version issues a PLERROR
- void PStreamBuf::write_(const char* p, streamsize n)
- {
-   PLERROR("write_ not implemented for this PStremBuf");
- }
+//! writes exactly n characters from p (unbuffered, must flush)
+//! Default version issues a PLERROR
+void PStreamBuf::write_(const char* p, streamsize n)
+{
+  PLERROR("write_ not implemented for this PStreamBuf");
+}
  
 PStreamBuf::streamsize PStreamBuf::refill_in_buf()
-  {
+{
 #ifdef BOUNDCHECK
-    if(!isReadable())
-      PLERROR("Called PStreamBuf::refill_in_buf on a buffer not marked as readable");
+  if(!isReadable())
+    PLERROR("Called PStreamBuf::refill_in_buf on a buffer not marked as readable");
 #endif
 
-    inbuf_p = inbuf+ungetsize;
-    streamsize n = read_(inbuf_p, inbuf_chunksize);
-    inbuf_end = inbuf_p+n;
-    return n;
-  }
+  inbuf_p = inbuf + ungetsize;
+  streamsize n = read_(inbuf_p, inbuf_chunksize);
+  inbuf_end = inbuf_p + n;
+  return n;
+}
 
 PStreamBuf::streamsize PStreamBuf::read(char* p, streamsize n)
 {
@@ -186,7 +179,7 @@ void PStreamBuf::unread(const char* p, streamsize n)
 void PStreamBuf::putback(char c)
 {
   if(inbuf_p<=inbuf)
-    PLERROR("Cannot putback('%c') Input buffer bound reached (you may want ot increase the unget_capacity)",c);
+    PLERROR("Cannot putback('%c') Input buffer bound reached (you may want to increase the unget_capacity)",c);
   
   inbuf_p--;
   *inbuf_p = c;
@@ -205,7 +198,7 @@ void PStreamBuf::flush()
 
 
 void PStreamBuf::write(const char* p, streamsize n)
-  {
+{
 #ifdef BOUNDCHECK
   if(!isWritable())
     PLERROR("Called PStreamBuf::write on a buffer not marked as writable");
@@ -236,6 +229,6 @@ void PStreamBuf::write(const char* p, streamsize n)
     }
   else // unbuffered
     write_(p,n);
-  }
+}
 
 } // end of namespace PLearn

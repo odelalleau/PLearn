@@ -45,6 +45,7 @@
 #include <plearn_learners/testers/PTester.h>  // for using class StatSpec
 #include <plearn/base/stringutils.h>
 #include <plearn/io/MatIO.h>
+#include <plearn/io/load_and_save.h>
 
 namespace PLearn {
 using namespace std;

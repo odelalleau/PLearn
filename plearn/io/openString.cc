@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: openString.cc,v 1.1 2004/11/26 20:32:18 plearner Exp $ 
+   * $Id: openString.cc,v 1.2 2004/12/22 19:38:14 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -42,20 +42,12 @@
 
 
 #include "openString.h"
-
-#if defined(WIN32)
-// TO DO win32 implementation
-#else
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <plearn/io/StringPStreamBuf.h>
-#endif
+
 
 namespace PLearn {
 using namespace std;
 
-// Put function implementations here.
   PStream openString(string& s, const string& openmode, PStream::mode_t io_formatting)
   {
     PStream st = new StringPStreamBuf(&s, openmode);

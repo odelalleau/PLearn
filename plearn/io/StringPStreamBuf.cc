@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StringPStreamBuf.cc,v 1.1 2004/10/15 21:14:00 plearner Exp $ 
+   * $Id: StringPStreamBuf.cc,v 1.2 2004/12/22 19:38:14 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -70,6 +70,8 @@ using namespace std;
 
   StringPStreamBuf::~StringPStreamBuf()
   {
+    flush();
+    
     if(own_string && st!=0)
       delete st;
   }

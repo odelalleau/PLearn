@@ -36,13 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: AutoSDBVMatrix.cc,v 1.8 2004/07/07 17:29:59 tihocan Exp $
+   * $Id: AutoSDBVMatrix.cc,v 1.9 2004/12/22 19:38:12 chrish42 Exp $
    * AUTHOR: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "AutoSDBVMatrix.h"
-//#include "stringutils.h"
+#include <plearn/io/load_and_save.h>
 
 
 namespace PLearn {

@@ -1,8 +1,8 @@
 // -*- C++ -*-
 
-// FdPStreamBuf.cc
+// PrPStreamBuf.cc
 //
-// Copyright (C) 2004 Pascal Vincent 
+// Copyright (C) 2004 Christian Hudon 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,53 +33,55 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FdPStreamBuf.cc,v 1.2 2004/12/22 19:38:13 chrish42 Exp $ 
+   * $Id: PrPStreamBuf.cc,v 1.1 2004/12/22 19:38:14 chrish42 Exp $ 
    ******************************************************* */
 
-// Authors: Pascal Vincent
+// Authors: Christian Hudon
 
-/*! \file FdPStreamBuf.cc */
+/*! \file PrPStreamBuf.cc */
 
 
-#include "FdPStreamBuf.h"
-#include <unistd.h>
+#include "PrPStreamBuf.h"
+#include <mozilla/nspr/prio.h>
 
 namespace PLearn {
 using namespace std;
 
-  FdPStreamBuf::FdPStreamBuf(int in_fd, int out_fd,
+  PrPStreamBuf::PrPStreamBuf(PRFileDesc* in_, PRFileDesc* out_,
                              bool own_in_, bool own_out_)
-    :PStreamBuf(in_fd>=0, out_fd>=0, 4096, 4096, default_ungetsize), 
-     in(in_fd), out(out_fd), own_in(own_in_), own_out(own_out_)
+    : PStreamBuf(in_ != 0, out_ != 0, 4096, 4096, default_ungetsize), 
+      in(in_), out(out_), own_in(own_in_), own_out(own_out_)
   {}
 
-  FdPStreamBuf::~FdPStreamBuf()
+  PrPStreamBuf::~PrPStreamBuf()
   {
+    const bool in_and_out_equal = (in == out);
+    
     flush();
-    if(in>=0 && own_in)
+    if (in && own_in)
       {
-        ::close(in);
-        in = -1;
+        PR_Close(in);
+        in = 0;
       }
-    if(out>=0 && own_out)
+    if (out && own_out)
       {
-        ::close(out);
-        out = -1;
+        if (!in_and_out_equal)
+          PR_Close(out);
+        out = 0;
       }
   }
 
-  FdPStreamBuf::streamsize FdPStreamBuf::read_(char* p, streamsize n)
+  PrPStreamBuf::streamsize PrPStreamBuf::read_(char* p, streamsize n)
   {
-    return ::read(in, p, n);
+    return PR_Read(in, p, n);
   }
 
   //! writes exactly n characters from p (unbuffered, must flush)
-  void FdPStreamBuf::write_(const char* p, streamsize n)
+  void PrPStreamBuf::write_(const char* p, streamsize n)
   {
-    streamsize nwritten = ::write(out, p, n);
-    if(nwritten!=n)
-      PLERROR("In FdPStreamBuf::write_ failed to write the requested number of bytes");
-    // fsync(out);
+    streamsize nwritten = ::PR_Write(out, p, n);
+    if (nwritten != n)
+      PLERROR("In PrPStreamBuf::write_ failed to write the requested number of bytes");
   }
 
 } // end of namespace PLearn

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FdPStreamBuf.h,v 1.1 2004/08/31 17:20:36 plearner Exp $ 
+   * $Id: FdPStreamBuf.h,v 1.2 2004/12/22 19:38:13 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -67,8 +67,8 @@ protected:
 
 public:
 
-  FdPStreamBuf(int in_fd=-1, int out_fd=-1, bool own_in_=false, bool own_out_=false,
-               streamsize inbuf_capacity=1000, streamsize outbuf_capacity=1000, streamsize unget_capacity=100);
+  FdPStreamBuf(int in_fd=-1, int out_fd=-1,
+               bool own_in_=false, bool own_out_=false);
   virtual ~FdPStreamBuf();
 
 protected:

@@ -1,8 +1,8 @@
 // -*- C++ -*-
 
-// FdPStreamBuf.cc
+// PrPStreamBuf.h
 //
-// Copyright (C) 2004 Pascal Vincent 
+// Copyright (C) 2004 Christian Hudon 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,53 +33,57 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FdPStreamBuf.cc,v 1.2 2004/12/22 19:38:13 chrish42 Exp $ 
+   * $Id: PrPStreamBuf.h,v 1.1 2004/12/22 19:38:14 chrish42 Exp $ 
    ******************************************************* */
 
-// Authors: Pascal Vincent
+// Authors: Christian Hudon
 
-/*! \file FdPStreamBuf.cc */
+/*! \file PrPStreamBuf.h */
 
 
-#include "FdPStreamBuf.h"
-#include <unistd.h>
+#ifndef PrPStreamBuf_INC
+#define PrPStreamBuf_INC
+
+#include "PStreamBuf.h"
+
+class PRFileDesc;
+
 
 namespace PLearn {
-using namespace std;
 
-  FdPStreamBuf::FdPStreamBuf(int in_fd, int out_fd,
-                             bool own_in_, bool own_out_)
-    :PStreamBuf(in_fd>=0, out_fd>=0, 4096, 4096, default_ungetsize), 
-     in(in_fd), out(out_fd), own_in(own_in_), own_out(own_out_)
-  {}
+/** An implementation of the PStreamBuf interface using Mozilla's
+    NSPR library. */
+class PrPStreamBuf: public PStreamBuf
+{
 
-  FdPStreamBuf::~FdPStreamBuf()
-  {
-    flush();
-    if(in>=0 && own_in)
-      {
-        ::close(in);
-        in = -1;
-      }
-    if(out>=0 && own_out)
-      {
-        ::close(out);
-        out = -1;
-      }
-  }
+private:
+  
+  typedef PStreamBuf inherited;
 
-  FdPStreamBuf::streamsize FdPStreamBuf::read_(char* p, streamsize n)
-  {
-    return ::read(in, p, n);
-  }
+protected:
+  // *********************
+  // * protected options *
+  // *********************
+
+  PRFileDesc* in;   //<! input NSPR file descriptor (0 if no input)
+  PRFileDesc* out;  //<! output NSPR file descriptor (0 if no output)
+  bool own_in, own_out; //<! true if {in|out} should be closed by this object upon destruction.
+
+public:
+
+  PrPStreamBuf(PRFileDesc* in=0, PRFileDesc* out=0,
+               bool own_in_=false, bool own_out_=false)
+  virtual ~PrPStreamBuf();
+
+protected:
+
+  virtual streamsize read_(char* p, streamsize n);
 
   //! writes exactly n characters from p (unbuffered, must flush)
-  void FdPStreamBuf::write_(const char* p, streamsize n)
-  {
-    streamsize nwritten = ::write(out, p, n);
-    if(nwritten!=n)
-      PLERROR("In FdPStreamBuf::write_ failed to write the requested number of bytes");
-    // fsync(out);
-  }
+  virtual void write_(const char* p, streamsize n);
+
+};
 
 } // end of namespace PLearn
+
+#endif

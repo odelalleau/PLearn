@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.33 2004/09/14 16:04:35 chrish42 Exp $
+   * $Id: Object.cc,v 1.34 2004/12/22 19:38:12 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -45,8 +45,9 @@
 #include "Object.h"
 #include "stringutils.h"    //!< For removeblanks.
 #include <plearn/io/fileutils.h>
+#include <plearn/io/load_and_save.h>
+#include <plearn/io/openFile.h>
 #include "TypeFactory.h"
-//#include <iostream>
 
 #include <algorithm>
 
