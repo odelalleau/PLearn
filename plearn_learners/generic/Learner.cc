@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.cc,v 1.23 2005/02/01 14:43:27 tihocan Exp $
+   * $Id: Learner.cc,v 1.24 2005/02/04 15:11:21 tihocan Exp $
    ******************************************************* */
 
 #include "Learner.h"
@@ -131,12 +131,16 @@ string Learner::basename() const
         PLWARNING("You should call setTrainingSet at the beginning of the train method in class %s ... Using 'unknown' as alias for now...", classname().c_str());
       return expdir + "unknown";
     }
+  /* Aliases are now removed.
   else if(train_set->getAlias().empty())
     {
         //PLWARNING("The training set has no alias defined for it (you could call setAlias(...)) Using 'unknown' as alias");
       return expdir + "unknown";
     }
   return expdir+train_set->getAlias();
+  */
+  PLERROR("In Learner::basename - The alias system is now out-of-order, update your code !");
+  return "";
 }
 
 
@@ -325,10 +329,14 @@ void Learner::openTestResultsStreams()
   test_results_streams.resize(n);
   for(int k=0; k<n; k++)
     {
+      PLERROR("In Learner::openTestResultsStreams - Come on, do not use this class anymore, aliases are out-of-order");
+      string filename = ""; // Dummy string to make the compiler happy.
+      /*
       string alias = test_sets[k]->getAlias();
       // if(alias.empty())
       //   PLERROR("In Learner::openTestResultsStreams testset #%d has no defined alias",k);
       string filename = alias.empty() ? string("/dev/null") : expdir+alias+".results";
+      */
       test_results_streams[k] = new ofstream(filename.c_str(), ios::out|ios::app);
       ostream& out = *test_results_streams[k];
       if(out.bad())
@@ -427,8 +435,9 @@ bool Learner::measure(int step, const Vec& costs)
     {
       test_results[n] = test(test_sets[n]);
       if ((!PLMPI::synchronized && each_cpu_saves_its_errors) || PLMPI::rank==0)
-        outputResultLineToFile(basename()+"."+test_sets[n]->getAlias()+".hist.results",test_results[n],true,
-                                   join(testResultsNames()," "));
+        PLERROR("In Learner::measure - Aliases are gone, so am I !");
+       // outputResultLineToFile(basename()+"."+test_sets[n]->getAlias()+".hist.results",test_results[n],true,
+       //                           join(testResultsNames()," "));
     }
 
     if (ntestsets>0 && earlystop_testsetnum>=0) // are we doing early stopping?
@@ -482,9 +491,12 @@ bool Learner::measure(int step, const Vec& costs)
           PLearn::save(fname,*this);
           // update .results file
           if ((!PLMPI::synchronized && each_cpu_saves_its_errors) || PLMPI::rank==0)
+            PLERROR("In Learner::measure - Aliases are gone, so am I !");
+            /*
             for (int n=0; n<ntestsets; n++) // looping over test sets
               outputResultLineToFile(basename()+"."+test_sets[n]->getAlias()+".results",test_results[n],false,
                                      join(testResultsNames()," "));
+            */
           cout << "Result for benchmark is: " << test_results << endl;
         }
       }
@@ -499,9 +511,12 @@ bool Learner::measure(int step, const Vec& costs)
     else
       // save tests in .results
       if ((!PLMPI::synchronized && each_cpu_saves_its_errors) || PLMPI::rank==0)
+        PLERROR("In Learner::measure - Aliases are gone, so am I !");
+        /*
         for (int n=0; n<ntestsets; n++) // looping over test sets
           outputResultLineToFile(basename()+"."+test_sets[n]->getAlias()+".results",test_results[n],false,
                                  join(testResultsNames()," "));
+        */
   }
 
   for (int i=0; i<measurers.size(); i++)
@@ -655,7 +670,8 @@ Vec Learner::test(VMat test_set, const string& save_test_outputs, const string& 
     costs = new FileVMatrix(save_test_costs, test_set.length(), ncostfuncs);
 
   int l = test_set.length();
-  ProgressBar progbar(vlog, "Testing " + test_set->getAlias(), l);
+  ProgressBar progbar(vlog, "Testing this old deprecated Learner you should not be using anymore", l);
+  //  + test_set->getAlias(), l); // Aliases are deprecated.
   // ProgressBar progbar(cerr, "Testing " + test_set->getAlias(), l);
   // ProgressBar progbar(nullout(), "Testing " + test_set->getAlias(), l);
 
