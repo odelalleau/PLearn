@@ -9,7 +9,7 @@ class Cluster(PyPLearnObject):
         expdir_pattern           = "expdir_.*"
         command_format           = 'cluster --execute "%s" --force --wait --duree=120h'
         max_nmachines            = 15
-        sleep_time               = 120
+        sleep_time               = 90
         logdir_path              = "LOGS"
         wait_for_expdir_creation = True
 
