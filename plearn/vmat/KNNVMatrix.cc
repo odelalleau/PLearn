@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNVMatrix.cc,v 1.8 2004/02/28 20:27:58 tihocan Exp $ 
+   * $Id: KNNVMatrix.cc,v 1.9 2004/03/01 18:33:20 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -277,10 +277,14 @@ void KNNVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 
   deepCopyField(nn, copies);
   deepCopyField(pij, copies);
-  deepCopyField(k_nn_mat, copies);
+  // Currently commented out because some of the VMats used for k_nn_mat
+  // may not implement deep copy correctly.
+  // TODO Put back when other VMats are fine.
+//  deepCopyField(k_nn_mat, copies);
   deepCopyField(kernel_pij, copies);
 
-  // PLERROR("KNNVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+  PLWARNING("In KNNVMatrix::makeDeepCopyFromShallowCopy - k_nn_mat will not be deep copied");
+  //  PLERROR("KNNVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 //////////////////////
