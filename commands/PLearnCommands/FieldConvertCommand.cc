@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: FieldConvertCommand.cc,v 1.35 2004/09/27 13:32:42 tihocan Exp $
+ * $Id: FieldConvertCommand.cc,v 1.36 2004/09/28 19:32:31 tihocan Exp $
  ******************************************************* */
 
 #include "FieldConvertCommand.h"
@@ -199,8 +199,10 @@ void FieldConvertCommand::run(const vector<string> & args)
     }
     pb.close();
     cout << "Removed " << n_removed << " samples that were missing more than " << max_count << " fields." << endl;
-    if (n_removed > 0)
+    if (n_removed > 0) {
       vm = new SelectRowsVMatrix(vm_orig, to_keep);
+      vm->setMetaDataDir(newFilename("/tmp", "select_rows_temp_dir", true));
+    }
     else
       vm = vm_orig;
   } else {
@@ -258,9 +260,8 @@ void FieldConvertCommand::run(const vector<string> & args)
       if(leftpart.size()>1)
       {
         // we have a range
-        int a = toint(leftpart[0]);
-        int b = toint(leftpart[1]);
-
+        int a = vm->fieldIndex(leftpart[0]);
+        int b = vm->fieldIndex(leftpart[1]);
         for(int j=a;j<=b;j++)
           force[j]=rpart;
       }
