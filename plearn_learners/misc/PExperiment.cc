@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PExperiment.cc,v 1.4 2003/06/03 14:52:11 plearner Exp $ 
+   * $Id: PExperiment.cc,v 1.5 2003/06/03 20:54:33 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -312,15 +312,15 @@ Vec PTester::perform(bool dont_set_training_set)
   VMat split_stats_vm;   // the vmat in which to save per split result stats
   if(expdir!="" && report_stats)
     {
-      saveStringInFile(expdir+"train_cost_names.txt", join(traincostnames,"\n")+"\n"); 
-      saveStringInFile(expdir+"test_cost_names.txt", join(testcostnames,"\n")+"\n"); 
+      saveStringInFile(expdir+"/train_cost_names.txt", join(traincostnames,"\n")+"\n"); 
+      saveStringInFile(expdir+"/test_cost_names.txt", join(testcostnames,"\n")+"\n"); 
 
-      global_stats_vm = new FileVMatrix(expdir+"global_stats.pmat", 1, nstats);
+      global_stats_vm = new FileVMatrix(expdir+"/global_stats.pmat", 1, nstats);
       for(int k=0; k<nstats; k++)
         global_stats_vm->declareField(k,statspecs[k].statName());
       global_stats_vm->saveFieldInfos();
 
-      split_stats_vm = new FileVMatrix(expdir+"split_stats.pmat", nsplits, 1+nstats);
+      split_stats_vm = new FileVMatrix(expdir+"/split_stats.pmat", nsplits, 1+nstats);
       split_stats_vm->declareField(0,"splitnum");
       for(int k=0; k<nstats; k++)
         split_stats_vm->declareField(k+1,statspecs[k].intStatName());

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.cc,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: MemoryVMatrix.cc,v 1.2 2003/06/03 20:54:33 ducharme Exp $
    ******************************************************* */
 
 #include "MemoryVMatrix.h"
@@ -49,14 +49,33 @@ using namespace std;
 
 IMPLEMENT_NAME_AND_DEEPCOPY(MemoryVMatrix);
 
+MemoryVMatrix::MemoryVMatrix() : data(Mat())
+{}
+
+MemoryVMatrix::MemoryVMatrix(const Mat& the_data)
+  :VMatrix(the_data.length(), the_data.width()), data(the_data)
+{}
+
+void MemoryVMatrix::declareOptions(OptionList& ol)
+{
+  declareOption(ol, "data", &MemoryVMatrix::data, OptionBase::buildoption, "The underlying matrix. \n");
+
+  inherited::declareOptions(ol);
+}
+
 void MemoryVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   deepCopyField(data, copies);
 }
 
-MemoryVMatrix::MemoryVMatrix(const Mat& the_data)
-  :VMatrix(the_data.length(), the_data.width()), data(the_data)
+void MemoryVMatrix::build_()
 {}
+
+void MemoryVMatrix::build()
+{
+  inherited::build();
+  build_();
+}
 
 real MemoryVMatrix::get(int i, int j) const
 { return data(i,j); }

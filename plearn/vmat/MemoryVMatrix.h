@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: MemoryVMatrix.h,v 1.2 2003/06/03 20:54:33 ducharme Exp $
    ******************************************************* */
 
 
@@ -51,14 +51,22 @@ using namespace std;
  
 class MemoryVMatrix: public VMatrix
 {
- protected:
+public:
+  typedef VMatrix inherited;
+
   Mat data;
 
- //!  necessary for the deepcopy mechanism 
- protected:
-  MemoryVMatrix() : data(Mat()) {}
+private:
+  //! This does the actual building.
+  // (Please implement in .cc)
+  void build_();
 
- public:
+ //!  necessary for the deepcopy mechanism 
+protected:
+  static void declareOptions(OptionList& ol);
+
+public:
+  MemoryVMatrix();
   MemoryVMatrix(const Mat& the_data);
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;
@@ -79,9 +87,12 @@ class MemoryVMatrix: public VMatrix
   virtual void write(ostream& out) const;
   virtual void oldread(istream& in);
 
+  //! simply calls inherited::build() then build_()
+  virtual void build();
+
   DECLARE_NAME_AND_DEEPCOPY(MemoryVMatrix);
   void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 };
 
-%> // end of namespcae PLearn
+%> // end of namespace PLearn
 #endif

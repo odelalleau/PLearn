@@ -59,7 +59,7 @@ class SequentialLearner: public PLearner
   protected:
  
     int last_train_t; // last value of train_set.length() for which training was actually done
-    int last_test_t; // last value of test_set.length() for which testing was actually done
+    mutable int last_test_t; // last value of test_set.length() for which testing was actually done
 
   public:
 
@@ -69,6 +69,7 @@ class SequentialLearner: public PLearner
     int max_train_len; // max nb of (input,target) pairs actually used for training
     int train_step; // how often we have to re-train a model, (default = 1 = after every time step)
     int horizon; // by how much to offset the target columns wrt the input columns (default = 1)
+    int outputsize_;
 
     // these two fields are used by other classes such as SequentialModelSelector
     // and SequentialValidation and they are filled when the method test is called 
@@ -91,6 +92,9 @@ class SequentialLearner: public PLearner
 
     //! simply calls inherited::build() then build_()
     virtual void build();
+
+    //! Default behaviour: return train_set->targetsize()
+    virtual int outputsize() const;
     
 /*!       *** SUBCLASS WRITING: ***
       Does the actual training. Subclasses must implement this method.
@@ -101,7 +105,7 @@ class SequentialLearner: public PLearner
         - if not, train and update the value of last_train_t
         - in either case, update the value of last_call_train_t
 */
-    virtual void train(VecStatsCollector& train_stats) =0;
+    virtual void train() =0;
  
 /*!       *** SUBCLASS WRITING: ***
       The method should:
@@ -109,19 +113,19 @@ class SequentialLearner: public PLearner
         - save the outputs and the costs in the  predictions & errors
           matrices, beginning at position last_call_train_t
 */
-    virtual void test(VMat testset, VecStatsCollector& test_stats,
-        VMat testoutputs=0, VMat testcosts=0) =0;
+    virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
+        VMat testoutputs=0, VMat testcosts=0) const =0;
 
     virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
-        Vec& output, Vec& costs);
+        Vec& output, Vec& costs) const;
 
     virtual void computeCostsOnly(const Vec& input, const Vec& target,
-        Vec& costs);
+        Vec& costs) const;
 
-    virtual void computeOutput(const Vec& input, Vec& output);
+    virtual void computeOutput(const Vec& input, Vec& output) const;
 
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
-        const Vec& target, Vec& costs);
+        const Vec& target, Vec& costs) const;
 
     virtual void forget();
 

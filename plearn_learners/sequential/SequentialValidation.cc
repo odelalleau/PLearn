@@ -48,7 +48,8 @@ IMPLEMENT_NAME_AND_DEEPCOPY(SequentialValidation);
 
 SequentialValidation::SequentialValidation()
   : init_train_size(1), expdir(""), save_final_model(true), save_initial_model(false),
-    save_test_outputs(false), save_test_costs(false)
+    save_data_sets(false), save_test_outputs(false), save_test_costs(false),
+    save_stat_collectors(false)
 {}
 
 void SequentialValidation::build_()
@@ -80,11 +81,16 @@ void SequentialValidation::declareOptions(OptionList& ol)
   declareOption(ol, "save_initial_model", &SequentialValidation::save_initial_model,
     OptionBase::buildoption, "If true, the initial model will be saved in initial_model.psave. \n");
 
+  declareOption(ol, "save_data_sets", &SequentialValidation::save_data_sets,
+    OptionBase::buildoption, "If true, the data sets (train/test) for each split will be saved. \n");
+
   declareOption(ol, "save_test_outputs", &SequentialValidation::save_test_outputs,
     OptionBase::buildoption, "If true, the outputs of the tests will be saved in test_outputs.pmat \n");
 
   declareOption(ol, "save_test_costs", &SequentialValidation::save_test_costs,
     OptionBase::buildoption, "If true, the costs of the tests will be saved in test_costs.pmat \n");
+
+  declareOption(ol, "save_stat_collectors", &SequentialValidation::save_stat_collectors, OptionBase::buildoption, "If true, stat collectors of each data sets (train/test) will be saved for each split. \n");
 
   inherited::declareOptions(ol);
 }
@@ -110,6 +116,9 @@ void SequentialValidation::run()
   if(!force_mkdir(expdir))
     PLERROR("Could not create experiment directory %s", expdir.c_str());
 
+  // This is to set inputsize() and targetsize()
+  learner->setTrainingSet(dataset);
+
   // Save this experiment description in the expdir (buildoptions only)
   PLearn::save(append_slash(expdir)+"sequential_validation.psave", *this, OptionBase::buildoption);
 
@@ -120,63 +129,84 @@ void SequentialValidation::run()
   int testcostsize = testcostnames.size();
   int outputsize = learner->outputsize();
 
-  // stats for a train on one split
-  VecStatsCollector train_stats;
+  // stats for a test on one split
+  PP<VecStatsCollector> train_stats = new VecStatsCollector();
+  learner->setTrainStatsCollector(train_stats);
 
   // stats for a test on one split
-  VecStatsCollector test_stats;
+  PP<VecStatsCollector> test_stats = new VecStatsCollector();
 
   // stats over all sequence
-  VecStatsCollector sequence_stats;
+  //VecStatsCollector sequence_stats;
 
   // the vmat in which to save results
-  VMat results;
+  //VMat results;
+
+  saveStringInFile(append_slash(expdir)+"train_cost_names.txt", join(traincostnames,"\n")+"\n");
+  saveStringInFile(append_slash(expdir)+"test_cost_names.txt", join(testcostnames,"\n")+"\n");
 
   // filename
-  string fname = append_slash(expdir)+"results.amat";
+  //string fname = append_slash(expdir)+"results.amat";
 
   // fieldnames
+/*
   TVec<string> fieldnames(1,string("sequence_num"));
   fieldnames.append(addprepostfix("train.",traincostnames,".mean"));
   fieldnames.append(addprepostfix("train.",traincostnames,".stddev"));
   fieldnames.append(addprepostfix("test.",testcostnames,".mean"));
   fieldnames.append(addprepostfix("test.",testcostnames,".stddev"));
+*/
 
-  int nfields = fieldnames.size();
+  //int nfields = fieldnames.size();
 
   // the learner horizon
   int horizon = learner->horizon;
  
-  results = new AsciiVMatrix(fname, nfields, fieldnames, "# Special values for sequence_num are: -1 -> MEAN; -2 -> STDERROR; -3 -> STDDEV");
+  //results = new AsciiVMatrix(fname, nfields, fieldnames, "# Special values for sequence_num are: -1 -> MEAN; -2 -> STDERROR; -3 -> STDDEV");
 
-  string learner_expdir = append_slash(expdir)+"subtrain";
-  learner->setExperimentDirectory(learner_expdir);
+  //string learner_expdir = append_slash(expdir)+"subtrain";
+  //learner->setExperimentDirectory(learner_expdir);
   if (save_initial_model)
-    PLearn::save(learner_expdir+"/initial.psave",learner);
+    PLearn::save(append_slash(expdir)+"initial_learner.psave",learner);
 
   for (int t=init_train_size; t<=dataset.length()-horizon; t++)
   {
     VMat sub_train = dataset.subMatRows(0,t); // excludes t, last training pair is (t-1-horizon,t-1)
-    VMat sub_test = dataset.subMatRows(t-1,1+horizon);
+    sub_train->defineSizes(dataset->inputsize(), dataset->targetsize(), dataset->weightsize());
+    VMat sub_test = dataset.subMatRows(0, t+horizon);
+    sub_test->defineSizes(dataset->inputsize(), dataset->targetsize(), dataset->weightsize());
 
+    string splitdir = append_slash(expdir)+"train_t="+tostring(t)+"/";
+    if (save_data_sets)
+      PLearn::save(splitdir+"training_set.psave", sub_train);
+
+    // Train
     learner->forget(); // PAS CERTAIN!  Doit-on faire un forget a chaque t?
-    train_stats.forget();
     learner->setTrainingSet(sub_train);
-    learner->train(train_stats);
+    learner->train();
+    //train_stats.finalize();
+    if (save_stat_collectors)
+      PLearn::save(splitdir+"train_stats.psave",train_stats);
+    if (save_final_model)
+      PLearn::save(splitdir+"final_learner.psave",learner);
 
+    // Test
     VMat test_outputs;
     VMat test_costs;
-
     if (save_test_outputs)
-      test_outputs = new FileVMatrix(learner_expdir+"/test_outputs.pmat",0,outputsize);
+      test_outputs = new FileVMatrix(splitdir+"test_outputs.pmat",0,outputsize);
     if (save_test_costs)
-      test_costs = new FileVMatrix(learner_expdir+"/test_costs.pmat",0,testcostsize);
-    if (save_final_model)
-      PLearn::save(learner_expdir+"final_learner.psave",learner);
+      test_costs = new FileVMatrix(splitdir+"test_costs.pmat",0,testcostsize);
 
-    test_stats.forget();
+    if (save_data_sets)
+      PLearn::save(splitdir+"test_set.psave", sub_test);
+
     learner->test(sub_test, test_stats, test_outputs, test_costs);
+    //test_stats.finalize();
+    if (save_stat_collectors)
+      PLearn::save(splitdir+"test_stats.psave",test_stats);
 
+/*
     Vec sequence_res(1,real(t));
     sequence_res.append(train_stats.getMean());
     sequence_res.append(train_stats.getStdDev());
@@ -185,8 +215,10 @@ void SequentialValidation::run()
 
     sequence_stats.update(sequence_res);
     results->appendRow(sequence_res);
+*/
   }
 
+/*
   // MEAN
   Vec resultrow = sequence_stats.getMean();
   resultrow[0] = -1;
@@ -201,6 +233,7 @@ void SequentialValidation::run()
   resultrow << sequence_stats.getStdDev();
   resultrow[0] = -3;
   results->appendRow(resultrow);
+*/
 
   //(output summary statistics of test performances in model.errors)
 }

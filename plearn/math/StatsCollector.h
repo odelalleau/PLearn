@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.14 2003/06/02 17:41:17 genji256 Exp $
+   * $Id: StatsCollector.h,v 1.15 2003/06/03 20:54:24 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -108,6 +108,11 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     //! (empty if maxnvalues=0)
     map<real,StatsCollectorCounts> counts; 
       
+  private:
+  //! This does the actual building.
+  // (Please implement in .cc)
+  void build_();
+
   protected: 
     //! Declares this class' options
     static void declareOptions(OptionList& ol);
@@ -131,6 +136,9 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
 
     //! currently understood statnames are E (mean), V (variance), STDDEV, MIN, MAX
     real getStat(const string& statname) const;
+
+    //! simply calls inherited::build() then build_()
+    virtual void build();
 
     //! clears all statistics, allowing to restart collecting them
     void forget();

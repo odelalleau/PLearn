@@ -36,6 +36,7 @@
 
 
 #include "MovingAverage.h"
+#include "TMat_maths_impl.h"
 
 namespace PLearn <%
 using namespace std;
@@ -53,14 +54,6 @@ void MovingAverage::build_()
     PLERROR("In MovingAverage::build_()  Empty cost_funcs : must at least specify one cost function!");
   if (window_length < 1)
     PLERROR("In MovingAverage::build_()  window_length has not been set!");
-  if (output.length() != target.length())
-    PLERROR("The output and target vectors don't have the same length.");
-
-  input.resize(0);
-  target.resize(targetsize());
-  output.resize(targetsize());
-  cost.resize(targetsize());
-  all_targets.resize(window_length, targetsize());
 }
 
 void MovingAverage::build()
@@ -80,17 +73,24 @@ void MovingAverage::declareOptions(OptionList& ol)
   inherited::declareOptions(ol);
 }
 
-void MovingAverage::train(VecStatsCollector& train_stats)
+void MovingAverage::train()
 {
   ProgressBar* pb;
+
+  static Vec input(0);
+  static Vec target(targetsize());
+  static Vec output(outputsize());
+  static Vec cost(targetsize());
+  static Mat all_targets;
 
   int target_pos = inputsize();
   int start = MAX(window_length-1, last_train_t);
   if (report_progress)
     pb = new ProgressBar("Training MovingAverage learner", train_set.length()-start);
+  train_stats->forget();
   for (int t=start; t<train_set.length(); t++)
   {
-    all_targets = train_set.subMat(t-window_length, target_pos, window_length+1, targetsize());
+    all_targets = train_set.subMat(t-window_length+1, target_pos, window_length, targetsize());
     columnMean(all_targets,output);
     predictions(t) << output;
     if (t >= horizon)
@@ -101,34 +101,41 @@ void MovingAverage::train(VecStatsCollector& train_stats)
       {
         computeCostsFromOutputs(input, output, target, cost);
         errors(t) << cost;
-        train_stats.update(cost);
+        train_stats->update(cost);
       }
     }
     if (pb) pb->update(t-start);
   }
   last_train_t = train_set.length();
 
-  train_stats.finalize();
+  train_stats->finalize();
 
   if (pb) delete pb;
 }
  
-void MovingAverage::test(VMat testset, VecStatsCollector& test_stats,
-    VMat testoutputs, VMat testcosts)
+void MovingAverage::test(VMat testset, PP<VecStatsCollector> test_stats,
+    VMat testoutputs, VMat testcosts) const
 {
   ProgressBar* pb;
+
+  static Vec input(0);
+  static Vec target(targetsize());
+  static Vec output(outputsize());
+  static Vec cost(targetsize());
+  static Mat all_targets;
 
   int start = MAX(window_length-1, last_test_t);
   start = MAX(last_train_t-1,start);
   int target_pos = inputsize();
   if (report_progress)
     pb = new ProgressBar("Testing MovingAverage learner", testset.length()-start);
+  test_stats->forget();
   for (int t=start; t<testset.length(); t++)
   {
-    all_targets = testset.subMat(t-window_length, target_pos, window_length+1, targetsize());
+    all_targets = testset.subMat(t-window_length+1, target_pos, window_length, targetsize()).toMat();
     columnMean(all_targets,output);
     predictions(t) << output;
-    if (testoutputs) testoutputs->putOrAppendRow(t, output);
+    if (testoutputs) testoutputs->appendRow(output);
     if (t >= horizon)
     {
       output = predictions(t-horizon);
@@ -137,21 +144,21 @@ void MovingAverage::test(VMat testset, VecStatsCollector& test_stats,
       {
         computeCostsFromOutputs(input, output, target, cost);
         errors(t) << cost;
-        if (testcosts) testcosts->putOrAppendRow(t, cost);
-        test_stats.update(cost);
+        if (testcosts) testcosts->appendRow(cost);
+        test_stats->update(cost);
       }
     }
     if (pb) pb->update(t-start);
   }
   last_test_t = testset.length();
 
-  test_stats.finalize();
+  test_stats->finalize();
 
   if (pb) delete pb;
 }
 
 void MovingAverage::computeCostsFromOutputs(const Vec& inputs, const Vec& outputs,
-    const Vec& targets, Vec& costs)
+    const Vec& targets, Vec& costs) const
 {
   if (cost_funcs.size() != 1)
     PLERROR("There is only 1 cost_funcs defined yet.");

@@ -59,8 +59,10 @@ class SequentialValidation: public Object
     string expdir; // the directory where everything will be saved
     bool save_final_model;
     bool save_initial_model;
+    bool save_data_sets;
     bool save_test_outputs;
     bool save_test_costs;
+    bool save_stat_collectors;
 
   private:
     //! This does the actual building

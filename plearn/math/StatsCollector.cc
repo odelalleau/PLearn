@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.13 2003/06/02 17:58:07 genji256 Exp $
+   * $Id: StatsCollector.cc,v 1.14 2003/06/03 20:54:24 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -105,6 +105,18 @@ void StatsCollector::declareOptions(OptionList& ol)
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
+}
+
+void StatsCollector::build_()
+{
+  if(maxnvalues>0)
+    counts[FLT_MAX] = StatsCollectorCounts();
+}
+
+void StatsCollector::build()
+{
+  inherited::build();
+  build_();
 }
 
 string StatsCollector::help()

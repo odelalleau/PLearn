@@ -82,6 +82,9 @@ void SequentialLearner::declareOptions(OptionList& ol)
   declareOption(ol, "horizon", &SequentialLearner::horizon,
     OptionBase::buildoption, " by how much to offset the target columns wrt the input columns \n");
 
+  declareOption(ol, "outputsize", &SequentialLearner::outputsize_,
+    OptionBase::buildoption, " the outputsize \n");
+
   inherited::declareOptions(ol);
 }
 
@@ -93,19 +96,23 @@ void SequentialLearner::forget()
   last_test_t = -1;
 }
 
+//! Returns train_set->targetsize()
+int SequentialLearner::outputsize() const
+{ return outputsize_; }
+
 void SequentialLearner::computeOutputAndCosts(const Vec& input,
-    const Vec& target, Vec& output, Vec& costs)
+    const Vec& target, Vec& output, Vec& costs) const
 { PLERROR("The method computeOutputAndCosts is not defined for this SequentialLearner"); }
 
 void SequentialLearner::computeCostsOnly(const Vec& input, const Vec& target,
-    Vec& costs)
+    Vec& costs) const
 { PLERROR("The method computeCostsOnly is not defined for this SequentialLearner"); }
 
-void SequentialLearner::computeOutput(const Vec& input, Vec& output)
+void SequentialLearner::computeOutput(const Vec& input, Vec& output) const
 { PLERROR("The method computeOutput is not defined for this SequentialLearner"); }
 
 void SequentialLearner::computeCostsFromOutputs(const Vec& input,
-    const Vec& output, const Vec& target, Vec& costs)
+    const Vec& output, const Vec& target, Vec& costs) const
 { PLERROR("The method computeCostsFromOutputs is not defined for this SequentialLearner"); }
 
 %> // end of namespace PLearn

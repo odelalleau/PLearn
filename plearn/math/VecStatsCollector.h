@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.h,v 1.7 2003/05/26 04:12:43 plearner Exp $ 
+   * $Id: VecStatsCollector.h,v 1.8 2003/06/03 20:54:24 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.h */
@@ -90,6 +90,9 @@ public:
   
   int length() const { return stats.length(); }
   int size() const { return length(); }
+
+  //! simply calls inherited::build() then build_()
+  virtual void build();
 
   //! clears all previously accumulated statistics
   void forget();

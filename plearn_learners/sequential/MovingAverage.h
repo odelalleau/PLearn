@@ -48,14 +48,6 @@ using namespace std;
 
 class MovingAverage: public SequentialLearner
 {
-  protected:
- 
-    Vec input;
-    Vec target;
-    Vec output;
-    Vec cost;
-    Mat all_targets;
-  
   public:
 
     typedef SequentialLearner inherited;
@@ -79,13 +71,13 @@ class MovingAverage: public SequentialLearner
     //! simply calls inherited::build() then build_()
     virtual void build();
     
-    virtual void train(VecStatsCollector& train_stats);
+    virtual void train();
  
-    virtual void test(VMat testset, VecStatsCollector& test_stats,
-        VMat testoutputs=0, VMat testcosts=0);
+    virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
+        VMat testoutputs=0, VMat testcosts=0) const;
 
     virtual void computeCostsFromOutputs(const Vec& inputs, const Vec& outputs,
-        const Vec& targets, Vec& costs);
+        const Vec& targets, Vec& costs) const;
 
     virtual TVec<string> getTrainCostNames() const;
     virtual TVec<string> getTestCostNames() const;
