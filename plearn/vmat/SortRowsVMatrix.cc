@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SortRowsVMatrix.cc,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: SortRowsVMatrix.cc,v 1.3 2004/04/05 23:05:30 morinf Exp $
    ******************************************************* */
 
 #include "SubVMatrix.h"
@@ -144,9 +144,11 @@ void SortRowsVMatrix::sortRows(VMat& m, TVec<int>& indices, TVec<int>& sort_colu
 void SortRowsVMatrix::build_()
 {
   // Construct the indices vector.
-  indices = TVec<int>(0, distr.length()-1, 1);
-  sortRows(distr, indices, sort_columns, 0, distr->length()-1, 0, increasing_order);
-  inherited::build(); // Since we have just changed the indices.
+  if (distr) {
+    indices = TVec<int>(0, distr.length()-1, 1);
+    sortRows(distr, indices, sort_columns, 0, distr->length()-1, 0, increasing_order);
+    inherited::build(); // Since we have just changed the indices.
+  }
   /*real best;
   real jval;
   int tmp;

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.h,v 1.6 2004/03/30 20:09:05 tihocan Exp $
+   * $Id: PLearnerOutputVMatrix.h,v 1.7 2004/04/05 22:59:17 morinf Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -118,6 +118,8 @@ public:
   PLEARN_DECLARE_OBJECT(PLearnerOutputVMatrix);
 
 };
+
+DECLARE_OBJECT_PTR(PLearnerOutputVMatrix);
 
 } // end of namespace PLearn
 #endif

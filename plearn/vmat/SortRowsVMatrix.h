@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: SortRowsVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
+   * $Id: SortRowsVMatrix.h,v 1.4 2004/04/05 23:05:30 morinf Exp $
    ******************************************************* */
 
 
@@ -83,6 +83,8 @@ private:
       int istart, int iend, int colstart, bool increasing_order);
 
 };
+
+DECLARE_OBJECT_PTR(SortRowsVMatrix);
 
 } // end of namespace PLearn
 #endif

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ProcessingVMatrix.h,v 1.4 2004/03/23 23:08:08 morinf Exp $ 
+   * $Id: ProcessingVMatrix.h,v 1.5 2004/04/05 23:00:35 morinf Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -107,6 +107,8 @@ public:
   PLEARN_DECLARE_OBJECT(ProcessingVMatrix);
 
 };
+
+DECLARE_OBJECT_PTR(ProcessingVMatrix);
 
 } // end of namespace PLearn
 #endif

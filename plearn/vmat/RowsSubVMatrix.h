@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RowsSubVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $ 
+   * $Id: RowsSubVMatrix.h,v 1.4 2004/04/05 23:03:05 morinf Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -98,6 +98,8 @@ public:
   PLEARN_DECLARE_OBJECT(RowsSubVMatrix);
 
 };
+
+DECLARE_OBJECT_PTR(RowsSubVMatrix);
 
 } // end of namespace PLearn
 #endif

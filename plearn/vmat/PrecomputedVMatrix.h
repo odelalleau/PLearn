@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrecomputedVMatrix.h,v 1.4 2004/03/23 23:08:08 morinf Exp $ 
+   * $Id: PrecomputedVMatrix.h,v 1.5 2004/04/05 23:00:03 morinf Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -104,6 +104,8 @@ public:
   PLEARN_DECLARE_OBJECT(PrecomputedVMatrix);
 
 };
+
+DECLARE_OBJECT_PTR(PrecomputedVMatrix);
 
 } // end of namespace PLearn
 #endif

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RowsSubVMatrix.cc,v 1.2 2004/02/20 21:14:44 chrish42 Exp $ 
+   * $Id: RowsSubVMatrix.cc,v 1.3 2004/04/05 23:03:05 morinf Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -78,7 +78,8 @@ void RowsSubVMatrix::declareOptions(OptionList& ol)
 
 void RowsSubVMatrix::build_()
 {
-  setMetaInfoFromSource();
+  if (source)
+    setMetaInfoFromSource();
 }
 
 // ### Nothing to add here, simply calls build_

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.h,v 1.5 2004/03/23 23:08:08 morinf Exp $
+   * $Id: MemoryVMatrix.h,v 1.6 2004/04/05 22:58:23 morinf Exp $
    ******************************************************* */
 
 
@@ -94,6 +94,8 @@ public:
   PLEARN_DECLARE_OBJECT(MemoryVMatrix);
   void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 };
+
+DECLARE_OBJECT_PTR(MemoryVMatrix);
 
 } // end of namespace PLearn
 #endif
