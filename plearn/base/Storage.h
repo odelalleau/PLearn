@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Storage.h,v 1.10 2004/02/28 17:56:36 tihocan Exp $
+   * $Id: Storage.h,v 1.11 2004/03/09 16:28:39 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -300,6 +300,9 @@ public:
       
       //!  Otherwise call the copy constructor to obtain a copy
       Storage<T>* deep_copy = new Storage<T>(*this);
+      for (int i = 0; i < size(); i++) {
+        deepCopyField(deep_copy->data[i], copies);
+      }
       //!  Put the copy in the map
       if (usage() > 1)
         copies[this] = deep_copy;
