@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.cc,v 1.20 2004/03/04 18:37:18 tihocan Exp $
+   * $Id: MultiInstanceNNet.cc,v 1.21 2004/03/04 19:18:20 nova77 Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/MultiInstanceNNet.h */
@@ -378,7 +378,7 @@ TVec<string> MultiInstanceNNet::getTrainCostNames() const
 
 TVec<string> MultiInstanceNNet::getTestCostNames() const
 { 
-  TVec<string> names(4);
+  TVec<string> names(3);
   names[0] = "NLL";
   names[1] = "class_error";
   names[2] = "lift_output";
