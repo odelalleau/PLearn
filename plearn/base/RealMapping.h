@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: RealMapping.h,v 1.16 2004/02/20 21:11:42 chrish42 Exp $
+   * $Id: RealMapping.h,v 1.17 2004/02/26 20:05:37 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -151,8 +151,8 @@ PStream& operator>>(PStream& in, RealRange &x);
        other_mapsto(MISSING_VALUE)
     {}
 
-    int size() const { return mapping.size(); }
-    int length() const { return mapping.size(); }
+    int size() const { return (int)mapping.size(); }
+    int length() const { return (int)mapping.size(); }
 
     //! Removes all entries in mapping.  Does not change other params.
     inline void clear() { mapping.clear(); }

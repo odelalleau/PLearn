@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PStreamBuf.h,v 1.4 2004/02/20 21:11:44 chrish42 Exp $ 
+   * $Id: PStreamBuf.h,v 1.5 2004/02/26 20:04:42 nova77 Exp $ 
    ******************************************************* */
 
 /*! \file PStreamBuf.h */
@@ -165,7 +165,7 @@ inline streamsize read(char* p, streamsize n)
 {
   streamsize nleft = n;
 
-  streamsize inbuf_n = inbuf_end-inbuf_p;
+  streamsize inbuf_n = (streamsize)(inbuf_end-inbuf_p);
   if(inbuf_n) // First copy what's left in the buffer
     {
       streamsize k = nleft<inbuf_n ?nleft :inbuf_n;
@@ -241,7 +241,7 @@ inline streamsize read(char* p, streamsize n)
 
   inline void flush()
   {
-    streamsize n = outbuf_p-outbuf;
+    streamsize n = (streamsize)(outbuf_p-outbuf);
     if(n)
       {
         write_(outbuf, n);
@@ -258,7 +258,7 @@ inline streamsize read(char* p, streamsize n)
 
   inline void write(char* p, streamsize n)
   {
-    streamsize bufrem = outbuf_end-outbuf_p;
+    streamsize bufrem = (streamsize)(outbuf_end-outbuf_p);
     streamsize nn = n<bufrem ?n :bufrem;
     memcpy(outbuf_p, p, nn);
     p += nn;

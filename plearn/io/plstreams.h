@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: plstreams.h,v 1.7 2004/02/20 21:11:44 chrish42 Exp $
+   * $Id: plstreams.h,v 1.8 2004/02/26 20:04:42 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,6 +50,10 @@
 
 #ifndef plstreams_INC
 #define plstreams_INC
+
+// norman: .NET must have at least one stl inclusion to resolve the
+//         std namespace
+#include <string>
 
 namespace PLearn {
 using namespace std;
