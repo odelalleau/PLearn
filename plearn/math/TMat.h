@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.8 2002/11/30 04:27:33 plearner Exp $
+   * $Id: TMat.h,v 1.9 2002/12/05 21:11:05 jauvinc Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -95,6 +95,7 @@ template <class T> class TMat;
     typedef T value_type;
     typedef int size_type;
     typedef T* iterator;
+    typedef const T* const_iterator;
 
       inline iterator begin() const 
       { 
@@ -822,6 +823,7 @@ public:
   typedef T value_type;
   typedef int size_type;
   typedef TMatElementIterator<T> iterator; // iterator over elements
+  typedef TMatElementIterator<T> const_iterator; // iterator over elements
   typedef T* compact_iterator; // super-efficient iterator over elements but works reliably only for compact matrices
   typedef T* rowelements_iterator; // iterator over elements of a particular row
 

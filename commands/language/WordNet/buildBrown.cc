@@ -34,6 +34,10 @@ int main(int argc, char** argv)
   int n_tagged_words = 0;
   int n_non_tagged_words = 0;
 
+  ontology.extractWord(OOV_TAG, ALL_WN_TYPE, false, false, false);
+  ontology.extractWord(NUMERIC_TAG, ALL_WN_TYPE, false, false, false);
+  ontology.extractWord(PROPER_NOUN_TAG, ALL_WN_TYPE, false, false, false);
+
   ////////////////////////////////////
   //////////// T A G G E D ///////////
   ////////////////////////////////////
@@ -42,6 +46,7 @@ int main(int argc, char** argv)
     input_if.open(files[i].c_str());
 
     //cout << "processing file " << files[i] << endl;
+    //cout << "voc_size = " << ontology.getAllWords().size() << endl;
 
     while (!input_if.eof())
     {
@@ -110,22 +115,21 @@ int main(int argc, char** argv)
       bool human_ambig = ((wnsn_str.find(';', 0) != string::npos) && (lexsn.find(';', 0) != string::npos)); 
       actual_word = lowerstring(actual_word);
 
-      cout << actual_word << endl;
+      //cout << actual_word << endl;
+
+      if (!ontology.containsWord(actual_word))
+        ontology.extractWord(actual_word, ALL_WN_TYPE, true, true, false);
+      word_id = ontology.getWordId(actual_word);
 
       if (tagged_word && !human_ambig)
       {
         //wno_wnsn = ontology.getWordSenseIdForWnsn(actual_word, convertPOS2WNO(pos), wnsn);
         wno_wnsn = ontology.getWordSenseIdForSenseKey(lemma, lexsn);
 
-        if (wno_wnsn == WNO_ERROR) 
+        if (wno_wnsn == WNO_ERROR) // SHOULD NOT HAPPEN!!
         {
           wno_wnsn = -1;
           n_unknown_errors++;
-          if (looksNumeric(actual_word.c_str()))
-            actual_word = NUMERIC_TAG;
-          if (!ontology.containsWord(actual_word))
-            ontology.extractWord(actual_word, ALL_WN_TYPE, true, true, false);
-          word_id = ontology.getWordId(actual_word);          
 //            PLWARNING("WNO_ERROR catched");
 //            cout << "lemma = " << lemma << endl;
 //            cout << "word = " << word << endl;
@@ -136,9 +140,6 @@ int main(int argc, char** argv)
 //            cout << "line = " << line << endl;
         } else
         {
-          if (!ontology.containsWord(actual_word))
-            ontology.extractWord(actual_word, ALL_WN_TYPE, true, true, false);
-          word_id = ontology.getWordId(actual_word);          
 #ifdef CHECK
           Set senses = ontology.getWordSenses(word_id);
           if (!senses.contains(wno_wnsn))
@@ -148,11 +149,6 @@ int main(int argc, char** argv)
       } else
       {
         wno_wnsn = -1;
-        if (looksNumeric(actual_word.c_str()))
-          actual_word = NUMERIC_TAG;
-        if (!ontology.containsWord(actual_word))
-          ontology.extractWord(actual_word, ALL_WN_TYPE, true, true, false);
-        word_id = ontology.getWordId(actual_word);          
         if (human_ambig)
           n_human_ambig_errors++;
       }
@@ -174,29 +170,50 @@ int main(int argc, char** argv)
   }
   progress.done();
 
+  cout << ontology.getAllWords().size() << " words in vocabulary" << endl;
+  cout << "vocabulary is locked" << endl;
+
   ////////////////////////////////////
   //////// N O N - T A G G E D ///////
   ////////////////////////////////////
   int n_non_tagged_lines = ShellProgressBar::getWcAsciiFileLineCount(in_text_file);
-  progress.set(0, n_non_tagged_lines - 1, "building non-tagged corpus");
+  progress.set(0, n_non_tagged_lines - 1, "building non-tagged corpus", 50);
+  progress.reset();
+  progress.init();
   progress.draw();
   n = 0;
   string word;
   while (!in_text.eof())
   {
     getline(in_text, word, '\n');
-    if (line == "") continue;
+    if (word == "") continue;
     progress.update(n++);
     n_non_tagged_words++;
-    if (!ontology.containsWord(word))
-      ontology.extractWord(word, ALL_WN_TYPE, true, true, false);
-    int word_id = ontology.getWordId(word);
+
+//     if (!ontology.containsWord(word))
+//       ontology.extractWord(word, ALL_WN_TYPE, true, true, false);
+
+    string stemmed_word = stemWord(word);
+    int word_id;
+
+    if (ontology.containsWord(stemmed_word))
+    {
+      word_id = ontology.getWordId(stemmed_word);
+    } else if (looksNumeric(word.c_str()))
+    {
+      word_id = ontology.getWordId(NUMERIC_TAG);
+    } else
+    {
+      word_id = ontology.getWordId(OOV_TAG);
+    }
+
     out_ttext << ontology.getWord(word_id) << " " << word_id << " " << -1 << endl;
     binwrite(out_bttext, word_id);
     binwrite(out_bttext, -1);
   }
   progress.done();
 
+  in_text.close();
   out_ttext.close();
   out_bttext.close();
 
@@ -224,14 +241,18 @@ bool startsWith(string& base, string s)
 
 int extractFiles(vector<string>& files, int n_files)
 {
-  ifstream b("brown1.files");
+
+  ifstream b;
   string line;
   int total_lines = 0;
   int fc = 0;
+
+  b.open("brown1.files");
+  //ifstream b("test");
   while (!b.eof() && fc < n_files)
   {
     getline(b, line, '\n');
-    if (line == "") continue;
+    if (line == "" || startsWith(line, "#")) continue;
     string file = "/u/jauvinc/wordnet-1.6/semcor/brown1/tagfiles/" + line;
     total_lines += ShellProgressBar::getWcAsciiFileLineCount(file);
     files.push_back(file);
@@ -249,7 +270,7 @@ int extractFiles(vector<string>& files, int n_files)
     files.push_back(file);
     fc++;
   }
-  
+
   cout << "retrieved " << fc << " files" << endl;
 
   return total_lines;

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array.h,v 1.8 2002/12/02 08:46:50 plearner Exp $
+   * $Id: Array.h,v 1.9 2002/12/05 21:11:17 jauvinc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -74,6 +74,7 @@ public:
       typedef T value_type;
       typedef int size_type;
       typedef T* iterator;
+      typedef const T* const_iterator;
       
       inline T* begin() const
       { return array; }

@@ -364,6 +364,57 @@ public:
     return full_vector;
   }
 
+  void getAsMaxSizedVectors(int max_size, vector<pair<real*, int> >& vectors)
+  {
+    if ((max_size % 3) != 0) PLWARNING("dangerous vector size (max_size mod 3 must equal 0)");
+
+    int n_elems = y2x.size() * 3;
+    int n_vecs = n_elems / max_size;
+    int remaining = n_elems % max_size;
+    if (remaining > 0) // padding to get sure that last block size (= remaining) is moddable by 3
+    {
+      n_vecs += 1;
+      int mod3 = remaining % 3;
+      if (mod3 != 0)
+        remaining += (3 - mod3);
+    }
+    vectors.resize(n_vecs);
+    //cerr << "(" << name << ") size = " << n_elems << endl;
+    for (int i = 0; i < n_vecs; i++)
+    {
+      if (i == (n_vecs - 1) && remaining > 0)
+      {
+        vectors[i].first = new real[remaining];
+        vectors[i].second = remaining;
+        //cerr << "(" << name << ") i = " << i << ", size = " << remaining << endl;
+      } else
+      {
+        vectors[i].first = new real[max_size];
+        vectors[i].second = max_size;
+        //cerr << "(" << name << ") i = " << i << ", size = " << max_size << endl;
+      }
+    }
+    int pos = 0;
+    for (int i = 0; i < ny(); i++)
+    {
+      map<int, real>& row_i = y2x(i);
+      for (map<int, real>::iterator it = row_i.begin(); it != row_i.end(); ++it)
+      {
+        int j = it->first;
+        real value = it->second;
+        vectors[pos / max_size].first[pos++ % max_size] = i;
+        vectors[pos / max_size].first[pos++ % max_size] = j;
+        vectors[pos / max_size].first[pos++ % max_size] = value;
+      }
+    }
+    while (pos < n_elems) // pad with (0, 0, 0)
+    {
+      vectors[pos / max_size].first[pos++ % max_size] = 0;
+      vectors[pos / max_size].first[pos++ % max_size] = 0;
+      vectors[pos / max_size].first[pos++ % max_size] = 0;
+    }
+  }
+
   void add(real* full_vector, int n_elems)
   {
     for (int i = 0; i < n_elems; i += 3)
@@ -444,6 +495,30 @@ inline void check_prob(Set Y, const map<int, real>& pYx)
 }
 
 inline void update(ProbabilitySparseMatrix& pYX, ProbabilitySparseMatrix& nYX)
+{
+  pYX.clear();
+  nYX.computeX();
+  nYX.computeY();
+  for (SetIterator xit = nYX.X.begin(); xit != nYX.X.end(); ++xit)
+  {
+    int x = *xit;
+    real sumYx = nYX.sumPYx(x);
+    if (sumYx != 0.0)
+    {
+      for (SetIterator yit = nYX.Y.begin(); yit != nYX.Y.end(); ++yit)
+      {
+        int y = *yit;
+        real p = nYX(y, x) / sumYx;
+        if (p)
+          pYX.set(y, x, p);
+      }
+    }
+  }
+  pYX.computeY();
+  pYX.computeX();
+}
+
+inline void updateAndClearCounts(ProbabilitySparseMatrix& pYX, ProbabilitySparseMatrix& nYX)
 {
   pYX.clear();
   nYX.computeX();

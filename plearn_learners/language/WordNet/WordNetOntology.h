@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.h,v 1.9 2002/11/26 20:58:16 jauvinc Exp $
+   * $Id: WordNetOntology.h,v 1.10 2002/12/05 21:13:18 jauvinc Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -151,7 +151,7 @@ protected:
   map<int, vector<int> > word_to_adv_wnsn;
   map<int, int> word_to_predominent_pos;
   map<int, bool> word_is_in_wn;
-  map<int, Set> word_to_categories_at_level;
+  map<int, Set> word_to_high_level_senses;
 
   int word_index; // unique id for words
   int synset_index; // unique id for synsets
@@ -175,6 +175,9 @@ protected:
   bool are_ancestors_extracted;
   bool are_descendants_extracted;
   bool are_predominent_pos_extracted;
+  bool are_word_high_level_senses_extracted;
+
+  int n_word_high_level_senses;
 
   // If 'differentiate_unknown_words' is set to 'true', all the unknown words (words that are 
   // out of WordNet) will be mapped to DIFFERENT synsets (senses), that are all going to be linked 
@@ -213,7 +216,7 @@ public:
   int getWordSenseIdForWnsn(string word, int wn_pos_type, int wnsn);
   int getWordSenseIdForSenseKey(string lemma, string lexsn);
   Set getWordSenses(int id);
-  Set getWordCategories(int id);
+  Set getWordHighLevelSenses(int id);
   Set getWordNounSenses(int id);
   Set getWordVerbSenses(int id);
   Set getWordAdjSenses(int id);
@@ -270,7 +273,7 @@ public:
   void intersectAncestorsAndSenses(Set categories, Set senses);
   void reducePolysemy(int level);
   void extractPredominentSyntacticClasses();
-  int extractWordCategoriesAtLevel(int noun_depth, int verb_depth, int adj_depth, int adv_depth, int unk_depth);
+  int extractWordHighLevelSenses(int noun_depth, int verb_depth, int adj_depth, int adv_depth, int unk_depth);
 
   // integrity verifications
   void detectWordsWithoutOntology();

@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.cc,v 1.8 2002/11/26 20:58:16 jauvinc Exp $
+   * $Id: WordNetOntology.cc,v 1.9 2002/12/05 21:13:18 jauvinc Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -105,8 +105,10 @@ void WordNetOntology::init(bool the_differentiate_unknown_words)
 
   are_ancestors_extracted = false;
   are_descendants_extracted = false;
-
   are_predominent_pos_extracted = false;
+  are_word_high_level_senses_extracted = false;
+
+  n_word_high_level_senses = 0;
 
   differentiate_unknown_words = the_differentiate_unknown_words;
 }
@@ -952,6 +954,10 @@ void WordNetOntology::printStats()
   cout << out_of_wn_word_count << " out of WN words" << endl;
   cout << getSenseSize() << " senses (" << (real)getSenseSize() / (real)getVocSize() << " senses per word on average)" << endl;
   cout << getSynsetSize() << " categories (ontology : sense + category, possible overlap)" << endl;
+  if (are_word_high_level_senses_extracted)
+  {
+    cout << n_word_high_level_senses << " high-level senses (" << (real)n_word_high_level_senses / (real)getVocSize() << " high-level senses per word on average)" << endl;
+  }
 }
 
 void WordNetOntology::save(string synset_file, string ontology_file)
@@ -993,9 +999,10 @@ void WordNetOntology::save(string synset_file, string ontology_file)
       int child_id = *iit;
       of_ontology << "c " << id << " " << child_id << endl;
     }
-    for (SetIterator iit = sense_to_words[id].begin(); iit != sense_to_words[id].end(); ++iit)
+    if (sense_to_words.find(id) != sense_to_words.end())
     {
-      of_ontology << "s " << id << " " << (*iit) << endl;
+      for (SetIterator iit = sense_to_words[id].begin(); iit != sense_to_words[id].end(); ++iit)
+        of_ontology << "s " << id << " " << (*iit) << endl;
     }
   }
 
@@ -1342,7 +1349,7 @@ Set WordNetOntology::getWordSenses(int id)
   return word_to_senses[id];
 }
 
-Set WordNetOntology::getWordCategories(int id)
+Set WordNetOntology::getWordHighLevelSenses(int id)
 {
 #ifndef NOWARNING
   if (!isWord(id))
@@ -1351,7 +1358,11 @@ Set WordNetOntology::getWordCategories(int id)
     return Set();
   }
 #endif
-  return word_to_categories_at_level[id];
+
+  if (!are_word_high_level_senses_extracted)
+    PLERROR("word high-level senses have not been extracted");
+
+  return word_to_high_level_senses[id];
 }
 
 Set WordNetOntology::getWordNounSenses(int id)
@@ -1821,16 +1832,19 @@ void WordNetOntology::getCategoriesUnderLevel(int ss_id, int cur_level, int targ
 
 void WordNetOntology::getDescendantCategoriesAtLevel(int ss_id, int cur_level, int target_level, Set categories)
 {
-  Node* node = synsets[ss_id];
-  if (cur_level < target_level && isSense(ss_id))
-    categories.insert(ss_id);
-  if (cur_level == target_level)
-    categories.insert(ss_id);
-  else
+  if (isSynset(ss_id))
   {
-    for (SetIterator it = node->children.begin(); it != node->children.end(); ++it)
-      getDescendantCategoriesAtLevel(*it, cur_level + 1, target_level, categories);
-  }  
+    Node* node = synsets[ss_id];
+    if (cur_level < target_level && isSense(ss_id))
+      categories.insert(ss_id);
+    if (cur_level == target_level)
+      categories.insert(ss_id);
+    else
+    {
+      for (SetIterator it = node->children.begin(); it != node->children.end(); ++it)
+        getDescendantCategoriesAtLevel(*it, cur_level + 1, target_level, categories);
+    }  
+  }
 }
 
 void WordNetOntology::reducePolysemy(int level)
@@ -2214,7 +2228,7 @@ bool WordNetOntology::isTopLevelCategory(int ss_id)
           ss_id == BOS_SS_ID || ss_id == EOS_SS_ID);
 }
 
-int WordNetOntology::extractWordCategoriesAtLevel(int noun_depth, int verb_depth, int adj_depth, int adv_depth, int unk_depth)
+int WordNetOntology::extractWordHighLevelSenses(int noun_depth, int verb_depth, int adj_depth, int adv_depth, int unk_depth)
 {
   Set noun_categories;
   getDescendantCategoriesAtLevel(NOUN_SS_ID, 0, noun_depth, noun_categories);
@@ -2226,7 +2240,7 @@ int WordNetOntology::extractWordCategoriesAtLevel(int noun_depth, int verb_depth
     for (SetIterator wit = word_descendants.begin(); wit != word_descendants.end(); ++wit)
     {
       int word_id = *wit;
-      word_to_categories_at_level[word_id].insert(ss_id);
+      word_to_high_level_senses[word_id].insert(ss_id);
     }
   }
   Set verb_categories;
@@ -2239,7 +2253,7 @@ int WordNetOntology::extractWordCategoriesAtLevel(int noun_depth, int verb_depth
     for (SetIterator wit = word_descendants.begin(); wit != word_descendants.end(); ++wit)
     {
       int word_id = *wit;
-      word_to_categories_at_level[word_id].insert(ss_id);
+      word_to_high_level_senses[word_id].insert(ss_id);
     }
   }
   Set adj_categories;
@@ -2252,7 +2266,7 @@ int WordNetOntology::extractWordCategoriesAtLevel(int noun_depth, int verb_depth
     for (SetIterator wit = word_descendants.begin(); wit != word_descendants.end(); ++wit)
     {
       int word_id = *wit;
-      word_to_categories_at_level[word_id].insert(ss_id);
+      word_to_high_level_senses[word_id].insert(ss_id);
     }
   }
   Set adv_categories;
@@ -2265,7 +2279,7 @@ int WordNetOntology::extractWordCategoriesAtLevel(int noun_depth, int verb_depth
     for (SetIterator wit = word_descendants.begin(); wit != word_descendants.end(); ++wit)
     {
       int word_id = *wit;
-      word_to_categories_at_level[word_id].insert(ss_id);
+      word_to_high_level_senses[word_id].insert(ss_id);
     }
   }
   Set unk_categories;
@@ -2278,7 +2292,7 @@ int WordNetOntology::extractWordCategoriesAtLevel(int noun_depth, int verb_depth
     for (SetIterator wit = word_descendants.begin(); wit != word_descendants.end(); ++wit)
     {
       int word_id = *wit;
-      word_to_categories_at_level[word_id].insert(ss_id);
+      word_to_high_level_senses[word_id].insert(ss_id);
     }
   }
   
@@ -2286,11 +2300,16 @@ int WordNetOntology::extractWordCategoriesAtLevel(int noun_depth, int verb_depth
   for (map<int, string>::iterator it = words.begin(); it != words.end(); ++it)
   {
     int word_id = it->first;
-    if (word_to_categories_at_level[word_id].size() == 0)
-      PLWARNING("no category for word '%s' (%d)", words[word_id].c_str(), word_id);
+    if (word_to_high_level_senses[word_id].size() == 0)
+      PLWARNING("word '%s' (%d) has no category", words[word_id].c_str(), word_id);
   }
 
-  return (noun_categories.size() + verb_categories.size() + adj_categories.size() + adv_categories.size() + unk_categories.size());
+  are_word_high_level_senses_extracted = true;
+
+  n_word_high_level_senses = (noun_categories.size() + verb_categories.size() + adj_categories.size() + adv_categories.size() + unk_categories.size());
+
+  return n_word_high_level_senses;
+
 }
 
 // {non-letters}word{non-letters} -> word
