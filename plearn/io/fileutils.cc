@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.50 2004/10/27 01:16:09 dorionc Exp $
+   * $Id: fileutils.cc,v 1.51 2004/11/18 14:29:20 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -295,7 +295,6 @@ void force_mkdir_for_file(const string& filepath)
   // If the directory does not exist, false is returned.
   bool force_rmdir(const string& dirname)
   {
-    system("pwd");
     if(!isdir(dirname))
       return false;
     vector<string> entries = lsdir_fullpath(dirname);
