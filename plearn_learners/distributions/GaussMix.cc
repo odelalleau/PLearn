@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.38 2004/05/31 12:58:51 tihocan Exp $ 
+ * $Id: GaussMix.cc,v 1.39 2004/06/01 13:18:17 tihocan Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -192,6 +192,36 @@ void GaussMix::build()
 ////////////
 void GaussMix::build_()
 {
+  alpha.resize(L);
+  log_p_x_j_alphaj.resize(L);
+  log_p_j_x.resize(L);
+  p_j_x.resize(L);
+  // Those are not used for every type:
+  cov_x.resize(0);
+  cov_y_x.resize(0);
+  eigenvectors.resize(0);
+  eigenvectors_x.resize(0);
+  eigenvectors_y_x.resize(0);
+  full_cov.resize(0);
+  log_coeff.resize(0);
+  sigma.resize(0);
+  y_x_mat.resize(0);
+  if (type == "spherical") {
+    sigma.resize(L);
+  } else if (type == "diagonal") {
+    // Nothing to resize here.
+  } else if (type == "general") {
+    cov_x.resize(L);
+    cov_y_x.resize(L);
+    eigenvectors.resize(L);
+    eigenvectors_x.resize(L);
+    eigenvectors_y_x.resize(L);
+    full_cov.resize(L);
+    log_coeff.resize(L);
+    y_x_mat.resize(L);
+  } else {
+    PLERROR("In GaussMix::resizeStuffFromOptions - Not implemented for this type");
+  }
   if (n_input == 0) {
     // No input part: the p_j_x must be obtained from the alpha.
     for (int j = 0; j < L; j++) {
@@ -199,6 +229,7 @@ void GaussMix::build_()
     }
     p_j_x << alpha;
   }
+  PDistribution::finishConditionalBuild();
 }
 
 ////////////////////////////////
@@ -532,42 +563,6 @@ Mat GaussMix::getEigenvectors(int j) const {
 //////////////////
 Vec GaussMix::getEigenvals(int j) const {
   return eigenvalues(j);
-}
-
-//////////////////////////////
-// initializeForConditional //
-//////////////////////////////
-void GaussMix::initializeForConditional() {
-  alpha.resize(L);
-  log_p_x_j_alphaj.resize(L);
-  log_p_j_x.resize(L);
-  p_j_x.resize(L);
-  // Those are not used for every type:
-  cov_x.resize(0);
-  cov_y_x.resize(0);
-  eigenvectors.resize(0);
-  eigenvectors_x.resize(0);
-  eigenvectors_y_x.resize(0);
-  full_cov.resize(0);
-  log_coeff.resize(0);
-  sigma.resize(0);
-  y_x_mat.resize(0);
-  if (type == "spherical") {
-    sigma.resize(L);
-  } else if (type == "diagonal") {
-    // Nothing to resize here.
-  } else if (type == "general") {
-    cov_x.resize(L);
-    cov_y_x.resize(L);
-    eigenvectors.resize(L);
-    eigenvectors_x.resize(L);
-    eigenvectors_y_x.resize(L);
-    full_cov.resize(L);
-    log_coeff.resize(L);
-    y_x_mat.resize(L);
-  } else {
-    PLERROR("In GaussMix::resizeStuffFromOptions - Not implemented for this type");
-  }
 }
 
 ////////////

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussMix.h,v 1.25 2004/05/27 14:28:17 tihocan Exp $ 
+   * $Id: GaussMix.h,v 1.26 2004/06/01 13:18:17 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file GaussMix.h */
@@ -205,10 +205,6 @@ public:
   // *************************
   // * PDistribution methods *
   // *************************
-
-  //! Initialize everything needed for the conditional distribution, so that
-  //! a call to setConditionalFlags() can be made.
-  virtual void initializeForConditional();
 
   //! Set the value for the input part of the conditional probability.
   virtual void setInput(const Vec& input) const;
