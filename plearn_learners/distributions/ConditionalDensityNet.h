@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.8 2003/11/25 02:34:41 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.9 2003/11/27 13:14:39 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -94,6 +94,10 @@ protected:
   Var unconditional_cdf; // the cond. distribution step multiplicative parameters 
   // are relative to the unconditional cdf step heights, at the mu positions, contained in this source var
   // (computed at the beginning of training).
+
+  // for debugging
+  Var prev_centers, prev_centers_M, scaled_prev_centers, 
+    scaled_prev_centers_M, minus_prev_centers_0, minus_scaled_prev_centers_0;
 
 public:
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.11 2003/11/25 02:34:41 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.12 2003/11/27 13:14:38 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -44,6 +44,8 @@
 #include "ConditionalDensityNet.h"
 #include "random.h"
 #include "DisplayUtils.h"
+#include "DilogarithmVariable.h"
+#include "SoftSlopeVariable.h"
 
 namespace PLearn <%
 using namespace std;
@@ -294,52 +296,49 @@ ConditionalDensityNet::ConditionalDensityNet()
       Var pos_b = softplus(b); pos_b->setName("pos_b");
       unconditional_cdf = Var(n_output_density_terms,1);
       Var pos_c = softplus(c)*unconditional_cdf; pos_c->setName("pos_c");
+      Var scaled_centers = pos_c*centers;
+      // scaled centers evaluated at target = M
+      Var scaled_centers_M = pos_c*centers_M;
+      // scaled centers evaluated at target = 0
+      Var scaled_centers_0 = -pos_c*mu;
       if (steps_type=="sigmoid_steps")
       {
-        steps = sigmoid(pos_c*centers); 
-        steps_M = sigmoid(pos_c*centers_M);
-        Var scaled_centers_0 = -pos_c*mu;
-        steps_gradient = steps*(1-steps);
-        steps_integral = softplus(pos_c*centers_M) - softplus(scaled_centers_0);
-        delta_steps = steps_M - sigmoid(scaled_centers_0);
+        steps = sigmoid(scaled_centers); 
+        // steps evaluated at target = M
+        steps_M = sigmoid(scaled_centers_M);
+        // derivative of steps wrt target
+        steps_gradient = pos_c*steps*(1-steps);
+        steps_integral = (softplus(scaled_centers_M) - softplus(scaled_centers_0))/pos_c;
+        delta_steps = centers_M*steps_M + mu*sigmoid(scaled_centers_0);
       }
       else if (steps_type=="sloped_steps")
       {
-        Var prev_centers = vconcat(target & (new SubMatVariable(centers,0,1,1,n_output_density_terms)));
-        Var prev_centers_M = vconcat(max_y & (new SubMatVariable(centers_M,0,1,1,n_output_density_terms)));
-        Var scaled_centers = -pos_c*centers;
-        Var scaled_prev_centers = -pos_c*prev_centers;
-        Var scaled_centers_M = -pos_c*centers_M;
-        Var scaled_prev_centers_M = -pos_c*prev_centers_M;
-        // Var scaled_mu = pos_c*mu;
-        // Var scaled_next_mu = pos_c*mu; ?
-        steps = softplus(scaled_prev_centers) - softplus(scaled_centers);
-        steps_M = softplus(scaled_prev_centers_M) - softplus(scaled_centers_M);
-        //steps_integral = -dilogarithm(-exp(scaled_centers_M)) + dilogarithm(-exp(scaled_next_centers_M));
-        //                 +dilogarithm(-exp(scaled_mu)) + dilogarithm(-exp(scaled_next_centers_M));
-        // delta_steps = ...
-        // A REVOIR COMPLETEMENT
+        Var left_side = vconcat(var(0.0) & (new SubMatVariable(mu,0,0,n_output_density_terms-1,1))); left_side->setName("left_side"); 
+        steps = soft_slope(target, pos_c, left_side, mu);
+        steps_gradient = d_soft_slope(target, pos_c, left_side, mu);
+        steps_integral = soft_slope_integral(pos_c,left_side,mu,0.0,maxY);
+        delta_steps = soft_slope_limit(target, pos_c, left_side, mu);
       }
       else PLERROR("ConditionalDensityNet::build, steps_type option value unknown: %s",steps_type.c_str());
 
       steps->setName("steps");
       steps_M->setName("steps");
       steps_integral->setName("steps_integral");
-      Var density_numerator = dot(pos_b*pos_c,steps_gradient);
+      Var density_numerator = dot(pos_b,steps_gradient);
       density_numerator->setName("density_numerator");
-      cum_denominator = pos_a + dot(pos_b,steps_M);
+      cum_denominator = pos_a + dot(pos_b,steps_M); cum_denominator->setName("cum_denominator");
       Var inverse_denominator = 1.0/cum_denominator;
       inverse_denominator->setName("inverse_denominator");
       cum_numerator = pos_a + dot(pos_b,steps);
-      cum_numerator->setName("cum_denominator");
+      cum_numerator->setName("cum_numerator");
       cumulative = cum_numerator * inverse_denominator;
       cumulative->setName("cumulative");
       density = density_numerator * inverse_denominator;
       density->setName("density");
-      // apply l'hopital rule if pos_c --> 0 to avoid blow-up (N.B. lim_{pos_c->0} pos_b/pos_c*steps_integral = pos_b*pos_c*delta_steps)
-      Var lhopital = ifThenElse(isAboveThreshold(pos_c,1e-20),pos_b/pos_c*steps_integral,pos_b*pos_c*delta_steps);
+      // apply l'hopital rule if pos_c --> 0 to avoid blow-up (N.B. lim_{pos_c->0} pos_b/pos_c*steps_integral = pos_b*delta_steps)
+      Var lhopital = ifThenElse(isAboveThreshold(pos_c,1e-20),pos_b*steps_integral,pos_b*delta_steps); lhopital->setName("lhopital");
       expected_value = (1 - pos_a*inverse_denominator)*max_y - sum(lhopital)*inverse_denominator;
-
+      expected_value->setName("expected_value");
       /*
        * cost functions:
        *   training_criterion = log_likelihood_vs_squared_error_balance*neg_log_lik
@@ -471,19 +470,12 @@ ConditionalDensityNet::ConditionalDensityNet()
       else
         f = Func(input, params, outputs);
       f->recomputeParents();
-      fill_random_uniform(input->value,-1,1);
-      f->fprop(input->value,outputs->value);
-      static bool display_graph = false;
-      //displayVarGraph(outputs,true);
-      if (display_graph)
-        displayFunction(f,true);
+
       if (mu_is_fixed)
         test_costf = Func(testinvars, params&mu, outputs&test_costs);
       else
         test_costf = Func(testinvars, params, outputs&test_costs);
       test_costf->recomputeParents();
-      if (display_graph)
-        displayFunction(test_costf,true);
       // The total training cost
       int l = train_set->length();
       int nsamples = batch_size>0 ? batch_size : l;
@@ -745,6 +737,14 @@ void ConditionalDensityNet::train()
   unconditional_p0 *= 1.0/sum_w;
   
   initializeParams();
+
+      f->fprop(input->value,outputs->value);
+      static bool display_graph = false;
+      //displayVarGraph(outputs,true);
+      if (display_graph)
+        displayFunction(f,true);
+      if (display_graph)
+        displayFunction(test_costf,true);
 
   int initial_stage = stage;
   bool early_stop=false;

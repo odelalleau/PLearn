@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.8 2003/11/25 02:33:18 yoshua Exp $
+   * $Id: pl_math.h,v 1.9 2003/11/27 13:14:34 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -306,6 +306,22 @@ inline real inverse_softplus(real y)
     return y;
   return log(exp(y)-1);
 }
+
+// as smoothness-->infty this becomes the linear by part function that
+// is 0 in [-infty,left], linear in [left,right], and 1 in [right,infty].
+// For finite smoothness, it is a smoother function, always with value in the interval [0,1].
+// It is always monotonically increasing wrt x (positive derivative in x).
+inline real soft_slope(real x, real smoothness=1, real left=0, real right=1)
+{
+  return 1 + (softplus(-smoothness*(x-left))-softplus(-smoothness*(x-right)))/(smoothness*(right-left));
+}
+  
+// This is the derivative of soft_slope with respect to x.
+inline real d_soft_slope(real x, real smoothness=1, real left=0, real right=1)
+{
+  // note that d(softplus(z))/dz = sigmoid(z)
+  return (-sigmoid(-smoothness*(x-left))+sigmoid(-smoothness*(x-right)))/(right-left);
+}
   
 //!  Return M choose N, i.e., M! / ( N! (M-N)! )
   inline int n_choose(int M,int N)
@@ -344,6 +360,15 @@ real dilogarithm(real x);
 
 inline real softplus_primitive(real x) {
   return -dilogarithm(-exp(x));
+}
+
+// integral of the soft_slope function between a and b
+inline real soft_slope_integral(real smoothness=1, real left=0, real right=1, real a=0, real b=1)
+{
+  return 
+    (b - a) + (softplus_primitive(-smoothness*(b-right)) - softplus_primitive(-smoothness*(b-left))
+               -softplus_primitive(-smoothness*(a-right)) + softplus_primitive(-smoothness*(a-left)))/
+    (smoothness*smoothness*(right-left));
 }
 
 %> // end of namespace PLearn
