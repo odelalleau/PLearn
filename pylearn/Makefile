@@ -7,3 +7,9 @@ pylearn.cpp: pylearn.pyste
 
 install:
 	cp pylearn.so ../scripts/plearn_modules
+
+clean:
+	-rm -rf OBJS pylearn.so pylearn.cpp
+
+realclean: clean
+	-rm -rf pyste.cache
