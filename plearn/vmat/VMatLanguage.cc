@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.6 2003/05/23 21:37:13 genji256 Exp $
+   * $Id: VMatLanguage.cc,v 1.7 2003/05/23 21:40:39 genji256 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -584,7 +584,7 @@ using namespace std;
               pstack.push(float_to_date(a)-float_to_date(b));
             }
             else {
-              pstack.push(MISSING_VALUE)
+              pstack.push(MISSING_VALUE);
             }
             break;
           case 33: //monthdiff
