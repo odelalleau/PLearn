@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.46 2004/02/28 18:10:48 tihocan Exp $
+* $Id: VMatrix.cc,v 1.47 2004/03/18 22:01:11 tihocan Exp $
 ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -100,7 +100,7 @@ void VMatrix::declareOptions(OptionList & ol)
   declareOption(ol, "targetsize", &VMatrix::targetsize_, OptionBase::buildoption, 
                 "size of target part (-1 if variable or unspecified, 0 if no target)");
   declareOption(ol, "weightsize", &VMatrix::weightsize_, OptionBase::buildoption, 
-                "size of weights (-1 if unspecified, 0 if no weight, 1 for sample weight, >1 currently not supported (include it is recommended to include additional info in target. weight is really reserved for a per sample weight).");
+                "size of weights (-1 if unspecified, 0 if no weight, 1 for sample weight, >1 currently not supported (include it is recommended to include additional info in target. weight is really reserved for a per sample weight)).");
   declareOption(ol, "metadatadir", &VMatrix::metadatadir, OptionBase::buildoption, 
                 "A directory in which to store meta-information for this matrix \n"
                 "You don't always have to give this explicitly. For ex. if your \n"
