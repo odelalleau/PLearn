@@ -3,7 +3,7 @@
 from plearn.pyplearn import *
 
 import sys
-from plearn.pyplearn import _parse_plargs, _postprocess_refs
+from plearn.pyplearn.pyplearn import _parse_plargs, _postprocess_refs
 
 pyplearn_file = open(sys.argv[1], 'U')
 lines = pyplearn_file.read()
