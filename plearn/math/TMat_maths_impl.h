@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.48 2004/05/26 17:59:26 nova77 Exp $
+   * $Id: TMat_maths_impl.h,v 1.49 2004/05/28 13:04:37 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -2167,12 +2167,12 @@ template <class T>
 void product(const TVec<T>& result, const TMat<T>& m, const TVec<T>& v)
 {
   int l=m.width();
-  if (l!=v.length() || m.length()!=vec.length())
+  if (l!=v.length() || m.length()!=result.length())
     PLERROR("product(TVec, TMat,TVec), incompatible arguments %dx%d times %d -> %d",
-        m.length(),m.width(), v.length(),vec.length());
-  T *rp = vec.data();
+        m.length(),m.width(), v.length(),result.length());
+  T *rp = result.data();
   T *vp = v.data();
-  for (int i=0;i<vec.length();i++)
+  for (int i=0;i<result.length();i++)
   {
     const T* mi = m[i];
     T s = 0;
