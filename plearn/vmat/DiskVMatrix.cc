@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: DiskVMatrix.cc,v 1.11 2004/02/20 21:14:29 chrish42 Exp $
+   * $Id: DiskVMatrix.cc,v 1.12 2004/02/26 17:55:37 nova77 Exp $
    ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -44,8 +44,10 @@
 namespace PLearn {
 using namespace std;
 
-
-
+#ifdef WIN32
+#include <io.h>
+#define unlink _unlink
+#endif
 
 /** DiskVMatrix **/
 /* Format description
@@ -314,5 +316,8 @@ DiskVMatrix::~DiskVMatrix()
 
 PLEARN_IMPLEMENT_OBJECT(DiskVMatrix, "ONE LINE DESCR", "NO HELP");
 
+#ifdef WIN32
+#undef unlink
+#endif
 
 } // end of namespcae PLearn

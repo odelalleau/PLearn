@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.cc,v 1.11 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: VVMatrix.cc,v 1.12 2004/02/26 17:58:33 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,7 +48,12 @@
 #include "IntVecFile.h"
 #include "VMatLanguage.h"
 #include "getDataSet.h"
+
+#ifdef WIN32
+#include <time.h>
+#else
 #include <unistd.h>
+#endif
 
 #define NEW_SYNTAX_CHAR '@' 
 
@@ -407,8 +412,8 @@ VMat VVMatrix::createPreproVMat(const string & filename)
         vector<vector<string> > mstr = extractSourceMatrix(sec,filename);      
         Array<VMat> vmrows(mstr.size());
         // we need to build a VMat that is the concatenation of the datasets contained in 'mstr'
-        for(unsigned int i=0;i<mstr.size();i++)
 
+        for(unsigned int i=0;i<mstr.size();i++)
         {
           Array<VMat> ar(mstr[i].size());
           for(unsigned int j=0;j<mstr[i].size();j++)
