@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.cc,v 1.10 2003/05/13 15:51:05 tihocan Exp $
+   * $Id: Optimizer.cc,v 1.11 2003/05/15 17:14:35 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,7 +52,8 @@ using namespace std;
 
 
 Optimizer::Optimizer(int n_updates, const string& file_name, int every_iterations)
-  :nupdates(n_updates), nstages(0), filename(file_name), every(every_iterations)
+  :nupdates(n_updates), nstages(0), filename(file_name), every(every_iterations),
+  nstages_per_epoch(1)
 {}
 Optimizer::Optimizer(VarArray the_params, Var the_cost, int n_updates,
                      const string& file_name, int every_iterations)
@@ -93,9 +94,6 @@ void Optimizer::build_()
     same_sign.clear();*/
   }
   stage = 0;
-  if (nstages_per_epoch <= 0) { // probably not correctly initialized by the learner
-    nstages_per_epoch = 1;
-  }
 }
 
 void Optimizer::declareOptions(OptionList& ol)
