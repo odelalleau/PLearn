@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VMatLanguage.h,v 1.16 2004/07/21 16:30:55 chrish42 Exp $
+   * $Id: VMatLanguage.h,v 1.17 2004/11/24 18:38:19 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,6 +44,9 @@
 #include "VMat.h"
 #include <plearn/base/RealMapping.h>
 
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:1125) // Get rid of ICC compiler warning.
+#endif
 
 namespace PLearn {
 using namespace std;
@@ -90,10 +93,10 @@ public:
     static void declareOptions(OptionList &ol);
 
     virtual void build();
-      
+
     //! Executes the program on the srcvec, copy resulting stack to result
     //! rowindex is only there for instruction 'rowindex' that pushes it on the stack
-    void run(const Vec& srcvec, const Vec& result, int rowindex=-1) const;
+    virtual void run(const Vec& srcvec, const Vec& result, int rowindex=-1) const;
 
     //! Gets the row with the given rowindex from the vmsource VMat
     //! and applies program to it.
@@ -164,6 +167,10 @@ DECLARE_OBJECT_PTR(VMatLanguage);
   time_t getDateOfCode(const string& codefile);
 
 } // end of namespace PLearn
+
+#ifdef __INTEL_COMPILER
+#pragma warning(default:1125)
+#endif
 
 #endif
 

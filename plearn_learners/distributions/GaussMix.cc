@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.43 2004/09/27 20:19:29 plearner Exp $ 
+ * $Id: GaussMix.cc,v 1.44 2004/11/24 18:39:54 tihocan Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -254,9 +254,15 @@ void GaussMix::computeMeansAndCovariances() {
       computeInputMeanAndVariance(weighted_train_set, center, variance);
       sigma[j] = sqrt(mean(variance));   // TODO See if harmonic mean is needed ?
 #ifdef BOUNDCHECK
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:279)  // Get rid of compiler warning.
+#endif
       if (isnan(sigma[j])) {
         PLWARNING("In GaussMix::computeMeansAndCovariances - A standard deviation is nan");
       }
+#ifdef __INTEL_COMPILER
+#pragma warning(default:279)
+#endif
 #endif
     } else if (type == "diagonal") {
       Vec variance(D);
@@ -307,9 +313,15 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const {
     for (int k = 0; k < size; k++) {
       p += gauss_log_density_stddev(y[k], mu_y[k], max(sigma_min, sigma[j]));
 #ifdef BOUNDCHECK
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:279)  // Get rid of compiler warning.
+#endif
       if (isnan(p)) {
         PLWARNING("In GaussMix::computeLogLikelihood - Density is nan");
       }
+#ifdef __INTEL_COMPILER
+#pragma warning(default:279)
+#endif
 #endif
     }
     return p;
@@ -397,9 +409,15 @@ void GaussMix::computePosteriors() {
     for (int j = 0; j < L; j++) {
       log_likelihood_post[j] = computeLogLikelihood(sample_row, j) + log(alpha[j]);
 #ifdef BOUNDCHECK
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:279)  // Get rid of compiler warning.
+#endif
       if (isnan(log_likelihood_post[j])) {
         PLWARNING("In GaussMix::computePosteriors - computeLogLikelihood returned nan");
       }
+#ifdef __INTEL_COMPILER
+#pragma warning(default:279)
+#endif
 #endif
     }
     log_sum_likelihood = logadd(log_likelihood_post);
@@ -654,9 +672,15 @@ real GaussMix::log_density(const Vec& y) const
   for (int j = 0; j < L; j++) {
     log_likelihood_dens[j] = computeLogLikelihood(y, j) + log_p_j_x[j];
 #ifdef BOUNDCHECK
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:279)  // Get rid of compiler warning.
+#endif
     if (isnan(log_likelihood_dens[j])) {
       PLWARNING("In GaussMix::log_density - computeLogLikelihood returned nan");
     }
+#ifdef __INTEL_COMPILER
+#pragma warning(default:279)
+#endif
 #endif
   }
   return logadd(log_likelihood_dens);

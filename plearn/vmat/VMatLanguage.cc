@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.28 2004/07/29 13:04:22 tihocan Exp $
+   * $Id: VMatLanguage.cc,v 1.29 2004/11/24 18:38:19 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -611,7 +611,13 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
             pstack.push(real(rowindex));
             break;
           case 28: // isnan
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:279)  // Get rid of ICC compiler warning.
+#endif
             pstack.push(isnan(pstack.pop())?1:0);
+#ifdef __INTEL_COMPILER
+#pragma warning(default:279)
+#endif
             break;
           case 29: //year
             pstack.push(float_to_date(pstack.pop()).year);
@@ -625,7 +631,13 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
           case 32: //daydiff
             b= pstack.pop();
             a= pstack.pop();
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:279) // Get rid of ICC compiler warning.
+#endif
             if (!isnan(a) && !isnan(b)) {
+#ifdef __INTEL_COMPILER
+#pragma warning(default:279)
+#endif
               pstack.push(float_to_date(a)-float_to_date(b));
             }
             else {
