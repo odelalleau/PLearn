@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TangentLearner.h,v 1.2 2004/05/31 22:09:17 yoshua Exp $ 
+   * $Id: TangentLearner.h,v 1.3 2004/06/01 20:25:26 monperrm Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus
@@ -95,6 +95,7 @@ public:
   int batch_size;
 
   real norm_penalization; // penalizes sum_i (||f_i||^2-1)^2
+  real svd_threshold;
 
   // ****************
   // * Constructors *

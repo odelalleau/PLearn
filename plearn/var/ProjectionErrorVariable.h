@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ProjectionErrorVariable.h,v 1.2 2004/05/31 22:08:56 yoshua Exp $
+   * $Id: ProjectionErrorVariable.h,v 1.3 2004/06/01 20:25:19 monperrm Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -92,8 +92,8 @@ protected:
 
 DECLARE_OBJECT_PTR(ProjectionErrorVariable);
 
-inline Var projection_error(Var f, Var t, real norm_penalization=1, int n=-1, bool use_subspace_distance=true) {
-  return new ProjectionErrorVariable(f, t, norm_penalization, n, use_subspace_distance);
+inline Var projection_error(Var f, Var t, real norm_penalization=0, int n=-1, bool use_subspace_distance=true, real epsilon=1e-6) {
+  return new ProjectionErrorVariable(f, t, norm_penalization, n, use_subspace_distance, epsilon);
 }
 
 } // end of namespace PLearn

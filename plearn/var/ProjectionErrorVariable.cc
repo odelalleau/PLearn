@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
- * $Id: ProjectionErrorVariable.cc,v 1.3 2004/05/31 22:08:55 yoshua Exp $
+ * $Id: ProjectionErrorVariable.cc,v 1.4 2004/06/01 20:25:19 monperrm Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -107,7 +107,7 @@ namespace PLearn {
         PLERROR("ProjectErrorVariable: the two arguments have inconsistant sizes");
       if (n_dim>n)
         PLERROR("ProjectErrorVariable: n_dim should be less than data dimension n");
-      if (use_subspace_distance)
+      if (!use_subspace_distance)
         {
           V.resize(n_dim,n_dim);
           Ut.resize(n,n);
@@ -121,9 +121,9 @@ namespace PLearn {
           wwuu.resize(n_dim+T);
           ww = wwuu.subVec(0,n_dim);
           uu = wwuu.subVec(n_dim,T);
-          wwuuM = wwuu.toMat(n_dim+T,1);
+          wwuuM = wwuu.toMat(1,n_dim+T);
           rhs.resize(n_dim+T);
-          rhs.subVec(0,n_dim).fill(1.0);
+          rhs.subVec(0,n_dim).fill(-1.0);
           A.resize(n_dim+T,n_dim+T);
           A11 = A.subMat(0,0,n_dim,n_dim);
           A12 = A.subMat(0,n_dim,n_dim,T);
@@ -190,8 +190,25 @@ namespace PLearn {
         lapackSolveLinearSystem(A, wwuuM, pivots);
         // note that A is destroyed here, but wwuu contains the solution
 
+        static bool debugging=false;
+        if (debugging)
+          {
+            productTranspose(A11,F,F);
+            productTranspose(A12,F,TT);
+            A12 *= -1.0;
+            Vec res(ww.length());
+            product(res,A11,ww);
+            productAcc(res,A12,uu);
+            res -= 1.0;
+            cout << "norm of error in w equations: " << norm(res) << endl;
+            Vec res2(uu.length());
+            transposeProduct(res2,A12,ww);
+            productTranspose(A22,TT,TT);
+            productAcc(res2,A22,uu);
+            cout << "norm of error in u equations: " << norm(res2) << endl;
+          }
         // scale w and u so that ||w|| = 1
-        real wnorm = norm(ww);
+        real wnorm = sum(ww); // norm(ww);
         wwuu *= 1.0/wnorm;
 
         // compute the cost = ||F'w - T'u||^2
@@ -231,12 +248,16 @@ namespace PLearn {
           }
       }
     if (norm_penalization>0)
+    {
+      real penalization=0;
       for (int i=0;i<n_dim;i++)
         {
           Vec f_i = F(i);
           norm_err[i] = pownorm(f_i)-1;
-          cost += norm_err[i]*norm_err[i];
+          penalization += norm_err[i]*norm_err[i];
         }
+      cost += norm_penalization*penalization;
+    }
     value[0] = cost;
   }
 
@@ -267,10 +288,10 @@ namespace PLearn {
       {
         Mat& dF = input1->matGradient;
         externalProductAcc(dF,ww,fw);
-        for (int i=0;i<n_dim;i++)
+        if (norm_penalization>0)
+          for (int i=0;i<n_dim;i++)
           {
             Vec df_i = dF(i); // n-vector
-            if (norm_penalization>0)
               multiplyAcc(df_i, input1->matValue(i), norm_penalization*2*norm_err[i]);
           }
       }

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TangentLearner.cc,v 1.2 2004/05/31 22:09:16 yoshua Exp $ 
+   * $Id: TangentLearner.cc,v 1.3 2004/06/01 20:25:26 monperrm Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
@@ -61,7 +61,7 @@ TangentLearner::TangentLearner()
 /* ### Initialize all fields to their default value here */
   : training_targets("local_neighbors"), use_subspace_distance(true), n_neighbors(5), n_dim(1),
     architecture_type("single_neural_network"), n_hidden_units(-1),
-    batch_size(1), norm_penalization(1)
+    batch_size(1), norm_penalization(0), svd_threshold(1e-3)
 {
 }
 
@@ -113,10 +113,10 @@ void TangentLearner::declareOptions(OptionList& ol)
   declareOption(ol, "optimizer", &TangentLearner::optimizer, OptionBase::buildoption,
 		"Optimizer that optimizes the cost function Number of tangent vectors to predict.\n"
 		);
-
-  declareOption(ol, "tangent_predictor", &TangentLearner::tangent_predictor, OptionBase::buildoption,
-		"Func that specifies the parametrized mapping from inputs to predicted tangent planes\n"
-		);
+		  
+//declareOption(ol, "tangent_predictor", &TangentLearner::tangent_predictor, OptionBase::buildoption,
+//	"Func that specifies the parametrized mapping from inputs to predicted tangent planes\n"
+//		);
 
   declareOption(ol, "architecture_type", &TangentLearner::architecture_type, OptionBase::buildoption,
 		"For pre-defined tangent_predictor types: \n"
@@ -142,6 +142,10 @@ void TangentLearner::declareOptions(OptionList& ol)
     "The penalty is norm_penalization*sum_i (1 - ||f_i||^2)^2.\n"                
 		);
 
+  declareOption(ol, "svd_threshold", &TangentLearner::svd_threshold, OptionBase::buildoption,
+		"Threshold to accept singular values of F in solving for linear combination weights on tangent subspace.\n"
+		);
+
   declareOption(ol, "parameters", &TangentLearner::parameters, OptionBase::learntoption,
 		"Parameters of the tangent_predictor function.\n"
 		);
@@ -153,10 +157,10 @@ void TangentLearner::declareOptions(OptionList& ol)
 void TangentLearner::build_()
 {
 
-  if (train_set)
+  int n = PLearner::inputsize_;
+  
+  if (n>0)
   {
-    int n = inputsize();
-
     if (architecture_type == "multi_neural_network")
       {
         if (n_hidden_units <= 0)
@@ -193,7 +197,7 @@ void TangentLearner::build_()
           parameters[i] = tangent_predictor->parameters[i];
       }
     
-    tangent_predictor->outputs.resize(n_dim,n);
+    tangent_predictor->outputs[0]->resize(n_dim,n);
     if (training_targets=="local_evectors")
       tangent_targets = Var(n_dim,n);
     else if (training_targets=="local_neighbors")
@@ -201,7 +205,7 @@ void TangentLearner::build_()
     else PLERROR("TangentLearner::build, option training_targets is %s, should be 'local_evectors' or 'local_neighbors'.",
                  training_targets.c_str());
 
-    Var proj_err = projection_error(tangent_predictor->outputs, tangent_targets, n, use_subspace_distance, norm_penalization);
+    Var proj_err = projection_error(tangent_predictor->outputs[0], tangent_targets, norm_penalization, n, use_subspace_distance, svd_threshold);
     cost_of_one_example = Func(tangent_predictor->inputs & tangent_targets, tangent_predictor->parameters, proj_err);
 
   }
