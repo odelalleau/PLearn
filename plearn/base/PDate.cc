@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDate.cc,v 1.3 2003/09/09 18:05:14 plearner Exp $
+   * $Id: PDate.cc,v 1.4 2003/10/22 20:04:33 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -109,6 +109,14 @@ PDate::PDate(string date)
         month = 12;
       else
         PLERROR("Invalid month string: %s",mo.c_str());
+    }
+  else if (date.size() == 8 && pl_isnumber(date))
+    {
+      year = toint(date.substr(0,4));
+      month = toint(date.substr(4,2));
+      day = toint(date.substr(6,2));
+      if(year<1970 || year>3000 || month<1 || month>12 || day<1 || day>31)
+        PLERROR("Invalid date string: %s",date.c_str());
     }
   else
     PLERROR("PDate::PDate: the passed date string is not in a known format: %s", date.c_str());
