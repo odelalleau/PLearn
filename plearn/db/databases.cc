@@ -36,14 +36,15 @@
 
 
 /* *******************************************************      
-   * $Id: databases.cc,v 1.5 2004/02/20 21:11:44 chrish42 Exp $
+   * $Id: databases.cc,v 1.6 2004/03/03 14:12:42 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "databases.h"
-#include "stringutils.h"
-#include "TMat_maths.h"
+//#include "stringutils.h"
+#include "NistDB.h"
+//#include "TMat_maths.h"
 #include "random.h"
 #include "VMat_maths.h"
 #include "RemapLastColumnVMatrix.h"
