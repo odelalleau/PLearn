@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.31 2004/02/26 04:39:36 nova77 Exp $
+   * $Id: TMat.h,v 1.32 2004/02/27 22:55:35 nova77 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -112,7 +112,7 @@ class TVec
       //         because int could be different from size_type!
       inline TVec(const vector<T> & vec)
        :length_((int)vec.size()), offset_(0),
-       storage(new Storage<T>(vec.size()))
+       storage(new Storage<T>((int)vec.size()))
        {
          for(int i=0;i<length_;i++)
            (*this)[i]=vec[i];

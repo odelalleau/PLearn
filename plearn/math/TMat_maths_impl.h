@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.39 2004/02/26 04:38:26 nova77 Exp $
+   * $Id: TMat_maths_impl.h,v 1.40 2004/02/27 22:55:35 nova77 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -486,7 +486,7 @@ T maxabs(const TVec<T>& vec)
 // }
 
 template<class T>
-T minabs(const TVec<T>& vec, int& index = int())
+T minabs(const TVec<T>& vec, int index = int())
 {
   #ifdef BOUNDCHECK
   if(vec.length()==0)
@@ -5630,20 +5630,21 @@ void addXandX2IfNonMissing(const TVec<T>& source, const TVec<int>& nnonmissing, 
 } // end of namespace PLearn
  
 
-#if __GNUC__==3 && __GNUC_MINOR__>0
-namespace __gnu_cxx {
-#else
-namespace std {
-#endif
+// Norman: replaced the code below with this wrapper
+SET_HASH_FUNCTION(PLearn::TVec<T>, T, v, sumsquare(v))
+//#if __GNUC__==3 && __GNUC_MINOR__>0
+//namespace __gnu_cxx {
+//#else
+//namespace std {
+//#endif
+//
+//template<class T>
+//struct hash<PLearn::TVec<T> >
+//{
+//	size_t operator()(PLearn::TVec<T> v) const { return hash<T>()(sumsquare(v));} 
+//};
 
-template<class T>
-struct hash<PLearn::TVec<T> >
-{
-  size_t operator()(PLearn::TVec<T> v) const { return hash<T>()(sumsquare(v));} 
-};
-
-
-} // end of namespace std
+//} // end of namespace std
 
 
 #endif // TMat_maths_impl_H
