@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.6 2003/10/09 23:06:42 dorionc Exp $
+   * $Id: Kernel.cc,v 1.7 2003/10/09 23:22:48 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -606,10 +606,8 @@ void GaussianKernel::setDataForKernelMatrix(VMat the_data)
 { 
   // Will be needed if is_sequential is true
   int previous_data_length;
-  if(data.isNotNull()){
-    cout << "B squarednorms: " << squarednorms << endl;  
+  if(data.isNotNull())
     previous_data_length = data.length();
-  }
 
   Kernel::setDataForKernelMatrix(the_data);
   squarednorms.resize(data.length());
@@ -618,13 +616,8 @@ void GaussianKernel::setDataForKernelMatrix(VMat the_data)
   if(is_sequential)
     index = previous_data_length;
 
-  int tmp=0;
-  for(; index<data.length(); index++){
-    tmp++;
+  for(; index<data.length(); index++)
     squarednorms[index] = data->dot(index,index);
-  }
-  cout << "After squarednorms: " << squarednorms << endl;
-  cout << "In " << tmp << " op" << endl;
 }
 
 real GaussianKernel::evaluate(const Vec& x1, const Vec& x2) const
