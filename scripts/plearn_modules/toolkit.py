@@ -18,9 +18,10 @@ def doc(obj):
 def listdirs(dirs):
     dirs_list = []
     for dirc in dirs:
-        dirs_list.extend( os.listdir(dirc) )
+        if os.path.exists(dirc):
+            dirs_list.extend( os.listdir(dirc) )
     return dirs_list
-    
+
 def get_path(branches, fpath):
     """Return the first existing branch/fname path, for branch in branches.
 

@@ -45,12 +45,6 @@ plearndir = os.environ.get('PLEARNDIR', os.path.join(homedir,'PLearn'))
 # Management of multiple Skeletons directory
 default_skeldir = os.path.join(plearndir,'scripts/Skeletons')
 SKELDIRS = string.split(os.getenv('SKELETONS_PATH', default_skeldir), ':')
-# SKELDIRS = default_skeldir
-
-print SKELDIRS
-print toolkit.listdirs(SKELDIRS)
-# baseclasses = map( lambda s: s[:-2], filter( lambda s: s[-2:]=='.h', toolkit.listdirs(SKELDIRS)) )
-
 baseclasses = [ s[:-2] for s in toolkit.listdirs(SKELDIRS) if s[-2:]=='h' ]
 
 if len(args)<2 or args[0] not in baseclasses:
