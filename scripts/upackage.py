@@ -71,9 +71,9 @@ def install(packagename, version='', prefixdir=''):
     if version not in installable_versions:
         print 'Version',version,'is not in the list of installable package versions.'
         sys.exit()
-    if version in installed_versions:
-        print packagename, version, 'appears to be already installed.'
-        sys.exit()
+    # if version in installed_versions:
+    #    print packagename, version, 'appears to be already installed.'
+    #    sys.exit()
 
     if prefixdir=='': # Let the user choose a prefix
         prefixes = get_environment_prefixpath()
@@ -88,18 +88,18 @@ def install(packagename, version='', prefixdir=''):
         prefixdir=prefixes[i-1]
 
     dependencies = package.get_dependencies(version)
-    for (depname, desired_versions) in dependencies:
+    for (depname, minimum_version) in dependencies:
         deppack = get_package(depname)
         installed_versions = deppack.get_installed_versions()
         found_ver = ''
-        for ver in desired_versions:
-            if ver in installed_versions:
+        for ver in installed_versions:
+            if upackages.version_equal_or_greater(ver, minimum_version):
                 found_ver = ver
                 break
         if found_ver!='':
             print 'Found dependency ', depname, found_ver, 'OK.'
         else:
-            print 'MISSING DEPENDENCY: ', packagename, 'requires', depname, '(required version:',string.join(desired_versions,' or '),')'
+            print 'MISSING DEPENDENCY: ', packagename, 'requires', depname, 'version >=',minimum_version
             print '  Versions of '+depname+' installable with upackage are:'
             print '    '+string.join(deppack.get_installable_versions(),'    \n')
             print '  Please enter the version you wish upackage to install '
@@ -251,8 +251,8 @@ def run():
         package = get_package(packagename)
         dependencies = package.get_dependencies(version)
         print 'UPACKAGE',packagename, version, ' installation depends on:'
-        for dep in dependencies:
-            print '  ',dep[0],' version',dep[1]
+        for depname, depver in dependencies:
+            print '  ',depname,' version >=',depver
         
 try:
     run()

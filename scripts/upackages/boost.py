@@ -1,3 +1,37 @@
+# upackages/boost.py
+#
+# Copyright (C) 2004 ApSTAT Technologies Inc.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#
+#   1. Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
+#
+#   2. Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#
+#   3. The name of the authors may not be used to endorse or promote
+#      products derived from this software without specific prior written
+#      permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+#  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+#  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+#  NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+#  TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+#  This file is part of the PLearn library. For more information on the PLearn
+#  library, go to the PLearn Web site at www.plearn.org
+
+# Author: Pascal Vincent
+
 from upackages import *
 import sys
 
@@ -11,8 +45,8 @@ def get_installed_versions():
     appear to be installed, or an empty list if none is installed."""
 
     versions = []
-    if(locate_lib('boost_prg_exec_monitor-gcc-mt-1_31')!=''):
-        versions.append('1.31')
+    if(locate_lib('libboost_regex-gcc-mt-1_31.so.1.31.0')!=''):
+        versions.append('1.31.0')
 
     return versions
 
@@ -22,10 +56,8 @@ def get_installable_versions():
 
 def get_dependencies(version):
     """Returns a list describing the upackages required to build and use the given version of this one.
-    The returned list is made of pairs (package_name, valid_versions)
-    where valid_versions is itself a list containing all the version strings
-    that can be used to build this package."""
-    return [ ('bjam',['3.1.3','3.1.4','3.1.7','3.1.9','3.1.10']) ]
+    The returned list is made of pairs (package_name, minimum_required_version)"""
+    return [ ('bjam','3.1.10') ]
 
 def install(version, prefixdir):
     """Downloads and builds the package in the current directory
@@ -61,10 +93,22 @@ def install(version, prefixdir):
             raise NameError
         
     if(version=='1.31.0'):
-        download_from_sourceforge('boost','boost_1_31_0.tar.gz')
-        unpack('boost_1_31_0.tar.gz')
-        chdir('boost_1_31_0')
-        system('bjam -sTOOLS=gcc -sPYTHON_ROOT='+python_root+' -sPYTHON_VERSION='+python_version+' --prefix='+prefixdir)
+        # download_from_sourceforge('boost','boost_1_31_0.tar.gz')
+        # unpack('boost_1_31_0.tar.gz')
+        # chdir('boost_1_31_0')
+        # system('bjam -sTOOLS=gcc -sPYTHON_ROOT='+python_root+' -sPYTHON_VERSION='+python_version+' --prefix='+prefixdir+' install')
+
+        # Make symbolic links in lib/
+        chdir(os.path.join(prefixdir,'lib'))
+        optext = '-gcc-mt-1_31'
+        for libname in [ 'date_time', 'prg_exec_monitor', 'python', 'regex', 'signals', 'test_exec_monitor', 'thread', 'unit_test_framework']:
+            symlink('libboost_'+libname+optext+'.a','libboost_'+libname+'.a',False)
+            symlink('libboost_'+libname+optext+'.so','libboost_'+libname+'.so',False)
+            
+        # Make symbolic link include/boost -> include/boost-1_31/boost
+        chdir(os.path.join(prefixdir,'include'))
+        symlink('boost-1_31/boost','boost')
+              
     else:
         raise Error('Installation of boost version '+version+' not supported.')
         

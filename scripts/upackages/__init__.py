@@ -154,8 +154,8 @@ def chdir(dirpath):
         os.makedirs(dirpath)
     os.chdir(dirpath)    
     
-def locate_lib(libname):
-    """Looks for that library in the following standard directories:
+def locate_lib(libfilename):
+    """Looks for libfilename in the following standard directories:
     /lib /usr/lib $LD_LIBRARY_PATH $LIBRARY_PATH
     If found, returns the full path of the library file.
     If not found, returns the empty string."""
@@ -163,22 +163,19 @@ def locate_lib(libname):
     libdirs = ['/lib','/usr/lib'] + string.split(os.getenv('LD_LIBRARY_PATH',''),':') + string.split(os.getenv('LIBRARY_PATH',''),':')
     libdirs = [ d for d in libdirs if d!='' ] 
     for dirpath in libdirs:
-        filepath = os.path.join(dirpath,'lib'+libname+'.so')
-        if(os.path.isfile(filepath)):
-            return filepath
-        filepath = os.path.join(dirpath,'lib'+libname+'.a')
+        filepath = os.path.join(dirpath,libfilename)
         if(os.path.isfile(filepath)):
             return filepath
     return ''                                                     
 
 def locate_include(includename):
     """Looks for that include in the following standard directories:
-    /usr/inclue /usr/local/include $C_INCLUDE_PATH $CPLUS_INCLUDE_PATH
+    /usr/inclue /usr/local/include $CPATH $C_INCLUDE_PATH $CPLUS_INCLUDE_PATH
     (The includename must be relative to one of these directories)
     If found, returns the path of the directory containing the file.
     If not found, returns the empty string."""
 
-    includedirs = ['/usr/include','/usr/local/include'] + string.split(os.getenv('C_INCLUDE_PATH',''),':') + string.split(os.getenv('CPLUS_INCLUDE_PATH',''),':')
+    includedirs = ['/usr/include','/usr/local/include'] + string.split(os.getenv('CPATH',''),':') + string.split(os.getenv('C_INCLUDE_PATH',''),':') + string.split(os.getenv('CPLUS_INCLUDE_PATH',''),':')
     includedirs = [ d for d in includedirs if d!='' ] 
     for dirpath in includedirs:
         filepath = os.path.join(dirpath,includename)
@@ -205,7 +202,45 @@ def get_package(packagename):
     exec 'package = upackages.'+packagename
     return package
 
+def version_equal_or_greater(ver, compared_to_ver):
+    """Returns whether ver >= compared_to_ver
+    versions are represented as version strings."""
+    return [ num for num in string.split(ver,'.') ] >= [ num for num in string.split(compared_to_ver,'.') ]
 
+def remove(path):
+    """removes a file, symlink, or an entire directory recursively"""
+    if os.path.isdir(path):
+        for name in os.listdir(path):
+            remove(name)
+        os.rmdir(path)
+    else:
+        os.remove(path)
+
+def rename(src,dst):
+    """Renames file or directory src into dst
+    This currently simply calls os.rename"""
+    os.rename(src,dst)
+
+def symlink(src, dst, rename_dst=True):
+    """Create a symbolic link pointing to src named dst.
+    The link is created only if src exists.
+    If rename_dst is True and dst exists, dst is renamed into dst.old.<num> where <num> is the first number available.
+    If rename_dst is False and dst exists, dst is first removed.
+    """
+    if os.path.exists(src):
+        if os.path.exists(dst):
+            if not rename_dst:
+                remove(dst)
+            else:
+                num = 1
+                newname = dst+'.old.'+str(num)
+                while os.path.exists(newname):
+                    num = num+1
+                    newname = dst+'.old.'+str(num)
+                rename(dst,newname)
+        os.symlink(src,dst)
+        print "CREATED SYMBOLIC LINK: ",dst,'-->',src
+    
 # def requires(packagename, required_version_list):
 #     """Checks if the specified package is installed with a version that is in the given version_list.
 #     If not, proposes installing it (the first version of the list).
