@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.3 2002/09/06 16:43:24 morinf Exp $
+   * $Id: TMat_maths_impl.h,v 1.4 2002/09/12 14:15:18 wangxian Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -71,7 +71,7 @@ T max(const TVec<T>& vec)
 
   //! y = softmax(x)
 template <class T> 
-void softmax(const TVec<T>& x, TVec<T>& y)
+void softmax(const TVec<T>& x, const TVec<T>& y)
 {  
   int n = x.length();
   if (n>0)
