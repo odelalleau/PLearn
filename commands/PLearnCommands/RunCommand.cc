@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunCommand.cc,v 1.14 2004/12/07 22:39:42 chapados Exp $ 
+   * $Id: RunCommand.cc,v 1.15 2004/12/22 16:23:23 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file RunCommand.cc */
@@ -80,6 +80,12 @@ void RunCommand::run(const vector<string>& args)
   if (extension == ".pyplearn")
     {
       script = process_pyplearn_script(scriptfile, args);
+      // When we call the pyplearn script with either --help
+      // or --dump, everything will already have been done by
+      // process_pyplearn_script, which then returns "" to
+      // signify that there is nothing else to be done.
+      if (script == "")
+        return;
     }
   else
     {
@@ -93,8 +99,6 @@ void RunCommand::run(const vector<string>& args)
       PP<Object> o = readObject(in);
       o->run();
       in.skipBlanksAndCommentsAndSeparators();
-      // cerr << bool(in) << endl;
-      // cerr << in.peek() << endl;
     }
 }
 
