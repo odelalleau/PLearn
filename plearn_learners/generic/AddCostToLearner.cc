@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.cc,v 1.3 2004/03/16 18:37:12 tihocan Exp $ 
+   * $Id: AddCostToLearner.cc,v 1.4 2004/03/19 19:28:14 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -42,7 +42,10 @@
 
 
 #include "AddCostToLearner.h"
+#include "ConcatColumnsVMatrix.h"
 #include "CrossEntropyVariable.h"
+#include "SubVMatrix.h"
+#include "SumOverBagsVariable.h"   //!< For the bag signal constants.
 #include "VarArray.h"
 #include "VecElementVariable.h"
 
@@ -51,6 +54,9 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(AddCostToLearner,
     "A PLearner that just adds additional costs to another PLearner.",
+    "In addition, this learner can be used to compute costs on bags instead of\n"
+    "individual samples, using the option 'compute_costs_on_bags'.\n"
+    "\n"
     "Feel free to make this class evolve by adding new costs, or rewriting it\n"
     "in a better fashion, because this one is certainly not perfect.\n"
     "To use the lift cost, do the following:\n"
@@ -72,7 +78,10 @@ PLEARN_IMPLEMENT_OBJECT(AddCostToLearner,
 // AddCostToLearner //
 //////////////////////
 AddCostToLearner::AddCostToLearner()
-: check_output_consistency(1),
+: bag_size(0),
+  check_output_consistency(1),
+  combine_bag_outputs_method(1),
+  compute_costs_on_bags(0),
   from_max(1),
   from_min(-1),
   rescale_output(0),
@@ -90,6 +99,16 @@ void AddCostToLearner::declareOptions(OptionList& ol)
       "If set to 1, additional checks will be performed to make sure the output\n"
       "is compatible with the costs to be computed. This may slow down the costs\n"
       "computation, but is also safer.");
+
+  declareOption(ol, "combine_bag_outputs_method", &AddCostToLearner::combine_bag_outputs_method, OptionBase::buildoption,
+      "The method used to combine the individual outputs of the sub_learner to\n"
+      "obtain a global output on the bag (irrelevant if 'compute_costs_on_bags' == 0):\n"
+      " - 1 : o = 1 - (1 - o_1) * (1 - o_2) * .... * (1 - o_n)\n"
+      " - 2 : o = max(o_1, o_2, ..., o_n)");
+
+  declareOption(ol, "compute_costs_on_bags", &AddCostToLearner::compute_costs_on_bags, OptionBase::buildoption,
+      "If set to 1, then the costs will be computed on bags, but the sub_learner will\n"
+      "be trained without the bag information (see SumOverBagsVariable for info on bags).");
 
   declareOption(ol, "costs", &AddCostToLearner::costs, OptionBase::buildoption,
       "The costs to be added:\n"
@@ -142,6 +161,8 @@ void AddCostToLearner::build()
 ////////////
 void AddCostToLearner::build_()
 {
+  // Give a default size to bag_outputs.
+  bag_outputs.resize(10, 1);
   // Make sure all costs are valid.
   int n = costs.length();
   int min_verb = 2;
@@ -198,7 +219,69 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
   int n_original_costs = sub_learner->nTestCosts();
   // We give only costs.subVec to the sub_learner because it may want to resize it.
   Vec sub_costs = costs.subVec(0, n_original_costs);
-  sub_learner->computeCostsFromOutputs(input, output, target, sub_costs);
+  if (compute_costs_on_bags) {
+    sub_learner->computeCostsFromOutputs(input, output, target.subVec(0, target.length() - 1), sub_costs);
+  } else {
+    sub_learner->computeCostsFromOutputs(input, output, target, sub_costs);
+  }
+
+  if (compute_costs_on_bags) {
+    // We only need to compute the costs when the whole bag has been seen,
+    // otherwise we just store the outputs of each sample in the bag and fill
+    // the cost with MISSING_VALUE.
+    int bag_signal = int(target[target.length() - 1]);
+    if (bag_signal & SumOverBagsVariable::TARGET_COLUMN_FIRST) {
+      // Beginning of the bag.
+      bag_size = 0;
+    }
+    if (bag_outputs.width() != output.length()) {
+      // Need to resize bag_outputs.
+      bag_outputs.resize(bag_outputs.length(), output.length());
+    }
+    if (bag_outputs.length() <= bag_size) {
+      // Need to resize bag_outputs.
+      bag_outputs.resize(bag_outputs.length() * 2, bag_outputs.width());
+    }
+    bag_outputs(bag_size) << output;
+    bag_size++;
+    if (bag_signal & SumOverBagsVariable::TARGET_COLUMN_LAST) {
+      // Reached the end of the bag: we can compute the output for the bag.
+      bag_outputs.resize(bag_size, bag_outputs.width());
+      switch (combine_bag_outputs_method) {
+        case 1: // o = 1 - (1 - o_1) * (1 - o_2) * .... * (1 - o_n)
+          {
+            real prod;
+            for (int j = 0; j < bag_outputs.width(); j++) {
+              prod = 1;
+              for (int i = 0; i < bag_outputs.length(); i++) {
+                prod = prod * (1 - bag_outputs(i, j));
+              }
+              output[j] = 1 - prod;
+            }
+          }
+          break;
+        case 2: // o = max(o_1, o_2, ..., o_n)
+          {
+            for (int j = 0; j < bag_outputs.width(); j++) {
+              output[j] = max(bag_outputs.column(j));
+            }
+          }
+          break;
+        default:
+          PLERROR("In AddCostToLearner::computeCostsFromOutputs - Unknown value for 'combine_bag_outputs_method'");
+      }
+    } else {
+      costs.fill(MISSING_VALUE);
+      return;
+    }
+  }
+
+  Vec the_target;
+  if (compute_costs_on_bags) {
+    the_target = target.subVec(0, target.length() - 1);
+  } else {
+    the_target = target;
+  }
 
   // Optional rescaling.
   if (!rescale_output) {
@@ -219,11 +302,11 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
     }
   }
   if (!rescale_target) {
-    desired_target << target;
+    desired_target << the_target;
   } else {
     int n = output.length();
     for (int i = 0; i < n; i++) {
-      desired_target[i] = (target[i] - from_min) * fac + to_min;
+      desired_target[i] = (the_target[i] - from_min) * fac + to_min;
     }
   }
 
@@ -294,6 +377,7 @@ void AddCostToLearner::computeOutput(const Vec& input, Vec& output) const
 void AddCostToLearner::forget()
 {
   sub_learner->forget();
+  bag_size = 0;
 }
     
 //////////////////////
@@ -329,21 +413,25 @@ TVec<string> AddCostToLearner::getTrainCostNames() const
   return sub_learner->getTrainCostNames();
 }
 
+//! To use varDeepCopyField.
+extern void varDeepCopyField(Var& field, CopiesMap& copies);
+
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
 void AddCostToLearner::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
-
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("AddCostToLearner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+  deepCopyField(bag_outputs, copies);
+  deepCopyField(cross_entropy_prop, copies);
+  varDeepCopyField(cross_entropy_var, copies);
+  deepCopyField(desired_target, copies);
+  varDeepCopyField(output_var, copies);
+  deepCopyField(sub_learner_output, copies);
+  deepCopyField(sub_input, copies);
+  varDeepCopyField(target_var, copies);
+  deepCopyField(costs, copies);
+  deepCopyField(sub_learner, copies);
 }
 
 ////////////////
@@ -352,6 +440,34 @@ void AddCostToLearner::makeDeepCopyFromShallowCopy(map<const void*, void*>& copi
 int AddCostToLearner::outputsize() const
 {
   return sub_learner->outputsize();
+}
+
+////////////////////
+// setTrainingSet //
+////////////////////
+void AddCostToLearner::setTrainingSet(VMat training_set, bool call_forget) {
+  if (compute_costs_on_bags) {
+    // We need to remove the bag information (assumed to be in the last column
+    // of the target) when giving the training set to the sub learner.
+    // TODO Write a SubTargetVMatrix to make it easier.
+    if (training_set->inputsize() < 0 || training_set->targetsize() < 0) {
+      PLERROR("In AddCostToLearner::setTrainingSet - The inputsize and / or targetsize of the training set isn't specified");
+    }
+    VMat sub_training_set;
+    if (training_set->weightsize() > 0) {
+      sub_training_set = new ConcatColumnsVMatrix(
+          new SubVMatrix(training_set, 0, 0, training_set->length(), training_set->inputsize() + training_set->targetsize() - 1),
+          new SubVMatrix(training_set, 0, training_set->inputsize() + training_set->targetsize(), training_set->length(), training_set->weightsize())
+      );
+    } else {
+      sub_training_set = new SubVMatrix(training_set, 0, 0, training_set->length(), training_set->width() - 1);
+    }
+    sub_training_set->defineSizes(training_set->inputsize(), training_set->targetsize() - 1, training_set->weightsize());
+    sub_learner->setTrainingSet(sub_training_set, call_forget);
+  } else {
+    sub_learner->setTrainingSet(training_set, call_forget);
+  }
+  inherited::setTrainingSet(training_set, call_forget);
 }
 
 ///////////

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.h,v 1.2 2004/03/16 18:37:18 tihocan Exp $ 
+   * $Id: AddCostToLearner.h,v 1.3 2004/03/19 19:28:14 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -64,6 +64,12 @@ protected:
 
   // Fields below are not options.
 
+  //! Used to store the outputs of the sub_learner for each sample in a bag.
+  mutable Mat bag_outputs;
+
+  //! Used to count the number of instances in a bag.
+  mutable int bag_size;
+    
   //! Propagation path for the cross entropy cost.
   mutable VarArray cross_entropy_prop;
   
@@ -86,9 +92,13 @@ protected:
   //! Used to store the sub_learner_output.
   Vec sub_learner_output;
 
+  //! Used to store the input given to the sub_learner, when it needs to be
+  //! copied in a separate place.
+  mutable Vec sub_input;
+
   //! Its value is desired_target[0].
   Var target_var;
-    
+
 public:
 
   // ************************
@@ -96,6 +106,8 @@ public:
   // ************************
 
   bool check_output_consistency;
+  int combine_bag_outputs_method;
+  bool compute_costs_on_bags;
   TVec<int> costs;
   bool force_output_to_target_interval;
   real from_max;
@@ -173,10 +185,10 @@ public:
   virtual TVec<string> getTrainCostNames() const;
 
   //! Overrridden to forward to the sub_learner.
-  virtual void setTrainingSet(VMat training_set, bool call_forget=true) {
-    sub_learner->setTrainingSet(training_set, call_forget);
-    PLearner::setTrainingSet(training_set, call_forget);
+  virtual void setExperimentDirectory(const string& the_expdir) {
+    sub_learner->setExperimentDirectory(the_expdir);
   }
+  virtual void setTrainingSet(VMat training_set, bool call_forget=true);
   virtual void setTrainStatsCollector(PP<VecStatsCollector> statscol) {
     sub_learner->setTrainStatsCollector(statscol);
   }
