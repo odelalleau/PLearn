@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: ProgressBar.h,v 1.6 2004/05/14 17:15:37 plearner Exp $
+   * $Id: ProgressBar.h,v 1.7 2004/07/13 20:59:05 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -70,7 +70,7 @@ public:
   virtual ~ProgressBarPlugin() {}
   virtual void addProgressBar(ProgressBar * pb){};
   virtual void killProgressBar(ProgressBar * pb){};
-  virtual void update(ProgressBar * pb, int newpos){};
+  virtual void update(ProgressBar * pb, unsigned long newpos){};
 };
 
 
@@ -80,7 +80,7 @@ class TextProgressBarPlugin : public ProgressBarPlugin
   PStream out;
 public:
   virtual void addProgressBar(ProgressBar * pb);
-  virtual void update(ProgressBar * pb, int newpos);
+  virtual void update(ProgressBar * pb, unsigned long newpos);
 
   TextProgressBarPlugin(ostream& _out);
   TextProgressBarPlugin(PStream& _out);
@@ -110,20 +110,20 @@ class ProgressBar
 {
 public:
   string title;
-  int currentpos; // current position
-  int maxpos;
+  unsigned long currentpos; // current position
+  unsigned long maxpos;
 
   // creates a new progressbar with the given title and maxpos
   // *** Note, for now, ignore the stream (someday, remove this argument for 
   // every progressBar creation in PLearn)
-  ProgressBar(string _title, int the_maxpos);
-  ProgressBar(ostream& _out,string _title, int the_maxpos);
-  ProgressBar(PStream& _out,string _title, int the_maxpos);
+  ProgressBar(string _title, unsigned long the_maxpos);
+  ProgressBar(ostream& _out,string _title, unsigned long the_maxpos);
+  ProgressBar(PStream& _out,string _title, unsigned long the_maxpos);
   
   // moves the progressbar up to position newpos
-  void operator()(int newpos){plugin->update(this,newpos);}
+  void operator()(unsigned long newpos){plugin->update(this,newpos);}
  
-  void update(int newpos){plugin->update(this,newpos);}
+  void update(unsigned long newpos){plugin->update(this,newpos);}
 
   // this function assumes plugin is always a valid object (it is created statically in the .cc)
   static void setPlugin(PP<ProgressBarPlugin> plugin_) { plugin = plugin_; }

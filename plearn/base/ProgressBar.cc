@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: ProgressBar.cc,v 1.7 2004/05/14 17:15:37 plearner Exp $
+   * $Id: ProgressBar.cc,v 1.8 2004/07/13 20:59:05 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -63,7 +63,7 @@ PP<ProgressBarPlugin> ProgressBar::getCurrentPlugin()
   return plugin; 
 }
 
-ProgressBar::ProgressBar(string _title, int the_maxpos)
+ProgressBar::ProgressBar(string _title, unsigned long the_maxpos)
   :title(_title),currentpos(0), maxpos(the_maxpos),closed(false)
 {
   if (plugin == NULL)
@@ -72,7 +72,7 @@ ProgressBar::ProgressBar(string _title, int the_maxpos)
   plugin->addProgressBar(this);
 }
 
-ProgressBar::ProgressBar(ostream& _out, string _title, int the_maxpos)
+ProgressBar::ProgressBar(ostream& _out, string _title, unsigned long the_maxpos)
   :title(_title),currentpos(0), maxpos(the_maxpos),closed(false)
 {
   if (plugin == NULL)
@@ -80,7 +80,7 @@ ProgressBar::ProgressBar(ostream& _out, string _title, int the_maxpos)
 
   plugin->addProgressBar(this);
 }
-ProgressBar::ProgressBar(PStream& _out, string _title, int the_maxpos)
+ProgressBar::ProgressBar(PStream& _out, string _title, unsigned long the_maxpos)
   :title(_title),currentpos(0), maxpos(the_maxpos),closed(false)
 {
   if (plugin == NULL)
@@ -129,7 +129,7 @@ void TextProgressBarPlugin::addProgressBar(ProgressBar * pb)
 #endif
 }
 
-void TextProgressBarPlugin::update(ProgressBar * pb,int newpos)
+void TextProgressBarPlugin::update(ProgressBar * pb,unsigned long newpos)
 {
 #if USING_MPI
     if(PLMPI::rank==0)
@@ -146,7 +146,9 @@ void TextProgressBarPlugin::update(ProgressBar * pb,int newpos)
 
         if(!pb->maxpos || newpos>pb->maxpos)
           return;
-        int ndots = newpos*100 / pb->maxpos - pb->currentpos*100/pb->maxpos;
+        int ndots = int(newpos / (double(pb->maxpos) / 100)) - int(pb->currentpos / (double(pb->maxpos) / 100));
+        if (ndots < 0)
+          PLERROR("In TextProgressBarPlugin::update - Trying to plot an infinite number of dots");
         while(ndots--)
           out << '.';
         out.flush();
