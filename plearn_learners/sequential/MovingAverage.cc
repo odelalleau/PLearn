@@ -175,8 +175,6 @@ void MovingAverage::test(VMat testset, PP<VecStatsCollector> test_stats,
   cout << "MovingAverage.last_test_t = " << last_test_t << endl;
 #endif
 
-  test_stats->finalize();
-
   if (pb) delete pb;
 }
 

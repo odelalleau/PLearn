@@ -159,8 +159,6 @@ void EmbeddedSequentialLearner::test(VMat testset, PP<VecStatsCollector> test_st
   }
   last_test_t = testset.length();
 
-  test_stats->finalize();
-
   if (pb)
     delete pb;
 }
