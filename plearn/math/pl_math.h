@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.21 2004/10/21 16:19:39 ducharme Exp $
+   * $Id: pl_math.h,v 1.22 2004/11/22 19:27:28 lamblin Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -66,6 +66,12 @@ using namespace std;
 #define REAL_MAX FLT_MAX
 #else
 #define REAL_MAX DBL_MAX
+#endif
+
+#ifdef USEFLOAT
+#define REAL_EPSILON FLT_EPSILON
+#else
+#define REAL_EPSILON DBL_EPSILON
 #endif
 
 union _plearn_nan_type { unsigned char c[4]; float d; };
