@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.28 2004/06/03 13:48:49 tihocan Exp $
+   * $Id: Kernel.cc,v 1.29 2004/06/16 18:28:18 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -154,20 +154,29 @@ void Kernel::addDataForKernelMatrix(const Vec& newRow)
 //////////////
 // evaluate //
 //////////////
-real Kernel::evaluate_i_j(int i, int j) const
-{ return evaluate(data.getSubRow(i,data_inputsize),data.getSubRow(j,data_inputsize)); }
+real Kernel::evaluate_i_j(int i, int j) const {
+  return evaluate(data->getSubRow(i, 0, data_inputsize), data->getSubRow(i, 0, data_inputsize));
+}
 
 
-real Kernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) const 
-{ return evaluate(data.getSubRow(i,data_inputsize),x); }
+real Kernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) const  {
+  static Vec x_i;
+  x_i.resize(data_inputsize);
+  data->getSubRow(i, 0, x_i);
+  return evaluate(x_i, x);
+}
 
 
 real Kernel::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x) const
 { 
+  static Vec x_i;
   if(is_symmetric)
     return evaluate_i_x(i,x,squared_norm_of_x);
-  else
-    return evaluate(x,data.getSubRow(i,data_inputsize));
+  else {
+    x_i.resize(data_inputsize);
+    data->getSubRow(i, 0, x_i);
+    return evaluate(x, x_i);
+  }
 }
 
 real Kernel::evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x, bool first_time) const {
@@ -213,16 +222,19 @@ void Kernel::computeGramMatrix(Mat K) const
   if (report_progress) {
     pb = new ProgressBar("Computing Gram matrix for " + classname(), (l * (l + 1)) / 2);
   }
+  real Kij;
+  real* Ki;
+  real* Kji_;
   for (int i=0;i<l;i++)
   {
-    real* Ki = K[i];
-    real* Kji_ = &K[0][i];
-    for (int j=0;j<=i;j++,Kji_+=m)
+    Ki = K[i];
+    Kji_ = &K[0][i];
+    for (int j=0; j<=i; j++,Kji_+=m)
     {
-      real Kij = evaluate_i_j(i,j);
-      Ki[j]=Kij;
+      Kij = evaluate_i_j(i,j);
+      *Ki++ = Kij;
       if (j<i)
-        *Kji_ =Kij;
+        *Kji_ = Kij;
     }
     if (pb) {
       count += i + 1;
