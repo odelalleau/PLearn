@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.48 2004/08/26 21:03:51 chrish42 Exp $
+   * $Id: fileutils.cc,v 1.49 2004/09/21 13:11:11 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -508,7 +508,11 @@ string newFilename(const string directory, const string prefix, bool is_director
     sprintf(tmpfilename,"%sXXXXXX",prefix.c_str());
   else
     sprintf(tmpfilename,"%s/%sXXXXXX",tmpdirname.c_str(),prefix.c_str());
-  mkstemp(tmpfilename);
+  int fd = mkstemp(tmpfilename);
+  if (fd == -1)
+    PLERROR("In newFilename - Could not create temporary file");
+  // Close the file descriptor, since we are not using it.
+  close(fd);
   if (is_directory) {
       // Defeats the purpose of mktemp, but who cares?
       std::remove(tmpfilename);
