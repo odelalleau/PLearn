@@ -179,6 +179,49 @@ void someAsserts()
   
   ASSERT( "PPath('foo/bar/hi.cc').dirname() == 'foo/bar'",
            PPath("foo/bar/hi.cc").dirname() == "foo/bar" );
+
+  MAND_LOG << plhead("Methods extension and no_extension") << endl;  
+
+  ASSERT( "PPath('foo/bar/hi.cc').extension() == 'cc'",
+           PPath("foo/bar/hi.cc").extension() == "cc" );
+
+  ASSERT( "PPath('foo/bar.dir/hi.cc').extension() == 'cc'",
+           PPath("foo/bar.dir/hi.cc").extension() == "cc" );
+
+  ASSERT( "PPath('foo/bar/hi.').extension() == ''",
+           PPath("foo/bar/hi.").extension() == "" );
+
+  ASSERT( "PPath('foo/bar/hi').extension() == ''",
+           PPath("foo/bar/hi").extension() == "" );
+
+  ASSERT( "PPath('foo/bar.dir/hi').extension() == ''",
+           PPath("foo/bar.dir/hi").extension() == "" );
+
+  ASSERT( "PPath('foo/bar/hi.cc').no_extension() == 'foo/bar/hi'",
+           PPath("foo/bar/hi.cc").no_extension() == "foo/bar/hi" );
+
+  ASSERT( "PPath('foo/bar.d/hi.cc').no_extension() == 'foo/bar.d/hi'",
+           PPath("foo/bar.d/hi.cc").no_extension() == "foo/bar.d/hi" );
+
+  ASSERT( "PPath('foo/bar.d/hi').no_extension() == 'foo/bar.d/hi'",
+           PPath("foo/bar.d/hi").no_extension() == "foo/bar.d/hi" );
+
+  ASSERT( "PPath('foo/bar.d/hi.').no_extension() == 'foo/bar.d/hi.'",
+           PPath("foo/bar.d/hi.").no_extension() == "foo/bar.d/hi." );
+
+  MAND_LOG << plhead("Methods addProtocol() and removeProtocol()") << endl;  
+
+  PRINT_TEST( "PPath('/foo/bar').addProtocol()",
+               PPath("/foo/bar").addProtocol().canonical() );
+
+  PRINT_TEST( "PPath('foo/bar').addProtocol()",
+               PPath("foo/bar").addProtocol().canonical() );  // PLERROR
+
+  PRINT_TEST( "PPath('file:/foo/bar').removeProtocol()",
+               PPath("file:/foo/bar").removeProtocol().canonical() );
+
+  PRINT_TEST( "PPath('/foo/bar').removeProtocol()",
+               PPath("/foo/bar").removeProtocol().canonical() );
 }
 
 void canonical()
@@ -280,13 +323,13 @@ int main()
   someAsserts();
   canonical();    // Display some canonical paths.
 
-  MAND_LOG << plhead("Platform dependent tests.") << endl;
+  MAND_LOG << plhead("Platform-dependent tests.") << endl;
 
   backslashes();
   absolute_path();
   
-// Note that platform dependent tests must not PRINT anything that is
-// platform dependent...
+// Note that platform-dependent tests must not PRINT anything that is
+// platform-dependent...
 //!< #if WIN32
 //!<   dosdependent();
 //!< #else

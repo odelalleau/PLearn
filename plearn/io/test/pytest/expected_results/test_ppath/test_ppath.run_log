@@ -49,6 +49,38 @@ PPath('foo/bar/').dirname() == 'foo/bar'                    True
 PPath('foo/bar/hi.cc').dirname() == 'foo/bar'               True
 
 
+#####  Methods extension and no_extension  ################################
+
+PPath('foo/bar/hi.cc').extension() == 'cc'                  True
+
+PPath('foo/bar.dir/hi.cc').extension() == 'cc'              True
+
+PPath('foo/bar/hi.').extension() == ''                      True
+
+PPath('foo/bar/hi').extension() == ''                       True
+
+PPath('foo/bar.dir/hi').extension() == ''                   True
+
+PPath('foo/bar/hi.cc').no_extension() == 'foo/bar/hi'       True
+
+PPath('foo/bar.d/hi.cc').no_extension() == 'foo/bar.d/hi'   True
+
+PPath('foo/bar.d/hi').no_extension() == 'foo/bar.d/hi'      True
+
+PPath('foo/bar.d/hi.').no_extension() == 'foo/bar.d/hi.'    True
+
+
+#####  Methods addProtocol() and removeProtocol()  ########################
+
+PPath('/foo/bar').addProtocol()                             file:/foo/bar
+
+PPath('foo/bar').addProtocol()                              FATAL ERROR: In PPath::addProtocol - A protocol can only be added to an absolute path, and 'foo/bar' is relative
+
+PPath('file:/foo/bar').removeProtocol()                     /foo/bar
+
+PPath('/foo/bar').removeProtocol()                          /foo/bar
+
+
 #####  Canonical paths  ###################################################
 
 ./foo                                                       foo
@@ -120,7 +152,7 @@ PLEARNDIR:/foo/                                             PLEARNDIR:foo/
 PLEARNDIR:/foo/../                                          PLEARNDIR:/
 
 
-#####  Platform dependent tests.  #########################################
+#####  Platform-dependent tests.  #########################################
 
 PPath('./foo//bar\toto')
   DOS: == 'foo/bar/toto'      POSIX: Rejected               True
