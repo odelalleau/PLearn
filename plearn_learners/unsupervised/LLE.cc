@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LLE.cc,v 1.2 2004/07/19 13:37:40 tihocan Exp $ 
+   * $Id: LLE.cc,v 1.3 2004/07/20 13:06:57 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -117,6 +117,7 @@ void LLE::build_()
   lle_kernel->knn = this->knn;
   lle_kernel->regularizer = this->regularizer;
   lle_kernel->reconstruct_coeff = this->reconstruct_coeff;
+  lle_kernel->report_progress = this->report_progress;
   lle_kernel->build();
   this->kernel = (Kernel*) lle_kernel;
 }
