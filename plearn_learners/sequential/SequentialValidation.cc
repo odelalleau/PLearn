@@ -37,7 +37,6 @@
 
 #include "SequentialValidation.h"
 #include <plearn/math/VecStatsCollector.h>
-//#include "AsciiVMatrix.h"
 #include <plearn/vmat/FileVMatrix.h>
 #include <plearn_learners/testers/PTester.h>  // for using class StatSpec
 
