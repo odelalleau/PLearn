@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.cc,v 1.20 2004/09/28 20:01:33 lamblin Exp $
+   * $Id: StackedLearner.cc,v 1.21 2004/10/05 13:28:43 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -360,6 +360,10 @@ TVec<string> StackedLearner::getTrainCostNames() const
 // resizeBaseLearnersOutputs //
 ///////////////////////////////
 void StackedLearner::resizeBaseLearnersOutputs() {
+  if (base_learners[0]->outputsize() != base_learners_outputs.width()) {
+    // The outputsize has changed. We reallocate everything.
+    base_learners_outputs = Mat();
+  }
   base_learners_outputs.resize(base_learners.length(),base_learners[0]->outputsize());
 }
 
