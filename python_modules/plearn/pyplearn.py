@@ -82,9 +82,9 @@ def pmap(*pairs):
     n = len(p)
     for (i, p) in enumerate(pairs):
         if i < n-1:
-            s += _plearn_repr( s[p] ) + ","
+            s += _plearn_repr( p ) + ","
         else:
-            s += _plearn_repr( pairs[n-1] )
+            s += _plearn_repr( p )
     s += "}"
     return plearn_snippet(s)
             
