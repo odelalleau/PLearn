@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KMeansClustering.cc,v 1.2 2004/10/14 19:18:46 tatien Exp $ 
+   * $Id: KMeansClustering.cc,v 1.3 2004/10/17 06:37:22 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Jean-Sébastien Senécal
@@ -69,8 +69,6 @@ void KMeansClustering::declareOptions(OptionList& ol)
 
 void KMeansClustering::build_()
 {
-  if (n_clusters_ <= 0)
-    PLERROR("In KMeansClustering::build_(): number of clusters (%d) should be > 0", n_clusters_);
 }
 
 void KMeansClustering::build()
@@ -94,6 +92,9 @@ int KMeansClustering::outputsize() const
 
 void KMeansClustering::forget()
 {
+  if (n_clusters_ <= 0)
+    PLERROR("In KMeansClustering::build_(): number of clusters (%d) should be > 0", n_clusters_);
+
   static Vec input;  // static so we don't reallocate/deallocate memory each time...
   static Vec target; // (but be careful that static means shared!)
 
@@ -134,6 +135,8 @@ void KMeansClustering::train()
 {
   // The role of the train method is to bring the learner up to stage==nstages,
   // updating train_stats with training costs measured on-line in the process.
+
+  assert( n_clusters_ > 0 );
   
   static Vec input;  // static so we don't reallocate/deallocate memory each time...
   static Vec target; // (but be careful that static means shared!)
