@@ -34,13 +34,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.31 2004/05/21 14:50:49 tihocan Exp $ 
+ * $Id: GaussMix.cc,v 1.32 2004/05/21 16:06:01 tihocan Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
 #include "ConcatColumnsVMatrix.h"
 #include "GaussMix.h"
-#include "pl_erf.h"   //!< For gauss_density().
+#include "pl_erf.h"   //!< For gauss_log_density_stddev().
 #include "plapack.h"
 #include "random.h"
 #include "SubVMatrix.h"
@@ -238,11 +238,8 @@ void GaussMix::computeMeansAndCovariances() {
 real GaussMix::computeLogLikelihood(Vec& x, int j) {
   if (type == "spherical") {
     real p = 0.0;
-    if (sigma[j] < sigma_min) {
-      return -1e10;
-    }
     for (int k = 0; k < D; k++) {
-      p += gauss_log_density(x[k], mu(j, k), sigma[j]);
+      p += gauss_log_density_stddev(x[k], mu(j, k), max(sigma_min, sigma[j]));
 #ifdef BOUNDCHECK
       if (isnan(p)) {
         PLWARNING("In GaussMix::computeLogLikelihood - Density is nan");
@@ -255,11 +252,7 @@ real GaussMix::computeLogLikelihood(Vec& x, int j) {
     real sig;
     for (int k = 0; k < D; k++) {
       sig = diags(k,j);
-      if (sig < sigma_min) {
-        return -1e10;
-      } else {
-        p += gauss_log_density(x[k], mu(j, k), sig);
-      }
+      p += gauss_log_density_stddev(x[k], mu(j, k), max(sigma_min, sig));
     }
     return p;
   } else if (type == "general") {
@@ -296,31 +289,22 @@ void GaussMix::computePosteriors() {
   static Vec log_likelihood;
   sample.resize(D);
   log_likelihood.resize(L);
-  real sum_likelihood;
+  real log_sum_likelihood;
   for (int i = 0; i < nsamples; i++) {
     train_set->getSubRow(i, 0, sample);
     // First we need to compute the likelihood P(x_i | j).
     for (int j = 0; j < L; j++) {
-      log_likelihood[j] = computeLogLikelihood(sample, j) * alpha[j];
+      log_likelihood[j] = computeLogLikelihood(sample, j) + log(alpha[j]);
 #ifdef BOUNDCHECK
       if (isnan(log_likelihood[j])) {
         PLWARNING("In GaussMix::computePosteriors - computeLogLikelihood returned nan");
       }
 #endif
     }
-    sum_likelihood = exp(logadd(log_likelihood));
-#ifdef BOUNDCHECK
-    if (sum_likelihood < epsilon) {
-      // x_i is far from each Gaussian, and thus sum_likelihood is null
-      // because of numerical approximations. We should find the closest
-      // Gaussian if this happens, and say P(j | x_i) = delta_{j is the
-      // closest Gaussian}
-      PLWARNING("In GaussMix::computePosteriors - A point has near zero density");
-    }
-#endif
+    log_sum_likelihood = logadd(log_likelihood);
     for (int j = 0; j < L; j++) {
       // Compute the posterior P(j | x_i) = P(x_i | j) * alpha_i / (sum_i ")
-      posteriors(i, j) = exp(log_likelihood[j]) / sum_likelihood;
+      posteriors(i, j) = exp(log_likelihood[j] - log_sum_likelihood);
     }
   }
   // Now update the sample weights.
