@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.h,v 1.25 2004/11/12 20:12:47 larocheh Exp $
+   * $Id: NNet.h,v 1.26 2005/01/11 20:06:00 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -164,6 +164,12 @@ public:
                                        const Vec& target, Vec& costs) const;
 
   virtual void makeDeepCopyFromShallowCopy(CopiesMap &copies);
+
+  //! Methods to get the network's (learned) parameters.
+  virtual Mat getW1() {return w1->matValue;}
+  virtual Mat getW2() {return w2->matValue;}
+  virtual Mat getWdirect() {return wdirect->matValue;}
+  virtual Mat getWout() {return wout->matValue;}
 
 protected:
   static void declareOptions(OptionList& ol);
