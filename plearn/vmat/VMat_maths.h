@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat_maths.h,v 1.15 2004/05/28 21:55:02 monperrm Exp $
+   * $Id: VMat_maths.h,v 1.16 2004/07/09 18:21:47 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -87,7 +87,7 @@ Mat computeBasicStats(VMat m);
 //! Retirns the unconditional statistics of each field
 TVec<StatsCollector> computeStats(VMat m, int maxnvalues);
 
-void computeStats(VMat m, VecStatsCollector& st);
+void computeStats(VMat m, VecStatsCollector& st, bool report_progress = true);
 
 
 //! returns the cooccurence statistics conditioned on the given field

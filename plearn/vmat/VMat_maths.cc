@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat_maths.cc,v 1.22 2004/05/28 21:55:02 monperrm Exp $
+* $Id: VMat_maths.cc,v 1.23 2004/07/09 18:21:47 tihocan Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat_maths.h"
@@ -188,19 +188,24 @@ Mat computeBasicStats(VMat m)
   return stats;
 }
 
-void computeStats(VMat m, VecStatsCollector& st)
+void computeStats(VMat m, VecStatsCollector& st, bool report_progress)
 {
   st.forget();
   st.setFieldNames(m->fieldNames());
   Vec v(m.width());
   int l = m.length();
-  ProgressBar pbar(cerr, "computing statistics", l);
+  ProgressBar* pbar = 0;
+  if (report_progress)
+    pbar = new ProgressBar("Computing statistics", l);
   for(int i=0; i<l; i++)
     {
-      pbar(i);
+      if (report_progress)
+        pbar->update(i);
       m->getRow(i,v);
       st.update(v);
     }
+  if (pbar)
+    delete pbar;
   st.finalize();
 }
 
