@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.cc,v 1.8 2004/05/13 13:12:57 tihocan Exp $ 
+   * $Id: KernelProjection.cc,v 1.9 2004/05/14 02:16:05 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -300,9 +300,10 @@ void KernelProjection::train()
   kernel->computeGramMatrix(gram);
   // (2) Compute its eigenvectors and eigenvalues.
   eigenVecOfSymmMat(gram, n_comp, eigenvalues, eigenvectors);
+  n_comp_kept = eigenvalues.length(); // Could be different of n_comp.
   // (3) Discard low eigenvalues.
   int p = 0;
-  while (p < n_comp && eigenvalues[p] > min_eigenvalue)
+  while (p < n_comp_kept && eigenvalues[p] > min_eigenvalue)
     p++;
   n_comp_kept = p;
   // (4) Optionally remove the discarded components.
