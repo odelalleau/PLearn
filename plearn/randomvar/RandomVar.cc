@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: RandomVar.cc,v 1.5 2004/02/20 21:11:48 chrish42 Exp $
+   * $Id: RandomVar.cc,v 1.6 2004/07/06 15:53:16 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -65,7 +65,7 @@
 #include "general.h"
 #include "RandomVar.h"
 //#include "NaryVariable.h"
-#include "ConjugateGradientOptimizer.h"
+//#include "ConjugateGradientOptimizer.h" // Not in the PLearn CVS repository.
 #include "plapack.h"
 #include "Var_operators.h"
 //#include <cmath>
@@ -540,8 +540,13 @@ real EM(ConditionalExpression conditional_expression,
   // again, assuming solvable max Q, a specialized but faster CG is enough
   Var totalElogP = meanOf(elogp,distr_observed_vars,
                           distr,n_samples,new_params);
+  PLERROR("In EM (RandomVar.cc), code using ConjugateGradientOptimizer is now commented out");
+  max_n_Q_iterations = max_n_Q_iterations; // TODO Remove this (just to make the compiler happy).
+  /* REMOVED because not in the PLearn CVS repository.
+     
   ConjugateGradientOptimizer opt(new_params, totalElogP,
                                  0.001,0.001,max_n_Q_iterations);
+                                 */
 
   // the outer loop is over EM iterations
   real avgnegloglik = 0;
@@ -551,7 +556,8 @@ real EM(ConditionalExpression conditional_expression,
 
   while (!EMfinished) {
     // the inner loop is over "new params" optimization of totalElogP 
-    opt.optimize();
+  PLERROR("In EM (RandomVar.cc), code using ConjugateGradientOptimizer is now commented out");
+//    opt.optimize(); COMMENTED (same as above)
     avgnegloglik = - totalElogP->value[0];
     cout << "EM epoch -Q = " << avgnegloglik << endl;
     nll_change = (previous_nll - avgnegloglik)/fabs(previous_nll);
