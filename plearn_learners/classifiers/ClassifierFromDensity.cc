@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ClassifierFromDensity.cc,v 1.7 2004/02/20 21:14:45 chrish42 Exp $ 
+   * $Id: ClassifierFromDensity.cc,v 1.8 2004/05/21 19:36:42 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file ClassifierFromDensity.cc */
@@ -100,15 +100,8 @@ ClassifierFromDensity::ClassifierFromDensity()
   void ClassifierFromDensity::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   {
     inherited::makeDeepCopyFromShallowCopy(copies);
-
-    // ### Call deepCopyField on all "pointer-like" fields 
-    // ### that you wish to be deepCopied rather than 
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("ClassifierFromDensity::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    deepCopyField(estimators, copies);
+    deepCopyField(log_priors, copies);
   }
 
 
