@@ -556,15 +556,18 @@ public:
 };
 
 /*! PStream objects to replace the standard cout, cin, ... */
-PStream& get_pin();
-PStream& get_pout();
-PStream& get_pio();
-PStream& get_perr();
+  PStream& get_pin();
+  PStream& get_pout();
+  PStream& get_pio();
+  PStream& get_perr();
+  PStream& get_pnull();
 
-extern PStream pin;
-extern PStream pout;
-extern PStream pio;
-extern PStream perr;
+
+  extern PStream pin;
+  extern PStream pout;
+  extern PStream pio;
+  extern PStream perr;
+  extern PStream pnull;
 
   // Simulation of <<flush <<endl and >>ws ...
 

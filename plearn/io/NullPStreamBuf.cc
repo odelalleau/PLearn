@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// StringPStreamBuf.cc
+// NullPStreamBuf.cc
 //
 // Copyright (C) 2004 Pascal Vincent 
 // 
@@ -33,61 +33,29 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StringPStreamBuf.cc,v 1.5 2005/03/01 19:18:44 plearner Exp $ 
+   * $Id: NullPStreamBuf.cc,v 1.1 2005/03/01 19:18:43 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
 
-/*! \file StringPStreamBuf.cc */
+/*! \file NullPStreamBuf.cc */
 
 
-#include "StringPStreamBuf.h"
-// #include <unistd.h>
+#include "NullPStreamBuf.h"
 
 namespace PLearn {
 using namespace std;
 
-  StringPStreamBuf::StringPStreamBuf(string* ptrs, const string& openmode, bool own_string_,
-                   streamsize inbuf_capacity, streamsize outbuf_capacity, streamsize unget_capacity)
-    :PStreamBuf(openmode=="r", openmode=="w" || openmode=="a", inbuf_capacity, outbuf_capacity, unget_capacity),
-     st(ptrs), read_index(0), own_string(own_string_)
-  {
-    if(openmode=="w") // truncate it first
-      st->clear();
+  NullPStreamBuf::NullPStreamBuf()
+    :PStreamBuf(true,true)
+  {}
 
-    else if(openmode!="r" && openmode!="a")
-      PLERROR("In StringPStreamBuf invalid openmode %s, must be one of r, w, a",openmode.c_str());
-  }
 
-  StringPStreamBuf::StringPStreamBuf(const string* ptrs, const string& openmode, bool own_string_,
-                   streamsize inbuf_capacity, streamsize unget_capacity)
-    :PStreamBuf(true, false, inbuf_capacity, 0, unget_capacity),
-     st(const_cast<string*>(ptrs)), read_index(0), own_string(own_string_)
-  {
-    if(openmode!="r")
-      PLERROR("In StringPStreamBuf(const string*, ...) invalid openmode %s, must be one of r if giving a const string* ",openmode.c_str());    
-  }
-
-  StringPStreamBuf::~StringPStreamBuf()
-  {
-    flush();
-    
-    if(own_string && st!=0)
-      delete st;
-  }
-
-  StringPStreamBuf::streamsize StringPStreamBuf::read_(char* p, streamsize n)
-  {
-    string::size_type nread = st->copy(p, string::size_type(n), read_index); 
-    read_index += nread;
-    return streamsize(nread);
-  }
+  NullPStreamBuf::streamsize NullPStreamBuf::read_(char* p, streamsize n)
+  { return 0; }
 
   //! writes exactly n characters from p (unbuffered, must flush)
-  void StringPStreamBuf::write_(const char* p, streamsize n)
-  {
-    while(n--)
-      st->operator+=(*p++);
-  }
+  void NullPStreamBuf::write_(const char* p, streamsize n)
+  {}
   
 } // end of namespace PLearn

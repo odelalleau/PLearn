@@ -34,6 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 #include "PStream.h"
+#include "NullPStreamBuf.h"
 #include "PrPStreamBuf.h"
 #include <plearn/math/pl_math.h>
 #include <mozilla/nspr/prio.h>
@@ -47,6 +48,14 @@ namespace PLearn {
 using namespace std;
 
 // Initialization for pin, pout, ...
+
+  PStream& get_pnull()
+  {
+    static PStream pnull = new NullPStreamBuf();
+    return pnull;    
+  }
+
+  PStream pnull = get_pnull();
 
 PStream& get_pin()
 {
