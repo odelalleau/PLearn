@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrix.h,v 1.11 2004/10/01 22:09:27 larocheh Exp $ 
+   * $Id: SourceVMatrix.h,v 1.12 2004/10/06 21:12:26 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -145,6 +145,9 @@ public:
 
   //! Returns the possible values for a certain field in the VMatrix
   virtual Vec getValues(int row, int col) const;
+
+  //! Returns the possible values of a certain field (column) given the input 
+  virtual Vec getValues(Vec input, int col) const;
 
 };
 

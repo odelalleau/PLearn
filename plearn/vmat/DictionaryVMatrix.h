@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DictionaryVMatrix.h,v 1.7 2004/09/14 16:04:39 chrish42 Exp $ 
+   * $Id: DictionaryVMatrix.h,v 1.8 2004/10/06 21:12:26 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Christopher Kermorvant
@@ -125,6 +125,9 @@ protected:
   virtual int getDimension(int row, int col) const;
 
   virtual Vec getValues(int row, int col) const;
+
+  //! Gives the possible values of a certain field (column) given the input
+  virtual Vec getValues(Vec input, int col) const;
 
 public:
 

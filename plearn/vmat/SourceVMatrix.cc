@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrix.cc,v 1.14 2004/10/01 22:09:27 larocheh Exp $ 
+   * $Id: SourceVMatrix.cc,v 1.15 2004/10/06 21:12:26 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -189,6 +189,11 @@ int SourceVMatrix::getDimension(int row, int col) const
 Vec SourceVMatrix::getValues(int row, int col) const
 {
   return source->getValues(row,col);
+}
+
+Vec SourceVMatrix::getValues(Vec input, int col) const
+{
+  return source->getValues(input,col);
 }
 
 } // end of namespace PLearn

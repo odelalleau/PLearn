@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.58 2004/09/27 20:19:28 plearner Exp $
+   * $Id: VMatrix.h,v 1.59 2004/10/06 21:12:16 larocheh Exp $
    ******************************************************* */
 
 
@@ -287,7 +287,7 @@ public:
   //! returns element as a string, even if value doesn't map to a string, in which case tostring(value) is returned
   virtual string getString(int row, int col) const;
 
-  //! Return the dimension of the column col, -1 if continuous   
+  //! Return the dimension of the values for a certain field, -1 if continuous  
   virtual int getDimension(int row, int col) const;
 
   ////////////////////////
@@ -505,8 +505,12 @@ public:
   virtual void accumulateXtX(int X_startcol, int X_ncols, 
                              Mat& result, int startrow=0, int nrows=-1, int ignore_this_row=-1) const;
 
+  //! Returns the possible values for a certain field in the VMatrix
   virtual Vec getValues(int row, int col) const {return Vec(0);}
  
+  //! Gives the possible values of a certain field (column) given the input
+  virtual Vec getValues(Vec input, int col) const {return Vec(0);}
+
   virtual ~VMatrix();
 };
 

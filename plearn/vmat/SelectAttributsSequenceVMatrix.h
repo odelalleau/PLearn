@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SelectAttributsSequenceVMatrix.h,v 1.7 2004/10/01 22:11:27 larocheh Exp $ 
+   * $Id: SelectAttributsSequenceVMatrix.h,v 1.8 2004/10/06 21:12:26 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -122,8 +122,8 @@ public:
   //! Indication that ignored elements of context should be replaced by the next nearest valid element.
   bool full_context;
 
-  //! Indication that the last element of the context should be the target element.
-  bool target_is_last_element;
+  //! Indication that the only output fields of a VMatrix row should be the output fields of the target element
+  bool put_only_target_output;
 
   //! Indication that the last accessed context should be put in a buffer.
   bool use_last_context;
@@ -233,7 +233,11 @@ public:
     {
       if(source)
       {
-        int src_col = col%n_attributs;
+        int src_col;
+        if(col < inputsize_)
+          src_col = col%source->inputsize();
+        else
+          src_col = source->inputsize() + (col-inputsize_)%source->targetsize();
         return source->getStringVal(src_col,str);
       }
       
@@ -246,7 +250,11 @@ public:
     {
       if(source)
       {
-        int src_col = col%n_attributs;
+        int src_col;
+        if(col < inputsize_)
+          src_col = col%source->inputsize();
+        else
+          src_col = source->inputsize() + (col-inputsize_)%source->targetsize();
         return source->getValString(src_col,val);
       }
       
@@ -262,8 +270,27 @@ public:
       if(col < 0 || col >= length_) PLERROR("In SelectAttributsSequenceVMatrix::getValues() : invalid col %d, width()=%d", col, width_);
       if(source)
       {
-        int src_col = col%n_attributs;
+        int src_col;
+        if(col < inputsize_)
+          src_col = col%source->inputsize();
+        else
+          src_col = source->inputsize() + (col-inputsize_)%source->targetsize();
         return source->getValues(indices[row],src_col);
+      }
+      return Vec(0);
+    }
+
+  virtual Vec getValues(Vec input, int col) const
+    {
+      if(col < 0 || col >= length_) PLERROR("In SelectAttributsSequenceVMatrix::getValues() : invalid col %d, width()=%d", col, width_);
+      if(source)
+      {
+        int src_col;
+        if(col < inputsize_)
+          src_col = col%source->inputsize();
+        else
+          src_col = source->inputsize() + (col-inputsize_)%source->targetsize();
+        return source->getValues(input,src_col);
       }
       return Vec(0);
     }
@@ -274,7 +301,11 @@ public:
       if(col < 0 || col >= length_) PLERROR("In SelectAttributsSequenceVMatrix::getDimension() : invalid col %d, width()=%d", col, width_);
       if(source)
       {
-        int src_col = col%n_attributs;
+        int src_col;
+        if(col < inputsize_)
+          src_col = col%source->inputsize();
+        else
+          src_col = source->inputsize() + (col-inputsize_)%source->targetsize();
         return source->getDimension(indices[row],src_col);
       }
       return -1;

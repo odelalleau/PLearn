@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SelectAttributsSequenceVMatrix.cc,v 1.5 2004/10/01 22:11:27 larocheh Exp $ 
+   * $Id: SelectAttributsSequenceVMatrix.cc,v 1.6 2004/10/06 21:12:26 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -49,7 +49,7 @@ using namespace std;
 
 SelectAttributsSequenceVMatrix::SelectAttributsSequenceVMatrix()
   :inherited(), n_left_context(2), n_right_context(2), conditions_offset(0), conditions_for_exclusion(1), full_context(true),
-   target_is_last_element(true), use_last_context(true)
+   put_only_target_output(false), use_last_context(true)
   /* ### Initialise all fields to their default value */
 {
 }
@@ -104,17 +104,7 @@ void SelectAttributsSequenceVMatrix::getNewRow(int i, const Vec& v) const
 
   int this_lower_bound = target;
   int this_upper_bound = target;
-  /*
-  cout << "i=" << i << " target=" << target << endl;
-  cout << "current_row_i=" << current_row_i << endl;
-  cout << "current_target_pos=" << current_target_pos << endl;
-  cout << "lower_bound=" << lower_bound << endl;
-  cout << "upper_bound=" << upper_bound << endl;
-  cout << "current_context_pos = " << endl;
-  for(this_hash_map::iterator it = current_context_pos.begin(); it != current_context_pos.end(); it++)
-    cout << it->first << " " << it->second << endl;
-  cout << "-------------------------------------" << endl;
-  */
+  
   // Left context construction
 
   while(n_left_context < 0 || left_added_elements < n_left_context)
@@ -260,7 +250,7 @@ void SelectAttributsSequenceVMatrix::getNewRow(int i, const Vec& v) const
   }
 
   // adding target element
-
+  int target_position = cp;
   current_row_i.subVec(cp*n_attributs,n_attributs) << target_element;
   if(use_last_context) 
   {
@@ -283,21 +273,22 @@ void SelectAttributsSequenceVMatrix::getNewRow(int i, const Vec& v) const
   if(current_row_i.length()-cp*n_attributs > 0)
     current_row_i.subVec(cp*n_attributs,current_row_i.length()-cp*n_attributs).fill(MISSING_VALUE);
 
-  if(target_is_last_element)
+  // Seperating input and output fields
+
+  for(int t=0; t<current_row_i.length(); t++)
   {
-    if(fixed_context) 
-    {
-      left_added_elements = n_left_context;
-      right_added_elements = n_right_context;
-    }
-    v.subVec(0,n_attributs*left_added_elements) << current_row_i.subVec(0,n_attributs*left_added_elements);
-    v.subVec(n_attributs*left_added_elements,current_row_i.length() - n_attributs*(1+left_added_elements)) << 
-      current_row_i.subVec(n_attributs*(1+left_added_elements),current_row_i.length() - n_attributs*(1+left_added_elements));
-    v.subVec(v.length()-n_attributs,n_attributs) << current_row_i.subVec(n_attributs*left_added_elements,n_attributs);
+    if(t%n_attributs < source->inputsize())
+      v[t/n_attributs * source->inputsize() + t%n_attributs] = current_row_i[t];
+    else
+      if(put_only_target_output)
+      {
+        if(t/n_attributs == target_position)
+          v[inputsize_ + t%n_attributs - source->inputsize() ] = current_row_i[t];
+      }
+      else
+        v[inputsize_ + t/n_attributs * source->targetsize() + t%n_attributs - source->inputsize() ] = current_row_i[t];
   }
-  else
-    v << current_row_i;
-  
+
   return;
 }
 
@@ -319,8 +310,8 @@ void SelectAttributsSequenceVMatrix::declareOptions(OptionList& ol)
                  "Indication that the specified conditions are for the exclusion (true) or inclusion (false) of elements in the VMatrix");
   declareOption(ol, "full_context", &SelectAttributsSequenceVMatrix::full_context, OptionBase::buildoption,
                  "Indication that ignored elements of context should be replaced by the next nearest valid element");
-  declareOption(ol, "target_is_last_element", &SelectAttributsSequenceVMatrix::target_is_last_element, OptionBase::buildoption,
-                 "Indication that the last element of the context should be the target element");
+  declareOption(ol, "put_only_target_output", &SelectAttributsSequenceVMatrix::put_only_target_output, OptionBase::buildoption,
+                 "Indication that the only output fields of a VMatrix row should be the output fields of the target element");
   declareOption(ol, "use_last_context", &SelectAttributsSequenceVMatrix::use_last_context, OptionBase::buildoption,
                  "Indication that the last accessed context should be put in a buffer.");
   declareOption(ol, "conditions", &SelectAttributsSequenceVMatrix::conditions, OptionBase::buildoption,
@@ -413,6 +404,11 @@ void SelectAttributsSequenceVMatrix::build_()
   length_ = indices.length();
   width_ = n_attributs*(max_context_length);
 
+  inputsize_ = max_context_length * source->inputsize();
+  targetsize_ = max_context_length * source->targetsize();
+
+  if(inputsize_+targetsize_ != width_) PLERROR("In SelectAttributsSequenceVMatrix:build_() : inputsize_ + targetsize_ != width_");
+
   current_row_i.resize(width_);
   current_target_pos = -1;
   current_context_pos.clear();
@@ -429,7 +425,7 @@ void SelectAttributsSequenceVMatrix::build_()
     left_context.resize(n_attributs*n_left_context);
     left_positions.resize(n_left_context);
   }
-  
+   
   if(n_right_context < 0) 
   {
     right_context.resize(width_);
@@ -440,6 +436,13 @@ void SelectAttributsSequenceVMatrix::build_()
     right_context.resize(n_attributs*n_right_context);
     right_positions.resize(n_right_context);
   }
+
+  if(put_only_target_output)
+  {
+    targetsize_ = source->targetsize();
+    width_ = inputsize_ + targetsize();
+  }
+
 }
 
 void SelectAttributsSequenceVMatrix::build()

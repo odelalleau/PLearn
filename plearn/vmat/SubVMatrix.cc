@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.cc,v 1.16 2004/10/01 22:09:27 larocheh Exp $
+   * $Id: SubVMatrix.cc,v 1.17 2004/10/06 21:12:26 larocheh Exp $
    ******************************************************* */
 
 #include "SubVMatrix.h"
@@ -251,6 +251,15 @@ Vec SubVMatrix::getValues(int row, int col) const
     PLERROR("In SubVMatrix::getValues(row,col) OUT OF BOUND access");
 #endif
   return parent->getValues(row+istart,col+jstart);
+}
+
+Vec SubVMatrix::getValues(Vec input, int col) const
+{
+  #ifdef BOUNDCHECK
+  if(col<0 || col>width())
+    PLERROR("In SubVMatrix::getValues(row,col) OUT OF BOUND access");
+#endif
+  return parent->getValues(input.subVec(jstart,input.length()-jstart),col+jstart);
 }
 
 } // end of namespcae PLearn
