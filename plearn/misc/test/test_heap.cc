@@ -11,7 +11,7 @@
 #include <plearn/math/random.h>
 
 const int n = 1000;                          // vector size
-const int m = 1000000;                       // number of random updates
+const int m = 100000;                        // number of random updates
 
 using namespace std;
 using namespace PLearn;
@@ -32,7 +32,7 @@ int main()
 
     data[j] = gaussian_01();
     if (! is_valid_heap(data.begin(), data.end())) {
-      update_heap(data.begin(), data.end(), data.begin()+j, less<real>());
+      update_heap(data.begin(), data.end(), data.begin()+j);
       assert(is_valid_heap(data.begin(), data.end()));
     }
   }

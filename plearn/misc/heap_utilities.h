@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: heap_utilities.h,v 1.1 2005/01/06 16:30:21 chapados Exp $ 
+   * $Id: heap_utilities.h,v 1.2 2005/01/06 16:54:34 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -95,6 +95,7 @@ update_heap(RandomAccessIterator first, RandomAccessIterator last,
  * Version of update_heap that uses less<T> as the strict weak ordering
  */
 template <typename RandomAccessIterator>
+inline
 void
 update_heap(RandomAccessIterator first, RandomAccessIterator last,
             RandomAccessIterator damaged)
@@ -130,6 +131,7 @@ bool is_valid_heap(RandomAccessIterator first, RandomAccessIterator last,
 
 //! Version of is_valid_heap that uses less<T> as the strict weak ordering
 template <typename RandomAccessIterator>
+inline
 bool is_valid_heap(RandomAccessIterator first, RandomAccessIterator last)
 {
   typedef typename std::iterator_traits<RandomAccessIterator>::value_type value_type;
