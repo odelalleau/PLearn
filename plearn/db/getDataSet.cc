@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.15 2004/03/04 14:53:24 tihocan Exp $
+   * $Id: getDataSet.cc,v 1.16 2004/03/10 18:13:07 lheureup Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -139,7 +139,13 @@ VMat getDataSet(const string& datasetstring, const string& alias)
                 } 
             }
           else if(ext==".amat")
-            vm = loadAsciiAsVMat(datasetstring);
+				if (datasetstring.find(".bin", 0, 4) != string::npos){
+				  Mat tempMat;
+				  loadAsciiSingleBinaryDescriptor(datasetstring,tempMat);
+				  vm = VMat(tempMat);
+				}else{
+				  vm = loadAsciiAsVMat(datasetstring);
+				}
           else if(ext==".strtable")
             vm = new StrTableVMatrix(StringTable(datasetstring));
           else if(ext==".sdb")
