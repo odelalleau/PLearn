@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.61 2004/07/09 18:22:19 tihocan Exp $
+* $Id: VMatrix.cc,v 1.62 2004/07/19 13:24:23 tihocan Exp $
 ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -1008,6 +1008,30 @@ void VMatrix::getRow(int i, VarArray& inputs) const
   Vec v(width());
   getRow(i,v);
   inputs << v; 
+}
+
+
+//////////
+// find //
+//////////
+bool VMatrix::find(const Vec& input, real tolerance, int* i) const {
+  static Vec get_row;
+  get_row.resize(inputsize());
+#ifdef BOUNDCHECK
+  if (input.length() != inputsize())
+    PLERROR("In VMatrix::find - The given vector must be the same size as inputsize");
+#endif
+  for (int j = 0; j < length(); j++) {
+    getSubRow(j, 0, get_row);
+    if (powdistance(input, get_row, 2.0) < tolerance) {
+      if (i)
+        *i = j;
+      return true;
+    }
+  }
+  if (i)
+    *i = -1;
+  return false;
 }
 
 void VMatrix::print(ostream& out) const

@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.48 2004/07/09 22:27:50 monperrm Exp $
+   * $Id: VMatrix.h,v 1.49 2004/07/19 13:24:24 tihocan Exp $
    ******************************************************* */
 
 
@@ -427,6 +427,13 @@ public:
 
   //!  copies column i into v (which must have appropriate length equal to the VMat's length)
   virtual void getColumn(int i, Vec v) const;
+
+  //! Return true iff the input vector is in this VMat (we compare only the input part).
+  //! If the parameter 'i' is provided, it will be filled with the index of the
+  //! corresponding data point, or with -1 if it does not exist in this VMat.
+  //! The 'tolerance' parameter indicates the maximum squared distance between two
+  //! points to consider them as equal.
+  virtual bool find(const Vec& input, real tolerance, int* i = 0) const;
 
 /*!     returns a Mat with the same data as this VMat
     The default version of this method copies the data in a fresh Mat created in memory
