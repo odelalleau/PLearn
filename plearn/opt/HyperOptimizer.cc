@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: HyperOptimizer.cc,v 1.1 2002/09/09 14:33:01 morinf Exp $
+   * $Id: HyperOptimizer.cc,v 1.2 2002/09/09 20:09:00 uid92278 Exp $
    * AUTHORS: Pascal Vincent & Frederic Morin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -56,6 +56,84 @@ HyperOptimizer::declareOptions(OptionList &ol)
     declareOption(ol, "substrategy", &HyperOptimizer::substrategy, OptionBase::buildoption,
                   "Embedded strategies performed during optimization");
     inherited::declareOptions(ol);
+}
+
+
+// ###### HSetVal #############################################################
+
+IMPLEMENT_NAME_AND_DEEPCOPY(HSetVal);
+
+void
+HSetVal::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "param", &HSetVal::param, OptionBase::buildoption,
+                  "Hyperparameters' alias to set the value for");
+    declareOption(ol, "value", &HSetVal::value, OptionBase::buildoption,
+                  "Value of the hyperparameters to be set");
+    inherited::declareOptions(ol);
+}
+
+void
+HSetVal::optimize(PP<Learner> learner, const VMat &dataset, const HAliases &aliases)
+{
+    string alias = const_cast<HAliases &>(aliases)[param];
+    cout << "HSetVal::optimize() - Setting: " << alias << " = " << value << endl;
+    learner->setOption(alias, value);
+}
+
+
+// ###### HTryAll #############################################################
+
+IMPLEMENT_NAME_AND_DEEPCOPY(HTryAll);
+
+void
+HTryAll::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "param", &HTryAll::param, OptionBase::buildoption,
+                  "Hyperparameters' alias to set the values for");
+    declareOption(ol, "values", &HTryAll::values, OptionBase::buildoption,
+                  "Values of the hyperparameters to try");
+    inherited::declareOptions(ol);
+}
+
+void
+HTryAll::optimize(PP<Learner> learner, const VMat &dataset, const HAliases &aliases)
+{
+    string alias = const_cast<HAliases &>(aliases)[param];
+    Vec results;
+    results.resize(values.size());
+
+    for (int k = 0; k < values.size(); ++k) {
+        cout << "HTryAll::optimize() - Trying " << alias << " = " << values[k] << endl;
+        learner->setOption(alias, values[k]);
+        results[k] = objective->test(learner, dataset);
+        cout << "results[" << k << "] = " << results[k] << endl;
+    }
+    cout << "HTryAll::optimize() - Selected " << alias << " = " << values[argmin(results)] << endl;
+    learner->setOption(alias, values[argmin(results)]);
+}
+
+
+// ###### HCoordinateDescent ##################################################
+
+IMPLEMENT_NAME_AND_DEEPCOPY(HCoordinateDescent);
+
+void
+HCoordinateDescent::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "substrategy", &HCoordinateDescent::substrategy, OptionBase::buildoption,
+                  "List of HyperOptimizers to perform optimization on");
+    declareOption(ol, "max_iterations", &HCoordinateDescent::max_iterations, OptionBase::buildoption,
+                  "Maximum number of iterations to perform");
+    inherited::declareOptions(ol);
+}
+
+void
+HCoordinateDescent::optimize(PP<Learner> learner, const VMat &dataset, const HAliases &aliases)
+{
+    for (int i = 0; i < max_iterations; ++i)
+        for (int j = 0; j < substrategy.size(); ++j)
+            substrategy[j]->optimize(learner, dataset, aliases);
 }
 
 %>; // end of namespace PLearn

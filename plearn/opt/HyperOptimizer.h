@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: HyperOptimizer.h,v 1.1 2002/09/09 14:33:01 morinf Exp $
+   * $Id: HyperOptimizer.h,v 1.2 2002/09/09 20:09:00 uid92278 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -57,6 +57,7 @@ using namespace std;
 
 class HyperOptimizer;
 typedef Array<PP<HyperOptimizer> > HStrategy;
+typedef map<string, string> HAliases;
 
 class HyperOptimizer: public Object
 {
@@ -65,13 +66,9 @@ class HyperOptimizer: public Object
     HyperOptimizer()
         {};
 
-    //! Evaluate learner's performance through the given objective
-    real evaluate(PP<Learner> learner, const VMat dataset) const
-        { return 0; }; //objective->test(learner, dataset); };
-
     //! Optimize the learner with respect to the given 
     //! hyperparameters and dataset.
-    virtual void optimize(PP<Learner> learner, const VMat dataset) = 0;
+    virtual void optimize(PP<Learner> learner, const VMat &dataset, const HAliases &aliases) = 0;
 
     PP<TestMethod> objective;
     HStrategy substrategy;
@@ -83,6 +80,81 @@ class HyperOptimizer: public Object
 }; // class HyperOptimizer
 
 DECLARE_OBJECT_PTR(HyperOptimizer);
+
+
+// ###### HSetVal #############################################################
+//
+// This is a dummy HyperOptimizer in the sense that it doesn't optimize
+// anything but sets a given hyperparameter's value explicitly.
+
+class HSetVal: public HyperOptimizer
+{
+    typedef HyperOptimizer inherited;
+public:
+    HSetVal()
+        {};
+
+    virtual void optimize(PP<Learner> learner, const VMat &dataset, const HAliases &aliases);
+
+    DECLARE_NAME_AND_DEEPCOPY(HSetVal);
+    static void declareOptions(OptionList &ol);
+protected:
+    string param;
+    string value;
+}; // class HSetVal
+
+DECLARE_OBJECT_PTR(HSetVal);
+
+
+// ###### HTryAll #############################################################
+//
+// Optimization consists of trying all values given in a list and choosing the
+// best performing one.
+
+class HTryAll: public HyperOptimizer
+{
+    typedef HyperOptimizer inherited;
+public:
+    HTryAll()
+        {};
+
+    virtual void optimize(PP<Learner> learner, const VMat &dataset, const HAliases &aliases);
+
+    DECLARE_NAME_AND_DEEPCOPY(HTryAll);
+    static void declareOptions(OptionList &ol);
+protected:
+    string param;
+    Array<string> values;
+}; // class HTryAll
+
+DECLARE_OBJECT_PTR(HTryAll);
+
+
+// ###### HCoordinateDescent ##################################################
+//
+// Perform a coordinate descent into a list of HyperOptimizers
+
+class HCoordinateDescent: public HyperOptimizer
+{
+    typedef HyperOptimizer inherited;
+public:
+    HCoordinateDescent()
+        : max_iterations(10)
+        {};
+
+    virtual void optimize(PP<Learner> learner, const VMat &dataset, const HAliases &aliases);
+
+    DECLARE_NAME_AND_DEEPCOPY(HCoordinateDescent);
+    static void declareOptions(OptionList &ol);
+protected:
+    int max_iterations;
+    HStrategy substragegy;
+
+}; // class HCoordinateDescent
+
+DECLARE_OBJECT_PTR(HCoordinateDescent);
+
+
 %>; // end of namespace PLearn
 
 #endif // HyperOptimizer_INC
