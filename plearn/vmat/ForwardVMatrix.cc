@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
- * $Id: ForwardVMatrix.cc,v 1.11 2004/07/21 16:30:55 chrish42 Exp $
+ * $Id: ForwardVMatrix.cc,v 1.12 2004/07/26 20:09:38 tihocan Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -285,7 +285,7 @@ void ForwardVMatrix::evaluateSumOfFbprop(Func f, Vec& output_result, Vec& output
  
 void ForwardVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
-  VMatrix::makeDeepCopyFromShallowCopy(copies);
+  inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(vm, copies);
 }
 
