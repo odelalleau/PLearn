@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.h,v 1.6 2003/08/13 08:13:17 plearner Exp $
+   * $Id: fileutils.h,v 1.7 2003/10/07 21:55:00 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -178,12 +178,21 @@ void saveStringInFile(const string& filepath, const string& text);
 string readAndMacroProcess(istream& in, map<string, string>& variables);
 
 //! Same as readAndMacroProcess, but takes a filename instead of an istream
-string readFileAndMacroProcess(const string& fname, map<string, string>& variables);
+//! The following variables are automatically set from the filepath: FILEPATH DIRPATH FILENAME FILEBASE FILEEXT 
+/*! Ex: if the absolute path to filepath is /home/me/foo.plearn
+  Then we'll get:
+  FILEPATH = "/home/me/foo.plearn"
+  DIRPATH  = "/home/me"
+  FILENAME = "foo.plearn"
+  FILEBASE = "foo"
+  FILEEXT  = ".plearn"
+*/
+string readFileAndMacroProcess(const string& filepath, map<string, string>& variables);
 
-inline string readFileAndMacroProcess(const string& fname)
+inline string readFileAndMacroProcess(const string& filepath)
 {
   map<string, string> variables;
-  return readFileAndMacroProcess(fname, variables);
+  return readFileAndMacroProcess(filepath, variables);
 }
 
 %> // end of namespace PLearn

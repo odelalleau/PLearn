@@ -1,0 +1,45 @@
+#!/usr/bin/env python
+
+import sys, string
+
+chunksize = 2**29
+
+args = sys.argv[:]
+del args[0] # ignore program name
+
+if len(args)<1:
+    print """
+Usage: splitfile <filepath> 
+       Will split a big text file into smaller files no bigger than """ + str(chunksize) + """ bytes
+       Splits will occur between 2 lines.
+       Resulting files will be named filepath.1 filepath.2 ...
+       """
+    sys.exit()
+
+fname = args[0]
+srcfile = open(fname)
+
+nfiles = 1
+destfname = fname+'.'+str(nfiles)
+destfile = open(destfname,"w")
+print "Writing to file ", destfname
+
+nlines = 0
+nbytes = 0
+for line in srcfile:
+    if nbytes+len(line)>chunksize:
+        print "  (",nlines, " lines written totaling ", nbytes, " bytes)"
+        destfile.close()
+        nfiles = nfiles +1
+        destfname = fname+'.'+str(nfiles)
+        destfile = open(destfname,"w")
+        print "Writing to file ", destfname
+        nbytes = 0
+        nlines = 0
+
+    destfile.write(line)
+    nbytes = nbytes + len(line)
+    nlines = nlines + 1
+
+print "  (",nlines, " lines written totaling ", nbytes, " bytes)"
+destfile.close()

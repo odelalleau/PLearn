@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.12 2003/09/09 18:05:19 plearner Exp $
+   * $Id: fileutils.cc,v 1.13 2003/10/07 21:55:00 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -490,11 +490,18 @@ string makeExplicitPath(const string& filename)
 }
   
 
-string readFileAndMacroProcess(const string& fname, map<string, string>& variables)
+string readFileAndMacroProcess(const string& filepath, map<string, string>& variables)
 {
-  ifstream in(fname.c_str());
+  string fpath = abspath(filepath);
+  variables["FILEPATH"] = fpath;
+  variables["DIRPATH"] = remove_trailing_slash(extract_directory(fpath));
+  variables["FILENAME"] = extract_filename(fpath);
+  variables["FILEBASE"] = remove_extension(extract_filename(fpath));
+  variables["FILEEXT"] = extract_extension(fpath);
+
+  ifstream in(fpath.c_str());
   if(!in)
-    PLERROR("In readFileAndMacroProcess, could not open file %s for reading", fname.c_str());
+    PLERROR("In readFileAndMacroProcess, could not open file %s for reading", fpath.c_str());
   return readAndMacroProcess(in, variables);
 }
 
