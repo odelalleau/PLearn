@@ -33,8 +33,10 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.6 2002/10/23 21:18:24 plearner Exp $
+   * $Id: oldplearn.cc,v 1.1 2002/10/23 21:18:24 plearner Exp $
    ******************************************************* */
+
+#include "plearnmain.h"
 
 // Available Splitters:
 #include "TrainTestSplitter.h"
@@ -68,12 +70,10 @@
 
 // #include "ViewCommand.h"
 
-#include "plearn_main.h"
-
 using namespace PLearn;
 
 int main(int argc, char** argv)
 {
-  return plearn_main(argc, argv);
+  return plearnmain(argc, argv);
 }
 
