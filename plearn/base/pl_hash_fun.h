@@ -35,7 +35,7 @@
 #ifndef pl_hash_fun_H
 #define pl_hash_fun_H
 
-#if __GNUC__ < 3
+#if __GNUC__<3 
 #  include <hash_set> //to get stl_hash_fun.h ... (template<> class hash)
 #else
 #  include <ext/hash_set> //to get stl_hash_fun.h ... (template<> class hash)
@@ -84,10 +84,10 @@ using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////
 
-#if __GNUC__ < 3
-namespace std <%
-#else
+#if __GNUC__==3 && __GNUC_MINOR__>0
 namespace __gnu_cxx <%
+#else
+namespace std <%
 #endif
 using std::string;
 
