@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussianProcessRegressor.h,v 1.3 2003/07/04 21:28:23 yoshua Exp $ 
+ * $Id: GaussianProcessRegressor.h,v 1.4 2003/07/08 18:32:58 yoshua Exp $ 
  ******************************************************* */
 
 /*! \file GaussianProcessRegressor.h */
@@ -76,7 +76,7 @@
  
 
 /* *******************************************************      
- * $Id: GaussianProcessRegressor.h,v 1.3 2003/07/04 21:28:23 yoshua Exp $
+ * $Id: GaussianProcessRegressor.h,v 1.4 2003/07/08 18:32:58 yoshua Exp $
  ******************************************************* */
 
 
@@ -92,7 +92,22 @@ namespace PLearn <%
 using namespace std;
 
 /*! Simple Gaussian Process Regression.
-  Should inherit from ConditionalDistribution (but currently Distribution inherits from the old Learner class!)
+
+// prediction = E[E[y|x]|training_set] = E[y|x,training_set]
+// prediction[j] = sum_i alpha_{ji} K(x,x_i)
+//               = (K(x,x_i))_i' inv(K+sigma^2[j] I) targets
+//
+// Var[y[j]|x,training_set] = Var[E[y[j]|x]|training_set] + E[Var[y[j]|x]|training_set]
+//  where
+//  Var[E[y[j]|x]|training_set] = K(x,x)- (K(x,x_i))_i' inv(K+sigma^2[j]) (K(x,x_i))_i
+//  and
+//  E[Var[y[j]|x]|training_set] = Var[y[j]|x] = sigma^2[j] = noise
+//
+// costs:
+//   MSE = sum_j (y[j] - prediction[j])^2
+//   NLL = sum_j log Normal(y[j];prediction[j],Var[y[j]|x,training_set])
+//
+
 */
 class GaussianProcessRegressor: public PConditionalDistribution
 {
@@ -210,6 +225,7 @@ class GaussianProcessRegressor: public PConditionalDistribution
   protected:
     static void declareOptions(OptionList& ol);
 
+    // covariance = K + sigma^2 I
     // multiply (K+sigma^2 I)^{-1} by vector v, put result in Cinv_v
     // TRICK USING PRINCIPAL E-VECTORS OF K:
     //   Let C = sum_{i=1}^m lambda_i v_i v_i' + sigma I
@@ -222,6 +238,10 @@ class GaussianProcessRegressor: public PConditionalDistribution
     void inverseCovTimesVec(real sigma, Vec v, Vec Cinv_v) const;
     // return u'*inverse(C)*u, using given sigma in C
     real QFormInverse(real sigma2, Vec u) const;
+
+    //! to be used for hyper-parameter selection, this is the negative log-likelihood of the
+    //! training data.
+    real BayesianCost();
 
   public:
     PLEARN_DECLARE_OBJECT_METHODS(GaussianProcessRegressor, "GaussianProcessRegressor", PConditionalDistribution);

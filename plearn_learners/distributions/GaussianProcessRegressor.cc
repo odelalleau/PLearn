@@ -72,7 +72,7 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianProcessRegressor.cc,v 1.3 2003/07/04 21:28:23 yoshua Exp $
+   * $Id: GaussianProcessRegressor.cc,v 1.4 2003/07/08 18:32:58 yoshua Exp $
    ******************************************************* */
 
 #include "GaussianProcessRegressor.h"
@@ -252,23 +252,10 @@ int GaussianProcessRegressor::getTrainCostIndex(const string& costname) const
 }
 
 //! return log of probability density log(p(x))
-//!  = sum_i -0.5*(log det(K+sigma[i]^2 I) - y'(K+sigma[i]^2 I) y - l/2 log(2 pi))
 double GaussianProcessRegressor::log_density(const Vec& y) const
 {
-  int l=K.length();
-  int m=eigenvectors.length();
-  double ld = l*n_outputs*Log2Pi;
-  for (int i=0;i<n_outputs;i++)
-  {
-    real sigma2_i=noise_sd[i]*noise_sd[i];
-    ld += QFormInverse(sigma2_i,y);
-    if (m<l)
-      ld += (l-m)*safeflog(sigma2_i);
-    for (int j=0;j<m;j++)
-      ld += safeflog(eigenvalues[i]+sigma2_i);
-  }
-  ld *= -0.5;
-  return ld;
+  PLERROR("GaussianProcessRegressor::log_density not implemented yet");
+  return 0;
 }
 
 //! return E[X] 
@@ -331,6 +318,20 @@ void GaussianProcessRegressor::computeOutput(const Vec& input, Vec& output) cons
   }
 }
 
+// prediction = E[E[y|x]|training_set] = E[y|x,training_set]
+// prediction[j] = sum_i alpha_{ji} K(x,x_i)
+//               = (K(x,x_i))_i' inv(K+sigma^2[j] I) targets
+//
+// Var[y[j]|x,training_set] = Var[E[y[j]|x]|training_set] + E[Var[y[j]|x]|training_set]
+//  where
+//  Var[E[y[j]|x]|training_set] = K(x,x)- (K(x,x_i))_i' inv(K+sigma^2[j]) (K(x,x_i))_i
+//  and
+//  E[Var[y[j]|x]|training_set] = Var[y[j]|x] = sigma^2[j] = noise
+//
+// costs:
+//   MSE = sum_j (y[j] - prediction[j])^2
+//   NLL = sum_j log Normal(y[j];prediction[j],Var[y[j]|x,training_set])
+//
 void GaussianProcessRegressor::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                                        const Vec& target, Vec& costs) const
 {
@@ -360,7 +361,7 @@ void GaussianProcessRegressor::computeCostsFromOutputs(const Vec& input, const V
   {
     real diff=mu[i] - target[i];
     mse += diff*diff;
-    logdensity += gauss_log_density(target[i],mu[i],var[i]);
+    logdensity += gauss_log_density(target[i],mu[i],var[i]+noise_sd[i]*noise_sd[i]);
   }
   costs[0]=mse;
   costs[1]=logdensity;
@@ -457,6 +458,30 @@ void GaussianProcessRegressor::train()
     VMat target_column = target_rows.subMatColumns(i,1);
     inverseCovTimesVec(noise_sd[i]*noise_sd[i],target_column.toMat().toVec(),alpha(i));
   }
+
+}
+
+real GaussianProcessRegressor::BayesianCost()
+{
+  //! compute the "training cost" = negative log-likelihood of the training data
+  //!  = 0.5*sum_i (log det(K+sigma[i]^2 I) + y' inv(K+sigma[i]^2 I) y + l log(2 pi))
+  int l=K.length();
+  int m=eigenvectors.length();
+  real nll = l*n_outputs*Log2Pi;
+  for (int i=0;i<n_outputs;i++)
+  {
+    real sigma2_i=noise_sd[i]*noise_sd[i];
+    nll += QFormInverse(sigma2_i,y); // y'*inv(C)*y 
+    // add the log det(K+sigma_i^2 I) contribution
+    if (m<l)
+      // the last l-m eigenvalues are sigma_i^2
+      nll += (l-m)*safeflog(sigma2_i); 
+    // while the first m ones are lambda_i + sigma_i^2
+    for (int j=0;j<m;j++)
+      nll += safeflog(eigenvalues[i]+sigma2_i);
+  }
+  nll *= 0.5;
+  return nll;
 }
 
 // multiply (K+sigma^2 I)^{-1} by vector v, put result in Cinv_v
