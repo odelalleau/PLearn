@@ -38,11 +38,12 @@
  
 
 /* *******************************************************      
-   * $Id: AdaptGradientOptimizer.cc,v 1.1 2003/05/06 20:40:39 tihocan Exp $
+   * $Id: AdaptGradientOptimizer.cc,v 1.2 2003/05/20 15:40:38 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "AdaptGradientOptimizer.h"
+#include "AsciiVMatrix.h" // TODO Remove later
 #include "TMat_maths.h"
 #include "DisplayUtils.h"
 
@@ -161,6 +162,8 @@ void AdaptGradientOptimizer::adaptLearningRateALAP1(
   }
 }
 
+static bool first_time = true;
+
 ////////////////////////////
 // adaptLearningRateBasic //
 ////////////////////////////
@@ -168,6 +171,13 @@ void AdaptGradientOptimizer::adaptLearningRateBasic(
     Vec learning_rates,
     Vec old_params,
     Vec old_evol) {
+/*  // TODO Remove later
+  static VMat lrates;
+  if (first_time) {
+    first_time = false;
+    lrates = new AsciiVMatrix("lrates.amat", params.nelems());
+  }
+  lrates->appendRow(learning_rates); */
   Var* array = params->data();
   int j = 0;
   int k;
@@ -175,6 +185,10 @@ void AdaptGradientOptimizer::adaptLearningRateBasic(
   int nb_max = 0;
   int nb_moy = 0;
   real u;
+  real lr_min = 0;
+  real lr_moy = 0;
+  real lr_max = 0;
+  real lr_mean = 0;
   for (int i=0; i<params.size(); i++) {
     k = j;
     for (; j<k+array[i]->nelems(); j++) {
@@ -184,19 +198,34 @@ void AdaptGradientOptimizer::adaptLearningRateBasic(
         learning_rates[j] += learning_rates[j] * adapt_coeff1;
       else if (u * old_evol[j] < 0)
         learning_rates[j] -= learning_rates[j] * adapt_coeff2;
-      if (learning_rates[j] < min_learning_rate) {
-        learning_rates[j] = min_learning_rate;
+      real min_lr = min_learning_rate / (1 + stage * decrease_constant);
+      real max_lr = max_learning_rate / (1 + stage * decrease_constant);
+      if (learning_rates[j] < min_lr) {
+//        if (abs(array[i]->valuedata[j-k]) < 0.7) {
+          learning_rates[j] = min_lr;
+//        } 
+        if (learning_rates[j] == 0) {
+          cout << "Null learning rate !" << endl;
+        }
         nb_min++;
-      } else if (learning_rates[j] > max_learning_rate) {
-        learning_rates[j] = max_learning_rate;
+        lr_min += abs(array[i]->valuedata[j-k]);
+      } else if (learning_rates[j] > max_lr) {
+        learning_rates[j] = max_lr;
         nb_max++;
+        lr_max += abs(array[i]->valuedata[j-k]);
       } else {
         nb_moy++;
+        lr_moy += abs(array[i]->valuedata[j-k]);
       }
+      lr_mean += abs(array[i]->valuedata[j-k]);
       // cout << learning_rates[j] << "  ";
     }
   }
+  if (nb_min > 0) lr_min /= real(nb_min);
+  if (nb_moy > 0) lr_moy /= real(nb_moy);
+  if (nb_max > 0) lr_max /= real(nb_max);
   cout << "nb_min = " << nb_min << "  --  nb_max = " << nb_max << "  --  nb_moy = " << nb_moy << endl;
+  cout << "w_lr_min = " << lr_min << "  --  w_lr_max = " << lr_max << " --  w_lr_moy = " << lr_moy << "  --  w_lr_mean = " << lr_mean/real(nb_min+nb_moy+nb_max) << endl; 
   // cout << endl;
 }
 
@@ -216,6 +245,7 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
 
   bool adapt = (learning_rate_adaptation != 0);
   stochastic_hack = stochastic_hack && !adapt;
+  stochastic_hack = false; // TODO Remove later
 
   // Big hack for the special case of stochastic gradient, to avoid doing an explicit update
   // (temporarily change the gradient fields of the parameters to point to the parameters themselves,
@@ -226,7 +256,7 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
       oldgradientlocations[i] = params[i]->defineGradientLocation(params[i]->matValue);
   }
 
-  meancost.clear(); // TODO Move to build_ ?
+  meancost.clear();
   
   int stage_max = stage + nstages; // the stage to reach
 
@@ -251,6 +281,11 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
     proppath.fbprop();
 
     meancost += cost->value;
+
+    // TODO Put back in the switch below when no more gradient stats
+    // are collected ?
+    params.copyGradientTo(gradient);
+    //collectGradientStats(gradient);
     
     // Move along the chosen direction
     // And learning rate adaptation after each step
@@ -260,12 +295,13 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
           params.updateAndClear();
         break;
       case 1:
-        params.copyGradientTo(gradient);
+        // params.copyGradientTo(gradient);
+        // TODO Not efficient, write a faster update ?
         params.update(learning_rates, gradient); 
         params.clearGradient();
         break;
       case 2:
-        params.copyGradientTo(gradient);
+        // params.copyGradientTo(gradient);
         adaptLearningRateALAP1(tmp_storage, gradient);
         params.update(learning_rate, gradient);
         tmp_storage << gradient;
