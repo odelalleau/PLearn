@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.cc,v 1.16 2003/02/15 22:24:50 morinf Exp $
+   * $Id: WordNetOntology.cc,v 1.17 2003/02/16 18:31:44 morinf Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -45,8 +45,7 @@ namespace PLearn {
   using namespace std;
 
 
-//#define FRED_MODIF
-//#define NOWARNING
+#define NOWARNING
 
 WordNetOntology::WordNetOntology()
 {
@@ -266,8 +265,6 @@ void WordNetOntology::extract(string voc_file, int wn_pos_type)
   progress.done();
   finalize();
   input_if.close();
-
-  listMultipleParented2();
 }
 
 bool WordNetOntology::isInWordNet(string word, bool trim_word, bool stem_word, bool remove_undescores)
@@ -448,10 +445,8 @@ WordNetOntology::findSynsetFromSynsAndGloss(const vector<string> &syns, const st
 {
     for (map<int, Node *>::iterator it = synsets.begin(); it != synsets.end(); ++it) {
         Node *node = it->second;
-        int id = node->ss_id;
-        if (node->gloss == gloss)
-            if (node->syns == syns)
-                return node;
+        if ((node->gloss == gloss) && (node->syns == syns))
+            return node;
     }
     return NULL;
 }
@@ -459,6 +454,12 @@ WordNetOntology::findSynsetFromSynsAndGloss(const vector<string> &syns, const st
 void
 WordNetOntology::extractTaggedWordFrequencies(map<int, map<int, int> > &word_senses_to_tagged_frequencies)
 {
+    // NOTE: The 'word_senses_to_tagged_frequencies' is a map where the key to the
+    //       map is a 'word_id' and the value associated with the key is another
+    //       map. This other map takes a 'synset_id' as its key and associates
+    //       a frequency value. Thus the data structure associates a frequency
+    //       to a (word_id, synset_id) couple.
+
     cout << "in WordNetOntology::extractTaggedWordFrequencies()" << endl;
     vector<int> dbases;
     dbases.reserve(4);
@@ -466,10 +467,9 @@ WordNetOntology::extractTaggedWordFrequencies(map<int, map<int, int> > &word_sen
     dbases.push_back(VERB);
     dbases.push_back(ADJ);
     dbases.push_back(ADV);
-    int dbases_size = 1;//dbases.size();
+    int dbases_size = dbases.size();
 
     word_senses_to_tagged_frequencies.clear();
-
     vector<string> syns;
     string gloss;
 
@@ -484,46 +484,50 @@ WordNetOntology::extractTaggedWordFrequencies(map<int, map<int, int> > &word_sen
         for (map<int, string>::iterator w_it = words.begin(); w_it != words.end(); ++w_it) {
             progress.update(++ws2tf_i);
             char *cword = cstr(w_it->second);
-            //SynsetPtr ssp = findtheinfo_ds(cword, dbases[i], -HYPERPTR, ALLSENSES);
-            IndexPtr idx;
-            SynsetPtr cursyn;
-            while ((idx = getindex(cword, dbases[i])) != NULL) {
-                cword = NULL;
-                if (idx->tagged_cnt) {
-                    map<int, map<int, int> >::iterator ws2tf_it = word_senses_to_tagged_frequencies.find(w_it->first);
-                    if (ws2tf_it == word_senses_to_tagged_frequencies.end()) {
-                        word_senses_to_tagged_frequencies[w_it->first] = map<int, int>();
-                        ws2tf_it = word_senses_to_tagged_frequencies.find(w_it->first);
-                    }
-                    for (int l = 0; l < idx->sense_cnt; ++l) {
-                        if ((cursyn = read_synset(dbases[i], idx->offset[l], idx->wd)) != NULL) {
-                            int freq = GetTagcnt(idx, l + 1);
-                            wnresults.OutSenseCount[wnresults.numforms]++;
-                            
-                            // Find if synset is in ontology
-                            if (freq) {
+            wnresults.numforms = wnresults.printcnt = 0; // Useful??
+            SynsetPtr ssp = findtheinfo_ds(cword, dbases[i], -HYPERPTR, ALLSENSES);
+            if (ssp != NULL) {
+                IndexPtr idx;
+                SynsetPtr cursyn;
+                while ((idx = getindex(cword, dbases[i])) != NULL) {
+                    cword = NULL;
+                    if (idx->tagged_cnt) {
+                        map<int, map<int, int> >::iterator ws2tf_it = word_senses_to_tagged_frequencies.find(w_it->first);
+                        if (ws2tf_it == word_senses_to_tagged_frequencies.end()) {
+                            word_senses_to_tagged_frequencies[w_it->first] = map<int, int>();
+                            ws2tf_it = word_senses_to_tagged_frequencies.find(w_it->first);
+                        }
+                        //for (int l = 0; l < idx->tagged_cnt; ++l) {
+                        for (int l = 0; l < idx->sense_cnt; ++l) {
+                            if ((cursyn = read_synset(dbases[i], idx->offset[l], idx->wd)) != NULL) {
+                                int freq = GetTagcnt(idx, l + 1);
+                                wnresults.OutSenseCount[wnresults.numforms]++;
+                                // Find if synset is in ontology
+                                //if (freq) {
                                 syns = getSynsetWords(cursyn);
-                                gloss = cursyn->defn;
+                                gloss = string(cursyn->defn);
                                 Node *node = findSynsetFromSynsAndGloss(syns, gloss);
                                 if (node != NULL) {
                                     (ws2tf_it->second)[node->ss_id] = freq;
                                     ++total_senses_found;
                                 }
+                                //}
+                                free_synset(cursyn);
                             }
-                            free_synset(cursyn);
                         }
                     }
-                }
-                wnresults.numforms++;
-                free_index(idx);
-            } // while()
-            //free_syns(ssp);
+                    wnresults.numforms++;
+                    free_index(idx);
+                } // while()
+                free_syns(ssp);
+            } // ssp != NULL
         }
     }
     progress.done();
     cout << "FOUND A GRAND TOTAL OF " << total_senses_found << " senses" << endl;
 }
 
+/*
 int WordNetOntology::extractFrequencies(string word, int whichsense, int dbase)
 {
     IndexPtr idx;
@@ -553,6 +557,7 @@ int WordNetOntology::extractFrequencies(string word, int whichsense, int dbase)
     }
     return freq;
 }
+*/
 
 bool WordNetOntology::extractSenses(string original_word, string processed_word, int wn_pos_type)
 {
@@ -668,31 +673,16 @@ Node* WordNetOntology::extractOntology(SynsetPtr ssp)
   removeDelimiters(defn, '|', '/');
   node->gloss = defn;
   node->is_unknown = false;
-  node->key = ssp->hereiam;
-  node->key2.set(ssp);
   synsets[node->ss_id] = node;
-/*
-  cout << "key = " << node->key << ", " << "pos = " << ssp->pos << ", "
-       << "fnum = " << ssp->fnum << endl;
-  cout << "key2 = ";
-  node->key2.print(cout);
-*/
+
   ssp = ssp->ptrlist;
   
   while (ssp != NULL)
   {
-/*
-    cout << "in extractOntology() ssp->key = " << ssp->key
-         << ", ssp->hereiam" << ssp->hereiam << endl;
-*/
     Node* parent_node = checkForAlreadyExtractedSynset(ssp);
     if (parent_node == NULL) // create new synset Node
     {
       parent_node = extractOntology(ssp);
-      //parent_node->key = ssp->hereiam;
-      parent_node->key2.set(ssp);
-      //cout << "key2 = ";
-      //parent_node->key2.print(cout);
     }
     
     node->parents.insert(parent_node->ss_id);
@@ -839,8 +829,6 @@ int WordNetOntology::getWordSenseIdForSenseKey(string lemma, string lexsn)
   SynsetPtr ssp = GetSynsetForSense(csense_key);
   if (ssp != NULL)
   {
-//      cout << "in getWordSenseIdForSenseKey(), ssp->key = " << ssp->key
-//           << endl;
     vector<string> synset_words = getSynsetWords(ssp);
     int word_id = words_id[lemma];
     for (SetIterator it = word_to_senses[word_id].begin(); it != word_to_senses[word_id].end(); ++it)
@@ -1002,59 +990,6 @@ vector<string> WordNetOntology::getSynsetWords(SynsetPtr ssp)
   return syns;
 }
 
-void
-WordNetOntology::listMultipleParented2()
-{
-    int total_multiple_parented_nodes = 0;
-    for (map<int, Node *>::iterator it = synsets.begin(); it != synsets.end(); ++it) {
-        Node *node = it->second;
-        int n_parents = node->parents.size();
-        if (n_parents > 1) {
-            cout << "Node " << node->ss_id << " (" << node->key << "|"
-                 << *(node->types.begin()) << ") ";
-            node->key2.print(cout);
-            printSynset(node->ss_id);
-            cout << " (words = ";
-            printSynsetWords2(node->ss_id);
-            cout << ") \nhas " << node->parents.size() << " parents: " << endl;
-            SetIterator par_it = node->parents->begin();
-            for ( ; par_it != node->parents.end(); ++par_it) {
-                Node *parent = getSynset(*par_it);
-                cout << "parent " << *par_it << " (" << parent->key << "|"
-                     << *(parent->types.begin()) << ") ";
-                node->key2.print(cout);
-                printSynset(*par_it);
-                cout << " (words = ";
-                printSynsetWords2(*par_it);
-                cout << ") " << endl;
-            }
-            ++total_multiple_parented_nodes;
-            cout << endl << endl;
-        }
-    }
-    cout << "Total multiple parented nodes = "
-         << total_multiple_parented_nodes << endl;
-}
-
-void
-WordNetOntology::printSynsetWords2(int ss_id, int n_words)
-{
-    if (synsets.find(ss_id) == synsets.end())
-        PLERROR("WeightedWNOntology::printSynsetWords2() - "
-                "synset %d doesn't exist", ss_id);
-    //Node *node = synsets[ss_id];
-    int n_printed_words = 0;
-    Set ss_words = getSynsetWordDescendants(ss_id);
-    SetIterator it = ss_words.begin();
-    if (n_words && ss_words.size())
-        cout << words[*it];
-    for (++it; (it != ss_words.end())
-             && (n_printed_words < n_words); ++it) {
-        cout << ", " << words[*it];
-    }
-    cout << flush;
-}
-
 void WordNetOntology::print(bool print_ontology)
 {
   for (map<int, Set>::iterator it = word_to_senses.begin(); it != word_to_senses.end(); ++it)
@@ -1164,10 +1099,6 @@ void WordNetOntology::save(string synset_file, string ontology_file)
     {
       of_synsets << *iit << "|";
     }
-#ifdef FRED_MODIF
-    of_synsets << "*|" << node->key << "|";
-    //node->key2.print(of_synsets); // tempo
-#endif
     of_synsets << endl;
   }
   of_synsets.close();
@@ -1238,39 +1169,24 @@ void WordNetOntology::load(string voc_file, string synset_file, string ontology_
     if (line == "") continue;
     if (line[0] == '#') continue;
     vector<string> tokens = split(line, "*");
-#ifdef FRED_MODIF
-    if (tokens.size() != 4)
-#else
     if (tokens.size() != 3)
-#endif
     { 
       PLERROR("the synset file has not the expected format, line %d = '%s'", line_no, line.c_str());
     }
     int ss_id = toint(tokens[0]);
     vector<string> type_tokens = split(tokens[1], "|");
     vector<string> ss_tokens = split(tokens[2], "|");
-#ifdef FRED_MODIF
-    vector<string> key_token = split(tokens[3], "|");
-#endif
     Node* node = new Node(ss_id);
     for (unsigned int i = 0; i < type_tokens.size(); i++)
     {
       node->types.insert(toint(type_tokens[i]));
     }
-#ifdef FRED_MODIF
-    int ss_tokens_size = ss_tokens.size();
-#endif
     node->gloss = ss_tokens[0];
+    node->syns.reserve(ss_tokens.size() - 1);
     for (unsigned int i = 1; i < ss_tokens.size(); i++)
     {
       node->syns.push_back(ss_tokens[i]);
     }
-#ifdef FRED_MODIF
-    if (key_token.size() == 1)
-      node->key = toint(key_token[0]);
-    else
-      node->key = -1;
-#endif
     synsets[node->ss_id] = node;
   }
   if_synsets.close();
@@ -2309,17 +2225,7 @@ void WordNetOntology::detectWordsWithoutOntology()
 
 int WordNetOntology::getMaxSynsetId()
 {
-/* No need for that, indexes are ordered!
-  int max_id = -1;
-  for (map<int, Node*>::iterator it = synsets.begin(); it != synsets.end(); ++it)
-  {
-    int id = it->first;
-    if (id > max_id)
-      max_id = id;
-  }
-  return max_id;
-*/
-  return synsets.rbegin()->first;
+    return synsets.rbegin()->first;
 }
 
 Set WordNetOntology::getSyntacticClassesForWord(int word_id)
@@ -2633,7 +2539,8 @@ void removeDelimiters(string& s, char delim, char replace)
   unsigned int pos = s.find(delim, 0);
   while (pos != string::npos)
   {
-    s.replace(pos, 1, &replace);
+      //s.replace(pos, 1, &replace);
+      s.replace(pos, 1, replace);
     pos = s.find(delim, pos + 1);
   }
 }

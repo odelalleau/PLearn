@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.h,v 1.13 2003/02/15 22:24:24 morinf Exp $
+   * $Id: WordNetOntology.h,v 1.14 2003/02/16 18:31:44 morinf Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -110,47 +110,6 @@ bool isLegalPunct(char c);
 char* cstr(string& s);
 void removeDelimiters(string& s, char delim, char replace);
 
-// Useless stuff brought to you by Fred
-struct NodeKey
-{
-    NodeKey()
-    {
-        headword = "";
-        headsense = -1;
-    };
-    void set(SynsetPtr ssp)
-    {
-        sstype = ssp->sstype;
-        fnum = ssp->fnum;
-        pos = ssp->pos;
-        for (int i = 0; i < 2; ++i)
-            lexid[i] = ssp->lexid[i];
-        for (int i = 0; i < 3; ++i)
-            wnsns[i] = ssp->wnsns[i];
-        if (sstype == 5) {
-            headword = ssp->headword;
-            headsense = ssp->headsense;
-        }
-        gloss_def = ssp->defn;
-    };
-    void print(ostream &out)
-    {
-        out << "[" << sstype << ", " << fnum << ", " << pos << ", " << lexid[0]
-            << lexid[1] << ", (" << wnsns[0] << ", " << wnsns[1]
-            << wnsns[2] << ")";
-        if (sstype == 5)
-            out << ", " << headword << ", " << headsense;
-        out << ", " << gloss_def << "]" << flush;
-    }
-    int sstype;
-    int fnum;
-    string pos;
-    int lexid[2];
-    int wnsns[3];
-    string headword;
-    short headsense;
-    string gloss_def;
-};
 
 // ontology DAG node
 
@@ -167,8 +126,6 @@ struct Node
   bool is_unknown;
   //int level;
   bool visited;
-  long key;        // Useless stuff, TO BE REMOVED
-  NodeKey key2;    // Useless stuff, TO BE REMOVED
 };
 
 class WordNetOntology
@@ -303,9 +260,6 @@ public:
   bool containsWordId(int id) { return (words.find(id) != words.end()); }
 
   Node *findSynsetFromSynsAndGloss(const vector<string> &syns, const string &gloss);
-  void listMultipleParented2();
-  void printSynsetWords2(int ss_id, int n_words = 15);
-
   void removeNonReachableSynsets();
 
   void print(bool print_ontology = true);
@@ -334,7 +288,7 @@ public:
   void extractWord(string original_word, int wn_pos_type, bool trim_word, bool stem_word, bool remove_underscores);
   bool extractSenses(string original_word, string processed_word, int wn_pos_type);
   void extractTaggedWordFrequencies(map<int, map<int, int> > &word_senses_to_tagged_frequencies);
-  int extractFrequencies(string word, int sense, int wn_pos_type);
+//int extractFrequencies(string word, int sense, int wn_pos_type);
   Node* extractOntology(SynsetPtr ssp);
   void extractAncestors(int threshold, bool cut_with_word_coverage = true);
   void extractAncestors(Node* node, Set ancestors, int level, int level_threshold);
