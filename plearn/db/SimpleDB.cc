@@ -35,6 +35,7 @@
 #define _GNU_SOURCE 1
 
 #include "SimpleDB.h"
+#include "random.h"
 
 namespace PLearn {
 using namespace std;
