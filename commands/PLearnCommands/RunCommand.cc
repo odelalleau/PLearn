@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunCommand.cc,v 1.9 2004/08/26 21:03:50 chrish42 Exp $ 
+   * $Id: RunCommand.cc,v 1.10 2004/08/27 14:59:44 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file RunCommand.cc */
@@ -56,12 +56,12 @@ PLearnCommandRegistry RunCommand::reg_(new RunCommand);
 void RunCommand::run(const vector<string>& args)
 {
   string scriptfile = args[0];
-  if(!file_exists(scriptfile))
+  if (!file_exists(scriptfile))
     PLERROR("Non existant script file: %s\n",scriptfile.c_str());
 
   map<string, string> vars;
   // populate vars with the arguments passed on the command line
-  for(unsigned int i=1; i<args.size(); i++)
+  for (unsigned int i=1; i<args.size(); i++)
     {
       string option = args[i];
       pair<string,string> name_val = split_on_first(option, "=");
@@ -74,8 +74,15 @@ void RunCommand::run(const vector<string>& args)
   string script;
   if (extension == ".pyplearn")
     {
-      const string command = "pyplearn_driver.py \"" + scriptfile + '\"';
-      Popen popen(command);
+      string command = "pyplearn_driver.py '" + scriptfile + '\'';
+      for (i = 1; i < args.size(); i++)
+	{
+	  command += " '";
+	  command += args[i];
+	  command += '\'';
+	}
+
+      Popen popen(command);      
       string script_before_preprocessing;
       while (!popen.in.eof())
 	{
