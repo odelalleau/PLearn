@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.cc,v 1.8 2003/09/17 02:34:12 chapados Exp $
+   * $Id: VVMatrix.cc,v 1.9 2003/11/21 17:14:34 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -524,7 +524,8 @@ VMat VVMatrix::createPreproVMat(const string & filename)
           cout<<"Rendering PMAT : "<<meta_data_dir+"/precomputed.pmat"<<endl;
           source->savePMAT(meta_data_dir+"/incomplete.precomputed.pmat");
           mvforce(meta_data_dir+"/incomplete.precomputed.pmat "+meta_data_dir+"/precomputed.pmat");
-          mvforce(meta_data_dir+"/incomplete.precomputed.pmat.fieldnames "+meta_data_dir+"/precomputed.pmat.fieldnames");
+// Seems to be useless now (TODO: remove ?)
+//          mvforce(meta_data_dir+"/incomplete.precomputed.pmat.fieldnames "+meta_data_dir+"/precomputed.pmat.fieldnames");
           if(pathexists(meta_data_dir+"/incomplete.precomputed.pmat.metadata/"))
             mvforce(meta_data_dir+"/incomplete.precomputed.pmat.metadata/ "+meta_data_dir+"/precomputed.pmat.metadata/");
           source=new FileVMatrix(meta_data_dir+"/precomputed.pmat");
