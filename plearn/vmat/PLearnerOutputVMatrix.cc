@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.cc,v 1.9 2004/03/30 20:09:05 tihocan Exp $
+   * $Id: PLearnerOutputVMatrix.cc,v 1.10 2004/04/20 13:54:06 lheureup Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -51,12 +51,14 @@ PLearnerOutputVMatrix::PLearnerOutputVMatrix()
  :inherited(),
   put_raw_input(false),
   train_learners(false)
-  /* ### Initialise all fields to their default value */
-{
-}
+  /* ### Initialize all fields to their default value */
+{}
+
 PLearnerOutputVMatrix::PLearnerOutputVMatrix
 (VMat data_,TVec<PP<PLearner> > learners_, bool put_raw_input_) 
-  : data(data_),learners(learners_),put_raw_input(put_raw_input_)
+: data(data_),learners(learners_),
+  put_raw_input(put_raw_input_),
+  train_learners(false)
 {
   build();
 }
