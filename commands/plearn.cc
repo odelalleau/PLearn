@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.25 2003/05/21 09:53:43 plearner Exp $
+   * $Id: plearn.cc,v 1.26 2003/05/21 13:43:04 tihocan Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -53,7 +53,7 @@
 #include "NNet.h"
 #include "HyperLearner.h"
 #include "TryAll.h"
-#include "EarlyStop.h"
+// #include "EarlyStop.h"
 
 // All Available Learners: 
 // #include "KNN.h"
