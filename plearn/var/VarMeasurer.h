@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VarMeasurer.h,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: VarMeasurer.h,v 1.2 2002/10/23 23:32:34 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -75,5 +75,6 @@ class VarMeasurer: public Measurer
 %> // end of namespace PLearn
 
 #endif
+
 
 

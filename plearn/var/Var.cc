@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Var.cc,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: Var.cc,v 1.2 2002/10/23 23:32:34 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -60,3 +60,4 @@ void deepCopyField(Var& field, CopiesMap& copies)
 }  
 
 %> // end of namespace PLearn
+

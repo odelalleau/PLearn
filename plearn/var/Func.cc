@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Func.cc,v 1.2 2002/09/05 19:32:43 morinf Exp $
+   * $Id: Func.cc,v 1.3 2002/10/23 23:32:34 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,6 +46,7 @@
 #include "TMat_maths.h"
 #include "DisplayUtils.h" ////////// to remove
 #include "Var.h"
+#include "TimesConstantVariable.h"
 
 namespace PLearn <%
 using namespace std;
@@ -604,3 +605,4 @@ void deepCopyField(Func& field, CopiesMap& copies)
 
 
 %> // end of namespace PLearn
+

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Func.h,v 1.2 2002/08/08 22:54:25 morinf Exp $
+   * $Id: Func.h,v 1.3 2002/10/23 23:32:34 dorionc Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -188,3 +188,4 @@ template <> void deepCopyField(Func& field, CopiesMap& copies);
 %> // end of namespace PLearn
 
 #endif
+

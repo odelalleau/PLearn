@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.h,v 1.2 2002/08/08 22:54:25 morinf Exp $
+   * $Id: Variable.h,v 1.3 2002/10/23 23:32:34 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -178,8 +178,7 @@ public:
   void sizeprop();
 
   //! set this Variable's parents.  To use with default constructor.
-  virtual void setParents(const VarArray& parents)
-  { PLERROR("In Variable::setParents  setParents() function not implemented for %s", classname().c_str()); }
+  virtual void setParents(const VarArray& parents);
 
   /*! 
     Variable(const Vec& the_value);
@@ -404,3 +403,4 @@ inline void Variable::updateAndClear()
 %> // end of namespace PLearn
 
 #endif
+

@@ -34,13 +34,14 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.cc,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: VarArray.cc,v 1.2 2002/10/23 23:32:34 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "VarArray.h"
 #include "NaryVariable.h"
 #include "DisplayUtils.h"
+#include "VarArrayElementVariable.h"
 
 namespace PLearn <%
 using namespace std;
@@ -1029,3 +1030,4 @@ void printInfo(VarArray inputs, const Var& output,bool show_gradients)
 }
 
 %> // end of namespace PLearn
+

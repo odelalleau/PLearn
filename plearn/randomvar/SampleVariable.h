@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: SampleVariable.h,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: SampleVariable.h,v 1.2 2002/10/23 23:32:33 dorionc Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -48,7 +48,7 @@
 #ifndef SampleVariable_INC
 #define SampleVariable_INC
 
-#include "Var.h"
+#include "Var_all.h"
 #include "random.h"
 #include "VarArray.h"
 

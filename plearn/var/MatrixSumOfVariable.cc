@@ -1,0 +1,181 @@
+// -*- C++ -*-
+
+// PLearn (A C++ Machine Learning Library)
+// Copyright (C) 1998 Pascal Vincent
+// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio, Rejean Ducharme and University of Montreal
+// Copyright (C) 2001-2002 Nicolas Chapados, Ichiro Takeuchi, Jean-Sebastien Senecal
+// Copyright (C) 2002 Xiangdong Wang, Christian Dorion
+
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+// 
+//  1. Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+// 
+//  2. Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//     documentation and/or other materials provided with the distribution.
+// 
+//  3. The name of the authors may not be used to endorse or promote
+//     products derived from this software without specific prior written
+//     permission.
+// 
+// THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+// NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+// TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// 
+// This file is part of the PLearn library. For more information on the PLearn
+// library, go to the PLearn Web site at www.plearn.org
+
+
+/* *******************************************************      
+   * $Id: MatrixSumOfVariable.cc,v 1.1 2002/10/23 23:32:34 dorionc Exp $
+   * This file is part of the PLearn library.
+   ******************************************************* */
+
+#include "MatrixSumOfVariable.h"
+
+// From Old NaryVariable.cc: all includes are putted in every file.
+// To be revised manually 
+#include "NaryVariable.h"
+#include "Var.h"
+#include "TMat_maths.h"
+#include "PLMPI.h"
+#include "DisplayUtils.h"
+#include "pl_erf.h"
+#include "Var_utils.h"
+namespace PLearn <%
+using namespace std;
+
+
+/** MatrixSumOfVariable **/
+
+MatrixSumOfVariable::MatrixSumOfVariable(VMat the_distr, Func the_f, int the_nsamples, int the_input_size)
+  :NaryVariable(nonInputParentsOfPath(the_f->inputs,the_f->outputs), 
+                the_f->outputs[0]->length(), 
+                the_f->outputs[0]->width()),
+  distr(the_distr), f(the_f), nsamples(the_nsamples), input_size(the_input_size), curpos(0),
+  input_value(the_distr->width()*nsamples), input_gradient(the_distr->width()*nsamples),
+  output_value(the_f->outputs[0]->size())
+  
+{
+  if(f->outputs.size()!=1)
+    PLERROR("In MatrixSumOfVariable: function must have a single variable output (maybe you can vconcat the vars into a single one prior to calling sumOf, if this is really what you want)");
+
+  if(nsamples==-1)
+    nsamples = distr->length();
+  f->inputs.setDontBpropHere(true);
+}
+
+
+IMPLEMENT_NAME_AND_DEEPCOPY(MatrixSumOfVariable);
+
+void MatrixSumOfVariable::recomputeSize(int& l, int& w) const
+{ l=f->outputs[0]->length(); w=f->outputs[0]->width(); }
+
+
+void MatrixSumOfVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+{
+  NaryVariable::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(distr, copies);
+  deepCopyField(f, copies);
+}
+
+
+void MatrixSumOfVariable::fprop()
+{
+  Vec oneInput_value(distr->width());
+  f->recomputeParents();
+
+  int inputpos=0;
+  int targetpos=nsamples*input_size;
+  for (int i=0; i<nsamples; i++)
+    {
+    distr->getRow(curpos, oneInput_value);
+    for (int j=0; j<input_size; j++,inputpos++)
+      input_value[inputpos]=oneInput_value[j];
+    for (int j=input_size; j<distr.width(); j++,targetpos++)
+      input_value[targetpos] = oneInput_value[j];
+    if(++curpos==distr.length())
+      curpos=0;
+    }
+  f->fprop(input_value, value);
+}
+
+
+void MatrixSumOfVariable::bprop()
+{ fbprop(); }
+
+
+void MatrixSumOfVariable::fbprop()
+{
+  Vec oneInput_value(distr->width());
+  f->recomputeParents();
+  
+  int inputpos=0;
+  int targetpos=nsamples*input_size;
+  for (int i=0; i<nsamples; i++)
+    {
+    distr->getRow(curpos, oneInput_value);
+    for (int j=0; j<input_size; j++,inputpos++)
+      input_value[inputpos]=oneInput_value[j];
+    for (int j=input_size; j<distr.width(); j++,targetpos++)
+      input_value[targetpos] = oneInput_value[j];
+    if(++curpos==distr.length())
+      curpos=0;
+    }
+  f->fbprop(input_value, value, input_gradient, gradient);
+}
+
+
+void MatrixSumOfVariable::symbolicBprop()
+{
+    PLERROR("MatrixSumOfVariable::symbolicBprop not implemented.");
+}
+
+
+void MatrixSumOfVariable::rfprop()
+{
+    PLERROR("MatrixSumOfVariable::rfprop not implemented.");
+}
+
+
+void MatrixSumOfVariable::printInfo(bool print_gradient)
+{
+  PLERROR("MatrixSumOfVariable::printInfo not implemented.");
+  Vec input_value(distr->width());
+  Vec input_gradient(distr->width());
+  Vec output_value(nelems());
+
+  f->recomputeParents();
+  value.clear();
+
+  for(int i=0; i<nsamples; i++)
+  {
+    distr->getRow(curpos++,input_value);
+    if (print_gradient)
+      f->fbprop(input_value, output_value, input_gradient, gradient);
+    else
+      f->fprop(input_value, output_value);
+    value += output_value;
+    if(++curpos>=distr->length())
+      curpos = 0;
+    f->fproppath.printInfo(print_gradient);
+  }
+  cout << info() << " : " << getName() << " = " << value;
+  if (print_gradient) cout << " gradient=" << gradient;
+  cout << endl; 
+}
+
+
+
+%> // end of namespace PLearn
+
+

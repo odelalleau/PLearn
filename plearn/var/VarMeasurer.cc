@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org 
 
 /* *******************************************************      
-   * $Id: VarMeasurer.cc,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: VarMeasurer.cc,v 1.2 2002/10/23 23:32:34 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -65,6 +65,7 @@ bool VarMeasurer::measure(int t, const Vec& costs)
 }
 
 %> // end of namespace PLearn
+
 
 
 

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.cc,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: Variable.cc,v 1.2 2002/10/23 23:32:34 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,6 +46,13 @@
 #include "Var.h"
 #include "VarArray.h"
 #include "Func.h"
+
+#include "VarElementVariable.h"
+#include "VarRowVariable.h"
+#include "SubMatVariable.h"
+#include "SubMatTransposeVariable.h"
+
+#include "Var_utils.h"
 
 namespace PLearn <%
 using namespace std;
@@ -233,6 +240,9 @@ void Variable::sizeprop()
   recomputeSize(l,w);
   resize(l,w);
 }
+
+void Variable::setParents(const VarArray& parents)
+{ PLERROR("In Variable::setParents  setParents() function not implemented for %s", classname().c_str()); }
 
 Mat Variable::defineGradientLocation(const Mat& m)
 {
@@ -786,3 +796,4 @@ void Variable::resizeRValue()
 
 
 %> // end of namespace PLearn
+

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.h,v 1.2 2002/09/17 01:27:34 zouave Exp $
+   * $Id: VarArray.h,v 1.3 2002/10/23 23:32:34 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -297,5 +297,6 @@ inline VarArray operator&(Var v1, Var v2)
 %> // end of namespace PLearn
 
 #endif
+
 
 
