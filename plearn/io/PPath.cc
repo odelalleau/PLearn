@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.cc,v 1.11 2005/02/15 18:18:34 tihocan Exp $ 
+   * $Id: PPath.cc,v 1.12 2005/02/16 15:12:24 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -62,6 +62,8 @@
 #define SYS_GETCWD     ::getcwd
 
 #endif
+
+#define PPATH_SLASH '/'  // The canonical slash.
 
 // TODO Use NSPR for getcwd ?
 
@@ -162,13 +164,9 @@ PStream& operator>>(PStream& in, PPath& path)
   switch (in.inmode) {
     case PStream::raw_ascii:
     case PStream::pretty_ascii:
-      {
-        path = PPath(spath);
-        break;
-      }
     case PStream::plearn_ascii:
       {
-        path = PPath(spath).absolute(); // TODO Why absolute() ?
+        path = PPath(spath);
         break;
       }
     default:
@@ -222,7 +220,7 @@ void PPath::ensureMappings()
       // and recognize a metapath.
       // Only canonical '/' are allowed in a metapath.
       // TODO Problem if we define a metapath to be '/' ?
-      if ( endsWith(next_metapath, '/') )
+      if ( endsWith(next_metapath, PPATH_SLASH) )
         next_metapath.replace( next_metapath.length()-1,
                                next_metapath.length(), "");        
 
@@ -235,7 +233,7 @@ void PPath::ensureMappings()
 }
 
 // This method MUST NOT return a path since it would lead to an infinite
-// loop of ctors.
+// loop of constructors.
 string PPath::expandEnvVariables(const string& path)
 {
   string expanded     = path;
@@ -310,9 +308,9 @@ void PPath::resolveSlashChars( )
     // Convert the canonic representation '/' by the appropriate
     // representation given the system (see slash_char instanciation in
     // PPath.cc). Multiple slash chars are removed.
-    if ( internal[ch] == '/' )
+    if ( internal[ch] == PPATH_SLASH )
     {
-      if( last != '/' )
+      if( last != PPATH_SLASH )
         resolved += _slash_char;
     }
 
@@ -616,6 +614,7 @@ string PPath::canonical() const
   while ( it != end )
   {      
     size_t begpath = canonic_path.find(it->second);
+    // TODO Be more efficient.
 
     // The path does not start with the current candidate or is shorter
     // than the previous metapath found.
@@ -658,17 +657,13 @@ string PPath::canonical() const
 
   // If any metapath was found, it must be replaced by its metaprotocol
   // equivalent.
-  if ( metaprotocol.length() > 0 ) 
+  if ( metaprotocol.length() > 0 ) {
     canonic_path.replace( 0, metapath.length(), metaprotocol+':' );
+    // Remove the slash just after the ':' if there is something following.
+    if (canonic_path.size() > metaprotocol.size() + 2)
+      canonic_path.erase(metaprotocol.size() + 1, 1);
+  }
 
-  // Remove the trailing slash if any
-  // TODO Really ?
-  /*
-  int canonic_len = canonic_path.length();
-  if ( canonic_len > 0 && canonic_path[ canonic_len-1 ] == _slash_char )
-    canonic_path.replace(canonic_len-1, canonic_len, "");
-  */
-  
   return canonic_path;
 }
 
