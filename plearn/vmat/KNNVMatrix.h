@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNVMatrix.h,v 1.1 2004/02/19 21:52:03 tihocan Exp $ 
+   * $Id: KNNVMatrix.h,v 1.2 2004/02/20 15:02:06 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -97,6 +97,13 @@ protected:
   //! Return the index in the source matrix of the sample number i in
   //! this matrix.
   inline int getSourceIndexOf(int i) const;
+
+  //! Return the tag of the sample number p in a bag:
+  //!   p == 0      => 1
+  //!   p == knn-1  => 2
+  //!   otherwise   => 0  
+  //! (If knn == 1, always return 3).
+  inline int getTag(int p) const;
 
 public:
 

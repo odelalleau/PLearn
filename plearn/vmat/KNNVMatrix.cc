@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNVMatrix.cc,v 1.1 2004/02/19 21:52:03 tihocan Exp $ 
+   * $Id: KNNVMatrix.cc,v 1.2 2004/02/20 15:02:06 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -50,10 +50,17 @@ using namespace std;
 // KNNVMatrix //
 ////////////////
 KNNVMatrix::KNNVMatrix() 
-: knn(5)
+: knn(6)
 {}
 
-PLEARN_IMPLEMENT_OBJECT(KNNVMatrix, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(KNNVMatrix, 
+    "A VMatrix that sees the nearest neighbours of each sample in the source VMat.", 
+    "Each sample is followed by its (knn-1) nearest neighbours.\n"
+    "To each row is appended an additional target, which is:\n"
+    " - 1 if it is the first of a bag of neighbours,\n"
+    " - 2 if it is the last of a bag,\n"
+    " - 0 if it is none of these,\n"
+    " - 3 if it is both (only for knn == 1).");
 
 ////////////////////
 // declareOptions //
@@ -61,11 +68,13 @@ PLEARN_IMPLEMENT_OBJECT(KNNVMatrix, "ONE LINE DESCR", "NO HELP");
 void KNNVMatrix::declareOptions(OptionList& ol)
 {
   declareOption(ol, "knn", &KNNVMatrix::knn, OptionBase::buildoption,
-      "The number of nearest neighbours to consider.");
+      "The number of nearest neighbours to consider (including the point itself).");
 
-  declareOption(ol, "nn", &KNNVMatrix::nn, OptionBase::learntoption,
-      "The matrix containing the index of the knn nearest neighbours of\n"
-      "each data point.");
+// Kinda useless to declare it as an option if we recompute it in build().
+// TODO See how to be more efficient.
+//  declareOption(ol, "nn", &KNNVMatrix::nn, OptionBase::learntoption,
+//      "The matrix containing the index of the knn nearest neighbours of\n"
+//      "each data point.");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -93,14 +102,15 @@ void KNNVMatrix::build_() {
     dk.computeGramMatrix(distances);
     // Deduce the nearest neighbours.
     nn = dk.computeNeighbourMatrixFromDistanceMatrix(distances);
-    // Only keep the (knn) nearest ones (i.e. knn+1 because the nearest neighbour
-    // is always the point itself).
+    // Only keep the (knn) nearest ones.
     // TODO Free the memory used by the other neighbours.
     // TODO Make the matrix be a TMat<int> instead of a Mat.
-    nn.resize(n, knn + 1);
+    nn.resize(n, knn);
     // Initialize correctly the various fields.
     copySizesFrom(source);
-    length_ = n * (knn + 1);
+    targetsize_++;
+    length_ = n * knn;
+    width_ = source->width() + 1;
   }
 }
 
@@ -126,15 +136,19 @@ void KNNVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 /////////
 real KNNVMatrix::get(int i, int j) const
 {
-  return source->get(getSourceIndexOf(i), j);
+  if (j < width_ - 1) {
+    return source->get(getSourceIndexOf(i), j);
+  } else {
+    return getTag(i % knn);
+  }
 }
 
 //////////////////////
 // getSourceIndexOf //
 //////////////////////
 int KNNVMatrix::getSourceIndexOf(int i) const {
-  int i_ref = i / (knn + 1);
-  int i_neighbour = i % (knn + 1);
+  int i_ref = i / knn;
+  int i_neighbour = i % knn;
   int i_neighbour_source = int(nn(i_ref, i_neighbour));
   return i_neighbour_source;
 }
@@ -151,7 +165,18 @@ void KNNVMatrix::getRow(int i, Vec v) const {
 ///////////////
 void KNNVMatrix::getSubRow(int i, int j, Vec v) const
 {
-  source->getSubRow(getSourceIndexOf(i), j, v);
+  source->getSubRow(getSourceIndexOf(i), j, v.subVec(0, v.length() - 1));
+  v[v.length() - 1] = getTag(i % knn);
+}
+
+////////////
+// getTag //
+////////////
+int KNNVMatrix::getTag(int p) const {
+  if (knn == 1) return 3;
+  if (p == 0) return 1;
+  if (p == knn - 1) return 2;
+  return 0;
 }
 
 %> // end of namespace PLearn
