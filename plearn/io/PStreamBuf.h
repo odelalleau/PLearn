@@ -33,14 +33,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PStreamBuf.h,v 1.10 2005/01/07 23:51:22 chrish42 Exp $ 
+   * $Id: PStreamBuf.h,v 1.11 2005/01/10 20:09:17 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file PStreamBuf.h */
 #ifndef PStreamBuf_INC
 #define PStreamBuf_INC
 
-#define STREAMBUFVER 0
+#define STREAMBUFVER 1
 
 #include <plearn/base/PP.h>
 
