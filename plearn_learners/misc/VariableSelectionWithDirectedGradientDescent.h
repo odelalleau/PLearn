@@ -60,10 +60,9 @@ private:
   int width;                                  // number of columns in train set
   
   real learning_rate;  
-  Vec input_weights;
+  Mat input_weights;
   TVec<bool> weights_selected;
   TVec<int> selected_variables;
-  Vec sorted_weights;
   
   ProgressBar* pb;
   int row;
@@ -73,7 +72,7 @@ private:
   real sample_weight;
   Vec sample_output;
   Vec sample_cost;  
-  real train_criterion;
+  Vec train_criterion;
   real n7_value;
   real n8_value;
   real n9_value;
@@ -82,9 +81,11 @@ private:
   real n9_gradient;
   real n8_gradient;
   real n7_gradient;
-  Vec weights_gradient;
+  Mat weights_gradient;
   int weights_gradient_max_col;
   real weights_gradient_max;
+  //! Stores the sum of the absolute values of the gradient over all targets.
+  Vec sum_of_abs_gradient;
   
   
 public:
@@ -102,8 +103,10 @@ public:
   virtual TVec<string> getTrainCostNames() const;
   virtual TVec<string> getTestCostNames() const;
   virtual void         computeOutput(const Vec& input, Vec& output) const;
-  virtual void         computeOutputAndCosts(const Vec& input, const Vec& target, Vec& output, Vec& costs) const;
   virtual void         computeCostsFromOutputs(const Vec& input, const Vec& output, const Vec& target, Vec& costs) const;
+  //! Overridden to take into account the new value of targetsize.
+  virtual void         setTrainingSet(VMat training_set, bool call_forget=true);
+
 
 protected:
 
