@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.49 2004/04/21 15:03:51 tihocan Exp $
+   * $Id: NNet.cc,v 1.50 2004/04/23 02:53:33 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -53,6 +53,7 @@
 #include "MulticlassLossVariable.h"
 #include "NegCrossEntropySigmoidVariable.h"
 #include "OneHotSquaredLoss.h"
+#include "RBFLayerVariable.h"
 #include "SigmoidVariable.h"
 #include "SoftmaxVariable.h"
 #include "SoftplusVariable.h"
@@ -96,6 +97,8 @@ NNet::NNet() // DEFAULT VALUES FOR ALL OPTIONS
    classification_regularizer(0),
    margin(1),
    fixed_output_weights(0),
+   rbf_layer_size(0),
+   first_class_is_junk(1),
    L1_penalty(false),
    input_reconstruction_penalty(0),
    direct_in_to_out(false),
@@ -133,6 +136,7 @@ void NNet::declareOptions(OptionList& ol)
 
   declareOption(ol, "layer1_weight_decay", &NNet::layer1_weight_decay, OptionBase::buildoption, 
                 "    Additional weight decay for the first hidden layer.  Is added to weight_decay.\n");
+
   declareOption(ol, "layer1_bias_decay", &NNet::layer1_bias_decay, OptionBase::buildoption, 
                 "    Additional bias decay for the first hidden layer.  Is added to bias_decay.\n");
 
@@ -164,6 +168,22 @@ void NNet::declareOptions(OptionList& ol)
 
   declareOption(ol, "direct_in_to_out", &NNet::direct_in_to_out, OptionBase::buildoption, 
                 "    should we include direct input to output connections?\n");
+
+  declareOption(ol, "rbf_layer_size", &NNet::rbf_layer_size, OptionBase::buildoption,
+                "    If non-zero, add an extra layer which computes N(h(x);mu_i,sigma_i) (Gaussian density) for the\n"
+                "    i-th output unit with mu_i a free vector and sigma_i a free scalar, and h(x) the vector of\n"
+                "    activations of the 'representation' output, i.e. what would be the output layer otherwise. The\n"
+                "    given non-zero value is the number of these 'representation' outputs. Typically this\n"
+                "    makes sense for classification problems, with a softmax output_transfer_func. If the\n"
+                "    first_class_is_junk option is set then the first output (first class) does not get a\n"
+                "    Gaussian density but just a 'pseudo-uniform' density (the single free parameter is the\n"
+                "    value of that density) and in a softmax it makes sure that when h(x) is far from the\n"
+                "    centers mu_i for all the other classes then the last class gets the strongest posterior probability.\n");
+
+  declareOption(ol, "first_class_is_junk", &NNet::first_class_is_junk, OptionBase::buildoption, 
+                "    This option is used only when rbf_layer_size>0. If true then the first class is\n"
+                "    treated differently and gets a pre-transfer-function value that is a learned constant, whereas\n"
+                "    the others get a normal centered at mu_i.\n");
 
   declareOption(ol, "output_transfer_func", &NNet::output_transfer_func, OptionBase::buildoption, 
                 "    what transfer function to use for ouput layer? \n"
@@ -302,7 +322,26 @@ void NNet::build_()
 
       if (nhidden2>0 && nhidden==0)
         PLERROR("NNet:: can't have nhidden2 (=%d) > 0 while nhidden=0",nhidden2);
-      
+
+      if (rbf_layer_size>0)
+      {
+        if (first_class_is_junk)
+        {
+          rbf_centers = Var(outputsize()-1, rbf_layer_size, "rbf_centers");
+          rbf_sigmas = Var(outputsize()-1, "rbf_sigmas");
+          output = hconcat(rbf_layer(output,rbf_centers,rbf_sigmas)&junk_prob);
+          params.append(junk_prob);
+        }
+        else
+        {
+          rbf_centers = Var(outputsize(), rbf_layer_size, "rbf_centers");
+          rbf_sigmas = Var(outputsize(), "rbf_sigmas");
+          output = rbf_layer(output,rbf_centers,rbf_sigmas);
+        }
+        params.append(rbf_centers);
+        params.append(rbf_sigmas);
+      }
+
       // output layer before transfer function
       wout = Var(1+output->size(), outputsize(), "wout");
       output = affine_transform(output,wout);

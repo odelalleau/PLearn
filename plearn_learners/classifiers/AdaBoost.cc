@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdaBoost.cc,v 1.2 2004/04/21 20:26:32 yoshua Exp $
+   * $Id: AdaBoost.cc,v 1.3 2004/04/23 02:53:29 yoshua Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -50,7 +50,9 @@ namespace PLearn {
 using namespace std;
 
 AdaBoost::AdaBoost()
-  : target_error(0.5), output_threshold(0.5), compute_training_error(1), pseudo_loss_adaboost(1), weight_by_resampling(1)
+  : target_error(0.5), output_threshold(0.5), compute_training_error(1), 
+    pseudo_loss_adaboost(1), weight_by_resampling(1), early_stopping(1),
+    save_often(0)
   { }
 
 PLEARN_IMPLEMENT_OBJECT(
@@ -77,6 +79,10 @@ void AdaBoost::declareOptions(OptionList& ol)
                 "Weights given to the weak learners (their output is linearly combined with these weights\n"
                 "to form the output of the AdaBoost learner).\n");
 
+  declareOption(ol, "initial_sum_weights", &AdaBoost::initial_sum_weights,
+                OptionBase::learntoption,
+                "Initial sum of weights on the examples. Do not temper with.\n");
+
   declareOption(ol, "weak_learner_template", &AdaBoost::weak_learner_template,
                 OptionBase::buildoption,
                 "Template for the regression weak learner to be boosted into a classifier");
@@ -91,7 +97,7 @@ void AdaBoost::declareOptions(OptionList& ol)
                 "Whether to use a variant of AdaBoost which is appropriate for soft classifiers\n"
                 "whose output is between 0 and 1 rather than being either 0 or 1.\n");
 
-  declareOption(ol, "weight_by_resampling", &AdaBoost::pseudo_loss_adaboost,
+  declareOption(ol, "weight_by_resampling", &AdaBoost::weight_by_resampling,
                 OptionBase::buildoption,
                 "Whether to train the weak learner using resampling to represent the weighting\n"
                 "given to examples. If false then give these weights explicitly in the training set\n"
@@ -104,6 +110,12 @@ void AdaBoost::declareOptions(OptionList& ol)
 
   declareOption(ol, "provide_learner_expdir", &AdaBoost::provide_learner_expdir, OptionBase::buildoption,
                 "If true, each weak learner to be trained will have its experiment directory set to WeakLearner#kExpdir/");
+
+  declareOption(ol, "early_stopping", &AdaBoost::early_stopping, OptionBase::buildoption,
+                "If true, then boosting stops when the next weak learner is too weak (avg error > target_error - .01)\n");
+
+  declareOption(ol, "save_often", &AdaBoost::save_often, OptionBase::buildoption,
+                "If true, then save the model after training each weak learner, under <expdir>/model.psave\n");
 
   declareOption(ol, "compute_training_error", &AdaBoost::compute_training_error, OptionBase::buildoption,
                 "Whether to compute training error at each stage.\n");
@@ -192,14 +204,14 @@ void AdaBoost::train()
     {
       ProgressBar pb("AdaBoost round " + tostring(stage) +
                      ": extracting initial weights", n);
-      real sum_w=0;
+      initial_sum_weights=0;
       for (int i=0; i<n; ++i) {
         pb.update(i);
         train_set->getExample(i, input, target, weight);
         example_weights[i]=weight;
-        sum_w += weight;
+        initial_sum_weights += weight;
       }
-      example_weights *= 1.0/sum_w;
+      example_weights *= 1.0/initial_sum_weights;
     }
     else example_weights.fill(1.0/n);
     sum_voting_weights = 0;
@@ -246,7 +258,9 @@ void AdaBoost::train()
       }
       else
       {
-        VMat data_weights = VMat(example_weights.toMat(n,1).copy());
+        Mat data_weights_column = example_weights.toMat(n,1).copy();
+        data_weights_column *= initial_sum_weights; // to bring the weights to the same average level as the original ones
+        VMat data_weights = VMat(data_weights_column);
         weak_learner_training_set = new ConcatColumnsVMatrix(unweighted_data,data_weights);
         weak_learner_training_set->defineSizes(inputsize(), 1, 1);
       }
@@ -304,7 +318,7 @@ void AdaBoost::train()
       cout << "weak learner at stage " << stage << " has average loss = " << learners_error[stage] << endl;
 
     // stopping criterion (in addition to n_stages)
-    if (learners_error[stage] == 0 || learners_error[stage] > target_error - 0.01)
+    if (early_stopping && (learners_error[stage] == 0 || learners_error[stage] > target_error - 0.01))
     {
       nstages = stage;
       cout << "AdaBoost::train early stopping because learner's loss at stage " << stage << " is " << learners_error[stage] << endl;
@@ -313,6 +327,9 @@ void AdaBoost::train()
 
     weak_learners.push_back(new_weak_learner);
 
+    if (save_often && expdir!="")
+      PLearn::save(append_slash(expdir)+"model.psave", *this);
+      
     // compute the new learner's weight
 
     voting_weights.push_back(safeflog(((1-learners_error[stage])*target_error)/(learners_error[stage]*(1-target_error))));

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdaBoost.h,v 1.2 2004/04/21 20:26:38 yoshua Exp $
+   * $Id: AdaBoost.h,v 1.3 2004/04/23 02:53:29 yoshua Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -69,6 +69,7 @@ protected:
   // (unnormalized) weight associated to each weak learner
   Vec voting_weights;
   real sum_voting_weights; // = sum(voting_weights);
+  real initial_sum_weights;
 
   //! Vector of weak learners learned from boosting
   TVec< PP<PLearner> > weak_learners;
@@ -102,6 +103,12 @@ public:
 
   // use resampling (vs weighting) to train the underlying classifier
   bool weight_by_resampling;
+
+  // stop if weak learner does not seem to help
+  bool early_stopping;
+
+  // save model after each stage into <expdir>/model.psave
+  bool save_often;
 
   // ****************
   // * Constructors *

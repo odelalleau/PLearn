@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.h,v 1.17 2004/04/21 15:04:45 tihocan Exp $
+   * $Id: NNet.h,v 1.18 2004/04/23 02:53:33 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -62,7 +62,9 @@ using namespace std;
     Var outbias; // bias used only if fixed_output_weights
     Var wdirect; // bias and weights for direct in-to-out connection
     Var wrec; // input reconstruction weights (optional), from hidden layer to predicted input
-
+    Var rbf_centers; // n_classes (or n_classes-1) x rbf_layer_size = mu_i of RBF gaussians
+    Var rbf_sigmas; // n_classes (or n_classes-1) entries (sigma's of the RBFs)
+    Var junk_prob; // scalar background (junk) probability, if first_class_is_junk
     Var output;
     Var predicted_input;
     VarArray costs; // all costs of interest
@@ -103,6 +105,9 @@ using namespace std;
     real classification_regularizer; // default: 0
     real margin; // default: 1, used with margin_perceptron_cost
     bool fixed_output_weights;
+
+    int rbf_layer_size; // number of representation units when adding an rbf layer in output
+    bool first_class_is_junk;
 
     bool L1_penalty; // default: false
     real input_reconstruction_penalty; // default = 0
