@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: FieldConvertCommand.cc,v 1.19 2004/03/11 19:11:28 tihocan Exp $
+ * $Id: FieldConvertCommand.cc,v 1.20 2004/03/12 14:04:29 tihocan Exp $
  ******************************************************* */
 
 #include "FieldConvertCommand.h"
@@ -108,6 +108,10 @@ void FieldConvertCommand::run(const vector<string> & args)
   real correlation = -1;
 
   VMat vm = getDataSet(source_fn);
+
+  if (target < 0 || target > vm->width()) {
+    PLERROR("The target column you specified is not valid");
+  }
  
   cout<<"### using field "<<target<<" as target"<<endl;
 
