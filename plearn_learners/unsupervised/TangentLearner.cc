@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TangentLearner.cc,v 1.6 2004/06/03 14:36:30 yoshua Exp $ 
+   * $Id: TangentLearner.cc,v 1.7 2004/06/03 15:33:41 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
@@ -214,6 +214,7 @@ void TangentLearner::build_()
     Var proj_err = projection_error(tangent_predictor->outputs[0], tangent_targets, norm_penalization, n, 
                                     normalize_by_neighbor_distance, use_subspace_distance, svd_threshold, 
                                     projection_error_regularization);
+    projection_error_f = Func(tangent_predictor->outputs[0] & tangent_targets, proj_err);
     cost_of_one_example = Func(tangent_predictor->inputs & tangent_targets, tangent_predictor->parameters, proj_err);
 
   }
@@ -355,12 +356,13 @@ void TangentLearner::computeOutput(const Vec& input, Vec& output) const
 void TangentLearner::computeCostsFromOutputs(const Vec& input, const Vec& output, 
 					     const Vec& target, Vec& costs) const
 {
+  costs.resize(1);
+  costs[0] = projection_error_f(output,target);
 }                                
 
 TVec<string> TangentLearner::getTestCostNames() const
 {
-  TVec<string> no_costs;
-  return no_costs;
+  return getTrainCostNames();
 }
 
 TVec<string> TangentLearner::getTrainCostNames() const

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TangentLearner.h,v 1.5 2004/06/03 14:36:30 yoshua Exp $ 
+   * $Id: TangentLearner.h,v 1.6 2004/06/03 15:33:41 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus
@@ -88,6 +88,7 @@ public:
 
   PP<Optimizer> optimizer; // to estimate the function that predicts local tangent vectors given the input
   Func tangent_predictor; // predicts local tangent vector given the input, and some parameters
+  Func projection_error_f; // map output to projection error
 
   // manual construction of the tangent_predictor
   string architecture_type; // "neural_network" or "linear" or "" for directly specifying the tangent_predictor
