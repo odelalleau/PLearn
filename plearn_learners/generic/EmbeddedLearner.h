@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.h,v 1.11 2004/09/14 16:04:56 chrish42 Exp $ 
+   * $Id: EmbeddedLearner.h,v 1.12 2004/10/06 05:43:30 chapados Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.h */
@@ -50,77 +50,105 @@ using namespace std;
 
 class EmbeddedLearner: public PLearner
 {
+  typedef PLearner inherited;
+
 public:
 
   // build option
-    PP<PLearner> learner_;
+  PP<PLearner> learner_;
 
 
-    typedef PLearner inherited;
+  // ****************
+  // * Constructors *
+  // ****************
 
-    // ****************
-    // * Constructors *
-    // ****************
-
-    // Default constructor, make sure the implementation in the .cc
-    // initializes all fields to reasonable default values.
-    EmbeddedLearner();
+  // Default constructor, make sure the implementation in the .cc
+  // initializes all fields to reasonable default values.
+  EmbeddedLearner();
 
   // ******************
   // * Object methods *
   // ******************
 
 private: 
-    //! This does the actual building. 
-    // (Please implement in .cc)
-    void build_();
+  //! This does the actual building. 
+  // (Please implement in .cc)
+  void build_();
 
 protected: 
-    //! Declares this class' options
-    // (Please implement in .cc)
-    static void declareOptions(OptionList& ol);
+  //! Declares this class' options
+  // (Please implement in .cc)
+  static void declareOptions(OptionList& ol);
 public:
-    // simply calls inherited::build() then build_() 
-    virtual void build();
+  // simply calls inherited::build() then build_() 
+  virtual void build();
 
-    //! Transforms a shallow copy into a deep copy
-    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+  //! Transforms a shallow copy into a deep copy
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-    //! Declares name and deepCopy methods
-    PLEARN_DECLARE_OBJECT(EmbeddedLearner);
+  //! Declares name and deepCopy methods
+  PLEARN_DECLARE_OBJECT(EmbeddedLearner);
 
-    // *******************
-    // * PLearner methods *
-    // *******************
-    
+  // *******************
+  // * PLearner methods *
+  // *******************
+
+  //! Forwarded to inner learner
   virtual int inputsize() const;
   
+  //! Forwarded to inner learner
   virtual int targetsize() const; 
   
+  //! Forwarded to inner learner
   virtual int outputsize() const;
 
+  //! Forwarded to inner learner
   virtual void forget();
 
+  //! Forwarded to inner learner
   virtual void train();
 
-  //! Override the test method to forward to embedded learner's
-  //! test method
-  virtual void test(VMat testset, PP<VecStatsCollector> test_stats, 
-                    VMat testoutputs=0, VMat testcosts=0) const;
-
+  //! Forwarded to inner learner
   virtual void computeOutput(const Vec& input, Vec& output) const;
 
+  //! Forwarded to inner learner
   virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                        const Vec& target, Vec& costs) const;
                               
+  //! Forwarded to inner learner
   virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
                                      Vec& output, Vec& costs) const;
 
+  //! Forwarded to inner learner
   virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
-    
+
+  //! Forwarded to inner learner
+  virtual void use(VMat testset, VMat outputs) const;
+
+  //! Forwarded to inner learner
+  virtual void useOnTrain(Mat& outputs) const;  
+  
+  //! Forwarded to inner learner
+  virtual void test(VMat testset, PP<VecStatsCollector> test_stats, 
+                    VMat testoutputs=0, VMat testcosts=0) const;
+
+  //! Forwarded to inner learner
   virtual TVec<string> getTestCostNames() const;
 
+  //! Forwarded to inner learner
   virtual TVec<string> getTrainCostNames() const;
+
+  //! Forwarded to inner learner
+  virtual int nTestCosts() const;
+
+  //! Forwarded to inner learner
+  virtual int nTrainCosts() const;
+
+  //! Forwarded to inner learner
+  virtual void resetInternalState();
+
+  //! Forwarded to inner learner
+  virtual bool isStatefulLearner() const;
 };
 
 // Declares a few other classes and functions related to this class

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.cc,v 1.13 2004/09/14 16:04:56 chrish42 Exp $ 
+   * $Id: EmbeddedLearner.cc,v 1.14 2004/10/06 05:43:30 chapados Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.cc */
@@ -45,13 +45,15 @@ using namespace std;
 
 // ###### EmbeddedLearner ######################################################
 
-PLEARN_IMPLEMENT_OBJECT(EmbeddedLearner, "Wraps an underlying learner", 
-                        "EmbeddedLearner implements nothing but forwarding \n"
-                        "calls to an underlying learner. It is typically used as\n"
-                        "baseclass for learners that are built on top of another learner");
+PLEARN_IMPLEMENT_OBJECT(
+  EmbeddedLearner,
+  "Wraps an underlying learner", 
+  "EmbeddedLearner implements nothing but forwarding \n"
+  "calls to an underlying learner. It is typically used as\n"
+  "baseclass for learners that are built on top of another learner");
 
 EmbeddedLearner::EmbeddedLearner()
-{}
+{ }
 
 void EmbeddedLearner::declareOptions(OptionList& ol)
 {
@@ -62,74 +64,138 @@ void EmbeddedLearner::declareOptions(OptionList& ol)
 
 void EmbeddedLearner::build_()
 {
-    if (!learner_)
-        PLERROR("EmbeddedLearner::_build() - learner_ attribute is NULL");
+  if (!learner_)
+    PLERROR("EmbeddedLearner::_build() - learner_ attribute is NULL");
 
-    learner_->build();
+  learner_->build();
 }
 
 void EmbeddedLearner::build()
 {
-    inherited::build();
-    build_();
+  inherited::build();
+  build_();
+}
+   
+int EmbeddedLearner::inputsize() const
+{
+  assert( learner_ );
+  return learner_->inputsize();
 }
 
-   
-void EmbeddedLearner::forget()
-{ learner_->forget(); }
-
-int EmbeddedLearner::inputsize() const
-{ return learner_->inputsize(); }
-
 int EmbeddedLearner::targetsize() const
-{ return learner_->targetsize(); }
+{
+  assert( learner_ );
+  return learner_->targetsize();
+}
 
 int EmbeddedLearner::outputsize() const
-{ return learner_->outputsize(); }
+{
+  assert( learner_ );
+  return learner_->outputsize();
+}
+
+void EmbeddedLearner::forget()
+{
+  assert( learner_ );
+  learner_->forget();
+}
 
 void EmbeddedLearner::train()
-{ learner_->train(); }
-
-void EmbeddedLearner::test(VMat testset, PP<VecStatsCollector> test_stats, 
-                           VMat testoutputs, VMat testcosts) const
 {
-  learner_->test(testset, test_stats, testoutputs, testcosts);
+  assert( learner_ );
+  learner_->train();
 }
 
 void EmbeddedLearner::computeOutput(const Vec& input, Vec& output) const
 { 
+  assert( learner_ );
   learner_->computeOutput(input, output); 
 }
 
 void EmbeddedLearner::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                               const Vec& target, Vec& costs) const
 { 
+  assert( learner_ );
   learner_->computeCostsFromOutputs(input, output, target, costs); 
 }
                                                       
 void EmbeddedLearner::computeOutputAndCosts(const Vec& input, const Vec& target,
-                                       Vec& output, Vec& costs) const
+                                            Vec& output, Vec& costs) const
 { 
+  assert( learner_ );
   learner_->computeOutputAndCosts(input, target, output, costs); 
 }
 
-void EmbeddedLearner::computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const
-{ learner_->computeCostsOnly(input, target, costs); }
-      
+void EmbeddedLearner::computeCostsOnly(const Vec& input, const Vec& target,
+                                       Vec& costs) const
+{
+  assert( learner_ );
+  learner_->computeCostsOnly(input, target, costs);
+}
+
+void EmbeddedLearner::use(VMat testset, VMat outputs) const
+{
+  assert( learner_ );
+  learner_->use(testset, outputs);
+}
+
+void EmbeddedLearner::useOnTrain(Mat& outputs) const
+{
+  assert( learner_ );
+  learner_->useOnTrain(outputs);
+}
+
+void EmbeddedLearner::test(VMat testset, PP<VecStatsCollector> test_stats, 
+                           VMat testoutputs, VMat testcosts) const
+{
+  assert( learner_ );
+  learner_->test(testset, test_stats, testoutputs, testcosts);
+}
+
 TVec<string> EmbeddedLearner::getTestCostNames() const
-{ return learner_->getTestCostNames(); }
+{
+  assert( learner_ );
+  return learner_->getTestCostNames();
+}
 
 TVec<string> EmbeddedLearner::getTrainCostNames() const
-{ return learner_->getTrainCostNames(); }
+{
+  assert( learner_ );
+  return learner_->getTrainCostNames();
+}
+
+int EmbeddedLearner::nTestCosts() const
+{
+  assert( learner_ );
+  return learner_->nTestCosts();
+}
+
+int EmbeddedLearner::nTrainCosts() const
+{
+  assert( learner_ );
+  return learner_->nTrainCosts();
+}
+
+void EmbeddedLearner::resetInternalState()
+{
+  assert( learner_ );
+  learner_->resetInternalState();
+}
+
+bool EmbeddedLearner::isStatefulLearner() const
+{
+  assert( learner_ );
+  return learner_->isStatefulLearner();
+}
 
 void EmbeddedLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    PLearner::makeDeepCopyFromShallowCopy(copies);
+  inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields 
-    // ### that you wish to be deepCopied rather than 
-    // ### shallow-copied.
-    deepCopyField(learner_, copies);    
+  // ### Call deepCopyField on all "pointer-like" fields 
+  // ### that you wish to be deepCopied rather than 
+  // ### shallow-copied.
+  deepCopyField(learner_, copies);    
 }
 
 } // end of namespace PLearn
