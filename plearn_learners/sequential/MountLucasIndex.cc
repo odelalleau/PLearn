@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.cc,v 1.13 2003/09/23 21:07:02 ducharme Exp $ 
+   * $Id: MountLucasIndex.cc,v 1.14 2003/09/29 21:02:47 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.cc */
@@ -156,7 +156,7 @@ void MountLucasIndex::train()
 
   //int start_t = last_train_t+1;
   int start_t = MAX(last_train_t+1,last_test_t+1);
-  ProgressBar* pb;
+  ProgressBar* pb = NULL;
   if (report_progress)
     pb = new ProgressBar("Training MountLucasIndex learner",train_set.length()-start_t);
 
@@ -172,10 +172,10 @@ void MountLucasIndex::train()
   last_call_train_t = train_set.length()-1;
   if (pb) delete pb;
 
+  //mlm_index.resize(current_month,mlm_index.width());
+  saveAscii("MLMIndex.amat", mlm_index);
 /*
   //index_value.resize(current_month,1);
-  //mlm_index.resize(current_month,mlm_index.width());
-  //saveAscii("MLMIndex.amat", mlm_index);
   //saveAscii("MLMIndex.avec", index_value);
   //cout << "Rendement du MLM Index = " << exp(log(index_value[current_month-1]/index_value[0])/(current_month/12.0)) << endl;
   cout << "Rendement du MLM Index = " << exp(log(index_value[current_month-1]/index_value[0])/(ns/12.0)) << endl;
@@ -202,7 +202,7 @@ void MountLucasIndex::test(VMat testset, PP<VecStatsCollector> test_stats,
     VMat testoutputs, VMat testcosts) const
 {
   int start_t = MAX(last_train_t+1,last_test_t+1);
-  ProgressBar* pb;
+  ProgressBar* pb = NULL;
   if (report_progress)
     pb = new ProgressBar("Testing MountLucasIndex learner",testset.length()-start_t);
 
@@ -218,7 +218,7 @@ void MountLucasIndex::test(VMat testset, PP<VecStatsCollector> test_stats,
   if (pb) delete pb;
 
 /*
-  index_value.resize(current_month,1);
+  //index_value.resize(current_month,1);
   mlm_index.resize(current_month,mlm_index.width());
   saveAscii("MLMIndex.amat", mlm_index);
   //saveAscii("MLMIndex.avec", index_value);
@@ -336,7 +336,8 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
       last_month_risk_free_rate = risk_free_rate;
       tbill_return[current_month] = is_missing(risk_free_rate_return) ? tbill_return[current_month-1] : tbill_return[current_month-1]*(1.0+risk_free_rate_return);
     }
-    errors(current_month,0) = index_value[current_month];
+    errors(t,0) = index_value[current_month];
+    //errors(current_month,0) = index_value[current_month];
     real total_return_with_transaction_fees = 0;
     for (int i=0; i<nb_commodities; i++)
     {
@@ -351,10 +352,12 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
         real return_with_transaction_fees = rate_return[i] + risk_free_rate_return - transaction_multiplicative_cost*fabs(transaction_amount/old_position_in_dollars);
         if (!is_missing(return_with_transaction_fees))
           total_return_with_transaction_fees += return_with_transaction_fees;
-        predictions(current_month,i) = next_pos*index_value[current_month]/(n_traded*last_tradable_price[i]);
+        predictions(t,i) = new_relative_position*index_value[current_month]/(n_traded*last_tradable_price[i]);
+        //predictions(current_month,i) = new_relative_position*index_value[current_month]/(n_traded*last_tradable_price[i]);
       }
       else
-        predictions(current_month,i) = 0.0;
+        predictions(t,i) = 0.0;
+        //predictions(current_month,i) = 0.0;
       is_long_position[i] = next_pos;
     }
     if (current_month>0 && n_traded>0)
@@ -363,9 +366,7 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
       sf += total_return_with_transaction_fees; 
       sf2 += total_return_with_transaction_fees*total_return_with_transaction_fees; 
     }
-    if (testoutputs) testoutputs->appendRow(predictions(current_month));
-    if (testcosts) testcosts->appendRow(errors(current_month));
-    state(t) << predictions(current_month);
+    //if (testoutputs) testoutputs->appendRow(predictions(current_month));
     ++current_month;
     
     // at the end of the year, choose which commodity will be included in the index the next year
@@ -378,8 +379,19 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
       }
     }
   }
-  else
-    state(t) << predictions(MAX(0,current_month-1));
+  else if (t > 0)
+  {
+    predictions(t) << predictions(t-1);
+    errors(t,0) = errors(t-1,0);
+  }
+  else // t==0
+  {
+    predictions(0) = 0.0;
+    errors(0,0) = 1000.0;
+  }
+
+  if (testoutputs) testoutputs->appendRow(predictions(t));
+  if (testcosts) testcosts->appendRow(errors(t));
 }
 
 bool MountLucasIndex::next_position(int pos, const Mat& unit_asset_value_) const

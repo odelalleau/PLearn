@@ -56,10 +56,14 @@ using namespace std;
 
 class SequentialLearner: public PLearner
 {
+public:
+  typedef PLearner inherited;
+
 protected:  
   int last_train_t; // last value of train_set.length() for which training was actually done (<= last_call_train_t)
   int last_call_train_t; // last value of train_set.length() for which train() was called (may not have done anything)
   mutable int last_test_t; // last value of test_set.length() for which testing was actually done
+
 public:
   int get_last_train_t(){ return last_train_t; }
   int get_last_call_train_t(){ return last_call_train_t; }

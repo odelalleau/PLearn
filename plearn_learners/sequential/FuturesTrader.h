@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.h,v 1.7 2003/09/27 04:05:24 dorionc Exp $ 
+   * $Id: FuturesTrader.h,v 1.8 2003/09/29 21:02:47 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.h */
@@ -82,11 +82,6 @@ public:
   FuturesTrader();
   
   //**************
-  // Members     *   
-  //**************  
-
-
-  //**************
   // Methods     *   
   //**************
       
@@ -96,7 +91,7 @@ private:
   
 protected:
   //! Declare this class' options
-  static void declareOptions(OptionList& ol);
+  //static void declareOptions(OptionList& ol);
   
 public:
   

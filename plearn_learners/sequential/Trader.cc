@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.cc,v 1.3 2003/09/28 21:40:46 dorionc Exp $ 
+ * $Id: Trader.cc,v 1.4 2003/09/29 21:02:47 ducharme Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -508,8 +508,14 @@ void Trader::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("Trader::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+  deepCopyField(internal_stats, copies);
+  deepCopyField(assets_price_indices, copies);
+  deepCopyField(last_valid_price, copies);
+  deepCopyField(assets_tradable_indices, copies);
+  deepCopyField(stop_loss_values, copies);
+  deepCopyField(portfolios, copies);
+  deepCopyField(advisor, copies);
+  deepCopyField(assets_names, copies);
 } 
 
 /*!

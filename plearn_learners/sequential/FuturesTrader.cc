@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.cc,v 1.8 2003/09/27 04:05:24 dorionc Exp $ 
+   * $Id: FuturesTrader.cc,v 1.9 2003/09/29 21:02:46 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.cc */
@@ -65,12 +65,6 @@ void FuturesTrader::build()
 void FuturesTrader::build_()
 {}
 
-void FuturesTrader::declareOptions(OptionList& ol)
-{
-  inherited::declareOptions(ol);
-}
-
-
 void FuturesTrader::trader_test( int t, VMat testset, 
                                  real& absolute_return_t, real& relative_return_t) const
 {
@@ -81,23 +75,28 @@ void FuturesTrader::trader_test( int t, VMat testset,
   for(int k=0; k < nb_assets; k++)
   { 
     // Relative return computation
-    real v_kt = weight(k, t) * price(k, t);
-    value_t += v_kt;
-    relative_sum += v_kt * relative_return(k, t);
-    
-    // Update of the portfolio return, adding the k^th assets return
-    absolute_return_t += weight(k, t) * absolute_return(k, t);
-    
-    if(first_asset_is_cash && k==0)
-      continue; // No call to delta and no trasaction cost on cash
-    
-    // No additive_cost on a null delta since there will be no transaction
-    real delta_ = delta(k, t);
-    if( delta_ > 0 )
-      absolute_return_t -= additive_cost + multiplicative_cost*delta_; // Not 1+mult since that cash pos should take care of the '1'
+    real w_kt = weight(k, t);
+    if (w_kt != 0.0)
+    {
+      real p_kt = price(k, t);
+      real v_kt = w_kt * p_kt;
+      value_t += v_kt;
+      relative_sum += v_kt * relative_return(k, t);
+
+      // Update of the portfolio return, adding the k^th assets return
+      absolute_return_t += w_kt * absolute_return(k, t);
+
+      if(first_asset_is_cash && k==0)
+        continue; // No call to delta and no transaction cost on cash
+
+      // No additive_cost on a null delta since there will be no transaction
+      real delta_ = delta(k, t);
+      if( delta_ > 0 )
+        absolute_return_t -= additive_cost + multiplicative_cost*delta_; // Not 1+mult since that cash pos should take care of the '1'
+    }
+    // Should there be a reinvestment procedure alike:
+    // weight(k,t+1) += absolute_return_t;   ???
   }
-  // Should there be a reinvestment procedure alike:
-  // weight(k,t+1) += absolute_return_t;                                     ???
   
   relative_return_t = relative_sum/value_t;
 }

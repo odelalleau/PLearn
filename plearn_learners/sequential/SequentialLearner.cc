@@ -44,7 +44,9 @@ using namespace std;
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(SequentialLearner, "ONE LINE DESCR", "NO HELP");
 
 SequentialLearner::SequentialLearner()
-  : max_seq_len(-1), max_train_len(-1), train_step(1), horizon(1), outputsize_(1)
+  : last_train_t(-1), last_call_train_t(-1), last_test_t(-1),
+    max_seq_len(-1), max_train_len(-1), train_step(1), horizon(1),
+    outputsize_(1)
 {}
 
 void SequentialLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
