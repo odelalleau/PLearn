@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: IndexedVMatrix.h,v 1.6 2004/03/23 23:08:08 morinf Exp $
+   * $Id: IndexedVMatrix.h,v 1.7 2004/04/05 22:54:50 morinf Exp $
    ******************************************************* */
 
 
@@ -64,8 +64,6 @@ public:
 
   static void declareOptions(OptionList& ol);
     
-  static string help();
-
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
   virtual void build();
@@ -77,6 +75,8 @@ private:
   void build_();
 
 };
+
+DECLARE_OBJECT_PTR(IndexedVMatrix);
 
 } // end of namespcae PLearn
 #endif

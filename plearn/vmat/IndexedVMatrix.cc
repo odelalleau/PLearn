@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: IndexedVMatrix.cc,v 1.4 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: IndexedVMatrix.cc,v 1.5 2004/04/05 22:54:50 morinf Exp $
    ******************************************************* */
 
 #include "IndexedVMatrix.h"
@@ -41,23 +41,15 @@
 namespace PLearn {
 using namespace std;
 
-PLEARN_IMPLEMENT_OBJECT(IndexedVMatrix, "ONE LINE DESCR", "NO HELP");
-
+PLEARN_IMPLEMENT_OBJECT(IndexedVMatrix, "ONE LINE DESCR", 
+                        "    VMat class that sees a matrix as a collection of triplets (row, column, value)\n"
+                        "Thus it is a N x 3 matrix, with N = the number of elements in the original matrix.\n");
 
 void IndexedVMatrix::declareOptions(OptionList& ol)
 {
   declareOption(ol, "m", &IndexedVMatrix::m, OptionBase::buildoption,
       "    The matrix viewed by the IndexedVMatrix\n");
   inherited::declareOptions(ol);
-}
-
-string IndexedVMatrix::help()
-{
-  // ### Provide some useful description of what the class is ...
-  return 
-    "    VMat class that sees a matrix as a collection of triplets (row, column, value)\n\
-    Thus it is a N x 3 matrix, with N = the number of elements in the original matrix.\n"
-      + optionHelp();
 }
 
 void IndexedVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
@@ -77,9 +69,11 @@ void IndexedVMatrix::build()
 ////////////
 void IndexedVMatrix::build_()
 {
-  width_ = 3;
-  length_ = m->length() * m->width();
-  // TODO Get Field Infos ?
+  if (m) {
+    width_ = 3;
+    length_ = m->length() * m->width();
+    // TODO Get Field Infos ?
+  }
 }
 
 /////////
