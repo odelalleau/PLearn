@@ -35,10 +35,11 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.40 2004/11/22 17:54:24 lapalmej Exp $
+   * $Id: StatsCollector.cc,v 1.41 2004/11/25 06:06:38 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
+#include <plearn/base/stringutils.h>
 #include "StatsCollector.h"
 #include "TMat_maths.h"
 #include "pl_erf.h"
@@ -63,6 +64,7 @@ PLEARN_IMPLEMENT_OBJECT(
   "  - STDERROR       Standard error of the sample mean\n"
   "  - MIN            Minimum value\n"
   "  - MAX            Maximum value\n"
+  "  - RANGE          The range, i.e. MAX - MIN\n"
   "  - SUM            Sum of observations \n"
   "  - SUMSQ          Sum of squares\n"
   "  - FIRST          First observation\n"
@@ -73,7 +75,12 @@ PLEARN_IMPLEMENT_OBJECT(
   "  - SHARPERATIO    Mean divided by standard deviation\n"
   "  - ZSTAT          Z-statistic of the sample mean estimator\n"
   "  - PZ1t           One-tailed probability of the Z-Statistic\n"
-  "  - PZ2t           Two-tailed probability of the Z-Statistic\n" );
+  "  - PZ2t           Two-tailed probability of the Z-Statistic\n"
+  "  - PSEUDOQ(q)     Return the location of the pseudo-quantile q, where 0 < q < 1\n"
+  "                   NOTE that bin counting must be enabled, i.e. maxnvalues > 0\n"
+  "  - IQR            The interquartile range, i.e. PSEUDOQ(0.75) - PSEUDOQ(0.25)\n"
+  "  - PRR            The pseudo robust range, i.e. PSEUDOQ(0.99) - PSEUDOQ(0.01)\n"
+  );
   
 
 StatsCollector::StatsCollector(int the_maxnvalues)
@@ -528,6 +535,50 @@ Mat StatsCollector::cdf(bool normalized) const
   return xy;
 }
 
+real StatsCollector::pseudo_quantile(real q) const
+{
+  // Basic strategy is to iterate over the bins and stop when the fraction
+  // of total observations crosses q.  Then we linearly interpolate between
+  // the previous bin and the current one.
+  map<real,StatsCollectorCounts>::const_iterator
+    it = counts.begin(), end = counts.end();
+  real previous_total = 0.0;
+  real current_total = MISSING_VALUE;
+  real previous_position = MISSING_VALUE;
+  if (nnonmissing_ == 0)
+    return MISSING_VALUE;
+  
+  for ( ; it != end ; ++it ) {
+    current_total = previous_total + it->second.n + it->second.nbelow;
+    if (is_missing(current_total) ||
+        current_total / nnonmissing_ >= q)
+      break;
+    previous_total = current_total;
+    previous_position = it->first;
+  }
+
+  // Boudary case if we did not collect any count statistics
+  if (is_missing(current_total))
+    return MISSING_VALUE;
+
+  // If we stopped at the first bin, do not interpolate with previous bin
+  assert( it != end );
+  if (is_missing(previous_position))
+    return it->first;
+
+  // If we stopped at last bin, do not interpolate with current bin which
+  // should be equal to FLT_MAX
+  if (it->first == FLT_MAX)
+    return previous_position;
+
+  // Otherwise, interpolate linearly between previous_position and
+  // current_position
+  real current_position = it->first;
+  real slope = (current_position - previous_position) /
+                  (current_total - previous_total);
+  return slope * (q * nnonmissing_ - previous_total) + previous_position;
+}
+
 void StatsCollector::print(ostream& out) const
 {
   out << "# samples: " << n() << "\n";
@@ -628,6 +679,7 @@ real StatsCollector::getStat(const string& statname) const
     statistics["STDERROR"]    = STATFUN(&StatsCollector::stderror);
     statistics["MIN"]         = STATFUN(&StatsCollector::min);
     statistics["MAX"]         = STATFUN(&StatsCollector::max);
+    statistics["RANGE"]       = STATFUN(&StatsCollector::range);
     statistics["SUM"]         = STATFUN(&StatsCollector::sum);
     statistics["SUMSQ"]       = STATFUN(&StatsCollector::sumsquare);
     statistics["FIRST"]       = STATFUN(&StatsCollector::first_obs);
@@ -639,7 +691,20 @@ real StatsCollector::getStat(const string& statname) const
     statistics["ZSTAT"]       = STATFUN(&StatsCollector::zstat);
     statistics["PZ1t"]        = STATFUN(&StatsCollector::zpr1t);
     statistics["PZ2t"]        = STATFUN(&StatsCollector::zpr2t);
+    statistics["IQR"]         = STATFUN(&StatsCollector::iqr);
+    statistics["PRR"]         = STATFUN(&StatsCollector::prr);
     init = true;
+  }
+
+  // Special case :: interpret the PSEUDOQ(xx) form
+  if (statname.substr(0,7) == "PSEUDOQ") {
+    PIStringStream in(statname);
+    string dummy;
+    in.smartReadUntilNext("(", dummy);
+    string quantile_str;
+    in.smartReadUntilNext(")", quantile_str);
+    real q = toreal(quantile_str);
+    return pseudo_quantile(q);
   }
   
   map<string,STATFUN>::iterator fun = statistics.find(statname);

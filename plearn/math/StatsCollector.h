@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.32 2004/11/16 23:14:44 dorionc Exp $
+   * $Id: StatsCollector.h,v 1.33 2004/11/25 06:06:38 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -112,7 +112,6 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     double nnonmissing_;   //!< (weighted) number of non missing value 
     double sum_;           //!< sum of all (values-first_
     double sumsquare_;     //!< sum of square of all (values-first_)
-    double sumweights_;    //!< sum of the weights
     real min_;             //!< the min
     real max_;             //!< the max
     real first_;           //!< first encountered nonmissing observation
@@ -145,6 +144,7 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     real sumsquare() const { return real(sumsquare_+2*first_*sum()-first_*first_*nnonmissing_); }
     real min() const { return min_; }
     real max() const { return max_; }
+    real range() const { return max_ - min_; }
     real mean() const { return real(sum()/nnonmissing_); }
     //real variance() const { return real((sumsquare_ - square(sum_)/nnonmissing_)/(nnonmissing_-1)); }
     real variance() const { return real((sumsquare_ - square(sum_)/nnonmissing_)/(nnonmissing_-1)); }
@@ -156,6 +156,8 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     real zstat() const { return mean()/stderror(); }
     real zpr1t() const;                      //!< one-tailed P(zstat())
     real zpr2t() const;                      //!< two-tailed P(zstat())
+    real iqr() const { return pseudo_quantile(0.75) - pseudo_quantile(0.25); }
+    real prr() const { return pseudo_quantile(0.99) - pseudo_quantile(0.01); }
     
     //! currently understood statnames are :
     //!   - E (mean)
@@ -167,6 +169,9 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     //!   - N, NMISSING, NNONMISING
     //!   - SHARPERATIO
     //!   - ZSTAT, PZ
+    //!   - PSEUDOQ(q)    (q is a fraction between 0 and 1)
+    //    - IQR           (inter-quartile range)
+    //!   - PRR           (pseudo robust range)
     real getStat(const string& statname) const;
 
     //! simply calls inherited::build() then build_()
@@ -193,6 +198,13 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     //! returns a Mat with x,y coordinates for plotting the cdf
     //! only if normalized will the cdf go to 1, otherwise it will go to nsamples
     Mat cdf(bool normalized=true) const;
+
+    /**
+     * Return the position of the pseudo-quantile Q.  This is derived from
+     * the bin-mapping, so maxnvalues must be greater than zero for this
+     * function to return something meaningful
+     */
+    real pseudo_quantile(real q) const;
 
     //! fix 'id' attribute of all StatCollectorCounts so that increasing ids correspond to increasing real values
     //! *** NOT TESTED YET
