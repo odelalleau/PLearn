@@ -141,6 +141,12 @@ optionalLibrary( name = 'wordnet',
                  linkeroptions = '-L /u/lisa/WordNet/v2.0/lib -lwn'
                  )
 
+optionalLibrary( name = 'boost',
+                 triggers = 'boost/*',
+                 includedirs = '/u/lisa/local/linux-i386/Install/Boost/current/boost',
+                 linkeroptions = ''
+                 )
+
 # What linker options to put always after those from the optional libraries
 linkeroptions_tail = '-lstdc++ -lm'
 
