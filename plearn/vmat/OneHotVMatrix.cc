@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: OneHotVMatrix.cc,v 1.6 2004/07/09 19:42:23 tihocan Exp $
+   * $Id: OneHotVMatrix.cc,v 1.7 2004/10/12 17:34:37 tihocan Exp $
    ******************************************************* */
 
 #include "OneHotVMatrix.h"
@@ -71,6 +71,13 @@ OneHotVMatrix::build()
 void
 OneHotVMatrix::build_()
 {
+  length_ = underlying_distr->length();
+  width_ = underlying_distr->width() - 1 + nclasses;
+  inputsize_ = underlying_distr->inputsize();
+  targetsize_ = nclasses;
+  weightsize_ = 0;
+  if (underlying_distr->weightsize() > 0)
+    PLWARNING("In OneHotVMatrix::build_ - Not sure a positive weightsize is supported");
 }
 
 void
