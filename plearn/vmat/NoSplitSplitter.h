@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NoSplitSplitter.h,v 1.1 2004/09/14 19:56:56 tihocan Exp $ 
+   * $Id: NoSplitSplitter.h,v 1.2 2004/09/15 13:45:44 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -98,7 +98,7 @@ public:
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
   //! Declares name and deepCopy methods
   PLEARN_DECLARE_OBJECT(NoSplitSplitter);
