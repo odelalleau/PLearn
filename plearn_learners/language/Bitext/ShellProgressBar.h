@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: ShellProgressBar.h,v 1.2 2004/04/05 13:19:57 tihocan Exp $
+ * $Id: ShellProgressBar.h,v 1.3 2004/04/05 13:22:21 tihocan Exp $
 ******************************************************* */
 
 
@@ -108,4 +108,6 @@ private:
 };
 
 } // end of namespace PLearn
+
+#endif
 
