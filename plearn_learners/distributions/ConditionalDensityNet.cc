@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.8 2003/11/21 00:00:38 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.9 2003/11/21 12:52:46 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -410,13 +410,28 @@ ConditionalDensityNet::ConditionalDensityNet()
         invars.push_back(sampleweight);
       }
 
-      if (outputs_def=="e")
-        outputs = expected_value;
-      else if (outputs_def=="S")
+      VarArray outputs_array(outputs_def.length());
+      int j=0;
+      for (unsigned int i=0;i<outputs_def.length();i++)
       {
-        // ???
+        if (outputs_def[i]=='e')
+          outputs_array[j++] = expected_value;
+        else if (outputs_def[i]=='S' || outputs_def[i]=='C' ||
+                 outputs_def[i]=='L' || outputs_def[i]=='D')
+        {
+          Func prob_f(target,outputs_def[i]=='S'?(var(1.0)-cumulative):
+                      (outputs_def[i]=='C'?cumulative:
+                       (outputs_def[i]=='D'?density:log(density))));
+          VarArray y_values(n_curve_points);
+          real delta = maxY/(n_curve_points-1);
+          for (int i=0;i<n_curve_points;i++)
+          {
+            y_values[i]->value[0] = i*delta;
+            outputs_array[j++] = prob_f(y_values[i])[0];
+          }
+        } else PLERROR("ConditionalDensityNet::build: can't handle outputs_def with option value = %c",outputs_def[i]);
       }
-
+      outputs = hconcat(outputs_array);
       //? target_dependent_outputs.resize(test_costs->size()+2);
       f = Func(input, outputs);
       test_costf = Func(testinvars, outputs&test_costs);
