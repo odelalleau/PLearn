@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: NaryVariable.h,v 1.2 2002/09/10 18:48:28 wangxian Exp $
+   * $Id: NaryVariable.h,v 1.3 2002/09/23 20:31:11 wangxian Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -165,6 +165,41 @@ class SumOfVariable: public NaryVariable
     
     void printInfo(bool print_gradient);
 };
+
+class MatrixSumOfVariable: public NaryVariable
+{
+  protected:
+    //!  protected default constructor for persistence
+    MatrixSumOfVariable() : distr(), f(), nsamples(), input_size(), curpos() {}
+
+  public:
+  //protected:
+    VMat distr;
+    Func f;
+    int nsamples;
+    int input_size;
+    int curpos; //!<  current pos in VMat 
+    // To avoid allocation/deallocations in fprop/bprop
+    Vec input_value;
+    Vec input_gradient;
+    Vec output_value;
+    
+  public:
+    //!  Sum_{inputs \in distr} f(inputs)
+    MatrixSumOfVariable(VMat the_distr, Func the_f, int the_nsamples=-1, int the_input_size=-1);
+    
+    DECLARE_NAME_AND_DEEPCOPY(MatrixSumOfVariable);
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+    virtual void fprop();
+    virtual void bprop();
+    virtual void fbprop();
+    virtual void symbolicBprop();
+    virtual void rfprop();
+    
+    void printInfo(bool print_gradient);
+};
+
 
 class ConcatOfVariable: public NaryVariable
 {

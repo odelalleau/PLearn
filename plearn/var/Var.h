@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Var.h,v 1.4 2002/09/11 19:23:41 wangxian Exp $
+   * $Id: Var.h,v 1.5 2002/09/23 20:31:11 wangxian Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -624,6 +624,10 @@ inline Var hconcat(const VarArray& varray)
 inline Var sumOf(VMat distr, Func f, int nsamples)
 { return new SumOfVariable(distr,f,nsamples); }
 
+// sumOf with matrix as inputs
+inline Var sumOf(VMat distr, Func f, int nsamples, int input_size)
+{ return new MatrixSumOfVariable(distr,f,nsamples,input_size); }
+
 //!  deprecated old version do not use!
 inline Var sumOf(Var output, const VarArray& inputs, VMat distr, int nsamples, VarArray parameters=VarArray())
 { return sumOf(distr,Func(inputs,output),nsamples); }
@@ -632,6 +636,10 @@ inline Var sumOf(Var output, const VarArray& inputs, VMat distr, int nsamples, V
 
 inline Var meanOf(VMat distr, Func f, int nsamples)
 { return new SumOfVariable(distr,f/nsamples,nsamples); }
+
+// meanOf with matrix as inputs
+inline Var meanOf(VMat distr, Func f, int nsamples, int input_size)
+{ return new MatrixSumOfVariable(distr, f/nsamples, nsamples, input_size); }
 
 //!  deprecated old version do not use!
 inline Var meanOf(Var output, const VarArray& inputs, VMat distr, int nsamples, VarArray parameters=VarArray())
