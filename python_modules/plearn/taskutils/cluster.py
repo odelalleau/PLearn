@@ -1,5 +1,5 @@
-import os, popen2, shutil, signal, sys, time
-
+import os, shutil, signal, sys, time
+from popen2                          import Popen4
 from ArgumentsOracle                 import *
 from plearn.utilities.toolkit        import command_output 
 from plearn.pyplearn.PyPLearnObject  import PyPLearnObject
@@ -14,16 +14,17 @@ class Cluster(PyPLearnObject):
         wait_for_expdir_creation = True
         popen_instances          = list
 
-    def free( self ):
-        sys.stderr.write("Freeing all tasks.")
-        for task in self.popen_instances:
-            try:
-                os.kill( task.pid, signal.SIGTERM )
-                sys.stderr.write(".")
-            except OSError:
-                pass
-        sys.stderr.write("\nDone.\n")
-        
+## Currently doesn't work
+##     def free( self ):
+##         sys.stderr.write("Freeing all tasks.")
+##         for task in self.popen_instances:
+##             try:
+##                 os.kill( task.pid, signal.SIGTERM )
+##                 sys.stderr.write(".")
+##             except OSError:
+##                 pass
+##         sys.stderr.write("\nDone.\n")
+
     def dispatch( self, program_call, arguments_oracle ):
         ## if not isinstance(arguments_oracle, ArgumentsOracle): raise TypeError
 
@@ -38,7 +39,7 @@ class Cluster(PyPLearnObject):
             for arguments in arguments_oracle:
 
                 ## Using the arguments to build the cluster command and launch the process.
-                self.dispatch_task( arguments )
+                self.dispatch_task( program_call, arguments )
 
                 ## This hack is a turnaround to the cluster command bug of
                 ## possibly returning before the task is actually launched
@@ -59,14 +60,19 @@ class Cluster(PyPLearnObject):
                 print
 
             ### Wait for all experiments completion
-            while ( machines_used_by_user() > 0 ):
+            still_running = machines_used_by_user()
+            while ( still_running > 0 ):
+                sys.stderr.write( "\nWaiting for completion: %d tasks still running.\n"
+                                  % still_running
+                                  )
                 time.sleep( self.sleep_time )
+                still_running = machines_used_by_user()
 
         except KeyboardInterrupt:
-            sys.stderr.write("Interrupted by user.\n")
-            self.free()
+            sys.stderr.write("\nInterrupted by user.\n")
+            cluster_free()
 
-    def dispatch_task( self, arguments ):
+    def dispatch_task( self, program_call, arguments ):
         """Using the arguments to build the cluster command and launch the process.
 
         Note that this method does not manage keyboard interrupts. These
@@ -109,9 +115,28 @@ def cluster_command( raw_command, logdir_path = None, format = Cluster.Defaults.
 
 def count_expdirs( expdir_pattern = Cluster.Defaults.expdir_pattern ):
     xpdirs = [ exp for exp in os.listdir( os.getcwd() )
-               if re.search( self.regexp, exp ) is not None
+               if re.search( expdir_pattern, exp ) is not None
                ]
     return len(xpdirs)
+
+def cluster_free( ):
+    cl = command_output( 'cluster --list | grep %s | grep -v cpu'
+                         % os.getenv("USER")
+                         )
+    nfree        = len(cl)
+    progress_bar = "[%s]" % "-"*nfree
+    sys.stderr.write( "Freeing %d tasks\n%s\n[" %
+                      (nfree, progress_bar)
+                      )
+
+    for reservation in cl:
+        index  = reservation.find(":")
+        res_id = int(reservation[:index])
+
+        os.system("cluster --libere --id=%d" % res_id)
+        sys.stderr.write(".")
+
+    sys.stderr.write("]\n")        
 
 def machines_used_by_user():
     cl = command_output( 'cluster --list | grep "cpu.*%s"'

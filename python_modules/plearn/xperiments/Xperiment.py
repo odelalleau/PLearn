@@ -1,6 +1,8 @@
 import os
 import plearn.utilities.toolkit as toolkit
 
+from plearn.utilities.Bindings import *
+
 __all__ = [
     ## Helper functions
     "option_value_split",
@@ -16,7 +18,7 @@ def option_value_split( s, sep="=", rhs_casts=[] ):
         return (s, None)
 
     ## The left hand side 
-    lhs     = s[:lhs_len]
+    lhs     = s[:lhs_len].strip()
 
     ## Parsing the right hand side
     rhs = s[lhs_len+1:]    
@@ -42,8 +44,8 @@ class Xperiment:
 
     def match( cls, expkey=[] ):
         xperiments = []
-
-        files = os.listdir( os.getcwd() )    
+        
+        files = os.listdir( os.getcwd() )            
         for fname in files:
             if fname.startswith( cls.expdir_prefix ):
                 xperiments.append( cls(fname, expkey) )            
@@ -57,52 +59,50 @@ class Xperiment:
     
     def __init__( self, path, expkey=[] ):
         self.path  = path
-
-        fdic = dict([ option_value_split(f, rhs_casts=self.rhs_casts) for f in expkey ])        
-        self.infos = self.parse_file( os.path.join(path, self.metainfos_fname),
-                                      fdic
-                                      )
+        self.infos = self.parse_file( os.path.join(path, self.metainfos_fname), expkey )
 
     def parse_file( self, mipath, expkey ):
         if not os.path.exists( mipath ):
             return [ ("Experiment still running", "") ]
 
-        infos = []
-        for line in file(mipath, "r"):
-            lhs, rhs = option_value_split( line, rhs_casts=self.rhs_casts)
-            do_append = True
-            if len(expkey):
-                found     = toolkit.find_one(lhs, expkey.keys())                
-                do_append = found is not None
+        infos  = Bindings([ option_value_split( line, rhs_casts=self.rhs_casts )
+                            for line in file(mipath, "r")
+                            ])
 
-                if do_append and expkey[found[0]] is not None:
-                    do_append = rhs==expkey[found[0]]
+        ## Restricting to the keys asked for
+        if expkey:
+            expkey = Bindings([ option_value_split(key, rhs_casts=self.rhs_casts)
+                                for key in expkey
+                                ])
+            validity_predicate = lambda lhs,rhs: rhs is None or infos[lhs]==rhs
 
-            if do_append:
-                infos.append( ("%s"%lhs.strip(), rhs) )
+            subset = Bindings()
+            for (lhs,rhs) in expkey.iteritems():
+                if lhs in infos and validity_predicate(lhs,rhs):
+                    subset[lhs] = infos[lhs]
+            infos = subset
 
         return infos
                
     def __cmp__( self, other ):
         if self.path == other.path:
             return 0
-        
-        len_o = len(other.infos)
-        
-        for (i, info) in enumerate(self.infos):
-            if i == len_o:
-                return 1
 
-            oinfo = other.infos[i]
-            if info != oinfo:
-                return cmp(info[1], oinfo[1])
-
+        other_it = other.infos.iteritems()
+        for item in self.infos.iteritems():
+            try:
+                compare = cmp( item, other_it.next() )                
+                if compare != 0:
+                    return compare
+            except StopIteration:
+                return 1 ## >
+                
         ## Non-Positive ( < or == )
-        return len(self.infos) - len_o
+        return len(self.infos) - len(other.infos)
 
     def __str__( self ):
         return "%s\n%s\n" % ( self.path,
                               "\n".join( [ "    %s= %s"
                                            % ( lhs.ljust(self.lhs_length), str(rhs) )
-                                           for (lhs,rhs) in self.infos ] )
+                                           for (lhs,rhs) in self.infos.iteritems() ] )
                               )

@@ -1,46 +1,77 @@
-__cvs_id__ = "$Id: Bindings.py,v 1.3 2005/02/04 19:09:01 dorionc Exp $"
+__cvs_id__ = "$Id: Bindings.py,v 1.4 2005/03/16 22:00:43 dorionc Exp $"
 
 from toolkit import quote_if, doc
 
-## class dictionary_emulator_metaclass( type ):
-##     """To emulate the Python dictionaries behavior.
+def c_iterator( container, itype="iteritems" ):
+    if hasattr(container, itype ):
+        return container.iteritems()
+    return iter(container)
 
-##     Any class having this class as metaclass must provide any of its
-##     instance with a member I{internal_dictionary}.
-##     """
-##     def __init__(cls, name, bases, dict):
-##         super(dictionary_emulator_metaclass, cls).__init__(name, bases, dict)
-        
-class Bindings( dict ):
+class Bindings:
     """Acts like a Python dictionary but keeps the addition order."""
-    def __init__(self, list_of_pairs=[]):
-        dict.__init__(self, list_of_pairs)
+    def __init__(self, container=[], value=None):
+        self.ordered_keys  = []
+        self.internal_dict = {}
 
-        self.ordered_keys = []        
-        for pair in list_of_pairs:
-            if len(pair) != 2:
-                raise ValueError("The Bindings constructor should be provided a list of pairs.")
+        iterator = c_iterator( container )                    
+        for item in iterator:
+            pair = None
+
+            ## Key
+            if len(item) == 1:
+                pair = (item, value)
+
+            ## Pair
+            elif len(item) == 2:
+                pair = item
+
+            else:
+                raise ValueError( "The Bindings constructor should be provided "
+                                  "a list of keys or pairs or a mapping "
+                                  "object supporting iteritems."
+                                  )
+            
             self.__setitem__( *pair )
 
+    ## Bindings added methods ########################################
+
+    ## Emulating containers ##########################################    
+    def __len__(self):
+        return len(self.ordered_keys)
+
+    def __contains__(self, key):
+        return key in self.ordered_keys
+    
     def __setitem__(self, key, value):
-        dict.__setitem__(self, key, value)
+        self.internal_dict[key] = value
         if not key in self.ordered_keys:
             self.ordered_keys.append(key)
 
+    def __getitem__( self, key ):
+        return self.internal_dict[key]
+
     def __delitem__(self, key):
-        dict.__delitem__(self, key)
-        self.ordered_keys.remove(key)
+        self.pop(key)
 
-    def __iter__(self):
-        return self.iterkeys()
+    def __str__(self):
+        if len(self) == 0:
+            return "{}"
 
-    def iterkeys(self):
-        return self.ordered_keys
-            
-    class iterator:
-        def __init__(self, bindings, values_else_item):
-            self.bindings = bindings
-            self.values   = values_else_item
+        s = None        
+        for (key, val) in self.iteritems( ):
+            if s is None:
+                s = "{%s: %s"
+            else:
+                s += ", %s: %s"
+            s = s % (quote_if(key), quote_if(val))
+        s += "}"
+        return s        
+
+    ## Iterators  ####################################################
+    class item_iterator:
+        def __init__( self, bindings, return_pairs=True ):
+            self.bindings     = bindings
+            self.return_pairs = return_pairs
 
             self.cur      = -1
             self.keys     = bindings.ordered_keys
@@ -56,31 +87,77 @@ class Bindings( dict ):
             curkey = self.keys[self.cur]
             curval = self.bindings[curkey] 
 
-            if self.values:
-                return curval
-            else:
+            if self.return_pairs:
                 return (curkey, curval)
+            else:
+                return curval
         
-    def itervalues(self):
-        return Bindings.iterator( self, True )
+    def __iter__(self):
+        return self.iterkeys()
 
     def iteritems(self):
-        return Bindings.iterator( self, False )
+        return Bindings.item_iterator( self )
 
-    def __str__(self):
-        if len(self) == 0:
-            return "{}"
-        s = None        
-        for (key, val) in self.iteritems():
-            if s is None:
-                s = "{%s: %s"
-            else:
-                s += ", %s: %s"
-            s = s % (quote_if(key), quote_if(val))
-        s += "}"
-        return s
+    def iterkeys(self):
+        return iter(self.ordered_keys)
+            
+    def itervalues(self):
+        return Bindings.item_iterator( self, False )
+
+    ## Iterator related methods ######################################
+    def items( self ):
+        return [ item for item in self.iteritems() ]
+
+    def keys( self ):
+        return [ k for k in self.iterkeys( ) ]
+
+    def values( self ):
+        return [ value for value in self.itervalues() ]
+
+    ## Other dictionnary methods #####################################
+    def clear( self ):
+        del self.ordered_keys[:]
+        self.internal_dict.clear()
+
+    def copy( self ):
+        return Bindings( self )
         
+    def fromkeys( cls, container, value=None ):               
+        return cls( c_iterator( container, "iterkeys" ), value )               
+    fromkeys = classmethod( fromkeys )
+
+    def get( self, key, x=None ):
+        if key in self:
+            return self.__getitem__( key )
+        return x
+
+    def has_key( self, key ):
+        return key in self.ordered_keys
+
+    def pop( self, key, x=None ):
+        if key in self:
+            self.ordered_keys.remove(key)
+            return self.internal_dict.pop(key)
+
+        if x is None:
+            raise KeyError("Binding object does not contain any '%s' key.") 
+        return x
         
+    def popitem( self ):
+        (key, val) = self.internal_dict.popitem(key)
+        self.ordered_keys.remove(key)
+        return (key, val)
+
+    def setdefault( self, k, x=None ):
+        if key in self:
+            return self.__getitem__( key )
+        self.__setitem__( k, x )
+        return x        
+        
+    def update( self, dic ):
+        for k in dic.keys():
+            self.__setitem__( k, dic[k] )
+
 if __name__ == "__main__":
     print "\nEmbedded test/tutorial for Bindings.py.\n"
 
