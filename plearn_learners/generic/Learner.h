@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.h,v 1.9 2003/05/07 05:39:19 plearner Exp $
+   * $Id: Learner.h,v 1.10 2003/05/22 14:34:26 wangxian Exp $
    ******************************************************* */
 
 
@@ -528,7 +528,7 @@ using namespace std;
     Vec computeTestStatistics(const VMat& costs);
 
 /*!       Return statistics computed by test_statistics on the test_costfuncs.
-      If (save_test_outputs) then the test outputs are saved in the given file,
+	      If (save_test_outputs) then the test outputs are saved in the given file,
       and similary if (save_test_costs).
 */
     virtual Vec test(VMat test_set, const string& save_test_outputs="", 

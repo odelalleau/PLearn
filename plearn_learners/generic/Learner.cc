@@ -39,10 +39,11 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.cc,v 1.10 2003/05/08 15:56:58 tihocan Exp $
+   * $Id: Learner.cc,v 1.11 2003/05/22 14:34:26 wangxian Exp $
    ******************************************************* */
 
 #include "Learner.h"
+#include "DisplayUtils.h"
 #include "TmpFilenames.h"
 #include "fileutils.h"
 #include "stringutils.h"
@@ -248,26 +249,38 @@ void Learner::forget()
 void Learner::useAndCostOnTestVec(const VMat& test_set, int i, const Vec& output, const Vec& cost)
 {
   tmpvec.resize(test_set.width());
-  test_set->getRow(i,tmpvec);
-  useAndCost(tmpvec.subVec(0,inputsize()), tmpvec.subVec(inputsize(),targetsize()), output, cost);
+  if (minibatch_size > 1)
+  {
+    Vec inputvec(inputsize()*minibatch_size);
+    Vec targetvec(targetsize()*minibatch_size);
+    for (int k=0; k<minibatch_size;k++)
+      {      
+      test_set->getRow(i+k,tmpvec);
+      for (int j=0; j<inputsize(); j++)
+         inputvec[k*inputsize()+j] = tmpvec[j];
+      for (int j=0; j<targetsize(); j++)
+         targetvec[k*targetsize()+j] = tmpvec[inputsize()+j];
+      }
+    useAndCost(inputvec, targetvec, output, cost);
+  }
+  else
+  {
+    test_set->getRow(i,tmpvec);
+    useAndCost(tmpvec.subVec(0,inputsize()), tmpvec.subVec(inputsize(),targetsize()), output, cost);
+  }
 }
 
 void Learner::useAndCost(const Vec& input, const Vec& target, Vec output, Vec cost)
 {
-  // cout << "target: " << target[0] << endl;
   use(input,output);
   computeCost(input, target, output, cost);
 }
 
 void Learner::computeCost(const Vec& input, const Vec& target, const Vec& output, const Vec& cost)
 {
+
   for (int k=0; k<test_costfuncs.size(); k++)
     cost[k] = test_costfuncs[k](output, target);
-  // cerr << "target=" << target << endl;
-  // cerr << "output=" << output << endl;
-  // cerr << "cost  =" << cost << endl;
-  // if(argmax(output)!=int(target[0]))
-  //   cerr << '!';
 }
 
 void Learner::setTestDuringTrain(ostream& out, int every, Array<VMat> testsets)
@@ -381,10 +394,11 @@ void Learner::setEarlyStopping(int which_testset, int which_testresult,
 
 bool Learner::measure(int step, const Vec& costs)
 {
+  earlystop_min_value /= minibatch_size;
   if (costs.length()<1)
     PLERROR("Learner::measure: costs.length_=%d should be >0", costs.length());
   
-//  vlog << ">>> Now measuring for step " << step << " (costs = " << costs << " )" << endl; 
+  //vlog << ">>> Now measuring for step " << step << " (costs = " << costs << " )" << endl; 
 
   //  if (objectiveout)
   //  objectiveout << setw(5) << step << "  " << costs << "\n";
@@ -407,21 +421,17 @@ bool Learner::measure(int step, const Vec& costs)
     Array<Vec> test_results(ntestsets);
     for (int n=0; n<ntestsets; n++) // looping over test sets
     {
-      //vlog << " >> testing on set #" << n << " ..." << endl; 
       test_results[n] = test(test_sets[n]);
-      // testout << test_results[n] << "    ";
       if ((!PLMPI::synchronized && each_cpu_saves_its_errors) || PLMPI::rank==0)
         outputResultLineToFile(basename()+"."+test_sets[n]->getAlias()+".hist.results",test_results[n],true,
                                    join(testResultsNames()," "));
-      // getTestResultsStream(n) << setw(5) << epoch_ << "  " << test_results[n] << endl;
     }
-    //    if (!measure_cpu_time_first)
-    //  testout<<getStopRunningTime(true,true);
-    // testout<<endl;
+
     if (ntestsets>0 && earlystop_testsetnum>=0) // are we doing early stopping?
     {
       real earlystop_currentval = 
         test_results[earlystop_testsetnum][earlystop_testresultindex];
+      //  cout << earlystop_currentval << " " << earlystop_testsetnum << " " << earlystop_testresultindex << endl;
       // Check if early-stopping condition was met
       if ((earlystop_relative_changes &&
            ((earlystop_currentval-earlystop_minval > 
@@ -449,9 +459,10 @@ bool Learner::measure(int step, const Vec& costs)
           if(expdir.empty()) // old deprecated mode
             load();
           else
-            PLearn::load(fname,*this, OptionBase::learntoption);
-          
+            PLearn::load(fname,*this, OptionBase::learntoption);          
         }
+        else
+          cout << "Result for benchmark is: " << test_results << endl;
         muststop = true;
       }
       else // earlystopping not met
@@ -470,6 +481,7 @@ bool Learner::measure(int step, const Vec& costs)
             for (int n=0; n<ntestsets; n++) // looping over test sets
               outputResultLineToFile(basename()+"."+test_sets[n]->getAlias()+".results",test_results[n],false,
                                      join(testResultsNames()," "));
+          cout << "Result for benchmark is: " << test_results << endl;
         }
       }
       if (earlystop_currentval < earlystop_minval)
@@ -477,8 +489,7 @@ bool Learner::measure(int step, const Vec& costs)
         earlystop_minval = earlystop_currentval;
         best_step = step;
         if(PLMPI::rank==0)
-          vlog << "currently best step at " << best_step << " with " << earlystop_currentval << endl;
-        
+          vlog << "currently best step at " << best_step << " with " << earlystop_currentval << " " << test_results << endl;        
       }
     } 
     else
@@ -526,23 +537,19 @@ void Learner::apply(const VMat& data, VMat outputs)
   {
     int n=data.length();
     int ncostfuncs = costsize();
-    // Vec data_row(data.width());
-    // Vec input_row = data_row.subVec(0,inputsize());
-    // Vec target = data_row.subVec(inputsize(), targetsize());
     Vec output_row(outputsize());
     Vec cost(ncostfuncs);
-    for (int i=0;i<n;i++)
+    cout << ncostfuncs << endl;
+    for (int i=0;i*minibatch_size<n;i++)
     {
-      // data->getRow(i,data_row); // also gets input_row and target
-      // useAndCost(input_row,target,output_row,cost); // does the work
-      useAndCostOnTestVec(data, i, output_row, cost);
+      useAndCostOnTestVec(data, i*minibatch_size, output_row, cost);
       costs->putRow(i,cost); // save the costs
     }
   }
 
   void Learner::computeLeaveOneOutCosts(const VMat& data, VMat costsmat)
   {
-    //    Vec testsample(inputsize()+targetsize());
+    // Vec testsample(inputsize()+targetsize());
     // Vec testinput = testsample.subVec(0,inputsize());
     // Vec testtarget = testsample.subVec(inputsize(),targetsize());
     Vec output(outputsize());
@@ -589,17 +596,19 @@ void Learner::apply(const VMat& data, VMat outputs)
   {
     int n=data.length();
     int ncostfuncs = costsize();
-    // Vec data_row(data.width());
-    // Vec input_row = data_row.subVec(0,inputsize());
-    // Vec target = data_row.subVec(inputsize(), targetsize());
-    Vec output_row(outputsize());
+    Vec output_row(outputsize()*minibatch_size);
     Vec costs_row(ncostfuncs);
-    for (int i=0;i<n;i++)
+    for (int i=0;i*minibatch_size<n;i++)
     {
       // data->getRow(i,data_row); // also gets input_row and target
-      useAndCostOnTestVec(data, i, output_row, costs_row);
+      useAndCostOnTestVec(data, i*minibatch_size, output_row, costs_row);
+      // useAndCostOnTestVec(data, i, output_row, costs_row);
       // useAndCost(input_row,target,output_row,costs_row); // does the work
-      outputs->putRow(i,output_row); // save the outputs
+      //outputs->putRow(i,output_row); // save the outputs          
+      for (int k=0; k<minibatch_size; k++)
+          {
+          outputs->putRow(i+k,output_row.subVec(k*outputsize(),outputsize())); // save the outputs
+          }
       costs->putRow(i,costs_row); // save the costs
     }
   }
@@ -623,10 +632,12 @@ Vec Learner::test(VMat test_set, const string& save_test_outputs, const string& 
 {
   int ncostfuncs = costsize();
 
-  Vec output(outputsize());
+  Vec output(outputsize()*minibatch_size);
   Vec cost(ncostfuncs);
   Mat output_block(minibatch_size,outputsize());
   Mat cost_block(minibatch_size,outputsize());
+  if (minibatch_size>1)
+    cost_block.resize(minibatch_size,costsize());  
 
   Vec result;
 
@@ -743,6 +754,7 @@ Vec Learner::test(VMat test_set, const string& save_test_outputs, const string& 
     }
   else // default sequential implementation
     {
+
       for (int i=0; i<l; i++)
         {
           if (i%10000<minibatch_size) stop_if_wanted();
@@ -792,6 +804,7 @@ void Learner::applyAndComputeCostsOnTestMat(const VMat& test_set, int i, const M
                                             const Mat& cost_block)
 {
   applyAndComputeCosts(test_set.subMatRows(i,output_block.length()),output_block,cost_block);
+  //applyAndComputeCosts(test_set.subMatRows(i,output_block.length()*minibatch_size),output_block,cost_block);
 }
 
 void Learner::setModel(const Vec& options) { 
