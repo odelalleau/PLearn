@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat_maths.cc,v 1.5 2003/07/04 18:21:06 jkeable Exp $
+* $Id: VMat_maths.cc,v 1.6 2003/08/15 17:18:03 yoshua Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat_maths.h"
@@ -722,8 +722,9 @@ Mat transposeProduct(VMat m1, VMat m2)
 }
 
 
-void linearRegression(VMat inputs, VMat outputs, real weight_decay, Mat theta_t, 
-                      bool use_precomputed_XtX_XtY, Mat XtX, Mat XtY, int verbose_every)
+real linearRegression(VMat inputs, VMat outputs, real weight_decay, Mat theta_t, 
+                      bool use_precomputed_XtX_XtY, Mat XtX, Mat XtY, real& sum_squared_Y,
+                      bool return_squared_loss, int verbose_every)
 {
   if (outputs.length()!=inputs.length())
     PLERROR("linearRegression: inputs.length()=%d while outputs.length()=%d",inputs.length(),outputs.length());
@@ -749,6 +750,7 @@ void linearRegression(VMat inputs, VMat outputs, real weight_decay, Mat theta_t,
       // XtY << transposeProduct(X,Y); // same thing (remember '=' for Mat never copies elements)
       XtX.clear();
       XtY.clear();
+      sum_squared_Y=0;
       Vec x(X.width());
       Vec y(Y.width());
       int l=X.length();
@@ -758,6 +760,7 @@ void linearRegression(VMat inputs, VMat outputs, real weight_decay, Mat theta_t,
         Y->getRow(i,y);
         externalProductAcc(XtX, x,x);
         externalProductAcc(XtY, x,y);
+        sum_squared_Y += dot(y,y);
       }
       // *************
     }
@@ -768,6 +771,18 @@ void linearRegression(VMat inputs, VMat outputs, real weight_decay, Mat theta_t,
 
   // now solve by Cholesky decomposition
   solveLinearSystemByCholesky(XtX,XtY,theta_t);
+
+  real squared_loss=0;
+  if (return_squared_loss)
+  {
+    // squared loss = sum_{ij} theta_{ij} (X'W X theta')_{ij} + sum_{t,i} Y_{ti}^2 - 2 sum_{ij} theta_{ij} (X'W Y)_{ij}
+    Mat M(inputsize+1,targetsize);
+    product(M,XtX,theta_t);
+    squared_loss += dot(M,theta_t); // 
+    squared_loss += sum_squared_Y;
+    squared_loss -= 2*dot(XtY,theta_t);
+  }
+  return squared_loss;
 }
 
 Mat linearRegression(VMat inputs, VMat outputs, real weight_decay)
@@ -777,19 +792,23 @@ Mat linearRegression(VMat inputs, VMat outputs, real weight_decay)
   Mat XtX(n,n);
   Mat XtY(n,n_outputs);
   Mat theta_t(n,n_outputs);
-  linearRegression(inputs, outputs, weight_decay, theta_t, false, XtX, XtY);
+  real sy=0;
+  linearRegression(inputs, outputs, weight_decay, theta_t, false, XtX, XtY,sy);
   return theta_t;
 }
 
 
-void weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas, real weight_decay, Mat theta_t, 
-                              bool use_precomputed_XtX_XtY, Mat XtX, Mat XtY, int verbose_every)
+real weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas, real weight_decay, Mat theta_t, 
+                              bool use_precomputed_XtX_XtY, Mat XtX, Mat XtY, real& sum_squared_Y,
+                              bool return_squared_loss, int verbose_every)
 {
+  int inputsize = inputs.width();
+  int targetsize = outputs.width();
   if (outputs.length()!=inputs.length())
     PLERROR("linearRegression: inputs.length()=%d while outputs.length()=%d",inputs.length(),outputs.length());
-  if (theta_t.length()!=inputs.width()+1 || theta_t.width()!=outputs.width())
+  if (theta_t.length()!=inputsize+1 || theta_t.width()!=targetsize)
     PLERROR("linearRegression: theta_t(%d,%d) should be (%dx%d)",
-          theta_t.length(),theta_t.width(),inputs.width()+1,outputs.width());
+            theta_t.length(),theta_t.width(),inputsize+1,targetsize);
 
   if(!use_precomputed_XtX_XtY) // then compute them
   {
@@ -810,6 +829,7 @@ void weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas, real weigh
       gamma_i = gammas(i,0);
       externalProductScaleAcc(XtX, x,x,gamma_i);
       externalProductScaleAcc(XtY, x,y,gamma_i);
+      sum_squared_Y += dot(y,y);
     }
   }
 
@@ -819,6 +839,18 @@ void weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas, real weigh
 
   // now solve by Cholesky decomposition
   solveLinearSystemByCholesky(XtX,XtY,theta_t);
+
+  real squared_loss=0;
+  if (return_squared_loss)
+  {
+    // squared loss = sum_{ij} theta_{ij} (X'W X theta')_{ij} + sum_{t,i} Y_{ti}^2 - 2 sum_{ij} theta_{ij} (X'W Y)_{ij}
+    Mat M(inputsize+1,targetsize);
+    product(M,XtX,theta_t);
+    squared_loss += dot(M,theta_t); // 
+    squared_loss += sum_squared_Y;
+    squared_loss -= 2*dot(XtY,theta_t);
+  }
+  return squared_loss;
 }
 
 //!  Version that does all the memory allocations of XtX, XtY and theta_t. Returns theta_t
@@ -829,7 +861,8 @@ Mat weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas, real weight
   Mat XtX(n,n);
   Mat XtY(n,n_outputs);
   Mat theta_t(n,n_outputs);
-  weightedLinearRegression(inputs, outputs, gammas, weight_decay, theta_t, false, XtX, XtY);
+  real sy=0;
+  weightedLinearRegression(inputs, outputs, gammas, weight_decay, theta_t, false, XtX, XtY,sy);
   return theta_t;
 }
 

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat_maths.h,v 1.4 2003/07/04 18:21:06 jkeable Exp $
+   * $Id: VMat_maths.h,v 1.5 2003/08/15 17:18:03 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -194,16 +194,19 @@ Mat transposeProduct(VMat m);
   they are used as they are (typically passed precomputed from a previous
   call made with a possibly different weight_decay)
 */
-void linearRegression(VMat inputs, VMat outputs, real weight_decay, Mat theta_t, 
-                      bool use_precomputed_XtX_XtY, Mat XtX, Mat XtY, int verbose_computation_every=0);
+real linearRegression(VMat inputs, VMat outputs, real weight_decay, Mat theta_t, 
+                      bool use_precomputed_XtX_XtY, Mat XtX, Mat XtY, real& sum_squared_Y,
+                      bool return_squared_loss=false, int verbose_computation_every=0);
+                      
 
 //!  Version that does all the memory allocations of XtX, XtY and theta_t. Returns theta_t
 Mat linearRegression(VMat inputs, VMat outputs, real weight_decay);
 
 //!  Linear regression where each input point is given a different importance weight (the gammas)
-void weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas,
-    real weight_decay, Mat theta_t, bool use_precomputed_XtX_XtY, Mat XtX,
-    Mat XtY, int verbose_computation_every=0);
+real weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas,
+                              real weight_decay, Mat theta_t, bool use_precomputed_XtX_XtY, Mat XtX,
+                              Mat XtY, real& sum_squared_Y, bool return_squared_loss=false, 
+                              int verbose_computation_every=0);
 
 /*!   Rebalance the input VMatrix so that each class has a probability 1/nclasses.
   Also, the return VMat class alternates between all classes cyclicly.

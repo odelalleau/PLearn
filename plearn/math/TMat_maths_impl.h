@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.16 2003/08/08 20:45:54 yoshua Exp $
+   * $Id: TMat_maths_impl.h,v 1.17 2003/08/15 17:17:59 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -884,6 +884,30 @@ T dot(const TVec<T>& vec1, const TVec<T>& vec2)
   T* v2 = vec2.data();
   for(int i=0; i<vec1.length(); i++)
     res += v1[i]*v2[i];
+  return res;
+}
+
+template<class T>
+T dot(const TMat<T>& m1, const TMat<T>& m2)
+{
+  #ifdef BOUNDCHECK
+  if(m1.size()!=m2.size())
+    PLERROR("In T operator*(const TMat<T>& m1, const TVec<T>& vec2) (dot product) the 2 matrices must have the same number of elements.");
+  #endif
+
+  T res = 0;
+  T* v1 = m1.data();
+  T* v2 = m2.data();
+  if (m1.isCompact() && m2.isCompact())
+    for(int i=0; i<m1.size(); i++)
+      res += v1[i]*v2[i];
+  else
+    {
+      TMatElementIterator<T> p1 = m1.begin();
+      TMatElementIterator<T> p2 = m2.begin();
+      for (int i=0; i<m1.size(); i++,++p1,++p2)
+        res += *p1 * *p2;
+    }
   return res;
 }
 

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.9 2003/08/13 08:13:46 plearner Exp $
+   * $Id: VMatLanguage.cc,v 1.10 2003/08/15 17:18:03 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -381,8 +381,10 @@ using namespace std;
     preprocess(in, defines, processed_sourcecode, fieldnames);
 
     if(output_preproc)
-      cerr<<"Preprocessed code:"<<endl<<processed_sourcecode<<endl;
-      cerr<<"FieldNames : "<<endl<<fieldnames<<endl;
+      {
+        cerr<<"Preprocessed code:"<<endl<<processed_sourcecode<<endl;
+        cerr<<"FieldNames : "<<endl<<fieldnames<<endl;
+      }
     generateCode(processed_sourcecode);
   }
 
