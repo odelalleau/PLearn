@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeuralNet.cc,v 1.8 2003/05/05 13:00:25 tihocan Exp $
+   * $Id: NeuralNet.cc,v 1.9 2003/05/06 15:19:41 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeuralNet.h */
@@ -351,7 +351,7 @@ void NeuralNet::train(VMat training_set)
   int l = training_set->length();  
   int nsamples = batch_size>0 ? batch_size : l;
   Func paramf = Func(input&target_and_weights, cost); // parameterized function to optimize
-  Var totalcost = meanOf(training_set,paramf, nsamples);
+  Var totalcost = meanOf(training_set, paramf, nsamples);
   optimizer->setToOptimize(params, totalcost);
   optimizer->addMeasurer(*this);
   optimizer->nstages = l / nsamples;
