@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.h,v 1.5 2004/03/23 23:08:09 morinf Exp $
+   * $Id: VVMatrix.h,v 1.6 2004/04/05 23:11:57 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -84,7 +84,6 @@ public:
   PLEARN_DECLARE_OBJECT(VVMatrix);
 
   virtual void build();
-  void build_();
   
   const string & getCode(){return code;}
 
@@ -119,6 +118,8 @@ public:
 
   virtual real get(int i, int j) const {return the_mat->get(i,j);}
   virtual void getSubRow(int i, int j, Vec v) const {the_mat->getSubRow(i,j,v);}
+private:
+  void build_();
 };
 
 DECLARE_OBJECT_PTR(VVMatrix);

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.cc,v 1.15 2004/03/16 14:01:52 tihocan Exp $
+   * $Id: VVMatrix.cc,v 1.16 2004/04/05 23:11:57 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -582,13 +582,14 @@ void VVMatrix::build()
 
 void VVMatrix::build_()
 {
-  setMetaDataDir(makeExplicitPath(the_filename+".metadata"));
-  force_mkdir(getMetaDataDir());
+  if (the_filename != "") {
+    setMetaDataDir(makeExplicitPath(the_filename+".metadata"));
+    force_mkdir(getMetaDataDir());
 
-  code = readFileAndMacroProcess(the_filename);
-  if(removeblanks(code)[0]=='<') // old xml-like format 
-    the_mat=createPreproVMat(the_filename);
-  else  // New standard PLearn object description format
+    code = readFileAndMacroProcess(the_filename);
+    if(removeblanks(code)[0]=='<') // old xml-like format 
+      the_mat=createPreproVMat(the_filename);
+    else  // New standard PLearn object description format
     {
       the_mat = dynamic_cast<VMatrix*>(newObject(code));
       if(the_mat.isNull())
@@ -596,26 +597,27 @@ void VVMatrix::build_()
       the_mat->setMetaDataDir(getMetaDataDir());
     }
 
-  setMtime(the_mat->getMtime());
-  length_ = the_mat.length();
-  width_ = the_mat.width();
+    setMtime(the_mat->getMtime());
+    length_ = the_mat.length();
+    width_ = the_mat.width();
 
-  // Copy the sizes.
-  copySizesFrom(the_mat);
+    // Copy the sizes.
+    copySizesFrom(the_mat);
 
-  //resize the string mappings
-  map_sr = TVec<map<string,real> >(width_);
-  map_rs = TVec<map<real,string> >(width_);
-
+    //resize the string mappings
+    map_sr = TVec<map<string,real> >(width_);
+    map_rs = TVec<map<real,string> >(width_);
+    
   
-  // done by getDataSet
-  // loadAllStringMappings();
+    // done by getDataSet
+    // loadAllStringMappings();
 
-  // Copy the parent field names
-  fieldinfos.resize(width_);
-  if (the_mat->getFieldInfos().size() > 0)
-    for(int j=0; j<width_; j++)
-      fieldinfos[j] = the_mat->getFieldInfos()[j];
+    // Copy the parent field names
+    fieldinfos.resize(width_);
+    if (the_mat->getFieldInfos().size() > 0)
+      for(int j=0; j<width_; j++)
+        fieldinfos[j] = the_mat->getFieldInfos()[j];
+  }
 }
 
 void VVMatrix::declareOptions(OptionList &ol)
