@@ -7,7 +7,7 @@ using namespace std;
 // DERIVEDCLASS //
 //////////////////
 DERIVEDCLASS::DERIVEDCLASS() 
-/* ### Initialise all fields to their default value here */
+/* ### Initialize all fields to their default value here */
   {
     // ...
 
