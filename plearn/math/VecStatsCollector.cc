@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.28 2004/12/15 01:51:41 chapados Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.29 2004/12/16 00:28:57 chapados Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -245,7 +245,6 @@ void VecStatsCollector::getMean(Vec& res) const
   res.resize(n);
   for(int k=0; k<n; k++)
     res[k] = stats[k].mean();
-  return res;
 }
 
 //! returns the empirical variance vec
