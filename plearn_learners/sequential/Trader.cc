@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.cc,v 1.6 2003/10/01 21:31:43 ducharme Exp $ 
+ * $Id: Trader.cc,v 1.7 2003/10/03 21:23:16 ducharme Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -50,10 +50,8 @@ using namespace std;
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Trader, "ONE LINE DESCR", "NO HELP");
 
 Trader::Trader():
-  build_complete(false),
-  very_first_test_t(-1),
-  nb_assets(0),
-  first_asset_is_cash(true), risk_free_rate("risk_free_rate"),
+  build_complete(false), very_first_test_t(-1), nb_assets(0),
+  risk_free_rate("risk_free_rate"),
   price_tag("close:level"), tradable_tag("is_tradable"), //return_type(1),
   additive_cost(0.0), multiplicative_cost(0.0),
   rebalancing_threshold(0.0), 
@@ -104,6 +102,8 @@ void Trader::build_()
 
   portfolios.resize(max_seq_len, nb_assets);
   portfolios.fill(MISSING_VALUE);
+  margin_cash.resize(max_seq_len, nb_assets);
+  margin_cash.fill(MISSING_VALUE);
 
   // Sync with the advisor
   advisor->trader = this;
@@ -132,9 +132,6 @@ void Trader::assets_info()
     assets_tradable_indices.clear();
   }
   
-  if(first_asset_is_cash)
-    assets_names.append("Cash");
-
   if(deduce_assets_names)
   {
     Array<VMField> finfo = internal_data_set->getFieldInfos();  
@@ -165,30 +162,28 @@ void Trader::assets_info()
   // Building a list of the indices needed to access the prices in the VMat
   assets_price_indices.resize(assets_names.length());
   assets_tradable_indices.resize(assets_names.length());
-  int asset_index = 0;
-  if(first_asset_is_cash){
-    assets_price_indices[0] = internal_data_set->fieldIndex(risk_free_rate);    
-    assets_tradable_indices[0] = -1;
-    asset_index++;
-  }
-  for(; asset_index < assets_names.length(); asset_index++){
+  for(int asset_index=0; asset_index<assets_names.length(); asset_index++)
+  {
     assets_price_indices[asset_index] = internal_data_set->fieldIndex(assets_names[asset_index]+":"+price_tag);
     assets_tradable_indices[asset_index] = internal_data_set->fieldIndex(assets_names[asset_index]+":"+tradable_tag);
   }
+  risk_free_rate_index = internal_data_set->fieldIndex(risk_free_rate);    
 }
 
 void Trader::forget()
 {
   inherited::forget();
   advisor->forget();
-  
+
   if(portfolios) 
     portfolios.fill(MISSING_VALUE);
 
-  if(stop_loss_active && !internal_data_set.isNull()){
+  if(margin_cash) 
+    margin_cash.fill(MISSING_VALUE);
+
+  if(stop_loss_active && internal_data_set.isNotNull())
     stop_loss_values.fill(0.0);
-  }
-  
+
   internal_stats.forget();
 }
 
@@ -198,12 +193,6 @@ void Trader::declareOptions(OptionList& ol)
                 OptionBase::buildoption,
                 "An embedded learner issuing recommendations on what should the portfolio look like");
 
-  
-  declareOption(ol, "first_asset_is_cash", &Trader::first_asset_is_cash,
-                OptionBase::buildoption,
-                "To be set as true if the undrlying models has a cash position. If it is the case, the \n"
-                "cash position will be considered to be the 1^rst in the portfolio, as reflected in the option's\n"
-                "name. Default: true.");
   
   declareOption(ol, "risk_free_rate", &Trader::risk_free_rate,
                 OptionBase::buildoption,
@@ -359,7 +348,23 @@ void Trader::train()
             "(last_call_train_t - last_train_t) following lines\n\t");
   
   if(last_test_t == -1)
+  {
     portfolios.subMatRows(0, last_call_train_t+1) << advisor->predictions.subMatRows(0, last_call_train_t+1);
+
+    // initialization of the margin cash
+    Vec margin_cash_t = margin_cash(t);
+    for (int k=0; k<nb_assets; k++)
+    {
+      real w_kt = weight(k,t);
+      if (!is_missing(w_kt) && w_kt!=0)
+      {
+        real p_kt = price(k,t);
+        margin_cash_t[k] = w_kt*p_kt;
+      }
+      else
+        margin_cash_t[k] = 0.0;
+    }
+  }
   else
   {
     // The portfolios matrix reflects the real positions took on the market by the trader
@@ -467,10 +472,6 @@ void Trader::test(VMat testset, PP<VecStatsCollector> test_stats,
 //           on achete tout weight(k, t+1)!!!
 real Trader::delta(int k, int t) const
 {
-  // Should not be called on the cash
-  if(first_asset_is_cash && k==0)
-    PLERROR("*** INTERNAL *** call to delta(%d, %d) with first_asset_is_cash set as true", k, t);
-
   // Here we consider that the initial test portfolio is the last train portfolio. This assumption seems reasonable since, 
   //  if we sequentially train the model, we will always have, in practice, kept the previous portfolios... The only exception could be at the 
   //  very first time that test is called... For now it is neglected... 
@@ -483,11 +484,11 @@ real Trader::delta(int k, int t) const
   real delta_ = weight(k, t+1) - current_wkt;
   if(fabs(delta_) < rebalancing_threshold){
     weight(k, t+1) = current_wkt;             // Rebalancing isn't needed
-    if(first_asset_is_cash){
-      // Since we didn't follow the recommendation of the advisor (sell or buy), the cash position 
-      //  will be affected. Didn't buy (delta_>0) we saved money; didn't sell (delta_<0), did not gain the expected money.
-      weight(0, t+1) += delta_ * price(k, t); 
-    }
+    // Since we didn't follow the recommendation of the advisor (sell or buy), the cash position 
+    //  will be affected. Didn't buy (delta_>0) we saved money; didn't sell (delta_<0), did not gain the expected money.
+    //weight(0, t+1) += delta_ * price(k, t); 
+    //weight(k, t+1) += delta_ * price(k, t); 
+
     return 0.0;
   }
   return fabs(delta_);  //else: delta_ >= rebalancing_threshold
@@ -504,11 +505,10 @@ bool Trader::stop_loss(int k, int t) const
   
   if( stop_loss_values[k]/stop_loss_horizon < stop_loss_threshold )
   {
-    if(first_asset_is_cash){
-      // Since we didn't follow the recommendation of the advisor (sell or buy), the cash position 
-      //  will be affected. Didn't buy: delta_>0; didn't sell: delta_<0.
-      weight(0, t+1) += weight(k,t+1) * price(k, t); 
-    }
+    // Since we didn't follow the recommendation of the advisor (sell or buy), the cash position 
+    //  will be affected. Didn't buy: delta_>0; didn't sell: delta_<0.
+    //weight(0, t+1) += weight(k,t+1) * price(k, t); 
+    margin_cash(k, t+1) += weight(k,t+1) * price(k, t); // ??? CHRISTIAN!!
     weight(k, t+1) = 0.0;             // Selling or covering short sales.
     // Une autre question... Idealement il faudrait  avoir une facon de determiner pendant combien
     // de temps on n'echange plus sur un asset suite a un stop_loss..
@@ -546,6 +546,7 @@ void Trader::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(assets_tradable_indices, copies);
   deepCopyField(stop_loss_values, copies);
   deepCopyField(portfolios, copies);
+  deepCopyField(margin_cash, copies);
   deepCopyField(advisor, copies);
   deepCopyField(assets_names, copies);
 } 

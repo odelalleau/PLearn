@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.h,v 1.4 2003/09/30 19:49:57 ducharme Exp $ 
+ * $Id: Trader.h,v 1.5 2003/10/03 21:23:16 ducharme Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -77,6 +77,7 @@ protected:
   
   //! List of indices associated with the price fields in the VMat
   TVec<int> assets_price_indices;
+  int risk_free_rate_index;
 
   //! The k element is the last time at which asset k had a non-missing price
   TMat<int> last_valid_price;
@@ -101,6 +102,13 @@ protected:
         directly in the portfolios matrix.
   */
   mutable Mat portfolios;
+
+  /*!
+    margin_cash(t) contains the cash position of each asset.
+    It has a length of max_seq_len and is initialize after the first
+    init_train_size train steps.
+   */
+  mutable Mat margin_cash;
   
   //! Access the portfolio weight k at time t (see the portfolios matrix comment) 
   real& weight(int k, int t) const { return portfolios(t-horizon, k); }
@@ -133,15 +141,6 @@ public:
   //! An embedded learner issuing recommendations on what should the portfolio look like
   PP<FinancialAdvisor> advisor;
 
-    /*!
-    To be set as true if the undrlying models has a cash position. If it is the case, the 
-     cash position will be considered to be the 1^rst in the portfolio, as reflected in the option's
-     name. 
-
-    Default: true.
-  */
-  bool first_asset_is_cash;
-  
   //! The risk free rate column name in the VMat. Default: risk_free_rate.
   string risk_free_rate;
 //#error Cash: as an hyper param != 0 au depart. Default: 1.0. Attention Cash doit etre signifiactivement > que le additive cost

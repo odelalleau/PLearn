@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.cc,v 1.10 2003/10/01 21:31:43 ducharme Exp $ 
+   * $Id: FuturesTrader.cc,v 1.11 2003/10/03 21:23:16 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.cc */
@@ -85,9 +85,6 @@ void FuturesTrader::trader_test( int t, VMat testset,
 
       // Update of the portfolio return, adding the k^th assets return
       absolute_return_t += w_kt * absolute_return(k, t);
-
-      if(first_asset_is_cash && k==0)
-        continue; // No call to delta and no transaction cost on cash
 
       // No additive_cost on a null delta since there will be no transaction
       real delta_ = delta(k, t);
