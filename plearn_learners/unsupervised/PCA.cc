@@ -34,13 +34,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PCA.cc,v 1.5 2003/10/13 02:02:59 yoshua Exp $ 
+   * $Id: PCA.cc,v 1.6 2004/02/17 18:14:05 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PCA.cc */
 #include "PCA.h"
 #include "VMat_maths.h"
-#include "TMat_maths.h"
+//#include "TMat_maths.h"
 #include "plapack.h"
 
 namespace PLearn <%
