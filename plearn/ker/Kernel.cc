@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.8 2003/12/15 22:08:32 dorionc Exp $
+   * $Id: Kernel.cc,v 1.9 2004/01/21 14:18:16 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -128,20 +128,30 @@ Vec Kernel::getParameters() const
 { return Vec(); }
 
 
-void 
-Kernel::apply(VMat m1, VMat m2, Mat& result) const
+///////////
+// apply //
+///////////
+void Kernel::apply(VMat m1, VMat m2, Mat& result) const
 {
   result.resize(m1->length(), m2->length());
-  Vec m1_i(m1->width());
-  Vec m2_j(m2->width());
+  int m1w = m1->inputsize();
+  if (m1w == -1) { // No inputsize specified: using width instead.
+    m1w = m1->width();
+  }
+  int m2w = m2->inputsize();
+  if (m2w == -1) {
+    m2w = m2->width();
+  }
+  Vec m1_i(m1w);
+  Vec m2_j(m2w);
   if(is_symmetric && m1==m2)
     {
       for(int i=0; i<m1->length(); i++)
         {
-          m1->getRow(i,m1_i);
+          m1->getSubRow(i,0,m1_i);
           for(int j=0; j<=i; j++)
             {
-              m2->getRow(j,m2_j);
+              m2->getSubRow(j,0,m2_j);
               real val = evaluate(m1_i,m2_j);
               result(i,j) = val;
               result(j,i) = val;
@@ -152,10 +162,10 @@ Kernel::apply(VMat m1, VMat m2, Mat& result) const
     {
       for(int i=0; i<m1->length(); i++)
         {
-          m1->getRow(i,m1_i);
+          m1->getSubRow(i,0,m1_i);
           for(int j=0; j<m2->length(); j++)
             {
-              m2->getRow(j,m2_j);
+              m2->getSubRow(j,0,m2_j);
               result(i,j) = evaluate(m1_i,m2_j);
             }
         }
@@ -163,43 +173,49 @@ Kernel::apply(VMat m1, VMat m2, Mat& result) const
 }
 
 
-void 
-Kernel::apply(VMat m, const Vec& x, Vec& result) const
+void Kernel::apply(VMat m, const Vec& x, Vec& result) const
 {
   result.resize(m->length());
-  Vec m_i(m->width());
+  int mw = m->inputsize();
+  if (mw == -1) { // No inputsize specified: using width instead.
+    mw = m->width();
+  }
+  Vec m_i(mw);
   for(int i=0; i<m->length(); i++)
     {
-      m->getRow(i,m_i);
+      m->getSubRow(i,0,m_i);
       result[i] = evaluate(m_i,x);
     }
 }
 
 
-void 
-Kernel::apply(Vec x, VMat m, Vec& result) const
+void Kernel::apply(Vec x, VMat m, Vec& result) const
 {
   result.resize(m->length());
-  Vec m_i(m->width());
+  int mw = m->inputsize();
+  if (mw == -1) { // No inputsize specified: using width instead.
+    mw = m->width();
+  }
+  Vec m_i(mw);
   for(int i=0; i<m->length(); i++)
     {
-      m->getRow(i,m_i);
+      m->getSubRow(i,0,m_i);
       result[i] = evaluate(x,m_i);
     }
 }
 
 
-Mat 
-Kernel::apply(VMat m1, VMat m2) const
+Mat Kernel::apply(VMat m1, VMat m2) const
 {
   Mat result;
   apply(m1,m2,result);
   return result;
 }
 
-
-real 
-Kernel::test(VMat d, real threshold, real sameness_below_threshold, real sameness_above_threshold) const
+//////////
+// test //
+//////////
+real Kernel::test(VMat d, real threshold, real sameness_below_threshold, real sameness_above_threshold) const
 {
   int nerrors = 0;
   int inputsize = (d->width()-1)/2;
