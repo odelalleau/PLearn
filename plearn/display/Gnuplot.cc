@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Gnuplot.cc,v 1.4 2002/09/20 23:36:39 yoshua Exp $
+   * $Id: Gnuplot.cc,v 1.5 2002/11/22 13:06:03 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -364,7 +364,7 @@ void Gnuplot::plotcdf(const Array<Vec>& vecarray, const Array<string>& titlearra
   }
 }
 
-void Gnuplot::plotdensity(Vec feature, const string& title, int halfwindowsize)
+void Gnuplot::plotdensity(Vec feature, const string& title, int halfwindowsize, string range)
 {
   Vec v = feature.copy();
   sortElements(v);
@@ -381,7 +381,7 @@ void Gnuplot::plotdensity(Vec feature, const string& title, int halfwindowsize)
     out << x << ' ' << density << "\n";
   }
   out.close();
-  tognuplot << "plot '" << tmpfilenames[0] << "' title '" << title << "' with lines" << endl;
+  tognuplot << "plot " << range << " '" << tmpfilenames[0] << "' title '" << title << "' with lines" << endl;
 }
 
 void Gnuplot::plotdensity(const Array<Vec>& vecarray, const Array<string>& titlearray, int halfwindowsize)

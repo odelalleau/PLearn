@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.cc,v 1.4 2002/10/03 07:35:28 plearner Exp $
+   * $Id: Learner.cc,v 1.5 2002/11/22 13:06:13 yoshua Exp $
    ******************************************************* */
 
 #include "Learner.h"
@@ -67,7 +67,7 @@ bool Learner::force_saving_on_all_processes = false;
 Learner::Learner(int the_inputsize, int the_targetsize, int the_outputsize)
   :train_objective_stream(0), epoch_(0), 
   inputsize_(the_inputsize), targetsize_(the_targetsize), outputsize_(the_outputsize), 
-  weightsize_(0), save_at_every_epoch(false), best_step(0)
+  weightsize_(0), save_at_every_epoch(false), save_objective(true), best_step(0)
 {
   test_every = 1;
   minibatch_size = 1; // by default call use, not apply
@@ -160,6 +160,7 @@ string Learner::help() const
                 "  - earlystop_max_degraded_steps: <int> (-1) \n"
                 "    ax. nb of steps beyond best found (-1 means ignore) \n"
                 "  - save_at_every_epoch: <bool> (false)\n"
+                "  - save_objective: <bool> (true)\n"
                 "    save learner at each epoch?\n")
     + Object::help();
 }
@@ -207,6 +208,9 @@ void Learner::declareOptions(OptionList& ol)
   declareOption(ol, "save_at_every_epoch", &Learner::save_at_every_epoch, OptionBase::buildoption, 
                 "    save learner at each epoch?\n");
 
+  declareOption(ol, "save_objective", &Learner::save_objective, OptionBase::buildoption, 
+                "    save objective at each epoch?\n");
+
   declareOption(ol, "expdir", &Learner::expdir, OptionBase::buildoption,
                 "   The directory in which to save results \n");
 
@@ -234,7 +238,6 @@ string Learner::getOptionsToSave() const
                 "outputsize "
                 "targetsize "
                 "expdir "
-                "save_at_every_epoch "
                 "use_file_if_bigger "
                 "test_every "
                 "earlystop_testsetnum "
@@ -245,8 +248,9 @@ string Learner::getOptionsToSave() const
                 "earlystop_relative_changes "
                 "earlystop_save_best "
                 "earlystop_max_degraded_steps "
-                "save_at_every_epoch "
                 "experiment_name "
+                "save_at_every_epoch "
+                "save_objective "
                 "test_costfuncs "
                 "test_statistics ")
     + inherited::getOptionsToSave(); 
@@ -529,7 +533,7 @@ bool Learner::measure(int step, const Vec& costs)
   //  objectiveout << setw(5) << step << "  " << costs << "\n";
 
 
-  if ((!PLMPI::synchronized && each_cpu_saves_its_errors) || PLMPI::rank==0)
+  if (((!PLMPI::synchronized && each_cpu_saves_its_errors) || PLMPI::rank==0) && save_objective)
     outputResultLineToFile(basename()+".objective",costs,true,join(trainObjectiveNames()," "));
 
   bool muststop = false;

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Gnuplot.h,v 1.4 2002/09/20 23:36:39 yoshua Exp $
+   * $Id: Gnuplot.h,v 1.5 2002/11/22 13:06:03 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -104,7 +104,7 @@ class Gnuplot
 
     void plotcdf(Vec feature, const string& title="cdf");
     void plotcdf(const Array<Vec>& vecarray, const Array<string>& titlearray);
-    void plotdensity(Vec feature, const string& title, int halfwindowsize);
+    void plotdensity(Vec feature, const string& title, int halfwindowsize, string range="");
     void plotdensity(const Array<Vec>& vecarray, const Array<string>& titlearray, int halfwindowsize);
 
   void histoplot(Vec feature, real minval, real maxval, int nbins, bool do_normalize=false, char* title="histogram");

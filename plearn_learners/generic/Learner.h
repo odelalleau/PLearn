@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.h,v 1.3 2002/09/17 01:27:34 zouave Exp $
+   * $Id: Learner.h,v 1.4 2002/11/22 13:06:13 yoshua Exp $
    ******************************************************* */
 
 
@@ -151,7 +151,7 @@ using namespace std;
     int earlystop_max_degraded_steps; //!< max. nb of steps beyond best found [in version >= 1]
 
     bool save_at_every_epoch; //!<  save learner at each epoch?
-
+    bool save_objective; //<! whether to save in basename()+".objective" the cost after each measure (e.g. after each epoch)
     int best_step; //!<  the step (usually epoch) at which validation cost was best
 
   protected:
