@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.42 2004/06/17 15:33:12 monperrm Exp $
+   * $Id: VMatrix.h,v 1.43 2004/06/18 16:49:53 tihocan Exp $
    ******************************************************* */
 
 
@@ -276,7 +276,7 @@ public:
   virtual real getStringVal(int col, const string & str) const;
 
   //! returns element as a string, even if value doesn't map to a string, in which case tostring(value) is returned
-  virtual string getString(int row,int col) const;
+  virtual string getString(int row, int col) const;
 
   ////////////////////////
   
