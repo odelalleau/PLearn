@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedFuncVariable.cc,v 1.4 2004/02/23 23:59:35 tihocan Exp $
+   * $Id: UnfoldedFuncVariable.cc,v 1.5 2004/02/24 21:12:18 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -140,7 +140,12 @@ void UnfoldedFuncVariable::fprop()
 {
   int n_unfold = transpose ? input_matrix->width() : input_matrix->length();
   for (int i=0;i<n_unfold;i++) {
-    inputs[i] << transpose ? input_matrix->matValue.column(i) : input_matrix->matValue(i);
+    if (transpose) {
+      Vec tmp = input_matrix->matValue.column(i).toVecCopy(); // TODO something more efficient
+      inputs[i] << tmp;
+    } else {
+      inputs[i] << input_matrix->matValue(i);
+    }
     f_paths[i].fprop();
     if (transpose) {
       matValue.column(i) << outputs[i]->value;
@@ -154,13 +159,10 @@ void UnfoldedFuncVariable::fprop()
 void UnfoldedFuncVariable::bprop()
 { 
   int n_unfold = transpose ? input_matrix->width() : input_matrix->length();
-  if (transpose) {
-    PLWARNING("In UnfoldedFuncVariable::bprop - Not sure backprop is correct with tranpose == 1");
-  }
   for (int i=0;i<n_unfold;i++)
     {
       f_paths[i].clearGradient();
-      outputs[i]->gradient << matGradient(i);
+      outputs[i]->gradient << transpose ? matGradient.column(i) : matGradient(i);
       f_paths[i].bprop();
     }
 }
