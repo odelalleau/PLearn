@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.19 2004/05/18 13:46:56 tihocan Exp $ 
+ * $Id: GaussMix.cc,v 1.20 2004/05/18 16:12:17 tihocan Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -55,8 +55,11 @@ using namespace std;
 GaussMix::GaussMix() 
 : PDistribution(),
   global_lambda0(false),   // TODO Declare as option.
+  alpha_min(1e-5),
+  epsilon(1e-6),
   kmeans_iterations(3),
   L(1),
+  sigma_min(1e-5),
   type("unknown")
 {
 //  forget(); TODO Call forget ?
@@ -101,6 +104,15 @@ void GaussMix::declareOptions(OptionList& ol)
                 "   - factor    : represented by Ks[i] principal components\n");
                 // TODO Finish this help.
 
+  declareOption(ol,"alpha_min", &GaussMix::alpha_min, OptionBase::buildoption,
+                "The minimum weight for each Gaussian.");
+  
+  declareOption(ol,"sigma_min", &GaussMix::sigma_min, OptionBase::buildoption,
+                "The minimum standard deviation allowed.");
+  
+  declareOption(ol,"epsilon", &GaussMix::epsilon, OptionBase::buildoption,
+                "A small number to check for near-zero probabilities.");
+  
   declareOption(ol,"kmeans_iterations", &GaussMix::kmeans_iterations, OptionBase::buildoption,
                 "The maximum number of iterations performed in the initial K-means algorithm.");
   
@@ -284,8 +296,13 @@ void GaussMix::build_()
 ////////////////////////////////
 void GaussMix::computeMeansAndCovariances() {
   VMat weighted_train_set;
+  Vec sum_columns(L);
+  columnSum(posteriors, sum_columns);
   for (int j = 0; j < L; j++) {
     // Build the weighted dataset.
+    if (sum_columns[j] < epsilon) {
+      PLWARNING("In GaussMix::computeMeansAndCovariances - A posterior is almost zero");
+    }
     VMat weights(posteriors.column(j));
     weighted_train_set = new ConcatColumnsVMatrix(
         new SubVMatrix(train_set, 0, 0, nsamples, D), weights);
@@ -315,6 +332,11 @@ void GaussMix::computeMeansAndCovariances() {
       Vec center = mu(j);
       computeInputMeanAndVariance(weighted_train_set, center, variance);
       sigma[j] = sqrt(mean(variance));   // TODO See if harmonic mean is needed ?
+#ifdef BOUNDCHECK
+      if (isnan(sigma[j])) {
+        PLWARNING("In GaussMix::computeMeansAndCovariances - A standard deviation is nan");
+      }
+#endif
     } else if (type == "diagonal") {
       Vec variance(D);
       Vec center = mu(j);
@@ -329,24 +351,38 @@ void GaussMix::computeMeansAndCovariances() {
   }
 }
 
-//////////////////
-// computePrior //
-//////////////////
-real GaussMix::computePrior(Vec& x, int j) {
+/////////////////////
+// computeLikehood //
+/////////////////////
+real GaussMix::computeLikehood(Vec& x, int j) {
   if (type == "spherical") {
     real p = 1.0;
+    if (sigma[j] < sigma_min) {
+      return 0;
+    }
     for (int k = 0; k < D; k++) {
       p *= gauss_density(x[k], mu(j, k), sigma[j]);
+#ifdef BOUNDCHECK
+      if (isnan(p)) {
+        PLWARNING("In GaussMix::computeLikehood - Density is nan");
+      }
+#endif
     }
     return p;
   } else if (type == "diagonal") {
     real p = 1.0;
+    real sig;
     for (int k = 0; k < D; k++) {
-      p *= gauss_density(x[k], mu(j, k), diags(k,j));
+      sig = diags(k,j);
+      if (sig < sigma_min) {
+        return 0;
+      } else {
+        p *= gauss_density(x[k], mu(j, k), sig);
+      }
     }
     return p;
   } else {
-    PLERROR("In GaussMix::computePrior - Not implemented for this type of Gaussian");
+    PLERROR("In GaussMix::computeLikehood - Not implemented for this type of Gaussian");
   }
   return 0;
 }
@@ -356,21 +392,34 @@ real GaussMix::computePrior(Vec& x, int j) {
 ///////////////////////
 void GaussMix::computePosteriors() {
   static Vec sample;
-  static Vec prior;
+  static Vec likehood;
   sample.resize(D);
-  prior.resize(L);
-  real sum_prior;
+  likehood.resize(L);
+  real sum_likehood;
   for (int i = 0; i < nsamples; i++) {
     train_set->getSubRow(i, 0, sample);
-    sum_prior = 0;
-    // First we need to compute the prior P(x_i | j).
+    sum_likehood = 0;
+    // First we need to compute the likehood P(x_i | j).
     for (int j = 0; j < L; j++) {
-      prior[j] = computePrior(sample, j) * alpha[j];
-      sum_prior += prior[j];
+      likehood[j] = computeLikehood(sample, j) * alpha[j];
+#ifdef BOUNDCHECK
+      if (isnan(likehood[j])) {
+        PLWARNING("In GaussMix::computePosteriors - computeLikehood returned nan");
+      }
+#endif
+      sum_likehood += likehood[j];
     }
+#ifdef BOUNDCHECK
+    if (sum_likehood < epsilon) {
+      // x_i is far from each Gaussian, and thus sum_likehood is null
+      // because of numerical approximations. We find the closest
+      // Gaussian, and say P(j | x_i) = delta_{j is the closest Gaussian}
+      PLWARNING("In GaussMix::computePosteriors - A point has near zero density");
+    }
+#endif
     for (int j = 0; j < L; j++) {
       // Compute the posterior P(j | x_i) = P(x_i | j) * alpha_i / (sum_i ")
-      posteriors(i, j) = prior[j] / sum_prior;
+      posteriors(i, j) = likehood[j] / sum_likehood;
     }
   }
 }
@@ -378,7 +427,8 @@ void GaussMix::computePosteriors() {
 ////////////////////
 // computeWeights //
 ////////////////////
-void GaussMix::computeWeights() {
+bool GaussMix::computeWeights() {
+  bool replaced_gaussian = false;
   alpha.fill(0);
   for (int i = 0; i < nsamples; i++) {
     for (int j = 0; j < L; j++) {
@@ -386,6 +436,15 @@ void GaussMix::computeWeights() {
     }
   }
   alpha /= real(nsamples);
+  for (int j = 0; j < L && !replaced_gaussian; j++) {
+    if (alpha[j] < alpha_min) {
+      // alpha[j] is too small! We need to remove this Gaussian from the
+      // mixture, and find a new (better) one.
+      replaceGaussian(j);
+      replaced_gaussian = true;
+    }
+  }
+  return replaced_gaussian;
 }
 
 ////////////
@@ -536,6 +595,33 @@ void GaussMix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   PLERROR("GaussMix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
+/////////////////////
+// replaceGaussian //
+/////////////////////
+void GaussMix::replaceGaussian(int j) {
+  // Find the Gaussian with highest weight.
+  int high = 0;
+  for (int k = 1; k < L; k++) {
+    if (alpha[k] > alpha[high]) {
+      high = k;
+    }
+  }
+  // Generate the new center from this Gaussian.
+  Vec new_center = mu(j);
+  generateFromGaussian(new_center, high);
+  // Copy the covariance.
+  if (type == "spherical") {
+    sigma[j] = sigma[high];
+  } else if (type == "diagonal") {
+    diags.column(j) << diags.column(high);
+  } else {
+    PLERROR("In GaussMix::replaceGaussian - Not implemented for this type");
+  }
+  // Arbitrarily takes half of the weight of this Gaussian.
+  alpha[j] = alpha[high] / 2.0;
+  alpha[high] = alpha[j];
+}
+
 ////////////////////
 // resetGenerator //
 ////////////////////
@@ -598,9 +684,12 @@ void GaussMix::train()
   }
 
   Vec sample(D);
+  bool replaced_gaussian = false;
   while (stage < nstages) {
-    computePosteriors();
-    computeWeights();
+    do {
+      computePosteriors();
+      replaced_gaussian = computeWeights();
+    } while (replaced_gaussian);
     computeMeansAndCovariances();
     stage++;
   }

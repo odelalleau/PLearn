@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussMix.h,v 1.13 2004/05/18 13:46:56 tihocan Exp $ 
+   * $Id: GaussMix.h,v 1.14 2004/05/18 16:12:17 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file GaussMix.h */
@@ -192,8 +192,11 @@ public:
   // * public build options *
   // ************************
 
+  real alpha_min;
+  real epsilon;
   int kmeans_iterations;
   int L;
+  real sigma_min;
   string type;
 
   // ****************
@@ -213,17 +216,24 @@ protected:
   virtual void computeMeansAndCovariances();
 
   //! Compute P(x | j), where j < L is the index of a component of the mixture.
-  virtual real computePrior(Vec& x, int j);
+  virtual real computeLikehood(Vec& x, int j);
 
   //! Compute the posteriors P(j | x_i) for each sample point and each Gaussian.
   virtual void computePosteriors();
 
   //! Compute the weight of each mixture (the coefficient alpha).
-  virtual void computeWeights();
+  //! If a mixture has a too low coefficient, it will be removed, and the method
+  //! will return 'true' (otherwise it will return 'false').
+  virtual bool computeWeights();
 
   //! Generate a sample x from the given Gaussian. If 'given_gaussian' is equal
   //! to -1, then a random Gaussian will be chosen according to the weights alpha.
   virtual void generateFromGaussian(Vec& x, int given_gaussian) const;
+
+  //! Replace the j-th Gaussian with another one (probably because that one is
+  //! not appropriate). The new one is centered on a random point sampled from
+  //! the Gaussian with highest weight alpha, and has the same covariance.
+  virtual void replaceGaussian(int j);
 
 public:
 
