@@ -51,7 +51,7 @@ if platform=='linux2':
     else:
         platform = 'linux-i386'
 
-verbose = 0
+
 homedir = os.environ['HOME']
 if platform=='win32':
   homedir = 'R:/'
@@ -97,6 +97,7 @@ def convertWinToLinux(path):
   else:
     return path
 
+    
 def join(dir,file,file2="",file3=""):
   """simply call os.path.join and convertWinToLinux"""
   if file2=='':
@@ -338,6 +339,11 @@ print
 configpath = locateconfigfile()
 print '*** Running pymake using following configuration file: ' + configpath
 execfile(configpath) 
+
+# to get SPC (Smart Parallel Compilation)
+if SPC:
+    print '*** Running pymake using Smart Parallel Compilation'
+    os.system('pyfreemachines '+SPClistfile+' '+SPCresultfile)
 
 # remove duplicates from sourcedirs
 sourcedirs = unique(sourcedirs)
@@ -971,11 +977,14 @@ class FileInfo:
             if platform=='win32':
                 self.launched = popen3('sh -c ' + quotedcommand, -1, 't')
             else:
-                self.launched = Popen3('sh -c ' + quotedcommand, 1, 10000)
+                self.shcommand = 'sh -c ' + quotedcommand
+                self.launched = Popen3(self.shcommand, 1, 10000)
         else:
-            self.launched = Popen3(rshcommand + ' ' + self.hostname + ' ' + quotedcommand, 1, 10000)
+            self.shcommand = rshcommand + ' ' + self.hostname + ' ' + quotedcommand
+            self.launched = Popen3(self.shcommand, 1, 10000)
         print '[ LAUNCHED',self.filebase+self.fileext,'on',self.hostname,']'
-        if verbose:
+        #print verbose;	
+    	if verbose:
             print quotedcommand
 
     def update_compilation_messages(self):
@@ -995,20 +1004,26 @@ class FileInfo:
         freeing the ressources used by the pipe.
         """
         print '[ FINISHED',self.filebase+self.fileext,'on',self.hostname,']'
-        print self.compile_command()
+        
+        if verbose:
+            print self.compile_command()
         errormsgs = ''
         if platform=='win32':
             print self.launched[2].read() # print warnings
             errormsgs = self.launched[0].readlines()
         else:
             print self.launched.childerr.read() # print warnings
+            
             errormsgs = self.launched.fromchild.readlines()
         if errormsgs:
             self.compilation_status = int(errormsgs[-1])  # last line was an echo $? (because rsh doesn't transmit the status byte correctly)
             if verbose:
                 print 'RETURN STATUS: ', self.compilation_status
             del errormsgs[-1]
+            
             print string.join(errormsgs,'')
+            
+            
 
         if platform!='win32':
             try:
@@ -1061,7 +1076,8 @@ class FileInfo:
 
     def launch_linking(self):
         command = self.link_command()
-        print command
+        if verbose:
+	        print command
         os.system(command)
 
     def dll_command(self):
