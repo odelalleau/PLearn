@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLS.cc,v 1.5 2004/03/10 14:50:55 tihocan Exp $ 
+   * $Id: PLS.cc,v 1.6 2004/03/11 13:58:13 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -166,6 +166,9 @@ void PLS::build_()
     stddev_input.resize(p);
     mean_target.resize(m);
     stddev_target.resize(m);
+    if (train_set->weightsize() > 0) {
+      PLWARNING("In PLS::build_ - The train set has weights, but the optimization algorithm won't use them");
+    }
   }
   if (!output_the_score && !output_the_target) {
     // Weird, we don't want any output ??
