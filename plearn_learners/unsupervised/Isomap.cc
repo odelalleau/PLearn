@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Isomap.cc,v 1.3 2004/07/06 21:17:32 plearner Exp $ 
+   * $Id: Isomap.cc,v 1.4 2004/07/16 13:12:55 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -61,7 +61,8 @@ Isomap::Isomap()
 
 PLEARN_IMPLEMENT_OBJECT(Isomap,
     "Performs ISOMAP dimensionality reduction.",
-    ""
+    "Be careful that in 'knn', we count each point as being one of its nearest\n"
+    "neighbors, thus for instance to consider 10 neighbors, use knn = 11.\n"
 );
 
 ////////////////////
