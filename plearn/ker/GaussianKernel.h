@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianKernel.h,v 1.4 2004/02/23 20:33:38 dorionc Exp $
+   * $Id: GaussianKernel.h,v 1.5 2004/04/05 19:15:27 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,11 +53,15 @@ using namespace std;
 //!  returns exp(-norm_2(x1-x2)^2/sigma^2)
 class GaussianKernel: public Kernel
 {
+
+private:
+
+  typedef Kernel inherited;
+		
 protected:
   static void declareOptions(OptionList& ol);
 
 public:
-  typedef Kernel inherited;
 
   //! Build options below.
   real sigma;

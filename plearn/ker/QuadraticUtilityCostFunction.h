@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: QuadraticUtilityCostFunction.h,v 1.2 2004/02/20 21:11:45 chrish42 Exp $
+   * $Id: QuadraticUtilityCostFunction.h,v 1.3 2004/04/05 19:15:27 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,6 +54,11 @@ using namespace std;
 */
 class QuadraticUtilityCostFunction : public Kernel
 {
+
+private:
+
+  typedef Kernel inherited;
+		
   protected:
     real risk_aversion;
     ProfitFunc profit_function;

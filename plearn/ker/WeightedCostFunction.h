@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: WeightedCostFunction.h,v 1.2 2004/02/20 21:11:45 chrish42 Exp $
+   * $Id: WeightedCostFunction.h,v 1.3 2004/04/05 19:15:27 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,6 +54,11 @@ using namespace std;
 //!  Returns target.lastElement() * costfunc(output,target.subVec(0,target.length()-1));
 class WeightedCostFunction: public Kernel
 {
+
+private:
+
+  typedef Kernel inherited;
+		
  protected:
    WeightedCostFunction() : costfunc() {}
   protected:

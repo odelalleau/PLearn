@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: NegOutputCostFunction.h,v 1.2 2004/02/20 21:11:45 chrish42 Exp $
+   * $Id: NegOutputCostFunction.h,v 1.3 2004/04/05 19:15:27 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,6 +54,11 @@ using namespace std;
 //! This is used for density estimators whose use(x) method typically computes log(p(x))
 class NegOutputCostFunction: public Kernel
 {
+
+private:
+
+  typedef Kernel inherited;
+		
 public:
   NegOutputCostFunction() {}
   PLEARN_DECLARE_OBJECT(NegOutputCostFunction);

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SquaredErrorCostFunction.h,v 1.3 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: SquaredErrorCostFunction.h,v 1.4 2004/04/05 19:15:27 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,6 +54,11 @@ using namespace std;
 
 class SquaredErrorCostFunction: public Kernel
 {
+
+private:
+
+  typedef Kernel inherited;
+		
 protected:
   //!  index in target vector of the target value to use to compute the squared error
   //!  (if -1, sum all the squared errors)
