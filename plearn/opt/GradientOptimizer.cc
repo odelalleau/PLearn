@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.cc,v 1.7 2003/04/29 13:06:05 tihocan Exp $
+   * $Id: GradientOptimizer.cc,v 1.8 2003/04/29 17:51:21 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -203,31 +203,72 @@ IMPLEMENT_NAME_AND_DEEPCOPY(GradientOptimizer);
 ///////////////
 // optimizeN //
 ///////////////
-bool GradientOptimizer::optimizeN(VecStatsCollector& stat_coll) {
+bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
+
+  bool adapt = (learning_rate_adaptation != 0);
+  stochastic_hack = stochastic_hack && !adapt;
 
   // Big hack for the special case of stochastic gradient, to avoid doing an explicit update
   // (temporarily change the gradient fields of the parameters to point to the parameters themselves,
   // so that gradients are "accumulated" directly in the parameters, thus updating them!
-  Array<Mat> oldgradientlocations;
-  // stochastic_hack=false;
-  if(stochastic_hack)
-  {
+  if(stochastic_hack) {
     int n = params.size();
-    oldgradientlocations.resize(n);
     for(int i=0; i<n; i++)
       oldgradientlocations[i] = params[i]->defineGradientLocation(params[i]->matValue);
   }
 
-  // normally loop over number of epochs x training set size
-  for (; !early_stop && stage<nstages; stage++) {
-    learning_rate = start_learning_rate/(1.0+decrease_constant*stage);
-    proppath.clearGradient();
-    cost->gradient[0] = -learning_rate;
-    proppath.fbprop();
+  meancost.clear();
+  int niter = nstages - stage; // the number of iterations to perform
 
-    // set params += -learning_rate * params.gradient
-    if(!stochastic_hack)
-      params.updateAndClear();
+  for (; !early_stop && stage<nstages; stage++) {
+
+    learning_rate = start_learning_rate/(1.0+decrease_constant*stage);
+    // TODO Make it work with ALAP !
+    proppath.clearGradient();
+    if (adapt)
+      cost->gradient[0] = -1.;
+    else
+      cost->gradient[0] = -learning_rate;
+
+    proppath.fbprop();
+    meancost += cost->value;
+    
+    // Move along the chosen direction
+    // And learning rate adaptation after each step
+    switch (learning_rate_adaptation) {
+      case 0:
+        if (!stochastic_hack)
+          params.updateAndClear();
+        break;
+      case 1:
+        params.copyGradientTo(gradient);
+        params.update(learning_rates, gradient); 
+        params.clearGradient();
+        break;
+      case 2:
+        params.copyGradientTo(gradient);
+        adaptLearningRateALAP1(tmp_storage, gradient);
+        params.update(learning_rate, gradient);
+        tmp_storage << gradient;
+        params.clearGradient();
+        break;
+    }
+    // stats_coll.update(cost);
+    // TODO To put when we have a stats collector ! ;)
+  }
+
+  cout << stage << " : " << meancost/niter << endl;
+
+  // Learning rate adaptation after a full epoch
+  switch (learning_rate_adaptation) {
+    case 0:
+      break;
+    case 1:
+      adaptLearningRateBasic(learning_rates, tmp_storage, old_evol);
+      params.copyTo(tmp_storage);
+      break;
+    case 2:
+      break;
   }
 
   if(stochastic_hack) // restore the gradients as they previously were...
@@ -236,7 +277,6 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stat_coll) {
       for(int i=0; i<n; i++)
         params[i]->defineGradientLocation(oldgradientlocations[i]);
     }
-  // TODO Call the Stats Collector
 
   return early_stop;
 }
@@ -252,26 +292,18 @@ real GradientOptimizer::optimize()
      out.open(filename.c_str());
      out << " Stochastic! " << endl;
     }
-  Vec meancost(cost->size());
   Vec lastmeancost(cost->size());
-  Vec gradient(params.nelems());
   early_stop = false;
 
-  // The vector containing the learning rate for each parameter
-  Vec learning_rates(params.nelems());
-  Vec old_gradient(params.nelems());
-  Vec old_evol(params.nelems()); // store the previous learning rates evolution
-  learning_rates.fill(start_learning_rate);
   switch (learning_rate_adaptation) {
     case 0:
       break;
     case 1:
-      // old_gradient is used to store the old parameters
-      params.copyTo(old_gradient);
+      params.copyTo(tmp_storage);
       old_evol.fill(0);
       break;
     case 2:
-      Optimizer::computeGradient(this, old_gradient);
+      Optimizer::computeGradient(this, tmp_storage);
       break;
   }
   bool adapt = (learning_rate_adaptation != 0);
@@ -317,8 +349,8 @@ real GradientOptimizer::optimize()
         case 0:
           break;
         case 1:
-          adaptLearningRateBasic(learning_rates, old_gradient, old_evol);
-          params.copyTo(old_gradient);
+          adaptLearningRateBasic(learning_rates, tmp_storage, old_evol);
+          params.copyTo(tmp_storage);
           break;
         case 2:
           break;
@@ -337,24 +369,23 @@ real GradientOptimizer::optimize()
       meancost.clear();
     }
     // set params += -learning_rate * params.gradient
-    if (adapt) {
-      switch (learning_rate_adaptation) {
-        case 0:
-          break; // that should not happen of course
-        case 1:
-          params.copyGradientTo(gradient);
-          params.update(learning_rates, gradient); 
-          break;
-        case 2:
-          params.copyGradientTo(gradient);
-          adaptLearningRateALAP1(old_gradient, gradient);
-          params.update(learning_rate, gradient);
-          old_gradient << gradient;
-          break;
-      }
-      params.clearGradient();
-    } else if (!stochastic_hack) {
-      params.updateAndClear();
+    switch (learning_rate_adaptation) {
+      case 0:
+        if (!stochastic_hack)
+          params.updateAndClear();
+        break;
+      case 1:
+        params.copyGradientTo(gradient);
+        params.update(learning_rates, gradient); 
+        params.clearGradient();
+        break;
+      case 2:
+        params.copyGradientTo(gradient);
+        adaptLearningRateALAP1(tmp_storage, gradient);
+        params.update(learning_rate, gradient);
+        tmp_storage << gradient;
+        params.clearGradient();
+        break;
     }
   }
 
@@ -403,6 +434,9 @@ void GradientOptimizer::adaptLearningRateBasic(
   Var* array = params->data();
   int j = 0;
   int k;
+  int nb_min = 0;
+  int nb_max = 0;
+  int nb_moy = 0;
   real u;
   for (int i=0; i<params.size(); i++) {
     k = j;
@@ -415,14 +449,55 @@ void GradientOptimizer::adaptLearningRateBasic(
         learning_rates[j] *= adapt_coeff2;
       if (learning_rates[j] < min_learning_rate) {
         learning_rates[j] = min_learning_rate;
+        nb_min++;
       } else if (learning_rates[j] > max_learning_rate) {
         learning_rates[j] = max_learning_rate;
+        nb_max++;
+      } else {
+        nb_moy++;
       }
       // cout << learning_rates[j] << "  ";
     }
   }
+  cout << "nb_min = " << nb_min << "  --  nb_max = " << nb_max << "  --  nb_moy = " << nb_moy << endl;
   // cout << endl;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /************* ScaledGradientOptimizer Stuff ************/
 

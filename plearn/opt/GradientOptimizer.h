@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.h,v 1.6 2003/04/29 13:06:06 tihocan Exp $
+   * $Id: GradientOptimizer.h,v 1.7 2003/04/29 17:51:21 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -81,7 +81,15 @@ using namespace std;
       real decrease_constant;
 
     private:
-      bool stochastic_hack;
+      bool stochastic_hack; // true when we're computing a stochastic gradient
+      Vec learning_rates;   // used to store the individual learning rates
+      Vec meancost;         // used to store the mean cost
+                            // TODO Will it be useless with stats_coll ?
+      Vec gradient;         // used to store the gradient
+      Vec tmp_storage;      // used to store various stuff
+      // used to store the previous learning rates evolution
+      Vec old_evol;
+      Array<Mat> oldgradientlocations; // used for the stochastic hack
 
     public: 
 
@@ -129,10 +137,34 @@ using namespace std;
   private:
 
     void build_() {
+      stage = 0;
       early_stop = false;
       SumOfVariable* sumofvar = dynamic_cast<SumOfVariable*>((Variable*)cost);
       stochastic_hack = sumofvar!=0 && sumofvar->nsamples==1;
       params.clearGradient();
+      int n = params.nelems();
+      if (n > 0) {
+        learning_rates.resize(n);
+        gradient.resize(n);
+        tmp_storage.resize(n);
+        old_evol.resize(n);
+        oldgradientlocations.resize(params.size());
+        meancost.resize(cost->size());
+        learning_rates.fill(start_learning_rate);
+        switch (learning_rate_adaptation) {
+          case 0:
+            break;
+          case 1:
+            // tmp_storage is used to store the old parameters
+            params.copyTo(tmp_storage);
+            old_evol.fill(0);
+            break;
+          case 2:
+            // tmp_storage is used to store the initial gradient
+            Optimizer::computeGradient(this, tmp_storage);
+            break;
+        }
+      }
     }
     
   public:
@@ -140,7 +172,7 @@ using namespace std;
     virtual void oldwrite(ostream& out) const;
     virtual void oldread(istream& in);
     virtual real optimize();
-    virtual bool optimizeN(VecStatsCollector& stat_coll);
+    virtual bool optimizeN(VecStatsCollector& stats_coll);
 
   private:
 
