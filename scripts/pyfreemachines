@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # Martin Monperrus
-# get the free machines
+# modified by
+# Jasmin Lapalme (01/2005)
+# get the free machines on the cluster depending on the type of cpu (64 or 32 bits)
 
 import re;
 import sys;
@@ -17,7 +19,12 @@ f = open(res_file);
 l = f.readlines();
 f.close();
 res = string.join(l,'');
-machines_lisa= re.findall('([a-z]{4}\d{2}) => { panne => 0, groupe => \'lisa\'.*', res);
+
+linux_type = os.uname()[4]
+if linux_type != 'x86_64':
+	machines_lisa= re.findall('([a-z]{4}\d{2}) => { panne => 0, groupe => \'lisa\'.*', res);
+else:
+	machines_lisa= re.findall('([a-z]{4}\d{2}) => { panne => 0, groupe => \'clop\'.*type_cpu => \'x86_64\'.*', res);
 
 
 # lecture des machines reservees
