@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.29 2004/09/13 20:03:07 larocheh Exp $ 
+   * $Id: plearn_inc.h,v 1.30 2004/09/14 14:10:24 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -93,7 +93,7 @@
 #include <plearn_learners/classifiers/AdaBoost.h>
 #include <plearn_learners/classifiers/ClassifierFromDensity.h>
 #include <plearn_learners/classifiers/MultiInstanceNNet.h>
-#include <plearn_learners/classifiers/OverlappingAdaBoost.h>
+//#include <plearn_learners/classifiers/OverlappingAdaBoost.h> // Does not currently compile.
 #include <plearn_learners/generic/AddCostToLearner.h>
 #include <plearn_learners/generic/AddLayersNNet.h>
 #include <plearn_learners/generic/NNet.h>
