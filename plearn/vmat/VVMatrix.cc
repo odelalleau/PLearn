@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.cc,v 1.14 2004/03/12 21:29:57 tihocan Exp $
+   * $Id: VVMatrix.cc,v 1.15 2004/03/16 14:01:52 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -336,7 +336,6 @@ VMat VVMatrix::createPreproVMat(const string & filename)
   unsigned int idx_shuffle =  (unsigned int)in.find("<SHUFFLE>");
   unsigned int idx_join    =  (unsigned int)in.find("<JOIN>");
   unsigned int idx_precompute =  (unsigned int)in.find("<PRECOMPUTE>");
-  //TODO Document the use of <SIZES>
   unsigned int idx_sizes   =  (unsigned int)in.find("<SIZES>");
   unsigned int cidx_source  = 0, cidx_prefilter = 0,  cidx_postfilter = 0,
                cidx_process = 0, cidx_shuffle   = 0,  cidx_precompute = 0,
