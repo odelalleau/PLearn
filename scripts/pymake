@@ -500,6 +500,7 @@ if 'icc' in optionargs:
 else:
     usingIntelCompiler = 0
 
+temp_objs=0
 if 'tmp' in optionargs:
   objspolicy = 2
   temp_objs=1
@@ -1037,10 +1038,6 @@ class FileInfo:
         """
         if verbose>=2:
             print '[ FINISHED',self.filebase+self.fileext,'on',self.hostname,']'
-        if  temp_objs:
-            try:
-                os.chmod(self.corresponding_ofile,33279)
-            except: pass
 
         warningmsgs=''
         errormsgs = ''
@@ -1378,4 +1375,5 @@ for target in otherargs:
             sequential_dll(file_info(target))
 
     if temp_objs:
+        os.system('chmod 777 '+objsdir+'/*')
         mychmod(objsdir,33279)
