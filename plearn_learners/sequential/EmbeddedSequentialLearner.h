@@ -93,16 +93,15 @@ class EmbeddedSequentialLearner: public SequentialLearner
 
     virtual void forget();
  
-    virtual void computeOutput(const VVec& input, Vec& output);
+    virtual void computeOutput(const Vec& input, Vec& output);
  
-    virtual void computeCostsFromOutputs(const VVec& input, const Vec& output,
-        const VVec& target, const VVec& weight, Vec& costs);
+    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
+        const Vec& target, Vec& costs);
  
-    virtual void computeOutputAndCosts(const VVec& input, VVec& target,
-        const VVec& weight, Vec& output, Vec& costs);
+    virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
+        Vec& output, Vec& costs);
  
-    virtual void computeCostsOnly(const VVec& input, VVec& target, VVec& weight,
-        Vec& costs);
+    virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs);
 
  
     virtual TVec<string> getTestCostNames() const;

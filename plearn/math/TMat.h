@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.15 2003/05/26 04:12:43 plearner Exp $
+   * $Id: TMat.h,v 1.16 2003/05/28 15:02:13 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -531,7 +531,7 @@ class TVec
       T* v = data();
       int currentsize = length();
       resize(currentsize + newvec.size());
-      for (int i=0; i<newvec.size(); ++i)
+      for (unsigned int i=0; i<newvec.size(); ++i)
         v[currentsize+i] = newvec[i];
     }
 

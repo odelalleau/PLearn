@@ -46,8 +46,8 @@ using namespace std;
 /*!
    We use the following conventions throughout this module:
   
-     - The VMat received by the train(...) method is in the range [0,t-1]
-     - The VMat received by the test(....) method is in the range [t-1,T]
+     - The last VMat received by the train(...) method is in the range [0,last_train_t-1]
+     - The last VMat received by the test(....) method is in the range [0,last_test_t-1]
      - All the VMat's in a SequentialLearner have all their informations at column t
        available at time t.  Hence, for a dataset of length T, there is only T-horizon
        effective examples, with the (input, target) pairs starting at (0, horizon)
@@ -59,7 +59,7 @@ class SequentialLearner: public PLearner
   protected:
  
     int last_train_t; // last value of train_set.length() for which training was actually done
-    int last_call_train_t; // value of train_set.length() for last call to train()
+    int last_test_t; // last value of test_set.length() for which testing was actually done
 
   public:
 
@@ -112,13 +112,13 @@ class SequentialLearner: public PLearner
 
     //! *** SUBCLASS WRITING: ***
     //! This should be defined in subclasses to compute the output from the input
-    virtual void computeOutput(const VVec& input, Vec& output) =0;
+    virtual void computeOutput(const Vec& input, Vec& output) =0;
 
     //! *** SUBCLASS WRITING: ***
     //! This should be defined in subclasses to compute the weighted costs from
     //! already computed output.
-    virtual void computeCostsFromOutputs(const VVec& input, const Vec& output,
-        const VVec& target, const VVec& weight, Vec& costs) =0;
+    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
+        const Vec& target, Vec& costs) =0;
 
     virtual void test(VMat testset, VecStatsCollector& test_stats,
         VMat testoutputs=0, VMat testcosts=0) =0;

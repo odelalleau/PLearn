@@ -95,16 +95,15 @@ void EmbeddedSequentialLearner::train(VecStatsCollector& train_stats)
     learner->train(train_stats);
     last_train_t = t;
   }
-  last_call_train_t = t;
 }
  
 void EmbeddedSequentialLearner::test(VMat testset, VecStatsCollector& test_stats,
     VMat testoutputs, VMat testcosts)
 {
   int l = testset.length();
-  VVec input, dummy_input;
-  VVec target, dummy_target;
-  VVec weight, dummy_weight;
+  Vec input, target;
+  static Vec dummy_input;
+  real weight;
  
   Vec output(testoutputs ?outputsize() :0);
   Vec costs(nTrainCosts());
@@ -117,34 +116,45 @@ void EmbeddedSequentialLearner::test(VMat testset, VecStatsCollector& test_stats
   if(report_progress)
     pb = new ProgressBar("Testing learner",l);
 
-  for (int t=last_call_train_t-1; t<last_call_train_t-1+testset.length(); t++)
+
+  // We DON'T allow in-sample testing; hence, we test either from the end of the
+  // last test, or the end of the training set.  The last_train_t MINUS 1 is because
+  // we allow the last training day to be part of the test set. Example: using
+  // today's price, we can train a model and then use it to make a prediction that
+  // has today's price as input (all that WITHOUT CHEATING or breaking the Criminal
+  // Code.)
+  int start = MAX(last_train_t-1,last_test_t);
+  for (int t=start; t<testset.length(); t++)
   {
-    testset.getSample(t-last_call_train_t+1, input, dummy_target, weight);
-    testset.getSample(t-last_call_train_t+1+horizon, dummy_input, target, dummy_weight);
+    testset.getExample(t, input, target, weight);
+    //testset.getSample(t-last_call_train_t+1, input, dummy_target, weight);
+    //testset.getSample(t-last_call_train_t+1+horizon, dummy_input, target, dummy_weight);
 
-/*
-    Vec testset_t(testset.width());
-    testset->getRow(t-last_call_train_t+1, testset_t);
-    Vec input = testset_t.subVec(0,inputsize());
-    testset->getRow(t-last_call_train_t+1+horizon, testset_t);
-    Vec target = testset_t.subVec(inputsize(),targetsize());
-*/
-    if (!Vec(input).hasMissing() && !Vec(target).hasMissing())
-    {    
-      learner->computeOutputAndCosts(input, target, weight, output, costs);
-
-      predictions(t) << output;
-      errors(t+horizon) << costs;
-
+    if (!input.hasMissing())
+    {
+      Vec output = predictions(t);
+      learner->computeOutput(input, output);
       if (testoutputs) testoutputs->putOrAppendRow(t, output);
-      if (testcosts) testcosts->putOrAppendRow(t+horizon, costs);
-
-      test_stats.update(costs);
+    }
+    if (t>=horizon)
+    {
+      Vec output = predictions(t-horizon);
+      if (!target.hasMissing() && !output.hasMissing())
+      {
+        Vec error_t = errors(t);
+        learner->computeCostsFromOutputs(dummy_input, output, target, error_t);
+        if (testcosts) testcosts->putOrAppendRow(t, error_t);
+        test_stats.update(error_t);
+      }
+      //learner->computeOutputAndCosts(input, target, weight, output, costs);
+      //predictions(t) << output;
+      //errors(t+horizon) << costs;
 
       if (pb)
-        pb->update(t-last_call_train_t+1);
+        pb->update(t-start);
     }
   }
+  last_test_t = testset.length();
 
   test_stats.finalize();
 
@@ -155,19 +165,19 @@ void EmbeddedSequentialLearner::test(VMat testset, VecStatsCollector& test_stats
 void EmbeddedSequentialLearner::forget()
 { learner->forget(); }
  
-void EmbeddedSequentialLearner::computeOutput(const VVec& input, Vec& output)
+void EmbeddedSequentialLearner::computeOutput(const Vec& input, Vec& output)
 { learner->computeOutput(input, output); }
  
-void EmbeddedSequentialLearner::computeCostsFromOutputs(const VVec& input, const Vec& output,
-    const VVec& target, const VVec& weight, Vec& costs)
-{ learner->computeCostsFromOutputs(input, output, target, weight, costs); }
+void EmbeddedSequentialLearner::computeCostsFromOutputs(const Vec& input, const Vec& output,
+    const Vec& target, Vec& costs)
+{ learner->computeCostsFromOutputs(input, output, target, costs); }
  
-void EmbeddedSequentialLearner::computeOutputAndCosts(const VVec& input, VVec& target,
-    const VVec& weight, Vec& output, Vec& costs)
-{ learner->computeOutputAndCosts(input, target, weight, output, costs); }
+void EmbeddedSequentialLearner::computeOutputAndCosts(const Vec& input, const Vec& target,
+    Vec& output, Vec& costs)
+{ learner->computeOutputAndCosts(input, target, output, costs); }
  
-void EmbeddedSequentialLearner::computeCostsOnly(const VVec& input, VVec& target, VVec& weight, Vec& costs)
-{ learner->computeCostsOnly(input, target, weight, costs); }
+void EmbeddedSequentialLearner::computeCostsOnly(const Vec& input, const Vec& target, Vec& costs)
+{ learner->computeCostsOnly(input, target, costs); }
 
 TVec<string> EmbeddedSequentialLearner::getTestCostNames() const
 { return learner->getTestCostNames(); }
@@ -175,47 +185,6 @@ TVec<string> EmbeddedSequentialLearner::getTestCostNames() const
 TVec<string> EmbeddedSequentialLearner::getTrainCostNames() const
 { return learner->getTrainCostNames(); }
 
-/*
-void EmbeddedSequentialLearner::computeCost(const Vec& input, const Vec& target, const Vec& output, const Vec& cost)
-{ learner->computeCost(input, target, output, cost); }
-
-void EmbeddedSequentialLearner::computeCosts(const VMat& data, VMat costs)
-{ learner->computeCosts(data, costs); }
- 
-void EmbeddedSequentialLearner::use(const Vec& input, Vec& output)
-{ learner->use(input, output); }
-
-void EmbeddedSequentialLearner::useAndCost(const Vec& input, const Vec& target, Vec output, Vec cost)
-{ learner->useAndCost(input, target, output, cost); }
-
-void EmbeddedSequentialLearner::useAndCostOnTestVec(const VMat& test_set, int i, const Vec& output, const Vec& cost)
-{ learner->useAndCostOnTestVec(test_set, i, output, cost); }
-
-void EmbeddedSequentialLearner::apply(const VMat& data, VMat outputs)
-{ learner->apply(data, outputs); }
-
-void EmbeddedSequentialLearner::applyAndComputeCosts(const VMat& data, VMat outputs, VMat costs)
-{ learner->applyAndComputeCosts(data, outputs, costs); }
-
-void EmbeddedSequentialLearner::applyAndComputeCostsOnTestMat(const VMat& test_set, int i,
-    const Mat& output_block, const Mat& cost_block)
-{ learner->applyAndComputeCostsOnTestMat(test_set, i, output_block, cost_block); }
-
-void EmbeddedSequentialLearner::computeLeaveOneOutCosts(const VMat& data, VMat costs)
-{ learner->computeLeaveOneOutCosts(data, costs); }
-
-void EmbeddedSequentialLearner::computeLeaveOneOutCosts(const VMat& data, VMat costsmat, CostFunc costf)
-{ learner->computeLeaveOneOutCosts(data, costsmat, costf); }
-
-Array<string> EmbeddedSequentialLearner::costNames() const
-{ return learner->costNames(); }
-
-Array<string> EmbeddedSequentialLearner::testResultsNames() const
-{ return learner->testResultsNames(); }
-
-Array<string> EmbeddedSequentialLearner::trainObjectiveNames() const
-{ return learner->trainObjectiveNames(); }
-*/
 
 %> // end of namespace PLearn
 

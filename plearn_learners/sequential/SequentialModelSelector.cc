@@ -55,12 +55,12 @@ void SequentialModelSelector::train(VecStatsCollector& train_stats)
     pb = new ProgressBar("Training learner",train_set.length());
 
   VecStatsCollector dummy_stats;
+  best_model.resize(train_set.length());
   for (int t=init_train_size+horizon; t<=train_set.length(); t++)
   {
     int start = max(t-max_train_len,init_train_size-1);
     VMat sub_train = train_set.subMatRows(0,t-horizon); // last training pair is (t-1-2*horizon,t-1-horizon)
-    VMat sub_test  = train_set.subMatRows(t-1-horizon,1+horizon); // this is the (t-1-horizon,t-1) (input,target) pair
-    Vec sequence_costs(models.size());
+    VMat sub_test  = train_set.subMatRows(0,t); // this is the (t-1-horizon,t-1) (input,target) pair
     for (int i=0; i<models.size(); i++)
     {
       models[i]->setTrainingSet(sub_train);
@@ -69,28 +69,27 @@ void SequentialModelSelector::train(VecStatsCollector& train_stats)
       Vec sequence_errors = models[i]->errors.subMat(start+horizon,0,t-start-horizon,errors.length()).toVecCopy();
       sequence_costs[i] = sequenceCost(sequence_errors);
     }
-    best_model = argmin(sequence_costs);
+    best_model[t] = argmin(sequence_costs);
     if (predictions(t-1-horizon).hasMissing())
     {
-      predictions(t-1-horizon) << models[best_model]->predictions(t-1-horizon);
-      errors(t-1) << models[best_model]->errors(t-1);
+      predictions(t-1-horizon) << models[best_model[t]]->predictions(t-1-horizon);
+      errors(t-1) << models[best_model[t]]->errors(t-1);
     }
 
     // now train with everything that is available
     for (int i=0; i<models.size(); i++)
     {
       models[i]->setTrainingSet(train_set);
-      if (i == best_model)
+      if (i == best_model[t])
         models[i]->train(train_stats);
       else
         models[i]->train(dummy_stats);
     }
-    last_train_t = train_set.length();
-    last_call_train_t = train_set.length();
 
     if (pb)
       pb->update(t);
   }
+  last_train_t = train_set.length();
 
   if (pb)
    delete pb; 
@@ -99,37 +98,42 @@ void SequentialModelSelector::train(VecStatsCollector& train_stats)
 void SequentialModelSelector::test(VMat test_set, VecStatsCollector& test_stats,
     VMat testoutputs, VMat testcosts)
 {
+  ProgressBar* pb;
+  if (report_progress)
+    pb = new ProgressBar("Testing learner",test_set.length());
+
   VecStatsCollector dummy_stats;
   // first test example is the pair (last_call_train_t-1,last_call_train_t-1+horizon)
   for (int i=0; i<models.size(); i++)
   {
-    if (i == best_model)
+    if (i == best_model[last_train_t])
       models[i]->test(test_set, test_stats, testoutputs, testcosts);
     else
       models[i]->test(test_set, dummy_stats);
   }
-  for (int t=last_call_train_t-1; t<last_call_train_t-1+test_set.length()-horizon; t++)
+  for (int t=last_test_t-1; t<test_set.length()-horizon; t++)
   {
-    predictions(t) << models[best_model]->predictions(t);
-    errors(t+horizon) << models[best_model]->errors(t+horizon);
+    predictions(t) << models[best_model[last_train_t]]->predictions(t);
+    errors(t+horizon) << models[best_model[last_train_t]]->errors(t+horizon);
   }
+  last_test_t = test_set.length();
 }
 
-void SequentialModelSelector::computeOutput(const VVec& input, Vec& output)
+void SequentialModelSelector::computeOutput(const Vec& input, Vec& output)
 {
-  models[best_model]->computeOutput(input, output);
+  models[best_model[last_train_t]]->computeOutput(input, output);
 }
 
-void SequentialModelSelector::computeCostsFromOutputs(const VVec& input, const Vec& output, const VVec& target, const VVec& weight, Vec& costs)
+void SequentialModelSelector::computeCostsFromOutputs(const Vec& input, const Vec& output, const Vec& target, Vec& costs)
 {
-  models[best_model]->computeCostsFromOutputs(input, output, target, weight, costs);
+  models[best_model[last_train_t]]->computeCostsFromOutputs(input, output, target, costs);
 }
 
 TVec<string> SequentialModelSelector::getTestCostNames() const
-{ return models[best_model]->getTestCostNames(); }
+{ return models[best_model[last_train_t]]->getTestCostNames(); }
 
 TVec<string> SequentialModelSelector::getTrainCostNames() const
-{ return models[best_model]->getTrainCostNames(); }
+{ return models[best_model[last_train_t]]->getTrainCostNames(); }
 
 void SequentialModelSelector::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
@@ -140,6 +144,7 @@ void SequentialModelSelector::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 void SequentialModelSelector::build_()
 {
+  sequence_costs.resize(models.size());
   forget();
 }
 
@@ -188,8 +193,9 @@ real SequentialModelSelector::sequenceCost(const Vec& sequence_errors)
 
 void SequentialModelSelector::forget()
 {
-  best_model = 0; // by default
-  last_call_train_t = init_train_size;
+  last_train_t = init_train_size;
+  best_model.resize(last_train_t);
+  best_model.fill(0);  // by default
   mean_costs.fill(MISSING_VALUE);
   for (int i=0; i<models.size(); i++)
     models[i]->forget();

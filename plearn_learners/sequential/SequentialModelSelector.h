@@ -51,7 +51,8 @@ class SequentialModelSelector: public SequentialLearner
   protected:
  
     Mat mean_costs; // [time_index,model_index], contains mean of model.errors[.,cost_index] over interval [max(0,time_index-max_train_len),time_index) of non-missing values
-    int best_model; // best model found up to now (t=last_call_train_t)
+    TVec<int> best_model; // best model selected at time t
+    Vec sequence_costs;  // the costs of each model on the training set
 
   public:
 
@@ -92,10 +93,10 @@ class SequentialModelSelector: public SequentialLearner
     virtual void test(VMat testset, VecStatsCollector& test_stats,
         VMat testoutputs=0, VMat testcosts=0);
 
-    virtual void computeOutput(const VVec& input, Vec& output);
+    virtual void computeOutput(const Vec& input, Vec& output);
 
-    virtual void computeCostsFromOutputs(const VVec& input, const Vec& output,
-        const VVec& target, const VVec& weight, Vec& costs);
+    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
+        const Vec& target, Vec& costs);
 
     //! This should return the names of the costs computed by computeCostsFromOutputs
     virtual TVec<string> getTestCostNames() const;
