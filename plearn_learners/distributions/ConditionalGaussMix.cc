@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalGaussMix.cc,v 1.1 2004/05/19 17:21:05 tihocan Exp $ 
+   * $Id: ConditionalGaussMix.cc,v 1.2 2004/05/20 13:02:38 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -42,6 +42,7 @@
 
 
 #include "ConditionalGaussMix.h"
+#include "pl_erf.h"
 #include "plapack.h"
 
 namespace PLearn {
@@ -84,6 +85,10 @@ void ConditionalGaussMix::declareOptions(OptionList& ol)
   declareOption(ol, "eigenvectors_x", &ConditionalGaussMix::eigenvectors_x, OptionBase::learntoption,
       "The eigenvectors of the top left part of the covariance matrix for each Gaussian.\n"
       "The j-th element is the matrix with eigenvectors of the j-th Gaussian, in rows.");
+
+  declareOption(ol, "mu_x", &ConditionalGaussMix::mu_x, OptionBase::learntoption,
+      "The average of x according to each Gaussian: the element (j,k) is the k-th\n"
+      "component of the average of x according to Gaussian j.");
 
   declareOption(ol, "sigma", &ConditionalGaussMix::sigma, OptionBase::learntoption,
       "The global standard deviation when using spherical Gaussians.");
@@ -129,6 +134,12 @@ double ConditionalGaussMix::cdf(const Vec& x) const
 /////////////////
 void ConditionalGaussMix::expectation(Vec& mu) const
 {
+  string type = gauss_mix->type;
+  if (type == "spherical") {
+
+  } else {
+    PLERROR("In ConditionalGaussMix::expectation - Not implemented for this type");
+  }
 
 }
 
@@ -147,6 +158,7 @@ void ConditionalGaussMix::forget()
   stage = 0;
   eigenvalues_x = Mat();
   eigenvectors_x = TVec<Mat>();
+  mu_x = Mat();
   sigma = Vec();
 }
 
@@ -208,9 +220,24 @@ void ConditionalGaussMix::setInput(const Vec& input) const {
   //    for the j-th Gaussian: sum_k (lambda_k - lambda0) (vx_k vx_k') + lambda0.I
   //    with vx_k the x part of the k-th eigenvector.
   int L = gauss_mix->L;
+  int d = input_part_size;
+  string type = gauss_mix->type;
   Vec log_pj_x(L);
   for (int j = 0; j < L; j++) {
-
+    if (type == "spherical") {
+      real p = 0.0;
+      for (int k = 0; k < d; k++) {
+        p += gauss_log_density(input[k], mu_x(j, k), sigma[j]);
+#ifdef BOUNDCHECK
+        if (isnan(p)) {
+          PLWARNING("In ConditionalGaussMix::setInput - Density is nan");
+        }
+#endif
+        log_pj_x[j] = p;
+      }
+    } else {
+      PLERROR("In ConditionalGaussMix::setInput - Not implemented for this type") ;
+    }
   }
 }
 
@@ -231,6 +258,7 @@ void ConditionalGaussMix::train()
   int L = gauss_mix->L;
   string type = gauss_mix->type;
   // Resize some stuff.
+  mu_x.resize(L,d);
   eigenvalues_x.resize(0,0);
   eigenvectors_x.resize(0);
   sigma.resize(0);
@@ -242,6 +270,8 @@ void ConditionalGaussMix::train()
     for (int j = 0; j < L; j++) {
       eigenvectors_x[j].resize(d,d);
     }
+  } else {
+    PLERROR("In ConditionalGaussMix::train - Not implemented for this type");
   }
   
   // We train the mixture on the joint probability.
@@ -279,6 +309,8 @@ void ConditionalGaussMix::train()
       Vec eigenvals = eigenvalues_x(j);
       eigenVecOfSymmMat(cov_x, d, eigenvals, eigenvectors_x[j]);
     }
+  } else {
+    PLERROR("In ConditionalGaussMix::train - Not implemented for this type");
   }
 }
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalGaussMix.h,v 1.1 2004/05/19 17:21:05 tihocan Exp $ 
+   * $Id: ConditionalGaussMix.h,v 1.2 2004/05/20 13:02:38 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -65,6 +65,7 @@ protected:
 
   Mat eigenvalues_x;
   TVec<Mat> eigenvectors_x;
+  Mat mu_x;
   Vec sigma;
 
 public:
