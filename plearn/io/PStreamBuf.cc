@@ -33,11 +33,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PStreamBuf.cc,v 1.9 2005/02/12 02:17:58 tihocan Exp $ 
+   * $Id: PStreamBuf.cc,v 1.10 2005/02/16 20:19:49 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PStreamBuf.cc */
 #include "PStreamBuf.h"
+
+#define PSTREAMBUF_NO_GET (-1000)
 
 namespace PLearn {
 using namespace std;
@@ -47,6 +49,7 @@ PStreamBuf::PStreamBuf(bool is_readable_, bool is_writable_,
                        streamsize unget_capacity)
   :is_readable(is_readable_),
    is_writable(is_writable_),
+   last_get(PSTREAMBUF_NO_GET),
    ungetsize(0),
    inbuf_chunksize(0),
    inbuf(0), inbuf_p(0), inbuf_end(0),
@@ -164,6 +167,10 @@ PStreamBuf::streamsize PStreamBuf::read(char* p, streamsize n)
     }
   
   streamsize nread = n-nleft;
+  if (nread > 0)
+    last_get = (unsigned char) p[nread - 1];
+  else
+    last_get = EOF;
   return nread;
 }
 
@@ -178,13 +185,20 @@ void PStreamBuf::unread(const char* p, streamsize n)
 
 void PStreamBuf::putback(char c)
 {
-  if (c == EOF)
-    return;
   if(inbuf_p<=inbuf)
     PLERROR("Cannot putback('%c') Input buffer bound reached (you may want to increase the unget_capacity)",c);
   
   inbuf_p--;
   *inbuf_p = c;
+}
+
+void PStreamBuf::unget()
+{
+  if (last_get == PSTREAMBUF_NO_GET)
+    PLERROR("In PStreamBuf::unget - You called unget() more than once or you did not call get() first");
+  if (last_get != EOF)
+    putback((char) last_get);
+  last_get = PSTREAMBUF_NO_GET;
 }
 
 

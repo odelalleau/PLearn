@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PStreamBuf.h,v 1.17 2005/02/12 17:48:18 tihocan Exp $ 
+   * $Id: PStreamBuf.h,v 1.18 2005/02/16 20:19:49 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PStreamBuf.h */
@@ -79,6 +79,10 @@ protected:
 
   bool is_readable;
   bool is_writable;
+
+  //! Remember the last character read by get() or read().
+  //! Could be EOF, or PSTREAMBUF_NO_GET (no character available).
+  int last_get;
 
 private: 
 
@@ -133,25 +137,33 @@ public:
   int get()
   {
     if(inbuf_p<inbuf_end || refill_in_buf())
-      return (unsigned char) *inbuf_p++;
+      return (last_get = (unsigned char) *inbuf_p++);
     else
-      return -1;
+      return (last_get = -1);
   }
   
-  //! Character c will be returned by the next get()
+  //! Character c will be returned by the next get().
+  //! If you put back the result of a previous call to get(), make sure it is
+  //! not EOF.
   void putback(char c);
+
+  //! Call putback(c) where c is the last character read by get() or read(),
+  //! stored in 'last_get'. If last_get == EOF, does nothing.
+  //! Will crash if one tries to call it twice (use unread() instead), i.e.
+  //! when last_get == PSTREAMBUF_NO_GET.
+  void unget();
 
   int peek()
   {
     if(inbuf_p<inbuf_end || refill_in_buf())
-      return *inbuf_p;
+      return (unsigned char) *inbuf_p;
     else
       return -1;
   }
   
   streamsize read(char* p, streamsize n);
 
-  //! puts the given characters back in the input buffer
+  //! Puts the given characters back in the input buffer
   //! so that they're the next thing read.
   void unread(const char* p, streamsize n);
 
