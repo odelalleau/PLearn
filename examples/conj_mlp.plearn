@@ -5,7 +5,7 @@ Experiment(
 expdir = "conj_mlp";
 
 # VMat: The dataset to use for training/testing (will be split according to what is specified in the testmethod)
-dataset = AutoVMatrix(specification="letters all normalize");
+dataset = AutoVMatrix(specification="letters:1000 all normalize");
 
 # PP< Splitter >: The splitter to use to generate one or several train/test pairs.
 splitter = TrainTestSplitter(test_fraction=.10) ;
@@ -29,7 +29,7 @@ NeuralNet(
           targetsize = 1;
 
           # int: number of hidden units in first hidden layer (0 means no hidden layer)
-          nhidden = 100;
+          nhidden = 10;
 
           # double: global weight decay for all layers
           weight_decay = 0;
@@ -54,7 +54,13 @@ NeuralNet(
           optimizer = ConjGradientOptimizer(
                       starting_step_size = 0.1  ;
                       epsilon = 0.001  ;
-
+                      line_search_algo = 0  ;
+                      find_new_direction_formula = 0  ;
+                      sigma = 0.01  ;
+                      rho = 0.005  ;
+                      fmax = 0  ;
+                      stop_epsilon = 0.0001;
+                      tau1 = 2  ;
                       )
 
           # int: how many samples to use to estimate the avergage gradient before updating the weights
