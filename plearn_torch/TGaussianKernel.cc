@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TGaussianKernel.cc,v 1.1 2005/02/23 01:31:19 tihocan Exp $ 
+   * $Id: TGaussianKernel.cc,v 1.2 2005/02/23 16:34:49 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -135,7 +135,7 @@ void TGaussianKernel::updateFromTorch() {
   if (gaussian_kernel->g == 0)
     g = 0;
   else {
-    sigma = 1.0 / sqrt(g);
+    sigma = 1.0 / sqrt(gaussian_kernel->g);
     if (g >= 0)
       g = gaussian_kernel->g;
   }
