@@ -35,7 +35,10 @@
 #include "stringutils.h"
 #include "SDBVMat.h"
 
+// norman: profiler deactivated for win32
+#ifndef WIN32
 #include "Profiler.h"
+#endif
 
 namespace PLearn {
 using namespace std;

@@ -34,13 +34,18 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StaticInitializer.h,v 1.2 2004/02/20 21:11:42 chrish42 Exp $ 
+   * $Id: StaticInitializer.h,v 1.3 2004/02/26 06:30:25 nova77 Exp $ 
    ******************************************************* */
 
 /*! \file StaticInitializer.h */
 #ifndef StaticInitializer_INC
 #define StaticInitializer_INC
 
+// norman:
+// If I don't add a definition of the namespace std it does not compile!
+#ifdef WIN32
+#include <string>
+#endif
 
 namespace PLearn {
 using namespace std;

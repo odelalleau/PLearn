@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: NistDB.cc,v 1.2 2004/02/20 21:11:43 chrish42 Exp $
+   * $Id: NistDB.cc,v 1.3 2004/02/26 06:39:03 nova77 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -113,7 +113,7 @@ void NistDB::getSubRow(int i, int j, Vec v) const
   if(j<width()-1)
     {
       imagef.seekg(16+i*(28*28)+j);
-#if __GNUC__ < 3
+#if __GNUC__ < 3 && !defined(WIN32)
       imagef.read(buf, npixelstoread);
 #else
       imagef.read(reinterpret_cast<char*>(buf), npixelstoread);

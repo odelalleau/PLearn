@@ -46,12 +46,12 @@ ostream& operator<<(ostream& out,const StringTable& st)
     {
       TVec<string> row=st.data(j);      
       for(int i=0;i<st.width();i++)
-          if(row[i].length() > colsiz[i])
-            colsiz[i]=row[i].length();
+          if((int)row[i].length() > colsiz[i])
+            colsiz[i]=(int)row[i].length();
     }
   for(int i=0;i<st.width();i++)
     if(st.fieldnames[i].length() > colsiz[i])
-      colsiz[i]=st.fieldnames[i].length();
+      colsiz[i]=(unsigned int)st.fieldnames[i].length();
 
   out<<"#: "; 
   for(int i=0;i<st.width();i++)
@@ -124,7 +124,7 @@ StringTable::StringTable(const string & filename)
     in.ignore(1);
   getline(in,str);
   fieldnames=split(str);
-  data.resize(nrows, fieldnames.size());
+  data.resize(nrows, (int)fieldnames.size());
   int rnum=0;
   getline(in,str);
   while(removeblanks(str)!="")
@@ -151,7 +151,7 @@ StringTable::StringTable(const string & filename)
       ++rnum;
       getline(in,str);
     }
-  data.resize(rnum, fieldnames.size());
+  data.resize(rnum, (int)fieldnames.size());
 }
 
 
