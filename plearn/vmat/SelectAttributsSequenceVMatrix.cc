@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SelectAttributsSequenceVMatrix.cc,v 1.2 2004/08/22 21:29:45 larocheh Exp $ 
+   * $Id: SelectAttributsSequenceVMatrix.cc,v 1.3 2004/09/03 13:45:15 kermorvc Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -326,15 +326,15 @@ void SelectAttributsSequenceVMatrix::declareOptions(OptionList& ol)
                  "Indication that the last accessed context should be put in a buffer.");
   declareOption(ol, "conditions", &SelectAttributsSequenceVMatrix::conditions, OptionBase::buildoption,
                  "Conditions to be satisfied for the exclusion or inclusion (see conditions_for_exclusion) of elements in the VMatrix");
-  declareOption(ol, "string_conditions", &SelectAttributsSequenceVMatrix::string_conditions, OptionBase::nosave,
+  declareOption(ol, "string_conditions", &SelectAttributsSequenceVMatrix::string_conditions, OptionBase::buildoption,
                  "Conditions, in string format, to be satisfied for the exclusion or inclusion (see conditions_for_exclusion) of elements in the VMatrix");
   declareOption(ol, "delimiters", &SelectAttributsSequenceVMatrix::delimiters, OptionBase::buildoption,
                  "Delimiters of context");
-  declareOption(ol, "string_delimiters", &SelectAttributsSequenceVMatrix::string_delimiters, OptionBase::nosave,
+  declareOption(ol, "string_delimiters", &SelectAttributsSequenceVMatrix::string_delimiters, OptionBase::buildoption,
                  "Delimiters, in string format, of context");
   declareOption(ol, "ignored_context", &SelectAttributsSequenceVMatrix::ignored_context, OptionBase::buildoption,
                  "Elements to be ignored in context");
-  declareOption(ol, "string_ignored_context", &SelectAttributsSequenceVMatrix::string_ignored_context, OptionBase::nosave,
+  declareOption(ol, "string_ignored_context", &SelectAttributsSequenceVMatrix::string_ignored_context, OptionBase::buildoption,
                  "Elements, in string format, to be ignored in context");
   declareOption(ol, "source", &SelectAttributsSequenceVMatrix::source, OptionBase::buildoption,
                  "Source VMat, from which contexts are extracted");
@@ -360,15 +360,19 @@ void SelectAttributsSequenceVMatrix::build_()
 
   // conditions
   from_string_to_int_format(string_conditions, conditions);
+  string_conditions.clear();
 
   // delimiters
   from_string_to_int_format(string_delimiters, delimiters);
-  
+  string_delimiters.clear();
+
   // ignored_context
   from_string_to_int_format(string_ignored_context, ignored_context);
+  string_ignored_context.clear();
 
   // gathering information from source VMat
 
+  indices.clear();
   int current_context_length = 0;
   ProgressBar *pb = new ProgressBar("Gathering information from source VMat of length " + tostring(source->length()), source->length());
   for(int i=0; i<source->length(); i++)
