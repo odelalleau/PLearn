@@ -36,51 +36,43 @@
 
 
 /* *******************************************************      
-   * $Id: HardSlopeVariable.h,v 1.4 2004/04/11 19:51:02 yoshua Exp $
+   * $Id: UnaryHardSlopeVariable.h,v 1.1 2004/04/11 19:51:02 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
-#ifndef HardSlopeVariable_INC
-#define HardSlopeVariable_INC
+#ifndef UnaryHardSlopeVariable_INC
+#define UnaryHardSlopeVariable_INC
 
-#include "NaryVariable.h"
-#include "Var_operators.h"
-#include "Var_all.h"
-//#include "pl_math.h"
-//#include "Var_utils.h"
+#include "UnaryVariable.h"
 
 namespace PLearn {
 using namespace std;
 
 
-// linear by part function that
-// is 0 in [-infty,left], linear in [left,right], and 1 in [right,infty].
-class HardSlopeVariable: public NaryVariable
+/*! * Simple unary transform with hard_slope function * */
+// output is 0 for input < left, 1 for input > right, and linear in between.
+class UnaryHardSlopeVariable: public UnaryVariable
 {
 protected:
-    typedef NaryVariable inherited;
+    typedef UnaryVariable inherited;
+  real left;
+  real right;
+  real inv_slope; // 1/(right-left)
   //!  Default constructor for persistence
-  HardSlopeVariable() {}
+  UnaryHardSlopeVariable() {}
 
 public:
-  HardSlopeVariable(Variable* x, Variable* smoothness, Variable* left, Variable* right);
-  PLEARN_DECLARE_OBJECT(HardSlopeVariable);
+  UnaryHardSlopeVariable(Variable* input,real l=-1,real r=1);
+  PLEARN_DECLARE_OBJECT(UnaryHardSlopeVariable);
   virtual void recomputeSize(int& l, int& w) const;
   
   
   virtual void fprop();
   virtual void bprop();
-  virtual void symbolicBprop();
 };
 
-inline Var hard_slope(Var x, Var left, Var right)
-{ return new HardSlopeVariable(x,left,right); }
-
-// derivative of hard_slope wrt x
-inline Var d_hard_slope(Var x, Var left, Var right)
-{
-  return ifThenElse((x>=left)*(x<=right),invertElements(right-left),var(0.0));
-}
+inline Var unary_hard_slope(Var v, real l=-1, real r=1)
+{ return new UnaryHardSlopeVariable(v,l,r); }
 
 } // end of namespace PLearn
 

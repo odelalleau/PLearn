@@ -36,50 +36,45 @@
 
 
 /* *******************************************************      
-   * $Id: HardSlopeVariable.h,v 1.4 2004/04/11 19:51:02 yoshua Exp $
+   * $Id: MarginPerceptronCostVariable.h,v 1.1 2004/04/11 19:51:02 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
-#ifndef HardSlopeVariable_INC
-#define HardSlopeVariable_INC
+#ifndef MarginPerceptronCostVariable_INC
+#define MarginPerceptronCostVariable_INC
 
-#include "NaryVariable.h"
-#include "Var_operators.h"
-#include "Var_all.h"
-//#include "pl_math.h"
-//#include "Var_utils.h"
+#include "BinaryVariable.h"
 
 namespace PLearn {
 using namespace std;
 
-
-// linear by part function that
-// is 0 in [-infty,left], linear in [left,right], and 1 in [right,infty].
-class HardSlopeVariable: public NaryVariable
+  // cost = sum_i max(0,margin - signed_target[i]*output[i])
+  // where signed_target is inferred from target as follows.
+  // target must be in (0,1,...,nclasses-1).
+  // If output.size()==1, signed_target[0] = target*2-1
+  // else signed_target[i] = 1_{target==i} - 1_{target!=i}.
+class MarginPerceptronCostVariable: public BinaryVariable
 {
 protected:
-    typedef NaryVariable inherited;
+  
+  real margin;
+  
+  typedef BinaryVariable inherited;
   //!  Default constructor for persistence
-  HardSlopeVariable() {}
+  MarginPerceptronCostVariable() {}
 
 public:
-  HardSlopeVariable(Variable* x, Variable* smoothness, Variable* left, Variable* right);
-  PLEARN_DECLARE_OBJECT(HardSlopeVariable);
+  MarginPerceptronCostVariable(Variable* output, Variable* target, real margin);
+  PLEARN_DECLARE_OBJECT(MarginPerceptronCostVariable);
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
   virtual void fprop();
   virtual void bprop();
-  virtual void symbolicBprop();
 };
 
-inline Var hard_slope(Var x, Var left, Var right)
-{ return new HardSlopeVariable(x,left,right); }
 
-// derivative of hard_slope wrt x
-inline Var d_hard_slope(Var x, Var left, Var right)
+inline Var margin_perceptron_cost(Var output, Var target, real margin)
 {
-  return ifThenElse((x>=left)*(x<=right),invertElements(right-left),var(0.0));
+  return new MarginPerceptronCostVariable(output, target, margin);
 }
 
 } // end of namespace PLearn

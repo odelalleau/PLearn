@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.h,v 1.14 2004/04/04 16:34:50 yoshua Exp $
+   * $Id: NNet.h,v 1.15 2004/04/11 19:51:51 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -100,11 +100,13 @@ using namespace std;
     real output_layer_bias_decay;   // default: MISSING_VALUE
     real direct_in_to_out_weight_decay; // default: MISSING_VALUE
     real classification_regularizer; // default: 0
+    real margin; // default: 1, used with margin_perceptron_cost
 
     bool L1_penalty; // default: false
     real input_reconstruction_penalty; // default = 0
     bool direct_in_to_out; // should we include direct input to output connecitons? default: false
-    string output_transfer_func; // tanh, sigmoid, softplus, softmax  (default: "" means no transfer function)
+    string output_transfer_func; // tanh, sigmoid, softplus, softmax, etc...  (default: "" means no transfer function)
+    string hidden_transfer_func; // tanh, sigmoid, softplus, softmax, etc...  (default: "tanh" means no transfer function)
     real interval_minval, interval_maxval; // if output_transfer_func = interval(minval,maxval), these are the interval bounds
 
     //! a list of cost functions to use in the form "[ cf1; cf2; cf3; ... ]"

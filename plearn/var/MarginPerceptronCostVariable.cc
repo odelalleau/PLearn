@@ -5,6 +5,7 @@
 // Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio, Rejean Ducharme and University of Montreal
 // Copyright (C) 2001-2002 Nicolas Chapados, Ichiro Takeuchi, Jean-Sebastien Senecal
 // Copyright (C) 2002 Xiangdong Wang, Christian Dorion
+// Copyright (C) 2003 Olivier Delalleau
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -36,52 +37,73 @@
 
 
 /* *******************************************************      
-   * $Id: HardSlopeVariable.h,v 1.4 2004/04/11 19:51:02 yoshua Exp $
+   * $Id: MarginPerceptronCostVariable.cc,v 1.1 2004/04/11 19:51:02 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
-#ifndef HardSlopeVariable_INC
-#define HardSlopeVariable_INC
-
-#include "NaryVariable.h"
-#include "Var_operators.h"
-#include "Var_all.h"
-//#include "pl_math.h"
-//#include "Var_utils.h"
+#include "MarginPerceptronCostVariable.h"
 
 namespace PLearn {
 using namespace std;
 
+/** MarginPerceptronCostVariable **/
 
-// linear by part function that
-// is 0 in [-infty,left], linear in [left,right], and 1 in [right,infty].
-class HardSlopeVariable: public NaryVariable
+PLEARN_IMPLEMENT_OBJECT(
+  MarginPerceptronCostVariable,
+  "Compute sigmoid of its first input, and then computes the negative "
+  "cross-entropy cost",
+  "NO HELP");
+
+////////////////////////////////////
+// MarginPerceptronCostVariable //
+////////////////////////////////////
+MarginPerceptronCostVariable::
+MarginPerceptronCostVariable(Variable* output, Variable* target, real m)
+  :BinaryVariable(output,target,1,1),margin(m)
 {
-protected:
-    typedef NaryVariable inherited;
-  //!  Default constructor for persistence
-  HardSlopeVariable() {}
+  if(target->size() != 1)
+    PLERROR("In MarginPerceptronCostVariable: target represents a class (0...n_classes-1) and must be a single integer");
+}
 
-public:
-  HardSlopeVariable(Variable* x, Variable* smoothness, Variable* left, Variable* right);
-  PLEARN_DECLARE_OBJECT(HardSlopeVariable);
-  virtual void recomputeSize(int& l, int& w) const;
-  
-  
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
-};
+///////////////////
+// recomputeSize //
+///////////////////
+void MarginPerceptronCostVariable::recomputeSize(int& l, int& w) const
+{ l=1, w=1; }
 
-inline Var hard_slope(Var x, Var left, Var right)
-{ return new HardSlopeVariable(x,left,right); }
-
-// derivative of hard_slope wrt x
-inline Var d_hard_slope(Var x, Var left, Var right)
+///////////
+// fprop //
+///////////
+void MarginPerceptronCostVariable::fprop()
 {
-  return ifThenElse((x>=left)*(x<=right),invertElements(right-left),var(0.0));
+  real cost = 0.0;
+  int target = int(input2->valuedata[0]);
+  for (int i=0; i<input1->size(); i++)
+  {
+    real output = input1->valuedata[i];
+    int signed_target = input1->size()==1?target*2-1:(target==i) - (target!=i);
+    real diff = margin - signed_target * output;
+    if (diff>0)
+      cost += diff;
+  }
+  valuedata[0] = cost;
+}
+
+///////////
+// bprop //
+///////////
+void MarginPerceptronCostVariable::bprop()
+{
+  real gr = *gradientdata;
+  int target = int(input2->valuedata[0]);
+  for (int i=0; i<input1->size(); i++)
+  {
+    real output = input1->valuedata[i];
+    int signed_target = input1->size()==1?target*2-1:(target==i) - (target!=i);
+    real diff = margin - signed_target * output;
+    if (diff>0)
+      input1->gradientdata[i] -= gr*signed_target;
+  }
 }
 
 } // end of namespace PLearn
-
-#endif 

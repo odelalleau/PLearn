@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.44 2004/04/04 16:34:43 yoshua Exp $
+   * $Id: NNet.cc,v 1.45 2004/04/11 19:51:51 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -49,6 +49,7 @@
 #include "ExpVariable.h"
 #include "LiftOutputVariable.h"
 #include "LogSoftmaxVariable.h"
+#include "MarginPerceptronCostVariable.h"
 #include "MulticlassLossVariable.h"
 #include "NegCrossEntropySigmoidVariable.h"
 #include "OneHotSquaredLoss.h"
@@ -61,6 +62,7 @@
 #include "SumSquareVariable.h"
 #include "TanhVariable.h"
 #include "TransposeProductVariable.h"
+#include "UnaryHardSlopeVariable.h"
 #include "Var_operators.h"
 #include "Var_utils.h"
 
@@ -92,6 +94,7 @@ NNet::NNet() // DEFAULT VALUES FOR ALL OPTIONS
    output_layer_bias_decay(0),
    direct_in_to_out_weight_decay(0),
    classification_regularizer(0),
+   margin(1),
    L1_penalty(false),
    input_reconstruction_penalty(0),
    direct_in_to_out(false),
@@ -158,10 +161,14 @@ void NNet::declareOptions(OptionList& ol)
 
   declareOption(ol, "output_transfer_func", &NNet::output_transfer_func, OptionBase::buildoption, 
                 "    what transfer function to use for ouput layer? \n"
-                "    one of: tanh, sigmoid, exp, softplus, softmax \n"
+                "    one of: tanh, sigmoid, exp, softplus, softmax, log_softmax \n"
                 "    or interval(<minval>,<maxval>), which stands for\n"
                 "    <minval>+(<maxval>-<minval>)*sigmoid(.).\n"
                 "    An empty string or \"none\" means no output transfer function \n");
+
+  declareOption(ol, "hidden_transfer_func", &NNet::hidden_transfer_func, OptionBase::buildoption, 
+                "    what transfer function to use for hidden units? \n"
+                "    one of: linear, tanh, sigmoid, exp, softplus, softmax, log_softmax, hard_slope or symm_hard_slope\n");
 
   declareOption(ol, "cost_funcs", &NNet::cost_funcs, OptionBase::buildoption, 
                 "    a list of cost functions to use\n"
@@ -181,6 +188,10 @@ void NNet::declareOptions(OptionList& ol)
   
   declareOption(ol, "classification_regularizer", &NNet::classification_regularizer, OptionBase::buildoption, 
                 "    used only in the stable_cross_entropy cost function, to fight overfitting (0<=r<1)\n");
+
+  declareOption(ol, "margin", &NNet::margin, OptionBase::buildoption, 
+                "    margin requirement, used only with the margin_perceptron_cost cost function.\n"
+                "    It should be positive, and larger values regularize more.\n");
 
   declareOption(ol, "optimizer", &NNet::optimizer, OptionBase::buildoption, 
                 "    specify the optimizer to use\n");
@@ -225,17 +236,56 @@ void NNet::build_()
       if(nhidden>0)
         {
           w1 = Var(1+inputsize(), nhidden, "w1");      
-          output = tanh(affine_transform(output,w1));
-          hidden_layer = output;
+          hidden_layer = affine_transform(output,w1); 
           params.append(w1);
+          if(hidden_transfer_func=="linear")
+            output = hidden_layer;
+          else if(hidden_transfer_func=="tanh")
+            output = tanh(hidden_layer);
+          else if(output_transfer_func=="sigmoid")
+            output = sigmoid(hidden_layer);
+          else if(output_transfer_func=="softplus")
+            output = softplus(hidden_layer);
+          else if(output_transfer_func=="exp")
+            output = exp(hidden_layer);
+          else if(output_transfer_func=="softmax")
+            output = softmax(hidden_layer);
+          else if (output_transfer_func == "log_softmax")
+            output = log_softmax(output);
+          else if(output_transfer_func=="hard_slope")
+            output = unary_hard_slope(hidden_layer,0,1);
+          else if(output_transfer_func=="symm_hard_slope")
+            output = unary_hard_slope(hidden_layer,-1,1);
+          else
+            PLERROR("In NNet::build_()  unknown hidden_transfer_func option: %s",hidden_transfer_func.c_str());
         }
 
       // second hidden layer
       if(nhidden2>0)
         {
           w2 = Var(1+nhidden, nhidden2, "w2");
-          output = tanh(affine_transform(output,w2));
+          output = affine_transform(output,w2);
           params.append(w2);
+          if(hidden_transfer_func=="linear")
+            output = output;
+          else if(hidden_transfer_func=="tanh")
+            output = tanh(output);
+          else if(output_transfer_func=="sigmoid")
+            output = sigmoid(output);
+          else if(output_transfer_func=="softplus")
+            output = softplus(output);
+          else if(output_transfer_func=="exp")
+            output = exp(output);
+          else if(output_transfer_func=="softmax")
+            output = softmax(output);
+          else if (output_transfer_func == "log_softmax")
+            output = log_softmax(output);
+          else if(output_transfer_func=="hard_slope")
+            output = unary_hard_slope(output,0,1);
+          else if(output_transfer_func=="symm_hard_slope")
+            output = unary_hard_slope(output,-1,1);
+          else
+            PLERROR("In NNet::build_()  unknown hidden_transfer_func option: %s",hidden_transfer_func.c_str());
         }
 
       if (nhidden2>0 && nhidden==0)
@@ -342,6 +392,8 @@ void NNet::build_()
                 setRegularizer(classification_regularizer);
             }
           }
+          else if (cost_funcs[k]=="margin_perceptron_cost")
+            costs[k] = margin_perceptron_cost(output,target,margin);
           else if (cost_funcs[k]=="lift_output")
             costs[k] = lift_output(output, target);
           else  // Assume we got a Variable name and its options

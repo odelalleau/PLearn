@@ -36,52 +36,60 @@
 
 
 /* *******************************************************      
-   * $Id: HardSlopeVariable.h,v 1.4 2004/04/11 19:51:02 yoshua Exp $
+   * $Id: UnaryHardSlopeVariable.cc,v 1.1 2004/04/11 19:51:02 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
-#ifndef HardSlopeVariable_INC
-#define HardSlopeVariable_INC
-
-#include "NaryVariable.h"
+#include "UnaryHardSlopeVariable.h"
 #include "Var_operators.h"
-#include "Var_all.h"
-//#include "pl_math.h"
 //#include "Var_utils.h"
 
 namespace PLearn {
 using namespace std;
 
 
-// linear by part function that
-// is 0 in [-infty,left], linear in [left,right], and 1 in [right,infty].
-class HardSlopeVariable: public NaryVariable
+/** UnaryHardSlopeVariable **/
+
+UnaryHardSlopeVariable::UnaryHardSlopeVariable(Variable* input,real l,real r) 
+  :UnaryVariable(input, input->length(), input->width()) ,
+   left(l), right(r), inv_slope(1.0/(r-l))
+{}
+
+
+PLEARN_IMPLEMENT_OBJECT(UnaryHardSlopeVariable, 
+                        "Hard slope function whose Var input is only the argument of the function.", 
+                        "Maps x (elementwise) to 0 if x<left, 1 if x>right, and linear in between otherwise.");
+
+void UnaryHardSlopeVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
+
+
+void UnaryHardSlopeVariable::fprop()
 {
-protected:
-    typedef NaryVariable inherited;
-  //!  Default constructor for persistence
-  HardSlopeVariable() {}
-
-public:
-  HardSlopeVariable(Variable* x, Variable* smoothness, Variable* left, Variable* right);
-  PLEARN_DECLARE_OBJECT(HardSlopeVariable);
-  virtual void recomputeSize(int& l, int& w) const;
-  
-  
-  virtual void fprop();
-  virtual void bprop();
-  virtual void symbolicBprop();
-};
-
-inline Var hard_slope(Var x, Var left, Var right)
-{ return new HardSlopeVariable(x,left,right); }
-
-// derivative of hard_slope wrt x
-inline Var d_hard_slope(Var x, Var left, Var right)
-{
-  return ifThenElse((x>=left)*(x<=right),invertElements(right-left),var(0.0));
+  int l = nelems();
+  real* inputptr = input->valuedata;
+  real* ptr = valuedata;
+  for(int i=0; i<l; i++)
+    *ptr++ = hard_slope(*inputptr++,left,right);
 }
+
+
+void UnaryHardSlopeVariable::bprop()
+{
+  int l = nelems();
+  real* inputgradientptr = input->gradientdata;
+  real* gradientptr = gradientdata;
+  real* valueptr = valuedata;
+  for(int i=0; i<l; i++)
+  {
+    real x = *valueptr++;
+    if (x>left)
+      if (x<right)
+        *inputgradientptr++ += *gradientptr++ * inv_slope;
+  }
+}
+
 
 } // end of namespace PLearn
 
-#endif 
+
