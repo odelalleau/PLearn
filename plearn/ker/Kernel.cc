@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.10 2004/01/26 14:10:32 tihocan Exp $
+   * $Id: Kernel.cc,v 1.11 2004/01/27 14:14:59 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -58,7 +58,9 @@ using namespace std;
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Kernel, "ONE LINE DESCR", "NO HELP");
 Kernel::~Kernel() {}
 
-
+////////////////////
+// declareOptions //
+////////////////////
 void Kernel::declareOptions(OptionList &ol)
 {
   declareOption(ol, "is_symmetric", &Kernel::is_symmetric, OptionBase::buildoption,
@@ -70,9 +72,28 @@ void Kernel::declareOptions(OptionList &ol)
                 "at each call to setDataForKernelMatrix. Given this information,\n"
                 "the kernel may not recompute informations still true from the previous data matrix.");
   
+  declareOption(ol, "specify_dataset", &Kernel::specify_dataset, OptionBase::buildoption,
+                "If set, then setDataForKernelMatrix will be called with this dataset at build time");
+  
   inherited::declareOptions(ol);
 }
 
+///////////
+// build //
+///////////
+void Kernel::build() {
+  inherited::build();
+  build_();
+}
+
+////////////
+// build_ //
+////////////
+void Kernel::build_() {
+  if (specify_dataset) {
+    this->setDataForKernelMatrix(specify_dataset);
+  }
+}
 
 ////////////////////////////
 // setDataForKernelMatrix //
@@ -111,7 +132,9 @@ real Kernel::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x) const
     return evaluate(x,data.getSubRow(i,data_inputsize));
 }
 
-
+///////////////////////
+// computeGramMatrix //
+///////////////////////
 void Kernel::computeGramMatrix(Mat K) const
 {
   if (!data) PLERROR("Kernel::computeGramMatrix should be called only after setDataForKernelMatrix");

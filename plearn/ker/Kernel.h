@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.12 2004/01/26 14:10:32 tihocan Exp $
+   * $Id: Kernel.h,v 1.13 2004/01/27 14:14:59 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -60,8 +60,11 @@ protected:
 
   static void declareOptions(OptionList& ol);
 public:
+
+  //! Build options.
   bool is_symmetric;
   bool is_sequential;
+  VMat specify_dataset;
 
   Kernel(bool is__symmetric = true) 
     : is_symmetric(is__symmetric), is_sequential(false) 
@@ -119,10 +122,15 @@ public:
   Mat estimateHistograms(VMat d, real sameness_threshold, real minval, real maxval, int nbins) const;
   Mat estimateHistograms(Mat input_and_class, real minval, real maxval, int nbins) const;
   real test(VMat d, real threshold, real sameness_below_threshold, real sameness_above_threshold) const;
-  virtual void build() {}
+  virtual void build();
   virtual void oldwrite(ostream& out) const;
   virtual void oldread(istream& in);
   virtual ~Kernel();
+
+private:
+
+  virtual void build_();
+
 };
 DECLARE_OBJECT_PTR(Kernel);
 
