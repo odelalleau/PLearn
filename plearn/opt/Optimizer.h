@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.h,v 1.6 2003/04/29 19:44:48 tihocan Exp $
+   * $Id: Optimizer.h,v 1.7 2003/05/01 15:22:29 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -170,6 +170,12 @@ using namespace std;
         Optimizer* opt,
         const Vec& gradient);
       
+    // Given an optimizer, compute the opposite of the gradient of the cost
+    // function and store it in the "gradient" Vec
+    static void computeOppositeGradient(
+        Optimizer* opt,
+        const Vec& gradient);
+
   };
 
 DECLARE_OBJECT_PTR(Optimizer);

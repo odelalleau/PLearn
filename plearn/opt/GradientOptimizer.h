@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.h,v 1.9 2003/04/30 13:30:03 tihocan Exp $
+   * $Id: GradientOptimizer.h,v 1.10 2003/05/01 15:22:28 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -137,6 +137,7 @@ using namespace std;
     void build_() {
       stage = 0;
       early_stop = false;
+      learning_rate = start_learning_rate;
       SumOfVariable* sumofvar = dynamic_cast<SumOfVariable*>((Variable*)cost);
       stochastic_hack = sumofvar!=0 && sumofvar->nsamples==1;
       params.clearGradient();
@@ -158,8 +159,8 @@ using namespace std;
             old_evol.fill(0);
             break;
           case 2:
-            // tmp_storage is used to store the initial gradient
-            Optimizer::computeGradient(this, tmp_storage);
+            // tmp_storage is used to store the initial opposite gradient
+            Optimizer::computeOppositeGradient(this, tmp_storage);
             break;
         }
       }

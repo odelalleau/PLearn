@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.20 2003/04/29 19:44:47 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.21 2003/05/01 15:22:27 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -292,12 +292,6 @@ public:   // TODO For test purpose... remove later
   // f(x) = cost(params + x*search_direction)
   // in x = alpha
   static real computeDerivative(real alpha, ConjGradientOptimizer* opt);
-
-  // Given an optimizer, compute the opposite of the gradient of the cost
-  // function and store it in the "gradient" Vec
-  static void computeOppositeGradient(
-      Optimizer* opt,
-      const Vec& gradient);
 
   // Put in a, b, c, d the coefficients of the cubic interpolation
   // given values of f and g=df/dx in 2 points (0 and 1)

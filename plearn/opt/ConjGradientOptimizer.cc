@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.18 2003/04/29 18:16:19 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.19 2003/05/01 15:22:26 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -245,21 +245,6 @@ real ConjGradientOptimizer::computeDerivative(
   return dot(opt->search_direction, opt->delta);
 }
 
-/////////////////////////////
-// computeOppositeGradient //
-/////////////////////////////
-void ConjGradientOptimizer::computeOppositeGradient(
-    Optimizer* opt,
-    const Vec& gradient) {
-  // Clear all what's left from previous computations
-  opt->proppath.clearGradient();
-  opt->params.clearGradient();
-  // We want the opposite of the gradient, thus the -1
-  opt->cost->gradient[0] = -1;
-  opt->proppath.fbprop();
-  opt->params.copyGradientTo(gradient);
-}
-  
 ///////////////
 // conjpomdp //
 ///////////////

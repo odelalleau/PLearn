@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.cc,v 1.11 2003/04/30 13:30:03 tihocan Exp $
+   * $Id: GradientOptimizer.cc,v 1.12 2003/05/01 15:22:28 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -228,9 +228,7 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
       case 0:
         learning_rate = start_learning_rate/(1.0+decrease_constant*stage);
         break;
-      case 1:
-        break;
-      case 2:
+      default:
         break;
     }
 
@@ -262,6 +260,8 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
         tmp_storage << gradient;
         params.clearGradient();
         break;
+      default:
+        break;
     }
     // stats_coll.update(cost);
     // TODO To put when we have a stats collector ! ;)
@@ -273,13 +273,11 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
 
   // Learning rate adaptation after a full epoch
   switch (learning_rate_adaptation) {
-    case 0:
-      break;
     case 1:
       adaptLearningRateBasic(learning_rates, tmp_storage, old_evol);
       params.copyTo(tmp_storage);
       break;
-    case 2:
+    default:
       break;
   }
 

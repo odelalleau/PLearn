@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.cc,v 1.3 2003/04/28 17:07:35 tihocan Exp $
+   * $Id: Optimizer.cc,v 1.4 2003/05/01 15:22:28 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -206,4 +206,19 @@ void Optimizer::computeGradient(
   opt->params.copyGradientTo(gradient);
 }
 
+/////////////////////////////
+// computeOppositeGradient //
+/////////////////////////////
+void Optimizer::computeOppositeGradient(
+    Optimizer* opt,
+    const Vec& gradient) {
+  // Clear all what's left from previous computations
+  opt->proppath.clearGradient();
+  opt->params.clearGradient();
+  // We want the opposite of the gradient, thus the -1
+  opt->cost->gradient[0] = -1;
+  opt->proppath.fbprop();
+  opt->params.copyGradientTo(gradient);
+}
+  
 %> // end of namespace PLearn
