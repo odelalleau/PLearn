@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.14 2004/03/03 14:12:19 tihocan Exp $
+   * $Id: getDataSet.cc,v 1.15 2004/03/04 14:53:24 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -45,8 +45,8 @@
 #include "AutoSDBVMatrix.h"
 //#include "stringutils.h"
 //#include "fileutils.h"
-#include "ConcatRowsVMatrix.h"      //< For vconcat.
-#include "databases.h"              //< For loadClassificationDataset.
+#include "ConcatRowsVMatrix.h"      //!< For vconcat.
+#include "databases.h"              //!< For loadClassificationDataset.
 #include "DiskVMatrix.h"
 #include "FileVMatrix.h"
 #include "getDataSet.h"
