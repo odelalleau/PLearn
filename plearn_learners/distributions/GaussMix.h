@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussMix.h,v 1.10 2004/05/04 14:45:38 yoshua Exp $ 
+   * $Id: GaussMix.h,v 1.11 2004/05/06 13:07:11 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file GaussMix.h */
@@ -192,7 +192,7 @@ public:
   // Unknown, Spherical, Diagonal, General, Factor
   string type;
 
-  // this function computes (I + V(t) * psi^-1 * V) ^ -1 and logcoef
+  // this function computes inv_ivtdv = (I + V(t) * psi^-1 * V) ^ -1 and logcoef
   void precomputeFAStuff(Mat V, Vec diag, real &log_coef, Vec inv_ivtdv);
 
   //! 4 next functions set the type of the parametrization of the gaussians covariance matrix

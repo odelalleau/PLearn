@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.15 2004/05/04 14:45:38 yoshua Exp $ 
+ * $Id: GaussMix.cc,v 1.16 2004/05/06 13:07:10 yoshua Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -353,8 +353,10 @@ void GaussMix::setGaussianGeneralWSamples(int l, real _alpha, real _sigma, int n
   if(ncomponents==0)
     PLERROR("With general gaussians, you must set n_principal_components to a number greater than 0.");
 
-  Vec wmeans(D);
-  Mat wcovar(D,D);
+  static Vec wmeans;
+  wmeans.resize(D);
+  static Mat wcovar;
+  wcovar.resize(D,D);
   Mat eig_vectors(ncomponents,D);
   Vec eig_values(ncomponents);
 
@@ -394,64 +396,72 @@ void GaussMix::setGaussianGeneralWSamples(int l, real _alpha, real _sigma, int n
 
   B = V' (psi^-1 - psi^-1 * V * (I + V'*psi^-1*V)^-1 * V' * psi^-1)
 
-
+  Here we do ONE STEP of EM update, using the weighted samples
+  (presumably because of this Gaussian is part of a mixture, and
+  the weights are its posteriors).
 */
 void GaussMix::setGaussianFactorWSamples(int l, real _alpha, VMat samples)
 {
-/*
-  bool samples_have_weights = samples->weightsize()>0;
+  //bool samples_have_weights = samples->weightsize()>0;
 
-  int nsamples=samples.length();
-  Vec wvec(nsamples);
-  Vec input(samples->inputsize());
-  Vec target(samples->targetsize());
-  real weight;
+  //int nsamples=samples.length();
+  //Vec wvec(nsamples);
+  //Vec input(samples->inputsize());
+  //Vec target(samples->targetsize());
+  //real weight;
 
-  Mat eig_vectors(n_principal_components,D);
-  Vec eig_values(n_principal_components);
+  static Mat eig_vectors;
+  eig_vectors.resize(n_principal_components+1,D);
+  static Vec eig_values;
+  eig_values.resize(n_principal_components+1);
 
-  Mat Vnew(K,D);
+  static Mat Vnew;
+  Vnew.resize(n_principal_components,D);
   
-  Mat mu;
-  Mat weights(nsamples, N);
+
+  // initialize factors using principal eigenvectors * sqrt(eigenvalues)
+  // and the next eigenvalue as initial "psi".
+  static Vec wmeans;
+  wmeans.resize(D);
+  static Mat wcovar;
+  wcovar.resize(D,D);
 
   computeInputMeanAndCovar(samples, wmeans,wcovar);
-  eigenVecOfSymmMat(wcovar, n_principal_components,  eig_values, eig_vectors); 
+  eigenVecOfSymmMat(wcovar, n_principal_components+1,  eig_values, eig_vectors); 
+  real initial_psi = eig_values[n_principal_components];
   real * data = eig_vectors.data();
 
   // multiply row[i] of eig_vectors by eig_values[i]
   for(int i=0;i<n_principal_components;i++)
+  {
+    real stddev=sqrt(eig_values[i]-initial_psi);
     for(int j=0;j<D;j++)
-      (*data++)*=eig_values[i];
+      (*data++)*=stddev;
+  }
 
-  // for now, we use EM_lambda0 as a constant noise for initialization
-
-  setGaussianFactor(l, _alpha, wmeans,  eig_vectors, Vec(EM_lambda0,D));
+  // constant noise is initial_psi
+  setGaussianFactor(l, _alpha, wmeans,  
+                    eig_vectors.subMatRows(0,n_principal_components), Vec(D,initial_psi));
 
   if(l>0)
     inv_ivtdv_idx[l] = inv_ivtdv_idx[l-1] + Ks[l]*Ks[l];
-  precompute_FA_stuff(V.subMatRows(V_idx[l],Ks[l]), diags(l), &log_coef[l], & inv_ivtdv.subVec(inv_ivtdv_idx[l], Ks[l]*Ks[l]));
+  precomputeFAStuff(V.subMatRows(V_idx[l],Ks[l]), diags(l), log_coef[l], inv_ivtdv.subVec(inv_ivtdv_idx[l], Ks[l]*Ks[l]));
 
-  // we have the FA for iteration 0
+  // do just ONE EM step, assuming this is called in an outer EM loop
 
-  while(!ok)
-  {
-    // compute Vnew
-
-    // compute sum_i{x_i E(z|x_i)')
+  // compute B
+  // compute E(z|x_i)
+  // compute E(zz'|x_i)
+  // compute Vnew
+  //   compute sum_i{(x_i-mu) E(z|x_i)') and sum_i E(zz'|x_i)
+  // compute psi_new
     
-  
-    /////// faire une fonction qui calcule Bx
-  }
-*/
 }
 
 // this function computes (I + V(t) * psi^-1 * V) ^ -1 and logcoef
-
 void GaussMix::precomputeFAStuff(Mat V, Vec diag, real &log_coef, Vec inv_ivtdv)
 {
   // compute I + V(t) * psi^-1 * V
-      
   int K = V.length();
   Mat i_plus_vt_ipsi_v( K, K, 0.0 );
 
@@ -1131,13 +1141,13 @@ double GaussMix::logDensityFactor(const Vec& x, int num) const
     int K=Ks[l];
 
     // The covariance matrix of a factor analyzer is (VV' + psi). Using the matrix inversion lemma, its inverse can be reexpressed as
-    // (psi^-1 - psi^-1 * V * (I + V'*psi^-1*V) ^-1 * V' * psi^-1)             (precomupted)
-    // here we compute log(p(x))= logcoef - 0.5 * ( x' * ( psi^-1 - psi^-1 * V * inv_ivtdv * V' * psi^-1) * x)
-    //                                              \_______________________________________________________/
-    //                                                                          q
+    // inv_cov=(psi^-1 - psi^-1 * V * (I + V'*psi^-1*V) ^-1 * V' * psi^-1)             (precomupted)
+    // here we compute log(p(x))= logcoef - 0.5 * ( (x-mu)' * inv_cov * (x-mu))
+    //                                             
+    //                                             
     // (see Frey, B.1999, Factor Analysis using batch online EM) : formula (9)
     
-    real q=0;
+    real q=0; // will hold the factor (x-mu)'*inv_cov*(x-mu)
     Vec diag = diags(l);
     for(int i=0;i<D; i++)
       q+=x_minus_mu[i]*x_minus_mu[i]*diag[i];
