@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
- * $Id: TVec_decl.h,v 1.13 2004/07/09 14:53:51 tihocan Exp $
+ * $Id: TVec_decl.h,v 1.14 2004/07/13 14:29:36 chapados Exp $
  * AUTHORS: Pascal Vincent & Yoshua Bengio
  * This file is part of the PLearn library.
  ******************************************************* */
@@ -534,6 +534,8 @@ public:
   void append(const vector<T>& newvec)
     {
       int currentsize = length();
+      if (currentsize + newvec.size() == 0)
+        return;
       resize(currentsize + newvec.size());
       T* v = data();
       for (unsigned int i=0; i<newvec.size(); ++i)
