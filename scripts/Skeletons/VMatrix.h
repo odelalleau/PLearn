@@ -22,6 +22,7 @@ private:
   typedef VMatrix inherited;
 
 protected:
+
   // *********************
   // * protected options *
   // *********************
@@ -30,8 +31,6 @@ protected:
   // ...
     
 public:
-
-  
 
   // ************************
   // * public build options *
@@ -44,8 +43,9 @@ public:
   // * Constructors *
   // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
+  //! Default constructor.
+  // Make sure the implementation in the .cc initializes all fields
+  // to reasonable default values.
   DERIVEDCLASS();
 
 
@@ -54,12 +54,14 @@ public:
   // ******************
 
 private: 
+
   //! This does the actual building. 
   // (Please implement in .cc)
   void build_();
 
 protected: 
-  //! Declares this class' options
+
+  //! Declares this class' options.
   // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
 
@@ -69,7 +71,7 @@ public:
   // **** Object methods ****
   // ************************
 
-  //! simply calls inherited::build() then build_() 
+  //! Simply calls inherited::build() then build_()
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy
@@ -85,14 +87,14 @@ public:
   // **** VMatrix methods ****
   // **************************
 
-  //! get element at i-th row, j-th column
-  //! (Please implement in .cc)
+  //! Get element at i-th row, j-th column
+  //  (Please implement in .cc)
   virtual real get(int i, int j) const;
 
-  //! get part or all of the i-th, starting at the j-th column,
+  //! Get part or all of the i-th, starting at the j-th column,
   //! with v.length() elements; these elements are put in v.
-  //! (Please implement in .cc)
-  //! (default version repeatedly calls get(i,j) which may have a significant overhead)
+  //  (Please implement in .cc)
+  //  (default version repeatedly calls get(i,j) which may have a significant overhead)
   virtual void getSubRow(int i, int j, Vec v) const;
 
   // ** Methods that can be optionally implemented
