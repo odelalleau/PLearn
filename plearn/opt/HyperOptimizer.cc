@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: HyperOptimizer.cc,v 1.2 2002/09/09 20:09:00 uid92278 Exp $
+   * $Id: HyperOptimizer.cc,v 1.3 2002/09/11 07:06:38 morinf Exp $
    * AUTHORS: Pascal Vincent & Frederic Morin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -77,7 +77,6 @@ void
 HSetVal::optimize(PP<Learner> learner, const VMat &dataset, const HAliases &aliases)
 {
     string alias = const_cast<HAliases &>(aliases)[param];
-    cout << "HSetVal::optimize() - Setting: " << alias << " = " << value << endl;
     learner->setOption(alias, value);
 }
 
@@ -100,16 +99,12 @@ void
 HTryAll::optimize(PP<Learner> learner, const VMat &dataset, const HAliases &aliases)
 {
     string alias = const_cast<HAliases &>(aliases)[param];
-    Vec results;
-    results.resize(values.size());
+    Vec results(values.size());
 
     for (int k = 0; k < values.size(); ++k) {
-        cout << "HTryAll::optimize() - Trying " << alias << " = " << values[k] << endl;
         learner->setOption(alias, values[k]);
         results[k] = objective->test(learner, dataset);
-        cout << "results[" << k << "] = " << results[k] << endl;
     }
-    cout << "HTryAll::optimize() - Selected " << alias << " = " << values[argmin(results)] << endl;
     learner->setOption(alias, values[argmin(results)]);
 }
 
@@ -134,6 +129,60 @@ HCoordinateDescent::optimize(PP<Learner> learner, const VMat &dataset, const HAl
     for (int i = 0; i < max_iterations; ++i)
         for (int j = 0; j < substrategy.size(); ++j)
             substrategy[j]->optimize(learner, dataset, aliases);
+}
+
+// ###### HTryCombinations ####################################################
+
+IMPLEMENT_NAME_AND_DEEPCOPY(HTryCombinations);
+
+void
+HTryCombinations::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "params", &HTryCombinations::params, OptionBase::buildoption,
+                  "List of hyperparameters to optimize");
+    declareOption(ol, "values", &HTryCombinations::values, OptionBase::buildoption,
+                  "List of values to select for optimization of the given hyperparameters");
+    inherited::declareOptions(ol);
+}
+
+void
+HTryCombinations::optimize(PP<Learner> learner, const VMat &dataset, const HAliases &aliases)
+{
+    Array<string> str_aliases(params.size());
+    for (int i = 0; i < params.size(); ++i)
+        str_aliases[i] = const_cast<HAliases &>(aliases)[params[i]];
+    recursive_optimize(learner, dataset, str_aliases, 0);
+}
+
+real
+HTryCombinations::recursive_optimize(PP<Learner> learner, const VMat &dataset, const Array<string> &aliases, int i)
+{
+    Vec results(values[i].size());
+
+    for (int k = 0; k < values[i].size(); ++k) {
+        learner->setOption(aliases[i], values[i][k]);
+        if (i == params.size() - 1)
+            results[k] = objective->test(learner, dataset);
+        else
+            results[k] = recursive_optimize(learner, dataset, aliases, i + 1);
+    }
+    int best_k = argmin(results);
+    learner->setOption(aliases[i], values[i][best_k]);
+    return results[best_k];
+}
+
+void
+HTryCombinations::build()
+{
+    inherited::build();
+    _build();
+}
+
+void
+HTryCombinations::_build()
+{
+    if (values.size() != params.size())
+        PLERROR("HTryCombinations::_build() - params.size() must match values.size()");
 }
 
 %>; // end of namespace PLearn

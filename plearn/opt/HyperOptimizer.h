@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: HyperOptimizer.h,v 1.2 2002/09/09 20:09:00 uid92278 Exp $
+   * $Id: HyperOptimizer.h,v 1.3 2002/09/11 07:06:38 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -75,6 +75,7 @@ class HyperOptimizer: public Object
 
     DECLARE_ABSTRACT_NAME_AND_DEEPCOPY(HyperOptimizer);
     static void declareOptions(OptionList &ol);
+
  protected:
  private:
 }; // class HyperOptimizer
@@ -122,7 +123,7 @@ public:
 
     DECLARE_NAME_AND_DEEPCOPY(HTryAll);
     static void declareOptions(OptionList &ol);
-protected:
+
     string param;
     Array<string> values;
 }; // class HTryAll
@@ -153,6 +154,35 @@ protected:
 }; // class HCoordinateDescent
 
 DECLARE_OBJECT_PTR(HCoordinateDescent);
+
+// ###### HTryCombinations ##################################################
+//
+// Try a list of combinations of values of multiple hyperparameters.
+
+class HTryCombinations: public HyperOptimizer
+{
+    typedef HyperOptimizer inherited;
+public:
+    HTryCombinations()
+        {};
+
+    virtual void optimize(PP<Learner> learner, const VMat &dataset, const HAliases &aliases);
+
+    DECLARE_NAME_AND_DEEPCOPY(HTryCombinations);
+    static void declareOptions(OptionList &ol);
+
+    virtual void build(); // We put these here to perform error checking on the specifications
+    void _build();
+
+protected:
+    real recursive_optimize(PP<Learner> learner, const VMat &dataset, const Array<string> &aliases, int i);
+
+    Array<Array<string> > values;
+    Array<string> params;
+
+}; // class HTryCombinations
+
+DECLARE_OBJECT_PTR(HTryCombinations);
 
 
 %>; // end of namespace PLearn

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeuralNet.cc,v 1.2 2002/09/10 22:31:03 morinf Exp $
+   * $Id: NeuralNet.cc,v 1.3 2002/09/11 07:05:45 morinf Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeuralNet.h */
@@ -366,7 +366,7 @@ void NeuralNet::train(VMat training_set)
   
   output_and_target_to_cost->recomputeParents();
   costf->recomputeParents();
-  cerr << totalcost->value << endl;
+  cerr << "totalcost->value = " << totalcost->value << endl;
   setTrainCost(totalcost->value);
 }
 
