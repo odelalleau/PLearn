@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.21 2004/07/19 22:45:25 mariusmuja Exp $ 
+   * $Id: plearn_inc.h,v 1.22 2004/07/20 13:08:30 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -99,6 +99,7 @@
 #include "PCA.h"
 #include "PLS.h"
 #include "StackedLearner.h"
+#include "TestingLearner.h"
 // Distribution (deprecated)
 #include "LocallyWeightedDistribution.h"
 // EmbeddedLearner
@@ -114,11 +115,11 @@
 #include "ManifoldParzen2.h"
 #include "SpiralDistribution.h"
 #include "UniformDistribution.h"
-#include "TestingLearner.h"
 
 /************
  * Splitter *
  ************/
+#include "DBSplitter.h"
 #include "ExplicitSplitter.h"
 #include "FilterSplitter.h"
 #include "FractionSplitter.h"
@@ -129,7 +130,6 @@
 #include "ToBagSplitter.h"
 #include "TrainTestSplitter.h"
 #include "TrainValidTestSplitter.h"
-#include "DBSplitter.h"
 
 /*********************
  * VecStatsCollector *
