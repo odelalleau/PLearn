@@ -28,9 +28,8 @@ else:
 # (no need to include the current directory, it is implicit)
 sourcedirs =   lsdirs(os.path.join(plearndir,'plearn/')) \
              + lsdirs(os.path.join(plearndir,'plearn_learners/')) \
-             + lsdirs(os.path.join(plearndir,'commands/')) \
+             + lsdirs(os.path.join(plearndir,'commands/'))[1:] \
              + lsdirs(os.path.join(lisaplearndir,'PLearnLibrary/')) \
-             + [ os.path.join(lisaplearndir,'Databases/') ] \
              + lsdirs(os.path.join(lisaplearndir,'Databases/')) 
 
 # will be added as list of includes (-I...) to all compilations

@@ -88,8 +88,8 @@ def abspath(mypath):
 def lsdirs(basedir):
     """returns the recursive list of all subdirectories of the given directory,
     excluding OBJS and CVS directories and those whose name starts with a dot.
-    The returned list does NOT contain the basedir"""
-    dirs = []
+    The first element of the returned list is the basedir"""
+    dirs = [ basedir ]
     for dname in os.listdir(basedir):
         if dname!='CVS' and dname!='OBJS' and dname[0]!='.':
             dname = os.path.join(basedir,dname)
