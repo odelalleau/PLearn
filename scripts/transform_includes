@@ -1,0 +1,168 @@
+#!/usr/bin/env python2.3
+#
+# Converts #include <foo.h> to #include <plearn/correct/sub/dir/foo.h>
+#
+# FIXME: does not work properly when the user gives a subdirectory of the root_dir as
+#        a directory to be converted. 
+
+# transform_includes
+# Copyright (c) 2004 Apstat Technologies, inc.
+
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#
+#   1. Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
+#
+#   2. Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#
+#   3. The name of the authors may not be used to endorse or promote
+#      products derived from this software without specific prior written
+#      permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+#  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+#  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+#  NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+#  TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+#  This file is part of the PLearn library. For more information on the PLearn
+#  library, go to the PLearn Web site at www.plearn.org
+
+import sys, os, re
+from optparse import OptionParser
+
+parser = OptionParser(usage="""usage: %prog [options] directory1 directory2 ...
+
+Utility to convert #includes of the form <foo.h> to <plearn/correct/subdir/foo.h>
+Example usage: %prog -r ~/PLearn -s commands -s plearn -s plearn_learners""")
+parser.add_option('-r', dest='root_path',
+                  help="Root path to scan for .h files to build the conversion map.")
+parser.add_option('-s', action='append', dest='subdirs', metavar='SUBDIR',
+                  help="Restrict contents of conversion map to specified SUBDIR of the root path. (Can be specified more than once.)")
+parser.add_option('--show-conversion-map', dest='show_conversion_map',
+                  action='store_true', default=False,
+                  help="Displays the conversion map before proceeding")
+parser.add_option('-n', '--dry-run', dest='dry_run',
+                  action='store_true', default=False,
+                  help="Dry run: only shows the conversions that would get done.")
+(options, args) = parser.parse_args()
+
+if not options.root_path:
+    parser.error('Must specify root path.')
+
+allowed_subdirs = options.subdirs
+if not allowed_subdirs:
+    # All subdirs allowed in the list. So make sure
+    # the h_filename.startswith(subdir) test returns True.
+    allowed_subdirs = ['']
+
+if args:
+    # These paths won't be valid after we chdir, so force them
+    # into absolute paths.
+    args = [os.path.abspath(p) for p in args]
+
+os.chdir(options.root_path)
+cc_files = [os.path.normpath(l.strip()) for l in os.popen(r'find . -name \*.cc -print').readlines()]
+h_files = [os.path.normpath(l.strip()) for l in os.popen(r'find . -name \*.h -print').readlines()]
+
+# Mapping from the name of an include file to its path.
+h_file_path = {}
+
+# Build h file mapping.
+duplicate_includes = False
+for h_filename in h_files:
+    for subdir in allowed_subdirs:
+        if h_filename.startswith(subdir):
+            dirname, filename = os.path.split(h_filename)
+            if filename in h_file_path:
+                if h_file_path[filename] != dirname:
+                    print 'Problem: identical file name "%s" in more than one include directory:' % filename
+                    print '   %s, %s' % (dirname, h_file_path[filename])
+                    duplicate_includes = True
+            else:
+                h_file_path[filename] = dirname
+            break
+
+match_include_re = re.compile(r' *#include +([<"])(.*)([">])')
+
+def transform_file(filename, h_file_path):
+    try:
+        f = file(filename, 'U')
+        lines = f.readlines()
+        f.close()
+    except:
+        print 'Error converting', filename
+        return
+
+    print 
+    print '-- Processing', filename
+    file_changed = False
+    for line_number in range(len(lines)):
+        l = lines[line_number]
+        match = re.match(match_include_re, l)
+        if match:
+            include_startquote = match.group(1)
+            include_filename = match.group(2)
+            
+            if include_filename in h_file_path:
+                include_filepath = h_file_path[include_filename]
+                dirname = os.path.dirname(filename)
+
+                use_quotes = True   # Whether to use "foo" or <foo> for the new include
+                if dirname == include_filepath:
+                    new_include_filename = os.path.basename(include_filename)
+                elif include_filepath.startswith(dirname):
+                    new_include_filename = os.path.join(include_filepath[len(dirname)+1:], include_filename)
+                else:
+                    new_include_filename = os.path.join(include_filepath, include_filename)
+                    use_quotes = False
+
+                if use_quotes:
+                    lines[line_number] = l[:match.start(1)] + '"' + new_include_filename + '"' + l[match.end(3):]
+                else:
+                    lines[line_number] = l[:match.start(1)] + '<' + new_include_filename + '>' + l[match.end(3):]
+                print lines[line_number].strip()
+                file_changed = True
+
+    if not options.dry_run:
+        if file_changed:
+            try:
+                print '-- Updating file:', filename
+                f = file(filename, 'w')
+                f.writelines(lines)
+                f.close()
+            except IOError:
+                print '   Error updating file', filename
+        else:
+            print '-- No changes dones:', filename
+
+
+if duplicate_includes:
+    sys.exit(2)
+
+if options.show_conversion_map:
+    from pprint import pprint
+    pprint(h_file_path)
+
+# Convert the files.
+if len(args) == 0:
+    for filename in cc_files + h_files:
+        transform_file(filename, h_file_path)
+else:
+    for d in args:
+        os.chdir(d)
+        command_line = r'find . \( -name \*.cc -o -name \*.h \) -print'
+        for filename in [os.path.normpath(l.strip()) for l in os.popen(command_line).readlines()]:
+            transform_file(filename, h_file_path)
+
+
+
+    
