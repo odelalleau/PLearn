@@ -141,6 +141,14 @@ void DERIVEDCLASS::resetGenerator(long g_seed) const
   PLERROR("resetGenerator not implemented for DERIVEDCLASS");
 }
 
+//////////////
+// setInput //
+//////////////
+void DERIVEDCLASS::setInput(const Vec& input) const {
+  // ### Perform any preprocessing necessary when the input part x is changed.
+  PLERROR("In DERIVEDCLASS::setInput - Not implemented");
+}
+
 /////////////////
 // survival_fn //
 /////////////////

@@ -77,19 +77,22 @@ public:
   // **** PConditionalDistribution methods ****
   // ******************************************
 
-  //! Return log of probability density log(p(x)).
-  virtual double log_density(const Vec& x) const;
+  //! Set the input part (x in p(y | x)).
+  virtual void setInput(const Vec& input) const;
 
-  //! Return survival fn = P(X>x).
-  virtual double survival_fn(const Vec& x) const;
+  //! Return log of probability density log(p(y | x)).
+  virtual double log_density(const Vec& y) const;
 
-  //! Return survival fn = P(X<x).
-  virtual double cdf(const Vec& x) const;
+  //! Return survival fn = P(Y>y | x).
+  virtual double survival_fn(const Vec& y) const;
 
-  //! Return E[X].
+  //! Return survival fn = P(Y<y | x).
+  virtual double cdf(const Vec& y) const;
+
+  //! Return E[Y | x].
   virtual void expectation(Vec& mu) const;
 
-  //! Return Var[X].
+  //! Return Var[Y | x].
   virtual void variance(Mat& cov) const;
 
   //! Reset the random number generator used by generate() using the given seed.
