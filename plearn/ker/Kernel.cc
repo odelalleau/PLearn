@@ -36,11 +36,12 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.14 2004/02/23 20:33:38 dorionc Exp $
+   * $Id: Kernel.cc,v 1.15 2004/02/28 18:05:01 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "Kernel.h"
+#include "ProgressBar.h"
 
 // From Old Kernel.cc: all includes are putted in every file.
 // To be revised manually 
@@ -58,6 +59,14 @@ using namespace std;
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Kernel, "ONE LINE DESCR", "NO HELP");
 Kernel::~Kernel() {}
 
+////////////
+// Kernel //
+////////////
+Kernel::Kernel(bool is__symmetric)
+: is_symmetric(is__symmetric),
+  report_progress(0)
+{}
+
 ////////////////////
 // declareOptions //
 ////////////////////
@@ -65,6 +74,10 @@ void Kernel::declareOptions(OptionList &ol)
 {
   declareOption(ol, "is_symmetric", &Kernel::is_symmetric, OptionBase::buildoption,
                 "TODO: Give some comments");
+  
+  declareOption(ol, "report_progress", &Kernel::report_progress, OptionBase::buildoption,
+                "If set to 1, a progress bar will be displayed when computing the Gram matrix,\n"
+                "or for other possibly costly operations.");
   
   declareOption(ol, "specify_dataset", &Kernel::specify_dataset, OptionBase::buildoption,
                 "If set, then setDataForKernelMatrix will be called with this dataset at build time");
@@ -106,6 +119,9 @@ void Kernel::setDataForKernelMatrix(VMat the_data)
   }
 }
 
+////////////////////////////
+// addDataForKernelMatrix //
+////////////////////////////
 void Kernel::addDataForKernelMatrix(const Vec& newRow)
 {
   try{
@@ -118,6 +134,9 @@ void Kernel::addDataForKernelMatrix(const Vec& newRow)
   }
 }
 
+//////////////
+// evaluate //
+//////////////
 real Kernel::evaluate_i_j(int i, int j) const
 { return evaluate(data.getSubRow(i,data_inputsize),data.getSubRow(j,data_inputsize)); }
 
@@ -142,6 +161,10 @@ void Kernel::computeGramMatrix(Mat K) const
   if (!data) PLERROR("Kernel::computeGramMatrix should be called only after setDataForKernelMatrix");
   int l=data->length();
   int m=K.mod();
+  ProgressBar* pb = 0;
+  if (report_progress) {
+    pb = new ProgressBar("Computing Gram matrix for " + classname(), l);
+  }
   for (int i=0;i<l;i++)
   {
     real* Ki = K[i];
@@ -153,6 +176,11 @@ void Kernel::computeGramMatrix(Mat K) const
       if (j<i)
         *Kji_ =Kij;
     }
+    if (pb)
+      pb->update(i);
+  }
+  if (pb) {
+    delete pb;
   }
 }
 
@@ -191,6 +219,9 @@ void Kernel::apply(VMat m1, VMat m2, Mat& result) const
   }
   Vec m1_i(m1w);
   Vec m2_j(m2w);
+  ProgressBar* pb = 0;
+  if (report_progress)
+    pb = new ProgressBar("Applying " + classname() + " to two matrices", m1->length());
   if(is_symmetric && m1==m2)
     {
       for(int i=0; i<m1->length(); i++)
@@ -203,6 +234,8 @@ void Kernel::apply(VMat m1, VMat m2, Mat& result) const
               result(i,j) = val;
               result(j,i) = val;
             }
+          if (pb)
+            pb->update(i);
         }
     }
   else
@@ -215,8 +248,12 @@ void Kernel::apply(VMat m1, VMat m2, Mat& result) const
               m2->getSubRow(j,0,m2_j);
               result(i,j) = evaluate(m1_i,m2_j);
             }
+          if (pb)
+            pb->update(i);
         }
     }
+  if (pb)
+    delete pb;
 }
 
 
@@ -288,14 +325,20 @@ real Kernel::test(VMat d, real threshold, real sameness_below_threshold, real sa
   return real(nerrors)/d->length();
 }
 
-
-
-Mat 
-Kernel::computeNeighbourMatrixFromDistanceMatrix(const Mat& D, bool insure_self_first_neighbour)
+//////////////////////////////////////////////
+// computeNeighbourMatrixFromDistanceMatrix //
+//////////////////////////////////////////////
+Mat Kernel::computeNeighbourMatrixFromDistanceMatrix(const Mat& D, bool insure_self_first_neighbour, bool report_progress)
 {
+  // TODO Make it possible to only compute the k nearest neighbours.
   int npoints = D.length();
   Mat neighbours(npoints, npoints);  
   Mat tmpsort(npoints,2);
+
+  ProgressBar* pb = 0;
+  if (report_progress) {
+    pb = new ProgressBar("Computing neighbour matrix", npoints);
+  }
   
     //for(int i=0; i<2; i++)
   for(int i=0; i<npoints; i++)
@@ -310,13 +353,16 @@ Kernel::computeNeighbourMatrixFromDistanceMatrix(const Mat& D, bool insure_self_
 
       sortRows(tmpsort);
       neighbours(i) << tmpsort.column(1);
+      if (pb)
+        pb->update(i);
     }
+  if (pb)
+    delete pb;
   return neighbours;
 }
 
 
-Mat 
-Kernel::estimateHistograms(VMat d, real sameness_threshold, real minval, real maxval, int nbins) const
+Mat Kernel::estimateHistograms(VMat d, real sameness_threshold, real minval, real maxval, int nbins) const
 {
   real binwidth = (maxval-minval)/nbins;
   int inputsize = (d->width()-1)/2;

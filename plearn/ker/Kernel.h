@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.18 2004/02/26 04:19:13 nova77 Exp $
+   * $Id: Kernel.h,v 1.19 2004/02/28 18:05:01 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -58,6 +58,7 @@ protected:
   int data_inputsize;   //< The inputsize of data (if -1, is set to data.width()).
 
   static void declareOptions(OptionList& ol);
+
 public:
 
   // norman: moved to public (Check this!)
@@ -65,11 +66,11 @@ public:
 
   //! Build options.
   bool is_symmetric;
+  int report_progress;
   VMat specify_dataset;
 
-  Kernel(bool is__symmetric = true) 
-    : is_symmetric(is__symmetric)
-    {}
+  //! Constructor.
+  Kernel(bool is__symmetric = true);
 
   PLEARN_DECLARE_ABSTRACT_OBJECT(Kernel);
 
@@ -111,7 +112,7 @@ public:
   //!  kernel is_symmetric]
   virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const; 
 
-  //! call evaluate_i_j to fill each of the entries (i,j) of symmetric matrix K
+  //! Call evaluate_i_j to fill each of the entries (i,j) of symmetric matrix K.
   virtual void computeGramMatrix(Mat K) const;
 
   //!  ** Subclasses may overload these methods ** 
@@ -137,7 +138,7 @@ public:
 
   //!  Returns a Mat m such that m(i,j) is the index of jth closest neighbour of input i, 
   //!  according to the "distance" measures given by D(i,j)
-  static Mat computeNeighbourMatrixFromDistanceMatrix(const Mat& D, bool insure_self_first_neighbour=true);
+  static Mat computeNeighbourMatrixFromDistanceMatrix(const Mat& D, bool insure_self_first_neighbour=true, bool report_progress = false);
 
   Mat estimateHistograms(VMat d, real sameness_threshold, real minval, real maxval, int nbins) const;
   Mat estimateHistograms(Mat input_and_class, real minval, real maxval, int nbins) const;
