@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: databases.h,v 1.9 2004/08/04 14:10:49 mariusmuja Exp $
+   * $Id: databases.h,v 1.10 2004/09/20 16:45:20 mariusmuja Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -136,6 +136,68 @@ inline string loadClassificationDatasetHelp()
     "    nist0 ... usps9 \n"
     "    They can optionally be followed by :size in which case only the 'size' \n"
     "    first rows will be kept. \n";
+}
+
+inline string loadUCIDatasetsHelp()
+{
+    return 
+        "In order to access the UCI datasets the dataset name must start with UCI_. The possible\n"
+        "dataset names are:\n"
+        "    UCI_annealing\n"
+        "    UCI_heart-disease_ID=va\n"
+        "    UCI_heart-disease_ID=cleveland\n"
+        "    UCI_heart-disease_ID=hungarian\n"
+        "    UCI_heart-disease_ID=switzerland\n"
+        "    UCI_housing\n"
+        "    UCI_image\n"
+        "    UCI_ionosphere\n"
+        "    UCI_iris\n"
+        "    UCI_iris_ID=bezdekIris\n"
+        "    UCI_isolet_ID=1+2+3+4\n"
+        "    UCI_isolet_ID=5\n"
+        "    UCI_monks-problems_ID=monks-1\n"
+        "    UCI_monks-problems_ID=monks-2\n"
+        "    UCI_monks-problems_ID=monks-3\n"
+        "    UCI_mushroom\n"
+        "    UCI_musk_ID=clean1\n"
+        "    UCI_musk_ID=clean2\n"
+        "    UCI_page-blocks\n"
+        "    UCI_pima-indians-diabetes\n"
+        "    UCI_solar-flare_ID=data1\n"
+        "    UCI_solar-flare_ID=data2\n"
+        "    UCI_statlog_ID=german\n"
+        "    UCI_statlog_ID=australian\n"
+        "    UCI_statlog_ID=heart\n"
+        "    UCI_statlog_ID=satimage\n"
+        "    UCI_statlog_ID=segment\n"
+        "    UCI_statlog_ID=vehicle\n"
+        "    UCI_statlog_ID=shuttle\n"
+        "    UCI_thyroid-disease_ID=allbp\n"
+        "    UCI_thyroid-disease_ID=allhyper\n"
+        "    UCI_thyroid-disease_ID=allhypo\n"
+        "    UCI_thyroid-disease_ID=allrep\n"
+        "    UCI_thyroid-disease_ID=ann\n"
+        "    UCI_thyroid-disease_ID=dis\n"
+        "    UCI_thyroid-disease_ID=sick\n"
+        "    UCI_thyroid-disease_ID=hypothyroid\n"
+        "    UCI_thyroid-disease_ID=new-thyroid\n"
+        "    UCI_thyroid-disease_ID=sick-euthyroid\n"
+        "    UCI_thyroid-disease_ID=thyroid0387\n"
+        "    UCI_abalone\n"
+        "    UCI_adult\n"
+        "    UCI_covtype\n"
+        "    UCI_internet_ads\n"
+        "    UCI_nursery\n"
+        "    UCI_pendigits\n"
+        "    UCI_spambase\n"
+        "    UCI_yeast\n" 
+        "In order to access the UCI KDD datasets the dataset name must start with UCI_KDD_. The possible\n"
+        "dataset names are:\n"
+        "    UCI_KDD_corel_ID=ColorMoments\n"
+        "    UCI_KDD_corel_ID=ColorHistogram\n"
+        "    UCI_KDD_corel_ID=CoocTexture\n"
+        "    UCI_KDD_corel_ID=LayoutHistogram\n"
+        "    UCI_KDD_insurance-bench\n";
 }
 
 void loadClassificationDataset(const string& dbname, int& inputsize, int& nclasses, VMat& trainset, VMat& testset, bool normalizeinputs, VMat& allset);
