@@ -50,4 +50,24 @@ exclude(p_tvec.last)
 exclude(p_tvec.data)
 
 p_tvec('double')
-#p_tvec('float')
+p_tvec('float')
+
+# Learners...
+
+p_plearner = Class('PLearn::PLearner', 'plearn_learners/generic/PLearner.h')
+
+set_policy(p_plearner.deepCopy, return_value_policy(manage_new_object))
+set_policy(p_plearner.getOptionList, return_internal_reference())
+set_policy(p_plearner._getOptionList_, return_internal_reference())
+set_policy(p_plearner._new_instance_for_typemap_, return_value_policy(manage_new_object))
+exclude(p_plearner.operator['<<'])
+exclude(p_plearner.operator['>>'])
+
+p_constantregressor = Class('PLearn::ConstantRegressor',
+                            'plearn_learners/regressors/ConstantRegressor.h')
+set_policy(p_constantregressor.deepCopy, return_value_policy(manage_new_object))
+set_policy(p_constantregressor.getOptionList, return_internal_reference())
+set_policy(p_constantregressor._getOptionList_, return_internal_reference())
+set_policy(p_constantregressor._new_instance_for_typemap_, return_value_policy(manage_new_object))
+exclude(p_constantregressor.operator['<<'])
+exclude(p_constantregressor.operator['>>'])
