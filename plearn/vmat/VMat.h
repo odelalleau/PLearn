@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat.h,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: VMat.h,v 1.2 2002/07/31 01:41:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -784,6 +784,7 @@ DECLARE_OBJECT_PTR(SubVMatrix);
 //!  according to given vector of indices
 class SelectRowsVMatrix: public VMatrix
 {
+    typedef VMatrix inherited;
 protected:
   VMat distr;
   TVec<int> indices;
@@ -791,6 +792,7 @@ public:
 
   //! Also copies the original fieldinfos upon construction
   //! Here the indices will be shared for efficiency. But you should not modify them afterwards!
+    SelectRowsVMatrix() {};
   SelectRowsVMatrix(VMat the_distr, TVec<int> the_indices) :
     VMatrix(the_indices.length(),the_distr->width()),
     distr(the_distr),indices(the_indices)
@@ -807,6 +809,10 @@ public:
       indices << the_indices; // copy to integer indices
     }
   
+    DECLARE_NAME_AND_DEEPCOPY(SelectRowsVMatrix);
+
+    static void declareOptions(OptionList &ol);
+
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;
   virtual real getStringVal(int col, const string & str) const;
@@ -815,6 +821,8 @@ public:
   virtual real dot(int i1, int i2, int inputsize) const;
   virtual real dot(int i, const Vec& v) const;
 };
+
+DECLARE_OBJECT_PTR(SelectRowsVMatrix);
 
 //!  sees an underlying VMat with the specified rows excluded
 class RemoveRowsVMatrix: public VMatrix

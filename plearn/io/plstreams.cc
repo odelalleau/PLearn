@@ -61,5 +61,6 @@ fstream &nullinout()
 pl_stream_raw raw;
 pl_stream_clear_flags clear_flags;
 pl_stream_user_flags user_flags;
+pl_stream_initiate initiate;
 
 %> // end of namespace PLearn

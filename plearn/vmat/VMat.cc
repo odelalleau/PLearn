@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat.cc,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: VMat.cc,v 1.2 2002/07/31 01:41:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -4100,6 +4100,8 @@ void UpsideDownVMatrix::putSubRow(int i, int j, Vec v)
 
 /** SelectRowsVMatrix **/
 
+IMPLEMENT_NAME_AND_DEEPCOPY(SelectRowsVMatrix);
+
 real SelectRowsVMatrix::get(int i, int j) const
 { return distr->get(indices[i], j); }
 
@@ -4118,6 +4120,12 @@ real SelectRowsVMatrix::getStringVal(int col, const string & str) const
 string SelectRowsVMatrix::getValString(int col, real val) const
 { return distr->getValString(col,val); }
 
+void SelectRowsVMatrix::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "distr", &SelectRowsVMatrix::distr, OptionBase::buildoption, "TODO");
+    declareOption(ol, "indices", &SelectRowsVMatrix::indices, OptionBase::buildoption, "TODO");
+    inherited::declareOptions(ol);
+}
 
 /** RemoveRowsVMatrix **/
 

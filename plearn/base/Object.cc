@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.1 2002/07/30 09:01:26 plearner Exp $
+   * $Id: Object.cc,v 1.2 2002/07/31 01:41:35 morinf Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -128,6 +128,7 @@ void Object::setOption(const string& optionname, const string& value)
 {
     istrstream in_(value.c_str());
     pl_istream in = in_;
+    in >> user_flags(dft_option_flag | OptionBase::nosave);
     readOptionVal(in, optionname);
 }
 
@@ -140,7 +141,7 @@ string Object::getOption(const string &optionname) const
 { 
   ostrstream out_;
   pl_ostream out = out_;
-  out.user_flags = dft_option_flag & OptionBase::nosave;
+  out << user_flags(dft_option_flag | OptionBase::nosave);
   writeOptionVal(out, optionname);
   char* buf = out_.str();
   int n = out_.pcount();
@@ -288,14 +289,10 @@ Object::newread(pl_istream &in)
             optionname = removeblanks(optionname);
             skipBlanksAndComments(in);
 
-            //cout << "reading optionname = " << optionname << endl;
-            //if (optionname == "paramsvalues")
-            //cout << "WHAT??? params received???" << endl;
-
             OptionList &options = getOptionList();
             OptionList::iterator it = find_if(options.begin(), options.end(),
                                               bind2nd(mem_fun(&OptionBase::isOptionNamed), optionname));
-            if (it != options.end() && ((*it)->flags() & in.user_flags) == 0)
+            if (it != options.end() && ((*it)->flags() & in.user_flags_) == 0)
                 (*it)->read_and_discard(in);
             else
                 readOptionVal(in, optionname);
@@ -321,7 +318,7 @@ Object::newread(pl_istream &in)
 void
 Object::newwrite(pl_ostream &out) const
 {
-    vector<string> optnames = split(getOptionsToSave(out.user_flags));
+    vector<string> optnames = split(getOptionsToSave(out.user_flags_));
     out << raw << classname() << "(\n";
     for (unsigned int i = 0; i < optnames.size(); ++i) {
         out << raw << optnames[i] << " = ";

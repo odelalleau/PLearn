@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: plstreams.h,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: plstreams.h,v 1.2 2002/07/31 01:41:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -118,16 +118,16 @@ enum pl_flags { plf_plain,
 class pl_istream: public iassignstream {
  public:
     pl_istream(const pl_istream &in)
-        : iassignstream(in), user_flags(in.user_flags), flags(in.flags)
+        : iassignstream(in), user_flags_(in.user_flags_), flags(in.flags)
         {};
     pl_istream(const istream &in = nullin())
-        : iassignstream(in), user_flags(dft_option_flag), flags(0)
+        : iassignstream(in), user_flags_(dft_option_flag), flags(0)
         {};
 
     pl_istream &operator() (istream &in)
-        { *this = in; return *this; };
+        { iassignstream::operator=(in); return *this; };
 
-    OBflag_t user_flags; 
+    OBflag_t user_flags_; 
     bitset<32> flags;
     map<unsigned int, void *> map_;
 protected:
@@ -138,16 +138,16 @@ protected:
 class pl_ostream: public oassignstream {
  public:
     pl_ostream(const pl_ostream &out)
-        : oassignstream(out), user_flags(out.user_flags), flags(out.flags)
+        : oassignstream(out), user_flags_(out.user_flags_), flags(out.flags)
         {};
     pl_ostream(const ostream &out = nullout())
-        : oassignstream(out), user_flags(dft_option_flag), flags(0)
+        : oassignstream(out), user_flags_(dft_option_flag), flags(0)
         {};
 
     pl_ostream &operator() (ostream &out)
-        { *this = out; return *this; };
+        { oassignstream::operator=(out); return *this; };
 
-    OBflag_t user_flags;
+    OBflag_t user_flags_;
     bitset<32> flags;
     map<void *, unsigned int> map_;
  protected:
@@ -163,10 +163,8 @@ public:
         : ioassignstream(in_out), ostr(in_out), istr(in_out)
         {};
 
-    //operator pl_ostream &() { return ostr; };
-    //operator pl_istream &() { return istr; };
     pl_stream &operator() (iostream &in_out)
-        { *this = in_out; ostr = in_out; istr = in_out; return *this; };
+        { ioassignstream::operator=(in_out); ostr(in_out); istr(in_out); return *this; };
 
     pl_ostream ostr;
     pl_istream istr;
@@ -184,11 +182,12 @@ public:
     pl_stream_user_flags &operator()(OBflag_t flags_)
         { flags = flags_; return *this; };
 };
+class pl_stream_initiate {};
 
 extern pl_stream_raw raw;
 extern pl_stream_clear_flags clear_flags;
 extern pl_stream_user_flags user_flags;
-
+extern pl_stream_initiate initiate;
 
 // Default implementations
 //
@@ -251,11 +250,11 @@ operator<<(pl_ostream &out, const pl_stream_raw raw_)
 
 inline pl_istream &
 operator>>(pl_istream &in, pl_stream_clear_flags &flags_)
-{ in.user_flags = 0; return in; };
+{ in.user_flags_ = 0; return in; };
 
 inline pl_ostream &
 operator<<(pl_ostream &out, const pl_stream_clear_flags &flags_)
-{ out.user_flags = 0; return out; };
+{ out.user_flags_ = 0; return out; };
 
 inline pl_istream &
 operator>>(pl_istream &in, pl_flags flag)
@@ -267,11 +266,19 @@ operator<<(pl_ostream &out, const pl_flags flag)
 
 inline pl_istream &
 operator>>(pl_istream &in, pl_stream_user_flags &flags_)
-{ in.user_flags = flags_.flags; return in; };
+{ in.user_flags_ = flags_.flags; return in; };
 
 inline pl_ostream &
 operator<<(pl_ostream &out, const pl_stream_user_flags &flags_)
-{ out.user_flags = flags_.flags; return out; };
+{ out.user_flags_ = flags_.flags; return out; };
+
+inline pl_istream &
+operator>>(pl_istream &in, pl_stream_initiate &initiate_)
+{ in.map_.clear(); return in; };
+
+inline pl_ostream &
+operator<<(pl_ostream &out, const pl_stream_initiate &initiate_)
+{ out.map_.clear(); return out; };
 
 typedef pl_istream & (*pl_istream_manip)(pl_istream &);
 typedef pl_ostream & (*pl_ostream_manip)(pl_ostream &);
