@@ -36,11 +36,12 @@
 
 
 /* *******************************************************      
-   * $Id: SortRowsVMatrix.cc,v 1.7 2004/09/14 16:04:39 chrish42 Exp $
+   * $Id: SortRowsVMatrix.cc,v 1.8 2004/09/27 13:33:57 tihocan Exp $
    ******************************************************* */
 
-#include "SubVMatrix.h"
 #include "SortRowsVMatrix.h"
+#include "SubVMatrix.h"
+#include <plearn/math/TMat_sort.h>    //!< For sortRows.
 
 namespace PLearn {
 using namespace std;
@@ -68,6 +69,10 @@ void SortRowsVMatrix::declareOptions(OptionList &ol)
         "    if set to 1, the data will be sorted in increasing order");
     
     inherited::declareOptions(ol);
+
+    redeclareOption(ol, "indices", &SortRowsVMatrix::indices, OptionBase::nosave,
+        "The indices are computed at build time.");
+
 }
 
 void SortRowsVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
@@ -103,7 +108,21 @@ void SortRowsVMatrix::build_()
   // Construct the indices vector.
   if (source) {
     indices = TVec<int>(0, source.length()-1, 1);
-    sortRows(source, indices, sort_columns, 0, source->length()-1, 0, increasing_order);
+    if (sort_columns.length() > 1) {
+      // We need to sort many columns: we use the unefficient method.
+      sortRows(source, indices, sort_columns, 0, source->length()-1, 0, increasing_order);
+    } else if (sort_columns.length() > 0) {
+      // Only sorting one column: we can do this more efficiently.
+      Mat to_sort(source->length(), 2);
+      // Fill first column with the column to sort.
+      to_sort.column(0) << source.subMatColumns(sort_columns[0], 1);
+      // Fill 2nd column with indices.
+      to_sort.column(1) << Vec(0, to_sort.length(), 1);
+      // Perform the sort.
+      PLearn::sortRows(to_sort, 0, increasing_order);
+      // Get the indices.
+      indices << to_sort.column(1);
+    }
     inherited::build(); // Since we have just changed the indices.
   }
 }
