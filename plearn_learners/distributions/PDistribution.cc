@@ -3,6 +3,7 @@
 // PDistribution.cc
 //
 // Copyright (C) 2003  Pascal Vincent 
+// Copyright (C) 2004  Université de Montréal
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.cc,v 1.13 2004/05/19 17:28:50 tihocan Exp $ 
+   * $Id: PDistribution.cc,v 1.14 2004/05/21 13:47:24 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.cc */
@@ -130,16 +131,16 @@ int PDistribution::outputsize() const
 void PDistribution::forget()
 { PLERROR("forget not implemented for this PDistribution"); }
     
-double PDistribution::log_density(const Vec& x) const
+real PDistribution::log_density(const Vec& x) const
 { PLERROR("density not implemented for this PDistribution"); return 0; }
 
-double PDistribution::density(const Vec& x) const
+real PDistribution::density(const Vec& x) const
 { return exp(log_density(x)); }
   
-double PDistribution::survival_fn(const Vec& x) const
+real PDistribution::survival_fn(const Vec& x) const
 { PLERROR("survival_fn not implemented for this PDistribution"); return 0; }
 
-double PDistribution::cdf(const Vec& x) const
+real PDistribution::cdf(const Vec& x) const
 { PLERROR("cdf not implemented for this PDistribution"); return 0; }
 
 void PDistribution::expectation(Vec& mu) const

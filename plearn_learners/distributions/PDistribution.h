@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.h,v 1.9 2004/05/19 17:28:50 tihocan Exp $ 
+   * $Id: PDistribution.h,v 1.10 2004/05/21 13:47:24 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.h */
@@ -47,9 +47,12 @@ using namespace std;
 
 class PDistribution: public PLearner
 {
-public:
+
+private:
 
   typedef PLearner inherited;
+
+public:
 
   // ************************
   // * public build options *
@@ -71,8 +74,7 @@ public:
   // * Constructors *
   // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
+  //! Default constructor.
   PDistribution();
 
 
@@ -81,13 +83,13 @@ public:
   // ******************
 
 private: 
+
   //! This does the actual building. 
-  // (Please implement in .cc)
   void build_();
 
 protected: 
+
   //! Declares this class' options
-  // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
 
 public:
@@ -103,8 +105,6 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   // Declares other standard object methods
-  //  If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
   PLEARN_DECLARE_OBJECT(PDistribution);
 
   // **************************
@@ -125,17 +125,17 @@ public:
 
 
   //! return log of probability density log(p(x))
-  virtual double log_density(const Vec& x) const;
+  virtual real log_density(const Vec& x) const;
 
   //! return probability density p(x)
   //! [ default version returns exp(log_density(x)) ]
-  virtual double density(const Vec& x) const;
+  virtual real density(const Vec& x) const;
   
   //! return survival function: P(X>x)
-  virtual double survival_fn(const Vec& x) const;
+  virtual real survival_fn(const Vec& x) const;
 
   //! return cdf: P(X<x)
-  virtual double cdf(const Vec& x) const;
+  virtual real cdf(const Vec& x) const;
 
   //! return E[X] 
   virtual void expectation(Vec& mu) const;
@@ -170,7 +170,7 @@ public:
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(PDistribution);
+DECLARE_OBJECT_PTR(PDistribution);
   
 } // end of namespace PLearn
 
