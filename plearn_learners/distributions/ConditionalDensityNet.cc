@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.42 2004/05/28 12:39:28 tihocan Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.43 2004/05/31 13:02:45 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -89,6 +89,7 @@ ConditionalDensityNet::ConditionalDensityNet()
   log_likelihood_vs_squared_error_balance(1),
   separate_mass_point(1),
   n_output_density_terms(0),
+  generate_precision(1e-3),
   steps_type("sloped_steps"),
   centers_initialization("data"),
   curve_positions("uniform"),
@@ -246,6 +247,9 @@ void ConditionalDensityNet::declareOptions(OptionList& ol)
 
   declareOption(ol, "initial_hardness", &ConditionalDensityNet::initial_hardness, OptionBase::buildoption, 
                 "    value that scales softplus(c).\n");
+
+  declareOption(ol, "generate_precision", &ConditionalDensityNet::generate_precision, OptionBase::buildoption, 
+                "    precision when generating a new sample\n");
 
   declareOption(ol, "paramsvalues", &ConditionalDensityNet::paramsvalues, OptionBase::learntoption, 
                 "    The learned neural network parameter vector\n");
@@ -450,12 +454,13 @@ void ConditionalDensityNet::build_()
       }
       else
       {
-        pos_a = softplus(a); 
+        pos_a = var(0.0);
         if (steps_type=="sigmoid_steps")
           {
             steps = sigmoid(scaled_centers); 
             // steps evaluated at target = M
             steps_M = sigmoid(scaled_centers_M);
+            steps_0 = sigmoid(scaled_centers_0);
             // derivative of steps wrt target
             steps_gradient = pos_c*steps*(1-steps);
             steps_integral = (softplus(scaled_centers_M) - softplus(scaled_centers_0))/pos_c;
@@ -465,6 +470,7 @@ void ConditionalDensityNet::build_()
           {
             steps = soft_slope(target, pos_c, left_side, mu);
             steps_M = soft_slope(max_y, pos_c, left_side, mu);
+            steps_0 = soft_slope(var(0.0), pos_c, left_side, mu);
             steps_gradient = d_soft_slope(target, pos_c, left_side, mu);
             steps_integral = soft_slope_integral(pos_c,left_side,mu,0.0,maxY);
             delta_steps = soft_slope_limit(target, pos_c, left_side, mu);
@@ -472,14 +478,14 @@ void ConditionalDensityNet::build_()
         else PLERROR("ConditionalDensityNet::build, steps_type option value unknown: %s",steps_type.c_str());
 
         density_numerator = dot(pos_b,steps_gradient);
-        cum_denominator = pos_a + dot(pos_b,steps_M); 
+        cum_denominator = dot(pos_b,steps_M - steps_0); 
         inverse_denominator = 1.0/cum_denominator;
-        cum_numerator = pos_a + dot(pos_b,steps);
+        cum_numerator = dot(pos_b,steps - steps_0);
         cumulative = cum_numerator * inverse_denominator;
         density = density_numerator * inverse_denominator;
         // apply l'hopital rule if pos_c --> 0 to avoid blow-up (N.B. lim_{pos_c->0} pos_b/pos_c*steps_integral = pos_b*delta_steps)
         lhopital = ifThenElse(isAboveThreshold(pos_c,1e-20),steps_integral,delta_steps); 
-        expected_value = pos_a*inverse_denominator*max_y + dot(pos_b,lhopital)*inverse_denominator;
+        expected_value = dot(pos_b,lhopital)*inverse_denominator;
         nll = -log(ifThenElse(isAboveThreshold(target,0.0,1,0,true),density,cumulative));
       }
       max_y->setName("maxY");
@@ -666,7 +672,8 @@ void ConditionalDensityNet::build_()
         f = Func(input, params, outputs);
       f->recomputeParents();
 
-      in2distr_f = Func(input,output);
+      in2distr_f = Func(input,pos_a);
+      in2distr_f->recomputeParents();
 
       if (mu_is_fixed)
         test_costf = Func(testinvars, params&mu, outputs&test_costs);
@@ -759,6 +766,7 @@ void ConditionalDensityNet::makeDeepCopyFromShallowCopy(map<const void*, void*>&
   varDeepCopyField(centers, copies);
   varDeepCopyField(centers_M, copies);
   varDeepCopyField(steps, copies);
+  varDeepCopyField(steps_M, copies);
   varDeepCopyField(steps_0, copies);
   varDeepCopyField(steps_gradient, copies);
   varDeepCopyField(steps_integral, copies);
@@ -789,7 +797,6 @@ void ConditionalDensityNet::makeDeepCopyFromShallowCopy(map<const void*, void*>&
   varDeepCopyField(mass_cost, copies);
   varDeepCopyField(pos_y_cost, copies);
   deepCopyField(optimizer, copies);
-  PLERROR("In ConditionalDensityNet::makeDeepCopyFromShallowCopy - Make sure the implementation is complete");
 }
 
 
@@ -799,7 +806,7 @@ void ConditionalDensityNet::setInput(const Vec& in) const
   if (!f)
     PLERROR("ConditionalDensityNet:setInput: build was not completed (maybe because training set was not provided)!");
 #endif
-  in2distr_f->fprop(in,output->value);
+  in2distr_f->fprop(in,pos_a->value);
 }
 
 real ConditionalDensityNet::log_density(const Vec& y) const
@@ -865,7 +872,7 @@ void ConditionalDensityNet::generate(Vec& y) const
         // decrease y
         y2 = y[0];
     }
-  while (delta>0.001*maxY);
+  while (delta > generate_precision * maxY);
 }
 
 
@@ -1027,7 +1034,11 @@ void ConditionalDensityNet::train()
           input->value << tmp1.subVec(0, n_input);
           target->value << tmp1.subVec(n_input, n_target);
           real y = target->valuedata[0];
-          if (y<=0)
+          if (y < 0)
+            PLERROR("In ConditionalDensityNet::train - Found a negative target");
+          if (y > maxY)
+            PLERROR("In ConditionalDensityNet::train - Found a target > maxY");
+          if (y == 0)
             unconditional_p0 += weight;
           if (init_mu_from_data)
             sc.update(y,weight);
