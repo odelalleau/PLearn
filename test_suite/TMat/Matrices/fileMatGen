@@ -1,0 +1,88 @@
+#!/usr/bin/env python
+
+import os, string, sys
+from operator import *
+from random import *
+
+MAX = 1000
+types = {"rand":"Random", "sq":"Square", "sym":"Symetric", "vec":"Vectors"}
+
+nb_of_mat = -1
+the_type = "#undefined"
+
+def lengthWidthFct():
+    length = -1
+    width = -1
+    if the_type == "vec":
+        length = 1
+    else:
+        length = randrange(1,10)
+
+    if the_type == "sq" or the_type == "sym":
+        width = length
+    else:
+        width = randrange(1,10)
+
+    return (length, width)
+        
+        
+def fileMatGen():
+    global nb_of_mat
+    global the_type
+    
+    args = sys.argv[:]
+    del args[0] # ignore program name
+    
+    for arg in args:
+        if arg[0]=='-':
+            if arg[1:] in types.keys():
+                the_type = arg[1:]
+            else:
+                usage()
+        else:
+            nb_of_mat = int(arg)
+
+    if nb_of_mat < 0 or the_type == "#undefined":
+        usage()
+
+    length = -1
+    width = -1
+    listForCVS = os.listdir(types[the_type])
+    cmd = "rm " + os.path.join(types[the_type],"m") + the_type + "* -f"
+    print("Cleaning: " + cmd)
+    os.system(cmd)
+    for mat in listForCVS:
+        os.system("cvs remove " + os.path.join(types[the_type],mat))
+    for i in range(0,nb_of_mat):
+        length, width = lengthWidthFct()
+        f = open( filename(i,length,width), "w")
+        f.write(str(length) + " " + str(width) + "\n")
+        f.flush()
+        for row in range(0,length):
+            writeRow(f, width)
+        f.close()
+
+def filename(nb, length, width):
+    return os.path.join( types[the_type], ("m" + the_type + str(nb) +
+                                           "_" + str(length) +
+                                           "_" + str(width) ))
+
+def myIntRand():
+    return int( uniform(-MAX, MAX) ) 
+    
+def writeRow(file, nbElems):
+    for el in range(0, nbElems):
+        file.write(str(myIntRand()) + ' ')
+        file.flush()
+    file.write("\n")
+    file.flush()
+
+def usage():
+    print("Usage: fileMatGen -<type> <nbOfMat>\n\twhere type is in " +
+          str(types.keys()) )
+    sys.exit()
+
+
+# MAIN PROGRAM
+
+fileMatGen()
