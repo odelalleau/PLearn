@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LLE.h,v 1.1 2004/07/15 21:21:14 tihocan Exp $ 
+   * $Id: LLE.h,v 1.2 2004/07/19 13:37:40 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -72,14 +72,14 @@ public:
   // ************************
 
   int knn;
+  real reconstruct_coeff;
+  real regularizer;
 
   // ****************
   // * Constructors *
   // ****************
 
   //! Default constructor.
-  // (Make sure the implementation in the .cc
-  // initializes all fields to reasonable default values)
   LLE();
 
 
@@ -90,13 +90,11 @@ public:
 private: 
 
   //! This does the actual building. 
-  // (Please implement in .cc)
   void build_();
 
 protected: 
   
   //! Declares this class' options.
-  // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
 
 public:
@@ -112,8 +110,6 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   // Declares other standard object methods.
-  // If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS.
   PLEARN_DECLARE_OBJECT(LLE);
 
 
@@ -122,7 +118,6 @@ public:
   // **********************************
 
   //! (Re-)initializes the PLearner in its fresh state.
-  // (Default implementation just calls inherited::forget()).
   virtual void forget();
 
 };

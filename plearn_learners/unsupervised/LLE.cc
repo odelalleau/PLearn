@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LLE.cc,v 1.1 2004/07/15 21:21:14 tihocan Exp $ 
+   * $Id: LLE.cc,v 1.2 2004/07/19 13:37:40 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -46,13 +46,17 @@
 namespace PLearn {
 using namespace std;
 
-//////////////////
+/////////
 // LLE //
-//////////////////
+/////////
 LLE::LLE() 
-: knn(5)
+: knn(5),
+  reconstruct_coeff(1e6),
+  regularizer(1e-6)
 {
   lle_kernel = new LLEKernel();
+  this->normalize = 1;  // In LLE, we normalize.
+  this->ignore_n_first = 1; // In LLE, we ignore the first eigenvector.
 }
 
 PLEARN_IMPLEMENT_OBJECT(LLE,
@@ -65,24 +69,35 @@ PLEARN_IMPLEMENT_OBJECT(LLE,
 ////////////////////
 void LLE::declareOptions(OptionList& ol)
 {
-  // ### Declare all of this object's options here
-  // ### For the "flags" of each option, you should typically specify  
-  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-  // ### OptionBase::tuningoption. Another possible flag to be combined with
-  // ### is OptionBase::nosave
-
   // Build options.
 
   declareOption(ol, "knn", &LLE::knn, OptionBase::buildoption,
       "The number of nearest neighbors considered.");
+
+  declareOption(ol, "reconstruct_coeff", &LLE::reconstruct_coeff, OptionBase::buildoption,
+      "The weight of K' in the weighted sum of K' and K'' (see LLEKernel).");
+
+  declareOption(ol, "regularizer", &LLE::regularizer, OptionBase::buildoption,
+      "The regularization factor used to make the linear systems stable.");
 
   // Learnt options.
 
   declareOption(ol, "lle_kernel", &LLE::lle_kernel, OptionBase::learntoption,
       "The kernel used in LLE.");
 
-  // Now call the parent class' declareOptions
+  // Now call the parent class' declareOptions.
   inherited::declareOptions(ol);
+
+  // Hide unused options from KernelProjection.
+  redeclareOption(ol, "kernel", &LLE::kernel, OptionBase::nosave,
+      "Will be set at build time.");
+
+  redeclareOption(ol, "normalize", &LLE::normalize, OptionBase::nosave,
+      "Will be set at construction time.");
+
+  redeclareOption(ol, "ignore_n_first", &LLE::ignore_n_first, OptionBase::nosave,
+      "Will be set to 1 at construction time.");
+
 }
 
 ///////////
@@ -99,18 +114,11 @@ void LLE::build()
 ////////////
 void LLE::build_()
 {
-  // ### This method should do the real building of the object,
-  // ### according to set 'options', in *any* situation. 
-  // ### Typical situations include:
-  // ###  - Initial building of an object from a few user-specified options
-  // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-  // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-  // ### You should assume that the parent class' build_() has already been called.
-
   lle_kernel->knn = this->knn;
+  lle_kernel->regularizer = this->regularizer;
+  lle_kernel->reconstruct_coeff = this->reconstruct_coeff;
   lle_kernel->build();
   this->kernel = (Kernel*) lle_kernel;
-  this->normalize = 1;  // In LLE, we normalize.
 }
 
 ////////////
