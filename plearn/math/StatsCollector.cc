@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.35 2004/06/26 00:24:14 plearner Exp $
+   * $Id: StatsCollector.cc,v 1.36 2004/07/15 03:13:22 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,20 +45,40 @@
 namespace PLearn {
 using namespace std;
 
-  PLEARN_IMPLEMENT_OBJECT(StatsCollector, "Collects basic statistics",     "A StatsCollector allows to compute basic global statistics for a series of numbers,\n"
-    "as well as statistics within automatically determined ranges.\n"
-    "The first maxnvalues encountered values will be used as reference points to define\n"
-    "the ranges, so to get reasonable results, your sequence should be iid, and NOT sorted!");
+PLEARN_IMPLEMENT_OBJECT(
+  StatsCollector,
+  "Collects basic statistics",
+  "A StatsCollector allows to compute basic global statistics for a series of numbers,\n"
+  "as well as statistics within automatically determined ranges.\n"
+  "The first maxnvalues encountered values will be used as reference points to define\n"
+  "the ranges, so to get reasonable results, your sequence should be iid, and NOT sorted!\n"
+  "\n"
+  "The following statistics are available:"
+  "  - E              Sample mean\n"
+  "  - V              Sample variance\n"
+  "  - STDDEV         Sample standard deviation\n"
+  "  - STDERROR       Standard error of the mean\n"
+  "  - MIN            Minimum value\n"
+  "  - MAX            Maximum value\n"
+  "  - SUM            Sum of observations \n"
+  "  - SUMSQ          Sum of squares\n"
+  "  - FIRST          First observation\n"
+  "  - LAST           Last observation\n"
+  "  - N              Total number of observations\n"
+  "  - NMISSING       Number of missing observations\n"
+  "  - NNONMISSING    Number of non-missing observations\n"
+  "  - SHARPERATIO    Mean divided by standard deviation\n");
+  
 
-  StatsCollector::StatsCollector(int the_maxnvalues)
-    : maxnvalues(the_maxnvalues),
-      nmissing_(0.), nnonmissing_(0.), 
-      sum_(0.), sumsquare_(0.), 
-      min_(MISSING_VALUE), max_(MISSING_VALUE),
-      first_(MISSING_VALUE), last_(MISSING_VALUE)
-  {
-    build_();
-  }
+StatsCollector::StatsCollector(int the_maxnvalues)
+  : maxnvalues(the_maxnvalues),
+    nmissing_(0.), nnonmissing_(0.), 
+    sum_(0.), sumsquare_(0.), 
+    min_(MISSING_VALUE), max_(MISSING_VALUE),
+    first_(MISSING_VALUE), last_(MISSING_VALUE)
+{
+  build_();
+}
 
 int sortIdComparator(const void* i1, const void* i2)
 {
