@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNClassifier.h,v 1.1 2004/12/21 07:14:10 chapados Exp $ 
+   * $Id: KNNClassifier.h,v 1.2 2004/12/24 07:37:05 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -124,6 +124,16 @@ public:
   //! Whether to weigh each of the K neighbors by the kernel evaluations,
   //! obtained from the costs coming out of the 'knn' object (default=true)
   bool use_knn_costs_as_weights;
+
+  //! If use_knn_costs_as_weights is false, use this kernel to weight the
+  //! observations.  If this object is not specified (default), the
+  //! rectangular kernel is used.
+
+  //! Disregard the 'use_knn_costs_as_weights' option, and use this kernel
+  //! to weight the observations.  If this object is not specified
+  //! (default), and the 'use_knn_costs_as_weights' is false, the
+  //! rectangular kernel is used.
+  Ker kernel;
 
 public:
   //#####  Object Methods  ##################################################

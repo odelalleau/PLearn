@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNClassifier.cc,v 1.1 2004/12/21 07:14:10 chapados Exp $ 
+   * $Id: KNNClassifier.cc,v 1.2 2004/12/24 07:37:04 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -43,7 +43,7 @@
 #include <math.h>
 
 #include <plearn_learners/nearest_neighbors/ExhaustiveNearestNeighbors.h>
-#include <plearn/ker/EpanechnikovKernel.h>
+#include <plearn/ker/GaussianKernel.h>
 #include "KNNClassifier.h"
 
 namespace PLearn {
@@ -85,17 +85,18 @@ PLEARN_IMPLEMENT_OBJECT(
   "evaluations for each nearest neighbor.  These are used as weights to\n"
   "determine the final class probabilities.  (NOTE: it is important to use\n"
   "a kernel that computes a SIMILARITY MEASURE, and not a DISTANCE MEASURE;\n"
-  "the default EpanechnikovKernel has the proper behavior.)  If the option\n"
+  "the default GaussianKernel has the proper behavior.)  If the option\n"
   "is false, an equal weighting is used (equivalent to square window).\n"
   );
 
 KNNClassifier::KNNClassifier()
-  : knn(new ExhaustiveNearestNeighbors(new EpanechnikovKernel(), false)),
+  : knn(new ExhaustiveNearestNeighbors(new GaussianKernel(), false)),
     nclasses(-1),
     kmin(5),
     kmult(0.0),
     kpow(0.5),
-    use_knn_costs_as_weights(true)
+    use_knn_costs_as_weights(true),
+    kernel()
 { }
 
 void KNNClassifier::declareOptions(OptionList& ol)
@@ -103,7 +104,7 @@ void KNNClassifier::declareOptions(OptionList& ol)
   declareOption(
     ol, "knn", &KNNClassifier::knn, OptionBase::buildoption,
     "The K-nearest-neighbors finder to use (default is an\n"
-    "ExhaustiveNearestNeighbors with an Epanechnikov kernel, lambda=1)");
+    "ExhaustiveNearestNeighbors with a Gaussian kernel, sigma=1)");
 
   declareOption(
     ol, "nclasses", &KNNClassifier::nclasses, OptionBase::buildoption,
@@ -129,6 +130,13 @@ void KNNClassifier::declareOptions(OptionList& ol)
     "Whether to weigh each of the K neighbors by the kernel evaluations,\n"
     "obtained from the costs coming out of the 'knn' object (default=true)");
 
+  declareOption(
+    ol, "kernel", &KNNClassifier::kernel, OptionBase::buildoption,
+    "Disregard the 'use_knn_costs_as_weights' option, and use this kernel\n"
+    "to weight the observations.  If this object is not specified\n"
+    "(default), and the 'use_knn_costs_as_weights' is false, the\n"
+    "rectangular kernel is used.");
+  
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
 }
@@ -159,6 +167,7 @@ void KNNClassifier::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(knn_costs,     copies);
   deepCopyField(class_weights, copies);
   deepCopyField(knn,           copies);
+  deepCopyField(kernel,        copies);
   inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
@@ -181,11 +190,13 @@ void KNNClassifier::setTrainingSet(VMat training_set, bool call_forget)
   int n = training_set.length();
   int num_neighbors = max(kmin, int(kmult*pow(n,kpow)));
   knn->num_neighbors = num_neighbors;
-  knn->copy_input  = false;
+  knn->copy_input  = bool(kernel);
   knn->copy_target = true;
   knn->copy_weight = false;
   knn->copy_index  = false;
   knn->setTrainingSet(training_set,call_forget);
+  knn_costs.resize(knn->nTestCosts());
+  knn_output.resize(knn->outputsize());
 }
 
 void KNNClassifier::forget()
@@ -204,22 +215,32 @@ void KNNClassifier::computeOutput(const Vec& input, Vec& output) const
 {
   assert( output.size() == outputsize() );
 
-  knn_output.resize(knn->num_neighbors);
-  knn_costs.resize(knn->nTestCosts());
+  // The case where a user-specified kernel complicates the situation 
+  const int inputsize = input.size();
+  real* output_data = knn_output.data();
   Vec knn_targets;                           //!< not used by knn
   knn->computeOutputAndCosts(input, knn_targets, knn_output, knn_costs);
   
-  // Cumulate the class weights
+  // Cumulate the class weights.  Compute the kernel if it's required.
   class_weights.resize(nclasses);
   class_weights.fill(0.0);
   real total_weight = 0.0;
-  for (int i=0, n=knn_output.size() ; i<n ; ++i) {
-    int nn_class = int(knn_output[i]);
+  for (int i=0, n=knn->num_neighbors ; i<n ; ++i) {
+    real w = -1.0;                           //!< safety net
+    if (kernel) {
+      Vec cur_input(inputsize, output_data);
+      w = kernel(cur_input, input);
+      output_data += inputsize;
+    }
+    int nn_class = int(*output_data++);
     if (nn_class < 0 || nn_class >= nclasses)
       PLERROR("KNNClassifier::computeOutput: expected the class to be between 0 "
-              "and %d but found %f", nclasses, knn_output[i]);
-
-    real w = (use_knn_costs_as_weights? knn_costs[nn_class] : 1.0);
+              "and %d but found %f", nclasses-1, nn_class);
+    if (!kernel)
+      if (use_knn_costs_as_weights)
+        w = knn_costs[nn_class];
+      else
+        w = 1.0;
     assert( w >= 0.0 );
     class_weights[nn_class] += w;
     total_weight += w;
@@ -231,7 +252,7 @@ void KNNClassifier::computeOutput(const Vec& input, Vec& output) const
 
   // And output them
   copy(class_weights.begin(), class_weights.end(), output.begin());
-}    
+}
 
 void KNNClassifier::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                             const Vec& target, Vec& costs) const
