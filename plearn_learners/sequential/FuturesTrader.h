@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.h,v 1.2 2003/09/08 18:44:30 dorionc Exp $ 
+   * $Id: FuturesTrader.h,v 1.3 2003/09/17 15:41:38 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.h */
@@ -48,58 +48,41 @@ using namespace std;
 
 class FuturesTrader: public SequentialLearner
 {
-  //START OF THINGS I ADDED *************************
-public:
-  /*!
-    The only purpose of this Map is that, conventionaly, financial papers refer to w_kt 
-    but here, with respect to the architecture of the Mat, w_tk is more efficient.
-    
-    The map also allows an abstraction of the horizon
-  */
-  // class Map
-//   {
-//     friend ostream& operator<<(ostream& out, const Map& m);
-//   private:
-//     int h; //!< The horizon
-//     Mat mat;
-//   public:
-//     Map(): h(0) {}
-//     Map(const Map& m){ mat = m.mat; h = m.h; }
-//     Map(int T, int h_): h(h_),mat(1,T-h){}            //!< One row map (instead of template bla, bla...
-//     Map(int N, int T, int h_):h(h_),mat(T-h, N){}
-//     void fill(real r){ mat.fill(0.0); }
-//     real& operator()(int k, int t){ return mat(t-h, k); }
-//     real& operator[](int t){ return mat(0,t-h); }
-//   };
-//   friend ostream& operator<<(ostream& out, const Map& m){ return (out << m.mat); }
-
 protected:
   // *********************
   // * protected options *
   // *********************
-
+  
   /*! 
     The names of the assets contained in the train_set
-     as parsed by the assets method
+    as parsed by the assets(...) method. 
   */
   TVec<string> assets_names;
   int nb_assets;               //!< Simply assets_names.length()
-
+  
   //! List of indices associated with the price fields in the VMat
   TVec<int> assets_price_indices;
-
+  
   //! List of indices associated with the tradable flag fields in the VMat
   TVec<int> assets_tradable_indices;
 
-  mutable VMat test_set;               //!< A reference to the testset received in test method
-  mutable int test_length;             //!< Simply test_set.length()-train_set.length()
+  //! The index of the SP500 column in the vmat (if sp500 != ""; see below)
+  int sp500_index;
+  mutable VecStatsCollector log_returns; //!< If sp500 != ""; see below
 
-  //mutable Mat test_weights_;          //!< The portfolio weights for the test
-  real& test_weights(int k, int t) const { return /*test_weights_*/advisor->state(t, k); }
+  //! Time at which test was called the very first time
+  mutable int very_first_test_t;
   
-  //mutable Vec test_Rt;                 //!< The return on each test period
+  mutable VMat test_set;               //!< A reference to the testset received in test method
+//  mutable int test_length;             //!< Simply test_set.length()-train_set.length()
+  
+  mutable StatsCollector Rt_stat;
+  //?? mutable Mat test_Rkt;
+  //Dans le stats collector mutable Vec test_Rt;                 //!< The return on each test period
   mutable Vec stop_loss_values;        //!< Will be used to keep track of the losses/gains
 
+  real& test_weights(int k, int t) const { return advisor->state(t, k); }
+  
 public:
   typedef SequentialLearner inherited;
 
@@ -115,6 +98,19 @@ public:
   //! An embedded learner issuing recommendations on what should the portfolio look like
   PP<SequentialLearner> advisor;
 
+  /*!
+    To be set as true if the undrlying models has a cash position. If it is the case, the 
+     cash position will be considered to be the 1^rst in the portfolio, as reflected in the option's
+     name. 
+
+    Default: true.
+  */
+  bool first_asset_is_cash;
+  
+  //! The risk free rate column name in the VMat. Default: risk_free_rate.
+  string risk_free_rate;
+//#error Cash: as an hyper param != 0 au depart. Default: 1.0. Attention Cash doit etre signifiactivement > que le additive cost
+
   /*! 
     The string such that asset_name:price_tag is the field name
      of the column containing the price. 
@@ -129,8 +125,19 @@ public:
   */
   string tradable_tag;
 
-  //! Each w_0t will be set to (capital_level - \sum_{k>0} w_kt). Default: 1.0
-  real capital_level;
+  /*!
+    The return type field is to be setted according to which formula the user 
+     wants the trader to use for returns. The DEFAULT is 1
+
+     1.- Absolute returns on period t:
+          r_kt = p_kt - p_k(t-horizon)
+          
+     2.- Relative returns on period t:
+                 p_kt - p_k(t-horizon)
+          r_kt = ---------------------
+                    p_k(t-horizon)
+  */
+  //int return_type;
 
   //! The fix cost of performing a trade. Default: 0
   real additive_cost;
@@ -139,6 +146,7 @@ public:
   real multiplicative_cost;
 
   //! The minimum amplitude for a transaction to be considered worthy. Default: 0
+  // It could be interesting to rebal only after a given period of time...
   real rebalancing_threshold;
   
   // Stop loss relative options
@@ -146,44 +154,47 @@ public:
   int  stop_loss_horizon;               //!< The horizon on which the loss/gains are considered
   real stop_loss_threshold;             //!< The value under which the stop loss is triggered
 
+  /*!
+    The following string is the SP500 field name. If given, the test will compute the 
+     covariance of the log returns model/SP500 
+     
+    Default: ""  //No computation 
+  */
+  string sp500;
 
   //**************
   // Methods     *   
   //**************
 
-  //! This parses the train_set VMat to get the assets_names
-  static void assets(const VMat& vmat, TVec<string>& names);
-  
-  //! Returns the price of the given asset at a given time. 
-  inline real price(int k, int t) const
-    { return train_set(t, assets_price_indices[k]); }
-  
+  //! This parses the train_set VMat to get the infos on the assets
+  static void assets_info(const VMat& vmat, TVec<string>& names,
+                          bool the_first_asset_is_cash,  const string& risk_free_rate_,
+                          TVec<int>& price_indices,      const string& price_tag_,
+                          TVec<int>& tradable_indices,   const string& tradable_tag_);
+
   //! Returns the price of the given asset at a given *TEST* time. 
-  inline real test_price(int k, int t) const
-    { return test_set(t+train_set.length(), assets_price_indices[k]); }
+  inline real price(int k, int t) const
+    { return test_set(t, assets_price_indices[k]); }
   
   //******************
-  // These version of return are to be modified
   //! Returns the return on the given asset at a given time. 
-  // #error *** should be +horizon... BAD definition of ret!!! *** 
-  inline real ret(int k, int t) const 
-    { return (price(k, t) - price(k, t-horizon)); }
+  inline real absolute_return(int k, int t) const
+    { return price(k, t) - price(k,t-horizon); }
   
-  inline real test_return(int k, int t) const
-    { 
-      return test_price(k, t) - test_price(k,t-1); 
-    }
+  inline real relative_return(int k, int t) const
+    { return price(k, t)/price(k,t-horizon); }
   //******************
   
   //! Returns the price of the given asset at a given time. 
   inline bool is_tradable(int k, int t)
-    { return train_set(t, assets_tradable_indices[k]); }
+    { 
+      if(first_asset_is_cash && k==0) 
+        return true;
+      return train_set(t, assets_tradable_indices[k]); 
+    }
   
-  //! Called at the begining of test
-  void build_test(const VMat& testset) const;
-
   /*!  
-    Returns |test_weights(k, t) - test_weights(k, t-1)| (if < rebalancing_threshold) 
+    Returns |test_weights(k, t) - test_weights(k, t+1)| (if < rebalancing_threshold) 
     or 0, otherwise.
 
     Also calls stop_loss
@@ -193,10 +204,8 @@ public:
   //! Ensures a basic stop loss
   bool stop_loss(int k, int t) const;
 
-  //! Calls the PLearner::setTrainingSet and the advisor one
+  //! Calls the inherited::setTrainingSet and the advisor one
   virtual void setTrainingSet(VMat training_set, bool call_forget=true);
-
-  //END OF THINGS I ADDED *************************
   
 private:
   //! This does the actual building

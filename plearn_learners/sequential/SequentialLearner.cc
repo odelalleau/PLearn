@@ -56,24 +56,24 @@ void SequentialLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 void SequentialLearner::build_()
 {
-  if(max_seq_len == -1)
-    PLERROR("SequentialLearner::build_\n"
-            "max_seq_length must be set to the maximum length a train/test set can be.");
-  
-  if( outputsize() == 0 )
-    PLERROR("SequentialLearner::build_\n"
-            "outputsize() returns 0 but predictions will later be assumed to have nonzero width.");
-  predictions.resize(max_seq_len, outputsize());
-  
-  if( nTestCosts() == 0 )
-    PLERROR("SequentialLearner::build_\n"
-            "nTestCosts() returns 0 but errors will later be assumed to have nonzero width.");
-  errors.resize(max_seq_len, nTestCosts());
-
-  state.resize(max_seq_len, outputsize());
-  //forget();
+  if(max_seq_len != -1)
+  {
+    if( outputsize() == 0 )
+      PLERROR("SequentialLearner::build_\n"
+              "outputsize() returns 0 but predictions will later be assumed to have nonzero width.");
+    predictions.resize(max_seq_len, outputsize());
+    
+    if( nTestCosts() == 0 )
+      PLERROR("SequentialLearner::build_\n"
+              "nTestCosts() returns 0 but errors will later be assumed to have nonzero width.");
+    errors.resize(max_seq_len, nTestCosts());
+    
+    state.resize(max_seq_len+horizon, outputsize());
+    state.fill(MISSING_VALUE);
+    //forget();
+  }  
 }
-
+  
 void SequentialLearner::build()
 {
   inherited::build();
