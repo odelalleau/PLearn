@@ -33,12 +33,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.40 2004/10/21 18:25:11 chapados Exp $ 
+   * $Id: PTester.cc,v 1.41 2004/11/02 16:35:49 lapalmej Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
 #include <plearn/math/VecStatsCollector.h>
 #include <plearn/vmat/FileVMatrix.h>
+#include <assert.h>
 #include "PTester.h"
 
 namespace PLearn {
