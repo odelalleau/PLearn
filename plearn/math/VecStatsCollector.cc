@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.22 2004/09/14 16:04:37 chrish42 Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.23 2004/10/15 15:57:00 chapados Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -44,7 +44,7 @@ namespace PLearn {
 using namespace std;
 
 VecStatsCollector::VecStatsCollector() 
-  :maxnvalues(0), compute_covariance(false)
+  :maxnvalues(0), compute_covariance(false), epsilon(0.0)
   {}
 
 PLEARN_IMPLEMENT_OBJECT(VecStatsCollector, "Collects basic statistics on a vector", "VecStatsCollector allows to collect statistics on a series of vectors.\n"
@@ -61,21 +61,29 @@ void VecStatsCollector::declareOptions(OptionList& ol)
     // ### is OptionBase::nosave
 
   declareOption(ol, "maxnvalues", &VecStatsCollector::maxnvalues, OptionBase::buildoption,
-                "maximum number of different values to keep track of for each element");
-  declareOption(ol, "compute_covariance", &VecStatsCollector::compute_covariance, OptionBase::buildoption,
-                "should we compute and keep X'.X ?");
-
-  declareOption(ol, "stats", &VecStatsCollector::stats, OptionBase::learntoption,
-                "the stats for each element");
-  declareOption(ol, "cov", &VecStatsCollector::cov, OptionBase::learntoption,
-                "the uncentered covariance matrix (mean not subtracted): X'.X");
+                "maximum number of different values to keep track of for each element\n"
+                "(default: 0, meaning we only keep track of global statistics)");
 
   declareOption(ol, "fieldnames", &VecStatsCollector::fieldnames, OptionBase::buildoption,
                 "Names of the fields of the vector");
 
-    // Now call the parent class' declareOptions
-    inherited::declareOptions(ol);
-  }
+  declareOption(ol, "compute_covariance", &VecStatsCollector::compute_covariance, OptionBase::buildoption,
+                "should we compute and keep X'.X ?  (default false)");
+
+  declareOption(ol, "epsilon", &VecStatsCollector::epsilon,
+                OptionBase::buildoption,
+                "Optional regularization to ADD to the variance vector "
+                "(returned by getVariance and getStdDev); default=0.0");
+  
+  declareOption(ol, "stats", &VecStatsCollector::stats, OptionBase::learntoption,
+                "the stats for each element");
+
+  declareOption(ol, "cov", &VecStatsCollector::cov, OptionBase::learntoption,
+                "the uncentered covariance matrix (mean not subtracted): X'.X");
+
+  // Now call the parent class' declareOptions
+  inherited::declareOptions(ol);
+}
 
 double VecStatsCollector::getStat(const string& statspec)
 {
@@ -214,7 +222,7 @@ Vec VecStatsCollector::getVariance() const
   int n = stats.size();
   Vec res(n);
   for(int k=0; k<n; k++)
-    res[k] = stats[k].variance();
+    res[k] = stats[k].variance() + epsilon;
   return res;
 }
 
@@ -224,7 +232,7 @@ Vec VecStatsCollector::getStdDev() const
   int n = stats.size();
   Vec res(n);
   for(int k=0; k<n; k++)
-    res[k] = stats[k].stddev();
+    res[k] = sqrt(stats[k].variance() + epsilon);
   return res;
 }
 

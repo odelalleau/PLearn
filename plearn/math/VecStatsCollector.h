@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.h,v 1.20 2004/09/14 16:04:37 chrish42 Exp $ 
+   * $Id: VecStatsCollector.h,v 1.21 2004/10/15 15:57:00 chapados Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.h */
@@ -56,25 +56,37 @@ public:
   // ************************
 
   //! maximum number of different values to keep track of for each element
-  int maxnvalues; //! (default: 0, meaning we only keep track of global statistics)
+  //! (default: 0, meaning we only keep track of global statistics)
+  int maxnvalues; 
 
   //! names of the fields of the update vector
   TVec<string> fieldnames;
 
-  //! Should we compute and keep X'.X ?
-  bool compute_covariance; //! (default false)
+  //! Should we compute and keep X'.X ?  (default false)
+  bool compute_covariance;
 
-  // * "learnt" options *
-  TVec<StatsCollector> stats; // the stats for each element
-  Mat cov; // the uncentered covariance matrix (mean not subtracted: X'.X)
+  //! Optional regularization to ADD to the variance vector
+  //! (returned by getVariance and getStdDev); default=0.0
+  double epsilon;
 
+  // ******************
+  // * learnt options *
+  // ******************
+
+  //! the stats for each element
+  TVec<StatsCollector> stats;
+
+  //! the uncentered covariance matrix (mean not subtracted: X'.X)
+  Mat cov; 
+
+  
   // ****************
   // * Constructors *
   // ****************
 
   VecStatsCollector();
 
-
+  
   // ******************
   // * Object methods *
   // ******************
