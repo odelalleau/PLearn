@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainTestBagsSplitter.cc,v 1.2 2004/03/11 03:25:33 nova77 Exp $
+   * $Id: TrainTestBagsSplitter.cc,v 1.3 2004/03/12 23:35:47 tihocan Exp $
    ******************************************************* */
 
 /*! \file TrainTestBagsSplitter.cc */
@@ -107,6 +107,8 @@ TVec<VMat> TrainTestBagsSplitter::getSplit(int k)
   Vec v;
   dataset->getRow(test_length, v);
   // Goes until it finds the end of the bag
+  // TODO If == 3, it's different but it's the end of a bag, no?
+  PLWARNING("In TrainTestBagsSplitter::getSplit - I think it won't work (see TODO in code)");
   while ( v[dataset->width()-1] != SumOverBagsVariable::TARGET_COLUMN_LAST)
   {
     ++test_length;
