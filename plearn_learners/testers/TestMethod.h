@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: TestMethod.h,v 1.5 2004/07/21 16:30:58 chrish42 Exp $
+   * $Id: TestMethod.h,v 1.6 2005/02/19 22:10:15 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -69,8 +69,8 @@ public:
 
   // ** Build Options **
   PP<Splitter> splitter;
-  TVec<string> statnames; //<! a list of n statistics name of the form ex: "E[E[train.class_error]]"
-  bool forget_learner; //<! should we call forget on the learner prior to every train?
+  TVec<string> statnames; //!< a list of n statistics name of the form ex: "E[E[train.class_error]]"
+  bool forget_learner; //!< should we call forget on the learner prior to every train?
 
   // Constructor
   TestMethod() :forget_learner(true) {}

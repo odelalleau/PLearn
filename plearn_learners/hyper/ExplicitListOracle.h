@@ -36,7 +36,7 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: ExplicitListOracle.h,v 1.1 2005/01/11 23:22:44 plearner Exp $ 
+   * $Id: ExplicitListOracle.h,v 1.2 2005/02/19 22:10:15 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file ExplicitListOracle.h */
@@ -68,8 +68,8 @@ public:
   // * public build options *
   // ************************
 
-  TVec<string> option_names; //<! name of options
-  TMat<string> option_values; //<! A matrix with as many columns as there are options, giving their values
+  TVec<string> option_names; //!< name of options
+  TMat<string> option_values; //!< A matrix with as many columns as there are options, giving their values
 
   // ****************
   // * Constructors *

@@ -36,7 +36,7 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperOptimize.h,v 1.2 2005/02/08 21:55:16 tihocan Exp $ 
+   * $Id: HyperOptimize.h,v 1.3 2005/02/19 22:10:15 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file HyperOptimize.h */
@@ -70,7 +70,7 @@ public:
   int min_n_trials;
   PP<OptionsOracle> oracle;
   bool provide_tester_expdir;  // should tester be provided with an expdir for each test run
-  TVec< PP<HyperCommand> > sub_strategy; //<! A possible sub-strategy to optimize other hyper parameters
+  TVec< PP<HyperCommand> > sub_strategy; //!< A possible sub-strategy to optimize other hyper parameters
   bool rerun_after_sub;
   bool provide_sub_expdir; // should sub_strategy be provided an expdir
   PP<Splitter> splitter;  // (if not specified, use default splitter specified in PTester)

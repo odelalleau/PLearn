@@ -99,11 +99,11 @@ public:
 
   enum mode_t 
     {
-      plearn_ascii,    //<! PLearn ascii serialization format (can be mixed with plearn_binary)
-      plearn_binary,   //<! PLearn binary serialization format (can be mixed with plearn_ascii)
-      raw_ascii,       //<! Raw C++ ascii output without additional separators (direct output to underlying ostream)
-      raw_binary,      //<! Simply writes the bytes as they are in memory.
-      pretty_ascii     //<! Ascii pretty print (in particular for Vec and Mat, formatted output without size info)
+      plearn_ascii,    //!< PLearn ascii serialization format (can be mixed with plearn_binary)
+      plearn_binary,   //!< PLearn binary serialization format (can be mixed with plearn_ascii)
+      raw_ascii,       //!< Raw C++ ascii output without additional separators (direct output to underlying ostream)
+      raw_binary,      //!< Simply writes the bytes as they are in memory.
+      pretty_ascii     //!< Ascii pretty print (in particular for Vec and Mat, formatted output without size info)
     };
   
   //! plearn_ascii and plearn_binary are used on output to determine in which format to write stuff.
@@ -112,19 +112,19 @@ public:
   //! Compression mode (mostly used by binary serialization of sequences of floats or doubles, such as TMat<real>)
   //! (Used on output only; autodetect on read).
   enum compr_mode_t { 
-    compr_none,            //<! No compression.
-    compr_double_as_float, //<! In plearn_binary mode, store doubles as float
-    compr_sparse,          //<! PLearn 
-    compr_lossy_sparse     //<! Also stores double as float 
+    compr_none,            //!< No compression.
+    compr_double_as_float, //!< In plearn_binary mode, store doubles as float
+    compr_sparse,          //!< PLearn 
+    compr_lossy_sparse     //!< Also stores double as float 
   };
 
 public:  
-  mode_t inmode;              //<! mode for input formatting
-  // bitset<32> pl_stream_flags_in;  //<! format flags for input
-  map<unsigned int, void *> copies_map_in; //<! copies map for input
-  mode_t outmode;            //<! mode for output formatting
-  // bitset<32> pl_stream_flags_out; //<! format flags for output
-  map<void *, unsigned int> copies_map_out; //<! copies map for output
+  mode_t inmode;              //!< mode for input formatting
+  // bitset<32> pl_stream_flags_in;  //!< format flags for input
+  map<unsigned int, void *> copies_map_in; //!< copies map for input
+  mode_t outmode;            //!< mode for output formatting
+  // bitset<32> pl_stream_flags_out; //!< format flags for output
+  map<void *, unsigned int> copies_map_out; //!< copies map for output
 
 private:
   static char tmpbuf[100];

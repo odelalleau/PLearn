@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FdPStreamBuf.h,v 1.5 2005/01/25 03:15:22 dorionc Exp $ 
+   * $Id: FdPStreamBuf.h,v 1.6 2005/02/19 22:09:53 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -66,9 +66,9 @@ protected:
   // * protected options *
   // *********************
 
-  int in;   //<! input unix file descriptor (-1 if no input)
-  int out;  //<! output unix file descriptor (-1 if no output)
-  bool own_in, own_out; //<! true if {pin|pout} should be closed by this object upon destruction.
+  int in;   //!< input unix file descriptor (-1 if no input)
+  int out;  //!< output unix file descriptor (-1 if no output)
+  bool own_in, own_out; //!< true if {pin|pout} should be closed by this object upon destruction.
 
 public:
 

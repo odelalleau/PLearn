@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrPStreamBuf.h,v 1.8 2005/01/31 17:10:39 chrish42 Exp $ 
+   * $Id: PrPStreamBuf.h,v 1.9 2005/02/19 22:09:54 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Christian Hudon
@@ -68,9 +68,9 @@ protected:
   // * protected options *
   // *********************
 
-  PRFileDesc* in;   //<! input NSPR file descriptor (0 if no input)
-  PRFileDesc* out;  //<! output NSPR file descriptor (0 if no output)
-  bool own_in, own_out; //<! true if {in|out} should be closed by this object upon destruction.
+  PRFileDesc* in;   //!< input NSPR file descriptor (0 if no input)
+  PRFileDesc* out;  //!< output NSPR file descriptor (0 if no output)
+  bool own_in, own_out; //!< true if {in|out} should be closed by this object upon destruction.
 
 public:
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CartesianProductOracle.h,v 1.1 2005/01/11 23:22:44 plearner Exp $
+   * $Id: CartesianProductOracle.h,v 1.2 2005/02/19 22:10:15 tihocan Exp $
    ******************************************************* */
 
 /*! \file CartesianProductOracle.h */
@@ -64,8 +64,8 @@ public:
   // * public build options *
   // ************************
 
-  TVec<string> option_names; //<! name of options
-  TVec< TVec<string> > option_values; //<! A list of option values for each option name
+  TVec<string> option_names; //!< name of options
+  TVec< TVec<string> > option_values; //!< A list of option values for each option name
 
   // ****************
   // * Constructors *

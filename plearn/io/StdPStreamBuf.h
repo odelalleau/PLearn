@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StdPStreamBuf.h,v 1.4 2005/01/14 19:40:49 plearner Exp $ 
+   * $Id: StdPStreamBuf.h,v 1.5 2005/02/19 22:09:54 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -77,13 +77,13 @@ protected:
   // *********************
   // * protected options *
   // *********************
-  istream* pin;  //<! underlying input stream
-  ostream* pout; //<! underlying output stream
-  bool own_pin, own_pout; //<! true if {pin|pout} was created internally
+  istream* pin;  //!< underlying input stream
+  ostream* pout; //!< underlying output stream
+  bool own_pin, own_pout; //!< true if {pin|pout} was created internally
 
 #if DONT_USE_PLSTREAMBUF == 0
-  PP<pl_streambuf> the_inbuf;   //<! markable input buffer
-  PP<pl_fdstreambuf> the_fdbuf; //<! buffer on a POSIX file descriptor
+  PP<pl_streambuf> the_inbuf;   //!< markable input buffer
+  PP<pl_fdstreambuf> the_fdbuf; //!< buffer on a POSIX file descriptor
 
   //! ptrs. to the original buffers;  used to 'reset' the underlying
   //! streams to a valid state when the PStream is destroyed.
@@ -138,7 +138,7 @@ protected:
 
 public:
 
-  inline istream* rawin() { return pin; }   //<! access to underlying istream
+  inline istream* rawin() { return pin; }   //!< access to underlying istream
   inline ostream* rawout() { return pout; }
 
 #if STREAMBUFVER == 0

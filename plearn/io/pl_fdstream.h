@@ -56,9 +56,9 @@ const int pl_dftbuflen= 4096;
 class pl_fdstreambuf : public streambuf, public PPointable
 {
 protected:  
-  int fd;  //<! the file descriptor
-  char* inbuf; //<! input buffer
-  int inbuf_capacity; //<! length of inbuf
+  int fd;  //!< the file descriptor
+  char* inbuf; //!< input buffer
+  int inbuf_capacity; //!< length of inbuf
   
 protected:
   

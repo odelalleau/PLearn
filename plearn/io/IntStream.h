@@ -99,8 +99,8 @@ public:
 // a VMat which is implemented with an IntStream 
  class IntStreamVMatrix : public RowBufferedVMatrix {
  protected:
-   PP<IntStream> stream; //<! where the data actually is
-   mutable int position; //<! position in the stream corresponding to the current window
+   PP<IntStream> stream; //!< where the data actually is
+   mutable int position; //!< position in the stream corresponding to the current window
 
    /*! current_row is a window on the stream, with
        current_row[width()-1] being the element at position 'position' of the stream.

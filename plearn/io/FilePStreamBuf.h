@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilePStreamBuf.h,v 1.5 2005/01/14 19:40:49 plearner Exp $ 
+   * $Id: FilePStreamBuf.h,v 1.6 2005/02/19 22:09:54 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -60,9 +60,9 @@ protected:
   // *********************
   // * protected options *
   // *********************
-  FILE* in;  //<! input FILE (0 if no input)
-  FILE* out; //<! output FILE (0 if no output)
-  bool own_in, own_out; //<! true if {in|out} should be closed by this object upon destruction.
+  FILE* in;  //!< input FILE (0 if no input)
+  FILE* out; //!< output FILE (0 if no output)
+  bool own_in, own_out; //!< true if {in|out} should be closed by this object upon destruction.
 
 public:
 

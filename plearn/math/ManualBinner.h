@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ManualBinner.h,v 1.8 2004/09/14 16:04:36 chrish42 Exp $ 
+   * $Id: ManualBinner.h,v 1.9 2005/02/19 22:10:14 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file ManualBinner.h */
@@ -52,7 +52,7 @@ protected:
   // * protected options *
   // *********************
 
-  PP<RealMapping> the_mapping; //<! pre-calculated in build_
+  PP<RealMapping> the_mapping; //!< pre-calculated in build_
     
 public:
 

@@ -35,7 +35,7 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperCommand.h,v 1.5 2005/02/09 18:21:01 dorionc Exp $ 
+   * $Id: HyperCommand.h,v 1.6 2005/02/19 22:10:15 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file HyperCommand.h */
@@ -62,7 +62,7 @@ private:
 protected:
 
   HyperLearner* hlearner;   //!< A 'real' pointer to avoid cycles (and memory leaks)
-  PPath expdir; //<! where to report results
+  PPath expdir; //!< where to report results
 
 public:
 

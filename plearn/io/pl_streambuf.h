@@ -77,29 +77,29 @@ class pl_streambuf : public streambuf, public PPointable
 
  protected:
   
-  streambuf& original_buf; //<! original buffer that needs marking
-  char* inbuf;             //<! buffer for marking: keeps all chars since first active mark
-  int inbuflen;            //<! current length of inbuf
-  static const int pback_size= 4;     //<! length of default put back area
-  static const int min_buf_size= 16;  //<! minimum buffer size
+  streambuf& original_buf; //!< original buffer that needs marking
+  char* inbuf;             //!< buffer for marking: keeps all chars since first active mark
+  int inbuflen;            //!< current length of inbuf
+  static const int pback_size= 4;     //!< length of default put back area
+  static const int min_buf_size= 16;  //!< minimum buffer size
 
-  pl_streammarker* first_marker;  //<! ptr. to the head of a linked list of active markers
+  pl_streammarker* first_marker;  //!< ptr. to the head of a linked list of active markers
 
-  virtual int_type underflow();   //<! underflow redefined
-  virtual int_type uflow();       //<! uflow redefined
+  virtual int_type underflow();   //!< underflow redefined
+  virtual int_type uflow();       //!< uflow redefined
 
 
   virtual streamsize xsgetn(char* s, streamsize n);
   virtual streamsize xsputn(const char* s, streamsize n);
 
 
-  virtual int_type overflow(int_type meta = pl_streambuf::eof); //<! overflow redefined
-  virtual int_type sync();        //<! sync redefined
-  virtual int_type pbackfail(int_type c= eof);  //<! pbackfail redefined
+  virtual int_type overflow(int_type meta = pl_streambuf::eof); //!< overflow redefined
+  virtual int_type sync();        //!< sync redefined
+  virtual int_type pbackfail(int_type c= eof);  //!< pbackfail redefined
 
-  //inline int curpos() const { return gptr() - inbuf; }  //<! return current position within the input buffer
+  //inline int curpos() const { return gptr() - inbuf; }  //!< return current position within the input buffer
   // norman: explicit cast:
-  inline int curpos() const { return (int)(gptr() - inbuf); }  //<! return current position within the input buffer
+  inline int curpos() const { return (int)(gptr() - inbuf); }  //!< return current position within the input buffer
 
 public:
 
@@ -107,7 +107,7 @@ public:
   pl_streambuf(streambuf& _original_buf, int_type _inbuflen= 0);
   virtual ~pl_streambuf();
 
-  void seekmark(const pl_streammarker& mark);  //<! reposition input to the marked position
+  void seekmark(const pl_streammarker& mark);  //!< reposition input to the marked position
 
 };
 
@@ -120,14 +120,14 @@ class pl_streammarker
 
  protected:
 
-  pl_streambuf* buf;  //<! marked buffer
-  pl_streammarker* next_marker;  //<! next marker for the marked buffer (linked list)
-  int pos;            //<! marked position
+  pl_streambuf* buf;  //!< marked buffer
+  pl_streammarker* next_marker;  //!< next marker for the marked buffer (linked list)
+  int pos;            //!< marked position
 
  public:
 
-  pl_streammarker(pl_streambuf* _buf);  //<! ctor. to mark a pl_streambuf
-  pl_streammarker(streambuf* _buf);  //<! ctor. to mark an STL streambuf (...only if it's really a pl_streambuf)
+  pl_streammarker(pl_streambuf* _buf);  //!< ctor. to mark a pl_streambuf
+  pl_streammarker(streambuf* _buf);  //!< ctor. to mark an STL streambuf (...only if it's really a pl_streambuf)
 
   virtual ~pl_streammarker(); 
 

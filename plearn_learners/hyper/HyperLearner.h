@@ -34,7 +34,7 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperLearner.h,v 1.1 2005/01/11 23:22:44 plearner Exp $
+   * $Id: HyperLearner.h,v 1.2 2005/02/19 22:10:15 tihocan Exp $
    ******************************************************* */
 // Author: Pascal Vincent
 
@@ -69,13 +69,13 @@ public:
   
   // Build options
   PP<PTester> tester; //!< The kind of train/test to perform for each combination of hyper-parameters.
-  TVec<string> option_fields; //<! learner option names to be reported in results table
-  TVec<string> dont_restart_upon_change; //<! list of options that do not require calling build() and forget() upon changing their value.  
+  TVec<string> option_fields; //!< learner option names to be reported in results table
+  TVec<string> dont_restart_upon_change; //!< list of options that do not require calling build() and forget() upon changing their value.  
 
-  TVec< PP<HyperCommand> > strategy; //<! The strategy to follow to optimize hyper parameters
+  TVec< PP<HyperCommand> > strategy; //!< The strategy to follow to optimize hyper parameters
 
-  bool provide_strategy_expdir; //<! should each strategy step be provided a directory expdir/Step#
-  bool save_final_learner; //<! should final learner be saved in expdir/final_learner.psave
+  bool provide_strategy_expdir; //!< should each strategy step be provided a directory expdir/Step#
+  bool save_final_learner; //!< should final learner be saved in expdir/final_learner.psave
   
   // HyperLearner methods
 

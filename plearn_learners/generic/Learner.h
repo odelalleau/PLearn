@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.h,v 1.17 2005/02/08 21:42:20 tihocan Exp $
+   * $Id: Learner.h,v 1.18 2005/02/19 22:10:14 tihocan Exp $
    ******************************************************* */
 
 
@@ -133,11 +133,11 @@ using namespace std;
     int inputsize_;  //!<  The data VMat's are assumed to be formed of inputsize()
     int targetsize_; //!<  columns followed by targetsize() columns.
     int outputsize_; //!<  the use() method produces an output vector of size outputsize().
-    int weightsize_; //<! number of weight fields in the target vec (all_targets = actual_target & weights)
+    int weightsize_; //!< number of weight fields in the target vec (all_targets = actual_target & weights)
 
     //! By default, MPI parallelization done at given level prevents further parallelization
     //! at lower levels. If true, this means "don't parallelize processing at this level" 
-    bool dont_parallelize; //<! (default: false)
+    bool dont_parallelize; //!< (default: false)
 
     //!  test during train specifications
     //oassignstream testout;
@@ -170,7 +170,7 @@ using namespace std;
     int earlystop_max_degraded_steps; //!< max. nb of steps beyond best found [in version >= 1]
 
     bool save_at_every_epoch; //!<  save learner at each epoch?
-    bool save_objective; //<! whether to save in basename()+".objective" the cost after each measure (e.g. after each epoch)
+    bool save_objective; //!< whether to save in basename()+".objective" the cost after each measure (e.g. after each epoch)
     int best_step; //!<  the step (usually epoch) at which validation cost was best
 
   protected:

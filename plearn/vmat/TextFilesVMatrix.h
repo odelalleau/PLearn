@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TextFilesVMatrix.h,v 1.2 2005/01/25 03:15:47 dorionc Exp $ 
+   * $Id: TextFilesVMatrix.h,v 1.3 2005/02/19 22:10:14 tihocan Exp $ 
    ******************************************************* */
 
 // Author: Pascal Vincent
@@ -91,7 +91,7 @@ public:
   // * public build options *
   // ************************
 
-  PPath metadatapath; //<! the path to the .metadata directory 
+  PPath metadatapath; //!< the path to the .metadata directory 
   
   TVec<string> txtfilenames;
 
