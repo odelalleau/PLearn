@@ -3,7 +3,7 @@
 
 // ClassifierFromDensity.h
 //
-// Copyright (C) 2003  Pascal Vincent 
+// Copyright (C) 20032-2005  Pascal Vincent & Olivier Delalleau
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -34,30 +34,34 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ClassifierFromDensity.h,v 1.7 2004/09/14 16:04:40 chrish42 Exp $ 
+   * $Id: ClassifierFromDensity.h,v 1.8 2005/01/27 14:22:29 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file ClassifierFromDensity.h */
 #ifndef ClassifierFromDensity_INC
 #define ClassifierFromDensity_INC
 
+#include <plearn_learners/distributions/PDistribution.h>
 #include <plearn_learners/generic/PLearner.h>
 
 namespace PLearn {
-using namespace std;
 
 class ClassifierFromDensity: public PLearner
 {
-public:
+
+private:
 
   typedef PLearner inherited;
+
+public:
+
 
   // ************************
   // * public build options *
   // ************************
 
   int nclasses;
-  TVec< PP<PLearner> > estimators;
+  TVec< PP<PDistribution> > estimators;
   Vec log_priors;
   bool output_log_probabilities;
   bool normalize_probabilities;
@@ -66,23 +70,21 @@ public:
   // * Constructors *
   // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
+  //! Default constructor.
   ClassifierFromDensity();
-
 
   // ******************
   // * PLearner methods *
   // ******************
 
 private: 
+
   //! This does the actual building. 
-  // (Please implement in .cc)
   void build_();
 
 protected: 
+
   //! Declares this class' options
-  // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
 
 public:
@@ -91,7 +93,7 @@ public:
   // **** Object methods ****
   // ************************
 
-  //! simply calls inherited::build() then build_() 
+  //! Simply calls inherited::build() then build_() 
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy
@@ -122,7 +124,6 @@ public:
 
 
   //! Computes the output from the input
-  // (PLEASE IMPLEMENT IN .cc)
   virtual void computeOutput(const Vec& input, Vec& output) const;
 
   //! Computes the costs from already computed output. 
@@ -141,7 +142,7 @@ public:
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(ClassifierFromDensity);
+DECLARE_OBJECT_PTR(ClassifierFromDensity);
   
 } // end of namespace PLearn
 

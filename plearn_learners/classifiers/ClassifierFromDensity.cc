@@ -3,7 +3,7 @@
 
 // ClassifierFromDensity.cc
 //
-// Copyright (C) 2003  Pascal Vincent 
+// Copyright (C) 2003-2005  Pascal Vincent & Olivier Delalleau
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ClassifierFromDensity.cc,v 1.13 2004/09/27 20:19:29 plearner Exp $ 
+   * $Id: ClassifierFromDensity.cc,v 1.14 2005/01/27 14:22:29 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file ClassifierFromDensity.cc */
@@ -49,166 +49,184 @@ namespace PLearn {
 using namespace std;
 
 ClassifierFromDensity::ClassifierFromDensity() 
-  :nclasses(-1), output_log_probabilities(0), normalize_probabilities(1)
-  {
-    // build_();
-  }
+: nclasses(-1),
+  output_log_probabilities(false),
+  normalize_probabilities(true)
+{}
 
-  PLEARN_IMPLEMENT_OBJECT(ClassifierFromDensity, "A classifier built from density estimators using Bayes' rule.", 
-                          "ClassifierFromDensity allowd to build a classifier\n"
-                          "by building one density estimator for each class, \n"
-                          "and using Bayes rule to combine them. \n");
+PLEARN_IMPLEMENT_OBJECT(ClassifierFromDensity, "A classifier built from density estimators using Bayes' rule.", 
+    "ClassifierFromDensity allows to build a classifier\n"
+    "by building one density estimator for each class, \n"
+    "and using Bayes rule to combine them. \n");
 
-  void ClassifierFromDensity::declareOptions(OptionList& ol)
-  {
-    declareOption(ol, "nclasses", &ClassifierFromDensity::nclasses, OptionBase::buildoption,
-                  "The number of classes");
-    declareOption(ol, "estimators", &ClassifierFromDensity::estimators, OptionBase::buildoption,
-                  "The array of density estimators, one for each class. \n"
-                  "You may also specify just one that will be replicated as many times as there are classes.");
-    declareOption(ol, "log_priors", &ClassifierFromDensity::log_priors, OptionBase::buildoption,
-                  "The log of the class prior probabilities");
-    declareOption(ol, "output_log_probabilities", &ClassifierFromDensity::output_log_probabilities, OptionBase::buildoption,
-                  "Whether computeOutput yields log-probabilities or probabilities (of classes given inputs)");
-    declareOption(ol, "normalize_probabilities", &ClassifierFromDensity::normalize_probabilities, OptionBase::buildoption,
-                  "Whether to normalize the probabilities (if not just compute likelihood * prior for each class)");
+////////////////////
+// declareOptions //
+////////////////////
+void ClassifierFromDensity::declareOptions(OptionList& ol)
+{
+  declareOption(ol, "nclasses", &ClassifierFromDensity::nclasses, OptionBase::buildoption,
+      "The number of classes");
 
-    // Now call the parent class' declareOptions
-    inherited::declareOptions(ol);
-  }
+  declareOption(ol, "estimators", &ClassifierFromDensity::estimators, OptionBase::buildoption,
+      "The array of density estimators, one for each class. \n"
+      "You may also specify just one that will be replicated as many times as there are classes.");
 
-  void ClassifierFromDensity::build_()
-  {
+  declareOption(ol, "log_priors", &ClassifierFromDensity::log_priors, OptionBase::buildoption,
+      "The log of the class prior probabilities");
+
+  declareOption(ol, "output_log_probabilities", &ClassifierFromDensity::output_log_probabilities, OptionBase::buildoption,
+      "Whether computeOutput yields log-probabilities or probabilities (of classes given inputs)");
+ 
+  declareOption(ol, "normalize_probabilities", &ClassifierFromDensity::normalize_probabilities, OptionBase::buildoption,
+      "Whether to normalize the probabilities (if not just compute likelihood * prior for each class)");
+
+  // Now call the parent class' declareOptions
+  inherited::declareOptions(ol);
+}
+
+///////////
+// build //
+///////////
+void ClassifierFromDensity::build()
+{
+  inherited::build();
+  build_();
+}
+
+////////////
+// build_ //
+////////////
+void ClassifierFromDensity::build_()
+{
   if(estimators.size()==1)
-    {
-      estimators.resize(nclasses);
-      for(int i=1; i<nclasses; i++)
-        estimators[i] = PLearn::deepCopy(estimators[0]);
-    }
-  else if(estimators.size()!=nclasses)
+  {
+    estimators.resize(nclasses);
+    for(int i=1; i<nclasses; i++)
+      estimators[i] = PLearn::deepCopy(estimators[0]);
+  }
+  else if(estimators.size() != nclasses)
     PLERROR("In ClassifierFromDensity: specified %d estimators but there are %d classes",estimators.size(), nclasses);
-  }
+}
 
-  // ### Nothing to add here, simply calls build_
-  void ClassifierFromDensity::build()
-  {
-    inherited::build();
-    build_();
-  }
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
+void ClassifierFromDensity::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+  inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(estimators, copies);
+  deepCopyField(log_priors, copies);
+}
 
-
-  void ClassifierFromDensity::makeDeepCopyFromShallowCopy(CopiesMap& copies)
-  {
-    inherited::makeDeepCopyFromShallowCopy(copies);
-    deepCopyField(estimators, copies);
-    deepCopyField(log_priors, copies);
-  }
-
-
+////////////////
+// outputsize //
+////////////////
 int ClassifierFromDensity::outputsize() const
 {
   return nclasses;
 }
 
+////////////
+// forget //
+////////////
 void ClassifierFromDensity::forget()
 {
   stage=0;
   for(int c=0; c<estimators.length(); c++)
     estimators[c]->forget();
 }
-    
+
+///////////
+// train //
+///////////
 void ClassifierFromDensity::train()
 {
   if(targetsize()!=1)
-    PLERROR("In ClassifierFromDensity: expecting a targetsize of 1 (class index between 0 and nclasses-1), not %d !!",targetsize());
-
-  if(!train_stats)  // make a default stats collector, in case there's none
-    train_stats = new VecStatsCollector();
+    PLERROR("In ClassifierFromDensity::train - Expecting a targetsize of 1 (class index between 0 and nclasses-1), not %d !!",targetsize());
 
   if(nstages<stage) // asking to revert to a previous stage!
     forget();  // reset the learner to stage=0
 
   if(stage==0)
-    {
-      log_priors.resize(nclasses);
-      
-      map<real, TVec<int> > indices = indicesOfOccurencesInColumn(train_set, inputsize());
-      
-      for(int c=0; c<nclasses; c++)
-        log_priors[c] = log(real(indices[real(c)].length())) - log(real(train_set.length())); // how many do we have?
+  {
+    log_priors.resize(nclasses);
 
-      string expd = getExperimentDirectory();
-      
-      for(int c=0; c<nclasses; c++)
-        {
-          if(verbosity>=1)
-            cerr << ">>> Training class " << c;
-          VMat set_c = train_set.rows(indices[c]);
-          int in_sz = set_c->inputsize();
-          int targ_sz = set_c->targetsize();
-          int we_sz = set_c->weightsize();
-          // removing target from set
-          if(we_sz==0)
-            {
-              set_c = set_c.subMatColumns(0,in_sz);
-              set_c->defineSizes(in_sz, 0, 0);
-            }
-          else // argh, there are some weights...
-            {
-              set_c = hconcat(set_c.subMatColumns(0,in_sz), set_c.subMatColumns(in_sz+targ_sz,we_sz));
-              set_c->defineSizes(in_sz,0,we_sz);
-            }
-          if(expd!="")
-            estimators[c]->setExperimentDirectory(expd+"Class"+tostring(c));
-          if(verbosity>=1)
-            cerr << " ( " << set_c.length() << " samples)" << endl;
-          estimators[c]->setTrainingSet(set_c);
-          estimators[c]->train();
-        }
-      stage = 1; // trained!
+    map<real, TVec<int> > indices = indicesOfOccurencesInColumn(train_set, inputsize());
+
+    for(int c=0; c<nclasses; c++)
+      log_priors[c] = log(real(indices[real(c)].length())) - log(real(train_set.length())); // how many do we have?
+
+    PPath expd = getExperimentDirectory();
+
+    for(int c=0; c<nclasses; c++)
+    {
+      if(verbosity>=1)
+        cout << ">>> Training class " << c;
+      VMat set_c = train_set.rows(indices[c]);
+      int in_sz = set_c->inputsize();
+      int targ_sz = set_c->targetsize();
+      int we_sz = set_c->weightsize();
+      // Removing target from set
+      if (we_sz==0)
+      {
+        set_c = set_c.subMatColumns(0,in_sz);
+        set_c->defineSizes(in_sz, 0, 0);
+      }
+      else // There are some weights.
+      {
+        set_c = hconcat(set_c.subMatColumns(0,in_sz), set_c.subMatColumns(in_sz+targ_sz,we_sz));
+        set_c->defineSizes(in_sz,0,we_sz);
+      }
+      if (expd!="")
+        estimators[c]->setExperimentDirectory(expd / "Class" / tostring(c));
+      if (verbosity>=1)
+        cout << " ( " << set_c.length() << " samples)" << endl;
+      estimators[c]->setTrainingSet(set_c);
+      PP<VecStatsCollector> train_stats = new VecStatsCollector();
+      train_stats->setFieldNames(estimators[c]->getTrainCostNames());
+      estimators[c]->setTrainStatsCollector(train_stats);
+      estimators[c]->train();
     }
+    stage = 1; // trained!
+  }
 }
 
+///////////////////
+// computeOutput //
+///////////////////
 void ClassifierFromDensity::computeOutput(const Vec& input, Vec& output) const
 {
   output.resize(nclasses);
-
   real logprob;
-  Vec logprobvec(1,&logprob);
   double log_of_sumprob = 0.;
 
   for(int c=0; c<nclasses; c++)
+  {
+    logprob = estimators[c]->log_density(input);
+    double logprob_c = logprob + log_priors[c]; // multiply p by the prior
+    output[c] = logprob_c;
+    if (normalize_probabilities)
     {
-      estimators[c]->computeOutput(input, logprobvec);
-      double logprob_c = logprob + log_priors[c]; // multiply p by the prior
-      output[c] = logprob_c;
-      if (normalize_probabilities)
-      {
-        if(c==0)
-          log_of_sumprob = logprob_c;
-        else
-          log_of_sumprob = logadd(log_of_sumprob, logprob_c);
-      }
-    }      
-
-  // cerr << "unnormalized logprob: " << output << endl;
-  // cerr << "log of sumprob: " << log_of_sumprob << endl;
+      if(c==0)
+        log_of_sumprob = logprob_c;
+      else
+        log_of_sumprob = logadd(log_of_sumprob, logprob_c);
+    }
+  }      
 
   if (normalize_probabilities)
     output -= real(log_of_sumprob); // divide by the sum
-  else if (nclasses==2)
-    output[1] -= output[0];
 
-  // make it probabilities rather than log probabilities...
+  // Make it probabilities rather than log probabilities...
   if (!output_log_probabilities)
     exp(output, output);
-
-  // cout << "output: " << output << endl;
-  // cout << "argmax: " << argmax(output) << endl;
 }
 
+/////////////////////////////
+// computeCostsFromOutputs //
+/////////////////////////////
 void ClassifierFromDensity::computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                           const Vec& target, Vec& costs) const
+    const Vec& target, Vec& costs) const
 {
   static CostFunc cl_er;
   static CostFunc cond_p;
@@ -216,12 +234,14 @@ void ClassifierFromDensity::computeCostsFromOutputs(const Vec& input, const Vec&
     cl_er = class_error();
   if(!cond_p)
     cond_p = condprob_cost();
-
   costs.resize(2);
   costs[0] = cl_er->evaluate(output, target);
   costs[1] = cond_p->evaluate(output, target);
 }                                
 
+//////////////////////
+// getTestCostNames //
+//////////////////////
 TVec<string> ClassifierFromDensity::getTestCostNames() const
 {
   TVec<string> cnames(2);
@@ -230,11 +250,12 @@ TVec<string> ClassifierFromDensity::getTestCostNames() const
   return cnames;
 }
 
+///////////////////////
+// getTrainCostNames //
+///////////////////////
 TVec<string> ClassifierFromDensity::getTrainCostNames() const
 {
   return TVec<string>();
 }
-
-
 
 } // end of namespace PLearn
