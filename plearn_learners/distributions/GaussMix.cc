@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.25 2004/05/19 17:27:21 tihocan Exp $ 
+ * $Id: GaussMix.cc,v 1.26 2004/05/20 14:06:52 tihocan Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -198,7 +198,7 @@ void GaussMix::computeMeansAndCovariances() {
     if (sum_columns[j] < epsilon) {
       PLWARNING("In GaussMix::computeMeansAndCovariances - A posterior is almost zero");
     }
-    VMat weights(posteriors.column(j));
+    VMat weights(columnmatrix(updated_weights(j)));
     weighted_train_set = new ConcatColumnsVMatrix(
         new SubVMatrix(train_set, 0, 0, nsamples, D), weights);
     weighted_train_set->defineSizes(D, 0, 1);
@@ -322,6 +322,8 @@ void GaussMix::computePosteriors() {
       posteriors(i, j) = likehood[j] / sum_likehood;
     }
   }
+  // Now update the sample weights.
+  updateSampleWeights();
 }
 
 ////////////////////
@@ -491,12 +493,12 @@ void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clu
           bestclust=j;
         }
       clust_idx[i]=bestclust;
-      samples_per_cluster[bestclust]++;
-      newclust(bestclust)+=input;
+      samples_per_cluster[bestclust] += weight;
+      newclust(bestclust) += input * weight;
     }
     for(int i=0; i<nclust; i++)
       if (samples_per_cluster[i]>0)
-        newclust(i)/=samples_per_cluster[i];
+        newclust(i) /= samples_per_cluster[i];
     clust << newclust;
     ok=true;
     for(int i=0;i<nsamples;i++)
@@ -505,7 +507,6 @@ void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clu
         ok=false;
         break;
       }
-    
   }
 }
 
@@ -592,11 +593,12 @@ void GaussMix::resetGenerator(long g_seed) const
 /////////////////
 void GaussMix::resizeStuff() {
   nsamples = train_set->length();
+  alpha.resize(L);
   D = train_set->inputsize();
+  initial_weights.resize(nsamples);
   mu.resize(L,D);
   posteriors.resize(nsamples, L);
-  alpha.resize(L);
-  nsamples = train_set->length();
+  updated_weights.resize(L, nsamples);
   // Those are not used for every type:
   sigma.resize(0);
   diags.resize(0,0);
@@ -648,6 +650,18 @@ void GaussMix::train()
   resizeStuff();
 
   if (stage == 0) {
+    // Copy the sample weights.
+    if (train_set->weightsize() <= 0) {
+      initial_weights.fill(1);
+    } else {
+      Vec tmp1;
+      Vec tmp2;
+      real w;
+      for (int i = 0; i < nsamples; i++) {
+        train_set->getExample(i, tmp1, tmp2, w);
+        initial_weights[i] = w;
+      }
+    }
     // Perform K-means to initialize the centers of the mixture.
     TVec<int> clust_idx;  // Store the cluster index for each sample.
     kmeans(train_set, L, clust_idx, mu, kmeans_iterations);
@@ -657,6 +671,7 @@ void GaussMix::train()
       // and 1 otherwise.
       posteriors(i, clust_idx[i]) = 1;
     }
+    updateSampleWeights();
     computeWeights();
     computeMeansAndCovariances();
     precomputeStuff();
@@ -683,6 +698,16 @@ void GaussMix::train()
   }
   if (pb)
     delete pb;
+}
+
+/////////////////////////
+// updateSampleWeights //
+/////////////////////////
+void GaussMix::updateSampleWeights() {
+  for (int j = 0; j < L; j++) {
+    updated_weights(j) << initial_weights;
+    columnmatrix(updated_weights(j)) *= posteriors.column(j);
+  }
 }
 
 double GaussMix::log_density(const Vec& x) const

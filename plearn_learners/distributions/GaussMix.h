@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussMix.h,v 1.18 2004/05/19 17:27:22 tihocan Exp $ 
+   * $Id: GaussMix.h,v 1.19 2004/05/20 14:06:52 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file GaussMix.h */
@@ -68,6 +68,16 @@ protected:
   int n_eigen_computed;
   int nsamples;
   Mat posteriors;
+
+  // Fields below are not options.
+
+  //! The initial weights of the samples x_i in the training set, copied for
+  //! efficiency concerns.
+  Vec initial_weights;
+
+  //! A matrix whose j-th line is a Vec with the weights of each sample x_i,
+  //! multiplied by the posterior P(j | x_i).
+  Mat updated_weights;
 
 public:
 
@@ -128,6 +138,10 @@ protected:
 
   //! Resize everything according to the options set.
   virtual void resizeStuff();
+
+  //! Update the sample weights according to their initial weights and the current
+  //! posterior probabilities.
+  void updateSampleWeights();
 
 public:
 
