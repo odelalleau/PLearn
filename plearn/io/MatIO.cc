@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatIO.cc,v 1.17 2005/02/08 21:34:52 tihocan Exp $
+   * $Id: MatIO.cc,v 1.18 2005/02/25 17:25:50 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -257,7 +257,7 @@ void loadPVec(const string& filename, TVec<float>& vec)
   char endiantype[20];
   int the_length;
 
-  FILE* f = fopen(filename.c_str(),"r");
+  FILE* f = fopen(filename.c_str(),"rb");
   if (!f)
     PLERROR("In loadPVec, could not open file %s for reading",filename.c_str());
   fread(header,DATAFILE_HEADERLENGTH,1,f);
@@ -307,7 +307,7 @@ void loadPVec(const string& filename, TVec<double>& vec)
   char endiantype[20];
   int the_length;
 
-  FILE* f = fopen(filename.c_str(),"r");
+  FILE* f = fopen(filename.c_str(),"rb");
   if (!f)
     PLERROR("In loadPVec, could not open file %s for reading",filename.c_str());
   fread(header,DATAFILE_HEADERLENGTH,1,f);
@@ -425,7 +425,7 @@ void loadPMat(const string& filename, TMat<float>& mat)
   int the_length;
   int the_width;
 
-  FILE* f = fopen(filename.c_str(),"r");
+  FILE* f = fopen(filename.c_str(),"rb");
   if (!f)
     PLERROR("In loadPMat, could not open file %s for reading",filename.c_str());
   fread(header,DATAFILE_HEADERLENGTH,1,f);
@@ -481,7 +481,7 @@ void loadPMat(const string& filename, TMat<double>& mat)
   int the_length=0;
   int the_width=0;
 
-  FILE* f = fopen(filename.c_str(),"r");
+  FILE* f = fopen(filename.c_str(),"rb");
   if (!f)
     PLERROR("In loadPMat, could not open file %s for reading",filename.c_str());
   fread(header,DATAFILE_HEADERLENGTH,1,f);
@@ -925,7 +925,7 @@ void loadAsciiWithoutSize(const string& filename, const Mat& mat)
 // Native SN format (Fmat)
 void saveSNMat(const string& filename, const Mat& mat)
 {
-  FILE *f=fopen(filename.c_str(),"w");
+  FILE *f=fopen(filename.c_str(),"wb");
   int i=0x1e3d4c51L;
   int j=0;
   fwrite_int(f,&i,1);
@@ -948,7 +948,7 @@ Mat loadSNMat(const string& filename)
   int imn;
   int length, width;
 
-  f=fopen(filename.c_str(),"r");
+  f=fopen(filename.c_str(),"rb");
   if (!f)
     PLERROR("In loadFmat, could not open file %s for reading",filename.c_str());
 
@@ -980,7 +980,7 @@ Mat loadSNMat(const string& filename)
 
 void saveSNVec(const string& filename, const Vec& vec)
 {
-  FILE* f=fopen(filename.c_str(),"w");
+  FILE* f=fopen(filename.c_str(),"wb");
   if(!f)
     PLERROR("In Vec::loadSNVec could not open file for writing");
   int i=0x1e3d4c51L;
@@ -1003,7 +1003,7 @@ Vec loadSNVec(const string& filename)
   int imn;
   int size;
 
-  f=fopen(filename.c_str(),"r");
+  f=fopen(filename.c_str(),"rb");
   if (!f)
     PLERROR("In Vec::loadSNVec could not open file %s for reading",filename.c_str());
 
@@ -1037,7 +1037,7 @@ Vec loadSNVec(const string& filename)
 
 Mat loadADMat(const string& filename)
 {
-  FILE *f = fopen(filename.c_str(),"r");
+  FILE *f = fopen(filename.c_str(),"rb");
   if (!f)
     PLERROR("In loadADMat, could not open file %s for reading",filename.c_str());
   int the_length, the_width;
@@ -1057,7 +1057,7 @@ Mat loadADMat(const string& filename)
 
 Vec loadADVec(const string& filename)
 {
-  FILE* f = fopen(filename.c_str(),"r");
+  FILE* f = fopen(filename.c_str(),"rb");
   if (!f)
     PLERROR("In Vec::loadADMat could not open file %s for reading",filename.c_str());
   int thesize;
