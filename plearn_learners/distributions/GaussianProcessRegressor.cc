@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianProcessRegressor.cc,v 1.9 2004/06/26 00:24:15 plearner Exp $
+   * $Id: GaussianProcessRegressor.cc,v 1.10 2004/07/09 19:42:43 tihocan Exp $
    ******************************************************* */
 
 #include "GaussianProcessRegressor.h"
@@ -320,7 +320,7 @@ void GaussianProcessRegressor::computeCostsFromOutputs(const Vec& input, const V
   {
     real diff=mu[i] - target[i];
     mse += diff*diff;
-    logdensity += gauss_log_density(target[i],mu[i],var[i]+noise_sd[i]*noise_sd[i]);
+    logdensity += gauss_log_density_var(target[i],mu[i],var[i]+noise_sd[i]*noise_sd[i]);
   }
   costs[0]=mse;
   costs[1]=logdensity;
