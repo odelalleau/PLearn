@@ -1,0 +1,89 @@
+// -*- C++ -*-
+
+// PLearn (A C++ Machine Learning Library)
+// Copyright (C) 2003 Olivier Delalleau
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+// 
+//  1. Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+// 
+//  2. Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//     documentation and/or other materials provided with the distribution.
+// 
+//  3. The name of the authors may not be used to endorse or promote
+//     products derived from this software without specific prior written
+//     permission.
+// 
+// THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+// NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+// TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// 
+// This file is part of the PLearn library. For more information on the PLearn
+// library, go to the PLearn Web site at www.plearn.org
+
+
+/* *******************************************************      
+   * $Id: SortRowsVMatrix.h,v 1.1 2003/12/05 18:55:01 tihocan Exp $
+   ******************************************************* */
+
+
+/*! \file PLearnLibrary/PLearnCore/VMat.h */
+
+#ifndef SortRowsVMatrix_INC
+#define SortRowsVMatrix_INC
+
+#include "SelectRowsVMatrix.h"
+
+namespace PLearn <%
+using namespace std;
+ 
+//! Sort the samples of a VMatrix according to one (or more)
+//! given columns.
+class SortRowsVMatrix: public SelectRowsVMatrix
+{
+
+  typedef SelectRowsVMatrix inherited;
+
+public:
+
+  //! Public build options
+  int increasing_order;
+  TVec<int> sort_columns;
+
+public:
+
+  SortRowsVMatrix();
+
+  PLEARN_DECLARE_OBJECT(SortRowsVMatrix);
+
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
+  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+
+private:
+
+  void build_();
+
+  //! This function returns in indices the sorting of the rows of a VMat m,
+  //! according to the columns specified by sort_columns[colstart, ...],
+  //! where m is viewed as ordered by the indices given at calling time.
+  //! Only the samples between istart and iend are considered.
+  static void sortRows(
+      VMat& m, TVec<int>& indices, TVec<int>& sort_columns,
+      int istart, int iend, int colstart, bool increasing_order);
+
+};
+
+%> // end of namespace PLearn
+#endif
