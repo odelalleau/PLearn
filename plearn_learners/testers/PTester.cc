@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.41 2004/11/02 16:35:49 lapalmej Exp $ 
+   * $Id: PTester.cc,v 1.42 2004/11/03 14:10:50 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -94,7 +94,7 @@ PLEARN_IMPLEMENT_OBJECT(
   "Statistics can be either specified entirely from the 'statnames' option, or built from\n"
   "'statnames' and 'statmask'. For instance, one may set:\n"
   "   statnames = [ \"NLL\" \"mse\" ]\n"
-  "   statmask  = [ [ \"E[*]\" ] [ \"test1.*\" \"test2.*\" ] [ \"E[*]\" \"STDERROR[*]\" ] ]\n"
+  "   statmask  = [ [ \"E[*]\" ] [ \"test#1-2#.*\" ] [ \"E[*]\" \"STDERROR[*]\" ] ]\n"
   "and this will compute:\n"
   "   E[test1.E[NLL]], STDERROR[test1.E[NLL]], E[test2.E[NLL]], STDERROR[test2.E[NLL]]\n"
   "   E[test1.E[mse]], STDERROR[test1.E[mse]], E[test2.E[mse]], STDERROR[test2.E[mse]]\n"
@@ -227,20 +227,53 @@ void PTester::build_()
   statnames_processed.resize(statnames.length());
   statnames_processed << statnames;
   if (statmask) {
+    // First process statmask to remove potential ranges, like test#1-3#.
+    // The result is stored in the 'sm' variable.
+    TVec< TVec<string> > sm(statmask.length());
+    for (int i = 0; i < statmask.length(); i++) {
+      for (int j = 0; j < statmask[i].length(); j++) {
+        string mask = statmask[i][j];
+        size_t pos;
+        bool is_range = false;
+        if ((pos = mask.find('#')) != string::npos) {
+          // There is a '#' character.
+          size_t pos2;
+          if ((pos2 = mask.find('#', pos + 1)) != string::npos) {
+            // There is a second '#' character.
+            vector<string> range = split(mask.substr(pos + 1, pos2 - pos - 1), '-');
+            if (range.size() == 2) {
+              // We have a range.
+              is_range = true;
+              int left = atoi(range[0].c_str());
+              int right = atoi(range[1].c_str());
+              int delta = 1;
+              if (left > right)
+                delta = -1;
+              right += delta;
+              for (int k = left; k != right; k += delta)
+                sm[i].append(mask.substr(0, pos) + tostring(k) + mask.substr(pos2 + 1, mask.size() - pos2));
+            }
+          }
+        }
+        if (!is_range)
+          // There is no range.
+          sm[i].append(mask);
+      }
+    }
     TVec< TVec<string> > temp(2);
     int d = 0;
     temp[d] = statnames_processed;
-    for (int i=0;i<statmask.length();i++) {
-      temp[1-d].resize(temp[d].length() * statmask[i].length());      
+    for (int i=0;i<sm.length();i++) {
+      temp[1-d].resize(temp[d].length() * sm[i].length());      
       
-      for (int j=0;j<statmask[i].length();j++) {
-        string mask = statmask[i][j];
+      for (int j=0;j<sm[i].length();j++) {
+        string mask = sm[i][j];
         size_t pos;
         if ((pos=mask.find('*'))==string::npos) {
           // This may actually be useful, if we want to force a value.
 //            PLWARNING("In PTester::build_ : the %s element of statmask does not contain a '*'",mask.c_str());
           for (int k = 0; k < temp[d].length(); k++) {
-            temp[1-d][j + k * statmask[i].length()] = mask;
+            temp[1-d][j + k * sm[i].length()] = mask;
           }
         } else {
           for (int k=0;k<temp[d].length();k++) {
@@ -249,7 +282,7 @@ void PTester::build_()
             }
             string elem = mask;
             elem.replace(pos,1,temp[d][k]);
-            temp[1-d][j + k * statmask[i].length()] = elem;
+            temp[1-d][j + k * sm[i].length()] = elem;
           }
         }
       }
