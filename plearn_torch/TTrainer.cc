@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TTrainer.cc,v 1.1 2005/02/23 01:31:19 tihocan Exp $ 
+   * $Id: TTrainer.cc,v 1.2 2005/02/23 21:55:13 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -117,6 +117,7 @@ void TTrainer::updateFromPLearn(Torch::Object* ptr) {
   else
     PLERROR("In TTrainer::updateFromPLearn - Torch::Trainer is an abstract class "
             "and cannot be instantiated");
+  FROM_P_OBJ(machine, machine, machine, TMachine, trainer, machine);
   inherited::updateFromPLearn(trainer);
 }
 
@@ -124,7 +125,7 @@ void TTrainer::updateFromPLearn(Torch::Object* ptr) {
 // updateFromTorch //
 /////////////////////
 void TTrainer::updateFromTorch() {
-  assert( (machine ? machine->machine : 0) == trainer->machine );
+  FROM_T_OBJ(machine, machine, machine, TMachine, trainer, machine);
   inherited::updateFromTorch();
 }
 

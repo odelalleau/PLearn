@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TSequence.cc,v 1.1 2005/02/23 16:29:02 tihocan Exp $ 
+   * $Id: TSequence.cc,v 1.2 2005/02/23 21:54:06 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -121,6 +121,10 @@ void TSequence::updateFromPLearn(Torch::Object* ptr) {
       allocator->free(sequence);
     sequence = new(allocator) Torch::Sequence(n_real_frames, frame_size);
   }
+
+  FROM_P_BASIC(n_frames, n_frames, sequence, n_frames);
+  
+  // TODO Find a cleaner way to do this.
   if (options["frames"]) {
     if (sequence->frame_size != frame_size)
       PLERROR("In TSequence::updateFromPLearn - Cannot modify the frame size");
@@ -132,10 +136,7 @@ void TSequence::updateFromPLearn(Torch::Object* ptr) {
         *(dest++) = *(source++);
     }
   }
-  if (options["n_frames"])
-    sequence->n_frames = n_frames;
 
-  PLWARNING("In TSequence::updateFromPLearn - Implementation to complete");
   inherited::updateFromPLearn(sequence);
 }
 
@@ -143,6 +144,8 @@ void TSequence::updateFromPLearn(Torch::Object* ptr) {
 // updateFromTorch //
 /////////////////////
 void TSequence::updateFromTorch() {
+  FROM_T_BASIC(n_frames, n_frames, sequence, n_frames);
+
   frames.resize(sequence->n_real_frames, sequence->frame_size);
   for (int i = 0; i < frames.length(); i++) {
     real* source = sequence->frames[i];
@@ -150,7 +153,6 @@ void TSequence::updateFromTorch() {
     for (int j = 0; j < frames.width(); j++)
       *(dest++) = *(source++);
   }
-  n_frames = sequence->n_frames;
   inherited::updateFromTorch();
 }
 
