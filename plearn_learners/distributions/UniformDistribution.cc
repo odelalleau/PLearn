@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UniformDistribution.cc,v 1.3 2004/05/26 16:05:57 tihocan Exp $ 
+   * $Id: UniformDistribution.cc,v 1.4 2004/06/21 14:57:01 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -46,9 +46,9 @@
 namespace PLearn {
 using namespace std;
 
-//////////////////
+/////////////////////////
 // UniformDistribution //
-//////////////////
+/////////////////////////
 UniformDistribution::UniformDistribution() 
 {
   // Default = generate points uniformly in [0,1].
