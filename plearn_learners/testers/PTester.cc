@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.21 2004/01/20 19:15:55 thibodea Exp $ 
+   * $Id: PTester.cc,v 1.22 2004/01/26 14:17:05 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -150,6 +150,8 @@ PTester::PTester()
     declareOption(ol, "global_template_stats_collector", &PTester::global_template_stats_collector, OptionBase::buildoption,
                   "If provided, this instance of a subclass of VecStatsCollector will be used as a template\n"
                   "to build all the global stats collector that collects statistics over splits");
+    declareOption(ol, "final_commands", &PTester::final_commands, OptionBase::buildoption,
+                  "If provided, the shell commands given will be executed after training is completed");
     inherited::declareOptions(ol);
   }
 
@@ -330,8 +332,9 @@ Vec PTester::perform(bool call_forget)
             test_costs = new FileVMatrix(splitdir+setname+"_costs.pmat",0,testcostsize);
       
           test_stats->forget();
-          if (testset->length()==0)
-            PLERROR("PTester:: test set % is of length 0!",setname.c_str());
+          if (testset->length()==0) {
+            PLWARNING("PTester:: test set % is of length 0, costs will be set to -1",setname.c_str());
+          }
           learner->test(testset, test_stats, test_outputs, test_costs);      
           test_stats->finalize();
           if(splitdir != "" && save_stat_collectors)
@@ -370,6 +373,11 @@ Vec PTester::perform(bool call_forget)
 
   if(global_stats_vm)
     global_stats_vm->appendRow(global_result);
+
+  // Perform the final commands provided in final_commands.
+  for (int i = 0; i < final_commands.length(); i++) {
+    system(final_commands[i].c_str());
+  }
 
   return global_result;
 }
