@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.27 2003/11/21 16:19:29 tihocan Exp $
+   * $Id: NNet.cc,v 1.28 2003/11/24 16:29:23 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -139,10 +139,14 @@ void NNet::declareOptions(OptionList& ol)
                 "      mse_onehot (for classification)\n"
                 "      NLL (negative log likelihood -log(p[c]) for classification) \n"
                 "      class_error (classification error) \n"
+                "      stable_cross_entropy (for binary classification)\n"
                 "    The first function of the list will be used as \n"
                 "    the objective function to optimize \n"
                 "    (possibly with an added weight decay penalty) \n");
   
+  declareOption(ol, "classification_regularizer", &NNet::classification_regularizer, OptionBase::buildoption, 
+                "    used only in the stable_cross_entropy cost function, to fight overfitting (0<=r<1)\n");
+
   declareOption(ol, "optimizer", &NNet::optimizer, OptionBase::buildoption, 
                 "    specify the optimizer to use\n");
 
@@ -286,8 +290,15 @@ void NNet::build_()
             costs[k] = multiclass_loss(output, target);
           else if(cost_funcs[k]=="cross_entropy")
             costs[k] = cross_entropy(output, target);
-          else if (cost_funcs[k]=="stable_cross_entropy")
-            costs[k] = stable_cross_entropy(before_transfer_func, target);
+          else if (cost_funcs[k]=="stable_cross_entropy") {
+            Var c = stable_cross_entropy(before_transfer_func, target);
+            costs[k] = c;
+            if (classification_regularizer) {
+              // There is a regularizer to add to the cost function.
+              dynamic_cast<NegCrossEntropySigmoidVariable*>((Variable*) c)->
+                setRegularizer(classification_regularizer);
+            }
+          }
           else if (cost_funcs[k]=="lift_output")
             costs[k] = lift_output(output, target);
           else  // Assume we got a Variable name and its options

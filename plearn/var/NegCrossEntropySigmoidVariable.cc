@@ -5,6 +5,7 @@
 // Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio, Rejean Ducharme and University of Montreal
 // Copyright (C) 2001-2002 Nicolas Chapados, Ichiro Takeuchi, Jean-Sebastien Senecal
 // Copyright (C) 2002 Xiangdong Wang, Christian Dorion
+// Copyright (C) 2003 Olivier Delalleau
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -36,7 +37,7 @@
 
 
 /* *******************************************************      
-   * $Id: NegCrossEntropySigmoidVariable.cc,v 1.2 2003/11/12 20:53:44 tihocan Exp $
+   * $Id: NegCrossEntropySigmoidVariable.cc,v 1.3 2003/11/24 16:29:24 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,8 +45,6 @@
 
 namespace PLearn <%
 using namespace std;
-
-
 
 /** NegCrossEntropySigmoidVariable **/
 
@@ -55,19 +54,26 @@ PLEARN_IMPLEMENT_OBJECT(
   "cross-entropy cost",
   "NO HELP");
 
+////////////////////////////////////
+// NegCrossEntropySigmoidVariable //
+////////////////////////////////////
 NegCrossEntropySigmoidVariable::
 NegCrossEntropySigmoidVariable(Variable* netout, Variable* target)
-  :BinaryVariable(netout,target,1,1)
+  :BinaryVariable(netout,target,1,1),regularizer(0)
 {
   if(netout->size() != target->size())
     PLERROR("In NegCrossEntropySigmoidVariable: netout and target must have the same size");
 }
 
-
+///////////////////
+// recomputeSize //
+///////////////////
 void NegCrossEntropySigmoidVariable::recomputeSize(int& l, int& w) const
 { l=1, w=1; }
 
-
+///////////
+// fprop //
+///////////
 void NegCrossEntropySigmoidVariable::fprop()
 {
   real cost = 0.0;
@@ -86,13 +92,22 @@ void NegCrossEntropySigmoidVariable::fprop()
         cost += -1e9;
      } // If target == 1.0 do nothing, cost is 0.
     } else {
-      cost += target*log(output) + (1.0-target)*log(1.0-output);
+      if (!regularizer) {
+        // Standard cross entropy.
+        cost += target*log(output) + (1.0-target)*log(1.0-output);
+      } else {
+        // Regularized cross entropy.
+        cost += target*((1 - regularizer) * log(output) + regularizer * log(1.0 - output)) +
+                (1.0-target)*((1 - regularizer) * log(1.0-output) + regularizer * log(output));
+      }
     }
   }
   valuedata[0] = -cost;
 }
 
-
+///////////
+// bprop //
+///////////
 void NegCrossEntropySigmoidVariable::bprop()
 {
   real gr = *gradientdata;
@@ -100,8 +115,27 @@ void NegCrossEntropySigmoidVariable::bprop()
   {
     real output = sigmoid(input1->valuedata[i]);
     real target = input2->valuedata[i];
-    input1->gradientdata[i] += gr*(output - target);
+    if (!regularizer) {
+      // Standard cross entropy.
+      input1->gradientdata[i] += gr*(output - target);
+    } else {
+      // Regularized cross entropy.
+      if (target == 0.0) {
+        input1->gradientdata[i] += gr*((1-regularizer) * output - regularizer * (1-output));
+      } else if (target == 1.0) {
+        input1->gradientdata[i] += gr*(regularizer * output - (1-regularizer) * (1-output));
+      } else {
+        PLERROR("NegCrossEntropySigmoidVariable::bprop: target is neither 0 nor 1");
+      }
+    }
   }
+}
+
+////////////////////
+// setRegularizer //
+////////////////////
+void NegCrossEntropySigmoidVariable::setRegularizer(real r) {
+  this->regularizer = r;
 }
 
 %> // end of namespace PLearn

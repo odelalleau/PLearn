@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: NegCrossEntropySigmoidVariable.h,v 1.1 2003/11/07 06:19:58 chapados Exp $
+   * $Id: NegCrossEntropySigmoidVariable.h,v 1.2 2003/11/24 16:29:24 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,6 +52,12 @@ using namespace std;
 class NegCrossEntropySigmoidVariable: public BinaryVariable
 {
 protected:
+  
+  //! If > 0, will modify the cost function to:
+  //! (1-t)(r*log(o)+(1-r)*log(1-o)) + t*(r*log(1-o)+(1-r)*log(o))
+  //! (t = target, o = output, r = regularizer = a small value)
+  real regularizer;
+  
   typedef BinaryVariable inherited;
   //!  Default constructor for persistence
   NegCrossEntropySigmoidVariable() {}
@@ -62,6 +68,8 @@ public:
   virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
   virtual void bprop();
+
+  void setRegularizer(real r);
 };
 
 
