@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: IfThenElseVariable.cc,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: IfThenElseVariable.cc,v 1.5 2004/02/26 07:45:13 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -69,7 +69,9 @@ void IfThenElseVariable::fprop()
 {
   if(If()->isScalar())
     {
-      bool test = (bool)If()->valuedata[0];
+      //bool test = (bool)If()->valuedata[0];
+	    // norman: replaced a bad cast with a better boolean conversion
+	    bool test = If()->valuedata[0] == 0 ? false : true;
       if (test)
         value << Then()->value;
       else
@@ -82,7 +84,9 @@ void IfThenElseVariable::fprop()
       real* elsev = Else()->valuedata;
       for (int k=0;k<nelems();k++)
         {
-          if ((bool)ifv[k])
+          //if ((bool)ifv[k])
+          // norman: replaced a bad cast with a better boolean conversion
+          if ( ifv[k] == 0 ? false:true )
             valuedata[k]=thenv[k];
           else
             valuedata[k]=elsev[k];
@@ -95,7 +99,9 @@ void IfThenElseVariable::bprop()
 {
   if(If()->isScalar())
     {
-      bool test = (bool)If()->valuedata[0];
+      // bool test = (bool)If()->valuedata[0];
+	  // norman: replaced a bad cast with a better boolean conversion
+	  bool test = If()->valuedata[0] == 0 ? false : true;
       if (test)
         Then()->gradient += gradient;
       else
@@ -108,7 +114,9 @@ void IfThenElseVariable::bprop()
       real* elseg = Else()->gradientdata;
       for (int k=0;k<nelems();k++)
         {
-          if ((bool)ifv[k])
+          //if ((bool)ifv[k])
+          // norman: replaced a bad cast with a better boolean conversion
+          if ( ifv[k] == 0 ? false:true )
             theng[k] += gradientdata[k];
           else
             elseg[k] += gradientdata[k];
@@ -130,7 +138,9 @@ void IfThenElseVariable::rfprop()
   if (rValue.length()==0) resizeRValue();
   if(If()->isScalar())
     {
-      bool test = (bool)If()->valuedata[0];
+		  //bool test = (bool)If()->valuedata[0];
+		  // norman: replaced a bad cast to a better boolean conversion
+	    bool test = If()->valuedata[0] == 0 ? false : true;
       if (test)
         rValue << Then()->rValue;
       else
@@ -143,7 +153,9 @@ void IfThenElseVariable::rfprop()
       real* relsev = Else()->rvaluedata;
       for (int k=0;k<nelems();k++)
         {
-          if ((bool)ifv[k])
+          //if ((bool)ifv[k])
+          // norman: replaced a bad cast with a better boolean conversion
+          if ( ifv[k] == 0 ? false:true )
             rvaluedata[k]=rthenv[k];
           else
             rvaluedata[k]=relsev[k];
