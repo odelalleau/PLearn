@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CascadeCorrelation.cc,v 1.2 2004/11/15 14:58:07 larocheh Exp $
+   * $Id: CascadeCorrelation.cc,v 1.3 2004/11/17 16:04:25 larocheh Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/CascadeCorrelation.h */
@@ -96,10 +96,10 @@ CascadeCorrelation::CascadeCorrelation() // DEFAULT VALUES FOR ALL OPTIONS
    classification_regularizer(0),
    margin(1),
    early_stop_threshold(0.00001),
+   min_iteration(10),
    correlation_early_stop_threshold(0.001),
    use_correlation_optimization(true),
-   L1_penalty_in_to_hid(false),
-   L1_penalty_hid_to_out(false),
+   L1_penalty(false),
    output_transfer_func(""),
    hidden_transfer_func("tanh"),
    interval_minval(0), interval_maxval(1),
@@ -114,7 +114,7 @@ CascadeCorrelation::~CascadeCorrelation()
 void CascadeCorrelation::declareOptions(OptionList& ol)
 {
   declareOption(ol, "n_opt_iterations", &CascadeCorrelation::n_opt_iterations, OptionBase::buildoption, 
-                "    number of iterations for the optimization algorithm of the network's weights)\n");
+                "    number of iterations for the optimization algorithm of the network's weights\n");
 
   declareOption(ol, "noutputs", &CascadeCorrelation::noutputs, OptionBase::buildoption, 
                 "    number of output units. This gives this learner its outputsize.\n"
@@ -141,11 +141,8 @@ void CascadeCorrelation::declareOptions(OptionList& ol)
   declareOption(ol, "output_layer_bias_decay", &CascadeCorrelation::output_layer_bias_decay, OptionBase::buildoption, 
                 "    Additional bias decay for the output layer.  Is added to 'bias_decay'.\n");
 
-  declareOption(ol, "L1_penalty_in_to_hid", &CascadeCorrelation::L1_penalty_in_to_hid, OptionBase::buildoption, 
-                "    should we use L1 penalty instead of the default L2 penalty on the weights between input and hidden nodes?\n");
-
-  declareOption(ol, "L1_penalty_hid_to_out", &CascadeCorrelation::L1_penalty_hid_to_out, OptionBase::buildoption, 
-                "    should we use L1 penalty instead of the default L2 penalty on the weights between hidden and output nodes?\n");
+  declareOption(ol, "L1_penalty", &CascadeCorrelation::L1_penalty, OptionBase::buildoption, 
+                "    should we use L1 penalty instead of the default L2 penalty on the network's weighs?\n");
 
   declareOption(ol, "output_transfer_func", &CascadeCorrelation::output_transfer_func, OptionBase::buildoption, 
                 "    what transfer function to use for ouput layer? \n"
@@ -181,9 +178,13 @@ void CascadeCorrelation::declareOptions(OptionList& ol)
   declareOption(ol, "margin", &CascadeCorrelation::margin, OptionBase::buildoption, 
                 "    margin requirement, used only with the margin_perceptron_cost cost function.\n"
                 "    It should be positive, and larger values regularize more.\n");
+
   declareOption(ol, "early_stop_threshold", &CascadeCorrelation::early_stop_threshold, OptionBase::buildoption, 
                 "    value of the relative difference of the optimized cost under which.\n"
                 "    optimization will be stopped.\n");
+
+  declareOption(ol, "min_iteration", &CascadeCorrelation::min_iteration, OptionBase::buildoption, 
+                "    minimum number of iterations befor early stop for the optimized cost.\n");
 
   declareOption(ol, "correlation_early_stop_threshold", &CascadeCorrelation::correlation_early_stop_threshold, OptionBase::buildoption, 
                 "    value of the relative difference of the correlation cost under which.\n"
@@ -239,9 +240,9 @@ void CascadeCorrelation::build_()
   if(inputsize_>=0 && targetsize_>=0 && weightsize_>=0)
   {
 
-    hidden_nodes.resize(nstages);
-    w.resize(nstages);
-    wout.resize(nstages);
+    hidden_nodes.resize(0,nstages);
+    w.resize(0,nstages);
+    wout.resize(0,nstages);
 
     // Initialize the input.
     input = Var(inputsize(), "input");
@@ -504,10 +505,11 @@ void CascadeCorrelation::updateOutputFromInput(int i) {
 
   // adding candidate node
   string var_name = "wout["+tostring(i)+"]";
-  wout[i] = Var(1,targetsize_,var_name.c_str());
+  Var temp(1,targetsize_,var_name.c_str());
+  wout.push_back(temp);
   params.append(wout[i]);
   fillWeights(wout[i],false,inputsize_+i+1);
-  hidden_nodes[i] = candidate_node;
+  hidden_nodes.push_back(candidate_node);
   before_transfer_func += new TransposeProductVariable(wout[i],candidate_node);
   dynamic_cast<IdentityVariable*> ((Variable*) identity)->setInput(before_transfer_func);
 }
@@ -521,7 +523,7 @@ void CascadeCorrelation::buildPenalties() {
   
   if(((output_layer_weight_decay + weight_decay)!=0 || (output_layer_bias_decay + bias_decay)!=0))
     penalties.append(affine_transform_weight_penalty(w_in_to_out, (output_layer_weight_decay*(inputsize_) + weight_decay), 
-          (output_layer_bias_decay + bias_decay), L1_penalty_hid_to_out));
+          (output_layer_bias_decay + bias_decay), L1_penalty));
 }
 
 void CascadeCorrelation::updatePenalties(int i) {
@@ -530,7 +532,7 @@ void CascadeCorrelation::updatePenalties(int i) {
   
   if(((output_layer_weight_decay + weight_decay)!=0 || (output_layer_bias_decay + bias_decay)!=0))
     penalties.append(affine_transform_weight_penalty(vconcat( ((VarArray)w_in_to_out) & wout), (output_layer_weight_decay*(inputsize_+i+1) + weight_decay), 
-          (output_layer_bias_decay + bias_decay), L1_penalty_hid_to_out));
+          (output_layer_bias_decay + bias_decay), L1_penalty));
 }
 
 //////////////////////////
@@ -632,7 +634,8 @@ TVec<string> CascadeCorrelation::getTestCostNames() const
 void CascadeCorrelation::addCandidateNode(int i)
 {
   string var_name = "w["+tostring(i)+"]";
-  w[i] = Var(inputsize_+1+i,var_name.c_str());
+  Var temp(inputsize_+1+i,var_name.c_str());
+  w.push_back(temp);
   fillWeights(w[i],true);
   params.append(w[i]);
   candidate_node = hiddenLayer(vconcat(((VarArray) input) & hidden_nodes.subVarArray(0,i)),w[i],hidden_transfer_func);
@@ -682,7 +685,13 @@ void CascadeCorrelation::initializeParams(bool set_seed)
   }
 
   fillWeights(w_in_to_out, true);
+  params.resize(1);
+  params[0] = w_in_to_out;
   paramsvalues.resize(w_in_to_out->size());
+  params.makeSharedValue(paramsvalues);
+  hidden_nodes.resize(0);
+  wout.resize(0);
+  w.resize(0);
 }
 
 //! To use varDeepCopyField.
@@ -786,10 +795,9 @@ void CascadeCorrelation::train()
       train_stats->finalize();
       if(verbosity>3)
         cout << "Epoch " << opt_iter << " train objective: " << train_stats->getMean() << endl;
-      if(train_stats->getMean()[0] == 0 || (last_cost_value - train_stats->getMean()[0])/abs(train_stats->getMean()[0]) < early_stop_threshold)
+      if(train_stats->getMean()[0] == 0 || (opt_iter >= min_iteration && (last_cost_value - train_stats->getMean()[0])/abs(train_stats->getMean()[0]) < early_stop_threshold))
       {
-        cout << "Early stop " << opt_iter << " with train objective: " << train_stats->getMean() << endl;
-        last_cost_value = REAL_MAX;
+        if(verbosity>3) cout << "Early stop " << opt_iter << " with train objective: " << train_stats->getMean() << endl;
         break;
       }
       else
@@ -816,7 +824,7 @@ void CascadeCorrelation::train()
     
       if(((hidden_nodes_weight_decay + weight_decay)!=0 || (hidden_nodes_bias_decay + bias_decay)!=0))
         candidate_penalty.append(affine_transform_weight_penalty(w[stage], (hidden_nodes_weight_decay*(inputsize_+1+stage) + weight_decay), 
-                                                                 (hidden_nodes_bias_decay + bias_decay), L1_penalty_in_to_hid));
+                                                                 (hidden_nodes_bias_decay + bias_decay), L1_penalty));
       Func temp1 = new Function(invars,residual_error);
       Func temp2 = new Function(input,w[stage],candidate_node);
       Var cccost_var = cccost(train_set,temp1,temp2);
@@ -831,6 +839,7 @@ void CascadeCorrelation::train()
       optimizer->build();
       if(verbosity > 3) cout << "Optimizing input to hidden weights" << endl;
       opt_iter=0;
+      last_cost_value = REAL_MAX;
       while(opt_iter<n_opt_iterations)
       {
         optimizer->nstages = 1;
@@ -844,7 +853,6 @@ void CascadeCorrelation::train()
         {
           if(verbosity>3)
             cout << "Early stop " << opt_iter << " with cascade correlation objective: " << ccstats->getMean() << endl;
-          last_cost_value = REAL_MAX;
           break;
         }
         else
@@ -882,6 +890,7 @@ void CascadeCorrelation::train()
 
     // Optimizing hidden to output weights
     opt_iter=0;
+    last_cost_value = REAL_MAX;
     while(opt_iter<n_opt_iterations)
     {
       optimizer->nstages = optstage_per_lstage;
@@ -891,10 +900,9 @@ void CascadeCorrelation::train()
       train_stats->finalize();
       if(verbosity>3 || (verbosity>2 && opt_iter == n_opt_iterations-1))
         cout << " Epoch " << opt_iter << " train objective: " << train_stats->getMean() << endl;
-      if(train_stats->getMean()[0] == 0 || (last_cost_value - train_stats->getMean()[0])/abs(train_stats->getMean()[0]) < early_stop_threshold)
+      if(train_stats->getMean()[0] == 0 || (opt_iter >= min_iteration && (last_cost_value - train_stats->getMean()[0])/abs(train_stats->getMean()[0]) < early_stop_threshold))
       {
-        if(verbosity>2) cout << "train objective: " << train_stats->getMean() << endl;
-        last_cost_value = REAL_MAX;
+        if(verbosity>2) cout << "Early stop " << opt_iter << " with train objective: " << train_stats->getMean() << endl;
         break;
       }
       else

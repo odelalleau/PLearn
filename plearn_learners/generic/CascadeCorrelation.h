@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CascadeCorrelation.h,v 1.1 2004/11/12 20:10:54 larocheh Exp $
+   * $Id: CascadeCorrelation.h,v 1.2 2004/11/17 16:04:25 larocheh Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/CascadeCorrelation.h */
@@ -106,11 +106,11 @@ public:
   real classification_regularizer; // default: 0
   real margin; // default: 1, used with margin_perceptron_cost
   real early_stop_threshold; // default: 0.00001
+  real min_iteration; // default: 10
   real correlation_early_stop_threshold; //default: 0.001
   bool use_correlation_optimization; //default true
 
-  bool L1_penalty_in_to_hid; // default: false
-  bool L1_penalty_hid_to_out; // default: false
+  bool L1_penalty; // default: false
   string output_transfer_func; // tanh, sigmoid, softplus, softmax, etc...  (default: "" means no transfer function)
   string hidden_transfer_func; // tanh, sigmoid, softplus, softmax, etc...  (default: "tanh" means no transfer function)
   real interval_minval, interval_maxval; // if output_transfer_func = interval(minval,maxval), these are the interval bounds
