@@ -66,8 +66,11 @@ if ncond !=len(names):
 
 for source in sources:
     for i in range(0,ncond):
-        print source, conditions[i], names[i]
-        filename = destdir + "/" + os.path.basename(source) + "_" + names[i] + ".vmat"
+        sname = os.path.basename(source)
+        p = string.find(sname,'.')
+        if p>=0:
+            sname = sname[0:p]
+        filename = destdir + "/" + sname + "_" + names[i] + ".vmat"
         f = open(filename,"w")
         f.write("<SOURCES>\n" + source + "\n</SOURCES>\n<PREFILTER>\n" + conditions[i] + "\n</PREFILTER>\n<PRECOMPUTE>dmat</PRECOMPUTE>\n")
         f.close()

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.10 2003/08/15 17:18:03 yoshua Exp $
+   * $Id: VMatLanguage.cc,v 1.11 2003/08/20 19:18:59 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -687,6 +687,12 @@ using namespace std;
     //for(int i=0;i<pstack.size();i++)
     //  cout<<pstack[i]<<" ";
     //cout<<endl;
+    if (pstack.length() > result.length())
+      PLERROR("Parsing VMatLanguage: left with %d too many items on the stack!",
+              pstack.length()-result.length());
+    if (pstack.length() < result.length())
+      PLERROR("Parsing VMatLanguage: left with %d missing items on the stack!",
+              result.length()-pstack.length());
     pstack >> result;
 
   };

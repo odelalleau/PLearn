@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.9 2003/08/13 08:13:46 plearner Exp $
+   * $Id: NNet.cc,v 1.10 2003/08/20 19:18:59 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -465,7 +465,7 @@ void NNet::initializeParams()
       if(direct_in_to_out)
       {
         //fill_random_uniform(wdirect->value, -delta, +delta);
-        fill_random_normal(wdirect->value, 0, delta);
+        fill_random_normal(wdirect->value, 0, 0.01*delta);
         wdirect->matValue(0).clear();
       }
       delta = 1./nhidden;

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.17 2003/08/15 17:17:59 yoshua Exp $
+   * $Id: TMat_maths_impl.h,v 1.18 2003/08/20 19:18:48 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -4299,7 +4299,8 @@ void  choleskyDecomposition(const TMat<T>& A, TMat<T>& L)
                   if (sum <= 0.0)
                     {
                       T eps = -1.1*sum;
-                      PLWARNING("Cholesky decomposition would fail: add %f to diagonal",eps);
+                      if (sum==0) eps=1e-8;
+                      PLWARNING("Cholesky decomposition would fail: add %g to diagonal",eps);
                       T* Aii=A.data();
                       int addm=A.mod()+1;
                       for (int ii=0;ii<n;ii++,Aii+=addm) *Aii += eps;

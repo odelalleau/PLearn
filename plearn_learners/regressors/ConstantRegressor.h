@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConstantRegressor.h,v 1.2 2003/08/13 08:13:47 plearner Exp $ 
+   * $Id: ConstantRegressor.h,v 1.3 2003/08/20 19:18:59 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file ConstantRegressor.h */
@@ -98,9 +98,6 @@ public:
 
   //! simply calls inherited::build() then build_() 
   virtual void build();
-
-  //! Provides a help message describing this class
-  static string help();
 
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
