@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.27 2004/05/05 19:24:08 nova77 Exp $ 
+   * $Id: PTester.cc,v 1.28 2004/05/10 13:03:11 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -143,7 +143,7 @@ PTester::PTester()
                   "If true, each learner to be trained will have its experiment directory set to Split#k/LearnerExpdir/");
     declareOption(ol, "train", &PTester::train, OptionBase::buildoption,
                   "If true, the learners are trained, otherwise only tested (in that case it is advised\n"
-                  "to load an already trained learner in the 'learner' field");
+                  "to load an already trained learner in the 'learner' field)");
     declareOption(ol, "template_stats_collector", &PTester::template_stats_collector, OptionBase::buildoption,
                   "If provided, this instance of a subclass of VecStatsCollector will be used as a template\n"
                   "to build all the stats collector used during training and testing of the learner");
