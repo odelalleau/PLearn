@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.5 2003/04/15 20:54:06 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.6 2003/04/15 21:44:08 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -263,6 +263,82 @@ void ConjGradientOptimizer::fletcherReeves (
   g << delta;
 }
 
+////////////////////
+// fletcherSearch //
+////////////////////
+real ConjGradientOptimizer::fletcherSearch (
+    real (*f)(real),
+    real (*g)(real),
+    real sigma,
+    real rho,
+    real fmax,
+    real tau1,
+    real tau2,
+    real tau3,
+    real alpha1,
+    real mu) {
+  
+  // Initialization
+  if (mu == FLT_MAX)
+    mu = (fmax - (*f)(0)) / (rho * (*g)(0));
+  if (alpha1 == FLT_MAX)
+    alpha1 = mu;
+  real alpha0 = 0;
+  real alpha2, f0, f1, g0, a1, a2, b1, b2;
+  f0 = (*f)(0);
+  g0 = (*g)(0);
+  bool isBracketed = false;
+  
+  // Bracketing
+  while (!isBracketed) {
+    f1 = (*f)(alpha1);
+    if (f1 <= fmax)
+      return alpha1;
+    if (f1 > f0 + alpha1 * g0 || f1 > (*f)(alpha0)) {
+      a1 = alpha0;
+      b1 = alpha1;
+      isBracketed = true;
+    } else {
+      if (abs((*g)(alpha1)) < -sigma * g0)
+        return alpha1;
+      if ((*g)(alpha1) >= 0) {
+        a1 = alpha1;
+        b1 = alpha0;
+        isBracketed = true;
+      } else {
+        if (mu <= 2*alpha1 - alpha0)
+          alpha2 = mu;
+        else
+          // alpha2 = findMinWithInterpol(2*alpha1 - alpha0, min(mu, alpha1 + tau1 * (alpha1 - alpha0))); // TODO Remove comment when ready
+          alpha2 = 0; // TODO Remove !
+      }
+    }
+    alpha0 = alpha1;
+    alpha1 = alpha2;
+  }
+
+  // Splitting
+  while (true) {
+    // alpha1 = findMinWithInterpol(a1 + tau2 * (b1-a1), b1 - tau3 * (b1-a1)); // TODO Remove comment when ready
+    f1 = (*f)(alpha1);
+    if ((a1 - alpha1) * (*g)(a1) <= epsilon)
+      return a1;
+    if (f1 > f0 + rho * alpha1 * g0 || f1 >= (*f)(a1)) {
+     a2 = a1;
+     b2 = alpha1;
+    } else {
+      if (abs((*g)(alpha1)) <= -sigma * g0)
+        return alpha1;
+      a2 = alpha1;
+      if ((b1 - a1) * (*g)(alpha1) >= 0)
+        b2 = a1;
+      else
+        b2 = b1;
+    }
+    a1 = a2;
+    b1 = b2;
+  }
+}
   
 /////////////
 // gSearch //

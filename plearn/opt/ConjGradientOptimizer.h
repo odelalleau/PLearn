@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.5 2003/04/15 20:54:06 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.6 2003/04/15 21:44:08 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -196,7 +196,6 @@ private:
 
   //------------------------- LINE SEARCH ALGORITHMS -------------------------
 
-  // Performs a line search along the direction "search_direction"
   // The GSearch algorithm as described in
   // "Direct Gradient-Based Reinforcement Learning:
   // II. Gradient Ascent Algorithms and Experiments"
@@ -212,6 +211,20 @@ private:
       real epsilon,
       Vec tmp_storage);
 
+  // The line search algorithm described in
+  // "Practical Methods of Optimization, 2nd Ed", by Fletcher (1987)
+  real fletcherSearch (
+      real (*f)(real),
+      real (*g)(real),
+      real sigma,
+      real rho,
+      real fmax,
+      real tau1 = 9,
+      real tau2 = 0.1,
+      real tau3 = 0.5,
+      real alpha1 = FLT_MAX,
+      real mu = FLT_MAX);
+  
   //--------------------------- UTILITY FUNCTIONS ----------------------------
   
 public:   // TODO For test purpose... remove later
