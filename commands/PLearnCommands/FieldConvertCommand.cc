@@ -1,6 +1,6 @@
 #include "FieldConvertCommand.h"
 #include "getDataSet.h"
-#include "/u/jkeable/LisaPLearn/UserExp/jkeable/bell/convert/TextFilesVMatrix.h"
+#include "/u/delallea/LisaPLearn/UserExp/delallea/TextFilesVMatrix.h"
 #include "VVMatrix.h"
 #include <fstream.h>
 #include "ProgressBar.h"
@@ -21,6 +21,7 @@ void FieldConvertCommand::run(const vector<string> & args)
   // set default values
   UNIQUE_NMISSING_FRACTION_TO_ASSUME_CONTINUOUS=.3f;
   PVALUE_THRESHOLD=0.025f;
+  FRAC_MISSING_TO_SKIP=0.9;
   target=-1;
   report_fn="FieldConvertReport.txt";
     
@@ -43,6 +44,8 @@ void FieldConvertCommand::run(const vector<string> & args)
       UNIQUE_NMISSING_FRACTION_TO_ASSUME_CONTINUOUS=toreal(val[1]);
     else if(val[0]=="min_pvalue")
       PVALUE_THRESHOLD=toreal(val[1]);
+    else if(val[0]=="frac_missing_to_skip")
+      FRAC_MISSING_TO_SKIP=toreal(val[1]);
     else if(val[0]=="onehot_with_correl")
       onehot_with_correl=tobool(val[1]);
     else PLERROR("unknown argument: %s ",val[0].c_str());
@@ -118,8 +121,11 @@ void FieldConvertCommand::run(const vector<string> & args)
     // no ? then find out type by ourselves
     else
     {
-      if(sc[i].nnonmissing()==0)
+
+      // Test for fields to be skipped, when not enough data is available.
+      if(sc[i].nnonmissing() <= (1-FRAC_MISSING_TO_SKIP) * vm->length()) {
         type=3;
+      }
 
       // test for constant values
       else if(count<=1)
