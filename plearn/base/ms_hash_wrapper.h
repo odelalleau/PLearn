@@ -36,15 +36,18 @@
 #ifndef ms_hash_wrapper_H
 #define ms_hash_wrapper_H
 
-#ifdef __GNUC__
+#ifdef __GNUC__ // Look below after the macros for the end.
 
-#include <ext/hash_set> //to get stl_hash_fun.h ... (template<> class hash)
-#include <ext/hash_map> //to get stl_hash_fun.h ... (template<> class hash)
+#if __GNUC__<3 
+#  include <hash_set> //to get stl_hash_fun.h ... (template<> class hash)
+#  include <hash_map> //to get stl_hash_fun.h ... (template<> class hash)
 
-#if __GNUC__==3 && __GNUC_MINOR__>0
-namespace __gnu_cxx {
+#define _CUST_NAME_SPACE std;
+  using namespace std;
 #else
-namespace std {
+#  include <ext/hash_set> //to get stl_hash_fun.h ... (template<> class hash)
+#  include <ext/hash_map> //to get stl_hash_fun.h ... (template<> class hash)
+  using namespace __gnu_cxx;
 #endif
 
 // Three original cases for hash specialization and declaration:
@@ -110,7 +113,7 @@ namespace std {
 //   { 
 //     return hash<const char*>()val.c_str()); 
 //   } 
-#define SET_HASH_WITH_INHERITANCE(type, originaltype, paramName, hashFunc)		\
+#define SET_HASH_WITH_INHERITANCE(type, originalType, paramName, hashFunc)		\
 	template<>																	\
 	struct hash< type >															\
 	{																			\
@@ -142,8 +145,7 @@ namespace std {
 		{																		\
 			return hash< templateClass >()(hashFunc);							\
 		}																		\
-	};										
-
+	};	
 #endif // __GNUC__
 
 //////////////////////////////////////////////////////////////////////////////
@@ -292,9 +294,9 @@ namespace std {
 																				\
 	}; 
 
+}
 
 #endif // WIN32 
 
-}
 
 #endif // ms_hash_wrapper_H
