@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: general.cc,v 1.6 2004/02/20 21:11:43 chrish42 Exp $
+   * $Id: general.cc,v 1.7 2004/02/25 22:32:59 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,6 +52,13 @@ namespace PLearn {
 using namespace std;
 
 static PLearnInit _plearn_init_;
+
+#ifdef WIN32
+#include <io.h> 
+// norman: potentially dangerous if there is a function called with the same name in this
+//         file. Beware!
+#define umask _umask
+#endif 
 
 PLearnInit::PLearnInit()
 {
@@ -146,6 +153,9 @@ string prgname(const string& setname)
   return prgname_;
 }
 
+#ifdef WIN32
+#undef umask
+#endif 
 } // end of namespace PLearn
 
 
