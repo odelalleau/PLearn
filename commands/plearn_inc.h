@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.52 2005/01/28 18:20:14 crompb Exp $ 
+   * $Id: plearn_inc.h,v 1.53 2005/02/04 15:07:22 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -243,6 +243,7 @@
 #include <plearn/vmat/SortRowsVMatrix.h>
 #include <plearn/vmat/SparseVMatrix.h>
 #include <plearn/vmat/SubInputVMatrix.h>
+#include <plearn/vmat/TextFilesVMatrix.h>
 #include <plearn/vmat/ThresholdVMatrix.h>
 #include <plearn/vmat/TransposeVMatrix.h>
 #include <plearn/vmat/VMatrixFromDistribution.h>
