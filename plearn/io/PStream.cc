@@ -222,14 +222,24 @@ void PStream::writeAsciiNum(unsigned long x)
 
 void PStream::writeAsciiNum(float x)
 {
-  snprintf(tmpbuf, sizeof(tmpbuf), "%g", x);
-  write(tmpbuf, strlen(tmpbuf));
+  if(is_missing(x))
+    write("nan");
+  else
+    {
+      snprintf(tmpbuf, sizeof(tmpbuf), "%g", x);
+      write(tmpbuf, strlen(tmpbuf));
+    }
 }
 
 void PStream::writeAsciiNum(double x)
 {
-  snprintf(tmpbuf, sizeof(tmpbuf), "%g", x);
-  write(tmpbuf, strlen(tmpbuf));
+  if(is_missing(x))
+    write("nan");
+  else
+    {
+      snprintf(tmpbuf, sizeof(tmpbuf), "%g", x);
+      write(tmpbuf, strlen(tmpbuf));
+    }
 }
 
 void PStream::readAsciiNum(char &x)
@@ -330,14 +340,31 @@ void PStream::readAsciiNum(double &x)
   int l=0;
   
   char c = get();
-  while(isdigit(c) || c=='-' || c=='+' || c=='.' || c=='e' || c=='E')
-  {
-    tmpbuf[l++] = c;
-    c = get();
-  }
-  tmpbuf[l] = '\0';
-  unget();
-  sscanf(tmpbuf,"%lf",&x);
+
+  switch(c)
+    {
+    case '?':
+      x = MISSING_VALUE;
+      break;
+    case 'n':
+    case 'N':
+      if(get()=='a' && get()=='n')
+        x = MISSING_VALUE;
+      else
+        PLERROR("Bug while reading file and expecting a double");
+      break;
+
+    default:
+      while(isdigit(c) || c=='-' || c=='+' || c=='.' || c=='e' || c=='E')
+        {
+          tmpbuf[l++] = c;
+          c = get();
+        }
+      tmpbuf[l] = '\0';
+      unget();
+      sscanf(tmpbuf,"%lf",&x);
+      break;
+    }
 }
 
 PStream& PStream::operator()(istream* pin_)
@@ -457,16 +484,16 @@ PStream& PStream::operator>>(char &x)
     case raw_binary:
       get(x);
       break;
+    case pretty_ascii:
     case raw_ascii:
       skipBlanks();
       get(x);
       break;
-    case pretty_ascii:
     case plearn_ascii:
     case plearn_binary:
       skipBlanksAndCommentsAndSeparators();
       get(x);
-      if (x == '\'')  // ascii case
+      if (x == '\'')  // ascii case (between single quotes)
       {
         get(x);
         get();
@@ -888,36 +915,31 @@ PStream& PStream::operator>>(unsigned short &x)
 
 PStream& PStream::operator>>(bool &x)
 {
-  char ch;
+  char c;
   switch(inmode)
   {
     case raw_ascii:
     case pretty_ascii:
-      skipBlanks();
-      get(ch);
-      break;
     case raw_binary:
-      get(ch);
-      break;
     case plearn_ascii:
     case plearn_binary:
-    {
       skipBlanksAndCommentsAndSeparators();
-      int c = get();
+      c = get();
       if(c==0x12)  // plearn_binary
-        get(ch);
-      else  // plearn_ascii
-      {
-        unget();
-        get(ch);
-      }
+        c=get();
+
+      if(c=='1')
+        x = true;
+      else if(c=='0')
+        x = false;
+      else
+        PLERROR("In PStream::operator>>(bool &x) wrong format for bool, must be character 0 or 1");
       break;
-    }
+
     default:
       PLERROR("In PStream::operator>>  unknown inmode!!!!!!!!!");
       break;
   }
-  x = (bool)ch;
   return *this;
 }
 
@@ -997,247 +1019,6 @@ PStream& PStream::operator>>(double &x)
   return *this;
 }
 
-/*
-PStream& PStream::operator>>(bool& x)
-{
-  if(inmode==raw_ascii)// std c++ istream format
-    rawin() >> x;
-  else //human-readable serialization format
-    { 
-      skipBlanks();
-      int c = get();
-      char tmp[10];
-      switch(c)
-        {
-        case '0':
-          x= false;
-          break;
-        case '1':
-          x = true;
-          break;
-        case 't':
-          c = peek();
-          if(!isalpha(c))
-            {
-              unget();
-              x = true;
-              break;
-            }
-          rawin().get(tmp,4);
-          if(strcmp(tmp,"rue")!=0 || isalpha(peek()))
-            PLERROR("In PStream::operator>>(bool&), wrong format, not a bool");
-          x = true;
-          break;
-        case 'f':
-          c = peek();
-          if(!isalpha(c))
-            {
-              unget();
-              x = false;
-              break;
-            }
-          rawin().get(tmp,5);
-          if(strcmp(tmp,"alse")!=0 || isalpha(peek()))
-            PLERROR("In PStream::operator>>(bool&), wrong format, not a bool");
-          x = false;
-          break;
-        default:
-          PLERROR("In PStream::operator>>(bool&), wrong format, not a bool, first character read was %c",c);
-        }
-      if(!isspace(get())) 
-        unget();
-    }
-  
-  return *this;
-}
-
-PStream& PStream::operator>>(float &x)
-{
-  switch(inmode)
-  {
-    case PStream::raw_ascii:
-      readAsciiNum(x);
-      break;
-    case PStream::raw_binary:
-      read(reinterpret_cast<char *>(&x), sizeof(x));
-      break;
-    case PStream::plearn_ascii:
-    case PStream::plearn_binary:
-      {
-        skipBlanksAndComments();
-        int c = get();
-        if(c=='n' || c=='N')
-          {
-            if(get()=='a' && get()=='n')
-              x = MISSING_VALUE;
-            else
-              PLERROR("Bug while reading file and expecting a float");
-          }
-        else
-          {
-            unget();
-            rawin() >> x; 
-          }
-        if(!isspace(get()))
-          unget();
-      }
-      break;
-    default:
-      PLERROR("In PStream::operator>>  unknown inmode!!!!!!!!!");
-      break;
-    }
-
-  return *this;
-}
-
-PStream& PStream::operator>>(double &x)
-{
-  switch(inmode)
-    {
-    case PStream::raw_ascii:
-      readAsciiNum(x);
-      break;
-    case PStream::raw_binary:
-      read(reinterpret_cast<char *>(&x), sizeof(x));
-      break;
-    case PStream::plearn_ascii:
-    case PStream::plearn_binary:
-      { 
-        skipBlanksAndComments();
-        int c = peek();
-        switch(c)
-          {
-          case '?':
-            get();
-            x = MISSING_VALUE;
-            break;
-          case 'n':
-          case 'N':
-            get();
-            if(get()=='a' && get()=='n')
-              x = MISSING_VALUE;
-            else
-              PLERROR("Bug while reading file and expecting a double");
-            break;
-          default:
-            rawin() >> x; 
-          }
-      }
-      break;
-    default:
-      PLERROR("In PStream::operator>>  unknown inmode!!!!!!!!!");
-      break;
-    }
-  
-  return *this;
-}
-
-PStream& PStream::operator>>(char *x)
-{
-  switch(inmode)
-    {
-    case PStream::raw_ascii:
-    case PStream::raw_binary:
-      rawin() >> x;
-      break;
-    case PStream::plearn_ascii:
-    case PStream::plearn_binary:
-      {
-        if(!x)
-          PLERROR("In PStream::operator>>(char*) character array must already be allocated to put the read string in");
-        skipBlanksAndComments();
-        int c = peek();
-        int i=0; // pos within the string
-        if(c=='"') // it's a quoted string "..."
-          {
-            c = get(); // skip the quote
-            c = get(); // get the next character
-            while(c!='"' && c!=EOF)
-              {
-                if(c=='\\') // escaped character
-                  c = get();
-                x[i++]= static_cast<char>(c);
-                c = get();
-              }
-            if(c==EOF)
-              PLERROR("In read(istream&, string&) unterminated quoted string");
-            if(!isspace(c))
-              unget();
-          }
-        else // it's a single word without quotes
-          {
-            c= get();
-            while(c != EOF && wordseparators.find(c)==string::npos) // as long as we don't meet a wordseparator (or eof)...
-              {
-                x[i++]= static_cast<char>(c);
-                c= get();
-              }
-            if(!isspace(c))
-              unget();
-          }
-      }
-      break;
-
-    default:
-      PLERROR("In PStream::operator>>  unknown inmode!!!!!!!!!");
-      break;
-    }
-  
-  return *this;
-}
-  
-PStream& PStream::operator>>(string &x)
-{
-  switch(inmode)
-    {
-    case PStream::raw_ascii:
-    case PStream::raw_binary:
-      rawin() >> x;
-      break;
-    case PStream::plearn_ascii:
-    case PStream::plearn_binary:
-      { 
-        skipBlanksAndComments();
-        int c = peek();
-        if(c=='"') // it's a quoted string "..."
-          {
-            x.resize(0);
-            c = get(); // skip the quote
-            c = get(); // get the next character
-            while(c!='"' && c!=EOF)
-              {
-                if(c=='\\') // escaped character
-                  c = get();
-                x+= static_cast<char>(c);
-                c = get();
-              }
-            if(c==EOF)
-              PLERROR("In read(istream&, string&) unterminated quoted string");
-            if(!isspace(get())) // skip following blank if any
-              unget();
-          }
-        else // it's a single word without quotes
-          {
-            x.resize(0);      
-            c= get();
-            while(c != EOF && wordseparators.find(c)==string::npos) // as long as we don't meet a wordseparator (or eof)...
-              {
-                x+= static_cast<char>(c);
-                c= get();
-              }
-            if(!isspace(c))
-              unget();
-          }
-      }
-      break;
-    default:
-      PLERROR("In PStream::operator>>  unknown inmode!!!!!!!!!");
-      break;
-    }
-  
-  return *this;
-}
-*/
 
 // Implementation of operator<<'s
 
@@ -1246,13 +1027,10 @@ PStream& PStream::operator<<(char x)
   switch(outmode)
   {
     case raw_ascii:
-      put(x);
-      put(' ');
-      break;
     case raw_binary:
+    case pretty_ascii:
       put(x);
       break;
-    case pretty_ascii:
     case plearn_ascii:
       put('\'');
       put(x);
@@ -1313,8 +1091,7 @@ PStream& PStream::operator<<(const char *x)
     case PStream::raw_ascii:
     case PStream::pretty_ascii:
     case PStream::raw_binary:
-      write(x, l);
-      put (' ');
+      write(x);
       break;      
 
     case PStream::plearn_ascii:
@@ -1520,17 +1297,17 @@ PStream& PStream::operator<<(bool x)
   switch(outmode)
   {
     case raw_binary:
-      x ? put('1') : put('0');
-      break;
     case raw_ascii:
-    case plearn_ascii:
     case pretty_ascii:
-      x ? put('1') : put('0');
+      if(x) put('1'); else put('0');
+      break;
+    case plearn_ascii:
+      if(x) put('1'); else put('0');
       put(' ');
       break;
     case plearn_binary:
       put((char)0x12);
-      x ? put('1') : put('0');
+      if(x) put('1'); else put('0');
       break;
     default:
       PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");
@@ -1594,100 +1371,6 @@ PStream& PStream::operator<<(double x)
   }
   return *this;
 }
-
-/*
-PStream& PStream::operator<<(double x)
-{
-  switch(outmode)
-    {
-    case PStream::raw_ascii:
-      writeAsciiNum(x);
-      break;
-    case PStream::raw_binary:
-      write(reinterpret_cast<char *>(&x), sizeof(x));
-      break;
-    case PStream::plearn_ascii:
-    case PStream::pretty_ascii:
-    case PStream::plearn_binary:
-      { 
-        if(is_missing(x))
-          rawout() << "nan ";
-        else
-          rawout() << setprecision(17) << x << ' '; 
-      }
-      break;
-    default:
-      PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");
-      break;
-    }
-  return *this;
-}
-
-PStream& PStream::operator<<(const char *x)
-{
-  switch(outmode)
-    {
-    case PStream::raw_ascii:
-    case PStream::pretty_ascii:
-    case PStream::raw_binary:
-      rawout() << x;
-      break;
-    case PStream::plearn_ascii:
-    case PStream::plearn_binary:
-      {
-        put('"');
-        int l = strlen(x);
-        for(int i=0; i<l; i++)
-          {
-            char c = x[i];
-            if(c=='"' || c=='\\') // escape quote and backslash
-              put('\\');
-            put(c);
-          }
-        put('"');
-        put(' ');
-      }
-      break;
-    default:
-      PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");
-      break;
-    }
-  return *this;
-}
-
-PStream& PStream::operator<<(const string &x)
-{
-  switch(outmode)
-    {
-    case PStream::raw_ascii:
-    case PStream::pretty_ascii:
-    case PStream::raw_binary:
-      rawout() << x;
-      break;
-    case PStream::plearn_ascii:
-    case PStream::plearn_binary:
-      {
-        put('"');
-        int l = x.length();
-        for(int i=0; i<l; i++)
-          {
-            char c = x[i];
-            if(c=='"' || c=='\\') // escape quote and backslash
-              put('\\');
-            put(c);
-          }
-        put('"');
-        put(' ');
-      }
-      break;
-    default:
-      PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");
-      break;
-    }
-  return *this;
-}
-*/
-
 
 
 //! attach: "attach" the PStream to a POSIX file descriptor.

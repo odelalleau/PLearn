@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.11 2003/03/19 23:02:35 jkeable Exp $
+   * $Id: TMat.h,v 1.12 2003/05/01 22:39:14 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -154,6 +154,16 @@ class TVec
         offset_ = other.offset_;
         return *this;
       }
+
+  operator vector<T>() const
+  {    
+    int n = length_;
+    vector<T> res(n);
+    T* ptr = data();
+    for(int i=0; i<n; i++)
+      res[i] = *ptr++;
+    return res;
+  }
 
     bool hasMissing() const
     {

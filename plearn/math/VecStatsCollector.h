@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.h,v 1.4 2003/04/29 21:33:42 plearner Exp $ 
+   * $Id: VecStatsCollector.h,v 1.5 2003/05/01 22:39:14 plearner Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.h */
@@ -88,6 +88,9 @@ protected:
 
 public:
   
+  int length() const { return stats.length(); }
+  int size() const { return length(); }
+
   //! clears all previously accumulated statistics
   void forget();
 

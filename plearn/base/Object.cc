@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.12 2003/04/29 21:33:34 plearner Exp $
+   * $Id: Object.cc,v 1.13 2003/05/01 22:39:13 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -307,13 +307,13 @@ string Object::getOptionsToSave(OBflag_t option_flags) const
 void Object::newread(PStream &in)
 {
   string cl;
-  getline(in.rawin(), cl, '(');
+  in.getline(cl, '(');
   cl = removeblanks(cl);
   if (cl != classname())
     PLERROR("Object::newread() - Was expecting \"%s\", but read \"%s\"",
             classname().c_str(), cl.c_str());
 
-  skipBlanksAndComments(in.rawin());
+  in.skipBlanksAndComments();
   if (in.get() != ')') 
     {
       in.unget();
@@ -321,9 +321,9 @@ void Object::newread(PStream &in)
         {
           // Read all specified options
           string optionname;
-          getline(in.rawin(), optionname, '=');
+          in.getline(optionname, '=');
           optionname = removeblanks(optionname);
-          skipBlanksAndComments(in.rawin());
+          in.skipBlanksAndComments();
 
           OptionList &options = getOptionList();
           OptionList::iterator it = find_if(options.begin(), options.end(),
@@ -347,15 +347,17 @@ void Object::newread(PStream &in)
 void Object::newwrite(PStream &out) const
 {
   vector<string> optnames = split(getOptionsToSave(out.option_flags_out));
-  out << raw << classname() << "(\n";
+  out.write(classname());
+  out.write("(\n");
   for (unsigned int i = 0; i < optnames.size(); ++i) 
     {
-      out << raw << optnames[i] << " = ";
+      out.write(optnames[i]);
+      out.write(" = ");
       writeOptionVal(out, optnames[i]);
       if (i < optnames.size() - 1)
-        out << raw << ";\n";
+        out.write(";\n");
     }
-  out << raw << " )\n";
+  out.write(" )\n");
 }
 
 
@@ -448,10 +450,11 @@ Object* readObject(PStream &in, unsigned int id)
     pl_streammarker fence(in.pl_rdbuf());
 
     int c = in.peek();
-    if (c == '<') {
+    if (c == '<')  // Old (deprecated) serialization mode 
+      {
         in.get(); // Eat '<'
         string cl;
-        getline(in.rawin(), cl, '>');
+        in.getline(cl, '>');
         cl = removeblanks(cl);
         if (cl == "null")
             return 0;
@@ -464,17 +467,21 @@ Object* readObject(PStream &in, unsigned int id)
         // Go back before the header starts
         in.pl_rdbuf()->seekmark(fence);
         o->read(in.rawin());
-    } else if (c == '*') {
-        in >> o;
-    } else {
+      } 
+    else if (c == '*') // Pointer to object
+      {
+      in >> o;
+      } 
+    else 
+      {
         // It must be a Classname(...) or a load(...) kind of definition
         string cl;
-        getline(in.rawin(), cl, '(');
+        in.getline(cl, '(');
         cl = removeblanks(cl);
         if (cl == "load") {
             // It's a load("...")
             string fname;
-            getline(in.rawin(), fname, ')');
+            in.getline(fname, ')');
             fname = removeblanks(fname);
             // TODO: Check if this is really what we want
             //       (ie: We could want to use the options
@@ -499,8 +506,9 @@ void displayObjectHelp(ostream& out, const string& classname, bool fulloptions)
   Object* obj = TypeFactory::instance().newObject(classname);
   if(!obj)
     {
-      cerr << "Learner type " << classname << " unknown." << endl;
-      cerr << "Did you #include it, does it correctly define classname() (through an IMPLEMENT_NAME_AND_DEEPCOPY for ex.)  and has it indeed been linked with your program?" << endl;
+      PLERROR("Learner type %s unknown.\n"
+              "Did you #include it, does it correctly define classname() (through an IMPLEMENT_NAME_AND_DEEPCOPY for ex.)\n"
+              "and has it indeed been linked with your program?", classname.c_str());
 
       exit(0);
     }
@@ -513,6 +521,50 @@ void displayObjectHelp(ostream& out, const string& classname, bool fulloptions)
       delete obj;
     }
 }
+
+PStream& operator>>(PStream& in, Object*& x)
+{
+    in.skipBlanksAndCommentsAndSeparators();
+    if (in.peek() == '*')
+      {
+        in.get(); // Eat '*'
+        unsigned int id;
+        in >> id;
+        in.skipBlanksAndCommentsAndSeparators();
+        if (id==0)
+          x = 0;
+        else if (in.peek() == '-') 
+          {
+            in.get(); // Eat '-'
+            char cc = in.get();
+            if(cc != '>') // Eat '>'
+              PLERROR("In PStream::operator>>(Object*&)  Wrong format.  Expecting \"*%d->\" but got \"*%d-%c\".", id, id, cc);
+            in.skipBlanksAndCommentsAndSeparators();
+            if(x)
+              in >> *x;
+            else // x is null
+              x = readObject(in, id);
+            in.skipBlanksAndCommentsAndSeparators();
+            in.copies_map_in[id]= x;
+          } 
+        else 
+          {
+            // Find it in map and return ptr;
+            map<unsigned int, void *>::iterator it = in.copies_map_in.find(id);
+            if (it == in.copies_map_in.end())
+              PLERROR("In PStream::operator>>(Object*&) object (ptr) to be read has not been previously defined");
+            x= static_cast<Object *>(it->second);
+          }
+      } 
+    else
+      {
+        x = readObject(in);
+        in.skipBlanksAndCommentsAndSeparators();
+      }
+
+    return in;
+  }
+
 
 
 /*
@@ -542,23 +594,6 @@ PStream& operator>>(PStream &in, Object * &o)
 }
 */
 
-
-//////////////////////////////////////////////////////////
-///// Tentative de nouveau systeme de serialisation //////
-/////    en cours  (Pascal)                         //////
-//////////////////////////////////////////////////////////
-
-/*
-void autoRead(istream& in)
-{
-  // read next token
-  if it's </MYCLASSNAME> invoke build() and return  
-  otherwise it's an optionname, so invoke readOptionVal
-
-  at the end of it all, call build()
-}
-
-*/
 
 
 %> // end of namespace PLearn

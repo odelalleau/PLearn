@@ -215,7 +215,7 @@ public:
   // This implementation does not seem to work: commented out [Pascal]
   // inline operator bool() { return (!pin || *pin) && (!pout || *pout) && (pin || pout); }
   // This is a temporary fix [Pascal]
-  inline operator bool() { return pin && peek()!=EOF; }
+  inline operator bool() { return pin && pin->good(); }
 
   inline bool eof() const { return pin->eof(); }
   inline bool good() const { return pin->good() && pout->good(); }
@@ -257,6 +257,7 @@ public:
     
     return *this; 
   }
+
   inline PStream& write(const char* s, streamsize n) { pout->write(s,n); return *this; }
   inline PStream& put(char c) { pout->put(c); return *this; }
   inline PStream& put(unsigned char c) { write(reinterpret_cast<char *>(&c), sizeof(c)); return *this; }

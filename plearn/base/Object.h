@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.12 2003/04/29 21:33:36 plearner Exp $
+   * $Id: Object.h,v 1.13 2003/05/01 22:39:13 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -564,6 +564,9 @@ inline void declareOption(OptionList& ol, const string& optionname, OptionType *
   inline PStream &operator<<(PStream &out, const Object &o)
     { o.newwrite(out); return out; }
 
+
+// This takes precedence over the template definitions for a template type T in PStream.h
+  PStream &operator>>(PStream &in, Object * &o);
 
 //! Will display the help message for an object of the given classname
 void displayObjectHelp(ostream& out, const string& classname, bool fulloptions=false);

@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.14 2003/04/29 21:33:45 plearner Exp $
+* $Id: VMatrix.cc,v 1.15 2003/05/01 22:39:14 plearner Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -423,14 +423,14 @@ void VMatrix::loadStringMapping(int col)
   init_map_sr();
   force_mkdir(getMetaDataDir()+"FieldInfo/");
   deleteStringMapping(col);
+
   if(!isfile(fname))
   {
     // try to create empty file to check consistency of path
-    ofstream o(fname.c_str());
-    if(o.bad())
-      PLERROR( string("\nEmpty new file "+fname+" could not be created.\n (This is ony done to check consistency of path. File is deleted afterward.)").c_str());
-    // call rmquotes so fieldnames weird characters pass
-    rm(fname);
+//     ofstream o(fname.c_str());
+//     if(o.bad())
+//       PLERROR( string("\nEmpty new file "+fname+" could not be created.\n (This is ony done to check consistency of path. File is deleted afterward.)").c_str());
+//     rm(fname);
     return;
   }
   
