@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussianProcessRegressor.h,v 1.1 2003/06/30 15:13:22 yoshua Exp $ 
+ * $Id: GaussianProcessRegressor.h,v 1.2 2003/07/04 01:37:24 yoshua Exp $ 
  ******************************************************* */
 
 /*! \file GaussianProcessRegressor.h */
@@ -76,7 +76,7 @@
  
 
 /* *******************************************************      
- * $Id: GaussianProcessRegressor.h,v 1.1 2003/06/30 15:13:22 yoshua Exp $
+ * $Id: GaussianProcessRegressor.h,v 1.2 2003/07/04 01:37:24 yoshua Exp $
  ******************************************************* */
 
 
@@ -229,9 +229,8 @@ class GaussianProcessRegressor: public PLearner
     real QFormInverse(real sigma2, Vec u) const;
 
   public:
-    //!  Does the necessary operations to transform a shallow copy (this)
-    //!  into a deep copy by deep-copying all the members that need to be.
-    DECLARE_ABSTRACT_NAME_AND_DEEPCOPY(GaussianProcessRegressor);
+    PLEARN_DECLARE_OBJECT_METHODS(GaussianProcessRegressor, "GaussianProcessRegressor", PLearner);
+
 };
 
 DECLARE_OBJECT_PTR(GaussianProcessRegressor);

@@ -72,7 +72,7 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianProcessRegressor.cc,v 1.1 2003/06/30 15:13:22 yoshua Exp $
+   * $Id: GaussianProcessRegressor.cc,v 1.2 2003/07/04 01:37:24 yoshua Exp $
    ******************************************************* */
 
 #include "GaussianProcessRegressor.h"
@@ -83,11 +83,11 @@ namespace PLearn <%
 using namespace std;
 
 GaussianProcessRegressor::GaussianProcessRegressor() : 
-  PLearner(), use_returns_what("e"), noise_sd(0.1), max_nb_evectors(-1),
-  Gram_matrix_normalization("none")
+  PLearner(), Gram_matrix_normalization("none"), 
+  max_nb_evectors(-1), use_returns_what("e")
 {}
 
-IMPLEMENT_ABSTRACT_NAME_AND_DEEPCOPY(GaussianProcessRegressor);
+PLEARN_IMPLEMENT_OBJECT_METHODS(GaussianProcessRegressor, "GaussianProcessRegressor", PLearner);
 
 string GaussianProcessRegressor::help()
 {
@@ -431,7 +431,7 @@ void GaussianProcessRegressor::train()
   }
   // compute principal eigenvectors
   int n_components = max_nb_evectors<0 || max_nb_evectors>l ? l : max_nb_evectors;
-  eigenVecOfSymmMat(K,n_components,eigenvalues,eigenvectors,0.0,1);
+  eigenVecOfSymmMat(K,n_components,eigenvalues,eigenvectors);
   // pre-compute alpha[i]=(K+noise_sd[i]^2 I)^{-1}*targets  for regression
   for (int i=0;i<n_outputs;i++)
   {

@@ -72,6 +72,8 @@ Object* TypeFactory::newObject(string type_name) const
   TypeMap::const_iterator it = type_map_.find(type_name);
   if (it == type_map_.end())
     PLERROR("In TypeFactory::newObject(\"%s\"): %s not registered in type map.", type_name.c_str(), type_name.c_str());
+  if (!(*it)->second.constructor)
+    PLERROR("In TypeFactory::newObject(\"%s\"): %s does not have a factory constructor!", type_name.c_str(), type_name.c_str());
   return (*it->second.constructor)();
 }
 
