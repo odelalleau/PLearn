@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HTMLHelpCommand.cc,v 1.4 2004/12/06 16:39:32 chapados Exp $ 
+   * $Id: HTMLHelpCommand.cc,v 1.5 2004/12/16 02:18:33 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -308,47 +308,61 @@ void HTMLHelpCommand::helpOnClass(const string& classname)
         << endl;
 
   out << "<div class=\"generaltable\">" << endl
-      << "<h2>List of Build Options</h2>" << endl
+      << "<h2>List of All Options</h2>" << endl
       << "<table cellspacing=\"0\" cellpadding=\"0\">" << endl;
   
   OptionList& options = (*entry.getoptionlist_method)();    
 
   int i=0;
-  for( OptionList::iterator olIt = options.begin(); olIt!=options.end(); ++olIt ) {
+  for( OptionList::iterator olIt = options.begin(); olIt!=options.end();
+       ++olIt ) {
+
+    string descr    = (*olIt)->description();
+    string optname  = (*olIt)->optionname();
+    string opttype  = (*olIt)->optiontype();
+    string defclass = "";
+    string defaultval = "?";
+
+    // Determine the flag rendering
+    vector<string> flag_strings;
     OptionBase::flag_t flags = (*olIt)->flags();
-    if(flags & OptionBase::buildoption) {
-      string descr    = (*olIt)->description();
-      string optname  = (*olIt)->optionname();
-      string opttype  = (*olIt)->optiontype();
-      string defclass = "";
-      string defaultval = "?";
-      if(obj) // it's an instantiable class
-      {
-        defaultval = (*olIt)->defaultval(); 
-        if(defaultval=="")
-          defaultval = (*olIt)->writeIntoString(obj);
-        defclass = (*olIt)->optionHolderClassName(obj);
-      }
-      out << string("  <tr class=\"") + (i++ % 2 == 0? "even" : "odd") + "\">" << endl
-          << "    <td>"
-          << "<div class=\"opttype\">" << highlight_known_classes(quote(opttype))
-          << "</div>" << endl
-          << "    <div class=\"optname\">" << quote(optname) << "</div>" << endl;
-      if (defaultval != "?")
-        out << "    <div class=\"optvalue\">= " << quote(defaultval) << "</div>" << endl;
-      out << "    </td>" << endl;
-      if (removeblanks(descr) == "")
-        descr = "(no description)";
-      out << "    <td>"
-          << highlight_known_classes(format_free_text(quote(descr)));
-      if (defclass != "") {
-        out << "    <span class=\"fromclass\">"
-            << "(defined&nbsp;by&nbsp;" << highlight_known_classes(defclass) << ")"
-            << "</span>" << endl;
-      }
-      out << "    </td>" << endl
-          << "  </tr>" << endl;
+    if (flags & OptionBase::buildoption)
+      flag_strings.push_back("buildoption");
+    if (flags & OptionBase::learntoption)
+      flag_strings.push_back("learntoption");
+    if (flags & OptionBase::tuningoption)
+      flag_strings.push_back("tuningoption");
+    if (flags & OptionBase::nosave)
+      flag_strings.push_back("nosave");
+    string flag_string = join(flag_strings," | ");
+    
+    if(obj) // it's an instantiable class
+    {
+      defaultval = (*olIt)->defaultval(); 
+      if(defaultval=="")
+        defaultval = (*olIt)->writeIntoString(obj);
+      defclass = (*olIt)->optionHolderClassName(obj);
     }
+    out << string("  <tr class=\"") + (i++ % 2 == 0? "even" : "odd") + "\">" << endl
+        << "    <td>"
+        << "<div class=\"opttype\">" << highlight_known_classes(quote(opttype))
+        << "</div>" << endl
+        << "    <div class=\"optname\">" << quote(optname) << "</div>" << endl;
+    if (defaultval != "?")
+      out << "    <div class=\"optvalue\">= " << quote(defaultval) << "</div>" << endl;
+    out << "    <div class=\"opttype\"><i>(" << flag_string << ")</i></div>" << endl;
+    out << "    </td>" << endl;
+    if (removeblanks(descr) == "")
+      descr = "(no description)";
+    out << "    <td>"
+        << highlight_known_classes(format_free_text(quote(descr)));
+    if (defclass != "") {
+      out << "    <span class=\"fromclass\">"
+          << "(defined&nbsp;by&nbsp;" << highlight_known_classes(defclass) << ")"
+          << "</span>" << endl;
+    }
+    out << "    </td>" << endl
+        << "  </tr>" << endl;
   }
   if (i == 0)
     out << "<tr><td>This class does not specify any build options.</td></tr>"
@@ -506,7 +520,7 @@ string HTMLHelpCommand::generated_by() const
     strftime(time_buffer,SIZE,"%Y/%m/%d %H:%M:%S",broken_down_time);
 
     return string("<p>&nbsp;</p>"
-                  "<address>Generated on " ) + time_buffer + " by $Id: HTMLHelpCommand.cc,v 1.4 2004/12/06 16:39:32 chapados Exp $</address>";
+                  "<address>Generated on " ) + time_buffer + " by $Id: HTMLHelpCommand.cc,v 1.5 2004/12/16 02:18:33 chapados Exp $</address>";
 }
 
 
