@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: plapack.cc,v 1.9 2004/06/21 21:12:32 ducharme Exp $
+   * $Id: plapack.cc,v 1.10 2004/06/29 13:22:05 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -222,7 +222,7 @@ int matInvert(Mat& in, Mat& inverse)
   PLERROR("eigen_SymmMat: LAPACK not available on this system!");
   return 0;
 #else
-  PLWARNING("matInvert: You're input matrix will be over-written!");
+  // PLWARNING("matInvert: Your input matrix will be over-written!");
 
   // some check
   if (in.length() != in.width())
