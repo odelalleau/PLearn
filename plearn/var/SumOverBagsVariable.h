@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOverBagsVariable.h,v 1.6 2004/02/23 23:57:28 tihocan Exp $
+   * $Id: SumOverBagsVariable.h,v 1.7 2004/02/25 05:19:22 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -92,7 +92,12 @@ class SumOverBagsVariable: public NaryVariable
     //! the last column of the target is not given in the call to f, but a bag_size input is provided instead.
     //! The inputs to f are: (matrix of bag inputs, the bag size, the bag target, the bag weight).
     SumOverBagsVariable(VMat the_vmat, Func the_f, int maxbagsize, int nsamples, bool transpose);
-    
+
+    static const TARGET_COLUMN_FIRST = 1;
+    static const TARGET_COLUMN_LAST = 2;
+    static const TARGET_COLUMN_SINGLE = 3;  // Beginning == End
+    static const TARGET_COLUMN_INTERMEDIATE = 0;
+
     PLEARN_DECLARE_OBJECT(SumOverBagsVariable);
     virtual void build();
     virtual void recomputeSize(int& l, int& w) const;
