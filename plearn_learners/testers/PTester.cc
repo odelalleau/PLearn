@@ -33,13 +33,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.34 2004/07/21 16:30:58 chrish42 Exp $ 
+   * $Id: PTester.cc,v 1.35 2004/07/23 20:22:15 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
+#include <plearn/math/VecStatsCollector.h>
 #include <plearn/vmat/FileVMatrix.h>
 #include "PTester.h"
-#include <plearn/math/VecStatsCollector.h>
 
 namespace PLearn {
 using namespace std;
@@ -80,13 +80,21 @@ PTester::PTester()
     train(true)
 {}
 
-  PLEARN_IMPLEMENT_OBJECT(PTester, "Manages a learning experiment, with training and estimation of generalization error.", 
-      "The PTester class allows you to describe a typical learning experiment that you wish to perform, \n"
-      "as a training/testing of a learning algorithm on a particular dataset.\n"
-      "The splitter is used to obtain one or several (such as for k-fold) splits of the dataset \n"
-      "and training/testing is performed on each split. \n"
-      "Requested statistics are computed, and all requested results are written in an appropriate \n"
-      "file inside the specified experiment directory. \n");
+PLEARN_IMPLEMENT_OBJECT(PTester, "Manages a learning experiment, with training and estimation of generalization error.", 
+    "The PTester class allows you to describe a typical learning experiment that you wish to perform, \n"
+    "as a training/testing of a learning algorithm on a particular dataset.\n"
+    "The splitter is used to obtain one or several (such as for k-fold) splits of the dataset \n"
+    "and training/testing is performed on each split. \n"
+    "Requested statistics are computed, and all requested results are written in an appropriate \n"
+    "file inside the specified experiment directory. \n"
+    "Statistics can be either specified entirely from the 'statnames' option, or built from\n"
+    "'statnames' and 'statmask'. For instance, one may set:\n"
+    "   statnames = [ \"NLL\" \"mse\" ]\n"
+    "   statmask  = [ [ \"E[*]\" ] [ \"test1.*\" \"test2.*\" ] [ \"E[*]\" \"STDERROR[*]\" ] ]\n"
+    "and this will compute:\n"
+    "   E[test1.E[NLL]], STDERROR[test1.E[NLL]], E[test2.E[NLL]], STDERROR[test2.E[NLL]]\n"
+    "   E[test1.E[mse]], STDERROR[test1.E[mse]], E[test2.E[mse]], STDERROR[test2.E[mse]]\n"
+);
 
 
   void PTester::declareOptions(OptionList& ol)
@@ -117,12 +125,7 @@ PTester::PTester()
                   "    S2 is computed over the samples of a given dataset split. S1 is over the splits. \n"); 
     declareOption(ol, "statmask", &PTester::statmask, OptionBase::buildoption,
                   "A list of lists of masks. If provided, each of the lists is used to compose the statnames_from_mask.\n"
-                  "If not provided the statnames are those in the 'statnames' list. \n"
-                  "For example if statmask = [ [\"E[train.*]\" \"E[test1.*]\"] ] and statnames = [ \"E[func1]\" \"E[func2]\" \n"
-                  "then the resulting statnames list will be:\n"
-                  "[ \"E[train.E[func1]]\", \"E[train.E[func2]]\", \"E[test1.E[func1]]\", \"E[test1.E[func2]]\" ].");
-    declareOption(ol, "statnames_from_mask", &PTester::statnames_from_mask, OptionBase::learntoption,
-                  "This vector will contain the statnames if mask is provided.");
+                  "If not provided the statnames are those in the 'statnames' list. See the class help for an example.\n");
     declareOption(ol, "learner", &PTester::learner, OptionBase::buildoption,
                   "The learner to train/test.\n");
     declareOption(ol, "report_stats", &PTester::report_stats, OptionBase::buildoption,
@@ -172,19 +175,23 @@ void PTester::build_()
       expdir = abspath(expdir);
     }
 
-  TVec<string> temp[2];
+  TVec< TVec<string> > temp(2);
 
   int d = 0;
   temp[d] = statnames;
   if (statmask) {
     for (int i=0;i<statmask.length();i++) {
-      temp[1-d].resize(0);      
+      temp[1-d].resize(temp[d].length() * statmask[i].length());      
       
       for (int j=0;j<statmask[i].length();j++) {
         string mask = statmask[i][j];
         size_t pos;
         if ((pos=mask.find('*'))==string::npos) {
-          PLWARNING("In PTester::build_ : the %s element of statmask does not contain a '*'",mask.c_str());
+          // This may actually be useful, if we want to force a value.
+//            PLWARNING("In PTester::build_ : the %s element of statmask does not contain a '*'",mask.c_str());
+          for (int k = 0; k < temp[d].length(); k++) {
+            temp[1-d][j + k * statmask[i].length()] = mask;
+          }
         } else {
           for (int k=0;k<temp[d].length();k++) {
             if (temp[d][k].find('*')!=string::npos) {
@@ -192,7 +199,7 @@ void PTester::build_()
             }
             string elem = mask;
             elem.replace(pos,1,temp[d][k]);
-            temp[1-d].append(elem);
+            temp[1-d][j + k * statmask[i].length()] = elem;
           }
         }
       }
@@ -201,7 +208,10 @@ void PTester::build_()
     
     statnames_from_mask.resize(temp[d].size());
     statnames_from_mask = temp[d];
+  } else {
+    statnames_from_mask = statnames;
   }
+
 }
 
   // ### Nothing to add here, simply calls build_
@@ -236,11 +246,7 @@ Vec PTester::perform(bool call_forget)
     PLERROR("No splitter specified for PTester");
 
   int nstats;
-  if (statmask) {
-    nstats = statnames_from_mask.length();
-  } else {
-    nstats = statnames.length();
-  }
+  nstats = statnames_from_mask.length();
   Vec global_result(nstats);
 
   {
@@ -302,11 +308,7 @@ Vec PTester::perform(bool call_forget)
   // Stat specs
   TVec<StatSpec> statspecs(nstats);
   for(int k=0; k<nstats; k++) {
-    if (statmask) {
       statspecs[k].init(statnames_from_mask[k]);
-    } else {
-      statspecs[k].init(statnames[k]);
-    }
   }
   
   // int traincostsize = traincostnames.size();
@@ -436,11 +438,7 @@ Vec PTester::perform(bool call_forget)
 
 TVec<string> PTester::getStatNames()
 {
-  if (statmask) {
-    return statnames_from_mask;
-  } else {
-    return statnames;
-  }
+  return statnames_from_mask;
 }
 
 
