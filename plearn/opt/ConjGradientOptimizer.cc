@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.39 2003/10/10 17:18:56 yoshua Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.40 2003/10/13 02:02:48 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -463,8 +463,8 @@ real ConjGradientOptimizer::fletcherSearchMain (
   // g0 = g(0), g_0 = g(alpha0), g_1 = g(alaph1)
   // (for the bracketing phase)
   real alpha2, f0, f_1=0, f_0, g0, g_1=0, g_0, a1=0, a2, b1=0, b2;
-  f0 = (*f)(0, opt);
-  g0 = (*g)(0, opt);
+  //  f0 = (*f)(0, opt);
+  g0 = (*g)(0, opt); f0 = opt->cost->value[0];
   f_0 = f0;
   g_0 = g0;
   if (mu == FLT_MAX)
@@ -536,6 +536,7 @@ real ConjGradientOptimizer::fletcherSearchMain (
   //     and we'll keep it this way
   //     We then use f1 = f(alpha1) and g1 = g(alpha1)
   real f1,g1;
+  bool repeated = false;
   while (true) {
      // cout << "Splitting : alpha1 = " << alpha1 << endl << "            a1 = " << a1 << endl << "            b1 = " << b1 << endl;
      // cout << "Interval : [" << a1 + tau2 * (b1-a1) << " , " << b1 - tau3 * (b1-a1) << "]" << endl;
@@ -543,12 +544,14 @@ real ConjGradientOptimizer::fletcherSearchMain (
         a1, b1,
         a1 + tau2 * (b1-a1), b1 - tau3 * (b1-a1),
         f_0, f_1, g_0, g_1);
-    f1 = (*f)(alpha1, opt);
-    if ((a1 - alpha1) * g_0 <= epsilon) {
+    g1 = (*g)(alpha1, opt);  f1 = opt->cost->value[0];
+    bool small= ((a1 - alpha1) * g_0 <= epsilon);
+    if (small && (a1>0 || repeated)) {
        // cout << "Early stop : a1 = " << a1 << " , alpha1 = " << alpha1 << " , g(a1) = " << g_0 << " , epsilon = " << epsilon << endl;
       return a1;
     }
-    g1 = (*g)(alpha1, opt);
+    if (small) repeated=true;
+    //g1 = (*g)(alpha1, opt);
     if (f1 > f0 + rho * alpha1 * g0 || f1 >= f_0) {
      a2 = a1;
      b2 = alpha1;
@@ -662,7 +665,7 @@ bool ConjGradientOptimizer::lineSearch() {
   }
   if (step < 0)
     cout << "Ouch, negative step !" << endl;
-  params.update(step, search_direction);
+  if (step!=0) params.update(step, search_direction);
   if (step == 0)
     cout << "No more progress made by the line search, stopping" << endl;
   return (step == 0);
