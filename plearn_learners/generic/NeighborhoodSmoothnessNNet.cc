@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.13 2004/02/28 20:28:51 tihocan Exp $
+   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.14 2004/03/01 18:34:18 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeighborhoodSmoothnessNNet.h */
@@ -558,11 +558,14 @@ void NeighborhoodSmoothnessNNet::setTrainingSet(VMat training_set, bool call_for
     || train_set->weightsize() != training_set->weightsize()
     || train_set->targetsize() != training_set->targetsize();
   train_set = training_set;
+
   if (training_set_has_changed && inputsize_<0)
   {
     inputsize_ = train_set->inputsize()-1;
     targetsize_ = train_set->targetsize();
     weightsize_ = train_set->weightsize();
+  } else if (train_set->inputsize() != training_set->inputsize()) {
+    PLERROR("In NeighborhoodSmoothnessNNet::setTrainingSet - You can't change the inputsize of the training set");
   }
   if (training_set_has_changed || call_forget)
     build(); // MODIF FAITE PAR YOSHUA: sinon apres un setTrainingSet le build n'est pas complete dans un NNet train_set = training_set;
