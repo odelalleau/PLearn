@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ObjectGenerator.h,v 1.1 2004/06/17 20:41:21 ducharme Exp $
+   * $Id: ObjectGenerator.h,v 1.2 2004/06/21 14:52:56 tihocan Exp $
    ******************************************************* */
 
 #include "Object.h"
@@ -70,9 +70,9 @@ private:
 protected:
   static void declareOptions(OptionList& ol);
 
-  //! Does the last generated Object is the last of the list
+  //! Is the last generated Object the last of the list ?
   //! MUST be define by a subclass
-  virtual bool lastObject() const =0;
+  virtual bool lastObject() const = 0;
 
 public:
 
@@ -81,7 +81,7 @@ public:
 
   //! This will generate the next object in the list of all options
   //! MUST be define by a subclass
-  virtual PP<Object> generateNextObject() =0;
+  virtual PP<Object> generateNextObject() = 0;
 
   //! This will generate a list of all possible Objects.
   //! By default, just loop over generateNextObject()
@@ -91,9 +91,6 @@ public:
   virtual void build();
 
   virtual void forget();
-
-  //! Provides a help message describing this class
-  static string help();
 
   //! Declares name and deepCopy methods
   PLEARN_DECLARE_ABSTRACT_OBJECT(ObjectGenerator);
