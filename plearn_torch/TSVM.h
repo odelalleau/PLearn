@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TSVM.h,v 1.1 2005/02/23 01:31:19 tihocan Exp $ 
+   * $Id: TSVM.h,v 1.2 2005/02/23 16:37:37 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -51,6 +51,7 @@ namespace PLearn {
 
 class TDataSet;
 class TKernel;
+class TSequence;
 
 class TSVM: public TQCMachine
 {
@@ -72,6 +73,7 @@ protected:
   PP<TDataSet> data;
   int n_support_vectors_bound;
   TVec<int> support_vectors;
+  TVec< PP<TSequence> > sv_sequences;
 
 public:
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TSVM.cc,v 1.1 2005/02/23 01:31:19 tihocan Exp $ 
+   * $Id: TSVM.cc,v 1.2 2005/02/23 16:37:37 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -44,6 +44,7 @@
 #include "TSVM.h"
 #include <plearn_torch/TDataSet.h>
 #include <plearn_torch/TKernel.h>
+#include <plearn_torch/TSequence.h>
 
 namespace PLearn {
 using namespace std;
@@ -88,6 +89,9 @@ void TSVM::declareOptions(OptionList& ol)
 
   declareOption(ol, "sv_alpha", &TSVM::sv_alpha, OptionBase::learntoption,
       "The coefficients (weights) of the support vectors.");
+
+  declareOption(ol, "sv_sequences", &TSVM::sv_sequences, OptionBase::learntoption,
+      "The support vectors themselves.");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -136,12 +140,19 @@ void TSVM::updateFromPLearn(Torch::Object* ptr) {
             "and cannot be instantiated");
   }
   if (options["kernel"])                  svm->kernel                   = kernel->kernel;
-  if (data && options["data"])            svm->data                     = data->dataset;
+  if (options["data"])                    svm->data                     = data ? data->dataset : 0;
   if (options["support_vectors"])         svm->support_vectors          = support_vectors ? support_vectors.data()
                                                                                           : 0;
-  if (options["n_support_vectors"])       svm->n_support_vectors        = support_vectors.length();
+  if (options["support_vectors"])         svm->n_support_vectors        = support_vectors.length();
   if (options["sv_alpha"])                svm->sv_alpha                 = sv_alpha ? sv_alpha.data()
                                                                                    : 0;
+  // TODO Could free some memory if possible.
+  if (options["sv_sequences"]) {
+    svm->sv_sequences = (Torch::Sequence **)allocator->alloc(sizeof(Torch::Sequence *)*sv_sequences.length());
+    for (int i = 0; i < sv_sequences.length(); i++) {
+      svm->sv_sequences[i] = sv_sequences[i]->sequence;
+    }
+  }
   if (options["n_support_vectors_bound"]) svm->n_support_vectors_bound  = n_support_vectors_bound;
   PLWARNING("In TSVM::updateFromPLearn - Implementation not completed");
   inherited::updateFromPLearn(svm);
@@ -151,19 +162,41 @@ void TSVM::updateFromPLearn(Torch::Object* ptr) {
 // updateFromTorch //
 /////////////////////
 void TSVM::updateFromTorch() {
-  assert( (kernel ? kernel->kernel : 0) == svm->kernel );
-  // TODO Think about how to deal with a dataset set by the Trainer,
-  //      and what it means in more general cases.
-  //  assert( (data   ? data->dataset  : 0) == svm->data   );
+  assert( (kernel ? kernel->kernel : 0) == svm->kernel ); // TODO Necessary ?
   if (kernel)
-    kernel->updateFromTorch();
+    kernel->updateFromTorch(); // TODO Not really necessary ?
+  if (svm->data != (data ? data->dataset : 0)) {
+    // The SVM dataset has changed.
+    TObjectMap::const_iterator it = torch_objects.find(svm->data);
+    if (it == torch_objects.end())
+      PLERROR("In TSVM::updateFromTorch - Could not find a TObject associated with the new dataset");
+    data = (TDataSet*) it->second;
+  }
   if (data)
-    data->updateFromTorch();
+    data->updateFromTorch(); // TODO Necessary ?
   support_vectors.resize(svm->n_support_vectors);
   sv_alpha.resize       (svm->n_support_vectors);
   support_vectors.copyFrom(svm->support_vectors, svm->n_support_vectors);
   sv_alpha.copyFrom       (svm->sv_alpha       , svm->n_support_vectors);
   n_support_vectors_bound = svm->n_support_vectors_bound;
+  if (options["sv_sequences"]) {
+    // TODO May have to be done in subclasses ?
+    int n = svm->n_support_vectors;
+    sv_sequences.resize(n);
+    for (int i = 0; i < n; i++) {
+      Torch::Sequence* seq = svm->sv_sequences[i];
+      TObjectMap::const_iterator it = torch_objects.find(seq);
+      if (it == torch_objects.end()) {
+        // Need to create a new sequence.
+        // TODO Would be cool to be able to create subclasses of TSequence.
+        PP<TSequence> new_seq = new TSequence();
+        new_seq->sequence = seq;
+        new_seq->updateFromTorch();
+        sv_sequences[i] = new_seq;
+      } else
+        sv_sequences[i] = (TSequence*) it->second;
+    }
+  }
   PLWARNING("In TSVM::updateFromTorch - Implementation non completed");
   inherited::updateFromTorch();
 }
