@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.h,v 1.14 2003/02/16 18:31:44 morinf Exp $
+   * $Id: WordNetOntology.h,v 1.15 2003/02/18 22:29:38 morinf Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -319,7 +319,8 @@ private:
   void getCategoriesAtLevel(int ss_id, int cur_level, int target_level, set<int>& categories);
   void getCategoriesUnderLevel(int ss_id, int cur_level, int target_level, Set categories);
   void visitUpward(Node* node);
-
+public:
+  void unvisitDownward(Node *node);
 };
 
 }

@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.cc,v 1.17 2003/02/16 18:31:44 morinf Exp $
+   * $Id: WordNetOntology.cc,v 1.18 2003/02/18 22:29:23 morinf Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -2210,6 +2210,17 @@ void WordNetOntology::visitUpward(Node* node)
     if (!synsets[parent_id]->visited)
       visitUpward(synsets[parent_id]);
   }
+}
+
+void
+WordNetOntology::unvisitDownward(Node *node)
+{
+    node->visited = false;
+    for (SetIterator s_it = node->children.begin(); s_it != node->children.end(); ++s_it) {
+        Node *child = synsets[*s_it];
+        if (child->visited)
+            unvisitDownward(child);
+    }
 }
 
 void WordNetOntology::detectWordsWithoutOntology()
