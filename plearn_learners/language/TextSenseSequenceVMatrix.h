@@ -1,3 +1,5 @@
+/*! \file TextSenseSequenceVMatrix.h */
+
 #ifndef TextSenseSequenceVMatrix_INC
 #define TextSenseSequenceVMatrix_INC
 
@@ -11,6 +13,7 @@
 namespace PLearn <%
 using namespace std;
 
+//! This class handles a sequence of words/sense tag/POS triplets to present it as target words and their context
 class TextSenseSequenceVMatrix: public RowBufferedVMatrix
 {
 protected:
