@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
- * $Id: TVec_decl.h,v 1.11 2004/07/09 14:11:39 tihocan Exp $
+ * $Id: TVec_decl.h,v 1.12 2004/07/09 14:37:00 tihocan Exp $
  * AUTHORS: Pascal Vincent & Yoshua Bengio
  * This file is part of the PLearn library.
  ******************************************************* */
@@ -468,10 +468,6 @@ public:
   inline void operator=(const T& f) const
   { fill(f); }
 
-  //! Same as fill(f) (will only work with TVec<real>).
-  inline void operator<<(const real& f) const
-  { fill(f); }
-  
   inline void clear() const
     { if(!isNull()) clear_n(data(),length()); }
 
@@ -774,6 +770,11 @@ public:
 };
 
 typedef TVec<real> Vec;
+
+//! Same as fill(f) (will only work with Vec, because of a potential conflict
+//! with T == string if we wanted to make it generic).
+inline void operator<<(const Vec& v, const real& f)
+{ v.fill(f); }
 
 template<class T>
 class TypeTraits< TVec<T> >
