@@ -63,7 +63,7 @@ public:
   
   bool use_last_eigenval;
   real scale_factor;
-  double global_lambda0;
+  real global_lambda0;
 
   // ************************
   // * public build options *

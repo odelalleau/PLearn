@@ -115,7 +115,7 @@ void ManifoldParzen2::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   // deepCopyField(trainvec, copies);
 
   // ### Remove this line when you have fully implemented this method.
-  PLERROR("ManifoldParzen2::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+  //PLERROR("ManifoldParzen2::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 // This is an efficient version of the most basic nearest neighbor search, using a Mat and euclidean distance
@@ -168,8 +168,8 @@ void computeLocalPrincipalComponents(Mat& dataset, int which_pattern, Mat& delta
   if (center.hasMissing())
     PLERROR("dataset row %d has missing values!", which_pattern);
   computeNearestNeighbors(dataset, center, delta_neighbors, which_pattern);
-  mean.resize(delta_neighbors.width());
-  columnMean(delta_neighbors, mean);
+  //mean.resize(delta_neighbors.width());  // Hugo: the mean should be the current point...
+  //columnMean(delta_neighbors, mean);
   delta_neighbors -= mean;
   computePrincipalComponents(delta_neighbors, eig_values, eig_vectors);
 }
@@ -198,8 +198,9 @@ void ManifoldParzen2::train()
       
     // center is sample
     mu(i) << trainset(i);
-
-    Vec center;
+    
+    Vec center(mu.width());
+    center << trainset(i);
     computeLocalPrincipalComponents(trainset, i, delta_neighbors, eigvals, components_eigenvecs, center);
 
     eigvals *= scale_factor;
@@ -232,7 +233,7 @@ void ManifoldParzen2::train()
     n_eigen = eigvals.length() - 1;
     GaussMix::build();
     resizeStuffBeforeTraining();
-    mu(i) << center;
+    //mu(i) << center;   // Hugo: the mean should be current point... 
     eigenvalues(i) << eigvals;
     eigenvalues(i, n_eigen_computed - 1) = lambda0;
     eigenvectors[i] << components_eigenvecs;
