@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.56 2004/07/21 16:30:56 chrish42 Exp $
+   * $Id: NNet.cc,v 1.57 2004/09/03 16:42:31 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -283,7 +283,7 @@ void NNet::build_()
           else if(hidden_transfer_func=="softmax")
             output = softmax(hidden_layer);
           else if (hidden_transfer_func == "log_softmax")
-            output = log_softmax(output);
+            output = log_softmax(hidden_layer);
           else if(hidden_transfer_func=="hard_slope")
             output = unary_hard_slope(hidden_layer,0,1);
           else if(hidden_transfer_func=="symm_hard_slope")
