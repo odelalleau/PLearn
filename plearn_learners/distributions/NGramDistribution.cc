@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NGramDistribution.cc,v 1.3 2004/10/13 18:59:24 larocheh Exp $ 
+   * $Id: NGramDistribution.cc,v 1.4 2004/10/13 20:27:05 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -149,6 +149,10 @@ void NGramDistribution::build_()
   // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
   // ### You should assume that the parent class' build_() has already been called.
 
+  conditional_flags.resize(n);
+  conditional_flags.fill(1);
+  conditional_flags[n-1] = 2;
+
   if(train_set)
   {
     if(inputsize() != n) PLERROR("In NGramDistribution:build_() : input size should be n=%d", n);
@@ -156,10 +160,6 @@ void NGramDistribution::build_()
     counts_map.resize(n);
 
     // Conditional flags are set automatically
-
-    conditional_flags.resize(n);
-    conditional_flags.fill(1);
-    conditional_flags[n-1] = 2;
 
     inherited::build();
 
@@ -300,17 +300,12 @@ real NGramDistribution::density(const Vec& y) const
     freq = tree->freq(ngram);
     normalization = tree->normalization(ngram);
     TVec<int> n_freq = tree->n_freq(ngram);
-    real ret = 0;
-    real factor = 1;
-    for(int j=ngram_length-1; j>=0; j--)
+    real ret = 1.0/voc_size;
+    for(int j=0; j<ngram_length; j++)
     { 
       if(normalization[j] != 0)
-      {
-        ret += factor * ((real)(freq[j] > discount_constant ? freq[j] - discount_constant : 0))/ normalization[j];
-        factor = factor * ((real)discount_constant)/normalization[j] * n_freq[j];
-      }
+        ret = (freq[j]+n_freq[j]*ret)/(normalization[j]+n_freq[j]);
     }
-    ret += factor *1.0/voc_size;
     
     return ret;
   }
