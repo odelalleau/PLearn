@@ -1,4 +1,5 @@
 import inspect, string, types
+import plearn.utilities.toolkit as toolkit
 
 ##########################################
 ### Helper functions 
@@ -94,7 +95,7 @@ class FrozenObject:
         for member in self.classmembers():
             value = getattr(self, member)            
             if isinstance(value, types.StringType):
-                members.append( '%s = "%s"' % (member,value) )
+                members.append( '%s = %s' % (member, toolkit.quote(value)) )
             else:
                 members.append( '%s = %s' % (member,value) )
 

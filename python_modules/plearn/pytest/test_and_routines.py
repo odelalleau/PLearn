@@ -54,29 +54,31 @@ class TestDefaults:
     program         = None
     arguments       = ''
     ressources      = []
+    disabled        = False
 
     __declare_members__ = [ ('name',            types.StringType),
                             ('description',     types.StringType),
                             ('program',         Program),
                             ('arguments',       types.StringType),
-                            ##('ressources',      Ressources),
-                            ('ressources',      types.ListType) ]
+                            ('ressources',      types.ListType),
+                            ('disabled',        types.BooleanType)
+                            ]
 
 class Test(FrozenObject):
     """Test is a class regrouping the elements that define a test for PyTest.
 
-    @cvar name: The name of the Test must uniquely determine the
+    @ivar name: The name of the Test must uniquely determine the
     test. Among others, it will be used to identify the test's results
     ( pytest/*_results/I{name}/ ) and to report test informations.
     @type name: String
 
-    @cvar description: The description must provide other users an
+    @ivar description: The description must provide other users an
     insight of what exactly is the Test testing. You are encouraged
     to used triple quoted strings for indented multi-lines
     descriptions.
     @type description: String
 
-    @cvar program: The proram to be run by the Test. The L{Program}
+    @ivar program: The proram to be run by the Test. The L{Program}
     class currently has four subclasses: L{LocalProgram},
     L{GlobalProgram}, L{LocalCompilableProgram} and
     L{GlobalCompilableProgram}. The I{Local} prefix specifies that the
@@ -91,33 +93,39 @@ class Test(FrozenObject):
 
     @type program: L{Program}
 
-    @cvar arguments: The command line arguments to be passed to the program
+    @ivar arguments: The command line arguments to be passed to the program
     for the test to proceed.
     @type arguments: String
 
-    @cvar ressources: A list of ressources that are used by your program either
+    @ivar ressources: A list of ressources that are used by your program either
     in the command line or directly in the code (plearn or pyplearn files, databases, ...).
     The elements of the list must be string representations of the path, absolute or relative,
     to the ressource.
     @type ressources: List of Strings
     """
     
-    instances_map = {}
+    instances_map    = {}
+    families_map     = {}
+    
     statistics = BasicStats("Test statistics")
     expected_results = os.path.join(plpath.pytest_dir, "expected_results")
     run_results = os.path.join(plpath.pytest_dir, "run_results")
     
     def __init__(self, defaults=TestDefaults, **overrides):
-        FrozenObject.__init__(self, defaults, overrides)
-        
+        FrozenObject.__init__(self, defaults, overrides)        
+        self.set_attribute( 'test_directory', os.getcwd() )
+
         if Test.instances_map.has_key( self.name ):
             raise DuplicateName( Test.instances_map[self.name], self )
         else:
             Test.statistics.new_test()
             Test.instances_map[self.name] = self
-
-        self.set_attribute( 'test_directory', os.getcwd() )
-        self.set_str_spacer('\n')
+            if Test.families_map.has_key( self.test_directory ):
+                Test.families_map[self.test_directory].append(self)
+            else:
+                Test.families_map[self.test_directory] = [self]
+                
+        self.set_str_spacer( '\n' )
 
     def check_name_format(self):
         if self.name == '':
@@ -174,12 +182,13 @@ class Test(FrozenObject):
             )
 
     def is_disabled(self):
-        disabled_ext         = '.disabled'
-        disabling_directory  = os.path.join(self.test_directory, 'pytest'+disabled_ext) 
-        disabling_test       = os.path.join(self.test_directory, self.name+disabled_ext) 
-        return ( os.path.exists(disabling_directory) or
-                 os.path.exists(disabling_test)       )
-
+##         disabled_ext         = '.disabled'
+##         disabling_directory  = os.path.join(self.test_directory, 'pytest'+disabled_ext) 
+##         disabling_test       = os.path.join(self.test_directory, self.name+disabled_ext) 
+##         return ( os.path.exists(disabling_directory) or
+##                  os.path.exists(disabling_test)       )
+        return self.disabled
+    
     def link_ressources(self, test_results):
         ressources = []
         ressources.extend( self.ressources )
@@ -206,10 +215,7 @@ class Test(FrozenObject):
                 if os.path.exists( meta ):
                     single_link( meta )
 
-        
-    def run(self, results):
-        self.check_name_format()
-        
+    def test_results(self, results):
         if results not in [Test.expected_results, Test.run_results]:
             raise ValueError(
                 "%s.run expects its results argument to be either "
@@ -217,7 +223,12 @@ class Test(FrozenObject):
                 % (self.classname(), self.classname(), self.classname())
                 )
 
-        test_results  = os.path.join( results, self.name )
+        return os.path.join( results, self.name )
+        
+    def run(self, results):
+        self.check_name_format()
+
+        test_results  = self.test_results( results )
         backup        = self.ensure_results_directory( test_results )
         self.link_ressources( test_results )
 
@@ -426,7 +437,12 @@ class RunTestRoutine(Routine):
     B{Do not modify} the results directory manually.
     """
     def preprocessing(self):
-        if not os.path.exists( Test.expected_results ):
+        self.set_attribute( "expected_results",
+                            self.test.test_results( Test.expected_results ) )
+        self.set_attribute( "run_results",
+                            self.test.test_results( Test.run_results ) )        
+        
+        if not os.path.exists( self.expected_results ):
             raise PyTestUsageError(
                 "%s\n Expected results must be generated by the 'results' mode "
                 "prior to any use of the 'run' mode."
@@ -444,9 +460,9 @@ class RunTestRoutine(Routine):
         
         self.test.run( Test.run_results )
 
-        self.path_resolve( Test.run_results )
-        verif = IntelligentDiff( Test.expected_results,
-                                 Test.run_results,
+        self.path_resolve( self.run_results )
+        verif = IntelligentDiff( self.expected_results,
+                                 self.run_results,
                                  self.forbidden_directories() )
         
         diffs = verif.get_differences()

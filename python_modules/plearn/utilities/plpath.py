@@ -64,6 +64,26 @@ pymake_objs            = "OBJS"
 cvs_directory          = "CVS"
 pytest_dir             = "pytest"
 
+def exempt_of_subdirectories( directories ):
+    """Remove any path in list that is a subdirectory of some other directory in the list.
+
+    @param list: The list exempt.
+    @type  list: ListType
+    """    
+    ldirs = len(directories)
+    to_remove = []
+    for i in range(ldirs):
+        for j in range(ldirs):
+            if i==j:
+                continue
+            if string.find(directories[i], directories[j]) != -1:
+                to_remove.append(directories[i])
+
+    for r in to_remove:
+        directories.remove(r)
+    return directories
+
+
 def user_independant_path(directory):
     """
     Eventuellement, il faut que je fasse quelque chose pour les tests qui ne sont sous aucune branche...

@@ -7,5 +7,6 @@
 ##     'test_and_routines'
 ##     ]
 
-from test_and_routines    import *
-from ModeAndOptionParser  import *
+import modes
+from   test_and_routines    import *
+from   ModeAndOptionParser  import ModeAndOptionParser, OptionGroup

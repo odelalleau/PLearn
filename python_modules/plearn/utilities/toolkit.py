@@ -5,7 +5,7 @@ submodule. If a considerable number of functions contained in this
 module seems to manage similar tasks, it is probably time to create a
 I{similar_tasks.py} L{utilities} submodule to move those functions to.
 """
-import os, popen2, string, sys, types
+import os, popen2, string, sys, time, types
 import epydoc.markup 
 import epydoc.markup.epytext
 
@@ -70,6 +70,12 @@ def cvs_remove(file):
     errors = process.childerr.readlines()
     map(lambda err: vprint(err, 1), errors)
     return True
+
+def date_time_string():
+    t = time.localtime()
+    return ( str(t[0]) + "_" + str(t[1]) + "_" + str(t[2])
+             + "_" +
+             str(t[3]) + ":" + str(t[4]) + ":" + str(t[5]) )
 
 def doc(obj, short=False):
     docstr = obj.__doc__
@@ -139,6 +145,11 @@ def last_user_to_commit(file_path):
         author = a
     
     return author
+
+def quote(s):
+    if string.find(s, '\n') != -1:
+        return '"""%s"""' % s
+    return '"%s"' % s
 
 def short_doc(obj):
     return doc(obj, True)
