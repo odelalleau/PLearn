@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TestingLearner.h,v 1.1 2004/07/16 21:57:14 mariusmuja Exp $ 
+   * $Id: TestingLearner.h,v 1.2 2004/07/19 22:47:00 mariusmuja Exp $ 
    ******************************************************* */
 
 // Authors: Marius Muja
@@ -63,8 +63,6 @@ protected:
   // * protected options *
   // *********************
 
-  bool call_forget;  
-  
 public:
 
   // ************************
@@ -158,6 +156,8 @@ public:
   virtual TVec<string> getTrainCostNames() const;
 
   virtual void setTrainingSet(VMat training_set, bool call_forget=true);
+
+  void setExperimentDirectory(const string& the_expdir);
 
   // *** SUBCLASS WRITING: ***
   // While in general not necessary, in case of particular needs 

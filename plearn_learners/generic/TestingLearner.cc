@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TestingLearner.cc,v 1.1 2004/07/16 21:57:14 mariusmuja Exp $ 
+   * $Id: TestingLearner.cc,v 1.2 2004/07/19 22:47:00 mariusmuja Exp $ 
    ******************************************************* */
 
 // Authors: Marius Muja
@@ -47,7 +47,6 @@ namespace PLearn {
 using namespace std;
 
 TestingLearner::TestingLearner() 
-/* ### Initialize all fields to their default value here */
 {
   // ...
 
@@ -65,12 +64,9 @@ void TestingLearner::declareOptions(OptionList& ol)
   // ### OptionBase::tuningoption. Another possible flag to be combined with
   // ### is OptionBase::nosave
 
-  declareOption(ol, "call_forget", &TestingLearner::call_forget, OptionBase::buildoption,
-                 "");
  
   declareOption(ol, "tester", &TestingLearner::tester, OptionBase::buildoption,
                  "The tester used by the TestingLearner.");
-
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -110,13 +106,18 @@ int TestingLearner::outputsize() const
 
 void TestingLearner::forget()
 {
-  call_forget = true;
+  stage = 0;
 }
     
 void TestingLearner::train()
 {
-  tester->perform(call_forget);
-  call_forget = false;
+  if (stage > 0) {
+    PLWARNING("In TestingLearner::train - Learner has already been trained");
+    return;
+  }
+  train_stats->update(tester->perform(true));
+  train_stats->setFieldNames(tester->getStatNames());
+  stage = 1;
 }
 
 
@@ -135,19 +136,28 @@ void TestingLearner::computeCostsFromOutputs(const Vec& input, const Vec& output
 // ...
 }                                
 
-//TVec<string> TestingLearner::getTestCostNames() const
-//{
-//}
+TVec<string> TestingLearner::getTestCostNames() const
+{
+  TVec<string> result;
+
+  return result;
+}
 
 TVec<string> TestingLearner::getTrainCostNames() const
 {
-  return tester->statnames;
+  return tester->getStatNames();
 }
 
 void TestingLearner::setTrainingSet(VMat training_set, bool call_forget)
 {
+  inherited::setTrainingSet(training_set, call_forget);
   tester->dataset = training_set;
 }
 
+
+void TestingLearner::setExperimentDirectory(const string& the_expdir)
+{
+  tester->setExperimentDirectory(the_expdir);
+}
 
 } // end of namespace PLearn
