@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.26 2004/04/14 13:03:33 tihocan Exp $
+   * $Id: vmatmain.cc,v 1.27 2004/04/23 18:04:10 nova77 Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -397,12 +397,7 @@ void viewVMat(const VMat& vm)
   int valwidth = 15;
   int valstrwidth = valwidth-1;
 
-  // norman: weird compiler...
-#ifdef WIN32
   char* valstrformat = "%14s";
-#else
-  const char* valstrformat = "%14s";
-#endif
 
   int curi = 0;
   int curj = 0;
@@ -442,9 +437,9 @@ void viewVMat(const VMat& vm)
           else
             {
               x = 1+leftcolwidth+(j-startj)*valwidth;
-              mvprintw(0, x, valstrformat, s.substr(0,valstrwidth).c_str());
+              mvprintw(0, x, valstrformat, s.substr(0,valstrwidth).c_str() );
               if((int)s.length() > valstrwidth)
-                mvprintw(1, x, valstrformat, s.substr(valstrwidth,valstrwidth).c_str());
+                mvprintw(1, x, valstrformat, s.substr(valstrwidth,valstrwidth).c_str() );
             }
           // attroff(A_REVERSE);
         }
@@ -483,7 +478,7 @@ void viewVMat(const VMat& vm)
               
               if( i == curi || (vm_showed.width() > 1 && j == curj) )
                 attron(A_REVERSE);
-              //else if ()
+              //else if ()
               //  attron(A_REVERSE);
               
               if(hide_sameval && i>starti && (val==oldv[j] || is_missing(val)&&is_missing(oldv[j])) )
