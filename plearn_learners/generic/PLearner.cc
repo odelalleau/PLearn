@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.45 2005/02/08 21:42:47 tihocan Exp $
+   * $Id: PLearner.cc,v 1.46 2005/03/02 20:56:52 plearner Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -373,6 +373,120 @@ void PLearner::resetInternalState()
 
 bool PLearner::isStatefulLearner() const
 { return false; }
+
+void PLearner::call(const string& methodname, int nargs, PStream& io)
+{
+  if(methodname=="setTrainingSet")
+    {
+      if(nargs!=2) PLERROR("PLearner remote method setTrainingSet takes 2 argument");
+      VMat training_set;
+      bool call_forget;
+      io >> training_set >> call_forget;
+      setTrainingSet(training_set, call_forget);
+      prepareToSendResults(io, 0);
+      io.flush();
+    }
+  else if(methodname=="setExperimentDirectory")
+    {
+      if(nargs!=1) PLERROR("PLearner remote method setExperimentDirectory takes 1 argument");
+      PPath the_expdir;
+      io >> the_expdir;
+      setExperimentDirectory(the_expdir);
+      prepareToSendResults(io, 0);
+      io.flush();      
+    }
+  else if(methodname=="getExperimentDirectory")
+    {
+      if(nargs!=0) PLERROR("PLearner remote method getExperimentDirectory takes 0 arguments");
+      PPath result = getExperimentDirectory();
+      prepareToSendResults(io, 1);
+      io << result;
+      io.flush();      
+    }
+  else if(methodname=="forget")
+    {
+      if(nargs!=0) PLERROR("PLearner remote method forget takes 0 arguments");
+      forget();
+      prepareToSendResults(io, 0);
+      io.flush();      
+    }
+  else if(methodname=="train")
+    {
+      if(nargs!=0) PLERROR("PLearner remote method train takes 0 arguments");
+      train();
+      prepareToSendResults(io, 0);
+      io.flush();      
+    }
+  else if(methodname=="resetInternalState")
+    {
+      if(nargs!=0) PLERROR("PLearner remote method resetInternalState takes 0 arguments");
+      resetInternalState();
+      prepareToSendResults(io, 0);
+      io.flush();
+    }
+  else if(methodname=="computeOutput")
+    {
+      if(nargs!=1) PLERROR("PLearner remote method computeOutput takes 1 argument");
+      Vec input;
+      io >> input;
+      Vec output;
+      computeOutput(input,output);
+      prepareToSendResults(io, 1);
+      io << output;
+      io.flush();    
+    }
+  else if(methodname=="computeOutputAndCosts")
+    {
+      if(nargs!=2) PLERROR("PLearner remote method computeOutputAndCosts takes 2 arguments");
+      Vec input, target;
+      io >> input >> target;
+      Vec output, costs;
+      computeOutputAndCosts(input,target,output,costs);
+      prepareToSendResults(io, 2);
+      io << output << costs;
+      io.flush();
+    }
+  else if(methodname=="computeCostsFromOutputs")
+    {
+      if(nargs!=3) PLERROR("PLearner remote method computeCostsFromOutputs takes 3 arguments");
+      Vec input, output, target;
+      io >> input >> output >> target;
+      Vec costs;
+      computeCostsFromOutputs(input,output,target,costs);
+      prepareToSendResults(io, 1);
+      io << costs;
+      io.flush();
+    }
+  else if(methodname=="computeCostsOnly")
+    {
+      if(nargs!=3) PLERROR("PLearner remote method computeCostsOnly takes 3 arguments");
+      Vec input, target;
+      io >> input >> target;
+      Vec costs;
+      computeCostsOnly(input,target,costs);
+      prepareToSendResults(io, 1);
+      io << costs;
+      io.flush();
+    }
+  else if(methodname=="getTestCostNames")
+    {
+      if(nargs!=0) PLERROR("PLearner remote method getTestCostNames takes 0 arguments");
+      TVec<string> result = getTestCostNames();
+      prepareToSendResults(io, 1);
+      io << result;
+      io.flush();     
+    }
+  else if(methodname=="getTrainCostNames")
+    {
+      if(nargs!=0) PLERROR("PLearner remote method getTrainCostNames takes 0 arguments");
+      TVec<string> result = getTrainCostNames();
+      prepareToSendResults(io, 1);
+      io << result;
+      io.flush();     
+    }
+  else
+    inherited::call(methodname, nargs, io);
+}
 
 
 } // end of namespace PLearn

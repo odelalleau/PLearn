@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ServerCommand.cc,v 1.4 2005/01/14 19:40:12 plearner Exp $ 
+   * $Id: ServerCommand.cc,v 1.5 2005/03/02 20:56:02 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -75,7 +75,7 @@ ServerCommand::ServerCommand():
 //! The actual implementation of the 'ServerCommand' command 
 void ServerCommand::run(const vector<string>& args)
 {
-  cerr << "Type ? to get some help." << endl;
+  cerr << "Type !? to get some help." << endl;
   // PStream io(&std::cin, &std::cout);
   PStream io(new StdPStreamBuf(&std::cin,&std::cout));
   // PStream io(new FdPStreamBuf(0,1));

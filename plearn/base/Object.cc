@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.41 2005/02/23 21:10:13 chapados Exp $
+   * $Id: Object.cc,v 1.42 2005/03/02 20:56:51 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -353,6 +353,7 @@ void Object::call(const string& methodname, int nargs, PStream& io)
 {
   if(methodname=="changeOptions")
     {
+      if(nargs!=1) PLERROR("Object remote method changeOptions takes 1 argument");
       map<string,string> name_value;
       io >> name_value;
       changeOptions(name_value);
@@ -361,6 +362,7 @@ void Object::call(const string& methodname, int nargs, PStream& io)
     }
   else if(methodname=="getOption") // gets option in serialised form
     {
+      if(nargs!=1) PLERROR("Object remote method getOption takes 1 argument");
       string optionname;
       io >> optionname;
       prepareToSendResults(io, 1);
@@ -369,6 +371,7 @@ void Object::call(const string& methodname, int nargs, PStream& io)
     }
   else if(methodname=="getOptionAsString") // gets option as a serialised string containing the serialised option
     {
+      if(nargs!=1) PLERROR("Object remote method getOptionasString takes 1 argument");
       string optionname;
       io >> optionname;
       string optionval = getOption(optionname);
@@ -378,12 +381,14 @@ void Object::call(const string& methodname, int nargs, PStream& io)
     }
   else if(methodname=="getObject")
     {
+      if(nargs!=0) PLERROR("Object remote method getObject takes 0 arguments");
       prepareToSendResults(io, 1);
       io << *this;
       io.flush();      
     }
   else if(methodname=="run")
     {
+      if(nargs!=0) PLERROR("Object remote method run takes 0 arguments");
       run();
       prepareToSendResults(io, 0);
       io.flush();

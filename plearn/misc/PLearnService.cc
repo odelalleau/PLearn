@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnService.cc,v 1.2 2005/01/14 19:40:50 plearner Exp $ 
+   * $Id: PLearnService.cc,v 1.3 2005/03/02 20:56:52 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -86,21 +86,23 @@ using namespace std;
   {
     // search for a free processing ressource
     // open an io channel to a plearn server running on found ressource 
-    string launch_command = "cldispatch "+service_launch_command;
+    // string launch_command = "cldispatch "+service_launch_command;
+    string launch_command = service_launch_command;
     DBG_LOG << "PLearnService::newServer launching: " << launch_command << endl;
-    PP<Popen> p = new Popen(launch_command);    
-    if(p->in.peek()==EOF)
-      return 0;
+    PP<Popen> p = new Popen(launch_command);
 
     // return RemotePLearnServer object controlling the remote processing ressource
     RemotePLearnServer* serv = new RemotePLearnServer(p);
     
     reserved_servers.insert(serv);
+
+    DBG_LOG << "PLearnService::newServer(" << (unsigned long) serv << endl;
     return serv;
   }
 
   void PLearnService::freeServer(RemotePLearnServer* remoteserv)
   {
+    DBG_LOG << "PLearnService::freeServer(" << (unsigned long) remoteserv << endl;
     if(reserved_servers.erase(remoteserv)!=1)
       PLERROR("In PLearnService::freeServer, no such registered server. This should not happen!");
   }

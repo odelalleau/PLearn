@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnServer.cc,v 1.5 2005/02/08 21:33:20 tihocan Exp $ 
+   * $Id: PLearnServer.cc,v 1.6 2005/03/02 20:56:51 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -74,18 +74,17 @@ using namespace std;
 
   void PLearnServer::printHelp()
   {
-    io.write(
-             "Summary of commands:\n"
-             "  ?                                 # print this help message \n"
-             "  F functionname nargs arg1 ...     # calls a supported function.\n"
-             "  N objid object_specification      # creates new object.\n"
-             "  M objid methodname nargs arg1 ... # calls method on object objid. Returns: R <nreturn> ret1 ... \n"
-             "  D objid                   # deletes object objid. Returns: R 0 \n"
-             "  Z                         # delete all objects. Returns: R 0 \n"
-             "  Q                         # Quit. Returns nothing. \n"
+    io.write("Summary of commands:\n"
+             "  !?                                 # print this help message \n"
+             "  !F functionname nargs arg1 ...     # calls a supported function.\n"
+             "  !N objid object_specification      # creates new object.\n"
+             "  !M objid methodname nargs arg1 ... # calls method on object objid. Returns: R <nreturn> ret1 ... \n"
+             "  !D objid                   # deletes object objid. Returns: R 0 \n"
+             "  !Z                         # delete all objects. Returns: R 0 \n"
+             "  !Q                         # Quit. Returns nothing. \n"
              "\n"
              "Except for ? and Q, all commands upon success return: \n"
-             "  R n_retutn_args arg1 ... \n"
+             "  R n_return_args arg1 ... \n"
              "If an error or exception occurs, the following is returned: \n"
              "  E \"errormsg\" \n"
              "\n"
@@ -107,11 +106,16 @@ using namespace std;
 
     for(;;)
       {
-        io.skipBlanksAndComments();
+        int c = -1;
+        do { c = io.get(); }
+        while(c!='!' && c!=EOF);
+
         int command = io.get();
+        
+        cerr << "Rceived command: " << char(command) << endl;
 
         try 
-          {
+          {            
             switch(command)
               {
               case '?':
@@ -126,10 +130,17 @@ using namespace std;
 
               case 'N': // new
                 obj = 0;
-                io >> obj_id >> obj;           // Read new object
+                // io >> obj_id >> obj;           // Read new object
+                cerr << "Reading obj_id" << endl;
+                io >> obj_id;
+                cerr << "Read obj_id = " << obj_id << endl;                 
+                io >> obj;
+                cerr << "Read object " << endl;
                 objmap[obj_id] = obj;
+                cerr << "Writing reply" << endl;
                 io.write("R 0");
                 io << endl;  
+                cerr << "Wrote result" << endl;
                 break;
             
               case 'D': // delete
@@ -165,7 +176,7 @@ using namespace std;
                 return;
 
               default:
-                PLERROR("Invalid PLearnServer command char: %c",command);
+                PLERROR("Invalid PLearnServer command char: %c Type !? for help.",command);
               }
           }
         catch(const PLearnError& e)

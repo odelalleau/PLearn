@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.54 2005/02/21 15:27:50 tihocan Exp $ 
+   * $Id: PTester.cc,v 1.55 2005/03/02 20:56:52 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -221,6 +221,47 @@ void PTester::declareOptions(OptionList& ol)
     "intervals are saved in a file SETNAME_confidence.pmat (default=false)");
   
   inherited::declareOptions(ol);
+}
+
+void PTester::call(const string& methodname, int nargs, PStream& io)
+{
+  if(methodname=="perform")
+    {
+      if(nargs!=1) PLERROR("PTester remote method perform takes 1 argument");
+      bool call_forget;
+      io >> call_forget;
+      Vec result = perform(call_forget);
+      prepareToSendResults(io, 1);
+      io << result;
+      io.flush();
+    }
+  else if(methodname=="getStatNames") 
+    {
+      if(nargs!=0) PLERROR("PTester remote method getStatNames takes 0 argument");
+      TVec<string> result = getStatNames();
+      prepareToSendResults(io, 1);
+      io << result;
+      io.flush();
+    }
+  else if(methodname=="setExperimentDirectory")
+    {
+      if(nargs!=1) PLERROR("PTester remote method setExperimentDirectory takes 1 argument");
+      PPath the_expdir;
+      io >> the_expdir;
+      setExperimentDirectory(the_expdir);
+      prepareToSendResults(io, 0);
+      io.flush();      
+    }
+  else if(methodname=="getExperimentDirectory")
+    {
+      if(nargs!=0) PLERROR("PTester remote method getExperimentDirectory takes 0 arguments");
+      PPath result = getExperimentDirectory();
+      prepareToSendResults(io, 1);
+      io << result;
+      io.flush();      
+    }
+  else
+    inherited::call(methodname, nargs, io);
 }
 
 void PTester::build_()

@@ -97,6 +97,25 @@ def regular_xyval_to_2d_grid_values(xyval):
     return values, x0, y0, deltax, deltay
 
 
+def imshow_xymagnitude(regular_xymagnitude, interpolation='nearest', cmap = cm.jet):
+    grid_values, x0, y0, deltax, deltay = regular_xyval_to_2d_grid_values(regular_xymagnitude)
+    imshow_2d_grid_values(grid_values, x0, y0, deltax, deltay, interpolation, cm.jet)
+    
+def imshow_xyrgb(regular_xyrgb, interpolation='nearest'):
+    grid_values, x0, y0, deltax, deltay = regular_xyval_to_2d_grid_values(regular_xymagnitude)
+    
+
+    
+def surfplot_xymagnitude(regular_xymagnitude):
+    gridvalues, x0, y0, deltax, deltay = regular_xyval_to_2d_grid_values(regular_xymagnitude)
+    nx = size(gridvalues,0)
+    ny = size(gridvalues,1)
+    gridvalues = reshape(gridvalues,(nx,ny))
+    x = arange(x0,x0+nx*deltax,deltax)
+    y = arange(y0,y0+ny*deltay,deltay)    
+    imv.surf(x, y, gridvalues)
+
+
 def imshow_2d_grid_values(gridvalues, x0, y0, deltax, deltay, interpolation='nearest', cmap = cm.jet):
     nx = size(gridvalues,0)
     ny = size(gridvalues,1)
@@ -106,27 +125,11 @@ def imshow_2d_grid_values(gridvalues, x0, y0, deltax, deltay, interpolation='nea
     # print 'gridvalues:', gridvalues
     imshow(gridvalues, cmap=cmap, origin='lower', extent=extent, interpolation=interpolation)
 
-def plot_2d_points(pointlist, style):
+def plot_2d_points(pointlist, style='bo'):
     x, y = zip(*pointlist)
     plot(x, y, style)
     
 
-def plot_2d_magnitude_and_points(regular_xymagnitude, pointlists, styles = ['bo','go','ro']):
-    grid_values, x0, y0, deltax, deltay = regular_xyval_to_2d_grid_values(regular_xymagnitude)
-    imshow_2d_grid_values(grid_values, x0, y0, deltax, deltay, 'bicubic', cm.jet)
-
-    for pointlist,style in zip(pointlists,styles[0:len(pointlists)]):
-        plot_2d_points(pointlist, style)
-
-
-def plot_surface(regular_xymagnitude):
-    gridvalues, x0, y0, deltax, deltay = regular_xyval_to_2d_grid_values(regular_xymagnitude)
-    nx = size(gridvalues,0)
-    ny = size(gridvalues,1)
-    gridvalues = reshape(gridvalues,(nx,ny))
-    x = arange(x0,x0+nx*deltax,deltax)
-    y = arange(y0,y0+ny*deltay,deltay)    
-    imv.surf(x, y, gridvalues)
 
 
 # def generate_2D_color_plot(x_y_color):

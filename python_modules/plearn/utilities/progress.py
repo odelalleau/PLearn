@@ -15,7 +15,7 @@ class ProgressBar:
 class StdoutProgressBar(ProgressBar):
     
     npoints = 100
-    out = sys.stdout
+    out = sys.stderr
 
     def write(str):
         StdoutProgressBar.out.write(str)

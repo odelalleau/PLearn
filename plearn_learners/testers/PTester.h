@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.h,v 1.21 2005/02/21 15:29:02 tihocan Exp $ 
+   * $Id: PTester.h,v 1.22 2005/03/02 20:56:52 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PTester.h */
@@ -164,6 +164,9 @@ public:
 
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+
+  //! Support for remote method invocation
+  virtual void call(const string& methodname, int nargs, PStream& io);
 
 };
 

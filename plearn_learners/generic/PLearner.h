@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.33 2005/02/09 18:20:12 dorionc Exp $
+   * $Id: PLearner.h,v 1.34 2005/03/02 20:56:52 plearner Exp $
    ******************************************************* */
 
 
@@ -359,6 +359,10 @@ public:
   //!  Does the necessary operations to transform a shallow copy (this)
   //!  into a deep copy by deep-copying all the members that need to be.
   PLEARN_DECLARE_ABSTRACT_OBJECT(PLearner);
+
+  //! Support for remote method invocation
+  virtual void call(const string& methodname, int nargs, PStream& io);
+
 };
 
 DECLARE_OBJECT_PTR(PLearner);
