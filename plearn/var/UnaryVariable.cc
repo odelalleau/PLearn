@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: UnaryVariable.cc,v 1.3 2002/09/06 17:08:57 morinf Exp $
+   * $Id: UnaryVariable.cc,v 1.4 2002/09/10 15:53:28 wangxian Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -149,13 +149,16 @@ void UnaryVariable::resizeRValue()
 /** ReshapeVariable **/
 
 ReshapeVariable::ReshapeVariable(Variable* v, int the_length, int the_width)
-  :UnaryVariable(v, the_length, the_width)
+  :UnaryVariable(v, the_length, the_width), length_(the_length), width_(the_width)
 {
   if(length()*width() != input.length()*input.width())
     PLERROR("In ReshapeVariable: length()*width() is different from the original var's length()*width()");
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(ReshapeVariable);
+
+void ReshapeVariable::recomputeSize(int& l, int& w) const
+{ l=length_; w=width_; }
 
 void ReshapeVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -191,13 +194,16 @@ void ReshapeVariable::symbolicBprop()
 /** SubMatVariable **/
 
 SubMatVariable::SubMatVariable(Variable* v, int i, int j, int the_length, int the_width)
-  :UnaryVariable(v, the_length, the_width), startk(i*v->width()+j)
+  :UnaryVariable(v, the_length, the_width), startk(i*v->width()+j), length_(the_length), width_(the_width)
 {
   if(i<0 || i+length()>v->length() || j<0 || j+width()>v->width())
     PLERROR("In SubMatVariable: requested sub-matrix is out of matrix bounds");
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(SubMatVariable);
+
+void SubMatVariable::recomputeSize(int& l, int& w) const
+{ l=length_; w=width_; }
 
 void SubMatVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -317,13 +323,16 @@ void SubMatVariable::rfprop()
 /** SubMatTransposeVariable **/
 
 SubMatTransposeVariable::SubMatTransposeVariable(Variable* v, int i, int j, int the_length, int the_width)
-  :UnaryVariable(v, the_width, the_length), startk(i*v->length()+j)
+  :UnaryVariable(v, the_width, the_length), startk(i*v->length()+j), length_(the_length), width_(the_width)
 {
   if(i<0 || i+the_length>v->length() || j<0 || j+the_width>v->width())
     PLERROR("In SubMatTransposeVariable: requested sub-matrix is out of matrix bounds");
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(SubMatTransposeVariable);
+
+void SubMatTransposeVariable::recomputeSize(int& l, int& w) const
+{ l=width_; w=length_; }
 
 void SubMatTransposeVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -430,6 +439,9 @@ MatRowVariable::MatRowVariable(const Mat& mat, Variable* input)
 
 IMPLEMENT_NAME_AND_DEEPCOPY(MatRowVariable);
 
+void MatRowVariable::recomputeSize(int& l, int& w) const
+{ l=m.width(); w=1; }
+
 void MatRowVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
   readHeader(in, "MatRowVariable");
@@ -469,6 +481,8 @@ VecElementVariable::VecElementVariable(const Vec& vec, Variable* input)
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(VecElementVariable);
+void VecElementVariable::recomputeSize(int& l, int& w) const
+{ l=1; w=1; }
 
 void VecElementVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -516,6 +530,8 @@ ExtendedVariable::ExtendedVariable(Variable* input, int the_top_extent,
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(ExtendedVariable);
+void ExtendedVariable::recomputeSize(int& l, int& w) const
+{ l=input->length()+top_extent+bottom_extent; w=input->width()+left_extent+right_extent; }
 
 void ExtendedVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -613,13 +629,15 @@ void ExtendedVariable::rfprop()
 /** DuplicateScalarVariable **/
 
 DuplicateScalarVariable::DuplicateScalarVariable(Variable* input, int thelength, int thewidth)
-  :UnaryVariable(input, thelength, thewidth)
+  :UnaryVariable(input, thelength, thewidth), length_(thelength), width_(thewidth)
 {
   if (!input->isScalar())
     PLERROR("In DuplicateScalarVariable input is not a scalar");
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(DuplicateScalarVariable);
+void DuplicateScalarVariable::recomputeSize(int& l, int& w) const
+{ l=length_; w=width_; }
 
 void DuplicateScalarVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -657,13 +675,15 @@ void DuplicateScalarVariable::symbolicBprop()
 /** DuplicateRowVariable **/
 
 DuplicateRowVariable::DuplicateRowVariable(Variable* input, int thelength)
-  :UnaryVariable(input, thelength, input->width())
+  :UnaryVariable(input, thelength, input->width()), length_(thelength)
 {
   if (!input->isRowVec())
     PLERROR("In DuplicateRowVariable input is not a row");
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(DuplicateRowVariable);
+void DuplicateRowVariable::recomputeSize(int& l, int& w) const
+{ l=length_; w=input->width(); }
 
 void DuplicateRowVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -705,13 +725,15 @@ void DuplicateRowVariable::symbolicBprop()
 /** DuplicateColumnVariable **/
 
 DuplicateColumnVariable::DuplicateColumnVariable(Variable* input, int thewidth)
-  :UnaryVariable(input, input->length(), thewidth)
+  :UnaryVariable(input, input->length(), thewidth), width_(thewidth)
 {
   if (!input->isColumnVec())
     PLERROR("In DuplicateColumnVariable input is not a column");
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(DuplicateColumnVariable);
+void DuplicateColumnVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=width_; }
 
 void DuplicateColumnVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -757,6 +779,8 @@ SumVariable::SumVariable(Variable* input)
   :UnaryVariable(input, 1, 1) {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(SumVariable);
+void SumVariable::recomputeSize(int& l, int& w) const
+{ l=1; w=1; }
 
 void SumVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -808,6 +832,8 @@ ColumnSumVariable::ColumnSumVariable(Variable* input)
   :UnaryVariable(input, 1, input->width()) {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(ColumnSumVariable);
+void ColumnSumVariable::recomputeSize(int& l, int& w) const
+{ l=1; w=input->width(); }
 
 void ColumnSumVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -851,6 +877,8 @@ RowSumVariable::RowSumVariable(Variable* input)
   :UnaryVariable(input, input->length(), 1) {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(RowSumVariable);
+void RowSumVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=1; }
 
 void RowSumVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -898,6 +926,8 @@ PlusConstantVariable::PlusConstantVariable(Variable* input, real c)
 {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(PlusConstantVariable);
+void PlusConstantVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
 
 void PlusConstantVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -950,6 +980,8 @@ TimesConstantVariable::TimesConstantVariable(Variable* input, real c)
 {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(TimesConstantVariable);
+void TimesConstantVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
 
 void TimesConstantVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -998,6 +1030,8 @@ NegateElementsVariable::NegateElementsVariable(Variable* input)
   :UnaryVariable(input, input->length(), input->width()) {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(NegateElementsVariable);
+void NegateElementsVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
 
 void NegateElementsVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -1052,6 +1086,8 @@ InvertElementsVariable::InvertElementsVariable(Variable* input)
   :UnaryVariable(input, input->length(), input->width()) {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(InvertElementsVariable);
+void InvertElementsVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
 
 void InvertElementsVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -1106,6 +1142,8 @@ MatrixInverseVariable::MatrixInverseVariable(Variable* input)
 {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(MatrixInverseVariable);
+void MatrixInverseVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
 
 void MatrixInverseVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -1147,6 +1185,8 @@ LeftPseudoInverseVariable::LeftPseudoInverseVariable(Variable* input)
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(LeftPseudoInverseVariable);
+void LeftPseudoInverseVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
 
 void LeftPseudoInverseVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -1188,6 +1228,8 @@ RightPseudoInverseVariable::RightPseudoInverseVariable(Variable* input)
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(RightPseudoInverseVariable);
+void RightPseudoInverseVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
 
 void RightPseudoInverseVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -1224,6 +1266,8 @@ TanhVariable::TanhVariable(Variable* input)
   :UnaryVariable(input, input->length(), input->width()) {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(TanhVariable);
+void TanhVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
 
 void TanhVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -1294,6 +1338,8 @@ SigmoidVariable::SigmoidVariable(Variable* input)
   :UnaryVariable(input, input->length(), input->width()) {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(SigmoidVariable);
+void SigmoidVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
 
 void SigmoidVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -1370,6 +1416,8 @@ SoftplusVariable::SoftplusVariable(Variable* input)
   :UnaryVariable(input, input->length(), input->width()) {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(SoftplusVariable);
+void SoftplusVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
 
 void SoftplusVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -1409,6 +1457,8 @@ SquareVariable::SquareVariable(Variable* input)
   :UnaryVariable(input, input->length(), input->width()) {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(SquareVariable);
+void SquareVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
 
 void SquareVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -1470,6 +1520,8 @@ SumSquareVariable::SumSquareVariable(Variable* input)
   :UnaryVariable(input, 1, 1) {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(SumSquareVariable);
+void SumSquareVariable::recomputeSize(int& l, int& w) const
+{ l=1; w=1; }
 
 void SumSquareVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -1512,6 +1564,8 @@ SquareRootVariable::SquareRootVariable(Variable* input)
   :UnaryVariable(input, input->length(), input->width()) {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(SquareRootVariable);
+void SquareRootVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
 
 void SquareRootVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -1568,6 +1622,8 @@ AbsVariable::AbsVariable(Variable* input)
   :UnaryVariable(input, input->length(), input->width()) {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(AbsVariable);
+void AbsVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
 
 void AbsVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -1628,6 +1684,8 @@ MinVariable::MinVariable(Variable* input)
   :UnaryVariable(input, 1, 1) {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(MinVariable);
+void MinVariable::recomputeSize(int& l, int& w) const
+{ l=1; w=1; }
 
 void MinVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -1676,6 +1734,8 @@ MaxVariable::MaxVariable(Variable* input)
   :UnaryVariable(input, 1, 1) {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(MaxVariable);
+void MaxVariable::recomputeSize(int& l, int& w) const
+{ l=1; w=1; }
 
 void MaxVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -1724,6 +1784,8 @@ ArgminVariable::ArgminVariable(Variable* input)
   :UnaryVariable(input, input->isVec()?1:2, 1) {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(ArgminVariable);
+void ArgminVariable::recomputeSize(int& l, int& w) const
+{ l=input->isVec()?1:2; w=1; }
 
 void ArgminVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -1786,6 +1848,8 @@ ArgmaxVariable::ArgmaxVariable(Variable* input)
   :UnaryVariable(input, input->isVec()?1:2, 1) {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(ArgmaxVariable);
+void ArgmaxVariable::recomputeSize(int& l, int& w) const
+{ l=input->isVec()?1:2; w=1; }
 
 void ArgmaxVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -1849,6 +1913,8 @@ CutAboveThresholdVariable::CutAboveThresholdVariable(Variable* input, real the_t
 {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(CutAboveThresholdVariable);
+void CutAboveThresholdVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
 
 void CutAboveThresholdVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -1894,6 +1960,8 @@ CutBelowThresholdVariable::CutBelowThresholdVariable(Variable* input, real the_t
 {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(CutBelowThresholdVariable);
+void CutBelowThresholdVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
 
 void CutBelowThresholdVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -1938,6 +2006,8 @@ ExpVariable::ExpVariable(Variable* input)
   :UnaryVariable(input, input->length(), input->width()) {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(ExpVariable);
+void ExpVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
 
 void ExpVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -1996,6 +2066,8 @@ LogVariable::LogVariable(Variable* input)
   :UnaryVariable(input, input->length(), input->width()) {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(LogVariable);
+void LogVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
 
 void LogVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -2055,6 +2127,8 @@ LogSumVariable::LogSumVariable(Variable* input)
   :UnaryVariable(input,1,1),input_softmax(input->nelems()) {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(LogSumVariable);
+void LogSumVariable::recomputeSize(int& l, int& w) const
+{ l=1; w=1; }
 
 void LogSumVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -2100,6 +2174,8 @@ PLogPVariable::PLogPVariable(Variable* input)
   :UnaryVariable(input, input->length(), input->width()) {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(PLogPVariable);
+void PLogPVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
 
 void PLogPVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -2149,6 +2225,8 @@ PowVariable::PowVariable(Variable* input, real the_power)
 {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(PowVariable);
+void PowVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
 
 void PowVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -2195,6 +2273,8 @@ DeterminantVariable::DeterminantVariable(Var m)
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(DeterminantVariable);
+void DeterminantVariable::recomputeSize(int& l, int& w) const
+{ l=1; w=1; }
 
 void DeterminantVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -2238,6 +2318,8 @@ InterValuesVariable::InterValuesVariable(Variable* values)
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(InterValuesVariable);
+void InterValuesVariable::recomputeSize(int& l, int& w) const
+{ l=input->length()-1; w=1; }
 
 void InterValuesVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -2294,6 +2376,8 @@ IsAboveThresholdVariable(Variable* input, real the_threshold, real the_truevalue
 {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(IsAboveThresholdVariable);
+void IsAboveThresholdVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
 
 void IsAboveThresholdVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -2336,14 +2420,15 @@ void IsAboveThresholdVariable::rfprop()
 /** OneHotVariable **/
 
 OneHotVariable::OneHotVariable(int thelength, Variable* hotindex, real the_coldvalue, real the_hotvalue)
-  :UnaryVariable(hotindex,thelength,1), 
-   hotvalue(the_hotvalue), coldvalue(the_coldvalue) 
+  :UnaryVariable(hotindex,thelength,1), hotvalue(the_hotvalue), coldvalue(the_coldvalue), length_(thelength)
 {
   if(!hotindex->isScalar())
     PLERROR("InterValuesVariable OneHotVariable(int thelength, Variable* hotindex, real the_coldvalue, real the_hotvalue) hotindex must be scalar as it is supposed to be an integer index");
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(OneHotVariable);
+void OneHotVariable::recomputeSize(int& l, int& w) const
+{ l=length_; w=1; }
 
 void OneHotVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -2394,6 +2479,8 @@ EqualConstantVariable::EqualConstantVariable(Variable* input1, real input2)
 {}
   
 IMPLEMENT_NAME_AND_DEEPCOPY(EqualConstantVariable);
+void EqualConstantVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
 
 void EqualConstantVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -2432,6 +2519,8 @@ UnequalConstantVariable::UnequalConstantVariable(Variable* input1, real c_)
 {}
   
 IMPLEMENT_NAME_AND_DEEPCOPY(UnequalConstantVariable);
+void UnequalConstantVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
 
 void UnequalConstantVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -2471,6 +2560,8 @@ SubsampleVariable::SubsampleVariable(Variable* input, int the_subsamplefactor)
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(SubsampleVariable);
+void SubsampleVariable::recomputeSize(int& l, int& w) const
+{ l=input->length()/subsamplefactor; w=input->width()/subsamplefactor; }
 
 void SubsampleVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -2519,6 +2610,8 @@ ErfVariable::ErfVariable(Variable* input)
   :UnaryVariable(input, input->length(), input->width()) {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(ErfVariable);
+void ErfVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
 
 void ErfVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -2559,6 +2652,8 @@ SignVariable::SignVariable(Variable* input)
   :UnaryVariable(input, input->length(), input->width()) {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(SignVariable);
+void SignVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
 
 void SignVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -2594,6 +2689,8 @@ SoftmaxVariable::SoftmaxVariable(Variable* input)
   :UnaryVariable(input, input->length(), input->width()) {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(SoftmaxVariable);
+void SoftmaxVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
 
 void SoftmaxVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -2660,10 +2757,73 @@ void SoftmaxVariable::rfprop()
   }
 }
 
+/** MatrixSoftmaxVariable **/
+
+MatrixSoftmaxVariable::MatrixSoftmaxVariable(Variable* input) 
+  :UnaryVariable(input, input->length(), input->width()) {}
+
+IMPLEMENT_NAME_AND_DEEPCOPY(MatrixSoftmaxVariable);
+void MatrixSoftmaxVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
+
+void MatrixSoftmaxVariable::deepRead(istream& in, DeepReadMap& old2new)
+{
+  readHeader(in, "MatrixSoftmaxVariable");
+  inherited::deepRead(in, old2new);
+  readFooter(in, "MatrixSoftmaxVariable");
+}
+
+void MatrixSoftmaxVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
+{
+  writeHeader(out, "MatrixSoftmaxVariable");
+  inherited::deepWrite(out, already_saved);
+  writeFooter(out, "MatrixSoftmaxVariable");
+}
+
+void MatrixSoftmaxVariable::fprop()
+{
+  for(int i=0; i<input->length(); i++)
+    softmax(input->matValue(i),matValue(i));
+}
+
+void MatrixSoftmaxVariable::bprop()
+{
+  for(int i=0; i<input->length(); i++)
+    for(int j=0; j<input->width(); j++)
+      {
+       real vali = matValue[i][j];
+       for(int k=0; k<width(); k++)
+         {
+          if(k!=j)
+            input->matGradient[i][j] -= matGradient[i][k]*vali*matValue[i][k];
+          else
+            input->matGradient[i][j] += matGradient[i][j]*vali*(1.-vali);
+         }
+       }
+}
+
+void MatrixSoftmaxVariable::bbprop()
+{
+  PLERROR("MatrixSofmaxVariable::bbprop() not implemented");
+}
+
+void MatrixSoftmaxVariable::symbolicBprop()
+{
+  PLERROR("SofmaxVariable::symbolicBprop() not implemented");
+}
+
+// R{ s_i = exp(x_i) / sum_j exp(x_j) }   = (s_i(1-s_i) - sum_{k!=i} s_i s_k) R(s_i) = s_i ((1-s_i) - sum_{k!=i} s_k) R(s_i)
+void MatrixSoftmaxVariable::rfprop()
+{
+  PLERROR("SofmaxVariable::rfprop() not implemented");
+}
+
 /** LogSoftmaxVariable **/
 
 IMPLEMENT_NAME_AND_DEEPCOPY(LogSoftmaxVariable);
 
+void LogSoftmaxVariable::recomputeSize(int& l, int& w) const
+{ l=input->length(); w=input->width(); }
 
 LogSoftmaxVariable::LogSoftmaxVariable(Variable* input) 
     : UnaryVariable(input, input->length(), input->width())
