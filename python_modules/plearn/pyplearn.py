@@ -94,6 +94,8 @@ def _plearn_repr(x):
         return x.s
     elif isinstance(x, plearn_ref):
         return x.value()
+    elif callable(x):
+        return _plearn_repr( x() )
     else:
         raise TypeError('Does not know how to handle type %s' % type(x))
 
@@ -149,7 +151,7 @@ def _parse_plargs(args):
 class _pyplearn_magic_module(object):
     """An instance of this class (instanciated as pl) is used to provide
     the magic behavior whereas bits of Python code like:
-    pl.SequentialAdvisorSelector(comparison_type='foo", etc.) become
+    pl.SequentialAdvisorSelector(comparison_type='foo', etc.) become
     a string that can be fed to PLearn instead of a .plearn file."""
     indent = ' ' * 4
     
