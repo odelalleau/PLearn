@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainValidTestSplitter.h,v 1.1 2004/03/05 13:14:58 tihocan Exp $ 
+   * $Id: TrainValidTestSplitter.h,v 1.2 2004/03/05 13:53:24 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -69,9 +69,6 @@ protected:
 
   //! The first n_train samples of the dataset.
   VMat train_set;
-
-  //! The rest of the dataset.
-  VMat valid_and_test_set;
 
   //! Matrix containing the indices of the validation samples.
   TMat<int> valid_indices;
@@ -129,9 +126,12 @@ public:
 
   // ********************************
   // *        Splitter methods      *
-  // * (must be implemented in .cc) *
   // ********************************
 
+  //! Sets the dataset on which the splits are to be based
+  //! (overridden because build() needs to be called).
+  virtual void setDataSet(VMat the_dataset);
+  
   //! Returns the number of available different "splits"
   virtual int nsplits() const;
 

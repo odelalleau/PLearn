@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainValidTestSplitter.cc,v 1.1 2004/03/05 13:14:58 tihocan Exp $ 
+   * $Id: TrainValidTestSplitter.cc,v 1.2 2004/03/05 13:53:23 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -84,7 +84,7 @@ void TrainValidTestSplitter::declareOptions(OptionList& ol)
        "(or the train set if append_train is also set to 1).");
 
    declareOption(ol, "n_splits", &TrainValidTestSplitter::n_splits, OptionBase::buildoption,
-       "The number of splits we want (mostly useful if shuffle_valid_and_test == 1).");
+       "The number of splits we want (a value > 1 is useful with shuffle_valid_and_test = 1).");
 
    declareOption(ol, "n_train", &TrainValidTestSplitter::n_train, OptionBase::buildoption,
        "The number of samples that define the train set, assumed to be at the beginning\n"
@@ -125,7 +125,6 @@ void TrainValidTestSplitter::build_()
     int n_test = n - n_train - n_valid;
     // Define the train set.
     train_set = new SubVMatrix(dataset, 0, 0, n_train, dataset->width());
-    valid_and_test_set = new SubVMatrix(dataset, n_train, 0, n_valid + n_test, dataset->width());
     // Precompute all the indices.
     valid_indices.resize(n_splits, n_valid);
     test_indices.resize(n_splits, n_test);
@@ -134,12 +133,16 @@ void TrainValidTestSplitter::build_()
       for (int j = 0; j < n_valid + n_test; j++) {
         valid_and_test_indices[j] = j + n_train;
       }
-      shuffleElements(valid_and_test_indices);
+      if (shuffle_valid_and_test) {
+        shuffleElements(valid_and_test_indices);
+      }
       valid_indices(i) << valid_and_test_indices.subVec(0, n_valid);
       test_indices(i) << valid_and_test_indices.subVec(n_valid, n_test);
-      // Now sort the indices for (hopefully) faster access.
-      sortElements(valid_indices(i));
-      sortElements(test_indices(i));
+      if (shuffle_valid_and_test) {
+        // Now sort the indices for (hopefully) faster access.
+        sortElements(valid_indices(i));
+        sortElements(test_indices(i));
+      }
     }
   }
 }
@@ -151,9 +154,9 @@ TVec<VMat> TrainValidTestSplitter::getSplit(int k)
 {
   // ### Build and return the kth split .
   TVec<VMat> result(2);
-  VMat valid_set = new SelectRowsVMatrix(valid_and_test_set, valid_indices(k));
+  VMat valid_set = new SelectRowsVMatrix(dataset, valid_indices(k));
   result[0] = vconcat(train_set, valid_set);
-  result[1] = new SelectRowsVMatrix(valid_and_test_set, test_indices(k));
+  result[1] = new SelectRowsVMatrix(dataset, test_indices(k));
   if (append_train) {
     result.append(train_set);
   }
@@ -203,6 +206,14 @@ int TrainValidTestSplitter::nSetsPerSplit() const
     result++;
   }
   return result;
+}
+
+////////////////
+// setDataSet //
+////////////////
+void TrainValidTestSplitter::setDataSet(VMat the_dataset) {
+  inherited::setDataSet(the_dataset);
+  build_(); // To recompute the indices.
 }
 
 } // end of namespace PLearn
