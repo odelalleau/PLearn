@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.32 2004/07/21 16:30:52 chrish42 Exp $
+   * $Id: Kernel.cc,v 1.33 2004/07/21 17:02:51 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -55,7 +55,10 @@ Kernel::~Kernel() {}
 // Kernel //
 ////////////
 Kernel::Kernel(bool is__symmetric)
-: data_inputsize(-1),
+: lock_xi(false),
+  lock_xj(false),
+  lock_k_xi_x(false),
+  data_inputsize(-1),
   n_examples(-1),
   is_symmetric(is__symmetric),
   report_progress(0)
@@ -151,43 +154,85 @@ void Kernel::addDataForKernelMatrix(const Vec& newRow)
   }
 }
 
-//////////////
-// evaluate //
-//////////////
+//////////////////
+// evaluate_i_j //
+//////////////////
 real Kernel::evaluate_i_j(int i, int j) const {
-  static Vec x_i, x_j;
-  x_i.resize(data_inputsize);
-  x_j.resize(data_inputsize);
-  data->getSubRow(i, 0, x_i);
-  data->getSubRow(j, 0, x_j);
-  return evaluate(x_i, x_j);
-}
-
-
-real Kernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) const  {
-  static Vec x_i;
-  x_i.resize(data_inputsize);
-  data->getSubRow(i, 0, x_i);
-  return evaluate(x_i, x);
-}
-
-
-real Kernel::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x) const
-{ 
-  static Vec x_i;
-  if(is_symmetric)
-    return evaluate_i_x(i,x,squared_norm_of_x);
-  else {
-    x_i.resize(data_inputsize);
-    data->getSubRow(i, 0, x_i);
-    return evaluate(x, x_i);
+  static real result;
+  if (lock_xi || lock_xj) {
+    // This should not happen often, but you never know...
+    Vec xi(data_inputsize);
+    Vec xj(data_inputsize);
+    data->getSubRow(i, 0, xi);
+    data->getSubRow(j, 0, xj);
+    return evaluate(xi, xj);
+  } else {
+    lock_xi = true;
+    lock_xj = true;
+    evaluate_xi.resize(data_inputsize);
+    evaluate_xj.resize(data_inputsize);
+    data->getSubRow(i, 0, evaluate_xi);
+    data->getSubRow(j, 0, evaluate_xj);
+    result = evaluate(evaluate_xi, evaluate_xj);
+    lock_xi = false;
+    lock_xj = false;
+    return result;
   }
 }
 
+
+//////////////////
+// evaluate_i_x //
+//////////////////
+real Kernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) const  {
+  static real result;
+  if (lock_xi) {
+    Vec xi(data_inputsize);
+    data->getSubRow(i, 0, xi);
+    return evaluate(xi, x);
+  } else {
+    lock_xi = true;
+    evaluate_xi.resize(data_inputsize);
+    data->getSubRow(i, 0, evaluate_xi);
+    result = evaluate(evaluate_xi, x);
+    lock_xi = false;
+    return result;
+  }
+}
+
+//////////////////
+// evaluate_x_i //
+//////////////////
+real Kernel::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x) const {
+  static real result;
+  if(is_symmetric)
+    return evaluate_i_x(i,x,squared_norm_of_x);
+  else {
+    if (lock_xi) {
+      Vec xi(data_inputsize);
+      data->getSubRow(i, 0, xi);
+      return evaluate(x, xi);
+    } else {
+      lock_xi = true;
+      evaluate_xi.resize(data_inputsize);
+      data->getSubRow(i, 0, evaluate_xi);
+      result = evaluate(x, evaluate_xi);
+      lock_xi = false;
+      return result;
+    }
+  }
+}
+
+////////////////////////
+// evaluate_i_x_again //
+////////////////////////
 real Kernel::evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x, bool first_time) const {
   return evaluate_i_x(i, x, squared_norm_of_x);
 }
 
+////////////////////////
+// evaluate_x_i_again //
+////////////////////////
 real Kernel::evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x, bool first_time) const {
   return evaluate_x_i(x, i, squared_norm_of_x);
 }
@@ -225,17 +270,28 @@ bool Kernel::isInData(const Vec& x, int* i) const {
 // computeNearestNeighbors //
 /////////////////////////////
 void Kernel::computeNearestNeighbors(const Vec& x, Mat& k_xi_x_sorted, int knn) const {
-  static Vec k_xi_x;
-  k_xi_x.resize(n_examples);
+  Vec k_val;
+  bool unlock = true;
+  if (lock_k_xi_x) {
+    k_val.resize(n_examples);
+    unlock = false;
+  }
+  else {
+    lock_k_xi_x = true;
+    k_xi_x.resize(n_examples);
+    k_val = k_xi_x;
+  }
   k_xi_x_sorted.resize(n_examples, 2);
   // Compute the distance from x to all training points.
-  evaluate_all_i_x(x, k_xi_x);
+  evaluate_all_i_x(x, k_val);
   // Find the knn nearest neighbors.
   for (int i = 0; i < n_examples; i++) {
-    k_xi_x_sorted(i,0) = k_xi_x[i];
+    k_xi_x_sorted(i,0) = k_val[i];
     k_xi_x_sorted(i,1) = real(i);
   }
   partialSortRows(k_xi_x_sorted, knn);
+  if (unlock)
+    lock_k_xi_x = false;
 }
 
 ///////////////////////
@@ -476,7 +532,6 @@ TMat<int> Kernel::computeKNNeighbourMatrixFromDistanceMatrix(const Mat& D, int k
 //  You should use computeKNNeighbourMatrixFromDistanceMatrix instead.
 Mat Kernel::computeNeighbourMatrixFromDistanceMatrix(const Mat& D, bool insure_self_first_neighbour, bool report_progress)
 {
-  // TODO Make it possible to only compute the k nearest neighbours.
   int npoints = D.length();
   Mat neighbours(npoints, npoints);  
   Mat tmpsort(npoints,2);

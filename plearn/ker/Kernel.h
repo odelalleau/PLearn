@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.31 2004/07/21 16:30:52 chrish42 Exp $
+   * $Id: Kernel.h,v 1.32 2004/07/21 17:02:51 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -55,8 +55,13 @@ class Kernel: public Object
 
 private:
 
-  // norman: moved to public (Check this!)
   typedef Object inherited;
+
+  //! Used to store data to save memory allocation.
+  mutable Vec evaluate_xi, evaluate_xj, k_xi_x;
+
+  //! Used to make sure we do not accidentally overwrite some global data.
+  mutable bool lock_xi, lock_xj, lock_k_xi_x;
 		
 protected:
 
