@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org 
 
 /* *******************************************************      
-   * $Id: RealMapping.cc,v 1.3 2002/09/17 01:27:33 zouave Exp $
+   * $Id: RealMapping.cc,v 1.4 2002/10/31 20:43:52 zouave Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -196,5 +196,17 @@ using namespace std;
         readFooter(in,"RealMapping");        
       }
   }
+
+
+Vec RealMapping::getCutPoints() const
+{
+  Vec v(mapping.length()+1);
+  /*
+  char bracket= mapping[0].first.leftbracket;
+  v[0]= mapping[0].first.low;
+  */
+  return v;
+  
+}
 
 %> // end of namespace PLearn

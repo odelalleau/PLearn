@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: RealMapping.h,v 1.5 2002/10/24 20:17:12 zouave Exp $
+   * $Id: RealMapping.h,v 1.6 2002/10/31 20:43:52 zouave Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -146,6 +146,11 @@ using namespace std;
     virtual void print(ostream& out) const;
     virtual void write(ostream& out) const;
     virtual void read(istream& in);
+
+    //! If all ranges in the mapping are consecutive, return the cut points between different ranges.
+    //! e.g.: [0,1[  [1, 5[  [5, 10] --> <0,1,5,10>.
+    Vec getCutPoints() const;
+
   };
 
   DECLARE_OBJECT_PTR(RealMapping);

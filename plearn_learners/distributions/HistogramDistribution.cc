@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HistogramDistribution.cc,v 1.1 2002/10/24 20:17:16 zouave Exp $ 
+   * $Id: HistogramDistribution.cc,v 1.2 2002/10/31 20:43:53 zouave Exp $ 
    ******************************************************* */
 
 /*! \file HistogramDistribution.cc */
@@ -123,22 +123,17 @@ HistogramDistribution::HistogramDistribution(VMat data, PP<Binner> the_binner_)
 
     setTrainingSet(training_set);
 
-    // Sort training set and build bin_positions
-    Vec bins(data.length());
-    bins << data.getColumn(data.width()-1);
-    sort(bins.begin(), bins.end());
-    int j= 0;
-    while(bins[j] <= 0.0)
-      ++j;
-    if(0 < j)
-      PLWARNING("In HistogramDistribution::train  training_set contains negative values, "
-		"which will be discarded.");
-    bin_positions.resize(bins.length()-j+1);
-    bin_positions[0]= 0.0;
-    for(int i= 1; j < bins.length(); ++i, ++j)
-      bin_positions[i]= bins[j];
-    
+    Vec data(training_set.length());
+    data << training_set.getColumn(training_set.width()-1);
 
+    RealMapping binning= the_binner->getBinning(training_set);
+    binning.transform(data);
+    
+    for(int i= 0; i < data.length(); ++i)
+      {
+	
+      }
+    
 
     /*
  - prend la distri empirique
