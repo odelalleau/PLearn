@@ -63,11 +63,13 @@ skeldir                = "Skeletons"
 pymake_objs            = "OBJS"
 pymake_hidden          = ".pymake"
 cvs_directory          = "CVS"
+subversion_hidden      = ".svn"
 pytest_dir             = "pytest"
 
 special_directories    = [ skeldir,
                            pymake_objs,   pymake_hidden,
-                           cvs_directory, pytest_dir     ]
+                           cvs_directory, subversion_hidden,
+                           pytest_dir     ]
 
 
 ########################################

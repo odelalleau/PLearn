@@ -1,7 +1,7 @@
-__cvs_id__ = "$Id: modes.py,v 1.16 2005/01/25 03:15:57 dorionc Exp $"
+__cvs_id__ = "$Id: modes.py,v 1.17 2005/02/10 21:17:34 dorionc Exp $"
 
 import copy, shutil
-import plearn.utilities.cvs                as     cvs
+import plearn.utilities.version_control    as     version_control
 import plearn.utilities.ppath              as     ppath
 import plearn.utilities.toolkit            as     toolkit
 
@@ -9,7 +9,6 @@ from   programs                            import *
 from   test_and_routines                   import *
 from   ModeAndOptionParser                 import *
 from   plearn.tasks.dispatch               import *
-from   plearn.utilities.cvs                import *
 from   plearn.utilities.toolkit            import *
 from   plearn.utilities.verbosity          import *
 ## from   plearn.utilities.global_variables   import *
@@ -29,9 +28,13 @@ __all__ = [
 
 ## All modes that are completed must, in the class declaration,
 ## 
-supported_modes = [ 'add',          'commit', 'compile', 'disable', 'enable',
-                    'light_commit', 'list',   'ignore',  'prune',   'results',
-                    'run',          'update'
+supported_modes = [ 'add',
+                    ## 'commit',
+                    'compile', 'disable', 'enable',
+                    ## 'light_commit',
+                    'list',   'ignore',  'prune',   'results',
+                    'run',          'update',
+                    'vc_add'
                     ]
 
 def add_supported_modes( parser ):
@@ -171,38 +174,6 @@ class PyTestMode(Mode):
         return testing_options
 
 
-class commit( PyTestMode ):
-    """Commits PyTest's config file and results within the target directory."""
-    def procedure( self ):
-        global targets
-        if len(targets) == 0:
-            targets = [ os.getcwd() ]
-        else:
-            targets = ppath.exempt_of_subdirectories( targets )            
-        self.parse_config_files()
-
-        for (family, tests) in Test.families_map.iteritems():
-            os.chdir( family )
-
-            if not os.path.exists( ppath.cvs_directory ):
-                raise PyTestUsageError(
-                    "The directory in which lies a config file must be added to cvs by user.\n"
-                    "%s was not." % family
-                    )
-
-            config_path = config_file_path()
-
-            cvs.add( config_path )
-            cvs.add( ppath.pytest_dir )
-            cvs.add( Test.expected_results )
-            for test in tests:
-                cvs.recursive_add( test.test_results( Test.expected_results ) )
-
-            cvs.commit( [config_path, ppath.pytest_dir],
-                        'PyTest internal commit'
-                        )            
-
-
 class ignore(PyTestMode):
     """Causes the target hierarchy to be ignored by PyTest.
 
@@ -230,31 +201,6 @@ class ignore(PyTestMode):
         for target in targets:
             os.system("touch %s" % os.path.join( target, ignore.ignore_file ) )
 
-class light_commit( PyTestMode ):
-    """Commits the updated PyTest config file and pytest directory.
-
-    If, for instance, L{update} is used on multiple files, it may be
-    useful to use this light_commit mode to commit the PyTest config
-    file in all targeted directory.
-
-    B{Note that} this mode is intended to be used only when you are
-    sure that the pytest directory and subdirectories where not added
-    or removed any file.
-    """
-    def procedure( self ):
-        self.initialize()
-        self.parse_config_files()        
-
-        config_path = config_file_path()
-        
-        for (family, tests) in Test.families_map.iteritems():
-            os.chdir( family )
-            vprint("- %s light_commit\n" % os.getcwd(), 1)
-            cvs.commit( [config_path, ppath.pytest_dir],
-                        'PyTest internal commit'         )            
-
-    def option_groups(self, parser):
-        return [ self.target_options(parser) ]
             
 class list(PyTestMode):
     """Lists all tests within target directories."""
@@ -327,6 +273,33 @@ class prune( PyTestMode ):
 
     def option_groups(self, parser):
         return [ self.target_options(parser) ]
+
+class vc_add( PyTestMode ):
+    """Add PyTest's config file and results to version control."""
+    def procedure( self ):
+        global targets
+        if len(targets) == 0:
+            targets = [ os.getcwd() ]
+        else:
+            targets = ppath.exempt_of_subdirectories( targets )            
+        self.parse_config_files()
+
+        for (family, tests) in Test.families_map.iteritems():
+            os.chdir( family )
+
+
+            config_path = config_file_path()
+            try:
+                version_control.add( config_path )
+                version_control.add( ppath.pytest_dir )
+                version_control.add( Test.expected_results )
+                for test in tests:
+                    version_control.recursive_add( test.test_results( Test.expected_results ) )
+            except version_control.VersionControlError:
+                raise PyTestUsageError(
+                    "The directory in which lies a config file must be added to version control by user.\n"
+                    "%s was not." % family
+                    )
 
 class FamilyConfigMode( PyTestMode ):
     def procedure(self):

@@ -1,19 +1,20 @@
-__cvs_id__ = "$Id: test_and_routines.py,v 1.19 2005/01/25 03:15:57 dorionc Exp $"
+__cvs_id__ = "$Id: test_and_routines.py,v 1.20 2005/02/10 21:17:37 dorionc Exp $"
 
 import os, shutil, string
 
-import plearn.utilities.cvs           as     cvs
-import plearn.utilities.toolkit       as     toolkit
+from   plearn.utilities.version_control  import  is_under_version_control
+import plearn.utilities.version_control  as      version_control
 
-from   plearn.tasks.Task              import *
-from   plearn.utilities.verbosity     import *
-from   plearn.utilities.FrozenObject  import *
+import plearn.utilities.toolkit          as     toolkit
+
+from   plearn.tasks.Task                 import *
+from   plearn.utilities.verbosity        import *
+from   plearn.utilities.FrozenObject     import *
 
 ## In plearn.pytest
-##from   threading                      import *
-from   programs                       import *
-from   BasicStats                     import BasicStats
-from   IntelligentDiff                import *          
+from   programs                          import *
+from   BasicStats                        import BasicStats
+from   IntelligentDiff                   import *          
 
 __all__ = [
     ## Functions
@@ -185,20 +186,19 @@ class Test(FrozenObject):
 
     def ensure_results_directory(self, results):
         if os.path.exists( results ):
-            if os.path.exists( os.path.join(results, ppath.cvs_directory) ):
+            if is_under_version_control( results ):
                 answer = None
                 while not answer in ['yes', 'no']:
-                    answer = raw_input( "Results %s already are under version control! Are you sure\n"
+                    answer = raw_input( "Results %s already are under version control! Are you sure "
                                         "you want to generate new results (yes or no)? " % results )
 
                 if answer == 'no':
                     raise PyTestUsageError("Results creation interrupted by user")
 
                 ## YES
-                os.system( "cvs remove -Rf %s" % results )
-                cvs.commit( '.',
-                            'Removal of %s for new results creation.'
-                            % results )                
+                version_control.recursive_remove( results )
+                version_control.commit( '.', 'Removal of %s for new results creation.' )
+
             shutil.rmtree( results )
 
         ## Make a fresh directory

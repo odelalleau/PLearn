@@ -1,4 +1,4 @@
-__cvs_id__ = "$Id: cvs.py,v 1.3 2005/01/25 03:15:58 dorionc Exp $"
+__cvs_id__ = "$Id: cvs.py,v 1.4 2005/02/10 21:18:52 dorionc Exp $"
 
 import os, popen2, string, types
 
@@ -6,11 +6,6 @@ from plearn.utilities.ppath     import cvs_directory
 from plearn.utilities.verbosity import vprint
 
 def add( path ):
-    status = query("status", path, "Status: ")
-    vprint(path + " status: " + status + "\n", 2)
-    if status != '' and string.find(status, "Unknown") == -1:
-        return False
-    
     addCmd = "cvs add %s" % path 
     vprint("Adding: " + addCmd, 2)
     process = popen2.Popen4(addCmd)
@@ -77,18 +72,18 @@ def recursive_add( path ):
                            recursive_add( relative_path ) )
 
     return path_added
-    
-def remove(file):
-    status = query("status", file, "Status: ")
-    if status == '' or string.find(status, "Unknown") != -1:
-        return False
 
-    rmCmd = "cvs remove " + file
-    vprint("Removing: " + rmCmd, 2)
-    process = popen2.Popen3(rmCmd, True)
-    process.wait()
+def recursive_remove( path ):
+    rm_cmd = "cvs remove -Rf " + path
+    vprint("Removing: " + rm_cmd, 2)
+    os.system( rm_cmd )
     
-    errors = process.childerr.readlines()
-    map(lambda err: vprint(err, 1), errors)
     return True
+    
+## def remove( path ):
+##     rm_cmd = "cvs remove " + path
+##     vprint("Removing: " + rm_cmd, 2)
+##     os.system( rm_cmd )
+    
+##     return True
 
