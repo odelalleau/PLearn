@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.cc,v 1.6 2003/08/13 08:13:17 plearner Exp $
+   * $Id: Variable.cc,v 1.7 2003/10/07 15:28:13 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -397,11 +397,11 @@ void Variable::verifyGradient(real step)
   f->verifyGradient(p,step);
 }
 
-// set value = value + step_size * direction 
+// set value = value + (step_size*coeff + b) * direction
 // with step_size possibly scaled down s.t. box constraints are satisfied
 // return true if box constraints have been hit with the update
 
-bool Variable::update(real step_size, Vec direction_vec)
+bool Variable::update(real step_size, Vec direction_vec, real coeff, real b)
 {
   if(allows_partial_update)
     PLWARNING("Warning in Variable::update(real,Vec): will update every elements of the Variable");
@@ -412,7 +412,7 @@ bool Variable::update(real step_size, Vec direction_vec)
     real* direction = direction_vec.data();
     for(int i=0; i<nelems(); i++)
     {
-      valuedata[i] += step_size*direction[i];      
+      valuedata[i] += (step_size * coeff + b) * direction[i];      
       if(valuedata[i]<min_value)
       {
         valuedata[i]=min_value;
@@ -431,13 +431,13 @@ bool Variable::update(real step_size, Vec direction_vec)
     real* direction = direction_vec.data();
     for(int i=0; i<nelems(); i++)
     {
-      valuedata[i] += step_size*direction[i];      
+      valuedata[i] += (step_size * coeff + b) * direction[i];      
     }
   }
   return hit;
 }
 
-bool Variable::update(Vec step_sizes, Vec direction_vec)
+bool Variable::update(Vec step_sizes, Vec direction_vec, real coeff, real b)
 {
   if(allows_partial_update)
     PLWARNING("Warning in Variable::update(Vec,Vec): will update every elements of the Variable");
@@ -449,7 +449,7 @@ bool Variable::update(Vec step_sizes, Vec direction_vec)
   {
     for(int i=0; i<nelems(); i++)
     {
-      valuedata[i] += step[i]*direction[i];      
+      valuedata[i] += (step[i] * coeff + b) * direction[i];
       if(valuedata[i]<min_value)
       {
         valuedata[i]=min_value;
@@ -465,7 +465,7 @@ bool Variable::update(Vec step_sizes, Vec direction_vec)
   else
     // unconstrained update
     for(int i=0; i<nelems(); i++)
-      valuedata[i] += step[i]*direction[i];      
+      valuedata[i] += (step[i] * coeff + b) * direction[i];
   return hit;
 }
 

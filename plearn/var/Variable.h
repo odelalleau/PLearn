@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.h,v 1.9 2003/08/13 08:13:17 plearner Exp $
+   * $Id: Variable.h,v 1.10 2003/10/07 15:28:13 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -276,18 +276,18 @@ public:
   void clearDiagHessian(); 
   void clearSymbolicGradient() { g = Var(); }
 
-/*!     set value = value + step_size * direction 
+/*!     set value = value + (step_size * coeff + b) * direction 
     with step_size possibly scaled down s.t. box constraints are satisfied
     return true if box constraints have been hit with the update
     If (allows_partial_update) the update is done where necessary. // NB: Wrong ?
 */
-  bool update(real step_size, Vec direction_vec);
+  bool update(real step_size, Vec direction_vec, real coeff = 1.0, real b = 0.0);
 
-/*!     set value[i] = value[i] + step_sizes[i] * direction[i]
+/*!     set value[i] = value[i] + (step_sizes[i]*coeff + b) * direction[i]
     with step_size possibly scaled down s.t. box constraints are satisfied
     return true if box constraints have been hit with the update
 */
-  bool update(Vec step_sizes, Vec direction_vec);
+  bool update(Vec step_sizes, Vec direction_vec, real coeff = 1.0, real b = 0.0);
 
   //! Does value += gradient; gradient.clear();
   inline void updateAndClear();
@@ -418,8 +418,6 @@ inline void Variable::updateAndClear()
     valuedata[i] += gradientdata[i];
   gradient.clear();
 }
-
-
 
 %> // end of namespace PLearn
 

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.h,v 1.8 2003/08/13 08:13:17 plearner Exp $
+   * $Id: VarArray.h,v 1.9 2003/10/07 15:26:30 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -170,17 +170,22 @@ public:
   //!  clears the symbolic gradient in all vars of this array
   void clearSymbolicGradient(); 
 
-/*!     set value = value + step_size * direction
+/*!     set value = value + (step_size * coeff + b) * direction
     with step_size possibly scaled down s.t. box constraints are satisfied
     return true if box constraints have been hit with the update
 */
-  bool update(real step_size, Vec direction);
+  bool update(real step_size, Vec direction, real coeff = 1.0, real b = 0.0);
 
-  //! Update the variables in the VarArray with different step sizes
+  //! Update the variables in the VarArray with different step sizes,
+  //! and an optional scaling coefficient + constant coefficient
   //! step_sizes and direction must have the same length
   //! As with the update with a fixed step size, there is a possible scaling
   //! down, and the return value indicates contraints have been hit
-  bool update(Vec step_sizes, Vec direction);
+  bool update(Vec step_sizes, Vec direction, real coeff = 1.0, real b = 0.0);
+  
+  //! Same as update(Vec step_sizes, Vec direction, real coeff)
+  //! except there can be 1 different coeff for each variable
+  bool update(Vec step_sizes, Vec direction, Vec coeff);
 
 /*!     Using the box constraints on the values, return
     the maximum allowable step_size in the given direction

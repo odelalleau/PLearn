@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.cc,v 1.8 2003/09/17 15:27:30 yoshua Exp $
+   * $Id: VarArray.cc,v 1.9 2003/10/07 15:26:30 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -797,8 +797,7 @@ void VarArray::setDontBpropHere(bool val)
       array[i]->setDontBpropHere(val);
 }
 
-
-bool VarArray::update(real step_size, Vec direction)
+bool VarArray::update(real step_size, Vec direction, real coeff, real b)
 {
   bool hit = false;
   int pos=0;
@@ -806,11 +805,11 @@ bool VarArray::update(real step_size, Vec direction)
   for(int i=0; i<size(); pos+=array[i++]->nelems())
     if (!array[i].isNull())
       hit = hit || 
-        array[i]->update(step_size,direction.subVec(pos,array[i]->nelems()));
+        array[i]->update(step_size,direction.subVec(pos,array[i]->nelems()), coeff, b);
   return hit;
 }
 
-bool VarArray::update(Vec step_sizes, Vec direction)
+bool VarArray::update(Vec step_sizes, Vec direction, Vec coeffs)
 {
   bool hit = false;
   int pos = 0;
@@ -820,7 +819,25 @@ bool VarArray::update(Vec step_sizes, Vec direction)
       hit = hit ||
         array[i]->update(
             step_sizes.subVec(pos, array[i]->nelems()), 
-            direction.subVec(pos, array[i]->nelems()));
+            direction.subVec(pos, array[i]->nelems()),
+            coeffs[i]);
+    }
+  }
+  return hit;
+}
+
+bool VarArray::update(Vec step_sizes, Vec direction, real coeff, real b)
+{
+  bool hit = false;
+  int pos = 0;
+  iterator array = data();
+  for (int i=0; i<size(); pos+=array[i++]->nelems()) {
+    if (!array[i].isNull()) {
+      hit = hit ||
+        array[i]->update(
+            step_sizes.subVec(pos, array[i]->nelems()), 
+            direction.subVec(pos, array[i]->nelems()),
+            coeff, b);
     }
   }
   return hit;
