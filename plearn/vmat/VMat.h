@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat.h,v 1.19 2004/06/18 16:49:02 tihocan Exp $
+   * $Id: VMat.h,v 1.20 2004/07/09 17:25:56 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -69,6 +69,13 @@ public:
 
   int length() const { return ptr->length(); }
   int width() const { return ptr->width(); }
+
+  string fieldName(int fieldindex) const 
+  { return ptr->fieldName(fieldindex); } 
+
+  int getFieldIndex(const string& fieldname_or_num) const
+  { return ptr->getFieldIndex(fieldname_or_num); }
+
 
   real operator()(int i, int j) const { return ptr->get(i,j); }
   VVec operator()(int i) const { return VVec(*this, i); }

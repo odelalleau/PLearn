@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: pylearn.cc,v 1.1 2004/06/15 19:28:54 plearner Exp $
+   * $Id: pylearn.cc,v 1.2 2004/07/09 17:26:10 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 // Authors: Pascal Vincent
@@ -59,6 +59,8 @@ BOOST_PYTHON_MODULE(pylearn)
   class_<PLearn::VMat>("VMat")
     .def("length", &PLearn::VMat::length)
     .def("width", &PLearn::VMat::width)
+    .def("fieldName", &PLearn::VMat::fieldName) 
+    .def("getFieldIndex", &PLearn::VMat::getFieldIndex)
     .def("get", vmat_get)
     ;
 
