@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.36 2005/01/06 02:40:49 plearner Exp $
+   * $Id: Object.cc,v 1.37 2005/01/14 23:26:35 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -391,7 +391,7 @@ Object::~Object()
 Object* loadObject(const string &filename)
 {
 #if STREAMBUFVER == 1
-  PStream in = openFile(filename, "r", PStream::plearn_ascii);
+  PStream in = openFile(filename, PStream::plearn_ascii, "r");
 #else
   ifstream in_(filename.c_str());
   if (!in_)

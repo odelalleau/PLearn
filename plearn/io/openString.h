@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: openString.h,v 1.2 2005/01/14 21:47:25 chrish42 Exp $ 
+   * $Id: openString.h,v 1.3 2005/01/14 23:27:18 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -52,6 +52,9 @@ namespace PLearn {
   PStream openString(std::string& s, 
                      PStream::mode_t io_formatting,
                      const std::string& openmode = "r");
+
+  PStream openString(const std::string& s, 
+                     PStream::mode_t io_formatting);
 
 } // end of namespace PLearn
 

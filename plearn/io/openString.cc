@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: openString.cc,v 1.3 2005/01/14 21:47:25 chrish42 Exp $ 
+   * $Id: openString.cc,v 1.4 2005/01/14 23:27:18 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -67,6 +67,13 @@ using namespace std;
                      const string& openmode)
   {
     PStream st = new StringPStreamBuf(&s, openmode);
+    st.setMode(io_formatting);
+    return st;
+  }
+
+  PStream openString(const string& s, PStream::mode_t io_formatting)
+  {
+    PStream st = new StringPStreamBuf(&s, "r");
     st.setMode(io_formatting);
     return st;
   }

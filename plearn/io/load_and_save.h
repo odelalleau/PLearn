@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: load_and_save.h,v 1.1 2004/08/31 17:20:36 plearner Exp $ 
+   * $Id: load_and_save.h,v 1.2 2005/01/14 23:27:18 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -60,7 +60,7 @@ template <class T>
 inline void load(const string &filepath, T &x)
 {
 #if STREAMBUFVER == 1
-  PStream in = openFile(filepath,"r",PStream::plearn_ascii);
+  PStream in = openFile(filepath,PStream::plearn_ascii,"r");
   in >> x;
 #else
     ifstream in_(filepath.c_str());
