@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.h,v 1.11 2003/10/10 21:10:08 ducharme Exp $ 
+   * $Id: VecStatsCollector.h,v 1.12 2003/10/20 20:11:25 plearner Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.h */
@@ -47,6 +47,10 @@ using namespace std;
 
 class VecStatsCollector: public Object
 {    
+
+protected: 
+  TVec<string> fieldnames;
+
 public:
 
   typedef Object inherited;
@@ -98,8 +102,29 @@ public:
 
   //! updates the statistics when seeing x
   //! The weight applies to all elements of x
-  void update(const Vec& x, real weight = 1.0);
+  virtual void update(const Vec& x, real weight = 1.0);
+
+  //! Decalres names for the columns of the vector passed to update
+  void setFieldNames(TVec<string> the_fieldnames)
+  { fieldnames = the_fieldnames; }
   
+  //! Returns the declared names
+  TVec<string> getFieldNames() const
+  { return fieldnames; }
+
+  //! Returns the index corresponding to a fieldname or to the fieldnum passed as a string.
+  //! returns -1 if not found
+  int getFieldNum(const string& fieldname_or_num) const;
+
+  //! Returns a particular statistic.
+  /*! Standard statistics specifications are of the form ex: STAT[fieldname]
+    or STAT[fieldnum] where STAT is one of the statistics names understood by
+    StatsCollector::getStat. fieldnum start at 0, and fieldnames must have been
+    registered with setFieldNames.
+  Subclasses may overload this to handle more exotic statistics than the few 
+  standard ones. */
+  virtual double getStat(const string& statspec);
+
   //! calls update on all rows of m; weight assumed to be 1.0 for all roes
   void update(const Mat& m);
 

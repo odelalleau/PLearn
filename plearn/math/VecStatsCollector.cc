@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.12 2003/10/16 00:27:48 plearner Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.13 2003/10/20 20:11:26 plearner Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -80,6 +80,32 @@ string VecStatsCollector::help()
       "as well as (optionally) compute the covariance matrix."
       + optionHelp();
 }
+
+double VecStatsCollector::getStat(const string& statspec)
+{
+  PIStringStream in(statspec);
+  string statname;
+  in.smartReadUntilNext("[", statname);
+  string fieldname;
+  in.smartReadUntilNext("]", fieldname);
+  int fieldnum = getFieldNum(fieldname);
+  return getStats(fieldnum).getStat(statname);
+}
+
+int VecStatsCollector::getFieldNum(const string& fieldname_or_num) const
+{ 
+  int num = -1;
+  try 
+    {
+      num = toint(fieldname_or_num);
+    }
+  catch(const PLearnError& ple)
+    {
+      num = fieldnames.find(fieldname_or_num); 
+    }
+  return num;
+}
+
 
 void VecStatsCollector::update(const Vec& x, real weight)
 {
