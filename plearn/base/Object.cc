@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.5 2002/09/26 05:06:48 plearner Exp $
+   * $Id: Object.cc,v 1.6 2002/09/26 21:14:18 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -49,12 +49,10 @@
 namespace PLearn <%
 using namespace std;
 
-/*
-const flag_t OptionBase::buildoption = 1;       
-const flag_t OptionBase::learntoption = 1<<1;
-const flag_t OptionBase::tuningoption = 1<<2;
-const flag_t OptionBase::nosave = 1<<4; 
-*/
+const OptionBase::flag_t OptionBase::buildoption = 1;       
+const OptionBase::flag_t OptionBase::learntoption = 1<<1;
+const OptionBase::flag_t OptionBase::tuningoption = 1<<2;
+const OptionBase::flag_t OptionBase::nosave = 1<<4; 
 
 Object::Object()
 {}

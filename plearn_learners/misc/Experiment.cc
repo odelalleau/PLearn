@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Experiment.cc,v 1.2 2002/09/26 05:06:53 plearner Exp $ 
+   * $Id: Experiment.cc,v 1.3 2002/09/26 21:14:18 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Experiment.cc */
@@ -103,7 +103,7 @@ void Experiment::run()
     PLERROR("Could not create experiment directory %s", expdir.c_str());
 
   // Save this experiment description in the expdir (buildoptions only)
-  PLearn::save(append_slash(expdir)+"experiment.psave", OptionBase::buildoption);
+  PLearn::save(append_slash(expdir)+"experiment.pexp", OptionBase::buildoption);
 
   int nsplits = splitter->nsplits();
   Array<string> testresnames = learner->testResultsNames();

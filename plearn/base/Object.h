@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.5 2002/09/26 05:06:49 plearner Exp $
+   * $Id: Object.h,v 1.6 2002/09/26 21:14:18 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -351,17 +351,17 @@ public:
 
   //! 'buildoption' an option typically specified before calling the initial build 
   //! (semantically similat to a constructor parameter) ex: the number of hidden units in a neural net
-  static const flag_t buildoption = 1;       
+  static const flag_t buildoption;       
 
   //! 'learntoption' a field whose proper value is computed by the class after construction
   //! (not to be set by the user before build) ex: the weights of a neural net
-  static const flag_t learntoption = 1<<1;
+  static const flag_t learntoption;
 
   //! 'tuningoption' an option typically set after the initial build, to tune the object
-  static const flag_t tuningoption = 1<<2;
+  static const flag_t tuningoption;
 
   //! Do not include this option in the objet's serialisation (write method skips it)
-  static const flag_t nosave = 1<<4; 
+  static const flag_t nosave; 
 
 protected:
   string optionname_;  // the name of the option
