@@ -41,7 +41,7 @@ public:
                   "source dataset, but will be the last field of the new dataset.*** We assume target is never missing *** \n\n"\
                   "usage : FieldConvert *source=[source dataset] *destination=[new dataset with vmat extension] *target=[field index of target]\n"\
                   "force=[force file] report=[report file] fraction=[if number of unique values is > than 'fraction' * NonMISSING -> the field is continuous. Default=.3]\n"\
-                  "min_pvalue=[minimum pvalue to assume correlation with target, default=0.025] frac_missing_to_skip=[if nMISSING >= 'frac_missing_to_skip * number of samples then this field is skipped, default=0.9]\n"\
+                  "max_pvalue=[maximum pvalue to assume correlation with target, default=0.025] frac_missing_to_skip=[if MISSING >= 'frac_missing_to_skip * number of samples then this field is skipped, default=0.9]\n"\
                   "\nfields with asterix * are not optional\n"
                   ) 
   {}
