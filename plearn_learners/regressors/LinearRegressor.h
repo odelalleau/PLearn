@@ -1,4 +1,3 @@
-
 // -*- C++ -*-
 
 // LinearRegressor.h
@@ -34,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.h,v 1.8 2004/09/20 05:24:04 chapados Exp $
+   * $Id: LinearRegressor.h,v 1.9 2004/10/21 18:22:45 chapados Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.h */
@@ -48,9 +47,6 @@ using namespace std;
 
 class LinearRegressor: public PLearner
 {
-
-private:
-    
   typedef PLearner inherited;
 
   // Global storage used to save memory allocations.
@@ -66,29 +62,44 @@ protected:
   real sum_squared_y; //!< can be re-used if train is called several times on the same data set
   real sum_gammas; //!< sum of weights if weighted error, also for re-using training set with different weight decays
 
-  //! The Akaike Information Criterion computed at training time
-  real AIC;
+  //! Sum of squares of weights
+  real weights_norm; 
 
-  //! The Bayesian Information Criterion computed at training time
-  real BIC;
-  
   // *********************
   // * protected options *
   // *********************
 
   // ### declare protected option fields (such as learnt parameters) here
-  
-  Mat weights; //!<  The weight matrix computed by the regressor, (inputsize+1) x (outputsize)
-  real weights_norm; //!< sum of squares of weights
 
+  //! The weight matrix computed by the regressor,
+  //! (inputsize+1) x (outputsize)
+  Mat weights;
+
+  //! The Akaike Information Criterion computed at training time;
+  //! Saved as a learned option to allow outputting AIC as a test cost.
+  real AIC;
+
+  //! The Bayesian Information Criterion computed at training time
+  //! Saved as a learned option to allow outputting BIC as a test cost.
+  real BIC;
+  
+  //! Estimate of the residual variance for each output variable.
+  //! Saved as a learned option to allow outputting confidence intervals
+  //! when model is reloaded and used in test mode.
+  Vec resid_variance;
+  
 public:
 
   // ************************
   // * public build options *
   // ************************
 
+  //! Whether to use Cholesky decomposition for computing the solution
+  //! (true by default)
   bool cholesky;
-  real weight_decay; //!< factor on the squared norm of parameters penalty
+
+  //! Factor on the squared norm of parameters penalty (zero by default)
+  real weight_decay;
 
   // ****************
   // * Constructors *
@@ -115,6 +126,10 @@ protected:
   //! squared error of the trained  model.  Store the result in
   //! AIC and BIC members of the object.
   void computeInformationCriteria(real squared_error, int n);
+
+  //! Utility function to compute the variance of the residuals of the
+  //! regression
+  void computeResidualsVariance(const Vec& outputwise_sum_squared_Y);
   
 public:
 
@@ -163,7 +178,13 @@ public:
   //! Computes the costs from already computed output. 
   virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                        const Vec& target, Vec& costs) const;
-                                
+
+  //! Compute confidence intervals based on the NORMAL distribution
+  virtual
+  bool computeConfidenceFromOutput(const Vec& input, const Vec& output,
+                                   real probability,
+                                   TVec< pair<real,real> >& intervals) const;
+  
   //! Returns the names of the costs computed by computeCostsFromOutpus (and thus the test method)
   virtual TVec<string> getTestCostNames() const;
 

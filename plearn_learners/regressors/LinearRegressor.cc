@@ -34,12 +34,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.cc,v 1.12 2004/09/27 20:19:31 plearner Exp $
+   * $Id: LinearRegressor.cc,v 1.13 2004/10/21 18:22:45 chapados Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.cc */
 #include "LinearRegressor.h"
 #include <plearn/vmat/VMat_linalg.h>
+#include <plearn/math/pl_erf.h>
 
 namespace PLearn {
 using namespace std;
@@ -48,11 +49,13 @@ using namespace std;
 LinearRegressor::LinearRegressor()
 : sum_squared_y(MISSING_VALUE),
   sum_gammas(MISSING_VALUE),
+  weights_norm(MISSING_VALUE),
+  weights(),
   AIC(MISSING_VALUE),
   BIC(MISSING_VALUE),
-  weights_norm(MISSING_VALUE),
+  resid_variance(),
   cholesky(true),
-  weight_decay(0)  
+  weight_decay(0)
 { }
 
 PLEARN_IMPLEMENT_OBJECT(
@@ -91,15 +94,43 @@ void LinearRegressor::declareOptions(OptionList& ol)
   // ### one of OptionBase::buildoption, OptionBase::learntoption or 
   // ### OptionBase::tuningoption. Another possible flag to be combined with
   // ### is OptionBase::nosave
-  declareOption(ol, "cholesky", &LinearRegressor::cholesky, OptionBase::buildoption, 
-                "Whether to use the Cholesky decomposition or not, when solving the linear system. Default=1 (true)");
 
-  declareOption(ol, "weight_decay", &LinearRegressor::weight_decay, OptionBase::buildoption, 
-                "The weight decay is the factor that multiplies the squared norm of the parameters in the loss function\n");
+  //#####  Build Options  ####################################################
 
-  declareOption(ol, "weights", &LinearRegressor::weights, OptionBase::learntoption, 
-                "The weight matrix, which are the parameters computed by training the regressor.\n");
+  declareOption(ol, "cholesky", &LinearRegressor::cholesky,
+                OptionBase::buildoption, 
+                "Whether to use the Cholesky decomposition or not, "
+                "when solving the linear system. Default=1 (true)");
 
+  declareOption(ol, "weight_decay", &LinearRegressor::weight_decay,
+                OptionBase::buildoption, 
+                "The weight decay is the factor that multiplies the "
+                "squared norm of the parameters in the loss function");
+                
+  
+  //#####  Learnt Options  ###################################################
+  
+  declareOption(ol, "weights", &LinearRegressor::weights,
+                OptionBase::learntoption, 
+                "The weight matrix, which are the parameters computed by "
+                "training the regressor.\n");
+
+  declareOption(ol, "AIC", &LinearRegressor::AIC,
+                OptionBase::learntoption,
+                "The Akaike Information Criterion computed at training time;\n"
+                "Saved as a learned option to allow outputting AIC as a test cost.");
+
+  declareOption(ol, "BIC", &LinearRegressor::BIC,
+                OptionBase::learntoption,
+                "The Bayesian Information Criterion computed at training time;\n"
+                "Saved as a learned option to allow outputting BIC as a test cost.");
+
+  declareOption(ol, "resid_variance", &LinearRegressor::resid_variance,
+                OptionBase::learntoption,
+                "Estimate of the residual variance for each output variable\n"
+                "Saved as a learned option to allow outputting confidence intervals\n"
+                "when model is reloaded and used in test mode.\n");
+  
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
 }
@@ -137,6 +168,7 @@ void LinearRegressor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(XtX, copies);
   deepCopyField(XtY, copies);
   deepCopyField(weights, copies);
+  deepCopyField(resid_variance, copies);
 }
 
 
@@ -158,6 +190,7 @@ void LinearRegressor::forget()
   XtY.resize(0,XtY.width());
   sum_squared_y = 0;
   sum_gammas = 0;
+  resid_variance.resize(0);
 }
   
 
@@ -180,6 +213,7 @@ void LinearRegressor::train()
   train_stats->forget(); 
 
   real squared_error=0;
+  Vec outputwise_sum_squared_Y;
 
   if (train_set->weightsize()<=0)
   {
@@ -187,8 +221,9 @@ void LinearRegressor::train()
       linearRegression(train_set.subMatColumns(0, inputsize()), 
                        train_set.subMatColumns(inputsize(), outputsize()), 
                        weight_decay*train_set.length(), weights, 
-                       !recompute_XXXY, XtX, XtY,sum_squared_y, true, 0,
-                       cholesky);
+                       !recompute_XXXY, XtX, XtY,
+                       sum_squared_y, outputwise_sum_squared_Y,
+                       true, 0, cholesky);
   }
   else if (train_set->weightsize()==1)
   {
@@ -197,13 +232,18 @@ void LinearRegressor::train()
       train_set.subMatColumns(inputsize(), outputsize()),
       train_set.subMatColumns(inputsize()+outputsize(),1),
       weight_decay*train_set.length(), weights,
-      !recompute_XXXY, XtX, XtY,sum_squared_y,sum_gammas, true, 0, cholesky);
+      !recompute_XXXY, XtX, XtY, sum_squared_y, outputwise_sum_squared_Y,
+      sum_gammas, true, 0, cholesky);
   }
   else PLERROR("LinearRegressor: expected dataset's weightsize to be either 1 or 0, got %d\n",
                train_set->weightsize());
 
   // Update the AIC and BIC criteria
   computeInformationCriteria(squared_error, train_set.length());
+
+  // Update the sigmas for confidence intervals (the current formula does
+  // not account for the weights in the case of weighted linear regression)
+  computeResidualsVariance(outputwise_sum_squared_Y);
   
   Mat weights_excluding_biases = weights.subMatRows(1,inputsize());
   weights_norm = dot(weights_excluding_biases,weights_excluding_biases);
@@ -249,6 +289,26 @@ void LinearRegressor::computeCostsFromOutputs(
   costs[4] = (AIC+BIC)/2;
 }
 
+bool LinearRegressor::computeConfidenceFromOutput(
+  const Vec&, const Vec& output, real probability,
+  TVec< pair<real,real> >& intervals) const
+{
+  const int n = output.size();
+  if (n != resid_variance.size())
+    PLERROR("LinearRegressor::computeConfidenceFromOutput: output vector "
+            "size is incorrect or residuals variance not yet computed");
+  
+  // two-tailed
+  const real multiplier = gauss_01_quantile((1+probability)/2);
+  intervals.resize(n);
+  for (int i=0; i<n; ++i) {
+    real half_width = multiplier * sqrt(resid_variance[i]);
+    intervals[i] = std::make_pair(output[i] - half_width,
+                                  output[i] + half_width);
+  }
+  return true;
+}
+
 TVec<string> LinearRegressor::getTestCostNames() const
 {
   return getTrainCostNames();
@@ -277,6 +337,36 @@ void LinearRegressor::computeInformationCriteria(real squared_error, int n)
   real lnsqerr = log(squared_error/n);
   AIC = lnsqerr + 2*M/n;
   BIC = lnsqerr + M*log(real(n))/n;
+}
+
+void LinearRegressor::computeResidualsVariance(const Vec&
+                                               outputwise_sum_squared_Y)
+{
+  // The following formula (for the unweighted case) is used:
+  //
+  //    e'e = y'y - b'X'Xb
+  //
+  // where e is the residuals of the regression (for a single output), y
+  // is a column of targets (for a single output), b is the weigths
+  // vector, and X is the matrix of regressors.  From this point, use the
+  // fact that an estimator of sigma is given by
+  //
+  //   sigma = e'e / (N-K),
+  //
+  // where N is the size of the training set and K is the extended input
+  // size.
+  const int ninputs  = weights.length();
+  const int ntargets = weights.width();
+  const int N = train_set.length();
+  Vec b(ninputs);
+  Vec XtXb(ninputs);
+  resid_variance.resize(ntargets);
+  for (int i=0; i<ntargets; ++i) {
+    b << weights.column(i);
+    product(XtX, b, XtXb);
+    resid_variance[i] =
+      (outputwise_sum_squared_Y[i] - dot(b,XtXb)) / (N-ninputs);
+  }
 }
 
 } // end of namespace PLearn
