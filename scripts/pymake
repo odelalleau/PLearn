@@ -72,6 +72,26 @@ qtdir=''
 args = sys.argv[:]
 del args[0] # ignore program name
 
+#####
+# To be removed as soon as pymake is fixed under Windows!!!
+def log_link_command( command, exec_path ):
+    f = open("link.log", "w")
+    f.write(command)
+
+    dirname, basename = os.path.split(exec_path)
+    exe_target = os.path.join( dirname,
+                               "../../%s" % (basename[:-3]+"exe")
+                               )
+    f.write("\n\nmv %s %s" % (exec_path, exe_target))
+    f.close()
+    
+dorionc_hacked_pymake = False
+if '--log-link' in args:
+    dorionc_hacked_pymake = True
+    args.remove('--log-link')
+#####
+
+
 # initialize a few variables to their default values...
 # these may be overridden by the config file
 default_compiler = 'g++'
@@ -1189,6 +1209,8 @@ digraph G
         command = linker + so_options + ' -o ' + self.corresponding_output + ' ' + string.join(objsfilelist,' ') + ' ' + self.get_optional_libraries_linkeroptions() + ' ' + linkeroptions + ' ' + linkeroptions_tail
 
         # print "CALLED link_command WITH optional_libraries_linkeroptions of: ", self.get_optional_libraries_linkeroptions()        
+        if dorionc_hacked_pymake:
+            log_link_command( command, self.corresponding_output )
         return command
 
     def launch_linking(self):
