@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.24 2004/05/31 21:10:34 tatien Exp $
+   * $Id: stringutils.h,v 1.25 2004/06/01 13:54:07 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -276,8 +276,10 @@ vector<string> remove(const vector<string> &v, string element);
   template<class T> string tostring(const T& x)
     {
       ostringstream out;
-      PStream pout(&out);
-      pout << x;
+      // Commented out because this adds a trailing space.
+//      PStream pout(&out);
+//      pout << x;
+      out << x;
       return out.str();
 
       /* Old strstream code
