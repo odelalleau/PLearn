@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOverBagsVariable.h,v 1.5 2004/02/20 21:11:53 chrish42 Exp $
+   * $Id: SumOverBagsVariable.h,v 1.6 2004/02/23 23:57:28 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,20 +53,21 @@ class SumOverBagsVariable: public NaryVariable
 {
   protected:
     //!  protected default constructor for persistence
-    SumOverBagsVariable() : vmat(), f(), max_bag_size(-1), n_samples(1), curpos() {}
+    SumOverBagsVariable();
 
   public:
 
   typedef NaryVariable inherited;
 
   //protected:
-    VMat vmat;
-    Func f;
-    int max_bag_size;
-    int n_samples;
+  VMat vmat;
+  Func f;
+  int max_bag_size;
+  int n_samples;
+  bool transpose;
 
-    int curpos; //!<  current pos in VMat 
-    // To avoid allocation/deallocations in fprop/bprop
+  int curpos; //!<  current pos in VMat 
+  // To avoid allocation/deallocations in fprop/bprop
   Vec output_value;
   Mat input_values;
   Vec bag_size_vec;
@@ -90,7 +91,7 @@ class SumOverBagsVariable: public NaryVariable
     //!   last_column_of_target == 1+2==3 ==> single-row bag (both first and last)
     //! the last column of the target is not given in the call to f, but a bag_size input is provided instead.
     //! The inputs to f are: (matrix of bag inputs, the bag size, the bag target, the bag weight).
-    SumOverBagsVariable(VMat the_vmat, Func the_f, int maxbagsize, int nsamples);
+    SumOverBagsVariable(VMat the_vmat, Func the_f, int maxbagsize, int nsamples, bool transpose);
     
     PLEARN_DECLARE_OBJECT(SumOverBagsVariable);
     virtual void build();
@@ -110,8 +111,8 @@ class SumOverBagsVariable: public NaryVariable
 };
 
 //!  sumOf
-inline Var sumOverBags(VMat vmat, Func f, int max_bag_size, int nsamples)
-{ return new SumOverBagsVariable(vmat,f,max_bag_size,nsamples); }
+inline Var sumOverBags(VMat vmat, Func f, int max_bag_size, int nsamples, bool transpose = false)
+{ return new SumOverBagsVariable(vmat, f, max_bag_size, nsamples, transpose); }
 
 } // end of namespace PLearn
 
