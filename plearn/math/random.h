@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: random.h,v 1.9 2005/01/24 14:26:17 tihocan Exp $
+   * $Id: random.h,v 1.10 2005/01/25 14:33:44 tihocan Exp $
    ******************************************************* */
 
 #ifndef RANDOM_H
@@ -209,10 +209,4 @@ void computeRanks(const TMat<T>& mat, TMat<T>& ranks)
 } // end of namespace PLearn
 
 #endif
-
-
-
-
-
-
 
