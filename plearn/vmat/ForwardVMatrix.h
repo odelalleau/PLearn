@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: ForwardVMatrix.h,v 1.6 2004/03/23 23:08:08 morinf Exp $
+   * $Id: ForwardVMatrix.h,v 1.7 2004/04/05 22:53:21 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -61,9 +61,13 @@ protected:
 
 public:
 
-  PLEARN_DECLARE_OBJECT(ForwardVMatrix);
-
   ForwardVMatrix();
+  ForwardVMatrix(VMat vm);
+
+  PLEARN_DECLARE_OBJECT(ForwardVMatrix);
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
 
   //! This allows to set the underlying vmat
   void setVMat(VMat the_vm);
@@ -218,7 +222,9 @@ public:
   //!  compute fprop or fbprop of a sumOf operation
   virtual void evaluateSumOfFprop(Func f, Vec& output_result, int nsamples=-1);
   virtual void evaluateSumOfFbprop(Func f, Vec& output_result, Vec& output_gradient, int nsamples=-1);
- 
+
+private:
+  void build_();
 };
 
 DECLARE_OBJECT_PTR(ForwardVMatrix);

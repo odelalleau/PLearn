@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
- * $Id: ForwardVMatrix.cc,v 1.8 2004/02/20 21:14:44 chrish42 Exp $
+ * $Id: ForwardVMatrix.cc,v 1.9 2004/04/05 22:53:21 morinf Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -55,36 +55,60 @@ PLEARN_IMPLEMENT_OBJECT(ForwardVMatrix, "ONE LINE DESCR", "NO HELP");
 ForwardVMatrix::ForwardVMatrix()
 {}
 
+ForwardVMatrix::ForwardVMatrix(VMat the_vm)
+  : vm(the_vm)
+{
+}
+
+void
+ForwardVMatrix::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+ForwardVMatrix::build_()
+{
+  if (vm) {
+    length_ = vm->length();
+    width_ = vm->width();
+    writable = vm->isWritable();
+    if(inputsize_ < 0)
+      inputsize_ = vm->inputsize();
+    if(targetsize_ < 0)
+      targetsize_ = vm->targetsize();
+    if(weightsize_ < 0)
+      weightsize_ = vm->weightsize();
+    setMtime(vm->getMtime());
+    if(vm->hasMetaDataDir())
+      setMetaDataDir(vm->getMetaDataDir());
+    setAlias(vm->getAlias());
+    //  field_stats = vm->field_stats;
+
+    // copy fieldnames from vm if not set and they look good
+    if(!hasFieldInfos() && (width() == vm->width()) && vm->hasFieldInfos() )
+      setFieldInfos(vm->getFieldInfos());
+  } else {
+    length_ = 0;
+    width_ = 0;
+  }
+}
+
 void ForwardVMatrix::setVMat(VMat the_vm)
 {
   if(the_vm)
-    {
-      vm = the_vm;
-      length_ = vm->length();
-      width_ = vm->width();
-      writable = vm->isWritable();
-      if(inputsize_<0)
-        inputsize_ = vm->inputsize();
-      if(targetsize_<0)
-        targetsize_ = vm->targetsize();
-      if(weightsize_<0)
-        weightsize_ = vm->weightsize();
-      setMtime(vm->getMtime());
-      if(vm->hasMetaDataDir())
-        setMetaDataDir(vm->getMetaDataDir());
-      setAlias(vm->getAlias());
-      //  field_stats = vm->field_stats;
-
-      // copy fieldnames from vm if not set and they look good
-      if(!hasFieldInfos() && (width() == vm->width()) && vm->hasFieldInfos() )
-        setFieldInfos(vm->getFieldInfos());
-    }
+    vm = the_vm;
   else
-    {
-      vm = VMat();
-      length_ = 0;
-      width_ = 0;
-    }
+    vm = VMat();
+  build_();
+}
+
+void
+ForwardVMatrix::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "vm", &ForwardVMatrix::vm, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
 }
 
 string ForwardVMatrix::getValString(int col, real val) const
@@ -164,12 +188,14 @@ void ForwardVMatrix::compacify()
   
 void ForwardVMatrix::reset_dimensions() 
 { 
-  vm->reset_dimensions();
-  length_ = vm->length();
-  width_ = vm->width();
-  inputsize_ = vm->inputsize();
-  targetsize_ = vm->targetsize();
-  weightsize_ = vm->weightsize();
+  if (vm) {
+    vm->reset_dimensions();
+    length_ = vm->length();
+    width_ = vm->width();
+    inputsize_ = vm->inputsize();
+    targetsize_ = vm->targetsize();
+    weightsize_ = vm->weightsize();
+  }
 }
 
 VMat ForwardVMatrix::subMat(int i, int j, int l, int w)
