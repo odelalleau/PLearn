@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: PP.h,v 1.8 2004/10/14 21:23:27 ducharme Exp $
+   * $Id: PP.h,v 1.9 2004/10/15 18:06:36 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -93,6 +93,9 @@ class PP
   T* ptr;
 
  public:
+
+  //! The type of the element this smart pointer points to.
+  typedef T element_type;
 
   //! empty constructor
   inline PP<T>()
@@ -249,6 +252,12 @@ public:
   std::multimap<A,B> map;
 };
 
+
+template <class T>
+T* get_pointer(PP<T> const& p)
+{
+  return p;
+}
 
 } // end of namespace PLearn
 
