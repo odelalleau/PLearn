@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ShiftAndRescaleVMatrix.cc,v 1.11 2004/07/16 13:12:38 tihocan Exp $
+   * $Id: ShiftAndRescaleVMatrix.cc,v 1.12 2004/07/19 13:28:48 tihocan Exp $
    ******************************************************* */
 
 #include "ShiftAndRescaleVMatrix.h"
@@ -52,6 +52,7 @@ PLEARN_IMPLEMENT_OBJECT(ShiftAndRescaleVMatrix, "ONE LINE DESCR",
 ShiftAndRescaleVMatrix::
 ShiftAndRescaleVMatrix(VMat underlying_vm, Vec the_shift, Vec the_scale)
 : shift(the_shift), scale(the_scale), automatic(0), n_train(0), n_inputs(-1),
+  negate_shift(false),
   no_scale(false),
   ignore_missing(false),
   verbosity(1)
@@ -63,6 +64,7 @@ ShiftAndRescaleVMatrix(VMat underlying_vm, Vec the_shift, Vec the_scale)
 
 ShiftAndRescaleVMatrix::ShiftAndRescaleVMatrix()
 : automatic(1),n_train(0), n_inputs(-1),
+  negate_shift(false),
   no_scale(false),
   ignore_missing(false),
   verbosity(1)
@@ -71,6 +73,7 @@ ShiftAndRescaleVMatrix::ShiftAndRescaleVMatrix()
 ShiftAndRescaleVMatrix::ShiftAndRescaleVMatrix(VMat underlying_vm, int n_inputs_)
 : shift(underlying_vm->width()),
   scale(underlying_vm->width()), automatic(1),n_train(0), n_inputs(n_inputs_),
+  negate_shift(false),
   no_scale(false),
   ignore_missing(false),
   verbosity(1)
@@ -82,6 +85,7 @@ ShiftAndRescaleVMatrix::ShiftAndRescaleVMatrix(VMat underlying_vm, int n_inputs_
 ShiftAndRescaleVMatrix::
 ShiftAndRescaleVMatrix(VMat underlying_vm, int n_inputs_, int n_train_, bool the_ignore_missing, bool the_verbosity)
 : shift(underlying_vm->width()), scale(underlying_vm->width()), automatic(1), n_train(n_train_), n_inputs(n_inputs_),
+  negate_shift(false),
   no_scale(false),
   ignore_missing(the_ignore_missing),
   verbosity(the_verbosity)
@@ -104,6 +108,8 @@ void ShiftAndRescaleVMatrix::declareOptions(OptionList& ol)
                 "when automatic, use only the n_train first examples to estimate shift and scale, if n_train>0.");
   declareOption(ol, "n_inputs", &ShiftAndRescaleVMatrix::n_inputs, OptionBase::buildoption,
                 "when automatic, shift and scale only the first n_inputs columns (If n_inputs<0, set n_inputs from underlying_vmat->inputsize()).");
+  declareOption(ol, "negate_shift", &ShiftAndRescaleVMatrix::negate_shift, OptionBase::buildoption,
+                "If set to 1, the shift will be removed instead of added.");
   declareOption(ol, "no_scale", &ShiftAndRescaleVMatrix::no_scale, OptionBase::buildoption,
                 "If set to 1, no scaling will be performed (only a shift will be applied).");
   declareOption(ol, "ignore_missing", &ShiftAndRescaleVMatrix::ignore_missing, OptionBase::buildoption,
@@ -161,7 +167,8 @@ void ShiftAndRescaleVMatrix::build_()
         else
           computeMeanAndStddev(vm, shift, scale);
       }
-      negateElements(shift);
+      if (!negate_shift)
+        negateElements(shift);
       if (!no_scale) {
         for (int i=0;i<scale.length();i++) 
           if (scale[i]==0)
@@ -184,21 +191,38 @@ void ShiftAndRescaleVMatrix::build_()
                                          
 real ShiftAndRescaleVMatrix::get(int i, int j) const
 {
-  if (no_scale) {
-    return vm->get(i,j) + shift[j];
+  if (negate_shift) {
+    if (no_scale) {
+      return vm->get(i,j) - shift[j];
+    } else {
+      return (vm->get(i,j) - shift[j]) * scale[j];
+    }
   } else {
-    return (vm->get(i,j) + shift[j]) * scale[j];
+    if (no_scale) {
+      return vm->get(i,j) + shift[j];
+    } else {
+      return (vm->get(i,j) + shift[j]) * scale[j];
+    }
   }
 }
 
 void ShiftAndRescaleVMatrix::getSubRow(int i, int j, Vec v) const
 {
   vm->getSubRow(i,j,v);
-  if (no_scale) {
-    v += shift;
+  if (negate_shift) {
+    if (no_scale) {
+      v -= shift;
+    } else {
+      for(int jj=0; jj<v.length(); jj++)
+        v[jj] = (v[jj] - shift[j+jj]) * scale[j+jj];
+    }
   } else {
-    for(int jj=0; jj<v.length(); jj++)
-      v[jj] = (v[jj] + shift[j+jj]) * scale[j+jj];
+    if (no_scale) {
+      v += shift;
+    } else {
+      for(int jj=0; jj<v.length(); jj++)
+        v[jj] = (v[jj] + shift[j+jj]) * scale[j+jj];
+    }
   }
 }
 
