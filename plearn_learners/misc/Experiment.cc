@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Experiment.cc,v 1.12 2003/10/07 20:54:46 tihocan Exp $ 
+   * $Id: Experiment.cc,v 1.13 2004/02/11 20:17:54 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file Experiment.cc */
@@ -161,19 +161,19 @@ void Experiment::run()
 
       learner->forget();
       if(save_initial_models)
-        PLearn::save(learner_expdir+"/initial.psave",learner);
+        PLearn::save(learner_expdir+slash+"initial.psave",learner);
 
       learner->setTestDuringTrain(testset);
       learner->train(trainset);
       if(save_models)
-        PLearn::save(learner_expdir+"/final.psave",learner);
+        PLearn::save(learner_expdir+slash+"final.psave",learner);
 
-      string test_outputs_fname = learner_expdir+"/test_outputs.pmat";
+      string test_outputs_fname = learner_expdir+slash+"test_outputs.pmat";
       if(save_test_outputs)
-        test_outputs_fname = learner_expdir+"/test_outputs.pmat";
-      string test_costs_fname = learner_expdir+"/test_costs.pmat";
+        test_outputs_fname = learner_expdir+slash+"test_outputs.pmat";
+      string test_costs_fname = learner_expdir+slash+"test_costs.pmat";
       if(save_test_costs)
-        test_costs_fname = learner_expdir+"/test_costs.pmat";
+        test_costs_fname = learner_expdir+slash+"test_costs.pmat";
       Vec testres = learner->test(testset, test_outputs_fname, test_costs_fname);
 
       testres.println(cout);

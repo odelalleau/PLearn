@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PExperiment.cc,v 1.7 2003/10/07 20:55:09 tihocan Exp $ 
+   * $Id: PExperiment.cc,v 1.8 2004/02/11 20:17:56 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -312,15 +312,15 @@ Vec PTester::perform(bool dont_set_training_set)
   VMat split_stats_vm;   // the vmat in which to save per split result stats
   if(expdir!="" && report_stats)
     {
-      saveStringInFile(expdir+"/train_cost_names.txt", join(traincostnames,"\n")+"\n"); 
-      saveStringInFile(expdir+"/test_cost_names.txt", join(testcostnames,"\n")+"\n"); 
+      saveStringInFile(expdir+slash+"train_cost_names.txt", join(traincostnames,"\n")+"\n"); 
+      saveStringInFile(expdir+slash+"test_cost_names.txt", join(testcostnames,"\n")+"\n"); 
 
-      global_stats_vm = new FileVMatrix(expdir+"/global_stats.pmat", 1, nstats);
+      global_stats_vm = new FileVMatrix(expdir+slash+"global_stats.pmat", 1, nstats);
       for(int k=0; k<nstats; k++)
         global_stats_vm->declareField(k,statspecs[k].statName());
       global_stats_vm->saveFieldInfos();
 
-      split_stats_vm = new FileVMatrix(expdir+"/split_stats.pmat", nsplits, 1+nstats);
+      split_stats_vm = new FileVMatrix(expdir+slash+"split_stats.pmat", nsplits, 1+nstats);
       split_stats_vm->declareField(0,"splitnum");
       for(int k=0; k<nstats; k++)
         split_stats_vm->declareField(k+1,statspecs[k].intStatName());
@@ -331,7 +331,7 @@ Vec PTester::perform(bool dont_set_training_set)
     {
       string splitdir;
       if(expdir!="")
-        splitdir = append_slash(expdir)+"Split"+tostring(splitnum)+"/";
+        splitdir = append_slash(expdir)+"Split"+tostring(splitnum)+slash;
 
       TVec<VMat> dsets = splitter->getSplit(splitnum);
       VMat trainset = dsets[0];
@@ -339,7 +339,7 @@ Vec PTester::perform(bool dont_set_training_set)
         PLearn::save(splitdir+"training_set.psave",trainset);
 
       if(splitdir!="" && provide_learner_expdir)
-        learner->setExperimentDirectory(splitdir+"LearnerExpdir/");
+        learner->setExperimentDirectory(splitdir+"LearnerExpdir"+slash);
 
       if(!dont_set_training_set || nsplits>1)
         learner->setTrainingSet(trainset);  // also calls forget...
