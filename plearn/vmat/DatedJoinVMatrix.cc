@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DatedJoinVMatrix.cc,v 1.2 2004/03/16 14:22:27 yoshua Exp $
+   * $Id: DatedJoinVMatrix.cc,v 1.3 2004/03/17 21:18:10 yoshua Exp $
    ******************************************************* */
 
 // Authors: *Yoshua Bengio*
@@ -42,14 +42,15 @@
 
 
 #include "DatedJoinVMatrix.h"
+#include "PDate.h"
 
 namespace PLearn {
 using namespace std;
 
 
 DatedJoinVMatrix::DatedJoinVMatrix()
-  :inherited(),slave_date_field_index(-1),master_date_interval_start_field_index(-1),
-   master_date_interval_end_field_index(-1)
+  :inherited(),master_date_field_index(-1),slave_date_interval_start_field_index(-1),
+   slave_date_interval_end_field_index(-1), verbosity(0)
 {
 }
 
@@ -64,13 +65,74 @@ PLEARN_IMPLEMENT_OBJECT(DatedJoinVMatrix,
                         "in the master is forced to belong to a date interval in the slave,\n"
                         "as follows: slave_date_start <= master_date < slave_date_end.\n"
                         "If no match is found then the slave columns are left with missing values.\n"
+                        "If more than one slave row match, then the one with the earliest\n"
+                        "slave_date_start is used (and a warning is optionally issued)\n"
                         );
 
 void DatedJoinVMatrix::getRow(int i, Vec v) const
 {
   if (!master || !slave || slave_key_indices.length()==0) // etc...
-    PLERROR("DatedJoinVMatrix: object was not build properly!")
+    PLERROR("DatedJoinVMatrix: object was not build properly!");
 
+  // copy the master fields directly
+  master->getRow(i,v.subVec(0,master.width()));
+  Vec slave_fields = v.subVec(master.width(),slave_field_indices.size());
+
+  // build a key to search in the slave vmat
+  for (int j=0;j<master_key_indices.size();j++)
+    key[j] = v[master_key_indices[j]];
+
+  // get the list of matching slave rows
+  Maptype::const_iterator it,low,upp; 
+  pair<Maptype::const_iterator,Maptype::const_iterator> matches=mp.equal_range(key);
+  low=matches.first;
+  upp=matches.second;
+  if (low==mp.end())
+    slave_fields.fill(MISSING_VALUE);
+  else
+  {
+    PDate master_date;
+    if (master_date_field_index>=0)
+      master_date = float_to_date(v[master_date_field_index]);
+    PDate earliest_match;
+    int n_matches=0;
+    static TVec<int> matches;
+    if (verbosity>1) matches.resize(0);
+    // iterate over the matching slave rows
+    for (it=low;it!=upp;++it)
+    {
+      slave->getRow(it->second,slave_row);
+      if (master_date_field_index>=0)
+      {
+        PDate slave_date_interval_start = float_to_date(slave_row[slave_date_interval_start_field_index]);
+        PDate slave_date_interval_end = float_to_date(slave_row[slave_date_interval_end_field_index]);
+        if (master_date>=slave_date_interval_start && master_date<slave_date_interval_end)
+        {
+          if (n_matches==0 || slave_date_interval_start < earliest_match)
+          {
+            earliest_match = slave_date_interval_start;
+            for (int j=0;j<slave_field_indices.size();j++)
+              slave_fields[j] = slave_row[slave_field_indices[j]];
+          }
+          n_matches++;
+          if (verbosity>1) matches.append(it->second);
+        }
+      } else // no date, the LAST one will remain
+      {
+        for (int j=0;j<slave_field_indices.size();j++)
+          slave_fields[j] = slave_row[slave_field_indices[j]];
+        n_matches++;
+        if (verbosity>1) matches.append(it->second);
+      }
+    }
+    if (n_matches>1 && verbosity>0)
+    {
+      PLWARNING("DatedJointVMatrix:getRow(%d,.) matched more than once\n",i);
+      if (verbosity >1)
+        for (int j=0;j<n_matches;j++)
+          cerr << "master row " << i << " matched slave row " << matches[j] << endl;
+    }
+  }
 }
 
 void DatedJoinVMatrix::declareOptions(OptionList& ol)
@@ -103,65 +165,71 @@ void DatedJoinVMatrix::declareOptions(OptionList& ol)
                 "are specified (in that case they are assumed to be the same)\n"
                 );
 
-  declareOption(ol, "slave_key_names", &DatedJoinVMatrix::save_key_names, 
+  declareOption(ol, "slave_key_names", &DatedJoinVMatrix::slave_key_names, 
                 OptionBase::buildoption,
                 "Names of the 'key' fields in the slave vmatrix. They should not be\n"
                 "specified if the slave_key_indices are given directly. If not provided\n"
                 "and if the master_key_names are specified they are assumed to be the same.\n"
                 );
 
-  declareOption(ol, "slave_fields_indices", &DatedJoinVMatrix::slave_field_indices, 
+  declareOption(ol, "slave_field_indices", &DatedJoinVMatrix::slave_field_indices, 
                 OptionBase::buildoption,
                 "Indices of the fields in the slave vmatrix to be copied in result. It is not necessary\n"
-                "to specify them if the slave_fields_names are given.\n"
+                "to specify them if the slave_field_names are given.\n"
                 );
 
-  declareOption(ol, "slave_field_names", &DatedJoinVMatrix::save_field_names, 
+  declareOption(ol, "slave_field_names", &DatedJoinVMatrix::slave_field_names, 
                 OptionBase::buildoption,
                 "Names of the fields in the slave vmatrix to be copied in result. It is not necessary\n"
-                "to specify them if the slave_fields_indices are given.\n"
+                "to specify them if the slave_field_indices are given.\n"
                 );
 
-  declareOption(ol, "slave_date_field_index", &DatedJoinVMatrix::slave_date_field_index, 
+  declareOption(ol, "master_date_field_index", &DatedJoinVMatrix::master_date_field_index, 
                 OptionBase::buildoption,
-                "Index of the date field in the slave vmatrix. Should not be specified\n"
-                "if the slave_date_field_name is given.\n"
+                "Index of the date field in the master vmatrix. Should not be specified\n"
+                "if the master_date_field_name is given.\n"
                 );
 
-  declareOption(ol, "slave_date_field_name", &DatedJoinVMatrix::slave_date_field_name, 
+  declareOption(ol, "master_date_field_name", &DatedJoinVMatrix::master_date_field_name, 
                 OptionBase::buildoption,
-                "Name of the date field in the slave vmatrix. Should not be specified\n"
-                "if the slave_date_field_index is given.\n"
+                "Name of the date field in the master vmatrix. Should not be specified\n"
+                "if the master_date_field_index is given.\n"
                 );
 
-  declareOption(ol, "master_date_interval_start_field_index", 
-                &DatedJoinVMatrix::master_date_interval_start_field_index, 
+  declareOption(ol, "slave_date_interval_start_field_index", 
+                &DatedJoinVMatrix::slave_date_interval_start_field_index, 
                 OptionBase::buildoption,
-                "Index of the date interval start field in the master vmatrix.\n"
-                "Should not be specified if the master_date_interval_start_field_name is given.\n"
+                "Index of the date interval start field in the slave vmatrix.\n"
+                "Should not be specified if the slave_date_interval_start_field_name is given.\n"
                 );
 
-  declareOption(ol, "master_date_interval_start_field_name", 
-                &DatedJoinVMatrix::master_date_interval_start_field_name, 
+  declareOption(ol, "slave_date_interval_start_field_name", 
+                &DatedJoinVMatrix::slave_date_interval_start_field_name, 
                 OptionBase::buildoption,
-                "Name of the date interval start field in the master vmatrix.\n"
-                "Should not be specified if the master_date_interval_start_field_index is given.\n"
+                "Name of the date interval start field in the slave vmatrix.\n"
+                "Should not be specified if the slave_date_interval_start_field_index is given.\n"
                 );
 
-  declareOption(ol, "master_date_interval_end_field_index", 
-                &DatedJoinVMatrix::master_date_interval_end_field_index, 
+  declareOption(ol, "slave_date_interval_end_field_index", 
+                &DatedJoinVMatrix::slave_date_interval_end_field_index, 
                 OptionBase::buildoption,
-                "Index of the date interval end field in the master vmatrix.\n"
-                "Should not be specified if the master_date_interval_end_field_name is given.\n"
+                "Index of the date interval end field in the slave vmatrix.\n"
+                "Should not be specified if the slave_date_interval_end_field_name is given.\n"
                 );
 
-  declareOption(ol, "master_date_interval_end_field_name", 
-                &DatedJoinVMatrix::master_date_interval_end_field_name, 
+  declareOption(ol, "slave_date_interval_end_field_name", 
+                &DatedJoinVMatrix::slave_date_interval_end_field_name, 
                 OptionBase::buildoption,
-                "Name of the date interval end field in the master vmatrix.\n"
-                "Should not be specified if the master_date_interval_end_field_index is given.\n"
+                "Name of the date interval end field in the slave vmatrix.\n"
+                "Should not be specified if the slave_date_interval_end_field_index is given.\n"
                 );
 
+  declareOption(ol, "verbosity", &DatedJoinVMatrix::verbosity,
+                OptionBase::buildoption,
+                "0: no warning issued,\n"
+                "1: warning issued if more than one slave row matches,\n"
+                "2: details about these matches are printed\n"
+                );
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
 }
@@ -200,7 +268,7 @@ void DatedJoinVMatrix::build_()
       if (master_key_names.length()>0)
       {
         slave_key_indices.resize(master_key_names.length());
-        for (int i=0;i<slave_key_names.length();i++)
+        for (int i=0;i<master_key_names.length();i++)
           slave_key_indices[i] = slave->getFieldIndex(master_key_names[i]);
       }
       else PLERROR("DatedJoinVMatrix: No key names were provided and no slave_key_indices were provided!");
@@ -213,32 +281,52 @@ void DatedJoinVMatrix::build_()
         slave_field_indices[i] = slave->getFieldIndex(slave_field_names[i]);
     } 
     else PLERROR("DatedJoinVMatrix: No slave_field_names were provided and no slave_field_indices were provided!");
-    // * get slave date field index
-    if (slave_date_field_name!="")
-      slave_date_field_index = slave->getFieldIndex(slave_date_field_name);
-    else if (slave_date_field_index<0)
-      PLERROR("DatedJoinVMatrix: No slave_date_field_name was provided and no slave_date_field_index was provided!");
-    // * get master date interval start field index
-    if (master_date_interval_start_field_name!="")
-      master_date_interval_start_field_index = slave->getFieldIndex(master_date_interval_start_field_name);
-    else if (master_date_interval_start_field_index<0)
-      PLERROR("DatedJoinVMatrix: No master_date_interval_start_field_name was provided and no master_date_interval_start_field_index was provided!");
-    // * get master date interval end field index
-    if (master_date_interval_end_field_name!="")
-      master_date_interval_end_field_index = slave->getFieldIndex(master_date_interval_end_field_name);
-    else if (master_date_interval_end_field_index<0)
-      PLERROR("DatedJoinVMatrix: No master_date_interval_end_field_name was provided and no master_date_interval_end_field_index was provided!");
+    // * get master date field index
+    if (master_date_field_name!="")
+      master_date_field_index = master->getFieldIndex(master_date_field_name);
+    else if (master_date_field_index<0)
+      PLWARNING("DatedJoinVMatrix: No master_date_field_name was provided and no master_date_field_index was provided!");
+    // * get slave date interval start field index
+    if (slave_date_interval_start_field_name!="")
+      slave_date_interval_start_field_index = slave->getFieldIndex(slave_date_interval_start_field_name);
+    else if (slave_date_interval_start_field_index<0 && master_date_field_index>=0)
+      PLERROR("DatedJoinVMatrix: No slave_date_interval_start_field_name was provided and no slave_date_interval_start_field_index was provided!");
+    // * get slave date interval end field index
+    if (slave_date_interval_end_field_name!="")
+      slave_date_interval_end_field_index = slave->getFieldIndex(slave_date_interval_end_field_name);
+    else if (slave_date_interval_end_field_index<0 && master_date_field_index>=0)
+      PLERROR("DatedJoinVMatrix: No slave_date_interval_end_field_name was provided and no slave_date_interval_end_field_index was provided!");
 
     // INDEX THE SLAVE
-    slave_key.resize(slave_key_indices.length());
+    key.resize(slave_key_indices.length());
     slave_row.resize(slave.width());
     for (int i=0;i<slave.length();i++)
     {
       slave->getRow(i,slave_row);
       for (int j=0;j<slave_key_indices.size();j++)
-        slave_key[j] = slave_row[slave_key_indices[j]];
-      mp.insert(make_pair(slave_key,i));
+        key[j] = slave_row[slave_key_indices[j]];
+      mp.insert(make_pair(key,i));
     }
+
+    // set the width and the length
+    width_ = master.width() + slave_field_indices.size();
+    length_ = master.length();
+
+    //! Copy the appropriate VMFields
+    fieldinfos.resize(width_);
+    Array<VMField> master_infos = master->getFieldInfos();
+    Array<VMField> slave_infos = slave->getFieldInfos();
+    if (master_infos.size() > 0)
+      for (int i=0; i<master.width(); ++i)
+        fieldinfos[i] = master_infos[i];
+    if (slave_infos.size() > 0)
+      for (int i=0; i<slave_field_indices.size(); ++i)
+      {
+        VMField f=slave_infos[slave_field_indices[i]];
+        if (master->fieldIndex(f.name)>=0)
+          f.name = "slave." + f.name;
+        fieldinfos[master.width()+i] = f;
+      }
   }
 }
 
@@ -254,7 +342,7 @@ void DatedJoinVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copi
   inherited::makeDeepCopyFromShallowCopy(copies);
 
   deepCopyField(slave_row, copies);
-  deepCopyField(slave_key, copies);
+  deepCopyField(key, copies);
   deepCopyField(master, copies);
   deepCopyField(slave, copies);
   deepCopyField(master_key_indices, copies);

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DatedJoinVMatrix.h,v 1.2 2004/03/16 14:22:27 yoshua Exp $
+   * $Id: DatedJoinVMatrix.h,v 1.3 2004/03/17 21:18:10 yoshua Exp $
    ******************************************************* */
 
 // Authors: *Yoshua Bengio*
@@ -45,6 +45,7 @@
 #define DatedJoinVMatrix_INC
 
 #include "RowBufferedVMatrix.h"
+#include "VMat.h"
 
 namespace PLearn {
 using namespace std;
@@ -52,7 +53,8 @@ using namespace std;
 class DatedJoinVMatrix: public RowBufferedVMatrix
 {
 public:
-  typedef hash_multimap<Vec,int> Maptype;
+  typedef hash_multimap<Array<real>,int,phash_Array<real> > Maptype;
+  //typedef hash_multimap<Array<real>,int> Maptype;
 
   typedef RowBufferedVMatrix inherited;
 
@@ -62,7 +64,7 @@ protected:
   // *********************
 
   Vec slave_row;
-  Vec slave_key;
+  Array<real> key;
   Maptype mp; // maps a key to a list of row indices in the slave
 
 public:
@@ -76,15 +78,16 @@ public:
   TVec<int> slave_key_indices;
   TVec<string> master_key_names;
   TVec<string> slave_key_names;
-  TVec<int> slave_fields_indices;
-  TVec<string> slave_fields_names;
-  int slave_date_field_index;
-  string slave_date_field_name;
-  int master_date_interval_start_field_index;
-  int master_date_interval_end_field_index;p
-  string master_date_interval_start_field_name;
-  string master_date_interval_end_field_name;
-  
+  TVec<int> slave_field_indices;
+  TVec<string> slave_field_names;
+  int master_date_field_index;
+  string master_date_field_name;
+  int slave_date_interval_start_field_index;
+  int slave_date_interval_end_field_index;
+  string slave_date_interval_start_field_name;
+  string slave_date_interval_end_field_name;
+  int verbosity;
+
   // ****************
   // * Constructors *
   // ****************

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array.h,v 1.16 2004/03/09 16:25:40 tihocan Exp $
+   * $Id: Array.h,v 1.17 2004/03/17 21:18:05 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -55,7 +55,7 @@
 //#include "general.h"
 //#include "fileutils.h"
 #include "TMat.h"
-
+#include "ms_hash_wrapper.h"
 
 namespace PLearn {
 using namespace std;
@@ -93,7 +93,7 @@ class Array: public TVec<T>
         (*this)[1] = elem2;
       }
 
-    Array<T>(const Array& other)
+    Array<T>(const Array<T>& other)
       : TVec<T>(other.storage->size())
       {
         length_ = other.size();
@@ -134,12 +134,24 @@ class Array: public TVec<T>
     void clear()
     { length_ = 0; }
 
-    void operator=(const Array& other)
+    void operator=(const Array<T>& other)
     {
       resize(other.size());
       iterator array = data();
       for(int i=0; i<length_; i++)
         array[i] = other[i];
+    }
+
+    bool operator==(const Array<T>& other) const
+    {
+#ifdef BOUNDCHECK
+      if (size()!=other.size())
+        PLERROR("Array::operator== works on same-size arguments");
+#endif
+      iterator array = data();
+      for(int i=0; i<length_; i++)
+        if (array[i] != other[i]) return false;
+      return true;
     }
 
     void operator=(const vector<T> &other)
@@ -189,6 +201,14 @@ class Array: public TVec<T>
       in >> *this;
     }
 
+  //!  used by Hash  (VERY DIRTY: TO BE REMOVED [Pascal])
+  inline operator char*() const { if(isNull()) return 0; else return (char*)data(); }
+
+  // norman: removed const. With inline is useless (and .NET doesn't like it)
+  // Old code:
+  //inline const size_t byteLength() const { return length()*sizeof(T); }
+  inline size_t byteLength() const { return size()*sizeof(T); }
+
 /*  PAS UTILISE
     void increaseCapacity(int increase = 10)
     {
@@ -203,6 +223,24 @@ class Array: public TVec<T>
 
 };
 
+
+template <class T>
+void swap(Array<T>& a1, Array<T>& a2)
+{
+  T* a1d = a1.data();
+  T* a2d = a2.data();
+  T tmp;
+#ifdef BOUNDCHECK
+  if (a1.size()!=a2.size())
+    PLERROR("Array::swap expects two same-size arguments");
+#endif
+  for(int i=0; i<length_; i++)
+  {
+    tmp = a1d[i];
+    a1d[i]=a2d[i];
+    a2d[i]=tmp;
+  }
+}
 
 template <class T>
 inline PStream & operator>>(PStream &in, Array<T> &a)
@@ -350,9 +388,8 @@ inline TMat<T> hconcat(const TMat<T>& m1, const TMat<T>& m2) { return hconcat(Ar
 //!  This will allow a convenient way of building arrays of Matrices by writing ex: m1&m2&m3
 template<class T>
 inline Array< TMat<T> > operator&(const TMat<T>& m1, const TMat<T>& m2) { return Array< TMat<T> >(m1,m2); } 
+
 template<class T>
-
-
 class TypeTraits< Array<T> >
 {
 public:
@@ -365,6 +402,14 @@ public:
   static inline unsigned char big_endian_typecode()
   { return 0xFF; }
 
+};
+
+template <class T> 
+struct phash_Array {
+  size_t operator()(const Array<T>& a) const
+  {
+    return hashbytes((char*)a.data(),a.size()*sizeof(T));
+  }
 };
 
 } // end of namespace PLearn
