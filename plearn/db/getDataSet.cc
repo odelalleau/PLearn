@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.28 2004/11/24 18:19:27 tihocan Exp $
+   * $Id: getDataSet.cc,v 1.29 2004/12/07 22:39:24 chapados Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -56,6 +56,7 @@
 #include <plearn/vmat/VMat.h>
 #include <plearn/vmat/VVMatrix.h>
 #include <plearn/io/MatIO.h>
+#include <plearn/io/PyPlearnDriver.h>
 
 namespace PLearn {
 using namespace std;
@@ -136,8 +137,17 @@ VMat getDataSet(const string& datasetstring, const string& alias)
             {
               vm = dynamic_cast<VMatrix*>(newObject(code));
               if(vm.isNull())
-                PLERROR("Object described in %s is not a VMatrix subclass",datasetstring.c_str());
+                PLERROR("getDataSet: Object described in %s is not a VMatrix subclass",datasetstring.c_str());
             } 
+          }
+          else if (ext==".pymat" || ext==".py")
+          {
+            if (ext==".py")
+              PLWARNING("getDataSet: Note that the Python code in a '.py' file must return a pl.VMatrix");
+            string code = process_pyplearn_script(datasetstring);
+            vm = dynamic_cast<VMatrix*>(newObject(code));
+            if (vm.isNull())
+                PLERROR("getDataSet: Object described in %s is not a VMatrix subclass",datasetstring.c_str());
           }
           else if(ext==".amat") {
             // Check if the extension is ".bin.amat".
