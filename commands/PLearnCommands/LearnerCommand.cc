@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LearnerCommand.cc,v 1.11 2005/01/13 19:25:48 tihocan Exp $ 
+   * $Id: LearnerCommand.cc,v 1.12 2005/01/17 15:49:00 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -59,21 +59,37 @@ LearnerCommand::LearnerCommand():
                   "Allows to train, use and test a learner",
 
                   "learner train <learner_spec.plearn> <trainset.vmat> <trained_learner.psave>\n"
-                  "  -> Will train the specified learner on the specified trainset and save the resulting trained learner as trained_learner.psave\n"
+                  "  -> Will train the specified learner on the specified trainset and save the resulting trained learner as\n"
+                  "     trained_learner.psave\n"
+                  "\n"
                   "learner test <trained_learner.psave> <testset.vmat> <cost.stats> [<outputs.pmat>] [<costs.pmat>]\n"
-                  "  -> Tests the specified learner on the testset. Will produce a cost.stats file (viewable with the plearn stats command) and optionally saves individual outputs and costs\n"
-                  "learner compute_outputs <trained_learner.psave> <test_inputs.vmat> <outputs.pmat> (there is 'learner co' as a shortcut for compute_outputs)\n"
+                  "  -> Tests the specified learner on the testset. Will produce a cost.stats file (viewable with the plearn stats\n"
+                  "     command) and optionally saves individual outputs and costs\n"
+                  "\n"
+                  "learner compute_outputs <trained_learner.psave> <test_inputs.vmat> <outputs.pmat> (or 'learner co' as a shortcut)\n"
+                  "\n"
                   // "learner compute_costs <trained_learner.psave> <testset.vmat> <outputs.pmat> <costs.pmat>\n" 
                   "learner compute_outputs_on_1D_grid <trained_learner.psave> <gridoutputs.pmat> <xmin> <xmax> <nx> (shortcut: learner cg1)\n"
-                  "  -> Computes output of learner on nx equally spaced points in range [xmin, xmax] and writes the list of (x,output) in gridoutputs.pmat \n"
+                  "  -> Computes output of learner on nx equally spaced points in range [xmin, xmax] and writes the list of (x,output)\n"
+                  "     in gridoutputs.pmat \n"
+                  "\n"
                   "learner compute_outputs_on_2D_grid <trained_learner.psave> <gridoutputs.pmat> <xmin> <xmax> <ymin> <ymax> <nx> <ny> (shortcut: learner cg2)\n"
-                  "  -> Computes output of learner on the regular 2d grid specified and writes the list of (x,y,output) in gridoutputs.pmat \n"
+                  "  -> Computes output of learner on the regular 2d grid specified and writes the list of (x,y,output) in gridoutputs.pmat\n"
+                  "\n"
                   "learner compute_outputs_on_auto_grid <trained_learner.psave> <gridoutputs.pmat> <trainset.vmat> <nx> [<ny>] (shortcut: learner cg)\n"
-                  "  -> Automatically determines a bounding-box from the trainset (enlarged by 5%), and computes the output along a regular 1D grid of <nx> points or a regular 2D grid of <nx>*<ny> points. (Note: you can also invoke command vmat bbox to determine the bounding-box by yourself, and then invoke learner cg1 or learner cg2 appropriately)\n"
+                  "  -> Automatically determines a bounding-box from the trainset (enlarged by 5%), and computes the output along a\n"
+                  "     regular 1D grid of <nx> points or a regular 2D grid of <nx>*<ny> points. (Note: you can also invoke command vmat\n"
+                  "     bbox to determine the bounding-box by yourself, and then invoke learner cg1 or learner cg2 appropriately)\n"
+                  "\n"
                   "learner analyze_inputs <data.vmat> <results.pmat> <epsilon> <learner_1> ... <learner_n>\n"
-                  "\nThe datasets do not need to be .vmat they can be any valid vmatrix (.amat .pmat .dmat)"
+                  "  -> Analyze the influence of inputs of given learners. The output of each sample in the data VMatrix is computed\n"
+                  "     when each input is perturbed, so as to estimate the derivative of the output with respect to the input. This\n"
+                  "     is averaged over all samples and all learners so as to estimate the influence of each input. In the results.pmat\n"
+                  "     file, are stored the average, variance, min and max of the derivative for all inputs (and outputs).\n"
+                  "\n"
+                  "The datasets do not need to be .vmat they can be any valid vmatrix (.amat .pmat .dmat)"
                   ) 
-  {}
+{}
 
 ///////////
 // train //
