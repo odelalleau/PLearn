@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: DoubleAccessSparseMatrix_impl.h,v 1.5 2004/02/26 07:06:55 nova77 Exp $ 
+ * $Id: DoubleAccessSparseMatrix_impl.h,v 1.6 2004/09/13 19:40:04 kermorvc Exp $ 
  ******************************************************* */
 
 /*! \file DoubleAccessSparseMatrix_impl.h */
@@ -170,7 +170,7 @@ void DoubleAccessSparseMatrix<T>::clearElem(int i, int j)
 }
 
 template <class T>
-T DoubleAccessSparseMatrix<T>::get(int i, int j)
+T DoubleAccessSparseMatrix<T>::get(int i, int j) const
 {
 #ifdef BOUNDCHECK      
   if (i < 0 || i >= height || j < 0 || j >= width)
@@ -178,15 +178,15 @@ T DoubleAccessSparseMatrix<T>::get(int i, int j)
 #endif
   if (mode == ROW_WISE)
   {
-    map<int, T>& row_i = rows[i];
-    typename map<int, T>::iterator it = row_i.find(j);
+    const map<int, T>& row_i = rows[i];
+    typename map<int, T>::const_iterator it = row_i.find(j);
     if (it == row_i.end())
       return null_elem;
     return it->second;
   } else
   {
-    map<int, T>& col_j = cols[j];
-    typename map<int, T>::iterator it = col_j.find(i);
+    const map<int, T>& col_j = cols[j];
+    typename map<int, T>::const_iterator it = col_j.find(i);
     if (it == col_j.end())
       return null_elem;
     return it->second;
@@ -293,7 +293,7 @@ map<int, T>& DoubleAccessSparseMatrix<T>::getRow(int i)
 }
 
 template <class T>
-map<int, T>& DoubleAccessSparseMatrix<T>::getCol(int j)
+const map<int, T>& DoubleAccessSparseMatrix<T>::getCol(int j)const
 {
   if (mode == COLUMN_WISE || double_access)
   {

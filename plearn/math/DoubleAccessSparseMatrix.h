@@ -115,9 +115,9 @@ public:
 
   virtual void clearElem(int i, int j);
 
-  virtual T get(int i, int j);
+  virtual T get(int i, int j) const;
 
-  virtual T operator()(int i, int j) { return get(i, j); }
+  virtual T operator()(int i, int j)const { return get(i, j); }
 
   virtual bool exists(int i, int j);
 
@@ -129,7 +129,7 @@ public:
 
   virtual map<int, T>& getRow(int i);
   
-  virtual map<int, T>& getCol(int j);
+  virtual const map<int, T>& getCol(int j)const;
 
   virtual void addRow(map<int, T>& row);
 
