@@ -2,11 +2,9 @@
 
 // -*- C++ -*-
 
-// Distribution.h
+// LocallyWeightedDistribution.h
 // 
-// Copyright (C) *YEAR* *AUTHOR(S)* 
-// ...
-// Copyright (C) *YEAR* *AUTHOR(S)* 
+// Copyright (C) 2002 Pascal Vincent
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -37,39 +35,37 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Distribution.h,v 1.2 2002/10/22 04:49:19 plearner Exp $ 
+   * $Id: LocallyWeightedDistribution.h,v 1.1 2002/10/22 04:49:19 plearner Exp $ 
    ******************************************************* */
 
-/*! \file Distribution.h */
-#ifndef Distribution_INC
-#define Distribution_INC
+/*! \file LocallyWeightedDistribution.h */
+#ifndef LocallyWeightedDistribution_INC
+#define LocallyWeightedDistribution_INC
 
-#include "Learner.h"
+#include "Distribution.h"
 
 namespace PLearn <%
 using namespace std;
 
-class Distribution: public Learner
+class LocallyWeightedDistribution: public Distribution
 {
 protected:
-  // *********************
-  // * protected options *
-  // *********************
+  mutable Vec trainvec; //<! Will contain the current training sample
+  mutable Vec weights; //<! will contain the "localization" weights for the current test point
 
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
-    
 public:
 
-  typedef Learner inherited;
+  typedef Distribution inherited;
 
   // ************************
   // * public build options *
   // ************************
 
-  //! A string where the characters have the following meaning:
-  //! 'l'->log_density, 'd' -> density, 'c' -> cdf, 's' -> survival_fn, 'e' -> expectation, 'v' -> variance
-  string use_returns_what;
+  //! The kernel that will be used to locally weigh the samples
+  Ker weighting_kernel;
+
+  //! The distribution that will be trained with local weights
+  PP<Distribution> localdistr; 
 
   // ****************
   // * Constructors *
@@ -77,7 +73,7 @@ public:
 
   // Default constructor, make sure the implementation in the .cc
   // initializes all fields to reasonable default values.
-  Distribution();
+  LocallyWeightedDistribution();
 
 
   // ******************
@@ -105,10 +101,10 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(Distribution);
+  DECLARE_NAME_AND_DEEPCOPY(LocallyWeightedDistribution);
 
   // *******************
-  // * Learner methods *
+  // * Distribution methods *
   // *******************
 
   //! trains the model
@@ -117,14 +113,11 @@ public:
   //! computes the ouptu of a trained model
   virtual void use(const Vec& input, Vec& output);
 
-
   //! return log of probability density log(p(x))
   virtual real log_density(Vec x) const;
 
-  //! return probability density p(x)
-  //! [ default version returns exp(log_density(x)) ]
-  virtual real density(Vec x) const;
-  
+
+  /*
   //! return survival fn = P(X>x)
   virtual real survival_fn(Vec x) const;
 
@@ -136,11 +129,12 @@ public:
 
   //! return Var[X]
   virtual real variance() const;
+  */
    
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(Distribution);
+  DECLARE_OBJECT_PTR(LocallyWeightedDistribution);
   
 %> // end of namespace PLearn
 

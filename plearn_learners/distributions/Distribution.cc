@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Distribution.cc,v 1.1 2002/10/21 21:42:08 zouave Exp $ 
+   * $Id: Distribution.cc,v 1.2 2002/10/22 04:49:19 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Distribution.cc */
@@ -47,46 +47,37 @@ namespace PLearn <%
 using namespace std;
 
 Distribution::Distribution() 
-  :Learner( /* ### inputsize */ 0, /* targetsize */ 0, /* outputsize */ 0)
-/* ### Initialise all other fields here */
-  {
-    // ### Possibly call setTestCostFunctions(...) to define the cost functions 
-    // ### you are interested in (these are used by the default useAndCost() method,
-    // ### which is called by the default test() method).
-    // ### ex: 
-    // setTestCostFunctions(squared_error());
-
-    // ### You may also call setTestStatistics(...) if the Learner-default 'mean' and 'stderr' 
-    // ### statistics are not appropriate...
-
-    // ### You may or may not want to call build_() to finish building the object
-    // build_();
-  }
+{
+    use_returns_what = "l"; // by default, return log_density
+    
+    // cost function is -log_density
+    setTestCostFunctions(neg_output_costfunc());
+}
 
 
-  IMPLEMENT_NAME_AND_DEEPCOPY(Distribution);
+IMPLEMENT_NAME_AND_DEEPCOPY(Distribution);
 
-  void Distribution::declareOptions(OptionList& ol)
-  {
-    // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-    // ### OptionBase::tuningoption. Another possible flag to be combined with
-    // ### is OptionBase::nosave
-
-    declareOption(ol, "use_returns_what", &Distribution::use_returns_what, OptionBase::buildoption,
-                  "A string where the characters have the following meaning: \n"
-		  "'d' -> density, 'c' -> cdf, 's' -> survival_fn, 'e' -> expectation, 'v' -> variance");
-
-    // Now call the parent class' declareOptions
-    inherited::declareOptions(ol);
-  }
+void Distribution::declareOptions(OptionList& ol)
+{
+  // ### Declare all of this object's options here
+  // ### For the "flags" of each option, you should typically specify  
+  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+  // ### OptionBase::tuningoption. Another possible flag to be combined with
+  // ### is OptionBase::nosave
+  
+  declareOption(ol, "use_returns_what", &Distribution::use_returns_what, OptionBase::buildoption,
+                "A string where the characters have the following meaning: \n"
+                "'l'-> log_density, 'd' -> density, 'c' -> cdf, 's' -> survival_fn, 'e' -> expectation, 'v' -> variance");
+  
+  // Now call the parent class' declareOptions
+  inherited::declareOptions(ol);
+}
 
   string Distribution::help() const
   {
     // ### Provide some useful description of what the class is ...
     return 
-      "Distribution implements a ..."
+      "Distribution is the base class for distributions."
       + optionHelp();
   }
 
@@ -112,80 +103,75 @@ Distribution::Distribution()
 
 
   void Distribution::train(VMat training_set)
-  { 
-    if(training_set->width() != inputsize()+targetsize())
-      PLERROR("In Distribution::train(VMat training_set) training_set->width() != inputsize()+targetsize()");
+{ 
+  if(training_set->width() != inputsize()+targetsize())
+    PLERROR("In Distribution::train(VMat training_set) training_set->width() != inputsize()+targetsize()");
+  
+  setTrainingSet(training_set);
+  
+  // ### Please implement the actual training of the model.
+  // ### For models with incremental training, to benefit 
+  // ### from the "testing during training" and early-stopping 
+  // ### mechanisms, you should make sure to call measure at 
+  // ### every "epoch" (whatever epoch means for your algorithm).
+  // ### ex:
+  // if(measure(epoch,costvec)) 
+  //     break; // exit training loop because early-stopping contditions were met
+}
 
-    setTrainingSet(training_set);
+void Distribution::use(const Vec& input, Vec& output)
+{
+  int l = use_returns_what.length();
+  for(int i=0; i<l; i++)
+    {
+      switch(use_returns_what[i])
+        {
+        case 'l':
+          output[i] = log_density(input);
+          break;
+        case 'd':
+          output[i] = density(input);
+          break;
+        case 'c':
+          output[i] = cdf(input);
+          break;
+        case 's':
+          output[i] = survival_fn(input);
+          break;
+        case 'e':
+          output[i] = expectation();
+          break;
+        case 'v':
+          output[i] = variance();
+          break;
+        default:
+          PLERROR("In Distribution::use unknown use_returns_what character");
+        }
+    }
+}
 
-    // ### Please implement the actual training of the model.
-    // ### For models with incremental training, to benefit 
-    // ### from the "testing during training" and early-stopping 
-    // ### mechanisms, you should make sure to call measure at 
-    // ### every "epoch" (whatever epoch means for your algorithm).
-    // ### ex:
-    // if(measure(epoch,costvec)) 
-    //     break; // exit training loop because early-stopping contditions were met
-  }
+void Distribution::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+{
+  Learner::makeDeepCopyFromShallowCopy(copies);
+}
 
-  void Distribution::use(const Vec& input, Vec& output)
-  {
-    int l = use_returns_what.length();
-    for(int i=0; i<l; i++)
-      {
-	switch(use_returns_what[i])
-	  {
-	  case 'd':
-	    output[i] = density(input);
-	    break;
-	  case 'c':
-	    output[i] = cdf(input);
-	    break;
-	  case 's':
-	    output[i] = survival_fn(input);
-	    break;
-	  case 'e':
-	    output[i] = expectation();
-	    break;
-	  case 'v':
-	    output[i] = variance();
-	    break;
-	  }
-      }
-    // ### You should redefine this method to compute the output
-    // ### corresponfding to a new test input.
-  }
-
-  void Distribution::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
-  {
-    Learner::makeDeepCopyFromShallowCopy(copies);
-
-    // ### Call deepCopyField on all "pointer-like" fields 
-    // ### that you wish to be deepCopied rather than 
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("Distribution::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
-  }
-
-
+real Distribution::log_density(Vec x) const
+{ PLERROR("density not implemented for this Distribution"); return 0; }
 
 real Distribution::density(Vec x) const
-{ PLERROR("density not implemented for this Distribution"); }
+{ return exp(log_density(x)); }
   
-real Distribution::survival_fn(Vec x) const;
-{ PLERROR("survival_fn not implemented for this Distribution"); }
+real Distribution::survival_fn(Vec x) const
+{ PLERROR("survival_fn not implemented for this Distribution"); return 0; }
 
-real Distribution::cdf(Vec x) const;
-{ PLERROR("cdf not implemented for this Distribution"); }
+real Distribution::cdf(Vec x) const
+{ PLERROR("cdf not implemented for this Distribution"); return 0; }
 
-real Distribution::expectation() const;
-{ PLERROR("expectation not implemented for this Distribution"); }
+real Distribution::expectation() const
+{ PLERROR("expectation not implemented for this Distribution"); return 0; }
 
-real Distribution::variance() const;
-{ PLERROR("variance not implemented for this Distribution"); }
+real Distribution::variance() const
+{ PLERROR("variance not implemented for this Distribution"); return 0; }
 
 
 

@@ -10,9 +10,9 @@ lisaplearndir = os.environ.get('LISAPLEARNDIR', os.path.join(homedir,'LisaPLearn
 
 libdir = '/u/lisa/local/'+platform+'/lib'
 
-if sys.version.find('Mandrake Linux 8.2')>=0:
+if string.find(sys.version, 'Mandrake Linux 8.2')>=0:
     host_os = ('linux','mdk',8,2)
-elif sys.version.find('Red Hat Linux 7.2')>=0:
+elif string.find(sys.version, 'Red Hat Linux 7.2')>=0:
     host_os = ('linux','rh',7,2)
 else:
     host_os= ('?','?',0,0)
