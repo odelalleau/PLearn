@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AutoRunCommand.cc,v 1.3 2004/02/20 21:11:40 chrish42 Exp $ 
+   * $Id: AutoRunCommand.cc,v 1.4 2004/02/26 18:22:42 nova77 Exp $ 
    ******************************************************* */
 
 /*! \file AutoRunCommand.cc */
@@ -42,8 +42,13 @@
 #include "AutoRunCommand.h"
 #include "RunCommand.h"
 #include "TVec.h"
-//#include "fileutils.h"
-//#include <unistd.h>
+
+#include "fileutils.h"
+
+// norman: added check for win32
+#ifndef WIN32
+#include <unistd.h>
+#endif
 
 namespace PLearn {
 using namespace std;
