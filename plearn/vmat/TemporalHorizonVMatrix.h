@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: TemporalHorizonVMatrix.h,v 1.3 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: TemporalHorizonVMatrix.h,v 1.4 2004/04/05 23:07:07 morinf Exp $
    ******************************************************* */
 
 
@@ -72,7 +72,6 @@ public:
 
   static void declareOptions(OptionList &ol);
 
-  static string help();
   virtual void build();
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 

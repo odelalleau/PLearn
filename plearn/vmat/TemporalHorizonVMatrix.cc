@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: TemporalHorizonVMatrix.cc,v 1.3 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: TemporalHorizonVMatrix.cc,v 1.4 2004/04/05 23:07:07 morinf Exp $
    ******************************************************* */
 
 #include "TemporalHorizonVMatrix.h"
@@ -46,7 +46,8 @@ using namespace std;
 
 /** TemporalHorizonVMatrix **/
 
-PLEARN_IMPLEMENT_OBJECT(TemporalHorizonVMatrix, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(TemporalHorizonVMatrix, "ONE LINE DESCR",
+                        "    VMat class that delay the last entries of an underlying VMat by a certain horizon.\n");
 
 TemporalHorizonVMatrix::TemporalHorizonVMatrix(VMat the_distr, int the_horizon, int target_size)
   : inherited(the_distr.length()-the_horizon, the_distr->width()),
@@ -128,25 +129,17 @@ void TemporalHorizonVMatrix::build()
 ////////////
 void TemporalHorizonVMatrix::build_()
 {
-  length_ = distr->length()-horizon;
-  width_ = distr->width();
-  fieldinfos = distr->fieldinfos;
+  if (distr) {
+    length_ = distr->length()-horizon;
+    width_ = distr->width();
+    fieldinfos = distr->fieldinfos;
 
-  row_delay.resize(width());
-  for (int i=0; i<width(); i++)
-    row_delay[i] = i<width()-targetsize ? 0 : horizon;
+    row_delay.resize(width());
+    for (int i=0; i<width(); i++)
+        row_delay[i] = i<width()-targetsize ? 0 : horizon;
 
-  defineSizes(distr->inputsize(), distr->targetsize(), distr->weightsize());
-}
-
-//////////
-// help //
-//////////
-string TemporalHorizonVMatrix::help()
-{
-  return
-    "    VMat class that delay the last entries of an underlying VMat by a certain horizon.\n"
-    + optionHelp();
+    defineSizes(distr->inputsize(), distr->targetsize(), distr->weightsize());
+  }
 }
 
 } // end of namespace PLearn

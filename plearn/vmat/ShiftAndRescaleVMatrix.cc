@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ShiftAndRescaleVMatrix.cc,v 1.7 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: ShiftAndRescaleVMatrix.cc,v 1.8 2004/04/05 23:05:10 morinf Exp $
    ******************************************************* */
 
 #include "ShiftAndRescaleVMatrix.h"
@@ -46,7 +46,8 @@ using namespace std;
 
 /** ShiftAndRescaleVMatrix **/
 
-PLEARN_IMPLEMENT_OBJECT(ShiftAndRescaleVMatrix, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(ShiftAndRescaleVMatrix, "ONE LINE DESCR",
+                        "ShiftAndRescaleVMatrix allows to shift and scale the first n_inputs columns of an underlying_vm.\n");
 
 ShiftAndRescaleVMatrix::
 ShiftAndRescaleVMatrix(VMat underlying_vm, Vec the_shift, Vec the_scale)
@@ -96,29 +97,30 @@ void ShiftAndRescaleVMatrix::declareOptions(OptionList& ol)
 
 void ShiftAndRescaleVMatrix::build_()
 {
-  length_ = vm->length();
-  width_ = vm->width();
-  writable = vm->isWritable();
-  if(inputsize_<0)
-    inputsize_ = vm->inputsize();
-  if(targetsize_<0)
-    targetsize_ = vm->targetsize();
-  if(weightsize_<0)
-    weightsize_ = vm->weightsize();
-  setMtime(vm->getMtime());
-  if (vm->getMetaDataDir() != "") {
-    setMetaDataDir(vm->getMetaDataDir());
-  }
-  setAlias(vm->getAlias());
-  fieldinfos = vm->getFieldInfos();
-  if (automatic)
+  if (vm) {
+    length_ = vm->length();
+    width_ = vm->width();
+    writable = vm->isWritable();
+    if(inputsize_<0)
+      inputsize_ = vm->inputsize();
+    if(targetsize_<0)
+      targetsize_ = vm->targetsize();
+    if(weightsize_<0)
+      weightsize_ = vm->weightsize();
+    setMtime(vm->getMtime());
+    if (vm->getMetaDataDir() != "") {
+      setMetaDataDir(vm->getMetaDataDir());
+    }
+    setAlias(vm->getAlias());
+    fieldinfos = vm->getFieldInfos();
+    if (automatic)
     {
       if (n_inputs<0)
-        {
-          n_inputs = vm->inputsize();
-          if (n_inputs<0)
-            PLERROR("ShiftAndRescaleVMatrix: either n_inputs should be provided explicitly or the underlying VMatrix should have a set value of inputsize");
-        }
+      {
+        n_inputs = vm->inputsize();
+        if (n_inputs<0)
+          PLERROR("ShiftAndRescaleVMatrix: either n_inputs should be provided explicitly or the underlying VMatrix should have a set value of inputsize");
+      }
       if (n_train>0)
         computeMeanAndStddev(vm.subMatRows(0,n_train), shift, scale);
       else
@@ -126,15 +128,16 @@ void ShiftAndRescaleVMatrix::build_()
       negateElements(shift);
       for (int i=0;i<scale.length();i++) 
         if (scale[i]==0)
-          {
-            PLWARNING("ShiftAndRescale: data column number %d is constant",i);
-            scale[i]=1;
-          }
+        {
+          PLWARNING("ShiftAndRescale: data column number %d is constant",i);
+          scale[i]=1;
+        }
       invertElements(scale);
       shift.subVec(n_inputs,shift.length()-n_inputs).fill(0);
       scale.subVec(n_inputs,shift.length()-n_inputs).fill(1);
     }
-  reset_dimensions();
+    reset_dimensions();
+  }
 }
 
                                          
@@ -148,13 +151,6 @@ void ShiftAndRescaleVMatrix::getSubRow(int i, int j, Vec v) const
   vm->getSubRow(i,j,v);
   for(int jj=0; jj<v.length(); jj++)
     v[jj] = (v[jj] + shift[j+jj]) * scale[j+jj];
-}
-
-string ShiftAndRescaleVMatrix::help()
-{
-  return 
-    "ShiftAndRescaleVMatrix allows to shift and scale the first n_inputs columns of an underlying_vm.\n"
-    + optionHelp();
 }
 
 void ShiftAndRescaleVMatrix::build()

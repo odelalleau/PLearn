@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ShiftAndRescaleVMatrix.h,v 1.5 2004/03/23 23:08:08 morinf Exp $
+   * $Id: ShiftAndRescaleVMatrix.h,v 1.6 2004/04/05 23:05:10 morinf Exp $
    ******************************************************* */
 
 
@@ -57,7 +57,6 @@ using namespace std;
 class ShiftAndRescaleVMatrix: public VMatrix
 {
   typedef VMatrix inherited;
-  PLEARN_DECLARE_OBJECT(ShiftAndRescaleVMatrix);
 
 public:
   //!  x'_i = (x_i+shift_i)*scale_i
@@ -73,6 +72,8 @@ public:
   ShiftAndRescaleVMatrix(VMat underlying_distr, Vec the_shift, Vec the_scale);
   ShiftAndRescaleVMatrix(VMat underlying_distr, int n_inputs);
   ShiftAndRescaleVMatrix(VMat underlying_distr, int n_inputs, int n_train);
+
+  PLEARN_DECLARE_OBJECT(ShiftAndRescaleVMatrix);
 
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;
@@ -95,9 +96,6 @@ protected:
 public:
   // simply calls inherited::build() then build_() 
   virtual void build();
-
-  //! Provides a help message describing this class
-  static string help();
 
 };
 
