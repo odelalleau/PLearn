@@ -61,6 +61,7 @@ public:
   PLEARN_DECLARE_OBJECT(DERIVEDCLASS);
 
 };
+DECLARE_OBJECT_PTR(DERIVEDCLASS);
 
 %> // end of namespace PLearn
 #endif
