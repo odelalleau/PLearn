@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.h,v 1.15 2004/07/21 16:30:56 chrish42 Exp $
+   * $Id: Learner.h,v 1.16 2005/02/01 14:43:27 tihocan Exp $
    ******************************************************* */
 
 
@@ -388,9 +388,9 @@ using namespace std;
     virtual void oldread(istream& in);
 
     //! DEPRECATED. Call PLearn::save(filename, object) instead
-    void save(const string& filename="") const;
+    void save(const PPath& filename="") const;
     //! DEPRECATED. Call PLearn::load(filename, object) instead
-    void load(const string& filename="");
+    void load(const PPath& filename="");
 
     //! stopping condition, by default when a file
     //! named experiment_name + "_stop" is found to exist.

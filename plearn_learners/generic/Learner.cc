@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.cc,v 1.22 2004/12/22 19:38:16 chrish42 Exp $
+   * $Id: Learner.cc,v 1.23 2005/02/01 14:43:27 tihocan Exp $
    ******************************************************* */
 
 #include "Learner.h"
@@ -896,7 +896,7 @@ Array<string> Learner::trainObjectiveNames() const
     readFooter(in,"Learner");
   }
 
-  void Learner::save(const string& filename) const
+  void Learner::save(const PPath& filename) const
   {
 #if USING_MPI
     if (PLMPI::rank!=0 && !force_saving_on_all_processes)
@@ -910,7 +910,7 @@ Array<string> Learner::trainObjectiveNames() const
       PLERROR("Called Learner::save with an empty filename, while experiment_name is also empty. What file name am I supposed to use???? Anyway this method is DEPRECATED, you should call directly function PLearn::save(whatever_filename_you_want, the_object) ");
   }
 
-  void Learner::load(const string& filename)
+  void Learner::load(const PPath& filename)
   {
     if (!filename.empty())
       Object::load(filename);
