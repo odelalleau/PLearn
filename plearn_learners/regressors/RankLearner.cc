@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RankLearner.cc,v 1.1 2004/10/29 16:03:03 tihocan Exp $ 
+   * $Id: RankLearner.cc,v 1.2 2004/10/29 17:46:44 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -148,7 +148,6 @@ void RankLearner::computeOutputAndCosts(const Vec& input, const Vec& target,
   PLearner::computeOutputAndCosts(input, target, output, costs);
 }
 
-
 ////////////
 // forget //
 ////////////
@@ -196,7 +195,9 @@ void RankLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 int RankLearner::outputsize() const
 {
   // The outputsize is the usual outputsize (the one from the training set).
-  return PLearner::outputsize();
+  // Currently this can only be one, because we only deal with real targets
+  // (they are easier to sort).
+  return 1;
 }
 
 ////////////////////
