@@ -322,11 +322,11 @@ void SequentialValidation::run()
 #endif
     if (report_memory_usage)
       reportMemoryUsage(t);
-    
-    VMat sub_train = trainVMat(t);
-    VMat sub_test = testVMat(t);
-    VMat only_test = sub_test.subMatRows(sub_test.length()-1, 1);
 
+    // Compute training set.  Don't compute test set right away in case
+    // it's a complicated structure that cannot co-exist with an
+    // instantiated training set
+    VMat sub_train = trainVMat(t);
     string splitdir = expdir+"train_t="+tostring(t)+"/";
     if (save_data_sets || save_initial_model || save_stat_collectors ||
         save_final_model)
@@ -349,6 +349,7 @@ void SequentialValidation::run()
 
     // TEST: simply use computeOutputAndCosts for 1 observation in this
     // implementation
+    VMat sub_test = testVMat(t);
     sub_test.getExample(t, input, target, weight);
     test_stats->forget();
     learner->setTestSet(sub_test);           // temporary hack
