@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatIO.cc,v 1.14 2004/07/30 13:18:25 tihocan Exp $
+   * $Id: MatIO.cc,v 1.15 2004/08/02 21:04:00 mariusmuja Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -1144,6 +1144,11 @@ Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols,
       fgets(buffer,convert_UCIMLDB_BUF_LEN,f);
     } while (!feof(f) && (strcmp(buffer,"\n")==0 || strncmp(buffer,";;;",3)==0));
 
+  
+    // ignore everything after '|'
+    char *comm = strchr(buffer,'|');
+    if (comm) *comm = '\n';
+    
     line_len=strlen(buffer);
     cp=word=buffer;
     for (j=0;j<n_cols;j++)
@@ -1154,8 +1159,8 @@ Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols,
       /*  is this symbolic?  */
       cp2=word;
       string the_val = word;
-      while (!isalpha((int)*cp2) && *cp2!='?' && cp2 < cp) cp2++;
-      if (isalpha((int)*cp2) && *cp2!='?') { 
+      
+      if (!pl_isnumber(word) && *cp2!='?') { 
         /*  yes, non-missing symbolic character was found:  */
         if (symbols[j])
         { 
@@ -1215,12 +1220,18 @@ Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols,
       } while (!feof(f) && (strcmp(buffer,"\n")==0 || strncmp(buffer,";;;",3)==0));
     }
 
+
     for (i=0;i<n_rows;i++)
     {
       /*  read a row  */
       do {
         fgets(buffer,convert_UCIMLDB_BUF_LEN,f);
       } while (!feof(f) && (strcmp(buffer,"\n")==0 || strncmp(buffer,";;;",3)==0));
+
+      
+      // ignore everything after '|'
+      char *comm = strchr(buffer,'|');
+      if (comm) *comm = '\n';
 
       line_len=strlen(buffer);
       cp=word=buffer;
