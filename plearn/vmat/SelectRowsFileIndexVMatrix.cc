@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsFileIndexVMatrix.cc,v 1.5 2004/03/23 23:08:08 morinf Exp $
+   * $Id: SelectRowsFileIndexVMatrix.cc,v 1.6 2004/04/05 23:03:57 morinf Exp $
    ******************************************************* */
 
 #include "SelectRowsFileIndexVMatrix.h"
@@ -45,16 +45,45 @@ using namespace std;
 
 /** SelectRowsFileIndexVMatrix **/
 
+PLEARN_IMPLEMENT_OBJECT(SelectRowsFileIndexVMatrix, "ONE LINE DESC", "NO HELP");
+
 SelectRowsFileIndexVMatrix::SelectRowsFileIndexVMatrix()
 {
 }
 
 SelectRowsFileIndexVMatrix::SelectRowsFileIndexVMatrix(VMat the_distr, const string& indexfile)
-  : inherited(0,the_distr->width()), distr(the_distr), indices(indexfile) 
+    : inherited(0,the_distr->width()), distr(the_distr), indices(indexfile), index_file(indexfile)
 {
-  fieldinfos = the_distr->fieldinfos;
-  length_ = indices.length();
-  defineSizes(the_distr->inputsize(), the_distr->targetsize(), the_distr->weightsize());
+    build();
+}
+
+void
+SelectRowsFileIndexVMatrix::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+SelectRowsFileIndexVMatrix::build_()
+{
+  if (distr) {
+    fieldinfos = distr->fieldinfos;
+    length_ = indices.length();
+    if (length_ == -1) {
+      indices.open(index_file);
+      length_ = indices.length();
+    }
+    defineSizes(distr->inputsize(), distr->targetsize(), distr->weightsize());
+  }
+}
+
+void
+SelectRowsFileIndexVMatrix::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "distr", &SelectRowsFileIndexVMatrix::distr, OptionBase::buildoption, "");
+    declareOption(ol, "index_file", &SelectRowsFileIndexVMatrix::index_file, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
 }
 
 real SelectRowsFileIndexVMatrix::get(int i, int j) const

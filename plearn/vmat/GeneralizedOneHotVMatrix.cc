@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: GeneralizedOneHotVMatrix.cc,v 1.3 2004/03/23 23:08:08 morinf Exp $
+   * $Id: GeneralizedOneHotVMatrix.cc,v 1.4 2004/04/05 22:54:05 morinf Exp $
    ******************************************************* */
 
 #include "GeneralizedOneHotVMatrix.h"
@@ -45,6 +45,8 @@ using namespace std;
 
 
 /** GeneralizedOneHotVMatrix **/
+
+PLEARN_IMPLEMENT_OBJECT(GeneralizedOneHotVMatrix, "ONE LINE DESC", "ONE LINE HELP");
 
 GeneralizedOneHotVMatrix::GeneralizedOneHotVMatrix()
 {
@@ -62,6 +64,29 @@ GeneralizedOneHotVMatrix::GeneralizedOneHotVMatrix(VMat the_distr, Vec the_index
       distr->length()-1);
   if (index.length()!=nclasses.length() || cold_value.length()!=hot_value.length() || index.length()!=hot_value.length())
     PLERROR("In GeneralizedOneHotVMatrix: index, nclasses, cold_value and hot_value must have same length");
+}
+
+void
+GeneralizedOneHotVMatrix::build()
+{
+  inherited::build();
+  build_();
+}
+
+void
+GeneralizedOneHotVMatrix::build_()
+{
+}
+
+void
+GeneralizedOneHotVMatrix::declareOptions(OptionList &ol)
+{
+  declareOption(ol, "distr", &GeneralizedOneHotVMatrix::distr, OptionBase::buildoption, "");
+  declareOption(ol, "index", &GeneralizedOneHotVMatrix::index, OptionBase::buildoption, "");
+  declareOption(ol, "nclasses", &GeneralizedOneHotVMatrix::nclasses, OptionBase::buildoption, "");
+  declareOption(ol, "cold_value", &GeneralizedOneHotVMatrix::cold_value, OptionBase::buildoption, "");
+  declareOption(ol, "hot_value", &GeneralizedOneHotVMatrix::hot_value, OptionBase::buildoption, "");
+  inherited::declareOptions(ol);
 }
 
 void GeneralizedOneHotVMatrix::getRow(int i, Vec v) const

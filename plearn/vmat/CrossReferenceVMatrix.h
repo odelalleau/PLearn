@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CrossReferenceVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
+   * $Id: CrossReferenceVMatrix.h,v 1.4 2004/04/05 22:50:25 morinf Exp $
    ******************************************************* */
 
 
@@ -75,10 +75,20 @@ class CrossReferenceVMatrix: public VMatrix
   //! The column headings are simply the concatenation of the headings in
   //! the two vmatrices.
   CrossReferenceVMatrix(VMat v1, int c1, VMat v2);
+
+  PLEARN_DECLARE_OBJECT(CrossReferenceVMatrix);
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
+
   virtual void getRow(int i, Vec samplevec) const;
   virtual real get(int i, int j) const;
   virtual void reset_dimensions() { PLERROR("CrossReferenceVMatrix::reset_dimensions() not implemented"); }
+private:
+  void build_();
 };
+
+DECLARE_OBJECT_PTR(CrossReferenceVMatrix);
 
 } // end of namespcae PLearn
 #endif

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ExtendedVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
+   * $Id: ExtendedVMatrix.h,v 1.4 2004/04/05 22:52:26 morinf Exp $
    ******************************************************* */
 
 
@@ -80,6 +80,11 @@ public:
                   int the_left_extent, int the_right_extent, 
                   real the_fill_value);
 
+  PLEARN_DECLARE_OBJECT(ExtendedVMatrix);
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
+
   virtual void getRow(int i, Vec v) const;
   virtual void reset_dimensions() 
     { 
@@ -87,8 +92,11 @@ public:
       width_=distr->width()+left_extent+right_extent; 
       length_=distr->length()+top_extent+bottom_extent;
     }
+private:
+  void build_();
 };
 
+DECLARE_OBJECT_PTR(ExtendedVMatrix);
 
 } // end of namespcae PLearn
 #endif

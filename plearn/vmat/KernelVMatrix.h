@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: KernelVMatrix.h,v 1.1 2004/04/02 18:31:56 tihocan Exp $
+   * $Id: KernelVMatrix.h,v 1.2 2004/04/05 22:57:33 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -62,6 +62,7 @@ using namespace std;
 
 class KernelVMatrix: public VMatrix
 {
+    typedef VMatrix inherited;
  //protected:
  //!   KernelVMatrix() : d1(), d2(), ker(), input1(), input2() {}
 protected:
@@ -73,14 +74,23 @@ protected:
   Vec input2;
 
 public:
+  KernelVMatrix();
   KernelVMatrix(VMat data1, VMat data2, Ker the_ker);
+
+  PLEARN_DECLARE_OBJECT(KernelVMatrix);
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
 
   //DECLARE_NAME_AND_DEEPCOPY(KernelVMatrix);
   //virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;
+private:
+    void build_();
 };
 
+DECLARE_OBJECT_PTR(KernelVMatrix);
 
 } // end of namespace PLearn
 

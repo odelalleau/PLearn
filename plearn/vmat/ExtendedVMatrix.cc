@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ExtendedVMatrix.cc,v 1.3 2004/03/23 23:08:08 morinf Exp $
+   * $Id: ExtendedVMatrix.cc,v 1.4 2004/04/05 22:52:26 morinf Exp $
    ******************************************************* */
 
 #include "ExtendedVMatrix.h"
@@ -45,6 +45,8 @@ using namespace std;
 
 
 /** ExtendedVMatrix **/
+
+PLEARN_IMPLEMENT_OBJECT(ExtendedVMatrix, "ONE_LINE_DESC", "ONE_LINE_HELP");
 
 ExtendedVMatrix::ExtendedVMatrix()
   : top_extent(0), bottom_extent(0), left_extent(0), right_extent(0), fill_value(0)
@@ -58,8 +60,32 @@ ExtendedVMatrix::ExtendedVMatrix(VMat the_distr, int the_top_extent, int the_bot
               the_distr->width()+the_left_extent+the_right_extent),
     distr(the_distr), top_extent(the_top_extent), bottom_extent(the_bottom_extent), 
     left_extent(the_left_extent), right_extent(the_right_extent), fill_value(the_fill_value)
-{}
+{
+}
 
+void
+ExtendedVMatrix::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "distr", &ExtendedVMatrix::distr, OptionBase::buildoption, "");
+    declareOption(ol, "top_extent", &ExtendedVMatrix::top_extent, OptionBase::buildoption, "");
+    declareOption(ol, "bottom_extent", &ExtendedVMatrix::bottom_extent, OptionBase::buildoption, "");
+    declareOption(ol, "left_extent", &ExtendedVMatrix::left_extent, OptionBase::buildoption, "");
+    declareOption(ol, "right_extent", &ExtendedVMatrix::right_extent, OptionBase::buildoption, "");
+    declareOption(ol, "fill_value", &ExtendedVMatrix::fill_value, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
+
+void
+ExtendedVMatrix::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+ExtendedVMatrix::build_()
+{
+}
 
 void ExtendedVMatrix::getRow(int i, Vec v) const
 {

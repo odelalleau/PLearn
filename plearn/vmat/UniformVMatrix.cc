@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: UniformVMatrix.cc,v 1.3 2004/03/23 23:08:09 morinf Exp $
+   * $Id: UniformVMatrix.cc,v 1.4 2004/04/05 23:08:23 morinf Exp $
    ******************************************************* */
 
 #include "UniformVMatrix.h"
@@ -47,6 +47,8 @@ using namespace std;
 
 /** Uniform VMatrix **/
 
+PLEARN_IMPLEMENT_OBJECT(UniformVMatrix, "ONE LINE DESC", "NO HELP");
+
 UniformVMatrix::UniformVMatrix()
   : minval(0), maxval(1)
 {
@@ -55,6 +57,26 @@ UniformVMatrix::UniformVMatrix()
 UniformVMatrix::UniformVMatrix(real the_minval, real the_maxval, int the_width)
   : inherited(-1,the_width),minval(the_minval), maxval(the_maxval)
 {}
+
+void
+UniformVMatrix::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+UniformVMatrix::build_()
+{
+}
+
+void
+UniformVMatrix::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "minval", &UniformVMatrix::minval, OptionBase::buildoption, "");
+    declareOption(ol, "maxval", &UniformVMatrix::maxval, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 real UniformVMatrix::get(int i, int j) const
 {

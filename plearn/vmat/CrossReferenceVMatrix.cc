@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CrossReferenceVMatrix.cc,v 1.3 2004/03/23 23:08:08 morinf Exp $
+   * $Id: CrossReferenceVMatrix.cc,v 1.4 2004/04/05 22:50:25 morinf Exp $
    ******************************************************* */
 
 #include "CrossReferenceVMatrix.h"
@@ -46,6 +46,8 @@ using namespace std;
 
 /** CrossReferenceVMatrix **/
 
+PLEARN_IMPLEMENT_OBJECT(CrossReferenceVMatrix, "ONE LINE DESC", "ONE LINE HELP");
+
 CrossReferenceVMatrix::CrossReferenceVMatrix()
   : col1(0)
 {
@@ -54,10 +56,36 @@ CrossReferenceVMatrix::CrossReferenceVMatrix()
 CrossReferenceVMatrix::CrossReferenceVMatrix(VMat v1, int c1, VMat v2)
  : inherited(v1.length(), v1.width()+v2.width()-1), vm1(v1), col1(c1), vm2(v2)
 {
-  fieldinfos = v1->getFieldInfos();
-  fieldinfos &= v2->getFieldInfos();
+    //fieldinfos = v1->getFieldInfos();
+    // fieldinfos &= v2->getFieldInfos();
+  build();
 }
 
+
+void
+CrossReferenceVMatrix::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "vm1", &CrossReferenceVMatrix::vm1, OptionBase::buildoption, "");
+    declareOption(ol, "vm2", &CrossReferenceVMatrix::vm2, OptionBase::buildoption, "");
+    declareOption(ol, "col1", &CrossReferenceVMatrix::col1, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
+
+void
+CrossReferenceVMatrix::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+CrossReferenceVMatrix::build_()
+{
+    if (vm1 && vm2) {
+        fieldinfos = vm1->getFieldInfos();
+        fieldinfos &= vm2->getFieldInfos();
+    }
+}
 
 void CrossReferenceVMatrix::getRow(int i, Vec samplevec) const
 {

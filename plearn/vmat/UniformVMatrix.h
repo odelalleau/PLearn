@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: UniformVMatrix.h,v 1.3 2004/03/23 23:08:09 morinf Exp $
+   * $Id: UniformVMatrix.h,v 1.4 2004/04/05 23:08:23 morinf Exp $
    ******************************************************* */
 
 
@@ -65,10 +65,19 @@ class UniformVMatrix: public VMatrix
   UniformVMatrix(); //!<  default constructor (for automatic deserialization)
 
   UniformVMatrix(real the_minval, real the_maxval, int the_width);    
+
+  PLEARN_DECLARE_OBJECT(UniformVMatrix);
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
+
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;
+private:
+    void build_();
 };
 
+DECLARE_OBJECT_PTR(UniformVMatrix);
 
 } // end of namespcae PLearn
 #endif

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: UniformizeVMatrix.h,v 1.3 2004/03/23 23:08:09 morinf Exp $
+   * $Id: UniformizeVMatrix.h,v 1.4 2004/04/05 23:08:50 morinf Exp $
    ******************************************************* */
 
 
@@ -80,10 +80,19 @@ public:
   UniformizeVMatrix(VMat the_distr, Mat the_bins, Vec the_index,
                     real the_a=0.0, real the_b=1.0);
 
+  PLEARN_DECLARE_OBJECT(UniformizeVMatrix);
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
+
   virtual void getRow(int i, Vec v) const;
   virtual void reset_dimensions()
     { distr->reset_dimensions(); width_=distr->width(); length_=distr->length(); }
+private:
+    void build_();
 };
+
+DECLARE_OBJECT_PTR(UniformizeVMatrix);
 
 } // end of namespcae PLearn
 #endif

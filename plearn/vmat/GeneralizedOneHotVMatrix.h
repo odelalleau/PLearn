@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: GeneralizedOneHotVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
+   * $Id: GeneralizedOneHotVMatrix.h,v 1.4 2004/04/05 22:54:05 morinf Exp $
    ******************************************************* */
 
 
@@ -74,6 +74,12 @@ class GeneralizedOneHotVMatrix: public RowBufferedVMatrix
   GeneralizedOneHotVMatrix(VMat the_distr, Vec the_index, Vec the_nclasses,
                            Vec the_cold_value, Vec the_host_value);
 
+
+  PLEARN_DECLARE_OBJECT(GeneralizedOneHotVMatrix);
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
+
   virtual void getRow(int i, Vec samplevec) const;
   virtual void reset_dimensions() 
     { 
@@ -81,7 +87,12 @@ class GeneralizedOneHotVMatrix: public RowBufferedVMatrix
       width_=distr->width(); 
       length_=distr->length(); 
     }
+
+private:
+    void build_();
 };
+
+DECLARE_OBJECT_PTR(GeneralizedOneHotVMatrix);
 
 /*!   This VMat is built from another VMat and a 'mapping' matrix that indicates how the elements of the 
   last column should be remapped. It's a sort of generalisation of the OneHot VMatrix, which can also

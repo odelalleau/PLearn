@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: OneHotVMatrix.cc,v 1.3 2004/03/23 23:08:08 morinf Exp $
+   * $Id: OneHotVMatrix.cc,v 1.4 2004/04/05 22:59:00 morinf Exp $
    ******************************************************* */
 
 #include "OneHotVMatrix.h"
@@ -45,6 +45,8 @@ using namespace std;
 
 
 /** OneHotVMatrix **/
+
+PLEARN_IMPLEMENT_OBJECT(OneHotVMatrix, "ONE LINE DESC", "NO HELP");
 
 OneHotVMatrix::OneHotVMatrix()
     : nclasses(0), cold_value(0.0), hot_value(1.0)
@@ -56,7 +58,30 @@ OneHotVMatrix::OneHotVMatrix(VMat the_underlying_distr, int the_nclasses, real t
   : inherited(the_underlying_distr->length(), the_underlying_distr->width()+the_nclasses-1),
     underlying_distr(the_underlying_distr), nclasses(the_nclasses),
     cold_value(the_cold_value), hot_value(the_hot_value)
-{}
+{
+}
+
+void
+OneHotVMatrix::build()
+{
+  inherited::build();
+  build_();
+}
+
+void
+OneHotVMatrix::build_()
+{
+}
+
+void
+OneHotVMatrix::declareOptions(OptionList &ol)
+{
+  declareOption(ol, "underlying_distr", &OneHotVMatrix::underlying_distr, OptionBase::buildoption, "");
+  declareOption(ol, "nclasses", &OneHotVMatrix::nclasses, OptionBase::buildoption, "");
+  declareOption(ol, "cold_value", &OneHotVMatrix::cold_value, OptionBase::buildoption, "");
+  declareOption(ol, "hot_value", &OneHotVMatrix::hot_value, OptionBase::buildoption, "");
+  inherited::declareOptions(ol);
+}
 
 void OneHotVMatrix::getRow(int i, Vec samplevec) const
 {

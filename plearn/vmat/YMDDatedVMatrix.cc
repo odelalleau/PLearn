@@ -35,13 +35,15 @@
 
 
 /* *******************************************************      
-   * $Id: YMDDatedVMatrix.cc,v 1.3 2004/03/23 23:08:09 morinf Exp $
+   * $Id: YMDDatedVMatrix.cc,v 1.4 2004/04/05 23:12:54 morinf Exp $
    ******************************************************* */
 
 #include "YMDDatedVMatrix.h"
 
 namespace PLearn {
 using namespace std;
+
+PLEARN_IMPLEMENT_OBJECT(YMDDatedVMatrix, "ONE LINE DESC", "NO HELP");
 
 YMDDatedVMatrix::YMDDatedVMatrix()
 {
@@ -51,7 +53,7 @@ YMDDatedVMatrix::YMDDatedVMatrix(VMat data_, Mat years_, Mat months_, Mat days_)
   : inherited(data_->length(),data_->width()),data(data_), years(years_), 
     months(months_), days(days_), day_of_ith_pos(days_.length())
 {
-  init();
+    build();
 }
 
 YMDDatedVMatrix::YMDDatedVMatrix(Mat& YMD_and_data)
@@ -61,24 +63,32 @@ YMDDatedVMatrix::YMDDatedVMatrix(Mat& YMD_and_data)
     months(YMD_and_data.subMatColumns(1,1)),
     days(YMD_and_data.subMatColumns(2,1)), day_of_ith_pos(YMD_and_data.length())
 {
-  init();
+    build();
 }
 
-void YMDDatedVMatrix::init()
+void
+YMDDatedVMatrix::build()
 {
-  // check that the dates are in increasing chronological order and
-  // compute the pos_of_ith_{year,month,day} vectors
-  if (years.length()!=data->length() ||
-      months.length()!=data->length() ||
-      days.length()!=data->length())
-    PLERROR("YMDDatedVMatrix: arguments should all have the same length");
+    inherited::build();
+    build_();
+}
 
-  // build pos_of_date
-  int first_year = (int)years(0,0);
-  int last_year = (int)years(data->length()-1,0);
-  int ny=last_year-first_year+1;
-  pos_of_date.resize(ny);
-  for (int y=0;y<ny;y++)
+void YMDDatedVMatrix::build_()
+{
+  if (data && years && months && days && day_of_ith_pos) {
+    // check that the dates are in increasing chronological order and
+    // compute the pos_of_ith_{year,month,day} vectors
+    if (years.length()!=data->length() ||
+        months.length()!=data->length() ||
+        days.length()!=data->length())
+      PLERROR("YMDDatedVMatrix: arguments should all have the same length");
+
+    // build pos_of_date
+    int first_year = (int)years(0,0);
+    int last_year = (int)years(data->length()-1,0);
+    int ny=last_year-first_year+1;
+    pos_of_date.resize(ny);
+    for (int y=0;y<ny;y++)
     {
       pos_of_date[y].resize(12,31);
       for (int m=0;m<12;m++)
@@ -86,10 +96,10 @@ void YMDDatedVMatrix::init()
           pos_of_date[y](m,d)= -1; // -1 will mean unseen date
     }
 
-  int n_different_years=1;
-  int n_different_months=1;
-  int n_different_days=1;
-  for (int i=1;i<years.length();i++)
+    int n_different_years=1;
+    int n_different_months=1;
+    int n_different_days=1;
+    for (int i=1;i<years.length();i++)
     {
       if (years(i,0)>years(i-1,0)) 
         {
@@ -125,14 +135,14 @@ void YMDDatedVMatrix::init()
             }
         }
     }
-  pos_of_ith_year.resize(n_different_years+1);
-  pos_of_ith_month.resize(n_different_months+1);
-  pos_of_ith_day.resize(n_different_days+1);
-  int y=1;
-  int m=1;
-  int d=1;
-  day_of_ith_pos[0]=0;
-  for (int i=1;i<years.length();i++)
+    pos_of_ith_year.resize(n_different_years+1);
+    pos_of_ith_month.resize(n_different_months+1);
+    pos_of_ith_day.resize(n_different_days+1);
+    int y=1;
+    int m=1;
+    int d=1;
+    day_of_ith_pos[0]=0;
+    for (int i=1;i<years.length();i++)
     {
       if (years(i,0)>years(i-1,0)) 
         {
@@ -164,9 +174,21 @@ void YMDDatedVMatrix::init()
         }
       day_of_ith_pos[i]=d-1;
     }
-  pos_of_ith_year[y]=data->length();
-  pos_of_ith_month[m]=data->length();
-  pos_of_ith_day[d]=data->length();
+    pos_of_ith_year[y]=data->length();
+    pos_of_ith_month[m]=data->length();
+    pos_of_ith_day[d]=data->length();
+  }
+}
+
+void
+YMDDatedVMatrix::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "data", &YMDDatedVMatrix::data, OptionBase::buildoption, "");
+    declareOption(ol, "years", &YMDDatedVMatrix::years, OptionBase::buildoption, "");
+    declareOption(ol, "months", &YMDDatedVMatrix::months, OptionBase::buildoption, "");
+    declareOption(ol, "days", &YMDDatedVMatrix::days, OptionBase::buildoption, "");
+    declareOption(ol, "day_of_ith_pos", &YMDDatedVMatrix::day_of_ith_pos, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
 }
 
 VMat YMDDatedVMatrix::subDistrRelativeYears(int first_relative_year, int n_years)

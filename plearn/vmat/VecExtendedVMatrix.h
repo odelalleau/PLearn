@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: VecExtendedVMatrix.h,v 1.3 2004/03/23 23:08:09 morinf Exp $
+   * $Id: VecExtendedVMatrix.h,v 1.4 2004/04/05 23:12:21 morinf Exp $
    ******************************************************* */
 
 
@@ -73,6 +73,11 @@ public:
   //! are left empty (fill them yourself)
   VecExtendedVMatrix(VMat underlying, Vec extend_data);
 
+  PLEARN_DECLARE_OBJECT(VecExtendedVMatrix);
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
+
   virtual void getRow(int i, Vec v) const;
   virtual void reset_dimensions() {
     underlying_->reset_dimensions();
@@ -83,8 +88,11 @@ public:
 protected:
   VMat underlying_;
   Vec extend_data_;
+private:
+  void build_();
 };
 
+DECLARE_OBJECT_PTR(VecExtendedVMatrix);
 
 } // end of namespcae PLearn
 #endif

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: PairsVMatrix.cc,v 1.3 2004/03/23 23:08:08 morinf Exp $
+   * $Id: PairsVMatrix.cc,v 1.4 2004/04/05 22:59:40 morinf Exp $
    ******************************************************* */
 
 #include "PairsVMatrix.h"
@@ -46,6 +46,8 @@ using namespace std;
 
 /** PairsVMatrix **/
 
+PLEARN_IMPLEMENT_OBJECT(PairsVMatrix, "ONE LINE DESC", "NO HELP");
+
 PairsVMatrix::PairsVMatrix()
 {
 }
@@ -53,7 +55,28 @@ PairsVMatrix::PairsVMatrix()
 PairsVMatrix::PairsVMatrix(Mat the_data1, Mat the_data2)
   : inherited(data1.width()+data2.width(), data1.length()*data2.length()), 
     data1(the_data1), data2(the_data2)
-{}
+{
+}
+
+void
+PairsVMatrix::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+PairsVMatrix::build_()
+{
+}
+
+void
+PairsVMatrix::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "data1", &PairsVMatrix::data1, OptionBase::buildoption, "");
+    declareOption(ol, "data2", &PairsVMatrix::data2, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 void PairsVMatrix::getRow(int ij, Vec samplevec) const
 {

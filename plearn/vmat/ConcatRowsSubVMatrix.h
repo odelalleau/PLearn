@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsSubVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
+   * $Id: ConcatRowsSubVMatrix.h,v 1.4 2004/04/05 22:49:56 morinf Exp $
    ******************************************************* */
 
 
@@ -82,6 +82,11 @@ class ConcatRowsSubVMatrix: public VMatrix
     ConcatRowsSubVMatrix(VMat the_distr, TVec<int>& the_start, TVec<int>& the_len);
     ConcatRowsSubVMatrix(VMat the_distr, int start1, int len1, int start2, int len2);
 
+    PLEARN_DECLARE_OBJECT(ConcatRowsSubVMatrix);
+    static void declareOptions(OptionList &ol);
+
+    virtual void build();
+
     virtual real get(int i, int j) const;
     virtual void getSubRow(int i, int j, Vec v) const;
     virtual void reset_dimensions() 
@@ -94,7 +99,11 @@ class ConcatRowsSubVMatrix: public VMatrix
     }
     virtual real dot(int i1, int i2, int inputsize) const;
     virtual real dot(int i, const Vec& v) const;
+private:
+    void build_();
 };
+
+DECLARE_OBJECT_PTR(ConcatRowsSubVMatrix);
 
 } // end of namespcae PLearn
 #endif

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsFileIndexVMatrix.h,v 1.5 2004/03/23 23:08:08 morinf Exp $
+   * $Id: SelectRowsFileIndexVMatrix.h,v 1.6 2004/04/05 23:03:57 morinf Exp $
    ******************************************************* */
 
 
@@ -61,6 +61,7 @@ class SelectRowsFileIndexVMatrix: public VMatrix
 protected:
   VMat distr;
   IntVecFile indices;
+  string index_file;
 public:
   // ******************
   // *  Constructors  *
@@ -69,6 +70,11 @@ public:
 
   //! Copy the original fieldinfos upon construction
   SelectRowsFileIndexVMatrix(VMat the_distr, const string& indexfile);
+
+  PLEARN_DECLARE_OBJECT(SelectRowsFileIndexVMatrix);
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
 
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;
@@ -81,8 +87,11 @@ public:
   virtual real dot(int i1, int i2, int inputsize) const;
   virtual real dot(int i, const Vec& v) const;
   virtual void reset_dimensions() { distr->reset_dimensions(); width_=distr->width(); }
+private:
+    void build_();
 };
 
+DECLARE_OBJECT_PTR(SelectRowsFileIndexVMatrix);
 
 } // end of namespcae PLearn
 #endif

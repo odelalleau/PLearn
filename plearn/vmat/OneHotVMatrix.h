@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: OneHotVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
+   * $Id: OneHotVMatrix.h,v 1.4 2004/04/05 22:59:00 morinf Exp $
    ******************************************************* */
 
 
@@ -80,6 +80,12 @@ class OneHotVMatrix: public RowBufferedVMatrix
   //!  (see special case when nclasses==1 desribed above)
   //!  Warning: VMFields are NOT YET handled by this constructor
   OneHotVMatrix(VMat the_underlying_distr, int the_nclasses, real the_cold_value=0.0, real the_host_value=1.0);
+
+  PLEARN_DECLARE_OBJECT(OneHotVMatrix);
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
+
   virtual void getRow(int i, Vec samplevec) const;
   virtual void reset_dimensions() 
     { 
@@ -89,10 +95,14 @@ class OneHotVMatrix: public RowBufferedVMatrix
     }
   virtual real dot(int i1, int i2, int inputsize) const;
   virtual real dot(int i, const Vec& v) const;
+private:
+  void build_();
 };
 
 inline VMat onehot(VMat d, int nclasses, real cold_value=0.0, real hot_value=1.0)
 { return new OneHotVMatrix(d, nclasses, cold_value, hot_value); }
+
+DECLARE_OBJECT_PTR(OneHotVMatrix);
 
 } // end of namespcae PLearn
 #endif

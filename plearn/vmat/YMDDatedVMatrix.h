@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: YMDDatedVMatrix.h,v 1.3 2004/03/23 23:08:09 morinf Exp $
+   * $Id: YMDDatedVMatrix.h,v 1.4 2004/04/05 23:12:54 morinf Exp $
    ******************************************************* */
 
 
@@ -72,8 +72,6 @@ protected:
   Array< TMat<int> > pos_of_date; //!<  dates[year-years(0,0)][month-1][day-1] is the 
                                         //!  position of the absolute (year,month,day) date
 
-  void init();
-
 public:
   // ******************
   // *  Constructors  *
@@ -88,6 +86,11 @@ public:
   //!  first 3 columns and the rest of the data in the remaining columns.
   //!  Warning: VMFields are NOT YET handled by this constructor
   YMDDatedVMatrix(Mat& YMD_and_data);
+
+  PLEARN_DECLARE_OBJECT(YMDDatedVMatrix);
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
 
   //!  return the number of real fields required to specify a date: here 3 for YMD
   int nDateFields() { return 3; }
@@ -131,7 +134,11 @@ public:
   void copyDateOfRow(int row, int &year, int &month, int &day);
 
   virtual void reset_dimensions() { PLERROR("YMDDatedVMatrix::reset_dimensions() not implemented"); }
+private:
+    void build_();
 };
+
+DECLARE_OBJECT_PTR(YMDDatedVMatrix);
 
 } // end of namespace PLearn
 #endif

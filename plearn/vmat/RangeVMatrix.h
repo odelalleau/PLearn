@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: RangeVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
+   * $Id: RangeVMatrix.h,v 1.4 2004/04/05 23:01:00 morinf Exp $
    ******************************************************* */
 
 
@@ -67,11 +67,21 @@ class RangeVMatrix: public VMatrix
   RangeVMatrix(); //!<  default constructor (for automatic deserialization)
 
   RangeVMatrix(real the_start, real the_end, real the_step=1.0);
+
+  PLEARN_DECLARE_OBJECT(RangeVMatrix);
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
+
   virtual real get(int i, int j) const;
+private:
+    void build_();
 };
 
 inline VMat vrange(real start, real end, real step=1.0)
 { return new RangeVMatrix(start,end,step); }
+
+DECLARE_OBJECT_PTR(RangeVMatrix);
 
 } // end of namespcae PLearn
 #endif

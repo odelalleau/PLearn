@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: VecExtendedVMatrix.cc,v 1.3 2004/03/23 23:08:09 morinf Exp $
+   * $Id: VecExtendedVMatrix.cc,v 1.4 2004/04/05 23:12:21 morinf Exp $
    ******************************************************* */
 
 #include "VecExtendedVMatrix.h"
@@ -47,6 +47,8 @@ using namespace std;
 
 /** VecExtendedVMatrix **/
 
+PLEARN_IMPLEMENT_OBJECT(VecExtendedVMatrix, "ONE LINE DESC", "NO HELP");
+
 VecExtendedVMatrix::VecExtendedVMatrix()
 {
 }
@@ -56,7 +58,29 @@ VecExtendedVMatrix::VecExtendedVMatrix(VMat underlying, Vec extend_data)
               extend_data.length()),
     underlying_(underlying), extend_data_(extend_data)
 {
-  fieldinfos = underlying_->getFieldInfos();
+  build();
+}
+
+void
+VecExtendedVMatrix::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+VecExtendedVMatrix::build_()
+{
+    if (underlying_)
+        fieldinfos = underlying_->getFieldInfos();
+}
+
+void
+VecExtendedVMatrix::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "underlying_", &VecExtendedVMatrix::underlying_, OptionBase::buildoption, "");
+    declareOption(ol, "extend_data_", &VecExtendedVMatrix::extend_data_, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
 }
 
 void VecExtendedVMatrix::getRow(int i, Vec v) const

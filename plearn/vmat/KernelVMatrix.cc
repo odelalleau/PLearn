@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: KernelVMatrix.cc,v 1.1 2004/04/02 18:31:56 tihocan Exp $
+   * $Id: KernelVMatrix.cc,v 1.2 2004/04/05 22:57:33 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -58,12 +58,42 @@ using namespace std;
 // * KernelVMatrix *
 // *****************
 
+PLEARN_IMPLEMENT_OBJECT(KernelVMatrix, "ONE LINE DESC", "NO HELP");
+
+KernelVMatrix::KernelVMatrix()
+{
+}
+
 KernelVMatrix::KernelVMatrix(VMat data1, VMat data2, Ker the_ker)
   : VMatrix(data1->length(), data2->length()), 
     d1(data1), d2(data2), ker(the_ker), 
     input1(data1->width()), input2(data2->width())
 {}
 
+void
+KernelVMatrix::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+KernelVMatrix::build_()
+{
+    if (d1)
+        input1.resize(d1->width());
+    if (d2)
+        input2.resize(d2->width());
+}
+
+void
+KernelVMatrix::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "d1", &KernelVMatrix::d1, OptionBase::buildoption, "");
+    declareOption(ol, "d2", &KernelVMatrix::d2, OptionBase::buildoption, "");
+    declareOption(ol, "ker", &KernelVMatrix::ker, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 /*
 IMPLEMENT_NAME_AND_DEEPCOPY(KernelVMatrix);
