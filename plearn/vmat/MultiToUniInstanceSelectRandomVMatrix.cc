@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MultiToUniInstanceSelectRandomVMatrix.cc,v 1.1 2005/01/28 18:21:07 crompb Exp $ 
+   * $Id: MultiToUniInstanceSelectRandomVMatrix.cc,v 1.2 2005/03/25 16:07:55 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Benoit Cromp
@@ -65,7 +65,9 @@ void MultiToUniInstanceSelectRandomVMatrix::declareOptions(OptionList& ol)
 
   inherited::declareOptions(ol);
 
-  redeclareOption(ol, "indices", &MultiToUniInstanceSelectRandomVMatrix::indices, OptionBase::nosave, "The array of row indices extracted");
+  // Redeclare some options.
+  redeclareOption(ol, "indices", &MultiToUniInstanceSelectRandomVMatrix::indices, OptionBase::nosave, "");
+  redeclareOption(ol, "indices_vmat", &MultiToUniInstanceSelectRandomVMatrix::indices_vmat, OptionBase::nosave, "");
 
   redeclareOption(ol, "source", &MultiToUniInstanceSelectRandomVMatrix::source_, OptionBase::buildoption, "Multi instances conforming source VMatrix");
 }
@@ -118,7 +120,7 @@ void MultiToUniInstanceSelectRandomVMatrix::build_()
   int bag_signal_column = source_->inputsize() + source_->targetsize() - 1;
   int first_row = 0;
 
-  indices->resize(0); // This get rid of the useri's build option value.
+  indices.resize(0); // This get rid of the useri's build option value.
   for(int row=0; row<source_->length(); row++)
   {
     switch(int(source_->get(row, bag_signal_column)))
@@ -127,10 +129,10 @@ void MultiToUniInstanceSelectRandomVMatrix::build_()
         first_row = row;
         break;
       case 2:
-        indices->push_back(first_row+(int)(uniform_sample()*(row-first_row+1)));
+        indices.push_back(first_row+(int)(uniform_sample()*(row-first_row+1)));
         break;
       case 3:
-        indices->push_back(row);
+        indices.push_back(row);
         break;
     };
   }
