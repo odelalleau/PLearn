@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: LogAddVariable.h,v 1.6 2004/05/12 23:06:42 nova77 Exp $
+   * $Id: LogAddVariable.h,v 1.7 2004/11/24 18:25:56 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,6 +47,13 @@
 
 namespace PLearn {
 using namespace std;
+
+#ifdef __INTEL_COMPILER
+//! ICC has trouble finding the right logadd function, thus we give it a hint.
+inline real logadd_for_icc(real a, real b) {
+  return logadd(a, b);
+}
+#endif
 
 //!  output = log(exp(input1)+exp(input2)) but it is
 //!  computed in such a way as to preserve precision

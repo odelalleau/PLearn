@@ -36,12 +36,14 @@
 
 
 /* *******************************************************      
-   * $Id: LogAddVariable.cc,v 1.7 2004/04/27 15:58:16 morinf Exp $
+   * $Id: LogAddVariable.cc,v 1.8 2004/11/24 18:25:56 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "ExpVariable.h"
 #include "LogAddVariable.h"
+#include <plearn/math/pl_math.h>   //!< For logadd()
+#include <plearn/math/TMat_maths_impl.h>  //!< For apply()
 #include "Var_operators.h"
 //#include "Var_utils.h"
 
@@ -91,9 +93,13 @@ void LogAddVariable::recomputeSize(int& l, int& w) const
 
 void LogAddVariable::fprop()
 {
-  apply(input1->value,input2->value,value,logadd);
+  // Ugly hack to make it compile with ICC.
+#ifdef __INTEL_COMPILER
+  PLearn::apply(input1->value,input2->value,value, logadd_for_icc);
+#else
+  PLearn::apply(input1->value,input2->value,value, logadd);
+#endif
 }
-
 
 void LogAddVariable::bprop()
 {
