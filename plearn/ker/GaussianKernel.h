@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianKernel.h,v 1.3 2004/02/20 21:11:45 chrish42 Exp $
+   * $Id: GaussianKernel.h,v 1.4 2004/02/23 20:33:38 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,12 +53,11 @@ using namespace std;
 //!  returns exp(-norm_2(x1-x2)^2/sigma^2)
 class GaussianKernel: public Kernel
 {
-  typedef Kernel inherited;
-
 protected:
   static void declareOptions(OptionList& ol);
 
 public:
+  typedef Kernel inherited;
 
   //! Build options below.
   real sigma;
@@ -90,6 +89,9 @@ private:
 
   //!  This method precomputes the squared norm for all the data to later speed up evaluate methods
   virtual void setDataForKernelMatrix(VMat the_data);
+  
+  //! This method appends the newRow squared norm to the squarednorms Vec field
+  virtual void addDataForKernelMatrix(const Vec& newRow);
 
   virtual real evaluate(const Vec& x1, const Vec& x2) const; //!<  returns K(x1,x2) 
   virtual real evaluate_i_j(int i, int j) const; //!<  returns evaluate(data(i),data(j))

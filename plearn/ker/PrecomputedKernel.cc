@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PrecomputedKernel.cc,v 1.2 2004/02/20 21:11:45 chrish42 Exp $
+   * $Id: PrecomputedKernel.cc,v 1.3 2004/02/23 20:33:38 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -66,12 +66,7 @@ PLEARN_IMPLEMENT_OBJECT(PrecomputedKernel, "ONE LINE DESCR", "NO HELP");
 // }
 
 void PrecomputedKernel::build_()
-{
-  // If the flag was provided to only one of the kernel or the embedded, 
-  //  the two will be considered sequential
-  is_sequential = is_sequential || ker->is_sequential;
-  ker->is_sequential = is_sequential; 
-}
+{}
 
 
 void PrecomputedKernel::build()
@@ -110,21 +105,12 @@ void PrecomputedKernel::makeDeepCopyFromShallowCopy(map<const void*, void*>& cop
 //     }
 // }
 
-/*!
-  Given that the matrix is symetric, we reduce the computation from n^2 to
-  (n^2)/2 + n/2 calls to evaluate_i_j. 
-
-  Assume that n is the previous data length and n+1 the new one. 
-    Then the sequential processing (triggered by the 'is_sequential' flag)
-    will allow to reduce the computation from (n+1)^2 to 2n+1 calls to evaluate_i_j.
-    If the matrix is symetric, it goes down from ((n+1)^2)/2 + (n+1)/2 to (n+1) calls. 
+/*
+  Given that the matrix is symetric, we
+  reduce the computation from n^2 to (n^2)/2 + n/2 calls to evaluate_i_j
 */
 void PrecomputedKernel::setDataForKernelMatrix(VMat the_data)
-{ 
-  int prev_len = 0;
-  if(data.isNotNull())
-    prev_len = data.length();
-  
+{   
   Kernel::setDataForKernelMatrix(the_data);
   ker->setDataForKernelMatrix(the_data);
   
@@ -134,10 +120,7 @@ void PrecomputedKernel::setDataForKernelMatrix(VMat the_data)
   {
     precomputedK[i].resize(len);
     
-    int j=0;
-    if(is_sequential && i < prev_len)
-      j = prev_len;
-    for(; j < len; j++)
+    for(int j=0; j < len; j++)
     {
       if(is_symmetric && j<i)
         precomputedK[i][j] = precomputedK[j][i];
@@ -158,7 +141,8 @@ real PrecomputedKernel::evaluate_i_j(int i, int j) const
   if(precomputedK.isNull())
     PLERROR("In PrecomputedKernel::evaluate_i_j data must first be set with setDataForKernelMatrix");
   else if(i<0 || j<0 || i>=data.length() || j>=data.length())
-    PLERROR("In PrecomputedKernel::evaluate_i_j i and j must be between 0 and data.length()");
+    PLERROR("In PrecomputedKernel::evaluate_i_j i (%d) and j (%d) must be between 0 and data.length() (%d)",
+            i, j, data.length());
 #endif
   return precomputedK[i][j];//[i*data.length()+j];
 }
@@ -201,7 +185,8 @@ void PrecomputedKernel::readOptionVal(istream& in, const string& optionname)
 void PrecomputedKernel::declareOptions(OptionList &ol)
 {
     declareOption(ol, "ker", &PrecomputedKernel::ker, OptionBase::buildoption,
-                   "TODO: Some comments");
+                   "The underlying kernel.");
+
     inherited::declareOptions(ol);
 }
 

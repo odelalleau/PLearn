@@ -36,23 +36,16 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianKernel.cc,v 1.4 2004/02/20 21:11:45 chrish42 Exp $
+   * $Id: GaussianKernel.cc,v 1.5 2004/02/23 20:33:38 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "GaussianKernel.h"
 
-// From Old Kernel.cc: all includes are putted in every file.
-// To be revised manually 
-#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"
-//////////////////////////
+//#define GK_DEBUG
+
 namespace PLearn {
 using namespace std;
-
 
 // ** GaussianKernel **
 
@@ -75,23 +68,32 @@ void GaussianKernel::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies
 
 void GaussianKernel::setDataForKernelMatrix(VMat the_data)
 { 
-  // Will be needed if is_sequential is true
-  int previous_data_length = 0;
-  if(data.isNotNull())
-    previous_data_length = data.length();
-
-  Kernel::setDataForKernelMatrix(the_data);
+  inherited::setDataForKernelMatrix(the_data);
 
   squarednorms.resize(data.length());
-
-  int index = 0;
-  if(is_sequential)
-    index = previous_data_length;
-
-  for(; index<data.length(); index++)
+  for(int index=0; index<data.length(); index++)
     squarednorms[index] = data->dot(index,index, data_inputsize);
 }
 
+void GaussianKernel::addDataForKernelMatrix(const Vec& newRow)
+{
+  inherited::addDataForKernelMatrix(newRow);
+
+  int dlen  = data.length();
+  int sqlen = squarednorms.length();
+  if(sqlen == dlen-1)
+    squarednorms.resize(dlen);
+  else if(sqlen == dlen)
+    for(int s=1; s < sqlen; s++)
+      squarednorms[s-1] = squarednorms[s];  
+  else
+    PLERROR("Only two scenarios are managed:\n"
+            "Either the data matrix was only appended the new row or, under the windowed settings,\n"
+            "newRow is the new last row and other rows were moved backward.\n"
+            "However, sqlen = %d and dlen = %d excludes both!", sqlen, dlen);
+  
+  squarednorms.lastElement() = pownorm(newRow, 2); 
+}
 
 inline real GaussianKernel::evaluateFromSquaredNormOfDifference(real sqnorm_of_diff) const
 { return exp(sqnorm_of_diff*minus_one_over_sigmasquare); }
@@ -117,13 +119,32 @@ real GaussianKernel::evaluate(const Vec& x1, const Vec& x2) const
 
 
 real GaussianKernel::evaluate_i_j(int i, int j) const
-{ return evaluateFromDotAndSquaredNorm(squarednorms[i],data->dot(i,j,data_inputsize),squarednorms[j]); }
+{ 
+#ifdef GK_DEBUG 
+  if(i==0 && j==1){
+    cout << "*** i==0 && j==1 ***" << endl;
+    cout << "data(" << i << "): " << data(i) << endl << endl;
+    cout << "data(" << j << "): " << data(j) << endl << endl;  
+    
+    real sqnorm_i = pownorm((Vec)data(i), 2);
+    if(sqnorm_i != squarednorms[i])
+      PLERROR("%f = sqnorm_i != squarednorms[%d] = %f", sqnorm_i, i, squarednorms[i]);
+    
+    real sqnorm_j = pownorm((Vec)data(j), 2);
+    if(sqnorm_j != squarednorms[j])
+      PLERROR("%f = sqnorm_j != squarednorms[%d] = %f", sqnorm_j, j, squarednorms[j]);
+  }
+#endif
+  return evaluateFromDotAndSquaredNorm(squarednorms[i],data->dot(i,j,data_inputsize),squarednorms[j]); 
+}
 
 
 real GaussianKernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) const 
 { 
   if(squared_norm_of_x<0.)
     squared_norm_of_x = pownorm(x);
+
+#ifdef GK_DEBUG 
 //   real dot_x1_x2 = data->dot(i,x);
 //   cout << "data.row(" << i << "): " << data.row(i) << endl 
 //        << "squarednorms[" << i << "]: " << squarednorms[i] << endl
@@ -135,6 +156,8 @@ real GaussianKernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) c
 //        << "b-> minus_one_over_sigmasquare: " << minus_one_over_sigmasquare << endl
 //        << "a*b: " << sqnorm_of_diff*minus_one_over_sigmasquare << endl
 //        << "res: " << exp(sqnorm_of_diff*minus_one_over_sigmasquare) << endl; 
+#endif
+
   return evaluateFromDotAndSquaredNorm(squarednorms[i],data->dot(i,x),squared_norm_of_x); 
 }
 
@@ -176,8 +199,6 @@ void GaussianKernel::build()
   inherited::build();
   build_();
 }
-
-
 
 } // end of namespace PLearn
 

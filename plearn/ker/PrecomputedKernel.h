@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PrecomputedKernel.h,v 1.3 2004/02/20 21:11:45 chrish42 Exp $
+   * $Id: PrecomputedKernel.h,v 1.4 2004/02/23 20:33:38 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,12 +53,16 @@ using namespace std;
 //!  A kernel that precomputes the kernel matrix as soon as setDataForKernelMatrix is called.
 class PrecomputedKernel: public Kernel
 {
-		typedef Kernel inherited;
-		
+  typedef Kernel inherited;
+  
 protected:
   Ker ker; //!<  the real underlying kernel
   //float* precomputedK; //!<  the precomputed kernel matrix
   TVec<Vec> precomputedK; //!<  the precomputed kernel matrix
+
+  /* *******************
+     protected options *
+  **********************/
 
 private:
   void build_();
@@ -79,18 +83,20 @@ public:
 
   //!  This method precomputes and stores all kernel values 
   virtual void setDataForKernelMatrix(VMat the_data);
+
+  virtual void addDataForKernelMatrix(const Vec& newRow)
+    { PLERROR("PrecomputedKernel does not manage size varying data vmat. Use SequentialKernel instead."); }
   
+  //!  simply forwards to underlying kernel  
   virtual real evaluate(const Vec& x1, const Vec& x2) const; //!<  returns K(x1,x2) 
   virtual real evaluate_i_j(int i, int j) const; //!<  returns evaluate(data(i),data(j))
   virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const; //!<  returns evaluate(data(i),x)
   virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const; //!<  returns evaluate(x,data(i))
-  
+
   //virtual void readOptionVal(istream& in, const string& optionname);
   static void declareOptions(OptionList &ol);
   virtual void write(ostream& out) const;
-  virtual void oldread(istream& in);
-  
-  //!  simply forwards to underlying kernel  
+  virtual void oldread(istream& in);  
 };
 DECLARE_OBJECT_PTR(PrecomputedKernel);
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.13 2004/02/20 21:11:45 chrish42 Exp $
+   * $Id: Kernel.cc,v 1.14 2004/02/23 20:33:38 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -66,12 +66,6 @@ void Kernel::declareOptions(OptionList &ol)
   declareOption(ol, "is_symmetric", &Kernel::is_symmetric, OptionBase::buildoption,
                 "TODO: Give some comments");
   
-  declareOption(ol, "is_sequential", &Kernel::is_sequential, OptionBase::buildoption,
-                "To be set true if the kernel is to be used is a sequential context.\n"
-                "That is if the data matrix is meant to be grown from the previous one\n"
-                "at each call to setDataForKernelMatrix. Given this information,\n"
-                "the kernel may not recompute informations still true from the previous data matrix.");
-  
   declareOption(ol, "specify_dataset", &Kernel::specify_dataset, OptionBase::buildoption,
                 "If set, then setDataForKernelMatrix will be called with this dataset at build time");
   
@@ -100,9 +94,6 @@ void Kernel::build_() {
 ////////////////////////////
 void Kernel::setDataForKernelMatrix(VMat the_data)
 { 
-  if(data.isNotNull() && is_sequential && the_data.length() < data.length())
-    PLERROR("The Kernel::is_sequential flag was set to true but the new data\n"
-            "matrix is shorter (%d) than the previous one (%d)", the_data.length(), data.length());
   data = the_data; 
   if (data) {
     data_inputsize = data->inputsize();
@@ -115,6 +106,17 @@ void Kernel::setDataForKernelMatrix(VMat the_data)
   }
 }
 
+void Kernel::addDataForKernelMatrix(const Vec& newRow)
+{
+  try{
+    data->appendRow(newRow);
+  }
+  catch(const PLearnError& e){
+    PLERROR("Kernel::addDataForKernelMatrix: if one intends to use this method,\n"
+            "he must provide a data matrix for which the appendRow method is\n"
+            "implemented.");
+  }
+}
 
 real Kernel::evaluate_i_j(int i, int j) const
 { return evaluate(data.getSubRow(i,data_inputsize),data.getSubRow(j,data_inputsize)); }

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.16 2004/02/20 21:11:45 chrish42 Exp $
+   * $Id: Kernel.h,v 1.17 2004/02/23 20:33:38 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -63,11 +63,10 @@ public:
 
   //! Build options.
   bool is_symmetric;
-  bool is_sequential;
   VMat specify_dataset;
 
   Kernel(bool is__symmetric = true) 
-    : is_symmetric(is__symmetric), is_sequential(false) 
+    : is_symmetric(is__symmetric)
     {}
 
   PLEARN_DECLARE_ABSTRACT_OBJECT(Kernel);
@@ -77,11 +76,24 @@ public:
 
   //!  ** Subclasses may overload these methods to provide efficient kernel matrix access **
 
-/*!     This method sets the data VMat that will be used to define the kernel
+  /*!     
+    This method sets the data VMat that will be used to define the kernel
     matrix. It may precompute values from this that may later accelerate
     the evaluation of a kernel matrix element
-*/
+  */
   virtual void setDataForKernelMatrix(VMat the_data);
+
+  /*!
+    This method is meant to be used any time the data matrix
+    is appended a new row by an outer instance (e.g. SequentialKernel).
+    Through this method, the kernel must update any data dependant internal 
+    structure. The internal structures should have consistant length with 
+    the data matrix, assuming a sequential growing of the vmat.
+  */
+  virtual void addDataForKernelMatrix(const Vec& newRow);
+
+  virtual int nExamples()
+    { return data.length(); }
 
   //!  returns evaluate(data(i),data(j))
   virtual real evaluate_i_j(int i, int j) const; 
