@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MulticlassLossVariable.cc,v 1.4 2004/02/20 21:11:51 chrish42 Exp $
+   * $Id: MulticlassLossVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,13 +48,31 @@ using namespace std;
 
 /** MulticlassLossVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(MulticlassLossVariable, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(MulticlassLossVariable, 
+                        "ONE LINE DESCR",
+                        "NO HELP");
 
 MulticlassLossVariable::MulticlassLossVariable(Variable* netout, Variable* target)
-  :BinaryVariable(netout,target,1,1)
+  : inherited(netout,target,1,1)
 {
-  if(netout->size() != target->size())
-    PLERROR("In MulticlassLossVariable: netout and target must the same size");
+    build_();
+}
+
+void
+MulticlassLossVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+MulticlassLossVariable::build_()
+{
+    if (input1 && input2) {
+        // input1 and input2 are (respectively) netout and target from constructor
+        if(input1->size() != input2->size())
+            PLERROR("In MulticlassLossVariable: netout and target must the same size");
+    }
 }
 
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PlusRowVariable.cc,v 1.5 2004/02/20 21:11:52 chrish42 Exp $
+   * $Id: PlusRowVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,27 +50,43 @@ using namespace std;
 
 /** PlusRowVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(PlusRowVariable,
+                        "Adds a single-row var to each row of a matrix var",
+                        "NO HELP");
+
 PlusRowVariable::PlusRowVariable(Variable* input1, Variable* input2)
-  :BinaryVariable(input1, input2, input1->length(), input1->width())
+  : inherited(input1, input2, input1->length(), input1->width())
 {
-  if(!input2->isRowVec())
-    PLERROR("IN PlusRowVariable: input2 is not a row");
-  if(input2->width() != input1->width())
-    PLERROR("IN PlusRowVariable: input1 and input2 have a different width()");
+    build_();
+}
+
+void
+PlusRowVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+PlusRowVariable::build_()
+{
+    if (input1 && input2) {
+        if(!input2->isRowVec())
+            PLERROR("IN PlusRowVariable: input2 is not a row");
+        if(input2->width() != input1->width())
+            PLERROR("IN PlusRowVariable: input1 and input2 have a different width()");
+    }
 }
 
 
-PLEARN_IMPLEMENT_OBJECT(PlusRowVariable, "ONE LINE DESCR", "NO HELP");
-
-
 void PlusRowVariable::recomputeSize(int& l, int& w) const
-{ l=input1->length(); w=input1->width(); }
-
-
-
-
-
-
+{
+    if (input1) {
+        l = input1->length();
+        w = input1->width();
+    } else
+        l = w = 0;
+}
 
 
 void PlusRowVariable::fprop()

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ClassificationLossVariable.h,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: ClassificationLossVariable.h,v 1.5 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,19 +54,27 @@ using namespace std;
 //! Indicator(classnum==argmax(netout))
 class ClassificationLossVariable: public BinaryVariable
 {
-protected:
   typedef BinaryVariable inherited;
-  //!  Default constructor for persistence
-  ClassificationLossVariable() {}
 
 public:
+  //!  Default constructor for persistence
+  ClassificationLossVariable() {}
   ClassificationLossVariable(Variable* netout, Variable* classnum);
+
   PLEARN_DECLARE_OBJECT(ClassificationLossVariable);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
   //! can't bprop through a hard classification error...
   virtual void bprop() {}
+
+protected:
+  void build_();
 };
+
+DECLARE_OBJECT_PTR(ClassificationLossVariable);
 
 inline Var classification_loss(Var network_output, Var classnum)
 { 

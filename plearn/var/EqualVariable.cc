@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: EqualVariable.cc,v 1.5 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: EqualVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,26 +51,35 @@ using namespace std;
 
 /** EqualVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(EqualVariable,
+                        "A scalar var;  equal 1 if input1==input2, 0 otherwise",
+                        "NO HELP");
+
 EqualVariable::EqualVariable(Variable* input1, Variable* input2)
-  : BinaryVariable(input1, input2, 1,1)
+  : inherited(input1, input2, 1,1)
 {
-  if(input1->length() != input2->length()  ||  input1->width() != input2->width())
-    PLERROR("IN EqualVariable(Variable* input1, Variable* input2) input1 and input2 must have the same size");
+    build_();
+}
+
+void
+EqualVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+EqualVariable::build_()
+{
+    if (input1 && input2) {
+        if (input1->length() != input2->length() || input1->width() != input2->width())
+            PLERROR("IN EqualVariable(Variable* input1, Variable* input2) input1 and input2 must have the same size");
+    }
 }
 
   
-PLEARN_IMPLEMENT_OBJECT(EqualVariable, "ONE LINE DESCR", "NO HELP");
-
 void EqualVariable::recomputeSize(int& l, int& w) const
 { l=1; w=1; }
-
-
-
-
-
-
-
-
 
 void EqualVariable::fprop()
 {

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PlusScalarVariable.h,v 1.3 2004/02/20 21:11:52 chrish42 Exp $
+   * $Id: PlusScalarVariable.h,v 1.4 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,24 +52,29 @@ using namespace std;
 //!  adds a scalar var to a matrix var
 class PlusScalarVariable: public BinaryVariable
 {
-protected:
-    typedef BinaryVariable inherited;
-  //!  Default constructor for persistence
-  PlusScalarVariable() {}
+  typedef BinaryVariable inherited;
 
 public:
+  //!  Default constructor for persistence
+  PlusScalarVariable() {}
   PlusScalarVariable(Variable* input1, Variable* input2);
+
   PLEARN_DECLARE_OBJECT(PlusScalarVariable);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
   virtual void fprop();
   virtual void bprop();
   virtual void bbprop();
   virtual void symbolicBprop();
   virtual void rfprop();
+
+protected:
+    void build_();
 };
 
+DECLARE_OBJECT_PTR(PlusScalarVariable);
 
 } // end of namespace PLearn
 

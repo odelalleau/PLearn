@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: CrossEntropyVariable.cc,v 1.9 2004/03/04 19:31:07 nova77 Exp $
+   * $Id: CrossEntropyVariable.cc,v 1.10 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,13 +49,29 @@ using namespace std;
 
 /** CrossEntropyVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(CrossEntropyVariable, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(CrossEntropyVariable,
+                        "cost = - sum_i {target_i * log(output_i) + (1-target_i) * log(1-output_i)}",
+                        "NO HELP");
 
 CrossEntropyVariable::CrossEntropyVariable(Variable* netout, Variable* target)
-  :BinaryVariable(netout,target,1,1)
+  : inherited(netout,target,1,1)
 {
-  if(netout->size() != target->size())
-    PLERROR("In CrossEntropyVariable: netout and target must have the same size");
+    build_();
+}
+
+void
+CrossEntropyVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+CrossEntropyVariable::build_()
+{
+    // input1 and input2 are (respectively) netout and target from constructor
+    if (input1 && input2 && (input1->size() != input2->size()))
+        PLERROR("In CrossEntropyVariable: netout and target must have the same size");
 }
 
 
@@ -96,7 +112,6 @@ void CrossEntropyVariable::bprop()
     input1->gradientdata[i] += gr*(-target/output + (1.0-target)/(1.0-output));
   }
 }
-
 
 
 } // end of namespace PLearn

@@ -37,7 +37,7 @@
 
 
 /* *******************************************************      
-   * $Id: NegCrossEntropySigmoidVariable.cc,v 1.4 2004/02/20 21:11:51 chrish42 Exp $
+   * $Id: NegCrossEntropySigmoidVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,21 +48,35 @@ using namespace std;
 
 /** NegCrossEntropySigmoidVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(
-  NegCrossEntropySigmoidVariable,
-  "Compute sigmoid of its first input, and then computes the negative "
-  "cross-entropy cost",
-  "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(NegCrossEntropySigmoidVariable,
+                        "Compute sigmoid of its first input, and then computes the negative "
+                        "cross-entropy cost",
+                        "NO HELP");
 
 ////////////////////////////////////
 // NegCrossEntropySigmoidVariable //
 ////////////////////////////////////
-NegCrossEntropySigmoidVariable::
-NegCrossEntropySigmoidVariable(Variable* netout, Variable* target)
-  :BinaryVariable(netout,target,1,1),regularizer(0)
+NegCrossEntropySigmoidVariable::NegCrossEntropySigmoidVariable(Variable* netout, Variable* target, real regularizer_)
+  : inherited(netout,target,1,1),regularizer(regularizer_)
 {
-  if(netout->size() != target->size())
-    PLERROR("In NegCrossEntropySigmoidVariable: netout and target must have the same size");
+    build_();
+}
+
+void
+NegCrossEntropySigmoidVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+NegCrossEntropySigmoidVariable::build_()
+{
+    if (input1 && input2) {
+        // input1 and input2 are (respectively) netout and target from constructor
+        if(input1->size() != input2->size())
+            PLERROR("In NegCrossEntropySigmoidVariable: netout and target must have the same size");
+    }
 }
 
 ///////////////////
@@ -134,7 +148,9 @@ void NegCrossEntropySigmoidVariable::bprop()
 ////////////////////
 // setRegularizer //
 ////////////////////
-void NegCrossEntropySigmoidVariable::setRegularizer(real r) {
+void NegCrossEntropySigmoidVariable::setRegularizer(real r)
+{
+    PLWARNING("NegCrossEntropySigmoidVariable::setRegularizer() has been deprecated, use the setOption() method instead");
   this->regularizer = r;
 }
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: AffineTransformVariable.h,v 1.8 2004/02/20 21:11:49 chrish42 Exp $
+   * $Id: AffineTransformVariable.h,v 1.9 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -58,26 +58,27 @@ using namespace std;
 //! which is equivalent to b + 
 class AffineTransformVariable: public BinaryVariable
 {
-protected:
-    typedef BinaryVariable inherited;
-  //!  Default constructor for persistence
-  AffineTransformVariable() {}
+  typedef BinaryVariable inherited;
 
 public:
-  AffineTransformVariable(Variable* vec, Variable* transformation):
-    BinaryVariable(vec, transformation, 
-                   vec->size()==1?transformation->width():(vec->isRowVec()?1:transformation->width()),
-                   vec->size()==1?1:(vec->isRowVec()?transformation->width():1))
-  {
-    if(!vec->isVec())
-      PLERROR("In AffineTransformVariable: expecting a vector Var (row or column) as first argument");
-  }
+  //!  Default constructor for persistence
+  AffineTransformVariable() {}
+  AffineTransformVariable(Variable* vec, Variable* transformation);
+
   PLEARN_DECLARE_OBJECT(AffineTransformVariable);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
+
+protected:
+  void build_();
 };
+
+DECLARE_OBJECT_PTR(AffineTransformVariable);
 
 //! first row of transformation is the bias.
 inline Var affine_transform(Var vec, Var transformation)

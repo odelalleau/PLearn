@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: LiftOutputVariable.h,v 1.2 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: LiftOutputVariable.h,v 1.3 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,19 +47,26 @@ using namespace std;
 
 class LiftOutputVariable: public BinaryVariable
 {
-protected:
   typedef BinaryVariable inherited;
-  //!  Default constructor for persistence
-  LiftOutputVariable() {}
 
 public:
-  LiftOutputVariable(
-      Variable* netout, Variable* target);
+  //!  Default constructor for persistence
+  LiftOutputVariable() {}
+  LiftOutputVariable(Variable* netout, Variable* target);
+
   PLEARN_DECLARE_OBJECT(LiftOutputVariable);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
   virtual void bprop();
+
+protected:
+    void build_();
 };
+
+DECLARE_OBJECT_PTR(LiftOutputVariable);
 
 inline Var lift_output(Var linear_output, Var target)
 {

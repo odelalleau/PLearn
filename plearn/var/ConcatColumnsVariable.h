@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatColumnsVariable.h,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: ConcatColumnsVariable.h,v 1.5 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,21 +52,28 @@ using namespace std;
 //!  concatenation of the columns of several variables
 class ConcatColumnsVariable: public NaryVariable
 {
-protected:
-  //!  protected default constructor for persistence
-  ConcatColumnsVariable() {}
+  typedef NaryVariable inherited;
 
 public:
+  //!  default constructor for persistence
+  ConcatColumnsVariable() {}
   //!  all the variables must have the same number of rows
   ConcatColumnsVariable(const VarArray& vararray);
+
   PLEARN_DECLARE_OBJECT(ConcatColumnsVariable);
-  virtual void recomputeSize(int& l, int& w) const;
-  
-  
+
+  virtual void build();
+
+  virtual void recomputeSize(int& l, int& w) const;    
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
+
+protected:
+    void build_();
 };
+
+DECLARE_OBJECT_PTR(ConcatColumnsVariable);
 
 inline Var hconcat(const VarArray& varray)
 { return new ConcatColumnsVariable(varray); }

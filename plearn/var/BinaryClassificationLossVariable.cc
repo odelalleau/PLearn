@@ -37,7 +37,7 @@
 
 
 /* *******************************************************      
-   * $Id: BinaryClassificationLossVariable.cc,v 1.2 2004/02/20 21:11:49 chrish42 Exp $
+   * $Id: BinaryClassificationLossVariable.cc,v 1.3 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,15 +47,30 @@ using namespace std;
 
 /** BinaryClassificationLossVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(BinaryClassificationLossVariable, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(BinaryClassificationLossVariable,
+                        "For one-dimensional output: class is 0 if output < 0.5, and 1 if >= 0.5.",
+                        "NO HELP");
 
 BinaryClassificationLossVariable::BinaryClassificationLossVariable(Variable* netout, Variable* classnum)
-  :BinaryVariable(netout,classnum,1,1)
+  : inherited(netout,classnum,1,1)
 {
-  if(!classnum->isScalar())
-    PLERROR("In BinaryClassificationLossVariable: classnum must be a scalar variable representing an index of netout (typically a class number)");
+    build_();
 }
 
+void
+BinaryClassificationLossVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+BinaryClassificationLossVariable::build_()
+{
+    // input2 == classnum from constructor
+    if (input2 && !input2->isScalar())
+        PLERROR("In BinaryClassificationLossVariable: classnum must be a scalar variable representing an index of netout (typically a class number)");
+}
 
 void BinaryClassificationLossVariable::recomputeSize(int& l, int& w) const
 { l=1, w=1; }

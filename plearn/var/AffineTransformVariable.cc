@@ -36,55 +36,83 @@
 
 
 /* *******************************************************      
-   * $Id: AffineTransformVariable.cc,v 1.5 2004/02/20 21:11:49 chrish42 Exp $
+   * $Id: AffineTransformVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "AffineTransformVariable.h"
+
 namespace PLearn {
 using namespace std;
 
 
-PLEARN_IMPLEMENT_OBJECT(AffineTransformVariable, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(AffineTransformVariable,
+                        "Affine transformation of a vector variable.",
+                        "NO HELP");
+
+AffineTransformVariable::AffineTransformVariable(Variable* vec, Variable* transformation)
+    : inherited(vec, transformation, 
+                (vec->size() == 1) ? transformation->width() : (vec->isRowVec() ? 1 : transformation->width()),
+                (vec->size() == 1) ? 1 : (vec->isRowVec() ? transformation->width() : 1))
+{
+    build_();
+}
+
+void
+AffineTransformVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+AffineTransformVariable::build_()
+{
+    // input1 is vec from constructor
+    if (input1 && !input1->isVec())
+        PLERROR("In AffineTransformVariable: expecting a vector Var (row or column) as first argument");
+}
 
 void AffineTransformVariable::recomputeSize(int& l, int& w) const
 { 
-  l=input1->isRowVec()?1:input2->width(); w=input1->isColumnVec()?1:input2->width(); 
+    if (input1 && input2) {
+        l = input1->isRowVec() ? 1 : input2->width();
+        w = input1->isColumnVec() ? 1 : input2->width(); 
+    } else
+        l = w = 0;
 }
 
 
 void AffineTransformVariable::fprop()
-  {
-    value << input2->matValue.firstRow();
-    Mat lintransform = input2->matValue.subMatRows(1,input2->length()-1);
-    transposeProductAcc(value, lintransform, input1->value);
-  }
+{
+  value << input2->matValue.firstRow();
+  Mat lintransform = input2->matValue.subMatRows(1,input2->length()-1);
+  transposeProductAcc(value, lintransform, input1->value);
+}
 
 
 void AffineTransformVariable::bprop()
-  {
-    Mat&  afftr = input2->matValue;
-    int l = afftr.length();
-    // Vec bias = afftr.firstRow();
-    Mat lintr = afftr.subMatRows(1,l-1);
+{
+  Mat&  afftr = input2->matValue;
+  int l = afftr.length();
+  // Vec bias = afftr.firstRow();
+  Mat lintr = afftr.subMatRows(1,l-1);
 
-    Mat& afftr_g = input2->matGradient;
-    Vec bias_g = afftr_g.firstRow();
-    Mat lintr_g = afftr_g.subMatRows(1,l-1);
+  Mat& afftr_g = input2->matGradient;
+  Vec bias_g = afftr_g.firstRow();
+  Mat lintr_g = afftr_g.subMatRows(1,l-1);
 
-    bias_g += gradient;    
-    if(!input1->dont_bprop_here)      
-      productAcc(input1->gradient, lintr, gradient);
-    externalProductAcc(lintr_g, input1->value, gradient);
-  }
+  bias_g += gradient;    
+  if(!input1->dont_bprop_here)      
+    productAcc(input1->gradient, lintr, gradient);
+  externalProductAcc(lintr_g, input1->value, gradient);
+}
 
 
 void AffineTransformVariable::symbolicBprop()
-  {
-   PLERROR("AffineTransformVariable::symbolicBprop() not implemented");
-  }
-
-
+{
+  PLERROR("AffineTransformVariable::symbolicBprop() not implemented");
+}
 
 } // end of namespace PLearn
 

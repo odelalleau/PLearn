@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: CrossEntropyVariable.h,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: CrossEntropyVariable.h,v 1.5 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,18 +52,26 @@ using namespace std;
 //! cost = - sum_i {target_i * log(output_i) + (1-target_i) * log(1-output_i)}
 class CrossEntropyVariable: public BinaryVariable
 {
-protected:
   typedef BinaryVariable inherited;
-  //!  Default constructor for persistence
-  CrossEntropyVariable() {}
 
 public:
+  //!  Default constructor for persistence
+  CrossEntropyVariable() {}
   CrossEntropyVariable(Variable* netout, Variable* target);
+
   PLEARN_DECLARE_OBJECT(CrossEntropyVariable);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
   virtual void bprop();
+
+protected:
+    void build_();
 };
+
+DECLARE_OBJECT_PTR(CrossEntropyVariable);
 
 inline Var cross_entropy(Var network_output, Var targets)
 { return new CrossEntropyVariable(network_output, targets); }

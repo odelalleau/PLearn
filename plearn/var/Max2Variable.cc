@@ -36,13 +36,12 @@
 
 
 /* *******************************************************      
-   * $Id: Max2Variable.cc,v 1.5 2004/02/20 21:11:51 chrish42 Exp $
+   * $Id: Max2Variable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "Max2Variable.h"
 #include "Var_operators.h"
-//#include "Var_utils.h"
 
 namespace PLearn {
 using namespace std;
@@ -50,27 +49,43 @@ using namespace std;
 
 /** Max2Variable **/
 
+
+PLEARN_IMPLEMENT_OBJECT(Max2Variable,
+                        "Elementwise max over 2 elements: max(v1,v2)[i] = max(v1[i],v2[i]) "
+                        "with same dimensions as the input vectors",
+                        "NO HELP");
+
 Max2Variable::Max2Variable(Variable* input1, Variable* input2)
-  :BinaryVariable(input1, input2, input1->length(), input1->width())
+  : inherited(input1, input2, input1->length(), input1->width())
 {
-  if (input1->length() != input2->length()  ||  input1->width() != input2->width())
-    PLERROR("IN Max2Variable input1 and input2 must have the same size");
+    build_();
+}
+
+void
+Max2Variable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+Max2Variable::build_()
+{
+    if (input1 && input2) {
+        if (input1->length() != input2->length()  ||  input1->width() != input2->width())
+            PLERROR("IN Max2Variable input1 and input2 must have the same size");
+    }
 }
 
 
-PLEARN_IMPLEMENT_OBJECT(Max2Variable, "ONE LINE DESCR", "NO HELP");
-
-
 void Max2Variable::recomputeSize(int& l, int& w) const
-{ l=input1->length(); w=input1->width(); }
-
-
-
-
-
-
-
-
+{
+    if (input1) {
+        l = input1->length();
+        w = input1->width();
+    } else
+        l = w = 0;
+}
 
 void Max2Variable::fprop()
 {

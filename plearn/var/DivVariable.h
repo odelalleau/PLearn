@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DivVariable.h,v 1.3 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: DivVariable.h,v 1.4 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,23 +54,28 @@ using namespace std;
 //!  divides 2 matrix vars of same size elementwise
 class DivVariable: public BinaryVariable
 {
-protected:
-    typedef BinaryVariable inherited;
-  //!  Default constructor for persistence
-  DivVariable() {}
+  typedef BinaryVariable inherited;
 
 public:
+  //!  Default constructor for persistence
+  DivVariable() {}
   DivVariable(Variable* input1, Variable* input2);
+
   PLEARN_DECLARE_OBJECT(DivVariable);
-  virtual void recomputeSize(int& l, int& w) const;
-  
-  
+
+  virtual void build();
+
+  virtual void recomputeSize(int& l, int& w) const;    
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
   virtual void rfprop();
+
+protected:
+    void build_();
 };
 
+DECLARE_OBJECT_PTR(DivVariable);
 
 } // end of namespace PLearn
 

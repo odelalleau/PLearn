@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: EqualScalarVariable.cc,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: EqualScalarVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,27 +48,39 @@ using namespace std;
 
 /** EqualScalarVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(EqualScalarVariable,
+                        "A scalar var;  equal 1 if input1==input2, 0 otherwise",
+                        "NO HELP");
+
 EqualScalarVariable::EqualScalarVariable(Variable* input1, Variable* input2)
-  : BinaryVariable(input1, input2, input1->length(), input1->width())
+  : inherited(input1, input2, input1->length(), input1->width())
 {
-  if(!input2->isScalar())
-    PLERROR("IsSmallerVariable EqualScalarVariable(Variable* input1, Variable* input2) input2 must be a scalar");
+    build_();
+}
+
+void
+EqualScalarVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+EqualScalarVariable::build_()
+{
+    if(input2 && !input2->isScalar())
+        PLERROR("IsSmallerVariable EqualScalarVariable(Variable* input1, Variable* input2) input2 must be a scalar");
 }
 
   
-PLEARN_IMPLEMENT_OBJECT(EqualScalarVariable, "ONE LINE DESCR", "NO HELP");
-
-
 void EqualScalarVariable::recomputeSize(int& l, int& w) const
-{ l=input1->length(); w=input1->width(); }
-
-
-
-
-
-
-
-
+{
+    if (input1) {
+        l = input1->length();
+        w = input1->width();
+    } else
+        l = w = 0;
+}
 
 void EqualScalarVariable::fprop()
 {
@@ -82,7 +94,6 @@ void EqualScalarVariable::fprop()
 void EqualScalarVariable::bprop() {}
 
 void EqualScalarVariable::symbolicBprop() {}
-
 
 
 } // end of namespace PLearn

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MinusRowVariable.cc,v 1.5 2004/02/20 21:11:51 chrish42 Exp $
+   * $Id: MinusRowVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,28 +51,43 @@ using namespace std;
 
 /** MinusRowVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(MinusRowVariable,
+                        "ONE LINE DESCR",
+                        "NO HELP");
+
 MinusRowVariable::MinusRowVariable(Variable* input1, Variable* input2)
-  :BinaryVariable(input1, input2, input1->length(), input1->width())
+  : inherited(input1, input2, input1->length(), input1->width())
 {
-  if(!input2->isRowVec())
-    PLERROR("IN MinusRowVariable: input2 is not a row");
-  if(input2->width() != input1->width())
-    PLERROR("IN MinusRowVariable: input1 and input2 have a different width()");
+    build_();
+}
+
+void
+MinusRowVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+MinusRowVariable::build_()
+{
+    if (input1 && input2) {
+        if(!input2->isRowVec())
+            PLERROR("IN MinusRowVariable: input2 is not a row");
+        if(input2->width() != input1->width())
+            PLERROR("IN MinusRowVariable: input1 and input2 have a different width()");
+    }
 }
 
 
-PLEARN_IMPLEMENT_OBJECT(MinusRowVariable, "ONE LINE DESCR", "NO HELP");
-
-
 void MinusRowVariable::recomputeSize(int& l, int& w) const
-{ l=input1->length(); w=input1->width(); }
-
-
-
-
-
-
-
+{
+    if (input1) {
+        l = input1->length();
+        w = input1->width();
+    } else
+        l = w = 0;
+}
 
 void MinusRowVariable::fprop()
 {

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MulticlassLossVariable.h,v 1.4 2004/02/20 21:11:51 chrish42 Exp $
+   * $Id: MulticlassLossVariable.h,v 1.5 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -56,19 +56,27 @@ using namespace std;
 
 class MulticlassLossVariable: public BinaryVariable
 {
-protected:
   typedef BinaryVariable inherited;
-  //!  Default constructor for persistence
-  MulticlassLossVariable() {}
 
 public:
+  //!  Default constructor for persistence
+  MulticlassLossVariable() {}
   MulticlassLossVariable(Variable* netout, Variable* target);
+
   PLEARN_DECLARE_OBJECT(MulticlassLossVariable);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
   //! can't bprop through a hard classification error...
   virtual void bprop() {}
+
+protected:
+    void build_();
 };
+
+DECLARE_OBJECT_PTR(MulticlassLossVariable);
 
 inline Var multiclass_loss(Var network_output, Var targets)
 { return new MulticlassLossVariable(network_output, targets); }

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: IsLargerVariable.cc,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: IsLargerVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,26 +48,40 @@ using namespace std;
 
 /** IsLargerVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(IsLargerVariable,
+                        "ONE LINE DESCR",
+                        "NO HELP");
+
 IsLargerVariable::IsLargerVariable(Variable* input1, Variable* input2)
-  : BinaryVariable(input1, input2, input1->length(), input1->width())
+  : inherited(input1, input2, input1->length(), input1->width())
 {
-  if(input1->length() != input2->length() || input1->width() != input2->width())
-    PLERROR("EqualVariable IsLargerVariable(Variable* input1, Variable* input2), the size of input1 and input2 are inconsistent");
+    build_();
 }
 
+void
+IsLargerVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
-PLEARN_IMPLEMENT_OBJECT(IsLargerVariable, "ONE LINE DESCR", "NO HELP");
-
+void
+IsLargerVariable::build_()
+{
+    if (input1 && input2) {
+        if(input1->length() != input2->length() || input1->width() != input2->width())
+            PLERROR("EqualVariable IsLargerVariable(Variable* input1, Variable* input2), the size of input1 and input2 are inconsistent");
+    }
+}
 
 void IsLargerVariable::recomputeSize(int& l, int& w) const
-{ l=input1->length(); w=input1->width(); }
-
-
-
-
-
-
-
+{
+    if (input1) {
+        l = input1->length();
+        w = input1->width();
+    } else
+        l = w = 0;
+}
 
 void IsLargerVariable::fprop()
 {

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MinusScalarVariable.cc,v 1.5 2004/02/20 21:11:51 chrish42 Exp $
+   * $Id: MinusScalarVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,26 +51,38 @@ using namespace std;
 
 /** MinusScalarVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(MinusScalarVariable,
+                        "ONE LINE DESCR",
+                        "NO HELP");
+
 MinusScalarVariable::MinusScalarVariable(Variable* input1, Variable* input2)
-  :BinaryVariable(input1, input2, input1->length(), input1->width())
+  : inherited(input1, input2, input1->length(), input1->width())
 {
-  if(!input2->isScalar())
-    PLERROR("IN MinusScalarVariable: input2 is not a scalar");
+    build_();
 }
 
+void
+MinusScalarVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
-PLEARN_IMPLEMENT_OBJECT(MinusScalarVariable, "ONE LINE DESCR", "NO HELP");
-
+void
+MinusScalarVariable::build_()
+{
+    if(input2 && !input2->isScalar())
+        PLERROR("IN MinusScalarVariable: input2 is not a scalar");
+}
 
 void MinusScalarVariable::recomputeSize(int& l, int& w) const
-{ l=input1->length(); w=input1->width(); }
-
-
-
-
-
-
-
+{
+    if (input1) {
+        l = input1->length();
+        w = input1->width();
+    } else
+        l = w = 0;
+}
 
 void MinusScalarVariable::fprop()
 {

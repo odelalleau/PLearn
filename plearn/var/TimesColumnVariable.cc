@@ -36,14 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: TimesColumnVariable.cc,v 1.5 2004/02/20 21:11:54 chrish42 Exp $
+   * $Id: TimesColumnVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "RowSumVariable.h"
 #include "TimesColumnVariable.h"
 #include "Var_operators.h"
-//#include "Var_utils.h"
 
 namespace PLearn {
 using namespace std;
@@ -51,28 +50,43 @@ using namespace std;
 
 /** TimesColumnVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(TimesColumnVariable,
+                        "Multiplies each column of a matrix var elementwise with a single column variable",
+                        "NO HELP");
+
 TimesColumnVariable::TimesColumnVariable(Variable* input1, Variable* input2)
-  :BinaryVariable(input1, input2, input1->length(), input1->width())
+  : inherited(input1, input2, input1->length(), input1->width())
 {
-  if(!input2->isColumnVec())
-    PLERROR("IN TimesColumnVariable: input2 is not a column");
-  if(input2->length() != input1->length())
-    PLERROR("IN TimesColumnVariable: input1 and input2 have a different length()");
+    build_();
+}
+
+void
+TimesColumnVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+TimesColumnVariable::build_()
+{
+    if (input1 && input2) {
+        if(!input2->isColumnVec())
+            PLERROR("IN TimesColumnVariable: input2 is not a column");
+        if(input2->length() != input1->length())
+            PLERROR("IN TimesColumnVariable: input1 and input2 have a different length()");
+    }
 }
 
 
-PLEARN_IMPLEMENT_OBJECT(TimesColumnVariable, "ONE LINE DESCR", "NO HELP");
-
-
 void TimesColumnVariable::recomputeSize(int& l, int& w) const
-{ l=input1->length(); w=input1->width(); }
-
-
-
-
-
-
-
+{
+    if (input1) {
+        l = input1->length();
+        w = input1->width();
+    } else
+        l = w = 0;
+}
 
 void TimesColumnVariable::fprop()
 {

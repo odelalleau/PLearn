@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: TimesColumnVariable.h,v 1.3 2004/02/20 21:11:54 chrish42 Exp $
+   * $Id: TimesColumnVariable.h,v 1.4 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,23 +52,28 @@ using namespace std;
 //!  multiplies each column of a matrix var elementwise with a single column variable
 class TimesColumnVariable: public BinaryVariable
 {
-protected:
-    typedef BinaryVariable inherited;
-  //!  Default constructor for persistence
-  TimesColumnVariable() {}
+  typedef BinaryVariable inherited;
 
 public:
+  //!  Default constructor for persistence
+  TimesColumnVariable() {}
   TimesColumnVariable(Variable* input1, Variable* input2);
+
   PLEARN_DECLARE_OBJECT(TimesColumnVariable);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
   virtual void rfprop();
+
+protected:
+    void build_();
 };
 
+DECLARE_OBJECT_PTR(TimesColumnVariable);
 
 } // end of namespace PLearn
 

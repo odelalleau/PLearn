@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: VarRowsVariable.cc,v 1.4 2004/02/20 21:11:54 chrish42 Exp $
+   * $Id: VarRowsVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,25 +48,40 @@ using namespace std;
 
 /** VarRowsVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(VarRowsVariable,
+                        "Variable that is a subset of a matrix's rows; "
+                        "input1 : matrix from which rows are selected; "
+                        "input2 : vector whose elements are row indices in input1",
+                        "NO HELP");
+
 VarRowsVariable::VarRowsVariable(Variable *input1, Variable *input2)
-  : BinaryVariable(input1, input2, input2->length(), input1->width())
+  : inherited(input1, input2, input2->length(), input1->width())
 {
-  input1->allowPartialUpdates();
+    build_();
 }
 
+void
+VarRowsVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
-PLEARN_IMPLEMENT_OBJECT(VarRowsVariable, "ONE LINE DESCR", "NO HELP");
-
+void
+VarRowsVariable::build_()
+{
+    if (input1)
+        input1->allowPartialUpdates();
+}
 
 void VarRowsVariable::recomputeSize(int& l, int& w) const
-{ l=input2->length(); w=input1->width(); }
-
-
-
-
-
-
-
+{
+    if (input1 && input2) {
+        l = input2->length();
+        w = input1->width();
+    } else
+        l = w = 0;
+}
 
 void VarRowsVariable::fprop()
 {

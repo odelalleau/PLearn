@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: LeftPseudoInverseVariable.cc,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: LeftPseudoInverseVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,26 +49,41 @@ using namespace std;
 
 /** LeftPseudoInverseVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(LeftPseudoInverseVariable, 
+                        "ONE LINE DESCR", 
+                        "NO HELP");
+
 LeftPseudoInverseVariable::LeftPseudoInverseVariable(Variable* input)
-  :UnaryVariable(input, input->length(), input->width()) 
+  : inherited(input, input->length(), input->width()) 
 {
-  if (input->width() < input->length())
-    PLERROR("LeftPseudoInverseVariable(Var): input width_(%d) < length_(%d)",
-          input->width(), input->length());
+    build_();
 }
 
+void
+LeftPseudoInverseVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
-PLEARN_IMPLEMENT_OBJECT(LeftPseudoInverseVariable, "ONE LINE DESCR", "NO HELP");
+void
+LeftPseudoInverseVariable::build_()
+{
+    if (input) {
+        if (input->width() < input->length())
+            PLERROR("LeftPseudoInverseVariable(Var): input width_(%d) < length_(%d)",
+                    input->width(), input->length());
+    }
+}
 
 void LeftPseudoInverseVariable::recomputeSize(int& l, int& w) const
-{ l=input->length(); w=input->width(); }
-
-
-
-
-
-
-
+{
+    if (input) {
+        l = input->length();
+        w = input->width();
+    } else
+        l = w = 0;
+}
 
 void LeftPseudoInverseVariable::fprop()
 {

@@ -37,7 +37,7 @@
 
 
 /* *******************************************************      
-   * $Id: BinaryClassificationLossVariable.h,v 1.2 2004/02/20 21:11:49 chrish42 Exp $
+   * $Id: BinaryClassificationLossVariable.h,v 1.3 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,19 +53,27 @@ using namespace std;
 //! For one-dimensional output: class is 0 if output < 0.5, and 1 if >= 0.5.
 class BinaryClassificationLossVariable: public BinaryVariable
 {
-protected:
   typedef BinaryVariable inherited;
-  //!  Default constructor for persistence
-  BinaryClassificationLossVariable() {}
 
 public:
+  //!  Default constructor for persistence
+  BinaryClassificationLossVariable() {}
   BinaryClassificationLossVariable(Variable* netout, Variable* classnum);
+
   PLEARN_DECLARE_OBJECT(BinaryClassificationLossVariable);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
   //! can't bprop through a hard classification error...
   virtual void bprop() {}
+
+protected:
+  void build_();
 };
+
+DECLARE_OBJECT_PTR(BinaryClassificationLossVariable);
 
 inline Var binary_classification_loss(Var network_output, Var classnum)
 { 

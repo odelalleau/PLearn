@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: RightPseudoInverseVariable.h,v 1.4 2004/02/20 21:11:52 chrish42 Exp $
+   * $Id: RightPseudoInverseVariable.h,v 1.5 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,21 +51,27 @@ using namespace std;
 
 class RightPseudoInverseVariable: public UnaryVariable
 {
-protected:
-    typedef UnaryVariable inherited;
-  //!  Default constructor for persistence
-  RightPseudoInverseVariable() {}
+  typedef UnaryVariable inherited;
 
 public:
+  //!  Default constructor for persistence
+  RightPseudoInverseVariable() {}
   RightPseudoInverseVariable(Variable* input);
+
   PLEARN_DECLARE_OBJECT(RightPseudoInverseVariable);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
+
+protected:
+    void build_();
 };
+
+DECLARE_OBJECT_PTR(RightPseudoInverseVariable);
 
 inline Var rightPseudoInverse(Var v)
 {

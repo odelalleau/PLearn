@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DotProductVariable.cc,v 1.5 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: DotProductVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,16 +52,29 @@ using namespace std;
 
 // Dot product between 2 matrices (or vectors) with same number of elements
 
+PLEARN_IMPLEMENT_OBJECT(DotProductVariable,
+                        "Dot product between 2 matrices (or vectors) with same number of elements",
+                        "NO HELP");
+
 DotProductVariable::DotProductVariable(Variable* input1, Variable* input2)
-  : BinaryVariable(input1, input2, 1, 1)
+  : inherited(input1, input2, 1, 1)
 {
-  if(input1->nelems() != input2->nelems())
-    PLERROR("IN DotProductVariable input1 and input2 must have the same number of elements");
+    build_();
 }
 
+void
+DotProductVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
-PLEARN_IMPLEMENT_OBJECT(DotProductVariable, "ONE LINE DESCR", "NO HELP");
-
+void
+DotProductVariable::build_()
+{
+    if(input1 && input2 && (input1->nelems() != input2->nelems()))
+        PLERROR("IN DotProductVariable input1 and input2 must have the same number of elements");
+}
 
 void DotProductVariable::recomputeSize(int& l, int& w) const
 { l=1; w=1; }

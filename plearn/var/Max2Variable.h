@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Max2Variable.h,v 1.4 2004/02/20 21:11:51 chrish42 Exp $
+   * $Id: Max2Variable.h,v 1.5 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -56,21 +56,27 @@ using namespace std;
 */
 class Max2Variable: public BinaryVariable
 {
-protected:
-    typedef BinaryVariable inherited;
-  //!  Default constructor for persistence
-  Max2Variable() {}
+  typedef BinaryVariable inherited;
 
 public:
+  //!  Default constructor for persistence
+  Max2Variable() {}
   Max2Variable(Variable* input, Variable* power);
+
   PLEARN_DECLARE_OBJECT(Max2Variable);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
+
+protected:
+    void build_();
 };
+
+DECLARE_OBJECT_PTR(Max2Variable);
 
 inline Var max(Var v1, Var v2)
 { return new Max2Variable(v1,v2); }

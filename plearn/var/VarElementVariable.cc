@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: VarElementVariable.cc,v 1.4 2004/02/20 21:11:54 chrish42 Exp $
+   * $Id: VarElementVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,26 +49,32 @@ using namespace std;
 
 /** VarElementVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(VarElementVariable,
+                        "ONE LINE DESCR",
+                        "NO HELP");
+
 VarElementVariable::VarElementVariable(Variable* input1, Variable* input2)
-  : BinaryVariable(input1, input2, 1, 1)
+  : inherited(input1, input2, 1, 1)
 {
-  if(input2->nelems()>2)
-    PLERROR("IN VarElementVariable(Variable* input1, Variable* input2) input2 must have 1 (a k position index) or 2 elements (an i,j position index)");
+    build_();
 }
 
-  
-PLEARN_IMPLEMENT_OBJECT(VarElementVariable, "ONE LINE DESCR", "NO HELP");
+void
+VarElementVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
+void
+VarElementVariable::build_()
+{
+    if (input2 && input2->nelems() > 2)
+        PLERROR("IN VarElementVariable(Variable* input1, Variable* input2) input2 must have 1 (a k position index) or 2 elements (an i,j position index)");
+}
 
 void VarElementVariable::recomputeSize(int& l, int& w) const
 { l=1; w=1; }
-
-
-
-
-
-
-
 
 void VarElementVariable::fprop()
 {

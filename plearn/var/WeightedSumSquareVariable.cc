@@ -36,43 +36,50 @@
 
 
 /* *******************************************************      
-   * $Id: WeightedSumSquareVariable.cc,v 1.5 2004/02/20 21:11:54 chrish42 Exp $
+   * $Id: WeightedSumSquareVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "WeightedSumSquareVariable.h"
 #include "Var_operators.h"
-//#include "Var_utils.h"
 
 namespace PLearn {
 using namespace std;
 
-
-
-
 /** WeightedSumSquareVariable **/
 
-
-PLEARN_IMPLEMENT_OBJECT(WeightedSumSquareVariable, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(WeightedSumSquareVariable,
+                        "ONE LINE DESCR",
+                        "NO HELP");
 
 WeightedSumSquareVariable::WeightedSumSquareVariable(Variable* input, Variable* weights)
-  :BinaryVariable(input,weights,1,1)
+  : inherited(input,weights,1,1)
 {
-  if(input->nelems() != weights->nelems())
-    PLERROR("In WeightedSumSquareVariable: input and weights must be the same size;"
-	    " input->nelems()=%d weights->nelems()=&d.",
-	    input->nelems(), weights->nelems());
+    build_();
+}
+
+void
+WeightedSumSquareVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+WeightedSumSquareVariable::build_()
+{
+    if (input1 && input2) {
+        // input1 and input2 are (respectively) input and weights from constructor
+        if (input1->nelems() != input2->nelems())
+            PLERROR("In WeightedSumSquareVariable: input and weights must be the same size;"
+                    " input->nelems()=%d weights->nelems()=&d.",
+                    input1->nelems(), input2->nelems());
+    }
 }
 
 
 void WeightedSumSquareVariable::recomputeSize(int& l, int& w) const
 { l=1; w=1; }
-
-
-
-
-
-
 
 
 void WeightedSumSquareVariable::fprop()

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DeterminantVariable.cc,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: DeterminantVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,30 +45,36 @@
 namespace PLearn {
 using namespace std;
 
-
-
 /** DeterminantVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(DeterminantVariable,
+                        "The argument must be a square matrix Var and the result is its determinant",
+                        "NO HELP");
+
 DeterminantVariable::DeterminantVariable(Var m)
-  :UnaryVariable(m,1,1) 
+  : inherited(m,1,1) 
 {
-  if (m->width()!=m->length())
-    PLERROR("Max2Variable: parent(%d,%d) must be a square matrix",
-          m->length()!=m->width());
+    build_();
+}
+
+void
+DeterminantVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+DeterminantVariable::build_()
+{
+    if (input && (input->width() != input->length()))
+        PLERROR("Max2Variable: parent(%d,%d) must be a square matrix",
+                input->length() != input->width());
 }
 
 
-PLEARN_IMPLEMENT_OBJECT(DeterminantVariable, "ONE LINE DESCR", "NO HELP");
-
 void DeterminantVariable::recomputeSize(int& l, int& w) const
 { l=1; w=1; }
-
-
-
-
-
-
-
 
 
 void DeterminantVariable::fprop()

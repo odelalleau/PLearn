@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: VarRowsVariable.h,v 1.3 2004/02/20 21:11:54 chrish42 Exp $
+   * $Id: VarRowsVariable.h,v 1.4 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -55,23 +55,28 @@ using namespace std;
 */
 class VarRowsVariable: public BinaryVariable
 {
- protected:
-    typedef BinaryVariable inherited;
-  //!  Default constructor for persistence
-  VarRowsVariable() {}
+  typedef BinaryVariable inherited;
 
  public:
+  //!  Default constructor for persistence
+  VarRowsVariable() {}
   VarRowsVariable(Variable *input1, Variable *input2);
+
   PLEARN_DECLARE_OBJECT(VarRowsVariable);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
   //  virtual void rprop();
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
+
+protected:
+    void build_();
 };
 
+DECLARE_OBJECT_PTR(VarRowsVariable);
 
 } // end of namespace PLearn
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: VarRowVariable.cc,v 1.4 2004/02/20 21:11:54 chrish42 Exp $
+   * $Id: VarRowVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,32 +46,44 @@
 namespace PLearn {
 using namespace std;
 
-
-
-
 /** VarRowVariable **/
+  
+PLEARN_IMPLEMENT_OBJECT(VarRowVariable,
+                        "Variable that is the row of the input1 variable indexed by the input2 variable",
+                        "NO HELP");
 
 VarRowVariable::VarRowVariable(Variable* input1, Variable* input2)
-  : BinaryVariable(input1, input2, 1, input1->width())
+  : inherited(input1, input2, 1, input1->width())
 {
-  if(!input2->isScalar())
-    PLERROR("IN VarRowVariable(Variable* input1, Variable* input2) input2 must be scalar as it is supposed to be an integer index");
-  input1->allowPartialUpdates();
+    build_();
 }
 
-  
-PLEARN_IMPLEMENT_OBJECT(VarRowVariable, "ONE LINE DESCR", "NO HELP");
+void
+VarRowVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+VarRowVariable::build_()
+{
+    if (input1 && input2) {
+        if (!input2->isScalar())
+            PLERROR("IN VarRowVariable(Variable* input1, Variable* input2) input2 must be scalar as it is supposed to be an integer index");
+        input1->allowPartialUpdates();
+    }
+}
 
 
 void VarRowVariable::recomputeSize(int& l, int& w) const
-{ l=1; w=input1->width(); }
-
-
-
-
-
-
-
+{
+    l = 1;
+    if (input1)
+        w = input1->width();
+    else
+        w = 0;
+}
 
 void VarRowVariable::fprop()
 {

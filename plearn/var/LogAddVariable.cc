@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: LogAddVariable.cc,v 1.6 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: LogAddVariable.cc,v 1.7 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,19 +52,42 @@ using namespace std;
 
 /** LogAddVariable **/
 
+
+PLEARN_IMPLEMENT_OBJECT(LogAddVariable,
+                        "output = log(exp(input1)+exp(input2)) but it is "
+                        "computed in such a way as to preserve precision",
+                        "NO HELP");
+
 LogAddVariable::LogAddVariable(Variable* input1, Variable* input2)
-  :BinaryVariable(input1, input2, input1->length(), input1->width())
+  : inherited(input1, input2, input1->length(), input1->width())
 {
-  if (input1->length() != input2->length()  ||  input1->width() != input2->width())
-    PLERROR("PLogPVariable LogAddVariable input1 and input2 must have the same size");
+    build_();
 }
 
+void
+LogAddVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
-PLEARN_IMPLEMENT_OBJECT(LogAddVariable, "ONE LINE DESCR", "NO HELP");
-
+void
+LogAddVariable::build_()
+{
+    if (input1 && input2) {
+        if (input1->length() != input2->length()  ||  input1->width() != input2->width())
+            PLERROR("PLogPVariable LogAddVariable input1 and input2 must have the same size");
+    }
+}
 
 void LogAddVariable::recomputeSize(int& l, int& w) const
-{ l=input1->length(); w=input1->width(); }
+{
+    if (input1) {
+        l = input1->length();
+        w = input1->width();
+    } else
+        l = w = 0;
+}
 
 void LogAddVariable::fprop()
 {

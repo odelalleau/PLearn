@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatColumnsVariable.cc,v 1.3 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: ConcatColumnsVariable.cc,v 1.4 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,27 +48,43 @@ using namespace std;
 
 
 /** ConcatColumnsVariable **/
+
+PLEARN_IMPLEMENT_OBJECT(ConcatColumnsVariable,
+                        "Concatenation of the columns of several variables",
+                        "NO HELP");
+
 ConcatColumnsVariable::ConcatColumnsVariable(const VarArray& vararray)
-    :NaryVariable(vararray.nonNull(), vararray.maxLength(), vararray.sumOfWidths())
+    : inherited(vararray.nonNull(), vararray.maxLength(), vararray.sumOfWidths())
 {
-  int l=varray[0]->length();
-  for (int i=1; i<varray.size(); i++)
-    if (l!=varray[i]->length())
-      PLERROR("ConcatColumnsVariable: all non-null variables must have the same length");
+    build_();
 }
 
+void
+ConcatColumnsVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
-PLEARN_IMPLEMENT_OBJECT(ConcatColumnsVariable, "ONE LINE DESCR", "NO HELP");
+void
+ConcatColumnsVariable::build_()
+{
+    if (varray->length()) {
+        int l = varray[0]->length();
+        for (int i = 1; i < varray.size(); i++)
+            if (l != varray[i]->length())
+                PLERROR("ConcatColumnsVariable: all non-null variables must have the same length");
+    }
+}
 
 void ConcatColumnsVariable::recomputeSize(int& l, int& w) const
-{ l=varray.maxLength(); w=varray.sumOfWidths(); }
-
-
-
-
-
-
-
+{
+    if (varray) {
+        l = varray.maxLength();
+        w = varray.sumOfWidths();
+    } else
+        l = w = 0;
+}
 
 void ConcatColumnsVariable::fprop()
 {

@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: LiftOutputVariable.cc,v 1.5 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: LiftOutputVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -55,12 +55,27 @@ PLEARN_IMPLEMENT_OBJECT(
 ////////////////////////
 // LiftOutputVariable //
 ////////////////////////
-LiftOutputVariable::LiftOutputVariable
-  (Variable* netout, Variable* target)
-  :BinaryVariable(netout,target,1,1)
+LiftOutputVariable::LiftOutputVariable(Variable* netout, Variable* target)
+  : inherited(netout,target,1,1)
 {
-  if(netout->size() != target->size())
-    PLERROR("In LiftOutputVariable: netout and target must have the same size");
+    build_();
+}
+
+void
+LiftOutputVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+LiftOutputVariable::build_()
+{
+    if (input1 && input2) {
+        // input1 and input2 are (respectively) netout and target from the constructor
+        if(input1->size() != input2->size())
+            PLERROR("In LiftOutputVariable: netout and target must have the same size");
+    }
 }
 
 ///////////////////

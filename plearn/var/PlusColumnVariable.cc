@@ -36,13 +36,12 @@
 
 
 /* *******************************************************      
-   * $Id: PlusColumnVariable.cc,v 1.5 2004/02/20 21:11:52 chrish42 Exp $
+   * $Id: PlusColumnVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "PlusColumnVariable.h"
 #include "RowSumVariable.h"
-//#include "Var_utils.h"
 
 namespace PLearn {
 using namespace std;
@@ -50,27 +49,43 @@ using namespace std;
 
 /** PlusColumnVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(PlusColumnVariable,
+                        "Adds a single-column var to each column of a matrix var",
+                        "NO HELP");
+
 PlusColumnVariable::PlusColumnVariable(Variable* input1, Variable* input2)
-  :BinaryVariable(input1, input2, input1->length(), input1->width())
+  : inherited(input1, input2, input1->length(), input1->width())
 {
-  if(!input2->isColumnVec())
-    PLERROR("IN PlusColumnVariable: input2 is not a column");
-  if(input2->length() != input1->length())
-    PLERROR("IN PlusColumnVariable: input1 and input2 have a different length()");
+    build_();
+}
+
+void
+PlusColumnVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+PlusColumnVariable::build_()
+{
+    if (input1 && input2) {
+        if(!input2->isColumnVec())
+            PLERROR("IN PlusColumnVariable: input2 is not a column");
+        if(input2->length() != input1->length())
+            PLERROR("IN PlusColumnVariable: input1 and input2 have a different length()");
+    }
 }
 
 
-PLEARN_IMPLEMENT_OBJECT(PlusColumnVariable, "ONE LINE DESCR", "NO HELP");
-
-
 void PlusColumnVariable::recomputeSize(int& l, int& w) const
-{ l=input1->length(); w=input1->width(); }
-
-
-
-
-
-
+{
+    if (input1) {
+        l = input1->length();
+        w = input1->width();
+    } else
+        l = w = 0;
+}
 
 
 void PlusColumnVariable::fprop()

@@ -36,14 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: MinusColumnVariable.cc,v 1.5 2004/02/20 21:11:51 chrish42 Exp $
+   * $Id: MinusColumnVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "MinusColumnVariable.h"
 #include "RowSumVariable.h"
 #include "Var_operators.h"
-//#include "Var_utils.h"
 
 namespace PLearn {
 using namespace std;
@@ -51,27 +50,44 @@ using namespace std;
 
 /** MinusColumnVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(MinusColumnVariable,
+                        "ONE LINE DESCR",
+                        "NO HELP");
+
 MinusColumnVariable::MinusColumnVariable(Variable* input1, Variable* input2)
-  :BinaryVariable(input1, input2, input1->length(), input1->width())
+  : inherited(input1, input2, input1->length(), input1->width())
 {
-  if(!input2->isColumnVec())
-    PLERROR("IN MinusColumnVariable: input2 is not a column");
-  if(input2->length() != input1->length())
-    PLERROR("IN MinusColumnVariable: input1 and input2 have a different length()");
+    build_();
+}
+
+void
+MinusColumnVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+MinusColumnVariable::build_()
+{
+    if (input1 && input2) {
+        if(!input2->isColumnVec())
+            PLERROR("IN MinusColumnVariable: input2 is not a column");
+        if(input2->length() != input1->length())
+            PLERROR("IN MinusColumnVariable: input1 and input2 have a different length()");
+    }
 }
 
 
-PLEARN_IMPLEMENT_OBJECT(MinusColumnVariable, "ONE LINE DESCR", "NO HELP");
-
 
 void MinusColumnVariable::recomputeSize(int& l, int& w) const
-{ l=input1->length(); w=input1->width(); }
-
-
-
-
-
-
+{
+    if (input1) {
+        l = input1->length();
+        w = input1->width();
+    } else
+        l = w = 0;
+}
 
 
 void MinusColumnVariable::fprop()

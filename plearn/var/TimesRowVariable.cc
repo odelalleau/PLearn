@@ -36,14 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: TimesRowVariable.cc,v 1.5 2004/02/20 21:11:54 chrish42 Exp $
+   * $Id: TimesRowVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "ColumnSumVariable.h"
 #include "TimesRowVariable.h"
 #include "Var_operators.h"
-//#include "Var_utils.h"
 
 namespace PLearn {
 using namespace std;
@@ -51,28 +50,42 @@ using namespace std;
 
 /** TimesRowVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(TimesRowVariable,
+                        "Multiplies each row of a matrix var elementwise with a single row variable",
+                        "NO HELP");
+
 TimesRowVariable::TimesRowVariable(Variable* input1, Variable* input2)
-  :BinaryVariable(input1, input2, input1->length(), input1->width())
+  : inherited(input1, input2, input1->length(), input1->width())
 {
-  if(!input2->isRowVec())
-    PLERROR("IN TimesRowVariable: input2 is not a row");
-  if(input2->width() != input1->width())
-    PLERROR("IN TimesRowVariable: input1 and input2 have a different width()");
+    build_();
 }
 
+void
+TimesRowVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
-PLEARN_IMPLEMENT_OBJECT(TimesRowVariable, "ONE LINE DESCR", "NO HELP");
-
+void
+TimesRowVariable::build_()
+{
+    if (input1 && input2) {
+        if (!input2->isRowVec())
+            PLERROR("IN TimesRowVariable: input2 is not a row");
+        if (input2->width() != input1->width())
+            PLERROR("IN TimesRowVariable: input1 and input2 have a different width()");
+    }
+}
 
 void TimesRowVariable::recomputeSize(int& l, int& w) const
-{ l=input1->length(); w=input1->width(); }
-
-
-
-
-
-
-
+{
+    if (input1) {
+        l = input1->length();
+        w = input1->width();
+    } else
+        l = w = 0;
+}
 
 void TimesRowVariable::fprop()
 {

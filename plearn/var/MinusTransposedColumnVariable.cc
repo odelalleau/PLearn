@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MinusTransposedColumnVariable.cc,v 1.5 2004/02/20 21:11:51 chrish42 Exp $
+   * $Id: MinusTransposedColumnVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,28 +51,42 @@ using namespace std;
 
 /** MinusTransposedColumnVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(MinusTransposedColumnVariable,
+                        "ONE LINE DESCR",
+                        "NO HELP");
+
 MinusTransposedColumnVariable::MinusTransposedColumnVariable(Variable* input1, Variable* input2)
-  :BinaryVariable(input1, input2, input1->length(), input1->width())
+  : inherited(input1, input2, input1->length(), input1->width())
 {
-  if(!input2->isColumnVec())
-    PLERROR("IN MinusTransposedColumnVariable: input2 is not a column");
-  if(input2->length() != input1->width())
-    PLERROR("IN MinusTransposedColumnVariable: the width() of input1 and the length() of input2 differ");
+    build_();
 }
 
+void
+MinusTransposedColumnVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
-PLEARN_IMPLEMENT_OBJECT(MinusTransposedColumnVariable, "ONE LINE DESCR", "NO HELP");
-
+void
+MinusTransposedColumnVariable::build_()
+{
+    if (input1 && input2) {
+        if(!input2->isColumnVec())
+            PLERROR("IN MinusTransposedColumnVariable: input2 is not a column");
+        if(input2->length() != input1->width())
+            PLERROR("IN MinusTransposedColumnVariable: the width() of input1 and the length() of input2 differ");
+    }
+}
 
 void MinusTransposedColumnVariable::recomputeSize(int& l, int& w) const
-{ l=input1->length(); w=input1->width(); }
-
-
-
-
-
-
-
+{
+    if (input1) {
+        l = input1->length();
+        w = input1->width();
+    } else
+        l = w = 0;
+}
 
 void MinusTransposedColumnVariable::fprop()
 {
@@ -104,8 +118,6 @@ void MinusTransposedColumnVariable::symbolicBprop()
   input1->accg(g);
   input2->accg(-columnSum(g));
 }
-
-
 
 } // end of namespace PLearn
 

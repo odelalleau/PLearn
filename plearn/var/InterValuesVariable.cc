@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: InterValuesVariable.cc,v 1.5 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: InterValuesVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,25 +53,39 @@ using namespace std;
 
 // if values = [x1,x2,...,x10], the resulting variable is 
 // [(x1+x2)/2,(x2+x3)/2, ... (x9+x10)/2]
+PLEARN_IMPLEMENT_OBJECT(InterValuesVariable,
+                        "if values = [x1,x2,...,x10], the resulting variable is [(x1+x2)/2,(x2+x3)/2, ... (x9+x10)/2]",
+                        "NO HELP");
+
 InterValuesVariable::InterValuesVariable(Variable* values) 
-  :UnaryVariable(values,values->length()-1,1) 
+  : inherited(values,values->length()-1,1) 
 {
-  if(!values->isColumnVec())
-    PLERROR("In InterValuesVariable: input must be a column vector (single column matrix)");
+    build_();
+}
+
+void
+InterValuesVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+InterValuesVariable::build_()
+{
+    if(input && !input->isColumnVec())
+        PLERROR("In InterValuesVariable: input must be a column vector (single column matrix)");
 }
 
 
-PLEARN_IMPLEMENT_OBJECT(InterValuesVariable, "ONE LINE DESCR", "NO HELP");
-
 void InterValuesVariable::recomputeSize(int& l, int& w) const
-{ l=input->length()-1; w=1; }
-
-
-
-
-
-
-
+{
+    if (input)
+        l = input->length() - 1;
+    else
+        l = 0;
+    w=1;
+}
 
 
 void InterValuesVariable::fprop()

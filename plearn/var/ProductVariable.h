@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ProductVariable.h,v 1.4 2004/02/20 21:11:52 chrish42 Exp $
+   * $Id: ProductVariable.h,v 1.5 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,23 +52,29 @@ using namespace std;
 //!  Matrix product
 class ProductVariable: public BinaryVariable
 {
-protected:
-    typedef BinaryVariable inherited;
-  //!  Default constructor for persistence
-  ProductVariable() {}
+  typedef BinaryVariable inherited;
 
 public:
+  //!  Default constructor for persistence
+  ProductVariable() {}
   ProductVariable(Variable* input1, Variable* input2);
+
   PLEARN_DECLARE_OBJECT(ProductVariable);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
   virtual void fprop();
   virtual void bprop();
   virtual void bbprop();
   virtual void symbolicBprop();
   virtual void rfprop();
+
+protected:
+  void build_();
 };
+
+DECLARE_OBJECT_PTR(ProductVariable);
 
 //!  general matrix product
 inline Var product(Var v1, Var v2)

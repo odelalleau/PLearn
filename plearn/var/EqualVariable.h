@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: EqualVariable.h,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: EqualVariable.h,v 1.5 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,21 +53,27 @@ using namespace std;
 //!  A scalar var;  equal 1 if input1==input2, 0 otherwise
 class EqualVariable: public BinaryVariable
 {
-protected:
-    typedef BinaryVariable inherited;
-  //!  Default constructor for persistence
-  EqualVariable() {}
+  typedef BinaryVariable inherited;
 
 public:
+  //!  Default constructor for persistence
+  EqualVariable() {}
   EqualVariable(Variable* input1, Variable* input2);
+
   PLEARN_DECLARE_OBJECT(EqualVariable);
-  virtual void recomputeSize(int& l, int& w) const;
-  
-  
+
+  virtual void build();
+
+  virtual void recomputeSize(int& l, int& w) const;  
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
+
+protected:
+    void build_();
 };
+
+DECLARE_OBJECT_PTR(EqualVariable);
 
 /*!   First case: v1 and v2 are two vectors of length() l
      resulting Var is 1 if for all i=0 to l-1,

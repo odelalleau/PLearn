@@ -36,14 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: DivVariable.cc,v 1.5 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: DivVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "DivVariable.h"
 #include "InvertElementsVariable.h"
 #include "Var_operators.h"
-//#include "Var_utils.h"
 
 namespace PLearn {
 using namespace std;
@@ -51,26 +50,40 @@ using namespace std;
 
 /** DivVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(DivVariable,
+                        "Divide 2 matrix vars of same size elementwise",
+                        "NO HELP");
+
 DivVariable::DivVariable(Variable* input1, Variable* input2)
   : BinaryVariable(input1, input2, input1->length(), input1->width())
 {
-  if(input1->length()!=input2->length() || input1->width()!=input2->width())
-    PLERROR("In DivVariable: input1 and input2 must have exactly the same shape");
+    build_();
 }
 
 
-PLEARN_IMPLEMENT_OBJECT(DivVariable, "ONE LINE DESCR", "NO HELP");
-
-
 void DivVariable::recomputeSize(int& l, int& w) const
-{ l=input1->length(); w=input1->width(); }
+{
+    if (input1) {
+        l = input1->length();
+        w = input1->width();
+    } else
+        l = w = 0;
+}
 
+void
+DivVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
-
-
-
-
-
+void
+DivVariable::build_()
+{
+    if (input1 && input2)
+        if(input1->length() != input2->length() || input1->width() != input2->width())
+            PLERROR("In DivVariable: input1 and input2 must have exactly the same shape");
+}
 
 void DivVariable::fprop()
 {

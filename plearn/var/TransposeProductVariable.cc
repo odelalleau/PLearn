@@ -36,14 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: TransposeProductVariable.cc,v 1.5 2004/02/20 21:11:54 chrish42 Exp $
+   * $Id: TransposeProductVariable.cc,v 1.6 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "ProductVariable.h"
 #include "ProductTransposeVariable.h"
 #include "TransposeProductVariable.h"
-//#include "Var_utils.h"
 
 namespace PLearn {
 using namespace std;
@@ -52,25 +51,42 @@ using namespace std;
 /** TransposeProductVariable **/
 
 // Matrix product between transpose of matrix1 and matrix2
+
+PLEARN_IMPLEMENT_OBJECT(TransposeProductVariable,
+                        "Matrix product between transpose of matrix1 and matrix2",
+                        "NO HELP");
+
 TransposeProductVariable::TransposeProductVariable(Variable* m1, Variable* m2)
-  : BinaryVariable(m1, m2, m1->width(), m2->width())
+  : inherited(m1, m2, m1->width(), m2->width())
 {
-  if (m1->length() != m2->length())
-    PLERROR("In ProductVariable: the size of m1 and m2 are not compatible for a matrix product");
+    build_();
 }
 
+void
+TransposeProductVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
-PLEARN_IMPLEMENT_OBJECT(TransposeProductVariable, "ONE LINE DESCR", "NO HELP");
+void
+TransposeProductVariable::build_()
+{
+    if (input1 && input2) {
+        // input1 and input2 are (respectively) m1 and m2 from constructor
+        if (input1->length() != input2->length())
+            PLERROR("In ProductVariable: the size of m1 and m2 are not compatible for a matrix product");
+    }
+}
 
 void TransposeProductVariable::recomputeSize(int& l, int& w) const
-{ l=input1->width(); w=input2->width(); }
-
-
-
-
-
-
-
+{
+    if (input1 && input2) {
+        l = input1->width();
+        w = input2->width();
+    } else
+        l = w = 0;
+}
 
 void TransposeProductVariable::fprop()
 {

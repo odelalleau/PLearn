@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MinusVariable.h,v 1.5 2004/02/20 21:11:51 chrish42 Exp $
+   * $Id: MinusVariable.h,v 1.6 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,22 +51,28 @@ using namespace std;
 
 class MinusVariable: public BinaryVariable
 {
-protected:
-    typedef BinaryVariable inherited;
-  //!  Default constructor for persistence
-  MinusVariable() {}
+  typedef BinaryVariable inherited;
 
 public:
+  //!  Default constructor for persistence
+  MinusVariable() {}
   MinusVariable(Variable* input1, Variable* input2);
+
   PLEARN_DECLARE_OBJECT(MinusVariable);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
   virtual void fprop();
   virtual void bprop();
   virtual void bbprop();
   virtual void symbolicBprop();
+
+protected:
+    void build_();
 };
+
+DECLARE_OBJECT_PTR(MinusVariable);
 
 inline Var minus(Var v, Var w) {
       return new MinusVariable(v, w);

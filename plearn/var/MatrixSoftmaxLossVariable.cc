@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixSoftmaxLossVariable.cc,v 1.4 2004/02/20 21:11:51 chrish42 Exp $
+   * $Id: MatrixSoftmaxLossVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,24 +47,39 @@ using namespace std;
 
 
 /** MatrixSoftmaxLossVariable **/
-PLEARN_IMPLEMENT_OBJECT(MatrixSoftmaxLossVariable, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(MatrixSoftmaxLossVariable,
+                        "ONE LINE DESCR",
+                        "NO HELP");
 
 MatrixSoftmaxLossVariable::MatrixSoftmaxLossVariable(Variable* input1, Variable* input2) 
-:BinaryVariable(input1, input2, input2->length(), input2->width())
+  : inherited(input1, input2, input2->length(), input2->width())
 {
-  if(!input2->isVec())
-    PLERROR("In MatrixSoftmaxLossVariable: position must be a vector");
+    build_();
+}
+
+void
+MatrixSoftmaxLossVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+MatrixSoftmaxLossVariable::build_()
+{
+    if (input2 && !input2->isVec())
+        PLERROR("In MatrixSoftmaxLossVariable: position must be a vector");
 }
 
 
 void MatrixSoftmaxLossVariable::recomputeSize(int& l, int& w) const
-{ l=input2->length(); w=input2->width(); }
-
-
-
-
-
-
+{
+    if (input2) {
+        l = input2->length();
+        w = input2->width();
+    } else
+        l = w = 0;
+}
 
 
 void MatrixSoftmaxLossVariable::fprop()

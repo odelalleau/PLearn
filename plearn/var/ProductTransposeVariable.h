@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ProductTransposeVariable.h,v 1.4 2004/02/20 21:11:52 chrish42 Exp $
+   * $Id: ProductTransposeVariable.h,v 1.5 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,23 +52,29 @@ using namespace std;
 //!  Matrix product between matrix1 and transpose of matrix2
 class ProductTransposeVariable: public BinaryVariable
 {
-protected:
-    typedef BinaryVariable inherited;
-  //!  Default constructor for persistence
-  ProductTransposeVariable() {}
+  typedef BinaryVariable inherited;
 
 public:
+  //!  Default constructor for persistence
+  ProductTransposeVariable() {}
   ProductTransposeVariable(Variable* matrix1, Variable* matrix2);
+
   PLEARN_DECLARE_OBJECT(ProductTransposeVariable);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
   virtual void fprop();
   virtual void bprop();
   virtual void bbprop();
   virtual void symbolicBprop();
   virtual void rfprop();
+
+protected:
+    void build_();
 };
+
+DECLARE_OBJECT_PTR(ProductTransposeVariable);
 
 inline Var productTranspose(Var& m1, Var& m2)
 {

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: VecElementVariable.cc,v 1.4 2004/02/20 21:11:54 chrish42 Exp $
+   * $Id: VecElementVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,25 +48,39 @@ using namespace std;
 
 /** VecElementVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(VecElementVariable,
+                        "Variable that is the element of vector vec indexed by variable input",
+                        "NO HELP");
+
 VecElementVariable::VecElementVariable(const Vec& vec, Variable* input)
-  : UnaryVariable(input, 1,1), v(vec)
+  : inherited(input, 1,1), v(vec)
 {
-  if(!input->isScalar())
-    PLERROR("IN VecElementVariable(const Vec& vec, Variable* input) input must have nelems() 1 as it is supposed to be an integer index");
+    build_();
 }
 
+void
+VecElementVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
-PLEARN_IMPLEMENT_OBJECT(VecElementVariable, "ONE LINE DESCR", "NO HELP");
+void
+VecElementVariable::build_()
+{
+    if(input && !input->isScalar())
+        PLERROR("IN VecElementVariable(const Vec& vec, Variable* input) input must have nelems() 1 as it is supposed to be an integer index");
+}
+
+void
+VecElementVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "v", &VecElementVariable::v, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 void VecElementVariable::recomputeSize(int& l, int& w) const
 { l=1; w=1; }
-
-
-
-
-
-
-
 
 void VecElementVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {

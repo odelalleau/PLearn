@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: LogSoftmaxVariable.cc,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: LogSoftmaxVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,18 +48,23 @@ using namespace std;
 
 /** LogSoftmaxVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(LogSoftmaxVariable, "ONE LINE DESCR", "NO HELP");
-
-
-void LogSoftmaxVariable::recomputeSize(int& l, int& w) const
-{ l=input->length(); w=input->width(); }
-
+PLEARN_IMPLEMENT_OBJECT(LogSoftmaxVariable,
+                        "ONE LINE DESCR",
+                        "NO HELP");
 
 LogSoftmaxVariable::LogSoftmaxVariable(Variable* input) 
-    : UnaryVariable(input, input->length(), input->width())
+    : inherited(input, input->length(), input->width())
 {
 }
 
+void LogSoftmaxVariable::recomputeSize(int& l, int& w) const
+{
+    if (input) {
+        l = input->length();
+        w = input->width();
+    } else
+        l = w = 0;
+}
 
 void
 LogSoftmaxVariable::fprop()

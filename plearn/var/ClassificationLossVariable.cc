@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ClassificationLossVariable.cc,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: ClassificationLossVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,15 +48,30 @@ using namespace std;
 
 /** ClassificationLossVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(ClassificationLossVariable, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(ClassificationLossVariable,
+                        "Indicator(classnum==argmax(netout))",
+                        "NO HELP");
 
 ClassificationLossVariable::ClassificationLossVariable(Variable* netout, Variable* classnum)
-  :BinaryVariable(netout,classnum,1,1)
+  : inherited(netout,classnum,1,1)
 {
-  if(!classnum->isScalar())
-    PLERROR("In ClassificationLossVariable: classnum must be a scalar variable representing an index of netout (typically a class number)");
+    build_();
 }
 
+void
+ClassificationLossVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+ClassificationLossVariable::build_()
+{
+    // input2 is classnum from constructor
+    if (input2 && !input2->isScalar())
+        PLERROR("In ClassificationLossVariable: classnum must be a scalar variable representing an index of netout (typically a class number)");
+}
 
 void ClassificationLossVariable::recomputeSize(int& l, int& w) const
 { l=1, w=1; }

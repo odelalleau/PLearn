@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PlusVariable.h,v 1.4 2004/02/23 14:30:41 tihocan Exp $
+   * $Id: PlusVariable.h,v 1.5 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,23 +52,29 @@ using namespace std;
 //!  adds 2 matrix vars of same size
 class PlusVariable: public BinaryVariable
 {
-protected:
-    typedef BinaryVariable inherited;
-  //!  Default constructor for persistence
-  PlusVariable() {}
+  typedef BinaryVariable inherited;
 
 public:
+  //!  Default constructor for persistence
+  PlusVariable() {}
   PlusVariable(Variable* input1, Variable* input2);
+
   PLEARN_DECLARE_OBJECT(PlusVariable);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
   //  virtual void rprop();
   virtual void fprop();
   virtual void bprop();
   virtual void bbprop();
   virtual void symbolicBprop();
+
+protected:
+    void build_();
 };
+
+DECLARE_OBJECT_PTR(PlusVariable);
 
 } // end of namespace PLearn
 

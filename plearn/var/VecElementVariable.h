@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: VecElementVariable.h,v 1.4 2004/02/20 21:11:54 chrish42 Exp $
+   * $Id: VecElementVariable.h,v 1.5 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,26 +52,32 @@ using namespace std;
 //!  Variable that is the element of vector vec indexed by variable input
 class VecElementVariable: public UnaryVariable
 {
-protected:
-    typedef UnaryVariable inherited;
-  //!  Default constructor for persistence
-  VecElementVariable() {}
+  typedef UnaryVariable inherited;
 
 protected:
   Vec v;
 
 public:
+  //!  Default constructor for persistence
+  VecElementVariable() {}
   VecElementVariable(const Vec& vec, Variable* input);
+
   PLEARN_DECLARE_OBJECT(VecElementVariable);
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
 
+protected:
+  void build_();
 };
+
+DECLARE_OBJECT_PTR(VecElementVariable);
 
 inline Var accessElement(const Vec& v, Var index)
 { return new VecElementVariable(v,index); }

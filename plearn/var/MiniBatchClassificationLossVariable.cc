@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MiniBatchClassificationLossVariable.cc,v 1.4 2004/02/20 21:11:51 chrish42 Exp $
+   * $Id: MiniBatchClassificationLossVariable.cc,v 1.5 2004/04/27 15:58:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,25 +47,41 @@ using namespace std;
 
 
 /** MiniBatchClassificationLossVariable **/
-PLEARN_IMPLEMENT_OBJECT(MiniBatchClassificationLossVariable, "ONE LINE DESCR", "NO HELP");
+
+PLEARN_IMPLEMENT_OBJECT(MiniBatchClassificationLossVariable,
+                        "ONE LINE DESCR",
+                        "NO HELP");
 
 MiniBatchClassificationLossVariable::MiniBatchClassificationLossVariable(Variable* netout, Variable* classnum)
-  :BinaryVariable(netout,classnum,classnum->length(),classnum->width())
+  : inherited(netout,classnum,classnum->length(),classnum->width())
 {
-  if(!classnum->isVec())
-    PLERROR("In MiniBatchClassificationLossVariable: classnum must be a vector variable representing the indexs of netout (typically class numbers)");
+    build_();
+}
+
+void
+MiniBatchClassificationLossVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+MiniBatchClassificationLossVariable::build_()
+{
+    // input2 is classnum from constructor
+    if(input2 && !input2->isVec())
+        PLERROR("In MiniBatchClassificationLossVariable: classnum must be a vector variable representing the indexs of netout (typically class numbers)");
 }
 
 
 void MiniBatchClassificationLossVariable::recomputeSize(int& l, int& w) const
-{ l=input2->length(), w=input2->width(); }
-
-
-
-
-
-
-
+{
+    if (input2) {
+        l = input2->length();
+        w = input2->width();
+    } else
+        l = w = 0;
+}
 
 void MiniBatchClassificationLossVariable::fprop()
 {
