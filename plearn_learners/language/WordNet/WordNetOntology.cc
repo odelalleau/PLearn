@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.cc,v 1.22 2003/07/21 16:59:59 jauvinc Exp $
+   * $Id: WordNetOntology.cc,v 1.23 2003/07/21 19:18:18 jauvinc Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -2686,8 +2686,8 @@ void removeDelimiters(string& s, char delim, char replace)
   unsigned int pos = s.find(delim, 0);
   while (pos != string::npos)
   {
-      //s.replace(pos, 1, &replace);
-      s.replace(pos, 1, replace);
+    //s.replace(pos, 1, replace);
+    s.replace(pos, 1, &replace);
     pos = s.find(delim, pos + 1);
   }
 }
@@ -2705,7 +2705,8 @@ void replaceChars(string& str, char char_to_replace, char replacing_char)
   unsigned int pos = str.find(char_to_replace, 0);
   while (pos != string::npos)
   {
-    str.replace(pos, 1, replacing_char);
+    //str.replace(pos, 1, replacing_char);
+    str.replace(pos, 1, &replacing_char);
     pos = str.find(char_to_replace, pos + 1);
   }
 }
