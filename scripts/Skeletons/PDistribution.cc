@@ -173,7 +173,7 @@ void DERIVEDCLASS::train()
   /* TYPICAL CODE:
 
      static Vec input  // static so we don't reallocate/deallocate memory each time...
-     static Vec target
+     static Vec target // (but be careful, static means shared!)
      input.resize(inputsize())    // the train_set's inputsize()
      target.resize(targetsize())  // the train_set's targetsize()
      real weight
