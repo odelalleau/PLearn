@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.h,v 1.7 2003/09/10 21:06:10 ducharme Exp $ 
+   * $Id: MountLucasIndex.h,v 1.8 2003/09/17 21:14:37 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.h */
@@ -68,17 +68,32 @@ class MountLucasIndex: public SequentialLearner
     Mat next_to_last_unit_asset_value;
     Vec unit_asset_value;
     Vec index_value; // the monthly MLM Index
-    int current_month; // the current month (=0 for the first month of the train_set)
+    mutable int current_month; // the current month (=0 for the first month of the train_set)
     int nb_commodities; // number of commodities included in the MLM Index
     TVec<int> commodity_price_index; // the index corresponding to commodity_price_columns
     int last_day_of_month_index; // the index corresponding to last_day_of_month_column
     int julian_day_index; // the index corresponding to julian_day_column
     int risk_free_rate_index; // the index corresponding to risk_free_rate_column
     bool build_complete;
+
+    Vec last_month_last_price;
+    Vec last_month_next_to_last_price;
+    Vec last_tradable_price;
+    Vec next_to_last_tradable_price;
+    mutable real last_month_risk_free_rate;
+
+    Vec tbill_return;
+    Mat mlm_return;
+    Mat mlm_index;
+    mutable real s,s2,sf,sf2;
+    mutable int ns;
  
   private:
     //! This does the actual building
     void build_();
+
+    //! The core implementation of the train and test methods
+    void TrainTestCore(const Vec& input, VMat testoutputs=0, VMat testcosts=0) const;
 
   protected:
     //! Declare this class' options
