@@ -2,7 +2,7 @@
 %%
 %%  Copyright (c) 1998-2002 by Pascal Vincent
 %%
-%%  $Id: programmers_guide.tex,v 1.11 2004/07/13 20:34:23 lamblin Exp $
+%%  $Id: programmers_guide.tex,v 1.12 2004/08/02 20:08:51 lamblin Exp $
 
 \documentclass[11pt]{book}
 \usepackage{t1enc}              % new font encoding  (hyphenate words w/accents)
@@ -148,7 +148,7 @@ difficult but the efficiency is uncomparable.
 \subsection{Creating}
 
 \begin{verbatim}
-#include "TMat_maths.h"
+#include <plearn/math/TMat_maths.h>
 using namespace PLearn;
 
 int main(int argc, char** argv)
@@ -197,7 +197,7 @@ date, they are not documented, so you have to have a bath in the file (methods
 should be commented). A short example:
 
 \begin{verbatim}
-#include "TMat_maths.h"
+#include <plearn/math/TMat_maths.h>
 using namespace PLearn;
 
 int main(int argc, char** argv)
@@ -232,9 +232,10 @@ You can load and save a Mat with the following code (note that it needs an
 include of VMat.h):
 \begin{verbatim}
 
-#include "TMat_maths.h"
-#include "VMat.h"
-#include "getDataSet.h"
+#include <plearn/math/TMat_maths.h>
+#include <plearn/var/Var_all.h>
+#include <plearn/vmat/VMat.h>
+#include <plearn/db/getDataSet.h>
 
 using namespace PLearn;
 
@@ -587,7 +588,7 @@ provides the setOption method. Suppose {\tt Person} is a subclass of
 \Object, then we could do the following:
 
 \begin{verbatim}
-#include "Object.h"
+#include <plearn/base/Object.h>
 #include "Person.h"
 
 using namespace PLearn;
@@ -632,7 +633,7 @@ In the following code, we a way to build {\tt me} from its description
 in the file.
 
 \begin{verbatim}
-#include "Object.h"
+#include <plearn/base/Object.h>
 #include "Person.h"
 
 using namespace PLearn;
@@ -714,7 +715,7 @@ Drawing(
 Finally, you should use a SmartPointable for Person, as seen before in \ref{PP}.
 
 \begin{verbatim}
-#include "Object.h"
+#include <plearn/base/Object.h>
 #include "Person.h"
 
 using namespace PLearn;
@@ -785,8 +786,8 @@ nodes to represent intermediate states (variables) of the calculations.
  Example: 
  
 \begin{verbatim}
-#include "Var_all.h"
-#include "TMat_maths.h"
+#include <plearn/var/Var_all.h>
+#include <plearn/math/TMat_maths.h>
 
 using namespace PLearn;
 
@@ -836,8 +837,8 @@ int main(int argc, char** argv)
  To obtain the correct value of z as a function of x and u, after setting x->value and u->value, we need to perform fprop on all the intermediate nodes as well as z. 
 
 \begin{verbatim}
-#include "Var_all.h"
-#include "TMat_maths.h"
+#include <plearn/var/Var_all.h>
+#include <plearn/math/TMat_maths.h>
 
 using namespace PLearn;
 
@@ -886,7 +887,8 @@ be several input Vars so they are put in a VarArray. Once the path
 is obtained, we can propagate values through it with the fprop method:
 
 \begin{verbatim}
-#include "Var_all.h" #include "TMat_maths.h"
+#include <plearn/var/Var_all.h>
+#include <plearn/math/TMat_maths.h>
 
 using namespace PLearn;
 
@@ -925,8 +927,8 @@ int main(int argc, char** argv)
  In the previous, the \texttt{VarArray} is useful but not essential. Let consider the following example:
 
 \begin{verbatim}
-#include "Var_all.h"
-#include "TMat_maths.h"
+#include <plearn/var/Var_all.h>
+#include <plearn/math/TMat_maths.h>
 
 using namespace PLearn;
 
@@ -966,8 +968,8 @@ int main(int argc, char** argv)
  Once we have this path, we can also back-propagated gradients. For example, if we set the gradient of z to 1,
 
 \begin{verbatim}
-#include "Var_all.h"
-#include "TMat_maths.h"
+#include <plearn/var/Var_all.h>
+#include <plearn/math/TMat_maths.h>
 
 using namespace PLearn;
 
@@ -1025,8 +1027,8 @@ The main are:
 
 The last one id used as in the following example:
 \begin{verbatim}
-#include "Var_all.h"
-#include "TMat_maths.h"
+#include <plearn/var/Var_all.h>
+#include <plearn/math/TMat_maths.h>
 using namespace PLearn;
 
 int main(int argc, char** argv)
@@ -1055,10 +1057,10 @@ You can find numerous var in \texttt{PLearn\/plearn\/var}, some are shortcuted b
 
 With the following method, you can load and save THE VALUE of a var (not the symbolic path). 
 \begin{verbatim}
-#include "VMat.h"
-#include "getDataSet.h"
-#include "Var_all.h"
-#include "TMat_maths.h"
+#include <plearn/vmat/VMat.h>
+#include <plearn/db/getDataSet.h>
+#include <plearn/var/Var_all.h>
+#include <plearn/math/TMat_maths.h>
 
 using namespace PLearn;
 
@@ -1094,8 +1096,8 @@ as in the following example. Note that it will save all the Var,
 including the sub ones.
 
 \begin{verbatim}
-#include "Var_all.h"
-#include "TMat_maths.h"
+#include <plearn/var/Var_all.h>
+#include <plearn/math/TMat_maths.h>
 
 using namespace PLearn;
 
@@ -1145,8 +1147,8 @@ int main(int argc, char** argv)
 In order to make the usage of Var more friendly, you can use Func. The Func class is mode for those who want to make fprop on different values of Var in an elegant way. The two following examples illustrate this: they do exactly the same thing, but the first one without Func and the second one with.
 
 \begin{verbatim}
-#include "Var_all.h"
-#include "TMat_maths.h"
+#include <plearn/var/Var_all.h>
+#include <plearn/math/TMat_maths.h>
 
 using namespace PLearn;
 
@@ -1191,8 +1193,8 @@ int main(int argc, char** argv)
 With Func:
 
 \begin{verbatim}
-#include "Var_all.h"
-#include "TMat_maths.h"
+#include <plearn/var/Var_all.h>
+#include <plearn/math/TMat_maths.h>
 
 using namespace PLearn;
 
