@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.50 2004/04/23 02:53:33 yoshua Exp $
+   * $Id: NNet.cc,v 1.51 2004/04/23 13:15:16 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -329,14 +329,16 @@ void NNet::build_()
         {
           rbf_centers = Var(outputsize()-1, rbf_layer_size, "rbf_centers");
           rbf_sigmas = Var(outputsize()-1, "rbf_sigmas");
-          output = hconcat(rbf_layer(output,rbf_centers,rbf_sigmas)&junk_prob);
+          PLERROR("In NNet.cc, the code needs to be completed, rbf_layer isn't declared and thus it doesn't compile with the line below");
+//          output = hconcat(rbf_layer(output,rbf_centers,rbf_sigmas)&junk_prob);
           params.append(junk_prob);
         }
         else
         {
           rbf_centers = Var(outputsize(), rbf_layer_size, "rbf_centers");
           rbf_sigmas = Var(outputsize(), "rbf_sigmas");
-          output = rbf_layer(output,rbf_centers,rbf_sigmas);
+          PLERROR("In NNet.cc, the code needs to be completed, rbf_layer isn't declared and thus it doesn't compile with the line below");
+//          output = rbf_layer(output,rbf_centers,rbf_sigmas);
         }
         params.append(rbf_centers);
         params.append(rbf_sigmas);
@@ -759,6 +761,9 @@ void NNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   varDeepCopyField(outbias, copies);
   varDeepCopyField(wdirect, copies);
   varDeepCopyField(wrec, copies);
+  varDeepCopyField(rbf_centers, copies);
+  varDeepCopyField(rbf_sigmas, copies);
+  varDeepCopyField(junk_prob, copies);
   varDeepCopyField(output, copies);
   varDeepCopyField(predicted_input, copies);
   deepCopyField(costs, copies);
