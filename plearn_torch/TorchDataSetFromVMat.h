@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TorchDataSetFromVMat.h,v 1.1 2005/02/23 01:32:10 tihocan Exp $ 
+   * $Id: TorchDataSetFromVMat.h,v 1.2 2005/02/23 21:55:45 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -53,33 +53,33 @@ namespace Torch {
 class TorchDataSetFromVMat : public DataSet
 {
 
-  protected:
+protected:
 
-    //! PLearn vectors to store input and target parts.
-    PLearn::Vec input;
-    PLearn::Vec target;
+  //! PLearn vectors to store input and target parts.
+  PLearn::Vec input;
+  PLearn::Vec target;
 
-    //! Dummy weight for PLearn.
-    real dummy_weight;
+  //! Dummy weight for PLearn.
+  real dummy_weight;
 
-    //! List of preprocesses to perform.
-    PreProcessingList *pre_processes;
-  
-  public:
+  //! List of preprocesses to perform.
+  PreProcessingList *pre_processes;
 
-    //! The underlying PLearn VMatrix.
-    PLearn::VMat vmat;
+public:
 
-    //! Build a Torch::DataSet object from a PLearn::VMatrix.
-    TorchDataSetFromVMat(PLearn::VMat vm);
+  //! The underlying PLearn VMatrix.
+  PLearn::VMat vmat;
 
-    virtual void getNumberOfFrames(int t, int *n_input_frames, int *n_target_frames);
-    virtual void preProcess(PreProcessing *pre_processing);
-    virtual void setRealExample(int t, bool set_inputs=true, bool set_targets=true);
-    virtual void pushExample();
-    virtual void popExample();
+  //! Build a Torch::DataSet object from a PLearn::VMatrix.
+  TorchDataSetFromVMat(PLearn::VMat vm);
 
-    virtual ~TorchDataSetFromVMat();
+  virtual void getNumberOfFrames(int t, int *n_input_frames, int *n_target_frames);
+  virtual void preProcess(PreProcessing *pre_processing);
+  virtual void setRealExample(int t, bool set_inputs=true, bool set_targets=true);
+  virtual void pushExample();
+  virtual void popExample();
+
+  virtual ~TorchDataSetFromVMat();
 
 };
 
