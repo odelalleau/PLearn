@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOfVariable.cc,v 1.8 2004/02/20 21:11:53 chrish42 Exp $
+   * $Id: SumOfVariable.cc,v 1.9 2004/04/27 16:05:57 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,32 +51,65 @@ using namespace std;
 
 /** SumOfVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(SumOfVariable,
+                        "Variable that sums the value of a Func evaluated on each row of a VMat",
+                        "NO HELP");
+
 SumOfVariable::SumOfVariable(VMat the_distr, Func the_f, int the_nsamples)
-  :NaryVariable(nonInputParentsOfPath(the_f->inputs,the_f->outputs), 
+  : inherited(nonInputParentsOfPath(the_f->inputs,the_f->outputs), 
                 the_f->outputs[0]->length(), 
                 the_f->outputs[0]->width()),
-   distr(the_distr), f(the_f), nsamples(the_nsamples), curpos(0),
-   //input_value(the_distr->inputsize()+the_distr->targetsize()+the_distr->weightsize()), 
-   //input_gradient(the_distr->inputsize()+the_distr->targetsize()+the_distr->weightsize()), 
-   input_value(the_distr->width()),
-   input_gradient(the_distr->width()),
-   output_value(the_f->outputs[0]->size())
+    distr(the_distr), f(the_f), nsamples(the_nsamples), curpos(0),
+    //input_value(the_distr->inputsize()+the_distr->targetsize()+the_distr->weightsize()), 
+    //input_gradient(the_distr->inputsize()+the_distr->targetsize()+the_distr->weightsize()), 
+    input_value(the_distr->width()),
+    input_gradient(the_distr->width()),
+    output_value(the_f->outputs[0]->size())
 {
-  input_value.resize(the_distr->inputsize()+the_distr->targetsize()+the_distr->weightsize());
-  input_gradient.resize(the_distr->inputsize()+the_distr->targetsize()+the_distr->weightsize());
-  if(f->outputs.size()!=1)
-    PLERROR("In SumOfVariable: function must have a single variable output (maybe you can vconcat the vars into a single one prior to calling sumOf, if this is really what you want)");
+    build_();
+}
 
-  if(nsamples==-1)
-    nsamples = distr->length();
-  f->inputs.setDontBpropHere(true);
+void
+SumOfVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+SumOfVariable::build_()
+{
+    if (f && distr) {
+        input_value.resize(distr->inputsize() + distr->targetsize() + distr->weightsize());
+        input_gradient.resize(distr->inputsize() + distr->targetsize() + distr->weightsize());
+        if(f->outputs.size() != 1)
+            PLERROR("In SumOfVariable: function must have a single variable output (maybe you can vconcat the vars into a single one prior to calling sumOf, if this is really what you want)");
+
+        if(nsamples == -1)
+            nsamples = distr->length();
+        f->inputs.setDontBpropHere(true);
+    }
+}
+
+void
+SumOfVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "distr", &SumOfVariable::distr, OptionBase::buildoption, "");
+    declareOption(ol, "f", &SumOfVariable::f, OptionBase::buildoption, "");
+    declareOption(ol, "nsamples", &SumOfVariable::nsamples, OptionBase::buildoption, "");
+    declareOption(ol, "curpos", &SumOfVariable::curpos, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
 }
 
 
-PLEARN_IMPLEMENT_OBJECT(SumOfVariable, "Variable that sums the value of a Func evaluated on each row of a VMat", "NO HELP");
-
 void SumOfVariable::recomputeSize(int& l, int& w) const
-{ l=f->outputs[0]->length(); w=f->outputs[0]->width(); }
+{
+    if (f && f->outputs.size()) {
+        l = f->outputs[0]->length();
+        w = f->outputs[0]->width();
+    } else
+        l = w = 0;
+}
 
 
 void SumOfVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOfVariable.h,v 1.4 2004/02/20 21:11:53 chrish42 Exp $
+   * $Id: SumOfVariable.h,v 1.5 2004/04/27 16:05:57 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,9 +51,7 @@ using namespace std;
 
 class SumOfVariable: public NaryVariable
 {
-  protected:
-    //!  protected default constructor for persistence
-    SumOfVariable() : distr(), f(), nsamples(), curpos() {}
+    typedef NaryVariable inherited;
 
   public:
   //protected:
@@ -67,10 +65,16 @@ class SumOfVariable: public NaryVariable
     Vec output_value;
     
   public:
+    //!  protected default constructor for persistence
+    SumOfVariable() : distr(), f(), nsamples(), curpos() {}
     //!  Sum_{inputs \in distr} f(inputs)
     SumOfVariable(VMat the_distr, Func the_f, int the_nsamples=-1);
     
     PLEARN_DECLARE_OBJECT(SumOfVariable);
+    static void declareOptions(OptionList &ol);
+
+    virtual void build();
+
     virtual void recomputeSize(int& l, int& w) const;
     virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
     virtual void fprop();
@@ -80,7 +84,12 @@ class SumOfVariable: public NaryVariable
     virtual void rfprop();
     
     void printInfo(bool print_gradient);
+
+protected:
+    void build_();
 };
+
+DECLARE_OBJECT_PTR(SumOfVariable);
 
 //!  sumOf
 inline Var sumOf(VMat distr, Func f, int nsamples)
