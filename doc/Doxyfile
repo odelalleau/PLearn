@@ -757,8 +757,13 @@ PREDEFINED             =
 # The macro definition that is found in the sources will be used. 
 # Use the PREDEFINED tag if you want to use a different macro definition.
 
-EXPAND_AS_DEFINED      = PLEARN_DECLARE_OBJECT DECLARE_OBJECT_PTR \
-			 DECLARE_TYPE_TRAITS PLEARN_DECLARE_ABSTRACT_OBJECT
+EXPAND_AS_DEFINED      = PLEARN_DECLARE_OBJECT PLEARN_IMPLEMENT_OBJECT \
+		         DECLARE_OBJECT_PTR DECLARE_TEMPLATE_OBJECT_PTR \
+			 DECLARE_TYPE_TRAITS DECLARE_OBJECT_PP \
+			 PLEARN_DECLARE_ABSTRACT_OBJECT \
+			 PLEARN_IMPLEMENT_ABSTRACT_OBJECT \
+			 PLEARN_DECLARE_TEMPLATE_OBJECT \
+			 PLEARN_IMPLEMENT_TEMPLATE_OBJECT
 
 # If the SKIP_FUNCTION_MACROS tag is set to YES (the default) then 
 # doxygen's preprocessor will remove all function-like macros that are alone 
