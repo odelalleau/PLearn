@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /********************************************************
-* $Id: VMatrix.cc,v 1.93 2005/02/24 16:27:35 lheureup Exp $
+* $Id: VMatrix.cc,v 1.94 2005/02/26 18:29:07 tihocan Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -779,11 +779,9 @@ void VMatrix::setMetaDataDir(const PPath& the_metadatadir)
   if(the_metadatadir=="")
     PLERROR("Called setMetaDataDir with an empty string");
   metadatadir = the_metadatadir.absolute() / "";
-  // TODO See why the metadata dir is not created anymore.
-// dorionc
-//!<   if(!force_mkdir(metadatadir))
-//!<     PLERROR("In VMatrix::setMetadataDir could not create directory %s",metadatadir.c_str());
-//!<   metadatadir = abspath(metadatadir);
+  // We do not create the metadata directory here anymore.
+  // This is to prevent the proliferation of useless directories.
+  // A VMatrix's subclass should now create the metadatadir itself if it needs it.
 }
 
 //////////////////
