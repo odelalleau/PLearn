@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLS.cc,v 1.1 2004/02/24 21:32:01 tihocan Exp $ 
+   * $Id: PLS.cc,v 1.2 2004/02/26 03:39:57 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -311,14 +311,8 @@ void PLS::train()
   }
   VMat input_part = new SubVMatrix(
       train_set, 0, 0, train_set->length(), train_set->inputsize());
-  int target_start_col;
-  if (train_set->target_is_last) {
-    target_start_col = train_set->width() - train_set->targetsize();
-  } else {
-    target_start_col = train_set->inputsize();
-  }
   VMat target_part = new SubVMatrix(
-      train_set, 0, target_start_col, train_set->length(), train_set->targetsize());
+      train_set, 0, train_set->inputsize(), train_set->length(), train_set->targetsize());
   PP<ShiftAndRescaleVMatrix> X_vmat = new ShiftAndRescaleVMatrix();
   X_vmat->vm = input_part;
   X_vmat->build();
