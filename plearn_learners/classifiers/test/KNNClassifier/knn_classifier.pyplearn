@@ -1,0 +1,73 @@
+import os.path
+import sys
+from plearn.pyplearn import *
+
+plarg_defaults.data = \
+    os.path.expandvars(os.path.join("${PLEARNDIR}/test_suite/data/eslt_mixture",
+                                    "data_train.amat"))
+plarg_defaults.kernel = "GaussianKernel"
+plarg_defaults.sigma  = "1"
+plarg_defaults.kmin   = "15"
+plarg_defaults.kmult  = "0"
+plarg_defaults.output = "grapher"
+expdir = "knn_classifier_data=%s_kernel=%s_sigma=%s_kmin=%s_kmult=%s" % \
+         (os.path.basename(plargs.data), plargs.kernel,
+          plargs.sigma, plargs.kmin, plargs.kmult)
+
+dataset = pl.AutoVMatrix(
+    specification = plargs.data,
+    inputsize = 2,
+    targetsize = 1,
+    weightsize = 0)
+
+## Cover the default separately to exercise different code paths
+if plargs.kernel == "GaussianKernel" and plargs.sigma == "1":
+    learner = pl.KNNClassifier(nclasses=2,
+                               kmin=int(plargs.kmin),
+                               kmult=float(plargs.kmult))
+elif plargs.kernel == "GaussianKernel":
+    learner = pl.KNNClassifier(knn = pl.ExhaustiveNearestNeighbors(),
+                               kernel = pl.GaussianKernel(sigma = float(plargs.sigma)),
+                               nclasses=2,
+                               kmin=int(plargs.kmin),
+                               kmult=float(plargs.kmult))
+elif plargs.kernel == "Constant":
+    ## Rectangular window
+    learner = pl.KNNClassifier(knn = pl.ExhaustiveNearestNeighbors(),
+                               use_knn_costs_as_weights = 0,
+                               nclasses=2,
+                               kmin=int(plargs.kmin),
+                               kmult=float(plargs.kmult))
+else:
+    print >>sys.stderr, "Non-Gaussian kernels not supported for now"
+    
+splitter = pl.FractionSplitter(
+    splits = TMat(1,2, [ (0,1) , (0,1) ])
+    )
+
+tester = pl.PTester(
+    expdir    = expdir,
+    dataset   = dataset,
+    splitter  = splitter,
+    learner   = learner,
+    statnames = ['E[test.E[class_error]]', 'E[test.E[neglogprob]]'],
+    provide_learner_expdir = 1,
+    save_test_costs   = 1,
+    save_test_outputs = 1
+    )
+
+grapher = pl.Grapher(
+    task = "2D classification",
+    basename = expdir,
+    learner = learner,
+    trainset = dataset,
+    griddim = [200,200],
+    radius = -1./500
+    )
+    
+
+def main():
+    if plargs.output == "grapher":
+        return grapher
+    else:
+        return tester

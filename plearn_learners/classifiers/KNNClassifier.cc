@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNClassifier.cc,v 1.2 2004/12/24 07:37:04 chapados Exp $ 
+   * $Id: KNNClassifier.cc,v 1.3 2004/12/25 08:02:52 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -87,6 +87,10 @@ PLEARN_IMPLEMENT_OBJECT(
   "a kernel that computes a SIMILARITY MEASURE, and not a DISTANCE MEASURE;\n"
   "the default GaussianKernel has the proper behavior.)  If the option\n"
   "is false, an equal weighting is used (equivalent to square window).\n"
+  "\n"
+  "The weights originally present in the training set ARE TAKEN INTO\n"
+  "ACCOUNT when weighting each observation: they serve to multiply the\n"
+  "kernel values to give the effective weight for an observation.\n"
   );
 
 KNNClassifier::KNNClassifier()
@@ -104,7 +108,7 @@ void KNNClassifier::declareOptions(OptionList& ol)
   declareOption(
     ol, "knn", &KNNClassifier::knn, OptionBase::buildoption,
     "The K-nearest-neighbors finder to use (default is an\n"
-    "ExhaustiveNearestNeighbors with a Gaussian kernel, sigma=1)");
+    "ExhaustiveNearestNeighbors with a GaussianKernel, sigma=1)");
 
   declareOption(
     ol, "nclasses", &KNNClassifier::nclasses, OptionBase::buildoption,
@@ -192,7 +196,7 @@ void KNNClassifier::setTrainingSet(VMat training_set, bool call_forget)
   knn->num_neighbors = num_neighbors;
   knn->copy_input  = bool(kernel);
   knn->copy_target = true;
-  knn->copy_weight = false;
+  knn->copy_weight = true;
   knn->copy_index  = false;
   knn->setTrainingSet(training_set,call_forget);
   knn_costs.resize(knn->nTestCosts());
@@ -232,20 +236,26 @@ void KNNClassifier::computeOutput(const Vec& input, Vec& output) const
       w = kernel(cur_input, input);
       output_data += inputsize;
     }
+    else if (use_knn_costs_as_weights)
+      w = knn_costs[i];
+    else
+      w = 1.0;
     int nn_class = int(*output_data++);
     if (nn_class < 0 || nn_class >= nclasses)
       PLERROR("KNNClassifier::computeOutput: expected the class to be between 0 "
               "and %d but found %f", nclasses-1, nn_class);
-    if (!kernel)
-      if (use_knn_costs_as_weights)
-        w = knn_costs[nn_class];
-      else
-        w = 1.0;
+    w *= *output_data++;                     //!< account for training weight
     assert( w >= 0.0 );
     class_weights[nn_class] += w;
     total_weight += w;
   }
 
+  // If the total weight is too small, output zero probability for all classes
+  if (total_weight < 1e-6) {
+    output.fill(0.0);
+    return;
+  }
+  
   // Now compute probabilities
   for (int i=0, n = nclasses; i<n ; ++i)
     class_weights[i] /= total_weight;

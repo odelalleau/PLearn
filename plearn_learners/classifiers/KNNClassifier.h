@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNClassifier.h,v 1.2 2004/12/24 07:37:05 chapados Exp $ 
+   * $Id: KNNClassifier.h,v 1.3 2004/12/25 08:02:52 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -85,6 +85,10 @@ namespace PLearn {
  * a kernel that computes a SIMILARITY MEASURE, and not a DISTANCE MEASURE;
  * the default EpanechnikovKernel has the proper behavior.)  If the option
  * is false, an equal weighting is used (equivalent to square window).
+ *
+ * The weights originally present in the training set ARE TAKEN INTO
+ * ACCOUNT when weighting each observation: they serve to multiply the
+ * kernel values to give the effective weight for an observation.
  */
 class KNNClassifier: public PLearner
 {
@@ -104,7 +108,7 @@ public:
   //#####  Public Build Options  ############################################
 
   //! The K-nearest-neighbors finder to use (default is an
-  //! ExhaustiveNearestNeighbors with an Epanechnikov kernel, lambda=1)
+  //! ExhaustiveNearestNeighbors with a GaussianKernel, sigma=1)
   PP<GenericNearestNeighbors> knn;
 
   //! Number of classes in the problem
