@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.65 2005/02/15 16:11:34 chrish42 Exp $
+   * $Id: fileutils.cc,v 1.66 2005/02/15 19:52:25 ducharme Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -167,6 +167,7 @@ vector<string> lsdir(const PPath& dirpath)
   PRErrorCode e = PR_GetError();
   if (e != PR_NO_MORE_FILES_ERROR
 #if 1 // Workaround for NSPR bug
+      && e != 0
       && e != PR_FILE_NOT_FOUND_ERROR
       && e != PR_NOT_DIRECTORY_ERROR
 #endif
