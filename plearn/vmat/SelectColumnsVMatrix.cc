@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectColumnsVMatrix.cc,v 1.8 2004/08/05 13:49:26 tihocan Exp $
+   * $Id: SelectColumnsVMatrix.cc,v 1.9 2004/08/09 16:23:52 tihocan Exp $
    ******************************************************* */
 
 #include "SelectColumnsVMatrix.h"
@@ -137,6 +137,35 @@ void SelectColumnsVMatrix::build_()
       for (int i=0; i<width(); ++i)
         fieldinfos[i] = source->getFieldInfos()[indices[i]];
   }
+}
+
+////////////////////////////
+// getStringToRealMapping //
+////////////////////////////
+const map<string,real>& SelectColumnsVMatrix::getStringToRealMapping(int col) const {
+  return source->getStringToRealMapping(indices[col]);
+}
+
+//////////////////
+// getStringVal //
+//////////////////
+real SelectColumnsVMatrix::getStringVal(int col, const string & str) const {
+  return source->getStringVal(indices[col], str);
+}
+
+
+////////////////////////////
+// getRealToStringMapping //
+////////////////////////////
+const map<real,string>& SelectColumnsVMatrix::getRealToStringMapping(int col) const {
+  return source->getRealToStringMapping(indices[col]);
+}
+
+//////////////////
+// getValString //
+//////////////////
+string SelectColumnsVMatrix::getValString(int col, real val) const {
+  return source->getValString(indices[col], val);
 }
 
 } // end of namespcae PLearn

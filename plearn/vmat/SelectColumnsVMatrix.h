@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectColumnsVMatrix.h,v 1.11 2004/08/05 13:49:26 tihocan Exp $
+   * $Id: SelectColumnsVMatrix.h,v 1.12 2004/08/09 16:23:52 tihocan Exp $
    ******************************************************* */
 
 
@@ -84,12 +84,12 @@ public:
 
   PLEARN_DECLARE_OBJECT(SelectColumnsVMatrix);
 
-  static void declareOptions(OptionList &ol);
   virtual void build();
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
 protected:
 
+  static void declareOptions(OptionList &ol);
   void getNewRow(int i, const Vec& v) const { getSubRow(i, 0, v); }
 
 public:
@@ -104,6 +104,12 @@ public:
         PLERROR("SelectColumnsVMatrix::reset_dimensions, underlying source not wide enough (%d>=%d)",
             indices[i],source->width());
   }
+
+  virtual const map<string,real>& getStringToRealMapping(int col) const;
+  virtual const map<real,string>& getRealToStringMapping(int col) const;
+
+  virtual real getStringVal(int col, const string & str) const;
+  virtual string getValString(int col, real val) const;
 
 private:
   void build_();
