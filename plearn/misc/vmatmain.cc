@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.38 2004/12/13 19:33:05 dorionc Exp $
+   * $Id: vmatmain.cc,v 1.39 2005/01/17 15:47:22 tihocan Exp $
    ******************************************************* */
 
 #include <algorithm>                         // for max
@@ -898,7 +898,9 @@ void viewVMat(const VMat& vm)
             }
             outFile << endl;
 
-            outFile << vm_showed.columns(indexs);
+            // Save the selected columns to the desired file, keeping the string values
+            // if 'view_strings' is currently true (can be toggled with 's'/'S' keys).
+            vm_showed.columns(indexs).print(outFile, view_strings);
             outFile.close();
 
             mvprintw(LINES-1,0,"*** Output written on: %s ***", fname);
