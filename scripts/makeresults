@@ -41,7 +41,7 @@ echo "# Wrapper to visualize the results stored in $MATNAME.amat." > $MATNAME.vm
 echo "<SOURCES>" >> $MATNAME.vmat
 echo "@" >> $MATNAME.vmat
 echo "SortRowsVMatrix(" >> $MATNAME.vmat
-echo "  distr =" >> $MATNAME.vmat
+echo "  source =" >> $MATNAME.vmat
 echo "    AutoVMatrix(specification = \"$MATNAME.amat\")" >> $MATNAME.vmat
 echo "  sort_columns = [" >> $MATNAME.vmat
 echo "    # Add here the columns you want to get sorted." >> $MATNAME.vmat
