@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.20 2003/09/10 21:06:01 ducharme Exp $
+   * $Id: TMat_maths_impl.h,v 1.21 2003/09/15 21:07:55 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -3453,6 +3453,58 @@ T variance(const TMat<T>& mat, T meanval)
         res += diff*diff;
       }
   return res/(mat.length()*mat.width()-1);
+}
+
+template<class T>
+T correlation(const TMat<T>& mat)
+{
+  int n = mat.length();
+  #ifdef BOUNDCHECK
+  if(n==0 || mat.width()==0)
+    PLERROR("In T correlation(const TMat<T>& mat) mat has 0 size");
+  #endif
+  if (mat.width() != 2)
+    PLERROR("In T correlation(const TMat<T>& mat), mat width (%d) must be 2", mat.width());
+
+  double s_x=0, s_y=0, s_xy=0, s_x2=0, s_y2=0;
+  for (int i=0; i<n; i++)
+  {
+    T x = mat(i,0);
+    T y = mat(i,1);
+    s_x += x;
+    s_x2 += x*x;
+    s_y += y;
+    s_y2 += y*y;
+    s_xy += x*y;
+  }
+
+  return (n*s_xy - s_x*s_y)/sqrt((n*s_x2 - s_x*s_x)*(n*s_y2 - s_y*s_y));
+}
+
+template<class T>
+T correlation(const TVec<T>& x, const TVec<T>& y)
+{
+  int n = x.length();
+  #ifdef BOUNDCHECK
+  if(n==0 || y.length()==0)
+    PLERROR("In T correlation(const TVec<T>& x, const TVec<T>& y), one Vec has 0 size");
+  #endif
+  if (n != y.length())
+    PLERROR("In T correlation(const TVec<T>& x, const TVec<T>& y), both Vec must have same length (%d != %d)", n, y.length());
+
+  double s_x=0, s_y=0, s_xy=0, s_x2=0, s_y2=0;
+  for (int i=0; i<n; i++)
+  {
+    T x_val = x[i];
+    T y_val = y[i];
+    s_x += x_val;
+    s_x2 += x_val*x_val;
+    s_y += y_val;
+    s_y2 += y_val*y_val;
+    s_xy += x_val*y_val;
+  }
+
+  return (n*s_xy - s_x*s_y)/sqrt((n*s_x2 - s_x*s_x)*(n*s_y2 - s_y*s_y));
 }
 
 template<class T>
