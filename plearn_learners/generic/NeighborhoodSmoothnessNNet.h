@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeighborhoodSmoothnessNNet.h,v 1.5 2004/02/23 14:35:15 tihocan Exp $
+   * $Id: NeighborhoodSmoothnessNNet.h,v 1.6 2004/02/24 19:32:42 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearn/plearn_learners/classifiers/NeighborhoodSmoothnessNNet.h */
@@ -156,6 +156,8 @@ using namespace std;
     virtual TVec<string> getTestCostNames() const;
 
     virtual void train();
+
+    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
     virtual void computeOutput(const Vec& input, Vec& output) const;
     

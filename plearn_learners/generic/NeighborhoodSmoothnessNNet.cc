@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.8 2004/02/24 19:15:08 tihocan Exp $
+   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.9 2004/02/24 19:32:42 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeighborhoodSmoothnessNNet.h */
@@ -246,8 +246,8 @@ void NeighborhoodSmoothnessNNet::build_()
   {
 
     // init. basic vars
-    int true_inputsize = inputsize() - 1;
-    Var input_and_pij = Var(inputsize(), "input_and_pij");
+    int true_inputsize = inputsize(); // inputsize is now true inputsize 
+    Var input_and_pij = Var(inputsize()+1, "input_and_pij");
     input = subMat(input_and_pij, 0, 0, true_inputsize, 1);
     output = input;
     params.resize(0);
@@ -545,6 +545,30 @@ TVec<string> NeighborhoodSmoothnessNNet::getTestCostNames() const
   return cost_funcs;
 }
 
+void NeighborhoodSmoothnessNNet::setTrainingSet(VMat training_set, bool call_forget)
+{ 
+  // YB: je ne suis pas sur qu'il soit necessaire de faire un build si la LONGUEUR du train_set a change? 
+  // les methodes non-parametriques qui utilisent la longueur devrait faire leur "resize" dans train, pas dans build.
+  bool training_set_has_changed =
+       !train_set
+    || train_set->width()      != training_set->width()
+    || train_set->length()     != training_set->length()
+    || train_set->inputsize()  != training_set->inputsize()
+    || train_set->weightsize() != training_set->weightsize()
+    || train_set->targetsize() != training_set->targetsize();
+  train_set = training_set;
+  if (training_set_has_changed && inputsize_<0)
+  {
+    inputsize_ = train_set->inputsize()-1;
+    targetsize_ = train_set->targetsize();
+    weightsize_ = train_set->weightsize();
+  }
+  if (training_set_has_changed || call_forget)
+    build(); // MODIF FAITE PAR YOSHUA: sinon apres un setTrainingSet le build n'est pas complete dans un NNet train_set = training_set;
+  if (call_forget)
+    forget();
+}
+
 ///////////
 // train //
 ///////////
@@ -666,7 +690,7 @@ void NeighborhoodSmoothnessNNet::initializeParams()
   else
     PLearn::seed();
 
-  real delta = 1. / (inputsize() - (max_n_instances - 1));
+  real delta = 1. / (inputsize()-1);
   /*
   if(direct_in_to_out)
     {
