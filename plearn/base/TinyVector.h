@@ -45,7 +45,7 @@
 
 namespace PLearn <%
 using namespace std;
-using namespace std::rel_ops;
+//using namespace std::rel_ops; // ne compile pas, pour une raison etrange
 
 //!  Forward declaration
 template <class T> class TinyVectorTrait;
