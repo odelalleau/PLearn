@@ -60,9 +60,9 @@ public:
   typedef PLearner inherited;
 
 protected:  
-  int last_train_t; // last value of train_set.length() for which training was actually done (<= last_call_train_t)
-  int last_call_train_t; // last value of train_set.length() for which train() was called (may not have done anything)
-  mutable int last_test_t; // last value of test_set.length() for which testing was actually done
+  int last_train_t; //! last value of train_set.length() for which training was actually done (<= last_call_train_t)
+  int last_call_train_t; //! last value of train_set.length() for which train() was called (may not have done anything)
+  mutable int last_test_t; //! last value of test_set.length() for which testing was actually done
 
 public:
   int get_last_train_t(){ return last_train_t; }
@@ -81,13 +81,13 @@ public:
   int train_step;     //!< how often we have to re-train a model, (default = 1 = after every time step)
   int horizon;        //!< by how much to offset the target columns wrt the input columns (default = 1)
   int outputsize_;
-  
-  // these two fields are used by other classes such as SequentialModelSelector
-  // and SequentialValidation and they are filled when the method test is called 
-  Mat predictions; // each element indexed by (time_index, output_index), there are (max_seq_len,outputsize) elements.
-  // initial values may be 'missing value' 
-  Mat errors; // each element indexed by (time_index, cost_index), there are (max_seq_len,nCosts) elements.
-  
+
+  //! these two fields are used by other classes such as SequentialModelSelector
+  //! and SequentialValidation and they are filled when the method test is called 
+  Mat predictions; //! each element indexed by (time_index, output_index), there are (max_seq_len,outputsize) elements.
+  //! initial values may be 'missing value' 
+  Mat errors; //! each element indexed by (time_index, cost_index), there are (max_seq_len,nCosts) elements.
+
 private:
   //! This does the actual building
   void build_();
@@ -146,7 +146,8 @@ protected:
     The getCostSequence method returns the sequence of the cost 
     at index 'cost_index' or named 'cname' 
     from sequenceStart() with a length of sequenceLength().
-  */
+    */
+
   int sequenceStart() const { return init_train_size; }
   int sequenceLength() const { return last_test_t - init_train_size + 1; }
   Vec getCostSequence(int cost_index) const
@@ -154,8 +155,6 @@ protected:
   Vec getCostSequence(string cname) const 
     { return getCostSequence(getTestCostIndex(cname)); }
 
-
-  
   /*!
     Any SequentialLearner will have the possiblity to save some data in a 
     matlab 'readable' format. The data will be saved in expdir/matlab_subdir
@@ -163,12 +162,13 @@ protected:
   */
   virtual void matlabSave(const string& matlab_subdir);
   
-    virtual void forget();
+  virtual void forget();
 
-    //!  Does the necessary operations to transform a shallow copy (this)
-    //!  into a deep copy by deep-copying all the members that need to be.
-    PLEARN_DECLARE_ABSTRACT_OBJECT(SequentialLearner);
-    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+  //!  Does the necessary operations to transform a shallow copy (this)
+  //!  into a deep copy by deep-copying all the members that need to be.
+  PLEARN_DECLARE_ABSTRACT_OBJECT(SequentialLearner);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+
 };
 
 //! Declares a few other classes and functions related to this class
