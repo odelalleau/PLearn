@@ -849,7 +849,6 @@ void readSequence(PStream& in, SequenceType& seq)
             if(inverted_byte_order)
               endianswap(&l);
             seq.resize((typename SequenceType::size_type) l);
-
             binread_(in, seq.begin(), l, typecode);
           }
         else
@@ -901,6 +900,52 @@ template <class T> inline PStream &
 operator<<(PStream &out, const vector<T> &v)
 { writeSequence(out, v); return out; }
 
+// Serialization of map types
+
+template<class SetT>
+void writeSet(PStream& out, const SetT& s)
+{  
+  typename SetT::const_iterator it = s.begin();
+  typename SetT::const_iterator itend = s.end();
+
+  out.put('[');
+  while(it!=itend)
+    {
+      out << *it;
+      ++it;
+      if (it != itend)
+          out.write(", ");
+    }
+  out.put(']');
+}
+
+template<class SetT>
+void readSet(PStream& in, SetT& s)
+{
+  s.clear();
+  in.skipBlanksAndCommentsAndSeparators();
+  int c = in.get();
+  if(c!='[')
+    PLERROR("In readSet(Pstream& in, SetT& s) expected '[' but read %c",c);
+  in.skipBlanksAndCommentsAndSeparators();
+  while(c!=']')
+    {
+      typename SetT::value_type val;
+      in >> val;
+      in.skipBlanksAndCommentsAndSeparators();
+      s.insert(val);
+      c = in.peek(); // do we have a ']' ?
+    }
+  in.get(); // eat the ']'
+}
+
+template <class T> inline PStream &
+operator>>(PStream &in, set<T> &v)
+{ readSet(in, v); return in; }
+
+template <class T> inline PStream &
+operator<<(PStream &out, const set<T> &v)
+{ writeSet(out, v); return out; }
 
 // **** Useful PStream classes... ****
 // (these can be used similarly to  ifstream, ofstream...)

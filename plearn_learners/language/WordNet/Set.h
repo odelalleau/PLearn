@@ -10,6 +10,12 @@ public:
   virtual ~PPointableSet() {}
 };
 
+inline PStream &operator<<(PStream &out, const PPointableSet &pp_set)
+{ out << static_cast<const set<int> &>(pp_set); return out; }
+
+inline PStream &operator>>(PStream &in, PPointableSet &pp_set)
+{ in >> static_cast<set<int> &>(pp_set); return in; }
+
 typedef PPointableSet::iterator SetIterator;
 
 class Set : public PP<PPointableSet>
@@ -68,6 +74,9 @@ public:
   bool operator!=(Set& s) { return *ptr != *s.ptr; }
 
 };
+
+inline PPointableSet * newSet()
+{ return new PPointableSet; };
 
 inline void merge(Set a, Set b, Set res)
 {
