@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrix.h,v 1.1 2003/10/08 23:01:57 plearner Exp $ 
+   * $Id: SourceVMatrix.h,v 1.2 2003/11/04 18:34:37 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -76,6 +76,8 @@ public:
   // ************************
 
   VMat source;
+
+  TVec<string> dependencies; // a list of paths to files that this VMat depends on
 
   // ****************
   // * Constructors *

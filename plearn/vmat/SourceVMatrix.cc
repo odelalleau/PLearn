@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrix.cc,v 1.1 2003/10/08 23:01:56 plearner Exp $ 
+   * $Id: SourceVMatrix.cc,v 1.2 2003/11/04 18:34:37 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -86,16 +86,27 @@ void SourceVMatrix::declareOptions(OptionList& ol)
   declareOption(ol, "source", &SourceVMatrix::source, OptionBase::buildoption,
                 "The source VMatrix");
 
+  declareOption(ol, "dependencies", &SourceVMatrix::dependencies, OptionBase::buildoption,
+                "a list of paths to files that this VMat depends on. \n"
+                "This vmat's mtime will initially be set to the latest of \n"
+                "the last modification times of its dependencies. \n"
+                "The mtime of its source will also be taken into account \n"
+                "generally later, when setMetaInfoFromSource gets called \n");
+
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
 }
 
 void SourceVMatrix::build_()
-{}
+{
+  time_t mt = getMtime();
+  for(int k=0; k<dependencies.size(); k++)
+    mt = max(mt, mtime(dependencies[k]));
+  setMtime(mt);
+}
 
 void SourceVMatrix::setMetaInfoFromSource()
 {
-  // Set modification time 
   setMtime(max(getMtime(),source->getMtime()));
 
   // copy length and width from source if not set
@@ -128,6 +139,7 @@ void SourceVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(source, copies);
+  deepCopyField(dependencies, copies);
 }
 
 %> // end of namespace PLearn

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilteredVMatrix.h,v 1.1 2003/10/29 16:55:49 plearner Exp $ 
+   * $Id: FilteredVMatrix.h,v 1.2 2003/11/04 18:34:37 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -83,10 +83,6 @@ public:
   { build_(); }
 
   virtual void setMetaDataDir(const string& the_metadatadir);
-
-  // ******************
-  // * Object methods *
-  // ******************
 
 private: 
   //! This does the actual building. 

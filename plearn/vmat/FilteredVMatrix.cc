@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilteredVMatrix.cc,v 1.1 2003/10/29 16:55:49 plearner Exp $ 
+   * $Id: FilteredVMatrix.cc,v 1.2 2003/11/04 18:34:37 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -62,7 +62,7 @@ void FilteredVMatrix::openIndex()
 {
   string idxfname = getMetaDataDir()+"filtered.idx";
 
-  if(file_exists(idxfname) && mtime(idxfname)>source->getMtime())
+  if(file_exists(idxfname) && mtime(idxfname)>=getMtime())
     indexes.open(idxfname);
   else  // let's (re)create the index
     {

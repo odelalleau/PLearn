@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.8 2003/10/31 20:50:42 plearner Exp $
+   * $Id: vmatmain.cc,v 1.9 2003/11/04 18:34:32 plearner Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -303,6 +303,8 @@ void viewVMat(const VMat& vm)
   int starti = 0;
   int startj = 0;  
 
+  map<int,Vec> cached_columns;
+
   while(key != 'q' && key != 'Q')
     {
       erase();
@@ -516,7 +518,18 @@ void viewVMat(const VMat& vm)
             real searchval = vm(curi,curj);
             if(l!="")
               searchval = toreal(l);
-            while(curi<vm->length() && vm(curi,curj)!=searchval)
+                
+            Vec cached;
+            if(cached_columns.find(curj)!=cached_columns.end())
+              cached = cached_columns[curj];
+            else
+              {
+                Vec cached(vm->length());
+                vm->getColumn(curj,cached);                
+                cached_columns[curj] = cached;
+              }
+
+            while(curi<vm->length() && cached[curi]!=searchval)
               ++curi;
             if(curi>=vm->length())
               curi = vm->length()-1;
