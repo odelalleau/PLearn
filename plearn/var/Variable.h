@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.h,v 1.14 2004/05/31 15:48:53 monperrm Exp $
+   * $Id: Variable.h,v 1.15 2004/06/01 13:15:20 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -309,7 +309,10 @@ public:
 
   //!  send message that updates must be full.
   void disallowPartialUpdates()
-  { gradient_status=2; }
+  {
+    allows_partial_update = false;
+    gradient_status=2;
+  }
 
   //!  says that given row has received gradient (should be updated on next call to update)
   void updateRow(int row)
