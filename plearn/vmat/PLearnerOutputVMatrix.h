@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.h,v 1.11 2004/09/14 16:04:39 chrish42 Exp $
+   * $Id: PLearnerOutputVMatrix.h,v 1.12 2004/09/18 16:54:21 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -68,6 +68,7 @@ protected:
   mutable Vec learner_target;
   mutable Vec non_input_part_of_data_row;
   mutable bool learners_need_train;  //!< Used to keep track of whether learners need training or not.
+  mutable TVec<Mat> complete_learners_output;
 
 public:
   // ************************
@@ -80,7 +81,7 @@ public:
   TVec<PP<PLearner> > learners; // the outputs of the learners will be concatenated
   bool put_raw_input; // if true not only the learner output but also the raw data input are in the input part of the VMatrix
   bool train_learners;
-
+  bool compute_output_once;
   // ****************
   // * Constructors *
   // ****************
@@ -88,7 +89,7 @@ public:
   // Default constructor, make sure the implementation in the .cc
   // initializes all fields to reasonable default values.
   PLearnerOutputVMatrix();
-  PLearnerOutputVMatrix(VMat data_,TVec<PP<PLearner> > learners_, bool put_raw_input_=false);
+  PLearnerOutputVMatrix(VMat data_,TVec<PP<PLearner> > learners_, bool put_raw_input_=false, bool train_learners_ = false, bool compute_output_once_ = false);
 
   // ******************
   // * Object methods *

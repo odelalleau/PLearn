@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.cc,v 1.14 2004/09/14 16:04:39 chrish42 Exp $
+   * $Id: PLearnerOutputVMatrix.cc,v 1.15 2004/09/18 16:54:21 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -50,15 +50,17 @@ using namespace std;
 PLearnerOutputVMatrix::PLearnerOutputVMatrix()
  :inherited(),
   put_raw_input(false),
-  train_learners(false)
+  train_learners(false),
+  compute_output_once(false)
   /* ### Initialize all fields to their default value */
 {}
 
 PLearnerOutputVMatrix::PLearnerOutputVMatrix
-(VMat data_,TVec<PP<PLearner> > learners_, bool put_raw_input_) 
+(VMat data_,TVec<PP<PLearner> > learners_, bool put_raw_input_, bool train_learners_, bool compute_output_once_) 
 : data(data_),learners(learners_),
   put_raw_input(put_raw_input_),
-  train_learners(false)
+  train_learners(train_learners_),
+  compute_output_once(compute_output_once_)
 {
   build();
 }
@@ -84,10 +86,22 @@ void PLearnerOutputVMatrix::getNewRow(int i, const Vec& v) const
     learners_need_train = false;
   }
   data->getRow(i,row);
-  for (int j=0;j<learners.length();j++)
+  if(compute_output_once)
   {
-    Vec out_j = learners_output(j);
-    learners[j]->computeOutput(learner_input,out_j);
+    int count = 0;
+    for (int j=0;j<learners.length();j++)
+    {
+      v.subVec(count,learners[j]->outputsize()) << complete_learners_output[j](i);
+      count += learners[j]->outputsize();
+    }
+  }
+  else
+  {
+    for (int j=0;j<learners.length();j++)
+    {
+      Vec out_j = learners_output(j);
+      learners[j]->computeOutput(learner_input,out_j);
+    }
   }
   v.subVec(0,c=learners_output.size()) << learners_output.toVec();
   if (put_raw_input)
@@ -118,6 +132,9 @@ void PLearnerOutputVMatrix::declareOptions(OptionList& ol)
    declareOption(ol, "train_learners", &PLearnerOutputVMatrix::train_learners, OptionBase::buildoption,
                 "If set to 1, the learners will be train on 'data' before computing the output");
 
+   declareOption(ol, "compute_output_once", &PLearnerOutputVMatrix::compute_output_once, OptionBase::buildoption,
+                "If set to 1, the output of the learners will be computed once and stored");
+
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
 }
@@ -126,15 +143,41 @@ void PLearnerOutputVMatrix::build_()
 {
   if (data && learners.length()>0 && learners[0])
   {
+    learners_need_train = train_learners;
+    row.resize(data->width());
+
     if (train_learners) {
       // Set the learners' training set.
       for (int i = 0; i < learners.length(); i++) {
         learners[i]->setTrainingSet(data);
       }
+      
       // Note that the learners will be train only if we actually call getRow().
+      // Hugo: except if compute_output_once is true
     }
-    learners_need_train = train_learners;
-    row.resize(data->width());
+
+    if(compute_output_once)
+      {
+        complete_learners_output.resize(learners.length());
+        for (int i = 0; i < learners.length(); i++) {
+          if(train_learners) learners[i]->train();
+          complete_learners_output[i].resize(data->length(),learners[i]->outputsize());
+        }
+        learners_need_train = false;
+
+        Vec input_row = row.subVec(0,data->inputsize());
+
+        for(int i=0; i<data->length();i++)
+        {
+          data->getRow(i,row);
+          for (int j=0;j<learners.length();j++)
+          {
+            Vec out_j = complete_learners_output[j](i);
+            learners[j]->computeOutput(input_row,out_j);
+          }
+        }
+      }
+
     if (data->inputsize() < 0)
       PLERROR("In PLearnerOutputVMatrix::build_ - The 'data' matrix has a negative inputsize");
     if (data->targetsize() < 0)
@@ -180,6 +223,7 @@ void PLearnerOutputVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(learners_output, copies);
   deepCopyField(learner_target, copies);
   deepCopyField(non_input_part_of_data_row, copies);
+  deepCopyField(compute_output_once, copies);
 }
 
 } // end of namespace PLearn
