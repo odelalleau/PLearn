@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: SequenceVMatrix.cc,v 1.1 2004/05/05 21:26:01 lapalmej Exp $
+   * $Id: SequenceVMatrix.cc,v 1.2 2004/05/12 16:36:17 lapalmej Exp $
    ******************************************************* */
 
 #include "SequenceVMatrix.h"
@@ -154,12 +154,34 @@ void SequenceVMatrix::putSeq(int i, Mat m)
   sequences[i] << m;
 }
 
+int SequenceVMatrix::getNbSeq() const
+{
+  return nbSeq;
+}
+
+/*
+ return the number of rows of the start sequence and the length next.
+*/
+int SequenceVMatrix::getNbRowInSeqs(int start, int length) const
+{
+  int total = 0;
+  for (int i = start; i < start + length; i++)
+    total += ((Mat)sequences[i]).nrows();
+  return total;
+}
+
+int SequenceVMatrix::getNbRowInSeq(int i) const
+{
+  return ((Mat)sequences[i]).nrows();
+}
+
 void SequenceVMatrix::run()
 {
   for (int i = 0; i < sequences.size(); i++) {
     real* data = sequences[i].data();
     cout << "Seq : " << i << " (size = " << sequences[i].length() << ")" << endl;
     for (int j = 0; j < sequences[i].length(); j++) {
+      *data = 15;
       cout << "[" << *data;
       data++;
       for (int k = 1; k < sequences[i].width(); k++) {

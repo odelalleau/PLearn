@@ -45,12 +45,11 @@ class SequenceVMatrix: public VMatrix
   typedef VMatrix inherited;
 
 protected:
-
-public:
-  
   //! Build options.
   TVec<Mat> sequences;
   int nbSeq;
+
+public:
   
   SequenceVMatrix();
   SequenceVMatrix(int nbSequences);
@@ -71,6 +70,10 @@ public:
  
   void getSeq(int i, Mat m) const;
   void putSeq(int i, Mat m);
+
+  int getNbSeq() const;
+  int getNbRowInSeq(int i) const;
+  int getNbRowInSeqs(int, int) const;
 
   virtual void run();
 
