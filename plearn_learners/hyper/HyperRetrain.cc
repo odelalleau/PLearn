@@ -35,7 +35,7 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperRetrain.cc,v 1.1 2005/01/11 23:22:44 plearner Exp $ 
+   * $Id: HyperRetrain.cc,v 1.2 2005/01/20 21:26:32 larocheh Exp $ 
    ******************************************************* */
 
 /*! \file HyperRetrain.cc */
@@ -105,7 +105,7 @@ Vec HyperRetrain::optimize()
 
   string testerexpdir = "";
   if(expdir!="" && provide_tester_expdir)
-    testerexpdir = expdir;
+    testerexpdir = expdir+"retrain/";
   tester->setExperimentDirectory(testerexpdir);
   
   PP<Splitter> default_splitter = tester->splitter;
