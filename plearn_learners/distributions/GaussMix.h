@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussMix.h,v 1.16 2004/05/18 20:10:56 tihocan Exp $ 
+   * $Id: GaussMix.h,v 1.17 2004/05/19 13:08:01 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file GaussMix.h */
@@ -122,6 +122,9 @@ protected:
   //! not appropriate). The new one is centered on a random point sampled from
   //! the Gaussian with highest weight alpha, and has the same covariance.
   virtual void replaceGaussian(int j);
+
+  //! Resize everything according to the options set.
+  virtual void resizeStuff();
 
 public:
 

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.23 2004/05/18 20:10:55 tihocan Exp $ 
+ * $Id: GaussMix.cc,v 1.24 2004/05/19 13:08:00 tihocan Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -566,25 +566,10 @@ void GaussMix::resetGenerator(long g_seed) const
   manual_seed(g_seed);  
 }
 
-///////////
-// train //
-///////////
-void GaussMix::train()
-{
-  // TODO Actually, we should compute the posteriors because saving them
-  // could take too much room.
-  // Check we actually need to train.
-  if (stage >= nstages) {
-    PLWARNING("In GaussMix::train - The learner is already trained");
-    return;
-  }
-
-  // Check there is a training set.
-  if (!train_set) {
-    PLERROR("In GaussMix::train - No training set specified");
-  }
-
-  // Make sure everything is the right size.
+/////////////////
+// resizeStuff //
+/////////////////
+void GaussMix::resizeStuff() {
   nsamples = train_set->length();
   D = train_set->inputsize();
   mu.resize(L,D);
@@ -618,6 +603,28 @@ void GaussMix::train()
   } else {
     PLERROR("In GaussMix::train - Unknown value for the 'type' option");
   }
+}
+
+///////////
+// train //
+///////////
+void GaussMix::train()
+{
+  // TODO Actually, we should compute the posteriors because saving them
+  // could take too much room.
+  // Check we actually need to train.
+  if (stage >= nstages) {
+    PLWARNING("In GaussMix::train - The learner is already trained");
+    return;
+  }
+
+  // Check there is a training set.
+  if (!train_set) {
+    PLERROR("In GaussMix::train - No training set specified");
+  }
+
+  // Make sure everything is the right size.
+  resizeStuff();
 
   if (stage == 0) {
     // Perform K-means to initialize the centers of the mixture.
@@ -636,6 +643,11 @@ void GaussMix::train()
 
   Vec sample(D);
   bool replaced_gaussian = false;
+  ProgressBar* pb = 0;
+  int n_steps = nstages - stage;
+  if (report_progress) {
+    pb = new ProgressBar("Training GaussMix", n_steps);
+  }
   while (stage < nstages) {
     do {
       computePosteriors();
@@ -644,7 +656,12 @@ void GaussMix::train()
     computeMeansAndCovariances();
     precomputeStuff();
     stage++;
+    if (pb) {
+      pb->update(n_steps - nstages + stage);
+    }
   }
+  if (pb)
+    delete pb;
 }
 
 double GaussMix::log_density(const Vec& x) const
