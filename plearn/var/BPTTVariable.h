@@ -67,6 +67,7 @@ class BPTTVariable: public NaryVariable
   VarArray squash_units_value; // squashing function for each unit. units_value contains the values to
                                // squash and squash_units_value will take the value of units_value and
                                // squash it
+  TVec<VarArray> squash_proppath;
 
   void updateIndexDest();
   void updateOrder();

@@ -155,6 +155,8 @@ namespace PLearn {
   void BPTTVariable::buildSquashVar() {
     units_value = VarArray(nunits);
     squash_units_value = VarArray(nunits);
+    squash_proppath = TVec<VarArray>(nunits);
+
     for (int i = 0; i < nunits; i++) {
       units_value[i] = var(0);
       if (units_type[i] == "TANH") {
@@ -162,9 +164,10 @@ namespace PLearn {
       } else if (units_type[i] == "EXP") {
 	squash_units_value[i] = exp(units_value[i]);
       } else if (units_type[i] == "ID") {
-	squash_units_value[i] = iden(units_value[i]);
+	squash_units_value[i] = units_value[i];
       } else 
 	PLERROR("%s is not a valide units_type", units_type[i].c_str());
+      squash_proppath[i] = propagationPath(units_value[i], squash_units_value[i]);
     }
   }
 
@@ -423,10 +426,12 @@ namespace PLearn {
     Compute the derivative squash function
   */
   real BPTTVariable::squash_d(int v, real r) {
-    squash_units_value[v]->value[0] = r;
-    squash_units_value[v]->gradient[0] = 1.0;
-    units_value[v]->gradient[0] = 0.0;
-    squash_units_value[v]->bprop();
+    squash_units_value[v] = r;
+    units_value[v]->clearGradient();
+    squash_proppath[v].clearGradient();
+    squash_units_value[v]->fillGradient(1.0);
+    squash_proppath[v].bprop();
+
     return units_value[v]->gradient[0];
   }
 
@@ -434,8 +439,10 @@ namespace PLearn {
     Compute the squash function
   */
   real BPTTVariable::squash(int v, real r) {
-    units_value[v]->value[0] = r;
-    squash_units_value[v]->fprop();
+    units_value[v] = r;
+    squash_proppath[v].clearGradient();
+    squash_proppath[v].fprop();
+
     return squash_units_value[v]->value[0];
   }
 
