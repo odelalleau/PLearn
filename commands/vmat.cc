@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmat.cc,v 1.3 2003/04/24 22:37:51 yoshua Exp $
+   * $Id: vmat.cc,v 1.4 2003/05/22 16:25:26 tihocan Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -41,6 +41,8 @@
 #include "VMat.h"
 #include "VMatLanguage.h"
 #include "VVMatrix.h"
+#include "AutoVMatrix.h"
+#include "BatchVMatrix.h"
 
 using namespace PLearn;
 
