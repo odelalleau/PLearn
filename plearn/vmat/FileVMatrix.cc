@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.15 2004/03/17 16:06:32 ducharme Exp $
+   * $Id: FileVMatrix.cc,v 1.16 2004/03/18 14:42:17 ducharme Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -53,7 +53,7 @@ PLEARN_IMPLEMENT_OBJECT(FileVMatrix, "ONE LINE DESCR", "NO HELP");
 // FileVMatrix //
 /////////////////
 FileVMatrix::FileVMatrix()
-  :filename_(""), f(0), build_new_file(true)
+  :filename_(""), f(0), build_new_file(false)
 {
   writable=true;
 }
@@ -109,13 +109,13 @@ void FileVMatrix::build_()
   char datatype[20];
   char endiantype[20];
 
-  if (build_new_file)
+  if (build_new_file || !isfile(filename_))
     force_mkdir_for_file(filename_);
 
   setMetaDataDir(filename_ + ".metadata"); 
   setMtime(mtime(filename_));
 
-  if (build_new_file)
+  if (build_new_file || !isfile(filename_))
   {
     if (!writable) {
       PLERROR("In FileVMatrix::build_ - You asked to create a new file, but 'writable' is set to 0 !");
