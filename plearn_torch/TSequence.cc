@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TSequence.cc,v 1.2 2005/02/23 21:54:06 tihocan Exp $ 
+   * $Id: TSequence.cc,v 1.3 2005/02/24 14:13:03 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -46,10 +46,21 @@
 namespace PLearn {
 using namespace std;
 
+///////////////
+// TSequence //
+///////////////
 TSequence::TSequence() 
 : sequence(0),
   n_frames(0)
 {}
+
+TSequence::TSequence(Torch::Sequence* seq)
+: sequence(seq),
+  n_frames(0)
+{
+  updateFromTorch();
+//  build(); // TODO Will most likely cause troubles...
+}
 
 PLEARN_IMPLEMENT_OBJECT(TSequence,
     "Interface between PLearn and a Torch Sequence object",

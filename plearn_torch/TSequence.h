@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TSequence.h,v 1.1 2005/02/23 16:29:02 tihocan Exp $ 
+   * $Id: TSequence.h,v 1.2 2005/02/24 14:13:04 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -81,6 +81,9 @@ public:
 
   //! Default constructor.
   TSequence();
+
+  //! Construct a new TSequence from an existing Torch Sequence.
+  TSequence(Torch::Sequence* seq);
 
   // ******************
   // * Object methods *
