@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.24 2004/03/25 00:41:33 nova77 Exp $
+   * $Id: vmatmain.cc,v 1.25 2004/03/25 03:49:28 nova77 Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -298,7 +298,7 @@ bool getList(char* str, int curj, const VMat& vm, Vec& outList, char* strReason)
   {
     // nothing was inserted, then gets the current column
     char strj[10];
-    sprintf(strj, "%d\0", curj);
+    sprintf(strj, "%d", curj);
     columnList.push_back(strj);				
   }
   else
@@ -481,8 +481,10 @@ void viewVMat(const VMat& vm)
               else
                 x = 1+leftcolwidth+(j-startj)*valwidth;
               
-              if(i == curi || j == curj)
+              if( i == curi || (vm_showed.width() > 1 && j == curj) )
                 attron(A_REVERSE);
+              //else if ()
+              //  attron(A_REVERSE);
               
               if(hide_sameval && i>starti && (val==oldv[j] || is_missing(val)&&is_missing(oldv[j])) )
                 mvprintw(y, x, valstrformat, "...");                
@@ -495,7 +497,7 @@ void viewVMat(const VMat& vm)
         }
 
       string strval = vm_showed->getString(curi, curj);
-      mvprintw(0,0,"Range[%d-%d]", 0, vm_showed.width()-1);
+      mvprintw(0,0,"Cols[%d-%d]", 0, vm_showed.width()-1);
       mvprintw(LINES-1,0," %dx%d   line= %d   col= %d     %s = %s (%f)", 
                vm_showed->length(), vm_showed->width(),
                curi, curj, vm_showed->fieldName(curj).c_str(), strval.c_str(), vm_showed(curi,curj));
@@ -638,12 +640,12 @@ void viewVMat(const VMat& vm)
         if(transposed)
         {
           curi = vm_showed->length()-1;
-          starti = curi;
+          starti = max(curi-ni + 1, 0);
         }
         else
         {
           curj = vm_showed->width()-1;
-          startj = curj;
+          startj = max(curj-nj + 1, 0);
         }
         break;
       ///////////////////////////////////////////////////////////////
@@ -733,7 +735,8 @@ void viewVMat(const VMat& vm)
           else
           {
             curi= toint(l);
-            starti = curi;
+            starti = max(curi-ni + 1, 0);
+            //starti = curi;
           }
           noecho();
         }
@@ -759,8 +762,8 @@ void viewVMat(const VMat& vm)
           }
           else
           {
-            curj= toint(c);
-            startj = curj;
+            curj = toint(c);
+            startj = max(curj-nj + 1, 0);
           }
           noecho();
         }
@@ -775,12 +778,12 @@ void viewVMat(const VMat& vm)
           clrtoeol();
 
           move(LINES-1, (int)strlen(strmsg));
-          char c[50];
-          getnstr(c, 50);
+          char strRange[50];
+          getnstr(strRange, 50);
 
           Vec indexs;
           char strReason[100] = {"\0"};
-          bool invalidInput = getList(c, curj, vm_showed, indexs, strReason);
+          bool invalidInput = getList(strRange, curj, vm_showed, indexs, strReason);
 
           if (invalidInput)
           {
@@ -804,6 +807,10 @@ void viewVMat(const VMat& vm)
 
             if (fname[0] == '\0')
               strcpy(fname, "outCol.txt");
+
+            mvprintw(LINES-1,0,"Writing file '%s'...", fname);
+            clrtoeol();
+            refresh();
 
             ofstream outFile(fname, ios::out);
 
@@ -856,10 +863,10 @@ void viewVMat(const VMat& vm)
           else
           {
             vm_showed = vm_showed.columns(indexs);
-            if (curj>vm_showed.width())
+            if (curj>=vm_showed.width())
             {
-              curj=vm_showed.width()-1;
-              startj = curj;
+              curj = vm_showed.width()-1;
+              startj = max(curj-nj + 1, 0);
             }
           }
 
@@ -893,7 +900,7 @@ void viewVMat(const VMat& vm)
         mvprintw(vStartHelp++,10," - home: move to the first column");
         mvprintw(vStartHelp++,10," - end: move to the last column");
         mvprintw(vStartHelp++,10," - 'r' or 'R': show only a range or a set of columns");
-        mvprintw(vStartHelp++,10," - 'a' or 'a': show all the columns");
+        mvprintw(vStartHelp++,10," - 'a' or 'A': show all the columns");
         mvprintw(vStartHelp++,10," - 'l' or 'L': prompt for a line number and go to that line");
         mvprintw(vStartHelp++,10," - 'c' or 'C': prompt for a column number and go to that column");
         mvprintw(vStartHelp++,10," - 's' or 'S': toggle display string fields as strings or numbers");
@@ -911,8 +918,6 @@ void viewVMat(const VMat& vm)
         break;
 
       case (int)'q': case (int)'Q': 
-        mvprintw(LINES-1,0," ");
-        clrtoeol();
         break;
 
       ///////////////////////////////////////////////////////////////
@@ -938,6 +943,10 @@ void viewVMat(const VMat& vm)
 	 throw(e);
   }
   
+  // make sure it is clean
+  mvprintw(LINES-1,0,"");
+  clrtoeol();
+  refresh();
 
   endwin();
 }
