@@ -119,7 +119,7 @@ optionalLibrary( name = 'xml-apstat',
 
 optionalLibrary( name = 'arpack',
                  triggers = 'arpack_proto.h',
-                 linkeroptions = '-L/u/lisa/local/linux-i386/lib/ARPACK/OBJS/' + platform + ' -larpack' )
+                 linkeroptions = '-L'+ libdir +'/ARPACK/OBJS/' + platform + ' -larpack' )
 
 # Note: now blas and lapack are together.
 #optionalLibrary( name = 'lapack',
@@ -136,10 +136,10 @@ optionalLibrary( name = 'opengl',
 # optionalLibrary( name = 'blas',
 #                 triggers = ['blas_proto.h','lapack_proto.h'],
 #                 linkeroptions = '-lblas'
-#                 linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl_p4 -lmkl_vml_p4 -lpthread'
-#                 linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl_p3 -lmkl_vml_p3 -lpthread'
-#                 linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl -lvml -lpthread'
-#                 linkeroptions = '-L/u/lisa/local/linux-i386/lib/atlas_athlon256 -lcblas -lf77blas -latlas'
+#                 linkeroptions = '-L' + libdir + '/intelmkl/lib/32 -lmkl_p4 -lmkl_vml_p4 -lpthread'
+#                 linkeroptions = '-L' + libdir + '/intelmkl/lib/32 -lmkl_p3 -lmkl_vml_p3 -lpthread'
+#                 linkeroptions = '-L' + libdir + '/intelmkl/lib/32 -lmkl -lvml -lpthread'
+#                 linkeroptions = '-L' + libdir + '/atlas_athlon256 -lcblas -lf77blas -latlas'
 #                 )
 
 # optionalLibrary( name = 'g2c',
@@ -163,18 +163,18 @@ optionalLibrary( name = 'X',
                  includedirs = '?',
                  linkeroptions = '-L/usr/X11R6/lib/ -lXi -lXext -lX11'
 )
+optionalLibrary( name='boost',
+                 triggers = 'boost*',
+                 includedirs = libdir + '/../include',
+                 linkeroptions = '-L'+libdir )
 
 optionalLibrary( name='boost_date_time',
-                 triggers = 'boost/date_time/*',
+                 triggers = 'boost/date_time*',
                  linkeroptions = '-lboost_date_time' )
 
 optionalLibrary( name='boost_filesystem',
-                 triggers = 'boost/filesystem/*',
+                 triggers = 'boost/filesystem*',
                  linkeroptions = '-lboost_filesystem' )
-
-optionalLibrary( name='boost_date_time',
-                 triggers = 'boost/date_time',
-                 linkeroptions = '-lboost_date_time' )
 
 optionalLibrary( name = 'boost_python',
                  triggers = 'boost/python.hpp',
@@ -312,21 +312,21 @@ pymakeOption( name = 'blas',
 pymakeOption( name = 'pentiumblas',
               description = 'compilation and linking BLAS for Intel Pentium processor',
               compileroptions = '-D USE_BLAS_SPECIALISATIONS',
-              linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl -lvml -lpthread -lg2c')
+              linkeroptions = '-L' + libdir +'/intelmkl/lib/32 -lmkl -lvml -lpthread -lg2c')
 
 pymakeOption( name = 'p3blas',
               description = 'compilation and linking BLAS for Intel Pentium 3 processor',
-              linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl_p3 -lmkl_vml_p3 -lpthread -lg2c')
+              linkeroptions = '-L'+ libdir + '/intelmkl/lib/32 -lmkl_p3 -lmkl_vml_p3 -lpthread -lg2c')
 
 pymakeOption( name = 'athlonblas',
               description = 'compilation and linking atlas BLAS for AMD Athlon processor',
               compileroptions = '-D USE_BLAS_SPECIALISATIONS',
-              linkeroptions = '-L/u/lisa/local/linux-i386/lib/atlas_athlon256 -lcblas -lf77blas -latlas -lg2c')
+              linkeroptions = '-L' + libdir + '/atlas_athlon256 -lcblas -lf77blas -latlas -lg2c')
 
 pymakeOption( name = 'p4blas',
               description = 'compilation and linking BLAS for Intel Pentium 4 processor',
               compileroptions = '-D USE_BLAS_SPECIALISATIONS',
-              linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl_p4 -lmkl_vml_p4 -lpthread -lg2c')
+              linkeroptions = '-L' + libdir + '/intelmkl/lib/32 -lmkl_p4 -lmkl_vml_p4 -lpthread -lg2c')
 
 pymakeOption( name = 'mammouthblas',
     description = 'compilation and linking BLAS for P4 Mammouth-Serie cluster',
