@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// FilePath.cc
+// PPath.cc
 //
 // Copyright (C) 2005 Pascal Vincent 
 // 
@@ -33,32 +33,33 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilePath.cc,v 1.1 2005/01/06 02:09:37 plearner Exp $ 
+   * $Id: PPath.cc,v 1.1 2005/01/06 19:35:01 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent, Christian Dorion, Nicolas Chapados
 
-/*! \file FilePath.cc */
+/*! \file PPath.cc */
 
 
-#include "FilePath.h"
+#include "PPath.h"
 
 namespace PLearn {
 using namespace std;
 
 // Put function implementations here.
 
-  PStream& operator<<(PStream& out, const FilePath& path)
+  PStream& operator<<(PStream& out, const PPath& path)
   {
     out << path.canonical();
     return out;
   }
 
-  PStream& operator>>(PStream& in, FilePath& path)
+  PStream& operator>>(PStream& in, PPath& path)
   {
     string spath;
     in >> spath;
-    path = FilePath(spath,in.getDirPath());
+    path = PPath(spath).absolute();
+    // path = PPath(spath);
     return in;
   }
 

@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// FilePath.h
+// PPath.h
 //
 // Copyright (C) 2005 Pascal Vincent 
 // 
@@ -33,16 +33,16 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilePath.h,v 1.1 2005/01/06 02:09:37 plearner Exp $ 
+   * $Id: PPath.h,v 1.1 2005/01/06 19:35:01 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent, Christian Dorion, Nicolas Chapados
 
-/*! \file FilePath.h */
+/*! \file PPath.h */
 
 
-#ifndef FilePath_INC
-#define FilePath_INC
+#ifndef PPath_INC
+#define PPath_INC
 
 // Put includes here
 #include <mozilla/nspr/prenv.h>
@@ -52,58 +52,65 @@ namespace PLearn {
 
 
   /*
-Canonique:
 
-./           (directory courant du process)
-${DIRPATH}/  (directory du fichier courant)
+    Un PPath est une string se comportant exactement comme une std:string à deux détails près:
+    * la sérialisation effectue une traduction entre une forme canonique et une forme de filepath appropriée pour l'os courant.
+    * il y a des méthodes supplémentaires pour gérer les opérations de path
 
-${HOME}/  (directory de l'utilisateur)
+    Les PPath écrits dans un PStream ont toujours la forme
+    canonique:
 
-Un nombre d'autres qui seraient pris de l'environnement de l'utilisateur (voir PR_GetEnv)
-Ex:
-${PLEARNDIR}/
+    PPath:AXADB:toto/tutu
+    PPath:PLEARN:toto/tutu
+    PPath:ABSOLUTE:C:/toto/tutu
 
-${PLEARNDATASETS}/
+    PLUS VRAI: Les PPath lus depuis un PStream donnent toujours une string absolue de la forme appropriée pour l'OS
+    NOUVELLE FACON: sont conservées as is. Il faut appeler absolute() pour obtenir une forme utilisable par les appels systèmes de l'OS.
+
+    
+
+    PPath:ABSOLUTE:C:/toto/tutu --> C:\toto\tutu
+    PPath:REMOTEUCI:toto/tutu    --> http://www.uci.org/toto/tutu
+    C:\toto\tutu --> C:\toto\tutu
+    toto/tutu --> C:\path_du_directory_courant\toto\tutu
+    http:     --> http:
+    "syntaxe fuckee a la con de getDataSet" --> "syntaxe fuckee a la con de getDataSet"
+
+  Attention: syntaxe de getDataSet 
+
+
+---
+
+Si on est sous windows
+
+  PPath("C:\toto")/"tutu"/"tete"   --->   "C:\toto\tutu\tete"
+  PPath("PPath:REMOTEUCI:toto/")/"tutu"/"tete" ---> "PPath:REMOTEUCI:toto/tutu/tete"
+
+  PPath("toto/tutu")+"tata"  -->   "toto/tututata"
+
+  
 
   */
 
-class FilePath
-{
-protected:
-  string abspath;  // internal absolute representation
 
+
+
+  class PPath: public std::string
+{
 public:
 
-  //! peut recevoir un path canonique ou non
-  //! avec des slash ou des backslash, peu importe.
-  FilePath(const string& path, const string& dirpath="");
+  PPath(const string path);
 
-  //! retourne un path utilisable dans fopen
-  operator char*();
-  operator string();
+  operator string() { return *this; }
   
-  // gere les / \ \ ...
-  /*
-   toto + "ab" -> totoab
-   toto + "/ab" -> toto/ab
-   toto + "/ab\\cd/e////f" -> /ab/
+  PPath canonical() const;  // returns a PPath in the canonical format
+  PPath absolute() const;   // returns an absolute path in the form appropriate for the OS
 
-  */
-  operator+=(const string& append);
-  operator+ ...
+  operator/=(const PPath& other);
+  operator/(const PPath& other) const;
 
-  operator/=
-  operator/ 
-
-  // retourne version canonique
-  // (attention, ne PAS y mettre de ${DIRPATH} )
-  // meme format peu importe la platforme
-  // pas de trailing slash
-  string canonical() const;
-  
-  // retourne path absolu
-  // platform dependent
-  string absolute() const;
+  PPath up() const;
+  PPath extension() const;
 
 };
 
