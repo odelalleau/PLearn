@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.17 2004/03/10 20:13:03 tihocan Exp $
+   * $Id: getDataSet.cc,v 1.18 2004/03/11 14:13:53 lheureup Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -140,7 +140,7 @@ VMat getDataSet(const string& datasetstring, const string& alias)
           }
           else if(ext==".amat")
             // TODO only check the extension is .bin.amat ?
-            if (datasetstring.find(".bin", 0, 4) != string::npos){
+            if (datasetstring.find(".bin.", 0, 5) != string::npos){
               Mat tempMat;
               loadAsciiSingleBinaryDescriptor(datasetstring,tempMat);
               vm = VMat(tempMat);
