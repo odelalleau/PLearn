@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.55 2004/07/09 22:28:45 monperrm Exp $
+   * $Id: TMat_maths_impl.h,v 1.56 2004/07/13 14:30:21 chapados Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -1370,36 +1370,42 @@ TVec<T> remove_missing(const TVec<T>& vec)
   return result;
 }
 
-template<class T>
-TVec<T> apply(const TVec<T>& vec, T (*func)(T))
+//! Transform a vector of T into a vector of U through a unary function.
+//! Note: output type need not be specified in this case
+template<class T, class U, class V>
+TVec<U> apply(const TVec<T>& vec, U (*func)(V))
 {
-  TVec<T> destination(vec.length());
+  TVec<U> destination(vec.length());
   apply(vec,destination,func);
   return destination;
 }
 
-template<class T>
-void apply(const TVec<T>& source, TVec<T>& destination, T (*func)(T))
+//! Transform a vector of T into a vector of U through a unary function
+template<class T, class U>
+void apply(const TVec<T>& source, TVec<U>& destination, U (*func)(T))
 {
   int n=source.length();
   if (n!=destination.length())
     PLERROR("apply: source(%d) and destination(%d) TVec<T>'s must have same length",
         n,destination.length());
   T* s = source.data();
-  T* d = destination.data();
+  U* d = destination.data();
   for(int i=0; i<n; i++)
     d[i]=func(s[i]);
 }
 
-template<class T>
-void apply(const TVec<T>& src1,const TVec<T>& src2,TVec<T>& dest,T (*func)(T,T))
+//! Transform a vector of T and a vector of U into a vector of V,
+//! through a binary function
+template<class T, class U, class V>
+void apply(const TVec<T>& src1,const TVec<U>& src2, TVec<V>& dest,
+           V (*func)(T,U))
 {
   int n=src1.length();
   if (n!=dest.length() || n!=src2.length())
     PLERROR("apply: src1, src2 and destination TVec<T>'s must have same length");
   T* s1 = src1.data();
-  T* s2 = src2.data();
-  T* d = dest.data();
+  U* s2 = src2.data();
+  V* d = dest.data();
   for(int i=0; i<n; i++)
     d[i]=func(s1[i],s2[i]);
 }
