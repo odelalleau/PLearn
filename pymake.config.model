@@ -252,11 +252,11 @@ pymakeOption( name = 'pintel',
               compileroptions = '-O3 -parallel');
 
 pymakeOption( name = 'safeopt',
-              description = 'safe optimized mode',
+              description = 'safe optimized mode (includes bound checking)',
               compileroptions = '-Wall -O3 -DBOUNDCHECK' )
 
 pymakeOption( name = 'checkopt',
-              description = 'safe optimized mode',
+              description = 'some variation on optimized mode',
               compileroptions = '-Wall -O3 -funroll-loops' )
 
 ### Same optimization options as -opt
