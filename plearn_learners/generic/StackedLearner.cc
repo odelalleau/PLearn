@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.cc,v 1.22 2004/10/27 21:47:21 lamblin Exp $
+   * $Id: StackedLearner.cc,v 1.23 2004/11/18 14:24:25 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -182,6 +182,7 @@ StackedLearner::StackedLearner()
   {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
+    deepCopyField(base_learners_outputs, copies);
     deepCopyField(base_learners, copies);
     if (combiner)
       deepCopyField(combiner, copies);
