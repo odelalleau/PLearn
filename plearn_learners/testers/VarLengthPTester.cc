@@ -44,9 +44,9 @@ VarLengthPTester::VarLengthPTester()
 {}
 
 PLEARN_IMPLEMENT_OBJECT(VarLengthPTester, "Manages a learning experiment, with training and estimation of generalization error.", 
-  "The VarLengthPTester has the same goal of PTester but it is specific to the learner BPTT which allows to"
-  " have sequences of variable length. This cause to hava some outputsize variable depending on inputsize."
-  "The tester must deal a little differently which the learner.");
+  "The VarLengthPTester has the same goal as PTester but it is specific to the learner BPTT which allows to\n"
+  "have sequences of variable length. This causes to have some outputsize variable depending on inputsize.\n"
+  "The tester must deal a little differently with the learner.");
 
 
 void VarLengthPTester::declareOptions(OptionList& ol)
