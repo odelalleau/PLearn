@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeuralNet.cc,v 1.11 2003/05/07 05:39:19 plearner Exp $
+   * $Id: NeuralNet.cc,v 1.12 2003/06/21 14:22:28 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeuralNet.h */
@@ -144,7 +144,7 @@ void NeuralNet::declareOptions(OptionList& ol)
                 "    how many times the optimizer gets to see the whole training set.\n");
 
   declareOption(ol, "paramsvalues", &NeuralNet::paramsvalues, OptionBase::learntoption, 
-                "    The learned parameter vector\n");
+                "    The learned parameter vector (in which order?)\n");
 
   declareOption(ol, "normalization", &NeuralNet::normalization, OptionBase::buildoption,
                 "    The normalization to be applied to the data\n");

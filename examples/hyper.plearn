@@ -23,11 +23,11 @@ learner =
   option_fields = [ "nstages" "nhidden" "weight_decay" "optimizer.start_learning_rate" ];
 
   # TVec< string >: cost stats to be reported in results table
-  cost_fields = [ "E[E[train.NLL]]" "E[E[train.class_error]]" "E[E[test.NLL]]" "E[E[test.class_error]]"]  ;
+  cost_fields = [ "E[E[train0.NLL]]" "E[E[train.class_error]]" "E[E[test.NLL]]" "E[E[test.class_error]]"]  ;
 
   # TVec< PP< Splitter > >: a list of splitters to define train/test sequences
   splitters = [ FractionSplitter(fractions = [[.80 .20]]),  # splitter 0 is train/test, and will be used to choose nhidden on the test error 
-                FractionSplitter(fractions = [[.10 0]])                   # splitter 1 gives a small training set, and will be used to choose learning rate and early stopping 
+                FractionSplitter(fractions = [[.10 0 ]])                   # splitter 1 gives a small training set, and will be used to choose learning rate and early stopping 
               ]  ;
 
   # TVec< PP< HOpt > >: a list of hyper-optimizers to call one after the other
@@ -36,9 +36,6 @@ learner =
       # TVec< pair< string, TVec< string > > >: A list of pairs of optionname : list_of_values for the learner.
       # All combinations of option and value will be tried
       options = [ nhidden: [50 100], weight_decay: [0 0.1 1] ]  ;
-
-      # TVec< PP< HOpt > >: If present, run the substrategy for each combination o option/value.
-      substrategy = 0 [ ]  ;
 
       # int: index of current splitter (in hlearner's splitters list) to use
       which_splitter = 0  ;
@@ -57,6 +54,7 @@ learner =
       save_all_models = 0;
       provide_learner_expdir = 0;
 
+      # TVec< PP< HOpt > >: If present, run the substrategy for each combination o option/value.
       substrategy = [ EarlyStop( option = nstages; range=[ 0 100 10 ]; which_splitter=1; which_objective=0; remember_best=1) ]
       )
     ]  ;
