@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.h,v 1.12 2004/05/04 19:59:56 ducharme Exp $
+   * $Id: VarArray.h,v 1.13 2004/05/05 13:39:36 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -80,10 +80,10 @@ public:
     return operator[](0);
   }
 
-  VarArray& operator&=(const Var& v);
-  VarArray& operator&=(const VarArray& va);
-  VarArray operator&(const Var& v) const;
-  VarArray operator&(const VarArray& va) const;
+  inline VarArray& operator&=(const Var& v);
+  inline VarArray& operator&=(const VarArray& va);
+  inline VarArray operator&(const Var& v) const;
+  inline VarArray operator&(const VarArray& va) const;
 
   int nelems() const;
   int sumOfLengths() const;
