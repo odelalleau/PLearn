@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.28 2004/05/21 02:18:46 yoshua Exp $ 
+ * $Id: GaussMix.cc,v 1.29 2004/05/21 04:02:28 yoshua Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -546,7 +546,7 @@ void GaussMix::precomputeStuff() {
       real log_det = 0;
       for (int k = 0; k < n_eigen_computed; k++) {
 #ifdef BOUNDCHECK
-        if (sigma_min<epsilon && eigenvalues(j,k) < epsilon) {
+        if (var_min<epsilon && eigenvalues(j,k) < epsilon) {
           PLWARNING("In GaussMix::precomputeStuff - An eigenvalue is near zero");
         }
 #endif

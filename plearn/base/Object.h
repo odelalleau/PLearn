@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.27 2004/05/14 17:49:10 chrish42 Exp $
+   * $Id: Object.h,v 1.28 2004/05/21 04:02:14 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -569,6 +569,9 @@ template<class T> inline Object* toObjectPtr(const PP<T>& x)
 { return toObjectPtr(*static_cast<T *>(x)); }
 
 template<class T> Object* toIndexedObjectPtr(const Array<T> &x, int i)
+{ return toObjectPtr(static_cast<T &>(x[i])); }
+
+template<class T> Object* toIndexedObjectPtr(const TVec<T> &x, int i)
 { return toObjectPtr(static_cast<T &>(x[i])); }
 
 template<class T> Object *toIndexedObjectPtr(const T&, int) // Never to be called stub
