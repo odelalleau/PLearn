@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Var_utils.h,v 1.3 2002/11/08 20:09:56 dorionc Exp $
+   * $Id: Var_utils.h,v 1.4 2002/11/08 22:26:19 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -360,9 +360,6 @@ inline Var min(Var v)
 
 inline Var max(Var v)
 { return new MaxVariable(v); }
-
-inline Var max(Var v1, Var v2)
-{ return new Max2Variable(v1,v2); }
 
 inline Var argmin(Var v)
 { return new ArgminVariable(v); }

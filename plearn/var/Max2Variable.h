@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Max2Variable.h,v 1.1 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: Max2Variable.h,v 1.2 2002/11/08 22:26:19 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -72,6 +72,8 @@ public:
   virtual void symbolicBprop();
 };
 
+inline Var max(Var v1, Var v2)
+{ return new Max2Variable(v1,v2); }
 
 %> // end of namespace PLearn
 
