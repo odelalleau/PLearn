@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat.h,v 1.18 2004/06/18 13:10:42 tihocan Exp $
+   * $Id: VMat.h,v 1.19 2004/06/18 16:49:02 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -148,9 +148,9 @@ inline void operator>>(const VMat& src, const Mat& dest)
 
 
 
-/*!   *********************************
-  * user-friendly VMat interface *
-  *********************************
+/*! ********************************
+    * User-friendly VMat interface *
+    ********************************
 */
 
 inline Array<VMat> operator&(const VMat& d1, const VMat& d2)
@@ -161,6 +161,8 @@ inline ostream& operator<<(ostream& out, const VMat& m)
 
 template <> void deepCopyField(VMat& field, CopiesMap& copies);
 
+//! Load an ASCII file and return the corresponding VMat (this will be
+//! a MemoryVMatrix, since the entire file is loaded in memory).
 VMat loadAsciiAsVMat(const string& filename);
 
 } // end of namespace PLearn
