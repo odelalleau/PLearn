@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Storage.h,v 1.3 2002/10/21 01:21:53 plearner Exp $
+   * $Id: Storage.h,v 1.4 2002/12/05 21:30:52 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -64,6 +64,7 @@ public: // A few STL-like typedefs
   typedef T value_type;
   typedef int size_type;
   typedef T* iterator;
+  typedef const T* const_iterator;
 
 public:
   int length_;

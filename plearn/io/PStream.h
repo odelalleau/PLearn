@@ -410,7 +410,7 @@ protected:
   }
 
   template <class T> 
-  inline PStream& operator>>(istream& in, PP<T> &o)
+  inline PStream& operator>>(PStream& in, PP<T> &o)
   {
     T *ptr;
     if (o.isNull())
@@ -423,7 +423,7 @@ protected:
   }
 
   template <class T> 
-  inline PStream& operator<<(ostream& out, const PP<T> &o)
+  inline PStream& operator<<(PStream& out, const PP<T> &o)
   {
     T *ptr = static_cast<T *>(o);
     out << const_cast<const T * &>(ptr);
