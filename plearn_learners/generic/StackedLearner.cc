@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.cc,v 1.10 2004/02/19 21:54:53 tihocan Exp $
+   * $Id: StackedLearner.cc,v 1.11 2004/02/20 14:14:19 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -43,6 +43,7 @@
 
 #include "StackedLearner.h"
 #include "PLearnerOutputVMatrix.h"
+#include "ShiftAndRescaleVMatrix.h"
 
 namespace PLearn <%
 using namespace std;
@@ -52,6 +53,7 @@ StackedLearner::StackedLearner()
   :
   base_train_splitter(0),
   train_base_learners(true),
+  normalize_base_learners_output(false),
   precompute_base_learners_output(false),
   put_raw_input(false)
   {
@@ -103,6 +105,10 @@ StackedLearner::StackedLearner()
                   "whether to train the base learners in the method train (otherwise they should be\n"
                   "initialized properly at construction / setOption time)\n");
 
+    declareOption(ol, "normalize_base_learners_output", &StackedLearner::normalize_base_learners_output, OptionBase::buildoption,
+                  "If set to 1, the output of the base learners on the combiner training set\n"
+                  "will be normalized (zero mean, unit variance) before training the combiner.");
+                  
     declareOption(ol, "precompute_base_learners_output", &StackedLearner::precompute_base_learners_output, OptionBase::buildoption,
                   "If set to 1, the output of the base learners on the combiner training set\n"
                   "will be precomputed in memory before training the combiner (this may speed\n"
@@ -246,6 +252,12 @@ void StackedLearner::train()
       }
     if (combiner)
     {
+      if (normalize_base_learners_output) {
+        // Normalize the combiner training set.
+        VMat normalized_trainset = 
+          new ShiftAndRescaleVMatrix(combiner->getTrainingSet(), -1);
+        combiner->setTrainingSet(normalized_trainset);
+      }
       if (precompute_base_learners_output) {
         // First precompute the train set of the combiner in memory.
         VMat precomputed_trainset = combiner->getTrainingSet();

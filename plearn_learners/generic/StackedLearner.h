@@ -33,13 +33,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.h,v 1.8 2004/02/19 21:54:53 tihocan Exp $
+   * $Id: StackedLearner.h,v 1.9 2004/02/20 14:14:19 tihocan Exp $
    ******************************************************* */
 
-// Authors: Yoshua Bengio, Olivier Delalleau
+// Authors: Yoshua Bengio
 
 /*! \file StackedLearner.h */
-
 
 #ifndef StackedLearner_INC
 #define StackedLearner_INC
@@ -95,6 +94,10 @@ public:
   //! whether to train the base learners in the method train (otherwise they should be
   //! initialized at construction / setOption time)
   bool train_base_learners;
+
+  //! If set to 1, the output of the base learners on the combiner training set
+  //! will be normalized (zero mean, unit variance).
+  bool normalize_base_learners_output;
 
   //! If set to 1, the output of the base learners on the combiner training set
   //! will be precomputed in memory before training the combiner.
