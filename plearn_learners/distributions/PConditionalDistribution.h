@@ -79,7 +79,7 @@ public:
   //! Set the input part before using the inherited methods
   virtual void setInput(const Vec& input);
 
-  virtual void use(const Vec& input, Vec& output);
+  virtual void computeOutput(const Vec& input, Vec& output) const;
 
   // Declares a few other classes and functions related to this class
   PLEARN_DECLARE_OBJECT(PConditionalDistribution);

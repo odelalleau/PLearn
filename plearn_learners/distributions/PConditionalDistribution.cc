@@ -68,7 +68,7 @@ void PConditionalDistribution::setInput(const Vec& input)
 { PLERROR("setInput must be implemented for this PConditionalDistribution"); }
 
 
-void PConditionalDistribution::use(const Vec& input, Vec& output)
+void PConditionalDistribution::computeOutput(const Vec& input, Vec& output) const
 {
   Vec x = input.subVec(0,input_part_size);
   int d=input.length()-input_part_size;
