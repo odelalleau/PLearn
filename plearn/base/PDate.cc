@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDate.cc,v 1.10 2004/08/04 13:17:35 tihocan Exp $
+   * $Id: PDate.cc,v 1.11 2005/03/29 15:08:24 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -71,6 +71,8 @@ PDate::PDate(int julian_day)
 
 PDate::PDate(string date)
 {
+  date = remobeblanks(date);
+
   // Format "2003/01/27"
   if (date.size() == 10 && date[4] == '/' && date[7] == '/') 
     {
@@ -118,11 +120,27 @@ PDate::PDate(string date)
       year = toint(date.substr(0,4));
       month = toint(date.substr(4,2));
       day = toint(date.substr(6,2));
-      if(year<1970 || year>3000 || month<1 || month>12 || day<1 || day>31)
-        PLERROR("Invalid date string: %s",date.c_str());
+    }
+
+  // Format 1020917  (102 stands for 2002)
+  else if (date.size()==7 && pl_isnumber(date))
+    {
+      year = 1900+toint(date.substr(0,3));
+      month = toint(date.substr(3,2));
+      day = toint(date.substr(5,2));
+    }
+  // Format 980917  (99 stands for 1998)
+  else if (date.size()==6 && pl_isnumber(date))
+    {
+      year = 1900+toint(date.substr(0,2));
+      month = toint(date.substr(2,2));
+      day = toint(date.substr(4,2));
     }
   else
     PLERROR("PDate::PDate: the passed date string is not in a known format: %s", date.c_str());
+
+  if(year<1970 || year>3000 || month<1 || month>12 || day<1 || day>31)
+    PLERROR("Invalid date string: %s",date.c_str());
 }
 
 bool PDate::isMissing() const
