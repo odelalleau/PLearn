@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.h,v 1.12 2003/10/16 20:51:37 ducharme Exp $ 
+   * $Id: MountLucasIndex.h,v 1.13 2003/10/17 21:09:38 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.h */
@@ -62,10 +62,12 @@ class MountLucasIndex: public FinancialAdvisor
     //string sp500_column;
     real transaction_multiplicative_cost;
 
+    int moving_average_window; // default=12 (1 year)
+
   protected:
     TVec<bool> is_long_position; // long or short position (for this month)
     TVec<bool> tradable_commodity; // is this commidity tradable for this year
-    Vec twelve_month_moving_average;
+    //Vec twelve_month_moving_average;
     Mat next_to_last_unit_asset_value;
     Vec unit_asset_value;
     Vec index_value; // the monthly MLM Index

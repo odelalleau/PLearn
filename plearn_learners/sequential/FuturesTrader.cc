@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.cc,v 1.20 2003/10/16 20:51:37 ducharme Exp $ 
+   * $Id: FuturesTrader.cc,v 1.21 2003/10/17 21:09:38 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.cc */
@@ -190,8 +190,6 @@ void FuturesTrader::trader_test(int t, VMat testset, PP<VecStatsCollector> test_
 
   if (testoutputs) testoutputs->appendRow(portfolios(t));
   if (testcosts) testcosts->appendRow(update);
-
-  //cout << "\t Turnover per year:\t\t" << sum(transaction_costs,true)/(sum(margin_cash,true)/12.0) << endl;
 }
 
 void FuturesTrader::check_margin(int k, int t) const

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.cc,v 1.18 2003/10/16 20:51:37 ducharme Exp $ 
+   * $Id: MountLucasIndex.cc,v 1.19 2003/10/17 21:09:38 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.cc */
@@ -49,7 +49,8 @@ PLEARN_IMPLEMENT_OBJECT(MountLucasIndex, "ONE LINE DESCR", "NO HELP");
 
 MountLucasIndex::MountLucasIndex()
   : last_day_of_month_column("is_last_day_of_month"), julian_day_column("Date"),
-    risk_free_rate_column("risk_free_rate"), current_month(0), build_complete(false)
+    risk_free_rate_column("risk_free_rate"), moving_average_window(12),
+    current_month(0), build_complete(false)
 {
 }
 
@@ -72,7 +73,7 @@ void MountLucasIndex::build_()
 
   is_long_position.resize(nb_commodities);
   tradable_commodity.resize(nb_commodities);
-  twelve_month_moving_average.resize(nb_commodities);
+  //twelve_month_moving_average.resize(nb_commodities);
   next_to_last_unit_asset_value.resize(max_seq_len,nb_commodities);
   unit_asset_value.resize(nb_commodities);
   index_value.resize(max_seq_len);
@@ -102,7 +103,7 @@ void MountLucasIndex::forget()
 
   is_long_position.fill(true);
   tradable_commodity.fill(false);
-  twelve_month_moving_average.fill(MISSING_VALUE);
+  //twelve_month_moving_average.fill(MISSING_VALUE);
   next_to_last_unit_asset_value.fill(MISSING_VALUE);
   unit_asset_value.fill(MISSING_VALUE);
   index_value.fill(MISSING_VALUE);
@@ -139,6 +140,9 @@ void MountLucasIndex::declareOptions(OptionList& ol)
 
   declareOption(ol, "transaction_multiplicative_cost", &MountLucasIndex::transaction_multiplicative_cost,
     OptionBase::buildoption, "transaction_multiplicative_cost \n");
+
+  declareOption(ol, "moving_average_window", &MountLucasIndex::moving_average_window,
+    OptionBase::buildoption, "Thw window length (in month) on which we compute the moving average\n");
 
   inherited::declareOptions(ol);
 }
@@ -422,10 +426,14 @@ bool MountLucasIndex::next_position(int pos, const Mat& unit_asset_value_) const
 {
   real the_month_unit_asset_value = unit_asset_value_(current_month, pos);
   real moving_average = 0;
-  int start = MAX(0,current_month-11);
-  for (int t=start; t<=current_month; t++)
+  //int start = MAX(0,current_month-11);
+  //int start = MAX(0,current_month-(moving_average_window-1));
+  //for (int t=start; t<=current_month; t++)
+  int start = MAX(0,current_month-moving_average_window);
+  for (int t=start; t<current_month; t++)
     moving_average += unit_asset_value_(t,pos);
-  moving_average /= (current_month+1-start);
+  moving_average /= (current_month-start);
+  //moving_average /= (current_month+1-start);
 
   return (the_month_unit_asset_value >= moving_average) ? true : false;
 }
@@ -470,7 +478,7 @@ void MountLucasIndex::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(commodity_start_year, copies);
   deepCopyField(is_long_position, copies);
   deepCopyField(tradable_commodity, copies);
-  deepCopyField(twelve_month_moving_average, copies);
+  //deepCopyField(twelve_month_moving_average, copies);
   deepCopyField(next_to_last_unit_asset_value, copies);
   deepCopyField(unit_asset_value, copies);
   deepCopyField(index_value, copies);
