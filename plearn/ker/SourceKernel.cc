@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceKernel.cc,v 1.2 2004/05/07 19:07:32 tihocan Exp $ 
+   * $Id: SourceKernel.cc,v 1.3 2004/06/25 12:58:22 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -64,12 +64,6 @@ PLEARN_IMPLEMENT_OBJECT(SourceKernel,
 ////////////////////
 void SourceKernel::declareOptions(OptionList& ol)
 {
-  // ### Declare all of this object's options here
-  // ### For the "flags" of each option, you should typically specify  
-  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-  // ### OptionBase::tuningoption. Another possible flag to be combined with
-  // ### is OptionBase::nosave
-
   declareOption(ol, "source_kernel", &SourceKernel::source_kernel, OptionBase::buildoption,
       "The underlying kernel.");
 
@@ -82,7 +76,6 @@ void SourceKernel::declareOptions(OptionList& ol)
 ///////////
 void SourceKernel::build()
 {
-  // ### Nothing to add here, simply calls build_
   inherited::build();
   build_();
 }
@@ -92,19 +85,12 @@ void SourceKernel::build()
 ////////////
 void SourceKernel::build_()
 {
-  // ### This method should do the real building of the object,
-  // ### according to set 'options', in *any* situation. 
-  // ### Typical situations include:
-  // ###  - Initial building of an object from a few user-specified options
-  // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-  // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-  // ### You should assume that the parent class' build_() has already been called.
   this->is_symmetric = source_kernel->is_symmetric;
   this->data_inputsize = source_kernel->dataInputsize();
   this->n_examples = source_kernel->nExamples();
   if (specify_dataset) {
     // Forward the specified dataset to the underlying kernel, if it is not done already.
-    if (specify_dataset != source_kernel->specify_dataset) {
+    if (static_cast<VMatrix*>(specify_dataset) != static_cast<VMatrix*>(source_kernel->specify_dataset)) {
       source_kernel->specify_dataset = specify_dataset;
       source_kernel->build();
     }
@@ -132,7 +118,6 @@ void SourceKernel::computeGramMatrix(Mat K) const {
 // evaluate //
 //////////////
 real SourceKernel::evaluate(const Vec& x1, const Vec& x2) const {
-  // ### Evaluate the kernel on a pair of points.
   return source_kernel->evaluate(x1, x2);
 }
 
@@ -140,7 +125,6 @@ real SourceKernel::evaluate(const Vec& x1, const Vec& x2) const {
 // evaluate_i_j //
 //////////////////
 real SourceKernel::evaluate_i_j(int i, int j) const {
-  // ### Evaluate the kernel on a pair of training points.
   return source_kernel->evaluate_i_j(i,j);
 }
 
@@ -171,13 +155,6 @@ Vec SourceKernel::getParameters() const {
 void SourceKernel::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
-
   deepCopyField(source_kernel, copies);
 }
 
