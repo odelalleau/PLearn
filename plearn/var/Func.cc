@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Func.cc,v 1.15 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: Func.cc,v 1.16 2004/03/08 18:29:28 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -193,6 +193,7 @@ void Function::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   deepCopyField(bproppath, copies);
   deepCopyField(parentspath, copies);
   deepCopyField(df, copies);
+  deepCopyField(parameters, copies);
 }
 
 void Function::fprop(const Vec& in, const Vec& out)
