@@ -1,0 +1,4 @@
+Yoshua Bengio
+Olivier Delalleau
+Réjean Ducharme
+Hugo Larochelle
