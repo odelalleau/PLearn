@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.32 2004/01/26 14:14:13 tihocan Exp $
+   * $Id: NNet.cc,v 1.33 2004/01/28 14:33:23 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -54,9 +54,10 @@
 namespace PLearn <%
 using namespace std;
 
-PLEARN_IMPLEMENT_OBJECT(NNet, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(NNet, "Ordinary Feedforward Neural Network with 1 or 2 hidden layers", 
+                        "Neural network with many bells and whistles...");
 
-NNet::NNet()
+NNet::NNet() // DEFAULT VALUES FOR ALL OPTIONS
   :
    nhidden(0),
    nhidden2(0),
@@ -175,6 +176,47 @@ void NNet::build()
   build_();
 }
 
+void NNet::setTrainingSet(VMat training_set, bool call_forget)
+{ 
+  bool training_set_has_changed =
+    !train_set || train_set->width()!=training_set->width() ||
+    train_set->length()!=training_set->length() || train_set->inputsize()!=training_set->inputsize()
+    || train_set->weightsize()!= training_set->weightsize();
+
+  train_set = training_set;
+  if (training_set_has_changed)
+  {
+    inputsize_ = train_set->inputsize();
+    targetsize_ = train_set->targetsize();
+    weightsize_ = train_set->weightsize();
+  }
+
+  // THE CODE BELOW SHOULD BE REMOVED: THIS NOT THE PLACE
+  // TO MASSAGE THE DATA SET, IT SHOULD BE DONE WHEN
+  // CONSTRUCTING THE VMAT SENT TO THE LEARNER, NOT
+  // IN THE LEARNER. Yoshua. N.B. ALSO REMOVE THE OPTION IN VMATRIX.
+  // IF THIS IS DONE THEN THE DEFAULT setTrainingSet CAN
+  // BE USED INSTEAD OF REDEFINING IN NNet.
+
+  // Reduce the train_set to the used data.
+  if (train_set->target_is_last) {
+    int useless_size = training_set.width() - targetsize() - inputsize();
+    if (useless_size > 0) {
+      int is = inputsize();
+      int ts = targetsize();
+      int ws = train_set->weightsize();
+      VMat train_input = new SubVMatrix(train_set, 0, 0, train_set.length(), inputsize());
+      VMat train_target = new SubVMatrix(train_set, 0, train_set.width() - targetsize(), train_set.length(), targetsize());
+      train_set = new ConcatColumnsVMatrix(train_input, train_target);
+      train_set->defineSizes(is, ts, ws);
+      train_set->build();
+    }
+  }
+
+  if (training_set_has_changed || call_forget)
+    build(); // MODIF FAITE PAR YOSHUA: sinon apres un setTrainingSet le build n'est pas complete dans un NNet train_set = training_set;
+}
+
 void NNet::build_()
 {
   /*
@@ -184,23 +226,9 @@ void NNet::build_()
   // Don't do anything if we don't have a train_set
   // It's the only one who knows the inputsize and targetsize anyway...
 
-  if(train_set)  
+  if(inputsize_>=0 && targetsize_>=0 && weightsize_>=0)
     {
 
-      // Reduce the train_set to the used data.
-      if (train_set->target_is_last) {
-        int useless_size = train_set.width() - targetsize() - inputsize();
-        if (useless_size > 0) {
-          int is = inputsize();
-          int ts = targetsize();
-          int ws = train_set->weightsize();
-          VMat train_input = new SubVMatrix(train_set, 0, 0, train_set.length(), inputsize());
-          VMat train_target = new SubVMatrix(train_set, 0, train_set.width() - targetsize(), train_set.length(), targetsize());
-          train_set = new ConcatColumnsVMatrix(train_input, train_target);
-          train_set->defineSizes(is, ts, ws);
-          train_set->build();
-        }
-      }
       
       // init. basic vars
       input = Var(inputsize(), "input");
@@ -277,9 +305,12 @@ void NNet::build_()
       
       target = Var(targetsize(), "target");
       
-      if(train_set->hasWeights())
+      if(weightsize_>0)
+      {
+        if (weightsize_!=1)
+          PLERROR("NNet: expected weightsize to be 1 or 0 (or unspecified = -1, meaning 0), got %d",weightsize_);
         sampleweight = Var(1, "weight");
-
+      }
       /*
 
        * costfuncs
@@ -369,17 +400,16 @@ void NNet::build_()
       // If there is no penalty, we still add costs[0] as the first cost, in
       // order to keep the same number of costs as if there was a penalty.
       if(penalties.size() != 0) {
-        if (train_set->hasWeights()) {
+        if (weightsize_>0)
         // only multiply by sampleweight if there are weights
           training_cost = hconcat(sampleweight*sum(hconcat(costs[0] & penalties))
                                   & (test_costs*sampleweight));
-        }
         else {
           training_cost = hconcat(sum(hconcat(costs[0] & penalties)) & test_costs);
         }
       } 
       else {
-        if(train_set->hasWeights()) {
+        if(weightsize_>0) {
         // only multiply by sampleweight if there are weights
           training_cost = hconcat(costs[0]*sampleweight & test_costs*sampleweight);
         } else {
@@ -402,7 +432,7 @@ void NNet::build_()
       params.makeSharedValue(paramsvalues);
 
       // Funcs
-      VarArray invars;
+      invars.resize(0);
       VarArray outvars;
       VarArray testinvars;
       if(input)
@@ -428,19 +458,6 @@ void NNet::build_()
       test_costf->recomputeParents();
       output_and_target_to_cost = Func(outvars, test_costs); 
       output_and_target_to_cost->recomputeParents();
-
-      // The total training cost
-      int l = train_set->length();
-      int nsamples = batch_size>0 ? batch_size : l;
-      Func paramf = Func(invars, training_cost); // parameterized function to optimize
-      Var totalcost = meanOf(train_set, paramf, nsamples);
-
-      if(optimizer)
-        {
-          optimizer->setToOptimize(params, totalcost);  
-          optimizer->build();
-        }
-
     }
 }
 
@@ -477,6 +494,13 @@ void NNet::train()
 
   // number of samples seen by optimizer before each optimizer update
   int nsamples = batch_size>0 ? batch_size : l;
+  Func paramf = Func(invars, training_cost); // parameterized function to optimize
+  Var totalcost = meanOf(train_set, paramf, nsamples);
+  if(optimizer)
+    {
+      optimizer->setToOptimize(params, totalcost);  
+      optimizer->build();
+    }
 
   // number of optimiser stages corresponding to one learner stage (one epoch)
   int optstage_per_lstage = l/nsamples;
@@ -495,13 +519,13 @@ void NNet::train()
       optimizer->optimizeN(*train_stats);
       train_stats->finalize();
       if(verbosity>2)
-        cerr << "Epoch " << stage << " train objective: " << train_stats->getMean() << endl;
+        cout << "Epoch " << stage << " train objective: " << train_stats->getMean() << endl;
       ++stage;
       if(pb)
         pb->update(stage-initial_stage);
     }
   if(verbosity>1)
-    cerr << "EPOCH " << stage << " train objective: " << train_stats->getMean() << endl;
+    cout << "EPOCH " << stage << " train objective: " << train_stats->getMean() << endl;
 
   if(pb)
     delete pb;
@@ -601,6 +625,7 @@ void NNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(penalties, copies);
   deepCopyField(training_cost, copies);
   deepCopyField(test_costs, copies);
+  deepCopyField(invars, copies);
   deepCopyField(params, copies);
   deepCopyField(paramsvalues, copies);
   deepCopyField(f, copies);

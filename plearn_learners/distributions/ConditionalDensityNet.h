@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.21 2004/01/27 13:17:22 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.22 2004/01/28 14:33:23 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -158,6 +158,9 @@ public:
 
   // maximum value that Y can take (minimum value is 0 by default).
   real maxY;
+
+  // threshold value of Y for which we might want to compute P(Y>thresholdY), with outputs_def='t'
+  real thresholdY;
 
   // this weight between 0 and 1 controls the balance of the cost function
   // between minimizing the negative log-likelihood and minimizing squared error

@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.16 2003/10/31 20:50:42 plearner Exp $
+   * $Id: PLearner.h,v 1.17 2004/01/28 14:33:23 yoshua Exp $
    ******************************************************* */
 
 
@@ -110,7 +110,10 @@ using namespace std;
     learner upon building.
     */
     VMat train_set;  
-    
+
+    // learnt options all obtained from train_set when doing setTrainingSet
+    int inputsize_, targetsize_, weightsize_;
+
     VMat validation_set;
 
     //! The stats_collector responsible for collecting train cost statistics during training.

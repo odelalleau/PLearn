@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.24 2004/01/26 14:15:28 tihocan Exp $
+   * $Id: PLearner.cc,v 1.25 2004/01/28 14:33:23 yoshua Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -61,7 +61,10 @@ PLearner::PLearner()
   seed_(-1), 
   stage(0), nstages(1),
   report_progress(true),
-  verbosity(1)
+  verbosity(1),
+  inputsize_(-1),
+  targetsize_(-1),
+  weightsize_(-1)
 {}
 
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(PLearner, "ONE LINE DESCR", "NO HELP");
@@ -97,6 +100,18 @@ void PLearner::declareOptions(OptionList& ol)
                 "You should never modify this option directly!"
                 "It is the role of forget() to bring it back to 0,\n"
                 "and the role of train() to bring it up to 'nstages'...");
+
+  declareOption(ol, "inputsize", &PLearner::inputsize_, OptionBase::learntoption, 
+                "The number of input columns in the data sets."
+                "Obtained from training set with setTrainingSet.");
+
+  declareOption(ol, "targetsize", &PLearner::targetsize_, OptionBase::learntoption, 
+                "The number of target columns in the data sets."
+                "Obtained from training set with setTrainingSet.");
+
+  declareOption(ol, "weightsize", &PLearner::weightsize_, OptionBase::learntoption, 
+                "The number of cost weight columns in the data sets."
+                "Obtained from training set with setTrainingSet.");
 
   declareOption(ol, "nstages", &PLearner::nstages, OptionBase::buildoption, 
                 "The stage until which train() should train this learner and return.\n"
@@ -139,6 +154,12 @@ void PLearner::setTrainingSet(VMat training_set, bool call_forget)
     train_set->length()!=training_set->length() || train_set->inputsize()!=training_set->inputsize()
     || train_set->weightsize()!= training_set->weightsize();
   train_set = training_set;
+  if (training_set_has_changed)
+  {
+    inputsize_ = train_set->inputsize();
+    targetsize_ = train_set->targetsize();
+    weightsize_ = train_set->weightsize();
+  }
   if (training_set_has_changed || call_forget)
     build(); // MODIF FAITE PAR YOSHUA: sinon apres un setTrainingSet le build n'est pas complete dans un NNet train_set = training_set;
   if (call_forget)
@@ -153,20 +174,18 @@ void PLearner::setTrainStatsCollector(PP<VecStatsCollector> statscol)
 { train_stats = statscol; }
 
 
-//! Returns train_set->inputsize()
 int PLearner::inputsize() const
 { 
-  if(!train_set) 
+  if (inputsize_<0)
     PLERROR("Must specify a training set before calling PLearner::inputsize()"); 
-  return train_set->inputsize(); 
+  return inputsize_; 
 }
 
-//! Returns train_set->targetsize()
 int PLearner::targetsize() const 
 { 
-  if(!train_set) 
+  if(!targetsize_) 
     PLERROR("Must specify a training set before calling PLearner::targetsize()"); 
-  return train_set->targetsize(); 
+  return targetsize_; 
 }
 
 void PLearner::build_()

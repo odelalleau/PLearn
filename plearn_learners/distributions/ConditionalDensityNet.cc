@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.29 2004/01/27 13:17:22 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.30 2004/01/28 14:33:16 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -70,6 +70,7 @@ ConditionalDensityNet::ConditionalDensityNet()
    direct_in_to_out(false),
    batch_size(1),
    maxY(1), // if Y is normalized to be in interval [0,1], that would be OK
+   thresholdY(0.1),
    log_likelihood_vs_squared_error_balance(1),
    separate_mass_point(1),
    n_output_density_terms(0),
@@ -183,6 +184,9 @@ ConditionalDensityNet::ConditionalDensityNet()
 
   declareOption(ol, "maxY", &ConditionalDensityNet::maxY, OptionBase::buildoption, 
                 "    maximum allowed value for Y. Default = 1.0 (data normalized in [0,1]\n");
+
+  declareOption(ol, "thresholdY", &ConditionalDensityNet::thresholdY, OptionBase::buildoption, 
+                "    threshold value of Y for which we might want to compute P(Y>thresholdY), with outputs_def='t'\n");
 
   declareOption(ol, "log_likelihood_vs_squared_error_balance", &ConditionalDensityNet::log_likelihood_vs_squared_error_balance, 
                 OptionBase::buildoption, 
@@ -587,6 +591,13 @@ ConditionalDensityNet::ConditionalDensityNet()
       {
         if (outputs_def[i]=='e')
           outputs_array &= expected_value;
+        else if (outputs_def[i]=='t')
+        {
+          Func survival_f(target&output,var(1.0)-cumulative);
+          Var threshold_y(1,1);
+          threshold_y->valuedata[0]=thresholdY;
+          outputs_array &= survival_f(threshold_y & output);
+        }
         else if (outputs_def[i]=='S' || outputs_def[i]=='C' ||
                  outputs_def[i]=='L' || outputs_def[i]=='D')
         {

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.cc,v 1.25 2004/01/17 02:03:52 yoshua Exp $
+   * $Id: GradientOptimizer.cc,v 1.26 2004/01/28 14:33:16 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -243,6 +243,10 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll)
   bool stochastic_hack = sumofvar!=0 && sumofvar->nsamples==1;
   stochastic_hack=false;
   if(stochastic_hack)
+    // make the gradient and values fields of parameters point to the same place,
+    // so that when the descendants of the parameter Var's do a bprop this
+    // automatically increments the parameters (by the right amount since
+    // we set the cost->gradient to -learning_rate).
     {
       int n = params.size();
       oldgradientlocations.resize(n);

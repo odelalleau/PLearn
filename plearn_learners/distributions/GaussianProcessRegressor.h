@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussianProcessRegressor.h,v 1.5 2003/08/13 08:13:46 plearner Exp $ 
+ * $Id: GaussianProcessRegressor.h,v 1.6 2004/01/28 14:33:23 yoshua Exp $ 
  ******************************************************* */
 
 /*! \file GaussianProcessRegressor.h */
@@ -76,7 +76,7 @@
  
 
 /* *******************************************************      
- * $Id: GaussianProcessRegressor.h,v 1.5 2003/08/13 08:13:46 plearner Exp $
+ * $Id: GaussianProcessRegressor.h,v 1.6 2004/01/28 14:33:23 yoshua Exp $
  ******************************************************* */
 
 
@@ -113,7 +113,7 @@ class GaussianProcessRegressor: public PConditionalDistribution
 {
 
   public:
-
+    typedef PConditionalDistribution inherited;  
     // Build options
 
     PP<Kernel> kernel; // kernel = prior covariance on functions

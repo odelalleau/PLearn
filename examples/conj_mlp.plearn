@@ -10,6 +10,8 @@ dataset = AutoVMatrix(specification="letters all normalize");
 # PP< Splitter >: The splitter to use to generate one or several train/test pairs.
 splitter = TrainTestSplitter(test_fraction=.10) ;
 
+statnames = ["E[E[test1.class_error]]", "E[E[test2.class_error]]", "E[E[test1.NLL]]", "E[E[test2.NLL]]"];
+
 # PP< Learner >: The learner to train/test
 learner = 
 NNet( 
@@ -64,11 +66,9 @@ NNet(
           batch_size = 0;
 
           # int: how many times the optimizer gets to see the whole training set.
-          nstages = 30;
+          nstages = 3;
 
-          # string:    The directory in which to save results 
-          expdir = ""  ;
-
+          seed = 0;
           )
 )
 

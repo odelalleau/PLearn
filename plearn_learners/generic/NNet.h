@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.h,v 1.9 2003/11/24 16:29:23 tihocan Exp $
+   * $Id: NNet.h,v 1.10 2004/01/28 14:33:23 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -66,7 +66,7 @@ using namespace std;
     VarArray penalties;
     Var training_cost; // weighted scalar costs[0] including penalties
     Var test_costs; // hconcat(costs)
-
+    VarArray invars;
     VarArray params;  // all arameter input vars
 
     Vec paramsvalues; // values of all parameters
@@ -129,6 +129,8 @@ using namespace std;
     static string help();
     virtual string getOptionsToSave() const;
     */
+
+    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
     virtual void build();
     virtual void forget(); // simply calls initializeParams()
