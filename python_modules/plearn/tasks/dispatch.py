@@ -5,6 +5,8 @@ from Task                           import *
 from plearn.utilities.verbosity     import *
 from plearn.utilities.FrozenObject  import *
 
+__all__ = ['Dispatch', 'DispatchDefaults']
+
 class DispatchDefaults:
     cluster_command  = 'cluster --wait --duree 240h --execute'
     localhost        = False

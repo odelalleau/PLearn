@@ -292,7 +292,7 @@ def initialize( ):
         localhost = options.localhost,
         nb_hosts  = options.hosts
         )
-    
+
     ## --all: Run all tests found in subdirectories of directories in
     ## globalvars.all_roots test_suite branches. If some targets are
     ## provided, these will be ignored.
@@ -303,6 +303,9 @@ def initialize( ):
     ## If no targets are provided, the cwd is the default target.
     if len(targets) == 0:
         targets.append( os.getcwd() )
+
+    for i,target in enumerate(targets):
+        targets[i] = os.path.abspath(target)
 
     if options.recursive:
         targets = plpath.exempt_of_subdirectories( targets )

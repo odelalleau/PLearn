@@ -9,7 +9,7 @@ from   plearn.utilities.verbosity     import *
 from   plearn.utilities.FrozenObject  import *
 
 ## In plearn.pytest
-from   threading                      import *
+##from   threading                      import *
 from   programs                       import *
 from   BasicStats                     import BasicStats
 from   IntelligentDiff                import *          

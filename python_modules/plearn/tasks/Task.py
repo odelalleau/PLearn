@@ -4,6 +4,8 @@ from threading                      import *
 from plearn.utilities.verbosity     import *
 from plearn.utilities.FrozenObject  import *
 
+__all__ = [ 'Task', 'TaskDefaults', 'task_name_from_int' ]
+
 def task_name_from_int(number):
     name = ''
     if number < 10:
