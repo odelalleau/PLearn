@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainTestSplitter.cc,v 1.11 2004/05/14 17:49:17 chrish42 Exp $ 
+   * $Id: TrainTestSplitter.cc,v 1.12 2005/04/06 19:05:21 lapalmej Exp $ 
    ******************************************************* */
 
 /*! \file TrainTestSplitter.cc */
@@ -48,7 +48,11 @@ namespace PLearn {
 using namespace std;
 
 TrainTestSplitter::TrainTestSplitter(real the_test_fraction)
-  : append_train(0), test_fraction(the_test_fraction)
+  : append_train(0), test_fraction(the_test_fraction), calc_with_pct(true), test_fraction_abs(0)
+{}
+
+TrainTestSplitter::TrainTestSplitter(int the_test_fraction_abs)
+  : append_train(0), test_fraction(0.0), calc_with_pct(false), test_fraction_abs(the_test_fraction_abs)
 {}
 
 PLEARN_IMPLEMENT_OBJECT(TrainTestSplitter, "ONE LINE DESCR",
@@ -60,8 +64,12 @@ void TrainTestSplitter::declareOptions(OptionList& ol)
       "if set to 1, the trainset will be appended after the test set (thus each split"
       " will contain three sets)");
 
+  declareOption(ol, "calc_with_pct", &TrainTestSplitter::calc_with_pct, OptionBase::buildoption,
+                "Boolean value : if it's true it will compupte the examples in the test set with the test_fraction value");
   declareOption(ol, "test_fraction", &TrainTestSplitter::test_fraction, OptionBase::buildoption,
                 "the fraction of the dataset reserved to the test set");
+  declareOption(ol, "test_fraction_abs", &TrainTestSplitter::test_fraction_abs, OptionBase::buildoption,
+                "the number of example of the dataset reserved to the test set");
 
   inherited::declareOptions(ol);
 }
@@ -98,9 +106,9 @@ TVec<VMat> TrainTestSplitter::getSplit(int k)
   TVec<VMat> split_(2);
   
   int l = dataset->length();
-  int test_length = int(test_fraction*l);
+  int test_length = calc_with_pct ? int(test_fraction*l) : test_fraction_abs;
   int train_length = l - test_length;
-  
+
   split_[0] = dataset.subMatRows(0, train_length);
   split_[1] = dataset.subMatRows(train_length, test_length);
   if (append_train) {

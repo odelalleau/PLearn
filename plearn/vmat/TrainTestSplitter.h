@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainTestSplitter.h,v 1.9 2004/04/05 23:07:35 morinf Exp $ 
+   * $Id: TrainTestSplitter.h,v 1.10 2005/04/06 19:05:21 lapalmej Exp $ 
    ******************************************************* */
 
 /*! \file TrainTestSplitter.h */
@@ -67,6 +67,8 @@ public:
 
   int append_train;
   real test_fraction; // the fraction of the dataset to be used as test (hese will be the last few samples of the dataset)
+  bool calc_with_pct;
+  int test_fraction_abs;
 
   // ****************
   // * Constructors *
@@ -75,6 +77,7 @@ public:
   // Default constructor, make sure the implementation in the .cc
   // initializes all fields to reasonable default values.
   TrainTestSplitter(real the_test_fraction = 0.0);
+  TrainTestSplitter(int the_test_fraction);
 
   // ******************
   // * Object methods *
