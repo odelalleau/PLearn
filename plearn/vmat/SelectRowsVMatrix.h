@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsVMatrix.h,v 1.12 2004/09/14 16:04:39 chrish42 Exp $
+   * $Id: SelectRowsVMatrix.h,v 1.13 2005/03/25 16:02:02 tihocan Exp $
    ******************************************************* */
 
 
@@ -63,6 +63,8 @@ public:
 
   //! Public build options
   TVec<int> indices;
+
+  VMat indices_vmat;
 
 public:
   // ******************

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsVMatrix.cc,v 1.16 2004/09/14 16:04:39 chrish42 Exp $
+   * $Id: SelectRowsVMatrix.cc,v 1.17 2005/03/25 16:02:01 tihocan Exp $
    ******************************************************* */
 
 #include "SelectRowsVMatrix.h"
@@ -101,7 +101,12 @@ const map<real,string>& SelectRowsVMatrix::getRealToStringMapping(int col) const
 void SelectRowsVMatrix::declareOptions(OptionList &ol)
 {
     declareOption(ol, "indices", &SelectRowsVMatrix::indices, OptionBase::buildoption, 
-        "    The array of row indices to extract");
+        "The array of row indices to extract");
+
+    declareOption(ol, "indices_vmat", &SelectRowsVMatrix::indices_vmat, OptionBase::buildoption, 
+        "If provided, will override the 'indices' option: the indices will be taken\n"
+        "from the first column of the given VMatrix (taking the integer part).");
+
     inherited::declareOptions(ol);
 }
 
@@ -125,6 +130,12 @@ void SelectRowsVMatrix::build()
 ////////////
 void SelectRowsVMatrix::build_()
 {
+  if (indices_vmat) {
+    int n = indices_vmat->length();
+    indices.resize(n);
+    for (int i = 0; i < n; i++)
+      indices[i] = int(indices_vmat->get(i,0));
+  }
   length_ = indices.length();
   if (source) {
     width_ = source->width();
