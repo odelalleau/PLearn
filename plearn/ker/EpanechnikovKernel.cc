@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EpanechnikovKernel.cc,v 1.2 2004/12/21 07:14:57 chapados Exp $ 
+   * $Id: EpanechnikovKernel.cc,v 1.3 2004/12/25 08:02:03 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -47,7 +47,7 @@ namespace PLearn {
 using namespace std;
 
 EpanechnikovKernel::EpanechnikovKernel()
-  : lambda(1)
+  : gamma(1)
 {
 }
 
@@ -61,11 +61,11 @@ PLEARN_IMPLEMENT_OBJECT(
   "classes derived from GenericNearestNeighbors.)\n"
   "\n"
   "In each dimension, the Epanechnikov kernel is defined as follows:\n"
-  "    K_lambda(x0,x) = D(|x-x0|/lambda) \n"
+  "    K_gamma(x0,x) = D(|x-x0|/gamma) \n"
   "where\n"
   "    D(t) = 3/4 (1-t^2),   if |t| <= 1;\n"
   "         = 0          ,   otherwise,\n"
-  "with the user-specified lambda a smoothing parameter.\n");
+  "with the user-specified gamma a smoothing parameter.\n");
 
 
 ////////////////////
@@ -73,7 +73,7 @@ PLEARN_IMPLEMENT_OBJECT(
 ////////////////////
 void EpanechnikovKernel::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "lamdba", &EpanechnikovKernel::lambda,
+  declareOption(ol, "gamma", &EpanechnikovKernel::gamma,
                 OptionBase::buildoption,
                 "Smoothing parameter for the Epanechnikov kernel (default=1.0)");
 
@@ -96,8 +96,8 @@ void EpanechnikovKernel::build()
 ////////////
 void EpanechnikovKernel::build_()
 {
-  if (lambda <= 0.0)
-    PLERROR("EpanechnikovKernel::build_: the 'lambda' option must be strictly positive");
+  if (gamma <= 0.0)
+    PLERROR("EpanechnikovKernel::build_: the 'gamma' option must be strictly positive");
 }
 
 //////////////
@@ -105,7 +105,7 @@ void EpanechnikovKernel::build_()
 //////////////
 real EpanechnikovKernel::evaluate(const Vec& x1, const Vec& x2) const
 {
-  real t = L2distance(x1,x2) / lambda;
+  real t = L2distance(x1,x2) / gamma;
   if (t <= 1.0)
     return 3 * (1-t*t) / 4;
   return 0;

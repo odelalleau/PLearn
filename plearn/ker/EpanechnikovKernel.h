@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EpanechnikovKernel.h,v 1.1 2004/12/21 02:07:15 chapados Exp $ 
+   * $Id: EpanechnikovKernel.h,v 1.2 2004/12/25 08:02:03 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -59,7 +59,7 @@ public:
   // ************************
 
   //! Smoothing parameter for the Epanechnikov kernel (default=1.0)
-  real lambda;
+  real gamma;
 
   // ****************
   // * Constructors *
