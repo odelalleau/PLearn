@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Dictionary.h,v 1.3 2004/09/14 18:52:56 kermorvc Exp $ 
+   * $Id: Dictionary.h,v 1.4 2004/10/01 20:04:17 kermorvc Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
@@ -148,7 +148,7 @@ virtual  string getSymbol(int id, TVec<int> options = TVec<int>(0))const;
   //! Returns a Vec containing every possible id values of the Dictionary
   //! Options can be specified to restrict the number of possible values. 
   //! Here, values is simply copied (which can be costly!), and then the copy is returned
-  Vec getValues(TVec<int> options=TVec<int>(0))
+  virtual Vec getValues(TVec<int> options=TVec<int>(0))
     { 
       Vec ret(string_to_int.size());
       int i=0;

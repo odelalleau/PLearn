@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Dictionary.cc,v 1.3 2004/09/14 18:52:56 kermorvc Exp $ 
+   * $Id: Dictionary.cc,v 1.4 2004/10/01 20:04:17 kermorvc Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
@@ -106,7 +106,6 @@ int Dictionary::getId(string symbol, TVec<string> options)
   // returns index of OOV_TAG if update_mode = NO_UPDATE,
   // insert the new word otherwise and return its index
   int index;
-  int oov_index = string_to_int[OOV_TAG];
   if(update_mode== UPDATE)
   {
     if(string_to_int.find(symbol) == string_to_int.end()){
@@ -122,7 +121,7 @@ int Dictionary::getId(string symbol, TVec<string> options)
     // NO update mode
     if(string_to_int.find(symbol) == string_to_int.end()){
       // word not found, return oov
-      return oov_index;
+      return string_to_int[OOV_TAG];
     }else{
       return string_to_int[symbol];
     }
