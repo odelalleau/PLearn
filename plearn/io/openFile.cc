@@ -33,56 +33,68 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: openFile.cc,v 1.4 2005/01/13 19:28:26 chrish42 Exp $ 
+   * $Id: openFile.cc,v 1.5 2005/01/14 21:47:25 chrish42 Exp $ 
    ******************************************************* */
 
-// Authors: Pascal Vincent
+// Authors: Pascal Vincent, Christian Hudon
 
 /*! \file openFile.cc */
 
 
 #include "openFile.h"
+#include <plearn/io/PrPStreamBuf.h>
+#include <mozilla/nspr/prio.h>
 
-#if defined(WIN32)
-// TO DO win32 implementation
-#else
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <plearn/io/FdPStreamBuf.h>
-#endif
 
 namespace PLearn {
 using namespace std;
 
-  /// @todo Switch to PrPStreamBuf to get Windows implementation.
-  PStream openFile(const string& filepath, const string& openmode, PStream::mode_t io_formatting)
+  /** Given a filename, opens the file and returns a PStream that can be
+   *  used to read and/or write to the file.
+   *
+   *  @param filepath The filename to be opened. Slashes will automatically
+   *  be converted to the path seperator of the underlying OS before
+   *  opening the file.
+   *
+   *  @param io_formatting The PStream formatting that will be used when
+   *  reading/writing to the file. Common modes include PStream::raw_ascii
+   *  (for a normal ascii text file) and PStream::plearn_ascii (for files
+   *  in the PLearn serialization format).
+   *
+   *  @param openmode The mode (read/write/append) to open the file in. Use
+   *  "r" for opening the file for reading, "w" for writing (overwrites the
+   *  file if it exists), or "a" for appending to the file (creating it if
+   *  it doesn't exist). The default is to open the file for reading ("r").
+   */
+  PStream openFile(const string& filepath, PStream::mode_t io_formatting,
+                   const string& openmode)
   {
     PStream st;
-#if defined(WIN32) || STREAMBUFVER == 0
-    PLERROR("openFile not yet implemented for windows");
-#else    
-    if(openmode=="r")
+#if STREAMBUFVER == 0
+    PLERROR("openFile not implemented for STREAMBUFVER == 0");
+#else
+    PRFileDesc* fd;
+    if (openmode == "r")
       {
-        int fd = open(filepath.c_str(),O_RDONLY|O_LARGEFILE);
-        if(fd<0)
+        fd = PR_Open(filepath.c_str(), PR_RDONLY, 0666);
+        if (!fd)
           PLERROR("openFile(\"%s\",\"%s\") failed.",filepath.c_str(), openmode.c_str());
-        st = new FdPStreamBuf(fd, -1, true, false);
+        st = new PrPStreamBuf(fd, 0, true, false);
       }
-    else if(openmode=="w")
+    else if (openmode == "w")
       {
-        int fd = open(filepath.c_str(),O_WRONLY|O_CREAT|O_TRUNC|O_LARGEFILE);
-        if(fd<0)
+        fd = PR_Open(filepath.c_str(), PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0666);
+        if (!fd)
           PLERROR("openFile(\"%s\",\"%s\") failed.",filepath.c_str(), openmode.c_str());
-        st = new FdPStreamBuf(-1, fd, false, true);
-      }      
-    else if(openmode=="a")
+        st = new PrPStreamBuf(0, fd, false, true);
+      }
+    else if (openmode == "a")
       {
-        int fd = open(filepath.c_str(),O_WRONLY|O_CREAT|O_APPEND|O_LARGEFILE);
-        if(fd<0)
+        fd = PR_Open(filepath.c_str(), PR_WRONLY | PR_CREATE_FILE | PR_APPEND, 0666);
+        if (!fd)
           PLERROR("openFile(\"%s\",\"%s\") failed.",filepath.c_str(), openmode.c_str());
-        st = new FdPStreamBuf(-1, fd, false, true);
-      }      
+        st = new PrPStreamBuf(0, fd, false, true);
+      }
     else
       PLERROR("In openFile, invalid openmode=\"%s\" ",openmode.c_str());    
 #endif

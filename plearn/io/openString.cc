@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: openString.cc,v 1.2 2004/12/22 19:38:14 chrish42 Exp $ 
+   * $Id: openString.cc,v 1.3 2005/01/14 21:47:25 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -48,16 +48,25 @@
 namespace PLearn {
 using namespace std;
 
-  PStream openString(string& s, const string& openmode, PStream::mode_t io_formatting)
+  /**  Returns a PStream attached to the given string.
+   *
+   * @param s The string used as storage for stuff read from or written to
+   * the PStream.
+   *
+   * @param io_formatting The type of PStream formatting that will be used
+   * when reading/writing to the string. Common modes include
+   * PStream::raw_ascii (for a normal ascii text file) and
+   * PStream::plearn_ascii (for files in the PLearn serialization format).
+   *   
+   * @param openmode The mode (read/write/append) to open the string in. 
+   * Use "r" for opening the string for reading, "w" for writing
+   * (overwrites the string), or "a" for appending to the string. The
+   * default is to open the string for reading ("r").
+   */
+  PStream openString(string& s, PStream::mode_t io_formatting,
+                     const string& openmode)
   {
     PStream st = new StringPStreamBuf(&s, openmode);
-    st.setMode(io_formatting);
-    return st;
-  }
-
-  PStream openString(const string& s, PStream::mode_t io_formatting)
-  {
-    PStream st = new StringPStreamBuf(&s, "r");
     st.setMode(io_formatting);
     return st;
   }

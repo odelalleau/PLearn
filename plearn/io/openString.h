@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: openString.h,v 1.1 2004/11/26 20:32:18 plearner Exp $ 
+   * $Id: openString.h,v 1.2 2005/01/14 21:47:25 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -48,19 +48,10 @@
 #include <plearn/io/PStream.h>
 
 namespace PLearn {
-using namespace std;
 
-  /*!  Returns a PStream attached to the given string.
-    openmode must currently be one of r, w, a
-    io_formatting will typically be PStream::raw_ascii or PStream::plearn_ascii
-  */
-  PStream openString(string& s, 
-                     const string& openmode, 
-                     PStream::mode_t io_formatting);
-
-  PStream openString(const string& s, 
-                     PStream::mode_t io_formatting);
-
+  PStream openString(std::string& s, 
+                     PStream::mode_t io_formatting,
+                     const std::string& openmode = "r");
 
 } // end of namespace PLearn
 

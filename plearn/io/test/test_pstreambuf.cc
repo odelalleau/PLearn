@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: test_pstreambuf.cc,v 1.1 2004/12/22 19:38:14 chrish42 Exp $
+   * $Id: test_pstreambuf.cc,v 1.2 2005/01/14 21:47:39 chrish42 Exp $
    ******************************************************* */
 
 #include <iostream>
@@ -129,7 +129,7 @@ void test_read() {
 void test_write()
 {
   std::string str;
-  PLearn::PStream s = PLearn::openString(str, "a", PLearn::PStream::raw_ascii);
+  PLearn::PStream s = PLearn::openString(str, PLearn::PStream::raw_ascii, "a");
 
   const unsigned int inbuf_size = 6;
   const unsigned int outbuf_size = 5;
@@ -179,7 +179,7 @@ void test_write()
 void test_write_unbuffered()
 {
   std::string str;
-  PLearn::PStream s = PLearn::openString(str, "w", PLearn::PStream::raw_ascii);
+  PLearn::PStream s = PLearn::openString(str, PLearn::PStream::raw_ascii, "w");
 
   const unsigned int inbuf_size = 6;
   const unsigned int outbuf_size = 0;

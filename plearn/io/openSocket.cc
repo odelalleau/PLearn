@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: openSocket.cc,v 1.3 2005/01/12 17:31:54 chrish42 Exp $ 
+   * $Id: openSocket.cc,v 1.4 2005/01/14 21:47:25 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Christian Hudon
@@ -53,10 +53,27 @@
 namespace PLearn {
 using namespace std;
 
+/** Opens a socket and returns an attached PStream.
+ *
+ * @param hostname The name or IP address of the host to connect to.
+ *
+ * @param port The port to connect to.
+ *
+ * @param io_formatting The PStream formatting that will be used when
+ * reading/writing to the socket. Common modes include PStream::raw_ascii
+ * (for a normal ascii text file) and PStream::plearn_ascii (for files in
+ * the PLearn serialization format).
+ *
+ * @param timeout Amount of time to wait for a connection (in seconds)
+ * before giving up.
+ */
 PStream openSocket(const string& hostname, int port,
                    PStream::mode_t io_formatting,
                    const int timeout)
 {
+  PStream st;
+  st.setMode(io_formatting);
+  
   PRFileDesc* socket = PR_NewTCPSocket();
   if (!socket)
     PLERROR("openSocket: socket creation failed! (Maybe you ran out of file descriptors?)");
@@ -76,14 +93,14 @@ PStream openSocket(const string& hostname, int port,
     {
       if (PR_Connect(socket, &address, timeout) == PR_SUCCESS)
         {
-          PStream st = new PrPStreamBuf(socket, socket, true, true);
-          st.setMode(io_formatting);
+          st = new PrPStreamBuf(socket, socket, true, true);
           return st;
         }
     }
 
   PLERROR("openSocket(%s, %d) failed while trying to connect: %s",
           hostname.c_str(), port, getPrErrorString().c_str());
+  return st;
 }
 
 } // end of namespace PLearn

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: openFile.h,v 1.2 2005/01/13 19:28:26 chrish42 Exp $ 
+   * $Id: openFile.h,v 1.3 2005/01/14 21:47:25 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -50,13 +50,9 @@
 namespace PLearn {
 using namespace std;
 
-  /*! Opens a file and returns an attached PStream.
-    io_formatting will typically be PStream::raw_ascii or PStream::plearn_ascii
-  */
   PStream openFile(const string& filepath, 
-                   const string& openmode = "r", 
-                   PStream::mode_t io_formatting = PStream::raw_ascii);
-
+                   PStream::mode_t io_formatting,
+                   const string& openmode = "r"); 
 
 } // end of namespace PLearn
 
