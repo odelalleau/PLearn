@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: EntropyContrast.h,v 1.3 2004/08/17 16:25:57 mariusmuja Exp $ 
+ * $Id: EntropyContrast.h,v 1.4 2004/08/20 13:16:01 mariusmuja Exp $ 
  ******************************************************* */
 
 /*! \file EntropyContrast.h */
@@ -198,8 +198,7 @@ namespace PLearn {
     void update_mu_sigma_f(const Vec &  f_x,Vec & mu,Vec & sigma) ;
     void update_alpha(int stage,int current_input_index) ; 
     void compute_diversity_cost(const Vec & f_x,const Vec & cost,Vec & grad_C_extra_cost_wrt_f_x );
-    void get_real_grad_variance_wrt_f(const Vec & f_x, Vec & grad ) ; 
-    void get_gen_grad_variance_wrt_f(const Vec & f_x, Vec & grad ) ; 
+    void get_grad_log_variance_wrt_f(Vec & grad, const Vec& f_x, const Vec& mu, const Vec& sigma); 
     void set_NNcontinuous_gradient(Vec &grad_C_real_wrt_f_x,Mat &grad_H_f_x_wrt_w, Mat &grad_H_f_x_wrt_v, Vec &z_x, Vec &x,
 		Vec &grad_H_f_x_wrt_bias_output, Vec &grad_H_f_x_wrt_bias_hidden);
     void gen_normal_0_1(Vec &output) ;
