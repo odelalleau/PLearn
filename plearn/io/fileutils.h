@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.h,v 1.21 2005/02/16 16:14:45 tihocan Exp $
+   * $Id: fileutils.h,v 1.22 2005/02/16 20:25:43 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -146,14 +146,8 @@ using namespace std;
     do {
       c = in.get();
     } while (c != EOF && isspace(c));
-    if (c != EOF)
-      in.putback(c);
+    in.unget();
     return c;
-//  OLD BUGGY VERSION:
-//    char c;
-//    while(isspace(c = in.get()));
-//    in.putback(c);
-//    return c;
   }
 
   //! Peeks the first char after removal of blanks and comments.
@@ -167,8 +161,6 @@ using namespace std;
       c = in.get();
     } while (c != EOF && isspace(c));
     return c;
-// OLD BUGGY VERSION:
-//    char c; while(isspace(c = in.get())); return c;
   }
 
   //! Gets the first char after removal of blanks and comments.

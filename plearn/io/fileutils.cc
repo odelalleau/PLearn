@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.67 2005/02/16 16:14:45 tihocan Exp $
+   * $Id: fileutils.cc,v 1.68 2005/02/16 20:25:39 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -368,7 +368,7 @@ void readWhileMatches(PStream& in, const string& s){
   {
     if(s[i]!=c)
     {
-      in.putback(c); // Match failed, unget that last character.
+      in.unget(); // Match failed, unget that last character.
       PLERROR("In readWhileMatches. Failure while matching %s: "
           "at position %d expected a '%c', but read a '%c'",s.c_str(),i,s[i],c);
     }
@@ -407,8 +407,7 @@ void skipBlanksAndComments(PStream& in)
     }
     c = in.get();
   }
-  if (c != EOF)
-    in.putback(c);
+  in.unget();
 }
 
 /////////////////////////
@@ -496,7 +495,7 @@ PPath newFilename(const PPath& directory, const string& prefix, bool is_director
   if (is_directory) {
     // Defeats the purpose of mktemp, but who cares?
     std::remove(tmpfilename);
-    PR_MkDir(tmpfilename, 0666);
+    PR_MkDir(tmpfilename, 0777);
   }
   if(!tmpfilename)
     PLERROR("In newFilename : could not make a new temporary filename");
