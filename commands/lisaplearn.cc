@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: lisaplearn.cc,v 1.13 2004/03/22 14:08:45 tihocan Exp $
+   * $Id: lisaplearn.cc,v 1.14 2004/03/25 13:25:07 tihocan Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -70,6 +70,7 @@
 // #include "KNN.h"
 //#include "Classification1HiddenNN.h"
 //#include "Mixture2.h"
+#include "/u/delallea/LisaPLearn/UserExp/ouimema/distances/GeneralizedDistKMethods.h"
 #include "AddCostToLearner.h"
 #include "ClassifierFromDensity.h"
 //#include "RegressorFromDensity.h"
