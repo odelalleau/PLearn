@@ -26,7 +26,7 @@ class ArgumentsOracle:
 class Cursor:
     def __init__( self, start = 0, restart = None ):
         self._value   = start
-        self.restart = restart
+        self.restart  = restart
 
     def inc( self ):
         """Returns True if the cursor was reset to 0."""
@@ -91,6 +91,7 @@ class CrossProductOracle( ArgumentsOracle ):
         ## If the first list of values has expired, the old set of
         ## arguments was processed
         if do_inc:
+            self.cursors[-1].set_value( None )
             raise StopIteration
 
         reversed_arguments.reverse()
@@ -138,7 +139,22 @@ class DirectorySplittedOracle( ArgumentsOracle ):
         
     def reset( self ):
         self.underlying_oracle.reset()
-    
+
+class PredicateOracle( ArgumentsOracle ):
+    def __init__( self, arguments_oracle, predicate ):                
+        self.underlying_oracle = arguments_oracle
+        self.predicate         = predicate
+
+    def next( self ):
+        _next = self.underlying_oracle.next()
+        while not self.predicate( _next ):
+            _next = self.underlying_oracle.next()
+        
+        return _next
+
+    def reset( self ):
+        self.underlying_oracle.reset()
+
 if __name__ == '__main__':
     pairs = []
     pairs.append(( "first",  [1,2,3] ))

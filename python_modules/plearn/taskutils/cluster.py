@@ -1,4 +1,4 @@
-import os, shutil, sys, time
+import os, popen2, shutil, signal, sys, time
 
 from ArgumentsOracle                 import *
 from plearn.utilities.toolkit        import command_output 
@@ -12,52 +12,82 @@ class Cluster(PyPLearnObject):
         sleep_time               = 90
         logdir_path              = "LOGS"
         wait_for_expdir_creation = True
+        popen_instances          = list
 
+    def free( self ):
+        sys.stderr.write("Freeing all tasks.")
+        for task in self.popen_instances:
+            try:
+                os.kill( task.pid, signal.SIGTERM )
+                sys.stderr.write(".")
+            except OSError:
+                pass
+        sys.stderr.write("\nDone.\n")
+        
     def dispatch( self, program_call, arguments_oracle ):
-        if not isinstance(arguments_oracle, ArgumentsOracle): raise TypeError
+        ## if not isinstance(arguments_oracle, ArgumentsOracle): raise TypeError
 
         expdir_count = None
         if self.wait_for_expdir_creation:
             expdir_count = count_expdirs( self.expdir_pattern )
 
-        ## The ArgumentsOracle is an iterator whose next() method returns a
-        ## formatted string representing the program arguments.
-        for arguments in arguments_oracle:
+        ## Frees all tasks if a keyboard interrupt is caught
+        try:
+            ## The ArgumentsOracle is an iterator whose next() method returns a
+            ## formatted string representing the program arguments.
+            for arguments in arguments_oracle:
 
-            ## Building the raw command and, afterwards, the cluster command
-            ## from the program_call and stringified arguments
-            raw_command = self.join_prog_and_arguments( program_call, arguments )
-            cluster_cmd = cluster_command( raw_command, self.logdir_path, self.command_format )
+                ## Using the arguments to build the cluster command and launch the process.
+                self.dispatch_task( arguments )
 
-            print "Launching: %s\n--" % raw_command
-            os.system( "%s &" % cluster_cmd )
-            print cluster_cmd
-
-            ## This hack is a turnaround to the cluster command bug of
-            ## possibly returning before the task is actually launched
-            if self.wait_for_expdir_creation:
-                current_count = count_expdirs( self.expdir_pattern )
-                while current_count == expdir_count:
-                    sys.stderr.write(".")
-                    time.sleep(2)
+                ## This hack is a turnaround to the cluster command bug of
+                ## possibly returning before the task is actually launched
+                if self.wait_for_expdir_creation:
                     current_count = count_expdirs( self.expdir_pattern )
+                    while current_count == expdir_count:
+                        sys.stderr.write(".")
+                        time.sleep(2)
+                        current_count = count_expdirs( self.expdir_pattern )
+                    print
+                    expdir_count = current_count
+
+                message = "Using %d machines or more; waiting ." % self.max_nmachines
+                while ( machines_used_by_user() >= self.max_nmachines ):
+                    sys.stderr.write(message)
+                    message = "."
+                    time.sleep( self.sleep_time )
                 print
-                expdir_count = current_count
 
-            message = "Using %d machines or more; waiting ." % self.max_nmachines
-            while ( machines_used_by_user() >= self.max_nmachines ):
-                sys.stderr.write(message)
-                message = "."
+            ### Wait for all experiments completion
+            while ( machines_used_by_user() > 0 ):
                 time.sleep( self.sleep_time )
-            print
 
-        ### Wait for all experiments completion
-        while ( machines_used_by_user() > 0 ):
-            time.sleep( self.sleep_time )
+        except KeyboardInterrupt:
+            sys.stderr.write("Interrupted by user.\n")
+            self.free()
+
+    def dispatch_task( self, arguments ):
+        """Using the arguments to build the cluster command and launch the process.
+
+        Note that this method does not manage keyboard interrupts. These
+        are managed in dispatch().
+        """
+
+        ## Building the raw command and, afterwards, the cluster command
+        ## from the program_call and stringified arguments
+        raw_command = self.join_prog_and_arguments( program_call, arguments )
+        cluster_cmd = cluster_command( raw_command, self.logdir_path, self.command_format )
+
+        print "Launching: %s\n--" % raw_command
+        ## os.system( "%s &" % cluster_cmd )
+        self.popen_instances.append( Popen4(cluster_cmd) )        
+        print cluster_cmd
 
     def join_prog_and_arguments( self, program_call, arguments ):
         return " ".join([ program_call, arguments ])
-    
+
+        
+                        
 def cluster_command( raw_command, logdir_path = None, format = Cluster.Defaults.command_format ):
     processed_cmd = raw_command
 
