@@ -41,8 +41,10 @@ namespace PLearn {
 void ProbVector::smoothNormalize(string name,real discounting_value)
 {
   // smooth by discounting  and Normalize
-  
+
+#ifdef DEBUG  
   cout << "Smoothing "<< name;
+#endif
   bool err_smooth_flag=false;
   int f;
   int size =  length_;
@@ -65,11 +67,14 @@ void ProbVector::smoothNormalize(string name,real discounting_value)
       err_smooth_flag=true;
     }
   }
+#ifdef DEBUG  
   cout << ": discounted " << sum_discounted << " from " << word_seen << " seen events summing " <<sum_v ;
+#endif
   // distribute discounted mass
   real unseen_prob=sum_discounted/(sum_v*size);
   word_seen=0;
   for(f=0;f<size;f++){
+    // Distribute on both seen and unseen events
     //if (v[f]<=discounting_value){
       word_seen++;
       v[f]/=sum_v;
@@ -78,7 +83,9 @@ void ProbVector::smoothNormalize(string name,real discounting_value)
       //       v[f]/=sum_v;
       //     }
   }
+#ifdef DEBUG  
   cout << " redistribute " << unseen_prob << " to "<< word_seen << " unseen events" <<endl;
+#endif
   if(err_smooth_flag)PLWARNING("minimal value < discounted value in Backoff  Smoothing smoothNormalize a probVector");
 }
 
@@ -93,7 +100,6 @@ void ProbVector::normalize()
   for(f=0;f<size;f++){
     sum_v+=v[f];
   }
-  
   for(f=0;f<size;f++){
     v[f]/=sum_v;
   }

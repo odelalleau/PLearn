@@ -39,6 +39,7 @@
 
 #include "ProbSparseMatrix.h"
 #include "TMat.h"
+#define PROB_PREC 0.0001
 namespace PLearn {
 using namespace std;
 
@@ -50,7 +51,7 @@ protected:
   // 1 : laplace
   // 2 : discount - backoff
   // 3 :  discount - backoff non shadowing
-  int smoothingMethod;
+  int smoothingMethod;  
 
   // Precomputed nomalization sum;
   Vec normalizationSum;

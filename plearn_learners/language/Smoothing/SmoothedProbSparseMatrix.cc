@@ -105,8 +105,12 @@ void SmoothedProbSparseMatrix::normalizeCondLaplace(ProbSparseMatrix& nXY, bool 
 
 void SmoothedProbSparseMatrix::normalizeCondBackoff(ProbSparseMatrix& nXY, real disc, Vec& bDist, bool clear_nXY,bool shadow)
 {
+  // disc is the percent of minial value to discount : discval = minvalue*disc
+  // In case of integer counts, the discounted value is 1*disc = disc
+ 
   int i,j;
   real nij,pij;
+  real minval,discval;
   int nXY_height = nXY.getHeight();
   int nXY_width = nXY.getWidth();
   // Shadowing or non shadowing smoothing
@@ -120,10 +124,8 @@ void SmoothedProbSparseMatrix::normalizeCondBackoff(ProbSparseMatrix& nXY, real 
   
   
   // Copy Backoff Distribution
-  //backoffDist = bDist;
   backoffDist.resize(bDist.size());
   backoffDist << bDist;
-  //cout << backoffDist;
   if (mode == ROW_WISE && (nXY.getMode() == ROW_WISE || nXY.isDoubleAccessible())){
     clear();
     if (backoffDist.size()!=nXY_width)PLERROR("Wrong dimension for backoffDistribution");
@@ -133,20 +135,28 @@ void SmoothedProbSparseMatrix::normalizeCondBackoff(ProbSparseMatrix& nXY, real 
     for (int i = 0; i < nXY_height; i++){
       // normalization
       real sum_row_i = nXY.sumRow(i);
-      // Store normalization sum
-      normalizationSum[i] =  sum_row_i;
-      // if there is no count in this column : uniform distribution
-      if (normalizationSum[i]==0)normalizationSum[j]=nXY_width;
+      if (sum_row_i==0){
+      // if there is no count in this column : uniform distribution	
+	normalizationSum[j]=nXY_width;
+      }else{
+	// Store normalization sum
+	normalizationSum[i] =  sum_row_i;
+      }
       backoffNormalization[i]= 1.0;
       map<int, real>& row_i = nXY.getRow(i);
-      
+      // compute minial value
+      minval=FLT_MAX;
+      for (map<int, real>::iterator it = row_i.begin(); it != row_i.end(); ++it){
+	minval=	it->second<minval?it->second:minval;
+      }
+      discval = minval*disc;
       for (map<int, real>::iterator it = row_i.begin(); it != row_i.end(); ++it){
         j = it->first;
         nij = it->second;
-	if(nij>disc){
-	  discountedMass[i]+=disc;
+	if(nij>discval){
+	  discountedMass[i]+=discval;
 	  // Discount
-	  pij =  (nij -disc)/ sum_row_i;
+	  pij =  (nij -discval)/ sum_row_i;
 	  if (pij<0) PLERROR("modified count < 0 in Backoff  Smoothing SmoothedProbSparseMatrix %s",nXY.getName().c_str());
 	  // update backoff normalization factor
 	  backoffNormalization[i]-= backoffDist[j];
@@ -157,6 +167,7 @@ void SmoothedProbSparseMatrix::normalizeCondBackoff(ProbSparseMatrix& nXY, real 
 	set(i, j,pij);
 	
       }
+      if(discountedMass[i]==0)PLERROR("Discounted mass is null but count are not null in %s line %d",nXY.getName().c_str(),i);
     }
     
     if (clear_nXY)nXY.clear();
@@ -168,26 +179,41 @@ void SmoothedProbSparseMatrix::normalizeCondBackoff(ProbSparseMatrix& nXY, real 
     for ( j = 0; j < nXY_width; j++){
       // normalization
       real sum_col_j = nXY.sumCol(j);
+      if (sum_col_j==0){
+	// if there is no count in this column : uniform distribution
+	normalizationSum[j]=nXY_height;
+	continue;
+      }else{
       // Store normalization sum
       normalizationSum[j] =  sum_col_j;
-      // if there is no count in this column : uniform distribution
-      if (normalizationSum[j]==0)normalizationSum[j]=nXY_height;
+      }
+      
       backoffNormalization[j]= 1.0;
       map<int, real>&  col_j = nXY.getCol(j);
+      // compute minimal value
+      minval=FLT_MAX;
+      for (map<int, real>::iterator it = col_j.begin(); it != col_j.end(); ++it){
+	minval=	(it->second<minval && it->second!=0) ?it->second:minval;
+      }
+      discval = minval*disc;
       for (map<int, real>::iterator it = col_j.begin(); it != col_j.end(); ++it){
 	i = it->first;
 	nij = it->second;
-	if(nij>disc){
-	  discountedMass[j]+=disc;
+	if(nij>discval){
+	  discountedMass[j]+=discval;
 	  // Discount
-	  pij = (nij -disc)/ sum_col_j;
+	  pij = (nij -discval)/ sum_col_j;
 	  if (pij<0) PLERROR("modified count < 0 in Backoff  Smoothing SmoothedProbSparseMatrix %s : i=%d j=%d p=%f",nXY.getName().c_str(),i,j,pij);
 	  // update backoff normalization factor
 	  backoffNormalization[j]-=backoffDist[i];
 	}else{
 	  pij = nij / sum_col_j;
 	}
+	if(pij<=0 || pij>1) PLERROR("Invalide smoothed probability %f in %s",pij,nXY.getName().c_str());
 	set(i, j, pij);
+      }
+      if(discountedMass[j]==0){
+	PLERROR("Discounted mass is null but count are not null in %s col %d",nXY.getName().c_str(),j);
       }
     }
     
@@ -243,6 +269,7 @@ real SmoothedProbSparseMatrix::get(int i, int j)
       return it->second;
     }
   }
+  return;
 }
 
 
