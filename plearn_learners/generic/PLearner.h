@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.29 2004/10/21 18:22:23 chapados Exp $
+   * $Id: PLearner.h,v 1.30 2004/11/23 21:49:57 tihocan Exp $
    ******************************************************* */
 
 
@@ -309,6 +309,9 @@ public:
   //! Performs test on testset, updating test cost statistics,
   //! and optionally filling testoutputs and testcosts
   //! The default version repeatedly calls computeOutputAndCosts or computeCostsOnly
+  //! Note that neither test_stats->forget() nor test_stats->finalize() is called,
+  //! so that you should call them yourself (respectively before and after calling
+  //! this method) if you don't plan to accumulate statistics.
   virtual void test(VMat testset, PP<VecStatsCollector> test_stats, 
                     VMat testoutputs=0, VMat testcosts=0) const;
 
