@@ -23,7 +23,7 @@ else:
 sourcedirs =   lsdirs(os.path.join(plearndir,'plearn/')) \
              + lsdirs(os.path.join(plearndir,'plearn_learners/')) \
              + lsdirs(os.path.join(plearndir,'../LisaPLearn/PLearnLibrary/')) \
-             + lsdirs(os.path.join(plearndir,'/u/lisa/local/linux-i386/lib/apstatsoft/apstatlib/')) \
+             + lsdirs(os.path.join(plearndir,'../LisaPLearn/apstatlib/')) \
              + lsdirs('/RQexec/casagran/apstatlib/') \
              + lsdirs(os.path.join(plearndir,'commands/'))[1:] 
 
