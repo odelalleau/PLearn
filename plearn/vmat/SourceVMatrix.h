@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrix.h,v 1.10 2004/09/14 16:04:39 chrish42 Exp $ 
+   * $Id: SourceVMatrix.h,v 1.11 2004/10/01 22:09:27 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -139,6 +139,12 @@ public:
 
   //! Declares name and deepCopy methods
   PLEARN_DECLARE_OBJECT(SourceVMatrix);
+  
+  //! Return the dimension of the values for a certain field, -1 if continuous   
+  virtual int getDimension(int row, int col) const;
+
+  //! Returns the possible values for a certain field in the VMatrix
+  virtual Vec getValues(int row, int col) const;
 
 };
 

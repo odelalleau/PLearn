@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.cc,v 1.15 2004/09/14 16:04:39 chrish42 Exp $
+   * $Id: SubVMatrix.cc,v 1.16 2004/10/01 22:09:27 larocheh Exp $
    ******************************************************* */
 
 #include "SubVMatrix.h"
@@ -233,6 +233,24 @@ real SubVMatrix::dot(int i, const Vec& v) const
 void SubVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies) {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(parent, copies);
+}
+
+int SubVMatrix::getDimension(int row, int col) const
+{
+  #ifdef BOUNDCHECK
+  if(row<0 || row>=length() || col<0 || col>width())
+    PLERROR("In SubVMatrix::getDimension(row,col) OUT OF BOUND access");
+#endif
+  return parent->getDimension(row+istart,col+jstart);
+}
+
+Vec SubVMatrix::getValues(int row, int col) const
+{
+  #ifdef BOUNDCHECK
+  if(row<0 || row>=length() || col<0 || col>width())
+    PLERROR("In SubVMatrix::getValues(row,col) OUT OF BOUND access");
+#endif
+  return parent->getValues(row+istart,col+jstart);
 }
 
 } // end of namespcae PLearn
