@@ -35,17 +35,17 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.cc,v 1.1 2003/11/04 18:13:39 tihocan Exp $
+ * $Id: LiftStatsCollector.cc,v 1.2 2003/11/04 21:24:03 tihocan Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
 /*! \file LiftStatsCollector.cc */
 
 #include "LiftStatsCollector.h"
+#include "TMat_maths.h"
 //#include "VMat.h"
-//#include "MemoryVMatrix.h"
+//#include "MemoryVMatrix.h" // TODO see what we keep
 //#include "stringutils.h"
-//#include "TMat_maths.h"                      //!< for sortRows
 
 namespace PLearn <%
 using namespace std;
@@ -54,13 +54,14 @@ using namespace std;
 // LiftStatsCollector //
 ////////////////////////
 LiftStatsCollector::LiftStatsCollector() 
-  : inherited() /*, all_updates(), is_finalized(false), sorted_updates(),
-    output_type(-1), sort_type(SortNatural), prr_loss_ratio(0.8),
-    output_column(0), claim_column(1), premium_column(2),
-    duration_column(3), ceede_forbidden_column(4),
-    duration_normalized_claim(false),
-    claim_multiplier(1.0), min_ceede(0.0), max_ceede(1.0),
-    score_filename("") */
+  : inherited(),
+  is_finalized(false),
+  nstored(0),
+  nsamples(0),
+  npos(0),
+  output_column(0),
+  target_column(1),
+  lift_fraction(0.1)
 {
 }
 
@@ -72,86 +73,22 @@ PLEARN_IMPLEMENT_OBJECT(
   "Computes the performance of a binary classifier",
   "The following statistics can be requested out of getStat():\n"
   "- LIFT = % of positive examples in the first n samples, divided by the % of positive examples in the whole database\n"
-  "- LIFT_MAX = best performance that could be achieved, if all positive examples where selected in the first n samples\n"
+  "- LIFT_MAX = best performance that could be achieved, if all positive examples were selected in the first n samples\n"
   );
 
 void LiftStatsCollector::declareOptions(OptionList& ol)
 {
-/*  declareOption(ol, "all_updates", &LiftStatsCollector::all_updates,
+  declareOption(ol, "n_first_samples", &LiftStatsCollector::n_first_samples,
       OptionBase::learntoption,
-      "Matrix accumulating all updates made to the stats "
-      "collector since the last update"); */
+      "Matrix storing the output and target of the first n samples with highest output, "
+      "as well as all the other data retrieved since the last call to finalize");
 
   declareOption(ol, "output_column", &LiftStatsCollector::output_column, OptionBase::buildoption,
       "    the column in which is the output value\n");
 
-/*  declareOption(ol, "target_column", &LiftStatsCollector::target_column), OptionBase::buildoption,
-      "    the column in which is the target value\n");*/ // TODO see if we use this
+  declareOption(ol, "target_column", &LiftStatsCollector::target_column, OptionBase::buildoption,
+      "    the column in which is the target value\n");
 
-/*  declareOption(ol, "output_type", &LiftStatsCollector::output_type,
-                OptionBase::buildoption,
-                "Type of function learned by the model. Can be one of:\n"
-                "1 : (LiftStatsCollector::PurePremium),      predict one-year premium\n"
-                "2 : (LiftStatsCollector::RelPRRProfit),     predict (claim-PRR_LR*premium)/premium\n"
-                "3 : (LiftStatsCollector::LossRatio),        predict claim/premium\n"
-                "4 : (LiftStatsCollector::LossRatioDiv1000), predict (claim/premium)/1000\n"
-                "5 : (LiftStatsCollector::ProbabilityCeede), from 0 (don't ceede) to 1 (ceede)");
-
-  declareOption(ol, "sort_type", &LiftStatsCollector::sort_type,
-                OptionBase::buildoption,
-                "Type of sorting to perform. Can be one of:\n"
-                "0 : (LiftStatsCollector::SortNatural),   use most \"natural\" sort for output_type\n"
-                "1 : (LiftStatsCollector::SortLossRatio), sort by decreasing predicted loss ratio\n"
-                "2 : (LiftStatsCollector::SortPRRProfit), sort by decrasing (pure_premium - PRR_LR*premium)\n"
-                "NOTE: not all sort types are supported by all output types");
-
-  declareOption(ol, "prr_loss_ratio", &LiftStatsCollector::prr_loss_ratio,
-                OptionBase::buildoption,
-                "Loss ratio above which ceeding to PRR is profitable (default=0.8)");
-
-  declareOption(ol, "output_column", &LiftStatsCollector::output_column,
-                OptionBase::buildoption,
-                "Column number (zero-based) in the cost vector containing the model output");
-  
-  declareOption(ol, "claim_column", &LiftStatsCollector::claim_column,
-                OptionBase::buildoption,
-                "Column number (zero-based) in the cost vector containing the claim amount during the contract");
-  
-  declareOption(ol, "premium_column", &LiftStatsCollector::premium_column,
-                OptionBase::buildoption,
-                "Column number (zero-based) in the cost vector containing the unflexed contract premium");
-  
-  declareOption(ol, "duration_column", &LiftStatsCollector::duration_column,
-                OptionBase::buildoption,
-                "Column number (zero-based) in the cost vector containing the contract duration");
-
-  declareOption(ol, "ceede_forbidden_column",
-                &LiftStatsCollector::ceede_forbidden_column,
-                OptionBase::buildoption,
-                "Column number of a boolean flag which, if 1, indicates that "
-                "the policy cannot be ceeded to PRR regardless of risk level");
-  
-  declareOption(ol, "duration_normalized_claim", &LiftStatsCollector::duration_normalized_claim,
-                OptionBase::buildoption,
-                "True (=1) if the claim has been normalized by the duration");
-
-  declareOption(ol, "claim_multiplier", &LiftStatsCollector::claim_multiplier,
-                OptionBase::buildoption,
-                "e.g. =1000 if the claim is in thousands of dollars (default=1.0)");
-
-  declareOption(ol, "min_ceede", &LiftStatsCollector::min_ceede,
-                OptionBase::buildoption,
-                "Minimum fraction of premium volume to ceede to pool");
-
-  declareOption(ol, "max_ceede", &LiftStatsCollector::max_ceede,
-                OptionBase::buildoption,
-                "Maximum fraction of premium volume to ceede to pool");
-
-  declareOption(ol, "score_filename", &LiftStatsCollector::score_filename,
-                OptionBase::buildoption,
-                "Name of file in which to save sorted scores, if desired");
-*/ // TODO see if useful
-  
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
 }
@@ -179,6 +116,97 @@ void LiftStatsCollector::build_()
   nsamples = 0; */ // TODO adapt to new framework
 }
 
+/////////////////
+// computeLift //
+/////////////////
+real LiftStatsCollector::computeLift() {
+  if (!is_finalized)
+    finalize();
+  // Compute statistics.
+  int npos_in_n_first = (int) sum(n_first_samples.column(1));
+  real first_samples_perf = npos_in_n_first/n_samples_to_keep;
+  real targets_perf = (npos_in_n_first + npos) / nsamples;
+  real lift = first_samples_perf/targets_perf*100.0;
+  return lift;
+}
+
+////////////////////
+// computeLiftMax //
+////////////////////
+real LiftStatsCollector::computeLiftMax() {
+  if (!is_finalized)
+    finalize();
+  int npos_in_n_first = (int) sum(n_first_samples.column(1));
+  real nones = npos_in_n_first + npos;
+  real max_first_samples_perf =
+    MIN(nones,(real)n_samples_to_keep) / (real) n_samples_to_keep;
+  real targets_perf = (npos_in_n_first + npos) / nsamples;
+  real max_lift = max_first_samples_perf/targets_perf*100.0;
+  return max_lift;
+}
+
+//////////////
+// finalize //
+//////////////
+void LiftStatsCollector::finalize()
+{
+  n_first_samples.resize(nstored,2); // get rid of the extra space allocated.
+
+  n_samples_to_keep = int(lift_fraction*nsamples);
+//  int n_last_samples = nsamples - n_first_samples; // TODO remove that
+  // Make sure the highest ouputs are in the last n_samples_to_keep elements
+  // of n_first_samples
+  selectAndOrder(n_first_samples, nstored - n_samples_to_keep); // TODO clear the crap
+
+  // Count the number of positive examples in the lowest outputs.
+  for (int i = 0; i < nstored - n_samples_to_keep; i++) {
+    if (n_first_samples(i,1) == 1) {
+      npos++;  // TODO initialize npos
+    }
+  }
+  
+  // Clear the lowest outputs, that are now useless.
+  for (int i = 0; i < n_samples_to_keep; i++) {
+    n_first_samples(i,0) = n_first_samples(i + nstored - n_samples_to_keep, 0);
+    n_first_samples(i,1) = n_first_samples(i + nstored - n_samples_to_keep, 1);
+  }
+  n_first_samples.resize(n_samples_to_keep, 2);
+
+  inherited::finalize();
+  is_finalized = true;
+}
+
+////////////
+// forget //
+////////////
+void LiftStatsCollector::forget()
+{
+  is_finalized = false;
+  nstored = 0;
+  npos = 0;
+  n_first_samples.resize(0,0);
+  n_first_samples.resize(1000,2);
+  inherited::forget();
+}
+
+/////////////
+// getStat //
+/////////////
+double LiftStatsCollector::getStat(const string& statspec)
+{
+  PIStringStream str(statspec);
+  string parsed;
+  str.smartReadUntilNext("(",parsed);
+  if (parsed == "LIFT") {
+    return computeLift();
+  }
+  else if (parsed == "LIFT_MAX") {
+    return computeLiftMax();
+  }
+  else
+    return inherited::getStat(statspec);
+}
+
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
@@ -191,332 +219,24 @@ void LiftStatsCollector::makeDeepCopyFromShallowCopy(map<const void*, void*>& co
 }
 
 ////////////
-// forget //
-////////////
-void LiftStatsCollector::forget()
-{
-/*  is_finalized = false;
-  all_updates.resize(0, all_updates.width()); */ // TODO useful ?
-  inherited::forget();
-}
-
-////////////
 // update //
 ////////////
 void LiftStatsCollector::update(const Vec& x, real w)
 {
-/*  if (all_updates.length() == 0 && all_updates.width() != x.length())
-    all_updates.resize(0, x.length());
-  else if (all_updates.width() != x.length())
-    PLERROR("LiftStatsCollector::update: trying to update with a row of "
-            "inconsistent size");
+  if (nstored == n_first_samples.length()) {
+    n_first_samples.resize(10*n_first_samples.length(), 2);
+  }
+  n_first_samples(nstored, 0) = x[output_column];
+  n_first_samples(nstored, 1) = x[target_column];
+  if (x[target_column] != 0 && x[target_column] != 1) {
+    PLERROR("In LiftStatsCollector::update Target must be 0 or 1 !");
+  }
+  nsamples++;
+  nstored++;
   is_finalized = false;
-  all_updates.push_back(x); */ // TODO see what we do
+
   inherited::update(x,w);
 }
 
-//////////////
-// finalize //
-//////////////
-void LiftStatsCollector::finalize()
-{
-/*  if (!is_finalized) {
-    // Create a new sorted_updates matrix
-    const int m = all_updates.width() + 1;
-    sorted_updates.resize(all_updates.length(), m);
-
-    const int n = all_updates.length();
-    total_premium = total_claim = total_duration = 0.0;
-    for (int i=0; i < n; ++i) {
-      Vec subrow = sorted_updates(i).subVec(0, m-1);
-      subrow << all_updates(i);
-
-      // If we cannot ceede the policy, use -FLT_MAX as the selection criterion
-      if (subrow[ceede_forbidden_column] || subrow[premium_column] < 0)
-        sorted_updates(i,m-1) = -FLT_MAX;
-      else
-        sorted_updates(i,m-1) = selectionCriterion(i);
-
-      // Accumulate some statistics
-      total_premium += subrow[premium_column];
-      total_claim   += subrow[claim_column];
-      total_duration+= subrow[duration_column];
-    }
-
-    // Finally perform the sorting according to the selectionCriterion;
-    // sort in DECREASING order: worst risks 1st
-    sortRows(sorted_updates, m-1, false);
-    is_finalized = true;
-
-    // Save scores if requested
-    if (score_filename != "") {
-      VMat mat = new MemoryVMatrix(sorted_updates);
-      mat->declareField(output_column,"model-output");
-      mat->declareField(claim_column,"claim");
-      mat->declareField(premium_column,"unflexed-premium");
-      mat->declareField(duration_column,"duration");
-      mat->declareField(ceede_forbidden_column,"do-not-ceede");
-      mat->declareField(m-1,"score");
-      mat->savePMAT(score_filename);
-    }
-  } */ // TODO see what we do here
-  inherited::finalize();
-}
-
-/////////////
-// getStat //
-/////////////
-double LiftStatsCollector::getStat(const string& statspec)
-{
-  PIStringStream str(statspec);
-  string parsed;
-  str.smartReadUntilNext("(",parsed);
-/*  if (parsed == "THRESH_PERCENT") {
-    str.smartReadUntilNext(")", parsed);
-    return thresholdFromFraction(todouble(parsed) / 100);
-  }
-  else if (parsed == "PROFIT_THRESH") {
-    str.smartReadUntilNext(")", parsed);
-    return profitFromThreshold(todouble(parsed));
-  }
-  else if (parsed == "PROFIT_PERCENT") {
-    str.smartReadUntilNext(")", parsed);
-    double thresh = thresholdFromFraction(todouble(parsed) / 100);
-    return profitFromThreshold(thresh);
-  }
-  else if (parsed == "OPTIMAL_PERCENT") {
-    double mp, ot, of;
-    optimizeWorld(mp, ot, of);
-    return of*100;
-  }
-  else if (parsed == "OPTIMAL_THRESH") {
-    double mp, ot, of;
-    optimizeWorld(mp, ot, of);
-    return ot;
-  }
-  else if (parsed == "OPTIMAL_PROFIT") {
-    double mp, ot, of;
-    optimizeWorld(mp, ot, of);
-    return mp;
-  }
-  else */ // TODO see what we do here
-    return inherited::getStat(statspec);
-}
-
-///////////////////
-// optimizeWorld //
-///////////////////
-/*void LiftStatsCollector::optimizeWorld(double& max_profit,
-                                      double& opt_threshold,
-                                      double& opt_fraction)
-{
-  if (! is_finalized)
-    finalize();
-  const int n = sorted_updates.length();
-  const int m = sorted_updates.width();
-  double cum_premium = 0.0;
-  double cum_profit = 0.0;
-  max_profit = -FLT_MAX;
-  opt_threshold = opt_fraction = 0.0;
-  
-  for (int i=0 ; i<n &&
-         cum_premium/total_premium <= max_ceede ; ++i) {
-    cum_profit  += prrSingleProfit(i);
-    cum_premium += sorted_updates(i,premium_column);
-
-    // As long as we have not reached at least min_ceede, do
-    // not record new maxima reached
-    double cur_fraction = cum_premium / total_premium;
-    if (cur_fraction >= min_ceede && cum_profit > max_profit) {
-      max_profit    = cum_profit;
-      opt_fraction  = cur_fraction;
-      opt_threshold = sorted_updates(i,m-1);
-    }
-  }  // TODO wtf is that ?
-}
-/////////////////////////
-// profitFromThreshold //
-/////////////////////////
-Vec LiftStatsCollector::profitFromThreshold(const Vec& thresholds)
-{
-  if (! is_finalized)
-    finalize();
-  const int n = sorted_updates.length();
-  const int m = sorted_updates.width(); 
-  const int max_thresh = thresholds.length();
-  int cur_thresh = 0;
-  double cum_profit = 0.0;
-  Vec results(max_thresh);
-
-  for (int i=0; i < n && cur_thresh < max_thresh; ++i) {
-    // As soon as we change bracket, record the cumulative profit until we
-    // were ABOVE OR EQUAL to the current threshold
-    for( ; cur_thresh < max_thresh &&
-           sorted_updates(i,m-1) < thresholds[cur_thresh] ; ++cur_thresh)
-      results[cur_thresh] = cum_profit;
-
-    // Accumulate profit for next record
-    cum_profit += prrSingleProfit(i);
-  }  // TODO wtf
-  return results;
-}
-
-///////////////////////////
-// thresholdFromFraction //
-///////////////////////////
-Mat LiftStatsCollector::thresholdFromFraction(const Vec& fractions)
-{
-//  if (! is_finalized)
-//    finalize();
-  Mat result(2, fractions.length());
-  double cum_premium = 0.0;
-  const int n = sorted_updates.length();
-  const int m = sorted_updates.width();
-  const int max_fraction = fractions.length();
-  int idx_fraction = 0;
-
-  // Simultaneously go through records and percents vector
-  for (int i=0; i<n && idx_fraction<max_fraction; ++i) {
-    cum_premium += sorted_updates(i,premium_column);
-    double cur_fraction = cum_premium / total_premium;
-    for ( ; idx_fraction < max_fraction &&
-            cur_fraction > fractions[idx_fraction] ; ++idx_fraction) {
-      result(0, idx_fraction) = sorted_updates(i, m-1);
-      result(1, idx_fraction) = cur_fraction;
-    }
-  }  // TODO wtf
-  return result;
-}
-
-/////////////////////
-// prrSingleProfit //
-/////////////////////
-double LiftStatsCollector::prrSingleProfit(int row_number) const
-{
-  if (! is_finalized)
-    PLERROR("LiftStatsCollector::prrSingleProfit: internal error, "
-            "finalize() not called");
-  
-  // This is the profit GIVEN that policy row_number is ceeded to pool
-  const double premium = sorted_updates(row_number, premium_column);
-  const double claim = actualClaim(row_number);
-
-  return claim - prr_loss_ratio * premium;  // TODO wtf
-  return 0;
-}
-
-/////////////////
-// actualClaim //
-/////////////////
-double LiftStatsCollector::actualClaim(int row_number) const
-{
-  if (! is_finalized)
-    PLERROR("LiftStatsCollector::actualClaim: internal error, "
-            "finalize() not called");
-
-  double claim = sorted_updates(row_number, claim_column);
-  if (duration_normalized_claim) {
-    if (duration_column < 0)
-      PLERROR("LiftStatsCollector::actualClaim: Claims are normalized by "
-              "duration but duration column not specified");
-    claim *= sorted_updates(row_number, duration_column);
-  }
-  return claim * claim_multiplier;  // TODO wtf
-  return 0;
-}
-
-////////////////////////
-// selectionCriterion //
-////////////////////////
-double LiftStatsCollector::selectionCriterion(real model_output,
-                                             int output_type,
-                                             real nonflexed_premium,
-                                             real duration,
-                                             real prr_loss_ratio,
-                                             int sort_type)
-{
-
-  switch(sort_type)
-  {
-  case SortNatural:
-  case SortLossRatio:
-    switch(output_type)
-    {
-    case PurePremium:
-      return model_output * duration / nonflexed_premium;
-
-    case RelPRRProfit:
-    case LossRatio:
-    case LossRatioDiv1000:
-    case ProbabilityCeede:
-      return model_output;
-
-    default:
-      PLERROR("LiftStatsCollector::selectionCriterion: Unknown target type %d",
-              output_type);
-    }
-
-  case SortPRRProfit:
-    switch(output_type)
-    {
-    case PurePremium:
-    case RelPRRProfit:
-    case LossRatio:
-    case LossRatioDiv1000:
-      return purePremium(model_output, output_type, nonflexed_premium,
-                         duration, prr_loss_ratio)
-        - prr_loss_ratio * nonflexed_premium;
-      
-    case ProbabilityCeede:
-      return model_output;
-      
-    default:
-      PLERROR("LiftStatsCollector::selectionCriterion: Unknown target type %d",
-              output_type);
-    }
-    
-  default:
-    PLERROR("LiftStatsCollector::selectionCriterion: Unknown sort type %d",
-            sort_type);
-  } // TODO wtf
-  return 0;
-}
-
-/////////////////
-// purePremium //
-/////////////////
-double LiftStatsCollector::purePremium(real model_output, int output_type,
-                                      real premium, real duration,
-                                      real prr_loss_ratio)
-{
-  switch(output_type) {
-  case PurePremium:
-    // Here, the pure premium is for one year: bring it back to true
-    // premium
-    return model_output / duration;
-
-  case RelPRRProfit:
-    // We have model_output = (claim - PRR_LR*premium)/premium.
-    // The pure premium is premium*model_output + PRR_LR*premium
-    return premium*model_output + prr_loss_ratio*premium;
-
-  case LossRatio:
-    // We have model_output = claim/premium
-    return model_output * premium;
-
-  case LossRatioDiv1000:
-    // We have model_output = (claim/premium)/1000
-    return 1000 * model_output * premium;
-
-  case ProbabilityCeede:
-    return MISSING_VALUE;                //!< no way to derive pure premium
-                                         //!< from a probability assessment
-    
-  default:
-    PLERROR("LiftStatsCollector::purePremium: unknown output_type %d\n",
-            output_type);
-  }  // TODO wtf
-  return 0;
-}
-*/ // TODO make sure we deleted all the useless stuff
+ // TODO make sure we deleted all the useless stuff
 %> // end of namespace PLearn

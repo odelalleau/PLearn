@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.h,v 1.1 2003/11/04 18:13:39 tihocan Exp $
+ * $Id: LiftStatsCollector.h,v 1.2 2003/11/04 21:24:03 tihocan Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -58,19 +58,24 @@ public:
 
 protected:
 
-  //! Store the n samples with the highest output.
   Mat n_first_samples;
 
-  //! After finalize, this matrix contains the same columns as all_updates
-  //! plus an additional column containing the selection_criterion.
-  //! Matrix is sorted according to selection_criterion
-/*  bool is_finalized; // TODO useful
-  Mat sorted_updates; // TODO useful 
+  //! Set to true after each call to finalize().
+  bool is_finalized;
 
-  double total_premium;                      //!< Total premium after finalize // TODO useful
-  double total_claim;                        //!< Total claim after finalize// TODO useful
-  double total_duration;                     //!< Total duration after finalize// TODO useful */
-  
+  //! Number of examples stored in the n_first_samples matrix.
+  int nstored;
+
+  //! Number of samples seen.
+  int nsamples;
+
+  //! Number of positive examples that are not retained in the ones with the
+  //! highest output.
+  int npos;
+
+  //! Number of examples to keep (nsamples * lift_fraction).
+  int n_samples_to_keep;
+
 public:
 
   // ************************
@@ -78,60 +83,8 @@ public:
   // ************************
 
   int output_column;
-
-
-  //! What is the learner trying to predict?
-/*  static const int PurePremium = 1;          //!< predict one-year premium// TODO useful
-  static const int RelPRRProfit = 2;         //!< predict (claim-PRR_LR*premium)/premium// TODO useful
-  static const int LossRatio = 3;            //!< predict claim/premium// TODO useful
-  static const int LossRatioDiv1000 = 4;     //!< predict (claim/premium)/1000// TODO useful
-  static const int ProbabilityCeede = 5;     //!< between 0 and 1, with 1 "should ceede for sure"// TODO useful
-  int output_type;                           //!< one of the 4 values above// TODO useful
-
-  //! Preferred sorting method (may not be honoured if the learner
-  //! cannot handle it, e.g. for a probabilistic classifier)
-  static const int SortNatural = 0;          //!< Most "natural" sort for output_type// TODO useful
-  static const int SortLossRatio = 1;        //!< sort by decreasing loss ratio// TODO useful
-  static const int SortPRRProfit = 2;        //!< sort by decrasing profit// TODO useful
-  int sort_type;// TODO useful
-  
-  //! What loss ratio are we going to use in the PRR profit formula
-  //! (default value is 0.8)
-  double prr_loss_ratio;// TODO useful
-
-  //! Column number of model output in cost vector
-  int output_column;// TODO useful
-
-  //! Column number of claim in cost vector. We assume UNSCALED CLAIM.
-  int claim_column;// TODO useful
-
-  //! Column number of charged premium in cost vector.  We assume the
-  //! UNSCALED premium actually charged to driver, irrespective of
-  //! duration.
-  int premium_column;// TODO useful
-
-  //! Column number of duration (if necessary, depending on target type)
-  int duration_column;// TODO useful
-
-  //! Column number of a boolean flag which, if 1, indicates that
-  //! the policy cannot be ceeded to PRR regardless of risk level
-  int ceede_forbidden_column;// TODO useful
-  
-  //! True if claim has been normalized by duration
-  bool duration_normalized_claim;// TODO useful
-
-  //! Claim multiplier: e.g. =1000 if claim is in thousands of dollars
-  double claim_multiplier;// TODO useful
-
-  //! Minimum fraction of premium volume to ceede to pool
-  double min_ceede;// TODO useful
-
-  //! Maximum fraction of premium volume to ceede to pool
-  double max_ceede;// TODO useful
-
-  //! Name of file in which to save sorted scores
-  string score_filename;// TODO useful */
-  
+  int target_column;
+  real lift_fraction;
 
   // ****************
   // * Constructors *
@@ -148,7 +101,7 @@ public:
 
   // A few overrides to properly save the accumulated information
   virtual void forget();
-  virtual void update(const Vec& x, real weight = 1.0); // TODO change ?
+  virtual void update(const Vec& x, real weight = 1.0);
 //  using inherited::update; // TODO wtf
 
   //! This finalize override sorts the matrix by selection criterion
@@ -166,75 +119,13 @@ public:
   //! - OPTIMAL_PERCENT           % ceeded yielding max profit // TODO change comments
   virtual double getStat(const string& statspec); // TODO wtf
 
-public:
-  //! Core optimizer: returns the maximal profit, the associated threshold,
-  //! and the associated premium fraction
-/*  void optimizeWorld(double& max_profit, double& opt_threshold,
-                     double& opt_fraction); // TODO wtf */
+protected:
+
+  //! Return the LIFT statistic.
+  real computeLift();
   
-  //! Compute the actual profit arising out of ceeding everything beyond
-  //! a list of thresholds.  For performance reasons, the thresholds should
-  //! be sorted in DECREASING order.
-/*  Vec profitFromThreshold(const Vec& thresholds); // TODO wtf */
-
-  //! Actual profit, for a single threshold
-/*  double profitFromThreshold(double threshold) {
-    Vec t(1);
-    t[0] = threshold;
-    return profitFromThreshold(t)[0]; // TODO wtf
-  } */
-
-  //! Compute the thresholds corresponding to the specified fraction ceeded.
-  //! For performance reasons, the fractions should be sorted in
-  //! INCREASING ORDER.  The returned matrix contains two rows: the first
-  //! row contains the thresholds, and the second one contains the
-  //! corresponding the EFFECTIVE fraction ceeded (each one corresponding 
-  //! to the NOMINAL fraction ceeded passed as argument).
-/*   Mat thresholdFromFraction(const Vec& fractions); // TODO wtf */
-
-  //! Actual threshold, for a single fraction
-/*  double thresholdFromFraction(double fraction) {
-    Vec t(1);
-    t[0] = fraction;
-    return (thresholdFromFraction(t))(0,0);
-  } // TODO wtf
-
-  //! Return the profit made for the given row, GIVEN that we ceede it to
-  //! the pool. This is given by (claim - PRR_LR*premium)
-  double prrSingleProfit(int row_number) const; // TODO wtf
-
-  //! Return the REAL claim: undo all normalization by duration and such
-  double actualClaim(int row_number) const; // TODO wtf
-
-  //! Return the selection criterion for a given row number)
-  double selectionCriterion(int row_number) const {
-    return selectionCriterion(all_updates(row_number, output_column),
-                              output_type,
-                              all_updates(row_number, premium_column),
-                              all_updates(row_number, duration_column),
-                              prr_loss_ratio, sort_type);
-  } // TODO wtf
-  
-  //! Return the "selection criterion" (which will be thresholded to
-  //! make a decision) depending on the target type.  Static with explicit
-  //! interface since this is called from outside.
-  //! The meaning of criterion varies depending on output_type :
-  //! 1. PurePremium:      (possibly scaled) loss ratio
-  //! 2. RelPRRProfit:     loss ratio - PRR_LR (e.g. PRR_LR=0.8)
-  //! 3. LossRatio:        loss ratio
-  //! 4. LossRatioDiv1000: loss ratio divided by 1000
-  //! 5. ProbabilityCeede: probability beyond which should ceede
-  static double selectionCriterion(real model_output, int output_type,
-                                   real nonflexed_premium, real duration,
-                                   real prr_loss_ratio = 0.8,
-                                   int sort_type = SortLossRatio); // TODO wtf
-
-  //! Return the pure premium given by a model, depending on the actual
-  //! model output, for observation row_number.  Static with explicit
-  //! interface since this is called from outside.
-  static double purePremium(real model_output, int output_type,
-                            real nonflexed_premium, real duration,
-                            real prr_loss_ratio); // TODO wtf */
+  //! Return the LIFT_MAX statistic.
+  real computeLiftMax();
 
 private: 
 
