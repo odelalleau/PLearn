@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.32 2004/03/12 23:32:36 tihocan Exp $
+   * $Id: fileutils.cc,v 1.33 2004/03/16 18:36:01 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -72,6 +72,7 @@
 #include "fileutils.h"
 #include "stringutils.h"
 #include "plerror.h"
+#include "pl_math.h"    //!< For 'real'.
 #include "PStream.h"
 
 namespace PLearn {
@@ -800,6 +801,39 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
               }
               break;
 
+            case 'M': // it's a MINUS{expr1}{expr2}
+              {
+                string expr1, expr2;
+                readWhileMatches(in, "MINUS");
+                bool syntax_ok = true;
+                int c = in.get();
+                if (syntax_ok) {
+                  if(c == '{')
+                    smartReadUntilNext(in, "}", expr1);
+                  else
+                    syntax_ok = false;
+                }
+                if (syntax_ok) {
+                  c = in.get();
+                  if(c == '{')
+                    smartReadUntilNext(in, "}", expr2);
+                  else
+                    syntax_ok = false;
+                }
+                if (!syntax_ok)
+                  PLERROR("$MINUS syntax is: $MINUS{expr1}{expr2}");
+                istrstream expr1_stream(expr1.c_str());
+                istrstream expr2_stream(expr2.c_str());
+                string expr1_eval = readAndMacroProcess(expr1_stream, variables);
+                string expr2_eval = readAndMacroProcess(expr2_stream, variables);
+                real e1, e2;
+                if (!pl_isnumber(expr1_eval, &e1) || !pl_isnumber(expr2_eval, &e2)) {
+                  PLERROR("In $MINUS{expr1}{expr2}, either 'expr1' or 'expr2' is not a number");
+                }
+                text += tostring(e1 - e2);
+              }
+              break;
+
             case 'S': // it's a SWITCH{expr}{cond1}{val1}{cond2}{val2}...{valdef}
               {
                 string expr, valdef;
@@ -863,9 +897,42 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
               }
               break;
 
+            case 'T': // it's a TIMES{expr1}{expr2}
+              {
+                string expr1, expr2;
+                readWhileMatches(in, "TIMES");
+                bool syntax_ok = true;
+                int c = in.get();
+                if (syntax_ok) {
+                  if(c == '{')
+                    smartReadUntilNext(in, "}", expr1);
+                  else
+                    syntax_ok = false;
+                }
+                if (syntax_ok) {
+                  c = in.get();
+                  if(c == '{')
+                    smartReadUntilNext(in, "}", expr2);
+                  else
+                    syntax_ok = false;
+                }
+                if (!syntax_ok)
+                  PLERROR("$TIMES syntax is: $TIMES{expr1}{expr2}");
+                istrstream expr1_stream(expr1.c_str());
+                istrstream expr2_stream(expr2.c_str());
+                string expr1_eval = readAndMacroProcess(expr1_stream, variables);
+                string expr2_eval = readAndMacroProcess(expr2_stream, variables);
+                real e1, e2;
+                if (!pl_isnumber(expr1_eval, &e1) || !pl_isnumber(expr2_eval, &e2)) {
+                  PLERROR("In $TIMES{expr1}{expr2}, either 'expr1' or 'expr2' is not a number");
+                }
+                text += tostring(e1 * e2);
+              }
+              break;
+
             default:
               PLERROR("In readAndMacroProcess: only supported macro commands are \n"
-                      "${varname}, $DEFINE, $ECHO, $IF, $INCLUDE, $ISEQUAL, $SWITCH."
+                      "${varname}, $DEFINE, $ECHO, $IF, $INCLUDE, $ISEQUAL, $MINUS, $SWITCH, $TIMES."
                       "But I read $%c !!",c);
             }
         }
