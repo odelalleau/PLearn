@@ -36,15 +36,16 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.30 2005/01/11 20:04:45 tihocan Exp $
+   * $Id: VMatLanguage.cc,v 1.31 2005/02/08 21:42:03 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "VMatLanguage.h"
-#include <plearn/base/stringutils.h>
-#include <plearn/io/fileutils.h>
-#include <plearn/db/getDataSet.h>
 #include <plearn/base/PDate.h>
+#include <plearn/base/stringutils.h>
+#include <plearn/db/getDataSet.h>
+#include <plearn/io/fileutils.h>
+#include <plearn/io/openFile.h>
 
 namespace PLearn {
 using namespace std;
@@ -102,16 +103,16 @@ using namespace std;
 
   // this function (that really should be sliced to to smaller pieces someday) takes raw VPL code and 
   // returns the preprocessed sourcecode along with the defines and the fieldnames it generated
-  void VMatLanguage::preprocess(istream& in, map<string, string>& defines,  string& processed_sourcecode, vector<string>& fieldnames)
+  void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,  string& processed_sourcecode, vector<string>& fieldnames)
   {
     // PStream pout(&cout);
     // pout << defines << endl;
-    char buf[500];
     string token;
     size_t spos;
     map<string,string>::iterator pos;
-    while(in >> token)
+    while(in)
       {
+        in >> token;
         pos=defines.find(token);
 
         // are we sitting on a mapping declaration?
@@ -253,9 +254,7 @@ using namespace std;
                   PLWARNING("File %s seems out of date with parent matrix %s",token.c_str(),file.c_str());
               }
             
-            ifstream incfile(token.c_str());
-            if(incfile.bad())
-              PLERROR("Cannot open file %s\n",token.c_str());
+            PStream incfile = openFile(token, PStream::raw_ascii, "r");
             // process recursively this included file
             // **POSSIBLE DRAWBACK : defines done in this file will be used in the next recursion level
             preprocess(incfile,defines, processed_sourcecode,fieldnames);
@@ -265,8 +264,9 @@ using namespace std;
         else if(token=="DEFINE")
           {
             in >> token;
-            in.getline(buf,500);
-            defines[token.c_str()]=string(buf);
+            string str_buf;
+            in.getline(str_buf);
+            defines[token.c_str()] = str_buf;
           }
         else if(pos!=defines.end())
           {
@@ -276,7 +276,7 @@ using namespace std;
             bool unstable=true;
             while(unstable)
               {
-                istrstream strm(oldstr.c_str());
+                PStream strm = openString(oldstr, PStream::raw_ascii, "r");
                 newstr="";
                 preprocess(strm,defines,newstr,fieldnames);
                 if(removeblanks(oldstr)==removeblanks(newstr))
@@ -311,13 +311,12 @@ using namespace std;
       }
   }
 
-  //  generate bytecode from preprocessed sourcecode
-  void VMatLanguage::generateCode(istream& processed_sourcecode)
+  void VMatLanguage::generateCode(PStream& processed_sourcecode)
   {
     char car;
     string token;
     map<string,int>::iterator pos;
-    car=peekAfterSkipBlanks(processed_sourcecode);
+    car = peekAfterSkipBlanks(processed_sourcecode);
     while(!processed_sourcecode.eof())
       {
         if (car=='{')
@@ -370,7 +369,9 @@ using namespace std;
 
   void VMatLanguage::generateCode(const string& processed_sourcecode)
   {
-    istrstream in(processed_sourcecode.c_str());
+    // Need to copy the source code because the argument is 'const'.
+    string source_copy = processed_sourcecode;
+    PStream in = openString(source_copy, PStream::raw_ascii, "r");
     generateCode(in);
   }
 
@@ -378,19 +379,19 @@ using namespace std;
 
   void VMatLanguage::compileString(const string & code, vector<string>& fieldnames)
   {
-    istrstream in(code.c_str());
+    // Need to copy the code because it is 'const'.
+    string code_copy = code;
+    PStream in = openString(code_copy, PStream::raw_ascii, "r");
     compileStream(in,fieldnames);
   }
 
-  void VMatLanguage::compileFile(const string & filename, vector<string>& fieldnames)
+  void VMatLanguage::compileFile(const PPath& filename, vector<string>& fieldnames)
   {
-    ifstream in(filename.c_str());
-    if(in.bad())
-      PLERROR("Cannot open file %s",filename.c_str());
+    PStream in = openFile(filename, PStream::raw_ascii, "r");
     compileStream(in,fieldnames);
   }
 
-  void VMatLanguage::compileStream(istream & in, vector<string>& fieldnames)
+  void VMatLanguage::compileStream(PStream & in, vector<string>& fieldnames)
   {
     map<string,string> defines;
     string processed_sourcecode;
@@ -412,8 +413,8 @@ using namespace std;
 
     if(output_preproc)
       {
-        cerr<<"Preprocessed code:"<<endl<<processed_sourcecode<<endl;
-        cerr<<"FieldNames : "<<endl<<fieldnames<<endl;
+        perr<<"Preprocessed code:"<<endl<<processed_sourcecode<<endl;
+        perr<<"FieldNames : "<<endl<<fieldnames<<endl;
       }
     generateCode(processed_sourcecode);
   }
