@@ -236,6 +236,7 @@ void SparseMatrix::diagonalOfSquare(Vec& d)
 real SparseMatrix::dotRow(int i, Vec v)
 {
   PLERROR("SparseMatrix is not appropriate to perform dotRow operations");
+  return 0;
 }
 
 // return dot product of j-th column with vector v
