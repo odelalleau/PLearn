@@ -12,7 +12,7 @@ import re
 # underscores between the Glade widget name and the signal name.
 handler_re = re.compile(r'^(on|after)_(.*)__(.*)$')
 
-def glade_load_and_autoconnect(glade_file, widget_name, myobj):
+def glade_load_and_autoconnect(myobj, glade_file, widget_name=''):
   """Loads and constructs the specified widget from the specified glade file,
   and connects signal handling methods of myobj to the widgets.
   Methods named like on_widget__signal or after_widget__signal
@@ -20,7 +20,11 @@ def glade_load_and_autoconnect(glade_file, widget_name, myobj):
   The call returns the glade_object, so that you may call glade_object.get_widget(widgetname)
   if you need to get the individual widgets.
   """
-  gladeobj = gtk.glade.XML(glade_file, widget_name)
+  gladeobj = None
+  if widget_name!='':
+    gladeobj = gtk.glade.XML(glade_file, widget_name)
+  else:
+    gladeobj = gtk.glade.XML(glade_file)
   get_widget = gladeobj.get_widget
   for attr in dir(myobj):
     match = handler_re.match(attr)
@@ -29,6 +33,7 @@ def glade_load_and_autoconnect(glade_file, widget_name, myobj):
       method = getattr(myobj, attr)
       assert callable(method)
       if when == 'on':
+        print 'Connecting signal',signal,'of widget',widget
         get_widget(widget).connect(signal, method)
       elif when == 'after':
         get_widget(widget).connect_after(signal, method)
