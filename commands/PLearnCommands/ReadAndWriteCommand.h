@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ReadAndWriteCommand.h,v 1.1 2002/10/25 23:16:08 plearner Exp $ 
+   * $Id: ReadAndWriteCommand.h,v 1.2 2003/10/31 22:34:18 plearner Exp $ 
    ******************************************************* */
 
 /*! \file ReadAndWriteCommand.h */
@@ -49,16 +49,7 @@ using namespace std;
 class ReadAndWriteCommand: public PLearnCommand
 {
 public:
-  ReadAndWriteCommand():
-    PLearnCommand("read_and_write",
-
-                  "Used to check (debug) the serialization system",
-
-                  "read_and_write <sourcefile> <destfile> \n"
-                  "Reads an Object (in PLearn serialization format) from the <sourcefile> and writes it to the <destfile>\n"
-                  )
-  {}
-                    
+  ReadAndWriteCommand();
   virtual void run(const vector<string>& args);
 
 protected:

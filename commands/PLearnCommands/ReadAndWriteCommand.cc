@@ -33,19 +33,33 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ReadAndWriteCommand.cc,v 1.1 2002/10/25 23:16:08 plearner Exp $ 
+   * $Id: ReadAndWriteCommand.cc,v 1.2 2003/10/31 22:34:18 plearner Exp $ 
    ******************************************************* */
 
 /*! \file ReadAndWriteCommand.cc */
 #include "ReadAndWriteCommand.h"
 #include "PStream.h"
 #include "Object.h"
+#include "stringutils.h"
+#include "fileutils.h"
 
 namespace PLearn <%
 using namespace std;
 
 //! This allows to register the 'ReadAndWriteCommand' command in the command registry
 PLearnCommandRegistry ReadAndWriteCommand::reg_(new ReadAndWriteCommand);
+
+ReadAndWriteCommand::ReadAndWriteCommand():
+  PLearnCommand("read_and_write",
+                
+                "Used to check (debug) the serialization system",
+                
+                "read_and_write <sourcefile> <destfile> \n"
+                "Reads an Object (in PLearn serialization format) from the <sourcefile> and writes it to the <destfile>\n"
+                "If the sourcefile ends with a .psave file, then it will not be subjected to macro preprosessing \n"
+                "Otherwise (ex: .plearn .vmat) it will. \n"
+                )
+{}
 
 //! The actual implementation of the 'ReadAndWriteCommand' command 
 void ReadAndWriteCommand::run(const vector<string>& args)
@@ -54,11 +68,22 @@ void ReadAndWriteCommand::run(const vector<string>& args)
     PLERROR("read_and_write takes 2 arguments");
   string source = args[0];
   string dest = args[1];
-  PIFStream in(source);
-  if(!in)
-    PLERROR("Could not open file %s for reading",source.c_str());
+
+  string ext = extract_extension(source);
   PP<Object> o;
-  in >> o;
+
+  if(ext==".psave") // may be binay. Don't macro-process
+    {
+      PLearn::load(source,o);
+    }
+  else
+    {
+      map<string, string> vars;
+      string script = readFileAndMacroProcess(source, vars);
+      PIStringStream in(script);
+      o = readObject(in);
+    }
+
   POFStream out(dest);
   if(!out)
     PLERROR("Could not open file %s for writing",dest.c_str());
