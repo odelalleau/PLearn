@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.cc,v 1.9 2003/04/10 18:05:00 jkeable Exp $
+   * $Id: stringutils.cc,v 1.10 2003/04/29 21:33:37 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -191,11 +191,11 @@ long tolong(const string& s, int base)
     char* endptr;
     long result = strtol(nptr,&endptr,base);
     if(endptr==nptr) { // no character to be read
-	string err = string("in toint string is not an int: ") + s;
-	PLERROR(err.c_str());
+      string err = string("in toint string is not an int: ") + s;
+      PLERROR(err.c_str());
     }
     return result;
-}
+  }
  
 bool tobool(const string& s)
 {
@@ -298,6 +298,19 @@ string removeblanks(const string& s)
       break;
   end = i;
   return s.substr(start,end-start+1);
+}
+
+string removeallblanks(const string& s)
+{
+  string res;
+  int l = s.length();
+  for(int i=0; i<l; i++)
+    {
+      char c = s[i];
+      if(c!=' ' && c!='\t' && c!='\n' && c!='\r')
+        res += c;
+    }
+  return res;
 }
 
 string removenewline(const string& s)

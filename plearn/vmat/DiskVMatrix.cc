@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: DiskVMatrix.cc,v 1.2 2003/03/19 23:15:22 jkeable Exp $
+   * $Id: DiskVMatrix.cc,v 1.3 2003/04/29 21:33:43 plearner Exp $
    ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -120,9 +120,7 @@ void DiskVMatrix::build_()
     map_sr = TVec<map<string,real> >(width_);
     map_rs = TVec<map<real,string> >(width_);
 
-    string fieldinfosfname = dirname+"/fieldnames";
-    if(isfile(fieldinfosfname))
-      loadFieldInfos(fieldinfosfname);
+    getFieldInfos();
   }
   else
   {
@@ -227,6 +225,14 @@ void DiskVMatrix::appendRow(Vec v)
   indexf->seekp(sizeof(int),ios::beg);
   indexf->write((char*)&length_,sizeof(int));
   //  indexf.flush();
+}
+
+void DiskVMatrix::flush()
+{
+  int filenum = dataf.size()-1;
+  fstream* f = dataf[filenum];
+  f->flush();
+  indexf->flush();
 }
 
 DiskVMatrix::~DiskVMatrix()

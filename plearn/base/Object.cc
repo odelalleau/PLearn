@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.11 2002/10/25 03:21:00 plearner Exp $
+   * $Id: Object.cc,v 1.12 2003/04/29 21:33:34 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -514,12 +514,8 @@ void displayObjectHelp(ostream& out, const string& classname, bool fulloptions)
     }
 }
 
-PStream& operator<<(PStream &out, const Object * &o)
-{
-    PLERROR("Not yet implemented");
-    return out;
-}
 
+/*
 PStream& operator>>(PStream &in, Object * &o)
 {
     if (in.peek() == '*') {
@@ -540,15 +536,11 @@ PStream& operator>>(PStream &in, Object * &o)
             o = static_cast<Object *>(it->second);
         }
     } else {
-/*        if (o) {
-            o->newread(in);
-        }
-        else*/
-            o = readObject(in);
+      o = readObject(in);
     }
     return in;
 }
-
+*/
 
 
 //////////////////////////////////////////////////////////

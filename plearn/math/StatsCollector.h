@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.8 2003/04/06 23:22:38 plearner Exp $
+   * $Id: StatsCollector.h,v 1.9 2003/04/29 21:33:42 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -128,6 +128,10 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     real stddev() const { return sqrt(variance()); }
     real stderror() const { return sqrt(variance()/nnonmissing()); }
           
+
+    //! currently understood statnames are E (mean), V (variance), STDDEV, MIN, MAX
+    real getStat(const string& statname) const;
+
     //! clears all statistics, allowing to restart collecting them
     void forget();
 
@@ -163,7 +167,6 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
 
     //! Provides a help message describing this class
     virtual string help() const;
-
   };
 
   DECLARE_OBJECT_PTR(StatsCollector);

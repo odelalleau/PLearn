@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.3 2003/03/19 23:15:23 jkeable Exp $
+   * $Id: FileVMatrix.cc,v 1.4 2003/04/29 21:33:45 plearner Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -65,6 +65,7 @@ FileVMatrix::FileVMatrix(const string& filename, int the_length, int the_width)
   if (!f)
     PLERROR("In FileVMatrix constructor, could not open file %s for read/write",filename.c_str());
 
+  setMetaDataDir(filename_ + ".metadata"); 
   setMtime(mtime(filename_));
 
   char header[DATAFILE_HEADERLENGTH]; 
@@ -110,9 +111,7 @@ FileVMatrix::FileVMatrix(const string& filename, int the_length, int the_width)
     fputc('\0',f);
   }
 
-  string fieldinfosfname = filename+".fieldnames";
-  if(isfile(fieldinfosfname))
-    loadFieldInfos(fieldinfosfname);
+  getFieldInfos();
 }
 
 void FileVMatrix::build()
@@ -128,6 +127,7 @@ void FileVMatrix::build_()
   char datatype[20];
   char endiantype[20];
 
+  setMetaDataDir(filename_ + ".metadata"); 
   setMtime(mtime(filename_));
 
   if (writable)
@@ -162,9 +162,7 @@ void FileVMatrix::build_()
   map_sr = TVec<map<string,real> >(width_);
   map_rs = TVec<map<real,string> >(width_);
 
-  string fieldinfosfname = filename_+".fieldnames";
-  if(isfile(fieldinfosfname))
-    loadFieldInfos(fieldinfosfname);
+  getFieldInfos();
 }
 
 void FileVMatrix::declareOptions(OptionList & ol)
@@ -276,5 +274,11 @@ void FileVMatrix::appendRow(Vec v)
   fseek(f,0,SEEK_SET);
   fwrite(header,DATAFILE_HEADERLENGTH,1,f);
 }
+
+void FileVMatrix::flush()
+{
+  fflush(f);
+}
+
 
 %> // end of namespcae PLearn

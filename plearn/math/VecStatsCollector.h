@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.h,v 1.3 2003/04/06 23:22:38 plearner Exp $ 
+   * $Id: VecStatsCollector.h,v 1.4 2003/04/29 21:33:42 plearner Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.h */
@@ -123,6 +123,16 @@ public:
   //! returns correlation matrix
   Mat getCorrelation() const;
 
+  //! Fills vector st with [mean, variance, stddev, min, max] (after resizing it if it had a size of 0)
+  //! However the order and number may change in future versions, so it's better to
+  //! first call getIndexInAllStats to get the index of a given stat.
+  Vec getAllStats(Vec& st) const;
+
+  //! Returns the index in the vector returned by getAllStats of the stat with the given name.
+  //! Currently available names are E (mean) V (variance) STDDEV MIN MAX
+  //! Will throw an exception if statname is invalid
+  int getIndexInAllStats(int fieldindex, const string& statname) const;
+
   //! Provides a help message describing this class
   virtual string help() const;
 
@@ -135,6 +145,7 @@ public:
 
 // Declares a few other classes and functions related to this class
   DECLARE_OBJECT_PTR(VecStatsCollector);
+
   
 %> // end of namespace PLearn
 

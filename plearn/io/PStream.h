@@ -386,12 +386,13 @@ protected:
   template <class T> 
   inline PStream& operator>>(PStream& in, T*& x)
   {
-    in >> ws;
-    if (in.peek() == '*') 
+    in.skipBlanksAndCommentsAndSeparators();
+    if (in.peek() == '*')
       {
         in.get(); // Eat '*'
         unsigned int id;
         in >> id;
+        in.skipBlanksAndCommentsAndSeparators();
         if (id==0)
           x = 0;
         else if (in.peek() == '-') 
@@ -400,10 +401,11 @@ protected:
             char cc = in.get();
             if(cc != '>') // Eat '>'
               PLERROR("In PStream::operator>>(T*&)  Wrong format.  Expecting \"*%d->\" but got \"*%d-%c\".", id, id, cc);
-            in >> ws;
+            in.skipBlanksAndCommentsAndSeparators();
             if(!x)
               x= new T();
-            in >> *x >> ws;
+            in >> *x;
+            in.skipBlanksAndCommentsAndSeparators();
             in.copies_map_in[id]= x;
           } 
         else 
@@ -416,8 +418,11 @@ protected:
           }
       } 
     else
-      in >> *x >> ws;
-    
+      {
+        in >> *x;
+        in.skipBlanksAndCommentsAndSeparators();
+      }
+
     return in;
   }
 
@@ -431,18 +436,21 @@ protected:
         if (it == out.copies_map_out.end()) 
           {
             int id = out.copies_map_out.size()+1;
-            //out.rawout() << '*' << id << "->";
-            out << '*' << id << "->";
+            out.put('*');
+            out << it->second;
+            out.write("->");
             out.copies_map_out[const_cast<T*&>(x)] = id;
             out << *x;
           }
         else 
-          //out.rawout() << '*' << it->second << ' ';
-          out << '*' << it->second << ' ';
+          {
+            out.put('*');
+            out << it->second;
+            out.put(' ');
+          }
       }
     else
-      //out.rawout() << "*0 ";
-      out << "*0 ";
+      out.write("*0 ");
     return out;
   }
 
@@ -489,14 +497,14 @@ inline PStream& operator>>(PStream& in, pair<S, T> &x)
 { 
   int c;
   in.skipBlanksAndCommentsAndSeparators();
-  c = i.get();
+  c = in.get();
   if(c!='[')
     PLERROR("In operator>>(PStream& in, pair<S, T> &x) expected '[' but read %c", c);
   in >> x.first;
   in.skipBlanksAndCommentsAndSeparators();
   in >> x.second;
   in.skipBlanksAndCommentsAndSeparators();
-  c = i.get();
+  c = in.get();
   if(c!=']')
     PLERROR("In operator>>(PStream& in, pair<S, T> &x) expected ']' but read %c", c);
   return in;

@@ -34,23 +34,23 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.h,v 1.2 2003/02/28 03:21:28 plearner Exp $ 
+   * $Id: EmbeddedLearner.h,v 1.3 2003/04/29 21:33:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.h */
 #ifndef EmbeddedLearner_INC
 #define EmbeddedLearner_INC
 
-#include "Learner.h"
+#include "PLearner.h"
 
 namespace PLearn <%
 using namespace std;
 
 // ###### EmbeddedLearner ######################################################
 
-class EmbeddedLearner: public Learner
+class EmbeddedLearner: public PLearner
 {
-    typedef Learner inherited;
+    typedef PLearner inherited;
 protected:
     // *********************
     // * protected options *
@@ -64,8 +64,7 @@ public:
     // * public build options *
     // ************************
 
-    // ### declare public option fields (such as build options) here
-    // ...
+    PP<PLearner> learner;
 
     // ****************
     // * Constructors *
@@ -73,18 +72,17 @@ public:
 
     // Default constructor, make sure the implementation in the .cc
     // initializes all fields to reasonable default values.
-    EmbeddedLearner(PP<Learner> the_learner = PP<Learner>());
+    EmbeddedLearner();
 
   // ******************
   // * Object methods *
   // ******************
 
-    void setLearner(PP<Learner> the_learner);
-
 private: 
     //! This does the actual building. 
     // (Please implement in .cc)
     void build_();
+
 protected: 
     //! Declares this class' options
     // (Please implement in .cc)
@@ -103,17 +101,32 @@ public:
     DECLARE_NAME_AND_DEEPCOPY(EmbeddedLearner);
 
     // *******************
-    // * Learner methods *
+    // * PLearner methods *
     // *******************
     
-    // trains the model
-    virtual void train(VMat training_set); 
-    
-    // computes the ouptu of a trained model
-    virtual void use(const Vec& input, Vec& output);
+    virtual void forget();
 
-protected:
-    PP<Learner> learner;
+    virtual void newtrain(VecStatsCollector& train_stats);
+    
+    virtual void newtest(VMat testset, VecStatsCollector& test_stats, 
+                         VMat testoutputs=0, VMat testcosts=0);
+
+    virtual void computeOutput(const VVec& input, Vec& output);
+
+    virtual void computeCostsFromOutputs(const VVec& input, const Vec& output, 
+                                         const VVec& target, const VVec& weight,
+                                         Vec& costs);
+
+                                
+    virtual void computeOutputAndCosts(const VVec& input, VVec& target, const VVec& weight,
+                                       Vec& output, Vec& costs);
+
+    virtual void computeCostsOnly(const VVec& input, VVec& target, VVec& weight, 
+                              Vec& costs);
+    
+    virtual Array<string> costNames() const;
+
+    virtual Array<string> trainObjectiveNames() const;
 };
 
 // Declares a few other classes and functions related to this class

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.10 2003/04/10 18:05:00 jkeable Exp $
+   * $Id: stringutils.h,v 1.11 2003/04/29 21:33:38 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -104,6 +104,9 @@ using namespace std;
   //!  removes starting and ending blanks '\n','\r',' ','\t'
   string removeblanks(const string& s);
 
+  //!  removes all blanks '\n','\r',' ','\t'
+  string removeallblanks(const string& s);
+
   //!  removes any trailing '\n' and/or '\r'
   string removenewline(const string& s);
 
@@ -144,7 +147,7 @@ int search_replace(string& text, const string& searchstr, const string& replaces
 */
   vector<string> split(const string& s, const string& delimiters=" \t\n\r", bool keepdelimiters=false);
 
-/*!     Split the string on the first specified character; return a pair with
+/*!     Split the string on the first occurence of a delimiter; return a pair with
     the two split parts.  If the splitting character is not found, the
     original string is returned in the first part of the pair, and "" is
     in the second part

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.11 2002/12/05 01:35:08 jauvinc Exp $
+   * $Id: Object.h,v 1.12 2003/04/29 21:33:36 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -563,9 +563,6 @@ inline void declareOption(OptionList& ol, const string& optionname, OptionType *
     { o.newread(in); return in; }
   inline PStream &operator<<(PStream &out, const Object &o)
     { o.newwrite(out); return out; }
-
-  PStream &operator>>(PStream &in, Object * &o);
-  PStream &operator<<(PStream &out, const Object * &o);
 
 
 //! Will display the help message for an object of the given classname

@@ -1309,15 +1309,30 @@ PStream& PStream::operator<<(const char *x)
 {
   int l = strlen(x);
   switch(outmode)
-  {
+    {
     case PStream::raw_ascii:
     case PStream::pretty_ascii:
     case PStream::raw_binary:
+      write(x, l);
+      put (' ');
+      break;      
+
     case PStream::plearn_ascii:
     case PStream::plearn_binary:
-      for (int i=0; i<l; i++) put(x[i]);
-      put (' ');
+      {
+        put('"');
+        for(int i=0; i<l; i++)
+          {
+            char c = x[i];
+            if(c=='"' || c=='\\') // escape quote and backslash
+              put('\\');
+            put(c);
+          }
+        put('"');
+        put(' ');
+      }
       break;
+
     default:
       PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");
       break;

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.6 2003/03/26 20:45:44 jkeable Exp $
+   * $Id: StatsCollector.cc,v 1.7 2003/04/29 21:33:42 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -419,6 +419,25 @@ void StatsCollector::update(real val)
     }
     readFooter(in,"StatsCollector");
   }
+
+//! Returns the index in the vector returned by getAllStats of the stat with the given name.
+//! Currently available names are E (mean) V (variance) STDDEV MIN MAX
+//! Will call PLERROR statname is invalid
+real StatsCollector::getStat(const string& statname) const
+{
+  if(statname=="E")
+    return mean();
+  else if(statname=="V")
+    return variance();
+  else if(statname=="STDDEV")
+    return stddev();
+  else if(statname=="MIN")
+    return min();
+  else if(statname=="MAX")
+    return max();
+  PLERROR("In StatsCollector::getIndexInAllStats, invalid statname %s",statname.c_str());
+  return 0;
+}
 
   // *********************************
   // *** ConditionalStatsCollector ***

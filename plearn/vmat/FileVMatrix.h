@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: FileVMatrix.h,v 1.2 2003/04/29 21:33:45 plearner Exp $
    ******************************************************* */
 
 
@@ -71,6 +71,7 @@ class FileVMatrix: public VMatrix
   virtual void put(int i, int j, real value);
   virtual void putSubRow(int i, int j, Vec v);
   virtual void appendRow(Vec v);
+  virtual void flush();
 
   virtual void build();
   void build_();

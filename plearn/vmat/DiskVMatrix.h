@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: DiskVMatrix.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: DiskVMatrix.h,v 1.2 2003/04/29 21:33:44 plearner Exp $
    ******************************************************* */
 
 
@@ -84,6 +84,7 @@ public:
   virtual void getRow(int i, Vec v) const;
   virtual void putRow(int i, Vec v);
   virtual void appendRow(Vec v);
+  virtual void flush();
 
   static void writeRow(ostream& out, const Vec& v);
   static void readRow(istream& in, const Vec& v);

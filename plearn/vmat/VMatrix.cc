@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.13 2003/04/10 18:05:03 jkeable Exp $
+* $Id: VMatrix.cc,v 1.14 2003/04/29 21:33:45 plearner Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -87,14 +87,22 @@ void VMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 
 Array<VMField>& VMatrix::getFieldInfos() const
 {
-  int w = width();
+  if(fieldinfos.size()==0)
+    {
+      string fname =  append_slash(getMetaDataDir()) + "fieldnames";
+      if(isfile(fname)) // file exists
+        loadFieldInfos();
+    }
+
   int ninfos = fieldinfos.size();
+  int w = width();
   if(ninfos!=w)
     {
       fieldinfos.resize(w);
       for(int j=ninfos; j<w; j++)
         fieldinfos[j] = VMField(tostring(j));
     }
+
   return fieldinfos;
 }
 
@@ -213,35 +221,37 @@ string VMatrix::fieldheader(int elementcharwidth)
   return "VMatrix::fieldheader NOT YET IMPLEMENTED";
 }
 
-void VMatrix::saveFieldInfos(const string& filename) const
+
+void VMatrix::declareField(int fieldindex, const string& fieldname, VMField::FieldType fieldtype)
+{ getFieldInfos(fieldindex) = VMField(fieldname,fieldtype); }
+
+void VMatrix::saveFieldInfos() const
 {
-  ofstream f(filename.c_str());
-  if(!f)
+  string filename = append_slash(getMetaDataDir()) + "fieldnames";
+  ofstream out(filename.c_str());
+  if(!out)
     PLERROR("In VMatrix::saveFieldInfos Couldn't open file %s for writing",filename.c_str());    
-  writeFieldInfos(f);
-}
-void VMatrix::loadFieldInfos(const string& filename)
-{
-  ifstream f(filename.c_str());
-  if(!f)
-    PLERROR("In VMatrix::loadFieldInfos Couldn't open file %s for reading",filename.c_str());    
-  readFieldInfos(f);
-}
-void VMatrix::writeFieldInfos(ostream& out) const
-{
   for(int i= 0; i < fieldinfos.length(); ++i)
     out << fieldinfos[i].name << '\t' << fieldinfos[i].fieldtype << endl;
 }
-void VMatrix::readFieldInfos(istream& in)
+
+void VMatrix::loadFieldInfos() const
 {
-  for(int i= 0; i < width(); ++i)
+  string filename = append_slash(getMetaDataDir()) + "fieldnames";
+  ifstream in(filename.c_str());
+  if(!in)
+    PLERROR("In VMatrix::loadFieldInfos Couldn't open file %s for reading",filename.c_str());    
+
+  int w = width();
+  fieldinfos.resize(w);
+  for(int i= 0; i < w; ++i)
     {
       vector<string> v(split(pgetline(in)));
       switch(v.size())
       {
-      case 1: declareField(i, v[0]); break;
-      case 2: declareField(i, v[0], VMField::FieldType(toint(v[1]))); break;
-      default: PLERROR("In VMatrix::readFieldInfos Format not recognized.  Each line should be '<name> {<type>}'.");
+      case 1: fieldinfos[i] = VMField(v[0]); break;
+      case 2: fieldinfos[i] = VMField(v[0], VMField::FieldType(toint(v[1]))); break;
+      default: PLERROR("In VMatrix::loadFieldInfos Format not recognized.  Each line should be '<name> {<type>}'.");
       }
     }
 }
@@ -312,6 +322,23 @@ void VMatrix::addStringMapping(int col, string str, real val)
   init_map_sr();
   map_sr[col][str]=val;
   map_rs[col][val]=str;
+}
+
+real VMatrix::addStringMapping(int col, string str)
+{
+  init_map_sr();
+  map<string,real>& m = map_sr[col];
+  map<string,real>::iterator it = m.find(str);
+
+  real val = 0;
+  if(it != m.end()) // str was found in map
+    val = it->second;
+  else // str not found in map: add a new mapping
+    {
+      val = -100 - m.size();
+      addStringMapping(col, str, val);
+    }
+  return val;
 }
 
 //! removes a string mapping
@@ -551,6 +578,9 @@ void VMatrix::appendRow(Vec v)
   PLERROR("This method (appendRow) not implemented by VMatrix subclass!");
 }
 
+void VMatrix::flush()
+{}
+
 void VMatrix::putOrAppendRow(int i, Vec v)
 {
   if(i==length())
@@ -679,12 +709,12 @@ void VMatrix::savePMAT(const string& pmatfile) const
     pb(i);
   }
 
-  //save field names
+  //set and save field names if necessary
   if (fieldinfos.size() > 0)
-  {
-    string fieldinfosfname = pmatfile+".fieldnames";
-    saveFieldInfos(fieldinfosfname);  
-  }
+    {
+      m.getFieldInfos() << getFieldInfos();
+      m.saveFieldInfos();      
+    }
 }
 
 void VMatrix::saveDMAT(const string& dmatdir) const

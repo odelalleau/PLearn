@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.11 2003/04/10 18:05:03 jkeable Exp $
+   * $Id: VMatrix.h,v 1.12 2003/04/29 21:33:45 plearner Exp $
    ******************************************************* */
 
 
@@ -130,8 +130,7 @@ public:
   // Field types...
   Array<VMField>& getFieldInfos() const;
   VMField& getFieldInfos(int fieldindex) const { return getFieldInfos()[fieldindex]; }
-  void declareField(int fieldindex, const string& fieldname, VMField::FieldType fieldtype=VMField::UnknownType)
-  { getFieldInfos(fieldindex) = VMField(fieldname,fieldtype); }
+  void declareField(int fieldindex, const string& fieldname, VMField::FieldType fieldtype=VMField::UnknownType);
   int fieldIndex(const string& fieldname) const; //!<  returns -1 if name not found
   string fieldName(int fieldindex) const { return getFieldInfos(fieldindex).name; } 
   void unduplicateFieldNames(); // add a numeric suffix to duplic. fieldNames (eg: field.1 field.2 etc..)
@@ -144,10 +143,9 @@ public:
   void printFields(ostream& out) const;
   string fieldheader(int elementcharwidth=8);
 
-  void saveFieldInfos(const string& filename) const;
-  void loadFieldInfos(const string& filename);
-  void writeFieldInfos(ostream& out) const;
-  void readFieldInfos(istream& in);
+  // loads/saves from/to the metadatadir/fieldnames file
+  void saveFieldInfos() const;
+  void loadFieldInfos() const;
   
   // these 3 functions deal with stringmaps, notes, and binning files (called special field info files, or 'SFIF')
   // for each field eventually, I (julien) guess all this info should be wrapped (thus saved, and loaded) by the VMField class
@@ -176,6 +174,10 @@ public:
   //! adds a string<->real mapping
   void addStringMapping(int col, string str, real val);
 
+  //! adds a string<->real mapping for a new string, if it doesn't already have one and returns the associated value
+  //! if the string doesn'a already have an associated value, it will be associated with value -100-number_of_strings_already_in_the_map
+  real addStringMapping(int col, string str);
+
   //! removes a string mapping
   void removeStringMapping(int col, string str);
 
@@ -201,7 +203,7 @@ public:
   //! returns the value->string mapping for field 'fld'
   virtual const map<real,string>& getRealToStringMapping(int col) const {return map_rs[col];}
 
-  //! returns value associated with a string.
+  //! returns value associated with a string (or MISSING_VALUE if there's no association for this string)
   virtual real getStringVal(int col, const string & str) const;
 
   //! returns element as a string, even if value doesn't map to a string, in which case tostring(value) is returned
@@ -216,6 +218,8 @@ public:
   void saveStats(const string& filename) const;
   void loadStats(const string& filename);
 
+  //! this should be called by the build method of every VMatrix that has a metadatadir
+  //! It will create said directory if it doesn's already exist.
   void setMetaDataDir(const string& the_metadatadir);
   string getMetaDataDir() const { return metadatadir; }
 
@@ -292,6 +296,9 @@ public:
     
   //!  This method must be implemented for matrices that are allowed to grow
   virtual void appendRow(Vec v);
+
+  //! For matrices stored on disk, this should flush all pending buffered write operations
+  virtual void flush();
 
   //! will call putRow if i<length() and appendRow if i==length()
   void putOrAppendRow(int i, Vec v);

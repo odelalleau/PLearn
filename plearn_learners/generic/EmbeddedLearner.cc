@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.cc,v 1.1 2003/02/28 00:12:37 plearner Exp $ 
+   * $Id: EmbeddedLearner.cc,v 1.2 2003/04/29 21:33:46 plearner Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.cc */
@@ -48,43 +48,33 @@ using namespace std;
 
 IMPLEMENT_NAME_AND_DEEPCOPY(EmbeddedLearner);
 
-EmbeddedLearner::EmbeddedLearner(PP<Learner> the_learner)
-    : Learner(the_learner.isNull() ? 0 : the_learner->inputsize(),
-              the_learner.isNull() ? 0 : the_learner->targetsize(),
-              the_learner.isNull() ? 0 : the_learner->outputsize()),
-      learner(the_learner)
-{
-}
-
-
 void EmbeddedLearner::declareOptions(OptionList& ol)
 {
     declareOption(ol, "learner", &EmbeddedLearner::learner, OptionBase::buildoption,
-                  "The associated learner");
+                  "The underlying learner");
     inherited::declareOptions(ol);
 }
 
 string EmbeddedLearner::help() const
 {
     return 
-        "EmbeddedLearner implements nothing but forward"
-        "calls to an underlying learner."
-        + optionHelp();
+        "EmbeddedLearner implements nothing but forwarding \n"
+        "calls to an underlying learner. It is typically used as\n"
+      "baseclass for learners that are built on top of another learner"
+      + optionHelp();
 }
 
 void EmbeddedLearner::build_()
 {
     if (learner.isNull())
-        PLERROR("EmbeddedLearner::_build() - learner attribut is NUL");
+        PLERROR("EmbeddedLearner::_build() - learner attribute is NUL");
 
     learner->build();
 
     inputsize_ = learner->inputsize();
     outputsize_ = learner->outputsize();
     targetsize_ = learner->targetsize();
-
-    setTestCostFunctions(learner->test_costfuncs);
-    setTestStatistics(learner->test_statistics);
+    weightsize_ = learner->targetsize();\
 }
 
 void EmbeddedLearner::build()
@@ -93,38 +83,49 @@ void EmbeddedLearner::build()
     build_();
 }
 
-void EmbeddedLearner::train(VMat training_set)
-{ 
-    if(training_set->width() != inputsize()+targetsize())
-        PLERROR("In EmbeddedLearner::train(VMat training_set) training_set->width() != inputsize()+targetsize()");
+   
+ void EmbeddedLearner::forget()
+{ learner->forget(); }
 
-    learner->train(training_set);
-}
+ void EmbeddedLearner::newtrain(VecStatsCollector& train_stats)
+{ learner->newtrain(VecStatsCollector& train_stats); }
+    
+ void EmbeddedLearner::newtest(VMat testset, VecStatsCollector& test_stats, 
+                         VMat testoutputs=0, VMat testcosts=0)
+{ learner->newtest(testset, test_stats, testoutputs, testcosts); }
 
-void EmbeddedLearner::use(const Vec& input, Vec& output)
-{
-    learner->use(input, output);
-}
+ void EmbeddedLearner::computeOutput(const VVec& input, Vec& output)
+{ learner->computeOutput(input, output); }
+
+ void EmbeddedLearner::computeCostsFromOutputs(const VVec& input, const Vec& output, 
+                                         const VVec& target, const VVec& weight,
+                                         Vec& costs)
+{ learner->computeCostsFromOutputs(input, output, target, weight, costs); }
+
+                                
+ void EmbeddedLearner::computeOutputAndCosts(const VVec& input, VVec& target, const VVec& weight,
+                                       Vec& output, Vec& costs)
+{ learner->computeOutputAndCosts(input, target, weight, output, costs); }
+
+ void EmbeddedLearner::computeCostsOnly(const VVec& input, VVec& target, VVec& weight, 
+                              Vec& costs)
+{ learner->computeCostsOnly(input, target, weight, costs); }
+    
+Array<string> EmbeddedLearner::costNames() const
+{ return learner->costNames(); } 
+
+Array<string> EmbeddedLearner::trainObjectiveNames() const
+{ return learner->trainObjectiveNames(); }
+
 
 void EmbeddedLearner::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
-    Learner::makeDeepCopyFromShallowCopy(copies);
+    PLearner::makeDeepCopyFromShallowCopy(copies);
 
     // ### Call deepCopyField on all "pointer-like" fields 
     // ### that you wish to be deepCopied rather than 
     // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
-    
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("EmbeddedLearner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
-}
-
-void
-EmbeddedLearner::setLearner(PP<Learner> the_learner)
-{
-    learner = the_learner;
-    build();
+    deepCopyField(learner, copies);    
 }
 
 %> // end of namespace PLearn
