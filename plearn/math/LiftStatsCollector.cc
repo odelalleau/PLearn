@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.cc,v 1.10 2004/03/04 18:05:34 tihocan Exp $
+ * $Id: LiftStatsCollector.cc,v 1.11 2004/03/09 16:39:02 tihocan Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -57,6 +57,7 @@ LiftStatsCollector::LiftStatsCollector()
   nsamples(0),
   npos(0),
   output_column_index(0),
+  count_fin(0),
   lift_fraction(0.1),
   opposite_lift(0),
   output_column(""),
@@ -96,6 +97,9 @@ PLEARN_IMPLEMENT_OBJECT(
 
 void LiftStatsCollector::declareOptions(OptionList& ol)
 {
+
+  declareOption(ol, "count_fin", &LiftStatsCollector::count_fin, OptionBase::learntoption,
+      "    the number of times finalize() has been called since the last forget()");
 
   declareOption(ol, "lift_fraction", &LiftStatsCollector::lift_fraction, OptionBase::buildoption,
       "    the % of samples to consider (default = 0.1)\n");
@@ -233,6 +237,10 @@ void LiftStatsCollector::finalize()
 
   inherited::finalize();
   is_finalized = true;
+  count_fin++;
+  if (verbosity >= 10) {
+    cout << "Called finalized " << count_fin << " times" << endl;
+  }
 }
 
 ////////////
@@ -247,6 +255,7 @@ void LiftStatsCollector::forget()
   n_first_updates.resize(0,0);
   n_first_updates.resize(1000,2);
   inherited::forget();
+  count_fin = 0;
 }
 
 /////////////
@@ -281,6 +290,9 @@ void LiftStatsCollector::makeDeepCopyFromShallowCopy(map<const void*, void*>& co
 ////////////
 void LiftStatsCollector::update(const Vec& x, real w)
 {
+  if (count_fin > 0) {
+    PLWARNING("In LiftStatsCollector::update - Called update after finalize (see help of LiftStatsCollector)");
+  }
   if (nstored == n_first_updates.length()) {
     n_first_updates.resize(MAX(1000,10*n_first_updates.length()), 2);
   }
@@ -306,6 +318,7 @@ void LiftStatsCollector::update(const Vec& x, real w)
         target = 0;
       } else {
         target = 1;
+//        cout << "Positive example : " << x << " (output_val = " << output_val << ")" << endl;
       }
       break;
     default:

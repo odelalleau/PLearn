@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.h,v 1.8 2004/02/20 21:11:46 chrish42 Exp $
+ * $Id: LiftStatsCollector.h,v 1.9 2004/03/09 16:39:02 tihocan Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -57,6 +57,12 @@ public:
   typedef VecStatsCollector inherited;
 
 protected:
+
+  // Protected options.
+  
+  int count_fin;
+
+  // Fields below are not options.
 
   //! Matrix storing the output and target of the samples with highest output,
   //! as well as all the other data retrieved since the last call to finalize.
