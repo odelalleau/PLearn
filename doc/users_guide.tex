@@ -2,7 +2,7 @@
 %%
 %%  Copyright (c) 2002 by Pascal Vincent
 %%
-%%  $Id: users_guide.tex,v 1.8 2003/02/06 21:37:06 ducharme Exp $
+%%  $Id: users_guide.tex,v 1.9 2003/02/10 21:37:57 ducharme Exp $
 
 \documentclass[11pt]{book}
 \usepackage{t1enc}              % new font encoding  (hyphenate words w/accents)
@@ -100,10 +100,10 @@ compile the library (since there is no binaries available).  For that purpose,
 you need to have g++ (or gcc) installed (available at http://gcc.gnu.org).
 We suggest that you use the newest version available, or at least 2.96 or higher.
 Also, instead of using the far-from-user-friendly Makefile, we wrote our own
-version, called pymake.  However, this has been writen using the script language
+version, called pymake.  However, this has been written using the script language
 python (version 1.5.2 or higher, available at http://www.python.org).
 
-In a pain-in-the-neck-world, none of the above utilitaries (cvs, gcc, python)
+In a pain-in-the-neck-world, none of the above utilities (cvs, gcc, python)
 are on your machine and you have to do some extra work.  But for the common user,
 all the job has already been done by your system administrator and all you have
 to do is download the PLearn library, add 2 lines to your .cshrc file, and
@@ -164,9 +164,9 @@ File containing a description of a virtual dataset. The next section goes into m
 
 \subsection{The vmat file format}
 
-A .vmat is a text specification of a dataset built from the composition of source data, possibly with operations applied to it. The description is made through a set of sections (all optionnal except SOURCES) enclosed in xml-like tags.
+A .vmat is a text specification of a dataset built from the composition of source data, possibly with operations applied to it. The description is made through a set of sections (all optional except SOURCES) enclosed in xml-like tags.
 
-There is a program named vmat (althought it handles many dataset formats) that can be used to perform usefull tasks with datasets. Two of them are relevant here. 
+There is a program named vmat (although it handles many dataset formats) that can be used to perform useful tasks with datasets. Two of them are relevant here. 
 
 Calling \verb!vmat gendef datasetname 10 20! will first generate a stats.def file in the metadata directory of the dataset containing a define for each field for each supported statistic. Then it will generate files bins10.def and bins20.def containing defines that can be used to bin the fields (with 10 and 20 bins). These defines can then be used (with INCLUDE) in the VPL code.
 
@@ -205,7 +205,7 @@ MEAN(claim) :claim.mean
 \end{verbatim}
 
 \subsubsection{SOURCES}
-The SOURCES section is the only one that is not optionnal. It describes the source dataset(s) (in any format) that the vmat will be built from. In its most complex form, the syntax of the specification is a matrix of NxM dataset strings. The datasets are first concatenated horizontally, then vertically. Thus, all datasets on a same row must have the same length, and the results of all horizontal concatenation, the same width.
+The SOURCES section is the only one that is not optional. It describes the source dataset(s) (in any format) that the vmat will be built from. In its most complex form, the syntax of the specification is a matrix of NxM dataset strings. The datasets are first concatenated horizontally, then vertically. Thus, all datasets on a same row must have the same length, and the results of all horizontal concatenation, the same width.
 
 \subsubsection{PREFILTER and POSTFILTER}
 
@@ -236,13 +236,13 @@ As soon as you declare a PROCESSING section, all fields resulting from previous 
 \subsubsection{PRECOMPUTE}
 When you need speed, use this section to create a precomputed version of you vmat. This version will be computed the first time the vmat is loaded. You specify the type of file you want the precomputed version to be saved to (dmat or pmat). See example above.
 
-The synchronization of the precomputed version is ensured through an almost-intelligent mecanism that checks the date of sources recursively. Note: we decided that include files (e.g: statistics) that are out of date issue a warning, but will not force recomputation. This could be changed. 
+The synchronization of the precomputed version is ensured through an almost-intelligent mechanism that checks the date of sources recursively. Note: we decided that include files (e.g: statistics) that are out of date issue a warning, but will not force recomputation. This could be changed. 
 
 \subsubsection{DEBUG}
 Including this section will force output of preprocessed VPL to stderr.
 
 \subsection{The VPL language}
-VPL (vmat processing language) is a home brewed mini-language in postfix notation. As of today, it is used is the \{PRE,POST\}FILT\-ERING and PROCESSING sections of a .vmat file. It supports INCLUDEs instructions and DEFINEs (dumb named string constants). It can handle reals as well as dates (format is: CYYMMDD, where C is 0 (1900-1999) or 1 (2000-2099). The language will not be extensively decribed here. For more info, you can look at
+VPL (vmat processing language) is a home brewed mini-language in postfix notation. As of today, it is used is the \{PRE,POST\}FILT\-ERING and PROCESSING sections of a .vmat file. It supports INCLUDEs instructions and DEFINEs (dumb named string constants). It can handle reals as well as dates (format is: CYYMMDD, where C is 0 (1900-1999) or 1 (2000-2099). The language will not be extensively described here. For more info, you can look at
 plearn/vmat/VMatLanguage.*. 
 
 A VPL code snippet is always applied to the row of a VMatrix, and can only refer to data of that row. The result of the execution will be a vector, which is the execution stack at code termination. 
@@ -360,20 +360,20 @@ TASK should represent a particular learning task for which you wish to
      assess different methods (ex: condprob_of_claim)
 
 DATA-REPRESENTATION is the notion of using different data representations
-                    (tosuit underlying learner) for a task. (ex:
+                    (to suit underlying learner) for a task. (ex:
                     onehot_inputs_integer_target)
 
-The directory organisation down to DATA-REPRESENTATION is only
+The directory organization down to DATA-REPRESENTATION is only
 indicative. You may name the directories as you please (including the
 DATA-REPRESENTATION directory), add or omit hierarchy levels, etc...
 
-The organisation below DATA-REPRESENTATION is however enforced by the
+The organization below DATA-REPRESENTATION is however enforced by the
 'plearn' program.  DATA-REPRESENTATION *must* contain a 'dataset.aliases'
 file defining the datasets to be used (in that representation). Everything
 below DATA-REPRESENTATION will use those datasets. 
 
 Because it contains the actual dataset specification in dataset.aliases 
-and models specificatrions in model.aliases
+and models specifications in model.aliases
 we also call EXP/PROJECT/TASK/DATA-REPRESENTATION/
              |___________________________________|
                               |
@@ -392,7 +392,7 @@ The actual dataset specification can be any string understood by getDataSet.
 
 The model.aliases file should contain one line for each
 learnertype+learnerparams you are considering. The line starts for an
-'alias' for that particular learnertytpe+learnerparams combination. That
+'alias' for that particular learnertype+learnerparams combination. That
 alias, which will also be the name of its result directory, must be
 followed by a learner classname, and a semi-column separated string of
 options of the form optionname=optionvalue, in the format understood by
@@ -468,7 +468,24 @@ Experiment(
 )
 \end{verbatim}
 
-Every \verb!Experiment! object must contain ...
+Every \verb!Experiment! object must contain the directory name where all the
+results about the experiment will be saved (\verb!expdir!), a \verb!dataset!,
+a \verb!splitter! (which tell you how to split your dataset between a trainset
+and a testset), a \verb!learner! (a NeuralNet in the example above), and a boolean
+specifying if you wish to save your trained learner (\verb!save_models!).
+
+Also, as we can see in the example, all the attributes that have simple types
+(int, bool, string) are written in the form: \verb!attribute = value;! (note that
+the ";" at the end is very important).  On the other hand, if the attribute is an
+object type (learner, dataset, optimizer, etc.), then the attribute is declared
+like:
+\begin{verbatim}
+attribute = object_type(
+  ...
+  ...
+)
+\end{verbatim}
+where the same rules applies for all the fields within the object.
 
 \chapter{File formats}
 
@@ -486,7 +503,7 @@ a non-printable ascii character.
 TVec and TMat will be serialized differently depending on the {\em
 implicit\_storage} flag of the PStream they are being written to.
 
-If {\em implicit\_storage} is set, then serialisation won't write the actual
+If {\em implicit\_storage} is set, then serialization won't write the actual
 whole structure of the TVec or TMat, but will only save the size information
 and elements as a 1D or 2D {\em sequence} (see \ref{ascii_sequence} and
 \ref{binary_sequence}), ex:
@@ -630,7 +647,7 @@ or {\tt 0xFF} to indicate a {\em generic} sequence.
 The header bytes are followed by one (for 1D sequences) or two (for 2D)
 4-byte int to indicate the length (and possibly width) of the sequence.
 So the total header size for sequences is 6 bytes for 1D sequences and 10
-bytes for 2D seqences.
+bytes for 2D sequences.
 
 This header is followed by a dump of the elements of the sequence (in
 row-major mode for 2D).  Notice that a sequence of a base type, may be
