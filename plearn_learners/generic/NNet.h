@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.h,v 1.10 2004/01/28 14:33:23 yoshua Exp $
+   * $Id: NNet.h,v 1.11 2004/02/17 14:52:03 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -45,7 +45,7 @@
 
 #include "PLearner.h"
 #include "Optimizer.h"
-#include "Var_all.h"
+//#include "Var_all.h"
 
 namespace PLearn <%
 using namespace std;

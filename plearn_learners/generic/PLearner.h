@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.17 2004/01/28 14:33:23 yoshua Exp $
+   * $Id: PLearner.h,v 1.18 2004/02/17 14:52:03 tihocan Exp $
    ******************************************************* */
 
 
@@ -50,8 +50,8 @@
 
 #include "Object.h"
 #include "VMat.h"
-#include "Splitter.h"
-#include "TMat.h"
+//#include "Splitter.h"
+//#include "TMat.h"
 #include "VecStatsCollector.h"
 
 namespace PLearn <%
