@@ -2,7 +2,7 @@
 %%
 %%  Copyright (c) 2002 by Pascal Vincent
 %%
-%%  $Id: users_guide.tex,v 1.17 2004/06/15 18:15:57 monperrm Exp $
+%%  $Id: users_guide.tex,v 1.18 2004/06/16 16:49:19 monperrm Exp $
 
 \documentclass[11pt]{book}
 \usepackage{html}               % package for latex2html
@@ -36,6 +36,7 @@
 Copyright \copyright\ 1998-2002 Pascal Vincent, Yoshua Bengio \\
 Copyright \copyright\ 2002 Julien Keable \\
 Copyright \copyright\ 2003 R\'ejean Ducharme \\
+Copyright \copyright\ 2004 Martin Monperrus \\
 
 Permission is granted to copy and distribute this document in any medium,
 with or without modification, provided that the following conditions are
@@ -97,19 +98,6 @@ display purpose, and may want to have them installed:
 \item a {\bf Java} compiler and interpretor
 \end{itemize}
 
-%% Move to programmers_guide
-
-% \subsection{Additional tools for developers}
-% 
-% In addition, if you wish to develop new learning algorithms, or otherwise
-%  contribute to the librery, the following tools will be useful:
-% \begin{itemize}
-% \item {\bf ssh} for write access to the SourceForge CVS repository.
-% \item {\bf gdb} for basic debugging (or a {\em better} debugger if you have one!)
-% \item {\bf valgrind} a wonderful free tool for memory-bug hunting.
-% \item {\bf perl} for running perl scripts
-% \item {\bf LaTeX, pdflatex, dvips, latex2html, doxygen} to re-generate the documentation. 
-% \end{itemize}
 
 \subsection{Optional libraries}
 
@@ -137,21 +125,6 @@ using the following instructions:
   cvs -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/plearn co PLearn
 \end{verbatim}
 and press the [enter] key when asked for a password.
-
-%% Move to programmers_guide
-
-% \subsection{Developer CVS access}
-% 
-% If you are going to contribute to PLearn on SourceForge (http://www.sourceforge.org):
-% \begin{itemize}
-% \item If you don't have one already, create a SourceForge account for yourself
-% \item Send me (plearner@sourceforge.org) your account login, so that I can add you to the developer list.
-% \item Make sure the {\tt CVS\_RSH} environment variable is set to {\tt ssh} in your .cshrc or .bashrc
-% \item Check-out PLearn as follows:
-% \begin{verbatim}
-% cvs -d :ext:your_sourceforge_login@cvs.sourceforge.net:/cvsroot/plearn co PLearn
-% \end{verbatim}
-% \end{itemize}
 
 
 
