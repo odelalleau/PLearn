@@ -19,10 +19,11 @@ PLearnCommandRegistry FieldConvertCommand::reg_(new FieldConvertCommand);
 void FieldConvertCommand::run(const vector<string> & args)
 {
   // set default values
-  UNIQUE_NMISSING_FRACTION_TO_ASSUME_CONTINUOUS=.3f;
-  PVALUE_THRESHOLD=0.025f;
-  FRAC_MISSING_TO_SKIP=0.9f;
-  target=-1;
+  UNIQUE_NMISSING_FRACTION_TO_ASSUME_CONTINUOUS = 0.3f;
+  PVALUE_THRESHOLD = 0.025f;
+  FRAC_MISSING_TO_SKIP = 0.9f;
+  FRAC_ENOUGH = 0.005f;
+  target = -1;
   report_fn="FieldConvertReport.txt";
     
   for(int i=0;i<(signed)args.size();i++)
@@ -46,6 +47,8 @@ void FieldConvertCommand::run(const vector<string> & args)
       PVALUE_THRESHOLD=toreal(val[1]);
     else if(val[0]=="frac_missing_to_skip")
       FRAC_MISSING_TO_SKIP=toreal(val[1]);
+    else if(val[0]=="frac_enough")
+      FRAC_ENOUGH=toreal(val[1]);
     else PLERROR("unknown argument: %s ",val[0].c_str());
   }
   if(source_fn=="")
@@ -100,6 +103,9 @@ void FieldConvertCommand::run(const vector<string> & args)
   ofstream out(desti_fn.c_str());
   ofstream report(report_fn.c_str());
   out<<"<SOURCES>\n"+source_fn+"\n</SOURCES>\n<PROCESSING>\n";
+
+  // Minimun number of representants of a class to be considered significant.
+  int n_enough = (int) (FRAC_ENOUGH * vm->length());
 
   // Process each field.
   for(int i=0;i<vm->width();i++)
@@ -165,7 +171,19 @@ void FieldConvertCommand::run(const vector<string> & args)
       // Test whether there are only 2 unique values: in this case, we don't
       // need a one hot, and we can consider it as continuous.
       else if (count == 2) {
-        type = continuous;
+        Vec counts(2);
+        int k = 0;
+        for(map<real,StatsCollectorCounts>::iterator it = sc[i].getCounts()->begin(); k <= 1; ++it) {
+          counts[k++] = it->second.n;
+        }
+        if (counts[0] >= n_enough && counts[1] >= n_enough) {
+          type = continuous;
+        } else {
+          // Not enough representants for one of the classes.
+          type = skip;
+          // cout << "Skipped binary field " << i << " (counts_0 = "
+          //     << counts[0] << ", counts_1 = " << counts[1] << ")" << endl;
+        }
       }
       else {
         // if there are fractional parts, assume continuous
@@ -308,9 +326,32 @@ void FieldConvertCommand::run(const vector<string> & args)
       else out<<"@"<<vm->fieldName(i)<<" "<<sc[i].mean()<<" - "<<sc[i].stddev()<<" / :"<<vm->fieldName(i)<<"\n";      
     }
 
-    if(action&ONEHOT)
-    {
-      out<<"@"<<vm->fieldName(i)<<" "<<sc[i].getAllValuesMapping()<<" "<<count<<" onehot :"<<vm->fieldName(i)<<":0:"<<(count-1)<<endl;
+    int n_discarded = 0;
+    if(action&ONEHOT) {
+      // First see if any value must be discarded, because not present often
+      // enough in the dataset.
+      int k = 0;
+      TVec<bool> to_be_included(count);
+      for (int j = 0; j < count; j++) {
+        to_be_included[j] = true;
+      }
+      for(map<real,StatsCollectorCounts>::iterator it = sc[i].getCounts()->begin(); it!=sc[i].getCounts()->end(); ++it) {
+        if (it->first!=FLT_MAX) {
+          if (it->second.n < n_enough) {
+            to_be_included[k] = false;
+            n_discarded++;
+            // cout << "Field " << i << ": value " << it->first
+            //     << " discarded (n = " << it->second.n << ")." << endl;
+          }
+          k++;
+        }
+      }
+      if (n_discarded <= count - 1) {
+        // We only consider this field if there is at least 1 class left.
+        out << "@"<<vm->fieldName(i) <<" " << sc[i].getAllValuesMapping(&to_be_included) << " "
+            << count - n_discarded << " onehot :"
+            << vm->fieldName(i)<<":0:"<<(count - 1 - n_discarded) << endl;
+      }
     }
 
     if(action&MISSING_BIT)
@@ -321,7 +362,7 @@ void FieldConvertCommand::run(const vector<string> & args)
     report<<tostring(i)+" ("+vm->fieldName(i)+") [c="<<count<<" nm="<<sc[i].nnonmissing()<<"] ";
     if(action==0)report<<"~~user intervention required :"<<message;
     if(action&NORMALIZE)report<<"NORMALIZE ";
-    if(action&ONEHOT)report<<"ONEHOT("<<count<<") ";
+    if(action&ONEHOT)report<<"ONEHOT("<<count<<") - discarded: " << n_discarded << " ";
     if(type==discrete_corr)report<<"correl: "<<correlation<<" 2tail-student:"<<student<<" ";
     if(action&MISSING_BIT)report<<"MISSING_BIT ";
     if(action&SKIP)report<<"SKIP ";
