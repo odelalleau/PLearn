@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.3 2003/11/17 18:45:01 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.4 2003/11/18 14:12:42 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -45,6 +45,8 @@
 #define ConditionalDensityNet_INC
 
 #include "PConditionalDistribution.h"
+#include "Var_all.h"
+#include "Optimizer.h"
 
 namespace PLearn <%
 using namespace std;
@@ -75,7 +77,8 @@ protected:
   Var mu; // output parameters, step location parameters
   Var density;
   Var cumulative;
-  Var expectation;
+  Var expected_value;
+  Vec target_dependent_outputs;
     VarArray costs; // all costs of interest
     VarArray penalties;
     Var training_cost; // weighted scalar costs[0] including penalties

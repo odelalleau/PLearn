@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.4 2003/11/18 02:55:27 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.5 2003/11/18 14:12:42 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -42,6 +42,7 @@
 
 
 #include "ConditionalDensityNet.h"
+#include "random.h"
 
 namespace PLearn <%
 using namespace std;
@@ -51,7 +52,6 @@ ConditionalDensityNet::ConditionalDensityNet()
   :
    nhidden(0),
    nhidden2(0),
-   noutputs(0),
    weight_decay(0),
    bias_decay(0),
    layer1_weight_decay(0),
@@ -65,7 +65,7 @@ ConditionalDensityNet::ConditionalDensityNet()
    direct_in_to_out(false),
    batch_size(1),
    maxY(0), // must be provided
-   max_likelihood_vs_squared_error_balance(1),
+   log_likelihood_vs_squared_error_balance(1),
    n_output_density_terms(0),
    steps_type("sloped_steps"),
    centers_initialization("uniform")
@@ -259,34 +259,33 @@ ConditionalDensityNet::ConditionalDensityNet()
       Var pos_a = softplus(a);
       Var pos_b = softplus(b);
       Var pos_c = softplus(c);
-      Var steps_M, steps_gradient, steps_primitive;
+      Var steps, steps_M, steps_gradient, steps_primitive;
       if (steps_type=="sigmoid_steps")
       {
-        Var steps = sigmoid(pos_c*centers);
+        steps = sigmoid(pos_c*centers);
         steps_M = sigmoid(pos_c*centers_M);
         steps_gradient = steps*(1-steps);
-        primitive_steps = softplus(pos_c*centers);
+        steps_primitive = softplus(pos_c*centers);
       }
       else if (steps_type=="sloped_steps")
       {
-        Var next_centers = vconcat(new SubMatVariable(centers,1,0,n_output_density_terms,1),(target-max_y));
+        Var next_centers = vconcat(new SubMatVariable(centers,1,0,n_output_density_terms,1) & (target-max_y));
         Var scaled_centers = -pos_c*centers;
         Var scaled_next_centers = -pos_c*next_centers;
-        Var steps = softplus(scaled_centers) - softplus(scaled_next_centers);
-        Var next_centers_M = vconcat(new SubMatVariable(centers_M,1,0,n_output_density_terms,1),var(0.0));
+        steps = softplus(scaled_centers) - softplus(scaled_next_centers);
+        Var next_centers_M = vconcat(new SubMatVariable(centers_M,1,0,n_output_density_terms,1) & var(0.0));
         steps_M = softplus(-pos_c*centers_M) - softplus(-pos_c*next_centers_M);
-        //primitive_steps = -dilogarithm(-exp(scaled_centers)) +
+        //steps_primitive = -dilogarithm(-exp(scaled_centers)) +
         //  dilogarithm(-exp(scaled_next_centers));
       }
       else PLERROR("ConditionalDensityNet::build, steps_type option value unknown: %s",steps_type.c_str());
 
       Var density_numerator = dot(pos_b*pos_c,steps_gradient);
       Var inverse_denominator = 1.0/(pos_a + dot(pos_b,steps_M));
-      Var density_numerator = dot(pos_b*pos_c,steps_gradient);
       Var cum_numerator = pos_a + dot(pos_b,steps);
       cumulative = cum_numerator * inverse_denominator;
       density = density_numerator * inverse_denominator;
-      expectation = (1 - pos_a*inverse_denominator)*max_y - dot(pos_b/pos_c,primitive_steps)*inverse_denominator;
+      expected_value = (1 - pos_a*inverse_denominator)*max_y - dot(pos_b/pos_c,steps_primitive)*inverse_denominator;
 
       /*
        * cost functions:
@@ -294,12 +293,12 @@ ConditionalDensityNet::ConditionalDensityNet()
        *                      +(1-log_likelihood_vs_squared_error_balance)*squared_err
        *                      +penalties
        *   neg_log_lik = -log(1_{target=0} cumulative + 1_{target>0} density)
-       *   squared_err = square(target - expectation)
+       *   squared_err = square(target - expected_value)
        */
       costs.resize(3);
       
-      costs[1] = -log(ifThenElse(target>0,density,cumulative));
-      costs[2] = square(target-expectation);
+      costs[1] = -log(ifThenElse(target>var(0.0),density,cumulative));
+      costs[2] = square(target-expected_value);
       if (log_likelihood_vs_squared_error_balance==1)
         costs[0] = costs[1];
       else if (log_likelihood_vs_squared_error_balance==0)
@@ -373,14 +372,10 @@ ConditionalDensityNet::ConditionalDensityNet()
         invars.push_back(input);
         testinvars.push_back(input);
       }
-
-ICI
-
-      if(output)
-        outvars.push_back(output);
-
-??
-
+      if(expected_value)
+      {
+        outvars.push_back(expected_value);
+      }
       if(target)
       {
         invars.push_back(target);
@@ -392,10 +387,11 @@ ICI
         invars.push_back(sampleweight);
       }
 
-      f = Func(input, output);
-      test_costf = Func(testinvars, output&test_costs);
+      target_dependent_outputs.resize(test_costs->size()+2);
+      f = Func(input, expected_value);
+      test_costf = Func(testinvars, expected_value&test_costs&density&cumulative);
       test_costf->recomputeParents();
-      output_and_target_to_cost = Func(outvars, test_costs); 
+      output_and_target_to_cost = Func(outvars, test_costs&density&cumulative); 
       output_and_target_to_cost->recomputeParents();
 
       // The total training cost
@@ -418,13 +414,23 @@ int ConditionalDensityNet::outputsize() const
 TVec<string> ConditionalDensityNet::getTrainCostNames() const
 {
   if (penalties.size() > 0)
-    return (cost_funcs[0]+"+penalty") & cost_funcs;
-  else
+  {
+    TVec<string> cost_funcs(4);
+    cost_funcs[0]="training_criterion+penalty";
+    cost_funcs[1]="training_criterion";
+    cost_funcs[2]="neg_log_likelihood";
+    cost_funcs[3]="squared_error";
     return cost_funcs;
+  }
+  else return getTestCostNames();
 }
 
 TVec<string> ConditionalDensityNet::getTestCostNames() const
 { 
+  TVec<string> cost_funcs(3);
+  cost_funcs[0]="training_criterion";
+  cost_funcs[1]="neg_log_likelihood";
+  cost_funcs[2]="squared_error";
   return cost_funcs;
 }
 
@@ -460,26 +466,48 @@ TVec<string> ConditionalDensityNet::getTestCostNames() const
   }
 
 
-double ConditionalDensityNet::log_density(const Vec& x) const
-{ PLERROR("density not implemented for ConditionalDensityNet"); return 0; }
+void ConditionalDensityNet::setInput(const Vec& in)
+{
+  input->value << in;
+}
 
-double ConditionalDensityNet::survival_fn(const Vec& x) const
-{ PLERROR("survival_fn not implemented for ConditionalDensityNet"); return 0; }
+double ConditionalDensityNet::log_density(const Vec& y) const
+{ 
+  test_costf->fprop(input->value & y,target_dependent_outputs);
+  return -target_dependent_outputs[1];
+}
 
-double ConditionalDensityNet::cdf(const Vec& x) const
-{ PLERROR("cdf not implemented for ConditionalDensityNet"); return 0; }
+double ConditionalDensityNet::survival_fn(const Vec& y) const
+{ 
+  test_costf->fprop(input->value & y,target_dependent_outputs);
+  return 1-target_dependent_outputs[target_dependent_outputs.length()-1];
+}
+
+double ConditionalDensityNet::cdf(const Vec& y) const
+{ 
+  test_costf->fprop(input->value & y,target_dependent_outputs);
+  return target_dependent_outputs[target_dependent_outputs.length()-1];
+}
 
 void ConditionalDensityNet::expectation(Vec& mu) const
-{ PLERROR("expectation not implemented for ConditionalDensityNet"); }
+{ 
+  f->fprop(input->value,mu);
+}
 
 void ConditionalDensityNet::variance(Mat& covar) const
-{ PLERROR("variance not implemented for ConditionalDensityNet"); }
+{ 
+  PLERROR("variance not implemented for ConditionalDensityNet"); 
+}
 
 void ConditionalDensityNet::resetGenerator(long g_seed) const
-{ PLERROR("resetGenerator not implemented for ConditionalDensityNet"); }
+{ 
+  PLERROR("resetGenerator not implemented for ConditionalDensityNet"); 
+}
 
 void ConditionalDensityNet::generate(Vec& x) const
-{ PLERROR("generate not implemented for ConditionalDensityNet"); }
+{ 
+  PLERROR("generate not implemented for ConditionalDensityNet"); 
+}
 
 
 // Default version of inputsize returns learner->inputsize()
