@@ -133,9 +133,15 @@ struct Field {
         PLERROR("Unknown field type %d with name %s",
 		int(field_type), name.c_str());
       }
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:279)  // Get rid of compiler warning.
+#endif
       if (sizeof(PDate) != 4)
         PLERROR("A PLearn PDate must have sizeof equal to 4");
-    }
+#ifdef __INTEL_COMPILER
+#pragma warning(default:279)
+#endif
+     }
 
   bool operator==(const Field& x) const {
     return name==x.name &&
@@ -1214,7 +1220,6 @@ SimpleDB<KT,QR>::SimpleDB(string rootname, string the_path,
 {
   if (path != "")
     path += slash;
-  string fullpath = path + name + ".sdb";
 
   switch (access_type) {
   case readwrite:
@@ -1392,7 +1397,13 @@ void SimpleDB<KT,QR>::addRow(const Row& row)
 template <class KT, class QR>   
 void SimpleDB<KT,QR>::setRow(const Row& row, RowNumber n)
 {
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:186)  // Get rid of compiler warning.
+#endif
   if(n<0 || n>=size())
+#ifdef __INTEL_COMPILER
+#pragma warning(default:186)
+#endif
     PLERROR("Out of bounds in SimpleDB::setRow");
   if(row_size != row.size())
     PLERROR("In setRow row_size != row.size() (%d != %d)", row_size, row.size());
@@ -1457,7 +1468,13 @@ void SimpleDB<KT,QR>::truncateFromRow(RowNumber n)
 template <class KT, class QR>   
 Row& SimpleDB<KT,QR>::getInRow(RowNumber n, Row& row) const
 {
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:186)  // Get rid of compiler warning.
+#endif
   if(n<0 || n>=size())
+#ifdef __INTEL_COMPILER
+#pragma warning(default:186)
+#endif
     PLERROR("Out of Bounds in SimpleDB::getInRow"); 
   if(row_size != row.size())
     PLERROR("In getInRow row_size!=row_size()");
