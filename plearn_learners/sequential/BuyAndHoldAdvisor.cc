@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BuyAndHoldAdvisor.cc,v 1.1 2003/12/02 15:40:53 dorionc Exp $ 
+   * $Id: BuyAndHoldAdvisor.cc,v 1.2 2004/01/26 21:07:14 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -49,7 +49,9 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(BuyAndHoldAdvisor, "ONE LINE DESCR", "NO HELP");
 
-BuyAndHoldAdvisor::BuyAndHoldAdvisor()
+BuyAndHoldAdvisor::BuyAndHoldAdvisor():
+  did_buy(false),
+  first_non_null_position(true)
 {}
 
 void BuyAndHoldAdvisor::build()
@@ -82,44 +84,73 @@ void BuyAndHoldAdvisor::declareOptions(OptionList& ol)
                 "If not, the positions will be setted to the first test positions of the\n"
                 "underlying advisors. ");
 
+  declareOption(ol, "first_non_null_position", &BuyAndHoldAdvisor::first_non_null_position, OptionBase::buildoption,
+                "If the BuyAndHoldAdvisor is based on an underlying advisor, this boolean specifies\n"
+                "if the BuyAndHoldAdvisor follows the first non-null position (true) or simply the\n"
+                "first position.\n"
+                "Default: true.");
+
   inherited::declareOptions(ol);
+}
+
+void BuyAndHoldAdvisor::train_test_core(VMat dataset, int t) const
+{  
+  if(did_buy)
+    return;
+  
+  // Buy
+  if(underlying.isNull())
+  {
+    predictions.subMatRows(0, t).fill(0.0);
+    predictions(t).fill(1.0);
+  }
+  else
+  {
+    underlying->setTrainingSet(dataset, false);
+    underlying->train();
+    predictions.subMatRows(0, t) << underlying->predictions.subMatRows(0, t);
+    predictions(t) << underlying->predictions(t);
+    errors(t) << underlying->errors(t);
+    
+    if(first_non_null_position)
+    {
+      int c=0;
+      while(c < predictions.width())
+      {
+        if( predictions(t, c) != 0 )
+          break;
+        c++;
+      }  
+      if(c == predictions.width()) return; // The position is the null vector
+    }  
+  }
+
+  // The model did buy it's position and will now only hold it
+  did_buy = true;
+
+  // Hold
+  for(int tt = t+1; tt < predictions.length(); tt++)
+    predictions(tt) << predictions(t);
 }
 
 void BuyAndHoldAdvisor::train()
 {
   last_call_train_t = train_set.length() - 1;
-  
-  if(last_train_t != -1)
-    return;
-
-  // Buy
-  last_train_t = last_call_train_t;
-  if(underlying.isNull())
-    predictions(last_train_t).fill(1.0);
-  else
-  {
-    underlying->setTrainingSet(train_set, false);
-    underlying->train();
-    predictions.subMatRows(0, last_train_t) << underlying->predictions.subMatRows(0, last_train_t);
-    predictions(last_train_t) << underlying->predictions(last_train_t);
-    errors(last_train_t) << underlying->errors(last_train_t);
-  }
-
-  // Hold
-  for(int t = last_train_t+1; t < predictions.length(); t++)
-    predictions(t) << predictions(last_train_t);
+  train_test_core(train_set, last_call_train_t);
+  last_train_t = last_call_train_t;  
 }
 
 void BuyAndHoldAdvisor::test(VMat testset, PP<VecStatsCollector> test_stats,
                         VMat testoutputs, VMat testcosts) const
 {
   last_test_t = testset.length()-1;
+  train_test_core(testset, last_test_t);
 }
  
 TVec<string> BuyAndHoldAdvisor::getTrainCostNames() const
 {
   if(underlying.isNull())
-    return TVec<string>(0);
+    return TVec<string>(1, "BidCost");
   return underlying->getTrainCostNames();
 }
 

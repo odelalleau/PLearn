@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BuyAndHoldAdvisor.h,v 1.1 2003/12/02 15:40:54 dorionc Exp $ 
+   * $Id: BuyAndHoldAdvisor.h,v 1.2 2004/01/26 21:07:24 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -63,7 +63,8 @@ protected:
   // *********************
   // * protected members *
   // *********************
-  
+  mutable bool did_buy;
+
 public:
 
   // ************************
@@ -76,10 +77,20 @@ public:
     underlying advisors. 
   */
   PP<FinancialAdvisor> underlying;
+
+  /*!
+    If the BuyAndHoldAdvisor is based on an underlying advisor, this boolean specifies 
+    if the BuyAndHoldAdvisor follows the first non-null position (true) or simply the
+    first position.
+    Default: true.
+  */
+  bool first_non_null_position;
   
   // *****************************
   // * public method to overload *
   // *****************************
+
+  virtual void train_test_core(VMat dataset, int t) const;
   
   // This function must be overloaded!
   virtual void train();

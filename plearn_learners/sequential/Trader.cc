@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.cc,v 1.18 2003/11/25 20:56:26 dorionc Exp $ 
+ * $Id: Trader.cc,v 1.19 2004/01/26 21:07:26 dorionc Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -421,7 +421,6 @@ void Trader::test(VMat testset, PP<VecStatsCollector> test_stats,
     //  before advisor goes forward
     // In the length position of the subMatRows, we use t+1 because we want the
     //  matrix to contain info at times 0, ..., t; these are on t+1 rows
-    //advisor->test(testset.subMatRows(0, t+1), test_stats, testoutputs, testcosts);
     advisor->test(testset.subMatRows(0, t+1), dummy_stats);
     if( is_missing(advisor->predictions(t, 0)) )
       PLERROR("The advisor->test method is assumed to compute and set the advisor->predictions up to its\n\t"
