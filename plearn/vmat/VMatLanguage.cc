@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.23 2004/05/14 17:49:17 chrish42 Exp $
+   * $Id: VMatLanguage.cc,v 1.24 2004/06/14 19:34:29 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -471,6 +471,7 @@ using namespace std;
         opcodes["get"]    = 51; // pos --> value_of_stack_at_pos (if pos is negative then it's relative to stacke end ex: -1 get will get the previous element of stack)
         opcodes["memput"] = 52; // a mempos -->    ( a is saved in memory position mempos)
         opcodes["memget"] = 53; // mempos --> val  ( gets val from memory in position mempos)
+        opcodes["neg"]    = 54; // a --> -a
       }
   }
 
@@ -770,6 +771,9 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
               }
               break;
             }
+          case 54: // neg
+            pstack.push(-pstack.pop());
+            break;
           
           default:
             PLERROR("BUG IN PreproInterpretor::run while running program: invalid opcode: %d", op);

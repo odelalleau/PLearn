@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.51 2004/06/10 17:18:51 tihocan Exp $
+* $Id: VMatrix.cc,v 1.52 2004/06/14 19:34:29 plearner Exp $
 ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -232,6 +232,7 @@ void VMatrix::printFieldInfo(ostream& out, int fieldnum) const
         PLERROR("Can't write name of type");
       }  
 
+    out.precision(12);
     out << "nmissing: " << s.nmissing() << '\n';
     out << "nnonmissing: " << s.nnonmissing() << '\n';
     out << "sum: " << s.sum() << '\n';

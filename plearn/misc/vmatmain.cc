@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.27 2004/04/23 18:04:10 nova77 Exp $
+   * $Id: vmatmain.cc,v 1.28 2004/06/14 19:34:29 plearner Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -478,7 +478,7 @@ void viewVMat(const VMat& vm)
               
               if( i == curi || (vm_showed.width() > 1 && j == curj) )
                 attron(A_REVERSE);
-              //else if ()
+              //else if ()
               //  attron(A_REVERSE);
               
               if(hide_sameval && i>starti && (val==oldv[j] || is_missing(val)&&is_missing(oldv[j])) )
