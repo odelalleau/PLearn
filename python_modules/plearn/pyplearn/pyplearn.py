@@ -493,9 +493,9 @@ U{Epytext Markup Language Manual<http://epydoc.sourceforge.net/epytext.html>}
 should not take you more than 15 minutes and you will be ready to document your
 code.
 """
-__cvs_id__ = "$Id: pyplearn.py,v 1.22 2005/03/04 03:04:50 dorionc Exp $"
+__cvs_id__ = "$Id: pyplearn.py,v 1.23 2005/03/10 21:27:29 dorionc Exp $"
 
-import string, time, types
+import string, types
 import plearn.utilities.metaprog as metaprog
 
 __all__ = [ 'PyPlearnError', 'ref', 'bind', 'bindref', 'plvar', 'TMat',
@@ -768,10 +768,6 @@ class _plargs_storage_fallback:
         if os.getenv('PyTest', '') != 'Running':
             from plearn.utilities.toolkit import date_time_string
             expdir = 'expdir_%s' % date_time_string()
-
-            ## This is highly hackish: dorionc (apdispatch)
-            time.sleep(1.5)
-        
         self.__dict__['expdir'] = expdir
 
     def __setattr__(self, k, v):

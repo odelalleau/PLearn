@@ -9,6 +9,18 @@ def add(path):
     vprint("Adding: %s" % add_cmd, 2)    
 
     return __report_status( add_cmd )
+
+def commit(files, msg):
+    if isinstance( files, str ):
+        files = [files]
+    elif not isinstance(files, type([])):
+        raise TypeError("The commit procedure accepts argument of type string of"
+                        "array of string: type (%s) is not valid.\n" % type(files))
+    
+    commit_cmd = "svn commit -m '" + msg + "' " + " ".join(files)
+
+    vprint("\n+++ Commiting (from "+ os.getcwd() +"):\n" + commit_cmd, 1)
+    os.system(commit_cmd) 
     
 def last_user_to_commit(file_path):
     raise NotImplementedError
