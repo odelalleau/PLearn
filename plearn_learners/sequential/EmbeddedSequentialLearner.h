@@ -102,45 +102,11 @@ class EmbeddedSequentialLearner: public SequentialLearner
         Vec& output, Vec& costs);
  
     virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs);
-
  
     virtual TVec<string> getTestCostNames() const;
  
     virtual TVec<string> getTrainCostNames() const;
 
-
-    // old Learner methods to be passed to the underlying Learner
-
-/*
-    virtual void computeCost(const Vec& input, const Vec& target,
-        const Vec& output, const Vec& cost);
-
-    virtual void computeCosts(const VMat& data, VMat costs);
- 
-    virtual void useAndCost(const Vec& input, const Vec& target,
-        Vec output, Vec cost);
-
-    virtual void useAndCostOnTestVec(const VMat& test_set, int i,
-        const Vec& output, const Vec& cost);
-
-    virtual void apply(const VMat& data, VMat outputs);
-
-    virtual void applyAndComputeCosts(const VMat& data, VMat outputs, VMat costs);
-
-    virtual void applyAndComputeCostsOnTestMat(const VMat& test_set,
-        int i, const Mat& output_block, const Mat& cost_block);
-
-    virtual void computeLeaveOneOutCosts(const VMat& data, VMat costs);
-
-    virtual void computeLeaveOneOutCosts(const VMat& data, VMat costsmat,
-        CostFunc costf);
-
-    virtual Array<string> costNames() const;
-
-    virtual Array<string> testResultsNames() const;
-
-    virtual Array<string> trainObjectiveNames() const;
-*/
 };
 
 //! Declares a few other classes and functions related to this class

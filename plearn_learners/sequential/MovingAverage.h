@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// SequentialModelSelector.h
+// MovingAverage.h
 //
 // Copyright (C) 2003 Rejean Ducharme, Yoshua Bengio
 // Copyright (C) 2003 Pascal Vincent
@@ -35,39 +35,33 @@
 
 
 
-#ifndef SEQUENTIAL_MODEL_SELECTOR
-#define SEQUENTIAL_MODEL_SELECTOR
+#ifndef MOVING_AVERAGE
+#define MOVING_AVERAGE
 
-#include "SequentialLearner.h"
+#include "PLearner.h"
 
 namespace PLearn <%
 using namespace std;
 
-/*!
-*/
+//! This SequentialLearner only takes the n previous target to predict the
+//! next one.  This is a memoryless learner!
 
-class SequentialModelSelector: public SequentialLearner
+class MovingAverage: public SequentialLearner
 {
   protected:
  
-    //Mat mean_costs; // [time_index,model_index], contains mean of model.errors[.,cost_index] over interval [max(0,time_index-max_train_len),time_index) of non-missing values
-    TVec<int> best_model; // best model selected at time t
-    Vec sequence_costs;  // the costs of each model on the training set
-
+    Vec input;
+    Vec target;
+    Vec output;
+    Vec cost;
+    Mat all_targets;
+  
   public:
 
     typedef SequentialLearner inherited;
 
-    enum CostType
-    {
-      SumCost = 0,
-      SharpeRatio // not yet defined
-    };
-
-    TVec< PP<SequentialLearner> > models;  // list of all the models
-    int init_train_size; // size of first training set
-    int cost_index; // which element of costs vector is used to select best model
-    CostType cost_type; // the type of cost to be used to select the best model
+    int window_length; // the length of the window on which to calculate the average
+    Array<string> cost_funcs; // a list of cost functions (only MSE for now)
 
   private:
     //! This does the actual building
@@ -80,10 +74,7 @@ class SequentialModelSelector: public SequentialLearner
   public:
 
     //! Constructor
-    SequentialModelSelector();
-
-    //! compute the cost of the given sequence of errors (based on the cost_type)
-    real sequenceCost(const Vec& sequence_errors);
+    MovingAverage();
 
     //! simply calls inherited::build() then build_()
     virtual void build();
@@ -93,33 +84,22 @@ class SequentialModelSelector: public SequentialLearner
     virtual void test(VMat testset, VecStatsCollector& test_stats,
         VMat testoutputs=0, VMat testcosts=0);
 
-    virtual void computeOutput(const Vec& input, Vec& output);
+    virtual void computeCostsFromOutputs(const Vec& inputs, const Vec& outputs,
+        const Vec& targets, Vec& costs);
 
-    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
-        const Vec& target, Vec& costs);
-
-    virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
-        Vec& output, Vec& costs);
- 
-    virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs);
-
-    //! This should return the names of the costs computed by computeCostsFromOutputs
-    virtual TVec<string> getTestCostNames() const;
-
-    //! This should return the names of the objective costs that the train method
-    //! computes and for which it updates the VecStatsCollector train_stats
     virtual TVec<string> getTrainCostNames() const;
+    virtual TVec<string> getTestCostNames() const;
 
     virtual void forget();
 
     //!  Does the necessary operations to transform a shallow copy (this)
     //!  into a deep copy by deep-copying all the members that need to be.
-    DECLARE_NAME_AND_DEEPCOPY(SequentialModelSelector);
-    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+    DECLARE_NAME_AND_DEEPCOPY(MovingAverage);
+    //virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 };
 
 //! Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(SequentialModelSelector);
+DECLARE_OBJECT_PTR(MovingAverage);
 
 %> // end of namespace PLearn
 

@@ -109,33 +109,20 @@ class SequentialLearner: public PLearner
         - save the outputs and the costs in the  predictions & errors
           matrices, beginning at position last_call_train_t
 */
-
-    //! *** SUBCLASS WRITING: ***
-    //! This should be defined in subclasses to compute the output from the input
-    virtual void computeOutput(const Vec& input, Vec& output) =0;
-
-    //! *** SUBCLASS WRITING: ***
-    //! This should be defined in subclasses to compute the weighted costs from
-    //! already computed output.
-    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
-        const Vec& target, Vec& costs) =0;
-
     virtual void test(VMat testset, VecStatsCollector& test_stats,
         VMat testoutputs=0, VMat testcosts=0) =0;
 
-/*!       *** SUBCLASS WRITING: ***
-      Uses a trained decider on input, filling output.
-      If the cost should also be computed, then the user
-      should call useAndCost instead of this method.
-    virtual void use(const Vec& input, Vec& output) =0;
-*/
+    virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
+        Vec& output, Vec& costs);
 
-/*!       *** SUBCLASS WRITING: ***
-     This method should be called AFTER or inside the build method,
-     e.g. in order to re-initialize parameters. It should
-     put the Learner in a 'fresh' state, not being influenced
-     by any past call to train (everything learned is forgotten!).
-*/
+    virtual void computeCostsOnly(const Vec& input, const Vec& target,
+        Vec& costs);
+
+    virtual void computeOutput(const Vec& input, Vec& output);
+
+    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
+        const Vec& target, Vec& costs);
+
     virtual void forget();
 
     //!  Does the necessary operations to transform a shallow copy (this)

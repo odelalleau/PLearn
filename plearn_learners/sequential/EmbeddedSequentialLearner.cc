@@ -110,13 +110,8 @@ void EmbeddedSequentialLearner::test(VMat testset, VecStatsCollector& test_stats
  
   testset->defineSizes(inputsize(),targetsize(),weightsize());
  
-  test_stats.forget();
+  //test_stats.forget();
  
-  ProgressBar* pb;
-  if(report_progress)
-    pb = new ProgressBar("Testing learner",l);
-
-
   // We DON'T allow in-sample testing; hence, we test either from the end of the
   // last test, or the end of the training set.  The last_train_t MINUS 1 is because
   // we allow the last training day to be part of the test set. Example: using
@@ -124,6 +119,9 @@ void EmbeddedSequentialLearner::test(VMat testset, VecStatsCollector& test_stats
   // has today's price as input (all that WITHOUT CHEATING or breaking the Criminal
   // Code.)
   int start = MAX(last_train_t-1,last_test_t);
+  ProgressBar* pb;
+  if(report_progress)
+    pb = new ProgressBar("Testing learner",l-start);
   for (int t=start; t<testset.length(); t++)
   {
     testset.getExample(t, input, target, weight);

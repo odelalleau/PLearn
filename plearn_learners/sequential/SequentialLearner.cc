@@ -91,5 +91,20 @@ void SequentialLearner::forget()
   last_test_t = -1;
 }
 
+void SequentialLearner::computeOutputAndCosts(const Vec& input,
+    const Vec& target, Vec& output, Vec& costs)
+{ PLERROR("The method computeOutputAndCosts is not defined for this SequentialLearner"); }
+
+void SequentialLearner::computeCostsOnly(const Vec& input, const Vec& target,
+    Vec& costs)
+{ PLERROR("The method computeCostsOnly is not defined for this SequentialLearner"); }
+
+void SequentialLearner::computeOutput(const Vec& input, Vec& output)
+{ PLERROR("The method computeOutput is not defined for this SequentialLearner"); }
+
+void SequentialLearner::computeCostsFromOutputs(const Vec& input,
+    const Vec& output, const Vec& target, Vec& costs)
+{ PLERROR("The method computeCostsFromOutputs is not defined for this SequentialLearner"); }
+
 %> // end of namespace PLearn
 

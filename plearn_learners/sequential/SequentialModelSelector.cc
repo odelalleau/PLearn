@@ -60,15 +60,16 @@ void SequentialModelSelector::train(VecStatsCollector& train_stats)
   {
     int start = max(t-max_train_len,init_train_size-1);
     VMat sub_train = train_set.subMatRows(0,t-horizon); // last training pair is (t-1-2*horizon,t-1-horizon)
-    VMat sub_test  = train_set.subMatRows(0,t); // this is the (t-1-horizon,t-1) (input,target) pair
+    VMat sub_test  = train_set.subMatRows(0,t); // last test pair is (t-1-horizon,t-1) (input,target)
     for (int i=0; i<models.size(); i++)
     {
       models[i]->setTrainingSet(sub_train);
       models[i]->train(dummy_stats);
       models[i]->test(sub_test, dummy_stats); // last cost computed goes at t-1, last prediction at t-1-horizon
-      Vec sequence_errors = models[i]->errors.subMat(start+horizon,0,t-start-horizon,errors.length()).toVecCopy();
+      Vec sequence_errors = models[i]->errors.subMat(start+horizon,cost_index,t-start-horizon,1).toVecCopy();  // VERIFIER LES INDICES!!!
       sequence_costs[i] = sequenceCost(sequence_errors);
     }
+    // we set the best model for this time step
     best_model[t] = argmin(sequence_costs);
     if (predictions(t-1-horizon).hasMissing())
     {
@@ -111,11 +112,18 @@ void SequentialModelSelector::test(VMat test_set, VecStatsCollector& test_stats,
     else
       models[i]->test(test_set, dummy_stats);
   }
+  for (int t=last_test_t; t<test_set.length(); t++)
+  {
+    predictions(t) << models[best_model[last_train_t]]->predictions(t);
+    errors(t) << models[best_model[last_train_t]]->errors(t);
+  }
+/*
   for (int t=last_test_t-1; t<test_set.length()-horizon; t++)
   {
     predictions(t) << models[best_model[last_train_t]]->predictions(t);
     errors(t+horizon) << models[best_model[last_train_t]]->errors(t+horizon);
   }
+*/
   last_test_t = test_set.length();
 }
 
@@ -129,6 +137,18 @@ void SequentialModelSelector::computeCostsFromOutputs(const Vec& input, const Ve
   models[best_model[last_train_t]]->computeCostsFromOutputs(input, output, target, costs);
 }
 
+void SequentialModelSelector::computeOutputAndCosts(const Vec& input,
+    const Vec& target, Vec& output, Vec& costs)
+{
+  models[best_model[last_train_t]]->computeOutputAndCosts(input, target, output, costs);
+}
+ 
+void SequentialModelSelector::computeCostsOnly(const Vec& input,
+    const Vec& target, Vec& costs)
+{
+  models[best_model[last_train_t]]->computeCostsOnly(input, target, costs);
+}
+
 TVec<string> SequentialModelSelector::getTestCostNames() const
 { return models[best_model[last_train_t]]->getTestCostNames(); }
 
@@ -139,11 +159,12 @@ void SequentialModelSelector::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(models, copies);
-  deepCopyField(mean_costs, copies);
+  //deepCopyField(mean_costs, copies);
 } 
 
 void SequentialModelSelector::build_()
 {
+  //mean_costs.resize(max_train_len,models.size());
   sequence_costs.resize(models.size());
   forget();
 }
@@ -196,7 +217,7 @@ void SequentialModelSelector::forget()
   last_train_t = init_train_size;
   best_model.resize(last_train_t);
   best_model.fill(0);  // by default
-  mean_costs.fill(MISSING_VALUE);
+  //mean_costs.fill(MISSING_VALUE);
   for (int i=0; i<models.size(); i++)
     models[i]->forget();
 }
