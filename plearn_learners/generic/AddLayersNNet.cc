@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddLayersNNet.cc,v 1.1 2004/09/03 20:53:16 tihocan Exp $ 
+   * $Id: AddLayersNNet.cc,v 1.2 2004/09/07 20:34:28 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -173,6 +173,7 @@ void AddLayersNNet::build_()
     if (add_hidden[i] > 0)
       no_added_layer = false;
   if (no_added_layer)
+    // TODO WRONG: the weights won't be correctly initialized (for now)
     return;
   params.resize(0);
 
@@ -185,8 +186,8 @@ void AddLayersNNet::build_()
   }
 
   // Add the required hidden layers.
-  hidden_layers.resize(n_parts);
-  VarArray hidden_weights(n_parts);
+  VarArray hidden_layers(n_parts);
+  hidden_weights.resize(n_parts);
   for (int i = 0; i < n_parts; i++) {
     if (add_hidden[i] > 0) {
       Var weights = Var(1 + real_parts_size[i], add_hidden[i], ("w_added_" + tostring(i)).c_str());
@@ -237,7 +238,7 @@ void AddLayersNNet::buildPenalties(const Var& hidden_layer) {
   inherited::buildPenalties(hidden_layer);
   for (int i = 0; i < parts_size.length(); i++) {
     if (add_hidden[i] > 0 && (weight_decay > 0 || bias_decay > 0)) {
-      penalties.append(affine_transform_weight_penalty(hidden_layers[i], weight_decay, bias_decay, L1_penalty));
+      penalties.append(affine_transform_weight_penalty(hidden_weights[i], weight_decay, bias_decay, L1_penalty));
     }
   }
 }
@@ -245,19 +246,21 @@ void AddLayersNNet::buildPenalties(const Var& hidden_layer) {
 //////////////////////
 // initializeParams //
 //////////////////////
-void AddLayersNNet::initializeParams() {
+void AddLayersNNet::initializeParams(bool set_seed) {
   // TODO Remove later...
-  if (seed_>=0)
-    manual_seed(seed_);
-  else
-    PLearn::seed();
+  if (set_seed) {
+    if (seed_>=0)
+      manual_seed(seed_);
+    else
+      PLearn::seed();
+  }
 
-  for (int i = 0; i < hidden_layers.size(); i++) {
+  for (int i = 0; i < hidden_weights.size() && i < add_hidden.size(); i++) {
     if (add_hidden[i] > 0) {
-      fillWeights(hidden_layers[i], true);
+      fillWeights(hidden_weights[i], true);
     }
   }
-  inherited::initializeParams(); // TODO Put this first later.
+  inherited::initializeParams(false); // TODO Put this first later.
 }
 
 /////////////////////////////////

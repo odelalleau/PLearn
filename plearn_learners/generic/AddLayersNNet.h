@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddLayersNNet.h,v 1.1 2004/09/03 20:53:16 tihocan Exp $ 
+   * $Id: AddLayersNNet.h,v 1.2 2004/09/07 20:34:28 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -67,9 +67,8 @@ protected:
   //! It is filled at build time from 'parts_size' and the training set inputsize.
   TVec<int> real_parts_size;
 
-  //! Contains the hidden layers added, and the input parts for which no hidden
-  //! layer has been added.
-  VarArray hidden_layers;
+  //! Contains the weights for the hidden layers added.
+  VarArray hidden_weights;
 
 public:
 
@@ -123,7 +122,7 @@ public:
 protected:
 
   //! Overridden to account for the added layers.
-  virtual void initializeParams();
+  virtual void initializeParams(bool set_seed = true);
   virtual void buildPenalties(const Var& hidden_layer);
 
 };
