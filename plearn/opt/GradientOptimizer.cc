@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.cc,v 1.9 2003/04/29 19:44:48 tihocan Exp $
+   * $Id: GradientOptimizer.cc,v 1.10 2003/04/29 21:01:41 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -257,7 +257,8 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
     // TODO To put when we have a stats collector ! ;)
   }
 
-  cout << stage << " : " << meancost/niter << endl;
+  meancost /= real(niter);
+  cout << stage << " : " << meancost << endl;
   early_stop = measure(stage+1,meancost);
 
   // Learning rate adaptation after a full epoch
