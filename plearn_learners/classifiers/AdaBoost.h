@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdaBoost.h,v 1.1 2004/04/20 14:27:20 yoshua Exp $
+   * $Id: AdaBoost.h,v 1.2 2004/04/21 20:26:38 yoshua Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -93,6 +93,15 @@ public:
   
   // threshold on output of weak learner to decide if class 0 or class 1
   real output_threshold;
+
+  // whether to compute training error during training
+  bool compute_training_error;
+
+  // use more refined training criterion when weak classifier is soft
+  bool pseudo_loss_adaboost;
+
+  // use resampling (vs weighting) to train the underlying classifier
+  bool weight_by_resampling;
 
   // ****************
   // * Constructors *
