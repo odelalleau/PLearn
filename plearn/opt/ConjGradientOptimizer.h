@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.28 2003/10/14 14:53:12 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.29 2003/10/14 19:18:17 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -263,18 +263,23 @@ private:
   // "Direct Gradient-Based Reinforcement Learning:
   // II. Gradient Ascent Algorithms and Experiments"
   // by J.Baxter, L. Weaver, P. Bartlett.
-  real gSearch (void (*grad)(Optimizer*, const Vec&));
+  real gSearch(void (*grad)(Optimizer*, const Vec&));
 
   // The line search algorithm described in
   // "Practical Methods of Optimization, 2nd Ed", by Fletcher (1987)
   // (this function actually just calls fletcherSearchMain)
-  real fletcherSearch (real mu = FLT_MAX);
+  real fletcherSearch(real mu = FLT_MAX);
 
+  // To be used in the cost is quadratic in the search direction : the minimum
+  // will then be found much faster.
+  real newtonSearch(
+    int max_steps,
+    real initial_step,
+    real low_enough);
   
   //--------------------------- UTILITY FUNCTIONS ----------------------------
   
-public:   // TODO For test purpose... remove later
-
+private:
 
   // Return cost->value() after an update of params with step size alpha
   // in the current search direction
@@ -285,6 +290,11 @@ public:   // TODO For test purpose... remove later
   // f(x) = cost(params + x*search_direction)
   // in x = alpha
   static real computeDerivative(real alpha, ConjGradientOptimizer* opt);
+
+  // Same as the two functions above combined.
+  // The result is returned in the cost and derivative parameters.
+  static void computeCostAndDerivative(
+      real alpha, ConjGradientOptimizer*opt, real& cost, real& derivative);
 
   // Put in a, b, c, d the coefficients of the cubic interpolation
   // given values of f and g=df/dx in 2 points (0 and 1)
@@ -312,6 +322,12 @@ public:   // TODO For test purpose... remove later
       real f1,
       real g0,
       real g1);
+
+  // Find the minimum of the quadratic interpolation of the function, given the
+  // n first values c[i] and derivatives g[i] at the points x[i]
+  static real findMinWithQuadInterpol(
+    int q, real sum_x, real sum_x_2, real sum_x_3, real sum_x_4,
+    real sum_c_x_2, real sum_g_x, real sum_c_x, real sum_c, real sum_g);
 
   // The main function for Fletcher's line search algorithm
   // We keep all the parameters, so that it can be used separately

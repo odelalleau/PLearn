@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.40 2003/10/13 02:02:48 yoshua Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.41 2003/10/14 19:18:17 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -231,6 +231,18 @@ PLEARN_IMPLEMENT_OBJECT(ConjGradientOptimizer, "ONE LINE DESCR", "NO HELP");
  * MAIN METHODS AND FUNCTIONS *
  ******************************/
 
+//////////////////////////////
+// computeCostAndDerivative //
+//////////////////////////////
+void ConjGradientOptimizer::computeCostAndDerivative(
+    real alpha, ConjGradientOptimizer*opt, real& cost, real& derivative) {
+  if (alpha == 0) {
+    cost = opt->cost->value[0];
+    derivative = -dot(opt->search_direction, opt->current_opp_gradient);
+  } else {
+  }
+}
+
 //////////////////////
 // computeCostValue //
 //////////////////////
@@ -409,6 +421,41 @@ real ConjGradientOptimizer::findMinWithCubicInterpol (
   return p1 + xmin*(p2-p1);
 }
 
+/////////////////////////////
+// findMinWithQuadInterpol //
+/////////////////////////////
+real ConjGradientOptimizer::findMinWithQuadInterpol(
+    int q, real sum_x, real sum_x_2, real sum_x_3, real sum_x_4,
+    real sum_c_x_2, real sum_g_x, real sum_c_x, real sum_c, real sum_g) {
+  real a =
+    -(q*sum_c_x_2 + 2*q*sum_g_x - sum_c*sum_x_2 + 
+      q*sum_c_x_2*sum_x_2 + 2*q*sum_g_x*sum_x_2 - sum_c*sum_x_2*sum_x_2 - 
+      q*sum_c_x*sum_x_3 - q*sum_g*sum_x_3 - 2*q*sum_c_x*sum_x - 
+      2*q*sum_g*sum_x + sum_c_x*sum_x_2*sum_x + sum_g*sum_x_2*sum_x + 
+      sum_c*sum_x_3*sum_x + 2*sum_c*sum_x*sum_x - sum_c_x_2*sum_x*sum_x - 
+      2*sum_g_x*sum_x*sum_x) / 
+    (-4*q*sum_x_2 + sum_x_2*sum_x_2 - 
+     4*q*sum_x_2*sum_x_2 + sum_x_2*sum_x_2*sum_x_2 + q*sum_x_3*sum_x_3 - q*sum_x_4 - 
+     q*sum_x_2*sum_x_4 + 4*q*sum_x_3*sum_x - 2*sum_x_2*sum_x_3*sum_x + 
+     4*q*sum_x*sum_x + sum_x_4*sum_x*sum_x);
+  
+  // TODO finish !
+
+  /*
+  b -> \(-\(\((4\ q\ sum_c_x\ sum_x_2 + 4\ q\ sum_g\ sum_x_2 - 
+            sum_c_x\ sum_x_2\^2 - sum_g\ sum_x_2\^2 - q\ sum_c_x_2\ sum_x_3 - 
+            2\ q\ sum_g_x\ sum_x_3 + sum_c\ sum_x_2\ sum_x_3 + q\ sum_c_x\ sum_x_4 + 
+            q\ sum_g\ sum_x_4 - 2\ q\ sum_c_x_2\ sum_x - 4\ q\ sum_g_x\ sum_x - 
+            2\ sum_c\ sum_x_2\ sum_x + sum_c_x_2\ sum_x_2\ sum_x + 
+            2\ sum_g_x\ sum_x_2\ sum_x - 
+            sum_c\ sum_x_4\ sum_x)\)/\((\(-4\)\ q\ sum_x_2 + sum_x_2\^2 - 
+              4\ q\ sum_x_2\^2 + sum_x_2\^3 + q\ sum_x_3\^2 - q\ sum_x_4 - 
+              q\ sum_x_2\ sum_x_4 + 4\ q\ sum_x_3\ sum_x - 2\ sum_x_2\ sum_x_3\ sum_x + 
+              4\ q\ sum_x\^2 + sum_x_4\ sum_x\^2)\)\)\), \) */
+
+    return 0;
+}
+
 ////////////////////
 // fletcherReeves //
 ////////////////////
@@ -463,7 +510,7 @@ real ConjGradientOptimizer::fletcherSearchMain (
   // g0 = g(0), g_0 = g(alpha0), g_1 = g(alaph1)
   // (for the bracketing phase)
   real alpha2, f0, f_1=0, f_0, g0, g_1=0, g_0, a1=0, a2, b1=0, b2;
-  //  f0 = (*f)(0, opt);
+  //  f0 = (*f)(0, opt); // TODO See why this has been commented
   g0 = (*g)(0, opt); f0 = opt->cost->value[0];
   f_0 = f0;
   g_0 = g0;
@@ -551,7 +598,7 @@ real ConjGradientOptimizer::fletcherSearchMain (
       return a1;
     }
     if (small) repeated=true;
-    //g1 = (*g)(alpha1, opt);
+    //g1 = (*g)(alpha1, opt); // TODO See why this has been commented
     if (f1 > f0 + rho * alpha1 * g0 || f1 >= f_0) {
      a2 = a1;
      b2 = alpha1;
@@ -760,6 +807,57 @@ real ConjGradientOptimizer::minQuadratic(
   return the_min;
 }
   
+//////////////////
+// newtonSearch //
+//////////////////
+real ConjGradientOptimizer::newtonSearch(
+    int max_steps,
+    real initial_step,
+    real low_enough
+    ) {
+  Vec c(max_steps); // the cost
+  Vec g(max_steps); // the gradient
+  Vec x(max_steps); // the step
+  computeCostAndDerivative(0, this, c[0], g[0]);
+  x[0] = 0;
+  real step = initial_step;
+  real x_2 = x[0]*x[0];
+  real x_3 = x[0] * x_2;
+  real x_4 = x_2 * x_2;
+  real sum_x = x[0];
+  real sum_x_2 = x_2;
+  real sum_x_3 = x_3;
+  real sum_x_4 = x_4;
+  real sum_c_x_2 = c[0] * x_2;
+  real sum_g_x = g[0] * x[0];
+  real sum_c_x = c[0] * x[0];
+  real sum_c = c[0];
+  real sum_g = g[0];
+  for (int i=1; i<max_steps; i++) {
+    computeCostAndDerivative(step, this, c[i], g[i]);
+    x[i] = step;
+    if (abs(g[i]) < low_enough) {
+      // we have reached the minimum
+      return step;
+    }
+    x_2 = x[i]*x[i];
+    x_3 = x[i] * x_2;
+    x_4 = x_2 * x_2;
+    sum_x += x[i];
+    sum_x_2 += x_2;
+    sum_x_3 += x_3;
+    sum_x_4 += x_4;
+    sum_c_x_2 += c[i] * x_2;
+    sum_g_x += g[i] * x[i];
+    sum_c_x += c[i] * x[i];
+    sum_c += c[i];
+    sum_g += g[i];
+    step = findMinWithQuadInterpol(i, sum_x, sum_x_2, sum_x_3, sum_x_4, sum_c_x_2, sum_g_x, sum_c_x, sum_c, sum_g);
+  }
+  cout << "Warning : minimum not reached, is the cost really quadratic ?" << endl;
+  return step;
+}
+
 //////////////
 // optimize //
 //////////////
