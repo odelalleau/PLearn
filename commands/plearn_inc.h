@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.55 2005/04/05 00:22:43 larocheh Exp $ 
+   * $Id: plearn_inc.h,v 1.56 2005/04/05 00:32:39 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -78,6 +78,7 @@
 #include <commands/PLearnCommands/ServerCommand.h>
 #include <commands/PLearnCommands/TestDependenciesCommand.h>
 #include <commands/PLearnCommands/TestDependencyCommand.h>
+#include <commands/PLearnCommands/VMatCommand.h>
 //#include <commands/PLearnCommands/TxtmatCommand.h>
 
 
