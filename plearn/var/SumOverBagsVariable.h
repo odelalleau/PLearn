@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOverBagsVariable.h,v 1.8 2004/02/25 18:10:54 yoshua Exp $
+   * $Id: SumOverBagsVariable.h,v 1.9 2004/02/25 21:38:08 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -62,6 +62,7 @@ class SumOverBagsVariable: public NaryVariable
   //protected:
   VMat vmat;
   Func f;
+  bool average;
   int max_bag_size;
   int n_samples;
   bool transpose;
@@ -91,8 +92,9 @@ class SumOverBagsVariable: public NaryVariable
     //!   last_column_of_target == 1+2==3 ==> single-row bag (both first and last)
     //! the last column of the target is not given in the call to f, but a bag_size input is provided instead.
     //! The inputs to f are: (matrix of bag inputs, the bag size, the bag target, the bag weight).
-    SumOverBagsVariable(VMat the_vmat, Func the_f, int maxbagsize, int nsamples, bool transpose);
+    SumOverBagsVariable(VMat the_vmat, Func the_f, int maxbagsize, int nsamples, bool average, bool transpose = false);
 
+    //! Tags to use in the vmat given to this variable.
     static const int TARGET_COLUMN_FIRST = 1;
     static const int TARGET_COLUMN_LAST = 2;
     static const int TARGET_COLUMN_SINGLE = 3;  // Beginning == End
@@ -116,8 +118,8 @@ class SumOverBagsVariable: public NaryVariable
 };
 
 //!  sumOf
-inline Var sumOverBags(VMat vmat, Func f, int max_bag_size, int nsamples, bool transpose = false)
-{ return new SumOverBagsVariable(vmat, f, max_bag_size, nsamples, transpose); }
+inline Var sumOverBags(VMat vmat, Func f, int max_bag_size, int nsamples, bool average = false, bool transpose = false)
+{ return new SumOverBagsVariable(vmat, f, max_bag_size, nsamples, average, transpose); }
 
 } // end of namespace PLearn
 

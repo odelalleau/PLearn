@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOverBagsVariable.cc,v 1.10 2004/02/25 20:34:05 yoshua Exp $
+   * $Id: SumOverBagsVariable.cc,v 1.11 2004/02/25 21:38:08 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,6 +54,7 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(SumOverBagsVariable, "Variable that sums the value of a Func each time evaluated on a subsequence of a VMat\n", 
                         "returns\n"
                         "   Sum_{bags in vmat} f(inputs and targets in bag)\n"
+                        "(it can average this sum over the number of bags if the 'average' option is set).\n"
                         "By convention a bag is a sequence of rows of the vmat in which the last column of the target\n"
                         "indicates whether the row is the first one (and/or) the last one, with its two least significant bits:\n"
                         "   last_column_of_target == 1 ==> first row\n"
@@ -75,16 +76,19 @@ PLEARN_IMPLEMENT_OBJECT(SumOverBagsVariable, "Variable that sums the value of a 
 /////////////////////////
 SumOverBagsVariable::SumOverBagsVariable()
   : vmat(), f(),
+    average(0),
     max_bag_size(-1), n_samples(1),
     transpose(0),
     curpos()
 {}
 
-SumOverBagsVariable::SumOverBagsVariable(VMat the_vmat, Func the_f, int max_bagsize, int nsamples, bool the_transpose)
+SumOverBagsVariable::SumOverBagsVariable(VMat the_vmat, Func the_f, int max_bagsize, int nsamples, bool the_average, bool the_transpose)
   :NaryVariable(nonInputParentsOfPath(the_f->inputs,the_f->outputs), 
                 the_f->outputs[0]->length(), 
                 the_f->outputs[0]->width()),
-   vmat(the_vmat), f(the_f), max_bag_size(max_bagsize), n_samples(nsamples),
+   vmat(the_vmat), f(the_f),
+   average(the_average),
+   max_bag_size(max_bagsize), n_samples(nsamples),
    transpose(the_transpose),
    curpos(0), bag_size(0)
 {
@@ -158,6 +162,9 @@ void SumOverBagsVariable::declareOptions(OptionList& ol)
                 "   last_column_of_target == 2 ==> last row\n"
                 "   last_column_of_target == 0 ==> intermediate row\n"
                 "   last_column_of_target == 1+2==3 ==> single-row bag (both first and last).\n");
+
+  declareOption(ol, "average", &SumOverBagsVariable::average, OptionBase::buildoption, 
+                "    If set to 1, then will compute the mean of the sum, and not the sum itself.");
 
   declareOption(ol, "max_bag_size", &SumOverBagsVariable::max_bag_size, OptionBase::buildoption, 
                 "    maximum number of examples in a bag (more than that in vmat will trigger a run-time error).\n");
@@ -273,13 +280,23 @@ void SumOverBagsVariable::fprop()
   else if (n_samples<=0) // one pass through the whole data set
     {
       curpos=0;
-      do 
+      int count_bags = 0;
+      do {
         fpropOneBag();
+        count_bags++;
+      }
       while (curpos>0);
+      if (average) {
+        value /= count_bags;
+      }
     }
-  else 
+  else {
     for (int i=0;i<n_samples;i++)
       fpropOneBag();
+    if (average) {
+      value /= n_samples;
+    }
+  }
 }
 
 
@@ -294,14 +311,26 @@ void SumOverBagsVariable::fbprop()
     fpropOneBag(true);
   else if (n_samples<=0) // one pass through the whole data set
     {
-      curpos=0;
-      do 
+      if (average) {
+        // We don't know in advance how many bags there are, so the gradient
+        // can't be propagated correctly.
+        PLERROR("In SumOverBagsVariable::fbprop - If you want to get the average, you must tell me the number of bags in n_samples > 0, because I'm too dumb to guess it.");
+      }
+      do {
         fpropOneBag(true);
+      }
       while (curpos>0);
     }
-  else 
+  else {
+    if (average) {
+      gradient /= n_samples;
+    }
     for (int i=0;i<n_samples;i++)
       fpropOneBag(true);
+    if (average) {
+      value /= n_samples;
+    }
+  }
 }
 
 ///////////
