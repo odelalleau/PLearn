@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrecomputedVMatrix.cc,v 1.12 2005/02/08 21:33:33 tihocan Exp $ 
+   * $Id: PrecomputedVMatrix.cc,v 1.13 2005/02/21 15:26:05 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -69,6 +69,9 @@ void PrecomputedVMatrix::getNewRow(int i, const Vec& v) const
   precomp_source->getRow(i,v);
 }
 
+////////////////////
+// declareOptions //
+////////////////////
 void PrecomputedVMatrix::declareOptions(OptionList& ol)
 {
   // ### Declare all of this object's options here
@@ -85,6 +88,20 @@ void PrecomputedVMatrix::declareOptions(OptionList& ol)
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
+
+  // Hide useless options.
+  redeclareOption(ol, "writable", &PrecomputedVMatrix::writable, OptionBase::nosave,
+      "Unused option.");
+  redeclareOption(ol, "length", &PrecomputedVMatrix::length_, OptionBase::nosave,
+      "Unused option.");
+  redeclareOption(ol, "width", &PrecomputedVMatrix::width_, OptionBase::nosave,
+      "Unused option.");
+  redeclareOption(ol, "inputsize", &PrecomputedVMatrix::inputsize_, OptionBase::nosave,
+      "Unused option.");
+  redeclareOption(ol, "targetsize", &PrecomputedVMatrix::targetsize_, OptionBase::nosave,
+      "Unused option.");
+  redeclareOption(ol, "weightsize", &PrecomputedVMatrix::weightsize_, OptionBase::nosave,
+      "Unused option.");
 }
 
 void PrecomputedVMatrix::setMetaDataDir(const PPath& the_metadatadir)
