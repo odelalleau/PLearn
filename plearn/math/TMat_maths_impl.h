@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.14 2003/07/31 05:23:56 chapados Exp $
+   * $Id: TMat_maths_impl.h,v 1.15 2003/08/04 21:38:39 chapados Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -1557,6 +1557,41 @@ int binary_search(const TVec<T>& src, T x)
       return k;
     }
     else if (x > src[k])
+      start = k+1;
+    else
+      end = k;
+  }
+}
+
+// Binary search according to the given column c of a matrix.  The column
+// MUST BE SORTED.  Return the row k such that src(k,c) <= x < src(k+1).
+// Returns -1 if x < src(0,c) or N-1 if x >= src(N-1,c).
+template <class T>
+int binary_search(const TMat<T>& src, int c, T x)
+{
+  const int len = src.length();
+
+  if (x < src(0,c))
+    return -1;
+  else if (x >= src(len-1,c))
+    return len-1;
+
+  int start = 0, end = len-1;
+  for (;;) {
+    int k = (start+end)/2;
+    if (x >= src(k,c) && x < src(k+1,c)) {
+      if (src(k,c) == src(k+1,c)) {
+        start = k;
+        end = k+1;
+        while (start > 0 && src(start-1,c) == src(start,c))
+          --start;
+        while (end < len-1 && src(end,c) == src(end+1,c))
+          ++end;
+        k = (start+end)/2;
+      }
+      return k;
+    }
+    else if (x > src(k,c))
       start = k+1;
     else
       end = k;

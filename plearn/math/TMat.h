@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.20 2003/07/24 15:17:30 larocheh Exp $
+   * $Id: TMat.h,v 1.21 2003/08/04 21:38:39 chapados Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -826,6 +826,223 @@ public:
 
 };
 
+//! Model of the Random Access Iterator concept for iterating through the
+//! ROWS of a TMat.  The basic idea is that operator* returns the current
+//! row as a TVec.
+template <class T>
+class TMatRowsIterator
+{
+public:
+  //! Some useful typedefs
+  typedef random_access_iterator_tag iterator_category;
+  typedef TVec<T>                    value_type;
+  typedef ptrdiff_t                  difference_type;
+  typedef TVec<T>*                   pointer;
+  typedef TVec<T>&                   reference;
+  
+private:
+  T* ptr;                                    //!< current row pointer
+  int width;                                 //!< vector width
+  int mod;                                   //!< mod in underlying matrix
+
+public:
+  TMatRowsIterator()
+    : ptr(), width(), mod() {}
+
+  TMatRowsIterator(T* p, int w, int m)
+    : ptr(p), width(w), mod(m) {}
+
+  // Implement trivial iterator functions
+  bool operator==(const TMatRowsIterator& other) const {
+    return ptr == other.ptr && width == other.width && mod == other.mod;
+  }
+
+  value_type operator*() {
+    return TVec<T>(width, ptr);
+  }
+
+  // cannot define operator-> here since we cannot return a pointer to a
+  // temporary (e.g. stack-based) vector and expect this to work properly...
+  
+  // Implement forward iterator functions
+  TMatRowsIterator& operator++() {
+    ptr += mod;
+    return *this;
+  }
+
+  TMatRowsIterator operator++(int) {
+    TMatRowsIterator r(*this);
+    ptr += mod;
+    return r;
+  }
+
+  // Implement bidirectional iterator functions
+  TMatRowsIterator& operator--() {
+    ptr -= mod;
+    return *this;
+  }
+
+  TMatRowsIterator operator--(int) {
+    TMatRowsIterator r(*this);
+    ptr -= mod;
+    return r;
+  }
+
+  // Implement random access iterator functions
+  TMatRowsIterator& operator+=(difference_type n) {
+    ptr += n*mod;
+    return *this;
+  }
+
+  TMatRowsIterator operator+(difference_type n) {
+    TMatRowsIterator r(*this);
+    r += n;
+    return r;
+  }
+  
+  TMatRowsIterator& operator-=(difference_type n) {
+    ptr -= n*mod;
+    return *this;
+  }
+
+  TMatRowsIterator operator-(difference_type n) {
+    TMatRowsIterator r(*this);
+    r -= n;
+    return r;
+  }
+
+  difference_type operator-(const TMatRowsIterator& y) {
+    return (ptr - y.ptr) / mod;
+  }
+  
+  value_type operator[](difference_type n) {
+    return TVec<T>(width, ptr + n*mod);
+  }
+
+  bool operator<(const TMatRowsIterator& y) {
+    return ptr < y.ptr;
+  }
+};
+
+template <class T>
+TMatRowsIterator<T> operator+(typename TMatRowsIterator<T>::difference_type n,
+                              const TMatRowsIterator<T>& y)
+{
+  TMatRowsIterator<T> r(y);
+  return r += n;
+}
+
+
+//! Model of the Random Access Iterator concept for iterating through a
+//! single column of a TMat, one row at a time.  The basic idea is that
+//! operator* returns a T for the given column of the current row.  Very
+//! useful for passing to STL algorithms.
+template <class T>
+class TMatColRowsIterator
+{
+public:
+  //! Some useful typedefs
+  typedef random_access_iterator_tag iterator_category;
+  typedef T                          value_type;
+  typedef ptrdiff_t                  difference_type;
+  typedef T*                         pointer;
+  typedef T&                         reference;
+  
+private:
+  T* ptr;                                    //!< current element pointer
+  int mod;                                   //!< mod in underlying matrix
+
+public:
+  TMatColRowsIterator()
+    : ptr(), mod() {}
+
+  //! This constructor assumes that p points to the proper initial element
+  TMatColRowsIterator(T* p, int m)
+    : ptr(p), mod(m) {}
+
+  // Implement trivial iterator functions
+  bool operator==(const TMatColRowsIterator& other) const {
+    return ptr == other.ptr && mod == other.mod;
+  }
+
+  reference operator*() {
+    return *ptr;
+  }
+
+  reference operator->() {                   //!< works if T is some kind
+    return *ptr;                             //!<  of smart pointer
+  }
+  
+  // Implement forward iterator functions
+  TMatColRowsIterator<T>& operator++() {
+    ptr += mod;
+    return *this;
+  }
+
+  TMatColRowsIterator<T> operator++(int) {
+    TMatColRowsIterator<T> r(*this);
+    ptr += mod;
+    return r;
+  }
+
+  // Implement bidirectional iterator functions
+  TMatColRowsIterator<T>& operator--() {
+    ptr -= mod;
+    return *this;
+  }
+
+  TMatColRowsIterator<T> operator--(int) {
+    TMatColRowsIterator<T> r(*this);
+    ptr -= mod;
+    return r;
+  }
+
+  // Implement random access iterator functions
+  TMatColRowsIterator<T>& operator+=(difference_type n) {
+    ptr += n*mod;
+    return *this;
+  }
+
+  TMatColRowsIterator<T> operator+(difference_type n) {
+    TMatColRowsIterator<T> r(*this);
+    r += n;
+    return r;
+  }
+  
+  TMatColRowsIterator<T>& operator-=(difference_type n) {
+    ptr -= n*mod;
+    return *this;
+  }
+
+  TMatColRowsIterator<T> operator-(difference_type n) {
+    TMatColRowsIterator<T> r(*this);
+    r -= n;
+    return r;
+  }
+
+  difference_type operator-(const TMatColRowsIterator<T>& y) {
+    return (ptr - y.ptr) / mod;
+  }
+  
+  reference operator[](difference_type n) {
+    return *(ptr + n*mod);
+  }
+
+  bool operator<(const TMatColRowsIterator<T>& y) {
+    return ptr < y.ptr;
+  }
+};
+
+template <class T>
+TMatColRowsIterator<T>
+operator+(typename TMatColRowsIterator<T>::difference_type n,
+          const TMatColRowsIterator<T>& y)
+{
+  TMatColRowsIterator<T> r(y);
+  return r += n;
+}
+
+
 template <class T>
 class TMat
 {
@@ -853,7 +1070,10 @@ public:
   typedef TMatElementIterator<T> iterator; // iterator over elements
   typedef TMatElementIterator<T> const_iterator; // iterator over elements
   typedef T* compact_iterator; // super-efficient iterator over elements but works reliably only for compact matrices
-  typedef T* rowelements_iterator; // iterator over elements of a particular row
+  typedef T* rowelements_iterator; // iterator over elements of a
+                                   // particular row
+  typedef TMatRowsIterator<T> rows_iterator;
+  typedef TMatColRowsIterator<T> colrows_iterator;
 
   TMat<T>()
     :offset_(0), mod_(0), length_(0), width_(0)
@@ -922,6 +1142,31 @@ public:
   //! an iterator obtained through rowelements_begin USING THE *SAME* rownum
   inline rowelements_iterator rowelements_end(int rownum) const
   { return data()+rownum*mod()+width(); }
+
+  //! Return an iterator over all rows of the matrix.  No const version for
+  //! now
+  TMatRowsIterator<T> rows_begin() {
+    return TMatRowsIterator<T>(data(), width_, mod_);
+  }
+
+  TMatRowsIterator<T> rows_end() {
+    return TMatRowsIterator<T>(data()+length_*mod_, width_, mod_);
+  }
+
+  //! Return an iterator over a single column of the matrix. No const
+  //! version for now.  In other words, this iterator views a single column
+  //! of the matrix AS A VECTOR to iterate on; very useful for STL algorithms.
+  TMatColRowsIterator<T> col_begin(int column) {
+    return TMatColRowsIterator<T>(data() + column, mod_);
+  }
+
+  //! This version is not strictly standards-compliant since the
+  //! end-pointer is beyond 1-past-the-end-of-the-array.  But this pointer
+  //! is never dereferenced and should work on all reasonable architectures
+  TMatColRowsIterator<T> col_end(int column) {
+    return TMatColRowsIterator<T>(data()+length_*mod_+column, mod_);
+  }
+  
 
 /*!     Resizes the matrix to a new length() and width()
     Notice that the previous structure of the data in the matrix
