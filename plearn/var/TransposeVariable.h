@@ -29,6 +29,10 @@ public:
   virtual void rfprop();
 };
 
+DECLARE_OBJECT_PTR(TransposeVariable);
+
+inline Var transpose(Var v)
+{ return new TransposeVariable(v); }
 
 %> // end of namespace PLearn
 
