@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TSVMClassification.cc,v 1.2 2005/02/23 17:26:36 tihocan Exp $ 
+   * $Id: TSVMClassification.cc,v 1.3 2005/02/23 21:53:52 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -121,55 +121,53 @@ void TSVMClassification::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 //////////////////////
 // updateFromPLearn //
 //////////////////////
-  void TSVMClassification::updateFromPLearn(Torch::Object* ptr) {
-    if (ptr)
-      svm_class = (Torch::SVMClassification*) ptr;
-    else {
-      if (svm_class)
-        allocator->free(svm_class);
-      svm_class = new(allocator) Torch::SVMClassification(kernel->kernel, C_j ? C_j.data() : 0);
-    }
-    if (options["cache_size"])  svm_class->cache_size_in_megs = cache_size;
-    if (options["C"])           svm_class->C_cst              = C;
-    if (options["C_j"])         svm_class->Cuser              = C_j ? C_j.data() : 0;
-    if (options["data"] && options["support_vectors"] && data) {
-      // Build sv_sequences.
-      int n = support_vectors.length();
-      // TODO Could have to free memory ?
-      svm_class->sv_sequences =
-        (Torch::Sequence **)allocator->alloc(sizeof(Torch::Sequence *)*n);
-      Torch::DataSet* dat = data->dataset;
-      int frame_buf_size = 0;
-      for (int i = 0; i < n; i++) {
-        dat->setExample(support_vectors[i]);
-        frame_buf_size += dat->inputs->getFramesSpace();
-      }
-      int seq_size = dat->inputs->getSequenceSpace();
-      char* seq_buf    = (char*) allocator->alloc(seq_size * n  );
-      char* frames_buf = (char*) allocator->alloc(frame_buf_size);
-      for (int i = 0; i < n; i++) {
-        dat->setExample(support_vectors[i]);
-        svm_class->sv_sequences[i] = dat->inputs->clone(allocator, seq_buf, frames_buf);
-        seq_buf += seq_size;
-        frames_buf += dat->inputs->getFramesSpace();
-      }
-    }
-
-    inherited::updateFromPLearn(svm_class);
+void TSVMClassification::updateFromPLearn(Torch::Object* ptr) {
+  if (ptr)
+    svm_class = (Torch::SVMClassification*) ptr;
+  else {
+    if (svm_class)
+      allocator->free(svm_class);
+    svm_class = new(allocator) Torch::SVMClassification(kernel->kernel, C_j ? C_j.data() : 0);
   }
+  FROM_P_BASIC(cache_size, cache_size, svm_class, cache_size_in_megs);
+  FROM_P_BASIC(C,          C,          svm_class, C_cst             );
+  FROM_P_TVEC (C_j,        C_j,        svm_class, Cuser, n_alpha    );
+
+  if (options["data"] && options["support_vectors"] && data) {
+    // Build sv_sequences from the dataset and the support vectors.
+    // TODO Do something cleaner !
+    int n = support_vectors.length();
+    // TODO Could have to free memory ?
+    svm_class->sv_sequences =
+      (Torch::Sequence **)allocator->alloc(sizeof(Torch::Sequence *)*n);
+    Torch::DataSet* dat = data->dataset;
+    int frame_buf_size = 0;
+    for (int i = 0; i < n; i++) {
+      dat->setExample(support_vectors[i]);
+      frame_buf_size += dat->inputs->getFramesSpace();
+    }
+    int seq_size = dat->inputs->getSequenceSpace();
+    char* seq_buf    = (char*) allocator->alloc(seq_size * n  );
+    char* frames_buf = (char*) allocator->alloc(frame_buf_size);
+    for (int i = 0; i < n; i++) {
+      dat->setExample(support_vectors[i]);
+      svm_class->sv_sequences[i] = dat->inputs->clone(allocator, seq_buf, frames_buf);
+      seq_buf += seq_size;
+      frames_buf += dat->inputs->getFramesSpace();
+    }
+  }
+
+  inherited::updateFromPLearn(svm_class);
+  // NB: not updating sequences_buffer, frames_buffer.
+}
 
 /////////////////////
 // updateFromTorch //
 /////////////////////
 void TSVMClassification::updateFromTorch() {
-  cache_size = svm_class->cache_size_in_megs;
-  C          = svm_class->C_cst;
-  if (svm_class->Cuser) {
-    int n_alpha = svm_class->n_alpha;
-    C_j.resize(n_alpha);
-    C_j.copyFrom(svm_class->Cuser, n_alpha);
-  } else
-    C_j = Vec();
+  FROM_T_BASIC(cache_size, cache_size, svm_class, cache_size_in_megs);
+  FROM_T_BASIC(C,          C,          svm_class, C_cst             );
+  FROM_T_TVEC (C_j,        C_j,        svm_class, Cuser, n_alpha    );
 
   inherited::updateFromTorch();
 }
