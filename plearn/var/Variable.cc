@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.cc,v 1.17 2004/05/31 15:48:53 monperrm Exp $
+   * $Id: Variable.cc,v 1.18 2004/06/01 13:15:57 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -408,16 +408,19 @@ void Variable::verifyGradient(real step)
 
 bool Variable::update(real step_size, Vec direction_vec, real coeff, real b)
 {
+  static bool hit;
+  static real full_coeff;
   if(allows_partial_update)
     PLWARNING("Warning in Variable::update(real,Vec): will update every elements of the Variable");
-  bool hit=false;
+  hit = false;
+  full_coeff = step_size * coeff + b;
   if(min_value>-FLT_MAX || max_value<FLT_MAX)
     // constrained update
   {
     real* direction = direction_vec.data();
     for(int i=0; i<nelems(); i++)
     {
-      valuedata[i] += (step_size * coeff + b) * direction[i];      
+      valuedata[i] += (full_coeff) * direction[i];      
       if(valuedata[i]<min_value)
       {
         valuedata[i]=min_value;
@@ -436,7 +439,7 @@ bool Variable::update(real step_size, Vec direction_vec, real coeff, real b)
     real* direction = direction_vec.data();
     for(int i=0; i<nelems(); i++)
     {
-      valuedata[i] += (step_size * coeff + b) * direction[i];      
+      valuedata[i] += (full_coeff) * direction[i];      
     }
   }
   return hit;
