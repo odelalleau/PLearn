@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_main.cc,v 1.16 2004/10/29 14:48:09 dorionc Exp $
+   * $Id: plearn_main.cc,v 1.17 2004/12/01 01:28:16 dorionc Exp $
    ******************************************************* */
 
 //#include "general.h"
@@ -44,11 +44,86 @@
 #include <plearn/sys/PLMPI.h>
 //#include "Object.h"
 //#include "RunCommand.h"
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;
 
-int plearn_main(int argc, char** argv)
+static bool is_command( string& possible_command )
+{
+  if(PLearnCommandRegistry::is_registered(possible_command))
+    return true; 
+
+  if( file_exists(possible_command) )
+  {
+    possible_command = "run";
+    return false;
+  }
+  
+  PLERROR( "%s appears to neither be a known PLearn command, "
+           "nor an existing .plearn script", possible_command.c_str() );
+  return false;
+}
+
+static void output_version( int major_version, int minor_version, int fixlevel )
+{
+  cerr << prgname()
+       << " "      << major_version
+       << "."      << minor_version
+       << "."      << fixlevel
+       << "  ("    << __DATE__ << " "
+       << __TIME__ << ")"      << endl;
+}
+
+static string global_options( vector<string>& command_line,
+                              int major_version, int minor_version, int fixlevel )
+{
+  int argc                 = command_line.size();
+
+  int no_version_pos       = findpos( command_line, "--no-version" );  
+
+  int verbosity_pos        = findpos( command_line, "--verbosity"  );
+  int verbosity_value      = VLEVEL_NORMAL;
+  int verbosity_value_pos  = -1; // IMPORTANT FOR THE TEST BELOW (for loop)
+  if ( verbosity_pos != -1 )
+  {
+    verbosity_value_pos = verbosity_pos+1;
+    if ( verbosity_value_pos < argc )
+      verbosity_value = toint( command_line[verbosity_value_pos] );
+    else
+      PLERROR("Option --verbosity must be followed by an integer value.");
+  }
+
+  
+  int    cleaned     = 0;
+  string the_command = "";
+  vector<string> old( command_line );
+  
+  for ( int c=0; c < argc; c++ )
+    if ( c != no_version_pos   &&
+         c != verbosity_pos    &&
+         c != verbosity_value_pos )
+    {
+      if ( the_command == "" )
+      {
+        the_command = old[c];
+        if ( !is_command( the_command ) )
+          command_line[cleaned++] = old[c];
+      }
+      else
+        command_line[cleaned++] = old[c];
+    }
+  command_line.resize( cleaned );
+  
+  if ( no_version_pos == -1 )
+    output_version( major_version, minor_version, fixlevel );
+  PL_Log::instance().verbosity( verbosity_value );
+
+  return the_command;
+}
+
+int plearn_main( int argc, char** argv,
+                 int major_version, int minor_version, int fixlevel )
 {
   try {
 
@@ -66,26 +141,13 @@ int plearn_main(int argc, char** argv)
     }
   else 
     {
-      string command = argv[1];
-						
-      if(PLearnCommandRegistry::is_registered(command))
-        {
-          vector<string> args = stringvector(argc-2, argv+2);
-          PLearnCommandRegistry::run(command, args);
-
-        }
-      else if(file_exists(command))
-        {
-          vector<string> args = stringvector(argc-1, argv+1);
-          PLearnCommandRegistry::run("run", args);
-        }
-      else
-        PLERROR("%s appears to neither be a known PLearn command, nor an existing .plearn script",command.c_str());
+      vector<string> command_line = stringvector(argc-1, argv+1);
+      string command = global_options( command_line, major_version, minor_version, fixlevel );
+      PLearnCommandRegistry::run(command, command_line);				
     }
 
-
   PLMPI::finalize();
-
+  
   } // end of try
   catch(const PLearnError& e)
   {
@@ -97,25 +159,6 @@ int plearn_main(int argc, char** argv)
   }
 
   return 0;
-}
-
-void version( int& argc, char** argv, 
-              int major_version, int minor_version, int fixlevel )
-{
-  if (argc >= 2 && !strcmp(argv[1], "--no-version")) 
-  {
-    // eat the "--no-version" argument
-    for (int i=2; i<argc; ++i)
-      argv[i-1] = argv[i];
-    argc--;
-  }  
-  else 
-  {
-    cerr << argv[0] << " " << major_version
-         << "." << minor_version
-         << "." << fixlevel
-         << "  (" << __DATE__ << " " << __TIME__ << ")" << endl;
-  }
 }
 
 } // end of namespace PLearn

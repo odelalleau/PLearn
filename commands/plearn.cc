@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.71 2004/10/29 14:48:00 dorionc Exp $
+   * $Id: plearn.cc,v 1.72 2004/12/01 01:28:01 dorionc Exp $
    ******************************************************* */
 
 #define PLEARN_MAJOR_VERSION 0
@@ -49,13 +49,9 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
-  // Also manages a --no-version option: 
-  //   If the *FIRST* argument is --no-version, version will not
-  //   output anything. 
-  version( argc, argv, 
-           PLEARN_MAJOR_VERSION, 
-           PLEARN_MINOR_VERSION, 
-           PLEARN_FIXLEVEL       );
-  return plearn_main(argc, argv);
+  return plearn_main( argc, argv, 
+                      PLEARN_MAJOR_VERSION, 
+                      PLEARN_MINOR_VERSION, 
+                      PLEARN_FIXLEVEL       );
 }
 
