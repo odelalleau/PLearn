@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TVec_decl.h,v 1.5 2004/05/17 21:33:10 tatien Exp $
+   * $Id: TVec_decl.h,v 1.6 2004/05/19 17:16:51 tatien Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -658,6 +658,7 @@ class TVec
       //!  return true if (*this)[i]==value[i] for all i, 0 otherwise
       bool operator==(const TVec<T>& value) const
       {
+        if (value.isEmpty() && isEmpty()) return true;
         if (value.length()!=length()) return false;
         T* x=data();
         T* y=value.data();
