@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KFoldSplitter.cc,v 1.3 2003/05/07 05:39:18 plearner Exp $ 
+   * $Id: KFoldSplitter.cc,v 1.4 2003/05/15 19:29:46 genji256 Exp $ 
    ******************************************************* */
 
 /*! \file SequentialSplitter.cc */
@@ -89,7 +89,7 @@ Array<VMat> KFoldSplitter::getSplit(int k)
 
     int n_data = dataset->length();
     real test_fraction = K > 0 ? (n_data/(real)K) : 0;
-    if ((int)(n_data * test_fraction) < 1)
+    if ((int)(test_fraction) < 1)
         test_fraction = 1; // leave-one-out cross-validation
 
     Array<VMat> split_(2);
