@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.h,v 1.23 2004/11/16 22:45:32 dorionc Exp $ 
+   * $Id: VecStatsCollector.h,v 1.24 2004/11/16 23:14:45 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.h */
@@ -61,7 +61,7 @@ public:
 
   /**
    * If the remove_observation mecanism is used and the removed
-   * value is equal to one of last_, min_ or max_, the default
+   * value is equal to one of first_, last_, min_ or max_, the default
    * behavior is to warn the user.
    * 
    * If one want to disable this feature, he may set

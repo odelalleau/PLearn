@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.31 2004/11/16 22:45:32 dorionc Exp $
+   * $Id: StatsCollector.h,v 1.32 2004/11/16 23:14:44 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -96,7 +96,7 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
 
     /**
      * If the remove_observation mecanism is used and the removed
-     * value is equal to one of last_, min_ or max_, the default
+     * value is equal to one of first_, last_, min_ or max_, the default
      * behavior is to warn the user.
      * 
      * If one want to disable this feature, he may set
