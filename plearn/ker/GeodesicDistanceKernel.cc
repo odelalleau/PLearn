@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GeodesicDistanceKernel.cc,v 1.8 2004/07/22 16:43:25 monperrm Exp $ 
+   * $Id: GeodesicDistanceKernel.cc,v 1.9 2004/07/22 16:45:09 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -134,7 +134,6 @@ int GeodesicDistanceKernel::computeNearestGeodesicNeighbour(int i, const Mat& k_
   int indice = 0;
   for (int j = 1; j < knn; j++) {
     dist = k_xi_x_sorted(j,0) + geo_distances->get(i, int(k_xi_x_sorted(j,1)));
-    //cout<<dist<<":";
     if (dist < min) {
       min = dist;
       indice = j;
@@ -148,7 +147,6 @@ int GeodesicDistanceKernel::computeNearestGeodesicNeighbour(int i, const Mat& k_
 /////////////////////////////
 real GeodesicDistanceKernel::computeShortestDistance(int i, const Mat& k_xi_x_sorted) const {
   int indice = computeNearestGeodesicNeighbour(i,k_xi_x_sorted);
-  //cout<<indice<<endl;
   return k_xi_x_sorted(indice,0) + geo_distances->get(i,indice);
 }
 
