@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianDistribution.h,v 1.8 2004/05/26 16:06:48 tihocan Exp $
+   * $Id: GaussianDistribution.h,v 1.9 2004/08/12 16:15:25 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -88,6 +88,8 @@ using namespace std;
     //! return a pseudo-random sample generated from the distribution.
     virtual void generate(Vec& x) const;
 
+    //! Overridden so that it does not necessarily need a training set.
+    virtual int inputsize() const;
 
   protected:
     static void declareOptions(OptionList& ol);

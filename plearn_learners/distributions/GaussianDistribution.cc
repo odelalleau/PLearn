@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianDistribution.cc,v 1.10 2004/07/21 16:30:55 chrish42 Exp $
+   * $Id: GaussianDistribution.cc,v 1.11 2004/08/12 16:15:25 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -156,5 +156,13 @@ void GaussianDistribution::generate(Vec& x) const
   x += mu;
 }
 
+///////////////
+// inputsize //
+///////////////
+int GaussianDistribution::inputsize() const {
+  if (train_set || mu.length() == 0)
+    return inherited::inputsize();
+  return mu.length();
+}
 
 } // end of namespace PLearn
