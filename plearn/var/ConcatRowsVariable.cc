@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVariable.cc,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: ConcatRowsVariable.cc,v 1.5 2004/04/27 16:04:13 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,27 +49,45 @@ using namespace std;
 
 
 /** ConcatRowsVariable **/
+
+PLEARN_IMPLEMENT_OBJECT(ConcatRowsVariable,
+                        "Concatenation of the rows of several variables",
+                        "NO HELP");
+
 ConcatRowsVariable::ConcatRowsVariable(const VarArray& vararray)
-    :NaryVariable(vararray.nonNull(), vararray.sumOfLengths(), vararray.maxWidth())
+    : inherited(vararray.nonNull(), vararray.sumOfLengths(), vararray.maxWidth())
 {
-  // all the variables must have the same width
-  int w = varray[0]->width();
-  for (int i=1; i<varray.size(); i++)
-    if (w!=varray[i]->width())
-      PLERROR("ConcatRowsVariable: all non-null variables must have the same width");
+    build_();
+}
+
+void
+ConcatRowsVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+ConcatRowsVariable::build_()
+{
+    // all the variables must have the same width
+    if (varray->length()) {
+        int w = varray[0]->width();
+        for (int i = 1; i < varray.size(); i++)
+            if (w != varray[i]->width())
+                PLERROR("ConcatRowsVariable: all non-null variables must have the same width");
+    }
 }
 
 
-PLEARN_IMPLEMENT_OBJECT(ConcatRowsVariable, "ONE LINE DESCR", "NO HELP");
-
 void ConcatRowsVariable::recomputeSize(int& l, int& w) const
-{ l=varray.sumOfLengths(); w=varray.maxWidth(); }
-
-
-
-
-
-
+{
+    if (varray) {
+        l = varray.sumOfLengths();
+        w = varray.maxWidth();
+    } else
+        l = w = 0;
+}
 
 
 void ConcatRowsVariable::fprop()
@@ -115,8 +133,6 @@ void ConcatRowsVariable::rfprop()
       rvaluedata[k] = vn->rvaluedata[i];
   }
 }
-
-
 
 } // end of namespace PLearn
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: VarArrayElementVariable.h,v 1.3 2004/02/20 21:11:54 chrish42 Exp $
+   * $Id: VarArrayElementVariable.h,v 1.4 2004/04/27 16:04:13 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,19 +54,27 @@ using namespace std;
 //!  by the input2 variable 
 class VarArrayElementVariable: public NaryVariable
 {
-protected:
-  //!  protected default constructor for persistence
-  VarArrayElementVariable() {}
+  typedef NaryVariable inherited;
 
 public:
+  //!  protected default constructor for persistence
+  VarArrayElementVariable() {}
   VarArrayElementVariable(VarArray& input1, const Var& input2);
+
   PLEARN_DECLARE_OBJECT(VarArrayElementVariable);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
+
+protected:
+    void build_();
 };
 
+DECLARE_OBJECT_PTR(VarArrayElementVariable);
 
 } // end of namespace PLearn
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: IfThenElseVariable.cc,v 1.5 2004/02/26 07:45:13 nova77 Exp $
+   * $Id: IfThenElseVariable.cc,v 1.6 2004/04/27 16:04:13 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,21 +49,42 @@ using namespace std;
 
 /** IfThenElseVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(IfThenElseVariable,
+                        "Variable that represents the element-wise IF-THEN-ELSE",
+                        "NO HELP");
+
 IfThenElseVariable::IfThenElseVariable(Var IfVar, Var ThenVar, Var ElseVar)
-    :NaryVariable(IfVar & ThenVar & (VarArray)ElseVar,ThenVar->length(), ThenVar->width())
+    : inherited(IfVar & ThenVar & (VarArray)ElseVar,ThenVar->length(), ThenVar->width())
 {
-  if (ThenVar->length() != ElseVar->length() || ThenVar->width() != ElseVar->width())
-    PLERROR("In IfThenElseVariable: ElseVar and ThenVar must have the same size");
-  if (!IfVar->isScalar() && (IfVar->length()!=ThenVar->length() || IfVar->width()!=ThenVar->width()))
-    PLERROR("In IfThenElseVariable: IfVar must either be a scalar or have the same size as ThenVar and ElseVar");
+    build_();
 }
 
+void
+IfThenElseVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
-PLEARN_IMPLEMENT_OBJECT(IfThenElseVariable, "ONE LINE DESCR", "NO HELP");
+void
+IfThenElseVariable::build_()
+{
+    if (varray.size()) {
+        if (varray[1]->length() != varray[2]->length() || varray[1]->width() != varray[2]->width())
+            PLERROR("In IfThenElseVariable: ElseVar and ThenVar must have the same size");
+        if (!varray[0]->isScalar() && (varray[0]->length() != varray[1]->length() || varray[0]->width() != varray[1]->width()))
+            PLERROR("In IfThenElseVariable: IfVar must either be a scalar or have the same size as ThenVar and ElseVar");
+    }
+}
 
 void IfThenElseVariable::recomputeSize(int& l, int& w) const
-{ l=varray[1]->length(); w=varray[1]->width(); }
-
+{
+    if (varray.size()) {
+        l = varray[1]->length();
+        w = varray[1]->width();
+    } else
+        l = w = 0;
+}
 
 void IfThenElseVariable::fprop()
 {

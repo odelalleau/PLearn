@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: IfThenElseVariable.h,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: IfThenElseVariable.h,v 1.5 2004/04/27 16:04:13 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -56,13 +56,17 @@ using namespace std;
 */
 class IfThenElseVariable: public NaryVariable
 {
-protected:
-  //!  Default constructor for persistence
-  IfThenElseVariable() {}
+    typedef NaryVariable inherited;
 
 public:
+  //!  Default constructor for persistence
+  IfThenElseVariable() {}
   IfThenElseVariable(Var IfVar, Var ThenVar, Var ElseVar);
+
   PLEARN_DECLARE_OBJECT(IfThenElseVariable);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
   virtual void bprop();
@@ -71,7 +75,12 @@ public:
   Var& If() { return varray[0]; }
   Var& Then() { return varray[1]; }
   Var& Else() { return varray[2]; }
+
+protected:
+    void build_();
 };
+
+DECLARE_OBJECT_PTR(IfThenElseVariable);
 
 //!  IT WOULD BE NICE IF WE COULD REDEFINE (:?)
 inline Var ifThenElse(Var If, Var Then, Var Else)

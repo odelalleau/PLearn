@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: VarArrayElementVariable.cc,v 1.4 2004/02/20 21:11:54 chrish42 Exp $
+   * $Id: VarArrayElementVariable.cc,v 1.5 2004/04/27 16:04:13 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,26 +49,47 @@ using namespace std;
 /** VarArrayElementVariable **/
 /* selects one element of a VarArray according to a Var index */
 
+PLEARN_IMPLEMENT_OBJECT(VarArrayElementVariable,
+                        "Selects one element of a VarArray according to a Var index */",
+                        "NO HELP");
+
 VarArrayElementVariable::
 VarArrayElementVariable(VarArray& input1, const Var& input2)
-  :NaryVariable(input1 & (VarArray)input2, input1[0]->length(), input1[0]->width())
+  : inherited(input1 & (VarArray)input2, input1[0]->length(), input1[0]->width())
 {
-  int l=input1[0]->length();
-  int w=input1[0]->width();
-  for (int i=1;i<input1.size();i++)
-    if (input1[i]->length()!=l || input1[i]->width()!=w)
-      PLERROR("VarArrayElementVairables expect all the elements of input1 array to have the same size");
-  if (!input2->isScalar())
-    PLERROR("VarArrayElementVariable expect an index Var (input2) of length 1");
+    build_();
+}
+
+void
+VarArrayElementVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+VarArrayElementVariable::build_()
+{
+    if (varray.size() >= 2) {// && varray[0] && varray[1] && varray[1].size()) {
+        int l = varray[0]->length();
+        int w = varray[0]->width();
+        for (int i = 1; i < varray.size() - 1; i++)
+            if (varray[i]->length() != l || varray[i]->width() != w)
+                PLERROR("VarArrayElementVairables expect all the elements of input1 array to have the same size");
+        if (!varray[varray.size() - 1]->isScalar())
+            PLERROR("VarArrayElementVariable expect an index Var (input2) of length 1");
+    }
 }
 
 
-PLEARN_IMPLEMENT_OBJECT(VarArrayElementVariable, "ONE LINE DESCR", "NO HELP");
-
-
 void VarArrayElementVariable::recomputeSize(int& l, int& w) const
-{ l=varray[0]->length(); w=varray[0]->width(); }
-
+{
+    if (varray && varray.size()) {
+        l = varray[0]->length();
+        w = varray[0]->width();
+    } else
+        l = w = 0;
+}
 
 void VarArrayElementVariable::fprop()
 {

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVariable.h,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: ConcatRowsVariable.h,v 1.5 2004/04/27 16:04:13 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,22 +52,29 @@ using namespace std;
 //!  concatenation of the rows of several variables
 class ConcatRowsVariable: public NaryVariable
 {
-protected:
-  //!  protected default constructor for persistence
-  ConcatRowsVariable() {}
+  typedef NaryVariable inherited;
 
 public:
+  //!  Default constructor for persistence
+  ConcatRowsVariable() {}
   //!  all the variables must have the same number of columns
   ConcatRowsVariable(const VarArray& vararray);
+
   PLEARN_DECLARE_OBJECT(ConcatRowsVariable);
-  virtual void recomputeSize(int& l, int& w) const;
-  
-  
+
+  virtual void build();
+
+  virtual void recomputeSize(int& l, int& w) const;  
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
   virtual void rfprop();
+
+protected:
+    void build_();
 };
+
+DECLARE_OBJECT_PTR(ConcatRowsVariable);
 
 inline Var vconcat(const VarArray& varray)
 { return new ConcatRowsVariable(varray); }
