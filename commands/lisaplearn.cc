@@ -33,13 +33,14 @@
 
 
 /* *******************************************************      
-   * $Id: lisaplearn.cc,v 1.20 2004/04/21 17:22:10 tihocan Exp $
+   * $Id: lisaplearn.cc,v 1.21 2004/04/22 13:05:50 tihocan Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
 
 // Available Splitters:
 #include "ExplicitSplitter.h"
+#include "FilterSplitter.h"
 #include "FractionSplitter.h"
 #include "KFoldSplitter.h"
 #include "RepeatSplitter.h"
