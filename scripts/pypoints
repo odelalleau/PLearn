@@ -32,13 +32,26 @@
 #  library, go to the PLearn Web site at www.plearn.org
 
 from Tkinter import *
-import tkFileDialog
+# import tkFileDialog
+import sys
 
 class InputPoints:
 
     colors = [ "Red", "Green", "Blue", "Yellow", "Magenta", "Cyan" ]
     radius = 4
+    canvaswidth = 500
+    canvasheight = 500
+    xlow = -1.0
+    xhigh = 1.0
+    ylow = -1.0
+    yhigh = 1.0
 
+    def getRealCoords(self, sx,sy):
+        """Returns x,y coordinates to put in mat, given sx,sy canvas coordinates expressed in pixels"""
+        x = self.xlow + sx*(self.xhigh-self.xlow)/self.canvaswidth
+        y = self.ylow + sy*(self.yhigh-self.ylow)/self.canvaswidth
+        return x,y
+        
     def __init__(self, master, filepath):
         self.filepath = filepath
         master.title(filepath)
@@ -75,7 +88,7 @@ class InputPoints:
         #############
         ## The canvas
 
-        canvas = Canvas(master, width=500, height=500, background="White")
+        canvas = Canvas(master, width=self.canvaswidth, height=self.canvasheight, background="White")
         canvas.grid(row=1,column=1)
         canvas.bind("<Button-1>", self.leftclick)
         canvas.bind("<Button-3>", self.rightclick)
@@ -84,14 +97,14 @@ class InputPoints:
         ###########
 
     def pressedClear(self):
-        print "pressed Clear"
+        # print "pressed Clear"
         for i in self.canvas.find_all():
             self.canvas.delete(i)
         for c in self.counts:
             c.set(0)
         
     def pressedSave(self):
-        print "pressed Save"
+        # print "pressed Save"
         self.save()
 
     def leftclick(self,event):
@@ -100,8 +113,8 @@ class InputPoints:
         y = canvas.canvasx(event.y)
         r = self.radius
         v = self.currentval.get()
-        print 'clicked at: ',x,y
-        print canvas.find_closest(x, y)
+        # print 'clicked at: ',x,y
+        # print canvas.find_closest(x, y)
         canvas.create_oval(x-r,y-r,x+r,y+r, fill=self.colors[v], outline="", tags=str(v))
         # increment count
         self.counts[v].set(self.counts[v].get()+1)
@@ -111,20 +124,12 @@ class InputPoints:
         x = canvas.canvasx(event.x)
         y = canvas.canvasx(event.y)
         r = 10
-        print 'clicked at: ',x,y
+        # print 'clicked at: ',x,y
         closest = canvas.find_closest(x, y)[0]
-        print 'Deleting closest: ', closest
+        # print 'Deleting closest: ', closest
 
         c = int(canvas.gettags(closest)[0])
-        self.counts[c].set(self.counts[c].get()-1)
-        
-#         tags = canvas.gettags(closest)
-
-#         # decrement count
-#         for v in range(0,len(self.counts)):
-#             if str(v) in tags:
-#                 self.counts[v].set(self.counts[v].get()-1)
-#                 break
+        self.counts[c].set(self.counts[c].get()-1)        
         canvas.delete(closest)
         
     def keypressed(self,event):
@@ -136,17 +141,36 @@ class InputPoints:
     def save(self):
         #if self.filepath=="":
         #    self.filepath=tkFileDialog.asksaveasfilename()
-
         canvas = self.canvas
+        points = canvas.find_all()
+        l = len(points)
+        w = 3
 
-        for p in canvas.find_all():
-            co = canvas.coords(p)
-            x = co[0]+self.radius
-            y = co[1]+self.radius
-            c = int(canvas.gettags(p)[0])
-            print x,y,c
+        f = open(self.filepath,'w')
+        f.write('#size: ' + `l` + ' ' + `w` + '\n')
         
-filepath=""
+        for p in points:
+            co = canvas.coords(p)  # screen coords
+            sx = co[0]+self.radius
+            sy = co[1]+self.radius
+            c = int(canvas.gettags(p)[0])
+            x,y = self.getRealCoords(sx,sy)
+            f.write(`x` + '\t' + `y` + '\t' + `c` + '\n') 
+
+        f.close()
+
+# Main prg
+
+args = sys.argv[:]
+
+if len(args)<2:
+    print "Usage: pypoints filename.amat"
+    print "Will open a window to input points and save their"
+    print "x,y coordinates and classnum in the given file"
+    sys.exit()
+
+filepath=args[1]
+
 root = Tk()
 app = InputPoints(root,filepath)
 root.mainloop()
