@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.32 2004/07/21 17:02:51 tihocan Exp $
+   * $Id: Kernel.h,v 1.33 2004/07/23 13:42:52 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -169,11 +169,10 @@ public:
   //! the dataset, and with -1 otherwise.
   bool isInData(const Vec& x, int* i = 0) const;
 
-  //! Fill 'k_xi_x_sorted' with the distances from x to the training points
-  //! in the first column (with the knn first ones being the distances to
-  //! the nearest neighbors of x), and with the indices of the corresponding
+  //! Fill 'k_xi_x_sorted' with the value of K(x, x_i) for all training points
+  //! x_i in the first column (with the knn first ones being sorted according
+  //! to increasing value of K(x, x_i)), and with the indices of the corresponding
   //! neighbors in the second column.
-  //! The distance between x and x_i is assumed to be K(x_i, x).
   void computeNearestNeighbors(const Vec& x, Mat& k_xi_x_sorted, int knn) const;
 
   //!  Returns a Mat m such that m(i,j) is the index of jth closest neighbour of input i, 
