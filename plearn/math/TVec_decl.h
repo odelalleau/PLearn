@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
- * $Id: TVec_decl.h,v 1.15 2004/07/21 16:30:53 chrish42 Exp $
+ * $Id: TVec_decl.h,v 1.16 2004/08/11 07:18:45 chapados Exp $
  * AUTHORS: Pascal Vincent & Yoshua Bengio
  * This file is part of the PLearn library.
  ******************************************************* */
@@ -575,7 +575,7 @@ public:
   inline void append(const TVec<T>& values)
     {
       int oldLength = length();
-      if (oldLength+values.length() == 0)
+      if (values.length() == 0)
         return;
       resize(oldLength+values.length());
       T* v = data()+oldLength;
