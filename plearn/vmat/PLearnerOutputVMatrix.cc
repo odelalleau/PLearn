@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.cc,v 1.18 2004/11/12 20:10:31 larocheh Exp $
+   * $Id: PLearnerOutputVMatrix.cc,v 1.19 2005/01/13 14:24:23 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -149,6 +149,9 @@ void PLearnerOutputVMatrix::declareOptions(OptionList& ol)
    declareOption(ol, "compute_output_once", &PLearnerOutputVMatrix::compute_output_once, OptionBase::buildoption,
                 "If set to 1, the output of the learners will be computed once and stored");
 
+   declareOption(ol, "fieldinfos_source", &PLearnerOutputVMatrix::fieldinfos_source, OptionBase::buildoption,
+       "If provided, the fieldnames will be copied from this source VMat.");
+
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
 }
@@ -226,11 +229,15 @@ void PLearnerOutputVMatrix::build_()
     length_ = data->length();
 
     // Set field info.
-    fieldinfos.resize(width_);
-    if (put_non_input && data->getFieldInfos().size() >= data->inputsize() + data->targetsize()) {
-      // We can retrieve the information for the target columns.
-      for (int i = 0; i < data->targetsize(); i++) {
-        fieldinfos[i + this->inputsize()] = data->getFieldInfos()[i + data->inputsize()];
+    if (fieldinfos_source) {
+      setFieldInfos(fieldinfos_source->getFieldInfos());
+    } else {
+      fieldinfos.resize(width_);
+      if (put_non_input && data->getFieldInfos().size() >= data->inputsize() + data->targetsize()) {
+        // We can retrieve the information for the target columns.
+        for (int i = 0; i < data->targetsize(); i++) {
+          fieldinfos[i + this->inputsize()] = data->getFieldInfos()[i + data->inputsize()];
+        }
       }
     }
   }
