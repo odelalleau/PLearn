@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.23 2003/05/20 15:42:11 plearner Exp $
+   * $Id: plearn.cc,v 1.24 2003/05/20 15:45:07 plearner Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -93,12 +93,6 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
-  PIStringStream in("il etait une fois dans l'ouest");
-  string w;
-  in >> w;
-  cerr << "Word: " << w << endl;
-  w.clear();
-  cerr << "Word: " << w << endl;
   return plearn_main(argc, argv);
 }
 
