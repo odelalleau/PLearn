@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainTestSplitter.h,v 1.5 2003/08/13 08:13:46 plearner Exp $ 
+   * $Id: TrainTestSplitter.h,v 1.6 2003/11/27 20:11:16 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file TrainTestSplitter.h */
@@ -65,6 +65,7 @@ public:
   // * public build options *
   // ************************
 
+  int append_train;
   real test_fraction; // the fraction of the dataset to be used as test (hese will be the last few samples of the dataset)
 
   // ****************

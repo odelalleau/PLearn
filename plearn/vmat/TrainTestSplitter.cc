@@ -37,25 +37,31 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainTestSplitter.cc,v 1.6 2003/08/13 08:13:46 plearner Exp $ 
+   * $Id: TrainTestSplitter.cc,v 1.7 2003/11/27 20:11:16 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file TrainTestSplitter.cc */
+
 #include "TrainTestSplitter.h"
 
 namespace PLearn <%
 using namespace std;
 
 TrainTestSplitter::TrainTestSplitter(real the_test_fraction)
-  : test_fraction(the_test_fraction)
+  : append_train(0), test_fraction(the_test_fraction)
 {};
 
 PLEARN_IMPLEMENT_OBJECT(TrainTestSplitter, "ONE LINE DESCR", "NO HELP");
 
 void TrainTestSplitter::declareOptions(OptionList& ol)
 {
+  declareOption(ol, "append_train", &TrainTestSplitter::append_train, OptionBase::buildoption,
+      "if set to 1, the trainset will be appended after the test set (thus each split"
+      " will contain three sets");
+
   declareOption(ol, "test_fraction", &TrainTestSplitter::test_fraction, OptionBase::buildoption,
-                "Defined the fraction of the dataset reserved to the test set");
+                "the fraction of the dataset reserved to the test set");
+
   inherited::declareOptions(ol);
 }
 
@@ -85,7 +91,10 @@ int TrainTestSplitter::nsplits() const
 
 int TrainTestSplitter::nSetsPerSplit() const
 {
-  return 2;
+  if (append_train)
+    return 3;
+  else
+    return 2;
 }
 
 TVec<VMat> TrainTestSplitter::getSplit(int k)
@@ -101,8 +110,11 @@ TVec<VMat> TrainTestSplitter::getSplit(int k)
   
   split_[0] = dataset.subMatRows(0, train_length);
   split_[1] = dataset.subMatRows(train_length, test_length);
+  if (append_train) {
+    split_.resize(3);
+    split_[2] = split_[0];
+  }
   return split_;
 }
-
 
 %> // end of namespace PLearn
