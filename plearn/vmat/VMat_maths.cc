@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat_maths.cc,v 1.12 2003/12/15 14:05:28 plearner Exp $
+* $Id: VMat_maths.cc,v 1.13 2004/01/13 22:38:52 yoshua Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat_maths.h"
@@ -53,6 +53,7 @@
 #include <vector>
 #include "VecStatsCollector.h"
 #include "ConditionalStatsCollector.h"
+#include "stats_utils.h"
 
 namespace PLearn <%
 using namespace std;
@@ -1123,6 +1124,64 @@ VMat temporalThreshold(VMat distr, int threshold_date, bool is_before,
 
   return distr.rows(indices);
 }
+
+//! Compute the correlations between each of the columns of x and each of the 
+//! columns of y. The results are in the x.width() by y.width() matrix r.
+//! The p-values of the corresponding test (no correlation) are stored 
+//! in the same-sized matrix pvalues.
+void correlations(const VMat& x, const VMat& y, Mat& r, Mat& pvalues)
+{
+  int n=x.length();
+  if (n!=y.length())
+    PLERROR("correlations: x and y must have the same length");
+  int wx=x.width();
+  int wy=y.width();
+  r.resize(wx,wy);
+  r.clear();
+  Mat sxy(wx,wy);
+  Vec sx2(wx);
+  Vec sy2(wx);
+  Vec sx(wx);
+  Vec sy(wx);
+  Vec xt(wx);
+  Vec yt(wy);
+  for (int t=0;t<n;t++)
+  {
+    x->getRow(t,xt);
+    y->getRow(t,yt);
+    for (int j=0;j<wy;j++)
+    {
+      real ytj = yt[j];
+      sy[j] += ytj;
+      sy2[j] += ytj*ytj;
+      for (int i=0;i<wx;i++)
+      {
+        real xti = xt[i];
+        sxy(i,j) += xti*ytj;
+        sx[i] += xti;
+        sx2[i] += xti*xti;
+      }
+    }
+  }
+  for (int i=0;i<wx;i++)
+    for (int j=0;j<wy;j++)
+    {
+      real nv = (sx2[i] - sx[i]/n*sx[i]); // = n * variance of x
+      if (nv>0) // don't bother if variance is 0
+        r(i,j) = (n*sxy(i,j)-sx[i]*sy[j])/sqrt((n*sx2[i]-sx[i]*sx[i])*(n*sy2[j]-sy[j]*sy[j]));
+      else
+        r(i,j) = 0;
+      if (r(i,j)<-1.01 || r(i,j)>1.01)
+        PLWARNING("correlation: weird correlation coefficient, %f for %d-th input, %d-target",
+                  r(i,j),i,j);
+    }
+  pvalues.resize(r.length(),r.width());
+  for (int i=0;i<r.length();i++)
+    for (int j=0;j<r.width();j++)
+      pvalues(i,j) = testNoCorrelationAsymptotically(r(i,j),n);
+
+}
+
 
 
 %> // end of namespace PLearn

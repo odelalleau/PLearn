@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: stats_utils.h,v 1.2 2004/01/10 22:54:29 yoshua Exp $
+   * $Id: stats_utils.h,v 1.3 2004/01/13 22:38:52 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -60,14 +60,14 @@ using namespace std;
 //! matrix size wx by wy upon return. N.B. If x holds in memory
 //! than copying it to a matrix (toMat()) before calling this function will
 //! speed up computation significantly.
-void SpearmanRankCorrelation(const VMat &x, const VMat& y, Mat r);
+void SpearmanRankCorrelation(const VMat &x, const VMat& y, Mat& r);
 
 //! Return P(|R|>|r|) two-sided p-value for the null-hypothesis that
-//! there is no monotonic dependency, with r the observed Spearman Rank 
+//! there is no monotonic dependency, with r the observed 
 //! correlation between two paired samples of length n. The p-value
-//! is computed by taking advantage of the fact that under the null
-//! hypothesis r*sqrt(n-1) is Normal(0,1), if n is LARGE ENOUGH (approx. > 30).
-real testSpearmanRankCorrelation(real r, int n);
+//! is computed by taking advantage of the fact that under the null 
+//! hypothesis (true corr=0), r*sqrt(n-1) converges to a Normal(0,1), if n is LARGE ENOUGH.
+real testNoCorrelationAsymptotically(real r, int n);
 
 //! Compute P(|R|>|r|) two-sided p-value for the null-hypothesis that
 //! there is no monotonic dependency, with r the observed Spearman Rank 
@@ -80,7 +80,9 @@ real testSpearmanRankCorrelation(real r, int n);
 //! matrix size wx by wy upon return. N.B. If x holds in memory
 //! than copying it to a matrix (toMat()) before calling this function will
 //! speed up computation significantly.
-void testSpearmanRankCorrelation(const VMat &x, const VMat& y, Mat pvalues);
+void testSpearmanRankCorrelationPValues(const VMat &x, const VMat& y, Mat& pvalues);
+//! same as above but return also in r the rank correlations
+void testSpearmanRankCorrelation(const VMat &x, const VMat& y, Mat& r, Mat& pvalues);
 
 //! Returns the max of the difference between the empirical cdf of 2 series of values
 //! Side-effect: the call sorts v1 and v2.

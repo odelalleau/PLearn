@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TestDependenciesCommand.h,v 1.1 2004/01/11 03:05:55 yoshua Exp $ 
+   * $Id: TestDependenciesCommand.h,v 1.2 2004/01/13 22:38:51 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file TestDependenciesCommand.h */
@@ -52,12 +52,15 @@ public:
   TestDependenciesCommand():
     PLearnCommand("test-dependencies",
                   "Compute dependency statistics between input and target variables.",
-                  "  test-dependencies <VMat> [<inputsize> <targetsize>]\n"
+                  "  test-dependencies <VMat> [<inputsize> <targetsize> [<datablocksize>]]\n"
                   "Reads a VMatrix (or any matrix format) and computes dependency statistics between each\n"
                   "of the input variables and each of the target variables. A dependency score is then\n"
                   "computed and a report is produced, listing the input variables in decreasing value of\n"
                   "that score. The current implementation only computes the Spearman rank correlation\n"
-                  "and the linear correlation.\n")
+                  "and the linear correlation. If <datablocksize> is provided, it is used to\n"
+                  "divide the data row-wise in blocks of <datablocksize> rows. The statistics\n"
+                  "are computed separately in each block, and then some statistics of these\n"
+                  "statistics (min, max, mean, stdev) are reported.\n")
   {}
                     
   virtual void run(const vector<string>& args);

@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: stats_utils.cc,v 1.3 2004/01/10 22:54:29 yoshua Exp $
+   * $Id: stats_utils.cc,v 1.4 2004/01/13 22:38:52 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -43,6 +43,7 @@
 #include "stats_utils.h"
 #include "TMat_maths.h"
 #include "pl_erf.h"
+#include "random.h"
 
 namespace PLearn <%
 using namespace std;
@@ -58,7 +59,7 @@ using namespace std;
 //! matrix size wx by wy upon return. N.B. If x holds in memory
 //! than copying to a matrix before calling this function will
 //! speed up computation significantly.
-void SpearmanRankCorrelation(const VMat &x, const VMat& y, Mat r)
+void SpearmanRankCorrelation(const VMat &x, const VMat& y, Mat& r)
 {
   int n=x.length();
   if (n!=y.length())
@@ -70,33 +71,41 @@ void SpearmanRankCorrelation(const VMat &x, const VMat& y, Mat r)
   Mat y_ranks;
   computeRanks(y.toMat(),y_ranks);
   Mat x_rank(n,1);
+  //real rank_normalization = sqrt(1.0/(n*n-1.0));
+  real rank_normalization = 12.0/(n*(n-1.0)*(n-2.0));
+  real half = n*0.5;
   for (int i=0;i<wx;i++)
   {
     Mat xi=x.column(i).toMat();
     // compute the rank of the i-th column of x
+    cout << ".";
     computeRanks(xi,x_rank);
     // compute the Spearman rank correlation coefficient:
     Vec r_i = r(i);
     for (int k=0;k<n;k++)
       for (int j=0;j<wy;j++)
       {
-        real delta = x_rank(k,0) - y_ranks(k,j);
-        r_i[j] += delta*delta;
+        //real delta = (x_rank(k,0) - y_ranks(k,j))*rank_normalization;
+        // r_i[j] += delta*delta;
+        r_i[j] += (x_rank(k,0) - half) * (y_ranks(k,j)-half) * rank_normalization;
       }
     for (int j=0;j<wy;j++)
-      r_i[j] = 1 - 6*r_i[j]/(n*(n*n-1));
+      if (r_i[j]<-1.01 || r_i[j]>1.01)
+        PLWARNING("SpearmanRankCorrelation: weird correlation coefficient, %f for %d-th input, %d-target",
+                  r_i[j],i,j);
   }
+  cout << endl;
 }
 
 //! Return P(|R|>|r|) two-sided p-value for the null-hypothesis that
 //! there is no monotonic dependency, with r the observed Spearman Rank 
 //! correlation between two paired samples of length n. The p-value
 //! is computed by taking advantage of the fact that under the null
-//! hypothesis r*sqrt(n-1) is Normal(0,1), if n is LARGE ENOUGH (approx. > 30).
-real testSpearmanRankCorrelation(real r, int n)
+//! hypothesis r*sqrt(n-1) converges to a Normal(0,1), if n is LARGE ENOUGH (approx. > 30).
+real testNoCorrelationAsymptotically(real r, int n)
 {
   real fz = fabs(r)*sqrt(n-1.0);
-  return gauss_01_cum(fz) + (1-gauss_01_cum(-fz));
+  return (1-gauss_01_cum(fz)) + gauss_01_cum(-fz);
 }
 
 //! Compute P(|R|>|r|) two-sided p-value for the null-hypothesis that
@@ -110,15 +119,20 @@ real testSpearmanRankCorrelation(real r, int n)
 //! matrix size wx by wy upon return. N.B. If x holds in memory
 //! than copying it to a matrix (toMat()) before calling this function will
 //! speed up computation significantly.
-void testSpearmanRankCorrelation(const VMat &x, const VMat& y, Mat pvalues)
+void testSpearmanRankCorrelationPValues(const VMat &x, const VMat& y, Mat& pvalues)
 {
   Mat r;
+  testSpearmanRankCorrelation(x,y,r,pvalues);
+}
+
+void testSpearmanRankCorrelation(const VMat &x, const VMat& y, Mat& r, Mat& pvalues)
+{
   SpearmanRankCorrelation(x,y,r);
   int n=x.length();
   pvalues.resize(r.length(),r.width());
   for (int i=0;i<r.length();i++)
     for (int j=0;j<r.width();j++)
-      pvalues(i,j) = pvalues(j,i) = testSpearmanRankCorrelation(r(i,j),n);
+      pvalues(i,j) = testNoCorrelationAsymptotically(r(i,j),n);
 }
 
 
