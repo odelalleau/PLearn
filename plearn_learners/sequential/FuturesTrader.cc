@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.cc,v 1.14 2003/10/07 20:29:03 ducharme Exp $ 
+   * $Id: FuturesTrader.cc,v 1.15 2003/10/08 21:07:21 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.cc */
@@ -162,11 +162,9 @@ void FuturesTrader::trader_test( int t, VMat testset,
     }
   }
   
-  real risk_free_return = exp(risk_free(t-horizon));
-  absolute_return_t += previous_value_t * (risk_free_return-1);
-  relative_return_t =  risk_free_return + relative_sum/previous_value_t;
-  if (relative_return_t < 0)
-    PLWARNING("Rendement negatif -> %g", relative_return_t);
+  real daily_risk_free_return = exp(log(1.0+risk_free(t-horizon))/252.0) - 1.0;
+  absolute_return_t += previous_value_t * daily_risk_free_return;
+  relative_return_t =  daily_risk_free_return + relative_sum/previous_value_t;
 }
 
 void FuturesTrader::check_margin(int k, int t) const

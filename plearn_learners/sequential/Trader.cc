@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.cc,v 1.10 2003/10/07 20:29:04 ducharme Exp $ 
+ * $Id: Trader.cc,v 1.11 2003/10/08 21:07:21 ducharme Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -420,30 +420,37 @@ void Trader::test(VMat testset, PP<VecStatsCollector> test_stats,
     // The order of the 'append' statements is IMPORTANT! (enum stats_indices) 
     Vec update;
     update.append( absolute_Rt );
-    update.append( log(relative_Rt) );
+    update.append( log(1.0 + relative_Rt) );
     if(sp500 != "")
       update.append( log(sp500_price(t)/sp500_price(t-horizon)) );
     internal_stats.update(update);
     
-    //cout << "(rt, log_rel_rt, sp)[" << t << "]: " << update << endl;    
+    //cout << "(rt, log_rel_rt, log_sp)[" << t << "]: " << update << endl;
   }
   
-  real average = internal_stats.stats[rt].mean(); 
-  real sigmasquare = internal_stats.stats[rt].variance();
-  real average_rel = internal_stats.stats[log_rel_rt].mean(); 
-  average_rel = exp(252.0*average_rel);
-  
+  real average_absolute_Rt = internal_stats.stats[rt].mean();
+  real stddev_absolute_Rt = internal_stats.stats[rt].stddev();
+  real average_relative_Rt = internal_stats.stats[log_rel_rt].mean();
+  real stddev_relative_Rt = internal_stats.stats[log_rel_rt].stddev();
+  real average_sp500 = internal_stats.stats[log_sp].mean();
+  real stddev_sp500 = internal_stats.stats[log_sp].stddev();
+
   cout << "***** ***** *****" << endl
-       << "Test: " << endl
 #if defined(VERBOSE) || defined(VERBOSE_TEST)
+       << "Test: " << endl
        << "\t weights:\n" << portfolios << endl
 #endif
-       << "\t Average Absolute Return:\t" << average << endl
-       << "\t Average Annual Relative Return:\t" << average_rel << endl
-       << "\t Empirical Variance:\t" << sigmasquare << endl
-       << "\t Sharpe Ratio:\t\t" << average/sqrt(sigmasquare) << endl;
+       //<< "\t Average Absolute Return:\t" << average_absolute_Rt << endl
+       //<< "\t Empirical Variance:\t" << variance_absolute_Rt << endl
+       << "\t Average Annual Return:\t" << exp(252.0*average_relative_Rt) << endl
+       << "\t Sharpe Ratio of monthly log-returns:\t\t" << average_relative_Rt/stddev_relative_Rt << endl
+       << "\t Sharpe Ratio:\t\t" << average_absolute_Rt/stddev_absolute_Rt << endl;
   if(sp500 != "")
-    cout << "\t Correlation with S&P500:\t"  << internal_stats.getCorrelation()(log_rel_rt, log_sp) << endl;
+  {
+    cout << "\t Average S&P500 Annual Return:\t" << exp(252.0*average_sp500) << endl
+         << "\t Sharpe Ratio of S&P500 monthly log-returns:\t\t" << average_sp500/stddev_sp500 << endl
+         << "\t Correlation with S&P500:\t"  << internal_stats.getCorrelation()(log_rel_rt, log_sp) << endl;
+  }
   cout <<  "***** ***** *****" << endl;
   
   // Keeping track of the call
