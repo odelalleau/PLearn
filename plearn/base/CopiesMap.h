@@ -38,6 +38,7 @@ using namespace std;
   NODEEPCOPY(double)
   NODEEPCOPY(float)
   NODEEPCOPY(int)
+  NODEEPCOPY(bool)
   NODEEPCOPY(string)
   NODEEPCOPY(VMField)
   NODEEPCOPY(VMFieldStat)
