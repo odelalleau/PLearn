@@ -183,5 +183,5 @@ class _pyplearn_magic_module(object):
 
 pl = _pyplearn_magic_module()
 
-all = ['ref', 'bind', 'pair', 'TMat', 'plargs', 'plarg_defaults', 'pl']
+all = ['ref', 'bind', 'TMat', 'plargs', 'plarg_defaults', 'pl']
 
