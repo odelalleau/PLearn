@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: PP.h,v 1.6 2004/03/25 18:56:26 yoshua Exp $
+   * $Id: PP.h,v 1.7 2004/07/27 16:35:32 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -190,14 +190,25 @@ class PP
 
 };
 
+  ///////////////////
+  // deepCopyField //
+  ///////////////////
   //!  Any pointer or smart pointer: call deepCopy()
   template <class T>
   inline void deepCopyField(PP<T>& field, CopiesMap& copies)
   {
-    if (field)
+    if (field) {
+      // Check the usage of the object pointed by 'field': it should be > 1,
+      // because 'field' is a shallow copy. However, it *could* happen that it
+      // is only 1, if the object that pointed to the same object has been deleted.
+      // Since this is usually not wanted, we display a warning if this happens.
+      // Indeed, there is a risk of this causing trouble, because the 'copies' map
+      // may contain invalid mappings refering to now deleted objects.
+      if (field->usage() == 1)
+        PLWARNING("In deepCopyField(PP<T>& field, ...) - The usage() of the underlying object is only 1, this is unusual");
       field = field->deepCopy(copies);
+    }
   }
-
 
   //!  A simple template function
   template<class T>
