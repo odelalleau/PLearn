@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.23 2004/11/24 18:23:22 tihocan Exp $
+   * $Id: pl_math.h,v 1.24 2004/12/04 00:12:16 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -85,40 +85,71 @@ extern _plearn_nan_type plearn_nan;
 #define MISSING_VALUE (plearn_nan.d)
 #endif
   
-  using namespace std;
+using namespace std;
 
-  using std::log;
-  using std::sqrt;
-  using std::pow;
-  using std::exp;
-  using std::tanh;
-  using std::abs;
+using std::log;
+using std::sqrt;
+using std::pow;
+using std::exp;
+using std::tanh;
+using std::abs;
 
-  //! Deprecated, use std::min and std::max instead
-#define MIN(a,b) ((a)<(b)?(a):(b))
-#define MAX(a,b) ((a)>(b)?(a):(b))
+inline real sign(real a) { 
+  if (a>0) return 1; 
+  if (a<0) return -1; 
+  return 0; 
+}
+inline real positive(real a) { if (a>0) return a; return 0; }
+inline real negative(real a) { if (a<0) return a; return 0; }
 
-#define SIGN(a) ((a)>=0?1:-1)
+//! Deprecated, use std::min and std::max instead
+#if !defined(MIN)
+#  define MIN(a,b) ((a)<(b)?(a):(b))
+#endif
 
-  inline real sign(real a) { 
-    if (a>0) return 1; 
-    if (a<0) return -1; 
-    return 0; 
-  }
-  inline real positive(real a) { if (a>0) return a; return 0; }
-  inline real negative(real a) { if (a<0) return a; return 0; }
+#if !defined(MAX)
+#  define MAX(a,b) ((a)>(b)?(a):(b))
+#endif
 
-#define ABS(x) ((x)>0 ?(x) :-(x))
-#define random() rand()
+#if !defined(SIGN)
+#  define SIGN(a) ((a)>=0?1:-1)
+#endif
 
-#define Pi 3.141592653589793
-#define Log2Pi 1.837877066409
-#define LOG_2 0.693147180559945
-#define LOG_INIT -FLT_MAX
-#define MINUS_LOG_THRESHOLD -18.42
+#if !defined(ABS)
+#  define ABS(x) ((x)>0 ?(x) :-(x))
+#endif
 
-#define DEG2RAD Pi/180.0
-#define RAD2DEG 57.29578
+#if !defined(random)
+#  define random() rand()
+#endif
+
+#if !defined(Pi)
+#  define Pi 3.141592653589793
+#endif
+
+#if !defined(Log2Pi)
+#  define Log2Pi 1.837877066409
+#endif
+
+#if !defined(LOG_2)
+#  define LOG_2 0.693147180559945
+#endif
+
+#if !defined(LOG_INIT)
+#  define LOG_INIT -FLT_MAX
+#endif
+
+#if !defined(MINUS_LOG_THRESHOLD)
+#  define MINUS_LOG_THRESHOLD -18.42
+#endif
+
+#if !defined(DEG2RAD)
+#  define DEG2RAD Pi/180.0
+#endif
+
+#if !defined(RAD2DEG)
+#  define RAD2DEG 57.29578
+#endif
 
 #if defined(_MSC_VER) || defined(_MINGW_)
 //!  drand48 does not exist in NT... because ANSI
