@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.4 2004/02/20 21:14:46 chrish42 Exp $
+   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.5 2004/02/20 22:26:54 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeighborhoodSmoothnessNNet.h */
@@ -249,38 +249,11 @@ void NeighborhoodSmoothnessNNet::build_()
   {
 
     int knn = max_n_instances;
-    if (train_set) {
-      // Precompute the p_ij.
-      if (verbosity >= 2) {
-        cout << "Computing the p_ij... " << flush;
-      }
-      kernel_input->setDataForKernelMatrix(train_set);
-      int n = train_set->length() / knn;
-      p_ij_mat.resize(n, knn-1);
-      for (int i = 0; i < n; i++) {
-        real sum = 0;
-        real k_ij;
-        for (int j = 1; j < knn; j++) {
-          // We omit the first nearest neighbour, which is the point itself.
-          int i_th_point = i * knn;
-          int j_th_nn = i_th_point + j;
-          k_ij = kernel_input->evaluate_i_j(i_th_point, j_th_nn);
-          p_ij_mat(i,j-1) = k_ij;
-          sum += k_ij;
-        }
-        p_ij_mat.row(i) /= sum;
-      }
-      if (verbosity >= 2) {
-        cout << "DONE" << endl;
-      }
-      p_ij = Var(p_ij_mat);
-    }
       
     // init. basic vars
-    int true_inputsize = inputsize() - (knn - 1);
-    Var input_and_pij = Var(inputsize(), "input");
+    int true_inputsize = inputsize() - 1;
+    Var input_and_pij = Var(inputsize(), "input_and_pij");
     input = subMat(input_and_pij, 0, 0, input_and_pij->length(), true_inputsize);
-    p_ij = subMat(input_and_pij, 0, 0, input_and_pij->length(), knn - 1);
     output = input;
     params.resize(0);
 
@@ -395,7 +368,7 @@ void NeighborhoodSmoothnessNNet::build_()
       output->setName("element output");
 
       f = Func(input, output);
-      f_input_to_hidden = Func(input_and_pij, last_hidden);
+      f_input_to_hidden = Func(input, last_hidden);
 
       /*
        * costfuncs
@@ -403,7 +376,8 @@ void NeighborhoodSmoothnessNNet::build_()
 
       bag_inputs = Var(max_n_instances, inputsize());
       bag_size = Var(1,1);
-      bag_hidden = unfoldedFuncOf(bag_inputs, f_input_to_hidden);
+      bag_hidden = unfoldedFuncOf(subMat(bag_inputs, 0, 0, bag_input.length(), true_inputsize), f_input_to_hidden);
+      p_ij = subMat(bag_inputs, 1, true_inputsize, bag_inputs->length() - 1, 1);
 
       // The q_ij function.
       Var hidden_0 = subMat(bag_hidden, 0, 0, 1, bag_hidden->width());
