@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.16 2004/05/13 20:22:30 nova77 Exp $
+   * $Id: pl_math.h,v 1.17 2004/05/31 14:24:36 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -303,7 +303,7 @@ inline real ultrafasttanh(const real& x)
 
   inline real tabulated_softplus(real x)
   {
-    static const int n_softplus_values = 10000;
+    static const int n_softplus_values = 1000000;
     static const real min_softplus_arg = -10;
     static const real max_softplus_arg = 10;
     static const real softplus_delta = (n_softplus_values-1)/(max_softplus_arg-min_softplus_arg);
