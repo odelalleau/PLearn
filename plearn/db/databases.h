@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: databases.h,v 1.5 2004/07/08 21:31:13 tihocan Exp $
+   * $Id: databases.h,v 1.6 2004/07/09 18:15:45 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -100,9 +100,13 @@ VMat loadLetters(int n_letters, bool do_shuffle);
 void loadUSPS(VMat& trainset, VMat& testset, bool use_smooth=true);
 VMat loadUSPS(bool use_smooth=true);
 VMat loadHousing(bool normalize=true);
-void loadUCI(VMat& trainset, VMat& testset, VMat& allset, string db_spec, string id, bool normalize);
+//! Load the train, test and all datasets for a UCI database.
+//! The 'normalize' parameter can be changed: if it is set to true in input, it may be changed
+//! to false when the method returns (this is because the data will already be normalized, and
+//! no additional normalization is needed).
+void loadUCI(VMat& trainset, VMat& testset, VMat& allset, string db_spec, string id, bool &normalize);
 //! Load a specific UCI dataset in the given VMatrix.
-void loadUCISet(VMat& data, string file, PP<UCISpecification> uci_spec, bool normalize);
+void loadUCISet(VMat& data, string file, PP<UCISpecification> uci_spec);
 
 
 /*!   This will return a VMat with a target in the last column in {0,..,nclasses-1} (for binary classification possible values are 0 and 1 (not -1)). 

@@ -36,19 +36,19 @@
 
 
 /* *******************************************************      
-   * $Id: databases.cc,v 1.8 2004/07/08 21:31:13 tihocan Exp $
+   * $Id: databases.cc,v 1.9 2004/07/09 18:15:45 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "databases.h"
-//#include "stringutils.h"
+#include "ConcatRowsVMatrix.h"
 #include "NistDB.h"
-//#include "TMat_maths.h"
 #include "random.h"
-#include "VMat_maths.h"
 #include "RemapLastColumnVMatrix.h"
+#include "ShiftAndRescaleVMatrix.h"
 #include "Splitter.h"
+#include "VMat_maths.h"
 
 namespace PLearn {
 using namespace std;
@@ -845,6 +845,12 @@ void loadClassificationDataset(const string& datasetname, int& inputsize, int& n
     computeMeanAndStddev(trainset, meanvec, stddevvec);
     meanvec = meanvec.subVec(0,inputsize);
     stddevvec = stddevvec.subVec(0,inputsize);
+    for (int i = 0; i < stddevvec.length(); i++) {
+      if (isnan(stddevvec[i])) {
+        // The standard dev is nan, the row must be constant.
+        stddevvec[i] = 1;
+      }
+    }
     for (int i=0;i<inputsize;i++)
       if (stddevvec[i]==0) stddevvec[i]=1;
     trainset = normalize(trainset,meanvec,stddevvec);
@@ -856,7 +862,7 @@ void loadClassificationDataset(const string& datasetname, int& inputsize, int& n
 /////////////
 // loadUCI //
 /////////////
-void loadUCI(VMat& trainset, VMat& testset, VMat& allset, string db_spec, string id, bool normalize) {
+void loadUCI(VMat& trainset, VMat& testset, VMat& allset, string db_spec, string id, bool &normalize) {
   string script_file = db_spec;
   if (id != "") {
     script_file += "_ID=" + id;
@@ -865,21 +871,40 @@ void loadUCI(VMat& trainset, VMat& testset, VMat& allset, string db_spec, string
   string db_dir = dbdir_name + "/UCI_MLDB/" + db_spec;
   Object* obj = PLearn::macroLoadObject(db_dir + "/" + script_file);
   PP<UCISpecification> uci_spec = static_cast<UCISpecification*>(obj);
-  if (uci_spec->file_all != "")
-    loadUCISet(allset, db_dir + "/" + uci_spec->file_all, uci_spec, normalize);
   if (uci_spec->file_train != "")
-    loadUCISet(trainset, db_dir + "/" + uci_spec->file_train, uci_spec, normalize);
+    loadUCISet(trainset, db_dir + "/" + uci_spec->file_train, uci_spec);
   if (uci_spec->file_test != "")
-    loadUCISet(testset, db_dir + "/" + uci_spec->file_test, uci_spec, normalize);
+    loadUCISet(testset, db_dir + "/" + uci_spec->file_test, uci_spec);
+  if (uci_spec->file_all != "") {
+    loadUCISet(allset, db_dir + "/" + uci_spec->file_all, uci_spec);
+  } else {
+    allset = vconcat(trainset, testset);
+  }
+  if (normalize) {
+    int is = uci_spec->inputsize;
+    if (is == -1)
+      is = allset->width() - 1;
+    VMat tmp_vmat = new ShiftAndRescaleVMatrix(allset, is, 0, true);
+    Mat new_data = tmp_vmat->toMat().subMatColumns(0, is);
+    if (allset->length() != trainset->length() + testset->length()) {
+      PLERROR("In loadUCI - The whole dataset should have a length equal to train + test");
+    }
+    allset->putMat(0, 0, new_data);
+    trainset->putMat(0, 0, new_data.subMatRows(0, trainset->length()));
+    testset->putMat(0, 0, new_data.subMatRows(trainset->length(), testset->length()));
+    // We don't want to normalize again.
+    normalize = false;
+  }
 }
 
 ////////////////
 // loadUCISet //
 ////////////////
-void loadUCISet(VMat& data, string file, PP<UCISpecification> uci_spec, bool normalize) {
+void loadUCISet(VMat& data, string file, PP<UCISpecification> uci_spec) {
   char *** to_symbols;
   int * to_n_symbols;
-  Mat the_data = loadUCIMLDB(file, &to_symbols, &to_n_symbols);
+  TVec<int> max_in_col;
+  Mat the_data = loadUCIMLDB(file, &to_symbols, &to_n_symbols, &max_in_col);
   if (uci_spec->target_is_first) {
     // We need to move the target to the last columns.
     int ts = uci_spec->targetsize;
