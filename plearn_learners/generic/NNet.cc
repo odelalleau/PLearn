@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.20 2003/10/21 19:58:08 tihocan Exp $
+   * $Id: NNet.cc,v 1.21 2003/10/22 14:17:22 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -297,6 +297,7 @@ void NNet::build_()
        */
 
       // create penalties
+      penalties.resize(0);  // prevents penalties from being added twice by consecutive builds
       if(w1 && ((layer1_weight_decay + weight_decay)!=0 || (layer1_bias_decay + bias_decay)!=0))
         penalties.append(affine_transform_weight_penalty(w1, (layer1_weight_decay + weight_decay), (layer1_bias_decay + bias_decay), L1_penalty));
       if(w2 && ((layer2_weight_decay + weight_decay)!=0 || (layer2_bias_decay + bias_decay)!=0))
@@ -440,7 +441,8 @@ void NNet::train()
     {
       optimizer->nstages = optstage_per_lstage;
       train_stats->forget();
-      early_stop=optimizer->optimizeN(*train_stats);
+      optimizer->early_stop = false;
+      optimizer->optimizeN(*train_stats);
       train_stats->finalize();
       if(verbosity>2)
         cerr << "Epoch " << stage << " train objective: " << train_stats->getMean() << endl;
