@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_main.cc,v 1.19 2004/12/01 16:46:00 tihocan Exp $
+   * $Id: plearn_main.cc,v 1.20 2004/12/01 19:38:02 tihocan Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -89,7 +89,7 @@ static string global_options( vector<string>& command_line,
   // (verbosity_pos == -1)!!!
   int verbosity_pos                = findpos( command_line, "--verbosity"  );
   int verbosity_value_pos          = -1; // ... 
-  VerbosityLevels verbosity_value   = VLEVEL_NORMAL;
+  VerbosityLevel verbosity_value   = VLEVEL_NORMAL;
 
   if ( verbosity_pos != -1 )
   {
@@ -97,9 +97,7 @@ static string global_options( vector<string>& command_line,
     verbosity_value_pos = verbosity_pos+1;
     if ( verbosity_value_pos < argc )
       verbosity_value =
-        VLEVEL_NORMAL;
-        // Uncomment this when it compiles.
-        // PL_Log::vlevel_from_string( command_line[verbosity_value_pos] );
+        PL_Log::vlevel_from_string( command_line[verbosity_value_pos] );
     else
       PLERROR("Option --verbosity must be followed by a VerbosityLevel name "
               "or by an integer value.");
