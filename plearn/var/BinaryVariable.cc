@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: BinaryVariable.cc,v 1.5 2002/10/08 14:56:40 wangxian Exp $
+   * $Id: BinaryVariable.cc,v 1.6 2002/10/08 15:16:32 wangxian Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -606,7 +606,6 @@ void ElementAtPositionVariable::rfprop()
 IndexAtPositionVariable::IndexAtPositionVariable(Variable* input1, Variable* input2, int the_length, int the_width)
   :BinaryVariable(input1, input2, the_length, the_width), length_(the_length), width_(the_width)
 {
-cout <<"hello" << endl;
   if(!input1->isVec())
     PLERROR("In IndexAtPositionVariable: Index must be a vector var");
   if(input1->size()!=input2->size())
