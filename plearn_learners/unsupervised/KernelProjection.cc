@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.cc,v 1.12 2004/07/19 13:31:12 tihocan Exp $ 
+   * $Id: KernelProjection.cc,v 1.13 2004/07/19 14:55:17 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -193,6 +193,7 @@ void KernelProjection::computeOutput(const Vec& input, Vec& output) const
   static Vec k_x_xi;
   static Mat result;
   static Mat used_eigenvectors;
+  static real* result_ptr;
   if (first_output) {
     // Initialize k_x_xi, used_eigenvectors and result correctly.
     k_x_xi.resize(n_examples);
@@ -205,7 +206,7 @@ void KernelProjection::computeOutput(const Vec& input, Vec& output) const
   // Compute the output.
   rowSum(used_eigenvectors * k_x_xi, result);
   output.resize(n_comp_kept);
-  real* result_ptr = result[0];
+  result_ptr = result[0];
   if (normalize) {
     real norm_coeff = sqrt(real(n_examples));
     for (int i = 0; i < n_comp_kept; i++) {
