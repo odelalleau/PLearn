@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.cc,v 1.17 2003/10/27 05:14:34 dorionc Exp $ 
+ * $Id: Trader.cc,v 1.18 2003/11/25 20:56:26 dorionc Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -68,6 +68,8 @@ void Trader::build()
 
 void Trader::build_()
 {
+  max_train_len = advisor->max_train_len;
+
   if(train_set.isNull())
     return;
 
@@ -170,6 +172,15 @@ void Trader::assets_info()
   assets_info(assets_tradable_indices, tradable_tag);
   risk_free_rate_index = internal_data_set->fieldIndex(risk_free_rate);    
 }
+
+int Trader::price_of_which_asset(int col)
+{
+  for(int k=0; k < nb_assets; k++)
+    if(assets_price_indices[k] == col) 
+      return k;
+  return -1;
+}
+
 
 void Trader::forget()
 {

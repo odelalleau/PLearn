@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.h,v 1.11 2003/10/27 05:14:34 dorionc Exp $ 
+ * $Id: Trader.h,v 1.12 2003/11/25 20:56:26 dorionc Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -236,8 +236,13 @@ public:
   //**************
   
   //! This parses the train_set VMat to get the infos on the assets
+protected:
   void assets_info();
+public:
   void assets_info(TVec<int>& info, const string& info_tag) const;
+
+  //! Returns the index of the assets for which the column is a price, -1 if none.
+  int price_of_which_asset(int col);
 
   //! Returns the price of the given asset at a given time. 
   real price(int k, int t) const;

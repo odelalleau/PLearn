@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.cc,v 1.24 2003/10/27 18:44:27 ducharme Exp $ 
+   * $Id: FuturesTrader.cc,v 1.25 2003/11/25 20:54:42 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.cc */
@@ -179,6 +179,7 @@ void FuturesTrader::trader_test(int t, VMat testset, PP<VecStatsCollector> test_
   real log_return = log(1.0+relative_return_t);
   real tbill_log_return = log(1.0+daily_risk_free_return);
   update.append(absolute_return_t);
+  cout << "absolute_return_"<<t<<": " << absolute_return_t << endl;
   update.append(log_return);
   update.append(monthly_turnover);
   update.append(tbill_log_return);
