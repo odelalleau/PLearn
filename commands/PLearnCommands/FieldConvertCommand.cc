@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: FieldConvertCommand.cc,v 1.25 2004/03/26 17:44:53 tihocan Exp $
+ * $Id: FieldConvertCommand.cc,v 1.26 2004/03/29 23:22:25 tihocan Exp $
  ******************************************************* */
 
 #include "FieldConvertCommand.h"
@@ -41,7 +41,7 @@
 //#include "VVMatrix.h"
 //#include <fstream.h>
 //#include "ProgressBar.h"
-//#include "pl_erf.h"       //!< For gauss_01_quantile.
+#include "pl_erf.h"       //!< For gauss_01_quantile.
 #include "random.h"
 #include "stringutils.h"
 #include "VMat.h"
@@ -50,6 +50,7 @@
 #define MISSING_BIT 2
 #define ONEHOT 4
 #define SKIP 16
+#define UNIFORMIZE 32
 
 using namespace PLearn;
 
@@ -78,9 +79,9 @@ FieldConvertCommand::FieldConvertCommand()
                   "to explicitely force the types of the ambiguous field(s). The file is made of lines of the following 2 possible formats:\n"
                   "FIELDNAME=type\n"
                   "fieldNumberA-fieldNumberB=type   [e.g : 200-204=constant, to force a range]\n"
-                  "\n"\
+                  "\n"
                   "Note that all types but skip, if the field contains missing values, an additionnal 'missing-bit' field is added and is '1' only for missing values.\n"
-                  "The difference between types constant and skip is only cosmetic: constant means the field is constant, while skip means either there are too many missing values or it has been forced to skip.\n"\
+                  "The difference between types constant and skip is only cosmetic: constant means the field is constant, while skip means either there are too many missing values or it has been forced to skip.\n"
                   "A report file is generated and contains the information about the processing for each field.\n"
                   "Target index of source needs to be specified (ie. to perform corelation test). It can be any field of the "
                   "source dataset, but will be the last field of the new dataset.*** We assume target is never missing *** \n\n"
@@ -96,6 +97,8 @@ FieldConvertCommand::FieldConvertCommand()
                   "         frac_enough           = [if a field is discrete, only values represented by at least frac_enough * nSamples elements will be kept] (default = 0.005)\n"
                   "         precompute            = [none | pmat | ... : possibly add a <PRECOMPUTE> tag in the destination] (default = none)\n"
                   "         discrete_tolerance    = [if a discrete field has float values, its one hot mapping will be enlarged according to this factor] (default = 0.001)\n"
+                  "         uniformize            = [0 | 1 : whether fields obviously not following a normal distribution should be uniformized] (default = 0)\n"
+                  "\n"
                   "where fields with asterix * are not optional\n"
                   ) 
   {}
@@ -114,6 +117,7 @@ void FieldConvertCommand::run(const vector<string> & args)
   target = -1;
   report_fn="FieldConvertReport.txt";
   precompute = "none";
+  bool uniformize = false;
     
   for(int i=0;i<(signed)args.size();i++)
   {
@@ -138,6 +142,8 @@ void FieldConvertCommand::run(const vector<string> & args)
       FRAC_MISSING_TO_SKIP=toreal(val[1]);
     else if(val[0]=="discrete_tolerance")
       DISCRETE_TOLERANCE = toreal(val[1]);
+    else if(val[0]=="uniformize")
+      uniformize = toint(val[1]);
     else if(val[0]=="frac_enough")
       FRAC_ENOUGH=toreal(val[1]);
     else if(val[0]=="precompute")
@@ -158,6 +164,9 @@ void FieldConvertCommand::run(const vector<string> & args)
   real correlation = -1;
 
   VMat vm = getDataSet(source_fn);
+
+  // A vector where we store the indices of the fields to be uniformized.
+  TVec<int> need_to_be_uniformized;
 
   if (target < 0 || target > vm->width()) {
     PLERROR("The target column you specified is not valid");
@@ -200,9 +209,19 @@ void FieldConvertCommand::run(const vector<string> & args)
   TVec<StatsCollector> sc;
   sc = vm->getStats();
 
-  ofstream out(desti_fn.c_str());
+  ofstream* out;
+  ofstream* out_uni;
+  string filename_non_uni = desti_fn + ".non_uniformized.vmat";
+  if (uniformize) {
+    // We write two files: the one with the preprocessing and another one with
+    // the uniformization.
+    out = new ofstream(filename_non_uni.c_str());
+    out_uni = new ofstream(desti_fn.c_str());
+  } else {
+    out = new ofstream(desti_fn.c_str());
+  }
   ofstream report(report_fn.c_str());
-  out<<"<SOURCES>\n"+source_fn+"\n</SOURCES>\n<PROCESSING>\n";
+  *out<<"<SOURCES>\n"+source_fn+"\n</SOURCES>\n<PROCESSING>\n";
 
   // Minimun number of representants of a class to be considered significant.
   int n_enough = (int) (FRAC_ENOUGH * vm->length());
@@ -413,184 +432,7 @@ void FieldConvertCommand::run(const vector<string> & args)
         }
     }
 
-    // The code commented below is a failed attempt to try and solve
-    // the problem of weird distributions.
-/*    // TO-DO We should also detect when this is mainly outliers.
-    // Check the normal assumption is not violated.
-    real epsilon_max = 1e6;
-    real epsilon_min = 1e-2;
-    real epsilon = epsilon_min;
-    real max = sc[i].max();
-    real min = sc[i].min();
-    real mu = sc[i].mean();
-    int nsamp = (int) sc[i].nnonmissing();
-    real sigma = sc[i].stddev();
-    real confidence = 0.05;
-    real alpha = gauss_01_quantile(pow((1 - confidence), 1 / real(nsamp)));
-    bool max_is_high = true;
-    bool min_is_low = true;
-    Vec col(0);
-    Vec previous_col(0);
-    int countlog = 0;
-    bool take_opposite = false;
-    real previous_min = 0, previous_max = 0, previous_sigma = 0, previous_mu = 0;
-    int countlogmax = 50;
-    Vec store_min(countlogmax);
-    Vec store_epsilon(countlogmax);
-    Vec store_sigma(countlogmax);
-    // NB: if count == 2, then this is a binary field, and we shouldn't perform
-    // this normal assumption analysis.
-    while (count > 2 && (max_is_high || min_is_low)) {
-      max_is_high = false;
-      min_is_low = false;
-      if ( (max - mu) / sigma > alpha ) {
-        // Max is too high.
-//        cout << "Max is too high for index " << i << endl;
-        max_is_high = true;
-      }
-      if ( (min - mu) / sigma < -alpha ) {
-        // Min is too low.
-//        cout << "Min is too low for index " << i << endl;
-        min_is_low = true;
-      }
-      if (abs(sigma) < 1e-3) {
-        cout << "Low sigma, giving up!" << endl;
-        max_is_high = false;
-        min_is_low = false;
-        countlog = 0;
-        take_opposite = false;
-        max = sc[i].max();
-        min = sc[i].min();
-        mu = sc[i].mean();
-        sigma = sc[i].stddev();
-      }
-      if (max_is_high || min_is_low) {
-        // Damnit! But how many samples are fucked up?
-        int n = vm->length();
-        if (col.length() == 0) {
-          // Not initialized yet.
-          col.resize(vm->length());
-          previous_col.resize(vm->length());
-          vm->getColumn(i,col);
-          previous_col << col;
-          countlog++; // We will make at least one log.
-          previous_min = min;
-          previous_max = max;
-          previous_sigma = sigma;
-          previous_mu = mu;
-        }
-        real t;
-        int nb_high = 0;
-        int nb_low = 0;
-        for (int k = 0; k < n; k++) {
-          t = col[k];
-          if (!is_missing(t)) {
-            if ( (t - mu) / sigma > alpha) {
-              nb_high++;
-            } else if ( (t - mu) / sigma < -alpha ) {
-              nb_low++;
-            }
-          }
-        }
-        if (nb_high > 0) {
-//          cout << "There are " << nb_high << " samples above +alpha = " << alpha << endl;
-        }
-        if (nb_low > 0) {
-//          cout << "There are " << nb_low << " samples below -alpha = " << -alpha << endl;
-        }
-        // Compute the log and see if it fixes it.
-        if (max_is_high && min_is_low) {
-          // TODO Find out a solution.
-//          cout << "Bleh, both max and min are fucked up, dunno what to do with field " << i << endl;
-          max_is_high = false;
-          min_is_low = false;
-          // (also, be careful as countlog > 0 at this time)
-        } else {
-          if (min_is_low) {
-            // First we take the opposite.
-            for (int k = 0; k < n; k++) {
-              col[k] = -col[k];
-              previous_col[k] = -previous_col[k];
-            }
-            mu = -mu;
-            max = -min;
-            min = -max;
-            if (take_opposite || countlog > 1) {
-              // We should take the opposite only on the first step.
-              PLERROR("Taking the opposite in later steps, something must be wrong!");
-            }
-            take_opposite = true;
-          }
-          // We compute the log and the new stats.
-          epsilon *= 10;
-          if (epsilon > epsilon_max) {
-            // We tried all available values on epsilon, time to take
-            // the log again.
-            previous_col << col;
-            epsilon = epsilon_min;
-            countlog++;
-            if (countlog > countlogmax) {
-              PLERROR("Too many logs taken");
-            }
-            previous_min = min;
-            previous_max = max;
-            previous_sigma = sigma;
-            previous_mu = mu;
-          } else {
-            // Epsilon was too low, we try again from fresh with the higher
-            // epsilon.
-            col << previous_col;
-            min = previous_min;
-            max = previous_max;
-            sigma = previous_sigma;
-            mu = previous_mu;
-          }
-          store_min[countlog - 1] = min;
-          store_sigma[countlog - 1] = sigma;
-          store_epsilon[countlog - 1] = epsilon;
-          real t;
-          real old_min = min;
-          real sumsq = 0;
-          max = -REAL_MAX;
-          min = REAL_MAX;
-          mu = 0;
-          for (int k = 0; k < n; k++) {
-            t = col[k];
-            if (!is_missing(t)) {
-//              t = log(1 + (t - old_min) + epsilon);
-              t = log(1 + (t - old_min) / sigma + epsilon);
-              col[k] = t;
-              mu += t;
-              sumsq += t*t;
-              if (t > max) {
-                max = t;
-              } else if (t < min) {
-                min = t;
-              }
-            }
-          }
-          real sum = mu;
-          mu /= real(nsamp);
-          sigma = sqrt(sumsq / real(nsamp - 1) + real(nsamp) / real(nsamp - 1) * mu * mu - 2 * mu / real(nsamp - 1) * sum);
-          real sigma_c = sqrt(variance(col, mean(col, true)));
-          if (abs(sigma - sigma_c) > 1e-3 && sc[i].nmissing() == 0) {
-            cout << "Sigma   = " << sigma << endl;
-            cout << "Sigma_c = " << sigma_c << endl;
-          } else {
-            cout << "OK, sigma and sigma_c seem to correspond" << endl;
-          }
-          
-          if (isnan(sigma)) {
-            PLERROR("Sigma = nan");
-          }
-        }
-      }
-    }
-    if (countlog > 0) {
-//      cout << "Countlog for index " << i << ": " << countlog << endl;
-    }*/
-
-    // now find out which actions to perform according to type 
+    // Now find out which actions to perform according to type.
 
     // We treat 'binary' as 'continuous'.
     if (type == binary)
@@ -622,12 +464,12 @@ void FieldConvertCommand::run(const vector<string> & args)
         action |= MISSING_BIT;
     }
     
-    // perform actions
+    // Perform actions.
     
     if(action&NORMALIZE)
     {
 
-      out << "@" << vm->fieldName(i) << " ";
+      *out << "@" << vm->fieldName(i) << " ";
       // Replace Nans by either the most frequent value or the mean.
       if(sc[i].nmissing()>0)
       {
@@ -648,26 +490,39 @@ void FieldConvertCommand::run(const vector<string> & args)
           // cout << i << ": maxi >= 10, and missingval = " << missingval << endl;
         }
         
-//        out<<"@"<<vm->fieldName(i)<<" isnan "<<missingval<<" @"<<vm->fieldName(i)<<" ifelse "<<sc[i].mean()<<" - "<<sc[i].stddev()<<" / :"<<vm->fieldName(i)<<"\n";      
-        out << "isnan " << missingval << " @" << vm->fieldName(i) << " ifelse ";
+        *out << "isnan " << missingval << " @" << vm->fieldName(i) << " ifelse ";
       }
 
-      /*
-      // Apply log transformations if necessary.
-      if (take_opposite) {
-        // First take the opposite.
-        out << "0 exch - ";
+      // If this field violates the normal assumption, and the user set the
+      // 'uniformize' option to 1, then we should keep this field intact, and
+      // remember it will need to be uniformized in the final vmat.
+      bool apply_normalization = true;
+      if (uniformize) {
+        real max = sc[i].max();
+        real min = sc[i].min();
+        real mu = sc[i].mean();
+        real sigma = sc[i].stddev();
+        int nsamp = (int) sc[i].nnonmissing();
+        real confidence = 0.05;
+        real alpha = gauss_01_quantile(pow((1 - confidence), 1 / real(nsamp)));
+        if ( (max - mu) / sigma > alpha  || (min - mu) / sigma < - alpha) {
+          // Normal assumption violated.
+          action ^= NORMALIZE;    // Remove the 'normalize' action.
+          action |= UNIFORMIZE;   // And add the 'uniformize' one.
+          apply_normalization = false;
+          *out << ":" << vm->fieldName(i) << endl;
+          need_to_be_uniformized.append(inputsize);
+        }
       }
-      for (int c = 0; c < countlog; c++) {
-        // Compute log(1 + (x - min) / sigma + epsilon).
-        out << store_min[c] << " - " << store_sigma[c] << " / ";
-        out << "1 + " << store_epsilon[c] << " + log ";
-      } */
 
-      // And apply normalization.
-      real mu = sc[i].mean();
-      real sigma = sc[i].stddev();
-      out << mu << " - " << sigma << " / :" << vm->fieldName(i)<<"\n";
+      // And apply normalization if we still need to do it.
+      if (apply_normalization) {
+        real mu = sc[i].mean();
+        real sigma = sc[i].stddev();
+        *out << mu << " - " << sigma << " / :" << vm->fieldName(i)<<"\n";
+      }
+
+      // Increase the counter of inputs.
       inputsize++;
     }
 
@@ -701,7 +556,7 @@ void FieldConvertCommand::run(const vector<string> & args)
           tol = DISCRETE_TOLERANCE;
         }
         RealMapping rm = sc[i].getAllValuesMapping(&to_be_included, 0, true, tol);
-        out << "@"<<vm->fieldName(i) <<" " << rm << " "
+        *out << "@"<<vm->fieldName(i) <<" " << rm << " "
           << rm.size() << " onehot :"
           << vm->fieldName(i)<<"_:0:"<< (rm.size() - 1) << endl;
 /*        out << "@"<<vm->fieldName(i) <<" " << sc[i].getAllValuesMapping(&to_be_included, 0, true) << " "
@@ -713,7 +568,7 @@ void FieldConvertCommand::run(const vector<string> & args)
 
     if(action&MISSING_BIT)
     {
-      out<<"@"<<vm->fieldName(i)<<" isnan 1 0 ifelse :"<<vm->fieldName(i)<<"_mbit\n";      
+      *out<<"@"<<vm->fieldName(i)<<" isnan 1 0 ifelse :"<<vm->fieldName(i)<<"_mbit\n";      
       inputsize++;
     }
 
@@ -725,6 +580,7 @@ void FieldConvertCommand::run(const vector<string> & args)
         report << "(after " << countlog << " log) ";
       }*/
     }
+    if (action & UNIFORMIZE) report << "UNIFORMIZE ";
     if(action&ONEHOT)report<<"ONEHOT("<<count<<") - discarded: " << n_discarded << " ";
     if(type==discrete_corr)report<<"correl: "<<correlation<<" 2tail-student:"<<student<<" ";
     if(action&MISSING_BIT)report<<"MISSING_BIT ";
@@ -738,18 +594,69 @@ void FieldConvertCommand::run(const vector<string> & args)
   delete pb;
 
   // Add the target.
-  out << "%" << target << " :target\n</PROCESSING>"<<endl;
+  *out << "%" << target << " :target\n</PROCESSING>"<<endl;
 
   // Add the sizes.
-  out << endl << "<SIZES>"  << endl
-              << inputsize  << endl // inputsize
-              << "1"        << endl // targetsize
-              << "0"        << endl // weightsize
-              << "</SIZES>" << endl;
+  *out << endl  << "<SIZES>"  << endl
+                << inputsize  << endl // inputsize
+                << "1"        << endl // targetsize
+                << "0"        << endl // weightsize
+                << "</SIZES>" << endl;
+
+  // Now build the uniformized VMatrix if 'uniformize' has been set.
+  if (uniformize) {
+    // Prepare the 'shift' and 'scale' vectors to map uniformized fields to
+    // [-1,1] instead of default [0,1].
+    Vec shift(inputsize + 1);  // +1 because of the target.
+    Vec scale(inputsize + 1);
+    shift.fill(0);
+    scale.fill(1);
+    for (int i = 0; i < need_to_be_uniformized.length(); i++) {
+      shift[need_to_be_uniformized[i]] = -0.5;
+      scale[need_to_be_uniformized[i]] = 2;
+    }
+    // Write the .vmat file.
+    *out_uni << "# Preprocessed VMat" << endl;
+    *out_uni << "<SOURCES>" << endl;
+    *out_uni << "@" << endl
+             << "ShiftAndRescaleVMatrix(" << endl
+             << "  automatic = 0" << endl
+             << "  shift = [" << shift << "]" << endl
+             << "  scale = [" << scale << "]" << endl
+             << "  underlying_vmat =" << endl;
+    *out_uni << "   PLearnerOutputVMatrix(" << endl;
+    *out_uni << "     train_learners = 1" << endl;
+    *out_uni << "     data = AutoVMatrix(specification = \"" << filename_non_uni << "\")" << endl;
+    *out_uni << "     learners = [" << endl;
+    *out_uni << "       UniformizeLearner(" << endl;
+    *out_uni << "         which_fieldnums = ";
+    *out_uni << "[ " << need_to_be_uniformized << "]" << endl;
+    *out_uni << "       )" << endl;
+    *out_uni << "     ]" << endl;
+    *out_uni << "   )" << endl
+             << ")" << endl;
+    *out_uni << "</SOURCES>" << endl << endl;
+    *out_uni << "<SIZES>"  << endl
+             << inputsize  << endl // inputsize
+             << "1"        << endl // targetsize
+             << "0"        << endl // weightsize
+             << "</SIZES>" << endl;
+  }
 
   // Possibly add the <PRECOMPUTE> tag.
   if (precompute != "none") {
-    out << endl << "<PRECOMPUTE>" << endl << precompute << endl << "</PRECOMPUTE>" << endl;
+    *out << endl << "<PRECOMPUTE>" << endl << precompute << endl << "</PRECOMPUTE>" << endl;
+    if (uniformize) {
+      *out_uni << endl << "<PRECOMPUTE>" << endl << precompute << endl << "</PRECOMPUTE>" << endl;
+    }
+  }
+
+  // Free stuff.
+  out->close();
+  delete out;
+  if (uniformize) {
+    out_uni->close();
+    delete out_uni;
   }
 
 }
