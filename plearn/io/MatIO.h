@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: MatIO.h,v 1.21 2004/08/09 16:16:08 tihocan Exp $
+   * $Id: MatIO.h,v 1.22 2004/11/24 18:21:37 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -192,7 +192,7 @@ void loadJPEGrgb(const string& jpeg_filename, Mat& rgbmat, int& row_size, int sc
 // Intelligent function that will load a file in almost all ascii formats that ever existed in this lab.
 // Additionally, if 'map_sr' is provided, it will fill it with the string -> real mappings encountered.
 template<class T>
-void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames, TVec<map<string,real> >* map_sr = 0)
+void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames, TVec<map<string,real> >* map_sr)
 {
   ifstream in(filename.c_str());
   if(!in)
