@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.17 2004/02/06 21:12:42 ducharme Exp $
+   * $Id: stringutils.h,v 1.18 2004/02/10 16:29:00 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -83,6 +83,7 @@ using namespace std;
   // this function handle numbers with exponents (such as 10.2E09)
   // as well as Nans. String can have trailing whitespaces on both sides
   bool pl_isnumber(const string& s,double* dbl=NULL);
+  bool pl_isnumber(const string& s,float* dbl);
 
   //!  conversions from string to numerical types
   long tolong(const string& s, int base=10);  

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.cc,v 1.14 2004/02/06 21:12:42 ducharme Exp $
+   * $Id: stringutils.cc,v 1.15 2004/02/10 16:29:00 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -80,12 +80,22 @@ string center(const string& s, unsigned int width, char padding)
 
 // this function handle numbers with exponents (such as 10.2E09)
 // as well as Nans. String can have trailing whitespaces on both sides
-bool pl_isnumber(const string& str,double * dbl)
+bool pl_isnumber(const string& str, double* dbl)
 {
   double d;
   string s=removeblanks(str);
   char* l;
   d = strtod(s.c_str(),&l);
+  if(s=="")d=MISSING_VALUE;
+  if(dbl!=NULL)*dbl=d;
+  return ((unsigned char)(l-s.c_str())==s.length());
+}
+
+bool pl_isnumber(const string& str, float* dbl) {
+  float d;
+  string s=removeblanks(str);
+  char* l;
+  d = strtof(s.c_str(),&l);
   if(s=="")d=MISSING_VALUE;
   if(dbl!=NULL)*dbl=d;
   return ((unsigned char)(l-s.c_str())==s.length());
