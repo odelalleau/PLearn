@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.cc,v 1.2 2002/10/17 17:53:34 jauvinc Exp $
+   * $Id: WordNetOntology.cc,v 1.3 2002/10/21 20:43:34 jauvinc Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -600,39 +600,24 @@ bool WordNetOntology::catchSpecialTags(string word)
 
 void WordNetOntology::lookForSpecialTags()
 {
-  if (isSense(OOV_SS_ID))
-  {
-    if (isSense(PROPER_NOUN_SS_ID))
-    {
-      if (isSense(NUMERIC_SS_ID))
-      {
-        if (isSense(PUNCTUATION_SS_ID))
-        {
-          if (!isSense(STOP_SS_ID))
-            PLWARNING("no <stop> tag found");
-        } else
-        {
-          PLWARNING("no <punctuation> tag found");
-        }
-      } else
-      {
-        PLWARNING("no <numeric> tag found");
-      }
-    } else
-    {
-      PLWARNING("no <proper_noun> tag found");
-    }
-  } else
-  {
+  if (!isSense(OOV_SS_ID))
     PLWARNING("no <oov> tag found");
-  }
+  if (!isSense(PROPER_NOUN_SS_ID))
+    PLWARNING("no <proper_noun> tag found");
+  if (!isSense(NUMERIC_SS_ID))
+    PLWARNING("no <numeric> tag found");
+  if (!isSense(PUNCTUATION_SS_ID))
+    PLWARNING("no <punctuation> tag found");
+  if (!isSense(STOP_SS_ID))
+    PLWARNING("no <stop> tag found");
 }
 
 void WordNetOntology::finalize()
 {
   propagatePOSTypes();
   linkUpperCategories();
-  setLevels();
+  //setLevels();
+  removeNonReachableSynsets();
 }
 
 int WordNetOntology::getWordSenseIdForWnsn(string word, int wn_pos_type, int wnsn)
@@ -815,21 +800,26 @@ void WordNetOntology::linkUpperCategories()
   }
 }
 
-void WordNetOntology::setLevels()
-{
-  Node* root_node = synsets[ROOT_SS_ID];
-  root_node->level = 0;
-  for (SetIterator it = root_node->children.begin(); it != root_node->children.end(); ++it)
-    setLevels(*it, 1);
-}
+// void WordNetOntology::setLevels()
+// {
+//   Node* root_node = synsets[ROOT_SS_ID];
+//   root_node->level = 0;
+//   for (SetIterator it = root_node->children.begin(); it != root_node->children.end(); ++it)
+//     setLevels(*it, 1);
+// }
 
-void WordNetOntology::setLevels(int ss_id, int level)
-{
-  Node* node = synsets[ss_id];
-  node->level = level;
-  for (SetIterator it = node->children.begin(); it != node->children.end(); ++it)
-    setLevels(*it, level + 1);
-}
+// void WordNetOntology::setLevels(int ss_id, int level)
+// {
+//   Node* node = synsets[ss_id];
+//   if (node->level != -1 && node->level != level)
+//   {
+//     PLWARNING("a synset is at 2 different levels (old level = %d, new level = %d)", node->level, level);
+//     printSynset(ss_id, 1);
+//   }
+//   node->level = level;
+//   for (SetIterator it = node->children.begin(); it != node->children.end(); ++it)
+//     setLevels(*it, level + 1);
+// }
 
 // look for an identical, already extracted synset
 Node* WordNetOntology::checkForAlreadyExtractedSynset(SynsetPtr ssp)
@@ -942,7 +932,7 @@ void WordNetOntology::printStats()
   cout << getVocSize() << " words in vocabulary" << endl;
   cout << in_wn_word_count << " in WN words" << endl;
   cout << out_of_wn_word_count << " out of WN words" << endl;
-  cout << getSenseSize() << " senses" << endl;
+  cout << getSenseSize() << " senses (" << (real)getSenseSize() / (real)getVocSize() << " senses per word on average)" << endl;
   cout << getSynsetSize() << " categories (ontology : sense + category, possible overlap)" << endl;
 }
 
@@ -1026,8 +1016,6 @@ void WordNetOntology::load(string voc_file, string synset_file, string ontology_
   }
   if_voc.close();
 
-  //int n_words_in_voc = counter;
-
   while (!if_synsets.eof()) // synsets
   {
     getline(if_synsets, line, '\n');
@@ -1074,7 +1062,12 @@ void WordNetOntology::load(string voc_file, string synset_file, string ontology_
 
     if (tokens[0] == "w")
     {
-      word_is_in_wn[id] = tobool(tokens[2]);
+      bool is_in_wn = tobool(tokens[2]);
+      word_is_in_wn[id] = is_in_wn;
+      if (is_in_wn)
+        in_wn_word_count++;
+      else
+        out_of_wn_word_count++;
     } else if (tokens[0] == "s")
     {
       child_id = toint(tokens[2]);
@@ -1754,19 +1747,50 @@ bool WordNetOntology::isSynsetUnknown(int id)
 //   }
 // }
 
-void WordNetOntology::getCategoriesAtLevel(int ss_id, int level, Set categories)
+// void WordNetOntology::getCategoriesAtLevel(int ss_id, int level, set<int>& categories)
+// {
+//   Node* node = synsets[ss_id];
+//   if (node->level == level)
+//   {
+//     categories.insert(ss_id);
+//   } else
+//   {
+//     for (SetIterator it = node->parents.begin(); it != node->parents.end(); ++it)
+//     {
+//       getCategoriesAtLevel(*it, level, categories);
+//     }
+//   }
+// }
+
+void WordNetOntology::getCategoriesAtLevel(int ss_id, int cur_level, int target_level, set<int>& categories)
 {
   Node* node = synsets[ss_id];
-  if (node->level == level)
+  if (cur_level == target_level && !isTopLevelCategory(ss_id))
   {
     categories.insert(ss_id);
   } else
   {
     for (SetIterator it = node->parents.begin(); it != node->parents.end(); ++it)
     {
-      getCategoriesAtLevel(*it, level, categories);
+      getCategoriesAtLevel(*it, cur_level + 1, target_level, categories);
     }
-  }
+  }  
+}
+
+void WordNetOntology::getCategoriesUnderLevel(int ss_id, int cur_level, int target_level, set<int>& categories)
+{
+  Node* node = synsets[ss_id];
+  categories.insert(ss_id);
+  if (cur_level == target_level && !isTopLevelCategory(ss_id))
+  {
+    return;
+  } else
+  {
+    for (SetIterator it = node->parents.begin(); it != node->parents.end(); ++it)
+    {
+      getCategoriesAtLevel(*it, cur_level + 1, target_level, categories);
+    }
+  }  
 }
 
 void WordNetOntology::reducePolysemy(int level)
@@ -1778,92 +1802,41 @@ void WordNetOntology::reducePolysemy(int level)
   for (map<int, string>::iterator it = words.begin(); it != words.end(); ++it)
   {
     int word_id = it->first;
-    reduceWordPolysemy(word_id, level);
+    //reduceWordPolysemy(word_id, level);
+    reduceWordPolysemy_preserveSenseOverlapping(word_id, level);
     progress.update(count++);
   }
   progress.done();
-  cout << "cleaning..." << endl;
-  cleanNonReachableSynsets();
+  removeNonReachableSynsets();
 }
 
-// inner class that simply serves as a duplicate detection mechanism for Sets (similar to a set<Set>)
-class SetsValuesSet
-{
-
-private:
-
-  vector<Set> sets;
-  vector<int> values;
-
-public:
-  
-  bool insert(Set s, int v = -1)
-  {
-    if (!find(s))
-    {
-      sets.push_back(s);
-      values.push_back(v);
-      return true;
-    } else
-      return false;
-  }
-
-  bool find(Set s)
-  {
-    for (vector<Set>::iterator it = sets.begin(); it != sets.end(); ++it)
-      if (*it == s)
-        return true;
-    return false;
-  }
-  
-  bool find(int v)
-  {
-    for (vector<int>::iterator it = values.begin(); it != values.end(); ++it)
-      if (*it == v)
-        return true;
-    return false;
-  }
-
-  void print()
-  {
-    cout << "sets : ";
-    for (unsigned int i = 0; i < sets.size(); i++)
-      cout << sets[i] << " | ";
-    cout << endl;
-    cout << "values : ";
-    for (unsigned int i = 0; i < values.size(); i++)
-      cout << values[i] << " | ";
-    cout << endl;
-  }
-
-  int size()
-  {
-    if (sets.size() != values.size()) PLERROR("something wrong");
-    return sets.size();
-  }
-
-};
-
-// for every sense of a word, build a list of categories at the nth ontological level,
-// and use these to cluster the senses
+// for every sense of a word, build a list of associated categories at the 
+// nth ontological level, and use these to cluster the senses; we can keep only 
+// a single sense in every clusters, thus performing a sense reduction
 void WordNetOntology::reduceWordPolysemy(int word_id, int level)
 {
   Set senses = word_to_senses[word_id];
   Set senses_to_be_removed;
   if (senses.size() > 1)
   {
-    SetsValuesSet svs;
+    //SetsValuesSet svs;
+    set<set<int> > ss;
     for (SetIterator it = senses.begin(); it != senses.end(); ++it)
     {
       int sense_id = *it;
-      Set categories_at_level;
-      getCategoriesAtLevel(sense_id, level, categories_at_level);
-      //cout << "sense_id = " << sense_id << ", categories_at_level[" << level << "] for word '" << words[word_id] << "' : " << categories_at_level;
-      if (!categories_at_level.isEmpty())
+      set<int> categories_at_level;
+      getCategoriesAtLevel(sense_id, 0, level, categories_at_level);
+
+//       cout << "sense_id = " << sense_id << ", categories_at_level[" << level << "] for word '" << words[word_id] << "' : ";
+//       for (set<int>::iterator sit = categories_at_level.begin(); sit != categories_at_level.end(); ++sit)
+//         cout << *sit << " ";
+
+      if (categories_at_level.size() != 0)
       {
         // if a list of categories, for a given sense, is already extracted 
         // (through a different sense) mark the sense for deletion
-        bool already_there = !svs.insert(categories_at_level, sense_id);
+        //bool already_there = !svs.insert(categories_at_level, sense_id);
+        bool already_there = (ss.find(categories_at_level) != ss.end());
         if (already_there)
         {
           //cout << "*" << endl;
@@ -1874,6 +1847,7 @@ void WordNetOntology::reduceWordPolysemy(int word_id, int level)
             sense_to_words.erase(sense_id);
         } else
         {
+          ss.insert(categories_at_level);
           //cout << endl;
         }
       } else
@@ -1894,9 +1868,137 @@ void WordNetOntology::reduceWordPolysemy(int word_id, int level)
   }
 }
 
+void WordNetOntology::reduceWordPolysemy_preserveSenseOverlapping(int word_id, int level)
+{
+  Set senses = word_to_senses[word_id];
+  Set senses_to_be_removed;
+  map<set<int>, Set> categories_to_senses;
+  if (senses.size() > 1)
+  {
+    for (SetIterator it = senses.begin(); it != senses.end(); ++it)
+    {
+      int sense_id = *it;
+      set<int> categories_at_level;
+      getCategoriesAtLevel(sense_id, 0, level, categories_at_level);
+      if (categories_at_level.size() != 0)
+        categories_to_senses[categories_at_level].insert(sense_id);
+     }
+
+    for (map<set<int>, Set>::iterator it = categories_to_senses.begin(); it != categories_to_senses.end(); ++it)
+    {
+      Set sense_cluster = it->second;
+      if (sense_cluster.size() > 1)
+      {
+        int sense_cluster_size = sense_cluster.size();
+        int n_sense_removed = 0;
+        for (SetIterator sit = sense_cluster.begin(); sit != sense_cluster.end(); ++sit)
+        {
+          int sense_id = *sit;
+          if (sense_to_words[sense_id].size() < 2 && n_sense_removed < (sense_cluster_size - 1))
+          {
+            senses_to_be_removed.insert(sense_id);
+            sense_to_words[sense_id].remove(word_id);
+            // if a sense doesn't point to any word anymore, erase it from the sense table
+            if (sense_to_words[sense_id].isEmpty())
+              sense_to_words.erase(sense_id);
+            n_sense_removed++;
+          }
+        }
+      }
+    }
+
+      if (!senses_to_be_removed.isEmpty())
+      {
+        cout << words[word_id] << endl;
+//       cout << "senses = " << senses; 
+//       cout << ", senses_to_be_removed = " << senses_to_be_removed << endl;
+      }
+
+    // erase the marked senses
+    for (SetIterator it = senses_to_be_removed.begin(); it != senses_to_be_removed.end(); ++it)
+    {
+      int sense_id = *it;
+
+      printSynset(sense_id, 1);
+
+      word_to_senses[word_id].remove(sense_id);
+      word_to_noun_senses[word_id].remove(sense_id);
+      word_to_verb_senses[word_id].remove(sense_id);
+      word_to_adj_senses[word_id].remove(sense_id);
+      word_to_adv_senses[word_id].remove(sense_id);
+    }
+  }
+}
+
+void WordNetOntology::reduceWordPolysemy_preserveSenseOverlapping2(int word_id, int level)
+{
+/*
+  Set senses = word_to_senses[word_id];
+  Set senses_to_be_removed;
+  map<int, <Set> > sense_to_categories_under_level(senses.size());
+  if (senses.size() > 1)
+  {
+    for (SetIterator it = senses.begin(); it != senses.end(); ++it)
+    {
+      int sense_id = *it;
+      set<int> categories_under_level;
+      getCategoriesAtLevel(sense_id, 0, level, categories_under_level);
+      sense_to_categories_under_level[sense_id] = categories_under_level;
+     }
+
+    
+
+
+    for (map<set<int>, Set>::iterator it = categories_to_senses.begin(); it != categories_to_senses.end(); ++it)
+    {
+      Set sense_cluster = it->second;
+      if (sense_cluster.size() > 1)
+      {
+        int sense_cluster_size = sense_cluster.size();
+        int n_sense_removed = 0;
+        for (SetIterator sit = sense_cluster.begin(); sit != sense_cluster.end(); ++sit)
+        {
+          int sense_id = *sit;
+          if (sense_to_words[sense_id].size() < 2 && n_sense_removed < (sense_cluster_size - 1))
+          {
+            senses_to_be_removed.insert(sense_id);
+            sense_to_words[sense_id].remove(word_id);
+            // if a sense doesn't point to any word anymore, erase it from the sense table
+            if (sense_to_words[sense_id].isEmpty())
+              sense_to_words.erase(sense_id);
+            n_sense_removed++;
+          }
+        }
+      }
+    }
+
+      if (!senses_to_be_removed.isEmpty())
+      {
+        cout << words[word_id] << endl;
+//       cout << "senses = " << senses; 
+//       cout << ", senses_to_be_removed = " << senses_to_be_removed << endl;
+      }
+
+    // erase the marked senses
+    for (SetIterator it = senses_to_be_removed.begin(); it != senses_to_be_removed.end(); ++it)
+    {
+      int sense_id = *it;
+
+      printSynset(sense_id, 1);
+
+      word_to_senses[word_id].remove(sense_id);
+      word_to_noun_senses[word_id].remove(sense_id);
+      word_to_verb_senses[word_id].remove(sense_id);
+      word_to_adj_senses[word_id].remove(sense_id);
+      word_to_adv_senses[word_id].remove(sense_id);
+    }
+  }
+*/
+}
+
 // remove all the synsets that are not accessible through the word table
 // direction is : words -> senses -> categories
-void WordNetOntology::cleanNonReachableSynsets()
+void WordNetOntology::removeNonReachableSynsets()
 {
   // visit the whole graph, beginning with words, and going upward, and marking the nodes
   for (map<int, Set>::iterator wit = word_to_senses.begin(); wit != word_to_senses.end(); ++wit)
@@ -2086,6 +2188,16 @@ void WordNetOntology::loadPredominentSyntacticClasses(string file)
   }
   in_pos.close();
   are_predominent_pos_extracted = true;
+}
+
+bool WordNetOntology::isTopLevelCategory(int ss_id)
+{
+  return (ss_id == ROOT_SS_ID || ss_id == SUPER_UNKNOWN_SS_ID || 
+          ss_id == NOUN_SS_ID || ss_id == VERB_SS_ID || 
+          ss_id == ADJ_SS_ID || ss_id == ADV_SS_ID ||
+          ss_id == OOV_SS_ID || ss_id == PROPER_NOUN_SS_ID ||
+          ss_id == NUMERIC_SS_ID || ss_id == PUNCTUATION_SS_ID ||
+          ss_id == STOP_SS_ID || ss_id == UNDEFINED_SS_ID);
 }
 
 // {non-letters}word{non-letters} -> word

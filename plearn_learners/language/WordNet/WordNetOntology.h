@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.h,v 1.3 2002/10/17 19:50:53 morinf Exp $
+   * $Id: WordNetOntology.h,v 1.4 2002/10/21 20:43:34 jauvinc Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -118,7 +118,7 @@ struct Node
   Set parents;
   Set children;
   bool is_unknown;
-  int level;
+  //int level;
   bool visited;
 };
 
@@ -243,6 +243,7 @@ public:
   bool isInWordNet(string word, bool trim_word = true, bool stem_word = true, bool remove_undescores = false);
   bool isInWordNet(int word_id);
   bool hasSenseInWordNet(string word, int wn_pos_type);
+  bool isTopLevelCategory(int ss_id);
 
   bool containsWord(string word) { return (words_id.find(word) != words_id.end()); }
   bool containsWordId(int id) { return (words.find(id) != words.end()); }
@@ -290,15 +291,19 @@ private:
   void propagatePOSTypes();
   void propagatePOSTypes(Node* node);
   void linkUpperCategories();
-  void setLevels();
-  void setLevels(int ss_id, int level);
+  //void setLevels();
+  //void setLevels(int ss_id, int level);
   Node* checkForAlreadyExtractedSynset(SynsetPtr ssp);
   vector<string> getSynsetWords(SynsetPtr ssp);
   void printOntology(Node* node, int level = 0);
   bool catchSpecialTags(string word);
   void reduceWordPolysemy(int word_id, int level);
-  void getCategoriesAtLevel(int ss_id, int level, Set categories);
-  void cleanNonReachableSynsets();
+  void reduceWordPolysemy_preserveSenseOverlapping(int word_id, int level);
+  void reduceWordPolysemy_preserveSenseOverlapping2(int word_id, int level);
+  //void getCategoriesAtLevel(int ss_id, int level, set<int>& categories);
+  void getCategoriesAtLevel(int ss_id, int cur_level, int target_level, set<int>& categories);
+  void getCategoriesUnderLevel(int ss_id, int cur_level, int target_level, set<int>& categories);
+  void removeNonReachableSynsets();
   void visitUpward(Node* node);
 
 };
