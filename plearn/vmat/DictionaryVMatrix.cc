@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DictionaryVMatrix.cc,v 1.10 2005/02/04 15:10:42 tihocan Exp $ 
+   * $Id: DictionaryVMatrix.cc,v 1.11 2005/02/08 21:34:28 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Christopher Kermorvant
@@ -167,7 +167,7 @@ void DictionaryVMatrix::build_()
   if(option_fields.length()==0) option_fields.resize(dictionaries.length());
 
   attributes_number = dictionaries.length();
-  input_file = abspath(input_file);
+  input_file = input_file.absolute();
   ifstream input_stream(input_file.c_str());
   if (!input_stream) PLERROR("DictionaryVMatrix: can't open input_file %s", input_file.c_str());
   // get file length

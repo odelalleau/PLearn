@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.27 2004/11/23 21:32:35 tihocan Exp $
+   * $Id: FileVMatrix.cc,v 1.28 2005/02/08 21:34:29 tihocan Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -67,8 +67,8 @@ FileVMatrix::FileVMatrix()
   writable=true;
 }
 
-FileVMatrix::FileVMatrix(const string& filename, bool writable_)
-: filename_(abspath(filename)), f(0), build_new_file(!isfile(filename)),
+FileVMatrix::FileVMatrix(const PPath& filename, bool writable_)
+: filename_(filename.absolute()), f(0), build_new_file(!isfile(filename)),
   old_filename(""),
   remove_when_done(false),
   track_ref(false)
@@ -84,8 +84,8 @@ static int strlen(char* s) {
   return n;
 }
 
-FileVMatrix::FileVMatrix(const string& filename, int the_length, int the_width)
-: inherited(the_length, the_width), filename_(abspath(filename)), f(0),
+FileVMatrix::FileVMatrix(const PPath& filename, int the_length, int the_width)
+: inherited(the_length, the_width), filename_(filename.absolute()), f(0),
   build_new_file(true),
   old_filename(""),
   remove_when_done(false),
@@ -95,8 +95,8 @@ FileVMatrix::FileVMatrix(const string& filename, int the_length, int the_width)
   build_();
 }
 
-FileVMatrix::FileVMatrix(const string& filename, int the_length, const TVec<string>& fieldnames)
-: inherited(the_length, fieldnames.length()), filename_(abspath(filename)), f(0),
+FileVMatrix::FileVMatrix(const PPath& filename, int the_length, const TVec<string>& fieldnames)
+: inherited(the_length, fieldnames.length()), filename_(filename.absolute()), f(0),
   build_new_file(true),
   old_filename(""),
   remove_when_done(false),

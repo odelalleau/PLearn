@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.h,v 1.4 2005/01/25 03:15:21 dorionc Exp $
+   * $Id: getDataSet.h,v 1.5 2005/02/08 21:34:27 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -73,7 +73,7 @@ VMat getDataSet(const PPath&  datasetpath,   const string& alias="");
 //! Looks for 'dataset.aliases' file in specified directory and its parent directories;
 //! Returns the directory containing dataset.aliases (returned string will be terminated 
 //! by a slash) or an empty string if not found.
-string locateDatasetAliasesDir(const string& dir_or_file_path=".");
+string locateDatasetAliasesDir(const PPath& dir_or_file_path=".");
 
 //! Looks for 'dataset.aliases' file in specified directory and its parent directories;
 //! loads it and returns the corresponding map. Returns an empty map if file was not found.

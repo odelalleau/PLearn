@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DictionaryVMatrix.h,v 1.9 2005/02/04 15:10:42 tihocan Exp $ 
+   * $Id: DictionaryVMatrix.h,v 1.10 2005/02/08 21:34:29 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Christopher Kermorvant
@@ -77,7 +77,7 @@ public:
   // ************************
 
   //! The text input file which is processed with dictionaries 
-  string input_file;
+  PPath input_file;
 
   //! The dictionaries, one for each attributes
   TVec< PP<Dictionary> > dictionaries;

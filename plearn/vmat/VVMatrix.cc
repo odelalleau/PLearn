@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.cc,v 1.28 2005/01/25 03:15:47 dorionc Exp $
+   * $Id: VVMatrix.cc,v 1.29 2005/02/08 21:34:32 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -278,13 +278,13 @@ void VVMatrix::generateVMatIndex(VMat source, const string& meta_data_dir,
           ivf.append(preivf[postivf[i]]);
       }
     else
-      mv(meta_data_dir+slash+"incomplete.source.prefilter.indexes "
-         +meta_data_dir+slash+"source.indexes");
+      mv(meta_data_dir+slash+"incomplete.source.prefilter.indexes",
+         meta_data_dir+slash+"source.indexes");
       
   else
     if(isfile(meta_data_dir+slash+"incomplete.source.postfilter.indexes"))
-      mv(meta_data_dir+slash+"incomplete.source.postfilter.indexes "
-         +meta_data_dir+slash+"source.indexes");
+      mv(meta_data_dir+slash+"incomplete.source.postfilter.indexes",
+         meta_data_dir+slash+"source.indexes");
   
   if(idx_shuffle!=string::npos)
     {
@@ -558,12 +558,13 @@ VMat VVMatrix::createPreproVMat(const string & filename)
             }
           }
 
-          mvforce(meta_data_dir/"incomplete.precomputed.dmat " + meta_data_dir/"precomputed.dmat");
+          mvforce(meta_data_dir/"incomplete.precomputed.dmat",
+                  meta_data_dir/"precomputed.dmat");
           if(pathexists(meta_data_dir/"incomplete.precomputed.dmat.metadata"))
           {
             rm(meta_data_dir/"precomputed.dmat.metadata");
-            mvforce( meta_data_dir/"incomplete.precomputed.dmat.metadata " +
-                     meta_data_dir/"precomputed.dmat.metadata");
+            mvforce(meta_data_dir/"incomplete.precomputed.dmat.metadata",
+                    meta_data_dir/"precomputed.dmat.metadata");
           }
           source=new DiskVMatrix(meta_data_dir/"precomputed.dmat");
         }
@@ -571,11 +572,11 @@ VMat VVMatrix::createPreproVMat(const string & filename)
         {
           cout<<"Rendering PMAT : "<<meta_data_dir+slash+"precomputed.pmat"<<endl;
           source->savePMAT(meta_data_dir+slash+"incomplete.precomputed.pmat");
-          mvforce( meta_data_dir/"incomplete.precomputed.pmat " +
-                   meta_data_dir/"precomputed.pmat");
+          mvforce(meta_data_dir/"incomplete.precomputed.pmat",
+                  meta_data_dir/"precomputed.pmat");
           if(pathexists(meta_data_dir/"incomplete.precomputed.pmat.metadata"))
-            mvforce( meta_data_dir/"incomplete.precomputed.pmat.metadata " +
-                     meta_data_dir/"precomputed.pmat.metadata" );
+            mvforce(meta_data_dir/"incomplete.precomputed.pmat.metadata",
+                    meta_data_dir/"precomputed.pmat.metadata");
           
           // Save the string mappings.
           source->setMetaDataDir(meta_data_dir);
@@ -608,7 +609,7 @@ void VVMatrix::build()
 void VVMatrix::build_()
 {
   if (the_filename != "") {
-    setMetaDataDir( makeExplicitPath(the_filename+".metadata") );
+    setMetaDataDir( PPath(the_filename+".metadata").absolute() );
     force_mkdir( getMetaDataDir() );
 
     code = readFileAndMacroProcess(the_filename);

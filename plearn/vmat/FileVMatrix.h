@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.h,v 1.16 2004/11/18 14:28:38 tihocan Exp $
+   * $Id: FileVMatrix.h,v 1.17 2005/02/08 21:34:30 tihocan Exp $
    ******************************************************* */
 
 
@@ -60,7 +60,7 @@ private:
 
 protected:
 
-  string filename_;
+  PPath filename_;
   FILE* f;
   bool file_is_bigendian;
   bool file_is_float;
@@ -71,14 +71,14 @@ private:
 
   //! Used to remember which file we were accessing before build was called for
   //! the last time.
-  string old_filename;
+  PPath old_filename;
 
 public:
 
   FileVMatrix();
-  FileVMatrix(const string& filename, bool writable_=false); //!<  opens an existing file
-  FileVMatrix(const string& filename, int the_length, int the_width); //!<  create a new matrix file
-  FileVMatrix(const string& filename, int the_length, const TVec<string>& fieldnames); //!<  create a new matrix file
+  FileVMatrix(const PPath& filename, bool writable_=false); //!<  opens an existing file
+  FileVMatrix(const PPath& filename, int the_length, int the_width); //!<  create a new matrix file
+  FileVMatrix(const PPath& filename, int the_length, const TVec<string>& fieldnames); //!<  create a new matrix file
 
 protected:
 

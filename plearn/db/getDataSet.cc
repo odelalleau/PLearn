@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.31 2005/02/04 15:09:25 tihocan Exp $
+   * $Id: getDataSet.cc,v 1.32 2005/02/08 21:34:11 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -79,7 +79,7 @@ time_t getDataSetDate(const string& datasetstring, const string& alias)
   VMat vm;
 
   // search for an alias in a dataset.aliases file
-  map<string,string> aliases = getDatasetAliases(getcwd());
+  map<string,string> aliases = getDatasetAliases(PPath::getcwd());
   if(aliases.find(datasetstring)!=aliases.end())
     return getDataSetDate(aliases[datasetstring]);
 
@@ -121,7 +121,7 @@ VMat getDataSet(const PPath&  datasetpath,   const string& alias)
 VMat getDataSet(const string& datasetstring, const string& alias)
 {
   // search for an alias in a dataset.aliases file
-  map<string,string> aliases = getDatasetAliases(getcwd());
+  map<string,string> aliases = getDatasetAliases(PPath::getcwd());
   if(aliases.find(datasetstring)!=aliases.end())
     return getDataSet(aliases[datasetstring]);
 
@@ -266,11 +266,11 @@ VMat getDataSet(const string& datasetstring, const string& alias)
 }
 
 
-string locateDatasetAliasesDir(const string& dir_or_file_path)
+string locateDatasetAliasesDir(const PPath& dir_or_file_path)
 {
   if(!pathexists(dir_or_file_path))
-    PLERROR("In getDatasetAliases argument '%s' is not an existing directory or file!", dir_or_file_path.c_str());
-  string dirname = extract_directory(abspath(dir_or_file_path));
+    PLERROR("In getDatasetAliases argument '%s' is not an existing directory or file!", dir_or_file_path.absolute().c_str());
+  string dirname = extract_directory(dir_or_file_path.absolute());
   string dot = ".";
   while(dirname!=slash && dirname!=dot+slash && !isfile(dirname + "dataset.aliases"))
     dirname = extract_directory(remove_trailing_slash(dirname));
