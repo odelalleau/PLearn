@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.cc,v 1.14 2005/02/16 21:55:38 tihocan Exp $ 
+   * $Id: PPath.cc,v 1.15 2005/02/17 02:11:12 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -195,7 +195,8 @@ PPath PPath::getcwd()
   if (!SYS_GETCWD(buf, 2000))
     // Error while reading the current directory. One should probably use a
     // larger buffer, but it is even easier to crash.
-    PLERROR("In PPath::getcwd - Could not obtain the current working directory, a larger buffer may be necessary");
+    PLERROR("In PPath::getcwd - Could not obtain the current working "
+            "directory, a larger buffer may be necessary");
   return PPath(buf);
 }
 
@@ -210,7 +211,12 @@ PPath PPath::getenv(const string& var, const PPath& default_)
   return default_;
 }
 
+// A map to store the bindings metaprotocol <-> metapath.
 map<string, PPath>  PPath::metaprotocol_to_metapath;
+
+////////////////////
+// ensureMappings //
+////////////////////
 void PPath::ensureMappings()
 {
   static bool mappings;
@@ -242,17 +248,12 @@ void PPath::ensureMappings()
         PLERROR("In PPath::ensureMappings - Error in PPath config file (%s): could not read the "
                 "path associated with '%s'",
                  config_file_path.absolute().c_str(), next_metaprotocol.c_str());
-      // First ensure that there are only canonical slashes.
-      if (_slash_char != PPATH_SLASH && next_metapath.find(_slash_char) != npos)
-        PLERROR("In PPath::ensureMappings - Please use only the canonical slash '%c' in your PPath "
-                 "config file (%s): the path '%s' is invalid",
-                 PPATH_SLASH, config_file_path.absolute().c_str(), next_metapath.c_str());
       // For the sake of simplicity, we do not allow a metapath to end with
       // a slash unless it is a root directory.
-      if (endsWith(next_metapath, PPATH_SLASH) && !next_metapath.isRoot())
+      if (endsWith(next_metapath, _slash_char) && !next_metapath.isRoot())
         PLERROR("In PPath::ensureMappings - Only root directories are allowed to end with '%c' in "
                 "your PPath config file (%s): the path '%s' is invalid",
-                 PPATH_SLASH, config_file_path.absolute().c_str(), next_metapath.c_str());
+                 _slash_char, config_file_path.absolute().c_str(), next_metapath.c_str());
 
       metaprotocol_to_metapath[ next_metaprotocol  ]  = next_metapath;
     }       
@@ -329,7 +330,7 @@ void PPath::resolveSlashChars( )
   {
     size_t forbidden = forbidden_chars.find( internal[ch] );    
     if ( forbidden != npos )
-      PLERROR( "PPath %s can not contain %c chars (or any of \"%s\").",
+      PLERROR( "PPath %s cannot contain %c chars (or any of \"%s\").",
                internal.c_str(), internal[ch], forbidden_chars.c_str() );
     
     // Convert the canonic representation '/' by the appropriate
@@ -690,9 +691,10 @@ string PPath::canonical() const
   if ( metaprotocol.length() > 0 ) {
     canonic_path.replace( 0, metapath.length(), metaprotocol+':' );
     // Remove the slash just after the ':' if there is something following.
-    if (canonic_path.size() > metaprotocol.size() + 2 &&
-        canonic_path[metaprotocol.size() + 1] == PPATH_SLASH)
-      canonic_path.erase(metaprotocol.size() + 1, 1);
+    size_t after_colon = metaprotocol.size() + 1;
+    if (canonic_path.size() > after_colon + 1 &&
+        canonic_path[after_colon] == PPATH_SLASH)
+      canonic_path.erase(after_colon, 1);
   }
 
   return canonic_path;
