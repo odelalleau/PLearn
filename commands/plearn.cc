@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.65 2004/05/21 13:46:10 tihocan Exp $
+   * $Id: plearn.cc,v 1.66 2004/05/26 16:48:34 tihocan Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -76,7 +76,6 @@
 #include "PLS.h"
 
 // Available Distributions.
-#include "ConditionalGaussMix.h"
 #include "GaussianDistribution.h"
 #include "LocallyWeightedDistribution.h"
 #include "ManifoldParzen2.h"
