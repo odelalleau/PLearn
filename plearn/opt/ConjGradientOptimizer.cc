@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.29 2003/07/24 18:18:42 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.30 2003/08/05 18:07:49 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -656,6 +656,8 @@ bool ConjGradientOptimizer::lineSearch() {
       step = 0;
       break;
   }
+  if (step < 0)
+    cout << "Ouch, negative step !" << endl;
   params.update(step, search_direction);
   if (step == 0)
     cout << "No more progress made by the line search, stopping" << endl;
@@ -756,6 +758,7 @@ real ConjGradientOptimizer::minQuadratic(
 //////////////
 real ConjGradientOptimizer::optimize()
 {
+  cout << "Warning ! In ConjGradientOptimizer::optimize This method is deprecated, use optimizeN instead" << endl;
   ofstream out;
   if (!filename.empty()) {
      out.open(filename.c_str());
