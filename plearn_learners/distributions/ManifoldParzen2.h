@@ -57,6 +57,7 @@ protected:
   int ncomponents; //!<  how many components do we want to remember from the PCA
   
   bool use_last_eigenval;
+  real scale_factor;
   double global_lambda0;
 public:
 
@@ -81,7 +82,7 @@ public:
   // * Object methods *
   // ******************
 
-  ManifoldParzen2(int the_nneighbors, int the_ncomponents, bool use_last_eigenvalue=true);
+  ManifoldParzen2(int the_nneighbors, int the_ncomponents, bool use_last_eigenvalue=true, real scale_factor=1);
   
 private: 
   //! This does the actual building. 

@@ -37,9 +37,9 @@
 #include "ManifoldParzen2.h"
 
 #include "plapack.h"
-//#include "general.h"
+#include "general.h"
 #include "TMat.h"
-//#include "TMat_maths.h"
+#include "TMat_maths.h"
 #include "BottomNI.h"
 
 namespace PLearn <%
@@ -51,8 +51,8 @@ ManifoldParzen2::ManifoldParzen2()
   : nneighbors(4),ncomponents(1),use_last_eigenval(true)
 {}
 
-ManifoldParzen2::ManifoldParzen2(int the_nneighbors, int the_ncomponents, bool use_last_eigenvalue)
-  : nneighbors(the_nneighbors),ncomponents(the_ncomponents),use_last_eigenval(true)
+ManifoldParzen2::ManifoldParzen2(int the_nneighbors, int the_ncomponents, bool use_last_eigenvalue, real the_scale_factor)
+  : nneighbors(the_nneighbors),ncomponents(the_ncomponents),use_last_eigenval(true),scale_factor(the_scale_factor)
 {
 }
 
@@ -128,6 +128,9 @@ void computePrincipalComponents(Mat dataset, Vec& eig_values, Mat& eig_vectors)
   covar.resize(dataset.width(), dataset.width());
   transposeProduct(covar, dataset,dataset);
   eigenVecOfSymmMat(covar, ncomp,  eig_values, eig_vectors); 
+  for (int i=0;i<eig_values.length();i++)
+    if (eig_values[i]<0)
+      eig_values[i] = 0;
 }
 
 void computeLocalPrincipalComponents(Mat& dataset, int which_pattern, Mat& delta_neighbors, Vec& eig_values, Mat& eig_vectors, Vec& mean)
@@ -164,6 +167,8 @@ void ManifoldParzen2::train()
 
     Vec center;
     computeLocalPrincipalComponents(trainset, i, delta_neighbors, eigvals, components_eigenvecs, center);
+
+    eigvals *= scale_factor;
 
 //    cout<<delta_neighbors<<endl;
     
