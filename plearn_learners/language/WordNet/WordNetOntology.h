@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.h,v 1.2 2002/10/17 17:53:34 jauvinc Exp $
+   * $Id: WordNetOntology.h,v 1.3 2002/10/17 19:50:53 morinf Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -125,7 +125,7 @@ struct Node
 class WordNetOntology
 {
 
-private:
+protected:
 
   // main ontology structure access points
   map<int, Set> word_to_senses;
