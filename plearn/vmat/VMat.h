@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat.h,v 1.13 2004/01/26 14:12:09 tihocan Exp $
+   * $Id: VMat.h,v 1.14 2004/02/09 19:04:25 lheureup Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -131,7 +131,7 @@ DECLARE_OBJECT_PP(VMat, VMatrix);
 inline void operator<<(const Mat& dest, const VMatrix& src)
 {
   if(dest.length()!=src.length() || dest.width()!=src.width())
-    PLERROR("In operator<<(const Mat& dest, const VMatrix& src), incompatible dimenasions");
+    PLERROR("In operator<<(const Mat& dest, const VMatrix& src), incompatible dimensions");
   src.getMat(0,0,dest);
 }
 
