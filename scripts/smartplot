@@ -1,0 +1,136 @@
+#!/usr/bin/env perl
+
+# smartplot
+
+# Copyright (C) 2000 Pascal Vincent
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#
+#   1. Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
+#
+#   2. Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#
+#   3. The name of the authors may not be used to endorse or promote
+#      products derived from this software without specific prior written
+#      permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+#  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+#  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+#  NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+#  TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+#  This file is part of the PLearn library. For more information on the PLearn
+#  library, go to the PLearn Web site at www.plearn.org
+
+print "args: ";
+print @ARGV;
+
+$nargs = $#ARGV+1;
+if ($nargs==0)
+{
+print "
+Usage: smartplot datafile
+   or: smartplot [destfile.eps] datafile plotnum
+   or: smartplot [destfile.eps] datafile plotnum xmin:xmax
+   or: smartplot [destfile.eps] datafile plotnum xmin:xmax ymin:ymax
+
+Smartplot is a perl script that allows you to execute gnuplot commands
+embedded in a datafile. This can be useful if you have (or are generating)
+data in a file and want to provide an easy way to view it.  
+
+A simple example of a 'smartplottable' datafile follows:
+
+__________________________________________________________________
+# Simple datafile 'example.data' with embedded gnuplot commands...
+# Available plots:
+# [1] x2 = f(x1)
+#: plot [0:5][0:10] @ using 1:2 
+# [2] (x2,x3) = f(x1) 
+#: set xlabel 'x1'; plot @ using 1:2 title 'x2' with lines, @ using 1:3 title 'x3' with lines
+#
+# COLUMNS: ( x1 x2 x3 )
+1.0  5  7.1
+2.5  6  3.4
+3.2  4  2.6
+4.1  7  3.8
+__________________________________________________________________
+
+Lines starting with #: are embedded gnuplot commands.  
+Other lines starting with # are ordinary comments.
+
+Calling smartplot with the datafile as only argument simply prints out all
+ordinary comment lines (excluding the embedded commands). Comments are free
+form, but they are typically arranged so that they give a menu of the
+available plots together with any other useful information about the data.
+
+Calling smartplot with the datafile and a number n will run the nth
+embedded command inside gnuplot, having previously substituted any @ with
+the name of the datafile.
+
+Pascal Vincent (February 2000)
+";
+
+exit; 
+}
+
+$epsfile = "";
+
+if ($nargs>1 and $ARGV[1] !~ /^[0-9]+$/)
+           { $epsfile = shift @ARGV;
+             $nargs = $nargs-1;
+         }
+
+$datafile = $ARGV[0];
+open (F, $datafile) or die "Couldn't open file $datafile";
+@comments = grep(/^#/, <F> );
+@commands = grep(/^#:/, @comments);
+$ncommands = $#commands+1;
+
+print grep(!/^#:/, @comments);
+
+die "No available #: plot commands in file" if $ncommands==0;
+exit if $nargs==1 and $ncommands>1;
+
+
+if ($nargs==1)
+ { $commandindex = 1; }
+else 
+ { $commandindex = $ARGV[1]; }
+
+if ($nargs==3)
+ { $plotoptions = "set xrange [$ARGV[2]]; "; }
+elsif ($nargs==4)
+ { $plotoptions = "set xrange [$ARGV[2]]; set yrange [$ARGV[3]]; "; }
+else
+ { $plotpotions = ""; }
+
+$command = $commands[$commandindex-1];
+$command =~ s/^#:\s*(.*)$/$1/;
+$command =~ s/\@/\"$datafile\"/g;
+$command = $plotoptions.$command;
+print $command;
+
+open (F, ">tmpplotcommand");
+print F $command;
+if ($epsfile)
+{
+#    print F "set terminal postscript eps color\n";
+    print F "set size .75,.575; set terminal postscript eps 14\n";
+    print F "set output '$epsfile'\n";
+    print F $command;    
+}
+close(F);
+
+system "gnuplot -persist tmpplotcommand";
+unlink "tmpplotcommand";
+

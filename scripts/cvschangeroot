@@ -1,0 +1,130 @@
+#!/usr/bin/env perl
+
+# cvschangeroot
+# A script that can be used to change the cvsroot pointed to by all CVS/Root files 
+# in a user checked out directory (in case the root changed)
+# Proceeds recursively in all subdirectories
+# and makes the CVS/Repository relative if they weren't
+
+# Copyright (C) 1999 Pascal Vincent
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#
+#   1. Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
+#
+#   2. Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#
+#   3. The name of the authors may not be used to endorse or promote
+#      products derived from this software without specific prior written
+#      permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+#  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+#  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+#  NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+#  TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+#  This file is part of the PLearn library. For more information on the PLearn
+#  library, go to the PLearn Web site at www.plearn.org
+
+
+sub process_dir($)
+{
+    my $previousdir;
+    chomp($previousdir = `pwd`);
+    chdir($_[0]);
+
+    opendir(DIR, ".") || die "couldn't open directory"; 
+    my @flist = grep(!/^\./,readdir(DIR));
+    closedir(DIR);
+
+    foreach $fname (@flist)
+    {
+        if(-d $fname and not -l $fname and -x $fname and -r $fname) # it's a directory
+        {
+            my $cvsroot;
+            my $cvsrepository;
+            if($fname eq "CVS") # let's process the CVS files
+            {
+                open(FILE,"CVS/Root") or die "couldn't open file CVS/Root for reading";
+                chomp($cvsroot = <FILE>);
+                close(FILE);
+                open(FILE,"CVS/Repository") or die "couldn't open file CVS/Repository for reading";
+                chomp($cvsrepository = <FILE>);
+                close(FILE);
+                
+                print "\n* In directory ".`pwd`;
+
+                if (substr($cvsrepository,0,1) eq "/") # it's not a relative path, let's make it relative
+                {
+                    my $cvsrootdir = substr($cvsroot, rindex($cvsroot,":")+1); # works even if there is no ':' as rindex would return -1
+                    if (substr($cvsrepository, 0, length($cvsrootdir)) ne $cvsrootdir) # sanity check...
+                    { die("CVS/Repository $cvsrepository does not start with the root directory $cvsrootdir"); }
+                    my $newcvsrepository = substr($cvsrepository,length($cvsrootdir)); # remove the rootdir part
+                    if(substr($newcvsrepository,0,1) eq "/") # remove any remaining head /
+                    { $newcvsrepository = substr($newcvsrepository,1); }
+                    print "Changing CVS/Repository from $cvsrepository to $newcvsrepository\n";
+                    open(FILE,">CVS/Repository") or die "couldn't open file CVS/Repository for writing";
+                    print FILE "$newcvsrepository\n";
+                    close(FILE);
+                }
+                else
+                {
+                    print "Keeping CVS/Repository as $cvsrepository\n";
+                }
+                if ($cvsroot ne $newcvsroot)
+                {
+                    print "Changing CVS/Root from $cvsroot to $newcvsroot\n";
+                    open(FILE,">CVS/Root") or die "couldn't open file CVS/Root for writing";
+                    print FILE "$newcvsroot\n";
+                    close(FILE);
+                }
+                else
+                {
+                    print "Keeping CVS/Root as $cvsroot\n";
+                }
+            }
+            else  # it's another directory, let's process it
+            {
+                process_dir($fname);
+            }
+        }
+    }
+
+    chdir($previousdir);
+}
+
+################
+# Main program #
+################
+
+$nargs = $#ARGV+1;
+if($nargs!=1)
+{
+print 
+"
+usage: cvschangeroot new_cvs_root
+This will put the new_cvs_root in the CVS/Root files 
+descending recursively in all directories.
+
+The paths in CVS/Repository will also be made relative to 
+the root rather than absolute if it's not already the case.
+Ex: cvschangeroot :pserver:vincentp\@cvs.iro.umontreal.ca:/home/cvs/cvslisa/cvsroot
+";
+
+exit;
+}
+
+$newcvsroot = shift; # global newcvsroot variable
+process_dir(".");
+print "\n ** All done successfully! **\n\n";
+

@@ -1,0 +1,206 @@
+#!/usr/bin/perl
+
+# search-replace
+# A script that performs a search-replace in source files 
+# recursing through directories, with undo capabilities
+
+# Copyright (C) 1999 Pascal Vincent
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#
+#   1. Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
+#
+#   2. Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#
+#   3. The name of the authors may not be used to endorse or promote
+#      products derived from this software without specific prior written
+#      permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+#  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+#  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+#  NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+#  TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+#  This file is part of the PLearn library. For more information on the PLearn
+#  library, go to the PLearn Web site at www.plearn.org
+
+# returns a full path to the given file (which may be expressed relative to the current directory)
+# if the file refers to a directory, an ending '/' will be appended to the name if it wasn't already there
+sub fullpath($)
+{
+    $filepath = $_[0];
+    if(substr($filepath,0,1) ne "/")
+    { 
+        $pwd = `pwd`;
+        chomp($pwd);
+        appendslash($pwd);
+        $filepath = $pwd.$filepath; 
+    }
+    appendslash($filepath) if -d $filepath ;
+    return $filepath;
+}
+
+# appends a slash at the end if there isn't already one
+# argument is both modified and returned.
+sub appendslash($)
+{
+    if(substr($_[0],length($_[0])-1,1) ne "/")
+    { $_[0].="/"; }
+    return $_[0];
+}
+
+# returns full path to all files and subdirectories of this dir
+sub lsdir($)
+{
+    my $dirname = fullpath($_[0]);
+    opendir(DIR,$dirname) || die "couldn't open directory $dirname";
+    @flist = grep(!/^\./,readdir(DIR));
+    closedir(DIR);
+    @flist =  map { $dirname.$_ } @flist;
+    return @flist;
+}
+
+
+sub process_file($)
+{
+  my $fname = $_[0];
+  # print "Examining file $fname\n";
+  my $buf;  # buffer containing file text
+  my $tbuf; # the fransformed buffer
+  open(FILE,$fname) or die "couldn't open file $fname for reading";
+  read(FILE,$buf,1000000); close(FILE);   
+  $tbuf = $buf;
+  my $noccurences = eval($command);
+  # my $noccurences =  $tbuf =~ s[$search][$replace]sgxe;
+  if($tbuf ne $buf)
+  {
+      print "+ Changed file $fname ($noccurences occurences)\n";
+      open(FILE,">$fname") or die "couldn't open file $fname for writing";
+      print FILE $tbuf;close(FILE);
+      # saving undo information...
+      open(FILE,">$undodir/$undofilenum") or die "couldn't open backup file $undodir/$undofilenum for writing";
+      print FILE $buf; close(FILE);
+      open(FILE,">>$undodir/undo.list") or die "couldn't open $undodir/undo.list to append undo information";
+      print FILE "$undofilenum $fname\n"; close(FILE);
+      $undofilenum++;
+  }
+}
+
+sub process_list(@)
+{
+    foreach $fname (@_)
+    {
+        if (-l $fname)
+        { 
+            print "Skipping symbolic link $fname\n";
+        }
+        else
+        {
+            # print "processing $fname\n";
+            if (-d $fname)
+            { 
+                my @flist = lsdir($fname);
+
+                @flist = grep { -d $_ or /Makefile|makefile|
+                               \.c$|\.cc$|\.cpp$|\.CC$|\.h$
+                                   |\.txt$|^readme|^Readme|^README/x } @flist;
+                process_list(@flist); 
+            }
+            else
+            { 
+                process_file(fullpath($fname));
+            }
+        }
+    }
+}
+
+################
+# Main program #
+################
+
+$nargs = $#ARGV+1;
+if($nargs<3)
+{
+print 
+"
+Normal usage: search-replace 'search_word' 'replace_word' <list of files and directories>
+Expert usage: search-replace -e 'search_regexp' 'replace_expression' <list of files and directories>
+
+Will perform the specified search-replace operation on every file in the
+list and recursively in directories.  (only certain kinds of files are
+considered when recursing in directories, .c .cc .h .txt Makefile makefile)
+
+For safety, the normal command only matches clearly delimited words, not
+parts within words ('words' are sequences of alpha-numeric-or-underscore
+characters. Any other character delimits a word boundary). Make sure not to
+use any special character in 'search_word' (unless you really know what you
+are doing...)
+
+The expert command uses perl extended regexp... Make sure you know what you are doing!
+
+If you regret your move command undo-search-replace allows you to revert to
+the version preceeding the changes.  (it has unlimited levels of undo, as
+long as you don't delete the ~/.undo directory where search-replace keeps
+copies of the old files)
+
+Ex: search-replace OldClassName NewClassName .
+
+";
+
+exit;
+}
+
+$user = $ENV{USER};
+$home = $ENV{HOME};
+$time = time;
+$undodir = "$home/.undo/$time";
+mkdir "$home/.undo",0777;
+mkdir $undodir,0777;
+$undofilenum = 0;
+
+$option = shift;
+if ($option eq "-e")
+{
+    $search = shift;
+    $replace = shift;
+    print "REPLACING REGEXP: $search \nWITH: $replace \nIN: ".join(" ",@ARGV)."\n";    
+    $command = '$tbuf =~ s['.$search.']['.$replace.']sgx';
+}
+else # no option was specified
+{
+    $search = $option;
+    $replace = shift;
+    print "REPLACING WORD: $search \nWITH: $replace \nIN: ".join(" ",@ARGV)."\n";
+    $command = '$tbuf =~ s[\b'.$search.'\b]['.$replace.']sgx';
+}
+
+print "ARE YOU REALLY SURE? [yes|no] ";
+$answer = <STDIN>;
+exit if $answer !~ /yes|Yes|YES/;
+
+process_list(@ARGV);
+
+if (not -r "$undodir/undo.list")
+{
+    rmdir $undodir;
+    print "No matches found! Nothing done. Nothing to be undone...\n";
+}
+else
+{
+    print "All Done!\n";
+    print "Use undo-search-replace command if you want to revert to the old version.\n";
+}
+
+
+
+

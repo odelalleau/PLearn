@@ -1,0 +1,530 @@
+#!/usr/bin/env python
+
+# pytransform
+# Copyright (c) 2002 Pascal Vincent
+
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#
+#   1. Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
+#
+#   2. Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#
+#   3. The name of the authors may not be used to endorse or promote
+#      products derived from this software without specific prior written
+#      permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+#  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+#  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+#  NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+#  TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+#  This file is part of the PLearn library. For more information on the PLearn
+#  library, go to the PLearn Web site at www.plearn.org
+
+import string, re, time, os, os.path, sys
+
+print "pytransform 1.0 [ (c) 2002, Pascal Vincent [GPL]. Report problems to vincentp@iro.umontreal.ca ]"
+
+#########################
+# initialisation 
+#########################
+
+homedir = os.environ['HOME']
+undodir = os.path.join(homedir,'.undo',str(int(time.time())))
+undofilenum = 0
+
+#########################
+# function definitions
+#########################
+
+def findStringEnd(text, start):
+    """given a start at the opening quote, this will return one beyond the corresponding closing quote"""
+    pos = start+1
+    while 1:
+        pos = string.find(text, '"', pos)
+        if text[pos-1] != '\\':
+            return pos+1
+        pos = pos+1
+               
+def findCharConstEnd(text, start):
+    """given a start at the opening quote of a char constant (ex: '\n'), this will return one beyond the corresponding closing quote"""
+    pos = start+1
+    while 1:
+        pos = string.find(text, "'", pos)
+        if text[pos-1] != '\\':
+            return pos+1
+        pos = pos+1
+
+def findLineEnd(text, start):
+    """returns 1 beyond the end of line. Or position of end of file if no line end is found."""
+    pos = string.find(text, "\n", start)
+    if pos<0:
+        return len(text)
+    return pos + 1
+
+def findCPPCommentEnd(text, start):
+    """C++ comments start with // and end with end of line"""
+    return findLineEnd(text,start)
+
+def findCCommentEnd(text, start):
+    """returns position just after the closing */ """
+    pos = string.find(text, '*/', start) + 2
+    return pos
+
+def hideCommentsAndStrings(text):
+    """Will replace all comments with /*#*/ and all strings and character
+    constants with "#" where # is the integer index of the comment or
+    string in the list of comments or strings respectively.
+    Returns (transformed_text, commentlist, stringlist)"""
+
+    commentlist = []
+    stringlist = []
+    result = [] # list of strings to join to form the result
+    exp = re.compile(r'//|/\*|"|\'')
+    startpos = 0
+    while 1:
+        m = exp.search(text, startpos)
+        if not m: break
+        partstart = m.start()
+        result.append(text[startpos:partstart])
+        if text[partstart]=='"':
+            partend = findStringEnd(text,partstart)
+            result.append('"'+str(len(stringlist))+'"')
+            stringlist.append(text[partstart:partend])
+            startpos = partend
+        elif text[partstart]=="'":
+            partend = findCharConstEnd(text,partstart)
+            result.append('"'+str(len(stringlist))+'"')
+            stringlist.append(text[partstart:partend])
+            startpos = partend
+        elif text[partstart:partstart+2]=='//':
+            partend=findCPPCommentEnd(text,partstart)
+            result.append('/*'+str(len(commentlist))+'*/')
+            commentlist.append(text[partstart:partend])
+            startpos = partend
+        elif text[partstart:partstart+2]=='/*':
+            partend=findCCommentEnd(text,partstart)
+            result.append('/*'+str(len(commentlist))+'*/')
+            commentlist.append(text[partstart:partend])
+            startpos = partend
+    result.append(text[startpos:])
+    transformed_text = string.join(result,'')    
+    return transformed_text, commentlist, stringlist
+
+def restoreCommentsAndStrings(text, commentlist, stringlist):
+    result = []
+    exp = re.compile(r'/\*|"')
+    startpos = 0
+    while 1:
+        m = exp.search(text, startpos)
+        if not m: break
+        partstart = m.start()
+        result.append(text[startpos:partstart])
+        if text[partstart]=='"':
+            partend = findStringEnd(text,partstart)
+            result.append(stringlist[int(text[partstart+1:partend-1])])
+            startpos = partend
+        elif text[partstart:partstart+2]=='/*':
+            partend = findCCommentEnd(text,partstart)
+            result.append(commentlist[int(text[partstart+2:partend-2])])
+            startpos = partend
+    result.append(text[startpos:])
+    return string.join(result,'')    
+
+#### Most of the functions below won't work if you have strings or comments
+#### containing badly paired groupings ( parenthesis, brackets, quotes, or
+#### comment indicators ). To avoid this problem, first use
+#### hideCommentsAndStrings prior to using these functions, and when you're
+#### done, do a restoreCommentsAndStrings.
+
+symmetric_symbol = {
+    '(': ')',
+    ')': '(',
+    '[': ']',
+    ']': '[',
+    '{': '}',
+    '}': '{'   }
+
+def findOpening(text, end):
+    """returns the position of the opening (, [ or { symbol, corresponding
+    to the closing ), ] or } at end.  Beware that this can't handle the
+    case of comments or strings containing the symbol: comments and strings
+    should first be hidden with hideCommentsAndStrings """
+    symb = text[end]
+    symsymb = symmetric_symbol[symb]
+    pos = end-1
+    while 1:
+        if text[pos]==symsymb:
+            return pos
+        elif text[pos]==symb:
+            pos = findOpening(text, pos) - 1
+        else:
+            pos = pos-1
+
+def findClosing(text, start):
+    """returns the position of the closing ), ] or } symbol, corresponding
+    to the opening (, [ or { at start.  Beware that this can't handle the
+    case of comments or strings containing the symbol: comments and strings
+    should first be hidden with hideCommentsAndStrings """
+    symb = text[start]
+    symsymb = symmetric_symbol[symb]
+    pos = start+1
+    while 1:
+        if text[pos]==symsymb:
+            return pos
+        elif text[pos]==symb:
+            pos = findClosing(text, pos) + 1
+        else:
+            pos = pos+1
+
+def previousNonWhite(text, end):
+    """starting from position end, returns the position of the previous
+    non-whitespace character, C-style comments are also considered as
+    whitespace"""
+    pos = end
+    while 1:
+        if text[pos] in string.whitespace:
+            pos = pos-1
+        elif text[pos-1:pos+1]=='*/':
+            pos = string.rfind(text, '/*', 0, pos-1)-1
+        else:
+            return pos            
+
+def nextNonWhite(text,start):
+    """starting from position start, returns the position of the next
+    non-whitespace character, C-style comments are also considered as
+    whitespace"""
+    pos = start
+    while 1:
+        if text[pos] in string.whitespace:
+            pos = pos+1
+        elif text[pos:pos+2]=='/*':
+            pos = string.find(text, '*/', pos+2)+2
+        else:
+            return pos
+
+wordchars = string.letters + string.digits + '_'
+        
+def previousNonWord(text, end):
+    """starting from position end, returns the position of the previous
+    non-word character (word characters are letters, digits and underline)"""
+    pos = end
+    while text[pos] in wordchars:
+        pos = pos - 1
+    return pos            
+       
+def findPrefixStart(text, end):
+    """given an end position just before the -> or the . of a method call or member access,
+    findPrefixStart will return start such that text[start:end+1] is the instance on which the method is called"""
+    encountered_word = 0
+    pos = end
+    while 1:
+        if text[pos] in ')]':
+            if encountered_word:
+                break
+            else:
+                pos = findOpening(text, pos) - 1
+        elif text[pos-1:pos+1] == '*/' or text[pos] in string.whitespace:
+            pos = previousNonWhite(text, pos)
+        elif text[pos-1:pos+1] == '->':
+            pos = pos - 2            
+            encountered_word = 0
+        elif text[pos] == '.':
+            pos = pos - 1
+            encountered_word = 0
+        elif text[pos] in wordchars:
+            if encountered_word: # already encountered another word previously
+                break
+            else:
+                pos = previousNonWord(text,pos)
+                encountered_word = 1
+        elif text[pos] in '([{};,+=-></%*&|~': # found a stopping condition
+            break
+        else:
+            pos = pos - 1
+    pos = nextNonWhite(text, pos+1)
+    return pos
+
+
+# text = 'int tot; terre(asile) ->/* il etaitr une fois dans l"ouest */  tutu(5x+7).parameters[indHiddenMat(i)]->value.normal(0, 1.0/num_variable_);'
+
+#  text = """
+#       fort  (int i=1; i<=nsvs; i++)
+#         xxx]tata[1,2,3] -> toto(i).residue.multiplyAdd(K_svs(i-1), -b_and_alphas[i]);
+#         """
+#  pos = string.find(text, 'multiplyAdd') - 1
+#  print text[pos]
+#  start = findPrefixStart(text,pos)
+#  print start, text[start:pos]
+#  sys.exit(0)
+
+
+def buggy_findPrefixStart(text, end):
+    """given an end position just before the -> or the . of a method call or member access,
+    findPrefixStart will return start such that text[start:end+1] is the instance on which the method is called"""
+    pos = previousNonWhite(text,end)
+    if text[pos] == ']':
+        return findPrefixStart(text, findOpening(text,pos)-1)
+    elif text[pos] == ')':
+        paropen = findOpening(text, pos)
+        pos = previousNonWhite(text, paropen-1)
+        if text[pos]=='.':
+            return findPrefixStart(text, pos-1)
+        elif text[pos-1:pos+1]=='->':
+            return findPrefixStart(text, pos-2)
+        elif text[pos] in ';,+=-></%*&|~':
+            return paropen
+        else:
+            return findPrefixStart(text, pos)
+    else:
+        while text[pos] in string.letters + string.digits + '_':
+            pos = pos-1
+        return pos+1
+
+def findArgumentEnd(text, start):
+    """Starting at start, supposed to be the beginning of an argument of a
+    function or method call, will return the end of this argument: a
+    position containing either a comma, or a closing paren) .
+    Note that comments and strings should first be hidden with hideCommentsAndStrings"""
+    pos = start    
+    while 1:
+        if text[pos] in '),':
+            return pos
+        elif text[pos] in '([':
+            pos = findClosing(text,pos) + 1
+        else:
+            pos = pos+1
+
+def isempty(s):
+    """tells if a string is empty, ignoring simple C comments"""
+    return re.match(r'\s*(/\*[^*]*\*/\s*)*$',s)
+        
+def getCallArguments(text, pos):
+    """given a pos of 1 beyond the opening parenthesis of a function or method call,
+    will return ( [ arg1, arg2, ...], endpos) where endpos is the position of the closing parenthesis"""
+    args = []
+    endpos = -1
+    while 1:
+        endpos = findArgumentEnd(text,pos)
+        if not isempty(text[pos:endpos]):
+            args.append(text[pos:endpos])
+        if text[endpos] != ',':
+            break
+        pos = endpos+1
+    return args, endpos
+    
+def substituteArgs(args, recipe):
+    """ex: substituteArgs( args, 'newfunc( *(%3), tanh(%2+%1) )
+    where args[0] and corresponding %0 represents the instance on which the method was called (if any)"""
+    result = recipe[:]
+    for i in range(len(args)):
+        result = string.replace(result, '%'+str(i), args[i])
+    return result
+
+
+def transformSimpleCall(text, methodname, nargs, recipe):
+     """ex: transformSimpleCall('plus', 2, '(%1 + %2)')"""
+     exp = re.compile(r'\s*\b'+methodname+r'\s*\(', re.M)
+     result = [] # list of strings to join to form the result
+     args = []  # list of arguments to the call
+     startpos = 0
+     while 1:
+         m = exp.search(text, startpos)
+         if not m: break
+         namestart, argstart = m.start(), m.end()
+         if namestart>=1 and text[namestart-1]=='.': break
+         if namestart>=2 and text[namestart-2:namestart]=='->': break
+         namestart = nextNonWhite(text,namestart)
+         args, closingpar = getCallArguments(text, argstart)
+         if len(args)!=nargs:
+             result.append(text[startpos:closingpar+1])
+         else:
+             result.append(text[startpos:namestart])
+             result.append(substituteArgs(['']+args, recipe))
+         startpos = closingpar+1
+     result.append(text[startpos:])
+     return string.join(result,'')
+
+def transformDotMethodCall(text, methodname, nargs, recipe):
+     """%0 is the instance on which the method is called
+     ex: transformDotMethodCall(text, 'accumulate', 1, '%0 += %1)')"""
+     exp = re.compile(r'\.\s*'+methodname+r'\s*\(', re.M)
+     result = [] # list of strings to join to form the result
+     args = []  # list of arguments to the call
+     startpos = 0
+     while 1:
+         m = exp.search(text, startpos)
+         if not m: break
+         dotpos, argstart = m.start(), m.end()
+         args, closingpar = getCallArguments(text, argstart)
+         if len(args)!=nargs:
+             result.append(text[startpos:closingpar+1])
+         else:
+             callstart = findPrefixStart(text, dotpos-1)
+             args = [text[callstart:dotpos]] + args
+             result.append(text[startpos:callstart])
+             result.append(substituteArgs(args, recipe))
+         startpos = closingpar+1
+     result.append(text[startpos:])
+     return string.join(result,'')
+
+
+def transformArrowMethodCall(text, methodname, nargs, recipe):
+     """%0 is the instance on which the method is called
+     ex: transformDotMethodCall(text, 'accumulate', 1, '*(%0) += %1)')"""
+     exp = re.compile(r'\-\>\s*'+methodname+r'\s*\(', re.M)
+     result = [] # list of strings to join to form the result
+     args = []  # list of arguments to the call
+     startpos = 0
+     while 1:
+         m = exp.search(text, startpos)
+         if not m: break
+         arrowpos, argstart = m.start(), m.end()
+         args, closingpar = getCallArguments(text, argstart)
+         if len(args)!=nargs:
+             result.append(text[startpos:closingpar+1])
+         else:
+             callstart = findPrefixStart(text, arrowpos-1)
+             args = [text[callstart:arrowpos]] + args
+             result.append(text[startpos:callstart])
+             result.append(substituteArgs(args, recipe))
+         startpos = closingpar+1
+     result.append(text[startpos:])
+     return string.join(result,'')
+
+def transformFile(filename, transformfunc):
+    global undofilenum
+    global undodir
+    global mode
+    filename = os.path.abspath(filename)
+    # print 'Examining file ' + filename
+    sys.stderr.write('.')
+    f = open(filename)
+    text = f.read()
+    f.close()
+    transformed_text = transformfunc(text)
+    if transformed_text != text:
+        print
+        if mode=='-check':
+            print 'Would transform file ' + filename
+            return
+        elif mode=='-test':
+            print 'Writing ' + filename + '.transformed'
+            f = open(filename+'.transformed','w')
+            f.write(transformed_text)
+            f.close()
+            os.system('echo "**** ' + filename + ' ****" >> pytransform.test.differences')
+            os.system('diff ' + filename + ' ' + filename + '.transformed >> pytransform.test.differences')
+            os.system('echo >> pytransform.test.differences')
+        elif mode=='-replace':
+            try:
+                f = open(filename,'w')
+                f.write(transformed_text)
+                f.close()
+            except IOError:
+                print 'Problem writing file ' + filename
+            # saving undo information
+            try:
+                print 'Transformed file ' + filename
+                if not os.path.exists(undodir):
+                    os.makedirs(undodir)
+                f = open(os.path.join(undodir,str(undofilenum)),'w')
+                f.write(text)
+                f.close()
+                f = open(os.path.join(undodir,'undo.list'),'a')
+                f.write(str(undofilenum) + ' ' + filename + '\n')
+                f.close()
+            except IOError:
+                print 'Problem writing undo information for file ' + filename
+            undofilenum = undofilenum + 1
+        else:
+            print 'BUG: Unknown mode'
+            sys.exit()
+
+
+filepattern = re.compile(r'\.c$|\.cc$|\.cpp$|\.CC$|\.h$|\.hpp$')
+
+def transformAllFiles(list_of_files_and_dirs, transformfunc):
+    for fname in list_of_files_and_dirs:
+        if os.path.isdir(fname):
+            flist = map(lambda f,d=fname: os.path.join(d,f),  os.listdir(fname))
+            flist = filter(lambda s: os.path.isdir(s) or filepattern.search(s), flist)
+            transformAllFiles(flist, transformfunc)
+        elif os.path.isfile(fname):
+            transformFile(fname, transformfunc)
+
+
+#########################
+# Main Program
+#########################
+
+args = sys.argv[:]
+del args[0] # ignore program name
+
+if len(args)<3 or args[0] not in ['-check','-test','-replace']:
+    print """
+Usage: pytransform [ -check | -test | -replace ] <transformfile> <list of files and directories>
+Where <transformfile> is the name of a file containing a python definition of
+the function transformfunc(text) which returns a transformed source code.
+ex:
+def transformfunc(text):
+    text = re.sub(r'#include\s+\"general\.h\"', '#include "PLearnCore/general.h"', text)
+    text, commentlist, stringlist = hideCommentsAndStrings(text)
+    text = transformDotMethodCall(text, 'accumulate', 1, '%0 += %1')
+    text = transformArrowMethodCall(text, 'accumulate', 1, '*(%0) += %1')
+    text = transformSimpleCall(text, 'add', 2, '(%1) + (%2)')
+    text = restoreCommentsAndStrings(text, commentlist, stringlist)
+    return text
+
+Specify -check if you just want to see which files would be modified.
+
+Specify -test  if you don't want the script to overwrite the files,
+  but rather create corresponding .transformed files as well as a
+  pytransform.test.differences giving the diff between original and
+  transformed version.
+
+Specify -replace if you want transformed files to be overwritten.
+  A backup of the original file will then be put in the appropriate
+  place in ~/.undo, so that you can call undo-search-replace to
+  undo the transformations, if you have second thoughts.
+"""
+    sys.exit()
+
+mode = args[0]
+
+if mode=='-test':
+    try: os.remove('pytransform.test.differences')
+    except: pass
+    print '*** Writing diffs to file pytransform.test.differences ***'
+
+# run the transformfile to define the transformfunc function
+execfile(args[1])
+
+# go for it!
+transformAllFiles(args[2:], transformfunc)
+
+print '\n*** All done! ***'
+
+##print transformSimpleCall( ' y =sigmoid(a,b)', 'sigmoid', 2, 'tanh(%2,%1)' )
+##print transformSimpleCall( ' y =sigmoid( 2x[3], y[1]*(1+x[y])); x = sigmoid( 2y, 2x)', 'sigmoid', 2, 'tanh(%2+3*(%1))' )
+##print transformSimpleCall( '      toto(3)', 'toto', 1, 'TRANSFORMED')
+##print transformSimpleCall( ' ->   toto(3)', 'toto', 1, 'TRANSFORMED')
+##print transformSimpleCall( ' .   toto(3)', 'toto', 1, 'TRANSFORMED')
+##print transformArrowMethodCall( ' y =y+(ac.b->f(x)  ->   sigmoid(a,b,c) +100)', 'sigmoid', 3, 'tanh(%0,%3,%2,%1)')
+
+
+
+
+
+
+
