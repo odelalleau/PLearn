@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.16 2003/04/28 17:08:19 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.17 2003/04/28 18:49:54 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -170,17 +170,20 @@ private:
 
   void build_() {
     // Make sure the internal datas have the right size
-    current_opp_gradient.resize(params.nelems());
-    search_direction.resize(params.nelems());
-    tmp_storage.resize(params.nelems());
-    delta.resize(params.nelems());
-
+    if (params.nelems() > 0) {
+      current_opp_gradient.resize(params.nelems());
+      search_direction.resize(params.nelems());
+      tmp_storage.resize(params.nelems());
+      delta.resize(params.nelems());
+      if (cost.length() > 0) {
+        computeOppositeGradient(this, current_opp_gradient);
+        search_direction <<  current_opp_gradient;  // first direction = -grad;
+        cost->fprop();
+        last_cost = cost->value[0];
+      }
+    }
     early_stop = false;
-    computeOppositeGradient(this, current_opp_gradient);
-    search_direction <<  current_opp_gradient;  // first direction = -grad;
     last_improvement = 0.1; // may only influence the speed of first iteration
-    cost->fprop();
-    last_cost = cost->value[0];
     current_step_size = starting_step_size;
   }
     
