@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Gnuplot.cc,v 1.5 2002/11/22 13:06:03 yoshua Exp $
+   * $Id: Gnuplot.cc,v 1.6 2003/02/03 00:39:45 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -238,6 +238,43 @@ void Gnuplot::plot(const Mat& m1, const string& opt1, const Mat& m2, const strin
   tognuplot << "'" << tmpfilenames[3] << "' " << opt4 << ", ";
   tognuplot << "'" << tmpfilenames[4] << "' " << opt5 << ", ";
   tognuplot << "'" << tmpfilenames[5] << "' " << opt6 << endl;
+}
+
+void Gnuplot::plotClasses(const Mat& m)
+{
+  Mat s = m.copy();
+  sortRows(s, 2);
+  string fname = tmpfilenames[0];
+  int l = s.length();
+  string command = "plot ";
+  ofstream out(fname.c_str());
+  if(!out)
+    PLERROR("Could not open file %s for writing ", fname.c_str());
+
+  real oldc = FLT_MAX;
+  int index = 0;
+  for(int i=0; i<l; i++)
+    {
+      real x = s(i,0);
+      real y = s(i,1);
+      real c = s(i,2);
+      if(c!=oldc)
+        {
+          if(i>0)
+            {
+              out << "\n\n";
+              command += ", ";
+            }
+          command += "'" + fname + "' index " + tostring(index) + " title '" + tostring(c) + "' with points";
+          ++index;
+        }
+      out << x << " " << y << " " << c << "\n";      
+      oldc = c;
+    }
+  out.close();
+
+  //  cerr <<  command << endl;
+  tognuplot << command << endl;
 }
 
 void Gnuplot::multiplot(vector<Mat *> &ms, vector<string> &opts)

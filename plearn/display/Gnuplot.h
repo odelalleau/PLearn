@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Gnuplot.h,v 1.5 2002/11/22 13:06:03 yoshua Exp $
+   * $Id: Gnuplot.h,v 1.6 2003/02/03 00:39:45 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -98,6 +98,10 @@ class Gnuplot
             const Mat& m4, const string& opt4, const Mat& m5, const string& opt5);
   void plot(const Mat& m1, const string& opt1, const Mat& m2, const string& opt2, const Mat& m3, const string& opt3, 
             const Mat& m4, const string& opt4, const Mat& m5, const string& opt5, const Mat& m6, const string& opt6);
+
+  // m must have 3 columns, with the 3rd column containing class numbers
+  // all points (x,y) will be plotted, with a different color and shape for each class
+  void plotClasses(const Mat& m);
 
   void multiplot(vector<Mat *> &ms, vector <string> &opts);
   void plot3d(const Mat &m1, const string &opt1="");
