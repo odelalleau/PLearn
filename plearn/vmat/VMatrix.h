@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.29 2003/12/15 14:05:28 plearner Exp $
+   * $Id: VMatrix.h,v 1.30 2004/01/07 22:18:43 ducharme Exp $
    ******************************************************* */
 
 
@@ -46,7 +46,6 @@
 #include <cstdlib>
 #include <map>
 #include "PP.h"
-#include "Mat.h"
 #include "TMat.h"
 #include "VarArray.h"
 #include "IntVecFile.h"

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Func.h,v 1.6 2003/08/13 08:13:17 plearner Exp $
+   * $Id: Func.h,v 1.7 2004/01/07 22:18:43 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -50,7 +50,7 @@
 
 #include "general.h"
 #include "PP.h"
-#include "Mat.h"
+#include "TMat.h"
 #include "VMat.h"
 #include "Variable.h"
 #include "VarArray.h"

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: Mat.cc,v 1.2 2003/06/03 14:52:09 plearner Exp $
+   * $Id: Mat.cc,v 1.3 2004/01/07 22:18:43 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -76,11 +76,13 @@ Vec* newVecArray(int n, int the_length)
 }
 
 
+/*
 template <>
 void deepCopyField(Vec& field, CopiesMap& copies)
 {
   field.makeDeepCopyFromShallowCopy(copies);
 }
+*/
 
 Mat* newMatArray(int n)
 {
@@ -151,11 +153,13 @@ Mat unitmatrix(int n)
   return m;
 }
 
+/*
 template <>
 void deepCopyField(Mat& field, CopiesMap& copies)
 {
   field.makeDeepCopyFromShallowCopy(copies);
 }
+*/
 
 %> // end of namespace PLearn
 

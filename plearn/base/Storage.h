@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Storage.h,v 1.6 2003/08/13 08:13:16 plearner Exp $
+   * $Id: Storage.h,v 1.7 2004/01/07 22:18:38 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -111,7 +111,7 @@ public:
   //!  data is initially filled with zeros
   inline Storage(int the_length=0)
     :length_(the_length), data(0), 
-     dont_delete_data(false), fd(STORAGE_UNUSED_HANDLE)
+     dont_delete_data(false), fd((tFileHandle)STORAGE_UNUSED_HANDLE)
     {
       int l = length();
 #ifdef BOUNDCHECK

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: databases.h,v 1.1 2002/11/28 04:27:17 jkeable Exp $
+   * $Id: databases.h,v 1.2 2004/01/07 22:18:42 ducharme Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -48,7 +48,6 @@
 #define DATABASES_INC
 
 #include "VMat.h"
-#include "Mat.h"
 #include "NistDB.h"
 
 namespace PLearn <%

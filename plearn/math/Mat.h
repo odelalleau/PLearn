@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: Mat.h,v 1.2 2003/06/03 14:52:09 plearner Exp $
+   * $Id: Mat.h,v 1.3 2004/01/07 22:18:43 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -68,7 +68,11 @@ inline istream& operator>>(istream& in, const Vec& v)
 Vec* newVecArray(int n);
 Vec* newVecArray(int n, int the_length);
 
-template <> void deepCopyField(Vec& field, CopiesMap& copies);
+template<>
+inline void deepCopyField(Vec& field, CopiesMap& copies)
+{
+  field.makeDeepCopyFromShallowCopy(copies);
+}
 
 Mat* newMatArray(int n);
 Mat* newMatArray(int n, int the_length, int the_width);
@@ -95,7 +99,11 @@ Mat unitmatrix(int n);
 */
 Mat operator^(const Mat& m1, const Mat& m2);
 
-template <> void deepCopyField(Mat& field, CopiesMap& copies);
+template<>
+inline void deepCopyField(Mat& field, CopiesMap& copies)
+{
+  field.makeDeepCopyFromShallowCopy(copies);
+}
 
 %> // end of namespace PLearn
 

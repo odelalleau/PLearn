@@ -36,14 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.9 2003/12/15 22:08:32 dorionc Exp $
+   * $Id: Kernel.h,v 1.10 2004/01/07 22:18:42 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #ifndef Kernel_INC
 #define Kernel_INC
 
-#include "Mat.h"
 #include "Object.h"
 #include "VMat.h"
 #include "PLMPI.h"
