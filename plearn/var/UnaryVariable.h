@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnaryVariable.h,v 1.2 2002/09/05 19:32:43 morinf Exp $
+   * $Id: UnaryVariable.h,v 1.3 2002/09/06 17:08:57 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -1096,27 +1096,6 @@ public:
     virtual void bbprop();
     virtual void symbolicBprop();
 }; // class LogSoftmaxVariable
-
-class LogGammaVariable: public UnaryVariable
-{
-protected:
-    typedef UnaryVariable inherited;
-  //!  Default constructor for persistence
-  LogGammaVariable() {}
-
-public:
-  LogGammaVariable(Variable* input);
-  DECLARE_NAME_AND_DEEPCOPY(LogGammaVariable);
-  virtual void deepRead(istream& in, DeepReadMap& old2new);
-  virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
-  virtual void fprop();
-  virtual void bprop();
-  virtual void bbprop();
-  virtual void symbolicBprop();
-  virtual void rfprop();
-};
-
-
 
 %> // end of namespace PLearn
 

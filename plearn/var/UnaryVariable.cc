@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: UnaryVariable.cc,v 1.2 2002/09/05 19:32:43 morinf Exp $
+   * $Id: UnaryVariable.cc,v 1.3 2002/09/06 17:08:57 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -2715,60 +2715,6 @@ void AffineTransformWeightPenalty::bprop()
   if(bias_decay_!=0)
     multiplyAcc(input->matGradient(1), input->matValue(1), two(bias_decay_)*gradientdata[0]);
 }
-
-
-
-/** LogGammaVariable **/
-
-LogGammaVariable::LogGammaVariable(Variable* input) 
-  :UnaryVariable(input, input->length(), input->width())
-{}
-
-IMPLEMENT_NAME_AND_DEEPCOPY(LogGammaVariable);
-
-void LogGammaVariable::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "LogGammaVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "LogGammaVariable");
-}
-
-void LogGammaVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "LogGammaVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "LogGammaVariable");
-}
-
-void LogGammaVariable::fprop()
-{
-  for(int i= 0; i < nelems(); ++i)
-    valuedata[i]= pl_gammln(input->valuedata[i]);
-}
-
-void LogGammaVariable::bprop()
-{
-  for(int i=0; i<nelems(); i++)
-    input->gradientdata[i]+= gradientdata[i] * pl_dgammlndz(input->valuedata[i]);
-}
-
-void LogGammaVariable::bbprop()
-{
-  PLERROR("LogGammaVariable::bbprop() not implemented");
-}
-
-void LogGammaVariable::symbolicBprop()
-{
-  PLERROR("LogGammaVariable::symbolicBprop() not implemented");
-}
-
-
-void LogGammaVariable::rfprop()
-{
-  PLERROR("LogGammaVariable::rfprop() not implemented");
-}
-
-
 
 %> // end of namespace PLearn
 
