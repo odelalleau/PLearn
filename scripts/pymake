@@ -98,6 +98,20 @@ def lsdirs(basedir):
                 dirs.extend(lsdirs(dname))
     return dirs
 
+def appendunique(l, l2):
+    """appends the elements of list l2 to list l, but only those that are not already in l"""
+    for e in l2:
+        if e not in l:
+            l.append(e)
+
+def unique(l):
+    """returns the elements of l but without duplicates"""
+    lfilt = []
+    for e in l:
+        if e not in lfilt:
+            lfilt.append(e)
+    return lfilt
+
     
 # This is used for buffering mtime calls
 mtime_map = {}
@@ -287,6 +301,9 @@ def locatehostsfile():
 configpath = locateconfigfile()
 print '*** Running pymake using following configuration file: ' + configpath
 execfile(configpath) 
+
+# remove duplicates from sourcedirs
+sourcedirs = unique(sourcedirs)
     
 print '*** Current platform is: ' + platform
 print
@@ -466,12 +483,6 @@ shuffle(list_of_hosts)
 
 # replicate list nprocesses_per_processor times
 list_of_hosts = nprocesses_per_processor * list_of_hosts
-
-def appendunique(l, l2):
-    """appends the elements of list l2 to list l, but only those that are not already in l"""
-    for e in l2:
-        if e not in l:
-            l.append(e)
 
 # rmccomment_regexp = re.compile(r'([^/])\/\*([^\*]|\*(?!\/))*\*\/',re.M)
 rmcppcomment_regexp = re.compile(r'//[^\n]*\n',re.M)

@@ -136,7 +136,7 @@ options_choices = [
   [ 'g++', 'mpi', 'purify' ],
   [ 'dbg', 'opt', 'gprof' ],
   [ 'double', 'float' ],
-  [ 'exiterrors', 'throwerrors' ], 
+  [ 'throwerrors', 'exiterrors' ], 
   [ 'blas', 'p3blas','p4blas','athlonblas','pentiumblas', 'noblas'],
 ]
 
