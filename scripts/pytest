@@ -357,6 +357,7 @@ def configTest(arg, path, dirList):
 
 def cvs_add(file):
     status = cvs_query("status", file, "Status: ")
+    tprint(file + " status: " + status, "q")
     if status != '' and string.find(status, "Unknown") == -1:
         return
     addCmd = "cvs add " + file
