@@ -37,80 +37,103 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Binner.cc,v 1.8 2004/09/14 16:04:36 chrish42 Exp $ 
+   * $Id: Binner.cc,v 1.9 2004/10/29 21:21:11 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file Binner.cc */
+
 #include "Binner.h"
+#include <plearn/math/TVec.h>
+#include <plearn/vmat/MemoryVMatrix.h>
 
 namespace PLearn {
 using namespace std;
 
 Binner::Binner() 
-  :Object()
-/* ### Initialise all fields to their default value */
-  {
-    // ...
+:Object()
+{}
 
-    // ### You may or may not want to call build_() to finish building the object
-    // build_();
-  }
+PLEARN_IMPLEMENT_OBJECT(Binner,
+    "Divides a range into bins.",
+    "");
 
+void Binner::declareOptions(OptionList& ol)
+{
+  // ### Declare all of this object's options here
+  // ### For the "flags" of each option, you should typically specify  
+  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+  // ### OptionBase::tuningoption. Another possible flag to be combined with
+  // ### is OptionBase::nosave
 
-  PLEARN_IMPLEMENT_OBJECT(Binner, "ONE LINE DESCR", "NO HELP");
+  // ### ex:
+  // declareOption(ol, "myoption", &Binner::myoption, OptionBase::buildoption,
+  //               "Help text describing this option");
+  // ...
 
-  void Binner::declareOptions(OptionList& ol)
-  {
-    // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-    // ### OptionBase::tuningoption. Another possible flag to be combined with
-    // ### is OptionBase::nosave
+  // Now call the parent class' declareOptions
+  inherited::declareOptions(ol);
+}
 
-    // ### ex:
-    // declareOption(ol, "myoption", &Binner::myoption, OptionBase::buildoption,
-    //               "Help text describing this option");
-    // ...
+void Binner::build_()
+{
+  // ### This method should do the real building of the object,
+  // ### according to set 'options', in *any* situation. 
+  // ### Typical situations include:
+  // ###  - Initial building of an object from a few user-specified options
+  // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
+  // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
+  // ### You should assume that the parent class' build_() has already been called.
+}
 
-    // Now call the parent class' declareOptions
-    inherited::declareOptions(ol);
-  }
-
-  void Binner::build_()
-  {
-    // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation. 
-    // ### Typical situations include:
-    // ###  - Initial building of an object from a few user-specified options
-    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-    // ### You should assume that the parent class' build_() has already been called.
-  }
-
-  // ### Nothing to add here, simply calls build_
-  void Binner::build()
-  {
-    inherited::build();
-    build_();
-  }
+// ### Nothing to add here, simply calls build_
+void Binner::build()
+{
+  inherited::build();
+  build_();
+}
 
 
-  void Binner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
-  {
-    Object::makeDeepCopyFromShallowCopy(copies);
+void Binner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+  Object::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields 
-    // ### that you wish to be deepCopied rather than 
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
+  // ### Call deepCopyField on all "pointer-like" fields 
+  // ### that you wish to be deepCopied rather than 
+  // ### shallow-copied.
+  // ### ex:
+  // deepCopyField(trainvec, copies);
 
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("Binner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
-  }
+  // ### Remove this line when you have fully implemented this method.
+  PLERROR("Binner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+}
 
-//! Returns a binning for a single column vmatrix v 
+////////////////
+// getBinning //
+////////////////
 PP<RealMapping> Binner::getBinning(VMat v) const
 { PLERROR("getBinning not implemented for this Binner"); return 0; }
 
+/////////////
+// getBins //
+/////////////
+TVec< TVec<int> > Binner::getBins(const Vec& v) const {
+  PLWARNING("In Binner::getBins - This method has not been tested yet, remove this warning if it works fine");
+  VMat col = new MemoryVMatrix(columnmatrix(v));
+  PP<RealMapping> mapping = getBinning(col);
+  TVec< TVec<int> > bins(mapping->length());
+  for (int i = 0; i < v.length(); i++) {
+    bins[mapping->binnumber(v[i])].append(i);
+  }
+  return bins;
+}
+
+///////////
+// nBins //
+///////////
+int Binner::nBins() const {
+  PLERROR("In Binner::nBins - The nBins() method is not available for this Binner.");
+  return 0;
+}
+
 } // end of namespace PLearn
+

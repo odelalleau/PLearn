@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Binner.h,v 1.8 2004/09/14 16:04:36 chrish42 Exp $ 
+   * $Id: Binner.h,v 1.9 2004/10/29 21:21:11 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file Binner.h */
@@ -45,8 +45,8 @@
 #define Binner_INC
 
 #include <plearn/base/Object.h>
-#include <plearn/vmat/VMat.h>
 #include <plearn/base/RealMapping.h>
+#include <plearn/vmat/VMat.h>
 
 namespace PLearn {
 using namespace std;
@@ -102,8 +102,17 @@ public:
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Returns a binning for a single column vmatrix v 
+  //! Return the number of bins computed by this binner.
+  //! Default implementation displays an error.
+  virtual int nBins() const;
+  
+  //! Returns a binning for a single column vmatrix v.
   virtual PP<RealMapping> getBinning(VMat v) const;
+
+  //! Return a vector whose i-th element is the list of the indices in 'v' that
+  //! belong to the i-th bin. This method does not need to be written in
+  //! subclasses (in general), as long as 'getBinning()' is implemented.
+  virtual TVec< TVec<int> > getBins(const Vec& v) const;
 
   //! Declares name and deepCopy methods
   PLEARN_DECLARE_OBJECT(Binner);
@@ -111,7 +120,7 @@ public:
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(Binner);
+DECLARE_OBJECT_PTR(Binner);
   
 } // end of namespace PLearn
 
