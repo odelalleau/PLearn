@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: random.cc,v 1.10 2005/01/21 20:26:15 yoshua Exp $
+   * $Id: random.cc,v 1.11 2005/01/24 14:28:04 tihocan Exp $
    ******************************************************* */
 
 extern "C" {
@@ -1033,15 +1033,12 @@ return(s);
 }
 */
 
-// fill dest with dest.length() unique indices of entries in (0,1,...n-1), chosen uniformly
-// i.e. sample multinomially but without replacement, so that each entry in (0...n-1) can occur 0 or once.
 void random_subset_indices(const TVec<int>& dest, int n)
 {
   if (dest.length()>n)
-    PLERROR("random_subset_indices: 1st argument should have length (%d) greater than value of 2nd argument (%d)",
+    PLERROR("random_subset_indices: 1st argument should have length (%d) <= value of 2nd argument (%d)",
             dest.length(),n);
-  TVec<int> v(n);
-  for (int i=0;i<n;i++) v[i]=i;
+  TVec<int> v(0, n-1, 1);
   shuffleElements(v);
   dest << v.subVec(0,dest.length());
 }
