@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.h,v 1.16 2004/07/21 16:30:54 chrish42 Exp $
+   * $Id: Variable.h,v 1.17 2004/07/26 21:04:14 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -77,10 +77,10 @@ public:
 
   Var subVec(int start, int len, bool transpose=false) const;
   Var subMat(int i, int j, int sublength, int subwidth, bool transpose=false) const;
-  Var row(int i, bool transpose=false) const { return subMat(i,0,1,width(),transpose); }
-  Var column(int j, bool transpose=false) const { return subMat(0,j,length(),1,transpose); }
-  Var operator()(int i) const { return row(i, false); }
-  Var operator()(int i, int j) const { return subMat(i,j,1,1); }
+  Var row(int i, bool transpose=false) const;
+  Var column(int j, bool transpose=false) const;
+  Var operator()(int i) const;
+  Var operator()(int i, int j) const;
 
   //!  take element i of a vector
   Var operator[](int i) const;
@@ -424,6 +424,27 @@ inline void Variable::updateAndClear()
 
 void varDeepCopyField(Var& field, CopiesMap& copies);
 
+
+inline Var Var::row(int i, bool transpose) const
+{
+  return subMat(i, 0, 1, width(), transpose);
+}
+    
+inline Var Var::column(int j, bool transpose) const
+{
+  return subMat(0, j, length(), 1, transpose);
+}
+
+inline Var Var::operator()(int i) const
+{
+  return row(i, false);
+}
+
+inline Var Var::operator()(int i, int j) const
+{
+  return subMat(i, j, 1, 1);
+}
+    
 } // end of namespace PLearn
 
 #endif
