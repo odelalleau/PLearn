@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMat_linalg.h,v 1.1 2004/09/27 20:19:28 plearner Exp $ 
+   * $Id: VMat_linalg.h,v 1.2 2004/10/21 18:23:59 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -70,7 +70,7 @@ Mat product(Mat m1, VMat m2);
 //!  returns M1'
 VMat transpose(VMat m1);
 
-/*!   computes the result of the linear regression into theta_t
+/*!   Computes the result of the linear regression into theta_t
   Parameters must have the following sizes:
   inputs(l,n)
   outputs(l,m)
@@ -83,24 +83,32 @@ VMat transpose(VMat m1);
   call made with a possibly different weight_decay).
   Returns average of squared loss.
 */
-real linearRegression(VMat inputs, VMat outputs, real weight_decay, Mat theta_t, 
-                      bool use_precomputed_XtX_XtY, Mat XtX, Mat XtY, real& sum_squared_Y,
-                      bool return_squared_loss=false, int verbose_computation_every=0,
-                      bool cholesky = true);
+real linearRegression(
+  VMat inputs, VMat outputs, real weight_decay, Mat theta_t, 
+  bool use_precomputed_XtX_XtY, Mat XtX, Mat XtY,
+  real& sum_squared_Y, Vec& outputwise_sum_squared_Y,
+  bool return_squared_loss=false, int verbose_computation_every=0,
+  bool cholesky = true);
                       
 
-//!  Version that does all the memory allocations of XtX, XtY and theta_t. Returns theta_t
+//! Version that does all the memory allocations of XtX, XtY and theta_t.
+//! Returns theta_t
 Mat linearRegression(VMat inputs, VMat outputs, real weight_decay);
 
-//! Linear regression where each input point is given a different importance weight (the gammas);
+//! Linear regression where each input point is given a different
+//! importance weight (the gammas); 
 //! returns weighted average of squared loss
-real weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas,
-                              real weight_decay, Mat theta_t, bool use_precomputed_XtX_XtY, Mat XtX,
-                              Mat XtY, real& sum_squared_Y, real& sum_gammas, bool return_squared_loss=false, 
-                              int verbose_computation_every=0, bool cholesky = true);
+real weightedLinearRegression(
+  VMat inputs, VMat outputs, VMat gammas,
+  real weight_decay, Mat theta_t, bool use_precomputed_XtX_XtY, Mat XtX,
+  Mat XtY, real& sum_squared_Y, Vec& outputwise_sum_squared_Y,
+  real& sum_gammas, bool return_squared_loss=false, 
+  int verbose_computation_every=0, bool cholesky = true);
 
-//!  Version that does all the memory allocations of XtX, XtY and theta_t. Returns theta_t
-Mat weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas, real weight_decay);
+//! Version that does all the memory allocations of XtX, XtY and theta_t. 
+//! Returns theta_t
+Mat weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas,
+                             real weight_decay);
 
 
 } // end of namespace PLearn

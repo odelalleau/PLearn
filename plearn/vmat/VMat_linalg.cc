@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMat_linalg.cc,v 1.1 2004/09/27 20:19:28 plearner Exp $ 
+   * $Id: VMat_linalg.cc,v 1.2 2004/10/21 18:23:59 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -152,9 +152,11 @@ VMat transpose(VMat m1)
   return VMat(transpose(m1.toMat()));
 }
 
-real linearRegression(VMat inputs, VMat outputs, real weight_decay, Mat theta_t, 
-                      bool use_precomputed_XtX_XtY, Mat XtX, Mat XtY, real& sum_squared_Y,
-                      bool return_squared_loss, int verbose_every, bool cholesky)
+real linearRegression(
+  VMat inputs, VMat outputs, real weight_decay, Mat theta_t, 
+  bool use_precomputed_XtX_XtY, Mat XtX, Mat XtY,
+  real& sum_squared_Y, Vec& outputwise_sum_squared_Y,
+  bool return_squared_loss, int verbose_every, bool cholesky)
 {
   if (outputs.length()!=inputs.length())
     PLERROR("linearRegression: inputs.length()=%d while outputs.length()=%d",inputs.length(),outputs.length());
@@ -174,6 +176,9 @@ real linearRegression(VMat inputs, VMat outputs, real weight_decay, Mat theta_t,
     {
       VMat X = new ExtendedVMatrix(inputs,0,0,1,0,1.0); // prepend a first column of ones
       VMat Y = outputs;
+      outputwise_sum_squared_Y.resize(targetsize);
+      outputwise_sum_squared_Y.fill(0.0);
+      
       // *************
       // Do efficiently the following:
       // XtX << transposeProduct(X); // '<<' to copy elements (as transposeProduct returns a new matrix)
@@ -191,6 +196,8 @@ real linearRegression(VMat inputs, VMat outputs, real weight_decay, Mat theta_t,
         externalProductAcc(XtX, x,x);
         externalProductAcc(XtY, x,y);
         sum_squared_Y += dot(y,y);
+        y *= y;                              //!< element-wise square
+        outputwise_sum_squared_Y += y;
       }
       // *************
     }
@@ -227,15 +234,19 @@ Mat linearRegression(VMat inputs, VMat outputs, real weight_decay)
   Mat XtY(n,n_outputs);
   Mat theta_t(n,n_outputs);
   real sy=0;
-  linearRegression(inputs, outputs, weight_decay, theta_t, false, XtX, XtY,sy);
+  Vec outputwise_sum_squared_Y;
+  linearRegression(inputs, outputs, weight_decay, theta_t,
+                   false, XtX, XtY, sy, outputwise_sum_squared_Y);
   return theta_t;
 }
 
 
-real weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas, real weight_decay, Mat theta_t, 
-                              bool use_precomputed_XtX_XtY, Mat XtX, Mat XtY, real& sum_squared_Y,
-                              real& sum_gammas, bool return_squared_loss, int verbose_every,
-                              bool cholesky)
+real weightedLinearRegression(
+  VMat inputs, VMat outputs, VMat gammas, real weight_decay, Mat theta_t, 
+  bool use_precomputed_XtX_XtY, Mat XtX, Mat XtY,
+  real& sum_squared_Y, Vec& outputwise_sum_squared_Y,
+  real& sum_gammas, bool return_squared_loss, int verbose_every,
+  bool cholesky)
 {
   int inputsize = inputs.width();
   int targetsize = outputs.width();
@@ -252,6 +263,8 @@ real weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas, real weigh
     XtY.clear();
     VMat X = new ExtendedVMatrix(inputs,0,0,1,0,1.0); // prepend a first column of ones
     VMat Y = outputs;
+    outputwise_sum_squared_Y.resize(targetsize);
+    outputwise_sum_squared_Y.fill(0.0);
     
     // Prepare to comnpute weighted XtX and XtY
     Vec x(X.width());
@@ -266,6 +279,8 @@ real weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas, real weigh
       externalProductScaleAcc(XtY, x,y,gamma_i);
       sum_squared_Y += gamma_i * dot(y,y);
       sum_gammas += gamma_i;
+      y *= y;                                //!< element-wise square
+      outputwise_sum_squared_Y += y;
     }
   }
 
@@ -293,8 +308,10 @@ real weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas, real weigh
   return squared_loss/l;
 }
 
-//!  Version that does all the memory allocations of XtX, XtY and theta_t. Returns theta_t
-Mat weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas, real weight_decay)
+//! Version that does all the memory allocations of XtX, XtY and
+//! theta_t. Returns theta_t
+Mat weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas,
+                             real weight_decay)
 {
   int n = inputs.width()+1;
   int n_outputs = outputs.width();
@@ -303,7 +320,10 @@ Mat weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas, real weight
   Mat theta_t(n,n_outputs);
   real sy=0;
   real sg=0;
-  weightedLinearRegression(inputs, outputs, gammas, weight_decay, theta_t, false, XtX, XtY,sy,sg);
+  Vec outputwise_sum_squared_Y;
+  weightedLinearRegression(inputs, outputs, gammas, weight_decay, theta_t,
+                           false, XtX, XtY, sy, outputwise_sum_squared_Y,
+                           sg);
   return theta_t;
 }
 
