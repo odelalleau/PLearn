@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatIO.cc,v 1.9 2004/03/24 20:18:44 dorionc Exp $
+   * $Id: MatIO.cc,v 1.10 2004/05/03 16:09:03 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -667,32 +667,84 @@ void loadGnuplot(const string& filename, Mat& mat)
 void matlabSave( const string& dir, const string& plot_title, const Vec& data, 
                  const Vec& add_col, const Vec& bounds, string legend, bool save_plot)
 {
+  Vec bidon;
   Mat mat(data.length(), 1);
   mat << data;
   TVec<string> legd;
   if(legend != "")
     legd.append(legend);
-  matlabSave(dir, plot_title, mat, add_col, bounds, legd, save_plot);
+  matlabSave(dir, plot_title, 
+             bidon,
+             mat, add_col, bounds, legd, save_plot);
+}
+
+void matlabSave( const string& dir, const string& plot_title, 
+                 const Vec& xValues, 
+                 const Vec& yValues, const Vec& add_col, const Vec& bounds, string legend, bool save_plot)
+{
+  Mat mat(yValues.length(), 1);
+  mat << yValues;
+  TVec<string> legd;
+  if(legend != "")
+    legd.append(legend);
+  matlabSave(dir, plot_title, 
+             xValues,
+             mat, add_col, bounds, legd, save_plot);
 }
 
 void matlabSave( const string& dir, const string& plot_title, const Mat& data, 
                  const Vec& add_col, const Vec& bounds, TVec<string> legend, bool save_plot)
 {
+  Vec bid;
+  matlabSave(dir, plot_title, bid, data, add_col, bounds, legend, save_plot);
+}
+
+/*! 
+  This is the *real* matlabSave function.
+
+  1) If xValues is empty, the yValues are plotted against the row indices.
+  
+  2) If xValues is not empty and its length is not equal to the length of yValues, 
+  then its length must be one and the value xValues[0] will be the start index for the xValues.
+*/
+void matlabSave( const string& dir, const string& plot_title, 
+                 const Vec& xValues,
+                 const Mat& yValues, const Vec& add_col, const Vec& bounds, TVec<string> legend, bool save_plot)
+{
   force_mkdir(dir);  
   string directory = append_slash(abspath(dir));
   force_mkdir(directory+"Images/");
   
-  int w = data.width();
-  
+  int w = yValues.width();
+
   ofstream out;
   string vec_fname = directory + plot_title + ".mmat";
   out.open(vec_fname.c_str(), ofstream::out | ofstream::trunc);
-  for(int d = 0; d < data.length(); d++)
+
+  real startX = 0.0;
+  int xLen = xValues.length(); 
+  if(xLen != 0)
   {
-    out << d << "\t";
+    if(xLen == yValues.length())
+      startX = MISSING_VALUE;
+    else if(xLen == 1)
+      startX = xValues[0];
+    else
+      PLERROR("matlabSave:\n"
+              "1) If xValues is empty, the yValues are plotted against the row indices.\n"
+              "2) If xValues is not empty and its length is not equal to the length of yValues, \n"
+              "then its length must be one and the value xValues[0] will be the start index for the xValues.");
+  }
+
+  for(int d = 0; d < yValues.length(); d++)
+  {
+    if(is_missing(startX))
+      out << xValues[d] << "\t";
+    else
+      out << (startX+d) << "\t";
     
     for(int col=0; col < w; col++)
-      out << data(d, col) << "\t";
+      out << yValues(d, col) << "\t";
     
     for(int add=0; add < add_col.length(); add++)
       out << add_col[add] << "\t";
@@ -703,7 +755,14 @@ void matlabSave( const string& dir, const string& plot_title, const Mat& data,
   string m_fname = directory + plot_title + ".m";
   out.open(m_fname.c_str(), ofstream::out | ofstream::trunc);
   out << "load " << vec_fname << " -ascii"   << endl
-      << "h = plot(" << plot_title << "(:,2:" << (1+w) << "));"  << endl
+      << plot_title << "= sortrows(" << plot_title << ")" << endl
+      << "h = plot(" 
+//--- X Values
+      << plot_title << "(:,1), "
+///////////////////////////////////////////////////////////////
+//--- Y Values
+      << plot_title << "(:,2:" << (1+w) << "));"  << endl
+///////////////////////////////////////////////////////////////
       << "set(h, 'LineWidth', 1.0)" << endl
       << "set(gcf, 'Position', [0, 0, 1000, 750])" << endl
       << "hold on" << endl;
@@ -711,7 +770,7 @@ void matlabSave( const string& dir, const string& plot_title, const Mat& data,
   if(legend.isNotEmpty())
   {
     int leg = legend.length();
-    int wid = data.width();
+    int wid = yValues.width();
     if(leg != wid)
     {
       if(legend[0] == "Numbers")
@@ -721,7 +780,7 @@ void matlabSave( const string& dir, const string& plot_title, const Mat& data,
           legend[c] = tostring(c);
       }
       else
-        PLERROR("TimeSeriesAnalysis::matlab_save: legend.length() = %d != %d = data.width()",
+        PLERROR("TimeSeriesAnalysis::matlab_save: legend.length() = %d != %d = yValues.width()",
                 leg, wid);
     }
     out << "legend(h";

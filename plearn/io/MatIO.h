@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: MatIO.h,v 1.13 2004/04/06 20:55:31 ducharme Exp $
+   * $Id: MatIO.h,v 1.14 2004/05/03 16:09:03 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -103,12 +103,35 @@ void loadGnuplot(const string& filename, Mat& mat);
 void saveGnuplot(const string& filename, const Vec& vec);
 void saveGnuplot(const string& filename, const Mat& mat);
 
-//! Format readable by matlab
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Format readable by matlab
+
+/*! 
+  The following two are simply calling the matrix version after transforming 
+  the Vec in a one column Mat. See below.
+*/
 void matlabSave( const string& dir, const string& plot_title, const Vec& data, 
                  const Vec& add_col, const Vec& bounds, string lengend="", bool save_plot=true);  
+void matlabSave( const string& dir, const string& plot_title, 
+                 const Vec& xValues,
+                 const Vec& yValues, const Vec& add_col, const Vec& bounds, string lengend="", bool save_plot=true);  
 
+//! Simply calls the coming matlabSave function with an empty xValues Vec. See below.
 void matlabSave( const string& dir, const string& plot_title, const Mat& data, 
                  const Vec& add_col, const Vec& bounds, TVec<string> legend=TVec<string>(), bool save_plot=true);
+
+/*! 
+  This is the *real* matlabSave function.
+
+  1) If xValues is empty, the yValues are plotted against the row indices.
+  
+  2) If xValues is not empty and its length is not equal to the length of yValues, 
+  then its length must be one and the value xValues[0] will be the start index for the xValues.
+*/
+void matlabSave( const string& dir, const string& plot_title, 
+                 const Vec& xValues,
+                 const Mat& yValues, const Vec& add_col, const Vec& bounds, TVec<string> legend=TVec<string>(), bool save_plot=true);
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //!  Reads and writes an ascii file without the size header (assuming that the size(length() and width()) is set)
 void loadAsciiWithoutSize(const string& filename, const Vec& vec);
