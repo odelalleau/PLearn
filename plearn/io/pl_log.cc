@@ -33,13 +33,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: pl_log.cc,v 1.1 2004/10/27 04:29:34 chapados Exp $ 
+   * $Id: pl_log.cc,v 1.2 2004/12/01 17:30:29 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
 
 /*! \file pl_log.cc */
 
+#include <map>
 #include <string>
 #include <plearn/base/stringutils.h>
 #include "pl_log.h"
@@ -68,6 +69,29 @@ PL_Log& PL_Log::instance()
   static PL_Log global_logger;
   return global_logger;
 }
+
+/**
+ * Parses a string to see whether or not it names a VerbosityLevel. If it
+ * doesn't, tries the cast to an int.
+ */
+VerbosityLevel PL_Log::vlevel_from_string(const string& v)
+{
+  static map<string, VerbosityLevel> _vlevels;
+  if ( _vlevels.size() == 0 )
+  {
+    _vlevels["VLEVEL_MAND"]    = VLEVEL_MAND;
+    _vlevels["VLEVEL_IMP"]     = VLEVEL_IMP;
+    _vlevels["VLEVEL_NORMAL"]  = VLEVEL_NORMAL ;
+    _vlevels["VLEVEL_DBG"]     = VLEVEL_DBG    ;
+    _vlevels["VLEVEL_EXTREME"] = VLEVEL_EXTREME;
+  }
+  
+  map<string, VerbosityLevel>::iterator it = _vlevels.find(v);
+  if ( it != _vlevels.end() )
+    return it->second;
+  return (VerbosityLevel)toint(v);
+}
+
 
 PStream& plsep(PStream& p)
 {

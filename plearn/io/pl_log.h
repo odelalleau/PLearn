@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: pl_log.h,v 1.2 2004/12/01 01:51:03 dorionc Exp $ 
+   * $Id: pl_log.h,v 1.3 2004/12/01 17:30:29 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -60,7 +60,7 @@ namespace PLearn {
 #define PL_LOG_VERBOSITY 1000
 #endif
 
-enum VerbosityLevels {
+enum VerbosityLevel {
   VLEVEL_MAND     = 0,    // Mandatory
   VLEVEL_IMP      = 1,    // Important
   VLEVEL_NORMAL   = 5,    // Normal
@@ -105,6 +105,12 @@ public:
     Heading(string h_) : h(h_) {}
     string h;
   };
+
+  /**
+   * Parses a string to see whether or not it names a VerbosityLevel. If it
+   * doesn't, tries the cast to an int.
+   */
+  static VerbosityLevel vlevel_from_string(const string& v);
   
 protected:
   int runtime_verbosity;
