@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.61 2004/11/22 17:51:11 dorionc Exp $
+   * $Id: TMat_maths_impl.h,v 1.62 2004/12/04 00:20:17 chapados Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -1653,8 +1653,14 @@ void tanh(const TVec<T>& x, TVec<T>& y)
     }
 }
 
-template<class T>
-TVec<T> exp(TVec<T> vec) { return apply(vec,safeexp); }
+template<class T> 
+TVec<T> 
+exp(const TVec<T>& vec) 
+{ 
+  TVec<T> res( vec.length() );
+  exp( vec, res );
+  return res;
+}
 
 // return indices of non-zero elements
 template<class T>
