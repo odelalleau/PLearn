@@ -94,7 +94,7 @@ def _plearn_repr(x):
         return x.s
     elif isinstance(x, plearn_ref):
         return x.value()
-    elif is None:
+    elif x is None:
         return "*0;"
     elif hasattr(x, 'plearn_repr'):
         return _plearn_repr(x.plearn_repr())
