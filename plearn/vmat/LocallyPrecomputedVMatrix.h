@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyPrecomputedVMatrix.h,v 1.1 2004/11/18 14:31:45 tihocan Exp $ 
+   * $Id: LocallyPrecomputedVMatrix.h,v 1.2 2004/12/09 20:08:08 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -68,7 +68,10 @@ public:
   // ************************
 
   string local_dir;
+  int max_wait;
   bool remove_when_done;
+  bool sequential_access;
+  int verbosity;
 
   // ****************
   // * Constructors *

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyPrecomputedVMatrix.cc,v 1.3 2004/11/18 17:34:05 tihocan Exp $ 
+   * $Id: LocallyPrecomputedVMatrix.cc,v 1.4 2004/12/09 20:08:08 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -51,14 +51,21 @@ using namespace std;
 ///////////////////////////////
 LocallyPrecomputedVMatrix::LocallyPrecomputedVMatrix()
 : local_dir("/Tmp"),
-  remove_when_done(true)
+  max_wait(30),
+  remove_when_done(true),
+  sequential_access(true),
+  verbosity(2)
 {
   precomp_type = "pmat";
 }
 
 PLEARN_IMPLEMENT_OBJECT(LocallyPrecomputedVMatrix,
     "A VMat that precomputes its source in a local directory.",
-    ""
+    "The 'sequential_access' option can be used to ensure that parallel experiments\n"
+    "do not access simultaneously the source VMat, in order to stay nice with the\n"
+    "disk usage. This is achieved thanks to a system lock file in the metadatadir of\n"
+    "the source VMat. Because it may happen that a lock file remains after an experiment\n"
+    "crashed, it will be ignored when it gets older than 'max_wait' minutes.\n"
 );
 
 ////////////////////
@@ -71,6 +78,12 @@ void LocallyPrecomputedVMatrix::declareOptions(OptionList& ol)
 
   declareOption(ol, "remove_when_done", &LocallyPrecomputedVMatrix::remove_when_done, OptionBase::buildoption,
       "Whether we want or not to remove the precomputed data when this object is deleted.");
+
+  declareOption(ol, "sequential_access", &LocallyPrecomputedVMatrix::sequential_access, OptionBase::buildoption,
+      "If set to 1, ensures there are no multiple parallel precomputations (see class help).");
+
+  declareOption(ol, "max_wait", &LocallyPrecomputedVMatrix::max_wait, OptionBase::buildoption,
+      "Maximum wait time in minutes when 'sequential access' is set to 1 (see class help).");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -99,10 +112,19 @@ void LocallyPrecomputedVMatrix::build_()
   if (metadatadir == "") {
     force_mkdir(local_dir);
     metadatadir = newFilename(local_dir, "locally_precomputed_", true);
+    if (sequential_access) {
+      // If necessary, wait until we are allowed to start the precomputation.
+      if (source->hasMetaDataDir())
+        source->lockMetaDataDir(max_wait * 60, verbosity >= 2);
+      else
+        PLERROR("In LocallyPrecomputedVMatrix::build_ - The source VMatrix must have a metadatadir");
+    }
     inherited::build();
     precomp_source->setOption("remove_when_done", tostring(remove_when_done));
     precomp_source->setOption("track_ref", "1");
     precomp_source->build();
+    if (sequential_access)
+      source->unlockMetaDataDir();
   }
 }
 
@@ -128,7 +150,7 @@ LocallyPrecomputedVMatrix::~LocallyPrecomputedVMatrix()
     // Let's check whether more FileVMatrix are accessing the same precomputed file.
     if (FileVMatrix::countRefs(precomputed_file) == 0) {
       bool removed = force_rmdir(metadatadir);
-      if (!removed)
+      if (!removed && verbosity >= 1)
         PLWARNING("In LocallyPrecomputedVMatrix::~LocallyPrecomputedVMatrix - The precomputed data could not be removed");
     }
   }
