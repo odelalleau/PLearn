@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.cc,v 1.12 2004/04/28 13:53:01 lheureup Exp $
+   * $Id: SubVMatrix.cc,v 1.13 2004/05/14 02:14:41 tihocan Exp $
    ******************************************************* */
 
 #include "SubVMatrix.h"
@@ -112,11 +112,19 @@ void SubVMatrix::build_()
   if(istart+length()>parent->length() || jstart+width()>parent->width())
     PLERROR("In SubVMatrix constructor OUT OF BOUNDS of parent VMatrix");
 
-  // Copy the parent field names
+  // Copy the parent field names.
   fieldinfos.resize(width_);
   if (parent->getFieldInfos().size() > 0)
     for(int j=0; j<width_; j++)
       fieldinfos[j] = parent->getFieldInfos()[jstart+j];
+
+  // Copy the parent string mappings.
+  map_rs.resize(width_);
+  map_sr.resize(width_);
+  for (int j = jstart; j < width_ + jstart; j++) {
+    map_rs[j - jstart] = parent->getRealToStringMapping(j);
+    map_sr[j - jstart] = parent->getStringToRealMapping(j);
+  }
 
   if (width_ == parent->width())
   {
