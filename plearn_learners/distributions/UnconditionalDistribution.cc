@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UnconditionalDistribution.cc,v 1.3 2004/09/14 16:04:56 chrish42 Exp $ 
+   * $Id: UnconditionalDistribution.cc,v 1.4 2005/01/27 14:24:09 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -138,6 +138,13 @@ void UnconditionalDistribution::build_()
 void UnconditionalDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
+}
+
+////////////////////
+// setTrainingSet //
+////////////////////
+void UnconditionalDistribution::setTrainingSet(VMat training_set, bool call_forget) {
+  PLearner::setTrainingSet(training_set, call_forget);
 }
 
 //////////////
