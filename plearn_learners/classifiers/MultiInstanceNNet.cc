@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.cc,v 1.19 2004/03/04 18:22:23 yoshua Exp $
+   * $Id: MultiInstanceNNet.cc,v 1.20 2004/03/04 18:37:18 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/MultiInstanceNNet.h */
@@ -320,10 +320,11 @@ void MultiInstanceNNet::build_()
       bag_inputs = Var(max_n_instances,inputsize());
       bag_output = 1-exp(unfoldedSumOf(bag_inputs,bag_size,input_to_logP0,max_n_instances));
 
-      costs.resize(2); // (negative log-likelihood, classification error) for the bag
+      costs.resize(3); // (negative log-likelihood, classification error, lift output) for the bag
 
       costs[0] = cross_entropy(bag_output, target);
       costs[1] = binary_classification_loss(bag_output,target);
+      costs[2] = lift_output(bag_output, target);
       test_costs = hconcat(costs);
 
       // Apply penalty to cost.
@@ -367,18 +368,20 @@ int MultiInstanceNNet::outputsize() const
 
 TVec<string> MultiInstanceNNet::getTrainCostNames() const
 {
-  TVec<string> names(3);
+  TVec<string> names(4);
   names[0] = "NLL+penalty";
   names[1] = "NLL";
   names[2] = "class_error";
+  names[3] = "lift_output";
   return names;
 }
 
 TVec<string> MultiInstanceNNet::getTestCostNames() const
 { 
-  TVec<string> names(2);
+  TVec<string> names(4);
   names[0] = "NLL";
   names[1] = "class_error";
+  names[2] = "lift_output";
   return names;
 }
 
@@ -475,6 +478,9 @@ void MultiInstanceNNet::computeOutput(const Vec& inputv, Vec& outputv) const
   f->fprop(inputv,outputv);
 }
 
+///////////////////////////
+// computeOutputAndCosts //
+///////////////////////////
 void MultiInstanceNNet::computeOutputAndCosts(const Vec& inputv, const Vec& targetv, 
                                  Vec& outputv, Vec& costsv) const
 {
@@ -498,7 +504,9 @@ void MultiInstanceNNet::computeOutputAndCosts(const Vec& inputv, const Vec& targ
   }
 }
 
-
+/////////////////////////////
+// computeCostsFromOutputs //
+/////////////////////////////
 void MultiInstanceNNet::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv, 
                                    const Vec& targetv, Vec& costsv) const
 {
@@ -518,12 +526,20 @@ void MultiInstanceNNet::computeCostsFromOutputs(const Vec& inputv, const Vec& ou
     int predicted_classe = (bag_P0>0.5)?0:1;
     real nll = (classe==0)?safeflog(bag_P0):safeflog(1-bag_P0);
     int classification_error = (classe != predicted_classe);
-    costsv[0] = nll + training_cost->value[0]-training_cost->value[1];
-    costsv[1] = nll;
-    costsv[2] = classification_error;
+    costsv[0] = nll;
+    costsv[1] = classification_error;
+    // Add the lift output.
+    if (targetv[0] > 0) {
+      costsv[2] = outputv[0];
+    } else {
+      costsv[2] = -outputv[0];
+    }
   }
 }
 
+//////////////////////
+// initializeParams //
+//////////////////////
 void MultiInstanceNNet::initializeParams()
 {
   if (seed_>=0)
