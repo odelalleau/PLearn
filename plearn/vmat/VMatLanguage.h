@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VMatLanguage.h,v 1.12 2004/04/05 23:10:31 morinf Exp $
+   * $Id: VMatLanguage.h,v 1.13 2004/04/27 05:50:59 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -65,6 +65,7 @@ using namespace std;
     TVec<RealMapping> mappings;
     mutable Vec pstack;
     mutable Vec myvec;
+    mutable Vec mem;
 
     // maps opcodes strings to opcodes numbers
     static map<string, int> opcodes;

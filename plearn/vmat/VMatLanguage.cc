@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.19 2004/04/22 16:42:03 tihocan Exp $
+   * $Id: VMatLanguage.cc,v 1.20 2004/04/27 05:50:59 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -467,6 +467,10 @@ using namespace std;
         opcodes["__getfieldsrange"] = 47; // %N:%M pushes field %N up to %M. M must be >= N.
         opcodes["select"] = 48; // v0 v1 v2 v3 ... vn-1 n i --> vi  
         opcodes["length"] = 49; // the length of the currently processed column.
+        opcodes["sign"]   = 50; // a --> sign(a)  (0 -1 or +1)
+        opcodes["get"]    = 51; // pos --> value_of_stack_at_pos (if pos is negative then it's relative to stacke end ex: -1 get will get the previous element of stack)
+        opcodes["memput"] = 52; // a mempos -->    ( a is saved in memory position mempos)
+        opcodes["memget"] = 53; // mempos --> val  ( gets val from memory in position mempos)
       }
   }
 
@@ -723,6 +727,47 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
           case 49: // length
             {
               pstack.push(srcvec.length());
+              break;
+            }
+          case 50: // sign
+            {
+              a = pstack.pop();
+              if(a>0)
+                pstack.push(1.);
+              else if(a<0)
+                pstack.push(-1.);
+              else
+                pstack.push(0.);
+              break;
+            }
+          case 51: // get
+            {
+              {
+                int i = int(pstack.pop());
+                if(i>=0)
+                  pstack.push(pstack[i]);
+                else
+                  pstack.push(pstack.length()+i);
+              }
+              break;
+            }
+          case 52: // memput
+            {
+              {
+                int i = int(pstack.pop());
+                a = pstack.pop();
+                if(mem.size()<i+1)
+                  mem.resize(i+1);
+                mem[i] = a;                    
+              }
+              break;
+            }
+          case 53: // memget
+            {
+              {
+                int i = int(pstack.pop());
+                pstack.push(mem[i]);
+              }
               break;
             }
           
