@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: stats_utils.h,v 1.5 2004/07/21 16:30:53 chrish42 Exp $
+   * $Id: stats_utils.h,v 1.6 2004/08/03 21:07:46 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -124,14 +124,26 @@ real max_cdf_diff(Vec& v1, Vec& v2);
 */
 real KS_test(real D, real N, int conv=10);
 
-//! Kolmogorov-Smirnov test. Computes D (the max abs dfference between the 2 cdfs)
-//! and p_value P(random variable D > observed D|no difference in true prob)
-//! A reasonable value for D is 10. The call sorts v1 and v2.
+/**
+ * Kolmogorov-Smirnov test. Computes D (the max abs dfference between the 2 cdfs)
+ * and p_value P(random variable D > observed D|no difference in true prob)
+ * A reasonable value for D is 10. The call sorts v1 and v2.
+ */
 void KS_test(Vec& v1, Vec& v2, int conv, real& D, real& p_value);
 
-//! Returns result of Kolmogorov-Smirnov test between 2 samples
-//! The call sorts v1 and v2.
+/** 
+ * Returns result of Kolmogorov-Smirnov test between 2 samples
+ * The call sorts v1 and v2.
+ */
 real KS_test(Vec& v1, Vec& v2, int conv=10);
+
+/**
+ * Given two paired sets u and v of n measured values, the paired t-test 
+ * determines whether they differ from each other in a significant way under 
+ * the assumptions that the paired differences are independent and identically 
+ * normally distributed.
+ */
+real paired_t_test(Vec u, Vec v);
 
 } // end of namespace PLearn
 

@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: stats_utils.cc,v 1.8 2004/07/21 16:30:53 chrish42 Exp $
+   * $Id: stats_utils.cc,v 1.9 2004/08/03 21:07:46 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -253,6 +253,25 @@ real KS_test(Vec& v1, Vec& v2, int conv)
 
 } // end of namespace PLearn
 
+
+real paired_t_test(Vec u, Vec v)
+{
+  int n = u.length();
+  if( v.length() != n )
+  {
+    PLWARNING("paired_t_test:  "
+              "Can't make a paired t-test on to unequally lengthed vectors (%d != %d).",
+              n, v.length());
+    return MISSING_VALUE;
+  }
+
+  real ubar = mean(u);
+  real vbar = mean(v);
+  Vec u2 = u - ubar;
+  Vec v2 = v - vbar;
+
+  return (ubar - vbar) * sqrt( n*(n-1) / sumsquare(u2-v2));
+}
 
 /* 
 
