@@ -915,7 +915,6 @@ def pymake(list_of_targets, linkname):
     print '++++ Computing dependencies...'
     for target in list_of_targets:
         get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_link, linkname)
-
     print '++++ Compiling...'
     parallel_compile(ccfiles_to_compile.keys())
     if executables_to_link.keys():

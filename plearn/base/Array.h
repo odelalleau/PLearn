@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array.h,v 1.2 2002/08/07 16:54:21 morinf Exp $
+   * $Id: Array.h,v 1.3 2002/08/21 18:40:41 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -214,7 +214,7 @@ public:
          array[i] = elem;
     }
 
-  bool operator==(const Array& other)
+  bool operator==(const Array& other) const
     {
       if (other.size() != array_size) 
          return false;

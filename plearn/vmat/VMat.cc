@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat.cc,v 1.4 2002/08/09 16:14:33 jkeable Exp $
+* $Id: VMat.cc,v 1.5 2002/08/21 18:40:42 jkeable Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat.h"
@@ -4124,6 +4124,9 @@ real SelectRowsVMatrix::getStringVal(int col, const string & str) const
 string SelectRowsVMatrix::getValString(int col, real val) const
 { return distr->getValString(col,val); }
 
+string SelectRowsVMatrix::getString(int row, int col) const
+{ return distr->getString(row,col); }
+
 void SelectRowsVMatrix::declareOptions(OptionList &ol)
 {
     declareOption(ol, "distr", &SelectRowsVMatrix::distr, OptionBase::buildoption, "TODO");
@@ -4178,6 +4181,9 @@ real SelectRowsFileIndexVMatrix::getStringVal(int col, const string & str) const
 
 string SelectRowsFileIndexVMatrix::getValString(int col, real val) const
 { return distr->getValString(col,val); }
+
+string SelectRowsFileIndexVMatrix::getString(int row, int col) const
+{ return distr->getString(indices[row], col); }
 
 /** SelectColumnsVMatrix **/
 
@@ -4351,6 +4357,20 @@ string ConcatColumnsVMatrix::getValString(int col, real val) const
   return array[k]->getValString(pos+col,val);
 }
 
+string ConcatColumnsVMatrix::getString(int row, int col) const
+{
+  if(col>=width_)
+    PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
+  int pos=0,k=0;
+  while(col>=pos+array[k]->width())
+    {
+      pos += array[k]->width();
+      k++;
+    }
+  return array[k]->getString(row,pos+col);
+}
+
+
 
 real ConcatColumnsVMatrix::dot(int i1, int i2, int inputsize) const
 {
@@ -4500,6 +4520,22 @@ real ConcatRowsVMatrix::getStringVal(int col, const string & str) const
   if(col>=width_)
     PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
   return array[0]->getStringVal(col,str);
+}
+
+//! Warning : the string map used is the one from the first of the concatenated matrices
+string ConcatRowsVMatrix::getValString(int col, real val) const
+{
+  if(col>=width_)
+    PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
+  return array[0]->getValString (col,val);
+}
+
+//! Warning : the string map used is the one from the first of the concatenated matrices
+string ConcatRowsVMatrix::getString(int row, int col) const
+{
+  int whichvm, rowofvm;
+  getpositions(row,whichvm,rowofvm);
+  return array[whichvm]->getString(rowofvm,col);
 }
 
 

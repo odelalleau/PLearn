@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VMatLanguage.h,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: VMatLanguage.h,v 1.2 2002/08/21 18:40:42 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -64,11 +64,9 @@ using namespace std;
     void generateCode(istream& processed_sourcecode);
     void preprocess(istream& in, map<string, string>& defines, string& processed_sourcecode,
                            vector<string>& fieldnames);
-
     
+public:
     VMatLanguage():vmsource(Mat()) { build_opcodes_map(); }
-
-  public:
     VMatLanguage(VMat vmsrc):vmsource(vmsrc) { build_opcodes_map(); }
     DECLARE_NAME_AND_DEEPCOPY(VMatLanguage);
 
@@ -86,13 +84,17 @@ using namespace std;
 
   class PreprocessingVMatrix: public RowBufferedVMatrix
   {
+    DECLARE_NAME_AND_DEEPCOPY(PreprocessingVMatrix);
+
   protected:
     VMat source;
     VMatLanguage program;
     Vec sourcevec;
     vector<string> fieldnames;
+    
 
   public:
+    PreprocessingVMatrix(){}
     PreprocessingVMatrix(VMat the_source, const string& program_string)
       :source(the_source),program(the_source)
     {
@@ -107,10 +109,11 @@ using namespace std;
       length_ = source.length();
       
     }
-    
+
     virtual void getRow(int i, Vec v) const;
 
   };
+
 
   time_t getDateOfCode(const string& codefile);
 

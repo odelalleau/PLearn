@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.3 2002/08/07 16:54:21 morinf Exp $
+   * $Id: stringutils.h,v 1.4 2002/08/21 18:40:41 jkeable Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -54,6 +54,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <iomanip>
 
 //!  to be replaced ultimately by the use of sstream, but including it currently produces a thousand warnings... [Pascal]
 #include <strstream.h>
@@ -117,6 +118,10 @@ using namespace std;
 
   //! returns true if s is a blank line (containing only space, tab, until end of line or a # comment-character is reached
   bool isBlank(const string& s);
+
+  //! returns true if s is a blank paragraph (containing only space, tab, until end of **string**)
+  bool isParagraphBlank(const string& s);
+
 
   //!  replaces all characters <= ' ' (i.e. newline, tab, space, etc...) by '_'
   string space_to_underscore(string str);
@@ -260,7 +265,7 @@ public:
       */
 
       ostrstream out;
-      out << x;
+      out << setprecision(8) << x;
       char* buf = out.str();
       int n = out.pcount();
       string s(buf,n);

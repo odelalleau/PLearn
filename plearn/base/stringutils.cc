@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.cc,v 1.1 2002/07/30 09:01:26 plearner Exp $
+   * $Id: stringutils.cc,v 1.2 2002/08/21 18:40:41 jkeable Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -64,6 +64,8 @@ using namespace std;
   {
     if(PLMPI::rank==0)
       {
+        if(!maxpos)
+          return;
         int ndots = newpos*100/maxpos - currentpos*100/maxpos;
         while(ndots--)
           out << '.';
@@ -302,6 +304,24 @@ bool isBlank(const string& s)
       if(c=='#' || c=='\n' || c=='\r')
         return true;
       else if(c!=' ' && c!='\t')
+        return false;
+    }
+  return true; // empty line
+}
+
+
+bool isParagraphBlank(const string& s)
+{
+  int l = s.length();
+  bool in_comment=false;
+  for(int i=0; i<l; i++)
+    {
+      char c = s[i];
+      if(c=='#')
+        in_comment=true;
+      else if(c=='\n' || c=='\r')
+        in_comment=false;
+      else if(c!=' ' && c!='\t' && !in_comment)
         return false;
     }
   return true; // empty line

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat.h,v 1.4 2002/08/09 01:54:40 jkeable Exp $
+   * $Id: VMat.h,v 1.5 2002/08/21 18:40:42 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -816,6 +816,7 @@ public:
   virtual void getSubRow(int i, int j, Vec v) const;
   virtual real getStringVal(int col, const string & str) const;
   virtual string getValString(int col, real val) const;
+  virtual string getString(int row,int col) const;
   virtual void reset_dimensions() { distr->reset_dimensions(); width_=distr->width(); }
   virtual real dot(int i1, int i2, int inputsize) const;
   virtual real dot(int i, const Vec& v) const;
@@ -891,6 +892,8 @@ public:
   virtual void getRow(int i, Vec v) const;
   virtual real getStringVal(int col, const string & str) const;
   virtual string getValString(int col, real val) const;
+  virtual string getString(int row,int col) const;
+
   virtual real dot(int i1, int i2, int inputsize) const;
   virtual real dot(int i, const Vec& v) const;
   virtual void reset_dimensions() { distr->reset_dimensions(); width_=distr->width(); }
@@ -1295,6 +1298,7 @@ class ConcatColumnsVMatrix: public RowBufferedVMatrix
   virtual void getRow(int i, Vec samplevec) const; 
   virtual real getStringVal(int col, const string & str) const;
   virtual string getValString(int col, real val) const;
+  virtual string getString(int row,int col) const;
   virtual void reset_dimensions() { PLERROR("ConcatColumnsVMatrix::reset_dimensions() not implemented"); }
   virtual real dot(int i1, int i2, int inputsize) const;
   virtual real dot(int i, const Vec& v) const;
@@ -1366,6 +1370,9 @@ class ConcatRowsVMatrix: public VMatrix
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;
   virtual real getStringVal(int col, const string & str) const;
+  virtual string getValString(int col, real val) const;
+  virtual string getString(int row,int col) const;
+
   virtual void reset_dimensions() 
     { 
       for (int i=0;i<array.size();i++) array[i]->reset_dimensions(); 

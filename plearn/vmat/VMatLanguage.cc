@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.2 2002/08/09 16:14:33 jkeable Exp $
+   * $Id: VMatLanguage.cc,v 1.3 2002/08/21 18:40:42 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,7 +49,6 @@
 namespace PLearn <%
 using namespace std;
   
-  // set to true for debugging 
   bool VMatLanguage::output_preproc=false;
 
   // returns oldest modification date of a file searching recursively every
@@ -133,11 +132,14 @@ using namespace std;
         else if(token[0]=='[')
           {
             vector<string> parts=split(token.substr(1),":]");
+
+            // fieldcopy, type  : [start,end]
             if(parts.size()==2)
               {
                 string astr=parts[0].substr(1);
                 string bstr=parts[1].substr(1);
-                int a=0,b=0;
+                int a=-1,b=-1;
+                
                 if(parts[0][0]=='@')
                   {
                     for(int i=0;i<vmsource.width();i++)
@@ -145,8 +147,8 @@ using namespace std;
                   }
                 else if(parts[0][0]=='%')
                   a=toint(parts[0].substr(1));
-                else PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%6]. 'end' must be after 'start'..");
-
+                else PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%6]. 'end' must be after 'start'.. OR [field] to copy a single field");
+                
                 if(parts[1][0]=='@')
                   {
                     for(int i=0;i<vmsource.width();i++)
@@ -154,17 +156,40 @@ using namespace std;
                   }
                 else if(parts[1][0]=='%')
                   b=toint(parts[1].substr(1));
-                else PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%6]. 'end' must be after 'start'..");
+                else PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%6]. 'end' must be after 'start'.. OR [field] to copy a single field");
                 
                 if(a>b)
                   PLERROR("In copyfield macro, you have specified a start field that is after the end field. Eg : [%10:%5]");
+                if(a==-1)
+                  PLERROR("In copyfield macro, unknown field :%s",astr.c_str());
+                if(b==-1)
+                  PLERROR("In copyfield macro, unknown field :%s",astr.c_str());
+
                 for(int i=a;i<=b;i++)
                   {
                     processed_sourcecode+=string("%")+tostring(i)+ " ";
                     fieldnames.push_back(vmsource->fieldName(i));
                   }
               }
-            else PLERROR("Strange fieldcopy format. e.g : [%0:%5]");
+            // fieldcopy, type  : [field]
+            else if(parts.size()==1)
+            {
+              string astr=parts[0].substr(1);
+              int a=-1;
+              if(parts[0][0]=='@')
+              {
+                for(int i=0;i<vmsource.width();i++)
+                  if(vmsource->fieldName(i)==astr){a=i;break;}
+              }
+              else if(parts[0][0]=='%')
+                a=toint(parts[0].substr(1));
+              else PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%6]. 'end' must be after 'start'.. OR [field] to copy a single field");
+              if(a==-1)
+                PLERROR("In copyfield macro, unknown field :%s",astr.c_str());
+              processed_sourcecode+=string("%")+tostring(a)+ " ";
+              fieldnames.push_back(vmsource->fieldName(a));
+            }
+            else PLERROR("Strange fieldcopy format. e.g : [%0:%5]. Found parts %s",join(parts," ").c_str());
           }
 
         else if(token[0]=='#')
@@ -392,7 +417,7 @@ using namespace std;
             pstack.push(*((float*)pptr++));
             break;
           case 1: // getfieldval
-            //if(*pptr > fieldvalues.width()) PLERROR("Index out of bounds in VPL code");
+            //if(*pptr > fieldvalues.width()) PLERROR("Tried to acces an out of bound field in VPL code");
             pstack.push(pfieldvalues[*pptr++]);
             break;
           case 2: // applymapping
@@ -441,32 +466,32 @@ using namespace std;
           case 11: // ==
             b = pstack.pop();
             a = pstack.pop();
-            pstack.push((a==b) ?1 :0);
+            pstack.push( ((float)a==(float)b) ?1 :0);
             break;
           case 12: // !=
             b = pstack.pop();
             a = pstack.pop();
-            pstack.push((a!=b) ?1 :0);
+            pstack.push(((float)a!=(float)b) ?1 :0);
             break;
           case 13: // >
             b = pstack.pop();
             a = pstack.pop();
-            pstack.push((a>b) ?1 :0);
+            pstack.push(((float)a>(float)b) ?1 :0);
             break;
           case 14: // >=
             b = pstack.pop();
             a = pstack.pop();
-            pstack.push((a>=b) ?1 :0);
+            pstack.push(((float)a>=(float)b) ?1 :0);
             break;
           case 15: // <
             b = pstack.pop();
             a = pstack.pop();
-            pstack.push((a<b) ?1 :0);
+            pstack.push(((float)a<(float)b) ?1 :0);
             break;
           case 16: // <=
             b = pstack.pop();
             a = pstack.pop();
-            pstack.push((a<=b) ?1 :0);
+            pstack.push(((float)a<=(float)b) ?1 :0);
             break;
           case 17: // and
             b = pstack.pop();
@@ -588,6 +613,6 @@ using namespace std;
     program.run(i,v);
   }
 
-  
+IMPLEMENT_NAME_AND_DEEPCOPY(PreprocessingVMatrix);
 
 %> // end of namespace PLearn
