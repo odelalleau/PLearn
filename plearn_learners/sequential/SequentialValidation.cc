@@ -360,8 +360,9 @@ void SequentialValidation::run()
         measure_after_test.size()  > 0  )
       force_mkdir(splitdir);
     
-    // TRAIN only if we arrive at an allowed training time-step
-    if (shouldTrain(t)) {
+    // Ensure a first train and, afterwards, train only if we arrive at an allowed
+    // training time-step
+    if ( t == init_train_size || shouldTrain(t)) {
       // Compute training set.  Don't compute test set right away in case
       // it's a complicated structure that cannot co-exist with an
       // instantiated training set
@@ -493,8 +494,9 @@ void SequentialValidation::reportMemoryUsage(int t)
 
 bool SequentialValidation::shouldTrain(int t)
 {
-  if (train_step <= 0)
+  if ( train_step <= 0 )
     return false;
+
   return (t - init_train_size) % train_step == 0;
 }
 

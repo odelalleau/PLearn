@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PCA.cc,v 1.19 2005/02/14 14:40:39 dorionc Exp $ 
+   * $Id: PCA.cc,v 1.20 2005/03/02 18:18:26 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file PCA.cc */
@@ -279,8 +279,19 @@ void PCA::incremental_algo()
   if (report_progress)
     pb = new ProgressBar("Incremental PCA", 2);
 
+  /*!
+    On the first call, there is no need to manage data prior to the window,
+    if any.
+  */
+  int start = stage;
+  if ( stage == 0 && _horizon > 0 )
+  {
+    int window_start = train_set.length() - _horizon;
+    start = window_start > 0 ? window_start : 0;
+  }
+  
   Vec observation;
-  for ( int obs=stage; obs < train_set.length(); obs++ )
+  for ( int obs=start; obs < train_set.length(); obs++ )
   {
     observation.resize( train_set.width() );
 
