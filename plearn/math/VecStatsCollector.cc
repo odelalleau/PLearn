@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.10 2003/09/06 22:29:39 chapados Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.11 2003/09/17 14:56:29 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -209,10 +209,13 @@ Vec VecStatsCollector::getStdError() const
 //! returns centered covariance matrix (mean subtracted)
 Mat VecStatsCollector::getCovariance() const
 {
+  real N = real(stats[0].n());
   Vec meanvec = getMean();
-  Mat covarmat = cov / real(stats[0].n());
-  externalProductScaleAcc(covarmat,meanvec,meanvec,real(-1.));
-  return covarmat;
+  Mat covariance(cov.length(), cov.width());
+  for(int i=0; i<cov.length(); i++)
+    for(int j=0; j<cov.width(); j++)
+      covariance(i, j) = (cov(i, j) - N*meanvec[i]*meanvec[j])/(N-1);
+  return covariance;
 }
 
 //! returns correlation matrix
