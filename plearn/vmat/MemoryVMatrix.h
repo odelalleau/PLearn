@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.h,v 1.13 2004/11/12 20:08:22 larocheh Exp $
+   * $Id: MemoryVMatrix.h,v 1.14 2004/11/17 16:15:46 tihocan Exp $
    ******************************************************* */
 
 
@@ -52,6 +52,13 @@ using namespace std;
 class MemoryVMatrix: public VMatrix
 {
   typedef VMatrix inherited;
+
+protected:
+
+  //! The matrix storing the data in memory. It can either point to 'data'
+  //! or be filled with the content of 'data_vm', depending on which of these
+  //! two options is used.
+  Mat memory_data;
 
 public:
 

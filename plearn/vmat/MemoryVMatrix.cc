@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.cc,v 1.24 2004/11/12 20:08:22 larocheh Exp $
+   * $Id: MemoryVMatrix.cc,v 1.25 2004/11/17 16:15:46 tihocan Exp $
    ******************************************************* */
 
 #include "MemoryVMatrix.h"
@@ -54,26 +54,33 @@ PLEARN_IMPLEMENT_OBJECT(MemoryVMatrix,
 );
 
 MemoryVMatrix::MemoryVMatrix() : data(Mat())
-{}
+{
+  memory_data = data;
+}
 
 MemoryVMatrix::MemoryVMatrix(int l, int w) : VMatrix(l, w)
 {
   data.resize(l,w);
+  memory_data = data;
   defineSizes(data.width(), 0, 0);
 }
 
 MemoryVMatrix::MemoryVMatrix(const Mat& the_data)
   :VMatrix(the_data.length(), the_data.width()), data(the_data)
 {
+  memory_data = the_data;
   defineSizes(the_data.width(), 0, 0);
 }
 
 MemoryVMatrix::MemoryVMatrix(VMat the_data_vm)
-  :VMatrix(the_data_vm->length(), the_data_vm->width()), data(the_data_vm->toMat())
+:VMatrix(the_data_vm->length(), the_data_vm->width()), memory_data(the_data_vm->toMat())
 {
-  defineSizes(the_data_vm->width(), 0, 0);
+  copySizesFrom(the_data_vm);
 }
 
+////////////////////
+// declareOptions //
+////////////////////
 void MemoryVMatrix::declareOptions(OptionList& ol)
 {
   declareOption(ol, "data", &MemoryVMatrix::data, OptionBase::buildoption,
@@ -85,9 +92,13 @@ void MemoryVMatrix::declareOptions(OptionList& ol)
   inherited::declareOptions(ol);
 }
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void MemoryVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(memory_data, copies);
   deepCopyField(data, copies);
   deepCopyField(data_vm, copies);
 }
@@ -99,24 +110,26 @@ void MemoryVMatrix::build_()
 {
   if (data_vm) {
     // Precompute data from data_vm;
-    data = data_vm->toMat();
+    memory_data = data_vm->toMat();
     copySizesFrom(data_vm);
+  } else {
+    memory_data = data;
   }
-  if (this->length() >= 0 && this->length() != data.length()) {
+  if (this->length() >= 0 && this->length() != memory_data.length()) {
     // New length specified.
-    data.resize(this->length(), data.width());
+    memory_data.resize(this->length(), memory_data.width());
   }
-  if (this->width() >= 0 && this->width() != data.width()) {
+  if (this->width() >= 0 && this->width() != memory_data.width()) {
     // New width specified.
-    data.resize(data.length(), this->width());
+    memory_data.resize(memory_data.length(), this->width());
   }
-  if (this->length() < 0 && data.length() >= 0) {
+  if (this->length() < 0 && memory_data.length() >= 0) {
     // Take the length from the data matrix.
-    this->length_ = data.length();
+    this->length_ = memory_data.length();
   }
-  if (this->width() < 0 && data.width() >= 0) {
+  if (this->width() < 0 && memory_data.width() >= 0) {
     // Take the width from the data matrix.
-    this->width_ = data.width();
+    this->width_ = memory_data.width();
   }
 }
 
@@ -129,14 +142,17 @@ void MemoryVMatrix::build()
   build_();
 }
 
+/////////
+// get //
+/////////
 real MemoryVMatrix::get(int i, int j) const
-{ return data(i,j); }
+{ return memory_data(i,j); }
 
 void MemoryVMatrix::put(int i, int j, real value)
-{ data(i,j) = value; }
+{ memory_data(i,j) = value; }
 
 void MemoryVMatrix::getColumn(int i, Vec v) const
-{ v << data.column(i); }
+{ v << memory_data.column(i); }
 
 void MemoryVMatrix::getSubRow(int i, int j, Vec v) const
 {
@@ -146,7 +162,7 @@ void MemoryVMatrix::getSubRow(int i, int j, Vec v) const
             "j=%d, v.length()=%d, width()=%d", j, v.length(), width());
 #endif
   if (v.length() > 0)
-    v.copyFrom(data[i]+j, v.length());
+    v.copyFrom(memory_data[i]+j, v.length());
 }
 
 ////////////
@@ -155,12 +171,18 @@ void MemoryVMatrix::getSubRow(int i, int j, Vec v) const
 void MemoryVMatrix::getRow(int i, Vec v) const
 {
   if (v.length() > 0)
-    v.copyFrom(data[i], width_);
+    v.copyFrom(memory_data[i], width_);
 }
 
+////////////
+// getMat //
+////////////
 void MemoryVMatrix::getMat(int i, int j, Mat m) const
-{ m << data.subMat(i,j,m.length(),m.width()); }
+{ m << memory_data.subMat(i,j,m.length(),m.width()); }
 
+///////////////
+// putSubRow //
+///////////////
 void MemoryVMatrix::putSubRow(int i, int j, Vec v)
 {
 #ifdef BOUNDCHECK
@@ -169,48 +191,51 @@ void MemoryVMatrix::putSubRow(int i, int j, Vec v)
             "j=%d, v.length()=%d, width()=%d", j, v.length(), width());
 #endif
   if (v.length() > 0)
-    v.copyTo(data[i]+j);
+    v.copyTo(memory_data[i]+j);
 }
 
+//////////
+// fill //
+//////////
 void MemoryVMatrix::fill(real value)
-{ data.fill(value); }
+{ memory_data.fill(value); }
 
+
+////////////
+// putRow //
+////////////
 void MemoryVMatrix::putRow(int i, Vec v)
 {
   if (v.length() > 0)
-    v.copyTo(data[i]);
+    v.copyTo(memory_data[i]);
 }
 
+////////////
+// putMat //
+////////////
 void MemoryVMatrix::putMat(int i, int j, Mat m)
-{ data.subMat(i,j,m.length(),m.width()) << m; }
+{ memory_data.subMat(i,j,m.length(),m.width()) << m; }
 
+///////////////
+// appendRow //
+///////////////
 void MemoryVMatrix::appendRow(Vec v)
 { 
-  data.appendRow(v); 
+  memory_data.appendRow(v); 
   length_++;
 }
-/*
-void MemoryVMatrix::write(ostream& out) const
-{
-  writeHeader(out, "MemoryVMatrix");
-  VMatrix::write(out);  // save higher-level stuff
-  writeField(out, "data", data);
-  writeFooter(out, "MemoryVMatrix");
-}
 
-void MemoryVMatrix::oldread(istream& in)
-{
-  readHeader(in, "MemoryVMatrix");
-  VMatrix::oldread(in);  // read higher-level stuff
-  readField(in, "data", data);
-  readFooter(in, "MemoryVMatrix");
-}
-*/
+///////////
+// toMat //
+///////////
 Mat MemoryVMatrix::toMat() const
-{ return data; }
+{ return memory_data; }
 
+////////////
+// subMat //
+////////////
 VMat MemoryVMatrix::subMat(int i, int j, int l, int w)
-{ return new MemoryVMatrix(data.subMat(i,j,l,w)); }
+{ return new MemoryVMatrix(memory_data.subMat(i,j,l,w)); }
 
 /////////
 // dot //
@@ -221,8 +246,8 @@ real MemoryVMatrix::dot(int i1, int i2, int inputsize) const
   if(inputsize>width())
     PLERROR("In MemoryVMatrix::dot inputsize>width()");
 #endif
-  real* v1 = data.rowdata(i1);
-  real* v2 = data.rowdata(i2);
+  real* v1 = memory_data.rowdata(i1);
+  real* v2 = memory_data.rowdata(i2);
   real res = 0.;
   for(int k=0; k<inputsize; k++)
     res += (*v1++) * (*v2++);
@@ -236,7 +261,7 @@ real MemoryVMatrix::dot(int i, const Vec& v) const
     PLERROR("In MemoryVMatrix::dot length of vector v is greater than VMat's width");
 #endif
   if (v.length() > 0) {
-    real* v1 = data.rowdata(i);
+    real* v1 = memory_data.rowdata(i);
     real* v2 = v.data();
     real res = 0.;
     for(int k=0; k<v.length(); k++)
