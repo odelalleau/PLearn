@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.cc,v 1.18 2003/10/15 21:06:31 ducharme Exp $ 
+   * $Id: FuturesTrader.cc,v 1.19 2003/10/15 21:19:39 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.cc */
@@ -98,7 +98,7 @@ void FuturesTrader::build_test() const
     {
       real p_kt = price(k,last_call_train_t);
       // Must not use the margin accessor here!!!
-      margin(k, last_call_train_t) = w_kt*p_kt/leverage;
+      margin(k, last_call_train_t) = fabs(w_kt)*p_kt/leverage;
     }
     else
       margin(k, last_call_train_t) = 0.0;
@@ -193,7 +193,7 @@ void FuturesTrader::trader_test(int t, VMat testset, PP<VecStatsCollector> test_
 
 void FuturesTrader::check_margin(int k, int t) const
 {
-  real v_kt = weight(k,t) * price(k, t);
+  real v_kt = fabs(weight(k,t)) * price(k, t);
   real original_margin = v_kt/leverage;
   real maintenance_margin = original_margin * maintenance_margin_ratio;
   
