@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Dictionary.h,v 1.2 2004/08/13 15:16:34 kermorvc Exp $ 
+   * $Id: Dictionary.h,v 1.3 2004/08/25 14:41:03 kermorvc Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
@@ -56,6 +56,7 @@
 
 #define NO_UPDATE 0
 #define UPDATE 1
+// Default mode for the dicionary
 #define DEFAULT_UPDATE 0
 
 // For words only
@@ -72,6 +73,17 @@
 namespace PLearn {
 using namespace std;
 
+/*! A dictionary is a mapping between a string and and index (int).
+  Depending on the update mode, the dictionay can include an unkown 
+  word when asking for its Id with getId();
+  if update_mode == UPDATE, add the word and return its Id
+  if  update_mode == NO_UPDATE, return Id of OOV (out of vocabulary word)
+
+  When using a WORDNET_WORD_DICTIONARY the word can be stemmed before
+  including in the dictionary :  stem_mode == STEM
+
+*/
+
 class Dictionary: public Object
 {
 
@@ -86,19 +98,18 @@ protected:
 
   // ### declare protected option fields (such as learnt parameters) here
   // ...
-    
-public:
-
-  // ************************
-  // * public build options *
-  // ************************
-
   //! string to int mapping
   map<string,int> string_to_int;
   //! int to string mapping
   map<int,string> int_to_string;
   //! WordNet ontology of the dictionary
-  WordNetOntology *wno;
+  WordNetOntology  *wno;
+
+public:
+
+  // ************************
+  // * public build options *
+  // ************************
   //! type of the dictionary
   int dict_type;
   //! update mode update/no update 
@@ -107,6 +118,8 @@ public:
   int stem_mode;
   //! file_name of dictionary
   string file_name_dict;
+  //! path to ontology
+  string ontology_file_name;
   //! Vector of dictionary
   TVec<string> vector_dict;
   
@@ -140,7 +153,7 @@ public:
     \param up_mode update mode : NO_UPDATE, UPDATE
     \param stem use word stemming : NO_STEM/STEM 
    */
-  Dictionary(WordNetOntology *ont,int ontology_type,bool up_mode=DEFAULT_UPDATE, bool stem =NO_STEM);
+  Dictionary(WordNetOntology *ont,string ontology_name,int ontology_type,bool up_mode=DEFAULT_UPDATE, bool stem =NO_STEM);
     
   
   // ******************
@@ -179,9 +192,12 @@ public:
   //! returns index of OOV_TAG if update_mode = NO_UPDATE
   //! insert the new word otherwise and return its index
   int getId(string symbol);
+
+  //! Const version. Do not insert unknown words
+  int getId(string symbol)const;
   
   //! Gives the symbol from an id of the dictionary
-  string getSymbol(int id);
+  string getSymbol(int id)const;
   
   // simply calls inherited::build() then build_() 
   virtual void build();

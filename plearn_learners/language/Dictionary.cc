@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Dictionary.cc,v 1.2 2004/08/13 15:16:34 kermorvc Exp $ 
+   * $Id: Dictionary.cc,v 1.3 2004/08/25 14:41:01 kermorvc Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
@@ -49,9 +49,11 @@ using namespace std;
   Dictionary::Dictionary()
     :
     dict_type(-1),
-    update_mode(0),
+    update_mode(0), 
     stem_mode(0),
-    file_name_dict("")
+    file_name_dict(""),
+    ontology_file_name(""),
+    vector_dict(0)
   {
     // ### You may or may not want to call build_() to finish building the object
     // build_();
@@ -73,11 +75,12 @@ using namespace std;
     vector_dict=symbols;
   }
 
-  Dictionary::Dictionary(WordNetOntology *ont,int ontology_type,bool up_mode, bool stem)
+  Dictionary::Dictionary(WordNetOntology *ont,string ontology_name,int ontology_type,bool up_mode, bool stem)
   {
     setStemMode(stem);
     setUpdateMode(up_mode);
     setDictionaryType(ontology_type);
+    ontology_file_name=ontology_name;
     wno=ont;
   }
 
@@ -85,31 +88,19 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(Dictionary,
     "Mapping string->int and int->string",
-    "MULTI LINE\nHELP"
-);
+    "Dictionary is a mapping between string and int. This mapping can be build automatically \n by the dictionary object (as it is done in StrTableVMatrix) but can also be specified.  \n It is usefull if you want several matrices which share the same mapping. There are 3    \n to specify a mapping as set by the dic_type parameter. with a file (file_name_dict),    \n with a vector (vector_dict) and with an ontology (ontology). \n The function getId  gives the id of a symbol in the dictionary. If the symbol is not in \n the dictionary and  update_mode = NO_UPDATE, it returns index of OOV_TAG. if the symbol \n is not update_mode = UPDATE, it inserts the new word and return its index.");
 
 void Dictionary::declareOptions(OptionList& ol)
 {
-  // ### Declare all of this object's options here
-  // ### For the "flags" of each option, you should typically specify  
-  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-  // ### OptionBase::tuningoption. Another possible flag to be combined with
-  // ### is OptionBase::nosave
-
-  // ### ex:
-  // declareOption(ol, "myoption", &Dictionary::myoption, OptionBase::buildoption,
-  //               "Help text describing this option");
-  // ...
-
-  // Now call the parent class' declareOptions
-
-  declareOption(ol, "dict_type", &Dictionary::dict_type, OptionBase::buildoption, "type of the dictionary");
+  declareOption(ol, "dict_type", &Dictionary::dict_type, OptionBase::buildoption, "type of the dictionary : \n\tVECTOR_DICTIONARY\t1\n\tFILE_DICTIONARY\t2\n\tWORDNET_WORD_DICTIONARY\t3\n\tWORDNET_SENSE_DICTIONARY\t4");
   declareOption(ol, "file_name_dict", &Dictionary::file_name_dict, OptionBase::buildoption, "file name for the dictionary");
+  declareOption(ol, "ontology_file_name", &Dictionary::ontology_file_name, OptionBase::buildoption, "path to the ontology");
   declareOption(ol, "vector_dict", &Dictionary::vector_dict, OptionBase::buildoption, "vector for the dictionary");
-  declareOption(ol, "update_mode", &Dictionary::update_mode, OptionBase::buildoption, "update_mode : 0(no_update)/1(update)");
-  
-
-  inherited::declareOptions(ol);
+  declareOption(ol, "update_mode", &Dictionary::update_mode, OptionBase::buildoption, "update_mode : 0(no_update)/1(update). Default is no_update");
+  declareOption(ol, "string_to_int", &Dictionary::string_to_int, OptionBase::buildoption, "string to int mapping");
+  declareOption(ol, "int_to_string", &Dictionary::int_to_string, OptionBase::buildoption, "int to string mapping");
+  // Problem : WordNet onlogy is not a PLearn::Object. declareOption(ol, "ontology", &Dictionary::wno, OptionBase::nosave, "pointer to the ontology");
+    inherited::declareOptions(ol);
 }
 
 void Dictionary::build_()
@@ -127,8 +118,6 @@ void Dictionary::build_()
   // set the dictionary in update mode to insert the words
   update_mode =  UPDATE;
   string line;
-  
-
   if(dict_type == FILE_DICTIONARY){
     ifstream ifs(file_name_dict.c_str());
     if (!ifs) PLERROR("Cannot open file %s", file_name_dict.c_str());
@@ -138,9 +127,17 @@ void Dictionary::build_()
       getId(line);
       }
     ifs.close();
+    if(saved_up_mode==NO_UPDATE){
+      // the dictionary must contain oov
+      getId(OOV_TAG);
+    }
   }else if(dict_type == VECTOR_DICTIONARY){
     for(int i=0; i<vector_dict.size(); i++){
       getId(vector_dict[i]);
+    }
+    if(saved_up_mode==NO_UPDATE){
+      // the dictionary must contain oov
+      getId(OOV_TAG);
     }
   }else  if(dict_type == WORDNET_WORD_DICTIONARY){
     // Add OOV if necessary
@@ -152,15 +149,8 @@ void Dictionary::build_()
   }else{
     PLERROR("Bad dictionary type %d",dict_type);
   }
-  
   // restore update mode;
   update_mode=saved_up_mode;
-  if(update_mode==NO_UPDATE){
-    // the dictionary must contain oov
-    getId(OOV_TAG);
-  }
-  
-
 }
 
 // ### Nothing to add here, simply calls build_
@@ -172,17 +162,13 @@ void Dictionary::build()
 
 int Dictionary::size()
 {
-  if(dict_type == VECTOR_DICTIONARY || dict_type == FILE_DICTIONARY)
-  {
+  if(dict_type == VECTOR_DICTIONARY || dict_type == FILE_DICTIONARY){
     return int_to_string.size();
   }
-
-  if(dict_type == WORDNET_WORD_DICTIONARY)
-  {
+    if(dict_type == WORDNET_WORD_DICTIONARY){
     return wno->getVocSize();
   }
-
-  PLERROR("Dictionary is of incorrect type %d", dict_type);
+    PLERROR("Dictionary is of incorrect type %d", dict_type);
   return -1;
 }
 
@@ -209,37 +195,52 @@ int Dictionary::getId(string symbol)
   // If the symbol is not in the dictionary, 
   // returns index of OOV_TAG if update_mode = NO_UPDATE
   // insert the new word otherwise and return its index
-
+  int index;
   if(update_mode== UPDATE){
     if(dict_type == VECTOR_DICTIONARY || dict_type == FILE_DICTIONARY)
       {
 	if(string_to_int.find(symbol) == string_to_int.end()){
 	  // word not found, add it
-	  int index=string_to_int.size();
+	  index=string_to_int.size();
+	  // update max_id if necessary
+	  //if(index>max_id)max_id=index;
+	  // set the maps
 	  string_to_int[symbol] = index;
 	  int_to_string[index] = symbol;
-	  cout << "add "<< symbol <<endl;
 	}
-
 	return string_to_int[symbol];
       }
-
     if(dict_type == WORDNET_WORD_DICTIONARY){
       if(!wno->containsWord(symbol)){
+	// word not found in the ontology, add it
 	wno->extractWord(symbol, ALL_WN_TYPE, true, true, false);
-	}
-      return wno->getWordId(symbol);
+      }
+      if(string_to_int.find(symbol) == string_to_int.end()){
+	index = wno->getWordId(symbol);
+      	// word not found in the map, store it
+	string_to_int[symbol] = index;
+	int_to_string[index] = symbol;
+      }
+      return string_to_int[symbol];
     }
     if(dict_type == WORDNET_SENSE_DICTIONARY){
       vector<string> tokens = split(symbol, "/");
       if(tokens.size()!=2)PLERROR("Badly formed word for sense extraction %s",symbol.c_str());
+      //  word not found in the ontology, add it
       if(!wno->containsWord(tokens[0])){
 	wno->extractWord(symbol, ALL_WN_TYPE, true, true, false);
       }
-      return wno->getSynsetIDForSenseKey( wno->getWordId(tokens[0]),tokens[1]);
+      if(string_to_int.find(symbol) == string_to_int.end()){
+	// sense not found in the map, store it
+	index =wno->getSynsetIDForSenseKey( wno->getWordId(tokens[0]),tokens[1]);
+	string_to_int[symbol] = index;
+	int_to_string[index] = symbol;
+      }
+      return index;
     }
     PLERROR(" Dictionary::getId : bad dictionary type %d",dict_type);
   }else{
+    // NO update mode
     if(dict_type == VECTOR_DICTIONARY || dict_type == FILE_DICTIONARY){
       if(string_to_int.find(symbol) == string_to_int.end()){
 	// word not found, return oov
@@ -249,26 +250,61 @@ int Dictionary::getId(string symbol)
       }
     }
     if(dict_type == WORDNET_WORD_DICTIONARY){
-      return wno->getWordId(symbol);
+      if(string_to_int.find(symbol) == string_to_int.end()){
+	index = wno->getWordId(symbol);
+      	// word not found in the map, store it
+	string_to_int[symbol] = index;
+	int_to_string[index] = symbol;
+      }
+      return string_to_int[symbol];
     }
     if(dict_type == WORDNET_SENSE_DICTIONARY){
       vector<string> tokens = split(symbol, "/");
       if(tokens.size()!=2)PLERROR("Badly formed word for sense extraction %s",symbol.c_str());
-      return wno->getSynsetIDForSenseKey( wno->getWordId(tokens[0]),tokens[1]);
+      if(string_to_int.find(symbol) == string_to_int.end()){
+	// sense not found in the map, store it
+	index =wno->getSynsetIDForSenseKey( wno->getWordId(tokens[0]),tokens[1]);
+	string_to_int[symbol] = index;
+	int_to_string[index] = symbol;
+      }
+      return index;
     }
     PLERROR(" Dictionary::getId : bad dictionary type %d",dict_type);
   }
   return 1;  
 }
 
-string Dictionary::getSymbol(int id)
+int Dictionary::getId(string symbol)const
+{
+  // Const version
+  // Gives the id of a symbol in the dictionary
+  // If the symbol is not in the dictionary, 
+  // returns index of OOV_TAG
+  if(dict_type == VECTOR_DICTIONARY || dict_type == FILE_DICTIONARY || dict_type == WORDNET_WORD_DICTIONARY || dict_type == WORDNET_WORD_DICTIONARY){
+    if(string_to_int.find(symbol) == string_to_int.end()){
+      // word not found, return oov
+      if(string_to_int.find(OOV_TAG)==string_to_int.end()){ 
+	PLERROR("Dictionary::getId can't find OOV_TAG and dictionary is const");
+      }else{
+	return (string_to_int.find(OOV_TAG))->second;
+      }
+    }else{
+      return (string_to_int.find(symbol))->second;
+    }
+  }
+  PLERROR(" Dictionary::getId : bad dictionary type %d",dict_type);
+  return 1;  
+}
+
+string Dictionary::getSymbol(int id)const
 {
   if(dict_type == VECTOR_DICTIONARY || dict_type == FILE_DICTIONARY)
   {
-    if(id >= 0 && id < (int)int_to_string.size())
-      return int_to_string[id];
-    else
+    if(id >= 0 && id < (int)int_to_string.size()){
+      return (int_to_string.find(id))->second;
+    }else{
       PLERROR("Entry id is doesn't satisfy 0 <= %d < %d", id, int_to_string.size());
+    }
   }
 
   if(dict_type == WORDNET_WORD_DICTIONARY)
@@ -280,20 +316,12 @@ string Dictionary::getSymbol(int id)
   return "";
 }
 
-
-
 void Dictionary::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
-
-  // ### Remove this line when you have fully implemented this method.
-  //PLERROR("Dictionary::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+  deepCopyField(string_to_int, copies);
+  deepCopyField(int_to_string, copies);
+  deepCopyField(vector_dict, copies);
 }
 
 } // end of namespace PLearn
