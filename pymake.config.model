@@ -18,8 +18,8 @@ elif sys.version.find('Red Hat Linux 7.2')>=0:
 else:
     host_os = '?'
 
-rshcommand= 'ssh'
-
+#rshcommand= 'ssh'
+rshcommand= 'rsh'
 
 # List of directories in which to look for .h includes and corresponding .cc files to compile and link with your program
 # (no need to include the current directory, it is implicit)
@@ -121,23 +121,24 @@ optionalLibrary( name = 'arpack',
 
 optionalLibrary( name = 'lapack',
                  triggers = 'lapack_proto.h',
-                 linkeroptions = '-lg2c -llapack /usr/lib/gcc-lib/i586-mandrake-linux-gnu/3.0.4/libg2c.a' 
-                 #                 linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl_lapack'
+                 linkeroptions = ' -llapack ' 
+                 #linkeroptions = '-lg2c -llapack /usr/lib/gcc-lib/i586-mandrake-linux-gnu/3.0.4/libg2c.a' 
+                 #linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl_lapack'
                  )
 
-#optionalLibrary( name = 'blas',
-#                 triggers = ['blas_proto.h','lapack_proto.h'],
-#                 linkeroptions = '-lblas'
+optionalLibrary( name = 'blas',
+                 triggers = ['blas_proto.h','lapack_proto.h'],
+                 linkeroptions = '-lblas'
 #                 linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl_p4 -lmkl_vml_p4 -lpthread'
 #                 linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl_p3 -lmkl_vml_p3 -lpthread'
 #                 linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl -lvml -lpthread'
 #                 linkeroptions = '-L/u/lisa/local/linux-i386/lib/atlas_athlon256 -lcblas -lf77blas -latlas'
-#                 )
+                 )
 
-#optionalLibrary( name = 'g2c',
-#                 triggers = ['blas_proto.h','lapack_proto.h'],
-#                 linkeroptions = '-lg2c'
-#                 )
+optionalLibrary( name = 'g2c',
+                 triggers = ['blas_proto.h','lapack_proto.h'],
+                 linkeroptions = '-lg2c'
+                 )
 
 optionalLibrary( name = 'ncurses',
                  triggers = 'curses.h',
