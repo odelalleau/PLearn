@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.cc,v 1.13 2003/05/03 05:02:18 plearner Exp $
+   * $Id: GradientOptimizer.cc,v 1.14 2003/05/05 13:00:29 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -218,9 +218,9 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
   }
 
   meancost.clear();
-  int niter = nstages - stage; // the number of iterations to perform
+  int stage_max = stage + nstages; // the stage to reach
 
-  for (; !early_stop && stage<nstages; stage++) {
+  for (; !early_stop && stage<stage_max; stage++) {
 
     // Take into account the learning rate decrease
     // TODO Incorporate it into other learning rate adaptation kinds ?
@@ -267,7 +267,7 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
     stats_coll.update(cost->value);
   }
 
-  meancost /= real(niter);
+  meancost /= real(nstages);
   cout << stage << " : " << meancost << endl;
   early_stop = measure(stage+1,meancost);
 

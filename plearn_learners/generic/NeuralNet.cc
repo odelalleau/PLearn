@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeuralNet.cc,v 1.7 2003/04/29 19:48:09 tihocan Exp $
+   * $Id: NeuralNet.cc,v 1.8 2003/05/05 13:00:25 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeuralNet.h */
@@ -354,10 +354,10 @@ void NeuralNet::train(VMat training_set)
   Var totalcost = meanOf(training_set,paramf, nsamples);
   optimizer->setToOptimize(params, totalcost);
   optimizer->addMeasurer(*this);
+  optimizer->nstages = l / nsamples;
   optimizer->build();
   bool early_stop = false;
   for (int e=0; !early_stop && e<nepochs; e++) { // launch optimizeN every epoch
-    optimizer->nstages = optimizer->stage + l / nsamples;
     early_stop = optimizer->optimizeN(stats_coll);
   }
   output_and_target_to_cost->recomputeParents();

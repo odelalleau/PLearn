@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.h,v 1.10 2003/05/01 15:22:28 tihocan Exp $
+   * $Id: GradientOptimizer.h,v 1.11 2003/05/05 13:00:29 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -135,7 +135,6 @@ using namespace std;
   private:
 
     void build_() {
-      stage = 0;
       early_stop = false;
       learning_rate = start_learning_rate;
       SumOfVariable* sumofvar = dynamic_cast<SumOfVariable*>((Variable*)cost);

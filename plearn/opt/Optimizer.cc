@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.cc,v 1.5 2003/05/03 05:02:18 plearner Exp $
+   * $Id: Optimizer.cc,v 1.6 2003/05/05 13:00:29 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -84,6 +84,7 @@ void Optimizer::build_()
     proppath = propagationPath(params, update_for_measure&(VarArray)cost);
   VarArray path_from_all_sources_to_direct_parents = propagationPathToParentsOfPath(params, cost);
   path_from_all_sources_to_direct_parents.fprop();
+  stage = 0;
 }
 
 void Optimizer::declareOptions(OptionList& ol)
@@ -98,7 +99,7 @@ void Optimizer::declareOptions(OptionList& ol)
                 "    call measure <every> <nupdates> iterations saving the results in the <filename>. \n");
 
   declareOption(ol, "nstages", &Optimizer::nstages, OptionBase::buildoption, 
-                "    number of iterations to reach on the next ""optimizeN"" call\n");
+                "    number of iterations to perform on the next ""optimizeN"" call\n");
 
   inherited::declareOptions(ol);
 }

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.h,v 1.7 2003/05/01 15:22:29 tihocan Exp $
+   * $Id: Optimizer.h,v 1.8 2003/05/05 13:00:29 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -72,7 +72,7 @@ using namespace std;
       Var cost;
       VarArray proppath; //forward and/or backward
       int nupdates; // deprecated  TODO Remove ?
-      int nstages; //!< number of steps to reach when calling optimizeN
+      int nstages; //!< number of steps to perform when calling optimizeN
       int stage;   //!< current number of steps performed
 
       bool early_stop;
