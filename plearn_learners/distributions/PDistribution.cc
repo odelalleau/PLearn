@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.cc,v 1.11 2004/02/26 18:04:45 nova77 Exp $ 
+   * $Id: PDistribution.cc,v 1.12 2004/03/03 18:13:36 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.cc */
@@ -114,14 +114,16 @@ void PDistribution::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 int PDistribution::outputsize() const
 {
   int l=0;
-  int targetsize_ = train_set->targetsize();
+  if (!train_set && targetsize_<0)
+    PLERROR("PDistribution::outputsize: train_set was not set and targetsize was not set!");
+  int target_size = targetsize_<0?train_set->targetsize():targetsize_;
   for (unsigned int i=0;i<outputs_def.length();i++)
     if (outputs_def[i]=='L' || outputs_def[i]=='D' || outputs_def[i]=='C' || outputs_def[i]=='S')
       l+=n_curve_points;
     else if (outputs_def[i]=='e')
-      l+=targetsize_;
+      l+=target_size;
     else if (outputs_def[i]=='v') // by default assume variance is full nxn matrix 
-      l+=targetsize_*targetsize_;
+      l+=target_size*target_size;
     else l++;
   return l;
 }

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.24 2004/02/29 16:44:05 nova77 Exp $
+   * $Id: fileutils.cc,v 1.25 2004/03/03 18:13:30 yoshua Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -606,11 +606,16 @@ string readFileAndMacroProcess(const string& filepath, map<string, string>& vari
 string readAndMacroProcess(istream& in, map<string, string>& variables)
 {
   string text; // the processed text to return
-
+  bool inside_a_quoted_string=false; // inside a quoted string we don't skip characters following a #
+  int c=EOF,last_c=EOF;
   while(in)
     {
-      int c = in.get();
-      if(c=='#')  // It's a comment: skip rest of line
+      last_c = c;
+      c = in.get();
+      if (last_c!='\\' && c=='"') // we find either the beginning or end of a quoted string
+        inside_a_quoted_string = !inside_a_quoted_string; // flip status
+
+      if(!inside_a_quoted_string && c=='#')  // It's a comment: skip rest of line
         {
           while(c!=EOF && c!='\n' && c!='\r')
             c = in.get();
