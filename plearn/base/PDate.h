@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: PDate.h,v 1.3 2003/10/30 22:16:35 plearner Exp $
+   * $Id: PDate.h,v 1.4 2003/11/26 20:54:36 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -141,6 +141,20 @@ inline int operator-(const PDate& to_date, const PDate& from_date)
   return to_date.toJulianDay() - from_date.toJulianDay();
 }
 
+//! add a number of days
+inline PDate operator+(const PDate& pdate, int ndays)
+{
+  return PDate(pdate.toJulianDay()+ndays);
+}
+
+//! subtract a number of days
+//! add a number of days
+inline PDate operator-(const PDate& pdate, int ndays)
+{
+  return PDate(pdate.toJulianDay()-ndays);
+}
+
+
 inline ostream& operator<<(ostream& os, const PDate& date)
 {
   os << date.info();
@@ -150,7 +164,11 @@ inline ostream& operator<<(ostream& os, const PDate& date)
 //! converts date to float: ex: September 29 1972: 720929; December 25 2002: 1021225
 //! Also converts missing date to missing flat value and vice-versa.
 float date_to_float(const PDate& t);
+
 PDate float_to_date(float f);
+
+inline PDate float_to_date(double d) 
+{ return float_to_date(float(d)); }
 
 %> // end of namespace PLearn
 
