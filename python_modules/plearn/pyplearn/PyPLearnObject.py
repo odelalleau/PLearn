@@ -17,6 +17,9 @@ def frozen(set):
             raise AttributeError("You cannot add attributes to %s" % self)
     return set_attr
 
+class frozen_metaclass( type ):
+    __setattr__ = frozen(type.__setattr__)
+    
 def members( instance, predicate=(lambda x,y: True) ):
     return dict([ (x,y)
                   for (x,y) in inspect.getmembers(instance)
@@ -172,9 +175,8 @@ class PyPLearnObject:
         
     ###########################################################
     ### PyPLearnObject feature: as a frozen object
-    __setattr__=frozen(object.__setattr__)
-    class __metaclass__(type):
-        __setattr__=frozen(type.__setattr__)
+    __setattr__   = frozen(object.__setattr__)
+    __metaclass__ = frozen_metaclass
 
     def set_attribute(self, key, value):
         self._frozen = False
@@ -248,6 +250,44 @@ class PyPLearnObject:
                    str(expected_type), type(att)      )
                 )
     ###########################################################                
+
+    def __lshift__(self, other):
+        cls = self.__class__
+        if not isinstance(other, cls):
+            raise TypeError( "%s type expected in __lshift__: %s received."
+                             % (cls, type(other))
+                             )
+
+        ## Unfreeze the object and keep track of the internal state
+        frozen = self._frozen
+        self._frozen = False
+        
+        ## The default values for this instance
+        defaults  = public_members(cls.Defaults)
+
+        ## The current values for the other object
+        othervals = public_members( other )
+
+        ## For each public members
+        for (member, otherval) in othervals.iteritems():
+
+            default = None
+            if defaults.has_key(member):
+                default = defaults[member]
+
+            override = None
+            if hasattr(self, member):
+                override = getattr(self, member)
+
+            ## If the default value was not overriden
+            if override == default:
+                ## Then override it with the other
+                ## object's override
+                setattr(self, member, otherval)
+
+        ## Set back to the internal state
+        self._frozen = frozen
+        return self
 
 
 

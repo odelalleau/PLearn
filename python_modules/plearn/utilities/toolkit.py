@@ -170,7 +170,19 @@ def quote(s):
 def short_doc(obj):
     return doc(obj, True)
 
-class default_roperators:
+
+def left_from_right(get):
+    def get_attr(self, rop_name):
+        if not rop_name in default_roperators._rop_names:
+            raise AttributeError
+        if hasattr(self, rop_name):
+            return get(self, rop_name)
+        lop_name = rop_name[0:2] + rop_name[3:]            
+        return get(self, lop_name)
+    return get_attr
+
+
+class default_roperators_metaclass( type ):
     _rop_names = [
         '__radd__', '__rsub__', '__rmul__', '__rdiv__',
         '__rtruediv__', '__rfloordiv__', '__rmod__',
@@ -178,20 +190,33 @@ class default_roperators:
         '__rrshift__', '__rand__', '__rxor__', '__ror__'
         ]
 
-    def __getattr__(self, rop_name):
-        if rop_name in default_roperators._rop_names:
-            lop_name = rop_name[0:2] + rop_name[3:]            
-            lop      = getattr(self, lop_name)            
-            return lop
+    def __init__(cls, name, bases, dict):
+        frozen = None
+        if hasattr(cls, '_frozen'):
+            frozen      = cls._frozen
+            cls._frozen = False
+            
+        super(default_roperators_metaclass, cls).__init__(name, bases, dict)
+        for rop_name in cls._rop_names:
+            lop_name = rop_name[0:2] + rop_name[3:]
+            if ( not dict.has_key(rop_name)
+                 and dict.has_key(lop_name) ):
+                setattr( cls, rop_name, dict[lop_name] )
 
-        raise AttributeError
+        if frozen is not None:
+            cls._frozen = frozen
 
+                
+class default_roperators(object):
+    __metaclass__ = default_roperators_metaclass
+                
 if __name__ == "__main__":
     class lop( default_roperators ):
         def test(cls):
             t = cls()
             print t + 10 
             print
+
             print 10 + t
             print
             try:
@@ -203,6 +228,7 @@ if __name__ == "__main__":
         test = classmethod(test)
 
         def __init__(self, val=0):
+            default_roperators.__init__(self)
             self.val = val
 
         def __str__(self):
@@ -213,3 +239,63 @@ if __name__ == "__main__":
             return lop( self.val + val )
 
     lop.test()
+
+##     class other_super:
+##         def __getattr__(self, k):
+##             def p(key):
+##                 print key
+##             return p
+
+##     class lop_first( default_roperators, other_super ):
+##         def test(cls):
+##             t = cls()
+##             print t + 10 
+##             print
+##             print 10 + t
+##             print
+##             try:
+##                 t << 10
+##                 print "SHOULD NOT WORK!!!"
+##             except Exception:
+##                 print "Failed as expected."
+
+##         test = classmethod(test)
+
+##         def __init__(self, val=0):
+##             self.val = val
+
+##         def __str__(self):
+##             return "lop_first(%d)"%self.val
+
+##         def __add__(self, val):
+##             print val
+##             return lop_first( self.val + val )
+
+##     lop_first.test()
+
+##     class lop_second( other_super, default_roperators ):
+##         def test(cls):
+##             t = cls()
+##             print t + 10 
+##             print
+##             print 10 + t
+##             print
+##             try:
+##                 t << 10
+##                 print "SHOULD NOT WORK!!!"
+##             except Exception:
+##                 print "Failed as expected."
+
+##         test = classmethod(test)
+
+##         def __init__(self, val=0):
+##             self.val = val
+
+##         def __str__(self):
+##             return "lop_second(%d)"%self.val
+
+##         def __add__(self, val):
+##             print val
+##             return lop_second( self.val + val )
+
+##     lop_second.test()
