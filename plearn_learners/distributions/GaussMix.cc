@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.37 2004/05/27 14:28:16 tihocan Exp $ 
+ * $Id: GaussMix.cc,v 1.38 2004/05/31 12:58:51 tihocan Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -912,6 +912,9 @@ void GaussMix::train()
   if (restore_flags) {
     setConditionalFlags(old_flags);
   }
+  // Clear 'log_p_j_x', because it may be filled with '-inf' after the initial
+  // build: saving it would cause PLearn to crash when reloading the object.
+  log_p_j_x.clear();
   // Options have changed: build is necessary.
   build();
 }
