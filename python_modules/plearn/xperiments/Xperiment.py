@@ -1,24 +1,17 @@
 import os, time
 import plearn.utilities.toolkit as toolkit
 
-from plearn.utilities.toolkit  import date_time_string
-from plearn.utilities.Bindings import *
+from plearn.pyplearn.pyplearn       import PLearnRepr, generate_expdir
+from plearn.pyplearn.PyPLearnObject import PyPLearnObject
+from plearn.utilities.Bindings      import *
 
 __all__ = [
     ## Helper functions
-    "generate_expdir",
     "option_value_split",
 
     ## Main class
     "Xperiment"
     ]
-
-def generate_expdir( ):
-    expdir = Xperiment.expdir_prefix
-    if os.getenv('PyTest', '') != 'Running':                        
-        expdir = '%s_%s' % ( expdir, date_time_string() )
-
-    return expdir
 
 def option_value_split( s, sep="=", rhs_casts=[] ):
     """Returns a (lhs, rhs) pair given I{sep}."""
@@ -44,7 +37,7 @@ def option_value_split( s, sep="=", rhs_casts=[] ):
 
     return (lhs, rhs)
 
-class Xperiment:
+class Xperiment(PyPLearnObject):
     ## The order is important! See rhs() implementation.
     rhs_casts       = [ int , float ]
     expdir_prefix   = "expdir" 
@@ -62,7 +55,7 @@ class Xperiment:
 
         for fname in dirlist:
             if fname.startswith( cls.expdir_prefix ):
-                xperiments.append( cls( fname , expkey ) )            
+                xperiments.append( cls( path = fname , expkey = expkey ) )            
             xperiments.sort()
 
         cls._cached_experiments = \
@@ -73,7 +66,19 @@ class Xperiment:
         return cls._cached_experiments            
     load_experiments = classmethod( load_experiments )
 
-    def match( cls, expkey=[], dirlist=None ):
+    def load_filed_experiments( cls, filename ):
+        if not os.path.exists( filename ):            
+            raise AssertionError( "Xperiments.load_filed_experiments() expects a "
+                                  "valid file; %s is not" % filename
+                                  )
+        
+        exps = open( filename, "r" )
+        cls._cached_experiments = eval( exps.read() )
+        exps.close()
+        return cls._cached_experiments
+    load_filed_experiments = classmethod( load_filed_experiments )
+
+    def match( cls, expkey=[] ):
         if cls._cached_experiments is None:
             raise AssertionError("Xperiment.load_experiments must be called before Xperiment.match.")
                         
@@ -81,11 +86,24 @@ class Xperiment:
                  if exp.is_matched( expkey )
                  ]    
     match = classmethod( match )
-            
-    def __init__( self, path, expkey=[] ):
-        self.path  = path
-        self.infos = self.parse_file( os.path.join(path, self.metainfos_fname), expkey )
 
+    def save_cache( cls, filename ):
+        cache_file = open( filename, "w" )
+        cache_file.write( PLearnRepr.repr(cls._cached_experiments) )
+        cache_file.close()
+    save_cache = classmethod( save_cache )
+
+    class Defaults:
+        path   = None
+        infos  = None
+        expkey = None
+            
+    def __init__( self, **overrides ):
+        PyPLearnObject.__init__( self, **overrides )
+
+        if self.infos is None:            
+            self.infos = self.parse_file( os.path.join(self.path, self.metainfos_fname), self.expkey )
+        
     def is_matched( self, expkey ):
         match_predicate = lambda key,val: val is None or self.infos[key]==val
         for string_key in expkey:
@@ -119,7 +137,7 @@ class Xperiment:
             infos = subset
 
         return infos
-               
+
     def __cmp__( self, other ):
         if self.path == other.path:
             return 0

@@ -140,6 +140,32 @@ class DirectorySplittedOracle( ArgumentsOracle ):
     def reset( self ):
         self.underlying_oracle.reset()
 
+class ExplicitListOracle( ArgumentsOracle ):
+    def __init__( self, argument_names, argument_values ):
+        """Iterating an explicit list of parameters given a list of argument names.
+
+        @param argument_values: Each element must have the same length than argument_names.        
+        """
+        self.argnames  = argument_names
+        self.argvalues = argument_values
+        self.cursor    = 0
+
+    def next( self ):
+        if self.cursor == len(self.argvalues):
+            raise StopIteration
+
+        names     = self.argnames
+        values    = self.argvalues[ self.cursor ]
+        arguments = [ "%s%s%s" % (names[a], self.name_value_joining_token, values[a])
+                      for a in range( len(names) )
+                      ]
+
+        self.cursor += 1
+        return self.arguments_joining_token.join( arguments )
+                
+    def reset( self ):
+        self.cursor = 0
+
 class PredicateOracle( ArgumentsOracle ):
     def __init__( self, arguments_oracle, predicate ):                
         self.underlying_oracle = arguments_oracle

@@ -1,4 +1,4 @@
-__cvs_id__ = "$Id: Bindings.py,v 1.4 2005/03/16 22:00:43 dorionc Exp $"
+__cvs_id__ = "$Id: Bindings.py,v 1.5 2005/03/29 16:54:36 dorionc Exp $"
 
 from toolkit import quote_if, doc
 
@@ -34,6 +34,9 @@ class Bindings:
             self.__setitem__( *pair )
 
     ## Bindings added methods ########################################
+    def plearn_repr( self ):
+        """Not an actual plearn representation!"""
+        return "Bindings( %s )" % str( self.items() )
 
     ## Emulating containers ##########################################    
     def __len__(self):
