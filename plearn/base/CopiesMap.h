@@ -1,21 +1,25 @@
 
-
 #ifndef CopiesMap_INC
 #define CopiesMap_INC
-
-//! Macro to define deep copy for types that actually do not require
-//! any deep copy (such as int, real, etc.).
-#define NODEEPCOPY(TYPE)                              \
-      inline void deepCopyField(TYPE&, CopiesMap&) {}
 
 #include <map>
 #include <string>
 #include "plerror.h"    //!< For PLWARNING.
 
+//! Macro to define deep copy for types that actually do not require
+//! any deep copy (such as int, real, etc.).
+//! Since the copy constructor of an array does copy the content of
+//! its storage, deep copying an array of such types is not necessary
+//! either.
+#define NODEEPCOPY(TYPE)                                      \
+      inline void deepCopyField(TYPE&, CopiesMap&) {}         \
+      inline void deepCopyField(Array<TYPE>&, CopiesMap&) {}
+
 namespace PLearn {
 
 class VMField;
 class VMFieldStat;
+template <class T> class Array;
 
 using namespace std;
 
