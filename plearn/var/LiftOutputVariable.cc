@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: LiftOutputVariable.cc,v 1.3 2004/02/12 15:45:39 tihocan Exp $
+   * $Id: LiftOutputVariable.cc,v 1.4 2004/02/12 21:11:01 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -90,7 +90,8 @@ void LiftOutputVariable::fprop()
 void LiftOutputVariable::bprop()
 {
   // TODO Not really sure what to do here, bprop shouldn't be used anyway.
-  PLWARNING("In LiftOutputVariable::bprop - You should not backprop on a LiftOutputVariable");
+  // Actually it IS called, should investigate why and what it does.
+  // PLWARNING("In LiftOutputVariable::bprop - You should not backprop on a LiftOutputVariable");
   real gr = *gradientdata;
   for (int i=0; i<input1->size(); i++)
   {
