@@ -46,7 +46,15 @@
 #include <iomanip>
 #include <typeinfo>
 #include <algorithm>
+
+// norman: added check for WIN32
+#ifndef WIN32
 #include <unistd.h>			     //!<  for lseek, read, write, close
+#else
+#include <assert.h>
+#include <io.h>
+#endif
+
 #include <fcntl.h>			     //!<  for open
 #include <errno.h>			     //!<  for errno
 #include <stdlib.h>			     //!<  for ptrdiff_t
@@ -60,6 +68,17 @@
 #include "PDate.h"			     //!<  for PDate
 #include "Hash.h"
 #include "TinyVector.h"
+
+#ifdef WIN32
+// norman: potentially dangerous if there is a function called with the same name in this
+//         file. Beware!
+#define open _open
+#define close _close
+#define lseek _lseek
+#define read _read
+#define write _write
+#define unlink _unlink
+#endif
 
 namespace PLearn {
 using namespace std;
@@ -1362,7 +1381,7 @@ void SimpleDB<KT,QR>::addRow(const Row& row)
   if (writtensize == -1) {
     //!  Preserve database integrity by truncating from the point where we
     //!  should have started writing
-#ifdef _MINGW_
+#if defined(_MINGW_) || defined(WIN32)
     PLWARNING("could not truncate database file, end may be corrupted!");
 #else
     ftruncate(fd, curpos);
@@ -1446,6 +1465,7 @@ Row& SimpleDB<KT,QR>::getInRow(RowNumber n, Row& row) const
   if(row_size != row.size())
     PLERROR("In getInRow row_size!=row_size()");
   int fd = seekToRow(n);
+
   int size_read = ::read(fd, row.raw(), row_size);
   if (size_read == -1)
     PLERROR("Could not read from database: %s",strerror(errno));
@@ -1874,8 +1894,22 @@ QR SimpleDB<KT,QR>::findEqualLinear(
   return qr;
 }
 
+<<<<<<< SimpleDB.h
+} // end of namespace PLearn
+
+#ifdef WIN32
+#undef open
+#undef close
+#undef lseek
+#undef read
+#undef write
+#undef unlink
+#endif
+
+=======
 } // end of namespace PLearn
    
+>>>>>>> 1.5
 
 #endif
 
