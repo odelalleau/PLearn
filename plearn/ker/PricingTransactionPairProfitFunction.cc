@@ -36,24 +36,16 @@
 
 
 /* *******************************************************      
-   * $Id: PricingTransactionPairProfitFunction.cc,v 1.3 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: PricingTransactionPairProfitFunction.cc,v 1.4 2004/04/07 23:16:58 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "PricingTransactionPairProfitFunction.h"
 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(PricingTransactionPairProfitFunction, "ONE LINE DESCR", "NO HELP");
-
-string PricingTransactionPairProfitFunction::info() const { return "pricing_pair_profit"; }
 
 
 real PricingTransactionPairProfitFunction::evaluate(const Vec& output, const Vec& target) const
@@ -68,38 +60,6 @@ real PricingTransactionPairProfitFunction::evaluate(const Vec& output, const Vec
 }
 
 
-void PricingTransactionPairProfitFunction::write(ostream& out) const
-{
-  writeHeader(out,"PricingTransactionPairProfitFunction");
-  writeField(out,"multiplicative_cost",multiplicative_cost);
-  writeField(out,"addititive_cost",additive_cost);
-  writeField(out,"per_unit_cost",per_unit_cost);
-  writeFooter(out,"PricingTransactionPairProfitFunction");
-}
-
-void PricingTransactionPairProfitFunction::oldread(istream& in)
-{
-  readHeader(in,"PricingTransactionPairProfitFunction");
-  readField(in,"multiplicative_cost",multiplicative_cost);
-  readField(in,"addititive_cost",additive_cost);
-  readField(in,"per_unit_cost",per_unit_cost);
-  readFooter(in,"PricingTransactionPairProfitFunction");
-}
-
-
-/*
-void PricingTransactionPairProfitFunction::readOptionVal(istream& in, const string& optionname)
-{
-  if (optionname == "multiplicative_cost")
-    PLearn::read(in,multiplicative_cost);
-  else if (optionname == "additive_cost")
-    PLearn::read(in,additive_cost);
-  else if (optionname == "per_unit_cost")
-    PLearn::read(in,per_unit_cost);
-  else
-    inherited::readOptionVal(in, optionname);  
-}
-*/
 void PricingTransactionPairProfitFunction::declareOptions(OptionList &ol)
 {
     declareOption(ol, "multiplicative_cost", &PricingTransactionPairProfitFunction::multiplicative_cost, OptionBase::buildoption,

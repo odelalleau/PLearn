@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PricingTransactionPairProfitFunction.h,v 1.3 2004/04/05 19:15:27 tihocan Exp $
+   * $Id: PricingTransactionPairProfitFunction.h,v 1.4 2004/04/07 23:16:58 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -66,17 +66,14 @@ using namespace std;
 */
 class PricingTransactionPairProfitFunction : public Kernel
 {
+    typedef Kernel inherited;
 
-private:
-
-  typedef Kernel inherited;
-		
-  protected:
+protected:
     real multiplicative_cost; //!<  transaction loss
     real additive_cost; //!<  transaction loss
     real per_unit_cost; //!<  transaction loss
+public:
     PricingTransactionPairProfitFunction(){}
-  public:
     PricingTransactionPairProfitFunction(real the_multiplicative_cost, 
                                          real the_additive_cost=0,
                                          real the_per_unit_cost=0) :
@@ -85,16 +82,17 @@ private:
     
     PLEARN_DECLARE_OBJECT(PricingTransactionPairProfitFunction);
     
-    virtual string info() const;
+    virtual string info() const
+        { return "pricing_pair_profit"; }
+
     virtual real evaluate(const Vec& output, const Vec& target) const; 
-    //virtual void readOptionVal(istream& in, const string& optionname);
-    static void declareOptions(OptionList &ol);
-    virtual void write(ostream& out) const;
-    virtual void oldread(istream& in);
+
+protected:
     //!  Recognized options: all 3 fields.
-    
+    static void declareOptions(OptionList &ol);    
 };
 
+DECLARE_OBJECT_PTR(PricingTransactionPairProfitFunction);
 
 } // end of namespace PLearn
 
