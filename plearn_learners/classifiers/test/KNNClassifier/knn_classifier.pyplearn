@@ -1,10 +1,10 @@
 import os.path
 import sys
 from plearn.pyplearn import *
+from plearn.utilities.plpath import plearndir
 
-plarg_defaults.data = \
-    os.path.expandvars(os.path.join("${PLEARNDIR}/test_suite/data/eslt_mixture",
-                                    "data_train.amat"))
+plarg_defaults.data = os.path.join(plearndir, 'test_suite', 'data', 
+                                   'eslt_mixture', 'data_train.amat')
 plarg_defaults.kernel = "GaussianKernel"
 plarg_defaults.sigma  = "1"
 plarg_defaults.kmin   = "15"
