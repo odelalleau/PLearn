@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.cc,v 1.5 2003/09/22 20:15:24 dorionc Exp $ 
+   * $Id: FuturesTrader.cc,v 1.6 2003/09/24 15:23:42 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.cc */
@@ -187,6 +187,8 @@ void FuturesTrader::forget()
   if(stop_loss_active && !test_set.isNull()){
     stop_loss_values.fill(0.0);
   }
+  Rt_stat.forget();
+  log_returns.forget();
 }
 
 void FuturesTrader::declareOptions(OptionList& ol)
@@ -321,10 +323,6 @@ void FuturesTrader::test(VMat testset, PP<VecStatsCollector> test_stats,
   }
 
   
-  //  Will be used to keep track of portfolio test returns stats.
-  Rt_stat.forget();
-  log_returns.forget();
-
   // If the testset provided is not larger than the previous one, the test method 
   //  won't do anything.
   if(testset.length()-1 <= last_test_t){
@@ -350,15 +348,7 @@ void FuturesTrader::test(VMat testset, PP<VecStatsCollector> test_stats,
   //  computed and managed. 
   //
   //  The clock then moves one time forward and the process is repeated.
-  real delta_;
   
-  // Relative return := 1/value_t * relative_sum
-  real v_kt=0;
-  real value_t = 0;
-  real relative_sum=0;
-  
-  real Rt = 0;
-  Vec update(2);
   for(int t = last_test_t+1; t < testset.length(); t++)
   {      
     // Calling the advisor one row at the time ensures us that the state of 
@@ -372,13 +362,13 @@ void FuturesTrader::test(VMat testset, PP<VecStatsCollector> test_stats,
               "(last_test_t)^th row.");
 
     // Clearing sums
-    value_t = 0;
-    relative_sum = 0;
-    Rt = 0;
+    real value_t = 0;
+    real relative_sum = 0;
+    real Rt = 0;
     for(int k=0; k < nb_assets; k++)
     { 
       // Relative return computation
-      v_kt = test_weights(k, t) * price(k, t);
+      real v_kt = test_weights(k, t) * price(k, t);
       value_t += v_kt;
       relative_sum += v_kt * relative_return(k, t);
       
@@ -389,7 +379,7 @@ void FuturesTrader::test(VMat testset, PP<VecStatsCollector> test_stats,
         continue; // No call to delta and no trasaction cost on cash
       
       // No additive_cost on a null delta since there will be no transaction
-      delta_ = delta(k, t);
+      real delta_ = delta(k, t);
       if( delta_ > 0 )
         Rt -= additive_cost + multiplicative_cost*delta_; // Not 1+mult since that cash pos should take care of the '1'
     }
@@ -411,6 +401,7 @@ void FuturesTrader::test(VMat testset, PP<VecStatsCollector> test_stats,
     if(sp500 != "")
     {
       // The relative return of the portfolio can be computed by relative_sum/value_t 
+      Vec update(2);
       update[0] = log(relative_sum/value_t);
       update[1] = log(testset(t,sp500_index)/testset(t-horizon,sp500_index)); 
       log_returns.update(update);
