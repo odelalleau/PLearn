@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.28 2005/01/18 20:29:02 chrish42 Exp $
+   * $Id: stringutils.h,v 1.29 2005/01/20 20:07:29 dorionc Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -56,7 +56,8 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
-#include <plearn/io/PStream.h>
+#include <plearn/base/tostring.h>
+#include <plearn/base/lexical_cast.h>
 
 namespace PLearn {
 using namespace std;
@@ -70,34 +71,10 @@ using namespace std;
 #define slash_char '/'
 #endif
 
-  //!  converts anything to a string (same output as with cout << x)
-  template<class T> string tostring(const T& x);
-
-  //!  specialised version for char*
-  inline string tostring(const char* s) { return string(s); }
-  
   //!  aligns the given string in a cell having the given width
   string left(const string& s,   size_t width, char padding=' ');
   string right(const string& s,  size_t width, char padding=' ');
   string center(const string& s, size_t width, char padding=' ');
-
-  // this function handle numbers with exponents (such as 10.2E09)
-  // as well as Nans. String can have trailing whitespaces on both sides
-  bool pl_isnumber(const string& s,double* dbl=NULL);
-  bool pl_isnumber(const string& s,float* dbl);
-
-  //!  conversions from string to numerical types
-  long tolong(const string& s, int base=10);  
-  double todouble(const string& s);
-  bool tobool(const string& s);
-  inline int toint(const string& s, int base=10) { return int(tolong(s,base)); }
-  inline float tofloat(const string& s) { return float(todouble(s)); }
-#ifdef USEFLOAT
-  inline float toreal(const string& s) { return tofloat(s); }
-#endif //!<  FLOAT
-#ifdef USEDOUBLE
-  inline double toreal(const string& s) { return todouble(s); }
-#endif //!<  DOUBLE
     
   //!  removes starting and ending blanks '\n','\r',' ','\t'
   string removeblanks(const string& s);
@@ -228,6 +205,8 @@ vector<string> remove(const vector<string> &v, string element);
 
   //!  ** File path manipulation functions ** 
 
+/////////////////////////////////////////////////////////////////////////////////////////
+// TO REMOVE
   //!  Returns everything after the last '/' (if there's no '/' returns filepath)
   string extract_filename(const string& filepath);
 
@@ -250,6 +229,8 @@ vector<string> remove(const vector<string> &v, string element);
 
   //!  Returns everything before the last '.' of the filename, excluding the '.' (if there's no '.' in the filename it returns the whole filename) 
   string extract_filename_without_extension(const string& filepath);
+// END OF TO REMOVE
+/////////////////////////////////////////////////////////////////////////////////////////
 
   //! In a multiline text, removes everything starting at commentstart pattern until the end of line
   void remove_comments(string& text, const string& commentstart="#");
@@ -270,35 +251,6 @@ vector<string> remove(const vector<string> &v, string element);
   {
     return out << p.first << ':' << p.second;
   }
-
-  //!  ------------------------------------------------------------------
-
-
-/*! ******************
-    * Implementation *
-    ******************
-*/
-    
-  template<class T> string tostring(const T& x)
-    {
-      ostringstream out;
-      out << x;
-      return out.str();
-    }
-
-  template<class K, class V>
-  string tostring(const map<K, V>& x)
-    {
-      ostringstream out;
-      PStream pout(&out);
-      pout << x;
-      return out.str();
-    }
-
-string tostring(const double& x);
-
-string tostring(const float& x);
-
 } // end of namespace PLearn
 
 #endif
