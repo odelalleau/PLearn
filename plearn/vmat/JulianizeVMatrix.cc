@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: JulianizeVMatrix.cc,v 1.7 2004/07/09 19:42:23 tihocan Exp $ 
+   * $Id: JulianizeVMatrix.cc,v 1.8 2004/07/16 01:08:16 plearner Exp $ 
    ******************************************************* */
 
 /*! \file JulianizeVMatrix.cc */
@@ -91,7 +91,7 @@ void JulianizeVMatrix::getNewRow(int i, const Vec& v) const
     src_it = src_beg + codes_it->first;
 
     // Now convert the date per se
-    double converted_date;
+    double converted_date = 0;
     int YYYY,MM,DD,hh,mm,ss;
     YYYY = int(*src_it++);
     MM   = int(*src_it++);
