@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalGaussMix.h,v 1.3 2004/05/20 15:25:05 tihocan Exp $ 
+   * $Id: ConditionalGaussMix.h,v 1.4 2004/05/21 13:14:52 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -171,6 +171,9 @@ public:
   //! And sets 'stage' back to 0 (this is the stage of a fresh learner!).
   // ### You may remove this method if your distribution does not implement it.
   virtual void forget();
+
+  //! Overridden to forward to the underlying Gaussian mixture.
+  virtual void setTrainingSet(VMat training_set, bool call_forget=true);
     
   //! The role of the train method is to bring the learner up to stage == nstages,
   //! updating the train_stats collector with training costs measured on-line in the process.

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalGaussMix.cc,v 1.3 2004/05/20 15:25:05 tihocan Exp $ 
+   * $Id: ConditionalGaussMix.cc,v 1.4 2004/05/21 13:14:52 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -56,7 +56,8 @@ ConditionalGaussMix::ConditionalGaussMix()
 
 PLEARN_IMPLEMENT_OBJECT(ConditionalGaussMix,
     "Models the conditional probability p(y|x), when p(x,y) is a mixture of Gaussians.",
-    ""
+    "The x part should be in the input part of the training set,\n"
+    "and the y part in the target part.\n"
 );
 
 ////////////////////
@@ -287,6 +288,16 @@ void ConditionalGaussMix::setInput(const Vec& input) const {
     }
     p_x += gauss_mix->alpha[j] * pj_x[j];
   }
+}
+
+////////////////////
+// setTrainingSet //
+////////////////////
+void ConditionalGaussMix::setTrainingSet(VMat training_set, bool call_forget) {
+  inherited::setTrainingSet(training_set, call_forget);
+  // NB: if call_forget == true, gauss_mix->forget() has already been called
+  // in this->forget().
+  gauss_mix->setTrainingSet(training_set, false);
 }
 
 /////////////////
