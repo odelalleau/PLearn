@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.h,v 1.11 2004/05/26 16:11:07 tihocan Exp $ 
+   * $Id: PDistribution.h,v 1.12 2004/05/26 18:39:42 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.h */
@@ -76,6 +76,9 @@ protected:
   //! must be the old k-th variable.
   TVec<int> cond_swap;
 
+  //! The step when plotting the curve (upper case outputs_def).
+  real delta_curve;
+
   //! A boolean indicating whether the distribution is only a full joint
   //! distribution (no conditional or marginalized variables). Its value is
   //! deduced from the conditional flags.
@@ -97,8 +100,7 @@ public:
 
   mutable Vec input_part;
 
-  // TODO
-  // interval of Y values for computing histogram output (upper case outputs_def)
+  // Interval of values for computing histrogram output (upper case outputs_def).
   real lower_bound, upper_bound; 
 
   // TODO

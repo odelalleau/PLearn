@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.cc,v 1.15 2004/05/26 16:11:07 tihocan Exp $ 
+   * $Id: PDistribution.cc,v 1.16 2004/05/26 18:39:42 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.cc */
@@ -58,11 +58,17 @@ PDistribution::PDistribution()
 
 PLEARN_IMPLEMENT_OBJECT(PDistribution, 
     "PDistribution is the base class for distributions.\n",
-    "PDistributions derive from PLearner (as some of them may be fitted to data with train() ),\n"
+    "PDistributions derive from PLearner (as some of them may be fitted to data with train()),\n"
     "but they have additional methods allowing for ex. to compute density or generate data points.\n"
     "The default implementations of the learner-type methods for computing outputs and costs work as follows:\n"
     "  - the outputs_def option allows to choose what outputs are produced\n"
-    "  - cost is a vector of size 1 containing only the negative log-likelihood (NLL) i.e. -log_density).\n");
+    "  - cost is a vector of size 1 containing only the negative log-likelihood (NLL) i.e. -log_density).\n"
+    "A PDistribution may be conditional P(Y|X), if the option 'conditional_flags' is set. If it is the case,\n"
+    "the input should always be made of both the 'input' part (X) and the 'target' part (Y), even if the\n"
+    "output may not need to use the Y part. The exception is when computeOutput() needs to be called\n"
+    "successively with the same value of X: in this case, after a first call with both X and Y, one may\n"
+    "only provide Y as input, and X will be assumed to be unchanged.\n"
+    );
 
 ////////////////////
 // declareOptions //
@@ -75,18 +81,13 @@ void PDistribution::declareOptions(OptionList& ol)
   declareOption(ol, "outputs_def", &PDistribution::outputs_def, OptionBase::buildoption,
       "A string where the characters have the following meaning: \n"
       "'l'-> log_density, 'd' -> density, 'c' -> cdf, 's' -> survival_fn,\n"
-      "and for conditional distributions: 'e' -> expectation, 'v' -> variance\n"
-      "In lower case 'l', 'd', 'c', 's' give the probability associated with\n"
-      "a given value of the observation. In upper case, the whole curve is\n"
-      "evaluated at regular intervals and produced in output (as a histogram). The\n"
-      "number of curve points is determined by the 'n_curve_points' option\n"
-      "Note that these options (upper case letters) only work for SCALAR Y variables."
-      "N.B. If the distribution is unconditional, dataset->targetsize() should be 0.\n"
-      "If the distribution is conditional P(Y|X) and 'l','d','c','s' (NOT upper case)\n"
-      "are selected, then the dataset->inputsize() should include both the X and Y\n"
-      "while dataset->targetsize() should be 0. If the upper case outputs_def are selected\n"
-      "then dataset->inputsize() should be the length of X (if conditional, or 0 otherwise), and\n"
-      "dataset->targetsize() should be the length of Y\n"
+      "'e' -> expectation, 'v' -> variance.\n"
+      "In lower case they give the value associated with a given observation.\n"
+      "In upper case, a curve is evaluated at regular intervals and produced in\n"
+      "output (as a histogram). For 'L', 'D', 'C', 'S', it is the target part that\n"
+      "varies, while for 'E' and 'V' it is the input part.\n"
+      "The number of curve points is determined by the 'n_curve_points' option.\n"
+      "Note that these options upper case letters) only work for SCALAR variables."
       );
 
   declareOption(ol, "conditional_flags", &PDistribution::conditional_flags, OptionBase::buildoption,
@@ -103,9 +104,9 @@ void PDistribution::declareOptions(OptionList& ol)
 
   declareOption(ol, "n_curve_points", &PDistribution::n_curve_points, OptionBase::buildoption,
       "The number of points for which the distribution is evaluated when outputs_defs\n"
-      "equals 'L', 'D', 'C' or 'S' (produce a histogram of the distribution or density).\n"
+      "is upper case (produce a histogram).\n"
       "The lower_bound and upper_bound options specify where the curve begins and ends.\n"
-      "Note that these options (upper case letters) only work for SCALAR Y variables."
+      "Note that these options (upper case letters) only work for SCALAR variables."
       );
 
   declareOption(ol, "lower_bound",  &PDistribution::lower_bound, OptionBase::buildoption,
@@ -150,6 +151,9 @@ void PDistribution::build()
 ////////////
 void PDistribution::build_()
 {
+  if (n_curve_points > 0) {
+    delta_curve = (upper_bound - lower_bound) / real(n_curve_points);
+  }
   resizeParts();
   // Preccompute the stuff associated to the conditional flags.
   setConditionalFlags(conditional_flags);
@@ -163,7 +167,9 @@ void PDistribution::build_()
 void PDistribution::computeOutput(const Vec& input, Vec& output) const
 {
   static Vec expect;
+  static Mat cov;
   static int k,l;
+  static Vec y;
   need_set_input = splitCond(input, input_part, target_part);
   if (need_set_input) {
     // There is an input part, and it is not the same as in the previous call.
@@ -192,11 +198,60 @@ void PDistribution::computeOutput(const Vec& input, Vec& output) const
         expectation(expect);
         k += n_target;
         break;
+      case 'v':
+        cov = output.subVec(k, square(n_target)).toMat(n_target, n_target);
+        variance(cov);
+        k += square(n_target);
+        break;
+      case 'E':
+      case 'V':
+        if (n_target > 1)
+          PLERROR("In PDistribution::computeOutput - Can only plot histogram of expectation or variance for one-dimensional target");
+      case 'L':
+      case 'D':
+      case 'C':
+      case 'S':
+        real t;
+        y.resize(1);
+        y[0] = lower_bound;
+        for (int j = 0; j < n_curve_points; j++) {
+          switch(outputs_def[i]) {
+            case 'L':
+              t = log_density(y);
+              break;
+            case 'D':
+              t = density(y);
+              break;
+            case 'C':
+              t = cdf(y);
+              break;
+            case 'S':
+              t = survival_fn(y);
+              break;
+            case 'E':
+              setInput(y);
+              expectation(expect);
+              t = expect[0];
+              break;
+            case 'V':
+              setInput(y);
+              cov = expect.toMat(1,1);
+              variance(cov);
+              t = expect[0];
+              break;
+            default:
+              PLERROR("In PDistribution::computeOutput - This should never happen");
+          }
+          output[j + k] = t;
+          y[0] += delta_curve;
+        }
+        k += n_curve_points;
+        break;
       default:
         PLERROR("In PDistribution::computeOutput - Unrecognized outputs_def character");
     }
   }
-}    
+}
 
 /////////////////////////////
 // computeCostsFromOutputs //
@@ -278,7 +333,8 @@ int PDistribution::outputsize() const
 {
   int l = 0;
   for (unsigned int i=0; i<outputs_def.length(); i++) {
-    if (outputs_def[i]=='L' || outputs_def[i]=='D' || outputs_def[i]=='C' || outputs_def[i]=='S')
+    if (outputs_def[i]=='L' || outputs_def[i]=='D' || outputs_def[i]=='C' || outputs_def[i]=='S'
+        || outputs_def[i]=='E' || outputs_def[i]=='V')
       l+=n_curve_points;
     else if (outputs_def[i]=='e')
       l += n_target;
@@ -287,22 +343,6 @@ int PDistribution::outputsize() const
     else l++;
   }
   return l;
-
-  /*
-  int l=0;
-  if (!train_set && targetsize_<0)
-    PLERROR("PDistribution::outputsize: train_set was not set and targetsize was not set!");
-  int target_size = targetsize_<0?train_set->targetsize():targetsize_;
-  for (unsigned int i=0;i<outputs_def.length();i++)
-    if (outputs_def[i]=='L' || outputs_def[i]=='D' || outputs_def[i]=='C' || outputs_def[i]=='S')
-      l+=n_curve_points;
-    else if (outputs_def[i]=='e')
-      l+=target_size;
-    else if (outputs_def[i]=='v') // by default assume variance is full nxn matrix 
-      l+=target_size*target_size;
-    else l++;
-    return l;
-    */
 }
 
 /////////////////
