@@ -34,7 +34,11 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 
+// From stdlib
+#include <sys/types.h>
+#include <unistd.h>                          // for getpid
 
+// From PLeearn
 #include "SequentialValidation.h"
 #include <plearn/math/VecStatsCollector.h>
 #include <plearn/vmat/FileVMatrix.h>
@@ -65,7 +69,8 @@ SequentialValidation::SequentialValidation()
     save_test_costs(false),
     save_stat_collectors(false),
     provide_learner_expdir(true),
-    save_sequence_stats(true)
+    save_sequence_stats(true),
+    report_memory_usage(false)
 {}
 
 void SequentialValidation::build_()
@@ -90,86 +95,113 @@ void SequentialValidation::build()
 
 void SequentialValidation::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "report_stats", &SequentialValidation::report_stats,
-                OptionBase::buildoption,
-                "If true, the computed global statistics specified in statnames will be saved in global_stats.pmat \n"
-                "and the corresponding per-split statistics will be saved in split_stats.pmat \n"
-                "For reference, all cost names (as given by the learner's getTrainCostNames() and getTestCostNames() ) \n"
-                "will be reported in files train_cost_names.txt and test_cost_names.txt");
+  declareOption(
+    ol, "report_stats", &SequentialValidation::report_stats,
+    OptionBase::buildoption,
+    "If true, the computed global statistics specified in statnames will be saved in global_stats.pmat \n"
+    "and the corresponding per-split statistics will be saved in split_stats.pmat \n"
+    "For reference, all cost names (as given by the learner's getTrainCostNames() and getTestCostNames() ) \n"
+    "will be reported in files train_cost_names.txt and test_cost_names.txt");
 
-  declareOption(ol, "statnames", &SequentialValidation::statnames,
-                OptionBase::buildoption,
-                "A list of global statistics we are interested in.\n"
-                "These are strings of the form S1[S2[dataset.cost_name]] where:\n"
-                "  - dataset is train or test1 or test2 ... (train being \n"
-                "    the first dataset in a split, test1 the second, ...) \n"
-                "  - cost_name is one of the training or test cost names (depending on dataset) understood \n"
-                "    by the underlying learner (see its getTrainCostNames and getTestCostNames methods) \n"
-                "  - S1 and S2 are a statistic, i.e. one of: E (expectation), V(variance), MIN, MAX, STDDEV, ... \n"
-                "    S2 is computed over the samples of a given dataset split. S1 is over the splits. \n");
+  declareOption(
+    ol, "statnames", &SequentialValidation::statnames,
+    OptionBase::buildoption,
+    "A list of global statistics we are interested in.\n"
+    "These are strings of the form S1[S2[dataset.cost_name]] where:\n"
+    "  - dataset is train or test1 or test2 ... (train being \n"
+    "    the first dataset in a split, test1 the second, ...) \n"
+    "  - cost_name is one of the training or test cost names (depending on dataset) understood \n"
+    "    by the underlying learner (see its getTrainCostNames and getTestCostNames methods) \n"
+    "  - S1 and S2 are a statistic, i.e. one of: E (expectation), V(variance), MIN, MAX, STDDEV, ... \n"
+    "    S2 is computed over the samples of a given dataset split. S1 is over the splits. \n");
 
-  declareOption(ol, "timewise_statnames", &SequentialValidation::timewise_statnames,
-                OptionBase::buildoption,
-                "Statistics to be collected into a VecStatsCollector at each timestep.");
+  declareOption(
+    ol, "timewise_statnames", &SequentialValidation::timewise_statnames,
+    OptionBase::buildoption,
+    "Statistics to be collected into a VecStatsCollector at each timestep.");
   
-  declareOption(ol, "expdir", &SequentialValidation::expdir,
-                OptionBase::buildoption,
-                "Path of this experiment's directory in which to save all experiment results (will be created if it does not already exist). \n");
+  declareOption(
+    ol, "expdir", &SequentialValidation::expdir,
+    OptionBase::buildoption,
+    "Path of this experiment's directory in which to save all experiment results (will be created if it does not already exist). \n");
 
-  declareOption(ol, "learner", &SequentialValidation::learner,
-                OptionBase::buildoption,
-                "The SequentialLearner to train/test. \n");
+  declareOption(
+    ol, "learner", &SequentialValidation::learner,
+    OptionBase::buildoption,
+    "The SequentialLearner to train/test. \n");
 
-  declareOption(ol, "dataset", &SequentialValidation::dataset,
-                OptionBase::buildoption,
-                "The dataset to use for training/testing. \n");
+  declareOption(
+    ol, "dataset", &SequentialValidation::dataset,
+    OptionBase::buildoption,
+    "The dataset to use for training/testing. \n");
 
-  declareOption(ol, "init_train_size", &SequentialValidation::init_train_size,
-                OptionBase::buildoption,
-                "Size of the first training set. \n");
+  declareOption(
+    ol, "init_train_size", &SequentialValidation::init_train_size,
+    OptionBase::buildoption,
+    "Size of the first training set. \n");
 
-  declareOption(ol, "last_test_time", &SequentialValidation::last_test_time,
-                OptionBase::buildoption,
-                "The last time-step to use for testing (Default = -1, i.e. use all data)");
+  declareOption(
+    ol, "last_test_time", &SequentialValidation::last_test_time,
+    OptionBase::buildoption,
+    "The last time-step to use for testing (Default = -1, i.e. use all data)");
   
-  declareOption(ol, "save_final_model", &SequentialValidation::save_final_model,
-                OptionBase::buildoption,
-                "If true, the final model will be saved in model.psave \n");
+  declareOption(
+    ol, "save_final_model", &SequentialValidation::save_final_model,
+    OptionBase::buildoption,
+    "If true, the final model will be saved in model.psave \n");
 
-  declareOption(ol, "save_initial_model", &SequentialValidation::save_initial_model,
-                OptionBase::buildoption,
-                "If true, the initial model will be saved in initial_model.psave. \n");
+  declareOption(
+    ol, "save_initial_model", &SequentialValidation::save_initial_model,
+    OptionBase::buildoption,
+    "If true, the initial model will be saved in initial_model.psave. \n");
 
-  declareOption(ol, "save_initial_seqval", &SequentialValidation::save_initial_seqval,
-                OptionBase::buildoption,
-                "If true, this SequentialValidation object will be saved in sequential_validation.psave. \n");
+  declareOption(
+    ol, "save_initial_seqval", &SequentialValidation::save_initial_seqval,
+    OptionBase::buildoption,
+    "If true, this SequentialValidation object will be saved in sequential_validation.psave. \n");
 
-  declareOption(ol, "save_data_sets", &SequentialValidation::save_data_sets,
-                OptionBase::buildoption,
-                "If true, the data sets (train/test) for each split will be saved. \n");
+  declareOption(
+    ol, "save_data_sets", &SequentialValidation::save_data_sets,
+    OptionBase::buildoption,
+    "If true, the data sets (train/test) for each split will be saved. \n");
 
-  declareOption(ol, "save_test_outputs", &SequentialValidation::save_test_outputs,
-                OptionBase::buildoption,
-                "If true, the outputs of the tests will be saved in test_outputs.pmat \n");
+  declareOption(
+    ol, "save_test_outputs", &SequentialValidation::save_test_outputs,
+    OptionBase::buildoption,
+    "If true, the outputs of the tests will be saved in test_outputs.pmat \n");
 
-  declareOption(ol, "save_test_costs", &SequentialValidation::save_test_costs,
-                OptionBase::buildoption,
-                "If true, the costs of the tests will be saved in test_costs.pmat \n");
+  declareOption(
+    ol, "save_test_costs", &SequentialValidation::save_test_costs,
+    OptionBase::buildoption,
+    "If true, the costs of the tests will be saved in test_costs.pmat \n");
 
-  declareOption(ol, "save_stat_collectors", &SequentialValidation::save_stat_collectors,
-                OptionBase::buildoption,
-                "If true, stat collectors of each data sets (train/test) will be saved for each split. \n");
+  declareOption(
+    ol, "save_stat_collectors", &SequentialValidation::save_stat_collectors,
+    OptionBase::buildoption,
+    "If true, stat collectors of each data sets (train/test) will be saved for each split. \n");
 
-  declareOption(ol, "provide_learner_expdir", &SequentialValidation::provide_learner_expdir,
-                OptionBase::buildoption,
-                "If true, learning results from the learner will be saved. \n");
+  declareOption(
+    ol, "provide_learner_expdir", &SequentialValidation::provide_learner_expdir,
+    OptionBase::buildoption,
+    "If true, learning results from the learner will be saved. \n");
 
-  declareOption(ol, "save_sequence_stats",
-                &SequentialValidation::save_sequence_stats,
-                OptionBase::buildoption,
-                "Whether the statistics accumulated at each time step should\n"
-                "be saved in the file \"sequence_stats.pmat\".  WARNING: this\n"
-                "file can get big!  (Default = 1, i.e. true)");
+  declareOption(
+    ol, "save_sequence_stats",
+    &SequentialValidation::save_sequence_stats,
+    OptionBase::buildoption,
+    "Whether the statistics accumulated at each time step should\n"
+    "be saved in the file \"sequence_stats.pmat\".  WARNING: this\n"
+    "file can get big!  (Default = 1, i.e. true)");
+
+  declareOption(
+    ol, "report_memory_usage",
+    &SequentialValidation::report_memory_usage,
+    OptionBase::buildoption,
+    "Whether to report memory usage in a directory expdir/MemoryUsage.\n"
+    "Memory usage is reported AT THE BEGINNING OF EACH time-step, using\n"
+    "both the /proc/PID/status method, and the 'mem_usage PID' method\n"
+    "(if available).  This is only supported on Linux at the moment.\n"
+    "(Default = false)");
   
   inherited::declareOptions(ol);
 }
@@ -185,6 +217,10 @@ void SequentialValidation::run()
   learner->setTrainingSet(dataset, false);
 
   setExperimentDirectory( append_slash(expdir) );
+
+  // If we need to report memory usage, create the appropriate directory
+  if (report_memory_usage)
+    force_mkdir( append_slash(expdir) + "MemoryUsage" );
 
   // Save this experiment description in the expdir (buildoptions only)
   if (save_initial_seqval)
@@ -283,12 +319,16 @@ void SequentialValidation::run()
 #ifdef DEBUG
     cout << "SequentialValidation::run() -- sub_train.length = " << t << " et sub_test.length = " << t+horizon << endl;
 #endif
+    if (report_memory_usage)
+      reportMemoryUsage(t);
+    
     VMat sub_train = dataset.subMatRows(0,t); // excludes t, last training pair is (t-2,t-1)
     VMat sub_test = dataset.subMatRows(0, t+1);
     VMat only_test = dataset.subMatRows(t, 1);
 
     string splitdir = expdir+"train_t="+tostring(t)+"/";
-    if (save_data_sets || save_initial_model || save_stat_collectors || save_final_model)
+    if (save_data_sets || save_initial_model || save_stat_collectors ||
+        save_final_model)
       force_mkdir(splitdir);
     if (save_data_sets)
       PLearn::save(splitdir+"training_set.psave", sub_train);
@@ -394,6 +434,23 @@ void SequentialValidation::reportStats(const Vec& global_result)
 //  saveAscii(expdir+"predictions.amat", learner->predictions);
 //  saveAscii(expdir+"errors.amat", learner->errors, learner->getTestCostNames());
 }
+
+void SequentialValidation::reportMemoryUsage(int t)
+{
+  pid_t pid = getpid();
+  char t_str[100];
+  sprintf(t_str, "%05d", t);
+
+  string memdir = append_slash(expdir) + "MemoryUsage";
+  string method1 = string("cat /proc/")+tostring(pid)+"/status > "
+    + memdir + "/status_" + t_str;
+  string method2 = string("mem_usage ")+tostring(pid)+" > "
+    + memdir + "/mem_usage_" + t_str;
+
+  system(method1.c_str());
+  system(method2.c_str());
+}
+  
 
 } // end of namespace PLearn
 

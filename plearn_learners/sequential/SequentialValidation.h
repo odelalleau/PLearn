@@ -93,6 +93,13 @@ public:
   //! file can get big!  (Default = 1, i.e. true)
   bool save_sequence_stats;
 
+  //! Whether to report memory usage in a directory expdir/MemoryUsage.
+  //! Memory usage is reported AT THE BEGINNING OF EACH time-step, using
+  //! both the /proc/PID/status method, and the 'mem_usage PID' method
+  //! (if available).  This is only supported on Linux at the moment.
+  //! (Default = false)
+  bool report_memory_usage;
+  
 private:
 
   //! This does the actual building
@@ -101,8 +108,13 @@ private:
 protected:
 
   //! Declare this class' options
-  static void declareOptions(OptionList& ol);  
+  static void declareOptions(OptionList& ol);
+
+  //! Utility method to report statistics
   virtual void reportStats(const Vec& global_result);
+
+  //! Utility method to report the amount of memory used at timestep t
+  virtual void reportMemoryUsage(int t);
 
 public:
 
