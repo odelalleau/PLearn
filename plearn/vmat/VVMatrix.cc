@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.cc,v 1.21 2004/06/17 20:59:31 tihocan Exp $
+   * $Id: VVMatrix.cc,v 1.22 2004/06/18 19:13:27 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -589,7 +589,7 @@ void VVMatrix::build_()
 
     code = readFileAndMacroProcess(the_filename);
     if(removeblanks(code)[0]=='<') // old xml-like format 
-      the_mat=createPreproVMat(the_filename);
+      the_mat = createPreproVMat(the_filename);
     else  // New standard PLearn object description format
     {
       the_mat = dynamic_cast<VMatrix*>(newObject(code));
@@ -605,13 +605,8 @@ void VVMatrix::build_()
     // Copy the sizes.
     copySizesFrom(the_mat);
 
-    //resize the string mappings
-    map_sr = TVec<map<string,real> >(width_);
-    map_rs = TVec<map<real,string> >(width_);
-    
-  
-    // done by getDataSet
-    // loadAllStringMappings();
+    // Copy the string mappings.
+    copyStringMappingsFrom(the_mat);
 
     // Copy the parent field names
     fieldinfos.resize(width_);
