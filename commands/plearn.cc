@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.44 2004/02/13 20:35:27 plearner Exp $
+   * $Id: plearn.cc,v 1.45 2004/02/21 14:59:15 yoshua Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -106,6 +106,7 @@
 #include "LearnerCommand.h"
 #include "KolmogorovSmirnovCommand.h"
 #include "TestDependenciesCommand.h"
+#include "TestDependencyCommand.h"
 #include "ReadAndWriteCommand.h"
 #include "JulianDateCommand.h"
 #include "FieldConvertCommand.h"
