@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: stats_utils.cc,v 1.5 2004/02/07 14:35:46 yoshua Exp $
+   * $Id: stats_utils.cc,v 1.6 2004/02/17 20:39:01 ouimema Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -155,7 +155,7 @@ real max_cdf_diff(Vec& v1, Vec& v2)
       if(v1[i1]<v2[i2])
         {
           i1++;
-          if(i1==n1)
+          if(i1+1==n1)
             break;
         }
       else
