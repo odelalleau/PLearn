@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: SortRowsVMatrix.h,v 1.4 2004/04/05 23:05:30 morinf Exp $
+   * $Id: SortRowsVMatrix.h,v 1.5 2004/06/18 16:45:02 tihocan Exp $
    ******************************************************* */
 
 
@@ -51,11 +51,14 @@ using namespace std;
 //! given columns.
 class SortRowsVMatrix: public SelectRowsVMatrix
 {
+
+private:
+
   typedef SelectRowsVMatrix inherited;
 
 public:
 
-  //! Public build options
+  //! Public build options.
   int increasing_order;
   TVec<int> sort_columns;
 
