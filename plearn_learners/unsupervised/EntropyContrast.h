@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: EntropyContrast.h,v 1.1 2004/08/16 18:24:04 dpopovici Exp $ 
+ * $Id: EntropyContrast.h,v 1.2 2004/08/16 19:45:08 dpopovici Exp $ 
  ******************************************************* */
 
 /*! \file EntropyContrast.h */
@@ -52,7 +52,6 @@
 #include <plearn/var/TransposeProductVariable.h>
 #include <plearn/var/ConcatColumnsVariable.h>
 #include <plearn/var/VarRowVariable.h>
-#include "TransposeVariable.h"
 #include <plearn/math/random.h>
 
 namespace PLearn {

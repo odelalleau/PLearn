@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: EntropyContrast.cc,v 1.2 2004/08/16 18:31:23 mariusmuja Exp $ 
+ * $Id: EntropyContrast.cc,v 1.3 2004/08/16 19:45:08 dpopovici Exp $ 
  ******************************************************* */
 
 /*! \file EntropyContrast.cc */
@@ -414,7 +414,7 @@ namespace PLearn {
     a.fill(0.0) ; 
     addToDiagonal(a,diag) ; 
     // compute dC / dw = dC/dg * v' * a
-    transposeProduct(grad_extra_wrt_w,grad_C_wrt_df_dx,v) ; 
+    productTranspose(grad_extra_wrt_w,grad_C_wrt_df_dx,v) ; 
     product(grad_extra_wrt_w,grad_extra_wrt_w,a) ;         
 
     // compute dC/dv = a * w' * dC/dg -2 * (dC/da * b * a) x' ; 
@@ -519,7 +519,12 @@ namespace PLearn {
       sigma_g.resize(nconstraints) ; 
       mu_g.resize(nconstraints) ; 
       g_x.resize(nconstraints) ;  
-
+      grad_C_wrt_df_dx.resize(nconstraints,n) ; 
+      df_dx.resize(nconstraints,n) ; 
+      
+      grad_extra_wrt_w.resize(nconstraints, nhidden) ; 
+      grad_extra_wrt_v.resize(nhidden, n) ; 
+   
       full_sum.resize(nconstraints) ;
     }
 
