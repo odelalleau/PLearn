@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
- * $Id: AutoVMatrix.cc,v 1.5 2004/04/05 23:14:13 morinf Exp $
+ * $Id: AutoVMatrix.cc,v 1.6 2004/05/07 19:39:37 tihocan Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -47,7 +47,10 @@
 namespace PLearn {
 using namespace std;
 
-PLEARN_IMPLEMENT_OBJECT(AutoVMatrix, "ONE LINE DESCR", "AutoVMatrix tries to interpret the given 'specification' (it will call getDataSet) and will be a wrapper around the appropriate VMatrix type, simply forwarding calls to it.");
+PLEARN_IMPLEMENT_OBJECT(AutoVMatrix,
+    "Automatically builds an appropriate VMat given its specification.",
+    "AutoVMatrix tries to interpret the given 'specification' (it will call getDataSet) and\n"
+    "will be a wrapper around the appropriate VMatrix type, simply forwarding calls to it.\n");
 
 AutoVMatrix::AutoVMatrix(const string& the_specification)
   :specification(the_specification)
@@ -56,9 +59,12 @@ AutoVMatrix::AutoVMatrix(const string& the_specification)
 void AutoVMatrix::declareOptions(OptionList& ol)
 {
   declareOption(ol, "specification", &AutoVMatrix::specification, OptionBase::buildoption,
-                "This is any string understood by getDataSet. Typically a file or directory path");
+                "This is any string understood by getDataSet. Typically a file or directory path.");
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
+
+  // Hide the 'vm' option, that is overwritten at build time anyway.
+  redeclareOption(ol, "vm", &ForwardVMatrix::vm, OptionBase::nosave, "");
 }
 
 void AutoVMatrix::build_()
