@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DivisiveNormalizationKernel.h,v 1.3 2004/06/11 13:22:27 tihocan Exp $ 
+   * $Id: DivisiveNormalizationKernel.h,v 1.4 2004/07/21 20:09:58 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -55,6 +55,9 @@ class DivisiveNormalizationKernel: public SourceKernel
 private:
 
   typedef SourceKernel inherited;
+  
+  //! Used to store the values of the source kernel.
+  mutable Vec all_k_x;
   
 protected:
 

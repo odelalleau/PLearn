@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DivisiveNormalizationKernel.cc,v 1.3 2004/06/11 13:22:27 tihocan Exp $ 
+   * $Id: DivisiveNormalizationKernel.cc,v 1.4 2004/07/21 20:09:58 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -124,14 +124,13 @@ void DivisiveNormalizationKernel::build_()
 // computeAverage //
 ////////////////////
 real DivisiveNormalizationKernel::computeAverage(const Vec& x, bool on_row, real squared_norm_of_x) const {
-  static Vec k_x;
-  k_x.resize(n_examples);
+  all_k_x.resize(n_examples);
   if (is_symmetric || !on_row) {
-    source_kernel->evaluate_all_i_x(x, k_x, squared_norm_of_x);
+    source_kernel->evaluate_all_i_x(x, all_k_x, squared_norm_of_x);
   } else {
-    source_kernel->evaluate_all_x_i(x, k_x, squared_norm_of_x);
+    source_kernel->evaluate_all_x_i(x, all_k_x, squared_norm_of_x);
   }
-  return sum(k_x) / real(n_examples);
+  return sum(all_k_x) / real(n_examples);
 }
 
 ///////////////////////

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GeodesicDistanceKernel.cc,v 1.6 2004/07/21 16:30:52 chrish42 Exp $ 
+   * $Id: GeodesicDistanceKernel.cc,v 1.7 2004/07/21 20:10:27 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -154,8 +154,6 @@ real GeodesicDistanceKernel::computeShortestDistance(int i, const Mat& k_xi_x_so
 // evaluate //
 //////////////
 real GeodesicDistanceKernel::evaluate(const Vec& x1, const Vec& x2) const {
-  static Mat k_xi_x_sorted1;
-  static Mat k_xi_x_sorted2;
   distance_kernel->computeNearestNeighbors(x1, k_xi_x_sorted1, knn);
   distance_kernel->computeNearestNeighbors(x2, k_xi_x_sorted2, knn);
   real min = REAL_MAX;
@@ -194,6 +192,9 @@ real GeodesicDistanceKernel::evaluate_i_x(int i, const Vec& x, real squared_norm
   return evaluate_i_x_again(i, x, squared_norm_of_x, true);
 }
 
+/////////////////////////////////
+// evaluate_i_x_from_distances //
+/////////////////////////////////
 real GeodesicDistanceKernel::evaluate_i_x_from_distances(int i, const Mat& k_xi_x_sorted) const {
   if (pow_distance) {
     return square(computeShortestDistance(i, k_xi_x_sorted));
@@ -205,9 +206,7 @@ real GeodesicDistanceKernel::evaluate_i_x_from_distances(int i, const Mat& k_xi_
 ////////////////////////
 // evaluate_i_x_again //
 ////////////////////////
-
 real GeodesicDistanceKernel::evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x, bool first_time) const {
-  static Mat k_xi_x_sorted;
   if (first_time) {
     distance_kernel->computeNearestNeighbors(x, k_xi_x_sorted, knn);
   }

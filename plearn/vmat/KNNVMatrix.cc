@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNVMatrix.cc,v 1.12 2004/07/21 16:30:55 chrish42 Exp $ 
+   * $Id: KNNVMatrix.cc,v 1.13 2004/07/21 20:11:40 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -301,14 +301,13 @@ int KNNVMatrix::getSourceIndexOf(int i, int& i_ref, int& i_n) const {
 // getNewRow //
 ///////////////
 void KNNVMatrix::getNewRow(int i, const Vec& v) const {
-  static Vec w;
-  w.resize(source->width());
+  source_row.resize(source->width());
   int i_n;
   int i_ref;
   int real_i = getSourceIndexOf(i, i_ref, i_n);
-  source->getRow(real_i, w);
+  source->getRow(real_i, source_row);
   if (kernel_pij) {
-    v.subVec(0, source->inputsize()) << w.subVec(0, source->inputsize());
+    v.subVec(0, source->inputsize()) << source_row.subVec(0, source->inputsize());
     if (i_n > 0) {
       v[source->inputsize()] = pij(i_ref, i_n - 1);
     } else {
@@ -316,14 +315,14 @@ void KNNVMatrix::getNewRow(int i, const Vec& v) const {
     }
   } else {
     v.subVec(0, source->inputsize() + source->targetsize())
-      << w.subVec(0, source->inputsize() + source->targetsize());
+      << source_row.subVec(0, source->inputsize() + source->targetsize());
   }
   v.subVec(inputsize(), source->targetsize())
-    << w.subVec(source->inputsize(), source->targetsize());
+    << source_row.subVec(source->inputsize(), source->targetsize());
   v[inputsize() + source->targetsize()] = getTag(i_n);
   if (weightsize() > 0) {
     v.subVec(inputsize() + targetsize(), weightsize())
-      << w.subVec(source->inputsize() + source->targetsize(), source->weightsize());
+      << source_row.subVec(source->inputsize() + source->targetsize(), source->weightsize());
   }
 }
 

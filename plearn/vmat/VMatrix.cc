@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.63 2004/07/21 16:30:55 chrish42 Exp $
+* $Id: VMatrix.cc,v 1.64 2004/07/21 20:13:26 tihocan Exp $
 ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -930,12 +930,12 @@ void VMatrix::putOrAppendRow(int i, Vec v)
 
 void VMatrix::forcePutRow(int i, Vec v)
 {
-  static Vec emptyrow;
   if(i<length())
     putRow(i,v);
   else 
     {
-      emptyrow.resize(width());
+      Vec emptyrow(width());
+      emptyrow.clear();
       while(length()<i)
         appendRow(emptyrow);
       appendRow(v);
@@ -1015,7 +1015,6 @@ void VMatrix::getRow(int i, VarArray& inputs) const
 // find //
 //////////
 bool VMatrix::find(const Vec& input, real tolerance, int* i) const {
-  static Vec get_row;
   get_row.resize(inputsize());
 #ifdef BOUNDCHECK
   if (input.length() != inputsize())

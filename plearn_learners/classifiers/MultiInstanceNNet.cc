@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.cc,v 1.28 2004/07/21 16:30:55 chrish42 Exp $
+   * $Id: MultiInstanceNNet.cc,v 1.29 2004/07/21 20:14:37 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/MultiInstanceNNet.h */
@@ -518,7 +518,6 @@ void MultiInstanceNNet::computeOutputAndCosts(const Vec& inputv, const Vec& targ
 void MultiInstanceNNet::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv, 
                                    const Vec& targetv, Vec& costsv) const
 {
-  static Vec instance_logP0;
   instance_logP0.resize(max_n_instances);
   int bag_signal = int(targetv[1]);
   if (bag_signal & 1) // first instance, start counting
@@ -608,6 +607,7 @@ extern void varDeepCopyField(Var& field, CopiesMap& copies);
 void MultiInstanceNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(instance_logP0, copies);
   varDeepCopyField(input, copies);
   varDeepCopyField(target, copies);
   varDeepCopyField(sampleweight, copies);

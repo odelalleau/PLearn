@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.h,v 1.13 2004/07/21 16:30:55 chrish42 Exp $
+   * $Id: MultiInstanceNNet.h,v 1.14 2004/07/21 20:14:37 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearn/plearn_learners/classifiers/MultiInstanceNNet.h */
@@ -45,14 +45,22 @@
 
 #include <plearn_learners/generic/PLearner.h>
 #include <plearn/opt/Optimizer.h>
-//#include "Var_all.h"
 
 namespace PLearn {
 using namespace std;
 
-  class MultiInstanceNNet: public PLearner
-  {
+class MultiInstanceNNet: public PLearner
+{
+
+private:
+
+  typedef PLearner inherited;
+
+  //! Used to store data between calls to computeCostsFromOutput.
+  mutable Vec instance_logP0;
+
   protected:
+
     Var input;  // Var(inputsize())
     Var target; // Var(targetsize()-weightsize())
     Var sampleweight; // Var(1) if train_set->hasWeights()
@@ -90,8 +98,6 @@ using namespace std;
 
   public:
     
-    typedef PLearner inherited;
-
     // Build options inherited from learner:
     // inputsize, outputsize, targetsize, experiment_name, save_at_every_epoch 
 

@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.50 2004/07/21 16:30:55 chrish42 Exp $
+   * $Id: VMatrix.h,v 1.51 2004/07/21 20:13:26 tihocan Exp $
    ******************************************************* */
 
 
@@ -68,7 +68,11 @@ class VMatrix: public Object
   friend class VMat;
 
 private:
+
   mutable FILE* lockf_; //! .lock file in metadatadir
+
+  //! Used in the 'find' method to store a row.
+  mutable Vec get_row;
 
 protected:
   int length_;

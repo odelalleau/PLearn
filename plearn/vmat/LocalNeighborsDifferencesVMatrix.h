@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocalNeighborsDifferencesVMatrix.h,v 1.3 2004/07/07 17:30:48 tihocan Exp $ 
+   * $Id: LocalNeighborsDifferencesVMatrix.h,v 1.4 2004/07/21 20:12:19 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
@@ -55,6 +55,9 @@ class LocalNeighborsDifferencesVMatrix: public SourceVMatrix
 private:
 
   typedef SourceVMatrix inherited;
+
+  //! Used to store data and save memory allocations.
+  mutable Vec neighbor_row, ith_row, a_row;
 
 protected:
   // NON-OPTION FIELDS

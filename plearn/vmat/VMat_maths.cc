@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat_maths.cc,v 1.25 2004/07/21 16:30:55 chrish42 Exp $
+* $Id: VMat_maths.cc,v 1.26 2004/07/21 20:12:42 tihocan Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat_maths.h"
@@ -357,8 +357,8 @@ void computeMeanAndVariance(VMat d, Vec& meanvec, Vec& variancevec)
 
 void computeInputMean(VMat d, Vec& meanvec)
 {
-  static Vec input;
-  static Vec target;
+  Vec input;
+  Vec target;
   real weight;
   int l = d->length();
   int n = d->inputsize();
@@ -376,9 +376,9 @@ void computeInputMean(VMat d, Vec& meanvec)
 
 void computeInputMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat)
 {
-  static Vec input;
-  static Vec target;
-  static Vec offset;
+  Vec input;
+  Vec target;
+  Vec offset;
   real weight;
   int l = d->length();
   int n = d->inputsize();
@@ -405,9 +405,9 @@ void computeInputMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat)
 
 void computeInputMeanAndVariance(VMat d, Vec& meanvec, Vec& var)
 {
-  static Vec input;
-  static Vec target;
-  static Vec offset;
+  Vec input;
+  Vec target;
+  Vec offset;
   real weight;
   int l = d->length();
   int n = d->inputsize();
@@ -469,8 +469,8 @@ void computeWeightedMeanAndCovar(Vec weights, VMat d, Vec& meanvec, Mat& covarma
 //! (returns the sum of all weights actually used)
 real computeWeightedMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat, real threshold)
 { 
-  static Vec samplevec;
-  static Vec diffvec;
+  Vec samplevec;
+  Vec diffvec;
   int w = d->width()-1;
   int l = d->length();
   samplevec.resize(w+1);

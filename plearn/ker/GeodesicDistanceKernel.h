@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GeodesicDistanceKernel.h,v 1.5 2004/07/19 13:25:54 tihocan Exp $ 
+   * $Id: GeodesicDistanceKernel.h,v 1.6 2004/07/21 20:10:27 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -55,14 +55,15 @@ class GeodesicDistanceKernel: public Kernel
 private:
 
   typedef Kernel inherited;
+
+  //! Used to store data and save memory allocation.
+  mutable Mat k_xi_x_sorted1, k_xi_x_sorted2, k_xi_x_sorted;
   
 protected:
 
   // *********************
   // * Protected options *
   // *********************
-
-  
 
 public:
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocalNeighborsDifferencesVMatrix.cc,v 1.4 2004/07/09 22:18:39 monperrm Exp $ 
+   * $Id: LocalNeighborsDifferencesVMatrix.cc,v 1.5 2004/07/21 20:12:19 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus
@@ -66,7 +66,6 @@ void LocalNeighborsDifferencesVMatrix::getNewRow(int i, const Vec& v) const
   if (width_<0)
     PLERROR("LocalNeighborsDifferencesVMatrix::getNewRow called but build was not done yet");
   Mat differences = v.toMat(n_neighbors,source->width());
-  static Vec neighbor_row, ith_row;
   neighbor_row.resize(source->width());
   ith_row.resize(source->width());
   source->getRow(i,ith_row);
@@ -99,13 +98,12 @@ void LocalNeighborsDifferencesVMatrix::build_()
     length_ = source->length();
     width_ = source->width()*n_neighbors;
     neighbors.resize(source->length(),n_neighbors);
-    static Vec row;
-    row.resize(source->width());
+    a_row.resize(source->width());
     for (int i=0;i<source->length();i++)
     {
-      source->getRow(i,row);
+      source->getRow(i,a_row);
       TVec<int> neighbors_of_i = neighbors(i);
-      computeNearestNeighbors(source,row,neighbors_of_i,i);
+      computeNearestNeighbors(source,a_row,neighbors_of_i,i);
     }
   }
 }
