@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.cc,v 1.6 2003/04/28 17:49:15 tihocan Exp $
+   * $Id: GradientOptimizer.cc,v 1.7 2003/04/29 13:06:05 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -260,13 +260,25 @@ real GradientOptimizer::optimize()
   // The vector containing the learning rate for each parameter
   Vec learning_rates(params.nelems());
   Vec old_gradient(params.nelems());
+  Vec old_evol(params.nelems()); // store the previous learning rates evolution
   learning_rates.fill(start_learning_rate);
-  Optimizer::computeGradient(this, old_gradient);
+  switch (learning_rate_adaptation) {
+    case 0:
+      break;
+    case 1:
+      // old_gradient is used to store the old parameters
+      params.copyTo(old_gradient);
+      old_evol.fill(0);
+      break;
+    case 2:
+      Optimizer::computeGradient(this, old_gradient);
+      break;
+  }
   bool adapt = (learning_rate_adaptation != 0);
 
   // Big hack for the special case of stochastic gradient, to avoid doing an explicit update
   // (temporarily change the gradient fields of the parameters to point to the parameters themselves,
-  // so that gradients are "accumulated" directly in the parameters, thus updating them!
+  // so that gradients are "accumulated" directly in the parameters, thus updating them!)
   SumOfVariable* sumofvar = dynamic_cast<SumOfVariable*>((Variable*)cost);
   Array<Mat> oldgradientlocations;
   bool stochastic_hack = sumofvar!=0 && sumofvar->nsamples==1;
@@ -301,6 +313,16 @@ real GradientOptimizer::optimize()
     if ((every!=0) && ((t+1)%every==0))
       // normally this is done every epoch
     { 
+      switch (learning_rate_adaptation) {
+        case 0:
+          break;
+        case 1:
+          adaptLearningRateBasic(learning_rates, old_gradient, old_evol);
+          params.copyTo(old_gradient);
+          break;
+        case 2:
+          break;
+      }
       //cerr << ">>>>>> nupdates= " << nupdates << "  every=" << every << "  sumofvar->nsamples=" << sumofvar->nsamples << endl;
       meancost /= real(every);
       //if (decrease_constant != 0)
@@ -316,23 +338,20 @@ real GradientOptimizer::optimize()
     }
     // set params += -learning_rate * params.gradient
     if (adapt) {
-      params.copyGradientTo(gradient);
       switch (learning_rate_adaptation) {
         case 0:
           break; // that should not happen of course
         case 1:
-          adaptLearningRateBasic(
-            learning_rates,
-            old_gradient,
-            gradient);
+          params.copyGradientTo(gradient);
           params.update(learning_rates, gradient); 
           break;
         case 2:
+          params.copyGradientTo(gradient);
           adaptLearningRateALAP1(old_gradient, gradient);
           params.update(learning_rate, gradient);
+          old_gradient << gradient;
           break;
       }
-      old_gradient << gradient;
       params.clearGradient();
     } else if (!stochastic_hack) {
       params.updateAndClear();
@@ -365,7 +384,8 @@ void GradientOptimizer::adaptLearningRateALAP1(
       prod += old_gradient[j] * new_gradient[j];
     }
   }
-  learning_rate = learning_rate + adapt_coeff1 * prod;
+  // The division by j=params.nelems() is a scaling coeff
+  learning_rate = learning_rate + adapt_coeff1 * prod / j;
   if (learning_rate < min_learning_rate) {
     learning_rate = min_learning_rate;
   } else if (learning_rate > max_learning_rate) {
@@ -378,28 +398,30 @@ void GradientOptimizer::adaptLearningRateALAP1(
 ////////////////////////////
 void GradientOptimizer::adaptLearningRateBasic(
     Vec learning_rates,
-    Vec old_gradient,
-    Vec new_gradient) {
-  int j = 0; // the current index in learning_rates
-  int k;
-  real prod;
+    Vec old_params,
+    Vec old_evol) {
   Var* array = params->data();
+  int j = 0;
+  int k;
+  real u;
   for (int i=0; i<params.size(); i++) {
     k = j;
     for (; j<k+array[i]->nelems(); j++) {
-      prod = old_gradient[j] * new_gradient[j];
-      if (prod > 0) {
+      u = old_evol[j];
+      old_evol[j] = array[i]->valuedata[j-k] - old_params[j];
+      if (u * old_evol[j] > 0)
         learning_rates[j] *= adapt_coeff1;
-      } else {
+      else if (u * old_evol[j] < 0)
         learning_rates[j] *= adapt_coeff2;
-      }
       if (learning_rates[j] < min_learning_rate) {
         learning_rates[j] = min_learning_rate;
       } else if (learning_rates[j] > max_learning_rate) {
         learning_rates[j] = max_learning_rate;
       }
+      // cout << learning_rates[j] << "  ";
     }
   }
+  // cout << endl;
 }
 
 /************* ScaledGradientOptimizer Stuff ************/

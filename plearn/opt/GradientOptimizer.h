@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.h,v 1.5 2003/04/28 17:49:15 tihocan Exp $
+   * $Id: GradientOptimizer.h,v 1.6 2003/04/29 13:06:06 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -149,8 +149,8 @@ using namespace std;
     // else           : lr(i) = lr(i) * adapt_coeff2
     void adaptLearningRateBasic(
         Vec learning_rates,
-        Vec old_gradient,
-        Vec new_gradient);
+        Vec old_params,
+        Vec new_evol);
 
     // ALAP1 formula learning rate adaptation
     // lr = lr + adapt_coeff1 * dot(grad(k-1), grad(k))
