@@ -1,4 +1,3 @@
-
 // -*- C++ -*-
 
 // PCA.h
@@ -34,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PCA.h,v 1.5 2004/03/30 18:54:54 tihocan Exp $ 
+   * $Id: PCA.h,v 1.6 2004/06/29 13:28:11 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PCA.h */
@@ -59,36 +58,35 @@ public:
   // * public build options *
   // ************************
 
-  int ncomponents; //! The number of principal components to keep (that's also the outputsize)
-  real sigmasq; //! this gets added to the diagonal of the covariance matrix prior to eigen-decomposition
-  bool normalize; //! if true, we divide by sqrt(eigenval) after projecting on the eigenvec.
+  string algo;
+  int ncomponents;  //! The number of principal components to keep (that's also the outputsize)
+  real sigmasq;     //! This gets added to the diagonal of the covariance matrix prior to eigen-decomposition
+  bool normalize;   //! If true, we divide by sqrt(eigenval) after projecting on the eigenvec.
   
-  // saved options
+  // Saved options
   Vec mu; //! The (weighted) mean of the samples 
   Vec eigenvals;  //! The ncomponents eigenvalues corresponding to the principal directions kept
-  Mat eigenvecs; //! A ncomponens x inputsize matrix containing the principal eigenvectors
+  Mat eigenvecs;  //! A ncomponents x inputsize matrix containing the principal eigenvectors
 
   // ****************
   // * Constructors *
   // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
+  //! Default constructor.
   PCA();
-
 
   // ******************
   // * PLearner methods *
   // ******************
 
 private: 
+
   //! This does the actual building. 
-  // (Please implement in .cc)
   void build_();
 
 protected: 
+
   //! Declares this class' options
-  // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
 
 public:
@@ -97,7 +95,7 @@ public:
   // **** Object methods ****
   // ************************
 
-  //! simply calls inherited::build() then build_() 
+  //! Simply calls inherited::build() then build_() 
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy
@@ -115,18 +113,15 @@ public:
 
   //! returns the size of this learner's output, (which typically
   //! may depend on its inputsize(), targetsize() and set options)
-  // (PLEASE IMPLEMENT IN .cc)
   virtual int outputsize() const;
 
   //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
   //! And sets 'stage' back to 0   (this is the stage of a fresh learner!)
-  // (PLEASE IMPLEMENT IN .cc)
   virtual void forget();
 
     
   //! The role of the train method is to bring the learner up to stage==nstages,
   //! updating the train_stats collector with training costs measured on-line in the process.
-  // (PLEASE IMPLEMENT IN .cc)
   virtual void train();
 
 
