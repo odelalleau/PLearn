@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.15 2004/02/28 18:05:01 tihocan Exp $
+   * $Id: Kernel.cc,v 1.16 2004/02/28 20:51:45 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -162,8 +162,9 @@ void Kernel::computeGramMatrix(Mat K) const
   int l=data->length();
   int m=K.mod();
   ProgressBar* pb = 0;
+  int count = 0;
   if (report_progress) {
-    pb = new ProgressBar("Computing Gram matrix for " + classname(), l);
+    pb = new ProgressBar("Computing Gram matrix for " + classname(), (l * (l + 1)) / 2);
   }
   for (int i=0;i<l;i++)
   {
@@ -176,8 +177,10 @@ void Kernel::computeGramMatrix(Mat K) const
       if (j<i)
         *Kji_ =Kij;
     }
-    if (pb)
-      pb->update(i);
+    if (pb) {
+      count += i + 1;
+      pb->update(count);
+    }
   }
   if (pb) {
     delete pb;
@@ -220,9 +223,20 @@ void Kernel::apply(VMat m1, VMat m2, Mat& result) const
   Vec m1_i(m1w);
   Vec m2_j(m2w);
   ProgressBar* pb = 0;
-  if (report_progress)
-    pb = new ProgressBar("Applying " + classname() + " to two matrices", m1->length());
-  if(is_symmetric && m1==m2)
+  bool easy_case = (is_symmetric && m1 == m2);
+  int l1 = m1->length();
+  int l2 = m2->length();
+  if (report_progress) {
+    int nb_steps;
+    if (easy_case) {
+      nb_steps = (l1 * (l1 + 1)) / 2;
+    } else {
+      nb_steps = l1 * l2;
+    }
+    pb = new ProgressBar("Applying " + classname() + " to two matrices", nb_steps);
+  }
+  int count = 0;
+  if(easy_case)
     {
       for(int i=0; i<m1->length(); i++)
         {
@@ -234,8 +248,10 @@ void Kernel::apply(VMat m1, VMat m2, Mat& result) const
               result(i,j) = val;
               result(j,i) = val;
             }
-          if (pb)
-            pb->update(i);
+          if (pb) {
+            count += i + 1;
+            pb->update(count);
+          }
         }
     }
   else
@@ -248,8 +264,10 @@ void Kernel::apply(VMat m1, VMat m2, Mat& result) const
               m2->getSubRow(j,0,m2_j);
               result(i,j) = evaluate(m1_i,m2_j);
             }
-          if (pb)
-            pb->update(i);
+          if (pb) {
+            count += l2;
+            pb->update(count);
+          }
         }
     }
   if (pb)
