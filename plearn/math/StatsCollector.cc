@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.12 2003/06/02 17:41:05 genji256 Exp $
+   * $Id: StatsCollector.cc,v 1.13 2003/06/02 17:58:07 genji256 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -164,7 +164,7 @@ void StatsCollector::update(real val)
                   {
                     it->second.nbelow++;
                     it->second.sum += val;
-                    it->second.sumsquare += sqval;
+                    it->second.sumsquare += val*val;
                   }
               }
           }
