@@ -62,6 +62,18 @@ public:
     // of the conditioning variable. It should be < inputsize().
   int input_part_size;
 
+private: 
+  //! This does the actual building. 
+  // (Please implement in .cc)
+  void build_();
+
+
+protected: 
+  //! Declares this class' options
+  // (Please implement in .cc)
+  static void declareOptions(OptionList& ol);
+
+public:
   // ****************
   // * Constructors *
   // ****************
@@ -70,8 +82,9 @@ public:
   // initializes all fields to reasonable default values.
   PConditionalDistribution();
 
-  //! Provides a help message describing this class
-  static string help();
+
+  //! simply calls inherited::build() then build_() 
+  virtual void build();
 
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.h,v 1.5 2003/08/31 14:31:18 yoshua Exp $ 
+   * $Id: PDistribution.h,v 1.6 2003/11/19 15:07:08 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.h */
@@ -59,7 +59,14 @@ public:
   //! A string where the characters have the following meaning:
   //! 'l'->log_density, 'd' -> density, 'c' -> cdf, 's' -> survival_fn
   //! (subclasses may define more uses, such as: 'e' -> expectation, 'v' -> variance)
+  //! Upper case produces the whole curve in output.
   string outputs_def;
+
+  // number of (histogram) curve points if outputs_def is upper case.
+  int n_curve_points;
+
+  // interval of Y values for computing histogram output (upper case outputs_def)
+  real lower_bound, upper_bound; 
 
   // ****************
   // * Constructors *
@@ -92,9 +99,6 @@ public:
 
   //! simply calls inherited::build() then build_() 
   virtual void build();
-
-  //! Provides a help message describing this class
-  static string help();
 
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);

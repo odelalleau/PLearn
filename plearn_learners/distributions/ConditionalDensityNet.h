@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.5 2003/11/19 02:43:08 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.6 2003/11/19 15:07:08 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -146,6 +146,10 @@ public:
   //   - uniform: at regular intervals in [0,maxY]
   //   - log-scale: as the exponential of values at regular intervals in [0,log(1+maxY)], minus 1
   string centers_initialization;
+
+  // approximate unconditional probability of Y=0 (mass point), used
+  // to initialize the parameters
+  real unconditional_p0;
 
   // ****************
   // * Constructors *

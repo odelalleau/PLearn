@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.cc,v 1.5 2003/08/13 08:13:46 plearner Exp $ 
+   * $Id: PDistribution.cc,v 1.6 2003/11/19 15:07:08 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.cc */
@@ -47,7 +47,13 @@ PDistribution::PDistribution()
   :outputs_def("l")
 {}
 
-  PLEARN_IMPLEMENT_OBJECT(PDistribution, "ONE LINE DESCR", "NO HELP");
+  PLEARN_IMPLEMENT_OBJECT(PDistribution, 
+                          "Distribution is the base class for distributions.\n",
+                          "Distributions derive from PLearner (as some of them may be fitted to data with train() )\n"
+                          "but they have additional methods allowing for ex. to compute density or generate data points.\n"
+                          "The default implementations of the learner-type methods for computing outputs and costs work as follows:\n"
+                          "  - the outputs_def option allows to choose what outputs are produced. \n"
+                          "  - cost is by a vector of size 1 containing only the negative log-likelihood (NLL) i.e. -log_density).\n");
 
   void PDistribution::declareOptions(OptionList& ol)
   {
@@ -55,21 +61,36 @@ PDistribution::PDistribution()
                   "A string where the characters have the following meaning: \n"
                   "'l'-> log_density, 'd' -> density, 'c' -> cdf, 's' -> survival_fn,\n"
                   "and for conditional distributions: 'e' -> expectation, 'v' -> variance\n"
+                  "In lower case 'l', 'd', 'c', 's' give the probability associated with\n"
+                  "a given value of the observation. In upper case, the whole curve is\n"
+                  "evaluated at regular intervals and produced in output (as a histogram). The\n"
+                  "number of curve points is determined by the 'n_curve_points' option\n"
+                  "Note that these options (upper case letters) only work for SCALAR Y variables."
+                  "N.B. If the distribution is unconditional, dataset->targetsize() should be 0.\n"
+                  "If the distribution is conditional P(Y|X) and 'l','d','c','s' (NOT upper case)\n"
+                  "are selected, then the dataset->inputsize() should include both the X and Y\n"
+                  "while dataset->targetsize() should be 0. If the upper case outputs_def are selected\n"
+                  "then dataset->inputsize() should be the length of X (if conditional, or 0 otherwise), and\n"
+                  "dataset->targetsize() should be the length of Y\n"
       );
+
+    declareOption(ol, "n_curve_points", &PDistribution::n_curve_points, OptionBase::buildoption,
+                  "The number of points for which the distribution is evaluated when outputs_defs\n"
+                  "equals 'L', 'D', 'C' or 'S' (produce a histogram of the distribution or density).\n"
+                  "The lower_bound and upper_bound options specify where the curve begins and ends.\n"
+                  "Note that these options (upper case letters) only work for SCALAR Y variables."
+                  );
+
+    declareOption(ol, "lower_bound",  &PDistribution::lower_bound, OptionBase::buildoption,
+                  "The lower bound of scalar Y values to compute a histogram of the distribution\n"
+                  "when upper case outputs_def are specified.\n");
+  
+    declareOption(ol, "upper_bound",  &PDistribution::lower_bound, OptionBase::buildoption,
+                  "The upper bound of scalar Y values to compute a histogram of the distribution\n"
+                  "when upper case outputs_def are specified.\n");
   
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
-  }
-
-  string PDistribution::help()
-  {
-    return 
-      "Distribution is the base class for distributions.\n"
-      "Distributions derive from PLearner (as some of them may be fitted to data with train() )\n"
-      "but they have additional methods allowing for ex. to compute density or generate data points.\n"
-      "The default implementations of the learner-type methods for computing outputs and costs work as follows:\n"
-      "  - the outputs_def option allows to choose what outputs are produced. \n"
-      "  - cost is by a vector of size 1 containing only the negative log-likelihood (NLL) i.e. -log_density).\n";
   }
 
   void PDistribution::build_()
@@ -97,12 +118,21 @@ int PDistribution::inputsize() const
 
 int PDistribution::targetsize() const
 {
-  return 0;
+  return train_set->targetsize();
 }
 
 int PDistribution::outputsize() const
 {
-  return outputs_def.length();
+  int l=0;
+  for (unsigned int i=0;i<outputs_def.length();i++)
+    if (outputs_def[i]=='L' || outputs_def[i]=='D' || outputs_def[i]=='C' || outputs_def[i]=='S')
+      l+=n_curve_points;
+    else if (outputs_def[i]=='e')
+      l+=train_set->targetsize();
+    else if (outputs_def[i]=='v') // by default assume variance is full nxn matrix 
+      l+=train_set->targetsize()*train_set->targetsize();
+    else l++;
+  return l;
 }
 
 void PDistribution::forget()

@@ -47,22 +47,52 @@ PConditionalDistribution::PConditionalDistribution()
    
 }
 
-PLEARN_IMPLEMENT_OBJECT(PConditionalDistribution, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(PConditionalDistribution, 
+                        "Conditional distribution or conditional density model P(Y|X)",
+                        "Abstract superclass for conditional distribution classes.\n"
+                        "It is a subclass of PDistribution, with the added method\n"
+                        "   setInput(Vec& input)\n"
+                        "to set X, that must be called before PDistribution methods such as\n"
+                        "log_density,cdf,survival_fn,expectation,variance,generate.\n"
+                        "The PDistribution option output_defs must be set to specify\n"
+                        "what the PLearner method computeOutput will produce. If it is\n"
+                        "set to 'l' (log_density), 'd' (density), 'c' (cdf), or 's' (survival_fn)\n"
+                        "then the input part of the data should contain both the input X and\n"
+                        "the 'target' Y values (targetsize()==0). Instead, if output_defs is set to\n"
+                        " 'e' (expectation) or 'v' (variance), then the input part of the data should\n"
+                        "contain only X, while the target part should contain Y\n");
 
-string PConditionalDistribution::help()
+void PConditionalDistribution::declareOptions(OptionList& ol)
 {
-  // ### Provide some useful description of what the class is ...
-  return 
-    "You must call setInput to set the condition before using the distribution"
-    + optionHelp();
+  declareOption(ol, "input_part_size", &PConditionalDistribution::input_part_size, OptionBase::buildoption,
+                "This option should be used only if outputs_def is 'l','d','c' or 's' (or upper case),\n"
+                "which is when computeOutput takes as input both the X and Y parts to compute P(Y|X).\n"
+                "This option gives the size of X, that is the length of the part of the data input which\n"
+                "contains the conditioning part of the distribution. The rest of the data input vector should\n"
+                "contain the Y value. If outputs_def is 'e' or 'v' or upper case then this option is ignored.\n");
+  inherited::declareOptions(ol);
 }
 
+  void PConditionalDistribution::build_()
+  {
+    if (train_set)
+    {
+      if (outputs_def=="L" || outputs_def=="D" || outputs_def=="C" || outputs_def=="S" || outputs_def=="e" || outputs_def=="v")
+        input_part_size = train_set->inputsize();
+    }
+  }
+
+  // ### Nothing to add here, simply calls build_
+  void PConditionalDistribution::build()
+  {
+    inherited::build();
+    build_();
+  }
 
 void PConditionalDistribution::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 }
-
 
 void PConditionalDistribution::setInput(const Vec& input) const
 { PLERROR("setInput must be implemented for this PConditionalDistribution"); }
@@ -88,6 +118,54 @@ void PConditionalDistribution::computeOutput(const Vec& input, Vec& output) cons
   {
     Mat covmat = output.toMat(d,d);
     variance(covmat);
+  }
+  else if (outputs_def=="L")
+  {
+    real lower = lower_bound;
+    real upper = upper_bound;
+    real delta = (upper - lower)/n_curve_points;
+    Vec y(1); y[0]=lower;
+    for (int i=0;i<n_curve_points;i++)
+    {
+      output[i] = log_density(y);
+      y[0]+=delta;
+    }
+  }
+  else if (outputs_def=="D")
+  {
+    real lower = lower_bound;
+    real upper = upper_bound;
+    real delta = (upper - lower)/n_curve_points;
+    Vec y(1); y[0]=lower;
+    for (int i=0;i<n_curve_points;i++)
+    {
+      output[i] = density(y);
+      y[0]+=delta;
+    }
+  }
+  else if (outputs_def=="C")
+  {
+    real lower = lower_bound;
+    real upper = upper_bound;
+    real delta = (upper - lower)/n_curve_points;
+    Vec y(1); y[0]=lower;
+    for (int i=0;i<n_curve_points;i++)
+    {
+      output[i] = cdf(y);
+      y[0]+=delta;
+    }
+  }
+  else if (outputs_def=="S")
+  {
+    real lower = lower_bound;
+    real upper = upper_bound;
+    real delta = (upper - lower)/n_curve_points;
+    Vec y(1); y[0]=lower;
+    for (int i=0;i<n_curve_points;i++)
+    {
+      output[i] = survival_fn(y);
+      y[0]+=delta;
+    }
   }
   else PLERROR("PConditionalDistribution: unknown setting of outputs_def = %s",outputs_def.c_str());
 }

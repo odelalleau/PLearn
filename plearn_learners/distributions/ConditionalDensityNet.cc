@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.6 2003/11/19 02:43:08 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.7 2003/11/19 15:07:08 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -68,7 +68,8 @@ ConditionalDensityNet::ConditionalDensityNet()
    log_likelihood_vs_squared_error_balance(1),
    n_output_density_terms(0),
    steps_type("sloped_steps"),
-   centers_initialization("uniform")
+   centers_initialization("uniform"),
+   unconditional_p0(0.01)
   {
   }
 
@@ -106,6 +107,8 @@ ConditionalDensityNet::ConditionalDensityNet()
                           " - uniform: at regular intervals in [0,maxY]\n"
                           " - log-scale: as the exponential of values at regular intervals in [0,log(1+maxY)], minus 1.\n"
                           "The c_i are initialized to 2/(mu_{i+1}-mu_{i-1}), and a and b_i to 0.\n"
+                          "For the output curve options (outputs_def='L',D','C', or 'S'), the lower_bound and upper_bound\n"
+                          "options of PDistribution are automatically set to 0 and maxY respectively.\n"
                           );
 
   void ConditionalDensityNet::declareOptions(OptionList& ol)
@@ -179,6 +182,10 @@ ConditionalDensityNet::ConditionalDensityNet()
                 "      - uniform: at regular intervals in [0,maxY]\n"
                 "      - log-scale: as the exponential of values at regular intervals in [0,log(1+maxY)], minus 1\nDefault=uniform\n");
 
+  declareOption(ol, "unconditional_p0", &ConditionalDensityNet::unconditional_p0, OptionBase::buildoption, 
+                "    approximate unconditional probability of Y=0 (mass point), used\n"
+                "    to initialize the parameters.\n");
+
   declareOption(ol, "paramsvalues", &ConditionalDensityNet::paramsvalues, OptionBase::learntoption, 
                 "    The learned neural network parameter vector\n");
 
@@ -192,6 +199,8 @@ ConditionalDensityNet::ConditionalDensityNet()
 
   if(train_set)  
     {
+      lower_bound = 0;
+      upper_bound = maxY;
       int n_output_parameters = 1+n_output_density_terms*3;
 
       // init. basic vars
@@ -218,9 +227,18 @@ ConditionalDensityNet::ConditionalDensityNet()
       if (nhidden2>0 && nhidden==0)
         PLERROR("ConditionalDensityNet:: can't have nhidden2 (=%d) > 0 while nhidden=0",nhidden2);
       
+      if (nhidden==-1) 
+        // special code meaning that the inputs should be ignored, only use biases
+      {
+        wout = Var(n_output_parameters, 1, "wout");
+        output = wout;
+      }
       // output layer before transfer function
-      wout = Var(1+output->size(), n_output_parameters, "wout");
-      output = affine_transform(output,wout);
+      else
+      {
+        wout = Var(1+output->size(), n_output_parameters, "wout");
+        output = affine_transform(output,wout);
+      }
       params.append(wout);
 
       // direct in-to-out layer
@@ -556,7 +574,29 @@ void ConditionalDensityNet::initializeParams()
     }
   //fill_random_uniform(wout->value, -delta, +delta);
   fill_random_normal(wout->value, 0, delta);
-  wout->matValue(0).clear();
+  Vec output_biases = wout->matValue(0);
+  int i=0;
+  Vec a = output_biases.subVec(i++,1);
+  Vec b = output_biases.subVec(i,n_output_density_terms); i+=n_output_density_terms;
+  Vec c = output_biases.subVec(i,n_output_density_terms); i+=n_output_density_terms;
+  Vec mu = output_biases.subVec(i,n_output_density_terms); i+=n_output_density_terms;
+  a[0]=inverse_softplus(unconditional_p0);
+  b.fill(inverse_softplus((1.0-unconditional_p0)/n_output_density_terms));
+  c.fill(inverse_softplus(1.0));
+  if (centers_initialization=="uniform")
+  {
+    real delta=maxY/(n_output_density_terms+1);
+    real center=delta;
+    for (int i=0;i<n_output_density_terms;i++,center+=delta)
+      mu[i]=center;
+  } else if (centers_initialization=="log-scale")
+  {
+    real delta=log(1+maxY)/(n_output_density_terms+1);
+    real center=delta;
+    for (int i=0;i<n_output_density_terms;i++,center+=delta)
+      mu[i]=exp(center)-1;
+  } else PLERROR("ConditionalDensityNet::initializeParams: unknown value %s for centers_initialization option",
+                 centers_initialization.c_str());
 
   // Reset optimizer
   if(optimizer)
