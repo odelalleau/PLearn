@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TangentLearner.cc,v 1.8 2004/07/08 15:57:27 monperrm Exp $ 
+   * $Id: TangentLearner.cc,v 1.9 2004/07/09 22:26:03 monperrm Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
@@ -51,15 +51,50 @@
 #include "random.h"
 #include "SumOfVariable.h"
 #include "TanhVariable.h"
+#include "random.h"
+#include "plapack.h"
 //#include "TMat_maths_impl.h"
 //#include "TVec_decl.h"
 
 namespace PLearn {
 using namespace std;
 
+// les neurones de la couche cachée correspondent à des hyperplans
+// la smartInitialization consiste a initialiser ces hyperplans passant
+// des points du train_set pris aleatoirement
+// comme ca, on est sur de bien quadriller l'espace des points.
+// le c correspond a une sorte de contre weight decay
+// plus c est grand plus on aura des poids grand et plus on a des neurones tranchés dans l'espace
+Mat smartInitialization(VMat v, int n, real c, real regularization)
+{
+  int l = v->length();
+  int w = v->width();
+  
+  Mat result(n,w);
+  Mat temp(w,w);
+  Vec b(w);
+  b<<c;
+  
+  int i,j;
+
+  for (i=0;i<n;++i)
+  {
+    temp.clear();
+    for (j=0;j<w;++j)
+    {
+      v->getRow(uniform_multinomial_sample(l),temp(j));
+    }
+    // regularization pour eviter 1/ quand on a tire deux fois le meme indice  2/ quand les points sont trops proches
+    regularizeMatrix(temp,regularization);
+    result(i) << solveLinearSystem(temp, b);
+  }
+  return result;
+}
+
 TangentLearner::TangentLearner() 
 /* ### Initialize all fields to their default value here */
   : training_targets("local_neighbors"), use_subspace_distance(false), normalize_by_neighbor_distance(true),
+    smart_initialization(0),initialization_regularization(1e-3),
     n_neighbors(5), n_dim(1), architecture_type("single_neural_network"), n_hidden_units(-1),
     batch_size(1), norm_penalization(0), svd_threshold(1e-5), projection_error_regularization(0)
 {
@@ -92,12 +127,18 @@ void TangentLearner::declareOptions(OptionList& ol)
   // ### OptionBase::tuningoption. Another possible flag to be combined with
   // ### is OptionBase::nosave
 
+  
   declareOption(ol, "training_targets", &TangentLearner::training_targets, OptionBase::buildoption,
 		"Specifies a strategy for training the tangent plane predictor. Possible values are the strings\n"
 		"   local_evectors   : local principal components (based on n_neighbors of x)\n"
 		"   local_neighbors  : difference between x and its n_neighbors.\n"
 		);
-
+  declareOption(ol, "smart_initialization",&TangentLearner::smart_initialization,OptionBase::buildoption,
+   "Use of Smart Initialization");
+   
+  declareOption(ol, "initialization_regularization",&TangentLearner::initialization_regularization,OptionBase::buildoption,
+   "initialization_regularization");
+  
   declareOption(ol, "use_subspace_distance", &TangentLearner::use_subspace_distance, OptionBase::buildoption,
                 "Minimize distance between subspace spanned by f_i and by (x-neighbors), instead of between\n"
                 "the individual targets t_j and the subspace spanned by the f_i.\n");
@@ -292,7 +333,7 @@ void TangentLearner::train()
   int optstage_per_lstage = l/nsamples;
 
   ProgressBar* pb = 0;
-  if(verbosity>0)
+  if(report_progress>0)
     pb = new ProgressBar("Training TangentLearner from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
 
   int initial_stage = stage;
@@ -326,12 +367,22 @@ void TangentLearner::initializeParams()
 
   if (architecture_type=="single_neural_network")
   {
-    real delta = 1.0 / sqrt(real(inputsize()));
-    fill_random_uniform(V->value, -delta, delta);
-    delta = 1.0 / real(n_hidden_units);
-    fill_random_uniform(W->matValue, -delta, delta);
-    b->matValue.clear();
-    c->matValue.clear();
+    if (smart_initialization)
+    {
+      V->matValue<<smartInitialization(train_set,n_hidden_units,smart_initialization,initialization_regularization);
+      W->value<<(1/real(n_hidden_units));
+      b->matValue.clear();
+      c->matValue.clear();
+    }
+    else
+    {
+      real delta = 1.0 / sqrt(real(inputsize()));
+      fill_random_uniform(V->value, -delta, delta);
+      delta = 1.0 / real(n_hidden_units);
+      fill_random_uniform(W->matValue, -delta, delta);
+      b->matValue.clear();
+      c->matValue.clear();
+    }
   }
   else if (architecture_type=="linear")
   {
@@ -356,8 +407,7 @@ void TangentLearner::computeOutput(const Vec& input, Vec& output) const
 void TangentLearner::computeCostsFromOutputs(const Vec& input, const Vec& output, 
 					     const Vec& target, Vec& costs) const
 {
-  costs.resize(1);
-  costs[0] = projection_error_f(output,target);
+  PLERROR("TangentLearner::computeCostsFromOutputs not defined for this learner");
 }                                
 
 TVec<string> TangentLearner::getTestCostNames() const
@@ -370,6 +420,7 @@ TVec<string> TangentLearner::getTrainCostNames() const
   TVec<string> cost(1); cost[0] = "projection_error";
   return cost;
 }
+
 
 
 } // end of namespace PLearn
