@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LLEKernel.cc,v 1.5 2004/07/20 19:27:46 tihocan Exp $ 
+   * $Id: LLEKernel.cc,v 1.6 2004/07/20 21:53:44 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -53,7 +53,7 @@ LLEKernel::LLEKernel()
 : build_in_progress(false),
   reconstruct_ker(new ReconstructionWeightsKernel()),
   knn(5),
-  reconstruct_coeff(1e6),
+  reconstruct_coeff(-1),
   regularizer(1e-6)
 {
 }
@@ -71,7 +71,9 @@ PLEARN_IMPLEMENT_OBJECT(LLEKernel,
     " - K''(x, x_i) = K''(x_i, x) = 0\n"
     "The weight of K' is given by the 'reconstruct_coeff' option: when this\n"
     "weight tends to infinity, the mapping obtained is the same as the\n"
-    "out-of-sample extension proposed in (Saul and Roweis, 2002).\n"
+    "out-of-sample extension proposed in (Saul and Roweis, 2002). To obtain\n"
+    "such a behavior, one should set 'reconstruct_coeff' to -1. This is the\n"
+    "default behavior, and it is suggested to keep it.\n"
 );
 
 ////////////////////
@@ -83,7 +85,10 @@ void LLEKernel::declareOptions(OptionList& ol)
       "The number of nearest neighbors considered.");
 
   declareOption(ol, "reconstruct_coeff", &LLEKernel::reconstruct_coeff, OptionBase::buildoption,
-      "The weight of K' in the weighted sum of K' and K''.");
+      "The weight of K' in the weighted sum of K' and K''. If set to a negative\n"
+      "value, it will behave as its absolute value when evaluated on the training\n"
+      "points with the evaluate_i_j method, but will return only its absolute value\n"
+      "times K' when evaluated with the evaluate_i_x method.");
 
   declareOption(ol, "regularizer", &LLEKernel::regularizer, OptionBase::buildoption,
       "The regularization factor used to make the linear systems stable.");
@@ -107,6 +112,15 @@ void LLEKernel::build()
 ////////////
 void LLEKernel::build_()
 {
+  // Let's make sure the value of 'reconstruct_coeff' is not set accidentally
+  // to an unusual value.
+  if (reconstruct_coeff == 0) {
+    PLWARNING("In LLEKernel::build_ - 'reconstruct_coeff' is set to 0, you won't be able to apply this kernel out-of-sample");
+  } else if (reconstruct_coeff > 0) {
+    PLWARNING("In LLEKernel::build_ - 'reconstruct_coeff' is > 0, this may give weird results out-of-sample for small coefficients");
+  } else if (fabs(reconstruct_coeff + 1) > 1e-6) {
+    PLWARNING("In LLEKernel::build_ - 'reconstruct_coeff' is negative but not -1, this may give some very weird stuff out-of-sample");
+  }
   reconstruct_ker->regularizer = this->regularizer;
   reconstruct_ker->knn = this->knn;
   reconstruct_ker->report_progress = this->report_progress;
@@ -126,7 +140,7 @@ void LLEKernel::computeGramMatrix(Mat K) const {
   reconstruct_ker->computeLLEMatrix(K);
   if (reconstruct_coeff != 0) {
     for (int i = 0; i < n_examples; i++) {
-      K(i, i) += reconstruct_coeff;
+      K(i, i) += fabs(reconstruct_coeff);
     }
   }
 }
@@ -145,7 +159,7 @@ real LLEKernel::evaluate(const Vec& x1, const Vec& x2) const {
 real LLEKernel::evaluate_i_j(int i, int j) const {
   if (i == j) {
     return
-      reconstruct_coeff +
+      fabs(reconstruct_coeff) +
       2 * reconstruct_ker->evaluate_i_j(i,i) -
       reconstruct_ker->evaluate_sum_k_i_k_j(i,i);
   } else {
@@ -181,9 +195,9 @@ real LLEKernel::evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x, 
       is_training_point = isInData(x, &j);
     }
     if (!is_training_point)
-      PLERROR("Return 0"); // TODO Return 0
+      return 0;
     return evaluate_i_j(i, j);
-  } else {
+  } else if (reconstruct_coeff > 0) {
     if (first_time) {
       is_training_point = isInData(x, &j);
     }
@@ -192,6 +206,9 @@ real LLEKernel::evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x, 
     } else {
       return reconstruct_coeff * reconstruct_ker->evaluate_x_i_again(x, i, squared_norm_of_x, first_time);
     }
+  } else {
+    // reconstruct_coeff < 0: we assume x is not a training point.
+    return fabs(reconstruct_coeff) * reconstruct_ker->evaluate_x_i_again(x, i, squared_norm_of_x, first_time);
   }
 }
 
