@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.60 2004/09/29 16:24:11 chapados Exp $
+   * $Id: TMat_maths_impl.h,v 1.61 2004/11/22 17:51:11 dorionc Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -51,6 +51,24 @@
 
 namespace PLearn {
 using namespace std;
+
+template <class T> 
+TVec<T> sign(const TVec<T>& vec)
+{
+  int len = vec.length();
+
+  TVec<T> sign_( len );
+  T*  v   = vec.data();
+  T*  s   = sign_.data();
+
+  while(--len >= 0)
+  {
+    *s = sign( *v );
+    v++; s++; 
+  }
+  
+  return sign_;
+}
 
 template <class T> 
 T max(const TVec<T>& vec)
