@@ -1,6 +1,6 @@
 #include "DERIVEDCLASS.h"
 
-namespace PLearn <%%
+namespace PLearn <%
 using namespace std;
 
 DERIVEDCLASS::DERIVEDCLASS() 
@@ -60,29 +60,6 @@ DERIVEDCLASS::DERIVEDCLASS()
   }
 
 
-  void DERIVEDCLASS::train(VMat training_set)
-  { 
-    if(training_set->width() != inputsize()+targetsize())
-      PLERROR("In DERIVEDCLASS::train(VMat training_set) training_set->width() != inputsize()+targetsize()");
-
-    setTrainingSet(training_set);
-
-    // ### Please implement the actual training of the model.
-    // ### For models with incremental training, to benefit 
-    // ### from the "testing during training" and early-stopping 
-    // ### mechanisms, you should make sure to call measure at 
-    // ### every "epoch" (whatever epoch means for your algorithm).
-    // ### ex:
-    // if(measure(epoch,costvec)) 
-    //     break; // exit training loop because early-stopping contditions were met
-  }
-
-  void DERIVEDCLASS::use(const Vec& input, Vec& output)
-  {
-    // ### You should redefine this method to compute the output
-    // ### corresponfding to a new test input.
-  }
-
   void DERIVEDCLASS::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   {
     Object::makeDeepCopyFromShallowCopy(copies);
@@ -97,4 +74,4 @@ DERIVEDCLASS::DERIVEDCLASS()
     PLERROR("DERIVEDCLASS::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
   }
 
-%%> // end of namespace PLearn
+%> // end of namespace PLearn

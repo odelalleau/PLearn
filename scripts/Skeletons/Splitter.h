@@ -1,12 +1,12 @@
 #ifndef DERIVEDCLASS_INC
 #define DERIVEDCLASS_INC
 
-#include "Object.h"
+#include "Splitter.h"
 
 namespace PLearn <%
 using namespace std;
 
-class DERIVEDCLASS: public Object
+class DERIVEDCLASS: public Splitter
 {
 protected:
   // *********************
@@ -18,7 +18,7 @@ protected:
     
 public:
 
-  typedef Object inherited;
+  typedef Splitter inherited;
 
   // ************************
   // * public build options *
@@ -63,10 +63,22 @@ public:
   //! Declares name and deepCopy methods
   DECLARE_NAME_AND_DEEPCOPY(DERIVEDCLASS);
 
+
+  // ********************************
+  // *        Splitter methods      *
+  // * (must be implemented in .cc) *
+  // ********************************
+
+  //! Returns the number of available different "splits"
+  virtual int nsplits() const;
+
+  //! Returns split number i
+  virtual Array<VMat> getSplit(int i=0);
+
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(DERIVEDCLASS);
+DECLARE_OBJECT_PTR(DERIVEDCLASS);
   
 %> // end of namespace PLearn
 
