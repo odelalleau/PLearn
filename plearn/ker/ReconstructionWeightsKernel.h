@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ReconstructionWeightsKernel.h,v 1.4 2004/07/20 19:29:10 tihocan Exp $ 
+   * $Id: ReconstructionWeightsKernel.h,v 1.5 2004/07/21 15:58:39 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -46,6 +46,7 @@
 
 #include "Kernel.h"
 #include "SelectRowsVMatrix.h"
+#include "ShiftAndRescaleVMatrix.h"
 
 namespace PLearn {
 using namespace std;
@@ -64,7 +65,26 @@ private:
   //! time we called 'reconstruct'. This is necessary to ensure everything
   //! is correctly initialized in the 'reconstruct' method.
   mutable bool new_data;
+
+  //! Used in 'evaluate_x_i_again' to store the distances from x to its
+  //! nearest neighbors.
+  mutable Mat k_xi_x_sorted;
+
+  //! Used in 'evaluate_x_i_again' to store the neighbors of x.
+  mutable TVec<int> neighbors_of_x;
+
+  //! Used in 'evaluate_x_i_again' to store the reconstruction weights of x.
+  mutable Vec weights_x;
+
+  //! Used in 'reconstruct' to store the local Gram matrix.
+  mutable Mat local_gram;
   
+  //! Used in 'reconstruct' to point toward the locally centered data.
+  mutable PP<ShiftAndRescaleVMatrix> centered_neighborhood;
+
+  //! Used in 'reconstruct' to store a vector filled with 1.
+  mutable Vec ones;
+
 protected:
 
   // *********************
@@ -104,6 +124,7 @@ public:
 
   Ker distance_kernel;
   Ker dot_product_kernel;
+  int ignore_nearest;
   int knn;
   real regularizer;
 
@@ -112,8 +133,6 @@ public:
   // ****************
 
   //! Default constructor.
-  // Make sure the implementation in the .cc initializes all fields to
-  // reasonable default values.
   ReconstructionWeightsKernel();
 
   // ******************
