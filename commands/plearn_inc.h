@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.20 2004/07/19 14:53:14 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.21 2004/07/19 22:45:25 mariusmuja Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -114,6 +114,7 @@
 #include "ManifoldParzen2.h"
 #include "SpiralDistribution.h"
 #include "UniformDistribution.h"
+#include "TestingLearner.h"
 
 /************
  * Splitter *
@@ -128,6 +129,7 @@
 #include "ToBagSplitter.h"
 #include "TrainTestSplitter.h"
 #include "TrainValidTestSplitter.h"
+#include "DBSplitter.h"
 
 /*********************
  * VecStatsCollector *
