@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.cc,v 1.3 2002/10/25 23:16:09 plearner Exp $
+   * $Id: Variable.cc,v 1.4 2003/04/25 20:40:49 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -462,6 +462,36 @@ bool Variable::update(real step_size, Vec direction_vec)
       valuedata[i] += step_size*direction[i];      
     }
   }
+  return hit;
+}
+
+bool Variable::update(Vec step_sizes, Vec direction_vec)
+{
+  bool hit=false;
+  real* direction = direction_vec.data();
+  real* step = step_sizes.data();
+  if(min_value>-FLT_MAX || max_value<FLT_MAX)
+    // constrained update
+  {
+    for(int i=0; i<nelems(); i++)
+    {
+      valuedata[i] += step[i]*direction[i];      
+      if(valuedata[i]<min_value)
+      {
+        valuedata[i]=min_value;
+        hit = true;
+      }
+      else if(valuedata[i]>max_value)
+      {
+        valuedata[i]=max_value;
+        hit = true;
+      }
+    }
+  }
+  else
+    // unconstrained update
+    for(int i=0; i<nelems(); i++)
+      valuedata[i] += step[i]*direction[i];      
   return hit;
 }
 

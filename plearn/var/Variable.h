@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.h,v 1.5 2002/10/25 23:16:09 plearner Exp $
+   * $Id: Variable.h,v 1.6 2003/04/25 20:40:51 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -268,9 +268,15 @@ public:
 /*!     set value = value + step_size * direction 
     with step_size possibly scaled down s.t. box constraints are satisfied
     return true if box constraints have been hit with the update
-    If (allows_partial_update) the update is done where necessary.
+    If (allows_partial_update) the update is done where necessary. // NB: Wrong ?
 */
   bool update(real step_size, Vec direction_vec);
+
+/*!     set value[i] = value[i] + step_sizes[i] * direction[i]
+    with step_size possibly scaled down s.t. box constraints are satisfied
+    return true if box constraints have been hit with the update
+*/
+  bool update(Vec step_sizes, Vec direction_vec);
 
   //! Does value += gradient; gradient.clear();
   inline void updateAndClear();
@@ -280,6 +286,7 @@ public:
     return true if box constraints have been hit with the update
 */
   bool update(real step_size);
+
   //!  send message that update may be sometimes needed on only parts of the Variable
   void allowPartialUpdates()
   {
