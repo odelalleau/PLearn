@@ -30,7 +30,7 @@ int main(int argc, char** argv)
 //     pos_file = tostring(argv[9]);
   if (load)
   {
-    WordNetOntology ontology(voc_file, synset_file, ontology_file, false, false);
+    WordNetOntology ontology(voc_file, synset_file, ontology_file, false, true);
     ontology.printStats();
     ontology.detectWordsWithoutOntology();
     if (polysemy_reduction_level != -1)
@@ -43,6 +43,10 @@ int main(int argc, char** argv)
 //       ontology.loadPredominentSyntacticClasses(pos_file);
     if (print)
       ontology.print(true);
+
+    cout << "extracting word categories" << endl;
+    ontology.extractWordCategoriesAtLevel(4, 2);
+
   } else
   {
     WordNetOntology ontology(voc_file, diff_unk, false, false, pos_type);

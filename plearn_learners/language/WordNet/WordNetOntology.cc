@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.cc,v 1.6 2002/11/14 20:08:08 jauvinc Exp $
+   * $Id: WordNetOntology.cc,v 1.7 2002/11/14 22:12:59 jauvinc Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -2213,7 +2213,7 @@ bool WordNetOntology::isTopLevelCategory(int ss_id)
           ss_id == BOS_SS_ID || ss_id == EOS_SS_ID);
 }
 
-int WordNetOntology::extractWordCategoriesAtLevel(int noun_depth, int verb_depth)
+int WordNetOntology::extractWordCategoriesAtLevel(int noun_depth, int verb_depth, int adj_depth, int adv_depth, int unk_depth)
 {
   Set noun_categories;
   getDescendantCategoriesAtLevel(NOUN_SS_ID, 0, noun_depth, noun_categories);
@@ -2241,25 +2241,47 @@ int WordNetOntology::extractWordCategoriesAtLevel(int noun_depth, int verb_depth
       word_to_categories_at_level[word_id].insert(ss_id);
     }
   }
-  Set word_descendants = getSynsetWordDescendants(ADJ_SS_ID);
-  for (SetIterator wit = word_descendants.begin(); wit != word_descendants.end(); ++wit)
+  Set adj_categories;
+  getDescendantCategoriesAtLevel(ADJ_SS_ID, 0, adj_depth, adj_categories);
+  //cout << "|verb categories| = " << verb_categories.size() << endl;
+  for (SetIterator sit = adj_categories.begin(); sit != adj_categories.end(); ++sit)
   {
-    int word_id = *wit;
-    word_to_categories_at_level[word_id].insert(ADJ_SS_ID);
+    int ss_id = *sit;
+    Set word_descendants = getSynsetWordDescendants(ss_id);
+    for (SetIterator wit = word_descendants.begin(); wit != word_descendants.end(); ++wit)
+    {
+      int word_id = *wit;
+      word_to_categories_at_level[word_id].insert(ss_id);
+    }
   }
-  word_descendants = getSynsetWordDescendants(ADV_SS_ID);
-  for (SetIterator wit = word_descendants.begin(); wit != word_descendants.end(); ++wit)
+  Set adv_categories;
+  getDescendantCategoriesAtLevel(ADV_SS_ID, 0, adv_depth, adv_categories);
+  //cout << "|verb categories| = " << verb_categories.size() << endl;
+  for (SetIterator sit = adv_categories.begin(); sit != adv_categories.end(); ++sit)
   {
-    int word_id = *wit;
-    word_to_categories_at_level[word_id].insert(ADV_SS_ID);
+    int ss_id = *sit;
+    Set word_descendants = getSynsetWordDescendants(ss_id);
+    for (SetIterator wit = word_descendants.begin(); wit != word_descendants.end(); ++wit)
+    {
+      int word_id = *wit;
+      word_to_categories_at_level[word_id].insert(ss_id);
+    }
   }
-  word_descendants = getSynsetWordDescendants(SUPER_UNKNOWN_SS_ID);
-  for (SetIterator wit = word_descendants.begin(); wit != word_descendants.end(); ++wit)
+  Set unk_categories;
+  getDescendantCategoriesAtLevel(SUPER_UNKNOWN_SS_ID, 0, unk_depth, unk_categories);
+  //cout << "|verb categories| = " << verb_categories.size() << endl;
+  for (SetIterator sit = unk_categories.begin(); sit != unk_categories.end(); ++sit)
   {
-    int word_id = *wit;
-    word_to_categories_at_level[word_id].insert(SUPER_UNKNOWN_SS_ID);
+    int ss_id = *sit;
+    Set word_descendants = getSynsetWordDescendants(ss_id);
+    for (SetIterator wit = word_descendants.begin(); wit != word_descendants.end(); ++wit)
+    {
+      int word_id = *wit;
+      word_to_categories_at_level[word_id].insert(ss_id);
+    }
   }
-
+  
+  // integrity verification : to each word should be assigned at least 1 category
   for (map<int, string>::iterator it = words.begin(); it != words.end(); ++it)
   {
     int word_id = it->first;
@@ -2267,7 +2289,7 @@ int WordNetOntology::extractWordCategoriesAtLevel(int noun_depth, int verb_depth
       PLWARNING("no category for word '%s' (%d)", words[word_id].c_str(), word_id);
   }
 
-  return (noun_categories.size() + verb_categories.size() + 3);
+  return (noun_categories.size() + verb_categories.size() + adj_categories.size() + adv_categories.size() + unk_categories.size());
 }
 
 // {non-letters}word{non-letters} -> word

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths.h,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: TMat_maths.h,v 1.2 2002/11/14 22:12:59 jauvinc Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -53,5 +53,13 @@
 #include "TMat_maths_specialisation.h"
 
 #endif
+
+
+
+
+
+
+
+
 
 

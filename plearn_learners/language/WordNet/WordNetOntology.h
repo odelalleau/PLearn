@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.h,v 1.7 2002/11/14 20:08:08 jauvinc Exp $
+   * $Id: WordNetOntology.h,v 1.8 2002/11/14 22:13:00 jauvinc Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -271,7 +271,7 @@ public:
   void intersectAncestorsAndSenses(Set categories, Set senses);
   void reducePolysemy(int level);
   void extractPredominentSyntacticClasses();
-  int extractWordCategoriesAtLevel(int noun_depth, int verb_depth);
+  int extractWordCategoriesAtLevel(int noun_depth, int verb_depth, int adj_depth, int adv_depth, int unk_depth);
 
   // integrity verifications
   void detectWordsWithoutOntology();
