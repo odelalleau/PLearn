@@ -56,6 +56,7 @@ if pos>=0:
 
 # QT specific stuff. If this is true, then qt's include dir and library are added for compilation and linkage
 useqt = 0
+qtdir=''
 
 # get the option arguments
 args = sys.argv[:]
@@ -565,21 +566,17 @@ class FileInfo:
         self.hasmain = FileInfo.hasmain_regexp.search(text)
         self.hasqobject = FileInfo.qobject_regexp.search(text)
         self.mocfilename = "moc_"+self.filebase+".cc"
-        #if self.hasqobject:
-        #   print self.filebase," hasqboject!"
-        # print self.filebase,".hasmain = ",self.hasmain
 
     def mocFile(self):
         """QT specific : if moc_'filename'.cc is older than 'filename'.h,
         then moc 'filename'.h (generates) moc_'filename'.cc"""
     
+        if qtdir == '':
+            print """\nError : The qtdir variable is unset but the file """+self.filepath+""" seems to use QT (a Q_OBJECT declaration was found). In your .pymake/config file, assign the qtdir variable to the path to Trolltech's QT installation. Example : qtdir = '/usr/lib/qt3/'"""
+            sys.exit()
+
         if (os.path.isfile(self.mocfilename)) and self.get_depmtime() <= os.path.getmtime(self.mocfilename):
             return 0
-        
-        if qtdir == '':
-            print """the qtdir variable is unset but some file "+self.filepath+" has a Q_OBJECT declaration.
-                  In .pymake/config, assign the qtdir variable to the path to Trolltech's QT installation.
-                  Example : /usr/lib/qt3/"""
                   
         os.system(qtdir+"bin/moc "+self.filepath+" -o "+self.mocfilename)
 
@@ -697,7 +694,7 @@ class FileInfo:
             linkeroptions = linkeroptions + optlib.linkeroptions + ' '
 
         if useqt:
-            linkeroptions = linkeroptions + '-L'+qtdir + 'lib/ -lqt -lGL -lGLU -lglut'
+            linkeroptions = linkeroptions + '-L'+qtdir + 'lib/ -lqt'
             
         return linkeroptions
         
