@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.37 2004/01/08 18:55:27 plearner Exp $
+* $Id: VMatrix.cc,v 1.38 2004/01/14 14:39:15 tihocan Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -285,10 +285,12 @@ void VMatrix::getExample(int i, Vec& input, Vec& target, real& weight)
   if(targetsize_<0)
     PLERROR("In VMatrix::getExample, targetsize_ not defined for this vmat");
   target.resize(targetsize_);
-  if (target_is_last) {
-    getSubRow(i,width() - targetsize_,target);
-  } else {
-    getSubRow(i,inputsize_,target);
+  if (targetsize_ > 0) {
+    if (target_is_last) {
+      getSubRow(i,width() - targetsize_,target);
+    } else {
+      getSubRow(i,inputsize_,target);
+    }
   }
 
   if(weightsize_==0)
