@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.35 2004/03/23 15:39:18 tihocan Exp $
+   * $Id: fileutils.cc,v 1.36 2004/03/30 16:46:26 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -922,6 +922,39 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
               }
               break;
 
+            case 'P': // it's a PLUS{expr1}{expr2}
+              {
+                string expr1, expr2;
+                readWhileMatches(in, "PLUS");
+                bool syntax_ok = true;
+                int c = in.get();
+                if (syntax_ok) {
+                  if(c == '{')
+                    smartReadUntilNext(in, "}", expr1);
+                  else
+                    syntax_ok = false;
+                }
+                if (syntax_ok) {
+                  c = in.get();
+                  if(c == '{')
+                    smartReadUntilNext(in, "}", expr2);
+                  else
+                    syntax_ok = false;
+                }
+                if (!syntax_ok)
+                  PLERROR("$PLUS syntax is: $PLUS{expr1}{expr2}");
+                istrstream expr1_stream(expr1.c_str());
+                istrstream expr2_stream(expr2.c_str());
+                string expr1_eval = readAndMacroProcess(expr1_stream, variables);
+                string expr2_eval = readAndMacroProcess(expr2_stream, variables);
+                real e1, e2;
+                if (!pl_isnumber(expr1_eval, &e1) || !pl_isnumber(expr2_eval, &e2)) {
+                  PLERROR("In $PLUS{expr1}{expr2}, either 'expr1' or 'expr2' is not a number");
+                }
+                text += tostring(e1 + e2);
+              }
+              break;
+
             case 'S': // it's a SWITCH{expr}{cond1}{val1}{cond2}{val2}...{valdef}
               {
                 string expr, valdef;
@@ -1020,7 +1053,7 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
 
             default:
               PLERROR("In readAndMacroProcess: only supported macro commands are \n"
-                      "${varname}, $CHAR, $DEFINE, $ECHO, $IF, $INCLUDE, $ISDEFINED, $ISEQUAL, $MINUS, $OR, $SWITCH, $TIMES."
+                      "${varname}, $CHAR, $DEFINE, $ECHO, $IF, $INCLUDE, $ISDEFINED, $ISEQUAL, $MINUS, $PLUS, $OR, $SWITCH, $TIMES."
                       "But I read $%c !!",c);
             }
         }
