@@ -34,16 +34,16 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: JulianizeVMatrix.h,v 1.1 2003/07/28 18:35:43 chapados Exp $ 
+   * $Id: JulianizeVMatrix.h,v 1.2 2003/07/28 18:42:52 chapados Exp $ 
    ******************************************************* */
 
 /*! \file JulianizeVMatrix.h */
 #ifndef JulianizeVMatrix_INC
 #define JulianizeVMatrix_INC
 
-#include <utilities>
+#include <utility>
 #include <vector>
-#include <algorithms>
+#include <algorithm>
 
 #include "RowBufferedVMatrix.h"
 #include "VMat.h"
@@ -81,6 +81,8 @@ public:
     case Date: return 3;
     case DateTime: return 6;
     }
+    PLERROR("JulianizeVMatrix::dateCodeWidth: unknown date code");
+    return 0;
   }
   
 protected:
