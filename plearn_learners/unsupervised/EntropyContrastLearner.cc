@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: EntropyContrastLearner.cc,v 1.2 2004/09/27 16:26:05 mariusmuja Exp $ 
+ * $Id: EntropyContrastLearner.cc,v 1.3 2004/10/01 19:47:11 mariusmuja Exp $ 
  ******************************************************* */
 
 // Authors: Marius Muja
@@ -48,6 +48,7 @@
 #include <plearn/var/PDistributionVariable.h>
 #include <plearn/var/SVDVariable.h>
 #include <plearn/var/ExtractVariable.h>
+#include <plearn/var/OutputVariable.h>
 #include <plearn_learners/distributions/GaussianDistribution.h>
 #include <plearn/math/random.h>
 
@@ -76,11 +77,13 @@ EntropyContrastLearner::EntropyContrastLearner()
     weight_decay_output(0),
     normalize_constraints(true),
     save_best_params(true),
-    sigma_lr(1),
-    distribution_sigma(0.1),
-    sigma_min_threshold(0.1)
+    sigma_generated(0.1),
+    sigma_min_threshold(0.1),
+    eps(0.0001),
+    save_x_hat(false),
+    gen_method("N(0,I)"),
+    use_sigma_min_threshold(true)
 {
-    // ...
 
     // ### You may or may not want to call build_() to finish building the object
     // build_();
@@ -112,12 +115,22 @@ void EntropyContrastLearner::declareOptions(OptionList& ol)
             "normalize the output constraints\n");
     declareOption(ol, "save_best_params", &EntropyContrastLearner::save_best_params, OptionBase::buildoption, 
             "specify if the best params are saved on each stage\n");
-    declareOption(ol, "sigma_lr", &EntropyContrastLearner::sigma_lr, OptionBase::buildoption, 
-            "sigma learning rate\n");
-    declareOption(ol, "distribution_sigma", &EntropyContrastLearner::distribution_sigma, OptionBase::buildoption, 
+    declareOption(ol, "sigma_generated", &EntropyContrastLearner::sigma_generated, OptionBase::buildoption, 
             "the sigma for the gaussian from which we get the generated data\n");
     declareOption(ol, "sigma_min_threshold", &EntropyContrastLearner::sigma_min_threshold, OptionBase::buildoption, 
             "the minimum value for each element of sigma of the computed features\n");
+    declareOption(ol, "eps", &EntropyContrastLearner::eps, OptionBase::buildoption, 
+            "we ignore singular values smaller than this.\n");
+    declareOption(ol, "gradient_scaling", &EntropyContrastLearner::gradient_scaling, OptionBase::buildoption, 
+            "");
+    declareOption(ol, "save_x_hat", &EntropyContrastLearner::save_x_hat, OptionBase::buildoption, 
+            "Save generated data to a file(for debug purposes).");
+    declareOption(ol, "gen_method", &EntropyContrastLearner::gen_method, OptionBase::buildoption, 
+            "The method used to generate new points.");
+    declareOption(ol, "use_sigma_min_threshold", &EntropyContrastLearner::use_sigma_min_threshold, OptionBase::buildoption, 
+            "Specify if the sigma of the features should be limited.");
+    
+
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -125,34 +138,16 @@ void EntropyContrastLearner::declareOptions(OptionList& ol)
 
 void EntropyContrastLearner::build_()
 {
-    manual_seed(time(NULL));
-    
+   manual_seed(time(NULL)); 
+
     if (train_set) {
 
         // input data
         int n = inputsize();
         x = Var(n, "input");
 
-        // generated data
-        PP<GaussianDistribution> dist = new GaussianDistribution();
-        Vec eig_values(n); 
-        Mat eig_vectors(n,n); eig_vectors.clear();
-        for(int i=0; i<n; i++)
-        {
-            eig_values[i] = distribution_sigma; 
-            eig_vectors(i,i) = 1.0;
-        }
-        dist->mu = Vec(n);
-        dist->eigenvalues = eig_values;
-        dist->eigenvectors = eig_vectors;
-
-        PP<PDistribution> temp;
-        temp = dist;
-
-        x_hat = new PDistributionVariable(x,temp) + x;
-        
-
-        V_best.resize(nconstraints*nhidden*inputsize());
+        V_save.resize(nconstraints*nhidden*inputsize());
+        V_b_save.resize(nconstraints*nhidden);
 
         V.resize(nconstraints);
         V_b.resize(nconstraints);
@@ -168,7 +163,8 @@ void EntropyContrastLearner::build_()
         W.resize(W_size);
         W_b.resize(nconstraints);
 
-        W_best.resize(W_size*nhidden);
+        W_save.resize(W_size*nhidden);
+        W_b_save.resize(nconstraints);
         
         for(int i=0 ; i<nconstraints ; ++i) { 
             for(int j=0 ; j<=i ; ++j) { 
@@ -179,23 +175,19 @@ void EntropyContrastLearner::build_()
             params.push_back(W_b[i]);
         }
 
+        
 
         // hidden layer
         VarArray hf(nconstraints);
-        VarArray hf_hat(nconstraints);
 
         for(int k=0 ; k<nconstraints ; ++k) { 
             hf[k] = tanh(product(V[k],x)+V_b[k]);
         }
         
-        for(int k=0 ; k<nconstraints ; ++k) { 
-            hf_hat[k] = tanh(product(V[k],x_hat)+V_b[k]);
-        }
 
         
         // network output
         VarArray f(nconstraints);
-        VarArray f_hat(nconstraints);
 
         for(int i=0 ; i<nconstraints ; ++i) { 
             for(int j=i ; j>=0 ; --j) { 
@@ -207,17 +199,6 @@ void EntropyContrastLearner::build_()
             }
         }
         
-        for(int i=0 ; i<nconstraints ; ++i) { 
-            for(int j=i ; j>=0 ; --j) { 
-               if (j==i) {
-                   f_hat[i] = product(W[INDEX(i,j)],hf_hat[j]) + W_b[i];
-               } else {
-                   f_hat[i] = f_hat[i] + product(W[INDEX(i,j)],no_bprop(hf_hat[j]));
-               }
-            }
-        }
-
-
         VarArray hg(nconstraints);
 
         for(int k=0 ; k<nconstraints ; ++k) { 
@@ -232,6 +213,82 @@ void EntropyContrastLearner::build_()
                    g[i] = product(W[INDEX(i,j)],hg[j]);
                } else {
                    g[i] = g[i] + product(W[INDEX(i,j)],no_bprop(hg[j]));
+               }
+            }
+        }
+
+        // generated data
+        PP<GaussianDistribution> dist = new GaussianDistribution();
+        Vec eig_values(n); 
+        Mat eig_vectors(n,n); eig_vectors.clear();
+        for(int i=0; i<n; i++)
+        {
+            eig_values[i] = 0.1; 
+            eig_vectors(i,i) = 1.0;
+        }
+        dist->mu = Vec(n);
+        dist->eigenvalues = eig_values;
+        dist->eigenvectors = eig_vectors;
+
+        PP<PDistribution> temp;
+        temp = dist;
+
+        x_hat = new PDistributionVariable(x,temp);
+
+        if (gen_method=="local_gaussian") {
+
+            Var grad = transpose(vconcat(g));
+            Var gs = Var(1,nconstraints);
+            gs->value << gradient_scaling;
+
+            grad = grad*invertElements(gs);
+
+            Var svd_vec = svd(grad);
+
+            int M = inputsize();
+            int N = nconstraints;
+
+            Var U = extract(svd_vec,0,M,M);
+            Var D = extract(svd_vec,M*M+N*N,M,1);
+
+            Var sigma_1 = Var(M,1,"sigma_1");
+            sigma_1->matValue.fill(sigma_generated);
+
+            Var eps_var = Var(M,1,"epsilon");
+            eps_var->matValue.fill(1/eps);
+
+            Var zero = Var(M);
+            zero->matValue.fill(0);
+            Var sigma1;
+            sigma1 = 5*square(invertElements(min(ifThenElse(D>zero,D,eps_var))));
+
+            Var one = Var(M);
+            one->matValue.fill(1);
+            
+            D = ifThenElse(D>zero,invertElements(square(D)+1e-10),sigma1*one);
+
+            x_hat = no_bprop(product(U,(sqrt(D)*x_hat))+x);    
+        }
+
+        if (save_x_hat) {
+            x_hat = output_var(x_hat,"x_hat.dat");
+        }
+        
+
+        VarArray hf_hat(nconstraints);
+
+        for(int k=0 ; k<nconstraints ; ++k) { 
+            hf_hat[k] = tanh(product(V[k],x_hat)+V_b[k]);
+        }
+
+        VarArray f_hat(nconstraints);
+
+        for(int i=0 ; i<nconstraints ; ++i) { 
+            for(int j=i ; j>=0 ; --j) { 
+               if (j==i) {
+                   f_hat[i] = product(W[INDEX(i,j)],hf_hat[j]) + W_b[i];
+               } else {
+                   f_hat[i] = f_hat[i] + product(W[INDEX(i,j)],no_bprop(hf_hat[j]));
                }
             }
         }
@@ -255,7 +312,6 @@ void EntropyContrastLearner::build_()
 
         Var c_entropy;
 
-        
         if (distribution=="normal") {
           
             mu = Var(1,nconstraints,"mu");
@@ -269,18 +325,26 @@ void EntropyContrastLearner::build_()
             params.push_back(sigma_hat);
 
             Var c_mu = square(no_bprop(f_var)-mu);
+            c_mu->setName("mu cost");
             Var c_sigma = square(sigma-square(no_bprop(c_mu)));
+            c_sigma->setName("sigma cost");
 
-            Var sigma_min = Var(1,nconstraints);
-            sigma_min->matValue.fill(sigma_min_threshold);
-            sigma = max(sigma,no_bprop(sigma_min));
+            if (use_sigma_min_threshold) {
+                Var sigma_min = Var(1,nconstraints);
+                sigma_min->matValue.fill(sigma_min_threshold);
+                sigma = max(sigma,no_bprop(sigma_min));
+            }
 
             Var c_mu_hat = square(no_bprop(f_hat_var)-mu_hat);
+            c_mu_hat->setName("generated mu cost");
             Var c_sigma_hat = square(sigma_hat-square(no_bprop(c_mu_hat)));
+            c_sigma_hat->setName("generated sigma cost");
             
-            c_entropy = weight_real*square(f_var-no_bprop(mu))/no_bprop(sigma) - weight_generated*square(f_hat_var-no_bprop(mu_hat))/no_bprop(sigma_hat);
+            c_entropy = weight_real*square(f_var-no_bprop(mu))/no_bprop(sigma) - 
+                        weight_generated*square(f_hat_var-no_bprop(mu_hat))/no_bprop(sigma_hat);
+            c_entropy->setName("entropy cost");
 
-            costs = c_entropy & c_mu & sigma_lr * c_sigma & c_mu_hat & c_sigma_hat;
+            costs = c_entropy & c_mu & c_sigma & c_mu_hat & c_sigma_hat;
             
             if (nconstraints>1) {
                 costs &= weight_extra*extra_cost;
@@ -389,33 +453,35 @@ void EntropyContrastLearner::train()
 
         train_stats->finalize(); // finalize statistics for this epoch
 
-        
+
         if (save_best_params) {
 
             if (fabs(training_cost->valuedata[0])<min_cost) {
                 min_cost = fabs(training_cost->valuedata[0]);
-                V.copyTo(V_best);
-                W.copyTo(W_best);
+                V.copyTo(V_save);
+                //            V_b.copyTo(V_b_save);
+                W.copyTo(W_save);
+                //          W_b.copyTo(W_b_save);
             }
         }
 
 
         if (verbosity>0) {
             cout << "Stage: " << stage << ", training cost: " << training_cost->matValue;
-            
 
-//            for(int i=0 ; i<W.length() ; ++i) { 
-//                cout << W[i] << "\n";
-//            }
-          
-//            cout << "---------------------------------------\n";
+
+            //            for(int i=0 ; i<W.length() ; ++i) { 
+            //                cout << W[i] << "\n";
+            //            }
+
+            //            cout << "---------------------------------------\n";
             cout << sigma << "\n";
             for(int i=0 ; i<costs.length() ; ++i) { 
                 cout << costs[i] << "\n";
             }
             cout << "---------------------------------------\n";
 
-            
+
         }
         ++stage;
         if(pb) {
@@ -424,8 +490,10 @@ void EntropyContrastLearner::train()
     }
 
     if (save_best_params) {
-        V.copyFrom(V_best);
-        W.copyFrom(W_best);
+        V.copyFrom(V_save);
+        //   V_b.copyFrom(V_b_save);
+        W.copyFrom(W_save);
+        // W_b.copyFrom(W_b_save);
     }
 
     if(pb) {
@@ -434,30 +502,30 @@ void EntropyContrastLearner::train()
 
     Vec x_(inputsize());
     Vec g_(inputsize()*nconstraints);
-    
+
     ofstream file1("gen.dat");
     for(int t=0 ; t<200 ; ++t) { 
-      train_set->getRow(t,x_);
+        train_set->getRow(t,x_);
 
-      f_output->fprop(x_,g_);
+        f_output->fprop(x_,g_);
 
-      file1 << x_ << " ";
+        file1 << x_ << " ";
 
-      for(int k=0 ; k<nconstraints ; ++k) { 
-          int is = inputsize();
-          Vec tmp(is);
+        for(int k=0 ; k<nconstraints ; ++k) { 
+            int is = inputsize();
+            Vec tmp(is);
 
-          tmp = g_.subVec(k*is,is);
-          normalize(tmp,2);
-          tmp /= 15;
-          
-          file1 << tmp << " ";
-      }
-      file1 << "\n";
+            tmp = g_.subVec(k*is,is);
+            normalize(tmp,2);
+            tmp /= 15;
+
+            file1 << tmp << " ";
+        }
+        file1 << "\n";
 
     }
     file1.close();
-    
+
 }
 
 

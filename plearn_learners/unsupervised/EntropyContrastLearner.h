@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: EntropyContrastLearner.h,v 1.2 2004/09/27 16:26:27 mariusmuja Exp $ 
+ * $Id: EntropyContrastLearner.h,v 1.3 2004/10/01 19:47:35 mariusmuja Exp $ 
  ******************************************************* */
 
 // Authors: Marius Muja
@@ -70,8 +70,10 @@ class EntropyContrastLearner: public PLearner
         VarArray V_b;
         VarArray W_b;
 
-        Vec V_best;
-        Vec W_best;
+        Vec V_save;
+        Vec V_b_save;
+        Vec W_save;
+        Vec W_b_save;
         
         VarArray g;
         Var mu, sigma;
@@ -102,9 +104,13 @@ class EntropyContrastLearner: public PLearner
         real weight_decay_output;
         bool normalize_constraints;
         bool save_best_params;
-        real sigma_lr;
-        real distribution_sigma;
+        real sigma_generated;
         real sigma_min_threshold;
+        real eps;
+        Vec gradient_scaling;
+        bool save_x_hat;
+        string gen_method;
+        bool use_sigma_min_threshold;
 
         // ****************
         // * Constructors *
