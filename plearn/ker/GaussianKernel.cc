@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianKernel.cc,v 1.15 2005/02/02 18:28:24 lamblin Exp $
+   * $Id: GaussianKernel.cc,v 1.16 2005/02/07 17:54:21 lamblin Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -150,6 +150,12 @@ real GaussianKernel::evaluateFromSquaredNormOfDifference(real sqnorm_of_diff) co
     return exp(sqnorm_of_diff*minus_one_over_sigmasquare);
   }
 }
+
+real GaussianKernel::evaluateFromDotAndSquaredNorm(real sqnorm_x1, real dot_x1_x2, real sqnorm_x2) const
+{
+  return evaluateFromSquaredNormOfDifference((sqnorm_x1+sqnorm_x2)-(dot_x1_x2+dot_x1_x2));
+}
+
 
 
 //////////////

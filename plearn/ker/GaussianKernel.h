@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianKernel.h,v 1.9 2004/09/14 16:04:36 chrish42 Exp $
+   * $Id: GaussianKernel.h,v 1.10 2005/02/07 17:54:21 lamblin Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -87,8 +87,7 @@ protected:
 
   inline real evaluateFromSquaredNormOfDifference(real sqnorm_of_diff) const;
 
-  inline real evaluateFromDotAndSquaredNorm(real sqnorm_x1, real dot_x1_x2, real sqnorm_x2) const
-  { return evaluateFromSquaredNormOfDifference((sqnorm_x1+sqnorm_x2)-(dot_x1_x2+dot_x1_x2)); }
+  inline real evaluateFromDotAndSquaredNorm(real sqnorm_x1, real dot_x1_x2, real sqnorm_x2) const;
 
   //!  This method precomputes the squared norm for all the data to later speed up evaluate methods
   virtual void setDataForKernelMatrix(VMat the_data);
