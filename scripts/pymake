@@ -1441,5 +1441,5 @@ for target in otherargs:
             sequential_dll(file_info(target))
 
         if temp_objs:
-            os.system('chmod 777 '+objsdir+'/*')
+            os.system('chmod 777 --silent '+objsdir+'/*')
             mychmod(objsdir,33279)
