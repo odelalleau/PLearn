@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PrecomputedKernel.h,v 1.1 2003/12/15 22:08:32 dorionc Exp $
+   * $Id: PrecomputedKernel.h,v 1.2 2004/01/13 19:54:17 lheureup Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,7 +51,6 @@ using namespace std;
 
 
 //!  A kernel that precomputes the kernel matrix as soon as setDataForKernelMatrix is called.
-//!  The kernel matrix is sotred internally as floats
 class PrecomputedKernel: public Kernel
 {
 		typedef Kernel inherited;
