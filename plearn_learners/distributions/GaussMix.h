@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussMix.h,v 1.19 2004/05/20 14:06:52 tihocan Exp $ 
+   * $Id: GaussMix.h,v 1.20 2004/05/20 15:23:25 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file GaussMix.h */
@@ -58,13 +58,11 @@ protected:
   // * protected options *
   // *********************
 
-  Vec alpha;
   Mat eigenvalues;
   TVec<Mat> eigenvectors;
   int D;
   Mat diags;
   Vec log_coeff;
-  Mat mu;  
   int n_eigen_computed;
   int nsamples;
   Mat posteriors;
@@ -94,8 +92,9 @@ public:
   string type;
 
   // Currently learnt options, but may be build options in the future.
+  Vec alpha;
+  Mat mu;  
   Vec sigma;
-
 
   // ****************
   // * Constructors *
@@ -180,9 +179,9 @@ public:
   //! Declares name and deepCopy methods
   PLEARN_DECLARE_OBJECT(GaussMix);
 
-  // *******************
-  // * Learner methods *
-  // *******************
+  // ********************
+  // * PLearner methods *
+  // ********************
 
   //! Trains the model.
   virtual void train();
