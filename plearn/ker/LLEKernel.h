@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LLEKernel.h,v 1.2 2004/07/19 13:26:42 tihocan Exp $ 
+   * $Id: LLEKernel.h,v 1.3 2004/07/20 13:00:26 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -130,6 +130,9 @@ public:
   // **** Kernel methods ****
   // **************************
 
+  //! Overridden for efficiency purpose.
+//  virtual void computeGramMatrix(Mat K) const;
+
   //! Compute K(x1,x2).
   virtual real evaluate(const Vec& x1, const Vec& x2) const;
 
@@ -147,7 +150,6 @@ public:
   // some of the following methods:
   // virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const;
   // virtual real evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x=-1, bool first_time = false) const;
-  // virtual void computeGramMatrix(Mat K) const;
   // virtual void addDataForKernelMatrix(const Vec& newRow);
   // virtual void setParameters(Vec paramvec);
   // virtual Vec getParameters() const;

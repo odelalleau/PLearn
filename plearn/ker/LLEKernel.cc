@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LLEKernel.cc,v 1.3 2004/07/19 14:53:45 tihocan Exp $ 
+   * $Id: LLEKernel.cc,v 1.4 2004/07/20 13:00:26 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -119,11 +119,25 @@ void LLEKernel::build_()
   }
 }
 
+///////////////////////
+// computeGramMatrix //
+///////////////////////
+/*
+void LLEKernel::computeGramMatrix(Mat K) const {
+  reconstruct_ker->computeLLEMatrix(K);
+  if (reconstruct_coeff != 0) {
+    for (int i = 0; i < n_examples; i++) {
+      K(i, i) += reconstruct_coeff;
+    }
+  }
+}
+*/
+
 //////////////
 // evaluate //
 //////////////
 real LLEKernel::evaluate(const Vec& x1, const Vec& x2) const {
-  // Calling evaluate means neither x1 nor x2 is in the training set.
+  PLERROR("In LLEKernel::evaluate - Not implemented");
   return 0;
 }
 
@@ -131,28 +145,26 @@ real LLEKernel::evaluate(const Vec& x1, const Vec& x2) const {
 // evaluate_i_j //
 //////////////////
 real LLEKernel::evaluate_i_j(int i, int j) const {
-  static real w_ki;
-  static real sum;
-  sum = 0;
   if (i == j) {
-    for (int k = 0; k < n_examples; k++) {
-      w_ki = reconstruct_ker->evaluate_i_j(k, i);
-      sum += w_ki * w_ki;
-    }
-    return reconstruct_coeff + reconstruct_ker->evaluate_i_j(i, i) * 2 - sum;
+    return
+      reconstruct_coeff +
+      2 * reconstruct_ker->evaluate_i_j(i,i) -
+      reconstruct_ker->evaluate_sum_k_i_k_j(i,i);
   } else {
-    for (int k = 0; k < n_examples; k++) {
-      sum += reconstruct_ker->evaluate_i_j(k, i) * reconstruct_ker->evaluate_i_j(k, j);
-    }
-    return reconstruct_ker->evaluate_i_j(i,j) + reconstruct_ker->evaluate_i_j(j,i) - sum;
+    return
+      reconstruct_ker->evaluate_i_j(j,i) +
+      reconstruct_ker->evaluate_i_j(i,j) -
+      reconstruct_ker->evaluate_sum_k_i_k_j(i,j);
   }
+
 }
 
 //////////////////
 // evaluate_i_x //
 //////////////////
 real LLEKernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) const {
-    static int j;
+  static int j;
+  PLERROR("In LLEKernel::evaluate_i_x - Not implemented");
   if (isInData(x, &j)) {
     return evaluate_i_j(i, j);
   } else {
@@ -166,13 +178,23 @@ real LLEKernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) const 
 real LLEKernel::evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x, bool first_time) const {
   static int j;
   static bool is_training_point;
-  if (first_time) {
-    is_training_point = isInData(x, &j);
-  }
-  if (is_training_point) {
+  if (reconstruct_coeff == 0) {
+    // This kernel should only be evaluated on training points.
+    if (first_time) {
+      is_training_point = isInData(x, &j);
+    }
+    if (!is_training_point)
+      PLERROR("Return 0"); // TODO Return 0
     return evaluate_i_j(i, j);
   } else {
-    return reconstruct_coeff * reconstruct_ker->evaluate_x_i_again(x, i, squared_norm_of_x, first_time);
+    if (first_time) {
+      is_training_point = isInData(x, &j);
+    }
+    if (is_training_point) {
+      return evaluate_i_j(i, j);
+    } else {
+      return reconstruct_coeff * reconstruct_ker->evaluate_x_i_again(x, i, squared_norm_of_x, first_time);
+    }
   }
 }
 
