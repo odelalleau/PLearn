@@ -1,8 +1,7 @@
 // -*- C++ -*-
-
-// Experiment.h
+// VecStatsCollector.h
 // 
-// Copyright (C) 2002 Pascal Vincent, Frederic Morin
+// Copyright (C) 2002 Pascal Vincent
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,22 +32,21 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Experiment.h,v 1.2 2002/09/26 05:06:53 plearner Exp $ 
+   * $Id: VecStatsCollector.h,v 1.1 2002/09/26 05:06:53 plearner Exp $ 
    ******************************************************* */
 
-/*! \file Experiment.h */
-#ifndef Experiment_INC
-#define Experiment_INC
+/*! \file VecStatsCollector.h */
+#ifndef VecStatsCollector_INC
+#define VecStatsCollector_INC
 
 #include "Object.h"
-#include "Learner.h"
-#include "VMat.h"
-#include "Splitter.h"
+#include "TMat.h"
+#include "StatsCollector.h"
 
 namespace PLearn <%
 using namespace std;
 
-class Experiment: public Object
+class VecStatsCollector: public Object
 {    
 public:
 
@@ -58,19 +56,22 @@ public:
   // * public build options *
   // ************************
 
-  //! Path of this experiment's directory in which to save all experiment results (will be created if it does not already exist)
-  string expdir;  
-  PP<Learner> learner;
-  VMat dataset;
-  PP<Splitter> splitter;
-  bool save_models;
+  //! maximum number of different values to keep track of for each element
+  int maxnvalues; //! (default: 0, meaning we only keep track of global statistics)
+
+  //! Should we compute and keep X'.X ?
+  bool compute_covariance; //! (default false)
+
+  // * "learnt" options *
+  TVec<StatsCollector> stats; // the stats for each element
+  Mat cov; // the uncentered covariance matrix (mean not subtracted: X'.X)
+
 
   // ****************
   // * Constructors *
   // ****************
 
-  // Default constructor
-  Experiment();
+  VecStatsCollector();
 
 
   // ******************
@@ -84,26 +85,54 @@ private:
 
 protected: 
   //! Declares this class' options
-  // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
 
 public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
+  
+  //! updates the statistics when seeing x
+  void update(const Vec& x);
+  
+  //! clears all previously accumulated statistics
+  void forget();
+
+  //! returns statistics for element i
+  const StatsCollector& getStats(int i) const 
+  { return stats[i]; }
+
+  //! returns the empirical mean (sample average) vec
+  Vec getMean() const;
+
+  //! returns the empirical variance vec
+  Vec getVariance() const;
+
+  //! returns the empirical standard deviation vec
+  Vec getStdDev() const;
+
+  //! returns the empirical standard deviation vec
+  Vec getStdError() const;
+
+  //! returns uncentered covariance matrix (mean not subtracted X'.X)
+  const Mat& getXtX() const
+  { return cov; }
+
+  //! returns centered covariance matrix (mean subtracted)
+  Mat getCovariance() const;
+  
+  //! returns correlation matrix
+  Mat getCorrelation() const;
 
   //! Provides a help message describing this class
   virtual string help() const;
 
+  //! Transforms a shallow copy into a deep copy
+  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+
   //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(Experiment);
-
-  //! runs the experiment
-  virtual void run();
-
+  DECLARE_NAME_AND_DEEPCOPY(VecStatsCollector);
 };
 
 // Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(Experiment);
+  DECLARE_OBJECT_PTR(VecStatsCollector);
   
 %> // end of namespace PLearn
 

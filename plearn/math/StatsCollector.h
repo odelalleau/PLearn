@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.4 2002/09/04 22:41:46 jkeable Exp $
+   * $Id: StatsCollector.h,v 1.5 2002/09/26 05:06:53 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -62,61 +62,93 @@ public:
     sum(0.), sumsquare(0.),id(0) {}          
 };
 
-//!  this class holds simple statistics about a field
+inline PStream& operator>>(PStream& in, StatsCollectorCounts& c)
+{ in >> c.n >> c.nbelow >> c.sum >> c.sumsquare >> c.id; return in; }
+
+inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
+{ out << c.n << c.nbelow << c.sum << c.sumsquare << c.id; return out; }
+
+/*!
+    "A StatsCollector allows to compute basic global statistics for a series of numbers,\n"
+    "as well as statistics within automatically determined ranges.\n"
+    "The first maxnvalues encountered values will be used as points to define\n"
+    "the ranges, so to get reasonable results, your sequence should be iid, and NOT sorted!"
+*/
+
   class StatsCollector: public Object
   {
     public:
       DECLARE_NAME_AND_DEEPCOPY(StatsCollector);
       
-  protected:
+  public:
 
-    
+    typedef Object inherited;
+
+    // ** Build options **
+
+    //! maximum number of different values to keep track of in counts
+    //! (if 0, we will only keep track of global statistics)
+    int maxnvalues; 
+
+
+    // ** Learnt options **
+
     int nmissing_;  //!<  number of missing values
     int nnonmissing_; //!<  number of non missing value 
     double sum_; //!<  sum of all values
     double sumsquare_; //!<  sum of square of all values
-    real min_;
-    real max_;
-
-    //!  maximum number of different values to keep track of in counts
-    int maxnvalues; 
+    real min_; //!< the min
+    real max_; //!< the max
 
     //! will contain up to maxnvalues values and associated Counts
     //! as well as a last element which maps FLT_MAX, so that we don't miss anything
+    //! (empty if maxnvalues=0)
     map<real,StatsCollectorCounts> counts; 
       
+  protected: 
+    //! Declares this class' options
+    static void declareOptions(OptionList& ol);
+
   public:
 
-      StatsCollector(int the_maxnvalues=255);
+    StatsCollector(int the_maxnvalues=0);
       
-      int n() const { return nmissing_ + nnonmissing_; } //!< number of samples seen with update (length of VMat for ex.)
-      int nmissing() const { return nmissing_; }
-      int nnonmissing() const { return nnonmissing_; }
-      real sum() const { return real(sum_); }
-      real sumsquare() const { return real(sumsquare_); }
-      real min() const { return min_; }
-      real max() const { return max_; }
-      real mean() const { return real(sum_/nnonmissing_); }
+    int n() const { return nmissing_ + nnonmissing_; } //!< number of samples seen with update (length of VMat for ex.)
+    int nmissing() const { return nmissing_; }
+    int nnonmissing() const { return nnonmissing_; }
+    real sum() const { return real(sum_); }
+    real sumsquare() const { return real(sumsquare_); }
+    real min() const { return min_; }
+    real max() const { return max_; }
+    real mean() const { return real(sum_/nnonmissing_); }
     real variance() const { return real((sumsquare_ - square(sum_)/nnonmissing_)/(nnonmissing_-1)); }
     real stddev() const { return sqrt(variance()); }
     real stderror() const { return sqrt(variance()/nnonmissing()); }
       
-      void update(real val);
+    //! update statistics with next value val of sequence 
+    void update(real val);
+    
+    //! clears all statistics, allowing to restart collecting them
+    void forget();
 
     map<real,StatsCollectorCounts> * getCounts(){return &counts;}
 
-      //! returns a Mat with x,y coordinates for plotting the cdf
-      //! only if normalized will the cdf go to 1, otherwise it will go to nsamples
-      Mat cdf(bool normalized=true) const;
+    //! returns a Mat with x,y coordinates for plotting the cdf
+    //! only if normalized will the cdf go to 1, otherwise it will go to nsamples
+    Mat cdf(bool normalized=true) const;
 
     //! returns a mapping that maps values to a bin number (from 0 to mapping.length()-1)
     //! The mapping will leave missing values as MISSING_VALUE
     //! And values outside the [min, max] range will be mapped to -1
     RealMapping getBinMapping(int discrete_mincount, int continuous_mincount) const;
 
-    virtual void write(ostream& out) const;
-    virtual void read(istream& in);
+    virtual void oldwrite(ostream& out) const;
+    virtual void oldread(istream& in);
     virtual void print(ostream& out) const;
+
+    //! Provides a help message describing this class
+    virtual string help() const;
+
   };
 
   DECLARE_OBJECT_PTR(StatsCollector);

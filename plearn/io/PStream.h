@@ -1,11 +1,10 @@
 // -*- C++ -*-
 
-// PLearn (A C++ Machine Learning Library)
+// PStream.h
 // Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
-// Copyright (C) 2002 Frederic Morin, Xavier Saint-Mleux <saintmlx@iro.umontreal.ca>
+// Copyright (C) 1999-2001 Pascal Vincent, Yoshua Bengio and University of Montreal
+// Copyright (C) 2002 Frederic Morin, Xavier Saint-Mleux, Pascal Vincent
 //
-
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -48,8 +47,10 @@
 #include "pl_fdstream.h"
 #include "PStream_util.h"
 #include "plerror.h"
+#include <fstream>
 
 namespace PLearn <%
+
 using namespace std;
 
 /*!
@@ -69,7 +70,7 @@ using namespace std;
 
 class PStream : public PPointable
 {
- public:
+public:
   //! typedef's for PStream manipulators
   typedef PStream& (*pl_pstream_manip)(PStream&);
   typedef istream& (*pl_istream_manip_compat)(istream&);
@@ -133,78 +134,32 @@ public:
   compr_mode_t compression_mode;
 
 public:  
+
   //! default ctor: the stream is unusable ...
-  PStream()
-    :pin(0), pout(0), own_pin(false), own_pout(false), 
-     option_flags_in(dft_option_flag), inmode(plearn_ascii), 
-     option_flags_out(dft_option_flag), outmode(plearn_ascii), 
-     original_bufin(0), original_bufout(0), 
-     implicit_storage(false), compression_mode(compr_none)
-  {}
+  PStream();
+
   //! ctor. from an istream (I)
-  PStream(istream* pin_)
-    :pin(pin_), pout(0), own_pin(false), own_pout(false), 
-     option_flags_in(dft_option_flag), inmode(plearn_ascii), 
-     option_flags_out(dft_option_flag), outmode(plearn_ascii),
-     original_bufin(pin_->rdbuf()), original_bufout(0), 
-    implicit_storage(false), compression_mode(compr_none)
-  { initInBuf(); }
+  PStream(istream* pin_);
+
   //! ctor. from an ostream (O)
-  PStream(ostream* pout_)
-    :pin(0), pout(pout_), own_pin(false), own_pout(false), 
-     option_flags_in(dft_option_flag), inmode(plearn_ascii), 
-     option_flags_out(dft_option_flag), outmode(plearn_ascii),
-     original_bufin(0), original_bufout(pout_->rdbuf()), 
-     implicit_storage(false), compression_mode(compr_none)
-  {}
+  PStream(ostream* pout_);
+
   //! ctor. from an iostream (IO)
-  PStream(iostream* pios_)
-    :pin(pios_), pout(pios_), own_pin(false), own_pout(false), 
-     option_flags_in(dft_option_flag), inmode(plearn_ascii), 
-     option_flags_out(dft_option_flag), outmode(plearn_ascii),
-     original_bufin(pios_->rdbuf()), original_bufout(pios_->rdbuf()),
-  implicit_storage(false), compression_mode(compr_none)
-  { initInBuf(); }
+  PStream(iostream* pios_);
+
   //! ctor. from an istream and an ostream (IO)
-  PStream(istream* pin_, ostream* pout_)
-    :pin(pin_), pout(pout_), own_pin(false), own_pout(false), 
-     option_flags_in(dft_option_flag), inmode(plearn_ascii), 
-     option_flags_out(dft_option_flag), outmode(plearn_ascii),
-     original_bufin(pin_->rdbuf()), original_bufout(pout_->rdbuf())
-  { initInBuf(); }
+  PStream(istream* pin_, ostream* pout_);
+
   //! copy ctor.
-  PStream(const PStream& pios)
-    :the_inbuf(pios.the_inbuf), the_fdbuf(pios.the_fdbuf),
-     pin(pios.pin), pout(pios.pout), own_pin(false), own_pout(false), 
-     option_flags_in(pios.option_flags_in), inmode(pios.inmode), 
-     option_flags_out(pios.option_flags_out), outmode(pios.outmode), 
-     original_bufin(pios.original_bufin), original_bufout(pios.original_bufout)
-  {}
+  PStream(const PStream& pios);
+
   //! dtor.
-  virtual ~PStream()
-  {
-    // am I the only PStream using this buffer?
-    if(the_inbuf && 1 == the_inbuf->usage())
-      {// reset underlying streams's buffers before destroying the_inbuf
-	if(pin) pin->rdbuf(original_bufin);
-	if(pout) pout->rdbuf(original_bufout);
-      }
-    if(own_pin && pin) delete pin; // delete pin if we created it
-    if(own_pout && pout) delete pout; // delete pout if we created it
-  }
+  virtual ~PStream();
   
-protected:
-  //! initInBuf: called by ctors. to ensure that pin's buffer is markable
-  inline void initInBuf()
-  {
-    if(pin)
-      {
-	the_inbuf= dynamic_cast<pl_streambuf*>(pin->rdbuf());
-	if(the_inbuf.isNull())
-	  the_inbuf= new pl_streambuf(*pin->rdbuf());
-	pin->rdbuf(the_inbuf);
-      }
-  }
+
+  inline void setInMode(mode_t m) { inmode = m; }
+  inline void setOutMode(mode_t m) { outmode = m; }
+  inline void setMode(mode_t m) { inmode = m; outmode = m; }
 
 public:
   //op()'s: re-init with different underlying stream(s)
@@ -241,235 +196,57 @@ public:
   inline PStream& flush() { pout->flush(); return *this; }
   /******/
 
-  //! returns the markable input buffer
-  inline pl_streambuf* pl_rdbuf() { return the_inbuf; }
-
-  /******
-   * The folowing methods are 'forwarded' from ios;  Two versions of each method
-   * are provided so that input and output behaviour may be different.
-   */
-  inline ios_base::fmtflags flags_in() const { return pin->flags(); }
-  inline ios_base::fmtflags flags_out() const { return pout->flags(); }
-  inline ios_base::fmtflags flags_in(ios_base::fmtflags ff) { return pin->flags(ff); }
-  inline ios_base::fmtflags flags_out(ios_base::fmtflags ff) { return pout->flags(ff); }
-  /*NOTE: setf_{in|out} also exist in 'PLearn::pl_flags' version... see below */
-  inline ios_base::fmtflags setf_in(ios_base::fmtflags ff) { return pin->setf(ff); }
-  inline ios_base::fmtflags setf_out(ios_base::fmtflags ff) { return pout->setf(ff); }
-  inline ios_base::fmtflags setf_in(ios_base::fmtflags ff, ios_base::fmtflags mask)
-    { return pin->setf(ff,mask); }
-  inline ios_base::fmtflags setf_out(ios_base::fmtflags ff, ios_base::fmtflags mask)
-    { return pout->setf(ff,mask); }
-  inline void unsetf_in(ios_base::fmtflags mask) { pin->unsetf(mask); }
-  inline void unsetf_out(ios_base::fmtflags mask) { pout->unsetf(mask); }
-  inline char fill_in() const { return pin->fill(); }
-  inline char fill_out() const { return pout->fill(); }
-  inline char fill_in(char c) { return pin->fill(c); }
-  inline char fill_out(char c) { return pout->fill(c); }
-  inline streamsize width_in() const { return pin->width(); }
-  inline streamsize width_out() const { return pout->width(); }
-  inline streamsize width_in(streamsize w) { return pin->width(w); }
-  inline streamsize width_out(streamsize w) { return pout->width(w); }
-  /******/
-
   //! attach this stream to a POSIX file descriptor.
   void attach(int fd);
 
-  // decl./implementation of operator>>'s
+
+  // Useful skip functions
+
+  //! reads everything until '\n' (also consumes the '\n')
+  void skipRestOfLine();
+
+  //! skips any blanks (space, tab, newline) and comments starting with #
+  void skipBlanksAndComments();
+
+  //! skips any blanks, # comments, and separators (',' and ';')
+  void skipBlanksAndCommentsAndSeparators();
+
+  // operator>>'s for base types
   PStream& operator>>(bool &x);
   PStream& operator>>(float &x);
   PStream& operator>>(double &x);
   PStream& operator>>(char * &x);
   PStream& operator>>(string &x);
+  PStream& operator>>(char &x); 
+  PStream& operator>>(signed char &x);
+  PStream& operator>>(unsigned char &x);
+  PStream& operator>>(int &x);
+  PStream& operator>>(unsigned int &x);  
+  PStream& operator>>(long &x);  
+  PStream& operator>>(unsigned long &x);
+  PStream& operator>>(short &x);
+  PStream& operator>>(unsigned short &x);  
+
+  // operator<<'s for base types
+  PStream& operator<<(float x);
+  PStream& operator<<(double x);
+  PStream& operator<<(const char *x);
+  PStream& operator<<(const string &x);
+  PStream& operator<<(char x); 
+  PStream& operator<<(signed char x);
+  PStream& operator<<(unsigned char x);
+  PStream& operator<<(int x);
+  PStream& operator<<(unsigned int x);
+  PStream& operator<<(long x);
+  PStream& operator<<(unsigned long x);
+  PStream& operator<<(short x);
+  PStream& operator<<(unsigned short x);
+  PStream& operator<<(bool x);
  
-  inline PStream& operator>>(char &x)
-  {
-    switch(inmode)
-      {
-      case PStream::raw_ascii:
-	rawin() >> x;
-	break;
-      case PStream::raw_binary:
-	get(x);
-	break;
-      case PStream::plearn_ascii:
-      case PStream::plearn_binary:
-	rawin() >> x >> ws;
-	break;
-      default:
-	PLERROR("In PStream::operator>>  unknown inmode!!!!!!!!!");
-	break;
-      }
-    return *this;
-  }
- 
-  inline PStream& operator>>(signed char &x)
-  {
-    switch(inmode)
-      {
-      case PStream::raw_ascii:
-	rawin() >> x;
-	break;
-      case PStream::raw_binary:
-	get(reinterpret_cast<char &>(x));
-	break;
-      case PStream::plearn_ascii:
-      case PStream::plearn_binary:
-	rawin() >> x >> ws;
-	break;
-      default:
-	PLERROR("In PStream::operator>>  unknown inmode!!!!!!!!!");
-	break;
-      }
-    return *this;
-  }
+  /*****
+   * op>> & op<< for pairs and maps
+   */
 
-  inline PStream& operator>>(unsigned char &x)
-  {
-    switch(inmode)
-      {
-      case PStream::raw_ascii:
-	rawin() >> x;
-	break;
-      case PStream::raw_binary:
-	get(reinterpret_cast<char &>(x));
-	break;
-      case PStream::plearn_ascii:
-      case PStream::plearn_binary:
-	rawin() >> x >> ws;
-	break;
-      default:
-	PLERROR("In PStream::operator>>  unknown inmode!!!!!!!!!");
-	break;
-      }
-    return *this;
-  }
-
-  inline PStream& operator>>(int &x)
-  {
-    switch(inmode)
-      {
-      case PStream::raw_ascii:
-	rawin() >> x;
-	break;
-      case PStream::raw_binary:
-	read(reinterpret_cast<char *>(&x), sizeof(int));
-	break;
-      case PStream::plearn_ascii:
-      case PStream::plearn_binary:
-	rawin() >> x >> ws;
-	break;
-      default:
-	PLERROR("In PStream::operator>>  unknown inmode!!!!!!!!!");
-	break;
-      }
-    return *this;
-  }
-
-  inline PStream& operator>>(unsigned int &x)
-  {
-    switch(inmode)
-      {
-      case PStream::raw_ascii:
-	rawin() >> x;
-	break;
-      case PStream::raw_binary:
-	read(reinterpret_cast<char *>(&x), sizeof(unsigned int));
-	break;
-      case PStream::plearn_ascii:
-      case PStream::plearn_binary:
-	rawin() >> x >> ws;
-	break;
-      default:
-	PLERROR("In PStream::operator>>  unknown inmode!!!!!!!!!");
-	break;
-      }
-    return *this;
-  }
-  
-  inline PStream& operator>>(long int &x)
-  {
-    switch(inmode)
-      {
-      case PStream::raw_ascii:
-	rawin() >> x;
-	break;
-      case PStream::raw_binary:
-	read(reinterpret_cast<char *>(&x), sizeof(long int));
-	break;
-      case PStream::plearn_ascii:
-      case PStream::plearn_binary:
-	rawin() >> x >> ws;
-	break;
-      default:
-	PLERROR("In PStream::operator>>  unknown inmode!!!!!!!!!");
-	break;
-      }
-    return *this;
-  }
-  
-  inline PStream& operator>>(unsigned long &x)
-  {
-    switch(inmode)
-      {
-      case PStream::raw_ascii:
-	rawin() >> x;
-	break;
-      case PStream::raw_binary:
-	read(reinterpret_cast<char *>(&x), sizeof(unsigned long));
-	break;
-      case PStream::plearn_ascii:
-      case PStream::plearn_binary:
-	rawin() >> x >> ws;
-	break;
-      default:
-	PLERROR("In PStream::operator>>  unknown inmode!!!!!!!!!");
-	break;
-      }
-    return *this;
-  }
-  
-  inline PStream& operator>>(short int &x)
-  {
-    switch(inmode)
-      {
-      case PStream::raw_ascii:
-	rawin() >> x;
-	break;
-      case PStream::raw_binary:
-	read(reinterpret_cast<char *>(&x), sizeof(short int));
-	break;
-      case PStream::plearn_ascii:
-      case PStream::plearn_binary:
-	rawin() >> x >> ws;
-	break;
-      default:
-	PLERROR("In PStream::operator>>  unknown inmode!!!!!!!!!");
-	break;
-      }
-    return *this;
-  }
-  
-  inline PStream& operator>>(unsigned short &x)
-  {
-    switch(inmode)
-      {
-      case PStream::raw_ascii:
-	rawin() >> x;
-	break;
-      case PStream::raw_binary:
-	read(reinterpret_cast<char *>(&x), sizeof(unsigned short));
-	break;
-      case PStream::plearn_ascii:
-      case PStream::plearn_binary:
-	rawin() >> x >> ws;
-	break;
-      default:
-	PLERROR("In PStream::operator>>  unknown inmode!!!!!!!!!");
-	break;
-      }
-    return *this;
-  }
-  
   template <typename S, typename T> 
   inline PStream& operator>>(pair<S, T> &x) { return *this >> x.first >> x.second; }
   
@@ -482,223 +259,8 @@ public:
     x.clear();
     for (int i = 0; i < l; ++i) 
       {
-	*this >> p;
-	x.insert(p);
-      }
-    return *this;
-  }
-
-
-  // Implementation of operator<<'s
-  PStream& operator<<(float x);
-  PStream& operator<<(double x);
-  PStream& operator<<(const char *x);
-  PStream& operator<<(const string &x);
-
-  inline PStream& operator<<(char x) 
-  { 
-    switch(outmode)
-      {
-      case PStream::raw_ascii:
-	rawout() << x;
-	break;
-      case PStream::raw_binary:
-	write(reinterpret_cast<char *>(&x), sizeof(x));
-	break;
-      case PStream::plearn_ascii:
-      case PStream::plearn_binary:
-	rawout() << x << ' ';
-	break;
-      default:
-	PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");
-	break;
-      }
-    return *this;
-  }
-
-  inline PStream& operator<<(signed char x) 
-  { 
-    switch(outmode)
-      {
-      case PStream::raw_ascii:
-	rawout() << x;
-	break;
-      case PStream::raw_binary:
-	write(reinterpret_cast<char *>(&x), sizeof(x));
-	break;
-      case PStream::plearn_ascii:
-      case PStream::plearn_binary:
-	rawout() << x << ' ';
-	break;
-      default:
-	PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");
-	break;
-      }
-    return *this;
-  }
-
-  inline PStream& operator<<(unsigned char x) 
-  { 
-    switch(outmode)
-      {
-      case PStream::raw_ascii:
-	rawout() << x;
-	break;
-      case PStream::raw_binary:
-	write(reinterpret_cast<char *>(&x), sizeof(x));
-	break;
-      case PStream::plearn_ascii:
-      case PStream::plearn_binary:
-	rawout() << x << ' ';
-	break;
-      default:
-	PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");
-	break;
-      }
-    return *this;
-  }
-
-  inline PStream& operator<<(int x) 
-  { 
-    switch(outmode)
-      {
-      case PStream::raw_ascii:
-	rawout() << x;
-	break;
-      case PStream::raw_binary:
-	write(reinterpret_cast<char *>(&x), sizeof(x));
-	break;
-      case PStream::plearn_ascii:
-      case PStream::plearn_binary:
-	rawout() << x << ' ';
-	break;
-      default:
-	PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");
-	break;
-      }
-    return *this;
-  }
-
-  inline PStream& operator<<(unsigned int x) 
-  { 
-    switch(outmode)
-      {
-      case PStream::raw_ascii:
-	rawout() << x;
-	break;
-      case PStream::raw_binary:
-	write(reinterpret_cast<char *>(&x), sizeof(x));
-	break;
-      case PStream::plearn_ascii:
-      case PStream::plearn_binary:
-	rawout() << x << ' ';
-	break;
-      default:
-	PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");
-	break;
-      }
-    return *this;
-  }
-
-  inline PStream& operator<<(long int x) 
-  { 
-    switch(outmode)
-      {
-      case PStream::raw_ascii:
-	rawout() << x;
-	break;
-      case PStream::raw_binary:
-	write(reinterpret_cast<char *>(&x), sizeof(x));
-	break;
-      case PStream::plearn_ascii:
-      case PStream::plearn_binary:
-	rawout() << x << ' ';
-	break;
-      default:
-	PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");
-	break;
-      }
-    return *this;
-  }
-
-  inline PStream& operator<<(unsigned long x) 
-  { 
-    switch(outmode)
-      {
-      case PStream::raw_ascii:
-	rawout() << x;
-	break;
-      case PStream::raw_binary:
-	write(reinterpret_cast<char *>(&x), sizeof(x));
-	break;
-      case PStream::plearn_ascii:
-      case PStream::plearn_binary:
-	rawout() << x << ' ';
-	break;
-      default:
-	PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");
-	break;
-      }
-    return *this;
-  }
-
-  inline PStream& operator<<(short int x) 
-  { 
-    switch(outmode)
-      {
-      case PStream::raw_ascii:
-	rawout() << x;
-	break;
-      case PStream::raw_binary:
-	write(reinterpret_cast<char *>(&x), sizeof(x));
-	break;
-      case PStream::plearn_ascii:
-      case PStream::plearn_binary:
-	rawout() << x << ' ';
-	break;
-      default:
-	PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");
-	break;
-      }
-    return *this;
-  }
-
-  inline PStream& operator<<(unsigned short x) 
-  { 
-    switch(outmode)
-      {
-      case PStream::raw_ascii:
-	rawout() << x;
-	break;
-      case PStream::raw_binary:
-	write(reinterpret_cast<char *>(&x), sizeof(x));
-	break;
-      case PStream::plearn_ascii:
-      case PStream::plearn_binary:
-	rawout() << x << ' ';
-	break;
-      default:
-	PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");
-	break;
-      }
-    return *this;
-  }
-
-  inline PStream& operator<<(bool x) 
-  { 
-    switch(outmode)
-      {
-      case raw_ascii:
-      case raw_binary:
-	rawout() << (x?'1':'0');
-	break;
-      case plearn_ascii:
-      case plearn_binary:
-	rawout() << (x?'1':'0') << ' ';
-	break;
-      default:
-	PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");
-	break;
+        *this >> p;
+        x.insert(p);
       }
     return *this;
   }
@@ -717,23 +279,6 @@ public:
   }
 
   /*****
-   * operator<<'s and operator>>'s to set flags, etc.
-   */
-  inline istream& operator>>(pl_stream_raw& raw_) { return rawin(); }
-  inline ostream& operator<<(const pl_stream_raw& raw_) { return rawout(); }
-  inline PStream& operator>>(pl_stream_clear_flags& flags_) { option_flags_in= 0; return *this; }
-  inline PStream& operator<<(const pl_stream_clear_flags& flags_) { option_flags_out= 0; return *this; }
-  inline PStream& operator>>(pl_stream_option_flags& flags_) { option_flags_in= flags_.flags; return *this; }
-  inline PStream& operator<<(pl_stream_option_flags& flags_) { option_flags_out= flags_.flags; return *this; }
-  inline PStream& operator>>(pl_stream_initiate& initiate_) { copies_map_in.clear(); return *this; }
-  inline PStream& operator<<(const pl_stream_initiate& initiate_) { copies_map_out.clear(); return *this; }
-  inline PStream& operator>>(pl_pstream_manip func) { return (*func)(*this); }
-  inline PStream& operator<<(const pl_pstream_manip func) { return (*func)(*this); }
-  inline PStream& operator>>(pl_istream_manip_compat func) { (*func)(*pin); return *this; }
-  inline PStream& operator<<(const pl_ostream_manip_compat func) { (*func)(*pout); return *this; }
- 
-
-  /*****
    * op>> & op<< for generic pointers
    */
 
@@ -743,31 +288,31 @@ public:
     *this >> ws;
     if (peek() == '*') 
       {
-	get(); // Eat '*'
-	unsigned int id;
-	*this >> id;
-	if (id==0)
-	  x = 0;
-	else if (peek() == '-') 
-	  {
-	    get(); // Eat '-'
-	    char cc = get();
-	    if(cc != '>') // Eat '>'
-	      PLERROR("In PStream::operator>>(T*&)  Wrong format.  Expecting \"*%d->\" but got \"*%d-%c\".", id, id, cc);
-	    *this >> ws;
-	    if(!x)
-	      x= new T();
-	    *this >> *x >> ws;
-	    copies_map_in[id]= x;
-	  } 
-	else 
-	  {
-	    // Find it in map and return ptr;
-	    map<unsigned int, void *>::iterator it = copies_map_in.find(id);
-	    if (it == copies_map_in.end())
-	      PLERROR("In PStream::operator>>(T*&) object (ptr) to be read has not been previously defined");
-	    x= static_cast<T *>(it->second);
-	  }
+        get(); // Eat '*'
+        unsigned int id;
+        *this >> id;
+        if (id==0)
+          x = 0;
+        else if (peek() == '-') 
+          {
+            get(); // Eat '-'
+            char cc = get();
+            if(cc != '>') // Eat '>'
+              PLERROR("In PStream::operator>>(T*&)  Wrong format.  Expecting \"*%d->\" but got \"*%d-%c\".", id, id, cc);
+            *this >> ws;
+            if(!x)
+              x= new T();
+            *this >> *x >> ws;
+            copies_map_in[id]= x;
+          } 
+        else 
+          {
+            // Find it in map and return ptr;
+            map<unsigned int, void *>::iterator it = copies_map_in.find(id);
+            if (it == copies_map_in.end())
+              PLERROR("In PStream::operator>>(T*&) object (ptr) to be read has not been previously defined");
+            x= static_cast<T *>(it->second);
+          }
       } 
     else
       *this >> *x >> ws;
@@ -780,16 +325,16 @@ public:
   {
     if(x)
       {
-	map<void *, unsigned int>::iterator it = copies_map_out.find(const_cast<T*&>(x));
-	if (it == copies_map_out.end()) 
-	  {
-	    int id = copies_map_out.size()+1;
-	    rawout() << '*' << id << "->";
-	    copies_map_out[const_cast<T*&>(x)] = id;
-	    *this << *x;
-	  }
-	else 
-	  rawout() << '*' << it->second << ' ';
+        map<void *, unsigned int>::iterator it = copies_map_out.find(const_cast<T*&>(x));
+        if (it == copies_map_out.end()) 
+          {
+            int id = copies_map_out.size()+1;
+            rawout() << '*' << id << "->";
+            copies_map_out[const_cast<T*&>(x)] = id;
+            *this << *x;
+          }
+        else 
+          rawout() << '*' << it->second << ' ';
       }
     else
       rawout() << "*0 ";
@@ -820,6 +365,56 @@ public:
   }
 
   
+
+  /*****
+   * operator<<'s and operator>>'s to set flags, etc.
+   */
+  inline istream& operator>>(pl_stream_raw& raw_) { return rawin(); }
+  inline ostream& operator<<(const pl_stream_raw& raw_) { return rawout(); }
+  inline PStream& operator>>(pl_stream_clear_flags& flags_) { option_flags_in= 0; return *this; }
+  inline PStream& operator<<(const pl_stream_clear_flags& flags_) { option_flags_out= 0; return *this; }
+  inline PStream& operator>>(pl_stream_option_flags& flags_) { option_flags_in= flags_.flags; return *this; }
+  inline PStream& operator<<(pl_stream_option_flags& flags_) { option_flags_out= flags_.flags; return *this; }
+  inline PStream& operator>>(pl_stream_initiate& initiate_) { copies_map_in.clear(); return *this; }
+  inline PStream& operator<<(const pl_stream_initiate& initiate_) { copies_map_out.clear(); return *this; }
+  inline PStream& operator>>(pl_pstream_manip func) { return (*func)(*this); }
+  inline PStream& operator<<(const pl_pstream_manip func) { return (*func)(*this); }
+  inline PStream& operator>>(pl_istream_manip_compat func) { (*func)(*pin); return *this; }
+  inline PStream& operator<<(const pl_ostream_manip_compat func) { (*func)(*pout); return *this; }
+
+  //! returns the markable input buffer
+  inline pl_streambuf* pl_rdbuf() { return the_inbuf; }
+
+  /******
+   * The folowing methods are 'forwarded' from ios;  Two versions of each method
+   * are provided so that input and output behaviour may be different.
+   */
+  inline ios_base::fmtflags flags_in() const { return pin->flags(); }
+  inline ios_base::fmtflags flags_out() const { return pout->flags(); }
+  inline ios_base::fmtflags flags_in(ios_base::fmtflags ff) { return pin->flags(ff); }
+  inline ios_base::fmtflags flags_out(ios_base::fmtflags ff) { return pout->flags(ff); }
+  /*NOTE: setf_{in|out} also exist in 'PLearn::pl_flags' version... see below */
+  inline ios_base::fmtflags setf_in(ios_base::fmtflags ff) { return pin->setf(ff); }
+  inline ios_base::fmtflags setf_out(ios_base::fmtflags ff) { return pout->setf(ff); }
+  inline ios_base::fmtflags setf_in(ios_base::fmtflags ff, ios_base::fmtflags mask)
+  { return pin->setf(ff,mask); }
+  inline ios_base::fmtflags setf_out(ios_base::fmtflags ff, ios_base::fmtflags mask)
+  { return pout->setf(ff,mask); }
+  inline void unsetf_in(ios_base::fmtflags mask) { pin->unsetf(mask); }
+  inline void unsetf_out(ios_base::fmtflags mask) { pout->unsetf(mask); }
+  inline char fill_in() const { return pin->fill(); }
+  inline char fill_out() const { return pout->fill(); }
+  inline char fill_in(char c) { return pin->fill(c); }
+  inline char fill_out(char c) { return pout->fill(c); }
+  inline streamsize width_in() const { return pin->width(); }
+  inline streamsize width_out() const { return pout->width(); }
+  inline streamsize width_in(streamsize w) { return pin->width(w); }
+  inline streamsize width_out(streamsize w) { return pout->width(w); }
+  /******/
+
+protected:
+  //! initInBuf: called by ctors. to ensure that pin's buffer is markable
+  void initInBuf();
 };
 
 
@@ -832,27 +427,46 @@ public:
 template<class T> 
 inline void write(ostream& out_, const T& o, OBflag_t the_flags= dft_option_flag)
 {
-    PStream out(&out_);
-    out << option_flags(the_flags) << o;
+  PStream out(&out_);
+  out << option_flags(the_flags) << o;
 }
 
 template<class T> 
 inline void read(istream& in_, T& o, OBflag_t the_flags= dft_option_flag)
 {
-    PStream in(&in_);
-    in >> option_flags(the_flags) >> o;
+  PStream in(&in_);
+  in >> option_flags(the_flags) >> o;
 }
 
 template<class T> 
 inline void read(const string& stringval, T& x)
 {
-    istrstream in_(stringval.c_str());
-    PStream in(&in_);
-    in >> x;
+  istrstream in_(stringval.c_str());
+  PStream in(&in_);
+  in >> x;
 }
 
 
-  
+// **** Useful PStream classes... ****
+// (these can be used similarly to  ifstream, ofstream...)
+
+class PIFStream: public PStream
+{
+public:
+  PIFStream(const string& fname, ios_base::openmode m = ios_base::in)
+    :PStream(new ifstream(fname.c_str())) 
+  { own_pin = true; }
+};
+
+class POFStream: public PStream
+{
+public:
+  POFStream(const string& fname, ios_base::openmode m = ios_base::out | ios_base::trunc)
+    :PStream(new ofstream(fname.c_str())) 
+  { own_pout = true; }
+};
+
+
 %> // namespace PLearn
 
 #endif //ndef PStream_INC

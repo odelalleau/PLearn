@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearnmain.cc,v 1.2 2002/09/17 01:27:34 zouave Exp $
+   * $Id: plearnmain.cc,v 1.3 2002/09/26 05:06:53 plearner Exp $
    ******************************************************* */
 
 
@@ -47,9 +47,23 @@
 #include "Learner.h"
 #include "Optimizer.h"
 #include "Kernel.h"
+#include "Experiment.h"
 
 namespace PLearn <%
 using namespace std;
+
+/*
+void interpret(PStream& in)
+{
+  while(in)
+    {
+      in.skipBlanksAndComments();
+      if(!in)
+        break;
+      if(in.peek()=='<') / it's either a <INCLUDE ...> or a <DEFINE ...> 
+    }
+}
+*/
 
 //! reads a modelalias -> object_representation map from a model.aliases file
 map<string, string> getModelAliases(const string& filename)
@@ -585,9 +599,22 @@ int plearnmain(int argc, char** argv)
     for(unsigned int i=0;i<ali.size();i++)
       cout<<ali[i]<<endl;
   }
-  else 
+  else // we suppose it's a filename of a .psave file containing Objects to be run
     {
-      cerr << "** Unknown command: type plearn without options to display help **" << endl;
+      PIFStream in(command);
+      if(!in)
+        {
+          cerr << "** ERROR: " << command << " appears to be neither a valid plearn command type, nor an existing filename" << endl;
+          cerr << "Type plearn with no argument to see the help." << endl;
+          exit(0);
+        }
+      
+      while(in)
+        {
+          PP<Object> o = readObject(in);
+          o->run();
+          in.skipBlanksAndComments();
+        }
     }
 
   PLMPI::finalize();

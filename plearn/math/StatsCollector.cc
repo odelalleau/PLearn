@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.2 2002/08/09 16:14:32 jkeable Exp $
+   * $Id: StatsCollector.cc,v 1.3 2002/09/26 05:06:53 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,15 +48,67 @@ using namespace std;
   IMPLEMENT_NAME_AND_DEEPCOPY(StatsCollector);
 
   StatsCollector::StatsCollector(int the_maxnvalues)
-    : nmissing_(0), nnonmissing_(0), 
-    sum_(0.), sumsquare_(0.), 
-    min_(MISSING_VALUE), max_(MISSING_VALUE),
-    maxnvalues(the_maxnvalues)
+    : maxnvalues(the_maxnvalues),
+      nmissing_(0), nnonmissing_(0), 
+      sum_(0.), sumsquare_(0.), 
+      min_(MISSING_VALUE), max_(MISSING_VALUE)    
   {
-    counts[FLT_MAX] = StatsCollectorCounts();
+    if(maxnvalues>0)
+      counts[FLT_MAX] = StatsCollectorCounts();
   }
   
-  void StatsCollector::update(real val)
+void StatsCollector::declareOptions(OptionList& ol)
+{
+  // buid options
+
+  declareOption(ol, "maxnvalues", &StatsCollector::maxnvalues, OptionBase::buildoption,
+                "maximum number of different values defining ranges to keep track of in counts\n"
+                "(if 0, we will only keep track of global statistics)");
+
+  // learnt options
+  declareOption(ol, "nmissing_", &StatsCollector::nmissing_, OptionBase::learntoption,
+                "number of missing values");
+  declareOption(ol, "nnonmissing_", &StatsCollector::nnonmissing_, OptionBase::learntoption,
+                "number of non missing value ");
+  declareOption(ol, "sum_", &StatsCollector::sum_, OptionBase::learntoption,
+                "sum of all values");
+  declareOption(ol, "sumsquare_", &StatsCollector::sumsquare_, OptionBase::learntoption,
+                "sum of square of all values");
+  declareOption(ol, "min_", &StatsCollector::min_, OptionBase::learntoption,
+                "the min");
+  declareOption(ol, "max_", &StatsCollector::max_, OptionBase::learntoption,
+                "the max");
+  declareOption(ol, "counts", &StatsCollector::counts, OptionBase::learntoption,
+                "will contain up to maxnvalues values and associated Counts\n"
+                "as well as a last element which maps FLT_MAX, so that we don't miss anything\n"
+                "(remains empty if maxnvalues=0)");
+
+  // Now call the parent class' declareOptions
+  inherited::declareOptions(ol);
+}
+
+string StatsCollector::help() const
+{
+  // ### Provide some useful description of what the class is ...
+  return 
+    "A StatsCollector allows to compute basic global statistics for a series of numbers,\n"
+    "as well as statistics within automatically determined ranges.\n"
+    "The first maxnvalues encountered values will be used as reference points to define\n"
+    "the ranges, so to get reasonable results, your sequence should be iid, and NOT sorted!"
+  + optionHelp();
+}
+
+void StatsCollector::forget()
+{
+    nmissing_ = 0;
+    nnonmissing_ = 0;
+    sum_ = 0.;
+    sumsquare_ = 0.;
+    min_ = MISSING_VALUE;
+    max_ = MISSING_VALUE;
+}
+
+void StatsCollector::update(real val)
   {
     if(is_missing(val))
       nmissing_++;
@@ -72,25 +124,28 @@ using namespace std;
         else if(val>max_)
           max_ = val;
         nnonmissing_++;
-
-        map<real,StatsCollectorCounts>::iterator it;
-        if(int(counts.size())<=maxnvalues) // Still remembering new unseen values
-        {
-          it = counts.find(val);
-          if(it==counts.end())
-            counts[val].id=counts.size()-1;
-          counts[val].n++;
-        }
-        else // We've filled up counts already
+        
+        if(maxnvalues>0)  // also remembering statistics inside values ranges
           {
-            it = counts.lower_bound(val);
-            if(it->first==val) // found the exact value
-              it->second.n++;
-            else // found the value just above val (possibly FLT_MAX)
+            map<real,StatsCollectorCounts>::iterator it;        
+            if(int(counts.size())<=maxnvalues) // Still remembering new unseen values
               {
-                it->second.nbelow++;
-                it->second.sum += val;
-                it->second.sumsquare += sqval;
+                it = counts.find(val);
+                if(it==counts.end())
+                  counts[val].id=counts.size()-1;
+                counts[val].n++;
+              }
+            else // We've filled up counts already
+              {
+                it = counts.lower_bound(val);
+                if(it->first==val) // found the exact value
+                  it->second.n++;
+                else // found the value just above val (possibly FLT_MAX)
+                  {
+                    it->second.nbelow++;
+                    it->second.sum += val;
+                    it->second.sumsquare += sqval;
+                  }
               }
           }
       }
@@ -213,7 +268,7 @@ using namespace std;
     */
   }
 
-  void StatsCollector::write(ostream& out) const
+  void StatsCollector::oldwrite(ostream& out) const
   {
     writeHeader(out,"StatsCollector",0);
     writeField(out, "nmissing_", nmissing_);    
@@ -241,7 +296,7 @@ using namespace std;
     writeFooter(out,"StatsCollector");
   }
 
-  void StatsCollector::read(istream& in)
+  void StatsCollector::oldread(istream& in)
   {
     int version = readHeader(in,"StatsCollector");
     if(version!=0)

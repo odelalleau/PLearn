@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.4 2002/09/17 01:27:33 zouave Exp $
+   * $Id: Object.h,v 1.5 2002/09/26 05:06:49 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -276,6 +276,9 @@ using namespace std;
          6) return status integer
     */
     virtual int call(const string& methodname, int nargs, istream& in_parameters, ostream& out_results);
+
+    //! Overload this for runnable objects (default method issues a runtime error)
+    virtual void run();
 
     //! For backward compatibility with old saved object
     virtual void oldread(istream& in);

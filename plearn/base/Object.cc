@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.4 2002/09/17 01:27:33 zouave Exp $
+   * $Id: Object.cc,v 1.5 2002/09/26 05:06:48 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -48,6 +48,13 @@
 
 namespace PLearn <%
 using namespace std;
+
+/*
+const flag_t OptionBase::buildoption = 1;       
+const flag_t OptionBase::learntoption = 1<<1;
+const flag_t OptionBase::tuningoption = 1<<2;
+const flag_t OptionBase::nosave = 1<<4; 
+*/
 
 Object::Object()
 {}
@@ -360,6 +367,9 @@ int Object::call(const string& methodname, int nargs, istream& in_parameters, os
   PLERROR("call method not implemented for this object"); 
   return -1;
 }
+
+void Object::run()
+{ PLERROR("Not a runnable Object"); }
 
 void Object::oldread(istream& in)
 { PLERROR("oldread method not implemented for this object"); }

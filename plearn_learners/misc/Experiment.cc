@@ -33,45 +33,35 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Experiment.cc,v 1.1 2002/09/10 23:32:22 plearner Exp $ 
+   * $Id: Experiment.cc,v 1.2 2002/09/26 05:06:53 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Experiment.cc */
 #include "Experiment.h"
+#include "pl_io.h"
+#include "VecStatsCollector.h"
 
 namespace PLearn <%
 using namespace std;
 
 Experiment::Experiment() 
-  :Object()
+  :save_models(true)
   {}
 
   IMPLEMENT_NAME_AND_DEEPCOPY(Experiment);
 
   void Experiment::declareOptions(OptionList& ol)
   {
-    // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-    // ### OptionBase::tuningoption. Another possible flag to be combined with
-    // ### is OptionBase::nosave
-
-    // ### ex:
-    // declareOption(ol, "myoption", &Experiment::myoption, OptionBase::buildoption,
-    //               "Help text describing this option");
-    // ...
-
-    // Now call the parent class' declareOptions
-    
     declareOption(ol, "expdir", &Experiment::expdir, OptionBase::buildoption,
                   "Path of this experiment's directory in which to save all experiment results (will be created if it does not already exist)");
     declareOption(ol, "learner", &Experiment::learner, OptionBase::buildoption,
                   "The learner to train/test");
     declareOption(ol, "dataset", &Experiment::dataset, OptionBase::buildoption,
                   "The dataset to use for training/testing (will be split according to what is specified in the testmethod)");
-    declareOption(ol, "testmethod", &Experiment::testmethod, OptionBase::buildoption,
-                  "The testmethod to use. This will typically an instance of TestMethod, built with a specific Splitter,\n"
-                  "such as TrainTestSplitter or KFoldSplitter... Ask for help about TestMethod and Splitter for more info.");
+    declareOption(ol, "splitter", &Experiment::splitter, OptionBase::buildoption,
+                  "The splitter to use to generate one or several train/test pairs.");
+    declareOption(ol, "save_models", &Experiment::save_models, OptionBase::buildoption,
+                  "If false, the models won't be saved.");
     inherited::declareOptions(ol);
   }
 
@@ -80,6 +70,9 @@ Experiment::Experiment()
     return 
       "The Experiment class allows you to describe a typical learning experiment that you wish to perform, \n"
       "as a training/testing of a learning algorithm on a particular dataset.\n"
+      "Detailed results for each split #i will be saved in sub-directory Splits/#i of the experiment directory. \n"
+      "Final results for each split and basic statistics across all splits will be saved in the results.summary \n"
+      "file in the experiment directory.\n"
       + optionHelp();
   }
 
@@ -98,11 +91,52 @@ Experiment::Experiment()
 void Experiment::run()
 {
   if(expdir=="")
-    PLERROR("In experiment::run, experiment directory not set.");
-  if(!force_mkdir(const string& expdir))
-    PLERROR("Could not create experiment directory %s", epxdir.c_str());
+    PLERROR("No expdir specified for Experiment.");
+  if(!learner)
+    PLERROR("No leaner specified for Experiment.");
+  if(!dataset)
+    PLERROR("No dataset specified for Experiment");
+  if(!splitter)
+    PLERROR("No splitter specified for Experiment");
 
-  
+  if(!force_mkdir(expdir))
+    PLERROR("Could not create experiment directory %s", expdir.c_str());
+
+  // Save this experiment description in the expdir (buildoptions only)
+  PLearn::save(append_slash(expdir)+"experiment.psave", OptionBase::buildoption);
+
+  int nsplits = splitter->nsplits();
+  Array<string> testresnames = learner->testResultsNames();
+  int ntestcosts = testresnames.size();
+  VecStatsCollector teststats;
+
+  POFStream resout(append_slash(expdir)+"results.summary");
+  resout.setMode(PStream::raw_ascii);
+  resout << "#: RESULT ";
+  for(int k=0; k<ntestcosts; k++)
+    resout << testresnames[k] << "  ";
+  resout << endl;
+
+  for(int k=0; k<nsplits; k++)
+    {
+      Array<VMat> train_test = splitter->getSplit(k);
+      if(train_test.size()!=2) 
+        PLERROR("Splitter returned a split with %d subsets, instead of the expected 2: train&test",train_test.size());
+      VMat trainset = train_test[0];
+      VMat testset = train_test[1];
+      string learner_expdir = append_slash(expdir)+"Splits/"+tostring(k);
+      learner->setExperimentDirectory(learner_expdir);
+      learner->forget();
+      learner->train(trainset);
+      Vec testres = learner->test(testset);
+      resout << "Split_" << k << " ";
+      resout << testres << endl;
+      teststats.update(testres);
+    }
+
+  resout << "MEAN   " << teststats.getMean() << endl;
+  resout << "STDDEV " << teststats.getStdDev() << endl;
+  resout << "STDERROR " << teststats.getStdError() << endl;
 }
 
 %> // end of namespace PLearn
