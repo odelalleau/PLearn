@@ -35,13 +35,14 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperCommand.cc,v 1.1 2005/01/11 23:22:44 plearner Exp $ 
+   * $Id: HyperCommand.cc,v 1.2 2005/02/08 21:42:56 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file HyperCommand.cc */
 
 #include "HyperCommand.h"
 #include "HyperLearner.h"
+#include <plearn/io/fileutils.h> //!< For force_mkdir()
 
 namespace PLearn {
 using namespace std;
@@ -55,7 +56,7 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(HyperCommand,
                                  "commands to be used in the strategy of a HyperLearner",
                                  "");
 
-void HyperCommand::setExperimentDirectory(const string& the_expdir) 
+void HyperCommand::setExperimentDirectory(const PPath& the_expdir) 
 { 
   if(the_expdir=="")
     expdir = "";
@@ -63,7 +64,7 @@ void HyperCommand::setExperimentDirectory(const string& the_expdir)
     {
       if(!force_mkdir(the_expdir))
         PLERROR("In PLearner::setExperimentDirectory Could not create experiment directory %s",the_expdir.c_str());
-      expdir = abspath(the_expdir);
+      expdir = the_expdir.absolute();
     }
 }
 

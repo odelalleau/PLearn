@@ -35,7 +35,7 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperCommand.h,v 1.3 2005/01/25 03:15:51 dorionc Exp $ 
+   * $Id: HyperCommand.h,v 1.4 2005/02/08 21:42:57 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file HyperCommand.h */
@@ -100,7 +100,7 @@ public:
   void setHyperLearner(HyperLearner* the_hlearner)
   { hlearner = the_hlearner; }
 
-  virtual void setExperimentDirectory(const string& the_expdir);
+  virtual void setExperimentDirectory(const PPath& the_expdir);
 
   string getExperimentDirectory() const
   { return expdir; }

@@ -39,11 +39,12 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.44 2005/01/25 03:15:49 dorionc Exp $
+   * $Id: PLearner.cc,v 1.45 2005/02/08 21:42:47 tihocan Exp $
    ******************************************************* */
 
 #include "PLearner.h"
 #include <plearn/base/stringutils.h>
+#include <plearn/io/fileutils.h>
 
 namespace PLearn {
 using namespace std;
@@ -138,17 +139,20 @@ void PLearner::declareOptions(OptionList& ol)
   inherited::declareOptions(ol);
 }
 
-
-void PLearner::setExperimentDirectory(const string& the_expdir) 
+////////////////////////////
+// setExperimentDirectory //
+////////////////////////////
+void PLearner::setExperimentDirectory(const PPath& the_expdir) 
 { 
   if(the_expdir=="")
     expdir = "";
   else
-    {
-      if(!force_mkdir(the_expdir))
-        PLERROR("In PLearner::setExperimentDirectory Could not create experiment directory %s",the_expdir.c_str());
-      expdir = PPath(the_expdir).absolute() / "";
-    }
+  {
+    if(!force_mkdir(the_expdir))
+      PLERROR("In PLearner::setExperimentDirectory Could not create experiment directory %s",
+              the_expdir.absolute().c_str());
+    expdir = the_expdir / "";
+  }
 }
 
 void PLearner::setTrainingSet(VMat training_set, bool call_forget)

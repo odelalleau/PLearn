@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.31 2005/01/25 03:15:50 dorionc Exp $
+   * $Id: PLearner.h,v 1.32 2005/02/08 21:42:48 tihocan Exp $
    ******************************************************* */
 
 
@@ -157,7 +157,7 @@ public:
   //! related to this model are to be saved.     
   //! If it is an empty string, it is understood to mean that the 
   //! user doesn't want any file created by this learner.
-  virtual void setExperimentDirectory(const string& the_expdir);
+  virtual void setExperimentDirectory(const PPath& the_expdir);
 
   //! This returns the currently set expdir (see setExperimentDirectory)
   string getExperimentDirectory() const { return expdir; }
