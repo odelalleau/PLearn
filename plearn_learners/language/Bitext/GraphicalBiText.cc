@@ -16,7 +16,9 @@ semcor_train_path("/u/kermorvc/Data/Semcor/semcor1.7/1/train_corpus_all_wn17"),
 semcor_valid_path("/u/kermorvc/Data/Semcor/semcor1.7/1/valid1_corpus_all_wn17"),
 semcor_valid2_path("/u/kermorvc/Data/Semcor/semcor1.7/1/valid2_corpus_all_wn17"),
 semcor_test_path("/u/kermorvc/Data/Semcor/semcor1.7/1/test_corpus_all_wn17"),
-senseval2_train_path("/u/kermorvc/Data/Senseval/english-lex-sample/train/eng-lex_world3")
+senseval2_train_path("/u/kermorvc/Data/Senseval/english-lex-sample/train/eng-lex_world3"),
+update_threshold(0),
+output_dir("./")
 {
 
 }
@@ -44,6 +46,8 @@ void GraphicalBiText::declareOptions(OptionList& ol)
                 "   path to the bitext validation file\n");
   declareOption(ol, "sensemap_file", & GraphicalBiText::sensemap_file, OptionBase::buildoption,
                 "   path to the sensemap file  for coarse senses\n");
+  declareOption(ol, "sensemap_level", & GraphicalBiText::sensemap_level, OptionBase::buildoption,
+                "  level of sense grouping 1=all grouped 99 = all separated\n");
   declareOption(ol, "semcor_train_path", & GraphicalBiText::semcor_train_path, OptionBase::buildoption,
                 "   path to the semcor training VMat file\n");
   declareOption(ol, "semcor_valid_path", & GraphicalBiText::semcor_valid_path, OptionBase::buildoption,
@@ -52,6 +56,10 @@ void GraphicalBiText::declareOptions(OptionList& ol)
 		"   path to a second semcor validation VMat file\n");
   declareOption(ol, "semcor_test_path", & GraphicalBiText::semcor_test_path, OptionBase::buildoption,
                 "   path to the semcor testing VMat file\n");
+  declareOption(ol, "update_threshold", & GraphicalBiText::update_threshold, OptionBase::buildoption,
+                "   p(s|e,f) threshold above which the bitext data is used\n");
+  declareOption(ol, "output_dir", & GraphicalBiText::output_dir, OptionBase::buildoption,
+		"   dir for all outputs\n");
   
 }
 
@@ -484,12 +492,12 @@ void GraphicalBiText::init()
   vector<string> tokens;
   string src_word,src_stem_word,tgt_word;
   int src_word_id,tgt_word_id;
-  int c,s,si,e,f,i,j,k,h,pos;
+  int c,s,si,e,f,i,j,pos;
   map <int,int> nb_translation;
   int oov_id = ontology.getWordId(OOV_TAG);
   int nbMap=0;
   Set src_senses,ss_anc;
-  SetIterator sit,ssit; 
+  SetIterator sit; 
   Vec row_data;
   row_data.resize(n_fields);
   ShellProgressBar progress;
@@ -696,7 +704,6 @@ void GraphicalBiText::init()
 
   // Compute commNode
   int deepestComNode;
-  int nb_commNode;
   Set e_senses;
   Set f_senses;
   progress.set(0,source_wsd_voc_size*target_wsd_voc_size , "INIT_compute_commNode", 50);  
@@ -903,7 +910,7 @@ void GraphicalBiText::compute_node_level()
   list<int> desc;// descendant list
   SetIterator sit,ssit;
   Set ss_anc;
-  Node *node,*node_par;
+  Node *node;
   bool incomplete;
   int s, max_level,par;
   node = ontology.getSynset(ROOT_SS_ID);
@@ -1257,7 +1264,7 @@ void GraphicalBiText::print(string name)
   TVec<int> e_senses ;
   SetIterator sit;
   int e_voc_size = ontology.getVocSize();
-  string filename = "out_gra"+name;
+  string filename = output_dir+"out_gra"+name;
   ofstream out_gra (filename.c_str());
   if (!out_gra.is_open()){ PLERROR("error printing hierarchy");}
 
@@ -1374,17 +1381,15 @@ void GraphicalBiText::update_WSD_model(string name)
   int i,j,k,h,e,f;
   real proba;
   int nbsent=0;
-  SetIterator ssit;
-  float thres;
   nHSupbi.clear();
   pHSupbi.clear();
   //Initialize nHSupbi with nHS
-  for (int j = 0; j < nHS.getWidth(); j++){
-    map<int, real>& col_j = nHS.getCol(j);
-    for (map<int, real>::iterator it = col_j.begin(); it != col_j.end(); ++it){
-      if( it->second!=0)nHSupbi.set(it->first,j, it->second);
-    }
-  }
+  // for (int j = 0; j < nHS.getWidth(); j++){
+  //  map<int, real>& col_j = nHS.getCol(j);
+  // for (map<int, real>::iterator it = col_j.begin(); it != col_j.end(); ++it){
+  //   if( it->second!=0)nHSupbi.set(it->first,j, it->second);
+  // }
+  //}
   nESupbi.clear();
   //Initialize nESupbi with nESbase
   for (int j = 0; j < nESbase.getWidth(); j++){
@@ -1396,11 +1401,11 @@ void GraphicalBiText::update_WSD_model(string name)
   
   
   pHupbi.clear();
-  pHupbi << pHbase;
+  //pHupbi << pHbase;
   // "." denotes the end of the sentence
   int point_index = source_word_to_id[tostring(".")];
  
-  string filename = "out_bi"+name;
+  string filename = output_dir+"/out_bi"+name;
   ofstream out_bi (filename.c_str());
   if (!out_bi.is_open()){ PLERROR("error while out_bi");}
   ShellProgressBar progress(0, train_bitext_src.size()- 1, "Updating_WSD_model ", 50);  
@@ -1423,23 +1428,25 @@ void GraphicalBiText::update_WSD_model(string name)
 	// Compute P(s|e,f)
 	proba =  compute_efs_likelihood(e,f,s);
 	
-	out_bi <<target_id_to_word[f] << "\t"<<  source_id_to_word[e]<<"\t"<<sensemap[ontology.getSenseKey(e,s)]<<"\t"<<proba << endl;
-	if(proba!=0){
-	  // update context proba forward
-	  for(j=1;j<=window_size;j++){
-	    h = (int)train_bitext_src[i+j];
-	    if(h==point_index)break;
-	    //update context proba
-	    pHupbi[h]++;
-	    nHSupbi.incr(h,s,proba);
-	  }
-	  // update context proba backward
-	  for(j=1;j<=window_size;j++){
-	    h = (int)train_bitext_src[i-j];
-	    if(h==point_index)break;
-	    //update context proba
-	    pHupbi[h]++;
-	    nHSupbi.incr(h,s,proba);
+	if(proba>update_threshold){
+	  out_bi <<target_id_to_word[f] << "\t"<<  source_id_to_word[e]<<"\t"<<sensemap[ontology.getSenseKey(e,s)]<<"\t"<<proba << endl;
+	  if(proba!=0){
+	    // update context proba forward
+	    for(j=1;j<=window_size;j++){
+	      h = (int)train_bitext_src[i+j];
+	      if(h==point_index)break;
+	      //update context proba
+	      pHupbi[h]++;
+	      nHSupbi.incr(h,s,proba);
+	    }
+	    // update context proba backward
+	    for(j=1;j<=window_size;j++){
+	      h = (int)train_bitext_src[i-j];
+	      if(h==point_index)break;
+	      //update context proba
+	      pHupbi[h]++;
+	      nHSupbi.incr(h,s,proba);
+	    }
 	  }
 	}
       }
@@ -1473,7 +1480,7 @@ void GraphicalBiText::senseTagBitext(string name)
   i =0;
 
   // open out file
-  string filename = "out_bi"+name;
+  string filename = output_dir+"out_bi"+name;
   ofstream out_bi (filename.c_str());
   if (!out_bi.is_open()){ PLERROR("error while out_bi");}
 
@@ -1511,7 +1518,7 @@ void GraphicalBiText::sensetag_valid_bitext(string name)
   int i,k,maxs,e,f;
   real proba=0,ps;
   
-  string filename = "out_bi"+name;
+  string filename = output_dir+"out_bi"+name;
   ofstream out_bi (filename.c_str());
   if (!out_bi.is_open()){ PLERROR("error while out_bi");}
   
@@ -1710,7 +1717,7 @@ void GraphicalBiText::test_WSD(VMat test_set, string name, TVec<string> v,bool s
   progress.init(); 
   progress.draw();  
 #ifdef PRINT_WSD 
-  string filename = "out_wsd"+name;
+  string filename = output_dir+"/out_wsd"+name;
   ofstream out_wsd (filename.c_str());
   if (!out_wsd.is_open()){ PLERROR("error while opening out_wsd");}
 #endif
@@ -1899,12 +1906,11 @@ void GraphicalBiText::test_WSD(VMat test_set, string name, TVec<string> v,bool s
   }
   progress.done();
   
-#ifdef PRINT_WSD 
+  //#ifdef PRINT_WSD 
   // open out_answers file
-   filename = "out_score_"+name;
+   filename = output_dir+"out_score_"+name;
   ofstream out_score (filename.c_str());
   if (!out_score.is_open()){ PLERROR("error while opening out_score");}
-  
   source_words = ontology.getAllWords();
   for (ssit = source_words.begin(); ssit != source_words.end(); ++ssit){
     e = *ssit;
@@ -1913,18 +1919,15 @@ void GraphicalBiText::test_WSD(VMat test_set, string name, TVec<string> v,bool s
     out_score <<diff<<"\t"<<source_id_to_word[e]<<"\t"<<dNumber[e]<<"\t"<<dMatch[e]<<"\t"<<dMatchBi[e]<<"\t"<<dMatchStup[e]<<endl;
     if(!select && dMatch[e]<dMatchBi[e])BiSelect[e]=true;
   }
+  out_score <<"#WSD "<<nbMap<<" mapping done"<<endl;
+  out_score <<"#WSD "+name+" Random correct :"<<nb_correctrandom<<" / "<<nb_supervised<< " = " << nb_correctrandom/nb_supervised*100 <<endl;
+  out_score <<"#WSD "+name+" StupidWordNet correct :"<<nb_correctwn<<" / "<<nb_supervised<< " = " << nb_correctwn/nb_supervised*100   <<endl;
+  out_score <<"#WSD "+name+" StupidBayes correct :"<<nb_corrects<<" / "<<nb_supervised<< " = " << nb_corrects/nb_supervised*100  << " % - " << nb_undefs << " undefined"  <<endl;
+  out_score <<"#WSD "+name+" NaiveBayes correct :"<<nb_correct<<" / "<<nb_supervised<< " = " << nb_correct/nb_supervised*100  << " % - " << nb_undef << " undefined"  <<endl;
+  out_score <<"#WSD "+name+" Bitext correct :"<< nb_correctb<<" / "<<nb_supervised<< " = " << nb_correctb/nb_supervised*100  << " % - " << nb_undefb << " undefined  - " <<nb_single<< " single sense words "<< nb_unknown << " unknown words " <<endl;
   out_score.close();
-#endif     
-
-  cout <<"WSD "<<nbMap<<" mapping done"<<endl;
-  cout <<"WSD "+name+" Random correct :"<<nb_correctrandom<<" / "<<nb_supervised<< " = " << nb_correctrandom/nb_supervised*100 <<endl;
-  cout <<"WSD "+name+" StupidWordNet correct :"<<nb_correctwn<<" / "<<nb_supervised<< " = " << nb_correctwn/nb_supervised*100   <<endl;
-  cout <<"WSD "+name+" StupidBayes correct :"<<nb_corrects<<" / "<<nb_supervised<< " = " << nb_corrects/nb_supervised*100  << " % - " << nb_undefs << " undefined"  <<endl;
-  cout <<"WSD "+name+" NaiveBayes correct :"<<nb_correct<<" / "<<nb_supervised<< " = " << nb_correct/nb_supervised*100  << " % - " << nb_undef << " undefined"  <<endl;
-  cout <<"WSD "+name+" Bitext correct :"<< nb_correctb<<" / "<<nb_supervised<< " = " << nb_correctb/nb_supervised*100  << " % - " << nb_undefb << " undefined  - " <<nb_single<< " single sense words "<< nb_unknown << " unknown words " <<endl;
-#ifdef PRINT_WSD  
   out_wsd.close();
-#endif 
+
 }
 
 real GraphicalBiText::compute_BN_likelihood(int e,int f, bool update, real nb)
@@ -2171,8 +2174,8 @@ void GraphicalBiText::compute_likelihood( Vec bitext_src, Vec bitext_tgt,string 
   ef_occur.resize(source_wsd_voc_size,target_wsd_voc_size);
   ef_occur.setName("ef_occur");ef_occur.setMode(COLUMN_WISE);
 
-  ofstream out_like ("out_like");
-  if (!out_like.is_open()){ PLERROR("error while opening out_like");}
+  //ofstream out_like ("out_like");
+  //if (!out_like.is_open()){ PLERROR("error while opening out_like");}
   
   
   join_log_likelihood = 0.0;

@@ -5,7 +5,7 @@
 #include <time.h>
 #include "ProbSparseMatrix.h"
 #include "SubVMatrix.h"
-#include "/u/kermorvc/LisaPLearn/UserExp/larocheh/WSD/learning/TextSenseSequenceVMatrix.h"
+#include "TextSenseSequenceVMatrix.h"
 #include "SelectColumnsVMatrix.h"
 #include "DiskVMatrix.h"
 #include "ConcatRowsVMatrix.h"
@@ -60,7 +60,11 @@ class GraphicalBiText : public Learner {
   VMat wsd_valid2;
   VMat wsd_test ;
   VMat senseval2_train;
+
+  real update_threshold;
     
+  string output_dir;// dir for all outputs
+  
   private :
     
     // Bitext Model
