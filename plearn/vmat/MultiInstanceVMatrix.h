@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MultiInstanceVMatrix.h,v 1.4 2004/02/29 15:53:06 yoshua Exp $ 
+   * $Id: MultiInstanceVMatrix.h,v 1.5 2004/03/18 21:58:36 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Norman Casagrande
@@ -70,8 +70,7 @@ public:
   // * public build options *
   // ************************
 
-  // ### declare public option fields (such as build options) here
-  // ...
+  int header_lines_to_skip;
 
   // ****************
   // * Constructors *

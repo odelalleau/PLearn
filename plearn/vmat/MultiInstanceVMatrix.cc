@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MultiInstanceVMatrix.cc,v 1.8 2004/03/12 23:33:54 tihocan Exp $ 
+   * $Id: MultiInstanceVMatrix.cc,v 1.9 2004/03/18 21:58:36 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Norman Casagrande
@@ -52,7 +52,8 @@ namespace PLearn {
 using namespace std;
 
 MultiInstanceVMatrix::MultiInstanceVMatrix()
-  :inherited(), data_(Mat()), source_targetsize(1)
+  :inherited(), data_(Mat()), source_targetsize(1),
+   header_lines_to_skip(0)
 {
   // ### You may or may not want to call build_() to finish building the object
   //build_();
@@ -104,6 +105,10 @@ void MultiInstanceVMatrix::declareOptions(OptionList& ol)
                 "If the inputsize option is not specified it is inferred from the text file.\n"
                 );
 
+  declareOption(ol, "header_lines_to_skip", &MultiInstanceVMatrix::header_lines_to_skip, OptionBase::buildoption,
+      "The number of lines to skip at the beginning of the file (they may be garbage, or \n"
+      "a header for a TextFilesVMatrix for instance).");
+
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
 }
@@ -135,6 +140,9 @@ void MultiInstanceVMatrix::build_()
   targetsize_ = source_targetsize + 1;
 
  // Check the number of columns
+  for (int i = 0; i < header_lines_to_skip; i++) {
+    getline(inFile, aLine, '\n');
+  }
   getline(inFile, aLine, '\n');
   vector<string> entries = split(aLine);
   int nFields = (int)entries.size();
@@ -152,11 +160,19 @@ void MultiInstanceVMatrix::build_()
 
   inFile.seekg(0);
   skipBlanksAndComments(inFile);
+  for (int i = 0; i < header_lines_to_skip; i++) {
+    getline(inFile, aLine, '\n');
+  }
+  skipBlanksAndComments(inFile);
 
   int nRows = count(istreambuf_iterator<char>(inFile),
                     istreambuf_iterator<char>(), '\n');
 
   inFile.seekg(0);
+  skipBlanksAndComments(inFile);
+  for (int i = 0; i < header_lines_to_skip; i++) {
+    getline(inFile, aLine, '\n');
+  }
   skipBlanksAndComments(inFile);
 
   data_.resize(nRows, inputsize_ + targetsize_);
