@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilterSplitter.cc,v 1.4 2004/09/14 16:04:39 chrish42 Exp $ 
+   * $Id: FilterSplitter.cc,v 1.5 2004/09/21 13:12:16 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pierre-Jean L Heureux
@@ -113,16 +113,18 @@ int FilterSplitter::nSetsPerSplit() const
   return filters.length();
 }
 
+//////////////
+// getSplit //
+//////////////
 TVec<VMat> FilterSplitter::getSplit(int k)
 {
   if (k != 0) PLERROR("This splitter will only create a single split");
   // ### Build and return the kth split
-  TVec <VMat> splitsets;
-  for (int i=0;i<filters.length();i++) {
-    splitsets.append(new FilteredVMatrix(dataset,filters[i], newFilename("/tmp", "filtered_vmatrix_temp_dir_", true)));
+  TVec<VMat> splitsets;
+  for (int i=0; i<filters.length(); i++) {
+    splitsets.append(new FilteredVMatrix(dataset, filters[i], newFilename("/tmp", "filtered_vmatrix_temp_dir_", true)));
   }
   return splitsets;
 }
-
 
 } // end of namespace PLearn
