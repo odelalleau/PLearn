@@ -41,7 +41,7 @@ matplotlib.use('TkAgg')
 #matplotlib.use('GTK')
   
 from pylab import *
-
+from mayavi.tools import imv
 
 def load_pmat_as_array(fname):
     s = file(fname,'rb').read()
@@ -117,6 +117,16 @@ def plot_2d_magnitude_and_points(regular_xymagnitude, pointlists, styles = ['bo'
 
     for pointlist,style in zip(pointlists,styles[0:len(pointlists)]):
         plot_2d_points(pointlist, style)
+
+
+def plot_surface(regular_xymagnitude):
+    gridvalues, x0, y0, deltax, deltay = regular_xyval_to_2d_grid_values(regular_xymagnitude)
+    nx = size(gridvalues,0)
+    ny = size(gridvalues,1)
+    gridvalues = reshape(gridvalues,(nx,ny))
+    x = arange(x0,x0+nx*deltax,deltax)
+    y = arange(y0,y0+ny*deltay,deltay)    
+    imv.surf(x, y, gridvalues)
 
 
 # def generate_2D_color_plot(x_y_color):

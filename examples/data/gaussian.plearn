@@ -21,7 +21,7 @@ ignore_weights_below = 0  ;
 # varies, while for 'E' and 'V' it is the input part (for conditional distributions).
 # The number of curve points is determined by the 'n_curve_points' option.
 # Note that the upper case letters only work for SCALAR variables.
-outputs_def = "l"  ;
+outputs_def = "d"  ;
 
 # TVec< int >: This vector should be set for conditional distributions. It indicates what
 # each input variable corresponds to:
