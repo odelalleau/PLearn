@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.45 2005/02/18 17:12:07 tihocan Exp $
+   * $Id: vmatmain.cc,v 1.46 2005/02/18 17:29:28 tihocan Exp $
    ******************************************************* */
 
 #include <algorithm>                         // for max
@@ -410,7 +410,11 @@ void viewVMat(const VMat& vm)
   bool view_strings = true;
   // If 'indent_strings_left' is set to false, then strings will be indented to the right.
   bool indent_strings_left = true;
-  bool hide_sameval = false; // if true, values that are the same as the one of the previous vmat line will not be displayed, (three dot will be displayed instead).
+  //! Can take three values:
+  //! 0 - usual display
+  //! 1 - values that are *exactly* the same as the one of the previous vmat line will be replaced by ...
+  //! 2 - values that are *approximately* the same as the one of the previous vmat line will be replaced by ...
+  int hide_sameval = 0;
   bool transposed = false;
   
   int namewidth = 0;
@@ -520,7 +524,9 @@ void viewVMat(const VMat& vm)
               //else if ()
               //  attron(A_REVERSE);
               
-              if(hide_sameval && i>starti && (is_equal(val,oldv[j])) )
+              if(hide_sameval == 2 && i>starti && (is_equal(val,oldv[j])) )
+                mvprintw(y, x, valstrformat, "...");                
+              else if(hide_sameval == 1 && i>starti &&  (val==oldv[j] || is_missing(val)&&is_missing(oldv[j])))
                 mvprintw(y, x, valstrformat, "...");                
               else
                 mvprintw(y, x, valstrformat, s.substr(0,valstrwidth).c_str());
@@ -684,9 +690,19 @@ void viewVMat(const VMat& vm)
         break;
       ///////////////////////////////////////////////////////////////
       case '.':
-        hide_sameval = !hide_sameval;
+        if (hide_sameval == 1)
+          hide_sameval = 0;
+        else
+          hide_sameval = 1;
         break;
       ///////////////////////////////////////////////////////////////
+      case ',':
+        if (hide_sameval == 2)
+          hide_sameval = 0;
+        else
+          hide_sameval = 2;
+        break;
+       ///////////////////////////////////////////////////////////////
       case 't': case 'T':          
         transposed = !transposed;
         nj = transposed ? LINES-3 : (COLS-leftcolwidth)/valwidth;
@@ -1059,7 +1075,8 @@ void viewVMat(const VMat& vm)
         mvprintw(vStartHelp++,10," - 'n' or 'N': toggle truncated field name display mode (under transposed display mode)");
         mvprintw(vStartHelp++,10," - 'e' or 'E': export a range or a set of columns to file");
         mvprintw(vStartHelp++,10," - 'v' or 'V': prompt for another dataset to view");
-        mvprintw(vStartHelp++,10," - '.'       : toggle displaying of ... for values that do not change");
+        mvprintw(vStartHelp++,10," - '.'       : toggle displaying of ... for values that do not change (exact match)");
+        mvprintw(vStartHelp++,10," - ','       : toggle displaying of ... for values that do not change (approximate match)");
         mvprintw(vStartHelp++,10," - '/'       : search for a value of the current field");
         mvprintw(vStartHelp++,10," - 'h' or 'H': display this screen");
         mvprintw(vStartHelp++,10," - 'q' or 'Q': quit program");          
