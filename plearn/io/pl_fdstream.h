@@ -76,7 +76,7 @@ protected:
   
   virtual int overflow(int c=EOF);
   virtual int underflow();
-  virtual int showmanyc();
+  virtual streamsize showmanyc();
   virtual streamsize xsputn(const char* s, streamsize n);
   virtual streamsize xsgetn(char* s, streamsize n);
   virtual streambuf* setbuf(char* p, int len);

@@ -75,7 +75,7 @@ streambuf* pl_fdstreambuf::setbuf(char* p, int len)
 }
 
 //! not implemented (yet)
-int pl_fdstreambuf::showmanyc()
+streamsize  pl_fdstreambuf::showmanyc()
 { return -1; }
 
 int pl_fdstreambuf::underflow()
