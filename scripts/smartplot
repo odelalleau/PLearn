@@ -124,8 +124,8 @@ open (F, ">tmpplotcommand");
 print F $command;
 if ($epsfile)
 {
-#    print F "set terminal postscript eps color\n";
-    print F "set size .75,.575; set terminal postscript eps 14\n";
+    print F "set terminal postscript eps color\n";
+#    print F "set size .75,.575; set terminal postscript eps 14\n";
     print F "set output '$epsfile'\n";
     print F $command;    
 }
