@@ -1075,11 +1075,20 @@ class FileInfo:
         return command
 
     def launch_linking(self):
+        corresponding_output = self.corresponding_output
+        self.corresponding_output = self.corresponding_output+".new"
         command = self.link_command()
         if verbose:
 	        print command
         os.system(command)
-
+        if not os.path.exists(self.corresponding_output):
+          print "Link command failed to create file " + self.corresponding_output
+        else:
+          try: os.remove(corresponding_output)
+          except: pass
+          os.rename(self.corresponding_output, corresponding_output)
+        self.corresponding_output = corresponding_output
+        
     def dll_command(self):
         """returns the command for making dll target from the .o files in objsfilelist and the corresponding .def file"""        
         objsfilelist = []
