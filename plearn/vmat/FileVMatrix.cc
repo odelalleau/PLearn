@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.12 2004/02/20 21:14:29 chrish42 Exp $
+   * $Id: FileVMatrix.cc,v 1.13 2004/03/01 18:32:11 tihocan Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -245,11 +245,32 @@ void FileVMatrix::declareOptions(OptionList & ol)
   inherited::declareOptions(ol);
 }
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
+void FileVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+{
+  inherited::makeDeepCopyFromShallowCopy(copies);
+
+  // ### Call deepCopyField on all "pointer-like" fields
+  // ### that you wish to be deepCopied rather than
+  // ### shallow-copied.
+  // ### ex:
+  // deepCopyField(trainvec, copies);
+
+  // TODO Copy correctly the field FILE* f.
+//  deepCopyField(f, copies);
+
+  PLERROR("FileVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+}
+
 FileVMatrix::~FileVMatrix()
 { 
   saveFieldInfos();
-  if(f)
+  if(f) {
     fclose(f); 
+    // TODO Shouldn't we also delete f ?
+  }
 }
 
 real FileVMatrix::get(int i, int j) const

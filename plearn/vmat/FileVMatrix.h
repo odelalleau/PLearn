@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.h,v 1.4 2004/02/20 21:14:29 chrish42 Exp $
+   * $Id: FileVMatrix.h,v 1.5 2004/03/01 18:32:11 tihocan Exp $
    ******************************************************* */
 
 
@@ -79,6 +79,9 @@ class FileVMatrix: public VMatrix
   PLEARN_DECLARE_OBJECT(FileVMatrix);
 
   static void declareOptions(OptionList & ol);
+
+  //! Transform a shallow copy into a deep copy.
+  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   virtual ~FileVMatrix();
 };
