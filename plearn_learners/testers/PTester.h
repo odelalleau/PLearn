@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.h,v 1.12 2004/07/21 16:30:58 chrish42 Exp $ 
+   * $Id: PTester.h,v 1.13 2004/07/23 20:18:53 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PTester.h */
@@ -57,7 +57,7 @@ private:
 
 protected:
 
-  // Learnt options.
+ // Learnt options.
 
   TVec<string> statnames_from_mask;
 
@@ -85,11 +85,15 @@ public:
   bool save_test_costs;
   bool save_test_outputs;
   PP<Splitter> splitter;
-  TVec<string> statnames;
   TVec<TVec<string> > statmask;
   PP<VecStatsCollector> template_stats_collector;
   bool train; // whether or not to train or just test
 
+  // TODO Move to protected as soon as Apstat code is fixed.
+  // Protected because it is safer to access it from getStatNames,
+  // since the 'statmask' option may modify the stats.
+  TVec<string> statnames;
+ 
   // ****************
   // * Constructors *
   // ****************
@@ -129,10 +133,8 @@ public:
   string getExperimentDirectory() const { return expdir; }
 
 
-  //! Return the statnames.
+  //! Return the statnames (potentially modified by statmask, if provided).
   TVec<string> getStatNames();
-    
-
 
   //! runs the tester
   virtual void run();
