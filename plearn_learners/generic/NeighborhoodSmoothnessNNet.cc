@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.11 2004/02/25 17:07:53 tihocan Exp $
+   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.12 2004/02/25 21:39:09 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeighborhoodSmoothnessNNet.h */
@@ -212,6 +212,7 @@ void NeighborhoodSmoothnessNNet::declareOptions(OptionList& ol)
   declareOption(ol, "batch_size", &NeighborhoodSmoothnessNNet::batch_size, OptionBase::buildoption, 
                 "    how many samples to use to estimate the avergage gradient before updating the weights\n"
                 "    0 is equivalent to specifying training_set->n_non_missing_rows() \n");
+  // TODO Not really, since the matrix given typically has much more rows (KNNVMatrix) than input samples.
 
   declareOption(ol, "paramsvalues", &NeighborhoodSmoothnessNNet::paramsvalues, OptionBase::learntoption, 
                 "    The learned parameter vector\n");
@@ -587,19 +588,8 @@ void NeighborhoodSmoothnessNNet::train()
   if(f.isNull()) // Net has not been properly built yet (because build was called before the learner had a proper training set)
     build();
 
-  Var totalcost = sumOverBags(train_set, invars_to_training_cost, max_n_instances, batch_size, false);
-
-  if(optimizer) {
-    optimizer->setToOptimize(params, totalcost);  
-    optimizer->build();
-  }
-
-  // number of optimiser stages corresponding to one learner stage (one epoch)
-  int optstage_per_lstage = 0;
   int n_bags = -1;
-  if (batch_size<=0)
-    optstage_per_lstage = 1;
-  else // must count the nb of bags in the training set
+  // We must count the nb of bags in the training set.
   {
     n_bags=0;
     int l = train_set->length();
@@ -610,8 +600,8 @@ void NeighborhoodSmoothnessNNet::train()
     int tag_column = train_set->inputsize() + train_set->targetsize() - 1;
     for (int i=0;i<l;i++) {
       train_set->getRow(i,row);
-      if (row[tag_column] == 1) {
-        // 1 indicates the beginning of a new bag.
+      if (int(row[tag_column]) & SumOverBagsVariable::TARGET_COLUMN_FIRST) {
+        // Indicates the beginning of a new bag.
         n_bags++;
       }
       if(pb)
@@ -619,7 +609,28 @@ void NeighborhoodSmoothnessNNet::train()
     }
     if(pb)
       delete pb;
+  }
+
+  int true_batch_size = batch_size;
+  if (true_batch_size <= 0) {
+    // The real batch size is actually the number of bags in the training set.
+    true_batch_size = n_bags;
+  }
+
+  // We can now compute the total cost.
+  Var totalcost = sumOverBags(train_set, invars_to_training_cost, max_n_instances, true_batch_size, true);
+
+  // Number of optimizer stages corresponding to one learner stage (one epoch).
+  int optstage_per_lstage = 0;
+  if (batch_size<=0) {
+    optstage_per_lstage = 1;
+  } else {
     optstage_per_lstage = n_bags/batch_size;
+  }
+
+  if(optimizer) {
+    optimizer->setToOptimize(params, totalcost);  
+    optimizer->build();
   }
 
   ProgressBar* pb = 0;
