@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BootstrapVMatrix.cc,v 1.7 2004/06/10 16:15:04 tihocan Exp $
+   * $Id: BootstrapVMatrix.cc,v 1.8 2004/06/10 20:09:20 tihocan Exp $
    ******************************************************* */
 
 #include "BootstrapVMatrix.h"
@@ -49,8 +49,7 @@ PLEARN_IMPLEMENT_OBJECT(BootstrapVMatrix,
     "A VMatrix that sees a bootstrap subset of its parent VMatrix.\n"
     "This is not a real bootstrap since a sample can only appear once."
     , 
-    "The only option to specify is \"source\"(and possibly \"frac\" and \"shuffle\")."
-    // TODO Hide the useless options.
+    ""
 );
 
 //////////////////////
@@ -81,6 +80,9 @@ void BootstrapVMatrix::declareOptions(OptionList &ol)
         "The fraction of elements we keep (default = 0.6667).");
 
     inherited::declareOptions(ol);
+
+    // Hide the 'indices' option, because it will be overridden at build time.
+    redeclareOption(ol, "indices", &SelectRowsVMatrix::indices, OptionBase::nosave,"");
 }
 
 ///////////
