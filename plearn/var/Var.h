@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Var.h,v 1.2 2002/09/05 19:32:43 morinf Exp $
+   * $Id: Var.h,v 1.3 2002/09/11 04:16:23 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -467,7 +467,7 @@ inline Var softmax(Var input, Var index)
 { 
   if (input->isVec())
     return new SoftmaxLossVariable(input, index);
-  else return new MatrixSoftmaxVariable(input, index);
+  else return new MatrixSoftmaxLossVariable(input, index);
 }
 
 inline Var neg_log_pi(Var p, Var index)

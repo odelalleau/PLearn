@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: UnaryVariable.cc,v 1.4 2002/09/10 15:53:28 wangxian Exp $
+   * $Id: UnaryVariable.cc,v 1.5 2002/09/11 04:16:23 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -2783,7 +2783,7 @@ void MatrixSoftmaxVariable::deepWrite(ostream& out, DeepWriteSet& already_saved)
 void MatrixSoftmaxVariable::fprop()
 {
   for(int i=0; i<input->length(); i++)
-    softmax(input->matValue(i),matValue(i));
+    softmax(const_cast<const Vec &>(input->matValue(i)),matValue(i));
 }
 
 void MatrixSoftmaxVariable::bprop()
