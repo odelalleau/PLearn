@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.20 2004/10/07 23:42:43 tatien Exp $
+   * $Id: pl_math.h,v 1.21 2004/10/21 16:19:39 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -72,7 +72,8 @@ union _plearn_nan_type { unsigned char c[4]; float d; };
 extern _plearn_nan_type plearn_nan;
 
 //!  Quiet NaN (float pattern)
-#ifdef NAN
+//#ifdef NAN
+#if defined(NAN) && !defined(WIN32)
 #define MISSING_VALUE NAN
 #else
 #define MISSING_VALUE (plearn_nan.d)
