@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TTorchDataSetFromVMat.cc,v 1.4 2005/02/24 14:13:18 tihocan Exp $ 
+   * $Id: TTorchDataSetFromVMat.cc,v 1.5 2005/02/24 15:36:47 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -136,9 +136,10 @@ void TTorchDataSetFromVMat::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 // updateFromPLearn //
 //////////////////////
 void TTorchDataSetFromVMat::updateFromPLearn(Torch::Object* ptr) {
-  if (ptr)
+  if (ptr) {
     torch_dataset_from_vmat = (Torch::TorchDataSetFromVMat*) ptr;
-  else {
+    FROM_P_BASIC(vmat, vmat, torch_dataset_from_vmat, vmat);
+  } else {
     if (!vmat)
       return;
     if (torch_dataset_from_vmat)
@@ -153,8 +154,7 @@ void TTorchDataSetFromVMat::updateFromPLearn(Torch::Object* ptr) {
 // updateFromTorch //
 /////////////////////
 void TTorchDataSetFromVMat::updateFromTorch() {
-  // TODO Think about a clean way to do this.
-  vmat = torch_dataset_from_vmat->vmat;
+  FROM_T_BASIC(vmat, vmat, torch_dataset_from_vmat, vmat);
   inherited::updateFromTorch();
 }
 
