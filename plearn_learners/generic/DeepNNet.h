@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DeepNNet.h,v 1.4 2005/01/20 18:55:48 yoshua Exp $ 
+   * $Id: DeepNNet.h,v 1.5 2005/01/21 20:26:15 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -197,7 +197,7 @@ public:
   void fprop() const;
 
   // initialize with random connectivity and random weights and 0 biases
-  void initializeParams();
+  void initializeParams(bool set_seed=true);
 };
 
 // Declares a few other classes and functions related to this class.

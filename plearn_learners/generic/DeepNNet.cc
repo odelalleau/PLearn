@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DeepNNet.cc,v 1.4 2005/01/20 18:55:47 yoshua Exp $ 
+   * $Id: DeepNNet.cc,v 1.5 2005/01/21 20:26:15 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -200,8 +200,14 @@ void DeepNNet::build_()
 
 }
 
-void DeepNNet::initializeParams()
+void DeepNNet::initializeParams(bool set_seed)
 {
+  if (set_seed) {
+    if (seed_>=0)
+      manual_seed(seed_);
+    else
+      PLearn::seed();
+  }
   for (int l=0;l<n_layers;l++)
   {
     biases[l].clear();
@@ -231,12 +237,16 @@ void DeepNNet::initializeParams()
         int n_in = sources[l][i].length();
         real delta = 1.0/sqrt((real)n_in);
         weights[l][i].resize(n_in);
-        fill_random_uniform(weights[l][i],-delta,delta);
+        if (n_layers==1)
+          weights[l][i].fill(0);
+        else
+          fill_random_uniform(weights[l][i],-delta,delta);
       }
     }
     else // fully connected, mostly for debugging
     {
-      real delta = 1.0/sqrt((real)n_previous);
+      // real delta = 1.0/sqrt((real)n_previous);
+      real delta = 1.0/n_previous;
       for (int i=0;i<n_next;i++)
       {
         sources[l][i].resize(n_previous);

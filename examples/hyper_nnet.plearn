@@ -1,8 +1,13 @@
 #!plearn
 
+$DEFINE{expdir}{hyper_nnet}
+ShellScript(
+  shell_commands = [ "rm -rf ${expdir}" ]
+)
+
 PTester(
 # string: Path of this experiment's directory in which to save all experiment results (will be created if it does not already exist)
-expdir = "hyper_nnet";
+expdir = "${expdir}";
 
 # provide this PTester'S learner with an expdir, to save its stuff
 provide_learner_expdir = 1;
@@ -24,7 +29,7 @@ append_train = 1  ;
 append_valid = 1  ;
 
 # int: The number of splits we want (mostly useful if shuffle_valid_and_test == 1).
-n_splits = 3  ;
+n_splits = 1  ;
 
 # int: The number of samples that define the train set, assumed to be at the beginning
 # of the dataset.
@@ -42,11 +47,7 @@ shuffle_valid_and_test = 1  ;
 );
 
 
-statnames = [
-"E[E[test1.class_error]]", "E[STDDEV[test1.class_error]]", "E[E[test1.NLL]]", "E[STDDEV[test1.NLL]]"
-"E[E[test2.class_error]]", "E[STDDEV[test2.class_error]]", "E[E[test2.NLL]]", "E[STDDEV[test2.NLL]]"
-"E[E[test3.class_error]]", "E[STDDEV[test3.class_error]]", "E[E[test3.NLL]]", "E[STDDEV[test3.NLL]]"
-];
+statmask = [ ["class_error" "NLL" ] [ "E[*]" ] [ "test1.*" "test2.*" "test3.*" ] [ "E[*]" "STDERROR[*]" ] ]
 
 save_test_outputs = 1;
 
@@ -63,7 +64,7 @@ learner =
           # so this is the number of classes)
           noutputs = 26;  # 26 letters
           # int: number of hidden units in first hidden layer (0 means no hidden layer)
-          nhidden = 10;
+          nhidden = 0;
 
           # double: global weight decay for all layers
           weight_decay = 0;
@@ -87,10 +88,10 @@ learner =
           # PP< Optimizer >:     specify the optimizer to use
           optimizer = GradientOptimizer(
                       # double: the initial learning rate
-                      start_learning_rate = 0.01  ;
+                      start_learning_rate = 0.001  ;
 
                       # double: the learning rate decrease constant
-                      decrease_constant = 0  ;
+                      decrease_constant = 1e-6  ;
                       )
 
           # int: how many samples to use to estimate the avergage gradient before updating the weights
@@ -106,14 +107,15 @@ learner =
           # int: how many times the optimizer gets to see the whole training set.
           nstages = 3;
 
+#          initialization_method = "zero";
           )
 
  tester = PTester(
    # PP< Splitter >: The splitter to use to generate one or several train/test pairs.
    splitter = TrainTestSplitter(test_fraction=.10) ;
 
-   statnames = ["E[E[train.NLL]]", "E[E[train.class_error]]",
-                "E[E[test.NLL]]", "E[E[test.class_error]]"];
+   statnames = ["E[train.E[NLL]]]", "E[train.E[class_error]]",
+                "E[test.E[NLL]]", "E[test.E[class_error]]"];
 
    save_test_outputs = 1;
 
@@ -143,11 +145,8 @@ learner =
               # PP< OptionsOracle >: Oracle giving trials to explore.
               oracle = ExplicitListOracle( 
                        option_names = ["nhidden", "optimizer.start_learning_rate"];
-                       option_values = 4 2 [ 
-                                             10 1e-4;
-                                             10 1e-3;
-                                             5  1e-4; 
-                                             5  1e-3;
+                       option_values = 1 2 [ 
+                                             10 1.5e-3;
                                            ] )
   
               # bool: If this is true, a new evaluation will be performed after executing the sub-strategy,
@@ -167,7 +166,7 @@ learner =
                                    option = "nstages"
 
                                    # TVec< double >: a numerical range of the form [ start, end ] or [ start, end, step ]
-                                   range = [1 5]  # 5 epochs only
+                                   range = [1 100]  # 100 epochs 
 
                                    # double: minimum allowed error beyond which we stop
                                    min_value = -3.40282e+38  ;

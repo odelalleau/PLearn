@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.24 2004/12/04 00:12:16 chapados Exp $
+   * $Id: pl_math.h,v 1.25 2005/01/21 20:26:15 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -437,6 +437,7 @@ inline real d_soft_slope(real x, real smoothness=1, real left=0, real right=1)
     }
 
   real safeflog(real a);
+  inline real safelog(real a) { return safeflog(a); }
   real safeexp(real a);
 
   real log(real base, real a);

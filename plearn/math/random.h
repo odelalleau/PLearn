@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: random.h,v 1.7 2004/04/12 00:36:28 yoshua Exp $
+   * $Id: random.h,v 1.8 2005/01/21 20:26:15 yoshua Exp $
    ******************************************************* */
 
 #ifndef RANDOM_H
@@ -139,6 +139,9 @@ real student_t_cdf(real t, int nb_degrees_of_freedom);
   void fill_random_uniform(const Mat& dest, real minval=0, real maxval=1);
   void fill_random_normal(const Mat& dest, real mean=0, real sdev=1);
 
+  // fill dest with dest.length() unique indices of entries in (0,1,...n-1), chosen uniformly
+  // i.e. sample multinomially but without replacement, so that each entry in (0...n-1) can occur 0 or once.
+  void random_subset_indices(const TVec<int>& dest, int n);
 
 //!  randomly shuffle the entries of the TVector
 template<class T>
