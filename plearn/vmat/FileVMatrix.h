@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.h,v 1.10 2004/04/05 23:14:13 morinf Exp $
+   * $Id: FileVMatrix.h,v 1.11 2004/06/25 13:00:44 tihocan Exp $
    ******************************************************* */
 
 
@@ -44,34 +44,39 @@
 #ifndef FileVMatrix_INC
 #define FileVMatrix_INC
 
-#include "VMat.h"
+#include "RowBufferedVMatrix.h"
 
 namespace PLearn {
 using namespace std;
  
 
 //!  A VMatrix that exists in a .pmat file (native plearn matrix format, same as for Mat)
-class FileVMatrix: public VMatrix
+class FileVMatrix: public RowBufferedVMatrix
 {
-  typedef VMatrix inherited;
 
- protected:
+private:
+
+  typedef RowBufferedVMatrix inherited;
+
+protected:
+
   string filename_;
   FILE* f;
   bool file_is_bigendian;
   bool file_is_float;
 
- private:
+private:
+
   bool build_new_file;
 
- public:
+public:
+
   FileVMatrix();
   FileVMatrix(const string& filename); //!<  opens an existing file
   FileVMatrix(const string& filename, int the_length, int the_width); //!<  create a new matrix file
   FileVMatrix(const string& filename, int the_length, const TVec<string>& fieldnames); //!<  create a new matrix file
 
-  virtual real get(int i, int j) const;
-  virtual void getSubRow(int i, int j, Vec v) const;
+  virtual void getRow(int i, Vec v) const;
 
   //! Re-write the header with all current field values.
   virtual void updateHeader();
@@ -91,7 +96,9 @@ class FileVMatrix: public VMatrix
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   virtual ~FileVMatrix();
+
 private:
+
   void build_();
 };
 

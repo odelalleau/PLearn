@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.19 2004/05/24 07:33:55 chapados Exp $
+   * $Id: FileVMatrix.cc,v 1.20 2004/06/25 13:00:43 tihocan Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -73,16 +73,16 @@ static int strlen(char* s) {
 }
 
 FileVMatrix::FileVMatrix(const string& filename, int the_length, int the_width)
-  :VMatrix(the_length, the_width), filename_(abspath(filename)), f(0),
-   build_new_file(true)
+: inherited(the_length, the_width), filename_(abspath(filename)), f(0),
+  build_new_file(true)
 {
   writable = true;
   build_();
 }
 
 FileVMatrix::FileVMatrix(const string& filename, int the_length, const TVec<string>& fieldnames)
-  :VMatrix(the_length, fieldnames.length()), filename_(abspath(filename)), f(0),
-   build_new_file(true)
+: inherited(the_length, fieldnames.length()), filename_(abspath(filename)), f(0),
+  build_new_file(true)
 {
   writable = true;
   build_();
@@ -273,36 +273,19 @@ FileVMatrix::~FileVMatrix()
   }
 }
 
-/////////
-// get //
-/////////
-real FileVMatrix::get(int i, int j) const
+////////////
+// getRow //
+////////////
+void FileVMatrix::getRow(int i, Vec v) const
 {
   if(file_is_float)
   {
-    fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(float), SEEK_SET);
-    return (real) fread_float(f,file_is_bigendian);
-  }
-  else
-  {
-    fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(double), SEEK_SET);
-    return (real) fread_double(f,file_is_bigendian);
-  }
-}
-
-///////////////
-// getSubRow //
-///////////////
-void FileVMatrix::getSubRow(int i, int j, Vec v) const
-{
-  if(file_is_float)
-  {
-    fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(float), SEEK_SET);
+    fseek(f, DATAFILE_HEADERLENGTH+(i*width_)*sizeof(float), SEEK_SET);
     fread_float(f, v.data(), v.length(), file_is_bigendian);
   }
   else
   {
-    fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(double), SEEK_SET);
+    fseek(f, DATAFILE_HEADERLENGTH+(i*width_)*sizeof(double), SEEK_SET);
     fread_double(f, v.data(), v.length(), file_is_bigendian);
   }  
 }
