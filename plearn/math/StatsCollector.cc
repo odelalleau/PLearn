@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.46 2005/01/27 19:30:57 chapados Exp $
+   * $Id: StatsCollector.cc,v 1.47 2005/01/28 02:45:43 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -57,7 +57,7 @@ PLEARN_IMPLEMENT_OBJECT(
   "The first maxnvalues encountered values will be used as reference points to define\n"
   "the ranges, so to get reasonable results, your sequence should be iid, and NOT sorted!\n"
   "\n"
-  "The following statistics are available:"
+  "The following statistics are available:\n"
   "  - E              Sample mean\n"
   "  - V              Sample variance\n"
   "  - STDDEV         Sample standard deviation\n"
