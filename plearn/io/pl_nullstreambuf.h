@@ -1,8 +1,6 @@
 // -*- C++ -*-
 
 // PLearn (A C++ Machine Learning Library)
-// Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
 // Copyright (C) 2002 Xavier Saint-Mleux
 //
 
@@ -38,7 +36,11 @@
 #ifndef pl_nullstreambuf_INC
 #define pl_nullstreambuf_INC
 
-#include <streambuf>
+#if __GNUC__ < 3
+#  include <streambuf.h>
+#else
+#  include <streambuf>
+#endif
 
 namespace PLearn <%
 
