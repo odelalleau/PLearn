@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: distr_maths.cc,v 1.4 2004/02/20 21:11:46 chrish42 Exp $
+   * $Id: distr_maths.cc,v 1.5 2004/02/29 02:58:05 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -169,6 +169,7 @@ real logOfCompactGaussian(const Vec& x, const Vec& mu,
 {
   // cerr << "logOfCompact: mu = " << mu << endl;
 
+  int i;
   int d = x.length();
   static Vec x_minus_mu;
   x_minus_mu.resize(d);
@@ -177,7 +178,7 @@ real logOfCompactGaussian(const Vec& x, const Vec& mu,
   real* pxmu = x_minus_mu.data();
     
   real sqnorm_xmu = 0;
-  for(int i=0; i<d; i++)
+  for(i=0; i<d; i++)
     {
       real val = *px++ - *pmu++;
       sqnorm_xmu += val*val;
@@ -188,7 +189,6 @@ real logOfCompactGaussian(const Vec& x, const Vec& mu,
   double inv_gamma = 1./gamma;
   int kk = eigenvalues.length();
   double q = inv_gamma * sqnorm_xmu;
-  int i;
   for(i=0; i<kk; i++)
     {
       double lambda_i = eigenvalues[i];
