@@ -17,7 +17,13 @@ shift
 for PARAM in $@; do
 PARAMS="$PARAMS""$PARAM "
 done
+
+# Wait until nobody else is messing with the output file.
+lockfile $OUTPUT.lock
+
 echo -n "$PARAMS" >> $OUTPUT
 plearn vmat cat $DIR/global_stats.pmat "rowindex 1 ==" >> $OUTPUT
-# Old version:
-# saveresults $PARAMS  1 $DIR/global_stats.pmat >> $OUTPUT
+
+# Release the lock
+rm -f $OUTPUT.lock
+
