@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.10 2003/05/26 21:12:32 genji256 Exp $
+   * $Id: StatsCollector.cc,v 1.11 2003/05/26 21:41:12 genji256 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -138,10 +138,7 @@ void StatsCollector::update(real val)
       nmissing_++;
     else
       {
-        if (nnonmissing_==0) {
-          first_val=val;
-          cout << first_val << endl;
-        }
+        if (nnonmissing_==0) first_val=val;
         double sqval = (val-first_val)*(val-first_val);
         sum_ += val;
         sumsquare_ += sqval;
