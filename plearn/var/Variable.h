@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.h,v 1.7 2003/07/24 15:03:36 larocheh Exp $
+   * $Id: Variable.h,v 1.8 2003/07/28 20:01:38 larocheh Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -317,7 +317,7 @@ public:
   //!  says that given row has received gradient (should be updated on next call to update)
   void updateRow(int row)
   {
-    if (gradient_status!=2 && allows_partial_update)
+    if (gradient_status!=2 && allows_partial_update && !rows_to_update.contains(row))
     {
       rows_to_update.append(row);
       if (gradient_status==0) gradient_status=1;
