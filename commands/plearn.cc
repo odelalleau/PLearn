@@ -33,15 +33,10 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.72 2004/12/01 01:28:01 dorionc Exp $
+   * $Id: plearn.cc,v 1.73 2005/01/20 21:38:45 tihocan Exp $
    ******************************************************* */
 
-#define PLEARN_MAJOR_VERSION 0
-#define PLEARN_MINOR_VERSION 92
-#define PLEARN_FIXLEVEL 0
-
-
-//! All includes should now go into plearn_inc.h.
+//! All includes should go into plearn_inc.h.
 #include "plearn_inc.h"
 #include "PLearnCommands/plearn_main.h"
 
