@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.47 2004/07/02 13:21:53 tihocan Exp $
+   * $Id: VMatrix.h,v 1.48 2004/07/09 22:27:50 monperrm Exp $
    ******************************************************* */
 
 
@@ -342,8 +342,22 @@ public:
   //! which can be useful to export data to other applications.
   virtual void saveAMAT(const string& amatfile, bool verbose=true, bool no_header = false) const;
 
-  inline int width() const { return width_; }
-  inline int length() const { return length_; }
+  inline int width() const 
+  { 
+  #ifdef BOUNDCHECK
+    if (!this) 
+      PLERROR("VMATRIX::width() This object has pointer this=NULL");
+  #endif 
+    return width_; 
+  }
+  inline int length() const 
+  {
+  #ifdef BOUNDCHECK
+    if (!this) 
+      PLERROR("VMATRIX::length() This object has pointer this=NULL");
+  #endif
+    return length_;
+ }
 
   inline bool isWritable() const { return writable; }
 
