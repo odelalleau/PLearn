@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: FieldConvertCommand.cc,v 1.37 2004/10/04 20:57:58 tihocan Exp $
+ * $Id: FieldConvertCommand.cc,v 1.38 2004/10/19 17:12:08 tihocan Exp $
  ******************************************************* */
 
 #include "FieldConvertCommand.h"
@@ -101,7 +101,7 @@ FieldConvertCommand::FieldConvertCommand()
                   "         uniformize            = [0 | 1 | 2: whether fields should be uniformized, 2 meaning all fields and 1 meaning only\n"
                   "                                 fields obviously not following a normal distribution] (default = 0)\n"
                   "         frac_missing_sample   = [if a sample has more than 'frac_missing_sample' * n_fields missing fields, then this sample\n"
-                  "                                 will be removed from the dataset (before analyzing the dataset's fields] (default = 0)\n"
+                  "                                 will be removed from the dataset (before analyzing the dataset's fields] (default = 1)\n"
                   "\n"
                   "where fields with asterix * are not optional\n"
                   ) 
@@ -118,7 +118,7 @@ void FieldConvertCommand::run(const vector<string> & args)
   FRAC_MISSING_TO_SKIP = 1.0;
   FRAC_ENOUGH = 0.005;
   DISCRETE_TOLERANCE = 1e-3;
-  real FRAC_MISSING_SAMPLE = 0;
+  real FRAC_MISSING_SAMPLE = 1;
   target = -1;
   report_fn="FieldConvertReport.txt";
   precompute = "none";
@@ -177,7 +177,7 @@ void FieldConvertCommand::run(const vector<string> & args)
   VMat vm;
   int n_removed = 0;
   TVec<int> to_keep;
-  if (FRAC_MISSING_SAMPLE > 0) {
+  if (FRAC_MISSING_SAMPLE < 1) {
     // We may have to remove some samples first.
     ProgressBar pb("Removing samples with too many missing values", vm_orig->length());
     int w = vm_orig->width();
