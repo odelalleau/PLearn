@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.h,v 1.1 2004/02/09 15:52:20 yoshua Exp $
+   * $Id: MultiInstanceNNet.h,v 1.2 2004/02/16 20:30:45 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearn/plearn_learners/classifiers/MultiInstanceNNet.h */
@@ -45,7 +45,7 @@
 
 #include "PLearner.h"
 #include "Optimizer.h"
-#include "Var_all.h"
+//#include "Var_all.h"
 
 namespace PLearn <%
 using namespace std;

@@ -34,12 +34,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunCommand.cc,v 1.3 2003/10/29 16:55:48 plearner Exp $ 
+   * $Id: RunCommand.cc,v 1.4 2004/02/16 20:25:50 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file RunCommand.cc */
 #include "RunCommand.h"
-#include "fileutils.h"
+#include "general.h"
+//#include "fileutils.h"
 #include "plerror.h"
 #include "Object.h"
 

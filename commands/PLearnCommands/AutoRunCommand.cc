@@ -34,15 +34,16 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AutoRunCommand.cc,v 1.1 2003/08/13 08:13:16 plearner Exp $ 
+   * $Id: AutoRunCommand.cc,v 1.2 2004/02/16 20:23:22 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file AutoRunCommand.cc */
+
 #include "AutoRunCommand.h"
 #include "RunCommand.h"
 #include "TVec.h"
-#include "fileutils.h"
-#include <unistd.h>
+//#include "fileutils.h"
+//#include <unistd.h>
 
 namespace PLearn <%
 using namespace std;

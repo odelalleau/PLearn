@@ -2,10 +2,12 @@
 #include "getDataSet.h"
 //#include "/u/delallea/LisaPLearn/UserExp/delallea/not-in-cvs/TextFilesVMatrix.h"
 //#include "TextFilesVMatrix.h"
-#include "VVMatrix.h"
-#include <fstream.h>
-#include "ProgressBar.h"
+//#include "VVMatrix.h"
+//#include <fstream.h>
+//#include "ProgressBar.h"
 #include "random.h"
+#include "stringutils.h"
+#include "VMat.h"
 
 #define NORMALIZE 1
 #define MISSING_BIT 2

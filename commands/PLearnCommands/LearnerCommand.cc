@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LearnerCommand.cc,v 1.1 2004/02/13 20:35:29 plearner Exp $ 
+   * $Id: LearnerCommand.cc,v 1.2 2004/02/16 20:24:30 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -43,10 +43,10 @@
 
 #include "LearnerCommand.h"
 #include "PLearner.h"
-#include "VecStatsCollector.h"
+//#include "VecStatsCollector.h"
 #include "FileVMatrix.h"
 #include "getDataSet.h"
-#include "PStream.h"
+//#include "PStream.h"
 
 namespace PLearn <%
 using namespace std;

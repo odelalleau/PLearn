@@ -33,15 +33,15 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ReadAndWriteCommand.cc,v 1.2 2003/10/31 22:34:18 plearner Exp $ 
+   * $Id: ReadAndWriteCommand.cc,v 1.3 2004/02/16 20:25:50 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file ReadAndWriteCommand.cc */
 #include "ReadAndWriteCommand.h"
-#include "PStream.h"
+//#include "PStream.h"
 #include "Object.h"
-#include "stringutils.h"
-#include "fileutils.h"
+//#include "stringutils.h"
+//#include "fileutils.h"
 
 namespace PLearn <%
 using namespace std;

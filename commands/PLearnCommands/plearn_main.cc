@@ -33,17 +33,17 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_main.cc,v 1.11 2003/08/13 08:13:16 plearner Exp $
+   * $Id: plearn_main.cc,v 1.12 2004/02/16 20:27:19 tihocan Exp $
    ******************************************************* */
 
-#include "general.h"
+//#include "general.h"
 #include "plearn_main.h"
 #include "PLearnCommandRegistry.h"
-#include "stringutils.h"
+//#include "stringutils.h"
 #include "random.h"
 #include "PLMPI.h"
-#include "Object.h"
-#include "RunCommand.h"
+//#include "Object.h"
+//#include "RunCommand.h"
 
 namespace PLearn <%
 using namespace std;

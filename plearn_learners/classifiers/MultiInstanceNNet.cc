@@ -35,21 +35,36 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.cc,v 1.1 2004/02/09 15:52:20 yoshua Exp $
+   * $Id: MultiInstanceNNet.cc,v 1.2 2004/02/16 20:30:45 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/MultiInstanceNNet.h */
 
 
+#include "AffineTransformVariable.h"
 #include "BinaryClassificationLossVariable.h"
+#include "ConcatColumnsVariable.h"
 #include "ConcatColumnsVMatrix.h"
-#include "DisplayUtils.h"
-#include "GradientOptimizer.h"
+#include "CrossEntropyVariable.h"
+#include "ExpVariable.h"
 #include "LiftOutputVariable.h"
-#include "NegCrossEntropySigmoidVariable.h"
+#include "LogSoftmaxVariable.h"
 #include "MultiInstanceNNet.h"
+#include "NegCrossEntropySigmoidVariable.h"
+#include "OneHotSquaredLoss.h"
 #include "random.h"
+#include "SigmoidVariable.h"
+#include "SoftmaxVariable.h"
+#include "SoftplusVariable.h"
+#include "SumSquareVariable.h"
 #include "SubVMatrix.h"
+#include "TanhVariable.h"
+#include "TransposeProductVariable.h"
+#include "Var_operators.h"
+#include "Var_utils.h"
+
+//#include "DisplayUtils.h"
+//#include "GradientOptimizer.h"
 
 namespace PLearn <%
 using namespace std;
@@ -63,14 +78,14 @@ PLEARN_IMPLEMENT_OBJECT(MultiInstanceNNet,
                         "We also know that y=1 if at least one of the y_i is 1, otherwise y=0, i.e.\n"
                         "   y = y_1 or y_2 or ... y_m\n"
                         "In terms of probabilities, it means that\n"
-                        "   P(Y=0|x_1..x_m) = \prod_{i=1}^m P(y_i=0|x_i)\n"
+                        "   P(Y=0|x_1..x_m) = \\prod_{i=1}^m P(y_i=0|x_i)\n"
                         "which determines the likelihood of the observation (x_1...x_m,y).\n"
                         "The neural network implements the computation of P(y_i=1|x_i). The same\n"
                         "model is assumed for all instances in the bag. The number of instances is variable but\n"
                         "bounded a-priori (max_n_instances). The gradient is computed for a whole bag\n"
                         "at a time. The architectural parameters and hyper-parameters of the model\n"
                         "are otherwise the same as for the generic NNet class.\n"
-                        );
+                       );
 
 MultiInstanceNNet::MultiInstanceNNet() // DEFAULT VALUES FOR ALL OPTIONS
   :
