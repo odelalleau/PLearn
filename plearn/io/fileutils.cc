@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.37 2004/04/23 14:14:17 plearner Exp $
+   * $Id: fileutils.cc,v 1.38 2004/04/29 13:18:37 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -846,6 +846,37 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
                             }
                           }
                           break;
+
+                        case 'H': // it's an ISHIGHER{expr1}{expr2}
+                          {
+                            string expr1, expr2;
+                            readWhileMatches(in, "HIGHER");
+                            bool syntax_ok = true;
+                            int c = in.get();
+                            if(c == '{')
+                              smartReadUntilNext(in, "}", expr1, true);
+                            else
+                              syntax_ok = false;
+                            if (syntax_ok) {
+                              c = in.get();
+                              if(c == '{')
+                                smartReadUntilNext(in, "}", expr2, true);
+                              else
+                                syntax_ok = false;
+                            }
+                            if (!syntax_ok)
+                              PLERROR("$ISEQUAL syntax is: $ISEQUAL{expr1}{expr2}");
+                            istrstream expr1_stream(expr1.c_str());
+                            istrstream expr2_stream(expr2.c_str());
+                            string expr1_eval = readAndMacroProcess(expr1_stream, variables);
+                            string expr2_eval = readAndMacroProcess(expr2_stream, variables);
+                            if (expr1_eval > expr2_eval) {
+                              text += "1";
+                            } else {
+                              text += "0";
+                            }
+                          }
+                          break;
                       }
                     }
                     break;
@@ -1053,7 +1084,7 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
 
             default:
               PLERROR("In readAndMacroProcess: only supported macro commands are \n"
-                      "${varname}, $CHAR, $DEFINE, $ECHO, $IF, $INCLUDE, $ISDEFINED, $ISEQUAL, $MINUS, $PLUS, $OR, $SWITCH, $TIMES."
+                      "${varname}, $CHAR, $DEFINE, $ECHO, $IF, $INCLUDE, $ISDEFINED, $ISEQUAL, $ISHIGHER, $MINUS, $PLUS, $OR, $SWITCH, $TIMES."
                       "But I read $%c !!",c);
             }
         }
