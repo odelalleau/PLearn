@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.h,v 1.1 2003/07/10 18:22:53 ducharme Exp $ 
+   * $Id: MountLucasIndex.h,v 1.2 2003/08/05 21:09:02 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.h */
@@ -54,23 +54,20 @@ using namespace std;
 class MountLucasIndex: public SequentialLearner
 {
   protected:
-    Vec next_to_last_closing_price; // closing price of the next-to-last day of last month
-    Vec last_closing_price; // the closing price of the last month
     TVec<bool> is_long_position; // long or short position (for this month)
     Vec twelve_month_moving_average;
     Mat monthly_unit_asset_value;
     Mat monthly_rate_return; // rate return for this month
     Vec index_value; // the monthly MLM Index
     int current_month; // the current month (=0 for the first month of the train_set)
+    int nb_commodities; // number of commodities included in the MLM Index
 
-    int y_index; // the year index in the input data
-    int m_index; // the month index in the input data
-    int d_index; // the day index in the input data
-    int first_price_index; // the price index of the first commodity
-    int time_to_last_day_index;
+    string julian_day_column; // the julian day number column in the input data
+    int julian_day_index; // the corresponding index
+    TVec<string> commodity_price_columns; // the commodity price columns in the input data
+    TVec<int> commodity_price_index; // the corresponding indexes
  
   public:
-    int nb_commodities; // number of commodities included in the MLM Index
 
   private:
     //! This does the actual building
@@ -118,9 +115,14 @@ class MountLucasIndex: public SequentialLearner
     //virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 };
 
+//! Compute the julian date number for the last day of the month, given
+//! the julian date number of today.
+int lastJulianDayOfMonth(int julian_day);
+
 //! Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(MountLucasIndex);
 
 %> // end of namespace PLearn
 
 #endif
+

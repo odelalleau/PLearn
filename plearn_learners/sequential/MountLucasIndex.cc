@@ -34,11 +34,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.cc,v 1.1 2003/07/10 18:22:53 ducharme Exp $ 
+   * $Id: MountLucasIndex.cc,v 1.2 2003/08/05 21:09:02 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.cc */
 #include "MountLucasIndex.h"
+#include "PDate.h"
 
 namespace PLearn <%
 using namespace std;
@@ -47,26 +48,29 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT_METHODS(MountLucasIndex, "MountLucasIndex", SequentialLearner);
 
 MountLucasIndex::MountLucasIndex()
-  : current_month(0), y_index(-1), m_index(-1), d_index(-1), first_price_index(-1),
-    time_to_last_day_index(-1), nb_commodities(-1)
+  : current_month(0), julian_day_column("julian_day")
 {
 }
 
 void MountLucasIndex::build()
 {
-  parentclass::build();
   build_();
+  parentclass::build();
 }
 
 void MountLucasIndex::build_()
 {
-  if (nb_commodities < 1)
-    PLERROR("The field nb_commodities must be set before building the MountLucasIndex Object");
+  if (commodity_price_columns.size() == 0)
+    PLERROR("The different commodity price columns must be set before building the MountLucasIndex Object");
   if (max_seq_len < 1)
     PLERROR("The field max_seq_len must be set before building the MountLucasIndex Object");
 
-  next_to_last_closing_price.resize(nb_commodities);
-  last_closing_price.resize(nb_commodities);
+  nb_commodities = commodity_price_columns.length();
+  julian_day_index = train_set->fieldIndex(julian_day_column);
+  commodity_price_index.resize(nb_commodities);
+  for (int i=0; i<nb_commodities; i++)
+    commodity_price_index[i] = train_set->fieldIndex(commodity_price_columns[i]);
+
   is_long_position.resize(nb_commodities);
   twelve_month_moving_average.resize(nb_commodities);
   monthly_unit_asset_value.resize(max_seq_len,nb_commodities);
@@ -78,8 +82,8 @@ void MountLucasIndex::build_()
 
 void MountLucasIndex::forget()
 {
-  next_to_last_closing_price.fill(MISSING_VALUE);
-  last_closing_price.fill(MISSING_VALUE);
+  parentclass::forget();
+
   is_long_position.fill(true);
   twelve_month_moving_average.fill(MISSING_VALUE);
   monthly_unit_asset_value.fill(MISSING_VALUE);
@@ -92,81 +96,84 @@ void MountLucasIndex::forget()
 
 void MountLucasIndex::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "nb_commodities", &MountLucasIndex::nb_commodities,
-    OptionBase::buildoption, "The number of commodities included in the MLM Index \n");
+  declareOption(ol, "julian_day_column", &MountLucasIndex::julian_day_column,
+    OptionBase::buildoption, "The julian day number column (in the input data) \n");
 
-  declareOption(ol, "year_index", &MountLucasIndex::y_index,
-    OptionBase::buildoption, "The year index (in the input data) \n");
-
-  declareOption(ol, "month_index", &MountLucasIndex::m_index,
-    OptionBase::buildoption, "The month index (in the input data) \n");
-
-  declareOption(ol, "day_index", &MountLucasIndex::d_index,
-    OptionBase::buildoption, "The day index (in the input data) \n");
-
-  declareOption(ol, "first_price_index", &MountLucasIndex::first_price_index,
-    OptionBase::buildoption, "The price index (in the input data) \n");
-
-  declareOption(ol, "time_to_last_day_index", &MountLucasIndex::time_to_last_day_index,
-    OptionBase::buildoption, "The time_to_last_day_index index (in the input data) \n");
+  declareOption(ol, "commodity_price_columns", &MountLucasIndex::commodity_price_columns,
+    OptionBase::buildoption, "The commodity price columns (in the input data) \n");
 
   parentclass::declareOptions(ol);
 }
 
 void MountLucasIndex::train()
 {
+  int start_t = last_train_t+1;
   ProgressBar* pb;
   if (report_progress)
-    pb = new ProgressBar("Training SequentialModelSelector learner",train_set.length());
+    pb = new ProgressBar("Training SequentialModelSelector learner",train_set.length()-start_t);
 
+  Vec last_price(nb_commodities);
+  Vec next_to_last_price(nb_commodities);
+  Vec last_month_last_price(nb_commodities);
+  Vec last_month_next_to_last_price(nb_commodities);
   Vec input(train_set->inputsize()), target(train_set->targetsize());
   real w=1.0;
-  for (int t=0; t<train_set.length(); t++)
+  int julian_day, julian_last_day_of_month;
+  for (int t=start_t; t<train_set.length(); t++)
   {
     train_set->getExample(t, input, target, w);
-    Vec price_value = input.subVec(first_price_index, nb_commodities);
-    int time_to_last_day = int(input[time_to_last_day_index]);
+    julian_day = int(input[julian_day_index]);
+    Vec price_value = input(commodity_price_index);
+    next_to_last_price << last_price;
+    last_price << price_value;
 
-    if (time_to_last_day == 0) // last trading day of the month
+    if (t == start_t)
+      julian_last_day_of_month = lastJulianDayOfMonth(julian_day);
+
+    if (julian_day > julian_last_day_of_month)
     {
+      julian_last_day_of_month = lastJulianDayOfMonth(julian_day);
       if (current_month == 0)
       {
+        // next-to-last trading day of the month
+        monthly_unit_asset_value.firstRow().fill(1.0);
+        last_month_next_to_last_price << next_to_last_price;
+
+        // last trading day of the month
         monthly_rate_return.firstRow().fill(1.0);
         index_value[0] = 1000.0; // arbitrary initial value
+        last_month_last_price << last_price;
       }
       else
       {
-        Vec rate_return = monthly_rate_return(current_month);
-        for (int i=0; i<nb_commodities; i++)
-        {
-          rate_return[i] = (price_value[i]/last_closing_price[i] - 1);
-          if (!is_long_position[i]) rate_return[i] = -rate_return[i];
-          last_closing_price[i] = price_value[i];
-          is_long_position[i] = next_position(i, monthly_unit_asset_value);
-        }
-        index_value[current_month] = index_value[current_month-1]*mean(rate_return);
-        ++current_month;
-      }
-    }
-    else if (time_to_last_day == 1) // next-to-last trading day of the month
-    {
-      if (current_month == 0)
-      {
-        monthly_unit_asset_value.firstRow().fill(1.0);
-        next_to_last_closing_price << price_value;
-      }
-      else
-      {
+        // next-to-last trading day of the month
         Vec last_value = monthly_unit_asset_value(current_month-1);
         Vec this_value = monthly_unit_asset_value(current_month);
         for (int i=0; i<nb_commodities; i++)
         {
-          this_value[i] = last_value[i]*(price_value[i]/next_to_last_closing_price[i]);
-          next_to_last_closing_price[i] = price_value[i];
+          this_value[i] = last_value[i]*(next_to_last_price[i]/last_month_next_to_last_price[i]);
+          last_month_next_to_last_price[i] = next_to_last_price[i];
         }
+
+        // last trading day of the month
+        Vec rate_return = monthly_rate_return(current_month);
+        for (int i=0; i<nb_commodities; i++)
+        {
+          rate_return[i] = (last_price[i]/last_month_last_price[i] - 1);
+          if (!is_long_position[i]) rate_return[i] = -rate_return[i];
+          last_month_last_price[i] = last_price[i];
+          is_long_position[i] = next_position(i, monthly_unit_asset_value);
+        }
+        index_value[current_month] = index_value[current_month-1]*mean(rate_return);
+        predictions(current_month,0) = index_value[current_month];
+        ++current_month;
       }
     }
+
+    if (pb) pb->update(t-start_t);
   }
+  last_train_t = train_set.length()-1;
+  if (pb) delete pb;
 }
 
 // nothing to do in test
@@ -203,12 +210,22 @@ void MountLucasIndex::computeCostsFromOutputs(const Vec& input,
 
 TVec<string> MountLucasIndex::getTrainCostNames() const
 {
-  TVec<string> dummy_string;
+  TVec<string> dummy_string(1, "No Cost");
   return dummy_string;
 }
 
 TVec<string> MountLucasIndex::getTestCostNames() const
 { return getTrainCostNames(); }
+
+int lastJulianDayOfMonth(int julian_day)
+{
+  PDate today(julian_day);
+  int year_next_month = (today.month==12) ? today.year+1 : today.year;
+  int month_next_month = (today.month==12) ? 1 : today.month+1;
+  int day_next_month = 1;
+
+  return PDate(year_next_month, month_next_month, day_next_month).toJulianDay() - 1;
+}
 
 /*
 void MountLucasIndex::makeDeepCopyFromShallowCopy(CopiesMap& copies)

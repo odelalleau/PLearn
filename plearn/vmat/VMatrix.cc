@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.21 2003/06/03 14:52:10 plearner Exp $
+* $Id: VMatrix.cc,v 1.22 2003/08/05 21:08:54 ducharme Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -833,12 +833,8 @@ void VMatrix::savePMAT(const string& pmatfile) const
     pb(i);
   }
 
-  //set and save field names if necessary
-  if (fieldinfos.size() > 0)
-    {
-      m.getFieldInfos() << getFieldInfos();
-      m.saveFieldInfos();      
-    }
+  //save field names if necessary
+  if (fieldinfos.size() > 0) m.saveFieldInfos();      
 }
 
 void VMatrix::saveDMAT(const string& dmatdir) const
