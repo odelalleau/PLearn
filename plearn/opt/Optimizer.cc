@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.cc,v 1.7 2003/05/12 16:54:51 tihocan Exp $
+   * $Id: Optimizer.cc,v 1.8 2003/05/12 20:50:52 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,7 +51,7 @@ using namespace std;
 
 
 Optimizer::Optimizer(int n_updates, const string& file_name, int every_iterations)
-  :nupdates(n_updates), filename(file_name), every(every_iterations), nstages(0)
+  :nupdates(n_updates), nstages(0), filename(file_name), every(every_iterations)
 {}
 Optimizer::Optimizer(VarArray the_params, Var the_cost, int n_updates,
                      const string& file_name, int every_iterations)
@@ -224,7 +224,7 @@ void Optimizer::computeRepartition(
     }
     res[j]++;
   }
-  for (int i = 0; i<v.length(); i++) {
+  for (int i = 0; i<n; i++) {
     res[i] /= v.length();
   }
 }
@@ -236,10 +236,22 @@ real min_grad = 0;
 // collectGradientStats //
 //////////////////////////
 void Optimizer::collectGradientStats(Vec gradient) {
+  /*static VecStatsCollector grad;
+  static VecStatsCollector grad_abs;
+  static VecStatsCollector abs_grad;
+  static VMat gradm;
+  grad.update(gradient);
+
+  if (gradm) {
+    gradm = new AsciiVMatrix("gradm.amat", params.nelems());
+  }
+*/  
+
   mean_grad += gradient;
-  
   if ((stage+1) % nstages_per_epoch == 0) {
     // One epoch has just been completed
+ /*   gradm.appendRow(grad.mean()); */
+    
     string filename = "gradstats.data";
     ofstream* gradstats = new ofstream(filename.c_str(),ios::out|ios::app);
     ostream& out = *gradstats;
@@ -282,13 +294,13 @@ void Optimizer::collectGradientStats(Vec gradient) {
       min_grad = -max_grad;
       outd << "  " << min_grad << "  " << max_grad << endl;
     }
-    Vec distrib(mean_grad.length());
+    int n = 20;
+    Vec distrib(n);
     Vec mean_abs_grad(mean_grad.length());
     for (int i=0; i<mean_grad.length(); i++) {
       mean_abs_grad[i] = abs(mean_grad[i]);
     }
     int noutliers;
-    int n = 20;
     computeRepartition(mean_grad, n, min_grad, max_grad, distrib, noutliers);
     out << "  " <<
            (stage + 1) / nstages_per_epoch << "  " <<
@@ -312,7 +324,42 @@ void Optimizer::collectGradientStats(Vec gradient) {
       outd << abs(same_sign[i]) << "  ";
     }
     outd << endl;
-    
+
+    // Distribution of the number of consecutive iterations
+    outd << "  ";
+    int nepochs = (stage+1) / nstages_per_epoch;
+    Vec consec_distrib(nepochs+1);
+    Vec consec_distrib_grads(nepochs+1);
+    consec_distrib.clear();
+    consec_distrib_grads.clear();
+    for (int i=0; i<same_sign.length(); i++) {
+      int ind = int(abs(same_sign[i]));
+      consec_distrib[ind]++;
+      consec_distrib_grads[ind] += abs(mean_grad[i]);
+    }
+    for (int i=1; i<=nepochs; i++) {
+      consec_distrib[i] += consec_distrib[i-1];
+      outd << consec_distrib[i] << " ";
+    }
+    outd << endl << " ";
+    int smooth = 10;
+    Vec consec_grad_distrib(nepochs+1);
+    consec_grad_distrib.clear();
+    for (int i=1; i<=nepochs; i++) {
+      int nb = 0;
+      for (int j=i-smooth; j<=i+smooth; j++) {
+        if (j>=1 && j<=nepochs) {
+          nb += int(consec_distrib[j]);
+          consec_grad_distrib[i] += consec_distrib_grads[j];
+        }
+      }
+      if (nb > 0) {
+        consec_grad_distrib[i] /= real(nb);
+      }
+      outd << consec_grad_distrib[i] * 1000000<< " ";
+    }
+    outd << endl;
+
     mean_grad.clear();
     gradstats->close();
     gradstatsd->close();
