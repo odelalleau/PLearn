@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.22 2004/07/08 21:32:14 tihocan Exp $
+   * $Id: getDataSet.cc,v 1.23 2004/07/14 22:41:58 mariusmuja Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -188,10 +188,18 @@ VMat getDataSet(const string& datasetstring, const string& alias)
         int inputsize, nclasses;
         VMat trainset, testset, allset;
         loadClassificationDataset(datasetname, inputsize, nclasses, trainset, testset, normalizeinputs, allset);
-        if(dsetspec[1]=="train")
+        if(dsetspec[1]=="train") {
+          if (trainset==NULL) {
+            PLERROR("In getDataSet, there is no trainset available.");
+          }
           vm = trainset;
-        else if(dsetspec[1]=="test")
+        }
+        else if(dsetspec[1]=="test") {
+          if (testset==NULL) {
+            PLERROR("In getDataSet, there is no testset available.");
+          }
           vm = testset;
+        }
         else if(dsetspec[1]=="all") {
           if (allset) {
             vm = allset;
