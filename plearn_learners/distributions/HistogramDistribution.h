@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HistogramDistribution.h,v 1.4 2002/11/18 15:59:38 zouave Exp $ 
+   * $Id: HistogramDistribution.h,v 1.5 2002/11/20 17:05:11 zouave Exp $ 
    ******************************************************* */
 
 /*! \file HistogramDistribution.h */
@@ -131,7 +131,7 @@ public:
   //! trains the model
   virtual void train(VMat training_set); 
 
-  //! computes the ouptu of a trained model
+  //! computes the ouptut of a trained model
   virtual void use(const Vec& input, Vec& output);
 
   // ************************

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LimitedGaussianSmoother.h,v 1.1 2002/11/05 16:34:32 zouave Exp $ 
+   * $Id: LimitedGaussianSmoother.h,v 1.2 2002/11/20 17:05:06 zouave Exp $ 
    ******************************************************* */
 
 /*! \file LimitedGaussianSmoother.h */
@@ -41,6 +41,7 @@
 #define LimitedGaussianSmoother_INC
 
 #include "Smoother.h"
+#include <cmath>
 
 namespace PLearn <%
 using namespace std;
@@ -61,8 +62,8 @@ protected:
   // * protected options *
   // *********************
 
-  int window_size_wrt_sigma;
-  real sigma_bin;
+  real window_size_wrt_sigma, real sigma_bin;
+
     
 public:
 
@@ -84,7 +85,7 @@ public:
   LimitedGaussianSmoother();
 
 
-  LimitedGaussianSmoother(int window_size_wrt_sigma_, real sigma_bin_);
+  LimitedGaussianSmoother(real window_size_wrt_sigma_, real sigma_bin_);
 
 
   // ******************
@@ -122,6 +123,8 @@ public:
  public:
   virtual real smooth(const Vec& source_function, Vec smoothed_function, 
 		      Vec bin_positions = Vec(), Vec dest_bin_positions = Vec()) const;
+
+
 };
 
 // Declares a few other classes and functions related to this class

@@ -70,7 +70,7 @@ public:
   // trains the model
   virtual void train(VMat training_set); 
 
-  // computes the ouptu of a trained model
+  // computes the ouptut of a trained model
   virtual void use(const Vec& input, Vec& output);
    
 };

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LimitedGaussianSmoother.cc,v 1.3 2002/11/18 15:59:28 zouave Exp $ 
+   * $Id: LimitedGaussianSmoother.cc,v 1.4 2002/11/20 17:05:05 zouave Exp $ 
    ******************************************************* */
 
 /*! \file LimitedGaussianSmoother.cc */
@@ -53,10 +53,9 @@ LimitedGaussianSmoother::LimitedGaussianSmoother()
     // build_();
   }
 
-LimitedGaussianSmoother::LimitedGaussianSmoother(int window_size_wrt_sigma_, real sigma_bin_)
-  :window_size_wrt_sigma(window_size_wrt_sigma_), sigma_bin(sigma_bin_)
-{
-}
+LimitedGaussianSmoother::LimitedGaussianSmoother(real window_size_wrt_sigma_, real sigma_bin_)
+  :Smoother(), window_size_wrt_sigma(window_size_wrt_sigma_), sigma_bin(sigma_bin_)
+{}
 
   IMPLEMENT_NAME_AND_DEEPCOPY(LimitedGaussianSmoother);
 
@@ -122,6 +121,7 @@ LimitedGaussianSmoother::LimitedGaussianSmoother(int window_size_wrt_sigma_, rea
 real LimitedGaussianSmoother::smooth(const Vec& source_function, Vec smoothed_function, 
 				     Vec bin_positions, Vec dest_bin_positions) const
 {
+  //parzen regressor?? kernel smoothing??
 // smoothed_function[k] = sum_{j=max(0,k-window_size)}^{min(l-1,k+window_size)} w_{k,j} source_function[j]
 //                        / sum_{j=max(0,k-window_size)}^{min(l-1,k+window_size)} w_{k,j} 
 // with w_{k,j} = phi(bin_positions[j+1];mu_k,sigma_k)-phi(bin_positions[j];mu_k,sigma_k)
@@ -137,6 +137,8 @@ real LimitedGaussianSmoother::smooth(const Vec& source_function, Vec smoothed_fu
 // 2- Un sigma_bin pour chaque bin_position (src).
 //    Une gaussienne centree sur sur ch. pos src.
 //    
+
+
 
   smoothed_function.resize(source_function.length());
   smoothed_function.fill(0.0);
@@ -160,6 +162,68 @@ real LimitedGaussianSmoother::smooth(const Vec& source_function, Vec smoothed_fu
 				   ) 
 	    * source_function[j] / sum_weights;
     }
+
+
+
+/*
+  if(bin_positions.length() != 0 && source_function.length() != bin_positions.length()-1)
+    PLERROR("in LimitedGaussianSmoother::smooth  There must be one more bin_positions than the "
+	    "number of source_function points.");
+  //if no bin_positions given, assume positions are 0, 1, 2, ..., n
+  if(bin_positions.length() == 0)
+    {
+      int n= source_function.length()+1;
+      bin_positions.resize(n);
+      for(int i= 0; i < n; ++i)
+	bin_positions[i]= i;
+    }
+  //if no dest_bin_positions given, assume same as bin_positions
+  if(dest_bin_positions.length() == 0)
+    dest_bin_positions= bin_positions;
+
+  smoothed_function.resize(dest_bin_positions.length()-1);
+  smoothed_function.fill(0.0);
+  real window_size, mu, sigma, sum_weights;
+  int n= smoothed_function.length();
+  for(int i= 0; i < n; ++i)
+    {
+      sum_weights= 0.0;
+      int nj= source_function.length();
+      for(int j= 0; j < nj; ++j)
+	{
+	  mu= 0.5*(bin_positions[i+1]+bin_positions[i]);
+	  sigma= bin_positions[i+1]-bin_positions[i];
+	  window_size= window_size_wrt_sigma * sigma;
+	  real p1= mu - 0.5*window_size,
+	    p2= mu + 0.5*window_size;
+
+	  Vec::iterator it = find_if(options.begin(), options.end(),
+                                            bind2nd(mem_fun(&OptionBase::isOptionNamed), optionname));
+
+	  
+
+	}
+      
+
+
+	  /*
+      int min_j= i-static_cast<int>(window_size), max_j= i+static_cast<int>(window_size);
+      if(min_j < 0) min_j= 0;
+      if(max_j > smoothed_function.length()) max_j= smoothed_function.length();
+      */
+      real sum_weights= 0.0;
+      for(int j= min_j; j < max_j-1; ++j)
+	{
+	  sum_weights+= gauss_cum(bin_positions[j+1], mu, sigma) -
+	    gauss_cum(bin_positions[j], mu, sigma);
+	}
+      for(int j= min_j; j < max_j-1; ++j)
+	  smoothed_function[i]+= ( gauss_cum(bin_positions[j+1], mu, sigma) 
+				   - gauss_cum(bin_positions[j], mu, sigma)
+				   ) 
+	    * source_function[j] / sum_weights;
+    }
+*/
 }
 
 %> // end of namespace PLearn
