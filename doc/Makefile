@@ -2,7 +2,7 @@ all: guides.all doxygen
 
 # publish it all on the sourceforge web
 publish:
-	rsync -v -a -e ssh --cvs-exclude --delete --delete-excluded --modify-window=10 * plearner@plearn.sourceforge.net:/home/groups/p/pl/plearn/htdocs
+	rsync -v -rlt -e ssh --cvs-exclude --delete --delete-excluded --modify-window=10 `pwd`/ plearner@plearn.sourceforge.net:/home/groups/p/pl/plearn/htdocs
 
 guides.all: guides.html guides.pdf guides.ps
 
