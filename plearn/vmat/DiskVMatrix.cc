@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: DiskVMatrix.cc,v 1.7 2003/09/09 18:05:19 plearner Exp $
+   * $Id: DiskVMatrix.cc,v 1.8 2004/01/21 22:06:40 ducharme Exp $
    ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -84,15 +84,18 @@ for backward compatibility only. ]
 DiskVMatrix::DiskVMatrix()
   : indexf(0),freshnewfile(false),
     old_format(false),swap_endians(false),
-    readwritemode(false), tolerance(1e-6)
-{}
+    tolerance(1e-6)
+{
+  writable = false;
+}
 
 DiskVMatrix::DiskVMatrix(const string& the_dirname, bool readwrite)
   : indexf(0),freshnewfile(false),
     old_format(false),swap_endians(false),
     dirname(remove_trailing_slash(the_dirname)),
-    readwritemode(readwrite), tolerance(1e-6)
+    tolerance(1e-6)
 {
+  writable = readwrite;
   build_();
 }
 
@@ -102,8 +105,9 @@ DiskVMatrix::DiskVMatrix(const string& the_dirname, int the_width, bool write_do
     freshnewfile(true),
     old_format(false),swap_endians(false),
     dirname(remove_trailing_slash(the_dirname)),
-    readwritemode(true), tolerance(1e-6)
+    tolerance(1e-6)
 {
+  writable = true;
   build_();
 }
 
@@ -122,7 +126,7 @@ void DiskVMatrix::build_()
     setMetaDataDir(dirname + ".metadata"); 
     setMtime(mtime(append_slash(dirname)+"indexfile"));
     string omode;
-    if(readwritemode)
+    if(writable)
       omode = "a+b";
     else // read-only
       omode = "rb";
@@ -217,7 +221,6 @@ void DiskVMatrix::build_()
 void DiskVMatrix::declareOptions(OptionList &ol)
 {
   declareOption(ol, "dirname", &DiskVMatrix::dirname, OptionBase::buildoption, "Directory name of the.dmat");
-  //  declareOption(ol, "readwritemode", &DiskVMatrix::readwritemode, OptionBase::buildoption, "If true, open as read-write");
   declareOption(ol, "tolerance", &DiskVMatrix::tolerance, OptionBase::buildoption, "The absolute error tolerance for storing doubles as floats");
   inherited::declareOptions(ol);
 }
@@ -254,7 +257,7 @@ void DiskVMatrix::putRow(int i, Vec v)
 
 void DiskVMatrix::appendRow(Vec v)
 {
-  if(!readwritemode)
+  if(!writable)
     PLERROR("In DiskVMatrix::appendRow cannot append row in read only mode, set readwrite parameter to true when calling the constructor");
   if(v.length() != width())
     PLERROR("In DiskVMatrix::appendRow, length of v (%d) does not match matrix width (%d)",v.length(),width());
