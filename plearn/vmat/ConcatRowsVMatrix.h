@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVMatrix.h,v 1.10 2004/08/05 13:47:29 tihocan Exp $
+   * $Id: ConcatRowsVMatrix.h,v 1.11 2004/08/09 16:29:19 tihocan Exp $
    ******************************************************* */
 
 
@@ -49,60 +49,48 @@
 namespace PLearn {
 using namespace std;
  
-/*!   This class concatenates several distributions:
-  it samples from each of them in sequence, i.e.,
-  sampling all the samples from the first distribution,
-  then all the samples from the 2nd one, etc...
-  This works only for distributions with a finite 
-  number of samples (length()!=-1).
-*/
 class ConcatRowsVMatrix: public VMatrix
 {
+  
+private:
+
   typedef VMatrix inherited;
 
 protected:
 
   TVec<VMat> array;
 
-  //! A vector containing the final VMat to concatenate.
+  //! A vector containing the final VMats to concatenate.
   //! These are either the same as the ones in 'array', or a selection
   //! of their fields when the 'only_common_fields' option is true.
   TVec<VMat> to_concat;
 
+  //! Will be set to 'true' iff two VMats concatenated have not the same
+  //! mapping for a given string. This means the output must systematically
+  //! be checked to ensure consistency.
+  bool need_fix_mappings;
+
+  //! This is a matrix of size (number of matrices to concatenate, number of columns).
+  //! The element (i, j) is a mapping that says which value needs to be replaced with
+  //! what in the j-th column of the i-th matrix. This is to fix the mappings when
+  //! 'need_fix_mappings' is true.
+  TMat< map<real, real> > fixed_mappings;
+
 public:
 
+  bool fully_check_mappings;
   bool only_common_fields;
 
-  //! The fields names are copied from the FIRST VMat
+  //! The fields names are copied from the FIRST VMat, unless the 'only_common_fields'
+  //! option is set to 'true'.
   ConcatRowsVMatrix(TVec<VMat> the_array = TVec<VMat>());
   ConcatRowsVMatrix(VMat d1, VMat d2);
 
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;
-  //! Warning : the string map used is the one from the first of the concatenated matrices
-  virtual real getStringVal(int col, const string & str) const;
-  //! Warning : the string map used is the one from the first of the concatenated matrices
-  virtual string getValString(int col, real val) const;
-  //! Warning : the string map used is the one from the first of the concatenated matrices
-  virtual string getString(int row,int col) const;
-  //! This function does not really makes sense since there could be as many mappings
-  //! as the number of VMatrices composing this ConcatRowsVMatrix.
-  //! It will return the first's mapping.
-  const map<string,real>& getStringToRealMapping(int col) const;
 
-  virtual void reset_dimensions() 
-    { 
-      for (int i=0;i<array.size();i++) array[i]->reset_dimensions(); 
-      width_=array[0]->width();
-      length_=0;
-      for (int i=0;i<array.size();i++) 
-        {
-          if (array[i]->width()!=width_) 
-            PLERROR("ConcatRowsVMatrix: underlying-distr %d has %d width, while 0-th has %d",
-                  i,array[i]->width(),width_);
-          length_ += array[i]->length();
-        }
-    }
+  virtual void reset_dimensions();
+
   virtual real dot(int i1, int i2, int inputsize) const;
   virtual real dot(int i, const Vec& v) const;
   virtual void putMat(int i, int j, Mat m);
@@ -124,6 +112,23 @@ protected:
 private:
 
   void build_();
+
+  //! Build the string <-> real mappings so that they are consistent with the
+  //! different mappings from the concatenated VMats (the same string must
+  //! be mapped to the same value).
+  void ensureMappingsConsistency();
+
+  //! Browse through all data in the VMats to make sure there is no numerical
+  //! value conflicting with a string mapping. An error occurs if it is the case.
+  void fullyCheckMappings(bool report_progress = true);
+
+  //! Selects the fields common to all VMats to concatenate (called at build
+  //! time if 'only_common_fields' is true).
+  void findCommonFields();
+
+  //! Recompute length and width (same as reset_dimensions(), except it does not
+  //! forward to the underlying VMats).
+  void recomputeDimensions();
 
 };
 
