@@ -7,7 +7,8 @@ from   threading                     import Thread
 import plearn.utilities.toolkit      as     toolkit
 from   plearn.utilities.FrozenObject import *
 
-__all__ = [ 'ModeDefaults', 'Mode',
+__all__ = [ 'OptionGroup',
+            'ModeDefaults', 'Mode',
             'ModeAndOptionParserDefaults', 'ModeAndOptionParser' ]
 
 INDENT = 4
