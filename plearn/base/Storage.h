@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Storage.h,v 1.9 2004/02/26 06:21:52 nova77 Exp $
+   * $Id: Storage.h,v 1.10 2004/02/28 17:56:36 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -48,10 +48,11 @@
 #ifndef STORAGE_INC
 #define STORAGE_INC
 
-#include "general.h"
-#include "PP.h"
-#include "MemoryMap.h"
 #include <map>
+#include "general.h"
+#include "MemoryMap.h"
+#include "PP.h"
+#include "PStream.h"
 
 namespace PLearn {
 using namespace std;
