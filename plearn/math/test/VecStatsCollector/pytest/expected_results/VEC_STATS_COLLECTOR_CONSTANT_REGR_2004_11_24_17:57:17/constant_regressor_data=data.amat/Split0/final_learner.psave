@@ -1,0 +1,13 @@
+*1 ->ConstantRegressor(
+weight_decay = 0 ;
+constant_output = 1 [ 10.2388276293976492 ] ;
+expdir = "$RESULTS/VEC_STATS_COLLECTOR_CONSTANT_REGR_2004_11_24_17:57:17/constant_regressor_data=data.amat/Split0/LearnerExpdir/" ;
+seed = -1 ;
+stage = 0 ;
+n_examples = 100 ;
+inputsize = 0 ;
+targetsize = 1 ;
+weightsize = 0 ;
+nstages = 1 ;
+report_progress = 1 ;
+verbosity = 1  )
