@@ -1,5 +1,8 @@
 How to prepare learning Data for Bitext sense learning
 
+
+-- Bitext Alignment with GIZA++
+
 1) Download and compile GIZA++
 	http://www.isi.edu/~och/GIZA++.html
 
@@ -35,9 +38,25 @@ How to prepare learning Data for Bitext sense learning
 To use the Noun POS pruning (consider only translation couples which are nouns), the translation file ( EF.FE.A3.final.word2) must be in the following format :
 	french_noun POS english_noun POS
 
-	where POS are Penntree-bank pos tags.
+	where POS are Penntree-bank pos tags. I used the Brill tagger to tag the files (http://research.microsoft.com/users/brill/)
 
-5)
+-- Bitext Tagging
+
+5) Tag the Bitext using the Graphical model.
+	
+	5.1) cvs update your plearn hierarchy
+
+	5.2) pymake plearn
+
+	5.3) modify the GraphicalBiText.plearn script to match your local configuration (path to data files)
+
+	5.4) run the script :
+
+		plearn GraphicalBiText.plearn
+
+	When compiled with -dbg option, the model outputs several log files  out_score* and out_wsdSemcor*. The tagged bitext is stored in out_bi*. The number following out_bi represents the learning stage.
+
+	The model is not at all optimized. I am still trying a lot of variants in order to find the best way to tag the bitext files. If you want the model to run in a reasonable time, you should not try to disambiguate  more than 100 source words at a time (size of  EF.FE.A3.final.word2.tgt.voc)
 	
 			
 	

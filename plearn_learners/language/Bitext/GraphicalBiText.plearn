@@ -1,0 +1,27 @@
+#!plearn
+Experiment(
+expdir = "gbt";
+# no dataset
+dataset = *0;
+# trivial splitter
+splitter= ExplicitSplitter ( 
+  splitsets = 1 2 [ MemoryVMatrix(),  MemoryVMatrix()]
+)
+#save_models = 0;
+
+# PP< Learner >: The learner to train/test
+learner =
+GraphicalBiText(
+	window_size=3,
+	n_epoch=5,	
+	source_voc="EF.FE.treetagged.src.voc",
+	target_voc="EF.FE.treetagged.tgt.voc",	
+	train_file="/u/kermorvc/HTML/IDILIA/EF.FE.treetagged.pruned.1000000",
+	valid_file="/u/kermorvc/HTML/IDILIA/F.FE.treetagged.pruned.t500000",
+	source_path ="/u/kermorvc/HTML/IDILIA/world3",
+	semcor_train_path="/u/kermorvc/HTML/IDILIA/world3/train_corpus_all_wn17",
+	semcor_valid_path="/u/kermorvc/HTML/IDILIA/world3/valid1_corpus_all_wn17",
+	semcor_valid2_path="/u/kermorvc/HTML/IDILIA/world3/valid2_corpus_all_wn17",
+	semcor_test_path="/u/kermorvc/HTML/IDILIA/world3/test_corpus_all_wn17",
+	)	
+)
