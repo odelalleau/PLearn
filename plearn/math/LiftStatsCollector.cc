@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.cc,v 1.4 2003/11/05 17:46:29 tihocan Exp $
+ * $Id: LiftStatsCollector.cc,v 1.5 2003/11/12 18:39:28 tihocan Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -59,7 +59,8 @@ LiftStatsCollector::LiftStatsCollector()
   lift_fraction(0.1),
   output_column(0),
   sign_trick(0),
-  target_column(1)
+  target_column(1),
+  verbosity(0)
 {
 }
 
@@ -95,6 +96,9 @@ void LiftStatsCollector::declareOptions(OptionList& ol)
 
   declareOption(ol, "target_column", &LiftStatsCollector::target_column, OptionBase::buildoption,
       "    the column in which is the target value (default = 1)\n");
+
+  declareOption(ol, "verbosity", &LiftStatsCollector::verbosity, OptionBase::buildoption,
+      "    to be set >= 2 in order to display more info (default = 0)\n");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -132,6 +136,12 @@ real LiftStatsCollector::computeLift() {
   real first_samples_perf = npos_in_n_first/ (real) n_samples_to_keep;
   real targets_perf = (npos_in_n_first + npos) / (real) nsamples;
   real lift = first_samples_perf/targets_perf*100.0;
+  if (verbosity >= 2) {
+    cout << "There is a total of " << npos_in_n_first + npos <<
+      " positive examples to discover." << endl;
+    cout << "The learner found " << npos_in_n_first << 
+      " of them in the fraction considered (" << lift_fraction << ")." << endl;
+  }
   return lift;
 }
 

@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.h,v 1.4 2003/11/05 17:46:29 tihocan Exp $
+ * $Id: LiftStatsCollector.h,v 1.5 2003/11/12 18:39:28 tihocan Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -88,6 +88,7 @@ public:
   int output_column;
   int sign_trick;
   int target_column;
+  int verbosity;
 
   // ****************
   // * Constructors *
