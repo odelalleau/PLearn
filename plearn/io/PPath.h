@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.h,v 1.6 2005/02/14 18:15:24 tihocan Exp $ 
+   * $Id: PPath.h,v 1.7 2005/02/16 15:10:13 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent, Christian Dorion, Nicolas Chapados
@@ -89,7 +89,7 @@ metaprocol. For instance,
   HOME:foo/bar
 
 maps to /home/dorionc/foo/bar for me, while it could map to
-/u/bengioy/foo/bar for Yoshua and to R:\\foo\bar for some Windows
+/u/bengioy/foo/bar for Yoshua and to R:\foo\bar for some Windows
 user. Note that the canonical form of a path ALWAYS USES slash chars ('/')
 while the absolute() representation uses the appropriate slash ('/') or
 backslash ('\'). Hence, you should never care for windows' ugly '\' and always use
@@ -97,7 +97,7 @@ slash char '/' (this pretty much deprecates the usage of stringutils' slash
 slash_char global variables):
 
   // Under DOS the following is true.
-  PPath("C:/foo/bar") == "C:\\foo\bar" TODO C:\\ or C:\ ?
+  PPath("C:/foo/bar") == "C:\foo\bar"
 
 Also note that . and .. directories are elegantly resolved by PPath so that
 /home/dorionc/./foo/bar and /home/dorionc/foo/bar resolve to the same
@@ -287,9 +287,6 @@ public:
   bool   isEmpty       ()  const { return removeProtocol().empty(); }
   //! Return true iff this is an (absolute) root directory.
   bool   isRoot        ()  const;
-  //! Return true iff this is a relative PPath pointing to the current working
-  //! directory.
-  bool   isRelativeCWD ()  const { return !strcmp(removeProtocol().c_str(), "."); }
 
   PPath  operator+  (const char*    other) const { return operator+ (PPath(other)); }
   PPath& operator+= (const char*    other)       { return operator+=(PPath(other)); }
@@ -300,12 +297,14 @@ public:
   
   static string _slash;       //!< System-dependent slash string.
   static char   _slash_char;  //!< System-dependent slash character.
+
+  //! Path concatenation. Note there is no need for an
+  //! operator/(const string& other)
+  //! because a string will be automatically converted to a PPath.
   PPath  operator/  (const char*    other) const { return operator/ (PPath(other)); }
   PPath& operator/= (const char*    other)       { return operator/=(PPath(other)); }
   PPath  operator/  (const PPath&   other) const;
   PPath& operator/= (const PPath&   other);
-
-  // TODO Why not an operator/(const string& other) ?
 
   //! The operator '==' returns true iff the two paths represent the same file or
   //! directory. The final slash is systematically ignored. For instance:
@@ -422,6 +421,9 @@ public:
   */
   PPath drive() const;
 
+
+protected:
+
   /**
      Returns whether a path is absolute.
 
@@ -429,9 +431,11 @@ public:
      if it starts with a slash or backslash (current volume), or if a
      pathname after the volume letter and colon starts with a slash or
      backslash.
+
+     It is protected because one should use isAbsPath().
   */
   bool isabs() const;  
-  // TODO Only keep isAbsPath() ? Or make this one private ?
+
 };
 
 DECLARE_TYPE_TRAITS(PPath);
