@@ -105,7 +105,7 @@ real DERIVEDCLASS::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) con
 ////////////////////////
 // evaluate_i_x_again //
 ////////////////////////
-real DERIVEDCLASS::evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x, bool first_time) {
+real DERIVEDCLASS::evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x, bool first_time) const {
   // Default = uses the Kernel implementation.
   // Alternative = return source_kernel->evaluate_i_x_again(i,x,squared_norm_of_x,first_time);
   return Kernel::evaluate_i_x_again(i, x, squared_norm_of_x, first_time);
@@ -123,7 +123,7 @@ real DERIVEDCLASS::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x) con
 ////////////////////////
 // evaluate_x_i_again //
 ////////////////////////
-real DERIVEDCLASS::evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x, bool first_time) {
+real DERIVEDCLASS::evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x, bool first_time) const {
   // Default = uses the Kernel implementation.
   // Alternative = return source_kernel->evaluate_x_i_again(x,i,squared_norm_of_x,first_time);
   return Kernel::evaluate_x_i_again(x, i, squared_norm_of_x, first_time);

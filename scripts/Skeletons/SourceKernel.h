@@ -86,8 +86,8 @@ public:
   virtual real evaluate_i_j(int i, int j) const;
   virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const;
   virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const;
-  virtual real evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x=-1, bool first_time = false);
-  virtual real evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x=-1, bool first_time = false);
+  virtual real evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x=-1, bool first_time = false) const;
+  virtual real evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x=-1, bool first_time = false) const;
   virtual void computeGramMatrix(Mat K) const;
   
   // You may also want to override these methods if you don't want them
