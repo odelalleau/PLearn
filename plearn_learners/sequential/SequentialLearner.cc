@@ -127,8 +127,9 @@ void SequentialLearner::forget()
     predictions.fill(MISSING_VALUE);
   if (errors.isNotEmpty())
     errors.fill(MISSING_VALUE);
-  last_train_t = -1;
-  last_test_t = -1;
+  last_train_t      = -1;
+  last_call_train_t = -1;
+  last_test_t       = -1;
 }
 
 //! Returns train_set->targetsize()
