@@ -24,7 +24,8 @@ NNet(
           noutputs = 26;  # 26 letters
 
           # int: number of hidden units in first hidden layer (0 means no hidden layer)
-          nhidden = 20;
+          nhidden = 100;
+          # nhidden2 = 30;
 
           # double: global weight decay for all layers
           weight_decay = 0;

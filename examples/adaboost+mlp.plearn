@@ -1,0 +1,39 @@
+
+PTester(
+ expdir="adaboost+mlp";
+ provide_learner_expdir=1;
+ dataset=
+ ProcessingVMatrix(
+   source=AutoVMatrix(specification="letters all normalize");
+   prg="[%0:%15] %16 13 < :target"  # classes 0-12 vs the rest
+ )
+ splitter=FractionSplitter(splits= 1 3 [0:0.1, 0.9:1, 0:0.1])
+ statnames = [
+  "E[E[test1.class_error]]", "E[STDDEV[test1.class_error]]"
+  "E[E[test2.class_error]]", "E[STDDEV[test2.class_error]]", 
+  "E[E[test3.class_error]]", "E[STDDEV[test3.class_error]]", 
+  ];
+ save_test_outputs=0;
+ learner = 
+  AdaBoost(
+   output_threshold=0.5;
+   provide_learner_expdir=1;
+   verbosity=3;
+   compute_training_error=1;
+   nstages=5;
+   pseudo_loss_adaboost=0;
+   weak_learner_template=
+    NNet(
+     verbosity=3;
+     noutputs=1;
+     nhidden=30;
+     weight_decay=0;
+     output_transfer_func="sigmoid";
+     cost_funcs=["stable_cross_entropy", "binary_class_error"];
+     optimizer=GradientOptimizer(start_learning_rate=0.3; decrease_constant=1e-4);
+     batch_size=1;
+     seed=1;
+     nstages=10;
+   )
+  )
+)
