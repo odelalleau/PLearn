@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.cc,v 1.15 2005/02/17 02:11:12 tihocan Exp $ 
+   * $Id: PPath.cc,v 1.16 2005/02/17 04:45:59 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -64,8 +64,6 @@
 #endif
 
 #define PPATH_SLASH '/'  // The canonical slash.
-
-// TODO Use NSPR for getcwd ?
 
 namespace PLearn {
 using namespace std;
@@ -191,6 +189,8 @@ PPath PPath::home()
 ////////////
 PPath PPath::getcwd()
 {
+  // TODO Use a NSPR function when there is one:
+  //      https://bugzilla.mozilla.org/show_bug.cgi?id=280953
   char buf[2000];
   if (!SYS_GETCWD(buf, 2000))
     // Error while reading the current directory. One should probably use a
@@ -319,48 +319,32 @@ PPath::PPath(const string& path_)
 // Ensure a valid internal representation
 void PPath::resolveSlashChars( )
 {
-  const string internal = c_str();
-    
-  int plen = internal.length();      
+  size_t plen = length();      
   string resolved;
   resolved.reserve( plen );
   
-  char last = ' ';  // Could have been anything but '/' or '\'
-  for ( int ch=0; ch < plen; ch++ )
+  bool last_is_slash = false;
+  for ( size_t ch = 0; ch < plen; ch++ )
   {
-    size_t forbidden = forbidden_chars.find( internal[ch] );    
-    if ( forbidden != npos )
-      PLERROR( "PPath %s cannot contain %c chars (or any of \"%s\").",
-               internal.c_str(), internal[ch], forbidden_chars.c_str() );
+    char char_ch = operator[](ch);
+    if ( forbidden_chars.find(char_ch) != npos )
+      PLERROR( "PPath '%s' cannot contain character '%c' (or any of \"%s\").",
+               c_str(), char_ch, forbidden_chars.c_str() );
     
-    // Convert the canonic representation '/' by the appropriate
+    // Convert the canonic representation '/' to the appropriate
     // representation given the system (see slash_char instanciation in
     // PPath.cc). Multiple slash chars are removed.
-    if ( internal[ch] == PPATH_SLASH )
+    if ( char_ch == PPATH_SLASH || char_ch == _slash_char )
     {
-      if( last != PPATH_SLASH )
+      if( !last_is_slash ) { // Prevents duplicated slash characters.
         resolved += _slash_char;
+        last_is_slash = true;
+      }
     }
-
-    // TODO Why not doing this systematically ? We could have a _canonical_slash_char too
-    // and do something like if ( == _slash_char || canonical_slash_char).
-    // TODO Do ze_car = internal[ch]
-#if defined(WIN32)
-    // Under DOS, the previous if statement manages canonical '/' (that are
-    // forbidden in dos file paths). This if statement prevents multiple
-    // backslashes.
-    else if ( internal[ch] == _slash_char )
-    {
-      if( last != _slash_char )
-        resolved += _slash_char;
+    else {
+      resolved += char_ch;
+      last_is_slash = false;
     }
-#endif
-    
-    else
-      resolved += internal[ch];
-
-    // The last char is kept to help remove doubled _slash_chars.
-    last = internal[ch];
   }
 
   string::operator=(resolved);
@@ -593,30 +577,40 @@ void PPath::parseProtocol()
 
 }
 
+//////////////
+// absolute //
+//////////////
 PPath PPath::absolute() const
 {
+  if (protocol() != FILE_PROTOCOL)
+    PLERROR("In PPath::absolute - The absolute() method is only meant for "
+            "the FILE_PROTOCOL protocol");
+
   PPath abspath;
 
-  // Http and ftp urls are considered absolute.
   // An empty path remains empty when converted to absolute.
-  if ( isabs() || isEmpty() )
+  if ( isEmpty() || isAbsPath() )
     abspath = PPath( *this );
 
-  // File protocol (unspecified); relative file path.
+  // File protocol (unspecified); relative file path
+  // ==> relative path (current working directory of the process).
   else
   {
-    // No specified protocol and !isabs()
-    //    ==> relative path (current working directory of the process)
-    assert( _protocol == "" );
+    assert( _protocol.empty() );
     abspath = PPath::getcwd() / *this;
   }
+
+  // Remove useless trailing slash.
   abspath.removeTrailingSlash();
-  
+  // Remove protocol if necessary.
+  if (!_protocol.empty())
+    abspath = abspath.removeProtocol();
   return abspath;
 }
 
-// TODO Make sure we remove the file: protocol in absolute()
-
+///////////////
+// canonical //
+///////////////
 string PPath::canonical() const
 {
   // An empty path does not need to be modified.
@@ -693,27 +687,41 @@ string PPath::canonical() const
     // Remove the slash just after the ':' if there is something following.
     size_t after_colon = metaprotocol.size() + 1;
     if (canonic_path.size() > after_colon + 1 &&
-        canonic_path[after_colon] == PPATH_SLASH)
+        canonic_path[after_colon] == _slash_char)
       canonic_path.erase(after_colon, 1);
+  }
+
+  // If necessary, convert slash characters to the canonical slash.
+  if (_slash_char != PPATH_SLASH) {
+    size_t slash_pos = 0;
+    while ((slash_pos = canonic_path.find(_slash_char, slash_pos)) != npos)
+      canonic_path[slash_pos] = PPATH_SLASH;
   }
 
   return canonic_path;
 }
 
-// TODO Check this if I mess with protocols.
-
+/////////////////
+// addProtocol //
+/////////////////
 PPath PPath::addProtocol()  const
 {
-  if ( _protocol == "" )
-    return ( PPath("file:") += *this );
+  if ( _protocol.empty() )
+    return ( PPath(FILE_PROTOCOL + ':' + string(*this)) );
   return PPath( *this );
 }
 
+////////////////////
+// removeProtocol //
+////////////////////
 PPath PPath::removeProtocol()  const
 {
-  if ( _protocol == "" )
+  if ( _protocol.empty() )
     return PPath(*this);
-  return PPath( substr(_protocol.length()+1) );
+  PPath no_protocol;
+  // Avoid a call to the PPath constructor from a string.
+  no_protocol.assign(substr(_protocol.length()+1));
+  return no_protocol;
 }
 
 // TODO Check operators.
