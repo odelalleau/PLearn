@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.28 2004/05/10 13:03:11 tihocan Exp $ 
+   * $Id: PTester.cc,v 1.29 2004/05/11 20:57:54 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -97,8 +97,6 @@ PTester::PTester()
                   "Path of this tester's directory in which to save all tester results.\n"
                   "The directory will be created if it does not already exist.\n"
                   "If this is an empty string, no directory is created and no output file is generated.\n");
-    declareOption(ol, "learner", &PTester::learner, OptionBase::buildoption,
-                  "The learner to train/test.\n");
     declareOption(ol, "dataset", &PTester::dataset, OptionBase::buildoption,
                   "The dataset to use to generate splits. \n"
                   "(This is ignored if your splitter is an ExplicitSplitter)\n"
@@ -119,6 +117,8 @@ PTester::PTester()
                   "    by the underlying learner (see its getTrainCostNames and getTestCostNames methods) \n" 
                   "  - S1 and S2 are a statistic, i.e. one of: E (expectation), V(variance), MIN, MAX, STDDEV, ... \n"
                   "    S2 is computed over the samples of a given dataset split. S1 is over the splits. \n");
+    declareOption(ol, "learner", &PTester::learner, OptionBase::buildoption,
+                  "The learner to train/test.\n");
     declareOption(ol, "report_stats", &PTester::report_stats, OptionBase::buildoption,
                   "If true, the computed global statistics specified in statnames will be saved in global_stats.pmat \n"
                   "and the corresponding per-split statistics will be saved in split_stats.pmat \n"
