@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.cc,v 1.5 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: MemoryVMatrix.cc,v 1.6 2004/03/05 15:45:48 plearner Exp $
    ******************************************************* */
 
 #include "MemoryVMatrix.h"
@@ -61,7 +61,6 @@ MemoryVMatrix::MemoryVMatrix(const Mat& the_data)
 void MemoryVMatrix::declareOptions(OptionList& ol)
 {
   declareOption(ol, "data", &MemoryVMatrix::data, OptionBase::buildoption, "The underlying matrix. \n");
-
   inherited::declareOptions(ol);
 }
 
@@ -71,7 +70,8 @@ void MemoryVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 }
 
 void MemoryVMatrix::build_()
-{}
+{
+}
 
 void MemoryVMatrix::build()
 {
