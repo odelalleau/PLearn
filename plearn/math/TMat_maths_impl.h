@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.44 2004/05/04 14:45:33 yoshua Exp $
+   * $Id: TMat_maths_impl.h,v 1.45 2004/05/04 21:07:31 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -374,7 +374,7 @@ T weighted_mean(const TVec<T>& vec, const TVec<T>& weights, bool ignore_missing=
   T* w = weights.data();
   for(int i=0; i<vec.length(); i++)
   {
-    if (!is_missing(v[i]))
+    if (!is_missing(v[i]) && !is_missing(w[i]))
     {
       res += v[i] * w[i];
       sum_weights += w[i];
