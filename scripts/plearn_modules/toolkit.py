@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.3
 
-import sys, os, time, string, random
+import sys, os, time, string, random, copy
 from optparse import *
 
 def command_output(command):
@@ -101,6 +101,13 @@ def locatehostsfile( hosts_fname=(platform+".hosts") ):
         return fpath
     return ''
 
+def no_none(a):
+    b = []
+    for i in range(0, len(a)):
+        if a[i] is not None:
+            b.append(a[i])
+    return b
+    
 def remove_forbidden_dirs(dirlist, forbidden_directories):
     for fb in forbidden_directories:
         if fb in dirlist:
@@ -128,7 +135,15 @@ def short_doc(obj):
         return ''
     doc_lines = string.split(docstr, '\n')    
     return doc_lines[0]
-    
+
+def smart_concat(*lists):
+    b = []
+    for l in lists:
+        if l is not None:
+            b = b+l
+    return b
+
+
 __option_parser = None
 def declareOptionParser(parser):
     global __option_parser
@@ -150,6 +165,38 @@ def time_string():
 
 def tostring(num, prec=2):
     return fpformat.fix(num, prec)
+
+class Bindings:
+    def __init__(self, tuple_list=[]):
+        self.__keys   = []
+        self.__values = []
+        for (key, val) in tuple_list:
+            self.__keys.append(key)
+            self.__values.append(val)
+
+    def __setitem__(self, key, value):
+        if self.has_key(key):
+            i = self.__keys.index(key)
+            self.__values[i] = value
+        else:
+            self.__keys.append(key)
+            self.__values.append(val)
+
+    def __getitem(self, key):
+        if self.has_key(key):
+            i = self.__keys.index(key)
+            return self.__values[i]
+        raise KeyError("No key %s in this Bindings instance"%str(key))
+
+    def has_key(self, key):
+        return (key in self.__keys)
+
+    def keys(self):
+        return copy.deepcopy(self.__keys)
+
+    def values(self):
+        return copy.deepcopy(self.__values)
+    
     
 class Verbosity:
 

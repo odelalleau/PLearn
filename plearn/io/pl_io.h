@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io.h,v 1.12 2004/07/21 16:30:51 chrish42 Exp $
+   * $Id: pl_io.h,v 1.13 2004/08/27 12:56:37 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,7 +54,7 @@
 //#include <fstream>
 //#include <string>
 //#include <vector>
-//#include <map>
+#include <map>
 //#include <set>
 
 //#include "PStream.h"
@@ -64,6 +64,26 @@
 
 namespace PLearn {
 using namespace std;
+
+// Support for outputing std::map on an ostream.
+template <class Key, class Value>
+ostream& operator<<(ostream& out, const map<Key, Value>& m)
+{
+  out << "{" << flush;
+  typename map<Key,Value>::const_iterator it  = m.begin();
+
+  if ( m.size() > 0 )
+  {
+    for ( unsigned int elem = 0; elem < m.size()-1; elem++, it++ ) 
+      out << it->first << " : " << it->second << ", " << flush;
+
+    assert( it != m.end() );
+    out << it->first << " : " << it->second << flush;
+  }
+  
+  out << "}" << flush;
+  return out;
+}
 
 
 //*** Binary read and write to/from std::stream ***

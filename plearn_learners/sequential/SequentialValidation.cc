@@ -75,6 +75,9 @@ void SequentialValidation::build_()
     if(!force_mkdir(expdir))
       PLERROR("Could not create experiment directory %s", expdir.c_str());
   }
+
+  if ( dataset && dataset->inputsize() < 0 )
+    dataset->defineSizes(dataset->width(), 0, 0);
 }
 
 void SequentialValidation::build()
