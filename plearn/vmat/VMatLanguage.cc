@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.29 2004/11/24 18:38:19 tihocan Exp $
+   * $Id: VMatLanguage.cc,v 1.30 2005/01/11 20:04:45 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -180,6 +180,9 @@ using namespace std;
                   }
                 else if(parts[0][0]=='%')
                   a=toint(parts[0].substr(1));
+                else if (parts[0] == "END")
+                  // Keyword indicating we go till the end.
+                  a = vmsource->width() - 1;
                 else PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%6]. 'end' must be after 'start'.. OR [field] to copy a single field");
                 
                 if(parts[1][0]=='@')
@@ -189,6 +192,9 @@ using namespace std;
                   }
                 else if(parts[1][0]=='%')
                   b=toint(parts[1].substr(1));
+                else if (parts[1] == "END")
+                  // Keyword indicating we go till the end.
+                  b = vmsource->width() - 1;
                 else PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%6]. 'end' must be after 'start'.. OR [field] to copy a single field");
                 
                 if(a>b)
@@ -473,6 +479,7 @@ using namespace std;
         opcodes["memget"] = 53; // mempos --> val  ( gets val from memory in position mempos)
         opcodes["neg"]    = 54; // a --> -a
         opcodes["missing"] = 55;  // a missing value
+        opcodes["sumabs"] = 56;  // v0 v1 v2 ... vn --> sum_i |vi| (no pop, and starts from the beginning of the stack)
       }
   }
 
@@ -790,6 +797,14 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
           case 55: // missing
             pstack.push(MISSING_VALUE);
             break;
+          case 56: // sumabs
+            {
+              real sumabs = 0;
+              for (int i = 0; i < pstack.length(); i++)
+                sumabs += fabs(pstack[i]);
+              pstack.push(sumabs);
+              break;
+            }
           default:
             PLERROR("BUG IN PreproInterpretor::run while running program: invalid opcode: %d", op);
           }
@@ -852,10 +867,10 @@ PreprocessingVMatrix::build_()
 void
 PreprocessingVMatrix::declareOptions(OptionList &ol)
 {
+    inherited::declareOptions(ol);
     declareOption(ol, "source", &PreprocessingVMatrix::source, OptionBase::buildoption, "");
     declareOption(ol, "program", &PreprocessingVMatrix::program, OptionBase::buildoption, "");
     declareOption(ol, "fieldnames", &PreprocessingVMatrix::fieldnames, OptionBase::buildoption, "");
-    inherited::declareOptions(ol);
 }
 
 } // end of namespace PLearn
