@@ -1,8 +1,10 @@
 // -*- C++ -*-
 
 // PLearn (A C++ Machine Learning Library)
-// Copyright (C) 2003 Olivier Delalleau
+// Copyright (C) 1998 Pascal Vincent
+// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
 //
+
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -32,70 +34,22 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 
+ 
+
 /* *******************************************************      
-   * $Id: BootstrapVMatrix.cc,v 1.5 2004/04/17 00:47:02 plearner Exp $
+   * $Id: TMat.h,v 1.37 2004/04/17 00:46:15 plearner Exp $
+   * AUTHORS: Pascal Vincent & Yoshua Bengio
+   * This file is part of the PLearn library.
    ******************************************************* */
 
-#include "BootstrapVMatrix.h"
-#include "random.h"
+
+/*! \file PLearnLibrary/PLearnCore/TMat.h */
+
+#ifndef TMat_INC
+#define TMat_INC
+
+#include "TMat_impl.h"
 #include "TMat_sort.h"
 
-namespace PLearn {
-using namespace std;
+#endif
 
-/** BootstrapVMatrix **/
-
-PLEARN_IMPLEMENT_OBJECT(BootstrapVMatrix,
-    "A VMatrix that sees a bootstrap subset of its parent VMatrix.\n"
-    "This is not a real bootstrap since a sample can only appear once."
-    , 
-    "The only option to specify is \"distr\"(and possibly \"frac\")."
-);
-
-//////////////////////
-// BootstrapVMatrix //
-//////////////////////
-BootstrapVMatrix::BootstrapVMatrix()
-  : frac(0.6667)
-{
-}
-
-BootstrapVMatrix::BootstrapVMatrix(VMat m, real frac)
-{
-  this->frac = frac;
-  this->distr = m;
-  build();
-}
-
-void BootstrapVMatrix::declareOptions(OptionList &ol)
-{
-    declareOption(ol, "frac", &BootstrapVMatrix::frac, OptionBase::buildoption,
-        "    The fraction of elements we keep (default = 0.6667)");
-    inherited::declareOptions(ol);
-}
-
-///////////
-// build //
-///////////
-void BootstrapVMatrix::build()
-{
-  inherited::build();
-  build_();
-}
-
-////////////
-// build_ //
-////////////
-void BootstrapVMatrix::build_()
-{
-  if (distr) {
-    indices = TVec<int>(0, distr.length()-1, 1); // Range-vector
-    shuffleElements(indices);
-    indices = indices.subVec(0,int(frac * distr.length()));
-    sortElements(indices);
-    // Because we changed the indices, a rebuild may be needed.
-    inherited::build();
-  }
-}
-
-} // end of namespcae PLearn
