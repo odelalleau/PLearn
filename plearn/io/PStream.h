@@ -36,19 +36,19 @@
 #ifndef PStream_INC
 #define PStream_INC
 
-#include <iosfwd>
+//#include <iosfwd>
 #include <map>
 #include <set>
-#include <bitset>
+//#include <bitset>
 #include <sstream>
 #include "pl_hash_fun.h"
-#include "PP.h"
+//#include "PP.h"
 #include "pl_streambuf.h"
 #include "pl_fdstream.h"
 #include "PStream_util.h"
 #include "plerror.h"
 #include <fstream>
-#include "TypeTraits.h"
+//#include "TypeTraits.h"
 #include "byte_order.h"
 
 namespace PLearn {

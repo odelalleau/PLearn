@@ -37,13 +37,13 @@
  
 
 /* *******************************************************      
-   * $Id: IntVecFile.cc,v 1.4 2004/02/20 21:11:44 chrish42 Exp $
+   * $Id: IntVecFile.cc,v 1.5 2004/03/04 15:04:50 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "IntVecFile.h"
-#include "fileutils.h"
+//#include "fileutils.h"
 #include "byte_order.h"
 
 namespace PLearn {

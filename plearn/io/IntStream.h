@@ -48,8 +48,8 @@
 #ifndef MODULE_INTSTREAM
 #define MODULE_INTSTREAM
 
-#include <cstdio>
-#include "VMat.h" //!<  to make a sub-class of VMat with an IntStream inside
+//#include <cstdio>
+//#include "VMat.h" //!<  to make a sub-class of VMat with an IntStream inside
 #include "RowBufferedVMatrix.h"
 
 namespace PLearn {

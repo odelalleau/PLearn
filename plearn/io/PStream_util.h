@@ -39,8 +39,8 @@
 #define PStream_util_INC
 
 #include <string>
-#include "pl_nullstreambuf.h"
-#include <iosfwd>
+//#include "pl_nullstreambuf.h"
+//#include <iosfwd>
 
 namespace PLearn {
 using namespace std;

@@ -36,7 +36,7 @@
 /* IntStream.cc */
 
 #include "IntStream.h"
-#include <sys/stat.h>
+//#include <sys/stat.h>
 
 #ifndef _MSC_VER
 #include <unistd.h> 
@@ -44,7 +44,8 @@
 #include <cstdlib>
 #endif
 
-#include <cerrno>
+//#include <cerrno>
+
 // I am commenting this out because the compiler complained of previous declarations fronm stdlib.h throwing different exceptions!!! (Pascal)
 // #include <malloc.h>
 
