@@ -57,39 +57,10 @@ pytest_variables       = os.path.join( plearn_scripts, '.pytest_variables' )
 
 def user_independant_path(directory):
     """
-    Éventuellement, il faut que je fasse quelque chose pour les tests qui ne sont sous aucune branche...
+    Eventuellement, il faut que je fasse quelque chose pour les tests qui ne sont sous aucune branche...
     """
     pass
 
-def path_in_branches(directory, return_tuple=False):
-    path = None
-    for plbranch in plbranches.iterkeys():
-        try:
-            path = path_in_branch( plbranch, directory )
-            
-        except ValueError:
-            pass
-        else:
-            if return_tuple:
-                path = ( plbranch, path )
-            else:
-                path = plbranches[plbranch] + path
-            break
-
-    if path is None:
-        raise ValueError("Directory %s is under none of the plearn branches.")
-        
-    return path
-    
-def path_in_branch(plbranch, directory):
-    d = os.path.abspath(directory)
-    i = string.find(d, plbranch)
-    if i == -1:
-        raise ValueError( "Directory %s is not under the %s directory."
-                          % (directory, plbranches[plbranch]) )
-    assert i == 0    
-    return d[len(plearndir):]
-    
 def keep_only(dir, to_keep, hook=None):
     """Given a directory, this function removes all files and directories except I{to_keep}.
 
@@ -113,6 +84,92 @@ def keep_only(dir, to_keep, hook=None):
                 if callable(hook):
                     hook(fpath)
 
+def path_in_branches(directory, return_tuple=False):
+    """Returns the path the I{directory} within the appropriate plearn branch.
+
+    Will raise a L{ValueError} if the directory is not under any plearn branch.
+
+    @param directory: A valid directory path. 
+    @type  directory: String.
+
+    @param return_tuple: If True, the method returns a (branch,
+    path_in_branch) tuple. Else, it returns
+    'branch/path_in_branch'. Default: False.
+    @type  return_tuple: bool
+
+    @returns: If I{return_tuple} is True, the method returns a
+    (branch, path_in_branch) tuple. Else, it returns
+    'branch/path_in_branch'.
+    """
+    path = None
+    for plbranch in plbranches.iterkeys():
+        try:
+            path = path_in_branch( plbranch, directory,
+                                   (not return_tuple) )
+            
+        except ValueError:
+            pass
+        else:
+            if return_tuple:
+                path = ( plbranch, path )
+            break
+
+    if path is None:
+        raise ValueError("Directory %s is under none of the plearn branches."
+                         % directory )
+        
+    return path
+    
+def path_in_branch(plbranch, directory, prepend_branch=True):
+    """Returns the path the I{directory} within the provided I{plbranch}.
+
+    Will raise a L{ValueError} if the directory is not under I{plbranch}.
+
+    @param plbranch: A valid PLearn branch.
+    @type  plbranch: String.
+
+    @param directory: A valid directory path. 
+    @type  directory: String.
+
+    @param prepend_branch: If True, the method returns
+    'branch/path_in_branch'. Else it returns only 'path_in_branch'.
+    Default: True.
+    @type  prepend_branch: bool
+
+    @return: If I{prepend_branch} is True, the method returns
+    'branch/path_in_branch'. Else it returns only 'path_in_branch'.
+    """
+    d = os.path.abspath(directory)
+    i = string.find(d, plbranch)
+    if i == -1:
+        raise ValueError( "Directory %s is not under the %s directory."
+                          % (directory, plbranches[plbranch]) )
+    assert i == 0
+    if prepend_branch:
+        return os.path.join(plbranch, d[len(plearndir):])
+    return d[len(plearndir):]
+
+def plcommand(command_name):
+    """The path to the command named I{command_name} within its plearn branch. 
+
+    @param command_name: The name of a command the user expect to be
+    found in the 'commands' directory of one of the plearn branches.
+    @type  command_name: String
+
+    @return: A string representing the path to the command. The
+    function returns None if the command is not found.
+    """
+    command_path = None
+    for plbranch in plbranches.iterkeys():
+        cmd_path = os.path.join(plbranch, 'commands', command_name)
+        path     = cmd_path+'.cc'
+        if os.path.exists( path ):
+            command_path = cmd_path
+            break
+
+    return command_path
+
+    
 def splitprev(dir):
     """Returns the directory of which I{dir} is a subdirectory.
 
@@ -122,7 +179,6 @@ def splitprev(dir):
     @return: The directory of which I{dir} is a subdirectory. If
     I{dir} doesn't end by '/', then the result will be the same than
     L{os.path.split}(I{dir})
-
     """
     if dir[-1] == "/":
         dir.pop()
