@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilteredVMatrix.cc,v 1.6 2004/04/05 23:14:13 morinf Exp $ 
+   * $Id: FilteredVMatrix.cc,v 1.7 2004/04/19 12:40:25 lheureup Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -51,6 +51,14 @@ FilteredVMatrix::FilteredVMatrix()
   : inherited(),
     build_complete(false)
 {
+}
+
+FilteredVMatrix::FilteredVMatrix(VMat the_source, const string& program_string, const string& the_metadatadir)
+  : SourceVMatrix(the_source),
+    prg(program_string)
+{
+  metadatadir = the_metadatadir;
+  build_();
 }
 
 PLEARN_IMPLEMENT_OBJECT(FilteredVMatrix, "A filtered view of its source vmatrix", 

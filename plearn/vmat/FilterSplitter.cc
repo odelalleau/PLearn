@@ -33,14 +33,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilterSplitter.cc,v 1.1 2004/04/15 21:27:50 lheureup Exp $ 
+   * $Id: FilterSplitter.cc,v 1.2 2004/04/19 12:40:24 lheureup Exp $ 
    ******************************************************* */
 
 // Authors: Pierre-Jean L Heureux
 
 /*! \file FilterSplitter.cc */
 
-
+#include "fileutils.h"   //!< For newFilename.
 #include "FilterSplitter.h"
 #include "FilteredVMatrix.h"
 
@@ -115,11 +115,12 @@ int FilterSplitter::nSetsPerSplit() const
 
 TVec<VMat> FilterSplitter::getSplit(int k)
 {
-  if (k != 1) PLERROR("This splitter will only create a single split");
+  if (k != 0) PLERROR("This splitter will only create a single split");
   // ### Build and return the kth split
   TVec <VMat> splitsets;
-  for (int i=0;i<filters.length();i++)
-    splitsets.append(new FilteredVMatrix(dataset,filters[i]));
+  for (int i=0;i<filters.length();i++) {
+    splitsets.append(new FilteredVMatrix(dataset,filters[i], newFilename("/tmp", "filtered_vmatrix_temp_dir_", true)));
+  }
   return splitsets;
 }
 

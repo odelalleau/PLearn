@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilteredVMatrix.h,v 1.6 2004/04/05 23:14:13 morinf Exp $ 
+   * $Id: FilteredVMatrix.h,v 1.7 2004/04/19 12:40:25 lheureup Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -81,13 +81,11 @@ public:
   // * Constructors *
   // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
+  //! Default constructor.
   FilteredVMatrix();
 
-  FilteredVMatrix(VMat the_source, const string& program_string)
-    :SourceVMatrix(the_source),prg(program_string)
-  { build_(); }
+  //! Convenience constructor.
+  FilteredVMatrix(VMat the_source, const string& program_string, const string& the_metadatadir = "");
 
   virtual void setMetaDataDir(const string& the_metadatadir);
 
