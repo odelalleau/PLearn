@@ -334,6 +334,8 @@ def printusage():
             print '   -'+item + ': ' + pymake_options_defs[item].description
     print
     print 'Other possible options are:'
+    print "  -graph: if this is given, targets won't be compiled or linked. Instead their"
+    print "          dependency graph will be generated in targetname.dot and targetname.ps files."
     print '  -force: forces recompilation of all necessary files, even if they are up to date.'
     print '  -local: don\'t use parallel compilation, even if there is a .pymake/<platform>.hosts file.'
     print '  -clean: removes all OBJS subrdirectories recursively in all given directories'
@@ -638,7 +640,7 @@ class FileInfo:
     """
 
     # static patterns useful for parsing the file
-    include_regexp = re.compile(r'^\s*#include\s+(?:"|<)([^\s\"\>]+)(?:"|>)',re.M)
+    include_regexp = re.compile(r'^\s*#include\s*(?:"|<)([^\s\"\>]+)(?:"|>)',re.M)
     qobject_regexp = re.compile(r'\bQ\_OBJECT\b',re.M)
     #hasmain_regexp = re.compile(r'\b(main|mpi_master_main)\s*\(',re.M)
     hasmain_regexp = re.compile(r'\b(main|IMPLEMENT_APP)\s*\(',re.M)
@@ -1087,6 +1089,60 @@ class FileInfo:
                     failures.append(ccfile.filepath)
         return failures
 
+    def dotid(self):
+        """returns a string suitable as an ID for the dot graph language"""
+        return self.filebase+'_'+self.fileext[1:]
+
+    def filename(self):
+        """returns the filename (without the directory part) of the current node"""
+        return self.filebase+self.fileext
+
+    def build_dependency_graph(self, dotfile, visited_files):
+        """completes the ccfiles_to_link list by appending the FileInfo
+        for all .cc files related to this file through includes and .cc
+        files corresponding to .h files"""
+        if self not in visited_files:
+            visited_files.append(self)
+
+            if self.is_ccfile:
+                dotfile.write(self.dotid()+'[shape="box",label="'+self.filename()+'",fontsize=10,height=0.2,width=0.4,fontname="Helvetica",color="darkgreen",style="filled",fontcolor="white"];\n')
+            else: # it's a .h file
+                dotfile.write(self.dotid()+'[shape="box",label="'+self.filename()+'",fontsize=10,height=0.2,width=0.4,fontname="Helvetica",color="blue4",style="filled",fontcolor="white"];\n')
+                if self.corresponding_ccfile:
+                    self.corresponding_ccfile.build_dependency_graph(dotfile, visited_files)
+                    dotfile.write(self.dotid()+' -> '+self.corresponding_ccfile.dotid()+' [dir=none,color="darkgreen",fontsize=10,style="dashed",fontname="Helvetica"];\n')
+
+            for include in self.includes_from_sourcedirs:
+                include.build_dependency_graph(dotfile, visited_files)
+                dotfile.write(self.dotid()+' -> '+include.dotid()+' [dir=forward,color="blue4",fontsize=10,style="solid",fontname="Helvetica"];\n')
+
+            for lib in self.triggered_libraries:
+                if lib not in visited_files:
+                    visited_files.append(lib)
+                    dotfile.write(lib.name+'[shape="box",label="'+lib.name+'",fontsize=10,height=0.2,width=0.4,fontname="Helvetica",color="red3",style="filled",fontcolor="white"];\n')
+                dotfile.write(self.dotid()+' -> '+lib.name+' [dir=forward,color="red3",fontsize=10,style="solid",fontname="Helvetica"];\n')
+                print self.filename(),'->',lib.name
+                
+
+    def save_dependency_graph(self, dotfilename):
+        """Will save the dependency graph originating from this node into the dotfilename file
+        This file should end in .dot The dot program can be used to generate a postscript file from it.
+        The dependency graph considers include dependencies, as well as linkage dependencies,
+        and triggered optional libraries.
+        This allows one to see why all the files are compiled and linked together by pymake.
+        """
+        dotfile = open(dotfilename,'w')
+        dotfile.write("""
+digraph G
+{
+  edge [fontname="Helvetica",fontsize=10,labelfontname="Helvetica",labelfontsize=10];
+  node [fontname="Helvetica",fontsize=10,shape=record];
+""")     
+        visited_files = []
+        self.build_dependency_graph(dotfile, visited_files)
+        dotfile.write("}\n")
+        dotfile.close()
+
     def link_command(self):
         """returns the command for making executable target from the .o files in objsfilelist"""        
         objsfilelist = []
@@ -1330,7 +1386,7 @@ def mychmod(path,mode):
     mychmod(head,mode)
 
 # MAIN PROGRAM
-
+        
 for target in otherargs:
 
     ccfiles_to_compile = {}
@@ -1348,34 +1404,45 @@ for target in otherargs:
     # remove duplicates from sourcedirs
     sourcedirs = unique(sourcedirs)
     
-    options = getOptions(options_choices,optionargs)
-    
-    # Building name of object subdirectory    
-    if  objspolicy== 1:
-      objsdir = join('OBJS', platform + '__' + string.join(options,'_'))
-    elif objspolicy == 2:
-      objsdir = join(objsdir,platform + '__' + string.join(options,'_'))
-    
-    print '*** Running pymake on '+os.path.basename(target)+' using configuration file: ' + configpath
-    print '*** Running pymake on '+os.path.basename(target)+' using options: ' + string.join(map(lambda o: '-'+o, options))
-    print '++++ Computing dependencies of '+target+' ...'
-    get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_link, linkname)
+    if 'graph' in optionargs: # We just want to generate dependency graphs
+        if not isccfile(target):
+            cctarget = get_ccpath_from_noncc_path(target)            
+            info = file_info(cctarget)
+            print 'Generating dependency graph in '+target+'.dot ...'
+            info.save_dependency_graph(target+'.dot')
+            print 'Generating dependency graph view in '+target+'.ps ...'
+            os.system('dot -T ps '+target+'.dot > '+target+'.ps')
+
+    else: # We want to compile and possibly link
         
-    print '++++ Compiling...'
-    if platform=='win32':
-        win32_parallel_compile(ccfiles_to_compile.keys())
-    else:
-        parallel_compile(ccfiles_to_compile.keys())
+        options = getOptions(options_choices,optionargs)    
+    
+        # Building name of object subdirectory    
+        if  objspolicy== 1:
+          objsdir = join('OBJS', platform + '__' + string.join(options,'_'))
+        elif objspolicy == 2:
+          objsdir = join(objsdir,platform + '__' + string.join(options,'_'))
 
-    if force_link or (executables_to_link.keys() and not create_dll):
-        print '++++ Linking', string.join(map(lambda x: x.filebase, executables_to_link.keys()))
-        sequential_link(executables_to_link.keys(),linkname)
+        print '*** Running pymake on '+os.path.basename(target)+' using configuration file: ' + configpath
+        print '*** Running pymake on '+os.path.basename(target)+' using options: ' + string.join(map(lambda o: '-'+o, options))
+        print '++++ Computing dependencies of '+target+' ...'
+        get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_link, linkname)
 
-    if create_dll:
-        print '++++ Creating DLL of', target
-        for target in list_of_targets:
-            sequential_dll(file_info(target))
+        print '++++ Compiling...'
+        if platform=='win32':
+            win32_parallel_compile(ccfiles_to_compile.keys())
+        else:
+            parallel_compile(ccfiles_to_compile.keys())
 
-    if temp_objs:
-        os.system('chmod 777 '+objsdir+'/*')
-        mychmod(objsdir,33279)
+        if force_link or (executables_to_link.keys() and not create_dll):
+            print '++++ Linking', string.join(map(lambda x: x.filebase, executables_to_link.keys()))
+            sequential_link(executables_to_link.keys(),linkname)
+
+        if create_dll:
+            print '++++ Creating DLL of', target
+            for target in list_of_targets:
+                sequential_dll(file_info(target))
+
+        if temp_objs:
+            os.system('chmod 777 '+objsdir+'/*')
+            mychmod(objsdir,33279)
