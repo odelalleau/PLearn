@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.47 2004/02/25 04:00:54 yoshua Exp $
+   * $Id: plearn.cc,v 1.48 2004/02/25 18:08:26 tihocan Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -64,6 +64,7 @@
 #include "NeuralNet.h"
 #include "NNet.h"
 #include "PCA.h"
+#include "PLS.h"
 #include "GradientOptimizer.h"
 #include "AdaptGradientOptimizer.h"
 #include "ConjGradientOptimizer.h"
