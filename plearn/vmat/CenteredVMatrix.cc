@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CenteredVMatrix.cc,v 1.1 2004/06/26 15:03:48 tihocan Exp $ 
+   * $Id: CenteredVMatrix.cc,v 1.2 2004/06/29 13:22:55 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -75,10 +75,9 @@ void CenteredVMatrix::declareOptions(OptionList& ol)
   // ### OptionBase::tuningoption. Another possible flag to be combined with
   // ### is OptionBase::nosave
 
-  // ### ex:
-  // declareOption(ol, "myoption", &CenteredVMatrix::myoption, OptionBase::buildoption,
-  //               "Help text describing this option");
-  // ...
+  // There is no need to save 'mu' since it is recomputed at build time.
+  declareOption(ol, "mu", &CenteredVMatrix::mu, OptionBase::nosave,
+      "The sample mean");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -112,6 +111,13 @@ void CenteredVMatrix::build_()
     computeMean(source, mu);
     setMetaInfoFromSource();
   }
+}
+
+///////////
+// getMu //
+///////////
+Vec CenteredVMatrix::getMu() const {
+  return mu;
 }
 
 ////////////

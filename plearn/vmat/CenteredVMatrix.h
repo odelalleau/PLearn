@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CenteredVMatrix.h,v 1.1 2004/06/26 15:03:48 tihocan Exp $ 
+   * $Id: CenteredVMatrix.h,v 1.2 2004/06/29 13:22:55 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -99,6 +99,9 @@ protected:
   static void declareOptions(OptionList& ol);
 
 public:
+
+  //! Return the mean sample mu.
+  Vec getMu() const;
 
   //! This is the only method requiring implementation.
   virtual void getRow(int i, Vec v) const;
