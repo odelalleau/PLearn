@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.h,v 1.16 2004/09/14 16:04:58 chrish42 Exp $ 
+   * $Id: PTester.h,v 1.17 2004/10/21 18:25:11 chapados Exp $ 
    ******************************************************* */
 
 /*! \file PTester.h */
@@ -87,7 +87,14 @@ public:
   PP<Splitter> splitter;
   TVec<TVec<string> > statmask;
   PP<VecStatsCollector> template_stats_collector;
-  bool train; // whether or not to train or just test
+
+  //! Whether to save 95% confidence intervals for the test outputs;
+  //! make sense mostly if 'save_test_outputs' is also true.  The
+  //! intervals are saved in a file SETNAME_confidence.pmat (default=false)
+  bool save_test_confidence;
+  
+  //! whether or not to train or just test
+  bool train; 
 
   // TODO Move to protected as soon as Apstat code is fixed.
   // Protected because it is safer to access it from getStatNames,
@@ -115,6 +122,10 @@ protected:
   //! Declares this class' options
   // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
+
+  //! Utility function to compute confidence intervals over a test set
+  //! and save results in VMat
+  void computeConfidence(VMat test_set, VMat confidence);
 
 public:
   // simply calls inherited::build() then build_() 
