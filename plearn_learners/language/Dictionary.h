@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Dictionary.h,v 1.3 2004/08/25 14:41:03 kermorvc Exp $ 
+   * $Id: Dictionary.h,v 1.4 2004/08/25 21:44:45 kermorvc Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
@@ -82,6 +82,9 @@ using namespace std;
   When using a WORDNET_WORD_DICTIONARY the word can be stemmed before
   including in the dictionary :  stem_mode == STEM
 
+  The indices of the words are supposed to be consecutives : 
+  string_to_int.size()==max_id-1
+  
 */
 
 class Dictionary: public Object
@@ -199,6 +202,9 @@ public:
   //! Gives the symbol from an id of the dictionary
   string getSymbol(int id)const;
   
+  //! Get dimension of the dictionaries (number of differents values in the dictionary)
+  int getDimension(){return string_to_int.size();}
+
   // simply calls inherited::build() then build_() 
   virtual void build();
 

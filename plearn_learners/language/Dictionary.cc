@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Dictionary.cc,v 1.3 2004/08/25 14:41:01 kermorvc Exp $ 
+   * $Id: Dictionary.cc,v 1.4 2004/08/25 21:44:45 kermorvc Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
@@ -113,44 +113,47 @@ void Dictionary::build_()
   // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
   // ### You should assume that the parent class' build_() has already been called.
   
-  // save update mode for later
-  int saved_up_mode=update_mode;
-  // set the dictionary in update mode to insert the words
-  update_mode =  UPDATE;
-  string line;
-  if(dict_type == FILE_DICTIONARY){
-    ifstream ifs(file_name_dict.c_str());
-    if (!ifs) PLERROR("Cannot open file %s", file_name_dict.c_str());
-    while(!ifs.eof()){
-      getline(ifs, line, '\n');
-      if(line == "") continue;
-      getId(line);
+  //initial building
+  if(string_to_int.size()==0){
+    // save update mode for later
+    int saved_up_mode=update_mode;
+    // set the dictionary in update mode to insert the words
+    update_mode =  UPDATE;
+    string line;
+    if(dict_type == FILE_DICTIONARY){
+      ifstream ifs(file_name_dict.c_str());
+      if (!ifs) PLERROR("Cannot open file %s", file_name_dict.c_str());
+      while(!ifs.eof()){
+	getline(ifs, line, '\n');
+	if(line == "") continue;
+	getId(line);
       }
-    ifs.close();
-    if(saved_up_mode==NO_UPDATE){
+      ifs.close();
+      if(saved_up_mode==NO_UPDATE){
       // the dictionary must contain oov
-      getId(OOV_TAG);
-    }
-  }else if(dict_type == VECTOR_DICTIONARY){
-    for(int i=0; i<vector_dict.size(); i++){
-      getId(vector_dict[i]);
-    }
-    if(saved_up_mode==NO_UPDATE){
-      // the dictionary must contain oov
-      getId(OOV_TAG);
-    }
-  }else  if(dict_type == WORDNET_WORD_DICTIONARY){
-    // Add OOV if necessary
-    if (update_mode==NO_UPDATE){
-      if (!wno->containsWord(OOV_TAG)){
-	wno->extractWord(OOV_TAG, ALL_WN_TYPE, true, true, false);
+	getId(OOV_TAG);
       }
+    }else if(dict_type == VECTOR_DICTIONARY){
+      for(int i=0; i<vector_dict.size(); i++){
+	getId(vector_dict[i]);
+      }
+      if(saved_up_mode==NO_UPDATE){
+	// the dictionary must contain oov
+	getId(OOV_TAG);
+      }
+    }else  if(dict_type == WORDNET_WORD_DICTIONARY){
+      // Add OOV if necessary
+      if (update_mode==NO_UPDATE){
+	if (!wno->containsWord(OOV_TAG)){
+	  wno->extractWord(OOV_TAG, ALL_WN_TYPE, true, true, false);
+	}
+      }
+    }else{
+      PLERROR("Bad dictionary type %d",dict_type);
     }
-  }else{
-    PLERROR("Bad dictionary type %d",dict_type);
+    // restore update mode;
+    update_mode=saved_up_mode;
   }
-  // restore update mode;
-  update_mode=saved_up_mode;
 }
 
 // ### Nothing to add here, simply calls build_

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DictionaryVMatrix.h,v 1.2 2004/08/25 19:36:30 kermorvc Exp $ 
+   * $Id: DictionaryVMatrix.h,v 1.3 2004/08/25 21:40:11 kermorvc Exp $ 
    ******************************************************* */
 
 // Authors: Christopher Kermorvant
@@ -139,11 +139,14 @@ protected:
    virtual void getNewRow(int i, const Vec& v) const;
 
   //! returns value associated with a string (or MISSING_VALUE if there's no association for this string)
-    virtual real getStringVal(int col, const string & str) const;
+  virtual real getStringVal(int col, const string & str) const;
+  
   //! returns element as a string, even if value doesn't map to a string, in which case tostring(value) is returned
   virtual string getString(int row, int col) const;      
-
+  
   string getValString(int col, real val) const;
+  
+  int getDimension(int col) const;
 
 public:
 

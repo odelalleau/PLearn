@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DictionaryVMatrix.cc,v 1.2 2004/08/25 19:36:30 kermorvc Exp $ 
+   * $Id: DictionaryVMatrix.cc,v 1.3 2004/08/25 21:40:11 kermorvc Exp $ 
    ******************************************************* */
 
 // Authors: Christopher Kermorvant
@@ -103,6 +103,11 @@ string DictionaryVMatrix::getValString(int col, real val) const
   return dictionaries[col].getSymbol((int)val);
 }
 
+int DictionaryVMatrix::getDimension(int col) const
+{
+  return  dictionaries[col].getDimension();
+}
+
 void DictionaryVMatrix::declareOptions(OptionList& ol)
 {
   // ### Declare all of this object's options here
@@ -165,19 +170,22 @@ void DictionaryVMatrix::build_()
   WNPosIndex["RBS"] = 4;
   WNPosIndex["WRB"] = 4;
 
+  // Nothing to do if the VMatrix is reloaded...
+  if(data.length()!=0)return;
+
   TVec<string> tokens;
   Vec row;
   string line = "";
   string word="";
   int   input_length;
-   // we have not found a word attribute yet
-   word_attribute_index=-1;
-   //Check input file
-   if(input_file=="")PLERROR("DictionaryVMatrix: you must specify the option input_file\n");
-   input_file = abspath(input_file);
-   ifstream input_stream(input_file.c_str());
-   if (!input_stream) PLERROR("DictionaryVMatrix: can't open input_file %s", input_file.c_str());
-   // get file length
+  // we have not found a word attribute yet
+  word_attribute_index=-1;
+  //Check input file
+  if(input_file=="")PLERROR("DictionaryVMatrix: you must specify the option input_file\n");
+  input_file = abspath(input_file);
+  ifstream input_stream(input_file.c_str());
+  if (!input_stream) PLERROR("DictionaryVMatrix: can't open input_file %s", input_file.c_str());
+  // get file length
    input_length = countNonBlankLinesOfFile(input_file.c_str());
    // read first lines to set attributes_number value
    while (!input_stream.eof()){
@@ -188,11 +196,6 @@ void DictionaryVMatrix::build_()
      break;
    }
    input_stream.seekg (0, ios::beg);
-   //   input_stream.seekg (0, ios::end);
-   //input_length = input_stream.tellg();
-   //input_stream.seekg (0, ios::beg);
-  // reset file pointer to the beginning of the file
-  //input_stream.seekg(0,ios::beg);
   // check values
   if(attributes_number<=0) PLERROR("DictionaryVMatrix: bad attributes_number value (read from %s)\n", input_file.c_str());
   if(input_length<=0) PLERROR("DictionaryVMatrix: bad input_length value\n");
@@ -336,39 +339,42 @@ void  DictionaryVMatrix::buildDics()
 {
   bool sense_attribute_flag=false;
   bool up_param;
+  string file_path;
   // Build dictionaries
   for(int i=0;i<dic_specification.size();i++){
     // set default update value
     up_param = DEFAULT_UPDATE;
+    file_path = abspath(dic_specification[i][1]);
     if(dic_specification[i].size()==3){up_param = tobool(dic_specification[i][2]);}
     // Ontology type
     if(toint(dic_specification[i][0])==WORD_ONTOLOGY){
       // We have found a word attribute
+      if(word_attribute_index!=-1 && word_attribute_index!=i)PLERROR("DictionaryVMatrix: specified word_attribute_index %d is incorrect",word_attribute_index); 
       word_attribute_index=i;
       // Build ontology if needed
       if(ontology==NULL ){
-	string voc_file = dic_specification[i][1] + ".voc";
-	string synset_file = dic_specification[i][1] + ".synsets";
-	string ontology_file = dic_specification[i][1] + ".ontology";
-	string sense_key_file = dic_specification[i][1] + ".sense_key";
+	string voc_file =file_path + ".voc";
+	string synset_file =file_path + ".synsets";
+	string ontology_file =file_path + ".ontology";
+	string sense_key_file =file_path + ".sense_key";
 	ontology = new WordNetOntology(voc_file, synset_file, ontology_file, sense_key_file,up_param, false);
       }
-      dictionaries[i]=Dictionary(ontology, dic_specification[i][1],WORDNET_WORD_DICTIONARY);
+      dictionaries[i]=Dictionary(ontology,file_path,WORDNET_WORD_DICTIONARY);
     }
     if(toint(dic_specification[i][0])==SENSE_ONTOLOGY){
       sense_attribute_flag=true;
       if(ontology==NULL ){
-	string voc_file = dic_specification[i][1] + ".voc";
-	string synset_file = dic_specification[i][1] + ".synsets";
-	string ontology_file = dic_specification[i][1] + ".ontology";
-	string sense_key_file = dic_specification[i][1] + ".sense_key";
+	string voc_file =file_path + ".voc";
+	string synset_file =file_path + ".synsets";
+	string ontology_file =file_path + ".ontology";
+	string sense_key_file =file_path + ".sense_key";
 	ontology = new WordNetOntology(voc_file, synset_file, ontology_file, sense_key_file,up_param, false);
       }
-      dictionaries[i]=Dictionary(ontology, dic_specification[i][1],WORDNET_SENSE_DICTIONARY);
+      dictionaries[i]=Dictionary(ontology,file_path,WORDNET_SENSE_DICTIONARY);
     }
     // text file type
     if(toint(dic_specification[i][0])==TEXT_FILE){
-      dictionaries[i]=Dictionary(dic_specification[i][1],up_param);
+      dictionaries[i]=Dictionary(file_path,up_param);
       dictionaries[i].build();
       //cout << dictionaries[i]<<endl;
     }
