@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: MatIO.h,v 1.20 2004/07/21 16:30:51 chrish42 Exp $
+   * $Id: MatIO.h,v 1.21 2004/08/09 16:16:08 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -257,6 +257,8 @@ void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames, T
   mat.resize(length,width);
   TVec<int> current_map(width);
   current_map.fill(1001);   // The value of the string mapping we start with.
+  TVec<T> current_max(width); // The max of the numerical values in each column.
+  current_max.clear();
   // Initialize the mappings to empty mappings.
   if (map_sr) {
     map_sr->resize(width);
@@ -272,6 +274,36 @@ void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames, T
         loadmat >> inp_element;
         if (pl_isnumber(inp_element)) {
           mat_i[j] = strtod(inp_element.c_str(), 0);
+          if (map_sr) {
+            T val = mat_i[j];
+            // We need to make sure that this number does not conflict
+            // with a string mapping.
+            if (val > current_max[j])
+              current_max[j] = val;
+            if (current_max[j] >= current_map[j])
+              current_map[j] = int(current_max[j] + 1);
+            map<string,real>& m = (*map_sr)[j];
+            for (map<string,real>::iterator it = m.begin(); it != m.end(); it++) {
+              if (it->second == val) {
+                // We're screwed, there is currently a mapping between a string
+                // and this numeric value. We have to change it.
+                // We pick either the next string mapping value, or the current
+                // max in the column (+ 1) if it is larger.
+                int cur_max_plus_one = int(real(current_max[j]) + 1);
+                if (cur_max_plus_one > current_map[j]) {
+                  it->second = cur_max_plus_one;
+                  current_map[j] = cur_max_plus_one;
+                } else
+                  it->second = current_map[j];
+                current_map[j]++;
+                // In addition, we have to modify all previous data, which sucks.
+                for (int k = 0; k < i; k++) {
+                  if (mat(k, j) == val)
+                    mat(k, j) = it->second;
+                }
+              }
+            }
+          }
         } else {
           // This is a string!
           if (map_sr) {
@@ -287,7 +319,8 @@ void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames, T
               mat_i[j] = current_map[j];
               current_map[j]++;
             }
-          }
+          } else
+            PLERROR("In loadAscii - You need to provide 'map_sr' if you want to load an ASCII file with strings");
         }
       }
       if (!loadmat) {
