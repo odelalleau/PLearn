@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.44 2005/02/04 15:10:08 tihocan Exp $
+   * $Id: vmatmain.cc,v 1.45 2005/02/18 17:12:07 tihocan Exp $
    ******************************************************* */
 
 #include <algorithm>                         // for max
@@ -520,7 +520,7 @@ void viewVMat(const VMat& vm)
               //else if ()
               //  attron(A_REVERSE);
               
-              if(hide_sameval && i>starti && (val==oldv[j] || is_missing(val)&&is_missing(oldv[j])) )
+              if(hide_sameval && i>starti && (is_equal(val,oldv[j])) )
                 mvprintw(y, x, valstrformat, "...");                
               else
                 mvprintw(y, x, valstrformat, s.substr(0,valstrwidth).c_str());
