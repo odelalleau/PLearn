@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: BottomNI.h,v 1.1 2002/11/22 19:40:18 ducharme Exp $
+   * $Id: BottomNI.h,v 1.2 2003/06/04 18:51:52 jkeable Exp $
    * AUTHORS: Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -62,6 +62,7 @@ using namespace std;
   class BottomNI
   {
   protected:
+    int n_zeros; //!< number of zeros
     int N;
     TVec< pair<T,int> > bottomn;
     pair<T,int>* bottomnptr; //!<  bottomn.data()
@@ -83,6 +84,7 @@ using namespace std;
       bottomn.resize(N); //!<  reserve space for N elements
       bottomn.resize(0); //!<  set length back to 0
       bottomnptr = bottomn.data(); //!<  ptr for faster access
+      n_zeros=0;
     }
 
     void reset() { init(N); }
@@ -91,6 +93,8 @@ using namespace std;
     void update(T value, int index)
     {
       int l=bottomn.length();
+      if(value==0)
+        n_zeros++;
       if(l<N)
         {
           bottomn.append( pair<T,int>(value,index) );
@@ -113,6 +117,8 @@ using namespace std;
             }
         }
     }
+
+    int nZeros() const {return n_zeros;}
 
     void sort() 
     { std::sort(bottomnptr, bottomnptr+bottomn.length()); }

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org 
 
 /* *******************************************************      
-   * $Id: RealMapping.cc,v 1.9 2003/05/14 21:15:16 jkeable Exp $
+   * $Id: RealMapping.cc,v 1.10 2003/06/04 18:51:37 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -106,6 +106,12 @@ using namespace std;
     else
       return other_mapsto;      
   }
+
+  void RealMapping::addMapping(const RealRange& range, real val)
+    { mapping[range]= val; 
+    cout<<"adding :"<<range<<" = "<<val<<endl;
+    cout<<"MAPPING:"<<*this<<endl;}
+
 
   int RealMapping::binnumber(real val) const
   {
