@@ -43,6 +43,18 @@
 namespace PLearn {
 using namespace std;
 
+const string& wordseparators()
+{
+  static string wordseps = " \t\n\r)]};,:|#";
+  return wordseps;
+} 
+
+const string& raw_wordseparators()
+{
+  static string raw_wordseps = " \t\n\r";
+  return raw_wordseps;
+}   
+  
 pl_stream_raw raw;
 pl_stream_clear_flags clear_flags;
 pl_stream_initiate initiate;

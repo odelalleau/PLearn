@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.h,v 1.9 2005/02/18 18:34:04 tihocan Exp $ 
+   * $Id: PPath.h,v 1.10 2005/02/22 14:31:20 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent, Christian Dorion, Nicolas Chapados
@@ -186,8 +186,25 @@ protected:
    *  protected methods  *
    **********************/
 
-  //! Builds the static metaprotocol_to_metapath map once.
-  static void ensureMappings();
+  /*! OS dependent list of forbidden chars.
+   *
+   * POSIX SETTINGS: "\\"
+   *  Even if the posix standard allows backslashes in file paths,
+   *  PLearn users should never use those since PLearn aims at full and
+   *  easy portability.
+   *
+   *  Other chars may be forbidden soon.
+   *
+   * DOS SETTINGS: ""
+   *  None for now; coming soon.
+   */
+  static string forbidden_chars();
+
+  /*!
+    Builds a static metaprotocol-to-metapath map once and returns it at
+    each call.
+  */
+  static  const map<string, PPath>&  metaprotocolToMetapath();
 
   /*!
     Within PPath(const string& path_) ctor, the path_ argument may
@@ -238,21 +255,6 @@ protected:
     protocol was not specified.
   */
   string _protocol;
-
-  /*! OS dependent list of forbidden chars.
-   *
-   * POSIX SETTINGS: "\\"
-   *  Even if the posix standard allows backslashes in file paths,
-   *  PLearn users should never use those since PLearn aims at full and
-   *  easy portability.
-   *
-   *  Other chars may be forbidden soon.
-   *
-   * DOS SETTINGS: ""
-   *  None for now; coming soon.
-   */
-  static  string              forbidden_chars;
-  static  map<string, PPath>  metaprotocol_to_metapath;
 
 public:
 
@@ -305,8 +307,8 @@ public:
   //! Return true iff this is an (absolute) root directory.
   bool   isRoot        ()  const;
 
-  static string _slash;       //!< System-dependent slash string.
-  static char   _slash_char;  //!< System-dependent slash character.
+  static const string& _slash();       //!< System-dependent slash string.
+  static       char   _slash_char();  //!< System-dependent slash character.
 
   //! Path concatenation. Note there is no need for an
   //! operator/(const string& other)

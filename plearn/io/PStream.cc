@@ -680,7 +680,7 @@ PStream& PStream::operator>>(char *x)
       skipBlanksAndComments();
       int i=0; // pos within the string
       int c = get();
-      while (c!=EOF && wordseparators.find(c)==string::npos) // as long as we don't meet a wordseparator (or eof)...
+      while (c!=EOF && wordseparators().find(c)==string::npos) // as long as we don't meet a wordseparator (or eof)...
       {
         x[i++] = static_cast<char>(c);
         c = get();
@@ -728,7 +728,7 @@ PStream& PStream::operator>>(char *x)
       else // it's a single word without quotes
       {
         c= get();
-        while(c != EOF && wordseparators.find(c)==string::npos) // as long as we don't meet a wordseparator (or eof)...
+        while(c != EOF && wordseparators().find(c)==string::npos) // as long as we don't meet a wordseparator (or eof)...
         {
           x[i++]= static_cast<char>(c);
           c= get();
@@ -758,7 +758,7 @@ PStream& PStream::operator>>(string& x)
       int c = get();
       x.clear();
       // As long as we don't meet a (raw) wordseparator (or eof)...
-      while (c!=EOF && raw_wordseparators.find(c)==string::npos)
+      while (c!=EOF && raw_wordseparators().find(c)==string::npos)
       {
         x += static_cast<char>(c);
         c = get();
@@ -807,7 +807,7 @@ PStream& PStream::operator>>(string& x)
       {
         x.resize(0);      
         c= get();
-        while(c != EOF && wordseparators.find(c)==string::npos) // as long as we don't meet a wordseparator (or eof)...
+        while(c != EOF && wordseparators().find(c)==string::npos) // as long as we don't meet a wordseparator (or eof)...
         {
           x+= static_cast<char>(c);
           c= get();
