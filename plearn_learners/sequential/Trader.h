@@ -33,16 +33,17 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.h,v 1.14 2004/02/16 22:26:09 dorionc Exp $ 
+ * $Id: Trader.h,v 1.15 2004/02/18 21:06:31 dorionc Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
 
 /*! \file Trader.h */
 
-
 #ifndef Trader_INC
 #define Trader_INC
+
+//#define TCOST_DEBUG
 
 #include "SequentialLearner.h"
 #include "FinancialAdvisor.h"

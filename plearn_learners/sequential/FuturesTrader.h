@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.h,v 1.14 2004/02/16 22:26:09 dorionc Exp $ 
+   * $Id: FuturesTrader.h,v 1.15 2004/02/18 21:06:31 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.h */
@@ -48,8 +48,8 @@ using namespace std;
 
 class FuturesTrader: public Trader
 {
-public:
-  typedef Trader inherited;
+private:
+  mutable Vec monthly_transaction_costs;
   
 protected:
 
@@ -140,11 +140,14 @@ protected:
   
   real last_month_relative_return(const int& t) const;
 
+  real transactionCost(bool monthly_call, const int& k, const int& t) const;
+  
   //! Checkout if a margin call is needed
   void check_margin(int k, int t) const;
 
 public:
-  
+  typedef Trader inherited;
+
   //**************
   // Constructor *
   //**************  
