@@ -125,17 +125,11 @@ optionalLibrary( name = 'arpack',
                  triggers = 'arpack_proto.h',
                  linkeroptions = '-L/u/lisa/local/linux-i386/lib/ARPACK/OBJS/' + platform + ' -larpack' )
 
-if myhostname[0:6]=='apstat':
-    optionalLibrary( name = 'lapack',
-                     triggers = 'lapack_proto.h',
-                     linkeroptions = '-lg2c -llapack /usr/lib/gcc-lib/i586-mandrake-linux-gnu/3.0.4/libg2c.a' 
-                     )
-else:
-    optionalLibrary( name = 'lapack',
-                     triggers = 'lapack_proto.h',
-                     linkeroptions = ' -llapack ' 
-                     )
-    
+optionalLibrary( name = 'lapack',
+                 triggers = 'lapack_proto.h',
+                 linkeroptions = ' -llapack ' 
+                 )
+
 # optionalLibrary( name = 'blas',
 #                 triggers = ['blas_proto.h','lapack_proto.h'],
 #                 linkeroptions = '-lblas'
