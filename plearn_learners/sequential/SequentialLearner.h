@@ -58,7 +58,8 @@ class SequentialLearner: public PLearner
 {
   protected:
  
-    int last_train_t; // last value of train_set.length() for which training was actually done
+    int last_train_t; // last value of train_set.length() for which training was actually done (<= last_call_train_t)
+  int last_call_train_t; // last value of train_set.length() for which train() was called (may not have done anything)
     mutable int last_test_t; // last value of test_set.length() for which testing was actually done
 
   public:
@@ -124,7 +125,7 @@ class SequentialLearner: public PLearner
 
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
         const Vec& target, Vec& costs) const;
-
+  
     virtual void forget();
 
     //!  Does the necessary operations to transform a shallow copy (this)
