@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.cc,v 1.8 2004/03/09 16:43:44 tihocan Exp $
+   * $Id: pl_math.cc,v 1.9 2004/03/09 22:25:08 lheureup Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,7 +49,7 @@ using namespace std;
 
 
 # ifdef BIGENDIAN
-_plearn_nan_type plearn_nan = { 0x7f, 0xc0, 0, 0 };
+_plearn_nan_type plearn_nan = {{ 0x7f, 0xc0, 0, 0 }};
 # endif
 # ifdef LITTLEENDIAN
 // TODO This line removes the compilation warning, but does it still work ?
