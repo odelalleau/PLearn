@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat.h,v 1.14 2004/02/09 19:04:25 lheureup Exp $
+   * $Id: VMat.h,v 1.15 2004/02/19 21:53:08 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -107,8 +107,10 @@ public:
   operator Mat() const { return ptr->toMat(); }
   inline void save(const string& filename) const { ptr->save(filename); }
 
-  //!  will copy a precomputed version of the whole VMat into memory
-  //!  and replace the current pointer to point to the corresponding MemoryVMatrix
+  //!  Will copy a precomputed version of the whole VMat into memory
+  //!  and replace the current pointer to point to the corresponding MemoryVMatrix.
+  //!  Note that some info will be lost (like fields infos): check the .cc
+  //!  to understand why.
   void precompute();
   
 /*!     will copy a precomputed version of the whole VMat to the given file
