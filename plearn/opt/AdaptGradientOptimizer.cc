@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: AdaptGradientOptimizer.cc,v 1.6 2003/05/26 13:22:15 tihocan Exp $
+   * $Id: AdaptGradientOptimizer.cc,v 1.7 2003/05/27 14:22:14 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -145,6 +145,18 @@ IMPLEMENT_NAME_AND_DEEPCOPY(AdaptGradientOptimizer);
 static Vec old_meancost;
 static Vec old_mean_gradient;
 static Vec old_old_mean_gradient;
+static Vec memory_coeff;  // to store the various exponential average coeffs
+static Mat exp_average;   // to store the various exponential averages
+static int nb_avg = 2;    // the number of exponential averages
+static int time_constant = 5800;
+static Mat arithm_average;
+static Mat arithm_sum;
+static int arithm_last = 0;
+static Vec sum1;
+static Vec sum2;
+static Vec c1;
+static Vec c2;
+static Mat last_grad;
 
 ////////////
 // build_ //
@@ -176,6 +188,25 @@ void AdaptGradientOptimizer::build_(){
         // tmp_storage is used to store the old parameters
         params.copyTo(tmp_storage);
         old_evol.fill(0);
+        memory_coeff.resize(nb_avg);
+        exp_average.resize(n, nb_avg);
+        memory_coeff[0] = 0.99990;
+        memory_coeff[1] = 0.99995;
+        exp_average.clear();
+        sum1.resize(n);
+        sum2.resize(n);
+        sum1.clear();
+        sum2.clear();
+        c1.resize(n);
+        c1.clear();
+        c2.resize(n);
+        c2.clear();
+        last_grad.resize(n,4);
+        last_grad.clear();
+//        arithm_average.resize(n, 2*time_constant);
+ //       arithm_sum.resize(n, 2);
+  //      arithm_average.clear();
+   //     arithm_sum.clear();
         break;
       case 2:
         // tmp_storage is used to store the initial opposite gradient
@@ -357,6 +388,9 @@ real AdaptGradientOptimizer::optimize()
   return 0;
 }
 
+static real d;
+static int nb_min=0, nb_max=0, nb_moy=0, nb_changes=0, nb_non_changes=0;
+
 ///////////////
 // optimizeN //
 ///////////////
@@ -407,6 +441,13 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
     
     // Move along the chosen direction
     // And learning rate adaptation after each step
+    real min_lr = min_learning_rate / (1 + stage * decrease_constant);
+    real max_lr = max_learning_rate / (1 + stage * decrease_constant);
+    bool adapt_t = (stage % time_constant == 0 && stage > 2 * time_constant);
+    int k = 0;
+    if (adapt_t)
+      k = (stage / time_constant) % 4;
+    // TODO Remove all the above stuff later
     switch (learning_rate_adaptation) {
       case 0:
         if (!stochastic_hack)
@@ -417,6 +458,79 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
         // TODO Not efficient, write a faster update ?
         params.update(learning_rates, gradient); 
         params.clearGradient();
+
+//        int k = (arithm_last + time_constant) % time_constant;
+        for (int i=0; i<gradient.length(); i++) {
+          d = gradient[i]; // * learning_rates[i];
+          sum1[i] += d;
+          /*          for (int j=0; j<nb_avg; j++) {
+            exp_average(i,j) = 
+            memory_coeff[j] * exp_average(i,j) + (1-memory_coeff[j]) * d;
+            } */
+          //          arithm_sum(i,0) = arithm_sum(i,0) - arithm_average(i,arithm_last) + d;
+          //        arithm_sum(i,1) = arithm_sum(i,1) - arithm_average(i,k) + d;
+          //      arithm_average(i, arithm_last) = d;
+          if (adapt_t) {
+/*            if (sum1[i] >= 0)
+              last_grad(i,k) = 1;
+            else
+              last_grad(i,k) = -1;
+            int nbp = 0;
+            for (int j=0; j<4; j++) {
+              if (last_grad(i,j) == 1)
+                nbp++;
+            }
+              if (nbp == 2)  */
+            if (sum1[i] >=  0)
+              if (sum2[i] >= 0)
+                c1[i] = 0;
+              else
+                c1[i] = 1;
+            else
+              if (sum2[i] <= 0)
+                c1[i] = 0;
+              else
+                c1[i] = 1;
+
+            if (c1[i] == 1 && c2[i] == 1) {
+//            if (sum1[i] * sum2[i] < 0)
+              //          if (exp_average(i,0) * exp_average(i,1) < 0)
+              //            if (arithm_sum(i,1) * arithm_sum(i,0) < 0) 
+              // opposite average gradients
+              learning_rates[i] -= learning_rates[i] * adapt_coeff2;
+              //            learning_rates[i] = min_lr;
+              nb_changes++;
+            } else if (c1[i] == 0 && c2[i] == 0) {
+//            } else if (nbp == 4 || nbp == 0) {
+              learning_rates[i] += learning_rates[i] * adapt_coeff1;
+              nb_non_changes++;
+            }
+            if (learning_rates[i] < min_lr) {
+              learning_rates[i] = min_lr;
+              nb_min++;
+            } else if (learning_rates[i] > max_lr) {
+              learning_rates[i] = max_lr;
+              nb_max++;
+            } else {
+              nb_moy++;
+            }
+            sum2[i] = sum1[i];
+            sum1[i] = 0;
+            c2[i] = c1[i];
+          }
+        }
+/*        //        arithm_last++;
+        if (arithm_last >= time_constant)
+          arithm_last = 0; */
+        if (adapt_t) {
+          cout << "nb_min = " << nb_min << "  --  nb_max = " << nb_max << "  --  nb_moy = " << nb_moy << endl;
+          cout << "nb_changes = " << nb_changes << " -- nb_non_changes = " << nb_non_changes << endl;
+          nb_min =0;
+          nb_max = 0;
+          nb_moy = 0;
+          nb_changes = 0;
+          nb_non_changes = 0;
+        }
         break;
       case 2:
         // params.copyGradientTo(gradient);
@@ -429,13 +543,13 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
         break;
     }
 
-    stats_coll.update(cost->value);
+//    stats_coll.update(cost->value); TODO Put back later
   }
 
   // Learning rate adaptation after a full epoch
   switch (learning_rate_adaptation) {
     case 1:
-      adaptLearningRateBasic(learning_rates, tmp_storage, old_evol);
+      // adaptLearningRateBasic(learning_rates, tmp_storage, old_evol);
       params.copyTo(tmp_storage);
       break;
     default:
