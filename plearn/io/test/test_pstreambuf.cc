@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: test_pstreambuf.cc,v 1.2 2005/01/14 21:47:39 chrish42 Exp $
+   * $Id: test_pstreambuf.cc,v 1.3 2005/02/16 15:15:41 chapados Exp $
    ******************************************************* */
 
 #include <iostream>
@@ -196,6 +196,20 @@ void test_write_unbuffered()
   test("Flush (unbuffered)", str, "abcdefghijklm");  
 }
 
+void test_negchar()
+{
+  std::string str;
+  PLearn::PStream s = PLearn::openString(str, PLearn::PStream::raw_ascii, "w");
+
+  const unsigned int inbuf_size = 6;
+  const unsigned int outbuf_size = 0;
+  const unsigned int ungetbuf_size = 4;
+  s.setBufferCapacities(inbuf_size, outbuf_size, ungetbuf_size);
+
+  s.write("\xff");
+  test("Write a single 'negative' character", str, "\xff");
+}
+
 
 int main()
 {
@@ -205,6 +219,8 @@ int main()
   try {
     test_read();
     test_write();
+    test_write_unbuffered();
+    test_negchar();
   }
   catch (const PLearn::PLearnError& e) {
       cerr << "PLearnError: " << e.message() << endl;
