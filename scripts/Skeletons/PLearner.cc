@@ -67,8 +67,8 @@ void DERIVEDCLASS::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 
 int DERIVEDCLASS::outputsize() const
 {
-  // compute and return the size of this learner's output, (which typically
-  // may depend on its inputsize(), targetsize() and set options)
+  // Compute and return the size of this learner's output (which typically
+  // may depend on its inputsize(), targetsize() and set options).
 }
 
 void DERIVEDCLASS::forget()
@@ -120,7 +120,7 @@ void DERIVEDCLASS::train()
 
 void DERIVEDCLASS::computeOutput(const Vec& input, Vec& output) const
 {
-  // Compute the output from the input
+  // Compute the output from the input.
   // int nout = outputsize();
   // output.resize(nout);
   // ...
@@ -136,7 +136,7 @@ void DERIVEDCLASS::computeCostsFromOutputs(const Vec& input, const Vec& output,
 TVec<string> DERIVEDCLASS::getTestCostNames() const
 {
   // Return the names of the costs computed by computeCostsFromOutpus
-  // (these may or may not be exactly the same as what's returned by getTrainCostNames)
+  // (these may or may not be exactly the same as what's returned by getTrainCostNames).
   // ...
 }
 
@@ -144,7 +144,7 @@ TVec<string> DERIVEDCLASS::getTrainCostNames() const
 {
   // Return the names of the objective costs that the train method computes and 
   // for which it updates the VecStatsCollector train_stats
-  // (these may or may not be exactly the same as what's returned by getTestCostNames)
+  // (these may or may not be exactly the same as what's returned by getTestCostNames).
   // ...
 }
 
