@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectColumnsVMatrix.cc,v 1.13 2005/03/29 16:19:38 tihocan Exp $
+   * $Id: SelectColumnsVMatrix.cc,v 1.14 2005/04/06 22:50:49 chapados Exp $
    ******************************************************* */
 
 #include "SelectColumnsVMatrix.h"
@@ -169,23 +169,28 @@ void SelectColumnsVMatrix::build_()
       if (!fields_partial_match) {
         for (int i = 0; i < fields.length(); i++) {
           string the_field = fields[i];
-          int the_index = source->fieldIndex(the_field);
+          int the_index = source->fieldIndex(the_field);  // string only
           if (!extend_with_missing && the_index == -1) {
-            // This field does not exist in the source VMat.
+            // The_field does not exist AS A STRING in the vmat
             // It may be of the form FIELD1-FIELDN (a range of fields).
             size_t pos = the_field.find('-');
             bool ok = false;
             if (pos != string::npos) {
               string field1 = the_field.substr(0, pos);
               string fieldn = the_field.substr(pos + 1);
-              int the_index1 = source->fieldIndex(field1);
-              int the_indexn = source->fieldIndex(fieldn);
+              int the_index1 = source->getFieldIndex(field1);  // either string or number
+              int the_indexn = source->getFieldIndex(fieldn);  // either string or number
               if (the_index1 >= 0 && the_indexn > the_index1) {
                 // Indeed, this is a range.
                 ok = true;
                 for (int j = the_index1; j <= the_indexn; j++)
                   indices.append(j);
               }
+            }
+            // OR it may be a number by itself only
+            else if ((the_index = source->getFieldIndex(the_field)) != -1) {
+              ok = true;
+              indices.append(the_index);
             }
             if (!ok)
               PLERROR("In SelectColumnsVMatrix::build_ - Unknown field (%s) in source VMat "
