@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.23 2003/05/06 20:59:57 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.24 2003/05/12 16:55:48 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -159,6 +159,9 @@ public:
     inherited::build();
     build_();
   }
+  
+  //! Help function
+  static string help();
 
 private:
 
@@ -184,8 +187,6 @@ private:
     
 public:
 
-  virtual void oldwrite(ostream& out) const;
-  virtual void oldread(istream& in);
   virtual real optimize(); // Deprecated, use optimizeN
   virtual bool optimizeN(VecStatsCollector& stat_coll);
 

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.24 2003/05/09 14:46:50 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.25 2003/05/12 16:55:48 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -65,6 +65,8 @@ ConjGradientOptimizer::ConjGradientOptimizer(
   :inherited(n_updates, filename, every_iterations),
   starting_step_size(the_starting_step_size), restart_coeff(the_restart_coeff),
   epsilon(the_epsilon),
+  line_search_algo(2),
+  find_new_direction_formula(1),
   sigma(the_sigma), rho(the_rho), fmax(the_fmax),
   stop_epsilon(the_stop_epsilon), tau1(the_tau1), tau2(the_tau2),
   tau3(the_tau3)  {}
@@ -121,88 +123,98 @@ ConjGradientOptimizer::ConjGradientOptimizer(
 void ConjGradientOptimizer::declareOptions(OptionList& ol)
 {
     declareOption(ol, "starting_step_size", &ConjGradientOptimizer::starting_step_size, OptionBase::buildoption, 
-                  "    the initial step size for the line search algorithm\n");
+                 "    The initial step size for the line search algorithm.\n \
+           This option has very little influence on the algorithm performance, \n \
+           since it is only used for the first iteration, and is set by the algorithm\n \
+           in the later stages.\n");
 
-    declareOption(ol, "epsilon", &ConjGradientOptimizer::epsilon, OptionBase::buildoption, 
-                  "    the gradient resolution\n");
+    declareOption(ol, "restart_coeff", &ConjGradientOptimizer::restart_coeff, OptionBase::buildoption, 
+                  "    The restart coefficient. A restart is triggered when the following condition is met :\n \
+           abs(gradient(k-1).gradient(k)) >= restart_coeff * gradient(k)^2\n \
+           If no restart is wanted, any high value (e.g. 100) will prevent it.\n");
 
     declareOption(ol, "line_search_algo", &ConjGradientOptimizer::line_search_algo, OptionBase::buildoption, 
-                  "    the line search algorithm\n");
+                 "    The kind of line search algorithm used. Two methods are implemented :\n \
+        1) The line search algorithm described in :\n \
+           ""Practical Methods of Optimization, 2nd Ed""\n \
+           by Fletcher (1987).\n \
+           This algorithm seeks a minimum m of f(x)=C(x0+x.d) satisfying the two constraints :\n \
+             i) abs(f'(m)) < -sigma.f'(0)\n \
+            ii) f(m) < f(0) + m.rho.f'(0)\n \
+           with rho < sigma <= 1.\n \
+        2) The GSearch algorithm, described in :\n \
+           ""Direct Gradient-Based Reinforcement Learning: II. Gradient Ascent Algorithms and Experiments""\n \
+           by J.Baxter, L. Weaver, P. Bartlett (1999).\n \
+        The value of this option (either 1 or 2) indicates the method used.\n");
 
     declareOption(ol, "find_new_direction_formula", &ConjGradientOptimizer::find_new_direction_formula, OptionBase::buildoption, 
-                  "    the formula to find the new search direction\n");
+                  "    The kind of formula used in step 2 of the conjugate gradient algorithm to find the\n \
+        new search direction :\n \
+        1) ConjPOMPD : the formula associated with GSearch in the same paper. It is\n \
+                       almost the same as the Polak-Ribiere formula.\n \
+        2) Dai - Yuan\n \
+        3) Fletcher - Reeves\n \
+        4) Hestenes - Stiefel\n \
+        5) Polak - Ribiere : this is probably the most commonly used.\n \
+        The value of this option (from 1 to 5) indicates the formula used.\n");
+
+    declareOption(ol, "epsilon", &ConjGradientOptimizer::epsilon, OptionBase::buildoption, 
+                 "    GSearch specific option : the gradient resolution.\n \
+           This small value is used in the GSearch algorithm instead of 0, to provide\n \
+           some robustness against errors in the estimate of the gradient, and to\n \
+           prevent the algorithm from looping indefinitely if there is no local minimum.\n \
+           Any small value should work, and the overall performance should not depend\n \
+           much on it.\n ");
+    // TODO Check the last sentence is true !
 
     declareOption(ol, "sigma", &ConjGradientOptimizer::sigma, OptionBase::buildoption, 
-                  "    sigma\n");
+                  "    Fletcher's line search specific option : constraint parameter in i).\n");
 
     declareOption(ol, "rho", &ConjGradientOptimizer::rho, OptionBase::buildoption, 
-                  "    rho\n");
+                  "    Fletcher's line search specific option : constraint parameter in ii).\n");
 
     declareOption(ol, "fmax", &ConjGradientOptimizer::fmax, OptionBase::buildoption, 
-                  "    the value we will stop at if we manage to reach it\n");
+                  "    Fletcher's line search specific option : good enough minimum.\n \
+           If it finds a point n such that f(n) < fmax, then the line search returns n as minimum\n");
 
     declareOption(ol, "stop_epsilon", &ConjGradientOptimizer::stop_epsilon, OptionBase::buildoption, 
-                  "    the epsilon parameter to stop when we can't make any more progress\n");
+                  "    Fletcher's line search specific option : stopping criterium.\n \
+           This option allows the algorithm to detect when no improvement is possible along\n \
+           the search direction. It should be set to a very small value, or we may stop too\n \
+           early.\n");
 
     declareOption(ol, "tau1", &ConjGradientOptimizer::tau1, OptionBase::buildoption, 
-                  "    tau1\n");
+                  "    Fletcher's line search specific option : bracketing parameter.\n \
+           This option controls how fast is augmenting the bracketing interval in the first\n \
+           phase of the line search algorithm.\n \
+           Fletcher reports good empirical results with tau1 = 9.\n");
 
     declareOption(ol, "tau2", &ConjGradientOptimizer::tau2, OptionBase::buildoption, 
-                  "    tau2\n");
+                  "    Fletcher's line search specific option : bracketing parameter.\n \
+           This option controls how fast is augmenting the left side of the bracketing\n \
+           interval in the second phase of the line search algorithm.\n \
+           Fletcher reports good empirical results with tau2 = 0.1\n");
 
     declareOption(ol, "tau3", &ConjGradientOptimizer::tau3, OptionBase::buildoption, 
-                  "    tau3\n");
-
-    declareOption(ol, "restart_coeff", &ConjGradientOptimizer::tau3, OptionBase::buildoption, 
-                  "    the restart coefficient (put a high value, like 100, if you want no restart\n");
+                  "    Fletcher's line search specific option : bracketing parameter.\n \
+           This option controls how fast is decreasing the right side of the bracketing\n \
+           interval in the second phase of the line search algorithm.\n \
+           Fletcher reports good empirical results with tau3 = 0.5\n");
 
     inherited::declareOptions(ol);
 }
 
-//
-// oldwrite
-//
-void ConjGradientOptimizer::oldwrite(ostream& out) const
-{
-  writeHeader(out, "ConjGradientOptimizer", 0);
-  inherited::write(out);  
-  writeField(out, "starting_step_size", starting_step_size);
-  writeField(out, "epsilon", epsilon);
-  writeField(out, "line_search_algo", line_search_algo);
-  writeField(out, "find_new_direction_formula", find_new_direction_formula);
-  writeField(out, "sigma", sigma);
-  writeField(out, "rho", rho);
-  writeField(out, "fmax", fmax);
-  writeField(out, "stop_epsilon", stop_epsilon);
-  writeField(out, "tau1", tau1);
-  writeField(out, "tau2", tau2);
-  writeField(out, "tau3", tau3);
-  writeField(out, "restart_coeff", restart_coeff);
-  writeFooter(out, "ConjGradientOptimizer");
-}
-
-//
-// oldread
-//
-void ConjGradientOptimizer::oldread(istream& in)
-{
-  int ver = readHeader(in, "ConjGradientOptimizer");
-  if(ver!=0)
-    PLERROR("In ConjGradientOptimizer::read version number %d not supported",ver);
-  inherited::oldread(in);
-  readField(in, "starting_step_size", starting_step_size);
-  readField(in, "epsilon", epsilon);
-  readField(in, "line_search_algo", line_search_algo);
-  readField(in, "find_new_direction_formula", find_new_direction_formula);
-  readField(in, "sigma", sigma);
-  readField(in, "rho", rho);
-  readField(in, "fmax", fmax);
-  readField(in, "stop_epsilon", stop_epsilon);
-  readField(in, "tau1", tau1);
-  readField(in, "tau2", tau2);
-  readField(in, "tau3", tau3);
-  readField(in, "restart_coeff", restart_coeff);
-  readFooter(in, "ConjGradientOptimizer");
+//////////
+// help //
+//////////
+string ConjGradientOptimizer::help() {
+  return
+    " Optimizer based on the conjugate gradient method.\n \
+The conjugate gradient algorithm is basically the following :\n \
+ - 0: initialize the search direction d = -gradient\n \
+ - 1: perform a line search along direction d for the minimum of the gradient\n \
+ - 2: move to this minimum, update the search direction d and go to step 1\n \
+There are various methods available through the options for both steps 1 and 2.\n";
 }
 
 //
