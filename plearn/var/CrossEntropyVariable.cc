@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: CrossEntropyVariable.cc,v 1.5 2003/11/07 06:18:46 chapados Exp $
+   * $Id: CrossEntropyVariable.cc,v 1.6 2004/02/16 20:30:19 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -70,12 +70,22 @@ void CrossEntropyVariable::fprop()
   {
     real output = input1->valuedata[i];
     real target = input2->valuedata[i];
-#if BOUNDCHECK
-    if (output == 0.0 || output == 1.0)
+#ifdef BOUNDCHECK
+    if ((output == 0.0 && target != 0) || (output == 1.0 && target != 1))
       PLERROR("CrossEntropyVariable::fprop: model output is either exactly "
               "0.0 or 1.0; cannot compute cost function");
 #endif
-    cost += target*log(output) + (1.0-target)*log(1.0-output);
+    if (output == 0) {
+      if (target != 0) {
+        cost += 1e9;  // Arbitrary high value.
+      }
+    } else if (output == 1) {
+      if (target != 1) {
+        cost += 1e9;  // Arbitrary high value.
+      }
+    } else {
+      cost += target*log(output) + (1.0-target)*log(1.0-output);
+    }
   }
   valuedata[0] = -cost;
 }
@@ -88,7 +98,7 @@ void CrossEntropyVariable::bprop()
   {
     real output = input1->valuedata[i];
     real target = input2->valuedata[i];
-#if BOUNDCHECK
+#ifdef BOUNDCHECK
     if (output == target)
       PLERROR("CrossEntropyVariable::bprop: model output is either exactly "
               "0.0 or 1.0; cannot compute bprop");
