@@ -40,7 +40,7 @@
 namespace PLearn {
 using namespace std;
 
-#define ITMAX 100
+#define ITMAX 150
 #define EPS 3.0e-7
 #define FPMIN 1.0e-30
 #define Pi 3.141592653589793
@@ -130,7 +130,8 @@ real  pl_gcf(real a, real x)
 		if (fabs(del-1.0) < EPS) break;
 	}
 	if (i > ITMAX) {
-	    PLERROR("a too large, ITMAX too small in pl_gcf");
+	    PLWARNING("\"a\" is too large, ITMAX too small in "
+                    "calling pl_gcf(%f,%f)", a,x);
 	}
 	return exp(-x+a*log(x)-(gln))*h;
 }
