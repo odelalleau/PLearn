@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.h,v 1.9 2004/02/20 21:11:44 chrish42 Exp $
+   * $Id: fileutils.h,v 1.10 2004/02/26 03:56:19 nova77 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -55,6 +55,12 @@
 #include <string>
 #include <fstream>
 #include "general.h"
+
+// norman: set win32 functions
+#ifdef WIN32
+#include <sys/types.h>
+#define stat _stat
+#endif
 
 namespace PLearn {
 using namespace std;
@@ -126,9 +132,9 @@ void force_mkdir_for_file(const string& filepath);
   //! trivial unix touch
   void touch(const string& file);
 
-//! Reads while the characters read exactly match those in s
-//! Will throw a PLERROR exception as soon as it doesn't match
-void readWhileMatches(istream& in, const string& s);
+  //! Reads while the characters read exactly match those in s
+  //! Will throw a PLERROR exception as soon as it doesn't match
+  void readWhileMatches(istream& in, const string& s);
 
   //! skips everything until '\n' (also consumes the '\n')
   void skipRestOfLine(istream& in);
@@ -144,8 +150,8 @@ void readWhileMatches(istream& in, const string& s);
   //! #-style comments are considered blank
   int countNonBlankLinesOfFile(const string& filename);
 
-//! same as PStream's method smartReadUntilNext, but for istream
-int smartReadUntilNext(istream& in, string stoppingsymbols, string& characters_read);
+  //! same as PStream's method smartReadUntilNext, but for istream
+  int smartReadUntilNext(istream& in, string stoppingsymbols, string& characters_read);
   
   //! peeks the first char after removal of blanks
   inline char peekAfterSkipBlanks(istream& in) { while(isspace(in.get())); in.unget();return in.peek(); }
@@ -156,21 +162,21 @@ int smartReadUntilNext(istream& in, string stoppingsymbols, string& characters_r
 
   string makeFileNameValid(const string& filename);
 
-//! returns "./"+filename if filename is relative to current dir
+  //! returns "./"+filename if filename is relative to current dir
   string makeExplicitPath(const string& filename);
 
-//! Returns the whole content of the file as a string
-string loadFileAsString(const string& filepath);
+  //! Returns the whole content of the file as a string
+  string loadFileAsString(const string& filepath);
 
-//! Writes the raw string into the given file
-//! Intermediate directories in filepath are created if necessary
-void saveStringInFile(const string& filepath, const string& text);
+  //! Writes the raw string into the given file
+  //! Intermediate directories in filepath are created if necessary
+  void saveStringInFile(const string& filepath, const string& text);
 
-//! Will return the text, macro processed, with each instance of ${varname} in the text that corresponds to a key in the given map 
-//! replaced by its associated value. 
-//! Also every $DEFINE{varname=... } in the text will add a new varname entry in the map.  (The DEFINE macro will be discarded)
-//! Also every $INCLUDE{filepath} will be replaced in place by the text of the file it includes
-string readAndMacroProcess(istream& in, map<string, string>& variables);
+  //! Will return the text, macro processed, with each instance of ${varname} in the text that corresponds to a key in the given map 
+  //! replaced by its associated value. 
+  //! Also every $DEFINE{varname=... } in the text will add a new varname entry in the map.  (The DEFINE macro will be discarded)
+  //! Also every $INCLUDE{filepath} will be replaced in place by the text of the file it includes
+  string readAndMacroProcess(istream& in, map<string, string>& variables);
 
 //! Same as readAndMacroProcess, but takes a filename instead of an istream
 //! The following variables are automatically set from the filepath: FILEPATH DIRPATH FILENAME FILEBASE FILEEXT 
@@ -190,6 +196,11 @@ inline string readFileAndMacroProcess(const string& filepath)
   return readFileAndMacroProcess(filepath, variables);
 }
 
+#ifdef WIN32
+#undef stat
+#endif
+
 } // end of namespace PLearn
+
 
 #endif

@@ -3,7 +3,7 @@
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
-//
+// 
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.19 2004/02/20 21:11:44 chrish42 Exp $
+   * $Id: fileutils.cc,v 1.20 2004/02/26 03:56:19 nova77 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -48,8 +48,21 @@
 #if !defined(_MSC_VER) && !defined(_MINGW_)
 #include <sys/wait.h>
 #endif
+
+// norman: added win32 specific declarations
+#ifdef WIN32
+#include <direct.h>
+#define	S_ISDIR(m)	(((m) & S_IFMT) == S_IFDIR)
+#define	S_ISREG(m)	(((m) & S_IFMT) == S_IFREG)
+
+#define PL_MAX_FILE_SIZE 1000
+#define chdir _chdir
+#define stat _stat
+#else
 #include <dirent.h>
 #include <unistd.h>
+#endif
+
 #include <sstream>
 #include "fileutils.h"
 #include "stringutils.h"
@@ -62,7 +75,19 @@ using namespace std;
 string getcwd()
 {
     char buf[2000];
+    // norman: added specific functions for win32
+    //         (cannot do the define because getcwd is also
+    //         the name of this function!)
+#ifdef WIN32
+    _getcwd(buf, 2000);
+    // norman: replace the ugly windows backslash with the forward slash
+    for (int i = 0; buf[i] != 0 && i < 2000; ++i) {
+      if (buf[i] == '\\')
+        buf[i] = '/';
+    }
+#else
     ::getcwd(buf, 2000);
+#endif
     return string(buf);
 }
 
@@ -97,7 +122,7 @@ int chdir(const string& path)
 
   bool pathexists(const string& path)
   {
-    struct stat s;
+   struct stat s;
     int status = stat(path.c_str(),&s);
     if(status!=0)
       return false;
@@ -106,10 +131,11 @@ int chdir(const string& path)
 
   bool isdir(const string& path)
   {
-#ifdef _MINGW_
+#if defined(_MINGW_) || defined(WIN32) 
     if (path[path.size()-1] == ':') // c: or C: or r: or R: or...
       return true;
 #endif
+
     struct stat s;
     int status = stat(path.c_str(),&s);
     if(status!=0)
@@ -142,6 +168,60 @@ int chdir(const string& path)
   vector<string> lsdir(const string& dirpath)
   {
     vector<string> list;
+
+    // norman: added check
+#ifdef WIN32
+
+    PLERROR("lsdir: this function is not supported in win32");
+
+    // norman: Not working because of the "microsoft language extension - disabled"
+    //         problem. To be fixed with an external library!
+
+    //WIN32_FIND_DATA fileData; 
+    //HANDLE hSearch; 
+    //DWORD dwAttrs; 
+    //bool fFinished = false; 
+    //char oldpath[PL_MAX_FILE_SIZE];
+
+    //GetCurrentDirectory(FILENAME_MAX, oldpath);
+
+    //if (! SetCurrentDirectory(dirpath.c_str()) )
+    //{
+    //  SetCurrentDirectory(oldpath);
+    //  PLERROR("In lsdir: could not open directory %s",dirpath.c_str());
+    //}
+
+    //hSearch = FindFirstFile("*", &fileData); 
+    //if (hSearch == INVALID_HANDLE_VALUE) 
+    //{
+    //  SetCurrentDirectory(oldpath);
+    //  PLERROR("In lsdir: could not open directory %s. Invalid Handle Value.",dirpath.c_str());
+    //}
+
+    //while (!fFinished) 
+    //{ 
+    //  string s = fileData.cFileName;
+    //  if(s!="." && s!="..")
+    //    list.push_back(s);
+
+    //  if (!FindNextFile(hSearch, &fileData)) 
+    //  {
+    //    if (GetLastError() == ERROR_NO_MORE_FILES) 
+    //    { 
+    //      fFinished = true; 
+    //    } 
+    //    else 
+    //    { 
+    //      printf("Couldn't find next file."); 
+    //      // strange problem! :)
+    //    } 
+    //  }
+    //}
+
+    // SetCurrentDirectory(oldpath);
+
+#else
+
     DIR* d = opendir(dirpath.c_str());
     if(!d)
         PLERROR("In lsdir: could not open directory %s",dirpath.c_str());
@@ -153,6 +233,7 @@ int chdir(const string& path)
           list.push_back(s);
       }
     closedir(d);
+#endif
     return list;
   }
 
@@ -173,7 +254,7 @@ int chdir(const string& path)
       return true;
 
     int pos = 0;
-#if !defined(_MINGW_)
+#if !defined(_MINGW_) && !defined(WIN32)
     mode_t mode = S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH;
 #endif
     string pathpart;
@@ -187,7 +268,7 @@ int chdir(const string& path)
           pathpart = path;
         if(!isdir(pathpart))
           {
-#if !defined(_MINGW_)
+#if !defined(_MINGW_) && !defined(WIN32)
             if(mkdir(pathpart.c_str(),mode)!=0)
 #else
             if(mkdir(pathpart.c_str())!=0)
@@ -232,6 +313,7 @@ void force_mkdir_for_file(const string& filepath)
     if(rmdir(dirname.c_str())!=0)
       return false;
     return true;
+
   }
 
   long filesize(const string& filename)
@@ -391,7 +473,7 @@ int smartReadUntilNext(istream& in, string stoppingsymbols, string& characters_r
 //!  Makes use of mkstemp(...) to create a new file.
 string newFilename(const string directory, const string prefix, bool is_directory)
 {
-#ifdef _MINGW_
+#if defined(_MINGW_) || defined(WIN32)
     PLERROR("This call is not yet implemented for this platform");
     return "";
 #else
@@ -607,8 +689,15 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
   return text;
 }
 
-} // end of namespace PLearn
+#ifdef WIN32
+#undef S_ISDIR
+#undef S_ISREG
+#undef PL_MAX_FILE_SIZE
+#undef chdir
+#undef stat
+#endif
 
+} // end of namespace PLearn
 
 // int main()
 /*
