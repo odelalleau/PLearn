@@ -36,20 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: BinaryVariable.cc,v 1.9 2002/10/25 23:16:08 plearner Exp $
+   * $Id: BinaryVariable.cc,v 1.10 2003/01/08 21:32:03 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "BinaryVariable.h"
 
-// From Old BinaryVariable.cc: all includes are putted in every file.
-// To be revised manually 
-#include "BinaryVariable.h"
-#include "Var.h"
-#include "pl_erf.h"
-#include "Var_utils.h"
 namespace PLearn <%
-using namespace std;
 
 using namespace std;
 

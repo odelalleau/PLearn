@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Var_utils.h,v 1.4 2002/11/08 22:26:19 dorionc Exp $
+   * $Id: Var_utils.h,v 1.5 2003/01/08 21:33:11 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,7 +44,6 @@
 #define Var_utils_INC
 
 #include "Var_all.h"
-#include "TimesConstantVariable.h"
 
 namespace PLearn <%
 using namespace std;

@@ -36,18 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: SoftmaxLossVariable.cc,v 1.1 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: SoftmaxLossVariable.cc,v 1.2 2003/01/08 21:33:00 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "SoftmaxLossVariable.h"
-
-// From Old BinaryVariable.cc: all includes are putted in every file.
-// To be revised manually 
-#include "BinaryVariable.h"
-#include "Var.h"
-#include "pl_erf.h"
 #include "Var_utils.h"
+
 namespace PLearn <%
 using namespace std;
 
@@ -102,7 +97,8 @@ void SoftmaxLossVariable::bprop()
   for(int i=0; i<input1->nelems(); i++)
   {
     if (i!=classnum)
-       input1->gradientdata[i] = -gradientdata[i]/*?*/*vali*vali*safeexp(input1->valuedata[i]-input_index);
+       //input1->gradientdata[i] = -gradientdata[i]/*?*/*vali*vali*safeexp(input1->valuedata[i]-input_index);
+       input1->gradientdata[i] = -gradientdata[i]*vali*vali*safeexp(input1->valuedata[i]-input_index);
     else
        input1->gradientdata[i] = gradientdata[i]*vali*(1.-vali);
   }

@@ -37,13 +37,14 @@
  
 
 /* *******************************************************      
-   * $Id: SampleVariable.cc,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: SampleVariable.cc,v 1.2 2003/01/08 21:34:36 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
 
 
 #include "SampleVariable.h"
+#include "random.h"
 
 namespace PLearn <%
 using namespace std;

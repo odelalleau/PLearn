@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: RandomVar.h,v 1.2 2002/10/23 23:32:33 dorionc Exp $
+   * $Id: RandomVar.h,v 1.3 2003/01/08 21:34:35 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -331,7 +331,6 @@
 #ifndef RANDOMVAR_INC
 #define RANDOMVAR_INC
 
-#include "Var_all.h"
 #include "Optimizer.h"
 
 //!  used only for implementing the sampling Var's in the setValueFromParentsValue 

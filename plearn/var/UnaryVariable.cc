@@ -36,20 +36,12 @@
 
 
 /* *******************************************************      
-   * $Id: UnaryVariable.cc,v 1.11 2002/10/25 23:16:08 plearner Exp $
+   * $Id: UnaryVariable.cc,v 1.12 2003/01/08 21:33:08 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "UnaryVariable.h"
 
-// From Old UnaryVariable.cc: all includes are putted in every file.
-// To be revised manually 
-#include "DisplayUtils.h"
-#include "UnaryVariable.h"
-#include "Var.h"
-#include "TMat_maths.h"
-#include "pl_erf.h"
-#include "Var_utils.h"
 namespace PLearn <%
 using namespace std;
 

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: SampleVariable.h,v 1.2 2002/10/23 23:32:33 dorionc Exp $
+   * $Id: SampleVariable.h,v 1.3 2003/01/08 21:34:36 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -48,9 +48,10 @@
 #ifndef SampleVariable_INC
 #define SampleVariable_INC
 
-#include "Var_all.h"
-#include "random.h"
 #include "VarArray.h"
+#include "SourceVariable.h"
+#include "UnaryVariable.h"
+#include "BinaryVariable.h"
 
 namespace PLearn <%
 using namespace std;

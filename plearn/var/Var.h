@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Var.h,v 1.7 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: Var.h,v 1.8 2003/01/08 21:33:10 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,10 +48,6 @@
 #define Var_INC
 
 #include "Variable.h"
-#include "SourceVariable.h"
-#include "UnaryVariable.h"
-#include "BinaryVariable.h"
-#include "NaryVariable.h"
 
 namespace PLearn <%
 using namespace std;

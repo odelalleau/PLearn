@@ -36,24 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: NaryVariable.cc,v 1.5 2002/10/25 23:16:08 plearner Exp $
+   * $Id: NaryVariable.cc,v 1.6 2003/01/08 21:32:52 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "NaryVariable.h"
 
-// From Old NaryVariable.cc: all includes are putted in every file.
-// To be revised manually 
-#include "NaryVariable.h"
-#include "Var.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"
-#include "DisplayUtils.h"
-#include "pl_erf.h"
-#include "Var_utils.h"
 namespace PLearn <%
-using namespace std;
-
 using namespace std;
 
 /** NaryVariable **/

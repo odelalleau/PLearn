@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: RandomVar.cc,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: RandomVar.cc,v 1.2 2003/01/08 21:34:35 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -49,6 +49,7 @@
 #include "NaryVariable.h"
 #include "ConjugateGradientOptimizer.h"
 #include "plapack.h"
+#include "Var_utils.h"
 #include <cmath>
 
 namespace PLearn <%

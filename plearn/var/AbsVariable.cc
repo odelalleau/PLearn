@@ -36,20 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: AbsVariable.cc,v 1.1 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: AbsVariable.cc,v 1.2 2003/01/08 21:31:58 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "AbsVariable.h"
-
-// From Old UnaryVariable.cc: all includes are putted in every file.
-// To be revised manually 
-#include "DisplayUtils.h"
-#include "UnaryVariable.h"
-#include "Var.h"
-#include "TMat_maths.h"
-#include "pl_erf.h"
 #include "Var_utils.h"
+
 namespace PLearn <%
 using namespace std;
 

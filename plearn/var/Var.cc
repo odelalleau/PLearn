@@ -37,17 +37,12 @@
  
 
 /* *******************************************************      
-   * $Id: Var.cc,v 1.2 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: Var.cc,v 1.3 2003/01/08 21:33:09 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "general.h"
-#include "stringutils.h"
 #include "Var.h"
-#include "VarArray.h"
-#include "NaryVariable.h"
-#include "pl_erf.h"
-#include <cmath>
 
 namespace PLearn <%
 using namespace std;

@@ -36,18 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: PowVariableVariable.cc,v 1.1 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: PowVariableVariable.cc,v 1.2 2003/01/08 21:32:57 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "PowVariableVariable.h"
-
-// From Old BinaryVariable.cc: all includes are putted in every file.
-// To be revised manually 
-#include "BinaryVariable.h"
-#include "Var.h"
-#include "pl_erf.h"
 #include "Var_utils.h"
+
 namespace PLearn <%
 using namespace std;
 
