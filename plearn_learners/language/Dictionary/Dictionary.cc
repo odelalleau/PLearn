@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Dictionary.cc,v 1.4 2004/10/01 20:04:17 kermorvc Exp $ 
+   * $Id: Dictionary.cc,v 1.5 2004/11/24 18:41:00 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
@@ -126,7 +126,6 @@ int Dictionary::getId(string symbol, TVec<string> options)
       return string_to_int[symbol];
     }
   }
-  return -1; 
 }
 
 int Dictionary::getId(string symbol, TVec<string> options)const
@@ -142,8 +141,6 @@ int Dictionary::getId(string symbol, TVec<string> options)const
   }else{
     return string_to_int.find(symbol)->second;
   }
-
-  return -1;  
 }
 
 string Dictionary::getSymbol(int id, TVec<int>options)const
@@ -152,8 +149,6 @@ string Dictionary::getSymbol(int id, TVec<int>options)const
     return "";
   else
     return int_to_string.find(id)->second;
-
-  return "";
 }
 
 void Dictionary::makeDeepCopyFromShallowCopy(CopiesMap& copies)
