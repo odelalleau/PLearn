@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: CompactVMatrix.h,v 1.8 2004/09/14 16:04:39 chrish42 Exp $
+   * $Id: CompactVMatrix.h,v 1.9 2004/11/24 18:32:21 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -182,7 +182,7 @@ class CompactVMatrix : public RowBufferedVMatrix
     virtual void putSubRow(int i, int j, Vec v);
 
     //!  save everything in file (data and auxiliary information), binary format
-    virtual void save(const string& filename)
+    virtual void save(const string& filename) const
     { Object::save(filename); } //!<  calls write
     //virtual void write(ostream& out) const;
 
