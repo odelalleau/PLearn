@@ -123,7 +123,7 @@ void computePrincipalComponents(Mat dataset, Vec& eig_values, Mat& eig_vectors)
   int ncomp = eig_values.length(); // number of components we want
   covar.resize(dataset.width(), dataset.width());
   transposeProduct(covar, dataset,dataset);
-  eigenVecOfSymmMat(covar, ncomp,  eig_values, eig_vectors); 
+  eigenVecOfSymmMat(covar, ncomp,  eig_values, eig_vectors,0.0,1); 
 }
 
 void computeLocalPrincipalComponents(Mat& dataset, int which_pattern, Mat& delta_neighbors, Vec& eig_values, Mat& eig_vectors)

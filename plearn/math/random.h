@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: random.h,v 1.2 2002/12/06 19:06:40 yoshua Exp $
+   * $Id: random.h,v 1.3 2003/06/03 17:32:54 jkeable Exp $
    ******************************************************* */
 
 #ifndef RANDOM_H
@@ -94,7 +94,7 @@ real student_t_cdf(real t, int nb_degrees_of_freedom);
   /*!   returns a random number with mixture of gaussians, "w" is the mixture
      (must be positive numbers summing to 1), "mu" and "sigma" are the vectors
      of means and standard deviations for each gaussian   */
-  real  gaussian_mixture_mu_sigma(Vec& w, Vec& mu, Vec& sigma);
+  real  gaussian_mixture_mu_sigma(Vec& w, const Vec& mu, const Vec& sigma);
 
   /*!   returns a gamma distributed random number   */
   real  gamdev(int ia);
@@ -106,7 +106,7 @@ real student_t_cdf(real t, int nb_degrees_of_freedom);
   inline real binomial_sample(real prob1) { return bnldev(prob1); }
 
   /*!   returns a random deviate from a discrete distribution given explicitely by 'distribution'   */
-  int  multinomial_sample(Vec& distribution);
+  int  multinomial_sample(const Vec& distribution);
 
   //! return an integer between 0 and N-1 with equal probabilities 
   int uniform_multinomial_sample(int N);

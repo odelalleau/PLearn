@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: random.cc,v 1.2 2002/12/06 19:06:37 yoshua Exp $
+   * $Id: random.cc,v 1.3 2003/06/03 17:32:54 jkeable Exp $
    ******************************************************* */
 
 extern "C" {
@@ -348,7 +348,7 @@ real  gaussian_mu_sigma(real mu, real sigma)
   Rem: - i.e. SUM w[i] * N(mu[i],sigma[i])
   */
 
-real  gaussian_mixture_mu_sigma(Vec& w, Vec& mu, Vec& sigma)
+real  gaussian_mixture_mu_sigma(Vec& w, const Vec& mu, const Vec& sigma)
 {
   int    i;
   int    n = w.length();
@@ -515,7 +515,7 @@ real  bnldev(real pp, int n)
        - This random deviate is computed by the transformation method.
   */
 
-int  multinomial_sample(Vec& distribution)
+int  multinomial_sample(const Vec& distribution)
 {
   real  u  = uniform_sample();
   real* pi = distribution.data();
