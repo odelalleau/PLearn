@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /********************************************************
-* $Id: VMatrix.cc,v 1.92 2005/02/18 17:15:39 tihocan Exp $
+* $Id: VMatrix.cc,v 1.93 2005/02/24 16:27:35 lheureup Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -75,7 +75,7 @@ VMatrix::VMatrix()
   inputsize_(-1), targetsize_(-1), weightsize_(-1),
   writable(false)
 {
-  lockf_ = 0;
+  lockf_ = PStream();
 }
 
 VMatrix::VMatrix(int the_length, int the_width)
@@ -86,7 +86,7 @@ VMatrix::VMatrix(int the_length, int the_width)
   map_rs(TVec<map<real,string> >(the_width)),
   fieldstats(0)
 {
-  lockf_ = 0;
+  lockf_ = PStream();
 }
 
 ////////////////////
@@ -930,7 +930,7 @@ void VMatrix::unlockMetaDataDir() const
 {
   if(!lockf_)
     PLERROR("In VMatrix::unlockMetaDataDir() was called while no lock is held by this object");
-  lockf_ = 0;   // Release the lock.
+  lockf_ = PStream();   // Release the lock.
   PPath lockfile = metadatadir / ".lock";  
   rm(lockfile); // Remove the file.
 }
