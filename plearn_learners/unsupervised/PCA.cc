@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PCA.cc,v 1.2 2003/08/13 08:13:47 plearner Exp $ 
+   * $Id: PCA.cc,v 1.3 2003/10/02 14:25:42 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file PCA.cc */
@@ -53,7 +53,12 @@ PCA::PCA()
 {
 }
 
-PLEARN_IMPLEMENT_OBJECT(PCA, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(PCA, 
+                        "Performs a Principal Component Analysis preprocessing (projecting on the principal directions)", 
+                        "This learner finds the empirical covariance matrix of the input part of the training data"
+                        "and learns to project its input vectors along the principal eigenvectors"
+                        "of that matrix, optionally scaling by the inverse of the square root"
+                        "of the eigenvalues (to obtained 'sphered', i.e. Normal(0,I) data)");
 
 void PCA::declareOptions(OptionList& ol)
 {
@@ -77,12 +82,6 @@ void PCA::declareOptions(OptionList& ol)
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
 }
-
-  string PCA::help()
-  {
-    return 
-      "Performs a Principal Component Analysis reprocessing (projecting on the principal directions).\n";
-  }
 
   void PCA::build_()
   {

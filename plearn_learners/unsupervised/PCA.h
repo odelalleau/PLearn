@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PCA.h,v 1.2 2003/08/13 08:13:47 plearner Exp $ 
+   * $Id: PCA.h,v 1.3 2003/10/02 14:25:42 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file PCA.h */
@@ -94,9 +94,6 @@ public:
 
   //! simply calls inherited::build() then build_() 
   virtual void build();
-
-  //! Provides a help message describing this class
-  static string help();
 
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
