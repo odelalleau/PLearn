@@ -472,7 +472,7 @@ if 'spc' in optionargs :
         try: os.makedirs(join(homedir,'.pymake'))
         except: pass
         print '*** Running pymake using Smart Parallel Compilation'
-        cmd=plearndir+'/scripts/pyfreemachines '+plearndir+'/scripts/.machines_lisa '+join(homedir,'.pymake','SPC.hosts');
+        cmd=plearndir+'/scripts/pyfreemachines '+join(homedir,'.pymake','SPC.hosts');
 #         print cmd
         os.system(cmd)
     optionargs.remove('spc')
@@ -533,7 +533,7 @@ if local_compilation:
     list_of_hosts = ['localhost']
 else:
     if SPC:
-        hostspath = locateconfigfile('SPC.hosts',os.getcwd(),'localhost');
+        hostspath = locateconfigfile('SPC.hosts',homedir,'localhost');
     else:
         hostspath = locateconfigfile(platform+'.hosts',os.getcwd(),'localhost')
             
@@ -857,11 +857,17 @@ class FileInfo:
                 linkeroptions = linkeroptions + '-L'+qtdir + 'lib/ -lqt'
             else:
                 linkeroptions = linkeroptions + '-L'+qtdir + 'lib/ -lqt-mt'
-            
-        if platform=='win32':
-            return linkeroptions
-        else:
-            return linkeroptions + ' -L/usr/X11R6/lib/ -lXi -lXext -lX11'
+        return linkeroptions
+
+# as of date 09/07/2004
+# no need to -lXi -lXext -lX11 to compile PLearn
+# removing following code to speed up linking
+# if needed, this should go in an option in pymake.config.model
+# Martin
+#        if platform=='win32':
+#            return linkeroptions
+#        else:
+#            return linkeroptions + ' -L/usr/X11R6/lib/ -lXi -lXext -lX11'
         
     def get_depmtime(self):
         "returns the single latest last modification time of"
