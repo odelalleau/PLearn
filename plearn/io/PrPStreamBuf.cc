@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrPStreamBuf.cc,v 1.2 2005/01/07 23:51:22 chrish42 Exp $ 
+   * $Id: PrPStreamBuf.cc,v 1.3 2005/01/12 17:44:18 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Christian Hudon
@@ -86,9 +86,9 @@ using namespace std;
   
   bool PrPStreamBuf::good() const
   {
-    if (!in_ && !out_)
+    if (!in && !out)
       return false;
-    else if (!in_ && out_)
+    else if (!in && out)
       return true;
     else 
       return eof();
