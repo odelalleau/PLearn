@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.30 2004/03/10 19:55:49 tihocan Exp $
+   * $Id: fileutils.cc,v 1.31 2004/03/12 14:06:22 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -818,16 +818,16 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
                 // Read the pairs {compx}{valx}, then {valdef}
                 bool done_parsing = false;
                 while (syntax_ok && !done_parsing) {
-                  c = getAfterSkipBlanks(in);
+                  c = getAfterSkipBlanksAndComments(in);
                   string tmp_comp, tmp_val;
                   if(c == '{')
                     smartReadUntilNext(in, "}", tmp_comp);
                   else
                     syntax_ok = false;
                   if (syntax_ok) {
-                    c = peekAfterSkipBlanks(in);
+                    c = peekAfterSkipBlanksAndComments(in);
                     if(c == '{') {
-                      c = getAfterSkipBlanks(in);
+                      c = getAfterSkipBlanksAndComments(in);
                       smartReadUntilNext(in, "}", tmp_val);
                     }
                     else {
