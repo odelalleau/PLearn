@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: OverlappingAdaBoost.cc,v 1.3 2004/11/12 20:08:35 larocheh Exp $
+   * $Id: OverlappingAdaBoost.cc,v 1.4 2004/11/17 20:53:32 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -154,6 +154,7 @@ void OverlappingAdaBoost::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(voting_weights, copies);
   deepCopyField(weak_learners, copies);
   deepCopyField(weak_learner_template, copies);
+  deepCopyField(weak_learners_output,copies);
 }
 
 
@@ -169,6 +170,7 @@ void OverlappingAdaBoost::forget()
   learners_error.resize(0, nstages);
   weak_learners.resize(0, nstages);
   voting_weights.resize(0, nstages);
+  weak_learners_output.resize(0,nstages);
   sum_voting_weights = 0;
   if (seed_ >= 0)
     manual_seed(seed_);
@@ -211,7 +213,7 @@ void OverlappingAdaBoost::train()
     example_weights.resize(n);
     if (train_set->weightsize()>0)
     {
-      ProgressBar *pb;
+      ProgressBar *pb=0;
       if(report_progress) pb = new ProgressBar("OverlappingAdaBoost round " + tostring(stage) +
                      ": extracting initial weights", n);
       initial_sum_weights=0;
@@ -221,7 +223,7 @@ void OverlappingAdaBoost::train()
         example_weights[i]=weight;
         initial_sum_weights += weight;
       }
-      example_weights *= 1.0/initial_sum_weights;
+      example_weights *= real(1.0)/initial_sum_weights;
       if(report_progress) delete(pb);
     }
     else 
@@ -235,14 +237,14 @@ void OverlappingAdaBoost::train()
 
   VMat unweighted_data = train_set.subMatColumns(0, inputsize()+1);
   VMat expended_data;
-  learners_error.resize(nstages);
-  weak_learners_output.resize(nstages-1);
+  //learners_error.resize(nstages);
+  //weak_learners_output.resize(nstages);
 
   for ( ; stage < nstages ; ++stage)
   {
     VMat weak_learner_training_set;
     {
-      ProgressBar *pb;
+      ProgressBar *pb=0;
       if(report_progress)  pb = new ProgressBar("OverlappingAdaBoost round " + tostring(stage) +
                      ": making training set for weak learner", n);
       Array<VMat> temp_columns(1);
@@ -308,18 +310,18 @@ void OverlappingAdaBoost::train()
 
     new_weak_learner->train();
     
-    if(stage < nstages-1)
+    if(stage < nstages)
     {
       TVec< PP<PLearner> > pl(1); pl[0] = new_weak_learner;
-      weak_learners_output[stage] = new MemoryVMatrix(new PLearnerOutputVMatrix(expended_data, pl, false, false, false, false));
+      weak_learners_output.push_back(new MemoryVMatrix(new PLearnerOutputVMatrix(expended_data, pl, false, false, false, false)));
     }
     // calculate its weighted training error 
     {
-      ProgressBar *pb;     
+      ProgressBar *pb=0;     
       if(report_progress) pb = new ProgressBar("computing weighted training error of weak learner",n);
-      learners_error[stage] = 0;
+      learners_error.push_back(0);
       for (int i=0; i<n; ++i) {
-        pb->update(i);
+        if(report_progress) pb->update(i);
         expended_data->getExample(i, input, target, weight);
         new_weak_learner->computeOutput(input,output);
         real y_i=target[0];
@@ -504,18 +506,18 @@ void OverlappingAdaBoost::train()
       example_weights[i] *= exp(-voting_weights[stage]*(1-examples_error[i]));
       sum_w += example_weights[i];
     }
-    example_weights *= 1.0/sum_w;
+    example_weights *= real(1.0)/sum_w;
 
     if (compute_training_error)
     {
       {
-        ProgressBar *pb;
+        ProgressBar *pb=0;
         if(report_progress) pb = new ProgressBar("computing weighted training error of whole model",n);
         train_stats->forget();
         static Vec err(1);
         for (int i=0;i<n;i++)
         {
-          pb->update(i);
+          if(report_progress) pb->update(i);
           train_set->getExample(i, input, target, weight);
           computeCostsOnly(input,target,err);
           train_stats->update(err);

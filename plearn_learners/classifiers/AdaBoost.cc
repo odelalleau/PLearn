@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdaBoost.cc,v 1.7 2004/11/12 20:08:35 larocheh Exp $
+   * $Id: AdaBoost.cc,v 1.8 2004/11/17 20:53:32 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -214,7 +214,7 @@ void AdaBoost::train()
     example_weights.resize(n);
     if (train_set->weightsize()>0)
     {
-      ProgressBar *pb;
+      ProgressBar *pb=0;
       if(report_progress) pb = new ProgressBar("AdaBoost round " + tostring(stage) +
                      ": extracting initial weights", n);
       initial_sum_weights=0;
@@ -225,7 +225,7 @@ void AdaBoost::train()
         initial_sum_weights += weight;
       }
       if(report_progress) delete(pb);
-      example_weights *= 1.0/initial_sum_weights;
+      example_weights *= real(1.0)/initial_sum_weights;
     }
     else 
     {
@@ -243,7 +243,7 @@ void AdaBoost::train()
   {
     VMat weak_learner_training_set;
     { 
-      ProgressBar *pb;
+      ProgressBar *pb=0;
       if(report_progress) pb = new ProgressBar("AdaBoost round " + tostring(stage) +
                      ": making training set for weak learner", n);
       // We shall now construct a training set for the new weak learner:
@@ -302,7 +302,7 @@ void AdaBoost::train()
 
     // calculate its weighted training error 
     {
-      ProgressBar *pb;
+      ProgressBar *pb=0;
       if(report_progress) pb = new ProgressBar("computing weighted training error of weak learner",n);
       learners_error[stage] = 0;
       for (int i=0; i<n; ++i) {
@@ -485,12 +485,12 @@ void AdaBoost::train()
       example_weights[i] *= exp(-voting_weights[stage]*(1-examples_error[i]));
       sum_w += example_weights[i];
     }
-    example_weights *= 1.0/sum_w;
+    example_weights *= real(1.0)/sum_w;
 
     if (compute_training_error)
     {
       {
-        ProgressBar *pb;
+        ProgressBar *pb=0;
         if(report_progress) pb = new ProgressBar("computing weighted training error of whole model",n);
         train_stats->forget();
         static Vec err(1);
