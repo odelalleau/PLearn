@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.cc,v 1.4 2004/02/17 22:54:43 yoshua Exp $
+   * $Id: MultiInstanceNNet.cc,v 1.5 2004/02/19 15:25:49 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/MultiInstanceNNet.h */
@@ -49,11 +49,14 @@
 #include "ConcatColumnsVMatrix.h"
 #include "CrossEntropyVariable.h"
 #include "ExpVariable.h"
+#include "LogVariable.h"
 #include "LiftOutputVariable.h"
 #include "LogSoftmaxVariable.h"
 #include "MulticlassLossVariable.h"
 #include "MultiInstanceNNet.h"
 #include "UnfoldedSumOfVariable.h"
+#include "SumOverBagsVariable.h"
+#include "SumSquareVariable.h"
 #include "random.h"
 #include "SigmoidVariable.h"
 #include "SumVariable.h"
@@ -302,9 +305,63 @@ void MultiInstanceNNet::build_()
         }
       params.makeSharedValue(paramsvalues);
 
-      output->setName("output");
+      output->setName("element output");
 
       f = Func(input, output);
+
+      input_to_logP0 = Func(input, log(1 - output));
+
+      bag_size = Var(1,1);
+      bag_inputs = Var(max_n_instances,inputsize());
+      bag_output = 1-exp(unfoldedSumOf(bag_inputs,bag_size,input_to_logP0,max_n_instances));
+
+      costs.resize(2); // (negative log-likelihood, classification error) for the bag
+
+      costs[0] = cross_entropy(bag_output, target);
+      costs[1] = binary_classification_loss(bag_output,target);
+      test_costs = hconcat(costs);
+
+      // Apply penalty to cost.
+      // If there is no penalty, we still add costs[0] as the first cost, in
+      // order to keep the same number of costs as if there was a penalty.
+      if(penalties.size() != 0) {
+        if (weightsize_>0)
+          // only multiply by sampleweight if there are weights
+          training_cost = hconcat(sampleweight*sum(hconcat(costs[0] & penalties))
+                                  & (test_costs*sampleweight));
+        else {
+          training_cost = hconcat(sum(hconcat(costs[0] & penalties)) & test_costs);
+        }
+      } 
+      else {
+        if(weightsize_>0) {
+          // only multiply by sampleweight if there are weights
+          training_cost = hconcat(costs[0]*sampleweight & test_costs*sampleweight);
+        } else {
+          training_cost = hconcat(costs[0] & test_costs);
+        }
+      }
+      
+      training_cost->setName("training_cost");
+      test_costs->setName("test_costs");
+
+      invars = bag_inputs & bag_size & target & sampleweight;
+      inputs_and_targets_to_costs = Func(invars,costs);
+
+      inputs_and_targets_to_costs->recomputeParents();
+
+      /*  VarArray outvars;
+  VarArray testinvars;
+  testinvars.push_back(input);
+  outvars.push_back(output);
+  testinvars.push_back(target);
+  outvars.push_back(target);
+  
+  test_costf = Func(testinvars, output&test_costs);
+  test_costf->recomputeParents();
+  output_and_target_to_cost = Func(outvars, test_costs); 
+  output_and_target_to_cost->recomputeParents();
+      */
     }
 }
 
@@ -313,12 +370,16 @@ int MultiInstanceNNet::outputsize() const
 
 TVec<string> MultiInstanceNNet::getTrainCostNames() const
 {
-  return (cost_funcs[0]+"+penalty") & cost_funcs;
+  TVec<string> names(3);
+  names[0] = "NLL+penalty";
+  names[1] = "NLL";
+  names[2] = "class_error";
+  return names;
 }
 
 TVec<string> MultiInstanceNNet::getTestCostNames() const
 { 
-  return cost_funcs;
+  return getTrainCostNames();
 }
 
 
@@ -334,89 +395,42 @@ void MultiInstanceNNet::train()
   if(!train_stats)
     PLERROR("In MultiInstanceNNet::train, you did not setTrainStatsCollector");
 
-  int l = train_set->n_non_missing_rows();  
-
   if(f.isNull()) // Net has not been properly built yet (because build was called before the learner had a proper training set)
     build();
 
-  // *********** finish the build, which requires the train_set (in the unfolded sum) ***********
-
-#if 0
-  IN CONSTRUCTION: DESIGN HAS TO BE RE-DONE
-
-  costs.resize(2); // (negative log-likelihood, classification error) for the bag
-
-  // N.B. unfoldedSumOf sums over a set of rows of the train_set that constitute a bag 
-  bag_prob = 1 - exp(unfoldedSumOf(train_set,f,max_bag_size));
-  costs[0] = cross_entropy(bag_prob,target);
-  costs[1] = binary_classification_loss(bag_prob,target);
-
-  test_costs = hconcat(costs);
-
-  // Apply penalty to cost.
-  // If there is no penalty, we still add costs[0] as the first cost, in
-  // order to keep the same number of costs as if there was a penalty.
-  if(penalties.size() != 0) {
-    if (weightsize_>0)
-      // only multiply by sampleweight if there are weights
-      training_cost = hconcat(sampleweight*sum(hconcat(costs[0] & penalties))
-                              & (test_costs*sampleweight));
-    else {
-      training_cost = hconcat(sum(hconcat(costs[0] & penalties)) & test_costs);
-    }
-  } 
-  else {
-    if(weightsize_>0) {
-      // only multiply by sampleweight if there are weights
-      training_cost = hconcat(costs[0]*sampleweight & test_costs*sampleweight);
-    } else {
-      training_cost = hconcat(costs[0] & test_costs);
-    }
-  }
-      
-  training_cost->setName("training_cost");
-  test_costs->setName("test_costs");
-      
-  // Funcs
-  invars.resize(0);
-  VarArray outvars;
-  VarArray testinvars;
-  if(input)
-    {
-      invars.push_back(input);
-      testinvars.push_back(input);
-    }
-  if(output)
-    outvars.push_back(output);
-  if(target)
-    {
-      invars.push_back(target);
-      testinvars.push_back(target);
-      outvars.push_back(target);
-    }
-  if(sampleweight)
-    {
-      invars.push_back(sampleweight);
-    }
-  
-  test_costf = Func(testinvars, output&test_costs);
-  test_costf->recomputeParents();
-  output_and_target_to_cost = Func(outvars, test_costs); 
-  output_and_target_to_cost->recomputeParents();
-
-  // number of samples seen by optimizer before each optimizer update
-  int nsamples = batch_size>0 ? batch_size : l;
-  Func paramf = Func(invars, training_cost); // parameterized function to optimize
-  Var totalcost = meanOf(train_set, paramf, nsamples);
+  Var totalcost = sumOverBags(train_set, inputs_and_targets_to_costs, max_n_instances, batch_size);
   if(optimizer)
     {
       optimizer->setToOptimize(params, totalcost);  
       optimizer->build();
     }
-#endif
 
   // number of optimiser stages corresponding to one learner stage (one epoch)
-  int optstage_per_lstage = l/nsamples;
+  int optstage_per_lstage = 0;
+  int n_bags = -1;
+  if (batch_size<=0)
+    optstage_per_lstage = 1;
+  else // must count the nb of bags in the training set
+  {
+    n_bags=0;
+    int l = train_set->length();
+    ProgressBar* pb = 0;
+    if(report_progress)
+      pb = new ProgressBar("Counting nb bags in train_set for MultiInstanceNNet ", l);
+    Vec row(train_set->width());
+    Vec row_target = row.subVec(train_set->inputsize(),train_set->targetsize());
+    for (int i=0;i<l;i++)
+    {
+      train_set->getRow(i,row);
+      if (!row_target.hasMissing())
+        n_bags++;
+      if(pb)
+        pb->update(i);
+    }
+    if(pb)
+      delete pb;
+    optstage_per_lstage = n_bags/batch_size;
+  }
 
   ProgressBar* pb = 0;
   if(report_progress)
@@ -443,12 +457,12 @@ void MultiInstanceNNet::train()
   if(pb)
     delete pb;
 
-  output_and_target_to_cost->recomputeParents();
-  test_costf->recomputeParents();
+  //output_and_target_to_cost->recomputeParents();
+  //test_costf->recomputeParents();
+
   // cerr << "totalcost->value = " << totalcost->value << endl;
   // cout << "Result for benchmark is: " << totalcost->value << endl;
 }
-
 
 
 void MultiInstanceNNet::computeOutput(const Vec& inputv, Vec& outputv) const
@@ -459,14 +473,15 @@ void MultiInstanceNNet::computeOutput(const Vec& inputv, Vec& outputv) const
 void MultiInstanceNNet::computeOutputAndCosts(const Vec& inputv, const Vec& targetv, 
                                  Vec& outputv, Vec& costsv) const
 {
-  test_costf->fprop(inputv&targetv, outputv&costsv);
+  //test_costf->fprop(inputv&targetv, outputv&costsv);
+  //TO BE DONE
 }
 
 
 void MultiInstanceNNet::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv, 
                                    const Vec& targetv, Vec& costsv) const
 {
-  output_and_target_to_cost->fprop(outputv&targetv, costsv); 
+  //output_and_target_to_cost->fprop(outputv&targetv, costsv); 
 }
 
 void MultiInstanceNNet::initializeParams()

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOverBagsVariable.cc,v 1.1 2004/02/18 22:43:24 yoshua Exp $
+   * $Id: SumOverBagsVariable.cc,v 1.2 2004/02/19 15:25:31 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -81,17 +81,22 @@ void SumOverBagsVariable::build_()
     if (vmat->weightsize()!=0 && vmat->weightsize()!=1)
       PLERROR("SumOverBagsVariable expected vmat->weightsize to be 0 or 1");
     
-    input_and_target_values.resize(max_bag_size,
-                                   vmat->inputsize()+vmat->targetsize()+vmat->weightsize());
-    input_values = input_and_target_values.subMatColumns(0,vmat->inputsize());
-    target_values = input_and_target_values.subMatColumns(vmat->inputsize(),vmat->targetsize());
-    weight_values = input_and_target_values.subMatColumns(vmat->inputsize()+
-                                                          vmat->targetsize(),
-                                                          vmat->weightsize());
-    input_and_target_values_vec = input_and_target_values.toVec();
-    unused_gradients.resize(max_bag_size*input_and_target_values.width());
-
+    input_values.resize(max_bag_size,vmat->inputsize());
+    output_value.resize(f->outputs[0]->nelems());
+    output_av = Array<Vec>(output_av);
+    gradient_av = Array<Vec>(gradient);
     f->inputs.setDontBpropHere(true);
+
+    bag_size_vec.resize(1);
+    bag_target.resize(vmat->targetsize());
+    bag_weight.resize(vmat->weightsize());
+    f_inputs.resize(4);
+    f_inputs[0] = input_values.toVec();
+    f_inputs[1] = bag_size_vec;
+    f_inputs[2] = bag_target;
+    f_inputs[3] = bag_weight;
+    unused_gradients.resize(4);
+    for (int i=0;i<4;i++) unused_gradients[i] = f_inputs[i].copy();
   }
 }
 
@@ -125,11 +130,14 @@ void SumOverBagsVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& c
   deepCopyField(vmat, copies);
   deepCopyField(f, copies);
   deepCopyField(output_value, copies);
-  deepCopyField(input_and_target_values, copies);
   deepCopyField(input_values, copies);
-  deepCopyField(target_values, copies);
-  deepCopyField(weight_values, copies);
+  deepCopyField(bag_size_vec, copies);
+  deepCopyField(bag_target, copies);
+  deepCopyField(bag_weight, copies);
+  deepCopyField(f_inputs, copies);
   deepCopyField(unused_gradients, copies);
+  deepCopyField(output_av, copies);
+  deepCopyField(gradient_av, copies);
 }
 
 
@@ -144,15 +152,14 @@ void SumOverBagsVariable::fpropOneBag(bool do_bprop)
       PLERROR("SumOverBagsVariable: bag size=%d > expected max. bag size(%d)",
               bag_size,max_bag_size);
     Vec input_value = input_values(bag_size);
-    Vec target = target_values(bag_size);
     if (vmat->weightsize()>0)
       {
-        real& weight = weight_values(bag_size,0);
-        vmat->getExample(curpos,input_value,target,weight);
+        real& weight = bag_weight[0];
+        vmat->getExample(curpos,input_value,bag_target,weight);
       }
     else
-      vmat->getExample(curpos,input_value,target,dummy_weight);
-    not_reached_end_of_bag = target.hasMissing();
+      vmat->getExample(curpos,input_value,bag_target,dummy_weight);
+    not_reached_end_of_bag = bag_target.hasMissing();
     if(++curpos == vmat->length())
     {
       curpos = 0;
@@ -164,13 +171,11 @@ void SumOverBagsVariable::fpropOneBag(bool do_bprop)
         break;
     }
   }
-  static Vec bag_size_vec(1);
-  static Vec dummy1(1);
   bag_size_vec[0]=bag_size;
   if (do_bprop)
-    f->fbprop(input_and_target_values_vec & bag_size_vec,Array<Vec>(output_value),unused_gradients & dummy1,Array<Vec>(gradient));
+    f->fbprop(f_inputs,output_av,unused_gradients,gradient_av);
   else
-    f->fprop(input_and_target_values_vec & bag_size_vec,Array<Vec>(output_value));
+    f->fprop(f_inputs,output_av);
   value += output_value;
 }
 

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.h,v 1.3 2004/02/17 22:54:44 yoshua Exp $
+   * $Id: MultiInstanceNNet.h,v 1.4 2004/02/19 15:25:54 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearn/plearn_learners/classifiers/MultiInstanceNNet.h */
@@ -61,7 +61,14 @@ using namespace std;
     Var wout; // bias and weights of output layer
     Var wdirect; // bias and weights for direct in-to-out connection
 
-    Var output;
+    Var output; // output (P(y_i|x_i)) for a single bag element
+    Var bag_size; // filled up by SumOverBagsVariable
+    Var bag_inputs; // filled up by SumOverBagsVariable
+    Var bag_output; // P(y=1|bag_inputs)
+    Func inputs_and_targets_to_costs; // (bag inputs and targets) -> bag NLL
+    Func input_to_logP0; // single input x -> log P(y=0|x)
+    Var nll;
+
     VarArray costs; // (negative log-likelihood, classification error) for the bag
     VarArray penalties;
     Var training_cost; // weighted cost + penalties

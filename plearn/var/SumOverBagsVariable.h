@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOverBagsVariable.h,v 1.1 2004/02/18 22:43:24 yoshua Exp $
+   * $Id: SumOverBagsVariable.h,v 1.2 2004/02/19 15:25:31 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -68,17 +68,21 @@ class SumOverBagsVariable: public NaryVariable
     int curpos; //!<  current pos in VMat 
     // To avoid allocation/deallocations in fprop/bprop
   Vec output_value;
-  Mat input_and_target_values;
-  Vec input_and_target_values_vec;
   Mat input_values;
-  Mat target_values;
-  Mat weight_values;
-  Vec unused_gradients;
+  Vec bag_size_vec;
+  Vec bag_target;
+  Vec bag_weight;
+  Array<Vec> f_inputs; // (matrix of bag inputs, the bag size, the bag target, the bag weight)
+  Array<Vec> unused_gradients;
+  Array<Vec> output_av; // Array<Vec>(output_value)
+  Array<Vec> gradient_av; // Array<Vec>(gradient)
   int bag_size;
 
   public:
-    //!  Sum_{consecutive inputs \in vmat until one has non-missing end_of_bag field} f(inputs)
-    //! the end_of_bag field is at column end_of_bag_column in each row of the VMat.
+    //! Sum_{bags \in vmat} f(inputs and targets in bag)
+    //! By convention a bag is a sequence of rows of the vmat whose target is missing
+    //! except for the last row of the bag. The input to f is a VarArray whose
+    //! elements are the following: matrix of bag inputs, the bag size, the bag target, the bag weight.
     SumOverBagsVariable(VMat the_vmat, Func the_f, int maxbagsize, int nsamples);
     
     PLEARN_DECLARE_OBJECT(SumOverBagsVariable);
