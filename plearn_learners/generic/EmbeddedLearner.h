@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.h,v 1.13 2004/10/06 05:59:15 chapados Exp $ 
+   * $Id: EmbeddedLearner.h,v 1.14 2004/10/08 15:48:46 chapados Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.h */
@@ -133,18 +133,19 @@ public:
   virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
                                      Vec& output, Vec& costs) const;
 
-  //! Forwarded to inner learner
-  virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
+  //! NOT forwarded by default
+  // virtual void computeCostsOnly(const Vec& input, const Vec& target,
+  //                               Vec& costs) const;
 
-  //! Forwarded to inner learner
-  virtual void use(VMat testset, VMat outputs) const;
+  //! NOT forwarded by default
+  // virtual void use(VMat testset, VMat outputs) const;
 
-  //! Forwarded to inner learner
-  virtual void useOnTrain(Mat& outputs) const;  
+  //! NOT forwarded by default
+  // virtual void useOnTrain(Mat& outputs) const;  
   
-  //! Forwarded to inner learner
-  virtual void test(VMat testset, PP<VecStatsCollector> test_stats, 
-                    VMat testoutputs=0, VMat testcosts=0) const;
+  //! NOT forwarded by default
+  // virtual void test(VMat testset, PP<VecStatsCollector> test_stats, 
+  //                   VMat testoutputs=0, VMat testcosts=0) const;
 
   //! Forwarded to inner learner
   virtual TVec<string> getTestCostNames() const;
@@ -152,11 +153,11 @@ public:
   //! Forwarded to inner learner
   virtual TVec<string> getTrainCostNames() const;
 
-  //! Forwarded to inner learner
-  virtual int nTestCosts() const;
+  //! NOT forwarded by default
+  // virtual int nTestCosts() const;
 
-  //! Forwarded to inner learner
-  virtual int nTrainCosts() const;
+  //! NOT forwarded by default
+  // virtual int nTrainCosts() const;
 
   //! Forwarded to inner learner
   virtual void resetInternalState();

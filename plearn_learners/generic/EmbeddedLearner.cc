@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.cc,v 1.15 2004/10/06 05:59:15 chapados Exp $ 
+   * $Id: EmbeddedLearner.cc,v 1.16 2004/10/08 15:48:46 chapados Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.cc */
@@ -50,7 +50,11 @@ PLEARN_IMPLEMENT_OBJECT(
   "Wraps an underlying learner", 
   "EmbeddedLearner implements nothing but forwarding \n"
   "calls to an underlying learner. It is typically used as\n"
-  "baseclass for learners that are built on top of another learner");
+  "baseclass for learners that are built on top of another learner.\n"
+  "Note that only the NECESSARY member functions are forwarded to\n"
+  "the embedded learner; for others, we rely on the base class\n"
+  "implementation (which themselves call forwarded functions).\n"
+  "This makes it easier to override only a few select functions.");
 
 EmbeddedLearner::EmbeddedLearner(string expdir_append_)
   : learner_(0),
@@ -162,37 +166,11 @@ void EmbeddedLearner::computeCostsFromOutputs(const Vec& input, const Vec& outpu
   learner_->computeCostsFromOutputs(input, output, target, costs); 
 }
                                                       
-void EmbeddedLearner::computeOutputAndCosts(const Vec& input, const Vec& target,
+void EmbeddedLearner::computeOutputAndCosts(const Vec& input, const Vec& target, 
                                             Vec& output, Vec& costs) const
 { 
   assert( learner_ );
   learner_->computeOutputAndCosts(input, target, output, costs); 
-}
-
-void EmbeddedLearner::computeCostsOnly(const Vec& input, const Vec& target,
-                                       Vec& costs) const
-{
-  assert( learner_ );
-  learner_->computeCostsOnly(input, target, costs);
-}
-
-void EmbeddedLearner::use(VMat testset, VMat outputs) const
-{
-  assert( learner_ );
-  learner_->use(testset, outputs);
-}
-
-void EmbeddedLearner::useOnTrain(Mat& outputs) const
-{
-  assert( learner_ );
-  learner_->useOnTrain(outputs);
-}
-
-void EmbeddedLearner::test(VMat testset, PP<VecStatsCollector> test_stats, 
-                           VMat testoutputs, VMat testcosts) const
-{
-  assert( learner_ );
-  learner_->test(testset, test_stats, testoutputs, testcosts);
 }
 
 TVec<string> EmbeddedLearner::getTestCostNames() const
@@ -205,18 +183,6 @@ TVec<string> EmbeddedLearner::getTrainCostNames() const
 {
   assert( learner_ );
   return learner_->getTrainCostNames();
-}
-
-int EmbeddedLearner::nTestCosts() const
-{
-  assert( learner_ );
-  return learner_->nTestCosts();
-}
-
-int EmbeddedLearner::nTrainCosts() const
-{
-  assert( learner_ );
-  return learner_->nTrainCosts();
 }
 
 void EmbeddedLearner::resetInternalState()
