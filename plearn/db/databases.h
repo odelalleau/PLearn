@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: databases.h,v 1.8 2004/08/02 21:02:49 mariusmuja Exp $
+   * $Id: databases.h,v 1.9 2004/08/04 14:10:49 mariusmuja Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -104,7 +104,7 @@ VMat loadHousing(bool normalize=true);
 //! The 'normalize' parameter can be changed: if it is set to true in input, it may be changed
 //! to false when the method returns (this is because the data will already be normalized, and
 //! no additional normalization is needed).
-void loadUCI(VMat& trainset, VMat& testset, VMat& allset, string db_spec, string id, bool &normalize);
+void loadUCI(VMat& trainset, VMat& testset, VMat& allset, string db_spec, string id, bool &normalize, const string& type);
 //! Load a specific UCI dataset in the given VMatrix.
 void loadUCISet(VMat& data, string file, PP<UCISpecification> uci_spec);
 //! Load a AMAT format UCI dataset in the given VMatrix

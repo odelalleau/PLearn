@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: databases.cc,v 1.16 2004/08/02 21:02:35 mariusmuja Exp $
+   * $Id: databases.cc,v 1.17 2004/08/04 14:10:42 mariusmuja Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -816,7 +816,16 @@ void loadClassificationDataset(const string& datasetname, int& inputsize, int& n
     nclasses = 2;
   }
   else if (dbname.substr(0,4) == "UCI_") {
-    string db_spec = dbname.substr(4) ;
+    string db_spec;
+    string type;
+    if (dbname.substr(0,8) == "UCI_KDD_") {
+      db_spec = dbname.substr(8);
+      type = "KDD";
+    } else {
+      db_spec = dbname.substr(4);
+      type = "MLDB";
+    }
+    
     size_t look_for_id = db_spec.rfind("_ID=");
     string db_dir;
     string id = "";
@@ -827,7 +836,7 @@ void loadClassificationDataset(const string& datasetname, int& inputsize, int& n
     } else {
       db_dir = db_spec;
     }
-    loadUCI(trainset, testset, allset, db_dir, id, normalizeinputs);
+    loadUCI(trainset, testset, allset, db_dir, id, normalizeinputs,type);
   }
   else
     PLERROR("Unknown dbname %s",dbname.c_str());
@@ -863,13 +872,20 @@ void loadClassificationDataset(const string& datasetname, int& inputsize, int& n
 /////////////
 // loadUCI //
 /////////////
-void loadUCI(VMat& trainset, VMat& testset, VMat& allset, string db_spec, string id, bool &normalize) {
+void loadUCI(VMat& trainset, VMat& testset, VMat& allset, string db_spec, string id, bool &normalize, const string& type) {
   string script_file = db_spec;
   if (id != "") {
     script_file += "_ID=" + id;
   }
   script_file += ".plearn";
-  string db_dir = dbdir_name + "/UCI_MLDB/" + db_spec;
+  string db_dir;
+  if (type=="MLDB") {
+     db_dir = dbdir_name + "/UCI_MLDB/" + db_spec;
+  } else if (type=="KDD") {
+     db_dir = dbdir_name + "/UCI_KDD/" + db_spec;
+  } else {
+    PLERROR("In loadUCI: Unknown dataset type: %s.",type.c_str());
+  }
   Object* obj = PLearn::macroLoadObject(db_dir + "/" + script_file);
   PP<UCISpecification> uci_spec = static_cast<UCISpecification*>(obj);
   if (uci_spec->file_train != "") {
@@ -968,7 +984,6 @@ void loadUCIAMat(VMat& data, string file, PP<UCISpecification> uci_spec)
     
   }
 }
-
 
 ////////////////
 // loadUCISet //
