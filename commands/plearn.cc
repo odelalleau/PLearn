@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.57 2004/04/20 20:40:07 tihocan Exp $
+   * $Id: plearn.cc,v 1.58 2004/05/07 19:02:48 tihocan Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -65,6 +65,8 @@
 //#include "RegressorFromDensity.h"
 #include "Distribution.h"
 #include "GaussianDistribution.h"
+#include "KernelPCA.h"
+#include "KernelProjection.h"
 #include "LocallyWeightedDistribution.h"
 #include "NeuralNet.h"
 #include "NNet.h"
