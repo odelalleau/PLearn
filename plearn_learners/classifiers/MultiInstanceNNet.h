@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.h,v 1.9 2004/03/05 14:28:28 yoshua Exp $
+   * $Id: MultiInstanceNNet.h,v 1.10 2004/03/06 14:41:15 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearn/plearn_learners/classifiers/MultiInstanceNNet.h */
@@ -79,6 +79,8 @@ using namespace std;
     VarArray params;  // all arameter input vars
 
     Vec paramsvalues; // values of all parameters
+
+    int optstage_per_lstage; // number of bags in training set / batch_size (in nb of bags)
 
   public:
     mutable Func f; // input -> output

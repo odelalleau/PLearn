@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.cc,v 1.22 2004/03/05 14:28:28 yoshua Exp $
+   * $Id: MultiInstanceNNet.cc,v 1.23 2004/03/06 14:41:15 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/MultiInstanceNNet.h */
@@ -208,6 +208,38 @@ void MultiInstanceNNet::setTrainingSet(VMat training_set, bool call_forget)
     build(); // MODIF FAITE PAR YOSHUA: sinon apres un setTrainingSet le build n'est pas complete dans un MultiInstanceNNet train_set = training_set;
     if (call_forget) forget();
   }
+
+  if (training_set_has_changed)
+    {
+      // number of optimiser stages corresponding to one learner stage (one epoch)
+      optstage_per_lstage = 0;
+      int n_bags = -1;
+      if (batch_size<=0)
+        optstage_per_lstage = 1;
+      else // must count the nb of bags in the training set
+        {
+          n_bags=0;
+          int l = train_set->length();
+          ProgressBar* pb = 0;
+          if(report_progress)
+            pb = new ProgressBar("Counting nb bags in train_set for MultiInstanceNNet ", l);
+          Vec row(train_set->width());
+          int tag_column = train_set->inputsize() + train_set->targetsize() - 1;
+          for (int i=0;i<l;i++) {
+            train_set->getRow(i,row);
+            int tag = (int)row[tag_column];
+            if (tag & SumOverBagsVariable::TARGET_COLUMN_FIRST) {
+              // indicates the beginning of a new bag.
+              n_bags++;
+            }
+            if(pb)
+              pb->update(i);
+          }
+          if(pb)
+            delete pb;
+          optstage_per_lstage = n_bags/batch_size;
+        }
+    }
 }
 
 void MultiInstanceNNet::build_()
@@ -362,6 +394,7 @@ void MultiInstanceNNet::build_()
       inputs_and_targets_to_test_costs->recomputeParents();
       inputs_and_targets_to_training_costs->recomputeParents();
 
+      // A UN MOMENT DONNE target NE POINTE PLUS AU MEME ENDROIT!!!
     }
 }
 
@@ -410,34 +443,6 @@ void MultiInstanceNNet::train()
       optimizer->build();
     }
 
-  // number of optimiser stages corresponding to one learner stage (one epoch)
-  int optstage_per_lstage = 0;
-  int n_bags = -1;
-  if (batch_size<=0)
-    optstage_per_lstage = 1;
-  else // must count the nb of bags in the training set
-  {
-    n_bags=0;
-    int l = train_set->length();
-    ProgressBar* pb = 0;
-    if(report_progress)
-      pb = new ProgressBar("Counting nb bags in train_set for MultiInstanceNNet ", l);
-    Vec row(train_set->width());
-    int tag_column = train_set->inputsize() + train_set->targetsize() - 1;
-    for (int i=0;i<l;i++) {
-      train_set->getRow(i,row);
-      int tag = (int)row[tag_column];
-      if (tag & SumOverBagsVariable::TARGET_COLUMN_FIRST) {
-        // indicates the beginning of a new bag.
-        n_bags++;
-      }
-      if(pb)
-        pb->update(i);
-    }
-    if(pb)
-      delete pb;
-    optstage_per_lstage = n_bags/batch_size;
-  }
 
   ProgressBar* pb = 0;
   if(report_progress)
@@ -502,7 +507,7 @@ void MultiInstanceNNet::computeOutputAndCosts(const Vec& inputv, const Vec& targ
     target->valuedata[0] = targetv[0];
     if (weightsize_>0) sampleweight->valuedata[0]=1; // the test weights are known and used higher up
     inputs_and_targets_to_test_costs->fproppath.fprop();
-    costs.copyTo(costsv);
+    inputs_and_targets_to_test_costs->outputs.copyTo(costsv);
   }
 }
 
@@ -607,6 +612,13 @@ void MultiInstanceNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(wout, copies);
   deepCopyField(wdirect, copies);
   deepCopyField(output, copies);
+  deepCopyField(bag_size, copies);
+  deepCopyField(bag_inputs, copies);
+  deepCopyField(bag_output, copies);
+  deepCopyField(inputs_and_targets_to_test_costs, copies);
+  deepCopyField(inputs_and_targets_to_training_costs, copies);
+  deepCopyField(input_to_logP0, copies);
+  deepCopyField(nll, copies);
   deepCopyField(costs, copies);
   deepCopyField(penalties, copies);
   deepCopyField(training_cost, copies);
