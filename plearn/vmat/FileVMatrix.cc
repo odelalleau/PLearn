@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.23 2004/07/21 16:30:55 chrish42 Exp $
+   * $Id: FileVMatrix.cc,v 1.24 2004/08/16 15:45:44 dorionc Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -58,10 +58,10 @@ FileVMatrix::FileVMatrix()
   writable=true;
 }
 
-FileVMatrix::FileVMatrix(const string& filename)
+FileVMatrix::FileVMatrix(const string& filename, bool writable_)
   :filename_(abspath(filename)), f(0), build_new_file(!isfile(filename))
 {
-  writable = true;
+  writable = writable_;
   build_();
 }
 

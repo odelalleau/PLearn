@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.h,v 1.13 2004/07/07 17:30:48 tihocan Exp $
+   * $Id: FileVMatrix.h,v 1.14 2004/08/16 15:45:44 dorionc Exp $
    ******************************************************* */
 
 
@@ -72,7 +72,7 @@ private:
 public:
 
   FileVMatrix();
-  FileVMatrix(const string& filename); //!<  opens an existing file
+  FileVMatrix(const string& filename, bool writable_=false); //!<  opens an existing file
   FileVMatrix(const string& filename, int the_length, int the_width); //!<  create a new matrix file
   FileVMatrix(const string& filename, int the_length, const TVec<string>& fieldnames); //!<  create a new matrix file
 

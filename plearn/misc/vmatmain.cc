@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.34 2004/08/13 13:54:18 tihocan Exp $
+   * $Id: vmatmain.cc,v 1.35 2004/08/16 15:45:34 dorionc Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -1362,11 +1362,23 @@ int vmatmain(int argc, char** argv)
         vm->savePMAT(destination);
       else if(ext==".dmat")
         vm->saveDMAT(destination);
-      else
+      else if(ext == ".csv")
+      {
+        ofstream out(destination.c_str());
+        for(int i=0; i < vm.length(); i++)
         {
-          cerr << "ERROR: can only convert to .amat .pmat or .dmat " << endl
-               << "Please specify a destination name with a valid extension " << endl;
+          int last = vm.width()-1;
+          for(int j=0; j < last; j++)
+            out << vm(i, j) << "," << flush;
+          out << vm(i, last) << endl;
         }
+        out.close();
+      }
+      else
+      {
+        cerr << "ERROR: can only convert to .amat .pmat .dmat or .csv" << endl
+             << "Please specify a destination name with a valid extension " << endl;
+      }
     }
   else if(command=="info")
     {

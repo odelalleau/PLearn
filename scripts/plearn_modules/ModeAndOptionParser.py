@@ -457,7 +457,7 @@ class ModeSelector:
     def short_help(self, indent):
         result = []
         if self.default is None:
-            result.append("Suported modes are:\n")
+            result.append("\nSupported modes are:\n")
         else:
             result.append( "If no modes are provided:\n" )
             result.append( self.default.format_help(indent+INDENT) )
@@ -471,8 +471,8 @@ class ModeSelector:
         return "".join(result)
 
     def long_help(self, indent):
-        lhelp = ( "Pytest %s mode help.\n%s\n\n"
-                  % (string.strip(self.selected_mode_name, '#'),
+        lhelp = ( "Help for %s %s mode.\n%s\n\n"
+                  % (self.parser.get_prog_name(), string.strip(self.selected_mode_name, '#'),
                      self.selected_mode.description) )
         lhelp += self.parser.format_option_help()
         return lhelp

@@ -23,7 +23,7 @@ RESULTS_PATH                  = "Results"
 
 # Called 'Unexpected...' because the only reason it is
 # not removed, is if the test fails
-RESULTS_ON_RUN                = "Unexpected_Results"
+RESULTS_ON_RUN                = "ResultsOnRun"
 
 ############################################################
 # Global variables
@@ -758,8 +758,10 @@ class RunTest(ResultsTest):
         return ResultsTest._do_not_run(self)
 
     def _local_postprocessing(self):
-        verif = Verification(self, self.new_results)
+        raw_input('Verification')
+        verif = Verification(self._results_directory, self.new_results)
         if verif.RES_OK:
+#        if self._successful_verification():
             shutil.rmtree( self.new_results )
 
             run_results, last = splitprev(self.new_results) 
@@ -769,7 +771,7 @@ class RunTest(ResultsTest):
             ResultsTest._local_postprocessing(self)        
         else:
             self.failed = True
-            
+        
 class SyncTest(Test):
     """Manages to sync the cvs entries of test with the needed files."""
     
@@ -833,11 +835,12 @@ class Verification:
     Class that manages every details of the comparison of the
     expected results with the results obtained by run.
     """
-    def __init__(self, def_test, current_res):
+    def __init__(self, expected_res, current_res):
         self.RES_OK      = True
         self.current_res = current_res
         self.diff        = Diff()
-        os.path.walk(os.path.join(RESULTS_PATH, def_test.prog_name), self.compare_dir, '')
+        raw_input('init: %s' % expected_res)
+        os.path.walk(expected_res, self.compare_dir, '')
         
     def tf(self, fpath):
         """tf for twin file"""
@@ -848,6 +851,7 @@ class Verification:
         return twin
 
     def compare_dir(self, arg, dirpath, dirlist):
+        raw_input('del_forbidden')
         del_forbidden(dirlist)
         #raw_input("dirpath: " + dirpath + ", current: " + os.getcwd())
         #raw_input(dirlist)
@@ -1101,6 +1105,7 @@ def cvs_remove(file):
 def del_forbidden(dirlist, *other_forbidden):
     forbidden_directories = [ OBJS, "BACKUP", CVS, ".pymake", "Scripts"  ]
     forbidden_directories.extend(other_forbidden)
+    raw_input("forbidden_directories: %s" % str(forbidden_directories))
 
     for forbidden in forbidden_directories:
         if forbidden in dirlist:
@@ -1255,7 +1260,7 @@ def printErrors(dico):
         vprint(formattedKey + " -> " + dico[key], "Q")
 
 def pytest_version():
-    version_str = '$Id: pytest,v 1.11 2004/07/15 15:58:31 dorionc Exp $'
+    version_str = '$Id: pytest,v 1.12 2004/08/16 15:45:44 dorionc Exp $'
 
     bflag = "pytest,v"
     the_year = time.localtime()[0]
@@ -1390,7 +1395,7 @@ parser.add_option( '-v', "--verbosity", choices=["0", "1", "2"], default="1",
 ##################### Testing Options ######################
 
 testing_options = OptionGroup( parser, "Testing Options",
-                               "Available under the all modes BUT commit." )
+                               "Available under all modes BUT commit." )
 
 testing_options.add_option("--mail", default=None,
                            help='Not supported yet.')

@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.26 2004/07/21 20:26:30 tihocan Exp $
+   * $Id: PLearner.h,v 1.27 2004/08/16 15:45:44 dorionc Exp $
    ******************************************************* */
 
 
@@ -179,7 +179,7 @@ public:
   virtual void build();
 
 protected:
-  //! Building part of the PLearn that needs the train_set
+  //! Building part of the PLearner that needs the train_set
   virtual void build_from_train_set() {}
 
 private:
