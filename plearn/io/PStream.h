@@ -56,7 +56,8 @@ namespace PLearn {
 using namespace std;
 
 // norman: mandatory for WIN32
-#ifdef WIN32
+//#ifdef WIN32
+#if defined(WIN32) && !defined(_MINGW_) // MinGW runs under gcc...
 using namespace stdext;
 #endif
 

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatIO.cc,v 1.7 2004/03/05 21:32:03 dorionc Exp $
+   * $Id: MatIO.cc,v 1.8 2004/03/11 22:01:04 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -452,8 +452,8 @@ void loadPMat(const string& filename, TMat<double>& mat)
   char matorvec[20];
   char datatype[20];
   char endiantype[20];
-  int the_length;
-  int the_width;
+  int the_length=0;
+  int the_width=0;
 
   FILE* f = fopen(filename.c_str(),"r");
   if (!f)
