@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TQCTrainer.h,v 1.1 2005/02/23 01:31:19 tihocan Exp $ 
+   * $Id: TQCTrainer.h,v 1.2 2005/02/23 21:52:14 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -48,6 +48,8 @@
 #include <torch/QCTrainer.h>
 
 namespace PLearn {
+
+class TQCMachine;
 
 class TQCTrainer: public TTrainer
 {
@@ -76,6 +78,7 @@ public:
   int iter_msg;
   int iter_shrink;
   int max_unshrink;
+  PP<TQCMachine> qc_machine;
   bool unshrink;
 
 
@@ -114,6 +117,9 @@ public:
 
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+
+  //! Overridden to update 'qc_machine' instead of 'machine'.
+  virtual void train(PP<TDataSet> data);
 
   //! Update the underlying Torch object from this object's options.
   virtual void updateFromPLearn(Torch::Object* ptr);

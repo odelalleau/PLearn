@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TQCTrainer.cc,v 1.1 2005/02/23 01:31:19 tihocan Exp $ 
+   * $Id: TQCTrainer.cc,v 1.2 2005/02/23 21:52:14 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -43,7 +43,7 @@
 
 #include "TQCTrainer.h"
 #include <plearn_torch/TQCMachine.h>
-//#include <plearn_torch/TDataSet.h>
+#include <plearn_torch/TDataSet.h>
 
 namespace PLearn {
 using namespace std;
@@ -70,14 +70,8 @@ PLEARN_IMPLEMENT_OBJECT(TQCTrainer,
 
 void TQCTrainer::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "unshrink", &TQCTrainer::unshrink, OptionBase::buildoption,
-      "Whether to unshrink or not.");
-
-  declareOption(ol, "max_unshrink", &TQCTrainer::max_unshrink, OptionBase::buildoption,
-      "Maximal number of unshrinking.");
-
-  declareOption(ol, "iter_shrink", &TQCTrainer::iter_shrink, OptionBase::buildoption,
-      "Minimal number of iterations to shink.");
+  declareOption(ol, "qc_machine", &TQCTrainer::qc_machine, OptionBase::buildoption,
+      "The QCMachine that this trainer trains.");
 
   declareOption(ol, "epsilon_shrink", &TQCTrainer::epsilon_shrink, OptionBase::buildoption,
       "Shrinking accuracy.");
@@ -88,9 +82,23 @@ void TQCTrainer::declareOptions(OptionList& ol)
   declareOption(ol, "iter_msg", &TQCTrainer::iter_msg, OptionBase::buildoption,
       "Number of iterations between messages.");
 
+  declareOption(ol, "iter_shrink", &TQCTrainer::iter_shrink, OptionBase::buildoption,
+      "Minimal number of iterations to shrink.");
+
+  declareOption(ol, "max_unshrink", &TQCTrainer::max_unshrink, OptionBase::buildoption,
+      "Maximal number of unshrinking.");
+
+  declareOption(ol, "unshrink", &TQCTrainer::unshrink, OptionBase::buildoption,
+      "Whether to unshrink or not.");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
+
+  // Hide unused parent's options.
+
+  declareOption(ol, "machine", &TTrainer::machine, OptionBase::nosave,
+      "A QCTrainer only uses 'qc_machine'.");
+
 }
 
 void TQCTrainer::build_()
@@ -125,6 +133,15 @@ void TQCTrainer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   PLERROR("TQCTrainer::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
+///////////
+// train //
+///////////
+void TQCTrainer::train(PP<TDataSet> data) {
+  trainer->train(data->dataset, NULL);
+  updateFromTorch();              // Update Trainer parameters after training.
+  qc_machine->updateFromTorch();  // Update QCMachine parameters after training.
+}
+
 //////////////////////
 // updateFromPLearn //
 //////////////////////
@@ -134,34 +151,41 @@ void TQCTrainer::updateFromPLearn(Torch::Object* ptr) {
   else {
     if (qc_trainer)
       allocator->free(qc_trainer);
-    if (!machine)
-      // We cannot create the QCTrainer without a machine.
+    if (!qc_machine)
+      // We cannot create the QCTrainer without its machine.
       return;
-    qc_trainer = new(allocator) Torch::QCTrainer(((TQCMachine*) (TMachine*) machine)->qc_machine);
+    qc_trainer = new(allocator) Torch::QCTrainer(((TQCMachine*) qc_machine)->qc_machine);
   }
-  qc_trainer->end_eps               = end_accuracy;
-  qc_trainer->eps_shrink            = epsilon_shrink;
-  qc_trainer->n_iter_message        = iter_msg;
-  qc_trainer->n_iter_min_to_shrink  = iter_shrink;
-  qc_trainer->n_max_unshrink        = max_unshrink;
-  qc_trainer->unshrink_mode         = unshrink;
+  FROM_P_BASIC(end_accuracy,   end_accuracy,   qc_trainer, end_eps             );
+  FROM_P_BASIC(epsilon_shrink, epsilon_shrink, qc_trainer, eps_shrink          );
+  FROM_P_BASIC(iter_msg,       iter_msg,       qc_trainer, n_iter_message      );
+  FROM_P_BASIC(iter_shrink,    iter_shrink,    qc_trainer, n_iter_min_to_shrink);
+  FROM_P_BASIC(max_unshrink,   max_unshrink,   qc_trainer, n_max_unshrink      );
+  FROM_P_BASIC(unshrink,       unshrink,       qc_trainer, unshrink_mode       );
 
-  PLWARNING("In TQCTrainer::updateFromPLearn - Implementation not complete");
+  FROM_P_OBJ(qc_machine, qc_machine, qc_machine, TQCMachine, qc_trainer, qcmachine);
+
   inherited::updateFromPLearn(qc_trainer);
+  // NB: not updating cache, k_xi, k_xj, old_alpha_xi, old_alpha_xj, current_error,
+  //                  active_var_new, n_active_var_new, n_alpha, deja_shrink,
+  //                  unshrink_mode, y, alpha, grad, bound_eps, n_active_var,
+  //                  active_var, not_at_bound_at_iter, iter, status_alpha,
+  //                  Cup, Cdown
 }
 
 /////////////////////
 // updateFromTorch //
 /////////////////////
 void TQCTrainer::updateFromTorch() {
-  end_accuracy    = qc_trainer->end_eps;
-  epsilon_shrink  = qc_trainer->eps_shrink;
-  iter_msg        = qc_trainer->n_iter_message;
-  iter_shrink     = qc_trainer->n_iter_min_to_shrink;
-  max_unshrink    = qc_trainer->n_max_unshrink;
-  unshrink        = qc_trainer->unshrink_mode;
+  FROM_T_BASIC(end_accuracy,   end_accuracy,   qc_trainer, end_eps             );
+  FROM_T_BASIC(epsilon_shrink, epsilon_shrink, qc_trainer, eps_shrink          );
+  FROM_T_BASIC(iter_msg,       iter_msg,       qc_trainer, n_iter_message      );
+  FROM_T_BASIC(iter_shrink,    iter_shrink,    qc_trainer, n_iter_min_to_shrink);
+  FROM_T_BASIC(max_unshrink,   max_unshrink,   qc_trainer, n_max_unshrink      );
+  FROM_T_BASIC(unshrink,       unshrink,       qc_trainer, unshrink_mode       );
 
-  PLWARNING("In TQCTrainer::updateFromTorch - Implementation not complete");
+  FROM_T_OBJ(qc_machine, qc_machine, qc_machine, TQCMachine, qc_trainer, qcmachine);
+
   inherited::updateFromTorch();
 }
 
