@@ -8,11 +8,11 @@ from plearn.pytest                       import *
 from plearn.utilities.verbosity          import *
 from plearn.utilities.global_variables   import *
 
+declare_pytest_cvs_id( '$Id: pytest,v 1.28 2004/12/15 14:30:03 dorionc Exp $' )
 
 ############################################################
 # Module variables
 
-version_str = '$Id: pytest,v 1.27 2004/12/15 00:58:20 dorionc Exp $'
 globalvars.all_roots                      = [ plpath.plearndir,
                                               plpath.lisaplearndir,
                                               plpath.apstatdir      ]
@@ -24,7 +24,7 @@ def dynamic_version_header():
     c = lambda s: toolkit.centered_square( s, 70 ) 
 
     vprint( "\n%s\n%s\n%s\n"
-            % ( c("PyTest -- version " + pytest_version(version_str)),
+            % ( c("PyTest -- version " + pytest_version()),
                 c("(c) 2004 Christian Dorion"),
                 c("Report problems to dorionc@apstat.com") ),
             1
@@ -55,7 +55,7 @@ def mail():
     #                      # ( see end of pytest() )
         
 ## def pytest_version():
-##     version_str = '$Id: pytest,v 1.27 2004/12/15 00:58:20 dorionc Exp $'
+##     version_str = '$Id: pytest,v 1.28 2004/12/15 14:30:03 dorionc Exp $'
 
 ##     bflag = "pytest,v"
 ##     the_year = time.localtime()[0]
@@ -68,7 +68,7 @@ def mail():
 ###################################################################################
 ## MAIN PROGRAM
 parser = ModeAndOptionParser( usage = "%prog mode [options] target*",
-                              version = "%prog " + pytest_version(version_str)   )
+                              version = "%prog " + pytest_version()   )
 
 parser.add_option( '-v', "--verbosity",
                    choices=["0", "1", "2", "3"], default="1",
