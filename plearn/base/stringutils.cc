@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.cc,v 1.12 2003/06/30 17:32:27 plearner Exp $
+   * $Id: stringutils.cc,v 1.13 2003/08/26 18:45:44 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -360,6 +360,25 @@ int search_replace(string& text, const string& searchstr, const string& replaces
   return n;
 }
 
+
+vector<string> split(const string& s, char delimiter)
+{
+  vector<string> res;
+  int l = s.length();
+  int beg = 0;
+  int end = 0;
+  
+  while(end<=l)
+    {
+      while(end<l && s[end]!=delimiter)
+        ++end;
+      res.push_back(s.substr(beg,end-beg));
+      ++end;
+      beg = end;
+    }
+
+  return res;
+}
 
 vector<string> split(const string& s, const string& delimiters, bool keep_delimiters)
 {

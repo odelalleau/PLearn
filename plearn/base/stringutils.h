@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.14 2003/08/13 08:13:16 plearner Exp $
+   * $Id: stringutils.h,v 1.15 2003/08/26 18:45:44 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -55,10 +55,9 @@
 #include <vector>
 #include <iostream>
 #include <iomanip>
-#include "TMat.h"
-
 //!  to be replaced ultimately by the use of sstream, but including it currently produces a thousand warnings... [Pascal]
 #include <strstream.h>
+// #include "TMat.h"
 
 namespace PLearn <%
 using namespace std;
@@ -129,6 +128,9 @@ using namespace std;
 //! replaces all occurences of searchstr in the text by replacestr
 //! returns the number of matches that got replaced
 int search_replace(string& text, const string& searchstr, const string& replacestr);
+
+//! splits a string along occurences of the delimiters.
+vector<string> split(const string& s, char delimiter);
 
 /*!     splits a string into a list of substrings (using any sequence of 
     the given delimiters as split point)
