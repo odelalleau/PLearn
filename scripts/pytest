@@ -15,40 +15,8 @@ from plearn.utilities.global_variables   import *
 globalvars.all_roots                      = [ plpath.plearndir,
                                               plpath.lisaplearndir,
                                               plpath.apstatdir      ]
-globalvars.test_name_default              = '<MANDATORY_TEST_NAME>'
-globalvars.ignore_hierarchy               = 'pytest.ignore'
-
 #####################
 ## Functions are listed by alphabetical order
-
-def check_directory(dirc):
-    absdir = os.path.abspath(dirc)
-    if ( not os.path.isdir(absdir) or
-         string.find(absdir, 'test_suite') == -1 ):
-        raise ValueError( "Target %s\n" "is not a valid test_suite subdirectory."
-                          % absdir )
-    return absdir
-
-def commit_mode():
-    pdir, pvar = plpath.splitprev(plpath.pytest_variables)
-    os.chdir(pdir)
-    cvs_commit(pvar, 'PyTest internal commit')
-    sys.exit()
-    
-def common_preprocessing():
-    if modes.options.mail != None:
-        modes.options.savelog = mailing_log
-
-    if modes.options.savelog:
-        savelog_file = open(modes.options.savelog,'w')
-          
-    if modes.options.mail:
-        if modes.current_mode.name != "compilePLL":
-            vprint("The mail option is only supported under the compilePLL mode", 0)
-            sys.exit()
-        if modes.options.savelog:
-            vprint("Mail and savelog options are not compatible", 0)
-            sys.exit()
 
 def dynamic_version_header():
     # Dynamic version header
@@ -60,21 +28,8 @@ def dynamic_version_header():
             0
             )
 
-def ignore_mode():
-    """Causes the target hierarchy to be ignored by PyTest.
-
-    Simply drops a I{pytest.ignore} file that is recognized by PyTest
-    afterwards.
-    """
-    target = None
-    if len(modes.targets) == 0:
-        target = os.getcwd()
-    elif len(modes.targets) == 1:
-        target = modes.targets[0]
-
-    os.system("touch %s" % os.path.join( target, globalvars.ignore_hierarchy ) )
-        
 def mail():
+    raise DeprecationWarning
     # Opening the senmail process
     sendmail = Popen3("sendmail -t", True)
 
@@ -98,7 +53,7 @@ def mail():
     #                      # ( see end of pytest() )
         
 def pytest_version():
-    version_str = '$Id: pytest,v 1.21 2004/10/26 20:01:30 dorionc Exp $'
+    version_str = '$Id: pytest,v 1.22 2004/10/31 00:56:29 dorionc Exp $'
 
     bflag = "pytest,v"
     the_year = time.localtime()[0]
@@ -108,116 +63,35 @@ def pytest_version():
 
     return string.strip( version_str[begin:end] )
 
-def quiet_sys(cmdString):
-    os.system(cmdString + " > /dev/null")
-
-def testing_options():
-    testing_options = OptionGroup( parser, "Testing Options",
-                                   "Available under all modes BUT commit and ignore." )
-    
-    testing_options.add_option( "--all",
-                                action="store_true", default=False,
-                                help= "Run all tests found in subdirectories of directories in "
-                                "globalvars.all_roots test_suite branches. If some targets "
-                                "are provided, these will be ignored. " 
-                                )
-    
-    testing_options.add_option( "-R", "--recursive",
-                                action="store_true", default=False,
-                                help = 'Process all targets recursively. If some target is '
-                                'the subdirectory to another target, it will be ignored, i.e. '
-                                'the whole hierarchy will be tested only once.'
-                                ) 
-    
-    testing_options.add_option( '-l', '--localhost',
-                                action='store_true',
-                                help='This flag triggers a dispatch using only the local host. '
-                                'CURRENTLY ALWAYS TRUE!!!',
-                                default=True )
-    
-    testing_options.add_option( '--hosts', 
-                                help='The maximum nuber of hosts to use simultaneously.',
-                                default=10 )
-    
-    testing_options.add_option( '-n', '--test-name',
-                                help='Restricts the current mode to the named test.',
-                                default=globalvars.test_name_default )
-
-    testing_options.add_option( '--traceback',
-                                action="store_true",
-                                help="This flag triggers routines to report the traceback of "
-                                "PyTestUsageError. By default, only the class's name and meesage "
-                                "are reported.",
-                                default = False )
-    
-    testing_options.add_option( '-v', "--verbosity",
-                                choices=["0", "1", "2"], default="1",
-                                help="Selects the level of verbosity among [0, 1, 2], "
-                                "1 being the default value. Level 0 is very quiet, while level 2 "
-                                "is mainly intended for debug."
-                                )
-    
-    testing_options.add_option("--mail", default=None,
-                               help='Not supported yet.')
-
-    return testing_options
-
 ###################################################################################
 ## MAIN PROGRAM
 parser = ModeAndOptionParser( usage = "%prog mode [options] target*",
-                              version = "%prog " + pytest_version(),
-                              with_config_mode=False )
+                              version = "%prog " + pytest_version()   )
 
-for (mode, mode_routine) in modes.routine_mappings.iteritems():
-    option_groups = []                  
-    parser.add_mode( mode, modes.generic_processing,
-                     help          = toolkit.short_doc(mode_routine),
-                     description   = toolkit.doc(mode_routine),
-                     option_groups = option_groups
-                    )
+parser.add_option( '-v', "--verbosity",
+                   choices=["0", "1", "2"], default="1",
+                   help="Selects the level of verbosity among [0, 1, 2], "
+                   "1 being the default value. Level 0 is very quiet, while level 2 "
+                   "is mainly intended for debug."
+                   )
 
-parser.add_mode( 'disable', modes.disable,
-                 help          = toolkit.short_doc( modes.disable ),
-                 description   = toolkit.doc( modes.disable )
-                 )
+parser.add_option("--mail", default=None,
+                  help='Not supported yet.')
 
-parser.add_mode( 'enable', modes.enable,
-                 help          = toolkit.short_doc( modes.enable ),
-                 description   = toolkit.doc( modes.enable )
-                 )
-
-parser.add_mode( 'list', modes.list,
-                 help           = toolkit.short_doc( modes.list ),
-                 description    = toolkit.doc( modes.list ),
-                 option_groups = [ modes.list_options( parser ) ]
-                 )
-
-parser.add_option_group( testing_options() )
-
-parser.add_mode( 'commit', commit_mode,
-                 help='Commits PyTest internal modifications (ex: disabled test)',
-                 description='Commits PyTest internal modifications (ex: disabled test)',
-                 max_targets=0 )
-
-parser.add_mode( 'ignore', ignore_mode,
-                 help= toolkit.short_doc( ignore_mode ),
-                 description   = toolkit.doc( ignore_mode ),                 
-                 )
-
-
-############################################################
-##################### Parsing Options ######################
+modes.add_supported_modes( parser )
 
 modes.options, modes.targets = parser.parse_args()
-modes.current_mode           = parser.selected_mode()
+modes.current_mode           = parser.selected_mode
 
 ############################################################
 ################## Some preprocessing ######################
 
 ## Managing the verbosity option.
-set_verbosity( modes.options.verbosity )
+if hasattr(modes.options, 'verbosity'):
+    set_verbosity( modes.options.verbosity )
 
-if modes.options.mail is not None:
+if ( hasattr(modes.options, 'mail')
+     and modes.options.mail is not None ):
     ## vprint.keep_output()
     raise NotImplementedError
 
@@ -230,7 +104,7 @@ if modes.options.mail is not None:
 dynamic_version_header()
 
 try:
-    parser.launch_selected_mode()    
+    modes.current_mode.start()    
     while modes.current_mode.isAlive():
         time.sleep(0.2)
         
@@ -239,9 +113,10 @@ except KeyboardInterrupt, kex:
     sys.exit()
 
 vprint("Quitting PyTest.", 1)
-kept = vprint.close()    
-if kept is not None:
-    for k in kept:
-        print k
-    raise NotImplementedError('mail not implemented yet')
+
+## kept = vprint.close()    
+## if kept is not None:
+##     for k in kept:
+##         print k
+##     raise NotImplementedError('mail not implemented yet')
     

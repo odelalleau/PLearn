@@ -14,6 +14,18 @@ def frozen(set):
             raise AttributeError("You cannot add attributes to %s" % self)
     return set_attr
 
+def members( instance, predicate=(lambda x,y: True) ):
+    return dict([ (x,y)
+                  for (x,y) in inspect.getmembers(instance)
+                  if predicate(x, y)
+                  ])
+
+def public_members( instance ):
+    predicate = lambda x,y: not ( x.startswith("_")
+                                  or inspect.ismethod(y)
+                                  or inspect.isfunction(y) )
+    return members( instance, predicate )
+
 class MandatoryOverrideError(ValueError):
     def __init__(self, frozen_object, attribute_name):
         self.frozen_object

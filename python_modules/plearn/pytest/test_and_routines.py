@@ -1,6 +1,7 @@
 
 import os, shutil, string
 
+import plearn.utilities.cvs           as     cvs
 import plearn.utilities.toolkit       as     toolkit
 
 from   plearn.tasks.Task              import *
@@ -12,6 +13,20 @@ from   threading                      import *
 from   programs                       import *
 from   BasicStats                     import BasicStats
 from   IntelligentDiff                import *          
+
+__all__ = [
+    ## Functions
+    'config_file_path',
+
+    ## Exceptions
+    'PyTestUsageError',
+
+    ## Classes
+    'Test', 
+    'Routine',
+##    'AddTestRoutine',
+    'CompilationRoutine', 'ResultsCreationRoutine', 'RunTestRoutine'
+    ]
 
 def config_file_path( directory = None ):
     """The path to a pytest configuration file.
@@ -26,21 +41,13 @@ def config_file_path( directory = None ):
         return 'pytest.config'
     return os.path.join( os.path.abspath(directory), 'pytest.config' )
 
-def disable_file_name(directory, test_name=''):
-    if test_name == '':
-        test_name = 'pytest'
+## def disable_file_name(directory, test_name=''):
+##     if test_name == '':
+##         test_name = 'pytest'
 
-    test = os.path.join(directory, test_name)
-    return ( test, test+'.disabled' )
+##     test = os.path.join(directory, test_name)
+##     return ( test, test+'.disabled' )
 
-class PyTestUsageError(Exception):  
-    def __init__(self, msg):
-        Test.statistics.skip()
-        self.msg = msg
-
-    def __str__(self):
-        return self.msg
-    
 class DuplicateName( PyTestUsageError ):
     def __init__(self, test1, test2):
         PyTestUsageError.__init__(
@@ -168,11 +175,24 @@ class Test(FrozenObject):
     def ensure_results_directory(self, results):
         backup = None
         if os.path.exists( results ):
-            backup = results + ".BAK"
-            os.system( "cp -R %s %s" % (results, backup) )
-            plpath.keep_only(results, plpath.cvs_directory)
-        else:
-            os.makedirs( results )
+            if os.path.exists( os.path.join(results, plpath.cvs_directory) ):
+                answer = None
+                while not answer in ['yes', 'no']:
+                    answer = raw_input( "Results %s already exists! Are you sure you want to "
+                                        "generate new results (yes or no)? " % results )
+
+                if answer == 'no':
+                    raise PyTestUsageError("Results creation interrupted by user")
+
+                ## YES
+                os.system( "cvs remove -Rf %s" % results )
+                cvs.commit( '.',
+                            'Removal of %s for new results creation.'
+                            % results )
+                
+            backup = "%s.%s" % (results, toolkit.date_time_string())
+            os.system( "mv %s %s" % (results, backup) )
+        os.makedirs( results )
         return backup
 
     def get_path(self):
@@ -222,18 +242,22 @@ class Test(FrozenObject):
                 "%s.expected_results or %s.run_results"
                 % (self.classname(), self.classname(), self.classname())
                 )
-
+        
         return os.path.join( results, self.name )
         
     def run(self, results):
+        os.putenv("PLEARN_DATE_TIME", "NO")
         self.check_name_format()
+
 
         test_results  = self.test_results( results )
         backup        = self.ensure_results_directory( test_results )
-        self.link_ressources( test_results )
+        if backup is not None:
+            vprint("Previous results saved in %s" % backup )
 
+        self.link_ressources( test_results )
         run_command   = ( "%s %s >& %s"
-                          % ( self.program.name, self.arguments, self.name+'.run_log' )
+                          % ( self.program.get_name(), self.arguments, self.name+'.run_log' )
                           )
         
         vprint("Test name:   %s.\nDescription:\n    %s" % (self.name, self.description), 1)        
@@ -244,12 +268,13 @@ class Test(FrozenObject):
         os.system(run_command)
         os.chdir( cwd )
         
-        ## Forwarding the removal of the old results: if any operation
-        ## should cause the crash of PyTest, the old results would
-        ## still be available in the backup directory.
-        if backup is not None:
-            shutil.rmtree( backup )
+##         ## Forwarding the removal of the old results: if any operation
+##         ## should cause the crash of PyTest, the old results would
+##         ## still be available in the backup directory.
+##         if backup is not None:
+##             shutil.rmtree( backup )
         self.unlink_ressources( test_results )
+        os.putenv("PLEARN_DATE_TIME", "YES")
 
     def unlink_ressources(self, test_results):
         dirlist = os.listdir( test_results )
@@ -290,20 +315,6 @@ class Routine(Task):
         vprint("Compilation succeedded.", 1)
         return True
 
-    def forbidden_directories():
-        return [ plpath.pymake_objs, "BACKUP", plpath.cvs_directory,
-                 ".pymake", Test.expected_results, Test.run_results ]
-    forbidden_directories = staticmethod(forbidden_directories)
-
-    def path_resolve(self, results):
-        os.path.walk( results,
-                      path_resolve_dir,
-                      { plpath.home                : "$HOME",
-                        Test.expected_results      : "$RESULTS",
-                        Test.run_results           : "$RESULTS",
-                        forbidden_flag             : self.forbidden_directories() }
-                      )
-
     ## Overrides run and succeeded
     def run(self):
         try:
@@ -315,6 +326,7 @@ class Routine(Task):
                 os.chdir( self.test.test_directory )
                 Task.run(self)
         except PyTestUsageError, e: 
+            Test.statistics.skip()
             if Routine.report_traceback:
                 raise
             else:
@@ -419,7 +431,11 @@ class ResultsCreationRoutine(Routine):
         vprint("-----------------", 1)
         
         self.test.run( Test.expected_results )
-        self.path_resolve( Test.expected_results )
+
+        mappings = { os.path.abspath(Test.expected_results): "$RESULTS" }
+        mappings.update( plpath.env_mappings )
+        plpath.process_with_mappings( Test.expected_results, mappings )
+        
         vprint("", 1)
         self.succeeded( True )
 
@@ -460,12 +476,12 @@ class RunTestRoutine(Routine):
         
         self.test.run( Test.run_results )
 
-        self.path_resolve( self.run_results )
-        verif = IntelligentDiff( self.expected_results,
-                                 self.run_results,
-                                 self.forbidden_directories() )
-        
-        diffs = verif.get_differences()
+        mappings = { os.path.abspath(Test.run_results): "$RESULTS" }
+        mappings.update( plpath.env_mappings )
+        plpath.process_with_mappings( Test.run_results, mappings )
+
+        idiff  =  IntelligentDiff()
+        diffs  =  idiff.diff( self.expected_results, self.run_results )
         if diffs == []:
             self.succeeded( True )
         else:            

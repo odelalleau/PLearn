@@ -1,117 +1,89 @@
 
 import copy, os, string
-import plearn.utilities.toolkit    as toolkit
-
-from   pickle                      import *
+import plearn.utilities.plpath     as     plpath
+import plearn.utilities.toolkit    as     toolkit
 from   plearn.utilities.verbosity  import *
 
-__all__ = [
-    ## Variables
-    'forbidden_flag',
+class IntelligentDiff:    
+    
+    def __init__(self):
+        self.differences = []
 
-    ## Functions
-    'path_resolve_dir',
-    'path_resolve_file',
-
-    ## Classes
-    'IntelligentDiff'
-    ]
-
-forbidden_flag = "$#&*forbidden_directories*&#$"
-def path_resolve_dir(resolve_dico , dirname, dirlist):
-    forbidden_directories = []
-    if resolve_dico.has_key(forbidden_flag):
-        forbidden_directories = resolve_dico[forbidden_flag]
-
-    toolkit.exempt_list_of( dirlist, forbidden_directories )
-
-    for fname in dirlist:
-        fname = os.path.join(dirname, fname)
-        path_resolve_file(fname, resolve_dico)
-                        
-def path_resolve_file(fname, resolve_dico):
-    if os.path.isfile(fname):
-        fcontent = file(fname).readlines()
-
-        to_resolve = resolve_dico.keys()
-        resolve_sort = lambda r, s: len(r)-len(s)
-        to_resolve.sort( resolve_sort )
+    def are_directories(self, bench, other):
+        bench_is = os.path.isdir(bench)
+        other_is = os.path.isdir(other)
         
-        resolved = open(fname, 'w')
-        for line in fcontent:
-            for to_res in to_resolve:
-                if to_res != forbidden_flag:                    
-                    line = string.replace(line, to_res, resolve_dico[to_res])
-            resolved.write(line)
-        resolved.close()
-    
-    
-class IntelligentDiff:
-
-    PREPROCESSING = {'.psave':path_resolve_file}
-
-    def __init__(self, bench, other, forbidden_directories =[]):
-        self.__diffs = []
-        self.forbidden = forbidden_directories
-
-        self.diff(bench, other)
-
-    def __dirlist(self, dirc):
-        dirlist = os.listdir(dirc)
-        for fb in self.forbidden:
-            if fb in dirlist:
-                dirlist.remove(fb)
-        return dirlist
-
-    def __dirs(self, bench, other):
-        if os.path.isdir(other):
-            if os.path.isdir(bench):
-                self.diff_directories(bench, other)
-                return True
-            else:
-                self.__diffs.append("%s is a directory while %s is not."
-                                  % (other, bench) )
-                return True
-        elif os.path.isdir(bench):
-            self.__diffs.append("%s is a directory while %s is not."
-                              % (bench, other) )
+        if bench_is and other_is:                
             return True
-        return False        
 
-    def __links(self, bench, other):
+        ## At least one is not 
+        if bench_is:
+            self.differences.append(
+                "%s is a directory while %s is not." % (bench, other)
+                )
+            
+        elif other_is:
+            if toolkit.is_recursively_empty(other):
+                vprint("Empty directory %s was skipped." % other, 2)
+            else:
+                self.differences.append(
+                    "%s is a directory while %s is not." % (other, bench) )
+                
+        else: ## Both are not
+            return False        
+
+        return True
+
+    def are_links(self, bench, other):
         if os.path.islink(other):
             vprint("%s is link: diff will be skipped."%other)
-            return True
         elif os.path.islink(bench):
-            self.__diffs.append( "%s is a link while %s is not."
-                               % (bench, other) )
-            return True
-        return False
+            self.differences.append(
+                "%s is a link while %s is not." % (bench, other) )
+        else:
+            return False
+        return True
 
-    def __files(self, bench, other):
-        if os.path.isfile(other):
-            if os.path.isfile(bench):
-                self.diff_files(bench, other)
-                return True
-            else:
-                self.__diffs.append("%s is a file while %s is not."
-                                  % (other, bench) )
-                return True
-        elif os.path.isfile(bench):
-            self.__diffs.append("%s is a file while %s is not."
-                              % (bench, other) )
+    def are_files(self, bench, other):        
+        bench_is = os.path.isfile(bench)
+        other_is = os.path.isfile(other)
+        
+        if bench_is and other_is:                
             return True
-        return False        
+        
+        ## At least one is not 
+        if bench_is:
+            self.differences.append(
+                "%s is a file while %s is not." % (bench, other) )
+
+        elif other_is:
+            self.differences.append(
+                "%s is a file while %s is not." % (other, bench) )
+
+        else: ## Both are not
+            return False
+
+        return True
     
     def diff(self, bench, other):
-        if not self.__links(bench, other):
-            if not self.__dirs(bench, other):
-                if not self.__files(bench, other):
-                    raise RuntimeError( "%s and %s are not links, nor directories, nor files."
-                                        % (bench, other) )
+        if self.are_links(bench, other):
+            vprint("%s is a link: diff will be skipped."%other)
+        elif self.are_directories(bench, other):
+            self.diff_directories(bench, other)
+        elif self.are_files(bench, other):
+            self.diff_files(bench, other)
+        else:
+            raise RuntimeError(
+                "%s and %s are not links, nor directories, nor files." % (bench, other)
+                )
+        
+        return self.differences
 
     def diff_directories(self, bench, other):
-        other_list = self.__dirlist(other)
+        other_list = os.listdir( other )
+        toolkit.exempt_list_of( other_list,
+                                plpath.special_directories )
+        
         for of_name in other_list:
             bf = os.path.join(bench, of_name)
             of = os.path.join(other, of_name)
@@ -124,8 +96,5 @@ class IntelligentDiff:
         ## self.preprocess(other, bench_dir, other_dir)
         some_diff = toolkit.command_output('diff %s %s' % (bench, other))
         if some_diff:
-            self.__diffs.append( "\n+++ While comparing %s and %s:\n\t%s\n"
+            self.differences.append( "\n+++ While comparing %s and %s:\n\t%s\n"
                                % (bench, other, string.join(some_diff, "\t"))    )
-
-    def get_differences(self):
-        return copy.deepcopy(self.__diffs)

@@ -54,6 +54,12 @@ lisaplearndir          = os.getenv( 'LISAPLEARNDIR',
 apstatdir              = os.getenv( 'APSTATDIR',
                                     os.path.join(home, 'apstatsoft') )
 
+env_mappings           = { home                : "$HOME",
+                           plearndir           : "$PLEARNDIR",
+                           lisaplearndir       : "$LISAPLEARNDIR",
+                           apstatdir           : "$APSTATDIR"
+                           }
+
 plbranches             = { plearndir     : 'PLearn',
                            lisaplearndir : 'LisaPLearn',
                            apstatdir     : 'apstatsoft'  }
@@ -61,8 +67,12 @@ plbranches             = { plearndir     : 'PLearn',
 plearn_scripts         = os.path.join( plearndir, 'scripts' )
 
 pymake_objs            = "OBJS"
+pymake_hidden          = ".pymake"
 cvs_directory          = "CVS"
 pytest_dir             = "pytest"
+
+special_directories    = [ pymake_objs,   pymake_hidden,
+                           cvs_directory, pytest_dir    ]
 
 def exempt_of_subdirectories( directories ):
     """Remove any path in list that is a subdirectory of some other directory in the list.
@@ -198,6 +208,33 @@ def plcommand(command_name):
 
     return command_path
 
+
+def process_with_mappings( path, mappings ):
+    ## Do not process links
+    if os.path.islink( path ):
+        return
+
+    ## For directories, recursively process subpaths.
+    if os.path.isdir( path ):
+        for subpath in os.listdir( path ):
+            if subpath in [pymake_objs, pymake_hidden, cvs_directory]:
+                continue
+            
+            relative_path = os.path.join( path, subpath )
+            process_with_mappings( relative_path, mappings )
+        return
+
+    fcontent  = file( path ).readlines()
+    key_paths = mappings.keys()
+    key_paths.sort( lambda r, s: len(s)-len(r) )
+
+    processed = open( path, 'w' )
+    for line in fcontent:
+        for key in key_paths:
+            ##raw_input( "LINE: %s\nKEY: %s \n\n" % (line, key) )
+            line = string.replace(line, key, mappings[key])            
+        processed.write(line)
+    processed.close()
     
 def splitprev(dir):
     """Returns the directory of which I{dir} is a subdirectory.

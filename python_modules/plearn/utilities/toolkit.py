@@ -9,67 +9,23 @@ import os, popen2, string, sys, time, types
 import epydoc.markup 
 import epydoc.markup.epytext
 
+def boxed_string(s, box_width):
+    if len(s) > box_width:
+        words = string.split(s)
+        s = ''
+        for word in words:
+            if len(s) == 0:
+                s = word
+            elif len(s) < box_width-len(word):
+                s = "%s %s" % (s, word)
+            else:
+                s = "%s\n%s" % (s, word)
+    return s
+    
 def command_output(command):
     process = popen2.Popen4( command )
     process.wait()
     return process.fromchild.readlines()
-
-def cvs_add(file):
-    status = cvs_query("status", file, "Status: ")
-    vprint(file + " status: " + status + "\n", 2)
-    if status != '' and string.find(status, "Unknown") == -1:
-        return False
-    
-    addCmd = "cvs add " + file
-    vprint("Adding: " + addCmd, 2)
-    process = Popen3(addCmd, True)
-    errors = process.childerr.readlines()
-    map(lambda err: vprint(err, 1), errors)
-
-    return True
-
-def cvs_commit(files, msg):
-    if isinstance(files, types.StringType):
-        files = [files]
-    elif not isinstance(files, type([])):
-        raise TypeError("The cvs_commit procedure accepts argument of type string of"
-                        "array of string: type (%s) is not valid.\n" % type(files))
-    
-    commitCmd = ("cvs commit -m '" + msg + "' ")
-    for f in files:
-        commitCmd += f + " " 
-        
-    vprint("\n+++ Commiting (from "+ os.getcwd() +"):\n" + commitCmd, 1)
-    commitProcess = Popen3(commitCmd, True)
-    vprint(commitProcess.childerr.read(1024), 1)
-
-def cvs_query(option, fname, lookingFor, delim = "\n"):
-    #print fname
-    cvsProcess = Popen3("cvs " + option + " " + fname, True)
-    lines = cvsProcess.fromchild.readlines()
-    #print lines
-    for line in lines :
-        #print line
-        index = string.find(line, lookingFor)
-        #print("string.find(" + line + ", " + lookingFor + ") : ")
-        #print index
-        if index != -1:
-            result = line[index+len(lookingFor):]
-            result = result[:string.find(result, delim)]
-            return string.rstrip(result)
-    return ''
-
-def cvs_remove(file):
-    status = cvs_query("status", file, "Status: ")
-    if status == '' or string.find(status, "Unknown") != -1:
-        return False
-
-    rmCmd = "cvs remove " + file
-    vprint("Removing: " + rmCmd, 2)
-    process = Popen3(rmCmd, True)
-    errors = process.childerr.readlines()
-    map(lambda err: vprint(err, 1), errors)
-    return True
 
 def date_time_string():
     t = time.localtime()
@@ -131,21 +87,24 @@ def isvmat( file_path ):
     """True if the extension of I{file_path} is one of I{.amat}, I{.pmat} or I{.vmat}."""
     (base,ext) = os.path.splitext(file_path)
     return ext in [ '.amat','.pmat','.vmat' ]
-    
-    
-def last_user_to_commit(file_path):
-    """Returns username of the last person to commit the file corresponding to I{file_path}."""
-    file_path = os.path.abspath(file_path)
-    (dir, fname) = os.path.split(file_path)
-    os.chdir(dir)
 
-    author = "NEVER BEEN COMMITED"
-    a = cvs_query("log", fname, "author: ", ";")
-    if a != '':
-        author = a
-    
-    return author
+def is_recursively_empty(directory):
+    """Checks if the I{directory} is a the root of an empty hierarchy.
 
+    @param directory: A valid directory path
+    @type  directory: StringType
+
+    @return: True if the I{directory} is a the root of an empty
+    hierarchy. The function returns False if there exists any file or
+    link that are within a subdirectory of I{directory}.
+    """
+    for path in os.listdir(directory):
+        relative_path = os.path.join(directory, path)
+        if ( not os.path.isdir(relative_path) or 
+             not is_recursively_empty(relative_path) ):
+            return False
+    return True
+        
 def quote(s):
     if string.find(s, '\n') != -1:
         return '"""%s"""' % s
@@ -153,3 +112,6 @@ def quote(s):
 
 def short_doc(obj):
     return doc(obj, True)
+
+
+    
