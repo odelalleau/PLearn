@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.31 2003/10/29 16:55:49 plearner Exp $
+* $Id: VMatrix.cc,v 1.32 2003/10/31 20:50:42 plearner Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -101,7 +101,12 @@ void VMatrix::declareOptions(OptionList & ol)
   declareOption(ol, "weightsize", &VMatrix::weightsize_, OptionBase::buildoption, 
                 "size of weights (-1 if unspecified, 0 if no weight, 1 for sample weight, >1 currently not supported (include it is recommended to include additional info in target. weight is really reserved for a per sample weight).");
   declareOption(ol, "metadatadir", &VMatrix::metadatadir, OptionBase::buildoption, 
-                "length of the matrix (number of rows)");
+                "A directory in which to store meta-information for this matrix \n"
+                "You don't always have to give this explicitly. For ex. if your \n"
+                "vmat is the outer VMatrix in a .vmat file, the metadatadir will \n"
+                "automatically be set to name_ov_vmat_file.metadata/ \n"
+                "And if it is the source inside another VMatrix that sets its \n"
+                "metadatadir, it will often be set from that surrounding vmat's metadata \n");
   inherited::declareOptions(ol);
 }
 

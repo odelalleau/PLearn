@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.14 2003/10/29 16:55:49 plearner Exp $
+   * $Id: fileutils.cc,v 1.15 2003/10/31 20:50:35 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -465,6 +465,13 @@ string makeExplicitPath(const string& filename)
 
 string readFileAndMacroProcess(const string& filepath, map<string, string>& variables)
 {
+  // store previous filepath definitions
+  string old_filepath = variables["FILEPATH"];
+  string old_dirpath = variables["DIRPATH"];
+  string old_filename = variables["FILENAME"];
+  string old_filebase = variables["FILEBASE"];
+  string old_fileext = variables["FILEEXT"];
+
   string fpath = abspath(filepath);
   variables["FILEPATH"] = fpath;
   variables["DIRPATH"] = remove_trailing_slash(extract_directory(fpath));
@@ -475,7 +482,16 @@ string readFileAndMacroProcess(const string& filepath, map<string, string>& vari
   ifstream in(fpath.c_str());
   if(!in)
     PLERROR("In readFileAndMacroProcess, could not open file %s for reading", fpath.c_str());
-  return readAndMacroProcess(in, variables);
+  string text = readAndMacroProcess(in, variables);
+
+  // restore previous filepath definitions
+  variables["FILEPATH"] = old_filepath;
+  variables["DIRPATH"] = old_dirpath;
+  variables["FILENAME"] = old_filename;
+  variables["FILEBASE"] = old_filebase;
+  variables["FILEEXT"] = old_fileext;
+
+  return text;
 }
 
 string readAndMacroProcess(istream& in, map<string, string>& variables)
@@ -516,20 +532,20 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
 
             case 'I': // it's an INCLUDE{filepath}
               {
-                string includefile; // path of the file in a $INCLUDE{...} directive
+                string includefilepath; // path of the file in a $INCLUDE{...} directive
                 readWhileMatches(in, "INCLUDE");
                 int c = in.get();
                 if(c=='<')
-                  smartReadUntilNext(in, ">", includefile);
+                  smartReadUntilNext(in, ">", includefilepath);
                 else if(c=='{')
-                  smartReadUntilNext(in, "}", includefile);
+                  smartReadUntilNext(in, "}", includefilepath);
                 else
                   PLERROR("$INCLUDE must be followed immediately by a { or <");
-                istringstream includefilestream(includefile);
-                includefile = readAndMacroProcess(includefilestream,variables);
-                includefile = removeblanks(includefile);
-                string dirname = extract_directory(includefile);
-                string filename = extract_filename(includefile);
+                istringstream pathin(includefilepath);
+                includefilepath = readAndMacroProcess(pathin,variables);
+                includefilepath = removeblanks(includefilepath);
+                string dirname = extract_directory(includefilepath);
+                string filename = extract_filename(includefilepath);
                 string olddir = getcwd();
                 chdir(dirname);
                 text += readFileAndMacroProcess(filename, variables);

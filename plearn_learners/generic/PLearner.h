@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.15 2003/10/29 16:55:49 plearner Exp $
+   * $Id: PLearner.h,v 1.16 2003/10/31 20:50:42 plearner Exp $
    ******************************************************* */
 
 
@@ -110,6 +110,8 @@ using namespace std;
     learner upon building.
     */
     VMat train_set;  
+    
+    VMat validation_set;
 
     //! The stats_collector responsible for collecting train cost statistics during training.
     //! This is typically set by some external training harness that wants to collect some stats.
@@ -127,6 +129,12 @@ using namespace std;
 
     //! Returns the current train_set
     inline VMat getTrainingSet() const { return train_set; }
+
+    //! Set the validation set (optionally) for learners that are able to use it directly 
+    virtual void setValidationSet(VMat validset);
+
+    //! Returns the current validation set
+    VMat getValidationSet() const { return validation_set; }
 
     //! Sets the statistics collector whose update() method will be called 
     //! during training.

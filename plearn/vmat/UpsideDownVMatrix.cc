@@ -1,10 +1,9 @@
 // -*- C++ -*-
 
-// PLearn (A C++ Machine Learning Library)
-// Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999-2001 Pascal Vincent, Yoshua Bengio, Rejean Ducharme and University of Montreal
-// Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux
+// UpsideDownVMatrix.cc
 //
+// Copyright (C) 2003 Pascal Vincent 
+// 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -33,36 +32,59 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-
 /* *******************************************************      
-   * $Id: UpsideDownVMatrix.cc,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: UpsideDownVMatrix.cc,v 1.2 2003/10/31 20:50:42 plearner Exp $ 
    ******************************************************* */
+
+// Authors: Pascal Vincent
+
+/*! \file UpsideDownVMatrix.cc */
+
 
 #include "UpsideDownVMatrix.h"
 
 namespace PLearn <%
 using namespace std;
 
-/** UpsideDownVMatrix **/
 
-UpsideDownVMatrix::UpsideDownVMatrix(VMat the_distr):
-  VMatrix(the_distr->length(), the_distr->width()),
-  distr(the_distr)
-{
-  fieldinfos = distr->getFieldInfos();
+UpsideDownVMatrix::UpsideDownVMatrix()
+{}
+
+UpsideDownVMatrix::UpsideDownVMatrix(VMat the_source)
+  :SourceVMatrix(the_source)
+{ 
+  build_(); 
 }
-  
-real UpsideDownVMatrix::get(int i, int j) const
-{ return distr->get(length()-i-1,j); }
-
-void UpsideDownVMatrix::getSubRow(int i, int j, Vec v) const
-{ distr->getSubRow(length()-i-1,j,v); }
-
-void UpsideDownVMatrix::put(int i, int j, real value)
-{ distr->put(length()-i-1,j,value); }
-
-void UpsideDownVMatrix::putSubRow(int i, int j, Vec v)
-{ distr->putSubRow(length()-i-1,j,v); }
 
 
-%> // end of namespcae PLearn
+PLEARN_IMPLEMENT_OBJECT(UpsideDownVMatrix, "ONE LINE DESCRIPTION", "MULTI-LINE \nHELP");
+
+void UpsideDownVMatrix::getRow(int i, Vec v) const
+{
+  source->getRow(length_-(i+1),v);
+}
+
+void UpsideDownVMatrix::declareOptions(OptionList& ol)
+{
+  inherited::declareOptions(ol);
+}
+
+void UpsideDownVMatrix::build_()
+{
+  setMetaInfoFromSource();
+}
+
+// ### Nothing to add here, simply calls build_
+void UpsideDownVMatrix::build()
+{
+  inherited::build();
+  build_();
+}
+
+void UpsideDownVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+{
+  inherited::makeDeepCopyFromShallowCopy(copies);
+}
+
+%> // end of namespace PLearn
+

@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.22 2003/10/29 16:55:49 plearner Exp $
+   * $Id: PLearner.cc,v 1.23 2003/10/31 20:50:42 plearner Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -144,6 +144,10 @@ void PLearner::setTrainingSet(VMat training_set, bool call_forget)
   if (call_forget)
     forget();
 }
+
+void PLearner::setValidationSet(VMat validset)
+{ validation_set = validset; }
+
 
 void PLearner::setTrainStatsCollector(PP<VecStatsCollector> statscol)
 { train_stats = statscol; }

@@ -1,10 +1,9 @@
 // -*- C++ -*-
 
-// PLearn (A C++ Machine Learning Library)
-// Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999-2001 Pascal Vincent, Yoshua Bengio, Rejean Ducharme and University of Montreal
-// Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux
+// UpsideDownVMatrix.h
 //
+// Copyright (C) 2003 Pascal Vincent 
+// 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -33,38 +32,71 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-
 /* *******************************************************      
-   * $Id: UpsideDownVMatrix.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: UpsideDownVMatrix.h,v 1.2 2003/10/31 20:50:42 plearner Exp $ 
    ******************************************************* */
 
+// Authors: Pascal Vincent
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file UpsideDownVMatrix.h */
+
 
 #ifndef UpsideDownVMatrix_INC
 #define UpsideDownVMatrix_INC
 
-#include "VMat.h"
+#include "SourceVMatrix.h"
 
 namespace PLearn <%
 using namespace std;
- 
 
-//!  Silly (but sometimes useful) VMat class that sees the last row as the
-//!  first, the second last as the second, etc...
-class UpsideDownVMatrix: public VMatrix
+class UpsideDownVMatrix: public SourceVMatrix
 {
- protected:
-  VMat distr;
+public:
 
- public:
-  //! The original VMFields are copied upon construction
-  UpsideDownVMatrix(VMat the_distr);
-  virtual real get(int i, int j) const;
-  virtual void getSubRow(int i, int j, Vec v) const;
-  virtual void put(int i, int j, real value);
-  virtual void putSubRow(int i, int j, Vec v);
+  typedef SourceVMatrix inherited;
+
+  // ************************
+  // * public build options *
+  // ************************
+
+  // ****************
+  // * Constructors *
+  // ****************
+
+  // Default constructor, make sure the implementation in the .cc
+  // initializes all fields to reasonable default values.
+  UpsideDownVMatrix();
+
+  UpsideDownVMatrix(VMat the_source);
+
+  // ******************
+  // * Object methods *
+  // ******************
+
+private: 
+  //! This does the actual building. 
+  // (Please implement in .cc)
+  void build_();
+
+protected: 
+  //! Declares this class' options
+  // (Please implement in .cc)
+  static void declareOptions(OptionList& ol);
+
+public:
+  //!  This is the only method requiring implementation
+  virtual void getRow(int i, Vec v) const;
+
+  // simply calls inherited::build() then build_() 
+  virtual void build();
+
+  //! Transforms a shallow copy into a deep copy
+  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+
+  //! Declares name and deepCopy methods
+  PLEARN_DECLARE_OBJECT(UpsideDownVMatrix);
+
 };
 
-%> // end of namespcae PLearn
+%> // end of namespace PLearn
 #endif

@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.7 2003/10/30 22:16:52 plearner Exp $
+   * $Id: vmatmain.cc,v 1.8 2003/10/31 20:50:42 plearner Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -265,7 +265,18 @@ void printConditionalStats(VMat vm, int condfield)
 
 }
 
-
+/*
+int findNextIndexOfValue(VMat m, int col, real value, int startrow=0)
+{
+  if(m->hasMetaDataDir())
+    {
+      string fpath = apppend_slash(m->getMetaDataDir())+"CachedColumns/"+tostring(col);
+      if(!file_exists(filepath))
+        
+      
+    }
+}
+*/
 
 void viewVMat(const VMat& vm)
 {

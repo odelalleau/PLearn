@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrecomputedVMatrix.cc,v 1.3 2003/10/29 16:55:49 plearner Exp $ 
+   * $Id: PrecomputedVMatrix.cc,v 1.4 2003/10/31 20:50:42 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -84,7 +84,8 @@ void PrecomputedVMatrix::declareOptions(OptionList& ol)
 void PrecomputedVMatrix::setMetaDataDir(const string& the_metadatadir)
 {
   inherited::setMetaDataDir(the_metadatadir);
-  build();
+  if(hasMetaDataDir()) // don't do anything if the meta-data-dir is not yet set.
+    usePrecomputed();
 }
 
 void PrecomputedVMatrix::usePrecomputed()
@@ -132,9 +133,6 @@ void PrecomputedVMatrix::usePrecomputed()
 void PrecomputedVMatrix::build_()
 {
   setMetaInfoFromSource();
-  string mdir = getMetaDataDir();
-  if(hasMetaDataDir()) // don't do anything if the meta-data-dir is not yet set.
-    usePrecomputed();
 }
 
 // ### Nothing to add here, simply calls build_

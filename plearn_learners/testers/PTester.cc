@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.12 2003/10/29 16:55:49 plearner Exp $ 
+   * $Id: PTester.cc,v 1.13 2003/10/31 20:50:42 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -289,6 +289,8 @@ Vec PTester::perform(bool call_forget)
         learner->setExperimentDirectory(splitdir+"LearnerExpdir/");
 
       learner->setTrainingSet(trainset, call_forget && train);
+      if(dsets.size()>1)
+        learner->setValidationSet(dsets[1]);
 
       int outputsize = learner->outputsize();
 
