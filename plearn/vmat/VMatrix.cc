@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.66 2004/08/05 19:23:14 tihocan Exp $
+* $Id: VMatrix.cc,v 1.67 2004/08/06 13:21:44 tihocan Exp $
 ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -538,7 +538,8 @@ void VMatrix::saveAllStringMappings()
 
 void VMatrix::saveStringMappings(int col,string fname)
 {
-  if(map_sr[col].size()==0)
+  map<string, real> the_map = getStringToRealMapping(col);
+  if(the_map.size()==0)
   {
     rm(fname);
     return;
@@ -548,7 +549,7 @@ void VMatrix::saveStringMappings(int col,string fname)
   // ofstream o(fname.c_str());
   if(!o)
     PLERROR( "File %s can't be opened",fname.c_str());
-  for(map<string,real>::iterator it = map_sr[col].begin();it!=map_sr[col].end();++it)
+  for(map<string,real>::iterator it = the_map.begin();it!=the_map.end();++it)
     o << it->first << it->second << endl;
 }
 
