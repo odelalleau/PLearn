@@ -135,14 +135,18 @@ void SmoothedProbSparseMatrix::normalizeCondBackoff(ProbSparseMatrix& nXY, real 
       for (map<int, real>::iterator it = row_i.begin(); it != row_i.end(); ++it){
         j = it->first;
         nij = it->second;
-	discountedMass[i]+=disc;
-	// Discount
-	pij =  (nij -disc)/ sum_row_i;
-	if (pij<0) PLERROR("modified count < 0 in Backoff  Smoothing SmoothedProbSparseMatrix");
+	if(nij>disc){
+	  discountedMass[i]+=disc;
+	  // Discount
+	  pij =  (nij -disc)/ sum_row_i;
+	  if (pij<0) PLERROR("modified count < 0 in Backoff  Smoothing SmoothedProbSparseMatrix %s",nXY.getName().c_str());
+	  // update backoff normalization factor
+	  backoffNormalization[i]-= backoffDist[j];
+	}else{
+	   pij =  nij/ sum_row_i;
+	}
 	// Set modified count
 	set(i, j,pij);
-	// update backoff normalization factor
-	backoffNormalization[i]+= bDist[j];
 	
       }
     }
@@ -163,13 +167,17 @@ void SmoothedProbSparseMatrix::normalizeCondBackoff(ProbSparseMatrix& nXY, real 
       for (map<int, real>::iterator it = col_j.begin(); it != col_j.end(); ++it){
 	i = it->first;
 	nij = it->second;
-	discountedMass[j]+=disc;
-	// Discount
-	pij = (nij -disc)/ sum_col_j;
-	if (pij<0) PLERROR("modified count < 0 in Backoff  Smoothing SmoothedProbSparseMatrix");
+	if(nij>disc){
+	  discountedMass[j]+=disc;
+	  // Discount
+	  pij = (nij -disc)/ sum_col_j;
+	  if (pij<0) PLERROR("modified count < 0 in Backoff  Smoothing SmoothedProbSparseMatrix %s : i=%d j=%d p=%f",nXY.getName().c_str(),i,j,pij);
+	  // update backoff normalization factor
+	  backoffNormalization[j]-=backoffDist[i];
+	}else{
+	  pij = nij / sum_col_j;
+	}
 	set(i, j, pij);
-	// update backoff normalization factor
-	backoffNormalization[j]-=backoffDist[i];
       }
     }
     

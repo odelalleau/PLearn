@@ -55,7 +55,7 @@ protected:
   // Backoff distribution
   Vec backoffDist;
   Vec backoffNormalization;
-  // Strore discounted mass in case of Backoff smoothing
+  // Store discounted mass in case of Backoff smoothing
   Vec discountedMass;
 public:
 
