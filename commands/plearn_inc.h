@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.32 2004/09/14 19:57:52 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.33 2004/09/15 13:47:43 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -68,6 +68,13 @@
 #include "PLearnCommands/TestDependenciesCommand.h"
 #include "PLearnCommands/TestDependencyCommand.h"
 #include "PLearnCommands/VMatCommand.h"
+
+/**************
+ * Dictionary *
+ **************/
+#include <plearn_learners/language/Dictionary/Dictionary.h>
+#include <plearn_learners/language/Dictionary/FileDictionary.h>
+#include <plearn_learners/language/Dictionary/VecDictionary.h>
 
 /**********
  * Kernel *
@@ -179,16 +186,6 @@
 #include <plearn/vmat/TransposeVMatrix.h>
 #include <plearn/vmat/SelectAttributsSequenceVMatrix.h>
 #include <plearn/vmat/DictionaryVMatrix.h>
-
-/**************
- * Dictionary *
- **************/
-
-#include <plearn_learners/language/Dictionary/Dictionary.h>
-#include <plearn_learners/language/Dictionary/FileDictionary.h>
-#include <plearn_learners/language/Dictionary/VecDictionary.h>
-
-
 
 #endif
 
