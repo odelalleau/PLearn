@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.cc,v 1.17 2004/09/14 16:04:56 chrish42 Exp $
+   * $Id: StackedLearner.cc,v 1.18 2004/09/22 16:32:40 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -152,7 +152,7 @@ StackedLearner::StackedLearner()
       splitter->build();
     if (splitter && splitter->nSetsPerSplit()!=2)
       PLERROR("StackedLearner: the Splitter should produce only two sets per split, got %d",splitter->nSetsPerSplit());
-    base_learners_outputs.resize(base_learners.length(),base_learners[0]->outputsize());
+    resizeBaseLearnersOutputs();
   }
 
   // ### Nothing to add here, simply calls build_
@@ -234,6 +234,8 @@ void StackedLearner::setTrainingSet(VMat training_set, bool call_forget)
     }
   }
   inherited::setTrainingSet(training_set, call_forget);
+  // Changing the training set may change the outputsize of the base learners.
+  resizeBaseLearnersOutputs();
 }
 
 void StackedLearner::train()
@@ -320,5 +322,11 @@ TVec<string> StackedLearner::getTrainCostNames() const
 }
 
 
+///////////////////////////////
+// resizeBaseLearnersOutputs //
+///////////////////////////////
+void StackedLearner::resizeBaseLearnersOutputs() {
+  base_learners_outputs.resize(base_learners.length(),base_learners[0]->outputsize());
+}
 
 } // end of namespace PLearn
