@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SpiralDistribution.h,v 1.1 2003/06/04 02:56:37 plearner Exp $ 
+   * $Id: SpiralDistribution.h,v 1.2 2003/06/05 04:21:14 plearner Exp $ 
    ******************************************************* */
 
 /*! \file SpiralDistribution.h */
@@ -141,8 +141,8 @@ public:
   //! inputsize is 2 (or 3 if include_t is set to true)
   virtual int inputsize() const;
 
-  //! Resets the random number generator.
-  virtual void forget();
+  //! Resets the random number generator used by generate using the given seed
+  virtual void resetGenerator(long g_seed) const;
 
 };
 

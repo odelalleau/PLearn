@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SpiralDistribution.cc,v 1.1 2003/06/04 02:56:37 plearner Exp $ 
+   * $Id: SpiralDistribution.cc,v 1.2 2003/06/05 04:21:14 plearner Exp $ 
    ******************************************************* */
 
 /*! \file SpiralDistribution.cc */
@@ -155,10 +155,9 @@ void SpiralDistribution::generate(Vec& v) const
 int SpiralDistribution::inputsize() const 
 { return include_t ?3 :2; }
 
-//! Remove this method, if your distribution does not implement it
-void SpiralDistribution::forget()
+void SpiralDistribution::resetGenerator(long g_seed) const
 {
-  manual_seed(seed);  
+  manual_seed(g_seed);  
 }
 
 

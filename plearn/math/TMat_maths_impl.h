@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.10 2003/03/19 23:03:19 jkeable Exp $
+   * $Id: TMat_maths_impl.h,v 1.11 2003/06/05 04:22:43 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -1000,9 +1000,13 @@ inline TVec<T> operator/(const TVec<T>& v1, int scalar)
 template<class T>
 T logadd(const TVec<T>& vec) 
 {
+  int l = vec.length();
+  if(l==0)
+    return LOG_INIT;
+
   T *p_x = vec.data();
-  T sum = LOG_INIT;
-  for (int i=0; i<vec.length(); i++, p_x++)
+  T sum = *p_x++;
+  for (int i=1; i<l; i++, p_x++)
     sum = logadd(sum, *p_x);
   return sum;
 }
