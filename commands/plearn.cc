@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.46 2004/02/25 03:16:53 yoshua Exp $
+   * $Id: plearn.cc,v 1.47 2004/02/25 04:00:54 yoshua Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -94,11 +94,11 @@
 #include "SpiralDistribution.h"
 
 // SequentialLearner
-#include "SequentialLearner.h"
-#include "MovingAverage.h"
-#include "EmbeddedSequentialLearner.h"
-#include "SequentialModelSelector.h"
-#include "SequentialValidation.h"
+//#include "SequentialLearner.h"
+//#include "MovingAverage.h"
+//#include "EmbeddedSequentialLearner.h"
+//#include "SequentialModelSelector.h"
+//#include "SequentialValidation.h"
 
 // Commands
 #include "RunCommand.h"

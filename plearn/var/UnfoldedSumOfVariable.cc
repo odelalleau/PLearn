@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedSumOfVariable.cc,v 1.4 2004/02/20 21:11:54 chrish42 Exp $
+   * $Id: UnfoldedSumOfVariable.cc,v 1.5 2004/02/25 04:00:59 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -84,6 +84,9 @@ void UnfoldedSumOfVariable::build_()
   for (int i=0;i<max_bag_size;i++)
   {
     inputs[i].resize(f->inputs.size());
+    for (int j = 0; j < f->inputs.size(); j++) {
+      inputs[i][j] = Var(f->inputs[j]->length(), f->inputs[j]->width());
+    }
     outputs[i] = f(inputs[i])[0];
     f_paths[i] = propagationPath(inputs[i],outputs[i]);
   }
@@ -127,7 +130,7 @@ void UnfoldedSumOfVariable::fprop()
 {
   value.clear();
   int bagsize = (int)bag_size->valuedata[0];
-  if (bagsize>=max_bag_size)
+  if (bagsize>max_bag_size)
     PLERROR("UnfoldedSumOfVariable: bag size=%d > expected max. bag size(%d)",
             bagsize,max_bag_size);
   for (int i=0;i<bagsize;i++)

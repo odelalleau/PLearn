@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.cc,v 1.10 2004/02/23 01:28:27 yoshua Exp $
+   * $Id: MultiInstanceNNet.cc,v 1.11 2004/02/25 04:00:59 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/MultiInstanceNNet.h */
@@ -105,7 +105,6 @@ MultiInstanceNNet::MultiInstanceNNet() // DEFAULT VALUES FOR ALL OPTIONS
   max_n_instances(1),
    nhidden(0),
    nhidden2(0),
-   noutputs(0),
    weight_decay(0),
    bias_decay(0),
    layer1_weight_decay(0),
@@ -136,13 +135,6 @@ void MultiInstanceNNet::declareOptions(OptionList& ol)
 
   declareOption(ol, "nhidden2", &MultiInstanceNNet::nhidden2, OptionBase::buildoption, 
                 "    number of hidden units in second hidden layer (0 means no hidden layer)\n");
-
-  declareOption(ol, "noutputs", &MultiInstanceNNet::noutputs, OptionBase::buildoption, 
-                "    number of output units. This gives this learner its outputsize.\n"
-                "    It is typically of the same dimensionality as the target for regression problems \n"
-                "    But for classification problems where target is just the class number, noutputs is \n"
-                "    usually of dimensionality number of classes (as we want to output a score or probability \n"
-                "    vector, one per class");
 
   declareOption(ol, "weight_decay", &MultiInstanceNNet::weight_decay, OptionBase::buildoption, 
                 "    global weight decay for all layers\n");
@@ -358,8 +350,12 @@ void MultiInstanceNNet::build_()
       training_cost->setName("training_cost");
       test_costs->setName("test_costs");
 
-      invars = bag_inputs & bag_size & target & sampleweight;
-      inputs_and_targets_to_costs = Func(invars,costs);
+      if (weightsize_>0)
+        invars = bag_inputs & bag_size & target & sampleweight;
+      else
+        invars = bag_inputs & bag_size & target;
+
+      inputs_and_targets_to_costs = Func(invars,hconcat(costs));
 
       inputs_and_targets_to_costs->recomputeParents();
 
@@ -367,7 +363,7 @@ void MultiInstanceNNet::build_()
 }
 
 int MultiInstanceNNet::outputsize() const
-{ return noutputs; }
+{ return 1; }
 
 TVec<string> MultiInstanceNNet::getTrainCostNames() const
 {

@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.cc,v 1.12 2004/02/20 21:11:54 chrish42 Exp $
+   * $Id: VarArray.cc,v 1.13 2004/02/25 04:00:59 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -287,6 +287,8 @@ void VarArray::copyGradientFrom(const Vec& datavec)
 void VarArray::copyGradientFrom(const Array<Vec>& datavec)
 {
   iterator array = this->data();
+  if (size()!=datavec.size())
+    PLERROR("VarArray::copyGradientFrom has argument of size %d, expected %d",datavec.size(),size());
   for(int i=0; i<size(); i++)
     {
       Var& v = array[i];

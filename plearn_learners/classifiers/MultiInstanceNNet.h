@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.h,v 1.7 2004/02/23 01:28:27 yoshua Exp $
+   * $Id: MultiInstanceNNet.h,v 1.8 2004/02/25 04:00:59 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearn/plearn_learners/classifiers/MultiInstanceNNet.h */
@@ -96,7 +96,6 @@ using namespace std;
 
     int nhidden;    // number of hidden units in first hidden layer (default:0)
     int nhidden2;   // number of hidden units in second hidden layer (default:0)
-    int noutputs;   // number of output units (outputsize)
 
     real weight_decay; // default: 0
     real bias_decay;   // default: 0 

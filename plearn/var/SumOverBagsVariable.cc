@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOverBagsVariable.cc,v 1.7 2004/02/24 21:11:30 tihocan Exp $
+   * $Id: SumOverBagsVariable.cc,v 1.8 2004/02/25 04:00:59 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -107,6 +107,8 @@ void SumOverBagsVariable::build_()
 {
   if (vmat)
   {
+    if (f->outputs.size()!=1)
+      PLERROR("SumOverBagsVariable: expected a func with a single output variable (you may use concat to form a single output Var)");
     if (vmat->weightsize()!=0 && vmat->weightsize()!=1)
       PLERROR("SumOverBagsVariable expected vmat->weightsize to be 0 or 1");
     
