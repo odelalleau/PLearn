@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.h,v 1.5 2004/03/01 18:32:11 tihocan Exp $
+   * $Id: FileVMatrix.h,v 1.6 2004/03/15 17:55:59 tihocan Exp $
    ******************************************************* */
 
 
@@ -67,6 +67,9 @@ class FileVMatrix: public VMatrix
 
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;
+
+  //! Re-write the header with all current field values.
+  virtual void updateHeader();
 
   virtual void put(int i, int j, real value);
   virtual void putSubRow(int i, int j, Vec v);
