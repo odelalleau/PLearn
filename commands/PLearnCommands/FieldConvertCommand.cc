@@ -347,7 +347,9 @@ void FieldConvertCommand::run(const vector<string> & args)
       }
       if (n_discarded <= count - 1) {
         // We only consider this field if there is at least 1 class left.
-        out << "@"<<vm->fieldName(i) <<" " << sc[i].getAllValuesMapping(&to_be_included, 0, true) << " "
+        bool add_other = (n_discarded >= 1);
+        // If there is at least one value discarded, we add OTHER to the mapping.
+        out << "@"<<vm->fieldName(i) <<" " << sc[i].getAllValuesMapping(&to_be_included, 0, add_other) << " "
           << count - n_discarded << " onehot :"
           << vm->fieldName(i)<<":0:"<<(count - 1 - n_discarded) << endl;
       }
