@@ -58,9 +58,9 @@ using namespace std;
  *  It supports most operations available for standard c++ streams, plus:
  *   - a set of option flags that indicate which types of Object Options should be
  *     read/written (option_flags_{in|out}; has effect only for Object's);
- *   - a set of format flags that define format used for I/O. e.g.: "raw" for
- *     standard stream behaviour, "binary" for binary format, none for human-readable
- *     serialization format, etc. (pl_stream_flags_{in|out});
+ *   - a set of mode flags that define format used for I/O. e.g.:  "raw_ascii" for
+ *     standard c++ stream behaviour, "plearn_ascii"  for human-readable
+ *     serialization format, etc. (inmode and outmode);
  *   - a copies map to alow smart serialization of pointers;
  *   - a markable stream buffer which allows to 'seek back' to a previously set mark
  *     on any type of istream;
