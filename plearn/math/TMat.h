@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.24 2003/08/28 22:01:40 chapados Exp $
+   * $Id: TMat.h,v 1.25 2003/09/10 17:43:48 chapados Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -49,6 +49,9 @@
 #define TMAT_INC
 
 #include <iterator>
+#include <numeric>
+#include <functional>
+
 #include "general.h"
 #include "Storage.h"
 #include "Range.h"
@@ -1906,6 +1909,46 @@ TVec<T> concat(const TVec<T>& v1, const TVec<T>& v2);
 //! otherwise, it is a fresh copy with the element removed.
 template<class T>
 TVec<T> removeElement(const TVec<T>& v, int elemnum);
+
+
+//! A simple family of relational operators for TVec
+template <class T>
+bool operator<=(const TVec<T>& left, const TVec<T>& right)
+{
+  if (left.size() != right.size())
+    PLERROR("Left and right vectors must have the same size in operator<=");
+  return std::inner_product(left.begin(), left.end(), right.begin(),
+                            true, std::logical_and<bool>(),
+                            std::less_equal<T>());
+}
+
+template <class T>
+bool operator>=(const TVec<T>& left, const TVec<T>& right)
+{
+  if (left.size() != right.size())
+    PLERROR("Left and right vectors must have the same size in operator>=");
+  return std::inner_product(left.begin(), left.end(), right.begin(),
+                            true, std::logical_and<bool>(),
+                            std::greater_equal<T>());
+}
+
+template <class T>
+bool operator<(const TVec<T>& left, const TVec<T>& right)
+{
+  // Cannot use the inner product with strict less<T>, because it's more
+  // convenient to define this operator to allow <= for SOME elements, but
+  // < for AT LEAST ONE element.
+  return left <= right && left != right;
+}
+
+template <class T>
+bool operator>(const TVec<T>& left, const TVec<T>& right)
+{
+  // Cannot use the inner product with strict greater<T>, because it's more
+  // convenient to define this operator to allow >= for SOME elements, but
+  // > for AT LEAST ONE element.
+  return left >= right && left != right;
+}
 
 
 // *****************************
