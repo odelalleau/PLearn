@@ -1,8 +1,8 @@
 // -*- C++ -*-
 
-// PrPStreamBuf.h
+// Poll.h
 //
-// Copyright (C) 2004 Christian Hudon 
+// Copyright (C) 2005 Christian Hudon 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,57 +33,50 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrPStreamBuf.h,v 1.6 2005/01/28 22:36:30 chrish42 Exp $ 
+   * $Id: Poll.h,v 1.1 2005/01/28 22:36:30 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Christian Hudon
 
-/*! \file PrPStreamBuf.h */
+/*! \file Poll.h */
 
 
-#ifndef PrPStreamBuf_INC
-#define PrPStreamBuf_INC
+#ifndef Poll_INC
+#define Poll_INC
 
-#include "PStreamBuf.h"
-
-struct PRFileDesc;
+#include <vector>
+#include <mozilla/nspr/prio.h>
+#include <plearn/io/PStream.h>
 
 
 namespace PLearn {
+  using namespace std;
 
-/** An implementation of the PStreamBuf interface using Mozilla's
-    NSPR library. */
-class PrPStreamBuf: public PStreamBuf
-{
-  friend class PLearn::Poll;
-  
-private:
-  
-  typedef PStreamBuf inherited;
 
-protected:
-  // *********************
-  // * protected options *
-  // *********************
+  /** A class for polled IO with PStreams. Currently supports only
+   *  PrPStreamBufs.
+   */
+  class Poll {
+    
+  public:
+    void setStreamsToWatch(const vector<PStream>& streams);
 
-  PRFileDesc* in;   //<! input NSPR file descriptor (0 if no input)
-  PRFileDesc* out;  //<! output NSPR file descriptor (0 if no output)
-  bool own_in, own_out; //<! true if {in|out} should be closed by this object upon destruction.
+    int waitForEvents(int timeout = 0);
 
-public:
+    PStream getNextPendingEvent();
 
-  PrPStreamBuf(PRFileDesc* in=0, PRFileDesc* out=0,
-               bool own_in_=false, bool own_out_=false);
-  virtual ~PrPStreamBuf();
+  protected:
+    /// The PStream's to watch for IO.
+    vector<PStream> m_streams_to_watch;
 
-protected:
+    /** The underlying structure used by NSPR's PR_Poll to notify us
+        of pending IO. */
+    vector<PRPollDesc> m_poll_descriptors;
 
-  virtual streamsize read_(char* p, streamsize n);
-
-  //! writes exactly n characters from p (unbuffered, must flush)
-  virtual void write_(const char* p, streamsize n);
-
-};
+    /** Counter used to iterate through the m_poll_descriptors
+        in getNextPendingEvent */
+    unsigned int m_next_unexamined_event;
+  };
 
 } // end of namespace PLearn
 

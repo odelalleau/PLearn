@@ -1,8 +1,8 @@
 // -*- C++ -*-
 
-// PrPStreamBuf.h
+// Poll.cc
 //
-// Copyright (C) 2004 Christian Hudon 
+// Copyright (C) 2005 Christian Hudon 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,58 +33,61 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrPStreamBuf.h,v 1.6 2005/01/28 22:36:30 chrish42 Exp $ 
+   * $Id: Poll.cc,v 1.1 2005/01/28 22:36:29 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Christian Hudon
 
-/*! \file PrPStreamBuf.h */
+/*! \file Poll.cc */
 
 
-#ifndef PrPStreamBuf_INC
-#define PrPStreamBuf_INC
-
-#include "PStreamBuf.h"
-
-struct PRFileDesc;
-
+#include "Poll.h"
+#include <plearn/base/plerror.h>
+#include <plearn/io/PrPStreamBuf.h>
 
 namespace PLearn {
+using namespace std;
 
-/** An implementation of the PStreamBuf interface using Mozilla's
-    NSPR library. */
-class PrPStreamBuf: public PStreamBuf
-{
-  friend class PLearn::Poll;
-  
-private:
-  
-  typedef PStreamBuf inherited;
+  void Poll::setStreamsToWatch(const vector<PStream>& streams) {
+    m_streams_to_watch.clear();
+    m_poll_descriptors.resize(streams.size());
 
-protected:
-  // *********************
-  // * protected options *
-  // *********************
+    int i = 0;
+    for (vector<PStream>::const_iterator it = streams.begin();
+         it != streams.end(); ++it, ++i) {
+      PStreamBuf* st = *it;
+      PrPStreamBuf* pr_st = dynamic_cast<PrPStreamBuf*>(st);
+      if (!pr_st)
+        PLERROR("Poll::setStreamsToWatch: only PrPStreamBuf streams supported!");
 
-  PRFileDesc* in;   //<! input NSPR file descriptor (0 if no input)
-  PRFileDesc* out;  //<! output NSPR file descriptor (0 if no output)
-  bool own_in, own_out; //<! true if {in|out} should be closed by this object upon destruction.
+      m_streams_to_watch.push_back(*it);
+      m_poll_descriptors[i].fd = pr_st->out;
+      m_poll_descriptors[i].in_flags = PR_POLL_READ;
+    }
+  }
 
-public:
+  int Poll::waitForEvents(int timeout) {
+    if (m_poll_descriptors.size() == 0)
+      PLERROR("Poll::waitforEvents: called with no streams to watch.");
+    
+    m_next_unexamined_event = 0;
+    return PR_Poll(&m_poll_descriptors[0], m_poll_descriptors.size(),
+                   timeout);
+  }
 
-  PrPStreamBuf(PRFileDesc* in=0, PRFileDesc* out=0,
-               bool own_in_=false, bool own_out_=false);
-  virtual ~PrPStreamBuf();
+  PStream Poll::getNextPendingEvent() {
+    while (m_next_unexamined_event < m_poll_descriptors.size()) {
+      const int i = m_next_unexamined_event++;
+      if (m_poll_descriptors[i].out_flags & PR_POLL_READ) {
+        return m_streams_to_watch[i];
+      }
+    }
 
-protected:
+    PLERROR("Poll::getNextPendingEvent: called with no more pending events!");
+    // We never reach this because of the PLERROR. Used to silence
+    // a gcc warning.
+    return PStream();
+  }
 
-  virtual streamsize read_(char* p, streamsize n);
-
-  //! writes exactly n characters from p (unbuffered, must flush)
-  virtual void write_(const char* p, streamsize n);
-
-};
 
 } // end of namespace PLearn
-
-#endif
