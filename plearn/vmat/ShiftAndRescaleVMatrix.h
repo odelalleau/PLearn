@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ShiftAndRescaleVMatrix.h,v 1.8 2004/07/09 18:20:23 tihocan Exp $
+   * $Id: ShiftAndRescaleVMatrix.h,v 1.9 2004/07/16 13:12:38 tihocan Exp $
    ******************************************************* */
 
 
@@ -66,6 +66,7 @@ public:
   bool automatic; // find shift and scale automatically?
   int n_train; // when automatic, use the n_train first examples to estimate shift and scale
   int n_inputs; // when automatic, 
+  bool no_scale;
   bool ignore_missing;
   int verbosity;
 

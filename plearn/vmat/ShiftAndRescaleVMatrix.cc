@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ShiftAndRescaleVMatrix.cc,v 1.10 2004/07/12 21:32:40 tihocan Exp $
+   * $Id: ShiftAndRescaleVMatrix.cc,v 1.11 2004/07/16 13:12:38 tihocan Exp $
    ******************************************************* */
 
 #include "ShiftAndRescaleVMatrix.h"
@@ -52,6 +52,7 @@ PLEARN_IMPLEMENT_OBJECT(ShiftAndRescaleVMatrix, "ONE LINE DESCR",
 ShiftAndRescaleVMatrix::
 ShiftAndRescaleVMatrix(VMat underlying_vm, Vec the_shift, Vec the_scale)
 : shift(the_shift), scale(the_scale), automatic(0), n_train(0), n_inputs(-1),
+  no_scale(false),
   ignore_missing(false),
   verbosity(1)
 {
@@ -62,6 +63,7 @@ ShiftAndRescaleVMatrix(VMat underlying_vm, Vec the_shift, Vec the_scale)
 
 ShiftAndRescaleVMatrix::ShiftAndRescaleVMatrix()
 : automatic(1),n_train(0), n_inputs(-1),
+  no_scale(false),
   ignore_missing(false),
   verbosity(1)
 {}
@@ -69,6 +71,7 @@ ShiftAndRescaleVMatrix::ShiftAndRescaleVMatrix()
 ShiftAndRescaleVMatrix::ShiftAndRescaleVMatrix(VMat underlying_vm, int n_inputs_)
 : shift(underlying_vm->width()),
   scale(underlying_vm->width()), automatic(1),n_train(0), n_inputs(n_inputs_),
+  no_scale(false),
   ignore_missing(false),
   verbosity(1)
 {
@@ -79,6 +82,7 @@ ShiftAndRescaleVMatrix::ShiftAndRescaleVMatrix(VMat underlying_vm, int n_inputs_
 ShiftAndRescaleVMatrix::
 ShiftAndRescaleVMatrix(VMat underlying_vm, int n_inputs_, int n_train_, bool the_ignore_missing, bool the_verbosity)
 : shift(underlying_vm->width()), scale(underlying_vm->width()), automatic(1), n_train(n_train_), n_inputs(n_inputs_),
+  no_scale(false),
   ignore_missing(the_ignore_missing),
   verbosity(the_verbosity)
 {
@@ -100,6 +104,8 @@ void ShiftAndRescaleVMatrix::declareOptions(OptionList& ol)
                 "when automatic, use only the n_train first examples to estimate shift and scale, if n_train>0.");
   declareOption(ol, "n_inputs", &ShiftAndRescaleVMatrix::n_inputs, OptionBase::buildoption,
                 "when automatic, shift and scale only the first n_inputs columns (If n_inputs<0, set n_inputs from underlying_vmat->inputsize()).");
+  declareOption(ol, "no_scale", &ShiftAndRescaleVMatrix::no_scale, OptionBase::buildoption,
+                "If set to 1, no scaling will be performed (only a shift will be applied).");
   declareOption(ol, "ignore_missing", &ShiftAndRescaleVMatrix::ignore_missing, OptionBase::buildoption,
                 "If set to 1, then missing values will be ignored when computed mean and standard deviation.");
   declareOption(ol, "verbosity", &ShiftAndRescaleVMatrix::verbosity, OptionBase::buildoption,
@@ -142,10 +148,12 @@ void ShiftAndRescaleVMatrix::build_()
           vm_to_normalize = vm.subMatColumns(0, n_inputs);
         TVec<StatsCollector> stats = PLearn::computeStats(vm_to_normalize, 1, false);
         shift.resize(n_inputs);
-        scale.resize(n_inputs);
+        if (!no_scale)
+          scale.resize(n_inputs);
         for (int i = 0; i < n_inputs; i++) {
           shift[i] = stats[i].mean();
-          scale[i] = stats[i].stddev();
+          if (!no_scale)
+            scale[i] = stats[i].stddev();
         }
       } else {
         if (n_train>0)
@@ -154,18 +162,20 @@ void ShiftAndRescaleVMatrix::build_()
           computeMeanAndStddev(vm, shift, scale);
       }
       negateElements(shift);
-      for (int i=0;i<scale.length();i++) 
-        if (scale[i]==0)
-        {
-          if (verbosity >= 1)
-            PLWARNING("ShiftAndRescale: data column number %d is constant",i);
-          scale[i]=1;
-        }
-      invertElements(scale);
+      if (!no_scale) {
+        for (int i=0;i<scale.length();i++) 
+          if (scale[i]==0)
+          {
+            if (verbosity >= 1)
+              PLWARNING("ShiftAndRescale: data column number %d is constant",i);
+            scale[i]=1;
+          }
+        invertElements(scale);
+        scale.resize(vm->width());
+        scale.subVec(n_inputs, scale.length()-n_inputs).fill(1);
+      }
       shift.resize(vm->width());
-      scale.resize(vm->width());
       shift.subVec(n_inputs, shift.length()-n_inputs).fill(0);
-      scale.subVec(n_inputs, scale.length()-n_inputs).fill(1);
     }
     reset_dimensions();
   }
@@ -174,14 +184,22 @@ void ShiftAndRescaleVMatrix::build_()
                                          
 real ShiftAndRescaleVMatrix::get(int i, int j) const
 {
-  return (vm->get(i,j) + shift[j]) * scale[j];
+  if (no_scale) {
+    return vm->get(i,j) + shift[j];
+  } else {
+    return (vm->get(i,j) + shift[j]) * scale[j];
+  }
 }
 
 void ShiftAndRescaleVMatrix::getSubRow(int i, int j, Vec v) const
 {
   vm->getSubRow(i,j,v);
-  for(int jj=0; jj<v.length(); jj++)
-    v[jj] = (v[jj] + shift[j+jj]) * scale[j+jj];
+  if (no_scale) {
+    v += shift;
+  } else {
+    for(int jj=0; jj<v.length(); jj++)
+      v[jj] = (v[jj] + shift[j+jj]) * scale[j+jj];
+  }
 }
 
 void ShiftAndRescaleVMatrix::build()
