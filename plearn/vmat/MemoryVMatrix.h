@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.h,v 1.8 2004/06/16 18:28:56 tihocan Exp $
+   * $Id: MemoryVMatrix.h,v 1.9 2004/06/29 19:59:01 tihocan Exp $
    ******************************************************* */
 
 
@@ -75,6 +75,7 @@ public:
   virtual void getSubRow(int i, int j, Vec v) const;
   virtual Vec& getSubRow(int i, int j, int j_length) const;
   virtual void getRow(int i, Vec v) const;
+  virtual Vec& getRow(int i) const;
   virtual void getColumn(int i, Vec v) const;
   virtual void getMat(int i, int j, Mat m) const;
   virtual void put(int i, int j, real value);
@@ -87,9 +88,6 @@ public:
   virtual VMat subMat(int i, int j, int l, int w);
   virtual real dot(int i1, int i2, int inputsize) const;
   virtual real dot(int i, const Vec& v) const;
-
-    //virtual void write(ostream& out) const;
-    //virtual void oldread(istream& in);
 
   //! simply calls inherited::build() then build_()
   virtual void build();

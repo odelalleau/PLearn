@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.cc,v 1.16 2004/06/25 13:02:03 tihocan Exp $
+   * $Id: MemoryVMatrix.cc,v 1.17 2004/06/29 19:59:01 tihocan Exp $
    ******************************************************* */
 
 #include "MemoryVMatrix.h"
@@ -143,9 +143,19 @@ void MemoryVMatrix::getSubRow(int i, int j, Vec v) const
   v.copyFrom(data[i]+j, v.length());
 }
 
+////////////
+// getRow //
+////////////
 void MemoryVMatrix::getRow(int i, Vec v) const
 {
   v.copyFrom(data[i], width_);
+}
+
+Vec& MemoryVMatrix::getRow(int i) const
+{
+  static Vec v;
+  v = data(i);
+  return v;
 }
 
 void MemoryVMatrix::getMat(int i, int j, Mat m) const
