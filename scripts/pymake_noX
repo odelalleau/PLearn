@@ -31,7 +31,7 @@
 #  This file is part of the PLearn library. For more information on the PLearn
 #  library, go to the PLearn Web site at www.plearn.org
 
-import os, sys, re, string, glob, socket, time, whrandom, select, shutil, fnmatch
+import os, sys, re, string, glob, socket, time, whrandom, select, shutil, fnmatch,math
 from stat import *
 from types import *
 from popen2 import *
@@ -51,7 +51,7 @@ if platform=='linux2':
     else:
         platform = 'linux-i386'
 
-verbose = 0
+
 homedir = os.environ['HOME']
 if platform=='win32':
   homedir = 'R:/'
@@ -97,6 +97,7 @@ def convertWinToLinux(path):
   else:
     return path
 
+    
 def join(dir,file,file2="",file3=""):
   """simply call os.path.join and convertWinToLinux"""
   if file2=='':
@@ -440,11 +441,13 @@ while i < len(args):
         otherargs.append(args[i])
     i = i + 1
 #/JF
+
+
 if 'clean' in optionargs:
     if len(optionargs)!=1 or len(otherargs)==0:
         print 'BAD ARGUMENTS: with -clean, specify one or more directories to clean, but no other -option'
     else:
-        print '>> Removing following OBJS directorires: '
+        print '>> Removing the following OBJS directories: '
         for dirname in otherargs:
             os.path.walk(dirname,rmOBJS,'')
     sys.exit()
@@ -463,6 +466,12 @@ if 'force' in optionargs:
     force_recompilation = 1
     optionargs.remove('force')
 
+if 'spc' in optionargs or SPC:
+    SPC = 1
+    print '*** Running pymake using Smart Parallel Compilation'
+    os.system('pyfreemachines '+SPClistfile+' '+SPCresultfile)
+    optionargs.remove('spc')
+    
 local_compilation = 0 # do we want to do everything locally?
 if platform=='win32':
   local_compilation = 1 # in windows, we ALWAYS work locally
@@ -517,7 +526,10 @@ list_of_hosts = []
 if local_compilation:
     list_of_hosts = ['localhost']
 else:
-    hostspath = locatehostsfile()
+    if SPC:
+        hostspath = SPCresultfile;
+    else:
+        hostspath = locatehostsfile()
     if hostspath:
         print '*** Parallel compilation using list of hosts from file: ' + hostspath
         f = open(hostspath,'r')
@@ -837,7 +849,7 @@ class FileInfo:
                 linkeroptions = linkeroptions + '-L'+qtdir + 'lib/ -lqt-mt'
             
         return linkeroptions
-        
+                
     def get_depmtime(self):
         "returns the single latest last modification time of"
         "this file and all its .h dependencies through includes"
@@ -968,11 +980,15 @@ class FileInfo:
             if platform=='win32':
                 self.launched = popen3('sh -c ' + quotedcommand, -1, 't')
             else:
-                self.launched = Popen3('sh -c ' + quotedcommand, 1, 10000)
+                self.shcommand = 'sh -c ' + quotedcommand
+                self.launched = Popen3(self.shcommand, 1, 10000)
         else:
-            self.launched = Popen3(rshcommand + ' ' + self.hostname + ' ' + quotedcommand, 1, 10000)
-        print '[ LAUNCHED',self.filebase+self.fileext,'on',self.hostname,']'
-        if verbose:
+            self.shcommand = rshcommand + ' ' + self.hostname + ' ' + quotedcommand
+            self.launched = Popen3(self.shcommand, 1, 10000)
+        if verbose>=2:
+            print '[ LAUNCHED',self.filebase+self.fileext,'on',self.hostname,']'
+        
+    	if verbose>=3:
             print quotedcommand
 
     def update_compilation_messages(self):
@@ -991,21 +1007,28 @@ class FileInfo:
         compilation_status field to the appropriate value, and delete the launched field,
         freeing the ressources used by the pipe.
         """
-        print '[ FINISHED',self.filebase+self.fileext,'on',self.hostname,']'
-        print self.compile_command()
+        if verbose>=2:
+            print '[ FINISHED',self.filebase+self.fileext,'on',self.hostname,']'
+                
+        warningmsgs=''
         errormsgs = ''
         if platform=='win32':
-            print self.launched[2].read() # print warnings
+            warningmsgs = self.launched[2].readlines() # print warnings
             errormsgs = self.launched[0].readlines()
         else:
-            print self.launched.childerr.read() # print warnings
+            warningmsgs = self.launched.childerr.readlines() # print warnings
             errormsgs = self.launched.fromchild.readlines()
+            
         if errormsgs:
             self.compilation_status = int(errormsgs[-1])  # last line was an echo $? (because rsh doesn't transmit the status byte correctly)
-            if verbose:
+            if verbose>=4:
                 print 'RETURN STATUS: ', self.compilation_status
             del errormsgs[-1]
-            print string.join(errormsgs,'')
+        
+        msg = warningmsgs + errormsgs
+        
+        if msg:
+            print self.filebase+self.fileext,':', string.join(msg,'')
 
         if platform!='win32':
             try:
@@ -1057,10 +1080,24 @@ class FileInfo:
         return command
 
     def launch_linking(self):
+        corresponding_output = self.corresponding_output
+        self.corresponding_output = self.corresponding_output+".new"
+        try: os.remove(self.corresponding_output)
+        except: pass
         command = self.link_command()
-        print command
+        if verbose>=3:
+	        print command
         os.system(command)
-
+        if not os.path.exists(self.corresponding_output):
+          print "Link command failed to create file " + self.corresponding_output
+        else:
+          try: os.remove(corresponding_output)
+          except: pass
+          os.rename(self.corresponding_output, corresponding_output)
+          if verbose>=2:
+            print "Successfully created " + self.corresponding_output + " and renamed it to " + corresponding_output 
+        self.corresponding_output = corresponding_output
+        
     def dll_command(self):
         """returns the command for making dll target from the .o files in objsfilelist and the corresponding .def file"""        
         objsfilelist = []
@@ -1176,9 +1213,14 @@ def parallel_compile(files_to_compile):
     hostnum = 0
     outs = {}  # a dictionary indexed by the stdout of the process launched by popen, and containing the corresponding FileInfo object 
     errs = {}  # a dictionary indexed by the stderrs of the process launched by popen, and containing the corresponding FileInfo object 
+    
+    
     for ccfile in files_to_compile:
+        
         ccfile.make_objs_dir() # make sure the OBJS dir exists, otherwise the command will fail
-        if len(outs) < len(list_of_hosts):
+        #print len(outs)
+        
+        if len(outs) < len(list_of_hosts):# len(outs) number of launched compilation
             if len(files_to_compile)==1: # if there's just one file to compile, we compile it locally to avoid a long "Waiting for NFS to catch up!"
                 hostname = 'localhost'
             else:
@@ -1205,7 +1247,8 @@ def parallel_compile(files_to_compile):
     # Now wait until everybody is finished
     while outs:
         if len(outs)<=10:
-            print '[ STILL WAITING FOR:',string.join(map( lambda(f): f.filebase+f.fileext + ' on ' + f.hostname, outs.values()), ', '),']\n'
+            if verbose>=2:        
+                print '[ STILL WAITING FOR:',string.join(map( lambda(f): f.filebase+f.fileext + ' on ' + f.hostname, outs.values()), ', '),']'
         iwtd, owtd, ewtd = select.select(outs.keys()+errs.keys(), [], [])
         f = iwtd[0] 
         if errs.has_key(f):
@@ -1232,13 +1275,14 @@ def sequential_link(executables_to_link, linkname):
         failures =  ccfile.failed_ccfiles_to_link()
         if failures:
             print '[ Executable target',ccfile.filebase,'not remade because of previous compilation errors. ]'
-            if verbose:
-                print '   Errors were while compiling files:'
-                print '   '+string.join(failures,'\n   ')
+            
+            print '   Errors were while compiling files:'
+            print '   '+string.join(failures,'\n   ')
         else:
             print 'Waiting for NFS to catch up...'
             ccfile.nfs_wait_for_all_linkable_ofiles()            
-            print '[ LINKING',ccfile.filebase,']'
+            if verbose>=2:
+                print '[ LINKING',ccfile.filebase,']'
             ccfile.launch_linking()
             if platform!='win32' and not create_so:
                 ccfile.make_symbolic_link(linkname)            
@@ -1248,9 +1292,9 @@ def sequential_dll(target_file_info):
     failures =  target_file_info.failed_ccfiles_to_link()
     if failures:
         print '[ Executable target',target_file_info.filebase,'not remade because of previous compilation errors. ]'
-        if verbose:
-            print '   Errors were while compiling files:'
-            print '   '+string.join(failures,'\n   ')
+       
+        print '   Errors were while compiling files:'
+        print '   '+string.join(failures,'\n   ')
     else:
         print 'Waiting for NFS to catch up...'
         target_file_info.nfs_wait_for_all_linkable_ofiles()            
