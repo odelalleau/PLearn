@@ -126,7 +126,20 @@ PStream& endl(PStream& out)
 
 PStream& ws(PStream& in)
 {
-  in.skipBlanksAndComments();
+  switch(in.inmode) {
+    case PStream::raw_ascii:
+    case PStream::pretty_ascii:
+    case PStream::raw_binary:
+      in.skipBlanks();
+      break;
+    case PStream::plearn_ascii:
+    case PStream::plearn_binary:
+      // Also skip comments.
+      in.skipBlanksAndComments();
+      break;
+    default:
+      PLERROR("In ws(PStream& in) - in's inmode is not supported");
+  }
   return in;
 }
 
@@ -1247,6 +1260,7 @@ PStream& PStream::operator<<(const char *x)
   return *this;
 }
 
+// TODO What if the string contains a word separator ??
 PStream& PStream::operator<<(const string &x)
 {
   const char* array = x.c_str();
