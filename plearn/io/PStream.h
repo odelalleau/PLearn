@@ -1259,7 +1259,7 @@ class PIStringStream: public PStream
 {
 public:
   PIStringStream(const string& s)
-    :PStream(new istringstream(s)) {}
+    :PStream(new istringstream(s), true /* own it */) {}
 };
 
 
