@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: databases.cc,v 1.19 2004/09/27 20:19:26 plearner Exp $
+   * $Id: databases.cc,v 1.20 2005/01/25 15:31:37 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -177,9 +177,9 @@ void remapClassnums(VMat& data, real remap_minval_to, real remap_maxval_to)
     }
 }
 #ifdef DBDIR
-const static string dbdir_name = DBDIR;
+static const string dbdir_name = DBDIR;
 #else
-const static string dbdir_name = "";
+static const string dbdir_name = "";
 #endif
 
 VMat loadBreastCancerWisconsin(bool normalize, bool uniq)
