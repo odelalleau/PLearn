@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.37 2004/02/20 15:22:22 yoshua Exp $
+   * $Id: NNet.cc,v 1.38 2004/02/20 20:32:00 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -116,7 +116,7 @@ void NNet::declareOptions(OptionList& ol)
                 "    It is typically of the same dimensionality as the target for regression problems \n"
                 "    But for classification problems where target is just the class number, noutputs is \n"
                 "    usually of dimensionality number of classes (as we want to output a score or probability \n"
-                "    vector, one per class");
+                "    vector, one per class)");
 
   declareOption(ol, "weight_decay", &NNet::weight_decay, OptionBase::buildoption, 
                 "    global weight decay for all layers\n");
