@@ -33,10 +33,11 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-#include <iomanip>
+//#include <iomanip>
 #include "PStream.h"
-#include "stringutils.h"
-#include "fileutils.h" 
+//#include "stringutils.h"
+//#include "fileutils.h" 
+#include "pl_math.h"
 
 // norman:
 #ifdef WIN32

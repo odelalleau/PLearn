@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: MatIO.h,v 1.8 2004/02/26 06:48:26 nova77 Exp $
+   * $Id: MatIO.h,v 1.9 2004/03/04 15:06:09 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,8 +45,9 @@
 #define MatIO_INC
 
 #include "TMat.h"
-#include "fileutils.h"
-#include <stdlib.h>                          //!< for strtod
+#include "fileutils.h"          //!< For getNextNonBlankLine.
+#include <stdlib.h>             //!< For strtod.
+#include "stringutils.h"        //!< For toint.
 
 namespace PLearn {
 using namespace std;
