@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: FieldConvertCommand.cc,v 1.23 2004/03/13 02:38:27 tihocan Exp $
+ * $Id: FieldConvertCommand.cc,v 1.24 2004/03/20 02:59:36 tihocan Exp $
  ******************************************************* */
 
 #include "FieldConvertCommand.h"
@@ -63,6 +63,7 @@ void FieldConvertCommand::run(const vector<string> & args)
   PVALUE_THRESHOLD = 0.025;
   FRAC_MISSING_TO_SKIP = 1.0;
   FRAC_ENOUGH = 0.005;
+  DISCRETE_TOLERANCE = 1e-3;
   target = -1;
   report_fn="FieldConvertReport.txt";
   precompute = "none";
@@ -88,6 +89,8 @@ void FieldConvertCommand::run(const vector<string> & args)
       PVALUE_THRESHOLD=toreal(val[1]);
     else if(val[0]=="frac_missing_to_skip")
       FRAC_MISSING_TO_SKIP=toreal(val[1]);
+    else if(val[0]=="discrete_tolerance")
+      DISCRETE_TOLERANCE = toreal(val[1]);
     else if(val[0]=="frac_enough")
       FRAC_ENOUGH=toreal(val[1]);
     else if(val[0]=="precompute")
@@ -236,6 +239,27 @@ void FieldConvertCommand::run(const vector<string> & args)
       }
     }
 
+    // Test if there exist fractional parts.
+    // This test has two goals:
+    //  - if we don't know the type, a fractional part indicates continuous data
+    //  - if the type is discrete, we need to be careful in the one hot ranges
+    //    because taking exact float values is not a good idea
+    bool may_be_fraction = false;
+    if (type == continuous || type == binary) {
+      may_be_fraction = true;
+    } else if (type != skip && type != constant) {
+      int k = 0;
+      for (map<real,StatsCollectorCounts>::iterator it = sc[i].getCounts()->begin(); k < count; ++it) {
+        real val = it->first;
+        k++;
+        if((val-(int)val) != 0)
+        {
+          may_be_fraction = true;
+          break;
+        }
+      }
+    }
+
     // Did we find the type already?
     if (type == unknown && message == "")
     {
@@ -266,14 +290,8 @@ void FieldConvertCommand::run(const vector<string> & args)
         type=continuous;
       else {
         // if there are fractional parts, assume continuous
-        for(int j=0;j<vm->length();j++)
-        {
-          real val = vm->get(j,i);
-          if(!is_missing(val) && ((val-(int)val) != 0))
-          {
-            type=continuous;
-            break;
-          }
+        if (may_be_fraction) {
+          type=continuous;
         }
       }
 
@@ -626,9 +644,22 @@ void FieldConvertCommand::run(const vector<string> & args)
       }
       if (n_discarded <= count - 1) {
         // We only consider this field if there is at least 1 class left.
-        out << "@"<<vm->fieldName(i) <<" " << sc[i].getAllValuesMapping(&to_be_included, 0, true) << " "
+ // TODO TMP
+//        RealMapping rm = sc[i].getBinMapping(1,1);
+//        out << "@" << vm->fieldName(i) << " " << rm << " onehot :"
+//            << vm->fieldName(i) << ":0:" << rm.size() << endl;
+        real tol = 0;
+        if (may_be_fraction) {
+          // We need to take a margin because of floating point precision.
+          tol = DISCRETE_TOLERANCE;
+        }
+        RealMapping rm = sc[i].getAllValuesMapping(&to_be_included, 0, true, tol);
+        out << "@"<<vm->fieldName(i) <<" " << rm << " "
+          << rm.size() << " onehot :"
+          << vm->fieldName(i)<<"_:0:"<< (rm.size() - 1) << endl; // TODO add a "_"
+/*        out << "@"<<vm->fieldName(i) <<" " << sc[i].getAllValuesMapping(&to_be_included, 0, true) << " "
           << count - n_discarded << " onehot :"
-          << vm->fieldName(i)<<":0:"<<(count - 1 - n_discarded) << endl;
+          << vm->fieldName(i)<<"_:0:"<<(count - 1 - n_discarded) << endl; */
         inputsize += count - n_discarded;
       }
     }

@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: FieldConvertCommand.h,v 1.16 2004/03/16 14:02:22 tihocan Exp $
+ * $Id: FieldConvertCommand.h,v 1.17 2004/03/20 02:59:36 tihocan Exp $
  ******************************************************* */
 
 #ifndef FieldConvertCommand_INC
@@ -100,6 +100,7 @@ protected:
 
   static PLearnCommandRegistry reg_;
 
+  real DISCRETE_TOLERANCE;
   real UNIQUE_NMISSING_FRACTION_TO_ASSUME_CONTINUOUS;
   real PVALUE_THRESHOLD;
   real FRAC_MISSING_TO_SKIP;
