@@ -1,5 +1,6 @@
 #! /bin/sh
 # Will append the statistics of an experiment to an ascii file (typically a .amat file).
+# *** It needs 'plearn_full' to be compiled and in the path ***
 # Typical usage is to put in the final_commands option of a PTester:
 #   appendresults ${dir} results.amat ${param_1} ${param_2} ... ${param_n}
 
@@ -22,7 +23,7 @@ done
 lockfile $OUTPUT.lock
 
 echo -n "$PARAMS" >> $OUTPUT
-plearn vmat cat $DIR/global_stats.pmat "rowindex 1 ==" >> $OUTPUT
+plearn_full vmat cat $DIR/global_stats.pmat "rowindex 1 ==" >> $OUTPUT
 
 # Release the lock
 rm -f $OUTPUT.lock
