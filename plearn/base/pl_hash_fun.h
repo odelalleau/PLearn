@@ -79,11 +79,13 @@ extern const size_t PL_HASH_NOMBRES_MAGIQUES[256];
 
 ///////////////////////////////////////////////////////////////////////////
 
-//using namespace std;
-
-// norman: Old code kept for the moment..
+#if defined(__GNUC__) && defined(__INTEL_COMPILER)
+// Intel Compiler on Linux: we need to define a hash function for const char*.
+SET_HASH_WITH_FUNCTION_NOCONSTREF(const char*, _s, PLearn::hashval(_s))
+#endif // __GNUC__
 
 SET_HASH_WITH_INHERITANCE(std::string, const char*, __s, __s.c_str())
+
 //hash functions for strings
 //template<>
 //struct hash<string>
@@ -123,7 +125,7 @@ SET_HASH_WITH_FUNCTION(float, x, PLearn::hashval(x))
 using namespace stdext;
 
 #if defined(__INTEL_COMPILER)
-// because Intel compiler (in WIN32 only!!) defines hash_map and hash_table both in stdext and std
+// Because Intel compiler (in WIN32 only!!) defines hash_map and hash_table both in stdext and std
 // if we set that we use both (with "using namespace") it will have an ambiguity.
 // To solve this, I force hash_map, hash_multimap and hash_table to be explicit.
 
@@ -134,7 +136,15 @@ using namespace stdext;
 
 #endif // __INTEL_COMPILER
 
-#endif // WIN32
+#elif defined(__INTEL_COMPILER) && defined(_NAMESPACE_STLPORT)
+// STL port version (e.g. Ms computers). There is also a namespace conflict.
+// We prefer to use the STL port version because it is easier to debug.
 
+#define hash_map _NAMESPACE_STLPORT::hash_map
+#define hash_multimap _NAMESPACE_STLPORT::hash_multimap
+#define hash_set _NAMESPACE_STLPORT::hash_set
+#define hash_multiset _NAMESPACE_STLPORT::hash_multiset
+
+#endif // WIN32
 
 #endif // pl_hash_fun_H
