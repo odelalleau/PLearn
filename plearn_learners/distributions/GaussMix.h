@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussMix.h,v 1.20 2004/05/20 15:23:25 tihocan Exp $ 
+   * $Id: GaussMix.h,v 1.21 2004/05/21 14:51:00 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file GaussMix.h */
@@ -113,7 +113,7 @@ protected:
   virtual void computeMeansAndCovariances();
 
   //! Compute P(x | j), where j < L is the index of a component of the mixture.
-  virtual real computeLikehood(Vec& x, int j);
+  virtual real computeLogLikelihood(Vec& x, int j);
 
   //! Compute the posteriors P(j | x_i) for each sample point and each Gaussian.
   virtual void computePosteriors();
@@ -191,13 +191,13 @@ public:
   // ************************
 
   //! return density p(x)
-  virtual double log_density(const Vec& x) const;
+  virtual real log_density(const Vec& x) const;
 
   //! return survival fn = P(X>x)
-  virtual double survival_fn(const Vec& x) const;
+  virtual real survival_fn(const Vec& x) const;
 
   //! return survival fn = P(X<x)
-  virtual double cdf(const Vec& x) const;
+  virtual real cdf(const Vec& x) const;
 
   //! return E[X] 
   virtual Vec expectation() const;
