@@ -2,7 +2,7 @@
 %%
 %%  Copyright (c) 2002 by Pascal Vincent
 %%
-%%  $Id: users_guide.tex,v 1.5 2003/01/31 21:00:29 ducharme Exp $
+%%  $Id: users_guide.tex,v 1.6 2003/02/03 22:10:06 ducharme Exp $
 
 \documentclass[11pt]{book}
 \usepackage{t1enc}              % new font encoding  (hyphenate words w/accents)
@@ -37,6 +37,7 @@
 
 Copyright \copyright\ 1998-2002 Pascal Vincent, Yoshua Bengio \\
 Copyright \copyright\ 2002 Julien Keable \\
+Copyright \copyright\ 2003 R\'ejean Ducharme \\
 
 Permission is granted to copy and distribute this document in any medium,
 with or without modification, provided that the following conditions are
@@ -65,8 +66,46 @@ met:
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\chapter{Installation and Setup}
+\label{chap:label}
 
-\chapter{Using plearn commands}
+In order to install the PLearn software library and tools on your machine,
+you must make sure that cvs (http://www.cvshome.org) is already installed.
+(For a quick tutorial on how to use cvs, see
+http://plearn.sourceforge.net/plearncvs.html).
+
+You then can download the PLearn library through anonymous (pserver) cvs
+using the following instructions :
+
+\begin{itemize}
+\item cvs -d:pserver:anonymous@cvs.plearn.sourceforge.net:/cvsroot/plearn login
+\item press the [enter] key when asked for a password
+\item cvs -d:pserver:anonymous@cvs.plearn.sourceforge.net:/cvsroot/plearn co PLearn
+\end{itemize}
+
+The PLearn library should now be installed.  If you want to use it
+(which should be the case!), a few things need to be set.  First, you
+should add the following lines to your .cshrc file :
+
+setenv PLEARNDIR /path\_of\_plearn\_library/PLearn \\
+set path = ( \$path \$PLEARNDIR/scripts \$PLEARNDIR/commands )
+
+The only thing you have to check now, is if you have all the tools to
+compile the library (since there is no binaries available).  For that purpose,
+you need to have g++ (or gcc) installed (available at http://gcc.gnu.org).
+We suggest that you use the newest version available, or at least 2.96 or higher.
+Also, instead of using the far-from-user-friendly Makefile, we wrote our own
+version, called pymake.  However, this has been writen using the script language
+python version 1.5.2 or higher (available at http://www.python.org).
+
+In a pain-in-the-neck-world, none of the above utilitaries (cvs, gcc, python)
+are on your machine and you have to do some extra work.  But for the common user,
+all the job has already been done by your system administrator and all you have
+to do is download the PLearn library, add 2 lines to your .cshrc file, and
+that's it!!
+
+
+\chapter{Using PLearn commands}
 
 \section{Directory and file structure for datasets}
 
@@ -201,7 +240,8 @@ The synchronization of the precomputed version is ensured through an almost-inte
 Including this section will force output of preprocessed VPL to stderr.
 
 \subsection{The VPL language}
-VPL (vmat processing language) is a home brewed mini-language in postfix notation. As of today, it is used is the \{PRE,POST\}FILT\-ERING and PROCESSING sections of a .vmat file. It supports INCLUDEs instructions and DEFINEs (dumb named string constants). It can handle reals as well as dates (format is: CYYMMDD, where C is 0 (1900-1999) or 1 (2000-2099). The language will not be extensively decribed here. For more info, you can look at PLearnCore/VMatLanguage.*. 
+VPL (vmat processing language) is a home brewed mini-language in postfix notation. As of today, it is used is the \{PRE,POST\}FILT\-ERING and PROCESSING sections of a .vmat file. It supports INCLUDEs instructions and DEFINEs (dumb named string constants). It can handle reals as well as dates (format is: CYYMMDD, where C is 0 (1900-1999) or 1 (2000-2099). The language will not be extensively decribed here. For more info, you can look at
+plearn/vmat/VMatLanguage.*. 
 
 A VPL code snippet is always applied to the row of a VMatrix, and can only refer to data of that row. The result of the execution will be a vector, which is the execution stack at code termination. 
 
@@ -441,7 +481,7 @@ TMat( 3 1 2 1
 *2 )
 \end{verbatim}
 
-\subsection{Binary plearn format for base types}
+\subsection{Binary PLearn format for base types}
 
 To allow mixing of ascii and binary in a file, a non-printable ascii
 character is used as a one-byte header to identify any binary portion.  In
@@ -483,7 +523,7 @@ double         & big-endian    & 0x11        & 8 \\ \hline
 
 booleans are represented the same way in binary mode as in ascii mode: with the character 0 (for false) or 1 (for true).
 
-\subsection{Ascii plearn format for a sequence}
+\subsection{Ascii PLearn format for a sequence}
 \label{ascii_sequence}
 
 We consider both one-dimensional sequences ( array, vector, \ldots) which only have a length,
@@ -524,7 +564,7 @@ Notice that it's also possible to make a 1D sequence of 1D sequences, but that's
 %\begin{itemize}
 %\end{itemize}
 
-\subsection{Binary plearn format for a sequence}
+\subsection{Binary PLearn format for a sequence}
 \label{binary_sequence}
 
 We consider both one-dimensional sequences ( array, vector, \ldots) which only have a length,
@@ -573,30 +613,6 @@ on big-endian            &             & base-type given by header byte in previ
                          &             & table, followed by binary dump of elements \\ \hline
 \end{tabular}
 
-
-\chapter{Installation and Setup}
-\label{chap:label}
-
-In order to install the PLearn software library and tools on your machine,
-you must make sure that cvs (http://www.cvshome.org) is already installed.
-(For a quick tutorial on how to use cvs, see
-http://plearn.sourceforge.net/plearncvs.html).
-
-You then can download the PLearn library through anonymous (pserver) cvs
-using the following instructions :
-
-\begin{itemize}
-\item cvs -d:pserver:anonymous@cvs.plearn.sourceforge.net:/cvsroot/plearn login
-\item press the [enter] key when asked for a password
-\item cvs -d:pserver:anonymous@cvs.plearn.sourceforge.net:/cvsroot/plearn co PLearn
-\end{itemize}
-
-The PLearn library should now be installed.  If you want to use use
-(which should be the case!), a few things need to be set.  First, you
-should add the following lines to your .cshrc file :
-
-setenv PLEARNDIR \$HOME/PLearn \\
-set path = ( \$path \$PLEARNDIR/scripts \$PLEARNDIR/commands )
 
 \chapter*{License}
 
