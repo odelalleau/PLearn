@@ -2,7 +2,7 @@
 %%
 %%  Copyright (c) 1998-2002 by Pascal Vincent
 %%
-%%  $Id: programmers_guide.tex,v 1.8 2004/07/02 20:57:08 monperrm Exp $
+%%  $Id: programmers_guide.tex,v 1.9 2004/07/02 21:32:18 monperrm Exp $
 
 \documentclass[11pt]{book}
 \usepackage{t1enc}              % new font encoding  (hyphenate words w/accents)
@@ -1040,12 +1040,101 @@ int main(int argc, char** argv)
 }
 
 \end{verbatim}
+
+
+\subsection{Func}
+
+In order to make the usage of Var more friendly, you can use Func. The Func class is mode for those who want to make fprop on different values of Var in an elegant way. The two following examples illustrate this: they do exactly the same thing, but the first one without Func and the second one with.
+
+\begin{verbatim}
+
+#include "Var_all.h"
+#include "TMat_maths.h"
+
+using namespace PLearn;
+
+int main(int argc, char** argv)
+{   
+		Vec a(3),c(1);
+    Vec da(3),dc(1);
+    
+		// WITHOUT FUNC
+    Var x(3,1);
+    Var y = dot(x,tanh(x)); // z is a scalar variable result of the dot product of x and tanh(y)
+    VarArray path = propagationPath(x,y);    
+    
+    a<<"1 2.3 4";
+    
+    x->value<<a;    
+    path.fprop();
+    c=y->value;
+    cout<<a<<endl;
+    cout<<c<<endl;
+    
+    c<<"4 8.3 -12";
+    x->value<<c;
+    path.fprop();   
+    c=y->value;
+    cout<<a<<endl;
+    cout<<c<<endl;
+    
+    dc<<2.3;
+    y->gradient<<dc;
+    path.bprop();
+    da<<x->gradient;
+    cout<<dc<<endl;
+    cout<<da<<endl;
+    
+//     
+    return 0;
+}
+
+\end{verbatim}
+
+With Func:
+
+\begin{verbatim}
+#include "Var_all.h"
+#include "TMat_maths.h"
+
+using namespace PLearn;
+
+int main(int argc, char** argv)
+{   
+    Vec a(3),c(1);
+    Vec da(3),dc(1);
+    
+		// WITH FUNC
+    Var x(3,1);
+    Var result(1,1);
+    Func f(x, result ,dot(x,tanh(x))); // z is a scalar variable result of the dot product of x and tanh(y)
+    
+    a<<"1 2.3 4";
+    f->fprop(a,c);    
+    cout<<a<<endl;
+    cout<<c<<endl;
+    
+    a<<"4 8.3 -12";
+    f->fprop(a,c);    
+    cout<<a<<endl;
+    cout<<c<<endl;
+    
+    dc<<2.3;
+    f->fbprop(a,c,da,dc);    
+    cout<<dc<<endl;
+    cout<<da<<endl;
+    
+    return 0;
+}
+
+\end{verbatim}
+
+ 
 \chapter{Advanced}
  
 \section{RandomVar}
 
 \section{Function-like types}
-\subsection{Func}
 \subsection{Ker}
 \subsection{CostFunc}
 \subsection{StatsIt}
