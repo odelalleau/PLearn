@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: MatIO.h,v 1.16 2004/05/05 19:24:08 nova77 Exp $
+   * $Id: MatIO.h,v 1.17 2004/06/18 16:41:16 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -81,7 +81,7 @@ void loadPMat(const string& filename, TMat<double>& mat);
 //! WARNING: use only for float, double, and int types. Other type are not guaranteed to work
 
 //! intelligent functions that will load a file in almost all ascii formats that ever existed in this lab
-template<class T> void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames);
+template<class T> void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames, TVec<map<string,real> >* map_sr = 0);
 template<class T> void loadAscii(const string& filename, TMat<T>& mat);
 
 void parseSizeFromRemainingLines(const string& filename, ifstream& in, bool& could_be_old_amat, int& length, int& width);
@@ -184,9 +184,10 @@ Mat loadSTATLOG(const string& filename, char ****to_symbols=0, int **to_n_symbol
 void loadJPEGrgb(const string& jpeg_filename, Mat& rgbmat, int& row_size, int scale = 1);
 
 
-// intelligent function that will load a file in almost all ascii formats that ever existed in this lab
+// Intelligent function that will load a file in almost all ascii formats that ever existed in this lab.
+// Additionally, if 'map_sr' is provided, it will fill it with the string -> real mappings encountered.
 template<class T>
-void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames)
+void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames, TVec<map<string,real> >* map_sr = 0)
 {
   ifstream in(filename.c_str());
   if(!in)
@@ -249,6 +250,12 @@ void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames)
   ifstream loadmat(filename.c_str());
   
   mat.resize(length,width);
+  TVec<int> current_map(width);
+  current_map.fill(1001);   // The value of the string mapping we start with.
+  // Initialize the mappings to empty mappings.
+  if (map_sr) {
+    map_sr->resize(width);
+  }
   string inp_element;
   for(int i=0; i<length; i++)
   {
@@ -258,7 +265,25 @@ void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames)
       // C99 strtod handles NAN's and INF's.
       if (loadmat) {
         loadmat >> inp_element;
-        mat_i[j] = strtod(inp_element.c_str(), 0);
+        if (pl_isnumber(inp_element)) {
+          mat_i[j] = strtod(inp_element.c_str(), 0);
+        } else {
+          // This is a string!
+          if (map_sr) {
+            // Already encountered ?
+            map<string,real>& m = (*map_sr)[j];
+            map<string,real>::iterator it = m.find(inp_element);
+            if(it != m.end()) {
+              // It already exists in the map.
+              mat_i[j] = it->second;
+            } else {
+              // We need to add it.
+              (*map_sr)[j][inp_element] = current_map[j];
+              mat_i[j] = current_map[j];
+              current_map[j]++;
+            }
+          }
+        }
       }
       if (!loadmat) {
         loadmat.clear();
