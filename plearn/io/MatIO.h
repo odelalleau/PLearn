@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: MatIO.h,v 1.4 2003/07/31 05:23:56 chapados Exp $
+   * $Id: MatIO.h,v 1.5 2004/02/09 15:47:36 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -269,6 +269,70 @@ void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames)
         in.clear();
         mat_i[j] = MISSING_VALUE;
       }
+    }
+  }
+}
+
+//! Load an ASCII matrix whose format is:
+//! (entry_name, long_binary_dscriptor)
+//! with 'long_binary_dscriptor' being of the form '001100101011',
+//! each character being an entry of the matrix.
+//! (entry_name is ignored).
+//! Header must be: #size: length width
+template<class T>
+void loadAsciiSingleBinaryDescriptor(const string& filename, TMat<T>& mat)
+{
+  ifstream in(filename.c_str());
+  if(!in)
+    PLERROR("Could not open file %s for reading", filename.c_str());
+
+  int length = -1;
+  int width = -1;
+  
+  in >> ws;
+  string line;
+
+  while(in.peek()=='#')
+  {
+    getline(in, line);
+ 
+    unsigned int pos=line.find(":");
+    if(pos!=string::npos)
+    {
+      string sub=line.substr(0,pos);
+      if(sub=="#size") // we've found the dimension specification line
+      {
+        string siz=removeblanks((line.substr(pos)).substr(1));
+        vector<string> dim = split(siz," ");
+        if(dim.size()!=2)  PLERROR("I need exactly 2 dimensions for matrix");
+        length = toint(dim[0]);
+        width = toint(dim[1]);
+      }
+    }
+    in >> ws;
+  }
+
+  if(length==-1)  // still looking for size info...
+  {
+    PLERROR("Be nice and specify a width and length");
+  }
+
+  // We are now more careful about the possibility of the stream being in a
+  // bad state.
+  mat.resize(length,width);
+  string inp_element;
+  for(int i=0; i<length; i++)
+  {
+    T* mat_i = mat[i];
+    skipBlanksAndComments(in);
+    in >> inp_element;  // Read the entry name.
+    in >> inp_element;  // Read the binary descriptor.
+    if (inp_element.length() != (unsigned int) width) {
+      PLERROR("In loadAsciiSingleBinaryDescriptor, a descriptor isn't the right size");
+    }
+    for(int j=0; j<width; j++) {
+      // C99 strtod handles NAN's and INF's.
+      mat_i[j] = strtod(inp_element.substr(j,1).c_str(), 0);
     }
   }
 }
