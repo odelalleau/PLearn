@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.3
 
-import os
+import os, shutil
 from toolkit import *
 from threading import *
 
@@ -8,6 +8,17 @@ _disp_verbosity = Verbosity(1)
 def set_dispatch_verbosity_object(vobj):
     global _disp_verbosity
     _disp_verbosity = vobj
+
+def task_name_from_int(number):
+    name = ''
+    if number < 10:
+        name = '000'
+    elif number < 100:
+        name = '00'
+    elif number < 1000:
+        name = '0'
+    name += str( int(number) )
+    return name
 
 class Task(Thread, WithOptions):
 
@@ -45,7 +56,7 @@ class Task(Thread, WithOptions):
         self._cmd_line = cmd_line
 
         ## The name is a 4 digit string representation of the id
-        self.__set_experiment_name(task_id)
+        self.setName(task_name_from_int(task_id))
 
         # If the task fails, this flag must be triggered
         self.failed          = False
@@ -53,19 +64,6 @@ class Task(Thread, WithOptions):
     ###############################################
     ## Private methods
     ###############################################
-
-    def __set_experiment_name(self, number):
-        name = ''
-        if number < 10:
-            name = '000'
-        elif number < 100:
-            name = '00'
-        elif number < 1000:
-            name = '0'
-        name += str(number)
-        
-        self.setName(name)
-        ##add_task(name, self)
 
     ###############################################
     ## Protected Methods
@@ -76,7 +74,7 @@ class Task(Thread, WithOptions):
 
     def _do_run(self):
         if self._do_not_run():
-            self.dispatch.shared_files_access.acquire()
+            self.dispatch.acquire_shared_files_access(self)
             return
         
         ## The directory is not created before to avoid
@@ -95,7 +93,7 @@ class Task(Thread, WithOptions):
             
         ## For a proper management of last_experiment_finished        
         self._local_postprocessing()
-        self.dispatch.shared_files_access.acquire()
+        self.dispatch.acquire_shared_files_access(self)
         self._postprocessing()
 
         _disp_verbosity('[ FINISHED %s %s ]' % (self.classname(),self.getName()), 1)
@@ -154,6 +152,7 @@ class Task(Thread, WithOptions):
     ###############################################
 
     def run(self):
+        exception = None
         try:
             self._do_run()
             if self.failed:
@@ -163,22 +162,23 @@ class Task(Thread, WithOptions):
 
         except Exception, ex:
             if True:
-            #if False:
-                raise
-
-            msg = 'Exception in Task %s: %s' % (self.getName(), str(ex))
-            header = string.replace(string.center('', len(msg)+4), ' ', '*')
-            _disp_verbosity('%s\n* %s *\n%s' % (header,msg,header), 0)
-            try:
-                self._failed()
-            except Exception, ex2:
-                ## Using print in case the exception pops from _disp_verbosity
-                print 'In %s._failed:'%self.classname(), ex2
+                #if False:
+                exception = ex
+            else:
+                msg = 'Exception in Task %s:\n %s' % (self.getName(), str(ex))
+                header = string.replace(string.center('', len(msg)+4), ' ', '*')
+                _disp_verbosity('%s\n* %s *\n%s' % (header,msg,header), 0)
+                try:
+                    self._failed()
+                except Exception, ex2:
+                    ## Using print in case the exception pops from _disp_verbosity
+                    print 'In %s._failed:'%self.classname(), ex2                
 
         if self.get_option('signal_completion'):
             self.dispatch.set_last_finished_task( self.getName() )
             self.dispatch.one_task_is_finished.set()    
-
+            if exception is not None:
+                raise exception
 
 class AbsPathTask(Task):
     """Task that must be provided absolute paths.
@@ -270,10 +270,10 @@ class PLTask(AbsPathTask):
         ##  did not create the directory while waiting.
         self.experiments_path = os.path.join(self.root_expdir, "Experiments")
         if not os.path.exists(self.experiments_path):
-            self.dispatch.shared_files_access.acquire()
+            self.dispatch.acquire_shared_files_access(self)
             if not os.path.exists(self.experiments_path):
                 os.mkdir(self.experiments_path)    
-            self.dispatch.shared_files_access.release()
+            self.dispatch.release_shared_files_access(self)
 
         return os.path.join(self.experiments_path, self.getName())    
 
@@ -384,7 +384,7 @@ class PLTask(AbsPathTask):
     ###############################################
 
     def already_done(self):
-        self.dispatch.shared_files_access.acquire(True)
+        self.dispatch.acquire_shared_files_access(self)
 
         exists = False
         if os.path.exists(self.keyed_log_file):            
@@ -396,7 +396,7 @@ class PLTask(AbsPathTask):
                     exists = True
                     break
 
-        self.dispatch.shared_files_access.release()
+        self.dispatch.release_shared_files_access(self)
         return exists
         
     def check_for_core_dump(self):
@@ -422,10 +422,9 @@ class PLTask(AbsPathTask):
         pass
         
     def hasItMadeTheTop(self, top):
-        ## self.debug("entering...")
-        sorted_vmat = command_output("plearn vmat cat " + sort_file)
-        ## self.debug("done.")
-
+        sorted_vmat = command_output("plearn vmat cat " + self.sort_file)
+        _disp_verbosity("sorted_vmat:\n%s\n\n\n"%str(sorted_vmat), 2)
+        
         index = 0
         key = self.defines_dico.values()
         for line in sorted_vmat:
@@ -435,6 +434,7 @@ class PLTask(AbsPathTask):
             line = string.split(line)
                 
             if self.key_compare(key, line):
+            ##if int(line[0]) == int(self.getName()):
                 _disp_verbosity("Reached position %d"%index, 1)
                 break
             index += 1
@@ -443,17 +443,18 @@ class PLTask(AbsPathTask):
         # The experiment did not make it to the top
         if index == top:
             _disp_verbosity("SELF: RMDIR(%s)"%self._results_directory, 1)
-            RMDIR(self._results_directory)
+            shutil.rmtree(self._results_directory)
         elif index < top and len(sorted_vmat) > top: # The experiment is in the top
             define_keys = self.defines_dico.keys()
 
             ### The rejected row is the row numbered by top
-            rejected_experiment = (sorted_vmat[top])[0]
-
-            _disp_verbosity("Experiment %s trows out %s" % (self.getName(),rejected_experiment), 1)
+            line = string.split( sorted_vmat[top] )
+            rejected_experiment = task_name_from_int( int(line[0]) )
+            _disp_verbosity("Experiment %s throws out %s" % (self.getName(),rejected_experiment), 1)
 
             rejected_experiment = os.path.join(self.experiments_path, rejected_experiment)
-            RMDIR( rejected_experiment )
+
+            shutil.rmtree( rejected_experiment )
 
     def key_compare(self, key, line):
         index = 1
@@ -463,12 +464,12 @@ class PLTask(AbsPathTask):
             index += 1
         return True
 
-
-    def setOptions(self, root_expdir, keyed_log_file, global_stats, keep_only_n, bugs_list):
+    def setOptions(self, root_expdir, keyed_log_file, global_stats, keep_only_n, sort_file, bugs_list):
         self.root_expdir = root_expdir
         self.keyed_log_file = keyed_log_file
         self.global_stats = global_stats
         self.keep_only_n = keep_only_n
+        self.sort_file = sort_file
         self.bugs_list = bugs_list
 
         self.set_option('results_directory', self.__results_directory())
@@ -488,6 +489,20 @@ class PLTask(AbsPathTask):
         self.issued_an_error = False
 
 
+###############################################################
+### Management of KeyboadInterrupt within threads #############
+### reuires the following                         #############
+__dispatch_end = Event()
+def wait_for_dispatch_to_end():
+    __dispatch_end.wait()
+
+def dispatch_was_killed():
+    return __dispatch_end.isSet()
+
+def kill_dispatch():
+    __dispatch_end.set()
+
+###############################################################
 class Dispatch(Thread, WithOptions):
 
     OPTIONS = { 'cluster_command':'cluster --wait --duree 240h --execute',
@@ -500,7 +515,7 @@ class Dispatch(Thread, WithOptions):
         
         self.__tasks = {}
             
-        self.shared_files_access = Semaphore()
+        self.__shared_files_access = Semaphore()
         self.one_task_is_finished = Event()
         self.__last_finished_task = ''
 
@@ -511,6 +526,14 @@ class Dispatch(Thread, WithOptions):
         self.__tasks[task.getName()] = task
         #raw_input("\n\n %s" % str(self.__tasks))
 
+    def acquire_shared_files_access(self, child_thread):
+        if dispatch_was_killed():
+            return False
+        self.__shared_files_access.acquire(True)
+        if dispatch_was_killed():
+            return False
+        return True
+        
     def dispatch_command(self):
         if self._localhost:
             return ''
@@ -535,9 +558,20 @@ class Dispatch(Thread, WithOptions):
 
             task_done += 1
             _disp_verbosity("*** %d tasks done.    %d to go.\n"%(task_done,nb_task-task_done), 1)
-            self.shared_files_access.release()
+            self.release_shared_files_access(self)
+
+    def release_shared_files_access(self, child_thread):
+        self.__shared_files_access.release()
+        return True
 
     def run(self):
+        try:
+            self.__run_body()
+        except KeyboardInterrupt, ex:
+            _disp_verbosity("Dispatch killed by KeyboardInterrupt.", 0)
+        kill_dispatch()
+
+    def __run_body(self):        
         if self._localhost:
             self.localhost_run()
             return

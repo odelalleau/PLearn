@@ -3,17 +3,56 @@
 import sys, os, time, string, random
 from optparse import *
 
+def command_output(command):
+    ## In parallel processing, it's important to differentiate
+    ## between possible multiple calls to this function.
+    ## The time string is not enough since two calls can be
+    ## make at the same second!!!
+    tmp_file = ( ".appStart_command_output_tmp_file_" +
+                 time_string() +
+                 "_" + str(random.random())  )
+
+    cmd_out = string.join([command, ">", tmp_file])
+    os.system(cmd_out)
+
+    ofile = open(tmp_file, 'r')
+    lines = ofile.readlines()
+    ofile.close()
+    os.remove(tmp_file)
+    return lines
+
 def cp_array(a):
+    raise DeprecationWarning("Use the copy module functionalities instead.")
     b = []
     for e in a:
         b.append(e)
     return b
+
+__debug_ = 0
+def DEBUG(str, stop=False):
+    if not debug:
+        return
+
+    global __debug_
+    __debug_ = __debug_ + 1
+    print("\nDEBUG" + fpformat.fix(__debug_, 0))
+    
+    if stop:
+        raw_input(str)
+    else:
+        print(str)
 
 def doc(obj):
     docstr = obj.__doc__
     if docstr is None:
         return ''
     return docstr
+
+def ERROR(*msg):
+    raise DeprecationWarning("Use exceptions instead.")
+    msg = string.join( map(str, msg) )
+    print "ERROR:",msg
+    sys.exit()
 
 def listdirs(dirs):
     dirs_list = []
@@ -62,42 +101,10 @@ def locatehostsfile( hosts_fname=(platform+".hosts") ):
         return fpath
     return ''
 
-__debug_ = 0
-def DEBUG(str, stop=False):
-    if not debug:
-        return
-
-    global __debug_
-    __debug_ = __debug_ + 1
-    print("\nDEBUG" + fpformat.fix(__debug_, 0))
-    
-    if stop:
-        raw_input(str)
-    else:
-        print(str)
-
-def ERROR(*msg):
-    msg = string.join( map(str, msg) )
-    print "ERROR:",msg
-    sys.exit()
-
-def command_output(command):
-    ## In parallel processing, it's important to differentiate
-    ## between possible multiple calls to this function.
-    ## The time string is not enough since two calls can be
-    ## make at the same second!!!
-    tmp_file = ( ".appStart_command_output_tmp_file_" +
-                 time_string() +
-                 "_" + str(random.random())  )
-
-    cmd_out = string.join([command, ">", tmp_file])
-    os.system(cmd_out)
-
-    ofile = open(tmp_file, 'r')
-    lines = ofile.readlines()
-    ofile.close()
-    os.remove(tmp_file)
-    return lines
+def remove_forbidden_dirs(dirlist, forbidden_directories):
+    for fb in forbidden_directories:
+        if fb in dirlist:
+            dirlist.remove(fb)
 
 def set_typed_attr(object, attr, value, required_type):
     if not isinstance(value, required_type):

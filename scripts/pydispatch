@@ -1,5 +1,5 @@
 #!/usr/bin/env python2.3
-import select
+import select, copy
 from popen2 import *
 
 from dispatch import *
@@ -8,8 +8,11 @@ from ModeAndOptionParser import *
 number_of_defines = -1
 sort_criterion_cost_index = ""
 
-experiment_number = 0
+experiment_number = None
+
 bugs_list = 'buggedExp.amat'
+bugs_list_path = None
+
 sort_file = ""
 sort_file_base = "pydispatch_writeExpdir_sort_file.vmat"
 keyed_log_file = ""
@@ -21,42 +24,36 @@ def default_mode():
     dispatch.set_option('localhost', options.localhost)
     dispatch.set_option('nb_hosts', options.hosts)
 
-    if isinstance(current.dictionary_for_experiments, type('')):
-        current.dictionary_for_experiments = eval(current.dictionary_for_experiments)
+    if isinstance(current_mode.dictionary_for_experiments, type('')):
+        current_mode.dictionary_for_experiments = eval(current_mode.dictionary_for_experiments)
         
-    if not isinstance(current.dictionary_for_experiments, type({})):
+    if not isinstance(current_mode.dictionary_for_experiments, type({})):
         raise TypeError("The dictionary_for_experiments must be a dictionnary. Currently is %s\n"
                         "of type %s\n" "(Config file or target 2)"
-                        % (str(current.dictionary_for_experiments),
-                           type(current.dictionary_for_experiments)) )
+                        % (str(current_mode.dictionary_for_experiments),
+                           type(current_mode.dictionary_for_experiments)) )
 
-    assert( os.path.exists( current.script ),
-            "%s does not appear to be a valid plearn script." % current.script )
-
-    ## Loading the old number of experiments
-    nbExp_file = os.path.join(options.expdir,'.pydispatch_number_of_exp_done')
-    if os.path.exists( nbExp_file ):
-        execfile(nbExp_file)
-        print
-        print '+++ Experiments done yet:',experiment_number
-        print
+    assert( os.path.exists( current_mode.script ),
+            "%s does not appear to be a valid plearn script." % current_mode.script )
 
     #############################################################
     ## The dispatch.run() method is the core this whole program
-    generate_experiments( current.to_execute, current.script,
-                          current.dictionary_for_experiments )
-    dispatch.run()
+    generate_experiments( current_mode.to_execute, current_mode.script,
+                          current_mode.dictionary_for_experiments )
+    dispatch.start()
+    wait_for_dispatch_to_end()
     #############################################################
         
     if sort_file != '':
+        print("Removing sort_file (%s)"%sort_file)
         os.system('rm -Rf '+sort_file+'*')
 
-    ## Saving the new number of experiments
-    if os.path.exists( nbExp_file ):
-        os.remove(nbExp_file)
-    nbExp = open(nbExp_file, 'w')
-    nbExp.write("experiment_number = " + str(experiment_number) + "\n")
-    nbExp.close()
+##     ## Saving the new number of experiments
+##     if os.path.exists( nbExp_file ):
+##         os.remove(nbExp_file)
+##     nbExp = open(nbExp_file, 'w')
+##     nbExp.write("experiment_number = " + str(experiment_number) + "\n")
+##     nbExp.close()
 
 def expdir_preprocessing():
     assert(options.expdir, "The options.expdir should never be empty.")
@@ -81,6 +78,9 @@ def expdir_preprocessing():
         sort_file = os.path.join(options.expdir,sort_file_base)
         writeVmat(sort_file)
 
+    global bugs_list_path
+    bugs_list_path = os.path.join(options.expdir, bugs_list)
+
 def free():
     user = os.getenv("USER")
     cl = command_output("cluster --list"
@@ -104,13 +104,13 @@ def generate_experiments(to_exec, plscript, dico):
     number_of_defines = len(dico.keys())
 
     expdir_preprocessing()
+    initialize_number_of_experiment()
 
     exp = []
     arg_sets = []
     parse_args(dico, arg_sets)
 
     if options.count:
-        raw_input(options.count)
         print len(arg_sets),"Experiments would be launched."
         sys.exit()
 
@@ -126,7 +126,8 @@ def generate_experiments(to_exec, plscript, dico):
         experiment_number += 1
         newExperiment = PLTask(dispatch, experiment_number, to_exec, plscript, defines)
         newExperiment.setOptions( options.expdir, keyed_log_file,
-                                  options.global_stats, options.keep_only_n,
+                                  options.global_stats,
+                                  options.keep_only_n, sort_file,
                                   bugs_list )
         newExperiment.set_option('log_file', 'log_file.txt')
 ##        newExperiment.setSharedFilesSemaphore(shared_files_access)
@@ -134,7 +135,39 @@ def generate_experiments(to_exec, plscript, dico):
         newExperiment.build()
 
         dispatch.add_task( newExperiment )
-                        
+
+def get_max_id(vmat):
+    max_id = -1
+    for line in vmat:
+        line = string.split(line)
+        _id = int(line[0]) 
+        if _id > max_id:
+            max_id = _id
+    return max_id
+
+def initialize_number_of_experiment():
+    global experiment_number
+
+    experiment_number = 0
+    if os.path.exists(keyed_log_file):
+        vmat = command_output("plearn vmat cat " + keyed_log_file)
+        experiment_number = max(experiment_number, get_max_id(vmat))
+    elif os.path.exists(bugs_list_path):
+        vmat = command_output("plearn vmat cat " + bugs_list_path)
+        experiment_number = max(experiment_number, get_max_id(vmat))
+
+##     ## Loading the old number of experiments
+##     nbExp_file = os.path.join(options.expdir,'.pydispatch_number_of_exp_done')
+##     raw_input(nbExp_file)
+    
+##     if os.path.exists( nbExp_file ):
+##         global experiment_number
+##         execfile(nbExp_file)
+##         print
+##         print '+++ Experiments done yet:',experiment_number
+##         print
+
+    
 def parse_args(dico, arg_sets, curr=[]):
     keys = dico.keys()
     depth = len(curr)
@@ -146,7 +179,7 @@ def parse_args(dico, arg_sets, curr=[]):
     k = keys[depth]
     if isinstance(dico[k], type([])):
         for val in dico[k]:
-            new = cp_array(curr)
+            new = copy.copy(curr)
             new.append(val)
             parse_args(dico, arg_sets, new)    
     else:
@@ -274,7 +307,7 @@ def writeVmat(vmat_file):
     amat.write("# Wrapper to visualize the results stored in " + keyed_log_file + "\n")
     amat.write("<SOURCES>\n")
     amat.write("@SortRowsVMatrix(" + "\n")
-    amat.write("  distr =" + "\n")
+    amat.write("  source =" + "\n")
     amat.write("    AutoVMatrix(specification = \"" + keyed_log_file + "\")" + "\n")
     amat.write("    sort_columns = [ " + sort_criterion_cost_index + " ]  # Add here the columns you want to get sorted" + "\n")
 
@@ -326,7 +359,7 @@ try:
 
     ## The actual option parsing
     options, targets = parser.parse_args()
-    current = parser.selected_mode()
+    current_mode = parser.selected_mode()
 
     parser.launch_selected_mode()
     

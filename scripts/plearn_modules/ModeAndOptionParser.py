@@ -385,7 +385,9 @@ class Mode(WithOptions):
     def write_targets_config(self, obj_name):
         if not self.expected_targets is None:
             for target in self.expected_targets:
-                target_config = [ "%s.set_target("
+##                 target_config = [ "%s.set_target("
+##                                   % obj_name ]
+                target_config = [ "%s("
                                   % obj_name ]
 
                 target_name = '"' + target + '"'
