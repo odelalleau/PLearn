@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: plapack.cc,v 1.3 2002/08/21 20:00:00 yoshua Exp $
+   * $Id: plapack.cc,v 1.4 2002/12/06 19:06:32 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -616,6 +616,22 @@ Vec multivariate_normal(const Vec& mu, const Vec& e_values, const Mat& e_vectors
       x[i] += mu[i];
     }
   return x;
+}
+
+void multivariate_normal(Vec& x, const Vec& mu, const Vec& e_values, const Mat& e_vectors, Vec& z)
+{
+  int n = mu.length(); // the number of dimension
+  z.resize(n);
+  x.resize(n);
+  x.clear();
+  for (int i = 0; i < n; i++)
+    z[i] = gaussian_01();
+  for (int i = 0; i < n; i++)
+    {
+      for (int j = 0; j < n; j++)
+        x[i] += e_vectors[j][i] * sqrt(e_values[j]) * z[j]; 
+      x[i] += mu[i];
+    }
 }
 
 void affineNormalization(Mat data, Mat W, Vec bias, real regularizer)

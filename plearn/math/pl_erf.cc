@@ -54,7 +54,7 @@ static double pl_gammln_cof[7]={ 1.000000000190015     ,
 				 0.1208650973866179e-2,
 				 -0.5395239384953e-5   };
 
-// function gamma returns
+// function gamma returns log(Gamma(z)), where
 // Gamma(z) = \int_0^infty t^{z-1}*e^{-t} dt
 real pl_gammln(real z)
 {

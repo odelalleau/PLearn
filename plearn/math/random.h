@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: random.h,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: random.h,v 1.2 2002/12/06 19:06:40 yoshua Exp $
    ******************************************************* */
 
 #ifndef RANDOM_H
@@ -51,8 +51,19 @@ using namespace std;
   -----------------
   */
 
-  /*!   returns the natural logarithm of the gamma function   */
-  real  log_gamma(real xx);
+/*!   returns the natural logarithm of the gamma function   */
+real  log_gamma(real x);
+
+/*! returns the natural logarithm of the beta function */
+real log_beta(real x, real y);
+
+/*! returns the incomplete beta function B_z(x,y)  (BUGGED?)*/
+real incomplete_beta(real z, real x, real y);
+/*! returns the incomplete beta function B_z(x,y)  */
+double incbet(double x, double y, double z);
+
+/*! Student-t cumulative distribution function */
+real student_t_cdf(real t, int nb_degrees_of_freedom);
 
   /*!   
   Utilities for random numbers generation. 

@@ -43,7 +43,7 @@
 namespace PLearn <%
 using namespace std;
 
-//!  function gamma returns
+//! function gamma returns log(Gamma(z)), where
 //!  Gamma(z) = \int_0^infty t^{z-1}*e^{-t} dt
 real pl_gammln(real z);
 
@@ -68,6 +68,8 @@ real pl_erf(real x);
 
 //!  For X ~ Normal(0,1), cumulative probability function P(X<x)
 real gauss_01_cum(real x);
+
+inline real normal_cdf(real x) { return gauss_01_cum(x); }
 
 inline real gauss_cum(real x, real mu, real sigma)
 { return gauss_01_cum((x-mu)/sigma); }

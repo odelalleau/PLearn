@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plapack.h,v 1.3 2002/08/21 20:00:00 yoshua Exp $
+   * $Id: plapack.h,v 1.4 2002/12/06 19:06:36 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -172,6 +172,11 @@ int matInvert(Mat& in, Mat& inverse);
   //!  and covariance matrix A = evectors * diagonal(e_values) * evectors' 
   Vec multivariate_normal(const Vec& mu, const Vec& e_values, const Mat& e_vectors);
 
+   //!  generate a vector x sampled from the normal with mean mu 
+   //!  and covariance matrix A = evectors * diagonal(e_values) * evectors' 
+   //! (the normal(0,I) originally sampled to obtain x is stored in z).
+   //! Unlike the other variants of this function, this one does not allocate anything.
+   void multivariate_normal(Vec& x, const Vec& mu, const Vec& e_values, const Mat& e_vectors, Vec& z);
 
 /*!   Solves AX = B
   This is a simple wrapper over the lapack routine. It expects At and Bt (transposes of A and B) as input, 
