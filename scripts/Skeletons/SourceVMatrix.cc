@@ -7,8 +7,7 @@ using namespace std;
 // DERIVEDCLASS //
 //////////////////
 DERIVEDCLASS::DERIVEDCLASS()
-  :inherited()
-  /* ### Initialise all fields to their default value */
+/* ### Initialize all fields to their default value */
 {
   // ...
   // ### You may or may not want to call build_() to finish building the object
