@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// includes_plearn.h
+// plearn_inc.h
 //
 // Copyright (C) 2004 Olivier Delalleau 
 // 
@@ -33,18 +33,17 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: includes_plearn.h,v 1.2 2004/06/10 20:07:26 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.1 2004/06/15 13:29:34 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
 
-/*! \file includes_plearn.h */
+/*! \file plearn_inc.h */
 
-/*! Include here all classes used in the PLearn library and available
-    in the PLearn CVS repository */
+/*! Include here all classes available in the PLearn CVS repository */
 
-#ifndef includes_plearn_INC
-#define includes_plearn_INC
+#ifndef plearn_inc_INC
+#define plearn_inc_INC
 
 /*****************
  * Miscellaneous *
