@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.21 2004/03/24 06:40:10 nova77 Exp $
+   * $Id: vmatmain.cc,v 1.22 2004/03/24 18:41:40 nova77 Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -587,7 +587,7 @@ void viewVMat(const VMat& vm)
             if(is_missing(searchval))
             {
               searchval = toreal(searchme);
-              // This ones gives a very bad error: to be changed
+              // This one gives a very bad error: to be changed
               if(is_missing(searchval))
                 PLERROR("Search item is neither a string with a valid mapping, nor convertible to a real");
             }
@@ -677,7 +677,8 @@ void viewVMat(const VMat& vm)
       case (int)'e': case (int)'E': 
         {
           echo();
-          char strmsg[] = {"Enter column(s) or range (ex: 7;1-20;7,8,12) to export: "};
+          char strmsg[100];
+			 sprintf(strmsg, "Enter column(s) or range (ex: 7;1-20;7,8,12) to export (enter=%d): ", curj);
           mvprintw(LINES-1,0,strmsg);
           clrtoeol();
 
@@ -685,18 +686,24 @@ void viewVMat(const VMat& vm)
           char c[50];
           getnstr(c, 50);
 
-          vector<string>columnList = split(c, " -,", true);
+			 vector<string>columnList;
+			 if (c[0] == '\0')
+			 {
+				// nothing was inserted, then gets the current column
+				// (note: I am reusing strmsg because I don't want to waste space by allocating a new string)
+				sprintf(strmsg, "%d\0", curj);
+				columnList.push_back(strmsg);				
+			 }
+			 else
+			 {
+				columnList = split(c, " -,", true);
+			 }
+
           vector<string>::iterator vsIt;
           char strReason[100] = {"\0"};
 
           // checks for errors
           bool invalidInput = false;
-          if (columnList.empty())
-          {
-            invalidInput = true;
-            strcpy(strReason, "Nothing was inserted");
-          }
-
           int colVal = 0;
           char separator = 0;
 
@@ -751,13 +758,16 @@ void viewVMat(const VMat& vm)
           else
           {
 
-            char filemsg[] = {"Enter file name: "};
+            char filemsg[] = {"Enter file name (enter=outCol.txt): "};
             mvprintw(LINES-1,0,filemsg);
             clrtoeol();
 
             move(LINES-1, (int)strlen(filemsg));
             char fname[200];
             getnstr(fname, 200);
+
+				if (fname[0] == '\0')
+				  strcpy(fname, "outCol.txt");
 
             ofstream outFile(fname, ios::out);
 
