@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsVMatrix.cc,v 1.5 2003/06/03 14:52:09 plearner Exp $
+   * $Id: SelectRowsVMatrix.cc,v 1.6 2003/06/25 14:45:56 ducharme Exp $
    ******************************************************* */
 
 #include "SelectRowsVMatrix.h"
@@ -55,7 +55,6 @@ SelectRowsVMatrix::SelectRowsVMatrix(VMat the_distr, TVec<int> the_indices) :
   VMatrix(the_indices.length(),the_distr->width()),
   distr(the_distr),indices(the_indices)
 {
-  fieldinfos = the_distr->fieldinfos;
   build_();
 }
 
@@ -64,7 +63,6 @@ SelectRowsVMatrix::SelectRowsVMatrix(VMat the_distr, Vec the_indices) :
   VMatrix(the_indices.length(),the_distr->width()),
   distr(the_distr),indices(the_indices.length())
 {
-  fieldinfos = the_distr->fieldinfos;
   indices << the_indices; // copy to integer indices
   build_();
 }

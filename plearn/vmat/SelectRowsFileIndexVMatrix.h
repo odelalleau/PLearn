@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsFileIndexVMatrix.h,v 1.2 2003/03/19 23:15:25 jkeable Exp $
+   * $Id: SelectRowsFileIndexVMatrix.h,v 1.3 2003/06/25 14:45:56 ducharme Exp $
    ******************************************************* */
 
 
@@ -61,14 +61,8 @@ protected:
   IntVecFile indices;
 public:
   //! Copy the original fieldinfos upon construction
-  SelectRowsFileIndexVMatrix(VMat the_distr, const string& indexfile) :
-    VMatrix(0,the_distr->width()),
-    distr(the_distr),indices(indexfile) 
-    {
-      fieldinfos = the_distr->fieldinfos;
-      length_ = indices.length();
-    }
-  
+  SelectRowsFileIndexVMatrix(VMat the_distr, const string& indexfile);
+
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;
   virtual void getRow(int i, Vec v) const;

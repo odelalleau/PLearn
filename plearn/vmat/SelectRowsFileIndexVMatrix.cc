@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsFileIndexVMatrix.cc,v 1.2 2003/03/19 23:15:25 jkeable Exp $
+   * $Id: SelectRowsFileIndexVMatrix.cc,v 1.3 2003/06/25 14:45:56 ducharme Exp $
    ******************************************************* */
 
 #include "SelectRowsFileIndexVMatrix.h"
@@ -44,6 +44,16 @@ namespace PLearn <%
 using namespace std;
 
 /** SelectRowsFileIndexVMatrix **/
+
+SelectRowsFileIndexVMatrix::SelectRowsFileIndexVMatrix(VMat the_distr,
+  const string& indexfile) :
+    VMatrix(0,the_distr->width()),
+    distr(the_distr),indices(indexfile) 
+{
+  fieldinfos = the_distr->fieldinfos;
+  length_ = indices.length();
+  defineSizes(the_distr->inputsize(), the_distr->targetsize(), the_distr->weightsize());
+}
 
 real SelectRowsFileIndexVMatrix::get(int i, int j) const
 { return distr->get(indices[i], j); }
