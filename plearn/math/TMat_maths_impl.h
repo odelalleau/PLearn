@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.30 2004/01/10 22:54:29 yoshua Exp $
+   * $Id: TMat_maths_impl.h,v 1.31 2004/01/13 17:41:10 ouimema Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -3021,6 +3021,74 @@ void makeRowsSumTo1(const TMat<T>& mat)
   {
     TVec<T> row_i = mat(i);
     divide(row_i, sum(row_i), row_i);
+  }
+}
+
+//! Uses partial_sort.
+//! Sorts only the first k smalests rows and put it in the k firsts rows. 
+//! The other rows are in an arbitrary order.
+//! If sortk is 0, the k smalest rows are put in the k firsts rows but in an 
+//! arbitrary order. This implementation should be very efficient,
+//! but it does two memory allocation: a first one of mat.length()*(sizeof(real)+sizeof(int))
+//! and a second one of mat.length()*sizeof(int).
+template<class T>
+void partialSortRows(const TMat<T>& mat, int k, int sortk=1, int col=0)
+{
+  vector< pair<T,int> > order(mat.length());
+  typename vector< pair<T,int> >::iterator it = order.begin();
+  T* ptr = mat.data()+col;
+  for(int i=0; i<mat.length(); ++i, ptr+=mat.mod(), ++it)
+  {
+    it->first = *ptr;
+    it->second = i;
+  }
+
+  typename vector< pair<T,int> >::iterator middle = order.begin();
+  for(int i=0; i<k; ++i, ++middle);
+
+  partial_sort(order.begin(),middle,order.end());
+    
+  // Build the new destination position array
+  // (destpos is the inverse map of order.second)
+  vector<int> destpos(mat.length());  
+  for(int i=0; i<mat.length(); ++i)
+    destpos[order[i].second] = i;
+
+  // Put elements wich are in the rows k to mat.length()-1 at their place if
+  // their destpos is in the range 0 to k-1. If not, we leave them there.
+  for(int startpos = mat.length()-1; startpos>=k; startpos--)
+  {
+    int dest = destpos[startpos];
+    if(dest!=-1)
+    {
+      while(dest<k)
+      {
+        mat.swapRows(startpos,dest);
+        int newdest = destpos[dest];
+        destpos[dest] = -1;
+        dest = newdest;
+      }
+      destpos[startpos] = -1;
+    }
+  }
+
+  if(sortk) {
+    // Put the k firsts rows in the right order
+    for(int startpos = 0; startpos<k; startpos++)
+    {
+      int dest = destpos[startpos];      
+      if(dest!=-1)
+      {
+        while(dest!=startpos)
+        {
+          mat.swapRows(startpos,dest);
+          int newdest = destpos[dest];
+          destpos[dest] = -1;
+          dest = newdest;
+        }
+        destpos[startpos] = -1;
+      }
+    }
   }
 }
 
