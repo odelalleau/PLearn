@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddLayersNNet.h,v 1.6 2004/10/12 15:43:01 tihocan Exp $ 
+   * $Id: AddLayersNNet.h,v 1.7 2004/10/12 17:32:55 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -66,6 +66,9 @@ protected:
   //! This vector contains the 'real' parts' sizes (there is not '-1').
   //! It is filled at build time from 'parts_size' and the training set inputsize.
   TVec<int> real_parts_size;
+
+  //! Contains the added hidden layers.
+  VarArray hidden_layers;
 
   //! Contains the weights for the hidden layers added.
   VarArray hidden_weights;
@@ -119,6 +122,10 @@ public:
   // **************************
   // **** PLearner methods ****
   // **************************
+
+  //! Return the current activations of a given added hidden layer.
+  //! This is not a copy, so they should not be modified.
+  Vec getHiddenUnitsActivation(int layer);
 
   //! Return the hidden weights for a given hidden layer.
   //! This is not a copy, so they should not be modified.

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddLayersNNet.cc,v 1.7 2004/10/12 15:43:01 tihocan Exp $ 
+   * $Id: AddLayersNNet.cc,v 1.8 2004/10/12 17:32:54 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -193,7 +193,7 @@ void AddLayersNNet::build_()
   }
 
   // Add the required hidden layers.
-  VarArray hidden_layers(n_parts);
+  hidden_layers.resize(n_parts);
   hidden_weights.resize(n_parts);
   for (int i = 0; i < n_parts; i++) {
     if (add_hidden[i] > 0) {
@@ -252,12 +252,18 @@ void AddLayersNNet::buildPenalties(const Var& hidden_layer) {
   }
 }
 
+//////////////////////////////
+// getHiddenUnitsActivation //
+//////////////////////////////
+Vec AddLayersNNet::getHiddenUnitsActivation(int layer) {
+  return hidden_layers[layer]->value;
+}
+
 //////////////////////
 // getHiddenWeights //
 //////////////////////
 Mat AddLayersNNet::getHiddenWeights(int layer) {
-  Mat result = hidden_weights[layer]->matValue;
-  return result;
+  return hidden_weights[layer]->matValue;
 }
 
 ////////////////////////////
