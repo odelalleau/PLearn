@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeighborhoodSmoothnessNNet.h,v 1.2 2004/02/20 17:09:29 tihocan Exp $
+   * $Id: NeighborhoodSmoothnessNNet.h,v 1.3 2004/02/20 20:31:27 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearn/plearn_learners/classifiers/NeighborhoodSmoothnessNNet.h */
@@ -68,7 +68,7 @@ using namespace std;
     Var bag_output; // P(y=1|bag_inputs)
     Var bag_hidden; // The hidden layers of all inputs in a bag.
     mutable int test_bag_size; // BECAUSE OF UGLY HACK IN computOutputAndCost (look at it, it's worth it!)
-    Func inputs_and_targets_to_costs; // (bag inputs and targets) -> cost
+    Func invars_to_training_cost; // (bag inputs and targets) -> training cost
 
     VarArray costs; // (negative log-likelihood, classification error) for the bag
     VarArray penalties;
@@ -79,7 +79,8 @@ using namespace std;
 
     Vec paramsvalues; // values of all parameters
 
-    Mat p_ij;   // The precomputed p_ij.
+    Mat p_ij_mat;   // The precomputed p_ij.
+    Var p_ij;       // The probabilities p_ij on the inputs.
 
   public:
     mutable Func f; // input -> output
@@ -101,8 +102,10 @@ using namespace std;
     int nhidden2;   // number of hidden units in second hidden layer (default:0)
     int noutputs;   // number of output units (outputsize)
 
+    int knn;
     Ker kernel_input;
     real sigma_hidden;
+    real sne_weight;
 
     real weight_decay; // default: 0
     real bias_decay;   // default: 0 
@@ -145,8 +148,6 @@ using namespace std;
     static string help();
     virtual string getOptionsToSave() const;
     */
-
-    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
     virtual void build();
     virtual void forget(); // simply calls initializeParams()

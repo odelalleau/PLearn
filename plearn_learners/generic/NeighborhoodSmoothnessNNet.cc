@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.2 2004/02/20 17:09:29 tihocan Exp $
+   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.3 2004/02/20 20:31:27 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeighborhoodSmoothnessNNet.h */
@@ -57,6 +57,7 @@
 #include "LogSoftmaxVariable.h"
 #include "MinusVariable.h"
 #include "MulticlassLossVariable.h"
+#include "NegateElementsVariable.h"
 #include "NegCrossEntropySigmoidVariable.h"
 #include "NeighborhoodSmoothnessNNet.h"
 #include "OneHotSquaredLoss.h"
@@ -72,6 +73,7 @@
 #include "SubMatVariable.h"
 #include "SubVMatrix.h"
 #include "TanhVariable.h"
+#include "TimesVariable.h"
 #include "TimesScalarVariable.h"
 #include "TransposeProductVariable.h"
 #include "UnfoldedFuncVariable.h"
@@ -98,6 +100,7 @@ NeighborhoodSmoothnessNNet::NeighborhoodSmoothnessNNet() // DEFAULT VALUES FOR A
    nhidden2(0),
    noutputs(0),
    sigma_hidden(0.1),
+   sne_weight(0),
    weight_decay(0),
    bias_decay(0),
    layer1_weight_decay(0),
@@ -129,6 +132,12 @@ void NeighborhoodSmoothnessNNet::declareOptions(OptionList& ol)
   declareOption(ol, "nhidden2", &NeighborhoodSmoothnessNNet::nhidden2, OptionBase::buildoption, 
                 "    number of hidden units in second hidden layer (0 means no hidden layer)\n");
 
+  declareOption(ol, "sne_weight", &NeighborhoodSmoothnessNNet::sne_weight, OptionBase::buildoption, 
+                "    The weight of the SNE cost in the total cost optimized.");
+
+  declareOption(ol, "knn", &NeighborhoodSmoothnessNNet::knn, OptionBase::buildoption, 
+                "    The number of nearest neighbours considered (including the point itself).");
+
   declareOption(ol, "kernel_input", &NeighborhoodSmoothnessNNet::kernel_input, OptionBase::buildoption, 
                 "    The kernel used to compute the similarity between inputs.");
 
@@ -141,7 +150,7 @@ void NeighborhoodSmoothnessNNet::declareOptions(OptionList& ol)
                 "    It is typically of the same dimensionality as the target for regression problems \n"
                 "    But for classification problems where target is just the class number, noutputs is \n"
                 "    usually of dimensionality number of classes (as we want to output a score or probability \n"
-                "    vector, one per class");
+                "    vector, one per class)");
 
   declareOption(ol, "weight_decay", &NeighborhoodSmoothnessNNet::weight_decay, OptionBase::buildoption, 
                 "    global weight decay for all layers\n");
@@ -215,34 +224,18 @@ void NeighborhoodSmoothnessNNet::declareOptions(OptionList& ol)
 
 }
 
+///////////
+// build //
+///////////
 void NeighborhoodSmoothnessNNet::build()
 {
   inherited::build();
   build_();
 }
 
-void NeighborhoodSmoothnessNNet::setTrainingSet(VMat training_set, bool call_forget)
-{ 
-  bool training_set_has_changed =
-    !train_set || train_set->width()!=training_set->width() ||
-    train_set->length()!=training_set->length() || train_set->inputsize()!=training_set->inputsize()
-    || train_set->weightsize()!= training_set->weightsize();
-
-  train_set = training_set;
-  if (training_set_has_changed)
-  {
-    inputsize_ = train_set->inputsize();
-    targetsize_ = train_set->targetsize();
-    weightsize_ = train_set->weightsize();
-  }
-
-  if (training_set_has_changed || call_forget)
-  {
-    build(); // MODIF FAITE PAR YOSHUA: sinon apres un setTrainingSet le build n'est pas complete dans un NeighborhoodSmoothnessNNet train_set = training_set;
-    if (call_forget) forget();
-  }
-}
-
+////////////
+// build_ //
+////////////
 void NeighborhoodSmoothnessNNet::build_()
 {
   /*
@@ -255,15 +248,15 @@ void NeighborhoodSmoothnessNNet::build_()
   if(inputsize_>=0 && targetsize_>=0 && weightsize_>=0)
   {
 
+    int knn = max_n_instances;
     if (train_set) {
       // Precompute the p_ij.
       if (verbosity >= 2) {
         cout << "Computing the p_ij... " << flush;
       }
       kernel_input->setDataForKernelMatrix(train_set);
-      int knn = max_n_instances;
       int n = train_set->length() / knn;
-      p_ij.resize(n, knn-1);
+      p_ij_mat.resize(n, knn-1);
       for (int i = 0; i < n; i++) {
         real sum = 0;
         real k_ij;
@@ -272,25 +265,29 @@ void NeighborhoodSmoothnessNNet::build_()
           int i_th_point = i * knn;
           int j_th_nn = i_th_point + j;
           k_ij = kernel_input->evaluate_i_j(i_th_point, j_th_nn);
-          p_ij(i,j-1) = k_ij;
+          p_ij_mat(i,j-1) = k_ij;
           sum += k_ij;
         }
-        p_ij.row(i) /= sum;
+        p_ij_mat.row(i) /= sum;
       }
       if (verbosity >= 2) {
         cout << "DONE" << endl;
       }
+      p_ij = Var(p_ij_mat);
     }
       
-      // init. basic vars
-      input = Var(inputsize(), "input");
-      output = input;
-      params.resize(0);
+    // init. basic vars
+    int true_inputsize = inputsize() - (knn - 1);
+    Var input_and_pij = Var(inputsize(), "input");
+    input = subMat(input_and_pij, 0, 0, input_and_pij->length(), true_inputsize);
+    p_ij = subMat(input_and_pij, 0, 0, input_and_pij->length(), knn - 1);
+    output = input;
+    params.resize(0);
 
       // first hidden layer
       if(nhidden>0)
         {
-          w1 = Var(1+inputsize(), nhidden, "w1");      
+          w1 = Var(1 + true_inputsize, nhidden, "w1");      
           output = tanh(affine_transform(output,w1));
           params.append(w1);
           last_hidden = output;
@@ -318,8 +315,8 @@ void NeighborhoodSmoothnessNNet::build_()
       // direct in-to-out layer
       if(direct_in_to_out)
         {
-          wdirect = Var(inputsize(), outputsize(), "wdirect");// Var(1+inputsize(), outputsize(), "wdirect");
-          output += transposeProduct(wdirect, input);// affine_transform(input,wdirect);
+          wdirect = Var(true_inputsize, outputsize(), "wdirect");
+          output += transposeProduct(wdirect, input);
           params.append(wdirect);
         }
 
@@ -398,11 +395,15 @@ void NeighborhoodSmoothnessNNet::build_()
       output->setName("element output");
 
       f = Func(input, output);
-      f_input_to_hidden = Func(input,last_hidden);
+      f_input_to_hidden = Func(input_and_pij, last_hidden);
 
-      bag_inputs = Var(max_n_instances,inputsize());
+      /*
+       * costfuncs
+       */
+
+      bag_inputs = Var(max_n_instances, inputsize());
       bag_size = Var(1,1);
-      bag_hidden = unfoldedFuncOf(bag_inputs,f_input_to_hidden);
+      bag_hidden = unfoldedFuncOf(bag_inputs, f_input_to_hidden);
 
       // The q_ij function.
       Var hidden_0 = subMat(bag_hidden, 0, 0, 1, bag_hidden->width());
@@ -423,13 +424,11 @@ void NeighborhoodSmoothnessNNet::build_()
           ),
           f_hidden_to_k_hidden
         );
-      Var one_over_sum_of_k_hidden = invertElements(columnSum(k_hidden_all));
-      Var q_ij = timesScalar(k_hidden_all, one_over_sum_of_k_hidden);
-      Func f_q_ij(bag_hidden, q_ij);
+      Var one_over_sum_of_k_hidden = invertElements(sum(k_hidden_all));
+      Var log_q_ij = log(timesScalar(k_hidden_all, one_over_sum_of_k_hidden));
+      Var minus_weight_sum_p_ij_log_q_ij =
+        timesScalar(sum(times(p_ij, log_q_ij)), var(-sne_weight));
 
-      /*
-       * costfuncs
-       */
       int ncosts = cost_funcs.size();  
       if(ncosts<=0)
         PLERROR("In NNet::build_()  Empty cost_funcs : must at least specify the cost function to optimize!");
@@ -486,7 +485,7 @@ void NeighborhoodSmoothnessNNet::build_()
           //if(sampleweight)
           //  costs[k]= costs[k] * sampleweight; // NO, because this is taken into account (more properly) in stats->update
         }
-      
+
       test_costs = hconcat(costs);
 
       // Apply penalty to cost.
@@ -509,48 +508,60 @@ void NeighborhoodSmoothnessNNet::build_()
           training_cost = hconcat(costs[0] & test_costs);
         }
       }
+
+      // We add the SNE cost.
+      // TODO Make sure we optimize the training cost.
+      training_cost[0] = training_cost[0] + minus_weight_sum_p_ij_log_q_ij;
       
       training_cost->setName("training_cost");
       test_costs->setName("test_costs");
 
       invars = bag_inputs & bag_size & target & sampleweight;
-      inputs_and_targets_to_costs = Func(invars,costs);
+      invars_to_training_cost = Func(invars, training_cost);
 
-      inputs_and_targets_to_costs->recomputeParents();
+      invars_to_training_cost->recomputeParents();
 
-      /*  VarArray outvars; DO WE NEED THIS?
-  VarArray testinvars;
-  testinvars.push_back(input);
-  outvars.push_back(output);
-  testinvars.push_back(target);
-  outvars.push_back(target);
-  
-  test_costf = Func(testinvars, output&test_costs);
-  test_costf->recomputeParents();
-  output_and_target_to_cost = Func(outvars, test_costs); 
-  output_and_target_to_cost->recomputeParents();
-      */
+      // Other funcs.
+      VarArray outvars;
+      VarArray testinvars;
+      testinvars.push_back(input);
+      outvars.push_back(output);
+      testinvars.push_back(target);
+      outvars.push_back(target);
+
+      test_costf = Func(testinvars, output&test_costs);
+      test_costf->recomputeParents();
+      output_and_target_to_cost = Func(outvars, test_costs);
+      output_and_target_to_cost->recomputeParents();
+
   }
 }
 
+////////////////
+// outputsize //
+////////////////
 int NeighborhoodSmoothnessNNet::outputsize() const
 { return noutputs; }
 
+///////////////////////
+// getTrainCostNames //
+///////////////////////
 TVec<string> NeighborhoodSmoothnessNNet::getTrainCostNames() const
 {
-  TVec<string> names(3);
-  names[0] = "NLL+penalty";
-  names[1] = "NLL";
-  names[2] = "class_error";
-  return names;
+  return (cost_funcs[0]+"+penalty+SNE") & cost_funcs;
 }
 
+//////////////////////
+// getTestCostNames //
+//////////////////////
 TVec<string> NeighborhoodSmoothnessNNet::getTestCostNames() const
 { 
-  return getTrainCostNames();
+  return cost_funcs;
 }
 
-
+///////////
+// train //
+///////////
 void NeighborhoodSmoothnessNNet::train()
 {
   // NeighborhoodSmoothnessNNet nstages is number of epochs (whole passages through the training set)
@@ -566,12 +577,12 @@ void NeighborhoodSmoothnessNNet::train()
   if(f.isNull()) // Net has not been properly built yet (because build was called before the learner had a proper training set)
     build();
 
-  Var totalcost = sumOverBags(train_set, inputs_and_targets_to_costs, max_n_instances, batch_size);
-  if(optimizer)
-    {
-      optimizer->setToOptimize(params, totalcost);  
-      optimizer->build();
-    }
+  Var totalcost = sumOverBags(train_set, invars_to_training_cost, max_n_instances, batch_size);
+
+  if(optimizer) {
+    optimizer->setToOptimize(params, totalcost);  
+    optimizer->build();
+  }
 
   // number of optimiser stages corresponding to one learner stage (one epoch)
   int optstage_per_lstage = 0;
@@ -586,12 +597,13 @@ void NeighborhoodSmoothnessNNet::train()
     if(report_progress)
       pb = new ProgressBar("Counting nb bags in train_set for NeighborhoodSmoothnessNNet ", l);
     Vec row(train_set->width());
-    Vec row_target = row.subVec(train_set->inputsize(),train_set->targetsize());
-    for (int i=0;i<l;i++)
-    {
+    int tag_column = train_set->inputsize() + train_set->targetsize() - 1;
+    for (int i=0;i<l;i++) {
       train_set->getRow(i,row);
-      if (!row_target.hasMissing())
+      if (row[tag_column] == 1) {
+        // 1 indicates the beginning of a new bag.
         n_bags++;
+      }
       if(pb)
         pb->update(i);
     }
@@ -625,46 +637,42 @@ void NeighborhoodSmoothnessNNet::train()
   if(pb)
     delete pb;
 
-  //output_and_target_to_cost->recomputeParents();
-  //test_costf->recomputeParents();
+  // TODO Not sure if this is needed, but just in case...
+  output_and_target_to_cost->recomputeParents();
+  test_costf->recomputeParents();
 
-  // cerr << "totalcost->value = " << totalcost->value << endl;
-  // cout << "Result for benchmark is: " << totalcost->value << endl;
 }
 
-
-void NeighborhoodSmoothnessNNet::computeOutput(const Vec& inputv, Vec& outputv) const
+///////////////////
+// computeOutput //
+///////////////////
+void NeighborhoodSmoothnessNNet::computeOutput(
+    const Vec& inputv, Vec& outputv) const
 {
   f->fprop(inputv,outputv);
 }
 
-void NeighborhoodSmoothnessNNet::computeOutputAndCosts(const Vec& inputv, const Vec& targetv, 
-                                 Vec& outputv, Vec& costsv) const
+///////////////////////////
+// computeOutputAndCosts //
+///////////////////////////
+void NeighborhoodSmoothnessNNet::computeOutputAndCosts(
+    const Vec& inputv, const Vec& targetv, Vec& outputv, Vec& costsv) const
 {
-  f->fprop(inputv,outputv); // this is the individual P(y_i|x_i)
-  bag_inputs->matValue(test_bag_size++) << inputv;
-  // UGLY HACK WHICH ASSUMES THAT computeOutputAndCosts WILL BE CALLED
-  // FOR ALL ROWS OF A BAG, OR NOT AT ALL.
-  if (targetv.hasMissing())
-    costsv.fill(MISSING_VALUE);
-  else // end of bag, we have a target and we can compute a cost
-  {
-    bag_size->valuedata[0]=test_bag_size;
-    target->value << targetv;
-    if (weightsize_>0) sampleweight->valuedata[0]=1; // the test weights are known and used higher up
-    inputs_and_targets_to_costs->fproppath.fprop();
-//    costsv << costs>value; // COMMENTED OUT BECAUSE OF COMPILATION ERROR TODO FIX
-    test_bag_size=0;  // this is where it gets really ugly... (we don't have an explicit synchronization signal for the beginning of each block)
-  }
+  test_costf->fprop(inputv&targetv, outputv&costsv);
 }
 
-
-void NeighborhoodSmoothnessNNet::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv, 
-                                   const Vec& targetv, Vec& costsv) const
+/////////////////////////////
+// computeCostsFromOutputs //
+/////////////////////////////
+void NeighborhoodSmoothnessNNet::computeCostsFromOutputs(
+    const Vec& inputv, const Vec& outputv, const Vec& targetv, Vec& costsv) const
 {
-  //output_and_target_to_cost->fprop(outputv&targetv, costsv); 
+  output_and_target_to_cost->fprop(outputv&targetv, costsv); 
 }
 
+//////////////////////
+// initializeParams //
+//////////////////////
 void NeighborhoodSmoothnessNNet::initializeParams()
 {
   if (seed_>=0)
@@ -672,8 +680,7 @@ void NeighborhoodSmoothnessNNet::initializeParams()
   else
     PLearn::seed();
 
-  //real delta = 1./sqrt(inputsize());
-  real delta = 1./inputsize();
+  real delta = 1. / (inputsize() - (knn - 1));
   /*
   if(direct_in_to_out)
     {
@@ -713,12 +720,18 @@ void NeighborhoodSmoothnessNNet::initializeParams()
     optimizer->reset();
 }
 
+////////////
+// forget //
+////////////
 void NeighborhoodSmoothnessNNet::forget()
 {
   if (train_set) initializeParams();
   stage = 0;
 }
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void NeighborhoodSmoothnessNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
@@ -741,6 +754,7 @@ void NeighborhoodSmoothnessNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(test_costf, copies);
   deepCopyField(output_and_target_to_cost, copies);
   deepCopyField(optimizer, copies);
+  PLERROR("In NeighborhoodSmoothnessNNet::makeDeepCopyFromShallowCopy - Not fully implemented yet");
 }
 
 %> // end of namespace PLearn
