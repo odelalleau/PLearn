@@ -64,6 +64,7 @@ class SequentialValidation: public Object
     bool save_test_outputs;
     bool save_test_costs;
     bool save_stat_collectors;
+  bool provide_learner_expdir; /* =true */
 
   private:
     //! This does the actual building

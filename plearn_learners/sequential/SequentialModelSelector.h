@@ -79,7 +79,10 @@ class SequentialModelSelector: public SequentialLearner
 
     //! simply calls parentclass::build() then build_()
     virtual void build();
-    
+
+  //! Redefines so that it ALSO calls the method on all the learners in the TVec models
+  virtual void setExperimentDirectory(const string& _expdir);
+
     virtual void train();
  
     virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
@@ -87,7 +90,7 @@ class SequentialModelSelector: public SequentialLearner
 
     virtual void computeOutput(const Vec& input, Vec& output) const;
 
-    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
+   virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
         const Vec& target, Vec& costs) const;
 
     virtual void computeOutputAndCosts(const Vec& input, const Vec& target,

@@ -94,7 +94,7 @@ class SequentialLearner: public PLearner
 
     //! Default behaviour: return train_set->targetsize()
     virtual int outputsize() const;
-    
+  
 /*!       *** SUBCLASS WRITING: ***
       Does the actual training. Subclasses must implement this method.
       The method should upon entry, call setTrainingSet(training_set);

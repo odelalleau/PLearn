@@ -57,7 +57,8 @@ SequentialValidation::SequentialValidation()
     save_data_sets(false),
     save_test_outputs(false),
     save_test_costs(false),
-    save_stat_collectors(false)
+    save_stat_collectors(false),
+    provide_learner_expdir(true)
 {}
 
 void SequentialValidation::build_()
@@ -142,6 +143,9 @@ void SequentialValidation::run()
     PLERROR("No expdir specified for SequentialValidation.");
   if (!learner)
     PLERROR("No learner specified for SequentialValidation.");
+
+  if(provide_learner_expdir)
+    learner->setExperimentDirectory(append_slash(expdir)+"Model");
 
   // This is to set inputsize() and targetsize()
   learner->setTrainingSet(dataset, false);

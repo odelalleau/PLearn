@@ -48,6 +48,19 @@ SequentialModelSelector::SequentialModelSelector()
   : init_train_size(1), cost_index(0), cost_type("SumCost")
 {}
 
+void SequentialModelSelector::setExperimentDirectory(const string& _expdir)
+{
+  PLearner::setExperimentDirectory(_expdir);
+  string model_m;
+  for(int m=0; m < models.size(); m++)
+  {
+    model_m = models[m]->getExperimentDirectory();
+    if(model_m == "")
+      model_m = "Model_" + tostring(m);
+    models[m]->setExperimentDirectory(append_slash(_expdir)+ model_m);
+  }
+}
+
 void SequentialModelSelector::train()
 {
   ProgressBar* pb;
@@ -72,6 +85,11 @@ void SequentialModelSelector::train()
       models[i]->setTrainStatsCollector(dummy_stats);
       models[i]->train();
       models[i]->test(sub_test, dummy_stats); // last cost computed goes at t-1, last prediction at t-1-horizon
+      
+      PLWARNING("( %d, %d)", models[i]->errors.length(), models[i]->errors.width());
+      PLWARNING("models[%d]->errors.subMat(0,%d,%d,1)", i, cost_index, t);
+      cout << models[i]->errors.subMat(0,cost_index,t,1) << endl;
+
       Vec sequence_errors = remove_missing(models[i]->errors.subMat(0,cost_index,t,1).toVecCopy());
       sequence_costs[i] = sequenceCost(sequence_errors);
     }
@@ -108,6 +126,7 @@ void SequentialModelSelector::train()
 
   string s1 = append_slash(expdir) + "predictions_train_t=" + tostring(last_train_t); //"seq_model/predictions_train_t=" + tostring(last_train_t);
   string s2 = append_slash(expdir) + "errors_train_t=" + tostring(last_train_t);
+  cout << "Expdir: " << expdir << ", " << append_slash(expdir) << "; Strings: " << s1 << "; " << s2 << endl;
   saveAsciiWithoutSize(s1, predictions);
   saveAsciiWithoutSize(s2, errors);
 
