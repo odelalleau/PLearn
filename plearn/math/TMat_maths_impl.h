@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: TMat_maths_impl.h,v 1.2 2002/09/04 23:44:39 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -3655,6 +3655,30 @@ void normalize(TMat<T>& m)
     computeMeanAndStddev(m,meanvec,stddevvec);
     m -= meanvec;
     m /= stddevvec;
+}
+
+//! Divides each row by the sum of its elements
+template<class T>
+void normalizeRows(const TMat<T>& m)
+{
+  int l = m.length();
+  for(int i=0; i<l; i++)
+    {
+      TVec<T> v = m(i);
+      v /= sum(v);
+    }
+}
+
+//! Divides each column by the sum of its elements
+template<class T>
+void normalizeColumns(const TMat<T>& m)
+{
+  int l = m.length();
+  for(int i=0; i<l; i++)
+    {
+      TMat<T> v = m.column(i);
+      v /= sum(v);
+    }
 }
 
 //! divide each row by its n norm 

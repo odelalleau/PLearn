@@ -1,0 +1,142 @@
+%% -*- mode:latex; tex-open-quote:"\\og{}"; tex-close-quote:"\\fg{}" -*-
+%%
+%%  Copyright (c) 2002 by Pascal Vincent
+%%
+%%  $Id: tools_guide.tex,v 1.1 2002/09/04 23:42:04 plearner Exp $
+
+\documentclass[11pt]{book}
+\usepackage{t1enc}              % new font encoding  (hyphenate words w/accents)
+\usepackage{ae}                 % use virtual fonts for getting good PDF
+\usepackage{isolatin1}		% support for French accents
+
+%%%%%%%%% Definitions %%%%%%%%%%%%
+\newcommand{\PLearn}{\bf \it PLearn}
+\newcommand{\Object}{\bf Object} 
+\newcommand{\Learner}{\bf Learner} 
+\newcommand{\PPointable}{\bf PPointable} 
+
+
+\begin{document}
+
+%%%%%%%% Title Page %%%%%%%%%%
+\pagenumbering{roman}
+\thispagestyle{empty}
+
+\thispagestyle{empty}
+\begin{center}
+{\Huge PLearn Programmer's Tools Guide}\\
+\vspace{.5cm}
+{\Large The tools that make the programmer's life simpler}\\ 
+\vspace{6.5in}
+\end{center}
+\pagebreak
+
+\vspace*{10cm}
+
+
+{\small
+
+Copyright \copyright\ 2002 Pascal Vincent \\
+
+Permission is granted to copy and distribute this document in any medium,
+with or without modification, provided that the following conditions are
+met:
+
+\begin{enumerate}
+\item Modified versions must give fair credit to all authors.
+\item Modified versions may not be written with the aim to discredit, misrepresent, or otherwise taint the
+      reputation of any of the above authors.
+\item Modified versions must retain the above copyright notice, and append to
+   it the names of the authors of the modifications, together with the years the
+   modifications were written.
+\item Modified versions must retain this list of conditions unaltered, 
+    and may not impose any further restrictions.
+\end{enumerate}
+}
+
+\pagebreak
+
+%%%%%%%%% Table of contents %%%%%%%%%%%%
+\addcontentsline{toc}{chapter}{\numberline{}Table of contents}
+\tableofcontents
+
+\cleardoublepage\pagebreak
+\pagenumbering{arabic}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{PLearn scripts}
+
+\section{pymake}
+
+\section{cvschangeroot}
+
+\section{perlgrep}
+
+\section{search-replace}
+
+\section{pytransform}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{The PLearn test-suite }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{The speed benchmark suite}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{External tools}
+
+\section{cvs}
+
+\section{valgrind}
+
+\section{doxygen}
+
+\section{latex2html}
+
+\section{mpi}
+
+
+\chapter*{License}
+
+This document is covered by the license appearing after the title page.
+
+\vspace*{.5cm}
+
+The PLearn software library and tools described in this document are
+distributed under the following BSD-type license:
+
+\begin{verbatim}
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+ 
+  1. Redistributions of source code must retain the above copyright
+     notice, this list of conditions and the following disclaimer.
+ 
+  2. Redistributions in binary form must reproduce the above copyright
+     notice, this list of conditions and the following disclaimer in the
+     documentation and/or other materials provided with the distribution.
+ 
+  3. The name of the authors may not be used to endorse or promote
+     products derived from this software without specific prior written
+     permission.
+ 
+ THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+ IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+ NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+\end{verbatim}
+
+
+\end{document}
+

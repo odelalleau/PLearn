@@ -37,8 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: general.cc,v 1.1 2002/07/30 09:01:26 plearner Exp $
-   * AUTHORS: Pascal Vincent & Yoshua Bengio
+   * $Id: general.cc,v 1.2 2002/09/04 23:44:39 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 

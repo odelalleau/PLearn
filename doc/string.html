@@ -1,0 +1,37 @@
+<html>
+<head>
+<title>PLearn and string</title>
+</head>
+
+<body text="#000000" bgcolor="#FFFFFF">
+
+<h1>The standard C++ string class and PLearn</h1>
+
+We encourage the use of the standard C++ <code>string</code> class within PLearn.
+
+<P>
+<strong>If you are not familiar with the <code>string</code> class, take a look at this <a href="http://www.msoe.edu/eecs/ce/courseinfo/stl/string.htm">quick tutorial</a>.</strong>
+
+<P> 
+In addition PLearn defines the following useful functions (in <code>stringutils.h</code> which is included by <code>general.h</code>):
+
+<P>
+
+<ul>
+<li><code>tostring</code> which will transform about anything (number, Vec, ...) to a <code>string</code>
+<li><code>left</code>, <code>right</code> and <code>center</code> that allow you to align a string within a cell of given size.
+</ul>
+
+<P>
+These allow you to do things such as: 
+
+<pre>
+string firstname;
+int age;
+cout << "Please enter your first name and age";
+cin >> firstname >> age;
+string s = string("Your name is ") + firstname + " and you are " + tostring(age) + " years old.";
+string tablerow = center(firstname,20) + "|" + right(tostring(age),3);
+</pre>
+
+</body>
