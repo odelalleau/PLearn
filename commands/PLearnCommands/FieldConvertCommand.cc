@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: FieldConvertCommand.cc,v 1.22 2004/03/12 23:31:34 tihocan Exp $
+ * $Id: FieldConvertCommand.cc,v 1.23 2004/03/13 02:38:27 tihocan Exp $
  ******************************************************* */
 
 #include "FieldConvertCommand.h"
@@ -175,28 +175,72 @@ void FieldConvertCommand::run(const vector<string> & args)
       // add target ONLY at the end of the process 
       // (so it's the last column of the dataset)
       type=skip;
-    // no ? then find out type by ourselves
-    else
+
+    // Test for fields to be skipped, when not enough data is available.
+    if(sc[i].nnonmissing() <= (1-FRAC_MISSING_TO_SKIP) * vm->length()) {
+      if (type != unknown && type != skip && type != constant) {
+        // We forced the type to something that should not be skipped.
+        cout << "Warning: you forced the type of field number " << i << ", "
+             << "but there are too many missing values so it'll be skipped. "
+             << "If you want to keep it, you'll have to add it by hand to the resulting .vmat"
+             << endl;
+      }
+      type=skip;
+    }
+
+    // Test whether there are only 2 unique values: in this case, we don't
+    // need a one hot, and we set it to binary (which will be processed the
+    // same as continuous).
+    if (count == 2 && type != skip) {
+      Vec counts(2);
+      int k = 0;
+      for(map<real,StatsCollectorCounts>::iterator it = sc[i].getCounts()->begin(); k <= 1; ++it) {
+        counts[k++] = it->second.n;
+      }
+      if (counts[0] >= n_enough && counts[1] >= n_enough) {
+        if (type != unknown && type != binary) {
+          cout << "Warning: type for field number " << i << " set to binary, "
+               << "but you had forced it to something else." << endl;
+        }
+        type = binary;
+      } else {
+        // Not enough representants for one of the classes.
+        if (type != unknown && type != skip) {
+          cout << "Warning: field number " << i << " is binary but doesn't have "
+               << "enough representants of each class, thus it'll be skipped, "
+               << "even if you had forced it to some other type (edit the resulting "
+               << ".vmat if you really want to add it)." << endl;
+        }
+        type = skip;
+        // cout << "Skipped binary field " << i << " (counts_0 = "
+        //     << counts[0] << ", counts_1 = " << counts[1] << ")" << endl;
+      }
+    }
+
+    // Test for constant values.
+    if(count<=1 && type != skip && type != constant) {
+      if(sc[i].nmissing()>0 && sc[i].nmissing()<vm->length()) {
+        // This case actually never occurs in the Bell database.
+        // That's why we leave it to the user.
+        message = "Constant field, but there are " + tostring(sc[i].nmissing()) +
+          " missing values. Force the type, or modify this program !";
+      }
+      else {
+        // Either there is no missing value, or they are all missing.
+        if (type != unknown) {
+          cout << "Warning: field number " << i << " has been forced, but "
+               << "appears to be constant. Edit the resulting .vmat if you "
+               << "really want to add it." << endl;
+        }
+        type=constant;
+      }
+    }
+
+    // Did we find the type already?
+    if (type == unknown && message == "")
     {
 
-      // Test for fields to be skipped, when not enough data is available.
-      if(sc[i].nnonmissing() <= (1-FRAC_MISSING_TO_SKIP) * vm->length()) {
-        type=skip;
-      }
-
-      // test for constant values
-      else if(count<=1) {
-        if(sc[i].nmissing()>0 && sc[i].nmissing()<vm->length()) {
-          // This case actually never occurs in the Bell database.
-          // That's why we leave it to the user.
-          message = "Constant field, but there are " + tostring(sc[i].nmissing()) +
-            " missing values. Force the type, or modify this program !";
-        }
-        else 
-          // Either there is no missing value, or they are all missing.
-          type=constant;
-      }
-      else if(sc[i].max()>-1000 && vm->getStringToRealMapping(i).size()>0)
+      if(sc[i].max()>-1000 && vm->getStringToRealMapping(i).size()>0)
         message="Field uses both string map & numerical values";
       else if(sc[i].min() >= 0 && sc[i].max() >= 12000 && sc[i].max() <= 20000) {
         // Could be a numeric SAS date.
@@ -220,24 +264,6 @@ void FieldConvertCommand::run(const vector<string> & args)
       else if((count >= MIN( UNIQUE_NMISSING_FRACTION_TO_ASSUME_CONTINUOUS * sc[i].nnonmissing(), 2000)) 
           && vm->getStringToRealMapping(i).size()==0)
         type=continuous;
-      // Test whether there are only 2 unique values: in this case, we don't
-      // need a one hot, and we set it to binary (which will be processed the
-      // same as continuous).
-      else if (count == 2) {
-        Vec counts(2);
-        int k = 0;
-        for(map<real,StatsCollectorCounts>::iterator it = sc[i].getCounts()->begin(); k <= 1; ++it) {
-          counts[k++] = it->second.n;
-        }
-        if (counts[0] >= n_enough && counts[1] >= n_enough) {
-          type = binary;
-        } else {
-          // Not enough representants for one of the classes.
-          type = skip;
-          // cout << "Skipped binary field " << i << " (counts_0 = "
-          //     << counts[0] << ", counts_1 = " << counts[1] << ")" << endl;
-        }
-      }
       else {
         // if there are fractional parts, assume continuous
         for(int j=0;j<vm->length();j++)
