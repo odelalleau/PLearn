@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TangentLearner.cc,v 1.13 2004/07/21 16:30:59 chrish42 Exp $ 
+   * $Id: TangentLearner.cc,v 1.14 2004/08/02 16:15:02 monperrm Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
@@ -251,6 +251,7 @@ void TangentLearner::build_()
         c = Var(n_hidden_units,1,"c");
         V = Var(n_hidden_units,n,"V");
         tangent_predictor = Func(x, b & W & c & V, b + product(W,tanh(c + product(V,x))));
+        output_f = tangent_predictor;
       }
     else if (architecture_type == "linear")
       {
@@ -258,6 +259,7 @@ void TangentLearner::build_()
         b = Var(n_dim*n,1,"b");
         W = Var(n_dim*n,n,"W");
         tangent_predictor = Func(x, b & W, b + product(W,x));
+        output_f = tangent_predictor;
       }
     else if (architecture_type == "embedding_neural_network")
       {
@@ -267,8 +269,9 @@ void TangentLearner::build_()
         W = Var(n_dim,n_hidden_units,"W");
         c = Var(n_hidden_units,1,"c");
         V = Var(n_hidden_units,n,"V");
+        b = Var(n_dim,n,"b");
         Var a = tanh(c + product(V,x));
-        Var tangent_plane = diagonalized_factors_product(W,1-a*a,V); 
+        Var tangent_plane = diagonalized_factors_product(W,1-a*a,V);
         tangent_predictor = Func(x, W & c & V, tangent_plane);
         embedding = product(W,a);
         if (output_type=="tangent_plane")
@@ -442,8 +445,9 @@ void TangentLearner::initializeParams()
       fill_random_uniform(V->value, -delta, delta);
       delta = 1.0 / real(n_hidden_units);
       fill_random_uniform(W->matValue, -delta, delta);
-      b->matValue.clear();
       c->matValue.clear();
+      //fill_random_uniform(c->matValue,-3,3);
+      //b->matValue.clear();
     }
   }
   else if (architecture_type=="linear")
@@ -459,6 +463,7 @@ void TangentLearner::initializeParams()
     delta = 1.0 / real(n_hidden_units);
     fill_random_uniform(W->matValue, -delta, delta);
     c->value.clear();
+    b->value.clear();
   }
   else if (architecture_type=="embedding_quadratic")
   {

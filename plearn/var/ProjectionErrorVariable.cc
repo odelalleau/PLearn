@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
- * $Id: ProjectionErrorVariable.cc,v 1.12 2004/07/31 13:36:55 larocheh Exp $
+ * $Id: ProjectionErrorVariable.cc,v 1.13 2004/08/02 16:17:03 monperrm Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -63,7 +63,7 @@ namespace PLearn {
                           "    norm_penalization * sum_i (||f_i||^2 - 1)^2.\n");
   
     ProjectionErrorVariable::ProjectionErrorVariable(Variable* input1, Variable* input2, int n_, bool normalize_by_neighbor_distance_, bool use_subspace_distance_, real norm_penalization_, real epsilon_, real regularization_)
-    : inherited(input1, input2, 1, 1), n(n_), use_subspace_distance(use_subspace_distance_), normalize_by_neighbor_distance(normalize_by_neighbor_distance_), norm_penalization(norm_penalization_), epsilon(epsilon_), regularization(regularization)
+    : inherited(input1, input2, 1, 1), n(n_), use_subspace_distance(use_subspace_distance_), normalize_by_neighbor_distance(normalize_by_neighbor_distance_), norm_penalization(norm_penalization_), epsilon(epsilon_), regularization(regularization_)
   {
     build_();
   }
@@ -200,7 +200,7 @@ namespace PLearn {
         FT1 << F;
         multiply(FT2,TT,-1.0);
         lapackSVD(FT, Ut, S, V);
-        wwuu.clear();
+        wwuu.clear();//
         for (int k=0;k<S.length();k++)
           {
             real s_k = S[k];
@@ -270,9 +270,11 @@ namespace PLearn {
         for(int j=0; j<T;j++)
           {
             Vec tj = TT(j);
+
             Vec wj = w(j);
             product(wj, B, tj); // w_j = B * t_j = projection weights for neighbor j
             transposeProduct(fw, F, wj); // fw = sum_i w_ji f_i = z_m
+
             Vec fw_minus_tj = fw_minus_t(j);
             substract(fw,tj,fw_minus_tj); // -z_n = z_m - z
             if (normalize_by_neighbor_distance) // THAT'S THE ONE WHICH WORKS WELL:
@@ -295,7 +297,7 @@ namespace PLearn {
         }
       cost += norm_penalization*penalization;
     }
-    value[0] = cost;
+    value[0] = cost/real(T);
   }
 
 
@@ -341,11 +343,12 @@ namespace PLearn {
               {
                 Vec df_i = dF(i); // n-vector
                 if (normalize_by_neighbor_distance)
-                  multiplyAcc(df_i, fw_minus_tj, gradient[0] * wj[i]*2*one_over_norm_T[j]);
+                  multiplyAcc(df_i, fw_minus_tj, gradient[0] * wj[i]*2*one_over_norm_T[j]/real(T));
                 else
-                  multiplyAcc(df_i, fw_minus_tj, gradient[0] * wj[i]*2);
+                  multiplyAcc(df_i, fw_minus_tj, gradient[0] * wj[i]*2/real(T));
+//                 df_i/=real(T);
                 if (norm_penalization>0)
-                  multiplyAcc(df_i, F(i), gradient[0]*norm_penalization*2*norm_err[i]);
+                  multiplyAcc(df_i, F(i), gradient[0]*norm_penalization*2*norm_err[i]/real(T));
               }
           }
       }
