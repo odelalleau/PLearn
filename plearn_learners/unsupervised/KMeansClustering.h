@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KMeansClustering.h,v 1.1 2004/09/30 18:23:39 tatien Exp $ 
+   * $Id: KMeansClustering.h,v 1.2 2004/10/14 19:26:02 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Jean-Sébastien Senécal
@@ -98,7 +98,8 @@ public:
   //! updating the train_stats collector with training costs measured on-line in the process.
   virtual void train();
 
-  //! Computes the output from the input.
+  //! Computes the output from the input. Output contains negative
+  //! euclidian distance to the centroid of each cluster.
   virtual void computeOutput(const Vec& input, Vec& output) const;
   
   //! Computes the costs from already computed output. 
