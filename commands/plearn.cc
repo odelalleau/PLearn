@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.54 2004/04/14 21:42:45 chrish42 Exp $
+   * $Id: plearn.cc,v 1.55 2004/04/16 21:30:51 nova77 Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -52,6 +52,7 @@
 #include "RegularGridVMatrix.h"
 #include "VMatrixFromDistribution.h"
 #include "PrecomputedVMatrix.h"
+#include "SortRowsVMatrix.h"
 
 
 // All Available Learners: 
@@ -86,6 +87,9 @@
 
 #include "Experiment.h"
 
+// Stats collectors.
+#include "LiftStatsCollector.h"
+
 // New generation system
 #include "PTester.h"
 #include "NNet.h"
@@ -117,6 +121,14 @@
 #include "ReadAndWriteCommand.h"
 #include "JulianDateCommand.h"
 #include "FieldConvertCommand.h"
+
+#include "PLearnerOutputVMatrix.h"
+#include "ToBagSplitter.h"
+#include "RepeatSplitter.h"
+#include "HyperLearner.h"
+#include "HyperOptimize.h"
+#include "EarlyStoppingOracle.h"
+#include "SubInputVMatrix.h"
 
 using namespace PLearn;
 
