@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StatefulLearner.h,v 1.1 2004/07/19 13:46:39 ducharme Exp $ 
+   * $Id: StatefulLearner.h,v 1.2 2004/07/20 13:47:30 ducharme Exp $ 
    ******************************************************* */
 
 // Authors: Réjean Ducharme
@@ -123,11 +123,11 @@ public:
 
   //! Does this PLearner has an internal state?
   //! Default: true
-  virtual bool isStatefulLearner() const { return true; }
+  virtual bool isStatefulLearner() const;
 
   //! Set the dataset of an AssetManager (if any) to this testset
   //! Default: do nothing!
-  virtual void setTestSet(VMat testset) {}
+  virtual void setTestSet(VMat testset);
 
   //! Set the time step at which the current test is perform
   void setCurrentTestTime(int test_t) { current_test_t = test_t; }

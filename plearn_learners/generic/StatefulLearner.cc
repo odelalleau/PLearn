@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StatefulLearner.cc,v 1.1 2004/07/19 13:46:39 ducharme Exp $ 
+   * $Id: StatefulLearner.cc,v 1.2 2004/07/20 13:47:30 ducharme Exp $ 
    ******************************************************* */
 
 // Authors: Réjean Ducharme
@@ -103,5 +103,11 @@ void StatefulLearner::setTrainingSet(VMat training_set, bool call_forget)
   train_set = training_set;
   if (call_forget) forget();
 }
+
+void StatefulLearner::setTestSet(VMat testset)
+{}
+
+bool StatefulLearner::isStatefulLearner() const
+{ return true; }
 
 } // end of namespace PLearn
