@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.cc,v 1.20 2004/06/11 19:08:53 tihocan Exp $
+   * $Id: VVMatrix.cc,v 1.21 2004/06/17 20:59:31 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -383,7 +383,7 @@ VMat VVMatrix::createPreproVMat(const string & filename)
       // If it seems old, we display a warning (one may still want to use it
       // if he knows the changes made to the vmat code do not alter the data).
       if(mtime(meta_data_dir+slash+"precomputed.pmat") < date_of_code) {
-        PLWARNING("In VVMatrix::createPreproVMat - The precomputed data is older than current code, you may want to recompute again");
+        PLWARNING("In VVMatrix::createPreproVMat - The precomputed data (in %s) is older than current code, you may want to recompute again", meta_data_dir.c_str());
       }
       source=new FileVMatrix(meta_data_dir+slash+"precomputed.pmat");
       source->setMetaDataDir(meta_data_dir);
