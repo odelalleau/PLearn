@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.16 2003/11/04 23:32:11 chapados Exp $ 
+   * $Id: PTester.cc,v 1.17 2003/11/21 16:27:29 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -223,8 +223,6 @@ Vec PTester::perform(bool call_forget)
         {
           CopiesMap copies;
           stcol[setnum] = template_stats_collector->deepCopy(copies);
-          stcol[setnum]->build();
-          stcol[setnum]->forget();      
         }
       else
         stcol[setnum] = new VecStatsCollector();
@@ -233,6 +231,9 @@ Vec PTester::perform(bool call_forget)
         stcol[setnum]->setFieldNames(traincostnames);
       else
         stcol[setnum]->setFieldNames(testcostnames);
+
+      stcol[setnum]->build();
+      stcol[setnum]->forget();      
     }
 
   PP<VecStatsCollector> train_stats = stcol[0];
