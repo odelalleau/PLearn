@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.1 2002/07/30 09:01:26 plearner Exp $
+   * $Id: stringutils.h,v 1.2 2002/08/07 16:45:46 ducharme Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -62,12 +62,14 @@ namespace PLearn <%
 using namespace std;
   
   //! read from a string instead of a stream...
+/*
   template<class T>
   void read(const string& stringval, T& x)
   {
     istrstream in(stringval.c_str());
     read(in,x);
   }
+*/
 
   //!  converts anything to a string (same output as with cout << x)
   template<class T> string tostring(const T& x);
