@@ -1,0 +1,1304 @@
+#!/usr/bin/env python2.2
+
+### pytest is meant to manage all the TestSuite execution.
+import os, string, sys, shutil, glob, fpformat
+from operator import *
+from popen2 import *
+
+#####################
+### "usefull" defines
+true = 1
+false = 0
+
+#####################
+### files relative to pytest
+plearnlib_dir = os.path.join( os.environ["PLEARNDIR"], "plearn" ) 
+test_suite_dir = os.path.join( os.environ["PLEARNDIR"], "test_suite/")
+pytest_dir = os.path.join( test_suite_dir, "Scripts/")
+pytest_paths_file = os.path.join( pytest_dir, "pytest.paths_file" )
+pytest_config = ".pytest.config"
+
+#####################
+### Paths name
+results_path = "Results"
+log_ext = ".run_log"
+
+# results_on_run is called 'Unexpected...' because the only reason it is not
+# removed, is if the test fails
+results_on_run = "Unexpected_Results_For_"
+
+# created by pymake
+objs = "OBJS"
+
+
+#####################
+### global "defines"
+diff_program = "diff "
+supported_modes = '' # since it's a dictionnary of function, which aren't defined yet 
+#                    #  it'll be initialized in pytest()
+supported_options = ["all", "mail", "msg", "nostats", "q", "Q", "R", "savelog"]
+verbose_dico = {'verbose':0, 'q':1, 'Q':2, 'ALWAYS':3}
+
+
+#####################
+## global variables
+directory_when_called = ""
+testPath = "" # will contain a TestPath object
+current_mode = "" # will contain a the mode choosen by user
+optionargs = []  # will contain all the -... options, with the leading '-' removed
+target_dir_args = [] # will contain all other arguments to pymake (should be directory names)
+selected_target_tests = {} #will contain a dico of directories (keys) in which should be treated
+#                           only tests (values) aked by the user 
+commit_msg = 'Pytest automatic commit' #default; can be replaced by user provided msg
+defined_test_array = [] # meant to contain test defined in the pytest_config file.
+current_verbose_mode = -1
+
+mailing_log = os.path.join(plearnlib_dir, "mailing.log")
+mail_adress = ''
+savelog_file_name = '#undefined'
+savelog_file = '' # Must be replaced by user provided msg
+stats = '' # will contain stats about compile and run
+
+#####################
+## Functions are listed by alphabetical order
+
+def addTest(arg, directory, dirList):
+    if isForbidden( directory ): 
+        return
+
+    try:
+        testPaths.relativePath(directory)
+    except FormatError:
+        tprint('Must call the pytest on a TestSuite subdirectory',
+               priority = 'ALWAYS')
+        return
+
+    if not os.path.isdir( os.path.join(directory,results_path) ):
+        tprint('Must call the pytest -results mode before adding a test',
+               priority = 'ALWAYS')
+        return
+        
+    if os.path.exists(directory) and os.path.isdir(directory):
+        if pytest_config in dirList:
+            if not testPaths.contains(directory):
+                testPaths.add(directory)
+                tprint("Adding " + testPaths.relativePath(directory) + " to test paths",
+                       priority = 'Q')
+            else:
+                tprint("Tests in " + testPaths.relativePath(directory) + " are already included",
+                       priority = 'Q')
+        else:
+            tprint(testPaths.relativePath(directory)
+                   + ": Must create pytest config file before adding a test: pytest -config",
+                   priority = 'ALWAYS')
+            
+
+def cleanRoutine(arg, directory, dirlist):
+    recursiveOptionNotSupported("Clean")
+    if not prerequisite("remove", directory):
+        return
+        
+    if isForbidden( directory ): 
+        return
+    os.chdir(directory)
+
+    # Unlocking results
+    unlock()
+
+    # Removing all compile logs and unexpected results
+    for file in os.listdir(directory):
+        cleanSubRoutine(directory, file, lambda f: string.find(f, ".compile_log") != -1)
+        cleanSubRoutine(directory, file,
+                        lambda f: string.find(f, results_on_run) != -1,
+                        shutil.rmtree )
+
+    # Cleaning results, must wait to commit before to remove totally
+    rmdRes = cleanSubRoutine(directory, results_path,
+                             action = lambda f: keepOnly(f, 'CVS', cvs_remove) )
+    
+    # Finishing by config file 
+    rmPC = cleanSubRoutine(directory, pytest_config)
+
+    # Finally, committing changes
+    if rmdRes and rmPC:
+        cvs_commit([pytest_config, results_path])
+    elif rmdRes:
+        cvs_commit(results_path)
+    elif rmPC:
+        cvs_commit(pytest_config)
+    
+    os.chdir(test_suite_dir)
+    cvs_commit(testPaths.relativePath(pytest_paths_file))
+    os.chdir(directory)
+
+    if rmdRes:
+        shutil.rmtree(results_path)
+    else:
+        lock()
+
+    if not os.path.exists(results_path) and not os.path.exists(pytest_config):
+        tprint(testPaths.relativePath(directory) + " CLEANED!",
+               priority = 'Q')
+    else:
+        tprint(testPaths.relativePath(directory) + " WAS NOT CLEANED!",
+               priority = 'Q')
+
+def cleanSubRoutine(dir, fname, test=os.path.exists, action=os.remove):
+    cvs_removed = false
+    if test(fname):
+        action(fname)
+        cvs_removed = cvs_remove(fname)
+        tprint(fname + " removed in " + testPaths.relativePath(dir),
+               priority = 'q')
+    return cvs_removed
+
+def commitMode(arg, directory, dirlist):
+    recursiveOptionNotSupported("Commit")
+    if not prerequisite("add", directory):
+        return
+
+    os.chdir(directory)
+##    if not init_defined_test_array("commit", directory):
+##       return
+    try:  
+        # reads the config file to init defined_test_array
+        execfile(pytest_config)
+    except IOError:
+        tprint("Can't commit " + directory + " without config file!",
+               priority = 'ALWAYS')
+        return
+    
+    # 'Unlocking' the results for cvs to be able to write
+    unlock()
+    
+    dirName = testPaths.relativePath(directory)
+    os.chdir(test_suite_dir)
+    toCommit = []
+
+    pathsfName = testPaths.relativePath(pytest_paths_file)
+    tprint('Pytest examines ' + pathsfName,
+           priority = 'q')
+    cvs_add(pathsfName)
+    toCommit.append(pathsfName)
+
+    tprint('Pytest examines ' + dirName,
+           priority = 'q')
+    cvs_add(dirName)
+    #toCommit.append(dirName)
+    
+    configName = os.path.join(dirName, pytest_config)
+    tprint('Pytest examines ' + configName,
+           priority = 'q')
+    cvs_add( configName )
+    toCommit.append(configName)
+
+    resName = os.path.join(dirName, results_path)
+    tprint('Pytest examines ' + resName,
+           priority = 'q')
+    cvs_add( resName )
+    toCommit.append(resName)
+
+    for def_test in defined_test_array:
+        # commiting related_files
+        for relf in def_test.related_files:
+            rfname = os.path.join(dirName, relf)
+            tprint('Pytest examines ' + rfname,
+                   priority = 'q')
+            cvs_add( rfname )
+            toCommit.append(rfname)
+            
+        res_dir = os.path.join(dirName, def_test.results)
+        if os.path.exists( res_dir ):
+            cvs_add( res_dir )
+            os.path.walk(res_dir, commitSubRoutine, dirName)
+
+    # Finally, committing changes
+    cvs_commit(toCommit) 
+        
+    # 'Locking' back the results
+    os.chdir(directory)
+    lock()
+
+def commitSubRoutine(root, directory, dirlist):
+    neglect(dirlist, 'CVS', 'OBJS')
+    
+    for name in dirlist:
+        relname = os.path.join(directory, name)
+        tprint('Pytest examines ' + relname,
+               priority = 'q')
+        if not os.path.islink(relname):
+            cvs_add( relname )
+            
+            
+def compileAndRun(arg, thePath, dirlist):
+    global defined_test_array
+
+    if isForbidden( thePath ): 
+        return
+
+    os.chdir(thePath)
+   
+    try:
+        # reads the config file to init defined_test_array
+        execfile(pytest_config)
+    except IOError:
+        tprint("Can't run " + thePath + " without config file!",
+               priority = 'ALWAYS')
+        return
+        
+    for def_test in defined_test_array:
+        stats.new_test()
+        tprint ("->" + str(def_test),
+                priority = 'q')
+        if testCompilation( def_test ):
+            if current_mode == "run":
+                runTest( def_test )
+            elif current_mode == "watch":
+                simpleRun( def_test )
+        elif current_mode in ["run", "watch"]:
+            tprint("*** Run Test -SKIPPED- ***",
+                   priority = 'Q')
+        tprint("\n-----------------------------------------------------------\n",
+               priority = 'Q')
+
+    defined_test_array = []
+
+
+# called only under 'compilePLL' mode
+def compileCurrentDirectory(options = ''):
+    global current_mode
+    global current_verbose_mode
+    cwd = os.getcwd()
+    dirList = os.listdir(cwd)
+    try:
+        if testPaths.contains( cwd ):
+            old_vmode = current_verbose_mode
+            current_verbose_mode = verbose_dico['Q']
+
+            compileAndRun('', cwd, dirList)
+
+            current_verbose_mode = old_vmode
+    except FormatError:
+        for file in dirList:
+            if isccfile(file):
+                quiet_sys("pymake " + file + " " + options)
+            
+
+def compilePLL(bid, dirpath, dirlist):
+    recursiveOptionNotSupported("CompilePLL")
+    if len(target_dir_args) != 0:
+        tprint("*** Can not provide any file or directory with compilePLL mode! ***",
+               priority = "ALWAYS")
+        sys.exit()
+
+    tprint("Entering compilePLL mode: may last several minutes",
+           priority = "Q")
+
+    mixed_options = ['-dbg -float', '-dbg -double', '-opt -float', '-opt -double']
+
+    for options in mixed_options:
+        tprint("+++ Working with " + options, priority = 'Q')
+        os.chdir(plearnlib_dir)
+        quiet_sys("pymake -clean .")
+        dicoOfErrors = {}
+        os.path.walk(plearnlib_dir, compilePLLSubRoutine, [options, dicoOfErrors])
+        printErrors(dicoOfErrors)
+        tprint("\n\n", "ALWAYS")
+
+    # It is assumed that TestSuite directory and subdirectories only
+    #  contain tests that are meant to be compiled with the options
+    #  given in the config file
+    tprint("+++ Test Suite", priority = 'Q')
+    os.system("pytest -run -all -Q > /tmp/.run_all")
+    f = open("/tmp/.run_all",'r')
+    output = f.read()
+    stats_index = string.find(output, stats.log_header)
+    tprint( output[stats_index+len(stats.log_header) :
+                   len(output)-len("Quitting pytest ...\n")],
+            priority = 'Q')
+    os.remove("/tmp/.run_all")
+
+    if "mail" in optionargs:
+        mail()
+        return
+
+def compilePLLSubRoutine(options_and_dicoOfErrors, path, dirList):
+    del_all_forbidden_directories(dirList, "TestSuite")
+    path = os.path.abspath(path)
+    os.chdir(path)
+    compileCurrentDirectory(options_and_dicoOfErrors[0])
+    myCheckObj( path, options_and_dicoOfErrors[1] )
+
+def configTest(arg, path, dirList):
+    if isForbidden( path ): 
+        return
+
+    if os.path.exists(path) and os.path.isdir(path):
+        configPath = os.path.join(path, pytest_config)
+    else:
+        tprint("No path named " + path + "!",
+               priority = 'ALWAYS')
+        return
+    
+    if not os.path.exists(configPath):
+        f = open(configPath,'w')
+        f.write(default_config_text)
+        f.close()
+            
+    editor = os.environ.get('EDITOR', "emacs -nw")
+    cmd =  editor + " " + configPath 
+    os.system(cmd)
+    tprint("pytest config file has been created/modified in " + path,
+           priority = 'Q')
+
+def cvs_add(file):
+    status = cvs_query("status", file, "Status: ")
+    if status != '' and string.find(status, "Unknown") == -1:
+        return
+    addCmd = "cvs add " + file
+    tprint("Adding: " + addCmd,
+           priority = "q")
+    process = Popen3(addCmd, true)
+    errors = process.childerr.readlines()
+    map(lambda err: tprint(err, "q"), errors)
+
+def cvs_commit(files):
+    commitCmd = ("cvs commit -m '" + commit_msg + "' ")
+    for file in files:
+        commitCmd += file + " " 
+        
+    tprint("\n+++ Commiting (from "+ os.getcwd() +"):\n" + commitCmd,
+           priority = "Q")
+    commitProcess = Popen3(commitCmd, true)
+    tprint(commitProcess.childerr.read(1024),
+           priority = "Q")
+
+def cvs_query(option, fname, lookingFor, delim = "\n"):
+    cvsProcess = Popen3("cvs " + option + " " + fname, true)
+    lines = cvsProcess.fromchild.readlines()
+    for line in lines :
+        index = string.find(line, lookingFor)
+        if index != -1:
+            result = line[index+len(lookingFor):]
+            result = result[:string.find(result, delim)]
+            return result
+    return ''
+
+def cvs_remove(file):
+    status = cvs_query("status", file, "Status: ")
+    if status == '' or string.find(status, "Unknown") != -1:
+        return false
+
+    rmCmd = "cvs remove " + file
+    tprint("Removing: " + rmCmd,
+           priority = "q")
+    process = Popen3(rmCmd, true)
+    errors = process.childerr.readlines()
+    map(lambda err: tprint(err, "q"), errors)
+    return true
+
+## This is the default config text which is to be written in any new config file
+default_config_text = r"""
+
+# ==================================== pytest.config ======================================
+
+# Each test contained in this directory which must be runned, must be associated 
+# with a defineTest(...) method. The defineTest(...) below contains the default parameters.
+
+# usage:  defineTest( NAME, PYMAKE_OPTIONS, ARGS)
+
+# -------------- Also described in pymake's default configuration text --------------------
+# List of lists of mutually exclusive pymake options.
+# First option that appears in each group is the default, and is assumed if you don't
+# specify any option from that group
+# options_choices = [[ 'g++', 'CC'], [ 'dbg', 'opt']]
+
+# Description of options, and associated settings
+# name and description are mandatory (description will appear in usage display of pymake)
+# you can then specify any one or more of compiler, compileroptions, linker, linkeroptions
+
+#pymakeOption( name = 'g++',
+#              description = 'use g++ compiler and linker',
+#              compiler = 'g++',
+#              compileroptions = '-pedantic-errors',
+#              linker = 'g++' )
+
+#pymakeOption( name = 'CC',
+#              description = 'use CC compiler and linker',
+#              compiler = 'CC',
+#              linker = 'CC' )
+
+#pymakeOption( name = 'dbg',
+#              description = 'debug mode (defines BOUNDCHECK)',
+#              compileroptions = '-Wall -g -DBOUNDCHECK' )
+
+#pymakeOption( name = 'opt',
+#              description = 'optimized mode',
+#              compileroptions =
+#              '-Wall -O9 -funroll-loops -finline -fomit-frame-pointer -fstrength-reduce
+#                                                                        -ffast-math -fPIC' )
+# -------------------------------------------------------------------------------------------
+
+
+defineTest( PYMAKE_NAME='unknown',
+            PYMAKE_OPTIONS= '-g++ -dbg',
+            ARGS='',
+            RELATED_FILES=[]            )
+"""
+
+def defineTest( PYMAKE_NAME='unknown',
+                PYMAKE_OPTIONS= '-g++ -dbg',
+                ARGS='',
+                RELATED_FILES=[] ):
+    """
+    This function is called in the pytest_config file. Allows the user to define his test
+    """
+    if PYMAKE_NAME == 'unknown':
+        tprint("PYMAKE_NAME needed in config file \n(use pytest.config to correct your config file)",
+               priority = 'ALWAYS')
+        return
+    
+    if os.path.exists(PYMAKE_NAME) and not os.path.islink(PYMAKE_NAME):
+        tprint("PYMAKE_NAME in config file is not a link\n(use pytest -config to correct your config file)",
+               priority = 'ALWAYS')
+        return
+
+    #####
+    ## Single test treatment modifications
+    cwd = os.getcwd()
+    if cwd == directory_when_called:
+        cwd = "."
+    else:
+        cwd = cwd[len(directory_when_called)+1:]
+        
+    if (cwd in selected_target_tests.keys()
+        and not contains(selected_target_tests[cwd], PYMAKE_NAME)):
+        return
+    #####
+    defined_test_array.append( DefinedTest(PYMAKE_NAME, PYMAKE_OPTIONS, ARGS, RELATED_FILES) )
+
+## Almost the same than isFobidden: maybe it could be cleaner
+def del_all_forbidden_directories(dirList, *otherForbDirs):
+    forbidden_directories = ["BACKUP", "CVS", ".pymake", "Scripts"]
+    forbidden_directories.append(objs)
+    forbidden_directories.extend(otherForbDirs)
+
+    for forbidden in forbidden_directories:
+        try:
+            index = dirList.index(forbidden)
+            del dirList[index]
+        except ValueError:
+            pass 
+
+def enableSelectedMode():
+    # To avoid unnecessary operations
+    if current_mode == "paths":
+        os.system("more " + pytest_paths_file)
+        return
+    elif current_mode == "compilePLL":
+        compilePLL('', '', '')
+        return
+
+    # 'all' option management
+    directories = []
+    if "all" in optionargs:
+        directories = testPaths.getAll()
+    elif target_dir_args != []:
+        directories = target_dir_args
+    else:
+        directories.append(directory_when_called)
+
+    # function to invoke after selection
+    selectedMode = supported_modes[current_mode]
+
+    # Calling the appropriate mode, recursively if 'R' option was choosen
+    for dir in directories:
+        os.chdir(directory_when_called)
+
+        if "R" in optionargs:
+            if selected_target_tests:
+                tprint("R option vs single test not implemented yet (and may never be)",
+                       priority="ALWAYS")
+                sys.exit()
+            os.path.walk(dir, selectedMode, '')
+        else:
+            selectedMode('', dir, os.listdir(dir))
+
+def finalName(dir):
+    (foo, fName) = splitprev(dir)
+    return fName
+
+##def init_defined_test_array(op, path):
+##    """Reads the config file to init defined_test_array"""
+##    try:
+##        execfile(pytest_config)
+##    except IOError:
+##        tprint("Can't " + op + " " + path + " without config file!",
+##               priority = 'ALWAYS')
+##        return
+
+def isccfile(filepath):
+    (base,ext) = os.path.splitext(filepath)
+    return ext in ['.cc','.CC','.cpp','.c','.C']
+            
+def isForbidden(directory, verif=false):
+    ## directories not to go in when -R option is enabled
+    forbidden_directories = ["BACKUP", "CVS", ".pymake", "Scripts"]
+    forbidden_directories.append(objs)
+    if not verif:
+        forbidden_directories.append(results_path)
+        forbidden_directories.append(results_on_run)
+    
+    for dir in forbidden_directories:
+        if string.find(directory, dir) != -1: 
+            return true
+    return false 
+
+def keepOnly( dir, toKeep, otherAction=str ):
+    dirList = os.listdir(dir)
+    for file in dirList:
+        if file != toKeep:
+            fpath = os.path.join(dir, file)
+            if os.path.isdir(fpath):
+                keepOnly(fpath, toKeep, otherAction)
+            else:
+                os.remove(fpath)
+                otherAction(fpath)
+        
+def lastUserWhoDidCommit(fpath):
+    fpath = os.path.abspath(fpath)
+    (dir, fname) = os.path.split(fpath)
+    os.chdir(dir)
+
+    author = "NEVER BEEN COMMITED"
+    a = cvs_query("log", fname, "author: ", ";")
+    if a != '':
+        author = a
+    
+    return author
+
+def lock():
+    if os.path.exists(results_path):
+        # os.system("chmod u=rX -R " + results_path)
+        # (by Pascal: commented out because locking result directories
+        # prevents cvs from updating their content...
+        pass
+
+def mail():
+    global savelog_file_name
+    global savelog_file
+
+    # Opening the senmail process
+    sendmail = Popen3("sendmail -t", true)
+
+    # "Header" of the mail
+    sendmail.tochild.write("From: Pytest -compilePLL -mail\n")
+    sendmail.tochild.write("Subject: Pytest -- List of files that did not compile\n")
+    sendmail.tochild.write("To: " + mail_adress + "\n")
+
+    # Changing the mode of the savelog_file from write to read
+    savelog_file.close()
+    savelog_file = open(savelog_file_name, "r")
+
+    # "Body" of the mail
+    sendmail.tochild.write(savelog_file.read() + "\n")
+    sendmail.tochild.write(".\n")
+
+    # "Closing" the mail mode
+    sendmail.tochild.close()
+    savelog_file.close()
+    savelog_file_name = "#undefined" # that way the file isn't closed twice
+    #                                # ( see end of pytest() )
+
+# Only called in 'compilePLL' mode
+def myCheckObj(dirpath, dicoOfErrors):
+    names = os.listdir(dirpath)
+    if 'OBJS' in names: names.remove('OBJS')
+    if 'CVS' in names: names.remove('CVS')
+    for fname in names:
+        fpath = os.path.join(dirpath,fname)
+        if os.path.isfile(fpath):
+            basename, ext = os.path.splitext(fname)
+            if ext in ['.cc','.c','.C','.cpp','.CC']:
+                foundobj = 0 # found the .o file?
+                for f in glob.glob(os.path.join(dirpath,'OBJS','*',basename+'.o')):
+                    if os.path.isfile(f): foundobj = 1
+                if not foundobj:
+                    dicoOfErrors[fpath] = lastUserWhoDidCommit(fpath)
+
+def neglect(list, *toneg):
+    for elem in toneg:
+        try:
+            list.remove(elem)
+        except ValueError:
+            pass
+
+def option_value(args, option, default):
+    try:
+        vindex = args.index("-" + option) + 1
+
+        value = "-"
+        if vindex < len(args):
+            value = args.pop(vindex)
+        
+        if string.find(value, "-") != -1:
+            tprint("Must provide a value for option -" + option,
+                   priority = 'ALWAYS')
+            sys.exit()
+
+        return value
+    except ValueError:
+        return default
+
+def prerequisite(mode, directory):
+    test = ''
+    if mode == "add":
+        test = lambda b: not b
+    elif mode == "remove":
+        test = lambda b: b
+        
+    try:
+        if test( testPaths.contains(directory) ):
+            tprint("Must call pytest -" + mode + " " + testPaths.relativePath(directory) +
+                   " first: Nothing to be done here.",
+                   priority = "q")
+            return false
+    except FormatError:
+        tprint('Must call the pytest on a TestSuite subdirectory',
+               priority = 'ALWAYS')
+        return false
+
+    return true
+
+def printErrors(dico):
+    if len(dico) == 0:
+        tprint("No errors", "Q")
+        return
+    
+    tprint("\nfile -> last user who did commit", "Q")
+    tprint("--------------------------------", "Q")
+
+    for key in dico.keys():
+        formattedKey = key
+        index = string.find(key, plearnlib_dir)
+        if index != -1:
+            formattedKey = key[index+len(plearnlib_dir):]
+        tprint(formattedKey + " -> " + dico[key], "Q")
+
+def quiet_sys(cmdString):
+    os.system(cmdString + " > /dev/null")
+
+def recursiveOptionNotSupported(mode):
+    if "R" in optionargs:
+        tprint(mode + " mode doesn't support recursive (-R) option!",
+               priority = 'ALWAYS')
+        sys.exit()
+
+def removeTest(arg, directory, dirList):
+    if isForbidden( directory ): 
+        return
+
+    try:
+        if testPaths.contains(directory):
+            testPaths.remove(directory)
+            tprint("Removing " + testPaths.relativePath(directory) + " from test paths",
+                   priority = 'Q')
+        else:
+            tprint(testPaths.relativePath(directory) + " can not be removed (see pytest -paths)",
+                   priority = 'Q')
+    except FormatError:
+        tprint('Must call the pytest on a TestSuite subdirectory',
+               priority = 'ALWAYS')
+
+
+def resultsCreation(arg, dir, dirList):
+    global defined_test_array
+    if isForbidden( dir ): 
+        return
+    os.chdir(dir)
+
+    try:
+        testPaths.relativePath(dir)
+    except FormatError:
+        tprint('Must call the pytest on a TestSuite subdirectory',
+               priority = 'ALWAYS')
+        return
+    
+    # reads the config file to init defined_test_array
+    try:
+        execfile(pytest_config)
+    except IOError:
+        tprint(testPaths.relativePath(dir) + ": Must call the pytest -config option prior to -results",
+               priority = 'ALWAYS')
+        return
+
+    if os.path.exists(results_path):
+        unlock()
+    else:
+        os.mkdir(results_path)
+
+    errorWhileCreatingResults= (len(defined_test_array) == 0)
+    for def_test in defined_test_array:
+        res_path = os.path.join(results_path,def_test.pymake_name)
+        
+        if not resultsGeneration(def_test, res_path):
+            errorWhileCreatingResults= true
+            tprint("*** "+ def_test.pymake_name +" test didn't create new results (prior results kept, if any) ***\n",
+                   priority = 'ALWAYS')
+            
+    if not errorWhileCreatingResults:
+        tprint("*** Results were created successfully ***\n",
+               priority = 'q')
+
+    lock()
+    defined_test_array = []
+
+# 1) The res_path must exist and must have been prepared correctly
+# 2) This function considers it was called in the directory such as 
+#     os.path.join(os.getcwd(), res_path) is correct (if it doesn't exists,
+#     it will be created)
+def resultsGeneration(def_test, res_path):
+    directory = os.getcwd()
+
+    bak = ''
+    if os.path.exists(res_path):
+        bak = res_path + ".BAK"
+        os.system("cp -R " + res_path + " " + bak)
+        keepOnly(res_path, 'CVS')
+    else: 
+        os.mkdir(res_path)
+    
+    # Does linking to allow the test to be executed in res_path 
+    symlinktarget = os.path.join(res_path, def_test.pymake_name)
+    
+    try:
+        real_exec_path = os.path.join(directory, os.readlink(def_test.pymake_name))
+    except OSError:
+        tprint(testPaths.relativePath(directory) + ": Must compile " + def_test.pymake_name + " with 'pymake' first!",
+               priority = 'ALWAYS')
+
+        shutil.rmtree(res_path)
+        if bak != '':
+            os.system("mv " + bak + " " + res_path)
+
+        return false
+        
+    os.symlink(real_exec_path, symlinktarget)
+    
+    # Run the executable file in the res_path & redirect the output
+    os.chdir(res_path)
+    run_log = def_test.pymake_name+log_ext
+    run_command = def_test.pymake_name + " " + def_test.args + " > " + run_log
+    tprint("Runing test: \n\t" + run_command,
+           priority = 'Q')
+
+    ## os.system(run_command) -- replaced by:
+    process = Popen4(run_command)
+    process.wait()
+    ## ... to avoid cerr prints to be outputed
+    
+    os.chdir(directory)
+
+    if bak != '':
+        shutil.rmtree( bak )
+    
+    return run_log
+
+# This function must be called IN ( os.getcwd() ) the appropriate directory
+def runTest(def_test):
+    """
+    Once compilation was tested ok, the runMode runs the test, producing results to be
+    compared with expected ones (see compareResults function). If results have changed,
+    they're kept in Unexpected_Results_of_<def_test.pymake_name> directory for consultation.
+    \"User\" has to:
+    \t1- Fix the bugs, if there are.
+    \t2- Changes the expected results files if needed (using -res option)
+    """
+    tprint("\n*** Run Test ***",
+           priority = 'q')
+
+    if not os.path.islink(def_test.pymake_name):
+        tprint("Bad PYMAKE_NAME given in config file\n" +
+               "(use pytest.config to correct your config file)",
+               priority = 'ALWAYS')
+        return false
+
+    if not os.path.exists( os.path.join(results_path, def_test.pymake_name) ):
+        tprint("Must call \"pytest -results\" for " +
+               os.path.join(testPaths.relativePath(os.getcwd()), def_test.pymake_name) +
+               " before running the test !!!",
+               priority = 'ALWAYS')
+        return
+
+    results_on_run_local = results_on_run+def_test.pymake_name
+    run_log = resultsGeneration( def_test, results_on_run_local )
+        
+    # verifying the results, removing res_path if all turns to be OK
+    verif = Verification(def_test, results_on_run_local)
+    if verif.RES_OK:
+        stats.run_success()
+        tprint("*** Run Test PASSED ***",
+               priority = 'q')
+        shutil.rmtree( results_on_run_local )
+        
+    else:
+        stats.run_failure(def_test.pymake_name)
+        tprint("*** " + os.path.join( testPaths.relativePath(os.getcwd()), def_test.pymake_name) +
+               " Run Test FAILED: " +
+               "Run log wrote to file " + run_log + " ***",
+               priority = 'ALWAYS')
+
+
+def setVerboseMode():
+    global current_verbose_mode
+
+    if 'Q' in optionargs:
+        current_verbose_mode = verbose_dico['Q']
+    elif 'q' in optionargs:
+        current_verbose_mode = verbose_dico['q']
+    else:
+        current_verbose_mode = verbose_dico['verbose']
+
+def simpleRun(def_test):
+    if not os.path.islink(def_test.pymake_name):
+        tprint("Bad PYMAKE_NAME given in config file\n" +
+               "(use pytest.config to correct your config file)",
+               priority = 'ALWAYS')
+        return false
+
+    run_command = def_test.pymake_name + " " + def_test.args
+    
+    tprint("Runing test: \n\t" + run_command,
+           priority = 'Q')
+    os.system(run_command)
+
+def splitprev(dir):
+    if dir[len(dir)-1] == "/":
+        dir.pop()
+    return os.path.split(dir)
+
+# Can be called by the watch mode: that is why there are some "if current_mode == 'run'"
+def testCompilation(def_test):
+    """
+    First, the runMode shall test the compilation of a given test. The simplest way to do that is
+    to enter the tested directory, erase the executable file and then call pymake. If pymake rebuilds
+    the executable, then we assume that compilation went ok. If not, the \"user\" is informed, and
+    the pymake log is saved to file for consultation.
+
+    Requires PLearn/PLearnLibrary/Scripts/ to be included in your path
+    """
+
+    tprint("*** Compilation Test ***\n"
+           + "(Requires PLearn/PLearnLibrary/Scripts/ to be included in your path)",
+           priority = 'q')
+    
+    if os.path.exists(objs):
+        listObjs = os.listdir(objs)
+        for objSub in listObjs:
+            rmpath = os.path.join(objs, objSub, def_test.pymake_name)
+            if not os.path.exists(rmpath):
+                continue
+            rmCmd = "rm " + rmpath + "*";
+            tprint("Removing: " + rmCmd,
+                   priority= "q")
+            os.system(rmCmd)
+    if os.path.islink(def_test.pymake_name) or os.path.exists(def_test.pymake_name):
+        os.remove(def_test.pymake_name)
+
+
+    compile_log = def_test.pymake_name + ".compile_log"
+
+    if current_mode == "run" and os.path.exists(compile_log):
+        os.remove(compile_log)
+        
+    # there is a problem in catching the output of compilation when
+    # linking fails ...
+    pymake_cmd = ("pymake " + def_test.pymake_name +
+                  " " + def_test.pymake_options)
+
+    if current_mode == "run" or current_mode == "compilePLL":
+        pymake_cmd += (" > " + compile_log)
+    
+    tprint("Launching compilation:\n\t" + pymake_cmd,
+           priority = 'Q')
+    os.system( pymake_cmd )
+
+    if current_mode == "compilePLL":
+        os.remove(compile_log)
+        return true # compilePLL don't care if compilation passed or failed
+
+    if (os.path.islink(def_test.pymake_name)
+        and os.path.exists( os.readlink(def_test.pymake_name) )):
+
+        stats.compile_success()
+        tprint("*** Compilation Test PASSED ***",
+               priority = 'q')
+        if current_mode == "run":
+            os.remove(compile_log)
+        return true
+
+    stats.compile_failure( def_test.pymake_name )
+    fail_msg = ("*** " + os.path.join( testPaths.relativePath(os.getcwd()), def_test.pymake_name) +
+                " Compilation Test FAILED")
+    if current_mode == "run":
+        fail_msg += (": Compilation log wrote to file " + compile_log)
+    fail_msg += (" ***")
+    tprint(fail_msg,
+           priority = 'ALWAYS')
+    return false
+
+
+## Meant to manage prints according to their priority: Not implemented yet!
+def tprint(message, priority):
+    #for debug: print("current_verbose_mode: " + str(current_verbose_mode) + ", priority: " + str(priority))
+
+    if savelog_file_name != '#undefined':
+        savelog_file.write(message+"\n")
+
+    try:
+        if verbose_dico[priority] > current_verbose_mode:
+            print(message)
+    except KeyError:
+        print( "Internal error! Priority argument must be in " + str(verbose_dico.keys()) )
+
+
+def unlock():
+    if os.path.exists(results_path):
+        os.system("chmod u=rwX -R " + results_path)
+
+
+def usage():
+    tprint("Usage: pytest <-operational_mode> [-option]{0, *} [list of targets, file or directories]\n" +
+           "Operational modes (exactly one of these must be given):\n" +
+           "--------------------------------------------------------\n" +
+           str( supported_modes.keys() ) + "\n\n" +
+           "Options:\n---------\n" +
+           str( supported_options ) + "\n\n" +
+           "Online documentation: http://www.iro.umontreal.ca/~dorionc/Pytest.html\n",
+           priority = "ALWAYS")
+
+class DefinedTest:
+    """
+    Small class that allows the storage of all the infos given by a
+    call of defineTest in the config file
+    """
+    def __init__(self, pymake_name, pymake_options, args, related_files):
+        self.pymake_name = pymake_name
+        self.pymake_options = pymake_options
+        self.args = args
+        self.related_files = related_files
+
+        self.results = os.path.join(results_path,self.pymake_name) 
+    def __str__(self):
+        return ("DefinedTest( " +
+                "PYMAKE_NAME= '" + self.pymake_name + "', " +
+                "PYMAKE_OPTION= '" + self.pymake_options + "', " +
+                "ARGS= '" + self.args + "', " +
+                "RELATED_FILES= '" + str(self.related_files) + "') ")
+
+    def __repr__(self):
+        return str(self)
+
+
+class FormatError(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return `self.value`
+
+class Stats:
+    def __init__(self):
+        self.nb_of_tests = 0
+        
+        self.compiled = 0
+        self.comp_failure = []
+        
+        self.runned = 0
+        self.r_failure = []
+
+        self.log_header = "+++ Stats: \n"
+        
+    def __str__(self):
+        if self.nb_of_tests == 0:
+            return "No test runned!"
+        
+        mystr = (self.log_header +
+                 "Compilation test passed: " + fpformat.fix(self.compiled, 0) +
+                 " / " + fpformat.fix(self.nb_of_tests, 0) + "\n")
+        if self.comp_failure:
+            mystr += "\tFailed: " + str(self.comp_failure) + "\n"
+
+        mystr += ("Run test passed: " + fpformat.fix(self.runned, 0) +
+                " / " + fpformat.fix(self.nb_of_tests, 0) + "\n" )
+        if self.r_failure:
+            mystr += "\tFailed: " + str(self.r_failure)
+
+        return mystr
+        
+    def __repr__(self):
+        return str(self)
+
+    def compile_success(self):
+        self.compiled = self.compiled+1
+
+    def compile_failure(self, name):
+        self.comp_failure.append( name )
+
+    def new_test(self):
+        self.nb_of_tests = self.nb_of_tests+1
+
+    def run_success(self):
+        self.runned = self.runned+1
+
+    def run_failure(self, name):
+        self.r_failure.append( name )
+
+class TestPaths:
+    """
+    Class that manages the array of test path. Makes the format of
+    pytest_paths_file such that the paths are relative to the
+    test_suite_dir.
+    """
+    def __init__(self):
+        self.pathFile = ""
+        self.testPathsInFile = []
+        self.fileHeader = "self.testPathsInFile ="
+
+    def __str__(self):
+        return (repr(self) + " (pathFile: "
+                + self.pathFile + ")")
+
+    def __repr__(self):
+        return str(self)
+
+    def add(self, path):
+        self.testPathsInFile.append( self.relativePath(path) )
+
+    def close(self):
+        f = open(self.pathFile,'w')
+        f.write( self.fileHeader + str(self.testPathsInFile) + "\n" )
+        f.close()
+
+    def contains(self, path):
+        return contains(self.testPathsInFile, self.relativePath(path))
+
+    def getAll(self):
+        return [ os.path.join(test_suite_dir, x) for x in self.testPathsInFile]
+
+    def initialise(self, file):
+        self.pathFile = file
+        if os.path.exists(self.pathFile):
+            execfile(self.pathFile)
+        else:
+            pass #do somethig else some day
+
+    def relativePath(self, path):
+        #print(path)
+        #print(test_suite_dir)
+        if string.find(path, test_suite_dir) != 0:
+            raise FormatError(path + " must begin with test_suite_dir")
+        
+        return path[len(test_suite_dir):]
+
+    def remove(self, path):
+        self.testPathsInFile.remove( self.relativePath(path) )
+    
+class Verification:
+    """
+    Class that manages every details of the comparison of the
+    expected results with the results obtained by run.
+    """
+    def __init__(self, def_test, current_res):
+        self.RES_OK = true
+        self.current_res = current_res
+        self.diff_log = os.path.join( current_res,"diff_log" )
+        os.path.walk(os.path.join(results_path, def_test.pymake_name), self.compareDir, '')
+        
+    def tf(self, fpath):
+        """tf for twin file"""
+        return os.path.join(self.current_res, fpath) 
+
+    def compareDir(self, arg, dirpath, names):
+        if isForbidden( dirpath, verif=true ):
+            return
+
+        # debug: raw_input("dirpath: " + dirpath + ", current: " + os.getcwd())
+        
+        twin = ""
+        for name in names:
+            twin = self.tf(name)
+            name = os.path.join( dirpath, name )
+
+            # debug: raw_input("name: " + name + ", twin: " + twin)
+            
+            if os.path.islink(twin):
+                #if not os.readlink(name) == os.readlink(twin):
+                tprint("link: " + str(name),
+                       priority = 'q')
+                
+                # TBAdded: the link created by pymake is relative, mine absolute ...
+                #if not os.readlink(name) == os.readlink( twin ):
+                #    print os.readlink(name)
+                #    print os.readlink( twin )
+                #    self.RES_OK = false
+                #    break
+
+            # Important: isfile MUST be in elif AFTER islink because isfile follows links!
+            elif os.path.isfile(twin):
+                tprint("comparing file:\n\t" + name + "\n and \n\t" + twin,
+                       priority = 'q')
+                if self.diff(name, twin):
+                    tprint("Files are different!",
+                           priority = 'q')
+                    self.RES_OK = false
+                    break
+
+            elif not os.path.isdir(name):
+                tprint("The " + twin + " file is missing",
+                       priority = 'q')
+                self.RES_OK = false
+                break
+            
+    def diff(self, file1, file2):
+        """
+        Method that simply calls the diff prgm in the shell, generating a file.
+        If the file is empty, it assumes that there was no content difference
+        between file1 && file2. The methods then returns false and removes
+        the empty file. If the file isn't empty, it returns true and lets the
+        diff file in the results_on_run path
+        """ 
+        diff_cmd = diff_program + file1 + " " + file2 + " > " + self.diff_log
+        diffProcess = Popen3(diff_cmd, true)
+
+        errors = diffProcess.childerr.readlines()
+        diffprint = lambda err: tprint("\t" + err, priority = "ALWAYS")
+        if len(errors) != 0:
+            tprint("Errors occurred in diff:", priority = "ALWAYS")
+            map(diffprint, errors)
+            return true
+
+        f = open(self.diff_log, 'r')
+        lines = f.readlines()
+        if lines == []:
+            f.close()
+            os.remove(self.diff_log)
+            return false
+    
+        return true 
+    
+def pytest():
+    global stats
+    global testPaths
+    global directory_when_called
+    global current_mode
+    global supported_modes
+    global commit_msg
+
+    global mail_adress
+    global savelog_file_name
+    global savelog_file
+    directory_when_called = os.getcwd()
+    supported_modes = {"add":addTest, "clean":cleanRoutine, "compile":compileAndRun,"compilePLL":compilePLL,
+                       "commit":commitMode, "config":configTest, "paths":-1, "results":resultsCreation,
+                       "remove":removeTest, "run":compileAndRun, "watch":compileAndRun}
+    stats = Stats()
+    testPaths = TestPaths()
+    
+    # get the option arguments
+    args = sys.argv[:]
+    del args[0] # ignore program name
+
+    commit_msg = option_value(args, "msg", commit_msg)
+    mail_adress = option_value(args, "mail", mail_adress)
+    if mail_adress != '':
+        savelog_file_name = mailing_log
+    savelog_file_name = option_value(args, "savelog", savelog_file_name)
+
+    ## Debug: raw_input(savelog_file_name)
+    
+    if savelog_file_name != '#undefined':
+        savelog_file = open(savelog_file_name,'w')
+
+    # Dynamic version header
+    os.chdir(pytest_dir)
+    tprint("pytest " + cvs_query('log', 'pytest', 'revision ', '\n') +
+          " [ (c) Christian Dorion & Kim Levy, report problem to dorionc@ "
+           + "or levyk@iro.umontreal.ca ]\n",
+           priority = "ALWAYS")
+    
+
+    # Arg parsing
+    os.chdir(directory_when_called)
+    current_mode = [] # should contain only one mode...
+    for arg in args:
+        if arg[0]=='-':
+            if arg[1:] in supported_modes.keys():
+                current_mode.append(arg[1:])
+            elif arg[1:] in supported_options:
+                optionargs.append(arg[1:])
+            else:
+                tprint("Asked for '" + arg[1:] + "' option, which is unknown!\n",
+                       priority = 'q')
+        else:
+            if os.path.isdir(arg):
+                if not contains(target_dir_args, arg):
+                    target_dir_args.append( arg )
+            #####
+            ## Single test treatment initialization
+            #
+            else:
+                (dir, test) = os.path.split(arg)
+
+                ## Key (dir) treatment
+                if dir:
+                    if not os.path.isdir(dir):
+                        tprint(arg+ " is not an accessible test or directory", priority='ALWAYS')
+                        usage()
+                        sys.exit()
+                else:
+                    dir = "."
+
+                ## Adding if not there
+                if contains(target_dir_args, dir):
+                    selected_target_tests[dir].append(test)
+                else:
+                    target_dir_args.append(dir)
+                    selected_target_tests[dir] = [test]
+            #
+            ## end of single test treatment initialization
+            #####
+
+    if len(current_mode)!=1:
+        usage()
+        sys.exit()
+        
+    current_mode = current_mode[0]
+    if "mail" in optionargs:
+        if current_mode != "compilePLL":
+            tprint("The mail option is only supported under the compilePLL mode",
+                   priority = "ALWAYS")
+            sys.exit()
+        if "savelog" in optionargs:
+            tprint("Mail and savelog options are not compatible",
+                   priority = "ALWAYS")
+            sys.exit()
+        
+    setVerboseMode()
+
+    testPaths.initialise(pytest_paths_file)
+
+    ## That function launches the appropriate mode
+    enableSelectedMode()
+
+    if not "nostats" in optionargs and current_mode == "run":
+        tprint(str(stats), "ALWAYS")
+
+    tprint("Quitting pytest ...", priority = "ALWAYS")
+    if "savelog" in optionargs:
+        savelog_file.close()
+    testPaths.close()
+
+# MAIN PROGRAM
+pytest()
+
+

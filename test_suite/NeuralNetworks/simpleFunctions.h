@@ -1,0 +1,160 @@
+
+/* *******************************************************
+   * $Id: /u/lisa/dorionc/PLearn/PLearnLibrary/TestSuite/NeuralNetworks/simpleFunctions.h
+   * AUTHOR: Christian Dorion & Kim Levy
+   ******************************************************* */
+
+/*! \file PLearnLibrary/PLearnCore/TMat.h */
+
+#ifndef __SIMPLE_FUNCTIONS_H_
+#define __SIMPLE_FUNCTIONS_H_
+
+#include "random.h"
+#include "Tgeneral.h" 
+#include "TMat/TMat_utils.h"
+#include "Var.h" 
+#include "DisplayUtils.h"
+#include "GradientOptimizer.h"
+#include "VarArray.h"
+
+using namespace PLearn;
+using namespace std; 
+
+class SimpleFunction: public Object
+{
+private:
+  bool varGraphImplemented;
+  bool varFunctionApplyed;
+
+protected: 
+  Var varX;
+  Var varY;
+  //Var varZ;
+  Var varFunction;
+
+  void setVarGraphImplemented(){ varGraphImplemented = true; }
+
+public:
+  SimpleFunction():
+    varGraphImplemented(false), varFunctionApplyed(false),
+    varX(1,"argument X of varFunction"),
+    varY(1,"argument Y of varFunction"),
+    //varZ(1,"argument Z of varFunction"),
+    varFunction(1,"Var rep of function")
+  {}
+
+  //virtual string getClassName() { return "SimpleFunction";}
+  virtual string classname() { return "SimpleFunction";}
+  
+  virtual real function(real x, real y) = 0;
+  virtual void implementVarGraph() = 0; // must call setVarGraphImplemented !!!
+
+  void displayVarGraph(bool values=false){  PLearn::displayVarGraph(varFunction, values); }
+
+  Var applyVarFunction(const Var& x, const Var& y)
+  {
+    T_PRECONDITION(varGraphImplemented, "Must call implementVarGraph prior to applyVarFunction");
+
+    varX->matValue.resize(x->matValue.length(), x->matValue.width());
+    varX->matValue << x->matValue;
+
+    varY->matValue.resize(y->matValue.length(), y->matValue.width());
+    varY->matValue << y->matValue;
+    
+    //varZ->matValue.resize(z->matValue.length(), z->matValue.width());
+    //varZ->matValue << z->matValue;
+    
+    propagationPath(varFunction).fprop();
+    varFunctionApplyed = true;
+    return PLearn::deepCopy( varFunction );
+  }
+
+  bool compareResults()
+  {
+    T_PRECONDITION(varFunctionApplyed, "Must call applyVarFunction prior to compareResults");
+    Vec x = varX->value;
+    Vec y = varY->value;
+    //Vec z = varZ->value;
+    Vec res = varFunction->value;
+
+    T_ASSERT( x.length() == y.length() 
+              && y.length() == res.length(),
+              "Abnormal lengths in vars of SimpleFunctions!");
+    
+    Vec::iterator itX = x.begin();
+    Vec::iterator itY = y.begin();
+    //Vec::iterator itZ = z.begin();
+    Vec::iterator itRes = res.begin();
+    for(int i=0; i<x.length(); i++){
+      T_ASSERT( *itRes == function(*itX, *itY),
+                "Propagation through the var graph didn't give the expected results");
+      ++itX; ++itY; ++itRes;
+    }
+    
+    return true;
+  }
+  
+  virtual ~SimpleFunction(){}
+};  
+
+class Sommation: public SimpleFunction
+{
+public:
+  Sommation() : SimpleFunction() {}
+  virtual string classname() { return "Sommation";}
+  virtual real function(real x, real y) { return x+y; }
+  virtual void implementVarGraph(){
+    varFunction = varX+varY;
+    setVarGraphImplemented();
+  }
+};
+
+class Hypothenuse : public SimpleFunction
+{
+public:
+  Hypothenuse() : SimpleFunction() {}
+  virtual string classname() { return "Hypothenuse";}
+  virtual real function(real x, real y) { return sqrt(square(x)+square(y)); }
+  virtual void implementVarGraph(){
+    Var sqX = square(varX);
+    sqX->setName("varX^2");
+    
+    Var sqY = square(varY);
+    sqY->setName("varY^2");
+
+    varFunction = sqrt(sqX+sqY);
+    setVarGraphImplemented();
+  }
+};
+
+class XTimesExponentialY: public SimpleFunction
+{
+public:
+  XTimesExponentialY() : SimpleFunction() {}
+  virtual string classname() { return "XTimesExponentialY"; }
+  virtual real function(real x, real y) { return x*exp(y); }
+  virtual void implementVarGraph(){
+    Var expY = exp(varY);
+    expY->setName("Exp[varY]");
+    
+    varFunction = varX * expY;
+    setVarGraphImplemented();
+  }
+};
+
+class SqrtSquareExp
+{
+
+};  
+
+class MinusSqrtSquareExp
+{
+
+};
+
+class Weardo
+{
+
+};
+  
+#endif // ifndef __SIMPLE_FUNCTIONS_H_
