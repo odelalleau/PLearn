@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.h,v 1.6 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: SubVMatrix.h,v 1.7 2004/02/28 18:11:45 tihocan Exp $
    ******************************************************* */
 
 
@@ -52,14 +52,15 @@ using namespace std;
 class SubVMatrix: public VMatrix
 {
   typedef VMatrix inherited;
+
 protected:
-  VMat parent;
-  int istart;
-  int jstart;
 
 public:
   
   //! Build options.
+  VMat parent;
+  int istart;
+  int jstart;
   real fistart;
   real flength;
   
