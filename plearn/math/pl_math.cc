@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.cc,v 1.3 2003/11/25 02:33:18 yoshua Exp $
+   * $Id: pl_math.cc,v 1.4 2003/11/28 21:55:24 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -197,6 +197,8 @@ real dilogarithm(real x)
 {
   if (x<0)
     return -positive_dilogarithm(-x) + 0.5*positive_dilogarithm(x*x);
+  else 
+    if (x==0) return 0;
   else
     return positive_dilogarithm(x);
 }

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.9 2003/11/27 13:14:34 yoshua Exp $
+   * $Id: pl_math.h,v 1.10 2003/11/28 21:55:24 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -313,6 +313,14 @@ inline real inverse_softplus(real y)
 // It is always monotonically increasing wrt x (positive derivative in x).
 inline real soft_slope(real x, real smoothness=1, real left=0, real right=1)
 {
+  if (smoothness==0)
+    return 0.5;
+  if (smoothness>1000)
+  {
+    if (x<left) return 0;
+    if (x>right) return 1;
+    return (x-left)/(left-right);
+  }
   return 1 + (softplus(-smoothness*(x-left))-softplus(-smoothness*(x-right)))/(smoothness*(right-left));
 }
   

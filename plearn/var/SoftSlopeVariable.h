@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SoftSlopeVariable.h,v 1.1 2003/11/27 13:31:28 yoshua Exp $
+   * $Id: SoftSlopeVariable.h,v 1.2 2003/11/28 21:55:26 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -85,7 +85,7 @@ inline Var d_soft_slope(Var x, Var smoothness, Var left, Var right)
 // limit of soft_slope when smoothness-->0
 inline Var soft_slope_limit(Var x, Var smoothness, Var left, Var right)
 {
-  return var(1.0) + smoothness*(-sigmoid(-smoothness*(x-left))+sigmoid(-smoothness*(x-right)))/(right-left);
+  return var(0.5);
 }
 
 %> // end of namespace PLearn

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.26 2003/11/19 18:56:20 ducharme Exp $
+   * $Id: TMat_maths_impl.h,v 1.27 2003/11/28 21:55:24 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -153,6 +153,7 @@ void squareElements(const TVec<T>& x)
 template<class T> 
 T sumsquare(const TMat<T>& m)
 {  
+  if (m.size()==0) return 0;
   if(m.isCompact())
     {
       typename TMat<T>::compact_iterator it = m.compact_begin();
@@ -180,6 +181,7 @@ T sumsquare(const TMat<T>& m)
 template<class T> 
 T sumabs(const TMat<T>& m)
 {  
+  if (m.size()==0) return 0;
   if(m.isCompact())
     {
       typename TMat<T>::compact_iterator it = m.compact_begin();

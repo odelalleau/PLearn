@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.12 2003/11/27 13:14:38 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.13 2003/11/28 21:55:26 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -56,7 +56,7 @@ ConditionalDensityNet::ConditionalDensityNet()
    nhidden(0),
    nhidden2(0),
    weight_decay(0),
-   bias_decay(0),
+   bias_decay(1e-6),
    layer1_weight_decay(0),
    layer1_bias_decay(0),
    layer2_weight_decay(0),
@@ -73,7 +73,8 @@ ConditionalDensityNet::ConditionalDensityNet()
    steps_type("sloped_steps"),
    centers_initialization("uniform"),
    unconditional_p0(0.01),
-   mu_is_fixed(true)
+   mu_is_fixed(true),
+   initial_hardness(1)
   {
   }
 
@@ -193,8 +194,21 @@ ConditionalDensityNet::ConditionalDensityNet()
   declareOption(ol, "mu_is_fixed", &ConditionalDensityNet::mu_is_fixed, OptionBase::buildoption, 
                 "    whether to keep the step centers (mu[i]) fixed or to learn them.\n");
 
+  declareOption(ol, "initial_hardness", &ConditionalDensityNet::initial_hardness, OptionBase::buildoption, 
+                "    initial value of softplus(c), only used during parameter initialization\n");
+
   declareOption(ol, "paramsvalues", &ConditionalDensityNet::paramsvalues, OptionBase::learntoption, 
                 "    The learned neural network parameter vector\n");
+
+
+  declareOption(ol, "unconditional_cdf", &ConditionalDensityNet::unconditional_cdf, OptionBase::learntoption, 
+                "    Unconditional cumulative distribution function.\n");
+
+  declareOption(ol, "unconditional_delta_cdf", &ConditionalDensityNet::unconditional_delta_cdf, OptionBase::learntoption, 
+                "    Variations of the cdf from one step center to the next.\n");
+
+  declareOption(ol, "mu", &ConditionalDensityNet::unconditional_delta_cdf, OptionBase::learntoption, 
+                "    Step centers.\n");
 
     inherited::declareOptions(ol);
   }
@@ -292,10 +306,11 @@ ConditionalDensityNet::ConditionalDensityNet()
       Var max_y = var(maxY); max_y->setName("maxY");
       centers = target-mu; centers->setName("centers");
       centers_M = max_y-mu; centers_M->setName("centers_M");
-      Var pos_a = softplus(a); pos_a->setName("pos_a");
-      Var pos_b = softplus(b); pos_b->setName("pos_b");
-      unconditional_cdf = Var(n_output_density_terms,1);
-      Var pos_c = softplus(c)*unconditional_cdf; pos_c->setName("pos_c");
+      unconditional_cdf.resize(n_output_density_terms);
+      unconditional_delta_cdf = Var(n_output_density_terms,1);
+      pos_a = softplus(a); pos_a->setName("pos_a");
+      pos_b = softplus(b)*unconditional_delta_cdf; pos_b->setName("pos_b");
+      pos_c = softplus(c); pos_c->setName("pos_c");
       Var scaled_centers = pos_c*centers;
       // scaled centers evaluated at target = M
       Var scaled_centers_M = pos_c*centers_M;
@@ -315,6 +330,7 @@ ConditionalDensityNet::ConditionalDensityNet()
       {
         Var left_side = vconcat(var(0.0) & (new SubMatVariable(mu,0,0,n_output_density_terms-1,1))); left_side->setName("left_side"); 
         steps = soft_slope(target, pos_c, left_side, mu);
+        steps_M = soft_slope(max_y, pos_c, left_side, mu);
         steps_gradient = d_soft_slope(target, pos_c, left_side, mu);
         steps_integral = soft_slope_integral(pos_c,left_side,mu,0.0,maxY);
         delta_steps = soft_slope_limit(target, pos_c, left_side, mu);
@@ -322,7 +338,7 @@ ConditionalDensityNet::ConditionalDensityNet()
       else PLERROR("ConditionalDensityNet::build, steps_type option value unknown: %s",steps_type.c_str());
 
       steps->setName("steps");
-      steps_M->setName("steps");
+      steps_M->setName("steps_M");
       steps_integral->setName("steps_integral");
       Var density_numerator = dot(pos_b,steps_gradient);
       density_numerator->setName("density_numerator");
@@ -550,6 +566,7 @@ TVec<string> ConditionalDensityNet::getTestCostNames() const
   deepCopyField(f, copies);
   deepCopyField(test_costf, copies);
   deepCopyField(optimizer, copies);
+  deepCopyField(unconditional_delta_cdf, copies);
   deepCopyField(unconditional_cdf, copies);
   deepCopyField(mu, copies);
   inherited::makeDeepCopyFromShallowCopy(copies);
@@ -658,7 +675,7 @@ void ConditionalDensityNet::initializeParams()
     mu_ = output_biases.subVec(i,n_output_density_terms); i+=n_output_density_terms;
   a_[0]=inverse_softplus(unconditional_p0);
   b_.fill(inverse_softplus(1.0));
-  c_.fill(inverse_softplus(1.0));
+  c_.fill(inverse_softplus(initial_hardness));
   initialize_mu(mu_);
 
   // Reset optimizer
@@ -718,8 +735,7 @@ void ConditionalDensityNet::train()
   // estimate the unconditional cdf
   static real weight;
   Vec mu_values = mu->value;
-  Vec cdf_values = unconditional_cdf->value;
-  cdf_values.clear();
+  unconditional_cdf.clear();
   real sum_w=0;
   unconditional_p0 = 0;
   for (int i=0;i<l;i++)
@@ -730,14 +746,17 @@ void ConditionalDensityNet::train()
       unconditional_p0 += weight;
     for (int j=0;j<n_output_density_terms;j++)
       if (y<mu_values[j]) 
-        cdf_values[j]+=weight;
+        unconditional_cdf[j]+=weight;
     sum_w += weight;
   }
-  cdf_values *= 1.0/sum_w;
+  unconditional_cdf *= 1.0/sum_w;
   unconditional_p0 *= 1.0/sum_w;
+  unconditional_delta_cdf->valuedata[0]=unconditional_cdf[0]-unconditional_p0;
+  for (int i=1;i<n_output_density_terms;i++)
+    unconditional_delta_cdf->valuedata[i]=unconditional_cdf[i]-unconditional_cdf[i-1];
   
   initializeParams();
-
+  // debugging
       f->fprop(input->value,outputs->value);
       static bool display_graph = false;
       //displayVarGraph(outputs,true);

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SoftSlopeVariable.cc,v 1.1 2003/11/27 13:31:28 yoshua Exp $
+   * $Id: SoftSlopeVariable.cc,v 1.2 2003/11/28 21:55:26 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -92,9 +92,9 @@ void SoftSlopeVariable::fprop()
   int n3=varray[2]->nelems();
   int n4=varray[3]->nelems();
   real* x = varray[0]->valuedata;
-  real* smoothness = varray[0]->valuedata;
-  real* left = varray[0]->valuedata;
-  real* right = varray[0]->valuedata;
+  real* smoothness = varray[1]->valuedata;
+  real* left = varray[2]->valuedata;
+  real* right = varray[3]->valuedata;
 
   if (n1==n && n2==n && n3==n && n4==n)
     for(int i=0; i<n; i++)
@@ -126,13 +126,13 @@ void SoftSlopeVariable::bprop()
   int m3= n3==1?0:1;
   int m4= n4==1?0:1;
   real* x = varray[0]->valuedata;
-  real* smoothness = varray[0]->valuedata;
-  real* left = varray[0]->valuedata;
-  real* right = varray[0]->valuedata;
+  real* smoothness = varray[1]->valuedata;
+  real* left = varray[2]->valuedata;
+  real* right = varray[3]->valuedata;
   real* dx = varray[0]->gradientdata;
-  real* dsmoothness = varray[0]->gradientdata;
-  real* dleft = varray[0]->gradientdata;
-  real* dright = varray[0]->gradientdata;
+  real* dsmoothness = varray[1]->gradientdata;
+  real* dleft = varray[2]->gradientdata;
+  real* dright = varray[3]->gradientdata;
   for(int i=0; i<n; i++,x+=m1,smoothness+=m2,left+=m3,right+=m4,dx+=m1,dsmoothness+=m2,dleft+=m3,dright+=m4)
   {
     real t1 = sigmoid(- *smoothness*(*x-*left));

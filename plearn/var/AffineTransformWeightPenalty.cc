@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: AffineTransformWeightPenalty.cc,v 1.4 2003/10/10 17:18:56 yoshua Exp $
+   * $Id: AffineTransformWeightPenalty.cc,v 1.5 2003/11/28 21:55:26 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -59,15 +59,21 @@ void AffineTransformWeightPenalty::fprop()
 {
   if (L1_penalty_)
   {
-    valuedata[0] = weight_decay_*sumabs(input->matValue.subMatRows(1,input->length()-1));
+    if (input->length()>1)
+      valuedata[0] = weight_decay_*sumabs(input->matValue.subMatRows(1,input->length()-1));
+    else 
+      valuedata[0] = 0;
     if(bias_decay_!=0)
-      valuedata[0] += bias_decay_*sumabs(input->matValue(1));
+      valuedata[0] += bias_decay_*sumabs(input->matValue(0));
   }
   else
   {
-    valuedata[0] = weight_decay_*sumsquare(input->matValue.subMatRows(1,input->length()-1));
+    if (input->length()>1)
+      valuedata[0] = weight_decay_*sumsquare(input->matValue.subMatRows(1,input->length()-1));
+    else 
+      valuedata[0] = 0;
     if(bias_decay_!=0)
-      valuedata[0] += bias_decay_*sumsquare(input->matValue(1));
+      valuedata[0] += bias_decay_*sumsquare(input->matValue(0));
   }
 }
 
@@ -77,9 +83,11 @@ void AffineTransformWeightPenalty::bprop()
   int l = input->length() - 1;
   if (L1_penalty_)
   {
+    if (!input->matGradient.isCompact())
+      PLERROR("AffineTransformWeightPenalty::bprop, L1 penalty currently not handling non-compact weight matrix");
     int n=input->width();
-    real *d_w = input->matGradient[0];
-    real *w = input->matValue[0];
+    real *d_w = input->matGradient[1];
+    real *w = input->matValue[1];
     if (weight_decay_!=0)
     {
       for (int j=0;j<l;j++)
@@ -91,8 +99,8 @@ void AffineTransformWeightPenalty::bprop()
     }
     if(bias_decay_!=0)
     {
-      real* d_biases = input->matGradient[l];
-      real* biases = input->matValue[l];
+      real* d_biases = input->matGradient[0];
+      real* biases = input->matValue[0];
       for (int i=0;i<n;i++)
         if (biases[i]>0)
           d_biases[i] += bias_decay_*gradientdata[0];
@@ -104,7 +112,7 @@ void AffineTransformWeightPenalty::bprop()
   {
     multiplyAcc(input->matGradient.subMatRows(1,l), input->matValue.subMatRows(1,l), two(weight_decay_)*gradientdata[0]);
     if(bias_decay_!=0)
-      multiplyAcc(input->matGradient(1), input->matValue(1), two(bias_decay_)*gradientdata[0]);
+      multiplyAcc(input->matGradient(0), input->matValue(0), two(bias_decay_)*gradientdata[0]);
   }
 }
 

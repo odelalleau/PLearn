@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.9 2003/11/27 13:14:39 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.10 2003/11/28 21:55:26 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -72,9 +72,9 @@ protected:
 
     Var output; // output layer contains the parameters of the distribution:
   Var outputs; // contains the result of computeOutput, e.g. expectation, or cdf curve
-  Var a; // output parameter, scalar constant part
-  Var b; // output parameters, step height parameters
-  Var c; // output parameters, step smoothing parameters
+  Var a, pos_a; // output parameter, scalar constant part
+  Var b, pos_b; // output parameters, step height parameters
+  Var c, pos_c; // output parameters, step smoothing parameters
   Var mu; // output parameters, step location parameters
   Var density;
   Var cumulative;
@@ -91,9 +91,12 @@ protected:
 
    Var centers, centers_M, steps, steps_M, steps_gradient, steps_integral, delta_steps, cum_numerator, cum_denominator;
 
-  Var unconditional_cdf; // the cond. distribution step multiplicative parameters 
+  // the cond. distribution step multiplicative parameters 
   // are relative to the unconditional cdf step heights, at the mu positions, contained in this source var
   // (computed at the beginning of training).
+  Vec unconditional_cdf;
+  // unconditional_cdf[i] - unconditional_cdf[i-1], for use to scale the steps of the cdf
+  Var unconditional_delta_cdf; 
 
   // for debugging
   Var prev_centers, prev_centers_M, scaled_prev_centers, 
@@ -164,6 +167,9 @@ public:
 
   // whether to learn the mu or keep them at their initial values
   bool mu_is_fixed;
+
+  // initial value of softplus(c) (used only in initializeParams())
+  real initial_hardness;
 
   // ****************
   // * Constructors *
