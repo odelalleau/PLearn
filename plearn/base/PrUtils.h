@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrUtils.h,v 1.1 2005/01/12 17:31:41 chrish42 Exp $ 
+   * $Id: PrUtils.h,v 1.2 2005/01/12 21:00:52 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Christian Hudon
@@ -48,7 +48,7 @@
 
 namespace PLearn {
 
-  std::string getPrErrorString()
+  std::string getPrErrorString();
 
 } // end of namespace PLearn
 
