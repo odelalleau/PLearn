@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.h,v 1.1 2002/10/25 03:21:00 plearner Exp $
+   * $Id: Optimizer.h,v 1.2 2003/01/09 14:29:33 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,7 +48,6 @@
 #define OPTIMIZER_INC
 
 #include "Mat.h"
-#include "Var_all.h"
 #include "Func.h"
 #include "VMat.h"
 #include "Measurer.h"
