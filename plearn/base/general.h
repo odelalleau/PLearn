@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: general.h,v 1.11 2004/02/20 21:11:43 chrish42 Exp $
+   * $Id: general.h,v 1.12 2004/02/26 04:53:03 nova77 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -143,7 +143,7 @@ namespace std {
 namespace PLearn {
 using namespace std;
 
-#ifdef _MINGW_
+#if defined(_MINGW_) || defined(WIN32)
 #define sleep(t) _sleep(t*1000)
 #endif
 
