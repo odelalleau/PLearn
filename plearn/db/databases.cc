@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: databases.cc,v 1.7 2004/07/08 15:40:27 monperrm Exp $
+   * $Id: databases.cc,v 1.8 2004/07/08 21:31:13 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -743,7 +743,7 @@ void loadLetters(int& inputsize, int& nclasses, VMat& trainset, VMat& testset)
   testset = VMat(letters.subMatRows(16000,4000));
 }
 
-void loadClassificationDataset(const string& datasetname, int& inputsize, int& nclasses, VMat& trainset, VMat& testset, bool normalizeinputs)
+void loadClassificationDataset(const string& datasetname, int& inputsize, int& nclasses, VMat& trainset, VMat& testset, bool normalizeinputs, VMat& allset)
 {
   string dbname = datasetname;
   int reduced_size = 0;
@@ -815,6 +815,20 @@ void loadClassificationDataset(const string& datasetname, int& inputsize, int& n
     testset = remapLastColumn(testset,classnum,1.,0.);
     nclasses = 2;
   }
+  else if (dbname.substr(0,4) == "UCI_") {
+    string db_spec = dbname.substr(4) ;
+    size_t look_for_id = db_spec.rfind("_ID=");
+    string db_dir;
+    string id = "";
+    if (look_for_id != string::npos) {
+      // There is an ID specified.
+      db_dir = db_spec.substr(0, look_for_id);
+      id = db_spec.substr(look_for_id + 4);
+    } else {
+      db_dir = db_spec;
+    }
+    loadUCI(trainset, testset, allset, db_dir, id, normalizeinputs);
+  }
   else
     PLERROR("Unknown dbname %s",dbname.c_str());
 
@@ -839,7 +853,52 @@ void loadClassificationDataset(const string& datasetname, int& inputsize, int& n
 }
 
 
+/////////////
+// loadUCI //
+/////////////
+void loadUCI(VMat& trainset, VMat& testset, VMat& allset, string db_spec, string id, bool normalize) {
+  string script_file = db_spec;
+  if (id != "") {
+    script_file += "_ID=" + id;
+  }
+  script_file += ".plearn";
+  string db_dir = dbdir_name + "/UCI_MLDB/" + db_spec;
+  Object* obj = PLearn::macroLoadObject(db_dir + "/" + script_file);
+  PP<UCISpecification> uci_spec = static_cast<UCISpecification*>(obj);
+  if (uci_spec->file_all != "")
+    loadUCISet(allset, db_dir + "/" + uci_spec->file_all, uci_spec, normalize);
+  if (uci_spec->file_train != "")
+    loadUCISet(trainset, db_dir + "/" + uci_spec->file_train, uci_spec, normalize);
+  if (uci_spec->file_test != "")
+    loadUCISet(testset, db_dir + "/" + uci_spec->file_test, uci_spec, normalize);
+}
 
-
+////////////////
+// loadUCISet //
+////////////////
+void loadUCISet(VMat& data, string file, PP<UCISpecification> uci_spec, bool normalize) {
+  char *** to_symbols;
+  int * to_n_symbols;
+  Mat the_data = loadUCIMLDB(file, &to_symbols, &to_n_symbols);
+  if (uci_spec->target_is_first) {
+    // We need to move the target to the last columns.
+    int ts = uci_spec->targetsize;
+    if (ts == -1) {
+      PLERROR("In loadUCISet - We don't know how many columns to move");
+    }
+    if (uci_spec->weightsize > 0)
+      PLERROR("In loadUCISet - Damnit, I don't like weights");
+    the_data.resize(the_data.length(), the_data.width() + ts);
+    Vec row;
+    for (int i = 0; i < the_data.length(); i++) {
+      row = the_data(i);
+      row.subVec(the_data.width() - ts - 1, ts) << row.subVec(0, ts);
+    }
+    the_data = the_data.subMatColumns(ts, the_data.width() - ts);
+  }
+  data = VMat(the_data);
+  data->defineSizes(uci_spec->inputsize, uci_spec->targetsize, uci_spec->weightsize);
+  // TODO Free the symbols stuff and turn them into regular string <-> real mappings.
+}
 
 } // end of namespace PLearn

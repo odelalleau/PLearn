@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: databases.h,v 1.4 2004/03/03 14:12:19 tihocan Exp $
+   * $Id: databases.h,v 1.5 2004/07/08 21:31:13 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -47,6 +47,7 @@
 #ifndef DATABASES_INC
 #define DATABASES_INC
 
+#include "UCISpecification.h"
 #include "VMat.h"
 //#include "NistDB.h"
 
@@ -99,6 +100,9 @@ VMat loadLetters(int n_letters, bool do_shuffle);
 void loadUSPS(VMat& trainset, VMat& testset, bool use_smooth=true);
 VMat loadUSPS(bool use_smooth=true);
 VMat loadHousing(bool normalize=true);
+void loadUCI(VMat& trainset, VMat& testset, VMat& allset, string db_spec, string id, bool normalize);
+//! Load a specific UCI dataset in the given VMatrix.
+void loadUCISet(VMat& data, string file, PP<UCISpecification> uci_spec, bool normalize);
 
 
 /*!   This will return a VMat with a target in the last column in {0,..,nclasses-1} (for binary classification possible values are 0 and 1 (not -1)). 
@@ -128,7 +132,7 @@ inline string loadClassificationDatasetHelp()
     "    first rows will be kept. \n";
 }
 
-void loadClassificationDataset(const string& dbname, int& inputsize, int& nclasses, VMat& trainset, VMat& testset, bool normalizeinputs);
+void loadClassificationDataset(const string& dbname, int& inputsize, int& nclasses, VMat& trainset, VMat& testset, bool normalizeinputs, VMat& allset);
 
 
 } // end of namespace PLearn
