@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat_maths.cc,v 1.7 2003/09/20 20:33:35 yoshua Exp $
+* $Id: VMat_maths.cc,v 1.8 2003/09/20 20:56:31 yoshua Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat_maths.h"
@@ -810,7 +810,7 @@ real weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas, real weigh
     PLERROR("linearRegression: theta_t(%d,%d) should be (%dx%d)",
             theta_t.length(),theta_t.width(),inputsize+1,targetsize);
 
-  int l=X.length();
+  int l=inputs.length();
   if(!use_precomputed_XtX_XtY) // then compute them
   {
     XtX.clear();
@@ -863,7 +863,8 @@ Mat weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas, real weight
   Mat XtY(n,n_outputs);
   Mat theta_t(n,n_outputs);
   real sy=0;
-  weightedLinearRegression(inputs, outputs, gammas, weight_decay, theta_t, false, XtX, XtY,sy);
+  real sg=0;
+  weightedLinearRegression(inputs, outputs, gammas, weight_decay, theta_t, false, XtX, XtY,sy,sg);
   return theta_t;
 }
 
