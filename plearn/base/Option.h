@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Option.h,v 1.8 2004/12/07 20:25:28 chapados Exp $
+   * $Id: Option.h,v 1.9 2005/02/23 21:07:44 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,14 +47,22 @@
 #define Option_INC
 
 #include "OptionBase.h"
+#include <plearn/base/lexical_cast.h>
 
 namespace PLearn {
 using std::string;
 
+template <class T> class TVec;               //!< Forward-declare
+
+
+//#####  Generic Option  ######################################################
+  
 //! Template class for option definitions
-template<class ObjectType, class OptionType, class ConstOptionType>
+template<class ObjectType, class OptionType>
 class Option: public OptionBase
 {
+  typedef OptionBase inherited;
+  
 protected:
   OptionType ObjectType::*ptr;
 
@@ -65,10 +73,13 @@ public:
   Option(const string& optionname, OptionType ObjectType::* member_ptr, 
          flag_t flags, const string& optiontype, const string& defaultval,
          const string& description)
-    :OptionBase(optionname, flags, optiontype, defaultval, description),
-    ptr(member_ptr) {}
+    : inherited(optionname, flags, optiontype, defaultval, description),
+      ptr(member_ptr)
+    { }
+
   virtual void read(Object* o, PStream& in) const
-  { in >> dynamic_cast<ObjectType*>(o)->*ptr; }
+    { in >> dynamic_cast<ObjectType*>(o)->*ptr; }
+
   virtual void read_and_discard(PStream& in) const
   { 
     string dummy;
@@ -77,25 +88,59 @@ public:
     //OptionType op; //dummy object that will be destroyed after read
     //in >> op; //read dummy object
   }
+
   virtual void write(const Object* o, PStream& out) const
-  { out << static_cast<ConstOptionType>(dynamic_cast<const ObjectType *>(o)->*ptr); }
+    { out << dynamic_cast<ObjectType *>(const_cast<Object*>(o))->*ptr; }
 
   virtual Object* getAsObject(Object* o) const
-  { return toObjectPtr(dynamic_cast<ObjectType*>(o)->*ptr); }
+    { return toObjectPtr(dynamic_cast<ObjectType*>(o)->*ptr); }
 
   virtual const Object* getAsObject(const Object* o) const
-  { return toObjectPtr(dynamic_cast<const ObjectType*>(o)->*ptr); }
+    { return toObjectPtr(dynamic_cast<const ObjectType*>(o)->*ptr); }
 
   virtual Object *getIndexedObject(Object *o, int i) const
-  { return toIndexedObjectPtr(dynamic_cast<ObjectType*>(o)->*ptr, i); };
+    { return toIndexedObjectPtr(dynamic_cast<ObjectType*>(o)->*ptr, i); };
 
   virtual const Object* getIndexedObject(const Object *o, int i) const
-  { return toIndexedObjectPtr(dynamic_cast<const ObjectType*>(o)->*ptr, i); };
+    { return toIndexedObjectPtr(dynamic_cast<const ObjectType*>(o)->*ptr, i); };
 
   virtual string optionHolderClassName(const Object* o) const
-  { return dynamic_cast<const ObjectType*>(o)->ObjectType::_classname_(); }
+    { return dynamic_cast<const ObjectType*>(o)->ObjectType::_classname_(); }
 };
 
+
+//#####  TVec-Specific Option  ################################################
+
+// This is a special version of Option designed for TVec<T>.
+// The only difference is that it supports indexed reads and writes.
+template<class ObjectType, class VecElementType>
+class TVecOption : public Option<ObjectType, TVec<VecElementType> >
+{
+  typedef Option<ObjectType, TVec<VecElementType> > inherited;
+  
+public:
+  TVecOption(const string& optionname, TVec<VecElementType> ObjectType::* member_ptr, 
+             OptionBase::flag_t flags, const string& optiontype, const string& defaultval,
+             const string& description)
+    : inherited(optionname, member_ptr, flags, optiontype, defaultval,
+                description)
+    { }
+
+  virtual void readIntoIndex(Object* o, PStream& in, const string& index)
+    {
+      int i = tolong(index);
+      in >> (dynamic_cast<ObjectType*>(o)->*ptr)[i];
+    }
+
+  virtual void writeAtIndex(const Object* o, PStream& out, const string& index) const
+    {
+      int i = tolong(index);
+      out << (dynamic_cast<ObjectType*>(const_cast<Object*>(o))->*ptr)[i];
+    }
+};
+
+
+//#####  declareOption and Friends  ###########################################
 
 //! For flags, you should specify one of 
 //! OptionBase::buildoption, OptionBase::learntoption or OptionBase::tuningoption
@@ -107,22 +152,49 @@ public:
     unless you explicitly specify it as the last argument here (It is recomended that you *don't*
     specify it explicitly, unless you really must). */
 
-template<class ObjectType, class OptionType>
-inline void declareOption(OptionList& ol,                      //!< the list to which this option should be appended 
+template <class ObjectType, class OptionType>
+inline void declareOption(OptionList& ol,                      //!< list to which this option should be appended 
                           const string& optionname,            //!< the name of this option
                           OptionType ObjectType::* member_ptr, //!< &YourClass::your_field
                           OptionBase::flag_t flags,            //! see the flags in OptionBase
                           const string& description,           //!< a description of the option
-                          const string & defaultval="")        //!< the default value for this option, as set by the default constructor
-{ ol.push_back(new Option<ObjectType, OptionType, const OptionType>(optionname, member_ptr, flags, 
-                                                                    TypeTraits<OptionType>::name(), 
-                                                                    defaultval, description)); }
-template<class ObjectType, class OptionType>
-inline void declareOption(OptionList& ol, const string& optionname, OptionType *ObjectType::* member_ptr, OptionBase::flag_t flags,
-                          const string& description, const string & defaultval="")
-{ ol.push_back(new Option<ObjectType, OptionType *, const OptionType *>(optionname, member_ptr, flags, TypeTraits<OptionType *>::name(), 
-                                                                        defaultval, description)); }
-      
+                          const string& defaultval="")         //!< default value for this option, as set by the default constructor
+{
+  ol.push_back(new Option<ObjectType, OptionType>(optionname, member_ptr, flags, 
+                                                  TypeTraits<OptionType>::name(), 
+                                                  defaultval, description));
+}
+
+// Partial specialization for pointers
+template <class ObjectType, class OptionType>
+inline void declareOption(OptionList& ol,
+                          const string& optionname,
+                          OptionType* ObjectType::* member_ptr,
+                          OptionBase::flag_t flags,
+                          const string& description,
+                          const string& defaultval="")
+{
+  ol.push_back(new Option<ObjectType, OptionType *>(optionname, member_ptr, flags,
+                                                    TypeTraits<OptionType *>::name(), 
+                                                    defaultval, description));
+}
+
+// Partial specialization for TVec<T>
+template <class ObjectType, class VecElementType>
+inline void declareOption(OptionList& ol,
+                          const string& optionname,
+                          TVec<VecElementType> ObjectType::* member_ptr,
+                          OptionBase::flag_t flags,
+                          const string& description,
+                          const string& defaultval="")
+{
+  ol.push_back(new TVecOption<ObjectType, VecElementType>(
+                 optionname, member_ptr, flags,
+                 TypeTraits< TVec<VecElementType> >::name(),
+                 defaultval, description));
+}
+
+
 //! Allows one to redeclare an option differently
 //! (e.g. in a subclass, after calling inherited::declareOptions).
 template<class ObjectType, class OptionType>
@@ -138,13 +210,66 @@ inline void redeclareOption(OptionList& ol,                      //!< the list t
     if ((*it)->optionname() == optionname) {
       // We found the option to redeclare.
       found = true;
-      (*it) = new Option<ObjectType, OptionType, const OptionType>
+      (*it) = new Option<ObjectType, OptionType>
         (optionname, member_ptr, flags, TypeTraits<OptionType>::name(), defaultval, description);
     }
   }
   if (!found) {
     // We tried to redeclare an option that wasn't declared previously.
-    PLERROR("In Option::redeclareOption - The option you are trying to redeclare has not been declared yet.");
+    PLERROR("Option::redeclareOption: trying to redeclare option '%s' that has "
+            "not been declared before", optionname.c_str());
+  }
+}
+
+//! Partial specialization for pointers
+template<class ObjectType, class OptionType>
+inline void redeclareOption(OptionList& ol,                      //!< the list to which this option should be appended 
+                            const string& optionname,            //!< the name of this option
+                            OptionType* ObjectType::* member_ptr,//!< &YourClass::your_field
+                            OptionBase::flag_t flags,            //! see the flags in OptionBase
+                            const string& description,           //!< a description of the option
+                            const string & defaultval="")        //!< the default value for this option, as set by the default constructor
+{
+  bool found = false;
+  for (OptionList::iterator it = ol.begin(); !found && it != ol.end(); it++) {
+    if ((*it)->optionname() == optionname) {
+      // We found the option to redeclare.
+      found = true;
+      (*it) = new Option<ObjectType, OptionType*>
+        (optionname, member_ptr, flags, TypeTraits<OptionType*>::name(), defaultval, description);
+    }
+  }
+  if (!found) {
+    // We tried to redeclare an option that wasn't declared previously.
+    PLERROR("Option::redeclareOption: trying to redeclare option '%s' that has "
+            "not been declared before", optionname.c_str());
+  }
+}
+
+//! Partial specialization for TVec<T>
+template<class ObjectType, class VecElementType>
+inline void redeclareOption(OptionList& ol,
+                            const string& optionname,
+                            TVec<VecElementType> ObjectType::* member_ptr,
+                            OptionBase::flag_t flags,
+                            const string& description,
+                            const string & defaultval="")
+{
+  bool found = false;
+  for (OptionList::iterator it = ol.begin(); !found && it != ol.end(); it++) {
+    if ((*it)->optionname() == optionname) {
+      // We found the option to redeclare.
+      found = true;
+      (*it) = new TVecOption<ObjectType, VecElementType>
+        (optionname, member_ptr, flags,
+         TypeTraits< TVec<VecElementType> >::name(),
+         defaultval, description);
+    }
+  }
+  if (!found) {
+    // We tried to redeclare an option that wasn't declared previously.
+    PLERROR("Option::redeclareOption: trying to redeclare option '%s' that has "
+            "not been declared before", optionname.c_str());
   }
 }
 

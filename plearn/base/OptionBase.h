@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: OptionBase.h,v 1.9 2004/10/14 21:23:27 ducharme Exp $
+   * $Id: OptionBase.h,v 1.10 2005/02/23 21:07:44 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -112,6 +112,15 @@ public:
   virtual const Object* getAsObject(const Object* o) const = 0;
   virtual Object *getIndexedObject(Object *o, int i) const = 0;
   virtual const Object *getIndexedObject(const Object *o, int i) const = 0;    
+
+  //! Read into index "i" of the object's option; the index
+  //! is a string for generality (i.e. applies to both vectors and maps)
+  virtual void readIntoIndex(Object* o, PStream& in, const string& index);
+
+  //! Write from index "i" of the object's option; the index
+  //! is a string for generality (i.e. applies to both vectors and maps)
+  virtual void writeAtIndex(const Object* o, PStream& out,
+                            const string& index) const;
   
   //! Returns the name of the class in to which this field belongs
   virtual string optionHolderClassName(const Object* o) const = 0;

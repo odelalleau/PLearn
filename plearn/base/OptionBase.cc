@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: OptionBase.cc,v 1.3 2004/06/26 00:24:12 plearner Exp $
+   * $Id: OptionBase.cc,v 1.4 2005/02/23 21:07:44 chapados Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -58,15 +58,27 @@ bool OptionBase::shouldBeSkipped() const
 }
 
 string OptionBase::writeIntoString(const Object* o) const
-  {
-    ostrstream out_;
-    PStream out(&out_);
-    write(o, out);
-    char* buf = out_.str();
-    int n = out_.pcount();
-    string s(buf,n);
-    out_.freeze(false); // return ownership to the stream, so that it may free it...
-    return s;
-  }
+{
+  ostrstream out_;
+  PStream out(&out_);
+  write(o, out);
+  char* buf = out_.str();
+  int n = out_.pcount();
+  string s(buf,n);
+  out_.freeze(false); // return ownership to the stream, so that it may free it...
+  return s;
+}
+
+void OptionBase::readIntoIndex(Object*, PStream&, const string&)
+{
+  PLERROR("OptionBase::readIntoIndex: indexed reads are not supported for option '%s' "
+          "of type '%s'", optionname().c_str(), optiontype().c_str());
+}
+
+void OptionBase::writeAtIndex(const Object*, PStream&, const string&) const
+{
+  PLERROR("OptionBase::writeAtIndex: indexed writes are not supported for option '%s' "
+          "of type '%s'", optionname().c_str(), optiontype().c_str());
+}
 
 } // end of namespace PLearn
