@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.cc,v 1.24 2004/07/26 20:12:44 tihocan Exp $
+   * $Id: VVMatrix.cc,v 1.25 2004/08/06 13:23:13 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -397,7 +397,7 @@ VMat VVMatrix::createPreproVMat(const string & filename)
       if(mtime(meta_data_dir+slash+"precomputed.pmat") < date_of_code) {
         PLWARNING("In VVMatrix::createPreproVMat - The precomputed data (in %s) is older than current code, you may want to recompute again", meta_data_dir.c_str());
       }
-      source=new FileVMatrix(meta_data_dir+slash+"precomputed.pmat");
+      source = new FileVMatrix(meta_data_dir+slash+"precomputed.pmat");
       source->setMetaDataDir(meta_data_dir);
       source->setMtime(date_of_code);
       source->defineSizes(inputsize, targetsize, weightsize);
@@ -572,7 +572,14 @@ VMat VVMatrix::createPreproVMat(const string & filename)
 //          mvforce(meta_data_dir+slash+"incomplete.precomputed.pmat.fieldnames "+meta_data_dir+slash+"precomputed.pmat.fieldnames");
           if(pathexists(meta_data_dir+slash+"incomplete.precomputed.pmat.metadata"+slash))
             mvforce(meta_data_dir+slash+"incomplete.precomputed.pmat.metadata"+slash+" "+meta_data_dir+slash+"precomputed.pmat.metadata"+slash);
-          source=new FileVMatrix(meta_data_dir+slash+"precomputed.pmat");
+          // Save the string mappings.
+          source->setMetaDataDir(meta_data_dir);
+          source->saveAllStringMappings();
+          source = new FileVMatrix(meta_data_dir+slash+"precomputed.pmat");
+          source->setMetaDataDir(meta_data_dir);
+          source->setMtime(date_of_code);
+          source->defineSizes(inputsize, targetsize, weightsize);
+          // TODO The 3 lines above are duplicated throughout the code, this is ugly.
         }
       else if(precomp!="")
         PLERROR("Unsupported precomputing format : %s.  File is %s", precomp.c_str(),filename.c_str());
