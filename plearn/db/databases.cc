@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: databases.cc,v 1.14 2004/07/21 16:30:51 chrish42 Exp $
+   * $Id: databases.cc,v 1.15 2004/07/22 12:58:04 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -907,12 +907,15 @@ void loadUCI(VMat& trainset, VMat& testset, VMat& allset, string db_spec, string
       is = allset->width() - 1;
     VMat tmp_vmat = new ShiftAndRescaleVMatrix(allset, is, 0, true, 0);
     Mat new_data = tmp_vmat->toMat().subMatColumns(0, is);
-    if (allset->length() != trainset->length() + testset->length()) {
-      PLERROR("In loadUCI - The whole dataset should have a length equal to train + test");
-    }
     allset->putMat(0, 0, new_data);
-    trainset->putMat(0, 0, new_data.subMatRows(0, trainset->length()));
-    testset->putMat(0, 0, new_data.subMatRows(trainset->length(), testset->length()));
+    if (trainset && testset) {
+      if (allset->length() != trainset->length() + testset->length())
+        PLERROR("In loadUCI - The whole dataset should have a length equal to train + test");
+      trainset->putMat(0, 0, new_data.subMatRows(0, trainset->length()));
+      testset->putMat(0, 0, new_data.subMatRows(trainset->length(), testset->length()));
+    } else if (trainset || testset) {
+      PLERROR("In loadUCI - There can't be only a train set or only a test set");
+    }
     // We don't want to normalize again.
     normalize = false;
   }
