@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.42 2004/11/03 14:10:50 tihocan Exp $ 
+   * $Id: PTester.cc,v 1.43 2004/11/23 21:38:24 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -388,6 +388,17 @@ Vec PTester::perform(bool call_forget)
   for(int k=0; k<nstats; k++) {
       statspecs[k].init(statnames_processed[k]);
   }
+  // Hack to accumulate statistics over splits. We store in 'acc' the sets
+  // which need to accumulate statistics.
+  TVec<int> acc;
+  for (int k = 0; k < nstats; k++)
+    if (statspecs[k].extstat == "ACC") {
+      if (statspecs[k].setnum == 0)
+        PLERROR("In PTester::perform - For now, you cannot accumulate train stats");
+      if (acc.find(statspecs[k].setnum) == -1)
+        acc.append(statspecs[k].setnum);
+    } else if (acc.find(statspecs[k].setnum) != -1)
+      PLERROR("In PTester::perform - You can't have stats with and without 'ACC' for set %d", statspecs[k].setnum);
   
   // int traincostsize = traincostnames.size();
   int testcostsize = testcostnames.size();
@@ -466,7 +477,9 @@ Vec PTester::perform(bool call_forget)
             test_confidence = new FileVMatrix(splitdir+setname+"_confidence.pmat",
                                               0,2*outputsize);
           
-          test_stats->forget();
+          bool reset_stats = (acc.find(setnum) == -1);
+          if (reset_stats)
+            test_stats->forget();
           if (testset->length()==0) {
             PLWARNING("PTester:: test set % is of length 0, costs will be set to -1",setname.c_str());
           }
@@ -475,7 +488,8 @@ Vec PTester::perform(bool call_forget)
           learner->resetInternalState();
           
           learner->test(testset, test_stats, test_outputs, test_costs);
-          test_stats->finalize();
+          if (reset_stats)
+            test_stats->finalize();
           if(splitdir != "" && save_stat_collectors)
             PLearn::save(splitdir+setname+"_stats.psave",test_stats);
 
@@ -492,8 +506,12 @@ Vec PTester::perform(bool call_forget)
             splitres[k+1] = MISSING_VALUE;
 //            PLERROR("PTester::perform, trying to access a test set (test%d) beyond the last one (test%d)",
 //                    sp.setnum, stcol.length()-1);
-          else
-            splitres[k+1] = stcol[sp.setnum]->getStat(sp.intstatname);
+          else {
+            if (acc.find(sp.setnum) == -1)
+              splitres[k+1] = stcol[sp.setnum]->getStat(sp.intstatname);
+            else
+              splitres[k+1] = MISSING_VALUE;
+          }
         }
 
       if(split_stats_vm) {
@@ -506,9 +524,15 @@ Vec PTester::perform(bool call_forget)
 
 
   global_statscol->finalize();
-  for(int k=0; k<nstats; k++)
-    global_result[k] = global_statscol->getStats(k).getStat(statspecs[k].extstat);
-  
+  for(int k=0; k<nstats; k++) {
+    if (acc.find(statspecs[k].setnum) == -1)
+      global_result[k] = global_statscol->getStats(k).getStat(statspecs[k].extstat);
+    else {
+      int j = statspecs[k].setnum;
+      stcol[j]->finalize();
+      global_result[k] = stcol[j]->getStat(statspecs[k].intstatname);
+    }
+  }
 
   if(global_stats_vm)
     global_stats_vm->appendRow(global_result);
