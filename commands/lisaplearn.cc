@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: lisaplearn.cc,v 1.7 2004/03/10 18:23:02 tihocan Exp $
+   * $Id: lisaplearn.cc,v 1.8 2004/03/11 19:08:38 yoshua Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -77,6 +77,7 @@
 #include "NNet.h"
 #include "PCA.h"
 #include "PLS.h"
+#include "UniformizeLearner.h"
 #include "GradientOptimizer.h"
 #include "AdaptGradientOptimizer.h"
 #include "ConjGradientOptimizer.h"
@@ -104,6 +105,7 @@
 #include "ConstantRegressor.h"
 #include "MultiInstanceNNet.h"
 #include "MultiInstanceVMatrix.h"
+#include "SortRowsVMatrix.h"
 
 // Distributions
 #include "SpiralDistribution.h"
