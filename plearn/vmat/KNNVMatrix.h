@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNVMatrix.h,v 1.4 2004/02/20 22:28:05 tihocan Exp $ 
+   * $Id: KNNVMatrix.h,v 1.5 2004/02/27 05:03:19 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -77,6 +77,7 @@ public:
   // * public build options *
   // ************************
 
+  VMat k_nn_mat;
   Ker kernel_pij;
   int knn;
 

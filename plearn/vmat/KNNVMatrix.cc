@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNVMatrix.cc,v 1.4 2004/02/20 22:28:05 tihocan Exp $ 
+   * $Id: KNNVMatrix.cc,v 1.5 2004/02/27 05:04:04 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -42,6 +42,7 @@
 
 #include "DistanceKernel.h"
 #include "KNNVMatrix.h"
+#include "SelectRowsVMatrix.h"
 
 namespace PLearn {
 using namespace std;
@@ -71,6 +72,9 @@ PLEARN_IMPLEMENT_OBJECT(KNNVMatrix,
 ////////////////////
 void KNNVMatrix::declareOptions(OptionList& ol)
 {
+  declareOption(ol, "k_nn_mat", &KNNVMatrix::k_nn_mat, OptionBase::buildoption,
+      "TODO comment");
+
   declareOption(ol, "knn", &KNNVMatrix::knn, OptionBase::buildoption,
       "The number of nearest neighbours to consider (including the point itself).");
 
@@ -101,28 +105,102 @@ void KNNVMatrix::build()
 ////////////
 void KNNVMatrix::build_() {
   if (source) {
-    // Compute the pairwise distances.
-    DistanceKernel dk(2);
-    dk.setDataForKernelMatrix(source);
     int n = source->length();
-    Mat distances(n,n);
-    dk.computeGramMatrix(distances);
-    // Deduce the nearest neighbours.
-    nn = dk.computeNeighbourMatrixFromDistanceMatrix(distances);
-    // Only keep the (knn) nearest ones.
-    // TODO Free the memory used by the other neighbours.
-    // TODO Make the matrix be a TMat<int> instead of a Mat.
-    nn.resize(n, knn);
+    bool recompute_nn = true;
+    if (k_nn_mat) {
+      if (k_nn_mat->length() > 0) {
+        // We are given precomputed k nearest neighbours, what a good news.
+        if (k_nn_mat->length() == source->length()) {
+          if (k_nn_mat->width() < knn) {
+            PLWARNING("In KNNVMatrix::build_ - Not enough neighbours in the given k_nn_mat, will recompute nearest neighbours");
+          } else {
+            // Looks like this is the right thing.
+            recompute_nn = false;
+            nn.resize(n, knn);
+            for (int i = 0; i < n; i++) {
+              k_nn_mat->getSubRow(i, 0, nn(i));
+            }
+          }
+        } else {
+          // Lengths differ: maybe the source VMat is a subset of the matrix
+          // whose nearest neighbours have been computed.
+          // Let's try a SelectRowsVMatrix.
+          PP<SelectRowsVMatrix> smat = dynamic_cast<SelectRowsVMatrix*>((VMatrix*) source);
+          if (!smat.isNull() && smat->distr->length() == k_nn_mat->length()) {
+            // Bingo !
+            // Safety warning just in case it is not what we want.
+            PLWARNING("In KNNVMatrix::build_ - Will consider the given k_nn_mat has been computed on source's distr VMat");
+            recompute_nn = false;
+            // Now we need to retrieve the nearest neighbours within the SelectRowsVMatrix.
+            nn.resize(n, knn);
+            Vec store_nn(k_nn_mat->width());
+            for (int i = 0; i < n; i++) {
+              nn(i,0) = i;  // The nearest neighbour is always itself.
+              k_nn_mat->getRow(smat->indices[i], store_nn);
+              int k = 1;
+              for (int j = 1; j < knn; j++) {
+                bool ok = false;
+                while (!ok && k < store_nn.length()) {
+                  int q = smat->indices.find(int(store_nn[k]));
+                  if (q >= 0) {
+                    // The k-th nearest neighbour in smat->distr is in smat.
+                    ok = true;
+                    nn(i,j) = q;
+                  }
+                  k++;
+                }
+                if (k == store_nn.length()) {
+                  // We didn't find the j-th nearest neighbour.
+                  PLERROR("In KNNVMatrix::build_ - Not enough neighbours in the SelectRowsVMatrix");
+                }
+              }
+            }
+          } else {
+            // What the hell is this ?
+            PLWARNING("In KNNVMatrix::build_ - Don't know what to do with k_nn_mat, will recompute the nearest neighbours");
+          }
+        }
+      }
+    }
+
+    if (recompute_nn) {
+      // First make sure we can store the result if needed.
+      if (k_nn_mat) {
+        if (k_nn_mat->length() > 0) {
+          PLERROR("In KNNVMatrix::build_ - The given k_nn_mat already has data, free it first");
+        }
+      }
+      // Compute the pairwise distances.
+      DistanceKernel dk(2);
+      dk.report_progress = true;
+      dk.build();
+      dk.setDataForKernelMatrix(source);
+      Mat distances(n,n);
+      dk.computeGramMatrix(distances);
+      // Deduce the nearest neighbours.
+      nn = dk.computeNeighbourMatrixFromDistanceMatrix(distances);
+      // Only keep the (knn) nearest ones.
+      // TODO Free the memory used by the other neighbours.
+      // TODO Make the matrix be a TMat<int> instead of a Mat.
+      nn.resize(n, knn);
+      // Store the result.
+      if (k_nn_mat) {
+        for (int i = 0; i < n; i++) {
+          k_nn_mat->appendRow(nn(i));
+        }
+      }
+    }
+
     // Initialize correctly the various fields.
-    copySizesFrom(source);
-    targetsize_++;
+    targetsize_ = source->targetsize() + 1;
     length_ = n * knn;
     width_ = source->width() + 1;
+    setMetaInfoFromSource();
 
+    // Compute the p_ij if needed.
     if (kernel_pij) {
       inputsize_++;
       width_++;
-      // Compute the pij.
       kernel_pij->setDataForKernelMatrix(source);
       int n = source->length();
       pij.resize(n, knn-1);
@@ -202,6 +280,7 @@ void KNNVMatrix::getRow(int i, Vec v) const {
 // getTag //
 ////////////
 int KNNVMatrix::getTag(int p) const {
+  // TODO Better use the constants defined in SumOverBagsVariable.h.
   if (knn == 1) return 3;
   if (p == 0) return 1;
   if (p == knn - 1) return 2;
