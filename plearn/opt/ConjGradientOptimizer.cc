@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.22 2003/05/08 18:18:22 genji256 Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.23 2003/05/08 20:01:58 genji256 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -655,14 +655,14 @@ real ConjGradientOptimizer::minCubic(
       if (p2 < mini || mini == -FLT_MAX)
         return mini;
       if (p2 > maxi) { // the minimum is beyond the range
-       if ((mini-maxi) * (( a * mini + b) * (mini + maxi) + a * mini * mini + c) > 0)
+       if ( (mini-maxi) * ( ( a * mini + b) * (mini + maxi) + a * maxi * maxi + c) > 0)
 // is the same as: if (a*mini*mini*mini + b*mini*mini + c*mini >
 //                      a*maxi*maxi*maxi + b*maxi*maxi + c*maxi )
       		return maxi;
         else
           return mini;
       }
-  	if ((maxi-p2) * (( a * maxi + b) * (maxi + p2) + a * maxi * maxi + c) > 0)
+  	if ((maxi-p2) * (( a * maxi + b) * (maxi + p2) + a * p2 * p2 + c) > 0)
 // is the same as: if (a*maxi*maxi*maxi + b*maxi*maxi + c*maxi >
 //                      a*p2*p2*p2 + b*p2*p2 + c*p2)
         return p2;
@@ -672,14 +672,14 @@ real ConjGradientOptimizer::minCubic(
       if (p2 > maxi || maxi == FLT_MAX)
         return maxi;
       if (p2 < mini) { // the minimum is before the range
-        if ((mini-maxi) * (( a * mini + b) * (mini + maxi) + a * mini * mini + c) > 0)
+        if ((mini-maxi) * (( a * mini + b) * (mini + maxi) + a * maxi * maxi + c) > 0)
 // is the same as: if (a*mini*mini*mini + b*mini*mini + c*mini >
 // 		  	a*maxi*maxi*maxi + b*maxi*maxi + c*maxi )
 	  return maxi;
         else
           return mini;
       }
-      if ((maxi-p2) * (( a * maxi + b) * (maxi + p2) + a * maxi * maxi + c) > 0)
+      if ((maxi-p2) * (( a * maxi + b) * (maxi + p2) + a * p2 * p2 + c) > 0)
 // is the same as: if (a*maxi*maxi*maxi + b*maxi*maxi + c*maxi >
 //          		a*p2*p2*p2 + b*p2*p2 + c*p2)
         return p2;
