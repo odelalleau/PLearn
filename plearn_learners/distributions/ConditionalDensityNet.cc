@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNNet.cc,v 1.1 2004/01/27 13:16:42 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.29 2004/01/27 13:17:22 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
