@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StatefulLearner.h,v 1.2 2004/07/20 13:47:30 ducharme Exp $ 
+   * $Id: StatefulLearner.h,v 1.3 2004/07/20 20:40:33 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Réjean Ducharme
@@ -96,6 +96,11 @@ public:
   // **** PLearner methods ****
   // **************************
 
+  //! Forget still needs to be redefined in derived classes, but the
+  //! implementation here performs a no-op.  This allows derived classes
+  //! to write inherited::forget() without fear.
+  virtual void forget() = 0;
+  
   //! Computes the output from the input.
   //! Simply calls computeOutputAndCosts(...)
   virtual void computeOutput(const Vec& input, Vec& output) const;
