@@ -5,8 +5,7 @@ using namespace std;
 
 
 DERIVEDCLASS::DERIVEDCLASS()
-  :inherited()
-  /* ### Initialize all fields to their default value */
+/* ### Initialize all fields to their default value */
 {
   // ...
 
@@ -19,7 +18,7 @@ PLEARN_IMPLEMENT_OBJECT(DERIVEDCLASS,
     "NO HELP"
 );
 
-void DERIVEDCLASS::getNewRow(int i, Vec& v) const
+void DERIVEDCLASS::getNewRow(int i, const Vec& v) const
 {
   // ...
 }
