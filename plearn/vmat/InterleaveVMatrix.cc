@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: InterleaveVMatrix.cc,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: InterleaveVMatrix.cc,v 1.3 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 #include "InterleaveVMatrix.h"
@@ -45,6 +45,10 @@ using namespace std;
 
 
 /** InterleaveVMatrix **/
+
+InterleaveVMatrix::InterleaveVMatrix()
+{
+}
 
 InterleaveVMatrix::InterleaveVMatrix(Array<VMat> the_vm)
   :vm(the_vm)

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ProcessingVMatrix.h,v 1.3 2004/02/20 21:14:44 chrish42 Exp $ 
+   * $Id: ProcessingVMatrix.h,v 1.4 2004/03/23 23:08:08 morinf Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -52,14 +52,13 @@ using namespace std;
 
 class ProcessingVMatrix: public SourceVMatrix
 {
+  typedef SourceVMatrix inherited;
+
 protected:
   Vec sourcevec;
   VMatLanguage program;
 
 public:
-
-  typedef SourceVMatrix inherited;
-
   // ************************
   // * public build options *
   // ************************

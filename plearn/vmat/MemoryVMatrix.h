@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.h,v 1.4 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: MemoryVMatrix.h,v 1.5 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 
@@ -51,8 +51,9 @@ using namespace std;
  
 class MemoryVMatrix: public VMatrix
 {
-public:
   typedef VMatrix inherited;
+
+public:
 
   Mat data;
 
@@ -84,8 +85,8 @@ public:
   virtual real dot(int i1, int i2, int inputsize) const;
   virtual real dot(int i, const Vec& v) const;
 
-  virtual void write(ostream& out) const;
-  virtual void oldread(istream& in);
+    //virtual void write(ostream& out) const;
+    //virtual void oldread(istream& in);
 
   //! simply calls inherited::build() then build_()
   virtual void build();

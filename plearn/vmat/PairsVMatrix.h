@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: PairsVMatrix.h,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: PairsVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 
@@ -59,11 +59,17 @@ using namespace std;
 */
 class PairsVMatrix: public RowBufferedVMatrix
 {
+  typedef RowBufferedVMatrix inherited;
+
  protected:
   Mat data1;
   Mat data2;
 
  public:
+  // ******************
+  // *  Constructors  *
+  // ******************
+  PairsVMatrix(); //!<  default constructor (for automatic deserialization)
 
   PairsVMatrix(Mat the_data1, Mat the_data2);
   virtual void getRow(int ij, Vec samplevec) const;

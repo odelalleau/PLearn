@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNVMatrix.h,v 1.6 2004/02/27 22:48:36 yoshua Exp $ 
+   * $Id: KNNVMatrix.h,v 1.7 2004/03/23 23:08:08 morinf Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -52,13 +52,9 @@ using namespace std;
 
 class KNNVMatrix: public SourceVMatrix
 {
-
-public:
-
   typedef SourceVMatrix inherited;
 
 protected:
-
   // *********************
   // * protected options *
   // *********************

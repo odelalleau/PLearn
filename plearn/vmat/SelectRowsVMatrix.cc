@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsVMatrix.cc,v 1.10 2004/02/26 03:36:34 tihocan Exp $
+   * $Id: SelectRowsVMatrix.cc,v 1.11 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 #include "SelectRowsVMatrix.h"
@@ -49,19 +49,20 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(SelectRowsVMatrix, "ONE LINE DESCR", "NO HELP");
 
 SelectRowsVMatrix::SelectRowsVMatrix() 
-{}
+{
+}
 
-SelectRowsVMatrix::SelectRowsVMatrix(VMat the_distr, TVec<int> the_indices) :
-  VMatrix(the_indices.length(),the_distr->width()),
-  distr(the_distr),indices(the_indices)
+SelectRowsVMatrix::SelectRowsVMatrix(VMat the_distr, TVec<int> the_indices)
+  : inherited(the_indices.length(),the_distr->width()),
+    distr(the_distr),indices(the_indices)
 {
   build_();
 }
 
 //! Here the indices will be copied locally into an integer vector
-SelectRowsVMatrix::SelectRowsVMatrix(VMat the_distr, Vec the_indices) :
-  VMatrix(the_indices.length(),the_distr->width()),
-  distr(the_distr),indices(the_indices.length())
+SelectRowsVMatrix::SelectRowsVMatrix(VMat the_distr, Vec the_indices)
+  : inherited(the_indices.length(),the_distr->width()),
+    distr(the_distr),indices(the_indices.length())
 {
   indices << the_indices; // copy to integer indices
   build_();

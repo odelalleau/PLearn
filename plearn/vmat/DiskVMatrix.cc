@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: DiskVMatrix.cc,v 1.12 2004/02/26 17:55:37 nova77 Exp $
+   * $Id: DiskVMatrix.cc,v 1.13 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -128,7 +128,7 @@ void DiskVMatrix::build_()
     setMtime(mtime(append_slash(dirname)+"indexfile"));
     string omode;
     if(writable)
-      omode = "a+b";
+      omode = "r+b";
     else // read-only
       omode = "rb";
 
@@ -187,6 +187,8 @@ void DiskVMatrix::build_()
     map_rs = TVec<map<real,string> >(width_);
 
     getFieldInfos();
+    if (writable)
+        fseek(indexf, 0, SEEK_END);
   }
   else
   {

@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StrTableVMatrix.h,v 1.7 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: StrTableVMatrix.h,v 1.8 2004/03/23 23:08:09 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,6 +46,8 @@ using namespace std;
 
 class StrTableVMatrix: public MemoryVMatrix
 {
+    typedef MemoryVMatrix inherited;
+
 public:
   StrTableVMatrix(const StringTable & st);
   StrTableVMatrix();

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SparseVMatrix.h,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: SparseVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 
@@ -67,6 +67,8 @@ class SparseVMatrixRow
 
 class SparseVMatrix : public RowBufferedVMatrix
 {
+    typedef RowBufferedVMatrix inherited;
+
 protected:
   int nelements; //!<  total number of non-zero elements in the VMatrix  
   unsigned short* positions;
@@ -101,8 +103,8 @@ public:
 
   virtual void save(const string& filename)
   { Object::save(filename); } //!<  calls write
-  virtual void write(ostream& out) const;
-  virtual void oldread(istream& in);
+    //virtual void write(ostream& out) const;
+    //virtual void oldread(istream& in);
   	
   virtual ~SparseVMatrix();
 };

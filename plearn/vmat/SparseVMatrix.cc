@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SparseVMatrix.cc,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: SparseVMatrix.cc,v 1.3 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 #include "SparseVMatrix.h"
@@ -47,11 +47,7 @@ using namespace std;
 /** SparseVMatrix **/
 
 SparseVMatrix::SparseVMatrix(VMat m)
-  :RowBufferedVMatrix(m.length(),m.width()),
-   nelements(0),
-   positions(0),
-   values(0),
-   rows(0)
+  : inherited(m.length(),m.width()), nelements(0), positions(0), values(0), rows(0)
 {
   fieldinfos = m->getFieldInfos();                // Copy the field infos
   
@@ -225,7 +221,7 @@ real SparseVMatrix::dot(int i, const Vec& v) const
     }
   return res;
 }
-
+/*
 void SparseVMatrix::write(ostream& out) const
 {
   writeHeader(out,"SparseVMatrix");
@@ -273,7 +269,7 @@ void SparseVMatrix::oldread(istream& in)
     }
   readFooter(in,"SparseVMatrix");
 }
-
+*/
 SparseVMatrix::~SparseVMatrix()
 {
   if(nelements>0)

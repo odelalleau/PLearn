@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrecomputedVMatrix.h,v 1.3 2004/02/20 21:14:44 chrish42 Exp $ 
+   * $Id: PrecomputedVMatrix.h,v 1.4 2004/03/23 23:08:08 morinf Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -51,13 +51,12 @@ using namespace std;
 
 class PrecomputedVMatrix: public SourceVMatrix
 {
+  typedef SourceVMatrix inherited;
+
 protected:
   VMat precomp_source; // The precomputed source, as a DiskVMatrix
 
 public:
-
-  typedef SourceVMatrix inherited;
-
   // ************************
   // * public build options *
   // ************************

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.h,v 1.7 2004/03/17 16:06:32 ducharme Exp $
+   * $Id: FileVMatrix.h,v 1.8 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 
@@ -54,6 +54,7 @@ using namespace std;
 class FileVMatrix: public VMatrix
 {
   typedef VMatrix inherited;
+
  protected:
   string filename_;
   FILE* f;

@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StrTableVMatrix.cc,v 1.4 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: StrTableVMatrix.cc,v 1.5 2004/03/23 23:08:09 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,7 +47,8 @@ StrTableVMatrix::StrTableVMatrix()
 /* This contructor takes a StringTable (which is simply a matrix of string) and converts it to a matrix of reals
    using real->string and string->real maps
 */
-StrTableVMatrix::StrTableVMatrix(const StringTable & st):MemoryVMatrix(Mat(st.length(),st.width()))
+StrTableVMatrix::StrTableVMatrix(const StringTable & st)
+  : inherited(Mat(st.length(),st.width()))
 {
   map<string,real>::iterator it;
   double dbl;

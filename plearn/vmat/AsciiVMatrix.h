@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AsciiVMatrix.h,v 1.8 2004/02/26 07:53:01 nova77 Exp $ 
+   * $Id: AsciiVMatrix.h,v 1.9 2004/03/23 23:08:08 morinf Exp $ 
    ******************************************************* */
 
 /*! \file AsciiVMatrix.h */
@@ -48,6 +48,8 @@ using namespace std;
 
 class AsciiVMatrix: public RowBufferedVMatrix
 {
+  typedef RowBufferedVMatrix inherited;
+
 protected:
   string filename;
   mutable fstream* file;
@@ -59,9 +61,6 @@ protected:
   int length_max;
 
 public:
-
-  typedef RowBufferedVMatrix inherited;
-
   // ******************
   // *  Constructors  *
   // ******************

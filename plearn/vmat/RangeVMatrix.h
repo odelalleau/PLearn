@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: RangeVMatrix.h,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: RangeVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 
@@ -53,12 +53,19 @@ using namespace std;
 
 class RangeVMatrix: public VMatrix
 {
+  typedef VMatrix inherited;
+
  protected:
   real start;
   real end;
   real step;
 
  public:
+  // ******************
+  // *  Constructors  *
+  // ******************
+  RangeVMatrix(); //!<  default constructor (for automatic deserialization)
+
   RangeVMatrix(real the_start, real the_end, real the_step=1.0);
   virtual real get(int i, int j) const;
 };

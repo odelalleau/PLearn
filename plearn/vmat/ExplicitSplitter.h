@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ExplicitSplitter.h,v 1.5 2004/02/20 21:14:29 chrish42 Exp $ 
+   * $Id: ExplicitSplitter.h,v 1.6 2004/03/23 23:08:08 morinf Exp $ 
    ******************************************************* */
 
 /*! \file ExplicitSplitter.h */
@@ -47,16 +47,14 @@ using namespace std;
 
 class ExplicitSplitter: public Splitter
 {
+  typedef Splitter inherited;
+
 protected:
   // *********************
   // * protected options *
   // *********************
 
-    
 public:
-
-  typedef Splitter inherited;
-
   // ************************
   // * public build options *
   // ************************

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: OneHotVMatrix.h,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: OneHotVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 
@@ -63,6 +63,8 @@ using namespace std;
 */
 class OneHotVMatrix: public RowBufferedVMatrix
 {
+  typedef RowBufferedVMatrix inherited;
+
  protected:
   VMat underlying_distr;
   int nclasses;
@@ -70,6 +72,11 @@ class OneHotVMatrix: public RowBufferedVMatrix
   real hot_value;
 
  public:
+  // ******************
+  // *  Constructors  *
+  // ******************
+  OneHotVMatrix(); //!<  default constructor (for automatic deserialization)
+
   //!  (see special case when nclasses==1 desribed above)
   //!  Warning: VMFields are NOT YET handled by this constructor
   OneHotVMatrix(VMat the_underlying_distr, int the_nclasses, real the_cold_value=0.0, real the_host_value=1.0);

@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.36 2004/02/28 18:10:48 tihocan Exp $
+   * $Id: VMatrix.h,v 1.37 2004/03/23 23:08:09 morinf Exp $
    ******************************************************* */
 
 
@@ -64,6 +64,7 @@ class Func;
 
 class VMatrix: public Object
 {
+  typedef Object inherited;
   friend class VMat;
 
 private:
@@ -450,7 +451,6 @@ public:
   virtual void oldwrite(ostream& out) const;
   virtual void oldread(istream& in);
 
-typedef Object inherited;
   PLEARN_DECLARE_ABSTRACT_OBJECT(VMatrix);
   void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrix.h,v 1.4 2004/02/20 21:14:44 chrish42 Exp $ 
+   * $Id: SourceVMatrix.h,v 1.5 2004/03/23 23:08:08 morinf Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -60,6 +60,8 @@ using namespace std;
 
 class SourceVMatrix: public RowBufferedVMatrix
 {
+  typedef RowBufferedVMatrix inherited;
+
 protected:
   // *********************
   // * protected options *
@@ -68,9 +70,6 @@ protected:
   Vec sourcerow;
 
 public:
-
-  typedef RowBufferedVMatrix inherited;
-
   // ************************
   // * public build options *
   // ************************

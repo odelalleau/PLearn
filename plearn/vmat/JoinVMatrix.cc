@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: JoinVMatrix.cc,v 1.5 2004/02/29 16:44:06 nova77 Exp $
+   * $Id: JoinVMatrix.cc,v 1.6 2004/03/23 23:08:08 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,7 +46,7 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(JoinVMatrix, "ONE LINE DESCR", "NO HELP");
 
 JoinVMatrix::JoinVMatrix(VMat mas,VMat sla,TVec<int> mi,TVec<int> si)
-  :RowBufferedVMatrix(mas.length(),mas.width()),master(mas),slave(sla),master_idx(mi),slave_idx(si)
+  : inherited(mas.length(),mas.width()),master(mas),slave(sla),master_idx(mi),slave_idx(si)
 {
   if(master_idx.size()!=slave_idx.size())
     PLERROR("JoinVMatrix : master and slave field correspondance don't have same dimensions ");

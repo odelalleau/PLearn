@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: UniformizeVMatrix.cc,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: UniformizeVMatrix.cc,v 1.3 2004/03/23 23:08:09 morinf Exp $
    ******************************************************* */
 
 #include "UniformizeVMatrix.h"
@@ -46,10 +46,15 @@ using namespace std;
 
 /** UniformizeVMatrix **/
 
-UniformizeVMatrix::UniformizeVMatrix(VMat the_distr, Mat the_bins,
-  Vec the_index, real the_a, real the_b)
-  : RowBufferedVMatrix(the_distr->length(), the_distr->width()),
-  distr(the_distr), bins(the_bins), index(the_index), a(the_a), b(the_b)
+UniformizeVMatrix::UniformizeVMatrix()
+  : a(0), b(1)
+{
+}
+
+UniformizeVMatrix::UniformizeVMatrix(VMat the_distr, Mat the_bins, Vec the_index, real the_a,
+                                     real the_b)
+    : inherited(the_distr->length(), the_distr->width()),
+      distr(the_distr), bins(the_bins), index(the_index), a(the_a), b(the_b)
 {
   fieldinfos = distr->getFieldInfos();
   

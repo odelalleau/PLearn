@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: UniformizeVMatrix.h,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: UniformizeVMatrix.h,v 1.3 2004/03/23 23:08:09 morinf Exp $
    ******************************************************* */
 
 
@@ -61,6 +61,8 @@ using namespace std;
 */
 class UniformizeVMatrix: public RowBufferedVMatrix
 {
+  typedef RowBufferedVMatrix inherited;
+
 protected:
   VMat distr;
   Mat bins;
@@ -69,6 +71,11 @@ protected:
   real b;
 
 public:
+  // ******************
+  // *  Constructors  *
+  // ******************
+  UniformizeVMatrix(); //!<  default constructor (for automatic deserialization)
+
   //! The original VMFields are copied upon construction
   UniformizeVMatrix(VMat the_distr, Mat the_bins, Vec the_index,
                     real the_a=0.0, real the_b=1.0);

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: DatedVMatrix.h,v 1.2 2004/02/20 21:14:29 chrish42 Exp $
+   * $Id: DatedVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 
@@ -58,8 +58,15 @@ using namespace std;
 */
 class DatedVMatrix: public VMatrix
 {
+  typedef VMatrix inherited;
+
 public:
-  DatedVMatrix(int width, int length) : VMatrix(width,length) {}
+  // ******************
+  // *  Constructors  *
+  // ******************
+  DatedVMatrix() {}; //!<  default constructor (for automatic deserialization)
+
+  DatedVMatrix(int width, int length) : inherited(width,length) {}
 
 /*!     this one calls one of subDistrRelative{Years,Months,Days} according
     to wether units=="years", "months", or "days" (or if the first letter
@@ -95,5 +102,5 @@ public:
   virtual void copyDateOfRow(int row, int &year, int &month, int &day)=0;
 };
 
-} // end of namespcae PLearn
+} // end of namespace PLearn
 #endif

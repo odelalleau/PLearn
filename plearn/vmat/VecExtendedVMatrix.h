@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: VecExtendedVMatrix.h,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: VecExtendedVMatrix.h,v 1.3 2004/03/23 23:08:09 morinf Exp $
    ******************************************************* */
 
 
@@ -64,6 +64,11 @@ class VecExtendedVMatrix : public RowBufferedVMatrix
   typedef RowBufferedVMatrix inherited;
 
 public:
+  // ******************
+  // *  Constructors  *
+  // ******************
+  VecExtendedVMatrix(); //!<  default constructor (for automatic deserialization)
+
   //! The fieldinfos of the underlying are copied, the extension fieldinfos
   //! are left empty (fill them yourself)
   VecExtendedVMatrix(VMat underlying, Vec extend_data);

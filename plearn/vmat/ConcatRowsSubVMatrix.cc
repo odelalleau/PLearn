@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsSubVMatrix.cc,v 1.2 2004/02/20 21:14:29 chrish42 Exp $
+   * $Id: ConcatRowsSubVMatrix.cc,v 1.3 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 #include "ConcatRowsSubVMatrix.h"
@@ -46,10 +46,12 @@ using namespace std;
 
 /** ConcatRowsSubVMatrix **/
 
-ConcatRowsSubVMatrix::ConcatRowsSubVMatrix
-(VMat the_distr, TVec<int>& the_start, TVec<int>& the_len) :
-  VMatrix(-1,the_distr->width()),
-  distr(the_distr), start(the_start), len(the_len)
+ConcatRowsSubVMatrix::ConcatRowsSubVMatrix()
+{
+}
+
+ConcatRowsSubVMatrix::ConcatRowsSubVMatrix(VMat the_distr, TVec<int>& the_start, TVec<int>& the_len)
+  : inherited(-1,the_distr->width()), distr(the_distr), start(the_start), len(the_len)
 {
   //! Copy parent field names
   fieldinfos = the_distr->getFieldInfos();
@@ -57,10 +59,8 @@ ConcatRowsSubVMatrix::ConcatRowsSubVMatrix
   check();
 }
 
-ConcatRowsSubVMatrix::ConcatRowsSubVMatrix
-(VMat the_distr, int start1, int len1, int start2, int len2) :
-  VMatrix(-1,the_distr->width()),
-  distr(the_distr), start(2), len(2)
+ConcatRowsSubVMatrix::ConcatRowsSubVMatrix(VMat the_distr, int start1, int len1, int start2, int len2)
+  : inherited(-1,the_distr->width()), distr(the_distr), start(2), len(2)
 {
   //! Copy parent field names
   fieldinfos = the_distr->getFieldInfos();

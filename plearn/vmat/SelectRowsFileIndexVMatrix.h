@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsFileIndexVMatrix.h,v 1.4 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: SelectRowsFileIndexVMatrix.h,v 1.5 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 
@@ -56,10 +56,17 @@ using namespace std;
 */
 class SelectRowsFileIndexVMatrix: public VMatrix
 {
+  typedef VMatrix inherited;
+
 protected:
   VMat distr;
   IntVecFile indices;
 public:
+  // ******************
+  // *  Constructors  *
+  // ******************
+  SelectRowsFileIndexVMatrix(); //!<  default constructor (for automatic deserialization)
+
   //! Copy the original fieldinfos upon construction
   SelectRowsFileIndexVMatrix(VMat the_distr, const string& indexfile);
 

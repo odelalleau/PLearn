@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: JulianizeVMatrix.h,v 1.6 2004/02/20 21:14:44 chrish42 Exp $ 
+   * $Id: JulianizeVMatrix.h,v 1.7 2004/03/23 23:08:08 morinf Exp $ 
    ******************************************************* */
 
 /*! \file JulianizeVMatrix.h */
@@ -67,6 +67,8 @@ using namespace std;
  */
 class JulianizeVMatrix : public RowBufferedVMatrix
 {
+  typedef RowBufferedVMatrix inherited;
+
 public:
   //! This specifies the how the dates are coded in the underlying VMatrix;
   //! for now only two formats are allowed.
@@ -140,7 +142,6 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  typedef RowBufferedVMatrix inherited;
   PLEARN_DECLARE_OBJECT(JulianizeVMatrix);
 
 protected:

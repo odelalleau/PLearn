@@ -42,11 +42,16 @@ using namespace std;
 
 /** ThresholdVMatrix **/
 
+ThresholdVMatrix::ThresholdVMatrix()
+    : threshold(1), cold_value(0), hot_value(1), gt_threshold(true)
+{
+}
+
 ThresholdVMatrix::ThresholdVMatrix(VMat the_underlying_distr, real threshold_, real the_cold_value, real the_hot_value,
-				 bool gt_threshold_)
-  :RowBufferedVMatrix(the_underlying_distr->length(), the_underlying_distr->width()),
-   underlying_distr(the_underlying_distr), threshold(threshold_), cold_value(the_cold_value), hot_value(the_hot_value),
-   gt_threshold(gt_threshold_)
+                                   bool gt_threshold_)
+  : inherited(the_underlying_distr->length(), the_underlying_distr->width()),
+    underlying_distr(the_underlying_distr), threshold(threshold_), cold_value(the_cold_value),
+    hot_value(the_hot_value), gt_threshold(gt_threshold_)
 {}
 
 void ThresholdVMatrix::getRow(int i, Vec v) const

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ExtendedVMatrix.cc,v 1.2 2004/02/20 21:14:29 chrish42 Exp $
+   * $Id: ExtendedVMatrix.cc,v 1.3 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 #include "ExtendedVMatrix.h"
@@ -46,16 +46,18 @@ using namespace std;
 
 /** ExtendedVMatrix **/
 
-ExtendedVMatrix::ExtendedVMatrix(VMat the_distr, 
-                                 int the_top_extent, int the_bottom_extent, 
-                                 int the_left_extent, int the_right_extent, 
-                                 real the_fill_value) :
-  RowBufferedVMatrix(the_distr->length()+the_top_extent+the_bottom_extent,
-          the_distr->width()+the_left_extent+the_right_extent),
-  distr(the_distr), 
-  top_extent(the_top_extent), bottom_extent(the_bottom_extent), 
-  left_extent(the_left_extent), right_extent(the_right_extent),
-  fill_value(the_fill_value)
+ExtendedVMatrix::ExtendedVMatrix()
+  : top_extent(0), bottom_extent(0), left_extent(0), right_extent(0), fill_value(0)
+{
+}
+
+ExtendedVMatrix::ExtendedVMatrix(VMat the_distr, int the_top_extent, int the_bottom_extent, 
+                                 int the_left_extent, int the_right_extent,
+                                 real the_fill_value)
+  : inherited(the_distr->length()+the_top_extent+the_bottom_extent,
+              the_distr->width()+the_left_extent+the_right_extent),
+    distr(the_distr), top_extent(the_top_extent), bottom_extent(the_bottom_extent), 
+    left_extent(the_left_extent), right_extent(the_right_extent), fill_value(the_fill_value)
 {}
 
 

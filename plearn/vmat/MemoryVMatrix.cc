@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.cc,v 1.8 2004/03/17 15:06:48 tihocan Exp $
+   * $Id: MemoryVMatrix.cc,v 1.9 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 #include "MemoryVMatrix.h"
@@ -133,7 +133,7 @@ void MemoryVMatrix::appendRow(Vec v)
   data.appendRow(v); 
   length_++;
 }
-
+/*
 void MemoryVMatrix::write(ostream& out) const
 {
   writeHeader(out, "MemoryVMatrix");
@@ -149,7 +149,7 @@ void MemoryVMatrix::oldread(istream& in)
   readField(in, "data", data);
   readFooter(in, "MemoryVMatrix");
 }
-
+*/
 Mat MemoryVMatrix::toMat() const
 { return data; }
 

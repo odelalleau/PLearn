@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ByteMemoryVMatrix.h,v 1.2 2004/02/20 21:14:29 chrish42 Exp $
+   * $Id: ByteMemoryVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 
@@ -52,12 +52,19 @@ using namespace std;
 
 class ByteMemoryVMatrix: public VMatrix
 {
+  typedef VMatrix inherited;
+
  protected:
   unsigned char* data;
   Vec scale;//!<  sample = (data[i]+offset_[i])*scale[i];
   Vec offset_;
 
  public:
+  // ******************
+  // *  Constructors  *
+  // ******************
+  ByteMemoryVMatrix(); //!<  default constructor (for automatic deserialization)
+
   ByteMemoryVMatrix(unsigned char* data,int the_length,int the_width, double scaling_factor=1.0, double offset_=0.0);
   ByteMemoryVMatrix(unsigned char* data,int the_length,int the_width, Vec scale);
   ByteMemoryVMatrix(unsigned char* data,int the_length,int the_width, Vec scale, Vec offset_);

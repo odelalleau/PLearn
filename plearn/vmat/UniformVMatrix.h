@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: UniformVMatrix.h,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: UniformVMatrix.h,v 1.3 2004/03/23 23:08:09 morinf Exp $
    ******************************************************* */
 
 
@@ -52,11 +52,18 @@ using namespace std;
 
 class UniformVMatrix: public VMatrix
 {
+  typedef VMatrix inherited;
+
  protected:
   real minval;
   real maxval;
   
  public:
+  // ******************
+  // *  Constructors  *
+  // ******************
+  UniformVMatrix(); //!<  default constructor (for automatic deserialization)
+
   UniformVMatrix(real the_minval, real the_maxval, int the_width);    
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;

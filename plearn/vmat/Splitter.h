@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Splitter.h,v 1.7 2004/02/20 21:14:44 chrish42 Exp $ 
+   * $Id: Splitter.h,v 1.8 2004/03/23 23:08:08 morinf Exp $ 
    ******************************************************* */
 
 /*! \file Splitter.h */
@@ -62,6 +62,8 @@ using namespace std;
 
 class Splitter: public Object
 {
+  typedef Object inherited;
+
 protected:
   // *********************
   // * protected options *
@@ -70,9 +72,6 @@ protected:
     VMat dataset;
     
 public:
-
-  typedef Object inherited;
-
   // ****************
   // * Constructors *
   // ****************

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: VVec.h,v 1.9 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: VVec.h,v 1.10 2004/03/23 23:08:09 morinf Exp $
    ******************************************************* */
 
 
@@ -53,6 +53,8 @@ namespace PLearn {
 
 class VVec : public Object
 {
+  typedef Object inherited;
+
   public:
 
   // We leave the actual representation choice to some
@@ -115,7 +117,6 @@ class VVec : public Object
   virtual void print(ostream& out) const
   { out << ((Vec)*this) << flush; }
 
-  typedef Object inherited;
   PLEARN_DECLARE_OBJECT(VVec);
 };
 

@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: IndexedVMatrix.h,v 1.5 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: IndexedVMatrix.h,v 1.6 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 
@@ -51,11 +51,9 @@ using namespace std;
 //! matrix.
 class IndexedVMatrix: public VMatrix
 {
-
   typedef VMatrix inherited;
 
 public:
-
   //! Public build options
   VMat m;
 

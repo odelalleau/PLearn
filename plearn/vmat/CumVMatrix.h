@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CumVMatrix.h,v 1.2 2004/03/14 22:27:45 yoshua Exp $ 
+   * $Id: CumVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -51,7 +51,6 @@ using namespace std;
 
 class CumVMatrix: public SourceVMatrix
 {
-public:
   typedef SourceVMatrix inherited;
 
 protected:

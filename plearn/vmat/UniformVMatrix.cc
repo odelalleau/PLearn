@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: UniformVMatrix.cc,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: UniformVMatrix.cc,v 1.3 2004/03/23 23:08:09 morinf Exp $
    ******************************************************* */
 
 #include "UniformVMatrix.h"
@@ -47,8 +47,13 @@ using namespace std;
 
 /** Uniform VMatrix **/
 
+UniformVMatrix::UniformVMatrix()
+  : minval(0), maxval(1)
+{
+}
+
 UniformVMatrix::UniformVMatrix(real the_minval, real the_maxval, int the_width)
-  :VMatrix(-1,the_width),minval(the_minval), maxval(the_maxval)
+  : inherited(-1,the_width),minval(the_minval), maxval(the_maxval)
 {}
 
 real UniformVMatrix::get(int i, int j) const

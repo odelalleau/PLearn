@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: PairsVMatrix.cc,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: PairsVMatrix.cc,v 1.3 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 #include "PairsVMatrix.h"
@@ -46,8 +46,12 @@ using namespace std;
 
 /** PairsVMatrix **/
 
+PairsVMatrix::PairsVMatrix()
+{
+}
+
 PairsVMatrix::PairsVMatrix(Mat the_data1, Mat the_data2)
-  : RowBufferedVMatrix(data1.width()+data2.width(), data1.length()*data2.length()), 
+  : inherited(data1.width()+data2.width(), data1.length()*data2.length()), 
     data1(the_data1), data2(the_data2)
 {}
 

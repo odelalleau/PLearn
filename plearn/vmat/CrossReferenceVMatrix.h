@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CrossReferenceVMatrix.h,v 1.2 2004/02/20 21:14:29 chrish42 Exp $
+   * $Id: CrossReferenceVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 
@@ -59,12 +59,19 @@ using namespace std;
 */
 class CrossReferenceVMatrix: public VMatrix
 {
+  typedef VMatrix inherited;
+
  protected:
   VMat vm1;
   int col1;
   VMat vm2;
 
  public:
+  // ******************
+  // *  Constructors  *
+  // ******************
+  CrossReferenceVMatrix(); //!<  default constructor (for automatic deserialization)
+
   //! The column headings are simply the concatenation of the headings in
   //! the two vmatrices.
   CrossReferenceVMatrix(VMat v1, int c1, VMat v2);

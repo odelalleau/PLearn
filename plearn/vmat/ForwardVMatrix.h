@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: ForwardVMatrix.h,v 1.5 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: ForwardVMatrix.h,v 1.6 2004/03/23 23:08:08 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,6 +54,8 @@ using namespace std;
 
 class ForwardVMatrix: public VMatrix
 {
+  typedef VMatrix inherited;
+
 protected:
   VMat vm; // the underlying vmatrix to which all calls will be forwarded
 

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: RangeVMatrix.cc,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: RangeVMatrix.cc,v 1.3 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 #include "RangeVMatrix.h"
@@ -45,8 +45,13 @@ using namespace std;
 
 /** Range VMatrix **/
 
+RangeVMatrix::RangeVMatrix()
+  : start(0), end(0), step(1)
+{
+}
+
 RangeVMatrix::RangeVMatrix(real the_start, real the_end, real the_step)
-  :start(the_start), end(the_end), step(the_step)
+  : start(the_start), end(the_end), step(the_step)
 {
   width_=1;
   length_ = (int)((end-start)/step); 

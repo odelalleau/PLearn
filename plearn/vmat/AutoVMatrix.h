@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: AutoVMatrix.h,v 1.4 2004/02/20 21:14:29 chrish42 Exp $
+   * $Id: AutoVMatrix.h,v 1.5 2004/03/23 23:08:08 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,10 +54,10 @@ using namespace std;
 
 class AutoVMatrix: public ForwardVMatrix
 {
-public:
-
-  PLEARN_DECLARE_OBJECT(AutoVMatrix);
   typedef ForwardVMatrix inherited;
+
+public:
+  PLEARN_DECLARE_OBJECT(AutoVMatrix);
 
   // ************************
   // * public build options *

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RepeatSplitter.h,v 1.5 2004/03/12 23:35:06 tihocan Exp $ 
+   * $Id: RepeatSplitter.h,v 1.6 2004/03/23 23:08:08 morinf Exp $ 
    ******************************************************* */
 
 /*! \file RepeatSplitter.h */
@@ -48,9 +48,6 @@ using namespace std;
 
 class RepeatSplitter: public Splitter
 {
-
-public:
-
   typedef Splitter inherited;
 
 protected:

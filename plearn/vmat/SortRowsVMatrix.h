@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: SortRowsVMatrix.h,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: SortRowsVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 
@@ -51,7 +51,6 @@ using namespace std;
 //! given columns.
 class SortRowsVMatrix: public SelectRowsVMatrix
 {
-
   typedef SelectRowsVMatrix inherited;
 
 public:

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LearnerProcessedVMatrix.h,v 1.4 2004/02/20 21:14:44 chrish42 Exp $ 
+   * $Id: LearnerProcessedVMatrix.h,v 1.5 2004/03/23 23:08:08 morinf Exp $ 
    ******************************************************* */
 
 /*! \file LearnerProcessedVMatrix.h */
@@ -49,6 +49,8 @@ using namespace std;
 
 class LearnerProcessedVMatrix: public RowBufferedVMatrix
 {
+  typedef RowBufferedVMatrix inherited;
+
 protected:
   // *********************
   // * protected options *
@@ -110,8 +112,6 @@ public:
 
   //! Declares name and deepCopy methods
   PLEARN_DECLARE_OBJECT(LearnerProcessedVMatrix);
-  typedef RowBufferedVMatrix inherited;
-
 };
 
 } // end of namespace PLearn

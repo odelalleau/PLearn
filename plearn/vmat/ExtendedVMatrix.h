@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ExtendedVMatrix.h,v 1.2 2004/02/20 21:14:29 chrish42 Exp $
+   * $Id: ExtendedVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 
@@ -59,6 +59,8 @@ using namespace std;
 */
 class ExtendedVMatrix: public RowBufferedVMatrix
 {
+  typedef RowBufferedVMatrix inherited;
+
 public:
   VMat distr;
   int top_extent;
@@ -66,6 +68,11 @@ public:
   int left_extent;
   int right_extent;
   real fill_value; 
+
+  // ******************
+  // *  Constructors  *
+  // ******************
+  ExtendedVMatrix(); //!<  default constructor (for automatic deserialization)
 
   //!  Warning: VMFields are NOT YET handled by this constructor
   ExtendedVMatrix(VMat the_distr, 

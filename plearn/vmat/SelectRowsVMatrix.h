@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsVMatrix.h,v 1.6 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: SelectRowsVMatrix.h,v 1.7 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 
@@ -54,7 +54,6 @@ using namespace std;
 //!  according to given vector of indices
 class SelectRowsVMatrix: public VMatrix
 {
-
   typedef VMatrix inherited;
 
 public:
@@ -64,7 +63,9 @@ public:
   TVec<int> indices;
 
 public:
-
+  // ******************
+  // *  Constructors  *
+  // ******************
   SelectRowsVMatrix();
 
   //! Also copies the original fieldinfos upon construction

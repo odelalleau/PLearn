@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FractionSplitter.h,v 1.4 2004/02/20 21:14:44 chrish42 Exp $ 
+   * $Id: FractionSplitter.h,v 1.5 2004/03/23 23:08:08 morinf Exp $ 
    ******************************************************* */
 
 /*! \file FractionSplitter.h */
@@ -47,6 +47,8 @@ using namespace std;
 
 class FractionSplitter: public Splitter
 {
+  typedef Splitter inherited;
+
 protected:
   // *********************
   // * protected options *
@@ -56,9 +58,6 @@ protected:
   // ...
     
 public:
-
-  typedef Splitter inherited;
-
   // ************************
   // * public build options *
   // ************************

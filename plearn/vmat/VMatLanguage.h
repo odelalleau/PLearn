@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VMatLanguage.h,v 1.10 2004/02/26 20:12:04 nova77 Exp $
+   * $Id: VMatLanguage.h,v 1.11 2004/03/23 23:08:09 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -58,7 +58,8 @@ using namespace std;
 
   class VMatLanguage: public Object
   {
-  private:
+    typedef Object inherited;
+
     VMat vmsource;
     TVec<int> program; 
     TVec<RealMapping> mappings;
@@ -83,7 +84,6 @@ using namespace std;
 public:
     VMatLanguage():vmsource(Mat()) { build_opcodes_map(); }
     VMatLanguage(VMat vmsrc):vmsource(vmsrc) { build_opcodes_map(); }
-    typedef Object inherited;
     PLEARN_DECLARE_OBJECT(VMatLanguage);
 
     //! Executes the program on the srcvec, copy resulting stack to result

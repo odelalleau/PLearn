@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatColumnsVMatrix.h,v 1.4 2004/02/20 21:14:29 chrish42 Exp $
+   * $Id: ConcatColumnsVMatrix.h,v 1.5 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 
@@ -54,6 +54,7 @@ using namespace std;
 class ConcatColumnsVMatrix: public RowBufferedVMatrix
 {
   typedef RowBufferedVMatrix inherited;
+
  protected:
   Array<VMat> array;
   

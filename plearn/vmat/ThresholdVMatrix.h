@@ -53,6 +53,8 @@ using namespace std;
  */
 class ThresholdVMatrix: public RowBufferedVMatrix
 {
+  typedef RowBufferedVMatrix inherited;
+
  protected:
   VMat underlying_distr;
   real threshold;
@@ -61,6 +63,11 @@ class ThresholdVMatrix: public RowBufferedVMatrix
   bool gt_threshold;
 
  public:
+  // ******************
+  // *  Constructors  *
+  // ******************
+  ThresholdVMatrix(); //!<  default constructor (for automatic deserialization)
+
   ThresholdVMatrix(VMat the_underlying_distr, real threshold_, real the_cold_value=0.0, real the_hot_value=1.0,
 		  bool gt_threshold_= true);
   virtual void getRow(int i, Vec v) const;

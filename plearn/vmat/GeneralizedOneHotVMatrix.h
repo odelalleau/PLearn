@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: GeneralizedOneHotVMatrix.h,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: GeneralizedOneHotVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 
@@ -55,6 +55,8 @@ using namespace std;
 //!  by the Vec index) are mapped, instead of just the last one.
 class GeneralizedOneHotVMatrix: public RowBufferedVMatrix
 {
+  typedef RowBufferedVMatrix inherited;
+
  protected:
   VMat distr;
   Vec index;
@@ -63,6 +65,11 @@ class GeneralizedOneHotVMatrix: public RowBufferedVMatrix
   Vec hot_value;
 
  public:
+  // ******************
+  // *  Constructors  *
+  // ******************
+  GeneralizedOneHotVMatrix(); //!<  default constructor (for automatic deserialization)
+
   //!  Warning: VMFields are NOT YET handled by this constructor
   GeneralizedOneHotVMatrix(VMat the_distr, Vec the_index, Vec the_nclasses,
                            Vec the_cold_value, Vec the_host_value);

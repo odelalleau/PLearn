@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FinancePreprocVMatrix.h,v 1.6 2004/03/17 16:06:32 ducharme Exp $ 
+   * $Id: FinancePreprocVMatrix.h,v 1.7 2004/03/23 23:08:08 morinf Exp $ 
    ******************************************************* */
 
 /*! \file FinancePreprocVMatrix.h */
@@ -49,6 +49,8 @@ using namespace std;
 
 class FinancePreprocVMatrix: public RowBufferedVMatrix
 {
+  typedef RowBufferedVMatrix inherited;
+
 public:
 
   VMat underlying; //! the underlying vmat
@@ -127,8 +129,6 @@ public:
 
   //! Declares name and deepCopy methods
   PLEARN_DECLARE_OBJECT(FinancePreprocVMatrix);
-  typedef RowBufferedVMatrix inherited;
-
 };
 DECLARE_OBJECT_PTR(FinancePreprocVMatrix);
 

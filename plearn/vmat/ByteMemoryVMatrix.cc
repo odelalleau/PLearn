@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ByteMemoryVMatrix.cc,v 1.2 2004/02/20 21:14:29 chrish42 Exp $
+   * $Id: ByteMemoryVMatrix.cc,v 1.3 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 #include "ByteMemoryVMatrix.h"
@@ -47,8 +47,14 @@ using namespace std;
 /** ByteMemoryVMatrix **/
 
 ByteMemoryVMatrix::
+ByteMemoryVMatrix()
+    : data(0)
+{
+}
+
+ByteMemoryVMatrix::
 ByteMemoryVMatrix(unsigned char* the_data,int the_length,int the_width, Vec the_scale)
-  :VMatrix(the_length, the_width), data(the_data), 
+  :inherited(the_length, the_width), data(the_data), 
    scale(the_scale), offset_(the_scale.length())
 {
   if (the_scale.length() != width_)

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: InterleaveVMatrix.h,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: InterleaveVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 
@@ -63,10 +63,17 @@ using namespace std;
 */
 class InterleaveVMatrix: public VMatrix
 {
-  protected:
-    Array<VMat> vm;
+  typedef VMatrix inherited;
+
+protected:
+  Array<VMat> vm;
 
   public:
+  // ******************
+  // *  Constructors  *
+  // ******************
+  InterleaveVMatrix(); //!<  default constructor (for automatic deserialization)
+
   //! The field names are copied from the first VMat in the array
   InterleaveVMatrix(Array<VMat> distributions);
 

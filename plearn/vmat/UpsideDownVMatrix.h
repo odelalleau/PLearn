@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UpsideDownVMatrix.h,v 1.3 2004/02/20 21:14:44 chrish42 Exp $ 
+   * $Id: UpsideDownVMatrix.h,v 1.4 2004/03/23 23:08:09 morinf Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -51,10 +51,9 @@ using namespace std;
 
 class UpsideDownVMatrix: public SourceVMatrix
 {
-public:
-
   typedef SourceVMatrix inherited;
 
+public:
   // ************************
   // * public build options *
   // ************************

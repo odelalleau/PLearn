@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: DiskVMatrix.h,v 1.8 2004/02/20 21:14:29 chrish42 Exp $
+   * $Id: DiskVMatrix.h,v 1.9 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 
@@ -55,6 +55,8 @@ using namespace std;
 //!  Each row is compressed/decompressed through the methods of VecCompressor
 class DiskVMatrix: public RowBufferedVMatrix
 {
+  typedef RowBufferedVMatrix inherited;
+
 protected:
   mutable FILE* indexf;
   mutable TVec<FILE*> dataf;
@@ -95,7 +97,6 @@ public:
   void build_();
 
   PLEARN_DECLARE_OBJECT(DiskVMatrix);
-  typedef RowBufferedVMatrix inherited;
 
   static void declareOptions(OptionList & ol);
   

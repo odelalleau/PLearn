@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SubInputVMatrix.h,v 1.1 2004/02/26 03:31:55 tihocan Exp $ 
+   * $Id: SubInputVMatrix.h,v 1.2 2004/03/23 23:08:09 morinf Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -51,9 +51,6 @@ using namespace std;
 
 class SubInputVMatrix: public SourceVMatrix
 {
-
-public:
-
   typedef SourceVMatrix inherited;
 
 protected:

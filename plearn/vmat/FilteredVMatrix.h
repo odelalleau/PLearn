@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilteredVMatrix.h,v 1.4 2004/03/05 17:34:57 tihocan Exp $ 
+   * $Id: FilteredVMatrix.h,v 1.5 2004/03/23 23:08:08 morinf Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -52,6 +52,7 @@ using namespace std;
 
 class FilteredVMatrix: public SourceVMatrix
 {
+  typedef SourceVMatrix inherited;
 
 private:
 
@@ -69,8 +70,6 @@ protected:
   void openIndex();
 
 public:
-
-  typedef SourceVMatrix inherited;
 
   // ************************
   // * public build options *

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CompactVMatrix.cc,v 1.6 2004/03/17 16:06:32 ducharme Exp $
+   * $Id: CompactVMatrix.cc,v 1.7 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 #include "CompactVMatrix.h"
@@ -76,12 +76,18 @@ void CompactVMatrix::set_n_bits_in_byte()
 
 PLEARN_IMPLEMENT_OBJECT(CompactVMatrix, "ONE LINE DESCR", "NO HELP");
 
+CompactVMatrix::CompactVMatrix()
+  : n_symbols(0), n_fixedpoint(0), n_variables(0), one_hot_encoding(0), n_symbol_values(0),
+    fixedpoint_min(0), fixedpoint_max(0), delta(0), variables_permutation(0)
+{
+}
+
 CompactVMatrix::CompactVMatrix(int the_length, int nvariables, int n_binary, 
                                int n_nonbinary_discrete,
                                int n_fixed_point, TVec<int>& n_symbolvalues, 
                                Vec& fixed_point_min, Vec& fixed_point_max, 
                                bool onehot_encoding)
-  : RowBufferedVMatrix(the_length,nvariables), n_bits(n_binary), 
+  : inherited(the_length,nvariables), n_bits(n_binary), 
     n_symbols(n_nonbinary_discrete), n_fixedpoint(n_fixed_point),
     n_variables(nvariables), one_hot_encoding(onehot_encoding), 
     n_symbol_values(n_symbolvalues),
@@ -103,7 +109,7 @@ CompactVMatrix::CompactVMatrix(int the_length, int nvariables, int n_binary,
 }
 
 CompactVMatrix::CompactVMatrix(VMat m, int keep_last_variables_last, bool onehot_encoding)
-  : RowBufferedVMatrix(m->length(),m->width()), one_hot_encoding(onehot_encoding),
+  : inherited(m->length(),m->width()), one_hot_encoding(onehot_encoding),
     n_symbol_values(m->width()), variables_permutation(m->width())
 {
   if (!m->hasStats()) 
@@ -209,8 +215,8 @@ CompactVMatrix::CompactVMatrix(const string& filename, int nlast) : RowBufferedV
   set_n_bits_in_byte();
 }
 
-CompactVMatrix::CompactVMatrix(CompactVMatrix* cvm, VMat m, bool rescale, bool check) : 
-  RowBufferedVMatrix(m->length(),m->width())
+CompactVMatrix::CompactVMatrix(CompactVMatrix* cvm, VMat m, bool rescale, bool check)
+  : inherited(m->length(),m->width())
 {
   if (cvm->width() != m->width())
     PLERROR("CompactVMatrix::CompactVMatrix(CompactVMatrix* cvm, VMat m,...), args have widths %d!=%d",
@@ -674,7 +680,7 @@ void CompactVMatrix::perturb(int i, Vec v, real noise_level, int n_last)
       vp[c]=decoded;
   }
 }
-
+/*
 void CompactVMatrix::write(ostream& out) const
 {
   writeHeader(out,"CompactVMatrix");
@@ -724,7 +730,7 @@ void CompactVMatrix::oldread(istream& in)
   in.read((char*)data.data,data.length()*sizeof(unsigned char));
   readFooter(in,"CompactVMatrix");
 }
-
+*/
 void CompactVMatrix::append(CompactVMatrix* vm)
 {
   if (width_!=vm->width())

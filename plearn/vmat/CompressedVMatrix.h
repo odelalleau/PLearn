@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CompressedVMatrix.h,v 1.2 2004/02/20 21:14:29 chrish42 Exp $
+   * $Id: CompressedVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 
@@ -62,6 +62,8 @@ using namespace std;
 */
   class CompressedVMatrix: public RowBufferedVMatrix
   {
+    typedef RowBufferedVMatrix inherited;
+
   protected:
     int max_length; //!<  maximum number of rows that can be appended to the initially empty matrix
 
@@ -79,7 +81,10 @@ using namespace std;
     void init(int the_max_length, int the_width, size_t memory_alloc);
 
   public:
-
+    // ******************
+    // *  Constructors  *
+    // ******************
+    CompressedVMatrix(); //!<  default constructor (for automatic deserialization)
     
 /*!       This initializes the matrix with a length of 0 (but up to the_max_length rows can be appended)
       If no memory_alloc value is given, a sufficient default value will be used initially. 

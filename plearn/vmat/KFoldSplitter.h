@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KFoldSplitter.h,v 1.6 2004/02/20 21:14:44 chrish42 Exp $ 
+   * $Id: KFoldSplitter.h,v 1.7 2004/03/23 23:08:08 morinf Exp $ 
    ******************************************************* */
 
 /*! \file KFoldSplitter.h */
@@ -49,6 +49,8 @@ using namespace std;
 
 class KFoldSplitter: public Splitter
 {
+    typedef Splitter inherited;
+
 protected:
     // *********************
     // * protected options *
@@ -58,9 +60,6 @@ protected:
     // ...
     
 public:
-
-    typedef Splitter inherited;
-
     // ************************
     // * public build options *
     // ************************

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectColumnsVMatrix.h,v 1.4 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: SelectColumnsVMatrix.h,v 1.5 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 
@@ -55,7 +55,6 @@ using namespace std;
 //!  raw_sample.
 class SelectColumnsVMatrix: public VMatrix
 {
-
  typedef VMatrix inherited;
   
 public:

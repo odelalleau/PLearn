@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsSubVMatrix.h,v 1.2 2004/02/20 21:14:29 chrish42 Exp $
+   * $Id: ConcatRowsSubVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 
@@ -59,6 +59,8 @@ using namespace std;
 */
 class ConcatRowsSubVMatrix: public VMatrix
 {
+    typedef VMatrix inherited;
+
  protected:
     VMat distr;
     TVec<int> start;
@@ -71,6 +73,11 @@ class ConcatRowsSubVMatrix: public VMatrix
     void getpositions(int i, int& whichvm, int& rowofvm) const; 
 
   public:
+    // ******************
+    // *  Constructors  *
+    // ******************
+    ConcatRowsSubVMatrix(); //!<  default constructor (for automatic deserialization)
+
     //!  The field names of the parent VMat are copied upon construction
     ConcatRowsSubVMatrix(VMat the_distr, TVec<int>& the_start, TVec<int>& the_len);
     ConcatRowsSubVMatrix(VMat the_distr, int start1, int len1, int start2, int len2);

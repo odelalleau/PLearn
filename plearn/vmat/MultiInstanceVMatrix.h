@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MultiInstanceVMatrix.h,v 1.5 2004/03/18 21:58:36 tihocan Exp $ 
+   * $Id: MultiInstanceVMatrix.h,v 1.6 2004/03/23 23:08:08 morinf Exp $ 
    ******************************************************* */
 
 // Authors: Norman Casagrande
@@ -53,7 +53,6 @@ using namespace std;
 
 class MultiInstanceVMatrix: public RowBufferedVMatrix
 {
-public:
   typedef RowBufferedVMatrix inherited;
 
 protected:

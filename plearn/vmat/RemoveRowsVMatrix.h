@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: RemoveRowsVMatrix.h,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: RemoveRowsVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 
@@ -52,6 +52,8 @@ using namespace std;
 //!  sees an underlying VMat with the specified rows excluded
 class RemoveRowsVMatrix: public VMatrix
 {
+    typedef VMatrix inherited;
+
   protected:
     VMat distr;
     Vec indices;
@@ -62,10 +64,15 @@ class RemoveRowsVMatrix: public VMatrix
   public:
     virtual void reset_dimensions() { distr->reset_dimensions(); width_=distr->width(); }
 
+    // ******************
+    // *  Constructors  *
+    // ******************
+    RemoveRowsVMatrix() {}; //!<  default constructor (for automatic deserialization)
+
     //! Copy the original fieldinfos upon construction
-    RemoveRowsVMatrix(VMat the_distr, Vec the_indices=Vec() ) :
-      VMatrix(the_distr->length()-the_indices.length(), the_distr->width()),
-      distr(the_distr), indices(the_indices.copy())
+    RemoveRowsVMatrix(VMat the_distr, Vec the_indices=Vec() )
+      : inherited(the_distr->length()-the_indices.length(), the_distr->width()),
+        distr(the_distr), indices(the_indices.copy())
     {
       fieldinfos = the_distr->fieldinfos;
       

@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BootstrapVMatrix.h,v 1.3 2004/02/20 21:14:29 chrish42 Exp $
+   * $Id: BootstrapVMatrix.h,v 1.4 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 
@@ -49,7 +49,6 @@ using namespace std;
  
 class BootstrapVMatrix: public SelectRowsVMatrix
 {
-
   typedef SelectRowsVMatrix inherited;
 
 public:

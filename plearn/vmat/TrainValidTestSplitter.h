@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainValidTestSplitter.h,v 1.2 2004/03/05 13:53:24 tihocan Exp $ 
+   * $Id: TrainValidTestSplitter.h,v 1.3 2004/03/23 23:08:09 morinf Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -51,9 +51,6 @@ using namespace std;
 
 class TrainValidTestSplitter: public Splitter
 {
-
-public:
-
   typedef Splitter inherited;
 
 protected:

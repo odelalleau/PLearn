@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: CompactVMatrix.h,v 1.3 2004/02/20 21:14:29 chrish42 Exp $
+   * $Id: CompactVMatrix.h,v 1.4 2004/03/23 23:08:08 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -62,9 +62,11 @@ using namespace std;
 */
 class CompactVMatrix : public RowBufferedVMatrix
 {
+    typedef RowBufferedVMatrix inherited;
     class SDBVMatrix;
 
   protected:
+    
     //!  Each row of the matrix holds in order: bits, 1-byte symbols, fixed point numbers
     Storage<unsigned char> data;
     int row_n_bytes; //!<  # of bytes per row
@@ -86,7 +88,6 @@ class CompactVMatrix : public RowBufferedVMatrix
                                        in order to order them into (bits, bytes, fixedpoint)
                                        variables_permutation[new_column]=old_column (not in one-hot code)
 */
-  CompactVMatrix() {}
   static unsigned char n_bits_in_byte[256];
   static void set_n_bits_in_byte();
 
@@ -96,6 +97,11 @@ class CompactVMatrix : public RowBufferedVMatrix
     int normal_width;         //!<  the value of width_ when one_hot_encoding=true
   public:
     void setOneHotMode(bool on=true);
+
+    // ******************
+    // *  Constructors  *
+    // ******************
+    CompactVMatrix(); //!<  default constructor (for automatic deserialization)
 
     CompactVMatrix(int the_length, int n_variables, int n_binary, int n_nonbinary_discrete,
                    int n_fixed_point, TVec<int>& n_symbolvalues, Vec& fixed_point_min,
@@ -173,10 +179,10 @@ class CompactVMatrix : public RowBufferedVMatrix
     //!  save everything in file (data and auxiliary information), binary format
     virtual void save(const string& filename)
     { Object::save(filename); } //!<  calls write
-    virtual void write(ostream& out) const;
+    //virtual void write(ostream& out) const;
 
     //!  reverse of write, can be used by calling load(string)
-    virtual void oldread(istream& in);
+    //virtual void oldread(istream& in);
 
     PLEARN_DECLARE_OBJECT(CompactVMatrix);
     void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);

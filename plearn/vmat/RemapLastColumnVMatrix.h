@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: RemapLastColumnVMatrix.h,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: RemapLastColumnVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 
@@ -52,6 +52,8 @@ using namespace std;
 
 class RemapLastColumnVMatrix: public RowBufferedVMatrix
 {
+    typedef RowBufferedVMatrix inherited;
+
  protected:
     VMat underlying_distr;
 
@@ -68,6 +70,11 @@ class RemapLastColumnVMatrix: public RowBufferedVMatrix
     real else_val;
 
   public:
+    // ******************
+    // *  Constructors  *
+    // ******************
+    RemapLastColumnVMatrix(); //!<  default constructor (for automatic deserialization)
+
     //!  full explicit mapping.
     //!  Warning: VMFields are NOT YET handled by this constructor
     RemapLastColumnVMatrix(VMat the_underlying_distr, Mat the_mapping);

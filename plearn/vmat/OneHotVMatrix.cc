@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: OneHotVMatrix.cc,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: OneHotVMatrix.cc,v 1.3 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 #include "OneHotVMatrix.h"
@@ -46,9 +46,16 @@ using namespace std;
 
 /** OneHotVMatrix **/
 
-OneHotVMatrix::OneHotVMatrix(VMat the_underlying_distr, int the_nclasses, real the_cold_value, real the_host_value)
-  :RowBufferedVMatrix(the_underlying_distr->length(), the_underlying_distr->width()+the_nclasses-1),
-   underlying_distr(the_underlying_distr), nclasses(the_nclasses), cold_value(the_cold_value), hot_value(the_host_value)
+OneHotVMatrix::OneHotVMatrix()
+    : nclasses(0), cold_value(0.0), hot_value(1.0)
+{
+}
+
+OneHotVMatrix::OneHotVMatrix(VMat the_underlying_distr, int the_nclasses, real the_cold_value,
+                             real the_hot_value)
+  : inherited(the_underlying_distr->length(), the_underlying_distr->width()+the_nclasses-1),
+    underlying_distr(the_underlying_distr), nclasses(the_nclasses),
+    cold_value(the_cold_value), hot_value(the_hot_value)
 {}
 
 void OneHotVMatrix::getRow(int i, Vec samplevec) const

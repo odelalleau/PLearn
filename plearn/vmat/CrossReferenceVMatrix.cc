@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CrossReferenceVMatrix.cc,v 1.2 2004/02/20 21:14:29 chrish42 Exp $
+   * $Id: CrossReferenceVMatrix.cc,v 1.3 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 #include "CrossReferenceVMatrix.h"
@@ -46,8 +46,13 @@ using namespace std;
 
 /** CrossReferenceVMatrix **/
 
+CrossReferenceVMatrix::CrossReferenceVMatrix()
+  : col1(0)
+{
+}
+
 CrossReferenceVMatrix::CrossReferenceVMatrix(VMat v1, int c1, VMat v2)
- : VMatrix(v1.length(), v1.width()+v2.width()-1), vm1(v1), col1(c1), vm2(v2)
+ : inherited(v1.length(), v1.width()+v2.width()-1), vm1(v1), col1(c1), vm2(v2)
 {
   fieldinfos = v1->getFieldInfos();
   fieldinfos &= v2->getFieldInfos();

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: YMDDatedVMatrix.cc,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: YMDDatedVMatrix.cc,v 1.3 2004/03/23 23:08:09 morinf Exp $
    ******************************************************* */
 
 #include "YMDDatedVMatrix.h"
@@ -43,15 +43,19 @@
 namespace PLearn {
 using namespace std;
 
+YMDDatedVMatrix::YMDDatedVMatrix()
+{
+}
+
 YMDDatedVMatrix::YMDDatedVMatrix(VMat data_, Mat years_, Mat months_, Mat days_)
-    : DatedVMatrix(data_->length(),data_->width()),data(data_), years(years_), 
-      months(months_), days(days_), day_of_ith_pos(days_.length())
+  : inherited(data_->length(),data_->width()),data(data_), years(years_), 
+    months(months_), days(days_), day_of_ith_pos(days_.length())
 {
   init();
 }
 
 YMDDatedVMatrix::YMDDatedVMatrix(Mat& YMD_and_data)
-  : DatedVMatrix(YMD_and_data.length(),YMD_and_data.width()-3),
+  : inherited(YMD_and_data.length(),YMD_and_data.width()-3),
     data(YMD_and_data.subMatColumns(3,YMD_and_data.width()-3)), 
     years(YMD_and_data.subMatColumns(0,1)),
     months(YMD_and_data.subMatColumns(1,1)),

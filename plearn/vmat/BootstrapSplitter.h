@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BootstrapSplitter.h,v 1.2 2004/02/20 21:14:29 chrish42 Exp $ 
+   * $Id: BootstrapSplitter.h,v 1.3 2004/03/23 23:08:08 morinf Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -51,7 +51,6 @@ using namespace std;
 
 class BootstrapSplitter: public Splitter
 {
-public:
   typedef Splitter inherited;
 
 protected:

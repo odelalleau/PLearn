@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: RemapLastColumnVMatrix.cc,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: RemapLastColumnVMatrix.cc,v 1.3 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 #include "RemapLastColumnVMatrix.h"
@@ -46,18 +46,23 @@ using namespace std;
 
 /** RemapLastColumnVMatrix **/
 
+RemapLastColumnVMatrix::RemapLastColumnVMatrix()
+    : if_equals_val(0), then_val(0), else_val(0)
+{
+}
+
 RemapLastColumnVMatrix::RemapLastColumnVMatrix(VMat the_underlying_distr, Mat the_mapping)
-  :RowBufferedVMatrix(the_underlying_distr->length(), the_underlying_distr->width()+the_mapping.width()-2),
-   underlying_distr(the_underlying_distr), mapping(the_mapping)
-{}
+  : inherited (the_underlying_distr->length(), the_underlying_distr->width()+the_mapping.width()-2),
+    underlying_distr(the_underlying_distr), mapping(the_mapping)
+{
+}
 
 RemapLastColumnVMatrix::RemapLastColumnVMatrix(VMat the_underlying_distr, real if_equals_value, real then_value, real else_value)
-  :RowBufferedVMatrix(the_underlying_distr->length(), the_underlying_distr->width()),
-   underlying_distr(the_underlying_distr), 
-   if_equals_val(if_equals_value),
-   then_val(then_value),
-   else_val(else_value)
-{}
+  : inherited(the_underlying_distr->length(), the_underlying_distr->width()),
+    underlying_distr(the_underlying_distr), if_equals_val(if_equals_value),
+    then_val(then_value), else_val(else_value)
+{
+}
 
 void RemapLastColumnVMatrix::getRow(int i, Vec samplevec) const
 {

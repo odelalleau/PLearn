@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMatrixFromDistribution.h,v 1.5 2004/02/20 21:14:44 chrish42 Exp $ 
+   * $Id: VMatrixFromDistribution.h,v 1.6 2004/03/23 23:08:09 morinf Exp $ 
    ******************************************************* */
 
 /*! \file VMatrixFromDistribution.h */
@@ -49,15 +49,13 @@ using namespace std;
 
 class VMatrixFromDistribution: public VMatrix
 {
+  typedef VMatrix inherited;
 protected:
   
   //! Will hold the data sampled from the distribution
   Mat data;  
     
 public:
-
-  typedef VMatrix inherited;
-
   // ************************
   // * public build options *
   // ************************

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: RowBufferedVMatrix.h,v 1.4 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: RowBufferedVMatrix.h,v 1.5 2004/03/23 23:08:08 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,6 +54,8 @@ using namespace std;
 
 class RowBufferedVMatrix: public VMatrix
 {
+  typedef VMatrix inherited;
+
 protected:
   mutable int current_row_index;
   mutable Vec current_row;
@@ -61,9 +63,6 @@ protected:
   mutable Vec other_row;
 
 public:
-
-  typedef VMatrix inherited;
-
   RowBufferedVMatrix();
   RowBufferedVMatrix(int the_length, int the_width);
 

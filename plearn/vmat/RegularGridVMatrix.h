@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RegularGridVMatrix.h,v 1.3 2004/02/20 21:14:44 chrish42 Exp $ 
+   * $Id: RegularGridVMatrix.h,v 1.4 2004/03/23 23:08:08 morinf Exp $ 
    ******************************************************* */
 
 /*! \file RegularGridVMatrix.h */
@@ -48,15 +48,14 @@ using namespace std;
 
 class RegularGridVMatrix: public RowBufferedVMatrix
 {
+  typedef RowBufferedVMatrix inherited;
+
 protected:
   // *********************
   // * protected options *
   // *********************
 
 public:
-
-  
-
   // ************************
   // * public build options *
   // ************************
@@ -103,8 +102,6 @@ public:
 
   //! Declares name and deepCopy methods
   PLEARN_DECLARE_OBJECT(RegularGridVMatrix);
-  typedef RowBufferedVMatrix inherited;
-
 };
 
 } // end of namespace PLearn

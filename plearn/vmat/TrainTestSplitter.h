@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainTestSplitter.h,v 1.7 2004/02/20 21:14:44 chrish42 Exp $ 
+   * $Id: TrainTestSplitter.h,v 1.8 2004/03/23 23:08:09 morinf Exp $ 
    ******************************************************* */
 
 /*! \file TrainTestSplitter.h */
@@ -49,6 +49,8 @@ using namespace std;
 
 class TrainTestSplitter: public Splitter
 {
+  typedef Splitter inherited;
+
 protected:
   // *********************
   // * protected options *
@@ -58,8 +60,6 @@ protected:
   // ...
     
 public:
-
-  typedef Splitter inherited;
 
   // ************************
   // * public build options *

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: YMDDatedVMatrix.h,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: YMDDatedVMatrix.h,v 1.3 2004/03/23 23:08:09 morinf Exp $
    ******************************************************* */
 
 
@@ -57,6 +57,8 @@ using namespace std;
 */
 class YMDDatedVMatrix: public DatedVMatrix
 {
+    typedef DatedVMatrix inherited;
+
 public:
   VMat data;
 protected:
@@ -73,6 +75,11 @@ protected:
   void init();
 
 public:
+  // ******************
+  // *  Constructors  *
+  // ******************
+  YMDDatedVMatrix(); //!<  default constructor (for automatic deserialization)
+
   //!  THE DATES MUST BE IN INCREASING CHRONOLOGICAL ORDER.
   //!  Warning: VMFields are NOT YET handled by this constructor
   YMDDatedVMatrix(VMat data_, Mat years_, Mat months_, Mat days_);

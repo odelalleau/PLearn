@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.h,v 1.3 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: PLearnerOutputVMatrix.h,v 1.4 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -53,6 +53,8 @@ using namespace std;
 
 class PLearnerOutputVMatrix: public RowBufferedVMatrix
 {
+  typedef RowBufferedVMatrix inherited;
+
 protected:
   // *********************
   // * protected options *
@@ -67,9 +69,6 @@ protected:
   mutable Vec non_input_part_of_data_row;
 
 public:
-
-  typedef RowBufferedVMatrix inherited;
-
   // ************************
   // * public build options *
   // ************************

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: GeneralizedOneHotVMatrix.cc,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: GeneralizedOneHotVMatrix.cc,v 1.3 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 #include "GeneralizedOneHotVMatrix.h"
@@ -46,11 +46,16 @@ using namespace std;
 
 /** GeneralizedOneHotVMatrix **/
 
-GeneralizedOneHotVMatrix::GeneralizedOneHotVMatrix(VMat the_distr,
-  Vec the_index, Vec the_nclasses, Vec the_cold_value, Vec the_host_value)
-  : RowBufferedVMatrix(the_distr->length(), the_distr->width()+(int)sum(the_nclasses)-the_nclasses.length()),
-   distr(the_distr), index(the_index), nclasses(the_nclasses),
-   cold_value(the_cold_value), hot_value(the_host_value)
+GeneralizedOneHotVMatrix::GeneralizedOneHotVMatrix()
+{
+}
+
+GeneralizedOneHotVMatrix::GeneralizedOneHotVMatrix(VMat the_distr, Vec the_index,
+                                                   Vec the_nclasses, Vec the_cold_value,
+                                                   Vec the_host_value)
+  : inherited(the_distr->length(), the_distr->width()+(int)sum(the_nclasses)-the_nclasses.length()),
+    distr(the_distr), index(the_index), nclasses(the_nclasses),
+    cold_value(the_cold_value), hot_value(the_host_value)
 {
   if (min(index)<0 || max(index)>distr->length()-1)
     PLERROR("In GeneralizedOneHotVMatrix: all values of index must be in range [0,%d]",

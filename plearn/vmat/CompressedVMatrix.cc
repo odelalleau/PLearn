@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CompressedVMatrix.cc,v 1.2 2004/02/20 21:14:29 chrish42 Exp $
+   * $Id: CompressedVMatrix.cc,v 1.3 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 #include "VecCompressor.h"
@@ -47,6 +47,11 @@ using namespace std;
 
 // ************************
 // ** CompressedVMatrix **
+
+CompressedVMatrix::CompressedVMatrix()
+    : data(0), rowstarts(0), dataend(0), curpos(0)
+{
+}
 
 CompressedVMatrix::CompressedVMatrix(int the_max_length, int the_width, size_t memory_alloc)
 { init(the_max_length, the_width, 

@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.h,v 1.4 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: VVMatrix.h,v 1.5 2004/03/23 23:08:09 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,6 +47,8 @@ using namespace std;
 //! this class is a wrapper for a .vmat VMatrix.
 class VVMatrix: public VMatrix
 {
+  typedef VMatrix inherited;
+
 protected:
   string code;
   VMat the_mat;
@@ -79,7 +81,6 @@ public:
   string the_filename;
 
 public:
-  typedef VMatrix inherited;
   PLEARN_DECLARE_OBJECT(VVMatrix);
 
   virtual void build();

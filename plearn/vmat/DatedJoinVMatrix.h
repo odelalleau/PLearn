@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DatedJoinVMatrix.h,v 1.6 2004/03/23 20:21:18 yoshua Exp $
+   * $Id: DatedJoinVMatrix.h,v 1.7 2004/03/23 23:08:08 morinf Exp $
    ******************************************************* */
 
 // Authors: *Yoshua Bengio*
@@ -52,11 +52,11 @@ using namespace std;
 
 class DatedJoinVMatrix: public RowBufferedVMatrix
 {
+  typedef RowBufferedVMatrix inherited;
+
 public:
   typedef hash_multimap<Array<real>,int,hash_Array<real> > Maptype;
   //typedef hash_multimap<Array<real>,int> Maptype;
-
-  typedef RowBufferedVMatrix inherited;
 
 protected:
   // *********************
