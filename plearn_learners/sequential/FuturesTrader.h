@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.h,v 1.13 2003/12/02 15:40:54 dorionc Exp $ 
+   * $Id: FuturesTrader.h,v 1.14 2004/02/16 22:26:09 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.h */
@@ -66,12 +66,6 @@ protected:
     Default: "rollover"
   */
   string rollover_tag;
-
-  /*!
-    Enables the assetwise computation of the log returns
-    Default: false
-  */ 
-  bool assetwise_log_returns; 
 
   // *********************
   // * protected members *
@@ -122,9 +116,30 @@ protected:
   */
   virtual void trader_test(int t, VMat testset, PP<VecStatsCollector> test_stats,
       VMat testoutputs, VMat testcosts) const;
-  //virtual void trader_test(int t, VMat testset, 
-  //                         real& absolute_return_t, real& relative_return_t) const;
+//   void assetwise_management(const int& k, const int& t, const real& daily_risk_free_return,
+//                             real& previous_value_t, real& absolute_return_t,
+//                             real& relative_sum, Vec& assetwise_lret, 
+//                             real& transaction_cost, 
+//                             int previous_t=-1, bool margin_management=true) const; // subpart of trader_test 
+  void assetwise_management(const int& k, const int& t, const real& risk_free_return,
+                            Vec& assetwise, real& previous_value, 
+                            real& absolute_return, real& transaction_cost, 
+                            int previous_t = -1) const;
+
+  /*!
+    Subpart of trader_test that computes the time step relative return given...
+    The assetwise arg may be empty (no computation to be done) or filled with the assetwise relative sums.
+    Comment: Should maybe be changed for
+      static real time_step_relative_return(Vec& assetwise, const Vec& transaction_cost, const real& risk_free_return) const;
+    returning the relative return from forced assetwise data...
+   */
+//   void time_step_relative_return(real& relative_return, Vec& assetwise, 
+//                                  const real& relative_sum, const real& previous_value, 
+//                                  const real& transaction_cost, const real& risk_free_return) const;
+  real time_step_relative_return(Vec& assetwise, const real& previous_value, const real& risk_free_return) const;
   
+  real last_month_relative_return(const int& t) const;
+
   //! Checkout if a margin call is needed
   void check_margin(int k, int t) const;
 
@@ -163,9 +178,6 @@ public:
   virtual void build();
 
   virtual void forget();
-  
-  virtual TVec<string> getTrainCostNames() const;
-  virtual TVec<string> getTestCostNames() const;
   
   virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
                                      Vec& output, Vec& costs) const;

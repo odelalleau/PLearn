@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FinancialAdvisor.cc,v 1.3 2003/12/02 15:40:54 dorionc Exp $ 
+   * $Id: FinancialAdvisor.cc,v 1.4 2004/02/16 22:26:08 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -50,7 +50,8 @@ using namespace std;
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(FinancialAdvisor, "ONE LINE DESCR", "NO HELP");
 
 FinancialAdvisor::FinancialAdvisor():
-  trader(0)
+  trader(0),
+  build_complete(false)
 {}
 
 void FinancialAdvisor::build()
@@ -63,6 +64,10 @@ void FinancialAdvisor::build_()
 {      
 }
 
+void FinancialAdvisor::build_from_train_set()
+{      
+}
+
 void FinancialAdvisor::forget()
 {
   inherited::forget();
@@ -72,6 +77,58 @@ void FinancialAdvisor::declareOptions(OptionList& ol)
 {
   inherited::declareOptions(ol);
 }
+
+void FinancialAdvisor::train()
+{
+  if (!build_complete)
+    build_from_train_set();
+
+  last_call_train_t = train_set.length()-1;
+  int start_t = MAX(last_train_t+train_step, last_test_t+train_step);
+  if( last_call_train_t < start_t )
+    return;
+
+  ProgressBar* pb = NULL;
+  if (report_progress)
+    pb = new ProgressBar("Training " + classname() + " learner",train_set.length()-start_t);
+
+  Vec input(train_set->inputsize()), target(train_set->targetsize());
+  real w=1.0;
+  for (int t=start_t; t<train_set.length(); t++)
+  {
+    train_set->getExample(t, input, target, w);
+    train_test_core(input, t);
+    last_train_t = t;
+    if (pb) pb->update(t-start_t);
+  }
+//  last_call_train_t = train_set.length()-1;
+  if (pb) delete pb;
+}
+
+void FinancialAdvisor::test(VMat testset, PP<VecStatsCollector> test_stats,
+    VMat testoutputs, VMat testcosts) const
+{
+  int start_t = MAX(last_train_t+1,last_test_t+1);
+  if( testset.length()-1 < start_t )
+    return;
+ 
+  ProgressBar* pb = NULL;
+  if (report_progress)
+    pb = new ProgressBar("Testing " + classname() + " learner",testset.length()-start_t);
+
+  Vec input(testset->inputsize()), target(testset->targetsize());
+  real w=1.0;
+  for (int t=start_t; t<testset.length(); t++)
+  {
+    testset->getExample(t, input, target, w);
+    train_test_core(input, t, testoutputs, testcosts);
+    test_stats->update(errors(t));
+    if (pb) pb->update(t-start_t);
+  }
+  last_test_t = testset.length()-1;
+  if (pb) delete pb;
+}
+
 
 TVec<string> FinancialAdvisor::getTestCostNames() const
 {

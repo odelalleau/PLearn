@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdvisorTutorial.h,v 1.2 2003/09/24 19:22:43 dorionc Exp $ 
+   * $Id: AdvisorTutorial.h,v 1.3 2004/02/16 22:26:08 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -65,37 +65,32 @@ class AdvisorTutorial: public FinancialAdvisor
 
   public:
 
-    //! Constructor
-    AdvisorTutorial();
-
-    //! simply calls inherited::build() then build_()
-    virtual void build();
-
-    //! *** SUBCLASS WRITING: ***
-    virtual void train();
- 
-    //! *** SUBCLASS WRITING: ***
-    virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
-                      VMat testoutputs=0, VMat testcosts=0) const;
-
-    virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
-        Vec& output, Vec& costs) const;
-
-    virtual void computeCostsOnly(const Vec& input, const Vec& target,
-        Vec& costs) const;
-
-    virtual void computeOutput(const Vec& input, Vec& output) const;
-
-    virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
-        const Vec& target, Vec& costs) const;
-
-    virtual void forget();
-
-    virtual TVec<string> getTrainCostNames() const;
-    virtual TVec<string> getTestCostNames() const;
-
-    //!  Does the necessary operations to transform a shallow copy (this)
-    //!  into a deep copy by deep-copying all the members that need to be.
+  //! Constructor
+  AdvisorTutorial();
+  
+  //! simply calls inherited::build() then build_()
+  virtual void build();
+  
+  virtual void train_test_core(const Vec& input, int t, VMat testoutputs=0, VMat testcosts=0) const;
+    
+  virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
+                                     Vec& output, Vec& costs) const;
+  
+  virtual void computeCostsOnly(const Vec& input, const Vec& target,
+                                Vec& costs) const;
+  
+  virtual void computeOutput(const Vec& input, Vec& output) const;
+  
+  virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
+                                       const Vec& target, Vec& costs) const;
+  
+  virtual void forget();
+  
+  virtual TVec<string> getTrainCostNames() const;
+  virtual TVec<string> getTestCostNames() const;
+  
+  //!  Does the necessary operations to transform a shallow copy (this)
+  //!  into a deep copy by deep-copying all the members that need to be.
   typedef FinancialAdvisor inherited;
   PLEARN_DECLARE_OBJECT(AdvisorTutorial);
   virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);

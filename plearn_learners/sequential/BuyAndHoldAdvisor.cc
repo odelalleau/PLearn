@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BuyAndHoldAdvisor.cc,v 1.2 2004/01/26 21:07:14 dorionc Exp $ 
+   * $Id: BuyAndHoldAdvisor.cc,v 1.3 2004/02/16 22:26:08 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -50,7 +50,6 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(BuyAndHoldAdvisor, "ONE LINE DESCR", "NO HELP");
 
 BuyAndHoldAdvisor::BuyAndHoldAdvisor():
-  did_buy(false),
   first_non_null_position(true)
 {}
 
@@ -93,11 +92,11 @@ void BuyAndHoldAdvisor::declareOptions(OptionList& ol)
   inherited::declareOptions(ol);
 }
 
-void BuyAndHoldAdvisor::train_test_core(VMat dataset, int t) const
-{  
-  if(did_buy)
-    return;
-  
+void BuyAndHoldAdvisor::build_from_train_set()
+{
+  int t = train_set.length()-1;
+  last_call_train_t = t-train_step;
+
   // Buy
   if(underlying.isNull())
   {
@@ -106,7 +105,7 @@ void BuyAndHoldAdvisor::train_test_core(VMat dataset, int t) const
   }
   else
   {
-    underlying->setTrainingSet(dataset, false);
+    underlying->setTrainingSet(train_set, false);
     underlying->train();
     predictions.subMatRows(0, t) << underlying->predictions.subMatRows(0, t);
     predictions(t) << underlying->predictions(t);
@@ -126,27 +125,16 @@ void BuyAndHoldAdvisor::train_test_core(VMat dataset, int t) const
   }
 
   // The model did buy it's position and will now only hold it
-  did_buy = true;
+  build_complete = true;
 
   // Hold
   for(int tt = t+1; tt < predictions.length(); tt++)
-    predictions(tt) << predictions(t);
+    predictions(tt) << predictions(t);  
 }
 
-void BuyAndHoldAdvisor::train()
-{
-  last_call_train_t = train_set.length() - 1;
-  train_test_core(train_set, last_call_train_t);
-  last_train_t = last_call_train_t;  
-}
+void BuyAndHoldAdvisor::train_test_core(const Vec& input, int t, VMat testoutputs, VMat testcosts) const
+{}
 
-void BuyAndHoldAdvisor::test(VMat testset, PP<VecStatsCollector> test_stats,
-                        VMat testoutputs, VMat testcosts) const
-{
-  last_test_t = testset.length()-1;
-  train_test_core(testset, last_test_t);
-}
- 
 TVec<string> BuyAndHoldAdvisor::getTrainCostNames() const
 {
   if(underlying.isNull())

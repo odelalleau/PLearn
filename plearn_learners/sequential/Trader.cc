@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.cc,v 1.19 2004/01/26 21:07:26 dorionc Exp $ 
+ * $Id: Trader.cc,v 1.20 2004/02/16 22:26:09 dorionc Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -50,7 +50,10 @@ using namespace std;
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Trader, "ONE LINE DESCR", "NO HELP");
 
 Trader::Trader():
-  build_complete(false), very_first_test_t(-1), nb_assets(0),
+  build_complete(false), very_first_test_t(-1), 
+  assetwise_log_returns(false),
+  last_day_of_month_column(""), last_day_of_month_index(-1), last_day_of_previous_month(-1), 
+  nb_assets(0),
   risk_free_rate("risk_free_rate"),
   price_tag("close:level"), tradable_tag("is_tradable"),
   additive_cost(0.0), rebalancing_threshold(0.0), 
@@ -93,9 +96,15 @@ void Trader::build_()
   if(sp500 != "")
   {
     sp500_index = train_set->fieldIndex(sp500);
+    if(sp500_index == -1)
+      PLERROR("The sp500 column name provided (%s) corresponds to no column in the train_set.", sp500.c_str());
+
     last_valid_sp500_price.resize(max_seq_len);
     last_valid_sp500_price.fill(-1);
   }
+
+  if(last_day_of_month_column != "")
+    last_day_of_month_index = train_set->fieldIndex(last_day_of_month_column);
 
   portfolios.resize(max_seq_len, nb_assets);
   portfolios.fill(MISSING_VALUE);
@@ -151,7 +160,12 @@ void Trader::assets_info(TVec<int>& info, const string& info_tag) const
 {
   info.resize(assets_names.length());
   for(int asset_index=0; asset_index<assets_names.length(); asset_index++)
-    info[asset_index] = internal_data_set->fieldIndex(assets_names[asset_index]+":"+info_tag);
+  {
+    string ainfo = assets_names[asset_index]+":"+info_tag;
+    info[asset_index] = internal_data_set->fieldIndex(ainfo);
+    if(info[asset_index] == -1)
+      PLERROR("The asset info %s was not found.", ainfo.c_str());
+  }
 }
 
 void Trader::assets_info()
@@ -173,7 +187,7 @@ void Trader::assets_info()
   risk_free_rate_index = internal_data_set->fieldIndex(risk_free_rate);    
 }
 
-int Trader::price_of_which_asset(int col)
+int Trader::price_of_which_asset(int col) const
 {
   for(int k=0; k < nb_assets; k++)
     if(assets_price_indices[k] == col) 
@@ -196,10 +210,19 @@ void Trader::forget()
 
 void Trader::declareOptions(OptionList& ol)
 {
+  declareOption(ol, "assetwise_log_returns", &Trader::assetwise_log_returns, OptionBase::buildoption,
+                "Enables the assetwise computation of the log returns\n"
+                "Default: false");
+  
+  declareOption(ol, "last_day_of_month_column", &Trader::last_day_of_month_column, OptionBase::buildoption,
+                "If not empty, the trader will also compute monthly returns at each last day\n"
+                "of month, given that the string indicates the name of the boolean column\n"
+                "of the data vmat indicating the if a day is the last one of the month.\n"
+                "Default: \"\".");
+
   declareOption(ol, "advisor", &Trader::advisor,
                 OptionBase::buildoption,
                 "An embedded learner issuing recommendations on what should the portfolio look like");
-
   
   declareOption(ol, "risk_free_rate", &Trader::risk_free_rate,
                 OptionBase::buildoption,
@@ -501,6 +524,82 @@ void Trader::computeOutput(const Vec& input, Vec& output) const
 void Trader::computeCostsFromOutputs(const Vec& input,
                                      const Vec& output, const Vec& target, Vec& costs) const
 { PLERROR("The method computeCostsFromOutputs is not defined for this Trader"); }
+
+
+Vec Trader::updateCosts(const int& t, const real& tbill_log_return, const real& absolute_return, const real& log_return, 
+                        const Vec& assetwise_log_return /*=Vec()*/, const real& monthly_log_return /*=MISSING_VALUE*/,
+                        const real& sp500_log_return /*=MISSING_VALUE*/) const
+{
+  Vec update = advisor->errors(t).copy();
+  
+  update.append(tbill_log_return);
+  
+  update.append(absolute_return);  
+  update.append(log_return);
+  
+  update.append(log_return - tbill_log_return);  
+
+  if(assetwise_log_returns)
+  {
+    if(assetwise_log_return.length() != nb_assets)
+      PLERROR("%d = assetwise_log_return.length() != nb_assets = %d", assetwise_log_return.length(), nb_assets);
+    update.append(assetwise_log_return);
+  }
+    
+  if(last_day_of_month_index != -1)
+  {
+    if(monthly_log_return == MISSING_VALUE)
+      PLWARNING("monthly_log_return is MISSING_VALUE even if user requested computation\n"
+                "according to last_day_of_month_column (%s).", last_day_of_month_column.c_str());
+    update.append(monthly_log_return);
+  }
+  
+  if(sp500.size() > 0)
+  {
+    if(sp500_log_return == MISSING_VALUE)
+      PLWARNING("sp500_log_return is MISSING_VALUE even if user requested computation\n"
+                "according to sp500 (%s).", sp500.c_str());
+    update.append(sp500_log_return);
+    update.append(log_return - sp500_log_return);
+  }
+
+  return update;
+}
+
+/*!
+  The advisor cost names + other returns
+*/
+TVec<string> Trader::getTrainCostNames() const
+{
+  TVec<string> cost_names = advisor->getTrainCostNames();
+  
+  cost_names.append("tbill_log_return"); // TBILL(log_Rt)
+  cost_names.append("absolute_return");
+  cost_names.append("log_return");
+  cost_names.append("relative_tbill_log_return"); // model(log_Rt) - TBILL(log_Rt)
+
+  if(assetwise_log_returns)
+    for(int k=0; k < assets_names.length(); k++)
+      cost_names.append( getAssetCost(k) );
+  
+
+  if(last_day_of_month_column.size() > 0)
+    cost_names.append("monthly_log_return");
+  
+  if (sp500.size() > 0)
+  {
+    cost_names.append("sp500_log_return"); // SP500(log_Rt)
+    cost_names.append("relative_sp500_log_return"); // model(log_Rt) - SP500(log_Rt)
+  }
+
+  // Is the computation reflecting what a user wants to get??? (See FuturesTrader::trader_test)
+  //cost_names.append("turnover");
+  
+  return cost_names;
+}
+
+TVec<string> Trader::getTestCostNames() const
+{ return Trader::getTrainCostNames(); }
 
 void Trader::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.cc,v 1.27 2003/12/02 15:40:54 dorionc Exp $ 
+   * $Id: FuturesTrader.cc,v 1.28 2004/02/16 22:26:08 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.cc */
@@ -54,7 +54,7 @@ PLEARN_IMPLEMENT_OBJECT(FuturesTrader, "A meta-sequential learner trading future
                         "such as a basic stop loss.");
 
 FuturesTrader::FuturesTrader():
-  rollover_tag("rollover"), assetwise_log_returns(false),
+  rollover_tag("rollover"), 
   leverage(1.0), maintenance_margin_ratio(0.75)
 {}
 
@@ -68,7 +68,7 @@ void FuturesTrader::build_()
 {
   if(train_set.isNull())
     return;
-
+    
   margin_cash.resize(max_seq_len, nb_assets);
   margin_cash.fill(MISSING_VALUE);
 
@@ -112,7 +112,259 @@ void FuturesTrader::build_test() const
       margin(k, last_call_train_t) = 0.0;
   }
 }
+
+// void FuturesTrader::assetwise_management(const int& k, const int& t, const real& risk_free_return,
+//                                          real& previous_value_t, real& absolute_return_t,
+//                                          real& relative_sum, Vec& assetwise_lret, 
+//                                          real& transaction_cost, 
+//                                          int previous_t /*-1*/, bool margin_management/*=true*/) const
+// { 
+//   if(previous_t == -1)
+//     previous_t = t-horizon;
   
+//   if(margin_management)
+//   {
+//     // Marking the market: initializing the current margin to the ancient one
+//     // PLUS the risk free rate return
+//     margin(k, t) = margin(k, t-1) * (1.0 + risk_free_return);
+//   }
+  
+//   real w_kt = weight(k, t);
+//   // Relative return computation
+//   if (w_kt == 0.0)
+//     return;
+  
+//   // In regards of the relative return...
+//   real p_price = price(k, previous_t);
+//   real p_value = w_kt * p_price;
+//   previous_value_t += abs(p_value);
+//   real relative_value = p_value * (relative_return(k, t)-1.0);
+//   relative_sum += relative_value;
+  
+//   // The abolute return on asset k at time t
+//   real absolute_return_on_asset_k_at_t = w_kt * absolute_return(k, t);
+  
+//   if(margin_management)
+//   {
+//     /* Marking the market: 
+//        Instead of waiting until the maturity for trader to realize all gains and losses, 
+//        the clearinghouse requires all positions to recognize profits as they accrue daily.
+//        (Investments, p.725)
+//     */
+//     margin(k, t) += absolute_return_on_asset_k_at_t;
+//   }
+  
+//   // Update of the portfolio return, adding the k^th assets return
+//   absolute_return_t += absolute_return_on_asset_k_at_t;
+  
+//   // No additive_cost on a null delta since there will be no transaction
+//   real delta_ = delta(k, t);
+//   real p_kt = price(k, t);
+//   portfolio_value[t] += abs(w_kt)*p_kt;
+  
+//   real t_cost = 0;
+//   if( delta_ != 0.0 ) //To change for 0 when will pass to units!!!
+//   {
+//     t_cost = additive_cost + multiplicative_cost[k]*delta_;
+//     transaction_cost += t_cost;
+//   }
+  
+//   if(assetwise_lret.isNotEmpty())
+//     assetwise_lret[k] += (relative_value-t_cost);
+  
+//   if(margin_management)
+//   {
+//     // Checkout if a margin call is needed
+//     //check_margin(k, t); PAS D'APPELS DE MARGE POUR L'INSTANT!!!
+//   }
+// }
+
+// void FuturesTrader::time_step_relative_return(real& relative_return, Vec& assetwise, 
+//                                               const real& relative_sum, const real& previous_value,
+//                                               const real& transaction_cost, const real& risk_free_return) const
+// {
+//   cout << "relative_return: " << relative_return << endl
+//        << "assetwise: " << assetwise << endl
+//        << "relative_sum: " << relative_sum << endl
+//        << "previous_value: " << previous_value << endl
+//        << "transaction_cost: " << transaction_cost << endl
+//        << "risk_free_return: " << risk_free_return << endl
+//        << endl;
+  
+//   relative_return = 0.0;
+//   if(previous_value != 0.0)
+//   {
+//     relative_return = (relative_sum-transaction_cost)/previous_value;
+//     if(assetwise.isNotEmpty())
+//     {
+//       assetwise /= previous_value;
+      
+//       // Test:
+//       real test = 0;
+//       for(int k=0; k < nb_assets; k++)
+//         test += assetwise[k];
+//       if(!FEQUAL(test, relative_return))
+//       {
+//         cout << "assetwise: " << assetwise << endl
+//              << "previous_value: " << previous_value << endl;
+//         PLERROR("test = %f != %f = relative_return", test, relative_return);
+//       }
+//     }
+//   }
+//   else if(assetwise.isNotEmpty())
+//     assetwise.fill(0.0);
+  
+//   // Adding the return on cash position
+//   relative_return += risk_free_return;
+  
+//   for(int k=0; k < assetwise.length(); k++)
+//     assetwise[k] += risk_free_return;
+  
+//   cout << "relative_return: " << relative_return << endl
+//        << "assetwise: " << assetwise << endl
+//        << "relative_sum: " << relative_sum << endl
+//        << "previous_value: " << previous_value << endl
+//        << "transaction_cost: " << transaction_cost << endl
+//        << "risk_free_return: " << risk_free_return << endl
+//        << endl;
+// }
+
+void FuturesTrader::assetwise_management(const int& k, const int& t, const real& risk_free_return,
+                                         Vec& assetwise, real& previous_value, 
+                                         real& absolute_return, real& transaction_cost, 
+                                         int previous_t /*-1*/) const
+{ 
+  bool margin_management = true;
+  if(previous_t == -1)
+  {
+    previous_t = t-horizon;
+    margin_management = false;
+  }
+  
+  if(margin_management)
+  {
+    // Marking the market: initializing the current margin to the ancient one
+    // PLUS the risk free rate return
+    margin(k, t) = margin(k, t-1) * (1.0 + risk_free_return);
+  }
+  
+  real w_kt = weight(k, t);
+  // Relative return computation
+  if (w_kt == 0.0)
+    return;
+  
+  // Previous and current prices: for returns computation
+  real previous_price_k = price(k, previous_t);
+  real p_kt = price(k, t);
+
+  // Updates
+  real absolute_position = abs(w_kt);
+  previous_value += absolute_position * previous_price_k;
+  portfolio_value[t] += absolute_position * p_kt;
+  
+  // The abolute return on asset k at time t. The absolute return computation can NOT 
+  // be done by the absolute_return method since previous_t can be passed as an arg!
+  real absolute_return_on_asset_k_at_t = w_kt * (p_kt - previous_price_k);
+  absolute_return += absolute_return_on_asset_k_at_t;
+
+  if(margin_management)
+  {
+    /* Marking the market: 
+       Instead of waiting until the maturity for trader to realize all gains and losses, 
+       the clearinghouse requires all positions to recognize profits as they accrue daily.
+       (Investments, p.725)
+    */
+    margin(k, t) += absolute_return_on_asset_k_at_t;
+  }
+  
+  // Transaction Costs: No additive_cost on a null delta since there will be no transaction
+  real delta_ = delta(k, t);  
+  real t_cost = 0;
+  if( delta_ != 0.0 ) //To change for 0 when will pass to units!!!
+  {
+    t_cost = additive_cost + multiplicative_cost[k]*delta_;
+    transaction_cost += t_cost;
+  }
+  assetwise[k] += absolute_return_on_asset_k_at_t - t_cost;
+  
+  if(margin_management)
+  {
+    // Checkout if a margin call is needed
+    //check_margin(k, t); PAS D'APPELS DE MARGE POUR L'INSTANT!!!
+  }
+}
+
+real FuturesTrader::time_step_relative_return(Vec& assetwise, const real& previous_value, const real& risk_free_return) const
+{
+//   cout << "assetwise: " << assetwise << endl
+//        << "previous_value: " << previous_value << endl
+//        << "risk_free_return: " << risk_free_return << endl
+//        << endl;
+  
+  real relative_return = 0.0;
+  if(previous_value != 0.0)
+  {
+    relative_return = sum(assetwise)/previous_value;
+    
+    // This could have been done before:
+    //      assetwise /= previous_value;
+    //      relative_return = sum(assetwise);
+    // But precision would have been lowered.
+    assetwise /= previous_value;
+  }
+  else
+    assetwise.fill(0.0); // We will consider only the risk_free_return
+  
+
+  // Adding the return on cash position
+  assetwise += risk_free_return;
+  relative_return += risk_free_return;
+  
+//   cout << "assetwise: " << assetwise << endl
+//        << "previous_value: " << previous_value << endl
+//        << "risk_free_return: " << risk_free_return << endl
+//        << endl;
+
+  return relative_return;
+}
+
+real FuturesTrader::last_month_relative_return(const int& t) const
+{
+  if(last_day_of_previous_month == -1)
+    for(int last=t-1; last > 0; last--)
+      if(is_last_day_of_month(last))
+      { last_day_of_previous_month = last; break; }
+  
+  real last_month_risk_free_return = exp(log(risk_free(last_day_of_previous_month) + 1.0)/12.0) - 1.0;
+//    cout << "monthly_risk_free_return: " << monthly_risk_free_return << endl;
+  
+  Vec assetwise_ret(25, 0.0);
+  real last_month_value=0.0; 
+  real last_month_absolute_return=0.0;
+  real last_month_transaction_cost=0.0;
+  
+  for(int k=0; k < nb_assets; k++)
+  {
+//       cout << "k: " << k << "  " << "t: " << t << endl
+//            << "monthly_risk_free_return: " << monthly_risk_free_return << endl 
+//            << "monthly_previous_value_t : " << monthly_previous_value_t  << endl
+//            << "monthly_absolute_return_t : " << monthly_absolute_return_t  << endl
+//            << "monthly_relative_sum : " << monthly_relative_sum  << endl
+//            << "no_assetwise_ret : " << no_assetwise_ret  << endl
+//            << "monthly_transaction_cost : " << monthly_transaction_cost  << endl
+//            << "last_day_of_previous_month : " << last_day_of_previous_month  << endl
+//            << endl;
+    
+    assetwise_management(k, t, last_month_risk_free_return, 
+                         assetwise_ret, last_month_value, 
+                         last_month_absolute_return, last_month_transaction_cost,
+                         last_day_of_previous_month);
+  }
+  
+  last_day_of_previous_month = t;
+  return time_step_relative_return(assetwise_ret, last_month_value, last_month_risk_free_return);  
+}
+
 void FuturesTrader::trader_test(int t, VMat testset, PP<VecStatsCollector> test_stats,
     VMat testoutputs, VMat testcosts) const
 {
@@ -120,11 +372,8 @@ void FuturesTrader::trader_test(int t, VMat testset, PP<VecStatsCollector> test_
   portfolio_value[t] = 0;
   real previous_value_t = 0;
   real absolute_return_t = 0;
-  real relative_sum = 0;
-  Vec assetwise_lret(assetwise_log_returns ? nb_assets : 0);
-  if(assetwise_log_returns)
-    assetwise_lret.fill(0.0);
-
+  Vec assetwise_lret(nb_assets, 0.0);
+  
   real daily_risk_free_return = exp(log(1.0+risk_free(t-horizon))/252.0) - 1.0;
   if (is_missing(daily_risk_free_return))
   {
@@ -132,111 +381,34 @@ void FuturesTrader::trader_test(int t, VMat testset, PP<VecStatsCollector> test_
     daily_risk_free_return = 0;
   }
   for(int k=0; k < nb_assets; k++)
-  { 
-    real w_kt = weight(k, t);
-
-    // Marking the market: initializing the current margin to the ancient one
-    // PLUS the risk free rate return
-    margin(k, t) = margin(k, t-1) * (1.0 + daily_risk_free_return);
-
-    // Relative return computation
-    if (w_kt != 0.0)
-    {
-      // In regards of the relative return...
-      real p_price = price(k, t-horizon);
-      real p_value = w_kt * p_price;
-      previous_value_t += abs(p_value);
-      real relative_value = p_value * (relative_return(k, t)-1.0);
-      relative_sum += relative_value;
-
-      // The abolute return on asset k at time t
-      real absolute_return_on_asset_k_at_t = w_kt * absolute_return(k, t);
-
-      /* Marking the market: 
-          Instead of waiting until the maturity for trader to realize all gains and losses, 
-          the clearinghouse requires all positions to recognize profits as they accrue daily.
-          (Investments, p.725)
-      */
-      margin(k, t) += absolute_return_on_asset_k_at_t;
-      
-      // Update of the portfolio return, adding the k^th assets return
-      absolute_return_t += absolute_return_on_asset_k_at_t;
-
-      // No additive_cost on a null delta since there will be no transaction
-      real delta_ = delta(k, t);
-      real p_kt = price(k, t);
-      portfolio_value[t] += abs(w_kt)*p_kt;
-
-      real t_cost = 0;
-      if( delta_ != 0.0 ) //To change for 0 when will pass to units!!!
-      {
-        t_cost = additive_cost + multiplicative_cost[k]*delta_;
-        transaction_cost += t_cost;
-      }
-
-      if(assetwise_log_returns)
-        assetwise_lret[k] += (relative_value-t_cost);
-
-      // Checkout if a margin call is needed
-      //check_margin(k, t); PAS D'APPELS DE MARGE POUR L'INSTANT!!!
-    }
-  }
-
-  transaction_costs[t] = transaction_cost;
-  absolute_return_t += previous_value_t*daily_risk_free_return - transaction_cost;
-
-  real relative_return_t = 0; 
-  if(previous_value_t != 0.0)
-  {
-    relative_return_t += (relative_sum-transaction_cost)/previous_value_t;
-    if(assetwise_log_returns)
-      assetwise_lret /= previous_value_t;
-    
-    // Test:
-//     real test = 0;
-//     for(int k=0; k < nb_assets; k++)
-//       test += assetwise_lret[k];
-//     if(!FEQUAL(test, relative_return_t))
-//     {
-//       cout << "assetwise_lret: " << assetwise_lret << endl
-//            << "previous_value_t: " << previous_value_t << endl;
-//       PLERROR("test = %f != %f = relative_return_t", test, relative_return_t);
-//     }
-  }
-  else if(assetwise_log_returns)
-    assetwise_lret.fill(0.0);
+    assetwise_management(k, t, daily_risk_free_return, 
+                         assetwise_lret, previous_value_t, 
+                         absolute_return_t, transaction_cost);
   
-  // Adding the return on cash position
-  relative_return_t += daily_risk_free_return;
-  for(int k=0; k < nb_assets; k++)
-    assetwise_lret[k] += daily_risk_free_return;
+  transaction_costs[t] = transaction_cost;
 
-  real monthly_turnover = sum(transaction_costs,true)/(sum(portfolio_value,true)/12.0);
-  Vec update = advisor->errors(t).copy();
-
+  real relative_return_t = time_step_relative_return(assetwise_lret, previous_value_t, daily_risk_free_return);
+  
+  // See trainCostNames
+  //real monthly_turnover = sum(transaction_costs,true)/(sum(portfolio_value,true)/12.0);
+  
+  // Computing the errors
+  real tbill_log_return = log(1.0+daily_risk_free_return);
+  absolute_return_t += previous_value_t*daily_risk_free_return - transaction_cost;
   real log_return = log(1.0+relative_return_t);
   if(assetwise_log_returns)
     assetwise_lret = log(1.0+assetwise_lret);
 
-  real tbill_log_return = log(1.0+daily_risk_free_return);
-  update.append(absolute_return_t);
-  cout << "absolute_return_"<<t<<": " << absolute_return_t << endl;
+  real monthly_log_return = MISSING_VALUE;
+  if(last_day_of_month_index != -1 && is_last_day_of_month(t))
+    monthly_log_return = log(1.0+last_month_relative_return(t));
   
-  update.append(log_return);
-  if(assetwise_log_returns)
-    update.append(assetwise_lret);
-
-  update.append(monthly_turnover);
-  update.append(tbill_log_return);
-  update.append(log_return - tbill_log_return);
+  real sp500_log_return = MISSING_VALUE;
   if(sp500 != "")
-  {
-    real sp500_log_return = log(sp500_price(t)/sp500_price(t-horizon));
-    update.append(sp500_log_return);
-    update.append(log_return - sp500_log_return);
-  }
+    sp500_log_return = log(sp500_price(t)/sp500_price(t-horizon));
+  
+  Vec update = updateCosts(t, tbill_log_return, absolute_return_t, log_return, assetwise_lret, monthly_log_return, sp500_log_return);
   test_stats->update(update);
-
   if (testoutputs) testoutputs->appendRow(portfolios(t));
   predictions(t) << portfolios(t);
   if (testcosts) testcosts->appendRow(update);
@@ -289,10 +461,6 @@ void FuturesTrader::declareOptions(OptionList& ol)
                 "of the column containing the rollover information.\n"
                 "Default: \"rollover\"");
 
-  declareOption(ol, "assetwise_log_returns", &FuturesTrader::assetwise_log_returns, OptionBase::buildoption,
-                "Enables the assetwise computation of the log returns\n"
-                "Default: false");
-
   declareOption(ol, "leverage", &FuturesTrader::leverage,
                 OptionBase::buildoption,
                 "The ratio between the value of the contracts we are in and the margin we have.\n"
@@ -305,34 +473,6 @@ void FuturesTrader::declareOptions(OptionList& ol)
   
   inherited::declareOptions(ol);
 }
-
-/*!
-  The advisor cost names + other returns
-*/
-TVec<string> FuturesTrader::getTrainCostNames() const
-{
-  TVec<string> cost_names = advisor->getTrainCostNames();
-  cost_names.append("absolute_return");
-
-  cost_names.append("log_return");
-  if(assetwise_log_returns)
-    for(int k=0; k < assets_names.length(); k++)
-      cost_names.append(assets_names[k] + "_log_return");
-
-  cost_names.append("turnover");
-  cost_names.append("tbill_log_return"); // TBILL(log_Rt)
-  cost_names.append("relative_tbill_log_return"); // model(log_Rt) - TBILL(log_Rt)
-  if (sp500.size() > 0)
-  {
-    cost_names.append("sp500_log_return"); // SP500(log_Rt)
-    cost_names.append("relative_sp500_log_return"); // model(log_Rt) - SP500(log_Rt)
-  }
-
-  return cost_names;
-}
-
-TVec<string> FuturesTrader::getTestCostNames() const
-{ return FuturesTrader::getTrainCostNames(); }
 
 void FuturesTrader::computeOutputAndCosts(const Vec& input,
     const Vec& target, Vec& output, Vec& costs) const

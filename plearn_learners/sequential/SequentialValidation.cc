@@ -217,7 +217,9 @@ void SequentialValidation::run()
     VMat sub_train = dataset.subMatRows(0,t); // excludes t, last training pair is (t-1-horizon,t-1)
     VMat sub_test = dataset.subMatRows(0, t+horizon);
 
-    string splitdir = dir+"train_t="+tostring(t)+slash;
+    string splitdir = dir+"train_t="+tostring(t)+"/";
+    if (save_data_sets || save_initial_model)
+      force_mkdir(splitdir);
     if (save_data_sets)
       PLearn::save(splitdir+"training_set.psave", sub_train);
     if (save_initial_model)

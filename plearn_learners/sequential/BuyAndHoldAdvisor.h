@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BuyAndHoldAdvisor.h,v 1.2 2004/01/26 21:07:24 dorionc Exp $ 
+   * $Id: BuyAndHoldAdvisor.h,v 1.3 2004/02/16 22:26:08 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -63,7 +63,8 @@ protected:
   // *********************
   // * protected members *
   // *********************
-  mutable bool did_buy;
+  virtual void build_from_train_set();
+  virtual void train_test_core(const Vec& input, int t, VMat testoutputs=0, VMat testcosts=0) const;
 
 public:
 
@@ -89,16 +90,7 @@ public:
   // *****************************
   // * public method to overload *
   // *****************************
-
-  virtual void train_test_core(VMat dataset, int t) const;
   
-  // This function must be overloaded!
-  virtual void train();
-
-  // This function must be overloaded!  
-  virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
-                    VMat testoutputs=0, VMat testcosts=0) const;
-
   // This function must be overloaded!  
   virtual TVec<string> getTrainCostNames() const;
 

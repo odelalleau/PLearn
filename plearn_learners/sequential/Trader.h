@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.h,v 1.13 2003/12/02 15:40:54 dorionc Exp $ 
+ * $Id: Trader.h,v 1.14 2004/02/16 22:26:09 dorionc Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -86,6 +86,36 @@ private:
   Vec stop_loss_values;        
 
 protected:
+
+  // *********************
+  // * protected options *
+  // *********************
+
+  /*!
+    Enables the assetwise computation of the log returns
+    Default: false
+  */ 
+  bool assetwise_log_returns; 
+
+  /*!
+    If not empty, the trader will also compute monthly returns at each last day 
+    of month, given that the string indicates the name of the boolean column
+    of the data vmat indicating the if a day is the last one of the month.
+    Default: "".
+  */
+  string last_day_of_month_column;
+  
+  // *********************
+  // * protected members *
+  // *********************
+  
+  /* 
+     The following are used to manage the month returns calculation if 
+     last_day_of_month_column is not empty.
+  */
+  int last_day_of_month_index; //!< the index corresponding to last_day_of_month_column
+  mutable int last_day_of_previous_month; 
+  
 
   //! A reference to the largest of train_set/testset  
   mutable VMat internal_data_set;   
@@ -242,8 +272,14 @@ protected:
 public:
   void assets_info(TVec<int>& info, const string& info_tag) const;
 
+  //! Returns the name of the asset k
+  string getAssetName(int k) const { return assets_names[k]; }
+
+  //! Returns the asset's log return cost column's name.
+  string getAssetCost(int k) const { return assets_names[k] + "_log_return"; }
+  
   //! Returns the index of the assets for which the column is a price, -1 if none.
-  int price_of_which_asset(int col);
+  int price_of_which_asset(int col) const;
 
   //! Returns the price of the given asset at a given time. 
   real price(int k, int t) const;
@@ -251,7 +287,7 @@ public:
   //! Returns the price of the S&P500 at a given time. 
   real sp500_price(int t) const;
 
-  VMat getPricesSubMat(){ return internal_data_set.columns(assets_price_indices); }
+  VMat getPricesSubMat() const { return internal_data_set.columns(assets_price_indices); }
   
   //******************
   //! Returns the return on the given asset at a given time. 
@@ -263,13 +299,18 @@ public:
   //******************
   
   //! Returns the price of the given asset at a given time. 
-  inline bool is_tradable(int k, int t)
-    { return train_set(t, assets_tradable_indices[k]); }
-    
+  inline bool is_tradable(int k, int t) const
+    { return internal_data_set(t, assets_tradable_indices[k]); }
+
+  inline bool monthly_version(){ return (last_day_of_month_column != ""); }
+
+  inline bool is_last_day_of_month(int t) const
+    { return internal_data_set(t, last_day_of_month_index); }
+
   //! Calls the inherited::setTrainingSet and the advisor one
   virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
-  int N(){ return nb_assets; }
+  int N() const { return nb_assets; }
   
   //**********************
   // Learner Methods     *   
@@ -300,7 +341,19 @@ public:
   */
   virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
                     VMat testoutputs=0, VMat testcosts=0) const;
-  
+
+
+  /*! 
+    This method return a Vec with the costs passed as arg in the proper order:
+    to be modified accordingly each time getTestCostNames is modified
+  */
+  Vec updateCosts(const int& t, const real& tbill_log_return, const real& absolute_return, const real& log_return, 
+                  const Vec& assetwise_log_return=Vec(), const real& monthly_log_return=MISSING_VALUE,
+                  const real& sp500_log_return=MISSING_VALUE) const;
+    
+  virtual TVec<string> getTrainCostNames() const;
+  virtual TVec<string> getTestCostNames() const;
+    
   virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
                                      Vec& output, Vec& costs) const;
   

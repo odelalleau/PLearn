@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FinancialAdvisor.h,v 1.3 2003/12/02 15:40:54 dorionc Exp $ 
+   * $Id: FinancialAdvisor.h,v 1.4 2004/02/16 22:26:08 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -79,13 +79,25 @@ public:
   //! simply calls inherited::build() then build_()
   virtual void build();
   
-  //! *** SUBCLASS WRITING: ***
-  virtual void train() = 0;
-  
-  //! *** SUBCLASS WRITING: ***
+  /*! *** SUBCLASS WRITING: ***
+    A FinancialAdvisor subclass should (almost) never overload train 
+    and test methods. Since the update behavior of a financial advisor is
+    imposed by the sequential nature of the problem, the train and cost 
+    methods are calling the train_test_core method, which MUST be overloaded by 
+    the subclass. The build_from_train_set method will be called at the begin of
+    train if and only if build_complete is false (the default build_from_train_set 
+    method does nothing).
+  */
+protected:
+  bool build_complete;
+  virtual void build_from_train_set();
+  virtual void train_test_core(const Vec& input, int t, VMat testoutputs=0, VMat testcosts=0) const = 0;
+public:
+  virtual void train();  
   virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
-                      VMat testoutputs=0, VMat testcosts=0) const =0;
+                      VMat testoutputs=0, VMat testcosts=0) const;
   
+
   virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
                                        Vec& output, Vec& costs) const;
   
