@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io.h,v 1.10 2004/02/26 06:51:20 nova77 Exp $
+   * $Id: pl_io.h,v 1.11 2004/03/04 15:09:18 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,18 +48,19 @@
 #ifndef pl_io_INC
 #define pl_io_INC
 
-#include <cctype>
+//#include <cctype>
 #include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <string>
-#include <vector>
-#include <map>
-#include <set>
+//#include <iomanip>
+//#include <fstream>
+//#include <string>
+//#include <vector>
+//#include <map>
+//#include <set>
 
-#include "PStream.h"
-#include "stringutils.h"
-#include "fileutils.h"
+//#include "PStream.h"
+//#include "fileutils.h"
+#include "pl_math.h"        //!< For 'real'.
+//#include "stringutils.h"
 
 namespace PLearn {
 using namespace std;

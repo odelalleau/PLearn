@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io.cc,v 1.6 2004/02/20 21:11:44 chrish42 Exp $
+   * $Id: pl_io.cc,v 1.7 2004/03/04 15:09:18 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -46,10 +46,11 @@
 
 /*! \file PLearnLibrary/PLearnCore/pl_io.cc */
 
-#include <limits>
+//#include <limits>
 #include "pl_io.h"
 #include "plerror.h"
-#include "pl_math.h"
+//#include "pl_math.h"
+#include "byte_order.h" //!< For endianswap.
 
 namespace PLearn {
 using namespace std;

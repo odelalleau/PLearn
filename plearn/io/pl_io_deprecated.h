@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io_deprecated.h,v 1.6 2004/02/26 06:55:53 nova77 Exp $
+   * $Id: pl_io_deprecated.h,v 1.7 2004/03/04 15:09:18 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -48,9 +48,11 @@
 #ifndef pl_io_deprecated_INC
 #define pl_io_deprecated_INC
 
-#include "pl_io.h"
+//#include "pl_io.h"
 #include "plerror.h"
-#include <cstdio>
+//#include <cstdio>
+#include "byte_order.h"   //!< For endianswap.
+#include <iostream>       //!< For stream stuff.
 
 namespace PLearn {
 using namespace std;
