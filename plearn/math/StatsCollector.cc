@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.21 2003/10/14 20:39:30 ducharme Exp $
+   * $Id: StatsCollector.cc,v 1.22 2003/10/30 04:34:40 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -154,8 +154,8 @@ void StatsCollector::update(real val, real weight)
     nmissing_ += weight;
   else
   {
-    sum_ += val * weight;
-    sumsquare_ += val*val * weight;
+    //sum_ += val * weight;
+    //sumsquare_ += val*val * weight;
     last_ = val;
     if(nnonmissing_==0)                      // first value encountered
       min_ = max_ = first_ = last_ = val;
@@ -164,7 +164,10 @@ void StatsCollector::update(real val, real weight)
     else if(val>max_)
       max_ = val;
     nnonmissing_ += weight;
-        
+    double sqval = (val-first_)*(val-first_);
+    sum_ += (val-first_) * weight;
+    sumsquare_ += sqval * weight;
+    
     if(maxnvalues>0)  // also remembering statistics inside values ranges
     {
       map<real,StatsCollectorCounts>::iterator it;        
