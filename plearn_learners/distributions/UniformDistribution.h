@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UniformDistribution.h,v 1.3 2004/05/26 16:05:57 tihocan Exp $ 
+   * $Id: UniformDistribution.h,v 1.4 2004/06/21 14:56:51 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -44,24 +44,23 @@
 #ifndef UniformDistribution_INC
 #define UniformDistribution_INC
 
-#include "PDistribution.h"
+#include "UnconditionalDistribution.h"
 
 namespace PLearn {
 using namespace std;
 
-class UniformDistribution: public PDistribution
+class UniformDistribution: public UnconditionalDistribution
 {
 
 private:
 
-  typedef PDistribution inherited;  
+  typedef UnconditionalDistribution inherited;  
 
 protected:
 
   // *********************
   // * protected options *
   // *********************
-
     
 public:
 

@@ -34,23 +34,23 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SpiralDistribution.h,v 1.6 2004/05/26 16:06:12 tihocan Exp $ 
+   * $Id: SpiralDistribution.h,v 1.7 2004/06/21 14:56:32 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file SpiralDistribution.h */
 #ifndef SpiralDistribution_INC
 #define SpiralDistribution_INC
 
-#include "PDistribution.h"
+#include "UnconditionalDistribution.h"
 
 namespace PLearn {
 using namespace std;
 
-class SpiralDistribution: public PDistribution
+class SpiralDistribution: public UnconditionalDistribution
 {
 public:
 
-  typedef PDistribution inherited;
+  typedef UnconditionalDistribution inherited;
 
   // ************************
   // * public build options *
