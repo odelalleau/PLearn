@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: NaryVariable.h,v 1.8 2004/02/26 07:49:34 nova77 Exp $
+   * $Id: NaryVariable.h,v 1.9 2004/04/27 16:06:12 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -58,7 +58,8 @@ using namespace std;
 
 class NaryVariable: public Variable
 {
-    
+  //typedef NaryVariable inherited;
+
 protected:
   //!  Default constructor for persistence
   NaryVariable() {}

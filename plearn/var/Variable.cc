@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.cc,v 1.13 2004/03/09 18:34:49 tihocan Exp $
+   * $Id: Variable.cc,v 1.14 2004/04/27 16:06:12 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -225,7 +225,8 @@ void Variable::build_()
 { 
   int l, w;
   recomputeSize(l, w);
-  resize(l,w);
+  if (l && w)
+    resize(l,w);
 }
 
 void Variable::build()

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: BinaryVariable.h,v 1.9 2004/02/20 21:11:49 chrish42 Exp $
+   * $Id: BinaryVariable.h,v 1.10 2004/04/27 16:06:12 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,22 +53,18 @@ using namespace std;
 class BinaryVariable: public Variable
 {
   typedef Variable inherited;
-
-protected:
-  BinaryVariable() {}
-  static void declareOptions(OptionList & ol);
   
 protected:
   Var input1;
   Var input2;
 
 public:
+  BinaryVariable() {}
   BinaryVariable(Variable* v1, Variable* v2, int thelength, int thewidth);
   PLEARN_DECLARE_ABSTRACT_OBJECT(BinaryVariable);
+  static void declareOptions(OptionList & ol);
 
   virtual void setParents(const VarArray& parents);
-
-  
   
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
   virtual bool markPath();

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: NaryVariable.cc,v 1.8 2004/02/20 21:11:51 chrish42 Exp $
+   * $Id: NaryVariable.cc,v 1.9 2004/04/27 16:06:12 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,11 +47,11 @@ using namespace std;
 
 /** NaryVariable **/
 
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(NaryVariable, "ONE LINE DESCR", "NO HELP");
+
 NaryVariable::NaryVariable(const VarArray& the_varray, int thelength, int thewidth)
   :Variable(thelength,thewidth), varray(the_varray) {}
 
-
-PLEARN_IMPLEMENT_ABSTRACT_OBJECT(NaryVariable, "ONE LINE DESCR", "NO HELP");
 
 
 void NaryVariable::declareOptions(OptionList& ol)
