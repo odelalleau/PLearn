@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianKernel.h,v 1.10 2005/02/07 17:54:21 lamblin Exp $
+   * $Id: GaussianKernel.h,v 1.11 2005/02/07 19:57:43 lamblin Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -85,10 +85,6 @@ protected:
 
   virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  inline real evaluateFromSquaredNormOfDifference(real sqnorm_of_diff) const;
-
-  inline real evaluateFromDotAndSquaredNorm(real sqnorm_x1, real dot_x1_x2, real sqnorm_x2) const;
-
   //!  This method precomputes the squared norm for all the data to later speed up evaluate methods
   virtual void setDataForKernelMatrix(VMat the_data);
   
@@ -106,6 +102,11 @@ protected:
   static void declareOptions(OptionList& ol);  
 
 private:
+
+  inline real evaluateFromSquaredNormOfDifference(real sqnorm_of_diff) const;
+
+  inline real evaluateFromDotAndSquaredNorm(real sqnorm_x1, real dot_x1_x2, real sqnorm_x2) const;
+
   void build_();
 };
 
