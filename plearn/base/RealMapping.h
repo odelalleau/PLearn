@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: RealMapping.h,v 1.19 2004/07/21 16:30:50 chrish42 Exp $
+   * $Id: RealMapping.h,v 1.20 2005/02/08 21:33:59 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -82,7 +82,7 @@ class RealRange
     void write(ostream& out) const
     { out << leftbracket << low << ' ' << high << rightbracket; }
 
-    void read(istream& in)
+    void read(PStream& in)
     { in >> leftbracket >> low >> high >> rightbracket; checkbrackets(); }
 
 
@@ -115,7 +115,7 @@ class RealRange
 
   inline void write(ostream& out, const RealRange& range) { range.write(out); }
   inline ostream& operator<<(ostream& out, const RealRange& range) { range.print(out); return out; } 
-  inline void read(istream& in, RealRange& range) { range.read(in); }
+  inline void read(PStream& in, RealRange& range) { range.read(in); }
 
 PStream& operator<<(PStream& out, const RealRange& x);
 PStream& operator>>(PStream& in, RealRange &x);
@@ -224,7 +224,7 @@ PStream& operator>>(PStream& in, RealRange &x);
 
     virtual void print(ostream& out) const;
     virtual void write(ostream& out) const;
-    virtual void read(istream& in);
+    virtual void read(PStream& in);
 
     real maxMappedToValue();
 

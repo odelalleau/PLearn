@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org 
 
 /* *******************************************************      
-   * $Id: RealMapping.cc,v 1.21 2004/11/24 18:16:20 tihocan Exp $
+   * $Id: RealMapping.cc,v 1.22 2005/02/08 21:33:57 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -230,7 +230,7 @@ void RealMapping::declareOptions(OptionList& ol)
     writeFooter(out,"RealMapping");
   }
 
-  void RealMapping::read(istream& in)
+  void RealMapping::read(PStream& in)
   {
     clear();//mapping.resize(0);
     missing_mapsto = MISSING_VALUE;
@@ -242,7 +242,7 @@ void RealMapping::declareOptions(OptionList& ol)
     
     if(c=='<')
       {
-        in.unget();
+        in.putback(c);
         int version = readHeader(in,"RealMapping");
         if(version!=0)
           PLERROR("In RealMapping::read reading of version #%d not implemented",version);
@@ -282,7 +282,7 @@ void RealMapping::declareOptions(OptionList& ol)
         else 
         {
           string str;
-          getline(in,str,'-');
+          in.getline(str, '-');
           str=upperstring(removeblanks(str));
           if(str=="MISSING")
           {
