@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LLEKernel.cc,v 1.6 2004/07/20 21:53:44 tihocan Exp $ 
+   * $Id: LLEKernel.cc,v 1.7 2004/07/21 15:55:55 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -149,24 +149,49 @@ void LLEKernel::computeGramMatrix(Mat K) const {
 // evaluate //
 //////////////
 real LLEKernel::evaluate(const Vec& x1, const Vec& x2) const {
-  PLERROR("In LLEKernel::evaluate - Not implemented");
-  return 0;
+  static int j1, j2;
+  if (isInData(x1, &j1)) {
+    if (isInData(x2, &j2)) {
+      // Both points are in the training set.
+      return evaluate_i_j(j1, j2);
+    } else {
+      // Only x1 is in the training set.
+      return evaluate_i_x(j1, x2);
+    }
+  } else {
+    if (isInData(x2, &j2)) {
+      // Only x2 is in the training set.
+      return evaluate_i_x(j2, x1);
+    } else {
+      // Neither x1 nor x2 is in the training set.
+      return 0;
+    }
+  }
 }
 
 //////////////////
 // evaluate_i_j //
 //////////////////
 real LLEKernel::evaluate_i_j(int i, int j) const {
+  // When evaluated on training points, we must ignore the nearest neighbor
+  // (because it is the point itself).
+  real result;
+  int tmp = reconstruct_ker->ignore_nearest;
+  reconstruct_ker->ignore_nearest = 1;
   if (i == j) {
-    return
+    result =
       fabs(reconstruct_coeff) +
       2 * reconstruct_ker->evaluate_i_j(i,i) -
       reconstruct_ker->evaluate_sum_k_i_k_j(i,i);
+    reconstruct_ker->ignore_nearest = tmp;
+    return result;
   } else {
-    return
+    result =
       reconstruct_ker->evaluate_i_j(j,i) +
       reconstruct_ker->evaluate_i_j(i,j) -
       reconstruct_ker->evaluate_sum_k_i_k_j(i,j);
+    reconstruct_ker->ignore_nearest = tmp;
+    return result;
   }
 }
 
@@ -174,35 +199,27 @@ real LLEKernel::evaluate_i_j(int i, int j) const {
 // evaluate_i_x //
 //////////////////
 real LLEKernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) const {
-  static int j;
-  PLERROR("In LLEKernel::evaluate_i_x - Not implemented");
-  if (isInData(x, &j)) {
-    return evaluate_i_j(i, j);
-  } else {
-    return reconstruct_coeff * reconstruct_ker->evaluate_x_i(x, i, squared_norm_of_x);
-  }
+  return evaluate_i_x_again(i, x, squared_norm_of_x, true);
 }
 
 ////////////////////////
 // evaluate_i_x_again //
 ////////////////////////
 real LLEKernel::evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x, bool first_time) const {
-  static int j;
-  static bool is_training_point;
   if (reconstruct_coeff == 0) {
     // This kernel should only be evaluated on training points.
     if (first_time) {
-      is_training_point = isInData(x, &j);
+      x_is_training_point = isInData(x, &x_index);
     }
-    if (!is_training_point)
+    if (!x_is_training_point)
       return 0;
-    return evaluate_i_j(i, j);
+    return evaluate_i_j(i, x_index);
   } else if (reconstruct_coeff > 0) {
     if (first_time) {
-      is_training_point = isInData(x, &j);
+      x_is_training_point = isInData(x, &x_index);
     }
-    if (is_training_point) {
-      return evaluate_i_j(i, j);
+    if (x_is_training_point) {
+      return evaluate_i_j(i, x_index);
     } else {
       return reconstruct_coeff * reconstruct_ker->evaluate_x_i_again(x, i, squared_norm_of_x, first_time);
     }
@@ -236,7 +253,13 @@ void LLEKernel::setDataForKernelMatrix(VMat the_data) {
   if (build_in_progress)
     return;
   inherited::setDataForKernelMatrix(the_data);
+  // We ignore the nearest neighbor when computing the reconstruction weights
+  // on the training data.
+  reconstruct_ker->ignore_nearest = 1;
   reconstruct_ker->setDataForKernelMatrix(the_data);
+  // But we do not ignore it anymore when computing the reconstruction weights
+  // on new samples.
+  reconstruct_ker->ignore_nearest = 0;
 }
 
 } // end of namespace PLearn
