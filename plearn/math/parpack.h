@@ -58,6 +58,30 @@ using namespace std;
   (as given by n_evalues upon return, and the new size of e_vectors/e_values).
   Note also that e_vectors might be internally and temporarily 
   re-allocated to a larger size, with at most 1.5 times more rows.
+
+  If you want the eigen values and eigen vectors to be returned in the same order 
+  as in plapack's eigenVecOfSymmMat, "according_to_magnitude" must be set to false
+  and you must swap the eigen values and the eigen vectors. 
+  i.e. do something like:
+ .............................................................
+  Mat evectors(nb_principal_components,train_set.length());
+  Vec evalues(nb_principal_components);
+  int status;
+  long int n_ev=nb_principal_components;
+
+  status = eigenSparseSymmMat(A, evalues, 
+                              evectors, n_ev, 300, 
+                              true, true, false);
+  if (status<0 || status>1)
+    PLERROR("MyClass: eigenSparseSymmMat return error code number %d (see ARPACK dsaupd INFO variable)", status);
+  if (status==1 || n_ev != nb_principal_components)
+    PLERROR("MyClass: eigenSparseSymmMat computed only %d e-vectors rather than the required %d",
+            n_ev, nb_principal_components);
+
+  evalues.swap();
+  evectors.swapUpsideDown();
+ .............................................................
+
 */
 
 template<class MatT>
