@@ -60,6 +60,9 @@ public:
   //! Size of first training set (default: 1)
   int init_train_size;
 
+  //! The last time-step to use for testing (Default = -1, i.e. use all data)
+  int last_test_time;
+  
   //! The training/test set
   VMat dataset;
 

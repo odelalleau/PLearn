@@ -53,6 +53,7 @@ PLEARN_IMPLEMENT_OBJECT(
 
 SequentialValidation::SequentialValidation()
   : init_train_size(1),
+    last_test_time(-1),
     expdir(""),
     report_stats(true),
     save_final_model(true),
@@ -122,6 +123,10 @@ void SequentialValidation::declareOptions(OptionList& ol)
                 OptionBase::buildoption,
                 "Size of the first training set. \n");
 
+  declareOption(ol, "last_test_time", &SequentialValidation::last_test_time,
+                OptionBase::buildoption,
+                "The last time-step to use for testing (Default = -1, i.e. use all data)");
+  
   declareOption(ol, "save_final_model", &SequentialValidation::save_final_model,
                 OptionBase::buildoption,
                 "If true, the final model will be saved in model.psave \n");
@@ -176,8 +181,6 @@ void SequentialValidation::run()
   TVec<string> testcostnames = learner->getTestCostNames();
   TVec<string> traincostnames = learner->getTrainCostNames();
  
-  // int traincostsize = traincostnames.size();
-  int testcostsize = testcostnames.size();
   int outputsize = learner->outputsize();
   int nstats = statnames.length();
   int timewise_nstats = timewise_statnames.length();
@@ -250,10 +253,17 @@ void SequentialValidation::run()
   if (save_test_outputs)
     test_outputs = new FileVMatrix(expdir+"/test_outputs.pmat",0,outputsize);
   if (save_test_costs)
-    test_costs = new FileVMatrix(expdir+"/test_costs.pmat",0,testcostsize);
+    test_costs = new FileVMatrix(expdir+"/test_costs.pmat",0,testcostnames);
 
+  // Some further initializations
+  int maxt = (last_test_time >= 0? last_test_time : dataset.length() - 1);
   int splitnum = 0;
-  for (int t=init_train_size; t<=dataset.length()-1; t++, splitnum++)
+  double weight;
+  Vec input, target;
+  Vec output(learner->outputsize());
+  Vec costs(learner->nTestCosts());
+  
+  for (int t=init_train_size; t <= maxt; t++, splitnum++)
   {
 #ifdef DEBUG
     cout << "SequentialValidation::run() -- sub_train.length = " << t << " et sub_test.length = " << t+horizon << endl;
@@ -270,8 +280,7 @@ void SequentialValidation::run()
     if (save_initial_model)
       PLearn::save(splitdir+"initial_learner.psave",learner);
 
-    // Train
-    //learner->forget(); // PAS CERTAIN!  Doit-on faire un forget a chaque t?
+    // TRAIN
     train_stats->forget();
     learner->setTrainingSet(sub_train, false);
     learner->train();
@@ -282,15 +291,23 @@ void SequentialValidation::run()
     if (save_final_model)
       PLearn::save(splitdir+"final_learner.psave",learner);
 
-    // Test
+    // TEST: simply use computeOutputAndCosts for 1 observation in this
+    // implementation
+    dataset.getExample(t, input, target, weight);
+    test_stats->forget();
+    learner->setTestSet(sub_test);           // temporary hack
+    learner->setCurrentTestTime(t);          // temporary hack
+    learner->computeOutputAndCosts(input, target, output, costs);
+    test_stats->update(costs);
+    test_stats->finalize();
+
+    // Save what is required from the test run
     if (save_data_sets)
       PLearn::save(splitdir+"test_set.psave", sub_test);
-
-    test_stats->forget();
-    learner->setTestSet(sub_test);
-    learner->setCurrentTestTime(t);
-    learner->test(only_test, test_stats, test_outputs, test_costs);
-    test_stats->finalize();
+    if (test_outputs)
+      test_outputs->appendRow(output);
+    if (test_costs)
+      test_costs->appendRow(costs);
     if (save_stat_collectors)
       PLearn::save(splitdir+"test_stats.psave",test_stats);
 
