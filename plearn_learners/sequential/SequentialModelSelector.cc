@@ -55,15 +55,18 @@ void SequentialModelSelector::train()
     pb = new ProgressBar("Training learner",train_set.length());
 
   PP<VecStatsCollector> dummy_stats = new VecStatsCollector();
-  best_model.resize(train_set.length());
+  //best_model.resize(train_set.length());
   for (int t=init_train_size+horizon; t<=train_set.length(); t++)
   {
     int start = max(t-max_train_len,init_train_size-1);
     VMat sub_train = train_set.subMatRows(0,t-horizon); // last training pair is (t-1-2*horizon,t-1-horizon)
+    sub_train->setSizes(train_set->inputsize(), train_set->targetsize(), train_set->weightsize());
     VMat sub_test  = train_set.subMatRows(0,t); // last test pair is (t-1-horizon,t-1) (input,target)
+    sub_test->setSizes(train_set->inputsize(), train_set->targetsize(), train_set->weightsize());
     for (int i=0; i<models.size(); i++)
     {
-      models[i]->setTrainingSet(sub_train);
+      models[i]->setOnlyTrainingSet(sub_train);
+      models[i]->setTrainStatsCollector(dummy_stats);
       models[i]->train();
       models[i]->test(sub_test, dummy_stats); // last cost computed goes at t-1, last prediction at t-1-horizon
       Vec sequence_errors = models[i]->errors.subMat(start+horizon,cost_index,t-start-horizon,1).toVecCopy();  // VERIFIER LES INDICES!!!
@@ -80,12 +83,17 @@ void SequentialModelSelector::train()
     // now train with everything that is available
     for (int i=0; i<models.size(); i++)
     {
-      models[i]->setTrainingSet(train_set);
+      models[i]->setOnlyTrainingSet(train_set);
       if (i == best_model[t])
-        //models[i]->train(train_stats);
+      {
+        models[i]->setTrainStatsCollector(train_stats);
         models[i]->train();
+      }
       else
+      {
+        models[i]->setTrainStatsCollector(dummy_stats);
         models[i]->train();
+      }
     }
 
     if (pb)
@@ -166,15 +174,18 @@ void SequentialModelSelector::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 void SequentialModelSelector::build_()
 {
-  //mean_costs.resize(max_train_len,models.size());
+  best_model.resize(max_seq_len);
   sequence_costs.resize(models.size());
+  for (int i=0; i<models.size(); i++)
+    models[i]->horizon = horizon;
+
   forget();
 }
 
 void SequentialModelSelector::build()
 {
-  inherited::build();
   build_();
+  inherited::build();
 }
 
 void SequentialModelSelector::declareOptions(OptionList& ol)
@@ -211,9 +222,8 @@ real SequentialModelSelector::sequenceCost(const Vec& sequence_errors)
 void SequentialModelSelector::forget()
 {
   last_train_t = init_train_size;
-  best_model.resize(last_train_t);
+  best_model.resize(max_seq_len);
   best_model.fill(0);  // by default
-  //mean_costs.fill(MISSING_VALUE);
   for (int i=0; i<models.size(); i++)
     models[i]->forget();
 }
