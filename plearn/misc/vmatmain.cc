@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.13 2004/01/08 18:55:27 plearner Exp $
+   * $Id: vmatmain.cc,v 1.14 2004/02/20 21:11:47 chrish42 Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -48,7 +48,7 @@
 #include <curses.h>
 
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //! Prints where m1 and m2 differ by more than tolerance
@@ -1214,4 +1214,4 @@ int vmatmain(int argc, char** argv)
   return 0;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

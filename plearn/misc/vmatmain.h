@@ -32,13 +32,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.h,v 1.3 2003/12/15 14:05:27 plearner Exp $
+   * $Id: vmatmain.h,v 1.4 2004/02/20 21:11:47 chrish42 Exp $
    ******************************************************* */
 
 #include "Array.h"
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //! Prints where m1 and m2 differ by more than tolerance
@@ -59,4 +59,4 @@ void plotVMats(char* defs[], int ndefs);
 
 int vmatmain(int argc, char** argv);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.33 2004/02/17 21:07:02 tihocan Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.34 2004/02/20 21:14:45 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -66,7 +66,7 @@
 #include "TransposeProductVariable.h"
 #include "random.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 ConditionalDensityNet::ConditionalDensityNet() 
@@ -1174,4 +1174,4 @@ void ConditionalDensityNet::train()
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

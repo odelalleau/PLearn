@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.h,v 1.11 2004/02/17 14:52:03 tihocan Exp $
+   * $Id: NNet.h,v 1.12 2004/02/20 21:14:46 chrish42 Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -47,7 +47,7 @@
 #include "Optimizer.h"
 //#include "Var_all.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
   class NNet: public PLearner
@@ -160,7 +160,7 @@ using namespace std;
 
   DECLARE_OBJECT_PTR(NNet);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

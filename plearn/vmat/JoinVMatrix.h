@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: JoinVMatrix.h,v 1.5 2003/08/13 08:13:46 plearner Exp $
+   * $Id: JoinVMatrix.h,v 1.6 2004/02/20 21:14:44 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,7 +46,7 @@
 
 #include <vector>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -93,7 +93,7 @@ public:
 
 };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 #endif // JOINVMATRIX_H

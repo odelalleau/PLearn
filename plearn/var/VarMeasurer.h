@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VarMeasurer.h,v 1.2 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: VarMeasurer.h,v 1.3 2004/02/20 21:11:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,7 +46,7 @@
 #include "Measurer.h"
 #include "Var.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -72,7 +72,7 @@ class VarMeasurer: public Measurer
 
 };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ClassifierFromDensity.cc,v 1.6 2004/02/10 16:22:59 tihocan Exp $ 
+   * $Id: ClassifierFromDensity.cc,v 1.7 2004/02/20 21:14:45 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file ClassifierFromDensity.cc */
@@ -45,7 +45,7 @@
 #include "ClassErrorCostFunction.h"
 #include "NegLogProbCostFunction.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 ClassifierFromDensity::ClassifierFromDensity() 
@@ -236,4 +236,4 @@ TVec<string> ClassifierFromDensity::getTrainCostNames() const
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

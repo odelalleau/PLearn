@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ProcessingVMatrix.h,v 1.2 2003/12/05 22:13:45 plearner Exp $ 
+   * $Id: ProcessingVMatrix.h,v 1.3 2004/02/20 21:14:44 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -47,7 +47,7 @@
 #include "SourceVMatrix.h"
 #include "VMatLanguage.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class ProcessingVMatrix: public SourceVMatrix
@@ -109,5 +109,5 @@ public:
 
 };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 #endif

@@ -36,13 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: CrossEntropyVariable.cc,v 1.7 2004/02/18 20:28:42 chapados Exp $
+   * $Id: CrossEntropyVariable.cc,v 1.8 2004/02/20 21:11:50 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "CrossEntropyVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -107,6 +107,6 @@ void CrossEntropyVariable::bprop()
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 

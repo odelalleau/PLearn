@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: stats_utils.h,v 1.3 2004/01/13 22:38:52 yoshua Exp $
+   * $Id: stats_utils.h,v 1.4 2004/02/20 21:11:47 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,7 +46,7 @@
 #include "Mat.h"
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //! Compute the Spearman Rank correlation statistic. It measures
@@ -133,7 +133,7 @@ void KS_test(Vec& v1, Vec& v2, int conv, real& D, real& p_value);
 //! The call sorts v1 and v2.
 real KS_test(Vec& v1, Vec& v2, int conv=10);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 #endif

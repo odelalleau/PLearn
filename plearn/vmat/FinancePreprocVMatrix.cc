@@ -34,14 +34,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FinancePreprocVMatrix.cc,v 1.6 2004/02/19 16:57:35 ducharme Exp $ 
+   * $Id: FinancePreprocVMatrix.cc,v 1.7 2004/02/20 21:14:30 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file FinancePreprocVMatrix.cc */
 #include "FinancePreprocVMatrix.h"
 #include "PDate.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -329,5 +329,5 @@ void FinancePreprocVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>&
   deepCopyField(expiration_index, copies);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

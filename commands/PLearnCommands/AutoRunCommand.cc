@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AutoRunCommand.cc,v 1.2 2004/02/16 20:23:22 tihocan Exp $ 
+   * $Id: AutoRunCommand.cc,v 1.3 2004/02/20 21:11:40 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file AutoRunCommand.cc */
@@ -45,7 +45,7 @@
 //#include "fileutils.h"
 //#include <unistd.h>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //! This allows to register the 'AutoRunCommand' command in the command registry
@@ -97,5 +97,5 @@ void AutoRunCommand::run(const vector<string>& args)
 
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.cc,v 1.14 2004/02/17 14:52:03 tihocan Exp $
+   * $Id: Learner.cc,v 1.15 2004/02/20 21:14:46 chrish42 Exp $
    ******************************************************* */
 
 #include "Learner.h"
@@ -52,7 +52,7 @@
 #include "RemoveRowsVMatrix.h"
 #include "PLMPI.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 Vec Learner::tmp_input; // temporary input vec
@@ -1045,5 +1045,5 @@ PLERROR("Learner::newtrain not yet implemented");
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

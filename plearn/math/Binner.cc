@@ -37,13 +37,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Binner.cc,v 1.5 2003/08/13 08:13:17 plearner Exp $ 
+   * $Id: Binner.cc,v 1.6 2004/02/20 21:11:46 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file Binner.cc */
 #include "Binner.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 Binner::Binner() 
@@ -121,4 +121,4 @@ Binner::Binner()
 PP<RealMapping> Binner::getBinning(VMat v) const
 { PLERROR("getBinning not implemented for this Binner"); return 0; }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

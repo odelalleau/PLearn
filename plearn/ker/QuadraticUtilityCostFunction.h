@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: QuadraticUtilityCostFunction.h,v 1.1 2003/12/15 22:08:32 dorionc Exp $
+   * $Id: QuadraticUtilityCostFunction.h,v 1.2 2004/02/20 21:11:45 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,7 @@
 
 #include "Kernel.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /*!   cost function that takes (output,target) as arguments, transforms
@@ -83,7 +83,7 @@ inline CostFunc quadratic_risk(real risk_aversion, CostFunc profit_function)
   return new QuadraticUtilityCostFunction(risk_aversion, profit_function);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

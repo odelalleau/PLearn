@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.cc,v 1.10 2004/02/06 21:12:49 ducharme Exp $
+   * $Id: VVMatrix.cc,v 1.11 2004/02/20 21:14:44 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,7 +52,7 @@
 
 #define NEW_SYNTAX_CHAR '@' 
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 // vmat genfilterindex source.pmat toto.pvm toto.indexes
@@ -613,4 +613,4 @@ PLEARN_IMPLEMENT_OBJECT(VVMatrix, "ONE LINE DESCR", "NO HELP");
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

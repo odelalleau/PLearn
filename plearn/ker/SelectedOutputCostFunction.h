@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectedOutputCostFunction.h,v 1.1 2003/12/15 22:08:32 dorionc Exp $
+   * $Id: SelectedOutputCostFunction.h,v 1.2 2004/02/20 21:11:45 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,7 @@
 
 #include "Kernel.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -77,7 +77,7 @@ class SelectedOutputCostFunction: public Kernel
 };
 DECLARE_OBJECT_PTR(SelectedOutputCostFunction);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

@@ -37,7 +37,7 @@
 #include "random.h"
 #include "VMat_maths.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -171,4 +171,4 @@ void EmpiricalDistribution::generate(Vec& x) const
   }
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

@@ -34,7 +34,7 @@
 #include "StringTable.h"
 
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -155,4 +155,4 @@ StringTable::StringTable(const string & filename)
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

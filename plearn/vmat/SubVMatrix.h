@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.h,v 1.5 2004/02/10 16:21:14 tihocan Exp $
+   * $Id: SubVMatrix.h,v 1.6 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 
@@ -46,7 +46,7 @@
 
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
  
 class SubVMatrix: public VMatrix
@@ -91,5 +91,5 @@ public:
 
 DECLARE_OBJECT_PTR(SubVMatrix);
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn
 #endif

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunCommand.cc,v 1.4 2004/02/16 20:25:50 tihocan Exp $ 
+   * $Id: RunCommand.cc,v 1.5 2004/02/20 21:11:40 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file RunCommand.cc */
@@ -44,7 +44,7 @@
 #include "plerror.h"
 #include "Object.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //! This allows to register the 'RunCommand' command in the command registry
@@ -83,5 +83,5 @@ void RunCommand::run(const vector<string>& args)
     }
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

@@ -34,12 +34,12 @@
 
 
 /* *******************************************************      
-   * $Id: VecCompressor.cc,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: VecCompressor.cc,v 1.2 2004/02/20 21:11:46 chrish42 Exp $
    ******************************************************* */
 
 #include "VecCompressor.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
   // *******************
@@ -473,4 +473,4 @@ void VecCompressor::readCompressedVec(istream& in, const Vec& v)
 
 
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn

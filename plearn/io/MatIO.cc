@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatIO.cc,v 1.2 2003/02/13 21:45:24 ducharme Exp $
+   * $Id: MatIO.cc,v 1.3 2004/02/20 21:11:44 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -43,7 +43,7 @@
 #include "stringutils.h"
 #include "fileutils.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -1282,4 +1282,4 @@ void loadJPEGrgb(const string& jpeg_filename, Mat& rgbmat, int& row_size, int sc
   row_size = w;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

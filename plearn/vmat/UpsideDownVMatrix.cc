@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UpsideDownVMatrix.cc,v 1.2 2003/10/31 20:50:42 plearner Exp $ 
+   * $Id: UpsideDownVMatrix.cc,v 1.3 2004/02/20 21:14:44 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -43,7 +43,7 @@
 
 #include "UpsideDownVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -86,5 +86,5 @@ void UpsideDownVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& cop
   inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

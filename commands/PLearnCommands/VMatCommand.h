@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMatCommand.h,v 1.1 2003/08/13 08:13:16 plearner Exp $ 
+   * $Id: VMatCommand.h,v 1.2 2004/02/20 21:11:40 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file VMatCommand.h */
@@ -44,7 +44,7 @@
 #include "PLearnCommand.h"
 #include "PLearnCommandRegistry.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class VMatCommand: public PLearnCommand
@@ -58,6 +58,6 @@ protected:
 };
 
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

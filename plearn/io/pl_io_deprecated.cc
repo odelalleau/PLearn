@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io_deprecated.cc,v 1.1 2002/09/26 05:06:53 plearner Exp $
+   * $Id: pl_io_deprecated.cc,v 1.2 2004/02/20 21:11:44 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -48,7 +48,7 @@
 #include "stringutils.h"
 #include "pl_streambuf.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -72,7 +72,7 @@ int readHeader(istream& in, const string& classname)
   if (   headerlen<classnamelen+2 
          || header[0]!='<' || header.substr(1,classnamelen)!=classname
          || (header[1+classnamelen]!='>' && header[1+classnamelen]!=':') )
-    PLERROR("In Object::readHeader WRONG HEADER: %s (SHOULD BE <%s:version>)",header.c_str(),classname.c_str());
+    PLERROR("In Object::readHeader WRONG HEADER: %s (SHOULD BE {s:version>)",header.c_str(),classname.c_str());
   if (header[1+classnamelen]==':')
     return toint(header.substr(2+classnamelen, headerlen-classnamelen-2));
   else return 0;
@@ -441,5 +441,5 @@ void read_double(istream& in, double* ptr, int n, bool is_file_bigendian)
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

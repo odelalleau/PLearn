@@ -39,7 +39,7 @@
 #include <list>
 #include "TMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -84,7 +84,7 @@ public:
   string getFieldName(int i)const {return fieldnames[i];}
 };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 #endif

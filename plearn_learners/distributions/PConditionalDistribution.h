@@ -43,7 +43,7 @@
 #include "Learner.h"
 #include "PDistribution.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class PConditionalDistribution: public PDistribution
@@ -102,6 +102,6 @@ public:
 };
 
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

@@ -48,7 +48,7 @@
 // I am commenting this out because the compiler complained of previous declarations fronm stdlib.h throwing different exceptions!!! (Pascal)
 // #include <malloc.h>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
   IntStreamVMatrix::IntStreamVMatrix(IntStream& s, int window_size, int dummyinput, int eos)
@@ -262,5 +262,5 @@ InMemoryIntStream::InMemoryIntStream(IntStream& stream)
     data[i] = stream.next();
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SpiralDistribution.h,v 1.4 2004/02/06 00:33:49 yoshua Exp $ 
+   * $Id: SpiralDistribution.h,v 1.5 2004/02/20 21:14:46 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file SpiralDistribution.h */
@@ -43,7 +43,7 @@
 
 #include "PDistribution.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class SpiralDistribution: public PDistribution
@@ -150,6 +150,6 @@ public:
 // Declares a few other classes and functions related to this class
   DECLARE_OBJECT_PTR(SpiralDistribution);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

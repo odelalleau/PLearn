@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.11 2004/02/06 01:08:20 yoshua Exp $ 
+ * $Id: GaussMix.cc,v 1.12 2004/02/20 21:14:46 chrish42 Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -43,7 +43,7 @@
 #include "VMat_maths.h"
 #include "ConcatColumnsVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 GaussMix::GaussMix() 
@@ -1284,5 +1284,5 @@ real GaussMix::NLL(VMat dataset)
   return -nll;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.h,v 1.1 2002/11/28 04:25:38 jkeable Exp $
+   * $Id: getDataSet.h,v 1.2 2004/02/20 21:11:44 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -48,7 +48,7 @@
 #include <string>
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -77,7 +77,7 @@ string locateDatasetAliasesDir(const string& dir_or_file_path=".");
 //! loads it and returns the corresponding map. Returns an empty map if file was not found.
 map<string,string> getDatasetAliases(const string& dir_or_file_path=".");
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

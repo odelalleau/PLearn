@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLMPI.cc,v 1.2 2002/09/17 01:27:34 zouave Exp $
+   * $Id: PLMPI.cc,v 1.3 2004/02/20 21:11:49 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -42,7 +42,7 @@
 #include "plerror.h"
 #include <stdio.h>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -217,4 +217,4 @@ void PLMPI::exchangeColumnBlocks(Mat sourceBlock, Mat destBlocks)
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

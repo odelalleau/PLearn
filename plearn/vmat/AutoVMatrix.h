@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: AutoVMatrix.h,v 1.3 2003/08/13 08:13:45 plearner Exp $
+   * $Id: AutoVMatrix.h,v 1.4 2004/02/20 21:14:29 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,7 +46,7 @@
 
 #include "ForwardVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //! This class is a simple wrapper to an underlying VMatrix of another type
@@ -93,7 +93,7 @@ public:
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(AutoVMatrix);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

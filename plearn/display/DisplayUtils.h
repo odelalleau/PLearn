@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: DisplayUtils.h,v 1.3 2003/09/20 20:33:32 yoshua Exp $
+   * $Id: DisplayUtils.h,v 1.4 2004/02/20 21:11:44 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -54,7 +54,7 @@
 #include "Learner.h"
 #include "Func.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -110,7 +110,7 @@ void displayPoints(GhostScript& gs, Mat data, real radius, bool color=false);
                               real radius=0.05, 
                               int nx=200, int ny=200);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

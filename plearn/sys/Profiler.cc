@@ -33,13 +33,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Profiler.cc,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: Profiler.cc,v 1.2 2004/02/20 21:11:49 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "Profiler.h"
 #include <time.h>
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
   // initialize static variables
@@ -124,4 +124,4 @@ using namespace std;
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

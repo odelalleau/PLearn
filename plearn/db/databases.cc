@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: databases.cc,v 1.4 2003/12/04 21:25:00 tihocan Exp $
+   * $Id: databases.cc,v 1.5 2004/02/20 21:11:44 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -49,7 +49,7 @@
 #include "RemapLastColumnVMatrix.h"
 #include "Splitter.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -838,4 +838,4 @@ void loadClassificationDataset(const string& datasetname, int& inputsize, int& n
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

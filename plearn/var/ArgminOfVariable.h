@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ArgminOfVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
+   * $Id: ArgminOfVariable.h,v 1.4 2004/02/20 21:11:49 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,7 @@
 
 #include "NaryVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -86,6 +86,6 @@ public:
 inline Var argminOf(Var v, Var expression, Var values_of_v, VarArray inputs)
 { return new ArgminOfVariable(v, expression, values_of_v, inputs); }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif 

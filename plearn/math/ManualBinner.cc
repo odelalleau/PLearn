@@ -33,13 +33,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ManualBinner.cc,v 1.5 2003/08/13 08:13:17 plearner Exp $ 
+   * $Id: ManualBinner.cc,v 1.6 2004/02/20 21:11:46 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file ManualBinner.cc */
 #include "ManualBinner.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 ManualBinner::ManualBinner() 
@@ -123,4 +123,4 @@ PP<RealMapping> ManualBinner::getBinning() const
 { return the_mapping; }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.23 2004/02/16 21:23:57 tihocan Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.24 2004/02/20 21:14:45 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -48,7 +48,7 @@
 //#include "Var_all.h"
 #include "Optimizer.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class ConditionalDensityNet: public PConditionalDistribution
@@ -306,6 +306,6 @@ public:
 // Declares a few other classes and functions related to this class
   DECLARE_OBJECT_PTR(ConditionalDensityNet);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

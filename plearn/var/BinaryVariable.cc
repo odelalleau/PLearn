@@ -36,13 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: BinaryVariable.cc,v 1.12 2003/09/17 15:27:30 yoshua Exp $
+   * $Id: BinaryVariable.cc,v 1.13 2004/02/20 21:11:49 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "BinaryVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 
 using namespace std;
 
@@ -180,6 +180,6 @@ void BinaryVariable::resizeRValue()
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 

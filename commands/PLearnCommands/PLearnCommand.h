@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: PLearnCommand.h,v 1.1 2002/10/22 09:35:54 plearner Exp $
+   * $Id: PLearnCommand.h,v 1.2 2004/02/20 21:11:40 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,7 +46,7 @@
 #include <string>
 #include <vector>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -69,7 +69,7 @@ public:
 };
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

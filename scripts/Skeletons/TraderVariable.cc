@@ -1,6 +1,6 @@
 #include "DERIVEDCLASS.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 DERIVEDCLASS::DERIVEDCLASS() 
@@ -49,4 +49,4 @@ void DERIVEDCLASS::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   deepCopyField(fprop_weights, copies);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

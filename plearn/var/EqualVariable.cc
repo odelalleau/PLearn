@@ -36,14 +36,14 @@
 
 
 /* *******************************************************      
-   * $Id: EqualVariable.cc,v 1.4 2003/12/16 17:44:52 plearner Exp $
+   * $Id: EqualVariable.cc,v 1.5 2004/02/20 21:11:50 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "EqualVariable.h"
 #include "EqualScalarVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -97,6 +97,6 @@ Var isequal(Var v1, Var v2)
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 

@@ -35,12 +35,12 @@
 
 
 /* *******************************************************      
-   * $Id: ByteMemoryVMatrix.cc,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: ByteMemoryVMatrix.cc,v 1.2 2004/02/20 21:14:29 chrish42 Exp $
    ******************************************************* */
 
 #include "ByteMemoryVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -88,4 +88,4 @@ void ByteMemoryVMatrix::getSubRow(int i, int j, Vec samplevec) const
     v[jj] = s[j+jj] * (p[j+jj] + o[j+jj]);
 }
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn

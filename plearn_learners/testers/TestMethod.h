@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: TestMethod.h,v 1.3 2004/02/17 21:07:18 tihocan Exp $
+   * $Id: TestMethod.h,v 1.4 2004/02/20 21:14:50 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,7 +48,7 @@
 //#include "VMat.h"
 #include "Splitter.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -89,7 +89,7 @@ public:
 DECLARE_OBJECT_PTR(TestMethod);
 
 
-%>; // end of namespace PLearn
+}; // end of namespace PLearn
 
 #endif // TestMethod_INC
 

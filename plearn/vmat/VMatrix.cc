@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.42 2004/02/20 13:53:23 tihocan Exp $
+* $Id: VMatrix.cc,v 1.43 2004/02/20 21:14:44 chrish42 Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -66,7 +66,7 @@
 // #include "DisplayUtils.h"
 
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /** VMatrix **/
@@ -1228,4 +1228,4 @@ void VMatrix::evaluateSumOfFbprop(Func f, Vec& output_result, Vec& output_gradie
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

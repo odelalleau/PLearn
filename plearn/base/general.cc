@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: general.cc,v 1.5 2003/05/07 05:39:16 plearner Exp $
+   * $Id: general.cc,v 1.6 2004/02/20 21:11:43 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,7 +48,7 @@
 
 #include "stringutils.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 static PLearnInit _plearn_init_;
@@ -146,6 +146,6 @@ string prgname(const string& setname)
   return prgname_;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 

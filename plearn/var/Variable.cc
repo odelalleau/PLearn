@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.cc,v 1.8 2003/12/16 18:28:10 plearner Exp $
+   * $Id: Variable.cc,v 1.9 2004/02/20 21:11:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -58,7 +58,7 @@
 
 //#include "Var_utils.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -702,7 +702,7 @@ void Variable::makeSharedValue(PP<Storage<real> > storage, int offset_)
 {
   int n=nelems();
   if (storage->length()<offset_+n) 
-    PLERROR("Variable::makeSharedValue, storage(%d) too small(<%d+%d)",
+    PLERROR("Variable::makeSharedValue, storage(%d) too small({d+%d)",
           storage->length(),offset_,nelems());
   real* v=value.data();
   real* x=valuedata=storage->data+offset_;
@@ -725,7 +725,7 @@ void Variable::makeSharedGradient(PP<Storage<real> > storage, int offset_)
 {
   int n=nelems();
   if (storage->length()<offset_+n) 
-    PLERROR("Variable::makeSharedGradient, storage(%d) too small(<%d+%d)",
+    PLERROR("Variable::makeSharedGradient, storage(%d) too small({d+%d)",
           storage->length(),offset_,nelems());
   real* v=gradient.data();
   real* x=gradientdata=storage->data+offset_;
@@ -766,7 +766,7 @@ void Variable::makeSharedRValue(PP<Storage<real> > storage, int offset_)
   resizeRValue();
   int n=nelems();
   if (storage->length()<offset_+n) 
-    PLERROR("Variable::makeSharedRValue, storage(%d) too small(<%d+%d)",
+    PLERROR("Variable::makeSharedRValue, storage(%d) too small({d+%d)",
           storage->length(),offset_,nelems());
   real* v=rValue.data();
   real* x=rvaluedata=storage->data+offset_;
@@ -822,5 +822,5 @@ void Variable::resizeRValue()
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

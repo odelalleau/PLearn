@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Grapher.cc,v 1.3 2003/11/01 02:16:57 chapados Exp $ 
+   * $Id: Grapher.cc,v 1.4 2004/02/20 21:14:48 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file Grapher.cc */
@@ -45,7 +45,7 @@
 #include "Gnuplot.h"
 #include "RegularGridVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -828,4 +828,4 @@ void Grapher::run()
     inherited::makeDeepCopyFromShallowCopy(copies);
   }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Storage.h,v 1.7 2004/01/07 22:18:38 ducharme Exp $
+   * $Id: Storage.h,v 1.8 2004/02/20 21:11:42 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -53,7 +53,7 @@
 #include "MemoryMap.h"
 #include <map>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
     
@@ -334,6 +334,6 @@ PStream& operator>>(PStream& in, Storage<T>& seq)
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

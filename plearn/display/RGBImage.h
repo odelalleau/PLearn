@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: RGBImage.h,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: RGBImage.h,v 1.2 2004/02/20 21:11:44 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -52,7 +52,7 @@
 #include "Storage.h"
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -332,7 +332,7 @@ public:
 };
  */
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: RemapLastColumnVMatrix.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: RemapLastColumnVMatrix.h,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 
@@ -47,7 +47,7 @@
 #include "RowBufferedVMatrix.h"
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class RemapLastColumnVMatrix: public RowBufferedVMatrix
@@ -92,5 +92,5 @@ inline VMat remapLastColumn(VMat d, real if_equals_value, real then_value=1.0, r
 { return new RemapLastColumnVMatrix(d, if_equals_value, then_value, else_value); }
 
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn
 #endif

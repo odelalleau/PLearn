@@ -33,13 +33,13 @@
 // library, go to the PLearn Web site at www.plearn.org 
 
 /* *******************************************************      
-   * $Id: VarMeasurer.cc,v 1.2 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: VarMeasurer.cc,v 1.3 2004/02/20 21:11:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "VarMeasurer.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 bool VarMeasurer::measure(int t, const Vec& costs)
@@ -64,7 +64,7 @@ bool VarMeasurer::measure(int t, const Vec& costs)
   return false;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 

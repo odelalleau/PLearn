@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ReadAndWriteCommand.h,v 1.2 2003/10/31 22:34:18 plearner Exp $ 
+   * $Id: ReadAndWriteCommand.h,v 1.3 2004/02/20 21:11:40 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file ReadAndWriteCommand.h */
@@ -43,7 +43,7 @@
 #include "PLearnCommand.h"
 #include "PLearnCommandRegistry.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class ReadAndWriteCommand: public PLearnCommand
@@ -57,6 +57,6 @@ protected:
 };
 
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

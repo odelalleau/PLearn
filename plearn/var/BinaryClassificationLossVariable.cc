@@ -37,12 +37,12 @@
 
 
 /* *******************************************************      
-   * $Id: BinaryClassificationLossVariable.cc,v 1.1 2004/01/26 14:15:52 tihocan Exp $
+   * $Id: BinaryClassificationLossVariable.cc,v 1.2 2004/02/20 21:11:49 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "BinaryClassificationLossVariable.h"
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /** BinaryClassificationLossVariable **/
@@ -74,5 +74,5 @@ void BinaryClassificationLossVariable::fprop()
   valuedata[0] = (outputclass == classnum ?0 :1);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

@@ -41,7 +41,7 @@
 #include "FileVMatrix.h"
 #include "PTester.h"  // for using class StatSpec
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -291,5 +291,5 @@ void SequentialValidation::run()
 
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

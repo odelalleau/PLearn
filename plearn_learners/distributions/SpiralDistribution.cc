@@ -34,14 +34,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SpiralDistribution.cc,v 1.6 2004/02/06 00:45:46 yoshua Exp $ 
+   * $Id: SpiralDistribution.cc,v 1.7 2004/02/20 21:14:46 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file SpiralDistribution.cc */
 #include "SpiralDistribution.h"
 #include "random.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 SpiralDistribution::SpiralDistribution() 
@@ -165,4 +165,4 @@ void SpiralDistribution::resetGenerator(long g_seed) const
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SoftSlopeVariable.h,v 1.4 2004/02/17 21:03:20 tihocan Exp $
+   * $Id: SoftSlopeVariable.h,v 1.5 2004/02/20 21:11:53 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,7 +49,7 @@
 //#include "pl_math.h"
 //#include "Var_utils.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -110,6 +110,6 @@ inline Var soft_slope_limit(Var x, Var smoothness, Var left, Var right)
   return res;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif 

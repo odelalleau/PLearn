@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: AutoSDBVMatrix.h,v 1.4 2003/03/19 23:06:15 jkeable Exp $
+   * $Id: AutoSDBVMatrix.h,v 1.5 2004/02/20 21:11:43 chrish42 Exp $
    * AUTHOR: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -53,7 +53,7 @@
 #include "RowBufferedVMatrix.h"
 #include <map>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -187,6 +187,6 @@ protected:
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PStreamBuf.h,v 1.3 2003/08/13 08:13:17 plearner Exp $ 
+   * $Id: PStreamBuf.h,v 1.4 2004/02/20 21:11:44 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file PStreamBuf.h */
@@ -42,7 +42,7 @@
 
 #include "Object.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class PStreamBuf: public Object
@@ -304,6 +304,6 @@ inline streamsize read(char* p, streamsize n)
 // Declares a few other classes and functions related to this class
   DECLARE_OBJECT_PTR(PStreamBuf);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

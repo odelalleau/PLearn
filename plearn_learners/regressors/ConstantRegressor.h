@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConstantRegressor.h,v 1.4 2003/11/04 14:42:24 chapados Exp $ 
+   * $Id: ConstantRegressor.h,v 1.5 2004/02/20 21:14:49 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file ConstantRegressor.h */
@@ -43,7 +43,7 @@
 
 #include "PLearner.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class ConstantRegressor: public PLearner
@@ -159,6 +159,6 @@ public:
 // Declares a few other classes and functions related to this class
   DECLARE_OBJECT_PTR(ConstantRegressor);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

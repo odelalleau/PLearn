@@ -47,7 +47,7 @@
 #include <iostream>
 #include "PP.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 const int pl_dftbuflen= 4096;
@@ -111,7 +111,7 @@ public:
   ~pl_fdstream();
 };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif //ndef pl_fdstream_INC
 

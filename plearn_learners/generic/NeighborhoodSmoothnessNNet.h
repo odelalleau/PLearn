@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeighborhoodSmoothnessNNet.h,v 1.3 2004/02/20 20:31:27 tihocan Exp $
+   * $Id: NeighborhoodSmoothnessNNet.h,v 1.4 2004/02/20 21:14:46 chrish42 Exp $
    ******************************************************* */
 
 /*! \file PLearn/plearn_learners/classifiers/NeighborhoodSmoothnessNNet.h */
@@ -48,7 +48,7 @@
 #include "Optimizer.h"
 //#include "Var_all.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
   class NeighborhoodSmoothnessNNet: public PLearner
@@ -177,7 +177,7 @@ using namespace std;
 
   DECLARE_OBJECT_PTR(NeighborhoodSmoothnessNNet);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HelpCommand.h,v 1.1 2003/05/07 05:39:16 plearner Exp $ 
+   * $Id: HelpCommand.h,v 1.2 2004/02/20 21:11:40 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file HelpCommand.h */
@@ -43,7 +43,7 @@
 #include "PLearnCommand.h"
 #include "PLearnCommandRegistry.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class HelpCommand: public PLearnCommand
@@ -74,6 +74,6 @@ protected:
 };
 
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

@@ -43,7 +43,7 @@
 //#include "Learner.h"
 #include "Distribution.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class ConditionalDistribution: public Distribution
@@ -90,6 +90,6 @@ public:
 // Declares a few other classes and functions related to this class
   DECLARE_OBJECT_PTR(ConditionalDistribution);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StrTableVMatrix.h,v 1.6 2003/08/13 08:13:46 plearner Exp $
+   * $Id: StrTableVMatrix.h,v 1.7 2004/02/20 21:14:44 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -41,7 +41,7 @@
 #include "StringTable.h"
 #include "MemoryVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class StrTableVMatrix: public MemoryVMatrix
@@ -54,7 +54,7 @@ public:
 
 DECLARE_OBJECT_PTR(StrTableVMatrix);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 

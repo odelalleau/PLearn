@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: MPIStream.cc,v 1.3 2002/09/05 19:33:23 morinf Exp $
+   * $Id: MPIStream.cc,v 1.4 2004/02/20 21:11:44 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -46,7 +46,7 @@
 
 #if USING_MPI
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -260,7 +260,7 @@ using namespace std;
   }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 // end of #if USING_MPI
 #endif

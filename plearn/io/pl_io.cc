@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io.cc,v 1.5 2004/02/10 15:59:24 tihocan Exp $
+   * $Id: pl_io.cc,v 1.6 2004/02/20 21:11:44 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -51,7 +51,7 @@
 #include "plerror.h"
 #include "pl_math.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -875,4 +875,4 @@ size_t new_write_compressed(FILE* out, real* vec, int l, double tolerance, bool 
   return nbytes;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

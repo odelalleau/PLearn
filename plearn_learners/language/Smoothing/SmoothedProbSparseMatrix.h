@@ -39,7 +39,7 @@
 
 #include "ProbSparseMatrix.h"
 #include "TMat.h"
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class SmoothedProbSparseMatrix : public ProbSparseMatrix
@@ -86,6 +86,6 @@ public:
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

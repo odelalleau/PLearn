@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FinancialAdvisor.cc,v 1.4 2004/02/16 22:26:08 dorionc Exp $ 
+   * $Id: FinancialAdvisor.cc,v 1.5 2004/02/20 21:14:49 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -43,7 +43,7 @@
 
 #include "FinancialAdvisor.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -155,5 +155,5 @@ void FinancialAdvisor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   inherited::makeDeepCopyFromShallowCopy(copies);
 } 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

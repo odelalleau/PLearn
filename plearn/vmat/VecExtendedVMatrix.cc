@@ -35,13 +35,13 @@
 
 
 /* *******************************************************      
-   * $Id: VecExtendedVMatrix.cc,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: VecExtendedVMatrix.cc,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 #include "VecExtendedVMatrix.h"
 #include "TMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -69,4 +69,4 @@ void VecExtendedVMatrix::getRow(int i, Vec v) const
        v.begin() + underlying_->width());
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

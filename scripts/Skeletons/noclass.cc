@@ -1,9 +1,9 @@
 #include "DERIVEDCLASS.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 // Put function implementations here.
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

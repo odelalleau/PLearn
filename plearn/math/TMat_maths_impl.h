@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.36 2004/02/09 04:44:50 chapados Exp $
+   * $Id: TMat_maths_impl.h,v 1.37 2004/02/20 21:11:46 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -47,7 +47,7 @@
 #ifndef TMat_maths_impl_H
 #define TMat_maths_impl_H
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 template <class T> 
@@ -5528,13 +5528,13 @@ void addXandX2IfNonMissing(const TVec<T>& source, const TVec<int>& nnonmissing, 
       }
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
  
 
 #if __GNUC__==3 && __GNUC_MINOR__>0
-namespace __gnu_cxx <%
+namespace __gnu_cxx {
 #else
-namespace std <%
+namespace std {
 #endif
 
 template<class T>
@@ -5544,7 +5544,7 @@ struct hash<PLearn::TVec<T> >
 };
 
 
-%> // end of namespace std
+} // end of namespace std
 
 
 #endif // TMat_maths_impl_H

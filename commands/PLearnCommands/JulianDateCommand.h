@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: JulianDateCommand.h,v 1.1 2003/09/09 20:20:04 ducharme Exp $ 
+   * $Id: JulianDateCommand.h,v 1.2 2004/02/20 21:11:40 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Rejean Ducharme
@@ -47,7 +47,7 @@
 #include "PLearnCommand.h"
 #include "PLearnCommandRegistry.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class JulianDateCommand: public PLearnCommand
@@ -61,6 +61,6 @@ protected:
 };
 
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

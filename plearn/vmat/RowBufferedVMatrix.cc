@@ -35,13 +35,13 @@
 
 
 /* *******************************************************      
-   * $Id: RowBufferedVMatrix.cc,v 1.3 2003/10/10 21:57:52 dorionc Exp $
+   * $Id: RowBufferedVMatrix.cc,v 1.4 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 #include "RowBufferedVMatrix.h"
 #include "TMat_maths.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /** RowBufferedVMatrix **/
@@ -147,4 +147,4 @@ real RowBufferedVMatrix::dot(int i, const Vec& v) const
   return PLearn::dot(current_row.subVec(0,v.length()),v);
 }
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn

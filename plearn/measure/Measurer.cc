@@ -37,14 +37,14 @@
  
 
 /* *******************************************************      
-   * $Id: Measurer.cc,v 1.1 2002/11/22 19:40:18 ducharme Exp $
+   * $Id: Measurer.cc,v 1.2 2004/02/20 21:11:47 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "Measurer.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 Measurer::~Measurer() 
@@ -56,7 +56,7 @@ bool CallbackMeasurer::measure(int t, const Vec& costs)
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 

@@ -6,7 +6,7 @@
 
 #include <map>
 
-namespace PLearn <%
+namespace PLearn {
 
 using namespace std;
 
@@ -53,6 +53,6 @@ inline T* deepCopy(const T* source)
 }
 
 
-%>
+}
 
 #endif //ndef CopiesMap_INC

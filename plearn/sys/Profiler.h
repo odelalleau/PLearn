@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Profiler.h,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: Profiler.h,v 1.2 2004/02/20 21:11:49 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,7 +49,7 @@
 #include "plerror.h"
 #include "stringutils.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /*!     Profiling tools, to count average time elapsed and number of times 
@@ -127,7 +127,7 @@ using namespace std;
 
   };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

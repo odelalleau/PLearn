@@ -36,14 +36,14 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.49 2004/02/10 16:20:03 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.50 2004/02/20 21:11:48 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "ConjGradientOptimizer.h"
 #include "TMat_maths_impl.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //
@@ -1091,4 +1091,4 @@ void ConjGradientOptimizer::updateSearchDirection(real gamma) {
   current_opp_gradient << delta;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

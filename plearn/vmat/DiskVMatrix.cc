@@ -35,13 +35,13 @@
 
 
 /* *******************************************************      
-   * $Id: DiskVMatrix.cc,v 1.10 2004/02/17 15:55:06 dorionc Exp $
+   * $Id: DiskVMatrix.cc,v 1.11 2004/02/20 21:14:29 chrish42 Exp $
    ******************************************************* */
 
 #include "DiskVMatrix.h"
 #include "pl_io.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -315,4 +315,4 @@ DiskVMatrix::~DiskVMatrix()
 PLEARN_IMPLEMENT_OBJECT(DiskVMatrix, "ONE LINE DESCR", "NO HELP");
 
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: MPIStream.h,v 1.2 2003/02/03 22:22:13 zouave Exp $
+   * $Id: MPIStream.h,v 1.3 2004/02/20 21:11:44 chrish42 Exp $
    * AUTHORS: Pascal Vincent 
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -53,7 +53,7 @@
 #include <iostream>
 #include "PLMPI.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
   class MPIStreambuf : public streambuf
@@ -146,7 +146,7 @@ using namespace std;
     { if(mpistreams) delete[] mpistreams; }
   };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 //!  end of #if USING_MPI
 #endif 

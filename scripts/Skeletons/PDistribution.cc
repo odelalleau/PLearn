@@ -1,6 +1,6 @@
 #include "DERIVEDCLASS.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 DERIVEDCLASS::DERIVEDCLASS() 
@@ -150,4 +150,4 @@ void DERIVEDCLASS::train()
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

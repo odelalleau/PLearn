@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
- * $Id: GaussianProcessRegressor.h,v 1.7 2004/02/16 21:24:46 tihocan Exp $
+ * $Id: GaussianProcessRegressor.h,v 1.8 2004/02/20 21:14:46 chrish42 Exp $
  ******************************************************* */
 
 
@@ -48,7 +48,7 @@
 #include "PConditionalDistribution.h"
 #include "Kernel.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /*! Simple Gaussian Process Regression.
@@ -210,7 +210,7 @@ class GaussianProcessRegressor: public PConditionalDistribution
 
 DECLARE_OBJECT_PTR(GaussianProcessRegressor);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

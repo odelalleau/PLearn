@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: Popen.cc,v 1.4 2003/05/20 15:42:12 plearner Exp $
+   * $Id: Popen.cc,v 1.5 2004/02/20 21:11:49 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,7 +49,7 @@
 #include "Popen.h"
 #include <errno.h>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 #ifdef _MINGW_
@@ -181,7 +181,7 @@ vector<string> execute(const string& command)
   }
 
 #endif
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 

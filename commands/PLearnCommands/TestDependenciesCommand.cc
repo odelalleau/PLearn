@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TestDependenciesCommand.cc,v 1.3 2004/01/13 22:38:51 yoshua Exp $ 
+   * $Id: TestDependenciesCommand.cc,v 1.4 2004/02/20 21:11:40 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file TestDependenciesCommand.cc */
@@ -43,7 +43,7 @@
 #include "VMat_maths.h"
 #include "procinfo.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //! This allows to register the 'TestDependenciesCommand' command in the command registry
@@ -189,5 +189,5 @@ void TestDependenciesCommand::run(const vector<string>& args)
     }
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

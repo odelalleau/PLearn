@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.23 2004/01/29 18:12:53 plearner Exp $
+   * $Id: Object.h,v 1.24 2004/02/20 21:11:42 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -58,7 +58,7 @@
 #include "OptionBase.h"
 #include "Option.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /*! Object is the base class of all high level PLearn objects. It exposes simple mechanisms for:
@@ -620,7 +620,7 @@ template<class T> Object *toIndexedObjectPtr(const T&, int) // Never to be calle
   PStream &operator>>(PStream &in, Object * &o);
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 //! Useful function for debugging inside gdb:
 extern "C"

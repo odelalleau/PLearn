@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.27 2004/02/19 14:36:25 tihocan Exp $
+   * $Id: PLearner.cc,v 1.28 2004/02/20 21:14:47 chrish42 Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -51,7 +51,7 @@
 //#include "RemoveRowsVMatrix.h"
 //#include "PLMPI.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 PLearner::PLearner()
@@ -347,5 +347,5 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.h,v 1.8 2003/11/27 21:02:57 chapados Exp $ 
+   * $Id: EmbeddedLearner.h,v 1.9 2004/02/20 21:14:46 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.h */
@@ -43,7 +43,7 @@
 
 #include "PLearner.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 // ###### EmbeddedLearner ######################################################
@@ -129,6 +129,6 @@ public:
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(EmbeddedLearner);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

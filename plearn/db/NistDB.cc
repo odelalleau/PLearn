@@ -36,14 +36,14 @@
 
 
 /* *******************************************************      
-   * $Id: NistDB.cc,v 1.1 2002/11/28 04:28:08 jkeable Exp $
+   * $Id: NistDB.cc,v 1.2 2004/02/20 21:11:43 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "NistDB.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -137,4 +137,4 @@ void NistDB::getSubRow(int i, int j, Vec v) const
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

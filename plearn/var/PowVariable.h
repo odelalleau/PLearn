@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PowVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
+   * $Id: PowVariable.h,v 1.4 2004/02/20 21:11:52 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,7 @@
 
 #include "UnaryVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -78,6 +78,6 @@ inline Var pow(Var v, real power)
 inline Var sqrt(Var v)
 { return pow(v,0.5); }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif 

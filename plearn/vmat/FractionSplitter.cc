@@ -34,13 +34,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FractionSplitter.cc,v 1.3 2003/08/13 08:13:46 plearner Exp $ 
+   * $Id: FractionSplitter.cc,v 1.4 2004/02/20 21:14:44 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file FractionSplitter.cc */
 #include "FractionSplitter.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 FractionSplitter::FractionSplitter() 
@@ -149,4 +149,4 @@ TVec<VMat> FractionSplitter::getSplit(int k)
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

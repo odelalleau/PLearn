@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: plstreams.h,v 1.6 2003/05/20 15:42:12 plearner Exp $
+   * $Id: plstreams.h,v 1.7 2004/02/20 21:11:44 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,9 +51,9 @@
 #ifndef plstreams_INC
 #define plstreams_INC
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif //ndef plstreams_INC

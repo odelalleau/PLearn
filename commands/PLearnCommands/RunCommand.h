@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunCommand.h,v 1.2 2003/08/21 15:43:54 ducharme Exp $ 
+   * $Id: RunCommand.h,v 1.3 2004/02/20 21:11:40 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file RunCommand.h */
@@ -44,7 +44,7 @@
 #include "PLearnCommand.h"
 #include "PLearnCommandRegistry.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class RunCommand: public PLearnCommand
@@ -70,6 +70,6 @@ protected:
 };
 
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

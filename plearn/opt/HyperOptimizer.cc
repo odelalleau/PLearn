@@ -35,14 +35,14 @@
  
 
 /* *******************************************************      
-   * $Id: HyperOptimizer.cc,v 1.4 2003/08/13 08:13:17 plearner Exp $
+   * $Id: HyperOptimizer.cc,v 1.5 2004/02/20 21:11:48 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Frederic Morin
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "HyperOptimizer.h"
 
-namespace PLearn <%
+namespace PLearn {
 
 // ###### HyperOptimizer ######################################################
 
@@ -185,4 +185,4 @@ HTryCombinations::_build()
         PLERROR("HTryCombinations::_build() - params.size() must match values.size()");
 }
 
-%>; // end of namespace PLearn
+}; // end of namespace PLearn

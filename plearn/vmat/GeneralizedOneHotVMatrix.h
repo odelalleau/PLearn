@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: GeneralizedOneHotVMatrix.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: GeneralizedOneHotVMatrix.h,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 
@@ -47,7 +47,7 @@
 #include "RowBufferedVMatrix.h"
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
  
 
@@ -102,5 +102,5 @@ class GeneralizedOneHotVMatrix: public RowBufferedVMatrix
   replaced by (value==if_equals_value ?then_value :else_value)
 */
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn
 #endif

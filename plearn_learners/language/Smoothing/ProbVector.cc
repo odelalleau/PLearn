@@ -36,7 +36,7 @@
 
 #include "ProbVector.h"
 
-namespace PLearn <%
+namespace PLearn {
 
 void ProbVector::smoothNormalize(string name,real discounting_value)
 {
@@ -99,4 +99,4 @@ void ProbVector::normalize()
   }
 }
 
-%>
+}

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ProcessingVMatrix.cc,v 1.3 2003/12/05 22:13:45 plearner Exp $ 
+   * $Id: ProcessingVMatrix.cc,v 1.4 2004/02/20 21:14:44 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -43,7 +43,7 @@
 
 #include "ProcessingVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -106,5 +106,5 @@ void ProcessingVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& cop
   inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Range.h,v 1.1 2002/07/30 09:01:26 plearner Exp $
+   * $Id: Range.h,v 1.2 2004/02/20 21:11:42 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -50,7 +50,7 @@
 #ifndef Range_INC
 #define Range_INC
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
   class Range
@@ -80,6 +80,6 @@ using namespace std;
     return out;
   }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

@@ -33,7 +33,7 @@
 
 #include "byte_order.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 // *** LITTLE-ENDIAN / BIG-ENDIAN HELL... ***
@@ -78,4 +78,4 @@ void endianswap8(void* ptr, int n)
 }
 
 
-%>
+}

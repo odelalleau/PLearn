@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: TimesScalarVariable.h,v 1.3 2004/02/20 17:08:09 tihocan Exp $
+   * $Id: TimesScalarVariable.h,v 1.4 2004/02/20 21:11:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,7 @@
 
 #include "BinaryVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -76,6 +76,6 @@ inline Var timesScalar(Var v, Var scalar) {
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif 

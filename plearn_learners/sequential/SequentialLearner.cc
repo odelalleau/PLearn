@@ -37,7 +37,7 @@
 
 #include "SequentialLearner.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -133,5 +133,5 @@ void SequentialLearner::computeCostsFromOutputs(const Vec& input,
     const Vec& output, const Vec& target, Vec& costs) const
 { PLERROR("The method computeCostsFromOutputs is not defined for this SequentialLearner"); }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Func.h,v 1.8 2004/02/18 22:43:24 yoshua Exp $
+   * $Id: Func.h,v 1.9 2004/02/20 21:11:50 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -55,7 +55,7 @@
 #include "Variable.h"
 #include "VarArray.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -210,7 +210,7 @@ Func operator/(Func f, real value);
 
 template <> void deepCopyField(Func& field, CopiesMap& copies);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

@@ -40,7 +40,7 @@
 
 #include "SequentialLearner.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //! This SequentialLearner only takes the n previous target to predict the
@@ -92,6 +92,6 @@ class MovingAverage: public SequentialLearner
 //! Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(MovingAverage);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

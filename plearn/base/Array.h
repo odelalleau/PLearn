@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array.h,v 1.12 2003/08/13 08:13:16 plearner Exp $
+   * $Id: Array.h,v 1.13 2004/02/20 21:11:42 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -58,7 +58,7 @@
 
 
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -358,6 +358,6 @@ public:
 
 };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

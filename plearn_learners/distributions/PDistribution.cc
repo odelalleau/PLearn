@@ -34,13 +34,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.cc,v 1.9 2004/01/27 15:13:30 tihocan Exp $ 
+   * $Id: PDistribution.cc,v 1.10 2004/02/20 21:14:46 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.cc */
 #include "PDistribution.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 PDistribution::PDistribution() 
@@ -217,4 +217,4 @@ void PDistribution::generateN(const Mat& X) const
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

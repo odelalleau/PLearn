@@ -35,7 +35,7 @@
 #ifndef byte_order_INC
 #define byte_order_INC
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //!                WELCOME TO:
@@ -76,6 +76,6 @@ inline void endianswap(float* ptr, int n=1) { endianswap4(ptr,n); }
 inline void endianswap(double* ptr, int n=1) { endianswap8(ptr,n); }
 
 
-%>
+}
 
 #endif

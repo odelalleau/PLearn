@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: RangeVMatrix.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: RangeVMatrix.h,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 
@@ -46,7 +46,7 @@
 
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
  
 //!  Outputs scalar samples (length 1) starting at start, up to end (inclusive) with step. When end is reached it starts over again. 
@@ -66,5 +66,5 @@ class RangeVMatrix: public VMatrix
 inline VMat vrange(real start, real end, real step=1.0)
 { return new RangeVMatrix(start,end,step); }
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn
 #endif

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedSumOfVariable.h,v 1.4 2004/02/18 22:43:24 yoshua Exp $
+   * $Id: UnfoldedSumOfVariable.h,v 1.5 2004/02/20 21:11:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,7 @@
 
 #include "NaryVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -88,6 +88,6 @@ private:
 inline Var unfoldedSumOf(Var input_matrix, Var bag_size, Func f, int max_bag_size)
 { return new UnfoldedSumOfVariable(input_matrix,bag_size,f,max_bag_size); }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif 

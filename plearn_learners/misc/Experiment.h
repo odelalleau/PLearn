@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Experiment.h,v 1.5 2003/08/13 08:13:47 plearner Exp $ 
+   * $Id: Experiment.h,v 1.6 2004/02/20 21:14:48 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file Experiment.h */
@@ -45,7 +45,7 @@
 #include "VMat.h"
 #include "Splitter.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class Experiment: public Object
@@ -110,6 +110,6 @@ public:
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(Experiment);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: plapack.cc,v 1.7 2004/02/10 16:28:08 tihocan Exp $
+   * $Id: plapack.cc,v 1.8 2004/02/20 21:11:47 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -43,7 +43,7 @@
 #include <algorithm>
 #include "random.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 int eigen_SymmMat(Mat& in, Vec& e_value, Mat& e_vector, int& n_evalues_found,
@@ -475,4 +475,4 @@ void affineNormalization(Mat data, Mat W, Vec bias, real regularizer)
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io.h,v 1.8 2004/02/10 15:59:25 tihocan Exp $
+   * $Id: pl_io.h,v 1.9 2004/02/20 21:11:44 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -61,7 +61,7 @@
 #include "stringutils.h"
 #include "fileutils.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -247,7 +247,7 @@ size_t new_read_compressed(FILE* in, real* vec, int l, bool swap_endians=false);
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 #endif

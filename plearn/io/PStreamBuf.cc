@@ -33,13 +33,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PStreamBuf.cc,v 1.2 2003/08/13 08:13:17 plearner Exp $ 
+   * $Id: PStreamBuf.cc,v 1.3 2004/02/20 21:11:44 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file PStreamBuf.cc */
 #include "PStreamBuf.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 PStreamBuf::PStreamBuf(streamsize inbuf_capacity, streamsize outbuf_capacity, streamsize unget_capacity) 
@@ -124,4 +124,4 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(PStreamBuf, "ONE LINE DESCR", "NO HELP");
     inherited::makeDeepCopyFromShallowCopy(copies);
   }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

@@ -36,7 +36,7 @@
 #ifndef lapack_proto_INC
 #define lapack_proto_INC
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 extern "C" {
@@ -79,7 +79,7 @@ extern "C" {
 
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 #endif

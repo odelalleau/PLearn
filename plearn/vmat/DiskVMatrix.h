@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: DiskVMatrix.h,v 1.7 2004/01/21 22:06:40 ducharme Exp $
+   * $Id: DiskVMatrix.h,v 1.8 2004/02/20 21:14:29 chrish42 Exp $
    ******************************************************* */
 
 
@@ -47,7 +47,7 @@
 #include "RowBufferedVMatrix.h"
 #include <cstdio>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
  
 
@@ -104,5 +104,5 @@ public:
 
 DECLARE_OBJECT_PTR(DiskVMatrix);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 #endif

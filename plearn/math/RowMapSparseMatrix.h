@@ -42,7 +42,7 @@
 #include "TMat.h"
 #include "SparseMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -800,6 +800,6 @@ using namespace std;
 template <class T>
 void product(RowMapSparseMatrix<T>& M, const Vec& x, Vec& y) { M.product(x,y); }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

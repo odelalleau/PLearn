@@ -34,13 +34,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: VMatrixFromDistribution.cc,v 1.5 2003/08/13 08:13:46 plearner Exp $ 
+ * $Id: VMatrixFromDistribution.cc,v 1.6 2004/02/20 21:14:44 chrish42 Exp $ 
  ******************************************************* */
 
 /*! \file VMatrixFromDistribution.cc */
 #include "VMatrixFromDistribution.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 VMatrixFromDistribution::VMatrixFromDistribution() 
@@ -170,4 +170,4 @@ void VMatrixFromDistribution::getMat(int i, int j, Mat m) const
 Mat VMatrixFromDistribution::toMat() const
 { return data; }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

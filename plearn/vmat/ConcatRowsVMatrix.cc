@@ -35,12 +35,12 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVMatrix.cc,v 1.5 2003/08/13 08:13:46 plearner Exp $
+   * $Id: ConcatRowsVMatrix.cc,v 1.6 2004/02/20 21:14:29 chrish42 Exp $
    ******************************************************* */
 
 #include "ConcatRowsVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /** ConcatRowsVMatrix **/
@@ -166,4 +166,4 @@ real ConcatRowsVMatrix::dot(int i, const Vec& v) const
 }
 
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn

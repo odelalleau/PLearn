@@ -39,7 +39,7 @@
 
 #include "DoubleAccessSparseMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class ProbSparseMatrix : public DoubleAccessSparseMatrix<real>
@@ -94,6 +94,6 @@ public:
 
 };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

@@ -33,13 +33,13 @@
 
 
 /* *******************************************************      
-   * $Id: BootstrapVMatrix.cc,v 1.2 2003/11/29 17:39:22 tihocan Exp $
+   * $Id: BootstrapVMatrix.cc,v 1.3 2004/02/20 21:14:29 chrish42 Exp $
    ******************************************************* */
 
 #include "BootstrapVMatrix.h"
 #include "random.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /** BootstrapVMatrix **/
@@ -92,4 +92,4 @@ void BootstrapVMatrix::build_()
   inherited::build();
 }
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn

@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.18 2004/02/17 14:52:03 tihocan Exp $
+   * $Id: PLearner.h,v 1.19 2004/02/20 21:14:47 chrish42 Exp $
    ******************************************************* */
 
 
@@ -54,7 +54,7 @@
 //#include "TMat.h"
 #include "VecStatsCollector.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /*!     The base class for learning algorithms, which
@@ -336,7 +336,7 @@ using namespace std;
 // Vec trainTestLearner(PP<PLearner> learner, const VMat &dataset, PP<Splitter> splitter, TVec<string> statnames);
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

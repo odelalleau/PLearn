@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SoftSlopeIntegralVariable.h,v 1.1 2003/12/08 03:54:48 yoshua Exp $
+   * $Id: SoftSlopeIntegralVariable.h,v 1.2 2004/02/20 21:11:53 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,7 +47,7 @@
 #include "pl_math.h"
 #include "Var_utils.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -76,6 +76,6 @@ inline Var soft_slope_integral(Var smoothness, Var left, Var right, real a=0, re
   return new SoftSlopeIntegralVariable(smoothness,left,right,a,b);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif 

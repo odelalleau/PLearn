@@ -36,13 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: UnaryVariable.cc,v 1.14 2003/09/17 15:27:30 yoshua Exp $
+   * $Id: UnaryVariable.cc,v 1.15 2004/02/20 21:11:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "UnaryVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -151,6 +151,6 @@ void UnaryVariable::resizeRValue()
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 

@@ -36,12 +36,12 @@
 
 
 /* *******************************************************      
-   * $Id: AffineTransformVariable.cc,v 1.4 2003/09/17 15:27:30 yoshua Exp $
+   * $Id: AffineTransformVariable.cc,v 1.5 2004/02/20 21:11:49 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "AffineTransformVariable.h"
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -86,6 +86,6 @@ void AffineTransformVariable::symbolicBprop()
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.21 2003/08/13 08:13:16 plearner Exp $
+   * $Id: Object.cc,v 1.22 2004/02/20 21:11:42 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -48,7 +48,7 @@
 #include "TypeFactory.h"
 #include <iostream>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 Object::Object()
@@ -470,7 +470,7 @@ PStream& operator>>(PStream &in, Object * &o)
 }
 */
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 //! Useful function for debugging inside gdb:

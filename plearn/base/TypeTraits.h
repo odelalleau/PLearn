@@ -34,7 +34,7 @@
 
  
 /* *******************************************************      
-   * $Id: TypeTraits.h,v 1.4 2004/02/09 04:44:46 chapados Exp $
+   * $Id: TypeTraits.h,v 1.5 2004/02/20 21:11:42 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -50,7 +50,7 @@
 #include <list>
 #include <map>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /*! TypeTraits<some_type> will deliver the following information on the type:
@@ -199,7 +199,7 @@ public:
   { return 0xFF; }
 };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 #endif

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ProductVariable.cc,v 1.4 2004/02/17 21:05:19 tihocan Exp $
+   * $Id: ProductVariable.cc,v 1.5 2004/02/20 21:11:52 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,7 @@
 #include "TransposeProductVariable.h"
 //#include "Var_utils.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -122,6 +122,6 @@ void ProductVariable::rfprop()
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 

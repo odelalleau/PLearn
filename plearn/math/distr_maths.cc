@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: distr_maths.cc,v 1.3 2003/12/05 22:13:43 plearner Exp $
+   * $Id: distr_maths.cc,v 1.4 2004/02/20 21:11:46 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,7 +46,7 @@
 #include "distr_maths.h"
 #include "TMat_maths.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -250,5 +250,5 @@ real logPFittedGaussian(const Vec& x, const Mat& X, real lambda)
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: random.cc,v 1.5 2003/11/18 16:51:26 tihocan Exp $
+   * $Id: random.cc,v 1.6 2004/02/20 21:11:47 chrish42 Exp $
    ******************************************************* */
 
 extern "C" {
@@ -44,7 +44,7 @@ extern "C" {
 #include "general.h"
 #include "random.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -1021,5 +1021,5 @@ return(s);
 }
 */
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

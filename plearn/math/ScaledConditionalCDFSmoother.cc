@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: ScaledConditionalCDFSmoother.cc,v 1.7 2003/10/14 00:31:49 yoshua Exp $ 
+ * $Id: ScaledConditionalCDFSmoother.cc,v 1.8 2004/02/20 21:11:46 chrish42 Exp $ 
  ******************************************************* */
 
 /*! \file ScaledConditionalCDFSmoother.cc */
@@ -45,7 +45,7 @@
 #include "ScaledConditionalCDFSmoother.h"
 //#include "HistogramDistribution.h" //to get static fns. to calc survival <--> density  // already inc. from ConditionalCDFSmoother
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 ScaledConditionalCDFSmoother::ScaledConditionalCDFSmoother() 
@@ -269,4 +269,4 @@ real ScaledConditionalCDFSmoother::smooth(const Vec& source_function, Vec& smoot
   return 0.0; //dummy - FIXME - xsm
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

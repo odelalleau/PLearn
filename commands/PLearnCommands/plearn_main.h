@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_main.h,v 1.4 2004/02/16 20:27:19 tihocan Exp $
+   * $Id: plearn_main.h,v 1.5 2004/02/20 21:11:40 chrish42 Exp $
    ******************************************************* */
 
 //#include <string>
@@ -41,11 +41,11 @@
 #ifndef plearn_main_INC
 #define plearn_main_INC
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 int plearn_main(int argc, char** argv);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

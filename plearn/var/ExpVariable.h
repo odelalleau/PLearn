@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ExpVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
+   * $Id: ExpVariable.h,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,7 @@
 
 #include "UnaryVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -73,6 +73,6 @@ inline Var exp(Var v)
 { return new ExpVariable(v); }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif 

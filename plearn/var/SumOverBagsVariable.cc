@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOverBagsVariable.cc,v 1.4 2004/02/20 14:50:23 yoshua Exp $
+   * $Id: SumOverBagsVariable.cc,v 1.5 2004/02/20 21:11:53 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,7 +44,7 @@
 #include "PLMPI.h"
 #include "DisplayUtils.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -253,6 +253,6 @@ void SumOverBagsVariable::printInfo(bool print_gradient)
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 

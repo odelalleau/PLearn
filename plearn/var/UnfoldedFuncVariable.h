@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedFuncVariable.h,v 1.2 2004/02/20 17:08:31 tihocan Exp $
+   * $Id: UnfoldedFuncVariable.h,v 1.3 2004/02/20 21:11:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,7 @@
 
 #include "NaryVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -86,6 +86,6 @@ private:
 inline Var unfoldedFuncOf(Var input_matrix, Func f)
 { return new UnfoldedFuncVariable(input_matrix,f); }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif 

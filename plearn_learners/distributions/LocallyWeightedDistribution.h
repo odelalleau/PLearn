@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyWeightedDistribution.h,v 1.5 2003/08/13 08:13:46 plearner Exp $ 
+   * $Id: LocallyWeightedDistribution.h,v 1.6 2004/02/20 21:14:46 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file LocallyWeightedDistribution.h */
@@ -42,7 +42,7 @@
 
 #include "Distribution.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class LocallyWeightedDistribution: public Distribution
@@ -112,6 +112,6 @@ public:
 // Declares a few other classes and functions related to this class
   DECLARE_OBJECT_PTR(LocallyWeightedDistribution);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

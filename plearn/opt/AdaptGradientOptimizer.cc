@@ -38,14 +38,14 @@
  
 
 /* *******************************************************      
-   * $Id: AdaptGradientOptimizer.cc,v 1.15 2003/10/14 14:52:48 tihocan Exp $
+   * $Id: AdaptGradientOptimizer.cc,v 1.16 2004/02/20 21:11:48 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "AdaptGradientOptimizer.h"
 #include "SumOfVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 AdaptGradientOptimizer::AdaptGradientOptimizer(real the_start_learning_rate, 
@@ -431,4 +431,4 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
   return early_stop;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

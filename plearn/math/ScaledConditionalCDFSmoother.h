@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ScaledConditionalCDFSmoother.h,v 1.4 2003/08/28 20:53:21 yoshua Exp $ 
+   * $Id: ScaledConditionalCDFSmoother.h,v 1.5 2004/02/20 21:11:46 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file ScaledConditionalCDFSmoother.h */
@@ -46,7 +46,7 @@
 
 #include "ConditionalCDFSmoother.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class ScaledConditionalCDFSmoother: public ConditionalCDFSmoother
@@ -128,6 +128,6 @@ public:
 // Declares a few other classes and functions related to this class
   DECLARE_OBJECT_PTR(ScaledConditionalCDFSmoother);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

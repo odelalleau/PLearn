@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: NistDB.h,v 1.1 2002/11/28 04:28:08 jkeable Exp $
+   * $Id: NistDB.h,v 1.2 2004/02/20 21:11:43 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -49,7 +49,7 @@
 
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -74,7 +74,7 @@ inline void loadMNIST(VMat& training_set, VMat& test_set)
   test_set = new NistDB(false);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 #endif

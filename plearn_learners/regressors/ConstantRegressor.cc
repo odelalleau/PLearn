@@ -34,13 +34,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConstantRegressor.cc,v 1.6 2004/02/10 16:23:32 tihocan Exp $ 
+   * $Id: ConstantRegressor.cc,v 1.7 2004/02/20 21:14:49 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file ConstantRegressor.cc */
 #include "ConstantRegressor.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 ConstantRegressor::ConstantRegressor()
@@ -179,4 +179,4 @@ TVec<string> ConstantRegressor::getTrainCostNames() const
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussMix.h,v 1.7 2004/02/06 01:08:20 yoshua Exp $ 
+   * $Id: GaussMix.h,v 1.8 2004/02/20 21:14:46 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file GaussMix.h */
@@ -46,7 +46,7 @@
 
 #include "PDistribution.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /*
@@ -344,6 +344,6 @@ public:
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(GaussMix);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

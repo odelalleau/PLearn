@@ -35,12 +35,12 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatColumnsVMatrix.cc,v 1.5 2004/01/16 21:23:27 chapados Exp $
+   * $Id: ConcatColumnsVMatrix.cc,v 1.6 2004/02/20 21:14:29 chrish42 Exp $
    ******************************************************* */
 
 #include "ConcatColumnsVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /** ConcatColumnsVMatrix **/
@@ -211,4 +211,4 @@ real ConcatColumnsVMatrix::dot(int i, const Vec& v) const
 }
 
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn

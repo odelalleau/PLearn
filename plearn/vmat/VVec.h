@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: VVec.h,v 1.8 2004/02/17 15:55:06 dorionc Exp $
+   * $Id: VVec.h,v 1.9 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 
@@ -47,7 +47,7 @@
 #include "Object.h"
 #include "VMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 
 //! A VVec is a reference to a row or part of a row (a subrow) of a VMatrix
 
@@ -131,6 +131,6 @@ inline void operator<<(const Vec& v, const VVec& vv)
 inline void operator>>(const Vec& v, const VVec& vv)
 { vv.copyFrom(v); }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

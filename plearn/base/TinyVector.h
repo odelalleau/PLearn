@@ -43,7 +43,7 @@
 
 /*! \file PLearnLibrary/PLearnCore/TinyVector.h */
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 //using namespace std::rel_ops; // ne compile pas, pour une raison etrange
 
@@ -461,6 +461,6 @@ bool operator<(const TinyVector<T,N,TTrait>& x,
                                       y.begin(), y.end());
 }
     
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif // TINYVECTOR_H

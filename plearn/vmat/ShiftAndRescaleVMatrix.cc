@@ -35,13 +35,13 @@
 
 
 /* *******************************************************      
-   * $Id: ShiftAndRescaleVMatrix.cc,v 1.6 2003/09/10 00:09:12 chapados Exp $
+   * $Id: ShiftAndRescaleVMatrix.cc,v 1.7 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 #include "ShiftAndRescaleVMatrix.h"
 #include "VMat_maths.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /** ShiftAndRescaleVMatrix **/
@@ -163,4 +163,4 @@ void ShiftAndRescaleVMatrix::build()
   build_();
 }
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn

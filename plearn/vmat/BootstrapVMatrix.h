@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BootstrapVMatrix.h,v 1.2 2003/11/29 17:39:22 tihocan Exp $
+   * $Id: BootstrapVMatrix.h,v 1.3 2004/02/20 21:14:29 chrish42 Exp $
    ******************************************************* */
 
 
@@ -44,7 +44,7 @@
 
 #include "SelectRowsVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
  
 class BootstrapVMatrix: public SelectRowsVMatrix
@@ -76,6 +76,6 @@ private:
 
 };
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn
 #endif
 

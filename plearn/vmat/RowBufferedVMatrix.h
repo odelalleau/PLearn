@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: RowBufferedVMatrix.h,v 1.3 2003/09/09 18:05:19 plearner Exp $
+   * $Id: RowBufferedVMatrix.h,v 1.4 2004/02/20 21:14:44 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,7 +49,7 @@
 
 #include "VMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class RowBufferedVMatrix: public VMatrix
@@ -80,5 +80,5 @@ public:
   PLEARN_DECLARE_ABSTRACT_OBJECT(RowBufferedVMatrix);
 };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 #endif

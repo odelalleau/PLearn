@@ -42,7 +42,7 @@
 #include "Func.h"
 #include "SDBWithStats.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -1161,7 +1161,7 @@ namespace SDBFields
   typedef SDBVMFieldICBCClassification	FICBCClassification;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif //!<  NGSDBVMAT_H
 

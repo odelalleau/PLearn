@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RowsSubVMatrix.h,v 1.1 2003/10/29 16:55:49 plearner Exp $ 
+   * $Id: RowsSubVMatrix.h,v 1.2 2004/02/20 21:14:44 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -46,7 +46,7 @@
 
 #include "SourceVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class RowsSubVMatrix: public SourceVMatrix
@@ -100,5 +100,5 @@ public:
 
 };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 #endif

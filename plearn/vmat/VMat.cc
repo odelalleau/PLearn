@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat.cc,v 1.12 2004/02/19 21:53:07 tihocan Exp $
+* $Id: VMat.cc,v 1.13 2004/02/20 21:14:44 chrish42 Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat.h"
@@ -48,7 +48,7 @@
 #include "SelectColumnsVMatrix.h"
 #include "SelectRowsFileIndexVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /** VMat **/
@@ -121,4 +121,4 @@ VMat loadAsciiAsVMat(const string& filename)
   return vm;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io_deprecated.h,v 1.4 2003/09/09 18:05:19 plearner Exp $
+   * $Id: pl_io_deprecated.h,v 1.5 2004/02/20 21:11:44 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -52,7 +52,7 @@
 #include "plerror.h"
 #include <cstdio>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -257,7 +257,7 @@ inline void readNewline(istream& in)
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 #endif

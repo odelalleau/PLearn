@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLMPI.h,v 1.4 2002/11/30 04:27:33 plearner Exp $
+   * $Id: PLMPI.h,v 1.5 2004/02/20 21:11:49 chrish42 Exp $
    * AUTHORS: Pascal Vincent 
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -57,7 +57,7 @@
 #include "iostream.h"
 #include "fstream.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -370,7 +370,7 @@ inline int PLMPI::peek_any()
   }
 #endif
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 #endif

@@ -36,13 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: IsAboveThresholdVariable.cc,v 1.4 2003/12/08 03:46:31 yoshua Exp $
+   * $Id: IsAboveThresholdVariable.cc,v 1.5 2004/02/20 21:11:50 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "IsAboveThresholdVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -90,6 +90,6 @@ void IsAboveThresholdVariable::rfprop()
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 

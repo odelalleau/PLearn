@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: OneHotVMatrix.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: OneHotVMatrix.h,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 
@@ -47,7 +47,7 @@
 #include "RowBufferedVMatrix.h"
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
  
 
@@ -87,5 +87,5 @@ class OneHotVMatrix: public RowBufferedVMatrix
 inline VMat onehot(VMat d, int nclasses, real cold_value=0.0, real hot_value=1.0)
 { return new OneHotVMatrix(d, nclasses, cold_value, hot_value); }
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn
 #endif

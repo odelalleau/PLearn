@@ -36,7 +36,7 @@
 
 #include "ProbSparseMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 
 ProbSparseMatrix::ProbSparseMatrix(int n_rows, int n_cols, string name, int mode, bool double_access) : DoubleAccessSparseMatrix<real>(n_rows, n_cols, name, mode, double_access)
 {
@@ -244,4 +244,4 @@ void ProbSparseMatrix::normalizeJoint()
   }
 }
 
-%>
+}

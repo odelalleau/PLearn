@@ -33,14 +33,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ExplicitSplitter.cc,v 1.5 2003/08/13 08:13:46 plearner Exp $ 
+   * $Id: ExplicitSplitter.cc,v 1.6 2004/02/20 21:14:29 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file ExplicitSplitter.cc */
 #include "ExplicitSplitter.h"
 #include "getDataSet.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 ExplicitSplitter::ExplicitSplitter() 
@@ -99,4 +99,4 @@ TVec<VMat> ExplicitSplitter::getSplit(int k)
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

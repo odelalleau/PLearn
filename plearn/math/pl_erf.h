@@ -40,7 +40,7 @@
 
 #include "general.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //! function gamma returns log(Gamma(z)), where
@@ -93,7 +93,7 @@ inline real gauss_density(real x, real mu, real sigma)
 real p_value(real mu, real vn);
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

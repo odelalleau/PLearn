@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.cc,v 1.8 2003/11/21 16:26:17 tihocan Exp $
+ * $Id: LiftStatsCollector.cc,v 1.9 2004/02/20 21:11:46 chrish42 Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -44,7 +44,7 @@
 #include "LiftStatsCollector.h"
 #include "TMat_maths.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 ////////////////////////
@@ -317,4 +317,4 @@ void LiftStatsCollector::update(const Vec& x, real w)
   inherited::update(x,w);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

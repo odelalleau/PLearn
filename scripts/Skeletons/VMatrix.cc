@@ -1,6 +1,6 @@
 #include "DERIVEDCLASS.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 DERIVEDCLASS::DERIVEDCLASS() 
@@ -86,4 +86,4 @@ void DERIVEDCLASS::getSubRow(int i, int j, Vec v) const
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TmpFilenames.h,v 1.2 2003/03/18 18:29:56 ducharme Exp $
+   * $Id: TmpFilenames.h,v 1.3 2004/02/20 21:11:44 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -53,7 +53,7 @@
 #include "stringutils.h"
 #include "PP.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -73,6 +73,6 @@ using namespace std;
       char* newFile(const string directory="/tmp/", const string prefix="");
   };
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

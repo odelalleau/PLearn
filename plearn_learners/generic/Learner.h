@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.h,v 1.12 2003/08/13 08:13:46 plearner Exp $
+   * $Id: Learner.h,v 1.13 2004/02/20 21:14:46 chrish42 Exp $
    ******************************************************* */
 
 
@@ -55,7 +55,7 @@
 #include "VVec.h"
 //#include "TimeMeasurer.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /*!     The base class for learning algorithms, which
@@ -581,7 +581,7 @@ using namespace std;
   }
   
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

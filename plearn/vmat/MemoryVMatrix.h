@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.h,v 1.3 2003/08/13 08:13:46 plearner Exp $
+   * $Id: MemoryVMatrix.h,v 1.4 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 
@@ -46,7 +46,7 @@
 
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
  
 class MemoryVMatrix: public VMatrix
@@ -94,5 +94,5 @@ public:
   void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 #endif

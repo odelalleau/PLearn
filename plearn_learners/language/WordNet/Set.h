@@ -3,7 +3,7 @@
 
 #include "TMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class PPointableSet : public set<int>, public PPointable
@@ -153,6 +153,6 @@ inline ostream& operator<<(ostream& out, Set s)
 //   }
 // }
 
-%>
+}
 
 #endif

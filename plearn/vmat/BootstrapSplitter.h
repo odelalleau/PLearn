@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BootstrapSplitter.h,v 1.1 2003/11/29 17:40:24 tihocan Exp $ 
+   * $Id: BootstrapSplitter.h,v 1.2 2004/02/20 21:14:29 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -46,7 +46,7 @@
 
 #include "Splitter.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class BootstrapSplitter: public Splitter
@@ -135,6 +135,6 @@ public:
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(BootstrapSplitter);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

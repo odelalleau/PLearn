@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMatCommand.cc,v 1.2 2004/01/08 18:55:24 plearner Exp $ 
+   * $Id: VMatCommand.cc,v 1.3 2004/02/20 21:11:40 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file VMatCommand.cc */
@@ -42,7 +42,7 @@
 #include "getDataSet.h"
 #include "vmatmain.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //! This allows to register the 'VMatCommand' command in the command registry
@@ -110,5 +110,5 @@ void VMatCommand::run(const vector<string>& args)
   delete[] argv;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

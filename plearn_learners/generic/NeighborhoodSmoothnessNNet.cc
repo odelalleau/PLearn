@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.3 2004/02/20 20:31:27 tihocan Exp $
+   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.4 2004/02/20 21:14:46 chrish42 Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeighborhoodSmoothnessNNet.h */
@@ -84,7 +84,7 @@
 //#include "DisplayUtils.h"
 //#include "GradientOptimizer.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(NeighborhoodSmoothnessNNet, 
@@ -757,4 +757,4 @@ void NeighborhoodSmoothnessNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   PLERROR("In NeighborhoodSmoothnessNNet::makeDeepCopyFromShallowCopy - Not fully implemented yet");
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

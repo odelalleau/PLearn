@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: plexceptions.h,v 1.3 2003/03/15 00:04:22 plearner Exp $
+   * $Id: plexceptions.h,v 1.4 2004/02/20 21:11:43 chrish42 Exp $
    * AUTHOR: Frederic Morin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -50,7 +50,7 @@
 
 #include <string>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class PLearnError {
@@ -62,7 +62,7 @@ public:
     string message() const { return msg; }; // Return error message
 };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 //!<  USENAMESPACE
 
 #endif //!<  pexceptions_INC

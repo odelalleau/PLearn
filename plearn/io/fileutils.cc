@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.18 2004/02/06 21:12:49 ducharme Exp $
+   * $Id: fileutils.cc,v 1.19 2004/02/20 21:11:44 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -56,7 +56,7 @@
 #include "plerror.h"
 #include "PStream.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 string getcwd()
@@ -607,7 +607,7 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
   return text;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 // int main()

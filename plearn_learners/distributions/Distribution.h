@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Distribution.h,v 1.8 2003/08/13 08:13:46 plearner Exp $ 
+   * $Id: Distribution.h,v 1.9 2004/02/20 21:14:46 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file Distribution.h */
@@ -46,7 +46,7 @@
 
 #include "Learner.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class Distribution: public Learner
@@ -145,6 +145,6 @@ public:
 // Declares a few other classes and functions related to this class
   DECLARE_OBJECT_PTR(Distribution);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

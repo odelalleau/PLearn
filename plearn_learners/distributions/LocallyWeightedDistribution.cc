@@ -33,14 +33,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyWeightedDistribution.cc,v 1.5 2003/08/13 08:13:46 plearner Exp $ 
+   * $Id: LocallyWeightedDistribution.cc,v 1.6 2004/02/20 21:14:46 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file LocallyWeightedDistribution.cc */
 #include "LocallyWeightedDistribution.h"
 #include "ConcatColumnsVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 LocallyWeightedDistribution::LocallyWeightedDistribution() 
@@ -152,4 +152,4 @@ double LocallyWeightedDistribution::log_density(const Vec& x) const
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

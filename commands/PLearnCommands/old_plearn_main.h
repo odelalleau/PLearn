@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: old_plearn_main.h,v 1.1 2002/10/25 03:21:00 plearner Exp $
+   * $Id: old_plearn_main.h,v 1.2 2004/02/20 21:11:40 chrish42 Exp $
    ******************************************************* */
 
 #ifndef old_plearn_main_INC
@@ -42,7 +42,7 @@
 #include "general.h"
 #include "TypeFactory.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //! reads a modelalias -> object_representation map from a model.aliases file
@@ -50,6 +50,6 @@ map<string, string> getModelAliases(const string& filename);
 vector<string> getMultipleModelAliases(const string& model);
 int old_plearn_main(int argc, char** argv);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FractionSplitter.h,v 1.3 2003/08/13 08:13:46 plearner Exp $ 
+   * $Id: FractionSplitter.h,v 1.4 2004/02/20 21:14:44 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file FractionSplitter.h */
@@ -42,7 +42,7 @@
 
 #include "Splitter.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class FractionSplitter: public Splitter
@@ -121,6 +121,6 @@ public:
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(FractionSplitter);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

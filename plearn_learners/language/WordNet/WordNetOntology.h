@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.h,v 1.20 2003/11/28 17:15:53 larocheh Exp $
+   * $Id: WordNetOntology.h,v 1.21 2004/02/20 21:14:48 chrish42 Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -125,7 +125,7 @@
 //     category : concepts (forming an ontology DAG)
 //     synset : sense U category
 //
-namespace PLearn <%
+namespace PLearn {
 
 // utils
 string trimWord(string word);
@@ -485,6 +485,6 @@ public:
 
 };
 
-%>
+}
 
 #endif

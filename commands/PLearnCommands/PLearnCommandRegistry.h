@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: PLearnCommandRegistry.h,v 1.4 2004/02/16 20:24:59 tihocan Exp $
+   * $Id: PLearnCommandRegistry.h,v 1.5 2004/02/20 21:11:40 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,7 @@
 #include "PLearnCommand.h"
 
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class PLearnCommandRegistry
@@ -84,6 +84,6 @@ public:
 };
   
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

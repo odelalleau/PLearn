@@ -37,7 +37,7 @@
 // #include <iostream>
 // #include <cmath>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 #define ITMAX 100
@@ -209,4 +209,4 @@ real p_value(real mu, real vn)
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

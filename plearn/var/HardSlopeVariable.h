@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: HardSlopeVariable.h,v 1.2 2004/02/17 21:03:20 tihocan Exp $
+   * $Id: HardSlopeVariable.h,v 1.3 2004/02/20 21:11:50 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,7 +49,7 @@
 //#include "pl_math.h"
 //#include "Var_utils.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -84,6 +84,6 @@ inline Var d_hard_slope(Var x, Var left, Var right)
   return ifThenElse((x>=left)*(x<=right),invertElements(right-left),var(0.0));
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif 

@@ -35,12 +35,12 @@
 
 
 /* *******************************************************      
-   * $Id: YMDDatedVMatrix.cc,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: YMDDatedVMatrix.cc,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 #include "YMDDatedVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 YMDDatedVMatrix::YMDDatedVMatrix(VMat data_, Mat years_, Mat months_, Mat days_)
@@ -320,4 +320,4 @@ void YMDDatedVMatrix::copyDateOfRow(int row, int &year, int &month, int &day)
   day = (int)days(row,0);
 }
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ReadAndWriteCommand.cc,v 1.3 2004/02/16 20:25:50 tihocan Exp $ 
+   * $Id: ReadAndWriteCommand.cc,v 1.4 2004/02/20 21:11:40 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file ReadAndWriteCommand.cc */
@@ -43,7 +43,7 @@
 //#include "stringutils.h"
 //#include "fileutils.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //! This allows to register the 'ReadAndWriteCommand' command in the command registry
@@ -90,5 +90,5 @@ void ReadAndWriteCommand::run(const vector<string>& args)
   out << *o;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

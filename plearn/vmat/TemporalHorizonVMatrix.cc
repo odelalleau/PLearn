@@ -36,12 +36,12 @@
 
 
 /* *******************************************************      
-   * $Id: TemporalHorizonVMatrix.cc,v 1.2 2003/08/13 08:13:46 plearner Exp $
+   * $Id: TemporalHorizonVMatrix.cc,v 1.3 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 #include "TemporalHorizonVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /** TemporalHorizonVMatrix **/
@@ -149,4 +149,4 @@ string TemporalHorizonVMatrix::help()
     + optionHelp();
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

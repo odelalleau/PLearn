@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.h,v 1.10 2003/10/07 15:28:13 tihocan Exp $
+   * $Id: Variable.h,v 1.11 2004/02/20 21:11:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,7 +47,7 @@
 #include "TMat.h"
 #include "Object.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class Variable;
@@ -419,7 +419,7 @@ inline void Variable::updateAndClear()
   gradient.clear();
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.h,v 1.14 2004/02/07 14:35:49 yoshua Exp $
+   * $Id: GradientOptimizer.h,v 1.15 2004/02/20 21:11:48 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,7 +49,7 @@
 
 #include "Optimizer.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -207,7 +207,7 @@ DECLARE_OBJECT_PTR(GradientOptimizer);
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

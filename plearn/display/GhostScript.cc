@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GhostScript.cc,v 1.6 2004/01/21 01:04:19 plearner Exp $
+   * $Id: GhostScript.cc,v 1.7 2004/02/20 21:11:44 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -45,7 +45,7 @@
 
 #include "GhostScript.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
   real rgb2real(real r, real g, real b)
@@ -340,4 +340,4 @@ void GhostScript::multilineShow(real x, real y, const string& text, real newline
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

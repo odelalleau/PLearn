@@ -35,12 +35,12 @@
 
 
 /* *******************************************************      
-   * $Id: RangeVMatrix.cc,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: RangeVMatrix.cc,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 #include "RangeVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /** Range VMatrix **/
@@ -64,4 +64,4 @@ real RangeVMatrix::get(int i, int j) const
 }
 
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn

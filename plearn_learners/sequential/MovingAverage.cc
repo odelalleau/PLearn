@@ -39,7 +39,7 @@
 //#include "TMat_maths_impl.h"
 //#include "TMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -210,5 +210,5 @@ void MovingAverage::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 */
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.h,v 1.3 2003/08/13 08:13:46 plearner Exp $
+   * $Id: FileVMatrix.h,v 1.4 2004/02/20 21:14:29 chrish42 Exp $
    ******************************************************* */
 
 
@@ -46,7 +46,7 @@
 
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
  
 
@@ -85,5 +85,5 @@ class FileVMatrix: public VMatrix
 
 DECLARE_OBJECT_PTR(FileVMatrix);
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn
 #endif

@@ -36,7 +36,7 @@
 
 #include "MRUFileList.h"
 
-namespace PLearn <%
+namespace PLearn {
 
 MRUFileList::MRUFileList(int _max_opened_files, ios_base::openmode _mode)
   :max_opened_files(_max_opened_files),tot_miss(0),tot_access(0),mode(_mode)
@@ -95,4 +95,4 @@ MRUFileList::~MRUFileList()
   }
 }
 
-%> //end of namespace PLearn
+} //end of namespace PLearn

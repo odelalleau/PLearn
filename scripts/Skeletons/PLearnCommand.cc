@@ -1,6 +1,6 @@
 #include "DERIVEDCLASS.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //! This allows to register the 'DERIVEDCLASS' command in the command registry
@@ -22,5 +22,5 @@ void DERIVEDCLASS::run(const vector<string>& args)
   // *** PLEASE COMPLETE HERE ****
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

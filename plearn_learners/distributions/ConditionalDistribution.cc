@@ -38,7 +38,7 @@
 
 #include "ConditionalDistribution.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 ConditionalDistribution::ConditionalDistribution() 
@@ -89,4 +89,4 @@ void ConditionalDistribution::use(const Vec& input, Vec& output)
     output << variance().toVec();
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

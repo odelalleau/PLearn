@@ -35,7 +35,7 @@
 
 #include "SparseMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 void SparseMatrix::resize(int nbrows,int n_columns,int n_non_zero)
@@ -336,4 +336,4 @@ SparseMatrix add(Array<SparseMatrix>& matrices)
   return C;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

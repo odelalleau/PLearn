@@ -37,7 +37,7 @@
 
 
 /* *******************************************************      
-   * $Id: Var_operators.cc,v 1.1 2003/12/16 17:44:52 plearner Exp $
+   * $Id: Var_operators.cc,v 1.2 2004/02/20 21:11:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -66,7 +66,7 @@
 
 #include "EqualVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 Var operator+(Var v, real cte)
@@ -199,5 +199,5 @@ Var isdifferent(Var v1, Var v2)
 { return (1.0 - isequal(v1,v2) ); }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

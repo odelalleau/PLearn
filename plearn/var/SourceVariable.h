@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: SourceVariable.h,v 1.3 2003/08/13 08:13:17 plearner Exp $
+   * $Id: SourceVariable.h,v 1.4 2004/02/20 21:11:53 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,7 @@
 
 #include "VarArray.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class SourceVariable: public Variable
@@ -90,7 +90,7 @@ public:
 };
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

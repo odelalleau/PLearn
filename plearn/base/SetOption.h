@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SetOption.h,v 1.3 2003/08/13 08:13:16 plearner Exp $ 
+   * $Id: SetOption.h,v 1.4 2004/02/20 21:11:42 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file SetOption.h */
@@ -42,7 +42,7 @@
 
 #include "Object.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class SetOption: public Object
@@ -115,6 +115,6 @@ public:
 // Declares a few other classes and functions related to this class
   DECLARE_OBJECT_PTR(SetOption);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

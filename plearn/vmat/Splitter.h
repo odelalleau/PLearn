@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Splitter.h,v 1.6 2003/11/04 14:42:23 chapados Exp $ 
+   * $Id: Splitter.h,v 1.7 2004/02/20 21:14:44 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file Splitter.h */
@@ -44,7 +44,7 @@
 #include "Array.h"
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /*!
@@ -132,6 +132,6 @@ Vec randomSplit(VMat d, real test_fraction, VMat& train, VMat& test);
 void randomSplit(VMat d, real validation_fraction, real test_fraction, VMat& train, VMat& valid, VMat& test);
 
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.cc,v 1.11 2004/02/20 14:14:19 tihocan Exp $
+   * $Id: StackedLearner.cc,v 1.12 2004/02/20 21:14:47 chrish42 Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -45,7 +45,7 @@
 #include "PLearnerOutputVMatrix.h"
 #include "ShiftAndRescaleVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 StackedLearner::StackedLearner() 
@@ -319,4 +319,4 @@ TVec<string> StackedLearner::getTrainCostNames() const
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

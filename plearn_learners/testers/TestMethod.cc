@@ -35,14 +35,14 @@
  
 
 /* *******************************************************      
-   * $Id: TestMethod.cc,v 1.2 2003/08/13 08:13:47 plearner Exp $
+   * $Id: TestMethod.cc,v 1.3 2004/02/20 21:14:50 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Frederic Morin
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "TestMethod.h"
 
-namespace PLearn <%
+namespace PLearn {
 
 // ###### TestMethod ##########################################################
 
@@ -144,4 +144,4 @@ TestMethod::declareOptions(OptionList &ol)
 
 
 
-%>; // end of namespace PLearn
+}; // end of namespace PLearn

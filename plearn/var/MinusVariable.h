@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MinusVariable.h,v 1.4 2004/02/20 17:08:08 tihocan Exp $
+   * $Id: MinusVariable.h,v 1.5 2004/02/20 21:11:51 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,7 @@
 
 #include "BinaryVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -72,6 +72,6 @@ inline Var minus(Var v, Var w) {
       return new MinusVariable(v, w);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif 

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: YMDDatedVMatrix.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: YMDDatedVMatrix.h,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 
@@ -47,7 +47,7 @@
 #include "DatedVMatrix.h"
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
  
 /*!   A DatedVMatrix that knows about years, months, and days,
@@ -126,5 +126,5 @@ public:
   virtual void reset_dimensions() { PLERROR("YMDDatedVMatrix::reset_dimensions() not implemented"); }
 };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 #endif

@@ -36,14 +36,14 @@
 
 
 /* *******************************************************      
-   * $Id: AffineTransformWeightPenalty.cc,v 1.5 2003/11/28 21:55:26 yoshua Exp $
+   * $Id: AffineTransformWeightPenalty.cc,v 1.6 2004/02/20 21:11:49 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "AffineTransformWeightPenalty.h"
 #include "Var_utils.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -118,6 +118,6 @@ void AffineTransformWeightPenalty::bprop()
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 

@@ -39,7 +39,7 @@
 #include <unistd.h>
 #include "pl_fdstream.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -188,4 +188,4 @@ pl_fdstream::~pl_fdstream()
     delete[] outbuffer;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDateTime.h,v 1.2 2003/07/31 05:23:52 chapados Exp $
+   * $Id: PDateTime.h,v 1.3 2004/02/20 21:11:42 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,7 @@
 #include <iostream>
 #include <string>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /*!  PDateTime must be a concrete class with no virtual function.  Hence it
@@ -166,6 +166,6 @@ double hhmmss_to_double(int hh, int mm, int ss);
 //! convert a day fraction (< 1) to hours/minutes/seconds
 void double_to_hhmmss(double fraction, int& hh, int& mm, int& ss);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

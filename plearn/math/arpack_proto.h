@@ -36,7 +36,7 @@
 #ifndef arpack_proto_INC
 #define arpack_proto_INC
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -95,7 +95,7 @@ extern "C"
               short);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 #endif /* arpack_proto_INC */

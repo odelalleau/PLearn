@@ -37,14 +37,14 @@
  
 
 /* *******************************************************      
-   * $Id: SDBWithStats.cc,v 1.1 2002/07/30 09:01:26 plearner Exp $
+   * $Id: SDBWithStats.cc,v 1.2 2004/02/20 21:11:43 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "SDBWithStats.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
   int FieldStat::max_nsymbols = 400;
@@ -282,4 +282,4 @@ using namespace std;
   }
 
   
-%> // end of namespace PLearn
+} // end of namespace PLearn

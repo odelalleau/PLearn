@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.24 2004/01/07 22:24:25 tihocan Exp $
+   * $Id: StatsCollector.h,v 1.25 2004/02/20 21:11:46 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,7 @@
 #include "TMat.h"
 #include "RealMapping.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class StatsCollectorCounts
@@ -206,6 +206,6 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
 
 TVec<RealMapping> computeRanges(TVec<StatsCollector> stats, int discrete_mincount, int continuous_mincount);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

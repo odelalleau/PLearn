@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KolmogorovSmirnovCommand.h,v 1.1 2003/02/28 22:47:56 plearner Exp $ 
+   * $Id: KolmogorovSmirnovCommand.h,v 1.2 2004/02/20 21:11:40 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file KolmogorovSmirnovCommand.h */
@@ -43,7 +43,7 @@
 #include "PLearnCommand.h"
 #include "PLearnCommandRegistry.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class KolmogorovSmirnovCommand: public PLearnCommand
@@ -66,6 +66,6 @@ protected:
 };
 
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

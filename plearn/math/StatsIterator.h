@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: StatsIterator.h,v 1.5 2003/08/13 08:13:17 plearner Exp $
+   * $Id: StatsIterator.h,v 1.6 2004/02/20 21:11:46 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,7 +51,7 @@
 #include "VMat.h"
 #include "TMat_maths.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -419,7 +419,7 @@ inline StatsIt sharpe_ratio_stats() { return new SharpeRatioStatsIterator(); }
 //!< exponential of the mean
 inline StatsIt exp_mean_stats() { return new ExpMeanStatsIterator(); }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: SampleVariable.cc,v 1.2 2003/01/08 21:34:36 ducharme Exp $
+   * $Id: SampleVariable.cc,v 1.3 2004/02/20 21:11:49 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -46,7 +46,7 @@
 #include "SampleVariable.h"
 #include "random.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /*** SourceSampleVariable ***/
@@ -206,5 +206,5 @@ void DiagonalNormalSampleVariable::fprop()
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

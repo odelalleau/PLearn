@@ -33,13 +33,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SetOption.cc,v 1.3 2003/08/13 08:13:16 plearner Exp $ 
+   * $Id: SetOption.cc,v 1.4 2004/02/20 21:11:42 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file SetOption.cc */
 #include "SetOption.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 SetOption::SetOption() 
@@ -93,4 +93,4 @@ void SetOption::apply(PP<Object> obj, const map<string, string>& aliases)
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

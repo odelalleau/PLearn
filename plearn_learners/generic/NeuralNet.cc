@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
- * $Id: NeuralNet.cc,v 1.18 2004/02/17 21:07:02 tihocan Exp $
+ * $Id: NeuralNet.cc,v 1.19 2004/02/20 21:14:46 chrish42 Exp $
  ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeuralNet.h */
@@ -75,7 +75,7 @@
 #include "SemiSupervisedProbClassCostVariable.h"
 #include "IsMissingVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -514,4 +514,4 @@ void NeuralNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(optimizer, copies);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

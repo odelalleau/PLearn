@@ -42,7 +42,7 @@
 #include <vector>
 #include "OptionBase.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 // Predeclarations
@@ -135,6 +135,6 @@ public:
 void displayObjectHelp(ostream& out, const string& classname);
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif //!<  TYPEFACTORY_H

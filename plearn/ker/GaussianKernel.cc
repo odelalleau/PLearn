@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianKernel.cc,v 1.3 2004/01/27 21:57:25 tihocan Exp $
+   * $Id: GaussianKernel.cc,v 1.4 2004/02/20 21:11:45 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,7 +50,7 @@
 #include "TMat_maths.h"
 #include "PLMPI.h"
 //////////////////////////
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -179,5 +179,5 @@ void GaussianKernel::build()
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.38 2004/02/20 20:32:00 tihocan Exp $
+   * $Id: NNet.cc,v 1.39 2004/02/20 21:14:46 chrish42 Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -71,7 +71,7 @@
 #include "random.h"
 #include "SubVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(NNet, "Ordinary Feedforward Neural Network with 1 or 2 hidden layers", 
@@ -656,4 +656,4 @@ void NNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(optimizer, copies);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

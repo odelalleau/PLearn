@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AsciiVMatrix.h,v 1.6 2003/08/13 08:13:45 plearner Exp $ 
+   * $Id: AsciiVMatrix.h,v 1.7 2004/02/20 21:14:29 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file AsciiVMatrix.h */
@@ -43,7 +43,7 @@
 #include "RowBufferedVMatrix.h"
 #include "fstream.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class AsciiVMatrix: public RowBufferedVMatrix
@@ -115,6 +115,6 @@ public:
 
 };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 #endif
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.24 2004/02/17 21:07:18 tihocan Exp $ 
+   * $Id: PTester.cc,v 1.25 2004/02/20 21:14:50 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -43,7 +43,7 @@
 //#include "AsciiVMatrix.h"
 #include "FileVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 TVec<string> addprepostfix(const string& prefix, const TVec<string>& names, const string& postfix)
@@ -480,4 +480,4 @@ void StatSpec::parseStatname(const string& statname)
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

@@ -36,14 +36,14 @@
 
 
 /* *******************************************************      
-   * $Id: SoftSlopeIntegralVariable.cc,v 1.2 2004/01/05 01:29:06 yoshua Exp $
+   * $Id: SoftSlopeIntegralVariable.cc,v 1.3 2004/02/20 21:11:53 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "SoftSlopeIntegralVariable.h"
 #include "Var_utils.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -169,6 +169,6 @@ void SoftSlopeIntegralVariable::symbolicBprop()
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 

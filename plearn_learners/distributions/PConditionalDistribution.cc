@@ -38,7 +38,7 @@
 
 #include "PConditionalDistribution.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 PConditionalDistribution::PConditionalDistribution() 
@@ -170,4 +170,4 @@ void PConditionalDistribution::computeOutput(const Vec& input, Vec& output) cons
   else PLERROR("PConditionalDistribution: unknown setting of outputs_def = %s",outputs_def.c_str());
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

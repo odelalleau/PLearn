@@ -33,14 +33,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LimitedGaussianSmoother.cc,v 1.8 2003/08/13 08:13:17 plearner Exp $ 
+   * $Id: LimitedGaussianSmoother.cc,v 1.9 2004/02/20 21:11:46 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file LimitedGaussianSmoother.cc */
 #include "LimitedGaussianSmoother.h"
 #include "pl_erf.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 LimitedGaussianSmoother::LimitedGaussianSmoother() 
@@ -228,4 +228,4 @@ real LimitedGaussianSmoother::smooth(const Vec& source_function, Vec& smoothed_f
 */
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.15 2004/02/10 16:19:24 tihocan Exp $
+   * $Id: Kernel.h,v 1.16 2004/02/20 21:11:45 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,7 +47,7 @@
 #include "VMat.h"
 #include "PLMPI.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class Kernel: public Object
@@ -192,7 +192,7 @@ typedef Ker CostFunc;
 typedef CostFunc ProfitFunc;
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

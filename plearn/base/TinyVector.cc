@@ -33,7 +33,7 @@
 
 #include "TinyVector.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -53,4 +53,4 @@ template <>
 const int TinyVectorTrait<int>::Missing = INT_MAX;
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

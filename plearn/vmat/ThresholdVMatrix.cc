@@ -36,7 +36,7 @@
 
 #include "ThresholdVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -65,4 +65,4 @@ void ThresholdVMatrix::getRow(int i, Vec v) const
     v[p]= hot_value;
 }
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn

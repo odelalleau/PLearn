@@ -44,7 +44,7 @@
 #include <string>
 #include <list>
 
-namespace PLearn<%
+namespace PLearn{
 using namespace std;
 
 /* 
@@ -81,5 +81,5 @@ protected:
   ios_base::openmode mode;
 };
 
-%> // end of namespace PLearn  
+} // end of namespace PLearn  
 #endif

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Option.h,v 1.2 2003/05/20 15:42:12 plearner Exp $
+   * $Id: Option.h,v 1.3 2004/02/20 21:11:42 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,7 +48,7 @@
 
 #include "OptionBase.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //! Template class for option definitions
@@ -124,6 +124,6 @@ inline void declareOption(OptionList& ol, const string& optionname, OptionType *
                                                                         defaultval, description)); }
       
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif //!<  Option_INC

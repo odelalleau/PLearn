@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Var_utils.cc,v 1.2 2004/02/17 21:05:19 tihocan Exp $
+   * $Id: Var_utils.cc,v 1.3 2004/02/20 21:11:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,7 +51,7 @@
 //#include "Var_all.h"
 #include "Var_operators.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 Var mean(Var v)
@@ -108,6 +108,6 @@ Var powdistance(Var input1, Var input2, real n)
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 

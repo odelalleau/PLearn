@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: IndexedVMatrix.h,v 1.4 2003/08/13 08:13:46 plearner Exp $
+   * $Id: IndexedVMatrix.h,v 1.5 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 
@@ -42,7 +42,7 @@
 
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //! VMat class that sees a matrix as a collection of triplets
@@ -80,5 +80,5 @@ private:
 
 };
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn
 #endif

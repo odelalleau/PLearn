@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: Hash.cc,v 1.1 2002/11/22 19:45:59 ducharme Exp $
+   * $Id: Hash.cc,v 1.2 2004/02/20 21:11:46 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -43,7 +43,7 @@
 
 #include "Hash.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 const unsigned int Hash_UNUSED_TAG   = 0xffffffffu;
@@ -88,4 +88,4 @@ const unsigned int Hash_NOMBRES_MAGIQUES[256]= // un gros tas de nombres magique
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

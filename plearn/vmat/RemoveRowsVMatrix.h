@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: RemoveRowsVMatrix.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: RemoveRowsVMatrix.h,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 
@@ -46,7 +46,7 @@
 
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
  
 //!  sees an underlying VMat with the specified rows excluded
@@ -98,5 +98,5 @@ inline VMat removeRows(VMat d, Vec rownums)
 inline VMat removeRow(VMat d, int rownum)
 { return new RemoveRowsVMatrix(d,Vec(1,rownum)); }
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn
 #endif

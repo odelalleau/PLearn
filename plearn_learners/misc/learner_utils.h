@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: learner_utils.h,v 1.1 2003/06/05 04:22:44 plearner Exp $ 
+   * $Id: learner_utils.h,v 1.2 2004/02/20 21:14:48 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file learner_utils.h */
@@ -43,7 +43,7 @@
 
 #include "PLearner.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 Mat compute_learner_outputs(PP<PLearner> learner, VMat dataset);
@@ -80,6 +80,6 @@ void DX_save_2D_data_for_grid(const string& filename, const string& basename,
                                Mat data);
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

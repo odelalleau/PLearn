@@ -40,7 +40,7 @@
 #include "TMat.h"
 
 #define DISCOUNT_MASS 0.7
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class ProbVector : public Vec
@@ -61,6 +61,6 @@ class ProbVector : public Vec
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

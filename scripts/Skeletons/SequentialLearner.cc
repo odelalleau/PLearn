@@ -1,6 +1,6 @@
 #include "DERIVEDCLASS.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -76,5 +76,5 @@ TVec<string> DERIVEDCLASS::getTrainCostNames() const
 TVec<string> DERIVEDCLASS::getTestCostNames() const
 { return DERIVEDCLASS::getTrainCostNames(); }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

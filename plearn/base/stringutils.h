@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.18 2004/02/10 16:29:00 tihocan Exp $
+   * $Id: stringutils.h,v 1.19 2004/02/20 21:11:43 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -58,7 +58,7 @@
 #include <sstream>
 // #include "TMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
   
 #if defined(_MINGW_) || defined(WIN32)
@@ -283,7 +283,7 @@ vector<string> remove(const vector<string> &v, string element);
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
- * $Id: AutoVMatrix.cc,v 1.3 2003/08/13 08:13:45 plearner Exp $
+ * $Id: AutoVMatrix.cc,v 1.4 2004/02/20 21:14:29 chrish42 Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -44,7 +44,7 @@
 #include "AutoVMatrix.h"
 #include "getDataSet.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(AutoVMatrix, "ONE LINE DESCR", "NO HELP");
@@ -82,6 +82,6 @@ void AutoVMatrix::build()
   build_();
 }
  
-%> 
+} 
 
 

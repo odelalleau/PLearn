@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: random.h,v 1.5 2004/01/13 22:38:52 yoshua Exp $
+   * $Id: random.h,v 1.6 2004/02/20 21:11:47 chrish42 Exp $
    ******************************************************* */
 
 #ifndef RANDOM_H
@@ -42,7 +42,7 @@
 
 #include "TMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
   /*
@@ -199,7 +199,7 @@ void computeRanks(const TMat<T>& mat, TMat<T>& ranks)
       ranks(int(sorted[j](i,1)),j) = i;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

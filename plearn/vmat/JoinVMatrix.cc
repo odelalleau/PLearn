@@ -33,13 +33,13 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: JoinVMatrix.cc,v 1.3 2003/08/13 08:13:46 plearner Exp $
+   * $Id: JoinVMatrix.cc,v 1.4 2004/02/20 21:14:44 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include <JoinVMatrix.h>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -222,4 +222,4 @@ string JoinVMatrix::getString(int row,int col) const
     return slave->getString(row,col);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

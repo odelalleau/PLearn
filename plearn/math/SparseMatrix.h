@@ -40,7 +40,7 @@
 #include "Mat.h"
 #include "Array.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -109,6 +109,6 @@ SparseMatrix operator+(const SparseMatrix& A, const SparseMatrix& B);
 SparseMatrix add(Array<SparseMatrix>& matrices);
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

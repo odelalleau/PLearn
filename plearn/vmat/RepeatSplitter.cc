@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RepeatSplitter.cc,v 1.3 2004/01/27 14:15:41 tihocan Exp $ 
+   * $Id: RepeatSplitter.cc,v 1.4 2004/02/20 21:14:44 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file RepeatSplitter.cc */
@@ -42,7 +42,7 @@
 #include "RepeatSplitter.h"
 #include "SelectRowsVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 ////////////////////
@@ -172,4 +172,4 @@ void RepeatSplitter::setDataSet(VMat the_dataset) {
   build(); // necessary to recompute the indices.
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

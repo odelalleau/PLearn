@@ -1,7 +1,7 @@
 
 #include "DERIVEDCLASS.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 DERIVEDCLASS::DERIVEDCLASS() 
@@ -82,4 +82,4 @@ real DERIVEDCLASS::smooth(const Vec& source_function, Vec smoothed_function,
   PLERROR("smooth not implemented for DERIVEDCLASS.");
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: RealMapping.h,v 1.15 2004/01/13 20:00:23 ducharme Exp $
+   * $Id: RealMapping.h,v 1.16 2004/02/20 21:11:42 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,7 +46,7 @@
 #include "TMat.h"
 #include <map>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
   //! represents a real range: i.e. one of ]low,high[ ; [low,high[; [low,high]; ]low,high]
@@ -236,6 +236,6 @@ PStream& operator>>(PStream& in, RealRange &x);
 
   DECLARE_OBJECT_PTR(RealMapping);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

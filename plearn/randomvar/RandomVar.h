@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: RandomVar.h,v 1.4 2003/03/18 18:29:56 ducharme Exp $
+   * $Id: RandomVar.h,v 1.5 2004/02/20 21:11:48 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -340,7 +340,7 @@
 //!  used only for defining RandomVarVMatrix
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -1555,7 +1555,7 @@ class RandomVarVMatrix: public VMatrix
 
 //!   template <> void deepCopyField(RandomVar& field, CopiesMap& copies);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

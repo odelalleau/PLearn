@@ -37,14 +37,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalCDFSmoother.cc,v 1.4 2003/08/31 14:31:18 yoshua Exp $ 
+   * $Id: ConditionalCDFSmoother.cc,v 1.5 2004/02/20 21:11:46 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file ConditionalCDFSmoother.cc */
 
 #include "ConditionalCDFSmoother.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 ConditionalCDFSmoother::ConditionalCDFSmoother() {}
@@ -93,4 +93,4 @@ real ConditionalCDFSmoother::smooth(const Vec& source_function, Vec& smoothed_fu
   return 0.0;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

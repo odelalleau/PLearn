@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.h,v 1.2 2003/09/20 20:33:35 yoshua Exp $
+   * $Id: LinearRegressor.h,v 1.3 2004/02/20 21:14:49 chrish42 Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.h */
@@ -43,7 +43,7 @@
 
 #include "PLearner.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class LinearRegressor: public PLearner
@@ -172,6 +172,6 @@ public:
 // Declares a few other classes and functions related to this class
   DECLARE_OBJECT_PTR(LinearRegressor);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HistogramDistribution.cc,v 1.11 2004/02/16 21:23:57 tihocan Exp $ 
+   * $Id: HistogramDistribution.cc,v 1.12 2004/02/20 21:14:46 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file HistogramDistribution.cc */
@@ -41,7 +41,7 @@
 //#include <algorithm>
 //#include <cmath>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 HistogramDistribution::HistogramDistribution() {}
@@ -345,4 +345,4 @@ void HistogramDistribution::calc_survival_from_density(const Vec& density_, Vec&
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SoftmaxLossVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
+   * $Id: SoftmaxLossVariable.h,v 1.4 2004/02/20 21:11:53 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,7 +46,7 @@
 #include "BinaryVariable.h"
 #include "MatrixSoftmaxLossVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -78,6 +78,6 @@ inline Var softmax(Var input, Var index)
   else return new MatrixSoftmaxLossVariable(input, index);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif 

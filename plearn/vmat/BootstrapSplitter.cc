@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BootstrapSplitter.cc,v 1.1 2003/11/29 17:40:24 tihocan Exp $ 
+   * $Id: BootstrapSplitter.cc,v 1.2 2004/02/20 21:14:29 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file BootstrapSplitter.cc */
@@ -41,7 +41,7 @@
 #include "BootstrapSplitter.h"
 #include "BootstrapVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 BootstrapSplitter::BootstrapSplitter() 
@@ -155,4 +155,4 @@ void BootstrapSplitter::setDataSet(VMat the_dataset) {
   build(); // necessary to recompute the bootstrap samples.
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

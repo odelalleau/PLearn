@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plerror.cc,v 1.4 2003/03/15 00:04:21 plearner Exp $
+   * $Id: plerror.cc,v 1.5 2004/02/20 21:11:43 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -50,7 +50,7 @@
 
 //extern ofstream debug_stream;
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 ostream* error_stream = &cerr;
@@ -122,4 +122,4 @@ void exitmsg(const char* msg, ...)
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

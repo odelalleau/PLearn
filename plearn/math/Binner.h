@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Binner.h,v 1.4 2003/08/13 08:13:17 plearner Exp $ 
+   * $Id: Binner.h,v 1.5 2004/02/20 21:11:46 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file Binner.h */
@@ -48,7 +48,7 @@
 #include "VMat.h"
 #include "RealMapping.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class Binner: public Object
@@ -116,6 +116,6 @@ public:
 // Declares a few other classes and functions related to this class
   DECLARE_OBJECT_PTR(Binner);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

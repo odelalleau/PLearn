@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: PLearnCommandRegistry.cc,v 1.6 2004/02/16 20:24:59 tihocan Exp $
+   * $Id: PLearnCommandRegistry.cc,v 1.7 2004/02/20 21:11:40 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -41,7 +41,7 @@
 #include <iostream>
 #include <vector>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 PLearnCommandRegistry::command_map& PLearnCommandRegistry::commands()
@@ -100,5 +100,5 @@ void PLearnCommandRegistry::print_command_summary(ostream& out)
       }
   }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

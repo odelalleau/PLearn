@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: Popen.h,v 1.2 2002/09/17 01:27:34 zouave Exp $
+   * $Id: Popen.h,v 1.3 2004/02/20 21:11:49 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,7 +49,7 @@
 
 #include "general.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
   class Popen: public PPointable
@@ -98,6 +98,6 @@ using namespace std;
 */
   vector<string> execute(const string& command);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

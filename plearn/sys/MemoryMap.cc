@@ -33,7 +33,7 @@
 
 //#include <sys/stat.h>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 #if !(!defined(_MSC_VER) && !defined(_MINGW_))
@@ -145,4 +145,4 @@ void memoryUnmap(void * data, tFileHandle handle, int length)
 
 #endif  // version linux
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

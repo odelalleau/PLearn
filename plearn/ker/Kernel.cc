@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.12 2004/02/01 03:27:47 tihocan Exp $
+   * $Id: Kernel.cc,v 1.13 2004/02/20 21:11:45 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,7 +50,7 @@
 #include "TMat_maths.h"
 #include "PLMPI.h"
 //////////////////////////
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 using namespace std;
@@ -474,5 +474,5 @@ Mat findClosestPairsOfDifferentClass(int k, VMat data, Ker dist)
   return result;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

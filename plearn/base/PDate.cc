@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDate.cc,v 1.5 2004/02/06 21:12:42 ducharme Exp $
+   * $Id: PDate.cc,v 1.6 2004/02/20 21:11:42 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,7 +44,7 @@
 #include "general.h"                // for MISSING_VALUE
 #include <ctype.h>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 PDate::PDate()
@@ -177,4 +177,4 @@ PDate float_to_date(float f)
   return date;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

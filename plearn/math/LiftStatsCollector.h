@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.h,v 1.7 2003/11/21 16:26:17 tihocan Exp $
+ * $Id: LiftStatsCollector.h,v 1.8 2004/02/20 21:11:46 chrish42 Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -46,7 +46,7 @@
 
 #include "VecStatsCollector.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class LiftStatsCollector: public VecStatsCollector
@@ -155,6 +155,6 @@ public:
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(LiftStatsCollector);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

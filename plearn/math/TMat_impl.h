@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_impl.h,v 1.4 2004/02/16 20:28:27 tihocan Exp $
+   * $Id: TMat_impl.h,v 1.5 2004/02/20 21:11:46 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -47,7 +47,7 @@
 #ifndef TMAT_IMPL_H
 #define TMAT_IMPL_H
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -557,6 +557,6 @@ TMat<T> diagonalmatrix(const TVec<T>& v)
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif // TMAT_IMPL_H

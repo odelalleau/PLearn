@@ -36,12 +36,12 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsVMatrix.cc,v 1.8 2003/12/05 18:57:07 tihocan Exp $
+   * $Id: SelectRowsVMatrix.cc,v 1.9 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 #include "SelectRowsVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /** SelectRowsVMatrix **/
@@ -144,4 +144,4 @@ string SelectRowsVMatrix::help()
     + optionHelp();
 }
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn

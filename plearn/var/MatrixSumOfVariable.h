@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixSumOfVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
+   * $Id: MatrixSumOfVariable.h,v 1.4 2004/02/20 21:11:51 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,7 @@
 
 #include "NaryVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -91,6 +91,6 @@ inline Var sumOf(VMat distr, Func f, int nsamples, int input_size)
 inline Var meanOf(VMat distr, Func f, int nsamples, int input_size)
 { return new MatrixSumOfVariable(distr, f/nsamples, nsamples, input_size); }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif 

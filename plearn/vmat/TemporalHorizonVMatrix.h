@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: TemporalHorizonVMatrix.h,v 1.2 2003/08/13 08:13:46 plearner Exp $
+   * $Id: TemporalHorizonVMatrix.h,v 1.3 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 
@@ -46,7 +46,7 @@
 
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
  
 //!  This VMat delay the last targetsize entries of an underlying VMat
@@ -96,5 +96,5 @@ private:
 DECLARE_OBJECT_PTR(TemporalHorizonVMatrix);
 
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn
 #endif

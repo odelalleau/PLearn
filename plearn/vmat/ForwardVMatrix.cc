@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
- * $Id: ForwardVMatrix.cc,v 1.7 2003/10/08 23:01:56 plearner Exp $
+ * $Id: ForwardVMatrix.cc,v 1.8 2004/02/20 21:14:44 chrish42 Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -47,7 +47,7 @@
 #include "Kernel.h"
 #include "Func.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(ForwardVMatrix, "ONE LINE DESCR", "NO HELP");
@@ -249,6 +249,6 @@ void ForwardVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies
   deepCopyField(vm, copies);
 }
 
-%> 
+} 
 
 

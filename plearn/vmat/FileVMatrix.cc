@@ -35,13 +35,13 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.11 2004/02/13 21:50:31 ducharme Exp $
+   * $Id: FileVMatrix.cc,v 1.12 2004/02/20 21:14:29 chrish42 Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
 #include "fileutils.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -359,4 +359,4 @@ void FileVMatrix::flush()
   fflush(f);
 }
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn

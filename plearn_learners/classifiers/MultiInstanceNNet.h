@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.h,v 1.5 2004/02/19 22:03:27 yoshua Exp $
+   * $Id: MultiInstanceNNet.h,v 1.6 2004/02/20 21:14:45 chrish42 Exp $
    ******************************************************* */
 
 /*! \file PLearn/plearn_learners/classifiers/MultiInstanceNNet.h */
@@ -47,7 +47,7 @@
 #include "Optimizer.h"
 //#include "Var_all.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
   class MultiInstanceNNet: public PLearner
@@ -164,7 +164,7 @@ using namespace std;
 
   DECLARE_OBJECT_PTR(MultiInstanceNNet);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

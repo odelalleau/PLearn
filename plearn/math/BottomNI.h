@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: BottomNI.h,v 1.2 2003/06/04 18:51:52 jkeable Exp $
+   * $Id: BottomNI.h,v 1.3 2004/02/20 21:11:46 chrish42 Exp $
    * AUTHORS: Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -51,7 +51,7 @@
 #include "general.h"
 #include "TMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /*!     This is a very simple class, that allows you to keep track of the bottom
@@ -127,7 +127,7 @@ using namespace std;
     const TVec< pair<T,int> >& getBottomN() { return bottomn; }
   };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

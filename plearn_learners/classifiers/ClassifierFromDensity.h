@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ClassifierFromDensity.h,v 1.2 2003/08/13 08:13:46 plearner Exp $ 
+   * $Id: ClassifierFromDensity.h,v 1.3 2004/02/20 21:14:45 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file ClassifierFromDensity.h */
@@ -43,7 +43,7 @@
 
 #include "PLearner.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class ClassifierFromDensity: public PLearner
@@ -144,6 +144,6 @@ public:
 // Declares a few other classes and functions related to this class
   DECLARE_OBJECT_PTR(ClassifierFromDensity);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

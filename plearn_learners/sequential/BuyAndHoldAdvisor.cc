@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BuyAndHoldAdvisor.cc,v 1.3 2004/02/16 22:26:08 dorionc Exp $ 
+   * $Id: BuyAndHoldAdvisor.cc,v 1.4 2004/02/20 21:14:49 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -43,7 +43,7 @@
 
 #include "BuyAndHoldAdvisor.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -169,5 +169,5 @@ void BuyAndHoldAdvisor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   PLERROR("BuyAndHoldAdvisor::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 } 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

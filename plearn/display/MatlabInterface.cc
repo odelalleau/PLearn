@@ -35,7 +35,7 @@
 
 
 /* *******************************************************
-   * $Id: MatlabInterface.cc,v 1.2 2003/03/18 18:29:56 ducharme Exp $
+   * $Id: MatlabInterface.cc,v 1.3 2004/02/20 21:11:44 chrish42 Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -44,7 +44,7 @@
 #include "TypesNumeriques.h"
 #include "TmpFilenames.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -387,4 +387,4 @@ void MatlabInterface::eigs_r11(RowMapSparseMatrix<real>& A, Vec& evalues,
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

@@ -35,12 +35,12 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.cc,v 1.4 2003/08/13 08:13:46 plearner Exp $
+   * $Id: MemoryVMatrix.cc,v 1.5 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 #include "MemoryVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -164,4 +164,4 @@ real MemoryVMatrix::dot(int i, const Vec& v) const
   return res;
 }
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn

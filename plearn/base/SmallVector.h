@@ -43,7 +43,7 @@
 #include "ArrayAllocatorTrivial.h"
 #include "general.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -495,7 +495,7 @@ bool operator<(const SmallVector<T,SizeBits,Allocator>& x,
                                       y.begin(), y.end());
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 #endif

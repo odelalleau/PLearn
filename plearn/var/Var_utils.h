@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Var_utils.h,v 1.9 2004/02/17 21:03:20 tihocan Exp $
+   * $Id: Var_utils.h,v 1.10 2004/02/20 21:11:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,7 +47,7 @@
 //#include "Var_operators.h"
 #include "Var.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /*! 
@@ -75,7 +75,7 @@ Var entropy(Var v, bool normalize = true);
 Var distance(Var input1, Var input2, real n);
 Var powdistance(Var input1, Var input2, real n);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif 
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.12 2004/02/06 21:12:49 ducharme Exp $
+   * $Id: getDataSet.cc,v 1.13 2004/02/20 21:11:44 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -57,7 +57,7 @@
 #include "databases.h"
 #include "StringTable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -263,4 +263,4 @@ map<string,string> getDatasetAliases(const string& dir_or_file_path)
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

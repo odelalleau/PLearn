@@ -36,14 +36,14 @@
 
 
 /* *******************************************************      
-   * $Id: SemiSupervisedProbClassCostVariable.cc,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: SemiSupervisedProbClassCostVariable.cc,v 1.3 2004/02/20 21:11:52 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "SemiSupervisedProbClassCostVariable.h"
 #include "Var_utils.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -136,6 +136,6 @@ void SemiSupervisedProbClassCostVariable::rfprop()
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 

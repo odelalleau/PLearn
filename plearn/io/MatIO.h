@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: MatIO.h,v 1.6 2004/02/16 17:06:15 lheureup Exp $
+   * $Id: MatIO.h,v 1.7 2004/02/20 21:11:44 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,7 +48,7 @@
 #include "fileutils.h"
 #include <stdlib.h>                          //!< for strtod
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -419,7 +419,7 @@ void loadAscii(const string& filename, TMat<T>& mat)
   loadAscii(filename,mat,fn);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 #endif

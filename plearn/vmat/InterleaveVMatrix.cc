@@ -35,12 +35,12 @@
 
 
 /* *******************************************************      
-   * $Id: InterleaveVMatrix.cc,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: InterleaveVMatrix.cc,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 #include "InterleaveVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -114,4 +114,4 @@ void InterleaveVMatrix::getSubRow(int i, int j, Vec v) const
   vm[m]->getSubRow(pos, j, v);
 }
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn

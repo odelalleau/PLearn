@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianDistribution.h,v 1.5 2003/12/05 22:13:46 plearner Exp $
+   * $Id: GaussianDistribution.h,v 1.6 2004/02/20 21:14:46 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,7 +47,7 @@
 
 #include "PDistribution.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
   // This is a density estimation learner.
@@ -95,6 +95,6 @@ using namespace std;
 
   DECLARE_OBJECT_PTR(GaussianDistribution);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: SortRowsVMatrix.h,v 1.1 2003/12/05 18:55:01 tihocan Exp $
+   * $Id: SortRowsVMatrix.h,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 
@@ -44,7 +44,7 @@
 
 #include "SelectRowsVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
  
 //! Sort the samples of a VMatrix according to one (or more)
@@ -85,5 +85,5 @@ private:
 
 };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 #endif

@@ -35,13 +35,13 @@
  
 
 /* *******************************************************      
-   * $Id: CompactVMatrixPolynomialKernel.cc,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: CompactVMatrixPolynomialKernel.cc,v 1.3 2004/02/20 21:11:45 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "CompactVMatrixPolynomialKernel.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(CompactVMatrixPolynomialKernel, "ONE LINE DESCR", "NO HELP");
@@ -93,4 +93,4 @@ void CompactVMatrixPolynomialKernel::declareOptions(OptionList &ol)
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LearnerCommand.cc,v 1.2 2004/02/16 20:24:30 tihocan Exp $ 
+   * $Id: LearnerCommand.cc,v 1.3 2004/02/20 21:11:40 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -48,7 +48,7 @@
 #include "getDataSet.h"
 //#include "PStream.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //! This allows to register the 'LearnerCommand' command in the command registry
@@ -134,5 +134,5 @@ void LearnerCommand::run(const vector<string>& args)
     PLERROR("Invalid command %s check the help for available commands",command.c_str());
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

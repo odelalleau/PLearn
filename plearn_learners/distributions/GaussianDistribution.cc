@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianDistribution.cc,v 1.6 2004/02/16 21:23:57 tihocan Exp $
+   * $Id: GaussianDistribution.cc,v 1.7 2004/02/20 21:14:46 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,7 +49,7 @@
 #include "distr_maths.h"
 #include "random.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 #define ZEROGAMMA
@@ -153,4 +153,4 @@ void GaussianDistribution::generate(Vec& x) const
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

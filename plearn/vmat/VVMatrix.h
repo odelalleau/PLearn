@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.h,v 1.3 2003/08/13 08:13:46 plearner Exp $
+   * $Id: VVMatrix.h,v 1.4 2004/02/20 21:14:44 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -41,7 +41,7 @@
 
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //! this class is a wrapper for a .vmat VMatrix.
@@ -122,7 +122,7 @@ public:
 
 DECLARE_OBJECT_PTR(VVMatrix);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 #endif // VVMatrix_INC

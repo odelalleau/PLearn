@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: AutoSDBVMatrix.cc,v 1.3 2004/02/06 21:12:49 ducharme Exp $
+   * $Id: AutoSDBVMatrix.cc,v 1.4 2004/02/20 21:11:43 chrish42 Exp $
    * AUTHOR: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -46,7 +46,7 @@
 #include "fileutils.h"
 
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 AutoSDBVMatrix::AutoSDBVMatrix(const string& dbname)
@@ -127,6 +127,6 @@ void AutoSDBVMatrix::getMappings()
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 

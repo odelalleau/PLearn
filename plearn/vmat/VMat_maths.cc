@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat_maths.cc,v 1.15 2004/02/17 15:55:06 dorionc Exp $
+* $Id: VMat_maths.cc,v 1.16 2004/02/20 21:14:44 chrish42 Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat_maths.h"
@@ -55,7 +55,7 @@
 #include "ConditionalStatsCollector.h"
 #include "stats_utils.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /** Statistics functions **/
@@ -1239,4 +1239,4 @@ void correlations(const VMat& x, const VMat& y, Mat& r, Mat& pvalues)
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

@@ -36,7 +36,7 @@
 
 #include "SmoothedProbSparseMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 
 // Normalize with Laplace smoothing : 
 // Warning : resulting matrices are _NOT_ normalized as such !!!
@@ -398,4 +398,4 @@ bool ComplementedProbSparseMatrix::checkCondProbIntegrity()
 }
 
 
-%>
+}

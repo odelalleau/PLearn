@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.cc,v 1.8 2004/02/20 14:43:18 yoshua Exp $
+   * $Id: MultiInstanceNNet.cc,v 1.9 2004/02/20 21:14:45 chrish42 Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/MultiInstanceNNet.h */
@@ -71,7 +71,7 @@
 //#include "DisplayUtils.h"
 //#include "GradientOptimizer.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(MultiInstanceNNet, 
@@ -576,4 +576,4 @@ void MultiInstanceNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(optimizer, copies);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

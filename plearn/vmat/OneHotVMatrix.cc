@@ -35,12 +35,12 @@
 
 
 /* *******************************************************      
-   * $Id: OneHotVMatrix.cc,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: OneHotVMatrix.cc,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 #include "OneHotVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -76,4 +76,4 @@ real OneHotVMatrix::dot(int i, const Vec& v) const
   return underlying_distr->dot(i,v);
 }
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn

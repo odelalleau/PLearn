@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MulticlassErrorCostFunction.cc,v 1.1 2003/12/15 22:08:32 dorionc Exp $
+   * $Id: MulticlassErrorCostFunction.cc,v 1.2 2004/02/20 21:11:45 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,7 +50,7 @@
 #include "TMat_maths.h"
 #include "PLMPI.h"
 //////////////////////////
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -89,5 +89,5 @@ void MulticlassErrorCostFunction::oldread(istream& in)
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

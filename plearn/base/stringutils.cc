@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.cc,v 1.15 2004/02/10 16:29:00 tihocan Exp $
+   * $Id: stringutils.cc,v 1.16 2004/02/20 21:11:43 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -49,7 +49,7 @@
 #include "PLMPI.h"
 #endif //USING_MPI
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -619,7 +619,7 @@ ostream& operator<<(ostream& out, const vector<string>& vs)
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 

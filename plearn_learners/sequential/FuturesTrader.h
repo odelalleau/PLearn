@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.h,v 1.15 2004/02/18 21:06:31 dorionc Exp $ 
+   * $Id: FuturesTrader.h,v 1.16 2004/02/20 21:14:49 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.h */
@@ -43,7 +43,7 @@
 
 #include "Trader.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class FuturesTrader: public Trader
@@ -202,6 +202,6 @@ public:
 //! Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(FuturesTrader);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

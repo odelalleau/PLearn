@@ -35,7 +35,7 @@
 
 #include "pl_hash_fun.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -87,4 +87,4 @@ unsigned int hashbytes(const char* byte_start, int byte_length)
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

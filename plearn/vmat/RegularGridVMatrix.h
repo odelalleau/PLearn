@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RegularGridVMatrix.h,v 1.2 2003/08/27 19:20:49 ducharme Exp $ 
+   * $Id: RegularGridVMatrix.h,v 1.3 2004/02/20 21:14:44 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file RegularGridVMatrix.h */
@@ -43,7 +43,7 @@
 
 #include "RowBufferedVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class RegularGridVMatrix: public RowBufferedVMatrix
@@ -107,5 +107,5 @@ public:
 
 };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 #endif

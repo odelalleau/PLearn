@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: plerror.h,v 1.3 2003/03/15 00:04:21 plearner Exp $
+   * $Id: plerror.h,v 1.4 2004/02/20 21:11:43 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -53,7 +53,7 @@
 #include <iostream>
 #include "plexceptions.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 #ifndef USE_EXCEPTIONS
@@ -67,6 +67,6 @@ void errormsg(const char* msg, ...);
 void warningmsg(const char* msg, ...);
 void exitmsg(const char* msg, ...);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

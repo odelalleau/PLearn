@@ -34,14 +34,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.cc,v 1.4 2003/10/01 00:11:02 yoshua Exp $
+   * $Id: LinearRegressor.cc,v 1.5 2004/02/20 21:14:49 chrish42 Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.cc */
 #include "LinearRegressor.h"
 #include "VMat_maths.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /* ### Initialise all fields to their default value here */
@@ -228,4 +228,4 @@ TVec<string> LinearRegressor::getTrainCostNames() const
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

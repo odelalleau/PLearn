@@ -35,12 +35,12 @@
 
 
 /* *******************************************************      
-   * $Id: RemapLastColumnVMatrix.cc,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: RemapLastColumnVMatrix.cc,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 #include "RemapLastColumnVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -96,4 +96,4 @@ void RemapLastColumnVMatrix::getRow(int i, Vec samplevec) const
   }
 }
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOverBagsVariable.h,v 1.4 2004/02/20 14:50:23 yoshua Exp $
+   * $Id: SumOverBagsVariable.h,v 1.5 2004/02/20 21:11:53 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,7 @@
 
 #include "NaryVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -113,6 +113,6 @@ class SumOverBagsVariable: public NaryVariable
 inline Var sumOverBags(VMat vmat, Func f, int max_bag_size, int nsamples)
 { return new SumOverBagsVariable(vmat,f,max_bag_size,nsamples); }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif 

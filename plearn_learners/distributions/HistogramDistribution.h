@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HistogramDistribution.h,v 1.10 2003/08/31 14:31:18 yoshua Exp $ 
+   * $Id: HistogramDistribution.h,v 1.11 2004/02/20 21:14:46 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file HistogramDistribution.h */
@@ -44,7 +44,7 @@
 #include "Binner.h"
 #include "Smoother.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class HistogramDistribution: public PDistribution
@@ -178,6 +178,6 @@ public:
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(HistogramDistribution);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

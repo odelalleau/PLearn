@@ -43,7 +43,7 @@
 #include "VMat.h"
 #include "PP.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -97,6 +97,6 @@ class SequentialValidation: public Object
 //! Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(SequentialValidation);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

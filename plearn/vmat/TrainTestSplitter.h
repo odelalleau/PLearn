@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainTestSplitter.h,v 1.6 2003/11/27 20:11:16 tihocan Exp $ 
+   * $Id: TrainTestSplitter.h,v 1.7 2004/02/20 21:14:44 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file TrainTestSplitter.h */
@@ -44,7 +44,7 @@
 
 #include "Splitter.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class TrainTestSplitter: public Splitter
@@ -120,6 +120,6 @@ public:
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(TrainTestSplitter);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

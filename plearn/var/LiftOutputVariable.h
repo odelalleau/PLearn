@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: LiftOutputVariable.h,v 1.1 2003/11/20 15:29:16 tihocan Exp $
+   * $Id: LiftOutputVariable.h,v 1.2 2004/02/20 21:11:50 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -42,7 +42,7 @@
 
 #include "BinaryVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class LiftOutputVariable: public BinaryVariable
@@ -66,6 +66,6 @@ inline Var lift_output(Var linear_output, Var target)
   return new LiftOutputVariable(linear_output, target);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif 

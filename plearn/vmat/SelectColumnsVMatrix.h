@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectColumnsVMatrix.h,v 1.3 2003/08/13 08:13:46 plearner Exp $
+   * $Id: SelectColumnsVMatrix.h,v 1.4 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 
@@ -47,7 +47,7 @@
 
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
  
 //!  selects variables (columns) from a sub-distribution
@@ -99,5 +99,5 @@ private:
 
 };
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn
 #endif

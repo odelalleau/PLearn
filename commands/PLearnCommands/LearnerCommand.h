@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LearnerCommand.h,v 1.1 2004/02/13 20:35:29 plearner Exp $ 
+   * $Id: LearnerCommand.h,v 1.2 2004/02/20 21:11:40 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -47,7 +47,7 @@
 #include "PLearnCommand.h"
 #include "PLearnCommandRegistry.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class LearnerCommand: public PLearnCommand
@@ -65,6 +65,6 @@ protected:
 };
 
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

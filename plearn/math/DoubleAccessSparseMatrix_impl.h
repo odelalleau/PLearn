@@ -34,12 +34,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: DoubleAccessSparseMatrix_impl.h,v 1.3 2003/07/21 17:05:42 jauvinc Exp $ 
+ * $Id: DoubleAccessSparseMatrix_impl.h,v 1.4 2004/02/20 21:11:46 chrish42 Exp $ 
  ******************************************************* */
 
 /*! \file DoubleAccessSparseMatrix_impl.h */
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 template<class T>
@@ -700,4 +700,4 @@ void DoubleAccessSparseMatrix<T>::read(PStream& in)
   }
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

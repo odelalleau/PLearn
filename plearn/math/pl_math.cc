@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.cc,v 1.6 2003/12/08 03:46:31 yoshua Exp $
+   * $Id: pl_math.cc,v 1.7 2004/02/20 21:11:47 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,7 +44,7 @@
 
 #include "pl_math.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -249,4 +249,4 @@ real soft_slope_integral(real smoothness, real left, real right, real a, real b)
   return hard_slope_integral(left,right,a,b);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

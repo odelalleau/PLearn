@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.cc,v 1.20 2004/02/16 22:26:09 dorionc Exp $ 
+ * $Id: Trader.cc,v 1.21 2004/02/20 21:14:50 chrish42 Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -43,7 +43,7 @@
 
 #include "Trader.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -617,5 +617,5 @@ void Trader::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(transaction_costs, copies);
 } 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.h,v 1.7 2004/01/27 13:16:42 yoshua Exp $ 
+   * $Id: PDistribution.h,v 1.8 2004/02/20 21:14:46 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.h */
@@ -43,7 +43,7 @@
 
 #include "PLearner.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class PDistribution: public PLearner
@@ -173,6 +173,6 @@ public:
 // Declares a few other classes and functions related to this class
   DECLARE_OBJECT_PTR(PDistribution);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

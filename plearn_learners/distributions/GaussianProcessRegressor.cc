@@ -36,14 +36,14 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianProcessRegressor.cc,v 1.7 2004/02/16 21:24:46 tihocan Exp $
+   * $Id: GaussianProcessRegressor.cc,v 1.8 2004/02/20 21:14:46 chrish42 Exp $
    ******************************************************* */
 
 #include "GaussianProcessRegressor.h"
 #include "pl_erf.h"
 #include "plapack.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 GaussianProcessRegressor::GaussianProcessRegressor() : 
@@ -486,5 +486,5 @@ real GaussianProcessRegressor::QFormInverse(real sigma2, Vec u) const
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

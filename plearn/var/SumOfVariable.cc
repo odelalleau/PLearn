@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOfVariable.cc,v 1.7 2004/01/20 00:23:57 yoshua Exp $
+   * $Id: SumOfVariable.cc,v 1.8 2004/02/20 21:11:53 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,7 +44,7 @@
 #include "PLMPI.h"
 #include "DisplayUtils.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -296,6 +296,6 @@ void SumOfVariable::printInfo(bool print_gradient)
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 

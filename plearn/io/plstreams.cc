@@ -37,7 +37,7 @@
 
 #include "plstreams.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

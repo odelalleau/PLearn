@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: OptionBase.cc,v 1.1 2003/05/07 05:39:16 plearner Exp $
+   * $Id: OptionBase.cc,v 1.2 2004/02/20 21:11:42 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -43,7 +43,7 @@
 #include "OptionBase.h"
 #include "Object.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 const OptionBase::flag_t OptionBase::buildoption = 1;       
@@ -63,4 +63,4 @@ string OptionBase::writeIntoString(const Object* o) const
     return s;
   }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

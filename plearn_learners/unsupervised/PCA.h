@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PCA.h,v 1.3 2003/10/02 14:25:42 yoshua Exp $ 
+   * $Id: PCA.h,v 1.4 2004/02/20 21:14:50 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file PCA.h */
@@ -43,7 +43,7 @@
 
 #include "PLearner.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class PCA: public PLearner
@@ -160,6 +160,6 @@ public:
 // Declares a few other classes and functions related to this class
   DECLARE_OBJECT_PTR(PCA);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

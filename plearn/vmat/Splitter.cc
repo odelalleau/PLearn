@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Splitter.cc,v 1.5 2003/11/04 14:42:23 chapados Exp $ 
+   * $Id: Splitter.cc,v 1.6 2004/02/20 21:14:44 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file Splitter.cc */
@@ -43,7 +43,7 @@
 #include "ConcatColumnsVMatrix.h"
 #include "random.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Splitter, "ONE LINE DESCR", "NO HELP");
@@ -108,4 +108,4 @@ void randomSplit(VMat d, real validation_fraction, real test_fraction, VMat& tra
   split(d,validation_fraction,test_fraction,train,valid,test,true);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

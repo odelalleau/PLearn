@@ -39,7 +39,7 @@
 #include <iostream>
 
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 pl_stream_raw raw;
@@ -55,4 +55,4 @@ ostream nullout(&null_streambuf);
 iostream nullinout(&null_streambuf);
 
 
-%>
+}

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: PP.h,v 1.4 2004/02/02 22:02:00 ducharme Exp $
+   * $Id: PP.h,v 1.5 2004/02/20 21:11:42 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -53,7 +53,7 @@
 #include "CopiesMap.h"
 #include "plerror.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class PPointable
@@ -232,7 +232,7 @@ public:
 };
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

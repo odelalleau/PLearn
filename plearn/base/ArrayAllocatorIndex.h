@@ -34,14 +34,14 @@
 
 
 /* *******************************************************
- * * $Id: ArrayAllocatorIndex.h,v 1.2 2003/03/06 18:26:00 ducharme Exp $
+ * * $Id: ArrayAllocatorIndex.h,v 1.3 2004/02/20 21:11:42 chrish42 Exp $
  * ******************************************************* */
 
 
 #ifndef ARRAYALLOCATORINDEX_H
 #define ARRAYALLOCATORINDEX_H
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -76,7 +76,7 @@ public:
     }
 };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 #endif

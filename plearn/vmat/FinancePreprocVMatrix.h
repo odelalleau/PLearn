@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FinancePreprocVMatrix.h,v 1.4 2004/02/19 16:57:35 ducharme Exp $ 
+   * $Id: FinancePreprocVMatrix.h,v 1.5 2004/02/20 21:14:44 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file FinancePreprocVMatrix.h */
@@ -44,7 +44,7 @@
 #include "RowBufferedVMatrix.h"
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class FinancePreprocVMatrix: public RowBufferedVMatrix
@@ -130,5 +130,5 @@ public:
 };
 DECLARE_OBJECT_PTR(FinancePreprocVMatrix);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 #endif

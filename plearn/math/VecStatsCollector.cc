@@ -32,14 +32,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.16 2004/02/13 20:35:29 plearner Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.17 2004/02/20 21:11:46 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
 #include "VecStatsCollector.h"
 #include "TMat_maths.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 VecStatsCollector::VecStatsCollector() 
@@ -264,4 +264,4 @@ void VecStatsCollector::makeDeepCopyFromShallowCopy(map<const void*, void*>& cop
   deepCopyField(stats, copies);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plapack.h,v 1.15 2004/01/15 15:36:18 ouimema Exp $
+   * $Id: plapack.h,v 1.16 2004/02/20 21:11:47 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,7 +48,7 @@
 
 #include "lapack_proto.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 // Direct lapack calls, type independent
@@ -722,7 +722,7 @@ void diagonalizeSubspace(MatT& A, Mat& X, Vec& Ax,
 #endif
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 #endif //!<  plapack_h

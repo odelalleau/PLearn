@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: AdaptGradientOptimizer.h,v 1.9 2003/10/08 18:29:43 tihocan Exp $
+   * $Id: AdaptGradientOptimizer.h,v 1.10 2004/02/20 21:11:48 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,7 +50,7 @@
 
 #include "Optimizer.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -181,6 +181,6 @@ using namespace std;
 
   };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: SDBWithStats.h,v 1.1 2002/07/30 09:01:26 plearner Exp $
+   * $Id: SDBWithStats.h,v 1.2 2004/02/20 21:11:43 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -52,7 +52,7 @@
 #include "SimpleDB.h"
 #include <map>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
   class FieldStat
@@ -128,6 +128,6 @@ using namespace std;
     const FieldStat& getStat(const string& fieldname) const;
   };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DuplicateColumnVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
+   * $Id: DuplicateColumnVariable.h,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,7 @@
 
 #include "UnaryVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -81,6 +81,6 @@ inline Var duplicateColumn(Var v, int the_width)
     return new DuplicateColumnVariable(v,the_width); 
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif 

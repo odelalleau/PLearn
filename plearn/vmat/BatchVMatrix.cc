@@ -33,12 +33,12 @@
 
 
 /* *******************************************************      
-   * $Id: BatchVMatrix.cc,v 1.2 2003/08/13 08:13:45 plearner Exp $
+   * $Id: BatchVMatrix.cc,v 1.3 2004/02/20 21:14:29 chrish42 Exp $
    ******************************************************* */
 
 #include "BatchVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(BatchVMatrix, "ONE LINE DESCR", "NO HELP");
@@ -121,4 +121,4 @@ void BatchVMatrix::put(int i, int j, real value) {
   m->put(i_, j, value);
 }
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn

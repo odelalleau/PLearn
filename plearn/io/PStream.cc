@@ -38,7 +38,7 @@
 #include "stringutils.h"
 #include "fileutils.h" 
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 char PStream::tmpbuf[100];
@@ -1664,5 +1664,5 @@ void binread_(PStream& in, float* x, unsigned int n, unsigned char typecode)
     PLERROR("In binread_ incompatible typecode");
 }
 
-%> //end of namespace PLearn
+} //end of namespace PLearn
 

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.h,v 1.17 2003/10/14 14:52:27 tihocan Exp $
+   * $Id: Optimizer.h,v 1.18 2004/02/20 21:11:48 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,7 +54,7 @@
 #include "VecStatsCollector.h"
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -192,7 +192,7 @@ using namespace std;
 
 DECLARE_OBJECT_PTR(Optimizer);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

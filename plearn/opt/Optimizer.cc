@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.cc,v 1.23 2003/11/21 16:28:14 tihocan Exp $
+   * $Id: Optimizer.cc,v 1.24 2004/02/20 21:11:48 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,7 +47,7 @@
 #include "GhostScript.h"
 #endif
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -273,4 +273,4 @@ void Optimizer::computeOppositeGradient(
 
 }
   
-%> // end of namespace PLearn
+} // end of namespace PLearn

@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VecCompressor.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: VecCompressor.h,v 1.2 2004/02/20 21:11:46 chrish42 Exp $
    ******************************************************* */
 
 
@@ -43,7 +43,7 @@
 
 #include "TMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
  
 
@@ -96,5 +96,5 @@ public:
   { return 2+4*n+n/128; }
 };
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn
 #endif

@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: stats_utils.cc,v 1.6 2004/02/17 20:39:01 ouimema Exp $
+   * $Id: stats_utils.cc,v 1.7 2004/02/20 21:11:47 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,7 @@
 #include "pl_erf.h"
 #include "random.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //! Compute the Spearman Rank correlation statistic. It measures
@@ -251,7 +251,7 @@ real KS_test(Vec& v1, Vec& v2, int conv)
   return ks_stat;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 /* 

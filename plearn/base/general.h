@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: general.h,v 1.10 2003/11/05 22:09:27 ducharme Exp $
+   * $Id: general.h,v 1.11 2004/02/20 21:11:43 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -100,7 +100,7 @@
 //!  data files (.pmat and .pvec)
 #define DATAFILE_HEADERLENGTH 64
 
-namespace std <%
+namespace std {
   
   //! efficient specialisations of std::copy for built-in types
 
@@ -137,10 +137,10 @@ namespace std <%
   inline unsigned long* copy(unsigned long* first, unsigned long* last, unsigned long* dest)
   { size_t n = last-first; memcpy(dest, first, n*sizeof(unsigned long)); return dest+n; }
 
-%> // end of namespace std
+} // end of namespace std
 
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 #ifdef _MINGW_
@@ -270,6 +270,6 @@ public:
 string prgname(const string& setname = "");
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

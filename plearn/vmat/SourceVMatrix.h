@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrix.h,v 1.3 2003/12/05 22:13:45 plearner Exp $ 
+   * $Id: SourceVMatrix.h,v 1.4 2004/02/20 21:14:44 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -55,7 +55,7 @@ It has a source buildoption to specify said source.
 #include "RowBufferedVMatrix.h"
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class SourceVMatrix: public RowBufferedVMatrix
@@ -134,5 +134,5 @@ public:
 
 };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 #endif

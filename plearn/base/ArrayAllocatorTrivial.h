@@ -34,7 +34,7 @@
 
 
 /* *******************************************************
- * * $Id: ArrayAllocatorTrivial.h,v 1.3 2003/05/21 15:56:25 chapados Exp $
+ * * $Id: ArrayAllocatorTrivial.h,v 1.4 2004/02/20 21:11:42 chrish42 Exp $
  * ******************************************************* */
 
 
@@ -47,7 +47,7 @@
 #include "general.h"
 #include "ArrayAllocatorIndex.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -165,7 +165,7 @@ ArrayAllocatorTrivial<T,SizeBits>::toPointer(index_type i)
     return &arr[0] + i.index;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 #endif

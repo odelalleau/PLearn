@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Grapher.h,v 1.2 2003/11/01 02:16:57 chapados Exp $ 
+   * $Id: Grapher.h,v 1.3 2004/02/20 21:14:48 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file Grapher.h */
@@ -44,7 +44,7 @@
 #include "Object.h"
 #include "PLearner.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class Grapher: public Object
@@ -129,6 +129,6 @@ public:
 // Declares a few other classes and functions related to this class
   DECLARE_OBJECT_PTR(Grapher);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

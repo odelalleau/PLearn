@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BatchVMatrix.h,v 1.2 2003/08/13 08:13:45 plearner Exp $
+   * $Id: BatchVMatrix.h,v 1.3 2004/02/20 21:14:29 chrish42 Exp $
    ******************************************************* */
 
 
@@ -42,7 +42,7 @@
 
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //! VMat class that replicates small parts of a matrix (mini-batches), so that
@@ -86,5 +86,5 @@ private:
 
 };
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn
 #endif

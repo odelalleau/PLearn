@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: old_plearn_main.cc,v 1.2 2003/05/07 05:39:16 plearner Exp $
+   * $Id: old_plearn_main.cc,v 1.3 2004/02/20 21:11:40 chrish42 Exp $
    ******************************************************* */
 
 
@@ -50,7 +50,7 @@
 #include "Experiment.h"
 #include "FileVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /*
@@ -573,4 +573,4 @@ int old_plearn_main(int argc, char** argv)
 
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

@@ -52,7 +52,7 @@
 #include "VMat.h" //!<  to make a sub-class of VMat with an IntStream inside
 #include "RowBufferedVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class IntStream : public Object {
@@ -196,6 +196,6 @@ class InMemoryIntStream : public IntStream {
 */
 FilesIntStream* word_sequences2files_int_stream(const char* word_sequences_file);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

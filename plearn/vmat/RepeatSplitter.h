@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RepeatSplitter.h,v 1.3 2004/01/27 14:15:41 tihocan Exp $ 
+   * $Id: RepeatSplitter.h,v 1.4 2004/02/20 21:14:44 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file RepeatSplitter.h */
@@ -43,7 +43,7 @@
 
 #include "Splitter.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class RepeatSplitter: public Splitter
@@ -130,6 +130,6 @@ public:
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(RepeatSplitter);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

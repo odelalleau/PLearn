@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat.h,v 1.15 2004/02/19 21:53:08 tihocan Exp $
+   * $Id: VMat.h,v 1.16 2004/02/20 21:14:44 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,7 +54,7 @@
 #include "VMatrix.h"
 #include "VVec.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class Ker;
@@ -163,7 +163,7 @@ template <> void deepCopyField(VMat& field, CopiesMap& copies);
 
 VMat loadAsciiAsVMat(const string& filename);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

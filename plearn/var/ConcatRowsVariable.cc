@@ -36,14 +36,14 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
+   * $Id: ConcatRowsVariable.cc,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "ConcatRowsVariable.h"
 #include "SubMatVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -118,6 +118,6 @@ void ConcatRowsVariable::rfprop()
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 

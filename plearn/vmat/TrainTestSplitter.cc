@@ -37,14 +37,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainTestSplitter.cc,v 1.8 2004/01/27 14:15:57 tihocan Exp $ 
+   * $Id: TrainTestSplitter.cc,v 1.9 2004/02/20 21:14:44 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file TrainTestSplitter.cc */
 
 #include "TrainTestSplitter.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 TrainTestSplitter::TrainTestSplitter(real the_test_fraction)
@@ -117,4 +117,4 @@ TVec<VMat> TrainTestSplitter::getSplit(int k)
   return split_;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

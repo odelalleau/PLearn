@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * * $Id: ArrayAllocator.h,v 1.2 2003/03/06 18:25:59 ducharme Exp $
+ * * $Id: ArrayAllocator.h,v 1.3 2004/02/20 21:11:42 chrish42 Exp $
  * ******************************************************* */
 
 #ifndef ARRAYALLOCATOR_H
@@ -45,7 +45,7 @@
 #include "general.h"
 #include "ArrayAllocatorIndex.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -332,7 +332,7 @@ void ArrayAllocator<T,SizeBits>::swap(self_type& other)
   swap(free_root, other.free_root);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 #endif

@@ -35,14 +35,14 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.30 2004/02/09 04:44:50 chapados Exp $
+   * $Id: StatsCollector.cc,v 1.31 2004/02/20 21:11:46 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "StatsCollector.h"
 #include "TMat_maths.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
   PLEARN_IMPLEMENT_OBJECT(StatsCollector, "ONE LINE DESCR", "NO HELP");
@@ -531,6 +531,6 @@ TVec<RealMapping> computeRanges(TVec<StatsCollector> stats, int discrete_mincoun
   return ranges;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 

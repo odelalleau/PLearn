@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: Semaphores.cc,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: Semaphores.cc,v 1.2 2004/02/20 21:11:49 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -43,7 +43,7 @@
 #include "general.h"
 #include "Semaphores.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 ResourceSemaphore::ResourceSemaphore(int nb_semaphores)
@@ -225,4 +225,4 @@ CountEventsSemaphore::~CountEventsSemaphore()
   }
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

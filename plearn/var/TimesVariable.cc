@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: TimesVariable.cc,v 1.4 2004/02/17 21:05:19 tihocan Exp $
+   * $Id: TimesVariable.cc,v 1.5 2004/02/20 21:11:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,7 +44,7 @@
 #include "Var_operators.h"
 //#include "Var_utils.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -96,6 +96,6 @@ void TimesVariable::symbolicBprop()
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 

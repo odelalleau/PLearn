@@ -37,13 +37,13 @@
 
 
 /* *******************************************************      
-   * $Id: NegCrossEntropySigmoidVariable.cc,v 1.3 2003/11/24 16:29:24 tihocan Exp $
+   * $Id: NegCrossEntropySigmoidVariable.cc,v 1.4 2004/02/20 21:11:51 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "NegCrossEntropySigmoidVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /** NegCrossEntropySigmoidVariable **/
@@ -138,4 +138,4 @@ void NegCrossEntropySigmoidVariable::setRegularizer(real r) {
   this->regularizer = r;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

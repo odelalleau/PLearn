@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatColumnsVMatrix.h,v 1.3 2003/08/13 08:13:46 plearner Exp $
+   * $Id: ConcatColumnsVMatrix.h,v 1.4 2004/02/20 21:14:29 chrish42 Exp $
    ******************************************************* */
 
 
@@ -47,7 +47,7 @@
 #include "RowBufferedVMatrix.h"
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
  
 
@@ -87,5 +87,5 @@ inline VMat hconcat(Array<VMat> ds)
 { return new ConcatColumnsVMatrix(ds); }
 
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn
 #endif

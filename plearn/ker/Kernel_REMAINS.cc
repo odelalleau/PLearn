@@ -36,15 +36,15 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel_REMAINS.cc,v 1.1 2003/12/15 22:08:32 dorionc Exp $
+   * $Id: Kernel_REMAINS.cc,v 1.2 2004/02/20 21:11:45 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 
 
 
-namespace PLearn <%
+namespace PLearn {
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

@@ -39,7 +39,7 @@
 
 #include "general.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /*!   
@@ -205,7 +205,7 @@ public:
 
 };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #include "DoubleAccessSparseMatrix_impl.h"
 

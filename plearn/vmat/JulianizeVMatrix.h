@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: JulianizeVMatrix.h,v 1.5 2003/08/13 15:24:40 ducharme Exp $ 
+   * $Id: JulianizeVMatrix.h,v 1.6 2004/02/20 21:14:44 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file JulianizeVMatrix.h */
@@ -48,7 +48,7 @@
 #include "RowBufferedVMatrix.h"
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /*! JulianizeVMatrix
@@ -154,5 +154,5 @@ protected:
   void setVMFields();
 };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 #endif

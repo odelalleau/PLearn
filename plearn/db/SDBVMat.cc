@@ -37,7 +37,7 @@
 
 #include "Profiler.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -1315,4 +1315,4 @@ void SDBVMFieldICBCClassification::convertField(const SDBWithStats& sdb,
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

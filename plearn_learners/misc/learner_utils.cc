@@ -34,14 +34,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: learner_utils.cc,v 1.2 2003/06/05 19:13:15 plearner Exp $ 
+   * $Id: learner_utils.cc,v 1.3 2004/02/20 21:14:48 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file learner_utils.cc */
 #include "learner_utils.h"
 #include "VMat_maths.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -223,4 +223,4 @@ void DX_save_2D_data_for_grid(const string& filename, const string& basename,
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdvisorTutorial.cc,v 1.4 2004/02/16 22:26:08 dorionc Exp $ 
+   * $Id: AdvisorTutorial.cc,v 1.5 2004/02/20 21:14:49 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -43,7 +43,7 @@
 
 #include "AdvisorTutorial.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -132,5 +132,5 @@ void AdvisorTutorial::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 TVec<string> AdvisorTutorial::getTestCostNames() const
 { return AdvisorTutorial::getTrainCostNames(); }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

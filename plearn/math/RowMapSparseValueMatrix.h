@@ -39,7 +39,7 @@
 
 #include "RowMapSparseMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /*!   
@@ -304,6 +304,6 @@ T Aij = it->second;
 };
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

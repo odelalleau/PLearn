@@ -33,13 +33,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AsciiVMatrix.cc,v 1.8 2003/08/13 08:13:45 plearner Exp $ 
+   * $Id: AsciiVMatrix.cc,v 1.9 2004/02/20 21:14:29 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file AsciiVMatrix.cc */
 #include "AsciiVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -321,5 +321,5 @@ AsciiVMatrix::~AsciiVMatrix()
     }
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HelpCommand.cc,v 1.7 2004/02/16 20:24:08 tihocan Exp $ 
+   * $Id: HelpCommand.cc,v 1.8 2004/02/20 21:11:40 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file HelpCommand.cc */
@@ -42,7 +42,7 @@
 //#include "general.h"
 #include "getDataSet.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //! This allows to register the 'HelpCommand' command in the command registry
@@ -145,5 +145,5 @@ void HelpCommand::run(const vector<string>& args)
     }
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsSubVMatrix.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: ConcatRowsSubVMatrix.h,v 1.2 2004/02/20 21:14:29 chrish42 Exp $
    ******************************************************* */
 
 
@@ -46,7 +46,7 @@
 
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
  
 
@@ -89,5 +89,5 @@ class ConcatRowsSubVMatrix: public VMatrix
     virtual real dot(int i, const Vec& v) const;
 };
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn
 #endif

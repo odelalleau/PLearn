@@ -35,14 +35,14 @@
 
  
 /*
-* $Id: VVec.cc,v 1.6 2003/08/13 08:13:46 plearner Exp $
+* $Id: VVec.cc,v 1.7 2004/02/20 21:14:44 chrish42 Exp $
 ******************************************************* */
 
 
 #include "VVec.h"
 #include "MemoryVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 
 VVec::VVec(const Vec& v)
   :data(new MemoryVMatrix(rowmatrix(v))),
@@ -51,4 +51,4 @@ VVec::VVec(const Vec& v)
 
 PLEARN_IMPLEMENT_OBJECT(VVec, "ONE LINE DESCR", "NO HELP");
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

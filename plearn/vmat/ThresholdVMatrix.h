@@ -40,7 +40,7 @@
 #include "RowBufferedVMatrix.h"
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
  
 /* A bit like OneHotVMatrix with a threshold level
@@ -76,5 +76,5 @@ inline VMat thresholdVMat(VMat d, real threshold, real cold_value=0.0, real hot_
 			 bool gt_threshold= true)
 { return new ThresholdVMatrix(d, threshold, cold_value, hot_value, gt_threshold); }
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn
 #endif

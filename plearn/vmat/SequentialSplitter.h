@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SequentialSplitter.h,v 1.4 2003/08/13 08:13:46 plearner Exp $ 
+   * $Id: SequentialSplitter.h,v 1.5 2004/02/20 21:14:44 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file SequentialSplitter.h */
@@ -44,7 +44,7 @@
 
 #include "Splitter.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class SequentialSplitter: public Splitter
@@ -120,6 +120,6 @@ public:
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(SequentialSplitter);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif // SequentialSplitter_INC

@@ -3,7 +3,7 @@
 
 #include "RowBufferedVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class DERIVEDCLASS: public RowBufferedVMatrix
@@ -63,5 +63,5 @@ public:
 };
 DECLARE_OBJECT_PTR(DERIVEDCLASS);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 #endif

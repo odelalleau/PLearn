@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: BinaryVariable.h,v 1.8 2003/08/13 08:13:17 plearner Exp $
+   * $Id: BinaryVariable.h,v 1.9 2004/02/20 21:11:49 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,7 +46,7 @@
 #include "VarArray.h"
 #include "TMat_maths.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -89,7 +89,7 @@ public:
 }; 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif 
 

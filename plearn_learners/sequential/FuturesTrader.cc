@@ -34,13 +34,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.cc,v 1.30 2004/02/19 16:39:42 dorionc Exp $ 
+   * $Id: FuturesTrader.cc,v 1.31 2004/02/20 21:14:49 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.cc */
 #include "FuturesTrader.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -429,5 +429,5 @@ void FuturesTrader::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(assets_rollover_indices, copies);
   deepCopyField(margin_cash, copies);
 } 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.13 2003/10/29 16:55:49 plearner Exp $
+   * $Id: VMatLanguage.cc,v 1.14 2004/02/20 21:14:44 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,7 +46,7 @@
 #include "getDataSet.h"
 #include "PDate.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
   
   bool VMatLanguage::output_preproc=false;
@@ -712,4 +712,4 @@ void VMatLanguage::run(int rowindex, const Vec& result) const
 
 PLEARN_IMPLEMENT_OBJECT(PreprocessingVMatrix, "ONE LINE DESCR", "NO HELP");
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

@@ -35,12 +35,12 @@
 
 
 /* *******************************************************      
-   * $Id: CrossReferenceVMatrix.cc,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: CrossReferenceVMatrix.cc,v 1.2 2004/02/20 21:14:29 chrish42 Exp $
    ******************************************************* */
 
 #include "CrossReferenceVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -90,4 +90,4 @@ real CrossReferenceVMatrix::get(int i, int j) const
   }
 }
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn

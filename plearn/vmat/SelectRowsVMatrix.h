@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsVMatrix.h,v 1.5 2003/08/13 08:13:46 plearner Exp $
+   * $Id: SelectRowsVMatrix.h,v 1.6 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 
@@ -47,7 +47,7 @@
 
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
  
 //!  selects samples from a sub-distribution
@@ -101,5 +101,5 @@ private:
 
 };
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn
 #endif

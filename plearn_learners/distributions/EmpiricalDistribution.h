@@ -35,7 +35,7 @@
 
 #include "Distribution.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -100,6 +100,6 @@ using namespace std;
 
   DECLARE_OBJECT_PTR(EmpiricalDistribution);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

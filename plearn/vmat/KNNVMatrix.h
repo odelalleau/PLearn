@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNVMatrix.h,v 1.2 2004/02/20 15:02:06 tihocan Exp $ 
+   * $Id: KNNVMatrix.h,v 1.3 2004/02/20 21:14:44 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -46,7 +46,7 @@
 
 #include "SourceVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class KNNVMatrix: public SourceVMatrix
@@ -221,6 +221,6 @@ public:
 // Declares a few other classes and functions related to this class
   DECLARE_OBJECT_PTR(KNNVMatrix);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

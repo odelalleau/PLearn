@@ -45,7 +45,7 @@ using namespace __gnu_cxx;
 #endif
 #include <string>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -81,15 +81,15 @@ using namespace std;
   template <class T>
     inline unsigned int hashval(const T& x) { return hashbytes((char*)&x,sizeof(T)); }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 ///////////////////////////////////////////////////////////////////////////
 
 #if __GNUC__==3 && __GNUC_MINOR__>0
-namespace __gnu_cxx <%
+namespace __gnu_cxx {
 #else
-namespace std <%
+namespace std {
 #endif
 using std::string;
 
@@ -123,7 +123,7 @@ struct hash<float>
   size_t operator()(float x) const { return PLearn::hashval(x); }
 };
 
-%> // end of namespace
+} // end of namespace
 
 
 #endif // pl_hash_fun_H

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DistanceKernel.h,v 1.2 2004/01/21 14:16:43 tihocan Exp $
+   * $Id: DistanceKernel.h,v 1.3 2004/02/20 21:11:45 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,7 +46,7 @@
 #include "Kernel.h"
 #include "SelectedOutputCostFunction.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //! This class implements an Ln distance (defaults to L2 i.e. euclidean distance).
@@ -80,7 +80,7 @@ inline CostFunc absolute_deviation(int singleoutputindex=-1)
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

@@ -31,13 +31,13 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StrTableVMatrix.cc,v 1.3 2003/08/13 08:13:46 plearner Exp $
+   * $Id: StrTableVMatrix.cc,v 1.4 2004/02/20 21:14:44 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "StrTableVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 StrTableVMatrix::StrTableVMatrix()
@@ -110,4 +110,4 @@ StrTableVMatrix::StrTableVMatrix(const StringTable & st):MemoryVMatrix(Mat(st.le
 
 PLEARN_IMPLEMENT_OBJECT(StrTableVMatrix, "ONE LINE DESCR", "NO HELP");
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

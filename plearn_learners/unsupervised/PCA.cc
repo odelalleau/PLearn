@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PCA.cc,v 1.6 2004/02/17 18:14:05 tihocan Exp $ 
+   * $Id: PCA.cc,v 1.7 2004/02/20 21:14:50 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file PCA.cc */
@@ -43,7 +43,7 @@
 //#include "TMat_maths.h"
 #include "plapack.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 PCA::PCA() 
@@ -185,4 +185,4 @@ TVec<string> PCA::getTrainCostNames() const
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

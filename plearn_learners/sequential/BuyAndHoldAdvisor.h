@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BuyAndHoldAdvisor.h,v 1.3 2004/02/16 22:26:08 dorionc Exp $ 
+   * $Id: BuyAndHoldAdvisor.h,v 1.4 2004/02/20 21:14:49 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -46,7 +46,7 @@
 
 #include "FinancialAdvisor.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class BuyAndHoldAdvisor: public FinancialAdvisor
@@ -132,6 +132,6 @@ public:
 //! Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(BuyAndHoldAdvisor);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

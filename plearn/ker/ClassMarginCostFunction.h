@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ClassMarginCostFunction.h,v 1.1 2003/12/15 22:08:32 dorionc Exp $
+   * $Id: ClassMarginCostFunction.h,v 1.2 2004/02/20 21:11:45 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,7 @@
 
 #include "Kernel.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -93,7 +93,7 @@ inline CostFunc class_margin(bool binary_target_is_01=false,
                              bool output_is_positive=false) 
 { return new ClassMarginCostFunction(binary_target_is_01,output_is_positive); }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.29 2004/02/10 20:37:21 dorionc Exp $
+   * $Id: TMat.h,v 1.30 2004/02/20 21:11:46 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -58,7 +58,7 @@
 #include "plstreams.h"
 //#include "Array.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 template <class T> class TVec;
@@ -2299,7 +2299,7 @@ public:
   { return 0xFF; }
 };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #include "TMat_impl.h"
 

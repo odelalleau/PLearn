@@ -40,7 +40,7 @@
 #include "arpack_proto.h"
 #include "Mat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -276,7 +276,7 @@ int eigenSparseNonSymmMat(MatT& A, Vec e_values, Mat e_vectors, long int& n_eval
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 #endif

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Gnuplot.cc,v 1.7 2003/02/04 23:15:21 yoshua Exp $
+   * $Id: Gnuplot.cc,v 1.8 2004/02/20 21:11:44 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -47,7 +47,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 Gnuplot::Gnuplot(int nb_max_plot) 
@@ -459,6 +459,6 @@ void Gnuplot::export_ps(string psfname, string psoptions)
   
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 

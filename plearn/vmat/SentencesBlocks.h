@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SentencesBlocks.h,v 1.2 2003/03/18 18:29:56 ducharme Exp $
+   * $Id: SentencesBlocks.h,v 1.3 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 
@@ -47,7 +47,7 @@
 #include "VMat.h"
 #include "TVec.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
  
 
@@ -63,5 +63,5 @@ public:
   SentencesBlocks(int n_blocks, VMat d, Vec separator);
 };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 #endif

@@ -61,7 +61,7 @@
 #include "Hash.h"
 #include "TinyVector.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //!  Forward-declarations
@@ -1874,7 +1874,7 @@ QR SimpleDB<KT,QR>::findEqualLinear(
   return qr;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
    
 
 #endif

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilteredVMatrix.cc,v 1.3 2004/01/15 20:08:03 chapados Exp $ 
+   * $Id: FilteredVMatrix.cc,v 1.4 2004/02/20 21:14:30 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -43,7 +43,7 @@
 #include "ProgressBar.h"
 #include "FilteredVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -126,5 +126,5 @@ void FilteredVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copie
   inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

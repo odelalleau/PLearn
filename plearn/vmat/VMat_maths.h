@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat_maths.h,v 1.12 2004/02/17 15:55:06 dorionc Exp $
+   * $Id: VMat_maths.h,v 1.13 2004/02/20 21:14:44 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,7 +54,7 @@
 #include "ConditionalStatsCollector.h"
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class VecStatsCollector;
@@ -258,6 +258,6 @@ VMat temporalThreshold(VMat distr, int threshold_date, bool is_before,
 //! columns of y. The results are in the x.width() by y.width() matrix r.
 void correlations(const VMat& x, const VMat& y, Mat& r, Mat& pvalues);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: distr_maths.h,v 1.2 2003/10/29 16:55:49 plearner Exp $
+   * $Id: distr_maths.h,v 1.3 2004/02/20 21:11:47 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,7 @@
 
 #include "TMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 real logOfNormal(const Vec& x, const Vec& mu, const Mat& C);
@@ -66,6 +66,6 @@ real logOfCompactGaussian(const Vec& x, const Vec& mu,
                           real gamma=1e-6, bool add_gamma_to_eigenval=false);
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

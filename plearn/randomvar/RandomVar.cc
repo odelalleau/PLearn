@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: RandomVar.cc,v 1.4 2004/02/17 21:01:55 tihocan Exp $
+   * $Id: RandomVar.cc,v 1.5 2004/02/20 21:11:48 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -70,7 +70,7 @@
 #include "Var_operators.h"
 //#include <cmath>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 RandomVar::RandomVar() 
@@ -2413,4 +2413,4 @@ RandomVarVMatrix(ConditionalExpression conditional_expression)
 //      field = static_cast<RandomVariable*>(field->deepCopy(copies));
 //  }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

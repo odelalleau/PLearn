@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FinancialAdvisor.h,v 1.6 2004/02/19 16:39:42 dorionc Exp $ 
+   * $Id: FinancialAdvisor.h,v 1.7 2004/02/20 21:14:49 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -46,7 +46,7 @@
 
 #include "Trader.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class Trader;
@@ -124,6 +124,6 @@ public:
 //! Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(FinancialAdvisor);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

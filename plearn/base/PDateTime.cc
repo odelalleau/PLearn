@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDateTime.cc,v 1.3 2004/02/06 21:12:42 ducharme Exp $
+   * $Id: PDateTime.cc,v 1.4 2004/02/20 21:11:42 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -41,7 +41,7 @@
 #include "PDateTime.h"
 #include "general.h"                // for MISSING_VALUE
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 PDateTime::PDateTime()
@@ -180,5 +180,5 @@ void double_to_hhmmss(double fraction, int& hh, int& mm, int& ss)
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

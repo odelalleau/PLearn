@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalCDFSmoother.h,v 1.3 2003/08/13 08:13:17 plearner Exp $ 
+   * $Id: ConditionalCDFSmoother.h,v 1.4 2004/02/20 21:11:46 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file ConditionalCDFSmoother.h */
@@ -47,7 +47,7 @@
 #include "HistogramDistribution.h"
 #include "Smoother.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class ConditionalCDFSmoother: public Smoother
@@ -129,6 +129,6 @@ public:
 // Declares a few other classes and functions related to this class
   DECLARE_OBJECT_PTR(ConditionalCDFSmoother);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

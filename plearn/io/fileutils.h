@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.h,v 1.8 2003/10/29 16:55:49 plearner Exp $
+   * $Id: fileutils.h,v 1.9 2004/02/20 21:11:44 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -56,7 +56,7 @@
 #include <fstream>
 #include "general.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
   //! returns the absolute path to the current working directory as a string
@@ -190,6 +190,6 @@ inline string readFileAndMacroProcess(const string& filepath)
   return readFileAndMacroProcess(filepath, variables);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

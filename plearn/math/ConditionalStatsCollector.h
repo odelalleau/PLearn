@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalStatsCollector.h,v 1.3 2004/01/29 18:13:02 plearner Exp $ 
+   * $Id: ConditionalStatsCollector.h,v 1.4 2004/02/20 21:11:46 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -48,7 +48,7 @@
 #include "TMat.h"
 #include "RealMapping.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class ConditionalStatsCollector: public Object
@@ -171,6 +171,6 @@ public:
 // Declares a few other classes and functions related to this class
   DECLARE_OBJECT_PTR(ConditionalStatsCollector);
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

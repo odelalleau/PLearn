@@ -53,7 +53,7 @@
 #include "TypeTraits.h"
 #include "byte_order.h"
 
-namespace PLearn <%
+namespace PLearn {
 
 using namespace std;
 
@@ -1113,6 +1113,6 @@ public:
 };
 
 
-%> // namespace PLearn
+} // namespace PLearn
 
 #endif //ndef PStream_INC

@@ -33,12 +33,12 @@
 
 
 /* *******************************************************      
-   * $Id: IndexedVMatrix.cc,v 1.3 2003/08/13 08:13:46 plearner Exp $
+   * $Id: IndexedVMatrix.cc,v 1.4 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 #include "IndexedVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(IndexedVMatrix, "ONE LINE DESCR", "NO HELP");
@@ -116,4 +116,4 @@ void IndexedVMatrix::put(int i, int j, real value) {
 }
 
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn

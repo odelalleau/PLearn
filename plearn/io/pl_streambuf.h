@@ -47,7 +47,7 @@
 #include "plerror.h"
 #include "PP.h"
 
-namespace PLearn <%
+namespace PLearn {
 
 using namespace std;
 
@@ -131,6 +131,6 @@ class pl_streammarker
 };
 
 
-%> // namespace PLearn
+} // namespace PLearn
 
 #endif //ndef pl_streambuf_INC

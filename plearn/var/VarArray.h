@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.h,v 1.10 2004/02/18 22:43:25 yoshua Exp $
+   * $Id: VarArray.h,v 1.11 2004/02/20 21:11:54 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,7 +50,7 @@
 #include "Array.h"
 #include "Variable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -308,7 +308,7 @@ inline VarArray operator&(Var v1, Var v2)
  inline PStream &operator<<(PStream &out, const VarArray &o)
    { out << static_cast<const Array<Var> &>(o); return out; };
  
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

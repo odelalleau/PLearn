@@ -36,7 +36,7 @@
 
 #include "SimpleDB.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
    
 
@@ -966,4 +966,4 @@ using namespace std;
     }
   }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

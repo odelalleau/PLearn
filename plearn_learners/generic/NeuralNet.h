@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeuralNet.h,v 1.7 2004/02/17 14:52:03 tihocan Exp $
+   * $Id: NeuralNet.h,v 1.8 2004/02/20 21:14:47 chrish42 Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeuralNet.h */
@@ -47,7 +47,7 @@
 #include "Optimizer.h"
 //#include "Var_all.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
   class NeuralNet: public Learner
@@ -156,7 +156,7 @@ using namespace std;
 
   DECLARE_OBJECT_PTR(NeuralNet);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

@@ -3,7 +3,7 @@
 
 #include "TraderVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class DERIVEDCLASS: public TraderVariable
@@ -77,6 +77,6 @@ public:
 // Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(DERIVEDCLASS);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

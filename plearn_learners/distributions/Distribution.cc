@@ -37,14 +37,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Distribution.cc,v 1.12 2004/01/27 13:16:42 yoshua Exp $ 
+   * $Id: Distribution.cc,v 1.13 2004/02/20 21:14:46 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file Distribution.cc */
 #include "Distribution.h"
 #include "NegOutputCostFunction.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 Distribution::Distribution() 
@@ -174,4 +174,4 @@ void Distribution::generate(Vec& x) const
 { PLERROR("generate not implemented for this Distribution"); }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

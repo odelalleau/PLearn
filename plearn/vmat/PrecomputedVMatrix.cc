@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrecomputedVMatrix.cc,v 1.4 2003/10/31 20:50:42 plearner Exp $ 
+   * $Id: PrecomputedVMatrix.cc,v 1.5 2004/02/20 21:14:44 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -45,7 +45,7 @@
 #include "DiskVMatrix.h"
 #include "FileVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -153,5 +153,5 @@ void PrecomputedVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& co
   deepCopyField(precomp_source, copies);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

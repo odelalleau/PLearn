@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
- * $Id: VMField.h,v 1.2 2003/05/22 06:21:36 plearner Exp $
+ * $Id: VMField.h,v 1.3 2004/02/20 21:14:44 chrish42 Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -50,7 +50,7 @@
 #include "general.h"
 #include "PStream.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //!  a VMField contains a fieldname and a fieldtype
@@ -135,7 +135,7 @@ public:
   void read(istream& in);
 };
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

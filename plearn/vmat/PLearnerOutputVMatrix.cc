@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.cc,v 1.5 2003/10/12 14:53:21 yoshua Exp $
+   * $Id: PLearnerOutputVMatrix.cc,v 1.6 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -43,7 +43,7 @@
 
 #include "PLearnerOutputVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -145,5 +145,5 @@ void PLearnerOutputVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>&
   deepCopyField(non_input_part_of_data_row, copies);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

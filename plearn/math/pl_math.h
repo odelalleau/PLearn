@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.13 2003/12/08 03:46:31 yoshua Exp $
+   * $Id: pl_math.h,v 1.14 2004/02/20 21:11:47 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,7 +50,7 @@
 #include <climits>
 #include "plerror.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 #ifdef USEDOUBLE
@@ -386,7 +386,7 @@ real hard_slope_integral(real left=0, real right=1, real a=0, real b=1);
 // integral of the soft_slope function between a and b
 real soft_slope_integral(real smoothness=1, real left=0, real right=1, real a=0, real b=1);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
 #endif

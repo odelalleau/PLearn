@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_specialisation.h,v 1.4 2003/11/20 14:05:07 tihocan Exp $
+   * $Id: TMat_maths_specialisation.h,v 1.5 2004/02/20 21:11:46 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -47,7 +47,7 @@
 
 #include "TMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -495,7 +495,7 @@ inline void bprop_update_layer(real* dy, real* x, real* dx, real* w,
 #endif
 }
 	
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

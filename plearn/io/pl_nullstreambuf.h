@@ -42,7 +42,7 @@
 #  include <streambuf>
 #endif
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /*!
@@ -71,6 +71,6 @@ public:
   pl_nullstreambuf() :streambuf() {}
 };
 
-%> // namespace PLearn
+} // namespace PLearn
 
 #endif //ndef pl_nullstreambuf_INC

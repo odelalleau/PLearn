@@ -37,7 +37,7 @@
 
 
 /* *******************************************************      
-   * $Id: BinaryClassificationLossVariable.h,v 1.1 2004/01/26 14:15:52 tihocan Exp $
+   * $Id: BinaryClassificationLossVariable.h,v 1.2 2004/02/20 21:11:49 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,7 +46,7 @@
 
 #include "BinaryVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -78,6 +78,6 @@ inline Var binary_classification_loss(Var network_output, Var classnum)
   }
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif 

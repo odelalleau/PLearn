@@ -34,13 +34,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StaticInitializer.cc,v 1.1 2003/08/13 08:13:16 plearner Exp $ 
+   * $Id: StaticInitializer.cc,v 1.2 2004/02/20 21:11:42 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file StaticInitializer.cc */
 #include "StaticInitializer.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 StaticInitializer::StaticInitializer(VOIDFUNC initialize)
@@ -49,4 +49,4 @@ StaticInitializer::StaticInitializer(VOIDFUNC initialize)
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

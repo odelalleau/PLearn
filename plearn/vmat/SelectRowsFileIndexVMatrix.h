@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsFileIndexVMatrix.h,v 1.3 2003/06/25 14:45:56 ducharme Exp $
+   * $Id: SelectRowsFileIndexVMatrix.h,v 1.4 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 
@@ -46,7 +46,7 @@
 
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
  
 
@@ -77,5 +77,5 @@ public:
 };
 
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn
 #endif

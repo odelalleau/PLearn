@@ -36,14 +36,14 @@
 
 
 /* *******************************************************      
-   * $Id: MinusVariable.cc,v 1.4 2003/12/16 17:44:52 plearner Exp $
+   * $Id: MinusVariable.cc,v 1.5 2004/02/20 21:11:51 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "MinusVariable.h"
 #include "NegateElementsVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -100,6 +100,6 @@ void MinusVariable::symbolicBprop()
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 

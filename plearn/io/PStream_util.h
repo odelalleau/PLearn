@@ -42,7 +42,7 @@
 #include "pl_nullstreambuf.h"
 #include <iosfwd>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //! List of characters considered to mark a separation between "words"; 
@@ -94,6 +94,6 @@ extern istream nullin; //!<  a null instream: reading from it does nothing
 extern iostream nullinout; //!< a null iostream: reading/writing from/to it does nothing
 
 
-%>
+}
 
 #endif //ndef PStream_util_INC

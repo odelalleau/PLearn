@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubMatVariable.h,v 1.3 2004/02/20 17:08:09 tihocan Exp $
+   * $Id: SubMatVariable.h,v 1.4 2004/02/20 21:11:53 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,7 @@
 
 #include "UnaryVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -79,6 +79,6 @@ inline Var subMat(Var v, int i, int j, int l, int w) {
     return new SubMatVariable(v, i, j, l, w);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif 

@@ -34,13 +34,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LearnerProcessedVMatrix.cc,v 1.2 2003/08/13 08:13:46 plearner Exp $ 
+   * $Id: LearnerProcessedVMatrix.cc,v 1.3 2004/02/20 21:14:44 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file LearnerProcessedVMatrix.cc */
 #include "LearnerProcessedVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -132,5 +132,5 @@ void LearnerProcessedVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*
   deepCopyField(learner, copies);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

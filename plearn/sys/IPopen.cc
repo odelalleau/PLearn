@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: IPopen.cc,v 1.3 2002/09/17 01:27:34 zouave Exp $
+   * $Id: IPopen.cc,v 1.4 2004/02/20 21:11:49 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,7 +44,7 @@
 #include "stringutils.h"
 #include "IPopen.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 #ifndef _MINGW_
@@ -134,4 +134,4 @@ using namespace std;
     }
 #endif // ~_MINGW_
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

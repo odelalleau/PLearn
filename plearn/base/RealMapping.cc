@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org 
 
 /* *******************************************************      
-   * $Id: RealMapping.cc,v 1.15 2004/01/08 14:08:55 plearner Exp $
+   * $Id: RealMapping.cc,v 1.16 2004/02/20 21:11:42 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,7 +44,7 @@
 #include <sstream>
 #include "PStream.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -341,4 +341,4 @@ bool RealMapping::checkConsistency()
   return true;  
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: PDate.h,v 1.4 2003/11/26 20:54:36 plearner Exp $
+   * $Id: PDate.h,v 1.5 2004/02/20 21:11:42 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,7 +51,7 @@
 #include <string>
 #include <ctime>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /*!   PDate must be a concrete class with no virtual function.  Hence it
@@ -170,6 +170,6 @@ PDate float_to_date(float f);
 inline PDate float_to_date(double d) 
 { return float_to_date(float(d)); }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

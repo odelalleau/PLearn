@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GenerateDecisionPlot.cc,v 1.5 2003/08/13 08:13:47 plearner Exp $ 
+   * $Id: GenerateDecisionPlot.cc,v 1.6 2004/02/20 21:14:48 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file GenerateDecisionPlot.cc */
@@ -42,7 +42,7 @@
 #include "VecStatsCollector.h"
 #include "VMat_maths.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -563,4 +563,4 @@ void GenerateDecisionPlot::run()
     inherited::makeDeepCopyFromShallowCopy(copies);
   }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

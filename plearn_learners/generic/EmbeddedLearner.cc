@@ -34,13 +34,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.cc,v 1.10 2003/11/27 21:02:57 chapados Exp $ 
+   * $Id: EmbeddedLearner.cc,v 1.11 2004/02/20 21:14:46 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.cc */
 #include "EmbeddedLearner.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 // ###### EmbeddedLearner ######################################################
@@ -138,4 +138,4 @@ void EmbeddedLearner::makeDeepCopyFromShallowCopy(map<const void*, void*>& copie
     deepCopyField(learner_, copies);    
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

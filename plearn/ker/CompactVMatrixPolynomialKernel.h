@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CompactVMatrixPolynomialKernel.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: CompactVMatrixPolynomialKernel.h,v 1.3 2004/02/20 21:11:45 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,7 +48,7 @@
 #include "Kernel.h"
 #include "CompactVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /*!   behaves like PolynomialKernel except that the x1 and x2 vectors
@@ -82,6 +82,6 @@ class CompactVMatrixPolynomialKernel: public Kernel
 DECLARE_OBJECT_PTR(CompactVMatrixPolynomialKernel);
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

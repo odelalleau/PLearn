@@ -35,12 +35,12 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsFileIndexVMatrix.cc,v 1.3 2003/06/25 14:45:56 ducharme Exp $
+   * $Id: SelectRowsFileIndexVMatrix.cc,v 1.4 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 #include "SelectRowsFileIndexVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /** SelectRowsFileIndexVMatrix **/
@@ -82,4 +82,4 @@ string SelectRowsFileIndexVMatrix::getString(int row, int col) const
 const map<string,real>& SelectRowsFileIndexVMatrix::getStringToRealMapping(int col) const
 { return distr->getStringToRealMapping(col);}
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn

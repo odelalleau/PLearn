@@ -4,7 +4,7 @@
 #include "procinfo.h"
 #include "plerror.h"
 
-namespace PLearn <%
+namespace PLearn {
 
 int getSystemTotalMemory()
 {
@@ -20,4 +20,4 @@ int getSystemTotalMemory()
   return memory_size;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

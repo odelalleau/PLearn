@@ -40,7 +40,7 @@
 
 #include "SequentialLearner.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /*! This SequentialLearner simply embeddes a Learner that we wish
@@ -112,6 +112,6 @@ class EmbeddedSequentialLearner: public SequentialLearner
 //! Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(EmbeddedSequentialLearner);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

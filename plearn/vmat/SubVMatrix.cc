@@ -35,12 +35,12 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.cc,v 1.9 2004/02/19 14:34:12 tihocan Exp $
+   * $Id: SubVMatrix.cc,v 1.10 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 #include "SubVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -217,4 +217,4 @@ real SubVMatrix::dot(int i, const Vec& v) const
     return VMatrix::dot(i,v);
 }
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn

@@ -36,13 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: SortRowsVMatrix.cc,v 1.1 2003/12/05 18:55:01 tihocan Exp $
+   * $Id: SortRowsVMatrix.cc,v 1.2 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 #include "SubVMatrix.h"
 #include "SortRowsVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /** SortRowsVMatrix **/
@@ -214,4 +214,4 @@ void SortRowsVMatrix::build_()
   } */
 }
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn

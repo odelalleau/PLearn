@@ -42,7 +42,7 @@
 #include "TMat_maths.h"
 #include "BottomNI.h"
 
-namespace PLearn <%
+namespace PLearn {
 
 PLEARN_IMPLEMENT_OBJECT(ManifoldParzen2, "ONE LINE DESCR", "NO HELP");
 
@@ -199,4 +199,4 @@ void ManifoldParzen2::train()
   build();
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

@@ -41,7 +41,7 @@
 #include "VMat_maths.h"
 #include "TMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 ConditionalGaussianDistribution::ConditionalGaussianDistribution() 
@@ -133,4 +133,4 @@ void ConditionalGaussianDistribution::setInput(const Vec& input)
   mean << input;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

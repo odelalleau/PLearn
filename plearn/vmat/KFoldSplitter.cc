@@ -35,14 +35,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KFoldSplitter.cc,v 1.7 2003/11/27 14:43:02 tihocan Exp $ 
+   * $Id: KFoldSplitter.cc,v 1.8 2004/02/20 21:14:44 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file SequentialSplitter.cc */
 #include "KFoldSplitter.h"
 #include "VMat_maths.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 KFoldSplitter::KFoldSplitter(int k)
@@ -114,4 +114,4 @@ TVec<VMat> KFoldSplitter::getSplit(int k)
     return split_;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

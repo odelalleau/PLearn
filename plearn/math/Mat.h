@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: Mat.h,v 1.3 2004/01/07 22:18:43 ducharme Exp $
+   * $Id: Mat.h,v 1.4 2004/02/20 21:11:46 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,7 +47,7 @@
 #include "TMat.h"
 #include "MatIO.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
   // ********* Functions ***********
@@ -105,7 +105,7 @@ inline void deepCopyField(Mat& field, CopiesMap& copies)
   field.makeDeepCopyFromShallowCopy(copies);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 //!  For use within debugger (gdb) only
 void printvec(const PLearn::Vec& v);

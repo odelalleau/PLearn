@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GenMat.h,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: GenMat.h,v 1.2 2004/02/20 21:11:46 chrish42 Exp $
    * Generic Matrix (template) operations
    * AUTHORS: Yoshua Bengio
    * This file is part of the PLearn library.
@@ -49,7 +49,7 @@
 #ifndef GenMat_INC
 #define GenMat_INC
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -1007,6 +1007,6 @@ int metricMultiDimensionalScaling(MatT& square_distances,Mat embedding, int max_
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

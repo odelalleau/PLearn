@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: CompactVMatrix.h,v 1.2 2003/08/13 08:13:45 plearner Exp $
+   * $Id: CompactVMatrix.h,v 1.3 2004/02/20 21:14:29 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,7 +50,7 @@
 #include "RowBufferedVMatrix.h"
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /*!   Like MemoryVMatrix this class holds the data in memory,
@@ -190,5 +190,5 @@ class CompactVMatrix : public RowBufferedVMatrix
 };
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 #endif

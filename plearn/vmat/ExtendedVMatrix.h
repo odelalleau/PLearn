@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ExtendedVMatrix.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: ExtendedVMatrix.h,v 1.2 2004/02/20 21:14:29 chrish42 Exp $
    ******************************************************* */
 
 
@@ -47,7 +47,7 @@
 #include "RowBufferedVMatrix.h"
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
  
 
@@ -83,5 +83,5 @@ public:
 };
 
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn
 #endif

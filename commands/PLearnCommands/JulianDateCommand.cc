@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: JulianDateCommand.cc,v 1.1 2003/09/09 20:20:04 ducharme Exp $ 
+   * $Id: JulianDateCommand.cc,v 1.2 2004/02/20 21:11:40 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Rejean Ducharme
@@ -46,7 +46,7 @@
 #include "stringutils.h"
 #include "plerror.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //! This allows to register the 'JulianDateCommand' command in the command registry
@@ -77,5 +77,5 @@ void JulianDateCommand::run(const vector<string>& args)
   cout << args[0] << " correspond to " << dd << "/" << mm << "/" << yyyy << endl;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

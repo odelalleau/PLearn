@@ -33,13 +33,13 @@
 
 
 /* *******************************************************      
-   * $Id: LiftOutputVariable.cc,v 1.4 2004/02/12 21:11:01 tihocan Exp $
+   * $Id: LiftOutputVariable.cc,v 1.5 2004/02/20 21:11:50 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "LiftOutputVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 /** LiftOutputVariable **/
@@ -99,4 +99,4 @@ void LiftOutputVariable::bprop()
   }
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

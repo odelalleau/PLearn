@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.33 2004/02/20 13:53:23 tihocan Exp $
+   * $Id: VMatrix.h,v 1.34 2004/02/20 21:14:44 chrish42 Exp $
    ******************************************************* */
 
 
@@ -53,7 +53,7 @@
 #include "TMat_maths_impl.h"
 #include "VMField.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class Ker;
@@ -513,7 +513,7 @@ typedef Object inherited;
 
 DECLARE_OBJECT_PTR(VMatrix);
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif
 

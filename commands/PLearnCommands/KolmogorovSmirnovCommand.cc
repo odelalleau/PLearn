@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KolmogorovSmirnovCommand.cc,v 1.1 2003/02/28 22:47:55 plearner Exp $ 
+   * $Id: KolmogorovSmirnovCommand.cc,v 1.2 2004/02/20 21:11:40 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file KolmogorovSmirnovCommand.cc */
@@ -41,7 +41,7 @@
 #include "getDataSet.h"
 #include "stats_utils.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 //! This allows to register the 'KolmogorovSmirnovCommand' command in the command registry
@@ -71,5 +71,5 @@ void KolmogorovSmirnovCommand::run(const vector<string>& args)
   cout << "Result of Kolmogorov-Smirnov test is: " << ks_stat << endl;
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.h,v 1.15 2004/02/13 20:35:29 plearner Exp $ 
+   * $Id: VecStatsCollector.h,v 1.16 2004/02/20 21:11:46 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.h */
@@ -42,7 +42,7 @@
 #include "Object.h"
 #include "StatsCollector.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 class VecStatsCollector: public Object
@@ -187,6 +187,6 @@ public:
   DECLARE_OBJECT_PTR(VecStatsCollector);
 
   
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

@@ -1,6 +1,6 @@
 #include "DERIVEDCLASS.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 DERIVEDCLASS::DERIVEDCLASS() 
@@ -82,4 +82,4 @@ RealMapping DERIVEDCLASS::getBinning(VMat v) const
 }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

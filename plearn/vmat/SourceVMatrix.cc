@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrix.cc,v 1.4 2004/02/06 21:12:49 ducharme Exp $ 
+   * $Id: SourceVMatrix.cc,v 1.5 2004/02/20 21:14:44 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -43,7 +43,7 @@
 
 #include "SourceVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -146,5 +146,5 @@ void SourceVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   //  deepCopyField(dependencies, copies);
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

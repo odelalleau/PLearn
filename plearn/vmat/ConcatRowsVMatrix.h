@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVMatrix.h,v 1.3 2003/08/13 08:13:46 plearner Exp $
+   * $Id: ConcatRowsVMatrix.h,v 1.4 2004/02/20 21:14:29 chrish42 Exp $
    ******************************************************* */
 
 
@@ -46,7 +46,7 @@
 
 #include "VMat.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
  
 /*!   This class concatenates several distributions:
@@ -111,5 +111,5 @@ inline VMat vconcat(Array<VMat> ds)
 { return new ConcatRowsVMatrix(ds); }
 
 
-%> // end of namespcae PLearn
+} // end of namespcae PLearn
 #endif

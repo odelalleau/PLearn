@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: HyperOptimizer.h,v 1.5 2004/02/17 21:00:58 tihocan Exp $
+   * $Id: HyperOptimizer.h,v 1.6 2004/02/20 21:11:48 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,7 +47,7 @@
 #include "Learner.h"
 #include "TestMethod.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 // ###### HyperOptimizer ######################################################
@@ -185,6 +185,6 @@ protected:
 DECLARE_OBJECT_PTR(HTryCombinations);
 
 
-%>; // end of namespace PLearn
+}; // end of namespace PLearn
 
 #endif // HyperOptimizer_INC

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: OneHotVariable.h,v 1.3 2003/12/16 17:44:52 plearner Exp $
+   * $Id: OneHotVariable.h,v 1.4 2004/02/20 21:11:51 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,7 @@
 
 #include "UnaryVariable.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -80,6 +80,6 @@ inline Var onehot(int the_length, Var hotindex, real coldvalue=0.0, real hotvalu
 { return new OneHotVariable(the_length, hotindex, coldvalue, hotvalue); }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif 

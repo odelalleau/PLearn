@@ -38,7 +38,7 @@
 #include "SequentialModelSelector.h"
 //#include "TMat_maths_impl.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -269,5 +269,5 @@ void SequentialModelSelector::forget()
   inherited::forget();
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 

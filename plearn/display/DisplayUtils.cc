@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: DisplayUtils.cc,v 1.2 2003/03/18 18:29:55 ducharme Exp $
+   * $Id: DisplayUtils.cc,v 1.3 2004/02/20 21:11:44 chrish42 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -46,7 +46,7 @@
 #include "TmpFilenames.h"
 #include <strstream>
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 void displayHistogram(Gnuplot& gp, Mat dataColumn,
@@ -760,4 +760,4 @@ void displayDecisionSurface(GhostScript& gs, real destx, real desty, real destwi
   }
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn

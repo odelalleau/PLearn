@@ -3,12 +3,12 @@
 
 // Put includes here
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 // Put global function declarations here
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 #endif

@@ -36,14 +36,14 @@
 
 
 /* *******************************************************      
-   * $Id: HardSlopeVariable.cc,v 1.1 2003/11/30 05:34:29 yoshua Exp $
+   * $Id: HardSlopeVariable.cc,v 1.2 2004/02/20 21:11:50 chrish42 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "HardSlopeVariable.h"
 #include "Var_utils.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -148,6 +148,6 @@ void HardSlopeVariable::symbolicBprop()
 
 
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
 
