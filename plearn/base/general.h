@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: general.h,v 1.13 2004/02/28 17:57:29 tihocan Exp $
+   * $Id: general.h,v 1.14 2004/03/26 19:38:23 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -99,6 +99,11 @@
 //!  Size of header (in bytes) for native PLearn 
 //!  data files (.pmat and .pvec)
 #define DATAFILE_HEADERLENGTH 64
+
+//! INFINITY is not defined under Windows
+#ifdef _MSC_VER
+#define INFINITY HUGE_VAL
+#endif
 
 namespace std {
   

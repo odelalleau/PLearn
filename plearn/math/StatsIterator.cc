@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: StatsIterator.cc,v 1.4 2004/02/20 21:11:46 chrish42 Exp $
+   * $Id: StatsIterator.cc,v 1.5 2004/03/26 19:38:32 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -294,7 +294,7 @@ bool StderrStatsIterator::finish()
   for (int i=0;i<mean.length();i++)
     {
       mean[i] /= nsamples[i];
-      meansquared[i] /= nsamples-1;
+      meansquared[i] /= nsamples[i]-1;
     }
   squareSubtract(meansquared, mean);
   result = sqrt(meansquared/nsamples);
