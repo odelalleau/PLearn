@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdditiveNormalizationKernel.h,v 1.3 2004/05/14 02:13:03 tihocan Exp $ 
+   * $Id: AdditiveNormalizationKernel.h,v 1.4 2004/05/17 13:11:33 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -65,6 +65,7 @@ protected:
   Vec average_col;
   Vec average_row;
   real total_average;
+  real total_average_unbiased;
 
   // Fields below are not options.
 
@@ -74,6 +75,9 @@ protected:
   //! The last average computed in evaluate_x_i_again().
   real avg_evaluate_x_i_again;
 
+  //! A multiplicative factor to scale the result (1 or -1/2).
+  real factor;
+
 public:
 
   // ************************
@@ -81,7 +85,9 @@ public:
   // ************************
 
   bool data_will_change;
+  bool double_centering;
   bool remove_bias;
+  bool remove_bias_in_evaluate;
 
   // ****************
   // * Constructors *
@@ -91,7 +97,9 @@ public:
   AdditiveNormalizationKernel();
 
   //! Created from an existing kernel.
-  AdditiveNormalizationKernel(Ker the_source, bool remove_bias = false);
+  AdditiveNormalizationKernel
+    (Ker the_source, bool remove_bias = false, bool remove_bias_in_evaluate = false,
+     bool double_centering = false);
 
   // ************************
   // * SourceKernel methods *
@@ -124,8 +132,6 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   // Declares other standard object methods.
-  // If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS.
   PLEARN_DECLARE_OBJECT(AdditiveNormalizationKernel);
 
   // ******************************

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdditiveNormalizationKernel.cc,v 1.4 2004/05/14 02:13:03 tihocan Exp $ 
+   * $Id: AdditiveNormalizationKernel.cc,v 1.5 2004/05/17 13:11:33 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -50,14 +50,19 @@ using namespace std;
 // AdditiveNormalizationKernel //
 /////////////////////////////////
 AdditiveNormalizationKernel::AdditiveNormalizationKernel() 
-/* ### Initialize all fields to their default value here */
 : data_will_change(false),
-  remove_bias(false)
+  double_centering(false),
+  remove_bias(false),
+  remove_bias_in_evaluate(false)
 {}
 
-AdditiveNormalizationKernel::AdditiveNormalizationKernel(Ker the_source, bool the_remove_bias)
+AdditiveNormalizationKernel::AdditiveNormalizationKernel
+  (Ker the_source, bool the_remove_bias, bool the_remove_bias_in_evaluate,
+                   bool the_double_centering)
 : data_will_change(false),
-  remove_bias(the_remove_bias)
+  double_centering(the_double_centering),
+  remove_bias(the_remove_bias),
+  remove_bias_in_evaluate(the_remove_bias_in_evaluate)
 {
   source_kernel = the_source;
   build();
@@ -68,8 +73,11 @@ PLEARN_IMPLEMENT_OBJECT(AdditiveNormalizationKernel,
     "From a kernel K, defines a new kernel K' such that:\n"
     "  K'(x,y) = K(x,y) - E[K(x,x_i)] - E[K(x_i,y)] + E[K(x_i,x_j)]\n"
     "where the expectation is performed on the data set.\n"
-    "If the 'remove_bias' options is set, then the expectation will not\n"
+    "If the 'remove_bias' option is set, then the expectation will not\n"
     "take into account terms of the form K(x_i,x_i).\n"
+    "If the 'double_centering' option is set, this kernel K' will be\n"
+    "multiplied by -1/2 (this turns a squared distance kernel into a\n"
+    "centered dot product kernel).\n"
 );
 
 ////////////////////
@@ -77,13 +85,11 @@ PLEARN_IMPLEMENT_OBJECT(AdditiveNormalizationKernel,
 ////////////////////
 void AdditiveNormalizationKernel::declareOptions(OptionList& ol)
 {
-  // ### Declare all of this object's options here
-  // ### For the "flags" of each option, you should typically specify  
-  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-  // ### OptionBase::tuningoption. Another possible flag to be combined with
-  // ### is OptionBase::nosave
-
   // Build options.
+
+  declareOption(ol, "double_centering", &AdditiveNormalizationKernel::double_centering, OptionBase::buildoption,
+      "If set to 1, then the resulting kernel will be multiplied by -1/2,\n"
+      "which corresponds to the double-centering formula.");
   
   declareOption(ol, "data_will_change", &AdditiveNormalizationKernel::data_will_change, OptionBase::buildoption,
       "If set to 1, then the Gram matrix will be always recomputed, even if\n"
@@ -92,6 +98,10 @@ void AdditiveNormalizationKernel::declareOptions(OptionList& ol)
   declareOption(ol, "remove_bias", &AdditiveNormalizationKernel::remove_bias, OptionBase::buildoption,
       "If set to 1, then the bias induced by the K(x_i,x_i) will be removed.\n");
 
+  declareOption(ol, "remove_bias_in_evaluate", &AdditiveNormalizationKernel::remove_bias_in_evaluate, OptionBase::buildoption,
+      "If set to 1, then the bias induced by the K(x_i,x_i) will be removed, but only when\n"
+      "evaluating K(x,y) on test points (you don't need to do this if 'remove_bias' == 1).");
+
   // Learnt options.
 
   declareOption(ol, "average_col", &AdditiveNormalizationKernel::average_col, OptionBase::learntoption,
@@ -99,6 +109,10 @@ void AdditiveNormalizationKernel::declareOptions(OptionList& ol)
 
   declareOption(ol, "average_row", &AdditiveNormalizationKernel::average_row, OptionBase::learntoption,
       "The average of the underlying kernel over each row of the Gram matrix.");
+
+  declareOption(ol, "total_average_unbiased", &AdditiveNormalizationKernel::total_average_unbiased, OptionBase::learntoption,
+      "The average of the underlying kernel over the whole Gram matrix, without\n"
+      "the diagonal terms.");
 
   declareOption(ol, "total_average", &AdditiveNormalizationKernel::total_average, OptionBase::learntoption,
       "The average of the underlying kernel over the whole Gram matrix.");
@@ -129,6 +143,10 @@ void AdditiveNormalizationKernel::build_()
   // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
   // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
   // ### You should assume that the parent class' build_() has already been called.
+  if (double_centering)
+    factor = -0.5;
+  else
+    factor = 1;
 }
 
 ////////////////////
@@ -159,22 +177,28 @@ real AdditiveNormalizationKernel::evaluate(const Vec& x1, const Vec& x2) const {
   // ### Evaluate the kernel on a pair of points.
   real avg_1 = computeAverage(x1, true);
   real avg_2 = computeAverage(x2, false);
-  return source_kernel->evaluate(x1, x2) - avg_1 - avg_2 + total_average;
+  if (remove_bias || !remove_bias_in_evaluate) {
+    // We can use the 'total_average'.
+    return factor * (source_kernel->evaluate(x1, x2) - avg_1 - avg_2 + total_average);
+  } else {
+    // We need to use the 'total_average_unbiased'.
+    return factor * (source_kernel->evaluate(x1, x2) - avg_1 - avg_2 + total_average_unbiased);
+  }
 }
 
 //////////////////
 // evaluate_i_j //
 //////////////////
 real AdditiveNormalizationKernel::evaluate_i_j(int i, int j) const {
-  return source_kernel->evaluate_i_j(i,j) - average_row[i] - average_col[j] + total_average;
+  return factor * (source_kernel->evaluate_i_j(i,j) - average_row[i] - average_col[j] + total_average);
 }
 
 //////////////////
 // evaluate_i_x //
 //////////////////
 real AdditiveNormalizationKernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) const {
-  return source_kernel->evaluate_i_x(i, x, squared_norm_of_x)
-       - average_row[i] - computeAverage(x, false, squared_norm_of_x) + total_average;
+  return factor * (source_kernel->evaluate_i_x(i, x, squared_norm_of_x)
+       - average_row[i] - computeAverage(x, false, squared_norm_of_x) + total_average);
 }
 
 ////////////////////////
@@ -184,16 +208,16 @@ real AdditiveNormalizationKernel::evaluate_i_x_again(int i, const Vec& x, real s
   if (first_time) {
     avg_evaluate_i_x_again = computeAverage(x, false, squared_norm_of_x);
   }
-  return source_kernel->evaluate_i_x_again(i, x, squared_norm_of_x, first_time)
-       - average_row[i] - avg_evaluate_i_x_again + total_average;
+  return factor * (source_kernel->evaluate_i_x_again(i, x, squared_norm_of_x, first_time)
+       - average_row[i] - avg_evaluate_i_x_again + total_average);
 }
 
 //////////////////
 // evaluate_x_i //
 //////////////////
 real AdditiveNormalizationKernel::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x) const {
-  return source_kernel->evaluate_x_i(x, i, squared_norm_of_x)
-       - average_col[i] - computeAverage(x, true, squared_norm_of_x) + total_average;
+  return factor * (source_kernel->evaluate_x_i(x, i, squared_norm_of_x)
+       - average_col[i] - computeAverage(x, true, squared_norm_of_x) + total_average);
 }
 
 ////////////////////////
@@ -203,8 +227,8 @@ real AdditiveNormalizationKernel::evaluate_x_i_again(const Vec& x, int i, real s
   if (first_time) {
     avg_evaluate_x_i_again = computeAverage(x, true, squared_norm_of_x);
   }
-  return source_kernel->evaluate_x_i_again(x, i, squared_norm_of_x, first_time)
-       - average_col[i] - avg_evaluate_x_i_again + total_average;
+  return factor * (source_kernel->evaluate_x_i_again(x, i, squared_norm_of_x, first_time)
+       - average_col[i] - avg_evaluate_x_i_again + total_average);
 }
 
 /////////////////////////////////
@@ -248,11 +272,15 @@ void AdditiveNormalizationKernel::setDataForKernelMatrix(VMat the_data) {
       average_col.resize(n);
       average_col.fill(0);
     }
+    real k_x_x;
+    total_average_unbiased = 0;
     for (int i = 0; i < n; i++) {
       if (is_symmetric) {
         real v;
+        k_x_x = gram(i,i);
         if (!remove_bias) {
-          average_row[i] += gram(i,i);
+          average_row[i] += k_x_x;
+          total_average_unbiased -= k_x_x;
         }
         for (int j = i + 1; j < n; j++) {
           v = gram(i,j);
@@ -264,11 +292,21 @@ void AdditiveNormalizationKernel::setDataForKernelMatrix(VMat the_data) {
           if (!remove_bias || j != i) {
             average_row[i] += gram(i,j);
             average_col[i] += gram(j,i);
+            if (j == i) {
+              total_average_unbiased -= gram(i,j);
+            }
           }
         }
       }
     }
     total_average = sum(average_row);
+    if (remove_bias) {
+      // The sum is already unbiased.
+      total_average_unbiased = total_average;
+    } else {
+      // At this point, 'total_average_unbiased' = - \sum K(x_i,x_i).
+      total_average_unbiased += total_average;
+    }
     real n_terms_in_sum;    // The number of terms summed in average_row.
     if (remove_bias) {
       // The diagonal terms were not added.
@@ -277,6 +315,7 @@ void AdditiveNormalizationKernel::setDataForKernelMatrix(VMat the_data) {
       n_terms_in_sum = real(n);
     }
     total_average /= real(n * n_terms_in_sum);
+    total_average_unbiased /= real(n * (n-1));
     average_row /= n_terms_in_sum;
     if (!is_symmetric) {
       average_col /= n_terms_in_sum;
