@@ -2,15 +2,25 @@ import os
 import os.path
 import urllib
 import string
+import shutil
 
 packages = [ f[:-3] for f in os.listdir(__path__[0]) if len(f)>3 and f[-3:]=='.py' and f[0]!='_' ]
 # __all__ = packages
 
 patchdir = os.path.join(__path__[0],'patches')
 
+def make_usr_structure(prefixdir):
+    for name in ['src', 'lib', 'doc', 'include', 'bin', 'share' ]: 
+        d = os.path.join(prefixdir,name)
+        if not os.path.isdir(d): os.makedirs(d)
+
 def system(command):
     print ">>> EXECUTING " + command
     os.system(command)
+
+def copy(src,dest):
+    print ">>> COPY ", src, dest
+    shutil.copy(src,dest)
 
 def ends_with(s, termination):
     n = len(termination)
@@ -96,6 +106,6 @@ def locate_bin(binname):
     bindirs = ['/bin','/usr/bin','/usr/local/bin'] + string.split(os.getenv('PATH',''),':')
     bindirs = [ d for d in bindirs if d!='' ] 
     for dirpath in bindirs:
-        if os.path.isfile(os.path.join(dirpath,includename)):
+        if os.path.isfile(os.path.join(dirpath,binname)):
             return dirpath
     return ''

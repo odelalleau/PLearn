@@ -2,11 +2,12 @@ from upackages import *
 
 def requirements():
     """Returns a list of package_names required by this one."""
-    return ['bjam']
+    return []
 
 def is_installed():
     """Looks for relevant files in a number of standard locations
     to see if the package appears to be installed."""
+    return locate_bin('bjam')!=''
 
 def install(builddir, prefixdir):
     """Downloads and builds the package in the given builddir
@@ -19,25 +20,7 @@ def install(builddir, prefixdir):
     """
     
     chdir(builddir)
-
-    #download('http://unc.dl.sourceforge.net/sourceforge/boost/boost-build-2.0-m9.1.tar.bz2')
-    #unpack('boost-build-2.0-m9.1.tar.bz2')
-
-    # download('http://unc.dl.sourceforge.net/sourceforge/boost/boost_1_31_0.tar.gz')
-    # unpack('boost_1_31_0.tar.gz')
-
     download('http://voxel.dl.sourceforge.net/sourceforge/boost/boost-jam-3.1.10-1-linuxx86.tgz')
     unpack('boost-jam-3.1.10-1-linuxx86.tgz')
-        
-    # patch(patchdir+'/boost_patch0')
-    
-    # configure('--prefix='+prefixdir)
-    # patch('Makefile',Makefile_patch)
-    # create
-
-    chdir('boost_1_31_0')
-    system('bjam -sTOOLS=gcc --prefix='+prefixdir+' install')
-
-def setup():
-    install('/home/pascal/usr/src/boost', '/home/pascal/usr')
+    copy('boost-jam-3.1.10-1-linuxx86/bjam',prefixdir+'/bin')
 
