@@ -65,12 +65,13 @@ void SequentialLearner::build_()
               "outputsize() returns 0 but predictions will later be assumed to have nonzero width.");
     predictions.resize(max_seq_len, outputsize());
     predictions.fill(MISSING_VALUE);
-    
-    if( nTestCosts() == 0 )
-      PLERROR("SequentialLearner::build_\n"
-              "nTestCosts() returns 0 but errors will later be assumed to have nonzero width.");
-    errors.resize(max_seq_len, nTestCosts());
-    errors.fill(MISSING_VALUE);
+
+    int n_test_costs = nTestCosts();
+    if( n_test_costs > 0 )
+    {
+      errors.resize(max_seq_len, n_test_costs);
+      errors.fill(MISSING_VALUE);
+    }
   }  
 }
   
@@ -135,6 +136,9 @@ void SequentialLearner::forget()
 //! Returns train_set->targetsize()
 int SequentialLearner::outputsize() const
 { return outputsize_; }
+
+int SequentialLearner::nTestCosts() const
+{ return getTestCostNames().size(); }
 
 void SequentialLearner::computeOutputAndCosts(const Vec& input,
     const Vec& target, Vec& output, Vec& costs) const

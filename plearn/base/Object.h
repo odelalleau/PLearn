@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.30 2004/05/26 17:23:51 nova77 Exp $
+   * $Id: Object.h,v 1.31 2004/06/03 21:34:42 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -256,6 +256,9 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
           { Object *ptr = o;                                               \
             in >> ptr;                                                     \
             o = dynamic_cast<CLASSTYPE *>(ptr);                            \
+            if(ptr!=0 && o==0)                                             \
+              PLERROR("Mismatched classes while reading a pointer: %s is not a %s", \
+                   ptr->classname().c_str(),CLASSTYPE::_classname_().c_str()); \
             return in; }                                                   \
         inline PStream &operator<<(PStream &out, const CLASSTYPE &o)       \
           { o.newwrite(out); return out; }                                 \
@@ -263,6 +266,9 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
           { Object *ptr = (CLASSTYPE *)o;                                  \
             in >> ptr;                                                     \
             o = dynamic_cast<CLASSTYPE *>(ptr);                            \
+            if(ptr!=0 && o.isNull())                                       \
+              PLERROR("Mismatched classes while reading a PP: %s is not a %s", \
+                   ptr->classname().c_str(),CLASSTYPE::_classname_().c_str()); \
             return in;                                                     \
           }                                                                \
         DECLARE_TYPE_TRAITS(CLASSTYPE)
