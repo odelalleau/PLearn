@@ -52,8 +52,6 @@ class EmbeddedSequentialLearner: public SequentialLearner
 {
   public:
 
-    typedef SequentialLearner inherited;
-
     PP<PLearner> learner;  // the underlying Learner
 
   private:
@@ -69,7 +67,7 @@ class EmbeddedSequentialLearner: public SequentialLearner
     //! Constructor
     EmbeddedSequentialLearner();
 
-    //! simply calls inherited::build() then build_()
+    //! simply calls parentclass::build() then build_()
     virtual void build();
     
     //!  Does the actual training.
@@ -86,7 +84,6 @@ class EmbeddedSequentialLearner: public SequentialLearner
 
     //!  Does the necessary operations to transform a shallow copy (this)
     //!  into a deep copy by deep-copying all the members that need to be.
-    DECLARE_NAME_AND_DEEPCOPY(EmbeddedSequentialLearner);
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
     // PLearner methods to be passed to the underlying Learner
@@ -106,6 +103,9 @@ class EmbeddedSequentialLearner: public SequentialLearner
     virtual TVec<string> getTestCostNames() const;
  
     virtual TVec<string> getTrainCostNames() const;
+
+    //! Declares a few other classes and functions related to this class
+    PLEARN_DECLARE_OBJECT_METHODS(EmbeddedSequentialLearner, "EmbeddedSequentialLearner", SequentialLearner);
 
 };
 

@@ -45,7 +45,7 @@ namespace PLearn <%
 using namespace std;
 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(SequentialValidation);
+PLEARN_IMPLEMENT_OBJECT_METHODS(SequentialValidation, "SequentialValidation", Object);
 
 SequentialValidation::SequentialValidation()
   : init_train_size(1),
@@ -65,7 +65,7 @@ void SequentialValidation::build_()
 
 void SequentialValidation::build()
 {
-  inherited::build();
+  parentclass::build();
   build_();
 }
 
@@ -117,7 +117,7 @@ void SequentialValidation::declareOptions(OptionList& ol)
 
   declareOption(ol, "save_stat_collectors", &SequentialValidation::save_stat_collectors, OptionBase::buildoption, "If true, stat collectors of each data sets (train/test) will be saved for each split. \n");
 
-  inherited::declareOptions(ol);
+  parentclass::declareOptions(ol);
 }
 
 string SequentialValidation::help()

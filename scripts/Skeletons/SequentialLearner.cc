@@ -15,22 +15,18 @@ DERIVEDCLASS::DERIVEDCLASS()
   // build_();
 }
 
-void DERIVEDCLASS::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+void DERIVEDCLASS::build()
 {
-  parentclass::makeDeepCopyFromShallowCopy(copies);
-
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("DERIVEDCLASS::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
-} 
+  parentclass::build();
+  build_();
+}
 
 void DERIVEDCLASS::build_()
 {
 }
 
-void DERIVEDCLASS::build()
+void DERIVEDCLASS::forget()
 {
-  parentclass::build();
-  build_();
 }
 
 void DERIVEDCLASS::declareOptions(OptionList& ol)
@@ -38,7 +34,12 @@ void DERIVEDCLASS::declareOptions(OptionList& ol)
   parentclass::declareOptions(ol);
 }
 
-void DERIVEDCLASS::forget()
+void DERIVEDCLASS::train()
+{
+}
+ 
+void DERIVEDCLASS::test(VMat testset, PP<VecStatsCollector> test_stats,
+    VMat testoutputs=0, VMat testcosts=0) const
 {
 }
 
@@ -56,6 +57,22 @@ void DERIVEDCLASS::computeOutput(const Vec& input, Vec& output) const
 void DERIVEDCLASS::computeCostsFromOutputs(const Vec& input,
     const Vec& output, const Vec& target, Vec& costs) const
 { PLERROR("The method computeCostsFromOutputs is not defined for this DERIVEDCLASS"); }
+
+void DERIVEDCLASS::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+  parentclass::makeDeepCopyFromShallowCopy(copies);
+
+  // ### Remove this line when you have fully implemented this method.
+  PLERROR("DERIVEDCLASS::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+} 
+
+TVec<string> DERIVEDCLASS::getTrainCostNames() const
+{
+  return ...;
+}
+
+TVec<string> DERIVEDCLASS::getTestCostNames() const
+{ return DERIVEDCLASS::getTrainCostNames(); }
 
 %> // end of namespace PLearn
 

@@ -41,7 +41,7 @@ namespace PLearn <%
 using namespace std;
 
 
-IMPLEMENT_ABSTRACT_NAME_AND_DEEPCOPY(SequentialLearner);
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT_METHODS(SequentialLearner, "SequentialLearner", PLearner);
 
 SequentialLearner::SequentialLearner()
   : max_seq_len(-1), max_train_len(-1), train_step(1), horizon(0), outputsize_(1)
@@ -49,7 +49,7 @@ SequentialLearner::SequentialLearner()
 
 void SequentialLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+  parentclass::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(predictions, copies);
   deepCopyField(errors, copies);
 } 
@@ -64,7 +64,7 @@ void SequentialLearner::build_()
 
 void SequentialLearner::build()
 {
-  inherited::build();
+  parentclass::build();
   build_();
 }
 
@@ -85,7 +85,7 @@ void SequentialLearner::declareOptions(OptionList& ol)
   declareOption(ol, "outputsize", &SequentialLearner::outputsize_,
     OptionBase::buildoption, " the outputsize \n");
 
-  inherited::declareOptions(ol);
+  parentclass::declareOptions(ol);
 }
 
 void SequentialLearner::forget()

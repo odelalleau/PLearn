@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.32 2003/07/08 16:59:51 plearner Exp $
+   * $Id: plearn.cc,v 1.33 2003/07/10 18:22:50 ducharme Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -97,6 +97,7 @@
 #include "EmbeddedSequentialLearner.h"
 #include "SequentialModelSelector.h"
 #include "SequentialValidation.h"
+#include "MountLucasIndex.h"
 
 // Commands
 #include "HelpCommand.h"

@@ -51,8 +51,6 @@ class SequentialValidation: public Object
 {
   public:
 
-    typedef Object inherited;
-
     int init_train_size; // size of first training set
     VMat dataset; // the training/test set
     PP<SequentialLearner> learner; // the SequentialLearner that will be tested
@@ -80,7 +78,7 @@ class SequentialValidation: public Object
     //! Default constructor
     SequentialValidation();
 
-    //! Simply calls inherited::build() then build_()
+    //! Simply calls parentclass::build() then build_()
     virtual void build();
 
     //! Provides a help message describing this class
@@ -91,7 +89,7 @@ class SequentialValidation: public Object
     
     //!  Does the necessary operations to transform a shallow copy (this)
     //!  into a deep copy by deep-copying all the members that need to be.
-    DECLARE_NAME_AND_DEEPCOPY(SequentialValidation);
+    PLEARN_DECLARE_OBJECT_METHODS(SequentialValidation, "SequentialValidation", Object);
 };
 
 //! Declares a few other classes and functions related to this class

@@ -63,8 +63,6 @@ class SequentialLearner: public PLearner
 
   public:
 
-    typedef PLearner inherited;
-
     int max_seq_len; // max length of the VMat that train can contain = max de t ci-haut
     int max_train_len; // max nb of (input,target) pairs actually used for training
     int train_step; // how often we have to re-train a model, (default = 1 = after every time step)
@@ -90,7 +88,7 @@ class SequentialLearner: public PLearner
     //! Constructor
     SequentialLearner();
 
-    //! simply calls inherited::build() then build_()
+    //! simply calls parentclass::build() then build_()
     virtual void build();
 
     //! Default behaviour: return train_set->targetsize()
@@ -131,7 +129,7 @@ class SequentialLearner: public PLearner
 
     //!  Does the necessary operations to transform a shallow copy (this)
     //!  into a deep copy by deep-copying all the members that need to be.
-    DECLARE_ABSTRACT_NAME_AND_DEEPCOPY(SequentialLearner);
+    PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS(SequentialLearner, "SequentialLearner", PLearner);
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 };
 

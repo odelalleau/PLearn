@@ -48,6 +48,9 @@ class DERIVEDCLASS: public SequentialLearner
 
     virtual void forget();
 
+    virtual TVec<string> getTrainCostNames() const;
+    virtual TVec<string> getTestCostNames() const;
+
     //!  Does the necessary operations to transform a shallow copy (this)
     //!  into a deep copy by deep-copying all the members that need to be.
     PLEARN_DECLARE_OBJECT_METHODS(DERIVEDCLASS, "DERIVEDCLASS", SequentialLearner);

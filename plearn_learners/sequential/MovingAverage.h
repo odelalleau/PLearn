@@ -50,8 +50,6 @@ class MovingAverage: public SequentialLearner
 {
   public:
 
-    typedef SequentialLearner inherited;
-
     int window_length; // the length of the window on which to calculate the average
     Array<string> cost_funcs; // a list of cost functions (only MSE for now)
 
@@ -68,7 +66,7 @@ class MovingAverage: public SequentialLearner
     //! Constructor
     MovingAverage();
 
-    //! simply calls inherited::build() then build_()
+    //! simply calls parentclass::build() then build_()
     virtual void build();
     
     virtual void train();
@@ -86,7 +84,7 @@ class MovingAverage: public SequentialLearner
 
     //!  Does the necessary operations to transform a shallow copy (this)
     //!  into a deep copy by deep-copying all the members that need to be.
-    DECLARE_NAME_AND_DEEPCOPY(MovingAverage);
+    PLEARN_DECLARE_OBJECT_METHODS(MovingAverage, "MovingAverage", SequentialLearner);
     //virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 };
 
