@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.cc,v 1.4 2005/01/26 16:32:26 dorionc Exp $ 
+   * $Id: PPath.cc,v 1.5 2005/01/27 18:27:14 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -184,7 +184,7 @@ void PPath::ensureMappings()
                                                PPath::home() / ".plearn" );    
 
     PPath   config_file_path = plearn_configs / "ppath.config";
-    PStream ppath_config     = openFile( config_file_path.c_str(), PStream::plearn_ascii );
+    PStream ppath_config     = openFile(config_file_path, PStream::plearn_ascii );
 
     string          next_metaprotocol;
     ppath_config >> next_metaprotocol;
