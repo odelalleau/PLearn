@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.41 2005/01/18 17:54:32 lheureup Exp $
+   * $Id: vmatmain.cc,v 1.42 2005/01/18 18:56:15 lheureup Exp $
    ******************************************************* */
 
 #include <algorithm>                         // for max
@@ -90,7 +90,7 @@ int print_diff(ostream& out, VMat m1, VMat m2, double tolerance, int verbose)
           if(fabs(d)>tolerance || (is_missing(v1[j]) && !is_missing(v2[j])) || (is_missing(v2[j]) && !is_missing(v1[j])))
             {
 	      if (verbose)
-		out << "Elements at " << i << ',' << j << " differ by " << d << endl;
+	      	out << "Elements at " << i << ',' << j << " differ by " << d << endl;
               ++ndiff;
             }
         }
@@ -1384,9 +1384,10 @@ int vmatmain(int argc, char** argv)
       //      "       conditioning field <condfield#> \n"
       "   or: vmat diststat <dataset> <inputsize>\n"
       "       Will compute and output basic statistics on the euclidean distance \n"
-      "       between two consecutive input points \n"
-      "<dataset> is a parameter understandable by getDataSet. This includes all matrix file\n"
-      "file formats. Type 'vmat help dataset' so see what other <dataset> strings are possible." << endl;
+      "       between two consecutive input points \n\n"
+      "<dataset> is a parameter understandable by getDataSet. This includes \n"
+      "all matrix file formats. Type 'vmat help dataset' to see what other\n"
+      "<dataset> strings are available." << endl;
     exit(0);
   }
 
