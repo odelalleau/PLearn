@@ -48,6 +48,7 @@
 #	if __GNUC__ == 3 && __GNUC_MINOR__ == 0         // GCC 3.0
 #		define __NMSPACE__ std
 #  else                                            // GCC 3.1 or later
+using namespace __gnu_cxx;
 #		define __NMSPACE__ __gnu_cxx
 #  endif
 
