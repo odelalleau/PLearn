@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.23 2003/05/08 20:01:58 genji256 Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.24 2003/05/09 14:46:50 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -319,6 +319,9 @@ bool ConjGradientOptimizer::findDirection() {
     case 4:
       gamma = polakRibiere(computeOppositeGradient, this);
       break;
+    default:
+      gamma = 0;
+      break;
   }
   // It is suggested to keep gamma >= 0
   if (gamma < 0) {
@@ -436,7 +439,7 @@ real ConjGradientOptimizer::fletcherSearchMain (
   // f0 = f(0), f_0 = f(alpha0), f_1 = f(alpha1)
   // g0 = g(0), g_0 = g(alpha0), g_1 = g(alaph1)
   // (for the bracketing phase)
-  real alpha2, f0, f_1, f_0, g0, g_1, g_0, a1, a2, b1, b2;
+  real alpha2, f0, f_1, f_0, g0, g_1=0, g_0, a1=0, a2, b1=0, b2;
   f0 = (*f)(0, opt);
   g0 = (*g)(0, opt);
   f_0 = f0;
@@ -450,6 +453,7 @@ real ConjGradientOptimizer::fletcherSearchMain (
     return 0;
   }
   bool isBracketed = false;
+  alpha2 = alpha1 + 1; // just to avoid a pathological initialization
   
   // Bracketing
   while (!isBracketed) {
@@ -563,27 +567,27 @@ real ConjGradientOptimizer::gSearch (void (*grad)(Optimizer*, const Vec&)) {
 
   if (prod < 0) {
     // Step back to bracket the maximum
-    while (prod < -epsilon) {
+    do {
       sp = step;
       pp = prod;
       step = step / 2;
       params.update(-step, search_direction);
       (*grad)(this, delta);
       prod = dot(delta, search_direction);
-    }
+    } while (prod < -epsilon);
     sm = step;
     pm = prod;
   }
   else {
     // Step forward to bracket the maximum
-    while (prod > epsilon) {
+    do {
       sm = step;
       pm = prod;
       params.update(step, search_direction);
       (*grad)(this, delta);
       prod = dot(delta, search_direction);
       step = step * 2;
-    }
+    } while (prod > epsilon);
     sp = step;
     pp = prod;
   }
@@ -625,6 +629,9 @@ bool ConjGradientOptimizer::lineSearch() {
       break;
     case 1:
       step = gSearch(computeOppositeGradient);
+      break;
+    default:
+      step = 0;
       break;
   }
   params.update(step, search_direction);
