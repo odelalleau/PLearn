@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: ScaledConditionalCDFSmoother.cc,v 1.6 2003/08/31 14:31:18 yoshua Exp $ 
+ * $Id: ScaledConditionalCDFSmoother.cc,v 1.7 2003/10/14 00:31:49 yoshua Exp $ 
  ******************************************************* */
 
 /*! \file ScaledConditionalCDFSmoother.cc */
@@ -120,6 +120,8 @@ real ScaledConditionalCDFSmoother::smooth(const Vec& source_function, Vec& smoot
   //  adjustment = prev_ratio + (y-prev_y)*next_ratio/(next_y-prev_y)
   //  s(y) = unconditional_s(y)*adjustment
 
+  if (!prior_cdf)
+    PLERROR("in ScaledConditionalCDFSmoother::smooth  you need to supply a prior_cdf");
   //assume source_function is a survival fn.
   if(bin_positions.size() != source_function.size()+1)
     PLERROR("in ScaledConditionalCDFSmoother::smooth  you need to supply bin_positions");
