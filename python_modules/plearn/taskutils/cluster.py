@@ -113,7 +113,7 @@ def cluster_free( ):
                          % os.getenv("USER")
                          )
     nfree        = len(cl)
-    progress_bar = "[%s]" % "-"*nfree
+    progress_bar = "[%s]" % ("-"*nfree)
     sys.stderr.write( "Freeing %d tasks\n%s\n[" %
                       (nfree, progress_bar)
                       )
