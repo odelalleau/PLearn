@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.26 2004/05/20 14:06:52 tihocan Exp $ 
+ * $Id: GaussMix.cc,v 1.27 2004/05/21 01:57:51 yoshua Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -273,12 +273,13 @@ real GaussMix::computeLikehood(Vec& x, int j) {
     x_centered << x;
     x_centered -= mu(j);
     squared_norm_x_centered = pownorm(x_centered);
-    one_over_lambda0 = 1.0 / eigenvalues(j, n_eigen_computed - 1);
+    real var_min = sigma_min*sigma_min;
+    one_over_lambda0 = 1.0 / max(var_min,eigenvalues(j, n_eigen_computed - 1));
     // t -= 0.5  * 1/lambda_0 * ||x - mu||^2
     t -= 0.5 * one_over_lambda0 * squared_norm_x_centered;
     for (int k = 0; k < n_eigen_computed - 1; k++) {
       // t -= 0.5 * (1/lambda_k - 1/lambda_0) * ((x - mu)'.v_k)^2
-      t -= 0.5 * (1 / eigenvalues(j, k) - one_over_lambda0) * square(dot(eigenvectors[j](k), x_centered));
+      t -= 0.5 * (1 / max(var_min,eigenvalues(j, k)) - one_over_lambda0) * square(dot(eigenvectors[j](k), x_centered));
     }
     return exp(t);
   } else {
@@ -397,10 +398,11 @@ void GaussMix::generateFromGaussian(Vec& x, int given_gaussian) const {
     static real lambda0;
     norm.resize(n_eigen_computed - 1);
     fill_random_normal(norm);
-    lambda0 = eigenvalues(j, n_eigen_computed - 1);
+    real var_min = sigma_min*sigma_min;
+    lambda0 = max(var_min,eigenvalues(j, n_eigen_computed - 1));
     x.fill(0);
     for (int k = 0; k < n_eigen_computed - 1; k++) {
-      x += sqrt(eigenvalues(j,k) - lambda0) * norm[k] * eigenvectors[j](k);
+      x += sqrt(max(var_min,eigenvalues(j,k)) - lambda0) * norm[k] * eigenvectors[j](k);
     }
     norm.resize(D);
     fill_random_normal(norm);
@@ -529,18 +531,19 @@ void GaussMix::precomputeStuff() {
     // Nothing to do.
   } else if (type == "general") {
     // Precompute the log_coeff.
+    real var_min = sigma_min*sigma_min;
     for (int j = 0; j < L; j++) {
       real log_det = 0;
       for (int k = 0; k < n_eigen_computed; k++) {
 #ifdef BOUNDCHECK
-        if (eigenvalues(j,k) < epsilon) {
+        if (sigma_min<epsilon && eigenvalues(j,k) < epsilon) {
           PLWARNING("In GaussMix::precomputeStuff - An eigenvalue is near zero");
         }
 #endif
-        log_det += log(eigenvalues(j,k));
+        log_det += log(max(var_min,eigenvalues(j,k)));
       }
       if(D - n_eigen_computed > 0) {
-        log_det += log(eigenvalues(j, n_eigen_computed - 1)) * (D - n_eigen_computed);
+        log_det += log(max(var_min,eigenvalues(j, n_eigen_computed - 1))) * (D - n_eigen_computed);
       }
       log_coeff[j] = - 0.5 * (D * log(2*3.141549) + log_det );
     }
