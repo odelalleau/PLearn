@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.53 2004/06/26 15:10:58 tihocan Exp $
+   * $Id: TMat_maths_impl.h,v 1.54 2004/07/07 15:21:41 chapados Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -4776,7 +4776,6 @@ real choleskyInvert(const TMat<T>& A, TMat<T>& Ainv)
 {
   int n= A.length();
   TMat<T> L(n,n);
-  if (Ainv)
   Ainv.resize(n,n);
 
   choleskyDecomposition(A,L);

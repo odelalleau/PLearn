@@ -37,10 +37,10 @@
  
 
 /* *******************************************************      
-   * $Id: TVec_decl.h,v 1.8 2004/05/26 17:59:26 nova77 Exp $
-   * AUTHORS: Pascal Vincent & Yoshua Bengio
-   * This file is part of the PLearn library.
-   ******************************************************* */
+ * $Id: TVec_decl.h,v 1.9 2004/07/07 15:21:41 chapados Exp $
+ * AUTHORS: Pascal Vincent & Yoshua Bengio
+ * This file is part of the PLearn library.
+ ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/TMat.h */
@@ -61,112 +61,112 @@
 namespace PLearn {
 using namespace std;
 
-  // predeclarations
-  template<class T> class TMat;
-  class Variable;
-  class VarArray;
-  class QRchunker;
-  class QCchunker;
+// predeclarations
+template<class T> class TMat;
+class Variable;
+class VarArray;
+class QRchunker;
+class QCchunker;
 
 template <class T>
 class TVec
 {
   friend class TMat<T>;
 
-    friend class Variable; //!<  for makeShared hack... (to be cleaned)
-    friend class VarArray; //!<  for makeShared hack... (to be cleaned)
+  friend class Variable; //!<  for makeShared hack... (to be cleaned)
+  friend class VarArray; //!<  for makeShared hack... (to be cleaned)
 
-    //!  The following are for hacky interfaces that for some obscure and dirty reason access offset_ directly
-    friend class QRchunker;
-    friend class QCchunker;
+  //!  The following are for hacky interfaces that for some obscure and dirty reason access offset_ directly
+  friend class QRchunker;
+  friend class QCchunker;
 
-  protected:
-      int      length_;  /*!<  The length of the data  */
-      int      offset_;  /*!<  the displacement to do with respect to storage->data  */
-      PP< Storage<T> > storage; /*!<  where the data is really kept  */
+protected:
+  int      length_;  /*!<  The length of the data  */
+  int      offset_;  /*!<  the displacement to do with respect to storage->data  */
+  PP< Storage<T> > storage; /*!<  where the data is really kept  */
 
-  public:
+public:
 
-    typedef T value_type;
-    typedef int size_type;
-    typedef T* iterator;
-    typedef const T* const_iterator;
+  typedef T value_type;
+  typedef int size_type;
+  typedef T* iterator;
+  typedef const T* const_iterator;
 
-      inline iterator begin() const 
-      { 
-        if (storage.isNull()) return 0;
-        return storage->data+offset_; 
-      }
+  inline iterator begin() const 
+    { 
+      if (storage.isNull()) return 0;
+      return storage->data+offset_; 
+    }
 
-      inline iterator end() const 
-      { return begin()+length(); }
+  inline iterator end() const 
+    { return begin()+length(); }
 
-      // norman: added explicit cast before vec.size()
-      //         but beware if you're creating a constructor for storage that takes size_type
-      //         because int could be different from size_type!
-      inline TVec(const vector<T> & vec)
-       :length_((int)vec.size()), offset_(0),
-       storage(new Storage<T>((int)vec.size()))
-       {
-         for(int i=0;i<length_;i++)
-           (*this)[i]=vec[i];
-       }
+  // norman: added explicit cast before vec.size()
+  //         but beware if you're creating a constructor for storage that takes size_type
+  //         because int could be different from size_type!
+  inline TVec(const vector<T> & vec)
+    :length_((int)vec.size()), offset_(0),
+     storage(new Storage<T>((int)vec.size()))
+    {
+      for(int i=0;i<length_;i++)
+        (*this)[i]=vec[i];
+    }
 
-      inline TVec() 
-        :length_(0),offset_(0)
-      {}
+  inline TVec() 
+    :length_(0),offset_(0)
+    {}
 
-      inline explicit TVec(int the_length) 
-        :length_(the_length), offset_(0),
-         storage(new Storage<T>(the_length))
-      {}
+  inline explicit TVec(int the_length) 
+    :length_(the_length), offset_(0),
+     storage(new Storage<T>(the_length))
+    {}
 
-      //! Builds a Vec of specified length with all values initialised with the given value 
-      inline TVec(int the_length, const T& init_value) 
-        :length_(the_length), offset_(0),
-         storage(new Storage<T>(the_length))
-      { fill(init_value); }
+  //! Builds a Vec of specified length with all values initialised with the given value 
+  inline TVec(int the_length, const T& init_value) 
+    :length_(the_length), offset_(0),
+     storage(new Storage<T>(the_length))
+    { fill(init_value); }
 
-      //!  Builds a Vec containing values ranging from start to stop with step
-      //!  e.g., Vec(0,n-1,1) returns a vector of length() n, with 0,1,...n-1.
-      //!  creates range (start, start+step, ..., stop)
-      TVec(const T& start, const T& stop, const T& step);
+  //!  Builds a Vec containing values ranging from start to stop with step
+  //!  e.g., Vec(0,n-1,1) returns a vector of length() n, with 0,1,...n-1.
+  //!  creates range (start, start+step, ..., stop)
+  TVec(const T& start, const T& stop, const T& step);
 
-      //!  Builds a TVec which data is the_data 
-      inline TVec(int the_length, T* the_data)
-        :length_(the_length), offset_(0),
-         storage(new Storage<T>(the_length, the_data))
-      {}
+  //!  Builds a TVec which data is the_data 
+  inline TVec(int the_length, T* the_data)
+    :length_(the_length), offset_(0),
+     storage(new Storage<T>(the_length, the_data))
+    {}
 
-      //!  NOTE: COPY CONSTRUCTOR COPIES THE TVec STRUCTURE BUT NOT THE DATA
-       inline TVec(const TVec<T>& other)
-        :length_(other.length()), offset_(other.offset()),
-         storage(other.storage)
-      {}
+  //!  NOTE: COPY CONSTRUCTOR COPIES THE TVec STRUCTURE BUT NOT THE DATA
+  inline TVec(const TVec<T>& other)
+    :length_(other.length()), offset_(other.offset()),
+     storage(other.storage)
+    {}
 
-      //!  NOTE: operator= COPIES THE TVec STRUCTURE BUT NOT THE DATA (use operator<< to copy data)
-      inline const TVec<T>& operator=(const TVec<T>& other)
-      {
-        storage = other.storage;
-        length_ = other.length_;
-        offset_ = other.offset_;
-        return *this;
-      }
+  //!  NOTE: operator= COPIES THE TVec STRUCTURE BUT NOT THE DATA (use operator<< to copy data)
+  inline const TVec<T>& operator=(const TVec<T>& other)
+    {
+      storage = other.storage;
+      length_ = other.length_;
+      offset_ = other.offset_;
+      return *this;
+    }
 
   operator vector<T>() const
-  {    
-    int n = length_;
-    vector<T> res(n);
-    if(n>0)
+    {    
+      int n = length_;
+      vector<T> res(n);
+      if(n>0)
       {
         T* ptr = data();
         for(int i=0; i<n; i++)
           res[i] = *ptr++;
       }
-    return res;
-  }
+      return res;
+    }
 
-    bool hasMissing() const
+  bool hasMissing() const
     {
       iterator it = begin();
       iterator itend = end();
@@ -176,17 +176,17 @@ class TVec
       return false;
     }
 
-    inline int size() const { return length_; }
-    inline int length() const { return length_; }
-    inline int capacity() const { return storage.isNotNull() ? storage->length()-offset_ : 0; }
-    inline int offset() const { return offset_; }
+  inline int size() const { return length_; }
+  inline int length() const { return length_; }
+  inline int capacity() const { return storage.isNotNull() ? storage->length()-offset_ : 0; }
+  inline int offset() const { return offset_; }
 
-    inline PP< Storage<T> > getStorage() const { return storage; }
+  inline PP< Storage<T> > getStorage() const { return storage; }
 
-    //!  Makes sure the allocated memory for this vector is exactly length()
-    void compact()
+  //!  Makes sure the allocated memory for this vector is exactly length()
+  void compact()
     {
-      if(storage->length() != length())
+      if(storage && storage->length() != length())
       {
         if(storage->usage()>1)
           PLERROR("IN Mat::compact() compact operation not allowed when matrix storage is shared (for obvious reasons)");
@@ -194,47 +194,47 @@ class TVec
       }
     }
 
-      //!  used by Hash  (VERY DIRTY: TO BE REMOVED [Pascal])
-      inline operator char*() const { if(isNull()) return 0; else return (char*)data(); }
+  //!  used by Hash  (VERY DIRTY: TO BE REMOVED [Pascal])
+  inline operator char*() const { if(isNull()) return 0; else return (char*)data(); }
 
-      // norman: removed const. With inline is useless (and .NET doesn't like it)
-      // Old code:
-      //inline const size_t byteLength() const { return length()*sizeof(T); }
-      inline size_t byteLength() const { return length()*sizeof(T); }
+  // norman: removed const. With inline is useless (and .NET doesn't like it)
+  // Old code:
+  //inline const size_t byteLength() const { return length()*sizeof(T); }
+  inline size_t byteLength() const { return length()*sizeof(T); }
 
-/*!     Resizes the TVector to a new length
-        The underlying storage is never shrunk and
-        it is grown only if it is not already big enough
-        When grown, extrabytes are allocated to anticipate further grows
-*/
-      inline void resize(int newlength, int extrabytes=0)
-      {
+  /*!     Resizes the TVector to a new length
+    The underlying storage is never shrunk and
+    it is grown only if it is not already big enough
+    When grown, extrabytes are allocated to anticipate further grows
+  */
+  inline void resize(int newlength, int extrabytes=0)
+    {
 #ifdef BOUNDCHECK
-        if (newlength<0 || extrabytes<0)
-          PLERROR("IN TVec::resize(int newlength)\nInvalid argument (<0)");
+      if (newlength<0 || extrabytes<0)
+        PLERROR("IN TVec::resize(int newlength)\nInvalid argument (<0)");
 #endif
-        if (newlength == length_) {
-          // No need to do anything.
-          return;
-        }
-        if (storage.isNull() && newlength>0)
-        {
-          offset_ = 0;
-          length_ = newlength;
-          Storage<T>* s = new Storage<T>(newlength + extrabytes);          
-          storage = s;
-        }
-        else
-        {
-          if (storage.isNotNull() && (newlength > capacity()))
-            storage->resize (offset_ + newlength + extrabytes);
-          length_ = newlength;
-        }
+      if (newlength == length_) {
+        // No need to do anything.
+        return;
       }
+      if (storage.isNull() && newlength>0)
+      {
+        offset_ = 0;
+        length_ = newlength;
+        Storage<T>* s = new Storage<T>(newlength + extrabytes);          
+        storage = s;
+      }
+      else
+      {
+        if (storage.isNotNull() && (newlength > capacity()))
+          storage->resize (offset_ + newlength + extrabytes);
+        length_ = newlength;
+      }
+    }
 
-    //! writes the Vec to the PStream:
-    //! Note that users should rather use the form out << v;
-    void write(PStream& out) const
+  //! writes the Vec to the PStream:
+  //! Note that users should rather use the form out << v;
+  void write(PStream& out) const
     {
       const TVec<T>& v = *this; // simple alias
       if(storage && 
@@ -244,301 +244,304 @@ class TVec
            || out.outmode==PStream::pretty_ascii ) )
         writeSequence(out,v);
       else // write explicit storage
-        {
-          out.write("TVec("); 
-          out << v.length();
-          out << v.offset();
-          out << v.getStorage();
-          out.write(")\n");
-        }
+      {
+        out.write("TVec("); 
+        out << v.length();
+        out << v.offset();
+        out << v.getStorage();
+        out.write(")\n");
+      }
     }
 
-    //! reads the Vec from the PStream:
-    //! Note that users should rather use the form in >> v;
-    void read(PStream& in)
+  //! reads the Vec from the PStream:
+  //! Note that users should rather use the form in >> v;
+  void read(PStream& in)
     {
       TVec<T>& v = *this; // simple alias
       switch(in.inmode)
       {
-        case PStream::raw_ascii:
-        case PStream::raw_binary:      
-          readSequence(in, v);
+      case PStream::raw_ascii:
+      case PStream::raw_binary:      
+        readSequence(in, v);
 
-        case PStream::plearn_ascii:
-        case PStream::plearn_binary:
-          {
-            in.skipBlanksAndComments();
-            int c = in.peek();
-            if(c!='T') // implicit storage
-              readSequence(in,v);
-            else // explicit storage
-            {
-              char word[6];
-              // !!!! BUG: For some reason, this hangs!!!
-              // in.read(word,5);
-              for(int i=0; i<5; i++)
-                in.get(word[i]);
-              word[5]='\0';
-              if(strcmp(word,"TVec(")!=0)
-                PLERROR("In operator>>(PStream&, TVec&) '%s' not a proper header for a TVec!",word);
-              // v.storage = 0;
-              in.skipBlanksAndCommentsAndSeparators();
-              in >> v.length_;
-              in.skipBlanksAndCommentsAndSeparators();
-              in >> v.offset_;
-              in.skipBlanksAndCommentsAndSeparators();
-              in >> v.storage;
-              in.skipBlanksAndCommentsAndSeparators();
-              int c = in.get(); // skip ')'
-              if(c!=')')
-                PLERROR("In operator>>(PStream&, TVec&) expected a closing parenthesis, found '%c'",c);
-            }
-          }
-          break;
-      
-        default:
-          PLERROR("In TVec<T>::read(PStream& in)  unknown inmode!!!!!!!!!");
-          break;
+      case PStream::plearn_ascii:
+      case PStream::plearn_binary:
+      {
+        in.skipBlanksAndComments();
+        int c = in.peek();
+        if(c!='T') // implicit storage
+          readSequence(in,v);
+        else // explicit storage
+        {
+          char word[6];
+          // !!!! BUG: For some reason, this hangs!!!
+          // in.read(word,5);
+          for(int i=0; i<5; i++)
+            in.get(word[i]);
+          word[5]='\0';
+          if(strcmp(word,"TVec(")!=0)
+            PLERROR("In operator>>(PStream&, TVec&) '%s' not a proper header for a TVec!",word);
+          // v.storage = 0;
+          in.skipBlanksAndCommentsAndSeparators();
+          in >> v.length_;
+          in.skipBlanksAndCommentsAndSeparators();
+          in >> v.offset_;
+          in.skipBlanksAndCommentsAndSeparators();
+          in >> v.storage;
+          in.skipBlanksAndCommentsAndSeparators();
+          int c = in.get(); // skip ')'
+          if(c!=')')
+            PLERROR("In operator>>(PStream&, TVec&) expected a closing parenthesis, found '%c'",c);
         }
+      }
+      break;
+      
+      default:
+        PLERROR("In TVec<T>::read(PStream& in)  unknown inmode!!!!!!!!!");
+        break;
+      }
     }
 
-    // The following methods are deprecated, and just call corresponding functions.
-    // Please call those functions directly in new code
-    void save(const string& filename) const { savePVec(filename, *this); }
-    void load(const string& filename) { loadPVec(filename, *this); }
+  // The following methods are deprecated, and just call corresponding functions.
+  // Please call those functions directly in new code
+  void save(const string& filename) const { savePVec(filename, *this); }
+  void load(const string& filename) { loadPVec(filename, *this); }
     
-      //!  Returns a sub-TVector
-      TVec<T> subVec(int newstart, int newlength) const
-      {
+  //!  Returns a sub-TVector
+  TVec<T> subVec(int newstart, int newlength) const
+    {
 #ifdef BOUNDCHECK
-        if(newstart+newlength>length() || newlength<0)
-          PLERROR("TVec::subVec(int newstart, int newlength) OUT OF BOUNDS OR <0 length()"
-              " length()=%d; newstart=%d; newlength=%d.", length(), newstart, newlength);
+      if(newstart+newlength>length() || newlength<0)
+        PLERROR("TVec::subVec(int newstart, int newlength) OUT OF BOUNDS OR <0 length()"
+                " length()=%d; newstart=%d; newlength=%d.", length(), newstart, newlength);
 #endif
-        TVec<T> subv = *this;
-        subv.length_ = newlength;
-        subv.offset_ += newstart;
-        return subv;
-      }
+      TVec<T> subv = *this;
+      subv.length_ = newlength;
+      subv.offset_ += newstart;
+      return subv;
+    }
 
-    /*! ************
-      Deep copying
-      ************
-      */
-    void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
-
-    /*! Notice that deepCopy of a Vec returns a Vec rather than a Vec*. The
-      reason for this being that a Vec is already some kind of "smart
-      pointer" to an underlying Storage
+  /*! ************
+    Deep copying
+    ************
     */
-    TVec<T> deepCopy(map<const void*, void*>& copies) const;
+  void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+
+  /*! Notice that deepCopy of a Vec returns a Vec rather than a Vec*. The
+    reason for this being that a Vec is already some kind of "smart
+    pointer" to an underlying Storage
+  */
+  TVec<T> deepCopy(map<const void*, void*>& copies) const;
 
 
-      inline TVec<T> subVec(Range r) { return subVec(r.start, r.length); }
+  inline TVec<T> subVec(Range r) { return subVec(r.start, r.length); }
     
-      //!  Returns a TVector made up of the two (or more) input TVec
-      void concat(const TVec<T>& input1, const TVec<T>& input2)
-      {  
-        int l1 = input1.length();
-        int l2 = input2.length();
-        resize(l1+l2);
-        for(int i=0;i<l1;i++) (*this)[i] = input1[i];
-        for(int i=0;i<l2;i++) (*this)[l1+i] = input2[i];
-      }
+  //!  Returns a TVector made up of the two (or more) input TVec
+  void concat(const TVec<T>& input1, const TVec<T>& input2)
+    {  
+      int l1 = input1.length();
+      int l2 = input2.length();
+      resize(l1+l2);
+      for(int i=0;i<l1;i++) (*this)[i] = input1[i];
+      for(int i=0;i<l2;i++) (*this)[l1+i] = input2[i];
+    }
 
-      void concat(const TVec<T>& input1, const TVec<T>& input2, const TVec<T>& input3)
-      {
-        int l1 = input1.length();
-        int l2 = input2.length();
-        int l3 = input3.length();
-        resize(l1+l2+l3);
-        for(int i=0;i<l1;i++) (*this)[i] = input1[i];
-        for(int i=0;i<l2;i++) (*this)[l1+i] = input2[i];
-        for(int i=0;i<l3;i++) (*this)[l1+l2+i] = input3[i];
-      }
+  void concat(const TVec<T>& input1, const TVec<T>& input2, const TVec<T>& input3)
+    {
+      int l1 = input1.length();
+      int l2 = input2.length();
+      int l3 = input3.length();
+      resize(l1+l2+l3);
+      for(int i=0;i<l1;i++) (*this)[i] = input1[i];
+      for(int i=0;i<l2;i++) (*this)[l1+i] = input2[i];
+      for(int i=0;i<l3;i++) (*this)[l1+l2+i] = input3[i];
+    }
 
-      void concat(const TVec<T>& input1, const TVec<T>& input2, const TVec<T>& input3, const TVec<T>& input4)
-      {
-        int l1 = input1.length();
-        int l2 = input2.length();
-        int l3 = input3.length();
-        int l4 = input4.length();
-        resize(l1+l2+l3+l4);
-        for(int i=0;i<l1;i++) (*this)[i] = input1[i];
-        for(int i=0;i<l2;i++) (*this)[l1+i] = input2[i];
-        for(int i=0;i<l3;i++) (*this)[l1+l2+i] = input3[i];
-        for(int i=0;i<l4;i++) (*this)[l1+l2+l3+i] = input4[i];
-      }
+  void concat(const TVec<T>& input1, const TVec<T>& input2, const TVec<T>& input3, const TVec<T>& input4)
+    {
+      int l1 = input1.length();
+      int l2 = input2.length();
+      int l3 = input3.length();
+      int l4 = input4.length();
+      resize(l1+l2+l3+l4);
+      for(int i=0;i<l1;i++) (*this)[i] = input1[i];
+      for(int i=0;i<l2;i++) (*this)[l1+i] = input2[i];
+      for(int i=0;i<l3;i++) (*this)[l1+l2+i] = input3[i];
+      for(int i=0;i<l4;i++) (*this)[l1+l2+l3+i] = input4[i];
+    }
 
-      //!  The returned TMat will view the same data
-      inline TMat<T> toMat(int newlength, int newwidth) const;
+  //!  The returned TMat will view the same data
+  inline TMat<T> toMat(int newlength, int newwidth) const;
 
-      //!  returns a newly created copy of this TVec
-      inline TVec<T> copy() const
-      {
-        TVec<T> freshcopy(length());
-        freshcopy << *this;
-        return freshcopy;
-      }
+  //!  returns a newly created copy of this TVec
+  inline TVec<T> copy() const
+    {
+      TVec<T> freshcopy(length());
+      freshcopy << *this;
+      return freshcopy;
+    }
 
-      //!  copy from a C TVector starting at x of length() n
-      void copyFrom(const T* x, int n) const
-      {  
+  //!  copy from a C TVector starting at x of length() n
+  void copyFrom(const T* x, int n) const
+    {  
 #ifdef BOUNDCHECK
-        if(n != length())
-          PLERROR("IN TVec::copyFrom(T* x, int n)\nVecs do not have the same length()");
+      if(n != length())
+        PLERROR("IN TVec::copyFrom(T* x, int n)\nVecs do not have the same length()");
 #endif
-        T* v1 = data(); //!<  get data start
-        for(int i=0; i<n; i++)
-          v1[i] = x[i];
-      }
+      T* v1 = data(); //!<  get data start
+      for(int i=0; i<n; i++)
+        v1[i] = x[i];
+    }
 
-      //!  copy to a C TVec starting at x
-      void copyTo(T* x) const
-      {
-        T* v1 = data(); // get data start
-        for(int i=0; i<length(); i++)
-          x[i] = v1[i];
-      }
+  //!  copy to a C TVec starting at x
+  void copyTo(T* x) const
+    {
+      T* v1 = data(); // get data start
+      for(int i=0; i<length(); i++)
+        x[i] = v1[i];
+    }
 
-/*!         make the storage point to this address and
-        copy current value to it (i.e. without changing
-        current contents)
-*/
-      void makeSharedValue(T* x, int n)
-      {
+  /*!         make the storage point to this address and
+    copy current value to it (i.e. without changing
+    current contents)
+  */
+  void makeSharedValue(T* x, int n)
+    {
 #ifdef BOUNDCHECK
-        if(n != length())
-          PLERROR("IN TVec::makeSharedValue(T* x, int n)\nn(%d)!=length_(%d)",
+      if(n != length())
+        PLERROR("IN TVec::makeSharedValue(T* x, int n)\nn(%d)!=length_(%d)",
                 n,length());
 #endif
-        T* v = data(); //!<  get data start
-        for(int i=0; i<n; i++)
-          x[i] = v[i];
-        storage->pointTo(n,x);
-      }
+      T* v = data(); //!<  get data start
+      for(int i=0; i<n; i++)
+        x[i] = v[i];
+      storage->pointTo(n,x);
+    }
 
   bool isNull() const 
-  { return storage.isNull(); }
+    { return storage.isNull(); }
 
   bool isNotNull() const
-  { return storage.isNotNull(); }
+    { return storage.isNotNull(); }
 
   bool isEmpty() const
-  { return length_==0; }
+    { return length_==0; }
 
   bool isNotEmpty() const
-  { return length_!=0; }
+    { return length_!=0; }
       
   /*! This method is commented out because it is much too dangerous:
-      it allows a TVec to be converted into an int, which can cause some
-      very weird bugs that the compiler would have caught otherwise.*/
+    it allows a TVec to be converted into an int, which can cause some
+    very weird bugs that the compiler would have caught otherwise.*/
   /*
-    //!  To allow if(v) statements
-    operator bool() const
-    { return isNotEmpty(); }
+  //!  To allow if(v) statements
+  operator bool() const
+  { return isNotEmpty(); }
   */
       
   //!  To allow if(!v) statements
   bool operator!() const
-  { return isEmpty(); }
+    { return isEmpty(); }
 
-      // for compatibility with Array
-      TVec<T>* operator->()
-      { return this; }
+  // for compatibility with Array
+  TVec<T>* operator->()
+    { return this; }
 
-      //! Fills the vector with the given value
-      inline void fill(const T& value) const
-      { fill_n(data(), length(), value); }
+  //! Fills the vector with the given value; no-op if vector is null
+  inline void fill(const T& value) const
+    {
+      if (storage)
+        fill_n(data(), length(), value);
+    }
 
-      //! Fills the vector, putting startval in its first element
-      //! and increments of step in subsequent elements
-      void fill(const T& startval, const T& step)
-      {
-        iterator it = begin();
-        iterator itend = end();
-        for(T val=startval; it!=itend; ++it, val+=step)
-          *it = val;
-      }
+  //! Fills the vector, putting startval in its first element
+  //! and increments of step in subsequent elements
+  void fill(const T& startval, const T& step)
+    {
+      iterator it = begin();
+      iterator itend = end();
+      for(T val=startval; it!=itend; ++it, val+=step)
+        *it = val;
+    }
 
-      //! same as fill(f)
-      inline void operator=(const T& f) const
-      { fill(f); }
+  //! same as fill(f)
+  inline void operator=(const T& f) const
+    { fill(f); }
   
-      inline void clear() const
-      { if(!isNull()) clear_n(data(),length()); }
+  inline void clear() const
+    { if(!isNull()) clear_n(data(),length()); }
 
-      //!  inserts element at position (actually between values at position-1 and posiion). Length is increased by 1.
-      inline void insert(int position, T value)
-      {
+  //!  inserts element at position (actually between values at position-1 and posiion). Length is increased by 1.
+  inline void insert(int position, T value)
+    {
 #ifdef BOUNDCHECK
-        if(position<0 || position>length())
-          PLERROR("OUT OF BOUNDS in TVec::insert");
+      if(position<0 || position>length())
+        PLERROR("OUT OF BOUNDS in TVec::insert");
 #endif
-        resize(length()+1);
-        T* v = data();
-        for(int i=length()-1; i>position; i--)
-          v[i] = v[i-1];
-        v[position] = value;
-      }
+      resize(length()+1);
+      T* v = data();
+      for(int i=length()-1; i>position; i--)
+        v[i] = v[i-1];
+      v[position] = value;
+    }
 
-      //!  removes element at position, Length is decreased by 1
-      inline void remove(int position)
-      {
+  //!  removes element at position, Length is decreased by 1
+  inline void remove(int position)
+    {
 #ifdef BOUNDCHECK
-        if(position<0 || position>=length())
-          PLERROR("OUT OF BOUNDS in Vec::remove");
+      if(position<0 || position>=length())
+        PLERROR("OUT OF BOUNDS in Vec::remove");
 #endif
-        T* v = data();
-        for(int i=position; i<length()-1; i++)
-          v[i] = v[i+1];
-        resize(length()-1);
-      }
+      T* v = data();
+      for(int i=position; i<length()-1; i++)
+        v[i] = v[i+1];
+      resize(length()-1);
+    }
 
-      int findSorted(T value)
-      {
-        if (isEmpty())
-          return 0;
+  int findSorted(T value)
+    {
+      if (isEmpty())
+        return 0;
  
-        pair<iterator, iterator> range =
-          equal_range(begin(), end(), value);
+      pair<iterator, iterator> range =
+        equal_range(begin(), end(), value);
         
-        return int(range.first - begin());
-      }
+      return int(range.first - begin());
+    }
   
-      inline void insertSorted(T value, bool uniq)
-      {
-        int i = findSorted(value);
-        if(!uniq || i==length() || (*this)[i]!=value)
-          insert(i,value);
-      }
+  inline void insertSorted(T value, bool uniq)
+    {
+      int i = findSorted(value);
+      if(!uniq || i==length() || (*this)[i]!=value)
+        insert(i,value);
+    }
 
-      inline void removeSorted(T value)
-      {
-        int i = findSorted(value);
-        if(i<length() && (*this)[i]==value)
-          remove(i);
-      }
+  inline void removeSorted(T value)
+    {
+      int i = findSorted(value);
+      if(i<length() && (*this)[i]==value)
+        remove(i);
+    }
 
 
-    inline void append(const T& newval)
+  inline void append(const T& newval)
     {
       resize(length()+1, length());
       lastElement() = newval;
     }
 
-    //! for compatibility with Array
-    void append(const vector<T>& newvec)
+  //! for compatibility with Array
+  void append(const vector<T>& newvec)
     {
-      T* v = data();
       int currentsize = length();
       resize(currentsize + newvec.size());
+      T* v = data();
       for (unsigned int i=0; i<newvec.size(); ++i)
         v[currentsize+i] = newvec[i];
     }
 
-    //! for compatibility with Array
-    inline void appendIfNotThereAlready(const T& newval)
+  //! for compatibility with Array
+  inline void appendIfNotThereAlready(const T& newval)
     {
       T* v = data();
       for (int i=0;i<length();i++)
@@ -546,30 +549,32 @@ class TVec
       append(newval);
     }
 
-    //! stl compatibility
-    inline void push_back(const T& newval)
+  //! stl compatibility
+  inline void push_back(const T& newval)
     { append(newval); }
 
-    inline void pop_back()
+  inline void pop_back()
     {
       if(length_ <= 0)
         PLERROR("In TVec::pop_back already empty!");
       length_ -= 1; 
     } 
 
-    //! stack interface compatibility
-    inline void push(const T& newval)
+  //! stack interface compatibility
+  inline void push(const T& newval)
     { append(newval); }
     
-    inline T pop()
+  inline T pop()
     { T res = lastElement(); pop_back(); return res; }
 
-    inline T& top() const
+  inline T& top() const
     { return lastElement(); }
 
-    inline void append(const TVec<T>& values)
+  inline void append(const TVec<T>& values)
     {
       int oldLength = length();
+      if (oldLength+values.length() == 0)
+        return;
       resize(oldLength+values.length());
       T* v = data()+oldLength;
       T* newv = values.data();
@@ -577,190 +582,190 @@ class TVec
         v[i] = newv[i];
     }
 
-      inline T& operator[](int i) const
-      {
+  inline T& operator[](int i) const
+    {
 #ifdef BOUNDCHECK
-        if(i<0 || i>=length())
-          PLERROR("OUT OF BOUND ACCESS %d IN TVec(%d)::operator[]",i,length());
+      if(i<0 || i>=length())
+        PLERROR("OUT OF BOUND ACCESS %d IN TVec(%d)::operator[]",i,length());
 #endif
-        return storage->data[i+offset_]; 
-      }
+      return storage->data[i+offset_]; 
+    }
 
-      // norman: added operator[] for unsigned int
-      inline T& operator[](unsigned int i) const
-      {
+  // norman: added operator[] for unsigned int
+  inline T& operator[](unsigned int i) const
+    {
 #ifdef BOUNDCHECK
-        // norman: added explicit cast
-        if(i<0 || i>=(unsigned int)length())
-          PLERROR("OUT OF BOUND ACCESS %d IN TVec(%d)::operator[]",i,length());
+      // norman: added explicit cast
+      if(i<0 || i>=(unsigned int)length())
+        PLERROR("OUT OF BOUND ACCESS %d IN TVec(%d)::operator[]",i,length());
 #endif
-        return storage->data[i+offset_]; 
-      }
+      return storage->data[i+offset_]; 
+    }
 
-      inline T& lastElement() const
-      { return storage->data[offset_+length()-1]; }
+  inline T& lastElement() const
+    { return storage->data[offset_+length()-1]; }
 
-      inline T& firstElement() const
-      { return storage->data[offset_]; }
+  inline T& firstElement() const
+    { return storage->data[offset_]; }
 
-    inline T& front() const { return firstElement(); }
-    inline T& back() const { return lastElement(); }
+  inline T& front() const { return firstElement(); }
+  inline T& back() const { return lastElement(); }
 
-    // for compatibility with Array
-    inline T& first() const { return firstElement(); }
-    inline T& last() const { return lastElement(); }
+  // for compatibility with Array
+  inline T& first() const { return firstElement(); }
+  inline T& last() const { return lastElement(); }
 
 
-    //! Deprecated: use the select function instead
-    template<class I>
-    inline void operator()(const TVec<I>& indices, TVec<T>& destination) const
+  //! Deprecated: use the select function instead
+  template<class I>
+  inline void operator()(const TVec<I>& indices, TVec<T>& destination) const
     { selectElements(*this, indices, destination); }
 
-/*!         select the elements of the source (this) as specified by the
-        TVector of indices (between 0 and this->length()-1) into
-        the returned TVector (which will have the same length()
-        as the indices TVector).
-*/
-    template<class I>
-    inline TVec<T> operator()(const TVec<I>& indices) const
+  /*!         select the elements of the source (this) as specified by the
+    TVector of indices (between 0 and this->length()-1) into
+    the returned TVector (which will have the same length()
+    as the indices TVector).
+  */
+  template<class I>
+  inline TVec<T> operator()(const TVec<I>& indices) const
     {
       TVec<T> result(indices.length());
       selectElements(*this, indices, result);
       return result;
     }
 
-      //!  Returns a pointer to the beginning of the TVector data
-      inline T* data() const
-      {
+  //!  Returns a pointer to the beginning of the TVector data
+  inline T* data() const
+    {
 #ifdef BOUNDCHECK
-        if(storage.isNull())
-          PLERROR("IN TVec::operator()\nAttempted to get a pointer to the data of an empty TVec");
+      if(storage.isNull())
+        PLERROR("IN TVec::operator()\nAttempted to get a pointer to the data of an empty TVec");
 #endif
-        return storage->data+offset_; 
-      }
+      return storage->data+offset_; 
+    }
 
-      //!  swaps first and last element, second and second last, etc... (mirror symmetry). 
-      inline void swap()
-      {
-        int half = length()/2;
-        T* ptr = data();
-        for(int i=0; i<half; i++)
-          std::swap(ptr[i],ptr[length()-i-1]);
-      }
+  //!  swaps first and last element, second and second last, etc... (mirror symmetry). 
+  inline void swap()
+    {
+      int half = length()/2;
+      T* ptr = data();
+      for(int i=0; i<half; i++)
+        std::swap(ptr[i],ptr[length()-i-1]);
+    }
 
-      //!  return a vector with 1's when (*this)[i]==value for all i, 0 otherwise
-      TVec<bool> operator==(const T& value) const
+  //!  return a vector with 1's when (*this)[i]==value for all i, 0 otherwise
+  TVec<bool> operator==(const T& value) const
+    {
+      TVec<bool> r(length(), false);
+      //elementsEqualTo(*this,value,r);
+      for (int i=0; i<length(); i++)
       {
-        TVec<bool> r(length(), false);
-        //elementsEqualTo(*this,value,r);
-        for (int i=0; i<length(); i++)
-        {
-          if ((*this)[i] == value) r[i] = true;
-        }
-        return r;
+        if ((*this)[i] == value) r[i] = true;
       }
+      return r;
+    }
 
-      //!  return true if (*this)[i]==value[i] for all i, 0 otherwise
-      bool operator==(const TVec<T>& value) const
-      {
-        if (value.isEmpty() && isEmpty()) return true;
-        if (value.length()!=length()) return false;
-        T* x=data();
-        T* y=value.data();
-        for (int i=0;i<length();i++)
-          if (x[i]!=y[i]) return false;
-        return true;
-      }
-      bool operator!=(const TVec<T>& value) const { return !((*this)==value); }
+  //!  return true if (*this)[i]==value[i] for all i, 0 otherwise
+  bool operator==(const TVec<T>& value) const
+    {
+      if (value.isEmpty() && isEmpty()) return true;
+      if (value.length()!=length()) return false;
+      T* x=data();
+      T* y=value.data();
+      for (int i=0;i<length();i++)
+        if (x[i]!=y[i]) return false;
+      return true;
+    }
+  bool operator!=(const TVec<T>& value) const { return !((*this)==value); }
 
-      //!  return true if element is in the TVec and false otherwise.
-      bool contains(const T& element) const
-      {
-        if (length()==0) return false;
-        bool contained=false;
-        T *v = data(); //!<  get start of data
-        for (int i=0; i<length() && !contained; i++)
-          if (v[i]==element)
-            contained=true;
-        return contained;
-      }
+  //!  return true if element is in the TVec and false otherwise.
+  bool contains(const T& element) const
+    {
+      if (length()==0) return false;
+      bool contained=false;
+      T *v = data(); //!<  get start of data
+      for (int i=0; i<length() && !contained; i++)
+        if (v[i]==element)
+          contained=true;
+      return contained;
+    }
 
-      //!  return the set of indices whose corresponding values are "element". 
-      //! TODO Olivier: hmm, looks like it should return TVec<int>, no ? (same for other find methods)
-      TVec<T> findIndices(const T& element)
+  //!  return the set of indices whose corresponding values are "element". 
+  //! TODO Olivier: hmm, looks like it should return TVec<int>, no ? (same for other find methods)
+  TVec<T> findIndices(const T& element)
+    {
+      TVec<T> indices(0);
+      if (!isEmpty())
       {
-        TVec<T> indices(0);
-        if (!isEmpty())
-        {
         T *v = data();
         for (int i=0; i<length(); i++)
           if (v[i]==element)
             indices.append(i);
-        }
-        return indices;
       }
+      return indices;
+    }
  
-      TVec<T> findIndices(const TVec<T>& elements)
+  TVec<T> findIndices(const TVec<T>& elements)
+    {
+      TVec<T> indices(0);
+      if (!isEmpty())
       {
-        TVec<T> indices(0);
-        if (!isEmpty())
-        {
-          T *v = data();
-          for (int i=0; i<length(); i++)
-            for (int j=0, m=elements.length(); j<m; j++)
-              if (v[i] == elements[j])
-              {
-                indices.append(i);
-                break;
-              }
-        }
-        return indices;
-      }
- 
-      //!  Returns the position of the first occurence of element
-      //!  in the vector or -1 if it never occurs
-      int find(const T& element, int start=0) const
-      {
-        if (length()==0) return -1;
         T *v = data();
-        for (int i=start; i<length(); i++)
-          if(v[i]==element)
-            return i;
-        return -1;
-      }
-
-      TVec<T> find(TVec<T> elements)
-      {
-        TVec<T> indices(elements.length(),-1);
-        if (length()==0) return indices;
-        T *v = data();
-        for (int i=0, m=elements.length(); i<m; i++)
-          for (int j=0; j<length(); j++)
-            if (v[j] == elements[i])
+        for (int i=0; i<length(); i++)
+          for (int j=0, m=elements.length(); j<m; j++)
+            if (v[i] == elements[j])
             {
-              indices[i] = j;
+              indices.append(i);
               break;
             }
-        return indices;
       }
+      return indices;
+    }
+ 
+  //!  Returns the position of the first occurence of element
+  //!  in the vector or -1 if it never occurs
+  int find(const T& element, int start=0) const
+    {
+      if (length()==0) return -1;
+      T *v = data();
+      for (int i=start; i<length(); i++)
+        if(v[i]==element)
+          return i;
+      return -1;
+    }
 
-      //!  C++ stream output
-      void print(ostream& out = cout) const; //!<  the data is printed on a single row, no newline
-      void println(ostream& out = cout) const { print(out); out<<endl; } //!<  same with newline
-      void printcol(ostream& out = cout) const; //!<  printed as a column
-      void print(ostream& out, const string& separator) const; //!<  each value is printed with the given separator string between them
+  TVec<T> find(TVec<T> elements)
+    {
+      TVec<T> indices(elements.length(),-1);
+      if (length()==0) return indices;
+      T *v = data();
+      for (int i=0, m=elements.length(); i<m; i++)
+        for (int j=0; j<length(); j++)
+          if (v[j] == elements[i])
+          {
+            indices[i] = j;
+            break;
+          }
+      return indices;
+    }
 
-      void input(istream& in=cin) const;
+  //!  C++ stream output
+  void print(ostream& out = cout) const; //!<  the data is printed on a single row, no newline
+  void println(ostream& out = cout) const { print(out); out<<endl; } //!<  same with newline
+  void printcol(ostream& out = cout) const; //!<  printed as a column
+  void print(ostream& out, const string& separator) const; //!<  each value is printed with the given separator string between them
 
-      // calls print with cerr, usefull with gdb (> call obj.debugprint() )
-      void debugPrint(){print(cerr);}
+  void input(istream& in=cin) const;
+
+  // calls print with cerr, usefull with gdb (> call obj.debugprint() )
+  void debugPrint(){print(cerr);}
 
 
-      void operator<<(const string& datastring) const
-      {
-        istrstream in(datastring.c_str());
-        input(in);
-      }
+  void operator<<(const string& datastring) const
+    {
+      istrstream in(datastring.c_str());
+      input(in);
+    }
 
 };
 
@@ -771,13 +776,13 @@ class TypeTraits< TVec<T> >
 {
 public:
   static inline string name()
-  { return string("TVec< ") + TypeTraits<T>::name()+" >"; }
+    { return string("TVec< ") + TypeTraits<T>::name()+" >"; }
 
   static inline unsigned char little_endian_typecode()
-  { return 0xFF; }
+    { return 0xFF; }
 
   static inline unsigned char big_endian_typecode()
-  { return 0xFF; }
+    { return 0xFF; }
 };
 
 
