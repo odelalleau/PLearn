@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedFuncVariable.cc,v 1.8 2004/02/28 20:27:27 tihocan Exp $
+   * $Id: UnfoldedFuncVariable.cc,v 1.9 2004/03/03 14:14:36 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -179,7 +179,7 @@ void UnfoldedFuncVariable::printInfo(bool print_gradient)
   for (int i=0;i<n_unfold;i++)
     f_paths[i].printInfo(print_gradient);
   cout << info() << " : " << getName() << "[" << (void*)this << "]" 
-       << "(input_matrix=" << (void*)input_matrix;
+       << "(input_matrix=" << (void*)input_matrix << " ";
   for(int i=0; i<n_unfold; i++) cout << (void*)outputs[i] << " ";
   cout << ") = " << value;
   if (print_gradient) cout << " gradient=" << gradient;
