@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GetInputVMatrix.cc,v 1.2 2004/09/14 16:04:39 chrish42 Exp $ 
+   * $Id: GetInputVMatrix.cc,v 1.3 2005/03/08 15:09:30 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -121,7 +121,7 @@ void GetInputVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   // deepCopyField(trainvec, copies);
 
   // ### Remove this line when you have fully implemented this method.
-  PLERROR("GetInputVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+  //PLERROR("GetInputVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 } // end of namespace PLearn
