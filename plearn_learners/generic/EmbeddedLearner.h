@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.h,v 1.14 2004/10/08 15:48:46 chapados Exp $ 
+   * $Id: EmbeddedLearner.h,v 1.15 2004/10/21 18:40:17 chapados Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.h */
@@ -133,6 +133,12 @@ public:
   virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
                                      Vec& output, Vec& costs) const;
 
+  //! Forwarded to inner learner
+  virtual
+  bool computeConfidenceFromOutput(const Vec& input, const Vec& output,
+                                   real probability,
+                                   TVec< pair<real,real> >& intervals) const;
+  
   //! NOT forwarded by default
   // virtual void computeCostsOnly(const Vec& input, const Vec& target,
   //                               Vec& costs) const;

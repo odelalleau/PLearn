@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.cc,v 1.16 2004/10/08 15:48:46 chapados Exp $ 
+   * $Id: EmbeddedLearner.cc,v 1.17 2004/10/21 18:40:16 chapados Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.cc */
@@ -171,6 +171,15 @@ void EmbeddedLearner::computeOutputAndCosts(const Vec& input, const Vec& target,
 { 
   assert( learner_ );
   learner_->computeOutputAndCosts(input, target, output, costs); 
+}
+
+bool EmbeddedLearner::computeConfidenceFromOutput(
+  const Vec& input, const Vec& output,
+  real probability, TVec< pair<real,real> >& intervals) const
+{
+  assert( learner_ );
+  return learner_->computeConfidenceFromOutput(input,output,probability,
+                                               intervals);
 }
 
 TVec<string> EmbeddedLearner::getTestCostNames() const
