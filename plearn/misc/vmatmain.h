@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.h,v 1.6 2004/07/21 16:30:53 chrish42 Exp $
+   * $Id: vmatmain.h,v 1.7 2005/01/18 15:41:18 lheureup Exp $
    ******************************************************* */
 
 #include <plearn/base/Array.h>
@@ -46,7 +46,7 @@ static string vmat_view_dataset;
 
 //! Prints where m1 and m2 differ by more than tolerance
 //! returns the number of such differences, or -1 if the sizes differ
-int print_diff(ostream& out, VMat m1, VMat m2, double tolerance=1e-6);
+int print_diff(ostream& out, VMat m1, VMat m2, double tolerance=1e-6, int verbose=1);
 
 void interactiveDisplayCDF(const Array<VMat>& vmats);
 

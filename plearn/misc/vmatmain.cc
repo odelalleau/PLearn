@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.39 2005/01/17 15:47:22 tihocan Exp $
+   * $Id: vmatmain.cc,v 1.40 2005/01/18 15:41:17 lheureup Exp $
    ******************************************************* */
 
 #include <algorithm>                         // for max
@@ -66,7 +66,7 @@ using namespace std;
 
 //! Prints where m1 and m2 differ by more than tolerance
 //! returns the number of such differences, or -1 if the sizes differ
-int print_diff(ostream& out, VMat m1, VMat m2, double tolerance)
+int print_diff(ostream& out, VMat m1, VMat m2, double tolerance, int verbose)
 {
   int ndiff = 0;
   if(m1.length()!=m2.length() || m1.width()!=m2.width())
@@ -89,11 +89,13 @@ int print_diff(ostream& out, VMat m1, VMat m2, double tolerance)
           double d = v1[j]-v2[j];
           if(fabs(d)>tolerance || (is_missing(v1[j]) && !is_missing(v2[j])) || (is_missing(v2[j]) && !is_missing(v1[j])))
             {
-              out << "Elements at " << i << ',' << j << " differ by " << d << endl;
+				  if (verbose)
+					 out << "Elements at " << i << ',' << j << " differ by " << d << endl;
               ++ndiff;
             }
         }
     }
+  if (!verbose) out << ndiff <<endl;
   return ndiff;
 }
 
@@ -1354,7 +1356,7 @@ int vmatmain(int argc, char** argv)
       "   or: vmat cat <dataset> [<optional_vpl_filtering_code>]\n"
       "       To display the dataset \n"
       "   or: vmat sascat <dataset.vmat> <dataset.txt>\n"
-      "       To output in <filename.txt> the dataset in SAS-like tab-separated format with field names on the first line\n"
+      "       To output in <dataset.txt> the dataset in SAS-like tab-separated format with field names on the first line\n"
       "   or: vmat view <vmat> \n"
       "       Interactive display of a vmat. \n"
       "   or: vmat stats <dataset> \n"
@@ -1371,8 +1373,9 @@ int vmatmain(int argc, char** argv)
       "       Will generate <kvalue> pairs of .vmat that are splitted so they can be used for kfold trainings\n"
       "       The first .vmat-pair will be named <fileprefix>_train_1.vmat (all source_dataset except the first 1/k)\n"
       "       and <fileprefix>_test_1.vmat (the first 1/k of <source_dataset>\n"
-      "   or: vmat diff <dataset1> <dataset2> [tolerance] \n"
+      "   or: vmat diff <dataset1> <dataset2> [<tolerance> [<verbose>]]\n"
       "       Will report all elements that differ by more than tolerance (defauts to 1e-6) \n"
+      "       If verbose==0 then print only total number of differences \n"
       "   or: vmat cdf <dataset> [<dataset> ...] \n"
       "       To interactively display cumulative density function for each field \n"
       "       along with its basic statistics \n"
@@ -1655,9 +1658,12 @@ int vmatmain(int argc, char** argv)
       VMat vm1 = getDataSet(argv[2]);
       VMat vm2 = getDataSet(argv[3]);
       double tol = 1e-6;
-      if(argc>=5)
+		int verb = 1;
+      if(argc == 5)
         tol = atof(argv[4]);
-      print_diff(cout, vm1, vm2, tol);      
+		if (argc >= 6)
+		  verb = atoi(argv[5]);
+      print_diff(cout, vm1, vm2, tol, verb);      
     }
   else if(command=="cat")
     {
