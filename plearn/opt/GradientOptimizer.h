@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.h,v 1.3 2003/04/25 18:42:50 tihocan Exp $
+   * $Id: GradientOptimizer.h,v 1.4 2003/04/28 17:08:58 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -69,6 +69,15 @@ using namespace std;
 
       // Options (also available through setOption)
       real start_learning_rate;
+      real min_learning_rate;  //!< min value for learning_rate when adapting
+      real max_learning_rate;  //!< max value for learning_rate when adapting
+      //! Learning rate adaptation kind :
+      //! 0  = none
+      //! 1  = basic
+      //! 2  = ALAP1
+      int learning_rate_adaptation;
+      real adapt_coeff1;  //!< a coefficient for learning rate adaptation
+      real adapt_coeff2;  //!< a coefficient for learning rate adaptation
       real decrease_constant;
 
     private:
@@ -78,17 +87,32 @@ using namespace std;
 
       GradientOptimizer(real the_start_learning_rate=0.01, 
                         real the_decrease_constant=0,
+                        real the_min_learning_rate=0.001,
+                        real the_max_learning_rate=0.02,
+                        int the_learning_rate_adaptation=0,
+                        real the_adapt_coeff1=0,
+                        real the_adapt_coeff2=0,
                         int n_updates=1, const string& filename="", 
                         int every_iterations=1);
       GradientOptimizer(VarArray the_params, Var the_cost,
                         real the_start_learning_rate=0.01, 
                         real the_decrease_constant=0,
+                        real the_min_learning_rate=0.001,
+                        real the_max_learning_rate=0.02,
+                        int the_learning_rate_adaptation=0,
+                        real the_adapt_coeff1=0,
+                        real the_adapt_coeff2=0,
                         int n_updates=1, const string& filename="", 
                         int every_iterations=1);
       GradientOptimizer(VarArray the_params, Var the_cost, 
                         VarArray update_for_measure,
                         real the_start_learning_rate=0.01, 
                         real the_decrease_constant=0,
+                        real the_min_learning_rate=0.001,
+                        real the_max_learning_rate=0.02,
+                        int the_learning_rate_adaptation=0,
+                        real the_adapt_coeff1=0,
+                        real the_adapt_coeff2=0,
                         int n_updates=1, const string& filename="", 
                         int every_iterations=1);
 
@@ -118,8 +142,27 @@ using namespace std;
     virtual real optimize();
     virtual bool optimizeN(VecStatsCollector& stat_coll);
 
+  private:
+
+    // Basic learning rate adaptation
+    // If grad(i) > 0 : lr(i) = lr(i) * adapt_coeff1
+    // else           : lr(i) = lr(i) * adapt_coeff2
+    void adaptLearningRateBasic(
+        Vec learning_rates,
+        Vec old_gradient,
+        Vec new_gradient);
+
+    // ALAP1 formula learning rate adaptation
+    // lr = lr + adapt_coeff1 * dot(grad(k-1), grad(k))
+    void adaptLearningRateALAP1(
+        Vec learning_rates,
+        Vec old_gradient,
+        Vec new_gradient);
+
   protected:
+
     static void declareOptions(OptionList& ol);
+
   };
 
 DECLARE_OBJECT_PTR(GradientOptimizer);
