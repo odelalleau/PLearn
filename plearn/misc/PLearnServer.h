@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnServer.h,v 1.1 2005/01/06 02:09:38 plearner Exp $ 
+   * $Id: PLearnServer.h,v 1.2 2005/01/06 02:40:49 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -60,7 +60,6 @@ protected:
 
   PStream io;
   ObjMap objmap;
-  unsigned int last_obj_id;
 
 public:
   PLearnServer(const PStream& input_output);

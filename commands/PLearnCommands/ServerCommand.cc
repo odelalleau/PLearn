@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ServerCommand.cc,v 1.1 2005/01/06 02:09:37 plearner Exp $ 
+   * $Id: ServerCommand.cc,v 1.2 2005/01/06 02:40:23 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -68,7 +68,7 @@ ServerCommand::ServerCommand():
                   " \n"
                   "Summary of commands:\n"
                   "  > \"dirpath\"             # change directory to dirpath. Returns: R 0 \n"
-                  "  N object_specification    # creates new object. Returns: R 1 objid \n"
+                  "  N objid object_specification    # creates new object. Returns: R 0 \n"
                   "  M objid methodname nargs arg1 ... # calls method on object objid. Returns: R <nreturn> ret1 ... \n"
                   "  D objid                   # deletes object objid. Returns: R 0 \n"
                   "  Z                         # delete all objects. Returns: R 0 \n"

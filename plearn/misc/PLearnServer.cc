@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnServer.cc,v 1.1 2005/01/06 02:09:38 plearner Exp $ 
+   * $Id: PLearnServer.cc,v 1.2 2005/01/06 02:40:49 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -50,7 +50,7 @@ using namespace std;
 // Put function implementations here.
 
   PLearnServer::PLearnServer(const PStream& input_output)
-    :io(input_output), last_obj_id(0)
+    :io(input_output)
   {
     
   }
@@ -82,18 +82,16 @@ using namespace std;
 
               case 'N': // new
                 obj = 0;
-                cerr << "before reading" << endl;
-                io >> obj;           // Read new object
-                cerr << "after reading" << endl;
-                objmap[++last_obj_id] = obj;
-                io.write("R 1 ");
-                io << last_obj_id << endl;   // Send back the object id
+                io >> obj_id >> obj;           // Read new object
+                objmap[obj_id] = obj;
+                io.write("R 0");
+                io << endl;  
                 break;
             
               case 'D': // delete
                 io >> obj_id;
                 if(objmap.erase(obj_id)==0)
-                  PLERROR("Calling delete of an inexistant object");
+                  PLERROR("Calling delete of a non-existing object");
                 io.write("R 0");
                 io << endl;
                 break;
@@ -102,7 +100,7 @@ using namespace std;
                 io >> obj_id;
                 found = objmap.find(obj_id);
                 if(found == objmap.end()) // unexistant obj_id
-                  PLERROR("Calling a method on an inexistant object");
+                  PLERROR("Calling a method on a non-existing object");
                 else 
                   {
                     io >> method_name >> n_args;
@@ -113,7 +111,6 @@ using namespace std;
 
               case 'Z': // delete all objects
                 objmap.clear();
-                last_obj_id = 0;
                 io.write("R 0");
                 io << endl;
                 break;
