@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ExhaustiveNearestNeighbors.cc,v 1.4 2005/01/25 17:58:36 tihocan Exp $ 
+   * $Id: ExhaustiveNearestNeighbors.cc,v 1.5 2005/03/04 20:58:17 lamblin Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -131,7 +131,7 @@ void ExhaustiveNearestNeighbors::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(costs,        copies);
   deepCopyField(dummy_vec,    copies);
   deepCopyField(kernel,       copies);
-  deepCopyField(indexes,      copies);
+  deepCopyField(indices,      copies);
   inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
@@ -162,14 +162,14 @@ void ExhaustiveNearestNeighbors::computeOutputAndCosts(
   assert( costs.size() == num_neighbors );
   priority_queue< pair<real,int> > q;
   findNearestNeighbors(input, q);
-  indexes.resize(0, num_neighbors);
+  indices.resize(0, num_neighbors);
 
   // Dequeue the found nearest-neighbors in order of largest
   int i = 0;
   for ( ; i<num_neighbors && ! q.empty(); ++i) {
     const pair<real,int>& cur_top = q.top();
     costs[i] = (kernel_is_pseudo_distance? -1 : +1) * cur_top.first;
-    indexes.push_back(cur_top.second);
+    indices.push_back(cur_top.second);
     q.pop();
   }
 
@@ -178,7 +178,7 @@ void ExhaustiveNearestNeighbors::computeOutputAndCosts(
   for ( ; i < num_neighbors ; ++i )
     costs[i] = MISSING_VALUE;
 
-  constructOutputVector(indexes, output);
+  constructOutputVector(indices, output);
 }
 
 void ExhaustiveNearestNeighbors::computeOutput(const Vec& input, Vec& output) const
@@ -195,7 +195,7 @@ void ExhaustiveNearestNeighbors::computeCostsFromOutputs(
   // Not really efficient (the output has probably already been computed).
   dummy_vec.resize(outputsize());
   computeOutputAndCosts(input, target, dummy_vec, costs);
-}                                
+}
 
 
 TVec<string> ExhaustiveNearestNeighbors::getTestCostNames() const

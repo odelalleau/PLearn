@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GenericNearestNeighbors.h,v 1.3 2004/12/25 08:03:29 chapados Exp $ 
+   * $Id: GenericNearestNeighbors.h,v 1.4 2005/03/04 20:58:18 lamblin Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -81,6 +81,10 @@ namespace PLearn {
  * the test and train points be output.
  *
  */ 
+
+class GenericNearestNeighbors;
+typedef PP< GenericNearestNeighbors > GenericNN;
+
 class GenericNearestNeighbors: public PLearner
 {
   typedef PLearner inherited;
@@ -150,14 +154,14 @@ protected:
 
   //! From a vector of indexes into the training set, expand them into
   //! an output vector for the learner, and take into account all the
-  //! options.  One can pass less than num_neighbors indexes, in which
+  //! options.  One can pass less than num_neighbors indices, in which
   //! case the rest of the output vector is filled with missings.
-  void constructOutputVector(const TVec<int>& indexes, Vec& output) const;
+  void constructOutputVector(const TVec<int>& indices, Vec& output) const;
 };
 
 // Declares a few other classes and functions related to this class.
 DECLARE_OBJECT_PTR(GenericNearestNeighbors);
-  
+
 } // end of namespace PLearn
 
 #endif

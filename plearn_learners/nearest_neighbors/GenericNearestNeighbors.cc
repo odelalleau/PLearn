@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GenericNearestNeighbors.cc,v 1.5 2005/01/25 17:57:51 tihocan Exp $ 
+   * $Id: GenericNearestNeighbors.cc,v 1.6 2005/03/04 20:58:18 lamblin Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -77,7 +77,7 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
   "  simplifies client code who may then assume that a weight is always\n"
   "  present if requested\n"
   "- The index (row number) of the example from the training set (option\n"
-  "  \"copy_weight\")\n"
+  "  \"copy_index\")\n"
   "\n"
   "If more than one neighbor is requested, the complete output vector of\n"
   "this learner is simply the concatenation of the above template for\n"
@@ -184,12 +184,12 @@ int GenericNearestNeighbors::outputsize() const
   return num_neighbors * base_outputsize;
 }
 
-void GenericNearestNeighbors::constructOutputVector(const TVec<int>& indexes,
+void GenericNearestNeighbors::constructOutputVector(const TVec<int>& indices,
                                                     Vec& output) const
 {
   assert( output.size() == outputsize() );
   
-  int i, n=min(num_neighbors, indexes.size());
+  int i, n=min(num_neighbors, indices.size());
   int inputsize = train_set->inputsize();
   int targetsize = train_set->targetsize();
   int weightsize = train_set->weightsize();
@@ -197,7 +197,7 @@ void GenericNearestNeighbors::constructOutputVector(const TVec<int>& indexes,
 
   currow.resize(train_set.width());
   for (i=0 ; i<n ; ++i) {
-    train_set->getRow(indexes[i], currow);
+    train_set->getRow(indices[i], currow);
     real* currow_data = currow.data();
 
     if(copy_input) {
@@ -222,7 +222,7 @@ void GenericNearestNeighbors::constructOutputVector(const TVec<int>& indexes,
     }
 
     if (copy_index)
-      *output_data++ = real(indexes[i]);
+      *output_data++ = real(indices[i]);
   }
 
   if (n < num_neighbors)
