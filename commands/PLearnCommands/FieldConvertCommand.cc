@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: FieldConvertCommand.cc,v 1.40 2005/02/08 21:32:06 tihocan Exp $
+ * $Id: FieldConvertCommand.cc,v 1.41 2005/03/15 17:10:13 tihocan Exp $
  ******************************************************* */
 
 #include "FieldConvertCommand.h"
@@ -264,14 +264,20 @@ void FieldConvertCommand::run(const vector<string> & args)
         // we have a range
         int a = vm->getFieldIndex(leftpart[0]);
         int b = vm->getFieldIndex(leftpart[1]);
-        for(int j=a;j<=b;j++)
+        for(int j=a;j<=b;j++) {
+          if (force.find(j) != force.end())
+            PLERROR("In FieldConvertCommand::run - Duplicate force type for variable %d", j);
           force[j]=rpart;
+        }
       }
       else 
       {
-        if(vm->getFieldIndex(vec[0])==-1)
+        int index = vm->getFieldIndex(vec[0]);
+        if (index == -1)
           cout<<"field : "<<vec[0]<<" doesn't exist in matrix"<<endl;
-        force[vm->getFieldIndex(vec[0])] = rpart;
+        if (force.find(index) != force.end())
+          PLERROR("In FieldConvertCommand::run - Duplicate force type for variable %d", index);
+        force[index] = rpart;
       }
     }
   }
