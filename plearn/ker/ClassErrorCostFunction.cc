@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ClassErrorCostFunction.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
+   * $Id: ClassErrorCostFunction.cc,v 1.5 2004/09/24 15:06:26 kermorvc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,13 +45,14 @@
 namespace PLearn {
 using namespace std;
 
-
+ 
 // **** ClassErrorCostFunction ****
 
-PLEARN_IMPLEMENT_OBJECT(ClassErrorCostFunction, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(ClassErrorCostFunction, "Compute a classification cost function from ouput vector and target vector. ", "NO HELP");
 
 real ClassErrorCostFunction::evaluate(const Vec& output, const Vec& target) const
 {
+  if(is_missing(output[0]) && ignore_missing_values && output.length()==1 )return MISSING_VALUE;
   if(output_is_classnum)
   {
     if(is_integer(output[0]))
@@ -85,6 +86,8 @@ void
 ClassErrorCostFunction::declareOptions(OptionList &ol)
 {
     declareOption(ol, "output_is_classnum", &ClassErrorCostFunction::output_is_classnum, OptionBase::buildoption, "Output of learner is class number");
+    inherited::declareOptions(ol);
+    declareOption(ol, "ignore_missing_values", &ClassErrorCostFunction::ignore_missing_values, OptionBase::buildoption, "When output is missing, do not compute cost and return MISSING_VALUE");
     inherited::declareOptions(ol);
 }
 

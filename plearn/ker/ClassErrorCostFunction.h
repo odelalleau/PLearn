@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ClassErrorCostFunction.h,v 1.4 2004/04/07 23:15:17 morinf Exp $
+   * $Id: ClassErrorCostFunction.h,v 1.5 2004/09/24 15:06:27 kermorvc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,6 +53,8 @@ using namespace std;
 
 /*!   * If output and target both have length 1, then binary classification 
     with targets -1 and +1 is assumed and the sign of the output is considered
+    If ouput is MISSING_VALUE, evaluation returns MISSING_VALUE; MISSING_VALUE
+    can be considered as an error if ignore_missing_value is set to false.
   * If output has length>1 and target has length 1, then output is understood 
     as giving a score for each class while target is the index of the correct
     class (numbered from 0)
@@ -64,9 +66,10 @@ using namespace std;
 class ClassErrorCostFunction: public Kernel
 {
   typedef Kernel inherited;
-
+  
   protected:
-    bool output_is_classnum;
+     bool output_is_classnum;
+     bool ignore_missing_values;
 
  public:
 /*!       There are several cases:
@@ -78,8 +81,8 @@ class ClassErrorCostFunction: public Kernel
       Cases 1,2,3 are handled correctly with the default output_is_classnum=false
       For case 4 and 5, you must specify output_is_classnum=true
 */
-  ClassErrorCostFunction(bool the_output_is_classnum = false)
-    :output_is_classnum(the_output_is_classnum) {}
+  ClassErrorCostFunction(bool the_output_is_classnum = false,bool the_ignore_missing_values=true)
+    :output_is_classnum(the_output_is_classnum),ignore_missing_values(the_ignore_missing_values) {}
 
   PLEARN_DECLARE_OBJECT(ClassErrorCostFunction);
 
@@ -95,9 +98,9 @@ protected:
 
 DECLARE_OBJECT_PTR(ClassErrorCostFunction);
 
-inline CostFunc class_error(bool output_is_classnum=false) 
+inline CostFunc class_error(bool output_is_classnum=false,bool ignore_missing_values=true) 
 { 
-  return new ClassErrorCostFunction(output_is_classnum); 
+  return new ClassErrorCostFunction(output_is_classnum, ignore_missing_values); 
 } 
 
 
