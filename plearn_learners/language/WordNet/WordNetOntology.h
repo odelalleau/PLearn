@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.h,v 1.11 2003/01/30 22:22:40 morinf Exp $
+   * $Id: WordNetOntology.h,v 1.12 2003/02/15 02:03:57 morinf Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -110,7 +110,50 @@ bool isLegalPunct(char c);
 char* cstr(string& s);
 void removeDelimiters(string& s, char delim, char replace);
 
+// Useless stuff brought to you by Fred
+struct NodeKey
+{
+    NodeKey()
+    {
+        headword = "";
+        headsense = -1;
+    };
+    void set(SynsetPtr ssp)
+    {
+        sstype = ssp->sstype;
+        fnum = ssp->fnum;
+        pos = ssp->pos;
+        for (int i = 0; i < 2; ++i)
+            lexid[i] = ssp->lexid[i];
+        for (int i = 0; i < 3; ++i)
+            wnsns[i] = ssp->wnsns[i];
+        if (sstype == 5) {
+            headword = ssp->headword;
+            headsense = ssp->headsense;
+        }
+        gloss_def = ssp->defn;
+    };
+    void print(ostream &out)
+    {
+        out << "[" << sstype << ", " << fnum << ", " << pos << ", " << lexid[0]
+            << lexid[1] << ", (" << wnsns[0] << ", " << wnsns[1]
+            << wnsns[2] << ")";
+        if (sstype == 5)
+            out << ", " << headword << ", " << headsense;
+        out << ", " << gloss_def << "]" << flush;
+    }
+    int sstype;
+    int fnum;
+    string pos;
+    int lexid[2];
+    int wnsns[3];
+    string headword;
+    short headsense;
+    string gloss_def;
+};
+
 // ontology DAG node
+
 struct Node
 {
   Node() { ss_id = UNDEFINED_SS_ID; is_unknown = true; visited = false; }
@@ -124,7 +167,8 @@ struct Node
   bool is_unknown;
   //int level;
   bool visited;
-  long key;
+  long key;        // Useless stuff, TO BE REMOVED
+  NodeKey key2;    // Useless stuff, TO BE REMOVED
 };
 
 class WordNetOntology
@@ -258,6 +302,11 @@ public:
   bool containsWord(string word) { return (words_id.find(word) != words_id.end()); }
   bool containsWordId(int id) { return (words.find(id) != words.end()); }
 
+  void listMultipleParented2();
+  void printSynsetWords2(int ss_id, int n_words = 15);
+
+  void removeNonReachableSynsets();
+
   void print(bool print_ontology = true);
   void printSynset(int ss_id, int indent_level = 0);
   void printStats();
@@ -288,6 +337,7 @@ public:
   void extractAncestors(int threshold, bool cut_with_word_coverage = true);
   void extractAncestors(Node* node, Set ancestors, int level, int level_threshold);
   void extractAncestors(Node* node, Set ancestors, int word_coverage_threshold);
+
 protected:
   void extractDescendants(Node* node, Set sense_descendants, Set word_descendants);
 private:
@@ -312,7 +362,6 @@ private:
   //void getCategoriesAtLevel(int ss_id, int level, set<int>& categories);
   void getCategoriesAtLevel(int ss_id, int cur_level, int target_level, set<int>& categories);
   void getCategoriesUnderLevel(int ss_id, int cur_level, int target_level, Set categories);
-  void removeNonReachableSynsets();
   void visitUpward(Node* node);
 
 };

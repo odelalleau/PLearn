@@ -33,18 +33,20 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.cc,v 1.13 2003/01/31 16:29:07 morinf Exp $
+   * $Id: WordNetOntology.cc,v 1.14 2003/02/15 02:03:57 morinf Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "WordNetOntology.h"
+#include <algo.h>
 
 namespace PLearn {
   using namespace std;
 
 
-#define FRED_MODIF
+//#define FRED_MODIF
+//#define NOWARNING
 
 WordNetOntology::WordNetOntology()
 {
@@ -265,36 +267,7 @@ void WordNetOntology::extract(string voc_file, int wn_pos_type)
   finalize();
   input_if.close();
 
-  // FRED: Some code to check uniqueness of the potential keys I want to use
-#ifdef FRED_MODIF
-  for (map<int, Node *>::iterator it = synsets.begin(); it != synsets.end(); ++it) {
-      if (it->second->types.size() > 1)
-          cout << "node " << it->second->ss_id << " has more than 1 type"
-               << endl;
-  }
-
-  map<long, long> keys;
-  int duplicates = 0;
-  for (map<int, Node *>::iterator it = synsets.begin(); it != synsets.end(); ++it) {
-      long key = it->second->key;
-      if (keys.find(key) != keys.end()) {
-          ++duplicates;
-          cout << "key " << key << " is duplicate (ss_id = "
-               << it->second->ss_id << ")" << endl;
-          int type = *(it->second->types.begin());
-          // Print synset associated with duplicate
-          cout << "The following synsets are duplicates: " << endl;
-          for (map<int, Node *>::iterator i = synsets.begin();
-               i != synsets.end(); ++i) {
-              if (i->second->key == key && *(i->second->types.begin()) == type)
-                  printSynset(i->second->ss_id);
-          }
-      } else
-          keys[key] = key;
-  }
-  cout << "duplicates = " << duplicates << endl;
-  cout << "out of " << synsets.size() << " synsets" << endl;
-#endif // FRED_MODIF
+  listMultipleParented2();
 }
 
 bool WordNetOntology::isInWordNet(string word, bool trim_word, bool stem_word, bool remove_undescores)
@@ -615,24 +588,31 @@ Node* WordNetOntology::extractOntology(SynsetPtr ssp)
   node->gloss = defn;
   node->is_unknown = false;
   node->key = ssp->hereiam;
+  node->key2.set(ssp);
   synsets[node->ss_id] = node;
-
   node->key = ssp->hereiam; // FRED MODIF
-//  cout << "key = " << node->key << ", " << "pos = " << ssp->pos << ", "
-//       << "fnum = " << ssp->fnum << endl;
-
+/*
+  cout << "key = " << node->key << ", " << "pos = " << ssp->pos << ", "
+       << "fnum = " << ssp->fnum << endl;
+  cout << "key2 = ";
+  node->key2.print(cout);
+*/
   ssp = ssp->ptrlist;
   
   while (ssp != NULL)
   {
-//    cout << "in extractOntology() ssp->key = " << ssp->key
-//         << ", ssp->hereiam" << ssp->hereiam << endl;
+/*
+    cout << "in extractOntology() ssp->key = " << ssp->key
+         << ", ssp->hereiam" << ssp->hereiam << endl;
+*/
     Node* parent_node = checkForAlreadyExtractedSynset(ssp);
-    
     if (parent_node == NULL) // create new synset Node
     {
       parent_node = extractOntology(ssp);
-      parent_node->key = ssp->hereiam;
+      //parent_node->key = ssp->hereiam;
+      parent_node->key2.set(ssp);
+      //cout << "key2 = ";
+      //parent_node->key2.print(cout);
     }
     
     node->parents.insert(parent_node->ss_id);
@@ -783,7 +763,7 @@ int WordNetOntology::getWordSenseIdForSenseKey(string lemma, string lexsn)
 //           << endl;
     vector<string> synset_words = getSynsetWords(ssp);
     int word_id = words_id[lemma];
-    for (SetIterator it = word_to_senses[word_id].begin(); it != word_to_senses.end(); ++it)
+    for (SetIterator it = word_to_senses[word_id].begin(); it != word_to_senses[word_id].end(); ++it)
     {
       Node* node = synsets[*it];
       if (node->syns == synset_words)
@@ -942,6 +922,59 @@ vector<string> WordNetOntology::getSynsetWords(SynsetPtr ssp)
   return syns;
 }
 
+void
+WordNetOntology::listMultipleParented2()
+{
+    int total_multiple_parented_nodes = 0;
+    for (map<int, Node *>::iterator it = synsets.begin(); it != synsets.end(); ++it) {
+        Node *node = it->second;
+        int n_parents = node->parents.size();
+        if (n_parents > 1) {
+            cout << "Node " << node->ss_id << " (" << node->key << "|"
+                 << *(node->types.begin()) << ") ";
+            node->key2.print(cout);
+            printSynset(node->ss_id);
+            cout << " (words = ";
+            printSynsetWords2(node->ss_id);
+            cout << ") \nhas " << node->parents.size() << " parents: " << endl;
+            SetIterator par_it = node->parents->begin();
+            for ( ; par_it != node->parents.end(); ++par_it) {
+                Node *parent = getSynset(*par_it);
+                cout << "parent " << *par_it << " (" << parent->key << "|"
+                     << *(parent->types.begin()) << ") ";
+                node->key2.print(cout);
+                printSynset(*par_it);
+                cout << " (words = ";
+                printSynsetWords2(*par_it);
+                cout << ") " << endl;
+            }
+            ++total_multiple_parented_nodes;
+            cout << endl << endl;
+        }
+    }
+    cout << "Total multiple parented nodes = "
+         << total_multiple_parented_nodes << endl;
+}
+
+void
+WordNetOntology::printSynsetWords2(int ss_id, int n_words)
+{
+    if (synsets.find(ss_id) == synsets.end())
+        PLERROR("WeightedWNOntology::printSynsetWords2() - "
+                "synset %d doesn't exist", ss_id);
+    //Node *node = synsets[ss_id];
+    int n_printed_words = 0;
+    Set ss_words = getSynsetWordDescendants(ss_id);
+    SetIterator it = ss_words.begin();
+    if (n_words && ss_words.size())
+        cout << words[*it];
+    for (++it; (it != ss_words.end())
+             && (n_printed_words < n_words); ++it) {
+        cout << ", " << words[*it];
+    }
+    cout << flush;
+}
+
 void WordNetOntology::print(bool print_ontology)
 {
   for (map<int, Set>::iterator it = word_to_senses.begin(); it != word_to_senses.end(); ++it)
@@ -977,7 +1010,9 @@ void WordNetOntology::printSynset(int ss_id, int indent_level)
     cout << *it << ", ";
   }
   cout << " (" << ss_id << ")";
-  //cout << " " << synsets[ss_id]->gloss;
+  ////cout << " " << synsets[ss_id]->gloss;
+  cout << endl << "gloss = " << synsets[ss_id]->gloss << endl;
+  cout << "syns = " << synsets[ss_id]->syns << endl;
   cout << " {";
   for (SetIterator it = synsets[ss_id]->types.begin(); it != synsets[ss_id]->types.end(); ++it)
   {
@@ -1051,6 +1086,7 @@ void WordNetOntology::save(string synset_file, string ontology_file)
     }
 #ifdef FRED_MODIF
     of_synsets << "*|" << node->key << "|";
+    //node->key2.print(of_synsets); // tempo
 #endif
     of_synsets << endl;
   }
@@ -1114,34 +1150,47 @@ void WordNetOntology::load(string voc_file, string synset_file, string ontology_
   }
   if_voc.close();
 
+  int line_no = 0;
   while (!if_synsets.eof()) // synsets
   {
+    ++line_no;
     getline(if_synsets, line, '\n');
     if (line == "") continue;
     if (line[0] == '#') continue;
     vector<string> tokens = split(line, "*");
+#ifdef FRED_MODIF
     if (tokens.size() != 4)
+#else
+    if (tokens.size() != 3)
+#endif
     { 
-      PLERROR("the synset file has not the expected format, line = '%s'", line.c_str());
+      PLERROR("the synset file has not the expected format, line %d = '%s'", line_no, line.c_str());
     }
     int ss_id = toint(tokens[0]);
     vector<string> type_tokens = split(tokens[1], "|");
     vector<string> ss_tokens = split(tokens[2], "|");
+#ifdef FRED_MODIF
     vector<string> key_token = split(tokens[3], "|");
+#endif
     Node* node = new Node(ss_id);
     for (unsigned int i = 0; i < type_tokens.size(); i++)
     {
       node->types.insert(toint(type_tokens[i]));
     }
+#ifdef FRED_MODIF
+    int ss_tokens_size = ss_tokens.size();
+#endif
     node->gloss = ss_tokens[0];
     for (unsigned int i = 1; i < ss_tokens.size(); i++)
     {
       node->syns.push_back(ss_tokens[i]);
     }
+#ifdef FRED_MODIF
     if (key_token.size() == 1)
       node->key = toint(key_token[0]);
     else
       node->key = -1;
+#endif
     synsets[node->ss_id] = node;
   }
   if_synsets.close();
@@ -1510,6 +1559,12 @@ Node* WordNetOntology::getSynset(int id)
   {
     PLWARNING("asking for a non-synset id (%d)", id);
     return NULL;
+  }
+#endif
+#ifndef NOWARNING
+  if (synsets.find(id) == synsets.end()) {
+      PLWARNING("Asking for a non-existent synset id (%d)", id);
+      return NULL;
   }
 #endif
   return synsets[id];
@@ -2498,9 +2553,9 @@ void removeDelimiters(string& s, char delim, char replace)
   unsigned int pos = s.find(delim, 0);
   while (pos != string::npos)
   {
-    s.replace(pos, 1, replace);
+    s.replace(pos, 1, &replace);
     pos = s.find(delim, pos + 1);
   }
 }
 
-}
+} // namespace PLearn
