@@ -35,7 +35,7 @@ import sys, string, os
 args = sys.argv[:]
 
 helpstring =  """Usage:\n
-    make_train_valid_test destdir "['condition1','condition2' ...]" "['name1','name2' ...]" source1 source2 ...\n
+    vmat_select_from_sources destdir "['condition1','condition2' ...]" "['name1','name2' ...]" source1 source2 ...\n
     This program creates as many vmat files for each source file as there are conditions. Each of them has the form\n
          <SOURCES>
            $i-th-source

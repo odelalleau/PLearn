@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOfVariable.cc,v 1.5 2003/09/20 20:33:35 yoshua Exp $
+   * $Id: SumOfVariable.cc,v 1.6 2003/09/21 18:46:17 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -55,10 +55,14 @@ SumOfVariable::SumOfVariable(VMat the_distr, Func the_f, int the_nsamples)
                 the_f->outputs[0]->length(), 
                 the_f->outputs[0]->width()),
    distr(the_distr), f(the_f), nsamples(the_nsamples), curpos(0),
-   input_value(the_distr->inputsize()+the_distr->targetsize()+the_distr->weightsize()), 
-   input_gradient(the_distr->inputsize()+the_distr->targetsize()+the_distr->weightsize()), 
+   //input_value(the_distr->inputsize()+the_distr->targetsize()+the_distr->weightsize()), 
+   //input_gradient(the_distr->inputsize()+the_distr->targetsize()+the_distr->weightsize()), 
+   input_value(the_distr->width()),
+   input_gradient(the_distr->width()),
    output_value(the_f->outputs[0]->size())
 {
+  input_value.resize(the_distr->inputsize()+the_distr->targetsize()+the_distr->weightsize());
+  input_gradient.resize(the_distr->inputsize()+the_distr->targetsize()+the_distr->weightsize());
   if(f->outputs.size()!=1)
     PLERROR("In SumOfVariable: function must have a single variable output (maybe you can vconcat the vars into a single one prior to calling sumOf, if this is really what you want)");
 
@@ -88,7 +92,9 @@ void SumOfVariable::fprop()
 
   if(nsamples==1)
   {
+    input_value.resize(distr->width());
     distr->getRow(curpos, input_value);
+    input_value.resize(distr->inputsize()+distr->targetsize()+distr->weightsize());
     f->fprop(input_value, value);
     if(++curpos == distr->length())
       curpos = 0;
@@ -105,7 +111,9 @@ void SumOfVariable::fprop()
     Vec dummy_value(value.length());
     for(int i=start_pos; i<end_pos; i++)
     {
+      input_value.resize(distr->width());
       distr->getRow(i, input_value);
+      input_value.resize(distr->inputsize()+distr->targetsize()+distr->weightsize());
       f->fprop(input_value, output_value);
       dummy_value += output_value;
     }
@@ -113,7 +121,9 @@ void SumOfVariable::fprop()
 #else
     for(int i=0; i<nsamples; i++)
     {
+      input_value.resize(distr->width());
       distr->getRow(curpos, input_value);
+      input_value.resize(distr->inputsize()+distr->targetsize()+distr->weightsize());
       f->fprop(input_value, output_value);
       value += output_value;
       if(++curpos == distr->length())
@@ -134,8 +144,9 @@ void SumOfVariable::fbprop()
   
   if(nsamples==1)
   {
+    input_value.resize(distr->width());
     distr->getRow(curpos, input_value);
-
+    input_value.resize(distr->inputsize()+distr->targetsize()+distr->weightsize());
     //displayFunction(f, true, false, 250);
     f->fbprop(input_value, value, input_gradient, gradient);
     //displayFunction(f, true, false, 250);
@@ -154,7 +165,9 @@ void SumOfVariable::fbprop()
     Vec dummy_value(value.length());
     for(int i=start_pos; i<end_pos; i++)
     {
+      input_value.resize(distr->width());
       distr->getRow(i, input_value);
+      input_value.resize(distr->inputsize()+distr->targetsize()+distr->weightsize());
       f->fbprop(input_value, output_value, input_gradient, gradient);
       dummy_value += output_value;
     }
@@ -170,7 +183,9 @@ void SumOfVariable::fbprop()
 #else
     for(int i=0; i<nsamples; i++)
     {
+      input_value.resize(distr->width());
       distr->getRow(curpos, input_value);
+      input_value.resize(distr->inputsize()+distr->targetsize()+distr->weightsize());
       //displayFunction(f, true, false, 250);
       f->fbprop(input_value, output_value, input_gradient, gradient);
       value += output_value;
@@ -259,7 +274,9 @@ void SumOfVariable::printInfo(bool print_gradient)
 
   for(int i=0; i<nsamples; i++)
   {
+    input_value.resize(distr->width());
     distr->getRow(curpos++,input_value);
+    input_value.resize(distr->inputsize()+distr->targetsize()+distr->weightsize());
     if (print_gradient)
       f->fbprop(input_value, output_value, input_gradient, gradient);
     else
