@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RemoveDuplicateVMatrix.cc,v 1.1 2004/08/03 19:01:05 tihocan Exp $ 
+   * $Id: RemoveDuplicateVMatrix.cc,v 1.2 2004/08/03 19:03:30 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -83,6 +83,9 @@ void RemoveDuplicateVMatrix::declareOptions(OptionList& ol)
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
+
+  redeclareOption(ol, "indices", &RemoveDuplicateVMatrix::indices, OptionBase::buildoption,
+      "The indices will be computed at build time.");
 }
 
 ///////////
