@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: FieldConvertCommand.cc,v 1.28 2004/06/18 16:38:12 tihocan Exp $
+ * $Id: FieldConvertCommand.cc,v 1.29 2004/06/18 16:55:26 tihocan Exp $
  ******************************************************* */
 
 #include "FieldConvertCommand.h"
@@ -86,7 +86,7 @@ FieldConvertCommand::FieldConvertCommand()
                   "        *target                = [field index of target]\n"
                   "         force                 = [force file]\n"
                   "         report                = [report file] (default = 'FieldConvertReport.txt')\n"
-                  "         fraction              = [if number of unique values is > than 'fraction' * NonMISSING -> the field is continuous]\n"
+                  "         min_fraction          = [if number of unique values is > than 'fraction' * NonMISSING -> the field is continuous]\n"
                   "                                 (default = 0.3)\n"
                   "         max_pvalue            = [maximum pvalue to assume correlation with target] (default = 0.025)\n"
                   "         frac_missing_to_skip  = [if MISSING >= 'frac_missing_to_skip * number of samples then this field is skipped]\n"
