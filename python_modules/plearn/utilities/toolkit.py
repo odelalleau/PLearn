@@ -5,7 +5,7 @@ submodule. If a considerable number of functions contained in this
 module seems to manage similar tasks, it is probably time to create a
 I{similar_tasks.py} L{utilities} submodule to move those functions to.
 """
-__cvs_id__ = "$Id: toolkit.py,v 1.21 2005/02/09 15:41:13 dorionc Exp $"
+__cvs_id__ = "$Id: toolkit.py,v 1.22 2005/02/11 09:16:55 dorionc Exp $"
 import inspect, os, popen2, random, string, sys, time, types
 
 __epydoc_is_available = None
@@ -112,9 +112,22 @@ def cross_product( list1,  list2,
 
 def date_time_string():
     t = time.localtime()
-    return ( str(t[0]) + "_" + str(t[1]) + "_" + str(t[2])
-             + "_" +
-             str(t[3]) + ":" + str(t[4]) + ":" + str(t[5]) )
+    year  = str(t[0])
+
+    def length2( i ):
+        if i < 10:
+            return "0%d" % i
+        return str(i)
+    
+    month = length2( t[1] )
+    day   = length2( t[2] )
+
+    hour  = length2( t[3] )
+    mins  = length2( t[4] )
+    secs  = length2( t[5] )
+
+    return "%s_%s_%s_%s:%s:%s" % ( year, month, day,
+                                   hour, mins,  secs ) 
 
 def date_time_random_string():
     s = date_time_string()

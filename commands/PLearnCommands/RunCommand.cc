@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunCommand.cc,v 1.17 2005/01/28 17:42:35 plearner Exp $ 
+   * $Id: RunCommand.cc,v 1.18 2005/02/11 09:16:33 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file RunCommand.cc */
@@ -45,7 +45,10 @@
 #include <plearn/base/stringutils.h>
 #include <plearn/base/Object.h>
 #include <plearn/sys/Popen.h>
-#include <plearn/io/PyPlearnDriver.h>
+
+//#include <plearn/io/PyPlearnDriver.h>
+#include <plearn/io/PyPLearnScript.h>
+
 #include <plearn/io/openString.h>
 
 namespace PLearn {
@@ -76,29 +79,34 @@ void RunCommand::run(const vector<string>& args)
 
   const string extension = extract_extension(scriptfile);
   string script;
+
+  PP<PyPLearnScript> pyplearn_script;
   if (extension == ".pyplearn")
-    {
-      script = process_pyplearn_script(scriptfile, args);
-      // When we call the pyplearn script with either --help
-      // or --dump, everything will already have been done by
-      // process_pyplearn_script, which then returns "" to
-      // signify that there is nothing else to be done.
-      if (script == "")
-        return;
-    }
+  {
+    pyplearn_script = PyPLearnScript::process(scriptfile, args);
+    script          = pyplearn_script->getScript();
+    
+    // When we call the pyplearn script with either
+    // --help or --dump, everything will already have been done by
+    // the time the PyPLearnScript is built. 
+    if ( script == "" )
+      return;    
+  }
   else
-    {
-      script = readFileAndMacroProcess(scriptfile, vars);
-    }
+  {
+    script = readFileAndMacroProcess(scriptfile, vars);
+  }
+  
+  PStream in = openString( script, PStream::plearn_ascii );
+  while ( in )
+  {
+    PP<Object> o = readObject(in);
+    o->run();
+    in.skipBlanksAndCommentsAndSeparators();
+  }
 
-  PStream in = openString(script,PStream::plearn_ascii);
-
-  while(in)
-    {
-      PP<Object> o = readObject(in);
-      o->run();
-      in.skipBlanksAndCommentsAndSeparators();
-    }
+  if ( pyplearn_script.isNotNull() )
+    pyplearn_script->close();
 }
 
 } // end of namespace PLearn
