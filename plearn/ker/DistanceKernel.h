@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DistanceKernel.h,v 1.6 2004/06/16 18:24:45 tihocan Exp $
+   * $Id: DistanceKernel.h,v 1.7 2005/02/04 15:08:49 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,6 +44,7 @@
 #define DistanceKernel_INC
 
 #include "Kernel.h"
+#include <plearn/base/tostring.h>
 
 namespace PLearn {
 using namespace std;

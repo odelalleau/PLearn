@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RemoveDuplicateVMatrix.cc,v 1.4 2004/09/14 16:04:39 chrish42 Exp $ 
+   * $Id: RemoveDuplicateVMatrix.cc,v 1.5 2005/02/04 15:08:50 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -41,6 +41,7 @@
 /*! \file RemoveDuplicateVMatrix.cc */
 
 
+#include <plearn/base/tostring.h>
 #include <plearn/ker/DistanceKernel.h>
 #include "RemoveDuplicateVMatrix.h"
 

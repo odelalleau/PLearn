@@ -34,11 +34,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ClassifierFromDensity.cc,v 1.14 2005/01/27 14:22:29 tihocan Exp $ 
+   * $Id: ClassifierFromDensity.cc,v 1.15 2005/02/04 15:08:51 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file ClassifierFromDensity.cc */
 #include "ClassifierFromDensity.h"
+#include <plearn/base/tostring.h>
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
 #include <plearn/vmat/VMat_operations.h>
 #include <plearn/ker/Kernel.h>

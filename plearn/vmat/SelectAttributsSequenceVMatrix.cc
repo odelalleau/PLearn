@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SelectAttributsSequenceVMatrix.cc,v 1.7 2004/10/08 17:52:08 kermorvc Exp $ 
+   * $Id: SelectAttributsSequenceVMatrix.cc,v 1.8 2005/02/04 15:08:50 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -42,6 +42,7 @@
 
 
 #include "SelectAttributsSequenceVMatrix.h"
+#include <plearn/base/tostring.h>
 
 namespace PLearn {
 using namespace std;

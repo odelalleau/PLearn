@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectedOutputCostFunction.h,v 1.5 2004/09/14 16:04:36 chrish42 Exp $
+   * $Id: SelectedOutputCostFunction.h,v 1.6 2005/02/04 15:08:49 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,6 +44,7 @@
 #define SelectedOutputCostFunction_INC
 
 #include "Kernel.h"
+#include <plearn/base/tostring.h>
 
 namespace PLearn {
 using namespace std;

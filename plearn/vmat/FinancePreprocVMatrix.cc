@@ -34,12 +34,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FinancePreprocVMatrix.cc,v 1.13 2004/09/14 16:04:39 chrish42 Exp $ 
+   * $Id: FinancePreprocVMatrix.cc,v 1.14 2005/02/04 15:08:50 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file FinancePreprocVMatrix.cc */
 #include "FinancePreprocVMatrix.h"
 #include <plearn/base/PDate.h>
+#include <plearn/base/tostring.h>
 
 namespace PLearn {
 using namespace std;

@@ -35,10 +35,11 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatColumnsVMatrix.cc,v 1.12 2004/07/22 21:33:34 tatien Exp $
+   * $Id: ConcatColumnsVMatrix.cc,v 1.13 2005/02/04 15:08:49 tihocan Exp $
    ******************************************************* */
 
 #include "ConcatColumnsVMatrix.h"
+#include <plearn/base/tostring.h>
 
 namespace PLearn {
 using namespace std;

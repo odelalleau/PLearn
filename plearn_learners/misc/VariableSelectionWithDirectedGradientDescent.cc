@@ -40,6 +40,7 @@
    ************************************************************************************************************** */
 
 #include "VariableSelectionWithDirectedGradientDescent.h"
+#include <plearn/base/tostring.h>
 
 namespace PLearn {
 using namespace std;

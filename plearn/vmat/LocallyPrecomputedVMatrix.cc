@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyPrecomputedVMatrix.cc,v 1.7 2005/01/13 14:22:59 tihocan Exp $ 
+   * $Id: LocallyPrecomputedVMatrix.cc,v 1.8 2005/02/04 15:08:50 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -41,6 +41,7 @@
 /*! \file LocallyPrecomputedVMatrix.cc */
 
 #include "LocallyPrecomputedVMatrix.h"
+#include <plearn/base/tostring.h>
 #include <plearn/vmat/FileVMatrix.h>
 
 namespace PLearn {

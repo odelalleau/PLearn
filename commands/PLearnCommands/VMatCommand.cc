@@ -34,13 +34,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMatCommand.cc,v 1.8 2005/01/18 15:36:39 lheureup Exp $ 
+   * $Id: VMatCommand.cc,v 1.9 2005/02/04 15:08:47 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file VMatCommand.cc */
 #include "VMatCommand.h"
 #include <plearn/db/getDataSet.h>
 #include <plearn/misc/vmatmain.h>
+#include <plearn/base/lexical_cast.h>
 
 namespace PLearn {
 using namespace std;

@@ -33,15 +33,16 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DeepNNet.cc,v 1.11 2005/01/28 18:15:09 tihocan Exp $ 
+   * $Id: DeepNNet.cc,v 1.12 2005/02/04 15:08:51 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
 
 /*! \file DeepNNet.cc */
 
-#include <time.h>                 //!< For clock().
 #include "DeepNNet.h"
+#include <time.h>                 //!< For clock().
+#include <plearn/base/tostring.h>
 #include <plearn/math/random.h>
 #include <plearn/math/pl_math.h>
 
