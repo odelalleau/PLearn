@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.7 2002/10/25 06:33:54 plearner Exp $
+   * $Id: TMat_maths_impl.h,v 1.8 2003/03/03 02:48:48 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -1136,6 +1136,20 @@ void multiplyAdd(const TVec<T>& source1, const TVec<T>& source2,
   T* d=destination.data();
   for (int i=0;i<n;i++)
     d[i] = s1[i]+s2[i]*source3;
+}
+
+// destination[i] = a*destination[i] + b*source[i]
+template<class T>
+void multiplyScaledAdd(const TVec<T>& source, T a, T b, TVec<T>& destination)
+{
+  int n=source.length();
+  if (n!=destination.length())
+    PLERROR("multiply: source and destination (l=%d and %d) must have same length",
+          n,destination.length());
+  T* s=source.data();
+  T* d=destination.data();
+  for (int i=0;i<n;i++)
+    d[i] = a*d[i] + b*s[i];
 }
 
 // destination[i] = source1[i]+source2[i]
@@ -4976,30 +4990,38 @@ int GramSchmidtOrthogonalization(TMat<T> A, T tolerance)
 }
 
 //!  products
+
+//! return m x v
 template<class T>
   inline TVec<T> product(const TMat<T>& m, const TVec<T>& v)
   { TVec<T> res(m.length()); product(res, m,v); return res; }
 
+//! return m' x v
 template<class T>
   inline TVec<T> transposeProduct(const TMat<T>& m, const TVec<T>& v)
   { TVec<T> res(m.width()); transposeProduct(res, m,v); return res; }
 
+//! return m1 x m2
 template<class T>
   inline TMat<T> product(const TMat<T>& m1, const TMat<T>& m2)
   { TMat<T> res(m1.length(),m2.width()); product(res, m1,m2); return res; }
 
+//! return m1' x m2
 template<class T>
   inline TMat<T> transposeProduct(const TMat<T>& m1, const TMat<T>& m2)
   { TMat<T> res(m1.width(),m2.width()); transposeProduct(res, m1,m2); return res; }
 
+//! return m1 x m2'
 template<class T>
   inline TMat<T> productTranspose(const TMat<T>& m1, const TMat<T>& m2)
   { TMat<T> res(m1.length(),m2.length()); productTranspose(res, m1,m2); return res; }
 
+//! return m + v (added to every ROW of m)
 template<class T>
 inline TMat<T> operator+(const TMat<T>& m, const TVec<T>& v)
 { TMat<T> res = m.copy(); res+=v; return res; }
 
+//! return m - v (subtracted from every ROW of m)
 template<class T>
 inline TMat<T> operator-(const TMat<T>& m, const TVec<T>& v)
 { TMat<T> res = m.copy(); res-=v; return res; }
