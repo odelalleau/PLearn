@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.cc,v 1.9 2004/03/23 23:08:08 morinf Exp $
+   * $Id: MemoryVMatrix.cc,v 1.10 2004/06/11 13:23:02 tihocan Exp $
    ******************************************************* */
 
 #include "MemoryVMatrix.h"
@@ -47,7 +47,10 @@ using namespace std;
 
 /** MemoryVMatrix **/
 
-PLEARN_IMPLEMENT_OBJECT(MemoryVMatrix, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(MemoryVMatrix,
+    "ONE LINE DESCR",
+    "NO HELP"
+);
 
 MemoryVMatrix::MemoryVMatrix() : data(Mat())
 {}
