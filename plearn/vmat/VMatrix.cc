@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.7 2003/03/09 22:06:39 yoshua Exp $
+* $Id: VMatrix.cc,v 1.8 2003/03/09 22:59:47 yoshua Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -49,8 +49,7 @@
 #include "Func.h"
 #include "TopNI.h"
 #include "BottomNI.h"
-#include "VVec.h"
-#include "VVector.h"
+//#include "VVec.h"
 
 //#include "VMat.h"
 //#include "TMat_maths.h"
@@ -369,6 +368,7 @@ void VMatrix::getRow(int i, Vec v) const
 void VMatrix::getVRow(int i, VVec v) const
 {
   PLERROR("VMatrix::getVRow not defined for this class");
+  //return 0;
 }
 
 void VMatrix::putRow(int i, Vec v)
@@ -742,5 +742,6 @@ void VMatrix::evaluateSumOfFbprop(Func f, Vec& output_result, Vec& output_gradie
     if(curpos == length()) curpos = 0;
   }
 }
+
 
 %> // end of namespace PLearn

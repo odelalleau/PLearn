@@ -36,15 +36,12 @@
 
  
 /*
-* $Id: VVec.cc,v 1.2 2003/03/09 22:06:40 yoshua Exp $
+* $Id: VVec.cc,v 1.3 2003/03/09 22:59:47 yoshua Exp $
 ******************************************************* */
 
+
 #include "VVec.h"
-#include "VVector.h"
 
 namespace PLearn <%
-
-DECLARE_OBJECT_PP(VVec, VVector);
-IMPLEMENT_OBJECT_PP(VVec, VVector);
 
 %> // end of namespace PLearn

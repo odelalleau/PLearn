@@ -36,25 +36,12 @@
 
  
 /*
-* $Id: VVector.cc,v 1.1 2003/03/09 22:10:40 yoshua Exp $
+* $Id: VVector.cc,v 1.2 2003/03/09 22:59:47 yoshua Exp $
 ******************************************************* */
 
 #include "VVector.h"
 
 namespace PLearn <%
 
-IMPLEMENT_NAME_AND_DEEPCOPY(VVector);
-
-Vec VVector::toVec() const {
-  Vec row_vec(mat.width()); // somewhat wasteful
-  mat->getRow(row_index,row_vec);
-  return row_vec;
-}
-
-void VVector::toVec(Vec row_vec) {
-  mat->getRow(row_index,row_vec);
-}
-
-int VVector::length() const { return mat.width(); }
 
 %> // end of namespace PLearn

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.5 2003/03/09 22:06:40 yoshua Exp $
+   * $Id: VMatrix.h,v 1.6 2003/03/09 22:59:47 yoshua Exp $
    ******************************************************* */
 
 
@@ -53,9 +53,7 @@
 #include "IntVecFile.h"
 #include "StatsCollector.h"
 #include "TMat_maths_impl.h"
-
 #include "VMField.h"
-
 #include "VVec.h"
 
 namespace PLearn <%
@@ -64,9 +62,6 @@ using namespace std;
 class Ker;
 class VMat;
 class Func;
-
-//class VVector;
-//typedef PP<VVector> VVec;
 
 /*! ** VMatrix ** */
 
@@ -212,6 +207,7 @@ public:
   virtual void getRow(int i, Vec v) const; //!<  copies row i into v (which must have appropriate length equal to the VMat's width)
 
  //! get virtual row
+    //virtual VVec getVRow(int i) const;
   virtual void getVRow(int i, VVec v) const;
 
   virtual void putRow(int i, Vec v);
@@ -331,7 +327,6 @@ public:
 };
 
 DECLARE_OBJECT_PTR(VMatrix);
-
 
 %> // end of namespace PLearn
 
