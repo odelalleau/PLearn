@@ -1,8 +1,9 @@
 // -*- C++ -*-
 
-// plearn.cc
-// Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux, Rejean Ducharme
-//
+// KolmogorovSmirnovCommand.cc
+// 
+// Copyright (C) 2003 Pascal Vincent
+// 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -31,68 +32,44 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.14 2003/02/28 22:47:38 plearner Exp $
+   * $Id: KolmogorovSmirnovCommand.cc,v 1.1 2003/02/28 22:47:55 plearner Exp $ 
    ******************************************************* */
 
-#include "plearn_main.h"
-
-// Available Splitters:
-#include "ExplicitSplitter.h"
-#include "TrainTestSplitter.h"
-#include "KFoldSplitter.h"
-
-// Available VMats:
-#include "AutoVMatrix.h"
-
-// All Available Learners: 
-// #include "KNN.h"
-//#include "Classification1HiddenNN.h"
-//#include "Mixture2.h"
-#include "ClassifierFromDensity.h"
-#include "RegressorFromDensity.h"
-#include "Distribution.h"
-#include "GaussianDistribution.h"
-#include "LocallyWeightedDistribution.h"
-#include "NeuralNet.h"
-#include "GradientOptimizer.h"
-// #include "AutoStepGradientOptimizer.h"
-
-#include "ConstantModel.h"
-#include "MultiLearner.h"
-#include "LinearRegressor.h"
-
-#include "EnsembleLearner.h"
-
-// #include "SVM.h"
-
-#include "ParzenDensity.h"
-#include "ParzenRegressor.h"
-#include "ManifoldParzenDensity.h"
-
-#include "Experiment.h"
-
-
-// Commands
+/*! \file KolmogorovSmirnovCommand.cc */
 #include "KolmogorovSmirnovCommand.h"
-#include "ReadAndWriteCommand.h"
+#include "getDataSet.h"
+#include "stats_utils.h"
 
-using namespace PLearn;
+namespace PLearn <%
+using namespace std;
 
-int main(int argc, char** argv)
+//! This allows to register the 'KolmogorovSmirnovCommand' command in the command registry
+PLearnCommandRegistry KolmogorovSmirnovCommand::reg_(new KolmogorovSmirnovCommand);
+
+//! The actual implementation of the 'KolmogorovSmirnovCommand' command 
+void KolmogorovSmirnovCommand::run(const vector<string>& args)
 {
-  /*
-  string text = loadFileAsString(argv[1]);
-  
-  cerr << text << endl;
-  cerr << "\n------------------------------------------\n";
-  map<string, string> vars;
-  macro_process(text, vars);
-  cerr << text << endl;
-  exit(0);
-  */
+  if(args.size()!=4 && args.size()!=5)
+    PLERROR("ks-stat expects 4 or 5 arguments, check the help");
 
-  return plearn_main(argc, argv);
+  VMat m1 = getDataSet(args[0]);
+  int c1 = toint(args[1]);
+  VMat m2 = getDataSet(args[2]);
+  int c2 = toint(args[3]);
+  int conv = 10;
+  if(args.size()==5)
+     conv = toint(args[4]);
+
+  Vec v1 = m1.getColumn(c1);
+  Vec v2 = m2.getColumn(c2);
+
+  real D, ks_stat;
+  KS_test(v1, v2, conv, D, ks_stat);
+
+  cout << "Maximum absolute difference between the 2 cdfs is: " << D << endl;
+  cout << "Result of Kolmogorov-Smirnov test is: " << ks_stat << endl;
 }
+
+%> // end of namespace PLearn
 

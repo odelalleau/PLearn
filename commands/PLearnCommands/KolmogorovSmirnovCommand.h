@@ -1,8 +1,9 @@
 // -*- C++ -*-
 
-// plearn.cc
-// Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux, Rejean Ducharme
-//
+// KolmogorovSmirnovCommand.h
+// 
+// Copyright (C) 2003 Pascal Vincent
+// 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -31,68 +32,40 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.14 2003/02/28 22:47:38 plearner Exp $
+   * $Id: KolmogorovSmirnovCommand.h,v 1.1 2003/02/28 22:47:56 plearner Exp $ 
    ******************************************************* */
 
-#include "plearn_main.h"
+/*! \file KolmogorovSmirnovCommand.h */
+#ifndef KolmogorovSmirnovCommand_INC
+#define KolmogorovSmirnovCommand_INC
 
-// Available Splitters:
-#include "ExplicitSplitter.h"
-#include "TrainTestSplitter.h"
-#include "KFoldSplitter.h"
+#include "PLearnCommand.h"
+#include "PLearnCommandRegistry.h"
 
-// Available VMats:
-#include "AutoVMatrix.h"
+namespace PLearn <%
+using namespace std;
 
-// All Available Learners: 
-// #include "KNN.h"
-//#include "Classification1HiddenNN.h"
-//#include "Mixture2.h"
-#include "ClassifierFromDensity.h"
-#include "RegressorFromDensity.h"
-#include "Distribution.h"
-#include "GaussianDistribution.h"
-#include "LocallyWeightedDistribution.h"
-#include "NeuralNet.h"
-#include "GradientOptimizer.h"
-// #include "AutoStepGradientOptimizer.h"
-
-#include "ConstantModel.h"
-#include "MultiLearner.h"
-#include "LinearRegressor.h"
-
-#include "EnsembleLearner.h"
-
-// #include "SVM.h"
-
-#include "ParzenDensity.h"
-#include "ParzenRegressor.h"
-#include "ManifoldParzenDensity.h"
-
-#include "Experiment.h"
-
-
-// Commands
-#include "KolmogorovSmirnovCommand.h"
-#include "ReadAndWriteCommand.h"
-
-using namespace PLearn;
-
-int main(int argc, char** argv)
+class KolmogorovSmirnovCommand: public PLearnCommand
 {
-  /*
-  string text = loadFileAsString(argv[1]);
+public:
+  KolmogorovSmirnovCommand():
+    PLearnCommand("ks-stat",
+                  "Computes the Kolmogorov-Smirnov statistic between 2 matrix columns",
+                  "ks-stat <matA> <colA> <matB> <colB> [conv] \n"
+                  "Will compute the ks-statistic between column colA of matrix matA \n"
+                  "and column colB of matrix matB, with presion conv (defaults to 10). \n"
+                  "You can use any matrix files recognized by PLearn \n"
+                  ) 
+  {}
+                    
+  virtual void run(const vector<string>& args);
+
+protected:
+  static PLearnCommandRegistry reg_;
+};
+
   
-  cerr << text << endl;
-  cerr << "\n------------------------------------------\n";
-  map<string, string> vars;
-  macro_process(text, vars);
-  cerr << text << endl;
-  exit(0);
-  */
+%> // end of namespace PLearn
 
-  return plearn_main(argc, argv);
-}
-
+#endif

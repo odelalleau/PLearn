@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_main.cc,v 1.7 2003/02/06 21:36:45 ducharme Exp $
+   * $Id: plearn_main.cc,v 1.8 2003/02/28 22:47:56 plearner Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -119,7 +119,7 @@ int plearn_main(int argc, char** argv)
         }
       else if(PLearnCommandRegistry::is_registered(command))
         {
-          vector<string> args = stringvector(argc-1, argv+1);
+          vector<string> args = stringvector(argc-2, argv+2);
           PLearnCommandRegistry::run(command, args);
         }
       else // we suppose it's a filename of a .psave or .pexp file containing Objects to be run
