@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.35 2003/10/03 14:00:39 yoshua Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.36 2003/10/05 16:59:42 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -269,7 +269,6 @@ real ConjGradientOptimizer::conjpomdp (
     ConjGradientOptimizer* opt) {
   int i;
   // delta = Gradient
-  (*grad)(opt, opt->delta); // EST-CE VRAIMENT NECESSAIRE?
   real norm_g = pownorm(opt->current_opp_gradient);
   // tmp_storage <- delta - g (g = current_opp_gradient)
   for (i=0; i<opt->current_opp_gradient.length(); i++) {
@@ -304,7 +303,6 @@ void ConjGradientOptimizer::cubicInterpol(
 real ConjGradientOptimizer::daiYuan (
     void (*grad)(Optimizer*, const Vec&),
     ConjGradientOptimizer* opt) {
-  (*grad)(opt, opt->delta);
   real norm_grad = pownorm(opt->delta);
   for (int i=0; i<opt->current_opp_gradient.length(); i++) {
     opt->tmp_storage[i] = -opt->delta[i] + opt->current_opp_gradient[i];
@@ -342,12 +340,16 @@ bool ConjGradientOptimizer::findDirection() {
   }
   // It is suggested to keep gamma >= 0
   if (gamma < 0) {
-    // cout << "gamma < 0 ! gamma = " << gamma << " ==> Restarting" << endl;
+    cout << "gamma < 0 ! gamma = " << gamma << " ==> Restarting" << endl;
     gamma = 0;
   }
-  if (abs(dot(delta, current_opp_gradient)) > restart_coeff * pownorm(delta)) {
-    // cout << "Restart triggered !" << endl;
-    gamma = 0;
+  else {
+    real dp = dot(delta, current_opp_gradient);
+    real delta_n = pownorm(delta);
+    if (abs(dp) > restart_coeff *delta_n ) {
+      cout << "Restart triggered !" << endl;
+      gamma = 0;
+    }
   }
   updateSearchDirection(gamma);
   // If the gradient is very small, we can stop !
@@ -413,7 +415,6 @@ real ConjGradientOptimizer::fletcherReeves (
     void (*grad)(Optimizer*, const Vec&),
     ConjGradientOptimizer* opt) {
   // delta = opposite gradient
-  (*grad)(opt, opt->delta);
   real gamma = pownorm(opt->delta) / pownorm(opt->current_opp_gradient);
   return gamma;
 }
@@ -606,11 +607,11 @@ real ConjGradientOptimizer::gSearch (void (*grad)(Optimizer*, const Vec&)) {
     do {
       sm = step;
       pm = prod;
+      step = step * 2;
       params.update(-old_pos+step, search_direction);
       old_pos = step;
       (*grad)(this, delta);
       prod = dot(delta, search_direction);
-      step = step * 2;
     } while (prod > epsilon);
     sp = step;
     pp = prod;
@@ -634,7 +635,6 @@ real ConjGradientOptimizer::hestenesStiefel (
     ConjGradientOptimizer* opt) {
   int i;
   // delta = opposite gradient
-  (*grad)(opt, opt->delta);
   for (i=0; i<opt->current_opp_gradient.length(); i++) {
     opt->tmp_storage[i] = opt->delta[i] - opt->current_opp_gradient[i];
   }
@@ -787,6 +787,7 @@ real ConjGradientOptimizer::optimize()
     early_stop = lineSearch(); 
     if (early_stop)
       cout << "Early stopping triggered by the line search" << endl;
+    cost->fprop();
     current_cost = cost->value[0];
     
     // Find the new search direction
@@ -800,7 +801,7 @@ real ConjGradientOptimizer::optimize()
 
     // This value of current_step_size is suggested by Fletcher
     df = max (last_improvement, 10*stop_epsilon);
-    current_step_size = 2*df / dot(search_direction, current_opp_gradient);
+    current_step_size = min(1.0, 2*df / dot(search_direction, current_opp_gradient));
     
     // Display results TODO ugly copy/paste from GradientOptimizer: to be cleaned ?
     meancost += cost->value;
@@ -830,17 +831,26 @@ real ConjGradientOptimizer::optimize()
 ///////////////
 // optimizeN //
 ///////////////
-bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stat_coll) {
+bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
   real df, current_cost;
   meancost.clear();
   int stage_max = stage + nstages; // the stage to reach
+
+  if (stage==0)
+  {
+    computeOppositeGradient(this, current_opp_gradient);
+    search_direction <<  current_opp_gradient;  // first direction = -grad;
+    last_cost = cost->value[0];
+  }
 
   for (; !early_stop && stage<stage_max; stage++) {
 
     // Make a line search along the current search direction
     early_stop = lineSearch();
+    computeOppositeGradient(this, delta);
     current_cost = cost->value[0];
     meancost += cost->value;
+    stats_coll.update(cost->value);
     
     // Find the new search direction
     early_stop = early_stop || findDirection();
@@ -850,7 +860,7 @@ bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stat_coll) {
 
     // This value of current_step_size is suggested by Fletcher
     df = max (last_improvement, 10*stop_epsilon);
-    current_step_size = 2*df / dot(search_direction, current_opp_gradient);
+    current_step_size = min(1.0, 2*df / dot(search_direction, current_opp_gradient));
     
   }
 
@@ -872,7 +882,6 @@ real ConjGradientOptimizer::polakRibiere (
     ConjGradientOptimizer* opt) {
   int i;
   // delta = Gradient
-  (*grad)(opt, opt->delta);
   real normg = pownorm(opt->current_opp_gradient);
   for (i=0; i<opt->current_opp_gradient.length(); i++) {
     opt->tmp_storage[i] = opt->delta[i] - opt->current_opp_gradient[i];
@@ -896,9 +905,11 @@ void ConjGradientOptimizer::quadraticInterpol(
 // updateSearchDirection //
 ///////////////////////////
 void ConjGradientOptimizer::updateSearchDirection(real gamma) {
-  for (int i=0; i<search_direction.length(); i++) {
-    search_direction[i] = delta[i] + gamma * search_direction[i];
-  }
+  if (gamma==0)
+    search_direction << delta;
+  else
+    for (int i=0; i<search_direction.length(); i++)
+      search_direction[i] = delta[i] + gamma * search_direction[i];
   current_opp_gradient << delta;
 }
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.cc,v 1.3 2003/10/02 15:19:39 yoshua Exp $
+   * $Id: PLearnerOutputVMatrix.cc,v 1.4 2003/10/05 16:59:43 yoshua Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -113,8 +113,7 @@ void PLearnerOutputVMatrix::build_()
     row.resize(data->width());
     learner_input = row.subVec(0,data->inputsize());
     learner_target = row.subVec(data->inputsize(),data->targetsize());
-    int it=data->inputsize()+data->targetsize();
-    non_input_part_of_data_row = row.subVec(it,data->width()-it);
+    non_input_part_of_data_row = row.subVec(data->inputsize(),data->width()-data->inputsize());
     learners_output.resize(learners->length(),learners[0]->outputsize());
     for (int i=1;i<learners->length();i++)
       if (learners[i]->outputsize()!=learners[i-1]->outputsize())

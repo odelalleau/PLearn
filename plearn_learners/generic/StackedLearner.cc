@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.cc,v 1.5 2003/10/02 15:19:39 yoshua Exp $
+   * $Id: StackedLearner.cc,v 1.6 2003/10/05 16:59:43 yoshua Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -187,7 +187,7 @@ void StackedLearner::setTrainingSet(VMat training_set, bool call_forget)
   } else
   {
     for (int i=0;i<base_learners.length();i++)
-      base_learners[i]->setTrainingSet(training_set);
+      base_learners[i]->setTrainingSet(training_set,false);
     if (combiner)
       combiner->setTrainingSet(new PLearnerOutputVMatrix(training_set, base_learners, put_raw_input));
   }

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.26 2003/08/13 08:13:17 plearner Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.27 2003/10/05 16:59:42 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -174,10 +174,6 @@ private:
       delta.resize(params.nelems());
       if (cost.length() > 0) {
         meancost.resize(cost->size());
-        computeOppositeGradient(this, current_opp_gradient);
-        search_direction <<  current_opp_gradient;  // first direction = -grad;
-        cost->fprop();
-        last_cost = cost->value[0];
       }
     }
     early_stop = false;
