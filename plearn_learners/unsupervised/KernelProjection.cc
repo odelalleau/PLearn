@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.cc,v 1.3 2004/04/05 18:33:09 tihocan Exp $ 
+   * $Id: KernelProjection.cc,v 1.4 2004/04/05 19:38:38 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -243,7 +243,7 @@ void KernelProjection::setTrainingSet(VMat training_set, bool call_forget) {
 ///////////
 void KernelProjection::train()
 {
-  if (stage == 0) {
+  if (stage == 1) {
     PLWARNING("In KernelProjection::train - Learner has already been trained");
     return;
   }
