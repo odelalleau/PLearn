@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.35 2003/12/05 22:13:45 plearner Exp $
+* $Id: VMatrix.cc,v 1.36 2003/12/15 14:05:28 plearner Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -743,6 +743,7 @@ TVec<RealMapping> VMatrix::getRanges()
   return ranges;
 }
 
+/*
 //! returns the cooccurence statistics conditioned on the given field
 PP<ConditionalStatsCollector> VMatrix::getConditionalStats(int condfield)
 {
@@ -762,7 +763,7 @@ PP<ConditionalStatsCollector> VMatrix::getConditionalStats(int condfield)
     PLearn::load(condstatfile, *condst);      
   return condst;
 }
-
+*/
 // Eventually to be changed to pure virtual, once get has been implemented in all subclasses
 // calls to sample can then be replaced by getRow everywhere
 real VMatrix::get(int i, int j) const

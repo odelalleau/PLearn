@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.10 2003/12/05 22:13:45 plearner Exp $
+   * $Id: vmatmain.cc,v 1.11 2003/12/15 14:05:27 plearner Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -204,6 +204,7 @@ void printDistanceStatistics(VMat vm, int inputsize)
   cout << collector << endl;
 }
 
+/*
 void printConditionalStats(VMat vm, int condfield)
 {
   cout << "*** Ranges ***" << endl;
@@ -264,6 +265,7 @@ void printConditionalStats(VMat vm, int condfield)
 
 
 }
+*/
 
 /*
 int findNextIndexOfValue(VMat m, int col, real value, int startrow=0)
@@ -373,7 +375,7 @@ void viewVMat(const VMat& vm)
                 attron(A_REVERSE);
               
               if(hide_sameval && i>starti && (val==oldv[j] || is_missing(val)&&is_missing(oldv[j])) )
-                mvprintw(y, x, valstrformat,"...");                
+                mvprintw(y, x, valstrformat, "...");                
               else
                 mvprintw(y, x, valstrformat,s.substr(0,valstrwidth).c_str());
 
@@ -901,9 +903,9 @@ int vmatmain(int argc, char** argv)
       "   or: vmat cdf <dataset> [<dataset> ...] \n"
       "       To interactively display cumulative density function for each field \n"
       "       along with its basic statistics \n"
-      "   or: vmat cond <dataset> <condfield#> \n"
-      "       Interactive display of coditional statistics conditioned on the \n"
-      "       conditioning field <condfield#> \n"
+      //      "   or: vmat cond <dataset> <condfield#> \n"
+      //      "       Interactive display of coditional statistics conditioned on the \n"
+      //      "       conditioning field <condfield#> \n"
       "   or: vmat diststat <dataset> <inputsize>\n"
       "       Will compute and output basic statistics on the euclidean distance \n"
       "       between two consecutive input points \n"
@@ -925,6 +927,7 @@ int vmatmain(int argc, char** argv)
         }
       interactiveDisplayCDF(vmats);
     }
+  /*
   else if(command=="cond")
     {
       string dbname = argv[2];
@@ -934,6 +937,7 @@ int vmatmain(int argc, char** argv)
       int condfield = atoi(argv[3]);
       printConditionalStats(vm, condfield);    
     }
+  */
   else if(command=="convert")
     {
       string source = argv[2];

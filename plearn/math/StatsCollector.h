@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.22 2003/11/19 19:03:57 tihocan Exp $
+   * $Id: StatsCollector.h,v 1.23 2003/12/15 14:05:27 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -203,62 +203,6 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
 
   DECLARE_OBJECT_PTR(StatsCollector);
 
-  //!  this class holds counts of co-occurences of variables within
-  //!  specific ranges
-  class ConditionalStatsCollector : public Object
-  {
-  protected:
-
-    //++++++++++++
-    // Parameters
-
-
-    //! index of conditioning variable
-    int condvar; 
-
-    //+++++++++++++++++
-    // Computed results
-
-  public:    
-
-    //! ranges[k] must contain bin-mappings for variable k, which maps it to an integer ( 0 to mappings[k].size()-1 )
-    TVec<RealMapping> ranges; 
-
-    //! counts[k](i,j) is the number of times the variable k fell in range i while variable condvar was in range j
-    //! counts[k] has one more row and column than there are mapping ranges: the last ones counting "MISSING_VALUE" occurences.
-    TVec< TMat<int> > counts;
-
-    //! sums[k](i,j) contains the sum of variable k's values that fell in range i while condvar was in range j
-    //! (unlike counts, these do not have an extra row and column for misisng value)
-    TVec< TMat<double> > sums; 
-
-    //! sums[k](i,j) contains the sum of squares of variable k's values that fell in range i while condvar was in range j
-    //! (unlike counts, these do not have an extra row and column for misisng value)
-    TVec< TMat<double> > sumsquares;
-
-    PLEARN_DECLARE_OBJECT(ConditionalStatsCollector);
-
-    ConditionalStatsCollector();
-
-    //! Sets the ranges of interest for each variable, and the index of the conditioning variable. Ranges for a given variable should not overlap.
-    void setBinMappingsAndCondvar(const TVec<RealMapping>& the_ranges, int the_condvar);
-
-    //! Updates the counts for an observation v
-    void update(const Vec& v);
-
-    virtual void write(ostream& out) const;
-    virtual void oldread(istream& in);
-
-  protected:
-
-    //! Returns the first index of the range containing the given value for that variable
-    //! Returns ranges[varindex].length() if val==missing
-    //! Returns -1 if no range containing val was found
-    int findrange(int varindex, real val) const;
-
-  };
-
-  DECLARE_OBJECT_PTR(ConditionalStatsCollector);
 
 TVec<RealMapping> computeRanges(TVec<StatsCollector> stats, int discrete_mincount, int continuous_mincount);
 

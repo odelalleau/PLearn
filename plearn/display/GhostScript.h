@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GhostScript.h,v 1.4 2003/08/13 08:13:16 plearner Exp $
+   * $Id: GhostScript.h,v 1.5 2003/12/15 14:05:26 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -70,6 +70,7 @@ class GhostScript
   FILE* gs_cstream;
   PStream togs; 
   char command_string[1000];
+  bool isfile;
   static void writeBitmapHexString1Bit(const Mat& bm, PStream& out, bool lastrowfirst=false);
   static void writeBitmapHexString8Bits(const Mat& bm, PStream& out, bool lastrowfirst=false);
   static void writeBitmapHexString24Bits(const Mat& bm, PStream& out, bool lastrowfirst=false);

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GhostScript.cc,v 1.4 2003/08/13 08:13:16 plearner Exp $
+   * $Id: GhostScript.cc,v 1.5 2003/12/15 14:05:25 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -70,6 +70,7 @@ using namespace std;
   }
 
   GhostScript::GhostScript(int width, int height)
+    :isfile(false)
   {
     static char command_string[1000];
     // sprintf(command_string,"gs -sDEVICE=x11 -g%d%c%d - > /dev/null",width,'x',height);
@@ -80,6 +81,7 @@ using namespace std;
   }
 
   GhostScript::GhostScript(const string& filename, real x1, real y1, real x2, real y2)
+    :isfile(true)
     // :gs_cstream(0), togs(filename.c_str())
   {
     gs_cstream= fopen(filename.c_str(), "w");
@@ -93,12 +95,9 @@ using namespace std;
   { 
     if(gs_cstream)
       {
-        togs << "\nquit" << endl; 
+        if(!isfile)
+          togs << "\nquit" << endl; 
         fclose(gs_cstream);
-      }
-    else
-      {
-        // togs << "showpage" << endl;
       }
   }
 

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat_maths.h,v 1.8 2003/12/05 15:42:27 ouimema Exp $
+   * $Id: VMat_maths.h,v 1.9 2003/12/15 14:05:28 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,6 +51,7 @@
 #include "TMat.h"
 #include "TMat_maths.h"
 #include "StatsCollector.h"
+#include "ConditionalStatsCollector.h"
 #include "VMat.h"
 
 namespace PLearn <%

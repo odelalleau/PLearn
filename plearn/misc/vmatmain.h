@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.h,v 1.2 2003/10/30 22:16:52 plearner Exp $
+   * $Id: vmatmain.h,v 1.3 2003/12/15 14:05:27 plearner Exp $
    ******************************************************* */
 
 #include "Array.h"
@@ -51,7 +51,7 @@ void displayBasicStats(VMat vm);
 
 void printDistanceStatistics(VMat vm, int inputsize);
 
-void printConditionalStats(VMat vm, int condfield);
+// void printConditionalStats(VMat vm, int condfield);
 
 void viewVMat(const VMat& vm);
 

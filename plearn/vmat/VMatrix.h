@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.28 2003/12/05 22:13:46 plearner Exp $
+   * $Id: VMatrix.h,v 1.29 2003/12/15 14:05:28 plearner Exp $
    ******************************************************* */
 
 
@@ -311,7 +311,7 @@ public:
   //! returns the cooccurence statistics conditioned on the given field
   //! (within the ranges returned by getRanges() )
   //! The results are cached in file stats#.psave (where # stands for the condfield index)
-  PP<ConditionalStatsCollector> getConditionalStats(int condfield);
+  // PP<ConditionalStatsCollector> getConditionalStats(int condfield);
 
   // default version calls savePMAT
   virtual void save(const string& filename) const;

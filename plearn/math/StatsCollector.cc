@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.25 2003/11/27 21:02:57 chapados Exp $
+   * $Id: StatsCollector.cc,v 1.26 2003/12/15 14:05:27 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -307,6 +307,12 @@ RealMapping StatsCollector::getBinMapping(double discrete_mincount,
       }
     }   
   }
+  else if(m.first.high==max_)  // make sure we have a closing bracket on the max_
+    {
+      mapping.removeMapping(m.first);
+      mapping.addMapping(RealRange(m.first.leftbracket, m.first.low, max_, ']'),
+                         m.second);
+    }
   return mapping;
 }
 
@@ -508,88 +514,6 @@ real StatsCollector::getStat(const string& statname) const
   return 0;
 }
 
-  // *********************************
-  // *** ConditionalStatsCollector ***
-  // *********************************
-
-PLEARN_IMPLEMENT_OBJECT(ConditionalStatsCollector, "ONE LINE DESCR", "NO HELP");
-
-ConditionalStatsCollector::ConditionalStatsCollector()
-  :condvar(0) {}
-
-void ConditionalStatsCollector::setBinMappingsAndCondvar(const TVec<RealMapping>& the_ranges, int the_condvar) 
-{ 
-  ranges = the_ranges;
-  condvar = the_condvar;
-  int nvars = ranges.length();
-  counts.resize(nvars);
-  sums.resize(nvars);
-  sumsquares.resize(nvars);
-  int nranges_condvar = ranges[condvar].length();
-  for(int k=0; k<nvars; k++)
-  {        
-    int nranges_k = ranges[k].length();
-    counts[k].resize(nranges_k+1, nranges_condvar+1);
-    sums[k].resize(nranges_k, nranges_condvar);
-    sumsquares[k].resize(nranges_k, nranges_condvar);
-  }
-}
-
-int ConditionalStatsCollector::findrange(int varindex, real val) const
-{
-  RealMapping& r = ranges[varindex];
-  if(is_missing(val))
-    return r.length();
-  else
-    return (int) r.map(val);
-}
-  
-void ConditionalStatsCollector::update(const Vec& v)
-{
-  int nvars = ranges.length();
-  if(v.length()!=nvars)
-    PLERROR("IN ConditionalStatsCollectos::update length of update vector and nvars differ!");
-  int j = findrange(condvar, v[condvar]);
-  if(j==-1)
-    PLWARNING("In ConditionalStatsCollector::update value of conditioning var in none of the ranges");
-  for(int k=0; k<nvars; k++)
-  {
-    real val = v[k];
-    int i = findrange(k, val);
-    if(i==-1)
-      PLWARNING("In ConditionalStatsCollector::update value of variable #%d in none of the ranges",k);
-    counts[k](i,j)++;
-    if(!is_missing(val))
-    {
-      sums[k](i,j) += val;
-      sumsquares[k](i,j) += val;
-    }
-  }
-}
-
-void ConditionalStatsCollector::write(ostream& out) const
-{
-  writeHeader(out,"ConditionalStatsCollector",0);
-  writeField(out, "condvar", condvar);    
-  writeField(out, "ranges", ranges);    
-  writeField(out, "counts", counts);
-  writeField(out, "sums", sums);
-  writeField(out, "sumsquares", sumsquares);
-  writeFooter(out,"ConditionalStatsCollector");
-}
-
-void ConditionalStatsCollector::oldread(istream& in)
-{
-  int version = readHeader(in,"ConditionalStatsCollector");
-  if(version!=0)
-    PLERROR("In ConditionalStatsCollector::oldead don't know how to read this version");
-  readField(in, "condvar", condvar);    
-  readField(in, "ranges", ranges);    
-  readField(in, "counts", counts);
-  readField(in, "sums", sums);
-  readField(in, "sumsquares", sumsquares);
-  readFooter(in,"ConditionalStatsCollector");
-}
 
 TVec<RealMapping> computeRanges(TVec<StatsCollector> stats, int discrete_mincount, int continuous_mincount)
 {
