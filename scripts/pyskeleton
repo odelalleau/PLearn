@@ -38,7 +38,10 @@ import sys, os, string
 args = sys.argv[:]
 del args[0] # ignore program name
 
-baseclasses = ['Learner']
+homedir = os.environ['HOME']
+plearndir = os.environ.get('PLEARNDIR', os.path.join(homedir,'PLearn'))
+skeldir = os.path.join(plearndir,'scripts/Skeletons')
+baseclasses = map( lambda s: s[:-2], filter(lambda s: s[-2:]=='.h', os.listdir(skeldir)) )
 
 if len(args)<2 or args[0] not in baseclasses:
     print """
@@ -52,12 +55,12 @@ Currently supported base classes are: """
 baseclass = args[0]
 userclass = args[1]
 
-hfiles = {
-    'Learner': """
+
+header = """
 
 // -*- C++ -*-
 
-// PLearn (A C++ Machine Learning Library)
+// %(filename)s
 // 
 // Copyright (C) *YEAR* *AUTHOR(S)* 
 // ...
@@ -92,259 +95,32 @@ hfiles = {
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: pyskeleton,v 1.1 2002/07/30 04:06:40 plearner Exp $
-   * This file is part of the PLearn library.
+   * $Id: pyskeleton,v 1.2 2002/09/09 22:15:09 plearner Exp $ 
    ******************************************************* */
 
-/*! \\file PLearnLibrary/PLearnAlgo/%(userclass)s.h */
-
-#ifndef %(userclass)s_INC
-#define %(userclass)s_INC
-
-#include "Learner.h"
-
-namespace PLearn <%%
-using namespace std;
-
-class %(userclass)s: public Learner
-{
-protected:
-  // *********************
-  // * protected options *
-  // *********************
-
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
-    
-public:
-
-  typedef Learner inherited;
-
-  // ************************
-  // * public build options *
-  // ************************
-
-  // ### declare public option fields (such as build options) here
-  // ...
-
-  // ****************
-  // * Constructors *
-  // ****************
-
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
-  %(userclass)s();
-
-
-  // ******************
-  // * Object methods *
-  // ******************
-
-private: 
-  //! This does the actual building. 
-  // (Please implement in .cc)
-  void build_();
-
-protected: 
-  //! Declares this class' options
-  // (Please implement in .cc)
-  static void declareOptions(OptionList& ol);
-
-public:
-  // simply calls inherited::build() then build_() 
-  virtual void build();
-
-  //! Provides a help message describing this class
-  virtual string help() const;
-
-  //! Transforms a shallow copy into a deep copy
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
-
-  //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(%(userclass)s);
-
-  // *******************
-  // * Learner methods *
-  // *******************
-
-  // trains the model
-  virtual void train(VMat training_set); 
-
-  // computes the ouptu of a trained model
-  virtual void use(const Vec& input, Vec& output);
-   
-};
-
-// Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(%(userclass)s);
-  
-%%> // end of namespace PLearn
-
-#endif
+/*! \\file %(filename)s */
 """
-}
 
-ccfiles = {
-    'Learner': """
-// -*- C++ -*-
+# Locate the base class skeleton in the Skeletons directory and write the class
 
-// PLearn (A C++ Machine Learning Library)
-// Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999,2000 Pascal Vincent, Yoshua Bengio and University of Montreal
-//
-// This file is part of the PLearn Library. This library is free
-// software; you can redistribute it and/or modify it under the
-// terms of the GNU General Public License as published by the
-// Free Software Foundation, version 2.
-// 
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-// 
-// You should have received a copy of the GNU General Public License
-// along with this library; see the file GPL.txt  If not, write to the Free
-// Software Foundation, 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-//
-// As a special exception, you may compile and link this library with files
-// not covered by the GNU General Public License, and distribute the resulting
-// executable file under the terms of your choice, without the requirement to
-// distribute the complete corresponding source code, provided you have
-// obtained explicit written permission to do so from Pascal Vincent (primary
-// author of the library) or Yoshua Bengio or the University of Montreal.
-// This exception does not however invalidate any other reasons why the
-// executable file might be covered by the GNU General Public License.
-//
-// See the following URL for more information on PLearn:
-// http://plearn.sourceforge.net 
+def generate(baseclass, userclass, ext):
+    """Generates a userclass+ext file based on the baseclass+ext file to be found in the scripts/Skeleton directory"""
+    skeletonpath = os.path.join(skeldir, baseclass+ext)
+    filename = userclass+ext
+    if not os.path.exists(skeletonpath):
+        print "-> No " + skeletonpath + " Won't genrate " + filename
+    elif os.path.exists(filename):
+        print filename + " already exists. Remove it first if you want to regenerate it."
+    else:
+        skelf = open(skeletonpath)
+        text = header%vars() + string.replace(skelf.read(), 'DERIVEDCLASS', userclass)
+        skelf.close()
+        userf = open(filename, 'w')
+        userf.write(text)
+        userf.close()
+        print 'Wrote ' + filename + ' based on ' + skeletonpath
 
- 
-
-/* *******************************************************      
-   * $Id: pyskeleton,v 1.1 2002/07/30 04:06:40 plearner Exp $
-   * AUTHORS: ...
-   * This file is part of the PLearn library.
-   ******************************************************* */
-
-#include "%(userclass)s.h"
-
-namespace PLearn <%%
-using namespace std;
-
-%(userclass)s::%(userclass)s() 
-  :Learner( /* ### inputsize */ 0, /* targetsize */ 0, /* outputsize */ 0)
-/* ### Initialise all other fields here */
-  {
-    // ### Possibly call setTestCostFunctions(...) to define the cost functions 
-    // ### you are interested in (these are used by the default useAndCost() method,
-    // ### which is called by the default test() method).
-    // ### ex: 
-    // setTestCostFunctions(squared_error());
-
-    // ### You may also call setTestStatistics(...) if the Learner-default 'mean' and 'stderr' 
-    // ### statistics are not appropriate...
-
-    // ### You may or may not want to call build_() to finish building the object
-    // build_();
-  }
-
-
-  IMPLEMENT_NAME_AND_DEEPCOPY(%(userclass)s);
-
-  void %(userclass)s::declareOptions(OptionList& ol)
-  {
-    // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-    // ### OptionBase::tuningoption. Another possible flag to be combined with
-    // ### is OptionBase::nosave
-
-    // ### ex:
-    // declareOption(ol, "myoption", &%(userclass)s::myoption, OptionBase::buildoption,
-    //               "Help text describing this option");
-    // ...
-
-    // Now call the parent class' declareOptions
-    inherited::declareOptions(ol);
-  }
-
-  string %(userclass)s::help() const
-  {
-    // ### Provide some useful description of what the class is ...
-    return 
-      "%(userclass)s implements a ..."
-      + optionHelp();
-  }
-
-  void %(userclass)s::build_()
-  {
-    // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation. 
-    // ### Typical situations include:
-    // ###  - Initial building of an object from a few user-specified options
-    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-    // ### You should assume that the parent class' build_() has already been called.
-  }
-
-  // ### Nothing to add here, simply calls build_
-  void %(userclass)s::build()
-  {
-    inherited::build();
-    build_();
-  }
-
-
-  void %(userclass)s::train(VMat training_set)
-  { 
-    if(training_set->width() != inputsize()+targetsize())
-      PLERROR("In %(userclass)s::train(VMat training_set) training_set->width() != inputsize()+targetsize()");
-
-    setTrainingSet(training_set);
-
-    // ### Please implement the actual training of the model.
-    // ### For models with incremental training, to benefit 
-    // ### from the "testing during training" and early-stopping 
-    // ### mechanisms, you should make sure to call measure at 
-    // ### every "epoch" (whatever epoch means for your algorithm).
-    // ### ex:
-    // if(measure(epoch,costvec)) 
-    //     break; // exit training loop because early-stopping contditions were met
-  }
-
-  void %(userclass)s::use(const Vec& input, Vec& output)
-  {
-    // ### You should redefine this method to compute the output
-    // ### corresponfding to a new test input.
-  }
-
-  void %(userclass)s::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
-  {
-    Learner::makeDeepCopyFromShallowCopy(copies);
-
-    // ### Call deepCopyField on all "pointer-like" fields 
-    // ### that you wish to be deepCopied rather than 
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("%(userclass)s::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
-  }
-
-%%> // end of namespace PLearn
-"""
-    }
-
-hfname = userclass+'.h'
-print "Writing file " + hfname + "..."
-hf = open(hfname,"a")
-hf.write(hfiles[baseclass] % vars())
-hf.close()
-
-ccfname = userclass+'.cc'
-print "Writing file " + ccfname + "..."
-ccf = open(ccfname,"a")
-ccf.write(ccfiles[baseclass] % vars())
-ccf.close()
+# Process .h
+generate(baseclass, userclass, '.h')
+generate(baseclass, userclass, '.cc')
 
