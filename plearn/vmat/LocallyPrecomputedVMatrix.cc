@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyPrecomputedVMatrix.cc,v 1.9 2005/02/08 21:33:33 tihocan Exp $ 
+   * $Id: LocallyPrecomputedVMatrix.cc,v 1.10 2005/02/18 17:14:33 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -154,8 +154,10 @@ void LocallyPrecomputedVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 LocallyPrecomputedVMatrix::~LocallyPrecomputedVMatrix()
 {
   if (remove_when_done && metadatadir != "") {
-    string precomputed_file = precomp_source->getOption("filename");
-    precomputed_file = precomputed_file.substr(1, precomputed_file.size() - 2);
+    string filename_option = precomp_source->getOption("filename");
+    // Remove the extra " characters at the beginning and the end of the string.
+    filename_option = filename_option.substr(1, filename_option.size() - 2);
+    PPath precomputed_file = PPath(filename_option);
     // First we delete the precomputed source, so that it does not try to save
     // more stuff in the metadatadir after it has been deleted.
     precomp_source = 0;
@@ -163,7 +165,9 @@ LocallyPrecomputedVMatrix::~LocallyPrecomputedVMatrix()
     if (FileVMatrix::countRefs(precomputed_file) == 0) {
       bool removed = force_rmdir(metadatadir);
       if (!removed && verbosity >= 1)
-        PLWARNING("In LocallyPrecomputedVMatrix::~LocallyPrecomputedVMatrix - The precomputed data could not be removed");
+        PLWARNING("In LocallyPrecomputedVMatrix::~LocallyPrecomputedVMatrix - "
+                  "The precomputed data (in '%s') could not be removed",
+                   metadatadir.absolute().c_str());
     }
   }
 }
