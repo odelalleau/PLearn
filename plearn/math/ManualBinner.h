@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ManualBinner.h,v 1.2 2002/11/05 16:30:34 zouave Exp $ 
+   * $Id: ManualBinner.h,v 1.3 2002/11/18 15:59:32 zouave Exp $ 
    ******************************************************* */
 
 /*! \file ManualBinner.h */
@@ -110,6 +110,8 @@ public:
 public:
   //! Returns a binning for a single column vmatrix v 
   virtual PP<RealMapping> getBinning(VMat v) const;
+
+  virtual PP<RealMapping> getBinning() const;
 
 };
 

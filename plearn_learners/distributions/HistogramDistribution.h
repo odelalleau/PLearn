@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HistogramDistribution.h,v 1.3 2002/11/11 20:16:23 zouave Exp $ 
+   * $Id: HistogramDistribution.h,v 1.4 2002/11/18 15:59:38 zouave Exp $ 
    ******************************************************* */
 
 /*! \file HistogramDistribution.h */
@@ -143,7 +143,7 @@ public:
 
   //! return probability density p(x)
   //! [ default version returns exp(log_density(x)) ]
-  //virtual double density(const Vec& x) const;
+  virtual double density(const Vec& x) const;
   
   //! return survival fn = P(X>x)
   virtual double survival_fn(const Vec& x) const;

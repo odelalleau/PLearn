@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HistogramDistribution.cc,v 1.4 2002/11/11 20:16:23 zouave Exp $ 
+   * $Id: HistogramDistribution.cc,v 1.5 2002/11/18 15:59:34 zouave Exp $ 
    ******************************************************* */
 
 /*! \file HistogramDistribution.cc */
@@ -195,8 +195,17 @@ HistogramDistribution::HistogramDistribution(VMat data, PP<Binner> the_binner_,
 
   void HistogramDistribution::use(const Vec& input, Vec& output)
   {
-    // ### You should redefine this method to compute the output
-    // ### corresponfding to a new test input.
+    if(input.size() != 1 || output.size() != 1)
+      PLERROR("In HistogramDistribution::use  implemented only for reals; i.e. input.size()=output.size()=1.  "
+	      "Got input.size()=%d and output.size()=%d", input.size(), output.size());
+    // use_returns_what: 'l'->log_density, 'd' -> density, 'c' -> cdf, 's' -> survival_fn, 'e' -> expectation, 'v' -> variance
+    if(use_returns_what == "l") output[0]= log_density(input);
+    else if(use_returns_what == "d") output[0]= density(input);
+    else if(use_returns_what == "c") output[0]= cdf(input);
+    else if(use_returns_what == "s") output[0]= survival_fn(input);
+    else if(use_returns_what == "e") output[0]= expectation();
+    else if(use_returns_what == "v") output[0]= variance();
+    else PLERROR("In HistogramDistribution::use  unknown value for use_returns_what= \"%s\"", use_returns_what.c_str());
   }
 
   void HistogramDistribution::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
@@ -215,16 +224,18 @@ HistogramDistribution::HistogramDistribution(VMat data, PP<Binner> the_binner_,
 
 double HistogramDistribution::log_density(const Vec& x) const
 { 
-  PLERROR("density not implemented for HistogramDistribution"); return 0.0; 
+  return log(density(x));
 }
 
-/*
+
 double HistogramDistribution::density(const Vec& x) const
 {  
-  // ### You may implement this function if you need something different than the default.
-  // return exp(log_density(x)); 
+  if(x.size() != 1)
+    PLERROR("density implemented only for reals (vec size == 1).");
+
+  return bin_density[find_bin(x[0])];
 }
-*/
+
 
 double HistogramDistribution::survival_fn(const Vec& x) const
 { 
@@ -243,24 +254,23 @@ double HistogramDistribution::expectation() const
 { 
   real sum= 0.0;
   for(int i= 0; i < bin_density.size(); ++i)
-    //    sum+= bin_density[i] * (bin_positions[i]+bin_positions[i+1])/2;
-    sum+= bin_density[i] * bin_positions[i+1];
+    sum+= bin_density[i] * (bin_positions[i+1]-bin_positions[i]) * (bin_positions[i]+bin_positions[i+1])/2;
+    //    sum+= bin_density[i] * bin_positions[i+1];
   return sum; 
 }
 
 double HistogramDistribution::variance() const
 { 
   real sumsq= 0.0, sum= 0.0, s;
-  for(int i= 0; i < bin_density.size(); ++i)
+  int n= bin_density.size();
+  for(int i= 0; i < n; ++i)
     {
-      s= bin_density[i] * (bin_positions[i]+bin_positions[i+1])/2;
+      s= bin_density[i] * (bin_positions[i+1]-bin_positions[i]) * (bin_positions[i]+bin_positions[i+1])/2;
       sum+= s;
       sumsq+= s*s;
     }
-  return abs(sumsq-(sum*sum));
+  return abs(sumsq-(sum*sum)/n)/n;
 }
-
-
 
 int HistogramDistribution::find_bin(real x) const
 {
@@ -293,8 +303,6 @@ void HistogramDistribution::calc_density_from_survival()
 	sum+= (bin_density[i]= (survival_values[i] - survival_values[i+1]) / (bin_positions[i+1]-bin_positions[i]));
     else
       bin_density[i]= 0.0;
-  for(int i= 0; i < n; ++i)
-    bin_density[i]/= sum;
 }
 
 void HistogramDistribution::calc_survival_from_density()

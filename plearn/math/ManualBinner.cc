@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ManualBinner.cc,v 1.2 2002/11/05 16:30:34 zouave Exp $ 
+   * $Id: ManualBinner.cc,v 1.3 2002/11/18 15:59:31 zouave Exp $ 
    ******************************************************* */
 
 /*! \file ManualBinner.cc */
@@ -117,6 +117,9 @@ ManualBinner::ManualBinner(Vec bin_positions_)
 
 //! Returns a binning for a single column vmatrix v 
 PP<RealMapping> ManualBinner::getBinning(VMat v) const
+{ return the_mapping; }
+
+PP<RealMapping> ManualBinner::getBinning() const
 { return the_mapping; }
 
 

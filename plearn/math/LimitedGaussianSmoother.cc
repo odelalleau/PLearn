@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LimitedGaussianSmoother.cc,v 1.2 2002/11/11 20:16:22 zouave Exp $ 
+   * $Id: LimitedGaussianSmoother.cc,v 1.3 2002/11/18 15:59:28 zouave Exp $ 
    ******************************************************* */
 
 /*! \file LimitedGaussianSmoother.cc */
@@ -130,6 +130,13 @@ real LimitedGaussianSmoother::smooth(const Vec& source_function, Vec smoothed_fu
 // where phi(x;mu,sigma) = cdf of normal(mu,sigma) at x,
 // window_size = window_size_wrt_sigma * sigma_bin
 
+// for dest_bin_positions != bin_positions: 2 methods:
+// 1- trouver sigma_bin en fonction du voisinage
+//    d'une position dest.  Somme ponderee avec 
+//    gaussienne centree sur le pt. dest.
+// 2- Un sigma_bin pour chaque bin_position (src).
+//    Une gaussienne centree sur sur ch. pos src.
+//    
 
   smoothed_function.resize(source_function.length());
   smoothed_function.fill(0.0);
