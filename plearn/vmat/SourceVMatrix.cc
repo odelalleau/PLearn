@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrix.cc,v 1.6 2004/02/29 15:53:06 yoshua Exp $ 
+   * $Id: SourceVMatrix.cc,v 1.7 2004/05/14 02:14:09 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -130,6 +130,30 @@ void SourceVMatrix::setMetaInfoFromSource()
   // copy fieldnames from source if not set and they look good
   if(!hasFieldInfos() && (width() == source->width()) && source->hasFieldInfos() )
     setFieldInfos(source->getFieldInfos());
+
+  // Copy String/Real mappings if not set.
+  if (map_rs.length() == 0) {
+    map_rs.resize(width_);
+    for (int j = 0; j < width_; j++) {
+      if (j < source->width()) {
+        map_rs[j] = source->getRealToStringMapping(j);
+      } else {
+        // Empty map.
+        map_rs[j] = map<real,string>();
+      }
+    }
+  }
+  if (map_sr.length() == 0) {
+    map_sr.resize(width_);
+    for (int j = 0; j < width_; j++) {
+      if (j < source->width()) {
+        map_sr[j] = source->getStringToRealMapping(j);
+      } else {
+        // Empty map.
+        map_sr[j] = map<string,real>();
+      }
+    }
+  }
 }
 
 // ### Nothing to add here, simply calls build_
