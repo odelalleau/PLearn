@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsVMatrix.h,v 1.7 2004/03/23 23:08:08 morinf Exp $
+   * $Id: SelectRowsVMatrix.h,v 1.8 2004/04/05 23:04:24 morinf Exp $
    ******************************************************* */
 
 
@@ -75,11 +75,10 @@ public:
   //! Here the indices will be copied locally into an integer vector
   SelectRowsVMatrix(VMat the_distr, Vec the_indices);
   
-  PLEARN_DECLARE_OBJECT(SelectRowsVMatrix);
+    PLEARN_DECLARE_OBJECT(SelectRowsVMatrix);
 
   static void declareOptions(OptionList &ol);
 
-  static string help();
   virtual void build();
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
@@ -101,6 +100,8 @@ private:
   void build_();
 
 };
+
+DECLARE_OBJECT_PTR(SelectRowsVMatrix);
 
 } // end of namespcae PLearn
 #endif

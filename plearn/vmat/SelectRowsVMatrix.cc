@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsVMatrix.cc,v 1.12 2004/03/25 20:35:51 tihocan Exp $
+   * $Id: SelectRowsVMatrix.cc,v 1.13 2004/04/05 23:04:24 morinf Exp $
    ******************************************************* */
 
 #include "SelectRowsVMatrix.h"
@@ -46,7 +46,9 @@ using namespace std;
 
 /** SelectRowsVMatrix **/
 
-PLEARN_IMPLEMENT_OBJECT(SelectRowsVMatrix, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(SelectRowsVMatrix, "ONE LINE DESCR",
+"    VMat class that selects samples from a sub-distribution\n\
+    according to given vector of indices.\n");
 
 SelectRowsVMatrix::SelectRowsVMatrix() 
 {
@@ -133,17 +135,6 @@ void SelectRowsVMatrix::build_()
     weightsize_ = distr->weightsize();
     fieldinfos = distr->fieldinfos;
   }
-}
-
-//////////
-// help //
-//////////
-string SelectRowsVMatrix::help()
-{
-  return
-    "    VMat class that selects samples from a sub-distribution\n\
-    according to given vector of indices.\n"
-    + optionHelp();
 }
 
 } // end of namespcae PLearn
