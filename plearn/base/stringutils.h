@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.22 2004/05/04 21:15:53 nova77 Exp $
+   * $Id: stringutils.h,v 1.23 2004/05/25 04:20:28 chapados Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -256,6 +256,13 @@ vector<string> remove(const vector<string> &v, string element);
 
   //!  formatted printing of vector<string> prints strings separated by a ", "
   ostream& operator<<(ostream& out, const vector<string>& vs);
+
+  //! Formatted printing of a pair<U,V> as U:V
+  template <class U, class V>
+  ostream& operator<<(ostream& out, const pair<U,V>& p)
+  {
+    return out << p.first << ':' << p.second;
+  }
 
   //!  ------------------------------------------------------------------
 
