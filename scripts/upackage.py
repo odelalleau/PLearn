@@ -1,5 +1,39 @@
 #!/usr/bin/env python
 
+# upackage
+#
+# Copyright (C) 2004 ApSTAT Technologies Inc.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#
+#   1. Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
+#
+#   2. Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#
+#   3. The name of the authors may not be used to endorse or promote
+#      products derived from this software without specific prior written
+#      permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+#  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+#  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+#  NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+#  TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+#  This file is part of the PLearn library. For more information on the PLearn
+#  library, go to the PLearn Web site at www.plearn.org
+
+# Author: Pascal Vincent
+
 import sys
 import os
 import string
@@ -13,7 +47,9 @@ def get_package(packagename):
 def install_single_package(packagename, version, prefixdir):    
     upackages.make_usr_structure(prefixdir)
     package = get_package(packagename)
-    package.install(version, prefixdir+'/src/'+packagename+'/'+version, prefixdir)
+    srcdir = prefixdir+'/src/'+packagename+'/'+version
+    upackages.chdir(srcdir)
+    package.install(version, prefixdir)
 
 def install(packagename, version='', prefixdir=''):
     package = get_package(packagename)
@@ -43,7 +79,7 @@ def install(packagename, version='', prefixdir=''):
         prefixes = get_environment_prefixpath()
         print """\n
         CHOOSE THE PREFIX WHERE TO BUILD AND INSTALL THE PACKAGE
-        (make sure you have write permission for that directory)
+        (make sure you have write permission for that directory, switch user and rerun if needed)
         The following prefixes are listed in UPACKAGE_PREFIX_PATH:"""
         for i in range(len(prefixes)):
             print i+1,':',prefixes[i]
@@ -116,7 +152,14 @@ def environment_help_and_exit():
     sys.exit()
 
 def get_environment_prefixpath():
-    """Checks if relevant environment variables are consistently defined"""
+    """Checks if relevant environment variables are consistently defined.
+    And returns the content of environment variable UPACKAGE_PREFIX_PATH
+    as a list of strings (the paths of the prefix directories).
+    The variables that are checked are: UPACKAGE_PREFIX_PATH,
+    LD_LIBRARY_PATH, LIBRARY_PATH, CPATH
+    If one of those is missing or inconsistent with UPACKAGE_PREFIX_PATH,
+    then the function calls environment_help_and_exit()
+    """
 
     upackage_prefix_path = os.getenv('UPACKAGE_PREFIX_PATH')
     if not upackage_prefix_path:
@@ -211,5 +254,7 @@ def run():
         for dep in dependencies:
             print '  ',dep[0],' version',dep[1]
         
-
-run()
+try:
+    run()
+except KeyboardInterrupt:
+    print '\nABORTED due to KeyboardInterrupt.'

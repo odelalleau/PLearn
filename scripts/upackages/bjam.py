@@ -1,4 +1,5 @@
 from upackages import *
+import sys
 
 def description():
     return 'Boost jam is the build system used for the Boost Library'
@@ -26,8 +27,8 @@ def get_dependencies(version):
     that can be used to build the required package."""
     return []
 
-def install(version, builddir, prefixdir):
-    """Downloads and builds the package in the given builddir
+def install(version, prefixdir):
+    """Downloads and builds the package in the current directory
     Then installs it in the given prefixdir.
     On unix a 'prefixdir' is a directory that has the same organisation
     as /usr/ and is typically given in configure commands when building from
@@ -36,11 +37,25 @@ def install(version, builddir, prefixdir):
     The builddir will typically be prefixdir+"/src/"+pacakgename+"/"+version
     One may assume that all required dependencies are maet when this is called.
     """
-    if(version=='3.1.10'):
-        chdir(builddir)
-        download('http://voxel.dl.sourceforge.net/sourceforge/boost/boost-jam-3.1.10-1-linuxx86.tgz')
-        unpack('boost-jam-3.1.10-1-linuxx86.tgz')
-        copy('boost-jam-3.1.10-1-linuxx86/bjam',prefixdir+'/bin')
+    
+    filebase = ''
+    if version=='3.1.10':
+        filebase = 'boost-jam-3.1.10-1'
     else:
-        raise NameError
+        raise Error('Installation of bjam version '+version+' not supported.')
 
+    if sys.platform=='linux2':
+        download_from_sourceforge('boost',filebase+'-linuxx86.tgz')
+        unpack(filebase+'-linuxx86.tgz')
+        copy(filebase+'-linuxx86/bjam',prefixdir+'/bin')
+    elif sys.platform=='darwin':
+        download_from_sourceforge('boost',filebase+'-macosxppc.tgz')
+        unpack(filebase+'-macosxppc.tgz')
+        copy(filebase+'-macosxppc/bjam',prefixdir+'/bin')
+    elif sys.platform=='win32':
+        download_from_sourceforge('boost',filebase+'-ntx86.zip')
+        unpack(filebase+'-ntx86.zip')
+        copy(filebase+'-ntx86/bjam',prefixdir+'/bin')
+    else:
+        raise Error('Installation of bjam not (yet) supported on platform '+sys.platform)
+    

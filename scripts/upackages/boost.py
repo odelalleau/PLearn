@@ -27,7 +27,7 @@ def get_dependencies(version):
     return [ ('bjam',['3.1.3','3.1.4','3.1.7','3.1.9','3.1.10']) ]
 
 def install(version, builddir, prefixdir):
-    """Downloads and builds the package in the given builddir
+    """Downloads and builds the package in the current directory
     Then installs it in the given prefixdir.
     On unix a 'prefixdir' is a directory that has the same organisation
     as /usr/ and is typically given in configure commands when building from
@@ -37,6 +37,9 @@ def install(version, builddir, prefixdir):
     One may assume that all required dependencies are maet when this is called.
     """
 
+    if sys.platform!='linux2':
+        raise Error('Installation of boost not (yet) supported on platform '+sys.platform)
+        
     # locate python and version
     python_root = ''
     python_version = ''
@@ -56,16 +59,13 @@ def install(version, builddir, prefixdir):
         if python_root=='':
             raise NameError
         
-    chdir(builddir)
-
     if(version=='1.31.0'):
-        # download('http://unc.dl.sourceforge.net/sourceforge/boost/boost_1_31_0.tar.gz')
-        # unpack('boost_1_31_0.tar.gz')
+        download_from_sourceforge('boost','boost_1_31_0.tar.gz')
+        unpack('boost_1_31_0.tar.gz')
         chdir('boost_1_31_0')
         system('bjam -sTOOLS=gcc -sPYTHON_ROOT='+python_root+' -sPYTHON_VERSION='+python_version+' --prefix='+prefixdir)
-
     else:
-        raise NameError
+        raise Error('Installation of boost version '+version+' not supported.')
         
     #download('http://unc.dl.sourceforge.net/sourceforge/boost/boost-build-2.0-m9.1.tar.bz2')
     #unpack('boost-build-2.0-m9.1.tar.bz2')

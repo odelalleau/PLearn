@@ -1,3 +1,37 @@
+# upackages
+#
+# Copyright (C) 2004 ApSTAT Technologies Inc.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#
+#   1. Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
+#
+#   2. Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#
+#   3. The name of the authors may not be used to endorse or promote
+#      products derived from this software without specific prior written
+#      permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+#  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+#  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+#  NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+#  TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+#  This file is part of the PLearn library. For more information on the PLearn
+#  library, go to the PLearn Web site at www.plearn.org
+
+# Author: Pascal Vincent
+
 import os
 import os.path
 import urllib
@@ -8,6 +42,13 @@ packages = [ f[:-3] for f in os.listdir(__path__[0]) if len(f)>3 and f[-3:]=='.p
 # __all__ = packages
 
 patchdir = os.path.join(__path__[0],'patches')
+
+class Error(Exception):
+    """Base class for exceptions in this module"""
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
 
 def make_usr_structure(prefixdir):
     for name in ['src', 'lib', 'doc', 'include', 'bin', 'share' ]: 
@@ -20,11 +61,11 @@ def invoke(command):
     return output
 
 def system(command):
-    print ">>> EXECUTING " + command
+    print "$ EXECUTING " + command
     os.system(command)
 
 def copy(src,dest):
-    print ">>> COPY ", src, dest
+    print "$ COPY ", src, dest
     shutil.copy(src,dest)
 
 def ends_with(s, termination):
@@ -46,7 +87,7 @@ def unpack(filename):
     elif ends_with(filename, '.zip'):
         system('unzip '+filename)
     else:
-        raise NameError
+        raise Error('Cannot unpack '+filename+', unsupported extension.')
 
 def patch(patchfile):
     """Calls patch <patchfile"""
@@ -58,18 +99,57 @@ def download_hook(nblocks, blocksize, totalsize):
         print 'Transferred', nblocks*blocksize, '/', totalsize, ' bytes (', int(nblocks*100/totalnblocks),'% )'
     
 def download(url, filename=''):
-    """Downloads the given url as the given filename"""
+    """Downloads the url as the given filename"""
     if filename=='':
         filename = string.split(url,'/')[-1]
-    print ">>> DOWNLOADING", url, "AS", filename
+    print "DOWNLOADING", filename, "FROM", url
     f = urllib.urlretrieve(url, filename, download_hook)
+
+def choose_location_and_download(filename, url_list):
+    """Downloads a file from a list of possible alternative urls.
+    Asking the user which one it prefers."""
+    url = url_list[0]
+    if len(url_list)>1:
+        print "Choose location from where to download file "+filename+":"
+        for i in range(len(url_list)):
+            print i+1,':',url_list[i]
+        i = input('Which one to use? ')
+        url = url_list[i-1]
+    download(url,filename)
+
+def download_from_sourceforge(project, filename):
+    """Downloads the sourceforge file specified.
+    This will offer a choice of sourceforge mirrors."""
+
+    global sourceforge_mirror
+    if sourceforge_mirror not in globals():
+        mirror_list = [
+            ('ovh','(FR)'),
+            ('voxel','(US)'),
+            ('aleron','(US)'),
+            ('puzzle','(CH)'),
+            ('heanet','(IE)'),
+            ('optusnet','(AU)'),
+            ('umn','(US)'),
+            ('unc','(US)'),
+            ('belnet','(BE)') ]
+
+        print 'Choose sourceforge mirror to download from:'
+        for i in range(len(mirror_list)):
+            mirror, location = mirror_list[i]
+            print ' ',i+1,':',mirror,location
+        i = input('Which one to use? ')
+        sourceforge_mirror = mirror_list[i-1][0]
+
+    url = 'http://'+sourceforge_mirror+'.dl.sourceforge.net/sourceforge/'+project+'/'+filename
+    download(url)
 
 def chdir(dirpath):
     """This will cd into the specified directory,
     and attempt to create all necessary directories on the way if needed.
     An exception is raised if it fails.
     """
-    print ">>> CD "+dirpath
+    print "$ CD "+dirpath
     if not os.path.isdir(dirpath):
         os.makedirs(dirpath)
     os.chdir(dirpath)    
