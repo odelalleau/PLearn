@@ -17,6 +17,8 @@ if myhostname[0:6]=='apstat':
 else:
     rshcommand= 'rsh'
 
+nice_value = '1'
+
 # to get more or less verbosity (currently verbose in {0,1})
 verbose = 1;
 
