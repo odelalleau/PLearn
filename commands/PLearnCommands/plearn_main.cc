@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_main.cc,v 1.15 2004/07/21 16:30:49 chrish42 Exp $
+   * $Id: plearn_main.cc,v 1.16 2004/10/29 14:48:09 dorionc Exp $
    ******************************************************* */
 
 //#include "general.h"
@@ -88,11 +88,34 @@ int plearn_main(int argc, char** argv)
 
   } // end of try
   catch(const PLearnError& e)
-    {
-      cerr << "FATAL ERROR: " << e.message() << endl;
-    }
+  {
+    cerr << "FATAL ERROR: " << e.message() << endl;
+  }
+  catch (...) 
+  {
+    cerr << "FATAL ERROR: uncaught unknown exception" << endl;
+  }
+
   return 0;
 }
 
+void version( int& argc, char** argv, 
+              int major_version, int minor_version, int fixlevel )
+{
+  if (argc >= 2 && !strcmp(argv[1], "--no-version")) 
+  {
+    // eat the "--no-version" argument
+    for (int i=2; i<argc; ++i)
+      argv[i-1] = argv[i];
+    argc--;
+  }  
+  else 
+  {
+    cerr << argv[0] << " " << major_version
+         << "." << minor_version
+         << "." << fixlevel
+         << "  (" << __DATE__ << " " << __TIME__ << ")" << endl;
+  }
+}
 
 } // end of namespace PLearn

@@ -33,8 +33,13 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.70 2004/07/21 16:30:49 chrish42 Exp $
+   * $Id: plearn.cc,v 1.71 2004/10/29 14:48:00 dorionc Exp $
    ******************************************************* */
+
+#define PLEARN_MAJOR_VERSION 0
+#define PLEARN_MINOR_VERSION 92
+#define PLEARN_FIXLEVEL 0
+
 
 //! All includes should now go into plearn_inc.h.
 #include "plearn_inc.h"
@@ -44,6 +49,13 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
+  // Also manages a --no-version option: 
+  //   If the *FIRST* argument is --no-version, version will not
+  //   output anything. 
+  version( argc, argv, 
+           PLEARN_MAJOR_VERSION, 
+           PLEARN_MINOR_VERSION, 
+           PLEARN_FIXLEVEL       );
   return plearn_main(argc, argv);
 }
 
