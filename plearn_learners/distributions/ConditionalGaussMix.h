@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalGaussMix.h,v 1.2 2004/05/20 13:02:38 tihocan Exp $ 
+   * $Id: ConditionalGaussMix.h,v 1.3 2004/05/20 15:25:05 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -65,8 +65,17 @@ protected:
 
   Mat eigenvalues_x;
   TVec<Mat> eigenvectors_x;
+  Vec log_pj_x;
   Mat mu_x;
+  Vec pj_x;
+  mutable real p_x;
   Vec sigma;
+
+  // Fields below are not options.
+
+  int d_x;      //!< The dimension of x, equal to input_part_size.
+  int L;        //!< Equal to gauss_mix->L.
+  string type;  //!< Equal to gauss_mix->type.
 
 public:
 
@@ -86,6 +95,15 @@ public:
   // ************************************
   // * PConditionalDistribution methods *
   // ************************************
+
+protected:
+
+  //! Add the expectation E[y | x] given by the j-th Gaussian to the vector mu,
+  //! where this expectation is weighted by w.
+  virtual void addGaussianExpectation(Vec& mu, int j, real w = 1.0) const;
+
+  //! Resize everything correctly according to the current state.
+  virtual void resizeStuff();
 
 private: 
 
@@ -141,7 +159,7 @@ public:
   virtual void generate(Vec& x) const;
 
   // **************************
-  // **** Learner methods ****
+  // **** PLearner methods ****
   // **************************
 
   // ### Default version of inputsize returns learner->inputsize()
