@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMatCommand.cc,v 1.9 2005/02/04 15:08:47 tihocan Exp $ 
+   * $Id: VMatCommand.cc,v 1.10 2005/04/06 22:52:31 chapados Exp $ 
    ******************************************************* */
 
 /*! \file VMatCommand.cc */
@@ -50,10 +50,9 @@ using namespace std;
 PLearnCommandRegistry VMatCommand::reg_(new VMatCommand);
 
 VMatCommand::VMatCommand():
-    PLearnCommand("vmat",
-
-                  "Examination and manipulation of vmat datasets",
-
+    PLearnCommand(
+      "vmat",
+      "Examination and manipulation of vmat datasets",
       "Usage: vmat info <dataset> \n"
       "       Will info about dataset (size, etc..)\n"
       "   or: vmat fields <dataset> [name_only] [transpose] \n"
@@ -71,9 +70,16 @@ VMatCommand::VMatCommand():
       "       Interactive display to browse on the data. \n"
       "   or: vmat stats <dataset> \n"
       "       Will display basic statistics for each field \n"
-      "   or: vmat convert <source> <destination> \n"
-      "       To convert any dataset into a .amat .pmat or .dmat format \n"
-      "       The extension of the destination is used to determine the format you want \n"
+      "   or: vmat convert <source> <destination> [--cols=col1,col2,col3,...]\n"
+      "       To convert any dataset into a .amat, .pmat, .dmat or .csv format. \n"
+      "       The extension of the destination is used to determine the format you want. \n"
+      "       If the option --cols is specified, it requests to keep only the given columns\n"
+      "       (no space between the commas and the columns); columns can be given either as a\n"
+      "       number (zero-based) or a column name (string).  You can also specify a range,\n"
+      "       such as 0-18, or any combination thereof, e.g. 5,3,8-18,Date,74-85\n"
+      "       If .csv (Comma-Separated Value) is specified, the option --skip-missings is\n"
+      "       also recognized: if a row (after selecting the appropriate columns)\n"
+      "       contains one or more missing values, it is skipped during export\n"
       "   or: vmat gendef <source> [binnum1 binnum2 ...] \n"
       "       Generate stats for dataset (will put them in its associated metadatadir). \n"
       "   or: vmat genvmat <source_dataset> <dest_vmat> [binned{num} | onehot{num} | normalized]\n"
