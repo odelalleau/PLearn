@@ -213,8 +213,8 @@ void SequentialValidation::run()
   if (!learner)
     PLERROR("No learner specified for SequentialValidation.");
 
-  // This is to set inputsize() and targetsize()
-  learner->setTrainingSet(dataset, false);
+  // Get a first dataset to set inputsize() and targetsize()
+  learner->setTrainingSet(trainVMat(init_train_size), false);
 
   setExperimentDirectory( append_slash(expdir) );
 
@@ -307,7 +307,7 @@ void SequentialValidation::run()
     test_costs = new FileVMatrix(expdir+"/test_costs.pmat",0,testcostnames);
 
   // Some further initializations
-  int maxt = (last_test_time >= 0? last_test_time : dataset.length() - 1);
+  int maxt = (last_test_time >= 0? last_test_time : maxTimeStep() - 1);
   int splitnum = 0;
   double weight;
   Vec input, target;
@@ -322,9 +322,9 @@ void SequentialValidation::run()
     if (report_memory_usage)
       reportMemoryUsage(t);
     
-    VMat sub_train = dataset.subMatRows(0,t); // excludes t, last training pair is (t-2,t-1)
-    VMat sub_test = dataset.subMatRows(0, t+1);
-    VMat only_test = dataset.subMatRows(t, 1);
+    VMat sub_train = trainVMat(t);
+    VMat sub_test = testVMat(t);
+    VMat only_test = sub_test.subMatRows(sub_test.length()-1, 1);
 
     string splitdir = expdir+"train_t="+tostring(t)+"/";
     if (save_data_sets || save_initial_model || save_stat_collectors ||
@@ -348,10 +348,9 @@ void SequentialValidation::run()
 
     // TEST: simply use computeOutputAndCosts for 1 observation in this
     // implementation
-    dataset.getExample(t, input, target, weight);
+    sub_test.getExample(t, input, target, weight);
     test_stats->forget();
     learner->setTestSet(sub_test);           // temporary hack
-//    learner->setCurrentTestTime(t);          // temporary hack
     learner->computeOutputAndCosts(input, target, output, costs);
     test_stats->update(costs);
     test_stats->finalize();
@@ -451,6 +450,21 @@ void SequentialValidation::reportMemoryUsage(int t)
   system(method2.c_str());
 }
   
+VMat SequentialValidation::trainVMat(int t)
+{
+  // exclude t, last training pair is (t-2,t-1)
+  return dataset.subMatRows(0,t);
+}
+
+VMat SequentialValidation::testVMat(int t)
+{
+  return dataset.subMatRows(0,t+1);
+}
+
+int SequentialValidation::maxTimeStep() const
+{
+  return dataset.length();
+}
 
 } // end of namespace PLearn
 

@@ -116,6 +116,17 @@ protected:
   //! Utility method to report the amount of memory used at timestep t
   virtual void reportMemoryUsage(int t);
 
+  //! Utility method to return the training VMatrix at timestep t
+  //! (i.e. all timesteps 0..t-1, t excluded)
+  virtual VMat trainVMat(int t);
+
+  //! Utility method to return the test VMatrix at timestep t
+  //! (i.e. all timesteps 0..t, t included)
+  virtual VMat testVMat(int t);
+
+  //! Utility method to return the highest possible timestep plus 1
+  virtual int maxTimeStep() const;
+  
 public:
 
   //! Default constructor
