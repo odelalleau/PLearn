@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.22 2003/09/09 18:05:19 plearner Exp $
+   * $Id: VMatrix.h,v 1.23 2003/09/16 20:41:05 chapados Exp $
    ******************************************************* */
 
 
@@ -98,6 +98,11 @@ protected:
   TVec<map<string,real> > map_sr; 
   TVec<map<real,string> > map_rs; 
   
+private: 
+  //! This does the actual building. 
+  // (Please implement in .cc)
+  void build_();
+
 
 public:
   mutable Array<VMField> fieldinfos; // don't use this directly (deprecated...) call getFieldInfos() instead
@@ -106,6 +111,9 @@ public:
   VMatrix();
 
   VMatrix(int the_length, int the_width);
+
+  // simply calls inherited::build() then build_() 
+  virtual void build();
 
   static void declareOptions(OptionList & ol);
 

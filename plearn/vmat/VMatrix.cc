@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.27 2003/09/15 12:34:25 plearner Exp $
+* $Id: VMatrix.cc,v 1.28 2003/09/16 20:41:05 chapados Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -100,6 +100,8 @@ void VMatrix::declareOptions(OptionList & ol)
                 "size of target part (-1 if variable or unspecified, 0 if no target)");
   declareOption(ol, "weightsize", &VMatrix::weightsize_, OptionBase::buildoption, 
                 "size of weights (-1 if unspecified, 0 if no weight, 1 for sample weight, >1 currently not supported (include it is recommended to include additional info in target. weight is really reserved for a per sample weight).");
+  declareOption(ol, "metadatadir", &VMatrix::metadatadir, OptionBase::buildoption, 
+                "length of the matrix (number of rows)");
   inherited::declareOptions(ol);
 }
 
@@ -158,6 +160,20 @@ int VMatrix::fieldIndex(const string& fieldname) const
       return i;
   return -1;
 }
+
+void VMatrix::build_()
+{
+  if(metadatadir!="")
+    force_mkdir(metadatadir);
+  metadatadir = abspath(metadatadir);
+}
+
+void VMatrix::build()
+{
+  inherited::build();
+  build_();
+}
+
 
 void VMatrix::printFields(ostream& out) const
 { 
