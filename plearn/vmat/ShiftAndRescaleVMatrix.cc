@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ShiftAndRescaleVMatrix.cc,v 1.3 2003/08/13 08:13:46 plearner Exp $
+   * $Id: ShiftAndRescaleVMatrix.cc,v 1.4 2003/08/28 13:29:54 tihocan Exp $
    ******************************************************* */
 
 #include "ShiftAndRescaleVMatrix.h"
@@ -106,7 +106,9 @@ void ShiftAndRescaleVMatrix::build_()
   if(weightsize_<0)
     weightsize_ = vm->weightsize();
   setMtime(vm->getMtime());
-  setMetaDataDir(vm->getMetaDataDir());
+  if (vm->getMetaDataDir() != "") {
+    setMetaDataDir(vm->getMetaDataDir());
+  }
   setAlias(vm->getAlias());
   fieldinfos = vm->getFieldInfos();
   if (automatic)
