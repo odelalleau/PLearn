@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnServer.cc,v 1.4 2005/01/14 19:40:50 plearner Exp $ 
+   * $Id: PLearnServer.cc,v 1.5 2005/02/08 21:33:20 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -43,6 +43,7 @@
 
 #include "PLearnServer.h"
 #include <plearn/base/plerror.h>
+#include <plearn/io/fileutils.h> //!< For chdir()
 
 namespace PLearn {
 using namespace std;

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: load_and_save.h,v 1.4 2005/02/02 21:21:43 dorionc Exp $ 
+   * $Id: load_and_save.h,v 1.5 2005/02/08 21:33:18 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -46,8 +46,9 @@
 
 // Put includes here
 
-#include <plearn/io/PStream.h>
-#include <plearn/io/openFile.h>
+#include "PStream.h"
+#include "fileutils.h" //!< For force_mkdir_for_file();
+#include "openFile.h"
 
 namespace PLearn {
 using namespace std;

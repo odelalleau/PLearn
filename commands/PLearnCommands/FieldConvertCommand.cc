@@ -31,14 +31,15 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: FieldConvertCommand.cc,v 1.39 2005/02/04 15:08:37 tihocan Exp $
+ * $Id: FieldConvertCommand.cc,v 1.40 2005/02/08 21:32:06 tihocan Exp $
  ******************************************************* */
 
 #include "FieldConvertCommand.h"
 #include <plearn/base/stringutils.h>
 #include <plearn/db/getDataSet.h>
 #include <plearn/io/openFile.h>
-#include <plearn/math/pl_erf.h>       //!< For gauss_01_quantile.
+#include <plearn/io/fileutils.h>      //!< For newFilename()
+#include <plearn/math/pl_erf.h>       //!< For gauss_01_quantile()
 #include <plearn/math/random.h>
 #include <plearn/vmat/SelectRowsVMatrix.h>
 #include <plearn/vmat/VMat.h>

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrecomputedVMatrix.cc,v 1.11 2005/01/25 03:15:46 dorionc Exp $ 
+   * $Id: PrecomputedVMatrix.cc,v 1.12 2005/02/08 21:33:33 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -45,6 +45,7 @@
 #include "DiskVMatrix.h"
 #include "FileVMatrix.h"
 #include <plearn/io/PPath.h>
+#include <plearn/io/fileutils.h> //!< For force_rmdir()
 
 namespace PLearn {
 using namespace std;

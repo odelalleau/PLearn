@@ -35,19 +35,20 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /********************************************************
-* $Id: VMatrix.cc,v 1.90 2005/02/04 15:10:59 tihocan Exp $
+* $Id: VMatrix.cc,v 1.91 2005/02/08 21:33:33 tihocan Exp $
 ******************************************************* */
 
-#include <plearn/io/load_and_save.h>
 #include "VMatrix.h"
 #include "DiskVMatrix.h"
 #include "FileVMatrix.h"
 #include "SubVMatrix.h"
 #include "VMat_computeStats.h"
-#include <plearn/math/random.h>      //!< For uniform_multinomial_sample()
 #include <plearn/base/tostring.h>
 #include <plearn/base/lexical_cast.h>
 #include <plearn/base/stringutils.h> //!< For pgetline()
+#include <plearn/io/fileutils.h>     //!< For isfile()
+#include <plearn/io/load_and_save.h>
+#include <plearn/math/random.h>      //!< For uniform_multinomial_sample()
 
 namespace PLearn {
 using namespace std;
