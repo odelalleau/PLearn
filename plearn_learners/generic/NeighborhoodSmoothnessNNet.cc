@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.7 2004/02/23 23:58:17 tihocan Exp $
+   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.8 2004/02/24 19:15:08 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeighborhoodSmoothnessNNet.h */
@@ -461,7 +461,23 @@ void NeighborhoodSmoothnessNNet::build_()
       // Apply penalty to cost.
       // If there is no penalty, we still add costs[0] as the first cost, in
       // order to keep the same number of costs as if there was a penalty.
-      if(penalties.size() != 0) {
+      Var test_costs_final = test_costs;
+      Var first_cost_final = costs[0];
+      if (penalties.size() != 0) {
+        first_cost_final = sum(hconcat(first_cost_final & penalties));
+      }
+      if (weightsize_ > 0) {
+        test_costs_final = sampleweight * test_costs;
+        first_cost_final = sampleweight * first_cost_final;
+      }
+      // We add the SNE cost.
+      // TODO Make sure we optimize the training cost.
+      // TODO Actually maybe we should put this before multiplying by sampleweight.
+      first_cost_final = first_cost_final + minus_weight_sum_p_ij_log_q_ij;
+      
+      training_cost = hconcat(first_cost_final & test_costs_final);
+
+/*      if(penalties.size() != 0) {
         if (weightsize_>0)
           // only multiply by sampleweight if there are weights
           training_cost = hconcat(sampleweight*sum(hconcat(costs[0] & penalties))
@@ -477,12 +493,8 @@ void NeighborhoodSmoothnessNNet::build_()
         } else {
           training_cost = hconcat(costs[0] & test_costs);
         }
-      }
+      } */
 
-      // We add the SNE cost.
-      // TODO Make sure we optimize the training cost.
-      training_cost[0] = training_cost[0] + minus_weight_sum_p_ij_log_q_ij;
-      
       training_cost->setName("training_cost");
       test_costs->setName("test_costs");
 
