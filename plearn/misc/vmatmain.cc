@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.14 2004/02/20 21:11:47 chrish42 Exp $
+   * $Id: vmatmain.cc,v 1.15 2004/02/26 07:29:47 nova77 Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -45,7 +45,16 @@
 #include "stringutils.h"
 #include "getDataSet.h"
 #include "Gnuplot.h"
+
+// norman: added check
+#ifdef WIN32
+#include "curses.h"
+#undef min
+#undef max
+
+#else
 #include <curses.h>
+#endif
 
 
 namespace PLearn {
@@ -299,7 +308,13 @@ void viewVMat(const VMat& vm)
 
   int valwidth = 15;
   int valstrwidth = valwidth-1;
+
+  // norman: weird compiler...
+#ifdef WIN32
+  char* valstrformat = "%14s";
+#else
   const char* valstrformat = "%14s";
+#endif
 
   int curi = 0;
   int curj = 0;
