@@ -5,6 +5,12 @@ import plearn.utilities.toolkit        as     toolkit
 from   plearn.utilities.verbosity      import vprint
 from   plearn.utilities.FrozenObject   import FrozenObject
 
+import plearn.utilities.versionning    as     versionning
+versionning.project_module( "PyTest", __name__,
+                            "$Id: programs.py,v 1.5 2004/12/15 13:51:07 dorionc Exp $"
+                            )
+
+
 class PyTestUsageError(Exception): 
     def __init__(self, msg):
         self.msg = msg

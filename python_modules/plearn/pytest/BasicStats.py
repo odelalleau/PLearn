@@ -1,5 +1,10 @@
-from plearn.utilities.toolkit   import plural
-from plearn.utilities.verbosity import vprint
+from plearn.utilities.toolkit        import plural
+from plearn.utilities.verbosity      import vprint
+
+import plearn.utilities.versionning  as     versionning
+versionning.project_module( "PyTest", __name__,
+                            "$Id: BasicStats.py,v 1.7 2004/12/15 13:51:07 dorionc Exp $"
+                            )
 
 class BasicStats:
     """Basic test routine statistics.

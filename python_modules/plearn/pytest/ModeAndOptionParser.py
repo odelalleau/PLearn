@@ -7,6 +7,11 @@ from   threading                     import Thread
 import plearn.utilities.toolkit      as     toolkit
 from   plearn.utilities.FrozenObject import *
 
+import plearn.utilities.versionning        as     versionning
+versionning.project_module( "PyTest", __name__,
+                            "$Id: ModeAndOptionParser.py,v 1.7 2004/12/15 13:51:07 dorionc Exp $"
+                            )
+
 __all__ = [ 'OptionGroup',
             'ModeDefaults', 'Mode',
             'ModeAndOptionParserDefaults', 'ModeAndOptionParser' ]

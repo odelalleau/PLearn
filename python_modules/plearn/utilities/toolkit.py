@@ -7,11 +7,13 @@ I{similar_tasks.py} L{utilities} submodule to move those functions to.
 """
 import inspect, os, popen2, random, string, sys, time, types
 
+__epydoc_is_available = None
 try:
     import epydoc.markup 
     import epydoc.markup.epytext
+    __epydoc_is_available = True
 except ImportError:
-    pass
+    __epydoc_is_available = False
 
 def boxed_lines(s, box_width, indent=''):
     if len(s) <= box_width:
@@ -83,7 +85,8 @@ def doc(obj, short=False):
         striped = string.lstrip(line)
         errors  = []
 
-        if inspect.ismodule(epydoc.markup):
+        parsed = striped
+        if __epydoc_is_available:
             parsed  = epydoc.markup.epytext.parse_docstring( striped, errors ).to_plaintext(None)
         
         parsed  = string.rstrip( parsed )

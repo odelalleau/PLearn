@@ -12,6 +12,12 @@ from   plearn.utilities.toolkit            import *
 from   plearn.utilities.verbosity          import *
 from   plearn.utilities.global_variables   import *
 
+import plearn.utilities.versionning        as     versionning
+versionning.project_module( "PyTest", __name__,
+                            "$Id: modes.py,v 1.13 2004/12/15 13:51:07 dorionc Exp $"
+                            )
+
+
 current_mode    = None
 
 targets         = None

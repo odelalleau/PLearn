@@ -14,6 +14,11 @@ from   programs                       import *
 from   BasicStats                     import BasicStats
 from   IntelligentDiff                import *          
 
+import plearn.utilities.versionning   as     versionning
+versionning.project_module( "PyTest", __name__,
+                            "$Id: test_and_routines.py,v 1.13 2004/12/15 13:51:08 dorionc Exp $"
+                            )
+
 __all__ = [
     ## Functions
     'config_file_path', 'print_stats', 
