@@ -2,7 +2,7 @@
 %%
 %%  Copyright (c) 2002 by Pascal Vincent
 %%
-%%  $Id: users_guide.tex,v 1.13 2004/03/02 22:47:56 plearner Exp $
+%%  $Id: users_guide.tex,v 1.14 2004/03/15 18:44:01 tihocan Exp $
 
 \documentclass[11pt]{book}
 \usepackage{html}               % package for latex2html
@@ -412,6 +412,12 @@ MEAN(claim) :claim.mean
 @claim.mean isnan not
 </POSTFILTER>
 
+<SIZES>
+100
+1
+0
+</SIZES>
+
 <PRECOMPUTE> dmat </PRECOMPUTE>
 \end{verbatim}
 
@@ -443,6 +449,12 @@ Note that you can repeat the operation multiple times in a single JOIN section.
 Use this section to modify or create new fields in the dataset (e.g: binning operations, onehot conversions, etc..). The processing is specified with VPL, described later.
 
 As soon as you declare a PROCESSING section, all fields resulting from previous operations (sources concatenation, join operations) are not included automatically in the resulting matrix (obviously, you can still refer to them), so it is empty unless you declare them manually. In the small example given above, the operations done are the replacement of the first two fields by their sum, and then the remaining fields are appended in the resulting matrix with the second line. See VPL section for more details.
+
+\subsection{SIZES}
+This section lets you define the input size, target size and weight size of the matrix.
+They must be given in this specificic order, each on one line.
+This is especially useful when the .vmat file is loaded through an AutoVMatrix for instance, so
+you don't have to specify the sizes in the AutoVMatrix itself.
 
 \subsection{PRECOMPUTE}
 When you need speed, use this section to create a precomputed version of you vmat. This version will be computed the first time the vmat is loaded. You specify the type of file you want the precomputed version to be saved to (dmat or pmat). See example above.
