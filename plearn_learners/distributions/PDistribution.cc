@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.cc,v 1.16 2004/05/26 18:39:42 tihocan Exp $ 
+   * $Id: PDistribution.cc,v 1.17 2004/05/27 14:26:09 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.cc */
@@ -99,8 +99,8 @@ void PDistribution::declareOptions(OptionList& ol)
       "it is an unconditional distribution)."
       );
 
-  declareOption(ol, "input_part", &PDistribution::input_part, OptionBase::buildoption,
-      "The x in p(y|x), if the density is conditional.");
+  declareOption(ol, "provide_input", &PDistribution::provide_input, OptionBase::buildoption,
+      "If provided, then setInput() will be called at build time with this input.");
 
   declareOption(ol, "n_curve_points", &PDistribution::n_curve_points, OptionBase::buildoption,
       "The number of points for which the distribution is evaluated when outputs_defs\n"
@@ -154,11 +154,17 @@ void PDistribution::build_()
   if (n_curve_points > 0) {
     delta_curve = (upper_bound - lower_bound) / real(n_curve_points);
   }
+  // Make sure input_part.length() == n_input.
   resizeParts();
-  // Preccompute the stuff associated to the conditional flags.
+  // Initialize things needed for the conditional distributions.
+  initializeForConditional();
+  // Precompute the stuff associated to the conditional flags.
   setConditionalFlags(conditional_flags);
-  // Set the input part for a conditional distribution.
-  setInput(input_part);
+  // Set the input part for a conditional distribution, if provided.
+  if (provide_input.isNotEmpty() && provide_input.length() == n_input) {
+    input_part << provide_input;
+    setInput(input_part);
+  }
 }
 
 ///////////////////
@@ -170,7 +176,7 @@ void PDistribution::computeOutput(const Vec& input, Vec& output) const
   static Mat cov;
   static int k,l;
   static Vec y;
-  need_set_input = splitCond(input, input_part, target_part);
+  need_set_input = splitCond(input);
   if (need_set_input) {
     // There is an input part, and it is not the same as in the previous call.
     setInput(input_part);
@@ -317,6 +323,14 @@ void PDistribution::generateN(const Mat& X) const
   }
 }
 
+//////////////////////////////
+// initializeForConditional //
+//////////////////////////////
+void PDistribution::initializeForConditional() {
+  // Default does nothing.
+  return;
+}
+
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
@@ -455,7 +469,8 @@ void PDistribution::setConditionalFlags(TVec<int> flags) {
 // setInput //
 //////////////
 void PDistribution::setInput(const Vec& input) const {
-  // Default behavior = nothing to do.
+  // Default behavior: only fill input_part with input.
+  input_part << input;
 }
 
 ////////////////////
@@ -504,7 +519,7 @@ void PDistribution::sortFromFlags(Mat& m, bool sort_columns, bool sort_rows) {
 ///////////////
 // splitCond //
 ///////////////
-bool PDistribution::splitCond(const Vec& input, Vec& input_part, Vec& target_part) const {
+bool PDistribution::splitCond(const Vec& input) const {
   if (n_input > 0 && input.length() == n_target + n_margin) {
     // No input part provided: this means this is the same as before.
     if (already_sorted) {

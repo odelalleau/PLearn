@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.h,v 1.12 2004/05/26 18:39:42 tihocan Exp $ 
+   * $Id: PDistribution.h,v 1.13 2004/05/27 14:26:19 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.h */
@@ -84,6 +84,7 @@ protected:
   //! deduced from the conditional flags.
   bool full_joint_distribution;
 
+  mutable Vec input_part;       //!< Used to store the x part in p(y|x).
   mutable Vec target_part;      //!< Used to store the y part in p(y|x).
 
   //! A boolean indicating whether the input part has changed since last time,
@@ -97,8 +98,6 @@ public:
   // ************************
 
   TVec<int> conditional_flags;
-
-  mutable Vec input_part;
 
   // Interval of values for computing histrogram output (upper case outputs_def).
   real lower_bound, upper_bound; 
@@ -114,6 +113,8 @@ public:
   //! Upper case produces the whole curve in output.
   */
   string outputs_def;
+
+  Vec provide_input;
 
   // ****************
   // * Constructors *
@@ -184,6 +185,11 @@ public:
   //! the full joint distribution), with a backup in old_flags.
   bool ensureFullJointDistribution(TVec<int>& old_flags);
 
+  //! Initialize everything needed for the conditional distribution, so that
+  //! a call to setConditionalFlags() can be made. This method should be
+  //! implemented in conditional distributions (default version does nothing).
+  virtual void initializeForConditional();
+
   //! Resize input_part and target_part according to n_input and n_target.
   void resizeParts();
 
@@ -206,11 +212,12 @@ public:
   void sortFromFlags(Vec& v);
   void sortFromFlags(Mat& m, bool sort_columns = true, bool sort_rows = false);
 
-  //! Split an input into the part corresponding to the 'real' input, and the
-  //! target. Note that the 'margin' part is lost, since we don't need it.
+  //! Split an input into the part corresponding to the 'real' input (in
+  //! 'input_part'), and the target (in 'target_part').
+  //! Note that the 'margin' part is lost, since we don't need it.
   //! Return true iff the input part has changed since last time (this is false
   //! only it is absent from input, which can be seen from its length).
-  bool splitCond(const Vec& input, Vec& input_part, Vec& target_part) const;
+  bool splitCond(const Vec& input) const;
   
   //! This method updates the internal data given a new sorting of the variables
   //! defined by the conditional flags. The default version does nothing: it
