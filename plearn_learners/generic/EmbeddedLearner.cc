@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.cc,v 1.22 2005/02/08 21:54:20 tihocan Exp $ 
+   * $Id: EmbeddedLearner.cc,v 1.23 2005/03/03 20:25:25 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.cc */
@@ -156,12 +156,14 @@ void EmbeddedLearner::forget()
 {
   assert( learner_ );
   learner_->forget();
+  stage = 0;
 }
 
 void EmbeddedLearner::train()
 {
   assert( learner_ );
   learner_->train();
+  stage = learner_->stage;
 }
 
 void EmbeddedLearner::computeOutput(const Vec& input, Vec& output) const
