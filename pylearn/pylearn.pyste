@@ -10,8 +10,8 @@ Class('PLearn::PPointable', 'plearn/base/PP.h')
 p_object = Class('PLearn::Object', 'plearn/base/Object.h')
 
 set_policy(p_object.deepCopy, return_value_policy(manage_new_object))
-set_policy(p_object.getOptionList, return_value_policy(reference_existing_object))
-set_policy(p_object._getOptionList_, return_value_policy(reference_existing_object))
+set_policy(p_object.getOptionList, return_internal_reference())
+set_policy(p_object._getOptionList_, return_internal_reference())
 set_policy(p_object._new_instance_for_typemap_, return_value_policy(manage_new_object))
 
 exclude(p_object.operator['<<'])
@@ -30,3 +30,24 @@ set_policy(Function('PLearn::loadObject', 'plearn/base/Object.h'), return_value_
 
 Function('PLearn::getDataSetHelp', 'plearn/db/getDataSet.h')
 Function('PLearn::getDataSet', 'plearn/db/getDataSet.h')
+
+# TVec...
+
+p_tvec = Template('PLearn::TVec', 'plearn/math/TVec.h')
+exclude(p_tvec.operator['<<'])
+exclude(p_tvec.operator['char*'])
+# Also exclude these temporarily until we figure out
+# how to map them to Python iterators
+exclude(p_tvec.begin)
+exclude(p_tvec.end)
+exclude(p_tvec.top)
+exclude(p_tvec.firstElement)
+exclude(p_tvec.lastElement)
+exclude(p_tvec.front)
+exclude(p_tvec.back)
+exclude(p_tvec.first)
+exclude(p_tvec.last)
+exclude(p_tvec.data)
+
+p_tvec('double')
+#p_tvec('float')
