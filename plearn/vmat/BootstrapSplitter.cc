@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BootstrapSplitter.cc,v 1.2 2004/02/20 21:14:29 chrish42 Exp $ 
+   * $Id: BootstrapSplitter.cc,v 1.3 2004/04/05 22:47:08 morinf Exp $ 
    ******************************************************* */
 
 /*! \file BootstrapSplitter.cc */
@@ -54,7 +54,7 @@ BootstrapSplitter::BootstrapSplitter()
 
 PLEARN_IMPLEMENT_OBJECT(BootstrapSplitter, 
     "A splitter whose splits are bootstrap samples of the original dataset", 
-    "NO HELP");
+    "BootstrapSplitter implements a ...");
 
 void BootstrapSplitter::declareOptions(OptionList& ol)
 {
@@ -72,14 +72,6 @@ void BootstrapSplitter::declareOptions(OptionList& ol)
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
-}
-
-string BootstrapSplitter::help()
-{
-  // ### Provide some useful description of what the class is ...
-  return 
-    "BootstrapSplitter implements a ..."
-    + optionHelp();
 }
 
 void BootstrapSplitter::build_()
