@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: AutoVMatrix.h,v 1.6 2004/04/05 23:14:13 morinf Exp $
+   * $Id: AutoVMatrix.h,v 1.7 2004/05/13 20:22:31 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -76,7 +76,7 @@ private:
   // (Please implement in .cc)
   void build_();
 
-protected: 
+protected:
   //! Declares this class' options
   // (Please implement in .cc)
   static void declareOptions(OptionList& ol);

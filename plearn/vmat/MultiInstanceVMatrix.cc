@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MultiInstanceVMatrix.cc,v 1.10 2004/05/04 21:15:52 nova77 Exp $ 
+   * $Id: MultiInstanceVMatrix.cc,v 1.11 2004/05/13 20:22:31 nova77 Exp $ 
    ******************************************************* */
 
 // Authors: Norman Casagrande
@@ -133,6 +133,8 @@ void MultiInstanceVMatrix::build_()
   string inp_element;
   int configNum, bagType;
   int nComp = 0;
+	
+	int i;
 
   real* mat_i = NULL;
 
@@ -140,7 +142,7 @@ void MultiInstanceVMatrix::build_()
   targetsize_ = source_targetsize + 1;
 
  // Check the number of columns
-  for (int i = 0; i < header_lines_to_skip; i++) {
+  for (i = 0; i < header_lines_to_skip; i++) {
     getline(inFile, aLine, '\n');
   }
   getline(inFile, aLine, '\n');
@@ -160,7 +162,7 @@ void MultiInstanceVMatrix::build_()
 
   inFile.seekg(0);
   skipBlanksAndComments(inFile);
-  for (int i = 0; i < header_lines_to_skip; i++) {
+  for (i = 0; i < header_lines_to_skip; i++) {
     getline(inFile, aLine, '\n');
   }
   skipBlanksAndComments(inFile);
@@ -170,7 +172,7 @@ void MultiInstanceVMatrix::build_()
 
   inFile.seekg(0);
   skipBlanksAndComments(inFile);
-  for (int i = 0; i < header_lines_to_skip; i++) {
+  for (i = 0; i < header_lines_to_skip; i++) {
     getline(inFile, aLine, '\n');
   }
   skipBlanksAndComments(inFile);

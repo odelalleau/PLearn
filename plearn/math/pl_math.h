@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.15 2004/04/16 17:37:54 yoshua Exp $
+   * $Id: pl_math.h,v 1.16 2004/05/13 20:22:30 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -154,7 +154,7 @@ extern _plearn_nan_type plearn_nan;
   }
   */
 
-#ifdef LINUX
+#if defined(LINUX) && !defined(__INTEL_COMPILER)  // note: intel compiler on SGI does not like that
 #define DOUBLE_TO_INT(in,out) __asm__ __volatile__ ("fistpl %0" : "=m" (out) : "t" (in) : "st")  
 #else
 #define DOUBLE_TO_INT(in, out)  out = int(in)

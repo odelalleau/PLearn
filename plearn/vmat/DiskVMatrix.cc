@@ -35,11 +35,12 @@
 
 
 /* *******************************************************      
-   * $Id: DiskVMatrix.cc,v 1.13 2004/03/23 23:08:08 morinf Exp $
+   * $Id: DiskVMatrix.cc,v 1.14 2004/05/13 20:22:31 nova77 Exp $
    ******************************************************* */
 
 #include "DiskVMatrix.h"
 #include "pl_io.h"
+#include <errno.h>
 
 namespace PLearn {
 using namespace std;

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Storage.h,v 1.11 2004/03/09 16:28:39 tihocan Exp $
+   * $Id: Storage.h,v 1.12 2004/05/13 20:22:16 nova77 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -109,8 +109,19 @@ public:
   inline iterator end() const
   { return data+length_; }
 
+	// If you're wondering why I did this stupid (and useless) function, ask GCC 3.0 that does not accept
+	// to allocate a template into the constructor!!!! (and GCC 3.0 is the standard version on SGI)
+	void mem_alloc(int len)
+	{
+		data = new T[len];
+    if(!data)
+    	PLERROR("OUT OF MEMORY (new returned NULL) in constructor of storage, trying to allocate %d elements",length());
+    clear_n(data,len); // clear the zone
+	}
+	
+
   //!  data is initially filled with zeros
-  inline Storage(int the_length=0)
+  Storage(int the_length=0)
     :length_(the_length), data(0), 
      dont_delete_data(false), fd((tFileHandle)STORAGE_UNUSED_HANDLE)
     {
@@ -121,17 +132,7 @@ public:
 #endif
       if (l>0) 
         {
-          try 
-          {
-            data = new T[l];
-            if(!data)
-              PLERROR("OUT OF MEMORY (new returned NULL) in constructor of storage, trying to allocate %d elements",length());
-            clear_n(data,l); // clear the zone
-          }
-          catch(...)
-          {
-            PLERROR("OUT OF MEMORY in constructor of storage, trying to allocate %d elements",length());
-          }
+					mem_alloc(l);
         }
     }
 

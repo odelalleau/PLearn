@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: ProgressBar.cc,v 1.5 2004/02/28 17:54:35 tihocan Exp $
+   * $Id: ProgressBar.cc,v 1.6 2004/05/13 20:22:15 nova77 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -56,22 +56,31 @@ using namespace std;
 /////////////////////////////////////////////////////////////////////////////////////
 // Please, put me in my own file !!
 
-PP<ProgressBarPlugin> ProgressBar::plugin = new TextProgressBarPlugin(cerr);
+//PP<ProgressBarPlugin> ProgressBar::plugin = new TextProgressBarPlugin(cerr);
 
 ProgressBar::ProgressBar(string _title, int the_maxpos)
   :title(_title),currentpos(0), maxpos(the_maxpos),closed(false)
 {
+  if (plugin == NULL)
+    plugin = new TextProgressBarPlugin(cerr);
+    
   plugin->addProgressBar(this);
 }
 
-ProgressBar::ProgressBar(ostream& _out,string _title, int the_maxpos)
+ProgressBar::ProgressBar(ostream& _out, string _title, int the_maxpos)
   :title(_title),currentpos(0), maxpos(the_maxpos),closed(false)
 {
+  if (plugin == NULL)
+    plugin = new TextProgressBarPlugin(cerr);
+
   plugin->addProgressBar(this);
 }
-ProgressBar::ProgressBar(PStream& _out,string _title, int the_maxpos)
+ProgressBar::ProgressBar(PStream& _out, string _title, int the_maxpos)
   :title(_title),currentpos(0), maxpos(the_maxpos),closed(false)
 {
+  if (plugin == NULL)
+    plugin = new TextProgressBarPlugin(cerr);
+
   plugin->addProgressBar(this);
 }
 
