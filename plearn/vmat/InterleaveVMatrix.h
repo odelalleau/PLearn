@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: InterleaveVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
+   * $Id: InterleaveVMatrix.h,v 1.4 2004/04/05 22:55:21 morinf Exp $
    ******************************************************* */
 
 
@@ -68,7 +68,7 @@ class InterleaveVMatrix: public VMatrix
 protected:
   Array<VMat> vm;
 
-  public:
+public:
   // ******************
   // *  Constructors  *
   // ******************
@@ -80,6 +80,11 @@ protected:
   //! The field names are copied from the first VMat d1
   InterleaveVMatrix(VMat d1, VMat d2);
   
+  PLEARN_DECLARE_OBJECT(InterleaveVMatrix);
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
+
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;
   virtual void reset_dimensions() 
@@ -98,8 +103,12 @@ protected:
         }
       length_=n*maxl;
     }
+private:
+    void build_();
+    
 };
 
+DECLARE_OBJECT_PTR(InterleaveVMatrix);
 
 } // end of namespcae PLearn
 #endif

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: InterleaveVMatrix.cc,v 1.3 2004/03/23 23:08:08 morinf Exp $
+   * $Id: InterleaveVMatrix.cc,v 1.4 2004/04/05 22:55:21 morinf Exp $
    ******************************************************* */
 
 #include "InterleaveVMatrix.h"
@@ -46,52 +46,60 @@ using namespace std;
 
 /** InterleaveVMatrix **/
 
+PLEARN_IMPLEMENT_OBJECT(InterleaveVMatrix, "ONE LINE DESC", "ONE LINE HELP");
+
 InterleaveVMatrix::InterleaveVMatrix()
 {
 }
 
 InterleaveVMatrix::InterleaveVMatrix(Array<VMat> the_vm)
-  :vm(the_vm)
+  : vm(the_vm)
 {
-  int n=vm.size();
-  if (n<1) 
-    PLERROR("InterleaveVMatrix expects >= 1 underlying-distribution, got %d",n);
-
-  // Copy the parent fields
-  fieldinfos = vm[0]->getFieldInfos();
-  
-  width_ = vm[0]->width();
-  int maxl = 0;
-  for (int i=0;i<n;i++)
-    {
-      if (vm[i]->width() != width_)
-        PLERROR("InterleaveVMatrix: underlying-distr %d has %d width, while 0-th has %d",i,vm[i]->width(),width_);
-      int l=vm[i]->length();
-      if (l>maxl) maxl=l;
-    }
-  length_ = n*maxl;
+  build();
 }
 
 InterleaveVMatrix::InterleaveVMatrix(VMat d1, VMat d2)
-  :vm(d1,d2)
+  : vm(d1,d2)
 {
-  int n=vm.size();
-  if (n<1) 
-    PLERROR("InterleaveVMatrix expects >= 1 underlying-distribution, got %d",n);
+  build();
+}
 
-  // Copy the parent fields
-  fieldinfos = vm[0]->getFieldInfos();
+void
+InterleaveVMatrix::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+InterleaveVMatrix::build_()
+{
+  if (vm) {
+    int n = vm.size();
+    if (n<1) 
+      PLERROR("InterleaveVMatrix expects >= 1 underlying-distribution, got %d",n);
+
+    // Copy the parent fields
+    fieldinfos = vm[0]->getFieldInfos();
   
-  width_ = vm[0]->width();
-  int maxl = 0;
-  for (int i=0;i<n;i++)
-    {
+    width_ = vm[0]->width();
+    int maxl = 0;
+    for (int i = 0; i < n; i++) {
       if (vm[i]->width() != width_)
         PLERROR("InterleaveVMatrix: underlying-distr %d has %d width, while 0-th has %d",i,vm[i]->width(),width_);
-      int l=vm[i]->length();
-      if (l>maxl) maxl=l;
+      int l = vm[i]->length();
+      if (l > maxl)
+          maxl=l;
     }
-  length_ = n*maxl;
+    length_ = n * maxl;
+  }
+}
+
+void
+InterleaveVMatrix::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "vm", &InterleaveVMatrix::vm, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
 }
 
 real InterleaveVMatrix::get(int i, int j) const
