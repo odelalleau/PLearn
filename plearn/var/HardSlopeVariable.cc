@@ -36,125 +36,114 @@
 
 
 /* *******************************************************      
-   * $Id: SoftSlopeVariable.cc,v 1.3 2003/11/30 05:34:29 yoshua Exp $
+   * $Id: HardSlopeVariable.cc,v 1.1 2003/11/30 05:34:29 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
-#include "SoftSlopeVariable.h"
+#include "HardSlopeVariable.h"
 #include "Var_utils.h"
 
 namespace PLearn <%
 using namespace std;
 
 
-/** SoftSlopeVariable **/
+/** HardSlopeVariable **/
 
-SoftSlopeVariable::  SoftSlopeVariable(Variable* x, Variable* smoothness, Variable* left, Variable* right)
-  :NaryVariable(VarArray(x,smoothness) & Var(left) & Var(right), 
+HardSlopeVariable::  HardSlopeVariable(Variable* x, Variable* left, Variable* right)
+  :NaryVariable(VarArray(x,left) & Var(right), 
                 x->length()<left->length()?left->length():x->length(), 
                 x->width()<left->width()?left->width():x->width()) 
 {}
 
 
-PLEARN_IMPLEMENT_OBJECT(SoftSlopeVariable, 
-                        "This Var computes the soft_slope function", 
-                        "The soft_slope function is a soft version of linear by parts function.\n"
-                        "(as smoothness goes to infty). More precisely it converges to a function that is\n"
-                        "0 in [-infty,left], linear in [left,right], and 1 in [right,infty], and continuous\n"
-                        "It is always monotonically increasing wrt x (positive derivative in x).\n"
+PLEARN_IMPLEMENT_OBJECT(HardSlopeVariable, 
+                        "This Var computes the hard_slope function", 
+                        "The hard_slope function is linear by parts function:\n"
+                        "0 in [-infty,left], linear in [left,right], and 1 in [right,infty], and continuous.\n"
                         "If the arguments are vectors than the operation is performed element by element on all of them.\n");
 
-void SoftSlopeVariable::recomputeSize(int& l, int& w) const
+void HardSlopeVariable::recomputeSize(int& l, int& w) const
 { 
   l=0; 
   w=0;
-  for (int i=0;i<4;i++)
+  for (int i=0;i<3;i++)
   {
     if (varray[i]->length()>l) l=varray[i]->length();
     if (varray[i]->width()>w) w=varray[i]->width();
   }
-  for (int i=0;i<4;i++)
+  for (int i=0;i<3;i++)
   {
     if (varray[i]->length()!=l || varray[i]->width()!=w)
     {
       if (varray[i]->length()!=1 || varray[i]->width()!=1)
-        PLERROR("Each argument of SoftSlopeVariable should either have the same length/width as the others or length 1");
+        PLERROR("Each argument of HardSlopeVariable should either have the same length/width as the others or length 1");
     }
   }
 }
 
 
-void SoftSlopeVariable::fprop()
+void HardSlopeVariable::fprop()
 {
   int n=nelems();
   int n1=varray[0]->nelems();
   int n2=varray[1]->nelems();
   int n3=varray[2]->nelems();
-  int n4=varray[3]->nelems();
   real* x = varray[0]->valuedata;
-  real* smoothness = varray[1]->valuedata;
-  real* left = varray[2]->valuedata;
-  real* right = varray[3]->valuedata;
+  real* left = varray[1]->valuedata;
+  real* right = varray[2]->valuedata;
 
-  if (n1==n && n2==n && n3==n && n4==n)
+  if (n1==n && n2==n && n3==n)
     for(int i=0; i<n; i++)
-      valuedata[i] = soft_slope(x[i], smoothness[i], left[i], right[i]);
-  else if (n1==1 && n2==n && n3==n && n4==n)
+      valuedata[i] = hard_slope(x[i], left[i], right[i]);
+  else if (n1==1 && n2==n && n3==n)
     for(int i=0; i<n; i++)
-      valuedata[i] = soft_slope(*x, smoothness[i], left[i], right[i]);
+      valuedata[i] = hard_slope(*x, left[i], right[i]);
   else
   {
     int m1= n1==1?0:1;
     int m2= n2==1?0:1;
     int m3= n3==1?0:1;
-    int m4= n4==1?0:1;
-    for(int i=0; i<n; i++,x+=m1,smoothness+=m2,left+=m3,right+=m4)
-      valuedata[i] = soft_slope(*x, *smoothness, *left, *right);
+    for(int i=0; i<n; i++,x+=m1,left+=m2,right+=m3)
+      valuedata[i] = hard_slope(*x, *left, *right);
   }
 }
 
 
-void SoftSlopeVariable::bprop()
+void HardSlopeVariable::bprop()
 {
   int n=nelems();
   int n1=varray[0]->nelems();
   int n2=varray[1]->nelems();
   int n3=varray[2]->nelems();
-  int n4=varray[3]->nelems();
   int m1= n1==1?0:1;
   int m2= n2==1?0:1;
   int m3= n3==1?0:1;
-  int m4= n4==1?0:1;
   real* x = varray[0]->valuedata;
-  real* smoothness = varray[1]->valuedata;
-  real* left = varray[2]->valuedata;
-  real* right = varray[3]->valuedata;
+  real* left = varray[1]->valuedata;
+  real* right = varray[2]->valuedata;
   real* dx = varray[0]->gradientdata;
-  real* dsmoothness = varray[1]->gradientdata;
-  real* dleft = varray[2]->gradientdata;
-  real* dright = varray[3]->gradientdata;
-  for(int i=0; i<n; i++,x+=m1,smoothness+=m2,left+=m3,right+=m4,dx+=m1,dsmoothness+=m2,dleft+=m3,dright+=m4)
+  real* dleft = varray[1]->gradientdata;
+  real* dright = varray[2]->gradientdata;
+  for(int i=0; i<n; i++,x+=m1,left+=m2,right+=m3,dx+=m1,dleft+=m2,dright+=m3)
   {
-    real inv_smoothness = 1.0 / *smoothness;
-    real t1 = sigmoid(- *smoothness*(*x-*left));
-    real t2 = sigmoid(- *smoothness*(*x-*right));
-    real inv_delta=1.0/(*right-*left);
-    real rat = (soft_slope(*x, *smoothness, *left, *right) -1);
-    real move = rat * inv_delta;
-    real dss = (-t1*(*x-*left) + t2*(*x-*right))*inv_smoothness*inv_delta - rat * inv_smoothness;
-    real dll = t1*inv_delta*inv_smoothness + move;
-    real drr = -t2*inv_delta*inv_smoothness - move;
-    real dxx = (-t1+t2)*inv_delta;
-    *dx += gradientdata[i] * dxx;
-    *dsmoothness += gradientdata[i] * dss;
-    *dleft += gradientdata[i] * dll;
-    *dright += gradientdata[i] * drr;
+    real tleft = *x - *left;
+    real tright = *x - *right;
+    if (tright<=0 && tleft>=0)
+    {
+      real inv_delta=1.0/(*right - *left);
+      real dll = tright*inv_delta;
+      real drr = -tleft*inv_delta;
+      real dxx = inv_delta;
+      *dx += gradientdata[i] * dxx;
+      *dleft += gradientdata[i] * dll;
+      *dright += gradientdata[i] * drr;
+    }
   }
 }
 
-void SoftSlopeVariable::symbolicBprop()
+void HardSlopeVariable::symbolicBprop()
 {
-  PLERROR("SoftSlopeVariable::symbolicBprop() not implemented");
+  PLERROR("HardSlopeVariable::symbolicBprop() not implemented");
 }
 
 
