@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.cc,v 1.7 2003/10/07 15:28:13 tihocan Exp $
+   * $Id: Variable.cc,v 1.8 2003/12/16 18:28:10 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,8 +51,12 @@
 #include "VarRowVariable.h"
 #include "SubMatVariable.h"
 #include "SubMatTransposeVariable.h"
+#include "SourceVariable.h"
+#include "PlusScalarVariable.h"
+#include "TimesConstantVariable.h"
+#include "Var_operators.h"
 
-#include "Var_utils.h"
+//#include "Var_utils.h"
 
 namespace PLearn <%
 using namespace std;
