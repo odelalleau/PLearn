@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.64 2004/05/20 22:18:18 lapalmej Exp $
+   * $Id: plearn.cc,v 1.65 2004/05/21 13:46:10 tihocan Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -60,25 +60,29 @@
 // Available Kernels:
 #include "AdditiveNormalizationKernel.h"
 
-// All Available Learners: 
+// Available Learners: 
 // #include "KNN.h"
 //#include "Classification1HiddenNN.h"
 //#include "Mixture2.h"
 #include "AddCostToLearner.h"
+#include "BPTT.h"
 #include "ClassifierFromDensity.h"
 //#include "RegressorFromDensity.h"
-#include "ConditionalGaussMix.h"
-#include "Distribution.h"
-#include "GaussianDistribution.h"
 #include "KernelPCA.h"
 #include "KernelProjection.h"
-#include "LocallyWeightedDistribution.h"
-#include "ManifoldParzen2.h"
 #include "NeuralNet.h"
 #include "NNet.h"
-#include "BPTT.h"
 #include "PCA.h"
 #include "PLS.h"
+
+// Available Distributions.
+#include "ConditionalGaussMix.h"
+#include "GaussianDistribution.h"
+#include "LocallyWeightedDistribution.h"
+#include "ManifoldParzen2.h"
+#include "UniformDistribution.h"
+
+// Available Optimizers.
 #include "GradientOptimizer.h"
 #include "AdaptGradientOptimizer.h"
 #include "ConjGradientOptimizer.h"
