@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunCommand.cc,v 1.13 2004/09/09 13:39:07 dorionc Exp $ 
+   * $Id: RunCommand.cc,v 1.14 2004/12/07 22:39:42 chapados Exp $ 
    ******************************************************* */
 
 /*! \file RunCommand.cc */
@@ -45,6 +45,7 @@
 #include <plearn/base/stringutils.h>
 #include <plearn/base/Object.h>
 #include <plearn/sys/Popen.h>
+#include <plearn/io/PyPlearnDriver.h>
 
 namespace PLearn {
 using namespace std;
@@ -78,76 +79,7 @@ void RunCommand::run(const vector<string>& args)
   string script;
   if (extension == ".pyplearn")
     {
-      bool do_help = false;
-      bool do_dump = false;
-      string command = "pyplearn_driver.py '" + scriptfile + '\'';
-
-      // For pyplearn files, we support the following command-line
-      // arguments: --help to print the doc string of the .pyplearn file,
-      // and --dump to show the result of processing the .pyplearn file
-      // instead of running it.
-      if (args.size() >= 2)
-        {
-          if (args[1] == "--help")
-            {
-              do_help = true;
-              command += " --help";
-            }
-          else if (args[1] == "--dump")
-            {
-              do_dump = true;
-            }
-        }
-      
-      if (!do_help)
-        {
-          // Supply the PLearn command-line arguments to the pylearn driver
-          // script.
-          for (unsigned int i = 1; i < args.size(); i++)
-            {
-              string option = args[i];
-              // Skip --foo command-lines options.
-              if (option.size() < 2 || option.substr(0, 2) != "--")
-                {
-                  command += " '" + args[i] + '\'';
-                }
-            }
-
-          // Add the standard PLearn variables (DATE, DATETIME, etc.) to the
-          // list of variables used when runing the PLearn preprocessor on the
-          // output of the .pyplearn file to handle $DATE, etc.
-          // in PLearn strings.
-          addFileAndDateVariables(scriptfile, vars);
-
-          // Also add these variables (DATE, etc.) to the pyplearn driver
-          // script so they show up as pyplearn arguments too.
-          for (map<string, string>::const_iterator it = vars.begin();
-               it != vars.end(); ++it)
-            {
-              command += " '" + it->first + '=' + it->second + '\'';
-            }
-          
-        }
-      
-      Popen popen(command);      
-      string script_before_preprocessing;
-      while (!popen.in.eof())
-	{
-	  char c;
-	  popen.in.get(c);
-	  script_before_preprocessing += c;
-	}
-
-      if (do_help || do_dump)
-        {
-          cout << script_before_preprocessing;
-          return;
-        }
-      else
-        {
-          istringstream is(script_before_preprocessing);
-          script = readAndMacroProcess(is, vars);
-        }
+      script = process_pyplearn_script(scriptfile, args);
     }
   else
     {
