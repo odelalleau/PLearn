@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: MatIO.h,v 1.5 2004/02/09 15:47:36 tihocan Exp $
+   * $Id: MatIO.h,v 1.6 2004/02/16 17:06:15 lheureup Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -284,7 +284,7 @@ void loadAsciiSingleBinaryDescriptor(const string& filename, TMat<T>& mat)
 {
   ifstream in(filename.c_str());
   if(!in)
-    PLERROR("Could not open file %s for reading", filename.c_str());
+    PLERROR("In loadAsciiSingleBinaryDescriptor: Could not open file %s for reading", filename.c_str());
 
   int length = -1;
   int width = -1;
@@ -304,7 +304,7 @@ void loadAsciiSingleBinaryDescriptor(const string& filename, TMat<T>& mat)
       {
         string siz=removeblanks((line.substr(pos)).substr(1));
         vector<string> dim = split(siz," ");
-        if(dim.size()!=2)  PLERROR("I need exactly 2 dimensions for matrix");
+        if(dim.size()!=2)  PLERROR("In loadAsciiSingleBinaryDescriptor: I need exactly 2 dimensions for matrix");
         length = toint(dim[0]);
         width = toint(dim[1]);
       }
@@ -314,7 +314,7 @@ void loadAsciiSingleBinaryDescriptor(const string& filename, TMat<T>& mat)
 
   if(length==-1)  // still looking for size info...
   {
-    PLERROR("Be nice and specify a width and length");
+    PLERROR("In loadAsciiSingleBinaryDescriptor: Be nice and specify a width and length");
   }
 
   // We are now more careful about the possibility of the stream being in a
