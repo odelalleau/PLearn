@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianKernel.cc,v 1.14 2004/12/24 07:25:36 chapados Exp $
+   * $Id: GaussianKernel.cc,v 1.15 2005/02/02 18:28:24 lamblin Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -134,7 +134,7 @@ void GaussianKernel::addDataForKernelMatrix(const Vec& newRow)
 /////////////////////////////////////////
 // evaluateFromSquaredNormOfDifference //
 /////////////////////////////////////////
-inline real GaussianKernel::evaluateFromSquaredNormOfDifference(real sqnorm_of_diff) const
+real GaussianKernel::evaluateFromSquaredNormOfDifference(real sqnorm_of_diff) const
 {
   if (sqnorm_of_diff < 0) {
     // This could happen (especiallly in -opt) because of approximations, when
