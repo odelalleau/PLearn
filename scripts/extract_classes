@@ -514,7 +514,7 @@ def cc_mode():
 # END OF cc_mode
 
 def close_file_bottom(file, type):
-    file.write("\n\n%> // end of namespace PLearn\n\n")
+    file.write("\n\n} // end of namespace PLearn\n\n")
     if type == ".h":
         file.write("#endif ")
     file.close()
@@ -541,7 +541,7 @@ def create_file_top(class_name, type, include_fct):
         file.write("#define " + class_name + "_INC\n\n")
 
     include_fct(class_name, file)
-    file.write("namespace PLearn <%\n")
+    file.write("namespace PLearn {\n")
     file.write("using namespace std;\n\n")
 
     return file
@@ -578,48 +578,28 @@ def h_mode():
 
 def header_str(fname):
     (head, tail) = os.path.split( fname )
-    return ("// -*- C++ -*-\n" +
-            "\n" +
-            "// PLearn (A C++ Machine Learning Library)\n" +
-            "// Copyright (C) 1998 Pascal Vincent\n" +
-            "// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio, Rejean Ducharme and University of Montreal\n" +
-            "// Copyright (C) 2001-2002 Nicolas Chapados, Ichiro Takeuchi, Jean-Sebastien Senecal\n" +
-            "// Copyright (C) 2002 Xiangdong Wang, Christian Dorion\n" +
-            "\n" +
-            "// Redistribution and use in source and binary forms, with or without\n" +
-            "// modification, are permitted provided that the following conditions are met:\n" +
-            "// \n" +
-            "//  1. Redistributions of source code must retain the above copyright\n" +
-            "//     notice, this list of conditions and the following disclaimer.\n" +
-            "// \n" +
-            "//  2. Redistributions in binary form must reproduce the above copyright\n" +
-            "//     notice, this list of conditions and the following disclaimer in the\n" +
-            "//     documentation and/or other materials provided with the distribution.\n" +
-            "// \n" +
-            "//  3. The name of the authors may not be used to endorse or promote\n" +
-            "//     products derived from this software without specific prior written\n" +
-            "//     permission.\n" +
-            "// \n" +
-            "// THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR\n" +
-            "// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES\n" +
-            "// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN\n" +
-            "// NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,\n" +
-            "// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED\n" +
-            "// TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR\n" +
-            "// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF\n" +
-            "// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING\n" +
-            "// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS\n" +
-            "// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n" +
-            "// \n" +
-            "// This file is part of the PLearn library. For more information on the PLearn\n" +
-            "// library, go to the PLearn Web site at www.plearn.org\n" +
-            "\n" +
-            "\n" +
-            "/* *******************************************************      \n" +
-            "   * $Id: extract_classes,v 1.2 2002/10/23 23:43:27 dorionc Exp $\n" +
-            "   * This file is part of the PLearn library.\n" +
-            "   ******************************************************* */\n" +
-            "\n")
+    return ("""
+// -*- C++ -*-
+// """ + fname + """
+//
+// Copyright (C) 2004 ApSTAT Technologies Inc. 
+// All rights reserved.
+//
+// This program may not be modified, translated, 
+// copied or distributed in whole or in part or 
+// as part of a derivative work, in any form, 
+// whether as source code or binary code or any 
+// other form of translation, except if authorized 
+// by a prior agreement signed with ApSTAT Technologies Inc.
+
+/* *******************************************************      
+   * $Id: extract_classes,v 1.3 2004/06/28 19:19:57 dorionc Exp $ 
+   ******************************************************* */
+
+// Authors: Nicolas Chapados
+
+/*! \\file """ + fname + """ */
+""")
 
 def seek_tags(line, tags=['#ifndef', '#define', '#include', 'namespace']):
     #print("MLC not supported in seek_tags")

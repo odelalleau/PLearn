@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.2
+#$Id: pytest,v 1.7 2004/06/28 19:19:57 dorionc Exp $
 
 ### pytest is meant to manage all the TestSuite execution.
 import os, string, sys, shutil, glob, fpformat
@@ -58,6 +59,8 @@ mail_adress = ''
 savelog_file_name = '#undefined'
 savelog_file = '' # Must be replaced by user provided msg
 stats = '' # will contain stats about compile and run
+
+cvs_id_str = '$Id: pytest,v 1.7 2004/06/28 19:19:57 dorionc Exp $'
 
 #####################
 ## Functions are listed by alphabetical order
