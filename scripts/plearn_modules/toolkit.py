@@ -180,9 +180,9 @@ class Bindings:
             self.__values[i] = value
         else:
             self.__keys.append(key)
-            self.__values.append(val)
+            self.__values.append(value)
 
-    def __getitem(self, key):
+    def __getitem__(self, key):
         if self.has_key(key):
             i = self.__keys.index(key)
             return self.__values[i]

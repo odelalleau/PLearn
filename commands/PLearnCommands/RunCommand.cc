@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunCommand.cc,v 1.12 2004/09/01 22:14:15 chrish42 Exp $ 
+   * $Id: RunCommand.cc,v 1.13 2004/09/09 13:39:07 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file RunCommand.cc */
@@ -128,7 +128,7 @@ void RunCommand::run(const vector<string>& args)
             }
           
         }
-
+      
       Popen popen(command);      
       string script_before_preprocessing;
       while (!popen.in.eof())
