@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.h,v 1.24 2004/11/16 23:14:45 dorionc Exp $ 
+   * $Id: VecStatsCollector.h,v 1.25 2004/11/17 14:29:54 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.h */
@@ -127,11 +127,11 @@ public:
   //! The weight applies to all elements of x
   virtual void update(const Vec& x, real weight = 1.0);
 
-  /** 
-   * update statistics as if the vectorial observation x
+  /*! 
+   * Update statistics as if the vectorial observation x
    * was removed of the observation sequence.
    */
-  void remove_observation(const Vec& x, real weight = 1.0);
+  virtual void remove_observation(const Vec& x, real weight = 1.0);
   
   //! Declares names for the columns of the vector passed to update
   void setFieldNames(TVec<string> the_fieldnames)
