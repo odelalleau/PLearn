@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PCA.cc,v 1.7 2004/02/20 21:14:50 chrish42 Exp $ 
+   * $Id: PCA.cc,v 1.8 2004/03/30 19:35:23 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PCA.cc */
@@ -119,8 +119,16 @@ void PCA::train()
 
   if(stage<1)
     {
+      ProgressBar* pb = 0;
+      if (report_progress) {
+        pb = new ProgressBar("Training PCA", 2);
+      }
       computeInputMeanAndCovar(train_set, mu, covarmat);
+      if (pb)
+        pb->update(1);
       eigenVecOfSymmMat(covarmat, ncomponents, eigenvals, eigenvecs);      
+      if (pb)
+        pb->update(2);
       stage = 1;
     }
 }
