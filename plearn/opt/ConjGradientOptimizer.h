@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.10 2003/04/23 18:00:21 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.11 2003/04/23 18:34:33 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -196,8 +196,7 @@ private:
   // "Direct Gradient-Based Reinforcement Learning:
   // II. Gradient Ascent Algorithms and Experiments"
   // by J.Baxter, L. Weaver, P. Bartlett.
-  // This is just one single iteration of the algorithm
-  // Return true when the convergence is obtained
+  // Actually this is almost the same as the Polak-Ribiere formula
   static bool conjpomdp (
       // The given grad function needs to compute the gradient
       // (or the opposite of the gradient if we need the minimum, as the
