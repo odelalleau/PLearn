@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LearnerCommand.cc,v 1.4 2004/06/11 17:40:25 tihocan Exp $ 
+   * $Id: LearnerCommand.cc,v 1.5 2004/06/25 17:02:03 monperrm Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -72,14 +72,16 @@ LearnerCommand::LearnerCommand():
 
 void LearnerCommand::train(const string& learner_spec_file, const string& trainset_spec, const string& save_learner_file)
 {
-  PP<PLearner> learner;
-  PLearn::load(learner_spec_file,learner);
-  VMat trainset = getDataSet(trainset_spec);
-  PP<VecStatsCollector> train_stats = new VecStatsCollector();
-  learner->setTrainStatsCollector(train_stats);
-  learner->setTrainingSet(trainset);
-  learner->train();
-  PLearn::save(save_learner_file, learner);  
+
+
+    PP<PLearner> learner;
+    PLearn::load(learner_spec_file,learner);
+    VMat trainset = getDataSet(trainset_spec);
+    PP<VecStatsCollector> train_stats = new VecStatsCollector();
+    learner->setTrainStatsCollector(train_stats);
+    learner->setTrainingSet(trainset);
+    learner->train();
+    PLearn::save(save_learner_file, learner);
 }
 
 void LearnerCommand::test(const string& trained_learner_file, const string& testset_spec, const string& stats_file, const string& outputs_file, const string& costs_file)
@@ -116,22 +118,38 @@ void LearnerCommand::run(const vector<string>& args)
 {
   string command = args[0];
   if(command=="train")
-    train(args[1],args[2],args[3]);
+    {
+        if (args.size()==4)
+            train(args[1],args[2],args[3]);
+        else 
+            PLERROR("LearnerCommand::run you must provide 'plearn learner train learner_spec_file trainset_spec save_learner_file'");
+    }
   else if(command=="test")    
     {
-      string trained_learner_file = args[1];
-      string testset_spec = args[2];
-      string stats_basename = args[3];
-      string outputs_file;
-      if(args.size()>4)
-        outputs_file = args[4];
-      string costs_file;
-      if(args.size()>5)
-        costs_file = args[5];
-      test(trained_learner_file, testset_spec, stats_basename, outputs_file, costs_file);
+      if (args.size()>3)
+      {
+        string trained_learner_file = args[1];
+        string testset_spec = args[2];
+        string stats_basename = args[3];
+        string outputs_file;
+        if(args.size()>4)
+            outputs_file = args[4];
+        string costs_file;
+        if(args.size()>5)
+            costs_file = args[5];
+        test(trained_learner_file, testset_spec, stats_basename, outputs_file, costs_file);
+      }
+      else
+        PLERROR("LearnerCommand::run you must provide at least 'plearn learner test <trained_learner.psave> <testset.vmat> <cost.stats>'");
     }
   else if(command=="compute_outputs")
-    compute_outputs(args[1],args[2],args[3]);
+    {
+      if (args.size()==4)
+        compute_outputs(args[1],args[2],args[3]);
+      else
+        PLERROR("LearnerCommand::run you must provide 'plearn learner compute_outputs learner_spec_file trainset_spec save_learner_file'");
+    }    
+    
   else
     PLERROR("Invalid command %s check the help for available commands",command.c_str());
 }
