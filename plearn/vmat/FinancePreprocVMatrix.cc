@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FinancePreprocVMatrix.cc,v 1.8 2004/03/17 16:06:32 ducharme Exp $ 
+   * $Id: FinancePreprocVMatrix.cc,v 1.9 2004/04/05 22:52:53 morinf Exp $ 
    ******************************************************* */
 
 /*! \file FinancePreprocVMatrix.cc */
@@ -44,6 +44,8 @@
 namespace PLearn {
 using namespace std;
 
+PLEARN_IMPLEMENT_OBJECT(FinancePreprocVMatrix, "ONE LINE DESCR",
+                        "FinancePreprocVMatrix implements a VMatrix with extra preprocessing columns.");
 
 FinancePreprocVMatrix::FinancePreprocVMatrix()
   :inherited(), add_tradable(false), add_last_day_of_month(false),
@@ -70,8 +72,6 @@ FinancePreprocVMatrix::FinancePreprocVMatrix(VMat vm, TVec<string> the_asset_nam
 {
   build();
 }
-
-PLEARN_IMPLEMENT_OBJECT(FinancePreprocVMatrix, "ONE LINE DESCR", "NO HELP");
 
 void FinancePreprocVMatrix::getRow(int i, Vec v) const
 {
@@ -168,14 +168,6 @@ void FinancePreprocVMatrix::declareOptions(OptionList& ol)
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
-}
-
-string FinancePreprocVMatrix::help()
-{
-  // ### Provide some useful description of what the class is ...
-  return 
-    "FinancePreprocVMatrix implements a VMatrix with extra preprocessing columns."
-    + optionHelp();
 }
 
 void FinancePreprocVMatrix::setVMFields()

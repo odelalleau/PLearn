@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KFoldSplitter.h,v 1.7 2004/03/23 23:08:08 morinf Exp $ 
+   * $Id: KFoldSplitter.h,v 1.8 2004/04/05 22:56:43 morinf Exp $ 
    ******************************************************* */
 
 /*! \file KFoldSplitter.h */
@@ -92,9 +92,6 @@ protected:
 public:
     // simply calls inherited::build() then build_() 
     virtual void build();
-
-    //! Provides a help message describing this class
-    static string help();
 
     //! Declares name and deepCopy methods
     PLEARN_DECLARE_OBJECT(KFoldSplitter);

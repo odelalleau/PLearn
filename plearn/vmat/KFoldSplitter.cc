@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KFoldSplitter.cc,v 1.8 2004/02/20 21:14:44 chrish42 Exp $ 
+   * $Id: KFoldSplitter.cc,v 1.9 2004/04/05 22:56:43 morinf Exp $ 
    ******************************************************* */
 
 /*! \file SequentialSplitter.cc */
@@ -49,7 +49,8 @@ KFoldSplitter::KFoldSplitter(int k)
     : K(k),append_train(0)
 {};
 
-PLEARN_IMPLEMENT_OBJECT(KFoldSplitter, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(KFoldSplitter, "ONE LINE DESCR", 
+                        "KFoldSplitter implements K splits of the dataset into a training-set and a test-set");
 
 void KFoldSplitter::declareOptions(OptionList& ol)
 {
@@ -61,14 +62,6 @@ void KFoldSplitter::declareOptions(OptionList& ol)
                   " will contain three sets");
 
     inherited::declareOptions(ol);
-}
-
-string KFoldSplitter::help()
-{
-    // ### Provide some useful description of what the class is ...
-    return 
-        "KFoldSplitter implements K splits of the dataset into a training-set and a test-set"
-        + optionHelp();
 }
 
 void KFoldSplitter::build_()
