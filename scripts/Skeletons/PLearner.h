@@ -125,6 +125,8 @@ public:
   // virtual void test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs=0, VMat testcosts=0) const;
   // virtual int nTestCosts() const;
   // virtual int nTrainCosts() const;
+  // virtual void resetInternalState();
+  // virtual bool isStatefulLearner() const;
 
 };
 
