@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StrTableVMatrix.cc,v 1.6 2004/09/27 20:19:27 plearner Exp $
+   * $Id: StrTableVMatrix.cc,v 1.7 2004/11/17 16:16:18 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -107,6 +107,9 @@ StrTableVMatrix::StrTableVMatrix(const StringTable & st)
           }
         else data(i,j)=dbl;
     }
+
+  // We have modified the 'data' option.
+  inherited::build();
   
 }
 
