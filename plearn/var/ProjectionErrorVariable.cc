@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
- * $Id: ProjectionErrorVariable.cc,v 1.7 2004/06/03 14:36:07 yoshua Exp $
+ * $Id: ProjectionErrorVariable.cc,v 1.8 2004/06/03 14:39:10 yoshua Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -284,7 +284,7 @@ namespace PLearn {
             substract(fw,tj,fw_minus_tj);
             if (normalize_by_neighbor_distance)
               {
-                one_over_norm_T[j] = 1.0/norm(tj);
+                one_over_norm_T[j] = 1.0/pownorm(tj);
                 cost += sumsquare(fw_minus_tj)*one_over_norm_T[j];
               }
             else
