@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ToBagSplitter.cc,v 1.1 2004/03/12 23:29:35 tihocan Exp $ 
+   * $Id: ToBagSplitter.cc,v 1.2 2004/03/20 13:00:19 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -99,9 +99,12 @@ void ToBagSplitter::build_()
     Mat bags_store(dataset->length() / expected_size_of_bag + 1, expected_size_of_bag + 1);
     int num_bag = 0;
     int num_instance = 0;
-    int bag_signal_column = dataset->width() - 1; // Bag signal in the last column.
+    int bag_signal_column = dataset->inputsize() + dataset->targetsize() - 1; // Bag signal in the last target column.
     for (int i = 0; i < dataset->length(); i++) {
       if (num_instance + 1 >= bags_store.width()) {
+        if (num_instance > 10*(expected_size_of_bag+1))
+          PLERROR("ToBagSplitter: found bag size (%d) more than 10 times bigger than expected_size_of_bag (%d)!\n",
+                  num_instance,expected_size_of_bag);
         // Need to resize bags_store.
         bags_store.resize(bags_store.length(), bags_store.width() * 2);
       }
