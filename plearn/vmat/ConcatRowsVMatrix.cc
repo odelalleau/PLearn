@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVMatrix.cc,v 1.13 2004/10/26 16:25:39 tihocan Exp $
+   * $Id: ConcatRowsVMatrix.cc,v 1.14 2004/11/04 14:57:13 tihocan Exp $
    ******************************************************* */
 
 #include "ConcatRowsVMatrix.h"
@@ -118,7 +118,8 @@ void ConcatRowsVMatrix::build_()
 {
   int n = array.size();
   if (n < 1)
-    PLERROR("ConcatRowsVMatrix expects underlying-array of length >= 1, got 0");
+    // No array provided yet: nothing to do.
+    return;
 
   if (only_common_fields && fill_missing)
     PLERROR("In ConcatRowsVMatrix::build_ - You can't set both 'only_common_fields' and 'fill_missing'");
