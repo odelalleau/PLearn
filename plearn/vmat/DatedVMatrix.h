@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: DatedVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
+   * $Id: DatedVMatrix.h,v 1.4 2004/04/05 22:51:58 morinf Exp $
    ******************************************************* */
 
 
@@ -100,7 +100,16 @@ public:
   // and associated date trough year, month and day
   virtual Vec copyRowDataAndDate(int row, int &year, int &month, int &day)=0;
   virtual void copyDateOfRow(int row, int &year, int &month, int &day)=0;
+
+  PLEARN_DECLARE_ABSTRACT_OBJECT(DatedVMatrix);
+
+    static void declareOptions(OptionList &ol);
+    virtual void build();
+private:
+    void build_();
 };
+
+DECLARE_OBJECT_PTR(DatedVMatrix);
 
 } // end of namespace PLearn
 #endif
