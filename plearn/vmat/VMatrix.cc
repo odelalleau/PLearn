@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /********************************************************
-* $Id: VMatrix.cc,v 1.94 2005/02/26 18:29:07 tihocan Exp $
+* $Id: VMatrix.cc,v 1.95 2005/04/06 22:51:54 chapados Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -220,10 +220,17 @@ int VMatrix::fieldIndex(const string& fieldname) const
 int VMatrix::getFieldIndex(const string& fieldname_or_num) const
 {
   int i = fieldIndex(fieldname_or_num);
-  if(i==-1)
+  if(i==-1) {
     i = toint(fieldname_or_num);
+
+    // Now ensure that THE WHOLE FIELD has been converted, because we want
+    // to ensure that stuff that starts with a number but contains other
+    // things is not silently converted to the starting number
+    if (tostring(i) != fieldname_or_num)
+      i = -1;
+  }
   if (i < 0 || i >= width())
-    PLERROR("In VMatrix::getFieldIndex - Asked for an unvalid column number");
+    PLERROR("In VMatrix::getFieldIndex - Asked for an invalid column number");
   return i;
 }
 
