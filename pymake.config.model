@@ -41,6 +41,8 @@ elif platform=='linux-ppc':
     compileflags = '-DLINUXPPC -DBIGENDIAN'
 elif platform=='linux-alpha':
     compileflags = '-DSPARC -DBIGENDIAN'
+elif platform=='linux-ia64':
+    compileflags = '-DLINUX -DLITTLEENDIAN -ftemplate-depth-30'
 elif platform=='sunos5' :
     compileflags = '-DSPARC -DBIGENDIAN'
 elif platform=='irix6'  :
@@ -145,7 +147,7 @@ linkeroptions_tail = '-lstdc++ -lm'
 # List of lists of mutually exclusive pymake options.
 # First option that appears in each group is the default, and is assumed if you don't specify any option from that group
 options_choices = [
-  [ 'g++', 'mpi', 'purify' ],
+  [ 'g++', 'g++3', 'mpi', 'purify' ],
   [ 'dbg', 'opt', 'gprof', 'safeopt', 'checkopt' ],
   [ 'double', 'float' ],
   [ 'throwerrors', 'exiterrors' ], 
@@ -160,6 +162,12 @@ pymakeOption( name = 'g++',
               compiler = 'g++',
               compileroptions = '-Wno-deprecated -pedantic -DUSING_MPI=0 ',
               linker = 'g++' )
+
+pymakeOption( name = 'g++3',
+              description = 'compiling with g++3 (version 3.0), with no MPI support',
+              compiler = 'g++3',
+              compileroptions = '-Wno-deprecated -pedantic -DUSING_MPI=0 ',
+              linker = 'g++3' )
 
 pymakeOption( name = 'mpi',
               description = 'compiling and linking with MPI support (and USING_MPI=1)',
