@@ -1,0 +1,11 @@
+DATE                           = 
+DATETIME                       = 
+DIRPATH                        = /home/dorionc/PLearn/plearn_learners/regressors/test/StackedPCARegression/pytest/expected_results/STACKED_PCA_LINEAR_REGRESSION_2004_11_21_2:45:50
+FILEBASE                       = stacked_pca_regression
+FILEEXT                        = pyplearn
+FILENAME                       = stacked_pca_regression.pyplearn
+FILEPATH                       = /home/dorionc/PLearn/plearn_learners/regressors/test/StackedPCARegression/pytest/expected_results/STACKED_PCA_LINEAR_REGRESSION_2004_11_21_2:45:50/stacked_pca_regression.pyplearn
+HOME                           = /home/dorionc
+TIME                           = 
+data                           = data.amat
+expdir                         = expdir
