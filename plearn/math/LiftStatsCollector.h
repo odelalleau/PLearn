@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.h,v 1.2 2003/11/04 21:24:03 tihocan Exp $
+ * $Id: LiftStatsCollector.h,v 1.3 2003/11/05 17:27:12 tihocan Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -58,19 +58,21 @@ public:
 
 protected:
 
-  Mat n_first_samples;
+  //! Matrix storing the output and target of the samples with highest output,
+  //! as well as all the other data retrieved since the last call to finalize.
+  Mat n_first_updates;
 
   //! Set to true after each call to finalize().
   bool is_finalized;
 
-  //! Number of examples stored in the n_first_samples matrix.
+  //! Number of examples stored in the n_first_updates matrix.
   int nstored;
 
   //! Number of samples seen.
   int nsamples;
 
   //! Number of positive examples that are not retained in the ones with the
-  //! highest output.
+  //! highest output (that is to say the ones in n_first_updates).
   int npos;
 
   //! Number of examples to keep (nsamples * lift_fraction).
@@ -82,9 +84,9 @@ public:
   // * public build options *
   // ************************
 
+  real lift_fraction;
   int output_column;
   int target_column;
-  real lift_fraction;
 
   // ****************
   // * Constructors *
@@ -102,22 +104,14 @@ public:
   // A few overrides to properly save the accumulated information
   virtual void forget();
   virtual void update(const Vec& x, real weight = 1.0);
-//  using inherited::update; // TODO wtf
 
-  //! This finalize override sorts the matrix by selection criterion
-  //! in order to make it easier to compute the  // TODO change comment
+  //! This finalize override makes sure only the n_samples_to_keep samples
+  //! from the matrix n_first_updates with the highest output are left.
   virtual void finalize();
 
   //! In addition to the regular VecStatsCollector statistics, we
-  //! understand:
-  //! - PROFIT_PERCENT[<number>]  Profit made when this % is ceeded to pool
-  //! - PROFIT_THRESH[<number>]   Profit made when all scores greater than
-  //!                             number are ceeded to pool
-  //! - THRESH_PERCENT[<number>]  Threshold corresponding to % ceeded
-  //! - OPTIMAL_PROFIT            Maximum possible profit at optimal % ceeded
-  //! - OPTIMAL_THRESH            Optimal threshold yielding max profit
-  //! - OPTIMAL_PERCENT           % ceeded yielding max profit // TODO change comments
-  virtual double getStat(const string& statspec); // TODO wtf
+  //! understand specific lift statistics (see the .cc).
+  virtual double getStat(const string& statspec);
 
 protected:
 

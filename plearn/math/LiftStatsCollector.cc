@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.cc,v 1.2 2003/11/04 21:24:03 tihocan Exp $
+ * $Id: LiftStatsCollector.cc,v 1.3 2003/11/05 17:27:12 tihocan Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -43,9 +43,6 @@
 
 #include "LiftStatsCollector.h"
 #include "TMat_maths.h"
-//#include "VMat.h"
-//#include "MemoryVMatrix.h" // TODO see what we keep
-//#include "stringutils.h"
 
 namespace PLearn <%
 using namespace std;
@@ -59,9 +56,9 @@ LiftStatsCollector::LiftStatsCollector()
   nstored(0),
   nsamples(0),
   npos(0),
+  lift_fraction(0.1),
   output_column(0),
-  target_column(1),
-  lift_fraction(0.1)
+  target_column(1)
 {
 }
 
@@ -74,20 +71,23 @@ PLEARN_IMPLEMENT_OBJECT(
   "The following statistics can be requested out of getStat():\n"
   "- LIFT = % of positive examples in the first n samples, divided by the % of positive examples in the whole database\n"
   "- LIFT_MAX = best performance that could be achieved, if all positive examples were selected in the first n samples\n"
+  "(where n = lift_fraction * nsamples).\n"
+  "IMPORTANT: if you add more samples after you call finalize() (or get any of the statistics above), some samples may\n"
+  "be wrongly discarded and further statistics may be wrong\n"
   );
 
 void LiftStatsCollector::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "n_first_samples", &LiftStatsCollector::n_first_samples,
-      OptionBase::learntoption,
-      "Matrix storing the output and target of the first n samples with highest output, "
-      "as well as all the other data retrieved since the last call to finalize");
+
+  // TODO implement a sign trick
+  declareOption(ol, "lift_fraction", &LiftStatsCollector::lift_fraction, OptionBase::buildoption,
+      "    the % of samples to consider (default = 0.1)\n");
 
   declareOption(ol, "output_column", &LiftStatsCollector::output_column, OptionBase::buildoption,
-      "    the column in which is the output value\n");
+      "    the column in which is the output value (default = 0)\n");
 
   declareOption(ol, "target_column", &LiftStatsCollector::target_column, OptionBase::buildoption,
-      "    the column in which is the target value\n");
+      "    the column in which is the target value (default = 1)\n");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -107,13 +107,6 @@ void LiftStatsCollector::build()
 ////////////
 void LiftStatsCollector::build_()
 {
-/*  // We do not use resize on purpose, so
-  // that the previous result Vec does not get overwritten
-  result = Vec(2);
-  const int initial_length = 1000;
-  output_and_pos.resize(initial_length, 2);  // 1 output + 1 pos
-  targets.resize(initial_length);
-  nsamples = 0; */ // TODO adapt to new framework
 }
 
 /////////////////
@@ -123,9 +116,10 @@ real LiftStatsCollector::computeLift() {
   if (!is_finalized)
     finalize();
   // Compute statistics.
-  int npos_in_n_first = (int) sum(n_first_samples.column(1));
-  real first_samples_perf = npos_in_n_first/n_samples_to_keep;
-  real targets_perf = (npos_in_n_first + npos) / nsamples;
+
+  int npos_in_n_first = (int) sum(n_first_updates.column(1));
+  real first_samples_perf = npos_in_n_first/ (real) n_samples_to_keep;
+  real targets_perf = (npos_in_n_first + npos) / (real) nsamples;
   real lift = first_samples_perf/targets_perf*100.0;
   return lift;
 }
@@ -136,11 +130,11 @@ real LiftStatsCollector::computeLift() {
 real LiftStatsCollector::computeLiftMax() {
   if (!is_finalized)
     finalize();
-  int npos_in_n_first = (int) sum(n_first_samples.column(1));
+  int npos_in_n_first = (int) sum(n_first_updates.column(1));
   real nones = npos_in_n_first + npos;
   real max_first_samples_perf =
     MIN(nones,(real)n_samples_to_keep) / (real) n_samples_to_keep;
-  real targets_perf = (npos_in_n_first + npos) / nsamples;
+  real targets_perf = (npos_in_n_first + npos) / (real) nsamples;
   real max_lift = max_first_samples_perf/targets_perf*100.0;
   return max_lift;
 }
@@ -150,27 +144,34 @@ real LiftStatsCollector::computeLiftMax() {
 //////////////
 void LiftStatsCollector::finalize()
 {
-  n_first_samples.resize(nstored,2); // get rid of the extra space allocated.
+  n_first_updates.resize(nstored,2); // get rid of the extra space allocated.
 
   n_samples_to_keep = int(lift_fraction*nsamples);
-//  int n_last_samples = nsamples - n_first_samples; // TODO remove that
-  // Make sure the highest ouputs are in the last n_samples_to_keep elements
-  // of n_first_samples
-  selectAndOrder(n_first_samples, nstored - n_samples_to_keep); // TODO clear the crap
 
-  // Count the number of positive examples in the lowest outputs.
-  for (int i = 0; i < nstored - n_samples_to_keep; i++) {
-    if (n_first_samples(i,1) == 1) {
-      npos++;  // TODO initialize npos
+  if (nstored > n_samples_to_keep) {
+    // If not, then no change has to be made to n_first_updates.
+
+    // Make sure the highest ouputs are in the last n_samples_to_keep elements
+    // of n_first_updates.
+    if (n_samples_to_keep > 0) {
+      selectAndOrder(n_first_updates, nstored - n_samples_to_keep);
     }
-  }
+
+    // Count the number of positive examples in the lowest outputs.
+    for (int i = 0; i < nstored - n_samples_to_keep; i++) {
+      if (n_first_updates(i,1) == 1) {
+        npos++;
+      }
+    }
   
-  // Clear the lowest outputs, that are now useless.
-  for (int i = 0; i < n_samples_to_keep; i++) {
-    n_first_samples(i,0) = n_first_samples(i + nstored - n_samples_to_keep, 0);
-    n_first_samples(i,1) = n_first_samples(i + nstored - n_samples_to_keep, 1);
+    // Clear the lowest outputs, that are now useless.
+    for (int i = 0; i < n_samples_to_keep; i++) {
+      n_first_updates(i,0) = n_first_updates(i + nstored - n_samples_to_keep, 0);
+      n_first_updates(i,1) = n_first_updates(i + nstored - n_samples_to_keep, 1);
+    }
+    n_first_updates.resize(n_samples_to_keep, 2);
+    nstored = n_samples_to_keep;
   }
-  n_first_samples.resize(n_samples_to_keep, 2);
 
   inherited::finalize();
   is_finalized = true;
@@ -184,8 +185,9 @@ void LiftStatsCollector::forget()
   is_finalized = false;
   nstored = 0;
   npos = 0;
-  n_first_samples.resize(0,0);
-  n_first_samples.resize(1000,2);
+  nsamples = 0;
+  n_first_updates.resize(0,0);
+  n_first_updates.resize(1000,2);
   inherited::forget();
 }
 
@@ -212,10 +214,11 @@ double LiftStatsCollector::getStat(const string& statspec)
 /////////////////////////////////
 void LiftStatsCollector::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
+  cout << "In LiftStatsCollector::makeDeepCopyFromShallowCopy Warning, this function was not"
+    " tested properly, maybe n_first_updates should be declared as an option... If it works,"
+    " please remove this warning.";
   inherited::makeDeepCopyFromShallowCopy(copies);
-
-//  deepCopyField(all_updates, copies);   // TODO see if we use those fields
-//  deepCopyField(sorted_updates, copies);
+  deepCopyField(n_first_updates, copies);
 }
 
 ////////////
@@ -223,11 +226,11 @@ void LiftStatsCollector::makeDeepCopyFromShallowCopy(map<const void*, void*>& co
 ////////////
 void LiftStatsCollector::update(const Vec& x, real w)
 {
-  if (nstored == n_first_samples.length()) {
-    n_first_samples.resize(10*n_first_samples.length(), 2);
+  if (nstored == n_first_updates.length()) {
+    n_first_updates.resize(MAX(1000,10*n_first_updates.length()), 2);
   }
-  n_first_samples(nstored, 0) = x[output_column];
-  n_first_samples(nstored, 1) = x[target_column];
+  n_first_updates(nstored, 0) = x[output_column];
+  n_first_updates(nstored, 1) = x[target_column];
   if (x[target_column] != 0 && x[target_column] != 1) {
     PLERROR("In LiftStatsCollector::update Target must be 0 or 1 !");
   }
@@ -238,5 +241,4 @@ void LiftStatsCollector::update(const Vec& x, real w)
   inherited::update(x,w);
 }
 
- // TODO make sure we deleted all the useless stuff
 %> // end of namespace PLearn
