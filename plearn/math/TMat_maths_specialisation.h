@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_specialisation.h,v 1.6 2004/02/26 07:18:26 nova77 Exp $
+   * $Id: TMat_maths_specialisation.h,v 1.7 2004/02/26 18:52:25 nova77 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -387,7 +387,8 @@ inline real dot_product(real s,real* x,real* y,int n)
 	return s;
 }
 
-#if defined(SGI) || defined(WIN32)
+// norman: sse is not supported in WIN32
+#if defined(SGI) && !defined(WIN32)
 #include "sse.h"
 #endif //ndef SGI
 
