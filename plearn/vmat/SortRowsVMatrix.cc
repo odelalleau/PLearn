@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SortRowsVMatrix.cc,v 1.8 2004/09/27 13:33:57 tihocan Exp $
+   * $Id: SortRowsVMatrix.cc,v 1.9 2004/10/29 18:38:50 tihocan Exp $
    ******************************************************* */
 
 #include "SortRowsVMatrix.h"
@@ -117,7 +117,7 @@ void SortRowsVMatrix::build_()
       // Fill first column with the column to sort.
       to_sort.column(0) << source.subMatColumns(sort_columns[0], 1);
       // Fill 2nd column with indices.
-      to_sort.column(1) << Vec(0, to_sort.length(), 1);
+      to_sort.column(1) << Vec(0, to_sort.length() - 1, 1);
       // Perform the sort.
       PLearn::sortRows(to_sort, 0, increasing_order);
       // Get the indices.
