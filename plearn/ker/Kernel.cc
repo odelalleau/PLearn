@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.29 2004/06/16 18:28:18 tihocan Exp $
+   * $Id: Kernel.cc,v 1.30 2004/07/02 13:20:11 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -155,7 +155,12 @@ void Kernel::addDataForKernelMatrix(const Vec& newRow)
 // evaluate //
 //////////////
 real Kernel::evaluate_i_j(int i, int j) const {
-  return evaluate(data->getSubRow(i, 0, data_inputsize), data->getSubRow(i, 0, data_inputsize));
+  static Vec x_i, x_j;
+  x_i.resize(data_inputsize);
+  x_j.resize(data_inputsize);
+  data->getSubRow(i, 0, x_i);
+  data->getSubRow(j, 0, x_j);
+  return evaluate(x_i, x_j);
 }
 
 
