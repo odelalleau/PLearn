@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsVMatrix.cc,v 1.11 2004/03/23 23:08:08 morinf Exp $
+   * $Id: SelectRowsVMatrix.cc,v 1.12 2004/03/25 20:35:51 tihocan Exp $
    ******************************************************* */
 
 #include "SelectRowsVMatrix.h"
@@ -126,11 +126,13 @@ void SelectRowsVMatrix::build()
 void SelectRowsVMatrix::build_()
 {
   length_ = indices.length();
-  width_ = distr->width();
-  inputsize_ = distr->inputsize();
-  targetsize_ = distr->targetsize();
-  weightsize_ = distr->weightsize();
-  fieldinfos = distr->fieldinfos;
+  if (distr) {
+    width_ = distr->width();
+    inputsize_ = distr->inputsize();
+    targetsize_ = distr->targetsize();
+    weightsize_ = distr->weightsize();
+    fieldinfos = distr->fieldinfos;
+  }
 }
 
 //////////

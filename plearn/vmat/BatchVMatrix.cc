@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BatchVMatrix.cc,v 1.3 2004/02/20 21:14:29 chrish42 Exp $
+   * $Id: BatchVMatrix.cc,v 1.4 2004/03/25 20:34:36 tihocan Exp $
    ******************************************************* */
 
 #include "BatchVMatrix.h"
@@ -89,13 +89,15 @@ void BatchVMatrix::build()
 ////////////
 void BatchVMatrix::build_()
 {
-  width_ = m->width();
-  length_ = m->length() * 2;
-  fieldinfos = m->getFieldInfos();
-  last_batch = (m->length()-1) / batch_size;
-  last_batch_size = m->length() % batch_size;
-  if (last_batch_size == 0)
-    last_batch_size = batch_size;
+  if (m) {
+    width_ = m->width();
+    length_ = m->length() * 2;
+    fieldinfos = m->getFieldInfos();
+    last_batch = (m->length()-1) / batch_size;
+    last_batch_size = m->length() % batch_size;
+    if (last_batch_size == 0)
+      last_batch_size = batch_size;
+  }
 }
 
 /////////
