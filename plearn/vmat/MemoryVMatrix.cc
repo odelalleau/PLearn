@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.cc,v 1.22 2004/09/14 16:04:39 chrish42 Exp $
+   * $Id: MemoryVMatrix.cc,v 1.23 2004/09/16 21:03:22 chapados Exp $
    ******************************************************* */
 
 #include "MemoryVMatrix.h"
@@ -139,7 +139,8 @@ void MemoryVMatrix::getSubRow(int i, int j, Vec v) const
     PLERROR("MemoryVMatrix::getSubRow(int i, int j, Vec v) OUT OF BOUNDS. "
             "j=%d, v.length()=%d, width()=%d", j, v.length(), width());
 #endif
-  v.copyFrom(data[i]+j, v.length());
+  if (v.length() > 0)
+    v.copyFrom(data[i]+j, v.length());
 }
 
 ////////////
@@ -147,7 +148,8 @@ void MemoryVMatrix::getSubRow(int i, int j, Vec v) const
 ////////////
 void MemoryVMatrix::getRow(int i, Vec v) const
 {
-  v.copyFrom(data[i], width_);
+  if (v.length() > 0)
+    v.copyFrom(data[i], width_);
 }
 
 void MemoryVMatrix::getMat(int i, int j, Mat m) const
@@ -160,14 +162,18 @@ void MemoryVMatrix::putSubRow(int i, int j, Vec v)
     PLERROR("MemoryVMatrix::putSubRow(int i, int j, Vec v) OUT OF BOUNDS. "
             "j=%d, v.length()=%d, width()=%d", j, v.length(), width());
 #endif
-  v.copyTo(data[i]+j);
+  if (v.length() > 0)
+    v.copyTo(data[i]+j);
 }
 
 void MemoryVMatrix::fill(real value)
 { data.fill(value); }
 
 void MemoryVMatrix::putRow(int i, Vec v)
-{ v.copyTo(data[i]); }
+{
+  if (v.length() > 0)
+    v.copyTo(data[i]);
+}
 
 void MemoryVMatrix::putMat(int i, int j, Mat m)
 { data.subMat(i,j,m.length(),m.width()) << m; }
@@ -223,12 +229,15 @@ real MemoryVMatrix::dot(int i, const Vec& v) const
   if(v.length()>width())
     PLERROR("In MemoryVMatrix::dot length of vector v is greater than VMat's width");
 #endif
-  real* v1 = data.rowdata(i);
-  real* v2 = v.data();
-  real res = 0.;
-  for(int k=0; k<v.length(); k++)
-    res += v1[k]*v2[k];
-  return res;
+  if (v.length() > 0) {
+    real* v1 = data.rowdata(i);
+    real* v2 = v.data();
+    real res = 0.;
+    for(int k=0; k<v.length(); k++)
+      res += v1[k]*v2[k];
+    return res;
+  }
+  return 0.0;                                // in the case of a null vector
 }
 
 } // end of namespcae PLearn
