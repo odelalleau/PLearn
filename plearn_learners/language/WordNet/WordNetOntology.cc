@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.cc,v 1.29 2004/04/02 19:27:56 kermorvc Exp $
+   * $Id: WordNetOntology.cc,v 1.30 2004/05/11 20:56:37 tihocan Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -105,8 +105,9 @@ WordNetOntology::WordNetOntology(string voc_file,
 
 void WordNetOntology::init(bool the_differentiate_unknown_words)
 {
-  if (wninit() != 0)
-    PLERROR("WordNet init error");
+  if (wninit() != 0) {
+//    PLERROR("WordNet init error");
+  }
 
   noun_count = 0;
   verb_count = 0;
