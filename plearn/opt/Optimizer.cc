@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.cc,v 1.24 2004/02/20 21:11:48 chrish42 Exp $
+   * $Id: Optimizer.cc,v 1.25 2004/03/09 18:30:13 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -86,7 +86,7 @@ void Optimizer::build_()
     proppath = propagationPath(params, cost);
   }
   else
-    proppath = propagationPath(params, update_for_measure&(VarArray)cost);
+    proppath = propagationPath(params, update_for_measure & (VarArray) cost);
   VarArray path_from_all_sources_to_direct_parents = propagationPathToParentsOfPath(params, cost);
   path_from_all_sources_to_direct_parents.fprop();
   int n = params.nelems();
@@ -170,12 +170,21 @@ void Optimizer::setVMatOption(const string& optionname, VMat value)
 
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Optimizer, "ONE LINE DESCR", "NO HELP");
 
+//! To use varDeepCopyField.
+extern void varDeepCopyField(Var& field, CopiesMap& copies);
+
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void Optimizer::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(cost, copies);
+  varDeepCopyField(cost, copies);
   deepCopyField(params, copies);
-  //deepCopyField(measurers, copies);
+  deepCopyField(update_for_measure, copies);
+  deepCopyField(temp_grad, copies);
+  // The line below was commented, but there was no explaination why.
+  deepCopyField(measurers, copies);
   build();
 }
 
