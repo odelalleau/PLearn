@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.cc,v 1.11 2004/07/21 20:25:38 tihocan Exp $ 
+   * $Id: AddCostToLearner.cc,v 1.12 2004/08/13 13:54:57 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -316,8 +316,9 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
   }
 
   if (check_output_consistency) {
+    real out;
     for (int i = 0; i < sub_learner_output.length(); i++) {
-      real out = sub_learner_output[i];
+      out = sub_learner_output[i];
       if (out < output_min) {
         PLERROR("In AddCostToLearner::computeCostsFromOutputs - Sub-learner output (%f) is lower than %f", out, output_min);
       }
