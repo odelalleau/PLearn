@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatIO.cc,v 1.4 2004/02/29 16:44:05 nova77 Exp $
+   * $Id: MatIO.cc,v 1.5 2004/03/03 20:32:32 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -159,7 +159,7 @@ void loadVec(const string& file_name, TVec<double>& vec)
 
 void savePVec(const string& filename, const TVec<float>& vec)
 {
-  FILE* f = fopen(filename.c_str(),"w");
+  FILE* f = fopen(filename.c_str(),"wb");
   if (!f)
     PLERROR("In savePVec, could not open file %s for writing",filename.c_str());
 
@@ -192,7 +192,7 @@ void savePVec(const string& filename, const TVec<float>& vec)
 
 void savePVec(const string& filename, const TVec<double>& vec)
 {
-  FILE* f = fopen(filename.c_str(),"w");
+  FILE* f = fopen(filename.c_str(),"wb");
   if (!f)
     PLERROR("In savePVec, could not open file %s for writing",filename.c_str());
 
@@ -328,7 +328,7 @@ void loadPVec(const string& filename, TVec<double>& vec)
 
 void savePMat(const string& filename, const TMat<float>& mat)
 {
-  FILE* f = fopen(filename.c_str(),"w");
+  FILE* f = fopen(filename.c_str(),"wb");
   if (!f)
     PLERROR("In savePMat, could not open file %s for writing",filename.c_str());
 
@@ -360,7 +360,7 @@ void savePMat(const string& filename, const TMat<float>& mat)
 
 void savePMat(const string& filename, const TMat<double>& mat)
 {
-  FILE* f = fopen(filename.c_str(),"w");
+  FILE* f = fopen(filename.c_str(),"wb");
   if (!f)
     PLERROR("In savePMat, could not open file %s for writing",filename.c_str());
 
