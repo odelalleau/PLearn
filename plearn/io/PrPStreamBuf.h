@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrPStreamBuf.h,v 1.6 2005/01/28 22:36:30 chrish42 Exp $ 
+   * $Id: PrPStreamBuf.h,v 1.7 2005/01/31 15:06:04 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Christian Hudon
@@ -55,7 +55,7 @@ namespace PLearn {
     NSPR library. */
 class PrPStreamBuf: public PStreamBuf
 {
-  friend class PLearn::Poll;
+//  friend class PLearn::Poll;
   
 private:
   
