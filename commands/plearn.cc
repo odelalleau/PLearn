@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.9 2002/10/25 05:37:42 plearner Exp $
+   * $Id: plearn.cc,v 1.10 2002/10/25 06:49:18 plearner Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -57,7 +57,7 @@
 #include "LocallyWeightedDistribution.h"
 #include "NeuralNet.h"
 #include "GradientOptimizer.h"
-#include "AutoStepGradientOptimizer.h"
+// #include "AutoStepGradientOptimizer.h"
 
 #include "ConstantModel.h"
 #include "MultiLearner.h"
