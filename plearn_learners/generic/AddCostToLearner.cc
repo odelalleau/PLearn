@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.cc,v 1.8 2004/05/07 20:24:21 tihocan Exp $ 
+   * $Id: AddCostToLearner.cc,v 1.9 2004/05/10 13:02:39 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -112,9 +112,10 @@ void AddCostToLearner::declareOptions(OptionList& ol)
 
   declareOption(ol, "costs", &AddCostToLearner::costs, OptionBase::buildoption,
       "The costs to be added:\n"
-      " - 'lift_output', used to compute the lift cost\n"
-      " - 'cross_entropy', the cross entropy cost t*log(o) + (1-t)*log(1-o)\n"
-      " - 'mse', the mean squared error (o - t)^2");
+      " - 'lift_output': used to compute the lift cost\n"
+      " - 'cross_entropy': t*log(o) + (1-t)*log(1-o)\n"
+      " - 'mse': the mean squared error (o - t)^2\n"
+      " - 'squared_norm_reconstruction_error': | ||i||^2 - ||o||^2 |");
 
   declareOption(ol, "force_output_to_target_interval", &AddCostToLearner::force_output_to_target_interval, OptionBase::buildoption,
       "If set to 1 and 'rescale_output' is also set to 1, then the scaled output\n"
@@ -183,12 +184,11 @@ void AddCostToLearner::build_()
   }
   for (int i = 0; i < n; i++) {
     string c = costs[i];
+    if (display) cout << c << " ";
     if (c == "lift_output") {
-      if (display) cout << "lift_output ";
       // Output should be positive.
       output_min = max(output_min, real(0));
     } else if (c == "cross_entropy") {
-      if (display) cout << "cross_entropy ";
       // Output should be in [0,1].
       output_min = max(output_min, real(0));
       output_max = min(output_max, real(1));
@@ -200,9 +200,9 @@ void AddCostToLearner::build_()
         cross_entropy_prop = propagationPath(cross_entropy_var);
       }
     } else if (c == "mse") {
-      if (display) cout << "mse ";
+    } else if (c == "squared_norm_reconstruction_error") {
     } else {
-      PLERROR("In AddCostToLearner::build_ - Invalid cost requested");
+      PLERROR("In AddCostToLearner::build_ - Invalid cost requested (make sure you are using the new costs syntax)");
     }
   }
   if (n > 0 && display) {
@@ -330,6 +330,7 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
 
   for (int i = 0; i < this->costs.length(); i++) {
     string c = this->costs[i];
+    int ind_cost = i + n_original_costs;
     if (c == "lift_output") {
       // TODO Using a LiftOutputVariable would be better.
 #ifdef BOUNDCHECK
@@ -347,9 +348,9 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
         }
 #endif
         if (desired_target[0] == 1) {
-          costs[i + n_original_costs] = sub_learner_output[0];
+          costs[ind_cost] = sub_learner_output[0];
         } else {
-          costs[i + n_original_costs] = - sub_learner_output[0];
+          costs[ind_cost] = - sub_learner_output[0];
         }
       }
     } else if (c == "cross_entropy") {
@@ -360,9 +361,13 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
       }
 #endif
       cross_entropy_prop.fprop();
-      costs[i + n_original_costs] = cross_entropy_var->valuedata[0];
+      costs[ind_cost] = cross_entropy_var->valuedata[0];
     } else if (c == "mse") {
-      costs[i + n_original_costs] = powdistance(desired_target, sub_learner_output);
+      costs[ind_cost] = powdistance(desired_target, sub_learner_output);
+    } else if (c == "squared_norm_reconstruction_error") {
+      PLWARNING("In AddCostToLearner::computeCostsFromOutputs - 'squared_norm_reconstruction_error'"
+          " has not been tested yet, please remove this warning if it works correctly");
+      costs[ind_cost] = abs(pownorm(input, 2) - pownorm(sub_learner_output, 2));
     } else {
       PLERROR("In AddCostToLearner::computeCostsFromOutputs - Unknown cost");
     }
