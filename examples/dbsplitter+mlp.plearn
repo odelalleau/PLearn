@@ -2,7 +2,7 @@
 
 $DEFINE{expdir}{expdir-dbsplitter+mlp}
 
-$DEFINE{statmask}{[ "NLL*" "class_error*" ] [ "E[*]" ] [ "test1.*" "test2.*" ] [ "E[*]" "STDERROR[*]" ] }
+$DEFINE{statmask}{[ "NLL" "class_error" ] [ "E[*]" ] [ "test1.*" "test2.*" ] [ "E[*]" "STDERROR[*]" ] }
 
 ShellScript( 
   # TVec< string >: The commands to be executed at run time.
