@@ -63,7 +63,7 @@ ostream& operator<<(ostream& out,const StringTable& st)
       TVec<string> row=st.data(j);      
       out<<"   ";
       for(int i=0;i<st.width();i++)
-        out<<left(row[i],colsiz[i])<<" ; ";
+        out<<left(row[i],colsiz[i])<<";";
       out<<"\n";
     }
 
@@ -119,7 +119,9 @@ StringTable::StringTable(const string & filename)
   int nrows= countNonBlankLinesOfFile(filename);
   string str;
   ifstream in(filename.c_str());
-  in>>str;
+  in.ignore(2);
+  if(in.peek()==' ')
+    in.ignore(1);
   getline(in,str);
   fieldnames=split(str);
   data.resize(nrows, fieldnames.size());
@@ -127,10 +129,23 @@ StringTable::StringTable(const string & filename)
   getline(in,str);
   while(removeblanks(str)!="")
     {
-      vector<string> line=split(str,";");  
-      //line.pop_back(); // last string found is garbage *** NO!
+/*
+      vector<string> line;
+      unsigned int pos,lpos=0;
+      while((pos=str.find(";",lpos))!=string::npos)
+      {
+        line.push_back(str.substr(lpos,pos-lpos));
+        lpos=pos+1;
+      }
+      line.push_back(str.substr(lpos,str.size()-lpos));
       if(line.size()!=fieldnames.size())
         PLERROR("in row %i : elements (%i)  mismatch number of fields (%i)",rnum,line.size(),fieldnames.size());
+*/
+      vector<string> line=split(str,";");  
+      //line.pop_back(); // last string found is garbage *** NO, not true...!
+      if(line.size()!=fieldnames.size())
+        PLERROR("in row %i : elements (%i)  mismatch number of fields (%i)",rnum,line.size(),fieldnames.size());
+
       for(unsigned int i= 0; i < line.size(); ++i)
         data(rnum,i)= line[i];
       ++rnum;

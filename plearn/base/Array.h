@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array.h,v 1.10 2003/03/18 18:29:37 ducharme Exp $
+   * $Id: Array.h,v 1.11 2003/03/19 22:49:16 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -147,6 +147,15 @@ class Array: public TVec<T>
       for(int i=0; i<length_; i++)
         out << array[i] << endl;
     }
+
+  int findFirstOccurence(const T& elem)
+    {
+      for(int i=0;i<array_size;i++)
+        if(elem==array[i])
+          return i;
+      return -1;
+    }
+
 
     // DEPRECATED! Call PStream& << arr instead (This is for backward compatibility only)
     void write(ostream &out_) const

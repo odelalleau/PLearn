@@ -34,21 +34,65 @@
 // library, go to the PLearn Web site at www.plearn.org 
 
 /* *******************************************************      
-   * $Id: RealMapping.cc,v 1.5 2002/11/05 16:30:32 zouave Exp $
+   * $Id: RealMapping.cc,v 1.6 2003/03/19 22:49:17 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "RealMapping.h"
 #include "fileutils.h"
+#include <algorithm>
 
 namespace PLearn <%
 using namespace std;
 
-
-
-
-
   IMPLEMENT_NAME_AND_DEEPCOPY(RealMapping);
+
+  string RealRange::getString() const 
+  {
+    char s[50];
+    sprintf(s,"%c%f %f%c",leftbracket,low,high,rightbracket);
+    return s;
+  }  
+
+  bool RealRange::operator==(const RealRange& rr) const
+  {
+    return (rr.low == low && 
+            rr.high == high && 
+            rr.leftbracket == leftbracket && 
+            rr.rightbracket == rightbracket);
+  }
+
+  bool RealMapping::operator==(const RealMapping& rm) const
+  {
+    return (rm.mapping == mapping && 
+             (rm.missing_mapsto == missing_mapsto || (isnan(missing_mapsto)&&isnan(rm.missing_mapsto))) &&
+             rm.keep_other_as_is == keep_other_as_is &&
+            (rm.other_mapsto == other_mapsto || (isnan(other_mapsto)&&isnan(rm.other_mapsto))));
+  }
+
+  bool operator<(RealMapping::single_mapping_t a, RealMapping::single_mapping_t b)
+  {
+    return a.first<b.first;
+  }
+
+  int RealMapping::maxMappedToValue()
+  {
+    real max = -9999999;
+    mapping_t::iterator it = mapping.begin();
+    mapping_t::iterator itend = mapping.end();
+    for(; it!=itend; ++it)
+      if(it->second > max)
+        max = it->second;
+    return max;
+  }    
+
+  void RealMapping::buildOrderedMapping()
+  { 
+    o_mapping.resize(0);
+    for(iterator it = begin();it!=end();++it)
+      o_mapping.push_back(*it);
+    sort(o_mapping.begin(),o_mapping.end());
+  }
 
   real RealMapping::map(real val) const
   {
@@ -147,42 +191,42 @@ using namespace std;
             in >> val;
             addMapping(r,val);
           }
-	else if (isdigit(c) || c == '-' || c == '.')
-	  {
-	    real val0, val;
-	    in >> val0 >> ws;
-	    r= RealRange('[', val0, val0, ']');
-            if(in.get()!='-' || in.get()!='>')
-                PLERROR("Expecting -> after range specification ( range syntax example : ]100 200] -> 10 )");
-            in >> val;
-            addMapping(r,val);	    
-	  }
-       else 
+        else if (isdigit(c) || c == '-' || c == '.')
+        {
+          real val0, val;
+          in >> val0 >> ws;
+          r= RealRange('[', val0, val0, ']');
+          if(in.get()!='-' || in.get()!='>')
+            PLERROR("Expecting -> after range specification ( range syntax example : ]100 200] -> 10 )");
+          in >> val;
+          addMapping(r,val);	    
+        }
+        else 
+        {
+          string str;
+          getline(in,str,'-');
+          str=upperstring(removeblanks(str));
+          if(str=="MISSING")
           {
-            string str;
-            getline(in,str,'-');
-            str=removeblanks(str);
-            if(str=="MISSING")
-              {
-                if(in.get()!='>')
-                  PLERROR("Expecting -> after MISSING");
-                real val;
-                in >> val;
-                setMappingForMissing(val);
-              }
-            else if (str=="OTHER")
-              {
-                if(in.get()!='>')
-                  PLERROR("Expecting -> after OTHER");
-                real val;
-                in >> val;
-                setMappingForOther(val);
-              }
-            else PLERROR("Unexpected string in mapping definition : %s",str.c_str());
+            if(in.get()!='>')
+              PLERROR("Expecting -> after MISSING");
+            real val;
+            in >> val;
+            setMappingForMissing(val);
           }
+          else if (str=="OTHER")
+          {
+            if(in.get()!='>')
+              PLERROR("Expecting -> after OTHER");
+            real val;
+            in >> val;
+            setMappingForOther(val);
+          }
+          else PLERROR("Unexpected string in mapping definition : %s",str.c_str());
+        }
       }
     in.get();
-
+    
     if(uses_headers)
       {
         in >> ws;//skipBlanks(in);

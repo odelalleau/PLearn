@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Storage.h,v 1.4 2002/12/05 21:30:52 plearner Exp $
+   * $Id: Storage.h,v 1.5 2003/03/19 22:49:17 jkeable Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -305,6 +305,8 @@ public:
       //!  return the completed deep_copy
       return deep_copy;
     }
+
+  T& operator[](int idx) const {return data[idx];}
 
   inline void push_back(const T& x)
   {

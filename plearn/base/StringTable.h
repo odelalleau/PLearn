@@ -53,13 +53,31 @@ class StringTable
   map<string, int> rev_fn;   // maps fieldnames to column numbers
 
 public:
+  /* construct a string table from a '.strtable' file
+     File format is:
+
+     #size: length width [optionnal]
+     #: fieldname1 fieldname2 ... [optionnal]
+     f1;f2;f3
+     f1;f2;f3
+     ...
+     
+     e.g:
+     #:date bench machine compiler compilerOpt custCompilation custExecution benchOpt userTime realTime result
+     2002/08/20 15:43:47;nearest;P3;pymake;-opt;;;-nrepeat 1 -ndata 1000 -nfeat 50;1.11;1.11;3.08696
+     2002/08/20 15:43:47;nearest;P3;pymake;-opt;;;-nrepeat 1 -ndata 1000 -nfeat 100;2.13;2.13;8.36876
+     ...
+  */
+
+
   StringTable(const string & filename);
   StringTable();
-
   inline int length() const {return data.length();}
   inline int width() const {return data.width();}
   inline string& operator()(int i,int j){return data(i,j);}
   inline TVec<string> operator()(int i)const {return data(i);}
+  // next 2 functions are to construct a string table on the fly
+  // (don't bother with them if you're only loading .strtable files)
   void appendRow(const list<pair<string,string> >& row);
   void declareFields(const list<pair<string,string> > &row);
   friend ostream& operator<<(ostream& out,const StringTable& st);

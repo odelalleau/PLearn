@@ -185,7 +185,7 @@ public:
 };
 template <> struct TinyVectorTrait<int> {
 public:
-  static const unsigned int Missing;
+  static const int Missing;
 };
 
   
@@ -325,7 +325,8 @@ void TinyVector<T,N,TTrait>::assign(size_type n, const T& val)
 template <class T, unsigned N, class TTrait>
 TinyVector<T,N,TTrait>::TinyVector()
 {
-  assign(size_type(N), TTrait::Missing);
+  assign(static_cast<size_type>(N), 
+         static_cast<const T&>(TTrait::Missing));
 }
 
 template <class T, unsigned N, class TTrait>
@@ -368,7 +369,8 @@ typename TinyVector<T,N,TTrait>::size_type
 TinyVector<T,N,TTrait>::size() const
 {
   difference_type p = N-1;
-  while (p >= 0 && arr[p] == TTrait::Missing)
+
+  while (p >= 0 && arr[p] == static_cast<T>(TTrait::Missing))
     p--;
   return p+1;
 }

@@ -50,7 +50,7 @@ template <>
 const unsigned int TinyVectorTrait<unsigned int>::Missing = UINT_MAX;
 
 template <> 
-const unsigned int TinyVectorTrait<int>::Missing = UINT_MAX;
+const int TinyVectorTrait<int>::Missing = INT_MAX;
 
 
 %> // end of namespace PLearn

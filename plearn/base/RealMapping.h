@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: RealMapping.h,v 1.7 2002/11/05 16:30:33 zouave Exp $
+   * $Id: RealMapping.h,v 1.8 2003/03/19 22:49:17 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -62,7 +62,7 @@ class RealRange
     RealRange(): // default construvtor
       low(0), high(0), leftbracket(']'), rightbracket('[')
     {}
-      
+     
 
     RealRange(char leftbracket_, real low_, real high_, char rightbracket_):
       low(low_), high(high_), leftbracket(leftbracket_), rightbracket(rightbracket_)
@@ -85,6 +85,8 @@ class RealRange
     void read(istream& in)
     { in >> leftbracket >> low >> high >> rightbracket; checkbrackets(); }
 
+
+    string getString() const;
     
     //! Compare RealRange and real:
     //! the relation is either:
@@ -95,24 +97,37 @@ class RealRange
     inline bool contains(real val) const
     { return (val>=low) && (val<=high) && (val!=low || leftbracket=='[') && (val!=high || rightbracket==']'); }
 
-    inline bool operator<(real x) const
-    { return high < x || high == x && rightbracket == '['; }
+//     inline bool operator<(real x) const
+//     { return high < x || high == x && rightbracket == '['; }
+
+//     inline bool operator>(real x) const
+//     { return low > x || low == x && leftbracket == ']'; }
+
+/*    inline bool operator<(real x) const
+    { return low < x || high == x && rightbracket == '['; }
 
     inline bool operator>(real x) const
     { return low > x || low == x && leftbracket == ']'; }
 
+*/
     //! Compare 2 RealRanges:
     //! the relation is either:
     //!   Range0 < Range1, if higher bound 0 < lower bound 1
     //!   Range0 > Range1, if lower bound 0 > higher bound 1
     //! Any other case is undefined.  Ranges should not overlap.
+/*
+     inline bool operator<(const RealRange& x) const
+     { return high < x.low || high == x.low && rightbracket == x.leftbracket; }
 
+     inline bool operator>(const RealRange& x) const
+     { return low > x.high || low == x.high && leftbracket == x.rightbracket; }
+*/
+
+    // modified by Julien
     inline bool operator<(const RealRange& x) const
-    { return high < x.low || high == x.low && rightbracket == x.leftbracket; }
+      { return low < x.low || (low == x.low && leftbracket == '[' && x.leftbracket == ']'); }
 
-    inline bool operator>(const RealRange& x) const
-    { return low > x.high || low == x.high && leftbracket == x.rightbracket; }
-
+    bool operator==(const RealRange& rr) const;
   };
 
   inline void write(ostream& out, const RealRange& range) { range.write(out); }
@@ -123,11 +138,16 @@ class RealRange
   class RealMapping: public Object
   {
   public:
-    //    typedef TVec< pair<RealRange, real> > mapping_t;
+    typedef pair<RealRange, real> single_mapping_t;
+    typedef TVec< single_mapping_t > ordered_mapping_t;
     typedef map<RealRange, real> mapping_t;
     typedef mapping_t::iterator iterator;
     typedef mapping_t::const_iterator const_iterator;
     mapping_t mapping; // defines mapping from real ranges to values
+    // o_mapping contains the same mappings as 'mapping', but they are 
+    // ordered so that the lower limits of ranges are in ascending order
+    // NOTE : before any access, it must be created with a call to buildOrderedMapping()
+    ordered_mapping_t o_mapping; 
     real missing_mapsto; // value to which to map missing values (can be missing value)
     bool keep_other_as_is; // if true, values not in mapping are left as is, otherwise they're mappred to other_mapsto
     real other_mapsto; // value to which to map values not inmapping, if keep_other_as_is is false 
@@ -147,6 +167,7 @@ class RealRange
     //! Removes all entries in mapping.  Does not change other params.
     inline void clear() { mapping.clear(); }
     
+    void buildOrderedMapping();
 
     void removeMapping(const RealRange& range)
     { 
@@ -209,12 +230,13 @@ class RealRange
     void erase(iterator it) 
     { return mapping.erase(it); }
 
-
-
+    bool operator==(const RealMapping& rm) const;
 
     virtual void print(ostream& out) const;
     virtual void write(ostream& out) const;
     virtual void read(istream& in);
+
+    int maxMappedToValue();
 
     //! If all ranges in the mapping are consecutive, return the cut points between different ranges.
     //! e.g.: [0,1[  [1, 5[  [5, 10]  ]10, 15]--> <0,1,5,10,15>.
