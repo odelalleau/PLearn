@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.cc,v 1.5 2005/01/27 18:27:14 tihocan Exp $ 
+   * $Id: PPath.cc,v 1.6 2005/01/27 20:25:40 ducharme Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -601,7 +601,7 @@ bool PPath::operator== (const string& other) const
 bool PPath::operator==(const PPath& other) const
 {
   // If raw_equal is true, there is no need to call canonical()
-  bool raw_equal = strcmp(c_str(), other.c_str());
+  bool raw_equal = ( strcmp(c_str(), other.c_str()) == 0 );
   return raw_equal || ( strcmp(canonical().c_str(), other.canonical().c_str()) == 0 );
 }
 
