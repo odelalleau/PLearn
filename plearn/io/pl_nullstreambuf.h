@@ -36,10 +36,11 @@
 #ifndef pl_nullstreambuf_INC
 #define pl_nullstreambuf_INC
 
+
 #if __GNUC__ < 3
-#  include <streambuf.h>
+#include <streambuf.h>
 #else
-#  include <streambuf>
+#include <streambuf>
 #endif
 
 namespace PLearn <%
@@ -53,10 +54,17 @@ using namespace std;
 
 class pl_nullstreambuf : public streambuf
 {
+private:
+#if __GNUC__ < 3
+    typedef int int_type;
+    static const int_type eof = EOF;
+#else
+    static const int_type eof = traits_type::eof();
+#endif
  protected:
   virtual int_type underflow()
-    { return traits_type::eof(); }
-  virtual int_type overflow(int_type meta = traits_type::eof()) 
+    { return pl_nullstreambuf::eof; }
+  virtual int_type overflow(int_type meta = pl_nullstreambuf::eof) 
     { return meta; }
  public:
   pl_nullstreambuf()
