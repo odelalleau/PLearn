@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.6 2003/09/09 22:50:50 plearner Exp $
+   * $Id: vmatmain.cc,v 1.7 2003/10/30 22:16:52 plearner Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -266,6 +266,344 @@ void printConditionalStats(VMat vm, int condfield)
 }
 
 
+
+void viewVMat(const VMat& vm)
+{
+  initscr();
+  cbreak();
+  noecho();
+  keypad(stdscr,TRUE);
+  
+  int key= 0;
+  bool view_strings= true;
+  bool hide_sameval = false; // if true, values that are the same as the one of the previous vmat line will not be displayed, (three dot will be displayed instead).
+  bool transposed = false;
+  
+  int namewidth = 0;
+  for(int j=0; j<vm->width(); j++)
+    namewidth = max(namewidth, (int) vm->fieldName(j).size());
+
+  int valwidth = 15;
+  int valstrwidth = valwidth-1;
+  const char* valstrformat = "%14s";
+
+  int curi = 0;
+  int curj = 0;
+  int starti = 0;
+  int startj = 0;  
+
+  while(key != 'q' && key != 'Q')
+    {
+      erase();
+      
+      int leftcolwidth = transposed ?1+namewidth :10;
+
+      int nj = transposed ? LINES-3 : (COLS-leftcolwidth)/valwidth;
+      int ni = transposed ? (COLS-leftcolwidth)/valwidth : LINES-4;
+
+      int endj = min(vm->width(), startj+nj);
+      int endi = min(vm->length(), starti+ni);
+
+      int x=0, y=0; // (curses coordinates are (y,x) )
+
+      // print field names 
+      for(int j=startj; j<endj; j++)
+        {
+          string s = vm->fieldName(j);
+          // if(j==curj)
+          //  attron(A_REVERSE);
+          if(transposed)
+            mvprintw(1+(j-startj),0,"%s", s.c_str());
+          else
+            {
+              x = 1+leftcolwidth+(j-startj)*valwidth;
+              mvprintw(0, x, valstrformat, s.substr(0,valstrwidth).c_str());
+              if((int)s.length() > valstrwidth)
+                mvprintw(1, x, valstrformat, s.substr(valstrwidth,valstrwidth).c_str());
+            }
+          // attroff(A_REVERSE);
+        }
+
+      Vec v(vm.width());
+      Vec oldv(vm.width());
+
+      for(int i=starti; i<endi; i++)
+        { 
+          if(transposed)
+            {
+              y = 0;
+              x = 1+leftcolwidth+(i-starti)*valwidth;
+              mvprintw(y,x,"%14d",i);
+            }
+          else
+            {
+              y = i-starti+2;
+              x = 0;
+              mvprintw(y,x,"%d",i);
+            }
+          
+          vm->getRow(i,v);
+          
+          for(int j=startj; j<endj; j++)
+            {
+              real val = v[j];
+              string s = vm->getValString(j,val);
+              if(!view_strings || s=="")
+                s = tostring(val);
+              
+              if(transposed)
+                y = 1+(j-startj);
+              else
+                x = 1+leftcolwidth+(j-startj)*valwidth;
+              
+              if(i == curi || j == curj)
+                attron(A_REVERSE);
+              
+              if(hide_sameval && i>starti && (val==oldv[j] || is_missing(val)&&is_missing(oldv[j])) )
+                mvprintw(y, x, valstrformat,"...");                
+              else
+                mvprintw(y, x, valstrformat,s.substr(0,valstrwidth).c_str());
+
+              attroff(A_REVERSE);
+            }
+          oldv << v;          
+        }
+
+      string strval = vm->getString(curi, curj);
+      mvprintw(LINES-1,0," %dx%d   line= %d   col= %d     %s = %s (%f)", 
+               vm->length(), vm->width(),
+               curi, curj, vm->fieldName(curj).c_str(), strval.c_str(), vm(curi,curj));
+
+      refresh();
+      key= getch();
+
+      switch(key)
+        {
+        case KEY_LEFT: 
+          if(transposed)
+            {
+              if(curi>0)
+                --curi;
+              if(curi<starti)
+                starti = curi;
+            }
+          else
+            {
+              if(curj>0)
+                --curj;
+              if(curj<startj)
+                startj=curj;
+            }
+          break;
+        case KEY_RIGHT: 
+          if(transposed)
+            {
+              if(curi<vm->length()-1)
+                ++curi;
+              if(curi>=starti+ni)
+                ++starti;
+            }
+          else
+            {
+              if(curj<vm->width()-1)
+                ++curj;
+              if(curj>=startj+nj)
+                ++startj;
+            }
+          break;
+        case KEY_UP: 
+          if(transposed)
+            {
+              if(curj>0)
+                --curj;
+              if(curj<startj)
+                startj=curj;
+            }
+          else
+            {
+              if(curi>0)
+                --curi;
+              if(curi<starti)
+                starti = curi;
+            }
+          break;
+        case KEY_DOWN: 
+          if(transposed)
+            {
+              if(curj<vm->width()-1)
+                ++curj;
+              if(curj>=startj+nj)
+                ++startj;
+            }
+          else
+            {
+              if(curi<vm->length()-1)
+                ++curi;
+              if(curi>=starti+ni)
+                ++starti;
+            }
+          break;
+        case KEY_PPAGE: 
+          if(transposed)
+            {
+              curj -= nj;
+              startj -= nj;
+              if(startj<0)
+                startj = 0;
+              if(curj<0)
+                curj = 0;
+            }
+          else
+            {
+              curi -= ni;
+              starti -= ni;
+              if(starti<0)
+                starti = 0;
+              if(curi<0)
+                curi = 0;
+            }
+          break;
+        case KEY_NPAGE: 
+          if(transposed)
+            {
+              curj += nj;
+              startj += nj;
+              if(curj>=vm->width())
+                curj = vm->width()-1;
+              if(startj>vm->width()-nj)
+                startj = max(0,vm->width()-nj);
+            }
+          else
+            {
+              curi += ni;
+              starti += ni;
+              if(curi>=vm->length())
+                curi = vm->length()-1;
+              if(starti>vm->length()-ni)
+                starti = max(0,vm->length()-ni);
+            }
+          break;
+        case '.':
+          hide_sameval = !hide_sameval;
+          break;
+        case 't': case 'T':          
+          transposed = !transposed;
+          nj = transposed ? LINES-3 : (COLS-leftcolwidth)/valwidth;
+          ni = transposed ? (COLS-leftcolwidth)/valwidth : LINES-4;
+          starti = max(0,curi-ni/2);
+          startj = max(0,curj-nj/2);
+          //endj = min(vm->width(), startj+nj);
+          //endi = min(vm->length(), starti+ni);
+          break;
+        case '/':  // search for value
+          {
+            echo();
+            mvprintw(LINES-1,0,"Search for value                                                                             ");
+            move(LINES-1, 18);
+            char l[10];
+            getnstr(l, 10);
+            real searchval = vm(curi,curj);
+            if(l!="")
+              searchval = toreal(l);
+            while(curi<vm->length() && vm(curi,curj)!=searchval)
+              ++curi;
+            if(curi>=vm->length())
+              curi = vm->length()-1;
+            ni = transposed ? (COLS-leftcolwidth)/valwidth : LINES-4;
+            starti = max(0,curi-ni/2);
+          }
+          break;
+        case (int)'l': case (int)'L': 
+          {
+            echo();
+            mvprintw(LINES-1,0,"Goto line:                                                                            ");
+            move(LINES-1, 11);
+            char l[10];
+            getnstr(l, 10);
+            if(!pl_isnumber(l) || toint(l) < 0 || toint(l)>=vm->length())
+              {
+                mvprintw(LINES-1,0,"*** Invalid line number ***");
+                refresh();
+                sleep(1);
+              }
+            else
+              {
+                curi= toint(l);
+                starti = curi;
+              }
+            noecho();
+          }
+          break;
+        case (int)'c': case (int)'C': 
+          {
+            echo();
+            mvprintw(LINES-1,0,"Goto column:                                                                           ");
+            move(LINES-1, 13);
+            char c[10];
+            getnstr(c, 10);
+            if(!pl_isnumber(c) || toint(c) < 0 || toint(c)>=vm->width())
+              {
+                mvprintw(LINES-1,0,"*** Invalid column number ***");
+                refresh();
+                sleep(1);
+              }
+            else
+              {
+                curj= toint(c);
+                startj = curj;
+              }
+            noecho();
+          }
+          break;
+          
+        case (int)'s': case (int)'S': 
+          view_strings = !view_strings;
+          break;
+                    
+        case (int)'h': case (int)'H':
+          erase();
+          
+          mvprintw(0,COLS/2-6,"*** HELP ***");
+          
+          mvprintw(2,10, "KEYS:");
+          mvprintw(3,10, " - up: move up one line");
+          mvprintw(4,10, " - down: move down one line");
+          mvprintw(5,10, " - right: move right one column");
+          mvprintw(6,10, " - left: move left one column");
+          mvprintw(7,10, " - page up: move up one screen");
+          mvprintw(8,10, " - page down: move down one screen");
+          mvprintw(9,10, " - 'l' or 'L': prompt for a line number and go to that line");
+          mvprintw(10,10," - 'c' or 'C': prompt for a column number and go to that column");
+          mvprintw(11,10," - 's' or 'S': toggle display string fields as strings or numbers");
+          mvprintw(12,10," - 't' or 'T': toggle transposed display mode");
+          mvprintw(13,10," - '.'       : toggle displaying of ... for values that do not change");
+          mvprintw(14,10," - '/'       : search for a value of the current field");
+          mvprintw(15,10," - 'h' or 'H': display this screen");
+          mvprintw(16,10," - 'q' or 'Q': quit program");          
+          mvprintw(17,COLS/2-13,"(press any key to continue)");
+          
+          refresh();
+          getch();
+          
+          break;
+          
+        case (int)'q': case (int)'Q': 
+          break;
+          
+        default:
+          mvprintw(LINES-1,0,"*** Invalid command (type 'h' for help) ***");
+          refresh();
+          sleep(1);
+          break;
+        }
+    }
+  
+  endwin();
+}
+
+/* OLD CODE
+
+
 void viewVMat(const VMat& vm, int lin, int col)
 {
   initscr();
@@ -447,7 +785,7 @@ void viewVMat(const VMat& vm, int lin, int col)
   
   endwin();
 }
-
+*/
 
 void plotVMats(char* defs[], int ndefs)
 {
@@ -504,8 +842,8 @@ int vmatmain(int argc, char** argv)
       "       To list the fields with their names \n"
       "   or: vmat cat <dataset> [<optional_vpl_filtering_code>]\n"
       "       To display the dataset \n"
-      "   or: vmat view <dataset> [<line#> [<column#>]]\n"
-      "       Interactive display to browse on the data. \n"
+      "   or: vmat view <vmat> \n"
+      "       Interactive display of a vmat. \n"
       "   or: vmat stats <dataset> \n"
       "       Will display basic statistics for each field \n"
       "   or: vmat convert <source> <destination> \n"
@@ -794,12 +1132,19 @@ int vmatmain(int argc, char** argv)
               cout<<tmp<<endl;
             }
     }
+  /* OLD CODE
   else if(command=="view")
     {
       if(argc > 5)
         PLERROR("Bad number of arguments. Syntax for option view: %s view <dbname> [<row> [<col>]]", argv[0]);
       VMat vm= getDataSet(string(argv[2]));
       viewVMat(vm, argc>=4? toint(argv[3]) : 0, argc==5? toint(argv[4]) : 0);
+    }
+  */
+  else if(command=="view")
+    {
+      VMat vm= getDataSet(string(argv[2]));
+      viewVMat(vm);
     }
   else if(command=="plot")
     {

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: PDate.h,v 1.2 2003/07/31 05:23:52 chapados Exp $
+   * $Id: PDate.h,v 1.3 2003/10/30 22:16:35 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -79,8 +79,8 @@ public:
   //!  is about 6000 years ago... 
   PDate(int julian_day);
 
-  //!  Initialize a date from a string.  Currently, only the format
-  //!  YYYY/MM/DD is recognized
+  //!  Initialize a date from a string. 
+  //!  Currently recognized formats are: "2003/01/27", "27JAN2003"
   PDate(string date);
 
   //!  Missing date handling

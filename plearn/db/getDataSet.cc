@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.10 2003/10/29 16:55:49 plearner Exp $
+   * $Id: getDataSet.cc,v 1.11 2003/10/30 22:16:52 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -126,7 +126,7 @@ VMat getDataSet(const string& datasetstring, const string& alias)
           string ext = extract_extension(datasetstring);
           if(ext==".pmat")
             vm = new FileVMatrix(datasetstring);
-          else if(ext==".vmat")
+          else if(ext==".vmat" || ext==".txtmat")
             {
               string code = readFileAndMacroProcess(datasetstring);
               if(removeblanks(code)[0]=='<') // old xml-like format 
