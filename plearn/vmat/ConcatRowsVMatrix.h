@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVMatrix.h,v 1.8 2004/07/09 18:18:18 tihocan Exp $
+   * $Id: ConcatRowsVMatrix.h,v 1.9 2004/07/20 15:42:38 tatien Exp $
    ******************************************************* */
 
 
@@ -63,7 +63,7 @@ class ConcatRowsVMatrix: public VMatrix
  protected:
   Array<VMat> array;
 
-  //!  returns the index of the correct VMat in the array and the the row
+  //!  returns the index of the correct VMat in the array and the row
   //!  number in this VMat that correspond to row i in the ConcatRowsVMat
   void getpositions(int i, int& whichvm, int& rowofvm) const; 
 
