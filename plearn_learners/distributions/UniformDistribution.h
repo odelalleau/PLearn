@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UniformDistribution.h,v 1.1 2004/05/20 15:22:36 tihocan Exp $ 
+   * $Id: UniformDistribution.h,v 1.2 2004/05/21 13:16:08 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -111,6 +111,9 @@ public:
   // *******************************
   // **** PDistribution methods ****
   // *******************************
+
+  //! Overridden so that it does not need a training set.
+  virtual int inputsize() const;
 
   //! Return log of probability density log(p(x)).
   virtual double log_density(const Vec& x) const;

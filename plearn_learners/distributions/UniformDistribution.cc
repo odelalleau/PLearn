@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UniformDistribution.cc,v 1.1 2004/05/20 15:22:36 tihocan Exp $ 
+   * $Id: UniformDistribution.cc,v 1.2 2004/05/21 13:16:08 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -140,6 +140,13 @@ void UniformDistribution::generate(Vec& x) const
   for (int i = 0; i < min.length(); i++) {
     x[i] = bounded_uniform(min[i], max[i]);
   }
+}
+
+///////////////
+// inputsize //
+///////////////
+int UniformDistribution::inputsize() const {
+  return min.length();
 }
 
 /////////////////
