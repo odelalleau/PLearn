@@ -1089,6 +1089,27 @@ PStream& PStream::operator<<(const string &x)
   return *this;
 }
 
+
+void binread_(PStream& in, bool* x,                
+              unsigned int n, unsigned char typecode)  
+{                                                      
+  if(typecode!=TypeTraits<bool>::little_endian_typecode()) 
+    PLERROR("In binread_ incompatible typecode");      
+
+  while(n--)
+    {
+      int c = in.get();
+      if(c=='0')
+        *x = false;
+      else if(c=='1')
+        *x = true;
+      else
+        PLERROR("In binread_(PStream& in, bool* x, unsigned int n, unsigned char typecode): "
+                "read invalid value for a boolean: should be '1' or '0', not %c", c);
+      ++x;
+    }
+}
+
 #define IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(BASETYPE)  \
 void binread_(PStream& in, BASETYPE* x,                \
               unsigned int n, unsigned char typecode)  \
@@ -1110,9 +1131,7 @@ void binread_(PStream& in, BASETYPE* x,                \
 }
 
 
-IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(char);
-IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(signed char);
-IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(unsigned char);
+// IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(char);
 IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(short);
 IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(unsigned short);
 IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(int);

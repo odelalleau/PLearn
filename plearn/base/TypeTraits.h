@@ -34,7 +34,7 @@
 
  
 /* *******************************************************      
-   * $Id: TypeTraits.h,v 1.2 2002/10/21 01:21:53 plearner Exp $
+   * $Id: TypeTraits.h,v 1.3 2002/10/21 03:12:17 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -68,13 +68,13 @@ template<class T>
 class TypeTraits
 {
 public:
-  static string name()
+  static inline string name()
   { return "UNKNOWN_TYPE_NAME"; }
 
-  static unsigned char little_endian_typecode()
+  static inline unsigned char little_endian_typecode()
   { return 0xFF; }
 
-  static unsigned char big_endian_typecode()
+  static inline unsigned char big_endian_typecode()
   { return 0xFF; }
 
 };
@@ -85,13 +85,13 @@ template<class T>
 class TypeTraits<T*>
 {
 public:
-  static string name() 
+  static inline string name() 
   { return TypeTraits<T>::name()+"*"; }
 
-  static unsigned char little_endian_typecode()
+  static inline unsigned char little_endian_typecode()
   { return 0xFF; }
 
-  static unsigned char big_endian_typecode()
+  static inline unsigned char big_endian_typecode()
   { return 0xFF; }
 };
 
@@ -103,10 +103,10 @@ public:                                          \
   static inline string name()                    \
   { return #T; }                                 \
                                                  \
-  static unsigned char little_endian_typecode()  \
+  static inline unsigned char little_endian_typecode()  \
   { return LITTLE_ENDIAN_TYPECODE; }             \
                                                  \
-  static unsigned char big_endian_typecode()     \
+  static inline unsigned char big_endian_typecode()     \
   { return BIG_ENDIAN_TYPECODE; }                \
 }
 
@@ -118,10 +118,10 @@ public:                                          \
   static inline string name()                    \
   { return #T; }                                 \
                                                  \
-  static unsigned char little_endian_typecode()  \
+  static inline unsigned char little_endian_typecode()  \
   { return 0xFF; }                               \
                                                  \
-  static unsigned char big_endian_typecode()     \
+  static inline unsigned char big_endian_typecode()     \
   { return 0xFF; }                               \
 }
 
@@ -137,6 +137,7 @@ DECLARE_TYPE_TRAITS_FOR_BASETYPE(long, 0x07, 0x08);
 DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned long, 0x0B, 0x0C);
 DECLARE_TYPE_TRAITS_FOR_BASETYPE(float, 0x0E, 0x0F);
 DECLARE_TYPE_TRAITS_FOR_BASETYPE(double, 0x10, 0x11);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(bool, 0x12, 0x12);
 
 DECLARE_TYPE_TRAITS(string);
 
@@ -147,10 +148,10 @@ public:
   static inline string name()
   { return string("vector< ") + TypeTraits<T>::name()+" >"; }
 
-  static unsigned char little_endian_typecode()
+  static inline unsigned char little_endian_typecode()
   { return 0xFF; }
 
-  static unsigned char big_endian_typecode()
+  static inline unsigned char big_endian_typecode()
   { return 0xFF; }
 };
 
@@ -161,10 +162,10 @@ public:
   static inline string name()
   { return string("list< ") + TypeTraits<T>::name()+" >"; }
 
-  static unsigned char little_endian_typecode()
+  static inline unsigned char little_endian_typecode()
   { return 0xFF; }
 
-  static unsigned char big_endian_typecode()
+  static inline unsigned char big_endian_typecode()
   { return 0xFF; }
 };
 
@@ -175,10 +176,10 @@ public:
   static inline string name()
   { return string("pair< ") + TypeTraits<T>::name()+", " + TypeTraits<U>::name()+" >"; }
 
-  static unsigned char little_endian_typecode()
+  static inline unsigned char little_endian_typecode()
   { return 0xFF; }
 
-  static unsigned char big_endian_typecode()
+  static inline unsigned char big_endian_typecode()
   { return 0xFF; }
 };
 
@@ -189,10 +190,10 @@ public:
   static inline string name()
   { return string("map< ") + TypeTraits<T>::name()+", " + TypeTraits<U>::name()+" >"; }
 
-  static unsigned char little_endian_typecode()
+  static inline unsigned char little_endian_typecode()
   { return 0xFF; }
 
-  static unsigned char big_endian_typecode()
+  static inline unsigned char big_endian_typecode()
   { return 0xFF; }
 };
 

@@ -2,7 +2,7 @@
 %%
 %%  Copyright (c) 2002 by Pascal Vincent
 %%
-%%  $Id: users_guide.tex,v 1.2 2002/10/21 01:21:53 plearner Exp $
+%%  $Id: users_guide.tex,v 1.3 2002/10/21 03:12:14 plearner Exp $
 
 \documentclass[11pt]{book}
 \usepackage{t1enc}              % new font encoding  (hyphenate words w/accents)
@@ -456,6 +456,7 @@ current architectures.
 \label{tab:base-types} }
 \begin{tabular}{|llcl|} \hline 
 Base type      & Byte order    & Header byte & Number of bytes to follow \\ \hline 
+bool           & -             & 0x12        & 1 \\
 char           & -             & 0x01        & 1 \\
 signed char    & -             & 0x01        & 1 \\
 unsigned char  & -             & 0x02        & 1 \\
@@ -480,8 +481,7 @@ double         & big-endian    & 0x11        & 8 \\ \hline
 \end{center}
 \end{table}
 
-
-\begin{tabular}
+booleans are represented the same way in binary mode as in ascii mode: with the character 0 (for false) or 1 (for true).
 
 \subsection{Ascii plearn format for a sequence}
 \label{ascii_sequence}
@@ -545,6 +545,7 @@ All that follows is supposed to be in the byte-order implied by the header-byte.
 The first header-byte is followed by an {\em element-type} byte giving the nature
 of the elements in the sequence.  It can be either the byte identifying a
 base-type given in Table~\ref{tab:base-types} (the endianness must match),
+or {\tt 0x12} to indicate a sequence of booleans (1 byte per boolean) 
 or {\tt 0xFF} to indicate a {\em generic} sequence.
 
 The header bytes are followed by one (for 1D sequences) or two (for 2D)

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.4 2002/10/21 01:21:53 plearner Exp $
+   * $Id: TMat.h,v 1.5 2002/10/21 03:12:17 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -1994,6 +1994,12 @@ class TypeTraits< TVec<T> >
 public:
   static inline string name()
   { return string("TVec< ") + TypeTraits<T>::name()+" >"; }
+
+  static inline unsigned char little_endian_typecode()
+  { return 0xFF; }
+
+  static inline unsigned char big_endian_typecode()
+  { return 0xFF; }
 };
 
 template<class T>
@@ -2002,6 +2008,12 @@ class TypeTraits< TMat<T> >
 public:
   static inline string name()
   { return string("TMat< ") + TypeTraits<T>::name()+" >"; }
+
+  static inline unsigned char little_endian_typecode()
+  { return 0xFF; }
+
+  static inline unsigned char big_endian_typecode()
+  { return 0xFF; }
 };
 
 %> // end of namespace PLearn

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.8 2002/10/21 01:21:53 plearner Exp $
+   * $Id: Object.cc,v 1.9 2002/10/21 03:12:17 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -333,7 +333,7 @@ void Object::newread(PStream &in)
           else
             readOptionVal(in, optionname);
 
-          skipBlanksAndCommentsAndSeparators(in.rawin());
+          in.skipBlanksAndCommentsAndSeparators();
           if (in.peek() == ')') 
             {
               in.get();

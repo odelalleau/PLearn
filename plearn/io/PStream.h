@@ -470,6 +470,17 @@ void binwrite_(PStream& out, Iterator& it, unsigned int n)
   out.outmode = outmode; // restore previous outmode 
 }
 
+inline void binwrite_(PStream& out, const bool* x, unsigned int n)
+{
+  while(n--)
+    {
+      if(*x++)
+        out.put('1');
+      else
+        out.put('0');
+    }
+}
+
 inline void binwrite_(PStream& out, const char* x, unsigned int n) 
 { out.write((char*)x, n*sizeof(char)); }
 inline void binwrite_(PStream& out, char* x, unsigned int n) 
@@ -528,7 +539,7 @@ inline void binwrite_(PStream& out, double* x, unsigned int n)
 // The typecode indicates the type and format of the elements in the stream
 
 template<class Iterator>
-void binread_(PStream& in, Iterator& it, unsigned int n, unsigned char typecode)
+void binread_(PStream& in, Iterator it, unsigned int n, unsigned char typecode)
 {
   if(typecode!=0xFF)
     PLERROR("In binread_ : bug! A specialised binread_ should have been called for a typecode other than the 'generic' 0xFF");
@@ -540,9 +551,27 @@ void binread_(PStream& in, Iterator& it, unsigned int n, unsigned char typecode)
     }
 }
 
-void binread_(PStream& in, char* x, unsigned int n, unsigned char typecode);
-void binread_(PStream& in, signed char* x, unsigned int n, unsigned char typecode);
-void binread_(PStream& in, unsigned char* x, unsigned int n, unsigned char typecode);
+void binread_(PStream& in, bool* x, unsigned int n, unsigned char typecode);
+
+inline void binread_(PStream& in, char* x,
+              unsigned int n, unsigned char typecode)  
+{                                                      
+  // big endian and little endian have the same typecodes
+  // so we need to check only one for consistency
+
+  if(typecode!=TypeTraits<char>::little_endian_typecode()
+     && typecode!=TypeTraits<unsigned char>::little_endian_typecode()) 
+    PLERROR("In binread_ incompatible typecode");      
+
+  in.read((char*)x, n);
+}
+
+inline void binread_(PStream& in, signed char* x, unsigned int n, unsigned char typecode)
+{ binread_(in, (char *)x, n, typecode); }
+
+inline void binread_(PStream& in, unsigned char* x, unsigned int n, unsigned char typecode)
+{ binread_(in, (char *)x, n, typecode); }
+
 void binread_(PStream& in, short* x, unsigned int n, unsigned char typecode);
 void binread_(PStream& in, unsigned short* x, unsigned int n, unsigned char typecode);
 void binread_(PStream& in, int* x, unsigned int n, unsigned char typecode);
