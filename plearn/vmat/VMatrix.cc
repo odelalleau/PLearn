@@ -37,7 +37,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.81 2005/01/04 21:29:47 plearner Exp $
+* $Id: VMatrix.cc,v 1.82 2005/01/13 19:15:23 chrish42 Exp $
 ******************************************************* */
 
 #include <plearn/io/load_and_save.h>
@@ -52,7 +52,6 @@
 namespace PLearn {
 using namespace std;
 
-/** VMatrix **/
 
 
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
@@ -246,7 +245,7 @@ void VMatrix::printFieldInfo(ostream& out, int fieldnum) const
     out << "min: " << s.min() << '\n';
     out << "max: " << s.max() << '\n';
 
-    /*
+#if 0
     if(!s.counts.empty())
       {
         out << "\nCOUNTS: \n";
@@ -264,7 +263,7 @@ void VMatrix::printFieldInfo(ostream& out, int fieldnum) const
             ++it;
         }
       }
-    */
+#endif
     out << endl << endl;
 }
 
@@ -347,10 +346,9 @@ void VMatrix::saveStats(const string& filename) const
 }
 
 
+/// @todo Implementation not done yet. Implement
 string VMatrix::fieldheader(int elementcharwidth)
 {
-  // Implementation not done yet
-
   return "VMatrix::fieldheader NOT YET IMPLEMENTED";
 }
 
@@ -825,11 +823,8 @@ void VMatrix::loadAllStringMappings()
     loadStringMapping(i);
 }
 
-///////////////////////
-// loadStringMapping //
-///////////////////////
+/// Loads the appropriate string map file for column 'col'
 void VMatrix::loadStringMapping(int col)
-// loads the appropriate string map file for column 'col'
 {
   if(!hasMetaDataDir())
     return;
@@ -839,10 +834,12 @@ void VMatrix::loadStringMapping(int col)
 
   if(!isfile(fname))
   {
-//     ofstream o(fname.c_str());
-//     if(o.bad())
-//       PLERROR( string("\nEmpty new file "+fname+" could not be created.\n (This is ony done to check consistency of path. File is deleted afterward.)").c_str());
-//     rm(fname);
+#if 0
+    ofstream o(fname.c_str());
+    if(o.bad())
+      PLERROR( string("\nEmpty new file "+fname+" could not be created.\n (This is ony done to check consistency of path. File is deleted afterward.)").c_str());
+    rm(fname);
+#endif
     return;
   }
   
@@ -853,11 +850,13 @@ void VMatrix::loadStringMapping(int col)
   if(!f)
     PLERROR( string("File "+fname+" cannot be opened.").c_str());
 
-/*  string pref;
+#if 0
+  string pref;
   f>>pref;
   if(string(pref)!="#SMAP")
     PLERROR( string("File "+fname+" is not a valid String mapping file.\nShould start with #SMAP on first line (this is to prevent inopportunely overwritting another type of file)").c_str());
-*/
+#endif
+  
   while(f)
   {
     string s;
@@ -939,8 +938,10 @@ TVec<RealMapping> VMatrix::getRanges()
   return ranges;
 }
 
-// Eventually to be changed to pure virtual, once get has been implemented in all subclasses
-// calls to sample can then be replaced by getRow everywhere
+/**
+   @todo Eventually to be changed to pure virtual, once get has been implemented in all subclasses.
+   Calls to sample can then be replaced by getRow everywhere.
+*/
 real VMatrix::get(int i, int j) const
 {
   PLERROR("get(i,j) method not implemented for this VMat (name=%s), please implement.",classname().c_str());
@@ -1127,29 +1128,6 @@ void VMatrix::print(ostream& out) const
     }
 }
 
-/*
-void VMatrix::oldwrite(ostream& out) const
-{
-  writeHeader(out,"VMatrix");
-  writeField(out,"length_", length_);
-  writeField(out,"width_", width_);
-  //writeField(out,"fieldinfos", fieldinfos);
-  //writeField(out,"fieldstats", fieldstats);
-  writeFooter(out,"VMatrix");
-}
-
-void VMatrix::oldread(istream& in)
-{
-  readHeader(in,"VMatrix");
-  readField(in,"length_", length_);
-  readField(in,"width_", width_);
-  //readField(in,"fieldinfos", fieldinfos);
-  //readField(in,"fieldstats", fieldstats);
-  readFooter(in,"VMatrix");
-}
-*/
-
-
 VMatrix::~VMatrix()
 {}
 
@@ -1242,9 +1220,10 @@ void VMatrix::saveAMAT(const string& amatfile, bool verbose, bool no_header) con
     delete pb;
 }
 
-// result += transpose(X).Y
-// Where X = this->subMatColumns(X_startcol,X_ncols)
-// and   Y =  this->subMatColumns(Y_startcol,Y_ncols);
+/** result += transpose(X).Y
+ * Where X = this->subMatColumns(X_startcol,X_ncols)
+ * and   Y =  this->subMatColumns(Y_startcol,Y_ncols);
+ */
 void VMatrix::accumulateXtY(int X_startcol, int X_ncols, int Y_startcol, int Y_ncols, 
                             Mat& result, int startrow, int nrows, int ignore_this_row) const
 {
@@ -1260,8 +1239,9 @@ void VMatrix::accumulateXtY(int X_startcol, int X_ncols, int Y_startcol, int Y_n
     }
 }
 
-// result += transpose(X).Y
-// Where X = this->subMatColumns(X_startcol,X_ncols)
+/** result += transpose(X).Y
+ * Where X = this->subMatColumns(X_startcol,X_ncols)
+ */
 void VMatrix::accumulateXtX(int X_startcol, int X_ncols, 
                             Mat& result, int startrow, int nrows, int ignore_this_row) const
 {
