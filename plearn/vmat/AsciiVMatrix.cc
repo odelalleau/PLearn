@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AsciiVMatrix.cc,v 1.2 2003/02/18 21:57:04 ducharme Exp $ 
+   * $Id: AsciiVMatrix.cc,v 1.3 2003/02/20 21:49:32 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file AsciiVMatrix.cc */
@@ -48,14 +48,15 @@ using namespace std;
 IMPLEMENT_NAME_AND_DEEPCOPY(AsciiVMatrix);
 
 AsciiVMatrix::AsciiVMatrix(const string& fname, bool readwrite)
-  :inherited(), filename(fname), readwritemode(readwrite), newfile(false)
+  :inherited(), filename(fname), readwritemode(readwrite), newfile(false),
+   rewrite_length(true)
 {
   build();
 }
 
 AsciiVMatrix::AsciiVMatrix(const string& fname, int the_width, const vector<string>& the_comments)
   :inherited(0,the_width), filename(fname), comments(the_comments),
-   readwritemode(true), newfile(true), old_vmat_format(false)
+   readwritemode(true), newfile(true), rewrite_length(true)
 {
   build();
 }
@@ -81,7 +82,8 @@ void AsciiVMatrix::build_()
 
     *file << "#size: ";
     vmatlength_pos = file->tellp();
-    *file << "0         " << width() << endl;
+    length_max = 9999999;  // = 10 000 000 - 1
+    *file << "0 " << width() << "      " << endl;
     for (vector<string>::iterator it = comments.begin(); it != comments.end(); ++it)
     {
       *file << "# " << *it << endl;
@@ -103,7 +105,7 @@ void AsciiVMatrix::build_()
     // read the matrix in old or new format
     int length = -1;
     int width = -1;
-    old_vmat_format = true;
+    bool could_be_old_amat = true;
     file->seekg(0,fstream::beg);
     *file >> ws;
     string line;  
@@ -111,73 +113,73 @@ void AsciiVMatrix::build_()
     {
       streampos old_pos = file->tellg();
       getline(*file, line);
+      could_be_old_amat = false;  
       unsigned int pos=line.find(":");
       if (pos!=string::npos)
       {
         string sub=line.substr(0,pos);
         if (sub=="#size") // we've found the dimension specification line
         {
-          old_vmat_format = false;  
           string siz=removeblanks((line.substr(pos)).substr(1));
           vector<string> dim = split(siz," ");
           if (dim.size()!=2)  PLERROR("I need exactly 2 dimensions for matrix");
           length = toint(dim[0]);
           width = toint(dim[1]);
 
-          // we set vmatlength_pos to the correct value
+          // we set vmatlength_pos
           streampos current_pos = file->tellg();
           file->seekg(old_pos);
-          string dummy;
-          *file >> dummy;
-          *file >> ws;
+          char c = file->get();
+          while (c != ':')
+          {
+            c = file->get();
+          }
+          c = file->get();
           vmatlength_pos = file->tellp();
           file->seekg(current_pos);
+
+          // we set length_max
+          int width_ndigits = (int)log(real(width)) + 1;
+          string remain = removenewline(line.substr(pos+1));
+          int length_ndigits = remain.length() - width_ndigits - 1;
+          length_max = (int)pow(10.0,real(length_ndigits)) - 1;
         }
-        /*
-        else if (sub=="#") // we've found the fieldnames specification line
-        {
-          string fnl=line.substr(pos).substr(1);
-          TVec<string> fieldnames = split(fnl," ");
-          width=fieldnames.size();
-        }
-        */
       }
       *file >> ws;
     }
 
     if (length==-1)  // still looking for size info...
     {
-      old_vmat_format = true;  
       string line;
       getNextNonBlankLine(*file,line);
-      if (line=="")
-      {
-        width=length=0;
-        file->seekg(0,fstream::beg);
-        file->clear();
-      }
       int nfields1 = split(line).size();
       getNextNonBlankLine(*file,line);
-      if (line=="")
+      if (line=="") // only one line, no length nor width info
       {
         length=1;
         width=nfields1;
-        file->seekg(0,fstream::beg);
-        file->clear();
-        old_vmat_format = false;
+        rewrite_length = false;
+        could_be_old_amat = false;
       }
       int nfields2 = split(line).size();
       int guesslength = countNonBlankLinesOfFile(filename);
       real a, b;
-      if (old_vmat_format && nfields1==2) // could be an old .amat with first 2 numbers being length width
+      if (could_be_old_amat && nfields1==2) // could be an old .amat with first 2 numbers being length width
       {
         file->seekg(0,fstream::beg);
         file->clear();
+        vmatlength_pos = file->tellp();
         *file >> a >> b;
         if (guesslength == int(a)+1 && real(int(a))==a && real(int(b))==b && a>0 && b>0 && int(b)==nfields2) // it's clearly an old .amat
         {
           length = int(a);
           width = int(b);
+
+          file->seekg(vmatlength_pos);
+          getline(*file, line);
+          int width_ndigits = (int)log(real(width)) + 1;
+          int max_length_ndigits = line.length() - width_ndigits - 1;
+          length_max = (int)pow(10.0,real(max_length_ndigits)) - 1;
         }
       }
 
@@ -185,40 +187,38 @@ void AsciiVMatrix::build_()
       {
         if (nfields1==nfields2) // looks like a plain ascii file
         {
+          rewrite_length = false;
           length=guesslength;
           if (width!=-1 && width!=nfields1)
           {
             PLWARNING("In AsciiVMatrix:  Number of fieldnames and width mismatch in file %s.", filename.c_str());
-            //fieldnames.resize(nfields1);
-            //for (int i= 0; i < nfields1; ++i)
-            //  fieldnames[i]= string("Field-") + tostring(i);
           }
           width = nfields1;
-          file->seekg(0);
-          file->clear();
         }
-        else if (real(int(a))==a && real(int(b))==b && a>0 && b>0 && int(b)==nfields2)
-        {
-          length = int(a);
-          width = int(b);
-        }
+        else
+          PLERROR("In AsciiVMatrix: trying to load but couldn't determine file format automatically for %s",filename.c_str());
       }
     }
  
-    if (length==-1)
-      PLERROR("In AsciiVMatrix: trying to load but couldn't determine file format automatically for %s",filename.c_str());
-
     length_ = length;
     width_ = width;
 
     // build the vector of position of the begining of the lines
+    file->seekg(0,fstream::beg);
+    file->clear();
+    if (could_be_old_amat && rewrite_length)
+    {
+      string line;
+      getline(*file, line);
+    }
     pos_rows.clear();
     while (!file->eof())
     {
-      pos_rows.push_back(file->tellg());
+      *file >> ws;
+      if (file->peek()!='#' && file->peek()!=EOF) pos_rows.push_back(file->tellg());
+      cout << file->peek() << endl;
       string line;
       getline(*file, line);
-      *file >> ws;
     }
     file->clear();
     if (pos_rows.size() != (unsigned int)length)
@@ -242,6 +242,9 @@ void AsciiVMatrix::getRow(int i, Vec v) const
 
 void AsciiVMatrix::appendRow(Vec v)
 {
+  if (length() == length_max)
+    PLERROR("AsciiVMatrix::appendRow aborted: the matrix has reach its maximum length.");
+
   if (readwritemode)
   {
     // write the Vec at the end of the file
@@ -253,11 +256,14 @@ void AsciiVMatrix::appendRow(Vec v)
 
     // update the length
     length_++;
-    file->seekp(vmatlength_pos);
-    *file << length();
+    if (rewrite_length)
+    {
+      file->seekp(vmatlength_pos);
+      *file << length() << " " << width();
+    }
   }
   else
-    PLWARNING("AsciiVMatrix::appendRow aborted: the vmat has been open in read only format.");
+    PLERROR("AsciiVMatrix::appendRow aborted: the vmat has been open in read only format.");
 }
 
 void AsciiVMatrix::put(int i, int j, real value)

@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AsciiVMatrix.h,v 1.2 2003/02/18 21:57:04 ducharme Exp $ 
+   * $Id: AsciiVMatrix.h,v 1.3 2003/02/20 21:49:35 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file AsciiVMatrix.h */
@@ -58,7 +58,8 @@ protected:
   streampos vmatlength_pos;
   bool readwritemode;
   bool newfile;
-  bool old_vmat_format;
+  bool rewrite_length;
+  int length_max;
 
 public:
 
