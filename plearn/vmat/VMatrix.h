@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.2 2002/10/21 01:21:53 plearner Exp $
+   * $Id: VMatrix.h,v 1.3 2003/03/06 17:39:51 yoshua Exp $
    ******************************************************* */
 
 
@@ -62,6 +62,31 @@ using namespace std;
 class Ker;
 class VMat;
 class Func;
+
+/*! ** VVec ** */
+//! A VVec represents an abstract notion of "sample" or "example"
+//! which will allow us to generalize VMatrices to handle objects
+//! that are not conveniently representable with ordinary vectors.
+class VVec : public Object
+{
+    // We leave the actual representation choice to some
+    // underlying virtual matrix:
+  public:
+    VMat mat;
+    int row_index;
+
+    // to keep compatibility with most current code,
+    // VVec's can be converted to Vec's
+    virtual Vec toVec() {
+      Vec row_vec(mat.width()); // somewhat wasteful
+      mat.getRow(row_index,row_vec);
+      return row_vec;
+    }
+    virtual void toVec(Vec row_vec) {
+      mat.getRow(row_index,row_vec);
+    }
+    int length() { return mat.width(); }
+};
 
 /*! ** VMatrix ** */
 

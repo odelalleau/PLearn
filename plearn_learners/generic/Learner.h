@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.h,v 1.5 2002/12/02 08:46:51 plearner Exp $
+   * $Id: Learner.h,v 1.6 2003/03/06 17:40:06 yoshua Exp $
    ******************************************************* */
 
 
@@ -293,6 +293,14 @@ using namespace std;
         use(input,output);
       }
     }
+
+      //! **Next generation** learners allow inputs to be anything, not just Vec
+      Vec vec_input;
+      virtual void computeOutput(const VVec& input, Vec& output) {
+        vec_input.resize(input.length());
+        input.toVec(vec_input);
+        use(vec_input,output);
+      }
 
 /*!       ** DEPRECATED ** Do not use! 
       use the setOption and build methods instead
