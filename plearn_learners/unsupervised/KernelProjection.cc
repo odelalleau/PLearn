@@ -33,13 +33,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.cc,v 1.13 2004/07/19 14:55:17 tihocan Exp $ 
+   * $Id: KernelProjection.cc,v 1.14 2004/07/20 13:06:35 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
 
 /*! \file KernelProjection.cc */
 
+#include <time.h>               //!< For clock().
 #include "KernelProjection.h"
 #include "plapack.h"            //!< For eigenVecOfSymmMat.
 
@@ -316,7 +317,13 @@ void KernelProjection::train()
   if (report_progress) {
     kernel->report_progress = true;
   }
+  clock_t time_for_gram = clock();
   kernel->computeGramMatrix(gram);
+  time_for_gram = clock() - time_for_gram;
+  if (verbosity >= 3) {
+    cout << flush;
+    cout << "Time to compute the Gram matrix: " << real(time_for_gram) / real(CLOCKS_PER_SEC) << endl;
+  }
   // (2) Compute its eigenvectors and eigenvalues.
   eigenVecOfSymmMat(gram, n_comp + ignore_n_first, eigenvalues, eigenvectors);
   if (ignore_n_first > 0) {
