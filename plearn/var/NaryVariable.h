@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: NaryVariable.h,v 1.7 2004/02/20 21:11:51 chrish42 Exp $
+   * $Id: NaryVariable.h,v 1.8 2004/02/26 07:49:34 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,14 +47,17 @@
 #include "TMat.h"
 #include "VMat.h"
 #include "Func.h"
+
+// norman: multi threading unix standard not supported in win32
+#ifndef WIN32
 #include "Popen.h"
+#endif
 
 namespace PLearn {
 using namespace std;
 
 class NaryVariable: public Variable
 {
-  typedef Variable inherited;
     
 protected:
   //!  Default constructor for persistence
@@ -63,6 +66,9 @@ protected:
   
 public: // Temporarily public for GradientOptimizer hack (speed contest, Pascal)
   VarArray varray;
+
+  // norman: moved to public (TEMP!)
+  typedef Variable inherited;
 
 public:
   NaryVariable(const VarArray& the_varray, int thelength, int thewidth=1);
