@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.cc,v 1.8 2004/01/27 13:16:42 yoshua Exp $ 
+   * $Id: PDistribution.cc,v 1.9 2004/01/27 15:13:30 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.cc */
@@ -114,6 +114,7 @@ void PDistribution::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 int PDistribution::outputsize() const
 {
   int l=0;
+  int targetsize_ = train_set->targetsize();
   for (unsigned int i=0;i<outputs_def.length();i++)
     if (outputs_def[i]=='L' || outputs_def[i]=='D' || outputs_def[i]=='C' || outputs_def[i]=='S')
       l+=n_curve_points;
