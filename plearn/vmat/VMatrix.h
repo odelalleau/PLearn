@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.37 2004/03/23 23:08:09 morinf Exp $
+   * $Id: VMatrix.h,v 1.38 2004/04/16 14:56:27 tatien Exp $
    ******************************************************* */
 
 
@@ -415,8 +415,8 @@ public:
 */
   virtual Mat toMat() const;
 
-  //!  The default implementation of this methodoes nothing
-  //!  But subclasses may overload it to reallocate memory to exactly what is needed and no more.
+  //!  The default implementation of this method does nothing,
+  //!  but subclasses may overload it to reallocate memory to exactly what is needed and no more.
   virtual void compacify();
 
   //!  in case the dimensions of an underlying vmat has changed, recompute it
