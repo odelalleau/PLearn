@@ -9,7 +9,7 @@ from   plearn.utilities.verbosity    import *
 
 import plearn.utilities.versionning  as     versionning
 versionning.project_module( "PyTest", __name__,
-                            "$Id: IntelligentDiff.py,v 1.8 2004/12/20 21:04:57 dorionc Exp $"
+                            "$Id: IntelligentDiff.py,v 1.9 2004/12/20 23:16:50 dorionc Exp $"
                             )
 
 class Resources:
@@ -85,10 +85,9 @@ class Resources:
 
 class IntelligentDiff:    
     
-    def __init__(self, compare_program, comparable_psaves):
-        self.differences       = []
-        self.compare_program   = compare_program
-        self.comparable_psaves = comparable_psaves
+    def __init__(self, test): 
+        self.differences = []
+        self.test        = test
 
     def are_directories(self, bench, other):
         bench_is = os.path.isdir(bench)
@@ -196,27 +195,34 @@ class IntelligentDiff:
         directory_when_called = os.getcwd()
         (_b_, basename) = os.path.split(bench)
 
-        if basename in self.comparable_psaves:
-            ## Creating a temporary directory
-            tmp_dir    = "%s.idiff_%s"\
-                         % (other, toolkit.date_time_random_string())
-            os.mkdir( tmp_dir )
-            os.chdir( tmp_dir )
+## CURRENTLY, ALL PSAVE FILES ARE MANAGED
+##         if basename in self.comparable_psaves:
 
-            ## Creating the canonized files
-            bench_path = os.path.join(directory_when_called, bench)
-            bench_rw   = basename+".expected_rw"
-
-            other_path = os.path.join(directory_when_called, other)
-            other_rw   = basename+".run_rw"
-
-            cmd = "%s --no-version read_and_write %s %s"
-            os.system( cmd%(self.compare_program, bench_path, bench_rw) )
-            os.system( cmd%(self.compare_program, other_path, other_rw) )
-
-            ## Actual comparison
-            self.diff_files(bench_rw, other_rw)
-            os.chdir( directory_when_called )
+        ## The read_and_write command must be called within the appropriate
+        ## 'plearn' like program
+        compare_program = self.test.program.name
         
-        else:
-            vprint("Serialization file %s will be skipped."%bench, 3)
+        ## Creating a temporary directory
+        tmp_dir    = "%s.idiff_%s"\
+                     % (other, toolkit.date_time_random_string())
+        os.mkdir( tmp_dir )
+        self.test.link_resources( tmp_dir )
+
+        ## Creating the canonized files
+        os.chdir( tmp_dir )
+        bench_path = os.path.join(directory_when_called, bench)
+        bench_rw   = basename+".expected_rw"
+
+        other_path = os.path.join(directory_when_called, other)
+        other_rw   = basename+".run_rw"
+
+        cmd = "%s --no-version read_and_write %s %s"
+        os.system( cmd%(compare_program, bench_path, bench_rw) )
+        os.system( cmd%(compare_program, other_path, other_rw) )
+
+        ## Actual comparison
+        self.diff_files(bench_rw, other_rw)
+        os.chdir( directory_when_called )
+        
+##         else:
+##             vprint("Serialization file %s will be skipped."%bench, 3)

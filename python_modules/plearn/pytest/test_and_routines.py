@@ -16,7 +16,7 @@ from   IntelligentDiff                import *
 
 import plearn.utilities.versionning   as     versionning
 versionning.project_module( "PyTest", __name__,
-                            "$Id: test_and_routines.py,v 1.15 2004/12/20 21:04:57 dorionc Exp $"
+                            "$Id: test_and_routines.py,v 1.16 2004/12/20 23:16:51 dorionc Exp $"
                             )
 
 __all__ = [
@@ -62,15 +62,15 @@ class TestDefaults:
     arguments         = ''
     resources         = []
     disabled          = False
-    comparable_psaves = []
+##    comparable_psaves = []
 
     __declare_members__ = [ ('name',              types.StringType),
                             ('description',       types.StringType),
                             ('program',           Program),
                             ('arguments',         types.StringType),
                             ('resources',         types.ListType),
-                            ('disabled',          types.BooleanType),
-                            ('comparable_psaves', types.ListType)
+                            ('disabled',          types.BooleanType)##,
+##                             ('comparable_psaves', types.ListType)
                             ]
 
 class Test(FrozenObject):
@@ -140,8 +140,8 @@ class Test(FrozenObject):
                 
         self.set_str_spacer( '\n' )
 
-        if len(self.comparable_psaves) > 0:
-            assert isinstance(self.program, GlobalCompilableProgram)
+##         if len(self.comparable_psaves) > 0:
+##             assert isinstance(self.program, GlobalCompilableProgram)
             
     def sanity_check(self):
         if self.name == '':
@@ -222,32 +222,6 @@ class Test(FrozenObject):
 
     def is_disabled(self):
         return self.disabled
-    
-##     def link_resources(self, test_results):
-##         resources = []
-##         resources.extend( self.resources )
-##         resources.append( self.program.path )
-
-##         def single_link(resource):
-##             link_cmd = "ln -s %s %s" % ( resource, test_results )
-##             vprint( "Linking resource: %s." % link_cmd, 3 )
-##             os.system( link_cmd )
-            
-##         for resource in resources:
-##             if not os.path.isabs( resource ):
-##                 resource = os.path.join( self.test_directory, resource ) 
-##             if not os.path.exists( resource ):
-##                 raise PyTestUsageError(
-##                     "The %s test uses %s as a resource but path doesn't exist."
-##                     % ( self.name, resource )
-##                     )
-
-##             single_link( resource )
-
-##             if toolkit.isvmat( resource ):
-##                 meta = resource+'.metadata'
-##                 if os.path.exists( meta ):
-##                     single_link( meta )
 
     def test_results(self, results):
         if results not in [Test.expected_results, Test.run_results]:
@@ -267,12 +241,7 @@ class Test(FrozenObject):
         test_results  = self.test_results( results )
         backup        = self.ensure_results_directory( test_results )
 
-        ## self.link_resources( test_results )
-        resources = []
-        resources.extend( self.resources )
-        resources.append( self.program.path )
-        Resources.link_resources( self.test_directory, resources, test_results )
-
+        self.link_resources( test_results )
         run_command   = ( "./%s %s >& %s"
                           % ( self.program.get_name(), self.arguments, self.name+'.run_log' )
                           )
@@ -283,17 +252,17 @@ class Test(FrozenObject):
         os.system(run_command)
         os.chdir( cwd )
         
-        ## self.unlink_resources( test_results )
         Resources.unlink_resources( test_results )
         os.putenv("PLEARN_DATE_TIME", "YES")
 
-##     def unlink_resources(self, test_results):
-##         dirlist = os.listdir( test_results )
-##         for f in dirlist:
-##             path = os.path.join( test_results, f )
-##             if os.path.islink( path ):
-##                 vprint( "Removing link: %s." % path, 3 ) 
-##                 os.remove( path )
+    def link_resources(self, target_directory):
+        resources = []
+        resources.extend( self.resources )
+        resources.append( self.program.path )        
+        Resources.link_resources( self.test_directory, resources, target_directory )
+
+    def unlink_resources(self, target_directory):
+        Resources.unlink_resources( target_directory )
 
 class RoutineDefaults(TaskDefaults):
     test                  = None
@@ -307,8 +276,6 @@ class Routine(Task):
         overrides['task_name'] = test.name
         Task.__init__( self, defaults, **overrides ) 
 
-        ## os.chdir( test_suite_dir(directory) )
-        ## os.chdir( directory )
         self.test = test
 
     def compile_program(self):
@@ -457,8 +424,7 @@ class RunTestRoutine(Routine):
         mappings.update( Resources.name_resolution )
         plpath.process_with_mappings( Test.run_results, mappings )
 
-        idiff  =  IntelligentDiff( self.test.program.name, 
-                                   self.test.comparable_psaves )                
+        idiff  =  IntelligentDiff( self.test )
         diffs  =  idiff.diff( self.expected_results, self.run_results )
         if diffs == []:
             self.set_status( "Succeeded" )

@@ -1,5 +1,5 @@
 """ALL DOCUMENTATION IN THIS MODULE MUST BE REVISED!!!"""
-import inspect
+import inspect, types
 
 from   pyplearn                   import *
 import plearn.utilities.metaprog  as     metaprog
