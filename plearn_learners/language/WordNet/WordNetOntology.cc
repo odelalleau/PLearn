@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.cc,v 1.21 2003/06/30 15:13:52 yoshua Exp $
+   * $Id: WordNetOntology.cc,v 1.22 2003/07/21 16:59:59 jauvinc Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -66,7 +66,7 @@ WordNetOntology::WordNetOntology(string voc_file,
   if (pre_compute_descendants)
     extractDescendants();
   if (pre_compute_ancestors)
-    extractAncestors(word_coverage_threshold);
+    extractAncestors(word_coverage_threshold, true, true);
 }
 
 WordNetOntology::WordNetOntology(string voc_file,
@@ -82,7 +82,7 @@ WordNetOntology::WordNetOntology(string voc_file,
   if (pre_compute_descendants)
     extractDescendants();
   if (pre_compute_ancestors)
-    extractAncestors(word_coverage_threshold);
+    extractAncestors(word_coverage_threshold, true, true);
 }
 
 void WordNetOntology::init(bool the_differentiate_unknown_words)
@@ -1287,24 +1287,32 @@ void WordNetOntology::printNodes()
   }
 }
 
-void WordNetOntology::extractAncestors(int threshold, bool cut_with_word_coverage)
+void WordNetOntology::extractAncestors(int threshold, bool cut_with_word_coverage, bool exclude_itself)
 {
 #ifdef VERBOSE
   cout << "extracting ancestors... ";
 #endif
 
+  if (cut_with_word_coverage && !are_descendants_extracted)
+  {
+    cout << "*** I need to extract descendants before I can extract ancestors with a word coverage threshold ***" << endl;
+    extractDescendants();
+  }
+
   // synsets -> ancestors
   int n_sense_ancestors = 0;
   for (map<int, Node*>::iterator it = synsets.begin(); it != synsets.end(); ++it)
   {
+    int ss = it->first;
+    Node* node = it->second;
     Set ancestors;
-
     if (cut_with_word_coverage)
-      extractAncestors(it->second, ancestors, threshold);
+      extractAncestors(node, ancestors, threshold);
     else
-      extractAncestors(it->second, ancestors, 1, threshold);
-    ancestors.insert(it->first);
-    synset_to_ancestors[it->first] = ancestors;
+      extractAncestors(node, ancestors, 1, threshold);
+    if (!exclude_itself)
+      ancestors.insert(ss);
+    synset_to_ancestors[ss] = ancestors;
     n_sense_ancestors += ancestors.size();
   }
 
@@ -1321,8 +1329,8 @@ void WordNetOntology::extractAncestors(int threshold, bool cut_with_word_coverag
     {
       int sense_id = *it;
       Set ancestors = getSynsetAncestors(sense_id);
-      ancestors.insert(sense_id);
       word_ancestors.merge(ancestors);
+      word_ancestors.insert(sense_id);
     }
     word_to_ancestors[word_id] = word_ancestors;
     n_word_ancestors += word_ancestors.size();
@@ -1337,6 +1345,7 @@ void WordNetOntology::extractAncestors(int threshold, bool cut_with_word_coverag
 // "word coverage threshold" version
 void WordNetOntology::extractAncestors(Node* node, Set ancestors, int word_coverage_threshold)
 {
+/*
   int ss_id = node->ss_id;
   if (word_coverage_threshold == -1 || synset_to_word_descendants[ss_id].size() < word_coverage_threshold)
   {
@@ -1346,8 +1355,8 @@ void WordNetOntology::extractAncestors(Node* node, Set ancestors, int word_cover
       extractAncestors(synsets[*it], ancestors, word_coverage_threshold);
     }
   }
+*/
 
-/*
   for (SetIterator it = node->parents.begin(); it != node->parents.end(); ++it)
   {
     int ss_id = *it;
@@ -1357,7 +1366,6 @@ void WordNetOntology::extractAncestors(Node* node, Set ancestors, int word_cover
       extractAncestors(synsets[ss_id], ancestors, word_coverage_threshold);
     }
   }
-*/
 }
 
 // "level threshold" version
@@ -1452,14 +1460,27 @@ bool WordNetOntology::isInWordNet(int word_id)
 
 int WordNetOntology::getWordId(string word)
 {
-#ifndef NOWARNING
-  if (words_id.find(word) == words_id.end())
+  map<string, int>::iterator it = words_id.find(word);
+  if (it == words_id.end())
   {
-    PLWARNING("asking for a non-word (%s)", word.c_str());
-    return -1;
+    map<string, int>::iterator iit = words_id.find(OOV_TAG);
+    if (iit == words_id.end())
+      return -1;
+    else
+      return iit->second;
+  } else
+  {
+    return it->second;
   }
-#endif
-  return words_id[word];
+
+// #ifndef NOWARNING
+//   if (words_id.find(word) == words_id.end())
+//   {
+//     PLWARNING("asking for a non-word (%s)", word.c_str());
+//     return -1;
+//   }
+// #endif
+//   return words_id[word];
 }
 
 string WordNetOntology::getWord(int id)
@@ -1584,7 +1605,7 @@ void WordNetOntology::printSynsetAncestors()
 {
   if (!are_ancestors_extracted)
   {
-    extractAncestors(WORD_COVERAGE_THRESHOLD);
+    extractAncestors(WORD_COVERAGE_THRESHOLD, true, true);
   }
   for (map<int, Set>::iterator it = synset_to_ancestors.begin(); it != synset_to_ancestors.end(); ++it)
   {
@@ -1599,7 +1620,7 @@ void WordNetOntology::printWordAncestors()
 {
   if (!are_ancestors_extracted)
   {
-    extractAncestors(WORD_COVERAGE_THRESHOLD);
+    extractAncestors(WORD_COVERAGE_THRESHOLD, true, true);
   }
   for (map<int, Set>::iterator it = word_to_senses.begin(); it != word_to_senses.end(); ++it)
   {
@@ -1945,6 +1966,19 @@ bool WordNetOntology::isSynsetUnknown(int id)
 //     }
 //   }
 // }
+
+void WordNetOntology::getDownToUpParentCategoriesAtLevel(int ss_id, int target_level, Set categories, int cur_level)
+{
+  Node* node = synsets[ss_id];
+  if (cur_level == target_level && !isTopLevelCategory(ss_id))
+  {
+    categories.insert(ss_id);
+  } else
+  {
+    for (SetIterator it = node->parents.begin(); it != node->parents.end(); ++it)
+      getDownToUpParentCategoriesAtLevel(*it, target_level, categories, cur_level + 1);
+  }  
+}
 
 void WordNetOntology::getCategoriesAtLevel(int ss_id, int cur_level, int target_level, set<int>& categories)
 {
@@ -2652,8 +2686,8 @@ void removeDelimiters(string& s, char delim, char replace)
   unsigned int pos = s.find(delim, 0);
   while (pos != string::npos)
   {
-    s.replace(pos, 1, &replace);
-    //s.replace(pos, 1, replace);
+      //s.replace(pos, 1, &replace);
+      s.replace(pos, 1, replace);
     pos = s.find(delim, pos + 1);
   }
 }
@@ -2671,8 +2705,7 @@ void replaceChars(string& str, char char_to_replace, char replacing_char)
   unsigned int pos = str.find(char_to_replace, 0);
   while (pos != string::npos)
   {
-    //str.replace(pos, 1, replacing_char);
-    str.replace(pos, 1, &replacing_char);
+    str.replace(pos, 1, replacing_char);
     pos = str.find(char_to_replace, pos + 1);
   }
 }

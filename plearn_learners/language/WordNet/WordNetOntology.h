@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.h,v 1.16 2003/05/26 20:37:25 jauvinc Exp $
+   * $Id: WordNetOntology.h,v 1.17 2003/07/21 17:00:00 jauvinc Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -256,6 +256,7 @@ public:
   int getSyntacticClassForSense(int sense_id);
   int getPredominentSyntacticClassForWord(int word_id);
   void getDescendantCategoriesAtLevel(int ss_id, int cur_level, int target_level, Set categories);
+  void getDownToUpParentCategoriesAtLevel(int ss_id, int target_level, Set categories, int cur_level = 0);
 
   bool isWord(int id);
   bool isWord(string word);
@@ -306,7 +307,7 @@ public:
   void extractTaggedWordFrequencies(map<int, map<int, int> > &word_senses_to_tagged_frequencies);
 //int extractFrequencies(string word, int sense, int wn_pos_type);
   Node* extractOntology(SynsetPtr ssp);
-  void extractAncestors(int threshold, bool cut_with_word_coverage = true);
+  void extractAncestors(int threshold, bool cut_with_word_coverage, bool exclude_itself);
   void extractAncestors(Node* node, Set ancestors, int level, int level_threshold);
   void extractAncestors(Node* node, Set ancestors, int word_coverage_threshold);
   void extractDescendants(Node* node, Set sense_descendants, Set word_descendants);

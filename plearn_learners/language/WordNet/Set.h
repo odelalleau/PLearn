@@ -45,11 +45,13 @@ public:
   
   void merge(Set s) 
   {
-    Set res;
-    set_union(begin(), end(),
-              s.begin(), s.end(),
-              insert_iterator<PPointableSet>(*res, res.begin()));
-    *ptr = *res;
+//     Set res;
+//     set_union(begin(), end(),
+//               s.begin(), s.end(),
+//               insert_iterator<PPointableSet>(*res, res.begin()));
+//     *ptr = *res;
+    for (SetIterator it = s.begin(); it != s.end(); ++it)
+      insert(*it);
   }
 
   void difference(Set s)
