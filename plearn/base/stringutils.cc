@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.cc,v 1.19 2004/05/04 21:15:53 nova77 Exp $
+   * $Id: stringutils.cc,v 1.20 2004/05/05 19:24:09 nova77 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -366,7 +366,7 @@ string backslash_to_slash(string str)
 int search_replace(string& text, const string& searchstr, const string& replacestr)
 {
   int n = 0;
-  string::size_type startpos = text.find(searchstr, 0);
+  size_t startpos = text.find(searchstr, 0);
   while(startpos!=string::npos)
     {
       text.replace(startpos, searchstr.length(), replacestr);
@@ -400,8 +400,8 @@ vector<string> split(const string& s, const string& delimiters, bool keep_delimi
 {
   vector<string> result;
 
-  string::size_type startpos = 0;
-  string::size_type endpos = 0;
+  size_t startpos = 0;
+  size_t endpos = 0;
 
   for(;;)
     {
@@ -459,7 +459,7 @@ vector<string> split(const string& s, const string& delimiters, bool keep_delimi
 void split_on_first(const string& s,
                     const string& delimiters, string& left, string& right)
 {
-  string::size_type pos = s.find_first_of(delimiters);
+  size_t pos = s.find_first_of(delimiters);
   if (pos != string::npos)
     {
       left = s.substr(0,pos);
@@ -545,8 +545,8 @@ vector<string> addprepostfix(const string& prefix, const vector<string>& names, 
 
 string addprepostfix(const string& prefix, const string& text, const string& postfix)
 {
-  string::size_type startpos = 0;
-  string::size_type endpos = 0;
+  size_t startpos = 0;
+  size_t endpos = 0;
   string txt = removenewline(text);
   string res;
   while(endpos!=string::npos)

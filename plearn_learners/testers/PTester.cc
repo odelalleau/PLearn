@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.26 2004/03/01 18:36:13 tihocan Exp $ 
+   * $Id: PTester.cc,v 1.27 2004/05/05 19:24:08 nova77 Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -395,7 +395,7 @@ void StatSpec::init(const string& statname)
 void StatSpec::parseStatname(const string& statname)
 {
   string name1=removeallblanks(statname);
-  unsigned int p = name1.find("[");
+  size_t p = name1.find("[");
   if (p==string::npos)
     PLERROR("StatSpec::parseStatname(%s): can't find left bracket!",statname.c_str());
   // get first statistic name, which is anything before the [

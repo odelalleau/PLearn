@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.cc,v 1.18 2004/05/04 21:15:52 nova77 Exp $
+   * $Id: VVMatrix.cc,v 1.19 2004/05/05 19:24:09 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -127,7 +127,7 @@ vector<vector<string> > VVMatrix::extractSourceMatrix(const string & str,const s
 time_t VVMatrix::getDateOfVMat(const string& filename)
 {
   string in=readFileAndMacroProcess(filename);
-  size_t idx_source = (unsigned int)in.find("<SOURCES>");
+  size_t idx_source = in.find("<SOURCES>");
   size_t cidx_source;
 
   time_t latest = getDateOfCode(filename),tmp;

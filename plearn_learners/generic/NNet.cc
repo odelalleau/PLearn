@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.52 2004/04/23 13:27:38 tihocan Exp $
+   * $Id: NNet.cc,v 1.53 2004/05/05 19:24:08 nova77 Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -370,7 +370,7 @@ void NNet::build_()
       /*
        * output_transfer_func
        */
-      unsigned int p=0;
+      size_t p=0;
       if(output_transfer_func!="" && output_transfer_func!="none")
         {
           if(output_transfer_func=="tanh")
@@ -387,9 +387,9 @@ void NNet::build_()
             output = log_softmax(output);
           else if ((p=output_transfer_func.find("interval"))!=string::npos)
           {
-            unsigned int q = (unsigned int)output_transfer_func.find(",");
+            size_t q = output_transfer_func.find(",");
             interval_minval = atof(output_transfer_func.substr(p+1,q-(p+1)).c_str());
-            unsigned int r = (unsigned int)output_transfer_func.find(")");
+            size_t r = output_transfer_func.find(")");
             interval_maxval = atof(output_transfer_func.substr(q+1,r-(q+1)).c_str());
             output = interval_minval + (interval_maxval - interval_minval)*sigmoid(output);
           }

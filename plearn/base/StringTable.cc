@@ -132,7 +132,7 @@ StringTable::StringTable(const string & filename)
     {
 /*
       vector<string> line;
-      unsigned int pos,lpos=0;
+      size_t pos,lpos=0;
       while((pos=str.find(";",lpos))!=string::npos)
       {
         line.push_back(str.substr(lpos,pos-lpos));

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.21 2004/05/04 21:15:52 nova77 Exp $
+   * $Id: VMatLanguage.cc,v 1.22 2004/05/05 19:24:09 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -237,9 +237,9 @@ using namespace std;
             // stats file for example) and warn if the file is out of date
 
             // Mhhh.. is this still pertinent? This "stats" and "bins" thing is semi-standard I think
-            size_t idx_meta  =  (unsigned int)token.find(".metadata");
-            size_t idx_stats =  (unsigned int)token.find("stats.");
-            size_t idx_bins  =  (unsigned int)token.find("bins.");
+            size_t idx_meta  =  token.find(".metadata");
+            size_t idx_stats =  token.find("stats.");
+            size_t idx_bins  =  token.find("bins.");
             if(idx_meta!=string::npos && (idx_stats!=string::npos || idx_bins!=string::npos))
               {
                 string file=token.substr(0,idx_meta);

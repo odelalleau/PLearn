@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: MatIO.h,v 1.15 2004/05/04 21:15:53 nova77 Exp $
+   * $Id: MatIO.h,v 1.16 2004/05/05 19:24:08 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -204,7 +204,7 @@ void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames)
     getline(in, line);
     could_be_old_amat = false;
 
-    size_t pos=(size_t)line.find(":");
+    size_t pos=line.find(":");
     if(pos!=string::npos)
     {
       string sub=line.substr(0,pos);
