@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.18 2003/08/20 19:18:48 yoshua Exp $
+   * $Id: TMat_maths_impl.h,v 1.19 2003/09/04 13:27:32 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -225,6 +225,33 @@ T mean(const TVec<T>& vec)
   for(int i=0; i<vec.length(); i++)
     res += v[i];
   return T(res/vec.length());
+}
+
+//! if ignore_missing==true, then the mean is computed by ignoring the
+//! possible MISSING_VALUE in the Vec.
+//! if ignore_missing==false, then MISSING_VALUE is returned if one
+//! element of the Vec is MISSING_VALUE.
+template<class T>
+T mean_with_missing(const TVec<T>& vec, bool ignore_missing=true)
+{
+  #ifdef BOUNDCHECK
+  if(vec.length()==0)
+    PLERROR("IN T mean(const TVec<T>& vec) vec has zero length");
+  #endif
+  double res = 0.0;
+  int n_non_missing = 0;
+  T* v = vec.data();
+  for(int i=0; i<vec.length(); i++)
+  {
+    if (!is_missing(v[i]))
+    {
+      res += v[i];
+      n_non_missing++;
+    }
+    else if (!ignore_missing) return MISSING_VALUE;
+  }
+
+  return T(res/double(n_non_missing));
 }
 
 template<class T>
