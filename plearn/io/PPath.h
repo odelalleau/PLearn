@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.h,v 1.7 2005/02/16 15:10:13 tihocan Exp $ 
+   * $Id: PPath.h,v 1.8 2005/02/17 17:23:19 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent, Christian Dorion, Nicolas Chapados
@@ -120,6 +120,19 @@ the same ressource, in particular the final slash is ignored (except for a
 root directory).
 Finally, relative paths like "foo/bar" are considered to be relative to the
 current working directory of the process.
+
+Protocols
+=========
+
+In the examples above, paths are assumed to target a file (or directory) on disk.
+This can be made explicit by adding the protocol "file:", e.g. "file:/foo/bar".
+The protocols available are:
+ file:  <- on disk
+ ftp:   <- on a ftp server
+ http:  <- on a http server
+If a protocol is used, the path MUST be absolute.
+Also, a protocol cannot be used with a metaprotocol: "file:HOME:foo" is invalid,
+but you could define HOME to be "file:/home/login" and use "HOME:foo".
 
 What more?
 ===========
@@ -288,13 +301,6 @@ public:
   //! Return true iff this is an (absolute) root directory.
   bool   isRoot        ()  const;
 
-  PPath  operator+  (const char*    other) const { return operator+ (PPath(other)); }
-  PPath& operator+= (const char*    other)       { return operator+=(PPath(other)); }
-  PPath  operator+  (const string&  other) const { return operator+ (PPath(other)); }
-  PPath& operator+= (const string&  other)       { return operator+=(PPath(other)); }
-  PPath  operator+  (const PPath&   other) const;
-  PPath& operator+= (const PPath&   other);  
-  
   static string _slash;       //!< System-dependent slash string.
   static char   _slash_char;  //!< System-dependent slash character.
 
@@ -383,15 +389,15 @@ public:
   PPath basename  () const;
 
   /*!
-    If this path contains a dot, return the substring that comes after
-    the last dot. Otherwise, it returns "".
+    Return the extension of basename() (or an empty string if it has no
+    extension). The dot may or may not be included, depending on the value
+    of the 'with_dot' parameter.
   */
-  string extension () const;
+  string extension (bool with_dot = false) const;
 
   /*!
-    If this path contains a dot, return a path made from the substring
-    that comes before the last dot. Otherwise, it returns a copy of this
-    path.
+    Return a copy of the path, but without its extension (as computed by the
+    extension() method).
   */
   PPath no_extension () const;
 

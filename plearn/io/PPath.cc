@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.cc,v 1.17 2005/02/17 14:27:06 tihocan Exp $ 
+   * $Id: PPath.cc,v 1.18 2005/02/17 17:23:10 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -316,7 +316,9 @@ PPath::PPath(const string& path_)
   parseProtocol       ( );
 }
 
-// Ensure a valid internal representation
+///////////////////////
+// resolveSlashChars //
+///////////////////////
 void PPath::resolveSlashChars( )
 {
   size_t plen = length();      
@@ -350,8 +352,9 @@ void PPath::resolveSlashChars( )
   string::operator=(resolved);
 }
 
-// TODO What about file:HOME:PLearn ?
-
+/////////////////////////
+// expandMetaprotocols //
+/////////////////////////
 void PPath::expandMetaprotocols()
 {
   ensureMappings();
@@ -529,6 +532,9 @@ void PPath::resolveDots()
     insert(0, _protocol + ":");
 }
 
+///////////////////
+// parseProtocol //
+///////////////////
 void PPath::parseProtocol()
 {
   size_t endpr = find(':');
@@ -548,22 +554,23 @@ void PPath::parseProtocol()
   {
     _protocol = substr(0, endpr);
 
-    if ( _protocol == FILE_PROTOCOL )
+    if ( _protocol == FILE_PROTOCOL ||
+         _protocol == HTTP_PROTOCOL ||
+         _protocol == FTP_PROTOCOL  )
     {
+      // Make sure we do not define a protocol for a relative path.
       PPath check_filepath_validity = removeProtocol();
-      if ( check_filepath_validity != "" &&
-          !check_filepath_validity.isAbsPath() )
-        PLERROR("A PPath should not specify the 'file:' protocol "
+      if ( !check_filepath_validity.isEmpty() &&
+           !check_filepath_validity.isAbsPath() )
+        PLERROR("A PPath should not specify a protocol "
                 "for a relative path (in %s).", c_str());
-      // TODO Why ?
     }
 
     // Nothing prevents a file from containing a ':' char. Under dos, for
     // instance, a letter preceeding ':' represents the drive. Hence, if
     // we do not recognize the protocol, we assume the ':' was part of
     // the file name.
-    else if ( _protocol != HTTP_PROTOCOL &&
-              _protocol !=  FTP_PROTOCOL  )
+    else
       _protocol = "";
   }
 
@@ -614,15 +621,16 @@ PPath PPath::absolute() const
 string PPath::canonical() const
 {
   // An empty path does not need to be modified.
-  // Http && ftp path are already considered as canonical. // TODO See if ok...
-  if (isEmpty() || isHttpPath() || isFtpPath())
+  if (isEmpty())
     return *this;
 
-  // isFilePath()
   // We have to replace any special path by its canonic equivalent.
+  // Note that the protocol is kept. This means in particular that
+  // if ppath = "/foo/bar" and the metaprotocol FOO maps to "file:/foo",
+  // then the canonical form of ppath will still be "/foo/bar", and not
+  // "FOO:bar" (we may want to change this behavior in the future).
 
-  // Remove the file protocol if any.
-  string canonic_path = removeProtocol();
+  string canonic_path = *this;
 #ifdef __INTEL_COMPILER
 #pragma warning(disable:279)  // Get rid of compiler warning.
 #endif
@@ -708,8 +716,12 @@ string PPath::canonical() const
 /////////////////
 PPath PPath::addProtocol()  const
 {
-  if ( _protocol.empty() )
-    return ( PPath(FILE_PROTOCOL + ':' + string(*this)) );
+  if ( _protocol.empty()) {
+    if (!isAbsPath())
+      PLERROR("In PPath::addProtocol - A protocol can only be added to an "
+              "absolute path, and '%s' is relative", canonical().c_str());
+    return ( PPath(string(FILE_PROTOCOL) + ':' + string(*this)) );
+  }
   return PPath( *this );
 }
 
@@ -726,34 +738,28 @@ PPath PPath::removeProtocol()  const
   return no_protocol;
 }
 
-// TODO Check operators.
-
-// The resolveSlashChars and resolveDots were called on other upon construction
-PPath PPath::operator+(const PPath& other) const
-{
-  return PPath( string(*this) + string(other) );
-}
-
-PPath& PPath::operator+=(const PPath& other)
-{
-  string::operator+=(other);
-  resolveDots       ( );
-  return *this;
-}
-
+///////////////
+// operator/ //
+///////////////
 PPath PPath::operator/(const PPath& other) const
 {
   return ( PPath(*this) /= other );
 }
 
+////////////////
+// operator/= //
+////////////////
 PPath& PPath::operator/=(const PPath& other)
 {
+  if (other.isAbsPath())
+    PLERROR("In PPath::operator/= - The concatenated path (%s) cannot be absolute",
+             other.c_str());
   // Add a slash if needed.
-  // TODO The other path should not be absolute ?!
-  if ( !isEmpty()                              &&
-       !endsWith  (c_str(),       _slash_char) &&
-       !startsWith(other.c_str(), _slash_char)  )
-    string::operator+=(_slash);
+  // Note that 'other' cannot start with a slash, otherwise it would be an
+  // absolute directory.
+  if ( !isEmpty  ()                  &&
+       !endsWith (*this, _slash_char) )
+    string::operator+=(_slash_char);
   string::operator+=(other);
 
   resolveDots       ( );
@@ -823,26 +829,27 @@ PPath PPath::basename() const
 ///////////////
 // extension //
 ///////////////
-string PPath::extension() const
+string PPath::extension(bool with_dot) const
 {
-  // TODO Better search from the end ?
-  size_t begext = find('.');
-  if ( begext == npos ||
-       begext == length()-1 )
+  PPath base = basename();
+  size_t begext = base.rfind('.');
+  if ( begext == npos            || // Not found.
+       begext == base.length()-1 )  // Filename ending with a dot.
     return "";
-  return substr(begext+1);
+  return with_dot ? base.substr(begext) : base.substr(begext+1);
 }
 
-PPath PPath::no_extension () const
+//////////////////
+// no_extension //
+//////////////////
+PPath PPath::no_extension() const
 {
-  // TODO Better search from the end ?
-  size_t begext = find('.');
-  if ( begext == npos ||
-       begext == length()-1 )
-    return *this;
-  return substr(0, begext);
+  size_t ext_size = extension().size();
+  PPath copy = *this;
+  if (ext_size > 0)
+    copy.resize(size() - ext_size - 1);  // Remove the extension and the dot.
+  return copy;
 }
-
 
 // // Returns a ppath shorter than 256 character and exempt of any of the
 // // following chars: "*?'\"${}[]@ ,()"  --- replaced by underscores. 
