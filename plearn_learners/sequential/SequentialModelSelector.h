@@ -56,6 +56,8 @@ private:
   //! This does the actual building
   void build_();
 
+  void checkModelNames() const;
+
 protected:
 
   // *********************
@@ -70,7 +72,15 @@ protected:
   TMat<int> common_cost_indices;
   TVec<int> best_model; // best model selected at time t
   Vec sequence_costs;  // the costs of each model on the training set
-  
+
+  /*! 
+    If true, the model selector will report as costs the paired T tests on common_cost_indices[0] for
+    models[0] against each other model. The model selector will only report T tests once, 
+    at t=(max_seq_len-1)
+
+    Default: false.
+  */
+  bool report_paired_T_tests;
 
   // *********************
   // * protected methods *
@@ -95,7 +105,7 @@ public:
   TVec< PP<SequentialLearner> > models;  
 
   //! If the user desires to provide a name for each model instead of model_i
-  TVec< string > model_names;
+  mutable TVec< string > model_names;
 
   /*!
     The names of costs that are common to all models and that the user wishes the model

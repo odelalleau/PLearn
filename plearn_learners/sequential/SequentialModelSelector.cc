@@ -47,6 +47,7 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(SequentialModelSelector, "ONE LINE DESCR", "NO HELP");
 
 SequentialModelSelector::SequentialModelSelector(): 
+  report_paired_T_tests(false),
   stepwise_save(true),
   comparison_type(1),
   comparison_window(-1)
@@ -55,11 +56,7 @@ SequentialModelSelector::SequentialModelSelector():
 void SequentialModelSelector::setExperimentDirectory(const string& _expdir)
 {
   int nb_models = models.length();
-
-  int nb_names = model_names.length();
-  bool names = (nb_names != 0);
-  if( names && nb_names != nb_models )
-    PLERROR("Names must be provided for all models (%d = nb_names != nb_models = %d).", nb_names, nb_models);
+  checkModelNames();
 
   PLearner::setExperimentDirectory(_expdir);
   string model_m;
@@ -67,7 +64,7 @@ void SequentialModelSelector::setExperimentDirectory(const string& _expdir)
   {
     model_m = models[m]->getExperimentDirectory();
     if(model_m == "")
-      model_m = (names ? model_names[m] : ("Model_" + tostring(m)));
+      model_m = model_names[m];
     models[m]->setExperimentDirectory(append_slash(_expdir)+ model_m);
   }
 }
@@ -129,6 +126,13 @@ void SequentialModelSelector::declareOptions(OptionList& ol)
                 "The names of costs that are common to all models and that the user wishes the model\n"
                 "selector to keep track of. The first one is considered to be the main cost, the one\n"
                 "from which models will be compared to choose the best model.");
+
+  declareOption(ol, "report_paired_T_tests", &SequentialModelSelector::report_paired_T_tests, OptionBase::buildoption,
+                "If true, the model selector will report as costs the paired T tests on common_cost_indices[0] for\n"
+                "models[0] against each other model. The model selector will only report T tests once,\n"
+                "at t=(max_seq_len-1)\n"
+                "\n"
+                "Default: false.");
 
   declareOption(ol, "comparison_type", &SequentialModelSelector::comparison_type,
                 OptionBase::buildoption, 
@@ -386,6 +390,16 @@ void SequentialModelSelector::test(VMat test_set, PP<VecStatsCollector> test_sta
     Vec update = best_model_costs( common_cost_indices(best_model[last_train_t]) );
     update.append(models_update);
     
+    // Report T test processing: only reports T tests once, at t=(max_seq_len-1)
+    if( report_paired_T_tests )
+      for(int m=1; m < models.length(); m++)
+      {
+        if( test_set.length() == max_seq_len )
+          update.append( paired_t_test(0, m) );      
+        else
+          update.append( MISSING_VALUE );
+      }
+    
     test_stats->update( update );
   
     predictions(t) << models[best_model[last_train_t]]->predictions(t); 
@@ -444,24 +458,38 @@ void SequentialModelSelector::computeCostsOnly(const Vec& input,
   models[best_model[last_train_t]]->computeCostsOnly(input, target, costs);
 }
 
+void SequentialModelSelector::checkModelNames() const
+{
+  int nb_models = models.length();
+  int nb_names = model_names.length();
+  if(nb_names == 0)
+  {
+    model_names.resize(nb_models);
+    for(int m=0; m < nb_models; m++)
+      model_names[m] = "Model_"+tostring(m);
+  }
+  else if(nb_names != nb_models)
+    PLERROR("Names must be provided for all models (%d = nb_names != nb_models = %d).", nb_names, nb_models);
+}
+
 TVec<string> SequentialModelSelector::getTestCostNames() const
 { 
   TVec<string> tcnames = common_costs;
   
   int nb_models = models.length();
-
-  int nb_names = model_names.length();
-  if( nb_names != 0 && 
-      nb_names != nb_models )
-    PLERROR("Names must be provided for all models (%d = nb_names != nb_models = %d).", nb_names, nb_models);
+  checkModelNames();
 
   for(int m=0; m < nb_models; m++)
   {
     TVec<string> tcm = models[m]->getTestCostNames();
     for(int c=0; c < tcm.length(); c++)
-      tcnames.append( ((nb_names == 0) ? ("Model_"+tostring(m)) : model_names[m]) + "::" + tcm[c]);
+      tcnames.append(model_names[m] + "::" + tcm[c]);
   }
-
+  
+  if( report_paired_T_tests )
+    for(int m=1; m < nb_models; m++)
+      tcnames.append("T-test_" + model_names[0] + "_vs_" + model_names[m]);
+  
   return tcnames;
 }
 

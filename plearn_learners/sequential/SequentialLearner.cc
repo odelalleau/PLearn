@@ -137,22 +137,19 @@ void SequentialLearner::computeCostsFromOutputs(const Vec& input,
     const Vec& output, const Vec& target, Vec& costs) const
 { PLERROR("The method computeCostsFromOutputs is not defined for this SequentialLearner"); }
 
-Vec SequentialLearner::getCostSequence(int cost_index, int start/*=0*/, int stop/*=-1*/)
-{
-  if(start < 0) start = init_train_size-1;
-  if(stop < 0)  stop  = last_test_t;
-  int len = stop - start + 1;
-  return remove_missing( errors.subMat(start, cost_index, len, 1).toVecCopy() );
-}
-
 void SequentialLearner::matlabSave(const string& matlab_subdir)
 {
   string save_dir = append_slash(getExperimentDirectory()) + matlab_subdir;
   Vec dummy, add(1); add[0] = 0;
 
   TVec<string> cost_names = getTestCostNames();  
+  Vec startX(1, real(sequenceStart()));
   for(int g=0; g < cost_names.length(); g++)
-    PLearn::matlabSave(save_dir, cost_names[g], getCostSequence(g), add, dummy);       
+    PLearn::matlabSave(save_dir, cost_names[g], 
+                       startX,
+                       getCostSequence(g), add, dummy);       
+
+  PLearn::matlabSave(save_dir, "Predictions", predictions, dummy, dummy);
 }
 
 } // end of namespace PLearn

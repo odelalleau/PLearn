@@ -58,7 +58,8 @@ SequentialValidation::SequentialValidation()
     save_test_outputs(false),
     save_test_costs(false),
     save_stat_collectors(false),
-    provide_learner_expdir(true)
+    provide_learner_expdir(true),
+    matlab_subdir("")
 {}
 
 void SequentialValidation::build_()
@@ -128,6 +129,10 @@ void SequentialValidation::declareOptions(OptionList& ol)
     OptionBase::buildoption, "If true, the costs of the tests will be saved in test_costs.pmat \n");
 
   declareOption(ol, "save_stat_collectors", &SequentialValidation::save_stat_collectors, OptionBase::buildoption, "If true, stat collectors of each data sets (train/test) will be saved for each split. \n");
+
+  declareOption(ol, "matlab_subdir", &SequentialValidation::matlab_subdir, OptionBase::buildoption,
+                "If not empty, the learner matlabSave method will be called with that matlab_subdir at the end of the experiment.\n"
+                "Default: \"\".");
 
   inherited::declareOptions(ol);
 }
@@ -301,6 +306,9 @@ void SequentialValidation::reportStats(const Vec& global_result)
   saveAscii(expdir+"global_result.avec", global_result);
   saveAscii(expdir+"predictions.amat", learner->predictions);
   saveAscii(expdir+"errors.amat", learner->errors);
+
+  if(matlab_subdir != "")
+    learner->matlabSave(matlab_subdir);
 }
 
 } // end of namespace PLearn

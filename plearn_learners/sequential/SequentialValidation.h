@@ -99,6 +99,12 @@ public:
   bool save_test_costs;
   bool save_stat_collectors;
   bool provide_learner_expdir; /* =true */
+
+  /*!
+    If not empty, the learner matlabSave method will be called with that matlab_subdir at the end of the experiment.
+    Default: "".
+  */
+  string matlab_subdir;
   
   // *********************
   // * protected methods *

@@ -143,19 +143,17 @@ protected:
   /*!
     The getCostSequence method returns the sequence of the cost 
     at index 'cost_index' or named 'cname' 
-    from start (if negative then init_train_size-1 will be used)
-    to stop (if negative then last_test_t will be used) 
-    REMOVING MISSING VALUES. 
-    If some derived learner have some costs with particular 'behaviour', 
-    it may then overload getCostSequence for it to return the proper Vec.
-    
-    IMPORTANT: User should note that the length of the returned Vec may not be
-    equal to (stop - start + 1).
+    from sequenceStart() with a length of sequenceLength().
   */
-  virtual Vec getCostSequence(int cost_index, int start=-1, int stop=-1);
-  virtual Vec getCostSequence(string cname, int start=-1, int stop=-1)
-    { return getCostSequence(getTestCostIndex(cname), start, stop); }
+  int sequenceStart() const { return init_train_size; }
+  int sequenceLength() const { return last_test_t - init_train_size + 1; }
+  Vec getCostSequence(int cost_index) const
+    { return errors.subMat(sequenceStart(), cost_index, sequenceLength(), 1).toVecCopy(); }
+  Vec getCostSequence(string cname) const 
+    { return getCostSequence(getTestCostIndex(cname)); }
 
+
+  
   /*!
     Any SequentialLearner will have the possiblity to save some data in a 
     matlab 'readable' format. The data will be saved in expdir/matlab_subdir
