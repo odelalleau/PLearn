@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdaBoost.cc,v 1.5 2004/09/14 16:04:40 chrish42 Exp $
+   * $Id: AdaBoost.cc,v 1.6 2004/09/18 16:36:01 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -213,7 +213,11 @@ void AdaBoost::train()
       }
       example_weights *= 1.0/initial_sum_weights;
     }
-    else example_weights.fill(1.0/n);
+    else 
+    {
+      example_weights.fill(1.0/n);
+      initial_sum_weights = 1;
+    }
     sum_voting_weights = 0;
     voting_weights.resize(0,nstages);
   }
@@ -362,6 +366,7 @@ void AdaBoost::train()
       }
       if (verbosity>2)
         cout << "At stage " << stage << " boosted (weighted) classification error on training set = " << train_stats->getMean() << endl;
+     
     }
   }
 }
@@ -375,7 +380,10 @@ void AdaBoost::computeOutput(const Vec& input, Vec& output) const
   for (int i=0;i<voting_weights.length();i++)
   {
     weak_learners[i]->computeOutput(input,weak_learner_output);
-    sum_out += weak_learner_output[0]*voting_weights[i];
+    if(!pseudo_loss_adaboost)
+      sum_out += (weak_learner_output[0] < output_threshold ? 0 : 1) *voting_weights[i];
+    else
+      sum_out += weak_learner_output[0]*voting_weights[i];
   }
   output[0] = sum_out/sum_voting_weights;
 }
