@@ -138,6 +138,28 @@ pl_streambuf::int_type pl_streambuf::uflow()
   return c;
 }
 
+streamsize pl_streambuf::xsgetn(char_type* s, streamsize n)
+{
+  int_type c= uflow();
+  int i;
+  for(i= 0; i < n && c != pl_streambuf::eof; ++i)
+    {
+      s[i]= static_cast<char_type>(c);
+      c= uflow();
+    }
+  return i;
+}
+
+streamsize pl_streambuf::xsputn(const char_type* s, streamsize n)
+{
+  int_type c;
+  int i;
+  for(i= 0; i < n && c != pl_streambuf::eof; ++i)
+    c= overflow(static_cast<int_type>(s[i]));
+  return i;
+}
+
+
 pl_streambuf::int_type pl_streambuf::overflow(int_type meta) //trivial overflow
 { return original_buf.sputc(meta); }           //(no marking on output == no buffering)
 
@@ -155,6 +177,8 @@ pl_streambuf::int_type pl_streambuf::sync()
 
 pl_streambuf::int_type pl_streambuf::pbackfail(int_type c)
 { return original_buf.sungetc(); } //< pback before beginning of our buf: pback in underlying streambuf
+
+
 
 
 /*****

@@ -87,6 +87,11 @@ class pl_streambuf : public streambuf, public PPointable
   virtual int_type underflow();   //<! underflow redefined
   virtual int_type uflow();       //<! uflow redefined
 
+
+  virtual streamsize xsgetn(char* s, streamsize n);
+  virtual streamsize xsputn(const char* s, streamsize n);
+
+
   virtual int_type overflow(int_type meta = pl_streambuf::eof); //<! overflow redefined
   virtual int_type sync();        //<! sync redefined
   virtual int_type pbackfail(int_type c= eof);  //<! pbackfail redefined
