@@ -1,1 +1,1 @@
-self.testPathsInFile =['TMat', 'Storage', 'SimpleNet']
+self.testPathsInFile =['TMat', 'Storage', 'SimpleNet', 'PP']

@@ -357,7 +357,8 @@ def configTest(arg, path, dirList):
 
 def cvs_add(file):
     status = cvs_query("status", file, "Status: ")
-    tprint(file + " status: " + status, "q")
+    tprint(file + " status: " + status + "\n",
+           priority = "q")
     if status != '' and string.find(status, "Unknown") == -1:
         return
     addCmd = "cvs add " + file
@@ -760,7 +761,7 @@ def resultsGeneration(def_test, res_path):
     try:
         real_exec_path = os.path.join(directory, os.readlink(def_test.pymake_name))
     except OSError:
-        tprint(testPaths.relativePath(directory) + ": Must compile " + def_test.pymake_name + " with 'pymake' first!",
+        tprint(testPaths.relativePath(directory) + ": Must compile " + def_test.pymake_name + " with 'pytest -compile' first!",
                priority = 'ALWAYS')
 
         shutil.rmtree(res_path)
@@ -1208,8 +1209,7 @@ def pytest():
     # Dynamic version header
     os.chdir(pytest_dir)
     tprint("pytest " + cvs_query('log', 'pytest', 'revision ', '\n') +
-          " [ (c) Christian Dorion & Kim Levy, report problem to dorionc@ "
-           + "or levyk@iro.umontreal.ca ]\n",
+          " [ (c) Christian Dorion & Kim Levy, report problems to dorionc@iro.umontreal.ca ]\n",
            priority = "ALWAYS")
     
 
