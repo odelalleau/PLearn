@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.29 2004/05/21 04:02:28 yoshua Exp $ 
+ * $Id: GaussMix.cc,v 1.30 2004/05/21 13:01:32 yoshua Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -332,11 +332,11 @@ void GaussMix::computePosteriors() {
 ////////////////////
 bool GaussMix::computeWeights() {
   bool replaced_gaussian = false;
+  if (L==1) alpha[0]=1; else {
   alpha.fill(0);
   for (int i = 0; i < nsamples; i++) {
-    for (int j = 0; j < L; j++) {
+    for (int j = 0; j < L; j++)
       alpha[j] += posteriors(i,j);
-    }
   }
   alpha /= real(nsamples);
   for (int j = 0; j < L && !replaced_gaussian; j++) {
@@ -346,7 +346,7 @@ bool GaussMix::computeWeights() {
       replaceGaussian(j);
       replaced_gaussian = true;
     }
-  }
+  } }
   return replaced_gaussian;
 }
 
@@ -488,7 +488,7 @@ void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clu
       samples->getExample(i,input,target,weight);
       real dist,bestdist=1E300;
       int bestclust=0;
-      for(int j=0;j<nclust;j++)
+      if (nclust>1) for(int j=0;j<nclust;j++)
         if((dist=pownorm(clust(j)-input)) < bestdist)
         {
           bestdist=dist;
