@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io_deprecated.h,v 1.8 2004/07/21 16:30:52 chrish42 Exp $
+   * $Id: pl_io_deprecated.h,v 1.9 2005/02/08 21:37:36 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -48,11 +48,12 @@
 #ifndef pl_io_deprecated_INC
 #define pl_io_deprecated_INC
 
+#include <iostream>                   //!< For stream stuff.
 //#include "pl_io.h"
 #include <plearn/base/plerror.h>
 //#include <cstdio>
 #include <plearn/base/byte_order.h>   //!< For endianswap.
-#include <iostream>       //!< For stream stuff.
+#include <plearn/io/PStream.h>
 
 namespace PLearn {
 using namespace std;
@@ -188,8 +189,8 @@ inline unsigned char read_ubyte(istream& in)
   //!  footers for the persistance mechanism.
   void writeHeader(ostream& out, const string& classname, int version=0); //!<  writes "<ClassName:version>\n"
   void writeFooter(ostream& out, const string& classname); //!<  writes "</ClassName>\n"
-  int readHeader(istream& in, const string& classname);   //!<  consumes "<ClassName:version>\n and returns version"
-  void readFooter(istream& in, const string& classname);   //!<  consumes "</ClassName>\n"
+  int readHeader(PStream& in, const string& classname);   //!<  consumes "<ClassName:version>\n and returns version"
+  void readFooter(PStream& in, const string& classname);   //!<  consumes "</ClassName>\n"
 
 
 //! Writes a single newline character

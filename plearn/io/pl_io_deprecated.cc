@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io_deprecated.cc,v 1.5 2004/07/21 16:30:52 chrish42 Exp $
+   * $Id: pl_io_deprecated.cc,v 1.6 2005/02/08 21:37:32 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -58,7 +58,7 @@ void writeHeader(ostream& out, const string& classname, int version)
 void writeFooter(ostream& out, const string& classname)
 { out << "</" << classname << ">\n"; }
 
-int readHeader(istream& in, const string& classname)
+int readHeader(PStream& in, const string& classname)
 {
   string header;
 #if defined(_MINGW_) || defined(WIN32)
@@ -78,7 +78,7 @@ int readHeader(istream& in, const string& classname)
   else return 0;
 }
 
-void readFooter(istream& in, const string& classname)
+void readFooter(PStream& in, const string& classname)
 {
   string footer;
   in >> footer;
