@@ -143,7 +143,7 @@ or private '__').
         public2                        = "public again"
         )
 """
-__cvs_id__ = "$Id: PyPLearnObject.py,v 1.9 2005/02/08 00:39:08 dorionc Exp $"
+__cvs_id__ = "$Id: PyPLearnObject.py,v 1.10 2005/02/09 15:38:35 dorionc Exp $"
 
 import inspect, string, types
 
@@ -182,7 +182,7 @@ def frozen(set):
         if not self._frozen or hasattr(self,name):
             set(self,name,value) 
         else:
-            raise AttributeError("You cannot add attributes to %s" % self)
+            raise AttributeError("You cannot add attributes to an instance of %s" % self.__class__.__name__)
     return set_attr
 
 ##########################################
@@ -200,14 +200,37 @@ class _manage_attributes:
 
     This class encapsulates the attributes' related concerns.
 
-        1) The frozen metaclass: This class (and therefore PyPLearnObject)
-        has its metaclass set to I{frozen_metaclass}. This metaclass
-        modifies the __setattr__ method so that no new attributes can be
-        added to an instance after its initialization is done. Each
-        instance will therefore have for attributes the default
-        attributes in Defaults, if any -- see 2), and the attributes
-        defined in the keyword arguments of the __init__ method, referred
-        to as overrides.
+        1) The metaclass: This class (and therefore PyPLearnObject) is a
+        new style class: it uses a metaclass. Here, this metaclass modifies
+        the __setattr__ method so that no new attributes can be added to an
+        instance after its initialization is done. Each instance will
+        therefore have for attributes the default attributes in Defaults,
+        if any -- see 2), and the attributes defined in the keyword
+        arguments of the __init__ method, referred to as overrides. The
+        metaclass also defines default right operators for all defined left
+        operators::
+
+            ## With this declaration
+            class AffineTransform( PyPLearnObject ):
+                def __init__(self, pipe_stage, a=1, b=0):
+                    PyPLearnObject.__init__(
+                        self,
+                        pipe_stage = pipe_stage,
+                        a          = a,
+                        b          = b
+                        )
+
+                def __add__(self, val):
+                     if not operator.isNumberType(val):
+                         raise TypeError
+        
+                     return AffineTransform( self.pipe_stage,
+                                             self.a,
+                                             self.b + val   )
+
+            ## The following statement, calling __radd__, works
+            10 + AffineTransform(pipe_stage, 1, 0)
+            ## even though __radd__ is not explicitly defined
         
         2) The Defaults class: At init, the Defaults class is parsed and
         its attributes are used to set default attributes to the new
@@ -222,8 +245,32 @@ class _manage_attributes:
         string that could be used for serialization purpose (public and
         internal members are wrote to a initialization-like syntax.)
     """
-    __metaclass__ = frozen_metaclass
+    ##__metaclass__ = frozen_metaclass
+    class __metaclass__( type ):
+        _frozen     = True
+        __setattr__ = frozen(type.__setattr__)
 
+        _rop_names = [
+        '__radd__', '__rsub__', '__rmul__', '__rdiv__',
+        '__rtruediv__', '__rfloordiv__', '__rmod__',
+        '__rdivmod__', '__rpow__', '__rlshift__',
+        '__rrshift__', '__rand__', '__rxor__', '__ror__'
+        ]
+        
+        def __init__(cls, name, bases, dict):
+            cls._frozen = False
+            
+            super(type, cls).__init__(name, bases, dict) 
+            for rop_name in cls._rop_names:
+                lop_name = rop_name[0:2] + rop_name[3:]
+                if ( not dict.has_key(rop_name)
+                     and dict.has_key(lop_name) ):
+                    setattr( cls, rop_name, dict[lop_name] )
+                    
+            cls._frozen     = True
+            cls.__setattr__ = frozen(object.__setattr__)
+        
+        
     class Defaults:
         pass
 
@@ -282,21 +329,40 @@ class _manage_attributes:
         """Used in __init__() to initialize attributes.
         
         The current protocol is to instanciate any classes provided as
-        attributes in Defaults or in overrides. The current version uses no
-        arguments at instanciation.
+        attributes in Defaults. That is, if::
+
+            class Defaults:
+                default_attribute = SomeClass
+
+        Then the 'default_attribute' will be affected an instance of subclass. The current version
+        uses no arguments at instanciation::
+
+            self.default_attribute = SomeClass() 
+
+        The same will be done for overrides if the current class does not
+        contain an internal class having the override's name. If such a
+        class exists, however, it is assumed that the internal class is
+        properly managed as a class.
 
         The next version will manage tuples having a class as first
         element.  The class will be instanciated with the rest of the tuple
         as __init__ arguments.
         """
         assert not inspect.isroutine(attribute_value)
-        if self._ordered_len == 0:
-            self._list_of_attributes.append(attribute_name)
-            self._list_of_attributes.sort()
+
+        ## See the method docstring for the class management protocol.
+        internal_class = False
         
         if inspect.isclass( attribute_value ):
-            attribute_value = attribute_value()
-    
+            if hasattr( self, attribute_name ):
+                internal_class  = True
+            else:
+                attribute_value = attribute_value()
+
+        if self._ordered_len == 0 and not internal_class:
+            self._list_of_attributes.append(attribute_name)
+            self._list_of_attributes.sort()
+
         self.__dict__[attribute_name] = attribute_value        
             
     def attribute_pairs(self):
@@ -658,3 +724,33 @@ or private '__').
     """ % repr_vs_str() 
     )
     vprint(tutorial)    
+
+
+##     class lop( default_roperators ):
+##         def test(cls):
+##             t = cls()
+##             print t + 10 
+##             print
+
+##             print 10 + t
+##             print
+##             try:
+##                 t << 10
+##                 print "SHOULD NOT WORK!!!"
+##             except Exception:
+##                 print "Failed as expected."
+
+##         test = classmethod(test)
+
+##         def __init__(self, val=0):
+##             default_roperators.__init__(self)
+##             self.val = val
+
+##         def __str__(self):
+##             return "lop(%d)"%self.val
+
+##         def __add__(self, val):
+##             print val
+##             return lop( self.val + val )
+
+##     lop.test()

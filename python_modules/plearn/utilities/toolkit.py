@@ -5,7 +5,7 @@ submodule. If a considerable number of functions contained in this
 module seems to manage similar tasks, it is probably time to create a
 I{similar_tasks.py} L{utilities} submodule to move those functions to.
 """
-__cvs_id__ = "$Id: toolkit.py,v 1.20 2005/02/04 19:09:01 dorionc Exp $"
+__cvs_id__ = "$Id: toolkit.py,v 1.21 2005/02/09 15:41:13 dorionc Exp $"
 import inspect, os, popen2, random, string, sys, time, types
 
 __epydoc_is_available = None
@@ -305,45 +305,6 @@ def quote_if(s):
 def short_doc(obj):
     return doc(obj, True)
 
-def left_from_right(get):
-    def get_attr(self, rop_name):
-        if not rop_name in default_roperators._rop_names:
-            raise AttributeError
-        if hasattr(self, rop_name):
-            return get(self, rop_name)
-        lop_name = rop_name[0:2] + rop_name[3:]            
-        return get(self, lop_name)
-    return get_attr
-
-
-class default_roperators_metaclass( type ):
-    _rop_names = [
-        '__radd__', '__rsub__', '__rmul__', '__rdiv__',
-        '__rtruediv__', '__rfloordiv__', '__rmod__',
-        '__rdivmod__', '__rpow__', '__rlshift__',
-        '__rrshift__', '__rand__', '__rxor__', '__ror__'
-        ]
-
-    def __init__(cls, name, bases, dict):
-        frozen = None
-        if hasattr(cls, '_frozen'):
-            frozen      = cls._frozen
-            cls._frozen = False
-            
-        super(default_roperators_metaclass, cls).__init__(name, bases, dict)
-        for rop_name in cls._rop_names:
-            lop_name = rop_name[0:2] + rop_name[3:]
-            if ( not dict.has_key(rop_name)
-                 and dict.has_key(lop_name) ):
-                setattr( cls, rop_name, dict[lop_name] )
-
-        if frozen is not None:
-            cls._frozen = frozen
-
-                
-class default_roperators(object):
-    __metaclass__ = default_roperators_metaclass
-                
 if __name__ == "__main__":
 
     def header( s ):
@@ -359,57 +320,3 @@ if __name__ == "__main__":
     eval_test( "cross_product( ['a', 'b'], [1, 2, 3], "
                "joinfct = lambda s,i: '%s_%d' % (s, i) )"
                )
-    
-    sys.exit()
-
-    ### TBMoved in formatting.py
-    ###raw_input( len(parse_indent('   allo')) )
-
-    class lop( default_roperators ):
-        def test(cls):
-            t = cls()
-            print t + 10 
-            print
-
-            print 10 + t
-            print
-            try:
-                t << 10
-                print "SHOULD NOT WORK!!!"
-            except Exception:
-                print "Failed as expected."
-
-        test = classmethod(test)
-
-        def __init__(self, val=0):
-            default_roperators.__init__(self)
-            self.val = val
-
-        def __str__(self):
-            return "lop(%d)"%self.val
-
-        def __add__(self, val):
-            print val
-            return lop( self.val + val )
-
-    lop.test()
-
-## def delayed_removal(path, delay=5):
-##     timed = "%s.%s" % ( path, date_time_string() )
-##     os.system( 'mv %s %s' % ( path, timed ) )
-
-##     dirpath = os.dirname(path)
-##     dirlist = os.listdir(dirpath)
-##     delayed = {}
-##     for fname in dirlist:
-##         match = re.search("\.\d\d\d\d_\d\d_\d\d.*", fname)
-##         start = match.start()
-##         if start >= 0:
-##             base = fname[:start]
-##             if delayed.has_key( base ):
-##                 delayed[base].extend( fname )
-##             else:
-##                 delayed[base] = [ fname ]
-        
-##     return timed
-
