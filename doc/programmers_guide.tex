@@ -2,7 +2,7 @@
 %%
 %%  Copyright (c) 1998-2002 by Pascal Vincent
 %%
-%%  $Id: programmers_guide.tex,v 1.6 2004/06/17 15:46:22 monperrm Exp $
+%%  $Id: programmers_guide.tex,v 1.7 2004/06/18 15:54:17 monperrm Exp $
 
 \documentclass[11pt]{book}
 \usepackage{t1enc}              % new font encoding  (hyphenate words w/accents)
@@ -158,7 +158,7 @@ return 0;
 \subsection{Manipulating}
 All the corresponding methods are in TMat\_maths\_impl.h (or should be). As of 
 date, they are not documented, so you have to have a bath in the file (methods 
-are normally commented). A short example:
+should be commented). A short example:
 
 \begin{verbatim}
 #include "TMat_maths.h"
@@ -198,6 +198,7 @@ include of VMat.h):
 
 #include "TMat_maths.h"
 #include "VMat.h"
+#include "getDataSet.h"
 
 using namespace PLearn;
 
@@ -239,7 +240,7 @@ PLearner is the super class for learner. Here we describe how to create a PLearn
 
 \item type \texttt{pyskeleton PLearner MyLearner}
 
-\item edit the file MyLearner.h to add the correct field (int, Mat, etc.). Normally you don't have to has any methods.
+\item edit the file MyLearner.h to add the correct field (int, Mat, etc.). Normally you don't have to add any methods.
 
 \item edit the file MyLearner.cc
     \begin{enumerate}
@@ -945,6 +946,7 @@ With the following method, you can load and save THE VALUE of a var (not the sym
 \begin{verbatim}
 
 #include "VMat.h"
+#include "getDataSet.h"
 #include "Var_all.h"
 #include "TMat_maths.h"
 
