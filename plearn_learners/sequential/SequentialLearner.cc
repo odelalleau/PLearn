@@ -56,9 +56,9 @@ void SequentialLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 void SequentialLearner::build_()
 {
-  if(max_seq_length == -1)
+  if(max_seq_len == -1)
     PLERROR("SequentialLearner::build_\n"
-            "max_seq_length must be setted to the maximum length a train/test set can be.");
+            "max_seq_length must be set to the maximum length a train/test set can be.");
   
   if( outputsize() == 0 )
     PLERROR("SequentialLearner::build_\n"
