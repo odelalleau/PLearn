@@ -158,7 +158,7 @@ public:
     } else 
     {
       if (!dont_warn_for_zero)
-        PLWARNING("setting something to 0 in ProbabilitySparseMatrix");
+        PLWARNING("setting something to 0 in ProbabilitySparseMatrix %s", name.c_str());
       map<int,real>& PYx = x2y(x);
       if (PYx.find(y)!=PYx.end())
       {
