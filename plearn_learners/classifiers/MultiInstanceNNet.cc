@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.cc,v 1.6 2004/02/19 16:54:08 yoshua Exp $
+   * $Id: MultiInstanceNNet.cc,v 1.7 2004/02/19 22:03:27 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/MultiInstanceNNet.h */
@@ -110,6 +110,7 @@ MultiInstanceNNet::MultiInstanceNNet() // DEFAULT VALUES FOR ALL OPTIONS
    L1_penalty(false),
    direct_in_to_out(false),
    interval_minval(0), interval_maxval(1),
+   test_bag_size(0),
    batch_size(1)
 {}
 
@@ -473,8 +474,22 @@ void MultiInstanceNNet::computeOutput(const Vec& inputv, Vec& outputv) const
 void MultiInstanceNNet::computeOutputAndCosts(const Vec& inputv, const Vec& targetv, 
                                  Vec& outputv, Vec& costsv) const
 {
-  //test_costf->fprop(inputv&targetv, outputv&costsv);
-  //TO BE DONE
+  f->fprop(inputv,outputv); // this is the individual P(y_i|x_i)
+  bag_inputs->matValue(test_bag_size++) << inputv;
+  // UGLY HACK WHICH ASSUMES THAT computeOutputAndCosts WILL BE CALLED
+  // FOR ALL ROWS OF A BAG, OR NOT AT ALL.
+  if (targetv.hasMissing())
+    costsv.fill(MISSING_VALUE);
+  else // end of bag, we have a target and we can compute a cost
+  {
+    test_bag_size++;
+    bag_size->valuedata[0]=test_bag_size;
+    target->value << targetv;
+    if (weightsize_>0) sampleweight->valuedata[0]=1; // the test weights are known and used higher up
+    inputs_and_targets_to_costs->fproppath.fprop();
+    costsv << costs->value;
+    test_bag_size=0;  // this is where it gets really ugly... (we don't have an explicit synchronization signal for the beginning of each block)
+  }
 }
 
 

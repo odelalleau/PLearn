@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.h,v 1.4 2004/02/19 15:25:54 yoshua Exp $
+   * $Id: MultiInstanceNNet.h,v 1.5 2004/02/19 22:03:27 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearn/plearn_learners/classifiers/MultiInstanceNNet.h */
@@ -65,6 +65,7 @@ using namespace std;
     Var bag_size; // filled up by SumOverBagsVariable
     Var bag_inputs; // filled up by SumOverBagsVariable
     Var bag_output; // P(y=1|bag_inputs)
+    mutable int test_bag_size; // BECAUSE OF UGLY HACK IN computOutputAndCost (look at it, it's worth it!)
     Func inputs_and_targets_to_costs; // (bag inputs and targets) -> bag NLL
     Func input_to_logP0; // single input x -> log P(y=0|x)
     Var nll;
