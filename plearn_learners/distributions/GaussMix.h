@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussMix.h,v 1.3 2003/06/17 02:10:01 jkeable Exp $ 
+   * $Id: GaussMix.h,v 1.4 2003/07/24 18:33:51 jkeable Exp $ 
    ******************************************************* */
 
 /*! \file GaussMix.h */
@@ -56,72 +56,69 @@ This distribution implements a mixture of L multivariate normal gaussians in D d
 there are 3 ways to construct a GaussMix :
 1: 
    setMixtureType(...)
-   setGaussian(1,....)
-   setGaussian(2,....)
+   setGaussianXXX(1, ...)
+   setGaussianXXX(2, ...)
    ...
    build();
 
-2:
-   setOption : alpha, mu, V, lambda 
-   (e.g : mixtureType="General"; D=2;L=3;alpha = 3 [.33 .33 .33]; lambda = 6 [.2 .4 .2 .2 .2 .2]; mu = 3 2 [1 1 2 2 3 3]; V = 6 2  [1 0 0 1 1 0 0 1 1 0 0 1];  V_idx= 3 [0 2 4])
+2: setOption : alpha, mu, V, lambda, etc.. 
    build();
 
 3: load a serialized object:
    PLearn::load(filename, GaussMixObject)
 
-For the gaussians, you have 4 possible parametrizations (a.k.a types). Note that all gaussians of 
-the mixture must be of the same type.
+For the gaussians, there are 4 possible parametrizations of the covariance matrix. All gaussians of the mixture must be of the same type. 
+Note that depending on the chosen parametrization, members can have names that are irrelevent to the parameter they represent 
+(i.e: sigma holds lambda0 when set to use the general gaussian type)
 
 2 parameters are common to all 4 types :
 
 alpha : the ponderation factor of that gaussian
 mu : its center
 
-then, accordingly to the chosen type, you will set :
+then, accordingly to the chosen type, you will set for ...
 
-** spherical
+** spherical (constant diagonal covar matrix)
 real sigma : gaussians will have a diagonal covariance matrix = sigma * I
 
-** diagonal
+** diagonal (diagonal covar matrix)
 Vec diag : gaussians will have a diagonal covariance matrix DIAG(diag)
 
-** general
+** general (full-covariance matrix)
 
-for the general case, the user provides K<=D orthonormal vectors defining the principal axis of the gaussian,
-and their corresponding values (lambdas). The remaining unspecified D-K vectors, the complement of the orthogonal basis 
-formed by the K vectors, if any, are assumed to have a constant value of lambda0
+  For the general case, the user provides K<=D orthonormal vectors defining the principal axis of the gaussian (eigenvectors of its covar. matrix),
+  and their corresponding values (lambdas). The remaining unspecified D-K vectors (that is, the complement of the orthogonal basis 
+  formed by the K vectors), if any, are assumed to have a constant value of lambda0.
+  
+  Note: Each gaussian of the mixture can have a different K 
 
-Mat eigenvecs : a K x D orthonormal matrix in which the *rows* are the eigenvectors
-Vec lambda : the K factors of the vectors
-real lambda0 : the factor for the D-K vector
+Mat V : a Ks[i] x D orthonormal matrix in which the *rows* are the eigenvectors (GaussMix::V is in reality the concatenation of all those Ks[i]xD matrices)
+Vec lambda : the Ks[i] eigenvalues
+real sigma : (lambda0) the eigenvalue used for the D-Ks[i] unspecified eigenvectors
 
 ** factor  ( ie. used to build a mixture of factor analyser )
 
------> NOT TESTED YET
+Mat V : Ks[i]xD matrix which is the factor loading matrix (the Ks[i] vectors are not necessarily orthogonal neither normal)
+        *** Note : In the litterature, V corresponds to "big lambda transposed". 
+        (GaussMix::V is in reality the concatenation of all those Ks[i]xD matrices)
+Vec diag : the noise on each dimension of the feature space (called psi in most litterature)
 
-vecs : KxD matrix
+further notes on the FA model : 
 
-suppose a variable x can be expressed as :
+suppose a random variable x can be expressed as :
 
 x = Vz + mu + psi, with
 
-V, a DxK matrix
-z, a K vector
-mu, a D vector
-psi, a D vector
+V, a DxK matrix (factor loading matrix)
+z, a K vector (values of the components)
+mu, a D vector (mean of x)
+psi, a D vector (random noise added on each dimension)
 
 and 
 
 E(z) = 0, V(z) = I, E(psi)=0, C(psi_i, psi_j)=0, C(z, psi)=0,
 
 then the factor analyzer model holds. 
-If we have z and e multinormally distributed, we have :
-
-p(z_k) = N(zk; 0,1)
-p(x_n | z) = N(x_n; sum
-
-
-**** to be continued ****
 
 */
 
@@ -151,21 +148,20 @@ public:
   //! a length==L vector of sigmas (** or lambda0)
   Vec sigma;
 
-  //! a LxD matrix of diagonals (used if type is 'diagonal')
+  //! a LxD matrix of diagonals (type == 'diagonal' -> the diagonal of the covar matrix. type == 'factor' -> noise on each dimension of feature space)
   Mat diags;
 
   //! a LxD matrix. Rows[l] is the center of the gaussians l
   Mat mu;  
 
   //! a sum_Ks x D matrix in which *rows* are components (only used for general and factor gaussians)
+  //! V[ V_idx[l] ] up to V[ V_idx[l] + Ks[l] ] are the rows of V describing the l-th gaussian
   Mat V;
 
   //! V_idx is a vector of length L
-  //! V[ V_idx[l] ] up to V[ V_idx[l] + Ks[l] ] are rows of V describing the l-th gaussian
   TVec<int> V_idx;
 
-  // a length=sum_Ks vector (only used for general gaussians)
-  // **NOTE: it contains lambdas until build() is called, after, element 'i' contains ;
+  // a length=sum_Ks vector (only used for general gaussians) lambda[ V_idx[l] ] up to lambda[ V_idx[l] + Ks[l] ] are eigenvalus of the l-th gaussian
   Vec lambda;
 
   //! how much gaussians the mixture contains
@@ -173,6 +169,10 @@ public:
 
   //! the feature space dimension
   int D;
+
+  // used if type=="General". Number of components and lambda0 used to perform EM training.
+  int EM_ncomponents;
+  real EM_lambda0;
 
   // ****************
   // * Constructors *
@@ -190,30 +190,47 @@ public:
   // Unknown, Spherical, Diagonal, General, Factor
   string type;
 
-  //! set the type to spherical
+  // this function computes (I + V(t) * psi^-1 * V) ^ -1 and logcoef
+  void precomputeFAStuff(Mat V, Vec diag, real &log_coef, Vec inv_ivtdv);
+
+  //! 4 next functions set the type of the parametrization of the gaussians covariance matrix
+
   //! L : number of gaussians in mixture
   //! D : number of dimensions in feature space
-  void setMixtureTypeSherical(int L, int D);
+  void setMixtureTypeSpherical(int L, int D);
 
   void setMixtureTypeDiagonal(int L, int D);
 
   //! for 'general' and 'factor' mixtures :
-  //! avg_K : the average number of dimensions of the gaussians (used to preallocate memory, so addGaussians calls are faster)
+  //! avg_K : the average number of dimensions of the gaussians (used to preallocate memory, so setGaussianXXX calls are faster)
   void setMixtureTypeGeneral(int L, int avg_K, int D);
 
   void setMixtureTypeFactor(int L, int avg_K, int D);
 
+  //! 4 next functions provide an interface to set the gaussians manually
 
   // spherical
-  void setGaussian(int l, real alpha, Vec mu, real sigma);
+  void setGaussianSpherical(int l, real alpha, Vec mu, real sigma);
   // diagonal
-  void setGaussian(int l, real alpha, Vec mu, Vec diag);
+  void setGaussianDiagonal(int l, real alpha, Vec mu, Vec diag);
 
   //! for general and factor : number of eigen vectors must not change if your updating a previoulsy set gaussian.
   // general
-  void setGaussian(int l, real alpha, Vec mu, Vec _lambda, Mat eigenvecs, real _lambda0=0 );
+  // note: this function sets every _lambda[i] = MAX(lambda0,_lambda[i])
+  void setGaussianGeneral(int l, real alpha, Vec mu, Vec _lambda, Mat V, real lambda0=0 );
   // factor
-  void setGaussian(int l, real alpha, Vec mu, Mat vecs, Vec diag );
+  void setGaussianFactor(int l, real alpha, Vec mu, Mat V, Vec diag );
+
+  // set gaussian l to fit a group of samples (optionnaly weigthed)
+
+  // spherical : sigma = average of variance on all dimensions
+  void setGaussianSphericalWSamples(int l, real _alpha, VMat samples);
+  // diagonal : sigma[i] = variance on i-th dimension 
+  void setGaussianDiagonalWSamples(int l, real _alpha, VMat samples);
+  // general : weighted covariance matrix is used
+  void setGaussianGeneralWSamples(int l, real _alpha, real _sigma, int ncomponents, VMat samples);
+  // factor : gaussian in set with EM algorithm
+  void setGaussianFactorWSamples(int l, real _alpha, VMat samples);
 
   virtual void generate(Vec& x) const;
   void generateSpherical(Vec &x) const;
@@ -222,6 +239,13 @@ public:
   void generateFactor(Vec &x) const;
 
   virtual void resetGenerator(long g_seed) const;
+
+
+  void EMFactorAnalyser(VMat samples, real relativ_change_stop_value = 0.005);
+
+  // train with EM on (possibly weighted) samples,
+  // and stopping when NLL(t)/NLL(t-1) < 1 - relativ_change_stop_value.
+  void EM(VMat samples, real relativ_change_stop_value = 0.005);
 
 private: 
   //! This does the actual building. 
@@ -236,15 +260,18 @@ protected:
   //! (Please implement in .cc)
   static void declareOptions(OptionList& ol);
 
-  //! length == L. the log of the constant part in the p(x) equation (1/sqrt(2*pi^D * Det(C)))
+  void kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clust, int maxit=9999);
+
+  //! length == L. the log of the constant part in the p(x) equation : log(1/sqrt(2*pi^D * Det(C)))
   Vec log_coef;
 
-  //! precomputed (I+V(t)DV)^-1. Used for factor gaussians. 
-  //! stored as a vector which is the flattened view of 'L' x 'Ks[i] x Ks[i]' matrices. 
-  Vec ivtdv;
 
-  //! A length==L vector. ivtdv_idx[l] is the index at which starts the flattened Ks[l] x Ks[l] matrix for the l-th gaussian in ivtdv
-  TVec<int> ivtdv_idx; 
+  //! precomputed (I+V(t)DV)^-1. Used for factor gaussians. 
+  //! stored as a vector which is the flattened view of all L 'Ks[i] x Ks[i]' matrices. 
+  Vec inv_ivtdv;
+
+  //! A length==L vector. inv_ivtdv_idx[l] is the index at which starts the flattened Ks[l] x Ks[l] matrix for the l-th gaussian in inv_ivtdv
+  TVec<int> inv_ivtdv_idx; 
   
   //! the average number of dimensions of the gaussians (used to preallocate memory, so addGaussians calls are faster)
   int avg_K;
@@ -253,11 +280,13 @@ protected:
   //! only used for general and factor mixtures
   TVec<int> Ks;
 
+  // a work vector
+  Vec tmpvec,tmpvec2;
+
 public:
   //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
   //! And sets 'stage' back to 0   (this is the stage of a fresh learner!)
   virtual void forget();
-
 
   virtual int inputsize() const {return D;}
   
@@ -279,6 +308,8 @@ public:
 
   //! trains the model
   virtual void train(VMat training_set); 
+
+  real NLL(VMat set);
 
   // ************************
   // * Distribution methods *
