@@ -45,7 +45,6 @@
 #include <plearn/base/plerror.h>
 #include <plearn/base/byte_order.h>
 #include "fileutils.h"
-#include "PStreamFormat.h"
 #include "PStreamBuf.h"
 #include "StdPStreamBuf.h"
 
@@ -96,7 +95,6 @@ public:
   typedef ios ios_base;
 #endif
 
-  // inject some PStreamFormat types (for backward compatibility and convenience)
   enum mode_t 
     {
       plearn_ascii,    //<! PLearn ascii serialization format (can be mixed with plearn_binary)
