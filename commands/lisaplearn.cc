@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: lisaplearn.cc,v 1.12 2004/03/20 21:00:20 yoshua Exp $
+   * $Id: lisaplearn.cc,v 1.13 2004/03/22 14:08:45 tihocan Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -77,6 +77,7 @@
 #include "GaussianDistribution.h"
 #include "LinearRegressor.h"
 #include "LocallyWeightedDistribution.h"
+#include "MultiInstanceNNet.h"
 #include "NeuralNet.h"
 #include "NNet.h"
 #include "PCA.h"
@@ -105,10 +106,8 @@
 
 // New generation system
 #include "PTester.h"
-#include "NNet.h"
 #include "Grapher.h"
 #include "ConstantRegressor.h"
-#include "MultiInstanceNNet.h"
 #include "MultiInstanceVMatrix.h"
 #include "SortRowsVMatrix.h"
 
