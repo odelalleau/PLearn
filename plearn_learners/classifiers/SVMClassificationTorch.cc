@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SVMClassificationTorch.cc,v 1.1 2005/01/20 21:36:30 tihocan Exp $ 
+   * $Id: SVMClassificationTorch.cc,v 1.2 2005/01/24 14:29:35 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -41,7 +41,6 @@
 /*! \file SVMClassificationTorch.cc */
 
 #include "SVMClassificationTorch.h"
-#include <plearn/vmat/AutoVMatrix.h>
 #include <plearn_torch/TorchDataSet.h>
 #include <plearn_torch/TorchKernel.h>
 
