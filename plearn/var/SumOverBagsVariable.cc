@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOverBagsVariable.cc,v 1.9 2004/02/25 19:22:15 yoshua Exp $
+   * $Id: SumOverBagsVariable.cc,v 1.10 2004/02/25 20:34:05 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -251,7 +251,6 @@ void SumOverBagsVariable::fpropOneBag(bool do_bprop)
           PLERROR("SumOverBagsVariable: last bag of VMatrix is not complete");
           return;
         }
-        break;
     }
   }
   bag_size_vec[0]=bag_size;
