@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussMix.h,v 1.1 2003/06/02 20:59:54 jkeable Exp $ 
+   * $Id: GaussMix.h,v 1.2 2003/06/02 23:41:19 jkeable Exp $ 
    ******************************************************* */
 
 /*! \file GaussMix.h */
@@ -82,6 +82,8 @@ Vec lambda : the K eigenvalues
 real lambda0 : the eigenvalue that replaces the D-K eigenvalues 
 
 ** factor  ( ie. used to build a mixture of factor analyser )
+
+-----> NOT TESTED YET
 
 suppose a variable x can be expressed as :
 

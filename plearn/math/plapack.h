@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plapack.h,v 1.9 2003/06/02 21:00:14 jkeable Exp $
+   * $Id: plapack.h,v 1.10 2003/06/02 23:41:43 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -281,16 +281,20 @@ void lapackEIGEN2(const TMat<num_t>& A, TVec<num_t>& eigenvals, TMat<num_t>& eig
   if(INFO!=0)
     PLERROR("In lapackEIGEN2, problem when calling dsyevr_ to perform computation, returned INFO = %d",INFO); 
   eigenvals.resize(M);
+
+//  cout <<A <<endl;
   if(JOBZ=='V')
   {
-    for(int i=0;i<M;i++)
+    /*for(int i=0;i<M;i++)
       if(ISUPPZ[2*i] != 1 || ISUPPZ[2*i+1]!=N)
       {
         PLWARNING("In lapackEIGEN2, %i-th eigenvector has zeros. Check ISUPPZ in 'man dsyevr' to understand this issue.");
         break;
-      }
+        }*/
     eigenvecs.resize(M, N);
   }
+
+//  cout<<endl<<eigenvals<<endl;
 }
 
 

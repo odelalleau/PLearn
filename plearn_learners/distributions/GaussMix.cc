@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.1 2003/06/02 20:59:54 jkeable Exp $ 
+ * $Id: GaussMix.cc,v 1.2 2003/06/02 23:41:18 jkeable Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -185,9 +185,13 @@ void GaussMix::setGaussian(int l, real _alpha, Vec _mu, Vec _lambda, Mat eigenve
       inv_lambda_minus_lambda0.resize(newl);
     }
   }
-  else if(Ks[l]!=num_lambda)
-    PLERROR("GaussMix::setGaussian : for the same gaussian, the amount of vectors (length of the 'eigenvecs' matrix) that "\
-            "define a gaussian must not change between calls. ");
+  else 
+  {
+    cerr<<"prout"<<endl;
+    if(Ks[l]!=num_lambda)
+      PLERROR("GaussMix::setGaussian : for the same gaussian, the amount of vectors (length of the 'eigenvecs' matrix) that "\
+              "define a gaussian must not change between calls. ");
+  }
   
   V.subMatRows(V_idx[l],Ks[l])<<eigenvecs;
   for(int i=0;i<Ks[l];i++)
@@ -306,6 +310,7 @@ void GaussMix::build_()
   if(type==General || type==Factor)
   {
     Ks.resize(L);
+    Ks.fill(0.0);
     V_idx.resize(L);
     V.resize(L*avg_K,D);
     inv_lambda_minus_lambda0.resize(L*avg_K,D);
