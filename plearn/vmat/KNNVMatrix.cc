@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNVMatrix.cc,v 1.5 2004/02/27 05:04:04 tihocan Exp $ 
+   * $Id: KNNVMatrix.cc,v 1.6 2004/02/28 15:55:37 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -172,7 +172,7 @@ void KNNVMatrix::build_() {
       }
       // Compute the pairwise distances.
       DistanceKernel dk(2);
-      dk.report_progress = true;
+      //dk.report_progress = true; // does not compile...
       dk.build();
       dk.setDataForKernelMatrix(source);
       Mat distances(n,n);

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.cc,v 1.10 2004/02/24 22:34:51 tihocan Exp $
+   * $Id: Variable.cc,v 1.11 2004/02/28 15:55:08 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -193,12 +193,13 @@ Variable::Variable(const Mat& m)
 // shallow copy (same as default copy constructor, except varnum is set to ++nvars.
 Variable::Variable(const Variable& v)
   :varnum(++nvars), marked(false), varname(v.getName()), 
-  value(v.value), gradient(v.gradient), 
-  matValue(v.matValue),matGradient(v.matGradient),
-  valuedata(v.valuedata), gradientdata(v.gradientdata),
-  min_value(v.min_value),max_value(v.max_value),
-  g(v.g), diaghessian(v.diaghessian), diaghessiandata(v.diaghessiandata),
-  rvaluedata(v.rvaluedata), dont_bprop_here(v.dont_bprop_here)
+   allows_partial_update(v.allows_partial_update), gradient_status(v.gradient_status),
+   value(v.value), gradient(v.gradient), 
+   matValue(v.matValue),matGradient(v.matGradient),
+   valuedata(v.valuedata), gradientdata(v.gradientdata),
+   min_value(v.min_value),max_value(v.max_value),
+   g(v.g), diaghessian(v.diaghessian), diaghessiandata(v.diaghessiandata),
+   rvaluedata(v.rvaluedata), dont_bprop_here(v.dont_bprop_here)
 {}
 
 
