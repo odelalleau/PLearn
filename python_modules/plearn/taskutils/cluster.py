@@ -53,9 +53,6 @@ class Cluster(PyPLearnObject):
             sys.stderr.write("\nInterrupted by user.\n")
             self.free( )
 
-        if self.wait_for_expdir_creation:
-            Xperiment.log_generated_expdirs( enabled = False )
-            
     def dispatch_task( self, program_call, arguments ):
         """Using the arguments to build the cluster command and launch the process.
 
