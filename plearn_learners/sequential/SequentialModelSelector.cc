@@ -63,9 +63,9 @@ void SequentialModelSelector::train()
 #endif
     //int start = max(t-max_train_len,init_train_size-1);
     VMat sub_train = train_set.subMatRows(0,t-horizon); // last training pair is (t-1-2*horizon,t-1-horizon)
-    sub_train->setSizes(train_set->inputsize(), train_set->targetsize(), train_set->weightsize());
+    sub_train->defineSizes(train_set->inputsize(), train_set->targetsize(), train_set->weightsize());
     VMat sub_test  = train_set.subMatRows(0,t); // last test pair is (t-1-horizon,t-1) (input,target)
-    sub_test->setSizes(train_set->inputsize(), train_set->targetsize(), train_set->weightsize());
+    sub_test->defineSizes(train_set->inputsize(), train_set->targetsize(), train_set->weightsize());
     for (int i=0; i<models.size(); i++)
     {
       models[i]->setTrainingSet(sub_train, false);

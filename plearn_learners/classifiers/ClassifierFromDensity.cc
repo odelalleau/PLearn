@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ClassifierFromDensity.cc,v 1.2 2003/06/30 17:32:30 plearner Exp $ 
+   * $Id: ClassifierFromDensity.cc,v 1.3 2003/07/04 18:48:59 plearner Exp $ 
    ******************************************************* */
 
 /*! \file ClassifierFromDensity.cc */
@@ -154,12 +154,12 @@ void ClassifierFromDensity::train()
           if(we_sz==0)
             {
               set_c = set_c.subMatColumns(0,in_sz);
-              set_c->setSizes(in_sz, 0, 0);
+              set_c->defineSizes(in_sz, 0, 0);
             }
           else // argh, there are some weights...
             {
               set_c = hconcat(set_c.subMatColumns(0,in_sz), set_c.subMatColumns(in_sz+targ_sz,we_sz));
-              set_c->setSizes(in_sz,0,we_sz);
+              set_c->defineSizes(in_sz,0,we_sz);
             }
           if(expd!="")
             estimators[c]->setExperimentDirectory(expd+"Class"+tostring(c));
