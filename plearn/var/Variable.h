@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.h,v 1.19 2005/01/11 20:03:13 tihocan Exp $
+   * $Id: Variable.h,v 1.20 2005/02/04 15:10:02 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -227,7 +227,7 @@ public:
   virtual void copyValueInto(Vec v) { v << value; }
   virtual void copyGradientInto(Vec g) { g << gradient; }
 
-  virtual void print(ostream& out) const;
+  virtual void newwrite(PStream& out) const;
 
   //!  returns the name of this variable. If its name has not been set, 
   //!  it will be assigned a name of V_varnum

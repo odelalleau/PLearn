@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.48 2005/01/28 17:43:03 plearner Exp $
+   * $Id: StatsCollector.cc,v 1.49 2005/02/04 15:10:01 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -660,27 +660,37 @@ real StatsCollector::pseudo_quantile(real q) const
   return slope * (q * nnonmissing_ - previous_total) + previous_position;
 }
 
-void StatsCollector::print(ostream& out) const
+void StatsCollector::newwrite(PStream& out) const
 {
-  out << "# samples: " << n() << "\n";
-  out << "# missing: " << nmissing() << "\n";
-  out << "mean: " << mean() << "\n";
-  out << "stddev: " << stddev() << "\n";
-  out << "stderr: " << stderror() << "\n";
-  out << "min: " << min() << "\n";
-  out << "max: " << max() << "\n\n";
-  out << "first: " << first_obs() << "\n";
-  out << "last:  " << last_obs()  << "\n\n";
-  out << "counts size: " << counts.size() << "\n";
-  map<real,StatsCollectorCounts>::const_iterator it = counts.begin();
-  map<real,StatsCollectorCounts>::const_iterator itend = counts.end();
-  for(; it!=itend; ++it)
-    {
-      out << "value: " << it->first 
-          << "  #equal:" << it->second.n
-          << "  #less:" << it->second.nbelow
-          << "  avg_of_less:" << it->second.sum/it->second.nbelow << endl;
-    }
+  switch(out.outmode)
+  {
+    case PStream::raw_ascii:
+    case PStream::pretty_ascii:
+      {
+        out << "# samples: " << n() << "\n";
+        out << "# missing: " << nmissing() << "\n";
+        out << "mean: " << mean() << "\n";
+        out << "stddev: " << stddev() << "\n";
+        out << "stderr: " << stderror() << "\n";
+        out << "min: " << min() << "\n";
+        out << "max: " << max() << "\n\n";
+        out << "first: " << first_obs() << "\n";
+        out << "last:  " << last_obs()  << "\n\n";
+        out << "counts size: " << counts.size() << "\n";
+        map<real,StatsCollectorCounts>::const_iterator it = counts.begin();
+        map<real,StatsCollectorCounts>::const_iterator itend = counts.end();
+        for(; it!=itend; ++it)
+        {
+          out << "value: " << it->first 
+            << "  #equal:" << it->second.n
+            << "  #less:" << it->second.nbelow
+            << "  avg_of_less:" << it->second.sum/it->second.nbelow << endl;
+        }
+        break;
+      }
+    default:
+      inherited::newwrite(out);
+  }
 }
 
 void StatsCollector::oldwrite(ostream& out) const

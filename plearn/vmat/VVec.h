@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: VVec.h,v 1.12 2004/07/21 16:30:55 chrish42 Exp $
+   * $Id: VVec.h,v 1.13 2005/02/04 15:10:03 tihocan Exp $
    ******************************************************* */
 
 
@@ -113,8 +113,20 @@ public:
     return v;
   }
 
-  virtual void print(ostream& out) const
-  { out << ((Vec)*this) << flush; }
+  virtual void newwrite(PStream& out) const
+  {
+    switch(out.outmode)
+    {
+      case PStream::raw_ascii:
+      case PStream::pretty_ascii:
+        {
+          out << ((Vec)*this) << flush; 
+          break;
+        }
+      default:
+        inherited::newwrite(out);
+    }
+  }
 
   PLEARN_DECLARE_OBJECT(VVec);
   static void declareOptions(OptionList &ol);

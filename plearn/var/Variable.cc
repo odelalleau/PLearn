@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.cc,v 1.19 2004/09/14 16:04:38 chrish42 Exp $
+   * $Id: Variable.cc,v 1.20 2005/02/04 15:10:02 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -273,19 +273,32 @@ Mat Variable::defineGradientLocation(const Mat& m)
   return oldm;
 }
 
-void Variable::print(ostream& out) const
+void Variable::newwrite(PStream& out) const
 { 
-  // This is just to strip "Variable" out of the class name (as they all
-  // end in "Variable")
-  string cn=info();
-  int len = (int)cn.length();
-  if (len >= 9 && cn.substr(len-8,8) == "Variable")
-      out << cn.substr(0,len-8) << endl;
-  else
-      out << cn << endl;
+  switch(out.outmode)
+  {
+    case PStream::raw_ascii:
+    case PStream::pretty_ascii:
+      {
+        // This is just to strip "Variable" out of the class name (as they all
+        // end in "Variable")
+        string cn=info();
+        int len = (int)cn.length();
+        if (len >= 9 && cn.substr(len-8,8) == "Variable")
+          out << cn.substr(0,len-8) << endl;
+        else
+          out << cn << endl;
+        break;
+      }
+    default:
+      inherited::newwrite(out);
+  }
 }
 
-PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Variable, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Variable,
+    "The base Variable class",
+    ""
+);
 
 void Variable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {

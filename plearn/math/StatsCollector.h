@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.35 2005/01/27 19:30:56 chapados Exp $
+   * $Id: StatsCollector.h,v 1.36 2005/02/04 15:10:01 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -261,7 +261,9 @@ public:
 
   virtual void oldwrite(ostream& out) const;
   virtual void oldread(istream& in);
-  virtual void print(ostream& out) const;
+
+  //! Overridden to have a fancy output for raw_ascii and pretty_ascii modes.
+  virtual void newwrite(PStream& out) const;
 
 };
 
