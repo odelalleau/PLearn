@@ -33,16 +33,20 @@
 
 
 /* *******************************************************      
-   * $Id: plearnmain.cc,v 1.1 2002/09/04 23:44:39 plearner Exp $
+   * $Id: plearnmain.cc,v 1.2 2002/09/05 05:14:42 plearner Exp $
    ******************************************************* */
 
 
 // #include <sstream>
+#include "plearnmain.h"
+
 #include "MatIO.h"
-#include "Learner.h"
 #include "fileutils.h"
 #include "getDataSet.h"
 #include "random.h"
+#include "Learner.h"
+#include "Optimizer.h"
+#include "Kernel.h"
 
 namespace PLearn <%
 using namespace std;
@@ -232,7 +236,7 @@ void train_and_test(const string& modelalias, string trainalias, vector<string> 
 
 #endif
 
- ::save(psavefile, *learner);
+ save(psavefile, *learner);
 
 }
 
@@ -346,7 +350,7 @@ void cross_valid(const string& modelalias, string trainalias,int kval)
     
     string psavefile = learner->basename()+".psave";
     cout << ">>> Saving final trained model in file: " << psavefile << endl;
-    ::save(psavefile, *learner);
+    save(psavefile, *learner);
 
     // collect each k's results to make global results file
 

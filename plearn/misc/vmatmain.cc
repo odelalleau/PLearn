@@ -32,13 +32,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.1 2002/09/04 23:44:39 plearner Exp $
+   * $Id: vmatmain.cc,v 1.2 2002/09/05 05:14:42 plearner Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
 #include "general.h"
 #include "StatsCollector.h"
 #include "VMatLanguage.h"
+#include "PreproVMat.h"
 #include "VMat.h"
 #include "TMat_maths.h"
 #include "stringutils.h"
