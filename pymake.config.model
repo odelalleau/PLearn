@@ -42,9 +42,9 @@ verbose = 3;
 
 # List of directories in which to look for .h includes and corresponding .cc files to compile and link with your program
 # (no need to include the current directory, it is implicit)
-sourcedirs =   lsdirs(os.path.join(plearndir,'plearn/')) \
-             + lsdirs(os.path.join(plearndir,'plearn_learners/')) \
-             + lsdirs(os.path.join(plearndir,'commands/'))[1:] 
+sourcedirs =   lsdirs(join(plearndir,'plearn/')) \
+             + lsdirs(join(plearndir,'plearn_learners/')) \
+             + lsdirs(join(plearndir,'commands/'))[1:] 
 
 # will be added as list of includes (-I...) to all compilations
 mandatory_includedirs = [plearndir]
