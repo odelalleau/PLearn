@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussMix.h,v 1.6 2004/02/06 01:03:44 yoshua Exp $ 
+   * $Id: GaussMix.h,v 1.7 2004/02/06 01:08:20 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file GaussMix.h */
@@ -232,11 +232,13 @@ public:
   // factor : gaussian in set with EM algorithm
   void setGaussianFactorWSamples(int l, real _alpha, VMat samples);
 
-  virtual void generate(Vec& x) const;
-  void generateSpherical(Vec &x) const;
-  void generateDiagonal(Vec &x) const;
+  // if the argument given_gaussian is provided then a sample from
+  // the specified gaussian is generated, otherwise from the mixture
+  virtual void generate(Vec& x, int given_gaussian=-1) const;
+  void generateSpherical(Vec &x, int given_gaussian=-1) const;
+  void generateDiagonal(Vec &x, int given_gaussian=-1) const;
   void generateGeneral(Vec &x, int given_gaussian=-1) const;
-  void generateFactor(Vec &x) const;
+  void generateFactor(Vec &x, int given_gaussian=-1) const;
 
   virtual void resetGenerator(long g_seed) const;
 

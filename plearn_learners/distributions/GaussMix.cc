@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.10 2004/02/06 01:03:44 yoshua Exp $ 
+ * $Id: GaussMix.cc,v 1.11 2004/02/06 01:08:20 yoshua Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -895,34 +895,48 @@ void GaussMix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   PLERROR("GaussMix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
-void GaussMix::generate(Vec& x) const
+void GaussMix::generate(Vec& x, int given_gaussian) const
 {
   if(type[0]=='S')
-    generateSpherical(x);
+    generateSpherical(x,given_gaussian);
   else if(type[0]=='D')
-    generateDiagonal(x);
+    generateDiagonal(x,given_gaussian);
   else if(type[0]=='G')
-    generateGeneral(x);
+    generateGeneral(x,given_gaussian);
   else if(type[0]=='F')
-    generateFactor(x);
+    generateFactor(x,given_gaussian);
   else if(type=="Unknown")
     PLERROR("You forgot to specify mixture type (Spherical, Diagonal, General, Factor).");
   else PLERROR("unknown mixtrure type");
   return;
 }
 
-void GaussMix::generateSpherical(Vec &x) const
+void GaussMix::generateSpherical(Vec &x, int given_gaussian) const
 {
-  int l = multinomial_sample(alpha);
+  int l=0;
+  if (given_gaussian<0)
+    l = multinomial_sample(alpha);
+  else if (given_gaussian<alpha.length())
+    l = given_gaussian;
+  else
+    l = given_gaussian % alpha.length();
+
   fill_random_normal(x);
   tmpvec.fill(sqrt(sigma[l]));
   x*=tmpvec;
   x += mu(l);
 }
 
-void GaussMix::generateDiagonal(Vec &x) const
+void GaussMix::generateDiagonal(Vec &x, int given_gaussian) const
 {
-  int l = multinomial_sample(alpha);
+  int l=0;
+  if (given_gaussian<0)
+    l = multinomial_sample(alpha);
+  else if (given_gaussian<alpha.length())
+    l = given_gaussian;
+  else
+    l = given_gaussian % alpha.length();
+
   Vec lambda(diags(l));
   fill_random_normal(x);
   for(int i=0;i<D;i++)
@@ -932,7 +946,14 @@ void GaussMix::generateDiagonal(Vec &x) const
 
 void GaussMix::generateGeneral(Vec &x, int given_gaussian) const
 {
-  int l = given_gaussian>=0?given_gaussian:multinomial_sample(alpha);
+  int l=0;
+  if (given_gaussian<0)
+    l = multinomial_sample(alpha);
+  else if (given_gaussian<alpha.length())
+    l = given_gaussian;
+  else
+    l = given_gaussian % alpha.length();
+
   x=0;
   
   // the covariance matrix of the general gaussian type can be expressed as :
@@ -963,9 +984,16 @@ void GaussMix::generateGeneral(Vec &x, int given_gaussian) const
   x += mu(l);
 }
 
-void GaussMix::generateFactor(Vec &x) const
+void GaussMix::generateFactor(Vec &x, int given_gaussian) const
 {
-  int l = multinomial_sample(alpha);
+  int l=0;
+  if (given_gaussian<0)
+    l = multinomial_sample(alpha);
+  else if (given_gaussian<alpha.length())
+    l = given_gaussian;
+  else
+    l = given_gaussian % alpha.length();
+
   x=0;
   Vec norm(Ks[l]);
   fill_random_normal(norm);
