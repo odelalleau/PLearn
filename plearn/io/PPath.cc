@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.cc,v 1.12 2005/02/16 15:12:24 tihocan Exp $ 
+   * $Id: PPath.cc,v 1.13 2005/02/16 21:35:07 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -177,18 +177,31 @@ PStream& operator>>(PStream& in, PPath& path)
 
 //////////////////////////////////////////////  
 // Static PPath methods
+
+//////////
+// home //
+//////////
 PPath PPath::home()
 {
   return PPath( PR_GetEnv("HOME") );
 }
 
+////////////
+// getcwd //
+////////////
 PPath PPath::getcwd()
 {
   char buf[2000];
-  SYS_GETCWD(buf, 2000);
+  if (!SYS_GETCWD(buf, 2000))
+    // Error while reading the current directory. One should probably use a
+    // larger buffer, but it is even easier to crash.
+    PLERROR("In PPath::getcwd - Could not obtain the current working directory, a larger buffer may be necessary");
   return PPath(buf);
 }
 
+////////////
+// getenv //
+////////////
 PPath PPath::getenv(const string& var, const PPath& default_)
 {
   char* env_var = PR_GetEnv(var.c_str());
@@ -216,18 +229,27 @@ void PPath::ensureMappings()
     PPath   next_metapath;    
     while (ppath_config) {
       ppath_config >> next_metaprotocol >> next_metapath;
-      // Keep no trailing slash, because it makes it easier to manipulate
-      // and recognize a metapath.
-      // Only canonical '/' are allowed in a metapath.
-      // TODO Problem if we define a metapath to be '/' ?
-      if ( endsWith(next_metapath, PPATH_SLASH) )
-        next_metapath.replace( next_metapath.length()-1,
-                               next_metapath.length(), "");        
+      if (next_metaprotocol.empty())
+        // Nothing left to read.
+        break;
+      // Make sure we managed to read the metapath associated with the metaprotocol.
+      if (next_metapath.empty())
+        PLERROR("In PPath::ensureMappings - Error in PPath config file (%s): could not read the "
+                "path associated with '%s'",
+                 config_file_path.absolute().c_str(), next_metaprotocol.c_str());
+      // First ensure that there are only canonical slashes.
+      if (_slash_char != PPATH_SLASH && next_metapath.find(_slash_char) != npos)
+        PLERROR("In PPath::ensureMappings - Please use only the canonical slash '%c' in your PPath "
+                 "config file (%s): the path '%s' is invalid",
+                 PPATH_SLASH, config_file_path.absolute().c_str(), next_metapath.c_str());
+      // For the sake of simplicity, we do not allow a metapath to end with
+      // a slash unless it is a root directory.
+      if (endsWith(next_metapath, PPATH_SLASH) && !next_metapath.isRoot())
+        PLERROR("In PPath::ensureMappings - Only root directories are allowed to end with '%c' in "
+                "your PPath config file (%s): the path '%s' is invalid",
+                 PPATH_SLASH, config_file_path.absolute().c_str(), next_metapath.c_str());
 
       metaprotocol_to_metapath[ next_metaprotocol  ]  = next_metapath;
-
-//!<       cerr << left("next_metaprotocol: ", 20) << next_metaprotocol << endl
-//!<            << left("next_metapath: ", 20)     << next_metapath     << endl << endl;
     }       
   }
 }
@@ -631,10 +653,13 @@ string PPath::canonical() const
     // The current candidate is only a subtring of the canonic path.
     // Ex:
     //    /home/dorionc/hey
-    // dans
+    // in
     //    /home/dorionc/heyYou. 
+    // Note that if the canonic path is a root directory, it may end
+    // with a slash, in which case this cannot happen.
     if ( endpath != canonic_path.length()     &&
-        canonic_path[endpath] != _slash_char  )
+         canonic_path[endpath] != _slash_char &&
+         !endsWith(it->second, _slash_char) )
     {
       DBG_LOG << "Substring:\n\t" 
         << it->first << " -> " << it->second.c_str() << endl;
@@ -660,7 +685,8 @@ string PPath::canonical() const
   if ( metaprotocol.length() > 0 ) {
     canonic_path.replace( 0, metapath.length(), metaprotocol+':' );
     // Remove the slash just after the ':' if there is something following.
-    if (canonic_path.size() > metaprotocol.size() + 2)
+    if (canonic_path.size() > metaprotocol.size() + 2 &&
+        canonic_path[metaprotocol.size() + 1] == PPATH_SLASH)
       canonic_path.erase(metaprotocol.size() + 1, 1);
   }
 
