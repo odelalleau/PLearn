@@ -1,0 +1,13 @@
+
+Step:	 Testing the bbprop function of TimesScalarVariable
+Doing ...
+
+f->value[0]: 27
+Forward propagation through the vars has been verified
+
+z->gradientdata[0]: 27
+Backward propagation through the vars has been verified
+
+PASSED
+
+
