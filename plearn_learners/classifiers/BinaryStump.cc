@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BinaryStump.cc,v 1.3 2005/01/11 15:05:02 larocheh Exp $ 
+   * $Id: BinaryStump.cc,v 1.4 2005/02/04 17:02:18 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -273,6 +273,7 @@ void BinaryStump::train()
   train_stats->finalize();
   if(verbosity > 1)
     cout << "Weighted error = " << best_error << endl;
+  sf = TMat< pair<int, real> >(0,0);
 }
 
 
