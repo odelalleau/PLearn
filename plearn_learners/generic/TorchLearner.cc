@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TorchLearner.cc,v 1.3 2005/02/24 14:10:36 tihocan Exp $ 
+   * $Id: TorchLearner.cc,v 1.4 2005/02/24 15:35:22 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -89,6 +89,15 @@ void TorchLearner::declareOptions(OptionList& ol)
 
   // Now call the parent class' declareOptions.
   inherited::declareOptions(ol);
+
+  // Hide unused parent's options.
+
+  redeclareOption(ol, "seed", &TorchLearner::seed_, OptionBase::nosave,
+      "Torch learners in general will not use the PLearn seed.");
+
+  redeclareOption(ol, "nstages", &TorchLearner::nstages, OptionBase::nosave,
+      "A Torch learner is usually only trained on one stage.");
+
 }
 
 ///////////
