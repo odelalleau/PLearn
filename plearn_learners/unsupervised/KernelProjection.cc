@@ -33,14 +33,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.cc,v 1.6 2004/05/07 19:10:01 tihocan Exp $ 
+   * $Id: KernelProjection.cc,v 1.7 2004/05/11 20:58:57 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
 
 /*! \file KernelProjection.cc */
 
-#include "GaussianKernel.h"     //!< For the default kernel.
 #include "KernelProjection.h"
 #include "plapack.h"            //!< For eigenVecOfSymmMat.
 
@@ -130,7 +129,14 @@ void KernelProjection::build_()
 void KernelProjection::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                            const Vec& target, Vec& costs) const
 {
-  // No cost to compute.
+  // fs_squared_norm_reconstruction_error (see getTestCostNames).
+  real k_x_x = kernel->evaluate(input, input);
+  real fs_norm = pownorm(output, 2);
+  costs.resize(1);
+  costs[0] = abs(k_x_x - fs_norm);
+  if (k_x_x - fs_norm < -1e-5) {
+    cout << "Negative error: " << k_x_x - fs_norm << " (k_x_x = " << k_x_x << ", fs_norm = " << fs_norm << ")" << endl;
+  }
 }                                
 
 ///////////////////
@@ -184,8 +190,10 @@ void KernelProjection::forget()
 //////////////////////
 TVec<string> KernelProjection::getTestCostNames() const
 {
-  // No cost to compute.
   TVec<string> t;
+  // Feature space squared norm reconstruction error:
+  // | K(x,x) - ||output||^2 |
+  t.append("fs_squared_norm_reconstruction_error");
   return t;
 }
 
