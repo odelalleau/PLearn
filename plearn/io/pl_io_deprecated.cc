@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io_deprecated.cc,v 1.6 2005/02/08 21:37:32 tihocan Exp $
+   * $Id: pl_io_deprecated.cc,v 1.7 2005/02/22 20:56:29 ducharme Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -61,10 +61,10 @@ void writeFooter(ostream& out, const string& classname)
 int readHeader(PStream& in, const string& classname)
 {
   string header;
-#if defined(_MINGW_) || defined(WIN32)
-  in.tellg();   // Don't remove this line under MinGW, it apparently does nothing
-                // but if it's not there, it won't work (Hint: Microsoft conspiracy)
-#endif
+//#if defined(_MINGW_) || defined(WIN32)
+//  in.tellg();   // Don't remove this line under MinGW, it apparently does nothing
+//                // but if it's not there, it won't work (Hint: Microsoft conspiracy)
+//#endif
   in >> header;
   int headerlen = (int)header.length();
   in.get(); // consume newline
