@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: NegateElementsVariable.h,v 1.3 2004/02/20 21:11:51 chrish42 Exp $
+   * $Id: NegateElementsVariable.h,v 1.4 2004/02/23 14:30:19 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -71,6 +71,9 @@ public:
   virtual void rfprop();
 };
 
+inline Var negateElements(Var v) {
+  return new NegateElementsVariable(v);
+}
 
 } // end of namespace PLearn
 
