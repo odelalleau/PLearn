@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: databases.cc,v 1.11 2004/07/12 17:48:23 mariusmuja Exp $
+   * $Id: databases.cc,v 1.12 2004/07/12 21:32:05 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -885,7 +885,7 @@ void loadUCI(VMat& trainset, VMat& testset, VMat& allset, string db_spec, string
     int is = uci_spec->inputsize;
     if (is == -1)
       is = allset->width() - 1;
-    VMat tmp_vmat = new ShiftAndRescaleVMatrix(allset, is, 0, true);
+    VMat tmp_vmat = new ShiftAndRescaleVMatrix(allset, is, 0, true, 0);
     Mat new_data = tmp_vmat->toMat().subMatColumns(0, is);
     if (allset->length() != trainset->length() + testset->length()) {
       PLERROR("In loadUCI - The whole dataset should have a length equal to train + test");
