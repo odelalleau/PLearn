@@ -37,7 +37,7 @@
 
 #include "SequentialValidation.h"
 #include "VecStatsCollector.h"
-#include "AsciiVMatrix.h"
+//#include "AsciiVMatrix.h"
 #include "FileVMatrix.h"
 #include "PTester.h"  // for using class StatSpec
 

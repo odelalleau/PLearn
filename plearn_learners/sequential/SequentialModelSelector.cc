@@ -36,7 +36,7 @@
 
 
 #include "SequentialModelSelector.h"
-#include "TMat_maths_impl.h"
+//#include "TMat_maths_impl.h"
 
 namespace PLearn <%
 using namespace std;
