@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.24 2004/05/19 13:08:00 tihocan Exp $ 
+ * $Id: GaussMix.cc,v 1.25 2004/05/19 17:27:21 tihocan Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -409,6 +409,27 @@ void GaussMix::generateFromGaussian(Vec& x, int given_gaussian) const {
   } else {
     PLERROR("In GaussMix::generate - Unknown mixture type");
   }
+}
+
+///////////////////////
+// getNEigenComputed //
+///////////////////////
+int GaussMix::getNEigenComputed() const {
+  return n_eigen_computed;
+}
+
+/////////////////////
+// getEigenvectors //
+/////////////////////
+Mat GaussMix::getEigenvectors(int j) const {
+  return eigenvectors[j];
+}
+
+//////////////////
+// getEigenvals //
+//////////////////
+Vec GaussMix::getEigenvals(int j) const {
+  return eigenvalues(j);
 }
 
 ////////////

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussMix.h,v 1.17 2004/05/19 13:08:01 tihocan Exp $ 
+   * $Id: GaussMix.h,v 1.18 2004/05/19 17:27:22 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file GaussMix.h */
@@ -68,7 +68,6 @@ protected:
   int n_eigen_computed;
   int nsamples;
   Mat posteriors;
-  Vec sigma;
 
 public:
 
@@ -83,6 +82,10 @@ public:
   int n_eigen;
   real sigma_min;
   string type;
+
+  // Currently learnt options, but may be build options in the future.
+  Vec sigma;
+
 
   // ****************
   // * Constructors *
@@ -130,8 +133,6 @@ public:
 
   //! Overridden.
   virtual void generate(Vec& x) const;
-
-public:
 
   virtual void resetGenerator(long g_seed) const;
 
@@ -190,6 +191,11 @@ public:
 
   //! return Var[X]
   virtual Mat variance() const;
+
+  //! "Get" methods.
+  int getNEigenComputed() const;
+  Mat getEigenvectors(int j) const;
+  Vec getEigenvals(int j) const;
    
 };
 
