@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: FieldConvertCommand.cc,v 1.30 2004/07/14 03:54:19 chapados Exp $
+ * $Id: FieldConvertCommand.cc,v 1.31 2004/07/14 14:41:12 tihocan Exp $
  ******************************************************* */
 
 #include "FieldConvertCommand.h"
@@ -229,10 +229,8 @@ void FieldConvertCommand::run(const vector<string> & args)
   ProgressBar* pb = new ProgressBar("Analyzing fields", vm->width());
 
   // Process each field.
-  ProgressBar pbar(cerr, "Processing each field", vm->width());
   for(int i=0;i<vm->width();i++)
   {
-    pbar.update(i);
     type=unknown; // At the beginning we don't know the type.
     beta_hat=0;
     string message;
