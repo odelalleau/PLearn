@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLS.cc,v 1.12 2004/09/27 20:19:31 plearner Exp $ 
+   * $Id: PLS.cc,v 1.13 2004/10/05 13:29:11 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -374,6 +374,7 @@ void PLS::train()
   VMat target_part = new SubVMatrix(
       train_set, 0, train_set->inputsize(), train_set->length(), train_set->targetsize());
   PP<ShiftAndRescaleVMatrix> X_vmat = new ShiftAndRescaleVMatrix();
+  X_vmat->verbosity = this->verbosity;
   X_vmat->vm = input_part;
   X_vmat->build();
   mean_input << X_vmat->shift;
@@ -381,6 +382,7 @@ void PLS::train()
   negateElements(mean_input);
   invertElements(stddev_input);
   PP<ShiftAndRescaleVMatrix> Y_vmat = new ShiftAndRescaleVMatrix();
+  Y_vmat->verbosity = this->verbosity;
   Y_vmat->vm = target_part;
   Y_vmat->build();
   mean_target << Y_vmat->shift;
