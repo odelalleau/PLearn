@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilteredVMatrix.cc,v 1.14 2004/11/03 16:09:17 tihocan Exp $ 
+   * $Id: FilteredVMatrix.cc,v 1.15 2004/11/03 19:26:39 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -56,8 +56,8 @@ FilteredVMatrix::FilteredVMatrix()
 
 FilteredVMatrix::FilteredVMatrix(VMat the_source, const string& program_string, const string& the_metadatadir, bool the_report_progress)
   : SourceVMatrix(the_source),
-    prg(program_string),
-    report_progress(the_report_progress)
+    report_progress(the_report_progress),
+    prg(program_string)
 {
   metadatadir = append_slash(the_metadatadir);
   build_();
