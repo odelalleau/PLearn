@@ -514,7 +514,7 @@ void PStream::readAsciiNum(long &x)
     x = x*10 + c-'0';
     c = get();
   }
-  putback(c);
+  unget();
   x *= pos_or_neg;
 }
 
@@ -528,7 +528,7 @@ void PStream::readAsciiNum(unsigned long &x)
     x = x*10 + c-'0';
     c = get();
   }
-  putback(c);
+  unget();
 }
 
 void PStream::readAsciiNum(float &x)
@@ -571,7 +571,7 @@ void PStream::readAsciiNum(double &x)
           c = get();
         }
       tmpbuf[l] = '\0';
-      putback(c);
+      unget();
       sscanf(tmpbuf,"%lf",&x);
       break;
     }
@@ -688,7 +688,7 @@ PStream& PStream::operator>>(char *x)
       }
       x[i++] = 0;
       if(!isspace(c))
-        putback(c);
+        unget();
     }
       break;
     case PStream::plearn_ascii:
@@ -736,7 +736,7 @@ PStream& PStream::operator>>(char *x)
           c= get();
         }
         if(!isspace(c))
-          putback(c);
+          unget();
       }
       x[i++] = 0;
     }
@@ -817,7 +817,7 @@ PStream& PStream::operator>>(string& x)
           c= get();
         }
         if(!isspace(c))
-          putback(c);
+          unget();
       }
     }
       break;
@@ -854,7 +854,7 @@ PStream& PStream::operator>>(int &x)
       }
       else  // plearn_ascii
       {
-        putback(c);
+        unget();
         readAsciiNum(x);
       }
       break;
@@ -892,7 +892,7 @@ PStream& PStream::operator>>(unsigned int &x)
       }
       else  // plearn_ascii
       {
-        putback(c);
+        unget();
         readAsciiNum(x);
       }
       break;
@@ -930,7 +930,7 @@ PStream& PStream::operator>>(long &x)
       }
       else  // plearn_ascii
       {
-        putback(c);
+        unget();
         readAsciiNum(x);
       }
       break;
@@ -968,7 +968,7 @@ PStream& PStream::operator>>(unsigned long &x)
       }
       else  // plearn_ascii
       {
-        putback(c);
+        unget();
         readAsciiNum(x);
       }
       break;
@@ -1006,7 +1006,7 @@ PStream& PStream::operator>>(short &x)
       }
       else  // plearn_ascii
       {
-        putback(c);
+        unget();
         readAsciiNum(x);
       }
       break;
@@ -1044,7 +1044,7 @@ PStream& PStream::operator>>(unsigned short &x)
       }
       else  // plearn_ascii
       {
-        putback(c);
+        unget();
         readAsciiNum(x);
       }
       break;
@@ -1112,7 +1112,7 @@ PStream& PStream::operator>>(float &x)
       }
       else  // plearn_ascii
       {
-        putback(c);
+        unget();
         readAsciiNum(x);
       }
       break;
@@ -1150,7 +1150,7 @@ PStream& PStream::operator>>(double &x)
       }
       else  // ascii
       {
-        putback(c);
+        unget();
         readAsciiNum(x);
       }
       break;
