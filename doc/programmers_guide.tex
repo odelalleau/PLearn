@@ -2,18 +2,21 @@
 %%
 %%  Copyright (c) 1998-2002 by Pascal Vincent
 %%
-%%  $Id: programmers_guide.tex,v 1.9 2004/07/02 21:32:18 monperrm Exp $
+%%  $Id: programmers_guide.tex,v 1.10 2004/07/05 19:54:32 lamblin Exp $
 
 \documentclass[11pt]{book}
 \usepackage{t1enc}              % new font encoding  (hyphenate words w/accents)
 \usepackage{ae}                 % use virtual fonts for getting good PDF
-\usepackage{isolatin1}    % support for French accents
+\usepackage{isolatin1}          % support for French accents
+\usepackage{url}                % support URLs properly
 
 %%%%%%%%% Definitions %%%%%%%%%%%%
 \newcommand{\PLearn}{{\bf \it PLearn}}
-\newcommand{\Object}{{\bf Object}} 
+\newcommand{\Object}{{\bf Object}}
 \newcommand{\Learner}{{\bf Learner}} 
 \newcommand{\PPointable}{{\bf PPointable}} 
+\newcommand{\Var}{{\tt Var}}
+\newcommand{\RandomVar}{{\tt RandomVar}}
 
 \parskip=2mm
 \parindent=0mm
@@ -68,7 +71,26 @@ met:
 \section{ Introduction}
  Machine Learning algorithms are usually described in scientific papers in a standard mathematical formulation, often framed as an optimization of a given cost function. PLearn is a C++ library that uses the object-oriented and operator overloading capabilities of the C++ language to allow, among other things, to express cost functions and their optimization as a standard C++ program, in a declarative manner that is as close as possible to their mathematical formalization. 
 
- Most neural-network and general machine-learning simulation environments define their own scripting language. While it is very tempting for every computer-scientist to craft his own language, creating a complete, clear, efficient and bug-free language is a horrendous task, so this is how things usually go: one starts bulding a simple scripting syntax (typically lisp-like because it's easy to parse) to specify simple experiments. Quickly it appears too limited, and it may grow to include loops, functions, data structures, etc... Eventually it ends up including some sort of support for object-oriented programming, and finally for efficiency you want it to be compiled rather than interpreted! In the end, you end up with a huge mess of a system that was not designed to grow that much from the beginning, and which is often impossible to comprehend and maintain for anybody but its author. The end-result might sometimes be impressive, but at the cost of a lot of efforts diverted from your actual research. While C++ is far from being the perfect language, it is very powerful, can be both very expressive and generate highly efficient code, and most of all it has the immense advantage of being developed and well-supported by worldwide teams of dedicated and competent people... 
+ Most neural-network and general machine-learning simulation
+environments define their own scripting language. While it is very
+tempting for every computer-scientist to craft his own language,
+creating a complete, clear, efficient and bug-free language is
+a horrendous task, so this is how things usually go: one starts
+bulding a simple scripting syntax (typically lisp-like because
+it's easy to parse) to specify simple experiments. Quickly it
+appears too limited, and it may grow to include loops, functions,
+data structures, etc. Eventually it ends up including some sort of
+support for object-oriented programming, and finally for efficiency
+you want it to be compiled rather than interpreted! In the end,
+you end up with a huge mess of a system that was not designed to
+grow that much from the beginning, and which is often impossible to
+comprehend and maintain for anybody but its author. The end-result
+might sometimes be impressive, but at the cost of a lot of efforts
+diverted from your actual research. While C++ is far from being the
+perfect language, it is very powerful, can be both very expressive and
+generate highly efficient code, and most of all it has the immense
+advantage of being developed and well-supported by worldwide teams
+of dedicated and competent people...
 
 
  When providing the correct type abstractions, C++ can be an expressive-enough language to directly serve as a highly customizable, extensible and efficient ``scripting language'' for designing and running even the most demanding experiments in machine-learning research and development. So this is what this library is all about: providing the right type abstractions. What originally got me started on this project was the desire to be able to optimize a complex cost function by just expressing it in a declarative way as close as possible to the mathematical formulation. This lead to the original implementation of the Var class. Since then PLearn has grown to include many other useful types and abstractions. 
@@ -88,11 +110,14 @@ met:
 
 \section{Developer CVS access}
 
-If you are going to contribute to PLearn on SourceForge (http://www.sourceforge.org):
+If you are going to contribute to PLearn on SourceForge
+(\url{http://www.sourceforge.net}):
 \begin{itemize}
 \item If you don't have one already, create a SourceForge account for yourself
-\item Send me (plearner@sourceforge.org) your account login, so that I can add you to the developer list.
-\item Make sure the {\tt CVS\_RSH} environment variable is set to {\tt ssh} in your .cshrc or .bashrc
+\item Send me ({\tt plearner@users.sourceforge.net}) your account login,
+so that I can add you to the developer list.
+\item Make sure the {\tt CVS\_RSH} environment variable is set to
+{\tt ssh} in your .cshrc or .bashrc
 \item Check-out PLearn as follows:
 \begin{verbatim}
 cvs -d :ext:your_sourceforge_login@cvs.sourceforge.net:/cvsroot/plearn co PLearn
@@ -128,42 +153,41 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
+  // Example use of a `real' variable
+  // a compilation option makes it either a double or a float
+  // Pleas don't use double nor float
 
-// utilisation de variables reels
-// une option de compilation le transforme soit en double soit en float
-// ne pas utiliser des doubles ou des floats
-real a=15;
-cout<<a<<endl;
+  real a=15;
+  cout<<a<<endl;
 
-    //  vector creation : method 1
-    Vec b(3);
-    b[0] = 2;
-    b[1] = 42;
-    b[2] = 21;
-    cout<<b<<endl;
+  // Vector creation: method 1
+  Vec b(3);
+  b[0] = 2;
+  b[1] = 42;
+  b[2] = 21;
+  cout<<b<<endl;
 
-    //  vector creation : method 2
-    Vec b2(3);
-    b2<<"5 4.2 -2";
-    cout<<b2<<endl;
-    
-    // matrix creation : method 1
-    Mat c(3,2);
-    c(1,1)=1.1;
-    c(1,0)=4;
-    c(2,0)=5;
-    c(0,1)=-73.2;
-    c(0,0)=78;
-    c(2,1)=5.32e-2;
+  // Vector creation: method 2
+  Vec b2(3);
+  b2<<"5 4.2 -2";
+  cout<<b2<<endl;
 
-    cout<<c<<endl;
-    
-    // matrix creation : method 2
-    Mat c2(3,2);
-    c2<<"2 4 2.5e-1 6 1e3 3.1"; // read matrix row by matrix row 
-    cout<<c2<<endl;
-    return 0;
+  // Matrix creation : method 1
+  Mat c(3,2);
+  c(1,1)=1.1;
+  c(1,0)=4;
+  c(2,0)=5;
+  c(0,1)=-73.2;
+  c(0,0)=78;
+  c(2,1)=5.32e-2;
+  cout<<c<<endl;
 
+  // Matrix creation : method 2
+  Mat c2(3,2);
+  c2<<"2 4 2.5e-1 6 1e3 3.1"; // read matrix row by matrix row 
+  cout<<c2<<endl;
+
+  return 0;
 }
 \end{verbatim}
 
@@ -179,27 +203,27 @@ using namespace PLearn;
 int main(int argc, char** argv)
 {
 
-    //  creation de vecteurs
-    Vec b(3);
-    b[0] = 2;
-    b[1] = 42;
-    b[2] = 21;
-    cout<<b<<endl;
+  // vector creation
+  Vec b(3);
+  b[0] = 2;
+  b[1] = 42;
+  b[2] = 21;
+  cout<<b<<endl;
 
-    // creation de matrices
-    Mat c(3,2);
-    c(1,1)=1.0;
-    c(1,0)=4.0;
-    c(2,0)=5.0;
-    c(0,1)=73.0;
-    c(0,0)=78.0;
-    c(2,1)=5.0;
+  // matrix creation
+  Mat c(3,2);
+  c(1,1)=1.0;
+  c(1,0)=4.0;
+  c(2,0)=5.0;
+  c(0,1)=73.0;
+  c(0,0)=78.0;
+  c(2,1)=5.0;
 
 
-    Vec d(2);
-    transposeProductAcc(d,c,b);
-    cout<<d<<endl;
-    return 0;
+  Vec d(2);
+  transposeProductAcc(d,c,b);
+  cout<<d<<endl;
+  return 0;
 }
 \end{verbatim}
 
@@ -216,27 +240,28 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
-    Mat c(3,2);
-    c(1,1)=1.0;
-    c(1,0)=4.0;
-    c(2,0)=5.0;
-    c(0,1)=73.0;
-    c(0,0)=78.0;
-    c(2,1)=5.0;
+  Mat c(3,2);
+  c(1,1)=1.0;
+  c(1,0)=4.0;
+  c(2,0)=5.0;
+  c(0,1)=73.0;
+  c(0,0)=78.0;
+  c(2,1)=5.0;
 
-    //enregistrement dans un fichier pmat
-    c.save("enr.pmat");
+  // save into a pmat file
+  c.save("save.pmat");
 
-    //enregistrement dans un fichier amat
-    VMat vm(c);
-    vm->saveAMAT("enr.amat");
+  // save into an amat file
+  VMat vm(c);
+  vm->saveAMAT("save.amat");
 
+  // load from a file
+  VMat vm2 = getDataSet("save.pmat");
+    // it could have been "save.amat"
+  Mat m = vm2.toMat();
+  cout<<m;
 
-    // chargement a partir d'un fichier
-    VMat vm2 = getDataSet("enr.pmat"); // or enr.amat it's OK
-    Mat m = vm2.toMat();
-    cout<<m;
-    return 0;
+  return 0;
 }
 
 \end{verbatim}
@@ -250,19 +275,34 @@ PLearner is the super class for learner. Here we describe how to create a PLearn
 \subsection{First steps}
 \begin{enumerate}
 
-\item type \texttt{pyskeleton PLearner MyLearner}
+\item Type \texttt{pyskeleton PLearner MyLearner}
 
-\item edit the file MyLearner.h to add the correct field (int, Mat, etc.). Normally you don't have to add any methods.
+\item Edit the file MyLearner.h to add the correct field (int, Mat,
+      etc.). Normally you don't have to add any methods.
 
-\item edit the file MyLearner.cc
-    \begin{enumerate}
-        \item  add short and complete decsription in \texttt{PLEARN\_IMPLEMENT\_OBJECT}
-        \item  add the \texttt{declareOption} corresponding to the field you create in the \texttt{void MyLearner::declareOptions(OptionList\& ol)} method (don't forget to fill the help option). This will be used for saving and loading the PLearner.
-        \item If some fields derive from basic ones, don't add a \texttt{declareOption}, you have to implemement their building in the \texttt{MyLearner::build\_()} method.
-        \item If some fields are filled after training, add a \texttt{declareOption} with a OptionBase::learntoption option.
-        \item edit the remaining methods, \texttt{pyskeleton} has included comments to help you.
-    \end{enumerate}
-\item pray while launching a \texttt{pymake MyLearner.cc}.
+\item Edit the file MyLearner.cc
+  \begin{enumerate}
+    \item  Add short and complete description in
+    \texttt{PLEARN\_IMPLEMENT\_OBJECT}
+
+    \item  Add the \texttt{declareOption} corresponding
+    to the field you create in the \texttt{void
+    MyLearner::declareOptions(OptionList\& ol)} method (don't forget
+    to fill the help option). This will be used for saving and loading
+    the PLearner.
+
+    \item  If some fields derive from basic ones, don't add a
+    \texttt{declareOption}, you have to implemement their building
+    in the \texttt{MyLearner::build\_()} method.
+
+    \item  If some fields are filled after training, add a
+    \texttt{declareOption} with a OptionBase::learntoption option.
+
+    \item  Edit the remaining methods, \texttt{pyskeleton} has included
+    comments to help you.
+  \end{enumerate}
+
+\item Pray while launching a \texttt{pymake MyLearner.cc}.
 \end{enumerate} 
 
 
@@ -277,32 +317,28 @@ TODO
 
 Go read the section \ref{Var} and the section \ref{Optimizer}.
 
-%--------------------------------------------------------------------------------------------------- 
-%--------------------------------------------------------------------------------------------------- 
-%--------------------------------------------------------------------------------------------------- 
-%--------------------------------------------------------------------------------------------------- 
-%--------------------------------------------------------------------------------------------------- 
-%--------------------------------------------------------------------------------------------------- 
+%----------------------------------------------------------------------
 \chapter{Intermediate}
-%--------------------------------------------------------------------------------------------------- 
-%--------------------------------------------------------------------------------------------------- 
-%--------------------------------------------------------------------------------------------------- 
-%--------------------------------------------------------------------------------------------------- 
-%--------------------------------------------------------------------------------------------------- 
+%----------------------------------------------------------------------
+
 \section{Low-level concepts}
+
 \subsection{Important compilation flags}
 TODO: explication
+
 \begin{itemize}
 \item BOUNDCHECK or nothing
 \item USEFLOAT or USEDOUBLE
 \item LITTLEENDIAN or BIGENDIAN
 \end{itemize}
-Default with Pymake and Linux is BOUNDCHECK, USEDOUBLE, LITTLEENDIAN.
+ Default with Pymake and Linux is BOUNDCHECK, USEDOUBLE, \linebreak
+LITTLEENDIAN.
 
 \subsection{Smart Pointers}
 \label{PP}
- Memory management is one of the most error-prone aspects of traditional C and C++ programming. PLearn makes it easier through the use of \emph{reference-counted smart pointers}
-. 
+ Memory management is one of the most error-prone aspects of traditional
+C and C++ programming. PLearn makes it easier through the use of
+\emph{reference-counted smart pointers}.
 
  Traditionally, there are two basic ways an object can typically be created: 
 
@@ -311,49 +347,84 @@ Default with Pymake and Linux is BOUNDCHECK, USEDOUBLE, LITTLEENDIAN.
 \begin{verbatim}
 void f()
 { // Beginning of scope
-MyClass myinstance; // memory is allocated on the stack and constructor is called
-myinstance.dosomething(); // methods and members are called using a \emph{dot}
- 
-}// when exiting the scope, destructor of object is 
-// called automatically and stack memory is freed
+  MyClass myinstance; 
+    // memory is allocated on the stack,
+    // and constructor is called
 
+  myinstance.dosomething();
+    // methods and members are called using a dot
+
+} // when exiting the scope, destructor of object is
+  // called automatically and stack memory is freed
 \end{verbatim}
 
 \item  by calling new:
 \begin{verbatim}
 void f()
-{// Beginning of scope
-MyClass* ptr = new MyClass(); // memory is allocated on the heap by the new opearator which returns a pointer
-ptr->dosomething();// methods and members are called using \emph{"->"
-}
-delete ptr; // object is NOT destroyed automatically when leaving the scope
-} // ... instead, we have to call delete explicitly.
+{ // Beginning of scope
+
+  MyClass* ptr = new MyClass(); 
+    // memory is allocated on the heap by the "new"
+    // opearator, which returns a pointer
+
+  ptr->dosomething(); 
+    // methods and members are called using "->"
+
+  delete ptr;
+    // we have to call "delete" explicitly,
+    // because object is NOT automatically destroyed
+}   // when leaving the scope
 \end{verbatim}
 
 \end{itemize}
  In more complex cases, where several ojects may contain pointers to other objects, keeping track of when to delete an object quickly becomes a complex and error-prone bookkeeping task. 
 
 
- PLearn uses reference-counted smart pointers to automate this, so that you don't have to worry about calling delete. It is based on a \emph{smart pointer}
- template (PP which stands for PLearnPointer) that can be used on any class that derives from SmartPointable. A SmartPointable object contains the count of the number of smart pointers that point to it, and is automatically destroyed when this \emph{reference count}
- becomes 0 (i.e. when nobody any longer points to it) \begin{verbatim}
+ PLearn uses reference-counted smart pointers to automate this, so
+that you don't have to worry about calling delete. It is based on a
+\emph{smart pointer} template (PP which stands for PLearnPointer)
+that can be used on any class that derives from SmartPointable. A
+SmartPointable object contains the count of the number of smart
+pointers that point to it, and is automatically destroyed when this
+\emph{reference count} becomes 0 (i.e. when nobody any longer points
+to it)
+
+\begin{verbatim}
 class MyClass: public SmartPointable;
 
 void f()
-{// Beginning of first scope
-PP<MyClass> ptr = new MyClass();// memory is allocated on the heap (reference count for object is 1)
-  {// Beginning of second scope
-    PP<MyClass> ptr2 = ptr;// ptr2 and ptr point to the same opject (reference count becomes 2)
-  }// Object is not destroyed upon exiting the second scope (reference count becomes 1) 
-ptr->dosomething();// methods and members are called using "->"
-}// Object is automatically destroyed here when reference count becomes 0
+{ // Beginning of first scope
+  PP<MyClass> ptr = new MyClass();
+    // memory is allocated on the heap
+    // (reference count for object is 1)
+
+  { // Beginning of second scope
+    PP<MyClass> ptr2 = ptr;
+      // ptr2 and ptr point to the same object
+      // (reference count becomes 2)
+
+  } // Object is not destroyed upon exiting the second scope 
+    // (reference count becomes 1)
+
+  ptr->dosomething();
+    // methods and members are called using "->"
+
+} // Object is automatically destroyed here 
+  // when reference count becomes 0
 \end{verbatim}
+
  It is possible to mix traditional pointers to an object with smart pointers, and there are automatic conversions between the two. However, in general we discourage doing this, although it might prove useful in some situations (such as to keep a pointer to the actual specific type of the object rather than its base-class). If you do mix them, just remember that the object will get deleted as soon as the last smart pointer pointing to it is gone (when it gets out of scope for instance), regardless whether there are still traditional pointers pointing to it (the automatic reference count can only counts smart pointers!). 
 
 
- Many base classes in PLearn have an associated smart pointer type with a similar (and usually shorter) name, as shown in the following table. Sometimes the corresponding smart pointer type is a simple typedef to PP$<$\emph{baseclass}
-$>$. But we also often specialised them (by deriving PP$<$\emph{baseclass}
-$>$) to add operators and methods for user convenience. (So that, for instance, element at row i and column j of a VMat m can be accessed as m(i,j) as an alternative to the more verbose m-$>$get(i,j) )''; 
+ Many base classes in PLearn have an associated smart pointer type
+with a similar (and usually shorter) name, as shown in the following
+table. Sometimes this corresponding smart pointer type is a simple
+typedef to the type PP<\emph{baseclass}>. 
+
+But we also often specialised them (by deriving PP<\emph{baseclass}>)
+to add operators and methods for user convenience. So that, for
+instance, element at row i and column j of a VMat m can be accessed
+as m(i,j) as an alternative to the more verbose m->get(i,j).
 
 \begin{tabular}{|c|c|}
 \hline 
@@ -387,22 +458,28 @@ StatsIterator &StatsIt \\
  
  The person who only wishes to use the library typically doesn't need to understand all the details of the designer level hierarchy. Some concepts (such as Var) can be manipulated almost entirely through the smart pointer type and user-level functions, although knowing the most useful methods of the uinderlying base class, and the role of each subclass certainly doesn't harm. 
 
-\section{How to subclass a PLearn Object}
+\section{How to subclass a PLearn \Object}
 \label{Object}
 
-\subsection{Object}
- PLearn defines an Object class. There is not much to it. Its role is mainly to standardise the methods for printing, saving to file, and duplicating objects. Not all classes in PLearn are derived from Object (many low-level classes aren't). But all non-strictly-concrete classes (i.e. those with virtual methods) in PLearn derive from Object. This includes the Learner base class.
- 
-\Object allows an easy support for a number of useful generic facilities:
+\subsection{\Object}
+
+ PLearn defines an \Object\ class. There is not much to it. Its role
+is mainly to standardise the methods for printing, saving to file, and
+duplicating objects. Not all classes in PLearn are derived from Object
+(many low-level classes aren't). But all non-strictly-concrete classes
+(i.e. those with virtual methods) in PLearn derive from Object. This
+includes the Learner base class.
+
+\Object\ allows an easy support for a number of useful generic facilities:
 \begin{itemize}
-\item automatic memory management (through reference counted smart pointers: \Object derives from \PPointable)
+\item automatic memory management (through reference counted smart pointers: \Object\ derives from \PPointable)
 \item serialization/persistence ({\tt read, write, save, load})
 \item runtime type information ({\tt classname})
 \item displaying ({\tt info, print})
 \item deep copying ({\tt deepCopy})
-\item a generic way of setting options ({\tt setOption}) and a generic {\tt build()} method (the combination
-    of the two allows for instance to change the object structure and rebuild it at
-    runtime)
+\item a generic way of setting options ({\tt setOption}) and a generic
+  {\tt build()} method (the combination of the two allows for instance
+  to change the object structure and rebuild it at runtime)
 \end{itemize}
 
 
@@ -428,70 +505,72 @@ protected:
   // * protected options *
   // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
+  // ### declare protected option fields 
+  // ###  (such as learnt parameters) here
   // ...
     
 public:
+  // here we had the good things
+  string firstname;
+  int age;
 
-// here we had the good things
-string firstname;
-int age;
 \end{verbatim}
-
 
 Then you just have to fill the \texttt{declareOptions} method in the .cc .
 
 \begin{verbatim}
+void Person::declareOptions(OptionList& ol) 
+{
+  // ### Declare all of this object's options here
+  // ### For the "flags" of each option, you should typically
+  // ### specify one of OptionBase::buildoption, 
+  // ### OptionBase::learntoption or OptionBase::tuningoption.
+  // ### Another possible flag to be combined with is 
+  // ### OptionBase::nosave
 
- void Person::declareOptions(OptionList& ol)
-  {
-    // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-    // ### OptionBase::tuningoption. Another possible flag to be combined with
-    // ### is OptionBase::nosave
+  // ### ex:
+  declareOption(ol, "firstname", &Person::firstname, 
+                 OptionBase::buildoption,
+                 "Help text describing this option");
 
-    // ### ex:
-     declareOption(ol, "firstname", &Person::firstname, OptionBase::buildoption,
-                  "Help text describing this option");
-    
-     declareOption(ol, "age", &Person::age, OptionBase::buildoption,
-            "Help text describing this option");
+  declareOption(ol, "age", &Person::age, 
+                 OptionBase::buildoption,
+                 "Help text describing this option");
 // ...
 
-    // Now call the parent class' declareOptions
-    inherited::declareOptions(ol);
-  }
+  // Now call the parent class' declareOptions
+  inherited::declareOptions(ol);
+}
 \end{verbatim}
 
-\subsection{Setting option-fields and caling build()}
+\subsection{Setting option fields and calling build()}
 
 There are several techniques to implement the facilities of finishing
 building afterwards and named parameters.  In PLearn, we typically
 use public option fields (or sometimes protected fields with setter
 methods) and a public {\tt build()} method that does the actual
 building. Think of those public fields as really nothing but named
-constructor parameters, and {\tt build()} as the one and only true constructor.
+constructor parameters, and {\tt build()} as the one and only true
+constructor.
 
-The building of {\em me} in the previous example could then look as follows:
+The building of {\em me} in the previous example could then look
+as follows:
 
 \begin{verbatim}
-
 #include "Person.h"
 
 using namespace PLearn;
 
-// 
 int main(int argc, char** argv)
 {
-    Person me; // default constructor can set default values for the option-fields
-            // for ex: suppose default profession is "student"
-    me.firstname = "Pascal";
-    me.age = 29;
-    me.build(); // finalize the building process
-    
-    cout<<me.firstname; 
+  Person me; // default constructor can set default values 
+             // for the option-fields
+             // for ex: suppose default profession is "student"
+  me.firstname = "Pascal";
+  me.age = 29;
+  me.build(); // finalize the building process
 
+  cout<<me.firstname; 
 }
 \end{verbatim}
 
@@ -499,52 +578,58 @@ Note that there has to be a default (empty) constructor, whose role is also
 to set the default values of the parameters.
 
 
-\subsection{A generic way of setting options from "outside"}
+\subsection{A generic way of setting options from ``outside''}
 
-Sometimes, you want to set options and build an object from some form of
-interpreted language environment or from a text description, etc\ldots That
-is to say from "outside" a C++ program. For this, \PLearn provides the
-setOption method. Suppose {\tt Person} is a subclass of \Object, then we
-could do the following:
+Sometimes, you want to set options and build an object from some
+form of interpreted language environment or from a text description,
+etc. That is to say from ``outside'' a C++ program. For this, \PLearn\ 
+provides the setOption method. Suppose {\tt Person} is a subclass of
+\Object, then we could do the following:
 
 \begin{verbatim}
-
 #include "Object.h"
 #include "Person.h"
 
 using namespace PLearn;
 
-// 
 int main(int argc, char** argv)
 {
-  
-    Object *o = new Person(); // o is a smart pointer to an object whose true type is Person
-    o->setOption("firstname","Pascal");
-    o->setOption("age","29");
-    
-    Person *p = dynamic_cast<Person*>(o);
-  
-    cout<<p->firstname;
+  Object *o = new Person(); // o is a smart pointer to an 
+                            // object whose true type is Person
+  o->setOption("firstname","Pascal");
+  o->setOption("age","29");
 
+  Person *p = dynamic_cast<Person*>(o);
+
+  cout<<p->firstname;
 }
-
 \end{verbatim}
 
-Note that {\tt setOption} takes 2 strings: the name of the option, and its value serialised in string form. Strings are universal because anything can be represented (serialised) as a string. Actually setOption calls a lower-level method called {\tt readOptionVal} which reads the option value from a stream (a string stream in this case\ldots) rather than a string. Similarly there is a {\tt getOption} method which returns a string representation of a named option, and whose implementation suimply calls {\tt writeOptionVal} on a string stream.
+Note that {\tt setOption} takes 2 strings: the name of the option, and
+its value serialised in string form. Strings are universal because
+anything can be represented (serialized) as a string. Actually,
+setOption calls a lower-level method called {\tt readOptionVal}
+which reads the option value from a stream (a string stream in
+this case\ldots) rather than a string. Similarly there is a {\tt
+getOption} method which returns a string representation of a named
+option, and whose implementation simply calls {\tt writeOptionVal}
+on a string stream.
 
 
 \subsection{Building an object from its specification in a file}
 
-Building an object from a specification in a file is a natural extension of the setOption/build mechanism.
+Building an object from a specification in a file is a natural
+extension of the setOption/build mechanism.
 Suppose we now have a file {\tt me.psave} containing the following text:
 
 \begin{verbatim}
 Person( firstname="Pascal"; 
         age = 29;
-       );
+      );
 \end{verbatim}
 
-In the following code, we a way to build {\tt me} from its description in the file.
+In the following code, we a way to build {\tt me} from its description
+in the file.
 
 \begin{verbatim}
 #include "Object.h"
@@ -554,13 +639,12 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
-  
 
   Object* o = loadObject("me.psave"); 
   Person *p = dynamic_cast<Person*>(o);
-  
+
   cout<<p->firstname;
-  
+
   return 0;
 }
 \end{verbatim}
@@ -569,7 +653,6 @@ int main(int argc, char** argv)
 There are others ways to do that:
 
 \begin{verbatim}
-
 string filename = "me.psave";
 
 // 1) The loadObject function
@@ -591,7 +674,8 @@ string filename = "me.psave";
   me.read(in);
 }
 
-// 4) An alternative using the global generic plearn::read function
+// 4) An alternative using the global generic 
+//    plearn::read function
 {
   Object *me;
   ifstream in(filename.c_str());
@@ -600,32 +684,31 @@ string filename = "me.psave";
 
 // 5) What if we have the string representation at hand?
 {
-  // get the content of the file as a string (function in fileutils.h)
+  // get the content of the file as a string
+  // (function in fileutils.h)
   string description = loadFileAsString(filename);
   Object *me = newObject(description);
 }
-
 \end{verbatim}
- 
-Naturally, all that these functions do is parse the description in the
-file, and call {\tt readOptionVal} (the lower-level equivalent of
-setOption) for each specified option, before finally calling {\tt build()}.
+
+Naturally, all that these functions do is parse the description in
+the file, and call {\tt readOptionVal} (the lower-level equivalent
+of {\tt setOption}) for each specified option, before finally calling
+{\tt build()}.
 
 Note that options may have arbitrarily complex types. They are not limited to strings and numbers; in particular they may
-themselves be compex objects or arrays of things. For ex:
+themselves be compex objects or arrays of things. For example:
 
 \begin{verbatim}
-
 Drawing(
   color = "blue";
 
-  # path is an array of obejcts
+  # path is an array of objects
   path = [ Line(x0=0, y0=0, x1=10, y1=20); 
            Line(x0=0, y0=0, x1=10, y1=20, width=2);
            Circle(x=20; y=30; radius=5.3, fill=true);
          ];
   );
-
 \end{verbatim}
 
 Finally, you should use a SmartPointable for Person, as seen before in \ref{PP}.
@@ -638,13 +721,11 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
-
-  
    Object* o = loadObject("me.psave"); 
    PP<Person> p = dynamic_cast<Person*>(o);
-  
+
   cout<<p->firstname;
-  
+
   return 0;
 }
 \end{verbatim}
@@ -652,7 +733,12 @@ int main(int argc, char** argv)
 
 \subsection{Human description versus saved object} 
 
-The {\tt me.psave} file in the previous section may have been produced either manually by a human being, or automatically by calling {\tt plearn::save("me.psave",me); } on a previously constructed {\tt Person me} object. 
+The {\tt me.psave} file in the previous section may have been produced
+either manually by a human being, or automatically by calling 
+\begin{verbatim}
+plearn::save("me.psave",me);
+\end{verbatim}
+on a previously constructed {\tt Person me} object.
 
 The mechanism for building an object is the same in both cases: it automatically calls a series of {\tt readOptionVal} followed by {\tt build()}. However the options specified in both cases are not always the same:
 
@@ -669,9 +755,9 @@ There is a third conceptual category of options, that we call {\em \bf tuning op
 
 
 
-%-------------------------------------------------------------------------------------- 
-\section{PLearn for Matrix-Vectors Operations with Gradients}
-%-------------------------------------------------------------------------------------- 
+%----------------------------------------------------------------------
+\section{Matrix-Vectors Operations with Gradients}
+%----------------------------------------------------------------------
 \label{Var}
 
 \subsection{Introduction to Var}
@@ -682,7 +768,11 @@ There is a third conceptual category of options, that we call {\em \bf tuning op
  
  NO NUMERICAL COMPUTATION IS DONE AT THIS LEVEL. The purpose of the Var definitions is only to build the symbolic relationship between mathematical variables. 
 
- One can write arbitarily complex expressions using many implicit or explicit intermediary variables, and predefined functions such as in: w = exp(-(abs(sqrt(lambda)*v)/3.0); This will construct an internal representation, only with a larger number of intermediate nodes to represent intermediate states (variables) of the calculations. 
+ One can write arbitarily complex expressions using many implicit or
+explicit intermediary variables, and predefined functions such as
+in: $w=exp(-(abs(sqrt(lambda)*v)/3.0))$.  This will construct an
+internal representation, only with a larger number of intermediate
+nodes to represent intermediate states (variables) of the calculations.
 
  Each Var contains two Vec fields. 
  
@@ -702,35 +792,34 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
+  Var v(3,2); // declares a Variable of size 3x2
+  Var lambda(1,1); // declares a scalar Variable
 
-    Var v(3,2); // declares a Variable of size 3x2
-    Var lambda(1,1); // declares a scalar Variable
+  v->matValue(1,0)=4.0;
+  v->matValue(2,0)=5.0;
+  v->matValue(0,1)=73.0;
+  v->matValue(0,0)=78.0;
+  v->matValue(2,1)=5.0;
 
-    v->matValue(1,0)=4.0;
-    v->matValue(2,0)=5.0;
-    v->matValue(0,1)=73.0;
-    v->matValue(0,0)=78.0;
-    v->matValue(2,1)=5.0;
+  cout << v->matValue << endl;
 
-    cout << v->matValue << endl;
+  lambda->value = 2.0;
 
-    lambda->value = 2.0;
+  Var w = lambda*v;
 
-    Var w = lambda*v;
+  w->fprop();
 
-    w->fprop();
-
-    cout << w->matValue << endl;
-    return 0;
+  cout << w->matValue << endl;
+  return 0;
 }
-
 \end{verbatim}
- 
+
+
  If the expression to be calculated involves intermediate variables, fprop must be called in a correct order on all those intermediate variables before it can be called on the result variable we are interested in. For example, suppose we have $z=dot(x,tanh(y))$ where $x,u \in R^3$.
 
  
  A Var builds a directed acyclic graph whose nodes are Var's, with the following structure: 
-
+\nopagebreak
 \begin{verbatim}
 
  x    u                           x
@@ -742,92 +831,99 @@ int main(int argc, char** argv)
       |                           |           
       y ---> tanh() --> w  -----> dot----> z
 
-
 \end{verbatim}
- To obtain the correct value of z as a function of x and u, after setting x-$>$value and u-$>$value, we need to perform fprop on all the intermediate nodes as well as z. 
- 
+
+ To obtain the correct value of z as a function of x and u, after setting x->value and u->value, we need to perform fprop on all the intermediate nodes as well as z. 
+
 \begin{verbatim}
-
 #include "Var_all.h"
 #include "TMat_maths.h"
 
 using namespace PLearn;
 
 int main(int argc, char** argv)
-{   
-    
-    Var x(3,1);
-    Var u(3,1);
- 
-    x->matValue(0,0) = 1;
-    x->matValue(1,0)=2;
-    x->matValue(2,0)=3;
-    u->matValue(0,0)=4;
-    u->matValue(1,0)=5;
-    u->matValue(2,0)=6;
-    
-    cout<<x->matValue<<endl;
-    cout<<u->matValue<<endl;
-    
-    Var y = x + u; // y is also a 3x1 matrix
-    Var w = tanh(y);
-    Var z = dot(x,w); // z is a scalar variable result of the dot product of x and tanh(y)
-    
-    cout<<z->matValue<<endl;
-    y->fprop();
-    w->fprop();
-    z->fprop();
-    cout<<z->matValue<<endl;     
+{
+  Var x(3,1);
+  Var u(3,1);
 
-    return 0;
+  x->matValue(0,0)=1;
+  x->matValue(1,0)=2;
+  x->matValue(2,0)=3;
+  u->matValue(0,0)=4;
+  u->matValue(1,0)=5;
+  u->matValue(2,0)=6;
+
+  cout<<x->matValue<<endl;
+  cout<<u->matValue<<endl;
+
+  Var y = x + u;
+    // y is also a 3x1 matrix
+  Var w = tanh(y);
+  Var z = dot(x,w);
+    // z is a scalar variable result of the dot product 
+    // of x and tanh(y)
+
+  cout<<z->matValue<<endl;
+  y->fprop();
+  w->fprop();
+  z->fprop();
+  cout<<z->matValue<<endl;
+
+  return 0;
 }
-
 \end{verbatim}
- 
- To simplify the computation of values and gradients in a graph of Var's, we use a VarArray (don't forget the include).
- 
- A VarArray is simply an array of Vars, which has a method fprop() and a method bprop() which calls the fprop() (resp. bprop()) methods of all the elements of the array in the right order (note that a right order for bprop is the reverse of the order for fprop). The above function finds all the Var's on the paths from the the inputs Vars to the output Var. There are may be several input Vars so they are put in a VarArray. Once the path is obtained, we can propagate values through it with the fprop method:
- 
- \begin{verbatim}
-       
-#include "Var_all.h"
-#include "TMat_maths.h"
+
+ To simplify the computation of values and gradients in a graph of
+Var's, we use a VarArray (don't forget the include).
+
+ A VarArray is simply an array of Vars, which has a method {\tt
+fprop()} and a method {\tt bprop()} which calls the {\tt fprop()}
+(resp. {\tt bprop()}) methods of all the elements of the array in the
+right order (note that a right order for {\tt bprop} is the reverse of
+the order for {\tt fprop}). The above function finds all the Var's on
+the paths from the the inputs Vars to the output Var. There are may
+be several input Vars so they are put in a VarArray. Once the path
+is obtained, we can propagate values through it with the fprop method:
+
+\begin{verbatim}
+#include "Var_all.h" #include "TMat_maths.h"
 
 using namespace PLearn;
 
 int main(int argc, char** argv)
-{   
-    
-    Var x(3,1);
-    Var u(3,1);
- 
-    x->matValue(0,0) = 1;
-    x->matValue(1,0)=2;
-    x->matValue(2,0)=3;
-    u->matValue(0,0)=4;
-    u->matValue(1,0)=5;
-    u->matValue(2,0)=6;
-    
-    cout<<x->matValue<<endl;
-    cout<<u->matValue<<endl;
-    
-    Var y = x + u; // y is also a 3x1 matrix
-    Var w = tanh(y);
-    Var z = dot(x,w); // z is a scalar variable result of the dot product of x and tanh(y)
-    
-    cout<<z->matValue<<endl;
+{
+  Var x(3,1);
+  Var u(3,1);
 
-    VarArray path = propagationPath(x & u, z);
-    path.fprop();
-    
-    cout<<z->matValue<<endl;     
-    return 0;
+  x->matValue(0,0)=1;
+  x->matValue(1,0)=2;
+  x->matValue(2,0)=3;
+  u->matValue(0,0)=4;
+  u->matValue(1,0)=5;
+  u->matValue(2,0)=6;
+
+  cout<<x->matValue<<endl;
+  cout<<u->matValue<<endl;
+
+  Var y = x + u;
+    // y is also a 3x1 matrix
+  Var w = tanh(y);
+  Var z = dot(x,w);
+    // z is a scalar variable result of the dot product
+    // of x and tanh(y)
+
+  cout<<z->matValue<<endl;
+
+  VarArray path = propagationPath(x & u, z);
+  path.fprop();
+
+  cout<<z->matValue<<endl;
+  return 0;
 }
-
 \end{verbatim}
 
  In the previous, the \texttt{VarArray} is useful but not essential. Let consider the following example:
- 
+
 \begin{verbatim}
 #include "Var_all.h"
 #include "TMat_maths.h"
@@ -835,39 +931,40 @@ int main(int argc, char** argv)
 using namespace PLearn;
 
 int main(int argc, char** argv)
-{   
-    
-    Var x(3,1);
-    Var u(3,1);
- 
-    x->matValue(0,0) = 1;
-    x->matValue(1,0)=2;
-    x->matValue(2,0)=3;
-    u->matValue(0,0)=4;
-    u->matValue(1,0)=5;
-    u->matValue(2,0)=6;
-    
-    cout<<x->matValue<<endl;
-    cout<<u->matValue<<endl;
-    
-    Var z = dot(x,tanh(x+u)); // z is a scalar variable result of the dot product of x and tanh(y)
-    
-    cout<<z->matValue<<endl;
+{
+  Var x(3,1);
+  Var u(3,1);
 
-    VarArray path = propagationPath(x & u, z);
-    path.fprop();
-    
-    cout<<z->matValue<<endl;     
-    return 0;
-}       
+  x->matValue(0,0)=1;
+  x->matValue(1,0)=2;
+  x->matValue(2,0)=3;
+  u->matValue(0,0)=4;
+  u->matValue(1,0)=5;
+  u->matValue(2,0)=6;
+
+  cout<<x->matValue<<endl;
+  cout<<u->matValue<<endl;
+
+  Var z = dot(x,tanh(x+u));
+    // z is a scalar variable result of the dot product
+    // of x and tanh(y)
+
+  cout<<z->matValue<<endl;
+
+  VarArray path = propagationPath(x & u, z);
+  path.fprop();
+
+  cout<<z->matValue<<endl;
+  return 0;
+}
 \end{verbatim}
 
  This example performs exactly the same thing as the previous one. But in this case, we don't have any reference to the previous \texttt{Var y,w} to do \texttt{fprop()}. That's why a \texttt{VarArray} could be essential.
  
  You can also use  \texttt{y->fprop\_from\_all\_sources()} instead of a \texttt{VarArray} but this reconstruct the path each time and so don't store it. It's not efficient for a multi fprop and it's not possible to back-propagated gradients.
 
- Once we have this path, we can also back-propagated gradients. For example, if we set the gradient of z to 1, 
- 
+ Once we have this path, we can also back-propagated gradients. For example, if we set the gradient of z to 1,
+
 \begin{verbatim}
 #include "Var_all.h"
 #include "TMat_maths.h"
@@ -875,40 +972,41 @@ int main(int argc, char** argv)
 using namespace PLearn;
 
 int main(int argc, char** argv)
-{   
-    
-    Var x(3,1);
-    Var u(3,1);
- 
-    x->matValue(0,0) = 1;
-    x->matValue(1,0)=2;
-    x->matValue(2,0)=3;
-    u->matValue(0,0)=4;
-    u->matValue(1,0)=5;
-    u->matValue(2,0)=6;
-    
-    cout<<x->matValue<<endl;
-    cout<<u->matValue<<endl;
-    
-    Var y = x + u; // y is also a 3x1 matrix
-    Var w = tanh(y);
-    Var z = dot(x,w); // z is a scalar variable result of the dot product of x and tanh(y)
-    
-    cout<<z->matValue<<endl;
+{
+  Var x(3,1);
+  Var u(3,1);
 
-    VarArray path = propagationPath(x & u, z);
-    path.fprop();
-    
-    cout<<z->matValue<<endl;     
+  x->matValue(0,0)=1;
+  x->matValue(1,0)=2;
+  x->matValue(2,0)=3;
+  u->matValue(0,0)=4;
+  u->matValue(1,0)=5;
+  u->matValue(2,0)=6;
 
-    z->gradient = 1.0;
-    path.bprop();
-    cout << "dz/dx = " << x->gradient << endl;
-    cout << "dz/du = " << u->gradient << endl;
+  cout<<x->matValue<<endl;
+  cout<<u->matValue<<endl;
 
-    return 0;
+  Var y = x + u;
+    // y is also a 3x1 matrix
+  Var w = tanh(y);
+  Var z = dot(x,w);
+    // z is a scalar variable result of the dot product
+    // of x and tanh(y)
+
+  cout<<z->matValue<<endl;
+
+  VarArray path = propagationPath(x & u, z);
+  path.fprop();
+
+  cout<<z->matValue<<endl;
+
+  z->gradient = 1.0;
+  path.bprop();
+  cout << "dz/dx = " << x->gradient << endl;
+  cout << "dz/du = " << u->gradient << endl;
+
+  return 0;
 }
-
 \end{verbatim}
 
  We obtain the partial derivatives of z with respect to x and u in their
@@ -920,7 +1018,6 @@ int main(int argc, char** argv)
 You can create Var with several methods.
 The main are:
 \begin{verbatim}
-  
   Var(int the_length, int width_=1);
   Var(int the_length, int the_width, const char* name);
   Var(const Mat& mat);
@@ -934,13 +1031,13 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
-    Mat mx(3,1);    
-    mx(0,0) = 1;
-    mx(1,0)=2;
-    mx(2,0)=3;
-    Var x(mx);
-    cout<<x->matValue<<endl;
-    return 0;
+  Mat mx(3,1);
+  mx(0,0) = 1;
+  mx(1,0)=2;
+  mx(2,0)=3;
+  Var x(mx);
+  cout<<x->matValue<<endl;
+  return 0;
 }
 \end{verbatim}
 
@@ -958,7 +1055,6 @@ You can find numerous var in \texttt{PLearn\/plearn\/var}, some are shortcuted b
 
 With the following method, you can load and save THE VALUE of a var (not the symbolic path). 
 \begin{verbatim}
-
 #include "VMat.h"
 #include "getDataSet.h"
 #include "Var_all.h"
@@ -967,33 +1063,35 @@ With the following method, you can load and save THE VALUE of a var (not the sym
 using namespace PLearn;
 
 int main(int argc, char** argv)
-{   
-    
-    Var y(3,1); 
-    y->matValue(0,0) = 1;
-    y->matValue(1,0)=2;
-    y->matValue(2,0)=3;
-    cout<<y->matValue;
+{
+  Var y(3,1);
+  y->matValue(0,0)=1;
+  y->matValue(1,0)=2;
+  y->matValue(2,0)=3;
+  cout<<y->matValue;
 
-    //enregistrement dans un fichier pmat
-    y->matValue.save("enr.pmat");
+  // save into a pmat file
+  y->matValue.save("save.pmat");
 
-    //enregistrement dans un fichier amat
-    VMat vm(y->matValue);
-    vm->saveAMAT("enr.amat");
+  // save into an amat file
+  VMat vm(y->matValue);
+  vm->saveAMAT("save.amat");
 
 
-    // chargement a partir d'un fichier
-    VMat vm2 = getDataSet("enr.pmat");
-    Var x(vm2.toMat());
-    cout<<x->matValue;
-    return 0;
+  // load from a file
+  VMat vm2 = getDataSet("save.pmat");
+    // it could have been "save.amat"
+  Var x(vm2.toMat());
+  cout<<x->matValue;
+  return 0;
 }
 \end{verbatim}
 
 \subsubsection{All the var}
 
-Var is a subclass of Object, so you can use the methods of Object as in the following example. Note that it will save all the Var, including the sub ones.
+Var is a subclass of Object, so you can use the methods of Object
+as in the following example. Note that it will save all the Var,
+including the sub ones.
 
 \begin{verbatim}
 #include "Var_all.h"
@@ -1002,43 +1100,43 @@ Var is a subclass of Object, so you can use the methods of Object as in the foll
 using namespace PLearn;
 
 int main(int argc, char** argv)
-{   
+{
+  Var x(3,1);
+  Var u(3,1);
 
-    
-    Var x(3,1);
-    Var u(3,1);
- 
-    x->matValue(0,0) = 1;
-    x->matValue(1,0)=2;
-    x->matValue(2,0)=3;
-    u->matValue(0,0)=4;
-    u->matValue(1,0)=5;
-    u->matValue(2,0)=6;
-    
-    cout<<x->matValue<<endl;
-    cout<<u->matValue<<endl;
-    
-    Var z = dot(x,tanh(x+u)); // z is a scalar variable result of the dot product of x and tanh(y)
-    
-    cout<<z->matValue<<endl;
+  x->matValue(0,0)=1;
+  x->matValue(1,0)=2;
+  x->matValue(2,0)=3;
+  u->matValue(0,0)=4;
+  u->matValue(1,0)=5;
+  u->matValue(2,0)=6;
 
-    VarArray path = propagationPath(x & u, z);
-    path.fprop();
-    
-    cout<<z->matValue<<endl;     
-    
-    save("z.psave",z);
-    
-    Object* o = loadObject("z.psave"); 
-    
-    // pas de PP<> ou * acr Var est deja un PP<Variable>
-    Var p = dynamic_cast<Variable*>(o);
-  
-    cout<<p->matValue<<endl;
-       
-    return 0;
+  cout<<x->matValue<<endl;
+  cout<<u->matValue<<endl;
+
+  Var z = dot(x,tanh(x+u));
+    // z is a scalar variable result of the dot product
+    // of x and tanh(y)
+
+  cout<<z->matValue<<endl;
+
+  VarArray path = propagationPath(x & u, z);
+  path.fprop();
+
+  cout<<z->matValue<<endl;
+
+  save("z.psave",z);
+
+  Object* o = loadObject("z.psave");
+
+  // There is no PP<> nor * here,
+  // because Var is already a PP<Variable>
+  Var p = dynamic_cast<Variable*>(o);
+
+  cout<<p->matValue<<endl;
+
+  return 0;
 }
-
 \end{verbatim}
 
 
@@ -1047,48 +1145,47 @@ int main(int argc, char** argv)
 In order to make the usage of Var more friendly, you can use Func. The Func class is mode for those who want to make fprop on different values of Var in an elegant way. The two following examples illustrate this: they do exactly the same thing, but the first one without Func and the second one with.
 
 \begin{verbatim}
-
 #include "Var_all.h"
 #include "TMat_maths.h"
 
 using namespace PLearn;
 
 int main(int argc, char** argv)
-{   
-		Vec a(3),c(1);
-    Vec da(3),dc(1);
-    
-		// WITHOUT FUNC
-    Var x(3,1);
-    Var y = dot(x,tanh(x)); // z is a scalar variable result of the dot product of x and tanh(y)
-    VarArray path = propagationPath(x,y);    
-    
-    a<<"1 2.3 4";
-    
-    x->value<<a;    
-    path.fprop();
-    c=y->value;
-    cout<<a<<endl;
-    cout<<c<<endl;
-    
-    c<<"4 8.3 -12";
-    x->value<<c;
-    path.fprop();   
-    c=y->value;
-    cout<<a<<endl;
-    cout<<c<<endl;
-    
-    dc<<2.3;
-    y->gradient<<dc;
-    path.bprop();
-    da<<x->gradient;
-    cout<<dc<<endl;
-    cout<<da<<endl;
-    
-//     
-    return 0;
-}
+{
+  Vec a(3),c(1);
+  Vec da(3),dc(1);
 
+  // Without Func
+  Var x(3,1);
+  Var y = dot(x,tanh(x));
+    // z is a scalar variable result of the dot product
+    // of x and tanh(y)
+  VarArray path = propagationPath(x,y);
+
+  a<<"1 2.3 4";
+
+  x->value<<a;
+  path.fprop();
+  c=y->value;
+  cout<<a<<endl;
+  cout<<c<<endl;
+
+  c<<"4 8.3 -12";
+  x->value<<c;
+  path.fprop();
+  c=y->value;
+  cout<<a<<endl;
+  cout<<c<<endl;
+
+  dc<<2.3;
+  y->gradient<<dc;
+  path.bprop();
+  da<<x->gradient;
+  cout<<dc<<endl;
+  cout<<da<<endl;
+
+  return 0;
+}
 \end{verbatim}
 
 With Func:
@@ -1100,38 +1197,39 @@ With Func:
 using namespace PLearn;
 
 int main(int argc, char** argv)
-{   
-    Vec a(3),c(1);
-    Vec da(3),dc(1);
-    
-		// WITH FUNC
-    Var x(3,1);
-    Var result(1,1);
-    Func f(x, result ,dot(x,tanh(x))); // z is a scalar variable result of the dot product of x and tanh(y)
-    
-    a<<"1 2.3 4";
-    f->fprop(a,c);    
-    cout<<a<<endl;
-    cout<<c<<endl;
-    
-    a<<"4 8.3 -12";
-    f->fprop(a,c);    
-    cout<<a<<endl;
-    cout<<c<<endl;
-    
-    dc<<2.3;
-    f->fbprop(a,c,da,dc);    
-    cout<<dc<<endl;
-    cout<<da<<endl;
-    
-    return 0;
-}
+{
+  Vec a(3),c(1);
+  Vec da(3),dc(1);
 
+  // With Func
+  Var x(3,1);
+  Var result(1,1);
+  Func f(x, result ,dot(x,tanh(x)));
+    // z is a scalar variable result of the dot product
+    // of x and tanh(y)
+
+  a<<"1 2.3 4";
+  f->fprop(a,c);
+  cout<<a<<endl;
+  cout<<c<<endl;
+
+  a<<"4 8.3 -12";
+  f->fprop(a,c);
+  cout<<a<<endl;
+  cout<<c<<endl;
+
+  dc<<2.3;
+  f->fbprop(a,c,da,dc);
+  cout<<dc<<endl;
+  cout<<da<<endl;
+
+  return 0;
+}
 \end{verbatim}
 
- 
+
 \chapter{Advanced}
- 
+
 \section{RandomVar}
 
 \section{Function-like types}
@@ -1150,348 +1248,79 @@ int main(int argc, char** argv)
 % 
 \section{ Miscalleanous utilities}
 
- The PLearnLibrary/PLearnUtils directory contains classes and functions to
- perform various useful things such as graphically displaying things. The
- Scripts directory contains a number of perl-scripts and also binary
- programs to both help manage the source-tree, and to manipulate matrix
- files.
+ The PLearnLibrary/PLearnUtils directory contains classes and
+functions to perform various useful things such as graphically
+displaying things. The Scripts directory contains a number of
+perl-scripts and also binary programs to both help manage the
+source-tree, and to manipulate matrix files.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\chapter{RandomVar tutorial}
-
-\begin{verbatim}
-
-   Whereas a Var represents a variable in the mathematical sense, a
-   RandomVar represents a random variable in the mathematical sense.  A
-   random variable is generally defined in terms of other random variables
-   through deterministic transformations, or in terms of other random
-   variables which are the parameters of its distribution.  A RandomVar
-   represents a node in a graphical model, and its distribution is defined
-   in terms of the values of its parents in the model.  For example, its
-   parents may be the parameters of its distribution or it may be the
-   random variables which when combined deterministically give rise to its
-   value. The set of classes provided here allows to build such a network of
-   random variables, and to make limited inferences, probability
-   computations, gradient computations, and learning.
-
-   Examples of use of RandomVars:
-
-   Var u,lv; // constants, but changing their value will change
-   Var w; // the distributions associated to the RandomVar's
-   ...
-   // things like *, +, log, tanh, etc... must do the proper thing for RandomVars
-   RandomVar X = gamma(0.5)*log(normal(u,lv));
-   RandomVar Y = tanh(w*X + u);
-   RandomVar LW(2); // unnormalized log-weights of the mixture
-   RandomVar Z = mixture(Y&X,LW);  // mixture of Y and X 
-
-   // see the comment on operator&, operator[] and mixtures below
-   ...
-   // (conditionned on the RHS of the |)
-   Vec x,y; // put some value in x and y
-   Vec z = sample(Z|((X==x)&&(Y==y)));
-   // This is achieved by redefining operator==, operator&& and operator|
-   // to represent the data structure which the function sample
-   // takes as argument. In particular, note that == creates the
-   // RVInstance data structure (which contains a RV and a Var instance),
-   // while && makes an array of these structures, and |
-   // creates a ConditionalExpression structure, which has a RVInstance
-   // for the LHS (left-hand side) and a RVInstanceArray for the 
-   // RHS (right-hand side).
-   ...
-   // Using these operators, you can compute also the probability of a 
-   // value for the random variable, or its conditional probability. In fact the
-   // statement below defines a functional relationship (in the usual "Variable"
-   // sense) between the variable y and the variable p or log_p. Note that
-   // no actual numerical value has yet been computed. 
-   Var y(1);
-   Var p = P(Y==y);
-   Var log_p = logP(Y==y);
-   // or
-   Var y,x;
-   Var log_p = logP((Y==y)|(X==x)); // note again ()'s for precedence
-   // e.g. of use
-   Vec actual_value_for_x_and_y = ...;
-   Func f = log_p(x&y);
-   float prob = f(actual_value_for_x_and_y)[0];
-   cout << "log(P(Y|X))=" << prob << endl;
-   ...
-   // in the case of discrete distributions, the whole distribution can 
-   // be returned by P and logP, which are also defined on RandomVars.
-   Vec p = P(Y);
-   Vec log_p = logP(Y);
-   ...
-   // note that if Y has RandomVar parents, the above var can only be computed
-   // if these parents are given a particular value or if
-   // they are integrated over (with the function marginalize below).
-   // This call will therefore automatically try to marginalize Y
-   // (by integrating over the parents which are not observed).
-   // To make a RandomVar observed, simply use the conditioning
-   // notation V|(X==x)&(Y==y)&(Z==z), e.g. to condition V on X=x,Y=y,Z=z.
-   ...
-   // Similarly to P, logP, and sample, other functions of RVs are defined:
-   // construct a Var that is functionally dependent on the Var x
-   // and represents the expectation of Y given that X==x.
-   Var e=E(Y|(X==x));
-   // Similarly for covariance matrix:
-   Var v=V(Y|((X==x)&&(Z==z));
-   // and for the cumulative distribution function
-   // (which here depends on the Vars y and x)
-   Var c=P((Y<y)|(X==x));
-   // Note that derivatives through all these functional relationships
-   // can automatically be computed. For example, to compute the
-   // gradients of the log-probability wrt some parameters W & B & LogVariance
-   RandomVar W,B,X,LogVariance; // all are "non-random", X is the input
-   Var w,b,x,lv; // values that the above will take
-   // e.g. to give values to these Vars
-   w[0]=1; b[0]=0;x[0]=3;lv[0]=0;
-   RandomVar Y=normal(W*X+B,LV); // the model (i.e. a regression)
-   // establish the functional relationship of interest,
-   // which goes from (y & x & w & b & lv) to logp:
-   Var logp = logP((Y==y)|(X==x)&&(W==w)&&(B==b)&&(LV==lv));
-   // to actually compute logp, do
-   logp->fprop_from_all_sources(); // a source is "constant" Var
-   // to compute gradients, use the propagationPath function to find
-   // the path of Vars from, say w&b, to logp:
-   VarArray prop_path = propagationPath(w&b,logp);
-   prop_path.bprop(); // compute dlogP/dparams in w->gradient and b->gradient
-   ...
-   // By default a RandomVar represents a "non-random" random variable 
-   // (of class NonRandomVariable or a FunctionalRandomVariable which depends
-   // only on NonRandomVariable). This is not the same as a "constant"
-   // variable. It only means that its value is deterministic, but
-   // its value may be a (Var) function of other Vars:
-   RandomVar X;
-   X->value = 1+exp(y+w*z); // y, w and z are Vars here
-   ...
-   // Parameters of the distributions that define the random variables can be
-   // learned, most generally by optimizing a criterion to optimize, e.g.
-   Mat observed_xy_matrix; // each row = concatenation of an X and a Y obs.
-   Var cost =  -logP((Y==y)|(X==x)&&(Params==params));
-   // below, establish the functional relationship between x & y & params
-   // and the "totalcost" which is the sum of "cost" when x & y are
-   // "sampled" from the given empirical distribution.
-   Var totalcost = meanOf(cost,x&y,VMat(observed_xy_matrix),
-                          observed_xy_matrix.length, params);
-   // construct an optimizer that optimizes totalcost by varying params
-   ConjugateGradientOptimizer opt(params,totalcost, 1e-5, 1e-3, 100);
-   // do the actual optimization
-   float train_NLL = opt.optimize();
-   // now we can test on a particular point setting values for
-   // x and y and params and doing an fprop with
-   propagationPath(x&y&params,cost).fprop();
-   ...
-   // Sometimes, the parameters can be estimated more efficiently
-   // using an internal mechanism for estimation (usually the analytical 
-   // solution of maximum likelihood or the EM algorithm):
-   float avgNegLogLik=EM(Y|X,W&B&LV,VMat(observed_xy_matrix),
-                         observed_xy_matrix.length,4,0.001);
-   // where the first argument specifies which conditional distribution
-   // is of interest (ignoring the parameters), the second argument
-   // gives the parameters to estimate, and the third one specifies
-   // a training set. Note that the order of the variables in the 
-   // observed_xy_matrix must be (1) inputs: all the variables on the RHS 
-   // of the conditioning |, (2) outputs: all the variables on the LHS of the |.
-   ...
-   // Arrays of RVs can be formed with the operator &:
-   RVArray a = X & Y & V;
-   // and they can be automatically cast into JointRandomVariables
-   // (whose value is the concatenation of the values of its parents)
-   RandomVar Z = X & Y & V;
-   ...
-   // Marginals can sometimes be obtained (when X is discrete or 
-   // the integral is feasible analytically and the code knows how to do it...).
-   // For example, suppose X is one of the parents of Y. Then
-   RandomVar mY = marginalize(Y,X);
-   // is a random variable such that P(mY=y) = int_x P(Y=y|X=x)P(X=x) dx
-   // this is obtained by summing over the values of X if it is discrete,
-   // by doing the integral if we know how to do it, or otherwise, by the
-   // Laplace approximation, or by some numerical integration method
-   // such as Monte-Carlo.
-   ...
-   // The operator() is defined on RandomVar as follows:
-   // If i is an integer, X(i) extracts a RandomVar that is scalar 
-   // and corresponds to the i-th element of the vector random variable X 
-   // (similarly, if the underlying Var is a matrix, X(i,j), 
-   // extracts the random element (i,j)). These two operators
-   // are also defined for the case in which the index is a Var
-   // (treated like the integer), and the case in which it is a RandomVar.
-   // The last case, X(I), actually represents a mixture of the elements
-   // of the vector X, with weights given by the parameters of I
-   // (which must be discrete).
-   ...
-   // The operator[] is defined on RandomVars which are JointVariables,
-   // and it allows to extract the i-th random variable in the array
-   // of RVs that the joint represents. Again, the operator is defined
-   // for i in X[i] being an integer, a Var, and a RandomVar. The
-   // last case, X[I], is very interesting because it represents
-   // the graphical model of a mixture in which I is the index,
-   // and it is not (yet) integrated over.
-   RVArray a(3);
-   a[0]=X; a[1]=Y; a[2]=Z;
-   RandomVar XYZ(a);
-   // or equivalently
-   RandomVar XYZ = X & Y & Z;
-   ...
-   // A MultinomialRandomVariable is a subclass of RandomVariable
-   // that represents discrete-valued variables in the range 0 ... N-1.
-   RandomVar LW(3); // unnormalized log-probabilities of I
-   RandomVar I = multinomial(LW); // N=3 possible values here
-   // The parameters of a discrete random variable are the "log-probabilities" 
-   // (more precisely the discrete probabilities are obtained with a softmax 
-   // of the parameters, LW here). The discrete random variable will be 
-   // conditional if LW is not a NonRandomVariable but rather depends
-   // on some other RVs.
-   ...
-   // Let us consider a random variable that is obtained by selecting
-   // one of several random variables (on the same space). We call
-   // such a random variable an IndexedRandomVariable and it is 
-   // obtained with the operator[] acting on a JointRandomVariable
-   // with a MultinomialRandomVariable as argument:
-   RandomVar V = XYZ[I]; // will take either the distribution of X, Y or Z according to value of I
-   // therefore P(V=v|I=i)=P(XYZ[i]=v)
-   ...
-   // A mixture is the marginalization of an IndexedRandomVariable with
-   // respect to the random index:
-   RandomVar LW(3); // unnormalized log-weights of the mixture
-   RandomVar M = mixture(XYZ,LW);
-   // which is exactly the same thing as
-   RandomVar I = multinomial(LW); 
-   RandomVar M = marginalize(XYZ[I],I);
-   ...
-   // Example of conditional mixture of n d-dimensional diagonal 
-   // Gaussians with neural network expectations:
-   // (1) define the neural network
-   RandomVar X(n_inputs); // X is the network input RV
-   Var x(n_inputs); // x will be its value
-   int n_inputs=4, n_hidden=5,n_outputs=d*n;
-   Var layer1W(n_hidden,n_inputs), layer2W(n_outputs,n_hidden);
-   Var layer1bias(n_hidden), layer2bias(n_outputs);
-   RandomVar NetOutput = layer2bias+layer2W*tanh(layer1bias+layer1W*X);
-   // (2) define the gaussian mixture
-   // (2.1) define the gaussians
-   RVArray normals(n);
-   RVArray mu(n),logsigma(n);
-   for (int i=0;i<n;i++) {
-     mu[i]=NetOutput.subVec(i*d,d); // extract subvector as i-th mean vector
-     normals[i]=Normal(mu[i],logsigma[i]);
-   }
-   // (2.2) build the mixture itself
-   Var lw(n);
-   lw->value.fill(1.0/n);
-   RandomVar Y = mixture(normals,lw); //the "target" output random variable
-   Var y(d); // its value
-   VarArray tunable_parameters = 
-      lw & layer1W & layer2W & layer1bias & layer2bias;
-   // each row of Mat is the concatenation of an x (input) and a y 
-   Mat observed_xy_matrix; 
-   // logP returns the path that goes from all "source" (constant) variables
-   // into the computation of the given conditional probability
-   Var cost =  -logP((Y==y)|(X==x)); 
-   // note that we don't need to condition on the "non-random" parameters
-   // such as the log-weights of the mixture (lw), but they will
-   // occur as tunable parameters.
-   // Below, the order of x and y in the observed_xy_matrix must
-   // match their order in the second argument of meanOf.
-   Var totalcost = meanOf(cost,x&y,VMat(observed_xy_matrix),
-                          observed_xy_matrix.length,tunable_parameters);
-   ...
-   // Example in which some parameters W & B have to be fitted
-   // to some data, while the hyper-parameters gamma that control
-   // the distribution of W & B should be fitted to maximize
-   // the likelihood of the data.
-   int npoints = 10; // there are 10 (x,y) pairs in each observation
-   Var muW, logvarW, muB, logvarB; // parameters of the prior
-   RandomVar W = normal(muW,logvarW); // prior on W
-   RandomVar B = normal(muB,logvarB); // prior on B
-   Var log_var(1); // log-variance of Y
-   Var ones(npoints);
-   ones->value.fill(1.0);
-   Var log_vars = ones*log_var; // make vector of npoints copies of log_var
-   Var x(npoints); // input
-   Var muXint, logvXint; // parameters of Xinterval
-   RandomVar Xinterval = normal(muXint,logvXint); // prior on Xinterval
-   RandomVar Y = normal(tanh(W*x+B),log_vars); 
-   Var cost = -logP((Y==y)&&(Xinterval==vconcat(min(x) & max(x))));
-   // note that the above requires marginalizing over W & B
-   VarArray gamma = muXint & logvXint & log_var & muW & logvarW & muB & logvarB;
-   Var totalcost = meanOf(cost,x&y,VMat(observed_xy_matrix),
-                          observed_xy_matrix.length, gamma);
-   ConjugateGradientOptimizer opt(gamma,totalcost, 1e-5, 1e-3, 100);
-   float train_NLL = opt.optimize();
-   // to obtain a fit of Theta for a particular value of x and y, optimize
-   Var w,b;
-   Var fitcost = 
-     -logP(((Y==y)&&(Xinterval==vconcat(min(x) & max(x))))|(W==w)&&(B==b));
-   ConjugateGradientOptimizer fitopt(w & b,fitcost, 1e-5, 1e-3, 100);
-   float fit_NLL = fitopt.optimize();
-   // and the fitted parameters can be read in w->value and b->value.
-
-\end{verbatim}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \chapter{ PLearn coding guidelines and philosophy}
- Several people wrote significant parts of PLearn, and if you take a closer
- look at the code, you will see a number of clearly different coding styles
- and philosophies. However, as of this writing (09/2000), the overall
- design and organization of most of the library is still to be blamed (or
- praised...) on me. So these remarks are my personal view of things, and do
- not necessarily reflect the opinion of everybody on the PLearn developer
- team, but I hope it will help you understand the reasons why things are
- the way they are, and hopefully have you choose to keep them that way...
+
+ Several people wrote significant parts of PLearn, and if you take a
+closer look at the code, you will see a number of clearly different
+coding styles and philosophies. However, as of this writing (09/2000),
+the overall design and organization of most of the library is still to
+be blamed (or praised\ldots) on me. So these remarks are my personal
+view of things, and do not necessarily reflect the opinion of everybody
+on the PLearn developer team, but I hope it will help you understand
+the reasons why things are the way they are, and hopefully have you
+choose to keep them that way\ldots
 
  Pascal 
+
 \section{A few words on C++}
- Agreed, C++ \emph{can be} a very complex language. The main reason being
- that it is extremely feature-rich, but that is also what makes C++ so
- powerful and expressive, and thus appropriate for a machine-learning
- library. Yet I insist on the \emph{can be} : it doesn't always have to be,
- it depends a great deal on what features you choose to use and when.
+ Agreed, C++ \emph{can be} a very complex language. The main reason
+being that it is extremely feature-rich, but that is also what
+makes C++ so powerful and expressive, and thus appropriate for a
+machine-learning library. Yet I insist on the \emph{can be} : it
+doesn't always have to be, it depends a great deal on what features
+you choose to use and when.
 
- People who discover C++ tend to first be overwhelmed with its wealth of
- features, and then seem to want to use them all at once in even the
- simplest piece of code (complex templates, deep multiple inheritance
- trees, exceptions, multiple nested namespaces; add multi-threading on top
- of that and you're sure to write the most unreadable, unportable and
- compiler-bug trigerring error-prone code ever). Finally, after great
- intellectual efforts, they discover that even their compiler (not to
- mention their debugger!) has trouble understanding it all and, if they
- manage to have it swallow the code, they realise that no other compiler
- will (portability anybody?). This is still quite true as of this writing
- (09/2000) and was even more so a few years ago, yet tools will keep
- improving until some day, hopefully, they all behave perfectly by the
- book, according to the standard, but until this blessed day comes,
- beware... Many people then give up, frustrated, and decide to go back to
- C, which is a shame. C++ \emph{is} a much better language than C,
- especially for writing Object Oriented code, and it \emph{does} make the
- programmer's life much easier... as long as \emph{you} keep things simple.
+ People who discover C++ tend to first be overwhelmed with its wealth
+of features, and then seem to want to use them all at once in even the
+simplest piece of code (complex templates, deep multiple inheritance
+trees, exceptions, multiple nested namespaces; add multi-threading on
+top of that and you're sure to write the most unreadable, unportable
+and compiler-bug trigerring error-prone code ever). Finally, after
+great intellectual efforts, they discover that even their compiler
+(not to mention their debugger!) has trouble understanding it all
+and, if they manage to have it swallow the code, they realise that
+no other compiler will (portability anybody?). This is still quite
+true as of this writing (09/2000) and was even more so a few years
+ago, yet tools will keep improving until some day, hopefully, they
+all behave perfectly by the book, according to the standard, but
+until this blessed day comes, beware\ldots\ Many people then give up,
+frustrated, and decide to go back to C, which is a shame. C++ \emph{is}
+a much better language than C, especially for writing Object Oriented
+code, and it \emph{does} make the programmer's life much easier\ldots\
+as long as \emph{you} keep things simple.
 
 
- So please, especially if you're a beginner, keep this in mind when writing
-C++ code: having so many ``cool'' features in the language doesn't mean
-that you must use them all at once. Choose wisely and, if in doubt, always
-prefer the simplest solution... \\  
+ So please, especially if you're a beginner, keep this in mind
+when writing C++ code: having so many ``cool'' features in the language
+doesn't mean that you must use them all at once. Choose wisely and,
+if in doubt, always prefer the simplest solution\ldots
 
 \section{Design goals and priorities}
 
- Any project implicitly or explicitly sets some goals and these directly
- influence the way code is written. With PLearn, one of the founding goal,
- was to be able to describe complex machine-learning experiments by
- assembling simple building-blocks directly in C++, without resorting to a
- layer of home-grown dedicated language (as experience had proven us that
- it is hard to grow and maintain such a language, which appears always too
- limited anyway). Obviously we also want to have them run efficiently
- (hence the choice of C++ rather than a higher level interpreted language).
+ Any project implicitly or explicitly sets some goals and these
+directly influence the way code is written. With PLearn, one of the
+founding goal, was to be able to describe complex machine-learning
+experiments by assembling simple building-blocks directly in C++,
+without resorting to a layer of home-grown dedicated language (as
+experience had proven us that it is hard to grow and maintain such
+a language, which appears always too limited anyway). Obviously
+we also want to have them run efficiently (hence the choice of C++
+rather than a higher level interpreted language).
 
- Any system should ideally be simple to understand and use, lightning fast,
- and extremely geneal. Yet there is always a tradeoff to be made between
- these 3 highly desirable characteristics. Here is the priority I gave
- them, in the design of the library, it logically follows from the
- project's primary goals: 
+ Any system should ideally be simple to understand and use, lightning
+fast, and extremely geneal. Yet there is always a tradeoff to be made
+between these 3 highly desirable characteristics. Here is the priority
+I gave them, in the design of the library, it logically follows from
+the project's primary goals:
+
 \begin{enumerate}
 \item  readability, simplicity, ease of use (and portability)
 \item  computational efficiency
@@ -1501,127 +1330,131 @@ prefer the simplest solution... \\  
 \section{Usage of C++ features in PLearn}
 
  As I mentionned earlier, moderation is good in everything, including in
- moderation... ;) 
+ moderation\ldots\ ;) 
 
-\textbf{ Function and method prototypes without parameter names} \\
-C++ code is typically divided between .h files which contain class layout,
-function and method prototypes, and .cc files which contain the actual
-implementation. Ideally, it should be possible to understand what a method
-or function does by looking it up only in the .h file. Comments are part of
-achieving this, but having a meaningful name for the parameters of the
-function also helps a great deal.
+\subsection*{Function and method prototypes without parameter names}
+ C++ code is typically divided between .h files which contain class
+layout, function and method prototypes, and .cc files which contain the
+actual implementation. Ideally, it should be possible to understand
+what a method or function does by looking it up only in the .h
+file. Comments are part of achieving this, but having a meaningful
+name for the parameters of the function also helps a great deal.
 
- C++ allows you to omit parameter names in prototypes (and only give their
- types). This defies the purpose of clarity, and is thus considered bad
- practice by the author and in PLearn in general. Except for possible
- default values (that are to appear only in the .h), the prototype in the
- .h file should be identical to the definition in the .cc file and include
- parameter names.
+ C++ allows you to omit parameter names in prototypes (and only
+give their types). This defies the purpose of clarity, and is thus
+considered bad practice by the author and in PLearn in general. Except
+for possible default values (that are to appear only in the .h),
+the prototype in the .h file should be identical to the definition
+in the .cc file and include parameter names.
 
- (i.e. people usually have trouble understanding what float* f(float*, int,
- int, char, char*, float); is supposed to do, and defining a new type for
- each argument is \emph{not} the right way of making this more
- understandable... giving them a meaningful name is.) 
+ (i.e. people usually have trouble understanding what float* f(float*,
+int, int, char, char*, float); is supposed to do, and defining a new
+type for each argument is \emph{not} the right way of making this
+more understandable\ldots\ giving them a meaningful name is.)
 
-\textbf{ Basic data types} \\ 
-Conceptually, people usually think of 3
-simple basic data types: integers, reals, and booleans (possibly 4 if you
-add character). C++ has them in many flavours, including signed and
-unsigned, several precisions, etc.... These all have their use from a
-low-level hardware perspective (which woud have been much better if they
-had been given standard byte sizes by the standard...), but to the
-mathematically minded library-user they are an annoyance. So throughout
-most of PLearn, unless otherwise dictated by low-level precision or space
+\subsection*{Basic data types}
+ Conceptually, people usually think of 3 simple basic data types:
+integers, reals, and booleans (possibly 4 if you add character). C++
+has them in many flavours, including signed and unsigned, several
+precisions, etc. These all have their use from a low-level hardware
+perspective (which woud have been much better if they had been given
+standard byte sizes by the standard\ldots), but to the mathematically
+minded library-user they are an annoyance. So throughout most of
+PLearn, unless otherwise dictated by low-level precision or space
 considerations, we use only 3 types that correspond to the 3 concepts:
+
 \begin{itemize}
-\item \textbf{int}
- is used for integers
-\item \textbf{bool}
- is used for booleans
-\item \textbf{real}
- is used for reals
+\item \textbf{int} is used for integers
+\item \textbf{bool} is used for booleans
+\item \textbf{real} is used for reals
+
+{\tt real} is defined throughout the whole library to be either {\tt
+float} or {\tt double}, depending on a compilation flag (USEDOUBLE
+or USEFLOAT).
 \end{itemize}
 
-real is defined throughout the whole library to be either float or double,
-depending on a compilation flag (USEDOUBLE or USEFLOAT).
-
  Also we encourage people \emph{not to} define a new type if it
- conceptually corresponds to one of those three concepts, in particular I
- for one (and I'm surely not alone) dislike to have to write
- \emph{namespace::subnamespace::classname::interiorclassname::length\_type}
- when the damn thing is just an integer, if you get my point. Please use
- int, it saves the user keystrokes, code lookup time, and eases
- understanding. (i.e.:  genericity-- but simplicity++ and ease\_of\_use++,
- see section on desing priorities above).
+conceptually corresponds to one of those three concepts, in particular
+I for one (and I'm surely not alone) dislike to have to write\\
+\texttt{namespace::subnamespace::classname::interiorclass::length\_type}\\
+when the damn thing is just an integer, if you get my point. Please
+use int, it saves the user keystrokes, code lookup time, and
+eases understanding (i.e.: genericity-\,- but simplicity++ and
+ease\_of\_use++, see section on desing priorities above).
 
- The use of unsigned int types is also a source of annoyance to me (and of
- potential nasty bugs. ex: for(unsigned int i=10; i$>$=0; --i) ). So again,
- unless you really need the extra bit of precision, use int (also saves a
- few keystrokes).
+ The use of unsigned int types is also a source of annoyance to me,
+and of potential nasty bugs. Ex:
+\verb!for (unsigned int i=10; i>=0; --i)!
+
+So again, unless you really need the extra bit of precision,
+use int (also saves a few keystrokes).
 
  A kind of string type is also usually seen as part of the set of basic
-types, but we'll discuss this in the section on the standard library.   
+types, but we'll discuss this in the section on the standard library.
 
-\textbf{ Namespaces} \\
-Namespaces are most useful to prevent name clashes
-between different libraries. So ultimately, all of PLearn is to reside in
-the PLearn namespace. However gdb currently seems to have trouble coping
-with them, so the namespace directives are currently surrounded by ugly
-\#ifdef USENAMESPACE which we usually keep undefined. Also, for now, I do
-not encourage the use of sub-namespaces to organize the code within PLearn
-(with or without \#ifdefs). It's already hard enough to get the
-organization right in terms of concepts, class hierarchies, and files,
-without introducing yet another hierarchy of things (which besides, would
-go mostly untested as we always compile with USENAMESPACE undefined, for
-now anyway). 
+\subsection*{Namespaces}
+ Namespaces are most useful to prevent name clashes between different
+libraries. So ultimately, all of PLearn is to reside in the PLearn
+namespace. However gdb currently seems to have trouble coping with
+them, so the namespace directives are currently surrounded by ugly
+\#ifdef USENAMESPACE which we usually keep undefined.
 
-\textbf{ Exceptions and runtime errors} \\
-Exceptions can be a nice and useful
-feature, allowing you to build sophisticated error recovery mechanisms and
-the like... But designing a consistent error-recovery scheme with an
-appropriate exception class hierarchy is a complex task. Besides in PLearn,
-we typically have no use for a sophisticated error recovery mechanism: a
-run time error is always a sign of a bug somewhere, and the policy in
-PLearn is to never try to second-guess the programmer: all we want is for
-the program to abort immediately with a somewhat meaningful message, and
-the debugger to be able to trace the call. Unfortunately, as of this
-writing, exceptions are poorly supported by debuggers (and they can create
-a nightmare in multi-threaded code).
+ Also, for now, I do not encourage the use of sub-namespaces to
+organize the code within PLearn (with or without \#ifdefs). It's
+already hard enough to get the organization right in terms of
+concepts, class hierarchies, and files, without introducing yet
+another hierarchy of things (which besides, would go mostly untested
+as we always compile with USENAMESPACE undefined, for now anyway).
+
+\subsection*{Exceptions and runtime errors}
+ Exceptions can be a nice and useful feature, allowing you to build
+sophisticated error recovery mechanisms and the like\ldots\ But
+designing a consistent error-recovery scheme with an appropriate
+exception class hierarchy is a complex task. Besides in PLearn, we
+typically have no use for a sophisticated error recovery mechanism:
+a runtime error is always a sign of a bug somewhere, and the policy
+in PLearn is to never try to second-guess the programmer: all we want
+is for the program to abort immediately with a somewhat meaningful
+message, and the debugger to be able to trace the call. Unfortunately,
+as of this writing, exceptions are poorly supported by debuggers
+(and they can create a nightmare in multi-threaded code).
 
  So essentially we don't use exceptions in PLearn, but a very simple
- runtime error mechanism: error(``my meaningful error message''); will
- result in a call to function errormsg that simply prints out the message
- and exits the program. Thus it is easy to set a breakpoint in errormsg in
- the debugger and trace what happened. This is a no-fuss solution that does
- the job. Notice that the errormsg function can easily be modified to throw
- an exception if you wish to do a proper error recovery (in case brutally
- exiting the program is not an acceptable behaviour).
+runtime error mechanism: \texttt{error("my meaningful error message");}
+will result in a call to function {\tt errormsg} that simply prints out
+the message and exits the program. Thus it is easy to set a breakpoint
+in {\tt errormsg} in the debugger and trace what happened. This is
+a no-fuss solution that does the job. Notice that the {\tt errormsg}
+function can easily be modified to throw an exception if you wish to
+do a proper error recovery (in case brutally exiting the program is
+not an acceptable behaviour).
 
-Exceptions can also be useful for other things, but for typical
-runtime-errors, please use error(\emph{errormsg})  
+ Exceptions can also be useful for other things, but for typical
+runtime-errors, please use {\tt error(\emph{errormsg})}.
 
-\textbf{ Templates} \\
-Templates is one of the most powerful features of
-C++. But it's also the most complex, and the one with which compilers and
-debuggers have the most trouble (almost all but the simplest template code
-is hardly portable across compilers because of inconsistencies between
-them, and it was much worse a few years back!). The early versions of
-PLearn deliberately did not use\emph{ any} template code at all (many other
-librariy designers out there for whom portability was a major concern made
-the same choice).
+\subsection*{Templates}
+ Templates is one of the most powerful features of C++. But it's also
+the most complex, and the one with which compilers and debuggers
+have the most trouble (almost all but the simplest template code is
+hardly portable across compilers because of inconsistencies between
+them, and it was much worse a few years back!). The early versions
+of PLearn deliberately did not use \emph{any} template code at all
+(many other librariy designers out there for whom portability was a
+major concern made the same choice).
 
-As the compilers improved, I started allowing myself to use \emph{simple}
-templates for things where they were \emph{really} appropriate, (i.e. smart
-pointers and generic containers). And I would recommend everybody to stick
-to this. Please, \emph{refrain} from using templates as much as possible:
-it will make your code easier to write, to read, to debug, to port, to
-understand, and also faster to compile. It's usually easy to later
-``templatize'' a working and well-tested non-templated code if really
-needed. But it's always annoying to have to ``de-templatize'' a complex
-template code because the compiler on your new target platform cannot
-understand it (chances are that you won't either).   
+ As the compilers improved, I started allowing myself to use
+\emph{simple} templates for things where they were \emph{really}
+appropriate, (i.e. smart pointers and generic containers). And I
+would recommend everybody to stick to this. Please, \emph{refrain}
+from using templates as much as possible: it will make your code
+easier to write, to read, to debug, to port, to understand, and
+also faster to compile. It's usually easy to later ``templatize'' a
+working and well-tested non-templated code if really needed. But it's
+always annoying to have to ``de-templatize'' a complex template code
+because the compiler on your new target platform cannot understand it
+(chances are that you won't either).
 
-\textbf{ Multiple inheritance and complex class hierarchies} \\
+\subsection*{Multiple inheritance and complex class hierarchies}
  Multiple inheritance poses a number of technical problems and a multiple
 inheritance tree is also usually more difficult to understand
 conceptually. Therefore, PLearn uses only single inheritance and I would
@@ -1633,156 +1466,157 @@ Also we often use concrete classes, and in general prefer flat class
 hierarchies than very deep ones, as they are easier to comprehend.
 
 
-\textbf{ const} \\
+\subsection*{const}
+ const is number one on my list of C++ annoyances. But unfortunately
+there is no way to really do without it, so try to use it consistently,
+and try not to get too frustrated in case of code constipation,
+pardon me, const problems\ldots\ there is always a (hopefully clean)
+way around them.
 
-const is number one on my list of C++ annoyances. But unfortunately there
-is no way to really do without it, so try to use it consistently, and try
-not to get too frustrated in case of code constipation, pardon me, const
-problems... there is always a (hopefully clean) way around them.
 
-
-\textbf{ public, private, protected} \\
-
- There are probably too many class members that are public in PLearn. But,
- as we love our potential library users (they are mostly us for now
- anyway), we tend to avoid paranoia, and to trust them for not doing dirty
- things with our not-so-private members. Hell, they have access to the
- source code anyway! 
+\subsection*{public, private, protected}
+ There are probably too many class members that are public in
+PLearn. But, as we love our potential library users (they are mostly
+us for now anyway), we tend to avoid paranoia, and to trust them
+for not doing dirty things with our not-so-private members. Hell,
+they have access to the source code anyway!
 
 \section{Usage of the C++ standard library in PLearn} 
 
-In early versions of PLearn, we did not use much of the standard
- library (as no compilers yet agreed on a standard), except for
- iostreams. Now that there is a well established standard, and that all
- compiler makers are working towards conforming to it, we are slowly moving
- PLearn to using more of the standard library facilities. 
+ In early versions of PLearn, we did not use much of the standard
+library (as no compilers yet agreed on a standard), except for
+iostreams. Now that there is a well established standard, and that
+all compiler makers are working towards conforming to it, we are
+slowly moving PLearn to using more of the standard library facilities.
 
 
-\textbf{Strings} \\
+\subsection*{Strings}
+ Many places in PLearn still use char* to represent strings,
+but they'll slowly be changed into using the std::string class
+instead. Please use string from now on. Feel free to change any usage
+of char* you meet into string.
 
- Many places in PLearn still use char* to represent strings, but they'll
- slowly be changed into using the std::string class instead. Please use
- string from now on. Feel free to change any usage of char* you meet into
- string.
+ A number of useful additional functions for user-friendly string
+manipulation can be found in file PLearnCore/stringutils.h A brief
+(and certainly not up to date) description of it, as well as a pointer
+to a quick overview of the basic string operations can be found here.
 
-  A number of useful additional functions for user-friendly string manipulation can be found in file PLearnCore/stringutils.h A brief (and certainly not up to date) description of it, as well as a pointer to a quick overview of the basic string operations can be found here. 
-
-
-\textbf{Streams} \\
-
- Several pieces of old PLearn code still use the C stream library (FILE*
- ...), but the standard C++ stream facilities is the officially approved
- way to go for new code.
+\subsection*{Streams}
+ Several pieces of old PLearn code still use the C stream library
+(FILE* \ldots), but the standard C++ stream facilities is the
+officially approved way to go for new code.
 
 
-\textbf{ Standard containers and algorithms} \\
-
- It's now OK to use STL containers wherever appropriate. Two other generic
- containers were previously developed for PLearn: Array is heavily used,
- and is a base class for a number of other specialised array types, so it
- is not likely to vanish any time soon (although I may have it derive from
- std::vector one of these days). The main advantage of Array over
- std::vector is that runtime bound-checking can be turned on or off with a
- compilation flag (BOUNDCHECK), and there's also a user-friendly (but
- inefficient) syntax to build arrays from simple elements using the \&
- operator. Hash may also be progressively abandoned in favour of std::map,
- hash\_map (is this one part of the C++ standard?) and the like...
+\subsection*{Standard containers and algorithms}
+ It's now OK to use STL containers wherever appropriate. Two other
+generic containers were previously developed for PLearn: Array is
+heavily used, and is a base class for a number of other specialised
+array types, so it is not likely to vanish any time soon (although
+I may have it derive from {\tt std::vector} one of these days). The
+main advantage of Array over {\tt std::vector} is that runtime
+bound-checking can be turned on or off with a compilation flag
+(BOUNDCHECK), and there's also a user-friendly (but inefficient)
+syntax to build arrays from simple elements using the \& operator. Hash
+may also be progressively abandoned in favour of std::map, hash\_map
+(is this one part of the C++ standard?) and the like\ldots
 
 
 \section{Naming conventions}
 
- The following naming conventions are used throughout PLearn. They are
- mostly inspired by the Java naming conventions. Anybody who uses or wishes
- to extend PLearn should be aware of them (as it makes understanding of the
- code easier) and try to respect them (as it will make the understanding of
- their code easier to other people who will have the privilege to dig into
- it).
+ The following naming conventions are used throughout PLearn. They
+are mostly inspired by the Java naming conventions. Anybody who
+uses or wishes to extend PLearn should be aware of them (as it makes
+understanding of the code easier) and try to respect them (as it will
+make the understanding of their code easier to other people who will
+have the privilege to dig into it).
 
-\textbf{ To make it short and simple:}
+\subsection*{To make it short and simple:}
 
 \begin{itemize}
-\item MyClassName
-\item myMethodName()
-\item my\_variable\_name \emph{OR }
-myvariablename \emph{(both for member variables or otherwise)}
+\item {\tt MyClassName}
+\item {\tt myMethodName()}
+\item {\tt my\_variable\_name} \emph{OR }
+      {\tt myvariablename} \emph{(both for member variables or otherwise)}
 
-\item my\_global\_function() \emph{OR}
- myGlobalFunction()
-\item  MY\_CONSTANT  \emph{(for \#define constants or other)}
-
+\item {\tt my\_global\_function()} \emph{OR}
+      {\tt myGlobalFunction()}
+\item {\tt MY\_CONSTANT}  \emph{(for \#define constants or other)}
 
 \end{itemize}
-\textbf{ Remarks:}
+
+\subsection*{Remarks:}
+
 \begin{itemize}
 \item  A classname should always start with an uppercase.
-\item  methods, functions, and variable names should always start with a lowercase.
+\item  Methods, functions, and variable names should always start with a lowercase.
 \item  Underscores(\_) should never be used in class names or method names.
-\item  Typical methods that return a bool status should begin with is or has ex: isEmpty() isNull() hasChildren()
-\item  In case you want to provide a read-only accessor method to a protected or private member variable, use \emph{varname\_}
- for the member variable and \emph{varname() }
-for the accessor method.
-\item  The arguments of a constructor often carry initial values for member variables.  We usually name the argument in the constructor 'the\_varname' so that it doesn't clash with the targetted member variable (which is just 'varname')
+\item  Typical methods that return a bool status should begin with is or has. Ex: {\tt isEmpty()} {\tt isNull()} {\tt hasChildren()}.
+\item  In case you want to provide a read-only accessor method to a protected or private member variable, use {\tt varname\_} for the member variable and {\tt varname()} for the accessor method.
+\item  The arguments of a constructor often carry initial values for member variables. We usually name the argument in the constructor `the\_varname' so that it doesn't clash with the targetted member variable (which is just `varname')
 
 \end{itemize}
 
  A few reasonable exceptions are tolerated throughout the code (such as
- function P for probability instead of a lowercase p, or a member variable
- K for a kernel matrix...) But exceptions that don't serve any purpose
- should not be!
+function P for probability instead of a lowercase p, or a member
+variable K for a kernel matrix\ldots) But exceptions that don't serve
+any purpose should not be!
 
 \section{Final word}
 
- The PLearn library is far from perfect, it still has a lot of rough edges
- (my to-do list is growing every day), and there are several things that I
- would do differently if I was to start all over again. But it is
- nevertheless already a very usable tool, that for the most part, I feel,
- meets its primary design goals. Besides I consider good code design an
- iterative process: one starts with an initially rough version and
- iteratively refines it under the light of real-world experience. The code
- base is not carved in stone, it is an evolving being, and the source code
- is there so that you can tweak it and adapt it to your needs, and
- hopefully help make it better.
+ The PLearn library is far from perfect, it still has a lot of
+rough edges (my to-do list is growing every day), and there are
+several things that I would do differently if I was to start all
+over again. But it is nevertheless already a very usable tool, that
+for the most part, I feel, meets its primary design goals. Besides I
+consider good code design an iterative process: one starts with an
+initially rough version and iteratively refines it under the light
+of real-world experience. The code base is not carved in stone, it
+is an evolving being, and the source code is there so that you can
+tweak it and adapt it to your needs, and hopefully help make it better.
 
 \chapter{Debugging}
 
-There are several types of problems you'll encounter, and each has a
+ There are several types of problems you'll encounter, and each has a
 proven solving technique.
 
 \section{Compilation problems}
 
 {\bf Solution: } learn how to program in C++
 
-No, I mean seriously, learn C++, {\em thorouhly}, until you are able to
-truly and fully understand every single bit of the cryptic message issued
-by the compiler, and why on earth it may have chosen to insult your
-intelligence with it. Because that cryptic message always contains the
-solution. 
+ No, I mean seriously, learn C++, {\em thoroughly}, until you are
+able to truly and fully understand every single bit of the cryptic
+message issued by the compiler, and why on earth it may have chosen
+to insult your intelligence with it. Because that cryptic message
+always contains the solution.
 
-In particular, you need to really understand the difference between a const
-thingy and a non-const thingy, because to C++ they are often two totally
-different beasts (although to a decent human, they may look the same at first inspection).
+ In particular, you need to really understand the difference between
+a const thingy and a non-const thingy, because to C++ they are often
+two totally different beasts (although to a decent human, they may
+look the same at first inspection).
 
-So make sure you truly understand {\em all} the subtle differences between for ex.: \\
+ So make sure you truly understand {\em all} the subtle differences
+between for ex.: \\
 \verb!const char* MyObj::mymethod(const char* &foo, const int& bar)!  \\
 and
 \verb!char* MyObj::mymethod(const char *const foo, int& bar) const! \\
 
 
-On rare occasions, you might occasionaly stumble upon a compiler {\em bug}
-(as in {\em compiler internal error!!!} ), in which case you may try the
-following: upgrade your dusty compiler to the newest less-buggy version;
-check on google to see if anybody else had the same problem and if they
-found a workaround; try to find a workaround yourself (split your call in
-several pieces, using intermediate variables, add a cout here, reorder the
-instructions there... and pray!); try posting an SOS on the appropriate
-newsgroups; write a bug report! Somebody somewhere, is responsible for it
-and might be interested in fixing the mess, or already has\ldots.
+ On rare occasions, you might occasionaly stumble upon a compiler
+{\em bug} (as in {\em compiler internal error!!!} ), in which case
+you may try the following: upgrade your dusty compiler to the newest
+less-buggy version; check on google to see if anybody else had the
+same problem and if they found a workaround; try to find a workaround
+yourself (split your call in several pieces, using intermediate
+variables, add a cout here, reorder the instructions there\ldots\ 
+and pray!); try posting an SOS on the appropriate newsgroups; write
+a bug report! Somebody somewhere, is responsible for it and might be
+interested in fixing the mess, or already has\ldots
 
 
 \subsection{Frequently encountered compilation errors}
 
-To save you some time, you may look up in the following list if somebody
-stumbled upon the same problem.
+To save you some time, you may look up in the following list if
+somebody stumbled upon the same problem.
 
 \begin{itemize}
 
@@ -1840,11 +1674,11 @@ signature of the function for you. Note that the single quote at the beginning i
 \end{itemize}
 
 {\bf Hints for using gdb:} \\
-gdb is always at quite a lag behind, playing catch-up with the latest compiler. Sot it {\em has} problems.
+{\tt gdb} is always at quite a lag behind, playing catch-up with the latest compiler. Sot it {\em has} problems.
 Here are a few hints for working with it, or in spite of it\ldots
 \begin{itemize}
 \item printing a {\tt std::string} doesn't work. Cast it to a {\tt char*} first, as in \verb!p (char *) my_string!
-\item gdb often seems lost when you attempt to examine the insides of a complex
+\item {\tt gdb} often seems lost when you attempt to examine the insides of a complex
   object, replying that it can't find info on that class.  In this case,
   unfortunately, you'll have to insert instructions in the code to print the desired debug info
   (with \verb!cerr << ...!), recompile and rerun gdb.
@@ -1853,18 +1687,21 @@ Here are a few hints for working with it, or in spite of it\ldots
   called {\tt ptr}!), for ex: \verb!p my_var.ptr->value.length_!
 \end{itemize}
 
-I also suggest you learn using a good integrated development environment
-(IDE) like Emacs. Emacs has multiple windows, a compilation mode (pressing
-return on an error will bring you directly to the problematic line of the
-problematic file), and a gdb mode (with which you can easily follow the step by step execution, 
-as an arrow is always displayed before the next instruction to be executed, and you can rapidly put a breakpoint (Ctrl-X
-SPACE) anywhere). With the proper key definitions (learn how to define your
-own keys for maximum efficiencey!), a complete recompile of your code, and
-reload in gdb is just one key away.  You won't have to touch the rat. And
-yes, it even all works perfectly fine (multiple windows and all) inside a
-{\em single} text terminal over a telnet connexion for ex. (invoke it using
-\verb!emacs -nw!).
-  
+I also suggest you learn using a good integrated development
+environment (IDE) like Emacs. Emacs has multiple windows, a compilation
+mode (pressing return on an error will bring you directly to the
+problematic line of the problematic file), and a gdb mode (with
+which you can easily follow the step by step execution, as an arrow
+is always displayed before the next instruction to be executed, and
+you can rapidly put a breakpoint (Ctrl-X SPACE) anywhere).
+
+With the proper key definitions (learn how to define your own keys for
+maximum efficiency!), a complete recompile of your code, and reload in
+gdb is just one key away.  You won't have to touch the rat. And yes,
+it even all works perfectly fine (multiple windows and all) inside
+a {\em single} text terminal over a telnet connexion for ex. (invoke
+it using \verb!emacs -nw!).
+
 
 \section{Dirty runtime errors}
 
@@ -1885,36 +1722,40 @@ By this, I mean {\tt segmentation fault} and the like.
 
 This document is covered by the license appearing after the title page.
 
-\vspace*{.5cm}
-
 The PLearn software library and tools described in this document are
 distributed under the following BSD-type license:
 
 \begin{verbatim}
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
- 
-  1. Redistributions of source code must retain the above copyright
-     notice, this list of conditions and the following disclaimer.
- 
-  2. Redistributions in binary form must reproduce the above copyright
-     notice, this list of conditions and the following disclaimer in the
-     documentation and/or other materials provided with the distribution.
- 
-  3. The name of the authors may not be used to endorse or promote
-     products derived from this software without specific prior written
-     permission.
- 
- THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
- IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
- NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
- TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Redistribution and use in source and binary forms, with
+or without modification, are permitted provided that the
+following conditions are met:
+
+  1. Redistributions of source code must retain the above
+     copyright notice, this list of conditions and the
+     following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above
+     copyright notice, this list of conditions and the
+     following disclaimer in the documentation and/or other
+     materials provided with the distribution.
+
+  3. The name of the authors may not be used to endorse or
+     promote products derived from this software without
+     specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
+THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 \end{verbatim}
 
 
