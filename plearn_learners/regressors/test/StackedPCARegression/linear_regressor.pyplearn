@@ -2,8 +2,6 @@ import os.path
 from plearn.pyplearn import *
 
 plarg_defaults.data    = "data.amat"
-
-expdir = "linear_regressor_data=%s" % plargs.data
 dataset = pl.AutoVMatrix(
     specification = plargs.data,
     inputsize = 4,
@@ -18,7 +16,7 @@ splitter = pl.FractionSplitter(
     )
 
 tester = pl.PTester(
-    expdir = expdir,
+    expdir = plargs.expdir,
     dataset = dataset,
     splitter = splitter,
     learner = learner,
