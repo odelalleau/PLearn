@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TestDependenciesCommand.cc,v 1.5 2004/02/26 20:52:11 nova77 Exp $ 
+   * $Id: TestDependenciesCommand.cc,v 1.6 2004/02/26 21:59:43 nova77 Exp $ 
    ******************************************************* */
 
 /*! \file TestDependenciesCommand.cc */
@@ -43,7 +43,12 @@
 #include "VMat_maths.h"
 
 // norman: sorry, no memory check yet!
-#ifndef WIN32
+#ifdef WIN32
+#include <windows.h>
+// undef min and max macros to avoid conflict with the plearn min and max
+#undef min
+#undef max
+#else
 #include "procinfo.h"
 #endif
 
@@ -67,11 +72,10 @@ void TestDependenciesCommand::run(const vector<string>& args)
     data->defineSizes(inputsize,targetsize,data->weightsize());
 
 #ifdef WIN32
-  // norman:
-  // very bad hack until there will be a memory management function
-  // for win32. At the moment the problem is with the Windows extesions
-  // compiler option.
-  int memory_size = 512000;
+  MEMORYSTATUS stat;
+  GlobalMemoryStatus (&stat);
+  // Total available memory in bytes
+  int memory_size = stat.dwAvailVirtual;
 #else
   int memory_size = getSystemTotalMemory();
 #endif 
