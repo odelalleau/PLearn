@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.9 2003/05/14 21:15:31 jkeable Exp $
+   * $Id: StatsCollector.cc,v 1.10 2003/05/26 21:12:32 genji256 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -93,7 +93,9 @@ void StatsCollector::declareOptions(OptionList& ol)
   declareOption(ol, "sum_", &StatsCollector::sum_, OptionBase::learntoption,
                 "sum of all values");
   declareOption(ol, "sumsquare_", &StatsCollector::sumsquare_, OptionBase::learntoption,
-                "sum of square of all values");
+                "sum of square of all values (minus first_val, to improve numerical precision)");
+  declareOption(ol, "first_val", &StatsCollector::first_val, OptionBase::learntoption,
+                "first value observed in data");
   declareOption(ol, "min_", &StatsCollector::min_, OptionBase::learntoption,
                 "the min");
   declareOption(ol, "max_", &StatsCollector::max_, OptionBase::learntoption,
@@ -124,6 +126,7 @@ void StatsCollector::forget()
     nnonmissing_ = 0;
     sum_ = 0.;
     sumsquare_ = 0.;
+    first_val = MISSING_VALUE;
     min_ = MISSING_VALUE;
     max_ = MISSING_VALUE;
 }
@@ -135,7 +138,11 @@ void StatsCollector::update(real val)
       nmissing_++;
     else
       {
-        double sqval = val*val;
+        if (nnonmissing_==0) {
+          first_val=val;
+          cout << first_val << endl;
+        }
+        double sqval = (val-first_val)*(val-first_val);
         sum_ += val;
         sumsquare_ += sqval;
         if(nnonmissing_==0) // first value encountered

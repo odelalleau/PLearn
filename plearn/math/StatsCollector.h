@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.10 2003/05/07 05:39:17 plearner Exp $
+   * $Id: StatsCollector.h,v 1.11 2003/05/26 21:12:14 genji256 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -100,6 +100,7 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     int nnonmissing_; //!<  number of non missing value 
     double sum_; //!<  sum of all values
     double sumsquare_; //!<  sum of square of all values
+    double first_val;
     real min_; //!< the min
     real max_; //!< the max
 
@@ -120,11 +121,11 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     int nmissing() const { return nmissing_; }
     int nnonmissing() const { return nnonmissing_; }
     real sum() const { return real(sum_); }
-    real sumsquare() const { return real(sumsquare_); }
+    real sumsquare() const { return real(sumsquare_-2*first_val*sum_+first_val*first_val*nnonmissing_); }
     real min() const { return min_; }
     real max() const { return max_; }
     real mean() const { return real(sum_/nnonmissing_); }
-    real variance() const { return real((sumsquare_ - square(sum_)/nnonmissing_)/(nnonmissing_-1)); }
+    real variance() const { return real((sumsquare_ - square(sum_-nnonmissing_*first_val)/nnonmissing_)/(nnonmissing_-1)); }
     real stddev() const { return sqrt(variance()); }
     real stderror() const { return sqrt(variance()/nnonmissing()); }
           
