@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: AutoSDBVMatrix.cc,v 1.7 2004/06/29 19:48:45 tihocan Exp $
+   * $Id: AutoSDBVMatrix.cc,v 1.8 2004/07/07 17:29:59 tihocan Exp $
    * AUTHOR: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -82,7 +82,7 @@ AutoSDBVMatrix::AutoSDBVMatrix(const string& dbname)
     }
 }
 
-void AutoSDBVMatrix::getNewRow(int i, Vec& v) const
+void AutoSDBVMatrix::getNewRow(int i, const Vec& v) const
 {
   sdb_.getInRow(i, row_);
   Row::const_iterator it = row_.begin();
