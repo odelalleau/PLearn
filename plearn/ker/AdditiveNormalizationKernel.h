@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdditiveNormalizationKernel.h,v 1.1 2004/04/20 20:37:58 tihocan Exp $ 
+   * $Id: AdditiveNormalizationKernel.h,v 1.2 2004/05/07 19:04:42 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -87,9 +87,10 @@ public:
   // ****************
 
   //! Default constructor.
-  // Make sure the implementation in the .cc initializes all fields to
-  // reasonable default values.
   AdditiveNormalizationKernel();
+
+  //! Created from an existing kernel.
+  AdditiveNormalizationKernel(Ker the_source);
 
   // ************************
   // * SourceKernel methods *

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdditiveNormalizationKernel.cc,v 1.2 2004/04/21 17:38:56 tihocan Exp $ 
+   * $Id: AdditiveNormalizationKernel.cc,v 1.3 2004/05/07 19:04:42 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -53,6 +53,13 @@ AdditiveNormalizationKernel::AdditiveNormalizationKernel()
 /* ### Initialize all fields to their default value here */
 : data_will_change(false)
 {}
+
+AdditiveNormalizationKernel::AdditiveNormalizationKernel(Ker the_source) 
+: data_will_change(false)
+{
+  source_kernel = the_source;
+  build();
+}
 
 PLEARN_IMPLEMENT_OBJECT(AdditiveNormalizationKernel,
     "Normalizes additively an underlying kernel.",
@@ -115,20 +122,19 @@ void AdditiveNormalizationKernel::build_()
   // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
   // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
   // ### You should assume that the parent class' build_() has already been called.
-
 }
 
 ////////////////////
 // computeAverage //
 ////////////////////
 real AdditiveNormalizationKernel::computeAverage(const Vec& x, bool on_row, real squared_norm_of_x) const {
-  Vec k_x(data->length());
+  Vec k_x(n_examples);
   if (is_symmetric || !on_row) {
     source_kernel->evaluate_all_i_x(x, k_x, squared_norm_of_x);
   } else {
     source_kernel->evaluate_all_x_i(x, k_x, squared_norm_of_x);
   }
-  return sum(k_x) / real(data->length());
+  return sum(k_x) / real(n_examples);
 }
 
 ///////////////////////
