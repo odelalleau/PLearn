@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.27 2004/12/04 00:11:42 chapados Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.28 2004/12/15 01:51:41 chapados Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -239,10 +239,10 @@ void VecStatsCollector::finalize()
 }
 
 //! returns the empirical mean (sample average) vec
-Vec VecStatsCollector::getMean() const
+void VecStatsCollector::getMean(Vec& res) const
 {
   int n = stats.size();
-  Vec res(n);
+  res.resize(n);
   for(int k=0; k<n; k++)
     res[k] = stats[k].mean();
   return res;

@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.h,v 1.26 2004/12/04 00:11:35 chapados Exp $ 
+   * $Id: VecStatsCollector.h,v 1.27 2004/12/15 01:51:41 chapados Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.h */
@@ -169,8 +169,15 @@ public:
   { return stats[i]; }
 
   //! returns the empirical mean (sample average) vec
-  Vec getMean() const;
-
+  Vec getMean() const {
+    Vec mean;
+    getMean(mean);
+    return mean;
+  }
+  
+  //! Store the empirical mean in the given vec (which is resized)
+  void getMean(Vec& mean) const;
+  
   //! returns the empirical variance vec
   Vec getVariance() const;
 
