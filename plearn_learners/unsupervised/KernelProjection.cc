@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.cc,v 1.2 2004/04/05 18:18:51 tihocan Exp $ 
+   * $Id: KernelProjection.cc,v 1.3 2004/04/05 18:33:09 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -125,82 +125,14 @@ void KernelProjection::build_()
   first_output = true;  // Safer.
 }
 
-/////////////////////////////////
-// makeDeepCopyFromShallowCopy //
-/////////////////////////////////
-void KernelProjection::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+/////////////////////////////
+// computeCostsFromOutputs //
+/////////////////////////////
+void KernelProjection::computeCostsFromOutputs(const Vec& input, const Vec& output, 
+                                           const Vec& target, Vec& costs) const
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
-
-  // ### Call deepCopyField on all "pointer-like" fields 
-  // ### that you wish to be deepCopied rather than 
-  // ### shallow-copied.
-  // ### ex:
-  // deepCopyField(trainvec, copies);
-
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("KernelProjection::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
-}
-
-
-////////////////
-// outputsize //
-////////////////
-int KernelProjection::outputsize() const
-{
-  return n_comp_kept;
-}
-
-////////////
-// forget //
-////////////
-void KernelProjection::forget()
-{
-  //! (Re-)initialize the PLearner in its fresh state (that state may depend on the 'seed' option)
-  //! And sets 'stage' back to 0   (this is the stage of a fresh learner!)
-    /*!
-      A typical forget() method should do the following:
-         - initialize a random number generator with the seed option
-         - initialize the learner's parameters, using this random generator
-         - stage = 0
-    */
-  stage = 0;
-  n_comp_kept = n_comp;
-  n_examples = 0;
-  first_output = true;
-  // Free memory.
-  eigenvectors = Mat();
-  eigenvalues = Vec();
-}
-    
-///////////
-// train //
-///////////
-void KernelProjection::train()
-{
-  if (stage == 0) {
-    PLWARNING("In KernelProjection::train - Learner has already been trained");
-    return;
-  }
-  Mat gram(n_examples,n_examples);
-  // (1) Compute the Gram matrix.
-  kernel->computeGramMatrix(gram);
-  // (2) Compute its eigenvectors and eigenvalues.
-  eigenVecOfSymmMat(gram, n_comp, eigenvalues, eigenvectors);
-  // (3) Discard low eigenvalues.
-  int p = 0;
-  while (p < n_comp && eigenvalues[p] > min_eigenvalue)
-    p++;
-  n_comp_kept = p;
-  // (4) Optionally remove the discarded components.
-  if (free_extra_components) {
-    eigenvalues.resize(n_comp_kept);
-    eigenvectors.resize(n_comp_kept, eigenvectors.width());
-  }
-  // All done!
-  first_output = true;
-  stage = 1;
-}
+  // No cost to compute.
+}                                
 
 ///////////////////
 // computeOutput //
@@ -236,24 +168,26 @@ void KernelProjection::computeOutput(const Vec& input, Vec& output) const
   }
 }    
 
-/////////////////////////////
-// computeCostsFromOutputs //
-/////////////////////////////
-void KernelProjection::computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                           const Vec& target, Vec& costs) const
+////////////
+// forget //
+////////////
+void KernelProjection::forget()
 {
-// Compute the costs from *already* computed output. 
-// ...
-}                                
-
+  stage = 0;
+  n_comp_kept = n_comp;
+  n_examples = 0;
+  first_output = true;
+  // Free memory.
+  eigenvectors = Mat();
+  eigenvalues = Vec();
+}
+    
 //////////////////////
 // getTestCostNames //
 //////////////////////
 TVec<string> KernelProjection::getTestCostNames() const
 {
-  // Return the names of the costs computed by computeCostsFromOutpus
-  // (these may or may not be exactly the same as what's returned by getTrainCostNames)
-  // ...
+  // No cost to compute.
   TVec<string> t;
   return t;
 }
@@ -263,12 +197,33 @@ TVec<string> KernelProjection::getTestCostNames() const
 ///////////////////////
 TVec<string> KernelProjection::getTrainCostNames() const
 {
-  // Return the names of the objective costs that the train method computes and 
-  // for which it updates the VecStatsCollector train_stats
-  // (these may or may not be exactly the same as what's returned by getTestCostNames)
-  // ...
-  TVec<string> t;
-  return t;
+  return getTestCostNames();
+}
+
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
+void KernelProjection::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+{
+  inherited::makeDeepCopyFromShallowCopy(copies);
+
+  // ### Call deepCopyField on all "pointer-like" fields 
+  // ### that you wish to be deepCopied rather than 
+  // ### shallow-copied.
+  // ### ex:
+  // deepCopyField(trainvec, copies);
+
+  // ### Remove this line when you have fully implemented this method.
+  PLERROR("KernelProjection::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+}
+
+
+////////////////
+// outputsize //
+////////////////
+int KernelProjection::outputsize() const
+{
+  return n_comp_kept;
 }
 
 ////////////////////
@@ -281,6 +236,35 @@ void KernelProjection::setTrainingSet(VMat training_set, bool call_forget) {
   // If we save this learner then load it again, we want the kernel to remember
   // its dataset. Thus we must use the 'specify_dataset' option.
   kernel->specify_dataset = training_set;
+}
+
+///////////
+// train //
+///////////
+void KernelProjection::train()
+{
+  if (stage == 0) {
+    PLWARNING("In KernelProjection::train - Learner has already been trained");
+    return;
+  }
+  Mat gram(n_examples,n_examples);
+  // (1) Compute the Gram matrix.
+  kernel->computeGramMatrix(gram);
+  // (2) Compute its eigenvectors and eigenvalues.
+  eigenVecOfSymmMat(gram, n_comp, eigenvalues, eigenvectors);
+  // (3) Discard low eigenvalues.
+  int p = 0;
+  while (p < n_comp && eigenvalues[p] > min_eigenvalue)
+    p++;
+  n_comp_kept = p;
+  // (4) Optionally remove the discarded components.
+  if (free_extra_components) {
+    eigenvalues.resize(n_comp_kept);
+    eigenvectors.resize(n_comp_kept, eigenvectors.width());
+  }
+  // All done!
+  first_output = true;
+  stage = 1;
 }
 
 } // end of namespace PLearn
