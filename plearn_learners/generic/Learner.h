@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.h,v 1.1 2002/09/05 07:56:29 plearner Exp $
+   * $Id: Learner.h,v 1.2 2002/09/10 22:30:48 morinf Exp $
    ******************************************************* */
 
 
@@ -496,6 +496,11 @@ using namespace std;
   protected:
     static void declareOptions(OptionList& ol);
 
+      void setTrainCost(Vec &cost)
+          { train_cost.resize(cost.length()); train_cost << cost; };
+      Vec train_cost;
+  public:
+      Vec getTrainCost() { return train_cost; };
   };
 
   DECLARE_OBJECT_PTR(Learner);
