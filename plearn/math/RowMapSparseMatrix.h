@@ -118,6 +118,11 @@ using namespace std;
         rows[i].clear();
     }
 
+    void clearRow(int i)
+    {
+      rows[i].clear();
+    }
+
     T& operator()(int i, int j) { 
 #ifdef BOUNDCHECK      
       if (i<0 || i>=length() && j<0 || j>=width())
