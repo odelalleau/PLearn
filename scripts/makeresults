@@ -4,7 +4,7 @@
 #   makeresults results_mat ${expdir}/global_stats.pmat param_1 ... param_n
 #
 # Arguments:
-#   <matrix_name>  : the name of the output matrices, with no extension
+#   <matrix_name>  : the name of the output matrices, without the extension
 #   <template_mat> : a matrix file readable by 'plearn vmat fields', whose fields names
 #                    will be copied into the .amat field names
 #   <parameter_i>  : the name of the i-th parameter to be reported in the results
@@ -21,16 +21,15 @@ MATNAME="$1"
 shift
 
 # Don't do anything if files already exist.
-if [ -f $MATNAME.amat ] && [ -f $MATNAME.vmat ] && [ -d $MATNAME.amat.metadata ]; then
+if [ -f $MATNAME.amat ] && [ -f $MATNAME.vmat ]; then
   exit 0
 fi
 
-# But if they don't all exist, none should be there!
-if [ -f $MATNAME.amat ] || [ -f $MATNAME.vmat ] || [ -d $MATNAME.amat.metadata ]; then
+# But if they don't both exist, none should be there!
+if [ -f $MATNAME.amat ] || [ -f $MATNAME.vmat ]; then
   echo "In makeresults script: one of the following files already exist:"
-  echo "  $MATNAME.amat"
+  echo "  $MATNAME.amat, or"
   echo "  $MATNAME.vmat"
-  echo "  $MATNAME.amat.metadata"
   exit 127
 fi
 
@@ -43,23 +42,20 @@ echo "@" >> $MATNAME.vmat
 echo "SortRowsVMatrix(" >> $MATNAME.vmat
 echo "  distr =" >> $MATNAME.vmat
 echo "    AutoVMatrix(specification = \"$MATNAME.amat\")" >> $MATNAME.vmat
-echo "    sort_columns = [ ]" >> $MATNAME.vmat
+echo "    sort_columns = [ ]  # Add here the columns you want to get sorted" >> $MATNAME.vmat
 echo ")" >> $MATNAME.vmat
 echo "</SOURCES>" >> $MATNAME.vmat
 
-# Make the .amat and its metadata.
-mkdir $MATNAME.amat.metadata
-touch $MATNAME.amat.metadata/fieldnames
-echo "# Data collected from PLearn experiments" > $MATNAME.amat
-echo "# Below are the fieldnames, to put in $MATNAME.amat.metadata/fieldnames if it ever gets deleted" >>  $MATNAME.amat
-echo "# (to get back the stats names, use 'vmat fields' on a sample stats file)." >>  $MATNAME.amat
+# Make the .amat.
+echo "# Data collected from PLearn experiments, to be visualized through $MATNAME.vmat." > $MATNAME.amat
+echo "# Fieldnames:" >> $MATNAME.amat
+echo -n "#: " >> $MATNAME.amat
 for PARAM in $@; do
-  echo "#$PARAM 0" >> $MATNAME.amat
-  echo "$PARAM 0" >> $MATNAME.amat.metadata/fieldnames
+  echo -n "$PARAM " >> $MATNAME.amat
 done
 
 # Now uses the template matrix to complete the field names.
-plearn vmat fields $TEMPLATEMAT name_only >> $MATNAME.amat.metadata/fieldnames
+plearn vmat fields $TEMPLATEMAT name_only transpose >> $MATNAME.amat
 
 # Display exit message.
 echo "Files $MATNAME.vmat and $MATNAME.amat successfully created"
