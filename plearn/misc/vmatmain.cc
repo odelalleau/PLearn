@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.43 2005/01/20 21:48:42 tihocan Exp $
+   * $Id: vmatmain.cc,v 1.44 2005/02/04 15:10:08 tihocan Exp $
    ******************************************************* */
 
 #include <algorithm>                         // for max
@@ -49,6 +49,7 @@
 #include <plearn/base/stringutils.h>
 #include <plearn/db/getDataSet.h>
 #include <plearn/display/Gnuplot.h>
+#include <plearn/io/openFile.h>
 
 // norman: added check
 #ifdef WIN32
@@ -105,14 +106,14 @@ void interactiveDisplayCDF(const Array<VMat>& vmats)
   int w = vmats[0]->width();
 
   Array<string> name(k);
-  cout << ">>>> Dimensions of vmats: \n";
+  pout << ">>>> Dimensions of vmats: \n";
   for(int i=0; i<k; i++)
     {
       name[i] = vmats[i]->getMetaDataDir();
-      cout << name[i] << ": \t " << vmats[i]->length() << " x " << vmats[i]->width() << endl;
+      pout << name[i] << ": \t " << vmats[i]->length() << " x " << vmats[i]->width() << endl;
     }
 
-  vmats[0]->printFields(cout);
+  vmats[0]->printFields(pout);
 
   Gnuplot gp;
 
@@ -120,7 +121,7 @@ void interactiveDisplayCDF(const Array<VMat>& vmats)
   {
   // TVec<RealMapping> ranges = vm->getRanges();
 
-    cout << "Field (0.." << w-1 << ") [low high] ? ";
+    pout << "Field (0.." << w-1 << ") [low high] ? " << flush;
     vector<string> command;
     int varnum = -1;
     real low = -FLT_MAX; // means autorange
@@ -129,12 +130,12 @@ void interactiveDisplayCDF(const Array<VMat>& vmats)
       {
         command = split(pgetline(cin));
         if(command.size()==0)
-          vmats[0]->printFields(cout);
+          vmats[0]->printFields(pout);
         else
           {
             varnum = toint(command[0]);
             if(varnum<0 || varnum>=w)
-              vmats[0]->printFields(cout);
+              vmats[0]->printFields(pout);
             else if(command.size()==3)
               {
                 low = toreal(command[1]);
@@ -144,9 +145,9 @@ void interactiveDisplayCDF(const Array<VMat>& vmats)
       } while(varnum<0 || varnum>=w);
 
 
-    cout << "\n\n*************************************" << endl;
-    cout << "** #" << varnum << ": " << vmats[0]->fieldName(varnum) << " **" << endl;
-    cout << "*************************************" << endl;
+    pout << "\n\n*************************************" << endl;
+    pout << "** #" << varnum << ": " << vmats[0]->fieldName(varnum) << " **" << endl;
+    pout << "*************************************" << endl;
 
     Array<Mat> m(k);
 
@@ -155,11 +156,11 @@ void interactiveDisplayCDF(const Array<VMat>& vmats)
         TVec<StatsCollector> stats = vmats[i]->getStats();        
         StatsCollector& st = stats[varnum];
         m[i] = st.cdf(true);
-        cout << "[ " << name[i]  << " ]" << endl;
-        cout << st << endl;
+        pout << "[ " << name[i]  << " ]" << endl;
+        pout << st << endl;
       }
-    // cout << "RANGES: " << endl;
-    // cout << ranges[varnum];
+    // pout << "RANGES: " << endl;
+    // pout << ranges[varnum];
 
     if(low == -FLT_MAX)
       gp << "set xrange [*:*]" << endl;      
@@ -230,8 +231,8 @@ void printDistanceStatistics(VMat vm, int inputsize)
       pb(i);
     }
 
-  cout << "Euclidean distance statistics: " << endl;
-  cout << collector << endl;
+  pout << "Euclidean distance statistics: " << endl;
+  pout << collector << endl;
 }
 
 /*
@@ -1328,7 +1329,7 @@ void plotVMats(char* defs[], int ndefs)
   Gnuplot gp;
   gp << gp_command << endl;
   
-  cout << "Press any key to close GNUplot window and exit." << endl;
+  pout << "Press any key to close GNUplot window and exit." << endl;
   cin.get();
 }
 
@@ -1442,22 +1443,22 @@ int vmatmain(int argc, char** argv)
     {
       string dbname = argv[2];
       VMat vm = getDataSet(dbname);
-      cout<<vm.length()<<" x "<<vm.width()<<endl;
-      cout << "inputsize: " << vm->inputsize() << endl;
-      cout << "targetsize: " << vm->targetsize() << endl;
-      cout << "weightsize: " << vm->weightsize() << endl;
+      pout<<vm.length()<<" x "<<vm.width()<<endl;
+      pout << "inputsize: " << vm->inputsize() << endl;
+      pout << "targetsize: " << vm->targetsize() << endl;
+      pout << "weightsize: " << vm->weightsize() << endl;
       VVMatrix * vvm = dynamic_cast<VVMatrix*>((VMatrix*)vm);
       if(vvm!=NULL)
       {
-        cout<<"Last modification (including dependencies of .vmat): "<<vvm->getMtime()<<endl;
+        pout<<"Last modification (including dependencies of .vmat): "<<vvm->getMtime()<<endl;
         bool ispre=vvm->isPrecomputedAndUpToDate();
-        cout<<"precomputed && uptodate : ";
+        pout<<"precomputed && uptodate : ";
         if(ispre)
         {
-          cout <<"yes : " << vvm->getPrecomputedDataName()<<endl;
-          cout<<"timestamp of precom. data : "<<getDataSetDate(vvm->getPrecomputedDataName())<<endl;
+          pout <<"yes : " << vvm->getPrecomputedDataName()<<endl;
+          pout<<"timestamp of precom. data : "<<getDataSetDate(vvm->getPrecomputedDataName())<<endl;
         }
-        else cout <<"no"<<endl;
+        else pout <<"no"<<endl;
       }
     }
   else if(command=="fields")
@@ -1473,33 +1474,35 @@ int vmatmain(int argc, char** argv)
       string dbname = argv[2];
       VMat vm = getDataSet(dbname);
       if (add_info) {
-        cout<<"FieldNames: ";
+        pout<<"FieldNames: ";
         if (!transpose) {
-          cout << endl;
+          pout << endl;
         }
       }
       for(int i=0;i<vm.width();i++) {
         if (add_info) {
-          cout << i << ": ";
+          pout << i << ": ";
         }
-        cout << vm->fieldName(i);
+        pout << vm->fieldName(i);
         if (transpose) {
-         cout << " ";
+         pout << " ";
         } else {
-           cout << endl;
+           pout << endl;
         }
       }
       if (transpose) {
         // It misses a carriage return after everything is displayed.
-        cout << endl;
+        pout << endl;
       }
     }
   else if(command=="fieldinfo")
     {
+      if (argc < 4)
+        PLERROR("The 'fieldinfo' subcommand requires more parameters, please check the help");
       string dbname = argv[2];
       string fieldname_or_num = argv[3];
       VMat vm = getDataSet(dbname);
-      vm->printFieldInfo(cout, fieldname_or_num);
+      vm->printFieldInfo(pout, fieldname_or_num);
     }
   else if(command=="stats")
     {
@@ -1535,8 +1538,8 @@ int vmatmain(int argc, char** argv)
       for(int i=0;i<bins.size();i++)
         {
           int b=bins[i];
-          string name = vm->getMetaDataDir()+"/bins"+tostring(b)+".def";
-          ofstream bfile(name.c_str());
+          PPath name = vm->getMetaDataDir() / "bins"+tostring(b)+".def";
+          PStream bfile = openFile(name, PStream::raw_ascii, "w");
           RealMapping rm;
           for(int j=0;j<sc.size();j++)
             {
@@ -1682,7 +1685,7 @@ int vmatmain(int argc, char** argv)
               vpl.run(i,answer);
               if(answer[0]) {
                 vm->getRow(i, tmp);
-                cout<<tmp<<endl;
+                pout<<tmp<<endl;
               }
             }
         }
@@ -1690,7 +1693,7 @@ int vmatmain(int argc, char** argv)
           for(int i=0;i<vm.length();i++)
             {
               vm->getRow(i,tmp);      
-              cout<<tmp<<endl;
+              pout<<tmp<<endl;
             }
     }
   else if(command=="sascat")
@@ -1736,7 +1739,7 @@ int vmatmain(int argc, char** argv)
     }
   else if(command=="help")
     {
-      cout << getDataSetHelp() << endl;
+      pout << getDataSetHelp() << endl;
     }
   else
       PLERROR("Unknown command : %s",command.c_str());
