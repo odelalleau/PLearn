@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.cc,v 1.1 2003/09/23 01:04:02 yoshua Exp $
+   * $Id: PLearnerOutputVMatrix.cc,v 1.2 2003/09/23 01:27:27 yoshua Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -48,39 +48,41 @@ using namespace std;
 
 
 PLearnerOutputVMatrix::PLearnerOutputVMatrix()
-  :inherited(), put_raw_input(false), put_costs(false)
+  :inherited(), put_raw_input(false)
   /* ### Initialise all fields to their default value */
 {
 }
+PLearnerOutputVMatrix::PLearnerOutputVMatrix
+(VMat data_,TVec<PP<PLearner> > learners_, bool put_raw_input_) 
+  : data(data_),learners(learners_),put_raw_input(put_raw_input_)
+{
+  build();
+}
 
 PLEARN_IMPLEMENT_OBJECT(PLearnerOutputVMatrix, 
-                        "Use a PLearner to transform the input part of a data set into the learner's outputs",
+                        "Use a PLearner (or a set of them) to transform the input part of a data set into the learners outputs",
                         "The input part of this VMatrix is obtained from the input part an original data set on which\n"
-                        "a PLearner's computeOutput method is applied. The other columns of the original data set\n"
-                        "are copied as is. Optionally, the raw input can be copied as well, and the costs of the\n"
-                        "learner (which depend on the target part of the original data) can be copied as well,\n"
+                        "one or more PLearner's computeOutput method is applied. The other columns of the original data set\n"
+                        "are copied as is. Optionally, the raw input can be copied as well\n"
                         "always in the input part of the new VMatrix. The order of the elements of a new row is as follows:\n"
-                        "  - the output of the learner when applied on the input part of the original data,\n"
+                        "  - the outputs of the learners (concatenated) when applied on the input part of the original data,\n"
                         "  - optionally, the raw input part of the original data,\n"
-                        "  - optionally, the costs of the learner for that original data example,\n"
                         "  - all the non-input columns of the original data.");
 
 void PLearnerOutputVMatrix::getRow(int i, Vec v) const
 {
   int c=0;
   data->getRow(i,row);
-  learner->computeOutput(learner_input,learner_output);
-  v.subVec(0,c=learner_output->length()) << learner_output;
+  for (int j=0;j<learners.length();j++)
+  {
+    Vec out_j = learners_output(j);
+    learners[j]->computeOutput(learner_input,out_j);
+  }
+  v.subVec(0,c=learners_output.size()) << learners_output.toVec();
   if (put_raw_input)
   {
     v.subVec(c,learner_input->length()) << learner_input;
     c+=learner_input->length();
-  }
-  if (put_costs)
-  {
-    learner->computeCostsFromOutputs(learner_input,learner_output,learner_target,learner_costs);
-    v.subVec(c,learner_costs->length()) << learner_costs;
-    c+=learner_costs->length();
   }
   v.subVec(c,non_input_part_of_data_row.length()) << non_input_part_of_data_row;
 }
@@ -95,12 +97,10 @@ void PLearnerOutputVMatrix::declareOptions(OptionList& ol)
 
    declareOption(ol, "data", &PLearnerOutputVMatrix::data, OptionBase::buildoption,
                  "The original data set (a VMat)");
-   declareOption(ol, "learner", &PLearnerOutputVMatrix::learner, OptionBase::buildoption,
-                 "The PLearner which will be applied to the data set");
+   declareOption(ol, "learners", &PLearnerOutputVMatrix::learners, OptionBase::buildoption,
+                 "The vector of PLearners which will be applied to the data set");
    declareOption(ol, "put_raw_input", &PLearnerOutputVMatrix::put_raw_input, OptionBase::buildoption,
                  "whether to include in the input part of this VMatrix the raw data input part");
-   declareOption(ol, "put_costs", &PLearnerOutputVMatrix::put_raw_input, OptionBase::buildoption,
-                 "whether to include in the input part of this VMatrix the learner costs");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -108,15 +108,23 @@ void PLearnerOutputVMatrix::declareOptions(OptionList& ol)
 
 void PLearnerOutputVMatrix::build_()
 {
-  if (data && learner)
+  if (data && learners.length()>0 && learners[0])
   {
     row.resize(data->width());
     learner_input = row.subVec(0,data->inputsize());
     learner_target = row.subVec(data->inputsize(),data->targetsize());
     int it=data->inputsize()+data->targetsize();
     non_input_part_of_data_row = row.subVec(it,data->width()-it);
-    learner_output.resize(learner->outputsize());
-    learner_costs.resize(learner->nTestCosts());
+    learners_output.resize(learners->length(),learners[0]->outputsize());
+    for (int i=1;i<learners->length();i++)
+      if (learners[i]->outputsize()!=learners[i-1]->outputsize())
+        PLERROR("PLearnerOutputVMatrix: expecting all learners to have the same number of outputs!");
+    inputsize_ = learners[0]->outputsize() + (data->width() - data->inputsize());
+    if (put_raw_input) inputsize_ += data->inputsize();
+    targetsize_ = data->targetsize();
+    weightsize_ = data->weightsize();
+    length_ = data->length();
+    width_ = data->width() - data->inputsize() + inputsize_;
   }
 }
 
@@ -133,9 +141,8 @@ void PLearnerOutputVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>&
 
   deepCopyField(row, copies);
   deepCopyField(learner_input, copies);
-  deepCopyField(learner_output, copies);
+  deepCopyField(learners_output, copies);
   deepCopyField(learner_target, copies);
-  deepCopyField(learner_costs, copies);
   deepCopyField(non_input_part_of_data_row, copies);
 }
 

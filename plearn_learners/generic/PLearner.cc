@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.16 2003/09/20 20:33:35 yoshua Exp $
+   * $Id: PLearner.cc,v 1.17 2003/09/23 01:27:30 yoshua Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -56,7 +56,7 @@ using namespace std;
 
 PLearner::PLearner()
   :
-   seed(0), 
+   seed(-1), 
    stage(0), nstages(1),
    report_progress(true),
    verbosity(1)
@@ -89,6 +89,8 @@ void PLearner::declareOptions(OptionList& ol)
   declareOption(ol, "seed", &PLearner::seed, OptionBase::buildoption, 
                 "The initial seed for the random number generator used to initialize this learner's parameters\n"
                 "as typically done in the forget() method... \n"
+                "If -1 is provided, then a 'random' seed is chosen based on time of day, insuring that\n"
+                "different experiments may yield different results.\n"
                 "With a given seed, forget() should always initialize the parameters to the same values.");
 
   declareOption(ol, "stage", &PLearner::stage, OptionBase::learntoption, 

@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.13 2003/08/13 08:13:46 plearner Exp $
+   * $Id: PLearner.h,v 1.14 2003/09/23 01:27:30 yoshua Exp $
    ******************************************************* */
 
 
@@ -78,7 +78,7 @@ using namespace std;
     //! at the learner's.
     string expdir; 
 
-    long seed; //!< the seed used for the random number generator in initializing the learner (see forget() method).
+    long seed_; //!< the seed used for the random number generator in initializing the learner (see forget() method).
     int stage; //!< The current training stage, since last fresh initialization (forget()):
                //!< 0 means untrained, n often means after n epochs or optimization steps, etc...
                //!< The true meaning is learner-dependant.

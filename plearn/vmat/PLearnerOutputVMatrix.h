@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.h,v 1.1 2003/09/23 01:04:02 yoshua Exp $
+   * $Id: PLearnerOutputVMatrix.h,v 1.2 2003/09/23 01:27:27 yoshua Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -62,9 +62,8 @@ protected:
 
   mutable Vec row;
   mutable Vec learner_input;
-  mutable Vec learner_output;
+  mutable Mat learners_output;
   mutable Vec learner_target;
-  mutable Vec learner_costs;
   mutable Vec non_input_part_of_data_row;
 
 public:
@@ -78,9 +77,8 @@ public:
   // ### declare public option fields (such as build options) here
 
   VMat data; // whose input field will be applied to learner in order to obtain new input part of this VMatrix
-  PP<PLearner> learner;
+  TVec<PP<PLearner> > learners; // the outputs of the learners will be concatenated
   bool put_raw_input; // if true not only the learner output but also the raw data input are in the input part of the VMatrix
-  bool put_costs; // if true then the test costs are also put in the input part of the VMatrix
 
   // ****************
   // * Constructors *
@@ -89,6 +87,7 @@ public:
   // Default constructor, make sure the implementation in the .cc
   // initializes all fields to reasonable default values.
   PLearnerOutputVMatrix();
+  PLearnerOutputVMatrix(VMat data_,TVec<PP<PLearner> > learners_, bool put_raw_input_=false);
 
   // ******************
   // * Object methods *

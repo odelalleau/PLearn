@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.cc,v 1.3 2003/09/20 20:33:35 yoshua Exp $
+   * $Id: StackedLearner.cc,v 1.4 2003/09/23 01:27:30 yoshua Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -42,20 +42,29 @@
 
 
 #include "StackedLearner.h"
+#include "PLearnerOutputVMatrix.h"
 
 namespace PLearn <%
 using namespace std;
 
 StackedLearner::StackedLearner() 
 /* ### Initialise all fields to their default value here */
+  : train_base_learners(true)
   {
-    // ...
-
-    // ### You may or may not want to call build_() to finish building the object
-    // build_();
   }
 
-  PLEARN_IMPLEMENT_OBJECT(StackedLearner, "ONE LINE DESCRIPTION", "MULTI-LINE \nHELP");
+  PLEARN_IMPLEMENT_OBJECT(StackedLearner, 
+                          "Implements stacking, that combines two levels of learner, the 2nd level using the 1st outputs as inputs",
+                          "Stacking is a generic strategy in which two levels (or more, recursively) of learners\n"
+                          "are combined. The lower level may have one or more learners, and they may be trained\n"
+                          "on the same or different data from the upper level single learner. The outputs of the\n"
+                          "1st level learners are concatenated and serve as inputs to the second level learner.\n"
+                          "IT IS ASSUMED THAT ALL BASE LEARNERS HAVE THE SAME NUMBER OF INPUTS AND OUTPUTS\n"
+                          "There is also the option to copy the input of the 1st level learner as additional\n"
+                          " inputs for the second level (put_raw_input).\n"
+                          "A Splitter can optionally be provided to specify how to split the data into\n"
+                          "the training /validation sets for the lower and upper levels respectively\n"
+                          );
 
   void StackedLearner::declareOptions(OptionList& ol)
   {
@@ -65,10 +74,21 @@ StackedLearner::StackedLearner()
     // ### OptionBase::tuningoption. Another possible flag to be combined with
     // ### is OptionBase::nosave
 
-    // ### ex:
-    // declareOption(ol, "myoption", &StackedLearner::myoption, OptionBase::buildoption,
-    //               "Help text describing this option");
-    // ...
+    declareOption(ol, "base_learners", &StackedLearner::base_learners, OptionBase::buildoption,
+                  "A set of 1st level base learners that are independently trained (here or elsewhere)\n"
+                  "and whose outputs will serve as inputs to the combiner (2nd level learner)");
+    declareOption(ol, "combiner", &StackedLearner::combiner, OptionBase::buildoption,
+                  "A learner that is trained (possibly on a data set different from the one used to train\n"
+                  "the base_learners) using the outputs of the base_learners as inputs. If it is not\n"
+                  "provided, then the StackedLearner simply AVERAGES the outputs of the base_learners\n");
+    declareOption(ol, "splitter", &StackedLearner::splitter, OptionBase::buildoption,
+                  "A Splitter used to select which data subset(s) goes to training the base_learners\n"
+                  "and which data subset(s) goes to training the combiner. If not provided then the\n"
+                  "same data is used to train and test both levels. If provided, in each split, there should be\n"
+                  "two sets: the set on which to train the first level and the set on which to train the second one\n");
+    declareOption(ol, "train_base_learners", &StackedLearner::train_base_learners, OptionBase::buildoption,
+                  "whether to train the base learners in the method train (otherwise they should be\n"
+                  "initialized properly at construction / setOption time)\n");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -83,6 +103,21 @@ StackedLearner::StackedLearner()
     // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
     // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
     // ### You should assume that the parent class' build_() has already been called.
+    for (int i=0;i<base_learners.length();i++)
+    {
+      base_learners[i]->build();
+      if (i>0 && base_learners[i]->outputsize()!=base_learners[i-1]->outputsize())
+        PLERROR("StackedLearner: expecting base learners to have the same number of outputs!");
+    }
+    if (combiner)
+      combiner->build();
+    if (splitter)
+      splitter->build();
+    if (combiner)
+      train_stats = combiner->getTrainStatsCollector();
+    if (splitter && splitter->nSetsPerSplit()!=2)
+      PLERROR("StackedLearner: the Splitter should produce only two sets per split, got %d",splitter->nSetsPerSplit());
+    base_learners_outputs.resize(base_learners.length(),base_learners[0]->outputsize());
   }
 
   // ### Nothing to add here, simply calls build_
@@ -97,14 +132,11 @@ StackedLearner::StackedLearner()
   {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields 
-    // ### that you wish to be deepCopied rather than 
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("StackedLearner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    deepCopyField(base_learners, copies);
+    if (combiner)
+      deepCopyField(combiner, copies);
+    if (splitter)
+      deepCopyField(splitter, copies);
   }
 
 
@@ -112,83 +144,103 @@ int StackedLearner::outputsize() const
 {
   // compute and return the size of this learner's output, (which typically
   // may depend on its inputsize(), targetsize() and set options)
+  if (combiner)
+    return combiner->outputsize();
+  else
+    return base_learners[0]->outputsize();
 }
 
 void StackedLearner::forget()
 {
-  //! (Re-)initialize the PLearner in its fresh state (that state may depend on the 'seed' option)
-  //! And sets 'stage' back to 0   (this is the stage of a fresh learner!)
-    /*!
-      A typical forget() method should do the following:
-         - initialize a random number generator with the seed option
-         - initialize the learner's parameters, using this random generator
-         - stage = 0
-    */
+  if (train_base_learners)
+    for (int i=0;i<base_learners.length();i++)
+      base_learners[i]->forget();
+  if (combiner)
+    combiner->forget();
 }
     
+void StackedLearner::setTrainingSet(VMat training_set, bool call_forget)
+{ 
+  train_set = training_set;
+  if (splitter)
+  {
+    splitter->setDataSet(training_set);
+    if (splitter->nsplits()==1)
+    {
+      TVec<VMat> sets = splitter->getSplit();
+      VMat lower_trainset = sets[0];
+      VMat upper_trainset = sets[1];
+      if (train_base_learners)
+        for (int i=0;i<base_learners.length();i++)
+          base_learners[i]->setTrainingSet(lower_trainset);
+      if (combiner)
+        combiner->setTrainingSet(new PLearnerOutputVMatrix(upper_trainset, base_learners, put_raw_input));
+    }
+  } else
+  {
+    if (combiner)
+      combiner->setTrainingSet(new PLearnerOutputVMatrix(training_set, base_learners, put_raw_input));
+  }
+  if (call_forget)
+  {
+    build();
+    forget();
+  }
+}
+
 void StackedLearner::train()
 {
-    // The role of the train method is to bring the learner up to stage==nstages,
-    // updating train_stats with training costs measured on-line in the process.
-
-    /* TYPICAL CODE:
-
-      static Vec input  // static so we don't reallocate/deallocate memory each time...
-      static Vec target
-      input.resize(inputsize())    // the train_set's inputsize()
-      target.resize(targetsize())  // the train_set's targetsize()
-      real weight
-
-      if(!train_stats)  // make a default stats collector, in case there's none
-         train_stats = new VecStatsCollector()
-
-      if(nstages<stage) // asking to revert to a previous stage!
-         forget()  // reset the learner to stage=0
-
-      while(stage<nstages)
-        {
-          // clear statistics of previous epoch
-          train_stats->forget() 
-          
-          //... train for 1 stage, and update train_stats,
-          // using train_set->getSample(input, target, weight)
-          // and train_stats->update(train_costs)
-          
-          ++stage
-          train_stats->finalize() // finalize statistics for this epoch
-        }
-    */
+  if (!splitter || splitter->nsplits()==1) // simplest case
+  {
+    if (train_base_learners)
+      for (int i=0;i<base_learners.length();i++)
+        base_learners[i]->train();
+    if (combiner)
+      combiner->train();
+  } else PLERROR("StackedLearner: multi-splits case not implemented yet");
 }
 
 
 void StackedLearner::computeOutput(const Vec& input, Vec& output) const
 {
-  // Compute the output from the input
-  // int nout = outputsize();
-  // output.resize(nout);
-  // ...
+  for (int i=0;i<base_learners.length();i++)
+  {
+    Vec out_i = base_learners_outputs(i);
+    base_learners[i]->computeOutput(input,out_i);
+  }
+  if (combiner)
+    combiner->computeOutput(base_learners_outputs.toVec(),output);
+  else // just do a simple average of the outputs
+    columnMean(base_learners_outputs,output);
 }    
 
 void StackedLearner::computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                           const Vec& target, Vec& costs) const
+                                             const Vec& target, Vec& costs) const
 {
-// Compute the costs from *already* computed output. 
-// ...
+  if (combiner)
+    combiner->computeCostsFromOutputs(base_learners_outputs.toVec(),output,target,costs);
+  else // cheat
+    base_learners[0]->computeCostsFromOutputs(input,output,target,costs);
 }                                
 
 TVec<string> StackedLearner::getTestCostNames() const
 {
   // Return the names of the costs computed by computeCostsFromOutpus
   // (these may or may not be exactly the same as what's returned by getTrainCostNames)
-  // ...
+  if (combiner)
+    return combiner->getTestCostNames();
+  else
+    return base_learners[0]->getTestCostNames();
 }
 
 TVec<string> StackedLearner::getTrainCostNames() const
 {
   // Return the names of the objective costs that the train method computes and 
   // for which it updates the VecStatsCollector train_stats
-  // (these may or may not be exactly the same as what's returned by getTestCostNames)
-  // ...
+  if (combiner)
+    return combiner->getTestCostNames();
+  else
+    return base_learners[0]->getTestCostNames();
 }
 
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.h,v 1.3 2003/09/20 20:33:35 yoshua Exp $
+   * $Id: StackedLearner.h,v 1.4 2003/09/23 01:27:30 yoshua Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -58,7 +58,10 @@ protected:
 
   // ### declare protected option fields (such as learnt parameters) here
   // ...
-    
+
+  // NON-OPTIONs
+  Mat base_learners_outputs;
+
 public:
 
   typedef PLearner inherited;
@@ -70,8 +73,28 @@ public:
 
   // ### declare public option fields (such as build options) here
 
-  PP<PLearner> learner1;
-  PP<PLearner> learner2;
+  //! A set of 1st level base learners that are independently trained
+  //! (here or elsewhere) and whose outputs will serve as inputs to the combiner.
+  TVec<PP<PLearner> > base_learners;
+
+  //! A learner that is trained (possibly on a data set different from the
+  //! one used to train the base_learners) using the outputs of the base_learners
+  //! as inputs.
+  PP<PLearner> combiner;
+
+  //! This can be 
+  //! and which data subset(s) goes to training the combiner.
+  PP<Splitter> splitter;
+
+  //! whether to train the base learners in the method train (otherwise they should be
+  //! initialized at construction / setOption time)
+  bool train_base_learners;
+
+  //! optionally put the raw input as additional input of the combiner
+  bool put_raw_input;
+
+  //! optionally put the costs of all the learners as additional inputs of the combiner
+  bool put_costs;
 
   // ****************
   // * Constructors *
@@ -154,6 +177,10 @@ public:
   // (PLEASE IMPLEMENT IN .cc)
   virtual TVec<string> getTrainCostNames() const;
 
+
+    //! Declares the train_set
+    //! Then calls build() and forget() if necessary
+    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
   // *** SUBCLASS WRITING: ***
   // While in general not necessary, in case of particular needs 
