@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat_maths.cc,v 1.17 2004/05/04 14:45:38 yoshua Exp $
+* $Id: VMat_maths.cc,v 1.18 2004/05/05 13:53:01 tihocan Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat_maths.h"
@@ -381,6 +381,7 @@ void computeInputMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat)
     d->getExample(i,input,target,weight);
     weightsum += weight;
     multiplyAcc(meanvec,input,weight);
+    if (i==0) offset << input;
     input-=offset;
     externalProductScaleAcc(covarmat, input, input, weight);
   }
@@ -409,10 +410,10 @@ void computeInputMeanAndVariance(VMat d, Vec& meanvec, Vec& var)
     d->getExample(i,input,target,weight);
     if (i==0) offset<<input;
     weightsum+=weight;
-    for(int i=0;i<input.size();i++)
+    for(int j=0;j<input.size();j++)
     {
-      real xi = input[i]-offset[i];
-      var[i]+=weight*xi*xi;
+      real xj = input[j]-offset[j];
+      var[j]+=weight*xj*xj;
     }
     multiplyAcc(meanvec,input,weight);
   }
