@@ -13,7 +13,7 @@
 
 using namespace PLearn;
 
-//! This allows to register the 'JulianDateCommand' command in the command registry
+//! This allows to register the 'FieldConvertCommand' command in the command registry
 PLearnCommandRegistry FieldConvertCommand::reg_(new FieldConvertCommand);
 
 void FieldConvertCommand::run(const vector<string> & args)
@@ -21,7 +21,7 @@ void FieldConvertCommand::run(const vector<string> & args)
   // set default values
   UNIQUE_NMISSING_FRACTION_TO_ASSUME_CONTINUOUS=.3f;
   PVALUE_THRESHOLD=0.025f;
-  FRAC_MISSING_TO_SKIP=0.9;
+  FRAC_MISSING_TO_SKIP=0.9f;
   target=-1;
   report_fn="FieldConvertReport.txt";
     
@@ -48,6 +48,7 @@ void FieldConvertCommand::run(const vector<string> & args)
       FRAC_MISSING_TO_SKIP=toreal(val[1]);
     else if(val[0]=="onehot_with_correl")
       onehot_with_correl=tobool(val[1]);
+    // TODO see what is onehot_with_correl
     else PLERROR("unknown argument: %s ",val[0].c_str());
   }
   if(source_fn=="")
@@ -58,7 +59,7 @@ void FieldConvertCommand::run(const vector<string> & args)
     PLERROR("you must specify source target field index");
 
  // manual map between field index and types
-  map<int,int> force;
+  map<int,FieldType> force;
 
   real beta_hat,student;
 
@@ -75,7 +76,7 @@ void FieldConvertCommand::run(const vector<string> & args)
   {
     vector<string> vec = split(forcelines[i],"=");
     vector<string> leftpart = split(vec[0],"-");
-    int rpart = toint(vec[1]);
+    FieldType rpart = stringToFieldType(vec[1]);
 
     if(leftpart.size()>1)
     {
@@ -105,7 +106,7 @@ void FieldConvertCommand::run(const vector<string> & args)
   // process each field
   for(int i=0;i<vm->width();i++)
   {
-    type=0;
+    type=unknown;
     beta_hat=0;
     string message;
     int action = 0;
@@ -117,22 +118,22 @@ void FieldConvertCommand::run(const vector<string> & args)
     else if(i==target)
       // add target ONLY at the end of the process 
       // (so it's the last column of the dataset)
-      type=3;
+      type=skip;
     // no ? then find out type by ourselves
     else
     {
 
       // Test for fields to be skipped, when not enough data is available.
       if(sc[i].nnonmissing() <= (1-FRAC_MISSING_TO_SKIP) * vm->length()) {
-        type=3;
+        type=skip;
       }
 
       // test for constant values
       else if(count<=1)
         if(sc[i].nmissing()>0 && sc[i].nmissing()<vm->length())
-          type=4;
+          type=weird; // TODO see what this is exactly
         else 
-          type=3;
+          type=constant;
       else if(sc[i].max()>-1000 && vm->getStringToRealMapping(i).size()>0)
         message="Field uses both string map & numerical values";
       else if(sc[i].min()>19700000 && sc[i].max()<20040000)
@@ -141,21 +142,22 @@ void FieldConvertCommand::run(const vector<string> & args)
       // Test whether there are enough unique values to assume continuous data (having a string map implies discrete data)
       else if((count >= MIN( UNIQUE_NMISSING_FRACTION_TO_ASSUME_CONTINUOUS * sc[i].nnonmissing(), 2000)) 
           && vm->getStringToRealMapping(i).size()==0)
-        type=1;
-      else
+        type=continuous;
+      else {
         // if there are fractional parts, assume continuous
         for(int j=0;j<vm->length();j++)
         {
           real val = vm->get(j,i);
           if(!is_missing(val) && ((val-(int)val)>0))
           {
-            type=1;
+            type=continuous;
             break;
           }
         }
+      }
       // if the data doesn't look continuous (small numb. of unique 
-      // values and no fractional parts), 'type' still equals 0
-      if(type==0 && message=="")
+      // values and no fractional parts), 'type' still equals unknown.
+      if(type==unknown && message=="")
 
         // nevermind
 
@@ -205,53 +207,57 @@ void FieldConvertCommand::run(const vector<string> & args)
           if(student < PVALUE_THRESHOLD)
           {
             // then assume data is discrete but correlated
-            type=5;
-//            cout<<"##"<<i<<": nmiss:"<<sc[i].nnonmissing()<<" b:"<<beta_hat<<" sigma_beta_hat:"<<sigma_beta_hat<<" T:"<<student<<endl;
+            type=discrete_corr; // TODO Note that this was 5
+            cout<<"##"<<i<<": nmiss:"<<sc[i].nnonmissing()<<" b:"<<beta_hat<<" sigma_beta_hat:"<<sigma_beta_hat<<" T:"<<student<<endl;
           }
         }
       
-      // if we're still not sure (that is type==0 && message=="")
-      if(type==0 && message=="")
+      // if we're still not sure (that is type==unknown && message=="")
+      if(type==unknown && message=="")
         // is data 'uncorrelated + discrete + sparse'? Yes : Flag 
-        if((float)(sc[i].max()-sc[i].min()+1) > (float)(count)*2 )
-          type=1;
+        if((float)(sc[i].max()-sc[i].min()+1) > (float)(count)*2 ) {
+          type=continuous;
+          cout << "Hmm, not sure what that means exactly" << endl;
+        }
         else if((float)(sc[i].max()-sc[i].min()+1) != (float)(count) )
           message = "(edit force.txt): Data is made of a semi-sparse (density<50%) distribution of integers (uncorrelated with target). max: "+tostring(sc[i].max())+" min:"+tostring(sc[i].min())+" count:"+tostring(count);
-        else
+        else {
           // data is discrete, not sparse, and not correlated to target,
           // then simply make it as onehot
-          type = 2;
+          type = discrete_uncorr; // TODO Note that this was 2
+          cout << "Hmm, not sure either here" << endl;
+        }
     }
 
     // now find out which actions to perform according to type 
 
-    if(type==0)
+    if(type==unknown)
       cout<<tostring(i)+" ("+vm->fieldName(i)+") "<<message<<endl;
-    else if(type==1 || type==4)
+    else if(type==continuous || type==weird)
     {
       action |= NORMALIZE;
       if(sc[i].nmissing()>0)
         action |= MISSING_BIT;
     }  
-    else if(type==2)
+    else if(type==discrete_uncorr)
     {
       action = ONEHOT;
       if(sc[i].nmissing()>0)
         action |= MISSING_BIT;
     }  
-    else if(type==3)
+    else if(type==skip || type==constant)
     {
       action = SKIP;
     }
-    else if(type==5)
-      // type = 5 : data is discrete & correlated with target
+    else if(type==discrete_corr)
     {
       action |= NORMALIZE;
       action |= ONEHOT;
       if(sc[i].nmissing()>0)
         action |= MISSING_BIT;
     }
-    else if(type==4)
+    else if(type==weird)
+      // TODO Note that this line is probably never executed
       action=MISSING_BIT;
     
     // perform actions
@@ -292,7 +298,7 @@ void FieldConvertCommand::run(const vector<string> & args)
     if(action==0)report<<"~~user intervention required :"<<message;
     if(action&NORMALIZE)report<<"NORMALIZE ";
     if(action&ONEHOT)report<<"ONEHOT("<<count<<") ";
-    if(type==5)report<<"correl: "<<beta_hat<<" 2tail-student:"<<student<<" ";
+    if(type==discrete_corr)report<<"correl: "<<beta_hat<<" 2tail-student:"<<student<<" ";
     if(action&MISSING_BIT)report<<"MISSING_BIT ";
     if(action&SKIP)report<<"SKIP ";
     report<<endl;
@@ -301,9 +307,27 @@ void FieldConvertCommand::run(const vector<string> & args)
   }
   out<<"[@resp]\n</PROCESSING>\n"<<endl;
 
-
-
-
-
-
 }
+
+///////////////////////
+// stringToFieldType //
+///////////////////////
+PLearn::FieldConvertCommand::FieldType FieldConvertCommand::stringToFieldType(string s) {
+  if (s == "continuous")
+    return continuous;
+  else if (s == "discrete_uncorr")
+    return discrete_uncorr;
+  else if (s == "discrete_corr")
+    return discrete_corr;
+  else if (s == "constant")
+    return constant;
+  else if (s == "skip")
+    return skip;
+  else if (s == "weird")
+    return weird;
+  else {
+    PLERROR("In FieldConvertCommand::stringToFieldType Unknown field type: %s",s.c_str());
+    return skip;
+  }
+}
+
