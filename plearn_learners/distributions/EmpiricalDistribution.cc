@@ -57,10 +57,11 @@ EmpiricalDistribution::EmpiricalDistribution()
 }
 
 
-EmpiricalDistribution::EmpiricalDistribution(int inputsize)
-  :inherited()
+EmpiricalDistribution::EmpiricalDistribution(int inputsize, bool random_sample_)
+  :inherited(), random_sample(random_sample_)
 {
   inputsize_ = inputsize;
+  current_sample = 0;
 }
 
 
@@ -77,6 +78,7 @@ void EmpiricalDistribution::train(VMat training_set)
     PLERROR("inputsize_ must be specified before training");
   data = training_set.subMatColumns(0, inputsize_);
   targetsize_ = data.width()-inputsize_;
+  length = training_set.length();
 }
 
 double EmpiricalDistribution::log_density(const Vec& x) const
@@ -138,9 +140,18 @@ Mat EmpiricalDistribution::variance() const
 
 void EmpiricalDistribution::generate(Vec& x) const
 {
-  seed();
-  x.resize(data.width());
-  x << data(uniform_multinomial_sample(data.length()));
+  if(random_sample){
+    seed();
+    x.resize(data.width());
+    x << data(uniform_multinomial_sample(data.length()));
+  }
+  else{
+    x.resize(data.width());
+    x << data(current_sample);
+    current_sample++;
+    if(current_sample == length)
+      current_sample = 0;
+  }
 }
 
 %> // end of namespace PLearn

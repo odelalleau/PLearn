@@ -44,7 +44,6 @@ using namespace std;
   protected:
 
     VMat data;
-
     
     typedef Distribution inherited;
     
@@ -52,7 +51,7 @@ using namespace std;
 
     EmpiricalDistribution();
     
-    EmpiricalDistribution(int inputsize);
+    EmpiricalDistribution(int inputsize, bool random_sample_ = true);
 
     DECLARE_NAME_AND_DEEPCOPY(EmpiricalDistribution);
     void makeDeepCopyFromShallowCopy(CopiesMap& copies);
@@ -79,9 +78,18 @@ using namespace std;
 
 
     
-    //! return a pseudo-random sample generated from the distribution.
+    //! return a sample generated from the distribution.
     virtual void generate(Vec& x) const;
 
+    //If true, generate return a random example. If false,
+    //generate return the next example in the training_set. 
+    bool random_sample;
+
+    //The length of the current training set
+    int length;
+
+    //The example to be returned by generate
+    mutable int current_sample;
     
   protected:
     static void declareOptions(OptionList& ol);
