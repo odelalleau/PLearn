@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.26 2004/11/18 14:28:38 tihocan Exp $
+   * $Id: FileVMatrix.cc,v 1.27 2004/11/23 21:32:35 tihocan Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -307,7 +307,7 @@ void FileVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 //  deepCopyField(f, copies);
 
   // Not an error because we may want to do some deep-copying sometimes.
-  PLWARNING("FileVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+//  PLWARNING("FileVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 
   f = 0;   // Because we will open again the file (f should not be shared).
   old_filename = ""; // Because build() has not yet been called for this FileVMatrix.
