@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Gnuplot.h,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: Gnuplot.h,v 1.2 2002/08/19 18:18:27 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -93,6 +93,8 @@ class Gnuplot
   void plot(const Mat& m1, const string& opt1, const Mat& m2, const string& opt2);
   void plot(const Mat& m1, const string& opt1, const Mat& m2, const string& opt2, const Mat& m3, const string& opt3);
   void plot(const Mat& m1, const string& opt1, const Mat& m2, const string& opt2, const Mat& m3, const string& opt3, const Mat& m4, const string& opt4);
+  void plot(const Mat& m1, const string& opt1, const Mat& m2, const string& opt2, const Mat& m3, const string& opt3, 
+            const Mat& m4, const string& opt4, const Mat& m5, const string& opt5);
 
   void multiplot(vector<Mat *> &ms, vector <string> &opts);
   void plot3d(const Mat &m1, const string &opt1="");
