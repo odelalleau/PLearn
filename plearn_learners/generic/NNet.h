@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.h,v 1.15 2004/04/11 19:51:51 yoshua Exp $
+   * $Id: NNet.h,v 1.16 2004/04/12 00:36:31 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -59,6 +59,7 @@ using namespace std;
     Var w1; // bias and weights of first hidden layer
     Var w2; // bias and weights of second hidden layer
     Var wout; // bias and weights of output layer
+    Var outbias; // bias used only if fixed_output_weights
     Var wdirect; // bias and weights for direct in-to-out connection
     Var wrec; // input reconstruction weights (optional), from hidden layer to predicted input
 
@@ -101,6 +102,7 @@ using namespace std;
     real direct_in_to_out_weight_decay; // default: MISSING_VALUE
     real classification_regularizer; // default: 0
     real margin; // default: 1, used with margin_perceptron_cost
+    bool fixed_output_weights;
 
     bool L1_penalty; // default: false
     real input_reconstruction_penalty; // default = 0

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: random.cc,v 1.6 2004/02/20 21:11:47 chrish42 Exp $
+   * $Id: random.cc,v 1.7 2004/04/12 00:36:28 yoshua Exp $
    ******************************************************* */
 
 extern "C" {
@@ -564,6 +564,16 @@ void fill_random_uniform(const Vec& dest, real minval, real maxval)
   double scale = maxval-minval;
   for(; it!=itend; ++it)
     *it = real(uniform_sample()*scale+minval);
+}
+
+//!  sample each element from the given set
+void fill_random_discrete(const Vec& dest, const Vec& set)
+{
+  Vec::iterator it = dest.begin();
+  Vec::iterator itend = dest.end();  
+  int n=set.length();
+  for(; it!=itend; ++it)
+    *it = set[uniform_multinomial_sample(n)];
 }
 
 //!  sample each element from Normal(mean,sdev^2) distribution

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: random.h,v 1.6 2004/02/20 21:11:47 chrish42 Exp $
+   * $Id: random.h,v 1.7 2004/04/12 00:36:28 yoshua Exp $
    ******************************************************* */
 
 #ifndef RANDOM_H
@@ -126,6 +126,9 @@ real student_t_cdf(real t, int nb_degrees_of_freedom);
 
   //!  sample each element from uniform distribution U[minval,maxval]
   void fill_random_uniform(const Vec& dest, real minval=0, real maxval=1);
+
+  //!  sample each element from the given set
+  void fill_random_discrete(const Vec& dest, const Vec& set);
 
   //!  sample each element from Normal(mean,sdev^2) distribution
   void fill_random_normal(const Vec& dest, real mean=0, real stdev=1);

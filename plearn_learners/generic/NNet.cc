@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.45 2004/04/11 19:51:51 yoshua Exp $
+   * $Id: NNet.cc,v 1.46 2004/04/12 00:36:31 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -95,6 +95,7 @@ NNet::NNet() // DEFAULT VALUES FOR ALL OPTIONS
    direct_in_to_out_weight_decay(0),
    classification_regularizer(0),
    margin(1),
+   fixed_output_weights(0),
    L1_penalty(false),
    input_reconstruction_penalty(0),
    direct_in_to_out(false),
@@ -151,6 +152,9 @@ void NNet::declareOptions(OptionList& ol)
   declareOption(ol, "L1_penalty", &NNet::L1_penalty, OptionBase::buildoption, 
                 "    should we use L1 penalty instead of the default L2 penalty on the weights?\n");
 
+  declareOption(ol, "fixed_output_weights", &NNet::fixed_output_weights, OptionBase::buildoption, 
+                "    If true then the output weights are not learned. They are initialized to +1 or -1 randomly.\n");
+
   declareOption(ol, "input_reconstruction_penalty", &NNet::input_reconstruction_penalty, OptionBase::buildoption,
                 "    if >0 then a set of weights will be added from a hidden layer to predict (reconstruct) the inputs\n"
                 "    and the total loss will include an extra term that is the squared input reconstruction error,\n"
@@ -181,6 +185,7 @@ void NNet::declareOptions(OptionList& ol)
                 "      multiclass_error\n"
                 "      cross_entropy (for binary classification)\n"
                 "      stable_cross_entropy (more accurate backprop and possible regularization, for binary classification)\n"
+                "      margin_perceptron_cost (a hard version of the cross_entropy, uses the 'margin' option)\n"
                 "      lift_output (not a real cost function, just the output for lift computation)\n"
                 "    The first function of the list will be used as \n"
                 "    the objective function to optimize \n"
@@ -242,19 +247,19 @@ void NNet::build_()
             output = hidden_layer;
           else if(hidden_transfer_func=="tanh")
             output = tanh(hidden_layer);
-          else if(output_transfer_func=="sigmoid")
+          else if(hidden_transfer_func=="sigmoid")
             output = sigmoid(hidden_layer);
-          else if(output_transfer_func=="softplus")
+          else if(hidden_transfer_func=="softplus")
             output = softplus(hidden_layer);
-          else if(output_transfer_func=="exp")
+          else if(hidden_transfer_func=="exp")
             output = exp(hidden_layer);
-          else if(output_transfer_func=="softmax")
+          else if(hidden_transfer_func=="softmax")
             output = softmax(hidden_layer);
-          else if (output_transfer_func == "log_softmax")
+          else if (hidden_transfer_func == "log_softmax")
             output = log_softmax(output);
-          else if(output_transfer_func=="hard_slope")
+          else if(hidden_transfer_func=="hard_slope")
             output = unary_hard_slope(hidden_layer,0,1);
-          else if(output_transfer_func=="symm_hard_slope")
+          else if(hidden_transfer_func=="symm_hard_slope")
             output = unary_hard_slope(hidden_layer,-1,1);
           else
             PLERROR("In NNet::build_()  unknown hidden_transfer_func option: %s",hidden_transfer_func.c_str());
@@ -270,19 +275,19 @@ void NNet::build_()
             output = output;
           else if(hidden_transfer_func=="tanh")
             output = tanh(output);
-          else if(output_transfer_func=="sigmoid")
+          else if(hidden_transfer_func=="sigmoid")
             output = sigmoid(output);
-          else if(output_transfer_func=="softplus")
+          else if(hidden_transfer_func=="softplus")
             output = softplus(output);
-          else if(output_transfer_func=="exp")
+          else if(hidden_transfer_func=="exp")
             output = exp(output);
-          else if(output_transfer_func=="softmax")
+          else if(hidden_transfer_func=="softmax")
             output = softmax(output);
-          else if (output_transfer_func == "log_softmax")
+          else if (hidden_transfer_func == "log_softmax")
             output = log_softmax(output);
-          else if(output_transfer_func=="hard_slope")
+          else if(hidden_transfer_func=="hard_slope")
             output = unary_hard_slope(output,0,1);
-          else if(output_transfer_func=="symm_hard_slope")
+          else if(hidden_transfer_func=="symm_hard_slope")
             output = unary_hard_slope(output,-1,1);
           else
             PLERROR("In NNet::build_()  unknown hidden_transfer_func option: %s",hidden_transfer_func.c_str());
@@ -294,7 +299,14 @@ void NNet::build_()
       // output layer before transfer function
       wout = Var(1+output->size(), outputsize(), "wout");
       output = affine_transform(output,wout);
-      params.append(wout);
+      if (!fixed_output_weights)
+        params.append(wout);
+      else
+      {
+        outbias = Var(output->size(),"outbias");
+        output = output + outbias;
+        params.append(outbias);
+      }
 
       // direct in-to-out layer
       if(direct_in_to_out)
@@ -642,9 +654,24 @@ void NNet::initializeParams()
       delta = 1./nhidden2;
       w2->matValue(0).clear();
     }
-  //fill_random_uniform(wout->value, -delta, +delta);
-  fill_random_normal(wout->value, 0, delta);
-  wout->matValue(0).clear();
+  if (fixed_output_weights)
+  {
+    static Vec values;
+    if (values.size()==0)
+      {
+        values.resize(2);
+        values[0]=-1;
+        values[1]=1;
+      }
+    fill_random_discrete(wout->value, values);
+    wout->matValue(0).clear();
+  }
+  else
+  {
+    //fill_random_uniform(wout->value, -delta, +delta);
+    fill_random_normal(wout->value, 0, delta);
+    wout->matValue(0).clear();
+  }
 
   // Reset optimizer
   if(optimizer)
