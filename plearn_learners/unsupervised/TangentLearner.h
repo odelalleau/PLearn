@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TangentLearner.h,v 1.1 2004/05/28 21:55:02 monperrm Exp $ 
+   * $Id: TangentLearner.h,v 1.2 2004/05/31 22:09:17 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus
@@ -80,7 +80,8 @@ public:
 
   // ### declare public option fields (such as build options) here
 
-  string training_targets; // "local_evectors" or "local_neighbors"
+  string training_targets; // "local_evectors", "local_neighbors"
+  bool use_subspace_distance;
   int n_neighbors; // number of neighbors used in local_pca or number of neighbors to predict
   int n_dim; // number of reduced dimensions (number of tangent vectors to compute)
 
@@ -92,6 +93,8 @@ public:
   int n_hidden_units;
 
   int batch_size;
+
+  real norm_penalization; // penalizes sum_i (||f_i||^2-1)^2
 
   // ****************
   // * Constructors *

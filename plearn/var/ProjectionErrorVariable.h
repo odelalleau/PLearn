@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ProjectionErrorVariable.h,v 1.1 2004/05/27 15:03:06 monperrm Exp $
+   * $Id: ProjectionErrorVariable.h,v 1.2 2004/05/31 22:08:56 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -62,18 +62,20 @@ class ProjectionErrorVariable: public BinaryVariable
   
 public:
   int n; // dimension of the vectors
+  bool use_subspace_distance; // use subspace distance instead of distance to targets
+  real norm_penalization; // penalize sum_i (||f_i||^2 - 1)^2
   real epsilon; // cut-off of singular values to regularize linear system solution
   int n_dim; // nb of vectors in f
   int T; // nb of vectors in t
-  Vec S, fw;
-  Mat Ut, V, B, VVt;
+  Vec S, fw, norm_err, ww, uu, wwuu, rhs, Tu;
+  Mat Ut, V, B, VVt, A, A11, A12, A21, A22, wwuuM;
   Mat fw_minus_t;
   Mat w; // weights in the above minimization, in each row for each t_j
 
 
   //!  Default constructor for persistence
   ProjectionErrorVariable() {}
-  ProjectionErrorVariable(Variable* input1, Variable* input2, int n=-1, real epsilon=1e-6);
+  ProjectionErrorVariable(Variable* input1, Variable* input2, real norm_penalization=1.0, int n=-1, bool use_subspace_distance=true, real epsilon=1e-6);
 
   PLEARN_DECLARE_OBJECT(ProjectionErrorVariable);
 
@@ -90,8 +92,8 @@ protected:
 
 DECLARE_OBJECT_PTR(ProjectionErrorVariable);
 
-inline Var projection_error(Var f, Var t, int n=-1) {
-  return new ProjectionErrorVariable(f, t, n);
+inline Var projection_error(Var f, Var t, real norm_penalization=1, int n=-1, bool use_subspace_distance=true) {
+  return new ProjectionErrorVariable(f, t, norm_penalization, n, use_subspace_distance);
 }
 
 } // end of namespace PLearn

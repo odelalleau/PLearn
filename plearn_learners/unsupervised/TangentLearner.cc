@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TangentLearner.cc,v 1.1 2004/05/28 21:55:02 monperrm Exp $ 
+   * $Id: TangentLearner.cc,v 1.2 2004/05/31 22:09:16 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
@@ -59,9 +59,9 @@ using namespace std;
 
 TangentLearner::TangentLearner() 
 /* ### Initialize all fields to their default value here */
-  : training_targets("local_neighbors"), n_neighbors(5), n_dim(1),
+  : training_targets("local_neighbors"), use_subspace_distance(true), n_neighbors(5), n_dim(1),
     architecture_type("single_neural_network"), n_hidden_units(-1),
-    batch_size(1)
+    batch_size(1), norm_penalization(1)
 {
 }
 
@@ -70,13 +70,18 @@ PLEARN_IMPLEMENT_OBJECT(TangentLearner, "Learns local tangent plane of the manif
 			"The manifold is represented by a function which predicts a basis for the\n"
 			"tangent planes at each point x, given x in R^n. Let f_i(x) be the predicted i-th tangent\n"
 			"vector (in R^n). Then we will optimize the parameters that define the d functions f_i by\n"
-			"minimizing the following cost function:\n"
-			"   sum_x sum_j min_w ||t(x,j) - sum_i w_i f_i(x)||^2\n"
-			"where the first sum is over training examples and w is a free d-vector, and\n"
-			"t(x,j) estimates local tangent directions based on near neighbors. The algorithm\n"
-			"currently knows two ways to select the t(x,j) (see option training_targets):\n"
-			"  local_evectors : local principal components (based on n_neighbors of x)\n"
-			"  local_neighbors: difference between x and its n_neighbors.\n"
+      "to push the f_i so that they span the local tangent directions. Three criteria are\n"
+      "possible, according to the 'training_targets' option:\n"
+			" * If use_subspace_distance,\n"
+      "      criterion = min_{w,u}  || sum_i w_i f_i  -  sum_j u_j t(x,j) ||^2\n"
+      "      under the constraint that ||w||=1.\n"
+      "   else\n"
+			"      criterion = sum_x sum_j min_w ||t(x,j) - sum_i w_i f_i(x)||^2\n"
+			"   where the first sum is over training examples and w is a free d-vector, and\n"
+			"   t(x,j) estimates local tangent directions based on near neighbors. t(x,j)\n"
+      "   is defined according to the training_targets option:\n"
+			"    'local_evectors' : local principal components (based on n_neighbors of x)\n"
+			"    'local_neighbors': difference between x and its n_neighbors.\n"
 			);
 
 void TangentLearner::declareOptions(OptionList& ol)
@@ -92,6 +97,10 @@ void TangentLearner::declareOptions(OptionList& ol)
 		"   local_evectors   : local principal components (based on n_neighbors of x)\n"
 		"   local_neighbors  : difference between x and its n_neighbors.\n"
 		);
+
+  declareOption(ol, "use_subspace_distance", &TangentLearner::use_subspace_distance, OptionBase::buildoption,
+                "Minimize distance between subspace spanned by f_i and by (x-neighbors), instead of between\n"
+                "the individual targets t_j and the subspace spanned by the f_i.\n");
 
   declareOption(ol, "n_neighbors", &TangentLearner::n_neighbors, OptionBase::buildoption,
 		"Number of nearest neighbors to consider.\n"
@@ -127,6 +136,11 @@ void TangentLearner::declareOptions(OptionList& ol)
   declareOption(ol, "batch_size", &TangentLearner::batch_size, OptionBase::buildoption, 
                 "    how many samples to use to estimate the average gradient before updating the weights\n"
                 "    0 is equivalent to specifying training_set->length() \n");
+
+  declareOption(ol, "norm_penalization", &TangentLearner::norm_penalization, OptionBase::buildoption,
+		"Factor that multiplies an extra penalization of the norm of f_i so that ||f_i|| be close to 1.\n"
+    "The penalty is norm_penalization*sum_i (1 - ||f_i||^2)^2.\n"                
+		);
 
   declareOption(ol, "parameters", &TangentLearner::parameters, OptionBase::learntoption,
 		"Parameters of the tangent_predictor function.\n"
@@ -184,11 +198,12 @@ void TangentLearner::build_()
       tangent_targets = Var(n_dim,n);
     else if (training_targets=="local_neighbors")
       tangent_targets = Var(n_neighbors,n);
-    else PLERROR("TangentLearner::build, option training_targets is %s, should be 'local_evectors' or 'local_neighbors'",
+    else PLERROR("TangentLearner::build, option training_targets is %s, should be 'local_evectors' or 'local_neighbors'.",
                  training_targets.c_str());
 
-    cost_of_one_example = Func(tangent_predictor->inputs & tangent_targets, tangent_predictor->parameters, 
-                               projection_error(tangent_predictor->outputs, tangent_targets, n));
+    Var proj_err = projection_error(tangent_predictor->outputs, tangent_targets, n, use_subspace_distance, norm_penalization);
+    cost_of_one_example = Func(tangent_predictor->inputs & tangent_targets, tangent_predictor->parameters, proj_err);
+
   }
 }
 
