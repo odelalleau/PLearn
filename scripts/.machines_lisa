@@ -1,6 +1,5 @@
 #LISA
 
-#black.iro.umontreal.ca machine ou il n'y a pas g++
 #clyb10.iro.umontreal.ca  dead au 10/06/2004
 clyb11.iro.umontreal.ca
 clyb12.iro.umontreal.ca
@@ -11,12 +10,6 @@ clyb16.iro.umontreal.ca
 clyb17.iro.umontreal.ca
 clyb18.iro.umontreal.ca
 clyb19.iro.umontreal.ca
-curie.iro.umontreal.ca
-dirac.iro.umontreal.ca
-einstein.iro.umontreal.ca
-euclide.iro.umontreal.ca
-fermi.iro.umontreal.ca
-lhmm.iro.umontreal.ca
 lisa11.iro.umontreal.ca
 lisa12.iro.umontreal.ca
 lisa13.iro.umontreal.ca
@@ -41,16 +34,6 @@ lisa35.iro.umontreal.ca
 lisa36.iro.umontreal.ca
 lisa37.iro.umontreal.ca
 lisa38.iro.umontreal.ca
-lknn.iro.umontreal.ca
-lmfa.iro.umontreal.ca
-lmlp.iro.umontreal.ca
-lsom.iro.umontreal.ca
-lsvm.iro.umontreal.ca
-#neumann.iro.umontreal.ca existe plus
-#opter.iro.umontreal.ca c'est une 64 bit je crois
-#pauli.iro.umontreal.ca pas de pauli car sinon ca fait ramer les acces disques de tout le monde
-planck.iro.umontreal.ca
-#popper.iro.umontreal.ca probleme de compilation aussi
 
 
 # CLUSTER
@@ -64,7 +47,7 @@ cite06.iro.umontreal.ca
 cite0a.iro.umontreal.ca
 cite0b.iro.umontreal.ca
 cite0c.iro.umontreal.ca
-#cite0d.iro.umontreal.ca dead au 10/06/2004
+cite0d.iro.umontreal.ca
 cite0e.iro.umontreal.ca
 cite0f.iro.umontreal.ca
 cite0g.iro.umontreal.ca
@@ -87,7 +70,7 @@ clac26.iro.umontreal.ca
 clac27.iro.umontreal.ca
 clac28.iro.umontreal.ca
 clac31.iro.umontreal.ca
-#clac32.iro.umontreal.ca dead au 10/06/2004
+#clac32.iro.umontreal.ca
 clac33.iro.umontreal.ca
 clac34.iro.umontreal.ca
 clac35.iro.umontreal.ca
