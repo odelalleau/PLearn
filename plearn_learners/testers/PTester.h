@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.h,v 1.13 2004/07/23 20:18:53 tihocan Exp $ 
+   * $Id: PTester.h,v 1.14 2004/07/26 14:34:14 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PTester.h */
@@ -59,7 +59,7 @@ protected:
 
  // Learnt options.
 
-  TVec<string> statnames_from_mask;
+  TVec<string> statnames_processed;
 
 public:
 

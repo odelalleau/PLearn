@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.35 2004/07/23 20:22:15 tihocan Exp $ 
+   * $Id: PTester.cc,v 1.36 2004/07/26 14:34:14 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -124,7 +124,7 @@ PLEARN_IMPLEMENT_OBJECT(PTester, "Manages a learning experiment, with training a
                   "  - S1 and S2 are a statistic, i.e. one of: E (expectation), V(variance), MIN, MAX, STDDEV, ... \n"
                   "    S2 is computed over the samples of a given dataset split. S1 is over the splits. \n"); 
     declareOption(ol, "statmask", &PTester::statmask, OptionBase::buildoption,
-                  "A list of lists of masks. If provided, each of the lists is used to compose the statnames_from_mask.\n"
+                  "A list of lists of masks. If provided, each of the lists is used to compose the statnames_processed.\n"
                   "If not provided the statnames are those in the 'statnames' list. See the class help for an example.\n");
     declareOption(ol, "learner", &PTester::learner, OptionBase::buildoption,
                   "The learner to train/test.\n");
@@ -175,11 +175,10 @@ void PTester::build_()
       expdir = abspath(expdir);
     }
 
-  TVec< TVec<string> > temp(2);
-
-  int d = 0;
-  temp[d] = statnames;
   if (statmask) {
+    TVec< TVec<string> > temp(2);
+    int d = 0;
+    temp[d] = statnames.copy();
     for (int i=0;i<statmask.length();i++) {
       temp[1-d].resize(temp[d].length() * statmask[i].length());      
       
@@ -205,13 +204,10 @@ void PTester::build_()
       }
       d = 1-d;
     }
-    
-    statnames_from_mask.resize(temp[d].size());
-    statnames_from_mask = temp[d];
+    statnames_processed = temp[d];
   } else {
-    statnames_from_mask = statnames;
+    statnames_processed = statnames.copy();
   }
-
 }
 
   // ### Nothing to add here, simply calls build_
@@ -246,7 +242,7 @@ Vec PTester::perform(bool call_forget)
     PLERROR("No splitter specified for PTester");
 
   int nstats;
-  nstats = statnames_from_mask.length();
+  nstats = statnames_processed.length();
   Vec global_result(nstats);
 
   {
@@ -308,7 +304,7 @@ Vec PTester::perform(bool call_forget)
   // Stat specs
   TVec<StatSpec> statspecs(nstats);
   for(int k=0; k<nstats; k++) {
-      statspecs[k].init(statnames_from_mask[k]);
+      statspecs[k].init(statnames_processed[k]);
   }
   
   // int traincostsize = traincostnames.size();
@@ -438,7 +434,7 @@ Vec PTester::perform(bool call_forget)
 
 TVec<string> PTester::getStatNames()
 {
-  return statnames_from_mask;
+  return statnames_processed;
 }
 
 
