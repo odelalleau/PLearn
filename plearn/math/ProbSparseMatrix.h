@@ -48,15 +48,49 @@ class ProbSparseMatrix : public DoubleAccessSparseMatrix<real>
 public:
 
   ProbSparseMatrix(int n_rows = 0, int n_cols = 0, string name = "pXY", int mode = ROW_WISE, bool double_access = false);
-  DECLARE_NAME_AND_DEEPCOPY(ProbSparseMatrix);
+
   void incr(int i, int j, real inc = 1.0, bool warning = true);
+
   void set(int i, int j, real value, bool warning = true);
+
   bool checkCondProbIntegrity();
+
   bool checkJointProbIntegrity();
+
   void normalizeCond(ProbSparseMatrix& nXY, bool clear_nXY_on_the_fly = true);
+
   void normalizeJoint(ProbSparseMatrix& nXY, bool clear_nXY = true);
+
   void normalizeCond();
+
   void normalizeJoint();
+
+  string getClassName() const { return "ProbSparseMatrix"; }
+
+};
+
+template <class T> 
+inline PStream& operator<<(PStream &out, const ProbSparseMatrix &p)
+{ 
+  p.write(out); 
+  return out;
+}
+
+template <class T> 
+inline PStream& operator>>(PStream &in, ProbSparseMatrix &p)
+{ 
+  p.read(in); 
+  return in;
+}
+
+class PSMat : public PP<ProbSparseMatrix>
+{
+
+public:
+
+  PSMat(int n_rows = 0, int n_cols = 0, string name = "pXY", int mode = ROW_WISE, bool double_access = false) : PP<ProbSparseMatrix>(new ProbSparseMatrix(n_rows, n_cols, name, mode, double_access)) {}
+
+  PSMat(ProbSparseMatrix* p) : PP<ProbSparseMatrix>(p) {}
 
 };
 

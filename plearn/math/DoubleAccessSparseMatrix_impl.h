@@ -34,10 +34,10 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: DoubleAccessSparseMatrix_impl.h,v 1.1 2002/12/06 21:27:32 jauvinc Exp $ 
+ * $Id: DoubleAccessSparseMatrix_impl.h,v 1.2 2002/12/12 03:11:57 jauvinc Exp $ 
  ******************************************************* */
 
-/*! \file DoubleAccessSparseMatrix.cc */
+/*! \file DoubleAccessSparseMatrix_impl.h */
 
 namespace PLearn <%
 using namespace std;
@@ -58,36 +58,6 @@ DoubleAccessSparseMatrix<T>::DoubleAccessSparseMatrix(int n_rows, int n_cols, st
   {
     cols.resize(width);
   }
-}
-
-template <class T>
-void DoubleAccessSparseMatrix<T>::declareOptions(OptionList& ol)
-{
-  declareOption(ol, "rows", &DoubleAccessSparseMatrix<T>::rows, OptionBase::buildoption, 
-                "The row-wise accessible elements of the sparse matrix\n");
-
-  declareOption(ol, "cols", &DoubleAccessSparseMatrix<T>::cols, OptionBase::learntoption, 
-                "The column-wise accessible elements of the sparse matrix\n");
-
-  declareOption(ol, "name", &DoubleAccessSparseMatrix<T>::name, OptionBase::buildoption, 
-                "An (optional) name for the sparse matrix\n");
-
-  declareOption(ol, "mode", &DoubleAccessSparseMatrix<T>::mode, OptionBase::learntoption, 
-                "The access mode of the sparse matrix (row or column-wise)\n");
-
-  declareOption(ol, "double_access", &DoubleAccessSparseMatrix<T>::double_access, OptionBase::buildoption, 
-                "Whether the sparse matrix is accessible row-wise AND column-wise, OR not\n");
-
-  declareOption(ol, "height", &DoubleAccessSparseMatrix<T>::height, OptionBase::learntoption, 
-                "The height of the sparse matrix\n");
-
-  declareOption(ol, "width", &DoubleAccessSparseMatrix<T>::width, OptionBase::learntoption, 
-                "The width of the sparse matrix\n");
-
-  declareOption(ol, "null_elem", &DoubleAccessSparseMatrix<T>::null_elem, OptionBase::learntoption, 
-                "The null-element that will not be held in memory\n");
-
-  inherited::declareOptions(ol);
 }
 
 template <class T>
@@ -242,6 +212,44 @@ map<int, T>& DoubleAccessSparseMatrix<T>::operator()(int k)
     return getCol(k);
 }
 
+/*
+template <class T>
+void DoubleAccessSparseMatrix<T>::operator=(SMat<T> m)
+{
+  name = m->getName();
+  mode = m->getMode();
+  null_elem = m->getNullElem();
+  double_access = m->isDoubleAccessible();
+  clear();
+  resize(m->getHeight(), m->getWidth());
+  if (mode == ROW_WISE)
+  {
+    for (int i = 0; i < height; i++)
+    {
+      map<int, T>& row_i = m->getRow(i);
+      for (typename map<int, T>::iterator it = row_i.begin(); it != row_i.end(); ++it)
+      {
+        int j = it->first;
+        T val = it->second;
+        set(i, j, val);
+      }
+    }
+  } else
+  {
+    for (int j = 0; j < width; j++)
+    {
+      map<int, T>& col_j = m->getCol(j);
+      for (typename map<int, T>::iterator it = col_j.begin(); it != col_j.end(); ++it)
+      {
+        int i = it->first;
+        T val = it->second;
+        set(i, j, val);
+      }
+    }
+  }
+}
+*/
+
 template <class T>
 map<int, T>& DoubleAccessSparseMatrix<T>::getRow(int i)
 {
@@ -265,7 +273,7 @@ map<int, T>& DoubleAccessSparseMatrix<T>::getCol(int j)
   if (mode == COLUMN_WISE || double_access)
   {
 #ifdef BOUNDCHECK
-    if (j < 0 || j > height)
+    if (j < 0 || j > width)
       PLERROR("out-of-bound access to column %d, dims = (%d, %d)", j, height, width);
 #endif
     return cols[j];
@@ -297,7 +305,7 @@ T DoubleAccessSparseMatrix<T>::sumRow(int i)
 {
   if (mode == ROW_WISE || double_access)
   {
-    T sum = 0.0;
+    T sum = 0;
     map<int, T>& row_i = rows[i];
     for (typename map<int, T>::iterator it = row_i.begin(); it != row_i.end(); ++it)
       sum += it->second;
@@ -314,7 +322,7 @@ T DoubleAccessSparseMatrix<T>::sumCol(int j)
 {
   if (mode == COLUMN_WISE || double_access)
   {
-    T sum = 0.0;
+    T sum = 0;
     map<int, T>& col_j = cols[j];
     for (typename map<int, T>::iterator it = col_j.begin(); it != col_j.end(); ++it)
       sum += it->second;
@@ -456,7 +464,7 @@ void DoubleAccessSparseMatrix<T>::setCompressedVec(T* compressed_vec, int n_elem
 template <class T> 
 T DoubleAccessSparseMatrix<T>::sumOfElements()
 {
-  T sum = 0.0;
+  T sum = 0;
   if (mode == ROW_WISE)
   {
     for (int i = 0; i < height; i++)
@@ -523,6 +531,8 @@ void DoubleAccessSparseMatrix<T>::setDoubleAccessible(bool da)
 template <class T>
 void DoubleAccessSparseMatrix<T>::setMode(int new_mode)
 {
+  if (mode != ROW_WISE && mode != COLUMN_WISE) PLERROR("mode must be either row-wise or column-wise");
+
   if (mode != new_mode)
   {
     mode = new_mode;
@@ -555,6 +565,87 @@ void DoubleAccessSparseMatrix<T>::setMode(int new_mode)
       }
       rows.clear();
     }
+  }
+}
+
+template <class T>
+void DoubleAccessSparseMatrix<T>::write(PStream& out) const
+{
+  string class_name = getClassName();
+  switch(out.outmode)
+  {
+  case PStream::raw_ascii :
+  case PStream::pretty_ascii :
+    PLERROR("raw/pretty_ascii write not implemented in %s", class_name.c_str());
+    break;        
+  case PStream::raw_binary :
+    PLERROR("raw_binary write not implemented in %s", class_name.c_str());
+    break;        
+  case PStream::plearn_binary :
+  case PStream::plearn_ascii :
+    out.write(class_name + "(");
+    out << rows;
+    out << cols;
+    out << name;
+    out << mode;
+    out << double_access;
+    out << height;
+    out << width;
+    out << null_elem;
+    out.write(")\n");
+    break;
+  default:
+    PLERROR("unknown outmode in %s::write(PStream& out)", class_name.c_str());
+    break;
+  }
+}
+
+template <class T>
+void DoubleAccessSparseMatrix<T>::read(PStream& in)
+{
+  string class_name = getClassName();
+  switch (in.inmode)
+  {
+  case PStream::raw_ascii :
+    PLERROR("raw_ascii read not implemented in %s", class_name.c_str());
+    break;
+  case PStream::raw_binary :
+    PLERROR("raw_binary read not implemented in %s", class_name.c_str());
+    break;
+  case PStream::plearn_ascii :
+  case PStream::plearn_binary :
+  {
+    in.skipBlanksAndCommentsAndSeparators();
+    string word(class_name.size() + 1, ' ');
+    for (unsigned int i = 0; i < class_name.size() + 1; i++)
+      in.get(word[i]);
+    if (word != class_name + "(")
+      PLERROR("in %s::(PStream& in), '%s' is not a proper header", class_name.c_str(), word.c_str());
+    in.skipBlanksAndCommentsAndSeparators();
+    in >> rows;
+    in.skipBlanksAndCommentsAndSeparators();
+    in >> cols;
+    in.skipBlanksAndCommentsAndSeparators();
+    in >> name;
+    in.skipBlanksAndCommentsAndSeparators();
+    in >> mode;
+    in.skipBlanksAndCommentsAndSeparators();
+    in >> double_access;
+    in.skipBlanksAndCommentsAndSeparators();
+    in >> height;
+    in.skipBlanksAndCommentsAndSeparators();
+    in >> width;
+    in.skipBlanksAndCommentsAndSeparators();
+    in >> null_elem;
+    in.skipBlanksAndCommentsAndSeparators();
+    int c = in.get();
+    if(c != ')')
+      PLERROR("in %s::(PStream& in), expected a closing parenthesis, found '%c'", class_name.c_str(), c);
+  }
+  break;
+  default:
+    PLERROR("unknown inmode in %s::write(PStream& out)", class_name.c_str());
+    break;
   }
 }
 

@@ -42,8 +42,6 @@ ProbSparseMatrix::ProbSparseMatrix(int n_rows, int n_cols, string name, int mode
 {
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(ProbSparseMatrix);
-
 void ProbSparseMatrix::incr(int i, int j, real inc, bool warning)
 {
   if (inc <= 0.0 && warning)

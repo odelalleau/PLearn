@@ -37,13 +37,10 @@
 #ifndef DoubleAccessSparseMatrix_INC
 #define DoubleAccessSparseMatrix_INC
 
-#include "Object.h"
+#include "general.h"
 
 namespace PLearn <%
 using namespace std;
-
-#define ROW_WISE 1
-#define COLUMN_WISE 2
 
 /*!   
 
@@ -69,34 +66,45 @@ using namespace std;
   
   Note that you can define the null-element (of parametrized type T) to be anything that you
   wish. When 'setting' or 'getting' the matrix, this user-defined null-element will be used 
-  for the comparison. (Thus you can have a sparse matrix full of 1s, with only sparse 0s).
+  for the comparison. (Thus you can have, if you wish, a sparse matrix full of 1s, with only 
+  sparse 0s).
 
 */
 
+#define ROW_WISE -1000
+#define COLUMN_WISE -2000
+
+template <class T>
+class SMat;
+class PSMat;
+
 template<class T>
-class DoubleAccessSparseMatrix: public Object
+class DoubleAccessSparseMatrix : public PPointable
 {
 
 protected:
 
   vector<map<int, T> > rows;
+
   vector<map<int, T> > cols;
+
   string name;
+
   int mode;
+
   bool double_access;
+
   int height;
+
   int width;
+
   T null_elem;
 
 public:
 
-  typedef Object inherited;
-  
   DoubleAccessSparseMatrix(int n_rows = 0, int n_cols = 0, string _name = "<no-name>", int _mode = ROW_WISE, bool _double_access = false, T _null_elem = 0);
 
   virtual ~DoubleAccessSparseMatrix() {}
-
-  static void declareOptions(OptionList& ol);
 
   virtual void resize(int n_rows, int n_cols);
   
@@ -119,6 +127,8 @@ public:
   virtual void removeElem(int i, int j);
 
   virtual map<int, T>& operator()(int k);
+
+  //virtual void operator=(SMat<T> m);
 
   virtual map<int, T>& getRow(int i);
   
@@ -155,6 +165,42 @@ public:
   virtual void setName(string n) { name = n; }
   
   virtual string getName() { return name; }
+
+  virtual void write(PStream& out) const;
+
+  virtual void read(PStream& in);
+
+  virtual T getNullElem() { return null_elem; }
+
+  virtual string getClassName() const { return "DoubleAccesSparseMatrix"; }
+
+};
+
+template <class T> 
+inline PStream& operator<<(PStream &out, const DoubleAccessSparseMatrix<T> &m)
+{ 
+  m.write(out); 
+  return out;
+}
+
+template <class T> 
+inline PStream& operator>>(PStream &in, DoubleAccessSparseMatrix<T> &m)
+{ 
+  m.read(in); 
+  return in;
+}
+
+template <class T>
+class SMat : public PP<DoubleAccessSparseMatrix<T> > //: public PP<PPointableDoubleAccessSparseMatrix<T> >
+{
+
+public:
+
+  SMat(int n_rows = 0, int n_cols = 0, string name = "<no-name>", int mode = ROW_WISE, bool double_access = false) : PP<DoubleAccessSparseMatrix<T> >(new DoubleAccessSparseMatrix<T>(n_rows, n_cols, name, mode, double_access)) {}
+
+  SMat(DoubleAccessSparseMatrix<T>* p) : PP<DoubleAccessSparseMatrix<T> >(p) {}
+
+  DoubleAccessSparseMatrix<T>* getPtr() { return ptr; }
 
 };
 
