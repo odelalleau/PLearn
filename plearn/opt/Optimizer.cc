@@ -37,15 +37,11 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.cc,v 1.21 2003/10/08 18:29:11 tihocan Exp $
+   * $Id: Optimizer.cc,v 1.22 2003/10/14 14:52:27 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
-#include "AsciiVMatrix.h" // TODO Same as below ?
-#include "fileutils.h"  // TODO Remove when no more gradient stats ?
 #include "Optimizer.h"
-#include "TMat_maths.h"
-// #include "DisplayUtils.h"
 //#define DEBUGCG
 #ifdef DEBUGCG
 #include "GhostScript.h"
@@ -56,7 +52,7 @@ using namespace std;
 
 
 Optimizer::Optimizer(int n_updates, const string& file_name, int every_iterations)
-  :nupdates(n_updates), nstages(0), nstages_per_epoch(1), filename(file_name),
+  :nupdates(n_updates), nstages(0), filename(file_name),
   every(every_iterations)
 {}
 
@@ -239,169 +235,6 @@ void Optimizer::computeRepartition(
   }
 }
 
-//////////////////////////
-// collectGradientStats //
-//////////////////////////
-real Optimizer::collectGradientStats(Vec gradient) {
-  static VecStatsCollector grad;
-  static VecStatsCollector abs_grad;
-  static VecStatsCollector sign_grad;
-  static VecStatsCollector change_sign_grad;
-  static VMat grad_mean;
-  static VMat abs_grad_mean;
-  static VMat grad_var;
-  static VMat abs_grad_var;
-  static VMat sign_grad_mean;
-  static VMat sign_grad_var;
-  static VMat sign_mean_grad;
-  static VMat tmp_mat;
-  static VMat tmp_mat2;
-  static VMat tmp_mat3;
-  static VMat change_sign_grad_mean;
-  static VMat abs_grad_per_lr;
-  static bool first_time = true;
-  static int n_lr = 300; // how many different learning rates we consider
-  static Vec nchange;   // the number of times a gradient has changed sign
-  static Array<VecStatsCollector> stat_per_lr(n_lr);
-  static Vec temp_per_lr(n_lr);
-  static Vec store_grad(1);
-
-  if (first_time) {
-    first_time = false;
-    grad_mean = new AsciiVMatrix("grad_mean.amat", params.nelems());
-    grad_var = new AsciiVMatrix("grad_var.amat", params.nelems());
-    abs_grad_mean = new AsciiVMatrix("abs_grad_mean.amat", params.nelems());
-    abs_grad_var = new AsciiVMatrix("abs_grad_var.amat", params.nelems());
-    sign_grad_mean = new AsciiVMatrix("sign_grad_mean.amat", params.nelems());
-    sign_grad_var = new AsciiVMatrix("sign_grad_var.amat", params.nelems());
-    sign_mean_grad = new AsciiVMatrix("sign_mean_grad.amat", params.nelems());
-    change_sign_grad_mean = new AsciiVMatrix("change_sign_grad_mean.amat", params.nelems());
-    abs_grad_per_lr = new AsciiVMatrix("abs_grad_per_lr.amat", n_lr);
-    nchange.resize(params.nelems());
-    nchange.clear();
-  }
-
-  // Store gradient
-  grad.update(gradient);
-
-  // Store abs(gradient)
-  for (int i=0; i<gradient.length(); i++) {
-    temp_grad[i] = abs(gradient[i]);
-  }
-  abs_grad.update(temp_grad);
-
-  // Store sign(gradient)
-  for (int i=0; i<gradient.length(); i++) {
-    if (gradient[i] > 0) {
-      temp_grad[i] = 1;
-    } else {
-      temp_grad[i] = -1;
-    }
-  }
-  sign_grad.update(temp_grad);
-
-  real need_lower_lr = 0;
-
-  if ((stage+1) % nstages_per_epoch == 0) {
-    // One epoch has just been completed
-    temp_grad << grad.getMean();
-
-    grad_mean->appendRow(temp_grad); 
-    grad_var->appendRow(grad.getVariance());
-    abs_grad_mean->appendRow(abs_grad.getMean());
-    abs_grad_var->appendRow(abs_grad.getVariance());
-    sign_grad_mean->appendRow(sign_grad.getMean());
-    sign_grad_var->appendRow(sign_grad.getVariance());
-
-    // Compare abs(grad_mean) for the first and second layers
-    real g1 = 0, g2 = 0;
-    for (int i=0; i<340; i++) {
-      g1 += abs(temp_grad[i]);
-    }
-    for (int i=340; i<886; i++) {
-      g2 += abs(temp_grad[i]);
-    }
-    g1 /= 340;
-    g2 /= 886 - 340;
-    if (g1 < g2)
-      need_lower_lr = 1;
-    else
-      need_lower_lr = -1;
-    
-    // Store sign(mean(grad))
-    for (int i=0; i<gradient.length(); i++) {
-      if (temp_grad[i] > 0) {
-        temp_grad[i] = 1;
-      } else
-        temp_grad[i] = -1;
-    }
-    sign_mean_grad->appendRow(temp_grad);
-
-    // Stats per learning_rate
-    int pos = abs_grad_mean.length()-1;
-    for (int i=0; i<params.nelems(); i++) { //params.nelems(); i++)
-      store_grad[0] = abs_grad_mean(pos,i)*abs_grad_mean(pos,i);
-      if (nchange[i] > n_lr)
-        PLERROR("Use a larger n_lr !");
-      stat_per_lr[int(nchange[i])].update(store_grad);
-    }
-    for (int i=0; i<n_lr; i++) {
-      Vec m = stat_per_lr[i].getMean();
-      if (m.length() > 0)
-        temp_per_lr[i] = m[0];
-      else
-        temp_per_lr[i] = 0;
-    }
-    abs_grad_per_lr->appendRow(temp_per_lr);
-
-    // Compare two consecutive updates
-    int k = sign_mean_grad.length();
-    int nb_consec = 0;
-    int nb_change = 0;
-    int nb_change_340 = 0;
-    int nb_consec_340 = 0;
-    tmp_mat = sign_mean_grad.row(k-2);
-    tmp_mat2 = sign_mean_grad.row(k-3);
-    tmp_mat3 = sign_mean_grad.row(k-4);
-    for (int i=0; i<gradient.length(); i++) {
-      if (k<=1 || tmp_mat(0,i) == temp_grad[i]) {
-        // Same direction
-        temp_grad[i] = 0;
-      } else {
-        // Opposite direction
-        nb_change++;
-        nchange[i]++;
-        if (i < 340)
-          nb_change_340++;
-        temp_grad[i] = 1;
-        if (k > 3 && (tmp_mat(0,i) != tmp_mat2(0,i) || tmp_mat2(0,i) != tmp_mat(0,i))) {
-          nb_consec++;
-          if (i < 340)
-            nb_consec_340++;
-        }
-      }
-    }
-    cout << "Sign changes : " << nb_change << "(" << nb_change_340 << ")  among them " << nb_consec << "(" << nb_consec_340 << ") follow a previous change" << endl;
-    change_sign_grad.update(temp_grad);
-    change_sign_grad_mean->appendRow(change_sign_grad.getMean());
-
-    grad.forget();
-    abs_grad.forget();
-    sign_grad.forget();
-    for (int i=0; i<n_lr; i++) {
-      stat_per_lr[i].forget();
-    }
-  }
-  return need_lower_lr; 
-}
-
-/////////////////
-// computeCost //
-/////////////////
-/*void Optimizer::computeCost() {
-  cout << "Warning: In Optimizer::computeCost This optimizer doesn't implement this method" << endl;
-}*/
-    
 /////////////////////
 // computeGradient //
 /////////////////////

@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: AdaptGradientOptimizer.cc,v 1.14 2003/10/08 18:29:43 tihocan Exp $
+   * $Id: AdaptGradientOptimizer.cc,v 1.15 2003/10/14 14:52:48 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -177,8 +177,6 @@ void AdaptGradientOptimizer::build_(){
     tmp_storage.resize(n);
     old_evol.resize(n);
     oldgradientlocations.resize(params.size());
-    meancost.resize(cost->size());
-    meancost.clear();
     learning_rates.fill(start_learning_rate);
     switch (learning_rate_adaptation) {
       case 0:
@@ -356,7 +354,6 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
       cost->gradient[0] = -learning_rate;
 
     proppath.fbprop();
-    meancost += cost->value;
 
     // Actions to take after each step, depending on the
     // adaptation method used :
