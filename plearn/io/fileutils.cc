@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.68 2005/02/16 20:25:39 tihocan Exp $
+   * $Id: fileutils.cc,v 1.69 2005/02/17 17:25:05 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -508,19 +508,20 @@ PPath newFilename(const PPath& directory, const string& prefix, bool is_director
 ///////////////////////
 PPath makeFileNameValid(const PPath& path)
 {
-  // TODO Better PPath implementation.
-  PPath dirname  = path.dirname();
-  PPath filename = path.no_extension().basename();
-  string ext     = path.extension();
-  string ret     = path.absolute();
+  PPath dirname       = path.dirname();
+  PPath filename_full = path.basename();
+  PPath filename      = filename_full.no_extension();
+  string ext          = filename_full.extension(true);
+  PPath ret           = path;
   if(filename.length() + ext.length() > 256)
   {
-    int j= 0;
+    // We make a shorter name by encoding the rest into a few numbers.
+    int j = 0;
     string rest = filename.substr(256-ext.length()-12);
     do
     {
-      unsigned int n= j++;
-      for(unsigned int i= 0; i < rest.length(); ++i)
+      unsigned int n = j++;
+      for(size_t i = 0; i < rest.length(); ++i)
       {
         int m=0;
         switch(i%4)
@@ -536,17 +537,16 @@ PPath makeFileNameValid(const PPath& path)
       filename+= "-" + tostring(n);
     } while(pathexists(dirname / (filename + ext)));
     PLWARNING("makeFileNameValid: Filename '%s' changed to '%s'.", 
-        path.absolute().c_str(), (dirname / (filename + ext)).absolute().c_str());
-    ret = (dirname / (filename + ext)).absolute();
+               path.absolute().c_str(), (dirname / (filename + ext)).c_str());
+    ret = (dirname / (filename + ext));
   }
 
-  // replace illegal characters
-  char illegal[]="*?'\"${}[]@ ,()";
-  for(int i=0;i<(signed)ret.size();i++)
-    for(int j=0;j<15;j++)
-      if(ret[i]==illegal[j])
-        ret[i]='_';
-  return PPath(ret);
+  // Replace illegal characters.
+  string illegal = "*?'\"${}[]@ ,()";
+  for(size_t i=0;i<ret.size();i++)
+    if (illegal.find(ret[i]) != string::npos)
+      ret[i]='_';
+  return ret;
 }
 
 ///////////
