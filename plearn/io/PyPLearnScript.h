@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PyPLearnScript.h,v 1.1 2005/02/11 09:07:51 dorionc Exp $ 
+   * $Id: PyPLearnScript.h,v 1.2 2005/02/14 16:42:12 ducharme Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -45,6 +45,7 @@
 #define PyPLearnScript_INC
 
 #include <plearn/io/PPath.h>
+#include <plearn/io/openString.h>
 #include <plearn/base/Object.h>
 
 namespace PLearn {
@@ -52,7 +53,7 @@ namespace PLearn {
 class PyPLearnScript: public Object
 {
 public:
-  // STATIC METHOD
+  // STATIC METHODS
 
   /*!
     Given a filename, call an external process with the given name (default
@@ -68,7 +69,28 @@ public:
     const std::vector<std::string>& args = std::vector<std::string>(),
     const std::string& drivername        = "pyplearn_driver.py" );
 
-  
+  /*!
+   * This static method forwards its arguments to process() and returns a 
+   * pointer on an object of template type Obj by loading the resulting plearn 
+   * script. Note that the object IS NOT BUILT since one may want to set other 
+   * options prior to calling build().  
+   */
+  template<class Obj>
+  static PP<Obj> load(
+    const std::string& filename,
+    const std::vector<std::string>& args = std::vector<std::string>(),
+    const std::string& drivername        = "pyplearn_driver.py" )
+  {
+    PP<PyPLearnScript> script = PyPLearnScript::process(filename, args, drivername);
+
+    PStream in = openString( script->plearn_script, PStream::plearn_ascii );
+    PP<Obj> o  = new Obj();
+    in >> o;
+
+    return o;
+  }
+
+ 
 private:
   typedef Object inherited;
 
