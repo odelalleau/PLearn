@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TangentLearner.h,v 1.4 2004/06/02 02:06:13 yoshua Exp $ 
+   * $Id: TangentLearner.h,v 1.5 2004/06/03 14:36:30 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus
@@ -82,6 +82,7 @@ public:
 
   string training_targets; // "local_evectors", "local_neighbors"
   bool use_subspace_distance;
+  bool normalize_by_neighbor_distance;
   int n_neighbors; // number of neighbors used in local_pca or number of neighbors to predict
   int n_dim; // number of reduced dimensions (number of tangent vectors to compute)
 

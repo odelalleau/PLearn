@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TangentLearner.cc,v 1.5 2004/06/02 02:06:13 yoshua Exp $ 
+   * $Id: TangentLearner.cc,v 1.6 2004/06/03 14:36:30 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
@@ -59,8 +59,8 @@ using namespace std;
 
 TangentLearner::TangentLearner() 
 /* ### Initialize all fields to their default value here */
-  : training_targets("local_neighbors"), use_subspace_distance(true), n_neighbors(5), n_dim(1),
-    architecture_type("single_neural_network"), n_hidden_units(-1),
+  : training_targets("local_neighbors"), use_subspace_distance(true), normalize_by_neighbor_distance(true),
+    n_neighbors(5), n_dim(1), architecture_type("single_neural_network"), n_hidden_units(-1),
     batch_size(1), norm_penalization(0), svd_threshold(1e-3), projection_error_regularization(1e-4)
 {
 }
@@ -101,6 +101,9 @@ void TangentLearner::declareOptions(OptionList& ol)
   declareOption(ol, "use_subspace_distance", &TangentLearner::use_subspace_distance, OptionBase::buildoption,
                 "Minimize distance between subspace spanned by f_i and by (x-neighbors), instead of between\n"
                 "the individual targets t_j and the subspace spanned by the f_i.\n");
+
+  declareOption(ol, "normalize_by_neighbor_distance", &TangentLearner::normalize_by_neighbor_distance, 
+                OptionBase::buildoption, "Whether to normalize cost by distance of neighbor.\n");
 
   declareOption(ol, "n_neighbors", &TangentLearner::n_neighbors, OptionBase::buildoption,
 		"Number of nearest neighbors to consider.\n"
@@ -209,7 +212,8 @@ void TangentLearner::build_()
                  training_targets.c_str());
 
     Var proj_err = projection_error(tangent_predictor->outputs[0], tangent_targets, norm_penalization, n, 
-                                    use_subspace_distance, svd_threshold, projection_error_regularization);
+                                    normalize_by_neighbor_distance, use_subspace_distance, svd_threshold, 
+                                    projection_error_regularization);
     cost_of_one_example = Func(tangent_predictor->inputs & tangent_targets, tangent_predictor->parameters, proj_err);
 
   }

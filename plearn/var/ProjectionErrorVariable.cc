@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
- * $Id: ProjectionErrorVariable.cc,v 1.6 2004/06/02 02:06:06 yoshua Exp $
+ * $Id: ProjectionErrorVariable.cc,v 1.7 2004/06/03 14:36:07 yoshua Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -62,9 +62,11 @@ namespace PLearn {
                           "In any case, if norm_penalization>0, an extra term is added:\n"
                           "    norm_penalization * sum_i (||f_i||^2 - 1)^2.\n");
 
-  ProjectionErrorVariable::ProjectionErrorVariable(Variable* input1, Variable* input2, real norm_penalization_, int n_, 
+  ProjectionErrorVariable::ProjectionErrorVariable(Variable* input1, Variable* input2, real norm_penalization_, 
+                                                   int n_, bool normalize_by_neighbor_distance_, 
                                                    bool use_subspace_distance_, real epsilon_, real regularization_)
-    : inherited(input1, input2, 1, 1), n(n_), use_subspace_distance(use_subspace_distance_), norm_penalization(norm_penalization_), 
+    : inherited(input1, input2, 1, 1), n(n_), use_subspace_distance(use_subspace_distance_), 
+      normalize_by_neighbor_distance(normalize_by_neighbor_distance_), norm_penalization(norm_penalization_), 
       epsilon(epsilon_), regularization(regularization_)
   {
     build_();
@@ -118,6 +120,7 @@ namespace PLearn {
           VVt.resize(n_dim,n_dim);
           fw_minus_t.resize(T,n);
           w.resize(T,n_dim);
+          one_over_norm_T.resize(T);
         }
       else 
         {
@@ -254,9 +257,10 @@ namespace PLearn {
         VVt.clear();
         for (int k=0;k<S.length();k++)
           {
-            real s_k = S[k] + regularization;
+            real s_k = S[k];
             if (s_k>epsilon) // ignore the components that have too small singular value (more robust solution)
-              {
+              { 
+                s_k += regularization;
                 real coef = 1/(s_k*s_k);
                 for (int i=0;i<n_dim;i++)
                   {
@@ -278,7 +282,13 @@ namespace PLearn {
             transposeProduct(fw, F, wj); // fw = sum_i w_ji f_i 
             Vec fw_minus_tj = fw_minus_t(j);
             substract(fw,tj,fw_minus_tj);
-            cost += sumsquare(fw_minus_tj);
+            if (normalize_by_neighbor_distance)
+              {
+                one_over_norm_T[j] = 1.0/norm(tj);
+                cost += sumsquare(fw_minus_tj)*one_over_norm_T[j];
+              }
+            else
+                cost += sumsquare(fw_minus_tj);
           }
       }
     if (norm_penalization>0)
@@ -305,10 +315,10 @@ namespace PLearn {
     //   dcost/dF = w (F'w - T'u)'
     //
     // ELSE
-    //   dcost/dfw = 2 (fw - t_j)
+    //   dcost/dfw = 2 (fw - t_j)/||t_j||
     //   dfw/df_i = w_i 
     //  so 
-    //   dcost/df_i = sum_j 2(fw - t_j) w_i
+    //   dcost/df_i = sum_j 2(fw - t_j) w_i/||t_j||
     //
     // IF norm_penalization>0
     //   add the following to the gradient of f_i:
@@ -337,7 +347,10 @@ namespace PLearn {
             for (int i=0;i<n_dim;i++)
               {
                 Vec df_i = dF(i); // n-vector
-                multiplyAcc(df_i, fw_minus_tj, gradient[0] * wj[i]*2);
+                if (normalize_by_neighbor_distance)
+                  multiplyAcc(df_i, fw_minus_tj, gradient[0] * wj[i]*2*one_over_norm_T[j]);
+                else
+                  multiplyAcc(df_i, fw_minus_tj, gradient[0] * wj[i]*2);
                 if (norm_penalization>0)
                   multiplyAcc(df_i, F(i), gradient[0]*norm_penalization*2*norm_err[i]);
               }
