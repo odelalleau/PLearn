@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DatedJoinVMatrix.cc,v 1.3 2004/03/17 21:18:10 yoshua Exp $
+   * $Id: DatedJoinVMatrix.cc,v 1.4 2004/03/18 21:59:24 tihocan Exp $
    ******************************************************* */
 
 // Authors: *Yoshua Bengio*
@@ -280,7 +280,9 @@ void DatedJoinVMatrix::build_()
       for (int i=0;i<slave_field_names.length();i++)
         slave_field_indices[i] = slave->getFieldIndex(slave_field_names[i]);
     } 
-    else PLERROR("DatedJoinVMatrix: No slave_field_names were provided and no slave_field_indices were provided!");
+    else if (slave_field_indices.length() <= 0) {
+      PLERROR("DatedJoinVMatrix: No slave_field_names were provided and no slave_field_indices were provided!");
+    }
     // * get master date field index
     if (master_date_field_name!="")
       master_date_field_index = master->getFieldIndex(master_date_field_name);
