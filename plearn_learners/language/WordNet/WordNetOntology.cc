@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.cc,v 1.15 2003/02/15 22:24:24 morinf Exp $
+   * $Id: WordNetOntology.cc,v 1.16 2003/02/15 22:24:50 morinf Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -45,8 +45,8 @@ namespace PLearn {
   using namespace std;
 
 
-#define FRED_MODIF
-#define NOWARNING
+//#define FRED_MODIF
+//#define NOWARNING
 
 WordNetOntology::WordNetOntology()
 {
