@@ -108,7 +108,8 @@ class DefineTest(WithOptions):
                   'local_files':[]}
 
     # An array (or a single file name [string]) 'related_files' are to be managed (added or commited)
-    # under pytest's cvs mode.
+    # under pytest's cvs mode.  NOTE that if you do not include local_files, these will still be
+    # considered.
     CVS_FILES = { 'related_files':[] }
 
     def __init__(self, **kwargs):
@@ -189,6 +190,8 @@ class DefineTest(WithOptions):
         self.arguments = []
         for args in self._test_args:
             for f in self._local_files:
+                if f not in self._related_files:
+                    self._related_files.append(f)
                 args = string.replace(args, f, os.path.abspath(f))
             self.arguments.append(args)
             
@@ -222,7 +225,8 @@ class DefineTest(WithOptions):
     def set_cvs(self):
         """
         An array (or a single file name [string]) 'related_files' are to be managed (added or commited)
-        under pytest's cvs mode.
+        under pytest's cvs mode. NOTE that if you do not include local_files, these will still be
+        considered.
         CVS_FILES = { 'related_files':[] }
         """
         self.check_string_types('related_files', self.set_cvs.__doc__)
@@ -383,6 +387,7 @@ class Test(Task):
         for s in [self.prog_name,self.compile_options,args]:
             s = string.replace(s, ' ', '_')
             s = string.replace(s, '-', '_')
+            s = string.replace(s, '/', '_')
             res_dir = os.path.join(res_dir, s)
         self.set_option('results_directory', res_dir)
 
@@ -464,64 +469,6 @@ class AddTest(Test):
         self.disabled = os.path.join(directory, DISABLED_PYTEST_CONFIG)
 
         return '' 
-
-## class CommitTest(Test):
-##     """Examines CVS_FILES of a test and commit changes.
-
-##     NOTE that if file was not 'cvs added', the commit mode will do it prior
-##     to committing.
-##     """
-
-##     def __examine(self, p):
-##         path = relative_path(p)
-##         if os.path.exists(path):
-##             vprint('Pytest examines %s' % path, 2)
-##             return self._action(path)
-    
-##     def __commit_sub_routine(self, root, directory, dirlist):
-##         raw_input( (root, directory, dirlist) )
-##         neglect(dirlist, CVS, OBJS)
-        
-##         for name in dirlist:
-##             relname = os.path.join(directory, name)
-##             if ( os.path.exists(relname) and
-##                  not os.path.islink(relname) ):
-##                 self.__examine( relname )
-
-##     def _action(self, path):
-##         cvs_add(path)
-
-##     def _do_not_run(self):
-##         directory_when_called = os.getcwd()
-##         os.chdir(test_suite_dir(self.directory))
-
-##         self.__examine(self.directory)        
-##         self.__examine(self.config)
-##         #self.__examine(self.disabled) What should I do with that...
-
-##         if os.path.exists( self._results_directory ):
-##             self.__examine(self._results_base)
-##             self.__examine(self._results_directory)
-##             os.path.walk( self._results_directory, self.__commit_sub_routine,
-##                           relative_path(self._results_directory)   )
-        
-##         for relf in self.cvs_files:
-##             rfname = os.path.join(self.directory, relf)
-##             self.__examine(rfname)
-            
-##         cvs_commit( relative_path(self.directory) )
-##         os.chdir(directory_when_called)
-
-##         ##################################################################################
-##         # The current implementation of the CommitTest do not use parallel hosts.
-##         # No command are launched on another host, so this method always returns True,
-##         # meaning that the parallel processing should not be ran.
-##         return True
-
-##     def build_cmd_line(self, directory, prog_name, compile_options, arguments, cvs_files, compiler):
-##         self.config = os.path.join(directory, PYTEST_CONFIG)
-##         self.disabled = os.path.join(directory, DISABLED_PYTEST_CONFIG)       
-##         return 'echo $HOST'
 
 class CompileTest(Test):
     """Launches the compilation of all target tests' compilable files.
@@ -823,6 +770,64 @@ class RunTest(ResultsTest):
         else:
             self.failed = True
             
+class SyncTest(Test):
+    """Manages to sync the cvs entries of test with the needed files."""
+    
+    def __examine(self, p):
+        path = relative_path(p)
+        if os.path.exists(path):
+            vprint('Pytest examines %s' % path, 2)
+        return self._action(path)
+    
+    def __commit_sub_routine(self, root, directory, dirlist):
+        del_forbidden(dirlist)
+        os.system('rm *~ .*~ *.o *.pyc *.class ./~* #*# core* -f')
+
+        self.__examine(directory)
+        
+        for name in dirlist:
+            relname = os.path.join(directory, name)
+            if ( os.path.exists(relname) and
+                 not os.path.islink(relname) ):
+                self.__examine( relname )
+
+    def _action(self, path):
+        cvs_add(path)
+
+    def _do_not_run(self):
+        directory_when_called = os.getcwd()
+        os.chdir(test_suite_dir(self.directory))
+
+        self.__examine(self.directory)        
+        self.__examine(self.config)
+
+        if os.path.exists( self._results_directory ):
+            self.__examine(self._results_base)
+            os.path.walk( self._results_base, self.__commit_sub_routine,
+                          relative_path(self._results_directory)   )
+        
+        for relf in self.cvs_files:
+            rfname = os.path.join(self.directory, relf)
+            if os.path.isdir(rfname):
+                os.path.walk( rfname, self.__commit_sub_routine,
+                              relative_path(self.directory)    )
+            else:
+                self.__examine(rfname)
+            
+        cvs_commit( relative_path(self.directory), 'Pytest sync mode commit.' )
+        os.chdir(directory_when_called)
+        return True
+
+        ##################################################################################
+        # The current implementation of the CommitTest do not use parallel hosts.
+        # No command are launched on another host, so this method always returns True,
+        # meaning that the parallel processing should not be ran.
+        return True
+
+    def build_cmd_line(self, directory, prog_name, compile_options, arguments, cvs_files, compiler):
+        self.config = os.path.join(directory, PYTEST_CONFIG)
+        return ''
+
 class Verification:
     """
     Class that manages every details of the comparison of the
@@ -843,7 +848,7 @@ class Verification:
         return twin
 
     def compare_dir(self, arg, dirpath, dirlist):
-        del_all_forbidden_directories(dirlist)
+        del_forbidden(dirlist)
         #raw_input("dirpath: " + dirpath + ", current: " + os.getcwd())
         #raw_input(dirlist)
         for fname in dirlist:
@@ -915,7 +920,7 @@ def add_global_program(test_directory, prog_name):
 def build_tests(none, dirc, dirlist):
     global test_id
 
-    del_all_forbidden_directories(dirlist, RESULTS_PATH, RESULTS_ON_RUN)
+    del_forbidden(dirlist, RESULTS_PATH, RESULTS_ON_RUN)
 
 ##     raw_input(("dirc:", dirc))
 ##     raw_input(("dirlist:", dirlist))
@@ -1026,7 +1031,7 @@ def compilePLL():
         return
 
 def compilePLLSubRoutine(options_and_dicoOfErrors, path, dirList):
-    del_all_forbidden_directories(dirList, "TestSuite", RESULTS_PATH, RESULTS_ON_RUN)
+    del_forbidden(dirList, "TestSuite", RESULTS_PATH, RESULTS_ON_RUN)
     path = os.path.abspath(path)
     os.chdir(path)
     compileCurrentDirectory(options_and_dicoOfErrors[0])
@@ -1038,9 +1043,6 @@ def complete_test_name(directory):
 
 def cvs_add(file):
     status = cvs_query("status", file, "Status: ")
-    if not status:
-        raise RuntimeError("Having problem with csv...\n"
-                           "cvs_add(%s)"%file)     
     vprint(file + " status: " + status + "\n", 2)
     if status != '' and string.find(status, "Unknown") == -1:
         return False
@@ -1096,16 +1098,13 @@ def cvs_remove(file):
     map(lambda err: vprint(err, "q"), errors)
     return True
 
-def del_all_forbidden_directories(dirList, *otherForbDirs):
+def del_forbidden(dirlist, *other_forbidden):
     forbidden_directories = [ OBJS, "BACKUP", CVS, ".pymake", "Scripts"  ]
-    forbidden_directories.extend(otherForbDirs)
+    forbidden_directories.extend(other_forbidden)
 
     for forbidden in forbidden_directories:
-        try:
-            index = dirList.index(forbidden)
-            del dirList[index]
-        except ValueError:
-            pass 
+        if forbidden in dirlist:
+            dirlist.remove(forbidden)
 
 dispatch = None
 def dispatch_targets():
@@ -1239,25 +1238,6 @@ def myCheckObj(dirpath, dicoOfErrors):
                     if os.path.isfile(f): foundobj = 1
                 if not foundobj:
                     dicoOfErrors[fpath] = lastUserWhoDidCommit(fpath)
-
-def neglect(list, *toneg):
-    for elem in toneg:
-        try:
-            list.remove(elem)
-        except ValueError:
-            pass
-
-def parse_mode( supported_modes ):
-    global current_mode
-    
-    modes =  supported_modes.keys()
-    if len(sys.argv) > 1:
-        current_mode.name = sys.argv.pop(1)
-    if not current_mode.name in modes:
-        print ( """usage: pytest mode
-        where mode must be in        
-        """ + str(modes) )
-        sys.exit()
     
 def printErrors(dico):
     if len(dico) == 0:
@@ -1275,7 +1255,7 @@ def printErrors(dico):
         vprint(formattedKey + " -> " + dico[key], "Q")
 
 def pytest_version():
-    version_str = '$Id: pytest,v 1.10 2004/07/14 15:55:56 dorionc Exp $'
+    version_str = '$Id: pytest,v 1.11 2004/07/15 15:58:31 dorionc Exp $'
 
     bflag = "pytest,v"
     the_year = time.localtime()[0]
@@ -1358,6 +1338,10 @@ parser.add_mode("results", dispatch_targets, "Testing mode",
 parser.add_mode("run", dispatch_targets, "Testing mode",
                 help = short_doc(RunTest),
                 description = doc(RunTest) )
+
+parser.add_mode("sync", dispatch_targets, "Testing mode",
+                help = short_doc(SyncTest),
+                description = doc(SyncTest) )
 
 # Management modes 
 add_options = DefineTest().command_line_options(parser)
@@ -1443,7 +1427,9 @@ MODES_WITH_CONFIG = { #'commit':CommitTest,
                       #'remove':RemoveTest,
                       'compile':CompileTest,
                       'results':ResultsTest,
-                      'run':RunTest         }
+                      'run':RunTest,
+                      'sync':SyncTest
+                      }
 
 MANAGEMENT_MODES = { 'add':AddTest,
                      'disable':DisableTest,
@@ -1463,8 +1449,8 @@ if options.mail is not None:
 
 # Dynamic version header
 vprint("\n[ Pytest version " + pytest_version() + " (c) 2004 Christian Dorion ]\n" +
-       "[ (c) 2002 Christian Dorion & Kim Levy         ]\n" +
-       "[ Report problems to dorionc@apstat.com        ]\n", 0)
+       "[    (c) 2002 Christian Dorion & Kim Levy       ]\n" +
+       "[    Report problems to dorionc@apstat.com      ]\n", 0)
 
 ############################################################
 # Launching the selected mode: The main part of the program
@@ -1496,3 +1482,4 @@ if pytest_variables_were_modified:
 plearnlib_dir = os.path.join( os.environ["PLEARNDIR"], "plearn" ) 
 mailing_log = os.path.join(plearnlib_dir, "mailing.log")
 savelog_file = '' # Must be replaced by user provided msg
+

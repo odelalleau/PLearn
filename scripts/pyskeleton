@@ -33,7 +33,7 @@
 #  This file is part of the PLearn library. For more information on the PLearn
 #  library, go to the PLearn Web site at www.plearn.org
 
-import sys, os, string, popen2
+import sys, os, string, popen2, toolkit
 from time import time, localtime
 
 args = sys.argv[:]
@@ -41,18 +41,25 @@ del args[0] # ignore program name
 
 homedir = os.environ['HOME']
 plearndir = os.environ.get('PLEARNDIR', os.path.join(homedir,'PLearn'))
-skeldir = os.path.join(plearndir,'scripts/Skeletons')
-baseclasses = map( lambda s: s[:-2], filter(lambda s: s[-2:]=='.h', os.listdir(skeldir)) )
+
+# Management of multiple Skeletons directory
+default_skeldir = os.path.join(plearndir,'scripts/Skeletons')
+SKELDIRS = string.split(os.getenv('SKELETONS_PATH', default_skeldir), ':')
+
+baseclasses = map( lambda s: s[:-2],
+                   filter( lambda s: s[-2:]=='.h', toolkit.listdirs(SKELDIRS)) )
 
 if len(args)<2 or args[0] not in baseclasses:
-    print """
+    print ("""
 Usage: pyskeleton <base_class> <name_of_your_derived_class>
        Will generate skeleton .h and .cc files for your new class, 
        derived form the base_class, based on corresponding models in
-       the """ + skeldir + """ directory.
-       (You can easily add new 'models' in this directory.)
+       the %s director%s.
+       (You can easily add new 'models' in th%s director%s.)
        
 Currently supported base classes are: """
+           % (string.join(SKELDIRS, ' or\n       '),toolkit.plural(len(SKELDIRS), 'y', 'ies'),
+              toolkit.plural(len(SKELDIRS), 'is', 'ese'), toolkit.plural(len(SKELDIRS), 'y', 'ies')) )
     print string.join(baseclasses,' ')
     sys.exit()
   
@@ -78,7 +85,7 @@ def locate_header_file():
         if os.path.isfile(modelpath):
             return modelpath
         directory = abspath(os.path.join(directory,'..'))
-    return os.path.join(skeldir,'.pyskeleton_header')
+    return os.path.join(default_skeldir,'.pyskeleton_header')
 
 
 def fingername():
@@ -117,10 +124,11 @@ def generate(baseclass, userclass, ext):
     """Generates a userclass+ext file based on the baseclass+ext file to be found in the scripts/Skeleton directory"""
     year = global_year  # so that it appears in vars()
     author = global_author # so that it appears in vars()
-    skeletonpath = os.path.join(skeldir, baseclass+ext)
+    skeletonpath = toolkit.get_path(SKELDIRS, baseclass+ext)
     filename = userclass+ext
-    if not os.path.exists(skeletonpath):
-        print "-> No " + skeletonpath + " Won't genrate " + filename
+
+    if skeletonpath is None:
+        print "-> No Skeletons/" + (baseclass+ext) + ". Won't generate " + filename
     elif os.path.exists(filename):
         print filename + " already exists. Remove it first if you want to regenerate it."
     else:

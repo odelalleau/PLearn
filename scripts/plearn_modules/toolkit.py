@@ -15,6 +15,23 @@ def doc(obj):
         return ''
     return docstr
 
+def listdirs(dirs):
+    dirs_list = []
+    for dirc in dirs:
+        dirs_list.extend( os.listdir(dirc) )
+    return dirs_list
+    
+def get_path(branches, fpath):
+    """Return the first existing branch/fname path, for branch in branches.
+
+    Returns None if no branch/fname path exists.
+    """
+    for branch in branches:
+        bpath = os.path.join(branch, fpath)
+        if os.path.exists(bpath):
+            return bpath
+    return None
+    
 ## Pymake
 def get_platform():
     platform = sys.platform
@@ -87,6 +104,16 @@ def set_typed_attr(object, attr, value, required_type):
               "(Currently",type(value), ")")
     setattr(object, attr, value)
 
+def select_branch(dir, branches):
+    br_max = -1
+    branch = None
+    for brdir in branches:
+        br = os.path.commonprefix([brdir, dir])
+        if br > br_max:
+            br_max = br
+            branch = brdir
+    return branch
+    
 def short_doc(obj):
     docstr = doc(obj)
     if not docstr:
@@ -99,10 +126,10 @@ def declareOptionParser(parser):
     global __option_parser
     __option_parser = parser
 
-def plural(nb):
+def plural(nb, sing='', plur='s'):
     if nb > 1:
-        return 's'
-    return ''
+        return plur
+    return sing
     
 def quote(txt):
     return "'%s'" % txt
