@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ReconstructionWeightsKernel.h,v 1.2 2004/07/19 13:27:41 tihocan Exp $ 
+   * $Id: ReconstructionWeightsKernel.h,v 1.3 2004/07/20 13:01:14 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -78,6 +78,12 @@ protected:
     
   //! The indices of the neighbors of each data point.
   TMat<int> neighbors;
+
+  //! The element i is a matrix whose first column is the list of the points
+  //! which have i among their neighbors, and the second column is the index
+  //! of i in these neighbors.
+  //! The first column is sorted by increasing index, and does not contain i.
+  TVec< TMat<int> > is_neighbor_of;
 
   //! Points toward a subset of the training data (typically, a neighborhood).
   PP<SelectRowsVMatrix> sub_data;
@@ -132,8 +138,6 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   // Declares other standard object methods.
-  // If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS.
   PLEARN_DECLARE_OBJECT(ReconstructionWeightsKernel);
 
   // **************************
@@ -150,6 +154,14 @@ public:
   virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const;
 
   virtual void setDataForKernelMatrix(VMat the_data);
+
+  //! Return sum_k K(x_k, x_i) * K(x_k, x_j).
+  virtual real evaluate_sum_k_i_k_j(int i, int j) const;
+
+  //! Fill 'lle_mat', which must be of size (n x n), with entries (i,j) equal to
+  //! W_{ij} + W_{ji} - \sum_k W_{ki} W_{kj}
+  //! (this is used in LLE to compute the kernel Gram matrix).
+  virtual void computeLLEMatrix(const Mat& lle_mat) const;
 
   // *** SUBCLASS WRITING: ***
   // While in general not necessary, in case of particular needs 

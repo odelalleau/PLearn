@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ReconstructionWeightsKernel.cc,v 1.3 2004/07/19 14:54:05 tihocan Exp $ 
+   * $Id: ReconstructionWeightsKernel.cc,v 1.4 2004/07/20 13:01:14 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -153,6 +153,34 @@ void ReconstructionWeightsKernel::build_()
   }
 }
 
+//////////////////////
+// computeLLEMatrix //
+//////////////////////
+void ReconstructionWeightsKernel::computeLLEMatrix(const Mat& lle_mat) const {
+  lle_mat.clear();
+  ProgressBar* pb = 0;
+  if (report_progress)
+    pb = new ProgressBar("Computing LLE matrix", n_examples);
+  int neighb_j, neighb_k;
+  real w_ij;
+  for (int i = 0; i < n_examples; i++) {
+    for (int j = 0; j < knn - 1; j++) {
+      neighb_j = neighbors(i, j + 1);
+      w_ij = weights(i, j);
+      lle_mat(i, neighb_j) += w_ij;
+      lle_mat(neighb_j, i) += w_ij;
+      for (int k = 0; k < knn - 1; k++) {
+        neighb_k = neighbors(i, k + 1);
+        lle_mat(neighb_j, neighb_k) -= w_ij * weights(i, k);
+      }
+    }
+    if (report_progress)
+      pb->update(i + 1);
+  }
+  if (pb)
+    delete pb;
+}
+
 ////////////////////
 // computeWeights //
 ////////////////////
@@ -169,6 +197,20 @@ void ReconstructionWeightsKernel::computeWeights() {
   neighbors =
     computeKNNeighbourMatrixFromDistanceMatrix(distances, knn, true, report_progress);
   distances = Mat(); // Free memory.
+  // Fill the 'is_neighbor_of' vector.
+  is_neighbor_of.resize(n_examples);
+  TVec<int> row(2);
+  for (int i = 0; i < n_examples; i++)
+    is_neighbor_of[i].resize(0, 2);
+  for (int i = 0; i < n_examples; i++) {
+    row[0] = i;
+    for (int j = 1; j < knn; j++) {
+      row[1] = j;
+      is_neighbor_of[neighbors(i,j)].appendRow(row);
+    }
+  }
+  for (int i = 0; i < n_examples; i++)
+    sortRows(is_neighbor_of[i]);
   // Then compute the weights for each point i.
   TVec<int> neighbors_of_i;
   ProgressBar* pb = 0;
@@ -213,6 +255,41 @@ real ReconstructionWeightsKernel::evaluate_i_j(int i, int j) const {
 //////////////////
 real ReconstructionWeightsKernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) const {
   return 0;
+}
+
+//////////////////////////
+// evaluate_sum_k_i_k_j //
+//////////////////////////
+real ReconstructionWeightsKernel::evaluate_sum_k_i_k_j(int i, int j) const {
+  static TMat<int> i_is_neighb_of, j_is_neighb_of;
+  i_is_neighb_of = is_neighbor_of[i];
+  j_is_neighb_of = is_neighbor_of[j];
+  int test_n;
+  int k_i = 0;
+  int k_j = 0;
+  real sum = 0;
+  while (k_i < i_is_neighb_of.length()) {
+    test_n = i_is_neighb_of(k_i, 0);
+    while (k_j < j_is_neighb_of.length() && test_n > j_is_neighb_of(k_j, 0))
+      k_j++;
+    if (k_j < j_is_neighb_of.length()) {
+      if (test_n == j_is_neighb_of(k_j, 0)) {
+        // Found a common k.
+        sum += weights(test_n, i_is_neighb_of(k_i, 1) - 1) * weights(test_n, j_is_neighb_of(k_j, 1) - 1);
+        k_i++;
+        k_j++;
+      } else {
+        // Increase k_i.
+        test_n = j_is_neighb_of(k_j, 0);
+        while (k_i < i_is_neighb_of.length() && test_n > i_is_neighb_of(k_i, 0))
+          k_i++;
+      }
+    } else {
+      // No more common point.
+      return sum;
+    }
+  }
+  return sum;
 }
 
 //////////////////
