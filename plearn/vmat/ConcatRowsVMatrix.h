@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVMatrix.h,v 1.12 2004/09/14 16:04:39 chrish42 Exp $
+   * $Id: ConcatRowsVMatrix.h,v 1.13 2004/10/26 14:22:49 tihocan Exp $
    ******************************************************* */
 
 
@@ -78,6 +78,7 @@ protected:
 
 public:
 
+  bool fill_missing;
   bool fully_check_mappings;
   bool only_common_fields;
 
@@ -121,6 +122,9 @@ private:
   //! Browse through all data in the VMats to make sure there is no numerical
   //! value conflicting with a string mapping. An error occurs if it is the case.
   void fullyCheckMappings(bool report_progress = true);
+
+  //! Selects all the fields that appear in any of the concatenated VMat.
+  void findAllFields();
 
   //! Selects the fields common to all VMats to concatenate (called at build
   //! time if 'only_common_fields' is true).
