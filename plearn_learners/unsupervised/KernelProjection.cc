@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.cc,v 1.11 2004/07/09 22:21:08 monperrm Exp $ 
+   * $Id: KernelProjection.cc,v 1.12 2004/07/19 13:31:12 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -54,6 +54,7 @@ KernelProjection::KernelProjection()
   first_output(true),
   compute_costs(false),
   free_extra_components(true),
+  ignore_n_first(0),
   min_eigenvalue(-REAL_MAX),
   n_comp(1),
   n_comp_for_cost(-1),
@@ -96,6 +97,9 @@ void KernelProjection::declareOptions(OptionList& ol)
 
   declareOption(ol, "free_extra_components", &KernelProjection::free_extra_components, OptionBase::buildoption,
       "If set to 1, components computed but not kept won't be available after training.");
+
+  declareOption(ol, "ignore_n_first", &KernelProjection::ignore_n_first, OptionBase::buildoption,
+      "Will ignore the first 'ignore_n_first' eigenvectors, if this option is > 0.");
 
   // Learnt options.
 
@@ -203,8 +207,9 @@ void KernelProjection::computeOutput(const Vec& input, Vec& output) const
   output.resize(n_comp_kept);
   real* result_ptr = result[0];
   if (normalize) {
+    real norm_coeff = sqrt(real(n_examples));
     for (int i = 0; i < n_comp_kept; i++) {
-      output[i] = *(result_ptr++) / eigenvalues[i];
+      output[i] = *(result_ptr++) / eigenvalues[i] * norm_coeff;
     }
   } else {
     for (int i = 0; i < n_comp_kept; i++) {
@@ -312,7 +317,11 @@ void KernelProjection::train()
   }
   kernel->computeGramMatrix(gram);
   // (2) Compute its eigenvectors and eigenvalues.
-  eigenVecOfSymmMat(gram, n_comp, eigenvalues, eigenvectors);
+  eigenVecOfSymmMat(gram, n_comp + ignore_n_first, eigenvalues, eigenvectors);
+  if (ignore_n_first > 0) {
+    eigenvalues = eigenvalues.subVec(ignore_n_first, eigenvalues.length() - ignore_n_first);
+    eigenvectors = eigenvectors.subMatRows(ignore_n_first, eigenvectors.length() - ignore_n_first);
+  }
   n_comp_kept = eigenvalues.length(); // Could be different of n_comp.
   // (3) Discard low eigenvalues.
   int p = 0;
