@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.cc,v 1.8 2003/10/07 15:45:17 dorionc Exp $ 
+ * $Id: Trader.cc,v 1.9 2003/10/07 19:51:33 dorionc Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -425,10 +425,7 @@ void Trader::test(VMat testset, PP<VecStatsCollector> test_stats,
       update.append( log(sp500_price(t)/sp500_price(t-horizon)) );
     internal_stats.update(update);
     
-//#ifdef VERBOSE 
-    cout << "(rt, log_rel_rt, sp)[" << t << "]: " << update << endl;
-    
-//#endif
+    //cout << "(rt, log_rel_rt, sp)[" << t << "]: " << update << endl;    
   }
   
   real average = internal_stats.stats[rt].mean(); 

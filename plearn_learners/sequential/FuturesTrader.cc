@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.cc,v 1.12 2003/10/07 15:45:16 dorionc Exp $ 
+   * $Id: FuturesTrader.cc,v 1.13 2003/10/07 19:51:32 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.cc */
@@ -96,8 +96,7 @@ void FuturesTrader::build_test() const
     
     real p_kt = price(k,last_call_train_t);
 
-    // Must not use the margin accessor here!!!
-    margin_cash(last_call_train_t, k) = w_kt*p_kt/leverage; // Which is 0 if w_kt is 0
+    margin(k, last_call_train_t) = w_kt*p_kt/leverage; // Which is 0 if w_kt is 0
   }
 }
   
@@ -179,6 +178,9 @@ void FuturesTrader::check_margin(int k, int t) const
   real cash_from_nowhere_land = 1e12;
   PLWARNING("Margin call on asset %d at time %d: currently gets the money from\n"
             "nowhere land and doesn't keep track of anything", k, t);
+  cout << "original_margin: " << original_margin << endl
+       << "maintenance_margin: " << maintenance_margin << endl
+       << "margin(k, t): " << margin(k, t) << endl;
   
   // Gets cash from 
   cash_from_nowhere_land -= (original_margin - margin(k, t));  
