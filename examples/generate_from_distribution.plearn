@@ -1,0 +1,38 @@
+# This script generates points from a given distribution and saves the result
+# into a file in a given directory.
+
+# distr_file  : the file containing the distribution specification
+# n           : the number of samples to generate
+# save_dir    : the directory in which we save the generated samples
+# seed        : the random generator seed
+
+RunObject( 
+  # PP< UNKNOWN_TYPE_NAME >: The underlying object to be built.
+  underlying_object =
+    PrecomputedVMatrix( 
+      # string: The type of vmatrix to be used for the cached precomputed version of the source.
+      # Currently supported are: dmat, pmat
+      precomp_type = "pmat"  ;
+      # VMat: The source VMatrix
+      source =
+        VMatrixFromDistribution( 
+          # PP< PDistribution >: The distribution this matrix will be generated from
+          distr =
+            $INCLUDE{${distr_file}}
+          # string: mode can be one of:
+          #    "sample" : will draw nsamples from the distribution initializing the generator with the generator_seed 
+          #    "density" : for 1d or 2d distributions, will report the density along a grid of samples_per_dim 
+          #                  gridpoints per dimension. The resulting matrix will contain rows of the form [ coordinates density ] 
+          #    "log_density" : same as density, but reports the log of the density instead. 
+          mode = "sample"  ;
+          # long: The initial generator_seed to initialize the distribution's generator
+          generator_seed = ${seed}
+          # int: number of samples to draw
+          nsamples = ${n}  ;
+        );
+      # And if it is the source inside another VMatrix that sets its 
+      # metadatadir, it will often be set from that surrounding vmat's metadata 
+      metadatadir = "${save_dir}"  ;
+    );
+)
+
