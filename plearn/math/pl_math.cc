@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.cc,v 1.10 2004/04/16 17:37:54 yoshua Exp $
+   * $Id: pl_math.cc,v 1.11 2005/02/07 19:05:18 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -71,6 +71,27 @@ _plearn_nan_type plearn_nan = { 0, 0, 0xc0, 0x7f };
   {}
   
   PLMathInitializer pl_math_initializer;
+
+//////////////
+// is_equal //
+//////////////
+bool is_equal(real a, real b, real absolute_tolerance_threshold, 
+              real absolute_tolerance,
+              real relative_tolerance)
+{
+  if (isnan(a))
+    if (isnan(b))
+      return true;
+    else
+      return false;
+  if (isnan(b))
+    return false;
+  if (int inf_a = isinf(a))
+    return inf_a == isinf(b);
+  if (isinf(b))
+    return false;
+  return fast_is_equal(a, b, absolute_tolerance_threshold, absolute_tolerance, relative_tolerance);
+}
 
 real safeflog(real a)
 {
@@ -132,15 +153,17 @@ real square_f(real x)
  { return x*x; }
 
 // compute log(exp(log_a)-exp(log_b)) without losing too much precision
-real  logsub(real log_a, real log_b)
+real logsub(real log_a, real log_b)
 {
   if (log_a < log_b)
     PLERROR("log_sub: log_a (%f) should be greater than log_b (%f)", log_a, log_b);
  
   real negative_absolute_difference = log_b - log_a;
  
-  if (FEQUAL(log_a, log_b))
-    return -FLT_MAX;
+  // We specify an absolute 1e-5 threshold to have the same behavior as with
+  // the old FEQUAL macro.
+  if (fast_is_equal(log_a, log_b, REAL_MAX, 1e-5))
+    return -REAL_MAX;
   else if (negative_absolute_difference < MINUS_LOG_THRESHOLD)
     return log_a;
   else

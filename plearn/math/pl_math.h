@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.25 2005/01/21 20:26:15 yoshua Exp $
+   * $Id: pl_math.h,v 1.26 2005/02/07 19:05:19 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,25 +53,22 @@
 namespace PLearn {
 using namespace std;
 
-#ifdef USEDOUBLE
+// Define 'real' constants.
+// NB: the max is not really the max, but it's large enough for most applications.
+#if defined(USEDOUBLE)
 #define real double
-#endif
-
-#ifdef USEFLOAT
-#define real float
-#endif
-
-// it is not really the max, but it's large enough for most applications
-#ifdef USEFLOAT
-#define REAL_MAX FLT_MAX
-#else
 #define REAL_MAX DBL_MAX
-#endif
-
-#ifdef USEFLOAT
 #define REAL_EPSILON FLT_EPSILON
-#else
+#define ABSOLUTE_TOLERANCE 1e-8
+#define RELATIVE_TOLERANCE ABSOLUTE_TOLERANCE
+#elif defined(USEFLOAT)
+#define real float
+#define REAL_MAX FLT_MAX
 #define REAL_EPSILON DBL_EPSILON
+#define ABSOLUTE_TOLERANCE 1e-6
+#define RELATIVE_TOLERANCE ABSOLUTE_TOLERANCE
+#else
+#error You must define either USEDOUBLE or USEFLOAT
 #endif
 
 union _plearn_nan_type { unsigned char c[4]; float d; };
@@ -85,6 +82,30 @@ extern _plearn_nan_type plearn_nan;
 #define MISSING_VALUE (plearn_nan.d)
 #endif
   
+//! Test float equality (correctly deals with 'nan' and 'inf' values).
+bool is_equal(real a, real b, real absolute_tolerance_threshold = 1.0, 
+              real absolute_tolerance = ABSOLUTE_TOLERANCE,
+              real relative_tolerance = RELATIVE_TOLERANCE);
+
+//! Test float equality (but does not deal with 'nan' and 'inf' values).
+//! This function is faster than the 'is_equal' function.
+inline bool fast_is_equal(real a, real b, real absolute_tolerance_threshold = 1.0, 
+                          real absolute_tolerance = ABSOLUTE_TOLERANCE,
+                          real relative_tolerance = RELATIVE_TOLERANCE)
+{
+  // Check for 'nan' or 'inf' values in debug mode.
+#ifdef BOUNDCHECK
+  if (isnan(a) || isinf(a) || isnan(b) || isinf(b))
+    PLERROR("In fast_is_equal - Either 'a' or 'b' is 'nan' or 'inf'");
+#endif
+  real a_abs = fabs(a);
+  real b_abs = fabs(b);
+  if (a_abs < absolute_tolerance_threshold && b_abs < absolute_tolerance_threshold)
+    return (fabs(a-b) <= absolute_tolerance);
+  real diff_abs = fabs(a - b);
+  return diff_abs <= relative_tolerance*a_abs && diff_abs <= relative_tolerance*b_abs;
+}
+
 using namespace std;
 
 using std::log;
@@ -136,7 +157,7 @@ inline real negative(real a) { if (a<0) return a; return 0; }
 #endif
 
 #if !defined(LOG_INIT)
-#  define LOG_INIT -FLT_MAX
+#  define LOG_INIT -REAL_MAX
 #endif
 
 #if !defined(MINUS_LOG_THRESHOLD)
@@ -304,9 +325,6 @@ inline real ultrafasttanh(const real& x)
     { return x>=0. ?x :-x; }
 
 #define FSWAP(a,b) do {real _c; _c = *(a); *(a) = *(b); *(b) = _c;} while(0)
-#define FLOAT_THRESHOLD 0.00001
-#define FEQUAL(a,b) (FABS((a)-(b))<FLOAT_THRESHOLD)
-
 
   inline real mypow(real x, real p)
     { return x==0 ?0 :pow(x,p); }
@@ -327,20 +345,22 @@ inline real ultrafasttanh(const real& x)
 //!  is 1 if its argument is STRICTLY positive, and 0 otherwise
   inline real is_positive(real x) { return x>0? 1 : 0; }
 
-//!  numerically stable version of inverse_sigmoid(x) = log(x/(1-x))
-  inline real inverse_sigmoid(real x)
-    {
+//! Numerically stable version of inverse_sigmoid(x) = log(x/(1-x)).
+inline real inverse_sigmoid(real x)
+{
 #ifdef BOUNDCHECK
-      if (x < 0. || x > 1.)
-        PLERROR("In inv_sigmoid_value: a should be in [0,1]");
+  if (x < 0. || x > 1. || isnan(x))
+    PLERROR("In inv_sigmoid_value: a should be in [0,1]");
 #endif
-      if (FEQUAL(x,0.))
-        return -88.;
-      else if (FEQUAL(x,1.))
-        return 14.5;
-      else
-        return real(-log(1./x - 1.));
-    }
+  // We specify an absolute 1e-5 threshold to have the same behavior as with
+  // the old FEQUAL macro.
+  if (fast_is_equal(x,0.,REAL_MAX,1e-5))
+    return -88.;
+  else if (fast_is_equal(x,1.,REAL_MAX,1e-5))
+    return 14.5;
+  else
+    return real(-log(1./x - 1.));
+}
 
 //!  numerically stable computation of log(1+exp(x))
   inline real softplus(real x)
