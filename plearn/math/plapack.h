@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plapack.h,v 1.5 2002/12/22 02:01:14 yoshua Exp $
+   * $Id: plapack.h,v 1.6 2002/12/22 23:00:25 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,6 @@
 
 #include "Mat.h"
 #include "TMat_maths.h"
-#include "TMat.h"
 
 #include "lapack_proto.h"
 

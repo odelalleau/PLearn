@@ -38,6 +38,7 @@
 #define parpack_INC
 
 #include "arpack_proto.h"
+#include "Mat.h"
 
 namespace PLearn <%
 using namespace std;
