@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatColumnsVMatrix.cc,v 1.4 2003/08/13 08:13:46 plearner Exp $
+   * $Id: ConcatColumnsVMatrix.cc,v 1.5 2004/01/16 21:23:27 chapados Exp $
    ******************************************************* */
 
 #include "ConcatColumnsVMatrix.h"
@@ -122,7 +122,8 @@ real ConcatColumnsVMatrix::getStringVal(int col, const string & str) const
       pos += array[k]->width();
       k++;
     }
-  return array[k]->getStringVal(pos+col,str);
+//  return array[k]->getStringVal(pos+col,str);
+    return array[k]->getStringVal(col-pos,str);
 }
 
 string ConcatColumnsVMatrix::getValString(int col, real val) const
@@ -135,7 +136,8 @@ string ConcatColumnsVMatrix::getValString(int col, real val) const
       pos += array[k]->width();
       k++;
     }
-  return array[k]->getValString(pos+col,val);
+//  return array[k]->getValString(pos+col,val);
+  return array[k]->getValString(col-pos,val);
 }
 
 const map<string,real>& ConcatColumnsVMatrix::getStringMapping(int col) const
@@ -148,7 +150,8 @@ const map<string,real>& ConcatColumnsVMatrix::getStringMapping(int col) const
       pos += array[k]->width();
       k++;
     }
-  return array[k]->getStringToRealMapping(pos+col);
+//  return array[k]->getStringToRealMapping(pos+col);
+  return array[k]->getStringToRealMapping(col-pos);
 }
 
 string ConcatColumnsVMatrix::getString(int row, int col) const
@@ -161,7 +164,8 @@ string ConcatColumnsVMatrix::getString(int row, int col) const
       pos += array[k]->width();
       k++;
     }
-  return array[k]->getString(row,pos+col);
+//  return array[k]->getString(row,pos+col);
+  return array[k]->getString(row,col-pos);
 }
 
 
