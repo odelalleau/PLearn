@@ -1,8 +1,6 @@
 #ifndef SET_H
 #define SET_H
 
-#include "pl_io.h"
-
 namespace PLearn {
 
 class PPointableSet : public set<int>, public PPointable
@@ -22,12 +20,19 @@ public:
   Set() : PP<PPointableSet>(new PPointableSet) {}
   Set(PPointableSet* p) : PP<PPointableSet>(p) {}
 
-  bool contains(int i) { return ptr->find(i) != ptr->end(); }
-  void insert(int i) { ptr->insert(i); }
+  bool contains(int elem) { return ptr->find(elem) != ptr->end(); }
+  SetIterator find(int elem) { return ptr->find(elem); }
+  void insert(int elem) { ptr->insert(elem); }
   int size() { return ptr->size(); }
   bool isEmpty() { return (ptr->size() == 0); }
-  void remove(int i) { ptr->erase(i); }
+  void remove(int elem) { ptr->erase(elem); }
   void clear() { ptr->clear(); }
+  
+  void replace(int old_elem, int new_elem) 
+  {
+    remove(old_elem);
+    insert(new_elem);
+  }
   
   void merge(Set s) 
   {
@@ -96,6 +101,7 @@ inline ostream& operator<<(ostream& out, Set s)
 
 }
 
+//include "pl_io.h"
 // inline pl_ostream& operator<<(pl_ostream& out, Set& s)
 // {
 //   int l = s.size(); 

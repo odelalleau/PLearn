@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.h,v 1.1 2002/10/11 19:59:36 morinf Exp $
+   * $Id: WordNetOntology.h,v 1.2 2002/10/17 17:53:34 jauvinc Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -45,16 +45,16 @@
 #include "general.h"
 #include "ShellProgressBar.h"
 #include "Set.h"
+#include "PLMPI.h"
 
 #define NOUN_TYPE 1000
 #define VERB_TYPE 1001
 #define ADJ_TYPE 1002
 #define ADV_TYPE 1003
 #define UNDEFINED_TYPE 1004
-#define ALL_TYPE 1005
-
-#define N_TYPES 5
-const int Types[N_TYPES] = { NOUN_TYPE, VERB_TYPE, ADJ_TYPE, ADV_TYPE, UNDEFINED_TYPE };
+#define ALL_WN_TYPE 1005
+#define NUMERIC_TYPE 1006
+#define PROPER_NOUN_TYPE 1007
 
 #define UNDEFINED_SS_ID -1
 #define ROOT_SS_ID 0
@@ -67,13 +67,21 @@ const int Types[N_TYPES] = { NOUN_TYPE, VERB_TYPE, ADJ_TYPE, ADV_TYPE, UNDEFINED
 #define PROPER_NOUN_SS_ID 7
 #define NUMERIC_SS_ID 8
 #define PUNCTUATION_SS_ID 9
+#define STOP_SS_ID 10
 
-#define NULL_STR "(null)"
+#define NULL_TAG "<null>"
 
 #define OOV_TAG "<oov>"
 #define PROPER_NOUN_TAG "<proper_noun>"
 #define NUMERIC_TAG "<numeric>"
 #define PUNCTUATION_TAG "<punctuation>"
+#define STOP_TAG "<stop>"
+
+#define VERB_TAG "<verb>"
+#define NOUN_TAG "<noun>"
+#define ADJ_TAG "<adj>"
+#define ADV_TAG "<adv>"
+#define UNDEFINED_TAG "<undefined>"
 
 #define WNO_ERROR -1000
 
@@ -90,12 +98,13 @@ namespace PLearn {
 // utils
 string trimWord(string word);
 string stemWord(string& word); // call to WN morphword()
-string stemWord(string& word, int pos);
+string stemWord(string& word, int wn_pos);
 bool isLetter(char c);
 bool isDigit(char c);
 bool isAlpha(char c);
 bool isLegalPunct(char c);
 char* cstr(string& s);
+void removeDelimiters(string& s, char delim, char replace);
 
 // ontology DAG node
 struct Node
@@ -120,6 +129,10 @@ private:
 
   // main ontology structure access points
   map<int, Set> word_to_senses;
+  map<int, Set> word_to_noun_senses;
+  map<int, Set> word_to_verb_senses;
+  map<int, Set> word_to_adj_senses;
+  map<int, Set> word_to_adv_senses;
   map<int, Set> sense_to_words;
   map<int, Set> synset_to_ancestors;
   map<int, Set> word_to_ancestors;
@@ -132,6 +145,8 @@ private:
   map<int, vector<int> > word_to_verb_wnsn;
   map<int, vector<int> > word_to_adj_wnsn;
   map<int, vector<int> > word_to_adv_wnsn;
+  map<int, int> word_to_predominent_pos;
+  map<int, bool> word_is_in_wn;
 
   int word_index; // unique id for words
   int synset_index; // unique id for synsets
@@ -154,6 +169,7 @@ private:
   // these flags are set to 'true' when the corresponding data is pre-computed
   bool are_ancestors_extracted;
   bool are_descendants_extracted;
+  bool are_predominent_pos_extracted;
 
   // If 'differentiate_unknown_words' is set to 'true', all the unknown words (words that are 
   // out of WordNet) will be mapped to DIFFERENT synsets (senses), that are all going to be linked 
@@ -170,7 +186,7 @@ public:
                   bool differentiate_unknown_words,
                   bool pre_compute_ancestors,
                   bool pre_compute_descendants,
-                  int pos_type = ALL_TYPE,
+                  int wn_pos_type = ALL_WN_TYPE,
                   int word_coverage_threshold = -1);
 
   WordNetOntology(string voc_file,                         // init the system and load an ontology, 
@@ -183,19 +199,25 @@ public:
   void save(string synset_file, string ontology_file);
   void save(string voc_file);
   void load(string voc_file, string synset_file, string ontology_file);
+  void savePredominentSyntacticClasses(string file);
+  void loadPredominentSyntacticClasses(string file);
 
   // main access methods
-  int getWordId(string word) { return words_id[word]; }
-  string getWord(int id) { return words[id]; }
-  int getWordSenseIdForWnsn(string word, int pos_type, int wnsn);
+  int getWordId(string word);
+  string getWord(int id);
+  int getWordSenseIdForWnsn(string word, int wn_pos_type, int wnsn);
   int getWordSenseIdForSenseKey(string lemma, string lexsn);
-  Set getWordSenses(int id) { return word_to_senses[id]; }
-  Set getWordsForSense(int id) { return sense_to_words[id]; }
+  Set getWordSenses(int id);
+  Set getWordNounSenses(int id);
+  Set getWordVerbSenses(int id);
+  Set getWordAdjSenses(int id);
+  Set getWordAdvSenses(int id);
+  Set getWordsForSense(int id);
   Set getSynsetAncestors(int id, int max_level = -1);
   Set getWordAncestors(int id, int max_level = -1);
   Set getSynsetSenseDescendants(int id);
   Set getSynsetWordDescendants(int id);
-  Node* getSynset(int id) { return synsets[id]; }
+  Node* getSynset(int id);
   Node* getRootSynset() { return synsets[ROOT_SS_ID]; }
   Set getAllWords();
   Set getAllSenses();
@@ -219,7 +241,8 @@ public:
   bool isWordUnknown(int id);
   bool isSynsetUnknown(int id);
   bool isInWordNet(string word, bool trim_word = true, bool stem_word = true, bool remove_undescores = false);
-  bool hasSenseInWordNet(string word, int pos_type);
+  bool isInWordNet(int word_id);
+  bool hasSenseInWordNet(string word, int wn_pos_type);
 
   bool containsWord(string word) { return (words_id.find(word) != words_id.end()); }
   bool containsWordId(int id) { return (words.find(id) != words.end()); }
@@ -238,18 +261,21 @@ public:
   int overlappingSynsets(int ss_id1, int ss_id2);
   bool areOverlappingSynsets(int ss_id1, int ss_id2) { return (overlappingSynsets(ss_id1, ss_id2) > 1); }
 
-
   void intersectAncestorsAndSenses(Set categories, Set senses);
 
   void reducePolysemy(int level);
 
+  void extractPredominentSyntacticClasses();
+
+  // integrity verifications
   void detectWordsWithoutOntology();
+  void lookForSpecialTags();
 
 private:
 
-  void extract(string voc_file, int pos_type);
-  void extractWord(string original_word, int pos_type, bool trim_word, bool stem_word, bool remove_underscores);
-  bool extractSenses(string original_word, string processed_word, int pos_type);
+  void extract(string voc_file, int wn_pos_type);
+  void extractWord(string original_word, int wn_pos_type, bool trim_word, bool stem_word, bool remove_underscores);
+  bool extractSenses(string original_word, string processed_word, int wn_pos_type);
   Node* extractOntology(SynsetPtr ssp);
   void extractAncestors(int threshold, bool cut_with_word_coverage = true);
   void extractAncestors(Node* node, Set ancestors, int level, int level_threshold);

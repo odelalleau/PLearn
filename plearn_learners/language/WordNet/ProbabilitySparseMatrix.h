@@ -5,11 +5,11 @@
 #include "Object.h"
 #include "Set.h"
 
-#define NUMWIDTH 12
+#define NUMWIDTH 10
 
 namespace PLearn {
 
-typedef map<int, real>::const_iterator RowIterator;
+//typedef map<int, real>::const_iterator RowIterator;
 typedef map<int, real> SparseVec;
 typedef const map<int, real> ConstSparseVec;
 
@@ -123,6 +123,33 @@ public:
     { 
       return y2x(y); 
     }
+
+  map<int,real> getPYxCopy(int x, bool dont_raise_error=false) 
+    { 
+      map<int,real> PYx = x2y(x);
+      if (raise_error && !dont_raise_error && PYx.size()==0)
+        PLERROR("ProbabilitySparseMatrix::getPyx: accessing an empty column at X=%d",x);
+      return PYx;
+    }
+
+  map<int,real> getPyXCopy(int y)
+    { 
+      map<int, real> pyX = y2x(y);
+      return pyX; 
+    }
+
+  void setPYx(int x, const map<int, real>& pYx)
+    {
+      for (map<int, real>::const_iterator it = pYx.begin(); it != pYx.end(); ++it)
+        set(it->first, x, it->second);
+    }
+
+  void setPyX(int y, const map<int, real>& pyX)
+    {
+      for (map<int, real>::const_iterator it = pyX.begin(); it != pyX.end(); ++it)
+        set(y, it->first, it->second);
+    }
+
   void set(int y,int x,real v, bool dont_warn_for_zero = false) { 
     if (v!=0)
     {
@@ -312,6 +339,57 @@ public:
   {
     y2x.load(filename + ".y2x");
     x2y.load(filename + ".x2y");
+  }
+
+  real* getAsFullVector()
+  {
+    // a vector of triples : (row, col, value)
+    int vector_size = y2x.size() * 3;
+    real* full_vector = new real[vector_size];
+    int pos = 0;
+    for (int i = 0; i < ny(); i++)
+    {
+      map<int, real>& row_i = y2x(i);
+      for (map<int, real>::iterator it = row_i.begin(); it != row_i.end(); ++it)
+      {
+        int j = it->first;
+        real value = it->second;
+        full_vector[pos++] = (real)i;
+        full_vector[pos++] = (real)j;
+        full_vector[pos++] = value;
+      }
+    }
+    if (pos != vector_size)
+      PLERROR("weird");
+    return full_vector;
+  }
+
+  void add(real* full_vector, int n_elems)
+  {
+    for (int i = 0; i < n_elems; i += 3)
+      incr((int)full_vector[i], (int)full_vector[i + 1], full_vector[i + 2]);
+  }
+
+  void set(real* full_vector, int n_elems)
+  {
+    clear();
+    for (int i = 0; i < n_elems; i += 3)
+      set((int)full_vector[i], (int)full_vector[i + 1], full_vector[i + 2]);
+  }
+
+  real sumOfElements()
+  {
+    real sum = 0.0;
+    for (int i = 0; i < ny(); i++)
+    {
+      map<int, real>& row_i = y2x(i);
+      for (map<int, real>::iterator it = row_i.begin(); it != row_i.end(); ++it)
+      {
+        int j = it->first;
+        sum += get(i, j);
+      }
+    }
+    return sum;
   }
 
 };
