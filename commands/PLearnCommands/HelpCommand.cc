@@ -1,0 +1,145 @@
+// -*- C++ -*-
+
+// HelpCommand.cc
+// 
+// Copyright (C) 2003 Pascal Vincent 
+// 
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+// 
+//  1. Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+// 
+//  2. Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//     documentation and/or other materials provided with the distribution.
+// 
+//  3. The name of the authors may not be used to endorse or promote
+//     products derived from this software without specific prior written
+//     permission.
+// 
+// THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+// NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+// TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// 
+// This file is part of the PLearn library. For more information on the PLearn
+// library, go to the PLearn Web site at www.plearn.org
+
+/* *******************************************************      
+   * $Id: HelpCommand.cc,v 1.1 2003/05/07 05:39:16 plearner Exp $ 
+   ******************************************************* */
+
+/*! \file HelpCommand.cc */
+#include "HelpCommand.h"
+#include <iostream>
+
+#include "general.h"
+
+// Things to get help on
+#include "getDataSet.h"
+#include "Learner.h"
+#include "Splitter.h"
+#include "VMatrix.h"
+#include "Optimizer.h"
+#include "Kernel.h"
+#include "Variable.h"
+
+
+namespace PLearn <%
+using namespace std;
+
+//! This allows to register the 'HelpCommand' command in the command registry
+PLearnCommandRegistry HelpCommand::reg_(new HelpCommand);
+
+void HelpCommand::helpOverview()
+{
+  cout << 
+    "To run a .plearn script type:                       " + prgname() + " scriptfile.plearn \n"
+    "To run a command type:                              " + prgname() + " command [ command arguments ] \n\n"
+    "To get help on the script file format:              " + prgname() + " help scripts \n"
+    "To get a short description of available commands:   " + prgname() + " help commands \n"
+    "To get detailed help on a specific command:         " + prgname() + " help <command_name> \n"
+    "To get help on a specific PLearn object:            " + prgname() + " help <object_type_name> \n"
+    "To get help on datasets:                            " + prgname() + " help datasets \n" 
+      << endl;
+}
+
+void HelpCommand::helpScripts()
+{
+  cout << 
+    "You can run plearn with the name of a plearn script file as argument\n"
+    "A plearn script file should have a name ending in .plearn\n\n"
+    "A plearn script must contain at least one runnable PLearn object\n"
+    "Typical runnable PLearn objects are 'Experiment' and 'ComparisonExperiment'\n"
+    "\n"
+    "You can type '" + prgname() + " help xxx' to get a description and the list of build options\n"
+    "for any PLearn object xxx linked with the program\n"
+    "\n"
+    "A plearn script can use macro variable definitions and expansion. Macro commands start by a $\n"
+    "ex: $DEFINE{toto=[1,2,3,4]}  ${toto}  $INCLUDE{otherfile.pscript} \n"
+    "Macro variable definitions can also be provided on the command line in the form \n"
+    "varname=varvalue with each such pair separated by a blank, thus\n"
+    "allowing for scripts with arguments\n\n"
+       << endl;
+}
+
+void HelpCommand::helpCommands()
+{
+  cout << "To run a command, type:"
+       << "  % " + prgname()  + " command_name command_arguments \n" << endl;
+
+  cout << "Available commands are: " << endl;
+  PLearnCommandRegistry::print_command_summary(cout);
+  cout << endl;
+
+  cout << "For more details on a specific command, type: \n" 
+       << "  % " << prgname() << " help <command_name> \n"
+       << endl;
+}
+
+void HelpCommand::helpDatasets()
+{
+  cout << getDataSetHelp() << endl;
+}
+
+void HelpCommand::helpAboutScript(const string& fname)
+{
+  if(!file_exists(fname))
+    PLERROR("Could not open script file %s", fname.c_str());
+  cout << 
+    "Help about a script file not yet implemented \n"
+      << endl;
+}
+
+//! The actual implementation of the 'HelpCommand' command 
+void HelpCommand::run(const vector<string>& args)
+{
+  if(args.size()==0)
+    helpOverview();
+  else
+    {
+      string about = args[0];
+      if(extract_extension(about)==".plearn") // help is asked about a plearn script
+        helpAboutScript(about);
+      if(about=="scripts")
+        helpScripts();
+      else if(about=="commands")
+        helpCommands();
+      else if(about=="datasets")
+        helpDatasets();
+      else if(PLearnCommandRegistry::is_registered(about))
+        PLearnCommandRegistry::help(about, cout);
+      else 
+        displayObjectHelp(cout, about);
+    }
+}
+
+%> // end of namespace PLearn
+

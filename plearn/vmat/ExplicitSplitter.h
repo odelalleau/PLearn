@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ExplicitSplitter.h,v 1.1 2002/11/30 04:27:33 plearner Exp $ 
+   * $Id: ExplicitSplitter.h,v 1.2 2003/05/07 05:39:18 plearner Exp $ 
    ******************************************************* */
 
 /*! \file ExplicitSplitter.h */
@@ -93,7 +93,7 @@ public:
   virtual void build();
 
   //! Provides a help message describing this class
-  virtual string help() const;
+  static string help();
 
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);

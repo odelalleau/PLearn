@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AsciiVMatrix.cc,v 1.5 2003/02/27 09:22:11 plearner Exp $ 
+   * $Id: AsciiVMatrix.cc,v 1.6 2003/05/07 05:39:18 plearner Exp $ 
    ******************************************************* */
 
 /*! \file AsciiVMatrix.cc */
@@ -46,12 +46,12 @@ using namespace std;
 IMPLEMENT_NAME_AND_DEEPCOPY(AsciiVMatrix);
 
 AsciiVMatrix::AsciiVMatrix()
-  :readwritemode(false), newfile(false),
+  :file(0), readwritemode(false), newfile(false),
    rewrite_length(true)
 {}
 
 AsciiVMatrix::AsciiVMatrix(const string& fname, bool readwrite)
-  :filename(fname), readwritemode(readwrite), newfile(false),
+  :filename(fname), file(0), readwritemode(readwrite), newfile(false),
    rewrite_length(true)
 {
   build();
@@ -60,7 +60,7 @@ AsciiVMatrix::AsciiVMatrix(const string& fname, bool readwrite)
 AsciiVMatrix::AsciiVMatrix(const string& fname, int the_width, 
                const TVec<string>& the_fieldnames, 
                const string& comment)
-  :inherited(0,the_width), filename(fname), 
+  :inherited(0,the_width), filename(fname), file(0), 
    readwritemode(true), newfile(true), rewrite_length(true)
 {
   inherited::build();
@@ -303,7 +303,7 @@ void AsciiVMatrix::declareOptions(OptionList& ol)
   inherited::declareOptions(ol);
 }
 
-string AsciiVMatrix::help() const
+string AsciiVMatrix::help()
 {
   // ### Provide some useful description of what the class is ...
   return 
@@ -313,8 +313,12 @@ string AsciiVMatrix::help() const
 
 AsciiVMatrix::~AsciiVMatrix()
 {
-  if (file->is_open()) file->close();
-  delete file;
+  if (file)
+    {
+      if(file->is_open()) 
+        file->close();
+      delete file;
+    }
 }
 
 %> // end of namespace PLearn

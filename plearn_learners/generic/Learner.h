@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.h,v 1.8 2003/04/06 23:22:39 plearner Exp $
+   * $Id: Learner.h,v 1.9 2003/05/07 05:39:19 plearner Exp $
    ******************************************************* */
 
 
@@ -251,7 +251,7 @@ using namespace std;
     virtual void build();
 
     /* // All these have been replaced by the declareOptions system.
-    virtual string help() const;
+    static string help();
     virtual string getOptionsToSave() const;
     virtual void readOptionVal(istream& in, const string& optionname);    
     virtual void writeOptionVal(ostream& out, const string& optionname) const;

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.9 2003/04/29 21:33:42 plearner Exp $
+   * $Id: StatsCollector.h,v 1.10 2003/05/07 05:39:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -166,7 +166,7 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     virtual void print(ostream& out) const;
 
     //! Provides a help message describing this class
-    virtual string help() const;
+    static string help();
   };
 
   DECLARE_OBJECT_PTR(StatsCollector);

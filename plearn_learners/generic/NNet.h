@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.h,v 1.1 2003/04/29 21:33:51 plearner Exp $
+   * $Id: NNet.h,v 1.2 2003/05/07 05:39:19 plearner Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -128,7 +128,7 @@ using namespace std;
 
     // PLearner methods
     /*
-    virtual string help() const;
+    static string help();
     virtual string getOptionsToSave() const;
     */
 

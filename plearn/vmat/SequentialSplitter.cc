@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SequentialSplitter.cc,v 1.1 2002/09/11 21:27:44 morinf Exp $ 
+   * $Id: SequentialSplitter.cc,v 1.2 2003/05/07 05:39:18 plearner Exp $ 
    ******************************************************* */
 
 /*! \file SequentialSplitter.cc */
@@ -61,7 +61,7 @@ void SequentialSplitter::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
-string SequentialSplitter::help() const
+string SequentialSplitter::help()
 {
     // ### Provide some useful description of what the class is ...
     return 

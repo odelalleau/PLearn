@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: old_plearn_main.cc,v 1.1 2002/10/25 03:21:00 plearner Exp $
+   * $Id: old_plearn_main.cc,v 1.2 2003/05/07 05:39:16 plearner Exp $
    ******************************************************* */
 
 
@@ -550,16 +550,6 @@ int old_plearn_main(int argc, char** argv)
       string aboutwhat = argv[2];
       if(aboutwhat=="datasets")
         cout << getDataSetHelp();
-      else if(aboutwhat=="Learner")
-        displayRegisteredSubClassesOf<Learner>("Learner", cout);
-      else if(aboutwhat=="Optimizer")
-        displayRegisteredSubClassesOf<Optimizer>("Optimizer", cout);
-      else if(aboutwhat=="Kernel")
-        displayRegisteredSubClassesOf<Kernel>("Kernel", cout);
-      else if(aboutwhat=="Splitter")
-        displayRegisteredSubClassesOf<Splitter>("Splitter", cout);
-      else if(aboutwhat=="VMatrix")
-        displayRegisteredSubClassesOf<VMatrix>("VMatrix", cout);
       else
         displayObjectHelp(cout, aboutwhat);
     }

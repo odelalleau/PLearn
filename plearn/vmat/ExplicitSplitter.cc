@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ExplicitSplitter.cc,v 1.1 2002/11/30 04:27:33 plearner Exp $ 
+   * $Id: ExplicitSplitter.cc,v 1.2 2003/05/07 05:39:18 plearner Exp $ 
    ******************************************************* */
 
 /*! \file ExplicitSplitter.cc */
@@ -60,7 +60,7 @@ void ExplicitSplitter::declareOptions(OptionList& ol)
   inherited::declareOptions(ol);
 }
 
-string ExplicitSplitter::help() const
+string ExplicitSplitter::help()
 {
   return 
     "ExplicitSplitter allows you to define a 'splitter' by giving eplicitly the datasets for each split, as an array of array of strings or of VMatrices.\n"

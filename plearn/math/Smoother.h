@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Smoother.h,v 1.2 2002/12/02 22:11:05 zouave Exp $ 
+   * $Id: Smoother.h,v 1.3 2003/05/07 05:39:17 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Smoother.h */
@@ -95,7 +95,7 @@ public:
   virtual void build();
 
   //! Provides a help message describing this class
-  virtual string help() const;
+  static string help();
 
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);

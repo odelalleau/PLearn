@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Experiment.h,v 1.3 2003/02/27 09:22:12 plearner Exp $ 
+   * $Id: Experiment.h,v 1.4 2003/05/07 05:39:19 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Experiment.h */
@@ -97,7 +97,7 @@ public:
   virtual void build();
 
   //! Provides a help message describing this class
-  virtual string help() const;
+  static string help();
 
   //! Declares name and deepCopy methods
   DECLARE_NAME_AND_DEEPCOPY(Experiment);

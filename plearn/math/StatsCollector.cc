@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.7 2003/04/29 21:33:42 plearner Exp $
+   * $Id: StatsCollector.cc,v 1.8 2003/05/07 05:39:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -107,7 +107,7 @@ void StatsCollector::declareOptions(OptionList& ol)
   inherited::declareOptions(ol);
 }
 
-string StatsCollector::help() const
+string StatsCollector::help()
 {
   // ### Provide some useful description of what the class is ...
   return 

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.cc,v 1.4 2003/05/05 21:18:11 plearner Exp $ 
+   * $Id: EmbeddedLearner.cc,v 1.5 2003/05/07 05:39:18 plearner Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.cc */
@@ -58,7 +58,7 @@ void EmbeddedLearner::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
-string EmbeddedLearner::help() const
+string EmbeddedLearner::help()
 {
     return 
         "EmbeddedLearner implements nothing but forwarding \n"

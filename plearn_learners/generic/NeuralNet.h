@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeuralNet.h,v 1.2 2002/10/23 23:43:26 dorionc Exp $
+   * $Id: NeuralNet.h,v 1.3 2003/05/07 05:39:19 plearner Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeuralNet.h */
@@ -124,10 +124,7 @@ using namespace std;
     DECLARE_NAME_AND_DEEPCOPY(NeuralNet);
 
     // Learner methods
-    /*
-    virtual string help() const;
-    virtual string getOptionsToSave() const;
-    */
+    static string help();
 
     virtual void build();
     virtual void forget(); // simply calls initializeParams()

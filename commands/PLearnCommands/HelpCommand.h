@@ -1,12 +1,8 @@
-
-
 // -*- C++ -*-
 
-// TrainTestSplitter.cc
+// HelpCommand.h
 // 
-// Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999,2000 Pascal Vincent, Yoshua Bengio and University of Montreal
-// Copyright (C) 2002 Frederic Morin
+// Copyright (C) 2003 Pascal Vincent 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -37,66 +33,47 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TrainTestSplitter.cc,v 1.3 2003/05/07 05:39:18 plearner Exp $ 
+   * $Id: HelpCommand.h,v 1.1 2003/05/07 05:39:16 plearner Exp $ 
    ******************************************************* */
 
-/*! \file TrainTestSplitter.cc */
-#include "TrainTestSplitter.h"
+/*! \file HelpCommand.h */
+#ifndef HelpCommand_INC
+#define HelpCommand_INC
+
+#include "PLearnCommand.h"
+#include "PLearnCommandRegistry.h"
 
 namespace PLearn <%
 using namespace std;
 
-TrainTestSplitter::TrainTestSplitter(real the_test_fraction)
-  : test_fraction(the_test_fraction)
-{};
-
-IMPLEMENT_NAME_AND_DEEPCOPY(TrainTestSplitter);
-
-void TrainTestSplitter::declareOptions(OptionList& ol)
+class HelpCommand: public PLearnCommand
 {
-  declareOption(ol, "test_fraction", &TrainTestSplitter::test_fraction, OptionBase::buildoption,
-                "Defined the fraction of the dataset reserved to the test set");
-  inherited::declareOptions(ol);
-}
+protected:
 
-string TrainTestSplitter::help()
-{
-  // ### Provide some useful description of what the class is ...
-  return 
-    "TrainTestSplitter implements a single split of the dataset into a training-set and a test-set (the test part being the last few samples of the dataset)"
-    + optionHelp();
-}
-
-void TrainTestSplitter::build_()
-{
-}
-
-// ### Nothing to add here, simply calls build_
-void TrainTestSplitter::build()
-{
-  inherited::build();
-  build_();
-}
-
-int TrainTestSplitter::nsplits() const
-{
-  return 1; // only one split
-}
-
-Array<VMat> TrainTestSplitter::getSplit(int k)
-{
-  if (k)
-    PLERROR("TrainTestSplitter::getSplit() - k cannot be greater than 0");
+  void helpOverview();
+  void helpAboutScript(const string& fname);
+  void helpScripts();
+  void helpCommands();
+  void helpDatasets();
+  void helpObject(const string& objectname="");
   
-  Array<VMat> split_(2);
-  int l = dataset->length();
-  int test_length = int(test_fraction*l);
-  int train_length = l - test_length;
+public:
+  HelpCommand():
+    PLearnCommand("help",
+                  "plearn command-line help",
+
+                  "help <topic>\n"
+                  "Run the help command with no argument to get an overview of the system.\n"
+                  ) 
+  {}
+                    
+  virtual void run(const vector<string>& args);
+
+protected:
+  static PLearnCommandRegistry reg_;
+};
+
   
-  split_[0] = dataset.subMatRows(0, train_length);
-  split_[1] = dataset.subMatRows(train_length, test_length);
-  return split_;
-}
-
-
 %> // end of namespace PLearn
+
+#endif

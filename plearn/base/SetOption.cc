@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SetOption.cc,v 1.1 2003/04/06 23:22:13 plearner Exp $ 
+   * $Id: SetOption.cc,v 1.2 2003/05/07 05:39:16 plearner Exp $ 
    ******************************************************* */
 
 /*! \file SetOption.cc */
@@ -58,7 +58,7 @@ SetOption::SetOption()
     inherited::declareOptions(ol);
   }
 
-  string SetOption::help() const
+  string SetOption::help()
   {
     // ### Provide some useful description of what the class is ...
     return 

@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.4 2003/04/09 19:43:43 tihocan Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.5 2003/05/07 05:39:17 plearner Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -70,7 +70,7 @@ void VecStatsCollector::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
   }
 
-string VecStatsCollector::help() const
+string VecStatsCollector::help()
 {
     // ### Provide some useful description of what the class is ...
     return 

@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Binner.cc,v 1.3 2002/11/05 16:30:34 zouave Exp $ 
+   * $Id: Binner.cc,v 1.4 2003/05/07 05:39:16 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Binner.cc */
@@ -76,7 +76,7 @@ Binner::Binner()
     inherited::declareOptions(ol);
   }
 
-  string Binner::help() const
+  string Binner::help()
   {
     // ### Provide some useful description of what the class is ...
     return 

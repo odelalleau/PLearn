@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Distribution.h,v 1.6 2003/02/21 18:27:39 paiemeje Exp $ 
+   * $Id: Distribution.h,v 1.7 2003/05/07 05:39:18 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Distribution.h */
@@ -99,7 +99,7 @@ public:
   virtual void build();
 
   //! Provides a help message describing this class
-  virtual string help() const;
+  static string help();
 
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);

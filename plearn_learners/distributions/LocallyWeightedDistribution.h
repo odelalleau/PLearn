@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyWeightedDistribution.h,v 1.3 2002/10/22 08:46:07 plearner Exp $ 
+   * $Id: LocallyWeightedDistribution.h,v 1.4 2003/05/07 05:39:18 plearner Exp $ 
    ******************************************************* */
 
 /*! \file LocallyWeightedDistribution.h */
@@ -89,7 +89,7 @@ public:
   virtual void build();
 
   //! Provides a help message describing this class
-  virtual string help() const;
+  static string help();
 
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);

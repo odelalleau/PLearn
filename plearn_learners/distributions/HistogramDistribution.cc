@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HistogramDistribution.cc,v 1.7 2003/01/10 17:09:06 zouave Exp $ 
+   * $Id: HistogramDistribution.cc,v 1.8 2003/05/07 05:39:18 plearner Exp $ 
    ******************************************************* */
 
 /*! \file HistogramDistribution.cc */
@@ -100,7 +100,7 @@ HistogramDistribution::HistogramDistribution(VMat data, PP<Binner> the_binner_,
     inherited::declareOptions(ol);
   }
 
-  string HistogramDistribution::help() const
+  string HistogramDistribution::help()
   {
     // ### Provide some useful description of what the class is ...
     return 

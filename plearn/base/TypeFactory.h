@@ -2,6 +2,7 @@
 
 // TypeFactory.cc
 // Copyright (c) 2001 by Nicolas Chapados
+// Copyright (c) 2003 Pascal Vincent
 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -39,15 +40,44 @@
 #include <string>
 #include <map>
 #include <vector>
+#include "OptionBase.h"
 
 namespace PLearn <%
 using namespace std;
 
+// Predeclarations
+class Object;
+
 //!  Typedef for the "new instance" function type, which returns a
 //!  default-initialized Object
-  class Object;
-  typedef Object* (*NEW_OBJECT)();
-  typedef map<string,NEW_OBJECT> TypeMap;
+typedef Object* (*NEW_OBJECT)();
+typedef OptionList& (*GETOPTIONLIST_METHOD)();
+typedef string (*HELP_METHOD)();
+typedef bool (*ISA_METHOD)(Object* o);
+
+class TypeMapEntry
+{
+public:
+  string parent_class; // name of parent class
+  NEW_OBJECT constructor;
+  GETOPTIONLIST_METHOD getoptionlist_method;
+  HELP_METHOD help_method;
+  ISA_METHOD isa_method;
+  
+  TypeMapEntry(const string& the_parent_class="", 
+               NEW_OBJECT the_constructor=0, 
+               GETOPTIONLIST_METHOD the_getoptionlist_method=0,
+               HELP_METHOD the_help_method=0,
+               ISA_METHOD the_isa_method=0)
+    :parent_class(the_parent_class),
+     constructor(the_constructor), 
+     getoptionlist_method(the_getoptionlist_method),
+     help_method(the_help_method),
+     isa_method(the_isa_method)
+  {}
+};
+
+typedef map<string,TypeMapEntry> TypeMap;
 
 //##########################  CLASS  TYPEREGISTRAR  ###########################
 /*!   
@@ -58,7 +88,7 @@ using namespace std;
 class TypeRegistrar
 {
 public:
-  TypeRegistrar(string type_name, NEW_OBJECT constructor);
+  TypeRegistrar(const string& type_name, const TypeMapEntry& entry);
 };
 
 
@@ -74,17 +104,24 @@ public:
   // Default constructor, destructor, etc.
 
   //!  Register a type
-  void registerType(string type_name, NEW_OBJECT constructor);
+  void registerType(const string& type_name, const TypeMapEntry& entry);
 
   //!  Unregister a type
   void unregisterType(string type_name);
 
   //!  Verify if the type is registered
-  NEW_OBJECT isRegistered(string type_name) const;
+  bool isRegistered(string type_name) const;
 
   //!  Construct a new default-constructed object given its type name
-  //!  Return 0 if type_name is not registered
+  //!  Calls PLERROR (throws an exception) if type_name is not registered
   Object* newObject(string type_name) const;
+
+  //! Returns help for registered object
+  string help(string type_name) const;
+
+  //! Tells if the given object is a virtual base class (with pure virtual methods)
+  //! (This simply checks if it was declared with a constructor or not)
+  bool isAbstract(string type_name) const;
 
   const TypeMap& getTypeMap() const
   { return type_map_; }
@@ -95,9 +132,9 @@ public:
 };
 
 
-//#####  Utility Macros  ######################################################
+//! Will display the help message for an object of the given classname
+void displayObjectHelp(ostream& out, const string& classname);
 
-//!   (See Object.h)
 
 %> // end of namespace PLearn
 

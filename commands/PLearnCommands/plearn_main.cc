@@ -33,27 +33,19 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_main.cc,v 1.9 2003/03/15 00:04:20 plearner Exp $
+   * $Id: plearn_main.cc,v 1.10 2003/05/07 05:39:16 plearner Exp $
    ******************************************************* */
 
+#include "general.h"
 #include "plearn_main.h"
 #include "PLearnCommandRegistry.h"
 #include "stringutils.h"
 #include "random.h"
 #include "PLMPI.h"
-
-// Things to get help on
-#include "getDataSet.h"
-#include "Learner.h"
-#include "Splitter.h"
-#include "VMatrix.h"
-#include "Optimizer.h"
-#include "Kernel.h"
-#include "Variable.h"
+#include "Object.h"
 
 namespace PLearn <%
 using namespace std;
-
 
 int plearn_main(int argc, char** argv)
 {
@@ -63,63 +55,18 @@ int plearn_main(int argc, char** argv)
 
   seed();
 
-  string programname = argv[0];
+  // set program name
+  prgname(argv[0]);
+
   if(argc<=1)
     {
-      cerr << "Type '" << programname << " help' for help" << endl;
+      cerr << "Type '" << prgname() << " help' for help" << endl;
       return 0;
     }
   else 
     {
       string command = argv[1];
-      if(command=="help")
-        {
-          if(argc==2)
-            {
-              cerr << "Available commands are: " << endl;
-              PLearnCommandRegistry::print_command_summary(cerr);
-              cerr << endl;
-              cerr << "Type 'plearn help xxx' to get detailed help on command xxx \n\n" 
-                "You may also run plearn with the name of a plearn script file as argument\n"
-                "A plearn script file should have a name ending in .plearn\n"
-                "It can use macro variable definitions and expansion. Macro commands start by a $\n"
-                "ex: $DEFINE{toto=[1,2,3,4]}  ${toto}  $INCLUDE{otherfile.pscript} \n"
-                "Macro variable definitions can also be provided on the command line in the form \n"
-                "varname=varvalue with each such pair separated by a blank, thus\n"
-                "allowing for scripts with arguments\n\n"
-                "A plearn script must contain at least one runnable PLearn object\n"
-                "Typical runnable PLearn objects are 'Experiment' and 'ComparisonExperiment'\n\n"
-                "You can type 'plearn help xxx' to get a description and the list of build options\n"
-                "for any instantiable PLearn object xxx \n\n"
-                "In addition you can get a list of all instantiable subclasses of the following \n"
-                "base classes yyy by typing 'plearn help yyy':\n"
-                "   Learner, Splitter, VMatrix, Optimizer, Kernel, Variable \n\n"
-                "Finally 'plearn help datasets' will print some help on datasets\n" << endl;
-            }
-          else
-            {
-              string aboutwhat = argv[2];
-              if(PLearnCommandRegistry::is_registered(aboutwhat))
-                PLearnCommandRegistry::help(aboutwhat, cout);
-              else if(aboutwhat=="datasets")
-                cout << getDataSetHelp();
-              else if(aboutwhat=="Learner")
-                displayRegisteredSubClassesOf<Learner>("Learner", cout);
-              else if(aboutwhat=="Optimizer")
-                displayRegisteredSubClassesOf<Optimizer>("Optimizer", cout);
-              else if(aboutwhat=="Kernel")
-                displayRegisteredSubClassesOf<Kernel>("Kernel", cout);
-              else if(aboutwhat=="Splitter")
-                displayRegisteredSubClassesOf<Splitter>("Splitter", cout);
-              else if(aboutwhat=="VMatrix")
-                displayRegisteredSubClassesOf<VMatrix>("VMatrix", cout);
-              else if(aboutwhat=="Variable")
-                displayRegisteredSubClassesOf<Variable>("Variable", cout);
-              else
-                displayObjectHelp(cout, aboutwhat);
-            }
-        }
-      else if(PLearnCommandRegistry::is_registered(command))
+      if(PLearnCommandRegistry::is_registered(command))
         {
           vector<string> args = stringvector(argc-2, argv+2);
           PLearnCommandRegistry::run(command, args);
@@ -156,7 +103,6 @@ int plearn_main(int argc, char** argv)
               // cerr << in.peek() << endl;
             }
         }
-
 
     }
 

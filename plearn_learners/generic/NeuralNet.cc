@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeuralNet.cc,v 1.10 2003/05/06 20:25:19 tihocan Exp $
+   * $Id: NeuralNet.cc,v 1.11 2003/05/07 05:39:19 plearner Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeuralNet.h */
@@ -72,6 +72,11 @@ NeuralNet::NeuralNet()
 
 NeuralNet::~NeuralNet()
 {
+}
+
+string NeuralNet::help()
+{
+  return "Basic Multilayer perceptron class";
 }
 
 void NeuralNet::declareOptions(OptionList& ol)

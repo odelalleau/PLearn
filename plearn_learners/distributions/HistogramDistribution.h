@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HistogramDistribution.h,v 1.7 2003/01/10 17:09:07 zouave Exp $ 
+   * $Id: HistogramDistribution.h,v 1.8 2003/05/07 05:39:18 plearner Exp $ 
    ******************************************************* */
 
 /*! \file HistogramDistribution.h */
@@ -114,7 +114,7 @@ public:
   virtual void build();
 
   //! Provides a help message describing this class
-  virtual string help() const;
+  static string help();
 
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);

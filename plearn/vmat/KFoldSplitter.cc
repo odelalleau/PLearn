@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KFoldSplitter.cc,v 1.2 2002/10/03 07:35:28 plearner Exp $ 
+   * $Id: KFoldSplitter.cc,v 1.3 2003/05/07 05:39:18 plearner Exp $ 
    ******************************************************* */
 
 /*! \file SequentialSplitter.cc */
@@ -58,7 +58,7 @@ void KFoldSplitter::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
-string KFoldSplitter::help() const
+string KFoldSplitter::help()
 {
     // ### Provide some useful description of what the class is ...
     return 

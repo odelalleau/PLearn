@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalCDFSmoother.h,v 1.1 2002/12/02 22:10:56 zouave Exp $ 
+   * $Id: ConditionalCDFSmoother.h,v 1.2 2003/05/07 05:39:16 plearner Exp $ 
    ******************************************************* */
 
 /*! \file ConditionalCDFSmoother.h */
@@ -98,7 +98,7 @@ public:
   virtual void build();
 
   //! Provides a help message describing this class
-  virtual string help() const;
+  static string help();
 
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);

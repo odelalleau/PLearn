@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AsciiVMatrix.h,v 1.4 2003/02/27 09:22:12 plearner Exp $ 
+   * $Id: AsciiVMatrix.h,v 1.5 2003/05/07 05:39:18 plearner Exp $ 
    ******************************************************* */
 
 /*! \file AsciiVMatrix.h */
@@ -106,7 +106,7 @@ public:
   virtual void build();
 
   //! Provides a help message describing this class
-  virtual string help() const;
+  static string help();
 
   virtual ~AsciiVMatrix();
 

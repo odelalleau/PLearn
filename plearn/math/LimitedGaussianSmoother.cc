@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LimitedGaussianSmoother.cc,v 1.6 2003/01/10 17:09:01 zouave Exp $ 
+   * $Id: LimitedGaussianSmoother.cc,v 1.7 2003/05/07 05:39:17 plearner Exp $ 
    ******************************************************* */
 
 /*! \file LimitedGaussianSmoother.cc */
@@ -76,7 +76,7 @@ LimitedGaussianSmoother::LimitedGaussianSmoother(real window_size_wrt_sigma_, re
     inherited::declareOptions(ol);
   }
 
-  string LimitedGaussianSmoother::help() const
+  string LimitedGaussianSmoother::help()
   {
     // ### Provide some useful description of what the class is ...
     return 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PExperiment.cc,v 1.1 2003/05/03 05:02:18 plearner Exp $ 
+   * $Id: PExperiment.cc,v 1.2 2003/05/07 05:39:19 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PExperiment.cc */
@@ -98,7 +98,7 @@ PExperiment::PExperiment()
     inherited::declareOptions(ol);
   }
 
-  string PExperiment::help() const
+  string PExperiment::help()
   {
     return 
       "The PExperiment class allows you to describe a typical learning experiment that you wish to perform, \n"

@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: AutoVMatrix.h,v 1.1 2002/10/10 23:45:42 plearner Exp $
+   * $Id: AutoVMatrix.h,v 1.2 2003/05/07 05:39:18 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -86,7 +86,7 @@ public:
   virtual void build();
 
   //! Provides a help message describing this class
-  virtual string help() const;
+  static string help();
 
 };
 

@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Distribution.cc,v 1.8 2003/02/21 18:27:38 paiemeje Exp $ 
+   * $Id: Distribution.cc,v 1.9 2003/05/07 05:39:18 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Distribution.cc */
@@ -72,7 +72,7 @@ void Distribution::declareOptions(OptionList& ol)
   inherited::declareOptions(ol);
 }
 
-  string Distribution::help() const
+  string Distribution::help()
   {
     // ### Provide some useful description of what the class is ...
     return 

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.cc,v 1.16 2003/05/06 20:25:17 tihocan Exp $
+   * $Id: GradientOptimizer.cc,v 1.17 2003/05/07 05:39:17 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -90,7 +90,7 @@ void GradientOptimizer::declareOptions(OptionList& ol)
 }
 
   /*
-string GradientOptimizer::help() const
+string GradientOptimizer::help()
 {
   return 
     "GradientOptimizer is the simple usual gradient descent algorithm \n"

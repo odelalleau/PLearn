@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
- * $Id: AutoVMatrix.cc,v 1.1 2002/10/10 23:45:41 plearner Exp $
+ * $Id: AutoVMatrix.cc,v 1.2 2003/05/07 05:39:18 plearner Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -61,7 +61,7 @@ void AutoVMatrix::declareOptions(OptionList& ol)
   inherited::declareOptions(ol);
 }
 
-string AutoVMatrix::help() const
+string AutoVMatrix::help()
 {
   return 
     "AutoVMatrix tries to interpret the given 'specification' (it will call getDataSet) and will be a wrapper around the appropriate VMatrix type, simply forwarding calls to it."

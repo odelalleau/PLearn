@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: general.h,v 1.7 2003/04/10 18:05:00 jkeable Exp $
+   * $Id: general.h,v 1.8 2003/05/07 05:39:16 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -257,6 +257,10 @@ public:
 };
 
 //static PLearnInit _plearn_init_;
+
+// set or get (if argument is "") the program name, as given by argv[0] of main
+string prgname(const string& setname = "");
+
 
 %> // end of namespace PLearn
 

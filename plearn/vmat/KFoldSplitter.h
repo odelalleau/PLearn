@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KFoldSplitter.h,v 1.1 2002/09/11 21:27:44 morinf Exp $ 
+   * $Id: KFoldSplitter.h,v 1.2 2003/05/07 05:39:18 plearner Exp $ 
    ******************************************************* */
 
 /*! \file KFoldSplitter.h */
@@ -94,7 +94,7 @@ public:
     virtual void build();
 
     //! Provides a help message describing this class
-    virtual string help() const;
+    static string help();
 
     //! Declares name and deepCopy methods
     DECLARE_NAME_AND_DEEPCOPY(KFoldSplitter);

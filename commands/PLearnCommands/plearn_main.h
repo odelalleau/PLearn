@@ -33,8 +33,10 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_main.h,v 1.2 2002/10/25 03:21:00 plearner Exp $
+   * $Id: plearn_main.h,v 1.3 2003/05/07 05:39:16 plearner Exp $
    ******************************************************* */
+
+#include <string>
 
 #ifndef plearn_main_INC
 #define plearn_main_INC

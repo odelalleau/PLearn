@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ManualBinner.cc,v 1.3 2002/11/18 15:59:31 zouave Exp $ 
+   * $Id: ManualBinner.cc,v 1.4 2003/05/07 05:39:17 plearner Exp $ 
    ******************************************************* */
 
 /*! \file ManualBinner.cc */
@@ -72,7 +72,7 @@ ManualBinner::ManualBinner(Vec bin_positions_)
     inherited::declareOptions(ol);
   }
 
-  string ManualBinner::help() const
+  string ManualBinner::help()
   {
     // ### Provide some useful description of what the class is ...
     return 

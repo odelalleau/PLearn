@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.20 2003/05/06 20:58:43 tihocan Exp $
+   * $Id: plearn.cc,v 1.21 2003/05/07 05:39:14 plearner Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -83,6 +83,7 @@
 
 
 // Commands
+#include "HelpCommand.h"
 #include "KolmogorovSmirnovCommand.h"
 #include "ReadAndWriteCommand.h"
 

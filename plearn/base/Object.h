@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.13 2003/05/01 22:39:13 plearner Exp $
+   * $Id: Object.h,v 1.14 2003/05/07 05:39:16 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,16 +51,14 @@
 #include "general.h"
 #include "PP.h"
 #include "TypeTraits.h"
-#include "TypeFactory.h"
 #include "Array.h"
 #include "stringutils.h"
-
+#include "TypeFactory.h"
+#include "OptionBase.h"
+#include "Option.h"
 
 namespace PLearn <%
 using namespace std;
-
-  class OptionBase;  // predeclare for methods in Object
-  typedef vector< PP<OptionBase> > OptionList;
 
 /*!     This base class of PLearn objects exposes simple mechanisms for:
     - automatic memory management (through reference counting and smart pointers)
@@ -140,6 +138,9 @@ using namespace std;
     virtual Object* deepCopy(CopiesMap& copies) const;
 
     //!  returns name of the class
+    static string _classname_();
+
+    //!  returns calls its class's _classname_()
     virtual string classname() const; 
 
     //!  returns a bit more informative string about object (default returns
@@ -152,12 +153,8 @@ using namespace std;
 */
     virtual void print(ostream& out) const; 
 
-    //! Returns a help string with the list of build options
-    //! for this object (includes inherited options from parent classes)
-    /*! Warning: the values printed as "default" are the current instance's values, so they
-      correspond to the actual "defaults" only when invoked on an instance freshly constructed
-      with the default constructor... */
-    string optionHelp() const;
+    // For temporary backward compatibility. This simply returns an empty string now...
+    static string optionHelp();
 
     //! Reads and sets the value for the specified option from the specified stream
     /*! Subclasses should overload this, typically following this pattern:
@@ -202,7 +199,7 @@ using namespace std;
     //! Should return a multiline string with a short description of what this
     //! object does, as well as a description of available build-options
     //! (and their default value)
-    virtual string help() const;
+    static string help();
 
 /*!       This is a generic method to be able to retrieve the value of an
       option supported by the object (and its derivatives). The option
@@ -340,144 +337,6 @@ template<class T> Object* toIndexedObjectPtr(const Array<T> &x, int i)
 template<class T> Object *toIndexedObjectPtr(const T&, int) // Never to be called stub
 { PLERROR("toIndexedObjectPtr() - Unexpected error"); return 0; };
 
-//! Base class for option definitions
-class OptionBase: public PPointable
-{
-public:
-  typedef OBflag_t flag_t; // To change type of flag_t, change type of OBflag_t in pl_io.h instead
-
-  //! 'buildoption' an option typically specified before calling the initial build 
-  //! (semantically similat to a constructor parameter) ex: the number of hidden units in a neural net
-  static const flag_t buildoption;       
-
-  //! 'learntoption' a field whose proper value is computed by the class after construction
-  //! (not to be set by the user before build) ex: the weights of a neural net
-  static const flag_t learntoption;
-
-  //! 'tuningoption' an option typically set after the initial build, to tune the object
-  static const flag_t tuningoption;
-
-  //! Do not include this option in the objet's serialisation (write method skips it)
-  static const flag_t nosave; 
-
-protected:
-  string optionname_;  // the name of the option
-  flag_t flags_; 
-  string optiontype_;  // the datatype of the option ("int" ...)
-  string defaultval_;  // string representation of the default value (will be printed by optionHelp())
-  string description_; // A description of this option
-
-public:
-
-  //! Most of these parameters only serve to provide the user 
-  //! with an informative help text. (only optionname and saveit are really important)
-  OptionBase(const string& optionname, flag_t flags,
-             const string& optiontype, const string& defaultval, 
-             const string& description)
-    :optionname_(optionname), flags_(flags), 
-    optiontype_(optiontype), defaultval_(defaultval),
-    description_(description) {}
-
-  virtual void read(Object* o, PStream& in) const = 0;
-  virtual void read_and_discard(PStream& in) const = 0;
-  virtual void write(const Object* o, PStream& out) const = 0;
-
-  // writes the option into a string instead of a stream
-  // (calls write on a string stream) 
-  string writeIntoString(const Object* o) const;
-  
-  virtual Object* getAsObject(Object* o) const = 0;
-  virtual const Object* getAsObject(const Object* o) const = 0;
-  virtual Object *getIndexedObject(Object *o, int i) const = 0;
-  virtual const Object *getIndexedObject(const Object *o, int i) const = 0;    
-  
-  //! Returns the name of the class in to which this field belongs
-  virtual string optionHolderClassName(const Object* o) const = 0;
-
-  //! The name of the option (field)
-  inline const string& optionname() const { return optionname_; }
-  inline bool isOptionNamed(string name) const { return name == optionname(); }
-  
-  inline const string& optiontype() const { return optiontype_; }
-  inline const string& defaultval() const { return defaultval_; }
-  inline const string& description() const { return description_; }
-  inline flag_t flags() const { return flags_; }
-
-  //! change the string representation of the default value
-  inline void setDefaultVal(const string& newdefaultval)
-  { defaultval_ = newdefaultval; }
-};
-
-//! Template class for option definitions
-template<class ObjectType, class OptionType, class ConstOptionType>
-class Option: public OptionBase
-{
-protected:
-  OptionType ObjectType::*ptr;
-
-public:
-
-  //! Most of these parameters only serve to provide the user 
-  //! with an informative help text. (only optionname and saveit are really important)
-  Option(const string& optionname, OptionType ObjectType::* member_ptr, 
-         flag_t flags, const string& optiontype, const string& defaultval,
-         const string& description)
-    :OptionBase(optionname, flags, optiontype, defaultval, description),
-    ptr(member_ptr) {}
-  virtual void read(Object* o, PStream& in) const
-  { in >> dynamic_cast<ObjectType*>(o)->*ptr; }
-  virtual void read_and_discard(PStream& in) const
-  { 
-    string dummy;
-    smartReadUntilNext(in.rawin(), ";)", dummy);
-    in.unget();
-    //OptionType op; //dummy object that will be destroyed after read
-    //in >> op; //read dummy object
-  }
-  virtual void write(const Object* o, PStream& out) const
-  { out << static_cast<ConstOptionType>(dynamic_cast<const ObjectType *>(o)->*ptr); }
-
-  virtual Object* getAsObject(Object* o) const
-  { return toObjectPtr(dynamic_cast<ObjectType*>(o)->*ptr); }
-
-  virtual const Object* getAsObject(const Object* o) const
-  { return toObjectPtr(dynamic_cast<const ObjectType*>(o)->*ptr); }
-
-  virtual Object *getIndexedObject(Object *o, int i) const
-  { return toIndexedObjectPtr(dynamic_cast<ObjectType*>(o)->*ptr, i); };
-
-  virtual const Object* getIndexedObject(const Object *o, int i) const
-  { return toIndexedObjectPtr(dynamic_cast<const ObjectType*>(o)->*ptr, i); };
-
-  virtual string optionHolderClassName(const Object* o) const
-  { return dynamic_cast<const ObjectType*>(o)->ObjectType::classname(); }
-};
-
-//! For flags, you should specify one of 
-//! OptionBase::buildoption, OptionBase::learntoption or OptionBase::tuningoption
-//! If the option is not to be serialized, you can additionally specify 
-//! OptionBase::nosave
-/*! The "type" printed in optionHelp() is given by TypeTraits<OptionType>::name().
-    The "default value" printed in optionHelp() will be a serialization of 
-    the value of the field in a default constructed instance, (which should be ok in most cases),
-    unless you explicitly specify it as the last argument here (It is recomended that you *don't*
-    specify it explicitly, unless you really must). */
-
-template<class ObjectType, class OptionType>
-inline void declareOption(OptionList& ol,                      //!< the list to which this option should be appended 
-                          const string& optionname,            //!< the name of this option
-                          OptionType ObjectType::* member_ptr, //!< &YourClass::your_field
-                          OptionBase::flag_t flags,            //! see the flags in OptionBase
-                          const string& description,           //!< a description of the option
-                          const string & defaultval="")        //!< the default value for this option, as set by the default constructor
-{ ol.push_back(new Option<ObjectType, OptionType, const OptionType>(optionname, member_ptr, flags, 
-                                                                    TypeTraits<OptionType>::name(), 
-                                                                    defaultval, description)); }
-template<class ObjectType, class OptionType>
-inline void declareOption(OptionList& ol, const string& optionname, OptionType *ObjectType::* member_ptr, OptionBase::flag_t flags,
-                          const string& description, const string & defaultval="")
-{ ol.push_back(new Option<ObjectType, OptionType *, const OptionType *>(optionname, member_ptr, flags, TypeTraits<OptionType *>::name(), 
-                                                                        defaultval, description)); }
 
 /*! This function builds an object from its representation in the stream.
     It understands several representations:
@@ -568,48 +427,6 @@ inline void declareOption(OptionList& ol, const string& optionname, OptionType *
 // This takes precedence over the template definitions for a template type T in PStream.h
   PStream &operator>>(PStream &in, Object * &o);
 
-//! Will display the help message for an object of the given classname
-void displayObjectHelp(ostream& out, const string& classname, bool fulloptions=false);
-
-//! Will disply the list of all subclasses of the given BaseClass
-//! that are registered in the type factory
-template<class BaseClass>
-void displayRegisteredSubClassesOf(const string& baseclassname, ostream& out)
-{
-  out << "******************************************* " << endl;
-  out << "**  Registered subclasses of " << baseclassname << " ** " << endl;
-  out << "******************************************* " << endl;
-  const TypeMap& tmap = TypeFactory::instance().getTypeMap();
-  TypeMap::const_iterator it = tmap.begin();
-  TypeMap::const_iterator itend = tmap.end();
-  while(it!=itend)
-    {
-      // cerr << it->first << endl;
-      Object* o = (*(it->second))();
-      if(dynamic_cast<BaseClass*>(o))
-        out << it->first << endl;
-      if(o)
-        delete o;
-      ++it;
-    }
-  out << "-------------------------------------" << endl;
-}
-
-
-/*
-  inline pl_istream &
-  operator>>(pl_istream &in, PP<Object> &o)
-  {
-
-      if (Object *obj = readObject(in)) {
-          o = dynamic_cast<T *>(obj);
-          if (o.isNull())
-              PLERROR("Object is of wrong type \"%s\"", obj->classname().c_str());
-      } else
-          o = 0;
-      return in;
-  }
-*/
 
 /*!     The following macros are meant to help you write the classname() and
     deepCopy() methods in a systematic manner for every class.  Within your
@@ -635,7 +452,7 @@ void displayRegisteredSubClassesOf(const string& baseclassname, ostream& out)
     if the class is abstract; the implementation of the method 
     yields an error, but the return type is correct.
         
-    NEW STUFF: TYPE FACTORY-related.  In addition to declaring the
+    Also, TYPE FACTORY-related.  In addition to declaring the
     classname() and deepCopy() methods, the macros are now used to
     automate the declaration of classes derived from Object inside the
     global system TypeMap (see TypeFactory.h).  When you call these macros,
@@ -645,64 +462,72 @@ void displayRegisteredSubClassesOf(const string& baseclassname, ostream& out)
     to instantiate new empty objects given only the name of the class as a
     string.
 
-    CHANGE FROM PASCAL: Abstract classes are no longer declared in the TypeFactory.
-    As they could not be instantiated anyway, there was no point in including them,
-    and it prevented looping through all classes declared in the TypeFactory 
-    to list all Learner subclasses for example. This is now possible.
 */
 
-
-#define DECLARE_ABSTRACT_NAME(CLASSNAME)                                   \
+#define PLEARN_DECLARE_OBJECT_METHODS(CLASSTYPE, CLASSNAME, PARENTTYPE)    \
         public:                                                            \
-          string classname() const
-#define IMPLEMENT_ABSTRACT_NAME(CLASSNAME)                                 \
-	string CLASSNAME::classname() const                                \
-          { return #CLASSNAME; }
-
-#define DECLARE_ABSTRACT_DEEPCOPY(CLASSNAME)                               \
-        CLASSNAME *deepCopy(CopiesMap &copies) const
-#define IMPLEMENT_ABSTRACT_DEEPCOPY(CLASSNAME)                             \
-	CLASSNAME* CLASSNAME::deepCopy(CopiesMap& copies) const	           \
-	  { PLERROR("deepCopy is not implemented for %s",                  \
-              classname().c_str());		                           \
-	    return 0; }
-
-#define DECLARE_NAME(CLASSNAME)	                                           \
-        DECLARE_ABSTRACT_NAME(CLASSNAME);                                  \
+        static string _classname_();                                       \
+        virtual string classname() const;                                  \
+        static OptionList& _getOptionList_();                              \
+        virtual OptionList& getOptionList() const;                         \
         static Object* _new_instance_for_typemap_();                       \
-	      static TypeRegistrar _register_in_typemap_
-#define IMPLEMENT_NAME(CLASSNAME)                                          \
-        IMPLEMENT_ABSTRACT_NAME(CLASSNAME);                                \
-        Object* CLASSNAME::_new_instance_for_typemap_()                    \
-          { return new CLASSNAME(); }                                      \
-        TypeRegistrar CLASSNAME::_register_in_typemap_(                    \
-	      #CLASSNAME, &CLASSNAME::_new_instance_for_typemap_)
-#define IMPLEMENT_ABSTRACT_TEMPLATE_NAME(CLASSNAME, TEMPLATETYPE)          \
-        template <class TEMPLATETYPE> string                               \
-        CLASSNAME<TEMPLATETYPE>::classname() const                         \
-          { return #CLASSNAME"<"#TEMPLATETYPE">"; };            
-#define IMPLEMENT_TEMPLATE_NAME(CLASSNAME, TEMPLATETYPE)                   \
-        IMPLEMENT_ABSTRACT_TEMPLATE_NAME(CLASSNAME, TEMPLATETYPE)          \
-        template <class TEMPLATETYPE> Object *                             \
-        CLASSNAME<TEMPLATETYPE>::_new_instance_for_typemap_()              \
-          { return new CLASSNAME<TEMPLATETYPE>(); }
+        static bool _isa_(Object* o);                                      \
+	      static TypeRegistrar _register_in_typemap_;                        \
+        CLASSTYPE* deepCopy(CopiesMap &copies) const;
 
-#define DECLARE_DEEPCOPY(CLASSNAME)                                        \
-        DECLARE_ABSTRACT_DEEPCOPY(CLASSNAME)
-#define IMPLEMENT_DEEPCOPY(CLASSNAME)                                      \
-        CLASSNAME* CLASSNAME::deepCopy(CopiesMap& copies) const	           \
-          { return implementDeepCopy<CLASSNAME>(copies); }
-#define IMPLEMENT_TEMPLATE_DEEPCOPY(CLASSNAME, TEMPLATETYPE)               \
-        template <class TEMPLATETYPE> CLASSNAME<TEMPLATETYPE> *            \
-        CLASSNAME<TEMPLATETYPE>::deepCopy(CopiesMap &copies) const         \
-          { return implementDeepCopy<CLASSNAME<TEMPLATETYPE> >(copies); }
+#define PLEARN_IMPLEMENT_OBJECT_METHODS(CLASSTYPE, CLASSNAME, PARENTTYPE)     \
+	      string CLASSTYPE::_classname_()                                       \
+          { return CLASSNAME; }                                               \
+	      string CLASSTYPE::classname() const                                   \
+          { return _classname_(); }                                           \
+        OptionList& CLASSTYPE::_getOptionList_()                              \
+          { static OptionList ol;                                             \
+            if(ol.empty())                                                    \
+              declareOptions(ol);                                             \
+            return ol; }                                                      \
+        OptionList& CLASSTYPE::getOptionList() const                          \
+          { return _getOptionList_(); }                                       \
+        Object* CLASSTYPE::_new_instance_for_typemap_()                       \
+          { return new CLASSTYPE(); }                                         \
+        bool CLASSTYPE::_isa_(Object* o)                                      \
+          { return dynamic_cast<CLASSTYPE*>(o) != 0; }                        \
+        TypeRegistrar CLASSTYPE::_register_in_typemap_(CLASSNAME,             \
+	      TypeMapEntry(PARENTTYPE::_classname_(),                               \
+        &CLASSTYPE::_new_instance_for_typemap_,                               \
+        &CLASSTYPE::_getOptionList_, &CLASSTYPE::help, &CLASSTYPE::_isa_));   \
+        CLASSTYPE* CLASSTYPE::deepCopy(CopiesMap& copies) const	              \
+          { return implementDeepCopy<CLASSTYPE>(copies); }
 
-#define IMPLEMENT_ABSTRACT_TEMPLATE_DEEPCOPY(CLASSNAME, TEMPLATETYPE)      \
-        template <class TEMPLATETYPE> CLASSNAME<TEMPLATETYPE> *            \
-	CLASSNAME<TEMPLATETYPE>::deepCopy(CopiesMap& copies) const         \
-	  { PLERROR("deepCopy is not implemented for %s",                  \
-              classname().c_str());		                           \
-	    return 0; }
+#define PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS(CLASSTYPE, CLASSNAME, PARENTTYPE)    \
+        public:                                                            \
+        static string _classname_();                                       \
+        static OptionList& _getOptionList_();                              \
+        static bool _isa_(Object* o);                                      \
+	      static TypeRegistrar _register_in_typemap_;                        \
+        CLASSTYPE* deepCopy(CopiesMap &copies) const;
+
+#define PLEARN_IMPLEMENT_ABSTRACT_OBJECT_METHODS(CLASSTYPE, CLASSNAME, PARENTTYPE)     \
+	      string CLASSTYPE::_classname_()                                       \
+          { return CLASSNAME; }                                               \
+        OptionList& CLASSTYPE::_getOptionList_()                              \
+          { static OptionList ol;                                             \
+            if(ol.empty())                                                    \
+              declareOptions(ol);                                             \
+            return ol; }                                                      \
+        bool CLASSTYPE::_isa_(Object* o)                                      \
+          { return dynamic_cast<CLASSTYPE*>(o) != 0; }                         \
+        TypeRegistrar CLASSTYPE::_register_in_typemap_(CLASSNAME,             \
+	      TypeMapEntry(PARENTTYPE::_classname_(), 0,                            \
+        &CLASSTYPE::_getOptionList_, &CLASSTYPE::help, &CLASSTYPE::_isa_));   \
+        CLASSTYPE* CLASSTYPE::deepCopy(CopiesMap& copies) const	              \
+          { PLERROR("deepCopy called on an abstract class..."); return 0; }
+
+
+#define DECLARE_NAME_AND_DEEPCOPY(CLASSTYPE) PLEARN_DECLARE_OBJECT_METHODS(CLASSTYPE, #CLASSTYPE, Object)
+#define IMPLEMENT_NAME_AND_DEEPCOPY(CLASSTYPE) PLEARN_IMPLEMENT_OBJECT_METHODS(CLASSTYPE, #CLASSTYPE, Object)
+
+#define DECLARE_ABSTRACT_NAME_AND_DEEPCOPY(CLASSTYPE) PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS(CLASSTYPE, #CLASSTYPE, Object)
+#define IMPLEMENT_ABSTRACT_NAME_AND_DEEPCOPY(CLASSTYPE) PLEARN_IMPLEMENT_ABSTRACT_OBJECT_METHODS(CLASSTYPE, #CLASSTYPE, Object)
 
 #define DECLARE_OBJECT_PTR(CLASSNAME)                                      \
         inline Object *toObjectPtr(const CLASSNAME &o)                     \
@@ -722,6 +547,33 @@ void displayRegisteredSubClassesOf(const string& baseclassname, ostream& out)
             return in;                                                     \
           };                                                               \
         DECLARE_TYPE_TRAITS(CLASSNAME)
+
+#define DECLARE_OBJECT_PP(PPCLASSNAME, CLASSNAME)                          \
+        inline PStream &operator>>(PStream &in, PPCLASSNAME &o)      \
+          { Object *ptr;                                                   \
+            in >> ptr;                                                     \
+            o = dynamic_cast<CLASSNAME *>(ptr);                            \
+            return in; };                                                  \
+        inline PStream &operator<<(PStream &out, const PPCLASSNAME &o)    \
+          { out << static_cast<const PP<CLASSNAME> &>(o); return out; };  \
+        DECLARE_TYPE_TRAITS(PPCLASSNAME);
+
+// -------------------------------------------
+// Template hell!
+
+
+#define IMPLEMENT_TEMPLATE_NAME(CLASSNAME, TEMPLATETYPE)                   \
+        template <class TEMPLATETYPE> string                               \
+        CLASSNAME<TEMPLATETYPE>::classname() const                         \
+          { return #CLASSNAME"<"#TEMPLATETYPE">"; };                       \
+        template <class TEMPLATETYPE> Object *                             \
+        CLASSNAME<TEMPLATETYPE>::_new_instance_for_typemap_()              \
+          { return new CLASSNAME<TEMPLATETYPE>(); }
+
+#define IMPLEMENT_TEMPLATE_DEEPCOPY(CLASSNAME, TEMPLATETYPE)               \
+        template <class TEMPLATETYPE> CLASSNAME<TEMPLATETYPE> *            \
+        CLASSNAME<TEMPLATETYPE>::deepCopy(CopiesMap &copies) const         \
+          { return implementDeepCopy<CLASSNAME<TEMPLATETYPE> >(copies); }
 
 
 #define DECLARE_TEMPLATE_OBJECT_PTR(CLASSNAME)                            \
@@ -759,29 +611,6 @@ void displayRegisteredSubClassesOf(const string& baseclassname, ostream& out)
             };
 
 
-#define DECLARE_OBJECT_PP(PPCLASSNAME, CLASSNAME)                          \
-        inline PStream &operator>>(PStream &in, PPCLASSNAME &o)      \
-          { Object *ptr;                                                   \
-            in >> ptr;                                                     \
-            o = dynamic_cast<CLASSNAME *>(ptr);                            \
-            return in; };                                                  \
-        inline PStream &operator<<(PStream &out, const PPCLASSNAME &o)    \
-          { out << static_cast<const PP<CLASSNAME> &>(o); return out; };  \
-        DECLARE_TYPE_TRAITS(PPCLASSNAME);
-
-#define DECLARE_NAME_AND_DEEPCOPY(CLASSNAME)                               \
-        DECLARE_NAME(CLASSNAME);                                           \
-        DECLARE_DEEPCOPY(CLASSNAME);                                       \
-        virtual OptionList& getOptionList() const
-#define IMPLEMENT_NAME_AND_DEEPCOPY(CLASSNAME)	                           \
-        IMPLEMENT_NAME(CLASSNAME);                                         \
-        IMPLEMENT_DEEPCOPY(CLASSNAME);                                     \
-        OptionList& CLASSNAME::getOptionList() const                       \
-          { static OptionList ol;                                          \
-            if(ol.empty())                                                 \
-              declareOptions(ol);                                          \
-            return ol; }
-
 #define DECLARE_TEMPLATE_NAME_AND_DEEPCOPY(CLASSNAME, TEMPLATETYPE)        \
         OptionList& getOptionList() const                     \
           { static OptionList ol;                                          \
@@ -800,20 +629,21 @@ void displayRegisteredSubClassesOf(const string& baseclassname, ostream& out)
 
 #define IMPLEMENT_TEMPLATE_NAME_AND_DEEPCOPY(CLASSNAME, TEMPLATETYPE)      \
         TypeRegistrar CLASSNAME<TEMPLATETYPE>::_register_in_typemap_( \
-	      #CLASSNAME"<"#TEMPLATETYPE">", &CLASSNAME::_new_instance_for_typemap_)
-
-#define DECLARE_ABSTRACT_NAME_AND_DEEPCOPY(CLASSNAME)                      \
-        DECLARE_ABSTRACT_NAME(CLASSNAME);                                  \
-        DECLARE_ABSTRACT_DEEPCOPY(CLASSNAME)
-#define IMPLEMENT_ABSTRACT_NAME_AND_DEEPCOPY(CLASSNAME)                    \
-        IMPLEMENT_ABSTRACT_NAME(CLASSNAME);                                \
-        IMPLEMENT_ABSTRACT_DEEPCOPY(CLASSNAME)
+	      #CLASSNAME"<"#TEMPLATETYPE">", &CLASSNAME::_new_instance_for_typemap_ \
+        &CLASSNAME::help)
 
 #define DECLARE_ABSTRACT_TEMPLATE_NAME_AND_DEEPCOPY(CLASSNAME, TEMPLATETYPE)   \
         DECLARE_ABSTRACT_NAME_AND_DEEPCOPY(CLASSNAME<TEMPLATETYPE>)
+
 #define IMPLEMENT_ABSTRACT_TEMPLATE_NAME_AND_DEEPCOPY(CLASSNAME, TEMPLATETYPE) \
-        IMPLEMENT_ABSTRACT_TEMPLATE_NAME(CLASSNAME, TEMPLATETYPE);             \
-        IMPLEMENT_ABSTRACT_TEMPLATE_DEEPCOPY(CLASSNAME, TEMPLATETYPE)
+        template <class TEMPLATETYPE> string                               \
+        CLASSNAME<TEMPLATETYPE>::classname() const                         \
+          { return #CLASSNAME"<"#TEMPLATETYPE">"; };                       \
+        template <class TEMPLATETYPE> CLASSNAME<TEMPLATETYPE> *            \
+	CLASSNAME<TEMPLATETYPE>::deepCopy(CopiesMap& copies) const         \
+	  { PLERROR("deepCopy is not implemented for %s",                  \
+              classname().c_str());		                           \
+	    return 0; }
 
 // Template objects cannot be registered automatically. You have to register
 // each instantiation type explicitly with the following macro.
@@ -831,7 +661,6 @@ void displayRegisteredSubClassesOf(const string& baseclassname, ostream& out)
               classname().c_str());		                           \
 	    return 0; }
       
-
 %> // end of namespace PLearn
 
 #endif //!<  Object_INC

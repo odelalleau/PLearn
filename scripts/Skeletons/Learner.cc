@@ -40,7 +40,7 @@ DERIVEDCLASS::DERIVEDCLASS()
     inherited::declareOptions(ol);
   }
 
-  string DERIVEDCLASS::help() const
+  string DERIVEDCLASS::help()
   {
     // ### Provide some useful description of what the class is ...
     return 

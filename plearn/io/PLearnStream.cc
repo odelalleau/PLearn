@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnStream.cc,v 1.1 2002/12/02 08:46:51 plearner Exp $ 
+   * $Id: PLearnStream.cc,v 1.2 2003/05/07 05:39:16 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PLearnStream.cc */
@@ -72,7 +72,7 @@ PLearnStream::PLearnStream()
     inherited::declareOptions(ol);
   }
 
-  string PLearnStream::help() const
+  string PLearnStream::help()
   {
     // ### Provide some useful description of what the class is ...
     return 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Smoother.cc,v 1.1 2002/11/05 16:34:32 zouave Exp $ 
+   * $Id: Smoother.cc,v 1.2 2003/05/07 05:39:17 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Smoother.cc */
@@ -72,7 +72,7 @@ Smoother::Smoother()
     inherited::declareOptions(ol);
   }
 
-  string Smoother::help() const
+  string Smoother::help()
   {
     // ### Provide some useful description of what the class is ...
     return 

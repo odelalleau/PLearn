@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.h,v 1.4 2003/05/03 05:02:18 plearner Exp $ 
+   * $Id: EmbeddedLearner.h,v 1.5 2003/05/07 05:39:18 plearner Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.h */
@@ -92,7 +92,7 @@ public:
     virtual void build();
 
     //! Provides a help message describing this class
-    virtual string help() const;
+    static string help();
 
     //! Transforms a shallow copy into a deep copy
     virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);

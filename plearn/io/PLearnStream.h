@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnStream.h,v 1.1 2002/12/02 08:46:51 plearner Exp $ 
+   * $Id: PLearnStream.h,v 1.2 2003/05/07 05:39:16 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PLearnStream.h */
@@ -205,7 +205,7 @@ inline streamsize read(char* p, streamsize n)
   virtual void build();
 
   //! Provides a help message describing this class
-  virtual string help() const;
+  static string help();
 
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);

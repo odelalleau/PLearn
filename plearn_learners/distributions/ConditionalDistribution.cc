@@ -51,7 +51,7 @@ ConditionalDistribution::ConditionalDistribution()
 IMPLEMENT_NAME_AND_DEEPCOPY(ConditionalDistribution);
 
 
-string ConditionalDistribution::help() const
+string ConditionalDistribution::help()
 {
   // ### Provide some useful description of what the class is ...
   return 

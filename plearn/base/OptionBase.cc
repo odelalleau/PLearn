@@ -1,13 +1,10 @@
-
-
 // -*- C++ -*-
 
-// TrainTestSplitter.cc
-// 
+// PLearn (A C++ Machine Learning Library)
 // Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999,2000 Pascal Vincent, Yoshua Bengio and University of Montreal
+// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
 // Copyright (C) 2002 Frederic Morin
-// 
+
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -36,67 +33,34 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
+
 /* *******************************************************      
-   * $Id: TrainTestSplitter.cc,v 1.3 2003/05/07 05:39:18 plearner Exp $ 
+   * $Id: OptionBase.cc,v 1.1 2003/05/07 05:39:16 plearner Exp $
+   * AUTHORS: Pascal Vincent & Yoshua Bengio
+   * This file is part of the PLearn library.
    ******************************************************* */
 
-/*! \file TrainTestSplitter.cc */
-#include "TrainTestSplitter.h"
+#include "OptionBase.h"
+#include "Object.h"
 
 namespace PLearn <%
 using namespace std;
 
-TrainTestSplitter::TrainTestSplitter(real the_test_fraction)
-  : test_fraction(the_test_fraction)
-{};
+const OptionBase::flag_t OptionBase::buildoption = 1;       
+const OptionBase::flag_t OptionBase::learntoption = 1<<1;
+const OptionBase::flag_t OptionBase::tuningoption = 1<<2;
+const OptionBase::flag_t OptionBase::nosave = 1<<4; 
 
-IMPLEMENT_NAME_AND_DEEPCOPY(TrainTestSplitter);
-
-void TrainTestSplitter::declareOptions(OptionList& ol)
-{
-  declareOption(ol, "test_fraction", &TrainTestSplitter::test_fraction, OptionBase::buildoption,
-                "Defined the fraction of the dataset reserved to the test set");
-  inherited::declareOptions(ol);
-}
-
-string TrainTestSplitter::help()
-{
-  // ### Provide some useful description of what the class is ...
-  return 
-    "TrainTestSplitter implements a single split of the dataset into a training-set and a test-set (the test part being the last few samples of the dataset)"
-    + optionHelp();
-}
-
-void TrainTestSplitter::build_()
-{
-}
-
-// ### Nothing to add here, simply calls build_
-void TrainTestSplitter::build()
-{
-  inherited::build();
-  build_();
-}
-
-int TrainTestSplitter::nsplits() const
-{
-  return 1; // only one split
-}
-
-Array<VMat> TrainTestSplitter::getSplit(int k)
-{
-  if (k)
-    PLERROR("TrainTestSplitter::getSplit() - k cannot be greater than 0");
-  
-  Array<VMat> split_(2);
-  int l = dataset->length();
-  int test_length = int(test_fraction*l);
-  int train_length = l - test_length;
-  
-  split_[0] = dataset.subMatRows(0, train_length);
-  split_[1] = dataset.subMatRows(train_length, test_length);
-  return split_;
-}
-
+string OptionBase::writeIntoString(const Object* o) const
+  {
+    ostrstream out_;
+    PStream out(&out_);
+    write(o, out);
+    char* buf = out_.str();
+    int n = out_.pcount();
+    string s(buf,n);
+    out_.freeze(false); // return ownership to the stream, so that it may free it...
+    return s;
+  }
 
 %> // end of namespace PLearn

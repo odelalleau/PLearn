@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Experiment.cc,v 1.8 2003/05/06 15:17:44 tihocan Exp $ 
+   * $Id: Experiment.cc,v 1.9 2003/05/07 05:39:19 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Experiment.cc */
@@ -74,7 +74,7 @@ Experiment::Experiment()
     inherited::declareOptions(ol);
   }
 
-  string Experiment::help() const
+  string Experiment::help()
   {
     return 
       "The Experiment class allows you to describe a typical learning experiment that you wish to perform, \n"

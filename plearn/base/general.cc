@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: general.cc,v 1.4 2003/04/10 18:05:00 jkeable Exp $
+   * $Id: general.cc,v 1.5 2003/05/07 05:39:16 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -136,6 +136,14 @@ string hostname()
   if (!h)
     PLERROR("hostname: could not find $HOSTNAME nor $HOST in environment!");
   return h;
+}
+
+string prgname(const string& setname)
+{
+  static string prgname_ = "plearn";
+  if(setname!="")
+    prgname_ = setname;
+  return prgname_;
 }
 
 %> // end of namespace PLearn

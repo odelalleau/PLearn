@@ -72,7 +72,7 @@ void ConditionalGaussianDistribution::declareOptions(OptionList& ol)
   inherited::declareOptions(ol);
 }
 
-  string ConditionalGaussianDistribution::help() const
+  string ConditionalGaussianDistribution::help()
   {
     // ### Provide some useful description of what the class is ...
     return 

@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalCDFSmoother.cc,v 1.1 2002/12/02 22:10:51 zouave Exp $ 
+   * $Id: ConditionalCDFSmoother.cc,v 1.2 2003/05/07 05:39:16 plearner Exp $ 
    ******************************************************* */
 
 /*! \file ConditionalCDFSmoother.cc */
@@ -73,7 +73,7 @@ ConditionalCDFSmoother::ConditionalCDFSmoother(PP<HistogramDistribution>& prior_
     inherited::declareOptions(ol);
   }
 
-  string ConditionalCDFSmoother::help() const
+  string ConditionalCDFSmoother::help()
   {
     // ### Provide some useful description of what the class is ...
     return 

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.13 2003/05/01 22:39:13 plearner Exp $
+   * $Id: Object.cc,v 1.14 2003/05/07 05:39:16 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -45,14 +45,10 @@
 #include "Object.h"
 #include "stringutils.h"
 #include "fileutils.h"
+#include "TypeFactory.h"
 
 namespace PLearn <%
 using namespace std;
-
-const OptionBase::flag_t OptionBase::buildoption = 1;       
-const OptionBase::flag_t OptionBase::learntoption = 1<<1;
-const OptionBase::flag_t OptionBase::tuningoption = 1<<2;
-const OptionBase::flag_t OptionBase::nosave = 1<<4; 
 
 Object::Object()
 {}
@@ -67,18 +63,6 @@ Object* Object::deepCopy(map<const void*, void*>& copies) const
 void Object::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {}
 
-string OptionBase::writeIntoString(const Object* o) const
-  {
-    ostrstream out_;
-    PStream out(&out_);
-    write(o, out);
-    char* buf = out_.str();
-    int n = out_.pcount();
-    string s(buf,n);
-    out_.freeze(false); // return ownership to the stream, so that it may free it...
-    return s;
-  }
-
 OptionList& Object::getOptionList() const
 {
   static OptionList options;
@@ -86,71 +70,8 @@ OptionList& Object::getOptionList() const
   return options;
 }
 
-string Object::optionHelp() const
-  {
-    string res = "BUILD OPTIONS FOR CLASS " + classname() + ", with default values (includes options inherited from  parent classes): \n\n";
-
-    res += classname() + "( \n";
-    OptionList& options = getOptionList();    
-    for( OptionList::iterator it = options.begin(); it!=options.end(); ++it )
-      {
-        OptionBase::flag_t flags = (*it)->flags();
-        if(flags & OptionBase::buildoption)
-          {
-            string descr = (*it)->description();
-            string optname = (*it)->optionname();
-            string opttype = (*it)->optiontype();
-            string defaultval = (*it)->defaultval(); 
-            if(defaultval=="")
-              defaultval = (*it)->writeIntoString(this);
-            // string holderclass = (*it)->optionHolderClassName(this);
-            res += addprefix("# ", opttype + ": " + descr);
-            res += optname + " = " + defaultval + " ;\n\n";
-          }
-      }
-    res += ");\n\n";
-    return res;
-  }
-
-/* old optionhelp code
-string Object::optionHelp(bool buildoptions_only) const
-  {
-    string res = "OPTIONS FOR CLASS " + classname() + " (including options inherited from  parent classes): \n";
-    // res += "%%% A + in the first column indicates that the option is saved by the serialization methods \n";
-    // res += "%%% meaning of category: 'B': initial Build option;  'L': Learnt parameter; 'T': for Tuning with later setOption \n\n";
-      
-    OptionList& options = getOptionList();    
-    for( OptionList::iterator it = options.begin(); it!=options.end(); ++it )
-      {
-        OptionBase::flag_t flags = (*it)->flags();
-        if(flags & OptionBase::buildoption || !buildoptions_only)
-          {
-            string optname = (*it)->optionname();
-            if( flags & OptionBase::nosave )
-              res += "- ";
-            else
-              res += "+ ";
-            res += optname + ": " + (*it)->optiontype();
-            string defaultval = (*it)->defaultval();
-            if(defaultval=="")
-              defaultval = (*it)->writeIntoString(this);
-            res += " (default: " + defaultval + ") ";
-            res += " [" + (*it)->optionHolderClassName(this) + "] \n";
-            if(!buildoptions_only)
-              {
-                res += "[ options: ";
-                if(flags & OptionBase::buildoption) res += "buildoption ";
-                if(flags & OptionBase::learntoption) res += "learntoption ";
-                if(flags & OptionBase::tuningoption) res += "tuningoption ";
-                if(flags & OptionBase::nosave) res += "nosave ";
-                res += "]\n";
-              }
-            res += (*it)->description() + "\n";
-          }
-      }
-    return res;
-  }
-*/
+string Object::optionHelp() 
+{ return ""; }
 
 void Object::setOption(const string& optionname, const string& value)
 {
@@ -160,9 +81,9 @@ void Object::setOption(const string& optionname, const string& value)
     readOptionVal(in, optionname);
 }
 
-string Object::help() const
+string Object::help()
 {
-  return optionHelp();
+  return "Base class for PLearn Objects";
 }
 
 string Object::getOption(const string &optionname) const
@@ -184,9 +105,12 @@ void Object::build_()
 void Object::build()
 {}
 
-string Object::classname() const
+string Object::_classname_()
 { return "Object"; }
 // { return string(typeid(*this).name()); } // it would be nice to use this some day, rather than having to redefine classname() in every class
+
+string Object::classname() const
+{ return _classname_(); }
 
 string Object::info() const { return classname(); }
 
@@ -501,26 +425,6 @@ Object* readObject(PStream &in, unsigned int id)
     return o;
 }
 
-void displayObjectHelp(ostream& out, const string& classname, bool fulloptions)
-{
-  Object* obj = TypeFactory::instance().newObject(classname);
-  if(!obj)
-    {
-      PLERROR("Learner type %s unknown.\n"
-              "Did you #include it, does it correctly define classname() (through an IMPLEMENT_NAME_AND_DEEPCOPY for ex.)\n"
-              "and has it indeed been linked with your program?", classname.c_str());
-
-      exit(0);
-    }
-  else
-    {
-      if(fulloptions)
-        out << obj->optionHelp();
-      else
-        out << obj->help();
-      delete obj;
-    }
-}
 
 PStream& operator>>(PStream& in, Object*& x)
 {

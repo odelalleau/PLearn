@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: PLearnCommandRegistry.h,v 1.2 2002/10/25 03:47:25 plearner Exp $
+   * $Id: PLearnCommandRegistry.h,v 1.3 2003/05/07 05:39:16 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -62,7 +62,8 @@ protected:
 
   //! Issues a "bad command" message
   static void badcommand(const string& commandname);
-  
+
+ 
 public:
 
   //! registers a command

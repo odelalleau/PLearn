@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyWeightedDistribution.cc,v 1.3 2002/10/22 08:46:07 plearner Exp $ 
+   * $Id: LocallyWeightedDistribution.cc,v 1.4 2003/05/07 05:39:18 plearner Exp $ 
    ******************************************************* */
 
 /*! \file LocallyWeightedDistribution.cc */
@@ -61,7 +61,7 @@ LocallyWeightedDistribution::LocallyWeightedDistribution()
     inherited::declareOptions(ol);
   }
 
-  string LocallyWeightedDistribution::help() const
+  string LocallyWeightedDistribution::help()
   {
     // ### Provide some useful description of what the class is ...
     return 
