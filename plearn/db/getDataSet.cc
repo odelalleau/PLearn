@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.21 2004/06/18 19:08:23 tihocan Exp $
+   * $Id: getDataSet.cc,v 1.22 2004/07/08 21:32:14 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -186,14 +186,19 @@ VMat getDataSet(const string& datasetstring, const string& alias)
           }
         
         int inputsize, nclasses;
-        VMat trainset, testset;
-        loadClassificationDataset(datasetname, inputsize, nclasses, trainset, testset, normalizeinputs);
+        VMat trainset, testset, allset;
+        loadClassificationDataset(datasetname, inputsize, nclasses, trainset, testset, normalizeinputs, allset);
         if(dsetspec[1]=="train")
           vm = trainset;
         else if(dsetspec[1]=="test")
           vm = testset;
-        else if(dsetspec[1]=="all")
-          vm = vconcat(trainset,testset);    
+        else if(dsetspec[1]=="all") {
+          if (allset) {
+            vm = allset;
+          } else {
+            vm = vconcat(trainset,testset);    
+          }
+        }
         else 
           PLERROR("In getDataSet specification of predefined dataset: expecting second word to be 'train' or 'test' or 'all' not %s ...",dsetspec[1].c_str());
         vm->defineSizes(inputsize, 1);
