@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat.h,v 1.24 2005/01/20 21:49:05 tihocan Exp $
+   * $Id: VMat.h,v 1.25 2005/02/04 15:10:53 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,10 +47,10 @@
 #ifndef VMat_INC
 #define VMat_INC
 
-#include <cstdlib>
+//#include <cstdlib>
 #include <plearn/base/PP.h>
 #include <plearn/math/TMat.h>
-#include "VMField.h"
+//#include "VMField.h"
 #include "VMatrix.h"
 #include "VVec.h"
 
@@ -101,7 +101,7 @@ public:
   //!  Returns a VMatrix made of only the specified rows
   VMat rows(Vec rows_indices) const;
   //!  Returns a VMatrix made of only the rows specified in the indexfile (see IntVecFile)
-  VMat rows(const string& indexfile) const;
+  VMat rows(const PPath& indexfile) const;
 
   //!  Returns a VMatrix made of only the specified columns
   VMat columns(TVec<int> columns_indices) const;
@@ -110,7 +110,7 @@ public:
 
 
   operator Mat() const { return ptr->toMat(); }
-  inline void save(const string& filename) const { ptr->save(filename); }
+  inline void save(const PPath& filename) const { ptr->save(filename); }
 
   //!  Will copy a precomputed version of the whole VMat into memory
   //!  and replace the current pointer to point to the corresponding MemoryVMatrix.
@@ -126,9 +126,9 @@ public:
     previous precomputation for instance) rather than overwriting it (make
     sure the file indeed contains what you expect!)
 */
-  void precompute(const string& pmatfile, bool use_existing_file=false);
+  void precompute(const PPath& pmatfile, bool use_existing_file=false);
 
-  inline void print(ostream& out) const { ptr->print(out); }
+//  inline void print(PStream& out) const { ptr->print(out); }
 
   ~VMat();
 };
@@ -161,14 +161,16 @@ inline void operator>>(const VMat& src, const Mat& dest)
 inline Array<VMat> operator&(const VMat& d1, const VMat& d2)
 { return Array<VMat>(d1,d2); }
 
-inline ostream& operator<<(ostream& out, const VMat& m)
+/* Already defined in the DECLARE_OBJECT_PP macro.
+inline PStream& operator<<(PStream& out, const VMat& m)
 { m.print(out); return out; }
+*/
 
 template <> void deepCopyField(VMat& field, CopiesMap& copies);
 
 //! Load an ASCII file and return the corresponding VMat (this will be
 //! a MemoryVMatrix, since the entire file is loaded in memory).
-VMat loadAsciiAsVMat(const string& filename);
+VMat loadAsciiAsVMat(const PPath& filename);
 
 } // end of namespace PLearn
 

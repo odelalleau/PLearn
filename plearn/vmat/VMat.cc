@@ -36,7 +36,7 @@
 
  
 /* *******************************************************
-* $Id: VMat.cc,v 1.19 2004/09/27 20:19:27 plearner Exp $ *
+* $Id: VMat.cc,v 1.20 2005/02/04 15:10:52 tihocan Exp $ *
 * This file is part of the PLearn library.               *
 ******************************************************** */
 #include "VMat.h"
@@ -48,6 +48,9 @@
 #include "SelectColumnsVMatrix.h"
 #include "SelectRowsFileIndexVMatrix.h"
 #include <plearn/io/MatIO.h>
+
+// TODO-PPath   : this class is now PPath compliant
+// TODO-PStream : this class is now PStream compliant
 
 namespace PLearn {
 using namespace std;
@@ -73,7 +76,7 @@ VMat VMat::rows(TVec<int> rows_indices) const
 VMat VMat::rows(Vec rows_indices) const
 { return new SelectRowsVMatrix(*this, rows_indices); }
 
-VMat VMat::rows(const string& indexfile) const
+VMat VMat::rows(const PPath& indexfile) const
 { return new SelectRowsFileIndexVMatrix(*this, indexfile); }
 
 VMat VMat::columns(TVec<int> columns_indices) const
@@ -99,7 +102,7 @@ void VMat::precompute() {
   //(*this)->copyFieldInfosFrom(backup);
 }
   
-void VMat::precompute(const string& pmatfile, bool use_existing_file)
+void VMat::precompute(const PPath& pmatfile, bool use_existing_file)
 { 
   VMat backup = *this;
   Array<VMField> infos = (*this)->getFieldInfos();
@@ -122,7 +125,7 @@ void deepCopyField(VMat& field, CopiesMap& copies)
 /////////////////////
 // loadAsciiAsVMat //
 /////////////////////
-VMat loadAsciiAsVMat(const string& filename)
+VMat loadAsciiAsVMat(const PPath& filename)
 {
   Mat m;
   TVec<string> fn;
