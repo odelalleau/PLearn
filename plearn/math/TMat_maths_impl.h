@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.56 2004/07/13 14:30:21 chapados Exp $
+   * $Id: TMat_maths_impl.h,v 1.57 2004/07/13 21:00:56 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -2507,6 +2507,23 @@ void matRowsDotsAcc(TVec<T> v, const TMat<T>& A, const TMat<T>& B)
     for (int j=0;j<w;j++)
       s += *Aij++ * *Bij++;
     *vi++ += s;
+  }
+}
+
+//! Fill the bottom left part of a matrix with its top right part, so that it
+//! becomes symmetric.
+template<class T>
+void fillItSymmetric(const TMat<T>& mat) {
+  int m = mat.mod();
+  T* mat_data_to_fill;
+  T* mat_data_to_copy;
+  for (int i = 0; i < mat.length(); i++) {
+    mat_data_to_fill = mat[i];
+    mat_data_to_copy = &mat[0][i];
+    for (int j = 0; j < i; j++) {
+      *(mat_data_to_fill++) = *mat_data_to_copy;
+      mat_data_to_copy += m;
+    }
   }
 }
 
