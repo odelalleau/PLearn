@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.cc,v 1.21 2004/10/05 13:28:43 tihocan Exp $
+   * $Id: StackedLearner.cc,v 1.22 2004/10/27 21:47:21 lamblin Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -350,9 +350,9 @@ TVec<string> StackedLearner::getTrainCostNames() const
   // Return the names of the objective costs that the train method computes and 
   // for which it updates the VecStatsCollector train_stats
   if (combiner)
-    return combiner->getTestCostNames();
+    return combiner->getTrainCostNames();
   else
-    return base_learners[0]->getTestCostNames();
+    return base_learners[0]->getTrainCostNames();
 }
 
 
