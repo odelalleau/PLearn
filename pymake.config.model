@@ -152,24 +152,41 @@ optionalLibrary( name = 'wordnet',
                  linkeroptions = '-L /u/lisa/WordNet/v2.0/lib -lwn'
                  )
 
-optionalLibrary( name = 'boostpython',
-                 triggers = 'boost/python.hpp',
-                 includedirs = '/usr/include/python2.3',
-                 linkeroptions = '-lboost_python'
-                 )
 optionalLibrary( name = 'X',
                  triggers='?',
                  includedirs = '?',
                  linkeroptions = '-L/usr/X11R6/lib/ -lXi -lXext -lX11'
 )
 
-optionalLibrary( name = 'boost',
-                 triggers = 'boost/*',
-                 includedirs = '/u/lisa/local/linux-i386/include',
-#                 includedirs = '/FW30/NicolasStuff/boost-1.30.2',
-                 linkeroptions = ''
+optionalLibrary( name='boost_date_time',
+                 triggers = 'boost/date_time/*',
+                 linkeroptions = '-lboost_date_time' )
+
+optionalLibrary( name='boost_filesystem',
+                 triggers = 'boost/filesystem/*',
+                 linkeroptions = '-lboost_filesystem' )
+
+optionalLibrary( name='boost_date_time',
+                 triggers = 'boost/date_time',
+                 linkeroptions = '-lboost_date_time' )
+
+optionalLibrary( name = 'boost_python',
+                 triggers = 'boost/python.hpp',
+                 includedirs = '/usr/include/python2.3',
+                 linkeroptions = '-lboost_python'
                  )
 
+optionalLibrary( name='boost_regex',
+                 triggers = 'boost/regex*',
+                 linkeroptions = '-lboost_regex' )
+
+optionalLibrary( name='boost_signals',
+                 triggers = 'boost/signals*',
+                 linkeroptions = '-lboost_signals' )
+
+optionalLibrary( name='boost_thread',
+                 triggers = 'boost/thread*',
+                 linkeroptions = '-lboost_thread' )
 
 # What linker options to put always after those from the optional libraries
 linkeroptions_tail = '-lm'
