@@ -2,7 +2,7 @@
 
 // GaussianContinuum.h
 //
-// Copyright (C) 2004 Yoshua Bengio & Martin Monperrus
+// Copyright (C) 2004 Yoshua Bengio & Hugo Larochelle
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussianContinuum.h,v 1.4 2004/08/17 15:28:21 larocheh Exp $
+   * $Id: GaussianContinuum.h,v 1.5 2004/08/24 21:18:00 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -63,16 +63,17 @@ protected:
   // NON-OPTION FIELDS
   int n;
   Func cost_of_one_example;
-  Func verify_gradient_func;
+  //Func verify_gradient_func;
   Var x, noise_var; // input vector
   Var b, W, c, V, muV, smV, smb, snV, snb; // explicit view of the parameters (also in parameters field).
   //Var W_src, c_src, V_src, muV_src, smV_src, smb_src, snV_src, snb_src; 
   //VarArray mu_neighbors, sm_neighbors, sn_neighbors, hidden_neighbors, input_neighbors, index_neighbors, tangent_plane_neighbors;
-  Var tangent_targets; // target for the tangent vectors for one example 
+  Var tangent_targets, tangent_targets_and_point; // target for the tangent vectors for one example 
   Var tangent_plane;
   Var mu, sm, sn, mu_noisy; // parameters of the conditional models
-  Var p_x, p_target, p_neighbors, target_index, neigbor_indexes;
+  Var p_x, p_target, p_neighbors, p_neighbors_and_point, target_index, neigbor_indexes;
   Var sum_nll;
+  Var min_sig, min_d;
 
   PP<PDistribution> dist;
 
@@ -110,7 +111,10 @@ public:
 
   // ### declare public option fields (such as build options) here
 
+  bool include_current_point;
+  real random_walk_step_prop;
   bool use_noise;
+  bool use_noise_direction;
   real noise;
   string noise_type;
   int n_random_walk_step;
@@ -127,11 +131,13 @@ public:
   int points_per_dim;
   real min_sigma;
   real min_diff;
+  real min_p_x;
   bool print_parameters;
   bool sm_bigger_than_sn;
   bool use_best_model;
   int n_neighbors; // number of neighbors used for gradient descent
   int n_neighbors_density; // number of neighbors for the p(x) density estimation
+  int mu_n_neighbors; // number of neighbors to learn the mus
   int n_dim; // number of reduced dimensions (number of tangent vectors to compute)
   int compute_cost_every_n_epochs;
   string variances_transfer_function; // "square", "exp" or "softplus"
@@ -178,7 +184,7 @@ private:
 
   void make_random_walk();
 
-  void get_image_matrix(Mat& image, VMat image_points_vmat, int begin, string file_path);
+  void get_image_matrix(VMat points, VMat image_points_vmat, int begin, string file_path, int n_near_neigh);
 
 protected: 
   
