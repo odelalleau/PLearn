@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: AdaptGradientOptimizer.h,v 1.2 2003/05/06 21:00:31 tihocan Exp $
+   * $Id: AdaptGradientOptimizer.h,v 1.3 2003/05/22 16:30:18 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -83,6 +83,7 @@ using namespace std;
       real adapt_coeff1;  //!< a coefficient for learning rate adaptation
       real adapt_coeff2;  //!< a coefficient for learning rate adaptation
       real decrease_constant;
+      int mini_batch;
 
     private:
       bool stochastic_hack; // true when we're computing a stochastic gradient

@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: AdaptGradientOptimizer.cc,v 1.3 2003/05/21 20:02:25 tihocan Exp $
+   * $Id: AdaptGradientOptimizer.cc,v 1.4 2003/05/22 16:30:17 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -66,7 +66,9 @@ AdaptGradientOptimizer::AdaptGradientOptimizer(real the_start_learning_rate,
    learning_rate_adaptation(the_learning_rate_adaptation),
    adapt_coeff1(the_adapt_coeff1),
    adapt_coeff2(the_adapt_coeff2),
-   decrease_constant(the_decrease_constant) {}
+   decrease_constant(the_decrease_constant),
+   mini_batch(0)
+{}
 
 AdaptGradientOptimizer::AdaptGradientOptimizer(VarArray the_params, Var the_cost,
                                      real the_start_learning_rate, 
@@ -131,6 +133,9 @@ void AdaptGradientOptimizer::declareOptions(OptionList& ol)
 
     declareOption(ol, "learning_rate_adaptation", &AdaptGradientOptimizer::learning_rate_adaptation, OptionBase::buildoption, 
                   "    the way the learning rates evolve\n");
+
+    declareOption(ol, "mini_batch", &AdaptGradientOptimizer::mini_batch, OptionBase::buildoption, 
+                  "    if set to x>=1, then it will consider that we present x times the same mini-batch\n");
 
     inherited::declareOptions(ol);
 }
@@ -260,8 +265,16 @@ void AdaptGradientOptimizer::adaptLearningRateBasic(
       }
       lr_mean += abs(array[i]->valuedata[j-k]);
       // cout << learning_rates[j] << "  ";
+      if (mini_batch > 0 && (stage / nstages_per_epoch) % mini_batch == 0) {
+        // The next stage will examine a different mini-batch, so we need to
+        // reset the evolution
+        old_evol[j] = 0;
+      }
     }
   }
+/*  if (mini_batch > 0 && (stage / nstages_per_epoch) % mini_batch == 0) {
+    cout << "Batch done !" << endl;
+  } */
   if (nb_min > 0) lr_min /= real(nb_min);
   if (nb_moy > 0) lr_moy /= real(nb_moy);
   if (nb_max > 0) lr_max /= real(nb_max);
@@ -278,7 +291,6 @@ real AdaptGradientOptimizer::optimize()
   PLERROR("In AdaptGradientOptimizer::optimize Deprecated, use OptimizeN !");
   return 0;
 }
-
 
 ///////////////
 // optimizeN //
