@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: JulianizeVMatrix.cc,v 1.4 2004/02/20 21:14:44 chrish42 Exp $ 
+   * $Id: JulianizeVMatrix.cc,v 1.5 2004/04/05 22:56:15 morinf Exp $ 
    ******************************************************* */
 
 /*! \file JulianizeVMatrix.cc */
@@ -44,6 +44,15 @@
 
 namespace PLearn {
 using namespace std;
+
+
+PLEARN_IMPLEMENT_OBJECT(JulianizeVMatrix, "ONE LINE DESCR",
+                        "JulianizeVMatrix provides a conversion from a VMat containing dates\n"
+                        "in an explicit 3-column (YYYY,MM,DD) or 6-column (YYYY,MM,DD,HH,MM,SS)\n"
+                        "format to a Julian day number format (including fractional part to\n"
+                        "represent the hour within the day).  The dates can be at any columns,\n"
+                        "not only columns 0-2 (or 0-5).  More than a single date can be\n"
+                        "converted.\n");
 
 
 JulianizeVMatrix::JulianizeVMatrix()
@@ -62,8 +71,6 @@ JulianizeVMatrix::JulianizeVMatrix(VMat underlying,
   setVMFields();
 }
 
-
-PLEARN_IMPLEMENT_OBJECT(JulianizeVMatrix, "ONE LINE DESCR", "NO HELP");
 
 void JulianizeVMatrix::getRow(int i, Vec v) const
 {
@@ -123,19 +130,6 @@ void JulianizeVMatrix::declareOptions(OptionList& ol)
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
-}
-
-string JulianizeVMatrix::help()
-{
-  // ### Provide some useful description of what the class is ...
-  return 
-    "JulianizeVMatrix provides a conversion from a VMat containing dates\n"
-    "in an explicit 3-column (YYYY,MM,DD) or 6-column (YYYY,MM,DD,HH,MM,SS)\n"
-    "format to a Julian day number format (including fractional part to\n"
-    "represent the hour within the day).  The dates can be at any columns,\n"
-    "not only columns 0-2 (or 0-5).  More than a single date can be\n"
-    "converted.\n"
-    + optionHelp();
 }
 
 void JulianizeVMatrix::build_()

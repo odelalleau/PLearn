@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: JulianizeVMatrix.h,v 1.7 2004/03/23 23:08:08 morinf Exp $ 
+   * $Id: JulianizeVMatrix.h,v 1.8 2004/04/05 22:56:15 morinf Exp $ 
    ******************************************************* */
 
 /*! \file JulianizeVMatrix.h */
@@ -135,9 +135,6 @@ public:
   // simply calls inherited::build() then build_() 
   virtual void build();
 
-  //! Provides a help message describing this class
-  static string help();
-
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
@@ -154,6 +151,8 @@ protected:
   // "date" fields are named "Date", and "date-time" are named "DateTime".
   void setVMFields();
 };
+
+DECLARE_OBJECT_PTR(JulianizeVMatrix);
 
 } // end of namespace PLearn
 #endif

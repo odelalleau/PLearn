@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LearnerProcessedVMatrix.cc,v 1.3 2004/02/20 21:14:44 chrish42 Exp $ 
+   * $Id: LearnerProcessedVMatrix.cc,v 1.4 2004/04/05 22:57:59 morinf Exp $ 
    ******************************************************* */
 
 /*! \file LearnerProcessedVMatrix.cc */
@@ -44,13 +44,15 @@ namespace PLearn {
 using namespace std;
 
 
+PLEARN_IMPLEMENT_OBJECT(LearnerProcessedVMatrix, "ONE LINE DESCR", 
+                        "LearnerProcessedVMatrix implements a VMatrix processed on the fly by a learner (which will optionally be first trained on the source vmatrix)");
+
+
 LearnerProcessedVMatrix::LearnerProcessedVMatrix()
   :train_learner('-')
 {
   build_();
 }
-
-PLEARN_IMPLEMENT_OBJECT(LearnerProcessedVMatrix, "ONE LINE DESCR", "NO HELP");
 
 void LearnerProcessedVMatrix::getRow(int i, Vec v) const
 {
@@ -85,25 +87,16 @@ void LearnerProcessedVMatrix::declareOptions(OptionList& ol)
   inherited::declareOptions(ol);
 }
 
-string LearnerProcessedVMatrix::help()
-{
-  return 
-    "LearnerProcessedVMatrix implements a VMatrix processed on the fly by a learner (which will optionally be first trained on the source vmatrix)"
-    + optionHelp();
-}
-
 void LearnerProcessedVMatrix::build_()
 {
-  switch(train_learner)
-    {
+  if (source && learner) {
+    switch(train_learner) {
     case '-':
-      break;
+       break;
     case 'S':
-      {
         learner->setTrainingSet(source);
         learner->setTrainStatsCollector(new VecStatsCollector());
         learner->train();
-      }
       break;
     case 'U':
       {
@@ -113,9 +106,9 @@ void LearnerProcessedVMatrix::build_()
         learner->train();
       }
     }
-  
-  length_ = source->length();
-  width_ = learner->outputsize() + source->targetsize() + source->weightsize();
+    length_ = source->length();
+    width_ = learner->outputsize() + source->targetsize() + source->weightsize();
+  }
 }
 
 // ### Nothing to add here, simply calls build_

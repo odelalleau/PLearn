@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LearnerProcessedVMatrix.h,v 1.5 2004/03/23 23:08:08 morinf Exp $ 
+   * $Id: LearnerProcessedVMatrix.h,v 1.6 2004/04/05 22:57:59 morinf Exp $ 
    ******************************************************* */
 
 /*! \file LearnerProcessedVMatrix.h */
@@ -104,15 +104,14 @@ public:
   // simply calls inherited::build() then build_() 
   virtual void build();
 
-  //! Provides a help message describing this class
-  static string help();
-
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
   PLEARN_DECLARE_OBJECT(LearnerProcessedVMatrix);
 };
+
+DECLARE_OBJECT_PTR(LearnerProcessedVMatrix);
 
 } // end of namespace PLearn
 #endif
