@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io.cc,v 1.2 2003/05/26 04:12:42 plearner Exp $
+   * $Id: pl_io.cc,v 1.3 2003/08/13 20:12:27 chapados Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -455,55 +455,5 @@ void compress_vec(char* comprbuf, const double* data, int l, bool double_stored_
         }
     }
 }
-
-double compressed_dot_product(char* comprbufvec, const double* vecdata, int l, bool double_stored_as_float)
-{
-  union { double d; char c[8]; };
-  unsigned char mode;
-  int n;
-  double res=0;
-  const double *p=vecdata;
-  while(l>0)
-    {
-      read_compr_mode_and_size_ptr(comprbufvec, mode, n);
-      if(mode==0 || mode==1)
-        {
-          p+=n;
-          for(int j=0;j<n;j++)cout<<"0"<<endl;
-          l-=n;
-          if(mode==1)
-            {         
-              cout<<1<<endl;            
-              --l; res+=*p++; 
-            }
-        }
-      else if(mode==2)
-        {
-          while(n--)
-            {
-              cout<<(double)*comprbufvec<<endl;
-              res+= *p++ * double(*comprbufvec++);
-              --l;
-            }
-        }
-      else if(mode==3)
-        {
-          while(n--)
-            {
-              memcpy(c,comprbufvec,sizeof(double));
-              comprbufvec+=8;
-              res+= *p++ * d;
-              --l;
-            }
-        }
-      else 
-        PLERROR("BUG IN binread_compressed: mode is only 2 bits, so how can it be other than 0,1,2,3 ?");
-    }
-
-  if(l!=0)
-    PLERROR("In compressed_dot_product : l is not 0 at exit of function, wrong data?");
-  return res;
-}
-
 
 %> // end of namespace PLearn

@@ -42,8 +42,25 @@ namespace PLearn <%
 using namespace std;
 
 char PStream::tmpbuf[100];
-PStream_endl_ PLearn::endl; // the only instance!
-PStream_flush_ PLearn::flush; // the only instance!
+
+PStream& flush(PStream& out)
+{
+  out.flush();
+  return out;
+}
+
+PStream& endl(PStream& out)
+{
+  out.endl();
+  return out;
+}
+
+PStream& ws(PStream& in)
+{
+  in.skipBlanksAndComments();
+  return in;
+}
+
 
   //! default ctor: the stream is unusable ...
 PStream::PStream()

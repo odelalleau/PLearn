@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io.h,v 1.5 2003/05/26 04:12:42 plearner Exp $
+   * $Id: pl_io.h,v 1.6 2003/08/13 20:12:27 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -147,7 +147,6 @@ void binread_compressed(istream& in, float* data, int l);
 inline void read_compr_mode_and_size_ptr(char*& in, unsigned char& mode, int& size);
 void compress_vec(char* comprbuf, const double* data, int l, bool double_stored_as_float=false);
 void uncompress_vec(char* comprbuf, double* data, int l, bool double_stored_as_float=false);
-double compressed_dot_product(char* comprbufvec, const double* vecdata, int l, bool double_stored_as_float=false);
 
 
 %> // end of namespace PLearn

@@ -78,9 +78,10 @@ class PStream : public PPointable
 {
 public:
   //! typedef's for PStream manipulators
+  typedef PStream& (*pl_pstream_manip)(PStream&);
+
   //! DEPRECATED
   /*
-  typedef PStream& (*pl_pstream_manip)(PStream&);
   typedef istream& (*pl_istream_manip_compat)(istream&);
   typedef ostream& (*pl_ostream_manip_compat)(ostream&);
   */
@@ -337,7 +338,8 @@ public:
   PStream& operator>>(long &x);  
   PStream& operator>>(unsigned long &x);
   PStream& operator>>(short &x);
-  PStream& operator>>(unsigned short &x);  
+  PStream& operator>>(unsigned short &x);
+  PStream& operator>>(pl_pstream_manip func) { return (*func)(*this); }
 
   // operator<<'s for base types
   PStream& operator<<(float x);
@@ -362,6 +364,7 @@ public:
   PStream& operator<<(short x);
   PStream& operator<<(unsigned short x);
   PStream& operator<<(bool x);
+  PStream& operator<<(pl_pstream_manip func) { return (*func)(*this); }
  
   //! returns the markable input buffer
   //! DEPRECATED: TO BE REMOVED SOON, DO NOT USE!
@@ -424,32 +427,15 @@ protected:
 
 // Simulation of <<flush <<endl and >>ws ...
 
-class PStream_flush_ {};
-extern PStream_flush_ flush; // the only instance!
+extern PStream& flush(PStream& out);
+extern PStream& endl(PStream& out);
+extern PStream& ws(PStream& out);
 
-inline PStream& operator<<(PStream& out, PStream_flush_ x)
-{ out.flush(); return out; }
+// But inject the standard ones as well to keep them usable!!!
+using std::flush;
+using std::endl;
+using std::ws;
 
-inline ostream& operator<<(ostream& out, PStream_flush_ x)
-{ return out << std::flush; }
-
-class PStream_endl_ {};
-extern PStream_endl_ endl; // the only instance!
-
-inline PStream& operator<<(PStream& out, PStream_endl_ x)
-{ out.endl(); return out; }
-
-inline ostream& operator<<(ostream& out, PStream_endl_ x)
-{ return out << std::endl; }
-
-class PStream_ws_ {};
-extern PStream_ws_ ws; // the only instance!
-
-inline PStream& operator>>(PStream& in, PStream_ws_ x)
-{ in.skipBlanksAndComments(); return in; }
-
-inline istream& operator>>(istream& in, PStream_ws_ x)
-{ return in >> std::ws; }
 
   /*****
    * op>> & op<< for generic pointers
