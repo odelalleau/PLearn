@@ -4,6 +4,7 @@
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999-2001 Pascal Vincent, Yoshua Bengio, Rejean Ducharme and University of Montreal
 // Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux
+// Copyright (C) 2003 Olivier Delalleau
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -35,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectColumnsVMatrix.cc,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: SelectColumnsVMatrix.cc,v 1.2 2003/05/15 16:10:49 tihocan Exp $
    ******************************************************* */
 
 #include "SelectColumnsVMatrix.h"
@@ -44,6 +45,8 @@ namespace PLearn <%
 using namespace std;
 
 /** SelectColumnsVMatrix **/
+
+PLEARN_IMPLEMENT_OBJECT_METHODS(SelectColumnsVMatrix, "SelectColumnsVMatrix", VMatrix);
 
 SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_distr, TVec<int> the_indices)
   : VMatrix(the_distr->length(), the_indices.length()),
@@ -79,6 +82,56 @@ void SelectColumnsVMatrix::getSubRow(int i, int j, Vec v) const
 {
   for(int jj=0; jj<v.length(); jj++)
     v[jj] = distr->get(i, indices[j+jj]); 
+}
+
+void SelectColumnsVMatrix::declareOptions(OptionList &ol)
+{
+  declareOption(ol, "distr", &SelectColumnsVMatrix::distr, OptionBase::buildoption,
+      "    The matrix viewed by the SelectColumnsVMatrix");
+  declareOption(ol, "indices", &SelectColumnsVMatrix::indices, OptionBase::buildoption,
+      "    The array of column indices to extract");
+  inherited::declareOptions(ol);
+}
+
+void SelectColumnsVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+{
+  inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(distr, copies);
+  deepCopyField(indices, copies);
+}
+
+///////////
+// build //
+///////////
+void SelectColumnsVMatrix::build()
+{
+  inherited::build();
+  build_();
+}
+
+////////////
+// build_ //
+////////////
+void SelectColumnsVMatrix::build_()
+{
+  length_ = distr->length();
+  width_ = indices.length();
+  // Copy the appropriate VMFields
+  fieldinfos.resize(width());
+  if (distr->getFieldInfos().size() > 0)
+    for (int i=0; i<width(); ++i)
+      fieldinfos[i] = distr->getFieldInfos()[indices[i]];
+}
+
+//////////
+// help //
+//////////
+string SelectColumnsVMatrix::help()
+{
+  return
+    "    VMat class that selects variables from a sub-distribution\n\
+    according to given vector of indices.\n"
+    + optionHelp();
 }
 
 %> // end of namespcae PLearn

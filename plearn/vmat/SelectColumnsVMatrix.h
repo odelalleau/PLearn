@@ -4,6 +4,7 @@
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999-2001 Pascal Vincent, Yoshua Bengio, Rejean Ducharme and University of Montreal
 // Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux
+// Copyright (C) 2003 Olivier Delalleau
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -35,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectColumnsVMatrix.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: SelectColumnsVMatrix.h,v 1.2 2003/05/15 16:10:49 tihocan Exp $
    ******************************************************* */
 
 
@@ -54,10 +55,19 @@ using namespace std;
 //!  raw_sample.
 class SelectColumnsVMatrix: public VMatrix
 {
-protected:
+
+ typedef VMatrix inherited;
+  
+public:
+
+  //! Public build options
   VMat distr;
   TVec<int> indices;
+
 public:
+
+  SelectColumnsVMatrix() {}
+  
   //! The appropriate fieldinfos are copied upon construction
   //! Here the indices will be shared for efficiency. But you should not modify them afterwards!
   SelectColumnsVMatrix(VMat the_distr, TVec<int> the_indices);
@@ -65,18 +75,29 @@ public:
   //! Here the indices will be copied locally into an integer vector
   SelectColumnsVMatrix(VMat the_distr, Vec the_indices);
 
+  PLEARN_DECLARE_OBJECT_METHODS(SelectColumnsVMatrix, "SelectColumnsVMatrix", VMatrix);
+
+  static void declareOptions(OptionList &ol);
+  static string help();
+  virtual void build();
+  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;
   virtual void reset_dimensions() 
-    { 
-      distr->reset_dimensions(); length_=distr->length(); 
-      for (int i=0;indices.length();i++)
-        if (indices[i]>=distr->width())
-          PLERROR("SelectColumnsVMatrix::reset_dimensions, underlying distr not wide enough (%d>=%d)",
-                indices[i],distr->width());
-    }
-};
+  { 
+    distr->reset_dimensions(); length_=distr->length(); 
+    for (int i=0;indices.length();i++)
+      if (indices[i]>=distr->width())
+        PLERROR("SelectColumnsVMatrix::reset_dimensions, underlying distr not wide enough (%d>=%d)",
+            indices[i],distr->width());
+  }
 
+private:
+
+  void build_();
+
+};
 
 %> // end of namespcae PLearn
 #endif
