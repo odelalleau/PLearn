@@ -43,10 +43,8 @@
 #include <string>
 #include <vector>
 #include <iostream>
-//#include <iomanip>
 #include <stdexcept>         //!< for logic_error
 #include <typeinfo>
-//#include <algorithm>
 
 #include <assert.h>
 
@@ -58,14 +56,11 @@
 
 #include <fcntl.h>			     //!<  for open
 #include <errno.h>			     //!<  for errno
-#include <stdlib.h>			     //!<  for ptrdiff_t
-//#include <ctype.h>
+#include <cstdlib>			     //!<  for ptrdiff_t
 
 
 //!  From PLearn
-//#include "general.h"
 #include <plearn/base/stringutils.h>     //!< For slash.
-//#include "random.h"
 #include <plearn/base/PDate.h>			     //!<  for PDate
 #include <plearn/math/Hash.h>
 #include <plearn/base/TinyVector.h>
