@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNVMatrix.cc,v 1.9 2004/03/01 18:33:20 tihocan Exp $ 
+   * $Id: KNNVMatrix.cc,v 1.10 2004/06/29 19:58:17 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -131,7 +131,7 @@ void KNNVMatrix::build_() {
           // whose nearest neighbours have been computed.
           // Let's try a SelectRowsVMatrix.
           PP<SelectRowsVMatrix> smat = dynamic_cast<SelectRowsVMatrix*>((VMatrix*) source);
-          if (!smat.isNull() && smat->distr->length() == k_nn_mat->length()) {
+          if (!smat.isNull() && smat->source->length() == k_nn_mat->length()) {
             // Bingo !
             // Safety warning just in case it is not what we want.
             PLWARNING("In KNNVMatrix::build_ - Will consider the given k_nn_mat has been computed on source's distr VMat");
@@ -297,10 +297,10 @@ int KNNVMatrix::getSourceIndexOf(int i, int& i_ref, int& i_n) const {
   return i_neighbour_source;
 }
 
-////////////
-// getRow //
-////////////
-void KNNVMatrix::getRow(int i, Vec v) const {
+///////////////
+// getNewRow //
+///////////////
+void KNNVMatrix::getNewRow(int i, Vec& v) const {
   static Vec w;
   w.resize(source->width());
   int i_n;

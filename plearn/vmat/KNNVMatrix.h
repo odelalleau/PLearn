@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNVMatrix.h,v 1.8 2004/04/05 22:57:07 morinf Exp $ 
+   * $Id: KNNVMatrix.h,v 1.9 2004/06/29 19:58:17 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -135,7 +135,7 @@ public:
   // **************************
 
   //! Needed because it's a SourceVMatrix.
-  virtual void getRow(int i, Vec v) const;
+  virtual void getNewRow(int i, Vec& v) const;
 
   // ** Methods that can be optionally implemented
   // ** (their default implementation throws an error)
