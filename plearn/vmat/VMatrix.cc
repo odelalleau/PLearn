@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.40 2004/02/06 21:12:49 ducharme Exp $
+* $Id: VMatrix.cc,v 1.41 2004/02/12 22:15:09 ducharme Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -92,7 +92,7 @@ VMatrix::VMatrix(int the_length, int the_width)
 
 void VMatrix::declareOptions(OptionList & ol)
 {
-//  declareOption(ol, "writable", &VMatrix::writable, OptionBase::buildoption, "Are write operations permitted?");
+  declareOption(ol, "writable", &VMatrix::writable, OptionBase::buildoption, "Are write operations permitted?");
   declareOption(ol, "length", &VMatrix::length_, OptionBase::buildoption, 
                 "length of the matrix (number of rows)");
   declareOption(ol, "width", &VMatrix::width_, OptionBase::buildoption, 

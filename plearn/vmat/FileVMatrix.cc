@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.9 2004/02/09 23:06:18 ducharme Exp $
+   * $Id: FileVMatrix.cc,v 1.10 2004/02/12 22:15:09 ducharme Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -51,10 +51,12 @@ PLEARN_IMPLEMENT_OBJECT(FileVMatrix, "ONE LINE DESCR", "NO HELP");
 
 FileVMatrix::FileVMatrix()
   :filename_(""), f(0) 
-{}
+{
+  writable=true;
+}
 
 FileVMatrix::FileVMatrix(const string& filename)
-  :filename_(abspath(filename))
+  :filename_(abspath(filename)), f(0)
 {
   writable = true;
   build_();
@@ -68,11 +70,13 @@ static int strlen(char* s) {
 }
 
 FileVMatrix::FileVMatrix(const string& filename, int the_length, int the_width)
-  :VMatrix(the_length, the_width), filename_(abspath(filename))
+  :VMatrix(the_length, the_width), filename_(abspath(filename)), f(0)
 {
+  writable = true;
+  build_();
+/*
   force_mkdir_for_file(filename);
   // cout << "x1 " << strlen("MATRIX 1 12 DOUBLE LITTLE_ENDIAN") << endl;
-  writable = true;
   f = fopen(filename.c_str(),"w+b");
   if (!f)
     PLERROR("In FileVMatrix constructor, could not open file %s for read/write",filename.c_str());
@@ -126,6 +130,7 @@ FileVMatrix::FileVMatrix(const string& filename, int the_length, int the_width)
   }
 
   getFieldInfos();
+*/
 }
 
 void FileVMatrix::build()
@@ -136,45 +141,100 @@ void FileVMatrix::build()
 
 void FileVMatrix::build_()
 {
+  if (f) return; // file already built
+
   char header[DATAFILE_HEADERLENGTH];
   char matorvec[20];
   char datatype[20];
   char endiantype[20];
 
+  bool new_file = !isfile(filename_);
+  if (new_file)
+    force_mkdir_for_file(filename_);
+
   setMetaDataDir(filename_ + ".metadata"); 
   setMtime(mtime(filename_));
 
-  if (writable)
-    f = fopen(filename_.c_str(), "rw");
-  else
-    f = fopen(filename_.c_str(), "r");
-
-  if (!f)
-    PLERROR("In FileVMatrix constructor, could not open file %s for reading",filename_.c_str());
-  fread(header,DATAFILE_HEADERLENGTH,1,f);
-  if(header[DATAFILE_HEADERLENGTH-1]!='\n')
-    PLERROR("In FileVMatrix constructor, wrong header for PLearn binary matrix format. Please use checkheader (in PLearn/Scripts) to check the file.(0)");
-  sscanf(header,"%s%d%d%s%s",matorvec,&length_,&width_,datatype,endiantype);
-  if (strcmp(matorvec,"MATRIX")!=0)
-    PLERROR("In FileVMatrix constructor, wrong header for PLearn binary matrix format. Please use checkheader (in PLearn/Scripts) to check the file.(1)");
-
-  if (strcmp(endiantype,"LITTLE_ENDIAN")==0)
-    file_is_bigendian = false;
-  else if (strcmp(endiantype,"BIG_ENDIAN")==0)
-    file_is_bigendian = true;
-  else
-    PLERROR("In FileVMatrix constructor, wrong header for PLearn binary matrix format. Please use checkheader (in PLearn/Scripts) to check the file.(2)");
-
-  if (strcmp(datatype,"FLOAT")==0)
+  if (new_file)
+  {
+    writable = true;
+    f = fopen(filename_.c_str(),"w+b");
+    if (!f)
+      PLERROR("In FileVMatrix constructor, could not open file %s",filename_.c_str());
+#ifdef USEFLOAT
     file_is_float = true;
-  else if (strcmp(datatype,"DOUBLE")==0)
+#ifdef LITTLEENDIAN
+    file_is_bigendian = false; 
+    sprintf(header,"MATRIX %d %d FLOAT LITTLE_ENDIAN", length_, width_);
+#endif
+#ifdef BIGENDIAN
+    file_is_bigendian = true; 
+    sprintf(header,"MATRIX %d %d FLOAT BIG_ENDIAN", length_, width_);
+#endif
+#endif
+#ifdef USEDOUBLE
     file_is_float = false;
-  else
-    PLERROR("In FileVMatrix constructor, wrong header for PLearn binary matrix format. Please use checkheader (in PLearn/Scripts) to check the file.(3)");
+#ifdef LITTLEENDIAN
+    file_is_bigendian = false; 
+    sprintf(header,"MATRIX %d %d DOUBLE LITTLE_ENDIAN", length_, width_);
+#endif
+#ifdef BIGENDIAN
+    file_is_bigendian = true; 
+    sprintf(header,"MATRIX %d %d DOUBLE BIG_ENDIAN", length_, width_);
+#endif
+#endif
 
-  //resize the string mappings
-  map_sr = TVec<map<string,real> >(width_);
-  map_rs = TVec<map<real,string> >(width_);
+    int pos=strlen(header);
+    // Pad the header with whites and terminate it with '\n'
+    for(; pos<DATAFILE_HEADERLENGTH; pos++)
+      header[pos] = ' ';
+    header[DATAFILE_HEADERLENGTH-1] = '\n';
+
+    // write the header to the file
+    fwrite(header,DATAFILE_HEADERLENGTH,1,f);
+
+    if(length_ > 0 && width_ > 0) //ensure we can allocate enough space... if len>0, to ensure
+    {             // that the header ends with a '\n'.
+      if( fseek(f, DATAFILE_HEADERLENGTH+length_*width_*sizeof(real)-1, SEEK_SET) <0 )
+      {
+        perror("");
+        PLERROR("In FileVMatrix constructor Could not fseek to last byte");
+      }
+      fputc('\0',f);
+    }
+  }
+  else
+  {
+    if (writable)
+      f = fopen(filename_.c_str(), "r+b");
+    else
+      f = fopen(filename_.c_str(), "rb");
+
+    fread(header,DATAFILE_HEADERLENGTH,1,f);
+    if(header[DATAFILE_HEADERLENGTH-1]!='\n')
+      PLERROR("In FileVMatrix constructor, wrong header for PLearn binary matrix format. Please use checkheader (in PLearn/Scripts) to check the file.(0)");
+    sscanf(header,"%s%d%d%s%s",matorvec,&length_,&width_,datatype,endiantype);
+    if (strcmp(matorvec,"MATRIX")!=0)
+      PLERROR("In FileVMatrix constructor, wrong header for PLearn binary matrix format. Please use checkheader (in PLearn/Scripts) to check the file.(1)");
+
+    if (strcmp(endiantype,"LITTLE_ENDIAN")==0)
+      file_is_bigendian = false;
+    else if (strcmp(endiantype,"BIG_ENDIAN")==0)
+      file_is_bigendian = true;
+    else
+      PLERROR("In FileVMatrix constructor, wrong header for PLearn binary matrix format. Please use checkheader (in PLearn/Scripts) to check the file.(2)");
+
+    if (strcmp(datatype,"FLOAT")==0)
+      file_is_float = true;
+    else if (strcmp(datatype,"DOUBLE")==0)
+      file_is_float = false;
+    else
+      PLERROR("In FileVMatrix constructor, wrong header for PLearn binary matrix format. Please use checkheader (in PLearn/Scripts) to check the file.(3)");
+
+    //resize the string mappings
+    map_sr = TVec<map<string,real> >(width_);
+    map_rs = TVec<map<real,string> >(width_);
+  }
 
   getFieldInfos();
 }
