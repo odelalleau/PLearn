@@ -280,10 +280,11 @@ def write_bindings( writer = None ):
         if metaprotocol == "HOME":
             metapath = "${HOME}"
             
-        binding = '%s "%s"\n' % ( string.ljust(metaprotocol, 49),
+        if metapath != "":
+            binding = '%s "%s"\n' % ( string.ljust(metaprotocol, 49),
                                   metapath
                                   )
-        writer(binding)
+            writer(binding)
 
     ## Will close the writer iff it was provided by the PPathBindings'
     ## classmethod config_file_writer()
