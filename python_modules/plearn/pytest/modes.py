@@ -432,6 +432,9 @@ class RoutineBasedMode( PyTestMode ):
             test_instances = [( options.test_name,
                                 Test.instances_map[ options.test_name ]
                                 )]
+
+            Test.statistics.restrict( options.test_name )
+            
         else:
             test_instances = Test.instances_map.items()
 
@@ -448,9 +451,24 @@ class RoutineBasedMode( PyTestMode ):
 class compile( RoutineBasedMode ):
     def routine_type(self): return CompilationRoutine
 
-class results( RoutineBasedMode ):
-    def routine_type(self): return ResultsCreationRoutine
+class RoutineBasedMode_option_no_compile(RoutineBasedMode):
+    def option_groups(self, parser):
+        ogroups = [ self.target_options(parser),
+                    self.testing_options(parser) ]
 
-class run( RoutineBasedMode ):
-    def routine_type(self): return RunTestRoutine
+        ogroups[1].add_option( '--no-compile', default=False,
+                               action="store_true",
+                               help='Any program compilation is bypassed.' )
+
+        return ogroups
+    
+class results( RoutineBasedMode_option_no_compile ):
+    def routine_type(self): 
+        ResultsCreationRoutine.no_compile_option = options.no_compile
+        return ResultsCreationRoutine
+
+class run( RoutineBasedMode_option_no_compile ):
+    def routine_type(self):
+        RunTestRoutine.no_compile_option = options.no_compile
+        return RunTestRoutine
 

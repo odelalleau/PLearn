@@ -51,31 +51,54 @@ class DuplicateName( PyTestUsageError ):
             )        
 
 class Resources:
-    md5_mappings = {}
+    md5_mappings    = {}
+    name_resolution = {}
 
-    def link_resource(cls, path_to_resource, target):
-        link_cmd = "ln -s %s %s" % ( path_to_resource, target )
-        vprint( "Linking resource: %s." % link_cmd, 3 )
-        os.system( link_cmd )
-    link_resource = classmethod(link_resource)
+    def memorize(cls, abspath, fname):
+        if not cls.name_resolution.has_key(abspath):
+            cls.name_resolution[abspath] = "$RESOURCES{%s}"%fname        
+    memorize = classmethod(memorize)                                
+
+    def single_link(cls, path_to, resource, target_dir, must_exist=True):
+        ## Paths to the resource and target files
+        resource_path = resource
+        target_path   = target_dir
+
+        ## Abolute versions
+        if not os.path.isabs( resource_path ):
+            resource_path = os.path.join( path_to, resource )
+            target_path = os.path.join( path_to, target_dir, resource )
+            assert not os.path.exists( target_path ), target_path
+        
+        ## Linking
+        if os.path.exists( resource_path ):
+            link_cmd = "ln -s %s %s" % ( resource_path, target_path )
+            vprint( "Linking resource: %s." % link_cmd, 3 )
+            os.system( link_cmd )
+
+        elif must_exist:
+            raise PyTestUsageError(
+                "In %s: %s used as a resource but path doesn't exist."
+                % ( os.getcwd(), resource )
+                )
+
+        ## Mapping both to the same variable
+        cls.memorize( resource_path, resource )                
+        cls.memorize( target_path, resource )                
+
+        return (resource_path, target_path)        
+
+    single_link = classmethod(single_link)
     
     ## Class methods
-    def link_resources(cls, path_to, resources, target): 
+    def link_resources(cls, path_to, resources, target_dir): 
         for resource in resources:
-            if not os.path.isabs( resource ):
-                resource = os.path.join( path_to, resource ) 
-            if not os.path.exists( resource ):
-                raise PyTestUsageError(
-                    "In %s: %s used as a resource but path doesn't exist."
-                    % ( os.getcwd(), resource )
-                    )
-
-            cls.link_resource( resource )
-
+            cls.single_link( path_to, resource, target_dir )
+                        
             if toolkit.isvmat( resource ):
-                meta = resource+'.metadata'
-                if os.path.exists( meta ):
-                    cls.link_resource( meta )       
+                cls.single_link( path_to, resource+'.metadata',
+                                  target_dir,  False  )
+                
     link_resources = classmethod(link_resources)
 
     def md5sum(cls, path_to_ressource):
@@ -87,6 +110,15 @@ class Resources:
         md5_mappings[path_to_ressource] = md5
         return md5
     md5sum = classmethod(md5sum)
+
+    def unlink_resources(cls, target_dir):
+        dirlist = os.listdir( target_dir )
+        for f in dirlist:
+            path = os.path.join( target_dir, f )
+            if os.path.islink( path ):
+                vprint( "Removing link: %s." % path, 3 ) 
+                os.remove( path )
+    unlink_resources = classmethod(unlink_resources)
         
 class TestDefaults:
     name            = None
@@ -243,8 +275,12 @@ class Test(FrozenObject):
         return backup
 
     def formatted_decription(self):
-        return ( "Test name:   %s.\nDescription:\n    %s"
-                 % (self.name, self.description), 1)        
+        fdesc = [ "In %s"%self.test_directory, "" ]
+        
+        if string.lstrip(self.description, ' \n') != "":
+            fdesc.extend( toolkit.boxed_lines(self.description, 50, indent='    ')+[""] )
+
+        return string.join(['      '+line for line in fdesc], '\n')
 
     def get_name(self):
         return self.name
@@ -302,7 +338,12 @@ class Test(FrozenObject):
         test_results  = self.test_results( results )
         backup        = self.ensure_results_directory( test_results )
 
-        self.link_resources( test_results )
+        ## self.link_resources( test_results )
+        resources = []
+        resources.extend( self.resources )
+        resources.append( self.program.path )
+        Resources.link_resources( self.test_directory, resources, test_results )
+
         run_command   = ( "./%s %s >& %s"
                           % ( self.program.get_name(), self.arguments, self.name+'.run_log' )
                           )
@@ -313,7 +354,8 @@ class Test(FrozenObject):
         os.system(run_command)
         os.chdir( cwd )
         
-        self.unlink_resources( test_results )
+        ## self.unlink_resources( test_results )
+        Resources.unlink_resources( test_results )
         os.putenv("PLEARN_DATE_TIME", "YES")
 
     def unlink_resources(self, test_results):
@@ -355,8 +397,8 @@ class Routine(Task):
         vprint("Compilation succeedded.", 2)
         return True
 
-    def format_n_print(self, msg):
-        formatted = toolkit.centered_square( msg, 70 )
+    def format_n_print(self, msg, ldelim='[', rdelim=']'):
+        formatted = toolkit.centered_square( msg, 70, ldelim, rdelim )
         vprint(formatted, 1)
 
     ## Overrides run and succeeded
@@ -364,7 +406,8 @@ class Routine(Task):
         tname            = self.test.get_name()
         routine_and_name = "%s %s" % ( self.classname(), tname ) 
         self.format_n_print("LAUCHED %s" % routine_and_name)
-
+        self.format_n_print(self.test.formatted_decription(), ' ', ' ')
+        
         try:
             if self.test.is_disabled():
                 vprint("Test %s is disabled." % self.test.name, 2)
@@ -420,11 +463,15 @@ class ResultsCreationRoutine(Routine):
 
     B{Do not modify} the results directory manually.
     """
+
+    no_compile_option = False
+    
     def body_of_task(self):
-        compilation_succeeded = self.compile_program()
-        if not compilation_succeeded:
-            vprint("Results creation bails out.", 2)
-            return
+        if not ResultsCreationRoutine.no_compile_option:
+            compilation_succeeded = self.compile_program()
+            if not compilation_succeeded:
+                vprint("Results creation bails out.", 2)
+                return
             
         vprint("\nResults creation:", 2)
         vprint("-----------------", 2)
@@ -433,6 +480,7 @@ class ResultsCreationRoutine(Routine):
 
         mappings = { os.path.abspath(Test.expected_results): "$RESULTS" }
         mappings.update( plpath.env_mappings )
+        mappings.update( Resources.name_resolution )
         plpath.process_with_mappings( Test.expected_results, mappings )
         
         vprint("", 2)
@@ -451,6 +499,9 @@ class RunTestRoutine(Routine):
 
     B{Do not modify} the results directory manually.
     """
+
+    no_compile_option = False
+
     def preprocessing(self):
         self.set_attribute( "expected_results",
                             self.test.test_results( Test.expected_results ) )
@@ -464,11 +515,12 @@ class RunTestRoutine(Routine):
                 % self.test.get_path()
                 )
     
-    def body_of_task(self):
-        compilation_succeeded = self.compile_program()
-        if not compilation_succeeded:
-            vprint("Running bails out.", 2)
-            return
+    def body_of_task(self):        
+        if not RunTestRoutine.no_compile_option:
+            compilation_succeeded = self.compile_program()
+            if not compilation_succeeded:
+                vprint("Running bails out.", 2)
+                return
         
         vprint("\nRunning the test:", 2)
         vprint("-----------------", 2)
@@ -477,6 +529,7 @@ class RunTestRoutine(Routine):
 
         mappings = { os.path.abspath(Test.run_results): "$RESULTS" }
         mappings.update( plpath.env_mappings )
+        mappings.update( Resources.name_resolution )
         plpath.process_with_mappings( Test.run_results, mappings )
 
         idiff  =  IntelligentDiff()
@@ -487,5 +540,4 @@ class RunTestRoutine(Routine):
             report_path = os.path.join( Test.run_results,
                                         self.test.get_name()+'.failed' )
             toolkit.lines_to_file( diffs, report_path )
-            ##vprint.new_report( self.test.get_name()+'.failed', diffs )
             self.set_status( "Failed" )

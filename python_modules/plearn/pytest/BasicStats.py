@@ -27,6 +27,8 @@ class BasicStats:
                 )
         return "%s (/%d)" % (cur, nsucceeded+nfailed+nskipped)
 
+    def new_test(self, test_directory, test_name):
+        self.test_to_directory[test_name] = test_directory
         
     def print_stats(self):
         ntests     = len(self.test_to_directory)
@@ -79,10 +81,15 @@ class BasicStats:
             stat_lines.append( "" )
         
         vprint.highlight( stat_lines )
-        
-    def __repr__(self):
-        return str(self)
 
+    def restrict(self, test_name):
+        assert not self.succeeded
+        assert not self.failed
+        assert not self.skipped
+
+        test_dir = self.test_to_directory[test_name]
+        self.test_to_directory = {test_name:test_dir}
+        
     def set_status(self,  test_name, status):
         if status == "Succeeded":
             self.succeeded.append( test_name )
@@ -96,6 +103,4 @@ class BasicStats:
         else:
             raise ValueError(status) 
         
-    def new_test(self, test_directory, test_name):
-        self.test_to_directory[test_name] = test_directory
         

@@ -49,9 +49,9 @@ def boxed_string(s, box_width, indent=''):
 def boxed_string_from_words(words, box_width, indent=''):
     return string.join(boxed_lines_from_words(words, box_width, indent), '\n')    
 
-def centered_square(s, width):
+def centered_square(s, width, ldelim='[', rdelim=']'):
     width -= 4
-    return "[ " + string.center(s, width) + " ]" 
+    return ldelim+" " + string.center(s, width) + " "+rdelim 
 
 def command_output(command):
     process = popen2.Popen4( command )
