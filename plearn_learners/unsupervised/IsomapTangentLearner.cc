@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: IsomapTangentLearner.cc,v 1.1 2004/07/08 19:40:53 monperrm Exp $ 
+   * $Id: IsomapTangentLearner.cc,v 1.2 2004/07/15 14:26:55 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus
@@ -191,7 +191,7 @@ void IsomapTangentLearner::computeOutput(const Vec& input, Vec& output) const
   
 //   Vec tangentVector(inputsize()); // = sum_i v_ik*dk(i)/dx
   
-  int knn,ngn;
+  int ngn;
   VMat trainset = ank->specify_dataset;
   int n_examples = trainset->length();
   Mat diK_dx(n_examples,inputsize());
@@ -202,14 +202,13 @@ void IsomapTangentLearner::computeOutput(const Vec& input, Vec& output) const
   {
 
       // get the nearest neighbor
-      knn = gdk->computeNearestGeodesicNeighbour(i, k_xi_x_sorted); // ngn minimise la distance geodesique entre input et i
-      ngn = int(k_xi_x_sorted(knn,1));
+      ngn = gdk->computeNearestGeodesicNeighbour(i, k_xi_x_sorted); // ngn minimise la distance geodesique entre input et i
       trainset->getRow(ngn,temp);
       temp << (input-temp); // temp = x-xN
       //       cout<<gdk->evaluate_i_x(i,input,k_xi_x_sorted);
       //       cout<<norm(temp)<<endl;
       term2<<0;
-      term2 << gdk->evaluate_i_x(i,input,k_xi_x_sorted)*(temp)/norm(temp);
+      term2 << gdk->evaluate_i_x_from_distances(i,k_xi_x_sorted)*(temp)/norm(temp);
 //       else
 //         term2.fill(0);
       
@@ -217,11 +216,10 @@ void IsomapTangentLearner::computeOutput(const Vec& input, Vec& output) const
 
       for(j=0;j<n_examples;++j)
       {
-          knn = gdk->computeNearestGeodesicNeighbour(j, k_xi_x_sorted);// ngn minimise la distance geodesique entre input et j
-          ngn = int(k_xi_x_sorted(knn,1));
+          ngn = gdk->computeNearestGeodesicNeighbour(j, k_xi_x_sorted);// ngn minimise la distance geodesique entre input et j
           trainset->getRow(ngn,temp);
           temp << (input-temp);
-          sum += gdk->evaluate_i_x(j,input,k_xi_x_sorted)*(temp)/norm(temp);
+          sum += gdk->evaluate_i_x_from_distances(j,k_xi_x_sorted)*(temp)/norm(temp);
       }
       //cout<<term2<<endl;
       //cout<<sum;
