@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.1 2003/11/16 04:59:12 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.2 2003/11/17 01:53:22 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -63,88 +63,131 @@ ConditionalDensityNet::ConditionalDensityNet()
    direct_in_to_out_weight_decay(0),
    L1_penalty(false),
    direct_in_to_out(false),
-   output_transfer_func(""),
-   interval_minval(0), interval_maxval(1),
-   batch_size(1)
+   batch_size(1),
+   maxY(0), // must be provided
+   max_likelihood_vs_squared_error_balance(1),
+   n_output_density_terms(0),
+   steps_type("sloped_steps"),
+   centers_initialization("uniform")
   {
   }
 
-  PLEARN_IMPLEMENT_OBJECT(ConditionalDensityNet, "Neural Network that Implements a Positive Random Variable Conditional Density", "...");
+  PLEARN_IMPLEMENT_OBJECT(ConditionalDensityNet, "Neural Network that Implements a Positive Random Variable Conditional Density", 
+                          "The input vector is used to compute parameters of an output density or output\n"
+                          "cumulative distribution as well as output expected value. The ASSUMPTIONS\n"
+                          "on the generating distribution P(Y|X) are the following:\n"
+                          "  * Y is a single real value\n"
+                          "  * 0 <= Y <= maxY, with maxY a known finite value\n"
+                          "  * the density has a mass point at Y=0\n"
+                          "  * the density is continuous for Y>0\n"
+                          "The form of the conditional cumulative of Y is the following:\n"
+                          "   P(Y<=y|theta) = (1/Z) (s(a) + sum_i s(b_i) g(y,theta,i))\n"
+                          "where s(z)=log(1+exp(z)) is the softplus function, and g is a monotonic function\n"
+                          "in y whose first derivative and indefinite integral are known analytically.\n"
+                          "The parameters theta of Y's distribution are (a,b_1,b_2,...,c_1,c_2,...,mu_1,mu_2,...),\n"
+                          "which are obtained as the unconstrained outputs (no output transfer function) of a neural network.\n"
+                          "The normalization constant Z is computed analytically easily:\n"
+                          "   Z = s(a) + sum_i s(b_i) g(y,theta,i)\n"
+                          "The current implementation considers two choices for g:\n"
+                          "  - sigmoid_steps: g(y,theta,i) = sigmoid(s(c_i)*(y-mu_i))\n"
+                          "  - sloped_steps: g(y,theta,i) = s(s(c_i)*(mu_i-y))-s(s(c_i)*(mu_i-y))\n"
+                          "The density is analytically obtained using the derivative g' of g and\n"
+                          "expected value is analytically obtained using the primitive G of g.\n"
+                          "For the mass point at the origin,\n"
+                          "   P(Y=0|theta) = P(Y<=0|theta).\n"
+                          "For positive values of Y:\n"
+                          "   p(y|theta) = (1/Z) sum_i s(b_i) s(c_i) g'(y,theta,i).\n"
+                          "And the expected value of Y is obtained using the primitive:\n"
+                          "   E[Y|theta] = (1-s(a)/Z)*M - sum_i s(b_i)/(Z*s(c_i))*(G(M,theta,i)-G(0,theta,i))\n"
+                          "Training the model can be done by maximum likelihood (minimizing the log of the\n"
+                          "density) or by minimizing the average of squared error (y-E[Y|theta])^2\n"
+                          "or a combination of the two (with the max_likelihood_vs_squared_error_balance option).\n"
+                          "The step 'centers' mu_i are initialized according to some rule, in the interval [0,maxY]:\n"
+                          " - uniform: at regular intervals in [0,maxY]\n"
+                          " - log-scale: as the exponential of values at regular intervals in [0,log(1+maxY)], minus 1.\n"
+                          "The c_i are initialized to 2/(mu_{i+1}-mu_{i-1}), and a and b_i to 0.\n"
+                          );
 
   void ConditionalDensityNet::declareOptions(OptionList& ol)
   {
-  declareOption(ol, "nhidden", &NNet::nhidden, OptionBase::buildoption, 
+  declareOption(ol, "nhidden", &ConditionalDensityNet::nhidden, OptionBase::buildoption, 
                 "    number of hidden units in first hidden layer (0 means no hidden layer)\n");
 
-  declareOption(ol, "nhidden2", &NNet::nhidden2, OptionBase::buildoption, 
+  declareOption(ol, "nhidden2", &ConditionalDensityNet::nhidden2, OptionBase::buildoption, 
                 "    number of hidden units in second hidden layer (0 means no hidden layer)\n");
 
-  declareOption(ol, "noutputs", &NNet::noutputs, OptionBase::buildoption, 
+  declareOption(ol, "noutputs", &ConditionalDensityNet::noutputs, OptionBase::buildoption, 
                 "    number of output units. This gives this learner its outputsize.\n"
                 "    It is typically of the same dimensionality as the target for regression problems \n"
                 "    But for classification problems where target is just the class number, noutputs is \n"
                 "    usually of dimensionality number of classes (as we want to output a score or probability \n"
                 "    vector, one per class");
 
-  declareOption(ol, "weight_decay", &NNet::weight_decay, OptionBase::buildoption, 
+  declareOption(ol, "weight_decay", &ConditionalDensityNet::weight_decay, OptionBase::buildoption, 
                 "    global weight decay for all layers\n");
 
-  declareOption(ol, "bias_decay", &NNet::bias_decay, OptionBase::buildoption, 
+  declareOption(ol, "bias_decay", &ConditionalDensityNet::bias_decay, OptionBase::buildoption, 
                 "    global bias decay for all layers\n");
 
-  declareOption(ol, "layer1_weight_decay", &NNet::layer1_weight_decay, OptionBase::buildoption, 
+  declareOption(ol, "layer1_weight_decay", &ConditionalDensityNet::layer1_weight_decay, OptionBase::buildoption, 
                 "    Additional weight decay for the first hidden layer.  Is added to weight_decay.\n");
-  declareOption(ol, "layer1_bias_decay", &NNet::layer1_bias_decay, OptionBase::buildoption, 
+  declareOption(ol, "layer1_bias_decay", &ConditionalDensityNet::layer1_bias_decay, OptionBase::buildoption, 
                 "    Additional bias decay for the first hidden layer.  Is added to bias_decay.\n");
 
-  declareOption(ol, "layer2_weight_decay", &NNet::layer2_weight_decay, OptionBase::buildoption, 
+  declareOption(ol, "layer2_weight_decay", &ConditionalDensityNet::layer2_weight_decay, OptionBase::buildoption, 
                 "    Additional weight decay for the second hidden layer.  Is added to weight_decay.\n");
 
-  declareOption(ol, "layer2_bias_decay", &NNet::layer2_bias_decay, OptionBase::buildoption, 
+  declareOption(ol, "layer2_bias_decay", &ConditionalDensityNet::layer2_bias_decay, OptionBase::buildoption, 
                 "    Additional bias decay for the second hidden layer.  Is added to bias_decay.\n");
 
-  declareOption(ol, "output_layer_weight_decay", &NNet::output_layer_weight_decay, OptionBase::buildoption, 
+  declareOption(ol, "output_layer_weight_decay", &ConditionalDensityNet::output_layer_weight_decay, OptionBase::buildoption, 
                 "    Additional weight decay for the output layer.  Is added to 'weight_decay'.\n");
 
-  declareOption(ol, "output_layer_bias_decay", &NNet::output_layer_bias_decay, OptionBase::buildoption, 
+  declareOption(ol, "output_layer_bias_decay", &ConditionalDensityNet::output_layer_bias_decay, OptionBase::buildoption, 
                 "    Additional bias decay for the output layer.  Is added to 'bias_decay'.\n");
 
-  declareOption(ol, "direct_in_to_out_weight_decay", &NNet::direct_in_to_out_weight_decay, OptionBase::buildoption, 
+  declareOption(ol, "direct_in_to_out_weight_decay", &ConditionalDensityNet::direct_in_to_out_weight_decay, OptionBase::buildoption, 
                 "    Additional weight decay for the direct in-to-out layer.  Is added to 'weight_decay'.\n");
 
-  declareOption(ol, "L1_penalty", &NNet::L1_penalty, OptionBase::buildoption, 
+  declareOption(ol, "L1_penalty", &ConditionalDensityNet::L1_penalty, OptionBase::buildoption, 
                 "    should we use L1 penalty instead of the default L2 penalty on the weights?\n");
 
-  declareOption(ol, "direct_in_to_out", &NNet::direct_in_to_out, OptionBase::buildoption, 
+  declareOption(ol, "direct_in_to_out", &ConditionalDensityNet::direct_in_to_out, OptionBase::buildoption, 
                 "    should we include direct input to output connections?\n");
 
-  declareOption(ol, "output_transfer_func", &NNet::output_transfer_func, OptionBase::buildoption, 
-                "    what transfer function to use for ouput layer? \n"
-                "    one of: tanh, sigmoid, exp, softplus, softmax \n"
-                "    or interval(<minval>,<maxval>), which stands for\n"
-                "    <minval>+(<maxval>-<minval>)*sigmoid(.).\n"
-                "    An empty string or \"none\" means no output transfer function \n");
-
-  declareOption(ol, "cost_funcs", &NNet::cost_funcs, OptionBase::buildoption, 
-                "    a list of cost functions to use\n"
-                "    in the form \"[ cf1; cf2; cf3; ... ]\" where each function is one of: \n"
-                "      mse (for regression)\n"
-                "      mse_onehot (for classification)\n"
-                "      NLL (negative log likelihood -log(p[c]) for classification) \n"
-                "      class_error (classification error) \n"
-                "    The first function of the list will be used as \n"
-                "    the objective function to optimize \n"
-                "    (possibly with an added weight decay penalty) \n");
-  
-  declareOption(ol, "optimizer", &NNet::optimizer, OptionBase::buildoption, 
+  declareOption(ol, "optimizer", &ConditionalDensityNet::optimizer, OptionBase::buildoption, 
                 "    specify the optimizer to use\n");
 
-  declareOption(ol, "batch_size", &NNet::batch_size, OptionBase::buildoption, 
+  declareOption(ol, "batch_size", &ConditionalDensityNet::batch_size, OptionBase::buildoption, 
                 "    how many samples to use to estimate the avergage gradient before updating the weights\n"
                 "    0 is equivalent to specifying training_set->length() \n");
 
-  declareOption(ol, "paramsvalues", &NNet::paramsvalues, OptionBase::learntoption, 
-                "    The learned parameter vector\n");
+  declareOption(ol, "maxY", &ConditionalDensityNet::maxY, OptionBase::buildoption, 
+                "    maximum allowed value for Y.\n");
+
+  declareOption(ol, "log_likelihood_vs_squared_error_balance", &ConditionalDensityNet::log_likelihood_vs_squared_error_balance, 
+                OptionBase::buildoption, 
+                "    Relative weight given to negative log-likelihood (1- this weight given squared error).\n");
+
+  declareOption(ol, "n_output_density_terms", &ConditionalDensityNet::n_output_density_terms, 
+                OptionBase::buildoption, 
+                "    Number of terms (steps) in the output density function.\n");
+
+  declareOption(ol, "steps_type", &ConditionalDensityNet::steps_type, 
+                OptionBase::buildoption, 
+                "    The type of steps used to build the cumulative distribution.\n"
+                "    Allowed values are:\n"
+                "      - sigmoid_steps: g(y,theta,i) = sigmoid(s(c_i)*(y-mu_i))\n"
+                "      - sloped_steps: g(y,theta,i) = s(s(c_i)*(mu_i-y))-s(s(c_i)*(mu_i-y))\n.\n");
+
+  declareOption(ol, "centers_initialization", &ConditionalDensityNet::centers_initialization, 
+                OptionBase::buildoption, 
+                "    How to initialize the step centers (mu_i). Allowed values are:\n"
+                "      - uniform: at regular intervals in [0,maxY]\n"
+                "      - log-scale: as the exponential of values at regular intervals in [0,log(1+maxY)], minus 1\n");
+
+  declareOption(ol, "paramsvalues", &ConditionalDensityNet::paramsvalues, OptionBase::learntoption, 
+                "    The learned neural network parameter vector\n");
 
     inherited::declareOptions(ol);
   }
@@ -178,7 +221,7 @@ ConditionalDensityNet::ConditionalDensityNet()
         }
 
       if (nhidden2>0 && nhidden==0)
-        PLERROR("NNet:: can't have nhidden2 (=%d) > 0 while nhidden=0",nhidden2);
+        PLERROR("ConditionalDensityNet:: can't have nhidden2 (=%d) > 0 while nhidden=0",nhidden2);
       
       // output layer before transfer function
       wout = Var(1+output->size(), outputsize(), "wout");
@@ -222,7 +265,7 @@ ConditionalDensityNet::ConditionalDensityNet()
             output = interval_minval + (interval_maxval - interval_minval)*sigmoid(output);
           }
           else
-            PLERROR("In NNet::build_()  unknown output_transfer_func option: %s",output_transfer_func.c_str());
+            PLERROR("In ConditionalDensityNet::build_()  unknown output_transfer_func option: %s",output_transfer_func.c_str());
         }
 
       /*
@@ -240,7 +283,7 @@ ConditionalDensityNet::ConditionalDensityNet()
        */
       int ncosts = cost_funcs.size();  
       if(ncosts<=0)
-        PLERROR("In NNet::build_()  Empty cost_funcs : must at least specify the cost function to optimize!");
+        PLERROR("In ConditionalDensityNet::build_()  Empty cost_funcs : must at least specify the cost function to optimize!");
       costs.resize(ncosts);
       
       for(int k=0; k<ncosts; k++)
@@ -275,7 +318,7 @@ ConditionalDensityNet::ConditionalDensityNet()
             {
               costs[k]= dynamic_cast<Variable*>(newObject(cost_funcs[k]));
               if(costs[k].isNull())
-                PLERROR("In NNet::build_()  unknown cost_func option: %s",cost_funcs[k].c_str());
+                PLERROR("In ConditionalDensityNet::build_()  unknown cost_func option: %s",cost_funcs[k].c_str());
               costs[k]->setParents(output & target);
               costs[k]->build();
             }
@@ -519,10 +562,10 @@ void ConditionalDensityNet::forget()
 void ConditionalDensityNet::train()
 {
   if(!train_set)
-    PLERROR("In NNet::train, you did not setTrainingSet");
+    PLERROR("In ConditionalDensityNet::train, you did not setTrainingSet");
     
   if(!train_stats)
-    PLERROR("In NNet::train, you did not setTrainStatsCollector");
+    PLERROR("In ConditionalDensityNet::train, you did not setTrainStatsCollector");
 
   int l = train_set->length();  
 
@@ -537,7 +580,7 @@ void ConditionalDensityNet::train()
 
   ProgressBar* pb = 0;
   if(report_progress)
-    pb = new ProgressBar("Training NNet from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
+    pb = new ProgressBar("Training ConditionalDensityNet from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
 
   int initial_stage = stage;
   bool early_stop=false;

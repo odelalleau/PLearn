@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.1 2003/11/16 04:59:12 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.2 2003/11/17 01:53:22 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -88,6 +88,8 @@ public:
   // * public build options *
   // ************************
 
+  // ***** OPTIONS PASTED FROM NNET ************** 
+
   // ### declare public option fields (such as build options) here
     int nhidden;    // number of hidden units in first hidden layer (default:0)
     int nhidden2;   // number of hidden units in second hidden layer (default:0)
@@ -105,19 +107,36 @@ public:
 
     bool L1_penalty; // default: false
     bool direct_in_to_out; // should we include direct input to output connecitons? default: false
-    string output_transfer_func; // tanh, sigmoid, softplus, softmax  (default: "" means no transfer function)
-    real interval_minval, interval_maxval; // if output_transfer_func = interval(minval,maxval), these are the interval bounds
-
-    //! a list of cost functions to use in the form "[ cf1; cf2; cf3; ... ]"
-    // where the cost functions can be one of mse, mse_onehot, NLL,
-    // class_error or multiclass_error (no default)
-    Array<string> cost_funcs;  
 
     // Build options related to the optimization:
     PP<Optimizer> optimizer; // the optimizer to use (no default)
 
     int batch_size; // how many samples to use to estimate gradient before an update
                     // 0 means the whole training set (default: 1)
+
+  // ***** OPTIONS SPECIFIC TO CONDITIONALDENSITYNET ************** 
+
+  // maximum value that Y can take
+  real maxY;
+
+  // this weight between 0 and 1 controls the balance of the cost function
+  // between minimizing the negative log-likelihood and minimizing squared error
+  // if 1 then perform maximum likelihood, if 0 then perform least square optimization
+  real log_likelihood_vs_squared_error_balance; 
+
+  // number of terms in the output density function
+  int n_output_density_terms;
+
+  // the type of steps used to build the cumulative
+  // allowed values are:
+  //  - sigmoid_steps: g(y,theta,i) = sigmoid(s(c_i)*(y-mu_i))\n"
+  //  - sloped_steps: g(y,theta,i) = s(s(c_i)*(mu_i-y))-s(s(c_i)*(mu_i-y))\n"
+  string steps_type;
+
+  // how to initialize the mu_i:
+  //   - uniform: at regular intervals in [0,maxY]
+  //   - log-scale: as the exponential of values at regular intervals in [0,log(1+maxY)], minus 1
+  string centers_initialization;
 
   // ****************
   // * Constructors *
