@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.46 2004/05/14 17:49:13 chrish42 Exp $
+   * $Id: TMat_maths_impl.h,v 1.47 2004/05/26 16:05:14 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -2164,7 +2164,7 @@ inline void operator+=(const TVec<T>& vec1, const TVec<T>& vec2)
 
 //!  result[i] = sum_j m[i,j] * v[j]
 template <class T>
-void product(const TVec<T>& vec, const TMat<T>& m, const TVec<T>& v)
+void product(const TVec<T>& result, const TMat<T>& m, const TVec<T>& v)
 {
   int l=m.width();
   if (l!=v.length() || m.length()!=vec.length())
