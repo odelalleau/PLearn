@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: RowBufferedVMatrix.cc,v 1.2 2003/08/13 08:13:46 plearner Exp $
+   * $Id: RowBufferedVMatrix.cc,v 1.3 2003/10/10 21:57:52 dorionc Exp $
    ******************************************************* */
 
 #include "RowBufferedVMatrix.h"
@@ -125,8 +125,7 @@ real RowBufferedVMatrix::dot(int i1, int i2, int inputsize) const
       else // neither i1 nor i2 are cached
         {
           getRow(i1,current_row);
-          if(i2==i1)
-            getRow(i2,other_row);
+          getRow(i2,other_row);
           current_row_index = i1;
           other_row_index = i2;
         }
