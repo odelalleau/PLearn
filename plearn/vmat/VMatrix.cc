@@ -37,7 +37,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.76 2004/11/26 14:48:49 tihocan Exp $
+* $Id: VMatrix.cc,v 1.77 2004/12/07 22:41:52 chapados Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -53,7 +53,19 @@ using namespace std;
 /** VMatrix **/
 
 
-PLEARN_IMPLEMENT_ABSTRACT_OBJECT(VMatrix, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
+  VMatrix,
+  "Base classes for virtual matrices",
+  "VMatrix provides an abstraction for a virtual matrix, namely a matrix wherein\n"
+  "all element access operations are virtual.  This enables a wide variety of\n"
+  "matrix-like objects to be implemented, from simple data containers (e.g.\n"
+  "MemoryVMatrix), to large-scale matrices that don't fit in memory (e.g.\n"
+  "FileVMatrix), to on-the-fly calculations that are implemented through \n"
+  "various processing VMatrices.\n"
+  "\n"
+  "For implementers, a simple class to derive from is RowBufferedVMatrix, which\n"
+  "implements most of the functionality of the abstract VMatrix interface in terms\n"
+  "of a few simple virtual functions to be overridden by the user.");
 
 VMatrix::VMatrix()
   : lockf_(0), length_(-1), width_(-1), mtime_(0), 
