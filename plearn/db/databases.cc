@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: databases.cc,v 1.9 2004/07/09 18:15:45 tihocan Exp $
+   * $Id: databases.cc,v 1.10 2004/07/09 20:16:11 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -846,8 +846,9 @@ void loadClassificationDataset(const string& datasetname, int& inputsize, int& n
     meanvec = meanvec.subVec(0,inputsize);
     stddevvec = stddevvec.subVec(0,inputsize);
     for (int i = 0; i < stddevvec.length(); i++) {
-      if (isnan(stddevvec[i])) {
-        // The standard dev is nan, the row must be constant.
+      if (stddevvec[i] == 0) {
+        // The standard dev is 0, the row must be constant. Since we don't
+        // want nans we put 1 instead.
         stddevvec[i] = 1;
       }
     }
