@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.h,v 1.7 2003/10/10 21:10:17 ducharme Exp $ 
+ * $Id: Trader.h,v 1.8 2003/10/14 20:39:31 ducharme Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -77,8 +77,9 @@ private:
   
   //! The index of the SP500 column in the vmat (if sp500 != ""; see below)
   int sp500_index;
-  mutable VecStatsCollector internal_stats; //log_returns; //!< If sp500 != ""; see below
-  enum stats_indices { rt=0, log_rel_rt=1, log_sp=2 };
+  bool compute_covariance_with_sp500;
+  //mutable VecStatsCollector internal_stats; //log_returns; //!< If sp500 != ""; see below
+  //enum stats_indices { rt=0, log_rel_rt=1, log_sp=2 };
 
   //! Same thing s above, but for the S&P500
   TVec<int> last_valid_sp500_price;

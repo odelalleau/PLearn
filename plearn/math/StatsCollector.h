@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.18 2003/09/06 22:29:39 chapados Exp $
+   * $Id: StatsCollector.h,v 1.19 2003/10/14 20:39:30 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -135,6 +135,7 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     real variance() const { return real((sumsquare_ - square(sum_)/nnonmissing_)/(nnonmissing_-1)); }
     real stddev() const { return sqrt(variance()); }
     real stderror() const { return sqrt(variance()/nnonmissing()); }
+    real sharperatio() const { return mean()/stddev(); }
     real first_obs() const { return first_; }
     real last_obs() const { return last_; }
           
@@ -147,6 +148,7 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     //!   - SUM, SUMSQ
     //!   - FIRST, LAST
     //!   - N, NMISSING, NNONMISING
+    //!   - SHARPERATIO
     real getStat(const string& statname) const;
 
     //! simply calls inherited::build() then build_()

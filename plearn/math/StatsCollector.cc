@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.20 2003/10/10 21:10:08 ducharme Exp $
+   * $Id: StatsCollector.cc,v 1.21 2003/10/14 20:39:30 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -458,7 +458,7 @@ void StatsCollector::oldread(istream& in)
 
 
 //! Returns the index in the vector returned by getAllStats of the stat with the given name.
-//! Currently available names are E (mean) V (variance) STDDEV MIN MAX STDERROR
+//! Currently available names are E (mean) V (variance) STDDEV MIN MAX STDERROR SHARPERATIO
 //! Will call PLERROR statname is invalid
 real StatsCollector::getStat(const string& statname) const
 {
@@ -479,6 +479,7 @@ real StatsCollector::getStat(const string& statname) const
     statistics["N"]           = &StatsCollector::n;
     statistics["NMISSING"]    = &StatsCollector::nmissing;
     statistics["NNONMISSING"] = &StatsCollector::nnonmissing;
+    statistics["SHARPERATIO"] = &StatsCollector::sharperatio;
     init = true;
   }
   

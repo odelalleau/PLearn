@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.cc,v 1.13 2003/10/14 14:54:11 tihocan Exp $ 
+ * $Id: Trader.cc,v 1.14 2003/10/14 20:39:31 ducharme Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -95,7 +95,7 @@ void Trader::build_()
   if(sp500 != "")
   {
     sp500_index = train_set->fieldIndex(sp500);
-    internal_stats.compute_covariance = true;
+    //internal_stats.compute_covariance = compute_covariance_with_sp500;
     last_valid_sp500_price.resize(max_seq_len);
     last_valid_sp500_price.fill(-1);
   }
@@ -153,7 +153,7 @@ void Trader::assets_info()
   }
   else if (assets_names.isEmpty())
     PLERROR("The field name 'assets_names' has not been set and 'deduce_assets_names' is false");
-  cout << assets_names << endl; //TMP
+  //cout << assets_names << endl; //TMP
   
   outputsize_ = nb_assets = assets_names.length();
   if(nb_assets == 0)
@@ -182,7 +182,7 @@ void Trader::forget()
   if(stop_loss_active && internal_data_set.isNotNull())
     stop_loss_values.fill(0.0);
 
-  internal_stats.forget();
+  //internal_stats.forget();
 }
 
 void Trader::declareOptions(OptionList& ol)
@@ -240,6 +240,11 @@ void Trader::declareOptions(OptionList& ol)
                 OptionBase::buildoption,
                 "If the user wants the test method to compute the model log-returns correlation\n"
                 "with the S&P500 index, he only needs to provide the sp500 field name in the vmat");
+  
+  declareOption(ol, "compute_covariance_with_sp500", &Trader::compute_covariance_with_sp500,
+                OptionBase::buildoption,
+                "Should we compute the covariance between the log-returns and the S&P500.\n"
+                "The sp500 flag must be set!");
   
   declareOption(ol, "assets_names", &Trader::assets_names,
                 OptionBase::buildoption,
@@ -371,6 +376,7 @@ void Trader::test(VMat testset, PP<VecStatsCollector> test_stats,
   if(very_first_test_t == -1)
   {
     build_test();
+    test_stats->compute_covariance = compute_covariance_with_sp500;
 
     // Since we reached that point, we know we are going to test. Therefore, there is no arm
     //  in modifying directly last_test_t.
@@ -397,6 +403,8 @@ void Trader::test(VMat testset, PP<VecStatsCollector> test_stats,
   //  computed and managed. 
   //
   //  The clock then moves one time forward and the process is repeated.
+
+  PP<VecStatsCollector> dummy_stats = new VecStatsCollector();
   for(int t = last_test_t+1; t < testset.length(); t++)
   {
     // Calling the advisor one row at the time ensures us that the predictions of 
@@ -404,11 +412,13 @@ void Trader::test(VMat testset, PP<VecStatsCollector> test_stats,
     //  before advisor goes forward
     // In the length position of the subMatRows, we use t+1 because we want the
     //  matrix to contain info at times 0, ..., t; these are on t+1 rows
-    advisor->test(testset.subMatRows(0, t+1), test_stats, testoutputs, testcosts);
+    //advisor->test(testset.subMatRows(0, t+1), test_stats, testoutputs, testcosts);
+    advisor->test(testset.subMatRows(0, t+1), dummy_stats);
     if( is_missing(advisor->predictions(t, 0)) )
       PLERROR("The advisor->test method is assumed to compute and set the advisor->predictions up to its\n\t"
               "(last_test_t)^th row.");
-    portfolios.subMatRows(t, 1) << advisor->predictions.subMatRows(t, 1);
+    //portfolios.subMatRows(t, 1) << advisor->predictions.subMatRows(t, 1);
+    portfolios(t) << advisor->predictions(t);
         
     //**************************************************************
     //*** Body of the test which is specific to the type of Trader
@@ -419,6 +429,21 @@ void Trader::test(VMat testset, PP<VecStatsCollector> test_stats,
     if( is_missing(transaction_costs[t]) )
       PLERROR("SUBCLASS WRITING: the subclass trader_test method is expected to fill the transaction_costs vector");
  
+    Vec update = advisor->errors(t).copy();
+    real log_return = log(1.0+relative_Rt);
+    update.append(absolute_Rt);
+    update.append(log_return);
+    if(sp500 != "")
+    {
+      real sp500_log_return = log(sp500_price(t)/sp500_price(t-horizon));
+      update.append(sp500_log_return);
+      update.append(log_return - sp500_log_return);
+    }
+    test_stats->update(update);
+
+    if (testoutputs) testoutputs->appendRow(portfolios(t));
+    if (testcosts) testcosts->appendRow(update);
+/*
     // The order of the 'append' statements is IMPORTANT! (enum stats_indices) 
     Vec update;
     update.append( absolute_Rt );
@@ -426,10 +451,12 @@ void Trader::test(VMat testset, PP<VecStatsCollector> test_stats,
     if(sp500 != "")
       update.append( log(sp500_price(t)/sp500_price(t-horizon)) );
     internal_stats.update(update);
+*/
     
     //cout << "(rt, log_rel_rt, log_sp)[" << t << "]: " << update << endl;
   }
   
+/*
   real average_absolute_Rt = internal_stats.stats[rt].mean();
   real stddev_absolute_Rt = internal_stats.stats[rt].stddev();
   real average_relative_Rt = internal_stats.stats[log_rel_rt].mean();
@@ -443,7 +470,6 @@ void Trader::test(VMat testset, PP<VecStatsCollector> test_stats,
        ;
        //<< "\t Average Absolute Return:\t" << average_absolute_Rt << endl
        //<< "\t Empirical Variance:\t" << variance_absolute_Rt << endl
-/*
        << "\t Average Annual Return:\t" << exp(252.0*average_relative_Rt) << endl
        << "\t Sharpe Ratio of monthly log-returns:\t" << average_relative_Rt/stddev_relative_Rt << endl
        << "\t Sharpe Ratio:\t\t" << average_absolute_Rt/stddev_absolute_Rt << endl;
@@ -527,7 +553,7 @@ void Trader::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   
-  deepCopyField(internal_stats, copies);
+  //deepCopyField(internal_stats, copies);
   deepCopyField(assets_price_indices, copies);
   deepCopyField(last_valid_price, copies);
   deepCopyField(last_valid_sp500_price, copies);
@@ -539,13 +565,20 @@ void Trader::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 } 
 
 /*!
-  Since FuturesTrader::train mainly call its advisor train method
-   it is only normal that FuturesTrader::getTrainCostNames calls FT's 
-   advisor getTrainCostNames method. Make sure it is properly implemented.
+  The advisor cost names + other returns
 */
 TVec<string> Trader::getTrainCostNames() const
 {
-  return advisor->getTrainCostNames();
+  TVec<string> cost_names = advisor->getTrainCostNames();
+  cost_names.append("absolute_return");
+  cost_names.append("log_return");
+  if (sp500.size() > 0)
+  {
+    cost_names.append("sp500_log_return");
+    cost_names.append("relative_log_return"); // model(log_Rt) - SP500(log_Rt)
+  }
+
+  return cost_names;
 }
 
 TVec<string> Trader::getTestCostNames() const

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.cc,v 1.16 2003/10/10 21:10:17 ducharme Exp $ 
+   * $Id: FuturesTrader.cc,v 1.17 2003/10/14 20:39:31 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.cc */
@@ -169,7 +169,7 @@ void FuturesTrader::trader_test( int t, VMat testset,
     }
   }
   
-  absolute_return_t += previous_value_t * daily_risk_free_return;
+  absolute_return_t += previous_value_t * (1.0 + daily_risk_free_return);
   relative_return_t =  daily_risk_free_return + relative_sum/previous_value_t;
 
   cout << "\t Turnover per year:\t\t" << sum(transaction_costs,true)/(sum(margin_cash,true)/12.0) << endl;
