@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceKernel.cc,v 1.1 2004/04/20 20:38:35 tihocan Exp $ 
+   * $Id: SourceKernel.cc,v 1.2 2004/05/07 19:07:32 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -100,6 +100,15 @@ void SourceKernel::build_()
   // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
   // ### You should assume that the parent class' build_() has already been called.
   this->is_symmetric = source_kernel->is_symmetric;
+  this->data_inputsize = source_kernel->dataInputsize();
+  this->n_examples = source_kernel->nExamples();
+  if (specify_dataset) {
+    // Forward the specified dataset to the underlying kernel, if it is not done already.
+    if (specify_dataset != source_kernel->specify_dataset) {
+      source_kernel->specify_dataset = specify_dataset;
+      source_kernel->build();
+    }
+  }
 }
 
 ////////////////////////////
