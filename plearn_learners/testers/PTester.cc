@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.22 2004/01/26 14:17:05 tihocan Exp $ 
+   * $Id: PTester.cc,v 1.23 2004/02/11 20:04:14 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -284,7 +284,7 @@ Vec PTester::perform(bool call_forget)
     {
       string splitdir;
       if(expdir!="")
-        splitdir = append_slash(expdir)+"Split"+tostring(splitnum)+"/";
+        splitdir = append_slash(append_slash(expdir)+"Split"+tostring(splitnum));
 
       TVec<VMat> dsets = splitter->getSplit(splitnum);
       VMat trainset = dsets[0];
@@ -292,7 +292,7 @@ Vec PTester::perform(bool call_forget)
         PLearn::save(splitdir+"training_set.psave",trainset);
 
       if(splitdir!="" && train && provide_learner_expdir)
-        learner->setExperimentDirectory(splitdir+"LearnerExpdir/");
+        learner->setExperimentDirectory(append_slash(splitdir+"LearnerExpdir"));
 
       learner->setTrainingSet(trainset, call_forget && train);
       if(dsets.size()>1)
