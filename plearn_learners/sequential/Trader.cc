@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.cc,v 1.12 2003/10/10 21:10:17 ducharme Exp $ 
+ * $Id: Trader.cc,v 1.13 2003/10/14 14:54:11 tihocan Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -440,6 +440,7 @@ void Trader::test(VMat testset, PP<VecStatsCollector> test_stats,
        << "Test: " << endl
        << "\t weights:\n" << portfolios << endl
 #endif
+       ;
        //<< "\t Average Absolute Return:\t" << average_absolute_Rt << endl
        //<< "\t Empirical Variance:\t" << variance_absolute_Rt << endl
 /*
