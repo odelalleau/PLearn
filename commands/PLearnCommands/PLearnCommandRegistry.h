@@ -33,19 +33,15 @@
 
 
 /* *******************************************************      
-   * $Id: PLearnCommandRegistry.h,v 1.3 2003/05/07 05:39:16 plearner Exp $
+   * $Id: PLearnCommandRegistry.h,v 1.4 2004/02/16 20:24:59 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
-
-
-/*! \file PLearnLibrary/PLearnCore/Object.h */
 
 #ifndef PLearnCommandRegistry_INC
 #define PLearnCommandRegistry_INC
 
 #include <map>
 #include <string>
-#include <iostream>
 #include "PLearnCommand.h"
 
 

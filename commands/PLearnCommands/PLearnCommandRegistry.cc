@@ -33,11 +33,12 @@
 
 
 /* *******************************************************      
-   * $Id: PLearnCommandRegistry.cc,v 1.5 2003/05/07 05:39:16 plearner Exp $
+   * $Id: PLearnCommandRegistry.cc,v 1.6 2004/02/16 20:24:59 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "PLearnCommandRegistry.h"
+#include <iostream>
 #include <vector>
 
 namespace PLearn <%
