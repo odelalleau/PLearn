@@ -180,6 +180,10 @@ void BPTT::train()
   if(!rec_net)
     PLERROR("In BBPT::train, the reccurent network is not set properly");
 
+  Vec min_weights = Vec(weights.size());
+  Vec min_bias = Vec(bias.size());
+  real min_cost = REAL_MAX;
+
   int l = train_set->length();
 
   // number of samples seen by optimizer before each optimizer update
@@ -203,6 +207,7 @@ void BPTT::train()
   real last_value = 0.0;
 
   while(stage<nstages && !optimizer->early_stop) {
+    rec_net->reset();
     optimizer->nstages = optstage_per_lstage;
     train_stats->forget();
     optimizer->early_stop = false;
@@ -211,7 +216,7 @@ void BPTT::train()
 
     if(verbosity>2) {
       cout << "Epoch " << stage << " train objective: " << rec_net->value[0];
-      cout << " (" << (rec_net->value[0] - last_value) << ")";
+      cout << " (" << (rec_net->value[0] - last_value) << ") min : " << min_cost;
       cout << endl;
       cout << "Weights : " << weights << endl;
       cout << "Bias : " << bias << endl;
@@ -219,10 +224,19 @@ void BPTT::train()
     } else if (verbosity == 2) {
       if ((stage % 50) == 0) {
 	cout << "Epoch " << stage << " train objective: " << rec_net->value[0];
-	cout << " (" << (rec_net->value[0] - last_value) << ")";
+	cout << " (" << (rec_net->value[0] - last_value) << ") min : " << min_cost;
 	cout << endl;
 	last_value = rec_net->value[0];
       }
+    }
+    
+    if (rec_net->value[0] < min_cost) {
+      min_cost = rec_net->value[0];
+      min_weights << weights;
+      min_bias << bias;
+    } else {
+      //      weights << min_weights;
+      //bias << min_bias;      
     }
     ++stage;
     if(pb)
@@ -231,6 +245,11 @@ void BPTT::train()
   if(verbosity>1)
     cout << "EPOCH " << stage << " train objective: " << train_stats->getMean() << endl;
   
+  weights << min_weights;
+  bias << min_bias;
+
+  cout << "We use the params for the cost " << min_cost << endl;
+
   if(pb)
     delete pb;
 }
@@ -249,10 +268,18 @@ void BPTT::computeCostsFromOutputs(const Mat& input, const Mat& output,
 To test the verify gradient
 */
 void BPTT::run() {
-  /*  train();
-      rec_net->verifyGradient();*/
-  cout << "err(2,4)=" << rec_net->computeErr(2, 4) << " err(1,4)=" << rec_net->computeErr(1,4) << endl;
-  cout << "err'(2,4)=" << rec_net->computeGradErr(2, 4) << " err'(1,4)=" << rec_net->computeGradErr(1,4) << endl;
+  //    train();
+      rec_net->verifyGradient();
+      //  cout << "err(2,4)=" << rec_net->computeErr(2, 4) << " err(1,4)=" << rec_net->computeErr(1,4) << endl;
+      //cout << "err'(2,4)=" << rec_net->computeGradErr(2, 4) << " err'(1,4)=" << rec_net->computeGradErr(1,4) << endl;
+}
+
+void BPTT::get_next_step(Vec& output) {
+  rec_net->next_step(output);
+}
+
+void BPTT::init_step(const Mat& input) {
+  rec_net->init_step(input);
 }
 
 /*

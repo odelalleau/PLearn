@@ -32,8 +32,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 
-#ifndef XORSequenceVMatrix_INC
-#define XORSequenceVMatrix_INC
+#ifndef DelaySequenceVMatrix_INC
+#define DelaySequenceVMatrix_INC
 
 #include "SequenceVMatrix.h"
 

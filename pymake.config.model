@@ -163,6 +163,19 @@ optionalLibrary( name = 'wordnet',
                  linkeroptions = '-L /u/lisa/WordNet/v2.0/lib -lwn'
                  )
 
+# Jasmin : Library path for a library to read and edit midi files
+# The sources and binaries of these libraries are in LisaPlearn
+if platform=='darwin' :
+    libmididir = os.path.join(plearndir,'../LisaPLearn/Contrib/midi/lib_osx');
+else:
+    libmididir = os.path.join(plearndir,'../LisaPLearn/Contrib/midi/lib_linux');
+
+optionalLibrary( name = 'midi',
+                 triggers = ['libmidi/*', 'libdse/*'],
+                 includedirs = [os.path.join(plearndir,'../LisaPLearn/Contrib/midi/include')],
+                 linkeroptions = '-L' + libmididir + ' -lmidi'
+                 )
+
 optionalLibrary( name = 'boostpython',
                  triggers = 'boost/python.hpp',
                  includedirs = '/usr/include/python2.3',

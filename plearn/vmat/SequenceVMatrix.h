@@ -39,7 +39,11 @@
 
 namespace PLearn {
 using namespace std;
- 
+
+class SequenceVMatrix;
+
+typedef PP<SequenceVMatrix> SequenceVMat;
+
 class SequenceVMatrix: public VMatrix
 {
   typedef VMatrix inherited;
@@ -47,6 +51,10 @@ class SequenceVMatrix: public VMatrix
 protected:
   //! Build options.
   TVec<Mat> sequences;
+
+  Vec stdev;  // Standard deviation of each column
+  Vec mean;  // Mean of each column
+  Vec max;  // Max of each column
 
   void init(int nbSequences, int the_width);
 
@@ -77,7 +85,16 @@ public:
   int getNbRowInSeq(int i) const;
   int getNbRowInSeqs(int, int) const;
 
+  SequenceVMat get_level(int, int);
+  void clean();
+
+  int countNonNAN(int) const;
+
   void putOrAppendSequence(int, Mat);
+
+  void calc_mean();
+  void calc_stdev();
+  virtual void normalize_mean();
 
   void print();
 
@@ -90,11 +107,15 @@ public:
   virtual void build();
   void build_();
 
+  virtual void save_ascii(const string&) const;
+  virtual void save_ascii_abc(const string&) const;
+
+  static void copy_mat_to_arr(Mat, int, int, int, real*);
+  static int nearest(real*);
 };
 
 DECLARE_OBJECT_PTR(SequenceVMatrix);
 
-  typedef PP<SequenceVMatrix> SequenceVMat;
 
   SequenceVMat operator&(const SequenceVMat&, const SequenceVMat&);
 
@@ -108,27 +129,32 @@ protected:
   int col;
   int pos_seq;
   int pos_in_seq;
-  int size_;
+  TVec<int> size_;
+  int nbseq_;
   SequenceVMat mat;
 
   Vec row;
 
+  void internal_init();
+  void move_pos();
+
 public:
   SequenceVMatrixStream();
   
-  SequenceVMatrixStream(SequenceVMat, int);
+  SequenceVMatrixStream(SequenceVMat, int=0);
 
   void setSequence(SequenceVMat);
 
   bool hasMoreSequence();
   bool hasMoreInSequence();
 
-  void init();
+  void init(int=0);
 
   void nextSeq();
   real next();
 
-  int size();
+  int size(int=0) const;
+  int nb_seq() const;
 
   PLEARN_DECLARE_OBJECT(SequenceVMatrixStream);
 };

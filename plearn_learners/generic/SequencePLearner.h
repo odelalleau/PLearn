@@ -45,7 +45,7 @@ using namespace std;
   protected:
     VarArray params;
     SequenceVMat test_set;
-
+    
   public:
 
     typedef PLearner inherited;
@@ -88,6 +88,16 @@ using namespace std;
 
     virtual void computeOutputAndCosts(const Vec&, const Vec&, Vec&, Vec&) const;
     virtual void computeOutputAndCosts(const Mat&, const Mat&, Mat&, Mat&) const;
+
+    /*
+      These two functions work together. init_step must be called to initialise
+      the inputs to be able to generate the other step.
+      In a sequencePLearner, we use the output of step t-1 as an input of step t.
+      With this input we can generate the ouput at step t.
+      We can admit that these functions replace the compute function that are above.
+    */
+    virtual void get_next_step(Vec&) = 0;
+    virtual void init_step(const Mat&) = 0;
 
 
     virtual void run();

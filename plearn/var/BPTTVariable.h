@@ -52,6 +52,7 @@ class BPTTVariable: public NaryVariable
                   // the end depending on the type of cost
   int neuron_size; // length of the neuron array (i.e The number of time step)
 
+  int max_delay;
   TMat<int> indexDest;
   /* This table is an map of all the edges witch the key
      is the no of the vertex of destination of the edge.
@@ -94,6 +95,7 @@ class BPTTVariable: public NaryVariable
   void set_indexDest(int, int, int);
   void set_gradient(int, int, real);
 
+  void calc_step(Mat&, const Vec&);
 
   int currpos;
 
@@ -146,7 +148,14 @@ class BPTTVariable: public NaryVariable
   void computeOutputFromInput(const Mat&, Mat&);
   void computeCostFromOutput(const Mat&, const Mat&, Mat&);
 
+  void shift_neuron();
+  void copy_output_to_input();
+
+  void init_step(const Mat&);
+  void next_step(Vec&);
+
   void nextBatch();
+  void reset();
 
   void printState();
   void printOrder();

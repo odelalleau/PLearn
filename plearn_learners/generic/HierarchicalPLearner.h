@@ -31,96 +31,26 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-// Roughly copy from a code of Christian Jauvin(jauvinc@iro) that Implemented the EM
-// method for text generation.
-// I (Jasmin) adapt it for music generation and to PLearn.
-
-#ifndef EMPLEARNER_INC
-#define EMPLEARNER_INC
+#ifndef HIERARCHICALPLEARNER_INC
+#define HIERARCHICALPLEARNER_INC
 
 #include "SequencePLearner.h"
-#include "SequenceVMatrix.h"
 
 namespace PLearn {
 using namespace std;
 
-  class EMPLearner: public SequencePLearner
+  class HierarchicalPLearner: public SequencePLearner
   {
   protected:
+    int n_level_;
+    int rep_length_;
+    // Variable for the output
+    int gen_size_;
+    int start_size_;
+    TVec<int> harms_;
 
-    int N;  // This is a 3-gram
 
-    typedef map<const int, real> SimpleR;
-    typedef map<const int, int> SimpleI;
-    typedef map<const int, SimpleR> DoubleR;
-    typedef map<const int, SimpleI> DoubleI;
-    typedef map<const int, DoubleR> TripleR;
-    typedef map<const int, DoubleI> TripleI;
-
-    int max_n_bins;
-    real log_base;
-    int output_gen_size;
-    int verbosiy;
-
-    int n_track;
-
-    real zero_gram;
-    int note_count;
-
-    Mat bigram_mixture;
-    Mat bigram_mixture_posterior;
-    Mat trigram_mixture;
-    Mat trigram_mixture_posterior;
-
-    SequenceVMatrixStream train_stream;
-    SequenceVMatrixStream valid_stream;
-    SequenceVMatrixStream test_stream;
-    
-    SimpleI cunigram;
-    SimpleR punigram;
-    DoubleI cbigram;
-    DoubleR pbigram;
-    TripleI ctrigram;
-    TripleR ptrigram;
-
-    TVec<int> last_outputs;
-
-    void init_prob();
-    void verify_prob();
-    void verify_mixture();
-    void print_mixture();
-    void init_mixture();
-    void update_mixture();
-    void clear_mixture_posterior();
-    int mapFrequency(int, int) const;
-
-    int get_cunigram(int) const;
-    int get_cbigram(int, int) const;
-    int get_ctrigram(int, int, int) const;
-
-    real get_punigram(int) const;
-    real get_pbigram(int, int) const;
-    real get_ptrigram(int, int, int) const;
-
-    int get_ctrigramsize() const;
-
-    int get_noteno(int) const;
-
-    real get_zerogram() const;
-
-    int get_notecount() const;
-    int get_trainstreamsize() const;
-
-    void one_step_train();
-    void one_step_valid();
-    void one_step_test();
-
-    int get_next_note() const;
-    int get_next_note(int) const;
-    int get_next_note(int, int) const;
-
-    bool is_little(real r) const;
-
+    TVec< PP<SequencePLearner> > level_learner;
   public:
 
     typedef SequencePLearner inherited;
@@ -130,9 +60,9 @@ using namespace std;
 
   public:
 
-    EMPLearner();
-    virtual ~EMPLearner();
-    PLEARN_DECLARE_OBJECT(EMPLearner);
+    HierarchicalPLearner();
+    virtual ~HierarchicalPLearner();
+    PLEARN_DECLARE_OBJECT(HierarchicalPLearner);
 
     virtual void build();
     virtual void forget(); // simply calls initializeParams()
@@ -159,7 +89,7 @@ using namespace std;
 
   };
 
-  DECLARE_OBJECT_PTR(EMPLearner);
+  DECLARE_OBJECT_PTR(HierarchicalPLearner);
 
 } // end of namespace PLearn
 

@@ -192,18 +192,48 @@ namespace PLearn {
   */
   void BPTTVariable::updateIndexDest() {
     int nr = links.nrows();
+    max_delay = 0;
     indexDest = TMat<int>(nunits,nr+1, 0);
     for (int i = 0; i < links.nrows(); i++) {
       int dst = links(i,1);
       int nb = get_indexDest(dst, 0) + 1;
       set_indexDest(dst, 0, nb);
       set_indexDest(dst, nb, i);
+      if (max_delay < links(i,2))
+	max_delay = links(i,2);
     }
-
   }
 
 
   void BPTTVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies) { }
+
+
+  void BPTTVariable::calc_step(Mat& neu, const Vec& row) {
+    Var weights = varray[0];
+    Var bias = varray[1];
+    
+    int i_row = neu.nrows()-1;
+
+    for (int o = 0; o < nunits; o++) { // Loop on each units(neuron)
+      int v = order[o];
+      if (isInput(v) && !is_missing(row[v])) {
+	neu[i_row][v] = row[v];
+      } else {
+	real total = bias->value[v];
+	for (int e = 1; e <= get_indexDest(v,0); e++) { // Loop on each edge that comes to the neuron
+	  int edge_num = get_indexDest(v,e);
+	  int src_neuron = links(edge_num, 0);
+	  int delay = links(edge_num, 2);
+	  if (i_row - delay >= 0) {
+	    real w = weights->value[edge_num];
+	    real x = neu[i_row-delay][src_neuron];
+	    total += w * x;
+	  }
+	}
+	neu[i_row][v] = squash(v, total);
+      }
+    }
+  }
 
   /*
     Does the forward pass on nsamples sequences
@@ -212,8 +242,6 @@ namespace PLearn {
     int l = seqs->getNbSeq() - currpos; // Number of seqs remaining
     int nsamples = batch_size>0 ? batch_size : l;
   
-    Var weights = varray[0];
-    Var bias = varray[1];
     neuron_size = seqs->getNbRowInSeqs(currpos, nsamples);
     neuron = Mat(neuron_size, nunits, (real)0.0);
     cost = Mat(neuron_size, seqs->targetsize(), (real)0.0);
@@ -225,27 +253,14 @@ namespace PLearn {
       int nrow = seqs->getNbRowInSeq(i);
       Mat s = Mat(nrow, ncol);
       seqs->getSeq(i, s);
-      for (int j = 0; j < s.nrows(); j++) { // Loop on each example in seq
+      for (int j = 0; j < s.nrows() && !is_missing(s[j][0]); j++) { // Loop on each example in seq
 	Vec row = s(j);
-	for (int o = 0; o < nunits; o++) { // Loop on each units(neuron)
-	  int v = order[o];
-	  if (isInput(v) && !is_missing(row[v])) {
-	    set_neuron(t, v, row[v]);
-	  } else {
-	    real total = bias->value[v];
-	    for (int e = 1; e <= get_indexDest(v,0); e++) { // Loop on each edge that comes to the neuron
-	      int edge_num = get_indexDest(v,e);
-	      int src_neuron = links(edge_num, 0);
-	      int delay = links(edge_num, 2);
-	      if (j - delay >= 0) {
-		real w = weights->value[edge_num];
-		real x = get_neuron(t-delay,src_neuron);
-		total += w * x;
-	      }
-	    }
-	    set_neuron(t, v, squash(v, total));
-	  }
-	}
+	Mat sub_neu;
+	if (j - max_delay >= 0)
+	  sub_neu = neuron.subMat(t-max_delay, 0, max_delay+1, neuron.ncols());
+	else
+	  sub_neu = neuron.subMat(t-j, 0, j+1, neuron.ncols());
+	calc_step(sub_neu, row);
 	computeCost(t, row);
 	t++;
       }
@@ -259,31 +274,19 @@ namespace PLearn {
   void BPTTVariable::computeOutputFromInput(const Mat &input, Mat &output) {
     Var weights = varray[0];
     Var bias = varray[1];
-   
+    
     neuron = Mat(input.nrows(), nunits, (real)0.0);
     for (int t = 0; t < input.nrows(); t++) { // Loop on each example in seq
       Vec row = input(t);
-      for (int o = 0; o < nunits; o++) { // Loop on each units(neuron)
-	int v = order[o];
-	if (isInput(v) && !is_missing(row[v])) {
-	  set_neuron(t, v, row[v]);
-	} else {
-	  real total = bias->value[v];
-	  for (int e = 1; e <= get_indexDest(v,0); e++) { // Loop on each edge that comes to the neuron
-	    int edge_num = get_indexDest(v,e);
-	    int src_neuron = links(edge_num, 0);
-	    int delay = links(edge_num, 2);
-	    if (t - delay >= 0) {
-	      real w = weights->value[edge_num];
-	      real x = get_neuron(t-delay,src_neuron);
-	      total += w * x;
-	    }
-	  }
-	  set_neuron(t, v, squash(v, total));
-	  if (isOutput(v)) {
-	    output[t][v-nunits_input-nunits_hidden] = get_neuron(t, v);
-	  }
-	}
+      Mat sub_neu;
+      if (t-max_delay >= 0) {
+	sub_neu = neuron.subMat(t-max_delay, 0, max_delay+1, neuron.ncols());
+      } else {
+	sub_neu = neuron.subMat(0, 0, t+1, neuron.ncols());
+      }
+      calc_step(sub_neu, row);
+      for (int o = 0; o < nunits_output; o++) {
+	output[t][o] = get_neuron(t, o + nunits_input + nunits_hidden);
       }
     }
   }
@@ -299,6 +302,57 @@ namespace PLearn {
       }
     }
   }
+
+  void BPTTVariable::shift_neuron() {
+    for (int i = 0; i < neuron.nrows() - 1; i++) {
+      for (int j = 0; j < neuron.ncols(); j++) {
+	neuron[i][j] = neuron[i+1][j];
+      }
+    }
+    for (int j = 0; j < neuron.ncols(); j++) {
+      neuron[neuron.nrows() - 1][j] = 0.0;
+    }    
+  }
+
+  void BPTTVariable::copy_output_to_input() {
+#ifdef BOUNDCHECK
+    if (nunits_input != nunits_output)
+      PLERROR("In BPTTVariable::copy_output_to_input() : to use this function, the network must have the same number of input units and output units");
+#endif
+
+    for (int i = 0; i < nunits_input; i++) {
+      neuron[neuron.nrows() - 1][i] = neuron[neuron.nrows() - 2][i + nunits_input + nunits_hidden];
+    }
+  }
+
+  void BPTTVariable::init_step(const Mat& input) {
+    neuron = Mat(max_delay+1, nunits, (real)0.0);
+
+    for (int i = 0; i < max_delay + 1; i++) {
+      Mat sub_neu = neuron.subMat(0,0, i + 1, neuron.ncols());
+      Vec row = input(i);
+      calc_step(sub_neu, row);
+    }
+
+    for (int i = max_delay + 1; i < input.nrows(); i++) {
+      shift_neuron();
+      Vec row = input(i);
+      calc_step(neuron, row);
+    }
+    shift_neuron();
+    copy_output_to_input();
+  }
+
+  void BPTTVariable::next_step(Vec& out) {
+    Vec row = neuron(neuron.nrows()-1);
+    calc_step(neuron, row);
+    for (int i = 0; i < nunits_output; i++) {
+      out[i] = neuron[neuron.nrows()-1][nunits_input+nunits_hidden+i];
+    }
+    shift_neuron();
+    copy_output_to_input();    
+  }
+
 
   /*
     We call fbprop() because we cannot do a bprop without doing a fprop before
@@ -358,6 +412,10 @@ namespace PLearn {
   */
   void BPTTVariable::nextBatch() {
     currpos += batch_size;
+  }
+
+  void BPTTVariable::reset() {
+    currpos = 0;
   }
 
   /*
@@ -524,6 +582,7 @@ namespace PLearn {
 
     cout << "alpha : " << gradient[0] << endl;
   }  
+
 
   /*
     print the order in witch, the fprop and bprop will see the node.

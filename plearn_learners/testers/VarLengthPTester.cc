@@ -79,7 +79,7 @@ void VarLengthPTester::run()
   bptt_learner->forget();
   bptt_learner->run();
   */
-  
+
   perform(true);
 }
 
@@ -140,6 +140,8 @@ void VarLengthPTester::save(SequenceVMat test_set, SequenceVMat test_outputs,
 
   SequenceVMat all = test_set & test_outputs & test_costs;
   Vec sep = Vec(all->width(), -1.0);
+  test_outputs->save_ascii(append_slash(expdir) + "out" + tostring(nsetnum) + ".smat");
+  test_outputs->save_ascii_abc(append_slash(expdir) + "out" + tostring(nsetnum) + ".abcsmat");
   FileVMatrix file = FileVMatrix(append_slash(expdir) + "out" + tostring(nsetnum) + ".pmat", 0, all->width());
   for (int i = 0; i < all->getNbSeq(); i++) {
     Mat seq = Mat(all->getNbRowInSeq(i), all->width());

@@ -1,7 +1,7 @@
 // -*- C++ -*-
 
-// BPTT.h
-// Copyright (c) 2004 Jasmin Lapalme
+// PLearn (A C++ Machine Learning Library)
+// Copyright (C) 2004 Jasmin Lapalme
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -31,75 +31,62 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-#ifndef BPTT_INC
-#define BPTT_INC
 
-#include "SequencePLearner.h"
-#include "BPTTVariable.h"
-#include "Optimizer.h"
+#ifndef MidiSequenceVMatrix_INC
+#define MidiSequenceVMatrix_INC
+
+#include "SequenceVMatrix.h"
+#include "libmidi/MidiFile.h"
 
 namespace PLearn {
 using namespace std;
+ 
+ typedef MidiFile* MidiFilePtr;
 
-  class BPTT: public SequencePLearner
-  {
-  protected:
-    BPTTVariable* rec_net;
-    Vec weights, bias;
-    TMat<int> links;
-    int nneuron_input; // number of input neuron
-    int nneuron_hidden; // number of hidden neuron
-    int nneuron_output; // number of output neuron
-    TVec<string> units_type;
+class MidiSequenceVMatrix: public SequenceVMatrix
+{
+  typedef SequenceVMatrix inherited;
+protected:
+  string dirname_;
+  string type_;
+  int track_;
+  bool normalize_value_;
 
-    string cost_type; // Function to minimize
+  int* harms;
+  int* offset;
+  int* lags;
 
-    void build_default_units_type();
-    void build_fully_connected_network();
+  void read_meta_event(string);
 
-  public:
+  void fill_test();
+  void fill_shepard();
+  void fill_noteson();
+  void add_seq_noteson(string);
+  void add_seq_shepard(string);
 
-    typedef SequencePLearner inherited;
+  void build_target();
 
-    PP<Optimizer> optimizer; // the optimizer to use (no default)
+  real normalize(real);
 
-  private:
-    void build_();
+public:
+  
+  MidiSequenceVMatrix();
 
-  public:
+  PLEARN_DECLARE_OBJECT(MidiSequenceVMatrix);
 
-    BPTT();
-    virtual ~BPTT();
-    PLEARN_DECLARE_OBJECT(BPTT);
 
-    virtual void build();
-    virtual void forget(); // simply calls initializeParams()
+  string get_dirname() const;
+  string get_type() const;
+  int get_track() const;
 
-    virtual TVec<string> getTrainCostNames() const;
-    virtual TVec<string> getTestCostNames() const;
+  static void declareOptions(OptionList &ol);
+  virtual void build();
+  void build_();
+  virtual void run();
 
-    virtual void train();
+};
 
-    // The vec version of compute function cannot be use in a Sequence learner
-    virtual void computeOutput(const Mat&, Mat&) const;
-    
-    virtual void computeCostsFromOutputs(const Mat&, const Mat&, const Mat&, Mat&) const;
-
-    virtual void run();
-    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
-
-    virtual void get_next_step(Vec&);
-    virtual void init_step(const Mat&);
-
-  protected:
-    static void declareOptions(OptionList& ol);
-    void initializeParams();
-
-  };
-
-  DECLARE_OBJECT_PTR(BPTT);
+DECLARE_OBJECT_PTR(MidiSequenceVMatrix);
 
 } // end of namespace PLearn
-
 #endif
-

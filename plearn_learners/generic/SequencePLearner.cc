@@ -121,6 +121,7 @@ int SequencePLearner::outputsize() const
   In sequence we don't know the outputsize with knowing the input.
   The VMat must be a SequenceVMatrix.
 */
+
 int SequencePLearner::outputsize(VMat set) const
 { 
   SequenceVMatrix *seq = dynamic_cast<SequenceVMatrix*>((VMatrix*)set);

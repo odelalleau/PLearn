@@ -3,10 +3,10 @@ VarLengthPTester(
 expdir = "bptt";
 
 # VMat: The dataset to use for training/testing (will be split according to what is specified in the testmethod)
-dataset = XORSequenceVMatrix( min_seq_length = 20 ;
-                              max_seq_length = 10 ;
-                              length = 1000;
-	                      xor_length = 0;
+dataset = XORSequenceVMatrix( min_seq_length = 500 ;
+                              max_seq_length = 500 ;
+                              length = 1;
+	                      xor_length = 2;
                             );
 # PP< Splitter >: The splitter to use to generate one or several train/test pairs.
 splitter = TrainTestSplitter(test_fraction=.10) ;
@@ -20,9 +20,9 @@ save_data_sets = 1;
 
 learner = BPTT( batch_size = 0;
 		verbosity = 2;
-		nstages = 1000;
+		nstages = 40;
                 nneuron_input = 1;
-                nneuron_hidden = 20;
+                nneuron_hidden = 4;
                 nneuron_output = 1;
 #                optimizer = GradientOptimizer(
 #                      start_learning_rate = 0.001  ;
