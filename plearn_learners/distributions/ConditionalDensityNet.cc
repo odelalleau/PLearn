@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.40 2004/05/26 21:23:26 tihocan Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.41 2004/05/27 18:40:10 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -260,126 +260,128 @@ void ConditionalDensityNet::declareOptions(OptionList& ol)
                 "    Step centers.\n");
 
   declareOption(ol, "y_values", &ConditionalDensityNet::y_values, OptionBase::learntoption, 
-                "    Values of Y at which the cumulative (or density or survival) curves are computed if required.\n");
+      "    Values of Y at which the cumulative (or density or survival) curves are computed if required.\n");
 
-    inherited::declareOptions(ol);
-  }
+  inherited::declareOptions(ol);
+}
 
-  int ConditionalDensityNet::outputsize() const
-  {
-    int target_size = targetsize_<0?(train_set?train_set->targetsize():1):targetsize_;
-    int l=0;
-    for (unsigned int i=0;i<outputs_def.length();i++)
-      if (outputs_def[i]=='L' || outputs_def[i]=='D' || outputs_def[i]=='C' || outputs_def[i]=='S')
-        l+=n_curve_points;
-      else if (outputs_def[i]=='e')
-        l+=target_size;
-      else if (outputs_def[i]=='v') // by default assume variance is full nxn matrix 
-        l+=target_size*target_size;
-      else l++;
+/*
+int ConditionalDensityNet::outputsize() const
+{
+  int target_size = targetsize_<0?(train_set?train_set->targetsize():1):targetsize_;
+  int l=0;
+  for (unsigned int i=0;i<outputs_def.length();i++)
+    if (outputs_def[i]=='L' || outputs_def[i]=='D' || outputs_def[i]=='C' || outputs_def[i]=='S')
+      l+=n_curve_points;
+    else if (outputs_def[i]=='e')
+      l+=target_size;
+    else if (outputs_def[i]=='v') // by default assume variance is full nxn matrix 
+      l+=target_size*target_size;
+    else l++;
     return l;
-  }
+}
+*/
 
-  void ConditionalDensityNet::build_()
-  {
+void ConditionalDensityNet::build_()
+{
   // Don't do anything if we don't have a train_set
   // It's the only one who knows the inputsize and targetsize anyway...
 
-    if(inputsize_>=0 && targetsize_>=0 && weightsize_>=0)
+  if(inputsize_>=0 && targetsize_>=0 && weightsize_>=0)
+  {
+    lower_bound = 0;
+    upper_bound = maxY;
+    int n_output_parameters = mu_is_fixed?(1+n_output_density_terms*2):(1+n_output_density_terms*3);
+
+    if (n_curve_points<0)
+      n_curve_points = n_output_density_terms+1;
+
+    // init. basic vars
+    input = Var(n_input, "input");
+    output = input;
+    params.resize(0);
+
+    // first hidden layer
+    if(nhidden>0)
     {
-      lower_bound = 0;
-      upper_bound = maxY;
-      int n_output_parameters = mu_is_fixed?(1+n_output_density_terms*2):(1+n_output_density_terms*3);
+      w1 = Var(1+n_input, nhidden, "w1");      
+      output = tanh(affine_transform(output,w1));
+      params.append(w1);
+    }
 
-      if (n_curve_points<0)
-        n_curve_points = n_output_density_terms+1;
+    // second hidden layer
+    if(nhidden2>0)
+    {
+      w2 = Var(1+nhidden, nhidden2, "w2");
+      output = tanh(affine_transform(output,w2));
+      params.append(w2);
+    }
 
-      // init. basic vars
-      input = Var(inputsize(), "input");
-      output = input;
-      params.resize(0);
+    if (nhidden2>0 && nhidden==0)
+      PLERROR("ConditionalDensityNet:: can't have nhidden2 (=%d) > 0 while nhidden=0",nhidden2);
 
-      // first hidden layer
-      if(nhidden>0)
-        {
-          w1 = Var(1+inputsize(), nhidden, "w1");      
-          output = tanh(affine_transform(output,w1));
-          params.append(w1);
-        }
+    if (nhidden==-1) 
+      // special code meaning that the inputs should be ignored, only use biases
+    {
+      wout = Var(1, n_output_parameters, "wout");
+      output = transpose(wout);
+    }
+    // output layer before transfer function
+    else
+    {
+      wout = Var(1+output->size(), n_output_parameters, "wout");
+      output = affine_transform(output,wout);
+    }
+    params.append(wout);
 
-      // second hidden layer
-      if(nhidden2>0)
-        {
-          w2 = Var(1+nhidden, nhidden2, "w2");
-          output = tanh(affine_transform(output,w2));
-          params.append(w2);
-        }
+    // direct in-to-out layer
+    if(direct_in_to_out)
+    {
+      wdirect = Var(n_input, n_output_parameters, "wdirect");
+      //wdirect = Var(1+inputsize(), n_output_parameters, "wdirect");
+      output += transposeProduct(wdirect, input);// affine_transform(input,wdirect);
+      params.append(wdirect);
+    }
 
-      if (nhidden2>0 && nhidden==0)
-        PLERROR("ConditionalDensityNet:: can't have nhidden2 (=%d) > 0 while nhidden=0",nhidden2);
-      
-      if (nhidden==-1) 
-        // special code meaning that the inputs should be ignored, only use biases
-      {
-        wout = Var(1, n_output_parameters, "wout");
-        output = transpose(wout);
-      }
-      // output layer before transfer function
+    /*
+     * target and weights
+     */
+
+    target = Var(n_target, "target");
+
+    if(weightsize_>0)
+    {
+      if (weightsize_!=1)
+        PLERROR("ConditionalDensityNet: expected weightsize to be 1 or 0 (or unspecified = -1, meaning 0), got %d",weightsize_);
+      sampleweight = Var(1, "weight");
+    }
+    // output = parameters of the Y distribution
+
+    int i=0;
+    a = output[i++]; a->setName("a");
+    //b = new SubMatVariable(output,0,i,1,n_output_density_terms); 
+    b = new SubMatVariable(output,i,0,n_output_density_terms,1);
+    b->setName("b");
+    i+=n_output_density_terms;
+    //c = new SubMatVariable(output,0,i,1,n_output_density_terms);
+    c = new SubMatVariable(output,i,0,n_output_density_terms,1);
+    c->setName("c");
+
+    // we don't want to clear mu if this build is called
+    // just after a load(), because mu is a learnt option
+    if (!mu || (mu->length()!=n_output_density_terms && train_set))
+    {
+      if (mu_is_fixed)
+        //mu = Var(1,n_output_density_terms);
+        mu = Var(n_output_density_terms,1);
       else
       {
-        wout = Var(1+output->size(), n_output_parameters, "wout");
-        output = affine_transform(output,wout);
+        i+=n_output_density_terms;
+        //mu = new SubMatVariable(output,0,i,1,n_output_density_terms);
+        mu = new SubMatVariable(output,i,0,n_output_density_terms,1);
       }
-      params.append(wout);
-
-      // direct in-to-out layer
-      if(direct_in_to_out)
-        {
-          wdirect = Var(inputsize(), n_output_parameters, "wdirect");
-          //wdirect = Var(1+inputsize(), n_output_parameters, "wdirect");
-          output += transposeProduct(wdirect, input);// affine_transform(input,wdirect);
-          params.append(wdirect);
-        }
-
-      /*
-       * target and weights
-       */
-      
-      target = Var(targetsize(), "target");
-      
-      if(weightsize_>0)
-      {
-        if (weightsize_!=1)
-          PLERROR("ConditionalDensityNet: expected weightsize to be 1 or 0 (or unspecified = -1, meaning 0), got %d",weightsize_);
-        sampleweight = Var(1, "weight");
-      }
-      // output = parameters of the Y distribution
-      
-      int i=0;
-      a = output[i++]; a->setName("a");
-      //b = new SubMatVariable(output,0,i,1,n_output_density_terms); 
-      b = new SubMatVariable(output,i,0,n_output_density_terms,1);
-      b->setName("b");
-      i+=n_output_density_terms;
-      //c = new SubMatVariable(output,0,i,1,n_output_density_terms);
-      c = new SubMatVariable(output,i,0,n_output_density_terms,1);
-      c->setName("c");
-
-      // we don't want to clear mu if this build is called
-      // just after a load(), because mu is a learnt option
-      if (!mu || (mu->length()!=n_output_density_terms && train_set))
-        {
-          if (mu_is_fixed)
-            //mu = Var(1,n_output_density_terms);
-            mu = Var(n_output_density_terms,1);
-          else
-            {
-              i+=n_output_density_terms;
-              //mu = new SubMatVariable(output,0,i,1,n_output_density_terms);
-              mu = new SubMatVariable(output,i,0,n_output_density_terms,1);
-            }
-        }
-      mu->setName("mu");
+    }
+    mu->setName("mu");
 
       /*
        * output density
@@ -653,7 +655,9 @@ void ConditionalDensityNet::declareOptions(OptionList& ol)
               outputs_array &= prob_f(y_values[i] & output);
             }    
           }
-        } else PLERROR("ConditionalDensityNet::build: can't handle outputs_def with option value = %c",outputs_def[i]);
+        } else
+          outputs_array &= expected_value;
+//          PLERROR("ConditionalDensityNet::build: can't handle outputs_def with option value = %c",outputs_def[i]);
       }
       outputs = hconcat(outputs_array);
       if (mu_is_fixed)
@@ -675,16 +679,20 @@ void ConditionalDensityNet::declareOptions(OptionList& ol)
   }
 
 
+/* TODO Remove (?)
 void ConditionalDensityNet::computeOutput(const Vec& inputv, Vec& outputv) const
 {
   f->fprop(inputv,outputv);
 }
+*/
 
+/* TODO Remove (?)
 void ConditionalDensityNet::computeOutputAndCosts(const Vec& inputv, const Vec& targetv, 
                                  Vec& outputv, Vec& costsv) const
 {
   test_costf->fprop(inputv&targetv, outputv&costsv);
 }
+*/
 
 TVec<string> ConditionalDensityNet::getTrainCostNames() const
 {
@@ -720,6 +728,7 @@ extern void varDeepCopyField(Var& field, CopiesMap& copies);
 
 void ConditionalDensityNet::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
+  inherited::makeDeepCopyFromShallowCopy(copies);
   varDeepCopyField(input, copies);
   varDeepCopyField(target, copies);
   varDeepCopyField(sampleweight, copies);
@@ -778,7 +787,7 @@ void ConditionalDensityNet::makeDeepCopyFromShallowCopy(map<const void*, void*>&
   varDeepCopyField(mass_cost, copies);
   varDeepCopyField(pos_y_cost, copies);
   deepCopyField(optimizer, copies);
-  inherited::makeDeepCopyFromShallowCopy(copies);
+  PLERROR("In ConditionalDensityNet::makeDeepCopyFromShallowCopy - Make sure the implementation is complete");
 }
 
 
@@ -815,6 +824,7 @@ real ConditionalDensityNet::cdf(const Vec& y) const
 
 void ConditionalDensityNet::expectation(Vec& mu) const
 { 
+  mu.resize(n_target);
   mean_f->fprop(output->value,mu);
 }
 
@@ -831,6 +841,7 @@ void ConditionalDensityNet::resetGenerator(long g_seed) const
 void ConditionalDensityNet::generate(Vec& y) const
 { 
   real u = uniform_sample();
+  y.resize(1);
   if (u<pos_a->value[0]) // mass point
     {
       y[0]=0;
@@ -869,7 +880,7 @@ void ConditionalDensityNet::initializeParams()
     PLearn::seed();
 
   //real delta = 1./sqrt(inputsize());
-  real delta = 1.0/inputsize();
+  real delta = 1.0 / n_input;
   /*
   if(direct_in_to_out)
     {
@@ -966,6 +977,9 @@ void ConditionalDensityNet::train()
   if(!train_stats)
     PLERROR("In ConditionalDensityNet::train, you did not setTrainStatsCollector");
 
+  if (!already_sorted || n_margin > 0)
+    PLERROR("In ConditionalDensityNet::train - Currently, can only be trained if the data is given as input, target");
+
   if(f.isNull()) // Net has not been properly built yet (because build was called before the learner had a proper training set)
     build();
 
@@ -1003,9 +1017,13 @@ void ConditionalDensityNet::train()
           sc.build();
           sc.forget();
         }
+      Vec tmp1(inputsize());
+      Vec tmp2(targetsize());
       for (i=0;i<l;i++)
         {
-          train_set->getExample(i,input->value,target->value,weight);
+          train_set->getExample(i, tmp1, tmp2, weight);
+          input->value << tmp1.subVec(0, n_input);
+          target->value << tmp1.subVec(n_input, n_target);
           real y = target->valuedata[0];
           if (y<=0)
             unconditional_p0 += weight;
@@ -1186,7 +1204,5 @@ void ConditionalDensityNet::train()
 
   test_costf->recomputeParents();
 }
-
-
 
 } // end of namespace PLearn

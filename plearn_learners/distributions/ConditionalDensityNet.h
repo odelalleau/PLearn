@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.28 2004/05/26 21:24:10 tihocan Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.29 2004/05/27 18:40:12 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -44,18 +44,18 @@
 #ifndef ConditionalDensityNet_INC
 #define ConditionalDensityNet_INC
 
-#include "PConditionalDistribution.h"
+#include "PDistribution.h"
 #include "Optimizer.h"
 
 namespace PLearn {
 using namespace std;
 
-class ConditionalDensityNet: public PConditionalDistribution
+class ConditionalDensityNet: public PDistribution
 {
 
 private:
 
-  typedef PConditionalDistribution inherited;  
+  typedef PDistribution inherited;  
 
 protected:
   // *********************
@@ -210,7 +210,7 @@ public:
 
 
   // ******************
-  // * PConditionalDistribution methods *
+  // * PDistribution methods *
   // ******************
 
 private: 
@@ -241,7 +241,7 @@ public:
   PLEARN_DECLARE_OBJECT(ConditionalDensityNet);
 
   // **************************
-  // **** PConditionalDistribution methods ****
+  // **** PDistribution methods ****
   // **************************
 
   //! Set the input part before using the inherited methods
@@ -282,12 +282,14 @@ public:
   // it properly in the .cc
   // virtual int inputsize() const;
 
-  //! (Re-)initializes the PConditionalDistribution in its fresh state (that state may depend on the 'seed' option)
+  //! (Re-)initializes the PDistribution in its fresh state (that state may depend on the 'seed' option)
   //! And sets 'stage' back to 0   (this is the stage of a fresh learner!)
   //! You may remove this method if your distribution does not implement it
   virtual void forget();
 
+  /*
   virtual int outputsize() const;
+  */
     
   void initializeParams();
   void initialize_mu(Vec& mu_);
@@ -297,10 +299,14 @@ public:
   //! You may remove this method if your distribution does not implement it
   virtual void train();
 
+  /*
   virtual void computeOutput(const Vec& input, Vec& output) const;
+  */
 
+  /*
   virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
                                      Vec& output, Vec& costs) const;
+  */
 
   virtual TVec<string> getTrainCostNames() const;
   virtual TVec<string> getTestCostNames() const;
