@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TObject.cc,v 1.2 2005/02/23 16:36:17 tihocan Exp $ 
+   * $Id: TObject.cc,v 1.3 2005/02/23 21:51:11 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -116,6 +116,7 @@ void TObject::updateFromPLearn(Torch::Object* ptr) {
       torch_objects.erase(object);
     }
     object = ptr;
+    assert( torch_objects.find(object) == torch_objects.end() ); // Sanity check.
     torch_objects[object] = this;
   }
   else if (!object)
