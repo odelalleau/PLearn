@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ReconstructionWeightsKernel.cc,v 1.7 2004/07/21 16:30:52 chrish42 Exp $ 
+   * $Id: ReconstructionWeightsKernel.cc,v 1.8 2004/07/23 16:35:28 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -377,7 +377,7 @@ void ReconstructionWeightsKernel::reconstruct(const Vec& x, const TVec<int>& nei
     centered_neighborhood->no_scale = true;
     centered_neighborhood->negate_shift = true;
     centered_neighborhood->automatic = false;
-    centered_neighborhood->vm = (SelectRowsVMatrix*) sub_data; // TODO this is dangerous
+    centered_neighborhood->vm = (SelectRowsVMatrix*) sub_data;
     new_data = false;
   }
   // Center data on x.
@@ -387,7 +387,7 @@ void ReconstructionWeightsKernel::reconstruct(const Vec& x, const TVec<int>& nei
   centered_neighborhood->build();
   // TODO Get rid of this expensive build.
   // Compute the local Gram matrix.
-  dp_ker->setDataForKernelMatrix((ShiftAndRescaleVMatrix*) centered_neighborhood); // TODO this is dangerous
+  dp_ker->setDataForKernelMatrix((ShiftAndRescaleVMatrix*) centered_neighborhood);
   dp_ker->computeGramMatrix(local_gram);
   // Add regularization on the diagonal.
   regularizeMatrix(local_gram, regularizer);
