@@ -37,7 +37,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.82 2005/01/13 19:15:23 chrish42 Exp $
+* $Id: VMatrix.cc,v 1.83 2005/01/17 15:45:52 tihocan Exp $
 ******************************************************* */
 
 #include <plearn/io/load_and_save.h>
@@ -639,6 +639,16 @@ string VMatrix::getString(int row,int col) const
     return str;
 }
 
+//////////////////
+// getRowString //
+//////////////////
+void VMatrix::getRowString(int i, TVec<string> v_str) const {
+  v_str.resize(width());
+  for (int j = 0; j < width(); j++)
+    v_str[j] = getString(i, j);
+}
+
+
 ////////////////////////////
 // getStringToRealMapping //
 ////////////////////////////
@@ -1118,14 +1128,21 @@ bool VMatrix::find(const Vec& input, real tolerance, int* i) const {
   return false;
 }
 
-void VMatrix::print(ostream& out) const
+void VMatrix::print(ostream& out, bool save_strings) const
 {
-  Vec v(width());
-  for(int i=0; i<length(); i++)
-    {
+  if (save_strings) {
+    TVec<string> v_str(width());
+    for(int i=0; i<length(); i++) {
+      getRowString(i, v_str);
+      out << v_str << endl;
+    }
+  } else {
+    Vec v(width());
+    for(int i=0; i<length(); i++) {
       getRow(i,v);
       out << v << endl;
     }
+  }
 }
 
 VMatrix::~VMatrix()

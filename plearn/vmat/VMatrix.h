@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.63 2005/01/04 21:29:48 plearner Exp $
+   * $Id: VMatrix.h,v 1.64 2005/01/17 15:45:53 tihocan Exp $
    ******************************************************* */
 
 
@@ -294,6 +294,9 @@ public:
   //! returns element as a string, even if value doesn't map to a string, in which case tostring(value) is returned
   virtual string getString(int row, int col) const;
 
+  //! Copy row i (converted to string values, using string mappings when they exist) into v.
+  virtual void getRowString(int i, TVec<string> v_str) const;
+
   //! Return the dimension of the values for a certain field, -1 if continuous  
   virtual int getDimension(int row, int col) const;
 
@@ -500,7 +503,11 @@ public:
 
   operator Mat() const { return toMat(); }
 
-  void print(ostream& out) const;
+  //! Output the content of the VMat in the stream 'out'.
+  //! If 'save_strings' is set to true, then the string mappings will be taken
+  //! into account so as to save strings where they exist.
+  void print(ostream& out, bool save_strings = false) const;
+
   // virtual void oldwrite(ostream& out) const;
   // virtual void oldread(istream& in);
 
