@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TangentLearner.cc,v 1.16 2004/08/10 21:29:46 yoshua Exp $ 
+   * $Id: TangentLearner.cc,v 1.17 2004/08/11 19:09:09 mariusmuja Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
@@ -323,12 +323,9 @@ void TangentLearner::build_()
 
     if (parameters.size()>0 && parameters.nelems() == tangent_predictor->parameters.nelems())
       tangent_predictor->parameters.copyValuesFrom(parameters);
-    else
-      {
-        parameters.resize(tangent_predictor->parameters.size());
-        for (int i=0;i<parameters.size();i++)
-          parameters[i] = tangent_predictor->parameters[i];
-      }
+    parameters.resize(tangent_predictor->parameters.size());
+    for (int i=0;i<parameters.size();i++)
+      parameters[i] = tangent_predictor->parameters[i];
     
     if (training_targets=="local_evectors")
       tangent_targets = Var(n_dim,n);
@@ -398,6 +395,7 @@ void TangentLearner::train()
   {
 
     targets_vmat = local_neighbors_differences(train_set, n_neighbors);
+    //cout << targets_vmat;
   }
   else PLERROR("TangentLearner::train, unknown training_targets option %s (should be 'local_evectors' or 'local_neighbors')\n",
 	       training_targets.c_str());
