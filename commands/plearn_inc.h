@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.1 2004/06/15 13:29:34 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.2 2004/06/21 14:50:10 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -49,6 +49,7 @@
  * Miscellaneous *
  *****************/
 #include "Grapher.h"
+#include "RunObject.h"
 
 /***********
  * Command *
