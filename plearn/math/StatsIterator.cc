@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: StatsIterator.cc,v 1.5 2004/03/26 19:38:32 ducharme Exp $
+   * $Id: StatsIterator.cc,v 1.6 2004/03/29 16:23:03 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -217,12 +217,16 @@ void StddevStatsIterator::update(const Vec& input)
 
 bool StddevStatsIterator::finish()
 {
+  Vec square_mean(mean.length());
   for (int i=0;i<mean.length();i++)
   {
-    mean[i] /= nsamples[i];
-    meansquared[i] /= nsamples[i]-1;
+    //mean[i] /= nsamples[i];
+    real n = nsamples[i];
+    square_mean[i] = mean[i]*mean[i]/(n*(n-1.0));
+    meansquared[i] /= n-1.0;
   }
-  squareSubtract(meansquared, mean);
+  //squareSubtract(meansquared, mean);
+  meansquared -= square_mean;
   result = sqrt(meansquared);
   return true;
 }
