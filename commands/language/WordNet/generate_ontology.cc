@@ -12,14 +12,13 @@ int main(int argc, char** argv)
   string ontology_file = tostring(argv[4]);
   bool diff_unk = tobool(argv[5]);
   bool print = tobool(argv[6]);
-  int pos_type = 1005;
   WordNetOntology* ontology;
   if (load)
   {
     ontology = new WordNetOntology(voc_file, synset_file, ontology_file, false, true);
   } else
   {
-    ontology = new WordNetOntology(voc_file, diff_unk, false, true, pos_type);
+    ontology = new WordNetOntology(voc_file, diff_unk, false, false);
     ontology->save(synset_file, ontology_file);
   }
 

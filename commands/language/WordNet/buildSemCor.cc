@@ -197,7 +197,7 @@ bool startsWith(string& base, string s)
 
 int extractFiles(vector<string>& files, int n_files)
 {
-  ifstream b("brown1.files");
+  ifstream b("/u/jauvinc/brown/brown1.files");
   string line;
   int total_lines = 0;
   int fc = 0;
@@ -212,7 +212,7 @@ int extractFiles(vector<string>& files, int n_files)
   }
   b.close();
 
-  b.open("brown2.files");
+  b.open("/u/jauvinc/brown/brown2.files");
   while (!b.eof() && fc < n_files)
   {
     getline(b, line, '\n');
