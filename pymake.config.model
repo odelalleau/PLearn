@@ -135,19 +135,19 @@ else:
                      linkeroptions = ' -llapack ' 
                      )
     
-optionalLibrary( name = 'blas',
-                 triggers = ['blas_proto.h','lapack_proto.h'],
-                 linkeroptions = '-lblas'
+# optionalLibrary( name = 'blas',
+#                 triggers = ['blas_proto.h','lapack_proto.h'],
+#                 linkeroptions = '-lblas'
 #                 linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl_p4 -lmkl_vml_p4 -lpthread'
 #                 linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl_p3 -lmkl_vml_p3 -lpthread'
 #                 linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl -lvml -lpthread'
 #                 linkeroptions = '-L/u/lisa/local/linux-i386/lib/atlas_athlon256 -lcblas -lf77blas -latlas'
-                 )
+#                 )
 
-optionalLibrary( name = 'g2c',
-                 triggers = ['blas_proto.h','lapack_proto.h'],
-                 linkeroptions = '-lg2c'
-                 )
+# optionalLibrary( name = 'g2c',
+#                 triggers = ['blas_proto.h','lapack_proto.h'],
+#                 linkeroptions = '-lg2c'
+#                 )
 
 optionalLibrary( name = 'ncurses',
                  triggers = 'curses.h',
@@ -169,44 +169,21 @@ linkeroptions_tail = '-lstdc++ -lm'
 # List of lists of mutually exclusive pymake options.
 # First option that appears in each group is the default, and is assumed if you don't specify any option from that group
 options_choices = [
-  [ 'g++', 'g++3', 'mpi', 'purify' ],
+  [ 'g++', 'mpi', 'purify' ],
   [ 'dbg', 'opt', 'gprof' ],
   [ 'double', 'float' ],
   [ 'exiterrors', 'throwerrors' ], 
-  [ 'noblas', 'blas', 'p3blas','p4blas','athlonblas','pentiumblas'],
+  [ 'blas', 'p3blas','p4blas','athlonblas','pentiumblas', 'noblas'],
 ]
 
 
 # Description of options, and associated settings
 
-
-if myhostname[0:6]=='apstat':
-    pymakeOption( name = 'g++',
-                  description = 'compiling with default g++, with no MPI support',
-                  compiler = 'g++-2.96',
-                  compileroptions = '-pedantic-errors -DUSING_MPI=0',
-                  linker = 'g++-2.96' )
-else:
-    pymakeOption( name = 'g++',
-                  description = 'compiling with default g++, with no MPI support',
-                  compiler = 'g++',
-                  compileroptions = '-pedantic-errors -DUSING_MPI=0',
-                  linker = 'g++' )
-
-if myhostname[0:6]=='apstat':
-	# g++ 3  - Apstat
-	pymakeOption( name = 'g++3',
-        	      description = 'compiling with g++3, with no MPI support',
-	              compiler = 'g++',
-	              compileroptions = '-pedantic-errors -DUSING_MPI=0 ',
-	              linker = 'g++' )
-else:
-	# g++ 3 LISA
-	pymakeOption( name = 'g++3',
-        	      description = 'compiling with g++3, with no MPI support',
-              	      compiler = '/u/collober/Addons/Linux/bin/g++',
-                      compileroptions = '-pedantic-errors -DUSING_MPI=0',
-                      linker = '/u/collober/Addons/Linux/bin/g++' )
+pymakeOption( name = 'g++',
+              description = 'compiling with g++, with no MPI support',
+              compiler = 'g++',
+              compileroptions = '-Wno-deprecated -pedantic-errors -DUSING_MPI=0 ',
+              linker = 'g++' )
 
 pymakeOption( name = 'mpi',
               description = 'compiling and linking with MPI support (and USING_MPI=1)',

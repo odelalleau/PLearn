@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.8 2002/10/25 03:21:00 plearner Exp $
+   * $Id: Object.h,v 1.9 2002/10/25 05:37:42 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -195,8 +195,7 @@ using namespace std;
       value to be set.  Object::setOption causes an "Unknown option"
       runtime error.
 */
-    // Pascal: the new version calls readOptionVal, and is no longer virtual
-    // Subclasses must not overload this method, but readOptionVal.
+    // This calls readOptionVal on a stringstream built from value
     void setOption(const string& optionname, const string& value);
 
     //! Should return a multiline string with a short description of what this
@@ -209,8 +208,7 @@ using namespace std;
       value is returned as a string and MUST be converted to the correct type
       before use.
 */
-    // Pascal: the new version calls writeOptionVal, and is no longer virtual
-    // Subclasses must not overload this method, but writeOptionVal.
+    // This calls writeOptionVal into a string stream
     string getOption(const string &optionname) const;
     
   private:
