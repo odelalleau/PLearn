@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.cc,v 1.4 2004/04/05 19:38:38 tihocan Exp $ 
+   * $Id: KernelProjection.cc,v 1.5 2004/04/21 17:24:33 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -150,9 +150,7 @@ void KernelProjection::computeOutput(const Vec& input, Vec& output) const
     first_output = false;
   }
   // Compute the K(x,x_i).
-  for (int i = 0; i < n_examples; i++) {
-    k_x_xi[i] = kernel->evaluate_i_x(i, input);
-  }
+  kernel->evaluate_all_i_x(input, k_x_xi);
   // Compute the output.
   rowSum(used_eigenvectors * k_x_xi, result);
   output.resize(n_comp_kept);
