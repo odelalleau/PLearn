@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.cc,v 1.28 2004/02/20 21:11:48 chrish42 Exp $
+   * $Id: GradientOptimizer.cc,v 1.29 2004/02/28 16:01:39 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -250,7 +250,7 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll)
   SumOfVariable* sumofvar = dynamic_cast<SumOfVariable*>((Variable*)cost);
   Array<Mat> oldgradientlocations;
   bool stochastic_hack = sumofvar!=0 && sumofvar->nsamples==1;
-  stochastic_hack=false;
+  //stochastic_hack=false;
   if(stochastic_hack)
     // make the gradient and values fields of parameters point to the same place,
     // so that when the descendants of the parameter Var's do a bprop this
