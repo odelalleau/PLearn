@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TDataSet.cc,v 1.1 2005/02/23 01:31:19 tihocan Exp $ 
+   * $Id: TDataSet.cc,v 1.2 2005/02/23 18:03:39 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -157,9 +157,12 @@ void TDataSet::updateFromTorch() {
   select_examples             = dataset->select_examples;
   if (dataset->n_examples == 0)
     PLERROR("In TDataSet::updateFromTorch - No selected examples is currently not supported");
-  // TODO Do not save the whole Vec if everything is selected.
-  selected_examples.resize(dataset->n_examples);
-  selected_examples.copyFrom(dataset->selected_examples, dataset->n_examples);
+  if (dataset->n_examples == n_real_examples)
+    selected_examples.resize(0);
+  else {
+    selected_examples.resize(dataset->n_examples);
+    selected_examples.copyFrom(dataset->selected_examples, dataset->n_examples);
+  }
   n_inputs                    = dataset->n_inputs;
   n_targets                   = dataset->n_targets;
   real_current_example_index  = dataset->real_current_example_index;
