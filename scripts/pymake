@@ -753,7 +753,7 @@ class FileInfo:
                 self.corresponding_output = join(self.filedir, objsdir, 'lib'+self.filebase+'.so')
 
         else:
-            raise 'Attempting to build a FileInfo from a file that is not a .cc or .h or similar file'
+            raise 'Attempting to build a FileInfo from a file that is not a .cc or .h or similar file ('+self.filepath+')'
 
         if self.hasqobject:
             useqt = 1
@@ -1222,7 +1222,7 @@ digraph G
           linkeroptions = '--def='+self.corresponding_def_file
         linkeroptions = linkeroptions + ' ' + dllwrap_basic_options
 
-        command = dll_wrapper + ' ' + linkeroptions + ' -o ' + self.corresponding_output + ' ' + string.join(objsfilelist,' ')
+        command = dll_wrapper + ' ' + linkeroptions + ' -o ' + self.corresponding_output + ' ' + string.join(objsfilelist,' ') + ' ' + self.get_optional_libraries_linkeroptions()
 
         return command
 
