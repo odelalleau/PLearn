@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: RealMapping.h,v 1.14 2004/01/08 14:08:55 plearner Exp $
+   * $Id: RealMapping.h,v 1.15 2004/01/13 20:00:23 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -218,7 +218,7 @@ PStream& operator>>(PStream& in, RealRange &x);
     const_iterator end() const
     { return mapping.end(); }
     void erase(iterator it) 
-    { return mapping.erase(it); }
+    { mapping.erase(it); }
 
     bool operator==(const RealMapping& rm) const;
 
