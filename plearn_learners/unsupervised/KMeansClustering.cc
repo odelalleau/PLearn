@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KMeansClustering.cc,v 1.1 2004/09/30 18:23:39 tatien Exp $ 
+   * $Id: KMeansClustering.cc,v 1.2 2004/10/14 19:18:46 tatien Exp $ 
    ******************************************************* */
 
 // Authors: Jean-Sébastien Senécal
@@ -243,9 +243,7 @@ TVec<string> KMeansClustering::getTestCostNames() const
 {
   // Return the names of the costs computed by computeCostsFromOutpus
   // (these may or may not be exactly the same as what's returned by getTrainCostNames).
-  TVec<string> costnames(1);
-  costnames[0] = "reconstruction_error";
-  return costnames;
+  return TVec<string>(1, "squared_reconstruction_error");
 }
 
 TVec<string> KMeansClustering::getTrainCostNames() const

@@ -1,3 +1,7 @@
+#ifndef Tgeneral_INC
+#define Tgeneral_INC
+
+using namespace std;
 
 #include <plearn/base/general.h>
 #include <plearn/base/stringutils.h>
@@ -9,9 +13,6 @@
 #  include <sys/time.h> 
 #  include <unistd.h> 
 #endif 
-
-#ifndef Tgeneral_INC
-#define Tgeneral_INC
 
 #define REL_FEQUAL(a,b) ( FABS((a)-(b)) < (FABS(a)*FLOAT_THRESHOLD) )
 
@@ -45,15 +46,13 @@ cout << "Step:\t " << __name << endl;\
 cout << "Doing ..." << endl << endl;\
 __result = __testFunction;\
 if(__result){ cout << "PASSED" << endl; }\
-else{ cout << "****FAIL****" << endl; }\
+else{ PLERROR("****FAIL****"); }\
 cout << endl << endl;
 
-
-#ifdef USE_EXCEPTIONS // then it isn't defined in plerror.h ...
+//#ifdef USE_EXCEPTIONS // then it isn't defined in plerror.h ...
 inline void send_file_line(char* file,int line) 
 { cerr<<"At "<<file<<":"<<line; }
-#endif
-
+//#endif
 
 #define T_ERR(_Type__, _The_Message__)\
 cerr << "\n============================================================" << endl;\
@@ -79,15 +78,15 @@ if( !(__Test_) ){\
 T_ERR("T_ASSERT", (__Message_) )};
 
 
-
 template <class T>
 string
 array2string(T* array, int array_size)
 {
   string s("[ ");
-  for(int i=0; i<array_size; i++){
-	s.append( tostring(array[i]) );
-	s.append( " " );
+  for(int i=0; i<array_size; i++)
+  {
+    s.append( tostring(array[i]) );
+    s.append( " " );
   }
   s.append( "]" );
   return s;
@@ -98,7 +97,8 @@ string
 ptr_array2string(T* array, int array_size)
 {
   string s("[ ");
-  for(int i=0; i<array_size; i++){
+  for(int i=0; i<array_size; i++)
+  {
     s.append( tostring(*array[i]) );
     s.append( " " );
   }
