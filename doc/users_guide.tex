@@ -2,7 +2,7 @@
 %%
 %%  Copyright (c) 2002 by Pascal Vincent
 %%
-%%  $Id: users_guide.tex,v 1.16 2004/05/07 20:37:36 plearner Exp $
+%%  $Id: users_guide.tex,v 1.17 2004/06/15 18:15:57 monperrm Exp $
 
 \documentclass[11pt]{book}
 \usepackage{html}               % package for latex2html
@@ -10,6 +10,8 @@
 \usepackage{ae}                 % use virtual fonts for getting good PDF
 \usepackage{isolatin1}          % support for French accents
 \usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{verbatim}
 
 %%%%%%%%% Definitions %%%%%%%%%%%%
 \newcommand{\PLearn}{{\bf \it PLearn}}
@@ -20,24 +22,16 @@
 \parskip=2mm
 \parindent=0mm
 
+\title{{\Huge PLearn User's Guide\\ \Large How to use the PLearn Machine-Learning library and tools}}
+
 \begin{document}
 
 %%%%%%%% Title Page %%%%%%%%%%
 \pagenumbering{roman}
-\thispagestyle{empty}
 
-\thispagestyle{empty}
-\begin{center}
-{\Huge PLearn User's Guide}\\
-\vspace{.5cm}
-{\Large How to use the PLearn Machine-Learning library and tools}\\ 
-\end{center}
-\pagebreak
+\maketitle
 
-
-\vspace*{10cm}
-
-{\small
+\vspace*{9cm}
 
 Copyright \copyright\ 1998-2002 Pascal Vincent, Yoshua Bengio \\
 Copyright \copyright\ 2002 Julien Keable \\
@@ -57,18 +51,15 @@ met:
 \item Modified versions must retain this list of conditions unaltered, 
     and may not impose any further restrictions.
 \end{enumerate}
-}
-
-\pagebreak
 
 %%%%%%%%% Table of contents %%%%%%%%%%%%
 \addcontentsline{toc}{chapter}{\numberline{}Table of contents}
 \tableofcontents
 
-\begin{latexonly}
-\cleardoublepage\pagebreak
-\end{latexonly}
-\pagenumbering{arabic}
+% \begin{latexonly}
+% \cleardoublepage\pagebreak
+% \end{latexonly}
+% \pagenumbering{arabic}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -106,17 +97,19 @@ display purpose, and may want to have them installed:
 \item a {\bf Java} compiler and interpretor
 \end{itemize}
 
-\subsection{Additional tools for developers}
+%% Move to programmers_guide
 
-In addition, if you wish to develop new learning algorithms, or otherwise
- contribute to the librery, the following tools will be useful:
-\begin{itemize}
-\item {\bf ssh} for write access to the SourceForge CVS repository.
-\item {\bf gdb} for basic debugging (or a {\em better} debugger if you have one!)
-\item {\bf valgrind} a wonderful free tool for memory-bug hunting.
-\item {\bf perl} for running perl scripts
-\item {\bf LaTeX, pdflatex, dvips, latex2html, doxygen} to re-generate the documentation. 
-\end{itemize}
+% \subsection{Additional tools for developers}
+% 
+% In addition, if you wish to develop new learning algorithms, or otherwise
+%  contribute to the librery, the following tools will be useful:
+% \begin{itemize}
+% \item {\bf ssh} for write access to the SourceForge CVS repository.
+% \item {\bf gdb} for basic debugging (or a {\em better} debugger if you have one!)
+% \item {\bf valgrind} a wonderful free tool for memory-bug hunting.
+% \item {\bf perl} for running perl scripts
+% \item {\bf LaTeX, pdflatex, dvips, latex2html, doxygen} to re-generate the documentation. 
+% \end{itemize}
 
 \subsection{Optional libraries}
 
@@ -132,11 +125,10 @@ Moreover, the following (optional) libraries are required by some classes and pr
 PLearn is hosted on SourceForge, and the latest version is always available through CVS acces.
 For a quick tutorial on how to use cvs, see http://plearn.sourceforge.net/plearncvs.html
 
-You should download the PLearn source tree using one of the following methods:
 
 \subsection{Anonymous (read-only) CVS access }
 
-You then can download the PLearn library through anonymous (pserver) cvs
+Download the PLearn library through anonymous (pserver) cvs
 using the following instructions:
 
 \topsep=0mm
@@ -146,25 +138,27 @@ using the following instructions:
 \end{verbatim}
 and press the [enter] key when asked for a password.
 
-\subsection{Developer CVS access}
+%% Move to programmers_guide
 
-If you are going to contribute to PLearn on SourceForge (http://www.sourceforge.org):
-\begin{itemize}
-\item If you don't have one already, create a SourceForge account for yourself
-\item Send me (plearner@sourceforge.org) your account login, so that I can add you to the developer list.
-\item Make sure the {\tt CVS\_RSH} environment variable is set to {\tt ssh} in your .cshrc or .bashrc
-\item Check-out PLearn as follows:
-\begin{verbatim}
-cvs -d :ext:your_sourceforge_login@cvs.sourceforge.net:/cvsroot/plearn co PLearn
-\end{verbatim}
-\end{itemize}
+% \subsection{Developer CVS access}
+% 
+% If you are going to contribute to PLearn on SourceForge (http://www.sourceforge.org):
+% \begin{itemize}
+% \item If you don't have one already, create a SourceForge account for yourself
+% \item Send me (plearner@sourceforge.org) your account login, so that I can add you to the developer list.
+% \item Make sure the {\tt CVS\_RSH} environment variable is set to {\tt ssh} in your .cshrc or .bashrc
+% \item Check-out PLearn as follows:
+% \begin{verbatim}
+% cvs -d :ext:your_sourceforge_login@cvs.sourceforge.net:/cvsroot/plearn co PLearn
+% \end{verbatim}
+% \end{itemize}
 
 
 
 \section{Compiling PLearn programs}
 
 
-First, you should edit your .cshrc or .bashrc and 
+First, edit your .cshrc or .bashrc and 
 \begin{itemize}
 \item Set the {\tt PLEARNDIR} environment variable to the path of the PLearn directory. 
 (csh ex: \verb!setenv PLEARNDIR ${HOME}/PLearn!)
@@ -177,7 +171,7 @@ compile, and what to link (including optional libraries), and is able to
 run parallel compilation on several machines.  It is easily
 customizable.
 
-Simply try the following:
+The compiling commands are:
 \begin{verbatim}
 cd PLearn/commands
 pymake plearn
@@ -187,11 +181,12 @@ If it doesn't work, you may have to adapt the configuration file to your system
 (PLearn/.pymake/config)
 
 
-\chapter{Overview of the system}
+\chapter{Tutorial}
 
-PLearn is above all a C++ Library for research in the field of Machine
-Learning. But it also comes with a set of tools and programs, that allow
-you to easily carry out experiments.
+\include{tutorial}
+
+
+\chapter{Basics}
 
 \section{The plearn program}
 
@@ -210,26 +205,55 @@ datasets or result files, but they can also launch more evolved interactive prog
 The {\tt plearn} program has a simple yet very useful command-line help system.
 Type \verb!plearn help! to have an overview.
 
+\section{Essential commmands}
+
+The basic plearn command is \texttt{plearn script.plearn}.
+
+The wisest command is \texttt{plearn help ClassFoo}.
+
+But there are others:
+
+\texttt{plearn vmat view bidule.vmat} to view any .vmat, .pmat or .amat file.
+
+\texttt{plearn vmat convert truc.pmat truc.amat} to convert a specific data format in an other.
+
+\texttt{plearn learner train}, \texttt{plearn learner test}, \texttt{plearn learner computes\_output} provide useful shortcuts to avoid creating long .plearn script (cf. Tutorial).
+
+If you are interested in more information,
+
+\begin{verbatim}
+plearn help commands
+plearn help vmat
+plearn help learner
+\end{verbatim}
+
+\section{Essential classes}
+
+Here is a list of essential classes.
+
+\begin{verbatim}
+plearn help AutoVMatrix
+plearn help PTester
+plearn help Optimizer
+--- plearn help GradientOptimizer
+plearn help PLearner
+--- plearn help NNet
+\end{verbatim}
 
 \section{The .plearn object file format}
 
 PLearn uses the same simple file format, both to describe experiments to be
 performed (in .plearn scripts), and to save and restore objects
-such as a trained neural-network (in .psave files).
+such as a trained neural-network (in .psave or .spec files).
 
-Essentially these files contain the specifications of PLearn objects. For ex. a
-typical .plearn script will contain the specification of an Experiment
-object that fully describes the experiment to be performed.
+Essentially these files contain the specifications of PLearn objects.
+
+This is a typical .plearn script:
+
+\verbatiminput{../examples/regression.plearn}
 
 Objects are specified by the name of their type, followed by a list of
-\verb!option = value! pairs. For ex:
-
-\begin{verbatim}
-WondefulObject(                   # some comment here
-  critical_value = 3.5;    
-  save_results_in = "here/there/results.txt";
-);  # end of object specification
-\end{verbatim}  
+\verb!option = value! pairs. 
 
 Any sequence of spaces, newlines, tabs, comma, or semicolon is considered a
 separator. So colons and semicolons are just there to ease the reading,
@@ -268,72 +292,7 @@ Note for strings: unquoted strings, while not recommended are also supported. Th
 a separator (blank, comma, \ldots) or opening or closing symbol (parenthesis, bracket, \ldots) is met.
 
 
-\section{An example experiment}
-
-To run \verb!plearn!, you need a script file containing all the parameters of your
-experiment.  That script file MUST contain an \verb!Experiment! object (type
-\verb!"plearn help Experiment"! for more details).
-
-This is an example of what such a script file looks like (training a simple NeuralNet
-on the Letter dataset):
-
-\begin{verbatim}
-Experiment(
-  expdir = "mlp";
-  dataset = AutoVMatrix(specification="letters all normalize");
-  splitter = TrainTestSplitter(test_fraction=.10);
-  save_models = 1;
-
-  learner = NeuralNet(
-    inputsize = 16;
-    outputsize = 26;  # 26 letters
-    targetsize = 1;
-    nhidden = 100;
-    weight_decay = 0;
-    output_transfer_func = "softmax";
-    cost_funcs = [ "NLL", "class_error" ];
-
-    optimizer = GradientOptimizer(
-      start_learning_rate = 0.01;
-      decrease_constant = 0;
-    )
-
-    batch_size = 1;
-    nepochs = 100;
-    save_at_every_epoch = 0;
-    test_costfuncs = 0 [  ];
-    test_every = 1;
-    minibatch_size = 1;
-  )
-)
-\end{verbatim}
-
-Every \verb!Experiment! object must contain the directory name where all the
-results about the experiment will be saved (\verb!expdir!), a \verb!dataset!,
-a \verb!splitter! (which tell you how to split your dataset between a trainset
-and a testset), a \verb!learner! (a NeuralNet in the example above), and a boolean
-specifying if you wish to save your trained learner (\verb!save_models!).
-
-Also, as we can see in the example, all the attributes that have simple types
-(int, bool, string) are written in the form: \verb!attribute = value;!  
-On the other hand, if the attribute is an
-object type (learner, dataset, optimizer, etc.), then the attribute is declared
-like:
-\begin{verbatim}
-attribute = object_type(
-  ...
-  ...
-)
-\end{verbatim}
-where the same rules applies for all the fields within the object.
-
-
-
-\chapter{Dataset formats}
-
-The following dataset formats are understood by any command that expects a dataset (and by the getDataSet(\ldots) function).
-
-\section{.amat}
+\section{The .amat file format}
 
 Ascii data file.
 
@@ -352,16 +311,54 @@ ex:
     25  1.80   80
 \end{verbatim}
 
-\section{.pmat}
+\section{The .pmat file format}
 
 PLearn native binary format.
 
-\section{.sdb}
+\section{The .vmat file format}
+
+File containing a description of a virtual dataset.
+
+A .vmat is a text specification of a dataset built from the composition of source data, possibly with operations applied to it.
+
+\verbatiminput{../examples/train.vmat} 
+
+% This is not a NO-Lisa information
+
+% \section{Preprogrammed datasets}
+% 
+% \begin{itemize}
+% \item 2d
+% \item letters -> Letter Image Recognition data
+% \item breast -> The Wisconsin Breast Cancer problem
+% \item usps
+% \item mnist
+% \end{itemize}
+
+
+\chapter{Howto}
+
+\section{How to build a neural network?}
+
+You should have learned with the tutorial basic PLearn neural network. The class used is NNet.
+
+Here is a basic NNet script object:
+
+\verbatiminput{../examples/BasicNNet.spec}
+
+
+% ------------------------------------------------------------------------------------------
+% ------------------------------------------------------------------------------------------
+\chapter{Advanced}
+% ------------------------------------------------------------------------------------------
+% ------------------------------------------------------------------------------------------
+
+\section{The .sdb file format}
 
 Any simpledb can be automatically seen as a numeric vmat dataset. 
 String fields are removed.
 
-\section{.dmat/}
+\section{The .dmat/ format }
 
 Directory containing compressed data.
 
@@ -372,11 +369,9 @@ Contains:
 \item fieldnames
 \end{itemize}
 
-\section{.vmat}
+\section{Advanced .vmat}
 
-File containing a description of a virtual dataset.
-
-A .vmat is a text specification of a dataset built from the composition of source data, possibly with operations applied to it. The description is made through a set of sections (all optional except SOURCES) enclosed in xml-like tags.
+The description is made through a set of sections (all optional except SOURCES) enclosed in xml-like tags.
 
 There is a program named vmat (although it handles many dataset formats) that can be used to perform useful tasks with datasets. Two of them are relevant here. 
 
@@ -421,6 +416,7 @@ MEAN(claim) :claim.mean
 
 <PRECOMPUTE> dmat </PRECOMPUTE>
 \end{verbatim}
+
 
 \subsection{SOURCES}
 The SOURCES section is the only one that is not optional. It describes the source dataset(s) (in any format) that the vmat will be built from. In its most complex form, the syntax of the specification is a matrix of NxM dataset strings. The datasets are first concatenated horizontally, then vertically. Thus, all datasets on a same row must have the same length, and the results of all horizontal concatenation, the same width.
@@ -492,17 +488,6 @@ Here's a real-life example of a PROCESSING section:
 <\PROCESSING>
 \end{verbatim}
 
-\section{Preprogrammed datasets}
-
-\begin{itemize}
-\item 2d
-\item letters -> Letter Image Recognition data
-\item breast -> The Wisconsin Breast Cancer problem
-\item usps
-\item mnist
-\end{itemize}
-
-
 \section{The metadata directory}
 
 A metadata directory is associated with each dataset.  For the datasets
@@ -522,6 +507,7 @@ In addition, the {\tt .metadata} directory associated with a {\tt .vmat} may con
 \item {\tt precomputed.dmat/} or {\tt precomputed.pmat} if the {\tt .vmat} description specified \verb!<PRECOMPUTE>!
 \item {\tt source.index} containing row indexes in the source (resulting from \verb!<PREFILTER>!, \verb!<POSTFILTER>!, \verb!<SHUFFLE>!)
 \end{itemize}
+
 
 
 \chapter{Appendix A: File formats}
