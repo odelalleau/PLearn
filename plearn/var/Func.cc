@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Func.cc,v 1.11 2004/01/10 19:06:01 yoshua Exp $
+   * $Id: Func.cc,v 1.12 2004/01/17 02:03:57 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -524,7 +524,7 @@ void Function::verifyGradient(const Vec& input, real step)
       newinput[i] = input[i]-step;
       fprop(newinput,output);
       real out2 = output[0];
-      finitediffgradient[i] = out1/doublestep-out2/doublestep;
+      finitediffgradient[i] = (out1-out2)/doublestep;
       newinput[i] = input[i];
     }
   cerr << "Estimated gradient:   " << finitediffgradient;

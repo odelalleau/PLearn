@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.21 2004/01/15 22:56:50 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.22 2004/01/17 02:03:57 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -383,7 +383,7 @@ ConditionalDensityNet::ConditionalDensityNet()
         else PLERROR("ConditionalDensityNet::build, steps_type option value unknown: %s",steps_type.c_str());
 
         density_numerator = dot(pos_b,steps_gradient);
-        cum_denominator = dot(pos_b,steps_M-steps_0);
+        cum_denominator = dot(pos_b,positive(steps_M-steps_0));
         inverse_denominator = 1.0/cum_denominator;
         cum_numerator = dot(pos_b,(steps-steps_0));
         cumulative = pos_a + (1-pos_a) * cum_numerator * inverse_denominator;
@@ -459,12 +459,16 @@ ConditionalDensityNet::ConditionalDensityNet()
       
       costs[1] = nll;
       costs[2] = square(target-expected_value);
+      // for debugging gradient computation error
+      costs[0] = sum(output);
+#if 0 
       if (log_likelihood_vs_squared_error_balance==1)
         costs[0] = costs[1];
       else if (log_likelihood_vs_squared_error_balance==0)
         costs[0] = costs[2];
       else costs[0] = log_likelihood_vs_squared_error_balance*costs[1]+
              (1-log_likelihood_vs_squared_error_balance)*costs[2];
+#endif
 
       // for debugging
       //costs[0] = mass_cost + pos_y_cost;
@@ -531,6 +535,8 @@ ConditionalDensityNet::ConditionalDensityNet()
           initializeParams();
         }
       params.makeSharedValue(paramsvalues);
+
+      debug_f = Func(params,sum(output));
 
       // Funcs
       VarArray invars;
@@ -990,8 +996,14 @@ void ConditionalDensityNet::train()
 
       //if (verify_gradient)
       //  training_cost->verifyGradient(verify_gradient);
-      if (stage==nstages-1 && verify_gradient)
-        optimizer->verifyGradient(verify_gradient);
+      //if (stage==nstages-1 && verify_gradient)
+      if (verify_gradient)
+      {
+        cout << "DEBUG_F" << endl;
+        debug_f->verifyGradient(0.001);
+        cout << "OPTIMIZER" << endl;
+        optimizer->verifyGradient(0.001);
+      }
       if (display_graph)
         displayFunction(f,true);
       if (display_graph)

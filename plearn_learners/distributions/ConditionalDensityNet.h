@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.15 2003/12/08 03:46:31 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.16 2004/01/17 02:03:57 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -111,6 +111,7 @@ public:
     mutable Func f; // input -> output
     mutable Func test_costf; // input & target -> output & test_costs
     mutable Func output_and_target_to_cost; // output & target -> cost
+  mutable Func debug_f;
   Var totalcost;
   Var mass_cost;
   Var pos_y_cost;
