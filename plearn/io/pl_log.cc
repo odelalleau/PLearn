@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: pl_log.cc,v 1.3 2005/01/25 03:15:24 dorionc Exp $ 
+   * $Id: pl_log.cc,v 1.4 2005/01/25 21:31:27 ducharme Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados, Christian Dorion
@@ -49,7 +49,7 @@ namespace PLearn {
 using namespace std;
 
 PL_Log::PL_Log( )
-  : runtime_verbosity(PL_LOG_MAXVERBOSITY),
+  : runtime_verbosity(VLEVEL_NORMAL),
     output_stream(&cout, false),
     null_stream(new ofstream("/dev/null"), true),
     logger_count(0)
