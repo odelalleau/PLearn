@@ -1,5 +1,11 @@
 all: guides.all doxygen
 
+# publish it all on the sourceforge web
+publish:
+	export CVS_RSH=ssh
+	cvs commit
+	ssh plearner@plearn.sourceforge.net 'cd /home/groups/p/pl/plearn/htdocs/PLearn/doc/; cvs update -d -P; make guides.html; make guides.pdf'
+
 guides.all: guides.html guides.pdf guides.ps
 
 doxygen:
