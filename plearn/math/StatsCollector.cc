@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.44 2005/01/14 20:49:28 tihocan Exp $
+   * $Id: StatsCollector.cc,v 1.45 2005/01/18 16:02:54 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -92,11 +92,11 @@ PLEARN_IMPLEMENT_OBJECT(
   "    n = total number of examples, v_i the value assigned to example i, and assume\n"
   "    examples are sorted by order of magnitude |v_i|:\n"
   "    LIFT(f) = sum_{k=1}^{fn} 1_{v_i > 0} / (f * n+)\n"
-  "    NIPS_LIFT = (A_I - A) / (A_I - 1), with\n"
+  "    NIPS_LIFT = (A_I - A) / A_I, with\n"
   "      A = sum_{k=1}^n LIFT(k/n) / n\n"
   "      A_I = (n / n+ - 1) / 2 * (n+ / n + 1) + 1\n"
-  "      (NIPS_LIFT = 1 <=> random, > 1 <=> worse than random, ~= 0 <=> good)\n"
-  "      See http://predict.kyb.tuebingen.mpg.de/pages/evaluation.php for details.\n"
+  "      See http://predict.kyb.tuebingen.mpg.de/pages/evaluation.php for details (note\n"
+  "      that the formulas on the web site and in the python script are different).\n"
   "  - LIFT(f) actually returns - 100 * LIFT(f), so that lower means better, and it is\n"
   "    scaled by 100, as it is common practice.\n"
   );
@@ -821,7 +821,7 @@ real StatsCollector::nips_lift() const {
     result += lift(k + 1, n_pos_in_k_minus_1, n_pos_in_k_minus_1, pos_fraction);
   result /= n_total;
   real max_performance = 0.5 * (1 / pos_fraction - 1) * (pos_fraction + 1) + 1;
-  result = (max_performance - result) / (max_performance - 1.0);
+  result = (max_performance - result) / max_performance;
   return result;
 }
 
