@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.8 2003/09/14 21:51:33 yoshua Exp $
+   * $Id: FileVMatrix.cc,v 1.9 2004/02/09 23:06:18 ducharme Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -56,6 +56,7 @@ FileVMatrix::FileVMatrix()
 FileVMatrix::FileVMatrix(const string& filename)
   :filename_(abspath(filename))
 {
+  writable = true;
   build_();
 }
 
@@ -71,6 +72,7 @@ FileVMatrix::FileVMatrix(const string& filename, int the_length, int the_width)
 {
   force_mkdir_for_file(filename);
   // cout << "x1 " << strlen("MATRIX 1 12 DOUBLE LITTLE_ENDIAN") << endl;
+  writable = true;
   f = fopen(filename.c_str(),"w+b");
   if (!f)
     PLERROR("In FileVMatrix constructor, could not open file %s for read/write",filename.c_str());
