@@ -9,7 +9,7 @@ using namespace std;
 class DERIVEDCLASS: public PLearner
 {
 
-public:
+private:
 
   typedef PLearner inherited;
   

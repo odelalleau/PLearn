@@ -16,7 +16,9 @@ using namespace std;
 
 class DERIVEDCLASS: public VMatrix
 {
-public:
+
+private:
+
   typedef VMatrix inherited;
 
 protected:

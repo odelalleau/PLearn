@@ -8,7 +8,9 @@ using namespace std;
 
 class DERIVEDCLASS: public SequentialLearner
 {
-public:
+
+private:
+
   typedef SequentialLearner inherited;
   
 private:

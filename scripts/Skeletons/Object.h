@@ -8,7 +8,9 @@ using namespace std;
 
 class DERIVEDCLASS: public Object
 {
-public:
+
+private:
+  
   typedef Object inherited;
 
 protected:

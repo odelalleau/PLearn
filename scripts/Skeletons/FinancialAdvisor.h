@@ -8,7 +8,9 @@ using namespace std;
 
 class DERIVEDCLASS: public FinancialAdvisor
 {
-public:
+
+private:
+  
   typedef FinancialAdvisor inherited;
 
 protected:

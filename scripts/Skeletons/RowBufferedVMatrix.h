@@ -8,7 +8,9 @@ using namespace std;
 
 class DERIVEDCLASS: public RowBufferedVMatrix
 {
-public:
+
+private:
+
   typedef RowBufferedVMatrix inherited;
 
 protected:

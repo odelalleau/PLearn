@@ -8,7 +8,9 @@ using namespace std;
 
 class DERIVEDCLASS: public Binner
 {
-public:
+
+private:
+
   typedef Binner inherited;  
 
 protected:

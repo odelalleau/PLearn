@@ -8,7 +8,9 @@ using namespace std;
 
 class DERIVEDCLASS: public TraderVariable
 {
-public:
+
+private:
+
   typedef TraderVariable inherited;
 
 private:

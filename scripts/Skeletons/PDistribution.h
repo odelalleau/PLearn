@@ -8,7 +8,9 @@ using namespace std;
 
 class DERIVEDCLASS: public PDistribution
 {
-public:
+
+private:
+
   typedef PDistribution inherited;  
 
 protected:

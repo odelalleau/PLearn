@@ -9,7 +9,7 @@ using namespace std;
 class DERIVEDCLASS: public SourceVMatrix
 {
 
-public:
+private:
 
   typedef SourceVMatrix inherited;
 

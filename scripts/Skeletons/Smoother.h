@@ -8,7 +8,9 @@ using namespace std;
 
 class DERIVEDCLASS: public Smoother
 {
-public:
+
+private:
+
   typedef Smoother inherited;
   
 protected:
