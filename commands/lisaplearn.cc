@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: lisaplearn.cc,v 1.3 2004/03/06 14:41:14 yoshua Exp $
+   * $Id: lisaplearn.cc,v 1.4 2004/03/08 17:37:01 yoshua Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -53,6 +53,7 @@
 #include "RegularGridVMatrix.h"
 #include "VMatrixFromDistribution.h"
 #include "PrecomputedVMatrix.h"
+#include "CumVMatrix.h"
 
 // Hyper-learning:
 #include "CartesianProductOracle.h"
