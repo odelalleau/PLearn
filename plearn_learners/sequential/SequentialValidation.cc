@@ -62,7 +62,8 @@ SequentialValidation::SequentialValidation()
     save_test_outputs(false),
     save_test_costs(false),
     save_stat_collectors(false),
-    provide_learner_expdir(true)
+    provide_learner_expdir(true),
+    save_sequence_stats(true)
 {}
 
 void SequentialValidation::build_()
@@ -161,6 +162,13 @@ void SequentialValidation::declareOptions(OptionList& ol)
                 OptionBase::buildoption,
                 "If true, learning results from the learner will be saved. \n");
 
+  declareOption(ol, "save_sequence_stats",
+                &SequentialValidation::save_sequence_stats,
+                OptionBase::buildoption,
+                "Whether the statistics accumulated at each time step should\n"
+                "be saved in the file \"sequence_stats.pmat\".  WARNING: this\n"
+                "file can get big!  (Default = 1, i.e. true)");
+  
   inherited::declareOptions(ol);
 }
 
@@ -231,12 +239,14 @@ void SequentialValidation::run()
       global_stats_vm->declareField(k,statspecs[k].statName());
     global_stats_vm->saveFieldInfos();
 
-    split_stats_vm = new FileVMatrix(expdir+"sequence_stats.pmat", 0,
-                                     1+nstats);
-    split_stats_vm->declareField(0,"splitnum");
-    for(int k=0; k<nstats; k++)
-      split_stats_vm->declareField(k+1,statspecs[k].setname + "." + statspecs[k].intstatname);
-    split_stats_vm->saveFieldInfos();
+    if (save_sequence_stats) {
+      split_stats_vm = new FileVMatrix(expdir+"sequence_stats.pmat", 0,
+                                       1+nstats);
+      split_stats_vm->declareField(0,"splitnum");
+      for(int k=0; k<nstats; k++)
+        split_stats_vm->declareField(k+1,statspecs[k].setname + "." + statspecs[k].intstatname);
+      split_stats_vm->saveFieldInfos();
+    }
 
     if (timewise_nstats > 0) {
       timewise_stats_vm = new FileVMatrix(expdir+"timewise_stats.pmat", 0,

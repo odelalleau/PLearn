@@ -88,6 +88,11 @@ public:
   bool save_stat_collectors;
   bool provide_learner_expdir; /* =true */
 
+  //! Whether the statistics accumulated at each time step should
+  //! be saved in the file "sequence_stats.pmat".  WARNING: this
+  //! file can get big!  (Default = 1, i.e. true)
+  bool save_sequence_stats;
+
 private:
 
   //! This does the actual building
