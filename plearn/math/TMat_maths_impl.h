@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.25 2003/10/22 21:31:51 ducharme Exp $
+   * $Id: TMat_maths_impl.h,v 1.26 2003/11/19 18:56:20 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -2155,7 +2155,6 @@ void transposeProduct(const TVec<T>& result, const TMat<T>& m, const TVec<T>& v)
 template <class T>
 void transposeProductAcc(const TVec<T>& result, const TMat<T>& m, const TVec<T>& v)
 {
-  extern bool debug_;
   int l=m.length();
   int w=m.width();
   if (l!=v.length() || w!=result.length())
@@ -2195,8 +2194,6 @@ void transposeProductAcc(const TVec<T>& result, const TMat<T>& m, const TVec<T>&
       }
     else mp += w + deltam;
   }
-  if (debug_)
-    cout << "transposeProductAcc: " << v[v.length()-1] << " * " << m[0][0] << " ==> " << result << endl;
 }
 
 //!  result[i] += alpha * sum_j m[j,i] * v[j]
