@@ -80,12 +80,6 @@ public:
   //! typedef's for PStream manipulators
   typedef PStream& (*pl_pstream_manip)(PStream&);
 
-  //! DEPRECATED
-  /*
-  typedef istream& (*pl_istream_manip_compat)(istream&);
-  typedef ostream& (*pl_ostream_manip_compat)(ostream&);
-  */
-
 #if STREAMBUFVER == 0
   typedef PP<StdPStreamBuf> inherited;
   typedef StdPStreamBuf streambuftype;
@@ -122,17 +116,6 @@ public:
     compr_lossy_sparse     //<! Also stores double as float 
   };
 
-  
-protected:
-  /* OLD MARKABLE STREAM HACK
-  PP<pl_streambuf> the_inbuf;   //<! markable input buffer
-  PP<pl_fdstreambuf> the_fdbuf; //<! buffer on a POSIX file descriptor
-
-  istream* pin;  //<! underlying input stream
-  ostream* pout; //<! underlying output stream
-  bool own_pin, own_pout; //<! true if {pin|pout} was created internally
-  */
-
 public:  
   mode_t inmode;              //<! mode for input formatting
   // bitset<32> pl_stream_flags_in;  //<! format flags for input
@@ -140,13 +123,6 @@ public:
   mode_t outmode;            //<! mode for output formatting
   // bitset<32> pl_stream_flags_out; //<! format flags for output
   map<void *, unsigned int> copies_map_out; //<! copies map for output
-
-protected:
-  /* OLD MARKABLE STREAM HACK
-  //! ptrs. to the original buffers;  used to 'reset' the underlying
-  //! streams to a valid state when the PStream is destroyed.
-  streambuf* original_bufin, * original_bufout;
-  */
 
 private:
   static char tmpbuf[100];
@@ -330,14 +306,12 @@ public:
   inline string getline()
   { string s; getline(s); return s; }
 
-  //   inline int peek() { return ptr->rawin()->peek(); }
-  // The previous implementation does not seem to work, so we use this [Pascal]:
-  
   inline int peek() 
   { 
 #if STREAMBUFVER == 1 
     return ptr->peek();
 #else
+    // return ptr->rawin()->peek() does not seem to work, so we use this [Pascal]
     int c = ptr->rawin()->get(); 
     ptr->rawin()->unget(); 
     return c; 
@@ -443,7 +417,11 @@ public:
     return *this;
   }
 
-  inline PStream& put(unsigned char c) { write(reinterpret_cast<char *>(&c), sizeof(c)); return *this; }
+  inline PStream& put(unsigned char c)
+    {
+      write(reinterpret_cast<char *>(&c), sizeof(c));
+      return *this;
+    }
   inline PStream& put(int x) { return put((char)x); }
 
   inline PStream& flush() 
@@ -456,8 +434,12 @@ public:
     return *this; 
   }
 
-  inline PStream& endl() { put('\n'); flush(); return *this; }
-  /******/
+  inline PStream& endl()
+    {
+      put('\n');
+      flush();
+      return *this;
+    }
 
   // These are convenient method for writing raw strings (whatever the outmode):
   inline PStream& write(const char* s) 
@@ -477,7 +459,9 @@ public:
 #else
   //! attach this stream to a POSIX file descriptor.
   inline void attach(int fd)
-  { ptr->attach(fd); }
+    {
+      ptr->attach(fd);
+    }
 #endif
 
   // Useful skip functions
@@ -559,18 +543,18 @@ public:
 };
 
 
-// Simulation of <<flush <<endl and >>ws ...
+  // Simulation of <<flush <<endl and >>ws ...
 
-extern PStream& flush(PStream& out);
-extern PStream& endl(PStream& out);
-extern PStream& ws(PStream& out);
+  extern PStream& flush(PStream& out);
+  extern PStream& endl(PStream& out);
+  extern PStream& ws(PStream& out);
 
-// But inject the standard ones as well to keep them usable!!!
-using std::flush;
-using std::endl;
-using std::ws;
+  // But inject the standard ones as well to keep them usable!!!
+  using std::flush;
+  using std::endl;
+  using std::ws;
 
-
+  
   /*****
    * op>> & op<< for generic pointers
    */
@@ -622,7 +606,6 @@ using std::ws;
   template <class T> 
   inline PStream& operator<<(PStream& out, const T*& x)
   {
-    //    cerr << "{ " << x << " : " << out.copies_map_out.size() << " } " << endl; 
     if(x)
       {
         map<void *, unsigned int>::iterator it = out.copies_map_out.find(const_cast<T*&>(x));
@@ -1034,7 +1017,7 @@ void writeSequence(PStream& out, const SequenceType& seq)
 }
 
 
-//! This reads into a sequence
+//! Reads in a sequence type from a PStream.
 /*! For this to work with the current implementation, the SequenceType must have:
   - typedefs defining (SequenceType::...) value_type, size_type, iterator 
   - a begin() method that returns a proper iterator,
@@ -1233,9 +1216,7 @@ operator<<(PStream &out, const set<T> &v)
 { writeSet(out, v); return out; }
 
 
-// **** Useful PStream classes... ****
-// (these can be used similarly to  ifstream, ofstream...)
-
+/// @deprected Use openFile instead.
 class PIFStream: public PStream
 {
 public:
@@ -1244,6 +1225,7 @@ public:
   {}
 };
 
+/// @deprecated Use openFile instead.
 class POFStream: public PStream
 {
 public:
@@ -1253,10 +1235,7 @@ public:
 };
 
 
-// NOTE: This should ultimately be replaced by istringstream when we finally get rid of buggy gcc 2.96
-// or even better: our own version of the streambuf when we finally get rid of those annoying buggy C++ streams implementations.
-// So for now, consider this a "hack" (Pascal)
-
+/// @deprecated Use openString instead.
 class PIStringStream: public PStream
 {
 public:
