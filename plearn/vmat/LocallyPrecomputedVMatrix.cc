@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyPrecomputedVMatrix.cc,v 1.10 2005/02/18 17:14:33 tihocan Exp $ 
+   * $Id: LocallyPrecomputedVMatrix.cc,v 1.11 2005/02/21 15:23:53 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -154,9 +154,10 @@ void LocallyPrecomputedVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 LocallyPrecomputedVMatrix::~LocallyPrecomputedVMatrix()
 {
   if (remove_when_done && metadatadir != "") {
-    string filename_option = precomp_source->getOption("filename");
-    // Remove the extra " characters at the beginning and the end of the string.
-    filename_option = filename_option.substr(1, filename_option.size() - 2);
+    // Get the name of the precomputed file.
+    string filename_option;
+    openString(precomp_source->getOption("filename"), PStream::plearn_ascii)
+      >> filename_option;
     PPath precomputed_file = PPath(filename_option);
     // First we delete the precomputed source, so that it does not try to save
     // more stuff in the metadatadir after it has been deleted.
