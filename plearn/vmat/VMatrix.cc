@@ -3,6 +3,7 @@
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
+// Copyright (C) 2004 Rejean Ducharme
 //
 
 // Redistribution and use in source and binary forms, with or without
@@ -36,7 +37,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.73 2004/09/29 14:31:42 ducharme Exp $
+* $Id: VMatrix.cc,v 1.74 2004/10/22 18:51:08 ducharme Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -353,8 +354,13 @@ void VMatrix::declareFieldNames(TVec<string> fnames)
 
 void VMatrix::saveFieldInfos() const
 {
+  // check if we need to save the fieldinfos
   if(fieldinfos.size()==0)
     return;
+  Array<VMField> current_fieldinfos = getSavedFieldInfos();
+  if (current_fieldinfos==fieldinfos)
+    return;
+
   string filename = append_slash(getMetaDataDir()) + "fieldnames";
   ofstream out(filename.c_str());
   if(!out)
@@ -365,24 +371,37 @@ void VMatrix::saveFieldInfos() const
 
 void VMatrix::loadFieldInfos() const
 {
+  Array<VMField> current_fieldinfos = getSavedFieldInfos();
+  fieldinfos = current_fieldinfos;
+}
+
+Array<VMField> VMatrix::getSavedFieldInfos() const
+{
   string filename = append_slash(getMetaDataDir()) + "fieldnames";
+  if (!isfile(filename)) // no current fieldinfos saved
+  {
+    Array<VMField> no_fieldinfos(0);
+    return no_fieldinfos;
+  }
   ifstream in(filename.c_str());
   if(!in)
-    PLERROR("In VMatrix::loadFieldInfos Couldn't open file %s for reading",filename.c_str());    
+    PLERROR("In VMatrix::getSavedFieldInfos Couldn't open file %s for reading",filename.c_str());    
 
   int w = width();
-  fieldinfos.resize(w);
-  for(int i= 0; i < w; ++i)
+  Array<VMField> current_fieldinfos(w);
+  for(int i=0; i<w; ++i)
+  {
+    vector<string> v(split(pgetline(in)));
+    switch(v.size())
     {
-      vector<string> v(split(pgetline(in)));
-      switch(v.size())
-      {
-      case 1: fieldinfos[i] = VMField(v[0]); break;
-      case 2: fieldinfos[i] = VMField(v[0], VMField::FieldType(toint(v[1]))); break;
-      default: PLERROR("In VMatrix::loadFieldInfos Format not recognized in file %s.\n"
+      case 1: current_fieldinfos[i] = VMField(v[0]); break;
+      case 2: current_fieldinfos[i] = VMField(v[0], VMField::FieldType(toint(v[1]))); break;
+      default: PLERROR("In VMatrix::getSavedFieldInfos Format not recognized in file %s.\n"
                        "Each line should be '<name> {<type>}'.", filename.c_str());
-      }
     }
+  }
+
+  return current_fieldinfos;
 }
 
 // comments: see .h

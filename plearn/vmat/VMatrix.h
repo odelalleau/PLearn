@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.59 2004/10/06 21:12:16 larocheh Exp $
+   * $Id: VMatrix.h,v 1.60 2004/10/22 18:51:08 ducharme Exp $
    ******************************************************* */
 
 
@@ -174,6 +174,7 @@ public:
   bool hasFieldInfos() const;
   //! If no fieldnames have been set, will set default field names to "0", "1", "2", ... i.e. their column index.
   Array<VMField>& getFieldInfos() const;
+  Array<VMField> getSavedFieldInfos() const;
   VMField& getFieldInfos(int fieldindex) const { return getFieldInfos()[fieldindex]; }
   void declareField(int fieldindex, const string& fieldname, VMField::FieldType fieldtype=VMField::UnknownType);
   void declareFieldNames(TVec<string> fnames);
