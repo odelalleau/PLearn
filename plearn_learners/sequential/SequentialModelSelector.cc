@@ -110,7 +110,7 @@ void SequentialModelSelector::test(VMat test_set, PP<VecStatsCollector> test_sta
 {
   ProgressBar* pb;
   if (report_progress)
-    pb = new ProgressBar("Testing learner",test_set.length());
+    pb = new ProgressBar("Testing SequentialModelSelector learner",test_set.length());
 
   PP<VecStatsCollector> dummy_stats = new VecStatsCollector();
   // first test example is the pair (last_call_train_t-1,last_call_train_t-1+horizon)
