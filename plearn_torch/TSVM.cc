@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TSVM.cc,v 1.3 2005/02/23 18:01:50 tihocan Exp $ 
+   * $Id: TSVM.cc,v 1.4 2005/02/23 21:53:02 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -139,14 +139,15 @@ void TSVM::updateFromPLearn(Torch::Object* ptr) {
     PLERROR("In TSVM::updateFromPLearn - Torch::SVM is an abstract class "
             "and cannot be instantiated");
   }
-  if (options["kernel"])                  svm->kernel                   = kernel->kernel;
-  if (options["data"])                    svm->data                     = data ? data->dataset : 0;
-  if (options["b"])                       svm->b                        = b;
-  if (options["support_vectors"])         svm->support_vectors          = support_vectors ? support_vectors.data()
-                                                                                          : 0;
-  if (options["support_vectors"])         svm->n_support_vectors        = support_vectors.length();
-  if (options["sv_alpha"])                svm->sv_alpha                 = sv_alpha ? sv_alpha.data()
-                                                                                   : 0;
+  FROM_P_BASIC(b,                       b,                       svm, b                      );
+  FROM_P_BASIC(n_support_vectors_bound, n_support_vectors_bound, svm, n_support_vectors_bound);
+
+  FROM_P_TVEC (support_vectors, support_vectors, svm, support_vectors, n_support_vectors);
+  FROM_P_TVEC (sv_alpha,        sv_alpha,        svm, sv_alpha,        n_support_vectors);
+
+  FROM_P_OBJ  (kernel, kernel, kernel,  TKernel,  svm, kernel);
+  FROM_P_OBJ  (data,   data,   dataset, TDataSet, svm, data  );
+  /* Not as easy to do with a macro, TODO later !
   // TODO Could free some memory if possible.
   if (options["sv_sequences"]) {
     svm->sv_sequences = (Torch::Sequence **)allocator->alloc(sizeof(Torch::Sequence *)*sv_sequences.length());
@@ -154,34 +155,24 @@ void TSVM::updateFromPLearn(Torch::Object* ptr) {
       svm->sv_sequences[i] = sv_sequences[i]->sequence;
     }
   }
-  if (options["n_support_vectors_bound"]) svm->n_support_vectors_bound  = n_support_vectors_bound;
-  PLWARNING("In TSVM::updateFromPLearn - Implementation not completed");
+  */
   inherited::updateFromPLearn(svm);
+  // NB: not updating io_sequence_array, sv_sequences.
 }
 
 /////////////////////
 // updateFromTorch //
 /////////////////////
 void TSVM::updateFromTorch() {
-  assert( (kernel ? kernel->kernel : 0) == svm->kernel ); // TODO Necessary ?
-  if (kernel)
-    kernel->updateFromTorch(); // TODO Not really necessary ?
-  if (svm->data != (data ? data->dataset : 0)) {
-    // The SVM dataset has changed.
-    TObjectMap::const_iterator it = torch_objects.find(svm->data);
-    if (it == torch_objects.end())
-      PLERROR("In TSVM::updateFromTorch - Could not find a TObject associated with the new dataset");
-    data = (TDataSet*) it->second;
-  }
-  if (options["b"])
-    b = svm->b;
-  if (data)
-    data->updateFromTorch(); // TODO Necessary ?
-  support_vectors.resize(svm->n_support_vectors);
-  sv_alpha.resize       (svm->n_support_vectors);
-  support_vectors.copyFrom(svm->support_vectors, svm->n_support_vectors);
-  sv_alpha.copyFrom       (svm->sv_alpha       , svm->n_support_vectors);
-  n_support_vectors_bound = svm->n_support_vectors_bound;
+  FROM_T_BASIC(b,                       b,                       svm, b                      );
+  FROM_T_BASIC(n_support_vectors_bound, n_support_vectors_bound, svm, n_support_vectors_bound);
+
+  FROM_T_TVEC (support_vectors, support_vectors, svm, support_vectors, n_support_vectors);
+  FROM_T_TVEC (sv_alpha,        sv_alpha,        svm, sv_alpha,        n_support_vectors);
+
+  FROM_T_OBJ  (kernel, kernel, kernel,  TKernel,  svm, kernel);
+  FROM_T_OBJ  (data,   data,   dataset, TDataSet, svm, data  );
+  /* Not as easy to do with a macro, TODO later !
   if (options["sv_sequences"]) {
     // TODO May have to be done in subclasses ?
     int n = svm->n_support_vectors;
@@ -200,7 +191,7 @@ void TSVM::updateFromTorch() {
         sv_sequences[i] = (TSequence*) it->second;
     }
   }
-  PLWARNING("In TSVM::updateFromTorch - Implementation non completed");
+  */
   inherited::updateFromTorch();
 }
 
