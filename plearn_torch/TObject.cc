@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TObject.cc,v 1.1 2005/02/23 01:31:19 tihocan Exp $ 
+   * $Id: TObject.cc,v 1.2 2005/02/23 16:36:17 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -100,13 +100,26 @@ void TObject::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   PLERROR("TObject::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
+///////////////////
+// torch_objects //
+///////////////////
+TObject::TObjectMap TObject::torch_objects;
+
 //////////////////////
 // updateFromPLearn //
 //////////////////////
 void TObject::updateFromPLearn(Torch::Object* ptr) {
-  if (ptr)
+  if (ptr) {
+    if (object) {
+      // First remove old mapping from torch_objects.
+      assert( torch_objects.find(object) != torch_objects.end() ); // Sanity check.
+      torch_objects.erase(object);
+    }
     object = ptr;
+    torch_objects[object] = this;
+  }
   else if (!object)
+    // There is no need to create a new object if there is already one.
     object = new(allocator) Torch::Object();
 }
 

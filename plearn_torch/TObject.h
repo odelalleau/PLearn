@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TObject.h,v 1.1 2005/02/23 01:31:19 tihocan Exp $ 
+   * $Id: TObject.h,v 1.2 2005/02/23 16:36:18 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -121,6 +121,17 @@ public:
 
   //! Destructor to free allocated memory.
   virtual ~TObject() {delete allocator;}
+
+  // ******************
+  // * Static members *
+  // ******************
+
+public:
+
+  typedef map<const Torch::Object*, PLearn::TObject*> TObjectMap;
+
+  //! Mapping between a Torch Object and its corresponding PLearn TObject.
+  static TObjectMap torch_objects;
 
 };
 
