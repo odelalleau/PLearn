@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.15 2003/05/13 05:55:32 plearner Exp $
+   * $Id: Object.h,v 1.16 2003/05/22 21:56:27 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -187,7 +187,7 @@ using namespace std;
 
 #define DECLARE_OBJECT_PP(PPCLASSNAME, CLASSNAME)                          \
         inline PStream &operator>>(PStream &in, PPCLASSNAME &o)      \
-          { Object *ptr;                                                   \
+          { Object *ptr = 0;                                               \
             in >> ptr;                                                     \
             o = dynamic_cast<CLASSNAME *>(ptr);                            \
             return in; };                                                  \
