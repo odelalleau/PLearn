@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.31 2004/08/31 17:22:40 plearner Exp $
+   * $Id: Object.cc,v 1.32 2004/09/01 23:52:19 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -268,9 +268,9 @@ void Object::newread(PStream &in)
             (*it)->read_and_discard(in);
           else
             {
-              cerr << "Reading option: " << optionname << endl;
+              // cerr << "Reading option: " << optionname << endl;
               readOptionVal(in, optionname);
-              cerr << "returned from reading optiion " << optionname << endl;
+              // cerr << "returned from reading optiion " << optionname << endl;
             }
           in.skipBlanksAndCommentsAndSeparators();
           /*
