@@ -36,23 +36,18 @@
 
 
 /* *******************************************************      
-   * $Id: LogOfGaussianDensityKernel.cc,v 1.3 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: LogOfGaussianDensityKernel.cc,v 1.4 2004/04/07 23:17:52 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "LogOfGaussianDensityKernel.h"
 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
 
 PLEARN_IMPLEMENT_OBJECT(LogOfGaussianDensityKernel, "ONE LINE DESCR", "NO HELP");
+
 real LogOfGaussianDensityKernel::evaluate(const Vec& x1, const Vec& x2) const
 { 
   // cerr << "LogOfGaussKernel mu: " << x1 << endl; 

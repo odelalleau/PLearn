@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: LogOfGaussianDensityKernel.h,v 1.2 2004/02/20 21:11:45 chrish42 Exp $
+   * $Id: LogOfGaussianDensityKernel.h,v 1.3 2004/04/07 23:17:52 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -59,20 +59,26 @@ using namespace std;
 */
 class LogOfGaussianDensityKernel: public Kernel
 {
-		typedef Kernel inherited;
-		
- protected:
-   LogOfGaussianDensityKernel() : sigma() {}
- protected:
-  real sigma;
-  static void declareOptions(OptionList& ol);
- public:
-  LogOfGaussianDensityKernel(real the_sigma):sigma(the_sigma) {}
-  PLEARN_DECLARE_OBJECT(LogOfGaussianDensityKernel);
-  virtual real evaluate(const Vec& x1, const Vec& x2) const;
-};
-DECLARE_OBJECT_PTR(LogOfGaussianDensityKernel);
+    typedef Kernel inherited;
 
+ protected:
+    real sigma;
+
+ public:
+    LogOfGaussianDensityKernel()
+        : sigma() {}
+    LogOfGaussianDensityKernel(real the_sigma)
+        : sigma(the_sigma) {}
+
+    PLEARN_DECLARE_OBJECT(LogOfGaussianDensityKernel);
+
+    virtual real evaluate(const Vec& x1, const Vec& x2) const;
+
+protected:
+    static void declareOptions(OptionList& ol);
+};
+
+DECLARE_OBJECT_PTR(LogOfGaussianDensityKernel);
 
 } // end of namespace PLearn
 
