@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunCommand.h,v 1.1 2003/08/13 08:13:16 plearner Exp $ 
+   * $Id: RunCommand.h,v 1.2 2003/08/21 15:43:54 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file RunCommand.h */
@@ -59,7 +59,7 @@ public:
                   "Runs a .plearn script, with the arguments defined as\n"
                   "macro variables, accessible from within the script as ${argname} \n"
                   "'run' is what gets called when you give NO command name, but a valid .plearn script \n"
-                  "Lookup plearn help scripts form ore info on scripts. \n"
+                  "Lookup plearn help scripts for more info on scripts. \n"
                   ) 
   {}
                     
