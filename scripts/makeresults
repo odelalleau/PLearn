@@ -1,8 +1,19 @@
 #! /bin/sh
 # This script will make a .vmat and .amat to visualize and store the results of PLearn experiments.
+# Typical usage is to put in the final_commands option of a PTester:
+#   makeresults results_mat ${expdir}/global_stats.pmat param_1 ... param_n
+#
+# Arguments:
+#   <matrix_name>  : the name of the output matrices, with no extension
+#   <template_mat> : a matrix file readable by 'plearn vmat fields', whose fields names
+#                    will be copied into the .amat field names
+#   <parameter_i>  : the name of the i-th parameter to be reported in the results
+#
+# Output: two files (.vmat and .amat), used respectively to visualize and store the results of
+#         the experiments (using the appendresults script)
 
 if [ "$2" = "" ]; then
-  echo "Usage: makeresults <matrix_name> <template_mat> <parameter1> ... <parameterN>"
+  echo "Usage: makeresults <matrix_name> <template_mat> <parameter_1> ... <parameter_N>"
   exit 127
 fi
 
