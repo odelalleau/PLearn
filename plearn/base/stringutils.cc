@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.cc,v 1.17 2004/02/26 19:31:17 nova77 Exp $
+   * $Id: stringutils.cc,v 1.18 2004/03/20 21:00:24 yoshua Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -619,6 +619,32 @@ ostream& operator<<(ostream& out, const vector<string>& vs)
       ++it;
     }
   return out;
+}
+
+string tostring(const double& x)
+{
+  ostringstream out;
+  int ix = (int)x;
+  if (ix == x)
+    out << ix;
+  else {
+    out.precision(12);
+    out << x;
+  }
+  return out.str();
+}
+
+string tostring(const float& x)
+{
+  ostringstream out;
+  int ix = (int)x;
+  if (ix == x)
+    out << ix;
+  else {
+    out.precision(8);
+    out << x;
+  }
+  return out.str();
 }
 
 

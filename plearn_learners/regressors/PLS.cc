@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLS.cc,v 1.6 2004/03/11 13:58:13 tihocan Exp $ 
+   * $Id: PLS.cc,v 1.7 2004/03/20 21:00:24 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -191,6 +191,8 @@ void PLS::computeCostsFromOutputs(const Vec& input, const Vec& output,
 void PLS::computeOutput(const Vec& input, Vec& output) const
 {
   static Vec input_copy;
+  if (W.width()==0)
+    PLERROR("PLS::computeOutput but model was not trained!");
   // Compute the output from the input
   int nout = outputsize();
   output.resize(nout);

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.h,v 1.10 2004/03/06 14:41:15 yoshua Exp $
+   * $Id: MultiInstanceNNet.h,v 1.11 2004/03/20 21:00:24 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearn/plearn_learners/classifiers/MultiInstanceNNet.h */
@@ -81,6 +81,7 @@ using namespace std;
     Vec paramsvalues; // values of all parameters
 
     int optstage_per_lstage; // number of bags in training set / batch_size (in nb of bags)
+    bool training_set_has_changed; // if so, must count nb of bags in training set
 
   public:
     mutable Func f; // input -> output

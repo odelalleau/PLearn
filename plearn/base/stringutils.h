@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.20 2004/03/10 23:40:00 nova77 Exp $
+   * $Id: stringutils.h,v 1.21 2004/03/20 21:00:24 yoshua Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -282,7 +282,9 @@ vector<string> remove(const vector<string> &v, string element);
       */
     }
 
+string tostring(const double& x);
 
+string tostring(const float& x);
 
 } // end of namespace PLearn
 

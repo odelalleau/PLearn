@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMatCommand.cc,v 1.4 2004/02/29 16:44:04 nova77 Exp $ 
+   * $Id: VMatCommand.cc,v 1.5 2004/03/20 21:00:24 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file VMatCommand.cc */
@@ -61,6 +61,8 @@ VMatCommand::VMatCommand():
       "       To display statistics for that field \n"
       "   or: vmat cat <dataset> [<optional_vpl_filtering_code>]\n"
       "       To display the dataset \n"
+      "   or: vmat sascat <dataset.vmat> <dataset.txt>\n"
+      "       To output in <filename.txt> the dataset in SAS-like tab-separated format with field names on the first line\n"
       "   or: vmat view <dataset> [<line#> [<column#>]]\n"
       "       Interactive display to browse on the data. \n"
       "   or: vmat stats <dataset> \n"

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.cc,v 1.25 2004/03/09 18:35:14 tihocan Exp $
+   * $Id: MultiInstanceNNet.cc,v 1.26 2004/03/20 21:00:24 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/MultiInstanceNNet.h */
@@ -101,24 +101,24 @@ PLEARN_IMPLEMENT_OBJECT(MultiInstanceNNet,
                        );
 
 MultiInstanceNNet::MultiInstanceNNet() // DEFAULT VALUES FOR ALL OPTIONS
-  :
-  max_n_instances(1),
-   nhidden(0),
-   nhidden2(0),
-   weight_decay(0),
-   bias_decay(0),
-   layer1_weight_decay(0),
-   layer1_bias_decay(0),
-   layer2_weight_decay(0),
-   layer2_bias_decay(0),
-   output_layer_weight_decay(0),
-   output_layer_bias_decay(0),
-   direct_in_to_out_weight_decay(0),
-   L1_penalty(false),
-   direct_in_to_out(false),
-   interval_minval(0), interval_maxval(1),
-   test_bag_size(0),
-   batch_size(1)
+  : training_set_has_changed(false),
+    max_n_instances(1),
+    nhidden(0),
+    nhidden2(0),
+    weight_decay(0),
+    bias_decay(0),
+    layer1_weight_decay(0),
+    layer1_bias_decay(0),
+    layer2_weight_decay(0),
+    layer2_bias_decay(0),
+    output_layer_weight_decay(0),
+    output_layer_bias_decay(0),
+    direct_in_to_out_weight_decay(0),
+    L1_penalty(false),
+    direct_in_to_out(false),
+    interval_minval(0), interval_maxval(1),
+    test_bag_size(0),
+    batch_size(1)
 {}
 
 MultiInstanceNNet::~MultiInstanceNNet()
@@ -190,7 +190,7 @@ void MultiInstanceNNet::build()
 
 void MultiInstanceNNet::setTrainingSet(VMat training_set, bool call_forget)
 { 
-  bool training_set_has_changed =
+  training_set_has_changed =
     !train_set || train_set->width()!=training_set->width() ||
     train_set->length()!=training_set->length() || train_set->inputsize()!=training_set->inputsize()
     || train_set->weightsize()!= training_set->weightsize();
@@ -209,37 +209,6 @@ void MultiInstanceNNet::setTrainingSet(VMat training_set, bool call_forget)
     if (call_forget) forget();
   }
 
-  if (training_set_has_changed)
-    {
-      // number of optimiser stages corresponding to one learner stage (one epoch)
-      optstage_per_lstage = 0;
-      int n_bags = -1;
-      if (batch_size<=0)
-        optstage_per_lstage = 1;
-      else // must count the nb of bags in the training set
-        {
-          n_bags=0;
-          int l = train_set->length();
-          ProgressBar* pb = 0;
-          if(report_progress)
-            pb = new ProgressBar("Counting nb bags in train_set for MultiInstanceNNet ", l);
-          Vec row(train_set->width());
-          int tag_column = train_set->inputsize() + train_set->targetsize() - 1;
-          for (int i=0;i<l;i++) {
-            train_set->getRow(i,row);
-            int tag = (int)row[tag_column];
-            if (tag & SumOverBagsVariable::TARGET_COLUMN_FIRST) {
-              // indicates the beginning of a new bag.
-              n_bags++;
-            }
-            if(pb)
-              pb->update(i);
-          }
-          if(pb)
-            delete pb;
-          optstage_per_lstage = n_bags/batch_size;
-        }
-    }
 }
 
 void MultiInstanceNNet::build_()
@@ -433,6 +402,40 @@ void MultiInstanceNNet::train()
 
   if(f.isNull()) // Net has not been properly built yet (because build was called before the learner had a proper training set)
     build();
+
+
+  if (training_set_has_changed)
+    {
+      // number of optimiser stages corresponding to one learner stage (one epoch)
+      optstage_per_lstage = 0;
+      int n_bags = -1;
+      if (batch_size<=0)
+        optstage_per_lstage = 1;
+      else // must count the nb of bags in the training set
+        {
+          n_bags=0;
+          int l = train_set->length();
+          ProgressBar* pb = 0;
+          if(report_progress)
+            pb = new ProgressBar("Counting nb bags in train_set for MultiInstanceNNet ", l);
+          Vec row(train_set->width());
+          int tag_column = train_set->inputsize() + train_set->targetsize() - 1;
+          for (int i=0;i<l;i++) {
+            train_set->getRow(i,row);
+            int tag = (int)row[tag_column];
+            if (tag & SumOverBagsVariable::TARGET_COLUMN_FIRST) {
+              // indicates the beginning of a new bag.
+              n_bags++;
+            }
+            if(pb)
+              pb->update(i);
+          }
+          if(pb)
+            delete pb;
+          optstage_per_lstage = n_bags/batch_size;
+        }
+      training_set_has_changed = false;
+    }
 
   Var totalcost = sumOverBags(train_set, inputs_and_targets_to_training_costs, max_n_instances, batch_size);
   if(optimizer)

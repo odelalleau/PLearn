@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.18 2004/03/10 15:25:15 tihocan Exp $
+   * $Id: vmatmain.cc,v 1.19 2004/03/20 21:00:24 yoshua Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -901,6 +901,8 @@ int vmatmain(int argc, char** argv)
       "       To display statistics for that field \n"
       "   or: vmat cat <dataset> [<optional_vpl_filtering_code>]\n"
       "       To display the dataset \n"
+      "   or: vmat sascat <dataset.vmat> <dataset.txt>\n"
+      "       To output in <filename.txt> the dataset in SAS-like tab-separated format with field names on the first line\n"
       "   or: vmat view <vmat> \n"
       "       Interactive display of a vmat. \n"
       "   or: vmat stats <dataset> \n"
@@ -1227,6 +1229,25 @@ int vmatmain(int argc, char** argv)
               vm->getRow(i,tmp);      
               cout<<tmp<<endl;
             }
+    }
+  else if(command=="sascat")
+    {
+      if(argc!=4)
+        PLERROR("'vmat sascat' must be used that way : vmat sascat <in-dataset> <out-filename.txt>");
+      string dbname = argv[2];
+      string outname = argv[3];
+      string code;
+      VMat vm = getDataSet(dbname);
+      ofstream out(outname.c_str());
+      for (int i=0;i<vm.width();i++)
+        out << vm->fieldName(i) << "\t";
+      out << endl;
+      for(int i=0;i<vm.length();i++)
+      {
+        for (int j=0;j<vm.width();j++)
+          out << vm->getString(i,j) << "\t";
+        out<<endl;
+      }
     }
   /* OLD CODE
   else if(command=="view")

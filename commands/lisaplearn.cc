@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: lisaplearn.cc,v 1.11 2004/03/19 14:21:44 tihocan Exp $
+   * $Id: lisaplearn.cc,v 1.12 2004/03/20 21:00:20 yoshua Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -81,6 +81,7 @@
 #include "NNet.h"
 #include "PCA.h"
 #include "PLS.h"
+#include "StackedLearner.h"
 #include "UniformizeLearner.h"
 #include "GradientOptimizer.h"
 #include "AdaptGradientOptimizer.h"
