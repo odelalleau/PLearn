@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussMix.h,v 1.28 2004/09/14 16:04:55 chrish42 Exp $ 
+   * $Id: GaussMix.h,v 1.29 2005/03/03 20:15:00 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file GaussMix.h */
@@ -236,6 +236,7 @@ public:
   int getNEigenComputed() const;
   Mat getEigenvectors(int j) const;
   Vec getEigenvals(int j) const;
+  Vec getLogLikelihoodDens() const { return log_likelihood_dens; }
 
 };
 
