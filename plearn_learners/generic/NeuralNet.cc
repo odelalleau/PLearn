@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeuralNet.cc,v 1.6 2003/04/29 18:17:59 tihocan Exp $
+   * $Id: NeuralNet.cc,v 1.7 2003/04/29 19:48:09 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeuralNet.h */
@@ -353,6 +353,7 @@ void NeuralNet::train(VMat training_set)
   Func paramf = Func(input&target_and_weights, cost); // parameterized function to optimize
   Var totalcost = meanOf(training_set,paramf, nsamples);
   optimizer->setToOptimize(params, totalcost);
+  optimizer->addMeasurer(*this);
   optimizer->build();
   bool early_stop = false;
   for (int e=0; !early_stop && e<nepochs; e++) { // launch optimizeN every epoch
