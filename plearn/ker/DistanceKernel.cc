@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DistanceKernel.cc,v 1.6 2004/07/20 15:21:45 tihocan Exp $
+   * $Id: DistanceKernel.cc,v 1.7 2004/07/23 14:39:45 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -93,7 +93,7 @@ real DistanceKernel::evaluate_i_j(int i, int j) const {
     if (d < 0) {
       // This can happen (especially when compiled in -opt) if the two points
       // are the same, and the distance should be zero.
-      if (d < -1e-10)
+      if (d < -1e-3)
         // That should not happen.
         PLERROR("In DistanceKernel::evaluate_i_j - Found a (significantly) negative distance");
       d = 0;
