@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.35 2003/08/13 08:13:15 plearner Exp $
+   * $Id: plearn.cc,v 1.36 2003/08/26 20:30:13 plearner Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -84,12 +84,6 @@
 #include "NNet.h"
 #include "Grapher.h"
 #include "ConstantRegressor.h"
-
-#include "HyperLearner.h"
-#include "HyperOptimize.h"
-#include "OptionsOracle.h"
-#include "ExplicitListOracle.h"
-#include "EarlyStoppingOracle.h"
 
 // SequentialLearner
 #include "SequentialLearner.h"
