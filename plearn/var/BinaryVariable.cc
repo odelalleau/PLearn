@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: BinaryVariable.cc,v 1.3 2002/09/05 19:32:43 morinf Exp $
+   * $Id: BinaryVariable.cc,v 1.4 2002/09/09 20:43:23 uid92895 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -185,6 +185,9 @@ VarRowVariable::VarRowVariable(Variable* input1, Variable* input2)
   
 IMPLEMENT_NAME_AND_DEEPCOPY(VarRowVariable);
 
+void VarRowVariable::recomputeSize(int& l, int& w) const
+{ l=1; w=input1->width(); }
+
 void VarRowVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
   readHeader(in, "VarRowVariable");
@@ -226,6 +229,74 @@ void VarRowVariable::rfprop()
 }
 
 
+/** IndexVariable **/
+
+IndexVariable::IndexVariable(Variable *input1, Variable *input2)
+  : BinaryVariable(input1, input2, input2->length(), input1->width())
+{
+  if(!input2->isVec())
+    PLERROR("In IndexVariable: input2 must be a vector variable representing the indexs of input1");
+}
+
+IMPLEMENT_NAME_AND_DEEPCOPY(IndexVariable);
+
+void IndexVariable::recomputeSize(int& l, int& w) const
+{ l=input2->length(); w=input1->width(); }
+
+void IndexVariable::deepRead(istream& in, DeepReadMap& old2new)
+{
+  readHeader(in, "IndexVariable");
+  inherited::deepRead(in, old2new);
+  readFooter(in, "IndexVariable");
+}
+
+void IndexVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
+{
+  writeHeader(out, "IndexVariable");
+  inherited::deepWrite(out, already_saved);
+  writeFooter(out, "IndexVariable");
+}
+
+void IndexVariable::fprop()
+{
+  int n = input2->size();
+  if (input1->length()==n)
+    for (int i=0; i<n; i++)
+      {
+      int num = (int)input2->valuedata[i];
+      valuedata[i] = input1->matValue[i][num];
+      }
+  else if (input1->width()==n)
+    for (int i=0; i<n; i++)
+      {
+      int num = (int)input2->valuedata[i];
+      valuedata[i] = input1->matValue[num][i];
+      }
+      else PLERROR("IndexVariable::fprop: The size of the index vector should be equal to the length or width of the matrix");
+}
+
+void IndexVariable::bprop()
+{
+  int n = input2->size();
+  if (input1->length()==n)
+    for (int i=0; i<n; i++)
+      {
+      int num = (int) input2->valuedata[i];
+      input1->matGradient[i][num] += gradientdata[i];
+      }
+  else if (input1->width()==n)
+    for (int i=0; i<n; i++)
+      {
+      int num = (int) input2->valuedata[i];
+      input1->matGradient[num][i] += gradientdata[i];
+      }
+}
+
+void IndexVariable::symbolicBprop()
+{
+  PLERROR("IndexVariable::symbolicBprop() not implemented");
+}
+
 /** VarRowsVariable **/
 
 VarRowsVariable::VarRowsVariable(Variable *input1, Variable *input2)
@@ -235,6 +306,9 @@ VarRowsVariable::VarRowsVariable(Variable *input1, Variable *input2)
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(VarRowsVariable);
+
+void VarRowsVariable::recomputeSize(int& l, int& w) const
+{ l=input2->length(); w=input1->width(); }
 
 void VarRowsVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -280,6 +354,9 @@ VarColumnsVariable::VarColumnsVariable(Variable *input1, Variable *input2)
 
 IMPLEMENT_NAME_AND_DEEPCOPY(VarColumnsVariable);
 
+void VarColumnsVariable::recomputeSize(int& l, int& w) const
+{ l=input1->length(); w=input2->length(); }
+
 void VarColumnsVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
   readHeader(in, "VarColumnsVariable");
@@ -320,6 +397,9 @@ VarElementVariable::VarElementVariable(Variable* input1, Variable* input2)
 }
   
 IMPLEMENT_NAME_AND_DEEPCOPY(VarElementVariable);
+
+void VarElementVariable::recomputeSize(int& l, int& w) const
+{ l=1; w=1; }
 
 void VarElementVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -398,7 +478,7 @@ void VarElementVariable::rfprop()
 /** RowAtPositionVariable **/
 
 RowAtPositionVariable::RowAtPositionVariable(Variable* input1, Variable* input2, int the_length)
-  :BinaryVariable(input1, input2, the_length, input1->width())
+  :BinaryVariable(input1, input2, the_length, input1->width()), length_(the_length)
 {
   if(!input1->isRowVec())
     PLERROR("In RowAtPositionVariable: input1 must be a single row");
@@ -407,6 +487,9 @@ RowAtPositionVariable::RowAtPositionVariable(Variable* input1, Variable* input2,
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(RowAtPositionVariable);
+
+void RowAtPositionVariable::recomputeSize(int& l, int& w) const
+{ l=length_; w=input1->width(); }
 
 void RowAtPositionVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -452,7 +535,7 @@ void RowAtPositionVariable::rfprop()
 /** ElementAtPositionVariable **/
 
 ElementAtPositionVariable::ElementAtPositionVariable(Variable* input1, Variable* input2, int the_length, int the_width)
-  :BinaryVariable(input1, input2, the_length, the_width)
+  :BinaryVariable(input1, input2, the_length, the_width), length_(the_length), width_(the_width)
 {
   if(!input1->isScalar())
     PLERROR("In ElementAtPositionVariable: element must be a scalar var");
@@ -461,6 +544,9 @@ ElementAtPositionVariable::ElementAtPositionVariable(Variable* input1, Variable*
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(ElementAtPositionVariable);
+
+void ElementAtPositionVariable::recomputeSize(int& l, int& w) const
+{ l=length_; w=width_; }
 
 void ElementAtPositionVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -542,6 +628,9 @@ PlusScalarVariable::PlusScalarVariable(Variable* input1, Variable* input2)
 
 IMPLEMENT_NAME_AND_DEEPCOPY(PlusScalarVariable);
 
+void PlusScalarVariable::recomputeSize(int& l, int& w) const
+{ l=input1->length(); w=input1->width(); }
+
 void PlusScalarVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
   readHeader(in, "PlusScalarVariable");
@@ -612,6 +701,9 @@ PlusRowVariable::PlusRowVariable(Variable* input1, Variable* input2)
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(PlusRowVariable);
+
+void PlusRowVariable::recomputeSize(int& l, int& w) const
+{ l=input1->length(); w=input1->width(); }
 
 void PlusRowVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -689,6 +781,9 @@ PlusColumnVariable::PlusColumnVariable(Variable* input1, Variable* input2)
 
 IMPLEMENT_NAME_AND_DEEPCOPY(PlusColumnVariable);
 
+void PlusColumnVariable::recomputeSize(int& l, int& w) const
+{ l=input1->length(); w=input1->width(); }
+
 void PlusColumnVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
   readHeader(in, "PlusColumnVariable");
@@ -763,6 +858,9 @@ PlusVariable::PlusVariable(Variable* input1, Variable* input2)
 
 IMPLEMENT_NAME_AND_DEEPCOPY(PlusVariable);
 
+void PlusVariable::recomputeSize(int& l, int& w) const
+{ l=input1->length(); w=input1->width(); }
+
 void PlusVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
   readHeader(in, "PlusVariable");
@@ -821,6 +919,9 @@ MinusScalarVariable::MinusScalarVariable(Variable* input1, Variable* input2)
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(MinusScalarVariable);
+
+void MinusScalarVariable::recomputeSize(int& l, int& w) const
+{ l=input1->length(); w=input1->width(); }
 
 void MinusScalarVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -893,6 +994,9 @@ MinusRowVariable::MinusRowVariable(Variable* input1, Variable* input2)
 
 IMPLEMENT_NAME_AND_DEEPCOPY(MinusRowVariable);
 
+void MinusRowVariable::recomputeSize(int& l, int& w) const
+{ l=input1->length(); w=input1->width(); }
+
 void MinusRowVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
   readHeader(in, "MinusRowVariable");
@@ -960,6 +1064,9 @@ MinusTransposedColumnVariable::MinusTransposedColumnVariable(Variable* input1, V
 
 IMPLEMENT_NAME_AND_DEEPCOPY(MinusTransposedColumnVariable);
 
+void MinusTransposedColumnVariable::recomputeSize(int& l, int& w) const
+{ l=input1->length(); w=input1->width(); }
+
 void MinusTransposedColumnVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
   readHeader(in, "MinusTransposedColumnVariable");
@@ -1015,6 +1122,9 @@ MinusColumnVariable::MinusColumnVariable(Variable* input1, Variable* input2)
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(MinusColumnVariable);
+
+void MinusColumnVariable::recomputeSize(int& l, int& w) const
+{ l=input1->length(); w=input1->width(); }
 
 void MinusColumnVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -1081,6 +1191,9 @@ MinusVariable::MinusVariable(Variable* input1, Variable* input2)
 
 IMPLEMENT_NAME_AND_DEEPCOPY(MinusVariable);
 
+void MinusVariable::recomputeSize(int& l, int& w) const
+{ l=input1->length(); w=input1->width(); }
+
 void MinusVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
   readHeader(in, "MinusVariable");
@@ -1141,6 +1254,9 @@ TimesScalarVariable::TimesScalarVariable(Variable* input1, Variable* input2)
 
 IMPLEMENT_NAME_AND_DEEPCOPY(TimesScalarVariable);
 
+void TimesScalarVariable::recomputeSize(int& l, int& w) const
+{ l=input1->length(); w=input1->width(); }
+
 void TimesScalarVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
   readHeader(in, "TimesScalarVariable");
@@ -1199,6 +1315,9 @@ TimesRowVariable::TimesRowVariable(Variable* input1, Variable* input2)
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(TimesRowVariable);
+
+void TimesRowVariable::recomputeSize(int& l, int& w) const
+{ l=input1->length(); w=input1->width(); }
 
 void TimesRowVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -1261,6 +1380,9 @@ TimesColumnVariable::TimesColumnVariable(Variable* input1, Variable* input2)
 
 IMPLEMENT_NAME_AND_DEEPCOPY(TimesColumnVariable);
 
+void TimesColumnVariable::recomputeSize(int& l, int& w) const
+{ l=input1->length(); w=input1->width(); }
+
 void TimesColumnVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
   readHeader(in, "TimesColumnVariable");
@@ -1321,6 +1443,9 @@ TimesVariable::TimesVariable(Variable* input1, Variable* input2)
 
 IMPLEMENT_NAME_AND_DEEPCOPY(TimesVariable);
 
+void TimesVariable::recomputeSize(int& l, int& w) const
+{ l=input1->length(); w=input1->width(); }
+
 void TimesVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
   readHeader(in, "TimesVariable");
@@ -1366,6 +1491,9 @@ DivVariable::DivVariable(Variable* input1, Variable* input2)
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(DivVariable);
+
+void DivVariable::recomputeSize(int& l, int& w) const
+{ l=input1->length(); w=input1->width(); }
 
 void DivVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -1429,6 +1557,9 @@ PowVariableVariable::PowVariableVariable(Variable* input1, Variable* input2)
 }
   
 IMPLEMENT_NAME_AND_DEEPCOPY(PowVariableVariable);
+
+void PowVariableVariable::recomputeSize(int& l, int& w) const
+{ l=input1->length(); w=input1->width(); }
 
 void PowVariableVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -1520,6 +1651,9 @@ DotProductVariable::DotProductVariable(Variable* input1, Variable* input2)
 
 IMPLEMENT_NAME_AND_DEEPCOPY(DotProductVariable);
 
+void DotProductVariable::recomputeSize(int& l, int& w) const
+{ l=1; w=1; }
+
 void DotProductVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
   readHeader(in, "DotProductVariable");
@@ -1595,6 +1729,9 @@ ProductVariable::ProductVariable(Variable* m1, Variable* m2)
 
 IMPLEMENT_NAME_AND_DEEPCOPY(ProductVariable);
 
+void ProductVariable::recomputeSize(int& l, int& w) const
+{ l=input1->length(); w=input2->width(); }
+
 void ProductVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
   readHeader(in, "ProductVariable");
@@ -1665,6 +1802,9 @@ ProductTransposeVariable::ProductTransposeVariable(Variable* m1, Variable* m2)
 
 IMPLEMENT_NAME_AND_DEEPCOPY(ProductTransposeVariable);
 
+void ProductTransposeVariable::recomputeSize(int& l, int& w) const
+{ l=input1->length(); w=input2->width(); }
+
 void ProductTransposeVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
   readHeader(in, "ProductTransposeVariable");
@@ -1732,6 +1872,8 @@ TransposeProductVariable::TransposeProductVariable(Variable* m1, Variable* m2)
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(TransposeProductVariable);
+void TransposeProductVariable::recomputeSize(int& l, int& w) const
+{ l=input1->width(); w=input2->width(); }
 
 void TransposeProductVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -1801,6 +1943,9 @@ LogAddVariable::LogAddVariable(Variable* input1, Variable* input2)
 
 IMPLEMENT_NAME_AND_DEEPCOPY(LogAddVariable);
 
+void LogAddVariable::recomputeSize(int& l, int& w) const
+{ l=input1->length(); w=input1->width(); }
+
 void LogAddVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
   readHeader(in, "LogAddVariable");
@@ -1849,6 +1994,9 @@ Max2Variable::Max2Variable(Variable* input1, Variable* input2)
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(Max2Variable);
+
+void Max2Variable::recomputeSize(int& l, int& w) const
+{ l=input1->length(); w=input1->width(); }
 
 void Max2Variable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -1910,6 +2058,8 @@ EqualVariable::EqualVariable(Variable* input1, Variable* input2)
 }
   
 IMPLEMENT_NAME_AND_DEEPCOPY(EqualVariable);
+void EqualVariable::recomputeSize(int& l, int& w) const
+{ l=1; w=1; }
 
 void EqualVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -1949,6 +2099,9 @@ IsLargerVariable::IsLargerVariable(Variable* input1, Variable* input2)
 
 IMPLEMENT_NAME_AND_DEEPCOPY(IsLargerVariable);
 
+void IsLargerVariable::recomputeSize(int& l, int& w) const
+{ l=input1->length(); w=input1->width(); }
+
 void IsLargerVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
   readHeader(in, "IsLargerVariable");
@@ -1983,6 +2136,8 @@ IsSmallerVariable::IsSmallerVariable(Variable* input1, Variable* input2)
 }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(IsSmallerVariable);
+void IsSmallerVariable::recomputeSize(int& l, int& w) const
+{ l=input1->length(); w=input1->width(); }
 
 void IsSmallerVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -2019,6 +2174,9 @@ EqualScalarVariable::EqualScalarVariable(Variable* input1, Variable* input2)
   
 IMPLEMENT_NAME_AND_DEEPCOPY(EqualScalarVariable);
 
+void EqualScalarVariable::recomputeSize(int& l, int& w) const
+{ l=input1->length(); w=input1->width(); }
+
 void EqualScalarVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
   readHeader(in, "EqualScalarVariable");
@@ -2054,6 +2212,8 @@ ConvolveVariable::ConvolveVariable(Variable* input, Variable* mask)
 {}
 
 IMPLEMENT_NAME_AND_DEEPCOPY(ConvolveVariable);
+void ConvolveVariable::recomputeSize(int& l, int& w) const
+{ l=input1->length()-input2->length()+1; w=input1->width()-input2->width()+1; }
 
 void ConvolveVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -2102,6 +2262,9 @@ void ConvolveVariable::symbolicBprop()
 { PLERROR("ConvolveVariable::symbolicBprop() not yet implemented"); }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(AffineTransformVariable);
+void AffineTransformVariable::recomputeSize(int& l, int& w) const
+{ l=input1->isRowVec()?1:input2->width(); w=input1->isColumnVec()?1:input2->width(); }
+
 void AffineTransformVariable::fprop()
   {
     value << input2->matValue.firstRow();
@@ -2132,9 +2295,12 @@ void AffineTransformVariable::symbolicBprop()
   }
 
 IMPLEMENT_NAME_AND_DEEPCOPY(MatrixAffineTransformVariable);
+void MatrixAffineTransformVariable::recomputeSize(int& l, int& w) const
+{ l=input2->width(), w=input1->width(); }
+
 void MatrixAffineTransformVariable::fprop()
   {
-      Mat lintransform = input2->matValue.subMatRows(1,input2->length()-1);
+    Mat lintransform = input2->matValue.subMatRows(1,input2->length()-1);
     // matValue << input2->matValue.firstRow();
     for (int i = 0; i < length(); i++)
         for (int j = 0; j < width(); j++)
@@ -2172,6 +2338,9 @@ void MatrixAffineTransformVariable::symbolicBprop()
 /** OneHotSquaredLoss **/
 
 IMPLEMENT_NAME_AND_DEEPCOPY(OneHotSquaredLoss);
+void OneHotSquaredLoss::recomputeSize(int& l, int& w) const
+{ l=1, w=1; }
+
 OneHotSquaredLoss::OneHotSquaredLoss(Variable* netout, Variable* classnum, real coldval, real hotval)
     :BinaryVariable(netout,classnum,1,1), coldval_(coldval), hotval_(hotval)
 {
@@ -2238,6 +2407,9 @@ MatrixOneHotSquaredLoss::MatrixOneHotSquaredLoss(Variable* input1, Variable* inp
     PLERROR("In MatrixOneHotSquaredLoss: classnum must be a vector variable representing the indexs of netouts (typically some classnums)");
 }
 
+void MatrixOneHotSquaredLoss::recomputeSize(int& l, int& w) const
+{ l=input2->length(), w=input2->width(); }
+
 void MatrixOneHotSquaredLoss::deepRead(istream& in, DeepReadMap& old2new)
 {
   readHeader(in, "MatrixOneHotSquaredLoss");
@@ -2296,11 +2468,60 @@ ClassificationLossVariable::ClassificationLossVariable(Variable* netout, Variabl
     PLERROR("In ClassificationLossVariable: classnum must be a scalar variable representing an index of netout (typically a class number)");
 }
 
+void ClassificationLossVariable::recomputeSize(int& l, int& w) const
+{ l=1, w=1; }
+
 void ClassificationLossVariable::fprop()
 {
   int topscorepos = argmax(input1->value);
   int classnum = int(input2->valuedata[0]);
   valuedata[0] = (topscorepos==classnum ?0 :1);
+}
+
+/** MiniBatchClassificationLossVariable **/
+IMPLEMENT_NAME_AND_DEEPCOPY(MiniBatchClassificationLossVariable);
+MiniBatchClassificationLossVariable::MiniBatchClassificationLossVariable(Variable* netout, Variable* classnum)
+  :BinaryVariable(netout,classnum,classnum->length(),classnum->width())
+{
+  if(!classnum->isVec())
+    PLERROR("In MiniBatchClassificationLossVariable: classnum must be a vector variable representing the indexs of netout (typically class numbers)");
+}
+
+void MiniBatchClassificationLossVariable::recomputeSize(int& l, int& w) const
+{ l=input2->length(), w=input2->width(); }
+
+void MiniBatchClassificationLossVariable::deepRead(istream& in, DeepReadMap& old2new)
+{
+  readHeader(in, "MiniBatchClassificationLossVariable");
+  inherited::deepRead(in, old2new);
+  readFooter(in, "MiniBatchClassificationLossVariable");
+}
+
+void MiniBatchClassificationLossVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
+{
+  writeHeader(out, "MiniBatchClassificationLossVariable");
+  inherited::deepWrite(out, already_saved);
+  writeFooter(out, "MiniBatchClassificationLossVariable");
+}
+
+void MiniBatchClassificationLossVariable::fprop()
+{
+  int n = input2->size();
+  if(input1->length()==n)
+    for (int i=0; i<n; i++)
+      {
+      int topscorepos = argmax(input1->matValue.row(i));
+      int num = int(input2->valuedata[i]);
+      valuedata[i] = (topscorepos==num ?0 :1);
+      }
+  else if(input1->width()==n)
+    for (int i=0; i<n; i++)
+      {
+      int topscorepos = argmax(input1->matValue.column(i));
+      int num = int(input2->valuedata[i]);
+      valuedata[i] = (topscorepos==num ?0 :1);
+      }
+  else PLERROR("In MiniBatchClassificationLossVariable: The length or width of netout doesn't equal to the size of classnum");
 }
 
 
@@ -2313,6 +2534,9 @@ MulticlassLossVariable::MulticlassLossVariable(Variable* netout, Variable* targe
   if(netout->size() != target->size())
     PLERROR("In MulticlassLossVariable: netout and target must the same size");
 }
+
+void MulticlassLossVariable::recomputeSize(int& l, int& w) const
+{ l=1, w=1; }
 
 void MulticlassLossVariable::fprop()
 {
@@ -2336,6 +2560,9 @@ CrossEntropyVariable::CrossEntropyVariable(Variable* netout, Variable* target)
   if(netout->size() != target->size())
     PLERROR("In CrossEntropyVariable: netout and target must the same size");
 }
+
+void CrossEntropyVariable::recomputeSize(int& l, int& w) const
+{ l=1, w=1; }
 
 void CrossEntropyVariable::fprop()
 {
@@ -2368,6 +2595,9 @@ SoftmaxLossVariable::SoftmaxLossVariable(Variable* input1, Variable* input2)
   if(!input2->isScalar())
     PLERROR("In RowAtPositionVariable: position must be a scalar");
 }
+
+void SoftmaxLossVariable::recomputeSize(int& l, int& w) const
+{ l=1; w=1; }
 
 void SoftmaxLossVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -2439,29 +2669,32 @@ void SoftmaxLossVariable::rfprop()
 }
 
 /** MatrixSoftmaxLossVariable **/
-IMPLEMENT_NAME_AND_DEEPCOPY(MatrixSoftmaxVariable);
-MatrixSoftmaxVariable::MatrixSoftmaxVariable(Variable* input1, Variable* input2) 
+IMPLEMENT_NAME_AND_DEEPCOPY(MatrixSoftmaxLossVariable);
+MatrixSoftmaxLossVariable::MatrixSoftmaxLossVariable(Variable* input1, Variable* input2) 
 :BinaryVariable(input1, input2, input2->length(), input2->width())
 {
   if(!input2->isVec())
-    PLERROR("In MatrixSoftmaxVariable: position must be a vector");
+    PLERROR("In MatrixSoftmaxLossVariable: position must be a vector");
 }
 
-void MatrixSoftmaxVariable::deepRead(istream& in, DeepReadMap& old2new)
+void MatrixSoftmaxLossVariable::recomputeSize(int& l, int& w) const
+{ l=input2->length(); w=input2->width(); }
+
+void MatrixSoftmaxLossVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
-  readHeader(in, "MatrixSoftmaxVariable");
+  readHeader(in, "MatrixSoftmaxLossVariable");
   inherited::deepRead(in, old2new);
-  readFooter(in, "MatrixSoftmaxVariable");
+  readFooter(in, "MatrixSoftmaxLossVariable");
 }
 
-void MatrixSoftmaxVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
+void MatrixSoftmaxLossVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
 {
-  writeHeader(out, "MatrixSoftmaxVariable");
+  writeHeader(out, "MatrixSoftmaxLossVariable");
   inherited::deepWrite(out, already_saved);
-  writeFooter(out, "MatrixSoftmaxVariable");
+  writeFooter(out, "MatrixSoftmaxLossVariable");
 }
 
-void MatrixSoftmaxVariable::fprop()
+void MatrixSoftmaxLossVariable::fprop()
 {
   for (int i=0; i<input2->length(); i++)
   {
@@ -2474,7 +2707,7 @@ void MatrixSoftmaxVariable::fprop()
   }
 }
 
-void MatrixSoftmaxVariable::bprop()
+void MatrixSoftmaxLossVariable::bprop()
 {  
   for (int i=0; i<input2->length(); i++)
   {
@@ -2491,19 +2724,19 @@ void MatrixSoftmaxVariable::bprop()
   }
 }
 
-void MatrixSoftmaxVariable::bbprop()
+void MatrixSoftmaxLossVariable::bbprop()
 {
-  PLERROR("MatrixSoftmaxVariable::bbprop() not implemented");
+  PLERROR("MatrixSoftmaxLossVariable::bbprop() not implemented");
 }
 
-void MatrixSoftmaxVariable::symbolicBprop()
+void MatrixSoftmaxLossVariable::symbolicBprop()
 {
-  PLERROR("MatrixSoftmaxVariable::symbolicBprop() not implemented");
+  PLERROR("MatrixSoftmaxLossVariable::symbolicBprop() not implemented");
 }
 
-void MatrixSoftmaxVariable::rfprop()
+void MatrixSoftmaxLossVariable::rfprop()
 {
-  PLERROR("MatrixSoftmaxVariable::rfprop() not implemented");
+  PLERROR("MatrixSoftmaxLossVariable::rfprop() not implemented");
 }
 
 
@@ -2521,6 +2754,8 @@ WeightedSumSquareVariable::WeightedSumSquareVariable(Variable* input, Variable* 
 	    input->nelems(), weights->nelems());
 }
 
+void WeightedSumSquareVariable::recomputeSize(int& l, int& w) const
+{ l=1; w=1; }
 
 void WeightedSumSquareVariable::deepRead(istream& in, DeepReadMap& old2new)
 {

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: BinaryVariable.h,v 1.2 2002/08/06 21:05:43 wangxian Exp $
+   * $Id: BinaryVariable.h,v 1.3 2002/09/09 20:43:24 uid92895 Exp $
    * PRIMARY AUTHOR: Pascal Vincent
    * CONTRIBUTORS: Yoshua Bengio
    * This file is part of the PLearn library.
@@ -106,6 +106,7 @@ protected:
 public:
   VarRowVariable(Variable* input1, Variable* input2);
   DECLARE_NAME_AND_DEEPCOPY(VarRowVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   //  virtual void rprop();
@@ -113,6 +114,25 @@ public:
   virtual void bprop();
   virtual void symbolicBprop();
   virtual void rfprop();
+};
+
+//Mistakes may happened when the length of input1 equals to its width
+class IndexVariable: public BinaryVariable
+{
+protected:
+    typedef BinaryVariable inherited;
+  //!  Default constructor for persistence
+  IndexVariable() {}
+
+public:
+  IndexVariable(Variable* input1, Variable* input2);
+  DECLARE_NAME_AND_DEEPCOPY(IndexVariable);
+  virtual void recomputeSize(int& l, int& w) const;
+  virtual void deepRead(istream& in, DeepReadMap& old2new);
+  virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
+  virtual void fprop();
+  virtual void bprop();
+  virtual void symbolicBprop();
 };
 
 /*!   Variable that is a subset of a matrix's rows
@@ -129,6 +149,7 @@ class VarRowsVariable: public BinaryVariable
  public:
   VarRowsVariable(Variable *input1, Variable *input2);
   DECLARE_NAME_AND_DEEPCOPY(VarRowsVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   //  virtual void rprop();
@@ -151,6 +172,7 @@ class VarColumnsVariable: public BinaryVariable
  public:
   VarColumnsVariable(Variable *input1, Variable *input2);
   DECLARE_NAME_AND_DEEPCOPY(VarColumnsVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   //  virtual void rprop();
@@ -174,6 +196,7 @@ protected:
 public:
   VarElementVariable(Variable* input1, Variable* input2);
   DECLARE_NAME_AND_DEEPCOPY(VarElementVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   //  virtual void rprop();
@@ -196,10 +219,12 @@ protected:
     typedef BinaryVariable inherited;
   //!  Default constructor for persistence
   RowAtPositionVariable() {}
+  int length_;
 
 public:
   RowAtPositionVariable(Variable* input1, Variable* input2, int the_length);
   DECLARE_NAME_AND_DEEPCOPY(RowAtPositionVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   //  virtual void rprop();
@@ -218,13 +243,15 @@ public:
 class ElementAtPositionVariable: public BinaryVariable
 {
 protected:
-    typedef BinaryVariable inherited;
+  typedef BinaryVariable inherited;
   //!  Default constructor for persistence
   ElementAtPositionVariable() {}
+  int length_,width_;
 
 public:
   ElementAtPositionVariable(Variable* input1, Variable* input2, int the_length, int the_width);
   DECLARE_NAME_AND_DEEPCOPY(ElementAtPositionVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -245,6 +272,7 @@ protected:
 public:
   PlusScalarVariable(Variable* input1, Variable* input2);
   DECLARE_NAME_AND_DEEPCOPY(PlusScalarVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -265,6 +293,7 @@ protected:
 public:
   PlusRowVariable(Variable* input1, Variable* input2);
   DECLARE_NAME_AND_DEEPCOPY(PlusRowVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   //  virtual void rprop();
@@ -286,6 +315,7 @@ protected:
 public:
   PlusColumnVariable(Variable* input1, Variable* input2);
   DECLARE_NAME_AND_DEEPCOPY(PlusColumnVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   //  virtual void rprop();
@@ -307,6 +337,7 @@ protected:
 public:
   PlusVariable(Variable* input1, Variable* input2);
   DECLARE_NAME_AND_DEEPCOPY(PlusVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   //  virtual void rprop();
@@ -328,6 +359,7 @@ protected:
 public:
   MinusScalarVariable(Variable* input1, Variable* input2);
   DECLARE_NAME_AND_DEEPCOPY(MinusScalarVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -347,6 +379,7 @@ protected:
 public:
   MinusRowVariable(Variable* input1, Variable* input2);
   DECLARE_NAME_AND_DEEPCOPY(MinusRowVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -365,6 +398,7 @@ protected:
 public:
   MinusTransposedColumnVariable(Variable* input1, Variable* input2);
   DECLARE_NAME_AND_DEEPCOPY(MinusTransposedColumnVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -382,6 +416,7 @@ protected:
 public:
   MinusColumnVariable(Variable* input1, Variable* input2);
   DECLARE_NAME_AND_DEEPCOPY(MinusColumnVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -400,6 +435,7 @@ protected:
 public:
   MinusVariable(Variable* input1, Variable* input2);
   DECLARE_NAME_AND_DEEPCOPY(MinusVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -420,6 +456,7 @@ protected:
 public:
   TimesScalarVariable(Variable* input1, Variable* input2);
   DECLARE_NAME_AND_DEEPCOPY(TimesScalarVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -439,6 +476,7 @@ protected:
 public:
   TimesRowVariable(Variable* input1, Variable* input2);
   DECLARE_NAME_AND_DEEPCOPY(TimesRowVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -458,6 +496,7 @@ protected:
 public:
   TimesColumnVariable(Variable* input1, Variable* input2);
   DECLARE_NAME_AND_DEEPCOPY(TimesColumnVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -477,6 +516,7 @@ protected:
 public:
   TimesVariable(Variable* input1, Variable* input2);
   DECLARE_NAME_AND_DEEPCOPY(TimesVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -497,6 +537,7 @@ protected:
 public:
   DivVariable(Variable* input1, Variable* input2);
   DECLARE_NAME_AND_DEEPCOPY(DivVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -518,6 +559,7 @@ protected:
 public:
   DotProductVariable(Variable* input1, Variable* input2);
   DECLARE_NAME_AND_DEEPCOPY(DotProductVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -549,11 +591,10 @@ public:
       PLERROR("In AffineTransformVariable: expecting a vector Var (row or column) as first argument");
   }
   DECLARE_NAME_AND_DEEPCOPY(AffineTransformVariable);
-
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
-
 };
 
 //! Affine transformation of a MATRIX variable.
@@ -573,7 +614,7 @@ public:
     BinaryVariable(mat, transformation, transformation->width(), mat->width())
   {}
   DECLARE_NAME_AND_DEEPCOPY(MatrixAffineTransformVariable);
-
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
@@ -590,6 +631,7 @@ protected:
 public:
   ProductVariable(Variable* input1, Variable* input2);
   DECLARE_NAME_AND_DEEPCOPY(ProductVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -610,6 +652,7 @@ protected:
 public:
   ProductTransposeVariable(Variable* matrix1, Variable* matrix2);
   DECLARE_NAME_AND_DEEPCOPY(ProductTransposeVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -630,6 +673,7 @@ protected:
 public:
   TransposeProductVariable(Variable* matrix1, Variable* matrix2);
   DECLARE_NAME_AND_DEEPCOPY(TransposeProductVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -657,6 +701,7 @@ protected:
 public:
   OneHotSquaredLoss(Variable* netout, Variable* classnum, real coldval=0., real hotval=1.);
   DECLARE_NAME_AND_DEEPCOPY(OneHotSquaredLoss);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
@@ -674,6 +719,7 @@ protected:
 public:
   MatrixOneHotSquaredLoss(Variable* netout, Variable* classnum, real coldval=0., real hotval=1.);
   DECLARE_NAME_AND_DEEPCOPY(MatrixOneHotSquaredLoss);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -691,10 +737,28 @@ protected:
 public:
   ClassificationLossVariable(Variable* netout, Variable* classnum);
   DECLARE_NAME_AND_DEEPCOPY(ClassificationLossVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
-
   //! can't bprop through a hard classification error...
   virtual void bprop() {}
+};
+
+class MiniBatchClassificationLossVariable: public BinaryVariable
+{
+protected:
+  typedef BinaryVariable inherited;
+  //!  Default constructor for persistence
+  MiniBatchClassificationLossVariable() {}
+
+public:
+  MiniBatchClassificationLossVariable(Variable* netout, Variable* classnum);
+  DECLARE_NAME_AND_DEEPCOPY(MiniBatchClassificationLossVariable);
+  virtual void recomputeSize(int& l, int& w) const;
+  virtual void deepRead(istream& in, DeepReadMap& old2new);
+  virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
+  virtual void fprop();
+  //! can't bprop through a hard classification error...
+  virtual void bprop() {}  
 };
 
 //! cost = sum_i {cost_i}, with
@@ -712,8 +776,8 @@ protected:
 public:
   MulticlassLossVariable(Variable* netout, Variable* target);
   DECLARE_NAME_AND_DEEPCOPY(MulticlassLossVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
-
   //! can't bprop through a hard classification error...
   virtual void bprop() {}
 };
@@ -729,6 +793,7 @@ protected:
 public:
   CrossEntropyVariable(Variable* netout, Variable* target);
   DECLARE_NAME_AND_DEEPCOPY(CrossEntropyVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
   virtual void bprop();
 };
@@ -757,6 +822,7 @@ protected:
 public:
   PowVariableVariable(Variable* input, Variable* power);
   DECLARE_NAME_AND_DEEPCOPY(PowVariableVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -779,6 +845,7 @@ protected:
 public:
   Max2Variable(Variable* input, Variable* power);
   DECLARE_NAME_AND_DEEPCOPY(Max2Variable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -799,6 +866,7 @@ protected:
 public:
   LogAddVariable(Variable* input1, Variable* input2);
   DECLARE_NAME_AND_DEEPCOPY(LogAddVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -818,6 +886,7 @@ protected:
 public:
   EqualVariable(Variable* input1, Variable* input2);
   DECLARE_NAME_AND_DEEPCOPY(EqualVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -836,6 +905,7 @@ protected:
 public:
   IsLargerVariable(Variable* input1, Variable* input2);
   DECLARE_NAME_AND_DEEPCOPY(IsLargerVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -853,6 +923,7 @@ protected:
 public:
   IsSmallerVariable(Variable* input1, Variable* input2);
   DECLARE_NAME_AND_DEEPCOPY(IsSmallerVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -872,6 +943,7 @@ protected:
 public:
   EqualScalarVariable(Variable* input1, Variable* input2);
   DECLARE_NAME_AND_DEEPCOPY(EqualScalarVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -891,6 +963,7 @@ protected:
 public:
   ConvolveVariable(Variable* input, Variable* mask);
   DECLARE_NAME_AND_DEEPCOPY(ConvolveVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -908,6 +981,7 @@ protected:
 public:
   SoftmaxLossVariable(Variable* input1, Variable* input2);
   DECLARE_NAME_AND_DEEPCOPY(SoftmaxLossVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -918,15 +992,16 @@ public:
 };
 
 
-class MatrixSoftmaxVariable: public BinaryVariable
+class MatrixSoftmaxLossVariable: public BinaryVariable
 {
 protected:
   typedef BinaryVariable inherited;
   //!  Default constructor for persistence
-  MatrixSoftmaxVariable() {}
+  MatrixSoftmaxLossVariable() {}
 public:
-  MatrixSoftmaxVariable(Variable* input1, Variable* input2);
-  DECLARE_NAME_AND_DEEPCOPY(MatrixSoftmaxVariable);
+  MatrixSoftmaxLossVariable(Variable* input1, Variable* input2);
+  DECLARE_NAME_AND_DEEPCOPY(MatrixSoftmaxLossVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
@@ -952,6 +1027,7 @@ protected:
 public:
   WeightedSumSquareVariable(Variable* input, Variable* weights);
   DECLARE_NAME_AND_DEEPCOPY(WeightedSumSquareVariable);
+  virtual void recomputeSize(int& l, int& w) const;
   virtual void deepRead(istream& in, DeepReadMap& old2new);
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
