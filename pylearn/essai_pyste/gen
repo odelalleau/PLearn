@@ -2,7 +2,7 @@
 
 import os
 
-top_dirs = [os.path.join("..", d) for d in ['plearn', 'plearn_learners']]
+top_dirs = [os.path.join("../..", d) for d in ['plearn', 'plearn_learners']]
 
 include_dirs = []
 for top_dir in top_dirs:
