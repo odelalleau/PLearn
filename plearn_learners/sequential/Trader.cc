@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.cc,v 1.9 2003/10/07 19:51:33 dorionc Exp $ 
+ * $Id: Trader.cc,v 1.10 2003/10/07 20:29:04 ducharme Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -325,7 +325,7 @@ void Trader::setTrainingSet(VMat training_set, bool call_forget/*=true*/)
 */
 void Trader::train()
 {
-  if (!build_complete) build_();
+  if (!build_complete) build();
   
   // It could be possible but would require a complicated management of the portfolios matrix
   //   which I'll avoid unless really necessary.

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.cc,v 1.13 2003/10/07 19:51:32 dorionc Exp $ 
+   * $Id: FuturesTrader.cc,v 1.14 2003/10/07 20:29:03 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.cc */
@@ -94,9 +94,14 @@ void FuturesTrader::build_test() const
               "advisor should have copied portfolios[last_train_t] to the\n\t"
               "(last_call_train_t - last_train_t) following lines\n\t", k, last_call_train_t);
     
-    real p_kt = price(k,last_call_train_t);
-
-    margin(k, last_call_train_t) = w_kt*p_kt/leverage; // Which is 0 if w_kt is 0
+    if (w_kt != 0)
+    {
+      real p_kt = price(k,last_call_train_t);
+      // Must not use the margin accessor here!!!
+      margin(k, last_call_train_t) = w_kt*p_kt/leverage;
+    }
+    else
+      margin(k, last_call_train_t) = 0.0;
   }
 }
   
@@ -111,7 +116,6 @@ void FuturesTrader::trader_test( int t, VMat testset,
   for(int k=0; k < nb_assets; k++)
   { 
     real w_kt = weight(k, t);
-    real p_kt = price(k, t);
 
     // Marking the market: initializing the current margin to the ancient one
     margin(k, t) = margin(k, t-1);
@@ -126,17 +130,17 @@ void FuturesTrader::trader_test( int t, VMat testset,
       relative_sum += p_value * (relative_return(k, t)-1.0);
 
       // The abolute return on asset k at time t
-      real abolute_return_on_asset_k_at_t = w_kt * absolute_return(k, t);
+      real absolute_return_on_asset_k_at_t = w_kt * absolute_return(k, t);
 
       /* Marking the market: 
           Instead of waiting until the maturity for trader to realize all gains and losses, 
           the clearinghouse requires all positions to recognize profits as they accrue daily.
           (Investments, p.725)
       */
-      margin(k, t) += abolute_return_on_asset_k_at_t;
+      margin(k, t) += absolute_return_on_asset_k_at_t;
       
       // Update of the portfolio return, adding the k^th assets return
-      absolute_return_t += abolute_return_on_asset_k_at_t;
+      absolute_return_t += absolute_return_on_asset_k_at_t;
 
       // No additive_cost on a null delta since there will be no transaction
       real delta_ = delta(k, t);
@@ -149,12 +153,13 @@ void FuturesTrader::trader_test( int t, VMat testset,
         relative_sum -= transaction_cost;
         
         // Updating the margin, given the leverage
+        real p_kt = price(k, t);
         margin(k, t) += delta_*p_kt/leverage;
       }
+
+      // Checkout if a margin call is needed
+      check_margin(k, t);
     }
-    
-    // Checkout if a margin call is needed
-    check_margin(k, t);
   }
   
   real risk_free_return = exp(risk_free(t-horizon));
