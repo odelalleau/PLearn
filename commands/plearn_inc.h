@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.37 2004/11/01 14:14:10 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.38 2004/11/11 14:04:23 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -192,6 +192,7 @@
 #include <plearn/vmat/SubInputVMatrix.h>
 #include <plearn/vmat/ThresholdVMatrix.h>
 #include <plearn/vmat/TransposeVMatrix.h>
+#include <plearn/vmat/VMatrixFromDistribution.h>
 
 #endif
 
