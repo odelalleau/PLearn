@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: FieldConvertCommand.cc,v 1.32 2004/07/21 16:30:49 chrish42 Exp $
+ * $Id: FieldConvertCommand.cc,v 1.33 2004/07/28 17:25:15 tihocan Exp $
  ******************************************************* */
 
 #include "FieldConvertCommand.h"
@@ -372,7 +372,7 @@ void FieldConvertCommand::run(const vector<string> & args)
         real x_minus_xmean_square=0;
         real y_minus_ymean_square=0;
 
-        int len_nm = (int)sc[i].nnonmissing();
+        int len_nm = 0;
         int len = vm->length();
 
         Vec x(len);
@@ -382,13 +382,14 @@ void FieldConvertCommand::run(const vector<string> & args)
           
         // compute beta-hat
         for(int j=0;j<len;j++)
-          if(!is_missing(x[j]))
+          if(!is_missing(x[j]) && !is_missing(y[j]))
           {
             real xdiff = x[j] - xmean;
             real ydiff = y[j] - ymean;
             beta_hat += xdiff * ydiff;
             x_minus_xmean_square += xdiff * xdiff;
             y_minus_ymean_square += ydiff * ydiff;
+            len_nm++;
           }
           
         // Correlation^2 = sum_xy^2 / (sum_xx * sum_yy).
@@ -398,7 +399,7 @@ void FieldConvertCommand::run(const vector<string> & args)
 
         // compute sigma-hat
         for(int j=0;j<len;j++)
-          if(!is_missing(x[j]))
+          if(!is_missing(x[j]) && !is_missing(y[j]))
             sigma_hat += square(y[j]-ymean - beta_hat*(x[j]-xmean));
         sigma_hat /= len_nm-2;
 
