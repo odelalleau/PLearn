@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDateTime.cc,v 1.6 2004/03/04 15:02:00 tihocan Exp $
+   * $Id: PDateTime.cc,v 1.7 2004/07/21 19:55:18 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -143,7 +143,7 @@ double datetime_to_double(const PDateTime& t)
       hhmmss_to_double(t.hour,t.min,t.sec);
 }
 
-PDateTime double_to_date(double f)
+PDateTime double_to_datetime(double f)
 {
   PDateTime date;                     // missing by default
   if (! is_missing(f)) {
