@@ -37,8 +37,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ScaledConditionalCDFSmoother.cc,v 1.4 2003/08/13 08:13:17 plearner Exp $ 
-   ******************************************************* */
+ * $Id: ScaledConditionalCDFSmoother.cc,v 1.5 2003/08/28 20:53:21 yoshua Exp $ 
+ ******************************************************* */
 
 /*! \file ScaledConditionalCDFSmoother.cc */
 
@@ -49,78 +49,59 @@ namespace PLearn <%
 using namespace std;
 
 ScaledConditionalCDFSmoother::ScaledConditionalCDFSmoother() 
-  :ConditionalCDFSmoother() 
-/* ### Initialise all fields to their default value */
-  {
-    // ...
+  :ConditionalCDFSmoother(), scale_with_input(false)
+{
+}
 
-    // ### You may or may not want to call build_() to finish building the object
-    // build_();
-  }
+PLEARN_IMPLEMENT_OBJECT(ScaledConditionalCDFSmoother, 
+                        "This smoothes a low-resolution histogram using as prior a high-resolution one.", 
+                        "This class takes as 'prior_cdf' a detailed histogram (usually derived from\n"
+                        "an unconditional distribution) and uses it to smooth a given survival\n"
+                        "function and provide extra detail (high resolution).\n"
+                        "Two smoothing formula are provided, both of which guarantee that the smoothed\n"
+                        "survival function takes the same value as the raw one at or near original bin\n"
+                        "positions. In between the original bin positions, the smoothed survival\n"
+                        "is obtained by applying one of two possible formula, according to the\n"
+                        "preserve_relative_density option.\n");
 
-ScaledConditionalCDFSmoother::ScaledConditionalCDFSmoother(PP<HistogramDistribution>& prior_cdf)
-  :ConditionalCDFSmoother(prior_cdf)
-{}  
+void ScaledConditionalCDFSmoother::declareOptions(OptionList& ol)
+{
+  declareOption(ol, "preserve_relative_density", &ScaledConditionalCDFSmoother::preserve_relative_density, 
+                OptionBase::buildoption,
+                "If true then the following formula is used inside each of the large intervals (t_0,t_1):\n"
+                "  S(y_t) = S(y_{t_0})+(PS(y_t)-PS(y_{t_0}))(RS(y_{t_0})-RS(y_{t_1}))/(PS(y_{t_1})-PS(y_{t_0})\n"
+                "where S(y_t) is the smoothed survival function at position y_t, PS(y_t) is the prior\n"
+                "survival function at y_t, and RS(y_t) is the rough survival function (which is to be\n"
+                "smoothed) at y_t. Note that RS is only known at the extremes of the interval, y_{t_0}\n"
+                "and y_{t_1}. Note that this formula has the property that within the interval, the\n"
+                "density is the prior density, scaled by the ratio of the total density in the interval\n"
+                "for the target rough curve with respect to the prior curve\n"
+                "If false, then the following formula is used instead, using the same notation:\n"
+                "  S(y_t) = PS(y_t)(RS(y_{t_0})/PS(y_{t_0}) + (y_t - y_{t_0})(RS(y_{t_1})-RS(y_{t_0}))/(PS(y_{t_1}) (t_1 - t_0)))\n"
+                "What is the justification for this second formula?\n"
+                );
+                
 
-  PLEARN_IMPLEMENT_OBJECT(ScaledConditionalCDFSmoother, "ONE LINE DESCR", "NO HELP");
+  // Now call the parent class' declareOptions
+  inherited::declareOptions(ol);
+}
 
-  void ScaledConditionalCDFSmoother::declareOptions(OptionList& ol)
-  {
-    // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-    // ### OptionBase::tuningoption. Another possible flag to be combined with
-    // ### is OptionBase::nosave
+void ScaledConditionalCDFSmoother::build_()
+{
+}
 
-    // ### ex:
-    // declareOption(ol, "myoption", &ScaledConditionalCDFSmoother::myoption, OptionBase::buildoption,
-    //               "Help text describing this option");
-    // ...
-
-    // Now call the parent class' declareOptions
-    inherited::declareOptions(ol);
-  }
-
-  string ScaledConditionalCDFSmoother::help()
-  {
-    // ### Provide some useful description of what the class is ...
-    return 
-      "ScaledConditionalCDFSmoother implements a ..."
-      + optionHelp();
-  }
-
-  void ScaledConditionalCDFSmoother::build_()
-  {
-    // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation. 
-    // ### Typical situations include:
-    // ###  - Initial building of an object from a few user-specified options
-    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-    // ### You should assume that the parent class' build_() has already been called.
-  }
-
-  // ### Nothing to add here, simply calls build_
-  void ScaledConditionalCDFSmoother::build()
-  {
-    inherited::build();
-    build_();
-  }
+// ### Nothing to add here, simply calls build_
+void ScaledConditionalCDFSmoother::build()
+{
+  inherited::build();
+  build_();
+}
 
 
-  void ScaledConditionalCDFSmoother::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
-  {
-    Object::makeDeepCopyFromShallowCopy(copies);
-
-    // ### Call deepCopyField on all "pointer-like" fields 
-    // ### that you wish to be deepCopied rather than 
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("ScaledConditionalCDFSmoother::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
-  }
+void ScaledConditionalCDFSmoother::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+{
+  Object::makeDeepCopyFromShallowCopy(copies);
+}
 
 
 // To obtain each bin of the smoothed_function, scale multiplicatively each bin
@@ -128,7 +109,7 @@ ScaledConditionalCDFSmoother::ScaledConditionalCDFSmoother(PP<HistogramDistribut
 // makes it match the probability under the corresponding source_function
 // bin.
 real ScaledConditionalCDFSmoother::smooth(const Vec& source_function, Vec& smoothed_function, 
-		      Vec bin_positions, Vec dest_bin_positions) const
+                                          Vec bin_positions, Vec dest_bin_positions) const
 {
   // put in 'survival_fn' the multiplicatively adjusted unconditional_survival_fn
   // such that the estimatedS values at yvalues match. In each segment
@@ -157,20 +138,31 @@ real ScaledConditionalCDFSmoother::smooth(const Vec& source_function, Vec& smoot
       real prev_ratio=  source_function[i]/prior_cdf->survival_fn(v0);
       real next_ratio;
       if(i == source_function.size()-1)
-	next_ratio= 0.0;
+        next_ratio= 0.0;
       else
-	next_ratio=  source_function[i+1]/prior_cdf->survival_fn(v1);
+        next_ratio=  source_function[i+1]/prior_cdf->survival_fn(v1);
       
       cout  << source_function[i] << '\t'  << prev_ratio  << '\t' << next_ratio << '\t' << v0[0] << '\t' << v1[0] << endl;
-
+      real slope = scale_with_input? 0 : 
+        ((source_function[i+1]-source_function[i])/(prior_cdf->survival_fn(v1)-prior_cdf->survival_fn(v0)));
+      real absisse = scale_with_input? 0 : 
+        (source_function[i] - slope * prior_cdf->survival_fn(v0));
       while(j < smoothed_function.size() && dest_bin_positions[j+1] <= bin_positions[i+1])
-	{
-	  Vec v(1);
-	  v[0]= dest_bin_positions[j];
-	  smoothed_function[j]= prior_cdf->survival_fn(v) * (prev_ratio + (v[0]-v0[0])*next_ratio/(v1[0]-v0[0]));
-	  cout  << '\t' << v[0] << '\t' << prior_cdf->survival_fn(v) << '\t' << smoothed_function[j] << endl;
-	  ++j;
-	}
+        {
+          Vec v(1);
+          v[0]= dest_bin_positions[j];
+          // the line below seems wrong, so I have fixed it -- YB
+          // the reason it seems wrong is that smoothed_function[j_final] should be equal
+          // to source_function[i+1], but it is not, currently.
+          // smoothed_function[j]= prior_cdf->survival_fn(v) * (prev_ratio + (v[0]-v0[0])*next_ratio/(v1[0]-v0[0]));
+          if (scale_with_input)
+            smoothed_function[j]= prior_cdf->survival_fn(v) * 
+              (prev_ratio + (v[0]-v0[0])*(next_ratio-prev_ratio)/(v1[0]-v0[0]));
+          else // scale with bin number, i.e. warped with density
+            smoothed_function[j]= absisse + slope * prior_cdf->survival_fn(v);
+          cout  << '\t' << v[0] << '\t' << prior_cdf->survival_fn(v) << '\t' << smoothed_function[j] << endl;
+          ++j;
+        }
     }
   
   

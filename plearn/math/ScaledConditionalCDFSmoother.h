@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ScaledConditionalCDFSmoother.h,v 1.3 2003/08/13 08:13:17 plearner Exp $ 
+   * $Id: ScaledConditionalCDFSmoother.h,v 1.4 2003/08/28 20:53:21 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file ScaledConditionalCDFSmoother.h */
@@ -68,7 +68,10 @@ public:
   // ************************
 
   // ### declare public option fields (such as build options) here
-  // ...
+
+  // selects which formula is used to interpolate the survival
+  // function inside each of the large intervals.
+  bool preserve_relative_density;
 
   // ****************
   // * Constructors *
@@ -77,8 +80,6 @@ public:
   // Default constructor, make sure the implementation in the .cc
   // initializes all fields to reasonable default values.
   ScaledConditionalCDFSmoother();
-  ScaledConditionalCDFSmoother(PP<HistogramDistribution>&  prior_cdf);
-
 
   // ******************
   // * Object methods *
@@ -97,9 +98,6 @@ protected:
 public:
   // simply calls inherited::build() then build_() 
   virtual void build();
-
-  //! Provides a help message describing this class
-  static string help();
 
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
