@@ -1,50 +1,40 @@
 #!/usr/bin/python
 # Martin Monperrus
-# get the free machines from a file
-
-## commande pour avoir les reservations
-res_cmd = 'cat /u/clacutl/reserv/data'
+# get the free machines
 
 import re;
 import sys;
 import os;
+import string
 
+if len(sys.argv)<2:
+	print 'Usage: pyfreemachines [output_file]'
+	sys.exit()
 
-# lecture des donnees du cluster
-# sans utiliser la conmande cluster car
-# elle n'est pas robuste
-
-f = os.popen(res_cmd);
+# lecture des machines du cluster du LISA
+res_file = '/u/clacutl/libexec/libclac.pl'
+f = open(res_file);
 l = f.readlines();
-res = '';
 f.close();
-for x in l[:]:
-	res = res+x;
+res = string.join(l,'');
+machines_lisa= re.findall('([a-z]{4}\d{2}) => { groupe => \'lisa\'.* panne => 0', res);
 
-#print s;
 
-# lecture des machines possibles
-f=open(sys.argv[1], 'r');
-fr=open(sys.argv[2], 'w');
-
-l = f.readlines();
-
-#print l;
-
-for x in l[:]:
-
-	comment = re.findall('#', x);  #si c'est une ligne commentee
-	
-	if len(x)>1 and len(comment)==0:
-		s = re.findall('.*\.i', x); # recuperation juste de l'id
-		mach = s[0][:-2];	
-		s2 = re.findall(mach,res);
-	# 	print s2;
-
-		if len(s2) == 0: # si la machine n'est pas dans les reservations du cluster
-			print >>fr, mach
-            #print mach;
-	
-
+# lecture des machines reservees
+res_file = '/u/clacutl/reserv/data'
+f = open(res_file);
+machines_reservees = string.join(f.readlines(),'\n');
 f.close();
-fr.close();
+
+# ouverture du fichier de resultat
+f=open(sys.argv[1], 'w');
+
+
+for x in machines_lisa[:]:
+
+	s2 = re.findall(x,machines_reservees);
+	if len(s2) == 0: # si la machine n'est pas dans les reservations du cluster
+		print >>f, x
+
+# fermeture du fichier
+f.close();
