@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.cc,v 1.5 2003/05/07 05:39:18 plearner Exp $ 
+   * $Id: EmbeddedLearner.cc,v 1.6 2003/05/22 20:45:20 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.cc */
@@ -70,14 +70,14 @@ string EmbeddedLearner::help()
 void EmbeddedLearner::build_()
 {
     if (learner.isNull())
-        PLERROR("EmbeddedLearner::_build() - learner attribute is NUL");
+        PLERROR("EmbeddedLearner::_build() - learner attribute is NULL");
 
     learner->build();
 
     inputsize_ = learner->inputsize();
     outputsize_ = learner->outputsize();
     targetsize_ = learner->targetsize();
-    weightsize_ = learner->targetsize();\
+    weightsize_ = learner->targetsize();
 }
 
 void EmbeddedLearner::build()

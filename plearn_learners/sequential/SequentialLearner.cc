@@ -1,0 +1,95 @@
+// -*- C++ -*-
+
+// SequentialLearner.cc
+//
+// Copyright (C) 2003 Rejean Ducharme, Yoshua Bengio
+// Copyright (C) 2003 Pascal Vincent
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+//  1. Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+//
+//  2. Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//     documentation and/or other materials provided with the distribution.
+//
+//  3. The name of the authors may not be used to endorse or promote
+//     products derived from this software without specific prior written
+//     permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+// NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+// TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// This file is part of the PLearn library. For more information on the PLearn
+// library, go to the PLearn Web site at www.plearn.org
+
+
+
+#include "SequentialLearner.h"
+
+namespace PLearn <%
+using namespace std;
+
+
+IMPLEMENT_ABSTRACT_NAME_AND_DEEPCOPY(SequentialLearner);
+
+SequentialLearner::SequentialLearner()
+  : max_seq_len(-1), max_train_len(-1), train_step(1), horizon(0)
+{}
+
+void SequentialLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+  inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(predictions, copies);
+  deepCopyField(errors, copies);
+} 
+
+void SequentialLearner::build_()
+{
+  predictions.resize(max_seq_len, outputsize());
+  errors.resize(max_seq_len, nTestCosts());
+
+  forget();
+}
+
+void SequentialLearner::build()
+{
+  inherited::build();
+  build_();
+}
+
+void SequentialLearner::declareOptions(OptionList& ol)
+{
+  declareOption(ol, "max_seq_len", &SequentialLearner::max_seq_len,
+    OptionBase::buildoption, "max length of the training matrice \n");
+
+  declareOption(ol, "max_train_len", &SequentialLearner::max_train_len,
+    OptionBase::buildoption, "max nb of (input,target) pairs used for the training \n");
+
+  declareOption(ol, "train_step", &SequentialLearner::train_step,
+    OptionBase::buildoption, "how often we have to re-train a model, value of 1 = after every time step \n");
+
+  declareOption(ol, "horizon", &SequentialLearner::horizon,
+    OptionBase::buildoption, " by how much to offset the target columns wrt the input columns \n");
+}
+
+void SequentialLearner::forget()
+{
+  predictions.fill(MISSING_VALUE);
+  errors.fill(MISSING_VALUE);
+  last_train_t = -1;
+  last_call_train_t = -1;
+}
+
+%> // end of namespace PLearn
+

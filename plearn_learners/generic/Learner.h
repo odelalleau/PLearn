@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.h,v 1.10 2003/05/22 14:34:26 wangxian Exp $
+   * $Id: Learner.h,v 1.11 2003/05/22 20:45:20 ducharme Exp $
    ******************************************************* */
 
 
@@ -518,7 +518,7 @@ using namespace std;
       rather than all the Learner's costs setTestCostFunctions (and its
       possible additional internal cost).
 */
-    void computeLeaveOneOutCosts(const VMat& data, VMat costsmat, CostFunc costf);
+    virtual void computeLeaveOneOutCosts(const VMat& data, VMat costsmat, CostFunc costf);
 
 /*!       Given a VMat of costs as computed for example with computeCosts
       or with applyAndComputeCosts, compute and the test statistics over
