@@ -1,4 +1,5 @@
-import string, sys, fpformat, os, copy
+import string, sys, fpformat, os, copy, time
+from popen2 import *
 
 ### Take care not to override:
 undefined = '#undefined'
@@ -24,21 +25,26 @@ false = 0
 debug = false  
 ##################
 
-def appS_select_mode__(args, modes):
-    #print(args)
-    #print(modes)
-    #print("selected_options: " + str(selected_options))
-    for m in modes.keys():
-        get_option_value(args, m, undefined)
+##################
+# INTERNAL
+#__possible_options__ = []
+##################
 
-    #print("selected_options: " + str(selected_options))
+## def appS_select_mode__(args, modes):
+##     #print(args)
+##     #print(modes)
+##     #print("selected_options: " + str(selected_options))
+##     for m in modes.keys():
+##         get_option_value(args, m, undefined)
 
-    if len(selected_options) != 1:
-        print("Exactly one of " + str(modes.keys()) + " must be provided!")
-        sys.exit()
+##     #print("selected_options: " + str(selected_options))
 
-    global current_mode
-    current_mode = selected_options.pop()
+##     if len(selected_options) != 1:
+##         print("Exactly one of " + str(modes.keys()) + " must be provided!")
+##         sys.exit()
+
+##     global current_mode
+##     current_mode = selected_options.pop()
 
 def default_usage():
     print("BAD USAGE! (appStart.default_usage fct called)")
@@ -56,14 +62,24 @@ def appStart(_option_value, usage=default_usage, min_targets_len=1, max_targets_
        or
        3) check function for the option value
     """
-    
     # get the option arguments
     args = sys.argv[:]
     del args[0] # ignore program name
 
+    ##__possible_options__ = _option_value.keys()
+
     ### Looking for modes before args
+    global current_mode
     if len(_modes) > 0:
-        appS_select_mode__(args, _modes)
+        if len(args) == 0:
+            usage()
+            ##options_usage()
+            sys.exit()
+
+        current_mode = args.pop(0)
+        if not current_mode in _modes.keys():
+            print("Mode " + current_mode + " not in " + str(_modes.keys()))
+            sys.exit()
     ###
 
     
@@ -108,18 +124,32 @@ def appStart(_option_value, usage=default_usage, min_targets_len=1, max_targets_
 #end of: def appStart()
 
 _debug__ = 0
-def DEBUG(str, stop=true):
+def DEBUG(str, stop=false):
     if not debug:
         return
 
     global _debug__
-    _debug__ += 1
+    _debug__ = _debug__ + 1
     print("\nDEBUG" + fpformat.fix(_debug__, 0))
     
     if stop:
         raw_input(str)
     else:
         print(str)
+
+def ERROR(msg):
+    print("ERROR: " + msg)
+    sys.exit()
+
+def command_output(command):
+    tmp_file = ".appStart_command_output_tmp_file"
+    sort_command = string.join([command, ">>", tmp_file])
+    os.system(sort_command)
+    file = open(tmp_file, 'r')
+    lines = file.readlines()
+    file.close()
+    os.remove(tmp_file)
+    return lines
 
 def get_option_value(args, option, default):
     try:
@@ -157,8 +187,26 @@ def get_option_value(args, option, default):
     except ValueError:
         return default
 
+def launch(cmd, logfile=''):
+    if logfile == '':
+        logfile = time_string()
+
+    print("Launching\n\n" + cmd + "\n\n Outputs will be stored in " + logfile)
+    os.system(string.join(['nohup', cmd, ">&", logfile, "&"]))
+
+
 def int2string(num):
     return fpformat.fix(num, 0) 
+
+## def options_usage():
+##     if len(__possible_options__) == 0:
+##         return
+
+def time_string():
+    t = time.localtime()
+    return ( int2string(t[0]) + "_" + int2string(t[1]) + "_" + int2string(t[2])
+             + "_" +
+             int2string(t[3]) + ":" + int2string(t[4]) + ":" + int2string(t[5]) )
 
 def tostring(num, prec=2):
     return fpformat.fix(num, prec)
