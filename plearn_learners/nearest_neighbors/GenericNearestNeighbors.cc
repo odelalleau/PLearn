@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GenericNearestNeighbors.cc,v 1.6 2005/03/04 20:58:18 lamblin Exp $ 
+   * $Id: GenericNearestNeighbors.cc,v 1.7 2005/04/04 02:24:07 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -47,6 +47,7 @@
 
 // From PLearn
 #include "GenericNearestNeighbors.h"
+#include <plearn/ker/DistanceKernel.h>
 
 namespace PLearn {
 using namespace std;
@@ -85,7 +86,11 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
   "\n"
   "The learner's costs are dependent on the derived classes.  It is\n"
   "suggested that, at least, the similarity measure (Kernel value) between\n"
-  "the test and train points be output."
+  "the test and train points be output.\n"
+  "\n"
+  "Instead of Euclidean distance, the user can specify another distance\n"
+  "by providing a distance_kernel (something that returns a small non-negative number\n"
+  "when its arguments are 'similar'.\n"
   );
 
 GenericNearestNeighbors::GenericNearestNeighbors()
@@ -131,6 +136,12 @@ void GenericNearestNeighbors::declareOptions(OptionList& ol)
     "(as the row number, zero-based, in the training set.)\n"
     "(Default = false)");
   
+  declareOption(ol, "distance_kernel", &GenericNearestNeighbors::distance_kernel,
+                OptionBase::buildoption,
+                "An optional alternative to the Euclidean distance (DistanceKernel with n=2 and pow_distance=1).\n"
+                "It should be a 'distance-like' kernel rather than a 'dot-product-like' kernel, i.e. small\n"
+                "when the arguments are similar, and it should always be non-negative, and 0 only if arguments are equal.\n");
+
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
 }
@@ -145,6 +156,9 @@ void GenericNearestNeighbors::build_()
     PLERROR("GenericNearestNeighbors::build_: at least one of the options "
             "\"copy_input\", \"copy_target\", \"copy_weight\", \"copy_index\" "
             "must be specified (i.e. true)");
+  if (!distance_kernel)
+    // default is ordinary Euclidean distance (i.e. square root of sum of square differences)
+    distance_kernel = new DistanceKernel(2,true)
 }
 
 // ### Nothing to add here, simply calls build_
@@ -158,6 +172,7 @@ void GenericNearestNeighbors::build()
 void GenericNearestNeighbors::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   deepCopyField(currow, copies);
+  deepCopyField(distance_kernel, copies);
   
   inherited::makeDeepCopyFromShallowCopy(copies);
 }

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BallTreeNearestNeighbors.cc,v 1.2 2005/03/07 16:49:28 lamblin Exp $ 
+   * $Id: BallTreeNearestNeighbors.cc,v 1.3 2005/04/04 02:24:07 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Lamblin & Marius Muja
@@ -227,12 +227,10 @@ void BallTreeNearestNeighbors::anchorTrain()
     Vec pivot = Vec( inputsize() );
     train_set->getRow( 0, pivot );
 
-    DistanceKernel dk = DistanceKernel( 2 );
-    dk.pow_distance = true;
-    dk.setDataForKernelMatrix( train_set );
-    dk.build();
+    distance_kernel->setDataForKernelMatrix( train_set );
+    distance_kernel->build();
     Vec distances_from_pivot( nb_train_points );
-    dk.evaluate_all_i_x( pivot, distances_from_pivot );
+    distance_kernel->evaluate_all_i_x( pivot, distances_from_pivot );
 
     anchor_set.resize( 1 );
     Mat* p_anchor = &anchor_set[ 0 ];

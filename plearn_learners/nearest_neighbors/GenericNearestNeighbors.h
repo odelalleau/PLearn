@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GenericNearestNeighbors.h,v 1.4 2005/03/04 20:58:18 lamblin Exp $ 
+   * $Id: GenericNearestNeighbors.h,v 1.5 2005/04/04 02:24:08 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -43,6 +43,7 @@
 #define GenericNearestNeighbors_INC
 
 #include <plearn_learners/generic/PLearner.h>
+#include <plearn/ker/Ker.h>
 
 namespace PLearn {
 
@@ -70,7 +71,7 @@ namespace PLearn {
  *   simplifies client code who may then assume that a weight is always
  *   present if requested
  * - The index (row number) of the example from the training set (option
- *   "copy_weight")
+ *   "copy_index")
  *
  * If more than one neighbor is requested, the complete output vector of
  * this learner is simply the concatenation of the above template for
@@ -79,6 +80,10 @@ namespace PLearn {
  * The learner's costs are dependent on the derived classes.  It is
  * suggested that, at least, the similarity measure (Kernel value) between
  * the test and train points be output.
+ *
+ * Instead of Euclidean distance, the user can specify another distance
+ * by providing a distance_kernel (something that returns a small non-negative number
+ * when its arguments are "similar").
  *
  */ 
 
@@ -117,6 +122,8 @@ public:
   //! (as the row number, zero-based, in the training set.)
   bool copy_index;
   
+  //! An optional alternative to the Euclidean distance
+  Ker distance_kernel;
 
 public:
   //#####  Object Methods  ##################################################
