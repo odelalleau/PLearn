@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: FieldConvertCommand.cc,v 1.21 2004/03/12 14:50:28 tihocan Exp $
+ * $Id: FieldConvertCommand.cc,v 1.22 2004/03/12 23:31:34 tihocan Exp $
  ******************************************************* */
 
 #include "FieldConvertCommand.h"
@@ -112,6 +112,9 @@ void FieldConvertCommand::run(const vector<string> & args)
   if (target < 0 || target > vm->width()) {
     PLERROR("The target column you specified is not valid");
   }
+  
+  // Compute the result inputsize as the preprocessing goes on.
+  int inputsize = 0;
  
   cout<<"### using field "<<target<<" as target"<<endl;
 
@@ -574,7 +577,7 @@ void FieldConvertCommand::run(const vector<string> & args)
       real mu = sc[i].mean();
       real sigma = sc[i].stddev();
       out << mu << " - " << sigma << " / :" << vm->fieldName(i)<<"\n";
-      
+      inputsize++;
     }
 
     int n_discarded = 0;
@@ -597,16 +600,17 @@ void FieldConvertCommand::run(const vector<string> & args)
       }
       if (n_discarded <= count - 1) {
         // We only consider this field if there is at least 1 class left.
-        // If there is at least one value discarded, we add OTHER to the mapping.
         out << "@"<<vm->fieldName(i) <<" " << sc[i].getAllValuesMapping(&to_be_included, 0, true) << " "
           << count - n_discarded << " onehot :"
           << vm->fieldName(i)<<":0:"<<(count - 1 - n_discarded) << endl;
+        inputsize += count - n_discarded;
       }
     }
 
     if(action&MISSING_BIT)
     {
       out<<"@"<<vm->fieldName(i)<<" isnan 1 0 ifelse :"<<vm->fieldName(i)<<"_mbit\n";      
+      inputsize++;
     }
 
     report<<tostring(i)+" ("+vm->fieldName(i)+") [c="<<count<<" nm="<<sc[i].nnonmissing()<<"] ";
@@ -630,11 +634,18 @@ void FieldConvertCommand::run(const vector<string> & args)
   delete pb;
 
   // Add the target.
-  out << "%" << target << " :target\n</PROCESSING>\n"<<endl;
+  out << "%" << target << " :target\n</PROCESSING>"<<endl;
+
+  // Add the sizes.
+  out << endl << "<SIZES>"  << endl
+              << inputsize  << endl // inputsize
+              << "1"        << endl // targetsize
+              << "0"        << endl // weightsize
+              << "</SIZES>" << endl;
 
   // Possibly add the <PRECOMPUTE> tag.
   if (precompute != "none") {
-    out << "<PRECOMPUTE>" << endl << precompute << endl << "</PRECOMPUTE>" << endl;
+    out << endl << "<PRECOMPUTE>" << endl << precompute << endl << "</PRECOMPUTE>" << endl;
   }
 
 }
