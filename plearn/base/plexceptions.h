@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: plexceptions.h,v 1.4 2004/02/20 21:11:43 chrish42 Exp $
+   * $Id: plexceptions.h,v 1.5 2004/02/25 20:38:07 dorionc Exp $
    * AUTHOR: Frederic Morin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -54,7 +54,7 @@ namespace PLearn {
 using namespace std;
 
 class PLearnError {
-private:
+protected:
   string msg;
 
 public:
