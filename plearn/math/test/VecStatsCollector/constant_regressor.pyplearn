@@ -21,6 +21,7 @@ statnames = [
     'E[train.E[mse]]',
     'E[test.E[mse]]',             'E[test.V[mse]]',
     'E[test.STDDEV[mse]]',        'E[test.STDERROR[mse]]',
+    'E[test.SKEW[mse]]',          'E[test.KURT[mse]]',
     'E[test.MIN[mse]]',           'E[test.MAX[mse]]',
     'E[test.RANGE[mse]]',
     'E[test.SUM[mse]]',           'E[test.SUMSQ[mse]]',
