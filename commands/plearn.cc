@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.48 2004/02/25 18:08:26 tihocan Exp $
+   * $Id: plearn.cc,v 1.49 2004/02/29 15:53:01 yoshua Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -50,6 +50,7 @@
 #include "BatchVMatrix.h"
 #include "RegularGridVMatrix.h"
 #include "VMatrixFromDistribution.h"
+#include "PrecomputedVMatrix.h"
 
 
 // All Available Learners: 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrecomputedVMatrix.cc,v 1.5 2004/02/20 21:14:44 chrish42 Exp $ 
+   * $Id: PrecomputedVMatrix.cc,v 1.6 2004/02/29 15:53:06 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -54,7 +54,11 @@ PrecomputedVMatrix::PrecomputedVMatrix()
 {
 }
 
-PLEARN_IMPLEMENT_OBJECT(PrecomputedVMatrix, "ONE LINE DESCRIPTION", "MULTI-LINE \nHELP");
+PLEARN_IMPLEMENT_OBJECT(PrecomputedVMatrix, 
+                        "VMatrix that caches (pre-computes on disk) the content of a source vmatrix", 
+                        "This sub-class of SourceVMatrix pre-computes the content of a source vmatrix\n"
+                        "in a dmat or pmat file. The name of the disk file is obtained from the metadatadir option\n"
+                        "followed by precomp.dmat or precomp.pmat");
 
 void PrecomputedVMatrix::getRow(int i, Vec v) const
 {

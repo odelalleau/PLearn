@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MultiInstanceVMatrix.h,v 1.3 2004/02/25 05:41:26 nova77 Exp $ 
+   * $Id: MultiInstanceVMatrix.h,v 1.4 2004/02/29 15:53:06 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Norman Casagrande
@@ -59,9 +59,10 @@ public:
 protected:
 
   Mat         data_;
-  string      specification_;  // The file name
+  string      filename_;  // The *.mimat file name
   vector<int> configs_;
   vector< pair<string, int> > names_;
+  int source_targetsize; // number of target columns in the mimat file == targetsize()-1
 
 public:
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MultiInstanceVMatrix.cc,v 1.3 2004/02/25 05:41:26 nova77 Exp $ 
+   * $Id: MultiInstanceVMatrix.cc,v 1.4 2004/02/29 15:53:06 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Norman Casagrande
@@ -52,31 +52,54 @@ namespace PLearn {
 using namespace std;
 
 MultiInstanceVMatrix::MultiInstanceVMatrix()
-  :inherited(), data_(Mat())
+  :inherited(), data_(Mat()), source_targetsize(1)
 {
   // ### You may or may not want to call build_() to finish building the object
   //build_();
 }
 
 //MultiInstanceVMatrix::MultiInstanceVMatrix(const string& filename) 
-//  :inherited(), specification_(abspath(filename))
+//  :inherited(), filename_(abspath(filename))
 //{
 //  //build();
 //}
 
 
-PLEARN_IMPLEMENT_OBJECT(MultiInstanceVMatrix, "Matrix designed for multi instance data", "NO HELP (yet)");
+PLEARN_IMPLEMENT_OBJECT(MultiInstanceVMatrix, "Virtual Matrix for a multi instance dataset", 
+                        "In a multi-instance dataset examples come in 'bags' with only one target label\n"
+                        "for each bag. This class is built upon a source text file that describes such\n"
+                        "a dataset (see the help on the 'filename' option for format details).\n"
+                        "The resulting VMatrix shows the following structure in its rows, with\n"
+                        "all the rows of a bag being consecutive. Each row represents an instance and has:\n"
+                        "  - the input features for the instance\n"
+                        "  - the bag's source_targetsize target values (repeated over bag instances)\n"
+                        "  - a bag signal integer that identifies the beginning and end of the bag:\n"
+                        "     1 means the first instance of the bag\n"
+                        "     2 means the last instance of the bag\n"
+                        "     3 is for a bag with a single row (= 1+2)\n"
+                        "     0 is for intermediate instances.\n"
+                        "The targetsize of the VMatrix is automatically set to source_targetsize+1\n"
+                        "since the bag_signal is included (appended) in the target vector\n"
+                        );
 
 void MultiInstanceVMatrix::getRow(int i, Vec v) const
 {
-  // for the moment just call the super method
-  //inherited::getRow(i, v);
+  v << data_(i);
 }
 
 void MultiInstanceVMatrix::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "specification", &MultiInstanceVMatrix::specification_, OptionBase::buildoption,
-    "This is any string understood by getDataSet. Typically a file or directory path");
+  declareOption(ol, "filename", &MultiInstanceVMatrix::filename_, OptionBase::buildoption,
+                "This is the name of the ascii 'mimat' format filename. It is a supervised learning dataset\n"
+                "in which each input object can come in several instances (e.g. conformations) and the target is given to the\n"
+                "whole bag of these instances, not to individual instances. The expected format is the following:\n"
+                "Each row contains:\n"
+                "  - the object name (a string without white space)\n"
+                "  - the instance number (a non-negative integer)\n"
+                "  - the inputsize features for that instance (numeric, white-separated)\n"
+                "  - the source_targetsize target values for the bag (repeated on each row).\n"
+                "If the inputsize option is not specified it is inferred from the text file.\n"
+                );
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -87,11 +110,11 @@ void MultiInstanceVMatrix::build_()
   //this->setMetaDataDir(filename_ + ".metadata"); 
 
   // To be used in the end.. it is about 5 secs slower in debug
-  //int nRows = countNonBlankLinesOfFile(specification_);
+  //int nRows = countNonBlankLinesOfFile(filename_);
 
-  ifstream inFile(specification_.c_str());
+  ifstream inFile(filename_.c_str());
   if(!inFile)
-    PLERROR("In MultiInstanceVMatrix could not open file %s for reading", specification_.c_str());
+    PLERROR("In MultiInstanceVMatrix could not open file %s for reading", filename_.c_str());
 
   string lastName = "";
   string newName;
@@ -99,25 +122,37 @@ void MultiInstanceVMatrix::build_()
   string inp_element;
   int configNum, bagType;
   int i, nComp = 0;
-  int lastColumn = inputsize_ + targetsize_ - 1; // -1 because starts from 0!
+
   real* mat_i = NULL;
 
   int nRows = count(istreambuf_iterator<char>(inFile),
                     istreambuf_iterator<char>(), '\n');
 
+  // one more column for the bag signal 
+  targetsize_ = source_targetsize + 1;
+
   inFile.seekg(0);
 
   // Check the number of columns
   getline(inFile, aLine, '\n');
-  int nFields = (int)split(aLine).size();
-  if ( (nFields-1) != inputsize_ + targetsize_)
+  vector<string> entries = split(aLine);
+  int nFields = (int)entries.size();
+  if (inputsize_>=0)
   {
-    PLERROR("Either inputsize or targetsize are different from the specified file!\n"
-            " Got %d+%d (inputsize+targetsize) = %d, and found %d!", 
-            inputsize_, targetsize_, inputsize_+targetsize_, nFields - 1);
-  }
+    if ( (nFields-2) != inputsize_ + source_targetsize) // 2 for the object name and the instance number
+    {
+      PLERROR("Either inputsize or source_targetsize are inconsistent with the specified file!\n"
+              " Got %d+%d (inputsize+source_targetsize) = %d, and found %d! If unsure about inputsize, don't specify it or set to -1.", 
+              inputsize_, source_targetsize, inputsize_+source_targetsize, nFields - 2);
+    }
+  } else inputsize_ = nFields-2-source_targetsize;
+
+  int lastColumn = inputsize_ + source_targetsize; 
 
   data_.resize(nRows, inputsize_ + targetsize_);
+
+  width_ = inputsize_ + targetsize_;
+  length_ = nRows;
 
   inFile.seekg(0);
 
@@ -146,13 +181,13 @@ void MultiInstanceVMatrix::build_()
     }
     nComp++;
 
-    // next column: the number of the compound
+    // get next column: the number of the compound
     inFile >> configNum;
 
     configs_.push_back(configNum);
     
     mat_i = data_[lineNum];
-    for(i = 0; i < inputsize_ + targetsize_ - 1; i++)
+    for(i = 0; i < inputsize_ + source_targetsize; i++)
     {
       inFile >> inp_element;
       mat_i[i] = strtod(inp_element.c_str(), 0);
@@ -165,7 +200,7 @@ void MultiInstanceVMatrix::build_()
   //test << data_;
   //test.close();
 
-  this->setMtime(mtime(specification_));
+  this->setMtime(mtime(filename_));
   inFile.close();
 }
 
