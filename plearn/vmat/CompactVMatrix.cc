@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CompactVMatrix.cc,v 1.5 2004/02/29 16:44:06 nova77 Exp $
+   * $Id: CompactVMatrix.cc,v 1.6 2004/03/17 16:06:32 ducharme Exp $
    ******************************************************* */
 
 #include "CompactVMatrix.h"
@@ -798,7 +798,7 @@ void CompactVMatrix::append(CompactVMatrix* vm)
           if (fabs(rounded_decoded-decoded)<1e-4) 
             decoded = rounded_decoded;
           // ENCODE using new min/max
-          fixed_point_numbers[j]=(unsigned short)((decoded-new_min[j])/new_delta[j]);
+          fixed_point_numbers[j]=(unsigned char)((decoded-new_min[j])/new_delta[j]);
         }
     }
     cout << "DONE rescaling numeric variables fixed point representation." << endl;

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.h,v 1.6 2004/03/15 17:55:59 tihocan Exp $
+   * $Id: FileVMatrix.h,v 1.7 2004/03/17 16:06:32 ducharme Exp $
    ******************************************************* */
 
 
@@ -59,6 +59,9 @@ class FileVMatrix: public VMatrix
   FILE* f;
   bool file_is_bigendian;
   bool file_is_float;
+
+ private:
+  bool build_new_file;
 
  public:
   FileVMatrix();

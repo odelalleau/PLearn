@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.14 2004/03/15 17:57:46 tihocan Exp $
+   * $Id: FileVMatrix.cc,v 1.15 2004/03/17 16:06:32 ducharme Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -53,13 +53,13 @@ PLEARN_IMPLEMENT_OBJECT(FileVMatrix, "ONE LINE DESCR", "NO HELP");
 // FileVMatrix //
 /////////////////
 FileVMatrix::FileVMatrix()
-: filename_(""), f(0)
+  :filename_(""), f(0), build_new_file(true)
 {
   writable=true;
 }
 
 FileVMatrix::FileVMatrix(const string& filename)
-: filename_(abspath(filename)), f(0)
+  :filename_(abspath(filename)), f(0), build_new_file(!isfile(filename))
 {
   writable = true;
   build_();
@@ -73,7 +73,8 @@ static int strlen(char* s) {
 }
 
 FileVMatrix::FileVMatrix(const string& filename, int the_length, int the_width)
-: VMatrix(the_length, the_width), filename_(abspath(filename)), f(0)
+  :VMatrix(the_length, the_width), filename_(abspath(filename)), f(0),
+   build_new_file(true)
 {
   writable = true;
   build_();
@@ -108,19 +109,17 @@ void FileVMatrix::build_()
   char datatype[20];
   char endiantype[20];
 
-  bool new_file = !isfile(filename_);
-  if (new_file)
+  if (build_new_file)
     force_mkdir_for_file(filename_);
 
   setMetaDataDir(filename_ + ".metadata"); 
   setMtime(mtime(filename_));
 
-  if (new_file)
+  if (build_new_file)
   {
     if (!writable) {
       PLERROR("In FileVMatrix::build_ - You asked to create a new file, but 'writable' is set to 0 !");
     }
-    writable = true;
     f = fopen(filename_.c_str(),"w+b");
     if (!f)
       PLERROR("In FileVMatrix constructor, could not open file %s",filename_.c_str());

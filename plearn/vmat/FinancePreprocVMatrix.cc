@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FinancePreprocVMatrix.cc,v 1.7 2004/02/20 21:14:30 chrish42 Exp $ 
+   * $Id: FinancePreprocVMatrix.cc,v 1.8 2004/03/17 16:06:32 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file FinancePreprocVMatrix.cc */
@@ -55,7 +55,7 @@ FinancePreprocVMatrix::FinancePreprocVMatrix(VMat vm, TVec<string> the_asset_nam
     bool add_roll_over_info, int threshold, TVec<string> the_price_tags,
     TVec<int> moving_average_window_length,
     string the_volume_tag, string the_date_tag, string the_expiration_tag,
-    int the_last_day_cutoff)
+    int the_last_day_cutoff, bool last_date_is_a_last_day)
   :inherited(vm->length(), vm->width()+(add_tradable_info?the_asset_names.size():0) + (add_last_day?1:0) + (add_moving_average_stats?the_asset_names.size()*the_price_tags.size()*moving_average_window_length.size():0)+(add_roll_over_info?the_asset_names.size():0)),
    underlying(vm), asset_name(the_asset_names),
    add_tradable(add_tradable_info), add_last_day_of_month(add_last_day),
@@ -65,6 +65,7 @@ FinancePreprocVMatrix::FinancePreprocVMatrix(VMat vm, TVec<string> the_asset_nam
    moving_average_window(moving_average_window_length),
    volume_tag(the_volume_tag), date_tag(the_date_tag),
    expiration_tag(the_expiration_tag), last_day_cutoff(the_last_day_cutoff),
+   last_date_is_last_day(last_date_is_a_last_day),
    rollover_date(asset_name.size()), row_buffer(vm->width())
 {
   build();
@@ -260,9 +261,9 @@ void FinancePreprocVMatrix::build_()
       if (this_month != previous_month) last_day_of_month_index.append(i-1);
       previous_month = this_month;
     }
-    // we set the last day as a last tradable day of month (by default)
-    //if (last_day_of_month_index.lastElement() != underlying.length()-1)
-    //  last_day_of_month_index.append(underlying.length()-1);
+    // if needed, we set the last day as a last tradable day of month
+    if (last_date_is_last_day)
+      last_day_of_month_index.append(underlying.length()-1);
   }
 
   if (add_moving_average)
