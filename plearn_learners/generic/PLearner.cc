@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.41 2004/10/21 18:22:23 chapados Exp $
+   * $Id: PLearner.cc,v 1.42 2004/10/24 22:49:24 dorionc Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -58,7 +58,8 @@ PLearner::PLearner()
   verbosity(1),
   inputsize_(-1),
   targetsize_(-1),
-  weightsize_(-1)
+  weightsize_(-1),
+  n_examples(-1)
 {}
 
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(PLearner,
@@ -232,7 +233,8 @@ int PLearner::getTestCostIndex(const string& costname) const
     if(costnames[i]==costname)
       return i;
   PLERROR("In PLearner::getTestCostIndex, No test cost named %s in this learner.\n"
-          "Available test costs are: %s", costname.c_str(), tostring(costnames).c_str());
+          "Available test costs are: %s", costname.c_str(),
+          tostring(costnames).c_str());
   return -1;
 }
 
