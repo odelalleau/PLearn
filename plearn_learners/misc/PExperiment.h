@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PExperiment.h,v 1.6 2003/08/13 08:13:47 plearner Exp $ 
+   * $Id: PExperiment.h,v 1.7 2004/02/17 17:15:43 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PTester.h */
@@ -48,6 +48,7 @@
 namespace PLearn <%
 using namespace std;
 
+//! This code is deprecated, use PTester.h and PTester.cc instead.
 class PTester: public Object
 {    
 public:
