@@ -2,7 +2,7 @@
 %%
 %%  Copyright (c) 1998-2002 by Pascal Vincent
 %%
-%%  $Id: programmers_guide.tex,v 1.10 2004/07/05 19:54:32 lamblin Exp $
+%%  $Id: programmers_guide.tex,v 1.11 2004/07/13 20:34:23 lamblin Exp $
 
 \documentclass[11pt]{book}
 \usepackage{t1enc}              % new font encoding  (hyphenate words w/accents)
@@ -1158,8 +1158,8 @@ int main(int argc, char** argv)
   // Without Func
   Var x(3,1);
   Var y = dot(x,tanh(x));
-    // z is a scalar variable result of the dot product
-    // of x and tanh(y)
+    // y is a scalar variable result of the dot product
+    // of x and tanh(x)
   VarArray path = propagationPath(x,y);
 
   a<<"1 2.3 4";
@@ -1170,8 +1170,8 @@ int main(int argc, char** argv)
   cout<<a<<endl;
   cout<<c<<endl;
 
-  c<<"4 8.3 -12";
-  x->value<<c;
+  a<<"4 8.3 -12";
+  x->value<<a;
   path.fprop();
   c=y->value;
   cout<<a<<endl;
