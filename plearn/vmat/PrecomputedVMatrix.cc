@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrecomputedVMatrix.cc,v 1.6 2004/02/29 15:53:06 yoshua Exp $ 
+   * $Id: PrecomputedVMatrix.cc,v 1.7 2004/04/01 14:56:35 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -111,6 +111,7 @@ void PrecomputedVMatrix::usePrecomputed()
           source->saveDMAT(dmatdir);
           precomp_source = new DiskVMatrix(dmatdir);
         }
+      length_ = precomp_source->length();
     }
   else if(precomp_type=="pmat")
     {
@@ -128,6 +129,7 @@ void PrecomputedVMatrix::usePrecomputed()
           source->savePMAT(pmatfile);
           precomp_source = new FileVMatrix(pmatfile);
         }
+      length_ = precomp_source->length();
     }
   else
     PLERROR("Invalid precomp_type=%s. Must be one of: dmat, pmat.",precomp_type.c_str());
