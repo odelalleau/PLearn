@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: AdaptGradientOptimizer.h,v 1.5 2003/08/13 08:13:17 plearner Exp $
+   * $Id: AdaptGradientOptimizer.h,v 1.6 2003/10/07 15:18:34 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,6 +49,7 @@
 #define AdaptGradientOptimizer_INC
 
 #include "Optimizer.h"
+#include "NeuralNet.h"
 #include "SumOfVariable.h"
 
 namespace PLearn <%
@@ -84,6 +85,9 @@ using namespace std;
       real adapt_coeff2;  //!< a coefficient for learning rate adaptation
       real decrease_constant;
       int mini_batch;
+      int adapt_every;    //!< after how many updates we adapt learning rate
+
+      NeuralNet neural_lr;
 
     private:
       bool stochastic_hack; // true when we're computing a stochastic gradient
@@ -169,6 +173,11 @@ using namespace std;
   protected:
 
     static void declareOptions(OptionList& ol);
+
+  public:
+
+    // Crap stuff, to be removed later
+    real bidlr(real minlr);
 
   };
 
