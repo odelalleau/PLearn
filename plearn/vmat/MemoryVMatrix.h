@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.h,v 1.12 2004/09/14 16:04:39 chrish42 Exp $
+   * $Id: MemoryVMatrix.h,v 1.13 2004/11/12 20:08:22 larocheh Exp $
    ******************************************************* */
 
 
@@ -72,6 +72,7 @@ public:
   MemoryVMatrix();
   MemoryVMatrix(const Mat& the_data);
   MemoryVMatrix(int l, int w);
+  MemoryVMatrix(VMat the_data_vm);
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;
   virtual void getRow(int i, Vec v) const;

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.cc,v 1.23 2004/09/16 21:03:22 chapados Exp $
+   * $Id: MemoryVMatrix.cc,v 1.24 2004/11/12 20:08:22 larocheh Exp $
    ******************************************************* */
 
 #include "MemoryVMatrix.h"
@@ -66,6 +66,12 @@ MemoryVMatrix::MemoryVMatrix(const Mat& the_data)
   :VMatrix(the_data.length(), the_data.width()), data(the_data)
 {
   defineSizes(the_data.width(), 0, 0);
+}
+
+MemoryVMatrix::MemoryVMatrix(VMat the_data_vm)
+  :VMatrix(the_data_vm->length(), the_data_vm->width()), data(the_data_vm->toMat())
+{
+  defineSizes(the_data_vm->width(), 0, 0);
 }
 
 void MemoryVMatrix::declareOptions(OptionList& ol)
