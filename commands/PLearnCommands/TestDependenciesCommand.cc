@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TestDependenciesCommand.cc,v 1.9 2004/09/27 20:19:16 plearner Exp $ 
+   * $Id: TestDependenciesCommand.cc,v 1.10 2005/03/14 17:08:39 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file TestDependenciesCommand.cc */
@@ -54,6 +54,22 @@
 
 namespace PLearn {
 using namespace std;
+
+TestDependenciesCommand::TestDependenciesCommand()
+: PLearnCommand("test-dependencies",
+    "Compute dependency statistics between input and target variables.",
+    "  test-dependencies <VMat> [<inputsize> <targetsize> [<datablocksize>]]\n"
+    "Reads a VMatrix (or any matrix format) and computes dependency statistics between each\n"
+    "of the input variables and each of the target variables. A dependency score is then\n"
+    "computed and a report is produced, listing the input variables in decreasing value of\n"
+    "that score. The current implementation only computes the Spearman rank correlation\n"
+    "and the linear correlation. If <datablocksize> is provided, it is used to\n"
+    "divide the data row-wise in blocks of <datablocksize> rows. The statistics\n"
+    "are computed separately in each block, and then some statistics of these\n"
+    "statistics (min, max, mean, stdev) are reported.\n"
+    "Missing values are ignored in the Spearman rank correlation.\n"
+    )
+{}
 
 //! This allows to register the 'TestDependenciesCommand' command in the command registry
 PLearnCommandRegistry TestDependenciesCommand::reg_(new TestDependenciesCommand);
@@ -108,7 +124,7 @@ void TestDependenciesCommand::run(const vector<string>& args)
       if (col_blocksize>=inputsize) // everything fits in half the memory
         {
           x = VMat(x.toMat());
-          testSpearmanRankCorrelation(x,y,r,pvalues);
+          testSpearmanRankCorrelation(x,y,r,pvalues, true);
         }
       else // work by column blocks
         {
@@ -122,7 +138,7 @@ void TestDependenciesCommand::run(const vector<string>& args)
               Mat rb = r.subMatRows(bstart,bsize);
               Mat pb = pvalues.subMatRows(bstart,bsize);
               cout << "compute rank correlation for variables " << bstart << " - " << bstart+bsize-1 << endl;
-              testSpearmanRankCorrelation(block,y,rb,pb);
+              testSpearmanRankCorrelation(block,y,rb,pb, true);
             }
         }
       // linear correlations and corresponding p-values
@@ -201,7 +217,7 @@ void TestDependenciesCommand::run(const vector<string>& args)
         cout << " lin corr (" << lcm[0] << "," << lcdev[0] << "," << min(varlc) << "," << max(varlc) << " ) ";
         cout << " lin cor pval (" << lcpvm[0] << "," << lcpvdev[0] << "," << min(varlcpv) << "," << max(varlcpv) << " ) " << endl;
       }
-      else PLWARNING("not yet implemented");
+      else PLWARNING("In TestDependenciesCommand::run - The case 'targetsize > 1' is not implemented yet");
     }
 }
 
