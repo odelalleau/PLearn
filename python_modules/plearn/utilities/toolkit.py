@@ -5,9 +5,13 @@ submodule. If a considerable number of functions contained in this
 module seems to manage similar tasks, it is probably time to create a
 I{similar_tasks.py} L{utilities} submodule to move those functions to.
 """
-import os, popen2, string, sys, time, types
-import epydoc.markup 
-import epydoc.markup.epytext
+import inspect, os, popen2, string, sys, time, types
+
+try:
+    import epydoc.markup 
+    import epydoc.markup.epytext
+except ImportError:
+    pass
 
 def boxed_string(s, box_width, indent=''):
     if len(s) <= box_width:
@@ -69,7 +73,10 @@ def doc(obj, short=False):
     for line in lines:
         striped = string.lstrip(line)
         errors  = []
-        parsed  = epydoc.markup.epytext.parse_docstring( striped, errors ).to_plaintext(None)
+
+        if inspect.ismodule(epydoc.markup):
+            parsed  = epydoc.markup.epytext.parse_docstring( striped, errors ).to_plaintext(None)
+        
         parsed  = string.rstrip( parsed )
 
         if errors:
