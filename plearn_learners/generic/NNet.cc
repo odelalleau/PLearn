@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.14 2003/09/23 13:12:59 yoshua Exp $
+   * $Id: NNet.cc,v 1.15 2003/09/26 00:57:15 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -188,6 +188,9 @@ void NNet::build_()
           output = tanh(affine_transform(output,w2));
           params.append(w2);
         }
+
+      if (nhidden2>0 && nhidden==0)
+        PLERROR("NNet:: can't have nhidden2 (=%d) > 0 while nhidden=0",nhidden2);
       
       // output layer before transfer function
       wout = Var(1+output->size(), outputsize(), "wout");

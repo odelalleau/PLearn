@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.cc,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: pl_math.cc,v 1.2 2003/09/26 00:57:10 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -83,8 +83,10 @@ real safeexp(real a)
 {
 #if USEDOUBLE
   if (a < -300) return 0;
+  if (a > 300) return 1e38;
 #else
   if (a < -87) return 0;
+  if (a > 43) return 5e18;
 #endif
   return exp(a);
 }

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.7 2003/09/17 15:27:31 yoshua Exp $ 
+   * $Id: PTester.cc,v 1.8 2003/09/26 00:57:15 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -346,23 +346,28 @@ void StatSpec::init(const string& statname, PP<PLearner> learner)
 
 void StatSpec::parseStatname(const string& statname)
 {
-  vector<string> tokens = split(removeallblanks(statname), "[]");
-  string set_and_cost;
-  
-  if(tokens.size()==2)
-    {
-      extstat = "E";
-      intstat = tokens[0];
-      set_and_cost = tokens[1];
-    }
-  else if(tokens.size()==3)
-    {
-      extstat = tokens[0];
-      intstat = tokens[1];
-      set_and_cost = tokens[2];
-    }
-  else
-    PLERROR("In parse_statname: parse error for %s",statname.c_str());
+  string name1=removeallblanks(statname);
+  unsigned int p = name1.find("[");
+  if (p==string::npos)
+    PLERROR("StatSpec::parseStatname(%s): can't find left bracket!",statname.c_str());
+  // get first statistic name, which is anything before the [
+  extstat = name1.substr(0,p);
+  string n1 = name1.substr(p+1);
+  PIStringStream ss1(n1);
+  string name2="";
+  int closing_symbol = ss1.smartReadUntilNext("]", name2);
+  if (closing_symbol!=']')
+    PLERROR("StatSpec::parseStatname(%s): can't find right bracket corresponding to the first [!",statname.c_str());
+  p = name2.find("[");
+  if (p==string::npos)
+    PLERROR("StatSpec::parseStatname(%s): can't find 2nd left bracket!",statname.c_str());
+  intstat = name2.substr(0,p);
+  string n2 = name2.substr(p+1);
+  PIStringStream ss2(n2);
+  string set_and_cost="";
+  closing_symbol = ss2.smartReadUntilNext("]", set_and_cost);
+  if (closing_symbol!=']')
+    PLERROR("StatSpec::parseStatname(%s): can't find right bracket corresponding to the 2nd [!",statname.c_str());
 
   if(set_and_cost.length()<5)
     PLERROR("In parse_statname: parse error for %s",statname.c_str());
@@ -370,7 +375,7 @@ void StatSpec::parseStatname(const string& statname)
   split_on_first(set_and_cost,".", setname, costname);
   
   if(setname=="train")
- setnum = 0;
+    setnum = 0;
   else if(setname=="test")
     setnum = 1;
   else if(setname.substr(0,4)=="test")
