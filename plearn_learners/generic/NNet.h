@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.h,v 1.12 2004/02/20 21:14:46 chrish42 Exp $
+   * $Id: NNet.h,v 1.13 2004/02/26 03:39:32 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -129,8 +129,6 @@ using namespace std;
     static string help();
     virtual string getOptionsToSave() const;
     */
-
-    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
     virtual void build();
     virtual void forget(); // simply calls initializeParams()

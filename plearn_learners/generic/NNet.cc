@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.39 2004/02/20 21:14:46 chrish42 Exp $
+   * $Id: NNet.cc,v 1.40 2004/02/26 03:39:32 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -194,49 +194,6 @@ void NNet::build()
 {
   inherited::build();
   build_();
-}
-
-void NNet::setTrainingSet(VMat training_set, bool call_forget)
-{ 
-  bool training_set_has_changed =
-    !train_set || train_set->width()!=training_set->width() ||
-    train_set->length()!=training_set->length() || train_set->inputsize()!=training_set->inputsize()
-    || train_set->weightsize()!= training_set->weightsize();
-
-  train_set = training_set;
-  if (training_set_has_changed)
-  {
-    inputsize_ = train_set->inputsize();
-    targetsize_ = train_set->targetsize();
-    weightsize_ = train_set->weightsize();
-  }
-
-  // THE CODE BELOW SHOULD BE REMOVED: THIS NOT THE PLACE
-  // TO MASSAGE THE DATA SET, IT SHOULD BE DONE WHEN
-  // CONSTRUCTING THE VMAT SENT TO THE LEARNER, NOT
-  // IN THE LEARNER. Yoshua. N.B. ALSO REMOVE THE OPTION IN VMATRIX.
-  // IF THIS IS DONE THEN THE DEFAULT setTrainingSet CAN
-  // BE USED INSTEAD OF REDEFINING IN NNet.
-
-  // Reduce the train_set to the used data.
-  if (train_set->target_is_last) {
-    int useless_size = training_set.width() - targetsize() - inputsize();
-    if (useless_size > 0) {
-      int is = inputsize();
-      int ts = targetsize();
-      int ws = train_set->weightsize();
-      VMat train_input = new SubVMatrix(train_set, 0, 0, train_set.length(), inputsize());
-      VMat train_target = new SubVMatrix(train_set, 0, train_set.width() - targetsize(), train_set.length(), targetsize());
-      train_set = new ConcatColumnsVMatrix(train_input, train_target);
-      train_set->defineSizes(is, ts, ws);
-      train_set->build();
-    }
-  }
-
-  if (training_set_has_changed || call_forget)
-    build(); // MODIF FAITE PAR YOSHUA: sinon apres un setTrainingSet le build n'est pas complete dans un NNet train_set = training_set;
-  if (call_forget)
-    forget();
 }
 
 void NNet::build_()
@@ -524,7 +481,7 @@ void NNet::train()
     }
   else PLERROR("RecommandationNet::train can't train without setting an optimizer first!");
 
-  // number of optimiser stages corresponding to one learner stage (one epoch)
+  // number of optimizer stages corresponding to one learner stage (one epoch)
   int optstage_per_lstage = l/nsamples;
 
   ProgressBar* pb = 0;
