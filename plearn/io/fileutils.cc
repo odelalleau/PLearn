@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.29 2004/03/10 18:22:40 tihocan Exp $
+   * $Id: fileutils.cc,v 1.30 2004/03/10 19:55:49 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -664,6 +664,21 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
               }
               break;
 
+            case 'D': // it's a DEFINE{ varname }{ ... }
+              {
+                string varname; // name of a variable
+                string vardef; // definition of a variable
+                readWhileMatches(in, "DEFINE{");
+                getline(in,varname, '}');
+                varname = removeblanks(varname);
+                skipBlanksAndComments(in);
+                if(in.get()!='{')
+                  PLERROR("Bad syntax in .plearn DEFINE macro: correct syntax is $DEFINE{name}{definition}");
+                smartReadUntilNext(in, "}", vardef);
+                variables[varname] = vardef;
+              }
+              break;
+
             case 'E': // it's an ECHO{expression}
               {
                 string expr;
@@ -785,24 +800,72 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
               }
               break;
 
-            case 'D': // it's a DEFINE{ varname }{ ... }
+            case 'S': // it's a SWITCH{expr}{cond1}{val1}{cond2}{val2}...{valdef}
               {
-                string varname; // name of a variable
-                string vardef; // definition of a variable
-                readWhileMatches(in, "DEFINE{");
-                getline(in,varname, '}');
-                varname = removeblanks(varname);
-                skipBlanksAndComments(in);
-                if(in.get()!='{')
-                  PLERROR("Bad syntax in .plearn DEFINE macro: correct syntax is $DEFINE{name}{definition}");
-                smartReadUntilNext(in, "}", vardef);
-                variables[varname] = vardef;
+                string expr, valdef;
+                vector<string> comp;
+                vector<string> val;
+                readWhileMatches(in, "SWITCH");
+                bool syntax_ok = true;
+                // First read 'expr'.
+                int c = in.get();
+                if (syntax_ok) {
+                  if(c == '{')
+                    smartReadUntilNext(in, "}", expr);
+                  else
+                    syntax_ok = false;
+                }
+                // Read the pairs {compx}{valx}, then {valdef}
+                bool done_parsing = false;
+                while (syntax_ok && !done_parsing) {
+                  c = getAfterSkipBlanks(in);
+                  string tmp_comp, tmp_val;
+                  if(c == '{')
+                    smartReadUntilNext(in, "}", tmp_comp);
+                  else
+                    syntax_ok = false;
+                  if (syntax_ok) {
+                    c = peekAfterSkipBlanks(in);
+                    if(c == '{') {
+                      c = getAfterSkipBlanks(in);
+                      smartReadUntilNext(in, "}", tmp_val);
+                    }
+                    else {
+                      // We must have read 'valdef' just before.
+                      valdef = tmp_comp;
+                      done_parsing = true;
+                    }
+                  }
+                  if (!done_parsing) {
+                    comp.push_back(tmp_comp);
+                    val.push_back(tmp_val);
+                  }
+                }
+                if (!syntax_ok)
+                  PLERROR("$SWITCH syntax is: $SWITCH{expr}{comp1}{val1}{comp2}{val2}...{valdef}");
+                istrstream expr_stream(expr.c_str());
+                string expr_eval =  readAndMacroProcess(expr_stream, variables);
+                bool not_done = true;
+                for (unsigned int i = 0; i < comp.size() && not_done; i++) {
+                  istrstream comp_stream(comp[i].c_str());
+                  string comp_eval = readAndMacroProcess(comp_stream, variables);
+                  if (expr_eval == comp_eval) {
+                    not_done = false;
+                    istrstream val_stream(val[i].c_str());
+                    text += readAndMacroProcess(val_stream, variables);
+                  }
+                }
+                if (not_done) {
+                  // Default value needed.
+                  istrstream val_stream(valdef.c_str());
+                  text += readAndMacroProcess(val_stream, variables);
+                }
               }
               break;
 
             default:
               PLERROR("In readAndMacroProcess: only supported macro commands are \n"
-                      "${varname}, $DEFINE, $ECHO, $IF, $INCLUDE, $ISEQUAL."
+                      "${varname}, $DEFINE, $ECHO, $IF, $INCLUDE, $ISEQUAL, $SWITCH."
                       "But I read $%c !!",c);
             }
         }
