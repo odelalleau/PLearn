@@ -155,26 +155,30 @@ void someAsserts()
            PPath("foo/bar/") / "file.cc" == "foo/bar/file.cc" );  
 
   MAND_LOG << plhead("Methods up and dirname") << endl;  
+
+  PRINT_TEST( "PPath('/').up()", PPath("/").up() );   // PLERROR
+  PRINT_TEST( "PPath('').up()",  PPath("").up() );    // PLERROR
   
-  PRINT_TEST( "PPath('foo.cc').up()",
-               PPath("foo.cc").up() ); // PLERROR
-  ASSERT( "PPath('foo.cc').dirname() == ''",
-          PPath("foo.cc").dirname() == "" );
-    
+  ASSERT( "PPath('/foo').up() == '/'",
+           PPath("/foo").up() == "/" );  
+
   ASSERT( "PPath('foo/bar').up() == 'foo'",
-          PPath("foo/bar").up() == "foo" );  
-  ASSERT( "PPath('foo/bar').dirname() == 'foo'",
-          PPath("foo/bar").dirname() == "foo" );
-    
+           PPath("foo/bar").up() == "foo" );  
+
   ASSERT( "PPath('foo/bar/').up() == 'foo'",
-          PPath("foo/bar/").up() == "foo" );
+           PPath("foo/bar/").up() == "foo" );
+
+  ASSERT( "PPath('foo.cc').dirname() == '.'",
+           PPath("foo.cc").dirname() == "." );
+    
+  ASSERT( "PPath('foo/bar').dirname() == 'foo'",
+           PPath("foo/bar").dirname() == "foo" );
+    
   ASSERT( "PPath('foo/bar/').dirname() == 'foo/bar'",
-          PPath("foo/bar/").dirname() == "foo/bar" );
+           PPath("foo/bar/").dirname() == "foo/bar" );
   
-  ASSERT( "PPath('foo/bar/hi.cc').up() == 'foo'",
-          PPath("foo/bar/hi.cc").up() == "foo" );  
   ASSERT( "PPath('foo/bar/hi.cc').dirname() == 'foo/bar'",
-          PPath("foo/bar/hi.cc").dirname() == "foo/bar" );
+           PPath("foo/bar/hi.cc").dirname() == "foo/bar" );
 }
 
 //!< void relativePathAsserts();
@@ -223,17 +227,17 @@ int main()
 
   someAsserts();
 
-  MAND_LOG << plhead("Platform dependant tests.") << endl;
+  MAND_LOG << plhead("Platform dependent tests.") << endl;
 
   backslashes();
   absolute_path();
   
-// Note that platform dependant tests must not PRINT anything that is
-// platform dependant...
+// Note that platform dependent tests must not PRINT anything that is
+// platform dependent...
 //!< #if WIN32
-//!<   dosDependant();
+//!<   dosdependent();
 //!< #else
-//!<   posixDependant();
+//!<   posixdependent();
 //!< #endif
 
   return 0;
