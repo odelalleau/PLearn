@@ -747,12 +747,13 @@ PStream& PStream::operator>>(string& x)
       int c = peek();
       x.clear();
       c = get();
-      while (c!=EOF && wordseparators.find(c)==string::npos) // as long as we don't meet a wordseparator (or eof)...
+      // As long as we don't meet a (raw) wordseparator (or eof)...
+      while (c!=EOF && raw_wordseparators.find(c)==string::npos)
       {
         x += static_cast<char>(c);
         c = get();
       }
-      if(!isspace(c))
+      if(c != EOF && !isspace(c))
         putback(c);
     }
       break;
