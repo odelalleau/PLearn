@@ -35,12 +35,13 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.31 2003/12/05 18:58:58 tihocan Exp $
+   * $Id: NNet.cc,v 1.32 2004/01/26 14:14:13 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
 
 
+#include "BinaryClassificationLossVariable.h"
 #include "ConcatColumnsVMatrix.h"
 #include "DisplayUtils.h"
 #include "GradientOptimizer.h"
@@ -142,6 +143,7 @@ void NNet::declareOptions(OptionList& ol)
                 "      mse_onehot (for classification)\n"
                 "      NLL (negative log likelihood -log(p[c]) for classification) \n"
                 "      class_error (classification error) \n"
+                "      binary_class_error (classification error for a 0-1 binary classifier)\n"
                 "      multiclass_error\n"
                 "      cross_entropy (for binary classification)\n"
                 "      stable_cross_entropy (more accurate backprop and possible regularization, for binary classification)\n"
@@ -308,6 +310,8 @@ void NNet::build_()
             } 
           else if(cost_funcs[k]=="class_error")
             costs[k] = classification_loss(output, target);
+          else if(cost_funcs[k]=="binary_class_error")
+            costs[k] = binary_classification_loss(output, target);
           else if(cost_funcs[k]=="multiclass_error")
             costs[k] = multiclass_loss(output, target);
           else if(cost_funcs[k]=="cross_entropy")
