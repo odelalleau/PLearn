@@ -37,13 +37,13 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.25 2004/03/02 22:48:00 plearner Exp $
+   * $Id: Object.cc,v 1.26 2004/03/04 15:02:00 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "Object.h"
-//#include "stringutils.h"
+#include "stringutils.h"    //!< For removeblanks.
 #include "fileutils.h"
 #include "TypeFactory.h"
 //#include <iostream>
