@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.53 2004/05/05 19:24:08 nova77 Exp $
+   * $Id: NNet.cc,v 1.54 2004/05/21 02:18:52 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -731,8 +731,8 @@ void NNet::initializeParams()
   }
   else
   {
-    //fill_random_uniform(wout->value, -delta, +delta);
-    fill_random_normal(wout->value, 0, delta);
+    fill_random_uniform(wout->value, -delta, +delta);
+    //fill_random_normal(wout->value, 0, delta);
     wout->matValue(0).clear();
   }
 

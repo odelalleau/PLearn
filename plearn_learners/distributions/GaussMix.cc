@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.27 2004/05/21 01:57:51 yoshua Exp $ 
+ * $Id: GaussMix.cc,v 1.28 2004/05/21 02:18:46 yoshua Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -503,12 +503,13 @@ void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clu
         newclust(i) /= samples_per_cluster[i];
     clust << newclust;
     ok=true;
-    for(int i=0;i<nsamples;i++)
-      if(old_clust_idx[i]!=clust_idx[i])
-      {
-        ok=false;
-        break;
-      }
+    if (nclust>1)
+      for(int i=0;i<nsamples;i++)
+        if(old_clust_idx[i]!=clust_idx[i])
+        {
+          ok=false;
+          break;
+        }
   }
 }
 
@@ -517,8 +518,17 @@ void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clu
 /////////////////////////////////
 void GaussMix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
+  deepCopyField(eigenvalues,copies);
+  deepCopyField(eigenvectors,copies);
+  deepCopyField(diags,copies);
+  deepCopyField(log_coeff,copies);
+  deepCopyField(posteriors,copies);
+  deepCopyField(initial_weights,copies);
+  deepCopyField(updated_weights,copies);
+  deepCopyField(alpha,copies);
+  deepCopyField(mu,copies);
+  deepCopyField(sigma,copies);
   inherited::makeDeepCopyFromShallowCopy(copies);
-  PLERROR("GaussMix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 /////////////////////
