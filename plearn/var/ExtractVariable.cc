@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ExtractVariable.cc,v 1.1 2004/10/01 19:41:59 mariusmuja Exp $
+   * $Id: ExtractVariable.cc,v 1.2 2005/01/11 20:02:34 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,7 +51,7 @@ using namespace std;
 /** ExtractVariable **/
 
 PLEARN_IMPLEMENT_OBJECT(ExtractVariable,
-                        "Varible extracted from a vector variable.",
+                        "Variable extracted from a vector variable.",
                         "NO HELP");
 
 ExtractVariable::ExtractVariable(Variable* v, int the_offset, int the_length, int the_width)
