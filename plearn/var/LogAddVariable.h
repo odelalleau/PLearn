@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: LogAddVariable.h,v 1.5 2004/04/27 15:58:16 morinf Exp $
+   * $Id: LogAddVariable.h,v 1.6 2004/05/12 23:06:42 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,8 +47,6 @@
 
 namespace PLearn {
 using namespace std;
-
-
 
 //!  output = log(exp(input1)+exp(input2)) but it is
 //!  computed in such a way as to preserve precision
@@ -76,7 +74,7 @@ protected:
 
 DECLARE_OBJECT_PTR(LogAddVariable);
 
-inline Var logadd(Var input1, Var input2)
+inline Var logadd(Var& input1, Var& input2)
 { return new LogAddVariable(input1, input2); }
 
 } // end of namespace PLearn

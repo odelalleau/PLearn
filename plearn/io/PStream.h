@@ -55,12 +55,6 @@ namespace PLearn {
 
 using namespace std;
 
-// norman: mandatory for WIN32
-//#ifdef WIN32
-#if defined(WIN32) && !defined(_MINGW_) // MinGW runs under gcc...
-using namespace stdext;
-#endif
-
 /*!
  * PStream:
  *  This class defines a type of stream that should be used for all I/O within PLearn.

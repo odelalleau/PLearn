@@ -79,11 +79,11 @@ extern const size_t PL_HASH_NOMBRES_MAGIQUES[256];
 
 ///////////////////////////////////////////////////////////////////////////
 
-using std::string;
+//using namespace std;
 
 // norman: Old code kept for the moment..
 
-SET_HASH_WITH_INHERITANCE(string, const char*, __s, __s.c_str())
+SET_HASH_WITH_INHERITANCE(std::string, const char*, __s, __s.c_str())
 //hash functions for strings
 //template<>
 //struct hash<string>
@@ -116,5 +116,20 @@ SET_HASH_WITH_FUNCTION(float, x, PLearn::hashval(x))
 //{
 //  size_t operator()(float x) const { return PLearn::hashval(x); }
 //};
+
+#if defined (__INTEL_COMPILER)
+// because Intel compiler defines hash_map and hash_table both in stdext and std
+// if we set that we use both (with "using namespace") it will have an ambiguity.
+// To solve this, I force hash_map, hash_multimap and hash_table to be explicit.
+using namespace stdext;
+#define hash_map stdext::hash_map
+#define hash_multimap stdext::hash_multimap
+#define hash_set stdext::hash_set
+#define hash_multiset stdext::hash_multiset
+#endif
+
+#if (defined(WIN32) || defined(__INTEL_COMPILER)) && !defined(_MINGW_) // MinGW runs under gcc...
+using namespace stdext;
+#endif
 
 #endif // pl_hash_fun_H

@@ -34,7 +34,7 @@
 
  
 /* *******************************************************      
-   * $Id: TypeTraits.h,v 1.5 2004/02/20 21:11:42 chrish42 Exp $
+   * $Id: TypeTraits.h,v 1.6 2004/05/12 23:06:23 nova77 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -99,7 +99,7 @@ public:
 // be invoked when a different namespace is current
 #define DECLARE_TYPE_TRAITS_FOR_BASETYPE(T,LITTLE_ENDIAN_TYPECODE,BIG_ENDIAN_TYPECODE) \
 template<>                                       \
-class PLearn::TypeTraits<T>                      \
+class TypeTraits<T>                              \
 {                                                \
 public:                                          \
   static inline string name()                    \

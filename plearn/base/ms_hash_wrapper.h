@@ -168,8 +168,6 @@ using namespace __gnu_cxx;
 #include <hash_set>
 #include <hash_map>
 
-namespace std {
-
 // WARNING: paramName should be included in hashFunc!	
 // Example: 
 //     SET_HASH_WITH_FUNCTION(float, val, PLearn::hashval(val))
@@ -178,40 +176,43 @@ namespace std {
 //     { 
 //        return (size_t)(PLearn::hashval(val));
 //     } 
-#define SET_HASH_WITH_FUNCTION(type, paramName, hashFunc)						\
-	template<class _Kty>														\
-	class stdext::hash_compare<type, std::less<_Kty> >							\
-	{																			\
-	public:																		\
-		enum																	\
-		{	/* parameters for hash table */										\
-			bucket_size = 4,	/* 0 < bucket_size */							\
-			min_buckets = 8};	/* min_buckets = 2 ^^ N, 0 < N */				\
-																				\
-			hash_compare()														\
-				: comp()														\
-			{	/* construct with default comparator */							\
-			}																	\
-																				\
-			hash_compare(std::less<_Kty> _Pred)									\
-				: comp(_Pred)													\
-			{	/* construct with _Pred comparator */							\
-			}																	\
-																				\
-			size_t operator()(const type& paramName) const						\
-			{	/* hash _Keyval to size_t value */								\
-				return (size_t)(hashFunc);										\
-			}																	\
-																				\
-			bool operator()(const _Kty& _Keyval1, const _Kty& _Keyval2) const	\
-			{	/* test if _Keyval1 ordered before _Keyval2 */					\
-				return (comp(_Keyval1, _Keyval2));								\
-			}																	\
-																				\
-	protected:																	\
-		std::less<_Kty> comp;	/* the comparator object */						\
-																				\
-	}; 
+
+#define SET_HASH_WITH_FUNCTION(type, paramName, hashFunc)     \
+  namespace stdext {                                          \
+	template<class _Kty>                                        \
+	class hash_compare<type, std::less<_Kty> >                  \
+	{                                                           \
+	public:                                                     \
+		enum                                                      \
+		{	/* parameters for hash table */                         \
+			bucket_size = 4,	/* 0 < bucket_size */                 \
+			min_buckets = 8};	/* min_buckets = 2 ^^ N, 0 < N */     \
+                                                              \
+			hash_compare()                                          \
+				: comp()                                              \
+			{	/* construct with default comparator */               \
+			}                                                       \
+                                                              \
+			hash_compare(std::less<_Kty> _Pred)                     \
+				: comp(_Pred)                                         \
+			{	/* construct with _Pred comparator */                 \
+			}                                                       \
+                                                              \
+			size_t operator()(const type& paramName) const          \
+			{	/* hash _Keyval to size_t value */                    \
+				return (size_t)(hashFunc);                            \
+			}                                                       \
+                                                              \
+			bool operator()(const _Kty& _Keyval1, const _Kty& _Keyval2) const\
+			{	/* test if _Keyval1 ordered before _Keyval2 */        \
+				return (comp(_Keyval1, _Keyval2));                    \
+			}                                                       \
+                                                              \
+	protected:                                                  \
+		std::less<_Kty> comp; /* the comparator object */         \
+                                                              \
+	};                                                          \
+  } // end of namespace stdext
 
 // WARNING: paramName should be included in hashFunc!	
 //     SET_HASH_WITH_INHERITANCE(std::string, const char*, val, val.c_str())
@@ -220,40 +221,39 @@ namespace std {
 //   { 
 //     return stdext::hash_compare<const char*>()val.c_str()); 
 //   } 
-#define SET_HASH_WITH_INHERITANCE(type, originalType, paramName, hashFunc)		\
-	template<class _Kty>														\
-	class stdext::hash_compare<type, std::less<_Kty> >							\
-	{																			\
-	public:																		\
-		enum																	\
-		{	/* parameters for hash table */										\
-			bucket_size = 4,	/* 0 < bucket_size */							\
-			min_buckets = 8};	/* min_buckets = 2 ^^ N, 0 < N */				\
-																				\
-			hash_compare()														\
-				: comp()														\
-			{	/* construct with default comparator */							\
-			}																	\
-																				\
-			hash_compare(std::less<_Kty> _Pred)									\
-				: comp(_Pred)													\
-			{	/* construct with _Pred comparator */							\
-			}																	\
-																				\
-			size_t operator()(const type& paramName) const						\
-			{	/* hash _Keyval to size_t value */								\
-				return stdext::hash_compare< originalType >()(hashFunc);		\
-			}																	\
-																				\
-			bool operator()(const _Kty& _Keyval1, const _Kty& _Keyval2) const	\
-			{	/* test if _Keyval1 ordered before _Keyval2 */					\
-				return (comp(_Keyval1, _Keyval2));								\
-			}																	\
-																				\
-	protected:																	\
-		std::less<_Kty> comp;	/* the comparator object */						\
-																				\
-	}; 
+#define SET_HASH_WITH_INHERITANCE(type, originalType, paramName, hashFunc)\
+  namespace stdext {                                                      \
+  template<class _Kty>                                                    \
+  class hash_compare<type, std::less<_Kty> >                              \
+  {                                                                       \
+  public:                                                                 \
+    enum                                                                  \
+    {	/* parameters for hash table */                                     \
+      bucket_size = 4,	/* 0 < bucket_size */                             \
+      min_buckets = 8};	/* min_buckets = 2 ^^ N, 0 < N */                 \
+                                                                          \
+      hash_compare()                                                      \
+        : comp()                                                          \
+			{	/* construct with default comparator */ }                         \
+                                                                          \
+      hash_compare(std::less<_Kty> _Pred)                                 \
+        : comp(_Pred)                                                     \
+			{	/* construct with _Pred comparator */ }                           \
+                                                                          \
+      size_t operator()(const type& paramName) const                      \
+      {	/* hash _Keyval to size_t value */                                \
+        return hash_compare< originalType >()(hashFunc);                  \
+      }                                                                   \
+                                                                          \
+      bool operator()(const _Kty& _Keyval1, const _Kty& _Keyval2) const   \
+      {	/* test if _Keyval1 ordered before _Keyval2 */                    \
+        return (comp(_Keyval1, _Keyval2));                                \
+      }                                                                   \
+                                                                          \
+  protected:                                                              \
+    std::less<_Kty> comp;	/* the comparator object */                     \
+                                                                          \
+  }; }
 
 // WARNING: paramName should be included in hashFunc!	
 // Example: 
@@ -270,10 +270,11 @@ namespace std {
 //   //// Some other stuffs...
 //   }
 // See below: size_t operator()(const type& paramName) const 
-#define SET_HASH_FUNCTION(type, templateClass, paramName, hashFunc)				\
-	template<class templateClass >												\
-	class stdext::hash_compare<type, std::less< templateClass > >				\
-	{																			\
+#define SET_HASH_FUNCTION(type, templateClass, paramName, hashFunc)     \
+  namespace stdext {                                                      \
+	template<class templateClass >												                \
+	class hash_compare<type, std::less< templateClass > >				  \
+	{                                                                     \
 	public:																		\
 		enum																	\
 		{	/* parameters for hash table */										\
@@ -292,7 +293,7 @@ namespace std {
 																				\
 			size_t operator()(const type& paramName) const						\
 			{	/* hash _Keyval to size_t value */								\
-				return stdext::hash_compare< templateClass >()(hashFunc);		\
+				return hash_compare< templateClass >()(hashFunc);		\
 			}																	\
 																				\
 			bool operator()(const templateClass& _Keyval1, const templateClass& _Keyval2) const	\
@@ -303,9 +304,7 @@ namespace std {
 	protected:																	\
 		std::less< templateClass > comp;	/* the comparator object */			\
 																				\
-	}; 
-
-}
+  }; }
 
 #endif // WIN32 
 

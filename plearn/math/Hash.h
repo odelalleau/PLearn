@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: Hash.h,v 1.3 2004/02/26 07:11:12 nova77 Exp $
+   * $Id: Hash.h,v 1.4 2004/05/12 23:06:42 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -669,5 +669,4 @@ public:
 } // end of namespace PLearn
 
 #endif //!<  MODULE_HASH
-
 
