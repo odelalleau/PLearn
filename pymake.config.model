@@ -106,6 +106,12 @@ optionalLibrary( name = 'lapack',
                  linkeroptions = ' -llapack ' 
                  )
 
+optionalLibrary( name = 'opengl',
+                 triggers = 'GL/gl.h',
+                 linkeroptions = '-lGL -lGLU -lglut'
+                 )
+
+
 # optionalLibrary( name = 'blas',
 #                 triggers = ['blas_proto.h','lapack_proto.h'],
 #                 linkeroptions = '-lblas'
