@@ -165,7 +165,7 @@ optionalLibrary( name = 'X',
 
 optionalLibrary( name = 'boost',
                  triggers = 'boost/*',
-                 includedirs = '/u/lisa/local/linux-i386/Install/Boost/current',
+                 includedirs = '/u/lisa/local/linux-i386/include',
 #                 includedirs = '/FW30/NicolasStuff/boost-1.30.2',
                  linkeroptions = ''
                  )
