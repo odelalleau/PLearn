@@ -1,6 +1,6 @@
 #include "FieldConvertCommand.h"
 #include "getDataSet.h"
-#include "/u/delallea/LisaPLearn/UserExp/delallea/TextFilesVMatrix.h"
+#include "/u/delallea/LisaPLearn/UserExp/delallea/not-in-cvs/TextFilesVMatrix.h"
 #include "VVMatrix.h"
 #include <fstream.h>
 #include "ProgressBar.h"
