@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.40 2004/02/26 03:39:32 tihocan Exp $
+   * $Id: NNet.cc,v 1.41 2004/02/26 20:29:23 nova77 Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -400,7 +400,7 @@ void NNet::build_()
       output->setName("output");
       
       // Shared values hack...
-      if(paramsvalues && (paramsvalues.size() == params.nelems()))
+      if((bool)paramsvalues && (paramsvalues.size() == params.nelems()))
         params << paramsvalues;
       else
         {
