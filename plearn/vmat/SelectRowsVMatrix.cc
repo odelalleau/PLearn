@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsVMatrix.cc,v 1.3 2003/05/15 14:47:52 tihocan Exp $
+   * $Id: SelectRowsVMatrix.cc,v 1.4 2003/05/15 15:10:00 tihocan Exp $
    ******************************************************* */
 
 #include "SelectRowsVMatrix.h"
@@ -80,7 +80,7 @@ void SelectRowsVMatrix::declareOptions(OptionList &ol)
     declareOption(ol, "distr", &SelectRowsVMatrix::distr, OptionBase::buildoption,
         "    The matrix viewed by the SelectRowsVMatrix");
     declareOption(ol, "indices", &SelectRowsVMatrix::indices, OptionBase::buildoption, 
-        "    The array of indices to extract");
+        "    The array of row indices to extract");
     inherited::declareOptions(ol);
 }
 
