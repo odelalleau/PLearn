@@ -81,6 +81,7 @@ void DERIVEDCLASS::computeGramMatrix(Mat K) const {
 real DERIVEDCLASS::evaluate(const Vec& x1, const Vec& x2) const {
   // ### Evaluate the kernel on a pair of points.
   // TODO: Implement.
+  // Ex: return source_kernel->evaluate(x1,x2);
 }
 
 //////////////////
@@ -88,6 +89,7 @@ real DERIVEDCLASS::evaluate(const Vec& x1, const Vec& x2) const {
 //////////////////
 real DERIVEDCLASS::evaluate_i_j(int i, int j) const {
   // Default = uses the Kernel implementation.
+  // Alternative = return source_kernel->evaluate_i_j(i,j);
   return Kernel::evaluate_i_j(i,j);
 }
 
@@ -96,6 +98,7 @@ real DERIVEDCLASS::evaluate_i_j(int i, int j) const {
 //////////////////
 real DERIVEDCLASS::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) const {
   // Default = uses the Kernel implementation.
+  // Alternative = return source_kernel->evaluate_i_x(i,x,squared_norm_of_x);
   return Kernel::evaluate_i_x(i, x, squared_norm_of_x);
 }
 
@@ -104,6 +107,7 @@ real DERIVEDCLASS::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) con
 ////////////////////////
 real DERIVEDCLASS::evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x, bool first_time) {
   // Default = uses the Kernel implementation.
+  // Alternative = return source_kernel->evaluate_i_x_again(i,x,squared_norm_of_x,first_time);
   return Kernel::evaluate_i_x_again(i, x, squared_norm_of_x, first_time);
 }
 
@@ -112,6 +116,7 @@ real DERIVEDCLASS::evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_
 //////////////////
 real DERIVEDCLASS::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x) const {
   // Default = uses the Kernel implementation.
+  // Alternative = return source_kernel->evaluate_x_i(x,i,squared_norm_of_x);
   return Kernel::evaluate_x_i(x, i, squared_norm_of_x);
 }
 
@@ -120,6 +125,7 @@ real DERIVEDCLASS::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x) con
 ////////////////////////
 real DERIVEDCLASS::evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x, bool first_time) {
   // Default = uses the Kernel implementation.
+  // Alternative = return source_kernel->evaluate_x_i_again(x,i,squared_norm_of_x,first_time);
   return Kernel::evaluate_x_i_again(x, i, squared_norm_of_x, first_time);
 }
 
@@ -141,6 +147,7 @@ void DERIVEDCLASS::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 }
 
 /* This method may often need to be overridden in subclasses.
+   If it is not, then the call will be forwarded to 'source_kernel'.
 ////////////////////////////
 // setDataForKernelMatrix //
 ////////////////////////////
