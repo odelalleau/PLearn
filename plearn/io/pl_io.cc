@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io.cc,v 1.4 2003/09/09 18:05:19 plearner Exp $
+   * $Id: pl_io.cc,v 1.5 2004/02/10 15:59:24 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -619,7 +619,7 @@ to be read in the stream (after possibly reading N)
 */
 
 
-size_t new_read_compressed(FILE* in, double* vec, int l, bool swap_endians)
+size_t new_read_compressed(FILE* in, real* vec, int l, bool swap_endians)
 {
   size_t nbytes = 0; // number of bytes read
   unsigned char mode; // the mode byte
@@ -778,7 +778,7 @@ size_t new_write_mode_and_size(FILE* out, bool insert_zeroes, unsigned int N, un
   return nbytes;
 }
 
-size_t new_write_raw_data_as(FILE* out, double *vec, int l, unsigned char data_type)
+size_t new_write_raw_data_as(FILE* out, real *vec, int l, unsigned char data_type)
 {
   size_t nbytes = 0; // nbytes written
   switch(data_type)
@@ -787,7 +787,7 @@ size_t new_write_raw_data_as(FILE* out, double *vec, int l, unsigned char data_t
       nbytes = l;
       while(l--)
         {
-          double val = *vec++;
+          real val = *vec++;
           if(is_missing(val))
             putc(0x80,out);
           else
@@ -804,14 +804,18 @@ size_t new_write_raw_data_as(FILE* out, double *vec, int l, unsigned char data_t
       break;      
     case 3:
       nbytes = l*sizeof(double);
-      fwrite(vec,sizeof(double),l,out);
+      while(l--)
+        {
+          double val = static_cast<double>(*vec++);
+          fwrite(&val,sizeof(double),1,out);
+        }
       break;
     }
   return nbytes;
 }
 
 // Warning: this is low-level code written for efficiency
-size_t new_write_compressed(FILE* out, double* vec, int l, double tolerance, bool swap_endians)
+size_t new_write_compressed(FILE* out, real* vec, int l, double tolerance, bool swap_endians)
 {
   if(swap_endians)
     PLERROR("swap_endians in new_write_compressed not yet supported (currently only supported by new_read_compresed");
@@ -832,7 +836,7 @@ size_t new_write_compressed(FILE* out, double* vec, int l, double tolerance, boo
       unsigned char data_type = 0;
       if(l)
         {
-          double* ptr = vec;
+          real* ptr = vec;
           data_type = new_get_compr_data_type(*ptr, tolerance);
           ++nvals;
           ++ptr;
@@ -870,7 +874,5 @@ size_t new_write_compressed(FILE* out, double* vec, int l, double tolerance, boo
     } // end of for(;;)
   return nbytes;
 }
-
-
 
 %> // end of namespace PLearn

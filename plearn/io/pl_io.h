@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io.h,v 1.7 2003/09/09 18:05:19 plearner Exp $
+   * $Id: pl_io.h,v 1.8 2004/02/10 15:59:25 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -237,13 +237,13 @@ void uncompress_vec(char* comprbuf, double* data, int l, bool double_stored_as_f
 //! Returns the number of bytes written
 //! tolerance is the maximum allowed error tolerance to store doubles as floats.
 //! Set swap_endians to true if the data is to be written in the different byte-order from this machine's 
-size_t new_write_compressed(FILE* out, double* vec, int l, double tolerance=1e-6, bool swap_endians=false);
+size_t new_write_compressed(FILE* out, real* vec, int l, double tolerance=1e-6, bool swap_endians=false);
 
 //! Reads the l doubles in the new compressed formtat from in
 //! Returns the number of bytes read.
 //! Set swap_endians to true if the data was written on a machine with a different 
 //! endianness than the current one, so that the endians get swapped.
-size_t new_read_compressed(FILE* in, double* vec, int l, bool swap_endians=false);
+size_t new_read_compressed(FILE* in, real* vec, int l, bool swap_endians=false);
 
 
 
