@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.70 2005/02/18 15:46:53 tihocan Exp $
+   * $Id: fileutils.cc,v 1.71 2005/02/18 17:12:51 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -190,7 +190,7 @@ vector<PPath> lsdir_fullpath(const PPath& dirpath)
   // TODO Somewhat a copy of addprefix, not really elegant. Do better ?
   vector<string> without_path = lsdir(dirpath);
   vector<PPath> with_path(without_path.size());
-  PPath prefix = dirpath.dirname();
+  PPath prefix = dirpath;
   vector<string>::const_iterator it = without_path.begin();
   vector<PPath>::iterator newit = with_path.begin();
   while (it != without_path.end()) {
