@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array.h,v 1.13 2004/02/20 21:11:42 chrish42 Exp $
+   * $Id: Array.h,v 1.14 2004/02/26 19:59:32 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -66,6 +66,16 @@ template <class T>
 class Array: public TVec<T>
 {
   public:
+
+    // norman: added scope for dependent name to resolve lookup
+    //         See chap. 9.4.2 of C++ Templates, The Complete Guide 
+    //         by Vandevoorde and Josuttis
+    using TVec<T>::length_;
+    using TVec<T>::offset_;
+    using TVec<T>::storage;
+
+    using TVec<T>::data;
+    using TVec<T>::resize;
 
     typedef T* iterator;
 
