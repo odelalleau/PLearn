@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TMachine.cc,v 1.1 2005/02/23 01:31:19 tihocan Exp $ 
+   * $Id: TMachine.cc,v 1.2 2005/02/23 21:50:30 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -110,7 +110,6 @@ void TMachine::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 /////////////
 void TMachine::forward(Torch::Sequence* sequence) {
   machine->forward(sequence);
-  outputs = machine->outputs;
 }
 
 ///////////
@@ -118,15 +117,7 @@ void TMachine::forward(Torch::Sequence* sequence) {
 ///////////
 void TMachine::reset() {
   machine->reset();
-  updateFromTorch();
-}
-
-////////////////
-// setDataSet //
-////////////////
-void TMachine::setDataSet(Torch::DataSet *dataset_) {
-  // TODO See if this is called, and if not, how to make sure the PLearn object is udpated.
-  machine->setDataSet(dataset_);
+  // The underlying Machine has probably changed.
   updateFromTorch();
 }
 
@@ -140,13 +131,13 @@ void TMachine::updateFromPLearn(Torch::Object* ptr) {
     PLERROR("In TMachine::updateFromPLearn - Torch::Machine is an abstract class "
             "and cannot be instantiated");
   inherited::updateFromPLearn(machine);
+  // NB: not updating outputs.
 }
 
 /////////////////////
 // updateFromTorch //
 /////////////////////
 void TMachine::updateFromTorch() {
-  outputs = machine->outputs;
   inherited::updateFromTorch();
 }
 
