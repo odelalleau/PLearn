@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConstantRegressor.cc,v 1.10 2004/10/08 15:49:18 chapados Exp $ 
+   * $Id: ConstantRegressor.cc,v 1.11 2004/12/04 00:12:49 chapados Exp $ 
    ******************************************************* */
 
 /*! \file ConstantRegressor.cc */
@@ -141,6 +141,12 @@ void ConstantRegressor::train()
   for (int i=0;i<n_examples;i++)
   {
     train_set->getExample(i, input, target, weight);
+
+    // Skip the observation if it has any missings... (for now, next
+    // version should only skip the components that have a missing value)
+    if (target.hasMissing())
+      continue;
+      
     multiplyAdd(sum_of_weighted_targets,target,weight,sum_of_weighted_targets);
     sum_of_weights += weight;
     multiply(sum_of_weighted_targets,real(1.0/sum_of_weights),constant_output);
