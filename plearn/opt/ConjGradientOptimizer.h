@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.34 2004/02/20 21:11:48 chrish42 Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.35 2004/04/30 13:12:46 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -174,17 +174,16 @@ public:
     build_();
   }
   
-  //! Help function
-  static string help();
-
 private:
 
   void build_();
     
 public:
 
-  virtual real optimize(); // Deprecated, use optimizeN
+  virtual real optimize(); // Deprecated, use optimizeN.
   virtual bool optimizeN(VecStatsCollector& stat_coll);
+
+  virtual void reset();
 
 protected:
   static void declareOptions(OptionList& ol);

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.50 2004/02/20 21:11:48 chrish42 Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.51 2004/04/30 13:12:45 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -122,6 +122,15 @@ ConjGradientOptimizer::ConjGradientOptimizer(
     cout << "Warning: you should use the constructor ConjGradientOptimizer(), or some default options may not be set properly" << endl;
   }
   
+PLEARN_IMPLEMENT_OBJECT(ConjGradientOptimizer,
+    "Optimizer based on the conjugate gradient method.",
+    "The conjugate gradient algorithm is basically the following :\n"
+    "- 0: initialize the search direction d = -gradient\n"
+    "- 1: perform a line search along direction d for the minimum of the gradient\n"
+    "- 2: move to this minimum, update the search direction d and go to step 1\n"
+    "There are various methods available through the options for both steps 1 and 2."
+);
+
 // 
 // declareOptions
 // 
@@ -228,23 +237,6 @@ void ConjGradientOptimizer::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
-//////////
-// help //
-//////////
-string ConjGradientOptimizer::help() {
-  return
-    " Optimizer based on the conjugate gradient method.\n \
-The conjugate gradient algorithm is basically the following :\n \
- - 0: initialize the search direction d = -gradient\n \
- - 1: perform a line search along direction d for the minimum of the gradient\n \
- - 2: move to this minimum, update the search direction d and go to step 1\n \
-There are various methods available through the options for both steps 1 and 2.\n";
-}
-
-//
-// Implement name and deepCopy
-//
-PLEARN_IMPLEMENT_OBJECT(ConjGradientOptimizer, "ONE LINE DESCR", "NO HELP");
 
 /******************************
  * MAIN METHODS AND FUNCTIONS *
@@ -254,40 +246,39 @@ PLEARN_IMPLEMENT_OBJECT(ConjGradientOptimizer, "ONE LINE DESCR", "NO HELP");
 // build_ //
 ////////////
 void ConjGradientOptimizer::build_() {
-  // Make sure the internal datas have the right size
-  if (params.nelems() > 0) {
-    current_opp_gradient.resize(params.nelems());
-    search_direction.resize(params.nelems());
-    tmp_storage.resize(params.nelems());
-    delta.resize(params.nelems());
+  // Make sure the internal data have the right size.
+  int n = params.nelems();
+  if (n > 0) {
+    current_opp_gradient.resize(n);
+    search_direction.resize(n);
+    tmp_storage.resize(n);
+    delta.resize(n);
     if (cost.length() > 0) {
       meancost.resize(cost->size());
     }
   }
-  early_stop = false;
-  last_improvement = 0.1; // may only influence the speed of first iteration
-  current_step_size = starting_step_size;
 }
 
 //////////////////////////////
 // computeCostAndDerivative //
 //////////////////////////////
 void ConjGradientOptimizer::computeCostAndDerivative(
-    real alpha, ConjGradientOptimizer*opt, real& cost, real& derivative) {
+    real alpha, ConjGradientOptimizer* opt, real& cost, real& derivative) {
   if (alpha == 0) {
-    cost = opt->cost->value[0];
+    cost = opt->last_cost;
     derivative = -dot(opt->search_direction, opt->current_opp_gradient);
   } else {
-  opt->params.copyTo(opt->tmp_storage);
-  opt->params.update(alpha, opt->search_direction);
-  opt->proppath.clearGradient();
-  opt->params.clearGradient();
-  opt->cost->gradient[0] = 1;
-  opt->proppath.fbprop();
-  opt->params.copyGradientTo(opt->delta);
-  cost = opt->cost->value[0];
-  derivative = dot(opt->search_direction, opt->delta);
-  opt->params.copyFrom(opt->tmp_storage);
+    // TODO See why different from computeDerivative.
+    opt->params.copyTo(opt->tmp_storage);
+    opt->params.update(alpha, opt->search_direction);
+    opt->proppath.clearGradient();
+    opt->params.clearGradient();
+    opt->cost->gradient[0] = 1;
+    opt->proppath.fbprop();
+    opt->params.copyGradientTo(opt->delta);
+    cost = opt->cost->value[0];
+    derivative = dot(opt->search_direction, opt->delta);
+    opt->params.copyFrom(opt->tmp_storage);
   }
 }
 
@@ -297,8 +288,9 @@ void ConjGradientOptimizer::computeCostAndDerivative(
 real ConjGradientOptimizer::computeCostValue(
     real alpha,
     ConjGradientOptimizer* opt) {
-  if (alpha == 0)
-    return opt->cost->value[0];
+  if (alpha == 0) {
+    return opt->last_cost;
+  }
   opt->params.copyTo(opt->tmp_storage);
   opt->params.update(alpha, opt->search_direction);
   opt->proppath.fprop();
@@ -560,11 +552,11 @@ real ConjGradientOptimizer::fletcherSearchMain (
   // Initialization
   real alpha0 = 0;
   // f0 = f(0), f_0 = f(alpha0), f_1 = f(alpha1)
-  // g0 = g(0), g_0 = g(alpha0), g_1 = g(alaph1)
+  // g0 = g(0), g_0 = g(alpha0), g_1 = g(alpha1)
   // (for the bracketing phase)
   real alpha2, f0, f_1=0, f_0, g0, g_1=0, g_0, a1=0, a2, b1=0, b2;
-  //  f0 = (*f)(0, opt); // TODO See why this has been commented
-  g0 = (*g)(0, opt); f0 = opt->cost->value[0];
+  g0 = (*g)(0, opt);
+  f0 = (*f)(0, opt);
   f_0 = f0;
   g_0 = g0;
   if (mu == FLT_MAX)
@@ -580,7 +572,7 @@ real ConjGradientOptimizer::fletcherSearchMain (
   
   // Bracketing
   while (!isBracketed) {
-     // cout << "Bracketing : alpha1 = " << alpha1 << endl << "             alpha0 = " << alpha0 << endl;
+    // cout << "Bracketing : alpha1 = " << alpha1 << endl << "             alpha0 = " << alpha0 << endl;
     if (alpha1 == mu && alpha1 == alpha2) { // NB: Personal hack... hopefully that should not happen
       cout << "Warning : alpha1 == alpha2 == mu during bracketing" << endl;
       return alpha1;
@@ -638,16 +630,17 @@ real ConjGradientOptimizer::fletcherSearchMain (
   real f1,g1;
   bool repeated = false;
   while (true) {
-     // cout << "Splitting : alpha1 = " << alpha1 << endl << "            a1 = " << a1 << endl << "            b1 = " << b1 << endl;
-     // cout << "Interval : [" << a1 + tau2 * (b1-a1) << " , " << b1 - tau3 * (b1-a1) << "]" << endl;
+    // cout << "Splitting : alpha1 = " << alpha1 << endl << "            a1 = " << a1 << endl << "            b1 = " << b1 << endl;
+    // cout << "Interval : [" << a1 + tau2 * (b1-a1) << " , " << b1 - tau3 * (b1-a1) << "]" << endl;
     alpha1 = findMinWithCubicInterpol(
         a1, b1,
         a1 + tau2 * (b1-a1), b1 - tau3 * (b1-a1),
         f_0, f_1, g_0, g_1);
-    g1 = (*g)(alpha1, opt);  f1 = opt->cost->value[0];
+    g1 = (*g)(alpha1, opt);
+    f1 = opt->cost->value[0]; // Shortcut.
     bool small= ((a1 - alpha1) * g_0 <= epsilon);
     if (small && (a1>0 || repeated)) {
-       // cout << "Early stop : a1 = " << a1 << " , alpha1 = " << alpha1 << " , g(a1) = " << g_0 << " , epsilon = " << epsilon << endl;
+      // cout << "Early stop : a1 = " << a1 << " , alpha1 = " << alpha1 << " , g(a1) = " << g_0 << " , epsilon = " << epsilon << endl;
       return a1;
     }
     if (small) repeated=true;
@@ -689,7 +682,6 @@ real ConjGradientOptimizer::gSearch (void (*grad)(Optimizer*, const Vec&)) {
   params.copyTo(tmp_storage);
 
   params.update(step, search_direction);
-  real old_pos = step;
   (*grad)(this, delta);
   real prod = dot(delta, search_direction);
   if (prod < 0) {
@@ -697,9 +689,8 @@ real ConjGradientOptimizer::gSearch (void (*grad)(Optimizer*, const Vec&)) {
     do {
       sp = step;
       pp = prod;
-      step = step / 2;
-      params.update(-old_pos+step, search_direction);
-      old_pos = step;
+      step /= 2.0;
+      params.update(-step, search_direction);
       (*grad)(this, delta);
       prod = dot(delta, search_direction);
     } while (prod < -epsilon);
@@ -711,11 +702,10 @@ real ConjGradientOptimizer::gSearch (void (*grad)(Optimizer*, const Vec&)) {
     do {
       sm = step;
       pm = prod;
-      step = step * 2;
-      params.update(-old_pos+step, search_direction);
-      old_pos = step;
+      params.update(step, search_direction);
       (*grad)(this, delta);
       prod = dot(delta, search_direction);
+      step *= 2.0;
     } while (prod > epsilon);
     sp = step;
     pp = prod;
@@ -739,6 +729,7 @@ real ConjGradientOptimizer::hestenesStiefel (
     ConjGradientOptimizer* opt) {
   int i;
   // delta = opposite gradient
+  //  (*grad)(opt, opt->delta); // TODO See why this line has been removed.
   for (i=0; i<opt->current_opp_gradient.length(); i++) {
     opt->tmp_storage[i] = opt->delta[i] - opt->current_opp_gradient[i];
   }
@@ -1077,6 +1068,16 @@ void ConjGradientOptimizer::quadraticInterpol(
   c = f0;
   b = g0;
   a = f1 - f0 - g0;
+}
+
+///////////
+// reset //
+///////////
+void ConjGradientOptimizer::reset() {
+  inherited::reset();
+  early_stop = false;
+  last_improvement = 0.1; // May only influence the speed of first iteration.
+  current_step_size = starting_step_size;
 }
 
 ///////////////////////////
