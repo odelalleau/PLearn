@@ -34,14 +34,14 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: RealMapping.h,v 1.17 2004/02/26 20:05:37 nova77 Exp $
+   * $Id: RealMapping.h,v 1.18 2004/02/28 17:54:35 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #ifndef RealMapping_INC
 #define RealMapping_INC
 
-#include "general.h"
+//#include "general.h"
 #include "Object.h"
 #include "TMat.h"
 #include <map>

@@ -32,12 +32,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDateTime.cc,v 1.4 2004/02/20 21:11:42 chrish42 Exp $
+   * $Id: PDateTime.cc,v 1.5 2004/02/28 17:53:51 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
-#include <limits.h>                 // from stdc
-#include "stringutils.h"            // from PLearn
+//#include <limits.h>                 // from stdc
+//#include "stringutils.h"            // from PLearn
 #include "PDateTime.h"
 #include "general.h"                // for MISSING_VALUE
 

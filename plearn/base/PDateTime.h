@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDateTime.h,v 1.3 2004/02/20 21:11:42 chrish42 Exp $
+   * $Id: PDateTime.h,v 1.4 2004/02/28 17:53:51 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -42,7 +42,7 @@
 #ifndef PDateTime_INC
 #define PDateTime_INC
 
-#include <iostream>
+//#include <iostream>
 #include <string>
 
 namespace PLearn {

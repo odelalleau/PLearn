@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: plerror.h,v 1.4 2004/02/20 21:11:43 chrish42 Exp $
+   * $Id: plerror.h,v 1.5 2004/02/28 17:57:29 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -48,9 +48,9 @@
 #ifndef perror_INC
 #define perror_INC
 
-#include <cstdio>
+/*#include <cstdio>
 #include <cstdarg>
-#include <iostream>
+#include <iostream>*/
 #include "plexceptions.h"
 
 namespace PLearn {

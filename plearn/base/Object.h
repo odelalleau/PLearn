@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.24 2004/02/20 21:11:42 chrish42 Exp $
+   * $Id: Object.h,v 1.25 2004/02/28 17:53:01 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,16 +46,16 @@
 #ifndef Object_INC
 #define Object_INC
 
-#include <map>
-#include <set>
-#include "general.h"
+//#include <map>
+//#include <set>
+//#include "general.h"
 #include "PP.h"
 #include "StaticInitializer.h"
-#include "TypeTraits.h"
+//#include "TypeTraits.h"
 #include "Array.h"
-#include "stringutils.h"
+//#include "stringutils.h"
 #include "TypeFactory.h"
-#include "OptionBase.h"
+//#include "OptionBase.h"
 #include "Option.h"
 
 namespace PLearn {

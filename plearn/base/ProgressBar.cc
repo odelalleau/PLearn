@@ -37,12 +37,12 @@
  
 
 /* *******************************************************      
-   * $Id: ProgressBar.cc,v 1.4 2004/02/20 21:11:42 chrish42 Exp $
+   * $Id: ProgressBar.cc,v 1.5 2004/02/28 17:54:35 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
 
-#include <iomanip>
+//#include <iomanip>
 #include "ProgressBar.h"
 #include "stringutils.h"
 

@@ -39,7 +39,7 @@
 
 #include <string>
 #include <map>
-#include <vector>
+//#include <vector>
 #include "OptionBase.h"
 
 namespace PLearn {

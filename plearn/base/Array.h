@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array.h,v 1.14 2004/02/26 19:59:32 nova77 Exp $
+   * $Id: Array.h,v 1.15 2004/02/28 17:53:01 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,15 +47,14 @@
 #ifndef ARRAY_INC
 #define ARRAY_INC
 
-#include <map>
-#include <set>
+//#include <map>
+//#include <set>
 #include <string>
 #include <vector>
 #include "TypeTraits.h"
-#include "general.h"
-#include "fileutils.h"
+//#include "general.h"
+//#include "fileutils.h"
 #include "TMat.h"
-
 
 
 namespace PLearn {

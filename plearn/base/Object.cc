@@ -37,16 +37,16 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.22 2004/02/20 21:11:42 chrish42 Exp $
+   * $Id: Object.cc,v 1.23 2004/02/28 17:53:51 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "Object.h"
-#include "stringutils.h"
-#include "fileutils.h"
-#include "TypeFactory.h"
-#include <iostream>
+//#include "stringutils.h"
+//#include "fileutils.h"
+//#include "TypeFactory.h"
+//#include <iostream>
 
 namespace PLearn {
 using namespace std;

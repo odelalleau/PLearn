@@ -34,9 +34,9 @@
 #ifndef TINYVECTOR_H
 #define TINYVECTOR_H
 
-#include <utility>
-#include <stdexcept>			     // for out_of_range
-#include <algorithm>			     // for lexicographical_compare
+//#include <utility>
+//#include <stdexcept>			     // for out_of_range
+//#include <algorithm>			     // for lexicographical_compare
 #include <typeinfo>
 
 #include "plerror.h"

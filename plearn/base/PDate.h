@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: PDate.h,v 1.5 2004/02/20 21:11:42 chrish42 Exp $
+   * $Id: PDate.h,v 1.6 2004/02/28 17:53:01 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,7 +47,7 @@
 #ifndef PDate_INC
 #define PDate_INC
 
-#include <iostream>
+//#include <iostream>
 #include <string>
 #include <ctime>
 

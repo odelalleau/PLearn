@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: general.h,v 1.12 2004/02/26 04:53:03 nova77 Exp $
+   * $Id: general.h,v 1.13 2004/02/28 17:57:29 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -55,42 +55,42 @@
 #include <unistd.h>
 #endif
 
-#include <cstdlib>
-#include <cstdio>
-#include <cmath>
-#include <cstring>
-#include <cstdarg>
-#include <cstddef>
-#include <cfloat>
-#include <cctype>
-#include <iostream>
-#include <fstream>
-#include <strstream>
+//#include <cstdlib>
+//#include <cstdio>
+//#include <cmath>
+//#include <cstring>
+//#include <cstdarg>
+//#include <cstddef>
+//#include <cfloat>
+//#include <cctype>
+//#include <iostream>
+//#include <fstream>
+//#include <strstream>
 #include <iomanip>
-#include <cerrno>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <string>
-#include <vector>
+//#include <cerrno>
+//#include <sys/types.h>
+//#include <sys/stat.h>
+//#include <fcntl.h>
+//#include <string>
+//#include <vector>
 #include <map>
-#include <set>
-#include <algorithm>
-#include <functional>
+//#include <set>
+//#include <algorithm>
+//#include <functional>
 
 #ifdef SPARC
 #include <ieeefp.h>
 #endif
 
-#include "plerror.h"
+//#include "plerror.h"
 #include "pl_math.h"
-#include "pl_io.h"
+//#include "pl_io.h"
 #include "pl_io_deprecated.h"
 //#include "plstreams.h"
-#include "stringutils.h"
-#include "pl_hash_fun.h"
-#include "TypeTraits.h"
-#include "CopiesMap.h"
+//#include "stringutils.h"
+//#include "pl_hash_fun.h"
+//#include "TypeTraits.h"
+//#include "CopiesMap.h"
 
 // Include directive to be removed ultimately
 #include "ProgressBar.h"

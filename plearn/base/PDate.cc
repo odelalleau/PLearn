@@ -34,15 +34,15 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDate.cc,v 1.6 2004/02/20 21:11:42 chrish42 Exp $
+   * $Id: PDate.cc,v 1.7 2004/02/28 17:53:51 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
-#include <limits.h>                 // from stdc
-#include "stringutils.h"            // from PLearn
+//#include <limits.h>                 // from stdc
+//#include "stringutils.h"            // from PLearn
 #include "PDate.h"
 #include "general.h"                // for MISSING_VALUE
-#include <ctype.h>
+//#include <ctype.h>
 
 namespace PLearn {
 using namespace std;
