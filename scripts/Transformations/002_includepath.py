@@ -9,7 +9,7 @@ plearndir = os.environ.get('PLEARNDIR', os.path.join(homedir,'PLearn'))
 lisaplearndir = os.environ.get('LISAPLEARNDIR', os.path.join(homedir,'LisaPLearn'))
 apstatsoftdir = os.environ.get('APSTATSOFTDIR', os.path.join(homedir,'apstatsoft'))
 
-searchdirs = [ os.path.join(plearndir,'/commands/PLearnCommands'), plearndir, apstatsoftdir, lisaplearndir ]
+searchdirs = [ plearndir, apstatsoftdir, lisaplearndir ]
 
 # Will map raw .h files to more complete paths
 includepaths = {}
@@ -39,16 +39,15 @@ def transformfunc(fname, text):
     incend = 0
     incstart = text.find('#include', incend)
     while incstart >= 0:
-        incstart = incstart+8
-        while text[incstart] in [' ', '\t', '<', '"' ]:
+        while text[incstart] not in ['<', '"']:
             incstart = incstart+1
-        incend = incstart
+        incend = incstart+1
         while text[incend] not in ['>', '"']:
             incend = incend+1
-        filename = text[incstart:incend]
+        reldir, filename = os.path.split(text[incstart+1:incend])
         if filename in includepaths.keys():
-            res = res + text[chunkstart:incstart] + includepaths[filename] 
-            chunkstart = incend
+            res = res + text[chunkstart:incstart] + '<' + includepaths[filename] + '>' 
+            chunkstart = incend+1
         incstart = text.find('#include', incend)
     res = res + text[chunkstart:]
     return res
