@@ -35,7 +35,7 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperCommand.h,v 1.1 2005/01/11 23:22:44 plearner Exp $ 
+   * $Id: HyperCommand.h,v 1.2 2005/01/12 14:42:53 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file HyperCommand.h */
@@ -53,13 +53,18 @@ class VecStatsCollector;
 
 class HyperCommand: public Object
 {
+
+private:
+
+  typedef Object inherited;
+
 protected:
-  PP<HyperLearner> hlearner;
+
+  HyperLearner* hlearner;   //!< A 'real' pointer to avoid cycles (and memory leaks)
   string expdir; //<! where to report results
 
 public:
 
-  typedef Object inherited;
   PLEARN_DECLARE_ABSTRACT_OBJECT(HyperCommand);
 
   // ****************
@@ -75,13 +80,13 @@ public:
   // ******************
 
 private: 
+
   //! This does the actual building. 
-  // (Please implement in .cc)
   void build_();
 
 protected: 
+
   //! Declares this class' options
-  // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
 
 public:
