@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.h,v 1.4 2004/02/20 21:11:47 chrish42 Exp $
+   * $Id: vmatmain.h,v 1.5 2004/07/16 13:09:41 tihocan Exp $
    ******************************************************* */
 
 #include "Array.h"
@@ -40,6 +40,9 @@
 
 namespace PLearn {
 using namespace std;
+
+//! The specification of the dataset viewed by the vmat program.
+static string vmat_view_dataset;
 
 //! Prints where m1 and m2 differ by more than tolerance
 //! returns the number of such differences, or -1 if the sizes differ

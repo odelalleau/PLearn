@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.30 2004/06/18 19:09:36 tihocan Exp $
+   * $Id: vmatmain.cc,v 1.31 2004/07/16 13:09:41 tihocan Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -778,6 +778,48 @@ void viewVMat(const VMat& vm)
         }
         break;
       ///////////////////////////////////////////////////////////////
+      case (int)'v': case (int)'V': 
+        {
+          echo();
+          char strmsg[] = {"View dataset ('Enter' = reload last dataset): "};
+          mvprintw(LINES-1,0,strmsg);
+          clrtoeol();
+          move(LINES-1, (int) strlen(strmsg));
+          char c[200];
+          getnstr(c, 200);
+          string dataset = c;
+          if (dataset == "") {
+            // Reload last dataset.
+            dataset = vmat_view_dataset;
+          }
+          VMat new_vm;
+          bool error = false;
+          try {
+            new_vm = getDataSet(dataset);
+            vmat_view_dataset = dataset;
+          } catch(const PLearnError& e) {
+            error = true;
+          }
+          if (error) {
+            mvprintw(LINES-1,0,"*** Invalid dataset ***");
+            clrtoeol();
+            refresh();
+            // Wait until the user types something.
+            key = getch();
+            onError = true;
+          } else {
+            // Display the new dataset.
+            // First close the current display.
+            mvprintw(LINES-1,0,"");
+            clrtoeol();
+            refresh();
+            endwin();
+            // And launch the new one.
+            viewVMat(new_vm);
+          }
+        }
+        break;
+      ///////////////////////////////////////////////////////////////
       case (int)'e': case (int)'E': 
         {
           echo();
@@ -954,6 +996,7 @@ void viewVMat(const VMat& vm)
         mvprintw(vStartHelp++,10," - 's' or 'S': toggle display string fields as strings or numbers ('S' = right indentation)");
         mvprintw(vStartHelp++,10," - 't' or 'T': toggle transposed display mode");
         mvprintw(vStartHelp++,10," - 'e' or 'E': export a range or a set of columns to file");
+        mvprintw(vStartHelp++,10," - 'v' or 'V': prompt for another dataset to view");
         mvprintw(vStartHelp++,10," - '.'       : toggle displaying of ... for values that do not change");
         mvprintw(vStartHelp++,10," - '/'       : search for a value of the current field");
         mvprintw(vStartHelp++,10," - 'h' or 'H': display this screen");
@@ -1602,7 +1645,8 @@ int vmatmain(int argc, char** argv)
   */
   else if(command=="view")
     {
-      VMat vm= getDataSet(string(argv[2]));
+      vmat_view_dataset = string(argv[2]);
+      VMat vm = getDataSet(vmat_view_dataset);
       viewVMat(vm);
     }
   else if(command=="plot")
