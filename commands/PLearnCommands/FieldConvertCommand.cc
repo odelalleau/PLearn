@@ -139,6 +139,20 @@ void FieldConvertCommand::run(const vector<string> & args)
       }
       else if(sc[i].max()>-1000 && vm->getStringToRealMapping(i).size()>0)
         message="Field uses both string map & numerical values";
+      else if(sc[i].min() >= 0 && sc[i].max() >= 12000 && sc[i].max() <= 20000) {
+        // Could be a numeric SAS date.
+        // We first make sure they are all integer values.
+        bool non_integer = false;
+        for(int j=0;j<vm->length();j++)
+        {
+          real val = vm->get(j,i);
+          if(!is_missing(val) && ((val-(int)val) > 0))
+            non_integer = true;
+        }
+        if (!non_integer) {
+          message = "Looks like a numeric SAS date. If this is the case, first edit the source (.vmat) file to change the 'TextFilesVMatrix' field type (use sas_date), then edit force.txt to force the type to continuous. If it's not a date, please use force.txt to force the type.";
+        }
+      }
       else if(sc[i].min()>19700000 && sc[i].max()<20080000)
         // Could be a date between 1970 and 2008.
         message="Looks like a date. Edit the source file to change the 'TextFilesVMatrix' field type (use jdate). Otherwise, edit force.txt to force the type.";
