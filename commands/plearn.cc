@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.26 2003/05/21 13:43:04 tihocan Exp $
+   * $Id: plearn.cc,v 1.27 2003/05/22 16:24:58 tihocan Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -47,6 +47,7 @@
 // Available VMats:
 #include "AutoVMatrix.h"
 #include "IndexedVMatrix.h"
+#include "BatchVMatrix.h"
 
 // New generation system
 #include "PExperiment.h"
