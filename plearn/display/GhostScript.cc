@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GhostScript.cc,v 1.5 2003/12/15 14:05:25 plearner Exp $
+   * $Id: GhostScript.cc,v 1.6 2004/01/21 01:04:19 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -218,6 +218,72 @@ using namespace std;
     writeBitmapHexString24Bits(bm,togs,true);
     togs << "\ngrestore\n";
   }
+
+void GhostScript::show(real x, real y, const char* str, char halign, char valign)
+{
+  togs << "\n" << x << " " << y << " moveto ";
+  togs << "(" << str << ") dup stringwidth ";
+  
+  switch(valign)
+    {
+    case 't':
+      togs << " neg ";
+      break;
+    case 'm':
+      togs << " -2 div ";
+      break;
+    case 'b':
+      togs << " pop 0 ";
+      break;
+    default:
+      PLERROR("In GhostScript::show wrong valign parameter '%c'",valign);
+    }
+
+  togs << " exch ";
+  switch(halign)
+    {
+    case 'l':
+      togs << " pop 0 ";
+      break;
+    case 'c':
+      togs << " -2 div ";
+      break;
+    case 'r':
+      togs << " neg ";
+      break;
+    default:
+      PLERROR("In GhostScript::show wrong halign parameter '%c'",halign);
+    }
+
+  togs << " exch rmoveto show" << endl;
+}
+
+void GhostScript::setcolor(char* colorname)
+    {
+      if(!strcmp(colorname,"white")) setcolor(1,1,1);
+      else if(!strcmp(colorname,"black")) setcolor(0,0,0);
+      else if(!strcmp(colorname,"gray")) setcolor(.5,.5,.5);
+      else if(!strcmp(colorname,"darkgray")) setcolor(.25,.25,.25);
+      else if(!strcmp(colorname,"lightgray")) setcolor(.75,.75,.75);
+      else if(!strcmp(colorname,"red")) setcolor(1,0,0);
+      else if(!strcmp(colorname,"green")) setcolor(0,1,0);
+      else if(!strcmp(colorname,"blue")) setcolor(0,0,1);
+      else if(!strcmp(colorname,"magenta")) setcolor(1,0,1);
+      else if(!strcmp(colorname,"yellow")) setcolor(1,1,0);
+      else if(!strcmp(colorname,"cyan")) setcolor(0,1,1);
+      else setcolor(0,0,0); //!<  default is black
+    }
+
+void GhostScript::multilineShow(real x, real y, const string& text, real newlinesize, char halign, char valign)
+{
+  vector<string> splits = split(text, '\n');
+  int nsplits = splits.size();
+  for(int i=0; i<nsplits; i++)
+    {
+      show(x,y,splits[i].c_str(),halign,valign);
+      y -= newlinesize;
+    }
+}
 
   void GhostScript::drawBox(real x, real y, real width, real height)
   { 

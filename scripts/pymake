@@ -1041,6 +1041,8 @@ class FileInfo:
     def launch_linking(self):
         command = self.link_command()
         print command
+        if os.path.exists(self.corresponding_executable):
+            os.unlink(self.corresponding_executable)
         os.system(command)
 
     def dll_command(self):

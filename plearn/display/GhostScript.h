@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GhostScript.h,v 1.5 2003/12/15 14:05:26 plearner Exp $
+   * $Id: GhostScript.h,v 1.6 2004/01/21 01:04:19 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -135,16 +135,20 @@ class GhostScript
     }
 
   void show(const char* str)
-    { togs << "(" << str << ") show" << endl; }
+  { togs << "(" << str << ") show" << endl; }
 
-  void show(real x, real y, const char* str) 
-    { togs << "\n" << x << " " << y << " moveto (" << str << ") show" << endl; }
+  //! halign can be 'l' (left), 'c' (center) or 'r' (right)
+  //! valign can be 't' (top), 'm' (middle) or 'b' (bottom) 
+  void show(real x, real y, const char* str, char halign='l', char valign='b');
+
+  void centerShow(real x, real y, const char* str)
+  { show(x,y,str,'c','m'); }
+
+  //! accepts multiple line text (lines separated by \n) 
+  void multilineShow(real x, real y, const string& text, real newlinesize, char halign='l', char valign='b');
 
   void show(real x, real y, Vec v) 
-    { togs << "\n" << x << " " << y << " moveto (" << v << ") show" << endl; }
-
-  void centerShow(real x, real y, const char* str) 
-    { togs << "\n" << x << " " << y << " moveto (" << str << ") dup stringwidth exch -2 div exch -2 div rmoveto show" << endl; } 
+  { togs << "\n" << x << " " << y << " moveto (" << v << ") show" << endl; }
 
   void centerShow(real x, real y, Vec v) 
     { togs << "\n" << x << " " << y << " moveto (" << v << ") dup stringwidth exch -2 div exch -2 div rmoveto show" << endl; } 
@@ -163,25 +167,11 @@ class GhostScript
       setcolor(r,g,b);
     }
 
-  void setcolor(char* colorname)
-    {
-      if(!strcmp(colorname,"white")) setcolor(1,1,1);
-      else if(!strcmp(colorname,"black")) setcolor(0,0,0);
-      else if(!strcmp(colorname,"gray")) setcolor(.5,.5,.5);
-      else if(!strcmp(colorname,"darkgray")) setcolor(.25,.25,.25);
-      else if(!strcmp(colorname,"lightgray")) setcolor(.75,.75,.75);
-      else if(!strcmp(colorname,"red")) setcolor(1,0,0);
-      else if(!strcmp(colorname,"green")) setcolor(0,1,0);
-      else if(!strcmp(colorname,"blue")) setcolor(0,0,1);
-      else if(!strcmp(colorname,"magenta")) setcolor(1,0,1);
-      else if(!strcmp(colorname,"yellow")) setcolor(1,1,0);
-      else if(!strcmp(colorname,"cyan")) setcolor(0,1,1);
-      else setcolor(0,0,0); //!<  default is black
-    }
+  void setcolor(char* colorname);
 
   void setgray(real g)
     { togs << "\n" << g << " setgray\n"; }
-
+  
   void setlinewidth(real w)
     { togs << "\n" << w << " setlinewidth\n"; }
 
