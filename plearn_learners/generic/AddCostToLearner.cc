@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.cc,v 1.7 2004/04/22 20:57:53 tihocan Exp $ 
+   * $Id: AddCostToLearner.cc,v 1.8 2004/05/07 20:24:21 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -112,9 +112,9 @@ void AddCostToLearner::declareOptions(OptionList& ol)
 
   declareOption(ol, "costs", &AddCostToLearner::costs, OptionBase::buildoption,
       "The costs to be added:\n"
-      " - 1 : 'lift_output', used to compute the lift cost\n"
-      " - 2 : 'cross_entropy', the cross entropy cost t*log(o) + (1-t)*log(1-o)\n"
-      " - 3 : 'mse', the mean squared error (o - t)^2");
+      " - 'lift_output', used to compute the lift cost\n"
+      " - 'cross_entropy', the cross entropy cost t*log(o) + (1-t)*log(1-o)\n"
+      " - 'mse', the mean squared error (o - t)^2");
 
   declareOption(ol, "force_output_to_target_interval", &AddCostToLearner::force_output_to_target_interval, OptionBase::buildoption,
       "If set to 1 and 'rescale_output' is also set to 1, then the scaled output\n"
@@ -182,31 +182,27 @@ void AddCostToLearner::build_()
     cout << "Additional costs computed: ";
   }
   for (int i = 0; i < n; i++) {
-    switch(costs[i]) {
-      case 1: // lift_output
-        if (display) cout << "lift_output ";
-        // Output should be positive.
-        output_min = max(output_min, real(0));
-        break;
-      case 2: // cross_entropy
-        if (display) cout << "cross_entropy ";
-        // Output should be in [0,1].
-        output_min = max(output_min, real(0));
-        output_max = min(output_max, real(1));
-        {
-          Var zero = var(0);
-          output_var = accessElement(sub_learner_output, zero);
-          target_var = accessElement(desired_target, zero);
-          cross_entropy_var = cross_entropy(output_var, target_var);
-          cross_entropy_prop = propagationPath(cross_entropy_var);
-        }
-        break;
-      case 3: // mse
-        if (display) cout << "mse ";
-        break;
-      default:
-        PLERROR("In AddCostToLearner::build_ - Invalid cost requested");
-        break;
+    string c = costs[i];
+    if (c == "lift_output") {
+      if (display) cout << "lift_output ";
+      // Output should be positive.
+      output_min = max(output_min, real(0));
+    } else if (c == "cross_entropy") {
+      if (display) cout << "cross_entropy ";
+      // Output should be in [0,1].
+      output_min = max(output_min, real(0));
+      output_max = min(output_max, real(1));
+      {
+        Var zero = var(0);
+        output_var = accessElement(sub_learner_output, zero);
+        target_var = accessElement(desired_target, zero);
+        cross_entropy_var = cross_entropy(output_var, target_var);
+        cross_entropy_prop = propagationPath(cross_entropy_var);
+      }
+    } else if (c == "mse") {
+      if (display) cout << "mse ";
+    } else {
+      PLERROR("In AddCostToLearner::build_ - Invalid cost requested");
     }
   }
   if (n > 0 && display) {
@@ -333,48 +329,42 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
   }
 
   for (int i = 0; i < this->costs.length(); i++) {
-    switch(this->costs[i]) {
-      case 1: // Lift.
-        // TODO Using a LiftOutputVariable would be better.
+    string c = this->costs[i];
+    if (c == "lift_output") {
+      // TODO Using a LiftOutputVariable would be better.
 #ifdef BOUNDCHECK
-        if (sub_learner_output.length() != 1 || desired_target.length() != 1) {
-          PLERROR("In AddCostToLearner::computeCostsFromOutputs - Lift cost is only meant to be used with one-dimensional output and target");
+      if (sub_learner_output.length() != 1 || desired_target.length() != 1) {
+        PLERROR("In AddCostToLearner::computeCostsFromOutputs - Lift cost is only meant to be used with one-dimensional output and target");
+      }
+#endif
+      {
+        // The 'lift cost', which actually isn't a cost, is the output when
+        // the target is 1, and -output when the target is 0
+#ifdef BOUNDCHECK
+        if (desired_target[0] != 0 && desired_target[0] != 1) {
+          // Invalid target.
+          PLERROR("In AddCostToLearner::computeCostsFromOutputs - Target isn't compatible with lift");
         }
 #endif
-        {
-          // The 'lift cost', which actually isn't a cost, is the output when
-          // the target is 1, and -output when the target is 0
-#ifdef BOUNDCHECK
-          if (desired_target[0] != 0 && desired_target[0] != 1) {
-            // Invalid target.
-            PLERROR("In AddCostToLearner::computeCostsFromOutputs - Target isn't compatible with lift");
-          }
-#endif
-          if (desired_target[0] == 1) {
-            costs[i + n_original_costs] = sub_learner_output[0];
-          } else {
-            costs[i + n_original_costs] = - sub_learner_output[0];
-          }
+        if (desired_target[0] == 1) {
+          costs[i + n_original_costs] = sub_learner_output[0];
+        } else {
+          costs[i + n_original_costs] = - sub_learner_output[0];
         }
-        break;
-
-      case 2: // Cross entropy.
+      }
+    } else if (c == "cross_entropy") {
 #ifdef BOUNDCHECK
-          if (desired_target[0] != 0 && desired_target[0] != 1) {
-            // Invalid target.
-            PLERROR("In AddCostToLearner::computeCostsFromOutputs - Target isn't compatible with cross_entropy");
-          }
+      if (desired_target[0] != 0 && desired_target[0] != 1) {
+        // Invalid target.
+        PLERROR("In AddCostToLearner::computeCostsFromOutputs - Target isn't compatible with cross_entropy");
+      }
 #endif
-        cross_entropy_prop.fprop();
-        costs[i + n_original_costs] = cross_entropy_var->valuedata[0];
-        break;
-
-      case 3: // Mean squared error.
-        costs[i + n_original_costs] = powdistance(desired_target, sub_learner_output);
-        break;
-
-      default:
-        break;
+      cross_entropy_prop.fprop();
+      costs[i + n_original_costs] = cross_entropy_var->valuedata[0];
+    } else if (c == "mse") {
+      costs[i + n_original_costs] = powdistance(desired_target, sub_learner_output);
+    } else {
+      PLERROR("In AddCostToLearner::computeCostsFromOutputs - Unknown cost");
     }
   }
 }                                
@@ -406,19 +396,7 @@ TVec<string> AddCostToLearner::getTestCostNames() const
   // ...
   TVec<string> sub_costs = sub_learner->getTestCostNames();
   for (int i = 0; i < this->costs.length(); i++) {
-    switch(costs[i]) {
-      case 1: // Lift.
-        sub_costs.append("lift_output");
-        break;
-      case 2: // Cross entropy.
-        sub_costs.append("cross_entropy");
-        break;
-      case 3: // Mean squared error.
-        sub_costs.append("mse");
-        break;
-      default:
-        break;
-    }
+    sub_costs.append(costs[i]);
   }
   return sub_costs;
 }

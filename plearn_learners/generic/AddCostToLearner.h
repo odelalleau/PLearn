@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.h,v 1.3 2004/03/19 19:28:14 tihocan Exp $ 
+   * $Id: AddCostToLearner.h,v 1.4 2004/05/07 20:24:21 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -108,7 +108,7 @@ public:
   bool check_output_consistency;
   int combine_bag_outputs_method;
   bool compute_costs_on_bags;
-  TVec<int> costs;
+  TVec<string> costs;
   bool force_output_to_target_interval;
   real from_max;
   real from_min;
