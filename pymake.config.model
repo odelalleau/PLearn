@@ -1,5 +1,9 @@
 #!python
 
+# Qt Specific stuff
+
+qtdir = '/usr/lib/qt3/'
+
 # PLearn specific directories:
 
 # If the PLEARNDIR environment variable is not defined, we use the default "$HOME/PLearn/"
