@@ -152,7 +152,7 @@ streamsize pl_streambuf::xsgetn(char_type* s, streamsize n)
 
 streamsize pl_streambuf::xsputn(const char_type* s, streamsize n)
 {
-  int_type c;
+  int_type c = 1;
   int i;
   for(i= 0; i < n && c != pl_streambuf::eof; ++i)
     c= overflow(static_cast<int_type>(s[i]));
