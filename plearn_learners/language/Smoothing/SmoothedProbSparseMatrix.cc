@@ -331,6 +331,78 @@ bool SmoothedProbSparseMatrix::checkCondProbIntegrity()
   }
 }
 
+void  SmoothedProbSparseMatrix::write(PStream& out)
+{
+  ProbSparseMatrix::write(out);
+  string class_name = getClassName();
+  switch(out.outmode)
+    {
+    case PStream::raw_ascii :
+    case PStream::pretty_ascii :
+      PLERROR("raw/pretty_ascii write not implemented in %s", class_name.c_str());
+      break;        
+    case PStream::raw_binary :
+      PLERROR("raw_binary write not implemented in %s", class_name.c_str());
+      break;        
+    case PStream::plearn_binary :
+    case PStream::plearn_ascii :
+      out.write(class_name + "(");
+      out << smoothingMethod;
+      out << normalizationSum;
+      out << backoffDist;
+      out << backoffNormalization;
+      out << discountedMass;
+      out.write(")\n");
+      break;
+    default:
+      PLERROR("unknown outmode in %s::write(PStream& out)", class_name.c_str());
+      break;
+    }
+}
+
+void  SmoothedProbSparseMatrix::read(PStream& in)
+{
+  ProbSparseMatrix::read(in);
+  string class_name = getClassName();
+  switch (in.inmode)
+    {
+    case PStream::raw_ascii :
+      PLERROR("raw_ascii read not implemented in %s", class_name.c_str());
+      break;
+    case PStream::raw_binary :
+      PLERROR("raw_binary read not implemented in %s", class_name.c_str());
+      break;
+    case PStream::plearn_ascii :
+    case PStream::plearn_binary :
+      {
+	in.skipBlanksAndCommentsAndSeparators();
+	string word(class_name.size() + 1, ' ');
+	for (unsigned int i = 0; i < class_name.size() + 1; i++)
+	  in.get(word[i]);
+	if (word != class_name + "(")
+	  PLERROR("in %s::(PStream& in), '%s' is not a proper header", class_name.c_str(), word.c_str());
+	in.skipBlanksAndCommentsAndSeparators();
+	in >> smoothingMethod;
+	in.skipBlanksAndCommentsAndSeparators();
+	in >> normalizationSum;
+	in.skipBlanksAndCommentsAndSeparators();
+	in >> backoffDist;
+	in.skipBlanksAndCommentsAndSeparators();
+	in >> backoffNormalization;
+	in.skipBlanksAndCommentsAndSeparators();
+	in >> discountedMass;
+	in.skipBlanksAndCommentsAndSeparators();
+	int c = in.get();
+	if(c != ')')
+	  PLERROR("in %s::(PStream& in), expected a closing parenthesis, found '%c'", class_name.c_str(), c);
+      }
+    break;
+    default:
+      PLERROR("unknown inmode in %s::write(PStream& out)", class_name.c_str());
+      break;
+    }
+}
+
 void ComplementedProbSparseMatrix::complement(ProbSparseMatrix& nXY, bool clear_nXY)
 {
   int nXY_height = nXY.getHeight();

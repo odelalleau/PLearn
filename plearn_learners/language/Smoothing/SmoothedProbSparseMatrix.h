@@ -67,7 +67,8 @@ public:
   void normalizeCondLaplace(ProbSparseMatrix& nXY, bool clear_nXY = false);
   void normalizeCondBackoff(ProbSparseMatrix& nXY, real disc, Vec& bDist,bool clear_nXY,bool shadow);
   real get(int i,int j);
-
+  void write(PStream& out);
+  void read(PStream& in);
 };
 
 // WARNING : do not use this object, it is in developement. CK-11/2003
