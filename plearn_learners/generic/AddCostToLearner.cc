@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.cc,v 1.6 2004/03/23 17:46:16 tihocan Exp $ 
+   * $Id: AddCostToLearner.cc,v 1.7 2004/04/22 20:57:53 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -113,19 +113,14 @@ void AddCostToLearner::declareOptions(OptionList& ol)
   declareOption(ol, "costs", &AddCostToLearner::costs, OptionBase::buildoption,
       "The costs to be added:\n"
       " - 1 : 'lift_output', used to compute the lift cost\n"
-      " - 2 : 'cross_entropy', the cross entropy cost t*log(o) + (1-t)*log(1-o)");
+      " - 2 : 'cross_entropy', the cross entropy cost t*log(o) + (1-t)*log(1-o)\n"
+      " - 3 : 'mse', the mean squared error (o - t)^2");
 
   declareOption(ol, "force_output_to_target_interval", &AddCostToLearner::force_output_to_target_interval, OptionBase::buildoption,
       "If set to 1 and 'rescale_output' is also set to 1, then the scaled output\n"
       "will be forced to belong to [to_min, to_max], which may not be the case otherwise\n"
       "if the output doesn't originate from [from_min, from_max].");
       
-  declareOption(ol, "from_max", &AddCostToLearner::from_max, OptionBase::buildoption,
-      "Upper bound of the source interval [from_min, from_max] (used in rescaling).");
-
-  declareOption(ol, "from_min", &AddCostToLearner::from_min, OptionBase::buildoption,
-      "Lower bound of the source interval [from_min, from_max] (used in rescaling).");
-
   declareOption(ol, "rescale_output", &AddCostToLearner::rescale_output, OptionBase::buildoption,
       "If set to 1, then the output will be rescaled before computing the costs, according\n"
       "to the values of from_min, from_max, to_min, to_max. This means it will map\n"
@@ -134,14 +129,20 @@ void AddCostToLearner::declareOptions(OptionList& ol)
   declareOption(ol, "rescale_target", &AddCostToLearner::rescale_target, OptionBase::buildoption,
       "Same as 'rescale_output', but for the target.");
 
-  declareOption(ol, "sub_learner", &AddCostToLearner::sub_learner, OptionBase::buildoption,
-      "The learner to which we add the costs.");
+  declareOption(ol, "from_max", &AddCostToLearner::from_max, OptionBase::buildoption,
+      "Upper bound of the source interval [from_min, from_max] (used in rescaling).");
+
+  declareOption(ol, "from_min", &AddCostToLearner::from_min, OptionBase::buildoption,
+      "Lower bound of the source interval [from_min, from_max] (used in rescaling).");
 
   declareOption(ol, "to_max", &AddCostToLearner::to_max, OptionBase::buildoption,
       "Upper bound of the destination interval [to_min, to_max] (used in rescaling).");
 
   declareOption(ol, "to_min", &AddCostToLearner::to_min, OptionBase::buildoption,
       "Lower bound of the destination interval [to_min, to_max] (used in rescaling).");
+
+  declareOption(ol, "sub_learner", &AddCostToLearner::sub_learner, OptionBase::buildoption,
+      "The learner to which we add the costs.");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -182,12 +183,12 @@ void AddCostToLearner::build_()
   }
   for (int i = 0; i < n; i++) {
     switch(costs[i]) {
-      case 1:
+      case 1: // lift_output
         if (display) cout << "lift_output ";
         // Output should be positive.
         output_min = max(output_min, real(0));
         break;
-      case 2:
+      case 2: // cross_entropy
         if (display) cout << "cross_entropy ";
         // Output should be in [0,1].
         output_min = max(output_min, real(0));
@@ -199,6 +200,9 @@ void AddCostToLearner::build_()
           cross_entropy_var = cross_entropy(output_var, target_var);
           cross_entropy_prop = propagationPath(cross_entropy_var);
         }
+        break;
+      case 3: // mse
+        if (display) cout << "mse ";
         break;
       default:
         PLERROR("In AddCostToLearner::build_ - Invalid cost requested");
@@ -317,7 +321,7 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
   }
 
   if (check_output_consistency) {
-    for (int i = 0; i < sub_learner_output; i++) {
+    for (int i = 0; i < sub_learner_output.length(); i++) {
       real out = sub_learner_output[i];
       if (out < output_min) {
         PLERROR("In AddCostToLearner::computeCostsFromOutputs - Sub-learner output (%f) is lower than %f", out, output_min);
@@ -353,6 +357,7 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
           }
         }
         break;
+
       case 2: // Cross entropy.
 #ifdef BOUNDCHECK
           if (desired_target[0] != 0 && desired_target[0] != 1) {
@@ -363,6 +368,11 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
         cross_entropy_prop.fprop();
         costs[i + n_original_costs] = cross_entropy_var->valuedata[0];
         break;
+
+      case 3: // Mean squared error.
+        costs[i + n_original_costs] = powdistance(desired_target, sub_learner_output);
+        break;
+
       default:
         break;
     }
@@ -402,6 +412,9 @@ TVec<string> AddCostToLearner::getTestCostNames() const
         break;
       case 2: // Cross entropy.
         sub_costs.append("cross_entropy");
+        break;
+      case 3: // Mean squared error.
+        sub_costs.append("mse");
         break;
       default:
         break;
