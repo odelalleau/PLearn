@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.22 2003/09/17 15:27:30 yoshua Exp $
+   * $Id: TMat_maths_impl.h,v 1.23 2003/10/10 17:18:53 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -124,6 +124,18 @@ T sumsquare(const TVec<T>& x)
   return res;
 }
 
+//! returns the sum of absolute values of elements
+template<class T> 
+T sumabs(const TVec<T>& x)
+{
+  T* v = x.data();
+  T res = square(v[0]);
+  int l = x.length();
+  for(int i=1; i<l; i++)
+    res += fabs(v[i]);
+  return res;
+}
+
 //! squares the elements of x in place
 template<class T>
 void squareElements(const TVec<T>& x)
@@ -159,6 +171,33 @@ T sumsquare(const TMat<T>& m)
       ++it;
       for(; it!=itend; ++it)
         res += square(*it);
+      return res;
+    }
+}
+
+
+//! returns the sum of absolute value of the elements
+template<class T> 
+T sumabs(const TMat<T>& m)
+{  
+  if(m.isCompact())
+    {
+      typename TMat<T>::compact_iterator it = m.compact_begin();
+      typename TMat<T>::compact_iterator itend = m.compact_end();
+      T res = fabs(*it);
+      ++it;
+      for(; it!=itend; ++it)
+        res += fabs(*it);
+      return res;
+    }
+  else
+    {
+      typename TMat<T>::iterator it = m.begin();
+      typename TMat<T>::iterator itend = m.end();
+      T res = fabs(*it);
+      ++it;
+      for(; it!=itend; ++it)
+        res += fabs(*it);
       return res;
     }
 }

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.h,v 1.7 2003/09/20 20:33:35 yoshua Exp $
+   * $Id: NNet.h,v 1.8 2003/10/10 17:18:56 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -98,7 +98,7 @@ using namespace std;
     real output_layer_bias_decay;   // default: MISSING_VALUE
     real direct_in_to_out_weight_decay; // default: MISSING_VALUE
 
-    bool global_weight_decay; // default: false
+    bool L1_penalty; // default: false
     bool direct_in_to_out; // should we include direct input to output connecitons? default: false
     string output_transfer_func; // tanh, sigmoid, softplus, softmax  (default: "" means no transfer function)
     real interval_minval, interval_maxval; // if output_transfer_func = interval(minval,maxval), these are the interval bounds

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Var_utils.h,v 1.5 2003/01/08 21:33:11 ducharme Exp $
+   * $Id: Var_utils.h,v 1.6 2003/10/10 17:18:56 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -79,8 +79,8 @@ inline Var affine_transform(Var vec, Var transformation)
 
 //! weight decay and bias decay terms
 //! This has not been tested yet [Pascal: a tester].
-inline Var affine_transform_weight_penalty(Var transformation, real weight_decay, real bias_decay=0)
-{ return new AffineTransformWeightPenalty(transformation, weight_decay, bias_decay); } 
+inline Var affine_transform_weight_penalty(Var transformation, real weight_decay, real bias_decay=0, bool L1_penalty=false)
+{ return new AffineTransformWeightPenalty(transformation, weight_decay, bias_decay, L1_penalty); } 
 
 inline Var onehot_squared_loss(Var network_output, Var classnum, real coldval=0., real hotval=1.)
 { 
@@ -299,6 +299,9 @@ inline Var square(Var v)
 
 inline Var sumsquare(Var v)
 { return new SumSquareVariable(v); }
+
+inline Var sumabs(Var v)
+{ return new SumAbsVariable(v); }
 
 inline Var weighted_sumsquare(Var v, Var w)
 { return new WeightedSumSquareVariable(v,w); }

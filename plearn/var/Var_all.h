@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Var_all.h,v 1.1 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: Var_all.h,v 1.2 2003/10/10 17:18:56 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -140,6 +140,7 @@
 #include "SubsampleVariable.h"
 #include "SumOfVariable.h"
 #include "SumSquareVariable.h"
+#include "SumAbsVariable.h"
 #include "SumVariable.h"
 #include "TanhVariable.h"
 #include "TimesColumnVariable.h"

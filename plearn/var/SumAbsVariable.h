@@ -36,80 +36,40 @@
 
 
 /* *******************************************************      
-   * $Id: AffineTransformWeightPenalty.cc,v 1.4 2003/10/10 17:18:56 yoshua Exp $
+   * $Id: SumAbsVariable.h,v 1.1 2003/10/10 17:18:56 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
-#include "AffineTransformWeightPenalty.h"
-#include "Var_utils.h"
+#ifndef SumAbsVariable_INC
+#define SumAbsVariable_INC
+
+#include "UnaryVariable.h"
 
 namespace PLearn <%
 using namespace std;
 
 
-PLEARN_IMPLEMENT_OBJECT(AffineTransformWeightPenalty, "ONE LINE DESCR", "NO HELP");
-
-
-
-void AffineTransformWeightPenalty::recomputeSize(int& l, int& w) const
-{ l=1; w=1; }
-
-
-void AffineTransformWeightPenalty::fprop()
+class SumAbsVariable: public UnaryVariable
 {
-  if (L1_penalty_)
-  {
-    valuedata[0] = weight_decay_*sumabs(input->matValue.subMatRows(1,input->length()-1));
-    if(bias_decay_!=0)
-      valuedata[0] += bias_decay_*sumabs(input->matValue(1));
-  }
-  else
-  {
-    valuedata[0] = weight_decay_*sumsquare(input->matValue.subMatRows(1,input->length()-1));
-    if(bias_decay_!=0)
-      valuedata[0] += bias_decay_*sumsquare(input->matValue(1));
-  }
-}
+protected:
+    typedef UnaryVariable inherited;
+  //!  Default constructor for persistence
+  SumAbsVariable() {}
 
-    
-void AffineTransformWeightPenalty::bprop()
-{
-  int l = input->length() - 1;
-  if (L1_penalty_)
-  {
-    int n=input->width();
-    real *d_w = input->matGradient[0];
-    real *w = input->matValue[0];
-    if (weight_decay_!=0)
-    {
-      for (int j=0;j<l;j++)
-        for (int i=0;i<n;i++)
-          if (w[i]>0)
-            d_w[i] += weight_decay_*gradientdata[0];
-          else if (w[i]<0)
-            d_w[i] -= weight_decay_*gradientdata[0];
-    }
-    if(bias_decay_!=0)
-    {
-      real* d_biases = input->matGradient[l];
-      real* biases = input->matValue[l];
-      for (int i=0;i<n;i++)
-        if (biases[i]>0)
-          d_biases[i] += bias_decay_*gradientdata[0];
-        else if (biases[i]<0)
-          d_biases[i] -= bias_decay_*gradientdata[0];
-    }
-  }
-  else
-  {
-    multiplyAcc(input->matGradient.subMatRows(1,l), input->matValue.subMatRows(1,l), two(weight_decay_)*gradientdata[0]);
-    if(bias_decay_!=0)
-      multiplyAcc(input->matGradient(1), input->matValue(1), two(bias_decay_)*gradientdata[0]);
-  }
-}
-
+public:
+  SumAbsVariable(Variable* input);
+  PLEARN_DECLARE_OBJECT(SumAbsVariable);
+  virtual void recomputeSize(int& l, int& w) const;
+  
+  
+  virtual void fprop();
+  virtual void bprop();
+  //virtual void bbprop();
+  virtual void symbolicBprop();
+  //virtual void rfprop();
+};
 
 
 %> // end of namespace PLearn
 
-
+#endif 

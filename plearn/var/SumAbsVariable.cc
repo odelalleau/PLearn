@@ -36,76 +36,58 @@
 
 
 /* *******************************************************      
-   * $Id: AffineTransformWeightPenalty.cc,v 1.4 2003/10/10 17:18:56 yoshua Exp $
+   * $Id: SumAbsVariable.cc,v 1.1 2003/10/10 17:18:56 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
-#include "AffineTransformWeightPenalty.h"
+#include "SumAbsVariable.h"
 #include "Var_utils.h"
 
 namespace PLearn <%
 using namespace std;
 
 
-PLEARN_IMPLEMENT_OBJECT(AffineTransformWeightPenalty, "ONE LINE DESCR", "NO HELP");
+/** SumAbsVariable **/
+
+SumAbsVariable::SumAbsVariable(Variable* input)
+  :UnaryVariable(input, 1, 1) {}
 
 
+PLEARN_IMPLEMENT_OBJECT(SumAbsVariable, "ONE LINE DESCR", "NO HELP");
 
-void AffineTransformWeightPenalty::recomputeSize(int& l, int& w) const
+void SumAbsVariable::recomputeSize(int& l, int& w) const
 { l=1; w=1; }
 
 
-void AffineTransformWeightPenalty::fprop()
+
+
+
+
+
+
+void SumAbsVariable::fprop()
 {
-  if (L1_penalty_)
-  {
-    valuedata[0] = weight_decay_*sumabs(input->matValue.subMatRows(1,input->length()-1));
-    if(bias_decay_!=0)
-      valuedata[0] += bias_decay_*sumabs(input->matValue(1));
-  }
-  else
-  {
-    valuedata[0] = weight_decay_*sumsquare(input->matValue.subMatRows(1,input->length()-1));
-    if(bias_decay_!=0)
-      valuedata[0] += bias_decay_*sumsquare(input->matValue(1));
-  }
+  int n=input->nelems();
+  *valuedata= 0;
+  for(int i=0; i<n; i++)
+    *valuedata+= fabs(input->valuedata[i]);
 }
 
-    
-void AffineTransformWeightPenalty::bprop()
+
+void SumAbsVariable::bprop()
 {
-  int l = input->length() - 1;
-  if (L1_penalty_)
-  {
-    int n=input->width();
-    real *d_w = input->matGradient[0];
-    real *w = input->matValue[0];
-    if (weight_decay_!=0)
-    {
-      for (int j=0;j<l;j++)
-        for (int i=0;i<n;i++)
-          if (w[i]>0)
-            d_w[i] += weight_decay_*gradientdata[0];
-          else if (w[i]<0)
-            d_w[i] -= weight_decay_*gradientdata[0];
-    }
-    if(bias_decay_!=0)
-    {
-      real* d_biases = input->matGradient[l];
-      real* biases = input->matValue[l];
-      for (int i=0;i<n;i++)
-        if (biases[i]>0)
-          d_biases[i] += bias_decay_*gradientdata[0];
-        else if (biases[i]<0)
-          d_biases[i] -= bias_decay_*gradientdata[0];
-    }
-  }
-  else
-  {
-    multiplyAcc(input->matGradient.subMatRows(1,l), input->matValue.subMatRows(1,l), two(weight_decay_)*gradientdata[0]);
-    if(bias_decay_!=0)
-      multiplyAcc(input->matGradient(1), input->matValue(1), two(bias_decay_)*gradientdata[0]);
-  }
+  int n=input->nelems();
+  for(int i=0; i<n; i++)
+    if (input->valuedata[i]>0)
+      input->gradientdata[i]+= *gradientdata;
+    else if (input->valuedata[i]<0)
+      input->gradientdata[i]-= *gradientdata;
+}
+
+
+void SumAbsVariable::symbolicBprop()
+{
+  input->accg(g*abs(input));
 }
 
 

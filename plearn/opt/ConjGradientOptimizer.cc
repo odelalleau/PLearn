@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.38 2003/10/08 19:29:06 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.39 2003/10/10 17:18:56 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -844,6 +844,9 @@ bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
     search_direction <<  current_opp_gradient;  // first direction = -grad;
     last_cost = cost->value[0];
   }
+
+  if (early_stop)
+    stats_coll.update(cost->value);    
 
   for (; !early_stop && stage<stage_max; stage++) {
 

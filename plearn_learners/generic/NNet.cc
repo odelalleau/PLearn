@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.18 2003/10/10 14:09:14 chapados Exp $
+   * $Id: NNet.cc,v 1.19 2003/10/10 17:18:56 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -65,6 +65,7 @@ NNet::NNet()
    output_layer_weight_decay(0),
    output_layer_bias_decay(0),
    direct_in_to_out_weight_decay(0),
+   L1_penalty(false),
    direct_in_to_out(false),
    output_transfer_func(""),
    interval_minval(0), interval_maxval(1),
@@ -115,6 +116,9 @@ void NNet::declareOptions(OptionList& ol)
 
   declareOption(ol, "direct_in_to_out_weight_decay", &NNet::direct_in_to_out_weight_decay, OptionBase::buildoption, 
                 "    Additional weight decay for the direct in-to-out layer.  Is added to 'weight_decay'.\n");
+
+  declareOption(ol, "L1_penalty", &NNet::L1_penalty, OptionBase::buildoption, 
+                "    should we use L1 penalty instead of the default L2 penalty on the weights?\n");
 
   declareOption(ol, "direct_in_to_out", &NNet::direct_in_to_out, OptionBase::buildoption, 
                 "    should we include direct input to output connections?\n");
@@ -294,13 +298,19 @@ void NNet::build_()
 
       // create penalties
       if(w1 && ((layer1_weight_decay + weight_decay)!=0 || (layer1_bias_decay + bias_decay)!=0))
-        penalties.append(affine_transform_weight_penalty(w1, (layer1_weight_decay + weight_decay), (layer1_bias_decay + bias_decay)));
+        penalties.append(affine_transform_weight_penalty(w1, (layer1_weight_decay + weight_decay), (layer1_bias_decay + bias_decay), L1_penalty));
       if(w2 && ((layer2_weight_decay + weight_decay)!=0 || (layer2_bias_decay + bias_decay)!=0))
-        penalties.append(affine_transform_weight_penalty(w2, (layer2_weight_decay + weight_decay), (layer2_bias_decay + bias_decay)));
+        penalties.append(affine_transform_weight_penalty(w2, (layer2_weight_decay + weight_decay), (layer2_bias_decay + bias_decay), L1_penalty));
       if(wout && ((output_layer_weight_decay + weight_decay)!=0 || (output_layer_bias_decay + bias_decay)!=0))
-        penalties.append(affine_transform_weight_penalty(wout, (output_layer_weight_decay + weight_decay), (output_layer_bias_decay + bias_decay)));
+        penalties.append(affine_transform_weight_penalty(wout, (output_layer_weight_decay + weight_decay), 
+                                                         (output_layer_bias_decay + bias_decay), L1_penalty));
       if(wdirect && (direct_in_to_out_weight_decay + weight_decay) != 0)
-        penalties.append(sumsquare(wdirect)*(direct_in_to_out_weight_decay + weight_decay));
+      {
+        if (L1_penalty)
+          penalties.append(sumsquare(wdirect)*(direct_in_to_out_weight_decay + weight_decay));
+        else
+          penalties.append(sumabs(wdirect)*(direct_in_to_out_weight_decay + weight_decay));
+      }
 
       test_costs = hconcat(costs);
 
@@ -425,11 +435,12 @@ void NNet::train()
     pb = new ProgressBar("Training NNet from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
 
   int initial_stage = stage;
-  while(stage<nstages)
+  bool early_stop=false;
+  while(stage<nstages && !early_stop)
     {
       optimizer->nstages = optstage_per_lstage;
       train_stats->forget();
-      optimizer->optimizeN(*train_stats);
+      early_stop=optimizer->optimizeN(*train_stats);
       train_stats->finalize();
       if(verbosity>2)
         cerr << "Epoch " << stage << " train objective: " << train_stats->getMean() << endl;
