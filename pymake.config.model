@@ -226,25 +226,28 @@ pymakeOption( name = 'noblas',
 
 pymakeOption( name = 'blas',
               description = 'compilation and linking basic BLAS',
-              linkeroptions = '-lblas -lg2c-pic -D USE_BLAS_SPECIALISATIONS'
-#	      linkeroptions = '-lblas -lg2c -D USE_BLAS_SPECIALISATIONS'
+              compileroptions = '-D USE_BLAS_SPECIALISATIONS',
+              linkeroptions = '-lblas -lg2c'
               )
 
 pymakeOption( name = 'pentiumblas',
               description = 'compilation and linking BLAS for Intel Pentium processor',
-              linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl -lvml -lpthread -lg2c -D USE_BLAS_SPECIALISATIONS')
+              compileroptions = '-D USE_BLAS_SPECIALISATIONS',
+              linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl -lvml -lpthread -lg2c')
 
 pymakeOption( name = 'p3blas',
               description = 'compilation and linking BLAS for Intel Pentium 3 processor',
-              linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl_p3 -lmkl_vml_p3 -lpthread -lg2c -D USE_BLAS_SPECIALISATIONS')
+              linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl_p3 -lmkl_vml_p3 -lpthread -lg2c')
 
 pymakeOption( name = 'athlonblas',
               description = 'compilation and linking atlas BLAS for AMD Athlon processor',
-	      linkeroptions = '-L/u/lisa/local/linux-i386/lib/atlas_athlon256 -lcblas -lf77blas -latlas -lg2c -D USE_BLAS_SPECIALISATIONS')
+              compileroptions = '-D USE_BLAS_SPECIALISATIONS',
+              linkeroptions = '-L/u/lisa/local/linux-i386/lib/atlas_athlon256 -lcblas -lf77blas -latlas -lg2c')
 
 pymakeOption( name = 'p4blas',
               description = 'compilation and linking BLAS for Intel Pentium 4 processor',
-              linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl_p4 -lmkl_vml_p4 -lpthread -lg2c -D USE_BLAS_SPECIALISATIONS')
+              compileroptions = '-D USE_BLAS_SPECIALISATIONS',
+              linkeroptions = '-L/u/lisa/local/linux-i386/lib/intelmkl/lib/32 -lmkl_p4 -lmkl_vml_p4 -lpthread -lg2c')
 
 pymakeOption( name = 'float',
               description = 'float mode (real==float)',
