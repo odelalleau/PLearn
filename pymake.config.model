@@ -69,7 +69,7 @@ mandatory_includedirs = []
 
 # (sys.byteorder does not exist in older versions of python)
 if platform=='linux-i386':
-    compileflags = '-DLINUX -DLITTLEENDIAN -mcpu=i686 -march=i686'
+    compileflags = '-DLINUX -DLITTLEENDIAN -mcpu=i686 -march=i686 -ftemplate-depth-30'
 elif platform=='linux-ppc':
     compileflags = '-DLINUXPPC -DBIGENDIAN'    
 elif platform=='linux-alpha':
