@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.38 2005/02/21 03:34:41 chapados Exp $
+   * $Id: StatsCollector.h,v 1.39 2005/03/08 16:20:55 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -171,6 +171,7 @@ public:
   real last_obs() const               { return last_; }
   real sharperatio() const            { return mean()/stddev(); }
   real mean_over_skewness() const     { return mean()/skewness(); }
+  real mean_over_skewness_ms() const;        //!< Special version for model selection
   real mean_over_kurtosis() const     { return mean()/kurtosis(); }
   real zstat() const                  { return mean()/stderror(); }
   real zpr1t() const;                        //!< one-tailed P(zstat())

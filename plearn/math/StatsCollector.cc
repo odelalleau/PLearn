@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.54 2005/02/21 03:34:41 chapados Exp $
+   * $Id: StatsCollector.cc,v 1.55 2005/03/08 16:20:54 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -62,34 +62,35 @@ PLEARN_IMPLEMENT_OBJECT(
   "the ranges, so to get reasonable results, your sequence should be iid, and NOT sorted!\n"
   "\n"
   "The following statistics are available:\n"
-  "  - E              Sample mean\n"
-  "  - V              Sample variance\n"
-  "  - STDDEV         Sample standard deviation\n"
-  "  - STDERROR       Standard error of the sample mean\n"
-  "  - SKEW           Skewness == E(X-mu)^3 / sigma^3\n"
-  "  - KURT           Excess Kurtosis == E(X-mu)^4 / sigma^4 - 3\n"
-  "  - MIN            Minimum value\n"
-  "  - MAX            Maximum value\n"
-  "  - RANGE          The range, i.e. MAX - MIN\n"
-  "  - SUM            Sum of observations \n"
-  "  - SUMSQ          Sum of squares\n"
-  "  - FIRST          First observation\n"
-  "  - LAST           Last observation\n"
-  "  - N              Total number of observations\n"
-  "  - NMISSING       Number of missing observations\n"
-  "  - NNONMISSING    Number of non-missing observations\n"
-  "  - SHARPERATIO    Mean divided by standard deviation\n"
-  "  - EoverSKEW      Mean divided by skewness\n"
-  "  - EoverKURT      Mean divided by kurtosis\n"
-  "  - ZSTAT          Z-statistic of the sample mean estimator\n"
-  "  - PZ1t           One-tailed probability of the Z-Statistic\n"
-  "  - PZ2t           Two-tailed probability of the Z-Statistic\n"
-  "  - PSEUDOQ(q)     Return the location of the pseudo-quantile q, where 0 < q < 1\n"
-  "                   NOTE that bin counting must be enabled, i.e. maxnvalues > 0\n"
-  "  - IQR            The interquartile range, i.e. PSEUDOQ(0.75) - PSEUDOQ(0.25)\n"
-  "  - PRR            The pseudo robust range, i.e. PSEUDOQ(0.99) - PSEUDOQ(0.01)\n"
-  "  - LIFT(f)        Lift computed at fraction f (0 <= f <= 1)\n"
-  "  - NIPS_LIFT      Lift cost as computed in NIPS'2004 challenge\n"
+  "  - E            -  Sample mean\n"
+  "  - V            -  Sample variance\n"
+  "  - STDDEV       -  Sample standard deviation\n"
+  "  - STDERROR     -  Standard error of the sample mean\n"
+  "  - SKEW         -  Skewness == E(X-mu)^3 / sigma^3\n"
+  "  - KURT         -  Excess Kurtosis == E(X-mu)^4 / sigma^4 - 3\n"
+  "  - MIN          -  Minimum value\n"
+  "  - MAX          -  Maximum value\n"
+  "  - RANGE        -  The range, i.e. MAX - MIN\n"
+  "  - SUM          -  Sum of observations \n"
+  "  - SUMSQ        -  Sum of squares\n"
+  "  - FIRST        -  First observation\n"
+  "  - LAST         -  Last observation\n"
+  "  - N            -  Total number of observations\n"
+  "  - NMISSING     -  Number of missing observations\n"
+  "  - NNONMISSING  -  Number of non-missing observations\n"
+  "  - SHARPERATIO  -  Mean divided by standard deviation\n"
+  "  - EoverSKEW    -  Mean divided by skewness\n"
+  "  - EoverSKEWms  -  Mean divided by skewness (special version for model seoection; see note below)\n"
+  "  - EoverKURT    -  Mean divided by kurtosis\n"
+  "  - ZSTAT        -  Z-statistic of the sample mean estimator\n"
+  "  - PZ1t         -  One-tailed probability of the Z-Statistic\n"
+  "  - PZ2t         -  Two-tailed probability of the Z-Statistic\n"
+  "  - PSEUDOQ(q)   -  Return the location of the pseudo-quantile q, where 0 < q < 1.\n"
+  "                    NOTE that bin counting must be enabled, i.e. maxnvalues > 0\n"
+  "  - IQR          -  The interquartile range, i.e. PSEUDOQ(0.75) - PSEUDOQ(0.25)\n"
+  "  - PRR          -  The pseudo robust range, i.e. PSEUDOQ(0.99) - PSEUDOQ(0.01)\n"
+  "  - LIFT(f)      -  Lift computed at fraction f (0 <= f <= 1)\n"
+  "  - NIPS_LIFT    -  Lift cost as computed in NIPS'2004 challenge\n"
   "\n"
   "Notes:\n"
   "  - When computing LIFT-related statistics, all values encountered need to be stored\n"
@@ -109,6 +110,10 @@ PLEARN_IMPLEMENT_OBJECT(
   "    scaled by 100, as it is common practice.\n"
   "  - The skewness and kurtosis are computed in terms of UNCENTERED ACCUMULATORS,\n"
   "    i.e. sum{(x-a)^n}, where a is the first observation encountered, and n is some integer\n"
+  "  - EoverSKEWms is defined as EoverSKEW when the both the numerator and denominator\n"
+  "    are positive, otherwise it is defined as -|EoverSKEW|, i.e. it is always negative;\n"
+  "    the intended purpose of this statistic is to serve as a model selection criterion,\n"
+  "    wherein one wants to encourage high E and low positive skewness.\n"
   "  - For the skewness, defined as skewness == E(X-mu)^3 / sigma^3, we compute the top\n"
   "    term as\n"
   "\n"
@@ -875,6 +880,19 @@ real StatsCollector::kurtosis() const
   denominator *= denominator;
   denominator *= denominator;
   return numerator / denominator - 3.0;
+}
+
+///////////////////////////
+// mean_over_skewness_ms //
+///////////////////////////
+real StatsCollector::mean_over_skewness_ms() const
+{
+  real m = mean();
+  real s = skewness();
+  if (m > 0 && s > 0)
+    return m / s;
+  else
+    return - fabs(m / s);
 }
 
 //////////
