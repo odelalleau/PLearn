@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: lisaplearn.cc,v 1.6 2004/03/09 16:50:27 tihocan Exp $
+   * $Id: lisaplearn.cc,v 1.7 2004/03/10 18:23:02 tihocan Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -71,6 +71,7 @@
 //#include "RegressorFromDensity.h"
 #include "Distribution.h"
 #include "GaussianDistribution.h"
+#include "LinearRegressor.h"
 #include "LocallyWeightedDistribution.h"
 #include "NeuralNet.h"
 #include "NNet.h"
@@ -83,7 +84,6 @@
 
 // #include "ConstantModel.h"
 // #include "MultiLearner.h"
-// #include "LinearRegressor.h"
 // #include "EnsembleLearner.h"
 
 // #include "SVM.h"
