@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: PP.h,v 1.7 2004/07/27 16:35:32 tihocan Exp $
+   * $Id: PP.h,v 1.8 2004/10/14 21:23:27 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -54,7 +54,7 @@
 #include "plerror.h"
 
 namespace PLearn {
-using namespace std;
+using std::string;
 
 class PPointable
 {
@@ -246,7 +246,7 @@ template <class A, class B>
 class MultiMap : public PPointable
 {
 public:
-  multimap<A,B> map;
+  std::multimap<A,B> map;
 };
 
 

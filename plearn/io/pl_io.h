@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io.h,v 1.13 2004/08/27 12:56:37 dorionc Exp $
+   * $Id: pl_io.h,v 1.14 2004/10/14 21:23:55 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,22 +48,15 @@
 #ifndef pl_io_INC
 #define pl_io_INC
 
-//#include <cctype>
 #include <iostream>
-//#include <iomanip>
-//#include <fstream>
-//#include <string>
-//#include <vector>
 #include <map>
-//#include <set>
-
-//#include "PStream.h"
-//#include "fileutils.h"
 #include <plearn/math/pl_math.h>        //!< For 'real'.
-//#include "stringutils.h"
 
 namespace PLearn {
-using namespace std;
+using std::map;
+using std::pair;
+using std::istream;
+using std::ostream;
 
 // Support for outputing std::map on an ostream.
 template <class Key, class Value>

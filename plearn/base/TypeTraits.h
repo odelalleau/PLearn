@@ -34,7 +34,7 @@
 
  
 /* *******************************************************      
-   * $Id: TypeTraits.h,v 1.7 2004/05/14 17:49:10 chrish42 Exp $
+   * $Id: TypeTraits.h,v 1.8 2004/10/14 21:23:27 ducharme Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -51,7 +51,7 @@
 #include <map>
 
 namespace PLearn {
-using namespace std;
+using std::string;
 
 /*! TypeTraits<some_type> will deliver the following information on the type:
   - its name() [ returned as a string ]
@@ -142,7 +142,7 @@ DECLARE_TYPE_TRAITS_FOR_BASETYPE(bool, 0x12, 0x12);
 DECLARE_TYPE_TRAITS(string);
 
 template<class T>
-class TypeTraits< vector<T> >
+class TypeTraits< std::vector<T> >
 {
 public:
   static inline string name()
@@ -156,7 +156,7 @@ public:
 };
 
 template<class T>
-class TypeTraits< list<T> >
+class TypeTraits< std::list<T> >
 {
 public:
   static inline string name()
@@ -170,7 +170,7 @@ public:
 };
 
 template<class T, class U>
-class TypeTraits< pair<T,U> >
+class TypeTraits< std::pair<T,U> >
 {
 public:
   static inline string name()
@@ -184,7 +184,7 @@ public:
 };
 
 template<class T, class U>
-class TypeTraits< map<T,U> >
+class TypeTraits< std::map<T,U> >
 {
 public:
   static inline string name()

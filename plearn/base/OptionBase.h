@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: OptionBase.h,v 1.8 2004/07/21 16:30:50 chrish42 Exp $
+   * $Id: OptionBase.h,v 1.9 2004/10/14 21:23:27 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,7 +53,7 @@
 #include <vector>
 
 namespace PLearn {
-using namespace std;
+using std::string;
 
 // Predeclaration of Object
 class Object;
@@ -130,7 +130,7 @@ public:
   { defaultval_ = newdefaultval; }
 };
 
-typedef vector< PP<OptionBase> > OptionList;
+typedef std::vector< PP<OptionBase> > OptionList;
 
 
 

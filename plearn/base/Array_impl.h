@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array_impl.h,v 1.4 2004/09/14 16:04:35 chrish42 Exp $
+   * $Id: Array_impl.h,v 1.5 2004/10/14 21:23:27 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,7 +50,7 @@
 #include "Array_decl.h"
 
 namespace PLearn {
-using namespace std;
+using std::string;
 
 template <class T>
 void swap(Array<T>& a1, Array<T>& a2)

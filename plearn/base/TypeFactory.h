@@ -39,11 +39,10 @@
 
 #include <string>
 #include <map>
-//#include <vector>
 #include "OptionBase.h"
 
 namespace PLearn {
-using namespace std;
+using std::string;
 
 // Predeclarations
 class Object;
@@ -82,7 +81,7 @@ public:
   {}
 };
 
-typedef map<string,TypeMapEntry> TypeMap;
+typedef std::map<string,TypeMapEntry> TypeMap;
 
 
 //###########################  CLASS  TYPEFACTORY  ############################

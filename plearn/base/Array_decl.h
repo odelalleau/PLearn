@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array_decl.h,v 1.6 2004/09/14 16:04:35 chrish42 Exp $
+   * $Id: Array_decl.h,v 1.7 2004/10/14 21:23:27 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,18 +47,15 @@
 #ifndef Array_decl_INC
 #define Array_decl_INC
 
-//#include <map>
-//#include <set>
 #include <string>
 #include <vector>
 #include "TypeTraits.h"
-//#include "general.h"
-//#include "fileutils.h"
 #include <plearn/math/TMat_decl.h>
 
 #include "ms_hash_wrapper.h"
 namespace PLearn {
-using namespace std;
+using std::string;
+using std::vector;
 
 
 template <class T> 

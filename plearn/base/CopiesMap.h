@@ -16,12 +16,12 @@
       inline void deepCopyField(Array<TYPE>&, CopiesMap&) {}
 
 namespace PLearn {
+using std::string;
+using std::map;
 
 class VMField;
 class VMFieldStat;
 template <class T> class Array;
-
-using namespace std;
 
   //!  Global typedef to make the map of copied objects (needed by the deep
   //!  copy mechanism in Object) more palatable

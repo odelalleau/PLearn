@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Option.h,v 1.6 2004/08/31 17:22:40 plearner Exp $
+   * $Id: Option.h,v 1.7 2004/10/14 21:23:27 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,7 +49,7 @@
 #include "OptionBase.h"
 
 namespace PLearn {
-using namespace std;
+using std::string;
 
 //! Template class for option definitions
 template<class ObjectType, class OptionType, class ConstOptionType>

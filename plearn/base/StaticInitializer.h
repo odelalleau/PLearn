@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StaticInitializer.h,v 1.3 2004/02/26 06:30:25 nova77 Exp $ 
+   * $Id: StaticInitializer.h,v 1.4 2004/10/14 21:23:27 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file StaticInitializer.h */
@@ -48,7 +48,6 @@
 #endif
 
 namespace PLearn {
-using namespace std;
 
 typedef void (*VOIDFUNC)();
 

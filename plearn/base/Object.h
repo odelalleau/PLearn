@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.35 2004/07/07 15:09:38 chapados Exp $
+   * $Id: Object.h,v 1.36 2004/10/14 21:23:27 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,15 +48,10 @@
 
 #include <map>
 #include <string>
-//#include <set>
-//#include "general.h"
 #include "PP.h"
 #include "StaticInitializer.h"
-//#include "TypeTraits.h"
 #include "Array.h"
-//#include "stringutils.h"
 #include "TypeFactory.h"
-//#include "OptionBase.h"
 #include "Option.h"
 
 namespace PLearn {

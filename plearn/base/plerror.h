@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: plerror.h,v 1.5 2004/02/28 17:57:29 tihocan Exp $
+   * $Id: plerror.h,v 1.6 2004/10/14 21:23:27 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -48,13 +48,9 @@
 #ifndef perror_INC
 #define perror_INC
 
-/*#include <cstdio>
-#include <cstdarg>
-#include <iostream>*/
 #include "plexceptions.h"
 
 namespace PLearn {
-using namespace std;
 
 #ifndef USE_EXCEPTIONS
 extern ostream* error_stream;

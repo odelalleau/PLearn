@@ -36,25 +36,17 @@
 #ifndef PStream_INC
 #define PStream_INC
 
-//#include <iosfwd>
 #include <map>
 #include <set>
-//#include <bitset>
 #include <sstream>
+#include <fstream>
 #include <plearn/base/pl_hash_fun.h>
-//#include "PP.h"
 #include "PStream_util.h"
 #include <plearn/base/plerror.h>
-#include <fstream>
-//#include "TypeTraits.h"
 #include <plearn/base/byte_order.h>
 #include "fileutils.h"
 #include "PStreamBuf.h"
 #include "StdPStreamBuf.h"
-
-// OLD MARKABLE STREAM HACK
-// #include "pl_streambuf.h"
-// #include "pl_fdstream.h"
 
 
 namespace PLearn {
