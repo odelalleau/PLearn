@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SpiralDistribution.cc,v 1.3 2003/08/13 08:13:46 plearner Exp $ 
+   * $Id: SpiralDistribution.cc,v 1.4 2004/02/06 00:33:48 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file SpiralDistribution.cc */
@@ -61,7 +61,7 @@ SpiralDistribution::SpiralDistribution()
   {
     return 
       "SpiralDistribution is a generative model that generates 2D (x,y) samples in the following manner:\n"
-      " t ~ uniform([tmin, tmax]) \n"
+      " t ~ uniform([tmin, tmax])^uniformity \n"
       " x = lambda*t*sin(alpha*t) + N(0,sigma) \n"
       " y = lambda*t*cos(alpha*t) + N(0,sigma) \n";
   }
@@ -73,6 +73,7 @@ SpiralDistribution::SpiralDistribution()
   declareOption(ol, "tmin", &SpiralDistribution::tmin, OptionBase::buildoption,"");
   declareOption(ol, "tmax", &SpiralDistribution::tmax, OptionBase::buildoption,"");
   declareOption(ol, "sigma", &SpiralDistribution::sigma, OptionBase::buildoption,"");
+  declareOption(ol, "uniformity", &SpiralDistribution::uniformity, OptionBase::buildoption,"");
   declareOption(ol, "include_t", &SpiralDistribution::include_t, OptionBase::buildoption,
                 "If true, then t will be appended to the generated sample, along with x and y.");
   
@@ -137,7 +138,8 @@ void SpiralDistribution::generate(Vec& v) const
   v.resize(inputsize());
   
   real x, y;
-  real t =  bounded_uniform(tmin,tmax);
+  real u =  bounded_uniform(tmin,tmax);
+  real t = (uniformity==1)?u:pow(u,uniformity);
   curve(t,x,y);
   x += gaussian_mu_sigma(0, sigma);
   y += gaussian_mu_sigma(0, sigma);

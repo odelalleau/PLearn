@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SpiralDistribution.h,v 1.3 2003/08/13 08:13:46 plearner Exp $ 
+   * $Id: SpiralDistribution.h,v 1.4 2004/02/06 00:33:49 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file SpiralDistribution.h */
@@ -63,6 +63,7 @@ public:
   real tmin;
   real tmax;
   real sigma;
+  real uniformity;
   bool include_t;
 
   // ****************
