@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelPCA.cc,v 1.2 2004/05/11 20:59:08 tihocan Exp $ 
+   * $Id: KernelPCA.cc,v 1.3 2004/05/14 02:15:10 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -50,7 +50,7 @@ using namespace std;
 // KernelPCA //
 //////////////////
 KernelPCA::KernelPCA() 
-/* ### Initialize all fields to their default value here */
+: remove_bias(false)
 {
   // Usually, one will want only positive eigenvalues.
   min_eigenvalue = 0;
@@ -68,10 +68,9 @@ PLEARN_IMPLEMENT_OBJECT(KernelPCA,
 ////////////////////
 void KernelPCA::declareOptions(OptionList& ol)
 {
-  // ### ex:
-  // declareOption(ol, "myoption", &KernelPCA::myoption, OptionBase::buildoption,
-  //               "Help text describing this option");
-  // ...
+  declareOption(ol, "remove_bias", &KernelPCA::remove_bias, OptionBase::buildoption,
+      "If set to 1, the (additively) normalized kernel will not take into account terms\n"
+      "of the form K(x_i,x_i), in order to remove bias induced by those terms.");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -109,7 +108,7 @@ void KernelPCA::build_()
   if (kpca_kernel &&
       (!kernel ||
        (dynamic_cast<AdditiveNormalizationKernel*>((Kernel*) kernel))->source_kernel != kpca_kernel)) {
-    this->kernel = new AdditiveNormalizationKernel(kpca_kernel);
+    this->kernel = new AdditiveNormalizationKernel(kpca_kernel, remove_bias);
   }
 }
 

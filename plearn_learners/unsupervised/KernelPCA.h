@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelPCA.h,v 1.1 2004/05/07 19:01:59 tihocan Exp $ 
+   * $Id: KernelPCA.h,v 1.2 2004/05/14 02:15:10 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -70,6 +70,7 @@ public:
   // * public build options *
   // ************************
 
+  bool remove_bias;
 
   // ****************
   // * Constructors *

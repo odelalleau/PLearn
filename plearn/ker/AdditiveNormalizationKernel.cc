@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdditiveNormalizationKernel.cc,v 1.3 2004/05/07 19:04:42 tihocan Exp $ 
+   * $Id: AdditiveNormalizationKernel.cc,v 1.4 2004/05/14 02:13:03 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -51,11 +51,13 @@ using namespace std;
 /////////////////////////////////
 AdditiveNormalizationKernel::AdditiveNormalizationKernel() 
 /* ### Initialize all fields to their default value here */
-: data_will_change(false)
+: data_will_change(false),
+  remove_bias(false)
 {}
 
-AdditiveNormalizationKernel::AdditiveNormalizationKernel(Ker the_source) 
-: data_will_change(false)
+AdditiveNormalizationKernel::AdditiveNormalizationKernel(Ker the_source, bool the_remove_bias)
+: data_will_change(false),
+  remove_bias(the_remove_bias)
 {
   source_kernel = the_source;
   build();
@@ -65,7 +67,9 @@ PLEARN_IMPLEMENT_OBJECT(AdditiveNormalizationKernel,
     "Normalizes additively an underlying kernel.",
     "From a kernel K, defines a new kernel K' such that:\n"
     "  K'(x,y) = K(x,y) - E[K(x,x_i)] - E[K(x_i,y)] + E[K(x_i,x_j)]\n"
-    "where the expectation is performed on the data set."
+    "where the expectation is performed on the data set.\n"
+    "If the 'remove_bias' options is set, then the expectation will not\n"
+    "take into account terms of the form K(x_i,x_i).\n"
 );
 
 ////////////////////
@@ -84,6 +88,9 @@ void AdditiveNormalizationKernel::declareOptions(OptionList& ol)
   declareOption(ol, "data_will_change", &AdditiveNormalizationKernel::data_will_change, OptionBase::buildoption,
       "If set to 1, then the Gram matrix will be always recomputed, even if\n"
       "it's not completely sure the data has changed.");
+
+  declareOption(ol, "remove_bias", &AdditiveNormalizationKernel::remove_bias, OptionBase::buildoption,
+      "If set to 1, then the bias induced by the K(x_i,x_i) will be removed.\n");
 
   // Learnt options.
 
@@ -244,7 +251,9 @@ void AdditiveNormalizationKernel::setDataForKernelMatrix(VMat the_data) {
     for (int i = 0; i < n; i++) {
       if (is_symmetric) {
         real v;
-        average_row[i] += gram(i,i);
+        if (!remove_bias) {
+          average_row[i] += gram(i,i);
+        }
         for (int j = i + 1; j < n; j++) {
           v = gram(i,j);
           average_row[i] += v;
@@ -252,15 +261,25 @@ void AdditiveNormalizationKernel::setDataForKernelMatrix(VMat the_data) {
         }
       } else {
         for (int j = 0; j < n; j++) {
-          average_row[i] += gram(i,j);
-          average_col[i] += gram(j,i);
+          if (!remove_bias || j != i) {
+            average_row[i] += gram(i,j);
+            average_col[i] += gram(j,i);
+          }
         }
       }
     }
-    total_average = sum(average_row) / real(n * n);
-    average_row /= real(n);
+    total_average = sum(average_row);
+    real n_terms_in_sum;    // The number of terms summed in average_row.
+    if (remove_bias) {
+      // The diagonal terms were not added.
+      n_terms_in_sum = real(n - 1);
+    } else {
+      n_terms_in_sum = real(n);
+    }
+    total_average /= real(n * n_terms_in_sum);
+    average_row /= n_terms_in_sum;
     if (!is_symmetric) {
-      average_col /= real(n);
+      average_col /= n_terms_in_sum;
     }
   }
 }

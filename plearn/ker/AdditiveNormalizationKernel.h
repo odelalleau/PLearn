@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdditiveNormalizationKernel.h,v 1.2 2004/05/07 19:04:42 tihocan Exp $ 
+   * $Id: AdditiveNormalizationKernel.h,v 1.3 2004/05/14 02:13:03 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -81,6 +81,7 @@ public:
   // ************************
 
   bool data_will_change;
+  bool remove_bias;
 
   // ****************
   // * Constructors *
@@ -90,7 +91,7 @@ public:
   AdditiveNormalizationKernel();
 
   //! Created from an existing kernel.
-  AdditiveNormalizationKernel(Ker the_source);
+  AdditiveNormalizationKernel(Ker the_source, bool remove_bias = false);
 
   // ************************
   // * SourceKernel methods *
