@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilteredVMatrix.cc,v 1.4 2004/02/20 21:14:30 chrish42 Exp $ 
+   * $Id: FilteredVMatrix.cc,v 1.5 2004/03/05 17:34:57 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -48,7 +48,8 @@ using namespace std;
 
 
 FilteredVMatrix::FilteredVMatrix()
-  :inherited()
+  : inherited(),
+    build_complete(false)
 {
 }
 
@@ -88,7 +89,11 @@ void FilteredVMatrix::openIndex()
 void FilteredVMatrix::setMetaDataDir(const string& the_metadatadir)
 {
   inherited::setMetaDataDir(the_metadatadir);
-  openIndex();
+  if (build_complete) {
+    // Only call openIndex() if the build has been completed,
+    // otherwise the filtering program won't be ready yet.
+    openIndex();
+  }
 }
 
 void FilteredVMatrix::getRow(int i, Vec v) const
@@ -111,12 +116,17 @@ void FilteredVMatrix::build_()
   vector<string> fieldnames;
   program.setSource(source);
   program.compileString(prg,fieldnames); 
+  if(metadatadir != "") {
+    openIndex();
+  }
   setMetaInfoFromSource();
+  build_complete = true;
 }
 
 // ### Nothing to add here, simply calls build_
 void FilteredVMatrix::build()
 {
+  build_complete = false;
   inherited::build();
   build_();
 }

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilteredVMatrix.h,v 1.3 2004/02/20 21:14:30 chrish42 Exp $ 
+   * $Id: FilteredVMatrix.h,v 1.4 2004/03/05 17:34:57 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -52,7 +52,15 @@ using namespace std;
 
 class FilteredVMatrix: public SourceVMatrix
 {
+
+private:
+
+  //! A custom hack to make sure openIndex() is not called before
+  //! the build is complete.
+  bool build_complete;
+  
 protected:
+
   VMatLanguage program;
   IntVecFile indexes;  // indexes[i] is the
 
