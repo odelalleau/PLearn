@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GeodesicDistanceKernel.cc,v 1.3 2004/07/09 22:30:36 monperrm Exp $ 
+   * $Id: GeodesicDistanceKernel.cc,v 1.4 2004/07/15 14:26:11 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -142,11 +142,9 @@ void GeodesicDistanceKernel::computeNearestNeighbors(const Vec& x, Mat& k_xi_x_s
   partialSortRows(k_xi_x_sorted, knn);
 }
 
-/////////////////////////////
-// computeShortestDistance //
-/////////////////////////////
-
-// comments in .h
+/////////////////////////////////////
+// computeNearestGeodesicNeighbour //
+/////////////////////////////////////
 int GeodesicDistanceKernel::computeNearestGeodesicNeighbour(int i, const Mat& k_xi_x_sorted) const {
   real min = k_xi_x_sorted(0,0) + geo_distances->get(i, int(k_xi_x_sorted(0,1)));
   real dist;
@@ -158,11 +156,12 @@ int GeodesicDistanceKernel::computeNearestGeodesicNeighbour(int i, const Mat& k_
       indice = j;
     }
   }
-  return indice;
+  return int(k_xi_x_sorted(indice,1));
 }
 
-
-
+/////////////////////////////
+// computeShortestDistance //
+/////////////////////////////
 real GeodesicDistanceKernel::computeShortestDistance(int i, const Mat& k_xi_x_sorted) const {
   int indice = computeNearestGeodesicNeighbour(i,k_xi_x_sorted);
   return k_xi_x_sorted(indice,0) + geo_distances->get(i, int(k_xi_x_sorted(indice,1)));
@@ -212,7 +211,7 @@ real GeodesicDistanceKernel::evaluate_i_x(int i, const Vec& x, real squared_norm
   return evaluate_i_x_again(i, x, squared_norm_of_x, true);
 }
 
-real GeodesicDistanceKernel::evaluate_i_x(int i, const Vec& x, const Mat& k_xi_x_sorted, bool powdistance) const {
+real GeodesicDistanceKernel::evaluate_i_x_from_distances(int i, const Mat& k_xi_x_sorted) const {
   if (pow_distance) {
     return square(computeShortestDistance(i, k_xi_x_sorted));
   } else {
