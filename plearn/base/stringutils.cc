@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.cc,v 1.5 2002/11/30 04:27:33 plearner Exp $
+   * $Id: stringutils.cc,v 1.6 2002/12/12 23:07:10 jkeable Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -52,57 +52,94 @@
 namespace PLearn <%
 using namespace std;
 
-  ProgressBar::ProgressBar(ostream& logstream, string title, int the_maxpos)
-    :out(&logstream), currentpos(0), maxpos(the_maxpos)
+/////////////////////////////////////////////////////////////////////////////////////
+// Please, put me in my own file !!
+
+ProgressBarPlugin * ProgressBar::plugin = new TextProgressBarPlugin(cerr);
+
+ProgressBar::ProgressBar(string _title, int the_maxpos)
+  :title(_title),currentpos(0), maxpos(the_maxpos),closed(false)
   {
-    out.outmode=PStream::raw_ascii;
-#if USING_MPI
-    if(PLMPI::rank==0)
-      {
-#endif
-        string fulltitle = string(" ") + title + " (" + tostring(maxpos) + ") ";
-        out << "[" + center(fulltitle,100,'-') + "]\n[";
-        out.flush();
-#if USING_MPI
-      }
-#endif
+    if(title!="__VOID__")
+      plugin->addProgressBar(this);
   }
 
-  ProgressBar::ProgressBar(PStream& logstream, string title, int the_maxpos)
-    :out(logstream), currentpos(0), maxpos(the_maxpos)
+ProgressBar::ProgressBar(ostream& _out,string _title, int the_maxpos)
+  :title(_title),currentpos(0), maxpos(the_maxpos),closed(false)
   {
-    out.outmode=PStream::raw_ascii;
-#if USING_MPI
-    if(PLMPI::rank==0)
-      {
-#endif
-        string fulltitle = string(" ") + title + " (" + tostring(maxpos) + ") ";
-        out << "[" + center(fulltitle,100,'-') + "]\n[";
-        out.flush();
-#if USING_MPI
-      }
-#endif
+    if(title!="__VOID__")
+      plugin->addProgressBar(this);
+  }
+ProgressBar::ProgressBar(PStream& _out,string _title, int the_maxpos)
+  :title(_title),currentpos(0), maxpos(the_maxpos),closed(false)
+  {
+    if(title!="__VOID__")
+      plugin->addProgressBar(this);
   }
 
-  void ProgressBar::operator()(int newpos)
+ProgressBar::~ProgressBar() 
+{
+  close();
+}
+
+void ProgressBar::close()
+{ 
+  if(closed)
+    return;
+  closed=true;
+  if(title=="__VOID__")
+    return;
+  operator()(maxpos); 
+  plugin->killProgressBar(this);
+}              
+
+TextProgressBarPlugin::TextProgressBarPlugin(ostream& _out)
+  :out(&_out)
+{
+  out.outmode=PStream::raw_ascii;
+}
+
+TextProgressBarPlugin::TextProgressBarPlugin(PStream& _out)
+  :out(_out)
+{
+}
+
+void TextProgressBarPlugin::addProgressBar(ProgressBar * pb)
+{
+#if USING_MPI
+  if(PLMPI::rank==0)
   {
+#endif
+    string fulltitle = string(" ") + pb->title + " (" + tostring(pb->maxpos) + ") ";
+    out << "[" + center(fulltitle,100,'-') + "]\n[";
+    out.flush();
+#if USING_MPI
+  }
+#endif
+}
+
+void TextProgressBarPlugin::update(ProgressBar * pb,int newpos)
+{
 #if USING_MPI
     if(PLMPI::rank==0)
       {
 #endif
-        if(!maxpos)
+        if(!pb->maxpos)
           return;
-        int ndots = newpos*100/maxpos - currentpos*100/maxpos;
+        int ndots = newpos*100 / pb->maxpos - pb->currentpos*100/pb->maxpos;
         while(ndots--)
           out << '.';
         out.flush();
-        currentpos = newpos;
-        if(currentpos==maxpos)
+        pb->currentpos = newpos;
+        if(pb->currentpos==pb->maxpos)
           out << "]" << endl;
 #if USING_MPI
       }
 #endif
-  }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+
 
 
 string left(const string& s, unsigned int width, char padding)

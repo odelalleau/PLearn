@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.7 2002/11/30 04:27:33 plearner Exp $
+   * $Id: stringutils.h,v 1.8 2002/12/12 23:07:11 jkeable Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -248,29 +248,71 @@ vector<string> remove(const vector<string> &v, string element);
 
   //!  ------------------------------------------------------------------
 
+/////////////////////////////////////////////////////////////////////////////////////
+// Please, put me in my own file !!
 
-  // This class will help you display progress of a calculation
+class ProgressBar;
+
+// base class for pb plugins
+class ProgressBarPlugin
+{
+public:
+  ProgressBarPlugin(){}
+  virtual void addProgressBar(ProgressBar * pb){};
+  virtual void killProgressBar(ProgressBar * pb){};
+  virtual void update(ProgressBar * pb, int newpos){};
+};
+
+class TextProgressBarPlugin : public ProgressBarPlugin
+{
+  PStream out;
+public:
+  virtual void addProgressBar(ProgressBar * pb);
+  virtual void update(ProgressBar * pb, int newpos);
+
+  TextProgressBarPlugin(ostream& _out);
+  TextProgressBarPlugin(PStream& _out);
+  
+  virtual ~TextProgressBarPlugin(){}
+
+};
+
+// This class will help you display progress of a calculation
 class ProgressBar
 {
-protected:
-  //ostream& out;
-  PStream out;
+public:
+  string title;
   int currentpos; // current position
   int maxpos;
 
-public:
-
-  // creates a new progressbar on the given logstream with the given title and maxpos
-  ProgressBar(ostream& logstream, string title, int the_maxpos);
-  ProgressBar(PStream& logstream, string title, int the_maxpos);
-
+  // creates a new progressbar with the given title and maxpos
+  // *** Note, for now, ignore the stream (someday, remove this argument for 
+  // every progressBar creation in PLearn)
+  ProgressBar(string _title, int the_maxpos);
+  ProgressBar(ostream& _out,string _title, int the_maxpos);
+  ProgressBar(PStream& _out,string _title, int the_maxpos);
+  
   // moves the progressbar up to position newpos
-  void operator()(int newpos);
+  void operator()(int newpos){plugin->update(this,newpos);}
  
-  // Completes the progressbar before freeing the object
-  ~ProgressBar() { operator()(maxpos); }              
+  // assume plugin always exist (created static in .cc)
+  static void setPlugin(ProgressBarPlugin * _plugin){delete plugin;plugin=_plugin;}
+
+  // Completes and removes the progressBar 
+  void close();
+  
+  // calls close() if not already done
+  ~ProgressBar();
+private:
+  bool closed;
+  static ProgressBarPlugin * plugin;
 };
 
+// Special progress bar object : 
+// assign your progressbar object to this object to force its destruction
+static ProgressBar void_progress_bar = ProgressBar("__VOID__",0);
+
+////////////////////////////////////////////////////////////////
 
 /*! ******************
     * Implementation *
