@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ShiftAndRescaleVMatrix.cc,v 1.13 2004/09/27 20:19:27 plearner Exp $
+   * $Id: ShiftAndRescaleVMatrix.cc,v 1.14 2005/02/04 15:09:27 tihocan Exp $
    ******************************************************* */
 
 #include "ShiftAndRescaleVMatrix.h"
@@ -138,7 +138,7 @@ void ShiftAndRescaleVMatrix::build_()
     if (vm->getMetaDataDir() != "") {
       setMetaDataDir(vm->getMetaDataDir());
     }
-    setAlias(vm->getAlias());
+    // setAlias(vm->getAlias()); // Aliases are deprecated.
     fieldinfos = vm->getFieldInfos();
     if (automatic)
     {

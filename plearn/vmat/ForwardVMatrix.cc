@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
- * $Id: ForwardVMatrix.cc,v 1.17 2005/01/25 03:15:46 dorionc Exp $
+ * $Id: ForwardVMatrix.cc,v 1.18 2005/02/04 15:09:26 tihocan Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -81,7 +81,7 @@ ForwardVMatrix::build_()
     setMtime(vm->getMtime());
     if(vm->hasMetaDataDir())
       setMetaDataDir(vm->getMetaDataDir());
-    setAlias(vm->getAlias());
+    // setAlias(vm->getAlias()); // Aliases are now deprecated.
     //  field_stats = vm->field_stats;
 
     // copy fieldnames from vm if not set and they look good
