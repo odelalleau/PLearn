@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.34 2005/02/17 17:35:53 tihocan Exp $
+   * $Id: getDataSet.cc,v 1.35 2005/02/18 17:09:55 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -264,7 +264,7 @@ VMat getDataSet(const string& datasetstring, const string& alias)
   vm->unduplicateFieldNames();
 
   if(vm->inputsize()<0 && vm->targetsize()<0 && vm->weightsize()<0) {
-    PLWARNING("In getDataSet - The VMat loaded has no inputsize, targetsize "
+    PLWARNING("In getDataSet - The loaded VMat has no inputsize, targetsize "
               "or weightsize specified, setting them to (%d,0,0)", vm->width());
     vm->defineSizes(vm->width(),0,0);
   }
