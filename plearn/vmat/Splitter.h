@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Splitter.h,v 1.8 2004/03/23 23:08:08 morinf Exp $ 
+   * $Id: Splitter.h,v 1.9 2004/04/26 13:09:13 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file Splitter.h */
@@ -113,8 +113,10 @@ DECLARE_OBJECT_PTR(Splitter);
   Last argument i allows to get the ith split of a K-fold cross validation
   i = 0 corresponds to having the last ntest samples used as the test set
   i = 1 means having the ntest samples before those as the test set, etc...
+  If the bool 'use_all' is true, then the test set may contain more examples so that
+  if we ask all splits, all the examples are contained in one test split.
 */
-void split(VMat d, real test_fraction, VMat& train, VMat& test, int i=0);
+void split(VMat d, real test_fraction, VMat& train, VMat& test, int i = 0, bool use_all = false);
 
 //!  Splits the dataset d into 3 subsets 
 void split(VMat d, real validation_fraction, real test_fraction, VMat& train, VMat& valid, VMat& test,bool do_shuffle=false);

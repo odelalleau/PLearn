@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Splitter.cc,v 1.6 2004/02/20 21:14:44 chrish42 Exp $ 
+   * $Id: Splitter.cc,v 1.7 2004/04/26 13:09:13 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file Splitter.cc */
@@ -60,11 +60,36 @@ void Splitter::setDataSet(VMat the_dataset)
 
 // Useful splitting functions
 
-void split(VMat d, real test_fraction, VMat& train, VMat& test, int i)
+void split(VMat d, real test_fraction, VMat& train, VMat& test, int i, bool use_all)
 {
-  int ntest = int( test_fraction>=1.0 ?test_fraction :test_fraction*d.length() );
-  int ntrain_before_test = d.length()-(i+1)*ntest;
+  int n = d.length();
+  real ftest = test_fraction>=1.0 ? test_fraction : test_fraction*real(n);
+  int ntest = int(ftest);
+  int ntrain_before_test = n - (i+1)*ntest;
   int ntrain_after_test = i*ntest;
+  if (use_all) {
+    // See how many splits there are.
+    int nsplits = int(n / ftest + 0.5);
+    // See how many examples will be left.
+    int nleft = n - nsplits * ntest;
+    // Deduce how many examples to add in each split.
+    int ntest_more = nleft / nsplits;
+    // And, finally, how many splits will have one more example so that they are
+    // all taken somewhere.
+    int nsplits_one_more = nleft % nsplits;
+    // Now recompute ntest, ntrain_before_test and ntrain_after_test.
+    ntest = ntest + ntest_more;
+    if (i < nsplits_one_more) {
+      ntest++;
+      ntrain_before_test = n - (i+1) * ntest;
+    } else {
+      ntrain_before_test =
+        n
+      - (nsplits_one_more)          * (ntest + 1)
+      - (i - nsplits_one_more + 1)  * ntest;
+    }
+    ntrain_after_test = n - ntest - ntrain_before_test;
+  }
 
   test = d.subMatRows(ntrain_before_test, ntest);
   if(ntrain_after_test == 0)
@@ -72,8 +97,8 @@ void split(VMat d, real test_fraction, VMat& train, VMat& test, int i)
   else if(ntrain_before_test==0)
     train = d.subMatRows(ntest, ntrain_after_test);
   else
-    train =  vconcat( d.subMatRows(0,ntrain_before_test), 
-                      d.subMatRows(ntrain_before_test+ntest, ntrain_after_test) );
+    train = vconcat( d.subMatRows(0,ntrain_before_test), 
+                     d.subMatRows(ntrain_before_test+ntest, ntrain_after_test) );
 }
 
 Vec randomSplit(VMat d, real test_fraction, VMat& train, VMat& test)
