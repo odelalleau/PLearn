@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.cc,v 1.11 2004/06/15 20:49:56 tihocan Exp $
+   * $Id: MemoryVMatrix.cc,v 1.12 2004/06/16 18:28:56 tihocan Exp $
    ******************************************************* */
 
 #include "MemoryVMatrix.h"
@@ -115,6 +115,15 @@ void MemoryVMatrix::build()
   build_();
 }
 
+///////////////
+// getSubRow //
+///////////////
+Vec& MemoryVMatrix::getSubRow(int i, int j, int j_length) const {
+  static Vec v;
+  v = data(i).subVec(j, j_length);
+  return v;
+}
+
 real MemoryVMatrix::get(int i, int j) const
 { return data(i,j); }
 
@@ -173,6 +182,9 @@ Mat MemoryVMatrix::toMat() const
 VMat MemoryVMatrix::subMat(int i, int j, int l, int w)
 { return new MemoryVMatrix(data.subMat(i,j,l,w)); }
 
+/////////
+// dot //
+/////////
 real MemoryVMatrix::dot(int i1, int i2, int inputsize) const
 {
 #ifdef BOUNDCHECK
@@ -183,7 +195,7 @@ real MemoryVMatrix::dot(int i1, int i2, int inputsize) const
   real* v2 = data.rowdata(i2);
   real res = 0.;
   for(int k=0; k<inputsize; k++)
-    res += v1[k]*v2[k];
+    res += (*v1++) * (*v2++);
   return res;
 }
 
