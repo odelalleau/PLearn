@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PCA.cc,v 1.13 2004/07/21 16:30:59 chrish42 Exp $ 
+   * $Id: PCA.cc,v 1.14 2004/07/21 20:28:33 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PCA.cc */
@@ -196,7 +196,7 @@ int PCA::outputsize() const
 ///////////
 void PCA::train()
 {
-  static Mat covarmat;
+  Mat covarmat;
   if(stage<1)
   {
     ProgressBar* pb = 0;

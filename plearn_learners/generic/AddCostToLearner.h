@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.h,v 1.5 2004/07/21 16:30:56 chrish42 Exp $ 
+   * $Id: AddCostToLearner.h,v 1.6 2004/07/21 20:25:38 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -52,9 +52,12 @@ using namespace std;
 class AddCostToLearner: public PLearner
 {
 
-public:
+private:
 
   typedef PLearner inherited;
+
+  //! Global storage to save memory allocations.
+  mutable Vec combined_output;
   
 protected:
 

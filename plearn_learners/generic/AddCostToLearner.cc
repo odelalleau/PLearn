@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.cc,v 1.10 2004/07/21 16:30:56 chrish42 Exp $ 
+   * $Id: AddCostToLearner.cc,v 1.11 2004/07/21 20:25:38 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -225,7 +225,6 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
     sub_learner->computeCostsFromOutputs(input, output, target, sub_costs);
   }
 
-  static Vec combined_output;
   if (compute_costs_on_bags) {
     // We only need to compute the costs when the whole bag has been seen,
     // otherwise we just store the outputs of each sample in the bag and fill
@@ -424,6 +423,7 @@ extern void varDeepCopyField(Var& field, CopiesMap& copies);
 void AddCostToLearner::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(combined_output, copies);
   deepCopyField(bag_outputs, copies);
   deepCopyField(cross_entropy_prop, copies);
   varDeepCopyField(cross_entropy_var, copies);

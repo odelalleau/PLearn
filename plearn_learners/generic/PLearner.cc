@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.34 2004/07/19 13:45:44 ducharme Exp $
+   * $Id: PLearner.cc,v 1.35 2004/07/21 20:26:30 tihocan Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -60,11 +60,17 @@ PLearner::PLearner()
   weightsize_(-1)
 {}
 
-PLEARN_IMPLEMENT_ABSTRACT_OBJECT(PLearner, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(PLearner,
+    "The base class for all PLearn learners.",
+    ""
+);
+
 void PLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  Object::makeDeepCopyFromShallowCopy(copies);
+  inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(tmp_output, copies);
   deepCopyField(train_set, copies);
+  deepCopyField(validation_set, copies);
   deepCopyField(train_stats, copies);
 }
 
@@ -249,7 +255,6 @@ void PLearner::computeOutputAndCosts(const Vec& input, const Vec& target,
 void PLearner::computeCostsOnly(const Vec& input, const Vec& target,  
                                 Vec& costs) const
 {
-  static Vec tmp_output;
   tmp_output.resize(outputsize());
   computeOutputAndCosts(input, target, tmp_output, costs);
 }

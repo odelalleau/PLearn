@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussMix.h,v 1.26 2004/06/01 13:18:17 tihocan Exp $ 
+   * $Id: GaussMix.h,v 1.27 2004/07/21 20:22:36 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file GaussMix.h */
@@ -51,6 +51,10 @@ class GaussMix: public PDistribution
 private:
 
   typedef PDistribution inherited;
+
+  //! Storage vectors to save memory allocations.
+  Vec sample_row, log_likelihood_post;
+  mutable Vec x_minus_mu_x, mu_target, log_likelihood_dens;
 
 protected:
 

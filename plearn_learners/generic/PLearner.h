@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.25 2004/07/21 16:30:56 chrish42 Exp $
+   * $Id: PLearner.h,v 1.26 2004/07/21 20:26:30 tihocan Exp $
    ******************************************************* */
 
 
@@ -50,8 +50,6 @@
 
 #include <plearn/base/Object.h>
 #include <plearn/vmat/VMat.h>
-//#include "Splitter.h"
-//#include "TMat.h"
 #include <plearn/math/VecStatsCollector.h>
 
 namespace PLearn {
@@ -67,10 +65,11 @@ private:
 
   typedef Object inherited;
 
-private:
-
   mutable int n_train_costs_;
   mutable int n_test_costs_;
+
+  //! Global storage to save memory allocations.
+  mutable Vec tmp_output;
 
 public:
     
@@ -232,7 +231,7 @@ public:
     TYPICAL CODE:
 
     static Vec input;  // static so we don't reallocate/deallocate memory each time...
-    static Vec target;
+    static Vec target; // (but be careful that static means shared!)
     input.resize(inputsize());    // the train_set's inputsize()
     target.resize(targetsize());  // the train_set's targetsize()
     real weight;

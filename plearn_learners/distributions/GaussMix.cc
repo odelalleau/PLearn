@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.40 2004/07/21 16:30:55 chrish42 Exp $ 
+ * $Id: GaussMix.cc,v 1.41 2004/07/21 20:22:36 tihocan Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -388,26 +388,24 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_input) const {
 // computePosteriors //
 ///////////////////////
 void GaussMix::computePosteriors() {
-  static Vec sample;
-  static Vec log_likelihood;
-  sample.resize(D);
-  log_likelihood.resize(L);
+  sample_row.resize(D);
+  log_likelihood_post.resize(L);
   real log_sum_likelihood;
   for (int i = 0; i < nsamples; i++) {
-    train_set->getSubRow(i, 0, sample);
+    train_set->getSubRow(i, 0, sample_row);
     // First we need to compute the likelihood P(s_i | j).
     for (int j = 0; j < L; j++) {
-      log_likelihood[j] = computeLogLikelihood(sample, j) + log(alpha[j]);
+      log_likelihood_post[j] = computeLogLikelihood(sample_row, j) + log(alpha[j]);
 #ifdef BOUNDCHECK
-      if (isnan(log_likelihood[j])) {
+      if (isnan(log_likelihood_post[j])) {
         PLWARNING("In GaussMix::computePosteriors - computeLogLikelihood returned nan");
       }
 #endif
     }
-    log_sum_likelihood = logadd(log_likelihood);
+    log_sum_likelihood = logadd(log_likelihood_post);
     for (int j = 0; j < L; j++) {
       // Compute the posterior P(j | s_i) = P(s_i | j) * alpha_i / (sum_i ")
-      posteriors(i, j) = exp(log_likelihood[j] - log_sum_likelihood);
+      posteriors(i, j) = exp(log_likelihood_post[j] - log_sum_likelihood);
     }
   }
   // Now update the sample weights.
@@ -489,8 +487,8 @@ void GaussMix::generate(Vec& x) const
 // generateFromGaussian //
 //////////////////////////
 void GaussMix::generateFromGaussian(Vec& s, int given_gaussian) const {
-  int j;    // The index of the Gaussian to use.
   static Vec mu_y;
+  int j;    // The index of the Gaussian to use.
   if (given_gaussian < 0) {
     j = multinomial_sample(p_j_x);
   } else {
@@ -647,22 +645,21 @@ void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clu
 real GaussMix::log_density(const Vec& y) const
 { 
   // TODO There is some code duplication with computePosteriors.
-  static Vec log_likelihood;
 #ifdef BOUNDCHECK
   if (stage == 0)
     PLERROR("GaussMix::log_density was called while model was not trained");
 #endif
-  log_likelihood.resize(L);
+  log_likelihood_dens.resize(L);
   // First we need to compute the likelihood p(y | x,j) * p(j | x).
   for (int j = 0; j < L; j++) {
-    log_likelihood[j] = computeLogLikelihood(y, j) + log_p_j_x[j];
+    log_likelihood_dens[j] = computeLogLikelihood(y, j) + log_p_j_x[j];
 #ifdef BOUNDCHECK
-    if (isnan(log_likelihood[j])) {
+    if (isnan(log_likelihood_dens[j])) {
       PLWARNING("In GaussMix::log_density - computeLogLikelihood returned nan");
     }
 #endif
   }
-  return logadd(log_likelihood);
+  return logadd(log_likelihood_dens);
 }
 
 /////////////////////////////////
@@ -671,6 +668,11 @@ real GaussMix::log_density(const Vec& y) const
 void GaussMix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(sample_row, copies);
+  deepCopyField(log_likelihood_post, copies);
+  deepCopyField(log_likelihood_dens, copies);
+  deepCopyField(x_minus_mu_x, copies);
+  deepCopyField(mu_target, copies);
   deepCopyField(eigenvalues,copies);
   deepCopyField(eigenvectors,copies);
   deepCopyField(diags,copies);
@@ -793,8 +795,6 @@ void GaussMix::resizeStuffBeforeTraining() {
 // setInput //
 //////////////
 void GaussMix::setInput(const Vec& input) const {
-  static Vec x_minus_mu_x;
-  static Vec mu_target;
   inherited::setInput(input);
   // We need to compute:
   // p(j | x) = p(x | j) p(j) / p(x)
