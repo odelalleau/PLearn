@@ -7,40 +7,19 @@ from plearn.utilities.Bindings import *
 __all__ = [
     ## Helper functions
     "generate_expdir",
-    "wait_for_expdir_creation",
-    "log_generated_expdirs",    
     "option_value_split",
 
     ## Main class
     "Xperiment"
     ]
 
-NEW_EXPDIR_FLAG  = ".__new_expdir_flag__"
-ENABLED_LOG_FLAG = ".__enabled_log_flag__"
-
 def generate_expdir( ):
     expdir = Xperiment.expdir_prefix
     if os.getenv('PyTest', '') != 'Running':                        
         expdir = '%s_%s' % ( expdir, date_time_string() )
 
-    if os.path.exists( ENABLED_LOG_FLAG ):
-        os.system( "touch %s" % NEW_EXPDIR_FLAG )
-    
     return expdir
 
-def wait_for_expdir_creation( sleep_time = 2, waiting_hook = (lambda : None) ):
-    assert os.path.exists( ENABLED_LOG_FLAG )
-    while not os.path.exists( NEW_EXPDIR_FLAG ):
-        waiting_hook( )
-        time.sleep( sleep_time )
-    os.remove( NEW_EXPDIR_FLAG )
-    
-def log_generated_expdirs( enabled ):
-    if enabled:
-        os.system( "touch %s" % ENABLED_LOG_FLAG )
-    elif os.path.exists( ENABLED_LOG_FLAG ):
-        os.remove( ENABLED_LOG_FLAG )
-    
 def option_value_split( s, sep="=", rhs_casts=[] ):
     """Returns a (lhs, rhs) pair given I{sep}."""
     lhs_len = s.find( sep )
@@ -72,7 +51,10 @@ class Xperiment:
     metainfos_fname = "metainfos.txt"
     lhs_length      = 35
 
-    def match( cls, expkey=[], dirlist=None ):
+    ## See load_experiments
+    _cached_experiments = None
+
+    def load_experiments( cls, expkey=[], dirlist=None ):
         xperiments = []
 
         if dirlist is None:
@@ -80,18 +62,40 @@ class Xperiment:
 
         for fname in dirlist:
             if fname.startswith( cls.expdir_prefix ):
-                xperiments.append( cls(fname, expkey) )            
+                xperiments.append( cls( fname , expkey ) )            
             xperiments.sort()
-            
-        return [ x for x in xperiments
-                 if len(expkey) == 0 or
-                 len(x.infos) == len(expkey) ]
-    match = classmethod( match )
-        
+
+        cls._cached_experiments = \
+            [ x for x in xperiments 
+              if len(expkey) == 0 or
+              len(x.infos) == len(expkey) ]
     
+        return cls._cached_experiments            
+    load_experiments = classmethod( load_experiments )
+
+    def match( cls, expkey=[], dirlist=None ):
+        if cls._cached_experiments is None:
+            raise AssertionError("Xperiment.load_experiments must be called before Xperiment.match.")
+                        
+        return [ exp for exp in cls._cached_experiments
+                 if exp.is_matched( expkey )
+                 ]    
+    match = classmethod( match )
+            
     def __init__( self, path, expkey=[] ):
         self.path  = path
         self.infos = self.parse_file( os.path.join(path, self.metainfos_fname), expkey )
+
+    def is_matched( self, expkey ):
+        match_predicate = lambda key,val: val is None or self.infos[key]==val
+        for string_key in expkey:
+            key, val = option_value_split(string_key, rhs_casts=self.rhs_casts)
+            if ( key not in self.infos or 
+                 not match_predicate(key, val) ):
+                return False
+
+        ## Always matching empty expkey
+        return True
 
     def parse_file( self, mipath, expkey ):
         if not os.path.exists( mipath ):

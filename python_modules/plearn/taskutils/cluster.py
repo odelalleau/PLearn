@@ -134,6 +134,8 @@ def machines_used_by_user():
     return len(cl)
 
 if __name__ == '__main__':
+    raise NotImplementedError("Please update.")
+
     pairs = []
     pairs.append(( "first",  [1,2,3] ))
     pairs.append(( "second", 10 ))
