@@ -35,8 +35,9 @@ public:
   // * Constructors *
   // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
+  //! Default constructor.
+  // (Make sure the implementation in the .cc
+  // initializes all fields to reasonable default values)
   DERIVEDCLASS();
 
 
