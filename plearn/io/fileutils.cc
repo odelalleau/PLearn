@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.49 2004/09/21 13:11:11 tihocan Exp $
+   * $Id: fileutils.cc,v 1.50 2004/10/27 01:16:09 dorionc Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -589,25 +589,37 @@ string makeExplicitPath(const string& filename)
 void addFileAndDateVariables(const string& filepath, map<string, string>& variables)
 {
   // Define new local variables
-  const string fpath = abspath(filepath);
-  variables["FILEPATH"] = fpath;
-  variables["DIRPATH"] = remove_trailing_slash(extract_directory(fpath));
-  variables["FILENAME"] = extract_filename(fpath);
-  variables["FILEBASE"] = remove_extension(extract_filename(fpath));
-  variables["FILEEXT"] = extract_extension(fpath);
-  variables["HOME"] = getenv("HOME");
+  const string fpath       = abspath(filepath);
+  variables["FILEPATH"]    = fpath;
+  variables["DIRPATH"]     = remove_trailing_slash(extract_directory(fpath));
+  variables["FILENAME"]    = extract_filename(fpath);
+  variables["FILEBASE"]    = remove_extension(extract_filename(fpath));
+  variables["FILEEXT"]     = extract_extension(fpath);
+  variables["HOME"]        = getenv("HOME");
 
-  // Compute DATE, TIME, and DATETIME variables
-  time_t curtime = time(NULL);
-  struct tm *broken_down_time = localtime(&curtime);
-  const int SIZE = 100;
-  char time_buffer[SIZE];
-  strftime(time_buffer,SIZE,"%Y%m%d:%H%M%S",broken_down_time);
-  variables["DATETIME"] = time_buffer;
-  strftime(time_buffer,SIZE,"%Y%m%d",broken_down_time);
-  variables["DATE"] = time_buffer;
-  strftime(time_buffer,SIZE,"%H%M%S",broken_down_time);
-  variables["TIME"] = time_buffer;
+  char* date_time_env = getenv("PLEARN_DATE_TIME");
+
+  if ( date_time_env 
+       && string(date_time_env) == "NO" )
+  {
+    variables["DATETIME"]  = "";
+    variables["DATE"]      = "";
+    variables["TIME"]      = "";    
+  }
+  else
+  {
+    // Compute DATE, TIME, and DATETIME variables
+    time_t curtime = time(NULL);
+    struct tm *broken_down_time = localtime(&curtime);
+    const int SIZE = 100;
+    char time_buffer[SIZE];
+    strftime(time_buffer,SIZE,"%Y%m%d:%H%M%S",broken_down_time);
+    variables["DATETIME"] = time_buffer;
+    strftime(time_buffer,SIZE,"%Y%m%d",broken_down_time);
+    variables["DATE"] = time_buffer;
+    strftime(time_buffer,SIZE,"%H%M%S",broken_down_time);
+    variables["TIME"] = time_buffer;
+  }
 }
 
 string readFileAndMacroProcess(const string& filepath, map<string, string>& variables)
