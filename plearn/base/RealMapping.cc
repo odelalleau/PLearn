@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org 
 
 /* *******************************************************      
-   * $Id: RealMapping.cc,v 1.22 2005/02/08 21:33:57 tihocan Exp $
+   * $Id: RealMapping.cc,v 1.23 2005/03/15 15:29:00 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,16 +49,35 @@ namespace PLearn {
 using namespace std;
 
 
-PLEARN_IMPLEMENT_OBJECT(RealMapping, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(RealMapping,
+    "Mapping between ranges and values.",
+    ""
+);
 
+////////
+// << //
+////////
 PStream& operator<<(PStream& out, const RealRange& x) 
 { 
   out.put(x.leftbracket);
-  out << x.low << x.high;
+  out << x.low;
+  switch(out.outmode) {
+    case PStream::raw_ascii:
+    case PStream::pretty_ascii:
+      out << ' ';
+      break;
+    default:
+      // Nothing to add.
+      break;
+  }
+  out << x.high;
   out.put(x.rightbracket);
   return out;
 }
 
+////////
+// >> //
+////////
 PStream& operator>>(PStream& in, RealRange &x) 
 { 
   in.skipBlanksAndCommentsAndSeparators();
@@ -209,6 +228,29 @@ void RealMapping::declareOptions(OptionList& ol)
       }
   }
 
+//////////////
+// newwrite //
+//////////////
+void RealMapping::newwrite(PStream& out) const {
+  switch (out.outmode) {
+    case PStream::raw_ascii:
+      out << "{ ";
+      for(mapping_t::const_iterator it= mapping.begin();
+          it != mapping.end(); ++it)
+        out << it->first << " -> " << it->second << "; ";
+      if(!is_missing(missing_mapsto))
+        out << "MISSING -> " << missing_mapsto << "; " << endl;
+      if(!keep_other_as_is)
+        out << "OTHER -> " << other_mapsto;
+      out << "} ";
+      break;
+    default:
+      inherited::newwrite(out);
+  }
+}
+
+// TODO  The following are probably deprecated.
+
   void RealMapping::print(ostream& out) const
   { 
     out << "{ ";
@@ -242,7 +284,7 @@ void RealMapping::declareOptions(OptionList& ol)
     
     if(c=='<')
       {
-        in.putback(c);
+        in.unget();
         int version = readHeader(in,"RealMapping");
         if(version!=0)
           PLERROR("In RealMapping::read reading of version #%d not implemented",version);

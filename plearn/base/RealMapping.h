@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: RealMapping.h,v 1.20 2005/02/08 21:33:59 tihocan Exp $
+   * $Id: RealMapping.h,v 1.21 2005/03/15 15:29:01 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -221,6 +221,9 @@ PStream& operator>>(PStream& in, RealRange &x);
     { mapping.erase(it); }
 
     bool operator==(const RealMapping& rm) const;
+
+    //! Overridden to use the specific real mapping format in raw_ascii mode.
+    virtual void newwrite(PStream& out) const;
 
     virtual void print(ostream& out) const;
     virtual void write(ostream& out) const;
