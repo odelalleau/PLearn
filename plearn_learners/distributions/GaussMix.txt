@@ -1,0 +1,25 @@
+ 
+
+
+class
+{
+// on a l Gaussiennes
+// un espace de dimension d
+// des gaussiennes de dimension k(i) ou i est la ieme gaussienne 
+
+  Vec alpha; // (l) les coefficients de la mixture
+  Mat mu;  // (l x n) centres
+  Vec sigma; // (l) les sigma scalaires
+  Mat diags; // (l x d) les sigmas diagonaux
+
+  Mat vecteurs_propres; // vercerus propres sont des lignes
+
+retenus par re
+  Pour les valeurs propres, 3 possibilites a envisager (a decider)
+   - garder une matrice de vals propres separee
+   - garder les vals-propres comme le premier vecteur dans chaque sous-matrice de vecteurs_propres
+
+  // Potentiellement?
+  Mat valeurs_propres; // mais elles peuvent aussi etre inclues dans vecteur_propres
+
+};

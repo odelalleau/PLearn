@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plapack.h,v 1.8 2003/01/29 20:52:37 plearner Exp $
+   * $Id: plapack.h,v 1.9 2003/06/02 21:00:14 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -64,6 +64,11 @@ inline void lapack_Xgesdd_(char* JOBZ, int* M, int* N, double* A, int* LDA, doub
 inline void lapack_Xgesdd_(char* JOBZ, int* M, int* N, float* A, int* LDA, float* S, float* U, int* LDU, float* VT, int* LDVT, float* WORK, int* LWORK, int* IWORK, int* INFO)
 { sgesdd_(JOBZ, M, N, A, LDA, S, U, LDU, VT, LDVT, WORK, LWORK, IWORK, INFO); }
 
+inline void lapack_Xsyevr_(char* JOBZ, char* RANGE, char* UPLO, int* N, float* A, int* LDA, float* VL, float* VU, int* IL, int* IU, float* ABSTOL, int* M, float* W, float* Z, int* LDZ, int* ISUPPZ, float* WORK, int* LWORK, int* IWORK, int* LIWORK, int* INFO)
+{ ssyevr_(JOBZ, RANGE, UPLO, N, A, LDA, VL, VU, IL, IU, ABSTOL, M, W, Z, LDZ, ISUPPZ, WORK, LWORK, IWORK, LIWORK, INFO);}
+
+inline void lapack_Xsyevr_(char* JOBZ, char* RANGE, char* UPLO, int* N, double* A, int* LDA, double* VL, double* VU, int* IL, int* IU, double* ABSTOL, int* M, double* W, double* Z, int* LDZ, int* ISUPPZ, double* WORK, int* LWORK, int* IWORK, int* LIWORK, int* INFO)
+{ dsyevr_(JOBZ, RANGE, UPLO, N, A, LDA, VL, VU, IL, IU, ABSTOL, M, W, Z, LDZ, ISUPPZ, WORK, LWORK, IWORK, LIWORK, INFO);}
 
 
 //!  Computes the eigenvalues and eigenvectors of a symmetric (NxN) matrix A.
@@ -178,6 +183,118 @@ void lapackEIGEN(const TMat<num_t>& A, TVec<num_t>& eigenvals, TMat<num_t>& eige
     eigenvecs.resize(M, N);
 }
 
+//! Computes the eigenvalues and eigenvectors of a symmetric (NxN) matrix A.
+//! Check lapackEIGEN for more info
+//! (lapackEIGEN2 differs from lapackEIGEN in that is uses another algorithm)
+
+template<class num_t>
+void lapackEIGEN2(const TMat<num_t>& A, TVec<num_t>& eigenvals, TMat<num_t>& eigenvecs, char RANGE='A', num_t low=0, num_t high=0, num_t ABSTOL=1e-6)
+{
+
+#ifdef BOUNDCHECK
+  if(A.length()!=A.width())
+    PLERROR("In lapackEIGEN length and width of A differ, it should be symmetric!");
+#endif
+
+  char JOBZ = eigenvecs.isEmpty() ?'N' :'V';
+  char UPLO = 'U';
+  int N = A.length();
+  int LDA = A.mod();
+
+  int IL=0, IU=0;
+  num_t VL=0, VU=0;
+
+  eigenvals.resize(N);
+  int M; // The number of eigenvalues returned
+
+  switch(RANGE)
+    {
+    case 'A':
+      if(JOBZ=='V')
+        eigenvecs.resize(N, N);
+      break;
+    case 'I':
+      IL = int(low)+1; // +1 because fortran indexes start at 1
+      IU = int(high)+1;
+      if(JOBZ=='V')
+        eigenvecs.resize(IU-IL+1, N);
+      break;
+    case 'V':
+      VL = low;
+      VU = high;
+      if(JOBZ=='V')
+        eigenvecs.resize(N, N);
+      break;
+    default:
+      PLERROR("In lapackEIGEN: invalid RANGE character: %c",RANGE);
+    }
+  
+  num_t* Z = 0;
+  int LDZ = 1;
+  if(eigenvecs)
+    {
+      Z = eigenvecs.data();
+      LDZ = eigenvecs.mod();
+    }
+
+  // temporary work vectors
+  static TVec<num_t> WORK;
+  static TVec<int> IWORK;
+  static TVec<int> IFAIL;
+  static TVec<int> ISUPPZ;
+
+  WORK.resize(1);
+  IWORK.resize(1);
+  IFAIL.resize(N);
+  ISUPPZ.resize(2*N);
+
+  int LWORK = -1;
+  int LIWORK = -1;
+  int INFO;
+
+
+  // first call to find optimal work size
+  //  cerr << '(';
+
+  lapack_Xsyevr_( &JOBZ, &RANGE, &UPLO, &N, A.data(), &LDA,  &VL,  &VU,
+                  &IL,  &IU,  &ABSTOL,  &M,  eigenvals.data(), Z, &LDZ, ISUPPZ.data(),
+                  WORK.data(), &LWORK, IWORK.data(), &LIWORK, &INFO );
+  // cerr << ')';
+
+  if(INFO!=0)
+    PLERROR("In lapackEIGEN2, problem in first call to dsyevr_ to get optimal work size, returned INFO = %d",INFO); 
+  
+  // make sure we have enough space
+  LWORK = (int) WORK[0]; // optimal size
+  WORK.resize(LWORK);
+
+  LIWORK = (int) IWORK[0]; // optimal size
+  IWORK.resize(LIWORK);
+
+  // second call to do the computation
+  // cerr << '{';
+  lapack_Xsyevr_( &JOBZ, &RANGE, &UPLO, &N, A.data(), &LDA,  &VL,  &VU,
+                  &IL,  &IU,  &ABSTOL,  &M,  eigenvals.data(), Z, &LDZ, ISUPPZ.data(),
+           WORK.data(), &LWORK, IWORK.data(), &LIWORK, &INFO );
+  // cerr << '}';
+
+  if(INFO!=0)
+    PLERROR("In lapackEIGEN2, problem when calling dsyevr_ to perform computation, returned INFO = %d",INFO); 
+  eigenvals.resize(M);
+  if(JOBZ=='V')
+  {
+    for(int i=0;i<M;i++)
+      if(ISUPPZ[2*i] != 1 || ISUPPZ[2*i+1]!=N)
+      {
+        PLWARNING("In lapackEIGEN2, %i-th eigenvector has zeros. Check ISUPPZ in 'man dsyevr' to understand this issue.");
+        break;
+      }
+    eigenvecs.resize(M, N);
+  }
+}
+
+
+
 
 //! Computes up to k largest eigen_values and corresponding eigen_vectors of symmetric matrix m. 
 //! Parameters eigen_values and eigen_vectors are resized accordingly and filled by the call.
@@ -185,16 +302,29 @@ void lapackEIGEN(const TMat<num_t>& A, TVec<num_t>& eigenvals, TMat<num_t>& eige
 //! The corresponding eigenvectors are in the *ROWS* of eigen_vectors
 //! WARNING: m is destroyed during the operation.
 
+//! algo_number={1,2} chooses which underlying lapack function is called. 
+
 // (will work for float and double)
 template<class num_t>
-void eigenVecOfSymmMat(TMat<num_t>& m, int k, TVec<num_t>& eigen_values, TMat<num_t>& eigen_vectors)
+void eigenVecOfSymmMat(TMat<num_t>& m, int k, TVec<num_t>& eigen_values, TMat<num_t>& eigen_vectors, num_t ABSTOL=1e-6, int algo_number=2)
 {
   eigen_vectors.resize(k,m.width());
-  // FASTER
-  if(k>= m.width())
-    lapackEIGEN(m, eigen_values, eigen_vectors);
-  else
-    lapackEIGEN(m, eigen_values, eigen_vectors, 'I', num_t(m.width()-k), num_t(m.width()-1));
+  if(algo_number == 1)
+  {
+    // FASTER
+    if(k>= m.width())
+      lapackEIGEN(m, eigen_values, eigen_vectors, 'A',num_t(0),num_t(0),ABSTOL);
+    else
+      lapackEIGEN(m, eigen_values, eigen_vectors, 'I', num_t(m.width()-k), num_t(m.width()-1),ABSTOL);
+  }
+  else 
+  {
+    // FASTER
+    if(k>= m.width())
+      lapackEIGEN2(m, eigen_values, eigen_vectors, 'A',num_t(0),num_t(0),ABSTOL);
+    else
+      lapackEIGEN2(m, eigen_values, eigen_vectors, 'I', num_t(m.width()-k), num_t(m.width()-1),ABSTOL);
+  }
 
   // put largest (rather than smallest) first!
   eigen_values.swap();
