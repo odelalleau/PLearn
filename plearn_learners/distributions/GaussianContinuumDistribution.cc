@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussianContinuumDistribution.cc,v 1.3 2005/03/07 16:42:26 larocheh Exp $
+   * $Id: GaussianContinuumDistribution.cc,v 1.4 2005/03/08 16:50:32 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -398,7 +398,7 @@ void GaussianContinuumDistribution::declareOptions(OptionList& ol)
 		"For pre-defined tangent_predictor types: \n"
 		"   single_neural_network : prediction = b + W*tanh(c + V*x), where W has n_hidden_units columns\n"
 		"                          where the resulting vector is viewed as a n_dim by n matrix\n"
-    "   embedding_neural_network: prediction[k,i] = d(e[k]/d(x[i), where e(x) is an ordinary neural\n"
+    "   embedding_neural_network: prediction[k,i] = d(e[k])/d(x[i), where e(x) is an ordinary neural\n"
     "                             network representing the embedding function (see output_type option)\n"
 		"where (b,W,c,V) are parameters to be optimized.\n"
 		);
@@ -448,7 +448,7 @@ void GaussianContinuumDistribution::declareOptions(OptionList& ol)
                 );
 
   declareOption(ol, "mus", &GaussianContinuumDistribution::mus, OptionBase::learntoption,
-		"The mu vertors for the training set.\n"
+		"The mu vectors for the training set.\n"
                 );
 
   declareOption(ol, "sms", &GaussianContinuumDistribution::sms, OptionBase::learntoption,
@@ -1129,6 +1129,10 @@ void GaussianContinuumDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copie
   deepCopyField(output_f_all, copies);
   deepCopyField(projection_error_f, copies);
   deepCopyField(noisy_data, copies);
+
+  // TODO : NB: It is not complete !
+  deepCopyField(log_gauss, copies);
+  deepCopyField(w_mat, copies);
 }
 
 
@@ -1140,6 +1144,10 @@ void GaussianContinuumDistribution::forget()
     
 void GaussianContinuumDistribution::train()
 {
+
+  // Set train_stats if not already done.
+  if (!train_stats)
+    train_stats = new VecStatsCollector();
 
   // find nearest neighbors...
 
@@ -1270,20 +1278,23 @@ void GaussianContinuumDistribution::initializeParams()
 // log_density //
 /////////////////
 real GaussianContinuumDistribution::log_density(const Vec& x) const {
-  // compute log-density
+  // Compute log-density.
 
-  // fetching nearest neighbors for density estimation
+  // Fetching nearest neighbors for density estimation.
   knn(reference_set,x,n_neighbors_density,t_nn,bool(0));
+  w_mat.resize(t_nn.length(), w.length());
+  Vec w_vec;
   t_row << x;
   log_gauss.resize(t_nn.length());
   real log_ref_set = log((real)reference_set.length());
   for(int neighbor=0; neighbor<t_nn.length(); neighbor++)
   {
+    w_vec = w_mat(neighbor);
     reference_set->getRow(t_nn[neighbor],neighbor_row);
     substract(t_row,neighbor_row,x_minus_neighbor);
     substract(x_minus_neighbor,mus(t_nn[neighbor]),z);
-    product(w, Bs[t_nn[neighbor]], z);
-    transposeProduct(zm, Fs[t_nn[neighbor]], w);
+    product(w_vec, Bs[t_nn[neighbor]], z);
+    transposeProduct(zm, Fs[t_nn[neighbor]], w_vec);
     substract(z,zm,zn);
     log_gauss[neighbor] = -0.5*(pownorm(zm,2)/sms[t_nn[neighbor]] + pownorm(zn,2)/sns[t_nn[neighbor]] 
                                 + n_dim*log(sms[t_nn[neighbor]]) + (n-n_dim)*log(sns[t_nn[neighbor]])) - n/2.0 * Log2Pi - log_ref_set;

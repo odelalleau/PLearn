@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussianContinuumDistribution.h,v 1.2 2005/03/07 16:42:27 larocheh Exp $
+   * $Id: GaussianContinuumDistribution.h,v 1.3 2005/03/08 16:50:32 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -85,7 +85,6 @@ protected:
 
   // p(x) computation fields
   VMat train_and_generated_set;
-  VMat reference_set;
   TMat<int> train_nearest_neighbors;
   TVec< Mat > Bs, Fs;
   Mat mus;
@@ -96,10 +95,8 @@ protected:
   Vec S_svd;      // idem
   mutable Vec z, zm, zn, x_minus_neighbor, w;
   mutable Vec t_row, neighbor_row;
-  mutable TVec<int> t_nn;
   mutable Vec t_dist;
   mutable Mat distances;
-  mutable Vec log_gauss;
 
   mutable DistanceKernel dk;
 
@@ -113,6 +110,11 @@ protected:
   VarArray parameters;
 
 public:
+
+  mutable TVec<int> t_nn;
+  mutable Vec log_gauss;                        //!< To store log(P(x|k)).
+  mutable Mat w_mat;                            //!< To store local coordinates.
+  VMat reference_set;
 
   // ************************
   // * public build options *
@@ -164,8 +166,6 @@ public:
   // ****************
 
   //! Default constructor.
-  // (Make sure the implementation in the .cc
-  // initializes all fields to reasonable default values)
   GaussianContinuumDistribution();
 
 
@@ -176,7 +176,6 @@ public:
 private: 
 
   //! This does the actual building. 
-  // (Please implement in .cc)
   void build_();
 
   void compute_train_and_validation_costs();
@@ -190,7 +189,6 @@ private:
 protected: 
   
   //! Declares this class' options.
-  // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
 
   //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
