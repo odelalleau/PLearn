@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNClassifier.h,v 1.3 2004/12/25 08:02:52 chapados Exp $ 
+   * $Id: KNNClassifier.h,v 1.4 2005/02/03 17:55:40 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -46,6 +46,7 @@
 
 #include <plearn_learners/generic/PLearner.h>
 #include <plearn_learners/nearest_neighbors/GenericNearestNeighbors.h>
+#include <plearn/ker/Kernel.h>
 
 namespace PLearn {
 
