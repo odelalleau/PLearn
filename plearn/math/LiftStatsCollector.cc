@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.cc,v 1.6 2003/11/19 19:02:36 tihocan Exp $
+ * $Id: LiftStatsCollector.cc,v 1.7 2003/11/20 15:31:27 tihocan Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -57,6 +57,7 @@ LiftStatsCollector::LiftStatsCollector()
   nsamples(0),
   npos(0),
   lift_fraction(0.1),
+  opposite_lift(0),
   output_column(0),
   sign_trick(0),
   target_column(1),
@@ -75,7 +76,21 @@ PLEARN_IMPLEMENT_OBJECT(
   "- LIFT_MAX = best performance that could be achieved, if all positive examples were selected in the first n samples\n"
   "(where n = lift_fraction * nsamples).\n"
   "IMPORTANT: if you add more samples after you call finalize() (or get any of the statistics above), some samples may\n"
-  "be wrongly discarded and further statistics may be wrong\n"
+  "be wrongly discarded and further statistics may be wrong\n\n"
+  "Here are the typical steps to follow to optimize the lift with a neural network:\n"
+  "- add a lift_output cost to cost_funcs (e.g. cost_funcs = [ \"stable_cross_entropy\" \"lift_output\"];)\n"
+  "- change the template_stats_collector of your PTester:\n"
+  "    template_stats_collector =\n"
+  "      LiftStatsCollector (\n"
+  "        output_column = 1 ; # lift_output\n"
+  "        opposite_lift = 1 ; # if you want to optimize the lift\n"
+  "        sign_trick = 1 ;\n"
+  "      )\n"
+  "- add the lift to its statnames:\n"
+  "    statnames = [ \"E[train.E[stable_cross_entropy]]\",\"E[test.E[stable_cross_entropy]]\",\n"
+  "                  \"E[train.LIFT]\", \"E[test.LIFT]\" ]\n"
+  "- change which_cost in your HyperOptimize strategy.\n"
+
   );
 
 void LiftStatsCollector::declareOptions(OptionList& ol)
@@ -83,6 +98,9 @@ void LiftStatsCollector::declareOptions(OptionList& ol)
 
   declareOption(ol, "lift_fraction", &LiftStatsCollector::lift_fraction, OptionBase::buildoption,
       "    the % of samples to consider (default = 0.1)\n");
+
+  declareOption(ol, "opposite_lift", &LiftStatsCollector::opposite_lift, OptionBase::buildoption,
+      "    if set to 1, the LIFT stat will return -LIFT, so that it can be considered as a cost (default = 0)\n");
 
   declareOption(ol, "output_column", &LiftStatsCollector::output_column, OptionBase::buildoption,
       "    the column in which is the output value (default = 0)\n");
@@ -118,10 +136,6 @@ void LiftStatsCollector::build()
 ////////////
 void LiftStatsCollector::build_()
 {
-  if (sign_trick == 1) {
-    cout << "Warning, the sign trick has been implemented but not tested. If it works, "
-      "you can remove this warning, and if it doesn't, you can fix it ;)" << endl;
-  }
 }
 
 /////////////////
@@ -136,11 +150,22 @@ real LiftStatsCollector::computeLift() {
   real first_samples_perf = npos_in_n_first/ (real) n_samples_to_keep;
   real targets_perf = (npos_in_n_first + npos) / (real) nsamples;
   real lift = first_samples_perf/targets_perf*100.0;
+  if (verbosity >= 10) {
+    cout << "LiftStatsCollector : is_finalized=" << is_finalized << ", nstored="
+         << nstored << ", nsamples=" << nsamples << ", npos=" << npos
+         << ", n_samples_to_keep=" << n_samples_to_keep << ", lift_fraction="
+         << lift_fraction << ", output_column=" << output_column << ", sign_trick="
+         << sign_trick << ", target_column=" << target_column << ", verbosity= "
+         << verbosity << endl;
+  }
   if (verbosity >= 2) {
     cout << "There is a total of " << npos_in_n_first + npos <<
       " positive examples to discover." << endl;
     cout << "The learner found " << npos_in_n_first << 
       " of them in the fraction considered (" << lift_fraction << ")." << endl;
+  }
+  if (opposite_lift == 1) {
+    return -lift;
   }
   return lift;
 }
@@ -235,9 +260,6 @@ double LiftStatsCollector::getStat(const string& statspec)
 /////////////////////////////////
 void LiftStatsCollector::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
-  cout << "In LiftStatsCollector::makeDeepCopyFromShallowCopy Warning, this function was not"
-    " tested properly, maybe n_first_updates should be declared as an option... If it works,"
-    " please remove this warning.";
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(n_first_updates, copies);
 }
@@ -262,6 +284,7 @@ void LiftStatsCollector::update(const Vec& x, real w)
       // Sign trick.
       n_first_updates(nstored, 0) = FABS(output_val);
       if (output_val <= 0) {
+        x[output_column] = -output_val;
         target = 0;
       } else {
         target = 1;
