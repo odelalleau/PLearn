@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.35 2004/01/29 18:13:02 plearner Exp $
+   * $Id: TMat_maths_impl.h,v 1.36 2004/02/09 04:44:50 chapados Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -963,6 +963,27 @@ T dot(const TVec<T>& vec1, const TVec<T>& vec2)
   T res = 0;
   T* v1 = vec1.data();
   T* v2 = vec2.data();
+  for(int i=0; i<vec1.length(); i++)
+    res += v1[i]*v2[i];
+  return res;
+}
+
+//! Special dot product that allows TVec's of different types,
+//! as long as operator*(T,U) is defined.  The return type V must
+//! be specified in all circumstances, e.g. :
+//!   TVec<int> v1; TVec<float> v2;
+//!   double result = dot<double>(v1,v2);
+template<class V, class T, class U>
+V dot(const TVec<T>& vec1, const TVec<U>& vec2)
+{
+  #ifdef BOUNDCHECK
+  if(vec1.length()!=vec2.length())
+    PLERROR("In T operator*(const TVec<T>& vec1, const TVec<T>& vec2) (dot product) the 2 vecs must have the same length.");
+  #endif
+
+  V res = 0;
+  T* v1 = vec1.data();
+  U* v2 = vec2.data();
   for(int i=0; i<vec1.length(); i++)
     res += v1[i]*v2[i];
   return res;

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.29 2004/01/29 18:13:02 plearner Exp $
+   * $Id: StatsCollector.cc,v 1.30 2004/02/09 04:44:50 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -494,20 +494,20 @@ real StatsCollector::getStat(const string& statname) const
   static bool init = false;
   static map<string,STATFUN> statistics;
   if (!init) {
-    statistics["E"]           = &StatsCollector::mean;
-    statistics["V"]           = &StatsCollector::variance;
-    statistics["STDDEV"]      = &StatsCollector::stddev;
-    statistics["STDERROR"]    = &StatsCollector::stderror;
-    statistics["MIN"]         = &StatsCollector::min;
-    statistics["MAX"]         = &StatsCollector::max;
-    statistics["SUM"]         = &StatsCollector::sum;
-    statistics["SUMSQ"]       = &StatsCollector::sumsquare;
-    statistics["FIRST"]       = &StatsCollector::first_obs;
-    statistics["LAST"]        = &StatsCollector::last_obs;
-    statistics["N"]           = &StatsCollector::n;
-    statistics["NMISSING"]    = &StatsCollector::nmissing;
-    statistics["NNONMISSING"] = &StatsCollector::nnonmissing;
-    statistics["SHARPERATIO"] = &StatsCollector::sharperatio;
+    statistics["E"]           = STATFUN(&StatsCollector::mean);
+    statistics["V"]           = STATFUN(&StatsCollector::variance);
+    statistics["STDDEV"]      = STATFUN(&StatsCollector::stddev);
+    statistics["STDERROR"]    = STATFUN(&StatsCollector::stderror);
+    statistics["MIN"]         = STATFUN(&StatsCollector::min);
+    statistics["MAX"]         = STATFUN(&StatsCollector::max);
+    statistics["SUM"]         = STATFUN(&StatsCollector::sum);
+    statistics["SUMSQ"]       = STATFUN(&StatsCollector::sumsquare);
+    statistics["FIRST"]       = STATFUN(&StatsCollector::first_obs);
+    statistics["LAST"]        = STATFUN(&StatsCollector::last_obs);
+    statistics["N"]           = STATFUN(&StatsCollector::n);
+    statistics["NMISSING"]    = STATFUN(&StatsCollector::nmissing);
+    statistics["NNONMISSING"] = STATFUN(&StatsCollector::nnonmissing);
+    statistics["SHARPERATIO"] = STATFUN(&StatsCollector::sharperatio);
     init = true;
   }
   
