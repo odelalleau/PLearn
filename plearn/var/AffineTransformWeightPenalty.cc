@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: AffineTransformWeightPenalty.cc,v 1.8 2004/04/28 18:42:20 tihocan Exp $
+   * $Id: AffineTransformWeightPenalty.cc,v 1.9 2004/11/02 20:20:45 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -95,8 +95,8 @@ void AffineTransformWeightPenalty::bprop()
     if (weight_decay_!=0)
     {
       real delta = weight_decay_ * gradientdata[0];
-      real* w = input->matValue[n];
-      real* d_w = input->matGradient[n];
+      real* w = input->matValue[1];
+      real* d_w = input->matGradient[1];
       int tot = l * n; // Number of weights to update.
       for (int i = 0; i < tot; i++) {
         if (w[i] > 0)
@@ -107,13 +107,14 @@ void AffineTransformWeightPenalty::bprop()
     }
     if(bias_decay_!=0)
     {
+      real delta = bias_decay_ * gradientdata[0];
       real* d_biases = input->matGradient[0];
       real* biases = input->matValue[0];
       for (int i=0;i<n;i++)
         if (biases[i]>0)
-          d_biases[i] += bias_decay_*gradientdata[0];
+          d_biases[i] += delta;
         else if (biases[i]<0)
-          d_biases[i] -= bias_decay_*gradientdata[0];
+          d_biases[i] -= delta;
     }
   }
   else
