@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.18 2004/04/08 07:41:48 plearner Exp $
+   * $Id: VMatLanguage.cc,v 1.19 2004/04/22 16:42:03 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -466,6 +466,7 @@ using namespace std;
         opcodes["vecscalmul"] = 46; // x1 ... xn n alpha --> (x1*alpha) ... (xn*alpha)
         opcodes["__getfieldsrange"] = 47; // %N:%M pushes field %N up to %M. M must be >= N.
         opcodes["select"] = 48; // v0 v1 v2 v3 ... vn-1 n i --> vi  
+        opcodes["length"] = 49; // the length of the currently processed column.
       }
   }
 
@@ -719,6 +720,12 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
               pstack.push(a);
               break;
             }
+          case 49: // length
+            {
+              pstack.push(srcvec.length());
+              break;
+            }
+          
           default:
             PLERROR("BUG IN PreproInterpretor::run while running program: invalid opcode: %d", op);
           }
