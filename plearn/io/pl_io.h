@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io.h,v 1.2 2002/10/21 01:21:53 plearner Exp $
+   * $Id: pl_io.h,v 1.3 2002/11/30 04:27:33 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -207,6 +207,8 @@ static const string wordseparators(" \t\n\r)]};|#");
 // *************************************
 
 // Default behavior
+
+/*
 template <class T> inline void
 binread(istream &in, T &x)
 { PLERROR("binread() - Not defined for this type"); }
@@ -224,6 +226,7 @@ binread(istream &in, T &x, int n)
 template <class T> inline void
 binwrite(ostream &out, const T &x, int n)
 { PLERROR("binwrite() - Not defined for this type"); };
+*/
 
 //!  general purpose (but less efficient)
 //!  version for pointers to things that have a binwrite/binread function

@@ -45,6 +45,7 @@ using namespace std;
 
 using namespace std;
 
+
 class StringTable
 {
   TMat<string> data;
@@ -52,6 +53,9 @@ class StringTable
   map<string, int> rev_fn;   // maps fieldnames to column numbers
 
 public:
+  StringTable(const string & filename);
+  StringTable();
+
   inline int length() const {return data.length();}
   inline int width() const {return data.width();}
   inline string& operator()(int i,int j){return data(i,j);}
@@ -60,10 +64,7 @@ public:
   void declareFields(const list<pair<string,string> > &row);
   friend ostream& operator<<(ostream& out,const StringTable& st);
   string getFieldName(int i)const {return fieldnames[i];}
-  friend StringTable loadStrTable(const string & filename);
 };
-
-StringTable loadStrTable(const string & filename);
 
 %> // end of namespace PLearn
 

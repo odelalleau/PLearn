@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: PLearnCommandRegistry.cc,v 1.3 2002/10/25 03:47:25 plearner Exp $
+   * $Id: PLearnCommandRegistry.cc,v 1.4 2002/11/30 04:27:33 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,11 +54,11 @@ PLearnCommandRegistry::command_map& PLearnCommandRegistry::commands()
 void PLearnCommandRegistry::do_register(PLearnCommand* command)
 { commands()[command->name] = command; }
 
-  bool PLearnCommandRegistry::is_registered(const string& commandname)
-  { return commands().find(commandname)!=commands().end(); }
+bool PLearnCommandRegistry::is_registered(const string& commandname)
+{ return commands().find(commandname)!=commands().end(); }
   
-  void PLearnCommandRegistry::print_command_summary(ostream& out)
-  {
+void PLearnCommandRegistry::print_command_summary(ostream& out)
+{
     command_map::iterator it = commands().begin();
     command_map::iterator itend = commands().end();
     while(it!=itend)

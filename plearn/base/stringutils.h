@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.6 2002/10/03 07:35:27 plearner Exp $
+   * $Id: stringutils.h,v 1.7 2002/11/30 04:27:33 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -132,6 +132,10 @@ using namespace std;
 
   //! replaces all backslashes with slash
   string backslash_to_slash(string str);
+
+//! replaces all occurences of searchstr in the text by replacestr
+//! returns the number of matches that got replaced
+int search_replace(string& text, const string& searchstr, const string& replacestr);
 
 /*!     splits a string into a list of substrings (using any sequence of 
     the given delimiters as split point)

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Splitter.cc,v 1.2 2002/10/03 07:35:28 plearner Exp $ 
+   * $Id: Splitter.cc,v 1.3 2002/11/30 04:27:33 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Splitter.cc */
@@ -47,6 +47,11 @@ namespace PLearn <%
 using namespace std;
 
 IMPLEMENT_ABSTRACT_NAME_AND_DEEPCOPY(Splitter);
+
+void Splitter::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+{
+  deepCopyField(dataset, copies);
+}
 
 // Useful splitting functions
 

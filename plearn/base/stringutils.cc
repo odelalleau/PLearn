@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.cc,v 1.4 2002/10/03 07:35:27 plearner Exp $
+   * $Id: stringutils.cc,v 1.5 2002/11/30 04:27:33 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -384,6 +384,21 @@ string backslash_to_slash(string str)
     }
   return str;
 }
+
+
+int search_replace(string& text, const string& searchstr, const string& replacestr)
+{
+  int n = 0;
+  string::size_type startpos = text.find(searchstr, 0);
+  while(startpos!=string::npos)
+    {
+      text.replace(startpos, searchstr.length(), replacestr);
+      ++n;
+      startpos = text.find(searchstr, startpos+replacestr.length());
+    }
+  return n;
+}
+
 
 vector<string> split(const string& s, const string& delimiters, bool keep_delimiters)
 {

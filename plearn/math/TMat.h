@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.7 2002/11/11 20:16:23 zouave Exp $
+   * $Id: TMat.h,v 1.8 2002/11/30 04:27:33 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -1588,7 +1588,6 @@ PStream & operator>>(PStream &in, TVec<T> &v)
 }
 
 
-/*
 
 template<class T>      
 void binwrite(ostream& out, const TVec<T>& v)
@@ -1635,8 +1634,6 @@ void binread_double(istream& in, TVec<T>& v)
   else for (int i=0;i<l;i+=200000)
     PLearn::binread_double(in,&v[i],std::min(200000,l-i));
 }
-
-*/
 
 
 template<class T>

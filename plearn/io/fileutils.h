@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.h,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: fileutils.h,v 1.2 2002/11/30 04:27:33 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -123,6 +123,10 @@ using namespace std;
   void mvforce(const string& file);
 
 
+//! Reads while the characters read exactly match those in s
+//! Returns true if all characters in s matched with those in the stream
+bool readWhileMatches(istream& in, const string& s);
+
   // skips everything until '\n' (also consumes the '\n')
   void skipRestOfLine(istream& in);
 
@@ -153,6 +157,9 @@ using namespace std;
   string newFilename(const string directory="/tmp/", const string prefix="", bool is_directory=false);
 
   string makeFileNameValid(const string& filename);
+
+void macro_process(string& text, map<string, string> variables);
+
 
 %> // end of namespace PLearn
 

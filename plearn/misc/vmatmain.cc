@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.3 2002/10/03 07:35:28 plearner Exp $
+   * $Id: vmatmain.cc,v 1.4 2002/11/30 04:27:33 plearner Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -81,6 +81,7 @@ int print_diff(ostream& out, VMat m1, VMat m2, double tolerance)
             }
         }
     }
+  return ndiff;
 }
 
 void interactiveDisplayCDF(const Array<VMat>& vmats)

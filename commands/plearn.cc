@@ -33,12 +33,13 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.11 2002/10/25 23:16:00 plearner Exp $
+   * $Id: plearn.cc,v 1.12 2002/11/30 04:27:32 plearner Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
 
 // Available Splitters:
+#include "ExplicitSplitter.h"
 #include "TrainTestSplitter.h"
 #include "KFoldSplitter.h"
 
@@ -81,6 +82,15 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
+  string text = loadFileAsString(argv[1]);
+  
+  cerr << text << endl;
+  cerr << "\n------------------------------------------\n";
+  map<string, string> vars;
+  macro_process(text, vars);
+  cerr << text << endl;
+  exit(0);
+
   return plearn_main(argc, argv);
 }
 

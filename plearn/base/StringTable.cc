@@ -112,31 +112,31 @@ void StringTable::declareFields(const list<pair<string,string> > & row)
     }
 }
 
-StringTable loadStrTable(const string & filename)
+StringTable::StringTable(){}
+
+StringTable::StringTable(const string & filename)
 {
-  StringTable st;
   int nrows= countNonBlankLinesOfFile(filename);
   string str;
   ifstream in(filename.c_str());
   in>>str;
   getline(in,str);
-  st.fieldnames=split(str);
-  st.data.resize(nrows, st.fieldnames.size());
+  fieldnames=split(str);
+  data.resize(nrows, fieldnames.size());
   int rnum=0;
   getline(in,str);
   while(removeblanks(str)!="")
     {
       vector<string> line=split(str,";");  
-      line.pop_back(); // last string found is garbage
-      if(line.size()!=st.fieldnames.size())
-        PLERROR("in row %i : elements (%i)  mismatch number of fields (%i)",rnum,line.size(),st.fieldnames.size());
+      //line.pop_back(); // last string found is garbage *** NO!
+      if(line.size()!=fieldnames.size())
+        PLERROR("in row %i : elements (%i)  mismatch number of fields (%i)",rnum,line.size(),fieldnames.size());
       for(unsigned int i= 0; i < line.size(); ++i)
-	st.data(rnum,i)= line[i];
+        data(rnum,i)= line[i];
       ++rnum;
       getline(in,str);
     }
-  st.data.resize(rnum, st.fieldnames.size());
-  return st;
+  data.resize(rnum, fieldnames.size());
 }
 
 

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLMPI.h,v 1.3 2002/09/17 01:27:34 zouave Exp $
+   * $Id: PLMPI.h,v 1.4 2002/11/30 04:27:33 plearner Exp $
    * AUTHORS: Pascal Vincent 
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -54,6 +54,8 @@
 #include "Mat.h"
 #include "plerror.h"
 #include "plstreams.h"
+#include "iostream.h"
+#include "fstream.h"
 
 namespace PLearn <%
 using namespace std;
@@ -303,13 +305,13 @@ class pofstream: public ofstream
 {
 public:
   pofstream() {}
-  pofstream(const char *name, int mode=ios::out, int prot=0664)
-  { open(name, mode, prot); }
+  pofstream(const char *name, ios::openmode mode=ios::out)
+  { open(name, mode); }
 
-  void open(const char *name, int mode=ios::out, int prot=0664)
+  void open(const char *name,  ios::openmode mode=ios::out)
   { 
     if(PLMPI::rank==0)
-      fstreambase::open(name, mode, prot); 
+      ofstream::open(name, mode); 
     else
       ios::rdbuf(nullout.rdbuf());
   }

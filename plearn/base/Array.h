@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array.h,v 1.6 2002/10/21 05:18:52 plearner Exp $
+   * $Id: Array.h,v 1.7 2002/11/30 04:27:33 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -127,6 +127,16 @@ public:
         for (int i = 0; i < array_size; ++i)
             array[i] = other[i];
     }
+
+      //!  To allow if(v) statements
+      operator bool() const
+      { return array!=0; }
+      
+
+      //!  To allow if(!v) statements
+      bool operator!() const
+      { return array==0; }
+
 
   Array<T>* operator->()
     { return this; }

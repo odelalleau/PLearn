@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Splitter.h,v 1.2 2002/10/03 07:35:28 plearner Exp $ 
+   * $Id: Splitter.h,v 1.3 2002/11/30 04:27:33 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Splitter.h */
@@ -94,6 +94,9 @@ public:
 
   //! Returns split number i
   virtual Array<VMat> getSplit(int i=0) = 0;
+
+  //! Transforms a shallow copy into a deep copy
+  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
 };
 
