@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.31 2004/06/03 21:34:42 ducharme Exp $
+   * $Id: Object.h,v 1.32 2004/06/16 18:19:06 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -226,8 +226,21 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
         template < TEMPLATE_DEF_ ## CLASSTYPE > \
         bool CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_isa_(Object* o)                \
           { return dynamic_cast<CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >*>(o) != 0; }  \
-        CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >* CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::deepCopy(CopiesMap& copies) const \
-          { return implementDeepCopy<CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE > >(copies); } \
+                                                                                       \
+        template < TEMPLATE_DEF_ ## CLASSTYPE > \
+        CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >* \
+        CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::deepCopy(CopiesMap& copies) const \
+        { \
+          CopiesMap::iterator it = copies.find(this);         \
+          if (it != copies.end())                             \
+            return static_cast<CLASSTYPE*>(it->second);       \
+          CLASSTYPE* deep_copy = new CLASSTYPE(dynamic_cast<const CLASSTYPE&>(*this)); \
+          if (usage() > 1)                                                             \
+            copies[this] = deep_copy;                                                  \
+          deep_copy->makeDeepCopyFromShallowCopy(copies);                              \
+          return deep_copy;                                                            \
+        }                                                                              \
+                                                                                       \
         template < TEMPLATE_DEF_ ## CLASSTYPE > \
         void CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::_static_initialize_()   \
           { TypeFactory::register_type( \
