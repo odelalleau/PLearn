@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMField.cc,v 1.3 2004/02/20 21:14:44 chrish42 Exp $
+* $Id: VMField.cc,v 1.4 2004/10/22 18:48:01 ducharme Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMField.h"
@@ -49,52 +49,16 @@ using namespace std;
 VMField::VMField(const string& the_name, FieldType the_fieldtype)
   : name(the_name), fieldtype(the_fieldtype) {}
 
-/*
-void VMField::print(ostream& out) const
+bool VMField::operator==(const VMField& other) const
 {
-  out << name << "\t type: ";
-  switch(fieldtype)
-    {
-      case VMField::UnknownType:
-        out << "UnknownType\n";
-        break;
-      case VMField::Continuous:
-        out << "Continuous\n";
-        break;
-      case VMField::DiscrGeneral:
-        out << "DiscrGeneral\n";
-        break;
-      case VMField::DiscrMonotonic:
-        out << "DiscrMonotonic\n";
-        break;
-      case VMField::DiscrFloat:
-        out << "DiscrFloat\n";
-        break;
-      case VMField::Date:
-        out << "Date\n";
-        break;
-      default:
-        PLERROR("Can't write name of type");
-    }  //writeField(out,"fieldtype", fieldtype);
+  return (name==other.name && fieldtype==other.fieldtype);
 }
 
-void VMField::write(ostream& out) const
+bool VMField::operator!=(const VMField& other) const
 {
-  writeHeader(out,"VMField");
-  writeField(out,"name", name);
-  //writeField(out,"fieldtype", fieldtype);
-  //out << "fieldtype: " << fieldtype << endl;
-  writeFooter(out,"VMField");
+  return !((*this)==other);
 }
 
-void VMField::read(istream& in)
-{
-  readHeader(in,"VMField");
-  readField(in,"name", name);
-  //readField(in,"fieldtype", fieldtype);
-  readFooter(in,"VMField");
-}
-*/
 
 /** VMFieldStat **/
 

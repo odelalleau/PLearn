@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
- * $Id: VMField.h,v 1.4 2004/07/21 16:30:55 chrish42 Exp $
+ * $Id: VMField.h,v 1.5 2004/10/22 18:48:01 ducharme Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -72,22 +72,12 @@ public:
   FieldType fieldtype;
 
   VMField(const string& the_name="", FieldType the_fieldtype=UnknownType);
+
+  bool operator==(const VMField& other) const;
+  bool operator!=(const VMField& other) const;
     
-  //  void print(ostream& out) const;
-  //  void write(ostream& out) const;
-  //  void read(istream& in);
 };
 
-// inline ostream& operator<<(ostream& out, const VMField& f) { f.print(out); return out; }
-
-// inline void write(ostream& out, const VMField& f) { f.write(out); }
-// inline void read(istream& in, VMField& f) { f.read(in); }
-
-// inline PStream &operator<<(PStream &out, const VMField &f)
-// { f.write(out.rawout()); return out; };
-
-// inline PStream &operator>>(PStream &in, VMField &f)
-// { f.read(in.rawin()); return in; };
 
 //!  this class holds simple statistics about a field
 class VMFieldStat
