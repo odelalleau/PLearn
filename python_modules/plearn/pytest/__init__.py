@@ -1,18 +1,32 @@
 
-import modes, string, time
+import modes, os, string, time
 from   ModeAndOptionParser import ModeAndOptionParser, OptionGroup
 
 __all__ = ["modes", "ModeAndOptionParser", "OptionGroup", "pytest_version"]
 
-version_str = "$Id: __init__.py,v 1.6 2004/12/14 04:59:16 dorionc Exp $"
+version_str = "$Id: __init__.py,v 1.7 2004/12/14 05:09:17 dorionc Exp $"
 
-really_all = [ "ModeAndOptionParser", 
-               "BasicStats", 
-               "IntelligentDiff", 
-               "ModeAndOptionParser", 
-               "modes", 
-               "programs", 
-               "test_and_routines" ]
+## really_all = [ "ModeAndOptionParser", 
+##                "BasicStats", 
+##                "IntelligentDiff", 
+##                "ModeAndOptionParser", 
+##                "modes", 
+##                "programs", 
+##                "test_and_routines" ]
+
+def version_strings():
+    entries_path = os.path.abspath( os.path.dirname(__file__) )
+    entries_path = os.path.join( entries_path, "CVS/Entries" )
+    cvs_entries  = toolkit.command_output("cat %s" % entries_path)
+
+    for line in cvs_entries:
+        splited_line = string.split(line, '/')
+        if len(splited_line) < 1:
+            continue
+        
+        filename = splited_line[0]
+        if filename.endswith('.py'):
+            pass
 
 def pytest_version( script_version_string ):
     minv = 1e06
