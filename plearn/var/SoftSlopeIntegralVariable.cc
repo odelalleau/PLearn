@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SoftSlopeIntegralVariable.cc,v 1.1 2003/12/08 03:54:48 yoshua Exp $
+   * $Id: SoftSlopeIntegralVariable.cc,v 1.2 2004/01/05 01:29:06 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -135,14 +135,14 @@ void SoftSlopeIntegralVariable::bprop()
     //  d/dsmoothness = (softplus(-smoothness*(b-right))*(right-b) + softplus(-smoothness*(b-left))*(b-left)
     //                 + softplus(-smoothness*(a-right))*(a-right) + softplus(-smoothness*(a-left))*(left-a))/
     //     (smoothness*smoothness*(right-left))
-    //     - 2 * soft_slope_integral / smoothness
-    //
+    //     - 2 * (soft_slope_integral - b + a) / smoothness
+    //n
     //  d/dleft = (-softplus(-smoothness*(b-left)) + softplus(-smoothness*(a-left)))/
     //     (smoothness*(right-left))
-    //     + soft_slope_integral / (right-left)
+    //     + (soft_slope_integral - b + a)/ (right-left)
     //
     //  d/dright =  (softplus(-smoothness*(b-right)) - softplus(-smoothness*(a-right)))/(smoothness*(right-left))
-    //         - soft_slope_integral / (right-left)
+    //         - (soft_slope_integral - b + a)/ (right-left)
     //
     real inv_smoothness = 1.0 / *smoothness;
     real br = (b-*right);
@@ -154,11 +154,11 @@ void SoftSlopeIntegralVariable::bprop()
     real t3 = softplus(- *smoothness*ar);
     real t4 = softplus(- *smoothness*al);
     real inv_delta=1.0/(*right-*left);
-    real ssi = valuedata[i];
+    real ssiab = valuedata[i]-b+a;
     *dsmoothness += gradientdata[i] * 
-      ((-t1*br + t2*bl + t3*ar - t4*al)*inv_smoothness*inv_delta - 2*ssi)*inv_smoothness;
-    *dleft += gradientdata[i] * ((-t2 + t4)*inv_smoothness + ssi) * inv_delta;
-    *dright += gradientdata[i] * ((t1 - t3)*inv_smoothness - ssi) * inv_delta;
+      ((-t1*br + t2*bl + t3*ar - t4*al)*inv_smoothness*inv_delta - 2*ssiab)*inv_smoothness;
+    *dleft += gradientdata[i] * ((-t2 + t4)*inv_smoothness + ssiab) * inv_delta;
+    *dright += gradientdata[i] * ((t1 - t3)*inv_smoothness - ssiab) * inv_delta;
   }
 }
 
