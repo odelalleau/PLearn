@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: FieldConvertCommand.h,v 1.15 2004/03/12 14:50:28 tihocan Exp $
+ * $Id: FieldConvertCommand.h,v 1.16 2004/03/16 14:02:22 tihocan Exp $
  ******************************************************* */
 
 #ifndef FieldConvertCommand_INC
@@ -75,7 +75,7 @@ public:
                   "force=[force file] report=[report file] fraction=[if number of unique values is > than 'fraction' * NonMISSING -> the field is continuous. Default=.3] "\
                   "max_pvalue=[maximum pvalue to assume correlation with target, default=0.025] frac_missing_to_skip=[if MISSING >= 'frac_missing_to_skip * number of samples then this field is skipped, default=1.0] "\
                   "frac_enough=[if a field is discrete, only values represented by at least frac_enough * nSamples elements will be considered, default=0.005] "\
-                  "precompute=[\"none\" | \"pmat\" | ... : possibly add a <PRECOMPUTE> tag in the destination, default=\"none\"]\n"\
+                  "precompute=[none | pmat | ... : possibly add a <PRECOMPUTE> tag in the destination, default=none]\n"\
                   "\nfields with asterix * are not optional\n"
                   ) 
   {}
