@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: AdaptGradientOptimizer.cc,v 1.12 2003/10/07 16:38:00 tihocan Exp $
+   * $Id: AdaptGradientOptimizer.cc,v 1.13 2003/10/07 20:50:29 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,19 +47,6 @@
 #include "AsciiVMatrix.h" // TODO Remove later
 #include "TMat_maths.h"
 #include "DisplayUtils.h"
-
-// TODO: remove the hacks
-//#define HACK_NO_BASIC_ADAPT     // no basic learning rate adaptation
-// #define HACK_LR_CLASSIC          // slightly different update call, but should be the same effect
-//#define HACK_2_LR_VARIANCE 1.0      // two learning rates depending on low / high variance
-// #define HACK_LINEAR_LR_VARIANCE  // learning rates with linear interpolation depending on variance
-// #define HACK_USE_EXPONENTIAL_AVG_VARIANCE 0.9 // use an exponential average of the variance
-//#define HACK_FORMULA_GRAD_VAR // use a formula of the kind lr = a * grad - b * var
-//#define HACK_ALTERNATE_LR 0.1 // alternate 2 learning rates (initial and initial*(1+coeff))
-//#define HACK_2_LR_LAYER (17*20)  // one learning rate for each layer
-//#define HACK_SUDDEN_DEC       // decrease learning_rate to 0 in the last epochs
-//#define HACK_CST_SUDDEN_DEC       // decrease learning_rate to 0 in the last epochs, constantly
-//#define HACK_DECREASING_BOUNDS // decreasing bounds on the adaptive learning rate
 
 namespace PLearn <%
 using namespace std;
@@ -175,10 +162,6 @@ void AdaptGradientOptimizer::build_(){
   SumOfVariable* sumofvar = dynamic_cast<SumOfVariable*>((Variable*)cost);
   stochastic_hack = sumofvar!=0 && sumofvar->nsamples==1;
   params.clearGradient();
-  if (adapt_every == 0) {
-    adapt_every = nstages;  // the number of steps to complete an epoch
-    // TODO check this is true
-  }
   int n = params.nelems();
   if (n > 0) {
     store_var_grad.resize(n);
@@ -290,15 +273,17 @@ void AdaptGradientOptimizer::adaptLearningRateBasic(
       }
     }
   }
+}
 
-#if defined(HACK_2_LR_VARIANCE) 
+///////////////////////////////
+// adaptLearningRateVariance //
+///////////////////////////////
+void AdaptGradientOptimizer::adaptLearningRateVariance() {
   real moy_var = 0;
   real exp_avg_coeff = 0;
-#ifdef HACK_USE_EXPONENTIAL_AVG_VARIANCE
   if (stage > 1) {
-    exp_avg_coeff = HACK_USE_EXPONENTIAL_AVG_VARIANCE;
+    exp_avg_coeff = adapt_coeff1; // TODO document this feature
   }
-#endif
   for (int j=0; j<params.nelems(); j++) {
     // Compute variance
     store_var_grad[j] = 
@@ -312,28 +297,16 @@ void AdaptGradientOptimizer::adaptLearningRateBasic(
   store_grad.clear();
   moy_var /= real(params.nelems());
   int nb_low_var = 0, nb_high_var = 0;
-#if defined(HACK_2_LR_VARIANCE)
-#if defined(HACK_2_LR_VARIANCE)
-  real var_limit = HACK_2_LR_VARIANCE;
-#endif // if defined(HACK_2_LR_VARIANCE)
+  real var_limit = 1.0;
   for (int j=0; j<params.nelems(); j++) {
     if (store_var_grad[j] <= moy_var * var_limit) {
-#if defined(HACK_2_LR_VARIANCE)
-      learning_rates[j] = max_lr;
-#endif // if defined(HACK_2_LR_VARIANCE)
+      learning_rates[j] = max_learning_rate;
       nb_low_var++;
     } else {
-#if defined(HACK_2_LR_VARIANCE)
-      learning_rates[j] = min_lr;
-#endif // if defined(HACK_2_LR_VARIANCE)
+      learning_rates[j] = min_learning_rate;
       nb_high_var++;
     }
   }
-#endif // if defined(HACK_ADAPT_VARIANCE)
-  cout << "Nb low var = " << nb_low_var << " -- Nb high var = " << nb_high_var << endl;
-#endif // defined(HACK_2_LR_VARIANCE) || defined(HACK_LINEAR_LR_VARIANCE)
-
-  cout << "Current min_LR = " << min_lr << "  and max_LR = " << max_lr << endl;
 }
 
 /////////////////
@@ -342,25 +315,9 @@ void AdaptGradientOptimizer::adaptLearningRateBasic(
 void AdaptGradientOptimizer::computeCost() {
   meancost /= real(stage - cost_stage);
   cout << stage << " : " << meancost << endl;
-  int count = 0;
-  real moy_high = 0;
-  real moy_low = 0;
-/*  for (int i=0; i<store_cost.length(); i++) {
-    if (store_cost[i] > meancost[1]) {
-      if (store_cost[i] > 0.0001 * nstages) {
-//        cout << i << ": " << store_cost[i] << "  -  ";
-      }
-      count++;
-      moy_high += store_cost[i];
-    } else {
-      moy_low += store_cost[i];
-    }
-  }
-  cout << endl << "Nb high = " << count << "  -- Moy_High = " << moy_high / real(count) << "  -- Moy_Low = " << moy_low / real(store_cost.length() - count) << endl; */
   early_stop = measure(stage,meancost);
   meancost.clear();
   cost_stage = stage;
-  store_cost.clear();
 }
 
 //////////////
@@ -372,9 +329,6 @@ real AdaptGradientOptimizer::optimize()
   return 0;
 }
 
-static bool altern_lr = false;
-static int count_alt = 0;
-
 ///////////////
 // optimizeN //
 ///////////////
@@ -383,6 +337,10 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
   bool adapt = (learning_rate_adaptation != 0);
   stochastic_hack = stochastic_hack && !adapt;
   stochastic_hack = false; // TODO Remove later
+  if (adapt_every == 0) {
+    adapt_every = nstages;  // the number of steps to complete an epoch
+    // TODO check this is true
+  }
 
   // Big hack for the special case of stochastic gradient, to avoid doing an explicit update
   // (temporarily change the gradient fields of the parameters to point to the parameters themselves,
@@ -399,24 +357,12 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
 
     // Take into account the learning rate decrease
     // TODO Incorporate it into other learning rate adaptation kinds ?
-    double minlr = 0;
     switch (learning_rate_adaptation) {
       case 0:
-#ifdef HACK_CST_SUDDEN_DEC
-        if (stage > (int) (adapt_coeff1)) {
-        } else {
-          learning_rate = start_learning_rate/(1.0+decrease_constant*stage);
-        }
-#else
         learning_rate = start_learning_rate/(1.0+decrease_constant*stage);
-#endif
         break;
-      case 1:
-        // TODO HackSource to remove
-/*        minlr = min_learning_rate / (1.0 + stage * decrease_constant);
-        for (int j=0; j<params.nelems(); j++) {
-            learning_rates[j] = minlr;
-        } */
+      case 3:
+        // TODO fill ?
         break;
       default:
         break;
@@ -426,81 +372,50 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
     if (adapt)
       cost->gradient[0] = -1.;
     else
-#if defined(HACK_LR_CLASSIC) || defined(HACK_CST_SUDDEN_DEC)
-      cost->gradient[0] = -1.;
-#else
       cost->gradient[0] = -learning_rate;
-#endif
 
     proppath.fbprop();
 
     meancost += cost->value;
-    // TODO Remove later
-    if (stage == 0) {
-      store_cost.resize(1); //nstages;
-    }
-//    store_cost[nstages - (stage_max - stage)] += cost->value[1];
 
     // TODO Put back in the switch below when no more gradient stats
     // are collected ?
     params.copyGradientTo(gradient);
 
-#if defined(HACK_2_LR_VARIANCE) || defined(HACK_LINEAR_LR_VARIANCE) || defined(HACK_FORMULA_GRAD_VAR)
-    for (int i=0; i<params.nelems(); i++) {
-      store_grad[i] += gradient[i];
-      store_quad_grad[i] += gradient[i] * gradient[i];
-      count_updates++;
-    }
-#endif
-    
-    real need_lower_lr = 0; // collectGradientStats(gradient);
-//    collectGradientStats(gradient);
-
-/*    if (need_lower_lr == 1) {
-      cout << "Lower ! : ";
-//      min_learning_rate *= 0.9;
-    } else if (need_lower_lr == -1) {
-      cout << "Higher ! : ";
-//      min_learning_rate *= 1.1;
-    }*/
-    
-    // Move along the chosen direction
-    // And learning rate adaptation after each step
-    real coeff = 1/(1.0 + stage * decrease_constant);
-#ifdef HACK_CST_SUDDEN_DEC
-#endif
-//    if (stage % 10000 == 0) cout << "Coeff = " << coeff << endl;
+    // Actions to take after each step, depending on the
+    // adaptation method used :
+    // - moving along the chosen direction
+    // - adapting the learning rate
+    // - storing some data
+    real coeff = 1/(1.0 + stage * decrease_constant); // TODO cleaner solution ?
     switch (learning_rate_adaptation) {
       case 0:
         if (!stochastic_hack) {
-#if defined(HACK_LR_CLASSIC)
-          params.update(learning_rate, gradient);
-          params.clearGradient();
-#elif defined(HACK_CST_SUDDEN_DEC)
-          params.update(learning_rate, gradient, coeff, b);
-          params.clearGradient();
-#else
           params.updateAndClear();
-#endif
         }
         break;
       case 1:
         // params.copyGradientTo(gradient);
         // TODO Not efficient, write a faster update ?
-#if defined(HACK_FORMULA_GRAD_VAR) || defined(HACK_DECREASING_BOUNDS)
-        params.update(learning_rates, gradient);
-#else
         params.update(learning_rates, gradient, coeff); 
-#endif
         params.clearGradient();
-//        }
-//        cout << "Gradient norm:" << sqrt(pownorm(gradient)) << endl;
         break;
       case 2:
         // params.copyGradientTo(gradient);
         adaptLearningRateALAP1(tmp_storage, gradient);
         params.update(learning_rate, gradient);
         tmp_storage << gradient;
+        params.clearGradient();
+        break;
+      case 3:
+        // storing sum and sum-of-squares of the gradient in order to compute
+        // the variance later
+        for (int i=0; i<params.nelems(); i++) {
+          store_grad[i] += gradient[i];
+          store_quad_grad[i] += gradient[i] * gradient[i];
+          count_updates++;
+        }
+        params.update(learning_rates, gradient, coeff);
         params.clearGradient();
         break;
       default:
@@ -511,15 +426,17 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
       // Time for learning rate adaptation
       switch (learning_rate_adaptation) {
         case 0:
-#ifdef HACK_ALTERNATE_LR
-#endif
           break;
         case 1:
           adaptLearningRateBasic(learning_rates, tmp_storage, old_evol);
           params.copyTo(tmp_storage);
           break;
         case 2:
-          cout << "Current learning rate " << learning_rate << endl;
+          // TODO really nothing ?
+          break;
+        case 3:
+          adaptLearningRateVariance();
+          break;
         default:
           break;
       }

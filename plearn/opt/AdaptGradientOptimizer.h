@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: AdaptGradientOptimizer.h,v 1.7 2003/10/07 16:38:00 tihocan Exp $
+   * $Id: AdaptGradientOptimizer.h,v 1.8 2003/10/07 20:50:29 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -164,7 +164,7 @@ using namespace std;
     // If grad(i) > 0 : lr(i) = lr(i) + lr(i) * adapt_coeff1
     // else           : lr(i) = lr(i) - lr(i) * adapt_coeff2
     void adaptLearningRateBasic(
-        Vec learning_rates,
+        Vec learning_rates, // TODO remove this since it's a class member
         Vec old_params,
         Vec new_evol);
 
@@ -174,6 +174,11 @@ using namespace std;
     void adaptLearningRateALAP1(
         Vec old_gradient,
         Vec new_gradient);
+
+    // Learning rate adaptation depending on the variance :
+    // If var(i) is low, lr(i) = max_learning_rate
+    // else              lr(i) = min_learning_rate
+    void adaptLearningRateVariance();
 
   protected:
 
