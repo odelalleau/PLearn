@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.69 2004/08/25 21:43:40 kermorvc Exp $
+* $Id: VMatrix.cc,v 1.70 2004/09/08 23:52:49 larocheh Exp $
 ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -654,7 +654,7 @@ void VMatrix::setMetaDataDir(const string& the_metadatadir)
 }
 
 //! Return the dimension of the column col, -1 if continuous 
-int VMatrix::getDimension(int col) const
+int VMatrix::getDimension(int row, int col) const
 {
   return -1;
 }  

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DictionaryVMatrix.h,v 1.4 2004/09/08 23:39:32 larocheh Exp $ 
+   * $Id: DictionaryVMatrix.h,v 1.5 2004/09/08 23:52:49 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Christopher Kermorvant
@@ -143,7 +143,7 @@ protected:
   
   virtual string getValString(int col, real val) const;
   
-  virtual int getDimension(int col) const;
+  virtual int getDimension(int row, int col) const;
 
 public:
 

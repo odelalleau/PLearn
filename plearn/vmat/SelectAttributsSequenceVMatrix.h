@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SelectAttributsSequenceVMatrix.h,v 1.3 2004/09/08 23:07:52 larocheh Exp $ 
+   * $Id: SelectAttributsSequenceVMatrix.h,v 1.4 2004/09/08 23:52:49 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -267,6 +267,20 @@ public:
       }
       return Vec(0);
     }
+
+    virtual int getDimension(int row, int col) const
+    {
+      if(row < 0 || row >= length_) PLERROR("In SelectAttributsSequenceVMatrix::getValues() : invalid row %d, length()=%d", row, length_);
+      if(col < 0 || col >= length_) PLERROR("In SelectAttributsSequenceVMatrix::getValues() : invalid col %d, width()=%d", col, width_);
+      if(source)
+      {
+        int src_col = col%n_attributs;
+        return source->getDimension(indices[row],src_col);
+      }
+      return -1;
+    }
+
+
 };
 
 DECLARE_OBJECT_PTR(SelectAttributsSequenceVMatrix);

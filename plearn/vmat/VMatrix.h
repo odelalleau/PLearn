@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.55 2004/09/08 23:25:16 larocheh Exp $
+   * $Id: VMatrix.h,v 1.56 2004/09/08 23:52:49 larocheh Exp $
    ******************************************************* */
 
 
@@ -289,7 +289,7 @@ public:
   virtual string getString(int row, int col) const;
 
   //! Return the dimension of the column col, -1 if continuous   
-  virtual int getDimension(int col) const;
+  virtual int getDimension(int row, int col) const;
 
   ////////////////////////
   

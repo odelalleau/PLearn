@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DictionaryVMatrix.cc,v 1.4 2004/09/08 23:39:32 larocheh Exp $ 
+   * $Id: DictionaryVMatrix.cc,v 1.5 2004/09/08 23:52:49 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Christopher Kermorvant
@@ -97,7 +97,7 @@ string DictionaryVMatrix::getValString(int col, real val) const
   return dictionaries[col].getSymbol((int)val);
 }
 
-int DictionaryVMatrix::getDimension(int col) const
+int DictionaryVMatrix::getDimension(int row, int col) const
 {
   return  dictionaries[col].getDimension();
 }
