@@ -54,7 +54,7 @@ def mail():
     #                      # ( see end of pytest() )
         
 def pytest_version():
-    version_str = '$Id: pytest,v 1.25 2004/12/10 19:39:05 dorionc Exp $'
+    version_str = '$Id: pytest,v 1.26 2004/12/13 19:33:31 dorionc Exp $'
 
     bflag = "pytest,v"
     the_year = time.localtime()[0]
@@ -70,7 +70,7 @@ parser = ModeAndOptionParser( usage = "%prog mode [options] target*",
                               version = "%prog " + pytest_version()   )
 
 parser.add_option( '-v', "--verbosity",
-                   choices=["0", "1", "2"], default="1",
+                   choices=["0", "1", "2", "3"], default="1",
                    help="Selects the level of verbosity among [0, 1, 2, 3], "
                    "1 being the default value. Level 0 is very quiet, while level 3 "
                    "is mainly intended for debug."

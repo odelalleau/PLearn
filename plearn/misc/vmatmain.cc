@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.37 2004/11/24 18:23:39 tihocan Exp $
+   * $Id: vmatmain.cc,v 1.38 2004/12/13 19:33:05 dorionc Exp $
    ******************************************************* */
 
 #include <algorithm>                         // for max
@@ -413,6 +413,7 @@ void viewVMat(const VMat& vm)
   int namewidth = 0;
   for(int j=0; j<vm->width(); j++)
     namewidth = max(namewidth, (int) vm->fieldName(j).size());
+  int namewidth_ = namewidth; 
 
   int valwidth = 15;
   int valstrwidth = valwidth-1;
@@ -450,6 +451,9 @@ void viewVMat(const VMat& vm)
       for(int j=startj; j<endj; j++)
       {
           string s = vm_showed->fieldName(j);
+          if ( int(s.size()) > namewidth)
+            s = s.substr(0, namewidth);
+
           // if(j==curj)
           //  attron(A_REVERSE);
           if(transposed)
@@ -973,6 +977,43 @@ void viewVMat(const VMat& vm)
         vm_showed = vm;
         break;
       ///////////////////////////////////////////////////////////////
+      case (int)'n': case (int)'N': 
+        if ( namewidth != namewidth_ )
+          namewidth = namewidth_;
+        else
+        {
+          int def = (namewidth < 80) ? namewidth : 80;
+
+          echo();
+          char strmsg[100];
+          sprintf(strmsg, "Enter namewidth to use (between 10 and %d -- enter=%d): ", namewidth, def);
+          mvprintw(LINES-1,0,strmsg);
+          clrtoeol();
+
+          move(LINES-1, (int)strlen(strmsg));
+          char l[10];
+          getnstr(l, 10);
+          if(l[0] == '\0')
+          {
+            namewidth = def;
+          }
+          else if( !pl_isnumber(l) || toint(l) < 0 || toint(l)>namewidth )
+          {
+            mvprintw(LINES-1,0,"*** Invalid line number ***");
+            clrtoeol();
+            refresh();
+            // wait until the user types something
+            key = getch();
+            onError = true;
+          }
+          else
+          {
+            namewidth = toint(l);
+          }
+          noecho();
+        }
+        break;
+      ///////////////////////////////////////////////////////////////
       case (int)'s':
         if (indent_strings_left)
           // Toggle display.
@@ -1018,6 +1059,7 @@ void viewVMat(const VMat& vm)
         mvprintw(vStartHelp++,10," - 'c' or 'C': prompt for a column number and go to that column");
         mvprintw(vStartHelp++,10," - 's' or 'S': toggle display string fields as strings or numbers ('S' = right indentation)");
         mvprintw(vStartHelp++,10," - 't' or 'T': toggle transposed display mode");
+        mvprintw(vStartHelp++,10," - 'n' or 'N': toggle truncated field name display mode (under transposed display mode)");
         mvprintw(vStartHelp++,10," - 'e' or 'E': export a range or a set of columns to file");
         mvprintw(vStartHelp++,10," - 'v' or 'V': prompt for another dataset to view");
         mvprintw(vStartHelp++,10," - '.'       : toggle displaying of ... for values that do not change");

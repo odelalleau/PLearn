@@ -67,7 +67,7 @@ class IntelligentDiff:
     
     def diff(self, bench, other):
         if self.are_links(bench, other):
-            vprint("%s is a link: diff will be skipped."%other, 2)
+            vprint("%s is a link: diff will be skipped."%other, 3)
         elif self.are_directories(bench, other):
             self.diff_directories(bench, other)
         elif self.are_files(bench, other):
@@ -90,6 +90,10 @@ class IntelligentDiff:
             self.diff(bf, of)
 
     def diff_files(self, bench, other):
+        if bench.endswith('.psave'):
+            vprint("Serialization file %s will be skipped."%bench, 3)
+            return
+        
         bench_dir = os.path.dirname(bench)
         other_dir = os.path.dirname(other)
         

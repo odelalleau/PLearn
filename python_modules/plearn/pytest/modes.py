@@ -451,24 +451,20 @@ class RoutineBasedMode( PyTestMode ):
 class compile( RoutineBasedMode ):
     def routine_type(self): return CompilationRoutine
 
-class RoutineBasedMode_option_no_compile(RoutineBasedMode):
+class results( RoutineBasedMode ):
+    def routine_type(self): return ResultsCreationRoutine
+
+class run( RoutineBasedMode ):    
+    def routine_type(self):
+        RunTestRoutine.no_compile_option = options.no_compile
+        return RunTestRoutine
+
     def option_groups(self, parser):
-        ogroups = [ self.target_options(parser),
-                    self.testing_options(parser) ]
+        ogroups = RoutineBasedMode.option_groups(self, parser)
 
         ogroups[1].add_option( '--no-compile', default=False,
                                action="store_true",
                                help='Any program compilation is bypassed.' )
 
         return ogroups
-    
-class results( RoutineBasedMode_option_no_compile ):
-    def routine_type(self): 
-        ResultsCreationRoutine.no_compile_option = options.no_compile
-        return ResultsCreationRoutine
-
-class run( RoutineBasedMode_option_no_compile ):
-    def routine_type(self):
-        RunTestRoutine.no_compile_option = options.no_compile
-        return RunTestRoutine
 
