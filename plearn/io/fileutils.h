@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.h,v 1.11 2004/03/04 15:08:04 tihocan Exp $
+   * $Id: fileutils.h,v 1.12 2004/03/10 19:54:43 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -156,6 +156,9 @@ void force_mkdir_for_file(const string& filepath);
   
   //! peeks the first char after removal of blanks
   inline char peekAfterSkipBlanks(istream& in) { while(isspace(in.get())); in.unget();return in.peek(); }
+
+  //! gets the first char after removal of blanks
+  inline char getAfterSkipBlanks(istream& in) { char c; while(isspace(c = in.get())); return c; }
 
   //! Returns a temporary file (or directory) name suitable
   //! for a unique (one time) use.
