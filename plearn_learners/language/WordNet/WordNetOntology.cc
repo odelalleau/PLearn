@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.cc,v 1.11 2003/01/30 22:22:40 morinf Exp $
+   * $Id: WordNetOntology.cc,v 1.12 2003/01/31 16:28:25 morinf Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -617,16 +617,28 @@ Node* WordNetOntology::extractOntology(SynsetPtr ssp)
   node->key = ssp->hereiam;
   synsets[node->ss_id] = node;
 
+  node->key = ssp->hereiam; // FRED MODIF
+//  cout << "key = " << node->key << ", " << "pos = " << ssp->pos << ", "
+//       << "fnum = " << ssp->fnum << endl;
+
   ssp = ssp->ptrlist;
   
   while (ssp != NULL)
   {
+//    cout << "in extractOntology() ssp->key = " << ssp->key
+//         << ", ssp->hereiam" << ssp->hereiam << endl;
     Node* parent_node = checkForAlreadyExtractedSynset(ssp);
     
     if (parent_node == NULL) // create new synset Node
     {
       parent_node = extractOntology(ssp);
+<<<<<<< WordNetOntology.cc
+      parent_node->key = ssp->hereiam; // FRED MODIF
+//      cout << "key = " << node->key << ", " << "pos = " << ssp->pos << ", "
+//           << "fnum = " << ssp->fnum << endl;
+=======
       parent_node->key = ssp->hereiam;
+>>>>>>> 1.11
     }
     
     node->parents.insert(parent_node->ss_id);
@@ -773,6 +785,8 @@ int WordNetOntology::getWordSenseIdForSenseKey(string lemma, string lexsn)
   SynsetPtr ssp = GetSynsetForSense(csense_key);
   if (ssp != NULL)
   {
+//      cout << "in getWordSenseIdForSenseKey(), ssp->key = " << ssp->key
+//           << endl;
     vector<string> synset_words = getSynsetWords(ssp);
     int word_id = words_id[lemma];
     for (SetIterator it = word_to_senses[word_id].begin(); it != word_to_senses.end(); ++it)
