@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: TransposeProductVariable.h,v 1.5 2004/04/27 15:58:16 morinf Exp $
+   * $Id: TransposeProductVariable.h,v 1.6 2004/09/07 20:52:20 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -76,7 +76,7 @@ protected:
 
 DECLARE_OBJECT_PTR(TransposeProductVariable);
 
-inline Var transposeProduct(Var& m1, Var& m2)
+inline Var transposeProduct(const Var& m1, const Var& m2)
 {
   return new TransposeProductVariable(m1, m2);
 }
