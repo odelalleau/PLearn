@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocalNeighborsDifferencesVMatrix.cc,v 1.5 2004/07/21 20:12:19 tihocan Exp $ 
+   * $Id: LocalNeighborsDifferencesVMatrix.cc,v 1.6 2004/07/21 20:32:53 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus
@@ -118,6 +118,10 @@ void LocalNeighborsDifferencesVMatrix::build()
 void LocalNeighborsDifferencesVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(neighbor_row, copies);
+  deepCopyField(ith_row, copies);
+  deepCopyField(a_row, copies);
+  deepCopyField(neighbors, copies);
 }
 
 } // end of namespace PLearn
