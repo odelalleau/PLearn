@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.4 2003/04/15 18:33:51 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.5 2003/04/15 20:54:06 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -214,13 +214,46 @@ private:
 
   //--------------------------- UTILITY FUNCTIONS ----------------------------
   
-  // Given a propagation path and the parameters params,
-  // compute the opposite of the gradient and store it in the "gradient" Vec.
+public:   // TODO For test purpose... remove later
+
+  // Given a propagation path from params to costs,
+  // return the derivative of the function :
+  // f(a) = costs(params + a*direction)
+  static real computeComposedGrad(
+      void (*grad)(VarArray, Var, VarArray, const Vec&),
+      VarArray params,
+      Var costs,
+      VarArray proppath,
+      Vec direction,
+      Vec delta);
+
+  // Given a propagation path from params to costs,
+  // compute the gradient and store it in the "gradient" Vec
+  static void computeGradient(
+      VarArray params,
+      Var cost,
+      VarArray proppath,
+      const Vec& gradient);
+
+  // Given a propagation path from params to costs,
+  // compute the opposite of the gradient and store it in the "gradient" Vec
   static void computeOppositeGradient(
       VarArray params,
       Var cost,
       VarArray proppath,
       const Vec& gradient);
+
+  // Finds the minimum of the cubic a.x^3 + b.x^2 + c.x
+  // in the range [mini, maxi]
+  static real minCubic(
+      real a, real b, real c,
+      real mini = -FLT_MAX, real maxi = FLT_MAX);
+
+  // Finds the minimum of the function a.x^2 + b.x
+  // in the range [mini, maxi]
+  static real minQuadratic(
+      real a, real b,
+      real mini = -FLT_MAX, real maxi = FLT_MAX);
 
 };
 

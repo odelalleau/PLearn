@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.4 2003/04/15 18:33:51 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.5 2003/04/15 20:54:06 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -127,10 +127,40 @@ void ConjGradientOptimizer::oldread(istream& in)
 //
 IMPLEMENT_NAME_AND_DEEPCOPY(ConjGradientOptimizer);
 
-/*************************
- * MAIN SPECIFIC METHODS *
- *************************/
+/******************************
+ * MAIN METHODS AND FUNCTIONS *
+ ******************************/
 
+/////////////////////////
+// computeComposedGrad //
+/////////////////////////
+real ConjGradientOptimizer::computeComposedGrad(
+    void (*grad)(VarArray, Var, VarArray, const Vec&),
+    VarArray params,
+    Var costs,
+    VarArray proppath,
+    Vec direction,
+    Vec delta) {
+  (*grad)(params, costs, proppath, delta);
+  return dot(delta, direction);
+}
+
+/////////////////////
+// computeGradient //
+/////////////////////
+void ConjGradientOptimizer::computeGradient(
+    VarArray params,
+    Var cost,
+    VarArray proppath,
+    const Vec& gradient) {
+  // Clear all what's left from previous computations
+  proppath.clearGradient();
+  params.clearGradient();
+  cost->gradient[0] = 1;
+  proppath.fbprop();
+  params.copyGradientTo(gradient);
+}
+  
 /////////////////////////////
 // computeOppositeGradient //
 /////////////////////////////
@@ -233,6 +263,7 @@ void ConjGradientOptimizer::fletcherReeves (
   g << delta;
 }
 
+  
 /////////////
 // gSearch //
 /////////////
@@ -332,6 +363,89 @@ void ConjGradientOptimizer::lineSearch(
     Vec tmp_storage) {
   gSearch(grad, params, costs, proppath, search_direction,
           starting_step_size, epsilon, tmp_storage);
+}
+
+//////////////
+// minCubic //
+//////////////
+real ConjGradientOptimizer::minCubic(real a, real b, real c,
+    real mini, real maxi) {
+  if (a == 0)
+    return minQuadratic(b, c, mini, maxi);
+  // f' = 3a.x^2 + 2b.x + c
+  real aa = 3*a;
+  real bb = 2*b;
+  real d = bb*bb - 4 * aa * c;
+  if (d <= 0) { // the function is monotonous
+    if (a > 0)
+      return mini;
+    else
+      return maxi;
+  } else {  // the most usual case
+    d = sqrt(d);
+    real p2 = (-bb + d) / (2*aa);
+    if (a > 0) {
+      if (p2 < mini || mini == FLT_MIN)
+        return mini;
+      if (p2 > maxi) { // the minimum is beyond the range
+        if (a*mini*mini*mini + b*mini*mini + c*mini > 
+            a*maxi*maxi*maxi + b*maxi*maxi + c*maxi)
+          return maxi;
+        else
+          return mini;
+      }
+      if (a*mini*mini*mini + b*mini*mini + c*mini >
+          a*p2*p2*p2 + b*p2*p2 + c*p2)
+        return p2;
+      else
+        return mini;
+    } else {
+      if (p2 > maxi || maxi == FLT_MAX)
+        return maxi;
+      if (p2 < mini) { // the minimum is before the range
+        if (a*mini*mini*mini + b*mini*mini + c*mini > 
+            a*maxi*maxi*maxi + b*maxi*maxi + c*maxi)
+          return maxi;
+        else
+          return mini;
+      }
+      if (a*maxi*maxi*maxi + b*maxi*maxi + c*maxi >
+          a*p2*p2*p2 + b*p2*p2 + c*p2)
+        return p2;
+      else
+        return maxi;
+    }
+  }
+}
+
+//////////////////
+// minQuadratic //
+//////////////////
+real ConjGradientOptimizer::minQuadratic(real a, real b,
+    real mini, real maxi) {
+  if (a ==  0) {
+    if (b > 0)
+      return mini;
+    else
+      return maxi;
+  }
+  if (a < 0) {
+    if (mini == -FLT_MAX)
+      return -FLT_MAX;
+    if (maxi == FLT_MAX)
+      return FLT_MAX;
+    if (mini*mini + mini * b / a > maxi*maxi + maxi * b / a)
+      return mini;
+    else
+      return maxi;
+  }
+  // Now, the most usual case
+  real the_min = -b / (2*a);
+  if (the_min < mini)
+    return mini;
+  if (the_min > maxi)
+    return maxi;
+  return the_min;
 }
   
 //////////////
