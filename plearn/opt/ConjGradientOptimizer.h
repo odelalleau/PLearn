@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.35 2004/04/30 13:12:46 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.36 2004/10/07 13:15:33 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -64,6 +64,8 @@ class ConjGradientOptimizer : public Optimizer {
 public:
 
   // General options (also available through setOption)
+
+  int verbosity;
 
   //! If set to 1, will compute and display the mean cost at each epoch
   int compute_cost;

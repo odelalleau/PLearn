@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.55 2004/07/21 16:30:54 chrish42 Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.56 2004/10/07 13:15:33 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -63,6 +63,7 @@ ConjGradientOptimizer::ConjGradientOptimizer(
     int n_updates, const string& filename, 
     int every_iterations)
   :inherited(n_updates, filename, every_iterations),
+  verbosity(2),
   compute_cost(1),
   line_search_algo(1),
   find_new_direction_formula(1),
@@ -88,6 +89,7 @@ ConjGradientOptimizer::ConjGradientOptimizer(
     int n_updates, const string& filename, 
     int every_iterations)
   :inherited(the_params, the_cost, n_updates, filename, every_iterations),
+  verbosity(2),
   starting_step_size(the_starting_step_size), restart_coeff(the_restart_coeff),
   epsilon(the_epsilon),
   sigma(the_sigma), rho(the_rho), fmax(the_fmax),
@@ -114,6 +116,7 @@ ConjGradientOptimizer::ConjGradientOptimizer(
     int every_iterations)
   :inherited(the_params, the_cost, the_update_for_measure,
              n_updates, filename, every_iterations),
+  verbosity(2),
   starting_step_size(the_starting_step_size), restart_coeff(the_restart_coeff),
   epsilon(the_epsilon),
   sigma(the_sigma), rho(the_rho), fmax(the_fmax),
@@ -233,6 +236,9 @@ void ConjGradientOptimizer::declareOptions(OptionList& ol)
 
     declareOption(ol, "compute_cost", &ConjGradientOptimizer::compute_cost, OptionBase::buildoption, 
                   "    If set to 1, will compute and display the mean cost at each epoch.\n");
+
+    declareOption(ol, "verbosity", &ConjGradientOptimizer::verbosity, OptionBase::buildoption, 
+        "Controls the amount of output.\n");
 
     inherited::declareOptions(ol);
 }
@@ -387,20 +393,21 @@ bool ConjGradientOptimizer::findDirection() {
       gamma = polakRibiere(computeOppositeGradient, this);
       break;
     default:
-      cout << "Warning ! Invalid conjugate gradient formula !" << endl;
-      gamma = 0;
+      PLERROR("In ConjGradientOptimizer::findDirection - Invalid conjugate gradient formula !");
       break;
   }
   // It is suggested to keep gamma >= 0
   if (gamma < 0) {
-    cout << "gamma < 0 ! gamma = " << gamma << " ==> Restarting" << endl;
+    if (verbosity >= 2)
+      cout << "gamma < 0 ! gamma = " << gamma << " ==> Restarting" << endl;
     gamma = 0;
   }
   else {
     real dp = dot(delta, current_opp_gradient);
     real delta_n = pownorm(delta);
     if (abs(dp) > restart_coeff *delta_n ) {
-      // cout << "Restart triggered !" << endl;
+      if (verbosity >= 5)
+        cout << "Restart triggered !" << endl;
       gamma = 0;
     }
   }
@@ -409,7 +416,7 @@ bool ConjGradientOptimizer::findDirection() {
 //  isFinished = pownorm(current_opp_gradient) < 0.0000001;
   // TODO This may lead to an erroneous early stop. To investigate ?
   isFinished = false;
-  if (isFinished)
+  if (isFinished && verbosity >= 2)
     cout << "Gradient is small enough, time to stop" << endl;
   return isFinished;
 }
@@ -564,7 +571,8 @@ real ConjGradientOptimizer::fletcherSearchMain (
   if (alpha1 == FLT_MAX)
     alpha1 = mu / 100; // My own heuristic
   if (g0 >= 0) {
-    cout << "Warning : df/dx(0) >= 0 !" << endl;
+    if (opt->verbosity >= 2)
+      cout << "Warning : df/dx(0) >= 0 !" << endl;
     return 0;
   }
   bool isBracketed = false;
@@ -574,12 +582,14 @@ real ConjGradientOptimizer::fletcherSearchMain (
   while (!isBracketed) {
     // cout << "Bracketing : alpha1 = " << alpha1 << endl << "             alpha0 = " << alpha0 << endl;
     if (alpha1 == mu && alpha1 == alpha2) { // NB: Personal hack... hopefully that should not happen
-      cout << "Warning : alpha1 == alpha2 == mu during bracketing" << endl;
+      if (opt->verbosity >= 2)
+        cout << "Warning : alpha1 == alpha2 == mu during bracketing" << endl;
       return alpha1;
     }
     f_1 = (*f)(alpha1, opt);
     if (f_1 <= fmax) {
-      cout << "fmax reached !" << endl;
+      if (opt->verbosity >= 2)
+        cout << "fmax reached !" << endl;
       opt->early_stop = true; //added by dorionc
       return alpha1;
     }
@@ -753,15 +763,17 @@ bool ConjGradientOptimizer::lineSearch() {
       step = newtonSearch(max_steps, initial_step, low_enough);
       break;
     default:
-      cout << "Warning ! Invalid conjugate gradient line search algorithm !" << endl;
+      PLERROR("In ConjGradientOptimizer::lineSearch - Invalid conjugate gradient line search algorithm");
       step = 0;
       break;
   }
   if (step < 0)
-    cout << "Ouch, negative step !" << endl;
+    if (verbosity >= 1)
+      cout << "Ouch, negative step !" << endl;
   if (step != 0) params.update(step, search_direction);
   if (step == 0)
-    cout << "No more progress made by the line search, stopping" << endl;
+    if (verbosity >= 2)
+      cout << "No more progress made by the line search, stopping" << endl;
   return (step == 0);
 }
 
@@ -901,7 +913,8 @@ real ConjGradientOptimizer::newtonSearch(
     sum_g += g[i];
     step = findMinWithQuadInterpol(i+1, sum_x, sum_x_2, sum_x_3, sum_x_4, sum_c_x_2, sum_g_x, sum_c_x, sum_c, sum_g);
   }
-  cout << "Warning : minimum not reached, is the cost really quadratic ?" << endl;
+  if (verbosity >= 1)
+    cout << "Warning : minimum not reached, is the cost really quadratic ?" << endl;
   return step;
 }
 
@@ -910,7 +923,7 @@ real ConjGradientOptimizer::newtonSearch(
 //////////////
 real ConjGradientOptimizer::optimize()
 {
-  cout << "Warning ! In ConjGradientOptimizer::optimize This method is deprecated, use optimizeN instead" << endl;
+  PLWARNING("In ConjGradientOptimizer::optimize This method is deprecated, use optimizeN instead");
   ofstream out;
   if (!filename.empty()) {
      out.open(filename.c_str());
@@ -934,14 +947,14 @@ real ConjGradientOptimizer::optimize()
     
     // Make a line search along the current search direction
     early_stop = lineSearch(); 
-    if (early_stop)
+    if (early_stop && verbosity >= 2)
       cout << "Early stopping triggered by the line search" << endl;
     cost->fprop();
     current_cost = cost->value[0];
     
     // Find the new search direction
     bool early_stop_dir = findDirection();
-    if (early_stop_dir)
+    if (early_stop_dir && verbosity >= 2)
       cout << "Early stopping triggered by direction search" << endl;
     early_stop = early_stop || early_stop_dir;
 
@@ -975,7 +988,7 @@ real ConjGradientOptimizer::optimize()
       if (compute_cost) {
         early_stop_mesure = measure(t+1,meancost); 
       }
-      if (early_stop_dir)
+      if (early_stop_dir && verbosity >= 2)
         cout << "Early stopping triggered by the measurer" << endl;
       early_stop = early_stop || early_stop_mesure;
      // early_stop = measure(t+1,meancost); // TODO find which is the best between this and the one above
@@ -1044,7 +1057,7 @@ bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
   }
 
   // TODO Call the Stats collector
-  if (early_stop)
+  if (early_stop && verbosity >= 2)
     cout << "Early Stopping !" << endl;
   return early_stop;
 }
