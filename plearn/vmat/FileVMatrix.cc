@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.31 2005/03/17 22:57:40 chrish42 Exp $
+   * $Id: FileVMatrix.cc,v 1.32 2005/03/21 15:02:19 tihocan Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -328,7 +328,7 @@ FileVMatrix::~FileVMatrix()
   if (track_ref)
     count_refs[filename_]--;
 
-  if (remove_when_done && filename_ != "")
+  if (remove_when_done && !filename_.isEmpty())
     if (!track_ref || count_refs[filename_] == 0) {
       rm(filename_);
       force_rmdir(getMetaDataDir());
