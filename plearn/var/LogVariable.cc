@@ -36,14 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: LogVariable.cc,v 1.7 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: LogVariable.cc,v 1.8 2004/02/23 14:29:30 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "LogVariable.h"
 #include "DisplayUtils.h"
 #include "Var_operators.h"
-//#include "Var_utils.h"
 
 namespace PLearn {
 using namespace std;
@@ -59,12 +58,6 @@ PLEARN_IMPLEMENT_OBJECT(LogVariable, "ONE LINE DESCR", "NO HELP");
 
 void LogVariable::recomputeSize(int& l, int& w) const
 { l=input->length(); w=input->width(); }
-
-
-
-
-
-
 
 
 void LogVariable::fprop()
@@ -108,8 +101,5 @@ void LogVariable::rfprop()
     rvaluedata[i] = input->rvaluedata[i] / input->valuedata[i];
 }
 
-
-
 } // end of namespace PLearn
-
 
