@@ -23,6 +23,11 @@ using namespace std;
   //!  copy mechanism in Object) more palatable
   typedef map<const void*,void*> CopiesMap;
 
+  //! Some typedefs to use the NODEEPCOPY macro with.
+  typedef map<string, float> map_string_float;
+  typedef map<string, double> map_string_double;
+  typedef map<double, string> map_double_string;
+  typedef map<float, string> map_float_string;
   
 /*! Support for generic deep copying
     
@@ -39,6 +44,10 @@ using namespace std;
   NODEEPCOPY(float)
   NODEEPCOPY(int)
   NODEEPCOPY(bool)
+  NODEEPCOPY(map_string_float)
+  NODEEPCOPY(map_string_double)
+  NODEEPCOPY(map_float_string)
+  NODEEPCOPY(map_double_string)
   NODEEPCOPY(string)
   NODEEPCOPY(VMField)
   NODEEPCOPY(VMFieldStat)
