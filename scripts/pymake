@@ -41,8 +41,11 @@ print "pymake 2.0 [ (C) 2001, Pascal Vincent. This is free software distributed 
 # initialise a few variables from the environment
 platform = sys.platform
 if platform=='linux2':
-    if os.uname()[4] == 'ppc':
+    linux_type = os.uname()[4]
+    if linux_type == 'ppc':
         platform = 'linux-ppc'
+    elif linux_type =='x86_64':
+        platform = 'linux-x86_64'
     else:
         platform = 'linux-i386'
 
@@ -1103,7 +1106,6 @@ def get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_l
     ccfiles_to_compile is a dictionary containing FileInfo of all .cc files to compile
     executables_to_link is a dictionary containing FileInfo of all .cc files containing a
     main whose corresponding executable should be made."""
-
     target = abspath(target) # get absolute path
     if os.path.basename(target)[0] == '.': # ignore files and directories starting with a dot
         return 

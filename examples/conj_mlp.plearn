@@ -66,7 +66,7 @@ NNet(
           batch_size = 0;
 
           # int: how many times the optimizer gets to see the whole training set.
-          nstages = 3;
+          nstages = 30;
 
           seed = 0;
           )
