@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
- * $Id: TVec_decl.h,v 1.10 2004/07/08 15:51:19 monperrm Exp $
+ * $Id: TVec_decl.h,v 1.11 2004/07/09 14:11:39 tihocan Exp $
  * AUTHORS: Pascal Vincent & Yoshua Bengio
  * This file is part of the PLearn library.
  ******************************************************* */
@@ -464,12 +464,13 @@ public:
         *it = val;
     }
 
-      //! same as fill(f)
-      inline void operator=(const T& f) const
-      { fill(f); }
-      
-      inline void operator<<(const real& f) const
-      { fill(f); }
+  //! same as fill(f)
+  inline void operator=(const T& f) const
+  { fill(f); }
+
+  //! Same as fill(f) (will only work with TVec<real>).
+  inline void operator<<(const real& f) const
+  { fill(f); }
   
   inline void clear() const
     { if(!isNull()) clear_n(data(),length()); }
