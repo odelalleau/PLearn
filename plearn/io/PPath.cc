@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.cc,v 1.20 2005/02/22 14:31:18 dorionc Exp $ 
+   * $Id: PPath.cc,v 1.21 2005/02/24 16:20:14 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -264,13 +264,11 @@ const map<string, PPath>& PPath::metaprotocolToMetapath()
         PLERROR("In PPath::metaprotocolToMetapath - Error in PPath config file (%s): could not read the "
                 "path associated with '%s'",
                  config_file_path.absolute().c_str(), next_metaprotocol.c_str());
+
       // For the sake of simplicity, we do not allow a metapath to end with
       // a slash unless it is a root directory.
-      if (endsWith(next_metapath, _slash_char()) && !next_metapath.isRoot())
-        PLERROR("In PPath::metaprotocolToMetapath - Only root directories are allowed to end with '%c' in "
-                "your PPath config file (%s): the path '%s' is invalid",
-                 _slash_char(), config_file_path.absolute().c_str(), next_metapath.c_str());
-
+      next_metapath.removeTrailingSlash();
+      
       metaprotocol_to_metapath[ next_metaprotocol  ]  = next_metapath;
     }       
   }
