@@ -34,7 +34,7 @@
 
 
 /* *******************************************************
- * * $Id: ArrayAllocatorTrivial.h,v 1.2 2003/03/06 18:26:01 ducharme Exp $
+ * * $Id: ArrayAllocatorTrivial.h,v 1.3 2003/05/21 15:56:25 chapados Exp $
  * ******************************************************* */
 
 
@@ -143,7 +143,8 @@ void ArrayAllocatorTrivial<T,SizeBits>::swap(self& other)
 
 
 template <class T, unsigned SizeBits>
-inline ArrayAllocatorTrivial<T,SizeBits>::index_type
+inline
+typename ArrayAllocatorTrivial<T,SizeBits>::index_type
 ArrayAllocatorTrivial<T,SizeBits>::toIndex(pointer p, size_type n)
 {
   if (p)
@@ -154,7 +155,8 @@ ArrayAllocatorTrivial<T,SizeBits>::toIndex(pointer p, size_type n)
 
 
 template <class T, unsigned SizeBits>
-inline ArrayAllocatorTrivial<T,SizeBits>::pointer
+inline
+typename ArrayAllocatorTrivial<T,SizeBits>::pointer
 ArrayAllocatorTrivial<T,SizeBits>::toPointer(index_type i)
 {
   if (i.isNull())

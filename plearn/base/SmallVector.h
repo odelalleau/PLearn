@@ -203,7 +203,7 @@ Allocator* SmallVector<T,SizeBits,Allocator>::alloc;
 
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
 template <class T, unsigned SizeBits, class Allocator>
-SmallVector<T,SizeBits,Allocator>::iterator
+typename SmallVector<T,SizeBits,Allocator>::iterator
 SmallVector<T,SizeBits,Allocator>::begin()
 {
   //!  This is always correct, even for zero-size vectors
@@ -212,7 +212,7 @@ SmallVector<T,SizeBits,Allocator>::begin()
 
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
 template <class T, unsigned SizeBits, class Allocator>
-SmallVector<T,SizeBits,Allocator>::const_iterator
+typename SmallVector<T,SizeBits,Allocator>::const_iterator
 SmallVector<T,SizeBits,Allocator>::begin() const
 {
   //!  This is always correct, even for zero-size vectors
@@ -221,7 +221,7 @@ SmallVector<T,SizeBits,Allocator>::begin() const
 
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
 template <class T, unsigned SizeBits, class Allocator>
-SmallVector<T,SizeBits,Allocator>::iterator
+typename SmallVector<T,SizeBits,Allocator>::iterator
 SmallVector<T,SizeBits,Allocator>::end()
 {
   return begin() + size();
@@ -229,7 +229,7 @@ SmallVector<T,SizeBits,Allocator>::end()
 
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
 template <class T, unsigned SizeBits, class Allocator>
-SmallVector<T,SizeBits,Allocator>::const_iterator
+typename SmallVector<T,SizeBits,Allocator>::const_iterator
 SmallVector<T,SizeBits,Allocator>::end() const
 {
   return begin() + size();
@@ -240,7 +240,7 @@ SmallVector<T,SizeBits,Allocator>::end() const
 
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
 template <class T, unsigned SizeBits, class Allocator>
-SmallVector<T,SizeBits,Allocator>::reference
+typename SmallVector<T,SizeBits,Allocator>::reference
 SmallVector<T,SizeBits,Allocator>::operator[](size_type n)
 {
 #ifdef BOUNDCHECK
@@ -252,7 +252,7 @@ SmallVector<T,SizeBits,Allocator>::operator[](size_type n)
     
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
 template <class T, unsigned SizeBits, class Allocator>
-SmallVector<T,SizeBits,Allocator>::const_reference
+typename SmallVector<T,SizeBits,Allocator>::const_reference
 SmallVector<T,SizeBits,Allocator>::operator[](size_type n) const
 {
 #ifdef BOUNDCHECK
@@ -264,7 +264,7 @@ SmallVector<T,SizeBits,Allocator>::operator[](size_type n) const
     
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
 template <class T, unsigned SizeBits, class Allocator>
-SmallVector<T,SizeBits,Allocator>::reference
+typename SmallVector<T,SizeBits,Allocator>::reference
 SmallVector<T,SizeBits,Allocator>::at(size_type n)
 {
   //!  n cannot be less than zero, because size_type is usually unsigned
@@ -276,7 +276,7 @@ SmallVector<T,SizeBits,Allocator>::at(size_type n)
     
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
 template <class T, unsigned SizeBits, class Allocator>
-SmallVector<T,SizeBits,Allocator>::const_reference
+typename SmallVector<T,SizeBits,Allocator>::const_reference
 SmallVector<T,SizeBits,Allocator>::at(size_type n) const
 {
   //!  n cannot be less than zero, because size_type is usually unsigned
@@ -288,7 +288,7 @@ SmallVector<T,SizeBits,Allocator>::at(size_type n) const
     
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
 template <class T, unsigned SizeBits, class Allocator>
-SmallVector<T,SizeBits,Allocator>::reference
+typename SmallVector<T,SizeBits,Allocator>::reference
 SmallVector<T,SizeBits,Allocator>::front()
 {
   if (empty())
@@ -299,7 +299,7 @@ SmallVector<T,SizeBits,Allocator>::front()
     
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
 template <class T, unsigned SizeBits, class Allocator>
-SmallVector<T,SizeBits,Allocator>::const_reference
+typename SmallVector<T,SizeBits,Allocator>::const_reference
 SmallVector<T,SizeBits,Allocator>::front() const
 {
   if (empty())
@@ -310,7 +310,7 @@ SmallVector<T,SizeBits,Allocator>::front() const
     
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
 template <class T, unsigned SizeBits, class Allocator>
-SmallVector<T,SizeBits,Allocator>::reference
+typename SmallVector<T,SizeBits,Allocator>::reference
 SmallVector<T,SizeBits,Allocator>::back()
 {
   if (empty())
@@ -321,7 +321,7 @@ SmallVector<T,SizeBits,Allocator>::back()
     
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
 template <class T, unsigned SizeBits, class Allocator>
-SmallVector<T,SizeBits,Allocator>::const_reference
+typename SmallVector<T,SizeBits,Allocator>::const_reference
 SmallVector<T,SizeBits,Allocator>::back() const
 {
   if (empty())
@@ -416,7 +416,7 @@ void SmallVector<T,SizeBits,Allocator>::pop_back()
 
 //template <class T, unsigned SizeBits, class Allocator = ArrayAllocatorTrivial<T,SizeBits> >
 template <class T, unsigned SizeBits, class Allocator>
-SmallVector<T,SizeBits,Allocator>::size_type
+typename SmallVector<T,SizeBits,Allocator>::size_type
 SmallVector<T,SizeBits,Allocator>::size() const
 {
   if (i.isNull())
@@ -477,7 +477,7 @@ bool operator==(const SmallVector<T,SizeBits,Allocator>& x,
                 const SmallVector<T,SizeBits,Allocator>& y)
 {
   bool equal = true;
-  SmallVector<T,SizeBits,Allocator>::const_iterator
+  typename SmallVector<T,SizeBits,Allocator>::const_iterator
 	xit=x.begin(), xend=x.end(), yit=y.begin(), yend=y.end();
   if (xend-xit != yend-yit)
 	return false;

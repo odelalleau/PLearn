@@ -34,6 +34,7 @@
 #ifndef TINYVECTOR_H
 #define TINYVECTOR_H
 
+#include <utility>
 #include <stdexcept>			     // for out_of_range
 #include <algorithm>			     // for lexicographical_compare
 #include <typeinfo>
@@ -44,6 +45,7 @@
 
 namespace PLearn <%
 using namespace std;
+using namespace std::rel_ops;
 
 //!  Forward declaration
 template <class T> class TinyVectorTrait;
@@ -160,8 +162,37 @@ template <class T, unsigned N, class TTrait>
 bool operator<(const TinyVector<T,N,TTrait>&,
                const TinyVector<T,N,TTrait>&);
 
+//!  Other operators (should be defined in std::rel_ops, but does not work
+//!  properly with gcc yet).
+template <class T, unsigned N, class TTrait>
+inline bool operator!=(const TinyVector<T,N,TTrait>& x,
+                       const TinyVector<T,N,TTrait>& y)
+{
+  return !(x == y);
+}
 
-    
+template <class T, unsigned N, class TTrait>
+inline bool operator> (const TinyVector<T,N,TTrait>& x,
+                       const TinyVector<T,N,TTrait>& y)
+{
+  return y < x;
+}
+
+template <class T, unsigned N, class TTrait>
+inline bool operator<=(const TinyVector<T,N,TTrait>& x,
+                       const TinyVector<T,N,TTrait>& y)
+{
+  return !(y < x);
+}
+
+template <class T, unsigned N, class TTrait>
+inline bool operator>=(const TinyVector<T,N,TTrait>& x,
+                       const TinyVector<T,N,TTrait>& y)
+{
+  return !(x < y);
+}
+
+
 //#########################  CLASS  TINYVECTORTRAIT  ######################
 /*!       
   The class TinyVectorTrait is specialized for each class T of
