@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TangentLearner.cc,v 1.4 2004/06/01 22:14:57 yoshua Exp $ 
+   * $Id: TangentLearner.cc,v 1.5 2004/06/02 02:06:13 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
@@ -61,7 +61,7 @@ TangentLearner::TangentLearner()
 /* ### Initialize all fields to their default value here */
   : training_targets("local_neighbors"), use_subspace_distance(true), n_neighbors(5), n_dim(1),
     architecture_type("single_neural_network"), n_hidden_units(-1),
-    batch_size(1), norm_penalization(0), svd_threshold(1e-3)
+    batch_size(1), norm_penalization(0), svd_threshold(1e-3), projection_error_regularization(1e-4)
 {
 }
 
@@ -146,6 +146,10 @@ void TangentLearner::declareOptions(OptionList& ol)
 		"Threshold to accept singular values of F in solving for linear combination weights on tangent subspace.\n"
 		);
 
+  declareOption(ol, "projection_error_regularization", &TangentLearner::projection_error_regularization, OptionBase::buildoption,
+		"Term added to the linear system matrix involved in fitting subspaces in the projection error computation.\n"
+		);
+
   declareOption(ol, "parameters", &TangentLearner::parameters, OptionBase::learntoption,
 		"Parameters of the tangent_predictor function.\n"
 		);
@@ -204,7 +208,8 @@ void TangentLearner::build_()
     else PLERROR("TangentLearner::build, option training_targets is %s, should be 'local_evectors' or 'local_neighbors'.",
                  training_targets.c_str());
 
-    Var proj_err = projection_error(tangent_predictor->outputs[0], tangent_targets, norm_penalization, n, use_subspace_distance, svd_threshold);
+    Var proj_err = projection_error(tangent_predictor->outputs[0], tangent_targets, norm_penalization, n, 
+                                    use_subspace_distance, svd_threshold, projection_error_regularization);
     cost_of_one_example = Func(tangent_predictor->inputs & tangent_targets, tangent_predictor->parameters, proj_err);
 
   }

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
- * $Id: ProjectionErrorVariable.cc,v 1.5 2004/06/01 22:14:34 yoshua Exp $
+ * $Id: ProjectionErrorVariable.cc,v 1.6 2004/06/02 02:06:06 yoshua Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -62,8 +62,10 @@ namespace PLearn {
                           "In any case, if norm_penalization>0, an extra term is added:\n"
                           "    norm_penalization * sum_i (||f_i||^2 - 1)^2.\n");
 
-  ProjectionErrorVariable::ProjectionErrorVariable(Variable* input1, Variable* input2, real norm_penalization_, int n_, bool use_subspace_distance_, real epsilon_)
-    : inherited(input1, input2, 1, 1), n(n_), use_subspace_distance(use_subspace_distance_), norm_penalization(norm_penalization_), epsilon(epsilon_)
+  ProjectionErrorVariable::ProjectionErrorVariable(Variable* input1, Variable* input2, real norm_penalization_, int n_, 
+                                                   bool use_subspace_distance_, real epsilon_, real regularization_)
+    : inherited(input1, input2, 1, 1), n(n_), use_subspace_distance(use_subspace_distance_), norm_penalization(norm_penalization_), 
+      epsilon(epsilon_), regularization(regularization_)
   {
     build_();
   }
@@ -101,6 +103,7 @@ namespace PLearn {
         T = input2->length();
 
       F = input1->value.toMat(n_dim,n);
+      dF = input1->gradient.toMat(n_dim,n);
       TT = input2->value.toMat(T,n);
       if (n<0) n = input1->width();
       if (input2->width()!=n)
@@ -202,13 +205,15 @@ namespace PLearn {
         for (int k=0;k<S.length();k++)
           {
             real s_k = S[k];
+            real sv = s_k+ regularization;
+            real coef = 1/(sv * sv);
             if (s_k>epsilon) // ignore the components that have too small singular value (more robust solution)
               {
                 real sum_first_elements = 0;
                 for (int j=0;j<n_dim;j++) 
                   sum_first_elements += V(j,k);
                 for (int i=0;i<n_dim+T;i++)
-                  wwuu[i] += V(i,k) * sum_first_elements / (s_k * s_k);
+                  wwuu[i] += V(i,k) * sum_first_elements * coef;
               }
           }
 #endif
@@ -249,14 +254,15 @@ namespace PLearn {
         VVt.clear();
         for (int k=0;k<S.length();k++)
           {
-            real s_k = S[k];
+            real s_k = S[k] + regularization;
             if (s_k>epsilon) // ignore the components that have too small singular value (more robust solution)
               {
+                real coef = 1/(s_k*s_k);
                 for (int i=0;i<n_dim;i++)
                   {
                     real* VVti = VVt[i];
                     for (int j=0;j<n_dim;j++)
-                      VVti[j] += V(i,k)*V(j,k)/(s_k*s_k);
+                      VVti[j] += V(i,k)*V(j,k)*coef;
                   }
                 //Vec Vk = V(k);
                 //externalProductScaleAcc(VVt, Vk, Vk, 1.0 / (s_k * s_k));
@@ -314,13 +320,12 @@ namespace PLearn {
 
     if (use_subspace_distance)
       {
-        Mat& dF = input1->matGradient;
-        externalProductAcc(dF,ww,fw);
+        externalProductScaleAcc(dF,ww,fw,gradient[0]);
         if (norm_penalization>0)
           for (int i=0;i<n_dim;i++)
           {
             Vec df_i = dF(i); // n-vector
-              multiplyAcc(df_i, F(i), norm_penalization*2*norm_err[i]);
+              multiplyAcc(df_i, F(i), gradient[0]*norm_penalization*2*norm_err[i]);
           }
       }
     else
@@ -331,10 +336,10 @@ namespace PLearn {
             Vec wj = w(j);
             for (int i=0;i<n_dim;i++)
               {
-                Vec df_i = input1->matGradient(i); // n-vector
+                Vec df_i = dF(i); // n-vector
                 multiplyAcc(df_i, fw_minus_tj, gradient[0] * wj[i]*2);
                 if (norm_penalization>0)
-                  multiplyAcc(df_i, F(i), norm_penalization*2*norm_err[i]);
+                  multiplyAcc(df_i, F(i), gradient[0]*norm_penalization*2*norm_err[i]);
               }
           }
       }

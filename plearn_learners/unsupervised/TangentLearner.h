@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TangentLearner.h,v 1.3 2004/06/01 20:25:26 monperrm Exp $ 
+   * $Id: TangentLearner.h,v 1.4 2004/06/02 02:06:13 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus
@@ -96,6 +96,7 @@ public:
 
   real norm_penalization; // penalizes sum_i (||f_i||^2-1)^2
   real svd_threshold;
+  real projection_error_regularization; // term to add on linear system diagonal, to solve for subspace fitting
 
   // ****************
   // * Constructors *
