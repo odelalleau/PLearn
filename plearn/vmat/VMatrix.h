@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.43 2004/06/18 16:49:53 tihocan Exp $
+   * $Id: VMatrix.h,v 1.44 2004/06/18 19:12:37 tihocan Exp $
    ******************************************************* */
 
 
@@ -262,6 +262,9 @@ public:
   //! loads the appropriate string map file for every column
   void loadAllStringMappings();
 
+  //! Copy all string mappings from a given VMat.
+  void copyStringMappingsFrom(VMat source);
+
   //! returns the string associated with value val 
   //! for field# col. Or returns "" if no string is associated.
   virtual string getValString(int col, real val) const;
@@ -342,7 +345,7 @@ public:
   inline bool isWritable() const { return writable; }
 
   // this function (used with .vmat datasets), is used to return the filename of fieldInfo files (string maps (.smap) and notes (.notes))
-  // Ir recursively navigates through links until it finds a suitable file (.smap or .notes)
+  // It recursively navigates through links until it finds a suitable file (.smap or .notes)
   // Idea : a .metadata/FieldInfo can contain one of these files :
   // (the order show here is the one used by the function to searches the file)
 

@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.56 2004/06/18 16:50:43 tihocan Exp $
+* $Id: VMatrix.cc,v 1.57 2004/06/18 19:12:37 tihocan Exp $
 ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -514,6 +514,9 @@ void VMatrix::removeColumnStringMappings(int c)
   map_rs[c].clear();
 }
 
+///////////////////////////
+// saveAllStringMappings //
+///////////////////////////
 void VMatrix::saveAllStringMappings()
 {
   string fname;
@@ -712,7 +715,9 @@ string VMatrix::getMetaDataDir() const
   return metadatadir; 
 }
 
-
+///////////////////////////
+// loadAllStringMappings //
+///////////////////////////
 void VMatrix::loadAllStringMappings()
 {
   // if this is a StrTableVMatrix, smap are already created
@@ -722,8 +727,11 @@ void VMatrix::loadAllStringMappings()
     loadStringMapping(i);
 }
 
-// loads the appropriate string map file for column 'col'
+///////////////////////
+// loadStringMapping //
+///////////////////////
 void VMatrix::loadStringMapping(int col)
+// loads the appropriate string map file for column 'col'
 {
   if(!hasMetaDataDir())
     return;
@@ -765,6 +773,19 @@ void VMatrix::loadStringMapping(int col)
   }
 }
 
+////////////////////////////
+// copyStringMappingsFrom //
+////////////////////////////
+void VMatrix::copyStringMappingsFrom(VMat source) {
+  if (width_ != source->width()) {
+    PLERROR("In VMatrix::copyStringMappingsFrom - The source VMatrix doesn't have the same width");
+  }
+  map_rs.resize(width_);
+  map_sr.resize(width_);
+  for (int i = 0; i < width_; i++) {
+    setStringMapping(i, source->getStringToRealMapping(i));
+  }
+}
 
 //! returns the unconditonal statistics for the given field
 TVec<StatsCollector> VMatrix::getStats() const
