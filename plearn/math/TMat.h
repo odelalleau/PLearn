@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.17 2003/06/03 14:52:09 plearner Exp $
+   * $Id: TMat.h,v 1.18 2003/06/06 05:23:52 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -153,9 +153,12 @@ class TVec
   {    
     int n = length_;
     vector<T> res(n);
-    T* ptr = data();
-    for(int i=0; i<n; i++)
-      res[i] = *ptr++;
+    if(n>0)
+      {
+        T* ptr = data();
+        for(int i=0; i<n; i++)
+          res[i] = *ptr++;
+      }
     return res;
   }
 

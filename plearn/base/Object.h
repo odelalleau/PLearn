@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.18 2003/06/03 14:52:08 plearner Exp $
+   * $Id: Object.h,v 1.19 2003/06/06 05:23:38 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -98,7 +98,7 @@ using namespace std;
         static Object* _new_instance_for_typemap_();                       \
         static bool _isa_(Object* o);                                      \
 	      static TypeRegistrar _register_in_typemap_;                        \
-        CLASSTYPE* deepCopy(CopiesMap &copies) const;
+        virtual CLASSTYPE* deepCopy(CopiesMap &copies) const;
 
 #define PLEARN_IMPLEMENT_OBJECT_METHODS(CLASSTYPE, CLASSNAME, PARENTTYPE)     \
 	      string CLASSTYPE::_classname_()                                       \
@@ -129,7 +129,7 @@ using namespace std;
         static OptionList& _getOptionList_();                              \
         static bool _isa_(Object* o);                                      \
 	      static TypeRegistrar _register_in_typemap_;                        \
-        CLASSTYPE* deepCopy(CopiesMap &copies) const;
+        virtual CLASSTYPE* deepCopy(CopiesMap &copies) const;
 
 #define PLEARN_IMPLEMENT_ABSTRACT_OBJECT_METHODS(CLASSTYPE, CLASSNAME, PARENTTYPE)     \
 	      string CLASSTYPE::_classname_()                                       \
@@ -609,7 +609,7 @@ template<class T> Object *toIndexedObjectPtr(const T&, int) // Never to be calle
           { return string(#CLASSNAME)+"<"+ TypeTraits<TEMPLATETYPE>::name() + ">"; };                       \
         static Object * _new_instance_for_typemap_()              \
           { return new CLASSNAME<TEMPLATETYPE>(); }                   \
-        CLASSNAME<TEMPLATETYPE> * deepCopy(CopiesMap &copies) const         \
+        virtual CLASSNAME<TEMPLATETYPE> * deepCopy(CopiesMap &copies) const         \
           { return implementDeepCopy<CLASSNAME<TEMPLATETYPE> >(copies); } \
         static TypeRegistrar _register_in_typemap_;
 
