@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.40 2005/01/18 15:41:17 lheureup Exp $
+   * $Id: vmatmain.cc,v 1.41 2005/01/18 17:54:32 lheureup Exp $
    ******************************************************* */
 
 #include <algorithm>                         // for max
@@ -89,8 +89,8 @@ int print_diff(ostream& out, VMat m1, VMat m2, double tolerance, int verbose)
           double d = v1[j]-v2[j];
           if(fabs(d)>tolerance || (is_missing(v1[j]) && !is_missing(v2[j])) || (is_missing(v2[j]) && !is_missing(v1[j])))
             {
-				  if (verbose)
-					 out << "Elements at " << i << ',' << j << " differ by " << d << endl;
+	      if (verbose)
+		out << "Elements at " << i << ',' << j << " differ by " << d << endl;
               ++ndiff;
             }
         }
@@ -1658,11 +1658,11 @@ int vmatmain(int argc, char** argv)
       VMat vm1 = getDataSet(argv[2]);
       VMat vm2 = getDataSet(argv[3]);
       double tol = 1e-6;
-		int verb = 1;
-      if(argc == 5)
+      int verb = 1;
+      if(argc >= 5)
         tol = atof(argv[4]);
-		if (argc >= 6)
-		  verb = atoi(argv[5]);
+      if (argc >= 6)
+	verb = atoi(argv[5]);
       print_diff(cout, vm1, vm2, tol, verb);      
     }
   else if(command=="cat")
