@@ -57,7 +57,9 @@ ManifoldParzen2::ManifoldParzen2()
   ncomponents(1),
   use_last_eigenval(true),
   scale_factor(1)
-{}
+{
+  nstages = 1;
+}
 
 ManifoldParzen2::ManifoldParzen2(int the_nneighbors, int the_ncomponents, bool use_last_eigenvalue, real the_scale_factor)
   : nneighbors(the_nneighbors),ncomponents(the_ncomponents),use_last_eigenval(true),scale_factor(the_scale_factor)
@@ -155,6 +157,7 @@ void ManifoldParzen2::train()
   type = "general";
   L = l;
   D = ncomponents;
+  GaussMix::build();
   resizeStuffBeforeTraining();
 //  setMixtureTypeGeneral(l, ncomponents, w); // TODO Remove this line when it works.
 
@@ -202,7 +205,6 @@ void ManifoldParzen2::train()
     alpha[i] = 1.0 / l;
     n_eigen = eigvals.length() - 1;
     GaussMix::build();
-    resizeStuffFromOptions();
     resizeStuffBeforeTraining();
     mu(i) << center;
     eigenvalues(i) << eigvals;
@@ -210,6 +212,7 @@ void ManifoldParzen2::train()
     eigenvectors[i] << components_eigenvecs;
 //    setGaussianGeneral(i, 1.0/l, center, eigvals.subVec(0,eigvals.length()-1), components_eigenvecs.subMatRows(0,eigvals.length()-1), lambda0);
   }
+  stage = 1;
   build();
 }
 
