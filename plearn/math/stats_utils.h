@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: stats_utils.h,v 1.1 2003/02/28 22:47:57 plearner Exp $
+   * $Id: stats_utils.h,v 1.2 2004/01/10 22:54:29 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,9 +44,43 @@
 #define stats_utils_INC
 
 #include "Mat.h"
+#include "VMat.h"
 
 namespace PLearn <%
 using namespace std;
+
+//! Compute the Spearman Rank correlation statistic. It measures
+//! how much of a monotonic dependency there is between two variables x and y
+//! (column matrices). The statistic is computed as follows:
+//!    r = 1 - 6 (sum_{i=1}^n (rx_i - ry_i)^2) / (n(n^2-1))
+//! If x and y are column matrices than r is a 1x1 matrix.
+//! If x and y have width wx and wy respectively than the
+//! statistic is computed for each pair of column (the first
+//! taken from x and the second from y) and r will be a symmetric
+//! matrix size wx by wy upon return. N.B. If x holds in memory
+//! than copying it to a matrix (toMat()) before calling this function will
+//! speed up computation significantly.
+void SpearmanRankCorrelation(const VMat &x, const VMat& y, Mat r);
+
+//! Return P(|R|>|r|) two-sided p-value for the null-hypothesis that
+//! there is no monotonic dependency, with r the observed Spearman Rank 
+//! correlation between two paired samples of length n. The p-value
+//! is computed by taking advantage of the fact that under the null
+//! hypothesis r*sqrt(n-1) is Normal(0,1), if n is LARGE ENOUGH (approx. > 30).
+real testSpearmanRankCorrelation(real r, int n);
+
+//! Compute P(|R|>|r|) two-sided p-value for the null-hypothesis that
+//! there is no monotonic dependency, with r the observed Spearman Rank 
+//! correlation between two paired samples x and y of length n (column
+//! matrices). The p-value is computed by taking advantage of the fact 
+//! that under the null hypothesis r*sqrt(n-1) is Normal(0,1).
+//! If x and y have width wx and wy respectively than the
+//! statistic is computed for each pair of column (the first
+//! taken from x and the second from y) and pvalues will be a symmetric
+//! matrix size wx by wy upon return. N.B. If x holds in memory
+//! than copying it to a matrix (toMat()) before calling this function will
+//! speed up computation significantly.
+void testSpearmanRankCorrelation(const VMat &x, const VMat& y, Mat pvalues);
 
 //! Returns the max of the difference between the empirical cdf of 2 series of values
 //! Side-effect: the call sorts v1 and v2.
@@ -68,7 +102,7 @@ real max_cdf_diff(Vec& v1, Vec& v2);
      Let F_1(x) the empirical cumulative distribution of D_1 of size N_1, and
      let F_2(x) the empirical cumulative distribution of D_2 of size N_2. Then
 
-       D = max_x | F_1(x) - F_2 |
+       D = max_x | F_1(x) - F_2(x) |
 
      and the effective N is N_1 N_2 / (N_1 + N_2).
 
@@ -86,12 +120,12 @@ real max_cdf_diff(Vec& v1, Vec& v2);
 
    Ref: Stephens, M.A. (1970), Journal of the Royal Statistical Society B, vol. 32, pp. 115-122.
 */
-
 real KS_test(real D, real N, int conv=10);
 
-//! Kolmogorov-Smirnov test. Computes D (the max abs dfference between the 2 cdfs) and the ks statistic.
+//! Kolmogorov-Smirnov test. Computes D (the max abs dfference between the 2 cdfs)
+//! and p_value P(random variable D > observed D|no difference in true prob)
 //! A reasonable value for D is 10. The call sorts v1 and v2.
-void KS_test(Vec& v1, Vec& v2, int conv, real& D, real& ks_stat);
+void KS_test(Vec& v1, Vec& v2, int conv, real& D, real& p_value);
 
 //! Returns result of Kolmogorov-Smirnov test between 2 samples
 //! The call sorts v1 and v2.

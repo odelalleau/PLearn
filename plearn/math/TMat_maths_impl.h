@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.29 2004/01/10 19:05:58 yoshua Exp $
+   * $Id: TMat_maths_impl.h,v 1.30 2004/01/10 22:54:29 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -3071,6 +3071,36 @@ template<class T>
       }
     }
   }
+
+
+//! For each column of mat, sort the elements and put in the 'ranks' matrix
+//! (of the same dimensions) the rank of original elements. More precisely,
+//! Let mat(i,j) be the k-th largest element of column j, than ranks(i,j) will be k.
+template<class T>
+void computeRanks(const TMat<T>& mat, TMat<T> ranks)
+{
+  int width=mat.width();
+  int n=mat.length();
+  ranks.resize(n,width);
+  TVec<Mat> sorted(width); 
+  // sort all the y's
+  for (int j=0;j<width;j++)
+    sorted[j].resize(n,2);
+  for (int i=0;i<n;i++)
+  {
+    for (int j=0;j<width;j++)
+    {
+      sorted[j](i,0)=mat(i,j);
+      sorted[j](i,1)=i;
+    }
+  }
+  for (int j=0;j<width;j++)
+    sortRows(sorted[j]);
+  // compute the ranks
+  for (int i=0;i<n;i++)
+    for (int j=0;j<width;j++)
+      ranks(int(sorted[j](i,1)),j) = i;
+}
 
   /*   Not taken from Numerical Recipies: This is a quickly written and hihghly unefficient algorithm!   */
   /*   Sorts the columns of the given matrix, in ascending order of its rownum row's elements   */

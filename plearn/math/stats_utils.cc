@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: stats_utils.cc,v 1.2 2003/03/01 16:00:46 yoshua Exp $
+   * $Id: stats_utils.cc,v 1.3 2004/01/10 22:54:29 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -42,9 +42,85 @@
 
 #include "stats_utils.h"
 #include "TMat_maths.h"
+#include "pl_erf.h"
 
 namespace PLearn <%
 using namespace std;
+
+//! Compute the Spearman Rank correlation statistic. It measures
+//! how much of a monotonic dependency there is between two variables x and y
+//! (column matrices). The statistic is computed as follows:
+//!    r = 1 - 6 (sum_{i=1}^n (rx_i - ry_i)^2) / (n(n^2-1))
+//! If x and y are column matrices than r is a 1x1 matrix.
+//! If x and y have width wx and wy respectively than the
+//! statistic is computed for each pair of column (the first
+//! taken from x and the second from y) and r will be a symmetric
+//! matrix size wx by wy upon return. N.B. If x holds in memory
+//! than copying to a matrix before calling this function will
+//! speed up computation significantly.
+void SpearmanRankCorrelation(const VMat &x, const VMat& y, Mat r)
+{
+  int n=x.length();
+  if (n!=y.length())
+    PLERROR("SpearmanRankCorrelation: x and y must have the same length");
+  int wx=x.width();
+  int wy=y.width();
+  r.resize(wx,wy);
+  r.clear();
+  Mat y_ranks;
+  computeRanks(y.toMat(),y_ranks);
+  Mat x_rank(n,1);
+  for (int i=0;i<wx;i++)
+  {
+    Mat xi=x.column(i).toMat();
+    // compute the rank of the i-th column of x
+    computeRanks(xi,x_rank);
+    // compute the Spearman rank correlation coefficient:
+    Vec r_i = r(i);
+    for (int k=0;k<n;k++)
+      for (int j=0;j<wy;j++)
+      {
+        real delta = x_rank(k,0) - y_ranks(k,j);
+        r_i[j] += delta*delta;
+      }
+    for (int j=0;j<wy;j++)
+      r_i[j] = 1 - 6*r_i[j]/(n*(n*n-1));
+  }
+}
+
+//! Return P(|R|>|r|) two-sided p-value for the null-hypothesis that
+//! there is no monotonic dependency, with r the observed Spearman Rank 
+//! correlation between two paired samples of length n. The p-value
+//! is computed by taking advantage of the fact that under the null
+//! hypothesis r*sqrt(n-1) is Normal(0,1), if n is LARGE ENOUGH (approx. > 30).
+real testSpearmanRankCorrelation(real r, int n)
+{
+  real fz = fabs(r)*sqrt(n-1.0);
+  return gauss_01_cum(fz) + (1-gauss_01_cum(-fz));
+}
+
+//! Compute P(|R|>|r|) two-sided p-value for the null-hypothesis that
+//! there is no monotonic dependency, with r the observed Spearman Rank 
+//! correlation between two paired samples x and y of length n (column
+//! matrices). The p-value is computed by taking advantage of the fact 
+//! that under the null hypothesis r*sqrt(n-1) is Normal(0,1).
+//! If x and y have width wx and wy respectively than the
+//! statistic is computed for each pair of column (the first
+//! taken from x and the second from y) and pvalues will be a symmetric
+//! matrix size wx by wy upon return. N.B. If x holds in memory
+//! than copying it to a matrix (toMat()) before calling this function will
+//! speed up computation significantly.
+void testSpearmanRankCorrelation(const VMat &x, const VMat& y, Mat pvalues)
+{
+  Mat r;
+  SpearmanRankCorrelation(x,y,r);
+  int n=x.length();
+  pvalues.resize(r.length(),r.width());
+  for (int i=0;i<r.length();i++)
+    for (int j=0;j<r.width();j++)
+      pvalues(i,j) = pvalues(j,i) = testSpearmanRankCorrelation(r(i,j),n);
+}
+
 
 //! Returns the max of the difference between the empirical cdf of 2 series of values
 real max_cdf_diff(Vec& v1, Vec& v2)
@@ -138,13 +214,13 @@ real KS_test(real D, real N, int conv)
   return 2 * res;
 }
 
-void KS_test(Vec& v1, Vec& v2, int conv, real& D, real& ks_stat)
+void KS_test(Vec& v1, Vec& v2, int conv, real& D, real& p_value)
 {
   int n1 = v1.length();
   int n2 = v2.length();
   real N = (n1/real(n1+n2))*n2;
   D = max_cdf_diff(v1, v2);
-  ks_stat = KS_test(D,N,conv);
+  p_value = KS_test(D,N,conv);
 }
 
 real KS_test(Vec& v1, Vec& v2, int conv)
