@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.59 2005/02/01 21:15:21 ducharme Exp $
+   * $Id: fileutils.cc,v 1.60 2005/02/01 23:41:38 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -182,6 +182,7 @@ using namespace std;
     if (e != PR_NO_MORE_FILES_ERROR
 #if 1 // Workaround for NSPR bug
         && e != PR_FILE_NOT_FOUND_ERROR
+        && e != PR_NOT_DIRECTORY_ERROR
 #endif
        )
       PLERROR("In lsdir: error while listing directory: %s.",
@@ -254,7 +255,7 @@ using namespace std;
           return false;
       }
       else {
-        if (PR_RmDir(it->c_str()) != PR_SUCCESS)
+        if (PR_Delete(it->c_str()) != PR_SUCCESS)
           return false;
       }
     }

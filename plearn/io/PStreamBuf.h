@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PStreamBuf.h,v 1.13 2005/01/28 17:43:03 plearner Exp $ 
+   * $Id: PStreamBuf.h,v 1.14 2005/02/01 23:41:37 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PStreamBuf.h */
@@ -132,7 +132,7 @@ public:
   int get()
   {
     if(inbuf_p<inbuf_end || refill_in_buf())
-      return *inbuf_p++;
+      return (unsigned char) *inbuf_p++;
     else
       return -1;
   }
