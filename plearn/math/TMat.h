@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.19 2003/07/03 23:31:41 plearner Exp $
+   * $Id: TMat.h,v 1.20 2003/07/24 15:17:30 larocheh Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -529,7 +529,7 @@ class TVec
 
     inline void append(const T& newval)
     {
-      resize(length()+1);
+      resize(length()+1, length());
       lastElement() = newval;
     }
 
