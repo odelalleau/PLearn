@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussianContinuum.h,v 1.2 2004/07/21 16:30:59 chrish42 Exp $
+   * $Id: GaussianContinuum.h,v 1.3 2004/08/06 14:27:13 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -62,8 +62,14 @@ protected:
   // NON-OPTION FIELDS
 
   Func cost_of_one_example;
-  Var b, W, c, V; // explicit view of the parameters (also in parameters field).
+  Func verify_gradient_func;
+  Var b, W, c, V, muV, smV, smb, snV, snb; // explicit view of the parameters (also in parameters field).
+  //Var W_src, c_src, V_src, muV_src, smV_src, smb_src, snV_src, snb_src; 
+  //VarArray mu_neighbors, sm_neighbors, sn_neighbors, hidden_neighbors, input_neighbors, index_neighbors, tangent_plane_neighbors;
   Var tangent_targets; // target for the tangent vectors for one example 
+  Var tangent_plane;
+  Var mu, sm, sn; // parameters of the conditional models
+  Var p_x, p_target, p_neighbors, target_index, neigbor_indexes;
 
   // *********************
   // * protected options *
@@ -82,11 +88,11 @@ public:
 
   int n_neighbors; // number of neighbors used in local_pca or number of neighbors to predict
   int n_dim; // number of reduced dimensions (number of tangent vectors to compute)
-  string variances_transfer_function; "square", "exp" or "softplus"
+  string variances_transfer_function; // "square", "exp" or "softplus"
   PP<Optimizer> optimizer; // to estimate the function that predicts local tangent vectors given the input
   Var embedding;
   Func output_f;
-  Func tangent_predictor; // predicts local tangent vector given the input, and some parameters
+  Func predictor; // predicts everything about the gaussian
   Func projection_error_f; // map output to projection error
 
   // manual construction of the tangent_predictor

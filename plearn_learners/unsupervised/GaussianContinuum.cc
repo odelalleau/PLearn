@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussianContinuum.cc,v 1.2 2004/07/21 16:30:58 chrish42 Exp $
+   * $Id: GaussianContinuum.cc,v 1.3 2004/08/06 14:27:13 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -45,14 +45,19 @@
 #include <plearn/vmat/LocalNeighborsDifferencesVMatrix.h>
 #include <plearn/var/ProductVariable.h>
 #include <plearn/var/PlusVariable.h>
+#include <plearn/var/SoftplusVariable.h>
+#include <plearn/var/VarRowsVariable.h>
+#include <plearn/var/VarRowVariable.h>
 #include <plearn/var/Var_operators.h>
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
 #include <plearn/math/random.h>
 #include <plearn/var/SumOfVariable.h>
 #include <plearn/var/TanhVariable.h>
+#include <plearn/var/NllSemisphericalGaussianVariable.h>
 #include <plearn/var/DiagonalizedFactorsProductVariable.h>
 #include <plearn/math/random.h>
 #include <plearn/math/plapack.h>
+#include <plearn/var/ColumnSumVariable.h>
 
 namespace PLearn {
 using namespace std;
@@ -98,8 +103,7 @@ GaussianContinuum::GaussianContinuum()
 {
 }
 
-PLEARN_IMPLEMENT_OBJECT(GaussianContinuum, 
-                        "Learn a continuous (uncountable) Gaussian mixture with non-local parametrization"
+PLEARN_IMPLEMENT_OBJECT(GaussianContinuum, "Learns a continuous (uncountable) Gaussian mixture with non-local parametrization",
                         "This learner implicitly estimates the density of the data through\n"
                         "a generalization of the Gaussian mixture model and of the TangentLearner\n"
                         "algorithm (see help on that class). The density is the fixed point of\n"
@@ -413,11 +417,6 @@ void GaussianContinuum::declareOptions(OptionList& ol)
                 "    how many samples to use to estimate the average gradient before updating the weights\n"
                 "    0 is equivalent to specifying training_set->length() \n");
 
-  declareOption(ol, "norm_penalization", &GaussianContinuum::norm_penalization, OptionBase::buildoption,
-		"Factor that multiplies an extra penalization of the norm of f_i so that ||f_i|| be close to 1.\n"
-    "The penalty is norm_penalization*sum_i (1 - ||f_i||^2)^2.\n"                
-		);
-
   declareOption(ol, "svd_threshold", &GaussianContinuum::svd_threshold, OptionBase::buildoption,
 		"Threshold to accept singular values of F in solving for linear combination weights on tangent subspace.\n"
 		);
@@ -441,90 +440,102 @@ void GaussianContinuum::build_()
   
   if (n>0)
   {
-    if (architecture_type == "multi_neural_network")
+    Var log_n_examples(1,1,"log(n_examples)");
+
+    if (architecture_type == "embedding_neural_network")
       {
         if (n_hidden_units <= 0)
           PLERROR("GaussianContinuum::Number of hidden units should be positive, now %d\n",n_hidden_units);
-      }
-    if (architecture_type == "single_neural_network")
-      {
-        if (n_hidden_units <= 0)
-          PLERROR("GaussianContinuum::Number of hidden units should be positive, now %d\n",n_hidden_units);
-        Var x(n);
-        b = Var(n_dim*n,1,"b");
-        W = Var(n_dim*n,n_hidden_units,"W");
-        c = Var(n_hidden_units,1,"c");
-        V = Var(n_hidden_units,n,"V");
-        tangent_predictor = Func(x, b & W & c & V, b + product(W,tanh(c + product(V,x))));
-      }
-    else if (architecture_type == "linear")
-      {
-        Var x(n);
-        b = Var(n_dim*n,1,"b");
-        W = Var(n_dim*n,n,"W");
-        tangent_predictor = Func(x, b & W, b + product(W,x));
-      }
-    else if (architecture_type == "embedding_neural_network")
-      {
-        if (n_hidden_units <= 0)
-          PLERROR("GaussianContinuum::Number of hidden units should be positive, now %d\n",n_hidden_units);
+        /*
+        mu_neighbors.resize(n_neighbors);
+        sm_neighbors.resize(n_neighbors);
+        sn_neighbors.resize(n_neighbors);
+        hidden_neighbors.resize(n_neighbors);
+        input_neighbors.resize(n_neighbors);
+        index_neighbors.resize(n_neighbors);
+        tangent_plane_neighbors.resize(n_neighbors);
+        */
+
         Var x(n);
         W = Var(n_dim,n_hidden_units,"W");
         c = Var(n_hidden_units,1,"c");
         V = Var(n_hidden_units,n,"V");
+        muV = Var(n,n_hidden_units,"muV"); 
+        smV = Var(1,n_hidden_units,"smV");  
+        smb = Var(1,1,"smB");
+        snV = Var(1,n_hidden_units,"snV");  
+        snb = Var(1,1,"snB");
+        
+        /*
+        W_src = new SourceVariable(W->matValue);
+        c_src = new SourceVariable(c->matValue);
+        V_src = new SourceVariable(V->matValue);
+        muV_src = new SourceVariable(muV->matValue); 
+        smV_src = new SourceVariable(smV->matValue);  
+        smb_src = new SourceVariable(smb->matValue);
+        snV_src = new SourceVariable(snV->matValue);  
+        snb_src = new SourceVariable(snb->matValue);
+        */
+        
         Var a = tanh(c + product(V,x));
-        Var tangent_plane = diagonalized_factors_product(W,1-a*a,V); 
-        tangent_predictor = Func(x, W & c & V, tangent_plane);
+        tangent_plane = diagonalized_factors_product(W,1-a*a,V); 
         embedding = product(W,a);
+        mu = product(muV,a); // rajouter dans le .h
+        sm = softplus(smb + product(smV,a)); 
+        sn = softplus(snb + product(snV,a)); 
+        predictor = Func(x, W & c & V & muV & smV & smb & snV & snb, tangent_plane & mu & sm & sn);
+
         if (output_type=="tangent_plane")
-          output_f = tangent_predictor;
+          output_f = Func(x, tangent_plane);
         else if (output_type=="embedding")
           output_f = Func(x, embedding);
         else if (output_type=="tangent_plane+embedding")
           output_f = Func(x, tangent_plane & embedding);
+        // else ...
       }
-    else if (architecture_type == "embedding_quadratic")
-      {
-        Var x(n);
-        b = Var(n_dim,n,"b");
-        W = Var(n_dim*n,n,"W");
-        Var Wx = product(W,x);
-        Var tangent_plane = Wx + b;
-        tangent_predictor = Func(x, W & b, tangent_plane);
-        embedding = product(new PlusVariable(b,Wx),x);
-        if (output_type=="tangent_plane")
-          output_f = tangent_predictor;
-        else if (output_type=="embedding")
-          output_f = Func(x, embedding);
-        else if (output_type=="tangent_plane+embedding")
-          output_f = Func(x, tangent_plane & embedding);
-      }
-    else if (architecture_type != "")
+    else
       PLERROR("GaussianContinuum::build, unknown architecture_type option %s (should be 'neural_network', 'linear', or empty string '')\n",
               architecture_type.c_str());
 
-    if (parameters.size()>0 && parameters.nelems() == tangent_predictor->parameters.nelems())
-      tangent_predictor->parameters.copyValuesFrom(parameters);
+    if (parameters.size()>0 && parameters.nelems() == predictor->parameters.nelems())
+      predictor->parameters.copyValuesFrom(parameters);
     else
       {
-        parameters.resize(tangent_predictor->parameters.size());
+        parameters.resize(predictor->parameters.size());
         for (int i=0;i<parameters.size();i++)
-          parameters[i] = tangent_predictor->parameters[i];
+          parameters[i] = predictor->parameters[i];
       }
     
-    if (training_targets=="local_evectors")
-      tangent_targets = Var(n_dim,n);
-    else if (training_targets=="local_neighbors")
-      tangent_targets = Var(n_neighbors,n);
-    else PLERROR("GaussianContinuum::build, option training_targets is %s, should be 'local_evectors' or 'local_neighbors'.",
-                 training_targets.c_str());
+    tangent_targets = Var(n_neighbors,n);
 
-    Var proj_err = projection_error(tangent_predictor->outputs[0], tangent_targets, norm_penalization, n, 
-                                    normalize_by_neighbor_distance, use_subspace_distance, svd_threshold, 
-                                    projection_error_regularization);
-    projection_error_f = Func(tangent_predictor->outputs[0] & tangent_targets, proj_err);
-    cost_of_one_example = Func(tangent_predictor->inputs & tangent_targets, tangent_predictor->parameters, proj_err);
+    Var target_index = Var(1,1);
+    Var neighbor_indexes = Var(n_neighbors,1);
+    p_x = Var(train_set->length(),1);
+    p_target = new VarRowsVariable(p_x,target_index);
+    p_neighbors =new VarRowsVariable(p_x,neighbor_indexes);
+    /*
+    for(int neighbor = 0; neighbor < n_neighbors; neighbor++)
+    {
+      index_neighbors[neighbor] = Var(1,1); 
+      index_neighbors[neighbor]->value[0] = neighbor;
+      input_neighbors[neighbor] = new VarRowVariable(tangent_targets,index_neighbors[neighbor]) + x;
+      hidden_neighbors[neighbor] = tanh(c_src + product(V_src,input_neighbors[neighbor]));
+      tangent_plane_neighbors[neighbor] = diagonalized_factors_product(W_src,1-hidden_neighbors[neighbor]*hidden_neighbors[neighbor],V_src); 
+      mu_neighbors[neighbor] = product(muV_src,a); // rajouter dans le .h
+      sm_neighbors[neighbor] = softplus(smb_src + product(smV_src,hidden_neighbors[neighbor])); 
+      sn_neighbors[neighbor] = softplus(snb_src + product(snV_src,hidden_neighbors[neighbor])); 
+    }
+    */
 
+    // compute - log ( sum_{neighbors of x} P(neighbor|x) ) according to semi-spherical model
+    Var nll = nll_semispherical_gaussian(tangent_plane, mu, sm, sn, tangent_targets, p_target, p_neighbors,
+                                         svd_threshold); // + log_n_examples;
+    //nll_f = Func(tangent_plane & mu & sm & sn & tangent_targets, nll);
+    Var knn = Var(1,1);
+    knn->value[0] = n_neighbors;
+    Var sum_nll = new ColumnSumVariable(nll) / knn;
+    cost_of_one_example = Func(predictor->inputs & tangent_targets & target_index & neighbor_indexes, predictor->parameters, sum_nll);
+    verify_gradient_func = Func(predictor->inputs & tangent_targets & target_index & neighbor_indexes, predictor->parameters, sum_nll);
   }
 }
 
@@ -546,9 +557,17 @@ void GaussianContinuum::makeDeepCopyFromShallowCopy(map<const void*, void*>& cop
   varDeepCopyField(c, copies);
   varDeepCopyField(V, copies);
   varDeepCopyField(tangent_targets, copies);
+  varDeepCopyField(muV, copies);
+  varDeepCopyField(smV, copies);
+  varDeepCopyField(smb, copies);
+  varDeepCopyField(snV, copies);
+  varDeepCopyField(snb, copies);
+  varDeepCopyField(mu, copies);
+  varDeepCopyField(sm, copies);
+  varDeepCopyField(sn, copies);
   deepCopyField(parameters, copies);
   deepCopyField(optimizer, copies);
-  deepCopyField(tangent_predictor, copies);
+  deepCopyField(predictor, copies);
 }
 
 
@@ -571,22 +590,12 @@ void GaussianContinuum::train()
   if (!cost_of_one_example)
     PLERROR("GaussianContinuum::train: build has not been run after setTrainingSet!");
 
-  if (training_targets == "local_evectors")
-  {
-    //targets_vmat = new LocalPCAVMatrix(train_set, n_neighbors, n_dim);
-    PLERROR("local_evectors not yet implemented");
-  }
-  else if (training_targets == "local_neighbors")
-  {
+  targets_vmat = local_neighbors_differences(train_set, n_neighbors, false, true);
 
-    targets_vmat = local_neighbors_differences(train_set, n_neighbors);
-  }
-  else PLERROR("GaussianContinuum::train, unknown training_targets option %s (should be 'local_evectors' or 'local_neighbors')\n",
-	       training_targets.c_str());
-  
   train_set_with_targets = hconcat(train_set, targets_vmat);
-  train_set_with_targets->defineSizes(inputsize(),inputsize()*n_neighbors,0);
+  train_set_with_targets->defineSizes(inputsize()+inputsize()*n_neighbors+1+n_neighbors,0);
   int l = train_set->length();  
+  //log_n_examples->value[0] = log(real(l));
   int nsamples = batch_size>0 ? batch_size : l;
   Var totalcost = meanOf(train_set_with_targets, cost_of_one_example, nsamples);
   if(optimizer)
@@ -603,6 +612,10 @@ void GaussianContinuum::train()
   if(report_progress>0)
     pb = new ProgressBar("Training GaussianContinuum from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
 
+  //Vec row(inputsize()+inputsize()*n_neighbors+1+n_neighbors);
+  //train_set_with_targets->getRow(0,row);
+  //verify_gradient_func->verifyGradient(row);
+  
   int initial_stage = stage;
   bool early_stop=false;
   while(stage<nstages && !early_stop)
@@ -632,47 +645,26 @@ void GaussianContinuum::initializeParams()
   else
     PLearn::seed();
 
-  if (architecture_type=="single_neural_network")
-  {
-    if (smart_initialization)
-    {
-      V->matValue<<smartInitialization(train_set,n_hidden_units,smart_initialization,initialization_regularization);
-      W->value<<(1/real(n_hidden_units));
-      b->matValue.clear();
-      c->matValue.clear();
-    }
-    else
-    {
-      real delta = 1.0 / sqrt(real(inputsize()));
-      fill_random_uniform(V->value, -delta, delta);
-      delta = 1.0 / real(n_hidden_units);
-      fill_random_uniform(W->matValue, -delta, delta);
-      b->matValue.clear();
-      c->matValue.clear();
-    }
-  }
-  else if (architecture_type=="linear")
-  {
-    real delta = 1.0 / sqrt(real(inputsize()));
-    b->matValue.clear();
-    fill_random_uniform(W->matValue, -delta, delta);
-  }
-  else if (architecture_type=="embedding_neural_network")
+  if (architecture_type=="embedding_neural_network")
   {
     real delta = 1.0 / sqrt(real(inputsize()));
     fill_random_uniform(V->value, -delta, delta);
     delta = 1.0 / real(n_hidden_units);
     fill_random_uniform(W->matValue, -delta, delta);
     c->value.clear();
-  }
-  else if (architecture_type=="embedding_quadratic")
-  {
-    real delta = 1.0 / sqrt(real(inputsize()));
-    fill_random_uniform(W->matValue, -delta, delta);
-    b->value.clear();
+    fill_random_uniform(smV->matValue, -delta, delta);
+    smb->value.clear();
+    fill_random_uniform(smV->matValue, -delta, delta);
+    snb->value.clear();
+    fill_random_uniform(snV->matValue, -delta, delta);
+    fill_random_uniform(muV->matValue, -delta, delta);
+    
   }
   else PLERROR("other types not handled yet!");
-  // Reset optimizer
+  
+  for(int i=0; i<p_x.length(); i++)
+    p_x->value[i] = 1.0/p_x.length();
+
   if(optimizer)
     optimizer->reset();
 }
@@ -688,7 +680,7 @@ void GaussianContinuum::computeOutput(const Vec& input, Vec& output) const
 void GaussianContinuum::computeCostsFromOutputs(const Vec& input, const Vec& output, 
 					     const Vec& target, Vec& costs) const
 {
-  PLERROR("GaussianContinuum::computeCostsFromOutputs not defined for this learner");
+
 }                                
 
 TVec<string> GaussianContinuum::getTestCostNames() const
