@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.57 2004/06/18 19:12:37 tihocan Exp $
+* $Id: VMatrix.cc,v 1.58 2004/06/29 13:24:24 tihocan Exp $
 ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -1088,7 +1088,10 @@ void VMatrix::saveDMAT(const string& dmatdir) const
   }
 }
 
-void VMatrix::saveAMAT(const string& amatfile, bool verbose) const
+//////////////
+// saveAMAT //
+//////////////
+void VMatrix::saveAMAT(const string& amatfile, bool verbose, bool no_header) const
 {
   int l = length();
   int w = width();
@@ -1097,9 +1100,11 @@ void VMatrix::saveAMAT(const string& amatfile, bool verbose) const
   if (!out)
    PLERROR("In saveAscii could not open file %s for writing",amatfile.c_str());
 
-  out << "#size: "<< l << ' ' << w << endl;
+  if (!no_header) {
+    out << "#size: "<< l << ' ' << w << endl;
+  }
   out.precision(15);
-  if(w>0)
+  if(w>0 && !no_header)
     {
       out << "#: ";
       for(int k=0; k<w; k++)
