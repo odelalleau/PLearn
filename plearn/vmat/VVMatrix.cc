@@ -2,6 +2,7 @@
 
 // VVMatrix.cc
 // Copyright (C) 2002 Pascal Vincent and Julien Keable
+// Copyright (C) 2003 Olivier Delalleau
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -32,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.cc,v 1.2 2003/03/19 23:15:33 jkeable Exp $
+   * $Id: VVMatrix.cc,v 1.3 2003/05/14 19:10:06 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,6 +49,8 @@
 #include "VMatLanguage.h"
 #include "getDataSet.h"
 #include <unistd.h>
+
+#define NEW_SYNTAX_CHAR '@' 
 
 namespace PLearn <%
 using namespace std;
@@ -90,6 +93,11 @@ VMat VVMatrix::buildFilteredVMatFromVPL(VMat source, const string & code, const 
 vector<vector<string> > VVMatrix::extractSourceMatrix(const string & str,const string& filename)
 {
   vector<vector<string> > mstr;
+  if (str[0] == NEW_SYNTAX_CHAR) {
+    // We are using the new syntax : we don't care about this for now,
+    // too bad for the getDate method !
+    return mstr;
+  }
   vector<string> lines=getNonBlankLines(str);
   for(unsigned int i=0;i<lines.size();i++)
     mstr.push_back(split(lines[i],"|"));
@@ -126,6 +134,7 @@ time_t VVMatrix::getDateOfVMat(const string& filename)
         PLERROR("Cannot find closing tag </SOURCES>. File is %s",filename.c_str());
       string sec=in.substr(idx_source,cidx_source-idx_source);
       vector<vector<string> > mstr = extractSourceMatrix(sec,filename);
+      // TODO Make it work with the new syntax
       for(unsigned int i=0;i<mstr.size();i++)
         for(unsigned int j=0;j<mstr[i].size();j++)
           {
@@ -384,48 +393,58 @@ VMat VVMatrix::createPreproVMat(const string & filename)
         PLERROR("Cannot find closing tag </SOURCES>. File is %s",filename.c_str());
       // 'sec' is the text content of the <SOURCES> section
       string sec=in.substr(idx_source,cidx_source-idx_source);
-      vector<vector<string> > mstr = extractSourceMatrix(sec,filename);
+
+      if (sec[1] == NEW_SYNTAX_CHAR) {
+        // We are using the new syntax
+        sec[1] = ' ';  // remove the special character indicating the new syntax
+        source = dynamic_cast<VMatrix*>(newObject(sec));
+        if(source.isNull()) {
+          PLERROR("In VVMatrix::createPreproVMat %s is not a valid VMatrix subclass",sec.c_str());
+        }
+      } else {
       
-      // we need to build a VMat that is the concatenation of the datasets contained in 'mstr'
-      for(unsigned int i=0;i<mstr.size();i++)
+        vector<vector<string> > mstr = extractSourceMatrix(sec,filename);
+
+        // we need to build a VMat that is the concatenation of the datasets contained in 'mstr'
+        for(unsigned int i=0;i<mstr.size();i++)
         {
           Array<VMat> ar(mstr[i].size());
           for(unsigned int j=0;j<mstr[i].size();j++)
+          {
+            vector<string> vecstr;
+            vecstr=split(mstr[i][j],":");
+            ar[j]=getDataSet(vecstr[0]);              
+
+            // handle different cases of dataset specification
+            // legal formats are: 
+            // 1- simple dataset filename
+            // 2- intVecFile specification : filename:intVecFile_Filename
+            // 3- range specifiaction : filename:start:length
+            // 4- range specifiaction + intVecFile: filename:intVecFile_Filename:start:length
+            switch(vecstr.size())
             {
-              vector<string> vecstr;
-              vecstr=split(mstr[i][j],":");
-              ar[j]=getDataSet(vecstr[0]);              
-              
-              // handle different cases of dataset specification
-              // legal formats are: 
-              // 1- simple dataset filename
-              // 2- intVecFile specification : filename:intVecFile_Filename
-              // 3- range specifiaction : filename:start:length
-              // 4- range specifiaction + intVecFile: filename:intVecFile_Filename:start:length
-              switch(vecstr.size())
-                {
-                case 1: // only dataset name so we do nothing 
-                  break;
-                case 2: // we have an intVecFile specification
-                  // prefix with the path to the current vmat
-                  if(vecstr[1][0]!='/')
-                    vecstr[1]=extract_directory(filename)+vecstr[1];
-                  ar[j]=new SelectRowsFileIndexVMatrix(ar[j],vecstr[1]);
-                  break;
-                case 3: // submatRows range specification 
-                  ar[j]=ar[j].subMatRows(toint(vecstr[1]),toint(vecstr[2]));
-                  break;
-                case 4: // intVecFile + submatRows
-                  if(vecstr[1][0]!='/')
-                    vecstr[1]=extract_directory(filename)+vecstr[1];
-                  ar[j]=new SelectRowsFileIndexVMatrix(ar[j],vecstr[1]);
-                  ar[j]=ar[j].subMatRows(toint(vecstr[2]),toint(vecstr[3]));
-                  break;
-                default:
-                  PLERROR("Strange number of semicolumns... Format of source must be something.vmat[:indexfile.index][:start_row:length]. File is %s",filename.c_str());
-                  break;
-                }
+              case 1: // only dataset name so we do nothing 
+                break;
+              case 2: // we have an intVecFile specification
+                // prefix with the path to the current vmat
+                if(vecstr[1][0]!='/')
+                  vecstr[1]=extract_directory(filename)+vecstr[1];
+                ar[j]=new SelectRowsFileIndexVMatrix(ar[j],vecstr[1]);
+                break;
+              case 3: // submatRows range specification 
+                ar[j]=ar[j].subMatRows(toint(vecstr[1]),toint(vecstr[2]));
+                break;
+              case 4: // intVecFile + submatRows
+                if(vecstr[1][0]!='/')
+                  vecstr[1]=extract_directory(filename)+vecstr[1];
+                ar[j]=new SelectRowsFileIndexVMatrix(ar[j],vecstr[1]);
+                ar[j]=ar[j].subMatRows(toint(vecstr[2]),toint(vecstr[3]));
+                break;
+              default:
+                PLERROR("Strange number of semicolumns... Format of source must be something.vmat[:indexfile.index][:start_row:length]. File is %s",filename.c_str());
+                break;
             }
+          }
           VMat vmrow = ar.size()==1?ar[0]:hconcat(ar);
           if(vmrow.length()==-1)
             PLERROR("Trying to hconcat matrix with different lengths! File is %s",filename.c_str());
@@ -435,8 +454,9 @@ VMat VVMatrix::createPreproVMat(const string & filename)
             source=vconcat(source,vmrow);
         }
 
-      if(mstr.size()==0)
-        PLERROR("No source matrix found in <SOURCES> section! File is %s",filename.c_str());
+        if(mstr.size()==0)
+          PLERROR("No source matrix found in <SOURCES> section! File is %s",filename.c_str());
+      }
     }
   else PLERROR("Need at least a <SOURCES> section ! File is %s",filename.c_str());
 
