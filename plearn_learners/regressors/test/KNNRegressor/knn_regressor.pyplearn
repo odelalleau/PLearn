@@ -1,0 +1,87 @@
+import os.path
+import sys
+from plearn.pyplearn import *
+
+plarg_defaults.data   = "data.amat"
+plarg_defaults.local  = "none"
+plarg_defaults.gamma  = "1"
+plarg_defaults.kmin   = "15"
+plarg_defaults.kmult  = "0"
+plarg_defaults.output = "grapher"
+expdir = "knn_regressor_data=%s_local=%s_gamma=%s_kmin=%s_kmult=%s" % \
+         (os.path.basename(plargs.data), plargs.local,
+          plargs.gamma, plargs.kmin, plargs.kmult)
+
+dataset = pl.AutoVMatrix(
+    specification = plargs.data,
+    inputsize = 1,
+    targetsize = 1,
+    weightsize = 0)
+
+## Cover the default separately to exercise different code paths
+if plargs.local == "none" and plargs.gamma == "1":
+    learner = pl.KNNRegressor(kmin=int(plargs.kmin),
+                              kmult=float(plargs.kmult),
+                              kpow=1)
+elif plargs.local == "none":
+    learner = pl.KNNRegressor(knn = pl.ExhaustiveNearestNeighbors(),
+                              kernel = pl.EpanechnikovKernel(gamma = float(plargs.gamma)),
+                              kmin=int(plargs.kmin),
+                              kmult=float(plargs.kmult),
+                              kpow=1)
+elif plargs.local == "linear":
+    ## Linear local model
+    learner = pl.KNNRegressor(knn = pl.ExhaustiveNearestNeighbors(),
+                              kernel = pl.EpanechnikovKernel(gamma = float(plargs.gamma)),
+                              local_model = pl.LinearRegressor(weight_decay=1e-3),
+                              kmin=int(plargs.kmin),
+                              kmult=float(plargs.kmult),
+                              kpow=1)
+elif plargs.local == "nnet":
+    ## Neural net local model (2 hidden units)
+    ## -- does not seem to work right now...
+    local_model = pl.NNet(nhidden=2,
+                          weight_decay=1e-6,
+                          output_transfer_func="none",
+                          cost_funcs = ["mse"],
+                          optimizer = pl.GradientOptimizer())
+    learner = pl.KNNRegressor(knn = pl.ExhaustiveNearestNeighbors(),
+                              kernel = pl.GaussianKernel(sigma = float(plargs.gamma)),
+                              local_model = local_model,
+                              kmin=int(plargs.kmin),
+                              kmult=float(plargs.kmult),
+                              kpow=1)
+else:
+    print >>sys.stderr, "Non-Gaussian kernels not supported for now"
+    
+splitter = pl.FractionSplitter(
+    splits = TMat(1,2, [ (0,1) , (0,1) ])
+    )
+
+tester = pl.PTester(
+    expdir    = expdir,
+    dataset   = dataset,
+    splitter  = splitter,
+    learner   = learner,
+    statnames = ['E[test.E[class_error]]', 'E[test.E[neglogprob]]'],
+    provide_learner_expdir = 1,
+    save_test_costs   = 1,
+    save_test_outputs = 1
+    )
+
+grapher = pl.Grapher(
+    task = "1D regression",
+    basename = expdir,
+    learner = learner,
+    trainset = dataset,
+    griddim = [1000],
+    radius = -1./500,
+#    gridrange = [(-4,9.9)]
+    )
+    
+
+def main():
+    if plargs.output == "grapher":
+        return grapher
+    else:
+        return tester
