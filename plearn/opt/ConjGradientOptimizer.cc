@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.53 2004/05/19 17:26:53 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.54 2004/06/01 13:14:25 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -149,27 +149,27 @@ void ConjGradientOptimizer::declareOptions(OptionList& ol)
 
     declareOption(ol, "line_search_algo", &ConjGradientOptimizer::line_search_algo, OptionBase::buildoption, 
                  "    The kind of line search algorithm used :\n \
-        1) The line search algorithm described in :\n \
+        1. The line search algorithm described in :\n \
            ""Practical Methods of Optimization, 2nd Ed""\n \
            by Fletcher (1987).\n \
            This algorithm seeks a minimum m of f(x)=C(x0+x.d) satisfying the two constraints :\n \
-             i) abs(f'(m)) < -sigma.f'(0)\n \
-            ii) f(m) < f(0) + m.rho.f'(0)\n \
+             i. abs(f'(m)) < -sigma.f'(0)\n \
+            ii. f(m) < f(0) + m.rho.f'(0)\n \
            with rho < sigma <= 1.\n \
-        2) The GSearch algorithm, described in :\n \
+        2. The GSearch algorithm, described in :\n \
            ""Direct Gradient-Based Reinforcement Learning: II. Gradient Ascent Algorithms and Experiments""\n \
            by J.Baxter, L. Weaver, P. Bartlett (1999).\n \
-        3) A Newton line search algorithm for quadratic costs only.\n");
+        3. A Newton line search algorithm for quadratic costs only.\n");
 
     declareOption(ol, "find_new_direction_formula", &ConjGradientOptimizer::find_new_direction_formula, OptionBase::buildoption, 
                   "    The kind of formula used in step 2 of the conjugate gradient algorithm to find the\n \
         new search direction :\n \
-        1) ConjPOMPD : the formula associated with GSearch in the same paper. It is\n \
+        1. ConjPOMPD : the formula associated with GSearch in the same paper. It is\n \
                        almost the same as the Polak-Ribiere formula.\n \
-        2) Dai - Yuan\n \
-        3) Fletcher - Reeves\n \
-        4) Hestenes - Stiefel\n \
-        5) Polak - Ribiere : this is probably the most commonly used.\n \
+        2. Dai - Yuan\n \
+        3. Fletcher - Reeves\n \
+        4. Hestenes - Stiefel\n \
+        5. Polak - Ribiere : this is probably the most commonly used.\n \
         The value of this option (from 1 to 5) indicates the formula used.\n");
 
     declareOption(ol, "epsilon", &ConjGradientOptimizer::epsilon, OptionBase::buildoption, 
@@ -182,10 +182,10 @@ void ConjGradientOptimizer::declareOptions(OptionList& ol)
     // TODO Check the last sentence is true !
 
     declareOption(ol, "sigma", &ConjGradientOptimizer::sigma, OptionBase::buildoption, 
-                  "    Fletcher's line search specific option : constraint parameter in i).\n");
+                  "    Fletcher's line search specific option : constraint parameter in i.\n");
 
     declareOption(ol, "rho", &ConjGradientOptimizer::rho, OptionBase::buildoption, 
-                  "    Fletcher's line search specific option : constraint parameter in ii).\n");
+                  "    Fletcher's line search specific option : constraint parameter in ii.\n");
 
     declareOption(ol, "fmax", &ConjGradientOptimizer::fmax, OptionBase::buildoption, 
                   "    Fletcher's line search specific option : good enough minimum.\n \
@@ -997,6 +997,12 @@ bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
   real df, current_cost;
   meancost.clear();
   int stage_max = stage + nstages; // the stage to reach
+
+#ifdef BOUNDCHECK
+  if (current_step_size <= 0) {
+    PLERROR("In ConjGradientOptimizer::optimizeN - current_step_size <= 0, have you called reset() ?");
+  }
+#endif
 
   if (stage==0)
   {
