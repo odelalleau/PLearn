@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.cc,v 1.26 2004/03/20 21:00:24 yoshua Exp $
+   * $Id: MultiInstanceNNet.cc,v 1.27 2004/03/22 21:39:48 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/MultiInstanceNNet.h */
@@ -532,7 +532,7 @@ void MultiInstanceNNet::computeCostsFromOutputs(const Vec& inputv, const Vec& ou
     real bag_P0 = safeexp(sum(instance_logP0));
     int classe = int(targetv[0]);
     int predicted_classe = (bag_P0>0.5)?0:1;
-    real nll = (classe==0)?safeflog(bag_P0):safeflog(1-bag_P0);
+    real nll = (classe==0)?-safeflog(bag_P0):-safeflog(1-bag_P0);
     int classification_error = (classe != predicted_classe);
     costsv[0] = nll;
     costsv[1] = classification_error;
