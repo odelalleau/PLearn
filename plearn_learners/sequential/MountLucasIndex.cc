@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.cc,v 1.9 2003/09/09 21:03:15 ducharme Exp $ 
+   * $Id: MountLucasIndex.cc,v 1.10 2003/09/10 21:06:10 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.cc */
@@ -123,6 +123,9 @@ void MountLucasIndex::declareOptions(OptionList& ol)
   declareOption(ol, "risk_free_rate_column", &MountLucasIndex::risk_free_rate_column,
     OptionBase::buildoption, "The risk free rate column (in the input data) \n");
 
+  declareOption(ol, "transaction_multiplicative_cost", &MountLucasIndex::transaction_multiplicative_cost,
+    OptionBase::buildoption, "transaction_multiplicative_cost \n");
+
   inherited::declareOptions(ol);
 }
 
@@ -148,38 +151,53 @@ void MountLucasIndex::train()
   if (report_progress)
     pb = new ProgressBar("Training MountLucasIndex learner",train_set.length()-start_t);
 
-  Vec next_to_last_price(nb_commodities);
   Vec last_month_last_price(nb_commodities);
   Vec last_month_next_to_last_price(nb_commodities);
+  Vec last_tradable_price(nb_commodities, MISSING_VALUE);
+  Vec next_to_last_tradable_price(nb_commodities, MISSING_VALUE);
   Vec input(train_set->inputsize()), target(train_set->targetsize());
   real last_month_risk_free_rate;
   real w=1.0;
+  real s=0,s2=0,sf=0,sf2=0;
+  int ns=0;
   for (int t=start_t; t<train_set.length(); t++)
   {
     train_set->getExample(t, input, target, w);
     bool is_last_day_of_month = bool(input[last_day_of_month_index]);
     Vec price = input(commodity_price_index);
+    Vec rate_return(nb_commodities);
     int julian_day = (int)input[julian_day_index];
     real risk_free_rate = input[risk_free_rate_index];
+    int n_traded=0;
+
+    for (int i=0; i<nb_commodities; i++)
+    {
+      if (!is_missing(price[i]))
+      {
+        next_to_last_tradable_price[i] = last_tradable_price[i];
+        last_tradable_price[i] = price[i];
+      }
+    }
 
     if (is_last_day_of_month)
     {
       PDate julian_date(julian_day);
       int this_year = julian_date.year;
       int this_month = julian_date.month;
+      real risk_free_rate_return=0;
       mlm_return(current_month,0) = this_year;
       if (current_month == 0)
       {
         // next-to-last trading day of the month
         next_to_last_unit_asset_value.firstRow().fill(1.0);
-        last_month_next_to_last_price << next_to_last_price;
+        last_month_next_to_last_price << next_to_last_tradable_price;
 
         // last trading day of the month
         unit_asset_value.fill(1000.0); // arbitrary initial value
         index_value[0] = 1000.0; // MLM Index initial value
         tbill_return[0] = 1000.0; // MLM Index initial value
         mlm_return(0,1) = 0;
-        last_month_last_price << price;
+        last_month_last_price << last_tradable_price;
         last_month_risk_free_rate = risk_free_rate;
       }
       else
@@ -188,16 +206,16 @@ void MountLucasIndex::train()
         Vec last_value = next_to_last_unit_asset_value(current_month-1);
         Vec this_value = next_to_last_unit_asset_value(current_month);
         // last trading day of the month
-        Vec rate_return(nb_commodities);
         for (int i=0; i<nb_commodities; i++)
         {
           if (tradable_commodity[i])
           {
-            this_value[i] = last_value[i]*(next_to_last_price[i]/last_month_next_to_last_price[i]);
+            this_value[i] = last_value[i]*(next_to_last_tradable_price[i]/last_month_next_to_last_price[i]);
             if (is_missing(this_value[i])) this_value[i] = last_value[i];
-            rate_return[i] = (price[i]/last_month_last_price[i] - 1.0);
+            rate_return[i] = (last_tradable_price[i]/last_month_last_price[i] - 1.0);
             if (!is_long_position[i]) rate_return[i] = -rate_return[i];
-            unit_asset_value[i] *= price[i]/last_month_last_price[i];
+            unit_asset_value[i] *= last_tradable_price[i]/last_month_last_price[i];
+            n_traded++;
           }
           else
           {
@@ -206,23 +224,55 @@ void MountLucasIndex::train()
             unit_asset_value[i] = 1000.0;
           }
 
-          last_month_next_to_last_price[i] = next_to_last_price[i];
-          last_month_last_price[i] = price[i];
+          last_month_next_to_last_price[i] = next_to_last_tradable_price[i];
+          last_month_last_price[i] = last_tradable_price[i];
         }
-        real risk_free_rate_return = exp(log(last_month_risk_free_rate + 1.0)/12.0) - 1.0;
-        real delta = mean_with_missing(rate_return) + risk_free_rate_return;
-        if (is_missing(delta)) delta = 0.0; // first year
-        index_value[current_month] = index_value[current_month-1]*(1.0 + delta);
+
+        if (n_traded>0)
+        {
+          risk_free_rate_return = exp(log(last_month_risk_free_rate + 1.0)/12.0) - 1.0;
+          real delta = mean_with_missing(rate_return) + risk_free_rate_return;
+          real log_return = log(1+delta);
+          s += log_return;
+          s2 += log_return*log_return;
+          ns++;
+          if (is_missing(delta)) delta = 0.0; // first year
+          index_value[current_month] = index_value[current_month-1]*(1.0 + delta);
+          mlm_return(current_month,1) = delta*100.0;
+        }
+        else 
+        {
+          index_value[current_month] = index_value[current_month-1];
+          mlm_return(current_month,1) = 0;
+        }
         last_month_risk_free_rate = risk_free_rate;
         tbill_return[current_month] = is_missing(risk_free_rate_return) ? tbill_return[current_month-1] : tbill_return[current_month-1]*(1.0+risk_free_rate_return);
-        mlm_return(current_month,1) = delta*100.0;
       }
       errors(current_month,0) = index_value[current_month];
       real mean_unit_asset_value = mean(unit_asset_value);
+      real total_return_with_transaction_fees = 0;
       for (int i=0; i<nb_commodities; i++)
       {
-        predictions(current_month,i) = mean_unit_asset_value/price[i]*(is_long_position[i]?1.0:-1.0);
-        is_long_position[i] = next_position(i, next_to_last_unit_asset_value);
+        real old_relative_position = (is_long_position[i]?1.0:-1.0);
+        predictions(current_month,i) = mean_unit_asset_value/last_tradable_price[i]*old_relative_position;
+        bool next_pos = next_position(i, next_to_last_unit_asset_value);
+        real new_relative_position = (next_pos?1.0:-1.0);
+        if (current_month>0 && tradable_commodity[i])
+        {
+          real old_position_in_dollars = old_relative_position * index_value[current_month-1];
+          real new_position_in_dollars = new_relative_position * index_value[current_month];
+          real transaction_amount = old_position_in_dollars*(1+rate_return[i])+fabs(old_position_in_dollars)*(1+risk_free_rate_return) - new_position_in_dollars;
+          real return_with_transaction_fees = rate_return[i] + risk_free_rate_return - transaction_multiplicative_cost*fabs(transaction_amount/old_position_in_dollars);
+          if (!is_missing(return_with_transaction_fees))
+            total_return_with_transaction_fees += return_with_transaction_fees;
+        }
+        is_long_position[i] = next_pos;
+      }
+      if (current_month>0 && n_traded>0)
+      {
+        total_return_with_transaction_fees = log(1+total_return_with_transaction_fees/n_traded);
+        sf += total_return_with_transaction_fees; 
+        sf2 += total_return_with_transaction_fees*total_return_with_transaction_fees; 
       }
       ++current_month;
       
@@ -236,7 +286,6 @@ void MountLucasIndex::train()
         }
       }
     }
-    next_to_last_price << price;
 
     if (pb) pb->update(t-start_t);
   }
@@ -247,14 +296,23 @@ void MountLucasIndex::train()
   Mat mlm_index(index_value.length(),1,index_value.data());
   saveAscii("MLMIndex.amat", mlm_index);
   //saveAscii("MLMIndex.avec", index_value);
-  cout << "Rendement du MLM Index = " << exp(log(index_value[474]/index_value[18])/38.0) << endl;
+  cout << "Rendement du MLM Index = " << exp(log(index_value[current_month-1]/index_value[0])/(current_month/12.0)) << endl;
 
   mlm_return.resize(current_month,2);
   saveAscii("MLM_return.amat", mlm_return);
 
   tbill_return.resize(current_month);
   saveAscii("TBill_return.avec", tbill_return);
-  cout << "Rendement du TBill = " << exp(log(tbill_return[474]/tbill_return[18])/38.0) << endl;
+  cout << "Rendement du TBill = " << exp(log(tbill_return[current_month-1]/tbill_return[0])/(current_month/12.0)) << endl;
+
+  real r = s/ns;
+  real v = s2/ns - r*r;
+  cout << "Average annual return (composed monthly) = " << exp(r*12) << endl;
+  cout << "Sharpe Ratio of monthly log-returns = " << r/sqrt(v) << endl;
+  real rf = sf/ns;
+  cout << "Average annual return (composed monthly) with transaction fees = " << exp(rf*12) << endl;
+  real vf = sf2/ns - rf*rf;
+  cout << "Sharpe Ratio of monthly log-returns with transaction fees = " << rf/sqrt(vf) << endl;
 }
 
 // nothing to do in test

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.19 2003/09/04 13:27:32 ducharme Exp $
+   * $Id: TMat_maths_impl.h,v 1.20 2003/09/10 21:06:01 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -251,6 +251,7 @@ T mean_with_missing(const TVec<T>& vec, bool ignore_missing=true)
     else if (!ignore_missing) return MISSING_VALUE;
   }
 
+  if (n_non_missing == 0) return MISSING_VALUE;
   return T(res/double(n_non_missing));
 }
 

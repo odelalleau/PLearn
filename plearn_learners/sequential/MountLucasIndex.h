@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.h,v 1.6 2003/09/02 21:10:52 ducharme Exp $ 
+   * $Id: MountLucasIndex.h,v 1.7 2003/09/10 21:06:10 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.h */
@@ -59,6 +59,7 @@ class MountLucasIndex: public SequentialLearner
     string last_day_of_month_column; // the last_day_of_month column in the input data
     string julian_day_column; // the julian day number column in the input data
     string risk_free_rate_column; // the risk free rate column in the input data
+    real transaction_multiplicative_cost;
 
   protected:
     TVec<bool> is_long_position; // long or short position (for this month)
