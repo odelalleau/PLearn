@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.cc,v 1.19 2003/10/06 00:44:39 yoshua Exp $
+   * $Id: Optimizer.cc,v 1.20 2003/10/07 15:07:58 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -242,7 +242,7 @@ void Optimizer::computeRepartition(
 //////////////////////////
 // collectGradientStats //
 //////////////////////////
-void Optimizer::collectGradientStats(Vec gradient) {
+real Optimizer::collectGradientStats(Vec gradient) {
   static VecStatsCollector grad;
   static VecStatsCollector abs_grad;
   static VecStatsCollector sign_grad;
@@ -260,7 +260,7 @@ void Optimizer::collectGradientStats(Vec gradient) {
   static VMat change_sign_grad_mean;
   static VMat abs_grad_per_lr;
   static bool first_time = true;
-  static int n_lr = 50; // how many different learning rates we consider
+  static int n_lr = 300; // how many different learning rates we consider
   static Vec nchange;   // the number of times a gradient has changed sign
   static Array<VecStatsCollector> stat_per_lr(n_lr);
   static Vec temp_per_lr(n_lr);
@@ -300,6 +300,8 @@ void Optimizer::collectGradientStats(Vec gradient) {
   }
   sign_grad.update(temp_grad);
 
+  real need_lower_lr = 0;
+
   if ((stage+1) % nstages_per_epoch == 0) {
     // One epoch has just been completed
     temp_grad << grad.getMean();
@@ -310,6 +312,21 @@ void Optimizer::collectGradientStats(Vec gradient) {
     abs_grad_var->appendRow(abs_grad.getVariance());
     sign_grad_mean->appendRow(sign_grad.getMean());
     sign_grad_var->appendRow(sign_grad.getVariance());
+
+    // Compare abs(grad_mean) for the first and second layers
+    real g1 = 0, g2 = 0;
+    for (int i=0; i<340; i++) {
+      g1 += abs(temp_grad[i]);
+    }
+    for (int i=340; i<886; i++) {
+      g2 += abs(temp_grad[i]);
+    }
+    g1 /= 340;
+    g2 /= 886 - 340;
+    if (g1 < g2)
+      need_lower_lr = 1;
+    else
+      need_lower_lr = -1;
     
     // Store sign(mean(grad))
     for (int i=0; i<gradient.length(); i++) {
@@ -321,9 +338,11 @@ void Optimizer::collectGradientStats(Vec gradient) {
     sign_mean_grad->appendRow(temp_grad);
 
     // Stats per learning_rate
-    int pos = grad_mean.length()-1;
-    for (int i=0; i<params.nelems(); i++) {
-      store_grad[0] = abs(grad_mean(pos,i));
+    int pos = abs_grad_mean.length()-1;
+    for (int i=0; i<params.nelems(); i++) { //params.nelems(); i++)
+      store_grad[0] = abs_grad_mean(pos,i)*abs_grad_mean(pos,i);
+      if (nchange[i] > n_lr)
+        PLERROR("Use a larger n_lr !");
       stat_per_lr[int(nchange[i])].update(store_grad);
     }
     for (int i=0; i<n_lr; i++) {
@@ -334,11 +353,13 @@ void Optimizer::collectGradientStats(Vec gradient) {
         temp_per_lr[i] = 0;
     }
     abs_grad_per_lr->appendRow(temp_per_lr);
-    
+
     // Compare two consecutive updates
     int k = sign_mean_grad.length();
     int nb_consec = 0;
     int nb_change = 0;
+    int nb_change_340 = 0;
+    int nb_consec_340 = 0;
     tmp_mat = sign_mean_grad.row(k-2);
     tmp_mat2 = sign_mean_grad.row(k-3);
     tmp_mat3 = sign_mean_grad.row(k-4);
@@ -350,13 +371,17 @@ void Optimizer::collectGradientStats(Vec gradient) {
         // Opposite direction
         nb_change++;
         nchange[i]++;
+        if (i < 340)
+          nb_change_340++;
         temp_grad[i] = 1;
-        if (k > 3 && (tmp_mat(0,i) != tmp_mat2(0,i) || tmp_mat2(0,i) != tmp_mat3(0,i))) {
+        if (k > 3 && (tmp_mat(0,i) != tmp_mat2(0,i) || tmp_mat2(0,i) != tmp_mat(0,i))) {
           nb_consec++;
+          if (i < 340)
+            nb_consec_340++;
         }
       }
     }
-    cout << "Sign changes : " << nb_change << "  among them " << nb_consec << " follow a previous change" << endl;
+    cout << "Sign changes : " << nb_change << "(" << nb_change_340 << ")  among them " << nb_consec << "(" << nb_consec_340 << ") follow a previous change" << endl;
     change_sign_grad.update(temp_grad);
     change_sign_grad_mean->appendRow(change_sign_grad.getMean());
 
@@ -367,6 +392,7 @@ void Optimizer::collectGradientStats(Vec gradient) {
       stat_per_lr[i].forget();
     }
   }
+  return need_lower_lr; 
 }
 
 /////////////////

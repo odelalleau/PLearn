@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.h,v 1.14 2003/08/13 08:13:17 plearner Exp $
+   * $Id: Optimizer.h,v 1.15 2003/10/07 15:07:59 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -185,7 +185,7 @@ using namespace std;
         Vec res, int& noutliers);
 
     //! Collect various statistics on the gradient.
-    void collectGradientStats(Vec gradient);
+    real collectGradientStats(Vec gradient);
 
     //! Given an optimizer, compute the gradient of the cost function and
     //! store it in the "gradient" Vec
