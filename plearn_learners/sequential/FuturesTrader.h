@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.h,v 1.1 2003/08/29 15:40:39 dorionc Exp $ 
+   * $Id: FuturesTrader.h,v 1.2 2003/09/08 18:44:30 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.h */
@@ -49,27 +49,31 @@ using namespace std;
 class FuturesTrader: public SequentialLearner
 {
   //START OF THINGS I ADDED *************************
-protected:
+public:
   /*!
     The only purpose of this Map is that, conventionaly, financial papers refer to w_kt 
     but here, with respect to the architecture of the Mat, w_tk is more efficient.
     
     The map also allows an abstraction of the horizon
   */
-  class Map
-  {
-  private:
-    int h; //!< The horizon
-    Mat mat;
-  public:
-    Map(): h(0) {}
-    Map(const Map& m){ mat = m.mat; h = m.h; }
-    Map(int N, int T, int h_=0):h(h_),mat(T-h, N){}
-    fill(real r){ mat.fill(0.0); }
-    real& operator()(int k, int t){ return mat(t-h, k); }
-  };
-  friend ostream& operator<<(ostream& out, const PMVMap& m){ return (out << m.mat); }
+  // class Map
+//   {
+//     friend ostream& operator<<(ostream& out, const Map& m);
+//   private:
+//     int h; //!< The horizon
+//     Mat mat;
+//   public:
+//     Map(): h(0) {}
+//     Map(const Map& m){ mat = m.mat; h = m.h; }
+//     Map(int T, int h_): h(h_),mat(1,T-h){}            //!< One row map (instead of template bla, bla...
+//     Map(int N, int T, int h_):h(h_),mat(T-h, N){}
+//     void fill(real r){ mat.fill(0.0); }
+//     real& operator()(int k, int t){ return mat(t-h, k); }
+//     real& operator[](int t){ return mat(0,t-h); }
+//   };
+//   friend ostream& operator<<(ostream& out, const Map& m){ return (out << m.mat); }
 
+protected:
   // *********************
   // * protected options *
   // *********************
@@ -80,17 +84,21 @@ protected:
   */
   TVec<string> assets_names;
   int nb_assets;               //!< Simply assets_names.length()
+
+  //! List of indices associated with the price fields in the VMat
+  TVec<int> assets_price_indices;
+
+  //! List of indices associated with the tradable flag fields in the VMat
+  TVec<int> assets_tradable_indices;
+
+  mutable VMat test_set;               //!< A reference to the testset received in test method
+  mutable int test_length;             //!< Simply test_set.length()-train_set.length()
+
+  //mutable Mat test_weights_;          //!< The portfolio weights for the test
+  real& test_weights(int k, int t) const { return /*test_weights_*/advisor->state(t, k); }
   
-  /*! 
-    Could be usefull to store prices in a map instead of accessing them with 
-    the field name multiple times
-  */
-  Map prices_map;
-  VMat test_set;
-  int test_length;             //!< Simply test_set.length()
-  Map test_weights;            //!< The portfolio weights for the test
-  Vec test_Rt;                 //!< The return on each test period
-  Vec stop_loss_values;        //!< Will be used to keep track of the losses/gains
+  //mutable Vec test_Rt;                 //!< The return on each test period
+  mutable Vec stop_loss_values;        //!< Will be used to keep track of the losses/gains
 
 public:
   typedef SequentialLearner inherited;
@@ -120,15 +128,21 @@ public:
     Default: "is_tradable"
   */
   string tradable_tag;
-  
-  //! The cost of performing a 1$ value trade
+
+  //! Each w_0t will be set to (capital_level - \sum_{k>0} w_kt). Default: 1.0
+  real capital_level;
+
+  //! The fix cost of performing a trade. Default: 0
+  real additive_cost;
+
+  //! The cost of performing a 1$ value trade. Default: 0
   real multiplicative_cost;
 
-  //! The minimum amplitude for a transaction to be considered worthy
+  //! The minimum amplitude for a transaction to be considered worthy. Default: 0
   real rebalancing_threshold;
   
   // Stop loss relative options
-  bool stop_loss_active;                //!< Is the PMV using the stop_loss protection
+  bool stop_loss_active;                //!< Is the PMV using the stop_loss protection. Default: false
   int  stop_loss_horizon;               //!< The horizon on which the loss/gains are considered
   real stop_loss_threshold;             //!< The value under which the stop loss is triggered
 
@@ -138,41 +152,49 @@ public:
   //**************
 
   //! This parses the train_set VMat to get the assets_names
-  static void assets();
+  static void assets(const VMat& vmat, TVec<string>& names);
   
   //! Returns the price of the given asset at a given time. 
-  inline real price(int k, int t)
-    { return train_set(t, train_set->fieldIndex(asset_names[k]+":"+price_tag)); }
+  inline real price(int k, int t) const
+    { return train_set(t, assets_price_indices[k]); }
   
   //! Returns the price of the given asset at a given *TEST* time. 
-  inline real test_price(int k, int t)
-    { return test_set(t, test_set->fieldIndex(assets_names[k]+":close:level")); }
-
+  inline real test_price(int k, int t) const
+    { return test_set(t+train_set.length(), assets_price_indices[k]); }
+  
   //******************
   // These version of return are to be modified
   //! Returns the return on the given asset at a given time. 
-  inline real ret(int k, int t)
+  // #error *** should be +horizon... BAD definition of ret!!! *** 
+  inline real ret(int k, int t) const 
     { return (price(k, t) - price(k, t-horizon)); }
   
-  inline real test_return(int k, int t)
-    { return (test_prices(k, t) - (t==0)?price(k, T-1):test_price(k,t)); }
+  inline real test_return(int k, int t) const
+    { 
+      return test_price(k, t) - test_price(k,t-1); 
+    }
   //******************
   
   //! Returns the price of the given asset at a given time. 
   inline bool is_tradable(int k, int t)
-    { return train_set(t, train_set->fieldIndex(assets_names[k]+":"+tradable_tag)); }
-
+    { return train_set(t, assets_tradable_indices[k]); }
+  
   //! Called at the begining of test
-  void build_test(const VMat& testset);
-  
-  //! Ensures a basic stop loss
-  bool stop_loss(int k, int t);
-  
+  void build_test(const VMat& testset) const;
+
   /*!  
     Returns |test_weights(k, t) - test_weights(k, t-1)| (if < rebalancing_threshold) 
     or 0, otherwise.
+
+    Also calls stop_loss
   */
-  real delta(int k, int t);
+  real delta(int k, int t) const;
+  
+  //! Ensures a basic stop loss
+  bool stop_loss(int k, int t) const;
+
+  //! Calls the PLearner::setTrainingSet and the advisor one
+  virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
   //END OF THINGS I ADDED *************************
   

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.cc,v 1.1 2003/08/29 15:40:39 dorionc Exp $ 
+   * $Id: FuturesTrader.cc,v 1.2 2003/09/08 18:44:30 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.cc */
@@ -46,11 +46,25 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(FuturesTrader, "ONE LINE DESCR", "NO HELP");
 
-FuturesTrader::FuturesTrader()
+FuturesTrader::FuturesTrader():
+  price_tag("close:level"), tradable_tag("is_tradable"),
+  capital_level(1.0), additive_cost(0.0), multiplicative_cost(0.0),
+  rebalancing_threshold(0.0), 
+  stop_loss_active(false), stop_loss_horizon(-1), stop_loss_threshold(-INFINITY)
 {}
+
+void FuturesTrader::setTrainingSet(VMat training_set, bool call_forget/*=true*/)
+{
+  inherited::setTrainingSet(training_set, call_forget);
+  advisor->setTrainingSet(training_set, call_forget);
+}
 
 void FuturesTrader::assets(const VMat& vmat, TVec<string>& names)
 {
+  names = TVec<string>();
+  if(vmat.isNull())
+    return;
+
   Array<VMField> finfo = vmat->getFieldInfos();  
   int pos=-1;
   string current="";
@@ -78,15 +92,32 @@ void FuturesTrader::build()
 
 void FuturesTrader::build_()
 {
-  forget();
+  if(train_set.isNull())
+    return;
   
+  forget();
+
+  if( stop_loss_active && 
+      (stop_loss_horizon == -1 || stop_loss_threshold == -INFINITY) )
+    PLERROR("In FuturesTrader::build_()\n\t"
+            "stop_loss_active is true but stop_loss_horizon and/or stop_loss_threshold are not properly setted");
+
+  // Gestion of the list of names
   assets(train_set, assets_names);
-  cout << names << endl; //TMP
+  cout << assets_names << endl; //TMP
   nb_assets = assets_names.length();
   if(nb_assets == 0)
     PLERROR("Must provide a non empty TVec<string> assets_names");
 
-#error  Gestion du price_map ICI (MPMV::build_)  
+  // Building a list of the indices needed to access the prices in the VMat
+  assets_price_indices    = TVec<int>(nb_assets);
+  assets_tradable_indices = TVec<int>(nb_assets);
+  for(int k=0; k < nb_assets; k++){
+    assets_price_indices[k] = train_set->fieldIndex(assets_names[k]+":"+price_tag);
+    assets_tradable_indices[k] = train_set->fieldIndex(assets_names[k]+":"+tradable_tag);
+  }
+
+//#error  Gestion du price_map ICI (MPMV::build_)  
   
   if(stop_loss_active){
     if(stop_loss_horizon == -1 || stop_loss_threshold == -1)
@@ -100,13 +131,14 @@ void FuturesTrader::build_()
   Initializes test_set, test_length, test_weights, test_Rt members
 */
 //dorionc: BTMPMV::
-void FuturesTrader::build_test(const VMat& testset)
+void FuturesTrader::build_test(const VMat& testset) const
 {
   test_set = testset;
-  test_length = testset.length();
+  test_length = testset.length()-train_set.length();
   
-  test_weights = Map(test_length, nb_assets, horizon);
-#error Rt = Map(1, test_length, horizon);  
+  //test_weights_ = Mat(test_length-horizon, nb_assets);  //Map(nb_assets, test_length, horizon);
+  advisor->state = Mat(0, nb_assets);
+//#error Rt = Map(1, test_length, horizon);  
 }
 
 void FuturesTrader::forget()
@@ -115,29 +147,79 @@ void FuturesTrader::forget()
   advisor->forget();
 
   if(!test_set.isNull()){
-    test_weights.fill(0.0);        
-    test_Rt.fill(0.0);         
+    advisor->state.fill(0.0); //test_weights_.fill(0.0);        
+//    test_Rt.fill(0.0);         
     stop_loss_values.fill(0.0);
   }
 }
 
 void FuturesTrader::declareOptions(OptionList& ol)
 {
-  PLERROR("Not Done Yet!!!");
+  declareOption(ol, "advisor", &FuturesTrader::advisor,
+                OptionBase::buildoption,
+                "An embedded learner issuing recommendations on what should the portfolio look like");
+    
+  declareOption(ol, "price_tag", &FuturesTrader::price_tag,
+                OptionBase::buildoption,
+                "The string such that asset_name:price_tag is the field name\n" 
+                "of the column containing the price.\n"
+                "Default: \"close:level\"");
   
+  declareOption(ol, "tradable_tag", &FuturesTrader::tradable_tag,
+                OptionBase::buildoption,
+                "The string such that asset_name:tradable_tag is the field name\n"
+                "of the column containing the tradable or not boolean.\n"
+                "Default: \"is_tradable\"");
+  
+  declareOption(ol, "capital_level", &FuturesTrader::capital_level,
+                OptionBase::buildoption,
+                "Each w_0t will be set to (capital_level - \\sum_{k>0} w_kt)\n"
+                "Default: 1.0");
+  
+  declareOption(ol, "additive_cost", &FuturesTrader::additive_cost,
+                OptionBase::buildoption,
+                "The fix cost of performing a trade.\n"
+                "Default: 0");
+  
+  declareOption(ol, "multiplicative_cost", &FuturesTrader::multiplicative_cost,
+                OptionBase::buildoption,
+                "The cost of performing a 1$ value trade\n"
+                "Default: 0");
+  
+  declareOption(ol, "rebalancing_threshold", &FuturesTrader::rebalancing_threshold,
+                OptionBase::buildoption,
+                "The minimum amplitude for a transaction to be considered worthy\n"
+                "Default: 0");
+  
+  declareOption(ol, "stop_loss_active", &FuturesTrader::stop_loss_active,
+                OptionBase::buildoption,
+                "Is the PMV using the stop_loss protection\n"
+                "Default: false");
+  
+  declareOption(ol, "stop_loss_horizon", &FuturesTrader::stop_loss_horizon,
+                OptionBase::buildoption,
+                "The horizon on which the loss/gains are considered");
+  
+  declareOption(ol, "stop_loss_threshold", &FuturesTrader::stop_loss_threshold,
+                OptionBase::buildoption,
+                "The value under which the stop loss is triggered");
+
   inherited::declareOptions(ol);
 }
 
 void FuturesTrader::train()
 {
+  last_call_train_t = train_set.length();
+  if(last_call_train_t < last_train_t+train_step)
+  { PLWARNING("last_call_train_t < last_train_t+train_step"); return; }
   advisor->train();
 }
  
 void FuturesTrader::test(VMat testset, PP<VecStatsCollector> test_stats,
-                         VMat testoutputs=0, VMat testcosts=0) const
+                         VMat testoutputs/*=0*/, VMat testcosts/*=0*/) const
 {
-#error multiplicative_cost ici ou dans computeOutputAndCosts
-  build_test(testset_);
+  build_test(testset);
+  Mat testset_as_mat = test_set.toMat(); // To avoid multiple call to toMat() (see the for loops)
   
 #ifdef MY_PROFILE
   string method_as_str = ("FuturesTrader::test (test_length=" + tostring(test_length) 
@@ -145,89 +227,71 @@ void FuturesTrader::test(VMat testset, PP<VecStatsCollector> test_stats,
   Profiler::start(method_as_str);
 #endif
 
-  //dorionc: args from BTMPMV::test
-  real average = 0.0; 
-  real sigmasquare = 0.0; 
-  real sum_of_squared_w = 0.0;
-  //---
-
-  real Rt_sum = 0;
-  real squaredRt_sum = 0;
-  real value_sum = 0;
+  // Appending a new StatsCollector at the end of test_stats. The 
+  //  new StatsCollector will be used to keep track of portfolio test returns stats.
+  int Rt_stat = test_stats->length();
+  test_stats->stats.append(StatsCollector());
+  
+  real delta_;
+  real Rt = 0;
+  for(int t = 0; t < test_length; t++) 
+  {  
+    advisor->test(test_set.subMat(0, 0, train_set.length()+t+1, test_set.width()), test_stats);
     
-  PLWARNING("Revoir la formule de w_k_t (vs getPf)!!! Aussi faire une map pour ne pas appeler kernel->ev_i_x plrs fois sur les memes arg");
-  PLWARNING("Erreur dans le calcul des profits: voir la formule dans stop_loss!");
-  for(int t = 0; t < test_length; t++)
-  {
-    value_sum = 0;
-    for(int k=1; k < nb_assets; k++)
+//#error Erreur dans le calcul des profits: voir la formule dans stop_loss
+    Rt = 0;
+    for(int k=0; k < nb_assets; k++)
     {
-      if( !stop_loss(k, t) ){
-        test_weights(k, t) = 0.0;      
-        for(int j=0; j < data.length(); j++)
-          test_weights(k, t) += alpha->matValue(j, k) * kernel->evaluate_i_x(j, testset_as_mat.row(t).toVecCopy());
-      }
+      // Must be called before computing anything with test_weights(k, t) 
+      //  since the method may update the weight
+      delta_ = delta(k, t);
       
-      trading_controls(k, t);
+      // Update of the portfolio return, adding the k^th assets return
+      Rt += test_weights(k, t) * test_return(k, t);
       
-      value_sum += test_weights(k, t) * test_prices(k, t);       
-
-      // Erreur dans le calcul des profits: voir la formule dans stop_loss!
-      //  Ca ne devrait pas etre ici!!!
-      Rtmap[t] += test_weights(k, t) * test_returns(k, t);
-      
-      sum_of_squared_w += square( test_weights(k,t) );
+      // No additive_cost on a null delta since there will be no transaction
+      if( delta_ > 0 )
+        Rt -= additive_cost + multiplicative_cost*delta(k, t);
     }
-    
-    // Penalty on the value of w_{0t}
-    test_weights(0,t) = capital_level - value_sum;
-    sum_of_squared_w += square( test_weights(0,t) );
-    
-    Rt_sum += Rtmap[t];
-    squaredRt_sum += square(Rtmap[t]);
+#ifdef VERBOSE 
+    cout << "R" << t << ": " << Rt << endl; 
+#endif
+
+    // The following four lines should be resumed to the last one as soon as possible! 
+    if(t==0)
+      PLWARNING("First test period HACK");
+    else
+      test_stats->stats[Rt_stat].update(Rt);
   }
   
-  test_weights_ = test_weights.mat;
-  test_Rt = Rtmap.mat;
-  average = (1.0/test_length)*Rt_sum;  
-  sigmasquare = ( (1.0/(test_length-1)) * 
-                  (squaredRt_sum - test_length*square(average)) );
+  real average = test_stats->getStats(Rt_stat).mean(); //(1.0/test_length)*Rt_sum; 
+  real sigmasquare = test_stats->getStats(Rt_stat).variance();
+  //( (1.0/(test_length-1)) * (squaredRt_sum - test_length*square(average)) );
+  
+  cout << "***** ***** *****" << endl
+       << "Test: " << endl
+#if defined(VERBOSE) || defined(VERBOSE_TEST)
+       << "\t weights:\n" << advisor->state << endl
+#endif
+       << "\t Average Return:\t" << average << endl
+       << "\t Empirical Variance:\t" << sigmasquare << endl
+       << "\t Sharpe Ratio:\t" << average/sqrt(sigmasquare) << endl
+       <<  "***** ***** *****" << endl;
   
 #ifdef MY_PROFILE
   Profiler::end(method_as_str);
 #endif
 }
 
-bool FuturesTrader::stop_loss(int k, int t)
-{
-  // The Stop Loss part has - for now - no sens for (t==0) since we suppose (test_weights(k, 0-1) == 0)
-  if(!stop_loss_active || t==0) return false;
-  
-  // t >= 1
-  stop_loss_values[k] += test_returns(k, t) * test_weights(k, t-1);  
-  
-  if(t > stop_loss_horizon)
-    stop_loss_values[k] -= test_returns(k, t-stop_loss_horizon) * test_weights(k, t-stop_loss_horizon-1);    
-  
-  // Here, if |test_weights(k, t)| < rebalancing_threshold , the effect will be conterbalanced
-  //  by the delta method: Is it a problem???
-  if( stop_loss_values[k] < stop_loss_threshold )
-  { 
-    test_weights(k, t) = 0.0;             // Selling or covering short sales.
-    stop_loss_values[k] = -INFINITY;      // This way: pi >= t ==> test_weights(k, pi) = 0 
-    return true;
-  }           
-  
-  // If we reach that point, stop_loss was not applyed
-  return false;
-}
-
-real FuturesTrader::delta(int k, int t)
+real FuturesTrader::delta(int k, int t) const
 {
   // For now, the initial testing portfolio is considered to be of weights 0
   real prev_wkt = 0.0;
   if(t > 0)
     prev_wkt = test_weights(k, t-1);
+  
+  if( stop_loss(k, t) )
+    return prev_wkt;
   
   // The threshold testing
   real delta_ = fabs(test_weights(k, t) - prev_wkt);
@@ -236,6 +300,30 @@ real FuturesTrader::delta(int k, int t)
     return 0.0;
   }
   return delta_;  //else: delta_ >= rebalancing_threshold
+}
+
+bool FuturesTrader::stop_loss(int k, int t) const
+{
+  // The Stop Loss part has - for now - no sens for (t==0) since we suppose (test_weights(k, 0-1) == 0)
+  if(!stop_loss_active || t==0) return false;
+  
+  // t >= 1
+  stop_loss_values[k] += test_return(k, t) * test_weights(k, t-1);
+  
+  if(t > stop_loss_horizon)
+    stop_loss_values[k] -= test_return(k, t-stop_loss_horizon) * test_weights(k, t-stop_loss_horizon-1);    
+  
+  // Here, if |test_weights(k, t)| < rebalancing_threshold , the effect will be conterbalanced
+  //  by the delta method: Is it a problem???
+  if( stop_loss_values[k]/stop_loss_horizon < stop_loss_threshold )
+  { 
+    test_weights(k, t) = 0.0;             // Selling or covering short sales.
+    stop_loss_values[k] = -INFINITY;      // This way: pi >= t ==> test_weights(k, pi) = 0 
+    return true;
+  }           
+  
+  // If we reach that point, stop_loss was not applyed
+  return false;
 }
 
 void FuturesTrader::computeOutputAndCosts(const Vec& input,
@@ -263,7 +351,7 @@ void FuturesTrader::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 TVec<string> FuturesTrader::getTrainCostNames() const
 {
-  return ...;
+  return advisor->getTrainCostNames();
 }
 
 TVec<string> FuturesTrader::getTestCostNames() const
