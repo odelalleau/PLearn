@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plapack.h,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: plapack.h,v 1.2 2002/08/09 22:21:34 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -174,10 +174,10 @@ int matInvert(Mat& in, Mat& inverse);
 
 
 /*!   Solves AX = B
-  This is a simple wrapper over the lapack routine. It expects A and Bt (transpose of B) as input, 
-  as well as a pivots vector of ints of same length as A.
+  This is a simple wrapper over the lapack routine. It expects At and Bt (transposes of A and B) as input, 
+  as well as storage for resulting pivots vector of ints of same length as A.
   The call overwrites Bt, putting the transposed solution Xt in there,
-  and A is also overwritten to contain the factors L and U from the factorization A = P*L*U; 
+  and At is also overwritten to contain the factors L and U from the factorization A = P*L*U; 
   (the unit diagonal elements of L  are  not stored).
   The lapack status is returned:
      = 0:  successful exit
@@ -185,7 +185,7 @@ int matInvert(Mat& in, Mat& inverse);
      > 0:  if INFO = i, U(i,i) is  exactly  zero.   The factorization has been completed, 
            but the factor U is exactly singular, so the solution could not be computed.
 */
-int lapackSolveLinearSystem(Mat& A, Mat& Bt, TVec<int>& pivots);
+int lapackSolveLinearSystem(Mat& At, Mat& Bt, TVec<int>& pivots);
 
 /*!   Returns the solution X of AX = B
   A and B are left intact, and the solution is returned.

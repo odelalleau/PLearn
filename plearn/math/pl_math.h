@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.4 2002/08/07 01:50:13 morinf Exp $
+   * $Id: pl_math.h,v 1.5 2002/08/09 22:21:34 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -55,13 +55,14 @@ using namespace std;
 
 #ifdef USEDOUBLE
 #define real double
-#define MAXREAL DOUBLE_MAX
 #endif
 
 #ifdef USEFLOAT
 #define real float
-#define MAXREAL FLOAT_MAX
 #endif
+
+// it is not really the max, but it's large enough for most applications
+#define REAL_MAX 1e37
 
 union _plearn_nan_type { unsigned char c[4]; float d; };
 extern _plearn_nan_type plearn_nan;

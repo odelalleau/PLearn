@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: plapack.cc,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: plapack.cc,v 1.2 2002/08/09 22:21:34 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -467,10 +467,10 @@ int matInvert(Mat& in, Mat& inverse)
 }
 
 
-int lapackSolveLinearSystem(Mat& A, Mat& Bt, TVec<int>& pivots)
+int lapackSolveLinearSystem(Mat& At, Mat& Bt, TVec<int>& pivots)
 {
 #ifdef BOUNDCHECK
-  if(A.width() != Bt.width())
+  if(At.width() != Bt.width())
     PLERROR("In lapackSolveLinearSystem: Incompatible dimensions");
 #endif
 
@@ -478,10 +478,10 @@ int lapackSolveLinearSystem(Mat& A, Mat& Bt, TVec<int>& pivots)
 #ifdef NOLAPACK
   PLERROR("lapackSolveLinearSystem: can't be called unless PLearn linked with LAPACK");
 #else
-  int N = A.length();
+  int N = At.width();
   int NRHS = Bt.length();
-  real* Aptr = A.data();
-  int LDA = A.mod();
+  real* Aptr = At.data();
+  int LDA = At.mod();
   if(pivots.length()!=N)
     pivots.resize(N);
   int* IPIVptr = pivots.data();
@@ -514,9 +514,9 @@ void solveTransposeLinearSystem(const Mat& A, const Mat& Y, Mat& X)
 Mat solveLinearSystem(const Mat& A, const Mat& B)
 {
   Mat Bt = transpose(B);
-  Mat Acopy = A.copy();
+  Mat At = transpose(A);
   TVec<int> pivots(A.length());
-  int status = lapackSolveLinearSystem(Acopy,Bt,pivots);
+  int status = lapackSolveLinearSystem(At,Bt,pivots);
   if(status<0)
     PLERROR("Illegal value in argument of lapackSolveLinearSystem");
   else if(status>0)
