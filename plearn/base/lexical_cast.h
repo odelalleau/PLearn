@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: lexical_cast.h,v 1.1 2005/01/20 20:07:30 dorionc Exp $ 
+   * $Id: lexical_cast.h,v 1.2 2005/01/31 15:48:19 ducharme Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -53,7 +53,10 @@ using namespace std;
 // this function handle numbers with exponents (such as 10.2E09)
 // as well as Nans. String can have trailing whitespaces on both sides
 bool pl_isnumber(const string& s,double* dbl=NULL);
+// norman: there is no strtof in .NET
+#ifndef WIN32
 bool pl_isnumber(const string& s,float* dbl);
+#endif // WIN32
 
 //!  conversions from string to numerical types
 long     tolong    (const string& s, int base=10);  
