@@ -233,7 +233,7 @@ def ppath(metaprotocol):
                        % ( metaprotocol, string.join(bindings.keys(), ", ") )
                        )
 
-    endpr = string.find(metapath, ':')
+    endpr    = protocol_end( metapath )
     while endpr != -1:
         mprotocol = metapath[:endpr]
 
@@ -244,13 +244,19 @@ def ppath(metaprotocol):
                 after_colon = metapath[endpr+1:]
 
             ## Replacing the MPROTOCOL:after_colon by MPath/after_colon
-            metapath = os.path.join(bindings[mprotocol], after_colon)
-
-        ## Looking for the next metaprotocol
-        endpr = string.find(metapath, ':')
+            metapath = os.path.join( bindings[mprotocol], after_colon )
+            endpr    = protocol_end( metapath )
 
     return metapath
 
+def protocol_end( mpath ):
+    ## DOS absolute paths contain ':' !!!
+    if os.path.isabs( mpath ):
+        return -1
+
+    ## Looking for the next metaprotocol
+    return string.find(mpath, ':')
+    
 def remove_binding(mprotocol):
     """Remove a metaprotocol to metapath binding.
 
