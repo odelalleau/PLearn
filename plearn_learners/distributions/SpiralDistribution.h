@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SpiralDistribution.h,v 1.5 2004/02/20 21:14:46 chrish42 Exp $ 
+   * $Id: SpiralDistribution.h,v 1.6 2004/05/26 16:06:12 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file SpiralDistribution.h */
@@ -118,13 +118,13 @@ public:
   // **************************
 
   //! return log of probability density log(p(x))
-  virtual double log_density(const Vec& x) const;
+  virtual real log_density(const Vec& x) const;
 
   //! return survival fn = P(X>x)
-  virtual double survival_fn(const Vec& x) const;
+  virtual real survival_fn(const Vec& x) const;
 
   //! return survival fn = P(X<x)
-  virtual double cdf(const Vec& x) const;
+  virtual real cdf(const Vec& x) const;
 
   //! return E[X] 
   virtual void expectation(Vec& mu) const;

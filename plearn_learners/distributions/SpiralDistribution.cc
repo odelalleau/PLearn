@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SpiralDistribution.cc,v 1.7 2004/02/20 21:14:46 chrish42 Exp $ 
+   * $Id: SpiralDistribution.cc,v 1.8 2004/05/26 16:06:12 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file SpiralDistribution.cc */
@@ -113,13 +113,13 @@ SpiralDistribution::SpiralDistribution()
     PLERROR("SpiralDistribution::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
   }
 
-double SpiralDistribution::log_density(const Vec& x) const
+real SpiralDistribution::log_density(const Vec& x) const
 { PLERROR("density not implemented for SpiralDistribution"); return 0; }
 
-double SpiralDistribution::survival_fn(const Vec& x) const
+real SpiralDistribution::survival_fn(const Vec& x) const
 { PLERROR("survival_fn not implemented for SpiralDistribution"); return 0; }
 
-double SpiralDistribution::cdf(const Vec& x) const
+real SpiralDistribution::cdf(const Vec& x) const
 { PLERROR("cdf not implemented for SpiralDistribution"); return 0; }
 
 void SpiralDistribution::expectation(Vec& mu) const
