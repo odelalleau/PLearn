@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// FinancialAdvisor.h
+// BuyAndHoldAdvisor.h
 //
 // Copyright (C) 2003 Christian Dorion 
 // 
@@ -33,35 +33,67 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FinancialAdvisor.h,v 1.3 2003/12/02 15:40:54 dorionc Exp $ 
+   * $Id: BuyAndHoldAdvisor.h,v 1.1 2003/12/02 15:40:54 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
 
-/*! \file FinancialAdvisor.h */
+/*! \file BuyAndHoldAdvisor.h */
 
 
-#ifndef FinancialAdvisor_INC
-#define FinancialAdvisor_INC
+#ifndef BuyAndHoldAdvisor_INC
+#define BuyAndHoldAdvisor_INC
 
-#include "Trader.h"
+#include "FinancialAdvisor.h"
 
 namespace PLearn <%
 using namespace std;
 
-class Trader;
-
-class FinancialAdvisor: public SequentialLearner
+class BuyAndHoldAdvisor: public FinancialAdvisor
 {
 public:
-  typedef SequentialLearner inherited;
-
-  //! The learner on which this advisor is synchronised
-  Trader* trader;
+  typedef FinancialAdvisor inherited;
 
 protected:
+  // *********************
+  // * protected options *
+  // *********************
+
+
+  // *********************
+  // * protected members *
+  // *********************
   
 public:
+
+  // ************************
+  // * public build options *
+  // ************************
+
+  /*!
+    If the underlying FinancialAdvisor is null, the positions will be only ones. 
+    If not, the positions will be setted to the first test positions of the 
+    underlying advisors. 
+  */
+  PP<FinancialAdvisor> underlying;
+  
+  // *****************************
+  // * public method to overload *
+  // *****************************
+  
+  // This function must be overloaded!
+  virtual void train();
+
+  // This function must be overloaded!  
+  virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
+                    VMat testoutputs=0, VMat testcosts=0) const;
+
+  // This function must be overloaded!  
+  virtual TVec<string> getTrainCostNames() const;
+
+  // This function must be overloaded!
+  virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
+                                     Vec& output, Vec& costs) const;
   
 private:
   //! This does the actual building
@@ -70,47 +102,32 @@ private:
 protected:
   //! Declare this class' options
   static void declareOptions(OptionList& ol);
-  
-public:
-  
+
+public:  
   //! Constructor
-  FinancialAdvisor();
-  
-  //! simply calls inherited::build() then build_()
-  virtual void build();
-  
-  //! *** SUBCLASS WRITING: ***
-  virtual void train() = 0;
-  
-  //! *** SUBCLASS WRITING: ***
-  virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
-                      VMat testoutputs=0, VMat testcosts=0) const =0;
-  
-  virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
-                                       Vec& output, Vec& costs) const;
-  
+  BuyAndHoldAdvisor();
+    
   virtual void computeCostsOnly(const Vec& input, const Vec& target,
-                                  Vec& costs) const;
+                                Vec& costs) const;
   
   virtual void computeOutput(const Vec& input, Vec& output) const;
   
   virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
-        const Vec& target, Vec& costs) const;
+                                       const Vec& target, Vec& costs) const;
   
+  //! simply calls inherited::build() then build_()
+  virtual void build();
+
   virtual void forget();
-  
-  virtual TVec<string> getTrainCostNames() const =0;
-
-  virtual TVec<string> getTestCostNames() const;
-
+    
   //!  Does the necessary operations to transform a shallow copy (this)
   //!  into a deep copy by deep-copying all the members that need to be.
-  PLEARN_DECLARE_ABSTRACT_OBJECT(FinancialAdvisor);
+  PLEARN_DECLARE_OBJECT(BuyAndHoldAdvisor);
   virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 };
 
 //! Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(FinancialAdvisor);
+DECLARE_OBJECT_PTR(BuyAndHoldAdvisor);
 
 %> // end of namespace PLearn
 

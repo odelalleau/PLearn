@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.h,v 1.12 2003/11/25 20:56:26 dorionc Exp $ 
+ * $Id: Trader.h,v 1.13 2003/12/02 15:40:54 dorionc Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -117,9 +117,6 @@ protected:
   
   //! An accessor to the risk_free_rate at time t
   real risk_free(int t) const { return internal_data_set(t,risk_free_rate_index); }  
-
-  //! Access the portfolio weight k at time t (see the portfolios matrix comment) 
-  real& weight(int k, int t) const { return portfolios(t-horizon, k); }
 
   //**************
   // Methods     *   
@@ -234,6 +231,10 @@ public:
   //**************
   // Methods     *  
   //**************
+
+public:
+  //! Access the portfolio weight k at time t (see the portfolios matrix comment) 
+  real& weight(int k, int t) const { return portfolios(t-horizon, k); }
   
   //! This parses the train_set VMat to get the infos on the assets
 protected:

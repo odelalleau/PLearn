@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.h,v 1.12 2003/10/27 05:14:34 dorionc Exp $ 
+   * $Id: FuturesTrader.h,v 1.13 2003/12/02 15:40:54 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.h */
@@ -52,19 +52,10 @@ public:
   typedef Trader inherited;
   
 protected:
+
   // *********************
   // * protected options *
   // *********************
-
-  /*!
-    margin_cash(t) contains the cash position of each asset.
-    It has a length of max_seq_len and is initialize after the first
-    init_train_size train steps.
-  */
-  Mat margin_cash;
-
-  //! Access the margin value on asset k at time t (see the margin_cash matrix) 
-  real& margin(int k, int t) const { return margin_cash(t-horizon, k); }
 
   //! List of indices associated with the rollover flag fields in the VMat
   TVec<int> assets_rollover_indices;
@@ -75,6 +66,26 @@ protected:
     Default: "rollover"
   */
   string rollover_tag;
+
+  /*!
+    Enables the assetwise computation of the log returns
+    Default: false
+  */ 
+  bool assetwise_log_returns; 
+
+  // *********************
+  // * protected members *
+  // *********************
+    
+  /*!
+    margin_cash(t) contains the cash position of each asset.
+    It has a length of max_seq_len and is initialize after the first
+    init_train_size train steps.
+  */
+  Mat margin_cash;
+
+  //! Access the margin value on asset k at time t (see the margin_cash matrix) 
+  real& margin(int k, int t) const { return margin_cash(t-horizon, k); }
 
 
   // ***********************

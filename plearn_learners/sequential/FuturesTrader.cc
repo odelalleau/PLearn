@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.cc,v 1.26 2003/11/28 21:15:34 dorionc Exp $ 
+   * $Id: FuturesTrader.cc,v 1.27 2003/12/02 15:40:54 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.cc */
@@ -54,7 +54,7 @@ PLEARN_IMPLEMENT_OBJECT(FuturesTrader, "A meta-sequential learner trading future
                         "such as a basic stop loss.");
 
 FuturesTrader::FuturesTrader():
-  rollover_tag("rollover"), 
+  rollover_tag("rollover"), assetwise_log_returns(false),
   leverage(1.0), maintenance_margin_ratio(0.75)
 {}
 
@@ -121,6 +121,9 @@ void FuturesTrader::trader_test(int t, VMat testset, PP<VecStatsCollector> test_
   real previous_value_t = 0;
   real absolute_return_t = 0;
   real relative_sum = 0;
+  Vec assetwise_lret(assetwise_log_returns ? nb_assets : 0);
+  if(assetwise_log_returns)
+    assetwise_lret.fill(0.0);
 
   real daily_risk_free_return = exp(log(1.0+risk_free(t-horizon))/252.0) - 1.0;
   if (is_missing(daily_risk_free_return))
@@ -143,7 +146,8 @@ void FuturesTrader::trader_test(int t, VMat testset, PP<VecStatsCollector> test_
       real p_price = price(k, t-horizon);
       real p_value = w_kt * p_price;
       previous_value_t += abs(p_value);
-      relative_sum += p_value * (relative_return(k, t)-1.0);
+      real relative_value = p_value * (relative_return(k, t)-1.0);
+      relative_sum += relative_value;
 
       // The abolute return on asset k at time t
       real absolute_return_on_asset_k_at_t = w_kt * absolute_return(k, t);
@@ -162,8 +166,16 @@ void FuturesTrader::trader_test(int t, VMat testset, PP<VecStatsCollector> test_
       real delta_ = delta(k, t);
       real p_kt = price(k, t);
       portfolio_value[t] += abs(w_kt)*p_kt;
+
+      real t_cost = 0;
       if( delta_ != 0.0 ) //To change for 0 when will pass to units!!!
-        transaction_cost += additive_cost + multiplicative_cost[k]*delta_;
+      {
+        t_cost = additive_cost + multiplicative_cost[k]*delta_;
+        transaction_cost += t_cost;
+      }
+
+      if(assetwise_log_returns)
+        assetwise_lret[k] += (relative_value-t_cost);
 
       // Checkout if a margin call is needed
       //check_margin(k, t); PAS D'APPELS DE MARGE POUR L'INSTANT!!!
@@ -172,17 +184,48 @@ void FuturesTrader::trader_test(int t, VMat testset, PP<VecStatsCollector> test_
 
   transaction_costs[t] = transaction_cost;
   absolute_return_t += previous_value_t*daily_risk_free_return - transaction_cost;
-  real relative_return_t = daily_risk_free_return;
+
+  real relative_return_t = 0; 
   if(previous_value_t != 0.0)
+  {
     relative_return_t += (relative_sum-transaction_cost)/previous_value_t;
+    if(assetwise_log_returns)
+      assetwise_lret /= previous_value_t;
+    
+    // Test:
+//     real test = 0;
+//     for(int k=0; k < nb_assets; k++)
+//       test += assetwise_lret[k];
+//     if(!FEQUAL(test, relative_return_t))
+//     {
+//       cout << "assetwise_lret: " << assetwise_lret << endl
+//            << "previous_value_t: " << previous_value_t << endl;
+//       PLERROR("test = %f != %f = relative_return_t", test, relative_return_t);
+//     }
+  }
+  else if(assetwise_log_returns)
+    assetwise_lret.fill(0.0);
+  
+  // Adding the return on cash position
+  relative_return_t += daily_risk_free_return;
+  for(int k=0; k < nb_assets; k++)
+    assetwise_lret[k] += daily_risk_free_return;
 
   real monthly_turnover = sum(transaction_costs,true)/(sum(portfolio_value,true)/12.0);
   Vec update = advisor->errors(t).copy();
+
   real log_return = log(1.0+relative_return_t);
+  if(assetwise_log_returns)
+    assetwise_lret = log(1.0+assetwise_lret);
+
   real tbill_log_return = log(1.0+daily_risk_free_return);
   update.append(absolute_return_t);
   cout << "absolute_return_"<<t<<": " << absolute_return_t << endl;
+  
   update.append(log_return);
+  if(assetwise_log_returns)
+    update.append(assetwise_lret);
+
   update.append(monthly_turnover);
   update.append(tbill_log_return);
   update.append(log_return - tbill_log_return);
@@ -246,6 +289,10 @@ void FuturesTrader::declareOptions(OptionList& ol)
                 "of the column containing the rollover information.\n"
                 "Default: \"rollover\"");
 
+  declareOption(ol, "assetwise_log_returns", &FuturesTrader::assetwise_log_returns, OptionBase::buildoption,
+                "Enables the assetwise computation of the log returns\n"
+                "Default: false");
+
   declareOption(ol, "leverage", &FuturesTrader::leverage,
                 OptionBase::buildoption,
                 "The ratio between the value of the contracts we are in and the margin we have.\n"
@@ -266,7 +313,12 @@ TVec<string> FuturesTrader::getTrainCostNames() const
 {
   TVec<string> cost_names = advisor->getTrainCostNames();
   cost_names.append("absolute_return");
+
   cost_names.append("log_return");
+  if(assetwise_log_returns)
+    for(int k=0; k < assets_names.length(); k++)
+      cost_names.append(assets_names[k] + "_log_return");
+
   cost_names.append("turnover");
   cost_names.append("tbill_log_return"); // TBILL(log_Rt)
   cost_names.append("relative_tbill_log_return"); // model(log_Rt) - TBILL(log_Rt)

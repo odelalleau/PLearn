@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FinancialAdvisor.cc,v 1.2 2003/09/27 04:05:24 dorionc Exp $ 
+   * $Id: FinancialAdvisor.cc,v 1.3 2003/12/02 15:40:54 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -73,6 +73,11 @@ void FinancialAdvisor::declareOptions(OptionList& ol)
   inherited::declareOptions(ol);
 }
 
+TVec<string> FinancialAdvisor::getTestCostNames() const
+{
+  return getTrainCostNames();
+}
+
 void FinancialAdvisor::computeOutputAndCosts(const Vec& input,
     const Vec& target, Vec& output, Vec& costs) const
 { PLERROR("The method computeOutputAndCosts is not defined for this FinancialAdvisor"); }
@@ -91,9 +96,6 @@ void FinancialAdvisor::computeCostsFromOutputs(const Vec& input,
 void FinancialAdvisor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-
-  // ### Remove this line when you have fully implemented this method.
-  PLERROR("FinancialAdvisor::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 } 
 
 %> // end of namespace PLearn
