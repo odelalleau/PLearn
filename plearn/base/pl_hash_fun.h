@@ -42,7 +42,7 @@ namespace PLearn {
 
 using namespace std;
 
-extern const long unsigned int PL_HASH_NOMBRES_MAGIQUES[256];
+extern const size_t PL_HASH_NOMBRES_MAGIQUES[256];
 
   //!  **************** Hash tables support *************************
 
