@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TTorchDataSetFromVMat.cc,v 1.3 2005/02/23 21:54:33 tihocan Exp $ 
+   * $Id: TTorchDataSetFromVMat.cc,v 1.4 2005/02/24 14:13:18 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -81,22 +81,22 @@ void TTorchDataSetFromVMat::declareOptions(OptionList& ol)
 
   // Hide parent's options that are set by this DataSet.
 
-  declareOption(ol, "n_inputs", &TTorchDataSetFromVMat::n_inputs, OptionBase::nosave,
+  redeclareOption(ol, "n_inputs", &TTorchDataSetFromVMat::n_inputs, OptionBase::nosave,
       "Automatically set.");
 
-  declareOption(ol, "n_targets", &TTorchDataSetFromVMat::n_targets, OptionBase::nosave,
+  redeclareOption(ol, "n_targets", &TTorchDataSetFromVMat::n_targets, OptionBase::nosave,
       "Automatically set.");
 
-  declareOption(ol, "n_real_examples", &TTorchDataSetFromVMat::n_real_examples, OptionBase::nosave,
+  redeclareOption(ol, "n_real_examples", &TTorchDataSetFromVMat::n_real_examples, OptionBase::nosave,
       "Automatically set.");
 
-  declareOption(ol, "real_current_example_index", &TTorchDataSetFromVMat::real_current_example_index, OptionBase::nosave,
+  redeclareOption(ol, "real_current_example_index", &TTorchDataSetFromVMat::real_current_example_index, OptionBase::nosave,
       "Automatically set.");
 
-  declareOption(ol, "select_examples", &TTorchDataSetFromVMat::select_examples, OptionBase::nosave,
+  redeclareOption(ol, "select_examples", &TTorchDataSetFromVMat::select_examples, OptionBase::nosave,
       "Automatically set.");
 
-  declareOption(ol, "selected_examples", &TTorchDataSetFromVMat::selected_examples, OptionBase::nosave,
+  redeclareOption(ol, "selected_examples", &TTorchDataSetFromVMat::selected_examples, OptionBase::nosave,
       "Automatically set.");
 
 }
