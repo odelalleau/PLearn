@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plapack.h,v 1.16 2004/02/20 21:11:47 chrish42 Exp $
+   * $Id: plapack.h,v 1.17 2004/04/27 13:03:03 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -381,7 +381,7 @@ simply calls this one with a different order of parameters...)
 
 // (will work for float and double)
 template<class num_t>
-void lapackSVD(const TMat<num_t>& At, TMat<num_t>& Ut, TVec<num_t>& S, TMat<num_t>& V, char JOBZ='A')
+void lapackSVD(const TMat<num_t>& At, TMat<num_t>& Ut, TVec<num_t>& S, TMat<num_t>& V, char JOBZ='A', real safeguard = 1)
 {            
   int M = At.width();
   int N = At.length();
@@ -438,13 +438,13 @@ void lapackSVD(const TMat<num_t>& At, TMat<num_t>& Ut, TVec<num_t>& S, TMat<num_
   int INFO;
 
   // first call to find optimal work size
-  lapack_Xgesdd_(&JOBZ, &M, &N, At.data(), &LDA, S.data(), U, &LDU, VT, &LDVT, WORK.data(), &LWORK, IWORK.data(), &INFO );
+  lapack_Xgesdd_(&JOBZ, &M, &N, At.data(), &LDA, S.data(), U, &LDU, VT, &LDVT, WORK.data(), &LWORK, IWORK.data(), &INFO);
 
   if(INFO!=0)
     PLERROR("In lapackSVD, problem in first call to sgesdd_ to get optimal work size, returned INFO = %d",INFO); 
   
   // make sure we have enough space
-  LWORK = (int) WORK[0]; // optimal size
+  LWORK = int(WORK[0] * safeguard + 0.5); // optimal size (safeguard may be used to make sure it doesn't crash in some rare occasions).
   WORK.resize(LWORK);
   // cerr << "Optimal WORK size: " << LWORK << endl;
 
@@ -484,6 +484,9 @@ JOBZ has the following meaning:
 
   'N': compute only the singular values (U and V are not computed)
 
+The optional value 'safeguard' may be used with a value > 1 if there is
+a crash in the SVD (typically, saying that parameter 12 has an illegal
+value).
 
 Relationships between SVD(A) and eigendecomposition of At.A and A.At
   -> square(singular values) = eigenvalues
@@ -493,10 +496,10 @@ Relationships between SVD(A) and eigendecomposition of At.A and A.At
 
 // (will work for float and double)
 template<class num_t>
-inline void SVD(const TMat<num_t>& A, TMat<num_t>& U, TVec<num_t>& S, TMat<num_t>& Vt, char JOBZ='A')
+inline void SVD(const TMat<num_t>& A, TMat<num_t>& U, TVec<num_t>& S, TMat<num_t>& Vt, char JOBZ='A', real safeguard = 1)
 {
   // A = U.S.Vt  -> At = V.S.Ut
-  lapackSVD(A,Vt,S,U,JOBZ);
+  lapackSVD(A,Vt,S,U,JOBZ, safeguard);
 }
 
 
