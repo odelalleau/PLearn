@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat_maths.cc,v 1.20 2004/05/19 17:26:30 tihocan Exp $
+* $Id: VMat_maths.cc,v 1.21 2004/05/28 15:35:50 tihocan Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat_maths.h"
@@ -46,6 +46,7 @@
 #include "ShiftAndRescaleVMatrix.h"
 #include "ExtendedVMatrix.h"
 #include "Array.h"
+#include "plapack.h"      //!< For solveLinearSystem.
 #include "random.h"
 #include "TmpFilenames.h"
 #include "fileutils.h"
@@ -890,7 +891,7 @@ VMat transpose(VMat m1)
 
 real linearRegression(VMat inputs, VMat outputs, real weight_decay, Mat theta_t, 
                       bool use_precomputed_XtX_XtY, Mat XtX, Mat XtY, real& sum_squared_Y,
-                      bool return_squared_loss, int verbose_every)
+                      bool return_squared_loss, int verbose_every, bool cholesky)
 {
   if (outputs.length()!=inputs.length())
     PLERROR("linearRegression: inputs.length()=%d while outputs.length()=%d",inputs.length(),outputs.length());
@@ -935,8 +936,12 @@ real linearRegression(VMat inputs, VMat outputs, real weight_decay, Mat theta_t,
   for (int i=1; i<XtX.length(); i++)
     XtX(i,i) += weight_decay;
 
-  // now solve by Cholesky decomposition
-  solveLinearSystemByCholesky(XtX,XtY,theta_t);
+  if (cholesky) {
+    // now solve by Cholesky decomposition
+    solveLinearSystemByCholesky(XtX,XtY,theta_t);
+  } else {
+    theta_t = solveLinearSystem(XtX, XtY);
+  }
 
   real squared_loss=0;
   if (return_squared_loss)
@@ -966,7 +971,8 @@ Mat linearRegression(VMat inputs, VMat outputs, real weight_decay)
 
 real weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas, real weight_decay, Mat theta_t, 
                               bool use_precomputed_XtX_XtY, Mat XtX, Mat XtY, real& sum_squared_Y,
-                              real& sum_gammas, bool return_squared_loss, int verbose_every)
+                              real& sum_gammas, bool return_squared_loss, int verbose_every,
+                              bool cholesky)
 {
   int inputsize = inputs.width();
   int targetsize = outputs.width();
@@ -1004,8 +1010,12 @@ real weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas, real weigh
   for (int i=1; i<XtX.length(); i++)
     XtX(i,i) += weight_decay;
 
-  // now solve by Cholesky decomposition
-  solveLinearSystemByCholesky(XtX,XtY,theta_t);
+  if (cholesky) {
+    // now solve by Cholesky decomposition
+    solveLinearSystemByCholesky(XtX,XtY,theta_t);
+  } else {
+    theta_t = solveLinearSystem(XtX, XtY);
+  }
 
   real squared_loss=0;
   if (return_squared_loss)

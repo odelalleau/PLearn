@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.cc,v 1.6 2004/03/10 18:21:24 tihocan Exp $
+   * $Id: LinearRegressor.cc,v 1.7 2004/05/28 15:36:46 tihocan Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.cc */
@@ -45,7 +45,9 @@ namespace PLearn {
 using namespace std;
 
 /* ### Initialise all fields to their default value here */
-LinearRegressor::LinearRegressor() : weight_decay(0)
+LinearRegressor::LinearRegressor()
+: cholesky(true),
+  weight_decay(0)
 {}
 
 PLEARN_IMPLEMENT_OBJECT(LinearRegressor, "Ordinary Least Squares and Ridge Regression, optionally weighted", 
@@ -75,11 +77,14 @@ PLEARN_IMPLEMENT_OBJECT(LinearRegressor, "Ordinary Least Squares and Ridge Regre
     // ### one of OptionBase::buildoption, OptionBase::learntoption or 
     // ### OptionBase::tuningoption. Another possible flag to be combined with
     // ### is OptionBase::nosave
+    declareOption(ol, "cholesky", &LinearRegressor::cholesky, OptionBase::buildoption, 
+                  "Whether to use the Cholesky decomposition or not, when solving the linear system.");
+
     declareOption(ol, "weight_decay", &LinearRegressor::weight_decay, OptionBase::buildoption, 
-                  "    The weight decay is the factor that multiplies the squared norm of the parameters in the loss function\n");
+                  "The weight decay is the factor that multiplies the squared norm of the parameters in the loss function\n");
 
     declareOption(ol, "weights", &LinearRegressor::weights, OptionBase::learntoption, 
-                  "    The weight matrix, which are the parameters computed by training the regressor.\n");
+                  "The weight matrix, which are the parameters computed by training the regressor.\n");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -170,7 +175,7 @@ void LinearRegressor::train()
         linearRegression(train_set.subMatColumns(0, inputsize()), 
                          train_set.subMatColumns(inputsize(), outputsize()), 
                          weight_decay*train_set.length(), weights, 
-                         !recompute_XXXY, XtX, XtY,sum_squared_y,true);
+                         !recompute_XXXY, XtX, XtY,sum_squared_y,true, 0, cholesky);
     }
   else if (train_set->weightsize()==1)
     {
@@ -178,7 +183,7 @@ void LinearRegressor::train()
         weightedLinearRegression(train_set.subMatColumns(0, inputsize()), 
                                  train_set.subMatColumns(inputsize(), outputsize()),
                                  train_set.subMatColumns(inputsize()+outputsize(),1), weight_decay*train_set.length(), weights,
-                                 !recompute_XXXY, XtX, XtY,sum_squared_y,sum_gammas,true);
+                                 !recompute_XXXY, XtX, XtY,sum_squared_y,sum_gammas,true, 0, cholesky);
     }
   else PLERROR("LinearRegressor: expected dataset's weightsize to be either 1 or 0, got %d\n",train_set->weightsize());
 

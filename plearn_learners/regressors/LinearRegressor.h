@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.h,v 1.3 2004/02/20 21:14:49 chrish42 Exp $
+   * $Id: LinearRegressor.h,v 1.4 2004/05/28 15:36:46 tihocan Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.h */
@@ -65,17 +65,15 @@ protected:
   
   Mat weights; //!<  The weight matrix computed by the regressor, (inputsize+1) x (outputsize)
   real weights_norm; //!< sum of squares of weights
-  real weight_decay; //!< factor on the squared norm of parameters penalty
 
 public:
-
-  
 
   // ************************
   // * public build options *
   // ************************
 
-  // ### declare public option fields (such as build options) here
+  bool cholesky;
+  real weight_decay; //!< factor on the squared norm of parameters penalty
 
   // ****************
   // * Constructors *

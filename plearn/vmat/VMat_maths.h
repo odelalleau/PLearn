@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat_maths.h,v 1.13 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: VMat_maths.h,v 1.14 2004/05/28 15:35:50 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -217,7 +217,8 @@ VMat transpose(VMat m1);
 */
 real linearRegression(VMat inputs, VMat outputs, real weight_decay, Mat theta_t, 
                       bool use_precomputed_XtX_XtY, Mat XtX, Mat XtY, real& sum_squared_Y,
-                      bool return_squared_loss=false, int verbose_computation_every=0);
+                      bool return_squared_loss=false, int verbose_computation_every=0,
+                      bool cholesky = true);
                       
 
 //!  Version that does all the memory allocations of XtX, XtY and theta_t. Returns theta_t
@@ -228,7 +229,7 @@ Mat linearRegression(VMat inputs, VMat outputs, real weight_decay);
 real weightedLinearRegression(VMat inputs, VMat outputs, VMat gammas,
                               real weight_decay, Mat theta_t, bool use_precomputed_XtX_XtY, Mat XtX,
                               Mat XtY, real& sum_squared_Y, real& sum_gammas, bool return_squared_loss=false, 
-                              int verbose_computation_every=0);
+                              int verbose_computation_every=0, bool cholesky = true);
 
 /*!   Rebalance the input VMatrix so that each class has a probability 1/nclasses.
   Also, the return VMat class alternates between all classes cyclicly.
