@@ -85,9 +85,9 @@ void VarLengthPTester::run()
 
 Vec VarLengthPTester::perform(bool call_forget)
 {
-  BPTT *bptt_learner = dynamic_cast<BPTT*>((PLearner*)learner);
-  if(!bptt_learner)
-    PLERROR("The learner specified is not a BPTTLearner or no learner specified for PTester.");
+  SequencePLearner *seq_learner = dynamic_cast<SequencePLearner*>((PLearner*)learner);
+  if(!seq_learner)
+    PLERROR("The learner specified is not a SequencePLearner or no learner specified for PTester.");
   if(!splitter)
     PLERROR("No splitter specified for PTester");
 
@@ -102,15 +102,18 @@ Vec VarLengthPTester::perform(bool call_forget)
     VMat trainset = dsets[0];
     
     if(dsets.size()>1)
-      bptt_learner->setValidationSet(dsets[1]);
+      seq_learner->setValidationSet(dsets[1]);
 
-    bptt_learner->setTrainStatsCollector(new VecStatsCollector());
-    bptt_learner->setTrainingSet(trainset, call_forget && train);
+    if(dsets.size()>2)
+      seq_learner->setTestSet(dynamic_cast<SequenceVMatrix*>((VMatrix*)dsets[2]));
+
+    seq_learner->setTrainStatsCollector(new VecStatsCollector());
+    seq_learner->setTrainingSet(trainset, call_forget && train);
     
     if (train) {
-      bptt_learner->train();
+      seq_learner->train();
     } else
-      bptt_learner->build();
+      seq_learner->build();
 
     for(int setnum=1; setnum<dsets.length(); setnum++) {
       SequenceVMat testset = dynamic_cast<SequenceVMatrix*>((VMatrix*)dsets[setnum]);
@@ -123,7 +126,7 @@ Vec VarLengthPTester::perform(bool call_forget)
 	PLWARNING("PTester:: test set is of length 0, costs will be set to -1");
       }
 
-      bptt_learner->test(testset, test_stats, test_outputs, test_costs);
+      seq_learner->test(testset, test_stats, test_outputs, test_costs);
       save(testset, test_outputs, test_costs, setnum);
     }
   }
@@ -136,7 +139,6 @@ void VarLengthPTester::save(SequenceVMat test_set, SequenceVMat test_outputs,
   force_mkdir(expdir);
 
   SequenceVMat all = test_set & test_outputs & test_costs;
-  int nligne = all->getNbRowInSeqs(0, all->getNbSeq()) + all->getNbSeq();
   Vec sep = Vec(all->width(), -1.0);
   FileVMatrix file = FileVMatrix(append_slash(expdir) + "out" + tostring(nsetnum) + ".pmat", 0, all->width());
   for (int i = 0; i < all->getNbSeq(); i++) {

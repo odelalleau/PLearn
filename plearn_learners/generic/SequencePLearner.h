@@ -44,6 +44,7 @@ using namespace std;
   {
   protected:
     VarArray params;
+    SequenceVMat test_set;
 
   public:
 
@@ -92,6 +93,8 @@ using namespace std;
     virtual void run();
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
+    void setTestSet(SequenceVMat);
+
     virtual void test(VMat testset, PP<VecStatsCollector> test_stats, 
                       VMat testoutputs=0, VMat testcosts=0) const;
     virtual void test(SequenceVMat testset, PP<VecStatsCollector> test_stats, 
@@ -103,6 +106,8 @@ using namespace std;
   };
   DECLARE_OBJECT_PTR(SequencePLearner);
 } // end of namespace PLearn
+
+#include "EMPLearner.h"
 
 #endif
 

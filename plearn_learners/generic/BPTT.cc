@@ -31,36 +31,9 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-#include "AffineTransformVariable.h"
-#include "AffineTransformWeightPenalty.h"
-#include "BinaryClassificationLossVariable.h"
-#include "ClassificationLossVariable.h"
-#include "ConcatColumnsVariable.h"
-#include "CrossEntropyVariable.h"
-#include "ExpVariable.h"
-#include "LiftOutputVariable.h"
-#include "LogSoftmaxVariable.h"
-#include "MulticlassLossVariable.h"
-#include "NegCrossEntropySigmoidVariable.h"
-#include "OneHotSquaredLoss.h"
-#include "SigmoidVariable.h"
-#include "SoftmaxVariable.h"
-#include "SoftplusVariable.h"
-#include "SumVariable.h"
-#include "SumAbsVariable.h"
-#include "SumOfVariable.h"
-#include "SumSquareVariable.h"
-#include "TanhVariable.h"
-#include "TransposeProductVariable.h"
-#include "Var_operators.h"
-#include "Var_utils.h"
-
-#include "ConcatColumnsVMatrix.h"
-//#include "DisplayUtils.h"
-#include "GradientOptimizer.h"
+#include "Optimizer.h"
 #include "BPTT.h"
 #include "random.h"
-#include "SubVMatrix.h"
 
 namespace PLearn {
 using namespace std;

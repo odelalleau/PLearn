@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: SequenceVMatrix.cc,v 1.6 2004/05/26 21:21:57 lapalmej Exp $
+   * $Id: SequenceVMatrix.cc,v 1.7 2004/05/29 13:43:15 lapalmej Exp $
    ******************************************************* */
 
 #include "SequenceVMatrix.h"
@@ -133,10 +133,12 @@ void SequenceVMatrix::putOrAppendSequence(int i, Mat m) {
     length_ = i + 1;
     width_ = m.width();
   }
+  /*
 #ifdef BOUNDCHECK
   if (width() == 0)
     PLERROR("In SequenceVMatrix::putOrAppendSequence the VMat has a width=0");
 #endif
+  */
   sequences[i] = Mat(m.length(), m.width());
   putSeq(i, m);
 }
@@ -226,7 +228,7 @@ int SequenceVMatrix::getNbRowInSeq(int i) const
 
 void SequenceVMatrix::print() {
   cout << "[ ";
-  for (int i = 0; i < 1; i++) {
+  for (int i = 0; i < getNbSeq(); i++) {
     cout << "[ ";
     for (int j = 0; j < sequences[i].nrows(); j++) {
       for (int k = 0; k < sequences[i].width(); k++) {
@@ -241,14 +243,17 @@ void SequenceVMatrix::print() {
 
 void SequenceVMatrix::run()
 {
-  Mat input, target;
-
-  getExample(3 ,input, target);
-
-  cout << input << endl;
-  cout << endl;
-  cout << target << endl;
-  cout << endl;
+  print();
+  cout << "run" << endl;
+  SequenceVMatrixStream stream = SequenceVMatrixStream(this,0);
+  while (stream.hasMoreSequence()) {
+    cout << "debut seq" << endl;
+    while (stream.hasMoreInSequence()) {
+      cout << stream.next() << " ";
+    }
+    cout << endl;
+    stream.nextSeq();
+  }
 }
 
 SequenceVMat operator&(const SequenceVMat& s1, const SequenceVMat& s2) {
@@ -285,6 +290,78 @@ SequenceVMat operator&(const SequenceVMat& s1, const SequenceVMat& s2) {
 
 
   return new_seq;
+}
+
+/** SequenceVMatrixStream **/
+
+PLEARN_IMPLEMENT_OBJECT(SequenceVMatrixStream, "ONE LINE DESCR", "NO HELP");
+
+SequenceVMatrixStream::SequenceVMatrixStream() {
+  mat = 0;
+  col = -1;
+  pos_seq = -1;
+  pos_in_seq = -1;
+}
+
+SequenceVMatrixStream::SequenceVMatrixStream(SequenceVMat m, int c) {
+  col = c;
+  setSequence(m);
+}
+
+void SequenceVMatrixStream::init() {
+  pos_seq = 0;
+  pos_in_seq = 0;
+  size_ = mat->getNbRowInSeqs(0, mat->getNbSeq());
+  row = Vec(mat->width());
+}
+
+void SequenceVMatrixStream::setSequence(SequenceVMat m) {
+  mat = m;
+  init();
+}
+
+bool SequenceVMatrixStream::hasMoreSequence() {
+  if (mat == 0)
+    PLERROR("In SequenceVMatrixStream::hasMoreSequence(), no SequenceVMatrix specified");
+
+  //  cout << "SequenceVMatrixStream::hasMoreSequence() : " << pos_seq << "<" << mat->getNbSeq() << endl;
+  return pos_seq < mat->getNbSeq();
+}
+
+bool SequenceVMatrixStream::hasMoreInSequence() {
+  if (mat == 0)
+    PLERROR("In SequenceVMatrixStream::hasMoreInSeq(), no SequenceVMatrix specified");
+
+  //  cout << "SequenceVMatrixStream::hasMoreInSequence()" << pos_in_seq << "<" <<  mat->getNbRowInSeq(pos_seq) << endl;
+  if (hasMoreSequence())
+    return pos_in_seq < mat->getNbRowInSeq(pos_seq);
+  return false;
+}
+
+void SequenceVMatrixStream::nextSeq() {
+#ifdef BOUNDCHECK
+  if (!hasMoreSequence())
+    PLERROR("In SequenceVMatrixStream::nextSeq(), no more sequence available");
+#endif
+  pos_seq++;
+  pos_in_seq = 0;
+}
+
+real SequenceVMatrixStream::next() {
+#ifdef BOUNDCHECK
+  if (!hasMoreSequence())
+    PLERROR("In SequenceVMatrixStream::next(), no more sequence available");
+  if (!hasMoreInSequence())
+    PLERROR("In SequenceVMatrixStream::next(), no more data in the sequence available");  
+#endif
+  
+  mat->getRowInSeq(pos_seq, pos_in_seq, row);
+  pos_in_seq++;
+  return row[col];
+}
+
+int SequenceVMatrixStream::size() {
+  return size_;
 }
 
 } // end of namespcae PLearn

@@ -92,11 +92,48 @@ public:
 
 };
 
+DECLARE_OBJECT_PTR(SequenceVMatrix);
+
   typedef PP<SequenceVMatrix> SequenceVMat;
 
   SequenceVMat operator&(const SequenceVMat&, const SequenceVMat&);
 
-DECLARE_OBJECT_PTR(SequenceVMatrix);
+  // === STREAM ===
+
+class SequenceVMatrixStream: public Object
+{
+  typedef Object inherited;
+
+protected:
+  int col;
+  int pos_seq;
+  int pos_in_seq;
+  int size_;
+  SequenceVMat mat;
+
+  Vec row;
+
+public:
+  SequenceVMatrixStream();
+  
+  SequenceVMatrixStream(SequenceVMat, int);
+
+  void setSequence(SequenceVMat);
+
+  bool hasMoreSequence();
+  bool hasMoreInSequence();
+
+  void init();
+
+  void nextSeq();
+  real next();
+
+  int size();
+
+  PLEARN_DECLARE_OBJECT(SequenceVMatrixStream);
+};
+
+DECLARE_OBJECT_PTR(SequenceVMatrixStream);
 
 } // end of namespcae PLearn
 #endif

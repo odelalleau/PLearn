@@ -129,6 +129,10 @@ int SequencePLearner::outputsize(VMat set) const
   return seq->getNbRowInSeqs(0, seq->getNbSeq());
 }
 
+void SequencePLearner::setTestSet(SequenceVMat s) {
+  test_set = s;
+}
+
 /*
   Test the network.
 */
