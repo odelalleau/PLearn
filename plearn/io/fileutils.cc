@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.33 2004/03/16 18:36:01 tihocan Exp $
+   * $Id: fileutils.cc,v 1.34 2004/03/18 18:23:03 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -767,33 +767,67 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
                     }
                     break;
 
-                  case 'S': // it's an ISEQUAL{expr1}{expr2}
+                  case 'S':
                     {
-                      string expr1, expr2;
-                      readWhileMatches(in, "SEQUAL");
-                      bool syntax_ok = true;
-                      int c = in.get();
-                      if(c == '{')
-                        smartReadUntilNext(in, "}", expr1);
-                      else
-                        syntax_ok = false;
-                      if (syntax_ok) {
-                        c = in.get();
-                        if(c == '{')
-                          smartReadUntilNext(in, "}", expr2);
-                        else
-                          syntax_ok = false;
-                      }
-                      if (!syntax_ok)
-                        PLERROR("$ISEQUAL syntax is: $ISEQUAL{expr1}{expr2}");
-                      istrstream expr1_stream(expr1.c_str());
-                      istrstream expr2_stream(expr2.c_str());
-                      string expr1_eval = readAndMacroProcess(expr1_stream, variables);
-                      string expr2_eval = readAndMacroProcess(expr2_stream, variables);
-                      if (expr1_eval == expr2_eval) {
-                        text += "1";
-                      } else {
-                        text += "0";
+
+                      int next = in.get();
+                      next = in.peek();   // Next character.
+                      switch(next) {
+
+                        case 'D': // it's an ISDEFINED{expr}
+                          {
+                            string expr;
+                            readWhileMatches(in, "DEFINED");
+                            bool syntax_ok = true;
+                            int c = in.get();
+                            if(c == '{')
+                              smartReadUntilNext(in, "}", expr);
+                            else
+                              syntax_ok = false;
+                            if (!syntax_ok)
+                              PLERROR("$ISDEFINED syntax is: $ISDEFINED{expr}");
+                            istrstream expr_stream(expr.c_str());
+                            string expr_eval = readAndMacroProcess(expr_stream, variables);
+                            map<string, string>::iterator it = variables.find(expr_eval);
+                            if(it==variables.end()) {
+                              // The variable is not defined.
+                              text += "0";
+                            } else {
+                              text += "1";
+                            }
+                          }
+                          break;
+
+                        case 'E': // it's an ISEQUAL{expr1}{expr2}
+                          {
+                            string expr1, expr2;
+                            readWhileMatches(in, "EQUAL");
+                            bool syntax_ok = true;
+                            int c = in.get();
+                            if(c == '{')
+                              smartReadUntilNext(in, "}", expr1);
+                            else
+                              syntax_ok = false;
+                            if (syntax_ok) {
+                              c = in.get();
+                              if(c == '{')
+                                smartReadUntilNext(in, "}", expr2);
+                              else
+                                syntax_ok = false;
+                            }
+                            if (!syntax_ok)
+                              PLERROR("$ISEQUAL syntax is: $ISEQUAL{expr1}{expr2}");
+                            istrstream expr1_stream(expr1.c_str());
+                            istrstream expr2_stream(expr2.c_str());
+                            string expr1_eval = readAndMacroProcess(expr1_stream, variables);
+                            string expr2_eval = readAndMacroProcess(expr2_stream, variables);
+                            if (expr1_eval == expr2_eval) {
+                              text += "1";
+                            } else {
+                              text += "0";
+                            }
+                          }
+                          break;
                       }
                     }
                     break;
@@ -932,7 +966,7 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
 
             default:
               PLERROR("In readAndMacroProcess: only supported macro commands are \n"
-                      "${varname}, $DEFINE, $ECHO, $IF, $INCLUDE, $ISEQUAL, $MINUS, $SWITCH, $TIMES."
+                      "${varname}, $DEFINE, $ECHO, $IF, $INCLUDE, $ISDEFINED, $ISEQUAL, $MINUS, $SWITCH, $TIMES."
                       "But I read $%c !!",c);
             }
         }
