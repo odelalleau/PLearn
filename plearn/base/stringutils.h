@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.26 2004/07/21 16:30:51 chrish42 Exp $
+   * $Id: stringutils.h,v 1.27 2004/08/17 19:21:18 tatien Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -135,6 +135,13 @@ using namespace std;
   //! replaces all backslashes with slash
   string backslash_to_slash(string str);
 
+  inline bool string_begins_with(const string& s, const string& beginning)
+  {
+    int n = beginning.size();
+    return ((int)s.size() >= n && s.substr(0,n) == beginning);
+  }
+
+  
 //! replaces all occurences of searchstr in the text by replacestr
 //! returns the number of matches that got replaced
 int search_replace(string& text, const string& searchstr, const string& replacestr);
@@ -276,10 +283,26 @@ vector<string> remove(const vector<string> &v, string element);
   template<class T> string tostring(const T& x)
     {
       ostringstream out;
-      // Commented out because this adds a trailing space.
-//      PStream pout(&out);
-//      pout << x;
       out << x;
+      return out.str();
+
+      /* Old strstream code
+      ostrstream out;
+      out << setprecision(8) << x;
+      char* buf = out.str();
+      int n = out.pcount();
+      string s(buf,n);
+      out.freeze(false); // return ownership to the stream, so that it may free it...
+      return s;
+      */
+    }
+
+  template<class K, class V>
+  string tostring(const map<K, V>& x)
+    {
+      ostringstream out;
+      PStream pout(&out);
+      pout << x;
       return out.str();
 
       /* Old strstream code
