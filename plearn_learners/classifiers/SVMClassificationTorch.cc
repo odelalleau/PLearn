@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SVMClassificationTorch.cc,v 1.5 2005/02/24 14:27:30 tihocan Exp $ 
+   * $Id: SVMClassificationTorch.cc,v 1.6 2005/02/24 15:34:56 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -42,6 +42,12 @@
 
 
 #include "SVMClassificationTorch.h"
+#include <plearn_torch/TTorchDataSetFromVMat.h>
+#include <plearn_torch/TTorchKernelFromKernel.h>
+#include <plearn_torch/TMachine.h>
+#include <plearn_torch/TSVMClassification.h>
+#include <plearn_torch/TQCTrainer.h>
+#include <plearn_torch/TTrainer.h>
 
 namespace PLearn {
 using namespace std;
@@ -50,13 +56,17 @@ using namespace std;
 // SVMClassificationTorch //
 ////////////////////////////
 SVMClassificationTorch::SVMClassificationTorch() 
-: output_the_class(true)
+: C(100),
+  cache_size(50),
+  iter_msg(1000),
+  output_the_class(true)
 {}
 
 PLEARN_IMPLEMENT_OBJECT(SVMClassificationTorch,
     "SVM classification using the Torch library",
     "Do not do anything that needs this object to be deep-copied, because it\n"
-    "is not possible yet."
+    "is not possible yet.\n"
+    "Only binary classification is currently supported.\n"
 );
 
 ////////////////////
@@ -71,8 +81,20 @@ void SVMClassificationTorch::declareOptions(OptionList& ol)
 
   // Build options.
 
+  declareOption(ol, "kernel", &SVMClassificationTorch::kernel, OptionBase::buildoption,
+      "The kernel we use.");
+
+  declareOption(ol, "C", &SVMClassificationTorch::C, OptionBase::buildoption,
+      "Trade-off margin / error.");
+
   declareOption(ol, "output_the_class", &SVMClassificationTorch::output_the_class, OptionBase::buildoption,
       "If set to 1, the output will be the class, otherwise it will be a real value.");
+
+  declareOption(ol, "iter_msg", &SVMClassificationTorch::iter_msg, OptionBase::buildoption,
+      "Number of iterations between each message.");
+
+  declareOption(ol, "cache_size", &SVMClassificationTorch::cache_size, OptionBase::buildoption,
+      "Cache size (in Mb).");
 
   // Learnt options.
 
@@ -81,6 +103,14 @@ void SVMClassificationTorch::declareOptions(OptionList& ol)
 
   // Now call the parent class' declareOptions.
   inherited::declareOptions(ol);
+
+  // Redeclare some parent's options.
+  redeclareOption(ol, "machine", &SVMClassificationTorch::machine, OptionBase::learntoption,
+      "Constructed at build time and saved to store learnt parameters.");
+
+  redeclareOption(ol, "trainer", &SVMClassificationTorch::trainer, OptionBase::nosave,
+      "Constructed at build time (there is no need to save it).");
+
 }
 
 ///////////
@@ -97,13 +127,23 @@ void SVMClassificationTorch::build()
 ////////////
 void SVMClassificationTorch::build_()
 {
-  // ### This method should do the real building of the object,
-  // ### according to set 'options', in *any* situation. 
-  // ### Typical situations include:
-  // ###  - Initial building of an object from a few user-specified options
-  // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-  // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-  // ### You should assume that the parent class' build_() has already been called.
+  // Build machine.
+  if (!machine)
+    machine = new TSVMClassification();
+  PP<TSVMClassification> svm_class = (TSVMClassification*) (TMachine*) machine;
+  svm_class->C = this->C;
+  svm_class->cache_size = this->cache_size;
+  svm_class->kernel = new TTorchKernelFromKernel(this->kernel);
+  svm_class->build();
+  // Build trainer.
+  if (!trainer)
+    trainer = new TQCTrainer();
+  PP<TQCTrainer> qc_trainer = (TQCTrainer*) (TTrainer*) this->trainer;
+  qc_trainer->qc_machine = (TQCMachine*) (TMachine*) this->machine;
+  qc_trainer->iter_msg = this->iter_msg;
+  qc_trainer->build();
+  // We can now build the TorchLearner.
+  inherited::build();
 }
 
 /////////////////////////////
@@ -113,6 +153,8 @@ void SVMClassificationTorch::computeCostsFromOutputs(const Vec& input, const Vec
                                            const Vec& target, Vec& costs) const
 {
   // No cost computed.
+  // For safety, we check we are trying to do binary classification with -1 and 1.
+  assert( target.length() == 1 && (target[0] == 1 || target[0] == -1) );
 }                                
 
 ///////////////////

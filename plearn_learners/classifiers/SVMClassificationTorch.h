@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SVMClassificationTorch.h,v 1.4 2005/02/24 14:27:30 tihocan Exp $ 
+   * $Id: SVMClassificationTorch.h,v 1.5 2005/02/24 15:34:56 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -45,6 +45,7 @@
 #define SVMClassificationTorch_INC
 
 #include <plearn_learners/generic/TorchLearner.h>
+#include <plearn/ker/Kernel.h>
 
 namespace PLearn {
 
@@ -66,6 +67,10 @@ public:
   // * public build options *
   // ************************
 
+  real C;
+  real cache_size;
+  Ker kernel;
+  int iter_msg;
   bool output_the_class;
 
   // ****************
