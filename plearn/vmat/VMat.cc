@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat.cc,v 1.14 2004/02/26 03:36:34 tihocan Exp $
+* $Id: VMat.cc,v 1.15 2004/03/09 00:05:44 lheureup Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat.h"
@@ -87,6 +87,8 @@ VMat VMat::columns(Vec columns_indices) const
 void VMat::precompute() {
   VMat backup = *this;
   *this = new MemoryVMatrix(Mat(*this));
+  (*this)->setFieldInfos( backup->getFieldInfos() );
+
   // We restore the sizes info (lost in the Mat conversion).
   // Note that there would probably be more info to restore (like
   // field infos, string mappings, ...).
@@ -95,9 +97,11 @@ void VMat::precompute() {
   
 void VMat::precompute(const string& pmatfile, bool use_existing_file)
 { 
+  Array<VMField> infos = (*this)->getFieldInfos();
   if(!use_existing_file || !file_exists(pmatfile))
     save(pmatfile); 
   *this = new FileVMatrix(pmatfile); 
+  (*this)->setFieldInfos( infos );
 }
 
 
