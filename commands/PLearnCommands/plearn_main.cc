@@ -33,17 +33,13 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_main.cc,v 1.17 2004/12/01 01:28:16 dorionc Exp $
+   * $Id: plearn_main.cc,v 1.18 2004/12/01 15:23:04 dorionc Exp $
    ******************************************************* */
 
-//#include "general.h"
 #include "plearn_main.h"
 #include "PLearnCommandRegistry.h"
-//#include "stringutils.h"
 #include <plearn/math/random.h>
 #include <plearn/sys/PLMPI.h>
-//#include "Object.h"
-//#include "RunCommand.h"
 #include <plearn/io/pl_log.h>
 
 namespace PLearn {
@@ -80,26 +76,39 @@ static string global_options( vector<string>& command_line,
 {
   int argc                 = command_line.size();
 
+  // Note that the findpos function (stringutils.h) returns -1 if the
+  // option is not found.
   int no_version_pos       = findpos( command_line, "--no-version" );  
 
-  int verbosity_pos        = findpos( command_line, "--verbosity"  );
-  int verbosity_value      = VLEVEL_NORMAL;
-  int verbosity_value_pos  = -1; // IMPORTANT FOR THE TEST BELOW (for loop)
+  // Note that the verbosity_value_pos IS NOT EQUAL TO verbosity_pos+1 if
+  // (verbosity_pos == -1)!!!
+  int verbosity_pos                = findpos( command_line, "--verbosity"  );
+  int verbosity_value_pos          = -1; // ... 
+  VerbosityLevel verbosity_value   = VLEVEL_NORMAL;
+
   if ( verbosity_pos != -1 )
   {
+    // ... here we can set verbosity_value_pos:
     verbosity_value_pos = verbosity_pos+1;
     if ( verbosity_value_pos < argc )
-      verbosity_value = toint( command_line[verbosity_value_pos] );
+      verbosity_value =
+        PL_Log::vlevel_from_string( command_line[verbosity_value_pos] );
     else
-      PLERROR("Option --verbosity must be followed by an integer value.");
+      PLERROR("Option --verbosity must be followed by a VerbosityLevel name "
+              "or by an integer value.");
   }
 
-  
+
+  // The following removes the options from the command line. It also
+  // parses the plearn command as being the first non-optional argument on
+  // the line. IF ANY OPTION IS ADDED, PLEASE MAKE SURE TO REMOVE IT BY
+  // ADDING A CONDITION IN THE if STATEMENT.
   int    cleaned     = 0;
   string the_command = "";
   vector<string> old( command_line );
-  
+
   for ( int c=0; c < argc; c++ )
+    // Neglecting to copy options
     if ( c != no_version_pos   &&
          c != verbosity_pos    &&
          c != verbosity_value_pos )
@@ -107,13 +116,16 @@ static string global_options( vector<string>& command_line,
       if ( the_command == "" )
       {
         the_command = old[c];
-        if ( !is_command( the_command ) )
+
+        // If it is not a command, then it is a file that must be forwarded
+        // to the run command (See the is_command function).
+        if ( !is_command( the_command ) )  
           command_line[cleaned++] = old[c];
       }
       else
         command_line[cleaned++] = old[c];
     }
-  command_line.resize( cleaned );
+  command_line.resize( cleaned ); // Truncating the end of the vector.
   
   if ( no_version_pos == -1 )
     output_version( major_version, minor_version, fixlevel );
@@ -134,18 +146,17 @@ int plearn_main( int argc, char** argv,
   // set program name
   prgname(argv[0]);
 
-  if(argc<=1)
-    {
-      cerr << "Type '" << prgname() << " help' for help" << endl;
-      return 0;
-    }
-  else 
-    {
-      vector<string> command_line = stringvector(argc-1, argv+1);
-      string command = global_options( command_line, major_version, minor_version, fixlevel );
-      PLearnCommandRegistry::run(command, command_line);				
-    }
+  
+  vector<string> command_line = stringvector(argc-1, argv+1);
+  string command = global_options( command_line, major_version, minor_version, fixlevel );
 
+  if ( command == "" )
+  {
+    cerr << "Type '" << prgname() << " help' for help" << endl;
+    return 0;
+  }
+
+  PLearnCommandRegistry::run(command, command_line);				
   PLMPI::finalize();
   
   } // end of try
