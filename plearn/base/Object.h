@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.2 2002/08/07 16:54:21 morinf Exp $
+   * $Id: Object.h,v 1.3 2002/09/10 23:32:21 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -72,9 +72,6 @@ using namespace std;
     of the two allows to change the object structure and rebuild it at
     runtime)
 */
-
-  //!  Note that the serialization mechanism is not (yet) tailored to handle
-  //!  an object tree with shared references in a smart way.
 
   class Object: public PPointable
   {
