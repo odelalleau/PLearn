@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectColumnsVMatrix.cc,v 1.12 2004/11/04 14:58:37 tihocan Exp $
+   * $Id: SelectColumnsVMatrix.cc,v 1.13 2005/03/29 16:19:38 tihocan Exp $
    ******************************************************* */
 
 #include "SelectColumnsVMatrix.h"
@@ -122,7 +122,8 @@ void SelectColumnsVMatrix::getSubRow(int i, int j, Vec v) const
 void SelectColumnsVMatrix::declareOptions(OptionList &ol)
 {
   declareOption(ol, "fields", &SelectColumnsVMatrix::fields, OptionBase::buildoption,
-      "The names of the fields to extract (will override 'indices' if provided).");
+      "The names of the fields to extract (will override 'indices' if provided). Can\n"
+      "be a range of the form Field_1-Field_n, if 'extend_with_missing' is false.");
 
   declareOption(ol, "fields_partial_match", &SelectColumnsVMatrix::fields_partial_match, OptionBase::buildoption,
       "If set to 1, then a field will be kept iff it contains one of the strings from 'fields'.");
@@ -169,10 +170,28 @@ void SelectColumnsVMatrix::build_()
         for (int i = 0; i < fields.length(); i++) {
           string the_field = fields[i];
           int the_index = source->fieldIndex(the_field);
-          if (!extend_with_missing && the_index == -1)
+          if (!extend_with_missing && the_index == -1) {
             // This field does not exist in the source VMat.
-            PLERROR("In SelectColumnsVMatrix::build_ - Unknown field (%s) in source VMat (you may want to use the 'extend_with_missing' option)", the_field.c_str());
-          indices.append(the_index);
+            // It may be of the form FIELD1-FIELDN (a range of fields).
+            size_t pos = the_field.find('-');
+            bool ok = false;
+            if (pos != string::npos) {
+              string field1 = the_field.substr(0, pos);
+              string fieldn = the_field.substr(pos + 1);
+              int the_index1 = source->fieldIndex(field1);
+              int the_indexn = source->fieldIndex(fieldn);
+              if (the_index1 >= 0 && the_indexn > the_index1) {
+                // Indeed, this is a range.
+                ok = true;
+                for (int j = the_index1; j <= the_indexn; j++)
+                  indices.append(j);
+              }
+            }
+            if (!ok)
+              PLERROR("In SelectColumnsVMatrix::build_ - Unknown field (%s) in source VMat "
+                      "(you may want to use the 'extend_with_missing' option)", the_field.c_str());
+          } else
+            indices.append(the_index);
         }
       } else {
         // We need to check whether or not we should add each field.
