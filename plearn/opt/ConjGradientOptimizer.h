@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.18 2003/04/29 17:34:58 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.19 2003/04/29 18:16:19 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -98,6 +98,7 @@ public:
 private:
 
   // Internal data
+  Vec meancost;              // used to store the mean cost
   Vec current_opp_gradient;  // current opposite gradient value
   Vec search_direction;      // current search direction for the line search
   Vec tmp_storage;           // used for temporary storage of data
@@ -177,6 +178,7 @@ private:
       tmp_storage.resize(params.nelems());
       delta.resize(params.nelems());
       if (cost.length() > 0) {
+        meancost.resize(cost->size());
         computeOppositeGradient(this, current_opp_gradient);
         search_direction <<  current_opp_gradient;  // first direction = -grad;
         cost->fprop();

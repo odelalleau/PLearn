@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.17 2003/04/28 17:08:18 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.18 2003/04/29 18:16:19 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -740,7 +740,6 @@ real ConjGradientOptimizer::optimize()
   if (!filename.empty()) {
      out.open(filename.c_str());
   }
-  Vec meancost(cost->size());
   Vec lastmeancost(cost->size());
   early_stop = false;
 
@@ -802,12 +801,15 @@ real ConjGradientOptimizer::optimize()
 ///////////////
 bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stat_coll) {
   real df, current_cost;
+  meancost.clear();
+  int niter = nstages - stage; // the number of iterations to perform
 
   for (; !early_stop && stage<nstages; stage++) {
 
     // Make a line search along the current search direction
     early_stop = lineSearch();
     current_cost = cost->value[0];
+    meancost += cost->value;
     
     // Find the new search direction
     early_stop = early_stop || findDirection();
@@ -820,6 +822,8 @@ bool ConjGradientOptimizer::optimizeN(VecStatsCollector& stat_coll) {
     current_step_size = 2*df / dot(search_direction, current_opp_gradient);
     
   }
+
+  cout << stage << " : " << meancost/niter << endl;
 
   // TODO Call the Stats collector
   return early_stop;
