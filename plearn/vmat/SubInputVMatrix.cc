@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SubInputVMatrix.cc,v 1.5 2004/09/14 16:04:39 chrish42 Exp $ 
+   * $Id: SubInputVMatrix.cc,v 1.6 2005/03/29 19:52:56 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -91,6 +91,8 @@ void SubInputVMatrix::build()
 void SubInputVMatrix::build_()
 {
   if (source) {
+    if (source->inputsize() < 0)
+      PLERROR("In SubInputVMatrix::build_ - The source's inputsize must be set");
     if (n_inputs == -1) {
       // Default value: we keep all inputs.
       n_inputs = source->inputsize() - j_start;
@@ -101,8 +103,15 @@ void SubInputVMatrix::build_()
     int n_removed = source->inputsize() - n_inputs;
     inputsize_ = n_inputs;
     width_ = source->width() - n_removed;
+    // Set field infos.
+    Array<VMField>& source_infos = source->getFieldInfos();
+    TVec<VMField> finfos(width_);
+    finfos.subVec(0, inputsize_) << source_infos.subVec(0, inputsize_);
+    finfos.subVec(inputsize_, finfos.length() - inputsize_)
+      << source_infos.subVec(source->inputsize(), source_infos.length() - source->inputsize());
+    setFieldInfos(finfos);
+    // Set other meta information.
     setMetaInfoFromSource();
-    // TODO fieldnames and such probably won't be set properly.
   }
 }
 
