@@ -72,9 +72,6 @@ public:
   //! simply calls inherited::build() then build_() 
   virtual void build();
 
-  //! Provides a help message describing this class
-  static string help();
-
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
