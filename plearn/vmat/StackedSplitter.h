@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedSplitter.h,v 1.2 2004/09/15 13:45:44 tihocan Exp $ 
+   * $Id: StackedSplitter.h,v 1.3 2004/10/29 21:15:16 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -82,8 +82,7 @@ public:
   // * Constructors *
   // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
+  //! Default constructor.
   StackedSplitter();
 
 
@@ -93,12 +92,10 @@ public:
 
 private: 
   //! This does the actual building. 
-  // (Please implement in .cc)
   void build_();
 
 protected: 
   //! Declares this class' options
-  // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
 
 public:
