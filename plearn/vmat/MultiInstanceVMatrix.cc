@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MultiInstanceVMatrix.cc,v 1.9 2004/03/18 21:58:36 tihocan Exp $ 
+   * $Id: MultiInstanceVMatrix.cc,v 1.10 2004/05/04 21:15:52 nova77 Exp $ 
    ******************************************************* */
 
 // Authors: Norman Casagrande
@@ -132,7 +132,7 @@ void MultiInstanceVMatrix::build_()
   string aLine;
   string inp_element;
   int configNum, bagType;
-  int i, nComp = 0;
+  int nComp = 0;
 
   real* mat_i = NULL;
 

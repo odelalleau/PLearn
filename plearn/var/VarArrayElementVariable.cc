@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: VarArrayElementVariable.cc,v 1.5 2004/04/27 16:04:13 morinf Exp $
+   * $Id: VarArrayElementVariable.cc,v 1.6 2004/05/04 21:15:53 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -84,7 +84,7 @@ VarArrayElementVariable::build_()
 
 void VarArrayElementVariable::recomputeSize(int& l, int& w) const
 {
-    if (varray && varray.size()) {
+    if (varray.size()) {
         l = varray[0]->length();
         w = varray[0]->width();
     } else

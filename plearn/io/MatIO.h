@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: MatIO.h,v 1.14 2004/05/03 16:09:03 dorionc Exp $
+   * $Id: MatIO.h,v 1.15 2004/05/04 21:15:53 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -203,9 +203,8 @@ void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames)
   {
     getline(in, line);
     could_be_old_amat = false;
- 
-	// norman: added explicit cast
-    unsigned int pos=(unsigned int)line.find(":");
+
+    size_t pos=(size_t)line.find(":");
     if(pos!=string::npos)
     {
       string sub=line.substr(0,pos);
@@ -292,7 +291,7 @@ void loadAsciiSingleBinaryDescriptor(const string& filename, TMat<T>& mat)
   {
     getline(in, line);
  
-    unsigned int pos=line.find(":");
+    size_t pos=line.find(":");
     if(pos!=string::npos)
     {
       string sub=line.substr(0,pos);

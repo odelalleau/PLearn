@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AsciiVMatrix.cc,v 1.11 2004/04/05 23:14:13 morinf Exp $ 
+   * $Id: AsciiVMatrix.cc,v 1.12 2004/05/04 21:15:52 nova77 Exp $ 
    ******************************************************* */
 
 /*! \file AsciiVMatrix.cc */
@@ -135,7 +135,7 @@ void AsciiVMatrix::build_()
       streampos old_pos = file->tellg();
       getline(*file, line);
       could_be_old_amat = false;  
-      unsigned int pos=(unsigned int)line.find(":");
+      size_t pos=line.find(":");
       if (pos!=string::npos)
       {
         string sub=line.substr(0,pos);
@@ -241,7 +241,7 @@ void AsciiVMatrix::build_()
       getline(*file, line);
     }
     file->clear();
-    if (pos_rows.size() != (unsigned int)length)
+    if ((int)pos_rows.size() != length)
       PLERROR("In AsciiVMatrix: the matrix has not the rigth size");
   }
 }

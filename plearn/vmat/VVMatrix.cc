@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.cc,v 1.17 2004/04/10 01:27:18 plearner Exp $
+   * $Id: VVMatrix.cc,v 1.18 2004/05/04 21:15:52 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -114,7 +114,7 @@ vector<vector<string> > VVMatrix::extractSourceMatrix(const string & str,const s
           if(srcstr[0]!=slash_char)
             {
               string potential_dir = extract_directory(filename);
-              unsigned int p = (unsigned int )srcstr.find(":");
+              size_t p = srcstr.find(":");
               string potential_path = potential_dir + srcstr.substr(0,p);
               if(file_exists(potential_path))              
                 srcstr=potential_dir+srcstr;
@@ -127,8 +127,8 @@ vector<vector<string> > VVMatrix::extractSourceMatrix(const string & str,const s
 time_t VVMatrix::getDateOfVMat(const string& filename)
 {
   string in=readFileAndMacroProcess(filename);
-  unsigned int idx_source = (unsigned int)in.find("<SOURCES>");
-  unsigned int cidx_source;
+  size_t idx_source = (unsigned int)in.find("<SOURCES>");
+  size_t cidx_source;
 
   time_t latest = getDateOfCode(filename),tmp;
 
@@ -203,11 +203,11 @@ void VVMatrix::processJoinSection(const vector<string> & code, VMat & tmpsource)
 // -- Not optimal, since it will first *precompute* if any postfilter is required
 void VVMatrix::generateVMatIndex(VMat source, const string& meta_data_dir,
                        const string & filename, time_t date_of_code,const string & in, 
-                       unsigned int idx_prefilter,unsigned int cidx_prefilter,
-                       unsigned int idx_postfilter,unsigned int cidx_postfilter,
-                       unsigned int idx_process,unsigned int cidx_process,
-                       unsigned int idx_shuffle,unsigned int cidx_shuffle,
-                       unsigned int idx_join,unsigned int cidx_join)
+                       size_t idx_prefilter, size_t cidx_prefilter,
+                       size_t idx_postfilter, size_t cidx_postfilter,
+                       size_t idx_process, size_t cidx_process,
+                       size_t idx_shuffle, size_t cidx_shuffle,
+                       size_t idx_join, size_t cidx_join)
 {
   VMat tmpsource = source;
   rm(meta_data_dir+slash+"source.indexes");     
@@ -329,17 +329,17 @@ string VVMatrix::getPrecomputedDataName()
 VMat VVMatrix::createPreproVMat(const string & filename)
 {
   string in=readFileAndMacroProcess(filename);
-  unsigned int idx_source  =  (unsigned int)in.find("<SOURCES>");
-  unsigned int idx_prefilter= (unsigned int)in.find("<PREFILTER>");
-  unsigned int idx_postfilter=(unsigned int)in.find("<POSTFILTER>");
-  unsigned int idx_process =  (unsigned int)in.find("<PROCESSING>");
-  unsigned int idx_shuffle =  (unsigned int)in.find("<SHUFFLE>");
-  unsigned int idx_join    =  (unsigned int)in.find("<JOIN>");
-  unsigned int idx_precompute =  (unsigned int)in.find("<PRECOMPUTE>");
-  unsigned int idx_sizes   =  (unsigned int)in.find("<SIZES>");
-  unsigned int cidx_source  = 0, cidx_prefilter = 0,  cidx_postfilter = 0,
-               cidx_process = 0, cidx_shuffle   = 0,  cidx_precompute = 0,
-               cidx_join    = 0, cidx_sizes     = 0;
+  size_t idx_source     = in.find("<SOURCES>");
+  size_t idx_prefilter  = in.find("<PREFILTER>");
+  size_t idx_postfilter = in.find("<POSTFILTER>");
+  size_t idx_process    = in.find("<PROCESSING>");
+  size_t idx_shuffle    = in.find("<SHUFFLE>");
+  size_t idx_join       = in.find("<JOIN>");
+  size_t idx_precompute = in.find("<PRECOMPUTE>");
+  size_t idx_sizes      = in.find("<SIZES>");
+  size_t cidx_source    = 0, cidx_prefilter = 0,  cidx_postfilter = 0,
+           cidx_process = 0, cidx_shuffle   = 0,  cidx_precompute = 0,
+           cidx_join    = 0, cidx_sizes     = 0;
   string precomp;
   VMat source;
 

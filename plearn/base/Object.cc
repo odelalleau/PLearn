@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.26 2004/03/04 15:02:00 tihocan Exp $
+   * $Id: Object.cc,v 1.27 2004/05/04 21:15:53 nova77 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -274,7 +274,7 @@ void Object::newwrite(PStream &out) const
   vector<string> optnames = split(getOptionsToSave());
   out.write(classname());
   out.write("(\n");
-  for (unsigned int i = 0; i < optnames.size(); ++i) 
+  for (size_t i = 0; i < optnames.size(); ++i) 
     {
       out.write(optnames[i]);
       out.write(" = ");
@@ -370,7 +370,7 @@ Object* readObject(PStream &in, unsigned int id)
         cl = removeblanks(cl);
         if (cl == "null")
             return 0;
-        unsigned int p = cl.find(":");
+        size_t p = cl.find(":");
         if (p != string::npos)
             cl = cl.substr(0, p);
         o = TypeFactory::instance().newObject(cl);

@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.20 2004/04/27 05:50:59 plearner Exp $
+   * $Id: VMatLanguage.cc,v 1.21 2004/05/04 21:15:52 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -108,7 +108,7 @@ using namespace std;
     // pout << defines << endl;
     char buf[500];
     string token;
-    unsigned int spos;
+    size_t spos;
     map<string,string>::iterator pos;
     while(in >> token)
       {
@@ -237,9 +237,9 @@ using namespace std;
             // stats file for example) and warn if the file is out of date
 
             // Mhhh.. is this still pertinent? This "stats" and "bins" thing is semi-standard I think
-            unsigned int idx_meta  =  (unsigned int)token.find(".metadata");
-            unsigned int idx_stats =  (unsigned int)token.find("stats.");
-            unsigned int idx_bins  =  (unsigned int)token.find("bins.");
+            size_t idx_meta  =  (unsigned int)token.find(".metadata");
+            size_t idx_stats =  (unsigned int)token.find("stats.");
+            size_t idx_bins  =  (unsigned int)token.find("bins.");
             if(idx_meta!=string::npos && (idx_stats!=string::npos || idx_bins!=string::npos))
               {
                 string file=token.substr(0,idx_meta);

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.21 2004/03/20 21:00:24 yoshua Exp $
+   * $Id: stringutils.h,v 1.22 2004/05/04 21:15:53 nova77 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -77,9 +77,9 @@ using namespace std;
   inline string tostring(const char* s) { return string(s); }
   
   //!  aligns the given string in a cell having the given width
-  string left(const string& s,   unsigned int width, char padding=' ');
-  string right(const string& s,  unsigned int width, char padding=' ');
-  string center(const string& s, unsigned int width, char padding=' ');
+  string left(const string& s,   size_t width, char padding=' ');
+  string right(const string& s,  size_t width, char padding=' ');
+  string center(const string& s, size_t width, char padding=' ');
 
   // this function handle numbers with exponents (such as 10.2E09)
   // as well as Nans. String can have trailing whitespaces on both sides

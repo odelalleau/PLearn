@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.h,v 1.6 2004/04/05 23:11:57 morinf Exp $
+   * $Id: VVMatrix.h,v 1.7 2004/05/04 21:15:52 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -64,11 +64,11 @@ protected:
   // -- Not optimal, since it will first *precompute* if any postfilter is required
   static void generateVMatIndex(VMat source, const string& meta_data_dir,
                                 const string & filename, time_t date_of_code,const string & in, 
-                                unsigned int idx_prefilter,unsigned int cidx_prefilter,
-                                unsigned int idx_postfilter,unsigned int cidx_postfilter,
-                                unsigned int idx_process,unsigned int cidx_process,
-                                unsigned int idx_shuffle,unsigned int cidx_shuffle,
-                                unsigned int idx_join,unsigned int cidx_join);
+                                size_t idx_prefilter, size_t cidx_prefilter,
+                                size_t idx_postfilter, size_t cidx_postfilter,
+                                size_t idx_process, size_t cidx_process,
+                                size_t idx_shuffle, size_t cidx_shuffle,
+                                size_t idx_join, size_t cidx_join);
 // returns the result from the join operation
   static void processJoinSection(const vector<string> & code, VMat & tmpsource);
   // returns a 2d-array that contains the structure of the source datasets that will be concatenated

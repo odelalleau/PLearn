@@ -42,17 +42,17 @@ using namespace std;
 ostream& operator<<(ostream& out,const StringTable& st)
 {
   // find out width of each columns
-  TVec<unsigned int> colsiz(st.width(),(unsigned int)0);
+  TVec<size_t> colsiz(st.width(),(size_t)0);
   for(int j=0;j<st.length();j++)
     {
       TVec<string> row=st.data(j);      
       for(int i=0;i<st.width();i++)
-        if((unsigned int)row[i].length() > colsiz[i])
-          colsiz[i]=(int)row[i].length();
+        if((size_t)row[i].length() > colsiz[i])
+          colsiz[i]=(size_t)row[i].length();
     }
   for(int i=0;i<st.width();i++)
     if(st.fieldnames[i].length() > colsiz[i])
-      colsiz[i]=(unsigned int)st.fieldnames[i].length();
+      colsiz[i]=(size_t)st.fieldnames[i].length();
 
   out<<"#: "; 
   for(int i=0;i<st.width();i++)

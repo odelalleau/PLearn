@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.cc,v 1.18 2004/03/20 21:00:24 yoshua Exp $
+   * $Id: stringutils.cc,v 1.19 2004/05/04 21:15:53 nova77 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -53,7 +53,7 @@ namespace PLearn {
 using namespace std;
 
 
-string left(const string& s, unsigned int width, char padding)
+string left(const string& s, size_t width, char padding)
   { 
     if(s.length()>width)
       return s;
@@ -61,7 +61,7 @@ string left(const string& s, unsigned int width, char padding)
       return s+string(width-s.length(),padding);
   }
 
-string right(const string& s, unsigned int width, char padding)
+string right(const string& s, size_t width, char padding)
   {
     if(s.length()>width)
       return s;
@@ -69,7 +69,7 @@ string right(const string& s, unsigned int width, char padding)
       return string(width-s.length(),padding)+s;
   }
 
-string center(const string& s, unsigned int width, char padding)
+string center(const string& s, size_t width, char padding)
   {
     if(s.length()>width)
       return s;
@@ -136,7 +136,7 @@ double todouble(const string& s)
 
   string extract_filename(const string& filepath)
   {
-    unsigned int p = (unsigned int)filepath.rfind(slash);
+    size_t p = filepath.rfind(slash);
     if (p != string::npos)
       return filepath.substr(p+1,filepath.length()-(p+1));
     else
@@ -145,7 +145,7 @@ double todouble(const string& s)
 
   string extract_directory(const string& filepath)
   {
-    unsigned int p = (unsigned int)filepath.rfind(slash);
+    size_t p = filepath.rfind(slash);
     if (p != string::npos)
       return filepath.substr(0,p+1);
     else
@@ -158,7 +158,7 @@ double todouble(const string& s)
   string extract_extension(const string& filepath)
   {
     string filename = extract_filename(filepath);
-    unsigned int p = (unsigned int)filename.rfind(".");
+    size_t p = filename.rfind(".");
     if (p != string::npos)
       return filename.substr(p,filename.length()-p);
     else
@@ -168,7 +168,7 @@ double todouble(const string& s)
   string extract_filename_without_extension(const string& filepath)
   {
     string filename = extract_filename(filepath);
-    unsigned int p = (unsigned int)filename.rfind(".");
+    size_t p = filename.rfind(".");
     if (p != string::npos)
       return filename.substr(0,p);
     else
@@ -177,7 +177,7 @@ double todouble(const string& s)
 
   string remove_extension(const string& filename)
   {
-    unsigned int p = (unsigned int)filename.rfind(".");
+    size_t p = filename.rfind(".");
     if (p != string::npos)
       return filename.substr(0,p);
     else
@@ -203,19 +203,19 @@ string* data_filename_2_filenames(const string& filename, int& nb_files)
 
 string removeblanks(const string& s)
 {
-  unsigned int start=0;
-  unsigned int end=0;
-  int i;
-  for(i=0; i<int(s.length()); i++)
+  size_t start=0;
+  size_t end=0;
+  size_t i;
+  for(i=0; i<s.length(); i++)
     if(s[i]!=' ' && s[i]!='\t' && s[i]!='\n' && s[i]!='\r')
       break;
   
-  if(i==int(s.length()))
+  if(i==s.length())
     return string("");
   else
     start = i;
 
-  for(i=int(s.length())-1; i>=0; i--)
+  for(i=s.length()-1; i>=0; i--)
     if(s[i]!=' ' && s[i]!='\t' && s[i]!='\n' && s[i]!='\r')
       break;
   end = i;
@@ -225,8 +225,8 @@ string removeblanks(const string& s)
 string removeallblanks(const string& s)
 {
   string res;
-  int l = (int)s.length();
-  for(int i=0; i<l; i++)
+  size_t l = s.length();
+  for(size_t i=0; i<l; i++)
     {
       char c = s[i];
       if(c!=' ' && c!='\t' && c!='\n' && c!='\r')
@@ -237,7 +237,7 @@ string removeallblanks(const string& s)
 
 string removenewline(const string& s)
 {
-  int pos = int(s.length())-1;
+  size_t pos = s.length()-1;
   while(pos>=0 && (s[pos]=='\r' || s[pos]=='\n'))
     pos--;
   return s.substr(0,pos+1);
@@ -245,7 +245,7 @@ string removenewline(const string& s)
 
 string remove_trailing_slash(const string& s)
 {
-  int pos = int(s.length())-1;
+  size_t pos = s.length()-1;
   while( s[pos]==slash_char && pos>=0 )
     pos--;
   return s.substr(0,pos+1);
@@ -253,7 +253,7 @@ string remove_trailing_slash(const string& s)
 
 string append_slash(const string& path)
 {
-  int l = (int)path.length();
+  size_t l = path.length();
   if(l>0 && path[l-1]!=slash_char)
     return path+slash;
   else
@@ -334,7 +334,7 @@ bool isParagraphBlank(const string& s)
 
 string space_to_underscore(string str)
 {
-  for(unsigned int i=0; i<str.size(); i++)
+  for(size_t i=0; i<str.size(); i++)
     {
       if(str[i]<=' ')
         str[i] = '_';
@@ -344,7 +344,7 @@ string space_to_underscore(string str)
 
 string underscore_to_space(string str)
 {
-  for(unsigned int i=0; i<str.size(); i++)
+  for(size_t i=0; i<str.size(); i++)
     {
       if(str[i]=='_')
         str[i] = ' ';
@@ -354,7 +354,7 @@ string underscore_to_space(string str)
 
 string backslash_to_slash(string str)
 {
-  for(unsigned int i=0; i<str.size(); i++)
+  for(size_t i=0; i<str.size(); i++)
     {
       if(str[i]=='\\')
         str[i] = '/';
@@ -483,14 +483,14 @@ pair<string,string> split_on_first(const string& s,
 
 void remove_comments(string& text, const string& commentstart)
 {
-  unsigned int startpos=0;
-  unsigned int endpos=0;
+  size_t startpos=0;
+  size_t endpos=0;
   while(endpos!=string::npos)
     {
-      startpos = (unsigned int)text.find(commentstart,startpos);
+      startpos = text.find(commentstart,startpos);
       if(startpos==string::npos)
         break;
-      endpos = (unsigned int)text.find_first_of("\n\r",startpos);
+      endpos = text.find_first_of("\n\r",startpos);
       text.erase(startpos, endpos-startpos);
     }
 }
@@ -517,15 +517,15 @@ string join(const vector<string>& s, const string& separator)
 vector<string> remove(const vector<string> &v, string element)
 {
   vector<string> res;
-  for (unsigned int i=0;i<v.size();i++)
+  for (size_t i=0;i<v.size();i++)
     if (v[i]!=element) res.push_back(v[i]);
   return res;
 }
 
 int findit(const vector<string> &v, string element)
 {
-  for (unsigned int i=0;i<v.size();i++)
-    if (v[i]==element) return i;
+  for (size_t i=0;i<v.size();i++)
+    if (v[i]==element) return (int)i;
   return -1;
 }
 
@@ -598,7 +598,7 @@ vector<string> getNonBlankLines(const string & in)
 
   char sep[3]={10,13,0};
   lines= split(in,sep);
-  for(unsigned int i=0;i<lines.size();i++)
+  for(size_t i=0;i<lines.size();i++)
     if(!isBlank(lines[i]))
       nblines.push_back(lines[i]);
   return nblines;

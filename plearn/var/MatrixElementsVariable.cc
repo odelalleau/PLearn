@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixElementsVariable.cc,v 1.7 2004/04/27 16:03:35 morinf Exp $
+   * $Id: MatrixElementsVariable.cc,v 1.8 2004/05/04 21:15:53 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -78,7 +78,7 @@ MatrixElementsVariable::build()
 void
 MatrixElementsVariable::build_()
 {
-    if (i && j && parameters && expression) {
+    if (i && j && (parameters.size() > 0) && expression) {
         if (!i->isScalar())
             PLERROR("MatrixElementsVariable expect a scalar index Var i_index");
         if (!j->isScalar())
