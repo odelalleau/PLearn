@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConstantRegressor.cc,v 1.9 2004/09/14 16:04:58 chrish42 Exp $ 
+   * $Id: ConstantRegressor.cc,v 1.10 2004/10/08 15:49:18 chapados Exp $ 
    ******************************************************* */
 
 /*! \file ConstantRegressor.cc */
@@ -48,19 +48,21 @@ ConstantRegressor::ConstantRegressor()
 {
 }
 
-PLEARN_IMPLEMENT_OBJECT(ConstantRegressor, 
-                        "PLearner that outputs a constant (input-independent) vector.\n", 
-                        "ConstantRegressor is a PLearner that outputs a constant (input-independent\n"
-                        "but training-data-dependent) vector. It is a regressor (i.e. during training\n"
-                        "the constant vector is chosen to minimize the (possibly weighted) average\n"
-                        "of the training set targets. Let\n"
-                        "  N = number of training examples,\n"
-                        "  M = target size (= output size),\n"
-                        "  y_{ij} = the jth target value of the ith training example,\n"
-                        "  w_i  = weight associated to the ith training example,\n"
-                        "then the j-th component of the learned vector is\n"
-                        "  (sum_{i=1}^N w_i * y_ij) / (sum_{i=1}^N w_i)\n"
-                        "The output can also be set manually with the 'constant_output' vector option\n");
+PLEARN_IMPLEMENT_OBJECT(
+  ConstantRegressor, 
+  "PLearner that outputs a constant (input-independent) vector.\n", 
+  "ConstantRegressor is a PLearner that outputs a constant (input-independent\n"
+  "but training-data-dependent) vector. It is a regressor (i.e. during training\n"
+  "the constant vector is chosen to minimize the (possibly weighted) average\n"
+  "of the training set targets. Let\n"
+  "  N = number of training examples,\n"
+  "  M = target size (= output size),\n"
+  "  y_{ij} = the jth target value of the ith training example,\n"
+  "  w_i  = weight associated to the ith training example,\n"
+  "then the j-th component of the learned vector is\n"
+  "  (sum_{i=1}^N w_i * y_ij) / (sum_{i=1}^N w_i)\n"
+  "The output can also be set manually with the 'constant_output' vector option\n"
+  "The only supported cost for both train and test is \"mse\"\n.");
 
 void ConstantRegressor::declareOptions(OptionList& ol)
 {
