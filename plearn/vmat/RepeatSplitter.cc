@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RepeatSplitter.cc,v 1.6 2004/03/13 02:44:26 tihocan Exp $ 
+   * $Id: RepeatSplitter.cc,v 1.7 2004/04/01 18:04:35 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file RepeatSplitter.cc */
@@ -52,6 +52,7 @@ RepeatSplitter::RepeatSplitter()
   : 
     last_n(-1),
     do_not_shuffle_first(0),
+    force_proportion(-1),
     n(1),
     seed(-1),
     shuffle(0)
@@ -71,6 +72,12 @@ void RepeatSplitter::declareOptions(OptionList& ol)
   declareOption(ol, "do_not_shuffle_first", &RepeatSplitter::do_not_shuffle_first, OptionBase::buildoption,
                  "If set to 1, then the dataset won't be shuffled the first time we do the splitting.\n"
                  "It only makes sense to use this option if 'shuffle' is set to 1.");
+
+  declareOption(ol, "force_proportion", &RepeatSplitter::force_proportion, OptionBase::buildoption,
+                 "If a target value appears at least once every x samples, will ensure that after\n"
+                 "shuffling it appears at least once every (x * 'force_proportion') samples, and not\n"
+                 "more than once every (x / 'force_proportion') samples. Will be ignored if < 1.\n"
+                 "Note that this currently only works for a binary target! (and hasn't been 100% tested).");
 
   declareOption(ol, "n", &RepeatSplitter::n, OptionBase::buildoption,
                  "How many times we want to repeat.");
@@ -116,6 +123,146 @@ void RepeatSplitter::build_()
       // Don't shuffle if (i == 0) and do_not_shuffle_first is set to 1.
       if (!do_not_shuffle_first || i > 0) {
         shuffleElements(shuffled);
+        if (force_proportion >= 1) {
+          // We need to ensure the proportions of target values are respected.
+          // First compute the target stats.
+          StatsCollector tsc(2000);
+          if (dataset->targetsize() != 1) {
+            PLERROR("In RepeatSplitter::build_ - 'force_proportion' is only implemented for a 1-dimensional target");
+          }
+          real t;
+          for (int j = 0; j < dataset->length(); j++) {
+            t = dataset->get(j, dataset->inputsize()); // We get the target.
+            tsc.update(t);
+          }
+          tsc.finalize();
+          // Make sure the target is binary.
+          int count = (int) tsc.getCounts()->size() - 1;
+          if (count != 2) {
+            PLERROR("In RepeatSplitter::build_ - 'force_proportion' is only implemented for a binary target");
+          }
+          // Ensure the proportion of the targets respect the constraints.
+          int j = 0;
+          for (map<real,StatsCollectorCounts>::iterator it = tsc.getCounts()->begin(); j < count; j++) {
+            t = it->first;
+            real prop_t = real(it->second.n) / real(dataset->length());
+            // Find the step to use to check the proportion is ok. We want a
+            // step such that each 'step' examples, there should be at least two
+            // with this target, but less than 'step - 10'.
+            // For instance, for a proportion of 0.1, 'step' would be 20,
+            // and for a proportion of 0.95, it would be 200.
+            // We also want the approximation made when rounding to be
+            // negligible.
+            int step = 20;
+            bool ok = false;
+            while (!ok) {
+              int n = int(step * prop_t + 0.5);
+              if (n >= 2  && n <= step - 10
+                          && abs(step * prop_t - real(n)) / real(step) < 0.01) {
+                ok = true;
+              } else {
+                // We try a higher step.
+                step *= 2;
+              }
+            }
+            int expected_count = int(step * prop_t + 0.5);
+            // cout << "step = " << step << ", expected_count = " << expected_count << endl;
+            // Now verify the proportion.
+            ok = false;
+            int tc = dataset->inputsize(); // The target column.
+            while (!ok) {
+              ok = true;
+              // First pass: ensure there is enough.
+              int first_pass_step = int(step * force_proportion + 0.5);
+              int k,l;
+              for (k = 0; k < shuffled.length(); k += first_pass_step) {
+                int count_target = 0;
+                for (l = k; l < k + first_pass_step && l < shuffled.length(); l++) {
+                  if (dataset->get(shuffled[l], tc) == t) {
+                    count_target++;
+                  }
+                }
+                if (l - k == first_pass_step && count_target < expected_count) {
+                  // Not enough, need to add more.
+                  ok = false;
+                  // cout << "At l = " << l << ", need to add " << expected_count - count_target << " samples" << endl;
+                  for (int m = 0; m < expected_count - count_target; m++) {
+                    bool can_swap = false;
+                    int to_swap = -1;
+                    // Find a sample to swap in the current window.
+                    while (!can_swap) {
+                      to_swap = int(uniform_sample() * first_pass_step);
+                      if (dataset->get(shuffled[k + to_swap], tc) != t) {
+                        can_swap = true;
+                      }
+                    }
+                    to_swap += k;
+                    // Find a sample to swap in the next samples.
+                    int next = k + first_pass_step - 1;
+                    can_swap = false;
+                    while (!can_swap) {
+                      next++;
+                      if (next >= shuffled.length()) {
+                        next = 0;
+                      }
+                      if (dataset->get(shuffled[next], tc) == t) {
+                        can_swap = true;
+                      }
+                    }
+                    // And swap baby!
+                    int tmp = shuffled[next];
+                    shuffled[next] = shuffled[to_swap];
+                    shuffled[to_swap] = tmp;
+                  }
+                }
+              }
+              // Second pass: ensure there aren't too many.
+              int second_pass_step = int(step / force_proportion + 0.5);
+              for (k = 0; k < shuffled.length(); k += second_pass_step) {
+                int count_target = 0;
+                for (l = k; l < k + second_pass_step && l < shuffled.length(); l++) {
+                  if (dataset->get(shuffled[l], tc) == count_target) {
+                    count_target++;
+                  }
+                }
+                if (l - k == second_pass_step && count_target > expected_count) {
+                  // Too many, need to remove some.
+                  ok = false;
+                  PLWARNING("In RepeatSplitter::build_ - The code reached hasn't been tested yet");
+                  // cout << "At l = " << l << ", need to remove " << - expected_count + count_target << " samples" << endl;
+                  for (int m = 0; m < - expected_count + count_target; m++) {
+                    bool can_swap = false;
+                    int to_swap = k - 1;
+                    // Find a sample to swap in the current window.
+                    while (!can_swap) {
+                      to_swap++;
+                      if (dataset->get(shuffled[to_swap], tc) == t) {
+                        can_swap = true;
+                      }
+                    }
+                    // Find a sample to swap in the next samples.
+                    int next = k + first_pass_step - 1;
+                    can_swap = false;
+                    while (!can_swap) {
+                      next++;
+                      if (next >= shuffled.length()) {
+                        next = 0;
+                      }
+                      if (dataset->get(shuffled[next], tc) != t) {
+                        can_swap = true;
+                      }
+                    }
+                    // And swap baby!
+                    int tmp = shuffled[next];
+                    shuffled[next] = shuffled[to_swap];
+                    shuffled[to_swap] = tmp;
+                  }
+                }
+              }
+            }
+            it++;
+          }
+        }
       }
       indices(i) << shuffled;
     }

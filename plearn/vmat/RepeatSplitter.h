@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RepeatSplitter.h,v 1.6 2004/03/23 23:08:08 morinf Exp $ 
+   * $Id: RepeatSplitter.h,v 1.7 2004/04/01 18:04:35 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file RepeatSplitter.h */
@@ -70,6 +70,7 @@ public:
   // ************************
 
   bool do_not_shuffle_first;
+  real force_proportion;
   int n;
   long seed;
   int shuffle;
