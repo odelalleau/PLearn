@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.cc,v 1.17 2003/10/14 20:39:31 ducharme Exp $ 
+   * $Id: FuturesTrader.cc,v 1.18 2003/10/15 21:06:31 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.cc */
@@ -105,14 +105,15 @@ void FuturesTrader::build_test() const
   }
 }
   
-void FuturesTrader::trader_test( int t, VMat testset, 
-                                 real& absolute_return_t, real& relative_return_t) const
+void FuturesTrader::trader_test(int t, VMat testset, PP<VecStatsCollector> test_stats,
+    VMat testoutputs, VMat testcosts) const
 {
-  absolute_return_t = 0;
-  transaction_costs[t] = 0;
-  
+  real transaction_cost = 0;
+  portfolio_value[t] = 0;
   real previous_value_t = 0;
+  real absolute_return_t = 0;
   real relative_sum = 0;
+
   real daily_risk_free_return = exp(log(1.0+risk_free(t-horizon))/252.0) - 1.0;
   if (is_missing(daily_risk_free_return))
   {
@@ -151,16 +152,13 @@ void FuturesTrader::trader_test( int t, VMat testset,
 
       // No additive_cost on a null delta since there will be no transaction
       real delta_ = delta(k, t);
+      real p_kt = price(k, t);
+      portfolio_value[t] += abs(w_kt)*p_kt;
       if( delta_ != 0.0 ) //To change for 0 when will pass to units!!!
       {
-        real transaction_cost = additive_cost + multiplicative_cost*fabs(delta_);
-        transaction_costs[t] += transaction_cost;
-          
-        absolute_return_t -= transaction_cost;
-        relative_sum -= transaction_cost;
-        
+        transaction_cost += additive_cost + multiplicative_cost*fabs(delta_);
+
         // Updating the margin, given the leverage
-        real p_kt = price(k, t);
         margin(k, t) += delta_*p_kt/leverage;
       }
 
@@ -168,11 +166,29 @@ void FuturesTrader::trader_test( int t, VMat testset,
       check_margin(k, t);
     }
   }
-  
-  absolute_return_t += previous_value_t * (1.0 + daily_risk_free_return);
-  relative_return_t =  daily_risk_free_return + relative_sum/previous_value_t;
 
-  cout << "\t Turnover per year:\t\t" << sum(transaction_costs,true)/(sum(margin_cash,true)/12.0) << endl;
+  transaction_costs[t] = transaction_cost;
+  absolute_return_t += previous_value_t * (1.0 + daily_risk_free_return) - transaction_cost;
+  real relative_return_t = daily_risk_free_return + (relative_sum-transaction_cost)/previous_value_t;
+
+  real monthly_turnover = sum(transaction_costs,true)/(sum(portfolio_value,true)/12.0);
+  Vec update = advisor->errors(t).copy();
+  real log_return = log(1.0+relative_return_t);
+  update.append(absolute_return_t);
+  update.append(log_return);
+  update.append(monthly_turnover);
+  if(sp500 != "")
+  {
+    real sp500_log_return = log(sp500_price(t)/sp500_price(t-horizon));
+    update.append(sp500_log_return);
+    update.append(log_return - sp500_log_return);
+  }
+  test_stats->update(update);
+
+  if (testoutputs) testoutputs->appendRow(portfolios(t));
+  if (testcosts) testcosts->appendRow(update);
+
+  //cout << "\t Turnover per year:\t\t" << sum(transaction_costs,true)/(sum(margin_cash,true)/12.0) << endl;
 }
 
 void FuturesTrader::check_margin(int k, int t) const
@@ -214,6 +230,27 @@ void FuturesTrader::declareOptions(OptionList& ol)
   
   inherited::declareOptions(ol);
 }
+
+/*!
+  The advisor cost names + other returns
+*/
+TVec<string> FuturesTrader::getTrainCostNames() const
+{
+  TVec<string> cost_names = advisor->getTrainCostNames();
+  cost_names.append("absolute_return");
+  cost_names.append("log_return");
+  cost_names.append("turnover");
+  if (sp500.size() > 0)
+  {
+    cost_names.append("sp500_log_return");
+    cost_names.append("relative_log_return"); // model(log_Rt) - SP500(log_Rt)
+  }
+
+  return cost_names;
+}
+
+TVec<string> FuturesTrader::getTestCostNames() const
+{ return FuturesTrader::getTrainCostNames(); }
 
 void FuturesTrader::computeOutputAndCosts(const Vec& input,
     const Vec& target, Vec& output, Vec& costs) const

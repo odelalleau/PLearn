@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.cc,v 1.16 2003/10/10 21:10:17 ducharme Exp $ 
+   * $Id: MountLucasIndex.cc,v 1.17 2003/10/15 21:06:31 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.cc */
@@ -152,6 +152,7 @@ void MountLucasIndex::train()
     last_day_of_month_index = train_set->fieldIndex(last_day_of_month_column);
     julian_day_index = train_set->fieldIndex(julian_day_column);
     risk_free_rate_index = train_set->fieldIndex(risk_free_rate_column);
+    sp500_index = train_set->fieldIndex(sp500_column);
     build_complete = true;
   }
 
@@ -217,6 +218,7 @@ void MountLucasIndex::test(VMat testset, PP<VecStatsCollector> test_stats,
   {
     testset->getExample(t, input, target, w);
     TrainTestCore(input, t, testoutputs, testcosts);
+    test_stats->update(errors(t));
     if (pb) pb->update(t-start_t);
   }
   last_test_t = testset.length()-1;
@@ -240,7 +242,6 @@ void MountLucasIndex::test(VMat testset, PP<VecStatsCollector> test_stats,
 
   real r = s/ns;
   real v = s2/ns - r*r;
-/*
   cout << "Moyenne  de log(1+r) = " << r << endl;
   cout << "Variance de log(1+r) = " << v << endl << endl;
   cout << "Average annual return (composed monthly) = " << exp(r*12) << endl;
@@ -255,6 +256,7 @@ void MountLucasIndex::test(VMat testset, PP<VecStatsCollector> test_stats,
   real vp = sp2/ns - rp*rp;
   cout << "Average S&P500 annual return (composed monthly) = " << exp(rp*12) << endl;
   cout << "Sharpe Ratio of S&P500 monthly log-returns = " << rp/sqrt(vp) << endl << endl;
+/*
 */
 }
 

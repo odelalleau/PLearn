@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.cc,v 1.14 2003/10/14 20:39:31 ducharme Exp $ 
+ * $Id: Trader.cc,v 1.15 2003/10/15 21:06:31 ducharme Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -102,6 +102,8 @@ void Trader::build_()
 
   portfolios.resize(max_seq_len, nb_assets);
   portfolios.fill(MISSING_VALUE);
+  portfolio_value.resize(max_seq_len);
+  portfolio_value.fill(MISSING_VALUE);
 
   transaction_costs.resize(max_seq_len);
   transaction_costs.fill(MISSING_VALUE);
@@ -176,8 +178,8 @@ void Trader::forget()
   inherited::forget();
   advisor->forget();
 
-  if(portfolios) 
-    portfolios.fill(MISSING_VALUE);
+  if(portfolios) portfolios.fill(MISSING_VALUE);
+  if(portfolio_value) portfolio_value.fill(MISSING_VALUE);
 
   if(stop_loss_active && internal_data_set.isNotNull())
     stop_loss_values.fill(0.0);
@@ -422,27 +424,14 @@ void Trader::test(VMat testset, PP<VecStatsCollector> test_stats,
         
     //**************************************************************
     //*** Body of the test which is specific to the type of Trader
-    real absolute_Rt, relative_Rt;
-    trader_test(t, testset, absolute_Rt, relative_Rt);    
+    //real absolute_Rt, relative_Rt;
+    //trader_test(t, testset, absolute_Rt, relative_Rt);    
+    trader_test(t, testset, test_stats, testoutputs, testcosts);
     //**************************************************************   
 
     if( is_missing(transaction_costs[t]) )
       PLERROR("SUBCLASS WRITING: the subclass trader_test method is expected to fill the transaction_costs vector");
  
-    Vec update = advisor->errors(t).copy();
-    real log_return = log(1.0+relative_Rt);
-    update.append(absolute_Rt);
-    update.append(log_return);
-    if(sp500 != "")
-    {
-      real sp500_log_return = log(sp500_price(t)/sp500_price(t-horizon));
-      update.append(sp500_log_return);
-      update.append(log_return - sp500_log_return);
-    }
-    test_stats->update(update);
-
-    if (testoutputs) testoutputs->appendRow(portfolios(t));
-    if (testcosts) testcosts->appendRow(update);
 /*
     // The order of the 'append' statements is IMPORTANT! (enum stats_indices) 
     Vec update;
@@ -562,27 +551,8 @@ void Trader::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(portfolios, copies);
   deepCopyField(advisor, copies);
   deepCopyField(assets_names, copies);
+  deepCopyField(transaction_costs, copies);
 } 
-
-/*!
-  The advisor cost names + other returns
-*/
-TVec<string> Trader::getTrainCostNames() const
-{
-  TVec<string> cost_names = advisor->getTrainCostNames();
-  cost_names.append("absolute_return");
-  cost_names.append("log_return");
-  if (sp500.size() > 0)
-  {
-    cost_names.append("sp500_log_return");
-    cost_names.append("relative_log_return"); // model(log_Rt) - SP500(log_Rt)
-  }
-
-  return cost_names;
-}
-
-TVec<string> Trader::getTestCostNames() const
-{ return Trader::getTrainCostNames(); }
 
 %> // end of namespace PLearn
 

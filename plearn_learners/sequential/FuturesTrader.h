@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.h,v 1.10 2003/10/10 21:10:17 ducharme Exp $ 
+   * $Id: FuturesTrader.h,v 1.11 2003/10/15 21:06:31 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.h */
@@ -61,7 +61,7 @@ protected:
     It has a length of max_seq_len and is initialize after the first
     init_train_size train steps.
   */
-  mutable Mat margin_cash;
+  Mat margin_cash;
 
   //! Access the margin value on asset k at time t (see the margin_cash matrix) 
   real& margin(int k, int t) const { return margin_cash(t-horizon, k); }
@@ -90,8 +90,10 @@ protected:
         Trader::test for each of test's time step. The method must set the 
         absolute & relative returns on test period t.
   */
-  virtual void trader_test(int t, VMat testset, 
-                           real& absolute_return_t, real& relative_return_t) const;
+  virtual void trader_test(int t, VMat testset, PP<VecStatsCollector> test_stats,
+      VMat testoutputs, VMat testcosts) const;
+  //virtual void trader_test(int t, VMat testset, 
+  //                         real& absolute_return_t, real& relative_return_t) const;
   
   //! Checkout if a margin call is needed
   void check_margin(int k, int t) const;
@@ -131,6 +133,9 @@ public:
   virtual void build();
 
   virtual void forget();
+  
+  virtual TVec<string> getTrainCostNames() const;
+  virtual TVec<string> getTestCostNames() const;
   
   virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
                                      Vec& output, Vec& costs) const;

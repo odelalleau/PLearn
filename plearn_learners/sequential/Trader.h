@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.h,v 1.8 2003/10/14 20:39:31 ducharme Exp $ 
+ * $Id: Trader.h,v 1.9 2003/10/15 21:06:31 ducharme Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -87,6 +87,11 @@ private:
   //! List of indices associated with the tradable flag fields in the VMat
   TVec<int> assets_tradable_indices;
   
+  //! Will be used to keep track of the losses/gains
+  Vec stop_loss_values;        
+
+protected:
+  
   /*! 
     The portfolios matrix is used to store the positions (weights) in each asset. The portfolio 
      matrix will have a length of max_seq_len. Its r^th row will be initialized with the portfolio 
@@ -96,12 +101,10 @@ private:
      The ideal portfolios suggested by the advisor will then by faced to market reality of corrected 
       directly in the portfolios matrix.
   */
-  mutable Mat portfolios;
-  
-  //! Will be used to keep track of the losses/gains
-  mutable Vec stop_loss_values;        
+  Mat portfolios;
 
-protected:
+  //! The (absolute) value of the portfolio at each time step
+  Vec portfolio_value;
   
   //! Simply assets_names.length()
   int nb_assets;               
@@ -147,8 +150,10 @@ protected:
         Trader::test for each of test's time step. The method must set the 
         absolute & relative returns on test period t.
   */
-  virtual void trader_test(int t, VMat testset, 
-                           real& absolute_return_t, real& relative_return_t) const =0;
+  virtual void trader_test(int t, VMat testset, PP<VecStatsCollector> test_stats,
+      VMat testoutputs, VMat testcosts) const =0;
+  //virtual void trader_test(int t, VMat testset, 
+  //                         real& absolute_return_t, real& relative_return_t) const =0;
   
 public:
   
@@ -301,9 +306,6 @@ public:
                                        const Vec& target, Vec& costs) const;
   
   virtual void forget();
-  
-  virtual TVec<string> getTrainCostNames() const;
-  virtual TVec<string> getTestCostNames() const;
   
   //!  Does the necessary operations to transform a shallow copy (this)
   //!  into a deep copy by deep-copying all the members that need to be.
