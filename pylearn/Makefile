@@ -10,7 +10,7 @@ gen_pymake_buildenv: $(CPP_FILES:.cpp=.h)
 	touch pylearn/pylearn.cc.new
 	for f in $(PYSTE_FILES:.pyste=.h); do echo >>pylearn/pylearn.cc.new \#include \"_$$f\"; done
 	echo >>pylearn/pylearn.cc.new \#include \"_main.h\"
-	(cd pylearn; if cmp pylearn.cc.new pylearn.cc; then cp pylearn.cc.new pylearn.cc; else rm pylearn.cc.new; fi)
+	(cd pylearn; if cmp pylearn.cc.new pylearn.cc >/dev/null; then rm pylearn.cc.new; else cp pylearn.cc.new pylearn.cc; fi)
 
 gen_main: pylearn/_main.h
 	pyste --module=pylearn --multiple --out=pylearn --generate-main $(PYSTE_FILES)

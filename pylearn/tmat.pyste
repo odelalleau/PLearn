@@ -1,0 +1,24 @@
+# -*-python-*-
+
+from defs import *
+Import('base.pyste')
+Import('vmatbase.pyste')
+
+# Additional includes
+#
+# VMat : for TMat<VMat>
+
+declaration_code('''#include <plearn/vmat/VMat.h>
+''')
+
+p_tmat = Template('PLearn::TMat', 'plearn/math/TMat.h')
+exclude_stuff(p_tmat)
+exclude(p_tmat.operator['=='])
+exclude(p_tmat.operator['()'])
+set_our_policy(p_tmat)
+set_policy(p_tmat.operator['()'], return_internal_reference())
+
+p_tmat_double = p_tmat('double', 'TMat_double')
+
+p_tmat('PLearn::VMat', 'TMat_VMat')
+

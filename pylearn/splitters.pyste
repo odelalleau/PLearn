@@ -5,6 +5,10 @@ Import('base.pyste')
 
 # Splitters...
 
+p_splitter = Class('PLearn::Splitter', 'plearn/vmat/Splitter.h')
+exclude_stuff(p_splitter)
+set_our_policy(p_splitter)
+
 p_explicitsplitter = Class('PLearn::ExplicitSplitter', 'plearn/vmat/ExplicitSplitter.h')
 exclude_stuff(p_explicitsplitter)
 set_our_policy(p_explicitsplitter)

@@ -1,0 +1,21 @@
+# -*-python-*-
+
+from defs import *
+Import('base.pyste')
+Import('vmatbase.pyste')
+
+# Additional includes
+#
+# Kernel, Func : for VMatrix
+
+declaration_code('''#include <plearn/ker/Kernel.h>
+#include <plearn/var/Func.h>
+''')
+
+p_forwardvmatrix = Class('PLearn::ForwardVMatrix', 'plearn/vmat/ForwardVMatrix.h')
+exclude_stuff(p_forwardvmatrix)
+set_our_policy(p_forwardvmatrix)
+
+p_autovmatrix = Class('PLearn::AutoVMatrix', 'plearn/vmat/AutoVMatrix.h')
+exclude_stuff(p_autovmatrix)
+set_our_policy(p_autovmatrix)

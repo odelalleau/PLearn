@@ -1,0 +1,12 @@
+# -*-python-*-
+
+from defs import *
+Import('base.pyste')
+
+p_tvec = Template('PLearn::TVec', 'plearn/math/TVec.h')
+exclude_stuff(p_tvec)
+set_our_policy(p_tvec)
+exclude(p_tvec.operator['char*'])
+p_tvec('double', 'TVec_double')
+p_tvec('std::string', 'TVec_string')
+

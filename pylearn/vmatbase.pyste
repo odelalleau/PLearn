@@ -1,0 +1,23 @@
+# -*-python-*-
+
+from defs import *
+Import('base.pyste')
+
+# Additional includes
+#
+# Kernel, Func : for VMatrix
+
+declaration_code('''#include <plearn/ker/Kernel.h>
+#include <plearn/var/Func.h>
+''')
+
+p_vmat = Class('PLearn::VMat', 'plearn/vmat/VMat.h')
+exclude_stuff(p_vmat)
+
+# VMatrix.h only includes forward declarations for PLearn::Ker
+# and PLearn::Func, but that isn't enough to get
+# the Pyste-generated wrapper to compile. Disabled for now.
+p_vmatrix = Class('PLearn::VMatrix', 'plearn/vmat/VMatrix.h')
+exclude_stuff(p_vmatrix)
+set_our_policy(p_vmatrix)
+
