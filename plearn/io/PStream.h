@@ -928,6 +928,7 @@ void readSet(PStream& in, SetT& s)
   if(c!='[')
     PLERROR("In readSet(Pstream& in, SetT& s) expected '[' but read %c",c);
   in.skipBlanksAndCommentsAndSeparators();
+  c = in.peek(); // do we have a ']' ?
   while(c!=']')
     {
       typename SetT::value_type val;
