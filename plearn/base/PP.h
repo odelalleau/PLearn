@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: PP.h,v 1.3 2002/10/21 05:18:52 plearner Exp $
+   * $Id: PP.h,v 1.4 2004/02/02 22:02:00 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -51,6 +51,7 @@
 #include <typeinfo>
 #include "TypeTraits.h"
 #include "CopiesMap.h"
+#include "plerror.h"
 
 namespace PLearn <%
 using namespace std;
