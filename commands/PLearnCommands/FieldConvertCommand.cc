@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: FieldConvertCommand.cc,v 1.33 2004/07/28 17:25:15 tihocan Exp $
+ * $Id: FieldConvertCommand.cc,v 1.34 2004/08/03 16:15:26 tihocan Exp $
  ******************************************************* */
 
 #include "FieldConvertCommand.h"
@@ -66,16 +66,17 @@ FieldConvertCommand::FieldConvertCommand()
                   "continuous      - quantitative data (data is real): the field is replaced by the normalized data (minus means, divided by stddev)\n"
                   "binary          - binary discrete data (is processed as a continuous field)\n"
                   "discrete_uncorr - discrete integers (qualitative data, e.g : postal codes, categories) not corr. with target: the field is replaced by a group of fields in a one-hot fashion.\n"
-                  "discrete_corr   - discrete integers, correlated with target : both the normalised and the onehot versions of the field are used in the new dataset\n"
+                  "discrete_corr   - discrete integers, correlated with target : both the normalized and the onehot versions of the field are used in the new dataset\n"
                   "constant        - constant data : the field is skipped (it is not present in the new dataset)\n"
-                  "skip            - unrelevant data : the field is skipped (it is not present in the new dataset)\n"
+                  "skip            - irrelevant data : the field is skipped (it is not present in the new dataset)\n"
                   "\n"
                   "When there are ambiguities, messages are displayed for the problematic field(s) and they are skipped. The user must use a 'force' file,\n"
-                  "to explicitely force the types of the ambiguous field(s). The file is made of lines of the following 2 possible formats:\n"
+                  "to explicitely force the types of the ambiguous field(s). The file is made of lines of the following possible formats:\n"
                   "FIELDNAME=type\n"
                   "fieldNumberA-fieldNumberB=type   [e.g : 200-204=constant, to force a range]\n"
+                  "FIELDNAME+=\"processing\" (n_inputs) [to add a home-made processing after a field; the number of inputs thus added must be given]\n"
                   "\n"
-                  "Note that all types but skip, if the field contains missing values, an additionnal 'missing-bit' field is added and is '1' only for missing values.\n"
+                  "Note that for all types but skip, if the field contains missing values, an additionnal 'missing-bit' field is added and is '1' only for missing values.\n"
                   "The difference between types constant and skip is only cosmetic: constant means the field is constant, while skip means either there are too many missing values or it has been forced to skip.\n"
                   "A report file is generated and contains the information about the processing for each field.\n"
                   "Target index of source needs to be specified (ie. to perform corelation test). It can be any field of the "
@@ -158,7 +159,9 @@ void FieldConvertCommand::run(const vector<string> & args)
     PLERROR("you must specify source target field index");
 
  // manual map between field index and types
-  map<int,FieldType> force;
+  map<int, FieldType> force;
+  map<int, string> additional_proc;
+  map<int, int> additional_proc_size;
 
   real beta_hat,student=-1;
   real correlation = -1;
@@ -184,24 +187,50 @@ void FieldConvertCommand::run(const vector<string> & args)
     forcelines = getNonBlankLines(loadFileAsString(force_fn));
   for(int i=0; i<(signed)forcelines.size();i++)
   {
-    vector<string> vec = split(forcelines[i],"=");
+    size_t pos_of_equal = forcelines[i].find('=');
+    if (pos_of_equal == string::npos)
+      PLERROR("In FieldConvertCommand - A line in the force file does not contain the '=' character");
+    vector<string> vec(2);
+    vec[0] = forcelines[i].substr(0, pos_of_equal);
+    vec[1] = forcelines[i].substr(pos_of_equal + 1);
+/*    cout << "vec[0] = " << vec[0] << endl;
+    cout << "vec[1] = " << vec[1] << endl; */
     vector<string> leftpart = split(vec[0],"-");
-    FieldType rpart = stringToFieldType(vec[1]);
+    if (leftpart.size() == 1 && leftpart[0].substr(leftpart[0].size() - 1) == "+") {
+      // Syntax: field+="processing" (number of inputs added)
+      int field_index = vm->fieldIndex(leftpart[0].substr(0, leftpart[0].size() - 1));
+      if (field_index == -1)
+        PLERROR("In FieldConvertCommand - A field was not found in the source VMatrix");
+      if (additional_proc[field_index] != "")
+        PLERROR("In FieldConvertCommand - There can be only one additional processing specified for each field");
+      size_t last_open_par = vec[1].rfind('(');
+      if (last_open_par == string::npos)
+        PLERROR("In FieldConvertCommand - You must specify the number of inputs added in a processing");
+      string added_inputs = vec[1].substr(last_open_par + 1, vec[1].rfind(')') - last_open_par - 1);
+      // cout << "added_inputs = " << added_inputs << endl;
+      additional_proc_size[field_index] = toint(added_inputs);
+      size_t first_comma = vec[1].find('"');
+      size_t last_comma = vec[1].rfind('"', last_open_par);
+      additional_proc[field_index] = vec[1].substr(first_comma + 1, last_comma - first_comma - 1);
+      // cout << "Processing added: " << additional_proc[field_index] << endl;
+    } else {
+      FieldType rpart = stringToFieldType(vec[1]);
 
-    if(leftpart.size()>1)
-    {
-      // we have a range
-      int a = toint(leftpart[0]);
-      int b = toint(leftpart[1]);
-      
-      for(int j=a;j<=b;j++)
-        force[j]=rpart;
-    }
-    else 
-    {
-      if(vm->fieldIndex(vec[0])==-1)
-        cout<<"field : "<<vec[0]<<" doesn't exist in matrix"<<endl;
-      force[vm->fieldIndex(vec[0])] = rpart;
+      if(leftpart.size()>1)
+      {
+        // we have a range
+        int a = toint(leftpart[0]);
+        int b = toint(leftpart[1]);
+
+        for(int j=a;j<=b;j++)
+          force[j]=rpart;
+      }
+      else 
+      {
+        if(vm->fieldIndex(vec[0])==-1)
+          cout<<"field : "<<vec[0]<<" doesn't exist in matrix"<<endl;
+        force[vm->fieldIndex(vec[0])] = rpart;
+      }
     }
   }
   ///////////////////////////////////////////////////
@@ -587,10 +616,16 @@ void FieldConvertCommand::run(const vector<string> & args)
       }*/
     }
     if (action & UNIFORMIZE) report << "UNIFORMIZE ";
-    if(action&ONEHOT)report<<"ONEHOT("<<count<<") - discarded: " << n_discarded << " ";
-    if(type==discrete_corr)report<<"correl: "<<correlation<<" 2tail-student:"<<student<<" ";
-    if(action&MISSING_BIT)report<<"MISSING_BIT ";
-    if(action&SKIP)report<<"SKIP ";
+    if (action&ONEHOT) report<<"ONEHOT("<<count<<") - discarded: " << n_discarded << " ";
+    if (type==discrete_corr) report<<"correl: "<<correlation<<" 2tail-student:"<<student<<" ";
+    if (action&MISSING_BIT) report<<"MISSING_BIT ";
+    if (action&SKIP) report<<"SKIP ";
+    if (additional_proc[i] != "") {
+      // There is an additional processing to add after this field.
+      *out << additional_proc[i] << endl;
+      inputsize += additional_proc_size[i];
+      report << "ADD_PROC ";
+    }
     report<<endl;
 
     pb->update(i);
