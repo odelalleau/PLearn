@@ -4,6 +4,7 @@
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999-2001 Pascal Vincent, Yoshua Bengio, Rejean Ducharme and University of Montreal
 // Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux
+// Copyright (C) 2003 Olivier Delalleau
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -35,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsVMatrix.cc,v 1.2 2003/03/19 23:15:25 jkeable Exp $
+   * $Id: SelectRowsVMatrix.cc,v 1.3 2003/05/15 14:47:52 tihocan Exp $
    ******************************************************* */
 
 #include "SelectRowsVMatrix.h"
@@ -43,10 +44,9 @@
 namespace PLearn <%
 using namespace std;
 
-
 /** SelectRowsVMatrix **/
 
-IMPLEMENT_NAME_AND_DEEPCOPY(SelectRowsVMatrix);
+PLEARN_IMPLEMENT_OBJECT_METHODS(SelectRowsVMatrix, "SelectRowsVMatrix", VMatrix);
 
 real SelectRowsVMatrix::get(int i, int j) const
 { return distr->get(indices[i], j); }
@@ -77,10 +77,48 @@ const map<real,string>& SelectRowsVMatrix::getRealToStringMapping(int col) const
 
 void SelectRowsVMatrix::declareOptions(OptionList &ol)
 {
-    declareOption(ol, "distr", &SelectRowsVMatrix::distr, OptionBase::buildoption, "TODO");
-    declareOption(ol, "indices", &SelectRowsVMatrix::indices, OptionBase::buildoption, "TODO");
+    declareOption(ol, "distr", &SelectRowsVMatrix::distr, OptionBase::buildoption,
+        "    The matrix viewed by the SelectRowsVMatrix");
+    declareOption(ol, "indices", &SelectRowsVMatrix::indices, OptionBase::buildoption, 
+        "    The array of indices to extract");
     inherited::declareOptions(ol);
 }
 
+void SelectRowsVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+{
+  inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(distr, copies);
+  deepCopyField(indices, copies);
+}
+
+///////////
+// build //
+///////////
+void SelectRowsVMatrix::build()
+{
+  inherited::build();
+  build_();
+}
+
+////////////
+// build_ //
+////////////
+void SelectRowsVMatrix::build_()
+{
+  length_ = indices.length();
+  width_ = distr->width();
+  fieldinfos = distr->fieldinfos;
+}
+
+//////////
+// help //
+//////////
+string SelectRowsVMatrix::help()
+{
+  return
+    "    VMat class that selects samples from a sub-distribution\n\
+    according to given vector of indices.\n"
+    + optionHelp();
+}
 
 %> // end of namespcae PLearn

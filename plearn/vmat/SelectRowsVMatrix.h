@@ -4,6 +4,7 @@
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999-2001 Pascal Vincent, Yoshua Bengio, Rejean Ducharme and University of Montreal
 // Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux
+// Copyright (C) 2003 Olivier Delalleau
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -35,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsVMatrix.h,v 1.2 2003/03/19 23:15:25 jkeable Exp $
+   * $Id: SelectRowsVMatrix.h,v 1.3 2003/05/15 14:47:52 tihocan Exp $
    ******************************************************* */
 
 
@@ -53,15 +54,20 @@ using namespace std;
 //!  according to given vector of indices
 class SelectRowsVMatrix: public VMatrix
 {
-    typedef VMatrix inherited;
-protected:
+
+  typedef VMatrix inherited;
+
+public:
+
+  //! Public build options
   VMat distr;
   TVec<int> indices;
+
 public:
 
   //! Also copies the original fieldinfos upon construction
   //! Here the indices will be shared for efficiency. But you should not modify them afterwards!
-    SelectRowsVMatrix() {};
+  SelectRowsVMatrix() {};
   SelectRowsVMatrix(VMat the_distr, TVec<int> the_indices) :
     VMatrix(the_indices.length(),the_distr->width()),
     distr(the_distr),indices(the_indices)
@@ -78,9 +84,13 @@ public:
       indices << the_indices; // copy to integer indices
     }
   
-    DECLARE_NAME_AND_DEEPCOPY(SelectRowsVMatrix);
+  PLEARN_DECLARE_OBJECT_METHODS(SelectRowsVMatrix, "SelectRowsVMatrix", VMatrix);
 
-    static void declareOptions(OptionList &ol);
+  static void declareOptions(OptionList &ol);
+
+  static string help();
+  virtual void build();
+  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;
@@ -94,10 +104,12 @@ public:
   virtual void reset_dimensions() { distr->reset_dimensions(); width_=distr->width(); }
   virtual real dot(int i1, int i2, int inputsize) const;
   virtual real dot(int i, const Vec& v) const;
+
+private:
+
+  void build_();
+
 };
-
-DECLARE_OBJECT_PTR(SelectRowsVMatrix);
-
 
 %> // end of namespcae PLearn
 #endif
