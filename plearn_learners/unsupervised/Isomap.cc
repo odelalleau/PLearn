@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Isomap.cc,v 1.1 2004/06/23 16:49:10 tihocan Exp $ 
+   * $Id: Isomap.cc,v 1.2 2004/06/23 20:20:46 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -60,7 +60,7 @@ Isomap::Isomap()
 }
 
 PLEARN_IMPLEMENT_OBJECT(Isomap,
-    "Performs ISOMAP.",
+    "Performs ISOMAP dimensionality reduction.",
     ""
 );
 
@@ -125,9 +125,12 @@ void Isomap::build_()
   if (distance_kernel &&
       (!kpca_kernel ||
        (dynamic_cast<GeodesicDistanceKernel*>((Kernel*) kpca_kernel))->distance_kernel != distance_kernel)) {
-    this->kpca_kernel = new GeodesicDistanceKernel(distance_kernel, knn, geodesic_file);
+    this->kpca_kernel = new GeodesicDistanceKernel(distance_kernel, knn, geodesic_file, true);
+    // We have modified the KPCA kernel, we must rebuild the KPCA.
+    inherited::build();
   }
-  kpca_kernel->report_progress = report_progress;
+  if (kpca_kernel)
+    kpca_kernel->report_progress = report_progress;
 }
 
 ////////////
