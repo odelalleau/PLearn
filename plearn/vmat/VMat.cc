@@ -35,10 +35,10 @@
 
 
  
-/*
-* $Id: VMat.cc,v 1.15 2004/03/09 00:05:44 lheureup Exp $
-* This file is part of the PLearn library.
-******************************************************* */
+/* *******************************************************
+* $Id: VMat.cc,v 1.16 2004/03/09 14:58:43 tihocan Exp $ *
+* This file is part of the PLearn library.               *
+******************************************************** */
 #include "VMat.h"
 #include "fileutils.h"
 
@@ -93,15 +93,21 @@ void VMat::precompute() {
   // Note that there would probably be more info to restore (like
   // field infos, string mappings, ...).
   (*this)->copySizesFrom(backup);
+  
+  //TODO
+  //(*this)->copyFieldInfosFrom(backup);
 }
   
 void VMat::precompute(const string& pmatfile, bool use_existing_file)
 { 
+  VMat backup = *this;
   Array<VMField> infos = (*this)->getFieldInfos();
   if(!use_existing_file || !file_exists(pmatfile))
     save(pmatfile); 
   *this = new FileVMatrix(pmatfile); 
   (*this)->setFieldInfos( infos );
+  (*this)->copySizesFrom(backup);
+  // TODO same as above
 }
 
 
