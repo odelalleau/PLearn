@@ -119,9 +119,10 @@ optionalLibrary( name = 'xml-apstat',
 #                 linkeroptions = '/u/lisa/local/linux-i386/Install/wxWindows/wxGTK-2.2.9/lib/libwx_gtk-2.2.so.6.2.6 -L/usr/lib -L/usr/X11R6/lib -lgtk -lgdk -rdynamic -lgmodule -lgthread -lglib -lpthread -ldl -lXi -lXext -lX11 -lm  -lpng -ljpeg -ltiff  -ldl -lpthread -lz -lm' )
 
 
+
 optionalLibrary( name = 'arpack',
                  triggers = 'arpack_proto.h',
-                 linkeroptions = '-L'+ libdir +'/ARPACK/OBJS/' + platform + ' -larpack' )
+                 linkeroptions = '-L'+ libdir +'/ARPACK/OBJS/' + target_platform + ' -larpack' )
 
 # Note: now blas and lapack are together.
 #optionalLibrary( name = 'lapack',

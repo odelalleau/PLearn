@@ -49,6 +49,8 @@ if platform=='linux2':
     else:
         platform = 'linux-i386'
 
+# for possible cross-compilation
+target_platform = platform
 
 homedir = os.environ['HOME']
 if platform=='win32':
@@ -486,7 +488,14 @@ if 'force' in optionargs:
 force_32bits = 0
 if 'm32' in optionargs:
     force_32bits = 1
+    if platform=='linux-x86_64' or platform=='linux-ia64':
+        target_platform = 'linux-i386'
+    elif platform=='linux-i386':
+        pass
+    else:
+        print 'Warning: you probably shouldn\'t be using "-m32" option'
     optionargs.remove('m32')
+
 
 if 'dist' in optionargs:
     distribute = 1
@@ -1580,15 +1589,6 @@ for target in otherargs:
         options = getOptions(options_choices,optionargs)
 
         # Building name of object subdirectory
-        target_platform = platform
-        if force_32bits:
-            if platform=='linux-x86_64' or platform=='linux-ia64':
-                target_platform = 'linux-i386'
-            elif platform=='linux-i386':
-                pass
-            else:
-                print 'Warning: you probably shouldn\'t be using "-m32" option'
-
         if  objspolicy== 1:
           objsdir = join('OBJS', target_platform + '__' + string.join(options,'_'))
         elif objspolicy == 2:
