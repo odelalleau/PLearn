@@ -158,6 +158,11 @@ optionalLibrary( name = 'boostpython',
                  includedirs = '/usr/include/python2.3',
                  linkeroptions = '-lboost_python'
                  )
+optionalLibrary( name = 'X',
+                 triggers='?',
+                 includedirs = '?',
+                 linkeroptions = '-L/usr/X11R6/lib/ -lXi -lXext -lX11'
+)
 
 optionalLibrary( name = 'boost',
                  triggers = 'boost/*',
