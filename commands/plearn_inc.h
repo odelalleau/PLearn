@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.25 2004/08/22 18:09:07 larocheh Exp $ 
+   * $Id: plearn_inc.h,v 1.26 2004/08/25 14:47:00 kermorvc Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -91,8 +91,8 @@
  * PLearner *
  ************/
 #include <plearn_learners/generic/AddCostToLearner.h>
-#include <plearn_learners/classifiers/ClassifierFromDensity.h>
 #include <plearn_learners/regressors/ConstantRegressor.h>
+#include <plearn_learners/classifiers/ClassifierFromDensity.h>
 #include <plearn_learners/regressors/LinearRegressor.h>
 #include <plearn_learners/classifiers/MultiInstanceNNet.h>
 #include <plearn_learners/generic/NNet.h>
@@ -170,7 +170,9 @@
 #include <plearn/vmat/ThresholdVMatrix.h>
 #include <plearn/vmat/TransposeVMatrix.h>
 #include <plearn/vmat/VMatrixFromDistribution.h>
+#include <plearn/vmat/DictionaryVMatrix.h>
 #include <plearn_learners/language/TextSenseSequenceVMatrix.h>
+#include <plearn/vmat/DictionaryVMatrix.h>
 #include <plearn/vmat/SelectAttributsSequenceVMatrix.h>
 
 #endif
