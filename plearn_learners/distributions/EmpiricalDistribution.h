@@ -46,7 +46,7 @@ using namespace std;
     VMat data;
 
     
-    typedef Learner inherited;
+    typedef Distribution inherited;
     
   public:
 
@@ -70,10 +70,10 @@ using namespace std;
     virtual double cdf(const Vec& x) const;
 
     //! return E[X] 
-    virtual double expectation() const;
+    virtual Vec expectation() const;
 
     //! return Var[X]
-    virtual double variance() const;
+    virtual Mat variance() const;
 
 
     

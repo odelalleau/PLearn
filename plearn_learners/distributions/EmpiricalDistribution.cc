@@ -52,6 +52,7 @@ void EmpiricalDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 
 EmpiricalDistribution::EmpiricalDistribution()
+  :inherited()
 {
 }
 
@@ -66,6 +67,7 @@ void EmpiricalDistribution::declareOptions(OptionList& ol)
 void EmpiricalDistribution::train(VMat training_set)
 {
   data = training_set;
+  inputsize_ = data.width();
 }
 
 double EmpiricalDistribution::log_density(const Vec& x) const
@@ -108,16 +110,36 @@ double EmpiricalDistribution::cdf(const Vec& x) const
 }
 
 
-//A COMPLETER
-double EmpiricalDistribution::expectation() const
+Vec EmpiricalDistribution::expectation() const
 {
-  return 0;
+  Vec mean(inputsize_);
+  mean.fill(0);
+  for(int i = 0; i<data.length(); i++){
+    mean = mean + data(i);
+  }
+  return mean / data.length();
 }
 
-//A COMPLETER
-double EmpiricalDistribution::variance() const
+Mat EmpiricalDistribution::variance() const
 {
-  return 0;
+  Vec mean(inputsize_);
+  mean = expectation();
+  Mat covariance(inputsize_,inputsize_);
+  covariance.fill(0);
+  for(int k = 0; k<data.length(); k++){
+    Vec row = data(k);
+    for(int i = 0; i<data.width(); i++){
+      for(int j = 0; j<data.width(); j++){
+        covariance(i,j) += row[i]*row[j]; 
+      }
+    }
+  }
+  for(int i = 0; i<data.width(); i++){
+    for(int j = 0; j<data.width(); j++){
+      covariance(i,j) -= data.length()*mean[i]*mean[j];
+    }
+  }
+  return covariance / (double) data.length();
 }
 
 
