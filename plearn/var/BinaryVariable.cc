@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: BinaryVariable.cc,v 1.6 2002/10/08 15:16:32 wangxian Exp $
+   * $Id: BinaryVariable.cc,v 1.7 2002/10/17 14:49:57 wangxian Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -232,7 +232,7 @@ void VarRowVariable::rfprop()
 /** ColumnIndexVariable **/
 
 ColumnIndexVariable::ColumnIndexVariable(Variable *input1, Variable *input2)
-  : BinaryVariable(input1, input2, input2->length(), input1->width())
+  : BinaryVariable(input1, input2, 1/*input2->length()*/, input1->width())
 {
   if(!input2->isVec())
     PLERROR("In ColumnIndexVariable: input2 must be a vector variable representing the indexs of input1");
@@ -241,7 +241,7 @@ ColumnIndexVariable::ColumnIndexVariable(Variable *input1, Variable *input2)
 IMPLEMENT_NAME_AND_DEEPCOPY(ColumnIndexVariable);
 
 void ColumnIndexVariable::recomputeSize(int& l, int& w) const
-{ l=input2->length(); w=input1->width(); }
+{ l=1/*input2->length()*/; w=input1->width();}
 
 void ColumnIndexVariable::deepRead(istream& in, DeepReadMap& old2new)
 {
@@ -259,26 +259,25 @@ void ColumnIndexVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) c
 
 void ColumnIndexVariable::fprop()
 {
-    for (int i=0; i<input2->size(); i++)
-      {
-      int num = (int)input2->valuedata[i];
-      valuedata[i] = input1->matValue[num][i];
-      }
+  for (int i=0; i<input2->size(); i++)
+    {
+    int num = (int)input2->valuedata[i];
+    valuedata[i] = input1->valuedata[num*input1->width()+i];
+    }
 }
 
 void ColumnIndexVariable::bprop()
 {
-    for (int i=0; i<input2->size(); i++)
-      {
-      int num = (int) input2->valuedata[i];
-      input1->matGradient[num][i] += gradientdata[i];
-      }
+  for (int i=0; i<input2->size(); i++)
+    {
+    int num = (int) input2->valuedata[i];
+    input1->gradientdata[num*input1->width()+i] += gradientdata[i];
+    }
 }
 
 void ColumnIndexVariable::symbolicBprop()
 {
   input1->accg(new IndexAtPositionVariable(g,input2,input1->length(),input1->width()));
-  //PLERROR("ColumnIndexVariable::symbolicBprop() not implemented");
 }
 
 /** VarRowsVariable **/
@@ -606,9 +605,9 @@ void ElementAtPositionVariable::rfprop()
 IndexAtPositionVariable::IndexAtPositionVariable(Variable* input1, Variable* input2, int the_length, int the_width)
   :BinaryVariable(input1, input2, the_length, the_width), length_(the_length), width_(the_width)
 {
-  if(!input1->isVec())
-    PLERROR("In IndexAtPositionVariable: Index must be a vector var");
-  if(input1->size()!=input2->size())
+  if(!input1->isVec()||!input2->isVec())
+    PLERROR("In IndexAtPositionVariable: input1 or input2 must be a vector var");
+  if(input1->size()!=input2->size()||input1->size()!=the_width)
     PLERROR("In IndexAtPositionVariable: input1 and input2 should be of same size");
 }
 
@@ -653,7 +652,6 @@ void IndexAtPositionVariable::bprop()
 void IndexAtPositionVariable::symbolicBprop()
 {
   input1->accg(new ColumnIndexVariable(g,input2));
-  //PLERROR("IndexAtPositionVariable::symbolicBprop() not implemented.");
 }
 
 void IndexAtPositionVariable::rfprop()
@@ -2356,16 +2354,16 @@ void MatrixAffineTransformVariable::recomputeSize(int& l, int& w) const
 { l=input2->width(), w=input1->width(); }
 
 void MatrixAffineTransformVariable::fprop()
-  {
+{
     Mat lintransform = input2->matValue.subMatRows(1,input2->length()-1);
     for (int i = 0; i < length(); i++)
         for (int j = 0; j < width(); j++)
              matValue[i][j] = input2->matValue[0][i];
     transposeProductAcc(matValue,lintransform, input1->matValue);
-  }
+}
 
 void MatrixAffineTransformVariable::bprop()
-  {
+{
     Mat&  afftr = input2->matValue;
     int l = afftr.length();
     Mat lintr = afftr.subMatRows(1,l-1);
@@ -2382,12 +2380,39 @@ void MatrixAffineTransformVariable::bprop()
     if(!input1->dont_bprop_here)      
       productAcc(input1->matGradient, lintr, matGradient);
     productTransposeAcc(lintr_g, input1->matValue, matGradient);
-  }
+}
 
 void MatrixAffineTransformVariable::symbolicBprop()
-  {
-   PLERROR("MatrixAffineTransformVariable::symbolicBprop() not implemented");
-  }
+{
+    Var lintr = new SubMatVariable(input2,0,0,input2->length()-1,input2->width());
+    //Var bias = new SubMatVariable(input2,length()-1,0,1,width());
+
+    if(!input1->dont_bprop_here)
+      input1->accg(new ProductVariable(lintr,g));
+    input2->accg(new MatrixAffineTransformFeedbackVariable(input1,g));
+}
+
+IMPLEMENT_NAME_AND_DEEPCOPY(MatrixAffineTransformFeedbackVariable);
+void MatrixAffineTransformFeedbackVariable::recomputeSize(int& l, int& w) const
+{ l=length(), w=width(); }
+
+void MatrixAffineTransformFeedbackVariable::fprop()
+{
+    Mat&  afftr = matValue;
+    int l = afftr.length();
+    Mat lintr = afftr.subMatRows(1,l-1);
+
+    Mat& afftr_g = matGradient;
+    Vec bias_g = afftr_g.firstRow();
+    Mat lintr_g = afftr_g.subMatRows(1,l-1);
+
+    for (int i = 0; i < input1->length(); i++)
+        for (int j = 0; j < input1->width(); j++)
+            {
+            bias_g[i] += input1->matGradient[i][j];
+            }
+    productTransposeAcc(lintr_g, input2->matValue, input1->matGradient);
+}
 
 /** OneHotSquaredLoss **/
 
@@ -2512,6 +2537,12 @@ void MatrixOneHotSquaredLoss::bprop()
      }
 }
 
+void MatrixOneHotSquaredLoss::symbolicBprop()
+{
+  PLERROR("MatrixOneHotSquaredLoss::symbolicBprop not implemented.");
+}
+
+
 /** ClassificationLossVariable **/
 
 IMPLEMENT_NAME_AND_DEEPCOPY(ClassificationLossVariable);
@@ -2578,6 +2609,10 @@ void MiniBatchClassificationLossVariable::fprop()
   else PLERROR("In MiniBatchClassificationLossVariable: The length or width of netout doesn't equal to the size of classnum");
 }
 
+void MiniBatchClassificationLossVariable::symbolicBprop()
+{
+  PLERROR("MiniBatchClassificationLossVariable::symbolicBprop not implemented.");
+}
 
 /** MulticlassLossVariable **/
 

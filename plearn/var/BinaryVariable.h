@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: BinaryVariable.h,v 1.4 2002/10/08 14:56:40 wangxian Exp $
+   * $Id: BinaryVariable.h,v 1.5 2002/10/17 14:49:57 wangxian Exp $
    * PRIMARY AUTHOR: Pascal Vincent
    * CONTRIBUTORS: Yoshua Bengio
    * This file is part of the PLearn library.
@@ -116,7 +116,7 @@ public:
   virtual void rfprop();
 };
 
-//Mistakes may happened when the length of input1 equals to its width
+//return a row vector with the elements indexed in each column
 class ColumnIndexVariable: public BinaryVariable
 {
 protected:
@@ -639,6 +639,28 @@ public:
   virtual void symbolicBprop();
 };
 
+//! Affine transformation of a MATRIX variable.
+//! Should work for both column and row vectors: result vector will be of same kind (row or col)
+//! First row of transformation matrix contains bias b, following rows contain linear-transformation T
+//! Will compute b + x.T 
+//! which is equivalent to b + 
+class MatrixAffineTransformFeedbackVariable: public BinaryVariable
+{
+protected:
+    typedef BinaryVariable inherited;
+  //!  Default constructor for persistence
+  MatrixAffineTransformFeedbackVariable() {}
+
+public:
+  MatrixAffineTransformFeedbackVariable(Variable* g, Variable* input):
+    BinaryVariable(g, input, g->length()+1, input->length())
+  {}
+  DECLARE_NAME_AND_DEEPCOPY(MatrixAffineTransformFeedbackVariable);
+  virtual void recomputeSize(int& l, int& w) const;
+  virtual void fprop();
+  virtual void bprop() {};
+};
+
 //!  Matrix product
 class ProductVariable: public BinaryVariable
 {
@@ -743,6 +765,7 @@ public:
   virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
   virtual void fprop();
   virtual void bprop();
+  virtual void symbolicBprop();
 };
 
 //! Indicator(classnum==argmax(netout))
@@ -778,6 +801,7 @@ public:
   virtual void fprop();
   //! can't bprop through a hard classification error...
   virtual void bprop() {}  
+  virtual void symbolicBprop();
 };
 
 //! cost = sum_i {cost_i}, with

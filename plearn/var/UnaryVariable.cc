@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: UnaryVariable.cc,v 1.8 2002/10/08 14:56:40 wangxian Exp $
+   * $Id: UnaryVariable.cc,v 1.9 2002/10/17 14:49:57 wangxian Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -2811,7 +2811,7 @@ void MatrixSoftmaxVariable::bbprop()
 
 void MatrixSoftmaxVariable::symbolicBprop()
 {
-  PLERROR("SofmaxVariable::symbolicBprop() not implemented");
+  PLERROR("MatrixSofmaxVariable::symbolicBprop() not implemented");
 }
 
 // R{ s_i = exp(x_i) / sum_j exp(x_j) }   = (s_i(1-s_i) - sum_{k!=i} s_i s_k) R(s_i) = s_i ((1-s_i) - sum_{k!=i} s_k) R(s_i)
