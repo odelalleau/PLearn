@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.cc,v 1.24 2005/01/14 16:34:45 larocheh Exp $ 
+   * $Id: PDistribution.cc,v 1.25 2005/01/27 14:23:12 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.cc */
@@ -545,7 +545,7 @@ void PDistribution::sortFromFlags(Mat& m, bool sort_columns, bool sort_rows) {
 // splitCond //
 ///////////////
 bool PDistribution::splitCond(const Vec& input) const {
-  if (n_input > 0 && input.length() == n_target + n_margin) {
+  if (n_input == 0 || (n_input > 0 && input.length() == n_target + n_margin)) {
     // No input part provided: this means this is the same as before.
     if (already_sorted) {
       target_part << input.subVec(0, n_target);
