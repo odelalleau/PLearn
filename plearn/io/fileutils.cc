@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.43 2004/05/26 20:26:52 tihocan Exp $
+   * $Id: fileutils.cc,v 1.44 2004/06/04 13:13:33 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -807,26 +807,56 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
                     }
                     break;
 
-                  case 'N': // it's an INCLUDE{filepath}
+                  case 'N':
                     {
-                      string includefilepath; // path of the file in a $INCLUDE{...} directive
-                      readWhileMatches(in, "NCLUDE");
-                      int c = in.get();
-                      if(c=='<')
-                        smartReadUntilNext(in, ">", includefilepath, true);
-                      else if(c=='{')
-                        smartReadUntilNext(in, "}", includefilepath, true);
-                      else
-                        PLERROR("$INCLUDE must be followed immediately by a { or <");
-                      istringstream pathin(includefilepath);
-                      includefilepath = readAndMacroProcess(pathin,variables);
-                      includefilepath = removeblanks(includefilepath);
-                      string dirname = extract_directory(includefilepath);
-                      string filename = extract_filename(includefilepath);
-                      string olddir = getcwd();
-                      chdir(dirname);
-                      text += readFileAndMacroProcess(filename, variables);
-                      chdir(olddir);
+                      int next = in.get();
+                      next = in.peek();   // Next character.
+                      switch(next) {
+
+                        case 'C': // it's an INCLUDE{filepath}
+                          {
+                            string includefilepath; // path of the file in a $INCLUDE{...} directive
+                            readWhileMatches(in, "CLUDE");
+                            int c = in.get();
+                            if(c=='<')
+                              smartReadUntilNext(in, ">", includefilepath, true);
+                            else if(c=='{')
+                              smartReadUntilNext(in, "}", includefilepath, true);
+                            else
+                              PLERROR("$INCLUDE must be followed immediately by a { or <");
+                            istringstream pathin(includefilepath);
+                            includefilepath = readAndMacroProcess(pathin,variables);
+                            includefilepath = removeblanks(includefilepath);
+                            string dirname = extract_directory(includefilepath);
+                            string filename = extract_filename(includefilepath);
+                            string olddir = getcwd();
+                            chdir(dirname);
+                            text += readFileAndMacroProcess(filename, variables);
+                            chdir(olddir);
+                          }
+                          break;
+
+                        case 'T': // it's an INT{val}
+                          {
+                            string expr;
+                            readWhileMatches(in, "T");
+                            bool syntax_ok = true;
+                            int c = in.get();
+                            if(c == '{')
+                              smartReadUntilNext(in, "}", expr, true);
+                            else
+                              syntax_ok = false;
+                            if (!syntax_ok)
+                              PLERROR("$INT syntax is: $INT{expr}");
+                            istrstream expr_stream(expr.c_str());
+                            string expr_eval = readAndMacroProcess(expr_stream, variables);
+                            real e;
+                            if (!pl_isnumber(expr_eval, &e)) {
+                              PLERROR("In $INT{expr}, 'expr' is not a number");
+                            }
+                            text += tostring(int(e));
+                          }
+                      }
                     }
                     break;
 
@@ -1133,7 +1163,7 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
 
             default:
               PLERROR("In readAndMacroProcess: only supported macro commands are \n"
-                      "${varname}, $CHAR, $DEFINE, $DIVIDE, $ECHO, $IF, $INCLUDE, $ISDEFINED, $ISEQUAL, $ISHIGHER, $MINUS, $PLUS, $OR, $SWITCH, $TIMES."
+                      "${varname}, $CHAR, $DEFINE, $DIVIDE, $ECHO, $IF, $INCLUDE, $INT, $ISDEFINED, $ISEQUAL, $ISHIGHER, $MINUS, $PLUS, $OR, $SWITCH, $TIMES."
                       "But I read $%c !!",c);
             }
         }
