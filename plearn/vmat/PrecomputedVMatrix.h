@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrecomputedVMatrix.h,v 1.9 2005/01/25 03:15:46 dorionc Exp $ 
+   * $Id: PrecomputedVMatrix.h,v 1.10 2005/02/21 15:26:36 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -76,29 +76,31 @@ public:
   // ******************
 
 private: 
+
   //! This does the actual building. 
   void build_();
   
   void usePrecomputed();
 
 protected: 
-  //! Declares this class' options
+
+  //! Declares this class' options.
   static void declareOptions(OptionList& ol);
 
-  //!  This is the only method requiring implementation
+  //! This is the only method requiring implementation.
   virtual void getNewRow(int i, const Vec& v) const;
 
 public:
 
   virtual void setMetaDataDir(const PPath& the_metadatadir);
 
-  // simply calls inherited::build() then build_() 
+  //! Simply calls inherited::build() then build_().
   virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
+  //! Transforms a shallow copy into a deep copy.
   virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-  //! Declares name and deepCopy methods
+  //! Declares name and deepCopy methods.
   PLEARN_DECLARE_OBJECT(PrecomputedVMatrix);
 
 };
