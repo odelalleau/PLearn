@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.cc,v 1.23 2004/11/24 18:17:53 tihocan Exp $
+   * $Id: stringutils.cc,v 1.24 2005/01/18 20:28:59 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -295,9 +295,6 @@ string pgetline(istream& in)
 {
   string line;
   getline(in,line);
-  //cout << "output: " << line.length() << endl;
-  //cout << "line: " << line << endl;
-  //cout << (int) in.peek() << endl;
   return removenewline(line);
 }
 
@@ -429,32 +426,6 @@ vector<string> split(const string& s, const string& delimiters, bool keep_delimi
 
   return result;
 }
-
-/*
-  int pos = 0;
-  int startpos = 0;
-  while(pos<s.length())
-    {
-      startpos = pos;
-      // while character at position pos is a delimiter
-      while (pos<s.length() && delimiters.find(s.substr(pos,1))!=string::npos) 
-        pos++;
-      if(keepdelimiters && pos>startpos)
-        result.push_back(s.substr(startpos, pos-startpos));
-
-      if(pos==s.length())
-        break;
-
-      startpos = pos;
-      // while character at position pos is NOT a delimiter
-      while (pos<s.length() && delimiters.find(s.substr(pos,1))==string::npos) 
-        pos++;
-      if(pos>startpos)
-        result.push_back(s.substr(startpos, pos-startpos));
-    }
-  return result;
-
-*/
 
 
 void split_on_first(const string& s,

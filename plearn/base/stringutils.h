@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.27 2004/08/17 19:21:18 tatien Exp $
+   * $Id: stringutils.h,v 1.28 2005/01/18 20:29:02 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -57,7 +57,6 @@
 #include <iomanip>
 #include <sstream>
 #include <plearn/io/PStream.h>
-// #include "TMat.h"
 
 namespace PLearn {
 using namespace std;
@@ -285,16 +284,6 @@ vector<string> remove(const vector<string> &v, string element);
       ostringstream out;
       out << x;
       return out.str();
-
-      /* Old strstream code
-      ostrstream out;
-      out << setprecision(8) << x;
-      char* buf = out.str();
-      int n = out.pcount();
-      string s(buf,n);
-      out.freeze(false); // return ownership to the stream, so that it may free it...
-      return s;
-      */
     }
 
   template<class K, class V>
@@ -304,16 +293,6 @@ vector<string> remove(const vector<string> &v, string element);
       PStream pout(&out);
       pout << x;
       return out.str();
-
-      /* Old strstream code
-      ostrstream out;
-      out << setprecision(8) << x;
-      char* buf = out.str();
-      int n = out.pcount();
-      string s(buf,n);
-      out.freeze(false); // return ownership to the stream, so that it may free it...
-      return s;
-      */
     }
 
 string tostring(const double& x);
