@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: RowBufferedVMatrix.h,v 1.8 2004/06/29 20:00:32 tihocan Exp $
+   * $Id: RowBufferedVMatrix.h,v 1.9 2004/07/02 13:21:23 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -77,9 +77,7 @@ public:
   //! These methods are implemented by buffering calls to getNewRow.
   virtual real get(int i, int j) const; //!<  returns element (i,j)
   virtual void getRow(int i, Vec v) const;
-  virtual Vec& getRow(int i) const;
   virtual void getSubRow(int i, int j, Vec v) const; //!<  fills v with the subrow i laying between columns j (inclusive) and j+v.length() (exclusive)
-  virtual Vec& getSubRow(int i, int j, int j_length) const;
 
   virtual real dot(int i1, int i2, int inputsize) const;
   virtual real dot(int i, const Vec& v) const;

@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.46 2004/06/29 20:02:25 tihocan Exp $
+   * $Id: VMatrix.h,v 1.47 2004/07/02 13:21:53 tihocan Exp $
    ******************************************************* */
 
 
@@ -382,14 +382,6 @@ public:
   //!  (default version repeatedly calls get(i,j) which may have a significant overhead)
   virtual void getSubRow(int i, int j, Vec v) const; //!<  fills v with the subrow i lying between columns j (inclusive) and j+v.length() (exclusive)
 
-  //! Return a Vec that contains the subrow i lying between columns j (inclusive) and
-  //! j + j_length (exclusive).
-  //! This vector should NOT be modified afterwards (use it only to read data), because
-  //! it may not be a copy of the data.
-  //! Default version uses getSubRow(i, j, v) with v a static Vec resized to j_length,
-  //! but subclasses may override this method to avoid a useless copy.
-  virtual Vec& getSubRow(int i, int j, int j_length) const;
-
 /*!     It is suggested that this method be implemented in subclasses of writable matrices
     to speed up accesses
     (default version repeatedly calls put(i,j,value) which may have a significant overhead)
@@ -413,7 +405,6 @@ public:
   //!  These methods do not usually need to be overridden in subclasses
   //!  (default versions call getSubRow, which should do just fine)
   virtual void getRow(int i, Vec v) const; //!<  copies row i into v (which must have appropriate length equal to the VMat's width)
-  virtual Vec& getRow(int i) const; //!<  returns a vector containing the row i (it should not be modifed afterwards)
 
   virtual void putRow(int i, Vec v);
   virtual void fill(real value);

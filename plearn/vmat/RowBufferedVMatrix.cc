@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: RowBufferedVMatrix.cc,v 1.7 2004/06/29 20:00:30 tihocan Exp $
+   * $Id: RowBufferedVMatrix.cc,v 1.8 2004/07/02 13:21:23 tihocan Exp $
    ******************************************************* */
 
 #include "RowBufferedVMatrix.h"
@@ -86,15 +86,6 @@ void RowBufferedVMatrix::getRow(int i, Vec v) const {
   v.copyFrom(current_row.data(), width_);
 }
 
-Vec& RowBufferedVMatrix::getRow(int i) const {
-  if (current_row_index != i) {
-    current_row.resize(width_);
-    getNewRow(i, current_row);
-    current_row_index = i;
-  }
-  return current_row;
-}
-
 ///////////////
 // getSubRow //
 ///////////////
@@ -107,17 +98,6 @@ void RowBufferedVMatrix::getSubRow(int i, int j, Vec v) const
       current_row_index = i;
     }
   v.copyFrom(current_row.data()+j, v.length());
-}
-
-Vec& RowBufferedVMatrix::getSubRow(int i, int j, int j_length) const {
-  static Vec result;
-  if (current_row_index != i) {
-    current_row.resize(width_);
-    getNewRow(i, current_row);
-    current_row_index = i;
-  }
-  result = current_row.subVec(j, j_length);
-  return result;
 }
 
 /////////
