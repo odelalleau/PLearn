@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: MatIO.h,v 1.9 2004/03/04 15:06:09 tihocan Exp $
+   * $Id: MatIO.h,v 1.10 2004/03/06 18:29:29 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -78,6 +78,10 @@ void savePMat(const string& filename, const TMat<double>& mat);
 void loadPMat(const string& filename, TMat<float>& mat);
 void loadPMat(const string& filename, TMat<double>& mat);
 
+void matlabSave( const string& dir, const string& plot_title, const Vec& data, 
+                 const Vec& add_col, const Vec& bounds, string legend, bool save_plot);
+void matlabSave( const string& dir, const string& plot_title, const Mat& data, 
+                 const Vec& add_col, const Vec& bounds, TVec<string> legend, bool save_plot);
 
 //! WARNING: use only for float, double, and int types. Other type are not guaranteed to work
 
