@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.51 2004/06/23 20:19:58 tihocan Exp $
+   * $Id: TMat_maths_impl.h,v 1.52 2004/06/25 18:15:28 dpopovici Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -2180,6 +2180,23 @@ inline void operator+=(const TVec<T>& vec1, const TVec<T>& vec2)
       }
     }
 
+    //!  TVec[i] = TVec[i]*fact1 + (x[i]-y[i])^2*fact2;
+  template<class T>
+    void diffSquareMultiplyScaledAcc(const TVec<T>& vec, const TVec<T>& x, const TVec<T>& y, T fact1, T fact2)
+    {
+      int n=x.length();
+      if (vec.length()!=n || y.length()!=n)
+        PLERROR("TVec::diffSquareMultiplyAcc this.length_=%d, x.length_=%d, y.length_=%d",
+            vec.length(),n,y.length());
+      T* p=vec.data();
+      T* xp=x.data();
+      T* yp=y.data();
+      for (int i=0;i<n;i++)
+      {
+        T diff = xp[i]-yp[i];
+        p[i] = fact1 * p[i] + fact2 * diff * diff;
+      }
+    }
 
 //!  result[i] = sum_j m[i,j] * v[j]
 template <class T>
