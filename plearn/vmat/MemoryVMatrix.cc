@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.cc,v 1.7 2004/03/16 14:15:30 tihocan Exp $
+   * $Id: MemoryVMatrix.cc,v 1.8 2004/03/17 15:06:48 tihocan Exp $
    ******************************************************* */
 
 #include "MemoryVMatrix.h"
@@ -81,6 +81,14 @@ void MemoryVMatrix::build_()
   if (this->width() >= 0 && this->width() != data.width()) {
     // New width specified.
     data.resize(data.length(), this->width());
+  }
+  if (this->length() < 0 && data.length() >= 0) {
+    // Take the length from the data matrix.
+    this->length_ = data.length();
+  }
+  if (this->width() < 0 && data.width() >= 0) {
+    // Take the width from the data matrix.
+    this->width_ = data.width();
   }
 }
 
