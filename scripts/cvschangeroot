@@ -36,7 +36,6 @@
 #  This file is part of the PLearn library. For more information on the PLearn
 #  library, go to the PLearn Web site at www.plearn.org
 
-
 sub process_dir($)
 {
     my $previousdir;
@@ -44,12 +43,14 @@ sub process_dir($)
     chdir($_[0]);
 
     opendir(DIR, ".") || die "couldn't open directory"; 
-    my @flist = grep(!/^\./,readdir(DIR));
+    # my @flist = grep(!/^\./,readdir(DIR));
+    my @flist = readdir(DIR);
+
     closedir(DIR);
 
     foreach $fname (@flist)
     {
-        if(-d $fname and not -l $fname and -x $fname and -r $fname) # it's a directory
+        if( ($fname ne ".") and ($fname ne "..") and -d $fname and not -l $fname and -x $fname and -r $fname) # it's a valid directory
         {
             my $cvsroot;
             my $cvsrepository;
@@ -114,7 +115,7 @@ print
 "
 usage: cvschangeroot new_cvs_root
 This will put the new_cvs_root in the CVS/Root files 
-descending recursively in all directories.
+descending recursively in all directories starting at current directory.
 
 The paths in CVS/Repository will also be made relative to 
 the root rather than absolute if it's not already the case.
