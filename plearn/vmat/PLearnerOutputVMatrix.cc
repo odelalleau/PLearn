@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.cc,v 1.17 2004/11/04 22:59:38 lamblin Exp $
+   * $Id: PLearnerOutputVMatrix.cc,v 1.18 2004/11/12 20:10:31 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -57,15 +57,16 @@ PLearnerOutputVMatrix::PLearnerOutputVMatrix()
 {}
 
 PLearnerOutputVMatrix::PLearnerOutputVMatrix
-(VMat data_,TVec<PP<PLearner> > learners_, bool put_raw_input_, bool train_learners_, bool compute_output_once_) 
+(VMat data_,TVec<PP<PLearner> > learners_, bool put_raw_input_, bool train_learners_, bool compute_output_once_, bool put_non_input_) 
 : data(data_),learners(learners_),
   put_raw_input(put_raw_input_),
-  put_non_input(true),
+  put_non_input(put_non_input_),
   train_learners(train_learners_),
   compute_output_once(compute_output_once_)
 {
   build();
 }
+
 
 PLEARN_IMPLEMENT_OBJECT(PLearnerOutputVMatrix, 
                         "Use a PLearner (or a set of them) to transform the input part of a data set into the learners outputs",

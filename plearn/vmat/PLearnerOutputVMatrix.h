@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.h,v 1.13 2004/10/12 17:34:12 tihocan Exp $
+   * $Id: PLearnerOutputVMatrix.h,v 1.14 2004/11/12 20:10:31 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -90,7 +90,7 @@ public:
   // Default constructor, make sure the implementation in the .cc
   // initializes all fields to reasonable default values.
   PLearnerOutputVMatrix();
-  PLearnerOutputVMatrix(VMat data_,TVec<PP<PLearner> > learners_, bool put_raw_input_=false, bool train_learners_ = false, bool compute_output_once_ = false);
+  PLearnerOutputVMatrix(VMat data_,TVec<PP<PLearner> > learners_, bool put_raw_input_=false, bool train_learners_ = false, bool compute_output_once_ = false, bool put_non_input_ = true);
 
   // ******************
   // * Object methods *
