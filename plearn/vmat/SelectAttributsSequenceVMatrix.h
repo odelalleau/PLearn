@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SelectAttributsSequenceVMatrix.h,v 1.9 2004/10/08 20:39:44 lamblin Exp $ 
+   * $Id: SelectAttributsSequenceVMatrix.h,v 1.10 2004/10/12 17:33:13 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -157,7 +157,7 @@ public:
   // initializes all fields to reasonable default values.
   SelectAttributsSequenceVMatrix();
 
-  SelectAttributsSequenceVMatrix::SelectAttributsSequenceVMatrix(VMat s, int l_context,int r_context);
+  SelectAttributsSequenceVMatrix(VMat s, int l_context,int r_context);
 
   // ******************
   // * Object methods *
