@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.cc,v 1.16 2004/10/12 17:34:12 tihocan Exp $
+   * $Id: PLearnerOutputVMatrix.cc,v 1.17 2004/11/04 22:59:38 lamblin Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -82,19 +82,22 @@ void PLearnerOutputVMatrix::getNewRow(int i, const Vec& v) const
   int c=0;
   if (learners_need_train) {
     // We need to train the learners first.
-    for (int i = 0; i < learners.length(); i++) {
+    for (int i = 0; i < learners.length(); i++)
+    {
+      PP<VecStatsCollector> stats = new VecStatsCollector();
+      learners[i]->setTrainStatsCollector(stats);
       learners[i]->train();
+      stats->finalize();
     }
     learners_need_train = false;
   }
   data->getRow(i,row);
   if(compute_output_once)
   {
-    int count = 0;
     for (int j=0;j<learners.length();j++)
     {
-      v.subVec(count,learners[j]->outputsize()) << complete_learners_output[j](i);
-      count += learners[j]->outputsize();
+      v.subVec(c,learners[j]->outputsize()) << complete_learners_output[j](i);
+      c += learners[j]->outputsize();
     }
   }
   else
@@ -104,8 +107,9 @@ void PLearnerOutputVMatrix::getNewRow(int i, const Vec& v) const
       Vec out_j = learners_output(j);
       learners[j]->computeOutput(learner_input,out_j);
     }
+    v.subVec(0,c=learners_output.size()) << learners_output.toVec();
   }
-  v.subVec(0,c=learners_output.size()) << learners_output.toVec();
+ 
   if (put_raw_input)
   {
     v.subVec(c,learner_input->length()) << learner_input;
@@ -172,7 +176,13 @@ void PLearnerOutputVMatrix::build_()
       {
         complete_learners_output.resize(learners.length());
         for (int i = 0; i < learners.length(); i++) {
-          if(train_learners) learners[i]->train();
+          if(train_learners)
+          {
+            PP<VecStatsCollector> stats = new VecStatsCollector();
+            learners[i]->setTrainStatsCollector(stats);
+            learners[i]->train();
+            stats->finalize();
+          }
           complete_learners_output[i].resize(data->length(),learners[i]->outputsize());
         }
         learners_need_train = false;
