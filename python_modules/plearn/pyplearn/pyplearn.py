@@ -511,7 +511,10 @@ class plearn_snippet:
     def __str__(self):
         return self.s
 
-    def __add__(self, snippet):
+    def __add__(self, o):
+        raise NotImplementedError("See dorionc")
+    
+    def __iadd__(self, snippet):
         """Overrides the operator+= on plearn_snippet instances.
 
         snippet <- plearn_snippet

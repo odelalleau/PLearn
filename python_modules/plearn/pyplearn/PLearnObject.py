@@ -5,6 +5,7 @@ X{Tutorial: Using PLearnObject}
 
 Coming soon...
 """
+from pyplearn import *
 from plearn.utilities.FrozenObject import *
 
 class PLearnObject( FrozenObject ):
@@ -61,5 +62,6 @@ class PLearnObject( FrozenObject ):
         
             return pl.NameOfTheCorespondingPLearnObject( **self.plearn_options() )
         """
-        raise NotImplemented("PLearnObject.plearn_repr must be overrided. (type(self): %s)"
-                             % type(self))
+##         raise NotImplemented("PLearnObject.plearn_repr must be overrided. (type(self): %s)"
+##                              % type(self))
+        return eval("pl.%s( **self.plearn_options() )" % self.classname())
