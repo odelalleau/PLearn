@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunObject.h,v 1.3 2004/09/14 16:04:37 chrish42 Exp $ 
+   * $Id: RunObject.h,v 1.4 2004/10/08 18:11:13 kermorvc Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -93,7 +93,7 @@ protected:
 
   //! Declares this class' options
   static void declareOptions(OptionList& ol);
-
+  string save_object_name;
 public:
 
   // Declares other standard object methods

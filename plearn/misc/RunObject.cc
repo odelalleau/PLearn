@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunObject.cc,v 1.2 2004/09/14 16:04:37 chrish42 Exp $ 
+   * $Id: RunObject.cc,v 1.3 2004/10/08 18:11:13 kermorvc Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -51,6 +51,7 @@ using namespace std;
 ///////////////
 RunObject::RunObject() 
 {
+  save_object_name="";
 }
 
 PLEARN_IMPLEMENT_OBJECT(RunObject,
@@ -64,6 +65,8 @@ void RunObject::declareOptions(OptionList& ol)
 {
   declareOption(ol, "underlying_object", &RunObject::underlying_object, OptionBase::buildoption,
       "The underlying object to be built.");
+  declareOption(ol, "save_object_name", &RunObject::save_object_name, OptionBase::buildoption,
+      "Save the object with this name");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -77,6 +80,7 @@ void RunObject::build()
 {
   inherited::build();
   build_();
+  if(save_object_name!="")PLearn::save(save_object_name,underlying_object);
 }
 
 void RunObject::makeDeepCopyFromShallowCopy(CopiesMap& copies)
