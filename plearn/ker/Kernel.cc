@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.26 2004/05/17 15:12:54 ouimema Exp $
+   * $Id: Kernel.cc,v 1.27 2004/05/29 18:18:18 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -170,18 +170,18 @@ real Kernel::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x) const
     return evaluate(x,data.getSubRow(i,data_inputsize));
 }
 
-real Kernel::evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x, bool first_time) {
+real Kernel::evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x, bool first_time) const {
   return evaluate_i_x(i, x, squared_norm_of_x);
 }
 
-real Kernel::evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x, bool first_time) {
+real Kernel::evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x, bool first_time) const {
   return evaluate_x_i(x, i, squared_norm_of_x);
 }
 
 //////////////////////
 // evaluate_all_i_x //
 //////////////////////
-void Kernel::evaluate_all_i_x(const Vec& x, Vec& k_xi_x, real squared_norm_of_x) {
+void Kernel::evaluate_all_i_x(const Vec& x, Vec& k_xi_x, real squared_norm_of_x) const {
   k_xi_x[0] = evaluate_i_x_again(0, x, squared_norm_of_x, true);
   for (int i = 1; i < k_xi_x.length(); i++) {
     k_xi_x[i] = evaluate_i_x_again(i, x, squared_norm_of_x);
@@ -191,7 +191,7 @@ void Kernel::evaluate_all_i_x(const Vec& x, Vec& k_xi_x, real squared_norm_of_x)
 //////////////////////
 // evaluate_all_x_i //
 //////////////////////
-void Kernel::evaluate_all_x_i(const Vec& x, Vec& k_x_xi, real squared_norm_of_x) {
+void Kernel::evaluate_all_x_i(const Vec& x, Vec& k_x_xi, real squared_norm_of_x) const {
   k_x_xi[0] = evaluate_x_i_again(x, 0, squared_norm_of_x, true);
   for (int i = 1; i < k_x_xi.length(); i++) {
     k_x_xi[i] = evaluate_x_i_again(x, i, squared_norm_of_x);
@@ -392,10 +392,10 @@ real Kernel::test(VMat d, real threshold, real sameness_below_threshold, real sa
 //////////////////////////////////////////////
 // computeKNNeighbourMatrixFromDistanceMatrix //
 //////////////////////////////////////////////
-Mat Kernel::computeKNNeighbourMatrixFromDistanceMatrix(const Mat& D, int knn, bool insure_self_first_neighbour, bool report_progress)
+TMat<int> Kernel::computeKNNeighbourMatrixFromDistanceMatrix(const Mat& D, int knn, bool insure_self_first_neighbour, bool report_progress)
 {
   int npoints = D.length();
-  Mat neighbours(npoints, knn);  
+  TMat<int> neighbours(npoints, knn);  
   Mat tmpsort(npoints,2);
 
   ProgressBar* pb = 0;
@@ -403,7 +403,7 @@ Mat Kernel::computeKNNeighbourMatrixFromDistanceMatrix(const Mat& D, int knn, bo
     pb = new ProgressBar("Computing neighbour matrix", npoints);
   }
   
-    //for(int i=0; i<2; i++)
+  Mat indices;
   for(int i=0; i<npoints; i++)
     {
       for(int j=0; j<npoints; j++)
@@ -415,7 +415,10 @@ Mat Kernel::computeKNNeighbourMatrixFromDistanceMatrix(const Mat& D, int knn, bo
         tmpsort(i,0) = -FLT_MAX;
 
       partialSortRows(tmpsort, knn);
-      neighbours(i) << tmpsort.column(1).subMatRows(0,knn);
+      indices = tmpsort.column(1).subMatRows(0,knn);
+      for (int j = 0; j < knn; j++) {
+        neighbours(i,j) = int(indices(j,0));
+      }
       if (pb)
         pb->update(i);
     }

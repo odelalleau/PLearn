@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.27 2004/05/17 14:46:50 ouimema Exp $
+   * $Id: Kernel.h,v 1.28 2004/05/29 18:18:18 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -126,8 +126,8 @@ public:
   //! Return evaluate(data(i),x), where x is the same as in the precedent call
   //! to this same function (except if 'first_time' is true). This can be used to speed
   //! up successive computations of K(x_i, x) (default version just calls evaluate_i_x).
-  virtual real evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x=-1, bool first_time = false);
-  virtual real evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x=-1, bool first_time = false);
+  virtual real evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x=-1, bool first_time = false) const;
+  virtual real evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x=-1, bool first_time = false) const;
 
   //! Call evaluate_i_j to fill each of the entries (i,j) of symmetric matrix K.
   virtual void computeGramMatrix(Mat K) const;
@@ -145,10 +145,10 @@ public:
   void apply(Vec x, VMat m, Vec& result) const; //!<  result[i]=K(x,m[i])
 
   //! Fill k_xi_x with K(x_i, x), for all i from 0 to k_xi_x.length().
-  void evaluate_all_i_x(const Vec& x, Vec& k_xi_x, real squared_norm_of_x=-1);
+  void evaluate_all_i_x(const Vec& x, Vec& k_xi_x, real squared_norm_of_x=-1) const;
 
   //! Fill k_x_xi with K(x, x_i), for all i from 0 to k_x_xi.length().
-  void evaluate_all_x_i(const Vec& x, Vec& k_x_xi, real squared_norm_of_x=-1);
+  void evaluate_all_x_i(const Vec& x, Vec& k_x_xi, real squared_norm_of_x=-1) const;
 
   inline real operator()(const Vec& x1, const Vec& x2) const
     { return evaluate(x1,x2); }
@@ -162,7 +162,7 @@ public:
   //!  Returns a Mat m such that m(i,j) is the index of jth closest neighbour of input i, 
   //!  according to the "distance" measures given by D(i,j).
   //!  Only knn neighbours are computed.
-  static Mat computeKNNeighbourMatrixFromDistanceMatrix(const Mat& D, int knn, bool insure_self_first_neighbour=true, bool report_progress = false);
+  static TMat<int> computeKNNeighbourMatrixFromDistanceMatrix(const Mat& D, int knn, bool insure_self_first_neighbour=true, bool report_progress = false);
 
   //!  Returns a Mat m such that m(i,j) is the index of jth closest neighbour of input i, 
   //!  according to the "distance" measures given by D(i,j)
