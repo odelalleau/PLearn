@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.h,v 1.13 2004/02/26 03:39:32 tihocan Exp $
+   * $Id: NNet.h,v 1.14 2004/04/04 16:34:50 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -60,8 +60,10 @@ using namespace std;
     Var w2; // bias and weights of second hidden layer
     Var wout; // bias and weights of output layer
     Var wdirect; // bias and weights for direct in-to-out connection
+    Var wrec; // input reconstruction weights (optional), from hidden layer to predicted input
 
     Var output;
+    Var predicted_input;
     VarArray costs; // all costs of interest
     VarArray penalties;
     Var training_cost; // weighted scalar costs[0] including penalties
@@ -100,6 +102,7 @@ using namespace std;
     real classification_regularizer; // default: 0
 
     bool L1_penalty; // default: false
+    real input_reconstruction_penalty; // default = 0
     bool direct_in_to_out; // should we include direct input to output connecitons? default: false
     string output_transfer_func; // tanh, sigmoid, softplus, softmax  (default: "" means no transfer function)
     real interval_minval, interval_maxval; // if output_transfer_func = interval(minval,maxval), these are the interval bounds

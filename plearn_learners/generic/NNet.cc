@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.43 2004/03/10 20:13:36 tihocan Exp $
+   * $Id: NNet.cc,v 1.44 2004/04/04 16:34:43 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -93,6 +93,7 @@ NNet::NNet() // DEFAULT VALUES FOR ALL OPTIONS
    direct_in_to_out_weight_decay(0),
    classification_regularizer(0),
    L1_penalty(false),
+   input_reconstruction_penalty(0),
    direct_in_to_out(false),
    output_transfer_func(""),
    interval_minval(0), interval_maxval(1),
@@ -146,6 +147,11 @@ void NNet::declareOptions(OptionList& ol)
 
   declareOption(ol, "L1_penalty", &NNet::L1_penalty, OptionBase::buildoption, 
                 "    should we use L1 penalty instead of the default L2 penalty on the weights?\n");
+
+  declareOption(ol, "input_reconstruction_penalty", &NNet::input_reconstruction_penalty, OptionBase::buildoption,
+                "    if >0 then a set of weights will be added from a hidden layer to predict (reconstruct) the inputs\n"
+                "    and the total loss will include an extra term that is the squared input reconstruction error,\n"
+                "    multiplied by the input_reconstruction_penalty factor.\n");
 
   declareOption(ol, "direct_in_to_out", &NNet::direct_in_to_out, OptionBase::buildoption, 
                 "    should we include direct input to output connections?\n");
@@ -213,12 +219,14 @@ void NNet::build_()
       input = Var(inputsize(), "input");
       output = input;
       params.resize(0);
+      Var hidden_layer;
 
       // first hidden layer
       if(nhidden>0)
         {
           w1 = Var(1+inputsize(), nhidden, "w1");      
           output = tanh(affine_transform(output,w1));
+          hidden_layer = output;
           params.append(w1);
         }
 
@@ -371,6 +379,14 @@ void NNet::build_()
         else
           penalties.append(sumsquare(wdirect)*(direct_in_to_out_weight_decay + weight_decay));
       }
+
+      if (input_reconstruction_penalty>0)
+        {
+          wrec = Var(hidden_layer->size(),inputsize(),"wrec");
+          predicted_input = transposeProduct(wrec, hidden_layer);
+          params.append(wrec);
+          penalties.append(input_reconstruction_penalty*sumsquare(predicted_input - input));
+        }
 
       test_costs = hconcat(costs);
 
