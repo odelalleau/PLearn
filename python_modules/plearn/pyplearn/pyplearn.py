@@ -668,6 +668,29 @@ def _parse_plargs(args):
 
 def bind_plargs(obj, field_names, plarg_names = None):
     """Binds some command line arguments to the fields of an object.
+
+    In short, given::
+
+        class MiscDefaults:
+            pca_comp              = 10
+            pca_norm              = 1   # True
+            sigma                 = 2.4
+
+    this call::
+
+        bind_plargs( MiscDefaults, [ "pca_comp", "pca_norm", "sigma" ] )
+
+    is strictly equivalent to::
+
+        plarg_defaults.pca_comp              = MiscDefaults.pca_comp
+        plarg_defaults.pca_norm              = MiscDefaults.pca_norm
+        plarg_defaults.sigma                 = MiscDefaults.sigma
+
+        MiscDefaults.pca_comp                = plargs.pca_comp
+        MiscDefaults.pca_norm                = plargs.pca_norm 
+        MiscDefaults.sigma                   = plargs.sigma
+
+    Therefore, you can configure the I{MiscDefaults} values from the command line.
     
     @param obj: Either a class (fields => static members) or an
     instance from which to get the default values for plarg_defaults
