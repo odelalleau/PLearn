@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.cc,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: SubVMatrix.cc,v 1.2 2003/05/03 05:02:18 plearner Exp $
    ******************************************************* */
 
 #include "SubVMatrix.h"
@@ -100,7 +100,7 @@ real SubVMatrix::get(int i, int j) const
 void SubVMatrix::getSubRow(int i, int j, Vec v) const
 {
 #ifdef BOUNDCHECK
-  if(i<0 || i>=length() || j<0 || j>=width())
+  if(i<0 || i>=length() || j<0 || j+v.length()>width())
     PLERROR("In SubVMatrix::getSubRow(i,j,v) OUT OF BOUND access");
 #endif
   parent->getSubRow(i+istart,j+jstart,v);

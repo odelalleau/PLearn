@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.17 2003/04/29 21:33:30 plearner Exp $
+   * $Id: plearn.cc,v 1.18 2003/05/03 05:02:02 plearner Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -45,6 +45,12 @@
 
 // Available VMats:
 #include "AutoVMatrix.h"
+
+
+// New generation system
+#include "PExperiment.h"
+#include "NNet.h"
+// #include "HyperLearner.h"
 
 // All Available Learners: 
 // #include "KNN.h"

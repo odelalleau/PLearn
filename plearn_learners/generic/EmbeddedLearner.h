@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.h,v 1.3 2003/04/29 21:33:46 plearner Exp $ 
+   * $Id: EmbeddedLearner.h,v 1.4 2003/05/03 05:02:18 plearner Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.h */
@@ -106,11 +106,8 @@ public:
     
     virtual void forget();
 
-    virtual void newtrain(VecStatsCollector& train_stats);
+    virtual void train(VecStatsCollector& train_stats);
     
-    virtual void newtest(VMat testset, VecStatsCollector& test_stats, 
-                         VMat testoutputs=0, VMat testcosts=0);
-
     virtual void computeOutput(const VVec& input, Vec& output);
 
     virtual void computeCostsFromOutputs(const VVec& input, const Vec& output, 
@@ -124,9 +121,12 @@ public:
     virtual void computeCostsOnly(const VVec& input, VVec& target, VVec& weight, 
                               Vec& costs);
     
-    virtual Array<string> costNames() const;
+    virtual void test(VMat testset, VecStatsCollector& test_stats, 
+                         VMat testoutputs=0, VMat testcosts=0);
 
-    virtual Array<string> trainObjectiveNames() const;
+    virtual TVec<string> getTestCostNames() const;
+
+    virtual TVec<string> getTrainCostNames() const;
 };
 
 // Declares a few other classes and functions related to this class

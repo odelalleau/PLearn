@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.cc,v 1.12 2003/05/01 15:22:28 tihocan Exp $
+   * $Id: GradientOptimizer.cc,v 1.13 2003/05/03 05:02:18 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -263,8 +263,8 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
       default:
         break;
     }
-    // stats_coll.update(cost);
-    // TODO To put when we have a stats collector ! ;)
+
+    stats_coll.update(cost->value);
   }
 
   meancost /= real(niter);

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.1 2003/04/29 21:33:50 plearner Exp $
+   * $Id: NNet.cc,v 1.2 2003/05/03 05:02:18 plearner Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -345,17 +345,27 @@ void NNet::setTrainingSet(VMat training_set)
   int nsamples = batch_size>0 ? batch_size : l;
   Func paramf = Func(input&target_and_weights, cost); // parameterized function to optimize
   Var totalcost = meanOf(train_set,paramf, nsamples);
-  optimizer->setToOptimize(params, totalcost);
-  optimizer->nupdates = l/nsamples;
+  optimizer->setToOptimize(params, totalcost);  
   optimizer->build();
 }
 
 void NNet::train(VecStatsCollector& train_stats)
 {
   // NNet nstages is number of epochs (whole passages through the training set)
+  // while optimizer nstages is number of weight updates.
+  // So relationship between the 2 depends whether we are in stochastic, batch or minibatch mode
 
- while(stage<nstages)
+  int l = train_set->length();  
+
+  // number of samples seen by optimizer before each optimizer update
+  int nsamples = batch_size>0 ? batch_size : l;
+
+  // number of optimiser stages corresponding to one learner stage (one epoch)
+  int optstage_per_lstage = l/nsamples;
+
+  while(stage<nstages)
     {
+      optimizer->nstages = stage*optstage_per_lstage;
       optimizer->optimizeN(train_stats);
       ++stage;
     }

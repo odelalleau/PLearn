@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.cc,v 1.2 2003/04/29 21:33:46 plearner Exp $ 
+   * $Id: EmbeddedLearner.cc,v 1.3 2003/05/03 05:02:18 plearner Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.cc */
@@ -87,13 +87,9 @@ void EmbeddedLearner::build()
  void EmbeddedLearner::forget()
 { learner->forget(); }
 
- void EmbeddedLearner::newtrain(VecStatsCollector& train_stats)
-{ learner->newtrain(VecStatsCollector& train_stats); }
+ void EmbeddedLearner::train(VecStatsCollector& train_stats)
+{ learner->train(VecStatsCollector& train_stats); }
     
- void EmbeddedLearner::newtest(VMat testset, VecStatsCollector& test_stats, 
-                         VMat testoutputs=0, VMat testcosts=0)
-{ learner->newtest(testset, test_stats, testoutputs, testcosts); }
-
  void EmbeddedLearner::computeOutput(const VVec& input, Vec& output)
 { learner->computeOutput(input, output); }
 
@@ -111,12 +107,15 @@ void EmbeddedLearner::build()
                               Vec& costs)
 { learner->computeCostsOnly(input, target, weight, costs); }
     
-Array<string> EmbeddedLearner::costNames() const
-{ return learner->costNames(); } 
+void EmbeddedLearner::test(VMat testset, VecStatsCollector& test_stats, 
+                         VMat testoutputs=0, VMat testcosts=0)
+{ learner->test(testset, test_stats, testoutputs, testcosts); }
 
-Array<string> EmbeddedLearner::trainObjectiveNames() const
-{ return learner->trainObjectiveNames(); }
+EmbeddedLearner::TVec<string> getTestCostNames() const
+{ return learner->getTestCostNames(); }
 
+EmbeddedLearner::TVec<string> getTrainCostNames() const
+{ return learner->getTrainCostNames(); }
 
 void EmbeddedLearner::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {

@@ -431,6 +431,7 @@ protected:
   template <class T> 
   inline PStream& operator<<(PStream& out, const T*& x)
   {
+    //    cerr << "{ " << x << " : " << out.copies_map_out.size() << " } " << endl; 
     if(x)
       {
         map<void *, unsigned int>::iterator it = out.copies_map_out.find(const_cast<T*&>(x));
@@ -438,7 +439,7 @@ protected:
           {
             int id = out.copies_map_out.size()+1;
             out.put('*');
-            out << it->second;
+            out << id;
             out.write("->");
             out.copies_map_out[const_cast<T*&>(x)] = id;
             out << *x;
@@ -479,9 +480,33 @@ protected:
   
 
 
-// Serialization of pairs
+// Serialization of pairs in the form:   
+// first : second
 
+template<class A,class B>
+inline PStream& operator<<(PStream& out, const pair<A,B>& x) 
+{ 
+  out << x.first;
+  out.write(": ");
+  out << x.second;
+  out.put(' ');
+  return out;
+}
 
+template <typename S, typename T> 
+inline PStream& operator>>(PStream& in, pair<S, T> &x) 
+{ 
+  in.skipBlanksAndCommentsAndSeparators();
+  in >> x.first;
+  in.skipBlanksAndComments();
+  if(in.get()|=':')
+    PLERROR("In operator>>(PStream& in, pair<S, T> &x) expected ':' to separate the 2 halves of the pair");
+  in.skipBlanksAndComments();
+  in >> x.second;
+  return in;
+}
+
+/*
 template<class A,class B>
 inline PStream& operator<<(PStream& out, const pair<A,B>& x) 
 { 
@@ -510,7 +535,7 @@ inline PStream& operator>>(PStream& in, pair<S, T> &x)
     PLERROR("In operator>>(PStream& in, pair<S, T> &x) expected ']' but read %c", c);
   return in;
 }
-  
+*/
 
 
 // Serialization of map types

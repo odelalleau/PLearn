@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.1 2003/04/29 21:33:51 plearner Exp $
+   * $Id: PLearner.cc,v 1.2 2003/05/03 05:02:18 plearner Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -82,10 +82,6 @@ void PLearner::declareOptions(OptionList& ol)
                 "Number of weights within target.  The last 'weightsize' fields of the target vector will be used as cost weights.\n"
                 "This is usually 0 (no weight) or 1 (1 weight per sample). Special loss functions may be able to give a meaning\n"
                 "to weightsize>1. Not all learners support weights.");
-
-  declareOption(ol, "expdir", &PLearner::expdir, OptionBase::buildoption,
-                "The directory in which to save results, models, etc... \n"
-                "If empty, the train method should not create *any* result file");
 
   declareOption(ol, "seed", &PLearner::seed, OptionBase::buildoption, 
                 "The initial seed for the random number generator used to initialize this learner's parameters\n"

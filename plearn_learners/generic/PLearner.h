@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.1 2003/04/29 21:33:51 plearner Exp $
+   * $Id: PLearner.h,v 1.2 2003/05/03 05:02:18 plearner Exp $
    ******************************************************* */
 
 
@@ -65,6 +65,10 @@ using namespace std;
 
     VMat train_set;  // The training set as set by setTrainingSet
 
+    //! the directory in which to save files related to this model (see setExperimentDirectory())
+    //! You may assume that it ends with a slash (setExperimentDirectory(...) ensures this).
+    string expdir; 
+
   public:
 
     typedef Object inherited;
@@ -74,11 +78,6 @@ using namespace std;
     int targetsize_; //!<  columns followed by targetsize() columns.
     int outputsize_; //!<  the use() method produces an output vector of size outputsize().
     int weightsize_; //<! number of weight fields in the target vec (all_targets = actual_target & weights)
-
-    //! the directory in which to save files related to this model (see setExperimentDirectory())
-    //! You may assume that it ends with a slash (setExperimentDirectory(...) ensures this).
-    string expdir; 
-
     long seed;
     int stage;
     int nstages;

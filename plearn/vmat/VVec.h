@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: VVec.h,v 1.5 2003/04/06 23:22:39 plearner Exp $
+   * $Id: VVec.h,v 1.6 2003/05/03 05:02:18 plearner Exp $
    ******************************************************* */
 
 
@@ -115,16 +115,16 @@ class VVec : public Object
   DECLARE_NAME_AND_DEEPCOPY(VVec);
 };
 
-inline void operator<<(const VVec& vv, const Vec& v)
+inline void operator>>(const VVec& vv, const Vec& v)
 { vv.toVec(v); }
 
-inline void operator>>(const VVec& vv, const Vec& v)
+inline void operator<<(const VVec& vv, const Vec& v)
 { vv.copyFrom(v); }
 
-inline void operator>>(const Vec& v, const VVec& vv)
+inline void operator<<(const Vec& v, const VVec& vv)
 { vv.toVec(v); }
 
-inline void operator<<(const Vec& v, const VVec& vv)
+inline void operator>>(const Vec& v, const VVec& vv)
 { vv.copyFrom(v); }
 
 
