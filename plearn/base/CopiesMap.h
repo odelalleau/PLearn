@@ -3,10 +3,19 @@
 #ifndef CopiesMap_INC
 #define CopiesMap_INC
 
+//! Macro to define deep copy for types that actually do not require
+//! any deep copy (such as int, real, etc.).
+#define NODEEPCOPY(TYPE)                              \
+      inline void deepCopyField(TYPE&, CopiesMap&) {}
 
 #include <map>
+#include <string>
+#include "plerror.h"    //!< For PLWARNING.
 
 namespace PLearn {
+
+class VMField;
+class VMFieldStat;
 
 using namespace std;
 
@@ -25,11 +34,23 @@ using namespace std;
     Take a close look at the Object class in Object.h to see how this is done.
 */
 
+  //! Types that do not require deep copy.
+  NODEEPCOPY(double);
+  NODEEPCOPY(float);
+  NODEEPCOPY(int);
+  NODEEPCOPY(string);
+  NODEEPCOPY(VMField);
+  NODEEPCOPY(VMFieldStat);
+
   //!  Any type not handled below: do nothing
   template <class T>
   inline void deepCopyField(T&, CopiesMap&)
   {
     /*! no op */
+    PLWARNING(
+        "In CopiesMap.h - deepCopyField not handled for this type. "
+        "If it actually doesn't need deep copy, edit CopiesMap.h and add NODEEPCOPY(your_type) to remove this warning."
+    );
   }
 
   template <class T>
