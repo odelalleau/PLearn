@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.cc,v 1.26 2004/11/26 14:49:23 tihocan Exp $
+   * $Id: MemoryVMatrix.cc,v 1.27 2004/11/26 16:57:23 tihocan Exp $
    ******************************************************* */
 
 #include "MemoryVMatrix.h"
@@ -53,12 +53,16 @@ PLEARN_IMPLEMENT_OBJECT(MemoryVMatrix,
     "will be precomputed in memory at build time.\n"
 );
 
-MemoryVMatrix::MemoryVMatrix() : data(Mat())
+MemoryVMatrix::MemoryVMatrix()
+: synch_data(true),
+  data(Mat())
 {
   memory_data = data;
 }
 
-MemoryVMatrix::MemoryVMatrix(int l, int w) : VMatrix(l, w)
+MemoryVMatrix::MemoryVMatrix(int l, int w)
+: VMatrix(l, w),
+  synch_data(false)
 {
   data.resize(l,w);
   memory_data = data;
@@ -66,16 +70,21 @@ MemoryVMatrix::MemoryVMatrix(int l, int w) : VMatrix(l, w)
 }
 
 MemoryVMatrix::MemoryVMatrix(const Mat& the_data)
-  :VMatrix(the_data.length(), the_data.width()), data(the_data)
+: VMatrix(the_data.length(), the_data.width()),
+  synch_data(true),
+  data(the_data)
 {
   memory_data = the_data;
   defineSizes(the_data.width(), 0, 0);
 }
 
 MemoryVMatrix::MemoryVMatrix(VMat the_data_vm)
-:VMatrix(the_data_vm->length(), the_data_vm->width()), memory_data(the_data_vm->toMat())
+: VMatrix(the_data_vm->length(), the_data_vm->width()),
+  memory_data(the_data_vm->toMat()),
+  synch_data(false)
 {
   copySizesFrom(the_data_vm);
+  setMetaInfoFrom(the_data_vm);
 }
 
 ////////////////////
@@ -111,9 +120,17 @@ void MemoryVMatrix::build_()
   if (data_vm) {
     // Precompute data from data_vm;
     memory_data = data_vm->toMat();
+    copySizesFrom(data_vm);
     setMetaInfoFrom(data_vm);
+    synch_data = false;
   } else {
+    synch_data = true;
+  }
+  if (synch_data) {
     memory_data = data;
+    // We temporarily set data to a new empty Mat, so that memory_data
+    // can be safely resized.
+    data = Mat();
   }
   if (this->length() >= 0 && this->length() != memory_data.length()) {
     // New length specified.
@@ -131,6 +148,9 @@ void MemoryVMatrix::build_()
     // Take the width from the data matrix.
     this->width_ = memory_data.width();
   }
+  if (synch_data)
+    // Restore data so that it is equal to memory_data.
+    data = memory_data;
 }
 
 ///////////

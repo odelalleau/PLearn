@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.h,v 1.14 2004/11/17 16:15:46 tihocan Exp $
+   * $Id: MemoryVMatrix.h,v 1.15 2004/11/26 16:57:23 tihocan Exp $
    ******************************************************* */
 
 
@@ -59,6 +59,11 @@ protected:
   //! or be filled with the content of 'data_vm', depending on which of these
   //! two options is used.
   Mat memory_data;
+
+  //! Set to true if data is given through the 'data' option instead of the
+  //! 'data_vm' option. It requires memory_data and data to systematically
+  //! be the same.
+  bool synch_data;
 
 public:
 
