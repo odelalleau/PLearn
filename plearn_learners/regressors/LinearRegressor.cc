@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.cc,v 1.15 2005/02/16 15:15:42 tihocan Exp $
+   * $Id: LinearRegressor.cc,v 1.16 2005/02/16 15:17:29 tihocan Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.cc */
@@ -136,7 +136,7 @@ void LinearRegressor::declareOptions(OptionList& ol)
 
   // Unused options.
 
-  redeclareOption(ol, "seed", &LinearRegressor::seed_, OptionBase::buildoption,
+  redeclareOption(ol, "seed", &LinearRegressor::seed_, OptionBase::nosave,
       "The random seed is not used in a linear regressor.");
 }
 
