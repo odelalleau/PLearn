@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrecomputedVMatrix.cc,v 1.1 2003/09/09 18:06:25 plearner Exp $ 
+   * $Id: PrecomputedVMatrix.cc,v 1.2 2003/09/09 22:50:54 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -133,15 +133,28 @@ void PrecomputedVMatrix::build_()
           
       setMtime(source->getMtime());
 
+      // Set length and width
       length_ = source->length();
       width_ = source->width();
 
+      // Set sizes
       if(inputsize_<0)
         inputsize_ = source->inputsize();
       if(targetsize_<0)
         targetsize_ = source->targetsize();
       if(weightsize_<0)
-        weightsize_ = source->weightsize();      
+        weightsize_ = source->weightsize();
+
+      // Set fieldnames
+      setFieldInfos(source->getFieldInfos());
+
+      // Set mapping and info files
+      for(int j=0; j<width_; j++)
+        {
+          setSFIFFilename(j, ".smap", source->getSFIFFilename(j,".smap"));
+          setSFIFFilename(j, ".notes", source->getSFIFFilename(j,".notes"));
+          setSFIFFilename(j, ".binning", source->getSFIFFilename(j,".binning"));
+        }
     }
 }
 

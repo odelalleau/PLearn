@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.5 2003/08/13 08:13:17 plearner Exp $
+   * $Id: vmatmain.cc,v 1.6 2003/09/09 22:50:50 plearner Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -758,7 +758,7 @@ int vmatmain(int argc, char** argv)
       VMat vm2 = getDataSet(argv[3]);
       double tol = 1e-6;
       if(argc>=5)
-        tol = atof(argv[5]);
+        tol = atof(argv[4]);
       print_diff(cout, vm1, vm2, tol);      
     }
   else if(command=="cat")
