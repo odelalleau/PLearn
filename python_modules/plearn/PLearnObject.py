@@ -10,11 +10,11 @@ class PLearnObject:
     
     This class sets the basics for managing classes defining default
     values for PLearnObject fields. It also provides, through
-    plargs(), an easy way to retreive all attributes to be forwarded
+    plearn_options(), an easy way to retreive all attributes to be forwarded
     to the plearn snippet through the 'pl' object (see plearn_repr()).
 
     IMPORTANT: Subclasses of PLearnObject MUST declare any internal
-    member, i.e. *any member that SHOULD NOT be considered by plargs*,
+    member, i.e. *any member that SHOULD NOT be considered by plearn_options*,
     with a name that starts with at least one underscore '_'.
     """
     def __init__(self, defaults=None, overrides=None):
@@ -30,12 +30,12 @@ class PLearnObject:
         if overrides is not None:
             self.__dict__.update( overrides )
 
-    def plargs(self):
-        """Return a dictionnary of all members of this instance that are considered to be plargs.
+    def plearn_options(self):
+        """Return a dictionnary of all members of this instance that are considered to be plearn options.
 
         IMPORTANT: Subclasses of PLearnObject MUST declare any
         internal member, i.e. *any member that SHOULD NOT be
-        considered by plargs*, with a name that starts with at least
+        considered by plearn_options()*, with a name that starts with at least
         one underscore '_'.
 
         Indeed, this method returns a dictionnary containing all and
@@ -51,10 +51,10 @@ class PLearnObject:
     def plearn_repr(self):
         """Any object overloading this method will be recognized by the pyplearn_driver
 
-        NOTE THAT in most cases, given the plargs() method just above,
+        NOTE THAT in most cases, given the plearn_options() method just above,
         the proper and easy way to implement this method is
 
-            return pl.NameOfTheCorespondingPLearnObject( **self.plargs() )
+            return pl.NameOfTheCorespondingPLearnObject( **self.plearn_options() )
         """
         raise NotImplemented("PLearnObject.plearn_repr must be overloaded. (type(self): %s)"
                              % type(self))
