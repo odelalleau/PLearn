@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: lisaplearn.cc,v 1.10 2004/03/12 23:30:22 tihocan Exp $
+   * $Id: lisaplearn.cc,v 1.11 2004/03/19 14:21:44 tihocan Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -49,14 +49,15 @@
 
 // Available VMats:
 #include "AutoVMatrix.h"
-#include "IndexedVMatrix.h"
 #include "BatchVMatrix.h"
 #include "CumVMatrix.h"
 #include "FilteredVMatrix.h"
+#include "IndexedVMatrix.h"
 #include "RegularGridVMatrix.h"
-#include "VMatrixFromDistribution.h"
 #include "PrecomputedVMatrix.h"
 #include "ProcessingVMatrix.h"
+#include "SubInputVMatrix.h"
+#include "VMatrixFromDistribution.h"
 
 // Hyper-learning:
 #include "CartesianProductOracle.h"
