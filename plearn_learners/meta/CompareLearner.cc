@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CompareLearner.cc,v 1.1 2005/01/06 18:45:11 larocheh Exp $ 
+   * $Id: CompareLearner.cc,v 1.2 2005/02/08 21:59:55 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -244,7 +244,7 @@ void CompareLearner::setValidationSet(VMat validset)
   }
 }
 
-void CompareLearner::setExperimentDirectory(const string& the_expdir) 
+void CompareLearner::setExperimentDirectory(const PPath& the_expdir) 
 { 
   if(the_expdir=="")
   {

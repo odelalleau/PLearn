@@ -36,7 +36,7 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperOptimize.cc,v 1.3 2005/01/28 00:24:23 dorionc Exp $ 
+   * $Id: HyperOptimize.cc,v 1.4 2005/02/08 21:55:16 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file HyperOptimize.cc */
@@ -138,7 +138,7 @@ void HyperOptimize::build()
   build_();
 }
 
-void HyperOptimize::setExperimentDirectory(const string& the_expdir)
+void HyperOptimize::setExperimentDirectory(const PPath& the_expdir)
 {
   inherited::setExperimentDirectory(the_expdir);  
   createResultsMat();

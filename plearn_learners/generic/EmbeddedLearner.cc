@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.cc,v 1.21 2005/01/25 03:15:48 dorionc Exp $ 
+   * $Id: EmbeddedLearner.cc,v 1.22 2005/02/08 21:54:20 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.cc */
@@ -121,7 +121,7 @@ void EmbeddedLearner::setTrainStatsCollector(PP<VecStatsCollector> statscol)
   learner_->setTrainStatsCollector(statscol);
 }
 
-void EmbeddedLearner::setExperimentDirectory(const string& the_expdir)
+void EmbeddedLearner::setExperimentDirectory(const PPath& the_expdir)
 {
   assert( learner_ );
   inherited::setExperimentDirectory(the_expdir);

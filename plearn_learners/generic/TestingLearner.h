@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TestingLearner.h,v 1.4 2004/09/14 16:04:56 chrish42 Exp $ 
+   * $Id: TestingLearner.h,v 1.5 2005/02/08 21:54:23 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Marius Muja
@@ -157,7 +157,7 @@ public:
 
   virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
-  void setExperimentDirectory(const string& the_expdir);
+  void setExperimentDirectory(const PPath& the_expdir);
 
   // *** SUBCLASS WRITING: ***
   // While in general not necessary, in case of particular needs 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TestingLearner.cc,v 1.3 2004/09/14 16:04:56 chrish42 Exp $ 
+   * $Id: TestingLearner.cc,v 1.4 2005/02/08 21:54:23 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Marius Muja
@@ -155,7 +155,7 @@ void TestingLearner::setTrainingSet(VMat training_set, bool call_forget)
 }
 
 
-void TestingLearner::setExperimentDirectory(const string& the_expdir)
+void TestingLearner::setExperimentDirectory(const PPath& the_expdir)
 {
   tester->setExperimentDirectory(the_expdir);
 }

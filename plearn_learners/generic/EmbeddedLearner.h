@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.h,v 1.16 2004/10/21 22:07:25 chapados Exp $ 
+   * $Id: EmbeddedLearner.h,v 1.17 2005/02/08 21:54:23 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.h */
@@ -105,7 +105,7 @@ public:
   virtual void setTrainStatsCollector(PP<VecStatsCollector> statscol);
 
   //! Forwarded to inner learner; takes into account expdir_append
-  virtual void setExperimentDirectory(const string& the_expdir);
+  virtual void setExperimentDirectory(const PPath& the_expdir);
 
   //! Forwarded to inner learner
   virtual int inputsize() const;

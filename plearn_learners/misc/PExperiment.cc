@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PExperiment.cc,v 1.11 2004/07/21 16:30:57 chrish42 Exp $ 
+   * $Id: PExperiment.cc,v 1.12 2005/02/08 21:59:13 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -246,7 +246,7 @@ void StatSpec::parseStatname(const string& statname)
 }
 
 
-void PTester::setExperimentDirectory(const string& the_expdir) 
+void PTester::setExperimentDirectory(const PPath& the_expdir) 
 { 
   if(the_expdir=="")
     expdir = "";

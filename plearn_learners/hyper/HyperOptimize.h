@@ -36,7 +36,7 @@
 // Author: Pascal Vincent
 
 /* *******************************************************      
-   * $Id: HyperOptimize.h,v 1.1 2005/01/11 23:22:44 plearner Exp $ 
+   * $Id: HyperOptimize.h,v 1.2 2005/02/08 21:55:16 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file HyperOptimize.h */
@@ -104,8 +104,8 @@ protected:
 
 public:
 
-  //! Sets the expdir and calls createResultsMat
-  virtual void setExperimentDirectory(const string& the_expdir);
+  //! Sets the expdir and calls createResultsMat.
+  virtual void setExperimentDirectory(const PPath& the_expdir);
 
   //! Returns the names of the resules returned by the optimize() method
   virtual TVec<string> getResultNames() const;

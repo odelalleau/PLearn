@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CompareLearner.h,v 1.1 2005/01/06 18:45:11 larocheh Exp $ 
+   * $Id: CompareLearner.h,v 1.2 2005/02/08 21:59:56 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -163,7 +163,7 @@ public:
   
   virtual void setValidationSet(VMat validset);
 
-  virtual void setExperimentDirectory(const string& the_expdir);
+  virtual void setExperimentDirectory(const PPath& the_expdir);
 
 };
   

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PExperiment.h,v 1.11 2005/01/25 03:15:53 dorionc Exp $ 
+   * $Id: PExperiment.h,v 1.12 2005/02/08 21:59:13 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PTester.h */
@@ -110,7 +110,7 @@ public:
   //! related to this model are to be saved.     
   //! If it is an empty string, it is understood to mean that the 
   //! user doesn't want any file created by this learner.
-  void setExperimentDirectory(const string& the_expdir);
+  void setExperimentDirectory(const PPath& the_expdir);
   
   //! This returns the currently set expdir (see setExperimentDirectory)
   string getExperimentDirectory() const { return expdir; }
