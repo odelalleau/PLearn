@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SoftSlopeVariable.cc,v 1.6 2004/02/20 21:11:53 chrish42 Exp $
+   * $Id: SoftSlopeVariable.cc,v 1.7 2004/04/16 17:37:55 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,10 +49,10 @@ using namespace std;
 
 /** SoftSlopeVariable **/
 
-SoftSlopeVariable::  SoftSlopeVariable(Variable* x, Variable* smoothness, Variable* left, Variable* right)
+SoftSlopeVariable::  SoftSlopeVariable(Variable* x, Variable* smoothness, Variable* left, Variable* right, bool tabulated_)
   :NaryVariable(VarArray(x,smoothness) & Var(left) & Var(right), 
                 x->length()<left->length()?left->length():x->length(), 
-                x->width()<left->width()?left->width():x->width()) 
+                x->width()<left->width()?left->width():x->width()), tabulated(tabulated_)
 {}
 
 
@@ -98,10 +98,10 @@ void SoftSlopeVariable::fprop()
 
   if (n1==n && n2==n && n3==n && n4==n)
     for(int i=0; i<n; i++)
-      valuedata[i] = soft_slope(x[i], smoothness[i], left[i], right[i]);
+      valuedata[i] = tabulated?tabulated_soft_slope(x[i], smoothness[i], left[i], right[i]):soft_slope(x[i], smoothness[i], left[i], right[i]);
   else if (n1==1 && n2==n && n3==n && n4==n)
     for(int i=0; i<n; i++)
-      valuedata[i] = soft_slope(*x, smoothness[i], left[i], right[i]);
+      valuedata[i] = tabulated?tabulated_soft_slope(*x, smoothness[i], left[i], right[i]):soft_slope(*x, smoothness[i], left[i], right[i]);
   else
   {
     int m1= n1==1?0:1;
@@ -109,7 +109,7 @@ void SoftSlopeVariable::fprop()
     int m3= n3==1?0:1;
     int m4= n4==1?0:1;
     for(int i=0; i<n; i++,x+=m1,smoothness+=m2,left+=m3,right+=m4)
-      valuedata[i] = soft_slope(*x, *smoothness, *left, *right);
+      valuedata[i] = tabulated?tabulated_soft_slope(*x, *smoothness, *left, *right):soft_slope(*x, *smoothness, *left, *right);
   }
 }
 
@@ -140,7 +140,7 @@ void SoftSlopeVariable::bprop()
     real t1 = sigmoid(- *smoothness*(*x-*left));
     real t2 = sigmoid(- *smoothness*(*x-*right));
     real inv_delta=1.0/(*right-*left);
-    real rat = (soft_slope(*x, *smoothness, *left, *right) -1);
+    real rat = (tabulated?tabulated_soft_slope(*x, *smoothness, *left, *right):soft_slope(*x, *smoothness, *left, *right)) -1;
     real move = rat * inv_delta;
     real dss = (-t1*(*x-*left) + t2*(*x-*right))*inv_smoothness*inv_delta - rat * inv_smoothness;
     real dll = t1*inv_delta*inv_smoothness + move;

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.24 2004/02/20 21:14:45 chrish42 Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.25 2004/04/16 17:37:55 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -285,6 +285,7 @@ public:
   //! You may remove this method if your distribution does not implement it
   virtual void forget();
 
+  virtual int outputsize() const;
     
   void initializeParams();
   void initialize_mu(Vec& mu_);

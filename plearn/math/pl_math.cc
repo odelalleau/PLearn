@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.cc,v 1.9 2004/03/09 22:25:08 lheureup Exp $
+   * $Id: pl_math.cc,v 1.10 2004/04/16 17:37:54 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -246,6 +246,19 @@ real soft_slope_integral(real smoothness, real left, real right, real a, real b)
     return 
       (b - a) + (softplus_primitive(-smoothness*(b-right)) - softplus_primitive(-smoothness*(b-left))
                  -softplus_primitive(-smoothness*(a-right)) + softplus_primitive(-smoothness*(a-left)))/
+      (smoothness*smoothness*(right-left));
+  // else do the integral of the hard slope function
+  return hard_slope_integral(left,right,a,b);
+}
+
+real tabulated_soft_slope_integral(real smoothness, real left, real right, real a, real b)
+{
+  if (smoothness==0)
+    return 0.5*(b-a);
+  if (smoothness<100)
+    return 
+      (b - a) + (tabulated_softplus_primitive(-smoothness*(b-right)) - tabulated_softplus_primitive(-smoothness*(b-left))
+                 -tabulated_softplus_primitive(-smoothness*(a-right)) + tabulated_softplus_primitive(-smoothness*(a-left)))/
       (smoothness*smoothness*(right-left));
   // else do the integral of the hard slope function
   return hard_slope_integral(left,right,a,b);

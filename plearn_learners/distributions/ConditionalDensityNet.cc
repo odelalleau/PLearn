@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.36 2004/02/29 16:44:06 nova77 Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.37 2004/04/16 17:37:55 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -266,6 +266,21 @@ ConditionalDensityNet::ConditionalDensityNet()
                 "    Values of Y at which the cumulative (or density or survival) curves are computed if required.\n");
 
     inherited::declareOptions(ol);
+  }
+
+  int ConditionalDensityNet::outputsize() const
+  {
+    int target_size = targetsize_<0?(train_set?train_set->targetsize():1):targetsize_;
+    int l=0;
+    for (unsigned int i=0;i<outputs_def.length();i++)
+      if (outputs_def[i]=='L' || outputs_def[i]=='D' || outputs_def[i]=='C' || outputs_def[i]=='S')
+        l+=n_curve_points;
+      else if (outputs_def[i]=='e')
+        l+=target_size;
+      else if (outputs_def[i]=='v') // by default assume variance is full nxn matrix 
+        l+=target_size*target_size;
+      else l++;
+    return l;
   }
 
   void ConditionalDensityNet::build_()
@@ -706,51 +721,51 @@ TVec<string> ConditionalDensityNet::getTestCostNames() const
 
   void ConditionalDensityNet::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   {
-  deepCopyField(input, copies);
-  deepCopyField(target, copies);
-  deepCopyField(sampleweight, copies);
-  deepCopyField(w1, copies);
-  deepCopyField(w2, copies);
-  deepCopyField(wout, copies);
-  deepCopyField(wdirect, copies);
-  deepCopyField(output, copies);
-  deepCopyField(outputs, copies);
-  deepCopyField(a, copies);
-  deepCopyField(pos_a, copies);
-  deepCopyField(b, copies);
-  deepCopyField(pos_b, copies);
-  deepCopyField(c, copies);
-  deepCopyField(pos_c, copies);
-  deepCopyField(density, copies);
-  deepCopyField(cumulative, copies);
-  deepCopyField(expected_value, copies);
+  varDeepCopyField(input, copies);
+  varDeepCopyField(target, copies);
+  varDeepCopyField(sampleweight, copies);
+  varDeepCopyField(w1, copies);
+  varDeepCopyField(w2, copies);
+  varDeepCopyField(wout, copies);
+  varDeepCopyField(wdirect, copies);
+  varDeepCopyField(output, copies);
+  varDeepCopyField(outputs, copies);
+  varDeepCopyField(a, copies);
+  varDeepCopyField(pos_a, copies);
+  varDeepCopyField(b, copies);
+  varDeepCopyField(pos_b, copies);
+  varDeepCopyField(c, copies);
+  varDeepCopyField(pos_c, copies);
+  varDeepCopyField(density, copies);
+  varDeepCopyField(cumulative, copies);
+  varDeepCopyField(expected_value, copies);
   deepCopyField(costs, copies);
   deepCopyField(penalties, copies);
-  deepCopyField(training_cost, copies);
-  deepCopyField(test_costs, copies);
+  varDeepCopyField(training_cost, copies);
+  varDeepCopyField(test_costs, copies);
   deepCopyField(invars, copies);
   deepCopyField(params, copies);
   deepCopyField(paramsvalues, copies);
-  deepCopyField(centers, copies);
-  deepCopyField(centers_M, copies);
-  deepCopyField(steps, copies);
-  deepCopyField(steps_0, copies);
-  deepCopyField(steps_gradient, copies);
-  deepCopyField(steps_integral, copies);
-  deepCopyField(delta_steps, copies);
-  deepCopyField(cum_numerator, copies);
-  deepCopyField(cum_denominator, copies);
+  varDeepCopyField(centers, copies);
+  varDeepCopyField(centers_M, copies);
+  varDeepCopyField(steps, copies);
+  varDeepCopyField(steps_0, copies);
+  varDeepCopyField(steps_gradient, copies);
+  varDeepCopyField(steps_integral, copies);
+  varDeepCopyField(delta_steps, copies);
+  varDeepCopyField(cum_numerator, copies);
+  varDeepCopyField(cum_denominator, copies);
   deepCopyField(unconditional_cdf, copies);
-  deepCopyField(unconditional_delta_cdf, copies);
-  deepCopyField(initial_hardnesses, copies);
-  deepCopyField(prev_centers, copies);
-  deepCopyField(prev_centers_M, copies);
-  deepCopyField(scaled_prev_centers, copies);
-  deepCopyField(scaled_prev_centers_M, copies);
-  deepCopyField(minus_prev_centers_0, copies);
-  deepCopyField(minus_scaled_prev_centers_0, copies);
+  varDeepCopyField(unconditional_delta_cdf, copies);
+  varDeepCopyField(initial_hardnesses, copies);
+  varDeepCopyField(prev_centers, copies);
+  varDeepCopyField(prev_centers_M, copies);
+  varDeepCopyField(scaled_prev_centers, copies);
+  varDeepCopyField(scaled_prev_centers_M, copies);
+  varDeepCopyField(minus_prev_centers_0, copies);
+  varDeepCopyField(minus_scaled_prev_centers_0, copies);
   deepCopyField(y_values, copies);
-  deepCopyField(mu, copies);
+  varDeepCopyField(mu, copies);
   deepCopyField(f, copies);
   deepCopyField(test_costf, copies);
   deepCopyField(output_and_target_to_cost, copies);
@@ -760,9 +775,9 @@ TVec<string> ConditionalDensityNet::getTestCostNames() const
   deepCopyField(in2distr_f, copies);
   deepCopyField(output_and_target, copies);
   deepCopyField(output_and_target_values, copies);
-  deepCopyField(totalcost, copies);
-  deepCopyField(mass_cost, copies);
-  deepCopyField(pos_y_cost, copies);
+  varDeepCopyField(totalcost, copies);
+  varDeepCopyField(mass_cost, copies);
+  varDeepCopyField(pos_y_cost, copies);
   deepCopyField(optimizer, copies);
   inherited::makeDeepCopyFromShallowCopy(copies);
   }

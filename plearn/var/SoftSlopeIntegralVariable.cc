@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SoftSlopeIntegralVariable.cc,v 1.3 2004/02/20 21:11:53 chrish42 Exp $
+   * $Id: SoftSlopeIntegralVariable.cc,v 1.4 2004/04/16 17:37:55 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,11 +49,11 @@ using namespace std;
 
 /** SoftSlopeIntegralVariable **/
 
-SoftSlopeIntegralVariable::  SoftSlopeIntegralVariable(Variable* smoothness, Variable* left, Variable* right, real a_, real b_)
+SoftSlopeIntegralVariable::  SoftSlopeIntegralVariable(Variable* smoothness, Variable* left, Variable* right, real a_, real b_, bool tabulated_)
   :NaryVariable(VarArray(smoothness) & Var(left) & Var(right), 
                 smoothness->length()<left->length()?left->length():smoothness->length(), 
                 smoothness->width()<left->width()?left->width():smoothness->width()),
-   a(a_), b(b_)
+   a(a_), b(b_), tabulated(tabulated_)
 {}
 
 
@@ -93,17 +93,17 @@ void SoftSlopeIntegralVariable::fprop()
 
   if (n1==n && n2==n && n3==n)
     for(int i=0; i<n; i++)
-      valuedata[i] = soft_slope_integral(smoothness[i], left[i], right[i],a,b);
+      valuedata[i] = tabulated?tabulated_soft_slope_integral(smoothness[i], left[i], right[i],a,b):soft_slope_integral(smoothness[i], left[i], right[i],a,b);
   else if (n1==1 && n2==n && n3==n)
     for(int i=0; i<n; i++)
-      valuedata[i] = soft_slope_integral(*smoothness, left[i], right[i],a,b);
+      valuedata[i] = tabulated?tabulated_soft_slope_integral(*smoothness, left[i], right[i],a,b):soft_slope_integral(*smoothness, left[i], right[i],a,b);
   else
   {
     int m1= n1==1?0:1;
     int m2= n2==1?0:1;
     int m3= n3==1?0:1;
     for(int i=0; i<n; i++,smoothness+=m1,left+=m2,right+=m3)
-      valuedata[i] = soft_slope_integral(*smoothness, *left, *right, a, b);
+      valuedata[i] = tabulated?tabulated_soft_slope_integral(*smoothness, *left, *right, a, b):soft_slope_integral(*smoothness, *left, *right, a, b);
   }
 }
 
@@ -149,10 +149,10 @@ void SoftSlopeIntegralVariable::bprop()
     real bl = (b-*left);
     real ar = (a-*right);
     real al = (a-*left);
-    real t1 = softplus(- *smoothness*br);
-    real t2 = softplus(- *smoothness*bl);
-    real t3 = softplus(- *smoothness*ar);
-    real t4 = softplus(- *smoothness*al);
+    real t1 = tabulated?tabulated_softplus(- *smoothness*br):softplus(- *smoothness*br);
+    real t2 = tabulated?tabulated_softplus(- *smoothness*bl):softplus(- *smoothness*bl);
+    real t3 = tabulated?tabulated_softplus(- *smoothness*ar):softplus(- *smoothness*ar);
+    real t4 = tabulated?tabulated_softplus(- *smoothness*al):softplus(- *smoothness*al);
     real inv_delta=1.0/(*right-*left);
     real ssiab = valuedata[i]-b+a;
     *dsmoothness += gradientdata[i] * 

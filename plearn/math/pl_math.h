@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.14 2004/02/20 21:11:47 chrish42 Exp $
+   * $Id: pl_math.h,v 1.15 2004/04/16 17:37:54 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -301,6 +301,28 @@ inline real ultrafasttanh(const real& x)
       //!  return 0.5*x + LOG_2 - log(1./cosh(0.5*x)); 
     }
 
+  inline real tabulated_softplus(real x)
+  {
+    static const int n_softplus_values = 10000;
+    static const real min_softplus_arg = -10;
+    static const real max_softplus_arg = 10;
+    static const real softplus_delta = (n_softplus_values-1)/(max_softplus_arg-min_softplus_arg);
+    static real softplus_values[n_softplus_values];
+    static bool computed_softplus_table = false;
+    if (!computed_softplus_table)
+    {
+      real y=min_softplus_arg;
+      real dy=1.0/softplus_delta;
+      for (int i=0;i<n_softplus_values;i++,y+=dy)
+        softplus_values[i] = softplus(y);
+      computed_softplus_table=true;
+    }
+    if (x<min_softplus_arg) return 0;
+    if (x>max_softplus_arg) return x;
+    int bin = int(rint((x-min_softplus_arg)*softplus_delta));
+    return softplus_values[bin];
+  }
+
 //! inverse of softplus function
 inline real inverse_softplus(real y)
 {
@@ -333,6 +355,14 @@ inline real soft_slope(real x, real smoothness=1, real left=0, real right=1)
   return 1 + (softplus(-smoothness*(x-left))-softplus(-smoothness*(x-right)))/(smoothness*(right-left));
 }
 
+inline real tabulated_soft_slope(real x, real smoothness=1, real left=0, real right=1)
+{
+  if (smoothness==0)
+    return 0.5;
+  if (smoothness>1000)
+    return hard_slope(x,left,right);
+  return 1 + (tabulated_softplus(-smoothness*(x-left))-tabulated_softplus(-smoothness*(x-right)))/(smoothness*(right-left));
+}
   
 // This is the derivative of soft_slope with respect to x.
 inline real d_soft_slope(real x, real smoothness=1, real left=0, real right=1)
@@ -380,11 +410,34 @@ inline real softplus_primitive(real x) {
   return -dilogarithm(-exp(x));
 }
 
+inline real tabulated_softplus_primitive(real x) {
+    static const int n_softplus_primitive_values = 10000;
+    static const real min_softplus_primitive_arg = -20;
+    static const real max_softplus_primitive_arg = 10;
+    static const real max_offset = max_softplus_primitive_arg*max_softplus_primitive_arg*0.5;
+    static const real softplus_primitive_delta = (n_softplus_primitive_values-1)/(max_softplus_primitive_arg-min_softplus_primitive_arg);
+    static real softplus_primitive_values[n_softplus_primitive_values];
+    static bool computed_softplus_primitive_table = false;
+    if (!computed_softplus_primitive_table)
+    {
+      real y=min_softplus_primitive_arg;
+      real dy=1.0/softplus_primitive_delta;
+      for (int i=0;i<n_softplus_primitive_values;i++,y+=dy)
+        softplus_primitive_values[i] = softplus_primitive(y);
+      computed_softplus_primitive_table=true;
+    }
+    if (x<min_softplus_primitive_arg) return 0;
+    if (x>max_softplus_primitive_arg) return softplus_primitive_values[n_softplus_primitive_values-1]+x*x*0.5 - max_offset;
+    int bin = int(rint((x-min_softplus_primitive_arg)*softplus_primitive_delta));
+    return softplus_primitive_values[bin];
+}
+
 real hard_slope_integral(real left=0, real right=1, real a=0, real b=1);
 
 
 // integral of the soft_slope function between a and b
 real soft_slope_integral(real smoothness=1, real left=0, real right=1, real a=0, real b=1);
+real tabulated_soft_slope_integral(real smoothness=1, real left=0, real right=1, real a=0, real b=1);
 
 } // end of namespace PLearn
 

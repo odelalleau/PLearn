@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SoftSlopeVariable.h,v 1.5 2004/02/20 21:11:53 chrish42 Exp $
+   * $Id: SoftSlopeVariable.h,v 1.6 2004/04/16 17:37:55 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -61,11 +61,12 @@ class SoftSlopeVariable: public NaryVariable
 {
 protected:
     typedef NaryVariable inherited;
+  bool tabulated;
   //!  Default constructor for persistence
   SoftSlopeVariable() {}
 
 public:
-  SoftSlopeVariable(Variable* x, Variable* smoothness, Variable* left, Variable* right);
+  SoftSlopeVariable(Variable* x, Variable* smoothness, Variable* left, Variable* right, bool tabulated=true);
   PLEARN_DECLARE_OBJECT(SoftSlopeVariable);
   virtual void recomputeSize(int& l, int& w) const;
   

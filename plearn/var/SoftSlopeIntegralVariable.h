@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SoftSlopeIntegralVariable.h,v 1.2 2004/02/20 21:11:53 chrish42 Exp $
+   * $Id: SoftSlopeIntegralVariable.h,v 1.3 2004/04/16 17:37:55 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -61,7 +61,8 @@ protected:
 
 public:
   real a,b;
-  SoftSlopeIntegralVariable(Variable* smoothness, Variable* left, Variable* right, real a_=0, real b_=1);
+  bool tabulated;
+  SoftSlopeIntegralVariable(Variable* smoothness, Variable* left, Variable* right, real a_=0, real b_=1, bool tabulated=true);
   PLEARN_DECLARE_OBJECT(SoftSlopeIntegralVariable);
   virtual void recomputeSize(int& l, int& w) const;
   
