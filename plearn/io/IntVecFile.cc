@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: IntVecFile.cc,v 1.6 2004/07/21 16:30:51 chrish42 Exp $
+   * $Id: IntVecFile.cc,v 1.7 2004/11/24 18:20:57 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -121,6 +121,9 @@ IntVecFile::~IntVecFile()
   close();
 }
 
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:593)  // Get rid of compiler warning.
+#endif
 TVec<int> IntVecFile::getVec() const
 {
   int tt;
@@ -128,13 +131,16 @@ TVec<int> IntVecFile::getVec() const
   seek_to_index(0);
   if((tt=fread(res.data(), sizeof(int), length(), f)) != length())
     PLERROR("fread error in IntVecFile::getVec()");
-
   // Switch byte order if necessary
   if (byte_order() != endianness_)
     endianswap(res.data(), length());
 
   return res;
 }
+#ifdef __INTEL_COMPILER
+#pragma warning(default:593)
+#endif
+
 void IntVecFile::append(const TVec<int>& vec)
 {
   seek_to_index(length());
@@ -170,7 +176,13 @@ void IntVecFile::writeFileSignature()
 
 void IntVecFile::getVersionAndSize()
 {
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:279)  // Get rid of compiler warning.
+#endif
   if (sizeof(int) != 4)
+#ifdef __INTEL_COMPILER
+#pragma warning(default:279)
+#endif
     PLERROR("IntVecFile::getVersionAndSize: "
             "IntVecFile not yet designed to handle sizeof(int) != 4");
   

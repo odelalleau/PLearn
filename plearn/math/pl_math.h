@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.22 2004/11/22 19:27:28 lamblin Exp $
+   * $Id: pl_math.h,v 1.23 2004/11/24 18:23:22 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -253,12 +253,20 @@ inline real ultrafasttanh(const real& x)
   template<class T>
   inline bool is_missing(const T& x) { return false; }
 
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:279)  // Get rid of compiler warning.
+#endif
+
   //! Missing value for double and float are represented by NaN
   inline bool is_missing(double x) { return isnan(x)!=0; }
 
   //! Missing value for double and float are represented by NaN
   inline bool is_missing(float x) { return isnan(x)!=0; }
   
+#ifdef __INTEL_COMPILER
+#pragma warning(default:279)
+#endif
+
   inline bool is_integer(real x) { return real(int(x))==x; }
 
   inline real FABS(real x)

@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.36 2004/11/20 01:52:54 chapados Exp $
+   * $Id: vmatmain.cc,v 1.37 2004/11/24 18:23:39 tihocan Exp $
    ******************************************************* */
 
 #include <algorithm>                         // for max
@@ -820,7 +820,7 @@ void viewVMat(const VMat& vm)
           try {
             new_vm = getDataSet(dataset);
             vmat_view_dataset = dataset;
-          } catch(const PLearnError& e) {
+          } catch(const PLearnError&) {
             error = true;
           }
           if (error) {

@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.cc,v 1.16 2004/09/14 16:04:38 chrish42 Exp $
+   * $Id: VarArray.cc,v 1.17 2004/11/24 18:28:44 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -95,7 +95,13 @@ VarArray::VarArray(Variable*  v1, Variable*  v2)
 // This is really EXTERN!  Don't try to define it...
 //template<>
 //extern void deepCopyField(Var& field, CopiesMap& copies);
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:1419)  // Get rid of compiler warning.
+#endif
 extern void varDeepCopyField(Var& field, CopiesMap& copies); // a cause d'une bug du compilateur
+#ifdef __INTEL_COMPILER
+#pragma warning(default:1419)
+#endif
 
 void VarArray::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {

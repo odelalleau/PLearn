@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org 
 
 /* *******************************************************      
-   * $Id: RealMapping.cc,v 1.20 2004/07/21 16:30:50 chrish42 Exp $
+   * $Id: RealMapping.cc,v 1.21 2004/11/24 18:16:20 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -113,10 +113,16 @@ bool RealRange::operator==(const RealRange& rr) const
 
   bool RealMapping::operator==(const RealMapping& rm) const
   {
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:279)  // Get rid of compiler warning.
+#endif
     return (rm.mapping == mapping && 
              (rm.missing_mapsto == missing_mapsto || (isnan(missing_mapsto)&&isnan(rm.missing_mapsto))) &&
              rm.keep_other_as_is == keep_other_as_is &&
             (rm.other_mapsto == other_mapsto || (isnan(other_mapsto)&&isnan(rm.other_mapsto))));
+#ifdef __INTEL_COMPILER
+#pragma warning(default:279)
+#endif
   }
 
   bool operator<(RealMapping::single_mapping_t a, RealMapping::single_mapping_t b)

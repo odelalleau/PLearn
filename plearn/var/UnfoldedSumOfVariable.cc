@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedSumOfVariable.cc,v 1.9 2004/09/14 16:04:38 chrish42 Exp $
+   * $Id: UnfoldedSumOfVariable.cc,v 1.10 2004/11/24 18:27:15 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -120,7 +120,14 @@ void UnfoldedSumOfVariable::recomputeSize(int& l, int& w) const
 }
 
 //! To use varDeepCopyField.
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:1419)  // Get rid of compiler warning.
+#endif
 extern void varDeepCopyField(Var& field, CopiesMap& copies);
+#ifdef __INTEL_COMPILER
+#pragma warning(default:1419)
+#endif
+
 
 void UnfoldedSumOfVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {

@@ -217,7 +217,13 @@ using namespace std;
     case ShortType:	return (short)        long_val_ == MissingShort;
     case IntType:	return (int)          long_val_ == MissingInt;
     case FloatType:
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:279)  // Get rid of compiler warning.
+#endif
     case DoubleType:	return isnan(double_val_);
+#ifdef __INTEL_COMPILER
+#pragma warning(default:279)
+#endif
     case DateType:
       return date_val_.year == MissingDate.year &&
 	date_val_.month == MissingDate.month &&
@@ -570,9 +576,15 @@ using namespace std;
     else if (const int* x = asInt())
       return *x == MissingInt;
     else if (const float* x = asFloat())
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:279)  // Get rid of compiler warning.
+#endif
       return isnan(*x);
     else if (const double* x = asDouble())
       return isnan(*x);
+#ifdef __INTEL_COMPILER
+#pragma warning(default:279)
+#endif
     else if (const PDate* x = asDate())
       return *x == MissingDate;
     else

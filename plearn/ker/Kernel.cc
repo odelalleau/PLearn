@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.35 2004/09/27 20:19:27 plearner Exp $
+   * $Id: Kernel.cc,v 1.36 2004/11/24 18:22:07 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -151,7 +151,7 @@ void Kernel::addDataForKernelMatrix(const Vec& newRow)
   try{
     data->appendRow(newRow);
   }
-  catch(const PLearnError& e){
+  catch(const PLearnError&){
     PLERROR("Kernel::addDataForKernelMatrix: if one intends to use this method,\n"
             "he must provide a data matrix for which the appendRow method is\n"
             "implemented.");

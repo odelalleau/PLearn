@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnaryVariable.cc,v 1.16 2004/09/14 16:04:38 chrish42 Exp $
+   * $Id: UnaryVariable.cc,v 1.17 2004/11/24 18:26:35 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -63,11 +63,13 @@ void UnaryVariable::declareOptions(OptionList& ol)
   inherited::declareOptions(ol);
 }
 
-
-
-
-
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:1419)  // Get rid of compiler warning.
+#endif
 extern void varDeepCopyField(Var& field, CopiesMap& copies);
+#ifdef __INTEL_COMPILER
+#pragma warning(default:1419)
+#endif
 
 void UnaryVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {

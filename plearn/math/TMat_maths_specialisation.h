@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_specialisation.h,v 1.8 2004/07/21 16:30:53 chrish42 Exp $
+   * $Id: TMat_maths_specialisation.h,v 1.9 2004/11/24 18:22:29 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -97,7 +97,10 @@ using namespace std;
   // ( Will use the transpose of A and/or B instead, if you set the correpsonding flags to true)
   inline void productScaleAcc(const TMat<double>& C, const TMat<double>& A, bool transposeA, const TMat<double>& B, bool transposeB, double alpha, double beta)
   {
-    int l1, w1, l2, w2;
+#ifdef BOUNDCHECK
+    int l2;
+#endif
+    int l1, w1, w2;
     char transa, transb;
     if(transposeA)
       {
@@ -113,13 +116,17 @@ using namespace std;
       }
     if(transposeB)
       {
+#ifdef BOUNDCHECK
         l2 = B.width();
+#endif
         w2 = B.length();
         transb = 'T';
     }
     else
       {
+#ifdef BOUNDCHECK
         l2 = B.length();
+#endif
         w2 = B.width();
         transb = 'N';
       }
@@ -224,7 +231,10 @@ inline void productTransposeAcc(const TMat<double>& mat, const TMat<double>& m1,
   // ( Will use the transpose of A and/or B instead, if you set the correpsonding flags to true)
   inline void productScaleAcc(const TMat<float>& C, const TMat<float>& A, bool transposeA, const TMat<float>& B, bool transposeB, float alpha, float beta)
   {
-    int l1, w1, l2, w2;
+#ifdef BOUNDCHECK
+    int l2;
+#endif
+    int l1, w1, w2;
     char transa, transb;
     if(transposeA)
       {
@@ -240,13 +250,17 @@ inline void productTransposeAcc(const TMat<double>& mat, const TMat<double>& m1,
       }
     if(transposeB)
       {
+#ifdef BOUNDCHECK
         l2 = B.width();
+#endif
         w2 = B.length();
         transb = 'T';
     }
     else
       {
+#ifdef BOUNDCHECK
         l2 = B.length();
+#endif
         w2 = B.width();
         transb = 'N';
       }
