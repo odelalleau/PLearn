@@ -241,6 +241,13 @@ def TMat(num_rows, num_cols, mat_contents):
                           ', '.join([_plearn_repr(e) for e in mat_contents]) +
                           ']')
 
+def include(filename):
+    """Includes the contents of a .plearn file."""
+    f = open(filename, 'U')
+    include_contents = f.read()
+    f.close()
+    return plearn_snippet(include_contents)
+
 class _plargs_storage_fallback:
     """A singleton instance of this class is instanciated by the package
     to store the default values for PLearn command-line variables."""
@@ -316,5 +323,5 @@ class _pyplearn_magic_module:
 
 pl = _pyplearn_magic_module()
 
-all = ['ref', 'bind', 'TMat', 'plargs', 'plarg_defaults', 'pl']
+all = ['ref', 'bind', 'TMat', 'plargs', 'plarg_defaults', 'pl', 'include']
 
