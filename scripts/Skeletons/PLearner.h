@@ -8,10 +8,13 @@ using namespace std;
 
 class DERIVEDCLASS: public PLearner
 {
+
 public:
+
   typedef PLearner inherited;
   
 protected:
+
   // *********************
   // * protected options *
   // *********************
@@ -37,16 +40,18 @@ public:
   DERIVEDCLASS();
 
 
-  // ******************
+  // ********************
   // * PLearner methods *
-  // ******************
+  // ********************
 
 private: 
+
   //! This does the actual building. 
   // (Please implement in .cc)
   void build_();
 
 protected: 
+  
   //! Declares this class' options
   // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
