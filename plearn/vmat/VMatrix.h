@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.69 2005/02/04 15:10:59 tihocan Exp $
+   * $Id: VMatrix.h,v 1.70 2005/02/25 14:11:02 tihocan Exp $
    ******************************************************* */
 
 
@@ -329,7 +329,7 @@ public:
   virtual void setMetaDataDir(const PPath& the_metadatadir);
 
   //! Returns true if a metadatadir was set
-  bool hasMetaDataDir() const { return metadatadir!=""; }
+  bool hasMetaDataDir() const { return !metadatadir.isEmpty(); }
 
   //! Throws a PLERROR if no metadatadir was set.
   PPath getMetaDataDir() const; 
