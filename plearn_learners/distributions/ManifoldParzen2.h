@@ -44,7 +44,12 @@ using namespace std;
 class ManifoldParzen2 : public GaussMix
 {
 
+private:
+
+  typedef GaussMix inherited;
+
 public:
+
   // *********************
   // * protected options *
   // *********************
@@ -59,8 +64,6 @@ public:
   bool use_last_eigenval;
   real scale_factor;
   double global_lambda0;
-
-  typedef GaussMix inherited;
 
   // ************************
   // * public build options *
