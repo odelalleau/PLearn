@@ -4,547 +4,591 @@ LINKER=g++
 CC_OPTIONS=-DLINUX -DLITTLEENDIAN -DUSEDOUBLE -DUSE_EXCEPTIONS -D USE_BLAS_SPECIALISATIONS -DUSING_MPI=0 -DDBDIR=\"/u/lisa/Database\" -ftemplate-depth-100 -Wno-deprecated -pedantic -Wno-long-long -Wall -O3 
 LINKER_OPTIONS=-lncurses  -L/usr/X11R6/lib/ -lXi -lXext -lX11  -lblas -lg2c -llapack -lm
 SOURCEDIRS=-Iplearn/db -Iplearn/ker -Iplearn/measure -Iplearn/opt -Iplearn/sys -Iplearn/vmat -Iplearn/base -Iplearn/display -Iplearn/io -Iplearn/math -Iplearn/misc -Iplearn/var -Iplearn_learners/misc -Iplearn_learners/classifiers -Iplearn_learners/regressors -Iplearn_learners/distributions -Iplearn_learners/sequential -Iplearn_learners/generic -Iplearn_learners/testers -Iplearn_learners/language -Iplearn_learners/unsupervised -Icommands -Icommands/PLearnCommands
+all: commands/plearn
+plearn/db/OBJS/linux-i386__g++_opt_double_throwerrors_blas:
+	mkdir -p $@
+	touch $@
+plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas:
+	mkdir -p $@
+	touch $@
+plearn/measure/OBJS/linux-i386__g++_opt_double_throwerrors_blas:
+	mkdir -p $@
+	touch $@
+plearn/opt/OBJS/linux-i386__g++_opt_double_throwerrors_blas:
+	mkdir -p $@
+	touch $@
+plearn/sys/OBJS/linux-i386__g++_opt_double_throwerrors_blas:
+	mkdir -p $@
+	touch $@
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas:
+	mkdir -p $@
+	touch $@
+plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas:
+	mkdir -p $@
+	touch $@
+plearn/display/OBJS/linux-i386__g++_opt_double_throwerrors_blas:
+	mkdir -p $@
+	touch $@
+plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas:
+	mkdir -p $@
+	touch $@
+plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas:
+	mkdir -p $@
+	touch $@
+plearn/misc/OBJS/linux-i386__g++_opt_double_throwerrors_blas:
+	mkdir -p $@
+	touch $@
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas:
+	mkdir -p $@
+	touch $@
+plearn_learners/misc/OBJS/linux-i386__g++_opt_double_throwerrors_blas:
+	mkdir -p $@
+	touch $@
+plearn_learners/classifiers/OBJS/linux-i386__g++_opt_double_throwerrors_blas:
+	mkdir -p $@
+	touch $@
+plearn_learners/regressors/OBJS/linux-i386__g++_opt_double_throwerrors_blas:
+	mkdir -p $@
+	touch $@
+plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas:
+	mkdir -p $@
+	touch $@
+plearn_learners/sequential/OBJS/linux-i386__g++_opt_double_throwerrors_blas:
+	mkdir -p $@
+	touch $@
+plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas:
+	mkdir -p $@
+	touch $@
+plearn_learners/testers/OBJS/linux-i386__g++_opt_double_throwerrors_blas:
+	mkdir -p $@
+	touch $@
+plearn_learners/language/OBJS/linux-i386__g++_opt_double_throwerrors_blas:
+	mkdir -p $@
+	touch $@
+plearn_learners/unsupervised/OBJS/linux-i386__g++_opt_double_throwerrors_blas:
+	mkdir -p $@
+	touch $@
+commands/OBJS/linux-i386__g++_opt_double_throwerrors_blas:
+	mkdir -p $@
+	touch $@
+commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas:
+	mkdir -p $@
+	touch $@
 
-dirs:
-	mkdir -p plearn/db/OBJS/linux-i386__g++_opt_double_throwerrors_blas
-	mkdir -p plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas
-	mkdir -p plearn/measure/OBJS/linux-i386__g++_opt_double_throwerrors_blas
-	mkdir -p plearn/opt/OBJS/linux-i386__g++_opt_double_throwerrors_blas
-	mkdir -p plearn/sys/OBJS/linux-i386__g++_opt_double_throwerrors_blas
-	mkdir -p plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
-	mkdir -p plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas
-	mkdir -p plearn/display/OBJS/linux-i386__g++_opt_double_throwerrors_blas
-	mkdir -p plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas
-	mkdir -p plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas
-	mkdir -p plearn/misc/OBJS/linux-i386__g++_opt_double_throwerrors_blas
-	mkdir -p plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
-	mkdir -p plearn_learners/misc/OBJS/linux-i386__g++_opt_double_throwerrors_blas
-	mkdir -p plearn_learners/classifiers/OBJS/linux-i386__g++_opt_double_throwerrors_blas
-	mkdir -p plearn_learners/regressors/OBJS/linux-i386__g++_opt_double_throwerrors_blas
-	mkdir -p plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas
-	mkdir -p plearn_learners/sequential/OBJS/linux-i386__g++_opt_double_throwerrors_blas
-	mkdir -p plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas
-	mkdir -p plearn_learners/testers/OBJS/linux-i386__g++_opt_double_throwerrors_blas
-	mkdir -p plearn_learners/language/OBJS/linux-i386__g++_opt_double_throwerrors_blas
-	mkdir -p plearn_learners/unsupervised/OBJS/linux-i386__g++_opt_double_throwerrors_blas
-	mkdir -p commands/OBJS/linux-i386__g++_opt_double_throwerrors_blas
-	mkdir -p commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 
-all: dirs commands/plearn
-
-plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/pl_math.o: plearn/math/pl_math.cc
+plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/pl_math.o: plearn/math/pl_math.cc plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/byte_order.o: plearn/base/byte_order.cc
+plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/byte_order.o: plearn/base/byte_order.cc plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ms_hash_wrapper.o: plearn/base/ms_hash_wrapper.cpp
+plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ms_hash_wrapper.o: plearn/base/ms_hash_wrapper.cpp plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/pl_hash_fun.o: plearn/base/pl_hash_fun.cc
+plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/pl_hash_fun.o: plearn/base/pl_hash_fun.cc plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PStream_util.o: plearn/io/PStream_util.cc
+plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PStream_util.o: plearn/io/PStream_util.cc plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/fileutils.o: plearn/io/fileutils.cc
+plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/fileutils.o: plearn/io/fileutils.cc plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PStreamBuf.o: plearn/io/PStreamBuf.cc
+plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PStreamBuf.o: plearn/io/PStreamBuf.cc plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/pl_streambuf.o: plearn/io/pl_streambuf.cc
+plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/pl_streambuf.o: plearn/io/pl_streambuf.cc plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/pl_fdstream.o: plearn/io/pl_fdstream.cc
+plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/pl_fdstream.o: plearn/io/pl_fdstream.cc plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/StdPStreamBuf.o: plearn/io/StdPStreamBuf.cc
+plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/StdPStreamBuf.o: plearn/io/StdPStreamBuf.cc plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PStream.o: plearn/io/PStream.cc
+plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PStream.o: plearn/io/PStream.cc plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/stringutils.o: plearn/base/stringutils.cc
+plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/stringutils.o: plearn/base/stringutils.cc plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/pl_io_deprecated.o: plearn/io/pl_io_deprecated.cc
+plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/pl_io_deprecated.o: plearn/io/pl_io_deprecated.cc plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ProgressBar.o: plearn/base/ProgressBar.cc
+plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ProgressBar.o: plearn/base/ProgressBar.cc plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/general.o: plearn/base/general.cc
+plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/general.o: plearn/base/general.cc plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/sys/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MemoryMap.o: plearn/sys/MemoryMap.cc
+plearn/sys/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MemoryMap.o: plearn/sys/MemoryMap.cc plearn/sys/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/plstreams.o: plearn/io/plstreams.cc
+plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/plstreams.o: plearn/io/plstreams.cc plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/pl_io.o: plearn/io/pl_io.cc
+plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/pl_io.o: plearn/io/pl_io.cc plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MatIO.o: plearn/io/MatIO.cc
+plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MatIO.o: plearn/io/MatIO.cc plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Mat.o: plearn/math/Mat.cc
+plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Mat.o: plearn/math/Mat.cc plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/sys/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PLMPI.o: plearn/sys/PLMPI.cc
+plearn/sys/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PLMPI.o: plearn/sys/PLMPI.cc plearn/sys/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/plerror.o: plearn/base/plerror.cc
+plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/plerror.o: plearn/base/plerror.cc plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/StaticInitializer.o: plearn/base/StaticInitializer.cc
+plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/StaticInitializer.o: plearn/base/StaticInitializer.cc plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/OptionBase.o: plearn/base/OptionBase.cc
+plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/OptionBase.o: plearn/base/OptionBase.cc plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TypeFactory.o: plearn/base/TypeFactory.cc
+plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TypeFactory.o: plearn/base/TypeFactory.cc plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Object.o: plearn/base/Object.cc
+plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Object.o: plearn/base/Object.cc plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VMField.o: plearn/vmat/VMField.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VMField.o: plearn/vmat/VMField.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Var.o: plearn/var/Var.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Var.o: plearn/var/Var.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/random.o: plearn/math/random.cc
+plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/random.o: plearn/math/random.cc plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/UnaryVariable.o: plearn/var/UnaryVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/UnaryVariable.o: plearn/var/UnaryVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PlusConstantVariable.o: plearn/var/PlusConstantVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PlusConstantVariable.o: plearn/var/PlusConstantVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/BinaryVariable.o: plearn/var/BinaryVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/BinaryVariable.o: plearn/var/BinaryVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SumVariable.o: plearn/var/SumVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SumVariable.o: plearn/var/SumVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PlusScalarVariable.o: plearn/var/PlusScalarVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PlusScalarVariable.o: plearn/var/PlusScalarVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ColumnSumVariable.o: plearn/var/ColumnSumVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ColumnSumVariable.o: plearn/var/ColumnSumVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PlusRowVariable.o: plearn/var/PlusRowVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PlusRowVariable.o: plearn/var/PlusRowVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RowSumVariable.o: plearn/var/RowSumVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RowSumVariable.o: plearn/var/RowSumVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PlusColumnVariable.o: plearn/var/PlusColumnVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PlusColumnVariable.o: plearn/var/PlusColumnVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PlusVariable.o: plearn/var/PlusVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PlusVariable.o: plearn/var/PlusVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MinusScalarVariable.o: plearn/var/MinusScalarVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MinusScalarVariable.o: plearn/var/MinusScalarVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/NegateElementsVariable.o: plearn/var/NegateElementsVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/NegateElementsVariable.o: plearn/var/NegateElementsVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MinusRowVariable.o: plearn/var/MinusRowVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MinusRowVariable.o: plearn/var/MinusRowVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MinusColumnVariable.o: plearn/var/MinusColumnVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MinusColumnVariable.o: plearn/var/MinusColumnVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MinusVariable.o: plearn/var/MinusVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MinusVariable.o: plearn/var/MinusVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TimesConstantVariable.o: plearn/var/TimesConstantVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TimesConstantVariable.o: plearn/var/TimesConstantVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/DotProductVariable.o: plearn/var/DotProductVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/DotProductVariable.o: plearn/var/DotProductVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TimesScalarVariable.o: plearn/var/TimesScalarVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TimesScalarVariable.o: plearn/var/TimesScalarVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TimesColumnVariable.o: plearn/var/TimesColumnVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TimesColumnVariable.o: plearn/var/TimesColumnVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TimesRowVariable.o: plearn/var/TimesRowVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TimesRowVariable.o: plearn/var/TimesRowVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TimesVariable.o: plearn/var/TimesVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TimesVariable.o: plearn/var/TimesVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/InvertElementsVariable.o: plearn/var/InvertElementsVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/InvertElementsVariable.o: plearn/var/InvertElementsVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/DivVariable.o: plearn/var/DivVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/DivVariable.o: plearn/var/DivVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/EqualScalarVariable.o: plearn/var/EqualScalarVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/EqualScalarVariable.o: plearn/var/EqualScalarVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/EqualVariable.o: plearn/var/EqualVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/EqualVariable.o: plearn/var/EqualVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Var_operators.o: plearn/var/Var_operators.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Var_operators.o: plearn/var/Var_operators.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/display/OBJS/linux-i386__g++_opt_double_throwerrors_blas/GhostScript.o: plearn/display/GhostScript.cc
+plearn/display/OBJS/linux-i386__g++_opt_double_throwerrors_blas/GhostScript.o: plearn/display/GhostScript.cc plearn/display/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TmpFilenames.o: plearn/io/TmpFilenames.cc
+plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TmpFilenames.o: plearn/io/TmpFilenames.cc plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/display/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Gnuplot.o: plearn/display/Gnuplot.cc
+plearn/display/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Gnuplot.o: plearn/display/Gnuplot.cc plearn/display/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/measure/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Measurer.o: plearn/measure/Measurer.cc
+plearn/measure/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Measurer.o: plearn/measure/Measurer.cc plearn/measure/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Kernel.o: plearn/ker/Kernel.cc
+plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Kernel.o: plearn/ker/Kernel.cc plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RealMapping.o: plearn/base/RealMapping.cc
+plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RealMapping.o: plearn/base/RealMapping.cc plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/StatsCollector.o: plearn/math/StatsCollector.cc
+plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/StatsCollector.o: plearn/math/StatsCollector.cc plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VecStatsCollector.o: plearn/math/VecStatsCollector.cc
+plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VecStatsCollector.o: plearn/math/VecStatsCollector.cc plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/StatsIterator.o: plearn/math/StatsIterator.cc
+plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/StatsIterator.o: plearn/math/StatsIterator.cc plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MemoryVMatrix.o: plearn/vmat/MemoryVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MemoryVMatrix.o: plearn/vmat/MemoryVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VVec.o: plearn/vmat/VVec.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VVec.o: plearn/vmat/VVec.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MPIStream.o: plearn/io/MPIStream.cc
+plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MPIStream.o: plearn/io/MPIStream.cc plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RowBufferedVMatrix.o: plearn/vmat/RowBufferedVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RowBufferedVMatrix.o: plearn/vmat/RowBufferedVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/FileVMatrix.o: plearn/vmat/FileVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/FileVMatrix.o: plearn/vmat/FileVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RemoveRowsVMatrix.o: plearn/vmat/RemoveRowsVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RemoveRowsVMatrix.o: plearn/vmat/RemoveRowsVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Learner.o: plearn_learners/generic/Learner.cc
+plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Learner.o: plearn_learners/generic/Learner.cc plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/display/OBJS/linux-i386__g++_opt_double_throwerrors_blas/DisplayUtils.o: plearn/display/DisplayUtils.cc
+plearn/display/OBJS/linux-i386__g++_opt_double_throwerrors_blas/DisplayUtils.o: plearn/display/DisplayUtils.cc plearn/display/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Func.o: plearn/var/Func.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Func.o: plearn/var/Func.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ElementAtPositionVariable.o: plearn/var/ElementAtPositionVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ElementAtPositionVariable.o: plearn/var/ElementAtPositionVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VarElementVariable.o: plearn/var/VarElementVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VarElementVariable.o: plearn/var/VarElementVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RowAtPositionVariable.o: plearn/var/RowAtPositionVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RowAtPositionVariable.o: plearn/var/RowAtPositionVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VarRowVariable.o: plearn/var/VarRowVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VarRowVariable.o: plearn/var/VarRowVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ExtendedVariable.o: plearn/var/ExtendedVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ExtendedVariable.o: plearn/var/ExtendedVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SubMatVariable.o: plearn/var/SubMatVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SubMatVariable.o: plearn/var/SubMatVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SubMatTransposeVariable.o: plearn/var/SubMatTransposeVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SubMatTransposeVariable.o: plearn/var/SubMatTransposeVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SourceVariable.o: plearn/var/SourceVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SourceVariable.o: plearn/var/SourceVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Variable.o: plearn/var/Variable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Variable.o: plearn/var/Variable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/sys/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Popen.o: plearn/sys/Popen.cc
+plearn/sys/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Popen.o: plearn/sys/Popen.cc plearn/sys/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/NaryVariable.o: plearn/var/NaryVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/NaryVariable.o: plearn/var/NaryVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VarArrayElementVariable.o: plearn/var/VarArrayElementVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VarArrayElementVariable.o: plearn/var/VarArrayElementVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VarArray.o: plearn/var/VarArray.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VarArray.o: plearn/var/VarArray.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/IntVecFile.o: plearn/io/IntVecFile.cc
+plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/IntVecFile.o: plearn/io/IntVecFile.cc plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/DiskVMatrix.o: plearn/vmat/DiskVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/DiskVMatrix.o: plearn/vmat/DiskVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SubVMatrix.o: plearn/vmat/SubVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SubVMatrix.o: plearn/vmat/SubVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ConditionalStatsCollector.o: plearn/math/ConditionalStatsCollector.cc
+plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ConditionalStatsCollector.o: plearn/math/ConditionalStatsCollector.cc plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ShiftAndRescaleVMatrix.o: plearn/vmat/ShiftAndRescaleVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ShiftAndRescaleVMatrix.o: plearn/vmat/ShiftAndRescaleVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ExtendedVMatrix.o: plearn/vmat/ExtendedVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ExtendedVMatrix.o: plearn/vmat/ExtendedVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/plapack.o: plearn/math/plapack.cc
+plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/plapack.o: plearn/math/plapack.cc plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/pl_erf.o: plearn/math/pl_erf.cc
+plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/pl_erf.o: plearn/math/pl_erf.cc plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/stats_utils.o: plearn/math/stats_utils.cc
+plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/stats_utils.o: plearn/math/stats_utils.cc plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VMat_maths.o: plearn/vmat/VMat_maths.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VMat_maths.o: plearn/vmat/VMat_maths.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VMatrix.o: plearn/vmat/VMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VMatrix.o: plearn/vmat/VMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SourceVMatrix.o: plearn/vmat/SourceVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SourceVMatrix.o: plearn/vmat/SourceVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SelectRowsVMatrix.o: plearn/vmat/SelectRowsVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SelectRowsVMatrix.o: plearn/vmat/SelectRowsVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SelectColumnsVMatrix.o: plearn/vmat/SelectColumnsVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SelectColumnsVMatrix.o: plearn/vmat/SelectColumnsVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SelectRowsFileIndexVMatrix.o: plearn/vmat/SelectRowsFileIndexVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SelectRowsFileIndexVMatrix.o: plearn/vmat/SelectRowsFileIndexVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VMat.o: plearn/vmat/VMat.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VMat.o: plearn/vmat/VMat.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PLearner.o: plearn_learners/generic/PLearner.cc
+plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PLearner.o: plearn_learners/generic/PLearner.cc plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RegularGridVMatrix.o: plearn/vmat/RegularGridVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RegularGridVMatrix.o: plearn/vmat/RegularGridVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/misc/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Grapher.o: plearn_learners/misc/Grapher.cc
+plearn_learners/misc/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Grapher.o: plearn_learners/misc/Grapher.cc plearn_learners/misc/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/misc/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RunObject.o: plearn/misc/RunObject.cc
+plearn/misc/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RunObject.o: plearn/misc/RunObject.cc plearn/misc/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PLearnCommandRegistry.o: commands/PLearnCommands/PLearnCommandRegistry.cc
+commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PLearnCommandRegistry.o: commands/PLearnCommands/PLearnCommandRegistry.cc commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RunCommand.o: commands/PLearnCommands/RunCommand.cc
+commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RunCommand.o: commands/PLearnCommands/RunCommand.cc commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/AutoRunCommand.o: commands/PLearnCommands/AutoRunCommand.cc
+commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/AutoRunCommand.o: commands/PLearnCommands/AutoRunCommand.cc commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PDate.o: plearn/base/PDate.cc
+plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PDate.o: plearn/base/PDate.cc plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Hash.o: plearn/math/Hash.cc
+plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Hash.o: plearn/math/Hash.cc plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TinyVector.o: plearn/base/TinyVector.cc
+plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TinyVector.o: plearn/base/TinyVector.cc plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/db/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SimpleDB.o: plearn/db/SimpleDB.cc
+plearn/db/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SimpleDB.o: plearn/db/SimpleDB.cc plearn/db/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/db/OBJS/linux-i386__g++_opt_double_throwerrors_blas/AutoSDBVMatrix.o: plearn/db/AutoSDBVMatrix.cc
+plearn/db/OBJS/linux-i386__g++_opt_double_throwerrors_blas/AutoSDBVMatrix.o: plearn/db/AutoSDBVMatrix.cc plearn/db/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ConcatRowsVMatrix.o: plearn/vmat/ConcatRowsVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ConcatRowsVMatrix.o: plearn/vmat/ConcatRowsVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/db/OBJS/linux-i386__g++_opt_double_throwerrors_blas/NistDB.o: plearn/db/NistDB.cc
+plearn/db/OBJS/linux-i386__g++_opt_double_throwerrors_blas/NistDB.o: plearn/db/NistDB.cc plearn/db/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RemapLastColumnVMatrix.o: plearn/vmat/RemapLastColumnVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RemapLastColumnVMatrix.o: plearn/vmat/RemapLastColumnVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ConcatColumnsVMatrix.o: plearn/vmat/ConcatColumnsVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ConcatColumnsVMatrix.o: plearn/vmat/ConcatColumnsVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Splitter.o: plearn/vmat/Splitter.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Splitter.o: plearn/vmat/Splitter.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/db/OBJS/linux-i386__g++_opt_double_throwerrors_blas/databases.o: plearn/db/databases.cc
+plearn/db/OBJS/linux-i386__g++_opt_double_throwerrors_blas/databases.o: plearn/db/databases.cc plearn/db/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/StringTable.o: plearn/base/StringTable.cc
+plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/StringTable.o: plearn/base/StringTable.cc plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/StrTableVMatrix.o: plearn/vmat/StrTableVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/StrTableVMatrix.o: plearn/vmat/StrTableVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/JoinVMatrix.o: plearn/vmat/JoinVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/JoinVMatrix.o: plearn/vmat/JoinVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VMatLanguage.o: plearn/vmat/VMatLanguage.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VMatLanguage.o: plearn/vmat/VMatLanguage.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VVMatrix.o: plearn/vmat/VVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VVMatrix.o: plearn/vmat/VVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/db/OBJS/linux-i386__g++_opt_double_throwerrors_blas/getDataSet.o: plearn/db/getDataSet.cc
+plearn/db/OBJS/linux-i386__g++_opt_double_throwerrors_blas/getDataSet.o: plearn/db/getDataSet.cc plearn/db/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/FieldConvertCommand.o: commands/PLearnCommands/FieldConvertCommand.cc
+commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/FieldConvertCommand.o: commands/PLearnCommands/FieldConvertCommand.cc commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/HelpCommand.o: commands/PLearnCommands/HelpCommand.cc
+commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/HelpCommand.o: commands/PLearnCommands/HelpCommand.cc commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/JulianDateCommand.o: commands/PLearnCommands/JulianDateCommand.cc
+commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/JulianDateCommand.o: commands/PLearnCommands/JulianDateCommand.cc commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/KolmogorovSmirnovCommand.o: commands/PLearnCommands/KolmogorovSmirnovCommand.cc
+commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/KolmogorovSmirnovCommand.o: commands/PLearnCommands/KolmogorovSmirnovCommand.cc commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/LearnerCommand.o: commands/PLearnCommands/LearnerCommand.cc
+commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/LearnerCommand.o: commands/PLearnCommands/LearnerCommand.cc commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ReadAndWriteCommand.o: commands/PLearnCommands/ReadAndWriteCommand.cc
+commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ReadAndWriteCommand.o: commands/PLearnCommands/ReadAndWriteCommand.cc commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/sys/OBJS/linux-i386__g++_opt_double_throwerrors_blas/procinfo.o: plearn/sys/procinfo.cc
+plearn/sys/OBJS/linux-i386__g++_opt_double_throwerrors_blas/procinfo.o: plearn/sys/procinfo.cc plearn/sys/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TestDependenciesCommand.o: commands/PLearnCommands/TestDependenciesCommand.cc
+commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TestDependenciesCommand.o: commands/PLearnCommands/TestDependenciesCommand.cc commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TestDependencyCommand.o: commands/PLearnCommands/TestDependencyCommand.cc
+commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TestDependencyCommand.o: commands/PLearnCommands/TestDependencyCommand.cc commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/misc/OBJS/linux-i386__g++_opt_double_throwerrors_blas/vmatmain.o: plearn/misc/vmatmain.cc
+plearn/misc/OBJS/linux-i386__g++_opt_double_throwerrors_blas/vmatmain.o: plearn/misc/vmatmain.cc plearn/misc/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VMatCommand.o: commands/PLearnCommands/VMatCommand.cc
+commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VMatCommand.o: commands/PLearnCommands/VMatCommand.cc commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SourceKernel.o: plearn/ker/SourceKernel.cc
+plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SourceKernel.o: plearn/ker/SourceKernel.cc plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/AdditiveNormalizationKernel.o: plearn/ker/AdditiveNormalizationKernel.cc
+plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/AdditiveNormalizationKernel.o: plearn/ker/AdditiveNormalizationKernel.cc plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/DotProductKernel.o: plearn/ker/DotProductKernel.cc
+plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/DotProductKernel.o: plearn/ker/DotProductKernel.cc plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/GaussianKernel.o: plearn/ker/GaussianKernel.cc
+plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/GaussianKernel.o: plearn/ker/GaussianKernel.cc plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SelectedOutputCostFunction.o: plearn/ker/SelectedOutputCostFunction.cc
+plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SelectedOutputCostFunction.o: plearn/ker/SelectedOutputCostFunction.cc plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/DistanceKernel.o: plearn/ker/DistanceKernel.cc
+plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/DistanceKernel.o: plearn/ker/DistanceKernel.cc plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/GeodesicDistanceKernel.o: plearn/ker/GeodesicDistanceKernel.cc
+plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/GeodesicDistanceKernel.o: plearn/ker/GeodesicDistanceKernel.cc plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/NegOutputCostFunction.o: plearn/ker/NegOutputCostFunction.cc
+plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/NegOutputCostFunction.o: plearn/ker/NegOutputCostFunction.cc plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/opt/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Optimizer.o: plearn/opt/Optimizer.cc
+plearn/opt/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Optimizer.o: plearn/opt/Optimizer.cc plearn/opt/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SumOfVariable.o: plearn/var/SumOfVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SumOfVariable.o: plearn/var/SumOfVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/opt/OBJS/linux-i386__g++_opt_double_throwerrors_blas/AdaptGradientOptimizer.o: plearn/opt/AdaptGradientOptimizer.cc
+plearn/opt/OBJS/linux-i386__g++_opt_double_throwerrors_blas/AdaptGradientOptimizer.o: plearn/opt/AdaptGradientOptimizer.cc plearn/opt/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/opt/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ConjGradientOptimizer.o: plearn/opt/ConjGradientOptimizer.cc
+plearn/opt/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ConjGradientOptimizer.o: plearn/opt/ConjGradientOptimizer.cc plearn/opt/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/opt/OBJS/linux-i386__g++_opt_double_throwerrors_blas/GradientOptimizer.o: plearn/opt/GradientOptimizer.cc
+plearn/opt/OBJS/linux-i386__g++_opt_double_throwerrors_blas/GradientOptimizer.o: plearn/opt/GradientOptimizer.cc plearn/opt/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/CrossEntropyVariable.o: plearn/var/CrossEntropyVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/CrossEntropyVariable.o: plearn/var/CrossEntropyVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SumOverBagsVariable.o: plearn/var/SumOverBagsVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SumOverBagsVariable.o: plearn/var/SumOverBagsVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VecElementVariable.o: plearn/var/VecElementVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VecElementVariable.o: plearn/var/VecElementVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas/AddCostToLearner.o: plearn_learners/generic/AddCostToLearner.cc
+plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas/AddCostToLearner.o: plearn_learners/generic/AddCostToLearner.cc plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ClassErrorCostFunction.o: plearn/ker/ClassErrorCostFunction.cc
+plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ClassErrorCostFunction.o: plearn/ker/ClassErrorCostFunction.cc plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/NegLogProbCostFunction.o: plearn/ker/NegLogProbCostFunction.cc
+plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/NegLogProbCostFunction.o: plearn/ker/NegLogProbCostFunction.cc plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/classifiers/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ClassifierFromDensity.o: plearn_learners/classifiers/ClassifierFromDensity.cc
+plearn_learners/classifiers/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ClassifierFromDensity.o: plearn_learners/classifiers/ClassifierFromDensity.cc plearn_learners/classifiers/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/regressors/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ConstantRegressor.o: plearn_learners/regressors/ConstantRegressor.cc
+plearn_learners/regressors/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ConstantRegressor.o: plearn_learners/regressors/ConstantRegressor.cc plearn_learners/regressors/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/regressors/OBJS/linux-i386__g++_opt_double_throwerrors_blas/LinearRegressor.o: plearn_learners/regressors/LinearRegressor.cc
+plearn_learners/regressors/OBJS/linux-i386__g++_opt_double_throwerrors_blas/LinearRegressor.o: plearn_learners/regressors/LinearRegressor.cc plearn_learners/regressors/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TransposeProductVariable.o: plearn/var/TransposeProductVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TransposeProductVariable.o: plearn/var/TransposeProductVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ProductTransposeVariable.o: plearn/var/ProductTransposeVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ProductTransposeVariable.o: plearn/var/ProductTransposeVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ProductVariable.o: plearn/var/ProductVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ProductVariable.o: plearn/var/ProductVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MatrixAffineTransformFeedbackVariable.o: plearn/var/MatrixAffineTransformFeedbackVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MatrixAffineTransformFeedbackVariable.o: plearn/var/MatrixAffineTransformFeedbackVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MatrixAffineTransformVariable.o: plearn/var/MatrixAffineTransformVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MatrixAffineTransformVariable.o: plearn/var/MatrixAffineTransformVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/AffineTransformVariable.o: plearn/var/AffineTransformVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/AffineTransformVariable.o: plearn/var/AffineTransformVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/IfThenElseVariable.o: plearn/var/IfThenElseVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/IfThenElseVariable.o: plearn/var/IfThenElseVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/IsAboveThresholdVariable.o: plearn/var/IsAboveThresholdVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/IsAboveThresholdVariable.o: plearn/var/IsAboveThresholdVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/AbsVariable.o: plearn/var/AbsVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/AbsVariable.o: plearn/var/AbsVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/IndexAtPositionVariable.o: plearn/var/IndexAtPositionVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/IndexAtPositionVariable.o: plearn/var/IndexAtPositionVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ColumnIndexVariable.o: plearn/var/ColumnIndexVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ColumnIndexVariable.o: plearn/var/ColumnIndexVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ExpVariable.o: plearn/var/ExpVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ExpVariable.o: plearn/var/ExpVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/LogVariable.o: plearn/var/LogVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/LogVariable.o: plearn/var/LogVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PLogPVariable.o: plearn/var/PLogPVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PLogPVariable.o: plearn/var/PLogPVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PowVariable.o: plearn/var/PowVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PowVariable.o: plearn/var/PowVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Var_utils.o: plearn/var/Var_utils.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Var_utils.o: plearn/var/Var_utils.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/AffineTransformWeightPenalty.o: plearn/var/AffineTransformWeightPenalty.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/AffineTransformWeightPenalty.o: plearn/var/AffineTransformWeightPenalty.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/BinaryClassificationLossVariable.o: plearn/var/BinaryClassificationLossVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/BinaryClassificationLossVariable.o: plearn/var/BinaryClassificationLossVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MiniBatchClassificationLossVariable.o: plearn/var/MiniBatchClassificationLossVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MiniBatchClassificationLossVariable.o: plearn/var/MiniBatchClassificationLossVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ClassificationLossVariable.o: plearn/var/ClassificationLossVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ClassificationLossVariable.o: plearn/var/ClassificationLossVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ConcatColumnsVariable.o: plearn/var/ConcatColumnsVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ConcatColumnsVariable.o: plearn/var/ConcatColumnsVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/LiftOutputVariable.o: plearn/var/LiftOutputVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/LiftOutputVariable.o: plearn/var/LiftOutputVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/LogSoftmaxVariable.o: plearn/var/LogSoftmaxVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/LogSoftmaxVariable.o: plearn/var/LogSoftmaxVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MulticlassLossVariable.o: plearn/var/MulticlassLossVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MulticlassLossVariable.o: plearn/var/MulticlassLossVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/UnfoldedSumOfVariable.o: plearn/var/UnfoldedSumOfVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/UnfoldedSumOfVariable.o: plearn/var/UnfoldedSumOfVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SumSquareVariable.o: plearn/var/SumSquareVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SumSquareVariable.o: plearn/var/SumSquareVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SigmoidVariable.o: plearn/var/SigmoidVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SigmoidVariable.o: plearn/var/SigmoidVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SumAbsVariable.o: plearn/var/SumAbsVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SumAbsVariable.o: plearn/var/SumAbsVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TanhVariable.o: plearn/var/TanhVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TanhVariable.o: plearn/var/TanhVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/classifiers/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MultiInstanceNNet.o: plearn_learners/classifiers/MultiInstanceNNet.cc
+plearn_learners/classifiers/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MultiInstanceNNet.o: plearn_learners/classifiers/MultiInstanceNNet.cc plearn_learners/classifiers/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MarginPerceptronCostVariable.o: plearn/var/MarginPerceptronCostVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MarginPerceptronCostVariable.o: plearn/var/MarginPerceptronCostVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/NegCrossEntropySigmoidVariable.o: plearn/var/NegCrossEntropySigmoidVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/NegCrossEntropySigmoidVariable.o: plearn/var/NegCrossEntropySigmoidVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MatrixOneHotSquaredLoss.o: plearn/var/MatrixOneHotSquaredLoss.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MatrixOneHotSquaredLoss.o: plearn/var/MatrixOneHotSquaredLoss.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/OneHotSquaredLoss.o: plearn/var/OneHotSquaredLoss.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/OneHotSquaredLoss.o: plearn/var/OneHotSquaredLoss.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MatrixSoftmaxVariable.o: plearn/var/MatrixSoftmaxVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MatrixSoftmaxVariable.o: plearn/var/MatrixSoftmaxVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SoftmaxVariable.o: plearn/var/SoftmaxVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SoftmaxVariable.o: plearn/var/SoftmaxVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SoftplusVariable.o: plearn/var/SoftplusVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SoftplusVariable.o: plearn/var/SoftplusVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/UnaryHardSlopeVariable.o: plearn/var/UnaryHardSlopeVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/UnaryHardSlopeVariable.o: plearn/var/UnaryHardSlopeVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas/NNet.o: plearn_learners/generic/NNet.cc
+plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas/NNet.o: plearn_learners/generic/NNet.cc plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/CenteredVMatrix.o: plearn/vmat/CenteredVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/CenteredVMatrix.o: plearn/vmat/CenteredVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/GetInputVMatrix.o: plearn/vmat/GetInputVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/GetInputVMatrix.o: plearn/vmat/GetInputVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/unsupervised/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PCA.o: plearn_learners/unsupervised/PCA.cc
+plearn_learners/unsupervised/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PCA.o: plearn_learners/unsupervised/PCA.cc plearn_learners/unsupervised/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/regressors/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PLS.o: plearn_learners/regressors/PLS.cc
+plearn_learners/regressors/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PLS.o: plearn_learners/regressors/PLS.cc plearn_learners/regressors/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PLearnerOutputVMatrix.o: plearn/vmat/PLearnerOutputVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PLearnerOutputVMatrix.o: plearn/vmat/PLearnerOutputVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas/StackedLearner.o: plearn_learners/generic/StackedLearner.cc
+plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas/StackedLearner.o: plearn_learners/generic/StackedLearner.cc plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Distribution.o: plearn_learners/distributions/Distribution.cc
+plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Distribution.o: plearn_learners/distributions/Distribution.cc plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/LocallyWeightedDistribution.o: plearn_learners/distributions/LocallyWeightedDistribution.cc
+plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/LocallyWeightedDistribution.o: plearn_learners/distributions/LocallyWeightedDistribution.cc plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas/EmbeddedLearner.o: plearn_learners/generic/EmbeddedLearner.cc
+plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas/EmbeddedLearner.o: plearn_learners/generic/EmbeddedLearner.cc plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SelectInputSubsetLearner.o: plearn_learners/generic/SelectInputSubsetLearner.cc
+plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SelectInputSubsetLearner.o: plearn_learners/generic/SelectInputSubsetLearner.cc plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/unsupervised/OBJS/linux-i386__g++_opt_double_throwerrors_blas/KernelProjection.o: plearn_learners/unsupervised/KernelProjection.cc
+plearn_learners/unsupervised/OBJS/linux-i386__g++_opt_double_throwerrors_blas/KernelProjection.o: plearn_learners/unsupervised/KernelProjection.cc plearn_learners/unsupervised/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/unsupervised/OBJS/linux-i386__g++_opt_double_throwerrors_blas/KernelPCA.o: plearn_learners/unsupervised/KernelPCA.cc
+plearn_learners/unsupervised/OBJS/linux-i386__g++_opt_double_throwerrors_blas/KernelPCA.o: plearn_learners/unsupervised/KernelPCA.cc plearn_learners/unsupervised/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/unsupervised/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Isomap.o: plearn_learners/unsupervised/Isomap.cc
+plearn_learners/unsupervised/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Isomap.o: plearn_learners/unsupervised/Isomap.cc plearn_learners/unsupervised/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/DivisiveNormalizationKernel.o: plearn/ker/DivisiveNormalizationKernel.cc
+plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/DivisiveNormalizationKernel.o: plearn/ker/DivisiveNormalizationKernel.cc plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/unsupervised/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SpectralClustering.o: plearn_learners/unsupervised/SpectralClustering.cc
+plearn_learners/unsupervised/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SpectralClustering.o: plearn_learners/unsupervised/SpectralClustering.cc plearn_learners/unsupervised/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PDistribution.o: plearn_learners/distributions/PDistribution.cc
+plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PDistribution.o: plearn_learners/distributions/PDistribution.cc plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ConcatRowsVariable.o: plearn/var/ConcatRowsVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ConcatRowsVariable.o: plearn/var/ConcatRowsVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/CutBelowThresholdVariable.o: plearn/var/CutBelowThresholdVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/CutBelowThresholdVariable.o: plearn/var/CutBelowThresholdVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SoftSlopeVariable.o: plearn/var/SoftSlopeVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SoftSlopeVariable.o: plearn/var/SoftSlopeVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SoftSlopeIntegralVariable.o: plearn/var/SoftSlopeIntegralVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SoftSlopeIntegralVariable.o: plearn/var/SoftSlopeIntegralVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ConditionalDensityNet.o: plearn_learners/distributions/ConditionalDensityNet.cc
+plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ConditionalDensityNet.o: plearn_learners/distributions/ConditionalDensityNet.cc plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/distr_maths.o: plearn/math/distr_maths.cc
+plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/distr_maths.o: plearn/math/distr_maths.cc plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/GaussianDistribution.o: plearn_learners/distributions/GaussianDistribution.cc
+plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/GaussianDistribution.o: plearn_learners/distributions/GaussianDistribution.cc plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/GaussMix.o: plearn_learners/distributions/GaussMix.cc
+plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/GaussMix.o: plearn_learners/distributions/GaussMix.cc plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ManifoldParzen2.o: plearn_learners/distributions/ManifoldParzen2.cc
+plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ManifoldParzen2.o: plearn_learners/distributions/ManifoldParzen2.cc plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/UnconditionalDistribution.o: plearn_learners/distributions/UnconditionalDistribution.cc
+plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/UnconditionalDistribution.o: plearn_learners/distributions/UnconditionalDistribution.cc plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SpiralDistribution.o: plearn_learners/distributions/SpiralDistribution.cc
+plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SpiralDistribution.o: plearn_learners/distributions/SpiralDistribution.cc plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/UniformDistribution.o: plearn_learners/distributions/UniformDistribution.cc
+plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/UniformDistribution.o: plearn_learners/distributions/UniformDistribution.cc plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ProjectionErrorVariable.o: plearn/var/ProjectionErrorVariable.cc
+plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ProjectionErrorVariable.o: plearn/var/ProjectionErrorVariable.cc plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/LocalNeighborsDifferencesVMatrix.o: plearn/vmat/LocalNeighborsDifferencesVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/LocalNeighborsDifferencesVMatrix.o: plearn/vmat/LocalNeighborsDifferencesVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn_learners/unsupervised/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TangentLearner.o: plearn_learners/unsupervised/TangentLearner.cc
+plearn_learners/unsupervised/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TangentLearner.o: plearn_learners/unsupervised/TangentLearner.cc plearn_learners/unsupervised/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ExplicitSplitter.o: plearn/vmat/ExplicitSplitter.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ExplicitSplitter.o: plearn/vmat/ExplicitSplitter.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/FilteredVMatrix.o: plearn/vmat/FilteredVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/FilteredVMatrix.o: plearn/vmat/FilteredVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/FilterSplitter.o: plearn/vmat/FilterSplitter.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/FilterSplitter.o: plearn/vmat/FilterSplitter.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/FractionSplitter.o: plearn/vmat/FractionSplitter.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/FractionSplitter.o: plearn/vmat/FractionSplitter.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/KFoldSplitter.o: plearn/vmat/KFoldSplitter.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/KFoldSplitter.o: plearn/vmat/KFoldSplitter.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RepeatSplitter.o: plearn/vmat/RepeatSplitter.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RepeatSplitter.o: plearn/vmat/RepeatSplitter.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SourceVMatrixSplitter.o: plearn/vmat/SourceVMatrixSplitter.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SourceVMatrixSplitter.o: plearn/vmat/SourceVMatrixSplitter.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TestInTrainSplitter.o: plearn/vmat/TestInTrainSplitter.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TestInTrainSplitter.o: plearn/vmat/TestInTrainSplitter.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ToBagSplitter.o: plearn/vmat/ToBagSplitter.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ToBagSplitter.o: plearn/vmat/ToBagSplitter.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TrainTestSplitter.o: plearn/vmat/TrainTestSplitter.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TrainTestSplitter.o: plearn/vmat/TrainTestSplitter.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TrainValidTestSplitter.o: plearn/vmat/TrainValidTestSplitter.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TrainValidTestSplitter.o: plearn/vmat/TrainValidTestSplitter.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/LiftStatsCollector.o: plearn/math/LiftStatsCollector.cc
+plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/LiftStatsCollector.o: plearn/math/LiftStatsCollector.cc plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ForwardVMatrix.o: plearn/vmat/ForwardVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ForwardVMatrix.o: plearn/vmat/ForwardVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/AutoVMatrix.o: plearn/vmat/AutoVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/AutoVMatrix.o: plearn/vmat/AutoVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/BatchVMatrix.o: plearn/vmat/BatchVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/BatchVMatrix.o: plearn/vmat/BatchVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/BootstrapVMatrix.o: plearn/vmat/BootstrapVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/BootstrapVMatrix.o: plearn/vmat/BootstrapVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/CumVMatrix.o: plearn/vmat/CumVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/CumVMatrix.o: plearn/vmat/CumVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/IndexedVMatrix.o: plearn/vmat/IndexedVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/IndexedVMatrix.o: plearn/vmat/IndexedVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/KNNVMatrix.o: plearn/vmat/KNNVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/KNNVMatrix.o: plearn/vmat/KNNVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MultiInstanceVMatrix.o: plearn/vmat/MultiInstanceVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MultiInstanceVMatrix.o: plearn/vmat/MultiInstanceVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PrecomputedVMatrix.o: plearn/vmat/PrecomputedVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PrecomputedVMatrix.o: plearn/vmat/PrecomputedVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ProcessingVMatrix.o: plearn/vmat/ProcessingVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ProcessingVMatrix.o: plearn/vmat/ProcessingVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SortRowsVMatrix.o: plearn/vmat/SortRowsVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SortRowsVMatrix.o: plearn/vmat/SortRowsVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SubInputVMatrix.o: plearn/vmat/SubInputVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SubInputVMatrix.o: plearn/vmat/SubInputVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TransposeVMatrix.o: plearn/vmat/TransposeVMatrix.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TransposeVMatrix.o: plearn/vmat/TransposeVMatrix.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VMatrixFromDistribution.o: plearn/vmat/VMatrixFromDistribution.cc
+plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VMatrixFromDistribution.o: plearn/vmat/VMatrixFromDistribution.cc plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/plearn_main.o: commands/PLearnCommands/plearn_main.cc
+commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/plearn_main.o: commands/PLearnCommands/plearn_main.cc commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
-commands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/plearn.o: commands/plearn.cc
+commands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/plearn.o: commands/plearn.cc commands/OBJS/linux-i386__g++_opt_double_throwerrors_blas
 	$(CC) $(CC_OPTIONS) $(SOURCEDIRS) -c -o $@ $<
 
 commands/plearn: plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/pl_math.o plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/byte_order.o plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ms_hash_wrapper.o plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/pl_hash_fun.o plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PStream_util.o plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/fileutils.o plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PStreamBuf.o plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/pl_streambuf.o plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/pl_fdstream.o plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/StdPStreamBuf.o plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PStream.o plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/stringutils.o plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/pl_io_deprecated.o plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ProgressBar.o plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/general.o plearn/sys/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MemoryMap.o plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/plstreams.o plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/pl_io.o plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MatIO.o plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Mat.o plearn/sys/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PLMPI.o plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/plerror.o plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/StaticInitializer.o plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/OptionBase.o plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TypeFactory.o plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Object.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VMField.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Var.o plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/random.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/UnaryVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PlusConstantVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/BinaryVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SumVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PlusScalarVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ColumnSumVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PlusRowVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RowSumVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PlusColumnVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PlusVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MinusScalarVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/NegateElementsVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MinusRowVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MinusColumnVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MinusVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TimesConstantVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/DotProductVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TimesScalarVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TimesColumnVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TimesRowVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TimesVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/InvertElementsVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/DivVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/EqualScalarVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/EqualVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Var_operators.o plearn/display/OBJS/linux-i386__g++_opt_double_throwerrors_blas/GhostScript.o plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TmpFilenames.o plearn/display/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Gnuplot.o plearn/measure/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Measurer.o plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Kernel.o plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RealMapping.o plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/StatsCollector.o plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VecStatsCollector.o plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/StatsIterator.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MemoryVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VVec.o plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MPIStream.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RowBufferedVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/FileVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RemoveRowsVMatrix.o plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Learner.o plearn/display/OBJS/linux-i386__g++_opt_double_throwerrors_blas/DisplayUtils.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Func.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ElementAtPositionVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VarElementVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RowAtPositionVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VarRowVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ExtendedVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SubMatVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SubMatTransposeVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SourceVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Variable.o plearn/sys/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Popen.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/NaryVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VarArrayElementVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VarArray.o plearn/io/OBJS/linux-i386__g++_opt_double_throwerrors_blas/IntVecFile.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/DiskVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SubVMatrix.o plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ConditionalStatsCollector.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ShiftAndRescaleVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ExtendedVMatrix.o plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/plapack.o plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/pl_erf.o plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/stats_utils.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VMat_maths.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SourceVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SelectRowsVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SelectColumnsVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SelectRowsFileIndexVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VMat.o plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PLearner.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RegularGridVMatrix.o plearn_learners/misc/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Grapher.o plearn/misc/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RunObject.o commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PLearnCommandRegistry.o commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RunCommand.o commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/AutoRunCommand.o plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PDate.o plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Hash.o plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TinyVector.o plearn/db/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SimpleDB.o plearn/db/OBJS/linux-i386__g++_opt_double_throwerrors_blas/AutoSDBVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ConcatRowsVMatrix.o plearn/db/OBJS/linux-i386__g++_opt_double_throwerrors_blas/NistDB.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RemapLastColumnVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ConcatColumnsVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Splitter.o plearn/db/OBJS/linux-i386__g++_opt_double_throwerrors_blas/databases.o plearn/base/OBJS/linux-i386__g++_opt_double_throwerrors_blas/StringTable.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/StrTableVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/JoinVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VMatLanguage.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VVMatrix.o plearn/db/OBJS/linux-i386__g++_opt_double_throwerrors_blas/getDataSet.o commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/FieldConvertCommand.o commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/HelpCommand.o commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/JulianDateCommand.o commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/KolmogorovSmirnovCommand.o commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/LearnerCommand.o commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ReadAndWriteCommand.o plearn/sys/OBJS/linux-i386__g++_opt_double_throwerrors_blas/procinfo.o commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TestDependenciesCommand.o commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TestDependencyCommand.o plearn/misc/OBJS/linux-i386__g++_opt_double_throwerrors_blas/vmatmain.o commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VMatCommand.o plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SourceKernel.o plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/AdditiveNormalizationKernel.o plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/DotProductKernel.o plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/GaussianKernel.o plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SelectedOutputCostFunction.o plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/DistanceKernel.o plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/GeodesicDistanceKernel.o plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/NegOutputCostFunction.o plearn/opt/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Optimizer.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SumOfVariable.o plearn/opt/OBJS/linux-i386__g++_opt_double_throwerrors_blas/AdaptGradientOptimizer.o plearn/opt/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ConjGradientOptimizer.o plearn/opt/OBJS/linux-i386__g++_opt_double_throwerrors_blas/GradientOptimizer.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/CrossEntropyVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SumOverBagsVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VecElementVariable.o plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas/AddCostToLearner.o plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ClassErrorCostFunction.o plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/NegLogProbCostFunction.o plearn_learners/classifiers/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ClassifierFromDensity.o plearn_learners/regressors/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ConstantRegressor.o plearn_learners/regressors/OBJS/linux-i386__g++_opt_double_throwerrors_blas/LinearRegressor.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TransposeProductVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ProductTransposeVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ProductVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MatrixAffineTransformFeedbackVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MatrixAffineTransformVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/AffineTransformVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/IfThenElseVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/IsAboveThresholdVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/AbsVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/IndexAtPositionVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ColumnIndexVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ExpVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/LogVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PLogPVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PowVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Var_utils.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/AffineTransformWeightPenalty.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/BinaryClassificationLossVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MiniBatchClassificationLossVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ClassificationLossVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ConcatColumnsVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/LiftOutputVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/LogSoftmaxVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MulticlassLossVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/UnfoldedSumOfVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SumSquareVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SigmoidVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SumAbsVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TanhVariable.o plearn_learners/classifiers/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MultiInstanceNNet.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MarginPerceptronCostVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/NegCrossEntropySigmoidVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MatrixOneHotSquaredLoss.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/OneHotSquaredLoss.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MatrixSoftmaxVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SoftmaxVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SoftplusVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/UnaryHardSlopeVariable.o plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas/NNet.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/CenteredVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/GetInputVMatrix.o plearn_learners/unsupervised/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PCA.o plearn_learners/regressors/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PLS.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PLearnerOutputVMatrix.o plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas/StackedLearner.o plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Distribution.o plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/LocallyWeightedDistribution.o plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas/EmbeddedLearner.o plearn_learners/generic/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SelectInputSubsetLearner.o plearn_learners/unsupervised/OBJS/linux-i386__g++_opt_double_throwerrors_blas/KernelProjection.o plearn_learners/unsupervised/OBJS/linux-i386__g++_opt_double_throwerrors_blas/KernelPCA.o plearn_learners/unsupervised/OBJS/linux-i386__g++_opt_double_throwerrors_blas/Isomap.o plearn/ker/OBJS/linux-i386__g++_opt_double_throwerrors_blas/DivisiveNormalizationKernel.o plearn_learners/unsupervised/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SpectralClustering.o plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PDistribution.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ConcatRowsVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/CutBelowThresholdVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SoftSlopeVariable.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SoftSlopeIntegralVariable.o plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ConditionalDensityNet.o plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/distr_maths.o plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/GaussianDistribution.o plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/GaussMix.o plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ManifoldParzen2.o plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/UnconditionalDistribution.o plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SpiralDistribution.o plearn_learners/distributions/OBJS/linux-i386__g++_opt_double_throwerrors_blas/UniformDistribution.o plearn/var/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ProjectionErrorVariable.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/LocalNeighborsDifferencesVMatrix.o plearn_learners/unsupervised/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TangentLearner.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ExplicitSplitter.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/FilteredVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/FilterSplitter.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/FractionSplitter.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/KFoldSplitter.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/RepeatSplitter.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SourceVMatrixSplitter.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TestInTrainSplitter.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ToBagSplitter.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TrainTestSplitter.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TrainValidTestSplitter.o plearn/math/OBJS/linux-i386__g++_opt_double_throwerrors_blas/LiftStatsCollector.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ForwardVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/AutoVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/BatchVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/BootstrapVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/CumVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/IndexedVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/KNNVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/MultiInstanceVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/PrecomputedVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/ProcessingVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SortRowsVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/SubInputVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/TransposeVMatrix.o plearn/vmat/OBJS/linux-i386__g++_opt_double_throwerrors_blas/VMatrixFromDistribution.o commands/PLearnCommands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/plearn_main.o commands/OBJS/linux-i386__g++_opt_double_throwerrors_blas/plearn.o
