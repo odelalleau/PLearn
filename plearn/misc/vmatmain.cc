@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.20 2004/03/23 22:27:35 nova77 Exp $
+   * $Id: vmatmain.cc,v 1.21 2004/03/24 06:40:10 nova77 Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -55,7 +55,6 @@
 #else
 #include <curses.h>
 #endif
-
 
 namespace PLearn {
 using namespace std;
@@ -320,6 +319,8 @@ void viewVMat(const VMat& vm)
   int curj = 0;
   int starti = 0;
   int startj = 0;
+
+  int vStartHelp = 0;
   
   bool onError=false;
 
@@ -341,7 +342,7 @@ void viewVMat(const VMat& vm)
 
       // print field names 
       for(int j=startj; j<endj; j++)
-        {
+      {
           string s = vm->fieldName(j);
           // if(j==curj)
           //  attron(A_REVERSE);
@@ -413,275 +414,454 @@ void viewVMat(const VMat& vm)
       else
         onError = false;
 
+      ///////////////////////////////////////////////////////////////
       switch(key)
+      {
+      case KEY_LEFT: 
+        if(transposed)
         {
-        case KEY_LEFT: 
-          if(transposed)
-            {
-              if(curi>0)
-                --curi;
-              if(curi<starti)
-                starti = curi;
-            }
-          else
-            {
-              if(curj>0)
-                --curj;
-              if(curj<startj)
-                startj=curj;
-            }
-          break;
-        case KEY_RIGHT: 
-          if(transposed)
-            {
-              if(curi<vm->length()-1)
-                ++curi;
-              if(curi>=starti+ni)
-                ++starti;
-            }
-          else
-            {
-              if(curj<vm->width()-1)
-                ++curj;
-              if(curj>=startj+nj)
-                ++startj;
-            }
-          break;
-        case KEY_UP: 
-          if(transposed)
-            {
-              if(curj>0)
-                --curj;
-              if(curj<startj)
-                startj=curj;
-            }
-          else
-            {
-              if(curi>0)
-                --curi;
-              if(curi<starti)
-                starti = curi;
-            }
-          break;
-        case KEY_DOWN: 
-          if(transposed)
-            {
-              if(curj<vm->width()-1)
-                ++curj;
-              if(curj>=startj+nj)
-                ++startj;
-            }
-          else
-            {
-              if(curi<vm->length()-1)
-                ++curi;
-              if(curi>=starti+ni)
-                ++starti;
-            }
-          break;
-        case KEY_PPAGE: 
-          if(transposed)
-            {
-              curj -= nj;
-              startj -= nj;
-              if(startj<0)
-                startj = 0;
-              if(curj<0)
-                curj = 0;
-            }
-          else
-            {
-              curi -= ni;
-              starti -= ni;
-              if(starti<0)
-                starti = 0;
-              if(curi<0)
-                curi = 0;
-            }
-          break;
-        case KEY_NPAGE: 
-          if(transposed)
-            {
-              curj += nj;
-              startj += nj;
-              if(curj>=vm->width())
-                curj = vm->width()-1;
-              if(startj>vm->width()-nj)
-                startj = max(0,vm->width()-nj);
-            }
-          else
-            {
-              curi += ni;
-              starti += ni;
-              if(curi>=vm->length())
-                curi = vm->length()-1;
-              if(starti>vm->length()-ni)
-                starti = max(0,vm->length()-ni);
-            }
-          break;
-        case KEY_HOME: 
-          // not working for the moment: see http://dickey.his.com/xterm/xterm.faq.html#xterm_pc_style
-          if(transposed)
-          {
-              curi = 0;
-              starti = 0;
-          }
-          else
-          {
-              curj = 0;
-              startj = 0;
-          }
-          break;
-        case '.':
-          hide_sameval = !hide_sameval;
-          break;
-        case 't': case 'T':          
-          transposed = !transposed;
-          nj = transposed ? LINES-3 : (COLS-leftcolwidth)/valwidth;
-          ni = transposed ? (COLS-leftcolwidth)/valwidth : LINES-4;
-          starti = max(0,curi-ni/2);
-          startj = max(0,curj-nj/2);
-          //endj = min(vm->width(), startj+nj);
-          //endi = min(vm->length(), starti+ni);
-          break;
-        case '/':  // search for value
-          {
-            echo();
-            mvprintw(LINES-1,0,"Search for value or string:");
-            // clear the rest of the line
-            clrtoeol();
-            move(LINES-1, 28);
-            char l[10];
-            getnstr(l, 10);
-            string searchme = removeblanks(l);
-            real searchval = vm(curi,curj);
-            if(searchme!="")
-              { 
-                searchval = vm->getStringVal(curj, searchme);
-                if(is_missing(searchval))
-                  {
-                    searchval = toreal(searchme);
-                    if(is_missing(searchval))
-                      PLERROR("Search item is neither a string with a valid mapping, nor convertible to a real");
-                  }
-              }
-            
-            Vec cached;
-            if(cached_columns.find(curj)!=cached_columns.end())
-              cached = cached_columns[curj];
-            else
-              {
-                mvprintw(LINES-1,0,"Building cache...                                                                            ");
-                refresh();
-                cached.resize(vm->length());
-                vm->getColumn(curj,cached);                
-                cached_columns[curj] = cached;
-              }
-
-            mvprintw(LINES-1,0,"Searching for value %f ...                                                                            ",searchval);
-            refresh();
-            ++curi; // start searching from next row
-            while(curi<vm->length() && cached[curi]!=searchval)
-              ++curi;
-            if(curi>=vm->length())
-              curi = 0;
-            ni = transposed ? (COLS-leftcolwidth)/valwidth : LINES-4;
-            starti = max(0,curi-ni/2);
-          }
-          break;
-        case (int)'l': case (int)'L': 
-          {
-            echo();
-            mvprintw(LINES-1,0,"Goto line:                                                                            ");
-            move(LINES-1, 11);
-            char l[10];
-            getnstr(l, 10);
-            if(!pl_isnumber(l) || toint(l) < 0 || toint(l)>=vm->length())
-              {
-                mvprintw(LINES-1,0,"*** Invalid line number ***");
-                refresh();
-                sleep(1);
-              }
-            else
-              {
-                curi= toint(l);
-                starti = curi;
-              }
-            noecho();
-          }
-          break;
-        case (int)'c': case (int)'C': 
-          {
-            echo();
-            mvprintw(LINES-1,0,"Goto column:                                                                           ");
-            move(LINES-1, 13);
-            char c[10];
-            getnstr(c, 10);
-            if(!pl_isnumber(c) || toint(c) < 0 || toint(c)>=vm->width())
-              {
-                mvprintw(LINES-1,0,"*** Invalid column number ***");
-                refresh();
-                sleep(1);
-              }
-            else
-              {
-                curj= toint(c);
-                startj = curj;
-              }
-            noecho();
-          }
-          break;
-          
-        case (int)'s': case (int)'S': 
-          view_strings = !view_strings;
-          break;
-                    
-        case (int)'h': case (int)'H':
-          erase();
-          
-          mvprintw(0,COLS/2-6,"*** HELP ***");
-          
-          mvprintw(2,10, "KEYS:");
-          mvprintw(3,10, " - up: move up one line");
-          mvprintw(4,10, " - down: move down one line");
-          mvprintw(5,10, " - right: move right one column");
-          mvprintw(6,10, " - left: move left one column");
-          mvprintw(7,10, " - page up: move up one screen");
-          mvprintw(8,10, " - page down: move down one screen");
-          mvprintw(9,10, " - 'l' or 'L': prompt for a line number and go to that line");
-          mvprintw(10,10," - 'c' or 'C': prompt for a column number and go to that column");
-          mvprintw(11,10," - 's' or 'S': toggle display string fields as strings or numbers");
-          mvprintw(12,10," - 't' or 'T': toggle transposed display mode");
-          mvprintw(13,10," - '.'       : toggle displaying of ... for values that do not change");
-          mvprintw(14,10," - '/'       : search for a value of the current field");
-          mvprintw(15,10," - 'h' or 'H': display this screen");
-          mvprintw(16,10," - 'q' or 'Q': quit program");          
-          mvprintw(17,COLS/2-13,"(press any key to continue)");
-          
-          refresh();
-          getch();
-          
-          break;
-          
-        case (int)'q': case (int)'Q': 
-          break;
-          
-        default:
-          mvprintw(LINES-1,0,"*** Invalid command (type 'h' for help) ***");
+          if(curi>0)
+            --curi;
+          if(curi<starti)
+            starti = curi;
+        }
+        else
+        {
+          if(curj>0)
+            --curj;
+          if(curj<startj)
+            startj=curj;
+        }
+        break;
+      ///////////////////////////////////////////////////////////////
+      case KEY_RIGHT: 
+        if(transposed)
+        {
+          if(curi<vm->length()-1)
+            ++curi;
+          if(curi>=starti+ni)
+            ++starti;
+        }
+        else
+        {
+          if(curj<vm->width()-1)
+            ++curj;
+          if(curj>=startj+nj)
+            ++startj;
+        }
+        break;
+      ///////////////////////////////////////////////////////////////
+      case KEY_UP: 
+        if(transposed)
+        {
+          if(curj>0)
+            --curj;
+          if(curj<startj)
+            startj=curj;
+        }
+        else
+        {
+          if(curi>0)
+            --curi;
+          if(curi<starti)
+            starti = curi;
+        }
+        break;
+      ///////////////////////////////////////////////////////////////
+      case KEY_DOWN: 
+        if(transposed)
+        {
+          if(curj<vm->width()-1)
+            ++curj;
+          if(curj>=startj+nj)
+            ++startj;
+        }
+        else
+        {
+          if(curi<vm->length()-1)
+            ++curi;
+          if(curi>=starti+ni)
+            ++starti;
+        }
+        break;
+      ///////////////////////////////////////////////////////////////
+      case KEY_PPAGE: 
+        if(transposed)
+        {
+          curj -= nj;
+          startj -= nj;
+          if(startj<0)
+            startj = 0;
+          if(curj<0)
+            curj = 0;
+        }
+        else
+        {
+          curi -= ni;
+          starti -= ni;
+          if(starti<0)
+            starti = 0;
+          if(curi<0)
+            curi = 0;
+        }
+        break;
+      ///////////////////////////////////////////////////////////////
+      case KEY_NPAGE: 
+        if(transposed)
+        {
+          curj += nj;
+          startj += nj;
+          if(curj>=vm->width())
+            curj = vm->width()-1;
+          if(startj>vm->width()-nj)
+            startj = max(0,vm->width()-nj);
+        }
+        else
+        {
+          curi += ni;
+          starti += ni;
+          if(curi>=vm->length())
+            curi = vm->length()-1;
+          if(starti>vm->length()-ni)
+            starti = max(0,vm->length()-ni);
+        }
+        break;
+      ///////////////////////////////////////////////////////////////
+      case KEY_HOME: 
+        // not working on unix for the moment: see http://dickey.his.com/xterm/xterm.faq.html#xterm_pc_style
+        if(transposed)
+        {
+          curi = 0;
+          starti = 0;
+        }
+        else
+        {
+          curj = 0;
+          startj = 0;
+        }
+        break;
+      ///////////////////////////////////////////////////////////////
+      case KEY_END: 
+        // not working on unix for the moment: see http://dickey.his.com/xterm/xterm.faq.html#xterm_pc_style
+        if(transposed)
+        {
+          curi = vm->length()-1;
+          starti = curi;
+        }
+        else
+        {
+          curj = vm->width()-1;
+          startj = curj;
+        }
+        break;
+      ///////////////////////////////////////////////////////////////
+      case '.':
+        hide_sameval = !hide_sameval;
+        break;
+      ///////////////////////////////////////////////////////////////
+      case 't': case 'T':          
+        transposed = !transposed;
+        nj = transposed ? LINES-3 : (COLS-leftcolwidth)/valwidth;
+        ni = transposed ? (COLS-leftcolwidth)/valwidth : LINES-4;
+        starti = max(0,curi-ni/2);
+        startj = max(0,curj-nj/2);
+        //endj = min(vm->width(), startj+nj);
+        //endi = min(vm->length(), starti+ni);
+        break;
+      ///////////////////////////////////////////////////////////////
+      case '/':  // search for value
+        {
+          echo();
+          char strmsg[] = {"Search for value or string: "};
+          mvprintw(LINES-1,0,strmsg);
           // clear the rest of the line
           clrtoeol();
-          
-          refresh();
-          
-          // wait until the user type something
-          key = getch();
-          onError = true;
+          move(LINES-1, (int)strlen(strmsg));
+          char l[10];
+          getnstr(l, 10);
+          string searchme = removeblanks(l);
+          real searchval = vm(curi,curj);
+          if(searchme!="")
+          { 
+            searchval = vm->getStringVal(curj, searchme);
+            if(is_missing(searchval))
+            {
+              searchval = toreal(searchme);
+              // This ones gives a very bad error: to be changed
+              if(is_missing(searchval))
+                PLERROR("Search item is neither a string with a valid mapping, nor convertible to a real");
+            }
+          }
 
-          //sleep(1);
-          break;
+          Vec cached;
+          if(cached_columns.find(curj)!=cached_columns.end())
+            cached = cached_columns[curj];
+          else
+          {
+            mvprintw(LINES-1,0,"Building cache...");
+            // clear the rest of the line
+            clrtoeol();
+            refresh();
+            cached.resize(vm->length());
+            vm->getColumn(curj,cached);                
+            cached_columns[curj] = cached;
+          }
+
+          mvprintw(LINES-1,0,"Searching for value %f ...",searchval);
+          clrtoeol();
+          refresh();
+          ++curi; // start searching from next row
+          while(curi<vm->length() && cached[curi]!=searchval)
+            ++curi;
+          if(curi>=vm->length())
+            curi = 0;
+          ni = transposed ? (COLS-leftcolwidth)/valwidth : LINES-4;
+          starti = max(0,curi-ni/2);
         }
+        break;
+      ///////////////////////////////////////////////////////////////
+      case (int)'l': case (int)'L': 
+        {
+          echo();
+          char strmsg[] = {"Goto line: "};
+          mvprintw(LINES-1,0,strmsg);
+          clrtoeol();
+          move(LINES-1, (int)strlen(strmsg));
+          char l[10];
+          getnstr(l, 10);
+          if(l[0] == '\0' || !pl_isnumber(l) || toint(l) < 0 || toint(l)>=vm->length())
+          {
+            mvprintw(LINES-1,0,"*** Invalid line number ***");
+            clrtoeol();
+            refresh();
+            // wait until the user types something
+            key = getch();
+            onError = true;
+          }
+          else
+          {
+            curi= toint(l);
+            starti = curi;
+          }
+          noecho();
+        }
+        break;
+      ///////////////////////////////////////////////////////////////
+      case (int)'c': case (int)'C': 
+        {
+          echo();
+          char strmsg[] = {"Goto column: "};
+          mvprintw(LINES-1,0,strmsg);
+          clrtoeol();
+          move(LINES-1, (int)strlen(strmsg));
+          char c[10];
+          getnstr(c, 10);
+          if(c[0] == '\0' || !pl_isnumber(c) || toint(c) < 0 || toint(c)>=vm->width())
+          {
+            mvprintw(LINES-1,0,"*** Invalid column number ***");
+            clrtoeol();
+            refresh();
+            // wait until the user types something
+            key = getch();
+            onError = true;
+          }
+          else
+          {
+            curj= toint(c);
+            startj = curj;
+          }
+          noecho();
+        }
+        break;
+      ///////////////////////////////////////////////////////////////
+      case (int)'e': case (int)'E': 
+        {
+          echo();
+          char strmsg[] = {"Enter column(s) or range (ex: 7;1-20;7,8,12) to export: "};
+          mvprintw(LINES-1,0,strmsg);
+          clrtoeol();
+
+          move(LINES-1, (int)strlen(strmsg));
+          char c[50];
+          getnstr(c, 50);
+
+          vector<string>columnList = split(c, " -,", true);
+          vector<string>::iterator vsIt;
+          char strReason[100] = {"\0"};
+
+          // checks for errors
+          bool invalidInput = false;
+          if (columnList.empty())
+          {
+            invalidInput = true;
+            strcpy(strReason, "Nothing was inserted");
+          }
+
+          int colVal = 0;
+          char separator = 0;
+
+          for (vsIt = columnList.begin(); vsIt != columnList.end(); vsIt++)
+          {
+            if (pl_isnumber(*vsIt))
+            {
+              if (colVal > toint(*vsIt) && separator == '-')
+              {
+                invalidInput = true;
+                strcpy(strReason, "Second element in range smaller than the first");
+                break;
+              }
+              colVal = toint(*vsIt);
+              if (colVal < 0 || colVal >= vm->width())
+              {
+                invalidInput = true;
+                strcpy(strReason, "Invalid column number");
+                break;
+              }
+            }
+            else
+            {
+              // there was already a separator!
+              if (separator == '-')
+              {
+                invalidInput = true;
+                strcpy(strReason, "Too many '-' separators");
+                break;
+              }
+
+              separator = (*vsIt)[0];
+              if (separator != '-' &&
+                separator != ',')
+              {
+                invalidInput = true;
+                strcpy(strReason, "Invalid column separator");
+                break;
+              }
+            }
+          }
+
+          if (invalidInput)
+          {
+            mvprintw(LINES-1,0,"*** Invalid input: %s ***", strReason);
+            clrtoeol();
+            refresh();
+            // wait until the user types something
+            key = getch();
+            onError = true;
+          }
+          else
+          {
+
+            char filemsg[] = {"Enter file name: "};
+            mvprintw(LINES-1,0,filemsg);
+            clrtoeol();
+
+            move(LINES-1, (int)strlen(filemsg));
+            char fname[200];
+            getnstr(fname, 200);
+
+            ofstream outFile(fname, ios::out);
+
+            Vec indexs;
+
+            if (separator == '-')
+            {
+              int start = toint(columnList.front());
+              int end = toint(columnList.back());
+              for (int colIdx = start; colIdx <= end; ++colIdx)
+                indexs.push_back(colIdx);
+            }
+            else if (separator == ',')
+            {
+              for (vsIt = columnList.begin(); vsIt != columnList.end(); ++vsIt)
+              {
+                if (pl_isnumber(*vsIt))
+                  indexs.push_back(toint(*vsIt));
+              }
+            }
+            else if (separator == 0)
+            {
+              indexs.push_back(toint(columnList.front()));
+            }
+
+            for (Vec::iterator it = indexs.begin(); it != indexs.end(); ++it)
+            {
+              outFile << vm->fieldName((int)*it) << '\t';
+            }
+            outFile << endl;
+
+            outFile << vm.columns(indexs);
+            outFile.close();
+
+            mvprintw(LINES-1,0,"*** Output written on: %s ***", fname);
+            clrtoeol();
+            refresh();
+            // wait until the user types something
+            key = getch();
+
+          }
+
+          noecho();
+        }
+        break;
+
+      ///////////////////////////////////////////////////////////////
+      case (int)'s': case (int)'S': 
+        view_strings = !view_strings;
+        break;
+
+      ///////////////////////////////////////////////////////////////
+      case (int)'h': case (int)'H':
+        erase();
+
+        vStartHelp = 2;
+
+        mvprintw(0,COLS/2-6,"*** HELP ***");
+
+        mvprintw(vStartHelp++,10,"KEYS:");
+        mvprintw(vStartHelp++,10," - up: move up one line");
+        mvprintw(vStartHelp++,10," - down: move down one line");
+        mvprintw(vStartHelp++,10," - right: move right one column");
+        mvprintw(vStartHelp++,10," - left: move left one column");
+        mvprintw(vStartHelp++,10," - page up: move up one screen");
+        mvprintw(vStartHelp++,10," - page down: move down one screen");
+        mvprintw(vStartHelp++,10," - home: move to the first column");
+        mvprintw(vStartHelp++,10," - end: move to the last column");
+        mvprintw(vStartHelp++,10," - 'l' or 'L': prompt for a line number and go to that line");
+        mvprintw(vStartHelp++,10," - 'c' or 'C': prompt for a column number and go to that column");
+        mvprintw(vStartHelp++,10," - 's' or 'S': toggle display string fields as strings or numbers");
+        mvprintw(vStartHelp++,10," - 't' or 'T': toggle transposed display mode");
+        mvprintw(vStartHelp++,10," - 'e' or 'E': export columns to file");
+        mvprintw(vStartHelp++,10," - '.'       : toggle displaying of ... for values that do not change");
+        mvprintw(vStartHelp++,10," - '/'       : search for a value of the current field");
+        mvprintw(vStartHelp++,10," - 'h' or 'H': display this screen");
+        mvprintw(vStartHelp++,10," - 'q' or 'Q': quit program");          
+        mvprintw(vStartHelp++,COLS/2-13,"(press any key to continue)");
+
+        refresh();
+        getch();
+
+        break;
+
+      case (int)'q': case (int)'Q': 
+        break;
+
+      ///////////////////////////////////////////////////////////////
+      default:
+        mvprintw(LINES-1,0,"*** Invalid command (type 'h' for help) ***");
+        // clear the rest of the line
+        clrtoeol();
+
+        refresh();
+
+        // wait until the user types something
+        key = getch();
+        onError = true;
+
+        //sleep(1);
+        break;
+      }
     }
-  
+
   endwin();
 }
 
