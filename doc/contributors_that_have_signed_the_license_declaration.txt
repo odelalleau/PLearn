@@ -1,4 +1,7 @@
 Yoshua Bengio
 Olivier Delalleau
 Réjean Ducharme
+Nicolas Leroux
+Pascal Lamblin
+Jasmin Lapalme
 Hugo Larochelle
