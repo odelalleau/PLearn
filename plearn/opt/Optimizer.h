@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.h,v 1.8 2003/05/05 13:00:29 tihocan Exp $
+   * $Id: Optimizer.h,v 1.9 2003/05/12 16:54:51 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -85,12 +85,19 @@ using namespace std;
 
       //oassignstream vlog;
       PStream vlog;
+      
+      //! Used by the gradient stats collector, to know when an epoch is
+      //! finished. Should be set by the learner.
+      int nstages_per_epoch;
+      
+    private:
+      Vec mean_grad;  //!< used to store the mean gradient for statistics
+      Vec same_sign;  //!< number of consecutive updates in same direction
 
     protected:
 
       Array<Measurer*> measurers;
 
-      // TODO Put back to protected later !
       //!  call measure <every> <nupdates> iterations
       //!  saving the results in the <filename>.
       string filename; // JS - that was const...
@@ -164,14 +171,23 @@ using namespace std;
 
     //--------------------------- UTILITY FUNCTIONS ----------------------------
 
-    // Given an optimizer, compute the gradient of the cost function and
-    // store it in the "gradient" Vec
+    //! Compute the repartition of v by splitting the interval [mini,maxi] into
+    //! n intervals. The result is stored into res.
+    void computeRepartition(
+        Vec v, int n, real mini, real maxi, 
+        Vec res, int& noutliers);
+
+    //! Collect various statistics on the gradient.
+    void collectGradientStats(Vec gradient);
+
+    //! Given an optimizer, compute the gradient of the cost function and
+    //! store it in the "gradient" Vec
     static void computeGradient(
         Optimizer* opt,
         const Vec& gradient);
       
-    // Given an optimizer, compute the opposite of the gradient of the cost
-    // function and store it in the "gradient" Vec
+    //! Given an optimizer, compute the opposite of the gradient of the cost
+    //! function and store it in the "gradient" Vec
     static void computeOppositeGradient(
         Optimizer* opt,
         const Vec& gradient);
