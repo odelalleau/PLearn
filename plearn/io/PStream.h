@@ -430,14 +430,6 @@ protected:
     return out;
   }
 
-  template <class T> 
-  inline PStream& operator<<(PStream& out, const PP<T> &o)
-  {
-    T *ptr = static_cast<T *>(o);
-    out << const_cast<const T * &>(ptr);
-    return out;
-  }
-
   
 
 
