@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: RealMapping.h,v 1.10 2003/05/14 21:15:16 jkeable Exp $
+   * $Id: RealMapping.h,v 1.11 2003/06/04 21:31:58 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -188,9 +188,7 @@ class RealRange
 	PLWARNING("In RealMapping::removeMapping  mapping not removed: does not exist.");
     }
 
-    void addMapping(const RealRange& range, real val)
-    { mapping[range]= val; }
-      //    { mapping.push_back(make_pair(range,val)); }
+    void addMapping(const RealRange& range, real val);
 
     //! Set mapping for missing value (by default it maps to MISSING_VALUE)
     void setMappingForMissing(real what_missing_mapsto)
