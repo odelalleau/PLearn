@@ -678,17 +678,15 @@ PStream& PStream::operator>>(char *x)
     case PStream::pretty_ascii:
     {
       skipBlanksAndComments();
-      int c = peek();
       int i=0; // pos within the string
-      c = get();
+      int c = get();
       while (c!=EOF && wordseparators.find(c)==string::npos) // as long as we don't meet a wordseparator (or eof)...
       {
         x[i++] = static_cast<char>(c);
         c = get();
       }
       x[i++] = 0;
-      if(!isspace(c))
-        unget();
+      unget();
     }
       break;
     case PStream::plearn_ascii:
@@ -757,17 +755,15 @@ PStream& PStream::operator>>(string& x)
     case PStream::pretty_ascii:
     {
       skipBlanksAndComments();
-      int c = peek();
+      int c = get();
       x.clear();
-      c = get();
       // As long as we don't meet a (raw) wordseparator (or eof)...
       while (c!=EOF && raw_wordseparators.find(c)==string::npos)
       {
         x += static_cast<char>(c);
         c = get();
       }
-      if(c != EOF && !isspace(c))
-        putback(c);
+      unget();
     }
       break;
     case PStream::plearn_ascii:
