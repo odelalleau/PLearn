@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.27 2003/10/03 17:18:29 jkeable Exp $
+   * $Id: TMat.h,v 1.28 2003/11/04 19:02:12 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -1403,7 +1403,7 @@ public:
                 PLERROR("Error in TMat::read(PStream& in), expected '[', read '%c'",c);
               in.skipBlanksAndCommentsAndSeparators();
               resize(l,w);
-              T* ptr = data();
+              T* ptr = (l>0 && w>0)? data():0;
               for(int i=0; i<length_; i++, ptr+=mod_)
                 for(int j=0; j<width_; j++)
                 {

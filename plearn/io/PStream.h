@@ -920,13 +920,17 @@ void readSequence(PStream& in, SequenceType& seq)
               PLERROR("Error in readSequence(SequenceType& seq), expected '[', read '%c'",c);
             in.skipBlanksAndCommentsAndSeparators();
             seq.resize((typename SequenceType::size_type) n);
-            typename SequenceType::iterator it = seq.begin();
-            while(n--)
+            if (n>0)
+            {
+              typename SequenceType::iterator it = seq.begin();
+              while(n--)
               {
                 in >> *it;
                 in.skipBlanksAndCommentsAndSeparators();
                 ++it;
               }
+            }
+            in.skipBlanksAndCommentsAndSeparators();
             c = in.get();
             if(c!=']')
               PLERROR("Error in readSequence(SequenceType& seq), expected ']', read '%c'",c);
