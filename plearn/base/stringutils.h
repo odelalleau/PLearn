@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.2 2002/08/07 16:45:46 ducharme Exp $
+   * $Id: stringutils.h,v 1.3 2002/08/07 16:54:21 morinf Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -66,7 +66,7 @@ using namespace std;
   template<class T>
   void read(const string& stringval, T& x)
   {
-    istrstream in(stringval.c_str());
+    istrstream in_(stringval.c_str());
     read(in,x);
   }
 */

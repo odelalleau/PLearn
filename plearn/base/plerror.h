@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: plerror.h,v 1.1 2002/07/30 09:01:26 plearner Exp $
+   * $Id: plerror.h,v 1.2 2002/08/07 16:54:21 morinf Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -66,19 +66,23 @@ inline void send_file_line(char* file,int line)
 //#define PLFRIENDLYERROR - Doesn't make sense to define this if exceptions
 //                          are not used!
 #define PLWARNING send_file_line(__FILE__,__LINE__),warningmsg
+#define PLDEPRECATED send_file_line(__FILE__, __LINE__), deprecatedmsg
 
 #else
 
-#define PLERROR errormsg
-#define PLFRIENDLYERROR friendlyerrormsg
-#define PLWARNING warningmsg
+void send_file_line(char *file, int line);
 
+#define PLERROR         send_file_line(__FILE__, __LINE__), errormsg
+#define PLFRIENDLYERROR send_file_line(__FILE__, __LINE__), friendlyerrormsg
+#define PLWARNING       send_file_line(__FILE__, __LINE__), warningmsg
+#define PLDEPRECATED    send_file_line(__FILE__, __LINE__), deprecatedmsg
 
 #endif //!<  USE_EXCEPTIONS
 
 void errormsg(const char* msg, ...);
 void warningmsg(const char* msg, ...);
 void exitmsg(const char* msg, ...);
+void deprecatedmsg();
 
 %> // end of namespace PLearn
 

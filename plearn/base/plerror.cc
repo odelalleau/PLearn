@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: plerror.cc,v 1.1 2002/07/30 09:01:26 plearner Exp $
+   * $Id: plerror.cc,v 1.2 2002/08/07 16:54:21 morinf Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -61,49 +61,67 @@ using namespace std;
 char error_msg[ERROR_MSG_SIZE];
 int error_status = ERROR_STATUS_NO_ERROR;
 bool may_continue = false;
+char *error_file;
+int error_line;
+
+void send_file_line(char *file, int line)
+{
+    error_file = file;
+    error_line = line;
+}
 
 void clear_warning()
 { error_status = ERROR_STATUS_NO_ERROR; }
 
 void throw_exception(char *msg, int exception_type)
 {
-  switch (exception_type) {
-  case FATAL_ERROR_EXCEPTION:
-  case RECUPERABLE_ERROR_EXCEPTION:
-    // The difference between these two cases is that in the first case
-    // the caller will call exit() upon return of this function while in the
-    // second case it won't.
-    // NOTE: The RECUPERABLE_ERROR_EXCEPTION is not yet used. However, when
-    //       (if ever) it is, we should be able to detect if the exception has
-    //       been handled in some way by the user. If we detect that it has not
-    //       been, we should call exit() at some point.
-    //       The RECUPERABLE_ERROR_EXCEPTION is meant to deal with situations
-    //       where in-place fixes can be made between resuming executions.
-    //       Pratically, this implies user-intervention (human-interface related)
-    //       to provide some input has to what to do to able the program to
-    //       continue.
-    error_status = ERROR_STATUS_FATAL_ERROR;
-    strncpy(error_msg, msg, ERROR_MSG_SIZE);
-    throw PLearnError();
-    break;
-  case WARNING_EXCEPTION:
-    // We don't throw anything since we don't want
-    // to interrupt the program, it will be for the
-    // user to watch JULIEN KEABLE from time to time the value the 
-    // error_status variable and retrieve the error_msg
-    error_status = ERROR_STATUS_WARNING;
-    strncpy(error_msg, msg, ERROR_MSG_SIZE);
-    break;
-  case IMMINENT_EXIT_EXCEPTION:
-    error_status = ERROR_STATUS_FATAL_ERROR;
-    strncpy(error_msg, msg, ERROR_MSG_SIZE);
-    throw PLearnError();
-    break;
-
-  default:
-    strcpy(error_msg, "Unexpected error-handling behavior!, BAD BAD");
-    exit(1);
-  }
+    switch (exception_type) {
+    case FATAL_ERROR_EXCEPTION:
+    case RECUPERABLE_ERROR_EXCEPTION:
+        // The difference between these two cases is that in the first case
+        // the caller will call exit() upon return of this function while in the
+        // second case it won't.
+        // NOTE: The RECUPERABLE_ERROR_EXCEPTION is not yet used. However, when
+        //       (if ever) it is, we should be able to detect if the exception has
+        //       been handled in some way by the user. If we detect that it has not
+        //       been, we should call exit() at some point.
+        //       The RECUPERABLE_ERROR_EXCEPTION is meant to deal with situations
+        //       where in-place fixes can be made between resuming executions.
+        //       Pratically, this implies user-intervention (human-interface related)
+        //       to provide some input has to what to do to able the program to
+        //       continue.
+        error_status = ERROR_STATUS_FATAL_ERROR;
+        strncpy(error_msg, msg, ERROR_MSG_SIZE);
+        throw PLearnError();
+        break;
+    case WARNING_EXCEPTION:
+        // We don't throw anything since we don't want
+        // to interrupt the program, it will be for the
+        // user to watch JULIEN KEABLE from time to time the value the 
+        // error_status variable and retrieve the error_msg
+        error_status = ERROR_STATUS_WARNING;
+        strncpy(error_msg, msg, ERROR_MSG_SIZE);
+        cerr << error_msg << endl; // Temporary, we will eventually throw something
+        break;
+    case IMMINENT_EXIT_EXCEPTION:
+        error_status = ERROR_STATUS_FATAL_ERROR;
+        strncpy(error_msg, msg, ERROR_MSG_SIZE);
+        throw PLearnError();
+        break;
+    case DEPRECATED_EXCEPTION:
+#ifdef FATAL_DEPRECATED
+        error_status = ERROR_STATUS_WARNING;
+        strncpy(error_msg, msg, ERROR_MSG_SIZE);
+        cerr << error_msg << endl; // Temporary, we will eventually throw something
+#else
+        error_status = ERROR_STATUS_FATAL_ERROR;
+        strncpy(error_msg, msg, ERROR_MSG_SIZE);
+        throw PLearnError();
+#endif
+    default:
+        strcpy(error_msg, "Unexpected error-handling behavior!, BAD BAD");
+        exit(1);
+    }
 }
 
 #else // !defined(USE_EXCEPTIONS)
@@ -207,5 +225,13 @@ void exitmsg(const char* msg, ...)
 #endif
 }
 
+void deprecatedmsg()
+{
+#ifdef FATAL_DEPRECATED
+    errormsg("Entered deprecated code, please modify your code");
+#else
+    warningmsg("Entered deprecated code, you will eventually have to change your code, do it today!");
+#endif
+}
 
 %> // end of namespace PLearn

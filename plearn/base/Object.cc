@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.2 2002/07/31 01:41:35 morinf Exp $
+   * $Id: Object.cc,v 1.3 2002/08/07 16:54:21 morinf Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -490,8 +490,13 @@ operator>>(pl_istream &in, Object * &o)
                 PLERROR("read() - Object to be read has not been previously defined");
             o = static_cast<Object *>(it->second);
         }
-    } else
-        o = readObject(in);
+    } else {
+/*        if (o) {
+            o->newread(in);
+        }
+        else*/
+            o = readObject(in);
+    }
     return in;
 }
 

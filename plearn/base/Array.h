@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array.h,v 1.1 2002/07/30 09:01:26 plearner Exp $
+   * $Id: Array.h,v 1.2 2002/08/07 16:54:21 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -422,8 +422,9 @@ operator>>(pl_istream &in, vector<T> &v)
     a.newread(in);
     v.clear();
     v.reserve(a.size());
-    for (int i= 0; i < a.size(); ++i)
+    for (int i= 0; i < a.size(); ++i) {
         v.push_back(a[i]);
+    }
     return in;
 }
 

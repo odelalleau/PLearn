@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.1 2002/07/30 09:01:26 plearner Exp $
+   * $Id: Object.h,v 1.2 2002/08/07 16:54:21 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -569,9 +569,10 @@ inline void declareOption(OptionList& ol, const string& optionname, OptionType *
   pl_istream &operator>>(pl_istream &in, Object * &o);
   pl_ostream &operator<<(pl_ostream &out, const Object * &o);
 
-  template <class T> inline pl_istream &
-  operator>>(pl_istream &in, PP<T> &o)
+/*  inline pl_istream &
+  operator>>(pl_istream &in, PP<Object> &o)
   {
+
       if (Object *obj = readObject(in)) {
           o = dynamic_cast<T *>(obj);
           if (o.isNull())
@@ -580,18 +581,31 @@ inline void declareOption(OptionList& ol, const string& optionname, OptionType *
           o = 0;
       return in;
   }
+*/
 
-  template <class T> inline pl_ostream &
-  operator<<(pl_ostream &out, const PP<T> &o)
-  {
-      if (o) {
-          T *ptr = static_cast<T *>(o);
-          out << const_cast<const T * &>(ptr);
-      } else
-          out << raw << "<null>";
-      return out;
-  }
+template <class T> inline pl_istream &
+operator>>(pl_istream &in, PP<T> &o)
+{
+    T *ptr;
+    if (o.isNull())
+        ptr = 0;
+    else
+        ptr = o;
+    in >> ptr;
+    o = ptr;
+    return in;
+}
 
+template <class T> inline pl_ostream &
+operator<<(pl_ostream &out, const PP<T> &o)
+{
+    if (o) {
+        T *ptr = static_cast<T *>(o);
+        out << const_cast<const T * &>(ptr);
+    } else
+        out << raw << "<null>";
+    return out;
+}
 
 /*!     The following macros are meant to help you write the classname() and
     deepCopy() methods in a systematic manner for every class.  Within your
@@ -691,10 +705,28 @@ inline void declareOption(OptionList& ol, const string& optionname, OptionType *
           { return const_cast<CLASSNAME *>(&o); };                         \
         inline pl_istream &operator>>(pl_istream &in, CLASSNAME &o)        \
           { o.newread(in); return in; };                                   \
+        inline pl_istream &operator>>(pl_istream &in, CLASSNAME * &o)      \
+          { if (o) o->newread(in);                                         \
+            else o = static_cast<CLASSNAME *>(readObject(in));             \
+            return in; };                                                  \
         inline pl_ostream &operator<<(pl_ostream &out, const CLASSNAME &o) \
           { o.newwrite(out); return out; };                                \
+        inline pl_istream &operator>>(pl_istream &in, PP<CLASSNAME> &o)    \
+          { Object *ptr = (CLASSNAME *)o;                                  \
+            in >> ptr;                                                     \
+            o = dynamic_cast<CLASSNAME *>(ptr);                            \
+            return in;                                                     \
+          };                                                               \
         DECLARE_TYPE_TRAITS(CLASSNAME)
 
+#define DECLARE_OBJECT_PP(PPCLASSNAME, CLASSNAME)                          \
+        inline pl_istream &operator>>(pl_istream &in, PPCLASSNAME &o)      \
+          { Object *ptr;                                                   \
+            in >> ptr;                                                     \
+            o = dynamic_cast<CLASSNAME *>(ptr);                            \
+            return in; };                                                  \
+        inline pl_ostream &operator<<(pl_ostream &out, const PPCLASSNAME &o) \
+          { out << static_cast<const PP<CLASSNAME> &>(o); return out; };
 
 #define DECLARE_NAME_AND_DEEPCOPY(CLASSNAME)                               \
         DECLARE_NAME(CLASSNAME);                                           \

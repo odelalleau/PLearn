@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Storage.h,v 1.1 2002/07/30 09:01:26 plearner Exp $
+   * $Id: Storage.h,v 1.2 2002/08/07 16:54:21 morinf Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -67,7 +67,7 @@ public:
   tFileHandle fd; //!<  The descriptor for the memory-mapped file (-1 if there is no memory mapping)
 
     inline Storage(const Storage& other)
-      :length_(other.length()), dont_delete_data(false), fd((tFileHandle)-1)
+      :length_(other.length()), dont_delete_data(false), fd((tFileHandle)STORAGE_UNUSED_HANDLE)
     {
       try 
       {
