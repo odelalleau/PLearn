@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_impl.h,v 1.12 2004/07/14 17:08:32 dorionc Exp $
+   * $Id: TMat_impl.h,v 1.13 2004/07/22 17:19:47 lapalmej Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -259,19 +259,6 @@ TMat<T>::TMat<T>(int the_length, int the_width, const TVec<T>& v)
     PLERROR("In Mat constructor from Vec: length()*width() of matrix must be equal to length() of Vec");
 }
 
-template <class T>
-TVec<T> TMat<T>::operator()(int rownum) const
-{
-#ifdef BOUNDCHECK
-  if(rownum<0 || rownum>=length())
-    PLERROR("OUT OF BOUND ACCESS IN TMat_impl::operator()(int rownum)");
-#endif
-  TVec<T> tv;
-  tv.length_ = width();
-  tv.offset_ = offset_ + mod()*rownum;
-  tv.storage = storage;
-  return tv;
-}
 
 template <class T>
 TVec<T> TMat<T>::toVecCopy() const

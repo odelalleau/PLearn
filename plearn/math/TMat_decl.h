@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
- * $Id: TMat_decl.h,v 1.3 2004/07/07 15:21:41 chapados Exp $
+ * $Id: TMat_decl.h,v 1.4 2004/07/22 17:19:47 lapalmej Exp $
  * AUTHORS: Pascal Vincent & Yoshua Bengio
  * This file is part of the PLearn library.
  ******************************************************* */
@@ -276,8 +276,18 @@ public:
       return storage->data[offset_ + mod()*rownum + colnum];
     }
 
-  inline TVec<T> operator()(int rownum) const;
-
+  inline TVec<T> operator()(int rownum) const
+  {
+#ifdef BOUNDCHECK
+    if(rownum<0 || rownum>=length())
+      PLERROR("OUT OF BOUND ACCESS IN TMat_impl::operator()(int rownum)");
+#endif
+    TVec<T> tv;
+    tv.length_ = width();
+    tv.offset_ = offset_ + mod()*rownum;
+    tv.storage = storage;
+    return tv;
+  }
 
   //! writes the Mat to the PStream:
   //! Note that users should rather use the form out << m;
