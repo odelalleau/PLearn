@@ -10,7 +10,7 @@ dataset = AutoVMatrix(specification="letters all normalize");
 # PP< Splitter >: The splitter to use to generate one or several train/test pairs.
 splitter = TrainTestSplitter(test_fraction=.10) ;
 
-statnames = ["E[E[test1.class_error]]", "E[E[test2.class_error]]", "E[E[test1.NLL]]", "E[E[test2.NLL]]"];
+statnames = ["E[test1.E[class_error]]", "E[test2.E[class_error]]", "E[test1.E[NLL]]", "E[test2.E[NLL]]"];
 
 # PP< Learner >: The learner to train/test
 learner = 
