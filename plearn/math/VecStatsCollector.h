@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.h,v 1.17 2004/06/26 00:24:14 plearner Exp $ 
+   * $Id: VecStatsCollector.h,v 1.18 2004/07/14 17:08:32 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.h */
@@ -47,13 +47,10 @@ using namespace std;
 
 class VecStatsCollector: public Object
 {    
-
-protected: 
-
-public:
-
+private:
   typedef Object inherited;
 
+public:
   // ************************
   // * public build options *
   // ************************
