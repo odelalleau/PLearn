@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.15 2004/02/26 07:29:47 nova77 Exp $
+   * $Id: vmatmain.cc,v 1.16 2004/03/05 21:44:44 tihocan Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -1188,8 +1188,10 @@ int vmatmain(int argc, char** argv)
           for(int i=0;i<vm.length();i++)
             {
               vpl.run(i,answer);
-              if(answer[0])
+              if(answer[0]) {
+                vm->getRow(i, tmp);
                 cout<<tmp<<endl;
+              }
             }
         }
       else
