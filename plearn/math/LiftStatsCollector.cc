@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.cc,v 1.15 2004/11/17 14:30:40 tihocan Exp $
+ * $Id: LiftStatsCollector.cc,v 1.16 2004/11/22 17:54:24 lapalmej Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -354,7 +354,7 @@ void LiftStatsCollector::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////////////////
 // remove_observation //
 ////////////////////////
-void LiftStatsCollector::remove_observation(const Vec& x, real weight = 1.0) {
+void LiftStatsCollector::remove_observation(const Vec& x, real weight) {
   // Not supported.
   PLERROR("In LiftStatsCollector::remove_observation - This method is not implemented");
 }

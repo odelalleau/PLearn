@@ -35,13 +35,15 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.39 2004/11/16 22:45:31 dorionc Exp $
+   * $Id: StatsCollector.cc,v 1.40 2004/11/22 17:54:24 lapalmej Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "StatsCollector.h"
 #include "TMat_maths.h"
 #include "pl_erf.h"
+#include <assert.h>
+
 
 namespace PLearn {
 using namespace std;
