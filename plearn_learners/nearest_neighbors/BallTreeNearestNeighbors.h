@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BallTreeNearestNeighbors.h,v 1.1 2005/03/04 21:01:58 lamblin Exp $ 
+   * $Id: BallTreeNearestNeighbors.h,v 1.2 2005/03/07 16:49:28 lamblin Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Lamblin & Marius Muja
@@ -106,7 +106,6 @@ private:
   // (Please implement in .cc)
   void build_();
   void anchorTrain();
-//  void topDownTrain(); // to be made some day
 
 protected: 
   

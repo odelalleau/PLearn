@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BallTreeNearestNeighbors.cc,v 1.1 2005/03/04 21:01:58 lamblin Exp $ 
+   * $Id: BallTreeNearestNeighbors.cc,v 1.2 2005/03/07 16:49:28 lamblin Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Lamblin & Marius Muja
@@ -91,10 +91,8 @@ void BallTreeNearestNeighbors::declareOptions( OptionList& ol )
 
   declareOption( ol, "train_method", &BallTreeNearestNeighbors::train_method, 
                  OptionBase::buildoption,
-                 "Method used to build the tree.\n"
-                 "Can be one of:\n"
-                 "  anchor (middle-out building based on Anchor\'s hierarchy\n"
-                 "  top_down (naive, not yet supported)\n"
+                 "Method used to build the tree. Just one is supported:\n"
+                 "  \"anchor\" (middle-out building based on Anchor\'s hierarchy\n"
                );
 
   declareOption( ol, "anchor_set", &BallTreeNearestNeighbors::anchor_set, 
@@ -182,10 +180,8 @@ void BallTreeNearestNeighbors::train()
   {
     anchorTrain();
   }
-  else if( train_method == "top_down" )
-  {
-    // do something else
-  }
+  else
+    PLERROR( "train_method \"%s\" not implemented", train_method.c_str() );
 }
 
 
