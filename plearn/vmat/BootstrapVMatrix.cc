@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BootstrapVMatrix.cc,v 1.9 2004/07/21 16:30:55 chrish42 Exp $
+   * $Id: BootstrapVMatrix.cc,v 1.10 2004/09/09 19:40:49 tihocan Exp $
    ******************************************************* */
 
 #include "BootstrapVMatrix.h"
@@ -56,8 +56,9 @@ PLEARN_IMPLEMENT_OBJECT(BootstrapVMatrix,
 // BootstrapVMatrix //
 //////////////////////
 BootstrapVMatrix::BootstrapVMatrix()
-  : frac(0.6667),
-    shuffle(false)
+: frac(0.6667),
+  seed(0),
+  shuffle(false)
 {}
 
 BootstrapVMatrix::BootstrapVMatrix(VMat m, real frac, bool shuffle)
@@ -78,6 +79,9 @@ void BootstrapVMatrix::declareOptions(OptionList &ol)
 
     declareOption(ol, "frac", &BootstrapVMatrix::frac, OptionBase::buildoption,
         "The fraction of elements we keep (default = 0.6667).");
+
+    declareOption(ol, "seed", &BootstrapVMatrix::seed, OptionBase::buildoption,
+        "The random generator seed (-1 = initialized from clock, 0 = no initialization).");
 
     inherited::declareOptions(ol);
 
@@ -101,6 +105,12 @@ void BootstrapVMatrix::build_()
 {
   if (source) {
     indices = TVec<int>(0, source.length()-1, 1); // Range-vector
+    if (seed == -1)
+      PLearn::seed();
+    else if (seed > 0)
+      manual_seed(seed);
+    else if (seed != 0)
+      PLERROR("In BootstrapVMatrix::build_ - The seed must be either -1 or > 0");
     shuffleElements(indices);
     indices = indices.subVec(0,int(frac * source.length()));
     if (!shuffle) {

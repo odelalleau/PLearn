@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BootstrapVMatrix.h,v 1.6 2004/04/20 14:01:07 tihocan Exp $
+   * $Id: BootstrapVMatrix.h,v 1.7 2004/09/09 19:40:49 tihocan Exp $
    ******************************************************* */
 
 
@@ -55,6 +55,7 @@ public:
 
   //! Public build options
   real frac;
+  long seed;
   bool shuffle;
 
 public:
