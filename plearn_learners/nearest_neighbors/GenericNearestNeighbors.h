@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GenericNearestNeighbors.h,v 1.1 2004/12/20 15:46:50 chapados Exp $ 
+   * $Id: GenericNearestNeighbors.h,v 1.2 2004/12/21 07:13:15 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -63,7 +63,7 @@ namespace PLearn {
  * is always the concatenation of one or more of (in that order):
  *
  * - The input vector from the training set (option "copy_input")
- * - The output vector from the training set (option "copy_output")
+ * - The target vector from the training set (option "copy_target")
  * - The weight from the training set (option "copy_weight")
  * - The index (row number) of the example from the training set (option
  *   "copy_weight")
@@ -83,7 +83,7 @@ class GenericNearestNeighbors: public PLearner
 
 protected:
   //! Internal buffer for constructing the output vector
-  Vec currow;
+  mutable Vec currow;
   
 public:
   //#####  Public Build Options  ############################################
@@ -96,9 +96,9 @@ public:
   //! (Default = false)
   bool copy_input;
 
-  //! If true, the output contains a copy of the found output vector(s).
+  //! If true, the output contains a copy of the found target vector(s).
   //! (Default = true)
-  bool copy_output;
+  bool copy_target;
 
   //! If true, the output contains a copy of the found weight, if any.
   //! (Default = true)
@@ -147,7 +147,7 @@ protected:
   //! an output vector for the learner, and take into account all the
   //! options.  One can pass less than num_neighbors indexes, in which
   //! case the rest of the output vector is filled with missings.
-  void constructOutputVector(const TVec<int>& indexes, Vec& output);
+  void constructOutputVector(const TVec<int>& indexes, Vec& output) const;
 };
 
 // Declares a few other classes and functions related to this class.

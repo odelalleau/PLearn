@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GenericNearestNeighbors.cc,v 1.1 2004/12/20 15:46:50 chapados Exp $ 
+   * $Id: GenericNearestNeighbors.cc,v 1.2 2004/12/21 07:13:15 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -68,7 +68,7 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
   "is always the concatenation of one or more of (in that order):\n"
   "\n"
   "- The input vector from the training set (option \"copy_input\")\n"
-  "- The output vector from the training set (option \"copy_output\")\n"
+  "- The target vector from the training set (option \"copy_target\")\n"
   "- The weight from the training set (option \"copy_weight\")\n"
   "- The index (row number) of the example from the training set (option\n"
   "  \"copy_weight\")\n"
@@ -85,7 +85,7 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
 GenericNearestNeighbors::GenericNearestNeighbors()
   : num_neighbors(1),
     copy_input(false),
-    copy_output(true),
+    copy_target(true),
     copy_weight(true),
     copy_index(false)
 { }
@@ -106,9 +106,9 @@ void GenericNearestNeighbors::declareOptions(OptionList& ol)
     "(Default = false)");
 
   declareOption(
-    ol, "copy_output", &GenericNearestNeighbors::copy_output,
+    ol, "copy_target", &GenericNearestNeighbors::copy_target,
     OptionBase::buildoption,
-    "If true, the output contains a copy of the found output vector(s).\n"
+    "If true, the output contains a copy of the found target vector(s).\n"
     "(Default = true)");
 
   declareOption(
@@ -134,9 +134,9 @@ void GenericNearestNeighbors::build_()
   if (num_neighbors <= 0)
     PLERROR("GenericNearestNeighbors::build_: the option \"num_neighbors\" "
             "must be strictly positive");
-  if (! (copy_input || copy_output || copy_weight || copy_index))
+  if (! (copy_input || copy_target || copy_weight || copy_index))
     PLERROR("GenericNearestNeighbors::build_: at least one of the options "
-            "\"copy_input\", \"copy_output\", \"copy_weight\", \"copy_index\" "
+            "\"copy_input\", \"copy_target\", \"copy_weight\", \"copy_index\" "
             "must be specified (i.e. true)");
 }
 
@@ -162,8 +162,8 @@ int GenericNearestNeighbors::outputsize() const
   assert( train_set );
   if (copy_input)
     base_outputsize += train_set->inputsize();
-  if (copy_output)
-    base_outputsize += train_set->outputsize();
+  if (copy_target)
+    base_outputsize += train_set->targetsize();
   if (copy_weight)
     base_outputsize += train_set->weightsize();
   if (copy_index)
@@ -176,13 +176,13 @@ int GenericNearestNeighbors::outputsize() const
 }
 
 void GenericNearestNeighbors::constructOutputVector(const TVec<int>& indexes,
-                                                    Vec& output)
+                                                    Vec& output) const
 {
-  assert( output.size() == outputsize );
+  assert( output.size() == outputsize() );
   
   int i, n=min(num_neighbors, indexes.size());
   int inputsize = train_set->inputsize();
-  int outputsize = train_set->outputsize();
+  int targetsize = train_set->targetsize();
   int weightsize = train_set->weightsize();
   real* output_data = output.data();
 
@@ -197,11 +197,11 @@ void GenericNearestNeighbors::constructOutputVector(const TVec<int>& indexes,
     }
     currow_data += inputsize;
     
-    if(copy_output) {
-      copy(currow_data, currow_data+outputsize, output_data);
-      output_data += outputsize;
+    if(copy_target) {
+      copy(currow_data, currow_data+targetsize, output_data);
+      output_data += targetsize;
     }
-    currow_data += outputsize;
+    currow_data += targetsize;
     
     if(copy_weight) {
       copy(currow_data, currow_data+weightsize, output_data);

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ExhaustiveNearestNeighbors.cc,v 1.1 2004/12/20 15:46:50 chapados Exp $ 
+   * $Id: ExhaustiveNearestNeighbors.cc,v 1.2 2004/12/21 07:13:15 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -42,7 +42,7 @@
 
 
 #include <plearn/base/stringutils.h>
-#include <plearn/kernel/DistanceKernel.h>
+#include <plearn/ker/DistanceKernel.h>
 #include "ExhaustiveNearestNeighbors.h"
 
 namespace PLearn {
@@ -57,6 +57,16 @@ PLEARN_IMPLEMENT_OBJECT(
   "inherited 'num_neighbors' option) closest examples according to a\n"
   "user-specified Kernel.\n"
   "\n"
+  "It is important to specify whether the Kernel denotes a SIMILARITY or a\n"
+  "(pseudo-)DISTANCE measure.  A similarity measure is HIGHER for points\n"
+  "that are closer.  The GaussianKernel is a similarity measure.  On the\n"
+  "other hand, a distance measure is LOWER for points that are closer.  A\n"
+  "DistanceKernel is a distance measure.  The option\n"
+  "'kernel_is_pseudo_distance' controls this:\n"
+  "\n"
+  "   - if false: the kernel is a similarity measure\n"
+  "   - if true (the default): the kernel is a distance measure\n"
+  "\n"
   "The output costs are simply the kernel values for each found training\n"
   "point.  The costs are named 'ker0', 'ker1', ..., 'kerK-1'.\n"
   "\n"
@@ -65,10 +75,14 @@ PLEARN_IMPLEMENT_OBJECT(
   "and carry out test operations!\n"
   );
 
-ExhaustiveNearestNeighbors::ExhaustiveNearestNeighbors()
+Ker ExhaustiveNearestNeighbors::default_kernel = new DistanceKernel();
+  
+ExhaustiveNearestNeighbors::ExhaustiveNearestNeighbors(
+  Ker kernel_, bool kernel_is_pseudo_distance_)
   : inherited(),
     training_mat(),
-    kernel(DistanceKernel())
+    kernel(kernel_),
+    kernel_is_pseudo_distance(kernel_is_pseudo_distance_)
 { }
 
 void ExhaustiveNearestNeighbors::declareOptions(OptionList& ol)
@@ -83,7 +97,14 @@ void ExhaustiveNearestNeighbors::declareOptions(OptionList& ol)
     OptionBase::buildoption,
     "Kernel that must be used to evaluate distances.  Default is a\n"
     "DistanceKernel with n=2, which gives an Euclidian distance.");
-  
+
+  declareOption(
+    ol, "kernel_is_pseudo_distance",
+    &ExhaustiveNearestNeighbors::kernel_is_pseudo_distance,
+    OptionBase::buildoption,
+    "Whether the kernel should be interpreted as a (pseudo-)distance\n"
+    "measure (true) or a similarity measure (false). Default = true.");
+
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
 }
@@ -106,8 +127,18 @@ void ExhaustiveNearestNeighbors::build()
 void ExhaustiveNearestNeighbors::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   deepCopyField(training_mat, copies);
+  deepCopyField(costs,        copies);
   deepCopyField(kernel,       copies);
+  deepCopyField(indexes,      copies);
   inherited::makeDeepCopyFromShallowCopy(copies);
+}
+
+
+void ExhaustiveNearestNeighbors::setTrainingSet(VMat training_set,
+                                                bool call_forget)
+{
+  training_mat = training_set.toMat();
+  inherited::setTrainingSet(training_set, call_forget);
 }
 
 
@@ -115,27 +146,57 @@ void ExhaustiveNearestNeighbors::forget()
 {
   // Nothing to forget!
 }
-    
+
+
 void ExhaustiveNearestNeighbors::train()
 {
   // Train is instantaneous. :-)
 }
 
 
+void ExhaustiveNearestNeighbors::computeOutputAndCosts(
+  const Vec& input, const Vec& target, Vec& output, Vec& costs) const
+{
+  assert( costs.size() == num_neighbors );
+  priority_queue< pair<real,int> > q;
+  findNearestNeighbors(input, q);
+  indexes.resize(0, num_neighbors);
+
+  // Dequeue the found nearest-neighbors in order of largest
+  int i = 0;
+  for ( ; i<num_neighbors && ! q.empty(); ++i) {
+    const pair<real,int>& cur_top = q.top();
+    costs[i] = (kernel_is_pseudo_distance? -1 : +1) * cur_top.first;
+    indexes.push_back(cur_top.second);
+    q.pop();
+  }
+
+  // Make remaining costs into missing values if the found number of
+  // neighbors is smaller than the requested number of neighbors
+  for ( ; i < num_neighbors ; ++i )
+    costs[i] = MISSING_VALUE;
+
+  constructOutputVector(indexes, output);
+}
+
 void ExhaustiveNearestNeighbors::computeOutput(const Vec& input, Vec& output) const
 {
-  // Compute the output from the input.
-  // int nout = outputsize();
-  // output.resize(nout);
-  // ...
-}    
+  costs.resize(num_neighbors);
+  Vec unused_targets;
+  computeOutputAndCosts(input, unused_targets, output, costs);
+}
 
-void ExhaustiveNearestNeighbors::computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                           const Vec& target, Vec& costs) const
+
+void ExhaustiveNearestNeighbors::computeCostsFromOutputs(
+  const Vec& input, const Vec& output, const Vec& target, Vec& costs) const
 {
-// Compute the costs from *already* computed output. 
-// ...
+  // In general, this cannot be done since the output vector does not
+  // necessarily contain the input vector, which would allow computing a
+  // kernel value.  Make it an error for now.
+  PLERROR("ExhaustiveNearestNeighbors::computeCostsFromOutputs: "
+          "this function is not supported; use computeOutputAndCosts instead");
 }                                
+
 
 TVec<string> ExhaustiveNearestNeighbors::getTestCostNames() const
 {
@@ -145,11 +206,28 @@ TVec<string> ExhaustiveNearestNeighbors::getTestCostNames() const
   return costs;
 }
 
+
 TVec<string> ExhaustiveNearestNeighbors::getTrainCostNames() const
 {
   // No training statistics
   return TVec<string>();
 }
 
+
+void ExhaustiveNearestNeighbors::findNearestNeighbors(
+  const Vec& input,
+  priority_queue< pair<real,int> >& q) const
+{
+  assert( q.empty() );
+
+  Vec train_input;
+  int inputsize = train_set->inputsize();
+  for(int i=0, n=training_mat.length() ; i<n ; ++i) {
+    train_input = training_mat(i).subVec(0,inputsize);
+    real kernel_value = kernel(input, train_input);
+    real q_value = (kernel_is_pseudo_distance? -1 : +1) * kernel_value;
+    q.push(make_pair(q_value, i));
+  }
+}
 
 } // end of namespace PLearn
