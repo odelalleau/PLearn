@@ -35,7 +35,7 @@ public:
                   "Target index of source needs to be specified (ie. to perform corelation test). It can be any field of the "\
                   "source dataset, but will be the last field of the new dataset.*** We assume target is never missing *** \n\n"\
                   "usage : FieldConvert *source=[source dataset] *destination=[new dataset with vmat extension] *target=[field index of target]\n"\
-                  "force=[force file] report_file=[report file] fraction=[if number of unique values is > than 'fraction' * NonMISSING -> the field is continuous. Default=.3]\n"\
+                  "force=[force file] report=[report file] fraction=[if number of unique values is > than 'fraction' * NonMISSING -> the field is continuous. Default=.3]\n"\
                   "min_pvalue=[minimum pvalue to assume correlation with target, default=0.025]\n"\
                   "\nfields with asterix * are not optional\n"
                   ) 
