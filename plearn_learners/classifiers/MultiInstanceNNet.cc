@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.cc,v 1.21 2004/03/04 19:18:20 nova77 Exp $
+   * $Id: MultiInstanceNNet.cc,v 1.22 2004/03/05 14:28:28 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/MultiInstanceNNet.h */
@@ -333,16 +333,16 @@ void MultiInstanceNNet::build_()
       if(penalties.size() != 0) {
         if (weightsize_>0)
           // only multiply by sampleweight if there are weights
-          training_cost = hconcat(sampleweight*sum(hconcat(costs[0] & penalties))
-                                  & (test_costs*sampleweight));
+          training_cost = hconcat(sampleweight*sum(hconcat(costs[0] & penalties)) // don't weight the lift output
+                                  & (costs[0]*sampleweight) & (costs[1]*sampleweight) & costs[2]);
         else {
           training_cost = hconcat(sum(hconcat(costs[0] & penalties)) & test_costs);
         }
       } 
       else {
         if(weightsize_>0) {
-          // only multiply by sampleweight if there are weights
-          training_cost = hconcat(costs[0]*sampleweight & test_costs*sampleweight);
+          // only multiply by sampleweight if there are weights (but don't weight the lift output)
+          training_cost = hconcat(costs[0]*sampleweight & costs[0]*sampleweight & costs[1]*sampleweight & costs[2]);
         } else {
           training_cost = hconcat(costs[0] & test_costs);
         }
@@ -356,9 +356,11 @@ void MultiInstanceNNet::build_()
       else
         invars = bag_inputs & bag_size & target;
 
-      inputs_and_targets_to_costs = Func(invars,test_costs);
+      inputs_and_targets_to_test_costs = Func(invars,test_costs);
+      inputs_and_targets_to_training_costs = Func(invars,training_cost);
 
-      inputs_and_targets_to_costs->recomputeParents();
+      inputs_and_targets_to_test_costs->recomputeParents();
+      inputs_and_targets_to_training_costs->recomputeParents();
 
     }
 }
@@ -401,7 +403,7 @@ void MultiInstanceNNet::train()
   if(f.isNull()) // Net has not been properly built yet (because build was called before the learner had a proper training set)
     build();
 
-  Var totalcost = sumOverBags(train_set, inputs_and_targets_to_costs, max_n_instances, batch_size);
+  Var totalcost = sumOverBags(train_set, inputs_and_targets_to_training_costs, max_n_instances, batch_size);
   if(optimizer)
     {
       optimizer->setToOptimize(params, totalcost);  
@@ -499,7 +501,7 @@ void MultiInstanceNNet::computeOutputAndCosts(const Vec& inputv, const Vec& targ
     bag_size->valuedata[0]=test_bag_size;
     target->valuedata[0] = targetv[0];
     if (weightsize_>0) sampleweight->valuedata[0]=1; // the test weights are known and used higher up
-    inputs_and_targets_to_costs->fproppath.fprop();
+    inputs_and_targets_to_test_costs->fproppath.fprop();
     costs.copyTo(costsv);
   }
 }

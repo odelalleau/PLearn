@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.49 2004/02/29 15:53:01 yoshua Exp $
+   * $Id: plearn.cc,v 1.50 2004/03/05 14:28:28 yoshua Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -91,6 +91,7 @@
 #include "ConstantRegressor.h"
 #include "MultiInstanceNNet.h"
 #include "MultiInstanceVMatrix.h"
+#include "LiftStatsCollector.h"
 
 // Distributions
 #include "SpiralDistribution.h"
