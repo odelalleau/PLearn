@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.17 2003/04/28 18:49:54 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.18 2003/04/29 17:34:58 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -169,6 +169,7 @@ public:
 private:
 
   void build_() {
+    stage = 0;
     // Make sure the internal datas have the right size
     if (params.nelems() > 0) {
       current_opp_gradient.resize(params.nelems());
