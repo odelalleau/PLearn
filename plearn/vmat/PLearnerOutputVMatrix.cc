@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.cc,v 1.4 2003/10/05 16:59:43 yoshua Exp $
+   * $Id: PLearnerOutputVMatrix.cc,v 1.5 2003/10/12 14:53:21 yoshua Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -115,10 +115,9 @@ void PLearnerOutputVMatrix::build_()
     learner_target = row.subVec(data->inputsize(),data->targetsize());
     non_input_part_of_data_row = row.subVec(data->inputsize(),data->width()-data->inputsize());
     learners_output.resize(learners->length(),learners[0]->outputsize());
-    for (int i=1;i<learners->length();i++)
-      if (learners[i]->outputsize()!=learners[i-1]->outputsize())
-        PLERROR("PLearnerOutputVMatrix: expecting all learners to have the same number of outputs!");
-    inputsize_ = learners[0]->outputsize();
+    inputsize_ = 0;
+    for (int i=0;i<learners->length();i++)
+      inputsize_ += learners[i]->outputsize();
     if (put_raw_input) 
       inputsize_ += data->inputsize();
     targetsize_ = data->targetsize();

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: AffineTransformVariable.h,v 1.4 2003/09/20 20:33:35 yoshua Exp $
+   * $Id: AffineTransformVariable.h,v 1.5 2003/10/12 14:53:13 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -65,7 +65,7 @@ public:
   AffineTransformVariable(Variable* vec, Variable* transformation):
     BinaryVariable(vec, transformation, 
                    vec->isRowVec()?1:transformation->width(),
-                   vec->isColumnVec()?1:transformation->width())
+                   (!(vec->isRowVec()) && vec->isColumnVec())?1:transformation->width())
   {
     if(!vec->isVec())
       PLERROR("In AffineTransformVariable: expecting a vector Var (row or column) as first argument");
