@@ -23,7 +23,10 @@ qtdir = '/usr/lib/qt-3.1/'
 # If the PLEARNDIR environment variable is not defined, we use the default "$HOME/PLearn/"
 plearndir = os.environ.get('PLEARNDIR', join(homedir,'PLearn'))
 
-libdir = '/u/lisa/local/'+platform+'/lib'
+libdir = os.environ.get('PLEARN_LIBDIR', '')
+if libdir == '':
+  print 'Error: First set the PLEARN_LIBDIR environment variable (root directory for external libraries used by PLearn)'
+  sys.exit()
 
 # use ssh @ Apstat
 if socket.getfqdn().endswith('apstat.com'):
@@ -42,12 +45,10 @@ verbose = 3;
 
 # List of directories in which to look for .h includes and corresponding .cc files to compile and link with your program
 # (no need to include the current directory, it is implicit)
-sourcedirs =   lsdirs(join(plearndir,'plearn/')) \
-             + lsdirs(join(plearndir,'plearn_learners/')) \
-             + lsdirs(join(plearndir,'commands/'))[1:] 
+sourcedirs = [ plearndir ]
 
 # will be added as list of includes (-I...) to all compilations
-mandatory_includedirs = [plearndir]
+mandatory_includedirs = []
 
 # The platform variable contains the type of platform from which pymake has been invoked. 
 # This is something like 'linux-i386', 'linux-alpha', 'sunos5', 'irix6', 'irix6-n32' etc...
@@ -164,6 +165,37 @@ optionalLibrary( name = 'X',
                  linkeroptions = '-L/usr/X11R6/lib/ -lXi -lXext -lX11'
 )
 
+# Operating system as defined by Torch when creating libraries.
+torch_os = os.uname()[0]
+
+# Base for the directory where we can find the Torch library.
+torch_libdir = join(libdir, 'torch/' + torch_os + '_')
+
+# Torch defines USE_DOUBLE when using real <=> double, and DEBUG in debug mode.
+# The directory in which the library is stored is 'torch_os'_<dbg/opt>_<float/double>
+torch_compiler_options = ''
+if usingOpt:
+  # Optimized mode.
+  torch_libdir += 'opt_'
+else:
+  # Debug mode.
+  torch_libdir += 'dbg_'
+  torch_compiler_options += '-DDEBUG '
+
+if usingFloat:
+  # real <=> float
+  torch_libdir += 'float'
+else:
+  # real <=> double
+  torch_libdir += 'double'
+  torch_compiler_options += '-DUSE_DOUBLE '
+
+optionalLibrary( name = 'torch',
+                 triggers = 'torch/*',
+                 linkeroptions = '-L' + torch_libdir + ' -ltorch',
+                 compileroptions = torch_compiler_options
+               ) 
+
 optionalLibrary( name='boost',
                  triggers = 'boost*',
 #                 includedirs = libdir + '/../include',  ## You don't need it if you set CPATH environment 
@@ -260,6 +292,7 @@ pymakeOption( name = 'dbg',
 # is -finline hurting?
 # is -funroll-loops hurting?
 
+# TODO What is this ?
 if usingIntelCompiler:
     pymakeOption( name = 'opt',
                   description = 'optimized for intel compiler',

@@ -228,6 +228,7 @@ class OptionalLibrary:
             if fnmatch.fnmatch(include,trigger):
                 # print 'INCLUDE ' + include  + ' TRIGGERED BY TRIGGER ' + trigger
                 return 1
+        return 0
         if include[0]!='/': # look for it in includedirs
             for incldir in self.includedirs:
                 if os.path.isfile(join(incldir,include)):
@@ -495,7 +496,7 @@ if 'spc' in optionargs :
     SPC = 1
     plearndir = os.environ.get('PLEARNDIR')
     if not plearndir:
-        print 'Error: First set the PLEARNDIR environnement variable in order to get the pyfreemachines script'
+        print 'Error: First set the PLEARNDIR environment variable in order to get the pyfreemachines script'
         sys.exit();
     else:
         try: os.makedirs(join(homedir,'.pymake'))
@@ -534,6 +535,16 @@ if 'icc' in optionargs:
     #optionargs.remove('icc')
 else:
     usingIntelCompiler = 0
+
+if 'float' in optionargs:
+    usingFloat = 1
+else:
+    usingFloat = 0
+
+if 'opt' in optionargs:
+    usingOpt = 1
+else:
+    usingOpt = 0
 
 temp_objs=0
 if 'tmp' in optionargs:
@@ -699,6 +710,7 @@ class FileInfo:
             #print 'Considering include ' + includefile
             for optlib in optional_libraries_defs:
                 if optlib.is_triggered_by(includefile) and not optlib in self.triggered_libraries:
+                    # print 'triggered: ' + optlib.name + '(file = ' + self.filepath + ', ' + includefile + ')'
                     self.triggered_libraries.append(optlib)
                     # print optlib.name + ' TRIGGERED BY INCLUDE ' + includefile + ' IN ' + self.filepath 
 
@@ -707,7 +719,7 @@ class FileInfo:
             if os.path.isfile(fullpath):
                 self.includes_from_sourcedirs.append(abspath(fullpath))
             else:
-                for srcdir in mandatory_includedirs:
+                for srcdir in sourcedirs:
                     fullpath = join(srcdir, includefile)
                     if os.path.isfile(fullpath):
                         self.includes_from_sourcedirs.append(abspath(fullpath))
@@ -817,8 +829,8 @@ class FileInfo:
 
 
     def collect_optional_libraries(self, optlibs, visited_files):
-        # print 'collecting optional libraries for file', self.filebase+self.fileext
         if self not in visited_files:
+            # print 'collecting optional libraries for file', self.filebase+self.fileext
             # print 'ENTERING'
             visited_files.append(self)
             if hasattr(self,'optional_libraries'):
@@ -1028,7 +1040,7 @@ class FileInfo:
           nice = nice_command + nice_value + ' '
           
         command = nice + compiler + ' ' + compileflags + ' ' + compileroptions + ' ' + string.join(optlib_compopt, ' ')
-        includedirs = [] + mandatory_includedirs + self.get_optional_libraries_includedirs()
+        includedirs = [] + sourcedirs + mandatory_includedirs + self.get_optional_libraries_includedirs()
         if includedirs:
             command = command + ' -I' + string.join(includedirs,' -I')
         command = command + ' -o ' + self.corresponding_ofile + ' -c ' + self.filepath        
