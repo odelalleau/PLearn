@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DeepNNet.cc,v 1.3 2005/01/19 02:01:15 yoshua Exp $ 
+   * $Id: DeepNNet.cc,v 1.4 2005/01/20 18:55:47 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -51,10 +51,12 @@ using namespace std;
 DeepNNet::DeepNNet() 
 /* ### Initialize all fields to their default value here */
   : n_layers(3),
+    n_outputs(1),
     default_n_units_per_hidden_layer(10),
     L1_regularizer(1e-5),
     initial_learning_rate(1e-4),
     learning_rate_decay(1e-6),
+    layerwise_learning_rate_adaptation(0),
     output_cost("mse"),
     add_connections(true),
     remove_connections(true),
@@ -74,6 +76,9 @@ void DeepNNet::declareOptions(OptionList& ol)
   declareOption(ol, "n_layers", &DeepNNet::n_layers, OptionBase::buildoption,
                 "Number of layers, including the output but not input layer");
 
+  declareOption(ol, "n_outputs", &DeepNNet::n_outputs, OptionBase::buildoption,
+                "Number of units of output layer");
+
   declareOption(ol, "default_n_units_per_hidden_layer", &DeepNNet::default_n_units_per_hidden_layer, 
                 OptionBase::buildoption, "If n_units_per_layer is not specified, it is given by this value for all hidden layers");
 
@@ -91,10 +96,15 @@ void DeepNNet::declareOptions(OptionList& ol)
   declareOption(ol, "learning_rate_decay", &DeepNNet::learning_rate_decay, OptionBase::buildoption,
                 "see the comment for initial_learning_rate.");
 
+  declareOption(ol, "layerwise_learning_rate_adaptation", &DeepNNet::layerwise_learning_rate_adaptation,
+                OptionBase::buildoption, "if 0 use stochastic gradient as usual, otherwise correct the\n"
+                "learning rates layerwise by multiplying by the ratio of average gradient norm\n"
+                "of the top layer by the i-th layer, to the power layerwise_learning_rate_adaptation.");
+
   declareOption(ol, "output_cost", &DeepNNet::output_cost, OptionBase::buildoption,
                 "String-valued option specifies output non-linearity and cost:\n"
                 "  'mse': mean squared error for regression with linear outputs\n"
-                "  'nll': negative log-likelihood of P(class|input) with softmax outputs");
+                "  'NLL': negative log-likelihood of P(class|input) with softmax outputs");
 
   declareOption(ol, "add_connections", &DeepNNet::add_connections, OptionBase::buildoption,
                 "whether to add connections when the potential connections average"
@@ -146,13 +156,16 @@ void DeepNNet::build_()
         avg_weight_gradients[l].resize(n_units_per_layer[l+1],n_units_per_layer[l]);
     }
 
+    bool do_initialize = false;
+
     if (sources.length() != n_layers) // in case we are called after loading the object we don't need to do this:
     {
       if (n_units_per_layer.length()==0)
       {
         n_units_per_layer.resize(n_layers);
-        for (int l=0;l<n_layers;l++)
+        for (int l=0;l<n_layers-1;l++)
           n_units_per_layer[l] = default_n_units_per_hidden_layer;
+        n_units_per_layer[n_layers-1] = n_outputs;
       }
       sources.resize(n_layers);
       weights.resize(n_layers);
@@ -170,7 +183,7 @@ void DeepNNet::build_()
           weights[l][i].resize(n_previous);
         }
       }
-      initializeParams();
+      do_initialize = true;
     }
     activations.resize(n_layers+1);
     activations[0].resize(inputsize_);
@@ -181,6 +194,8 @@ void DeepNNet::build_()
       activations[l+1].resize(n_units_per_layer[l]);
       activations_gradients[l].resize(n_units_per_layer[l]);
     }
+    if (do_initialize)
+      initializeParams();
   }
 
 }
@@ -190,13 +205,46 @@ void DeepNNet::initializeParams()
   for (int l=0;l<n_layers;l++)
   {
     biases[l].clear();
-    int n_u = n_units_per_layer[l];
-    int n_in = int(initial_sparsity * activations[l].length());
-    real delta = 1.0/n_in;
-    for (int i=0;i<n_u;i++)
+    int n_previous = (l==0)?inputsize_:n_units_per_layer[l-1];
+    int n_next = n_units_per_layer[l];
+    if (initial_sparsity>0)
     {
-      random_subset_indices(sources[l][i],n_in);
-      fill_random_uniform(weights[l][i],-delta,delta);
+      // first assign randomly some connections to each of the next layer unit
+      int n_in = int(0.66 * (1-initial_sparsity) * n_previous);
+      int n_out = int(0.66 * (1-initial_sparsity) * n_next);
+      for (int i=0;i<n_next;i++)
+      {
+        sources[l][i].resize(n_in);
+        random_subset_indices(sources[l][i],n_previous);
+      }
+      // then assign randomly some connections from each of the previous layer unit
+      TVec<int> dest(n_out);
+      for (int j=0;j<n_previous;j++)
+      {
+        random_subset_indices(dest,n_next);
+        for (int k=0;k<n_out;k++)
+          if (!sources[l][dest[k]].contains(j))
+            sources[l][dest[k]].append(j);
+      }
+      for (int i=0;i<n_next;i++)
+      {
+        int n_in = sources[l][i].length();
+        real delta = 1.0/sqrt((real)n_in);
+        weights[l][i].resize(n_in);
+        fill_random_uniform(weights[l][i],-delta,delta);
+      }
+    }
+    else // fully connected, mostly for debugging
+    {
+      real delta = 1.0/sqrt((real)n_previous);
+      for (int i=0;i<n_next;i++)
+      {
+        sources[l][i].resize(n_previous);
+        weights[l][i].resize(n_previous);
+        for (int j=0;j<n_previous;j++)
+          sources[l][i][j] = j;
+        fill_random_uniform(weights[l][i],-delta,delta);
+      }
     }
   }
 }
@@ -256,7 +304,7 @@ void DeepNNet::fprop() const
       else next_layer[i] = s;
     }
   }
-  if (output_cost == "nll")
+  if (output_cost == "NLL")
   {
     Vec output = activations[n_layers];
     softmax(output,output);
@@ -270,7 +318,10 @@ void DeepNNet::train()
   static Vec target;
   static Vec train_costs;
   target.resize(targetsize());
-  train_costs.resize(1);
+  if (output_cost=="mse")
+    train_costs.resize(1);
+  else
+    train_costs.resize(2);
   real example_weight;
   
   if(!train_stats)  // make a default stats collector, in case there's none
@@ -305,14 +356,18 @@ void DeepNNet::train()
         train_costs[0] = example_weight*pownorm(activations_gradients[n_layers-1]);
         activations_gradients[n_layers-1] *= 2*example_weight; // 2 from the square
       }
-      else if (output_cost == "nll")
+      else if (output_cost == "NLL")
       {
-        real p_target = activations[n_layers][int(target[0])];
-        train_costs[0] = -safelog(p_target)*example_weight;
-        activations_gradients[n_layers-1].fill(p_target);
-        activations_gradients[n_layers-1][int(target[0])] -= 1;
+        Vec output = activations[n_layers];
+        int target_class = int(target[0]);
+        real p_target = output[target_class];
+        train_costs[0] = example_weight*(-safelog(p_target));
+        int recognized_class = argmax(output);
+        train_costs[1] = example_weight*(recognized_class!=target_class);
+        activations_gradients[n_layers-1] << output;
+        activations_gradients[n_layers-1][target_class] -= 1;
       }
-      else PLERROR("DeepNNet: unknown output_cost = %s, expected mse or nll",output_cost.c_str());
+      else PLERROR("DeepNNet: unknown output_cost = %s, expected mse or NLL",output_cost.c_str());
 
       // bprop + update + track avg gradient
 
@@ -350,7 +405,7 @@ void DeepNNet::train()
         if (l>0)
           for (int i=0;i<n_u;i++) 
           {
-            real a = next_layer[i];
+            real a = previous_layer[i];
             previous_layer_gradient[i] = previous_layer_gradient[i] * (1 - a*a);
           }
       }
@@ -376,20 +431,36 @@ void DeepNNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
                                        const Vec& target, Vec& costs) const
 {
   if (output_cost == "mse")
-    costs[0] = powdistance(activations[n_layers],target);
-  else if (output_cost == "nll")
   {
-    real p_target = activations[n_layers][int(target[0])];
-    costs[0] = -safelog(p_target);
+    costs.resize(1);
+    costs[0] = powdistance(output,target);
   }
-  else PLERROR("DeepNNet: unknown output_cost = %s, expected mse or nll",output_cost.c_str());
+  else if (output_cost == "NLL")
+  {
+    costs.resize(2);
+    int target_class = int(target[0]);
+    real p_target = output[target_class];
+    costs[0] = -safelog(p_target);
+    int recognized_class = argmax(output);
+    costs[1] = recognized_class!=target_class;
+  }
+  else PLERROR("DeepNNet: unknown output_cost = %s, expected mse or NLL",output_cost.c_str());
 }                                
 
 TVec<string> DeepNNet::getTestCostNames() const
 {
-  TVec<string> names(1);
-  names[0] = output_cost;
-  return names;
+  if (output_cost == "mse")
+  {
+    TVec<string> names(1);
+    names[0] = "mse";
+    return names;
+  } else // "NLL"
+  {
+    TVec<string> names(2);
+    names[0] = "NLL";
+    names[1] = "class_error";
+    return names;
+  }
 }
 
 TVec<string> DeepNNet::getTrainCostNames() const

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DeepNNet.h,v 1.3 2005/01/19 02:01:15 yoshua Exp $ 
+   * $Id: DeepNNet.h,v 1.4 2005/01/20 18:55:48 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -82,11 +82,13 @@ public:
   // ### declare public option fields (such as build options) here
 
   int n_layers; // this counts the output layer but not the input layer
+  int n_outputs;
   int default_n_units_per_hidden_layer; // optionally to initialize n_units_per_layer
   TVec<int> n_units_per_layer; 
   real L1_regularizer; // amount of penalty on sum_{l,i,j} |weights[l][i][j]|
   real initial_learning_rate;
   real learning_rate_decay;
+  real layerwise_learning_rate_adaptation; 
   string output_cost; // implies a non-linearity for outputs: "mse" -> linear, "nll" -> softmax
   bool add_connections; // if true, instanciate potential connections with greater
   // average gradient than the existing connections with the smallest average gradient
