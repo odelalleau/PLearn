@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: WordNetSenseDictionary.cc,v 1.4 2004/10/06 21:27:46 kermorvc Exp $ 
+   * $Id: WordNetSenseDictionary.cc,v 1.5 2004/10/06 21:34:44 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
@@ -54,7 +54,7 @@ WordNetSenseDictionary::WordNetSenseDictionary()
 
 WordNetSenseDictionary::~WordNetSenseDictionary()
 {
-    if(wno || wno->getVocSize()!=1){
+    if(wno && wno->getVocSize()!=1){
       wno->finalize();
       wno->save(ontology_file_name + ".voc");
       wno->save(ontology_file_name + ".synsets", ontology_file_name + ".ontology", ontology_file_name + ".sense_key");

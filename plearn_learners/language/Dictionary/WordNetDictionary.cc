@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: WordNetDictionary.cc,v 1.6 2004/10/06 21:27:47 kermorvc Exp $ 
+   * $Id: WordNetDictionary.cc,v 1.7 2004/10/06 21:34:44 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
@@ -58,7 +58,7 @@ WordNetDictionary::WordNetDictionary()
   
 WordNetDictionary::~WordNetDictionary()
 {
-  if(wno || wno->getVocSize()!=1)
+  if(wno && wno->getVocSize()!=1)
     {
       wno->finalize();
       wno->save(ontology_file_name + ".voc");
