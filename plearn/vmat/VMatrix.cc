@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.47 2004/03/18 22:01:11 tihocan Exp $
+* $Id: VMatrix.cc,v 1.48 2004/04/08 00:33:44 plearner Exp $
 ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -234,10 +234,13 @@ void VMatrix::printFieldInfo(ostream& out, int fieldnum) const
 
     out << "nmissing: " << s.nmissing() << '\n';
     out << "nnonmissing: " << s.nnonmissing() << '\n';
+    out << "sum: " << s.sum() << '\n';
     out << "mean: " << s.mean() << '\n';
     out << "stddev: " << s.stddev() << '\n';
     out << "min: " << s.min() << '\n';
     out << "max: " << s.max() << '\n';
+
+    /*
     if(!s.counts.empty())
       {
         out << "\nCOUNTS: \n";
@@ -255,6 +258,7 @@ void VMatrix::printFieldInfo(ostream& out, int fieldnum) const
             ++it;
         }
       }
+    */
     out << endl << endl;
 }
 
