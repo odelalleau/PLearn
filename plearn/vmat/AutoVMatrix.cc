@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
- * $Id: AutoVMatrix.cc,v 1.9 2004/07/21 16:30:55 chrish42 Exp $
+ * $Id: AutoVMatrix.cc,v 1.10 2004/07/26 20:09:24 tihocan Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -81,6 +81,12 @@ void AutoVMatrix::build()
   build_();
 }
  
-} 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
+void AutoVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies) {
+  inherited::makeDeepCopyFromShallowCopy(copies);
+}
 
+} 
 

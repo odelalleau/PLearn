@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: AutoVMatrix.h,v 1.7 2004/05/13 20:22:31 nova77 Exp $
+   * $Id: AutoVMatrix.h,v 1.8 2004/07/26 20:09:24 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,9 +54,13 @@ using namespace std;
 
 class AutoVMatrix: public ForwardVMatrix
 {
+
+private:
+
   typedef ForwardVMatrix inherited;
 
 public:
+
   PLEARN_DECLARE_OBJECT(AutoVMatrix);
 
   // ************************
@@ -72,18 +76,22 @@ public:
   AutoVMatrix(const string& the_specification="");
 
 private: 
+
   //! This does the actual building. 
-  // (Please implement in .cc)
   void build_();
 
 protected:
+
   //! Declares this class' options
-  // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
 
 public:
-  // simply calls inherited::build() then build_() 
+
+  // Simply calls inherited::build() then build_()
   virtual void build();
+
+  //! Transforms a shallow copy into a deep copy
+  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
 };
 
