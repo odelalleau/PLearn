@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LearnerCommand.h,v 1.3 2005/01/04 21:24:07 plearner Exp $ 
+   * $Id: LearnerCommand.h,v 1.4 2005/01/13 19:25:48 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -46,17 +46,19 @@
 
 #include "PLearnCommand.h"
 #include "PLearnCommandRegistry.h"
-
-// for definition of real
-#include "plearn/math/pl_math.h"
+#include <plearn/math/pl_math.h>  //!< For definition of real.
+#include <plearn/math/TVec.h>     //!< For definition of TVec
 
 namespace PLearn {
 using namespace std;
 
 class LearnerCommand: public PLearnCommand
 {
+
 public:
+
   LearnerCommand();                    
+
   virtual void run(const vector<string>& args);
 
   static void train(const string& learner_spec_file, const string& trainset_spec, const string& save_learner_file);
@@ -73,8 +75,13 @@ public:
   static void compute_outputs_on_auto_grid(const string& trained_learner_file, const string& grid_outputs_file, 
                                            const string& dataset_spec, real extra_percent,
                                            int nx, int ny=0);
+
+  static void analyze_inputs(const string& data_file, const string& result_file, real epsilon, const TVec<string>& learner_files);
+  
 protected:
+
   static PLearnCommandRegistry reg_;
+
 };
 
   
