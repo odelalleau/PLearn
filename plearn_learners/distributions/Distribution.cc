@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Distribution.cc,v 1.3 2002/10/22 05:00:19 plearner Exp $ 
+   * $Id: Distribution.cc,v 1.4 2002/11/05 16:30:34 zouave Exp $ 
    ******************************************************* */
 
 /*! \file Distribution.cc */
@@ -47,9 +47,8 @@ namespace PLearn <%
 using namespace std;
 
 Distribution::Distribution() 
+  :Learner(0,1,1), use_returns_what("l")
 {
-    use_returns_what = "l"; // by default, return log_density
-    
     // cost function is -log_density
     setTestCostFunctions(neg_output_costfunc());
 }

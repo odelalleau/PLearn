@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HistogramDistribution.cc,v 1.2 2002/10/31 20:43:53 zouave Exp $ 
+   * $Id: HistogramDistribution.cc,v 1.3 2002/11/05 16:30:35 zouave Exp $ 
    ******************************************************* */
 
 /*! \file HistogramDistribution.cc */
@@ -62,9 +62,9 @@ HistogramDistribution::HistogramDistribution()
     // ### You may want to set the Distribution::use_returns_what parameter
   }
 
-HistogramDistribution::HistogramDistribution(VMat data, PP<Binner> the_binner_) 
+HistogramDistribution::HistogramDistribution(VMat data, PP<Binner> the_binner_, PP<Smoother> the_smoother_) 
   :Distribution(), bin_positions(data.length()+1), bin_density(data.length()), survival_values(data.length()),
-   the_binner(the_binner_)
+   the_binner(the_binner_), the_smoother(the_smoother_)
 {
   train(data);
 }
@@ -73,16 +73,16 @@ HistogramDistribution::HistogramDistribution(VMat data, PP<Binner> the_binner_)
 
   void HistogramDistribution::declareOptions(OptionList& ol)
   {
-    declareOption(ol, "bin_positions", &HistogramDistributionDistribution::bin_positions, OptionBase::learntoption,
+    declareOption(ol, "bin_positions", &HistogramDistribution::bin_positions, OptionBase::learntoption,
                   "The n+1 positions that define n bins. There is one more bin position "
 		  "than number of bins, all the bins are supposed adjacent.");
 
-    declareOption(ol, "bin_density", &HistogramDistributionDistribution::bin_density, OptionBase::learntoption,
+    declareOption(ol, "bin_density", &HistogramDistribution::bin_density, OptionBase::learntoption,
                   "Density of the distribution for each bin.  The density is supposed "
 		  "constant within each bin:\n"
 		  "\tp(x) = bin_density[i] if bin_positions[i] < x <= bin_positions[i+1].");
 
-    declareOption(ol, "survival_values", &HistogramDistributionDistribution::survival_values, OptionBase::learntoption,
+    declareOption(ol, "survival_values", &HistogramDistribution::survival_values, OptionBase::learntoption,
                   "Redundant with density is the pre-computed survival function.");
 
     // Now call the parent class' declareOptions
@@ -120,19 +120,44 @@ HistogramDistribution::HistogramDistribution(VMat data, PP<Binner> the_binner_)
   { 
     if(training_set->width() != inputsize()+targetsize())
       PLERROR("In HistogramDistribution::train(VMat training_set) training_set->width() != inputsize()+targetsize()");
+    if(training_set->width() != 1)
+      PLERROR("In HistogramDistribution::train(VMat training_set) training_set->width() must be 1 (column vec.)");
+    if(the_binner == 0)
+      PLERROR("In HistogramDistribution::train(VMat training_set) Can't train without a Binner.");
 
     setTrainingSet(training_set);
 
     Vec data(training_set.length());
     data << training_set.getColumn(training_set.width()-1);
 
-    RealMapping binning= the_binner->getBinning(training_set);
-    binning.transform(data);
-    
+    PP<RealMapping> binning= the_binner->getBinning(training_set);
+    binning->setMappingForOther(0.0);
+    binning->transform(data);
+
+
+    bin_positions= binning->getCutPoints();
+    bin_density.resize(bin_positions.length()-1);
+    survival_values.resize(bin_positions.length()-1);
+
     for(int i= 0; i < data.length(); ++i)
+      ++survival_values[static_cast<int>(data[i])];
+    //    bin_density << survival_values;
+    for(int i= survival_values.length()-2; i >= 0; --i)
+      survival_values[i]+= survival_values[i+1];
+    for(int i= survival_values.length()-1; i >= 0; --i)
+      survival_values[i]/= survival_values[0];
+
+    if(the_smoother)
       {
-	
+	Vec sv(survival_values.length());
+	sv << survival_values;
+	the_smoother->smooth(sv, survival_values, bin_positions, bin_positions);
       }
+    
+
+    calc_density_from_survival();
+
+    
     
 
     /*
@@ -143,6 +168,8 @@ HistogramDistribution::HistogramDistribution(VMat data, PP<Binner> the_binner_)
  |     - largeur des bins > a une valeur minimale 
  |     - bins contenir un minimum de points
 Binner
+
+
 
 Smoother
 (recalcule la densite)
@@ -231,9 +258,23 @@ void HistogramDistribution::calc_density_from_survival()
   bin_density.resize(n);
   for(int i= 0; i < n; ++i)
     if(bin_positions[i+1] != bin_positions[i])
-      bin_density[i]= (survival_values[i] - survival_values[i+1]) / (bin_positions[i+1]-bin_positions[i]);
+      if(i == n-1)
+	bin_density[i]= survival_values[i] / (bin_positions[i+1]-bin_positions[i]);
+      else
+	bin_density[i]= (survival_values[i] - survival_values[i+1]) / (bin_positions[i+1]-bin_positions[i]);
     else
       bin_density[i]= 0;
+}
+
+void HistogramDistribution::calc_survival_from_density()
+{
+  int n= bin_positions.length()-1;
+  survival_values.resize(n);
+  real prec= 0.0;
+  for(int i= n-1; i >= 0; --i)
+    prec= survival_values[i]= bin_density[i]*(bin_positions[i+1]-bin_positions[i]) + prec;
+  for(int i= 0; i < n; ++i)
+    survival_values[i]/= prec;
 }
 
 %> // end of namespace PLearn

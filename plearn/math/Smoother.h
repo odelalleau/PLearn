@@ -1,12 +1,8 @@
-
-
 // -*- C++ -*-
 
-// Binner.h
+// Smoother.h
 // 
-// Copyright (C) *YEAR* *AUTHOR(S)* 
-// ...
-// Copyright (C) *YEAR* *AUTHOR(S)* 
+// Copyright (C) 2002 Xavier Saint-Mleux
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -37,21 +33,20 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Binner.h,v 1.2 2002/11/05 16:30:34 zouave Exp $ 
+   * $Id: Smoother.h,v 1.1 2002/11/05 16:34:32 zouave Exp $ 
    ******************************************************* */
 
-/*! \file Binner.h */
-#ifndef Binner_INC
-#define Binner_INC
+/*! \file Smoother.h */
+#ifndef Smoother_INC
+#define Smoother_INC
 
 #include "Object.h"
-#include "VMat.h"
-#include "RealMapping.h"
+#include "TVec.h"
 
 namespace PLearn <%
 using namespace std;
 
-class Binner: public Object
+class Smoother: public Object
 {
 protected:
   // *********************
@@ -78,7 +73,7 @@ public:
 
   // Default constructor, make sure the implementation in the .cc
   // initializes all fields to reasonable default values.
-  Binner();
+  Smoother();
 
 
   // ******************
@@ -105,16 +100,31 @@ public:
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
-  //! Returns a binning for a single column vmatrix v 
-  virtual PP<RealMapping> getBinning(VMat v) const;
-
   //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(Binner);
+  DECLARE_ABSTRACT_NAME_AND_DEEPCOPY(Smoother);
+
+
+  /****
+   * Smoother methods
+   */
+
+ public:
+  // The source function is either f(i) = source_function[i] as a function of i
+  // or if bin_positions is provided (non-zero length), 
+  //    f(x) = source_function[i]
+  //      where i is s.t. bin_positions[i]>x>=bin_positions[i+1]
+  // the optional bin_positions vector has length 0, or 1 more than source_function.
+  // By default (if not provided) the dest_bin_positions are assumed the same as the source bin_positions.
+  // Returns integral(smoothed_function).
+  virtual real smooth(const Vec& source_function, Vec smoothed_function, 
+		      Vec bin_positions = Vec(), Vec dest_bin_positions = Vec()) const = 0;
+
+  //   real smooth(const HistogramCDF& source_cdf, HistogramCDF& dest_cdf);
 
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(Binner);
+  DECLARE_OBJECT_PTR(Smoother);
   
 %> // end of namespace PLearn
 

@@ -1,12 +1,8 @@
-
-
 // -*- C++ -*-
 
-// Binner.h
+// LimitedGaussianSmoother.h
 // 
-// Copyright (C) *YEAR* *AUTHOR(S)* 
-// ...
-// Copyright (C) *YEAR* *AUTHOR(S)* 
+// Copyright (C) 2002 Xavier Saint-Mleux
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -37,33 +33,40 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Binner.h,v 1.2 2002/11/05 16:30:34 zouave Exp $ 
+   * $Id: LimitedGaussianSmoother.h,v 1.1 2002/11/05 16:34:32 zouave Exp $ 
    ******************************************************* */
 
-/*! \file Binner.h */
-#ifndef Binner_INC
-#define Binner_INC
+/*! \file LimitedGaussianSmoother.h */
+#ifndef LimitedGaussianSmoother_INC
+#define LimitedGaussianSmoother_INC
 
-#include "Object.h"
-#include "VMat.h"
-#include "RealMapping.h"
+#include "Smoother.h"
 
 namespace PLearn <%
 using namespace std;
 
-class Binner: public Object
+
+// smoothed_function[k] = sum_{j=max(0,k-window_size)}^{min(l-1,k+window_size)} w_{k,j} source_function[j]
+//                        / sum_{j=max(0,k-window_size)}^{min(l-1,k+window_size)} w_{k,j} 
+// with w_{k,j} = phi(bin_positions[j+1];mu_k,sigma_k)-phi(bin_positions[j];mu_k,sigma_k)
+// where mu_k = 0.5*(bin_positions[k+1]+bin_positions[k]),
+//       sigma_k = bin_positions[k+window_size]-bin_positions[k]
+// where phi(x;mu,sigma) = cdf of normal(mu,sigma) at x,
+// window_size = window_size_wrt_sigma * sigma_bin
+
+class LimitedGaussianSmoother: public Smoother
 {
 protected:
   // *********************
   // * protected options *
   // *********************
 
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
+  int window_size_wrt_sigma;
+  real sigma_bin;
     
 public:
 
-  typedef Object inherited;
+  typedef Smoother inherited;
 
   // ************************
   // * public build options *
@@ -78,7 +81,10 @@ public:
 
   // Default constructor, make sure the implementation in the .cc
   // initializes all fields to reasonable default values.
-  Binner();
+  LimitedGaussianSmoother();
+
+
+  LimitedGaussianSmoother(int window_size_wrt_sigma_, real sigma_bin_);
 
 
   // ******************
@@ -105,16 +111,21 @@ public:
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
-  //! Returns a binning for a single column vmatrix v 
-  virtual PP<RealMapping> getBinning(VMat v) const;
-
   //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(Binner);
+  DECLARE_NAME_AND_DEEPCOPY(LimitedGaussianSmoother);
 
+
+  /****
+   * Smoother methods
+   */
+
+ public:
+  virtual real smooth(const Vec& source_function, Vec smoothed_function, 
+		      Vec bin_positions = Vec(), Vec dest_bin_positions = Vec()) const;
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(Binner);
+  DECLARE_OBJECT_PTR(LimitedGaussianSmoother);
   
 %> // end of namespace PLearn
 

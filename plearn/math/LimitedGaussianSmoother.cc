@@ -1,12 +1,8 @@
-
-
 // -*- C++ -*-
 
-// Binner.cc
+// LimitedGaussianSmoother.cc
 // 
-// Copyright (C) *YEAR* *AUTHOR(S)* 
-// ...
-// Copyright (C) *YEAR* *AUTHOR(S)* 
+// Copyright (C) 2002 Xavier Saint-Mleux
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -37,17 +33,18 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Binner.cc,v 1.3 2002/11/05 16:30:34 zouave Exp $ 
+   * $Id: LimitedGaussianSmoother.cc,v 1.1 2002/11/05 16:34:32 zouave Exp $ 
    ******************************************************* */
 
-/*! \file Binner.cc */
-#include "Binner.h"
+/*! \file LimitedGaussianSmoother.cc */
+#include "LimitedGaussianSmoother.h"
+#include "pl_erf.h"
 
 namespace PLearn <%
 using namespace std;
 
-Binner::Binner() 
-  :Object()
+LimitedGaussianSmoother::LimitedGaussianSmoother() 
+  :Smoother()
 /* ### Initialise all fields to their default value */
   {
     // ...
@@ -56,10 +53,14 @@ Binner::Binner()
     // build_();
   }
 
+LimitedGaussianSmoother::LimitedGaussianSmoother(int window_size_wrt_sigma_, real sigma_bin_)
+  :window_size_wrt_sigma(window_size_wrt_sigma_), sigma_bin(sigma_bin_)
+{
+}
 
-  IMPLEMENT_NAME_AND_DEEPCOPY(Binner);
+  IMPLEMENT_NAME_AND_DEEPCOPY(LimitedGaussianSmoother);
 
-  void Binner::declareOptions(OptionList& ol)
+  void LimitedGaussianSmoother::declareOptions(OptionList& ol)
   {
     // ### Declare all of this object's options here
     // ### For the "flags" of each option, you should typically specify  
@@ -68,7 +69,7 @@ Binner::Binner()
     // ### is OptionBase::nosave
 
     // ### ex:
-    // declareOption(ol, "myoption", &Binner::myoption, OptionBase::buildoption,
+    // declareOption(ol, "myoption", &LimitedGaussianSmoother::myoption, OptionBase::buildoption,
     //               "Help text describing this option");
     // ...
 
@@ -76,15 +77,15 @@ Binner::Binner()
     inherited::declareOptions(ol);
   }
 
-  string Binner::help() const
+  string LimitedGaussianSmoother::help() const
   {
     // ### Provide some useful description of what the class is ...
     return 
-      "Binner implements a ..."
+      "LimitedGaussianSmoother implements a ..."
       + optionHelp();
   }
 
-  void Binner::build_()
+  void LimitedGaussianSmoother::build_()
   {
     // ### This method should do the real building of the object,
     // ### according to set 'options', in *any* situation. 
@@ -96,14 +97,14 @@ Binner::Binner()
   }
 
   // ### Nothing to add here, simply calls build_
-  void Binner::build()
+  void LimitedGaussianSmoother::build()
   {
     inherited::build();
     build_();
   }
 
 
-  void Binner::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+  void LimitedGaussianSmoother::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   {
     Object::makeDeepCopyFromShallowCopy(copies);
 
@@ -114,11 +115,36 @@ Binner::Binner()
     // deepCopyField(trainvec, copies);
 
     // ### Remove this line when you have fully implemented this method.
-    PLERROR("Binner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    PLERROR("LimitedGaussianSmoother::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
   }
 
-//! Returns a binning for a single column vmatrix v 
-PP<RealMapping> Binner::getBinning(VMat v) const
-{ PLERROR("getBinning not implemented for this Binner"); return 0; }
+
+real LimitedGaussianSmoother::smooth(const Vec& source_function, Vec smoothed_function, 
+				     Vec bin_positions, Vec dest_bin_positions) const
+{
+  smoothed_function.resize(source_function.length());
+  smoothed_function.fill(0.0);
+  real window_size= window_size_wrt_sigma * sigma_bin;
+  for(int i= 0; i < smoothed_function.length()-1; ++i)
+    {
+      int min_j= i-static_cast<int>(window_size), max_j= i+static_cast<int>(window_size);
+      if(min_j < 0) min_j= 0;
+      if(max_j > smoothed_function.length()) max_j= smoothed_function.length();
+      real sum_weights= 0.0;
+      real mu= 0.5*(bin_positions[i+1]+bin_positions[i]),
+	sigma= bin_positions[max_j-1]-bin_positions[i];
+      for(int j= min_j; j < max_j; ++j)
+	{
+	  real z1= (bin_positions[j+1]-mu)/sigma, 
+	    z0= (bin_positions[j]-mu)/sigma;
+	  sum_weights+= gauss_01_cum(z1)-gauss_01_cum(z0);
+	}
+      for(int j= min_j; j < max_j; ++j)
+	  smoothed_function[i]+= ( gauss_01_cum((bin_positions[j+1]-mu)/sigma) 
+				   - gauss_01_cum((bin_positions[j]-mu)/sigma)
+				   ) 
+	    * source_function[j] / sum_weights;
+    }
+}
 
 %> // end of namespace PLearn

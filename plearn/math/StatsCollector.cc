@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.4 2002/10/15 17:30:37 jkeable Exp $
+   * $Id: StatsCollector.cc,v 1.5 2002/11/05 16:30:34 zouave Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -220,7 +220,7 @@ void StatsCollector::update(real val)
       PLERROR("Bug in StatsCollector::getBinMapping expected last element of mapping to be FLT_MAX...");
 
     // make sure we include max_
-    pair<RealRange, real>& m = mapping.lastMapping();
+    pair<RealRange, real> m = mapping.lastMapping();
     if(m.first.low == m.first.high)
       {
         // we appended a single point, let's append a range until max
@@ -228,8 +228,12 @@ void StatsCollector::update(real val)
       }
     else // we appended a real range, let's extend it until max_
       {
+	mapping.removeMapping(m.first);
+	mapping.addMapping(RealRange(m.first.leftbracket, m.first.low, max_, ']'), m.second);
+	/*
         m.first.high = max_;
         m.first.rightbracket = ']';
+	*/
       }      
 
     return mapping;

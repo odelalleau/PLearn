@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org 
 
 /* *******************************************************      
-   * $Id: RealMapping.cc,v 1.4 2002/10/31 20:43:52 zouave Exp $
+   * $Id: RealMapping.cc,v 1.5 2002/11/05 16:30:32 zouave Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,17 +44,19 @@
 namespace PLearn <%
 using namespace std;
 
+
+
+
+
   IMPLEMENT_NAME_AND_DEEPCOPY(RealMapping);
 
   real RealMapping::map(real val) const
   {
     if(is_missing(val))
       return missing_mapsto;
-    mapping_t::iterator it = mapping.begin();
-    mapping_t::iterator itend = mapping.end();
-    for(; it!=itend; ++it)
-      if(it->first.contains(val))
-        return it->second;
+    mapping_t::const_iterator it= mapping.lower_bound(RealRange('[',val,val,']'));
+    if(it != mapping.end() && it->first.contains(val))
+      return it->second;
     if(keep_other_as_is)
       return val;
     else
@@ -65,8 +67,8 @@ using namespace std;
   {
     if(is_missing(val))
       return -2;
-    mapping_t::iterator it = mapping.begin();
-    mapping_t::iterator itend = mapping.end();
+    mapping_t::const_iterator it = mapping.begin();
+    mapping_t::const_iterator itend = mapping.end();
     for(int num=0; it!=itend; ++it,num++)
       if(it->first.contains(val))
         return num;
@@ -88,10 +90,10 @@ using namespace std;
   void RealMapping::print(ostream& out) const
   { 
     out << "{ ";
-    int n = mapping.length();
     out.precision(17);
-    for(int i=0; i<n; i++)
-      out << mapping[i].first << " -> " << mapping[i].second << "; ";
+    for(mapping_t::const_iterator it= mapping.begin(); 
+	it != mapping.end(); ++it)
+      out << it->first << " -> " << it->second << "; ";
     if(!is_missing(missing_mapsto))
       out << "MISSING -> " << missing_mapsto << "; " << endl;
     if(!keep_other_as_is)
@@ -102,22 +104,13 @@ using namespace std;
   void RealMapping::write(ostream& out) const
   { 
     writeHeader(out,"RealMapping",0);
-    out << "{ ";
-    int n = mapping.length();
-    out.precision(17);
-    for(int i=0; i<n; i++)
-      out << mapping[i].first << " -> " << mapping[i].second << "; ";
-    if(!is_missing(missing_mapsto))
-      out << "MISSING -> " << missing_mapsto << "; " << endl;
-    if(!keep_other_as_is)
-      out << "OTHER -> " << other_mapsto;
-    out << "} ";
+    print(out);
     writeFooter(out,"RealMapping");
   }
 
   void RealMapping::read(istream& in)
   {
-    mapping.resize(0);
+    clear();//mapping.resize(0);
     missing_mapsto = MISSING_VALUE;
     keep_other_as_is = true;
 
@@ -200,13 +193,12 @@ using namespace std;
 
 Vec RealMapping::getCutPoints() const
 {
-  Vec v(mapping.length()+1);
-  /*
-  char bracket= mapping[0].first.leftbracket;
-  v[0]= mapping[0].first.low;
-  */
+  Vec v(length()+1);
+  mapping_t::const_iterator it= mapping.begin();
+  v[0]= it->first.low;
+  for(int i= 1; it != mapping.end(); ++it, ++i)
+    v[i]= it->first.high;
   return v;
-  
 }
 
 %> // end of namespace PLearn

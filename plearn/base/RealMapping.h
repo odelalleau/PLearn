@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: RealMapping.h,v 1.6 2002/10/31 20:43:52 zouave Exp $
+   * $Id: RealMapping.h,v 1.7 2002/11/05 16:30:33 zouave Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,12 +44,13 @@
 #include "general.h"
 #include "Object.h"
 #include "TMat.h"
+#include <map>
 
 namespace PLearn <%
 using namespace std;
 
   //! represents a real range: i.e. one of ]low,high[ ; [low,high[; [low,high]; ]low,high]
-  class RealRange
+class RealRange
   {
   public:
     real low;
@@ -75,9 +76,6 @@ using namespace std;
         PLERROR("In RealRange: Brackets must be either '[' or ']'"); 
     }
 
-    bool contains(real val)
-    { return (val>=low) && (val<=high) && (val!=low || leftbracket=='[') && (val!=high || rightbracket==']'); }
-
     void print(ostream& out) const
     { out << leftbracket << low << ' ' << high << rightbracket; }
 
@@ -86,17 +84,49 @@ using namespace std;
 
     void read(istream& in)
     { in >> leftbracket >> low >> high >> rightbracket; checkbrackets(); }
+
+    
+    //! Compare RealRange and real:
+    //! the relation is either:
+    //!   Range `contains` real
+    //!   Range < real, if higher bound < real
+    //!   Range > real, if lower bound > real
+
+    inline bool contains(real val) const
+    { return (val>=low) && (val<=high) && (val!=low || leftbracket=='[') && (val!=high || rightbracket==']'); }
+
+    inline bool operator<(real x) const
+    { return high < x || high == x && rightbracket == '['; }
+
+    inline bool operator>(real x) const
+    { return low > x || low == x && leftbracket == ']'; }
+
+    //! Compare 2 RealRanges:
+    //! the relation is either:
+    //!   Range0 < Range1, if higher bound 0 < lower bound 1
+    //!   Range0 > Range1, if lower bound 0 > higher bound 1
+    //! Any other case is undefined.  Ranges should not overlap.
+
+    inline bool operator<(const RealRange& x) const
+    { return high < x.low || high == x.low && rightbracket == x.leftbracket; }
+
+    inline bool operator>(const RealRange& x) const
+    { return low > x.high || low == x.high && leftbracket == x.rightbracket; }
+
   };
 
   inline void write(ostream& out, const RealRange& range) { range.write(out); }
   inline ostream& operator<<(ostream& out, const RealRange& range) { range.print(out); return out; } 
   inline void read(istream& in, RealRange& range) { range.read(in); }
-  
+
 
   class RealMapping: public Object
   {
   public:
-    typedef TVec< pair<RealRange, real> > mapping_t;
+    //    typedef TVec< pair<RealRange, real> > mapping_t;
+    typedef map<RealRange, real> mapping_t;
+    typedef mapping_t::iterator iterator;
+    typedef mapping_t::const_iterator const_iterator;
     mapping_t mapping; // defines mapping from real ranges to values
     real missing_mapsto; // value to which to map missing values (can be missing value)
     bool keep_other_as_is; // if true, values not in mapping are left as is, otherwise they're mappred to other_mapsto
@@ -111,14 +141,34 @@ using namespace std;
        other_mapsto(MISSING_VALUE)
     {}
 
-    int size() const { return mapping.length(); }
-    int length() const { return mapping.length(); }
+    int size() const { return mapping.size(); }
+    int length() const { return mapping.size(); }
 
     //! Removes all entries in mapping.  Does not change other params.
     inline void clear() { mapping.clear(); }
     
+
+    void removeMapping(const RealRange& range)
+    { 
+      mapping_t::iterator it= mapping.find(range);
+      if(it != mapping.end())
+	mapping.erase(it);
+      else
+	PLWARNING("In RealMapping::removeMapping  mapping not removed: does not exist.");
+    }
+
+    void removeMapping(real x) //remove range where x falls
+    {
+      mapping_t::iterator it= mapping.lower_bound(RealRange('[',x,x,']'));
+      if(it != mapping.end() && it->first.contains(x))
+	mapping.erase(it);
+      else
+	PLWARNING("In RealMapping::removeMapping  mapping not removed: does not exist.");
+    }
+
     void addMapping(const RealRange& range, real val)
-    { mapping.push_back(make_pair(range,val)); }
+    { mapping[range]= val; }
+      //    { mapping.push_back(make_pair(range,val)); }
 
     //! Set mapping for missing value (by default it maps to MISSING_VALUE)
     void setMappingForMissing(real what_missing_mapsto)
@@ -140,15 +190,34 @@ using namespace std;
     // transforms v by applying the mapping on all its elements
     void transform(const Vec& v) const;
 
-    pair<RealRange, real>& lastMapping() 
-    { return mapping.lastElement(); }
+    pair<RealRange, real> lastMapping() 
+    { return *(mapping.rbegin()); }
+    //    { return mapping.lastElement(); }
+
+    /***
+     * map methods "forwarded"
+     */
+
+    iterator begin()
+    { return mapping.begin(); }
+    const_iterator begin() const
+    { return mapping.begin(); }
+    iterator end()
+    { return mapping.end(); }
+    const_iterator end() const
+    { return mapping.end(); }
+    void erase(iterator it) 
+    { return mapping.erase(it); }
+
+
+
 
     virtual void print(ostream& out) const;
     virtual void write(ostream& out) const;
     virtual void read(istream& in);
 
     //! If all ranges in the mapping are consecutive, return the cut points between different ranges.
-    //! e.g.: [0,1[  [1, 5[  [5, 10] --> <0,1,5,10>.
+    //! e.g.: [0,1[  [1, 5[  [5, 10]  ]10, 15]--> <0,1,5,10,15>.
     Vec getCutPoints() const;
 
   };

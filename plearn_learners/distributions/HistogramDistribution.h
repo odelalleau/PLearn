@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HistogramDistribution.h,v 1.1 2002/10/24 20:17:16 zouave Exp $ 
+   * $Id: HistogramDistribution.h,v 1.2 2002/11/05 16:30:35 zouave Exp $ 
    ******************************************************* */
 
 /*! \file HistogramDistribution.h */
@@ -42,6 +42,7 @@
 
 #include "Distribution.h"
 #include "Binner.h"
+#include "Smoother.h"
 
 namespace PLearn <%
 using namespace std;
@@ -49,6 +50,7 @@ using namespace std;
 class HistogramDistribution: public Distribution
 {
 protected:
+public: //TEMP!!! s/b protected -xsm  
   // *********************
   // * protected options *
   // *********************
@@ -65,6 +67,9 @@ protected:
 
   //! this Binner is used to do binning at training time.
   PP<Binner> the_binner;
+
+  //! this Smoother is used at training time.
+  PP<Smoother> the_smoother;
 
     
 public:
@@ -88,7 +93,7 @@ public:
 
   //! This constructor calls train as part of the construction process.
   //! The use function can then be used right away.
-  HistogramDistribution(VMat data, PP<Binner> the_binner_= 0);
+  HistogramDistribution(VMat data, PP<Binner> the_binner_= 0, PP<Smoother> the_smoother_= 0);
 
   // ******************
   // * Object methods *
@@ -159,6 +164,8 @@ protected:
 
   //! calculate bin_density from survival_values  
   void calc_density_from_survival();
+  //! calculate survival_values from bin_density
+  void calc_survival_from_density();
 
   
 };
