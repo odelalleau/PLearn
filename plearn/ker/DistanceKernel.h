@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DistanceKernel.h,v 1.7 2005/02/04 15:08:49 tihocan Exp $
+   * $Id: DistanceKernel.h,v 1.8 2005/04/04 02:29:37 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -67,7 +67,7 @@ public:
 
     bool pow_distance;
 
-    DistanceKernel(real the_Ln=2);
+    DistanceKernel(real the_Ln=2, bool powdist=false);
     
     PLEARN_DECLARE_OBJECT(DistanceKernel);
 

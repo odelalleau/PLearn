@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GenericNearestNeighbors.h,v 1.5 2005/04/04 02:24:08 yoshua Exp $ 
+   * $Id: GenericNearestNeighbors.h,v 1.6 2005/04/04 02:30:42 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -43,7 +43,7 @@
 #define GenericNearestNeighbors_INC
 
 #include <plearn_learners/generic/PLearner.h>
-#include <plearn/ker/Ker.h>
+#include <plearn/ker/Kernel.h>
 
 namespace PLearn {
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DistanceKernel.cc,v 1.12 2004/12/20 20:04:06 chapados Exp $
+   * $Id: DistanceKernel.cc,v 1.13 2005/04/04 02:29:36 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -59,9 +59,9 @@ PLEARN_IMPLEMENT_OBJECT(
 ////////////////////
 // DistanceKernel //
 ////////////////////
-DistanceKernel::DistanceKernel(real the_Ln)
+DistanceKernel::DistanceKernel(real the_Ln, bool pd)
 : n(the_Ln),
-  pow_distance(false)
+  pow_distance(pd)
 {}
 
 ////////////////////
