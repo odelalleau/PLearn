@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocalNeighborsDifferencesVMatrix.h,v 1.4 2004/07/21 20:12:19 tihocan Exp $ 
+   * $Id: LocalNeighborsDifferencesVMatrix.h,v 1.5 2004/08/02 16:17:29 monperrm Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
@@ -57,7 +57,7 @@ private:
   typedef SourceVMatrix inherited;
 
   //! Used to store data and save memory allocations.
-  mutable Vec neighbor_row, ith_row, a_row;
+  mutable Vec neighbor_row, ith_row, a_row, diff_k;
 
 protected:
   // NON-OPTION FIELDS
@@ -77,6 +77,7 @@ public:
   // ### declare public option fields (such as build options) here
   // ...
   int n_neighbors;
+  bool concat_neighbors;
 
   // ****************
   // * Constructors *
@@ -116,9 +117,10 @@ public:
 };
 DECLARE_OBJECT_PTR(LocalNeighborsDifferencesVMatrix);
 
-inline VMat local_neighbors_differences(VMat source, int n_neighbors)
+inline VMat local_neighbors_differences(VMat source, int n_neighbors, bool concat = false)
 {
   LocalNeighborsDifferencesVMatrix* vmat = new LocalNeighborsDifferencesVMatrix();
+  vmat->concat_neighbors = concat;
   vmat->source=source;
   vmat->n_neighbors=n_neighbors;
   vmat->build();

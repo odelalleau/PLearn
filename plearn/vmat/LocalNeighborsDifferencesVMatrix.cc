@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocalNeighborsDifferencesVMatrix.cc,v 1.6 2004/07/21 20:32:53 tihocan Exp $ 
+   * $Id: LocalNeighborsDifferencesVMatrix.cc,v 1.7 2004/08/02 16:17:29 monperrm Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus
@@ -49,7 +49,7 @@ using namespace std;
 
 
 LocalNeighborsDifferencesVMatrix::LocalNeighborsDifferencesVMatrix()
-  :inherited(), n_neighbors(-1)
+  :inherited(), n_neighbors(-1), concat_neighbors(false)
   /* ### Initialise all fields to their default value */
 {
 }
@@ -61,30 +61,50 @@ PLEARN_IMPLEMENT_OBJECT(LocalNeighborsDifferencesVMatrix,
                         "between one of the nearest neighbors of x in the source and x itself.\n"
                         );
 
-void LocalNeighborsDifferencesVMatrix::getNewRow(int i, const Vec& v) const
-{
-  if (width_<0)
-    PLERROR("LocalNeighborsDifferencesVMatrix::getNewRow called but build was not done yet");
-  Mat differences = v.toMat(n_neighbors,source->width());
-  neighbor_row.resize(source->width());
-  ith_row.resize(source->width());
-  source->getRow(i,ith_row);
-  for (int k=0;k<n_neighbors;k++)
+  void LocalNeighborsDifferencesVMatrix::getNewRow(int i, const Vec& v) const
   {
-    Vec diff_k = differences(k);
-    source->getRow(neighbors(i,k),neighbor_row);
-    substract(neighbor_row,ith_row, diff_k);
-    // normalize result
-    // now it's done in ProjectionErrorVariable diff_k /= norm(diff_k);
+    if (width_<0)
+      PLERROR("LocalNeighborsDifferencesVMatrix::getNewRow called but build was not done yet");
+    if (concat_neighbors)
+      {
+        // resize des varaibles
+        //v.resize(source->width()); //we assume that the vector has already the good size
+        neighbor_row.resize(source->width());
+        ith_row.resize(source->width());
+        diff_k = v;
+        // recuperation de ce qu'il faut
+        source->getRow(i,ith_row);
+        source->getRow(neighbors(i,n_neighbors-1),neighbor_row);
+        
+        // on renvoie la valeur
+        substract(neighbor_row,ith_row, diff_k);
+
+      }
+    else
+      {
+        // vue en matrice du vecteur de sortie, ca pointe sur les memes donnees.
+        Mat differences = v.toMat(n_neighbors,source->width());
+        neighbor_row.resize(source->width());
+        ith_row.resize(source->width());
+        source->getRow(i,ith_row);
+        for (int k=0;k<n_neighbors;k++)
+          {
+            diff_k = differences(k);
+            source->getRow(neighbors(i,k),neighbor_row);
+            substract(neighbor_row,ith_row, diff_k);
+            // normalize result
+            // now it's done in ProjectionErrorVariable diff_k /= norm(diff_k);
+          }
+      }
   }
-}
 
 void LocalNeighborsDifferencesVMatrix::declareOptions(OptionList& ol)
 {
   declareOption(ol, "n_neighbors", &LocalNeighborsDifferencesVMatrix::n_neighbors, OptionBase::buildoption,
                 "Number of nearest neighbors. Determines the width of this vmatrix, which\n"
                 "is source->width() * n_neighbors.\n");
-
+  declareOption(ol, "concat_neighbors", &LocalNeighborsDifferencesVMatrix::concat_neighbors, OptionBase::buildoption,
+                "If true, returns the concatenation of nearest neighbors(x) -x  from 1 to n_neighbors , else, returns the n_neighbor nearest neighbor(x) - x");
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
 }
@@ -95,8 +115,12 @@ void LocalNeighborsDifferencesVMatrix::build_()
   if (source && (neighbors.length()==0 || source->length()!=length_ || source->width()*n_neighbors!=width_))
       // will not work if source is changed but has the same dimensions
   {
+    if (concat_neighbors)
+      width_ = source->width();      
+    else
+      width_ = source->width()*n_neighbors;
+      
     length_ = source->length();
-    width_ = source->width()*n_neighbors;
     neighbors.resize(source->length(),n_neighbors);
     a_row.resize(source->width());
     for (int i=0;i<source->length();i++)
