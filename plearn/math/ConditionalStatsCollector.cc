@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalStatsCollector.cc,v 1.2 2004/01/29 18:13:02 plearner Exp $ 
+   * $Id: ConditionalStatsCollector.cc,v 1.3 2004/02/18 01:19:46 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -237,20 +237,24 @@ void ConditionalStatsCollector::update(const Vec& v, real weight)
 
     counts[k](i,j)+=weight;
     if(!is_missing(val))
-    {
-      sums[k](i,j) += weight*val;
-      sums_condvar[k](j,i) += weight*val;
-      sumsquares[k](i,j) += weight*square(val);
-      sumsquares_condvar[k](j,i) += weight*square(val);
-      if(val<minima[k](i,j))
-        minima[k](i,j) = val;
-      if(condvar_val<minima_condvar[k](j,i))
-        minima_condvar[k](j,i) = condvar_val;
-      if(val>maxima[k](i,j))
-        maxima[k](i,j) = val;
-      if(condvar_val>maxima_condvar[k](j,i))
-        maxima_condvar[k](j,i) = condvar_val;
-    }
+      {
+        sums[k](i,j) += weight*val;
+        sumsquares[k](i,j) += weight*square(val);
+        if(val<minima[k](i,j))
+          minima[k](i,j) = val;
+        if(val>maxima[k](i,j))
+          maxima[k](i,j) = val;
+      }
+
+    if(!is_missing(condvar_val))
+      {
+        sums_condvar[k](j,i) += weight*condvar_val;
+        sumsquares_condvar[k](j,i) += weight*square(condvar_val);
+        if(condvar_val<minima_condvar[k](j,i))
+          minima_condvar[k](j,i) = condvar_val;
+        if(condvar_val>maxima_condvar[k](j,i))
+          maxima_condvar[k](j,i) = condvar_val;
+      }
   }
 }
 
