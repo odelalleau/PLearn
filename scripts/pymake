@@ -1438,8 +1438,7 @@ for target in otherargs:
 
         if create_dll:
             print '++++ Creating DLL of', target
-            for target in list_of_targets:
-                sequential_dll(file_info(target))
+            sequential_dll(file_info(target))
 
         if temp_objs:
             os.system('chmod 777 '+objsdir+'/*')
