@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.cc,v 1.5 2003/11/12 18:39:28 tihocan Exp $
+ * $Id: LiftStatsCollector.cc,v 1.6 2003/11/19 19:02:36 tihocan Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -251,26 +251,28 @@ void LiftStatsCollector::update(const Vec& x, real w)
     n_first_updates.resize(MAX(1000,10*n_first_updates.length()), 2);
   }
   real output_val = x[output_column];
+  real target = -1;
   switch(sign_trick) {
     case 0:
       // Normal behavior.
       n_first_updates(nstored, 0) = output_val;
-      n_first_updates(nstored, 1) = x[target_column];
+      target = x[target_column];
       break;
     case 1:
       // Sign trick.
       n_first_updates(nstored, 0) = FABS(output_val);
       if (output_val <= 0) {
-        n_first_updates(nstored, 1) = 0;
+        target = 0;
       } else {
-        n_first_updates(nstored, 1) = 1;
+        target = 1;
       }
       break;
     default:
       PLERROR("Wrong value for sign_trick in LiftStatsCollector");
       break;
   }
-  if (x[target_column] != 0 && x[target_column] != 1) {
+  n_first_updates(nstored, 1) = target;
+  if (target != 0 && target != 1) {
     PLERROR("In LiftStatsCollector::update Target must be 0 or 1 !");
   }
   nsamples++;
