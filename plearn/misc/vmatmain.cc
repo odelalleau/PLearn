@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.33 2004/08/04 13:21:41 tihocan Exp $
+   * $Id: vmatmain.cc,v 1.34 2004/08/13 13:54:18 tihocan Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -83,7 +83,7 @@ int print_diff(ostream& out, VMat m1, VMat m2, double tolerance)
       for(int j=0; j<w; j++)
         {
           double d = v1[j]-v2[j];
-          if(fabs(d)>tolerance)
+          if(fabs(d)>tolerance || (is_missing(v1[j]) && !is_missing(v2[j])) || (is_missing(v2[j]) && !is_missing(v1[j])))
             {
               out << "Elements at " << i << ',' << j << " differ by " << d << endl;
               ++ndiff;
