@@ -168,6 +168,8 @@ optionalLibrary( name = 'X',
 )
 
 # Operating system as defined by Torch when creating libraries.
+if platform=='win32': ## os.uname is not defined under Windows...
+  os.uname = lambda: ('Win32',)
 torch_os = os.uname()[0]
 
 # Base for the directory where we can find the Torch library.
