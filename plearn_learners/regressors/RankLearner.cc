@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RankLearner.cc,v 1.4 2004/11/10 15:06:07 tihocan Exp $ 
+   * $Id: RankLearner.cc,v 1.5 2004/11/30 16:13:46 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -119,7 +119,7 @@ void RankLearner::computeCostsFromOutputs(const Vec& input, const Vec& output,
   static real desired_rank, val, frac;
   static int n, left, right, mid;
   // Find the desired rank.
-  val = output[0];
+  val = target[0];
   n = sorted_targets.length();
   if (val <= sorted_targets[0])
     // Lowest than all targets.
