@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Train.cc,v 1.1 2004/08/05 13:52:18 monperrm Exp $ 
+   * $Id: Train.cc,v 1.2 2004/08/06 15:38:57 monperrm Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus
@@ -41,7 +41,7 @@
 /*! \file Train.cc */
 
 
-#include "plearn/misc/Train.h"
+#include "Train.h"
 #include "plearn/db/getDataSet.h"
 
 namespace PLearn {
