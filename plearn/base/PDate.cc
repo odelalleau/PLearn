@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDate.cc,v 1.11 2005/03/29 15:08:24 plearner Exp $
+   * $Id: PDate.cc,v 1.12 2005/03/29 16:25:12 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -71,7 +71,7 @@ PDate::PDate(int julian_day)
 
 PDate::PDate(string date)
 {
-  date = remobeblanks(date);
+  date = removeblanks(date);
 
   // Format "2003/01/27"
   if (date.size() == 10 && date[4] == '/' && date[7] == '/') 
