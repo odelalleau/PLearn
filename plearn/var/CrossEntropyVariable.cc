@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: CrossEntropyVariable.cc,v 1.8 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: CrossEntropyVariable.cc,v 1.9 2004/03/04 19:31:07 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -73,15 +73,7 @@ void CrossEntropyVariable::fprop()
     if ((output == 0.0 && target != 0) || (output == 1.0 && target != 1))
       PLERROR("CrossEntropyVariable::fprop: model output is either exactly "
               "0.0 or 1.0; cannot compute cost function");
-    if (output == 0) {
-      if (target != 0) {
-        cost -= 1e9;  // Arbitrary low value (negated into high below)
-      }
-    } else if (output == 1) {
-      if (target != 1) {
-        cost -= 1e9;  // Arbitrary low value (negated into high below)
-      }
-    } else {
+    if (output != 0 && output != 1) {
       cost += target*log(output) + (1.0-target)*log(1.0-output);
     }
   }
