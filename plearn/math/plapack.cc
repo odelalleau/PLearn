@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: plapack.cc,v 1.5 2003/01/29 03:14:27 plearner Exp $
+   * $Id: plapack.cc,v 1.6 2003/01/29 20:52:36 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,6 +49,8 @@ using namespace std;
 int eigen_SymmMat(Mat& in, Vec& e_value, Mat& e_vector, int& n_evalues_found,
                   bool compute_all, int nb_eigen, bool compute_vectors, bool largest_evalues)
 {
+  PLWARNING("eigen_SymmMat is deprecated: use eigenVecOfSymmMat or lapackEIGEN instead");
+
 #ifdef NOLAPACK
   PLERROR("eigen_SymmMat: LAPACK not available on this system!");
   return 0;
@@ -165,12 +167,7 @@ int eigen_SymmMat(Mat& in, Vec& e_value, Mat& e_vector, int& n_evalues_found,
     int* IFAIL = new int[N];
 
     // we now call the LAPACK Fortran function <ssyevx>
-#ifdef USEFLOAT
-    ssyevx_(JOBZ, RANGE, UPLO, &N, A, &LDA, &VL, &VU, &IL, &IU, &ABSTOL, &M, W, Z, &LDZ, WORK, &LWORK, IWORK, IFAIL, &INFO);
-#endif
-#ifdef USEDOUBLE
-    dsyevx_(JOBZ, RANGE, UPLO, &N, A, &LDA, &VL, &VU, &IL, &IU, &ABSTOL, &M, W, Z, &LDZ, WORK, &LWORK, IWORK, IFAIL, &INFO);
-#endif
+    lapack_Xsyevx_(JOBZ, RANGE, UPLO, &N, A, &LDA, &VL, &VU, &IL, &IU, &ABSTOL, &M, W, Z, &LDZ, WORK, &LWORK, IWORK, IFAIL, &INFO);
 
     n_evalues_found = M;
     if (M != nb_eigen)
@@ -210,191 +207,13 @@ int eigen_SymmMat(Mat& in, Vec& e_value, Mat& e_vector, int& n_evalues_found,
 int eigen_SymmMat_decreasing(Mat& in, Vec& e_value, Mat& e_vector, int& n_evalues_found,
                              bool compute_all, int nb_eigen, bool compute_vectors, bool largest_evalues)
 {
+  PLWARNING("eigen_SymmMat_decreasing is deprecated: use eigenVecOfSymmMat or lapackEIGEN instead");
+
   int res = eigen_SymmMat(in, e_value, e_vector, n_evalues_found,
                           compute_all, nb_eigen, compute_vectors, largest_evalues);
   e_value.swap();
   e_vector.swapUpsideDown();
   return res;
-}
-
-void eigenVecOfSymmMat(Mat& m, int k, Vec& eigen_values, Mat& eigen_vectors)
-{
-  eigen_vectors.resize(k,m.width());
-  // FASTER
-  if(k>= m.width())
-    lapackEIGEN(m, eigen_values, eigen_vectors);
-  else
-    lapackEIGEN(m, eigen_values, eigen_vectors, 'I', m.width()-k, m.width()-1);
-
-  // put largest (rather than smallest) first!
-  eigen_values.swap();
-  eigen_vectors.swapUpsideDown();
-}
-
-
-void lapackEIGEN(const TMat<double>& A, TVec<double>& eigenvals, TMat<double>& eigenvecs, char RANGE, double low, double high, double ABSTOL)
-{
-
-#ifdef BOUNDCHECK
-  if(A.length()!=A.width())
-    PLERROR("In lapackEIGEN length and width of A differ, it should be symmetric!");
-#endif
-
-  char JOBZ = eigenvecs.isEmpty() ?'N' :'V';
-  char UPLO = 'U';
-  int N = A.length();
-  int LDA = A.mod();
-
-  int IL=0, IU=0;
-  double VL=0, VU=0;
-
-  eigenvals.resize(N);
-  int M; // The number of eigenvalues returned
-
-  switch(RANGE)
-    {
-    case 'A':
-      if(JOBZ=='V')
-        eigenvecs.resize(N, N);
-      break;
-    case 'I':
-      IL = int(low)+1; // +1 because fortran indexes start at 1
-      IU = int(high)+1;
-      if(JOBZ=='V')
-        eigenvecs.resize(IU-IL+1, N);
-      break;
-    case 'V':
-      VL = low;
-      VU = high;
-      if(JOBZ=='V')
-        eigenvecs.resize(N, N);
-      break;
-    default:
-      PLERROR("In lapackEIGEN: invalid RANGE character: %c",RANGE);
-    }
-  
-  double* Z = 0;
-  int LDZ = 1;
-  if(eigenvecs)
-    {
-      Z = eigenvecs.data();
-      LDZ = eigenvecs.mod();
-    }
-
-  // temporary work vectors
-  static TVec<double> WORK;
-  static TVec<int> IWORK;
-  static TVec<int> IFAIL;
-
-  WORK.resize(1);
-  IWORK.resize(5*N);
-  IFAIL.resize(N);
-
-  int LWORK = -1;
-  int INFO;
-
-
-  // first call to find optimal work size
-  //  cerr << '(';
-  dsyevx_( &JOBZ, &RANGE, &UPLO, &N, A.data(), &LDA,  &VL,  &VU,
-           &IL,  &IU,  &ABSTOL,  &M,  eigenvals.data(), Z, &LDZ, 
-           WORK.data(), &LWORK, IWORK.data(), IFAIL.data(), &INFO );
-  // cerr << ')';
-
-  if(INFO!=0)
-    PLERROR("In lapackEIGEN, problem in first call to sgesdd_ to get optimal work size, returned INFO = %d",INFO); 
-  
-  // make sure we have enough space
-  LWORK = (int) WORK[0]; // optimal size
-  WORK.resize(LWORK);
-
-  // second call to do the computation
-  // cerr << '{';
-  dsyevx_( &JOBZ, &RANGE, &UPLO, &N, A.data(), &LDA,  &VL,  &VU,
-           &IL,  &IU,  &ABSTOL,  &M,  eigenvals.data(), Z, &LDZ, 
-           WORK.data(), &LWORK, IWORK.data(), IFAIL.data(), &INFO );
-  // cerr << '}';
-
-  if(INFO!=0)
-    PLERROR("In lapackEIGEN, problem when calling sgesdd_ to perform computation, returned INFO = %d",INFO); 
-
-  eigenvals.resize(M);
-  if(JOBZ=='V')
-    eigenvecs.resize(M, N);
-}
-
-void lapackSVD(const TMat<double>& At, TMat<double>& Ut, TVec<double>& S, TMat<double>& V, char JOBZ)
-{            
-  int M = At.width();
-  int N = At.length();
-  int LDA = At.mod();
-  int min_M_N = min(M,N);
-  S.resize(min_M_N);
-
-  switch(JOBZ)
-    {
-    case 'A':
-      Ut.resize(M,M);
-      V.resize(N,N);
-      break;
-    case 'S':
-      Ut.resize(min_M_N, M);
-      V.resize(N, min_M_N);
-      break;
-    case 'O':
-      if(M<N)
-        Ut.resize(M,M); // and V is not used      
-      else
-        V.resize(N,N); // and Ut is not used
-      break;
-    case 'N':
-      break;
-    default:
-      PLERROR("In lapackSVD, bad JOBZ argument : %c",JOBZ);
-    }
-
-
-  int LDU = 1;
-  int LDVT = 1;
-  double* U = 0;
-  double* VT = 0;
-
-  if(V)
-    {
-      LDVT = V.mod();
-      VT = V.data();
-    }
-  if(Ut)
-    {
-      LDU = Ut.mod();
-      U = Ut.data();
-    }
-
-  static TVec<double> WORK;
-  WORK.resize(1);
-  int LWORK = -1;
-
-  static TVec<int> IWORK;
-  IWORK.resize(8*min_M_N);
-
-  int INFO;
-
-  // first call to find optimal work size
-  dgesdd_(&JOBZ, &M, &N, At.data(), &LDA, S.data(), U, &LDU, VT, &LDVT, WORK.data(), &LWORK, IWORK.data(), &INFO );
-
-  if(INFO!=0)
-    PLERROR("In lapackSVD, problem in first call to sgesdd_ to get optimal work size, returned INFO = %d",INFO); 
-  
-  // make sure we have enough space
-  LWORK = (int) WORK[0]; // optimal size
-  WORK.resize(LWORK);
-  // cerr << "Optimal WORK size: " << LWORK << endl;
-
-  // second call to do the computation
-  dgesdd_(&JOBZ, &M, &N, At.data(), &LDA, S.data(), U, &LDU, VT, &LDVT, WORK.data(), &LWORK, IWORK.data(), &INFO );
-
-  if(INFO!=0)
-    PLERROR("In lapackSVD, problem when calling sgesdd_ to perform computation, returned INFO = %d",INFO); 
 }
 
 int matInvert(Mat& in, Mat& inverse)

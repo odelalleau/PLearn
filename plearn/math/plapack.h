@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plapack.h,v 1.7 2003/01/29 03:14:27 plearner Exp $
+   * $Id: plapack.h,v 1.8 2003/01/29 20:52:37 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,45 +51,25 @@
 namespace PLearn <%
 using namespace std;
 
+// Direct lapack calls, type independent
+inline void lapack_Xsyevx_(char* JOBZ, char* RANGE, char* UPLO, int* N, double* A, int* LDA, double* VL, double* VU, int* IL, int* IU, double* ABSTOL, int* M, double* W, double* Z, int* LDZ, double* WORK, int* LWORK, int* IWORK, int* IFAIL, int* INFO)
+{ dsyevx_(JOBZ, RANGE, UPLO, N, A, LDA, VL, VU, IL, IU, ABSTOL, M, W, Z, LDZ, WORK, LWORK, IWORK, IFAIL, INFO); }
 
-/*!   This function compute some or all eigenvalues (and optionnaly the
-  corresponding eigenvectors) of a symmetric matrix. The eigenvectors
-  are returned in the ROWS of e_vector.
-  
-  Note1: If compute_all==true, then the field nb_eigen will not be used.
-  
-  Note2: Your input matrix `in' will be over-written
-  
-  Note3: If compute_all=false only some eigen-values (and optionally e-vectors)
-         are computed. This flag allows to select whether those largest in magnitude
-          (the default) or smallest in magnitude are selected.
-  
-  Note4: This function is slightly modified. Now, you do not have to check 
-         if your input matrix is symmetric or not. 
-  Note5: The vectors and eigenvalues seem to be sorted in increasing order (
-*/
-int eigen_SymmMat(Mat& in, Vec& e_value, Mat& e_vector, int& n_evalues_found, 
-                  bool compute_all, int nb_eigen, bool compute_vectors = true,
-                  bool largest_evalues=true);
+inline void lapack_Xsyevx_(char* JOBZ, char* RANGE, char* UPLO, int* N, float* A, int* LDA, float* VL, float* VU, int* IL, int* IU, float* ABSTOL, int* M, float* W, float* Z, int* LDZ, float* WORK, int* LWORK, int* IWORK, int* IFAIL, int* INFO)
+{ ssyevx_(JOBZ, RANGE, UPLO, N, A, LDA, VL, VU, IL, IU, ABSTOL, M, W, Z, LDZ, WORK, LWORK, IWORK, IFAIL, INFO); }
 
-//!  same as the previous call, but eigenvalues/vectors are sorted by largest firat (in decreasing order)
-int eigen_SymmMat_decreasing(Mat& in, Vec& e_value, Mat& e_vector, int& n_evalues_found, 
-                  bool compute_all, int nb_eigen, bool compute_vectors = true,
-                  bool largest_evalues=true);
+inline void lapack_Xgesdd_(char* JOBZ, int* M, int* N, double* A, int* LDA, double* S, double* U, int* LDU, double* VT, int* LDVT, double* WORK, int* LWORK, int* IWORK, int* INFO)
+{ dgesdd_(JOBZ, M, N, A, LDA, S, U, LDU, VT, LDVT, WORK, LWORK, IWORK, INFO); }
+
+inline void lapack_Xgesdd_(char* JOBZ, int* M, int* N, float* A, int* LDA, float* S, float* U, int* LDU, float* VT, int* LDVT, float* WORK, int* LWORK, int* IWORK, int* INFO)
+{ sgesdd_(JOBZ, M, N, A, LDA, S, U, LDU, VT, LDVT, WORK, LWORK, IWORK, INFO); }
 
 
-//! Computes up to k largest eigen_values and corresponding eigen_vectors of symmetric matrix m. 
-//! Parameters eigen_values and eigen_vectors are resized accordingly and filled by the call.
-//! The eigenvalues are returned in decreasing order (largest first).
-//! The corresponding eigenvectors are in the *ROWS* of eigen_vectors
-//! WARNING: m is destroyed during the operation.
-void eigenVecOfSymmMat(Mat& m, int k, Vec& eigen_values, Mat& eigen_vectors);
 
-
-//!   Computes the eigenvalues and eigenvectors of a symmetric (NxN) matrix A.
-//!   BEWARE: The content of A is destroyed by the call.
-/*!   ATTENTION: uses TVec<double>::tmpvec1,2 don't use them in caller
-
+//!  Computes the eigenvalues and eigenvectors of a symmetric (NxN) matrix A.
+//!  BEWARE: The content of A is destroyed by the call.
+//!  NOTE: you may wish to use the simpler call eigenVecOfSymmMat
+/*! 
   Meaning of RANGE: 
      'A': all eigenvalues will be found.
      'V': all eigenvalues in the half-open interval (low,high] will be found. 
@@ -104,7 +84,124 @@ void eigenVecOfSymmMat(Mat& m, int k, Vec& eigen_values, Mat& eigen_vectors);
   And eigenvecs (unless initially null) will be resized to an MxN matrix 
   containing the corresponding M eigenvectors in its *rows*.
 */
-void lapackEIGEN(const TMat<double>& A, TVec<double>& eigenvals, TMat<double>& eigenvecs, char RANGE='A', double low=0, double high=0, double ABSTOL=1e-6);
+
+// (will work for float and double)
+template<class num_t>
+void lapackEIGEN(const TMat<num_t>& A, TVec<num_t>& eigenvals, TMat<num_t>& eigenvecs, char RANGE='A', num_t low=0, num_t high=0, num_t ABSTOL=1e-6)
+{
+
+#ifdef BOUNDCHECK
+  if(A.length()!=A.width())
+    PLERROR("In lapackEIGEN length and width of A differ, it should be symmetric!");
+#endif
+
+  char JOBZ = eigenvecs.isEmpty() ?'N' :'V';
+  char UPLO = 'U';
+  int N = A.length();
+  int LDA = A.mod();
+
+  int IL=0, IU=0;
+  num_t VL=0, VU=0;
+
+  eigenvals.resize(N);
+  int M; // The number of eigenvalues returned
+
+  switch(RANGE)
+    {
+    case 'A':
+      if(JOBZ=='V')
+        eigenvecs.resize(N, N);
+      break;
+    case 'I':
+      IL = int(low)+1; // +1 because fortran indexes start at 1
+      IU = int(high)+1;
+      if(JOBZ=='V')
+        eigenvecs.resize(IU-IL+1, N);
+      break;
+    case 'V':
+      VL = low;
+      VU = high;
+      if(JOBZ=='V')
+        eigenvecs.resize(N, N);
+      break;
+    default:
+      PLERROR("In lapackEIGEN: invalid RANGE character: %c",RANGE);
+    }
+  
+  num_t* Z = 0;
+  int LDZ = 1;
+  if(eigenvecs)
+    {
+      Z = eigenvecs.data();
+      LDZ = eigenvecs.mod();
+    }
+
+  // temporary work vectors
+  static TVec<num_t> WORK;
+  static TVec<int> IWORK;
+  static TVec<int> IFAIL;
+
+  WORK.resize(1);
+  IWORK.resize(5*N);
+  IFAIL.resize(N);
+
+  int LWORK = -1;
+  int INFO;
+
+
+  // first call to find optimal work size
+  //  cerr << '(';
+  lapack_Xsyevx_( &JOBZ, &RANGE, &UPLO, &N, A.data(), &LDA,  &VL,  &VU,
+           &IL,  &IU,  &ABSTOL,  &M,  eigenvals.data(), Z, &LDZ, 
+           WORK.data(), &LWORK, IWORK.data(), IFAIL.data(), &INFO );
+  // cerr << ')';
+
+  if(INFO!=0)
+    PLERROR("In lapackEIGEN, problem in first call to sgesdd_ to get optimal work size, returned INFO = %d",INFO); 
+  
+  // make sure we have enough space
+  LWORK = (int) WORK[0]; // optimal size
+  WORK.resize(LWORK);
+
+  // second call to do the computation
+  // cerr << '{';
+  lapack_Xsyevx_( &JOBZ, &RANGE, &UPLO, &N, A.data(), &LDA,  &VL,  &VU,
+           &IL,  &IU,  &ABSTOL,  &M,  eigenvals.data(), Z, &LDZ, 
+           WORK.data(), &LWORK, IWORK.data(), IFAIL.data(), &INFO );
+  // cerr << '}';
+
+  if(INFO!=0)
+    PLERROR("In lapackEIGEN, problem when calling sgesdd_ to perform computation, returned INFO = %d",INFO); 
+
+  eigenvals.resize(M);
+  if(JOBZ=='V')
+    eigenvecs.resize(M, N);
+}
+
+
+//! Computes up to k largest eigen_values and corresponding eigen_vectors of symmetric matrix m. 
+//! Parameters eigen_values and eigen_vectors are resized accordingly and filled by the call.
+//! The eigenvalues are returned in decreasing order (largest first).
+//! The corresponding eigenvectors are in the *ROWS* of eigen_vectors
+//! WARNING: m is destroyed during the operation.
+
+// (will work for float and double)
+template<class num_t>
+void eigenVecOfSymmMat(TMat<num_t>& m, int k, TVec<num_t>& eigen_values, TMat<num_t>& eigen_vectors)
+{
+  eigen_vectors.resize(k,m.width());
+  // FASTER
+  if(k>= m.width())
+    lapackEIGEN(m, eigen_values, eigen_vectors);
+  else
+    lapackEIGEN(m, eigen_values, eigen_vectors, 'I', num_t(m.width()-k), num_t(m.width()-1));
+
+  // put largest (rather than smallest) first!
+  eigen_values.swap();
+  eigen_vectors.swapUpsideDown();
+}
+
+
 
 /*! Performs the SVD decomposition A = U.S.Vt
   See SVD(...) for more details.
@@ -117,7 +214,82 @@ were getting back the transpose of U (Ut) and V.
 If you want a version without the funny transposes, look at SVD (which
 simply calls this one with a different order of parameters...)  
 */
-void lapackSVD(const TMat<double>& At, TMat<double>& Ut, TVec<double>& S, TMat<double>& V, char JOBZ='A');
+
+// (will work for float and double)
+template<class num_t>
+void lapackSVD(const TMat<num_t>& At, TMat<num_t>& Ut, TVec<num_t>& S, TMat<num_t>& V, char JOBZ='A')
+{            
+  int M = At.width();
+  int N = At.length();
+  int LDA = At.mod();
+  int min_M_N = min(M,N);
+  S.resize(min_M_N);
+
+  switch(JOBZ)
+    {
+    case 'A':
+      Ut.resize(M,M);
+      V.resize(N,N);
+      break;
+    case 'S':
+      Ut.resize(min_M_N, M);
+      V.resize(N, min_M_N);
+      break;
+    case 'O':
+      if(M<N)
+        Ut.resize(M,M); // and V is not used      
+      else
+        V.resize(N,N); // and Ut is not used
+      break;
+    case 'N':
+      break;
+    default:
+      PLERROR("In lapackSVD, bad JOBZ argument : %c",JOBZ);
+    }
+
+
+  int LDU = 1;
+  int LDVT = 1;
+  num_t* U = 0;
+  num_t* VT = 0;
+
+  if(V)
+    {
+      LDVT = V.mod();
+      VT = V.data();
+    }
+  if(Ut)
+    {
+      LDU = Ut.mod();
+      U = Ut.data();
+    }
+
+  static TVec<num_t> WORK;
+  WORK.resize(1);
+  int LWORK = -1;
+
+  static TVec<int> IWORK;
+  IWORK.resize(8*min_M_N);
+
+  int INFO;
+
+  // first call to find optimal work size
+  lapack_Xgesdd_(&JOBZ, &M, &N, At.data(), &LDA, S.data(), U, &LDU, VT, &LDVT, WORK.data(), &LWORK, IWORK.data(), &INFO );
+
+  if(INFO!=0)
+    PLERROR("In lapackSVD, problem in first call to sgesdd_ to get optimal work size, returned INFO = %d",INFO); 
+  
+  // make sure we have enough space
+  LWORK = (int) WORK[0]; // optimal size
+  WORK.resize(LWORK);
+  // cerr << "Optimal WORK size: " << LWORK << endl;
+
+  // second call to do the computation
+  lapack_Xgesdd_(&JOBZ, &M, &N, At.data(), &LDA, S.data(), U, &LDU, VT, &LDVT, WORK.data(), &LWORK, IWORK.data(), &INFO );
+
+  if(INFO!=0)
+    PLERROR("In lapackSVD, problem when calling sgesdd_ to perform computation, returned INFO = %d",INFO); 
+}
 
 //! Performs the SVD decomposition A = U.S.Vt
 //! Where U and Vt are orthonormal matrices.
@@ -151,11 +323,44 @@ Relationships between SVD(A) and eigendecomposition of At.A and A.At
   -> columns of V (rows of Vt) are the eigenvectors of At.A
   -> columns of U are the eigenvectors of A.At
 */
-inline void SVD(const TMat<double>& A, TMat<double>& U, TVec<double>& S, TMat<double>& Vt, char JOBZ='A')
+
+// (will work for float and double)
+template<class num_t>
+inline void SVD(const TMat<num_t>& A, TMat<num_t>& U, TVec<num_t>& S, TMat<num_t>& Vt, char JOBZ='A')
 {
   // A = U.S.Vt  -> At = V.S.Ut
   lapackSVD(A,Vt,S,U,JOBZ);
 }
+
+
+//  DO  NOT USE! 
+// eigen_SymmMat is deprecated: use eigenVecOfSymmMat or lapackEIGEN instead");
+/*!   This function compute some or all eigenvalues (and optionnaly the
+  corresponding eigenvectors) of a symmetric matrix. The eigenvectors
+  are returned in the ROWS of e_vector.
+  
+  Note1: If compute_all==true, then the field nb_eigen will not be used.
+  
+  Note2: Your input matrix `in' will be over-written
+  
+  Note3: If compute_all=false only some eigen-values (and optionally e-vectors)
+         are computed. This flag allows to select whether those largest in magnitude
+          (the default) or smallest in magnitude are selected.
+  
+  Note4: This function is slightly modified. Now, you do not have to check 
+         if your input matrix is symmetric or not. 
+  Note5: The vectors and eigenvalues seem to be sorted in increasing order (
+*/
+int eigen_SymmMat(Mat& in, Vec& e_value, Mat& e_vector, int& n_evalues_found, 
+                  bool compute_all, int nb_eigen, bool compute_vectors = true,
+                  bool largest_evalues=true);
+
+//  DO  NOT USE! 
+// eigen_SymmMat_decreasing is deprecated: use eigenVecOfSymmMat or lapackEIGEN instead");
+//!  same as the previous call, but eigenvalues/vectors are sorted by largest firat (in decreasing order)
+int eigen_SymmMat_decreasing(Mat& in, Vec& e_value, Mat& e_vector, int& n_evalues_found, 
+                  bool compute_all, int nb_eigen, bool compute_vectors = true,
+                  bool largest_evalues=true);
 
 //!  This function compute the inverse of a matrix.
 int matInvert(Mat& in, Mat& inverse);
