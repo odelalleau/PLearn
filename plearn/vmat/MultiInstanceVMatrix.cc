@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MultiInstanceVMatrix.cc,v 1.5 2004/03/04 14:43:17 yoshua Exp $ 
+   * $Id: MultiInstanceVMatrix.cc,v 1.6 2004/03/08 14:44:19 lheureup Exp $ 
    ******************************************************* */
 
 // Authors: Norman Casagrande
@@ -186,6 +186,7 @@ void MultiInstanceVMatrix::build_()
 
     configs_.push_back(configNum);
     
+	 // get the actual data columns + the target
     mat_i = data_[lineNum];
     for(i = 0; i < inputsize_ + source_targetsize; i++)
     {
@@ -193,6 +194,7 @@ void MultiInstanceVMatrix::build_()
       mat_i[i] = strtod(inp_element.c_str(), 0);
     }
 
+	 // close the last bag if necessary
     if (lineNum+1==nRows)
       {
         if (nComp > 1)
