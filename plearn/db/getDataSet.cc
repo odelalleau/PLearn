@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.20 2004/06/18 16:39:19 tihocan Exp $
+   * $Id: getDataSet.cc,v 1.21 2004/06/18 19:08:23 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -218,7 +218,7 @@ VMat getDataSet(const string& datasetstring, const string& alias)
       }
   }
   
-  vm->loadAllStringMappings(); // let's comment this until bug fixed by Julien
+  vm->loadAllStringMappings();
   vm->setAlias(alias);
   vm->unduplicateFieldNames();
   return vm;
