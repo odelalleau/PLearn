@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.cc,v 1.20 2004/07/09 22:14:19 monperrm Exp $
+   * $Id: MemoryVMatrix.cc,v 1.21 2004/07/26 20:09:56 tihocan Exp $
    ******************************************************* */
 
 #include "MemoryVMatrix.h"
@@ -81,7 +81,9 @@ void MemoryVMatrix::declareOptions(OptionList& ol)
 
 void MemoryVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
+  inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(data, copies);
+  deepCopyField(data_vm, copies);
 }
 
 ////////////
