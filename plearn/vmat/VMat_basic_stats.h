@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMat_basic_stats.h,v 1.1 2004/09/27 20:19:28 plearner Exp $ 
+   * $Id: VMat_basic_stats.h,v 1.2 2005/03/16 17:08:55 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -130,7 +130,13 @@ Array<Mat> computeConditionalMeans(VMat trainset, int targetsize, Mat& basic_sta
 
 //! Compute the correlations between each of the columns of x and each of the 
 //! columns of y. The results are in the x.width() by y.width() matrix r.
-void correlations(const VMat& x, const VMat& y, Mat& r, Mat& pvalues);
+//! The p-values of the corresponding test (no correlation) are stored 
+//! in the same-sized matrix pvalues.
+//! If 'ignore_missing' is set to true, for each pair of columns, only rows
+//! which have non-missing values will be taken into account.
+//! This method should not be called with 'ignore_missing' set to false if there
+//! are missing values in the VMats.
+void correlations(const VMat& x, const VMat& y, Mat& r, Mat& pvalues, bool ignore_missing = false);
 
 } // end of namespace PLearn
 #endif

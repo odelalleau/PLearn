@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMat_basic_stats.cc,v 1.2 2005/03/11 19:20:28 tihocan Exp $ 
+   * $Id: VMat_basic_stats.cc,v 1.3 2005/03/16 17:08:54 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -620,12 +620,12 @@ VMat normalize(VMat d, int inputsize, int ntrain)
 VMat normalize(VMat d, int inputsize) 
 { return normalize(d,inputsize,d.length()); }
 
-//! Compute the correlations between each of the columns of x and each of the 
-//! columns of y. The results are in the x.width() by y.width() matrix r.
-//! The p-values of the corresponding test (no correlation) are stored 
-//! in the same-sized matrix pvalues.
-void correlations(const VMat& x, const VMat& y, Mat& r, Mat& pvalues)
+//////////////////
+// correlations //
+//////////////////
+void correlations(const VMat& x, const VMat& y, Mat& r, Mat& pvalues, bool ignore_missing)
 {
+  TMat<int> n_nonmissing; // Store the number of non-missing values for each pair.
   int n=x.length();
   if (n!=y.length())
     PLERROR("correlations: x and y must have the same length");
@@ -640,6 +640,19 @@ void correlations(const VMat& x, const VMat& y, Mat& r, Mat& pvalues)
   Vec sy(wy);
   Vec xt(wx);
   Vec yt(wy);
+  Mat sy_m, sx_m, sy2_m, sx2_m;
+  if (ignore_missing) {
+    n_nonmissing.resize(wx, wy);
+    sy_m.resize(wx, wy);
+    sy2_m.resize(wx, wy);
+    sx_m.resize(wx, wy);
+    sx2_m.resize(wx, wy);
+    n_nonmissing.fill(0);
+    sy_m.fill(0);
+    sy2_m.fill(0);
+    sx_m.fill(0);
+    sx2_m.fill(0);
+  }
   for (int t=0;t<n;t++)
   {
     x->getRow(t,xt);
@@ -647,34 +660,69 @@ void correlations(const VMat& x, const VMat& y, Mat& r, Mat& pvalues)
     for (int j=0;j<wy;j++)
     {
       real ytj = yt[j];
-      sy[j] += ytj;
-      sy2[j] += ytj*ytj;
+      if (!ignore_missing) {
+#ifdef BOUNDCHECK
+        if (is_missing(ytj))
+          PLWARNING("In correlations - You should not compute correlations "
+                    "with missing values and 'ignore_ missing' set to false");
+#endif
+        sy[j] += ytj;
+        sy2[j] += ytj*ytj;
+      }
       for (int i=0;i<wx;i++)
       {
         real xti = xt[i];
-        sxy(i,j) += xti*ytj;
-        sx[i] += xti;
-        sx2[i] += xti*xti;
+        if (ignore_missing) {
+          if (!is_missing(ytj) && !is_missing(xti)) {
+            sy_m(i,j) += ytj;
+            sy2_m(i,j) += ytj * ytj;
+            sx_m(i,j) += xti;
+            sx2_m(i,j) += xti * xti;
+            sxy(i,j) += xti * ytj;
+            n_nonmissing(i,j)++;
+          }
+        } else {
+#ifdef BOUNDCHECK
+        if (is_missing(xti))
+          PLWARNING("In correlations - You should not compute correlations "
+                    "with missing values and 'ignore_ missing' set to false");
+#endif
+          sxy(i,j) += xti*ytj;
+          sx[i] += xti;
+          sx2[i] += xti*xti;
+        }
       }
     }
   }
   for (int i=0;i<wx;i++)
     for (int j=0;j<wy;j++)
     {
-      real nv = (sx2[i] - sx[i]/n*sx[i]); // = n * variance of x
+      real nv; // = n * variance of x
+      if (ignore_missing) {
+        nv = sx2_m(i,j) - sx_m(i,j) / real(n_nonmissing(i,j)) * sx_m(i,j);
+      } else {
+        nv = sx2[i] - sx[i]/real(n)*sx[i];
+      }
       if (nv>0) // don't bother if variance is 0
-        r(i,j) = (n*sxy(i,j)-sx[i]*sy[j])/sqrt((n*sx2[i]-sx[i]*sx[i])*(n*sy2[j]-sy[j]*sy[j]));
+        if (ignore_missing)
+          r(i,j) = (n_nonmissing(i,j)*sxy(i,j)-sx_m(i,j)*sy_m(i,j)) / 
+            sqrt( (n_nonmissing(i,j)*sx2_m(i,j)-sx_m(i,j)*sx_m(i,j)) *
+                  (n_nonmissing(i,j)*sy2_m(i,j)-sy_m(i,j)*sy_m(i,j)));
+        else
+          r(i,j) = (n*sxy(i,j)-sx[i]*sy[j])/sqrt((n*sx2[i]-sx[i]*sx[i])*(n*sy2[j]-sy[j]*sy[j]));
       else
         r(i,j) = 0;
       if (r(i,j)<-1.01 || r(i,j)>1.01)
         PLWARNING("correlation: weird correlation coefficient, %f for %d-th input, %d-target",
                   r(i,j),i,j);
     }
-  pvalues.resize(r.length(),r.width());
-  for (int i=0;i<r.length();i++)
-    for (int j=0;j<r.width();j++)
-      pvalues(i,j) = testNoCorrelationAsymptotically(r(i,j),n);
-
+  pvalues.resize(wx, wy);
+  for (int i=0;i<wx;i++)
+    for (int j=0;j<wy;j++)
+      if (ignore_missing)
+        pvalues(i,j) = testNoCorrelationAsymptotically(r(i,j),n_nonmissing(i,j));
+      else
+        pvalues(i,j) = testNoCorrelationAsymptotically(r(i,j),n);
 }
 
 } // end of namespace PLearn
