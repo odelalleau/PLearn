@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnaryVariable.h,v 1.4 2002/09/10 15:53:28 wangxian Exp $
+   * $Id: UnaryVariable.h,v 1.5 2002/09/11 19:35:36 wangxian Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -447,11 +447,10 @@ class AffineTransformWeightPenalty: public UnaryVariable
 
   public:
     DECLARE_NAME_AND_DEEPCOPY(AffineTransformWeightPenalty);
-  virtual void recomputeSize(int& l, int& w) const;
     AffineTransformWeightPenalty(Variable* affinetransform, real weight_decay, real bias_decay=0.) 
       :UnaryVariable(affinetransform, 1,1),weight_decay_(weight_decay),bias_decay_(bias_decay)
     {}
-    
+  virtual void recomputeSize(int& l, int& w) const;    
     virtual void fprop();
     virtual void bprop();
 };

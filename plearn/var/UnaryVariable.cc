@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: UnaryVariable.cc,v 1.6 2002/09/11 04:25:48 morinf Exp $
+   * $Id: UnaryVariable.cc,v 1.7 2002/09/11 19:35:36 wangxian Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -2859,6 +2859,9 @@ LogSoftmaxVariable::symbolicBprop()
     PLERROR("LogSofmaxVariable::symbolicBprop() not implemented");
 }
 
+
+void AffineTransformWeightPenalty::recomputeSize(int& l, int& w) const
+{ l=1; w=1; }
 
 void AffineTransformWeightPenalty::fprop()
 {
