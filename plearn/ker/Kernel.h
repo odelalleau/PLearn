@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.17 2004/02/23 20:33:38 dorionc Exp $
+   * $Id: Kernel.h,v 1.18 2004/02/26 04:19:13 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,7 +52,6 @@ using namespace std;
 
 class Kernel: public Object
 {
-		typedef Object inherited;
 		
 protected:
   VMat data; //!<  data for kernel matrix, which will be used for calls to evaluate_i_j and the like
@@ -60,6 +59,9 @@ protected:
 
   static void declareOptions(OptionList& ol);
 public:
+
+  // norman: moved to public (Check this!)
+  typedef Object inherited;
 
   //! Build options.
   bool is_symmetric;

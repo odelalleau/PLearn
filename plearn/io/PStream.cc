@@ -38,6 +38,11 @@
 #include "stringutils.h"
 #include "fileutils.h" 
 
+// norman:
+#ifdef WIN32
+#define snprintf _snprintf
+#endif
+
 namespace PLearn {
 using namespace std;
 
@@ -1204,7 +1209,7 @@ PStream& PStream::operator<<(unsigned char x)
 
 PStream& PStream::operator<<(const char *x)
 {
-  int l = strlen(x);
+  int l = (int)strlen(x);
   switch(outmode)
     {
     case PStream::raw_ascii:
