@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TestDependenciesCommand.cc,v 1.10 2005/03/14 17:08:39 tihocan Exp $ 
+   * $Id: TestDependenciesCommand.cc,v 1.11 2005/03/16 17:26:56 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file TestDependenciesCommand.cc */
@@ -144,7 +144,7 @@ void TestDependenciesCommand::run(const vector<string>& args)
       // linear correlations and corresponding p-values
       Mat lr = var_lin_corr(rowblock).toMat(inputsize,targetsize);
       Mat lpvalues = var_lc_pvalue(rowblock).toMat(inputsize,targetsize);
-      correlations(x,y,lr,lpvalues);
+      correlations(x, y, lr, lpvalues, true);
       Mat scores(inputsize,2);
       for (int i=0;i<inputsize;i++)
         {
