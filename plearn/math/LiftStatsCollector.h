@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.h,v 1.12 2004/11/17 14:30:41 tihocan Exp $
+ * $Id: LiftStatsCollector.h,v 1.13 2004/11/23 21:31:16 tihocan Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -52,7 +52,7 @@ using namespace std;
 class LiftStatsCollector: public VecStatsCollector
 {
 
-public:
+private:
 
   typedef VecStatsCollector inherited;
 
@@ -61,6 +61,7 @@ protected:
   // Protected options.
   
   int count_fin;
+  Vec roc_values;
 
   // Fields below are not options.
 
@@ -95,7 +96,7 @@ public:
 
   string lift_file;
   real lift_fraction;
-  int opposite_lift;
+  bool opposite_lift;
   string output_column;
   string roc_file;
   Vec roc_fractions;
@@ -133,6 +134,9 @@ public:
 
 protected:
 
+  //! Return the AUC statistic.
+  real computeAUC();
+
   //! Return the LIFT statistic.
   real computeLift();
   
@@ -152,8 +156,6 @@ protected:
 public:
 
   // Declares other standard object methods
-  //  If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
   PLEARN_DECLARE_OBJECT(LiftStatsCollector);
 
   // simply calls inherited::build() then build_().

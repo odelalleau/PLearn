@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.cc,v 1.16 2004/11/22 17:54:24 lapalmej Exp $
+ * $Id: LiftStatsCollector.cc,v 1.17 2004/11/23 21:31:15 tihocan Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -61,7 +61,7 @@ LiftStatsCollector::LiftStatsCollector()
   output_column_index(0),
   lift_file(""),
   lift_fraction(0.1),
-  opposite_lift(0),
+  opposite_lift(false),
   output_column(""),
   roc_file(""),
   sign_trick(0),
@@ -75,10 +75,11 @@ LiftStatsCollector::LiftStatsCollector()
 //////////////////
 PLEARN_IMPLEMENT_OBJECT(
   LiftStatsCollector,
-  "Computes the performance of a binary classifier",
+  "Used to evaluate the performance of a binary classifier.",
   "The following statistics can be requested out of getStat():\n"
   "- LIFT = % of positive examples in the first n samples, divided by the % of positive examples in the whole database\n"
   "- LIFT_MAX = best performance that could be achieved, if all positive examples were selected in the first n samples\n"
+  "- AUC = Area Under the Curve (i.e. the ROC curve), approximated by evaluation at each point of 'roc_fractions'\n"
   "(where n = lift_fraction * nsamples).\n"
   "IMPORTANT: if you add more samples after you call finalize() (or get any of the statistics above), some samples may\n"
   "be wrongly discarded and further statistics may be wrong\n\n"
@@ -101,14 +102,12 @@ PLEARN_IMPLEMENT_OBJECT(
 void LiftStatsCollector::declareOptions(OptionList& ol)
 {
 
-  declareOption(ol, "count_fin", &LiftStatsCollector::count_fin, OptionBase::learntoption,
-      "    the number of times finalize() has been called since the last forget()");
-
   declareOption(ol, "lift_fraction", &LiftStatsCollector::lift_fraction, OptionBase::buildoption,
       "    the % of samples to consider (default = 0.1)\n");
 
   declareOption(ol, "opposite_lift", &LiftStatsCollector::opposite_lift, OptionBase::buildoption,
-      "    if set to 1, the LIFT stat will return -LIFT, so that it can be considered as a cost (default = 0)\n");
+      "    If set to 1, the LIFT stat will return -LIFT, so that it can be considered as a cost (default = 0)\n"
+      "    Similarly, the AUC stat will return -AUC.");
 
   declareOption(ol, "output_column", &LiftStatsCollector::output_column, OptionBase::buildoption,
       "    the name of the column in which is the output value (the default value, \"\", assumes it is the first column))\n");
@@ -136,6 +135,12 @@ void LiftStatsCollector::declareOptions(OptionList& ol)
 
   declareOption(ol, "roc_fractions", &LiftStatsCollector::roc_fractions, OptionBase::buildoption,
       "(Ordered) fractions used to compute and save points in the ROC curve, or additional lifts.");
+
+  declareOption(ol, "count_fin", &LiftStatsCollector::count_fin, OptionBase::learntoption,
+      "    the number of times finalize() has been called since the last forget()");
+
+  declareOption(ol, "roc_values", &LiftStatsCollector::roc_values, OptionBase::learntoption,
+      "    The values of the ROC curve, evaluated at the 'roc_fractions' points.");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -166,6 +171,38 @@ void LiftStatsCollector::build_()
   } else {
     output_column_index = 0;
   }
+}
+
+/////////////////
+// computeLift //
+/////////////////
+real LiftStatsCollector::computeAUC() {
+  if (!is_finalized)
+    finalize();
+  // Compute statistics.
+  int n = roc_fractions.length();
+  if (n <= 0)
+    PLERROR("In LiftStatsCollector::computeAUC - You need to use the 'roc_fractions' option if you want to compute the AUC");
+  real previous_val = 0;
+  real previous_fraction = 0;
+  real auc = 0;
+  roc_fractions.append(1);  // Make sure we take into account the whole curve.
+  roc_values.append(1);
+  n++;
+  for (int i = 0; i < n; i++) {
+    real mean_val = (roc_values[i] + previous_val) / 2;
+    real interval_width = roc_fractions[i] - previous_fraction;
+    auc += interval_width * mean_val;
+    previous_val = roc_values[i];
+    previous_fraction = roc_fractions[i];
+  }
+  // Remove appended '1'.
+  roc_fractions.resize(roc_fractions.length() - 1);
+  roc_values.resize(roc_values.length() - 1);
+  if (opposite_lift)
+    return -auc;
+  else
+    return auc;
 }
 
 /////////////////
@@ -227,8 +264,8 @@ void LiftStatsCollector::finalize()
   if (nstored > n_samples_to_keep) {
     // If not, then no change has to be made to n_first_updates.
 
-    // Compute additional lifts (hack) if required.
-    if (roc_fractions.length() > 0 && (roc_file != "" || lift_file != "")) {
+    // Compute additional lifts if required.
+    if (roc_fractions.length() > 0) {
       // Copy data to make sure we do not change anything.
       Mat data(n_first_updates.length(), n_first_updates.width());
       data << n_first_updates;
@@ -253,6 +290,7 @@ void LiftStatsCollector::finalize()
       int sample_index = 0;
       string result_roc = "";
       string result_lift = "";
+      roc_values.resize(roc_fractions.length());
       while (lift_index < roc_fractions.length()) {
         while (sample_index < real(nsamples) * roc_fractions[lift_index]) {
           if (data(sample_index, 1) == 1)
@@ -261,17 +299,21 @@ void LiftStatsCollector::finalize()
         }
         real lift_value = real(count_pos) / real(sample_index) / frac_pos;
         real roc_value = real(count_pos) / real(nones);
+        roc_values[lift_index] = roc_value;
         lift_index++;
         result_roc += tostring(roc_value) + "\t";
         result_lift += tostring(lift_value) + "\t";
       }
       // Save the lifts in the given file.
-      if (lift_file != "") {
+      // We only save if the number of samples seen is > 1, because it may happen
+      // that when using an HyperLearner, train statistics are computed, and we
+      // could have nsamples == 1.
+      if (lift_file != "" && nsamples > 1) {
         command = "echo " + result_lift + " >> " + lift_file;
         // cout << "Command: " << command << endl;
         system(command.c_str());
       }
-      if (roc_file != "") {
+      if (roc_file != "" && nsamples > 1) {
         command = "echo " + result_roc + " >> " + roc_file;
         // cout << "Command: " << command << endl;
         system(command.c_str());
@@ -321,6 +363,7 @@ void LiftStatsCollector::forget()
   n_first_updates.resize(1000,2);
   inherited::forget();
   count_fin = 0;
+  roc_values.resize(0);
 }
 
 /////////////
@@ -337,6 +380,9 @@ double LiftStatsCollector::getStat(const string& statspec)
   else if (parsed == "LIFT_MAX") {
     return computeLiftMax();
   }
+  else if (parsed == "AUC") {
+    return computeAUC();
+  }
   else
     return inherited::getStat(statspec);
 }
@@ -347,6 +393,7 @@ double LiftStatsCollector::getStat(const string& statspec)
 void LiftStatsCollector::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(roc_values, copies);
   deepCopyField(n_first_updates, copies);
   deepCopyField(roc_fractions, copies);
 }
