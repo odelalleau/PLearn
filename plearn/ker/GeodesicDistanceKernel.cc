@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GeodesicDistanceKernel.cc,v 1.1 2004/06/23 16:48:48 tihocan Exp $ 
+   * $Id: GeodesicDistanceKernel.cc,v 1.2 2004/06/23 20:19:07 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -54,14 +54,18 @@ using namespace std;
 GeodesicDistanceKernel::GeodesicDistanceKernel() 
 : geodesic_file(""),
   knn(10),
+  pow_distance(false),
   shortest_algo("djikstra")
 {
   distance_kernel = new DistanceKernel(2);
 }
 
-GeodesicDistanceKernel::GeodesicDistanceKernel(Ker the_distance_kernel, int the_knn, string the_geodesic_file)
+GeodesicDistanceKernel::GeodesicDistanceKernel(Ker the_distance_kernel, int the_knn,
+    string the_geodesic_file, bool the_pow_distance)
 : geodesic_file(the_geodesic_file),
-  knn(the_knn)
+  knn(the_knn),
+  pow_distance(the_pow_distance),
+  shortest_algo("djikstra")
 {
   distance_kernel = the_distance_kernel;
   build();
@@ -77,12 +81,6 @@ PLEARN_IMPLEMENT_OBJECT(GeodesicDistanceKernel,
 ////////////////////
 void GeodesicDistanceKernel::declareOptions(OptionList& ol)
 {
-  // ### Declare all of this object's options here
-  // ### For the "flags" of each option, you should typically specify  
-  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-  // ### OptionBase::tuningoption. Another possible flag to be combined with
-  // ### is OptionBase::nosave
-
   // Build options.
 
   declareOption(ol, "knn", &GeodesicDistanceKernel::knn, OptionBase::buildoption,
@@ -90,6 +88,9 @@ void GeodesicDistanceKernel::declareOptions(OptionList& ol)
 
   declareOption(ol, "distance_kernel", &GeodesicDistanceKernel::distance_kernel, OptionBase::buildoption,
       "The kernel giving the distance between two points.");
+
+  declareOption(ol, "pow_distance", &GeodesicDistanceKernel::pow_distance, OptionBase::buildoption,
+      "If set to 1, then it will compute the squared geodesic distance.");
 
   declareOption(ol, "geodesic_file", &GeodesicDistanceKernel::geodesic_file, OptionBase::buildoption,
       "If provided, the geodesic distances will be saved in this file in binary format.");
@@ -175,23 +176,28 @@ real GeodesicDistanceKernel::evaluate(const Vec& x1, const Vec& x2) const {
       }
     }
   }
-  return min;
+  if (pow_distance) {
+    return square(min);
+  } else {
+    return min;
+  }
 }
 
 //////////////////
 // evaluate_i_j //
 //////////////////
 real GeodesicDistanceKernel::evaluate_i_j(int i, int j) const {
-  return geo_distances->get(i,j);
+  if (pow_distance) {
+    return square(geo_distances->get(i,j));
+  } else {
+    return geo_distances->get(i,j);
+  }
 }
 
 //////////////////
 // evaluate_i_x //
 //////////////////
 real GeodesicDistanceKernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) const {
-/*  static Mat k_xi_x_sorted;
-  computeNearestNeighbors(x, k_xi_x_sorted);
-  return computeShortestDistance(i, k_xi_x_sorted);*/
   return evaluate_i_x_again(i, x, squared_norm_of_x, true);
 }
 
@@ -203,7 +209,11 @@ real GeodesicDistanceKernel::evaluate_i_x_again(int i, const Vec& x, real square
   if (first_time) {
     computeNearestNeighbors(x, k_xi_x_sorted);
   }
-  return computeShortestDistance(i, k_xi_x_sorted);
+  if (pow_distance) {
+    return square(computeShortestDistance(i, k_xi_x_sorted));
+  } else {
+    return computeShortestDistance(i, k_xi_x_sorted);
+  }
 }
 
 /////////////////////////////////
@@ -274,6 +284,18 @@ void GeodesicDistanceKernel::setDataForKernelMatrix(VMat the_data) {
         pb->update(k + 1);
     }
   } else if (shortest_algo == "djikstra") {
+    // First build a symmetric neighborhoods matrix
+    // (j is a neighbor of i if it was already a neighbor, or if i was a
+    // neighbor of j).
+    TVec< TVec<int> > sym_neighborhoods(n);
+    int neighb;
+    for (int i = 0; i < n; i++) {
+      for (int j = 1; j < knn; j++) {
+        neighb = neighborhoods(i, j);
+        sym_neighborhoods[i].append(neighb);
+        sym_neighborhoods[neighb].append(i);
+      }
+    }
     Vec d;
     TVec<bool> T(n);
     int t, min, i, j, m, k;
@@ -292,8 +314,8 @@ void GeodesicDistanceKernel::setDataForKernelMatrix(VMat the_data) {
             min = m;
           }
         }
-        for (j = 1; j < knn; j++) {
-          t = neighborhoods(min, j);
+        for (j = 0; j < sym_neighborhoods[min].length(); j++) {
+          t = sym_neighborhoods[min][j];
           if (T[t]) {
             dist = d[min] + distances(min, t);
             if (d[t] > dist) {
@@ -306,6 +328,8 @@ void GeodesicDistanceKernel::setDataForKernelMatrix(VMat the_data) {
       if (report_progress)
         pb->update(k+1);
     }
+  } else {
+    PLERROR("In GeodesicDistanceKernel::setDataForKernelMatrix - Unknown value for 'shortest_algo'");
   }
   if (pb)
     delete pb;

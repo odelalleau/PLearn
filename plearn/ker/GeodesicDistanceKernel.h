@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GeodesicDistanceKernel.h,v 1.1 2004/06/23 16:48:48 tihocan Exp $ 
+   * $Id: GeodesicDistanceKernel.h,v 1.2 2004/06/23 20:19:07 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -73,6 +73,7 @@ public:
   Ker distance_kernel;
   string geodesic_file;
   int knn;
+  bool pow_distance;
   string shortest_algo;
 
   // ****************
@@ -83,7 +84,8 @@ public:
   GeodesicDistanceKernel();
 
   //! Convenient constructor.
-  GeodesicDistanceKernel(Ker the_distance_kernel, int the_knn = 10, string the_geodesic_file = "");
+  GeodesicDistanceKernel(Ker the_distance_kernel, int the_knn = 10,
+      string the_geodesic_file = "", bool the_pow_distance = false);
 
   // ******************
   // * Kernel methods *
