@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plapack.h,v 1.19 2004/05/28 21:55:01 monperrm Exp $
+   * $Id: plapack.h,v 1.20 2004/05/31 19:58:05 ouimema Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -263,7 +263,7 @@ void lapackGeneralizedEIGEN(const TMat<num_t>& A, const TMat<num_t>& B, int ITYP
   
   num_t* Z = 0;
   int LDZ = 1;
-  if(eigenvecs)
+  if(eigenvecs.isNotEmpty())
     {
       Z = eigenvecs.data();
       LDZ = eigenvecs.mod();
