@@ -37,16 +37,17 @@
  
 
 /* *******************************************************      
-   * $Id: general.cc,v 1.7 2004/02/25 22:32:59 nova77 Exp $
+   * $Id: general.cc,v 1.8 2004/02/28 17:58:51 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "general.h"
+#include <sys/stat.h>
 #ifdef _MSC_VER
 #include <io.h>
 #endif
 
-#include "stringutils.h"
+//#include "stringutils.h"
 
 namespace PLearn {
 using namespace std;

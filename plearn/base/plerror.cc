@@ -34,11 +34,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plerror.cc,v 1.6 2004/02/26 19:20:57 nova77 Exp $
+   * $Id: plerror.cc,v 1.7 2004/02/28 17:58:26 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
-#include <cstdlib>
+
+#include <cstdarg>
+//#include <cstdlib>
+#include <iostream>
 
 #include "plerror.h"
 // #include "general.h"
