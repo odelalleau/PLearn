@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.36 2004/07/15 03:13:22 chapados Exp $
+   * $Id: StatsCollector.cc,v 1.37 2004/08/11 12:22:44 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -363,7 +363,7 @@ RealMapping StatsCollector::getAllValuesMapping(TVec<bool>* to_be_included,
     // Compute the expansion coefficient 'epsilon'.
     StatsCollector values_diff;
     for (map<real,StatsCollectorCounts>::const_iterator it = counts.begin();
-         unsigned(i) < counts.size() - 2; i++) {
+         size_t(i) < counts.size() - 2; i++) {
       real val1 = it->first;
       it++;
       real val2 = it->first;
@@ -380,7 +380,7 @@ RealMapping StatsCollector::getAllValuesMapping(TVec<bool>* to_be_included,
   i = 0;
 
   for(map<real,StatsCollectorCounts>::const_iterator it = counts.begin() ;
-      unsigned(i) < counts.size() - 1; ++it)
+      size_t(i) < counts.size() - 1; ++it)
   {
     real low_val = it->first - epsilon;
     real up_val = it->first + epsilon;
