@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: FieldConvertCommand.cc,v 1.27 2004/06/10 20:08:05 tihocan Exp $
+ * $Id: FieldConvertCommand.cc,v 1.28 2004/06/18 16:38:12 tihocan Exp $
  ******************************************************* */
 
 #include "FieldConvertCommand.h"
@@ -210,7 +210,7 @@ void FieldConvertCommand::run(const vector<string> & args)
   sc = vm->getStats();
 
   ofstream* out;
-  ofstream* out_uni;
+  ofstream* out_uni = 0;
   string filename_non_uni = desti_fn + ".non_uniformized.vmat";
   if (uniformize > 0) {
     // We write two files: the one with the preprocessing and another one with
