@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.h,v 1.6 2004/07/09 22:22:15 monperrm Exp $ 
+   * $Id: KernelProjection.h,v 1.7 2004/07/19 13:30:33 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -82,6 +82,7 @@ public:
 
   bool compute_costs;
   bool free_extra_components;
+  int ignore_n_first;
   Ker kernel;
   real min_eigenvalue;
   int n_comp;
