@@ -602,7 +602,12 @@ def _plearn_repr(x):
         return str(x)
     elif isinstance(x, str):
         # Escape double quotes inside the string...
-        return '"' + x.replace('"', r'\"') + '"'
+        # Also replace embedded newlines by \n. Needed so we can include
+        # Python code in triple-quoted strings and the indentation isn't
+        # disturbed by pyplearn_magic_module's add_indent method. In the
+        # future, it'd be nicer to have a smarted add_indent that doesn't
+        # mess up triple-quoted strings.
+        return '"' + x.replace('"', r'\"').replace('\n', r'\n') + '"'
     elif isinstance(x, list):
         return str(len(x)) + ' [' + ', '.join([_plearn_repr(e) for e in x]) + ']'
     elif isinstance(x, dict):
@@ -756,11 +761,6 @@ def bind_plargs(obj, field_names, plarg_names = None):
     to None, the I{field_names} values will be used.
     @type  plarg_names: List of strings.    
     """
-    casts = { types.IntType     : int ,
-              types.FloatType    : float ,
-              types.StringType  : str
-              }
-    
     if plarg_names is None:
         plarg_names = field_names
 
@@ -770,15 +770,15 @@ def bind_plargs(obj, field_names, plarg_names = None):
         ## First set the argument's default value to the one provided
         ## by obj
         default_value  = getattr(obj, field)
-        setattr( plarg_defaults, arg_name, str(default_value) )
+        setattr(plarg_defaults, arg_name, str(default_value))
 
         ## binding: Then set the obj value to the one returned by
         ## plarg. If it was not provided by the user, the value will
         ## be set exactly to what it was when this funtion was
         ## entered. Otherwise, it will be set to the user provided value
         provided_value = getattr(plargs, arg_name)
-        cast           = casts[ type(default_value) ]
-        setattr( obj, field, cast(provided_value) )
+        cast = type(default_value)
+        setattr(obj, field, cast(provided_value))
 
 class _pyplearn_magic_module:
     """An instance of this class (instanciated as pl) is used to provide
@@ -792,7 +792,7 @@ class _pyplearn_magic_module:
         passed as s."""
         s = s.strip()
         if not '\n' in s:
-            # Single-line expression, no need to add any tabs
+            # Single-line expression, no need to add any indentation
             return s
 
         lines = s.split('\n')
