@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.72 2004/09/27 20:19:28 plearner Exp $
+* $Id: VMatrix.cc,v 1.73 2004/09/29 14:31:42 ducharme Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -44,18 +44,6 @@
 #include "FileVMatrix.h"
 #include "SubVMatrix.h"
 #include "VMat_computeStats.h"
-
-//#include "VMat.h"
-//#include "TMat_maths.h"
-//#include "Array.h"
-//#include "random.h"
-//#include "TmpFilenames.h"
-//#include "fileutils.h"
-//#include <vector>
-//#include "TopNI.h"
-//#include "BottomNI.h"
-//#include "VVMatrix.h"
-// #include "DisplayUtils.h"
 
 
 namespace PLearn {
@@ -391,7 +379,8 @@ void VMatrix::loadFieldInfos() const
       {
       case 1: fieldinfos[i] = VMField(v[0]); break;
       case 2: fieldinfos[i] = VMField(v[0], VMField::FieldType(toint(v[1]))); break;
-      default: PLERROR("In VMatrix::loadFieldInfos Format not recognized.  Each line should be '<name> {<type>}'.");
+      default: PLERROR("In VMatrix::loadFieldInfos Format not recognized in file %s.\n"
+                       "Each line should be '<name> {<type>}'.", filename.c_str());
       }
     }
 }
