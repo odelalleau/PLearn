@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.28 2005/02/08 21:39:07 tihocan Exp $
+   * $Id: pl_math.h,v 1.29 2005/02/18 14:15:45 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -74,9 +74,9 @@ using namespace std;
 union _plearn_nan_type { unsigned char c[4]; float d; };
 extern _plearn_nan_type plearn_nan;
 
-//!  Quiet NaN (float pattern)
-//#ifdef NAN
-#if defined(NAN) && !defined(WIN32)
+//! Quiet NaN (float pattern)
+//! Intel Compiler seems to have a bug when initializing a class' members with NAN.
+#if defined(NAN) && !defined(WIN32) && !defined(__INTEL_COMPILER)
 #define MISSING_VALUE NAN
 #else
 #define MISSING_VALUE (plearn_nan.d)
@@ -316,10 +316,10 @@ inline real ultrafasttanh(const real& x)
 #endif
 
   //! Missing value for double and float are represented by NaN
-  inline bool is_missing(double x) { return isnan(x)!=0; }
+  inline bool is_missing(double x) { return isnan(x); }
 
   //! Missing value for double and float are represented by NaN
-  inline bool is_missing(float x) { return isnan(x)!=0; }
+  inline bool is_missing(float x) { return isnan(x); }
   
 #ifdef __INTEL_COMPILER
 #pragma warning(default:279)
@@ -355,7 +355,7 @@ inline real ultrafasttanh(const real& x)
 inline real inverse_sigmoid(real x)
 {
 #ifdef BOUNDCHECK
-  if (x < 0. || x > 1. || isnan(x))
+  if (x < 0. || x > 1. || is_missing(x))
     PLERROR("In inv_sigmoid_value: a should be in [0,1]");
 #endif
   // We specify an absolute 1e-5 threshold to have the same behavior as with
