@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussMix.h,v 1.24 2004/05/26 16:55:30 tihocan Exp $ 
+   * $Id: GaussMix.h,v 1.25 2004/05/27 14:28:17 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file GaussMix.h */
@@ -51,10 +51,6 @@ class GaussMix: public PDistribution
 private:
 
   typedef PDistribution inherited;
-
-  //! A boolean to make sure everything has been correctly resized from
-  //! the given options.
-  bool is_resized_from_options;
 
 protected:
 
@@ -157,9 +153,6 @@ protected:
   //! the Gaussian with highest weight alpha, and has the same covariance.
   virtual void replaceGaussian(int j);
 
-  //! Resize everything it can from the options set.
-  void resizeStuffFromOptions();
-
   //! Resize everything before training.
   void resizeStuffBeforeTraining();
 
@@ -212,6 +205,10 @@ public:
   // *************************
   // * PDistribution methods *
   // *************************
+
+  //! Initialize everything needed for the conditional distribution, so that
+  //! a call to setConditionalFlags() can be made.
+  virtual void initializeForConditional();
 
   //! Set the value for the input part of the conditional probability.
   virtual void setInput(const Vec& input) const;

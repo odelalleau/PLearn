@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.36 2004/05/26 16:55:30 tihocan Exp $ 
+ * $Id: GaussMix.cc,v 1.37 2004/05/27 14:28:16 tihocan Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -54,7 +54,6 @@ using namespace std;
 //////////////
 GaussMix::GaussMix() 
 : PDistribution(),
-  is_resized_from_options(false),
   alpha_min(1e-5),
   epsilon(1e-6),
   kmeans_iterations(3),
@@ -184,7 +183,6 @@ void GaussMix::declareOptions(OptionList& ol)
 ///////////
 void GaussMix::build()
 {
-  is_resized_from_options = false;
   inherited::build();
   build_();
 }
@@ -194,7 +192,13 @@ void GaussMix::build()
 ////////////
 void GaussMix::build_()
 {
-  resizeStuffFromOptions();
+  if (n_input == 0) {
+    // No input part: the p_j_x must be obtained from the alpha.
+    for (int j = 0; j < L; j++) {
+      log_p_j_x[j] = log(alpha[j]);
+    }
+    p_j_x << alpha;
+  }
 }
 
 ////////////////////////////////
@@ -530,6 +534,42 @@ Vec GaussMix::getEigenvals(int j) const {
   return eigenvalues(j);
 }
 
+//////////////////////////////
+// initializeForConditional //
+//////////////////////////////
+void GaussMix::initializeForConditional() {
+  alpha.resize(L);
+  log_p_x_j_alphaj.resize(L);
+  log_p_j_x.resize(L);
+  p_j_x.resize(L);
+  // Those are not used for every type:
+  cov_x.resize(0);
+  cov_y_x.resize(0);
+  eigenvectors.resize(0);
+  eigenvectors_x.resize(0);
+  eigenvectors_y_x.resize(0);
+  full_cov.resize(0);
+  log_coeff.resize(0);
+  sigma.resize(0);
+  y_x_mat.resize(0);
+  if (type == "spherical") {
+    sigma.resize(L);
+  } else if (type == "diagonal") {
+    // Nothing to resize here.
+  } else if (type == "general") {
+    cov_x.resize(L);
+    cov_y_x.resize(L);
+    eigenvectors.resize(L);
+    eigenvectors_x.resize(L);
+    eigenvectors_y_x.resize(L);
+    full_cov.resize(L);
+    log_coeff.resize(L);
+    y_x_mat.resize(L);
+  } else {
+    PLERROR("In GaussMix::resizeStuffFromOptions - Not implemented for this type");
+  }
+}
+
 ////////////
 // kmeans //
 ////////////
@@ -754,65 +794,17 @@ void GaussMix::resizeStuffBeforeTraining() {
   }
 }
 
-////////////////////////////
-// resizeStuffFromOptions //
-////////////////////////////
-void GaussMix::resizeStuffFromOptions() {
-  if (is_resized_from_options) {
-    // Already resized correctly.
-    return;
-  }
-  alpha.resize(L);
-  log_p_x_j_alphaj.resize(L);
-  log_p_j_x.resize(L);
-  p_j_x.resize(L);
-  // Those are not used for every type:
-  cov_x.resize(0);
-  cov_y_x.resize(0);
-  eigenvectors.resize(0);
-  eigenvectors_x.resize(0);
-  eigenvectors_y_x.resize(0);
-  full_cov.resize(0);
-  log_coeff.resize(0);
-  sigma.resize(0);
-  y_x_mat.resize(0);
-  if (type == "spherical") {
-    sigma.resize(L);
-  } else if (type == "diagonal") {
-    // Nothing to resize here.
-  } else if (type == "general") {
-    cov_x.resize(L);
-    cov_y_x.resize(L);
-    eigenvectors.resize(L);
-    eigenvectors_x.resize(L);
-    eigenvectors_y_x.resize(L);
-    full_cov.resize(L);
-    log_coeff.resize(L);
-    y_x_mat.resize(L);
-  } else {
-    PLERROR("In GaussMix::resizeStuffFromOptions - Not implemented for this type");
-  }
-  is_resized_from_options = true;
-}
-
 //////////////
 // setInput //
 //////////////
 void GaussMix::setInput(const Vec& input) const {
   static Vec x_minus_mu_x;
   static Vec mu_target;
+  inherited::setInput(input);
   // We need to compute:
   // p(j | x) = p(x | j) p(j) / p(x)
-  if (stage == 0) {
-    // Cannot make any computation yet.
-    return;
-  }
-  if (n_input == 0) {
-    // No input part.
-    for (int j = 0; j < L; j++) {
-      log_p_j_x[j] = log(alpha[j]);
-    }
-    p_j_x << alpha;
+  if (stage == 0 || n_input == 0) {
+    // Nothing to do.
     return;
   }
   if (type == "spherical") {
@@ -849,8 +841,6 @@ void GaussMix::setInput(const Vec& input) const {
 ///////////
 void GaussMix::train()
 {
-  // TODO Actually, we should compute the posteriors because saving them
-  // could take too much room.
   // Check we actually need to train.
   if (stage >= nstages) {
     PLWARNING("In GaussMix::train - The learner is already trained");
@@ -922,8 +912,8 @@ void GaussMix::train()
   if (restore_flags) {
     setConditionalFlags(old_flags);
   }
-  // Computations related to the input part.
-  setInput(input_part);
+  // Options have changed: build is necessary.
+  build();
 }
 
 //////////////////////////////////
@@ -945,9 +935,6 @@ void GaussMix::updateFromConditionalSorting() {
     if ((n_input == 0 && n_margin == 0) || stage == 0) {
       // Nothing to do.
       return;
-    }
-    if (!is_resized_from_options) {
-      resizeStuffFromOptions();
     }
     tmp_cov.resize(D,D);
     real var_min = square(sigma_min);
