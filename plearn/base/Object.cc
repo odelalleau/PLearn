@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.39 2005/01/28 17:43:02 plearner Exp $
+   * $Id: Object.cc,v 1.40 2005/02/04 15:08:59 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -108,14 +108,6 @@ void Object::build()
 {}
 
 string Object::info() const { return classname(); }
-
-void Object::print(ostream& out) const
-{ 
-  PStream pout(&out);
-  pout << *this << endl;
-  //out << '{' << info() << "} ";
-}
-
 
 void Object::readOptionVal(PStream &in, const string &optionname)
 {
@@ -475,6 +467,24 @@ Object* readObject(PStream &in, unsigned int id)
 #endif
         o->newread(in);
       }
+
+#if 0
+    // Code that could be used... but need to see if it's useful and not too ugly.
+    // See if we actually want an option of this object, instead of the object itself.
+    in.skipBlanksAndCommentsAndSeparators();
+    while (in.peek() == '.') {
+      in.get(); // Skip the dot.
+      char ch;
+      string option_name;
+      while (((ch = in.peek()) >= 'A' && ch <= 'z') || ch == '_' || (ch >= '0' && ch <= '9')) {
+        in.get();
+        option_name += ch;
+      }
+      if (option_name == "")
+        PLERROR("In readObject - Could not read correctly the option name following a dot");
+      o = newObject(o->getOption(option_name));
+    }
+#endif
        
     if (id != UINT_MAX)
       in.copies_map_in[id] = o;

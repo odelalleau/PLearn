@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.38 2005/01/26 16:31:37 dorionc Exp $
+   * $Id: Object.h,v 1.39 2005/02/04 15:09:13 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -418,12 +418,6 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
     //!  classname())
     virtual string info() const; 
 
-/*!       Prints a human-readable, short (not necessarily complete)
-      description of this object instance (default prints info()).  This
-      is what is called by operator<< on Object
-*/
-    virtual void print(ostream& out) const; 
-
     //! Reads and sets the value for the specified option from the specified stream
     void readOptionVal(PStream &in, const string &optionname);
     
@@ -434,12 +428,13 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
     //! (optionnames are to be separated by a space, and must be supported by writeOptionVal)
     virtual string getOptionsToSave() const;
 
-    //! Serializes this object in the new format 
+    //! Default is to serialize this object in the new format
     //! Classname(optionname=optionval; optionname=optionval; ...)
-    void newwrite(PStream& out) const;
+    //! Subclasses may override this method to provide different outputs
+    //! depending on out's mode (plearn_ascii, raw_ascii, ...).
+    virtual void newwrite(PStream& out) const;
 
-
-    //! reads and builds an object in the new format 
+    //! Reads and builds an object in the new format 
     //! Classname(optionname=optionval; optionname=optionval; ...)
     void newread(PStream& in);
 
@@ -605,11 +600,9 @@ Object* macroLoadObject(const PPath &filename);
   inline Object* newObject(const string& representation)
   { istrstream in(representation.c_str()); return readObject(in); }
 
-  inline ostream& operator<<(ostream& out, const Object& obj)
-    { obj.print(out); return out; }
-
   inline PStream &operator>>(PStream &in, Object &o)
     { o.newread(in); return in; }
+
   inline PStream &operator<<(PStream &out, const Object &o)
     { o.newwrite(out); return out; }
 
