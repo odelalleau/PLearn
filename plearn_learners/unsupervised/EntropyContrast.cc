@@ -34,12 +34,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: EntropyContrast.cc,v 1.6 2004/09/14 16:04:58 chrish42 Exp $ 
+ * $Id: EntropyContrast.cc,v 1.7 2004/09/27 20:19:31 plearner Exp $ 
  ******************************************************* */
 
 /*! \file EntropyContrast.cc */
 #include "EntropyContrast.h"
-#include <plearn/vmat/VMat_maths.h>
+#include <plearn/vmat/VMat_basic_stats.h>
 //#include "TMat_maths.h"
 #include <plearn/math/plapack.h>
 #include <plearn/math/random.h>

@@ -38,7 +38,7 @@
 
 #include "ConditionalGaussianDistribution.h"
 #include <plearn/math/plapack.h>
-#include <plearn/vmat/VMat_maths.h>
+#include <plearn/vmat/VMat_basic_stats.h>
 #include <plearn/math/TMat.h>
 
 namespace PLearn {

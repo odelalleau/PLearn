@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DictionaryVMatrix.cc,v 1.7 2004/09/14 16:04:39 chrish42 Exp $ 
+   * $Id: DictionaryVMatrix.cc,v 1.8 2004/09/27 20:19:27 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Christopher Kermorvant
@@ -167,7 +167,7 @@ void DictionaryVMatrix::build_()
     getline(input_stream, line, '\n');
     if (line == "" || line[0] == '#') continue;
     tokens = split(line, delimiters);
-    if(attributes_number != tokens.size()) PLERROR("Number of attributs is different from number of dictionaries on line: %s", line.c_str());
+    if( (int)attributes_number != (int)tokens.size()) PLERROR("Number of attributs is different from number of dictionaries on line: %s", line.c_str());
     input_length++;
   }
   input_stream.close();
@@ -182,7 +182,7 @@ void DictionaryVMatrix::build_()
     getline(input_stream2, line, '\n');
     if (line == "" || line[0] == '#') continue;
     tokens = split(line, delimiters);
-    for(int j=0; j<tokens.size(); j++)
+    for(int j=0; j<(int)tokens.size(); j++)
     {
       TVec<string> options(option_fields[j].length());
       for(int k=0; k<options.length(); k++)

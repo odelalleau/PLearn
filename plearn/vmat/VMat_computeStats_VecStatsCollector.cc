@@ -1,9 +1,9 @@
 // -*- C++ -*-
 
-// PLearn (A C++ Machine Learning Library)
-// Copyright (C) 2002 Pascal Vincent
+// VMat_computeStats_VecStatsCollector.cc
 //
-
+// Copyright (C) 2004 Pascal Vincent 
+// 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -32,33 +32,42 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-
- 
-
 /* *******************************************************      
-   * $Id: VMat_usual.h,v 1.2 2004/09/27 20:19:28 plearner Exp $
-   * This file is part of the PLearn library.
+   * $Id: VMat_computeStats_VecStatsCollector.cc,v 1.1 2004/09/27 20:19:28 plearner Exp $ 
    ******************************************************* */
 
+// Authors: Pascal Vincent
 
-//! Simply includes the most commonly used VMatrix facilities
+/*! \file VMat_computeStats_VecStatsCollector.cc */
 
-#ifndef VMat_usual_INC
-#define VMat_usual_INC
 
-#include "VMat.h"
-#include "VMat_basic_stats.h"
-#include "VMatrix.h"
-#include "RowBufferedVMatrix.h"
-#include "MemoryVMatrix.h"
-#include "FileVMatrix.h"
-#include "DiskVMatrix.h"
-#include "SubVMatrix.h"
-#include "ConcatRowsVMatrix.h"
-#include "ConcatColumnsVMatrix.h"
-#include "RemoveRowsVMatrix.h"
+#include "VMat_computeStats_VecStatsCollector.h"
+#include <plearn/math/VecStatsCollector.h>
+#include <plearn/vmat/VMat.h>
 
-// That's for split functions 
-#include "Splitter.h"  
+namespace PLearn {
+using namespace std;
 
-#endif
+void computeStats(VMat m, VecStatsCollector& st, bool report_progress)
+{
+  st.forget();
+  st.setFieldNames(m->fieldNames());
+  Vec v(m.width());
+  int l = m.length();
+  ProgressBar* pbar = 0;
+  if (report_progress)
+    pbar = new ProgressBar("Computing statistics", l);
+  for(int i=0; i<l; i++)
+    {
+      m->getRow(i,v);
+      st.update(v);
+      if (report_progress)
+        pbar->update(i);
+    }
+  if (pbar)
+    delete pbar;
+  st.finalize();
+}
+
+
+} // end of namespace PLearn

@@ -36,11 +36,12 @@
 
 
 /* *******************************************************      
-   * $Id: SumOverBagsVariable.cc,v 1.14 2004/09/14 16:04:38 chrish42 Exp $
+   * $Id: SumOverBagsVariable.cc,v 1.15 2004/09/27 20:19:27 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "SumOverBagsVariable.h"
+#include <plearn/math/TMat_maths_impl.h>
 //#include "PLMPI.h"
 //#include "DisplayUtils.h"
 

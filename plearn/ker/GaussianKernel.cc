@@ -36,11 +36,12 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianKernel.cc,v 1.12 2004/09/14 16:04:36 chrish42 Exp $
+   * $Id: GaussianKernel.cc,v 1.13 2004/09/27 20:19:27 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "GaussianKernel.h"
+#include <plearn/math/TMat_maths_impl.h>
 
 //#define GK_DEBUG
 

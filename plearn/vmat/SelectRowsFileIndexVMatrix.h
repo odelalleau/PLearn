@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsFileIndexVMatrix.h,v 1.6 2004/04/05 23:03:57 morinf Exp $
+   * $Id: SelectRowsFileIndexVMatrix.h,v 1.7 2004/09/27 20:19:27 plearner Exp $
    ******************************************************* */
 
 
@@ -45,6 +45,7 @@
 #define SelectRowsFileIndexVMatrix_INC
 
 #include "VMat.h"
+#include <plearn/io/IntVecFile.h>
 
 namespace PLearn {
 using namespace std;

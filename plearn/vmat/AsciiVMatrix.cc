@@ -33,11 +33,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AsciiVMatrix.cc,v 1.14 2004/07/08 15:10:09 tihocan Exp $ 
+   * $Id: AsciiVMatrix.cc,v 1.15 2004/09/27 20:19:27 plearner Exp $ 
    ******************************************************* */
 
 /*! \file AsciiVMatrix.cc */
 #include "AsciiVMatrix.h"
+#include <plearn/base/stringutils.h>
 
 namespace PLearn {
 using namespace std;

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: databases.cc,v 1.18 2004/09/20 16:24:47 mariusmuja Exp $
+   * $Id: databases.cc,v 1.19 2004/09/27 20:19:26 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -48,7 +48,10 @@
 #include <plearn/vmat/RemapLastColumnVMatrix.h>
 #include <plearn/vmat/ShiftAndRescaleVMatrix.h>
 #include <plearn/vmat/Splitter.h>
-#include <plearn/vmat/VMat_maths.h>
+#include <plearn/vmat/VMat_basic_stats.h>
+#include <plearn/io/MatIO.h>
+#include <plearn/base/stringutils.h>
+#include <plearn/math/TMat_maths_impl.h>
 
 namespace PLearn {
 using namespace std;
@@ -792,7 +795,7 @@ void loadClassificationDataset(const string& datasetname, int& inputsize, int& n
       inputsize = trainset.width()-1;
       nclasses = 10;
       Mat m;
-      m.load("mnist_override.pmat");
+      loadPMat("mnist_override.pmat",m);
       if(m.width() != inputsize+1)
         PLERROR("mnist_overrid.pmat is espected to have a width of %d, but has %d",inputsize+1,m.width());
       trainset = VMat(m);

@@ -34,12 +34,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.cc,v 1.22 2004/09/14 16:04:56 chrish42 Exp $ 
+   * $Id: PDistribution.cc,v 1.23 2004/09/27 20:19:29 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.cc */
 
 #include "PDistribution.h"
+#include <plearn/math/TMat_maths_impl.h>
 
 namespace PLearn {
 using namespace std;

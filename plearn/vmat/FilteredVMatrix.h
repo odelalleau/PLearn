@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilteredVMatrix.h,v 1.10 2004/09/14 16:04:39 chrish42 Exp $ 
+   * $Id: FilteredVMatrix.h,v 1.11 2004/09/27 20:19:27 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -46,6 +46,7 @@
 
 #include "SourceVMatrix.h"
 #include "VMatLanguage.h"
+#include <plearn/io/IntVecFile.h>
 
 namespace PLearn {
 using namespace std;

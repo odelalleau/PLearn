@@ -34,16 +34,18 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Grapher.cc,v 1.9 2004/09/14 16:04:57 chrish42 Exp $ 
+   * $Id: Grapher.cc,v 1.10 2004/09/27 20:19:30 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Grapher.cc */
 #include "Grapher.h"
 #include <plearn/math/VecStatsCollector.h>
-#include <plearn/vmat/VMat_maths.h>
+#include <plearn/vmat/VMat_basic_stats.h>
 #include <plearn/display/GhostScript.h>
 #include <plearn/display/Gnuplot.h>
 #include <plearn/vmat/RegularGridVMatrix.h>
+#include <plearn/base/stringutils.h>
+#include <plearn/math/TMat_maths_impl.h>
 
 namespace PLearn {
 using namespace std;

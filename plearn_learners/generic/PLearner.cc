@@ -39,10 +39,11 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.38 2004/09/20 20:20:17 tihocan Exp $
+   * $Id: PLearner.cc,v 1.39 2004/09/27 20:19:29 plearner Exp $
    ******************************************************* */
 
 #include "PLearner.h"
+#include <plearn/base/stringutils.h>
 
 namespace PLearn {
 using namespace std;

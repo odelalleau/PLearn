@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: ForwardVMatrix.h,v 1.9 2004/09/14 16:04:39 chrish42 Exp $
+   * $Id: ForwardVMatrix.h,v 1.10 2004/09/27 20:19:27 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -162,50 +162,7 @@ public:
   //!  returns the result of the dot product between row i and the given vec (only v.length() first elements of row i are considered).
   virtual real dot(int i, const Vec& v) const;
 
-  //!  Assigns the value of the Vars in the list
-  //!  (the total size of all the vars in the list must equal width() )
-  virtual void getRow(int i, VarArray& inputs) const;
-
-  virtual void oldwrite(ostream& out) const;
-  virtual void oldread(istream& in);
-
   void makeDeepCopyFromShallowCopy(CopiesMap& copies);
-
-
-/*!     The following methods can be used in a straightforward manner to compute a variety of useful things:
-    Dot products between this vmat and a vector, find the K nearest neighbours to a vector, etc...
-    Most methods take an optional last parameter ignore_this_row which may contain the index of a row that
-    is to be excluded from the computation (this can be seful for leave-one-out evaluations for instance).
-*/
-
-/*!     This will compute for this vmat m a result vector (whose length must be tha same as m's)
-    s.t. result[i] = ker( m(i).subVec(v1_startcol,v1_ncols) , v2) 
-    i.e. the kernel value betweeen each (sub)row of m and v2
-*/
-  virtual void evaluateKernel(Ker ker, int v1_startcol, int v1_ncols, 
-                              const Vec& v2, const Vec& result, int startrow=0, int nrows=-1) const;
-
-  //!   returns sum_i [ ker( m(i).subVec(v1_startcol,v1_ncols) , v2) ]
-  virtual real evaluateKernelSum(Ker ker, int v1_startcol, int v1_ncols, 
-                                 const Vec& v2, int startrow=0, int nrows=-1, int ignore_this_row=-1) const;
-
-  //!  targetsum := sum_i [ m(i).subVec(t_startcol,t_ncols) * ker( m(i).subVec(v1_startcol,v1_ncols) , v2) ]
-  //!  and returns sum_i [ ker( m(i).subVec(v1_startcol,v1_ncols) , v2) ]
-  virtual real evaluateKernelWeightedTargetSum(Ker ker, int v1_startcol, int v1_ncols, const Vec& v2, 
-                                               int t_startcol, int t_ncols, Vec& targetsum, int startrow=0, int nrows=-1, int ignore_this_row=-1) const;
-  
-   
-/*!     This will return the Top N kernel evaluated values (between vmat (sub)rows and v2) and their associated row_index.
-    Result is returned as a vector of length N of pairs (kernel_value,row_index)
-    Results are sorted with largest kernel value first
-*/
-  virtual TVec< pair<real,int> > evaluateKernelTopN(int N, Ker ker, int v1_startcol, int v1_ncols, 
-                                                    const Vec& v2, int startrow=0, int nrows=-1, int ignore_this_row=-1) const;
-
-  //!  same as evaluateKernelTopN but will look for the N smallest values instead of top values.
-  //!  results are sorted with smallest kernel value first
-  virtual TVec< pair<real,int> > evaluateKernelBottomN(int N, Ker ker, int v1_startcol, int v1_ncols, 
-                                                       const Vec& v2, int startrow=0, int nrows=-1, int ignore_this_row=-1) const;
 
 
 /*!     result += transpose(X).Y
@@ -223,9 +180,6 @@ public:
   virtual void accumulateXtX(int X_startcol, int X_ncols, 
                              Mat& result, int startrow=0, int nrows=-1, int ignore_this_row=-1) const;
 
-  //!  compute fprop or fbprop of a sumOf operation
-  virtual void evaluateSumOfFprop(Func f, Vec& output_result, int nsamples=-1);
-  virtual void evaluateSumOfFbprop(Func f, Vec& output_result, Vec& output_gradient, int nsamples=-1);
 
 private:
   void build_();

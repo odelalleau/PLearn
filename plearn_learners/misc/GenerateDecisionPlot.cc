@@ -34,13 +34,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GenerateDecisionPlot.cc,v 1.9 2004/09/14 16:04:57 chrish42 Exp $ 
+   * $Id: GenerateDecisionPlot.cc,v 1.10 2004/09/27 20:19:30 plearner Exp $ 
    ******************************************************* */
 
 /*! \file GenerateDecisionPlot.cc */
 #include "GenerateDecisionPlot.h"
 #include <plearn/math/VecStatsCollector.h>
-#include <plearn/vmat/VMat_maths.h>
+#include <plearn/vmat/VMat_basic_stats.h>
 
 namespace PLearn {
 using namespace std;

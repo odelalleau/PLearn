@@ -36,12 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.34 2004/07/21 20:11:02 tihocan Exp $
+   * $Id: Kernel.cc,v 1.35 2004/09/27 20:19:27 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "Kernel.h"
 #include <plearn/base/ProgressBar.h>
+#include <plearn/math/TMat_maths_impl.h>
 
 namespace PLearn {
 using namespace std;

@@ -36,12 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: IfThenElseVariable.cc,v 1.6 2004/04/27 16:04:13 morinf Exp $
+   * $Id: IfThenElseVariable.cc,v 1.7 2004/09/27 20:19:27 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "IfThenElseVariable.h"
 #include "Var_utils.h"
+#include <plearn/math/TMat_maths_impl.h>
 
 namespace PLearn {
 using namespace std;

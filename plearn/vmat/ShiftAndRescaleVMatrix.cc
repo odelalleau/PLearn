@@ -35,11 +35,13 @@
 
 
 /* *******************************************************      
-   * $Id: ShiftAndRescaleVMatrix.cc,v 1.12 2004/07/19 13:28:48 tihocan Exp $
+   * $Id: ShiftAndRescaleVMatrix.cc,v 1.13 2004/09/27 20:19:27 plearner Exp $
    ******************************************************* */
 
 #include "ShiftAndRescaleVMatrix.h"
-#include "VMat_maths.h"
+#include "VMat_computeStats.h"
+#include "VMat_basic_stats.h"
+#include <plearn/math/TMat_maths_impl.h>
 
 namespace PLearn {
 using namespace std;

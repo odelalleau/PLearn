@@ -34,13 +34,13 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ClassifierFromDensity.cc,v 1.12 2004/09/14 16:04:40 chrish42 Exp $ 
+   * $Id: ClassifierFromDensity.cc,v 1.13 2004/09/27 20:19:29 plearner Exp $ 
    ******************************************************* */
 
 /*! \file ClassifierFromDensity.cc */
 #include "ClassifierFromDensity.h"
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
-#include <plearn/vmat/VMat_maths.h>
+#include <plearn/vmat/VMat_operations.h>
 #include <plearn/ker/Kernel.h>
 #include <plearn/ker/ClassErrorCostFunction.h>
 #include <plearn/ker/NegLogProbCostFunction.h>

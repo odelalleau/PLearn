@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat.h,v 1.21 2004/07/21 16:30:55 chrish42 Exp $
+   * $Id: VMat.h,v 1.22 2004/09/27 20:19:27 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -56,8 +56,6 @@
 
 namespace PLearn {
 using namespace std;
-
-class Ker;
 
 class VMat: public PP<VMatrix>
 {

@@ -33,11 +33,13 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: JoinVMatrix.cc,v 1.10 2004/07/07 17:30:48 tihocan Exp $
+   * $Id: JoinVMatrix.cc,v 1.11 2004/09/27 20:19:27 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "JoinVMatrix.h"
+#include <plearn/base/stringutils.h>
+#include <plearn/math/TMat_maths_impl.h>
 
 namespace PLearn {
 using namespace std;

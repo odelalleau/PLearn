@@ -34,11 +34,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RegularGridVMatrix.cc,v 1.6 2004/09/14 16:04:39 chrish42 Exp $ 
+   * $Id: RegularGridVMatrix.cc,v 1.7 2004/09/27 20:19:27 plearner Exp $ 
    ******************************************************* */
 
 /*! \file RegularGridVMatrix.cc */
 #include "RegularGridVMatrix.h"
+#include <plearn/math/TMat_maths_impl.h>
 
 namespace PLearn {
 using namespace std;

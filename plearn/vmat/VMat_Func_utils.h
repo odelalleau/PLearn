@@ -1,9 +1,9 @@
 // -*- C++ -*-
 
-// PLearn (A C++ Machine Learning Library)
-// Copyright (C) 2002 Pascal Vincent
+// VMat_Func_utils.h
 //
-
+// Copyright (C) 2004 Pascal Vincent 
+// 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -32,33 +32,33 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-
- 
-
 /* *******************************************************      
-   * $Id: VMat_usual.h,v 1.2 2004/09/27 20:19:28 plearner Exp $
-   * This file is part of the PLearn library.
+   * $Id: VMat_Func_utils.h,v 1.1 2004/09/27 20:19:28 plearner Exp $ 
    ******************************************************* */
 
+// Authors: Pascal Vincent
 
-//! Simply includes the most commonly used VMatrix facilities
+/*! \file VMat_Func_utils.h */
 
-#ifndef VMat_usual_INC
-#define VMat_usual_INC
 
-#include "VMat.h"
-#include "VMat_basic_stats.h"
-#include "VMatrix.h"
-#include "RowBufferedVMatrix.h"
-#include "MemoryVMatrix.h"
-#include "FileVMatrix.h"
-#include "DiskVMatrix.h"
-#include "SubVMatrix.h"
-#include "ConcatRowsVMatrix.h"
-#include "ConcatColumnsVMatrix.h"
-#include "RemoveRowsVMatrix.h"
+#ifndef VMat_Func_utils_INC
+#define VMat_Func_utils_INC
 
-// That's for split functions 
-#include "Splitter.h"  
+// Put includes here
+#include <plearn/math/TVec.h>
+
+namespace PLearn {
+using namespace std;
+
+  class Func;
+  class VMat;
+
+// Put global function declarations here
+
+  //!  compute fprop or fbprop of a sumOf operation
+  void evaluateSumOfFprop(VMat vm, Func f, Vec& output_result, int nsamples=-1);
+  void evaluateSumOfFbprop(VMat vm, Func f, Vec& output_result, Vec& output_gradient, int nsamples=-1);
+
+} // end of namespace PLearn
 
 #endif

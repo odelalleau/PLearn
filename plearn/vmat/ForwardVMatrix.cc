@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
- * $Id: ForwardVMatrix.cc,v 1.13 2004/09/14 16:04:39 chrish42 Exp $
+ * $Id: ForwardVMatrix.cc,v 1.14 2004/09/27 20:19:27 plearner Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -44,8 +44,6 @@
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
 
 #include "ForwardVMatrix.h"
-#include <plearn/ker/Kernel.h>
-#include <plearn/var/Func.h>
 
 namespace PLearn {
 using namespace std;
@@ -221,51 +219,7 @@ real ForwardVMatrix::dot(int i1, int i2, int inputsize) const
   
 real ForwardVMatrix::dot(int i, const Vec& v) const
 { return vm->dot(i,  v); }
-
   
-  
-void ForwardVMatrix::getRow(int i, VarArray& inputs) const
-{ vm->getRow(i, inputs); }
-
-void ForwardVMatrix::oldwrite(ostream& out) const
-{ vm->oldwrite(out); }
-void ForwardVMatrix::oldread(istream& in)
-{ vm->oldread(in); }
-
-void ForwardVMatrix::evaluateKernel(Ker ker, int v1_startcol, int v1_ncols, 
-                                 const Vec& v2, const Vec& result, int startrow, int nrows) const
-{ vm->evaluateKernel(ker, v1_startcol, v1_ncols, 
-                     v2,  result, startrow, nrows); }
-
-  
-real ForwardVMatrix::evaluateKernelSum(Ker ker, int v1_startcol, int v1_ncols, 
-                                    const Vec& v2, int startrow, int nrows, int ignore_this_row) const
-{ return vm->evaluateKernelSum(ker, v1_startcol, v1_ncols, 
-                               v2, startrow, nrows, ignore_this_row); }
-
-  
-  
-real ForwardVMatrix::evaluateKernelWeightedTargetSum(Ker ker, int v1_startcol, int v1_ncols, const Vec& v2, 
-                                                  int t_startcol, int t_ncols, Vec& targetsum, int startrow, int nrows, int ignore_this_row) const
-{ return vm->evaluateKernelWeightedTargetSum(ker, v1_startcol, v1_ncols,  v2, 
-                                             t_startcol, t_ncols, targetsum, startrow, nrows, ignore_this_row); }
-  
-   
-/*!     This will return the Top N kernel evaluated values (between vmat (sub)rows and v2) and their associated row_index.
-  Result is returned as a vector of length N of pairs (kernel_value,row_index)
-  Results are sorted with largest kernel value first
-*/
-TVec< pair<real,int> > ForwardVMatrix::evaluateKernelTopN(int N, Ker ker, int v1_startcol, int v1_ncols, 
-                                                       const Vec& v2, int startrow, int nrows, int ignore_this_row) const
-{ return vm->evaluateKernelTopN(N, ker, v1_startcol, v1_ncols, 
-                                v2, startrow, nrows, ignore_this_row); }
-
-  
-  
-TVec< pair<real,int> > ForwardVMatrix::evaluateKernelBottomN(int N, Ker ker, int v1_startcol, int v1_ncols, 
-                                                          const Vec& v2, int startrow, int nrows, int ignore_this_row) const
-{ return vm->evaluateKernelBottomN(N, ker, v1_startcol, v1_ncols, 
-                                   v2, startrow, nrows, ignore_this_row); }
 void ForwardVMatrix::accumulateXtY(int X_startcol, int X_ncols, int Y_startcol, int Y_ncols, 
                                 Mat& result, int startrow, int nrows, int ignore_this_row) const
 { vm->accumulateXtY(X_startcol, X_ncols, Y_startcol, Y_ncols, 
@@ -275,14 +229,7 @@ void ForwardVMatrix::accumulateXtX(int X_startcol, int X_ncols,
                                 Mat& result, int startrow, int nrows, int ignore_this_row) const
 { vm->accumulateXtX(X_startcol, X_ncols, 
                     result, startrow, nrows, ignore_this_row); }
-
-  
-void ForwardVMatrix::evaluateSumOfFprop(Func f, Vec& output_result, int nsamples)
-{ vm->evaluateSumOfFprop(f, output_result, nsamples); }
-
-void ForwardVMatrix::evaluateSumOfFbprop(Func f, Vec& output_result, Vec& output_gradient, int nsamples)
-{ vm->evaluateSumOfFbprop(f, output_result, output_gradient, nsamples); }
- 
+   
 void ForwardVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);

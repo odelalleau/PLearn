@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: CenteredVMatrix.cc,v 1.5 2004/09/14 16:04:38 chrish42 Exp $ 
+   * $Id: CenteredVMatrix.cc,v 1.6 2004/09/27 20:19:27 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -42,7 +42,8 @@
 
 
 #include "CenteredVMatrix.h"
-#include "VMat_maths.h"       //!< For computeMean.
+#include "VMat_basic_stats.h"       //!< For computeMean.
+#include <plearn/math/TMat_maths_impl.h>
 
 namespace PLearn {
 using namespace std;

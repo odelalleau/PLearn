@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HelpCommand.cc,v 1.9 2004/07/21 16:30:49 chrish42 Exp $ 
+   * $Id: HelpCommand.cc,v 1.10 2004/09/27 20:19:16 plearner Exp $ 
    ******************************************************* */
 
 /*! \file HelpCommand.cc */
@@ -41,6 +41,7 @@
 #include <iostream>
 //#include "general.h"
 #include <plearn/db/getDataSet.h>
+#include <plearn/base/stringutils.h>
 
 namespace PLearn {
 using namespace std;

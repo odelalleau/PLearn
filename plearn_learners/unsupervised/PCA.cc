@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PCA.cc,v 1.16 2004/09/14 16:04:59 chrish42 Exp $ 
+   * $Id: PCA.cc,v 1.17 2004/09/27 20:19:31 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PCA.cc */
@@ -42,7 +42,7 @@
 #include "PCA.h"
 #include <plearn/math/plapack.h>
 #include <plearn/math/random.h>     //!< For fill_random_normal.
-#include <plearn/vmat/VMat_maths.h>
+#include <plearn/vmat/VMat_basic_stats.h>
 
 namespace PLearn {
 using namespace std;

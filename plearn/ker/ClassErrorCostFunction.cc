@@ -36,11 +36,12 @@
 
 
 /* *******************************************************      
-   * $Id: ClassErrorCostFunction.cc,v 1.5 2004/09/24 15:06:26 kermorvc Exp $
+   * $Id: ClassErrorCostFunction.cc,v 1.6 2004/09/27 20:19:27 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "ClassErrorCostFunction.h"
+#include <plearn/math/TMat_maths_impl.h>
 
 namespace PLearn {
 using namespace std;

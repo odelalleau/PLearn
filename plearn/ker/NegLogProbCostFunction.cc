@@ -36,12 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: NegLogProbCostFunction.cc,v 1.5 2004/07/21 16:30:52 chrish42 Exp $
+   * $Id: NegLogProbCostFunction.cc,v 1.6 2004/09/27 20:19:27 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "NegLogProbCostFunction.h"
 #include <plearn/sys/PLMPI.h>
+#include <plearn/math/TMat_maths_impl.h>
 
 namespace PLearn {
 using namespace std;

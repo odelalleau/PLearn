@@ -36,27 +36,19 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.71 2004/09/14 16:04:40 chrish42 Exp $
+* $Id: VMatrix.cc,v 1.72 2004/09/27 20:19:28 plearner Exp $
 ******************************************************* */
 
+#include "VMatrix.h"
 #include "DiskVMatrix.h"
 #include "FileVMatrix.h"
 #include "SubVMatrix.h"
-#include "VMat_maths.h"
-#include "VMatrix.h"
-
-#include <plearn/math/BottomNI.h>
-#include <plearn/ker/Kernel.h>
-#include <plearn/var/Func.h>
-#include <plearn/base/stringutils.h>
-#include <plearn/math/TopNI.h>
+#include "VMat_computeStats.h"
 
 //#include "VMat.h"
 //#include "TMat_maths.h"
 //#include "Array.h"
 //#include "random.h"
-//#include "Kernel.h"
-//#include "Func.h"
 //#include "TmpFilenames.h"
 //#include "fileutils.h"
 //#include <vector>
@@ -70,6 +62,7 @@ namespace PLearn {
 using namespace std;
 
 /** VMatrix **/
+
 
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(VMatrix, "ONE LINE DESCR", "NO HELP");
 
@@ -849,27 +842,6 @@ TVec<RealMapping> VMatrix::getRanges()
   return ranges;
 }
 
-/*
-//! returns the cooccurence statistics conditioned on the given field
-PP<ConditionalStatsCollector> VMatrix::getConditionalStats(int condfield)
-{
-  PP<ConditionalStatsCollector> condst;
-  TVec<RealMapping> ranges = getRanges();
-  string condstatfile = getMetaDataDir() + slash+"stats" + tostring(condfield) + ".psave";      
-  string rangefile = getMetaDataDir() + slash+"ranges.psave";
-  cerr <<  "rangefile: " << mtime(rangefile) << " condstatfile: " << mtime(condstatfile) << endl;
-  if(mtime(rangefile)>mtime(condstatfile))
-    {
-      cerr << ">> Computing conditional stats conditioned on field " << condfield << endl;
-      cerr << "   (because file " << rangefile << " was more recent than cache file " << condstatfile << ")" << endl; 
-      condst = computeConditionalStats(this, condfield, ranges);
-      PLearn::save(condstatfile, *condst);
-    }
-  else
-    PLearn::load(condstatfile, *condst);      
-  return condst;
-}
-*/
 // Eventually to be changed to pure virtual, once get has been implemented in all subclasses
 // calls to sample can then be replaced by getRow everywhere
 real VMatrix::get(int i, int j) const
@@ -1025,16 +997,6 @@ real VMatrix::dot(int i, const Vec& v) const
   return PLearn::dot(dotrow_1, v);
 }
 
-////////////
-// getRow //
-////////////
-void VMatrix::getRow(int i, VarArray& inputs) const
-{ 
-  Vec v(width());
-  getRow(i,v);
-  inputs << v; 
-}
-
 
 //////////
 // find //
@@ -1068,6 +1030,7 @@ void VMatrix::print(ostream& out) const
     }
 }
 
+/*
 void VMatrix::oldwrite(ostream& out) const
 {
   writeHeader(out,"VMatrix");
@@ -1087,6 +1050,8 @@ void VMatrix::oldread(istream& in)
   //readField(in,"fieldstats", fieldstats);
   readFooter(in,"VMatrix");
 }
+*/
+
 
 VMatrix::~VMatrix()
 {}
@@ -1180,96 +1145,6 @@ void VMatrix::saveAMAT(const string& amatfile, bool verbose, bool no_header) con
     delete pb;
 }
 
-    // This will compute for this vmat m a result vector (whose length must be tha same as m's)
-    // s.t. result[i] = ker( m(i).subVec(v1_startcol,v1_ncols) , v2) 
-    // i.e. the kernel value betweeen each (sub)row of m and v2
-void VMatrix::evaluateKernel(Ker ker, int v1_startcol, int v1_ncols, 
-                             const Vec& v2, const Vec& result, int startrow, int nrows) const
-{
-  int endrow = (nrows>0) ?startrow+nrows :length_;
-  if(result.length() != endrow-startrow)
-    PLERROR("In VMatrix::evaluateKernel length of result vector does not match the row range");
-
-  Vec v1(v1_ncols);
-  for(int i=startrow; i<endrow; i++)
-  {
-    getSubRow(i,v1_startcol,v1);
-    result[i] = ker(v1,v2);
-  }
-}
-
-    //  returns sum_i [ ker( m(i).subVec(v1_startcol,v1_ncols) , v2) ]
-real VMatrix::evaluateKernelSum(Ker ker, int v1_startcol, int v1_ncols, 
-                                const Vec& v2, int startrow, int nrows, int ignore_this_row) const
-{
-  int endrow = (nrows>0) ?startrow+nrows :length_;
-  double result = 0.;
-  Vec v1(v1_ncols);
-  for(int i=startrow; i<endrow; i++)
-    if(i!=ignore_this_row)
-    {
-      getSubRow(i,v1_startcol,v1);
-      result += ker(v1,v2);
-    }
-  return (real)result;
-}
-    
-    // targetsum := sum_i [ m(i).subVec(t_startcol,t_ncols) * ker( m(i).subVec(v1_startcol,v1_ncols) , v2) ]
-    // and returns sum_i [ ker( m(i).subVec(v1_startcol,v1_ncols) , v2) ]
-real VMatrix::evaluateKernelWeightedTargetSum(Ker ker, int v1_startcol, int v1_ncols, const Vec& v2, 
-                                                 int t_startcol, int t_ncols, Vec& targetsum, int startrow, int nrows, int ignore_this_row) const
-{
-  int endrow = (nrows>0) ?startrow+nrows :length_;
-  targetsum.clear();
-  double result = 0.;
-  Vec v1(v1_ncols);
-  Vec target(t_ncols);
-  for(int i=startrow; i<endrow; i++)
-    if(i!=ignore_this_row)
-    {
-      getSubRow(i,v1_startcol,v1);
-      getSubRow(i,t_startcol,target);
-      real kerval = ker(v1,v2);
-      result += kerval;
-      multiplyAcc(targetsum, target,kerval);
-    }
-  return (real)result;
-}
-  
-TVec< pair<real,int> > VMatrix::evaluateKernelTopN(int N, Ker ker, int v1_startcol, int v1_ncols, 
-                                                   const Vec& v2, int startrow, int nrows, int ignore_this_row) const
-{
-  int endrow = (nrows>0) ?startrow+nrows :length_;
-  TopNI<real> extrema(N);
-  Vec v1(v1_ncols);
-  for(int i=startrow; i<endrow; i++)
-    if(i!=ignore_this_row)
-    {
-      getSubRow(i,v1_startcol,v1);
-      real kerval = ker(v1,v2);
-      extrema.update(kerval,i);
-    }
-  extrema.sort();
-  return extrema.getTopN();
-}
-
-TVec< pair<real,int> > VMatrix::evaluateKernelBottomN(int N, Ker ker, int v1_startcol, int v1_ncols, 
-                                                      const Vec& v2, int startrow, int nrows, int ignore_this_row) const
-{
-  int endrow = (nrows>0) ?startrow+nrows :length_;
-  BottomNI<real> extrema(N);
-  Vec v1(v1_ncols);
-  for(int i=startrow; i<endrow; i++)
-    if(i!=ignore_this_row)
-    {
-      getSubRow(i,v1_startcol,v1);
-      real kerval = ker(v1,v2);
-      extrema.update(kerval,i);
-    }
-  extrema.sort();
-  return extrema.getBottomN();
-}
-
 // result += transpose(X).Y
 // Where X = this->subMatColumns(X_startcol,X_ncols)
 // and   Y =  this->subMatColumns(Y_startcol,Y_ncols);
@@ -1303,51 +1178,6 @@ void VMatrix::accumulateXtX(int X_startcol, int X_ncols,
     }
 }
 
-void VMatrix::evaluateSumOfFprop(Func f, Vec& output_result, int nsamples)
-{
-  //if (f->outputs.size()!=1)
-  //  PLERROR("In evaluateSumOfFprop: function must have a single variable output (maybe you can concat the vars into a single one, if this is really what you want)");
- 
-  static int curpos = 0;
-  if (nsamples == -1) nsamples = length();
-  Vec input_value(width());
-  Vec output_value(output_result.length());
-
-  f->recomputeParents();
-  output_result.clear();
- 
-  for(int i=0; i<nsamples; i++)
-  {
-    getRow(curpos++, input_value);
-    f->fprop(input_value, output_value);
-    output_result += output_value;
-    if(curpos == length()) curpos = 0;
-  }
-}
-
-void VMatrix::evaluateSumOfFbprop(Func f, Vec& output_result, Vec& output_gradient, int nsamples)
-{
-//  if(f->outputs.size()!=1)
- //   PLERROR("In evaluateSumOfFprop: function must have a single variable output (maybe you can concat the vars into a single one, if this is really what you want)");
- 
-  static int curpos = 0;
-  if (nsamples == -1) nsamples = length();
-  Vec input_value(width());
-  Vec input_gradient(width());
-  Vec output_value(output_result.length());
-
-  f->recomputeParents();
-  output_result.clear();
- 
-  for(int i=0; i<nsamples; i++)
-  {
-    getRow(curpos++, input_value);
-    f->fbprop(input_value, output_value, input_gradient, output_gradient);
-    //displayFunction(f, true);
-    output_result += output_value;
-    if(curpos == length()) curpos = 0;
-  }
-}
 
 
 } // end of namespace PLearn

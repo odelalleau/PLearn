@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocalNeighborsDifferencesVMatrix.cc,v 1.9 2004/09/14 16:04:39 chrish42 Exp $ 
+   * $Id: LocalNeighborsDifferencesVMatrix.cc,v 1.10 2004/09/27 20:19:27 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus
@@ -42,7 +42,8 @@
 
 
 #include "LocalNeighborsDifferencesVMatrix.h"
-#include "VMat_maths.h"
+#include "VMat_computeNearestNeighbors.h"
+#include <plearn/math/TMat_maths_impl.h>
 
 namespace PLearn {
 using namespace std;

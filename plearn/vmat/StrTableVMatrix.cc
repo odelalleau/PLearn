@@ -31,11 +31,12 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StrTableVMatrix.cc,v 1.5 2004/03/23 23:08:09 morinf Exp $
+   * $Id: StrTableVMatrix.cc,v 1.6 2004/09/27 20:19:27 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "StrTableVMatrix.h"
+#include <plearn/base/stringutils.h>
 
 namespace PLearn {
 using namespace std;

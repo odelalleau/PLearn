@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussianContinuum.cc,v 1.7 2004/09/18 17:03:16 larocheh Exp $
+   * $Id: GaussianContinuum.cc,v 1.8 2004/09/27 20:19:31 plearner Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio & Martin Monperrus
@@ -59,7 +59,7 @@
 #include <plearn/math/random.h>
 #include <plearn/math/plapack.h>
 #include <plearn/var/ColumnSumVariable.h>
-#include <plearn/vmat/VMat_maths.h>
+#include <plearn/vmat/VMat_basic_stats.h>
 #include <plearn/vmat/ConcatRowsVMatrix.h>
 #include <plearn/vmat/SubVMatrix.h>
 #include <plearn/var/PDistributionVariable.h>

@@ -36,12 +36,11 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.25 2004/09/20 16:46:34 mariusmuja Exp $
+   * $Id: getDataSet.cc,v 1.26 2004/09/27 20:19:26 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
 
-//#include "MatIO.h"
 #include "AutoSDBVMatrix.h"
 //#include "stringutils.h"
 //#include "fileutils.h"
@@ -56,6 +55,7 @@
 #include <plearn/base/StringTable.h>
 #include <plearn/vmat/VMat.h>
 #include <plearn/vmat/VVMatrix.h>
+#include <plearn/io/MatIO.h>
 
 namespace PLearn {
 using namespace std;

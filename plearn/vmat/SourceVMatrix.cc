@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrix.cc,v 1.12 2004/09/14 16:04:39 chrish42 Exp $ 
+   * $Id: SourceVMatrix.cc,v 1.13 2004/09/27 20:19:27 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -42,6 +42,7 @@
 
 
 #include "SourceVMatrix.h"
+#include <plearn/base/stringutils.h>
 
 namespace PLearn {
 using namespace std;

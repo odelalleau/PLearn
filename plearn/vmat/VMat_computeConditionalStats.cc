@@ -1,9 +1,9 @@
 // -*- C++ -*-
 
-// PLearn (A C++ Machine Learning Library)
-// Copyright (C) 2002 Pascal Vincent
+// computeConditionalStats.cc
 //
-
+// Copyright (C) 2004 Pascal Vincent 
+// 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -32,33 +32,38 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-
- 
-
 /* *******************************************************      
-   * $Id: VMat_usual.h,v 1.2 2004/09/27 20:19:28 plearner Exp $
-   * This file is part of the PLearn library.
+   * $Id: VMat_computeConditionalStats.cc,v 1.1 2004/09/27 20:19:28 plearner Exp $ 
    ******************************************************* */
 
+// Authors: Pascal Vincent
 
-//! Simply includes the most commonly used VMatrix facilities
+/*! \file computeConditionalStats.cc */
 
-#ifndef VMat_usual_INC
-#define VMat_usual_INC
 
-#include "VMat.h"
-#include "VMat_basic_stats.h"
-#include "VMatrix.h"
-#include "RowBufferedVMatrix.h"
-#include "MemoryVMatrix.h"
-#include "FileVMatrix.h"
-#include "DiskVMatrix.h"
-#include "SubVMatrix.h"
-#include "ConcatRowsVMatrix.h"
-#include "ConcatColumnsVMatrix.h"
-#include "RemoveRowsVMatrix.h"
+#include "VMat_computeConditionalStats.h"
+#include <plearn/vmat/VMat.h>
 
-// That's for split functions 
-#include "Splitter.h"  
+namespace PLearn {
+using namespace std;
 
-#endif
+  //! returns the cooccurence statistics conditioned on the given field
+PP<ConditionalStatsCollector> computeConditionalStats(VMat m, int condfield, TVec<RealMapping> ranges)
+{
+  PP<ConditionalStatsCollector> condst = new ConditionalStatsCollector;
+  condst->setBinMappingsAndCondvar(ranges, condfield);
+  int l = m.length();
+  int w = m.width();
+  Vec v(w);
+  for(int i=0; i<l; i++)
+    {
+      if(i%10000==0)
+        cerr << "computeConditionalStats: row " << i << " of " << l << endl;
+      m->getRow(i,v);
+      condst->update(v);
+    }
+  return condst;
+}
+
+
+} // end of namespace PLearn

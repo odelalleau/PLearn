@@ -35,12 +35,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KFoldSplitter.cc,v 1.11 2004/05/14 17:49:14 chrish42 Exp $ 
+   * $Id: KFoldSplitter.cc,v 1.12 2004/09/27 20:19:27 plearner Exp $ 
    ******************************************************* */
 
 /*! \file SequentialSplitter.cc */
 #include "KFoldSplitter.h"
-#include "VMat_maths.h"
+#include "VMat_basic_stats.h"
 
 namespace PLearn {
 using namespace std;

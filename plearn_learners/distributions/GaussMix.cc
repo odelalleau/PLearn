@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.42 2004/09/14 16:04:55 chrish42 Exp $ 
+ * $Id: GaussMix.cc,v 1.43 2004/09/27 20:19:29 plearner Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -44,7 +44,7 @@
 #include <plearn/math/plapack.h>
 #include <plearn/math/random.h>
 #include <plearn/vmat/SubVMatrix.h>
-#include <plearn/vmat/VMat_maths.h>
+#include <plearn/vmat/VMat_basic_stats.h>
 
 namespace PLearn {
 using namespace std;

@@ -34,12 +34,12 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: learner_utils.cc,v 1.4 2004/07/21 16:30:57 chrish42 Exp $ 
+   * $Id: learner_utils.cc,v 1.5 2004/09/27 20:19:30 plearner Exp $ 
    ******************************************************* */
 
 /*! \file learner_utils.cc */
 #include "learner_utils.h"
-#include <plearn/vmat/VMat_maths.h>
+#include <plearn/vmat/VMat_basic_stats.h>
 
 namespace PLearn {
 using namespace std;

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
- * $Id: TMat_decl.h,v 1.5 2004/09/14 16:04:37 chrish42 Exp $
+ * $Id: TMat_decl.h,v 1.6 2004/09/27 20:19:27 plearner Exp $
  * AUTHORS: Pascal Vincent & Yoshua Bengio
  * This file is part of the PLearn library.
  ******************************************************* */
@@ -489,8 +489,8 @@ public:
   // Please call those functions directly in new code
   //void write(ostream& out) const { PLearn::write(out, *this); }
   //void read(istream& in) { PLearn::read(in, *this); }
-  void save(const string& filename) const { savePMat(filename, *this); }
-  void load(const string& filename) { loadPMat(filename, *this); }
+  // void save(const string& filename) const { savePMat(filename, *this); }
+  // void load(const string& filename) { loadPMat(filename, *this); }
     
   //!  Returns a TMat that is a column of the matrix
   inline TMat<T> column(int colnum) const

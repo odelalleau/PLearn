@@ -1,9 +1,9 @@
 // -*- C++ -*-
 
-// PLearn (A C++ Machine Learning Library)
-// Copyright (C) 2002 Pascal Vincent
+// VMat_computeNearestNeighbors.cc
 //
-
+// Copyright (C) 2004 Pascal Vincent 
+// 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -32,33 +32,48 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-
- 
-
 /* *******************************************************      
-   * $Id: VMat_usual.h,v 1.2 2004/09/27 20:19:28 plearner Exp $
-   * This file is part of the PLearn library.
+   * $Id: VMat_computeNearestNeighbors.cc,v 1.1 2004/09/27 20:19:28 plearner Exp $ 
    ******************************************************* */
 
+// Authors: Pascal Vincent
 
-//! Simply includes the most commonly used VMatrix facilities
+/*! \file VMat_computeNearestNeighbors.cc */
 
-#ifndef VMat_usual_INC
-#define VMat_usual_INC
 
-#include "VMat.h"
-#include "VMat_basic_stats.h"
-#include "VMatrix.h"
-#include "RowBufferedVMatrix.h"
-#include "MemoryVMatrix.h"
-#include "FileVMatrix.h"
-#include "DiskVMatrix.h"
-#include "SubVMatrix.h"
-#include "ConcatRowsVMatrix.h"
-#include "ConcatColumnsVMatrix.h"
-#include "RemoveRowsVMatrix.h"
+#include "VMat_computeNearestNeighbors.h"
+#include <plearn/vmat/VMat.h>
+#include <plearn/math/BottomNI.h>
+#include <plearn/math/TMat_maths_impl.h>
 
-// That's for split functions 
-#include "Splitter.h"  
+namespace PLearn {
+using namespace std;
 
-#endif
+// This is an efficient version of the most basic nearest neighbor search, using a Mat and euclidean distance
+void computeNearestNeighbors(VMat dataset, Vec x, TVec<int>& neighbors, int ignore_row)
+{
+  int K = neighbors.length(); // how many neighbors do we want?
+  BottomNI<real> neighbs(K);
+  Vec row(dataset->width());
+  for(int i=0; i<dataset->length(); i++)
+    if(i!=ignore_row)
+    {
+      dataset->getRow(i,row);
+      neighbs.update(powdistance(row,x), i);
+    }
+  neighbs.sort();
+  TVec< pair<real,int> > indices = neighbs.getBottomN();
+  int nonzero=0;
+  for(int k=0; k<K; k++)
+  {
+    if(indices[k].first>0)
+      nonzero++;
+    neighbors[k] = indices[k].second;
+  }
+  if(nonzero==0)
+    PLERROR("All neighbors had 0 distance. Use more neighbors. (There were %i other patterns with same values)",neighbs.nZeros());
+}
+
+
+
+} // end of namespace PLearn

@@ -36,7 +36,7 @@
 
  
 /* *******************************************************
-* $Id: VMat.cc,v 1.18 2004/07/21 16:30:55 chrish42 Exp $ *
+* $Id: VMat.cc,v 1.19 2004/09/27 20:19:27 plearner Exp $ *
 * This file is part of the PLearn library.               *
 ******************************************************** */
 #include "VMat.h"
@@ -47,6 +47,7 @@
 #include "SelectRowsVMatrix.h"
 #include "SelectColumnsVMatrix.h"
 #include "SelectRowsFileIndexVMatrix.h"
+#include <plearn/io/MatIO.h>
 
 namespace PLearn {
 using namespace std;

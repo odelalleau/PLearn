@@ -1,0 +1,136 @@
+// -*- C++ -*-
+
+// VMat_basic_stats.h
+//
+// Copyright (C) 2004 Pascal Vincent 
+// 
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+// 
+//  1. Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+// 
+//  2. Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//     documentation and/or other materials provided with the distribution.
+// 
+//  3. The name of the authors may not be used to endorse or promote
+//     products derived from this software without specific prior written
+//     permission.
+// 
+// THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+// NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+// TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// 
+// This file is part of the PLearn library. For more information on the PLearn
+// library, go to the PLearn Web site at www.plearn.org
+
+/* *******************************************************      
+   * $Id: VMat_basic_stats.h,v 1.1 2004/09/27 20:19:28 plearner Exp $ 
+   ******************************************************* */
+
+// Authors: Pascal Vincent
+
+/*! \file VMat_basic_stats.h */
+
+
+#ifndef VMat_basic_stats_INC
+#define VMat_basic_stats_INC
+
+// Put includes here
+#include <plearn/math/TVec.h>
+#include <plearn/math/TMat.h>
+#include <plearn/base/Array.h>
+
+namespace PLearn {
+using namespace std;
+
+  class VMat;
+
+#define MEAN_ROW 0
+#define STDDEV_ROW 1
+#define MIN_ROW 2
+#define MAX_ROW 3
+#define NMISSING_ROW 4
+#define NZERO_ROW 5
+#define NPOSITIVE_ROW 6
+#define NNEGATIVE_ROW 7
+#define MEANPOS_ROW 8
+#define STDDEVPOS_ROW 9
+
+/*!   The returned Mat is structured as follows:
+  row 0: mean
+  row 1: stddev
+  row 2: min
+  row 3: max
+  row 4: nmissing
+  row 5: nzero     (==0)
+  row 6: npositive (>0)
+  row 7: nnegative (<0)
+  row 8: mean of positive
+  row 9: stddev of positive
+*/
+Mat computeBasicStats(VMat m);
+
+void computeRowMean(VMat d, Vec& meanvec);
+void computeMean(VMat d, Vec& meanvec);
+void computeWeightedMean(Vec weights, VMat d, Vec& meanvec);
+void computeMeanAndVariance(VMat d, Vec& meanvec, Vec& variancevec);
+void computeMeanAndStddev(VMat d, Vec& meanvec, Vec& stddevvec);
+void computeMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat, ostream& logstream=cerr);
+void computeWeightedMeanAndCovar(Vec weights, VMat d, Vec& meanvec, Mat& covarmat);
+
+void autocorrelation_function(const VMat& data, Mat& acf);
+
+//! Computes the (possibly weighted) mean and covariance of the input part of the dataset.
+//! This will only call d->getExamplev
+void computeInputMean(VMat d, Vec& meanvec);
+void computeInputMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat);
+void computeInputMeanAndVariance(VMat d, Vec& meanvec, Vec& var);
+
+
+void computeRange(VMat d, Vec& minvec, Vec& maxvec);
+
+//! Last column of d is supposed to contain the weight for each sample
+//! Samples with a weight less or equal to threshold will be ignored
+//! (returns the sum of all the weights actually used)
+real computeWeightedMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat, real threshold=0);
+
+/*!   Computes conditional mean and variance of each target, conditoned on the
+  values of categorical integer input feature.  The basic_stats matrix may
+  be passed if previously computed (see computeBasicStats) or an empty
+  matrix may be passed otherwise, that will compute the basic statistics.
+  
+  An input feature #i is considered a categorical integer input if its min
+  and max (as found in basic_stats) are integers and are not too far
+  apart.  For these, the correponding returned array[i] matrix will
+  contain max-min+1 rows (one for each integer value between min and max
+  inclusive), each row containing the corresponding input value, the
+  number of times it occured, and mean and variance for each target.  The
+  returned matrix array[i] for input features that are not considered
+  categorical integers are empty.
+*/
+Array<Mat> computeConditionalMeans(VMat trainset, int targetsize, Mat& basic_stats);
+
+/*!   subtracts mean and divide by stddev
+  meanvec and stddevvec can be shorter than d.width() 
+  (as we probably only want to 'normalize' the 'input' part of the sample, 
+  and not the 'output' that is typically present in the last columns)
+*/
+  VMat normalize(VMat d, Vec meanvec, Vec stddevvec);
+  VMat normalize(VMat d, int inputsize, int ntrain); //!<  Here, mean and stddev are estimated on d.subMat(0,0,ntrain,inputsize)
+  VMat normalize(VMat d, int inputsize); //!<  Here, mean and stddev are estimated on the whole dataset d
+
+//! Compute the correlations between each of the columns of x and each of the 
+//! columns of y. The results are in the x.width() by y.width() matrix r.
+void correlations(const VMat& x, const VMat& y, Mat& r, Mat& pvalues);
+
+} // end of namespace PLearn
+#endif
