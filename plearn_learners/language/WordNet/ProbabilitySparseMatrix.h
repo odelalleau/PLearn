@@ -443,6 +443,30 @@ inline void check_prob(Set Y, const map<int, real>& pYx)
     PLERROR("check_prob failed, sum_y=%g",sum_y);
 }
 
+inline void update(ProbabilitySparseMatrix& pYX, ProbabilitySparseMatrix& nYX)
+{
+  pYX.clear();
+  nYX.computeX();
+  nYX.computeY();
+  for (SetIterator xit = nYX.X.begin(); xit != nYX.X.end(); ++xit)
+  {
+    int x = *xit;
+    real sumYx = nYX.sumPYx(x);
+    if (sumYx != 0.0)
+    {
+      for (SetIterator yit = nYX.Y.begin(); yit != nYX.Y.end(); ++yit)
+      {
+        int y = *yit;
+        real p = nYX(y, x) / sumYx;
+        if (p)
+          pYX.set(y, x, p);
+      }
+    }
+  }
+  pYX.computeY();
+  pYX.computeX();
+}
+
 inline ostream& operator<<(ostream& out, ProbabilitySparseMatrix& pyx)
 {
   bool re = pyx.raise_error;
