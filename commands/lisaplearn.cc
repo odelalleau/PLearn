@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: lisaplearn.cc,v 1.26 2004/05/17 13:09:48 tihocan Exp $
+   * $Id: lisaplearn.cc,v 1.27 2004/05/27 13:02:59 tihocan Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -82,8 +82,6 @@
 #include "AddCostToLearner.h"
 #include "ClassifierFromDensity.h"
 //#include "RegressorFromDensity.h"
-#include "Distribution.h"
-#include "GaussianDistribution.h"
 #include "KernelProjection.h"
 #include "KernelPCA.h"
 #include "LinearRegressor.h"
@@ -114,7 +112,7 @@
 
 #include "Experiment.h"
 
-// Stat collectors:
+// Available Stat collectors
 #include "LiftStatsCollector.h"
 
 // New generation system
@@ -124,7 +122,10 @@
 #include "MultiInstanceVMatrix.h"
 #include "SortRowsVMatrix.h"
 
-// Distributions
+// Available Distributions
+#include "ConditionalDensityNet.h"
+#include "Distribution.h"
+#include "GaussianDistribution.h"
 #include "SpiralDistribution.h"
 #include "NegOutputCostFunction.h"
 
