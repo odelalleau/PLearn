@@ -2,7 +2,7 @@
 %%
 %%  Copyright (c) 1998-2002 by Pascal Vincent
 %%
-%%  $Id: programmers_guide.tex,v 1.7 2004/06/18 15:54:17 monperrm Exp $
+%%  $Id: programmers_guide.tex,v 1.8 2004/07/02 20:57:08 monperrm Exp $
 
 \documentclass[11pt]{book}
 \usepackage{t1enc}              % new font encoding  (hyphenate words w/accents)
@@ -135,23 +135,35 @@ int main(int argc, char** argv)
 real a=15;
 cout<<a<<endl;
 
-//  creation de vecteurs
-Vec b(3);
-b[0] = 2;
-b[1] = 42;
-b[2] = 21;
-cout<<b<<endl;
+    //  vector creation : method 1
+    Vec b(3);
+    b[0] = 2;
+    b[1] = 42;
+    b[2] = 21;
+    cout<<b<<endl;
 
-// creation de matrices
-Mat c(3,2);
-c(1,1)=1.0;
-c(1,0)=4.0;
-c(2,0)=5.0;
-c(0,1)=73.0;
-c(0,0)=78.0;
-c(2,1)=5.0;
-cout<<c<<endl;
-return 0;
+    //  vector creation : method 2
+    Vec b2(3);
+    b2<<"5 4.2 -2";
+    cout<<b2<<endl;
+    
+    // matrix creation : method 1
+    Mat c(3,2);
+    c(1,1)=1.1;
+    c(1,0)=4;
+    c(2,0)=5;
+    c(0,1)=-73.2;
+    c(0,0)=78;
+    c(2,1)=5.32e-2;
+
+    cout<<c<<endl;
+    
+    // matrix creation : method 2
+    Mat c2(3,2);
+    c2<<"2 4 2.5e-1 6 1e3 3.1"; // read matrix row by matrix row 
+    cout<<c2<<endl;
+    return 0;
+
 }
 \end{verbatim}
 
@@ -942,6 +954,8 @@ You can find numerous var in \texttt{PLearn\/plearn\/var}, some are shortcuted b
 
 \subsection{Loading and saving}
 
+\subsubsection{Only the value}
+
 With the following method, you can load and save THE VALUE of a var (not the symbolic path). 
 \begin{verbatim}
 
@@ -977,8 +991,55 @@ int main(int argc, char** argv)
 }
 \end{verbatim}
 
+\subsubsection{All the var}
 
+Var is a subclass of Object, so you can use the methods of Object as in the following example. Note that it will save all the Var, including the sub ones.
 
+\begin{verbatim}
+#include "Var_all.h"
+#include "TMat_maths.h"
+
+using namespace PLearn;
+
+int main(int argc, char** argv)
+{   
+
+    
+    Var x(3,1);
+    Var u(3,1);
+ 
+    x->matValue(0,0) = 1;
+    x->matValue(1,0)=2;
+    x->matValue(2,0)=3;
+    u->matValue(0,0)=4;
+    u->matValue(1,0)=5;
+    u->matValue(2,0)=6;
+    
+    cout<<x->matValue<<endl;
+    cout<<u->matValue<<endl;
+    
+    Var z = dot(x,tanh(x+u)); // z is a scalar variable result of the dot product of x and tanh(y)
+    
+    cout<<z->matValue<<endl;
+
+    VarArray path = propagationPath(x & u, z);
+    path.fprop();
+    
+    cout<<z->matValue<<endl;     
+    
+    save("z.psave",z);
+    
+    Object* o = loadObject("z.psave"); 
+    
+    // pas de PP<> ou * acr Var est deja un PP<Variable>
+    Var p = dynamic_cast<Variable*>(o);
+  
+    cout<<p->matValue<<endl;
+       
+    return 0;
+}
+
+\end{verbatim}
 \chapter{Advanced}
  
 \section{RandomVar}
