@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DuplicateRowVariable.h,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: DuplicateRowVariable.h,v 1.5 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,26 +51,31 @@ using namespace std;
 
 class DuplicateRowVariable: public UnaryVariable
 {
+  typedef UnaryVariable inherited;
+
 protected:
-    typedef UnaryVariable inherited;
-  //!  Default constructor for persistence
-  DuplicateRowVariable() : n_duplicates() {}
   int length_;
-
+//  int n_duplicates;
 public:
-  int n_duplicates;
-
+  //!  Default constructor for persistence
+  DuplicateRowVariable() {};//: n_duplicates() {}
   DuplicateRowVariable(Variable* input, int thelength);
+
   PLEARN_DECLARE_OBJECT(DuplicateRowVariable);
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
 
+protected:
+  void build_();
 };
 
+DECLARE_OBJECT_PTR(DuplicateRowVariable);
 
 inline Var duplicateRow(Var v, int the_length)
 { 

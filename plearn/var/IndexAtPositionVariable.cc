@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: IndexAtPositionVariable.cc,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: IndexAtPositionVariable.cc,v 1.5 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,27 +49,44 @@ using namespace std;
 
 /** IndexAtPositionVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(IndexAtPositionVariable,
+                        "ONE LINE DESCR",
+                        "NO HELP");
+
 IndexAtPositionVariable::IndexAtPositionVariable(Variable* input1, Variable* input2, int the_length, int the_width)
-  :BinaryVariable(input1, input2, the_length, the_width), length_(the_length), width_(the_width)
+  : inherited(input1, input2, the_length, the_width), length_(the_length), width_(the_width)
 {
-  if(!input1->isVec()||!input2->isVec())
-    PLERROR("In IndexAtPositionVariable: input1 or input2 must be a vector var");
-  if(input1->size()!=input2->size()||input1->size()!=the_width)
-    PLERROR("In IndexAtPositionVariable: input1 and input2 should be of same size");
+    build_();
 }
 
+void
+IndexAtPositionVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
-PLEARN_IMPLEMENT_OBJECT(IndexAtPositionVariable, "ONE LINE DESCR", "NO HELP");
+void
+IndexAtPositionVariable::build_()
+{
+    if (input1 && input2) {
+        if(!input1->isVec() || !input2->isVec())
+            PLERROR("In IndexAtPositionVariable: input1 or input2 must be a vector var");
+        if(input1->size() != input2->size() || input1->size() != width_)
+            PLERROR("In IndexAtPositionVariable: input1 and input2 should be of same size");
+    }
+}
 
+void
+IndexAtPositionVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "length_", &IndexAtPositionVariable::length_, OptionBase::buildoption, "");
+    declareOption(ol, "width_", &IndexAtPositionVariable::width_, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 void IndexAtPositionVariable::recomputeSize(int& l, int& w) const
 { l=length_; w=width_; }
-
-
-
-
-
-
 
 
 void IndexAtPositionVariable::fprop()

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SemiSupervisedProbClassCostVariable.h,v 1.3 2004/02/20 21:11:52 chrish42 Exp $
+   * $Id: SemiSupervisedProbClassCostVariable.h,v 1.4 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -91,10 +91,9 @@ using namespace std;
 */
 class SemiSupervisedProbClassCostVariable: public NaryVariable
 {
-protected:
-  //!  Default constructor for persistence
-  SemiSupervisedProbClassCostVariable() {}
+  typedef NaryVariable inherited;
 
+protected:
   //! the option
   real flatten_factor;
 
@@ -103,8 +102,15 @@ protected:
   real sum_raised_prob;
 
 public:
+  //!  Default constructor for persistence
+  SemiSupervisedProbClassCostVariable() : flatten_factor(1) {}
   SemiSupervisedProbClassCostVariable(Var prob_, Var target_, Var prior_, real flattenfactor=1.0);
+
   PLEARN_DECLARE_OBJECT(SemiSupervisedProbClassCostVariable);
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
   virtual void bprop();
@@ -113,8 +119,12 @@ public:
   Var& prob() { return varray[0]; }
   Var& target() { return varray[1]; }
   Var& prior() { return varray[2]; }
+
+protected:
+    void build_();
 };
 
+DECLARE_OBJECT_PTR(SemiSupervisedProbClassCostVariable);
 
 } // end of namespace PLearn
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixElementsVariable.cc,v 1.6 2004/03/10 00:26:53 yoshua Exp $
+   * $Id: MatrixElementsVariable.cc,v 1.7 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,27 +52,55 @@ using namespace std;
    that depends on index variables i and j, that loop from
    0 to ni-1 and 0 to nj-1 respectively. */
 
-MatrixElementsVariable::MatrixElementsVariable
-(Variable* the_expression, const Var& i_index, const Var& j_index,
- int number_of_i_values, int number_of_j_values,
- const VarArray& the_parameters)
-  :NaryVariable(the_parameters, number_of_i_values, number_of_j_values), 
-   i(i_index), j(j_index), ni(number_of_i_values), 
-   nj(number_of_j_values), expression(the_expression), 
-   parameters(the_parameters)
-{
-  if (!i->isScalar())
-    PLERROR("MatrixElementsVariable expect a scalar index Var i_index");
-  if (!j->isScalar())
-    PLERROR("MatrixElementsVariable expect a scalar index Var j_index");
+PLEARN_IMPLEMENT_OBJECT(MatrixElementsVariable, 
+                        "Fills the elements of a matrix using the given scalar Variable "
+                        "expression, that depends on index variables i and j, that loop from "
+                        "0 to ni-1 and 0 to nj-1 respectively.",
+                        "NO HELP");
 
-  full_fproppath = propagationPath(parameters&(VarArray)i&(VarArray)j, expression);
-  fproppath = propagationPath(i&j, expression);
-  bproppath = propagationPath(parameters, expression);
+
+MatrixElementsVariable::MatrixElementsVariable(Variable* the_expression, const Var& i_index,
+                                               const Var& j_index, int number_of_i_values,
+                                               int number_of_j_values, const VarArray& the_parameters)
+  : inherited(the_parameters, number_of_i_values, number_of_j_values), i(i_index), 
+    j(j_index), ni(number_of_i_values), nj(number_of_j_values), expression(the_expression), 
+    parameters(the_parameters)
+{
+    build_();
 }
 
+void
+MatrixElementsVariable::build()
+{
+    inherited::build();
+}
 
-PLEARN_IMPLEMENT_OBJECT(MatrixElementsVariable, "ONE LINE DESCR", "NO HELP");
+void
+MatrixElementsVariable::build_()
+{
+    if (i && j && parameters && expression) {
+        if (!i->isScalar())
+            PLERROR("MatrixElementsVariable expect a scalar index Var i_index");
+        if (!j->isScalar())
+            PLERROR("MatrixElementsVariable expect a scalar index Var j_index");
+
+        full_fproppath = propagationPath(parameters&(VarArray)i&(VarArray)j, expression);
+        fproppath = propagationPath(i&j, expression);
+        bproppath = propagationPath(parameters, expression);
+    }
+}
+
+void
+MatrixElementsVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "i", &MatrixElementsVariable::i, OptionBase::buildoption, "");
+    declareOption(ol, "j", &MatrixElementsVariable::j, OptionBase::buildoption, "");
+    declareOption(ol, "ni", &MatrixElementsVariable::ni, OptionBase::buildoption, "");
+    declareOption(ol, "nj", &MatrixElementsVariable::nj, OptionBase::buildoption, "");
+    declareOption(ol, "expression", &MatrixElementsVariable::expression, OptionBase::buildoption, "");
+    declareOption(ol, "parameters", &MatrixElementsVariable::parameters, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 void MatrixElementsVariable::recomputeSize(int& l, int& w) const
 { l=ni; w=nj; }
@@ -91,7 +119,6 @@ void MatrixElementsVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>
   deepCopyField(fproppath, copies);
   deepCopyField(bproppath, copies);
 }
-
 
 
 void MatrixElementsVariable::fprop()
@@ -171,8 +198,4 @@ void MatrixElementsVariable::fbprop()
     }
 }
 
-
-
 } // end of namespace PLearn
-
-

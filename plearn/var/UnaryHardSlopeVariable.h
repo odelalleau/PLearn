@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnaryHardSlopeVariable.h,v 1.1 2004/04/11 19:51:02 yoshua Exp $
+   * $Id: UnaryHardSlopeVariable.h,v 1.2 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,23 +53,32 @@ using namespace std;
 // output is 0 for input < left, 1 for input > right, and linear in between.
 class UnaryHardSlopeVariable: public UnaryVariable
 {
+  typedef UnaryVariable inherited;
+
 protected:
-    typedef UnaryVariable inherited;
   real left;
   real right;
   real inv_slope; // 1/(right-left)
-  //!  Default constructor for persistence
-  UnaryHardSlopeVariable() {}
 
 public:
+  //!  Default constructor for persistence
+  UnaryHardSlopeVariable() {}
   UnaryHardSlopeVariable(Variable* input,real l=-1,real r=1);
+
   PLEARN_DECLARE_OBJECT(UnaryHardSlopeVariable);
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
   virtual void fprop();
   virtual void bprop();
+
+protected:
+  void build_();
 };
+
+DECLARE_OBJECT_PTR(UnaryHardSlopeVariable);
 
 inline Var unary_hard_slope(Var v, real l=-1, real r=1)
 { return new UnaryHardSlopeVariable(v,l,r); }

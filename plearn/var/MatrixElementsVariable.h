@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixElementsVariable.h,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: MatrixElementsVariable.h,v 1.5 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,11 +51,7 @@ using namespace std;
 
 class MatrixElementsVariable: public NaryVariable
 {
-protected:
-  //!  protected default constructor for persistence
-  MatrixElementsVariable() : i(), j(), ni(), nj(), expression(),
-                             parameters(), full_fproppath(), fproppath(),
-                             bproppath() {}
+  typedef NaryVariable inherited;
 
 protected:
   Var i;
@@ -70,18 +66,30 @@ protected:
   VarArray bproppath; //!<  output(parameters)
 
 public:
-  MatrixElementsVariable(Variable* the_expression, const Var& i_index,
-                         const Var& j_index,
-                         int number_of_i_values, int number_of_j_values,
-                         const VarArray& the_parameters);
+  //!  protected default constructor for persistence
+  MatrixElementsVariable()
+      : i(), j(), ni(), nj(), expression(), parameters(), full_fproppath(), fproppath(),
+        bproppath()
+  {}
+  MatrixElementsVariable(Variable* the_expression, const Var& i_index, const Var& j_index,
+                         int number_of_i_values, int number_of_j_values, const VarArray& the_parameters);
+                         
   PLEARN_DECLARE_OBJECT(MatrixElementsVariable);
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
   virtual void fprop();
   virtual void bprop();
   virtual void fbprop();
+
+protected:
+  void build_();
 };
 
+DECLARE_OBJECT_PTR(MatrixElementsVariable);
 
 inline Var matrixElements(Var expression, const Var& i, const Var& j,
                              int ni, int nj, const VarArray& parameters)

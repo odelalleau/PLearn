@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PowVariableVariable.h,v 1.4 2004/02/20 21:11:52 chrish42 Exp $
+   * $Id: PowVariableVariable.h,v 1.5 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -65,21 +65,27 @@ class NegLogSoftmaxLoss: public BinaryVariable
 */
 class PowVariableVariable: public BinaryVariable
 {
-protected:
-    typedef BinaryVariable inherited;
-  //!  Default constructor for persistence
-  PowVariableVariable() {}
+  typedef BinaryVariable inherited;
 
 public:
+  //!  Default constructor for persistence
+  PowVariableVariable() {}
   PowVariableVariable(Variable* input, Variable* power);
+
   PLEARN_DECLARE_OBJECT(PowVariableVariable);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
+
+protected:
+    void build_();
 };
+
+DECLARE_OBJECT_PTR(PowVariableVariable);
 
 inline Var pow(Var v, Var power)
 { return new PowVariableVariable(v,power); }

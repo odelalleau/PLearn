@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PowVariableVariable.cc,v 1.5 2004/02/20 21:11:52 chrish42 Exp $
+   * $Id: PowVariableVariable.cc,v 1.6 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,7 +46,6 @@
 #include "LogVariable.h"
 #include "PowVariableVariable.h"
 #include "Var_operators.h"
-//#include "Var_utils.h"
 
 namespace PLearn {
 using namespace std;
@@ -57,25 +56,41 @@ using namespace std;
 /* PowVariableVariable: x^y where x and y are variables but y is scalar 
    or it has the same size as x */
 
+PLEARN_IMPLEMENT_OBJECT(PowVariableVariable,
+                        "x^y where x and y are variables but y is scalar "
+                        "or it has the same size as x",
+                        "NO HELP");
+
 PowVariableVariable::PowVariableVariable(Variable* input1, Variable* input2)
-  : BinaryVariable(input1, input2, input1->length(), input1->width())
+  : inherited(input1, input2, input1->length(), input1->width())
 {
-  if(!input2->isScalar() && (input1->length()!=input2->length() || input1->width()!=input2->width()))
-    PLERROR("IN FunctionPowVariableVariable(Variable* input1, Variable* input2) input1 and input2 must have the same size or input2 must be scalar");
+    build_();
 }
 
-  
-PLEARN_IMPLEMENT_OBJECT(PowVariableVariable, "ONE LINE DESCR", "NO HELP");
+void
+PowVariableVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
+void
+PowVariableVariable::build_()
+{
+    if (input1 && input2) {
+        if(!input2->isScalar() && (input1->length()!=input2->length() || input1->width()!=input2->width()))
+            PLERROR("IN FunctionPowVariableVariable(Variable* input1, Variable* input2) input1 and input2 must have the same size or input2 must be scalar");
+    }
+}
 
 void PowVariableVariable::recomputeSize(int& l, int& w) const
-{ l=input1->length(); w=input1->width(); }
-
-
-
-
-
-
+{
+    if (input1) {
+        l = input1->length();
+        w = input1->width();
+    } else
+        l = w = 0;
+}
 
 
 void PowVariableVariable::fprop()

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DuplicateColumnVariable.cc,v 1.5 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: DuplicateColumnVariable.cc,v 1.6 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,25 +50,45 @@ using namespace std;
 
 /** DuplicateColumnVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(DuplicateColumnVariable,
+                        "ONE LINE DESCR",
+                        "NO HELP");
+
 DuplicateColumnVariable::DuplicateColumnVariable(Variable* input, int thewidth)
-  :UnaryVariable(input, input->length(), thewidth), width_(thewidth)
+  : inherited(input, input->length(), thewidth), width_(thewidth)
 {
-  if (!input->isColumnVec())
-    PLERROR("In DuplicateColumnVariable input is not a column");
+    build_();
 }
 
+void
+DuplicateColumnVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
-PLEARN_IMPLEMENT_OBJECT(DuplicateColumnVariable, "ONE LINE DESCR", "NO HELP");
+void
+DuplicateColumnVariable::build_()
+{
+    if (input && !input->isColumnVec())
+        PLERROR("In DuplicateColumnVariable input is not a column");
+}
+
+void
+DuplicateColumnVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "width_", &DuplicateColumnVariable::width_, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 void DuplicateColumnVariable::recomputeSize(int& l, int& w) const
-{ l=input->length(); w=width_; }
-
-
-
-
-
-
-
+{
+    if (input)
+        l = input->length();
+    else
+        l = 0;
+    w = width_;
+}
 
 void DuplicateColumnVariable::fprop()
 {
@@ -94,7 +114,4 @@ void DuplicateColumnVariable::symbolicBprop()
 }
 
 
-
 } // end of namespace PLearn
-
-

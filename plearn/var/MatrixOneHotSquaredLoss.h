@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixOneHotSquaredLoss.h,v 1.3 2004/02/20 21:11:51 chrish42 Exp $
+   * $Id: MatrixOneHotSquaredLoss.h,v 1.4 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,23 +51,31 @@ using namespace std;
 
 class MatrixOneHotSquaredLoss: public BinaryVariable
 {
-protected:
   typedef BinaryVariable inherited;
-  //!  Default constructor for persistence
-  MatrixOneHotSquaredLoss() {}
+
+protected:
   real coldval_, hotval_;
 
 public:
+  //!  Default constructor for persistence
+  MatrixOneHotSquaredLoss() {}
   MatrixOneHotSquaredLoss(Variable* netout, Variable* classnum, real coldval=0., real hotval=1.);
+
   PLEARN_DECLARE_OBJECT(MatrixOneHotSquaredLoss);
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
+
+protected:
+    void build_();
 };
 
+DECLARE_OBJECT_PTR(MatrixOneHotSquaredLoss);
 
 } // end of namespace PLearn
 

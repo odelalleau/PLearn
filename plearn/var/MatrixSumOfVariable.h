@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixSumOfVariable.h,v 1.4 2004/02/20 21:11:51 chrish42 Exp $
+   * $Id: MatrixSumOfVariable.h,v 1.5 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,9 +51,7 @@ using namespace std;
 
 class MatrixSumOfVariable: public NaryVariable
 {
-  protected:
-    //!  protected default constructor for persistence
-    MatrixSumOfVariable() : distr(), f(), nsamples(), input_size(), curpos() {}
+    typedef NaryVariable inherited;
 
   public:
   //protected:
@@ -68,10 +66,16 @@ class MatrixSumOfVariable: public NaryVariable
     Vec output_value;
     
   public:
+    //!  protected default constructor for persistence
+    MatrixSumOfVariable() : distr(), f(), nsamples(), input_size(), curpos() {}
     //!  Sum_{inputs \in distr} f(inputs)
     MatrixSumOfVariable(VMat the_distr, Func the_f, int the_nsamples=-1, int the_input_size=-1);
     
     PLEARN_DECLARE_OBJECT(MatrixSumOfVariable);
+    static void declareOptions(OptionList &ol);
+
+    virtual void build();
+
     virtual void recomputeSize(int& l, int& w) const;
     virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
     virtual void fprop();
@@ -81,7 +85,12 @@ class MatrixSumOfVariable: public NaryVariable
     virtual void rfprop();
     
     void printInfo(bool print_gradient);
+
+protected:
+    void build_();
 };
+
+DECLARE_OBJECT_PTR(MatrixSumOfVariable);
 
 // sumOf with matrix as inputs
 inline Var sumOf(VMat distr, Func f, int nsamples, int input_size)

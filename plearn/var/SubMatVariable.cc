@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubMatVariable.cc,v 1.5 2004/02/20 21:11:53 chrish42 Exp $
+   * $Id: SubMatVariable.cc,v 1.6 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,27 +50,47 @@ using namespace std;
 
 /** SubMatVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(SubMatVariable,
+                        "ONE LINE DESCR",
+                        "NO HELP");
+
 SubMatVariable::SubMatVariable(Variable* v, int i, int j, int the_length, int the_width)
-  :UnaryVariable(v, the_length, the_width), startk(i*v->width()+j), length_(the_length), width_(the_width)
+  : inherited(v, the_length, the_width), startk(i*v->width()+j), length_(the_length), width_(the_width)
 {
-  if(i<0 || i+length()>v->length() || j<0 || j+width()>v->width())
-    PLERROR("In SubMatVariable: requested sub-matrix is out of matrix bounds");
+    build_();
 }
 
+void
+SubMatVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
-PLEARN_IMPLEMENT_OBJECT(SubMatVariable, "ONE LINE DESCR", "NO HELP");
+void
+SubMatVariable::build_()
+{
+    if (input) {
+        // input is v from constructor
+        if(i_ < 0 || i_ + length() > input->length() || j_ < 0 || j_ + width() > input->width())
+            PLERROR("In SubMatVariable: requested sub-matrix is out of matrix bounds");
+        startk = i_ * input->width() + j_;
+    }
+}
 
+void
+SubMatVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "length_", &SubMatVariable::length_, OptionBase::buildoption, "");
+    declareOption(ol, "width_", &SubMatVariable::width_, OptionBase::buildoption, "");
+    declareOption(ol, "startk", &SubMatVariable::startk, OptionBase::buildoption, "");
+    declareOption(ol, "i_", &SubMatVariable::i_, OptionBase::buildoption, "");
+    declareOption(ol, "j_", &SubMatVariable::j_, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 void SubMatVariable::recomputeSize(int& l, int& w) const
 { l=length_; w=width_; }
-
-
-
-
-
-
-
-
 
 void SubMatVariable::fprop()
 {

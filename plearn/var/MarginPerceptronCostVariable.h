@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MarginPerceptronCostVariable.h,v 1.1 2004/04/11 19:51:02 yoshua Exp $
+   * $Id: MarginPerceptronCostVariable.h,v 1.2 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -55,22 +55,30 @@ using namespace std;
   // else signed_target[i] = 1_{target==i} - 1_{target!=i}.
 class MarginPerceptronCostVariable: public BinaryVariable
 {
-protected:
-  
+  typedef BinaryVariable inherited;
+
+protected:  
   real margin;
   
-  typedef BinaryVariable inherited;
+public:
   //!  Default constructor for persistence
   MarginPerceptronCostVariable() {}
-
-public:
   MarginPerceptronCostVariable(Variable* output, Variable* target, real margin);
+
   PLEARN_DECLARE_OBJECT(MarginPerceptronCostVariable);
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
   virtual void bprop();
+
+protected:
+  void build_();
 };
 
+DECLARE_OBJECT_PTR(MarginPerceptronCostVariable);
 
 inline Var margin_perceptron_cost(Var output, Var target, real margin)
 {

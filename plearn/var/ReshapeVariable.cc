@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ReshapeVariable.cc,v 1.4 2004/02/20 21:11:52 chrish42 Exp $
+   * $Id: ReshapeVariable.cc,v 1.5 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,26 +48,43 @@ using namespace std;
 
 /** ReshapeVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(ReshapeVariable,
+                        "Variable that views another variable, but with a different length() and width() "
+                        "(the only restriction being that length()*width() remain the same)",
+                        "NO HELP");
+
 ReshapeVariable::ReshapeVariable(Variable* v, int the_length, int the_width)
-  :UnaryVariable(v, the_length, the_width), length_(the_length), width_(the_width)
+  : inherited(v, the_length, the_width), length_(the_length), width_(the_width)
 {
-  if(length()*width() != input.length()*input.width())
-    PLERROR("In ReshapeVariable: length()*width() is different from the original var's length()*width()");
+    build_();
 }
 
+void
+ReshapeVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
-PLEARN_IMPLEMENT_OBJECT(ReshapeVariable, "ONE LINE DESCR", "NO HELP");
+void
+ReshapeVariable::build_()
+{
+    if (input) {
+        if(length() * width() != input.length() * input.width())
+            PLERROR("In ReshapeVariable: length()*width() is different from the original var's length()*width()");
+    }
+}
 
+void
+ReshapeVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "length_", &ReshapeVariable::length_, OptionBase::buildoption, "");
+    declareOption(ol, "width_", &ReshapeVariable::width_, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 void ReshapeVariable::recomputeSize(int& l, int& w) const
 { l=length_; w=width_; }
-
-
-
-
-
-
-
 
 void ReshapeVariable::fprop()
 {

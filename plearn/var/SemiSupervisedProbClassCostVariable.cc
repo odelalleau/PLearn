@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SemiSupervisedProbClassCostVariable.cc,v 1.3 2004/02/20 21:11:52 chrish42 Exp $
+   * $Id: SemiSupervisedProbClassCostVariable.cc,v 1.4 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,20 +49,44 @@ using namespace std;
 
 /** SemiSupervisedProbClassVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(SemiSupervisedProbClassCostVariable,
+                        "ONE LINE DESCR",
+                        "NO HELP");
+
 SemiSupervisedProbClassCostVariable::SemiSupervisedProbClassCostVariable(Var prob_, Var target_, Var prior_, real ff)
-  :NaryVariable(prob_ & target_ & (VarArray)prior_,1,1), flatten_factor(ff)
+  : inherited(prob_ & target_ & (VarArray)prior_,1,1), flatten_factor(ff)
 {
-  if (prior_->length()>0 && prob_->length() != prior_->length())
-    PLERROR("In SemiSupervisedProbClassCostVariable: If prior.length()>0 then prior and prob must have the same size");
-  if (!target_->isScalar())
-    PLERROR("In SemiSupervisedProbClassCostVariable: target must be a scalar");
-  if (flatten_factor<=0)
-    PLERROR("In SemiSupervisedProbClassCostVariable: flatten_factor must be positive, and even > 1 for normal use.");
-  raised_prob.resize(prob_->length());
+    build_();
 }
 
+void
+SemiSupervisedProbClassCostVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
-PLEARN_IMPLEMENT_OBJECT(SemiSupervisedProbClassCostVariable, "ONE LINE DESCR", "NO HELP");
+void
+SemiSupervisedProbClassCostVariable::build_()
+{
+    if (varray.size() >= 3 && varray[0] && varray[1] && varray[2]) {
+        // varray[0], varray[1] and varray[2] are (respectively) prob_, target_ and prior_ from constructor
+        if (varray[2]->length()>0 && varray[0]->length() != varray[2]->length())
+            PLERROR("In SemiSupervisedProbClassCostVariable: If prior.length()>0 then prior and prob must have the same size");
+        if (!varray[1]->isScalar())
+            PLERROR("In SemiSupervisedProbClassCostVariable: target must be a scalar");
+        raised_prob.resize(varray[0]->length());
+    }
+    if (flatten_factor <= 0)
+        PLERROR("In SemiSupervisedProbClassCostVariable: flatten_factor must be positive, and even > 1 for normal use.");
+}
+
+void
+SemiSupervisedProbClassCostVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "flatten_factor", &SemiSupervisedProbClassCostVariable::flatten_factor, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 void SemiSupervisedProbClassCostVariable::recomputeSize(int& l, int& w) const
 { l=1; w=1; }

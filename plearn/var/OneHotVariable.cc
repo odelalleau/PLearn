@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: OneHotVariable.cc,v 1.4 2004/02/20 21:11:51 chrish42 Exp $
+   * $Id: OneHotVariable.cc,v 1.5 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,24 +48,43 @@ using namespace std;
 
 /** OneHotVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(OneHotVariable,
+                        "Represents a vector of a given lenth, that has value 1 at the index "
+                        "given by another variable and 0 everywhere else",
+                        "NO HELP");
+
 OneHotVariable::OneHotVariable(int thelength, Variable* hotindex, real the_coldvalue, real the_hotvalue)
-  :UnaryVariable(hotindex,thelength,1), hotvalue(the_hotvalue), coldvalue(the_coldvalue), length_(thelength)
+    : inherited(hotindex,thelength,1), hotvalue(the_hotvalue), coldvalue(the_coldvalue), length_(thelength)
 {
-  if(!hotindex->isScalar())
-    PLERROR("InterValuesVariable OneHotVariable(int thelength, Variable* hotindex, real the_coldvalue, real the_hotvalue) hotindex must be scalar as it is supposed to be an integer index");
+    build_();
 }
 
+void
+OneHotVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
-PLEARN_IMPLEMENT_OBJECT(OneHotVariable, "ONE LINE DESCR", "NO HELP");
+void
+OneHotVariable::build_()
+{
+    // input is hotindex from constructor
+    if (input && !input->isScalar())
+        PLERROR("InterValuesVariable OneHotVariable(int thelength, Variable* hotindex, real the_coldvalue, real the_hotvalue) hotindex must be scalar as it is supposed to be an integer index");
+}
+
+void
+OneHotVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "hotvalue", &OneHotVariable::hotvalue, OptionBase::buildoption, "");
+    declareOption(ol, "coldvalue", &OneHotVariable::coldvalue, OptionBase::buildoption, "");
+    declareOption(ol, "length_", &OneHotVariable::length_, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 void OneHotVariable::recomputeSize(int& l, int& w) const
 { l=length_; w=1; }
-
-
-
-
-
-
 
 
 void OneHotVariable::fprop()

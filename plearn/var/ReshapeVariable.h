@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ReshapeVariable.h,v 1.4 2004/02/20 21:11:52 chrish42 Exp $
+   * $Id: ReshapeVariable.h,v 1.5 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,34 +48,37 @@
 namespace PLearn {
 using namespace std;
 
-
-
-
-
-
 /*! * Different views of a mat Var * */
 
 //!  Variable that views another variable, but with a different length() and width() 
 //!  (the only restriction being that length()*width() remain the same)
 class ReshapeVariable: public UnaryVariable
 {
+  typedef UnaryVariable inherited;
+
 protected:
-    typedef UnaryVariable inherited;
-  //!  Default constructor for persistence
-  ReshapeVariable() {}
   int length_, width_;
 
 public:
+  //!  Default constructor for persistence
+  ReshapeVariable() {}
   ReshapeVariable(Variable* v, int the_length, int the_width);
+
   PLEARN_DECLARE_OBJECT(ReshapeVariable);
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
 
+protected:
+    void build_();
 };
+
+DECLARE_OBJECT_PTR(ReshapeVariable);
 
 inline Var reshape(Var v, int newlength, int newwidth)
 { return new ReshapeVariable(v,newlength,newwidth); }

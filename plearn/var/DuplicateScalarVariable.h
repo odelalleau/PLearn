@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DuplicateScalarVariable.h,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: DuplicateScalarVariable.h,v 1.5 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,30 +48,35 @@
 namespace PLearn {
 using namespace std;
 
-
-
-
 /*! * Duplicates... * */
 
 class DuplicateScalarVariable: public UnaryVariable
 {
-protected:
     typedef UnaryVariable inherited;
-  //!  Default constructor for persistence
-  DuplicateScalarVariable() {}
+
+protected:
   int length_, width_;
 
 public:
+  //!  Default constructor for persistence
+  DuplicateScalarVariable() {}
   DuplicateScalarVariable(Variable* input, int thelength, int thewidth);
+
   PLEARN_DECLARE_OBJECT(DuplicateScalarVariable);
-  virtual void recomputeSize(int& l, int& w) const;
-  
-  
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
+
+  virtual void recomputeSize(int& l, int& w) const;    
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
 
+protected:
+    void build_();
 };
+
+DECLARE_OBJECT_PTR(DuplicateScalarVariable);
 
 inline Var duplicateScalar(Var v, int the_length, int the_width)
 { 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DuplicateColumnVariable.h,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: DuplicateColumnVariable.h,v 1.5 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,25 +51,32 @@ using namespace std;
 
 class DuplicateColumnVariable: public UnaryVariable
 {
+  typedef UnaryVariable inherited;
+
 protected:
-    typedef UnaryVariable inherited;
-  //!  Default constructor for persistence
-  DuplicateColumnVariable() : n_duplicates() {}
   int width_;
+  //int n_duplicates;
 
 public:
-  int n_duplicates;
-
+  //!  Default constructor for persistence
+  DuplicateColumnVariable() {}
   DuplicateColumnVariable(Variable* input, int thewidth);
+
   PLEARN_DECLARE_OBJECT(DuplicateColumnVariable);
-  virtual void recomputeSize(int& l, int& w) const;
-  
-  
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
+
+  virtual void recomputeSize(int& l, int& w) const;    
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
 
+protected:
+  void build_();
 };
+
+DECLARE_OBJECT_PTR(DuplicateColumnVariable);
 
 inline Var duplicateColumn(Var v, int the_width)
 { 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DuplicateScalarVariable.cc,v 1.5 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: DuplicateScalarVariable.cc,v 1.6 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,24 +50,40 @@ using namespace std;
 
 /** DuplicateScalarVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(DuplicateScalarVariable,
+                        "ONE LINE DESCR",
+                        "NO HELP");
+
 DuplicateScalarVariable::DuplicateScalarVariable(Variable* input, int thelength, int thewidth)
-  :UnaryVariable(input, thelength, thewidth), length_(thelength), width_(thewidth)
+  : inherited(input, thelength, thewidth), length_(thelength), width_(thewidth)
 {
-  if (!input->isScalar())
-    PLERROR("In DuplicateScalarVariable input is not a scalar");
+    build_();
 }
 
+void
+DuplicateScalarVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
-PLEARN_IMPLEMENT_OBJECT(DuplicateScalarVariable, "ONE LINE DESCR", "NO HELP");
+void
+DuplicateScalarVariable::build_()
+{
+    if (input && !input->isScalar())
+        PLERROR("In DuplicateScalarVariable input is not a scalar");
+}
+
+void
+DuplicateScalarVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "length_", &DuplicateScalarVariable::length_, OptionBase::buildoption, "");
+    declareOption(ol, "width_", &DuplicateScalarVariable::width_, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 void DuplicateScalarVariable::recomputeSize(int& l, int& w) const
 { l=length_; w=width_; }
-
-
-
-
-
-
 
 
 void DuplicateScalarVariable::fprop()

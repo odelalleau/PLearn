@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: OneHotSquaredLoss.cc,v 1.5 2004/02/20 21:11:51 chrish42 Exp $
+   * $Id: OneHotSquaredLoss.cc,v 1.6 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,19 +51,41 @@ using namespace std;
 
 /** OneHotSquaredLoss **/
 
-PLEARN_IMPLEMENT_OBJECT(OneHotSquaredLoss, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(OneHotSquaredLoss,
+                        "Computes sum(square_i(netout[i]-(i==classnum ?hotval :coldval))",
+                        "NO HELP");
+
+OneHotSquaredLoss::OneHotSquaredLoss(Variable* netout, Variable* classnum, real coldval, real hotval)
+  : inherited(netout,classnum,1,1), coldval_(coldval), hotval_(hotval)
+{
+    build_();
+}
+
+void
+OneHotSquaredLoss::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+OneHotSquaredLoss::build_()
+{
+    // input2 is classnum from constructor
+    if(input2 && !input2->isScalar())
+        PLERROR("In OneHotSquaredLoss: classnum must be a scalar variable representing an index of netout (typically a classnum)");
+}
+
+void
+OneHotSquaredLoss::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "coldval_", &OneHotSquaredLoss::coldval_, OptionBase::buildoption, "");
+    declareOption(ol, "hotval_", &OneHotSquaredLoss::hotval_, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 void OneHotSquaredLoss::recomputeSize(int& l, int& w) const
 { l=1, w=1; }
-
-
-OneHotSquaredLoss::OneHotSquaredLoss(Variable* netout, Variable* classnum, real coldval, real hotval)
-    :BinaryVariable(netout,classnum,1,1), coldval_(coldval), hotval_(hotval)
-{
-  if(!classnum->isScalar())
-    PLERROR("In OneHotSquaredLoss: classnum must be a scalar variable representing an index of netout (typically a classnum)");
-}
-
   
 void OneHotSquaredLoss::fprop()
 {

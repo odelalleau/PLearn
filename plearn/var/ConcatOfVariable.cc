@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatOfVariable.cc,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: ConcatOfVariable.cc,v 1.5 2004/04/27 16:03:34 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,19 +50,16 @@ using namespace std;
 /** ConcatOfVariable **/
 /* concatenates the results of each operation in the loop into the resulting variable */
 
+PLEARN_IMPLEMENT_OBJECT(ConcatOfVariable, "Concatenates the results of each operation in the loop into the resulting variable", "NO HELP");
+
 ConcatOfVariable::ConcatOfVariable(VMat the_distr, Func the_f)
-  :NaryVariable(nonInputParentsOfPath(the_f->inputs,the_f->outputs), 
-                the_f->outputs[0]->length()*the_distr->length(), 
-                the_f->outputs[0]->width()),
-  distr(the_distr), f(the_f)
+  : inherited(nonInputParentsOfPath(the_f->inputs, the_f->outputs), 
+              the_f->outputs[0]->length() * the_distr->length(), 
+              the_f->outputs[0]->width()),
+    distr(the_distr), f(the_f)
 {
-  if(f->outputs.size()!=1)
-    PLERROR("In ConcatOfVariable constructor: function must have a single output variable");
-
-  input_value.resize(distr->width());
-  input_gradient.resize(distr->width());
+    build_();
 }
-
 
 /* Old constructor
 ConcatOfVariable::ConcatOfVariable(Variable* the_output, const VarArray& the_inputs, VMat the_distr, const VarArray& the_parameters)
@@ -74,10 +71,43 @@ ConcatOfVariable::ConcatOfVariable(Variable* the_output, const VarArray& the_inp
 }
 */
 
-PLEARN_IMPLEMENT_OBJECT(ConcatOfVariable, "ONE LINE DESCR", "NO HELP");
+
+void
+ConcatOfVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "distr", &ConcatOfVariable::distr, OptionBase::buildoption, "");
+    declareOption(ol, "f", &ConcatOfVariable::f, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
+
+void
+ConcatOfVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+ConcatOfVariable::build_()
+{
+    if (distr && f) {
+        if(f->outputs.size()!=1)
+            PLERROR("In ConcatOfVariable constructor: function must have a single output variable");
+
+        input_value.resize(distr->width());
+        input_gradient.resize(distr->width());
+    }
+}
+
 
 void ConcatOfVariable::recomputeSize(int& l, int& w) const
-{ l=f->outputs[0]->length()*distr->length(); w=f->outputs[0]->width(); }
+{
+    if (f && distr) {
+        l = f->outputs[0]->length() * distr->length();
+        w = f->outputs[0]->width();
+    } else
+        l = w = 0;
+}
 
 
 void ConcatOfVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)

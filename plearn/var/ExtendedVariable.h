@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ExtendedVariable.h,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: ExtendedVariable.h,v 1.5 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -60,11 +60,7 @@ using namespace std;
 */
 class ExtendedVariable: public UnaryVariable
 {
-protected:
-    typedef UnaryVariable inherited;
-  //!  Default constructor for persistence
-  ExtendedVariable() : top_extent(), bottom_extent(), left_extent(),
-                       right_extent(), fill_value() {}
+  typedef UnaryVariable inherited;
 
 public:
   int top_extent;
@@ -73,19 +69,32 @@ public:
   int right_extent;
   real fill_value; 
 
+public:
+  //!  Default constructor for persistence
+  ExtendedVariable()
+    : top_extent(), bottom_extent(), left_extent(), right_extent(), fill_value()
+    {}
   ExtendedVariable(Variable* input, 
                    int the_top_extent, int the_bottom_extent, 
                    int the_left_extent, int the_right_extent, 
                    real the_fill_value);
+
   PLEARN_DECLARE_OBJECT(ExtendedVariable);
-  virtual void recomputeSize(int& l, int& w) const;
-  
-  
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
+
+  virtual void recomputeSize(int& l, int& w) const;  
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
   virtual void rfprop();
+
+protected:
+    void build_();
 };
+
+DECLARE_OBJECT_PTR(ExtendedVariable);
 
 //!  general extension of a matrix in any direction
 inline Var extend(Var v, int top_extent, int bottom_extent, int left_extent, int right_extent, real fill_value=0.0)

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubsampleVariable.cc,v 1.4 2004/02/20 21:11:53 chrish42 Exp $
+   * $Id: SubsampleVariable.cc,v 1.5 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,27 +48,48 @@ using namespace std;
 
 /** SubsampleVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(SubsampleVariable,
+                        "A subsample var; equals subsample(input, the_subsamplefactor)",
+                        "NO HELP");
+
 SubsampleVariable::SubsampleVariable(Variable* input, int the_subsamplefactor) 
-  :UnaryVariable(input, input->length()/the_subsamplefactor, input->width()/the_subsamplefactor), 
-   subsamplefactor(the_subsamplefactor) 
+  : inherited(input, input->length()/the_subsamplefactor, input->width()/the_subsamplefactor), 
+    subsamplefactor(the_subsamplefactor) 
 {
-  if(input->length()%the_subsamplefactor!=0 || input->width()%the_subsamplefactor!=0)
-    PLERROR("In SubsampleVariable constructor: Dimensions of input are not dividable by subsamplefactor");
+    build_();
 }
 
+void
+SubsampleVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
-PLEARN_IMPLEMENT_OBJECT(SubsampleVariable, "ONE LINE DESCR", "NO HELP");
+void
+SubsampleVariable::build_()
+{
+    if (input) {
+        if (input->length() % subsamplefactor != 0 || input->width() % subsamplefactor != 0)
+            PLERROR("In SubsampleVariable constructor: Dimensions of input are not dividable by subsamplefactor");
+    }
+}
+
+void
+SubsampleVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "subsamplefactor", &SubsampleVariable::subsamplefactor, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 void SubsampleVariable::recomputeSize(int& l, int& w) const
-{ l=input->length()/subsamplefactor; w=input->width()/subsamplefactor; }
-
-
-
-
-
-
-
-
+{
+    if (input) {
+        l = input->length() / subsamplefactor;
+        w = input->width()/subsamplefactor;
+    } else
+        l = w = 0;
+}
 
 void SubsampleVariable::fprop()
 {

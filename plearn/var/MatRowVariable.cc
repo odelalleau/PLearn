@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatRowVariable.cc,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: MatRowVariable.cc,v 1.5 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,19 +48,45 @@ using namespace std;
 
 /** MatRowVariable **/
 
+
+PLEARN_IMPLEMENT_OBJECT(MatRowVariable,
+                        "Variable that is the row of matrix mat indexed by variable input",
+                        "NO HELP");
+
 MatRowVariable::MatRowVariable(const Mat& mat, Variable* input)
-  : UnaryVariable(input, mat.width(), 1), m(mat)
+  : inherited(input, mat.width(), 1), m(mat)
 {
-  if(!input->isScalar())
-    PLERROR("IN MatRowVariable(const Mat& mat, Variable* input) input must have nelems() 1 as it is supposed to be an integer index");
+    build_();
 }
 
+void
+MatRowVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
-PLEARN_IMPLEMENT_OBJECT(MatRowVariable, "ONE LINE DESCR", "NO HELP");
+void
+MatRowVariable::build_()
+{
+    if(input && !input->isScalar())
+        PLERROR("IN MatRowVariable(const Mat& mat, Variable* input) input must have nelems() 1 as it is supposed to be an integer index");
+}
 
+void
+MatRowVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "m", &MatRowVariable::m, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
-void MatRowVariable::recomputeSize(int& l, int& w) const
-{ l=m.width(); w=1; }
+void
+MatRowVariable::recomputeSize(int& l, int& w) const
+{
+    if (m)
+        l=m.width();
+    w = 1;
+}
 
 
 

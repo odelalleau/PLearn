@@ -37,7 +37,7 @@
 
 
 /* *******************************************************      
-   * $Id: MarginPerceptronCostVariable.cc,v 1.1 2004/04/11 19:51:02 yoshua Exp $
+   * $Id: MarginPerceptronCostVariable.cc,v 1.2 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -57,12 +57,32 @@ PLEARN_IMPLEMENT_OBJECT(
 ////////////////////////////////////
 // MarginPerceptronCostVariable //
 ////////////////////////////////////
-MarginPerceptronCostVariable::
-MarginPerceptronCostVariable(Variable* output, Variable* target, real m)
-  :BinaryVariable(output,target,1,1),margin(m)
+MarginPerceptronCostVariable::MarginPerceptronCostVariable(Variable* output, Variable* target, real m)
+  : inherited(output,target,1,1),margin(m)
 {
-  if(target->size() != 1)
-    PLERROR("In MarginPerceptronCostVariable: target represents a class (0...n_classes-1) and must be a single integer");
+    build_();
+}
+
+void
+MarginPerceptronCostVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+MarginPerceptronCostVariable::build_()
+{
+    // input2 is target from constructor
+    if (input2 && input2->size() != 1)
+        PLERROR("In MarginPerceptronCostVariable: target represents a class (0...n_classes-1) and must be a single integer");
+}
+
+void
+MarginPerceptronCostVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "margin", &MarginPerceptronCostVariable::margin, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
 }
 
 ///////////////////

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DuplicateRowVariable.cc,v 1.5 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: DuplicateRowVariable.cc,v 1.6 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,25 +50,43 @@ using namespace std;
 
 /** DuplicateRowVariable **/
 
-DuplicateRowVariable::DuplicateRowVariable(Variable* input, int thelength)
-  :UnaryVariable(input, thelength, input->width()), length_(thelength)
-{
-  if (!input->isRowVec())
-    PLERROR("In DuplicateRowVariable input is not a row");
-}
-
-
 PLEARN_IMPLEMENT_OBJECT(DuplicateRowVariable, "ONE LINE DESCR", "NO HELP");
 
+DuplicateRowVariable::DuplicateRowVariable(Variable* input, int thelength)
+  : inherited(input, thelength, input->width()), length_(thelength)
+{
+    build_();
+}
+
+void
+DuplicateRowVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+DuplicateRowVariable::build_()
+{
+    if (input && !input->isRowVec())
+        PLERROR("In DuplicateRowVariable input is not a row");
+}
+
+void
+DuplicateRowVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "length_", &DuplicateRowVariable::length_, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
+
 void DuplicateRowVariable::recomputeSize(int& l, int& w) const
-{ l=length_; w=input->width(); }
-
-
-
-
-
-
-
+{
+    l = length_;
+    if (input)
+        w = input->width();
+    else
+        w = 0;
+}
 
 void DuplicateRowVariable::fprop()
 {

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatrixOneHotSquaredLoss.cc,v 1.4 2004/02/20 21:11:51 chrish42 Exp $
+   * $Id: MatrixOneHotSquaredLoss.cc,v 1.5 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,26 +48,47 @@ using namespace std;
 
 /** MatrixOneHotSquaredLoss **/
 
-PLEARN_IMPLEMENT_OBJECT(MatrixOneHotSquaredLoss, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(MatrixOneHotSquaredLoss,
+                        "ONE LINE DESCR",
+                        "NO HELP");
 
 MatrixOneHotSquaredLoss::MatrixOneHotSquaredLoss(Variable* input1, Variable* input2, real coldval, real hotval)
-    :BinaryVariable(input1,input2,input2->length(),input2->width()), coldval_(coldval), hotval_(hotval)
+  : inherited(input1,input2,input2->length(),input2->width()), coldval_(coldval), hotval_(hotval)
 {
-  if(!input2->isVec())
-    PLERROR("In MatrixOneHotSquaredLoss: classnum must be a vector variable representing the indexs of netouts (typically some classnums)");
+    build_();
 }
 
+void
+MatrixOneHotSquaredLoss::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+MatrixOneHotSquaredLoss::build_()
+{
+    if (input2 && !input2->isVec())
+        PLERROR("In MatrixOneHotSquaredLoss: classnum must be a vector variable representing the indexs of netouts (typically some classnums)");
+}
+
+void
+MatrixOneHotSquaredLoss::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "coldval_", &MatrixOneHotSquaredLoss::coldval_, OptionBase::buildoption, "");
+    declareOption(ol, "hotval_", &MatrixOneHotSquaredLoss::hotval_, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 void MatrixOneHotSquaredLoss::recomputeSize(int& l, int& w) const
-{ l=input2->length(), w=input2->width(); }
+{
+    if (input2) {
+        l = input2->length();
+        w = input2->width();
+    } else
+        l = w = 0;
+}
 
-
-
-
-
-
-
-  
 void MatrixOneHotSquaredLoss::fprop()
 {
   int n = input1->length();

@@ -36,13 +36,12 @@
 
 
 /* *******************************************************      
-   * $Id: UnaryHardSlopeVariable.cc,v 1.1 2004/04/11 19:51:02 yoshua Exp $
+   * $Id: UnaryHardSlopeVariable.cc,v 1.2 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "UnaryHardSlopeVariable.h"
 #include "Var_operators.h"
-//#include "Var_utils.h"
 
 namespace PLearn {
 using namespace std;
@@ -50,18 +49,44 @@ using namespace std;
 
 /** UnaryHardSlopeVariable **/
 
-UnaryHardSlopeVariable::UnaryHardSlopeVariable(Variable* input,real l,real r) 
-  :UnaryVariable(input, input->length(), input->width()) ,
-   left(l), right(r), inv_slope(1.0/(r-l))
-{}
-
-
 PLEARN_IMPLEMENT_OBJECT(UnaryHardSlopeVariable, 
                         "Hard slope function whose Var input is only the argument of the function.", 
                         "Maps x (elementwise) to 0 if x<left, 1 if x>right, and linear in between otherwise.");
 
+UnaryHardSlopeVariable::UnaryHardSlopeVariable(Variable* input,real l,real r) 
+  : inherited(input, input->length(), input->width()) ,
+    left(l), right(r), inv_slope(1.0/(r-l))
+{}
+
+void
+UnaryHardSlopeVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+UnaryHardSlopeVariable::build_()
+{
+    inv_slope = (1.0 / (right - 1));
+}
+
+void
+UnaryHardSlopeVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "left", &UnaryHardSlopeVariable::left, OptionBase::buildoption, "");
+    declareOption(ol, "right", &UnaryHardSlopeVariable::right, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
+
 void UnaryHardSlopeVariable::recomputeSize(int& l, int& w) const
-{ l=input->length(); w=input->width(); }
+{
+    if (input) {
+        l = input->length();
+        w = input->width();
+    } else
+        l = w = 0;
+}
 
 
 void UnaryHardSlopeVariable::fprop()

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: RowAtPositionVariable.cc,v 1.4 2004/02/20 21:11:52 chrish42 Exp $
+   * $Id: RowAtPositionVariable.cc,v 1.5 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,29 +49,49 @@ using namespace std;
 
 /** RowAtPositionVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(RowAtPositionVariable,
+                        "Variables positionned inside a larger zero variable ...",
+                        "NO HELP");
+
 RowAtPositionVariable::RowAtPositionVariable(Variable* input1, Variable* input2, int the_length)
-  :BinaryVariable(input1, input2, the_length, input1->width()), length_(the_length)
+  : inherited(input1, input2, the_length, input1->width()), length_(the_length)
 {
-  if(!input1->isRowVec())
-    PLERROR("In RowAtPositionVariable: input1 must be a single row");
-  if(!input2->isScalar())
-    PLERROR("In RowAtPositionVariable: position must be a scalar");
+    build_();
 }
 
+void
+RowAtPositionVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
-PLEARN_IMPLEMENT_OBJECT(RowAtPositionVariable, "ONE LINE DESCR", "NO HELP");
+void
+RowAtPositionVariable::build_()
+{
+    if (input1 && input2) {
+        if(!input1->isRowVec())
+            PLERROR("In RowAtPositionVariable: input1 must be a single row");
+        if(!input2->isScalar())
+            PLERROR("In RowAtPositionVariable: position must be a scalar");
+    }
+}
 
+void
+RowAtPositionVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "length_", &RowAtPositionVariable::length_, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 void RowAtPositionVariable::recomputeSize(int& l, int& w) const
-{ l=length_; w=input1->width(); }
-
-
-
-
-
-
-
-
+{
+    l=length_;
+    if (input1)
+        w = input1->width();
+    else
+        w = 0;
+}
 
 void RowAtPositionVariable::fprop()
 {

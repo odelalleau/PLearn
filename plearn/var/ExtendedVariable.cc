@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ExtendedVariable.cc,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: ExtendedVariable.cc,v 1.5 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,31 +50,56 @@ using namespace std;
 
 /** ExtendedVariable **/
 
-ExtendedVariable::ExtendedVariable(Variable* input, int the_top_extent,
-  int the_bottom_extent, int the_left_extent, int the_right_extent, real the_fill_value)
-  :UnaryVariable(input, input->length()+the_top_extent+the_bottom_extent, input->width()+the_left_extent+the_right_extent),
-   top_extent(the_top_extent), bottom_extent(the_bottom_extent), 
-   left_extent(the_left_extent), right_extent(the_right_extent),
-   fill_value(the_fill_value)
+PLEARN_IMPLEMENT_OBJECT(ExtendedVariable,
+                        "Variable that extends the input variable by appending rows at "
+                        "its top and bottom and columns at its left and right.",
+                        "NO HELP");
+
+ExtendedVariable::ExtendedVariable(Variable* input, int the_top_extent, int the_bottom_extent,
+                                   int the_left_extent, int the_right_extent, real the_fill_value)
+  : inherited(input, input->length()+the_top_extent+the_bottom_extent, input->width()+the_left_extent+the_right_extent),
+    top_extent(the_top_extent), bottom_extent(the_bottom_extent), 
+    left_extent(the_left_extent), right_extent(the_right_extent),
+    fill_value(the_fill_value)
 {
-  if(top_extent<0 || bottom_extent<0 || left_extent<0 || right_extent<0)
-    PLERROR("In ExtendedVariable: given extents must be >=0");
-  for(int k=0; k<nelems(); k++)
-    valuedata[k] = fill_value;
+    build_();
 }
 
+void
+ExtendedVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
-PLEARN_IMPLEMENT_OBJECT(ExtendedVariable, "ONE LINE DESCR", "NO HELP");
+void
+ExtendedVariable::build_()
+{
+    if(top_extent<0 || bottom_extent<0 || left_extent<0 || right_extent<0)
+        PLERROR("In ExtendedVariable: given extents must be >=0");
+    for(int k=0; k<nelems(); k++)
+        valuedata[k] = fill_value;
+}
+
+void
+ExtendedVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "top_extent", &ExtendedVariable::top_extent, OptionBase::buildoption, "");
+    declareOption(ol, "bottom_extent", &ExtendedVariable::bottom_extent, OptionBase::buildoption, "");
+    declareOption(ol, "left_extent", &ExtendedVariable::left_extent, OptionBase::buildoption, "");
+    declareOption(ol, "right_extent", &ExtendedVariable::right_extent, OptionBase::buildoption, "");
+    declareOption(ol, "fill_value", &ExtendedVariable::fill_value, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 void ExtendedVariable::recomputeSize(int& l, int& w) const
-{ l=input->length()+top_extent+bottom_extent; w=input->width()+left_extent+right_extent; }
-
-
-
-
-
-
-
+{
+    if (input) {
+        l = input->length() + top_extent + bottom_extent;
+        w = input->width() + left_extent + right_extent;
+    } else
+        l = w = 0;
+}
 
 void ExtendedVariable::fprop()
 {
@@ -147,8 +172,6 @@ void ExtendedVariable::rfprop()
         }
     }
 }
-
-
 
 } // end of namespace PLearn
 

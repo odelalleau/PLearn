@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubsampleVariable.h,v 1.4 2004/02/20 21:11:53 chrish42 Exp $
+   * $Id: SubsampleVariable.h,v 1.5 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,24 +52,31 @@ using namespace std;
 //!  A subsample var; equals subrample(input, the_subsamplefactor)
 class SubsampleVariable: public UnaryVariable
 {
-protected:
-    typedef UnaryVariable inherited;
-  //!  Default constructor for persistence
-  SubsampleVariable() : subsamplefactor() {}
+  typedef UnaryVariable inherited;
 
 protected:
   int subsamplefactor;
 
 public:
+  //!  Default constructor for persistence
+  SubsampleVariable() : subsamplefactor(1) {}
   SubsampleVariable(Variable* input,int the_subsamplefactor);
+
   PLEARN_DECLARE_OBJECT(SubsampleVariable);
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
+
+protected:
+    void build_();
 };
+
+DECLARE_OBJECT_PTR(SubsampleVariable);
 
 inline Var subsample(Var input, int subsample_factor)
 { return new SubsampleVariable(input, subsample_factor); }

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatRowVariable.h,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: MatRowVariable.h,v 1.5 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,32 +49,37 @@ namespace PLearn {
 using namespace std;
 
 
-
 /*! * Indexing an external Mat or Vec with a variable * */
 
 //!  Variable that is the row of matrix mat indexed by variable input
 class MatRowVariable: public UnaryVariable
 {
-protected:
-    typedef UnaryVariable inherited;
-  //!  Default constructor for persistence
-  MatRowVariable() {}
+  typedef UnaryVariable inherited;
 
 protected:
   Mat m;
 
 public:
+  //!  Default constructor for persistence
+  MatRowVariable() {}
   MatRowVariable(const Mat& mat, Variable* input);
+
   PLEARN_DECLARE_OBJECT(MatRowVariable);
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
 
+protected:
+    void build_();
 };
+
+DECLARE_OBJECT_PTR(MatRowVariable);
 
 inline Var accessRow(const Mat& m, Var index)
 { return new MatRowVariable(m,index); }

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubMatTransposeVariable.cc,v 1.5 2004/02/20 21:11:53 chrish42 Exp $
+   * $Id: SubMatTransposeVariable.cc,v 1.6 2004/04/27 16:03:35 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,26 +50,45 @@ using namespace std;
 
 /** SubMatTransposeVariable **/
 
-SubMatTransposeVariable::SubMatTransposeVariable(Variable* v, int i, int j, int the_length, int the_width)
-  :UnaryVariable(v, the_width, the_length), startk(i*v->length()+j), length_(the_length), width_(the_width)
-{
-  if(i<0 || i+the_length>v->length() || j<0 || j+the_width>v->width())
-    PLERROR("In SubMatTransposeVariable: requested sub-matrix is out of matrix bounds");
-}
-
-
 PLEARN_IMPLEMENT_OBJECT(SubMatTransposeVariable, "ONE LINE DESCR", "NO HELP");
 
+SubMatTransposeVariable::SubMatTransposeVariable(Variable* v, int i, int j, int the_length, int the_width)
+  : inherited(v, the_width, the_length), startk(i*v->length()+j), length_(the_length), width_(the_width)
+{
+    build_();
+}
+
+void
+SubMatTransposeVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+SubMatTransposeVariable::build_()
+{
+    if (input) {
+        // input is v from constructor
+        if (i_ < 0 || i_ + length_ > input->length() || j_ < 0 || j_ + width_ > input->width())
+            PLERROR("In SubMatTransposeVariable: requested sub-matrix is out of matrix bounds");
+        startk = i_ * input->length() + j_;
+    }
+}
+
+void
+SubMatTransposeVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "length_", &SubMatTransposeVariable::length_, OptionBase::buildoption, "");
+    declareOption(ol, "width_", &SubMatTransposeVariable::width_, OptionBase::buildoption, "");
+    declareOption(ol, "startk", &SubMatTransposeVariable::startk, OptionBase::buildoption, "");
+    declareOption(ol, "i_", &SubMatTransposeVariable::i_, OptionBase::buildoption, "");
+    declareOption(ol, "j_", &SubMatTransposeVariable::j_, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 void SubMatTransposeVariable::recomputeSize(int& l, int& w) const
 { l=width_; w=length_; }
-
-
-
-
-
-
-
 
 void SubMatTransposeVariable::fprop()
 {
