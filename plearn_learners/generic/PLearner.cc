@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.13 2003/06/30 17:32:30 plearner Exp $
+   * $Id: PLearner.cc,v 1.14 2003/08/08 20:45:54 yoshua Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -100,7 +100,7 @@ void PLearner::declareOptions(OptionList& ol)
 
   declareOption(ol, "nstages", &PLearner::nstages, OptionBase::buildoption, 
                 "The stage until which train() should train this learner and return.\n"
-                "The meaning of 'stage' is learner-dependent, but learner's whose \n"
+                "The meaning of 'stage' is learner-dependent, but for learners whose \n"
                 "training is incremental (such as involving incremental optimization), \n"
                 "it is typically synonym with the number of 'epochs', i.e. the number \n"
                 "of passages of the optimization process through the whole training set, \n"

@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.11 2003/08/07 19:23:40 dorionc Exp $
+   * $Id: PLearner.h,v 1.12 2003/08/08 20:45:54 yoshua Exp $
    ******************************************************* */
 
 
@@ -68,14 +68,29 @@ using namespace std;
     
     // Build options
 
-    //! The directory in which to save files related to this model (see setExperimentDirectory())
-    //! You may assume that it ends with a slash (setExperimentDirectory(...) ensures this).
-    //! If it's the empty string, then this learner should not create any file.
+    //! Path of the directory associated with this learner, in which
+    //! it should save any file it wishes to create.
+    //! The directory will be created if it does not already exist.
+    //! If expdir is the empty string (the default), then the learner
+    //! should not create *any* file. Note that, anyway, most file creation and
+    //! reporting are handled at the level of the PTester class rather than
+    //! at the learner's.
     string expdir; 
 
-    long seed;   //!< the seed used for the random number generator in initializing the learner (see forget() method).
-    int stage;
-    int nstages;
+    long seed; //!< the seed used for the random number generator in initializing the learner (see forget() method).
+    int stage; //!< The current training stage, since last fresh initialization (forget()):
+               //!< 0 means untrained, n often means after n epochs or optimization steps, etc...
+               //!< The true meaning is learner-dependant.
+               //!< You should never modify this option directly!
+               //!< It is the role of forget() to bring it back to 0,
+               //!< and the role of train() to bring it up to 'nstages'...
+    int nstages;//!< The stage until which train() should train this learner and return.
+                //!< The meaning of 'stage' is learner-dependent, but for learners whose
+                //!< training is incremental (such as involving incremental optimization),
+                //!< it is typically synonym with the number of 'epochs', i.e. the number
+                //!< of passages of the optimization process through the whole training set,
+                //!< since the last fresh initialisation.
+
     bool report_progress; //!< should progress in learning and testing be reported in a ProgressBar
     int verbosity; //! Level of verbosity. If 0, should not write anything on cerr. If >0 may write some info on the steps performed (the amount of detail written depends on the value of this option).
 
@@ -177,7 +192,8 @@ using namespace std;
       useful to set or reset the learner in its fresh state. 
       (remember build may be called after modifying options that do not 
       necessarily require the learner to restart from a fresh state...)
-      It is also called by the setTrainingSet method, after it calling build().
+      forget is also called by the setTrainingSet method, after calling build(),
+      so it will generally be called TWICE during setTrainingSet!
     */
     virtual void forget() =0;
 

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.cc,v 1.20 2003/05/21 13:42:11 tihocan Exp $
+   * $Id: GradientOptimizer.cc,v 1.21 2003/08/08 20:45:54 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -156,6 +156,8 @@ void GradientOptimizer::oldread(istream& in)
 
 IMPLEMENT_NAME_AND_DEEPCOPY(GradientOptimizer);
 
+static bool displayvg=false;
+
 real GradientOptimizer::optimize()
 {
   ofstream out;
@@ -165,6 +167,7 @@ real GradientOptimizer::optimize()
      out << " Stochastic! " << endl;
     }
   Vec meancost(cost->size());
+  TVec<int> costnonmissing(cost->size());
   Vec lastmeancost(cost->size());
   early_stop = false;
 
@@ -194,13 +197,16 @@ real GradientOptimizer::optimize()
     proppath.clearGradient();
     cost->gradient[0] = -learning_rate;
 
-      proppath.fbprop();//displayVarGraph(proppath, true, 333);
-      meancost += cost->value;
+      proppath.fbprop();
+      if (displayvg || !finite(cost->value[0]))
+        displayVarGraph(proppath, true, 333);
+      addIfNonMissing(cost->value,costnonmissing,meancost);
       if ((every!=0) && ((t+1)%every==0))
       // normally this is done every epoch
       { 
           //cerr << ">>>>>> nupdates= " << nupdates << "  every=" << every << "  sumofvar->nsamples=" << sumofvar->nsamples << endl;
-        meancost /= real(every);
+        for (int i=0;i<cost->size();i++)
+          meancost[i] /= costnonmissing[i];
         //if (decrease_constant != 0)
         //  cout << "at t=" << t << ", learning rate = " << learning_rate << endl;
         cout << t+1 << ' ' << meancost << ' ' << learning_rate << endl;
@@ -210,6 +216,7 @@ real GradientOptimizer::optimize()
         early_stop_i = (t+1)/every;
         lastmeancost << meancost;
         meancost.clear();
+        costnonmissing.clear();
       }
     // set params += -learning_rate * params.gradient
     if(!stochastic_hack)

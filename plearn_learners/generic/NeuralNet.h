@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeuralNet.h,v 1.3 2003/05/07 05:39:19 plearner Exp $
+   * $Id: NeuralNet.h,v 1.4 2003/08/08 20:45:54 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeuralNet.h */
@@ -99,11 +99,15 @@ using namespace std;
     bool global_weight_decay; // default: false
     bool direct_in_to_out; // should we include direct input to output connecitons? default: false
     string output_transfer_func; // tanh, sigmoid, softplus, softmax  (default: "" means no transfer function)
+    int iseed; // seed for random nb generator, -1 = use time of day
 
     //! a list of cost functions to use in the form "[ cf1; cf2; cf3; ... ]"
     // where the cost functions can be one of mse, mse_onehot, NLL,
-    // class_error or multiclass_error (no default)
+    // class_error or multiclass_error (no default), or semisupervised_prob_class
+    // (if the latter, then the semisupervised_flatten_factor option must be set).
     Array<string> cost_funcs;  
+    real semisupervised_flatten_factor; // see SemiSupervisedProbClassCostVariable for explanations
+    Vec semisupervised_prior; // see SemiSupervisedProbClassCostVariable for explanations
 
     // Build options related to the optimization:
     PP<Optimizer> optimizer; // the optimizer to use (no default)

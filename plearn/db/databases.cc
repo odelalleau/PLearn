@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: databases.cc,v 1.1 2002/11/28 04:27:17 jkeable Exp $
+   * $Id: databases.cc,v 1.2 2003/08/08 20:45:54 yoshua Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -825,6 +825,8 @@ void loadClassificationDataset(const string& datasetname, int& inputsize, int& n
     computeMeanAndStddev(trainset, meanvec, stddevvec);
     meanvec = meanvec.subVec(0,inputsize);
     stddevvec = stddevvec.subVec(0,inputsize);
+    for (int i=0;i<inputsize;i++)
+      if (stddevvec[i]==0) stddevvec[i]=1;
     trainset = normalize(trainset,meanvec,stddevvec);
     testset = normalize(testset,meanvec,stddevvec);
   }

@@ -35,8 +35,8 @@
 
 
 /* *******************************************************      
-   * $Id: NeuralNet.cc,v 1.12 2003/06/21 14:22:28 yoshua Exp $
-   ******************************************************* */
+ * $Id: NeuralNet.cc,v 1.13 2003/08/08 20:45:54 yoshua Exp $
+ ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeuralNet.h */
 
@@ -45,6 +45,8 @@
 #include "DisplayUtils.h"
 #include "random.h"
 #include "GradientOptimizer.h"
+#include "SemiSupervisedProbClassCostVariable.h"
+#include "IsMissingVariable.h"
 
 namespace PLearn <%
 using namespace std;
@@ -66,6 +68,8 @@ NeuralNet::NeuralNet()
    direct_in_to_out_weight_decay(0),
    direct_in_to_out(false),
    output_transfer_func(""),
+   iseed(-1),
+   semisupervised_flatten_factor(1),
    batch_size(1),
    nepochs(10000)
 {}
@@ -121,6 +125,9 @@ void NeuralNet::declareOptions(OptionList& ol)
                 "    one of: tanh, sigmoid, exp, softmax \n"
                 "    an empty string means no output transfer function \n");
 
+  declareOption(ol, "seed", &NeuralNet::iseed, OptionBase::buildoption, 
+                "    Seed for the random number generator used to initialize parameters. If -1 then use time of day.\n");
+
   declareOption(ol, "cost_funcs", &NeuralNet::cost_funcs, OptionBase::buildoption, 
                 "    a list of cost functions to use\n"
                 "    in the form \"[ cf1; cf2; cf3; ... ]\" where each function is one of: \n"
@@ -128,10 +135,21 @@ void NeuralNet::declareOptions(OptionList& ol)
                 "      mse_onehot (for classification)\n"
                 "      NLL (negative log likelihood -log(p[c]) for classification) \n"
                 "      class_error (classification error) \n"
+                "      semisupervised_prob_class\n"
                 "    The first function of the list will be used as \n"
                 "    the objective function to optimize \n"
-                "    (possibly with an added weight decay penalty) \n");
+                "    (possibly with an added weight decay penalty) \n"
+                "    If semisupervised_prob_class is chosen, then the options\n"
+                "    semisupervised_{flatten_factor,prior} will be used. Note that\n"
+                "    the output_transfer_func should be the softmax, in that case.\n"
+                );
   
+  declareOption(ol, "semisupervised_flatten_factor", &NeuralNet::semisupervised_flatten_factor, OptionBase::buildoption, 
+                "    Hyper-parameter of the semi-supervised criterion for probabilistic classifiers\n");
+
+  declareOption(ol, "semisupervised_prior", &NeuralNet::semisupervised_prior, OptionBase::buildoption, 
+                "    Hyper-parameter of the semi-supervised criterion = prior classes probabilities\n");
+
   declareOption(ol, "optimizer", &NeuralNet::optimizer, OptionBase::buildoption, 
                 "    specify the optimizer to use\n");
 
@@ -167,11 +185,11 @@ void NeuralNet::build_()
   // init. basic vars
   input = Var(inputsize(), "input");
   if (normalization.length()) {
-      Var means(normalization[0]);
-      Var stddevs(normalization[1]);
-      output = (input - means) / stddevs;
+    Var means(normalization[0]);
+    Var stddevs(normalization[1]);
+    output = (input - means) / stddevs;
   } else
-      output = input;
+    output = input;
   params.resize(0);
 
   // first hidden layer
@@ -229,10 +247,10 @@ void NeuralNet::build_()
    */
   if(weightsize() != 0 && weightsize() != 1 && targetsize()/2 != weightsize())
     PLERROR("In NeuralNet::build_()  weightsize must be either:\n"
-        "\t0: no weights on costs\n"
-        "\t1: single weight applied on total cost\n"
-        "\ttargetsize/2: vector of weights applied individually to each component of the cost\n"
-        "weightsize= %d; targetsize= %d.", weightsize(), targetsize());
+            "\t0: no weights on costs\n"
+            "\t1: single weight applied on total cost\n"
+            "\ttargetsize/2: vector of weights applied individually to each component of the cost\n"
+            "weightsize= %d; targetsize= %d.", weightsize(), targetsize());
 
 
   target_and_weights= Var(targetsize(), "target_and_weights");
@@ -240,8 +258,8 @@ void NeuralNet::build_()
   target->setName("target");
   if(0 < weightsize())
     {
-    costweights = new SubMatVariable(target_and_weights, targetsize()-weightsize(), 0, weightsize(), 1);
-    costweights->setName("costweights");
+      costweights = new SubMatVariable(target_and_weights, targetsize()-weightsize(), 0, weightsize(), 1);
+      costweights->setName("costweights");
     }
   /*
    * costfuncs
@@ -253,6 +271,7 @@ void NeuralNet::build_()
 
   for(int k=0; k<ncosts; k++)
     {
+      bool handles_missing_target=false;
       // create costfuncs and apply individual weights if weightsize() > 1
       if(cost_funcs[k]=="mse")
         if(weightsize() < 2)
@@ -262,12 +281,12 @@ void NeuralNet::build_()
       else if(cost_funcs[k]=="mse_onehot")
         costs[k] = onehot_squared_loss(output, target);
       else if(cost_funcs[k]=="NLL") {
-          if (output_transfer_func == "log_softmax")
-              costs[k] = -output[target];
-          else
-              costs[k] = neg_log_pi(output, target);
+        if (output_transfer_func == "log_softmax")
+          costs[k] = -output[target];
+        else
+          costs[k] = neg_log_pi(output, target);
       } else if(cost_funcs[k]=="class_error")
-          costs[k] = classification_loss(output, target);
+        costs[k] = classification_loss(output, target);
       else if(cost_funcs[k]=="multiclass_error")
         if(weightsize() < 2)
           costs[k] = multiclass_loss(output, target);
@@ -278,21 +297,37 @@ void NeuralNet::build_()
           costs[k] = cross_entropy(output, target);
         else
           PLERROR("In NeuralNet::build()  weighted cross entropy cost not implemented.");
+      else if (cost_funcs[k]=="semisupervised_prob_class")
+        {
+          if (output_transfer_func!="softmax")
+            PLWARNING("To properly use the semisupervised_prob_class criterion, the transfer function should probably be a softmax, to guarantee positive probabilities summing to 1");
+          if (semisupervised_prior.length()==0) // default value is (1,1,1...)
+            {
+              semisupervised_prior.resize(outputsize());
+              semisupervised_prior.fill(1.0);
+            }
+          costs[k] = new SemiSupervisedProbClassCostVariable(output,target,new SourceVariable(semisupervised_prior),
+                                                             semisupervised_flatten_factor);
+          handles_missing_target=true;
+        }
       else
-	{
-	  costs[k]= dynamic_cast<Variable*>(newObject(cost_funcs[k]));
-	  if(costs[k].isNull())
-	     PLERROR("In NeuralNet::build_()  unknown cost_func option: %s",cost_funcs[k].c_str());
-	  if(weightsize() < 2)
-	    costs[k]->setParents(output & target);
-	  else
-	    costs[k]->setParents(output & target & costweights);
-	  costs[k]->build();
-	}
+        {
+          costs[k]= dynamic_cast<Variable*>(newObject(cost_funcs[k]));
+          if(costs[k].isNull())
+            PLERROR("In NeuralNet::build_()  unknown cost_func option: %s",cost_funcs[k].c_str());
+          if(weightsize() < 2)
+            costs[k]->setParents(output & target);
+          else
+            costs[k]->setParents(output & target & costweights);
+          costs[k]->build();
+        }
 
       // apply a single global weight if weightsize() == 1
       if(1 == weightsize())
         costs[k]= costs[k] * costweights;
+
+      if (!handles_missing_target)
+        costs[k] = ifThenElse(isMissing(target),var(MISSING_VALUE),costs[k]);
     }
 
 
@@ -365,21 +400,25 @@ void NeuralNet::train(VMat training_set)
   
   output_and_target_to_cost->recomputeParents();
   costf->recomputeParents();
-  cerr << "totalcost->value = " << totalcost->value << endl;
+  // cerr << "totalcost->value = " << totalcost->value << endl;
   setTrainCost(totalcost->value);
 }
 
 
 void NeuralNet::initializeParams()
 {
+  if (iseed<0)
+    seed();
+  else
+    manual_seed(iseed);
   //real delta = 1./sqrt(inputsize());
   real delta = 1./inputsize();
   /*
-  if(direct_in_to_out)
+    if(direct_in_to_out)
     {
-      //fill_random_uniform(wdirect->value, -delta, +delta);
-      fill_random_normal(wdirect->value, 0, delta);
-      //wdirect->matValue(0).clear();
+    //fill_random_uniform(wdirect->value, -delta, +delta);
+    fill_random_normal(wdirect->value, 0, delta);
+    //wdirect->matValue(0).clear();
     }
   */
   if(nhidden>0)
@@ -388,11 +427,11 @@ void NeuralNet::initializeParams()
       //delta = 1./sqrt(nhidden);
       fill_random_normal(w1->value, 0, delta);
       if(direct_in_to_out)
-      {
-        //fill_random_uniform(wdirect->value, -delta, +delta);
-        fill_random_normal(wdirect->value, 0, delta);
-        wdirect->matValue(0).clear();
-      }
+        {
+          //fill_random_uniform(wdirect->value, -delta, +delta);
+          fill_random_normal(wdirect->value, 0, delta);
+          wdirect->matValue(0).clear();
+        }
       delta = 1./nhidden;
       w1->matValue(0).clear();
     }
@@ -432,8 +471,8 @@ void NeuralNet::forget()
 
 void NeuralNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    inherited::makeDeepCopyFromShallowCopy(copies);
-    deepCopyField(optimizer, copies);
+  inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(optimizer, copies);
 }
 
 %> // end of namespace PLearn

@@ -72,7 +72,7 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianProcessRegressor.cc,v 1.4 2003/07/08 18:32:58 yoshua Exp $
+   * $Id: GaussianProcessRegressor.cc,v 1.5 2003/08/08 20:45:54 yoshua Exp $
    ******************************************************* */
 
 #include "GaussianProcessRegressor.h"
@@ -471,7 +471,7 @@ real GaussianProcessRegressor::BayesianCost()
   for (int i=0;i<n_outputs;i++)
   {
     real sigma2_i=noise_sd[i]*noise_sd[i];
-    nll += QFormInverse(sigma2_i,y); // y'*inv(C)*y 
+    //nll += QFormInverse(sigma2_i,targets); // y'*inv(C)*y 
     // add the log det(K+sigma_i^2 I) contribution
     if (m<l)
       // the last l-m eigenvalues are sigma_i^2

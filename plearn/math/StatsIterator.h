@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: StatsIterator.h,v 1.3 2003/03/18 18:29:56 ducharme Exp $
+   * $Id: StatsIterator.h,v 1.4 2003/08/08 20:45:54 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -110,7 +110,7 @@ class MeanStatsIterator: public StatsIterator
     typedef StatsIterator inherited;
 
   protected:
-    int nsamples;
+  TVec<int> nsamples;
 
 public:
   virtual string info() const { return "mean"; }
@@ -134,7 +134,7 @@ class ExpMeanStatsIterator: public StatsIterator
     typedef StatsIterator inherited;
 
   protected:
-    int nsamples;
+  TVec<int> nsamples;
 
 public:
   virtual string info() const { return "exp_mean"; }
@@ -161,7 +161,7 @@ class StddevStatsIterator: public StatsIterator
 protected:
   Vec meansquared;
   Vec mean;
-  int nsamples;
+  TVec<int> nsamples;
 
 public:
   virtual string info() const { return "std_dev"; }
@@ -188,7 +188,7 @@ class StderrStatsIterator: public StatsIterator
 protected:
   Vec meansquared;
   Vec mean;
-  int nsamples;
+  TVec<int> nsamples;
 
 public:
   virtual string info() const { return "std_err"; }

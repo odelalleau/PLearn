@@ -36,88 +36,44 @@
 
 
 /* *******************************************************      
-   * $Id: LogVariable.cc,v 1.3 2003/08/08 20:45:54 yoshua Exp $
+   * $Id: IsMissingVariable.h,v 1.1 2003/08/08 20:45:54 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
-#include "LogVariable.h"
-#include "DisplayUtils.h"
-#include "Var_utils.h"
+#ifndef IsMissingVariable_INC
+#define IsMissingVariable_INC
+
+#include "UnaryVariable.h"
 
 namespace PLearn <%
 using namespace std;
 
 
-/** LogVariable **/
-
-LogVariable::LogVariable(Variable* input)
-  :UnaryVariable(input, input->length(), input->width()) {}
-
-
-IMPLEMENT_NAME_AND_DEEPCOPY(LogVariable);
-
-void LogVariable::recomputeSize(int& l, int& w) const
-{ l=input->length(); w=input->width(); }
-
-
-void LogVariable::deepRead(istream& in, DeepReadMap& old2new)
+//!  A scalar var;  equal 1 if input1!=c, 0 otherwise
+class IsMissingVariable: public UnaryVariable
 {
-  readHeader(in, "LogVariable");
-  inherited::deepRead(in, old2new);
-  readFooter(in, "LogVariable");
-}
+protected:
+    typedef UnaryVariable inherited;
+  //!  Default constructor for persistence
+  IsMissingVariable() {}
+  bool parallel; // if true then output 1 value per input, otherwise output 1 if ANY of the inputs is missing
 
+public:
+  virtual string info() const; 
 
-void LogVariable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "LogVariable");
-  inherited::deepWrite(out, already_saved);
-  writeFooter(out, "LogVariable");
-}
+public:
+  IsMissingVariable(Variable* input1, bool parallel=0);
+  DECLARE_NAME_AND_DEEPCOPY(IsMissingVariable);
+  virtual void recomputeSize(int& l, int& w) const;
+  virtual void deepRead(istream& in, DeepReadMap& old2new);
+  virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
+  virtual void fprop();
+  virtual void bprop();
+  virtual void symbolicBprop();
+};
 
-
-void LogVariable::fprop()
-{
-  for(int i=0; i<nelems(); i++)
-  {
-    valuedata[i] = safeflog(input->valuedata[i]);
-#ifdef BOUNDCHECK
-    if (!finite(valuedata[i]) && finite(input->valuedata[i]))
-    {
-      //PLWARNING("LogVariable::fprop qqchose va pas");
-      cout << "inputdata[i]= " << input->valuedata[i] << endl;
-      cout << "valuedata[i]= " << valuedata[i] << endl;
-      displayVarGraph(this, true, 250);
-      PLERROR("LogVariable::fprop qqchose va pas");
-    }
-#endif
-  }
-}
-
-
-void LogVariable::bprop()
-{
-  for(int i=0; i<nelems(); i++)
-    input->gradientdata[i] += gradientdata[i]/input->valuedata[i];
-}
-
-
-void LogVariable::symbolicBprop()
-{
-  input->accg(g / input);
-}
-
-
-// R{log(x)} = 1/x R(x)
-void LogVariable::rfprop()
-{
-  if (rValue.length()==0) resizeRValue();
-  for(int i=0; i<nelems(); i++)
-    rvaluedata[i] = input->rvaluedata[i] / input->valuedata[i];
-}
-
-
+inline Var isMissing(Var x) { return new IsMissingVariable(x); }
 
 %> // end of namespace PLearn
 
-
+#endif 

@@ -83,7 +83,7 @@ real gauss_01_quantile(real q);
 //!  for X ~ Normal(0,1), return density of X at x
 real gauss_01_density(real x);
 real gauss_01_log_density(real x);
-real gauss_log_density(real x, real mu, real logsigma);
+real gauss_log_density(real x, real mu, real sigma_square);
 
 inline real gauss_density(real x, real mu, real sigma)
 { return gauss_01_density((x-mu)/sigma); }

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.1 2003/07/04 18:48:59 plearner Exp $ 
+   * $Id: PTester.cc,v 1.2 2003/08/08 20:45:54 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -168,7 +168,8 @@ void PTester::build_()
 
 void PTester::run()
 {
-  perform(false);
+  //perform(false); // sinon le learner ne recoit pas de training set!???, pourquoi etait-ce ainsi? YB
+  perform(true);
 }
 
 void PTester::setExperimentDirectory(const string& the_expdir) 
@@ -223,7 +224,6 @@ Vec PTester::perform(bool set_training_set)
   
   // int traincostsize = traincostnames.size();
   int testcostsize = testcostnames.size();
-  int outputsize = learner->outputsize();
 
   VMat global_stats_vm;    // the vmat in which to save global result stats specified in statnames
   VMat split_stats_vm;   // the vmat in which to save per split result stats
@@ -264,6 +264,8 @@ Vec PTester::perform(bool set_training_set)
       if(splitdir!="" && save_initial_learners)
         PLearn::save(splitdir+"initial_learner.psave",learner);
       
+      int outputsize = learner->outputsize();
+
       train_stats->forget();
       learner->train();
       train_stats->finalize();

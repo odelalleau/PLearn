@@ -35,11 +35,11 @@
 
 
 /* *******************************************************      
-   * $Id: ShiftAndRescaleVMatrix.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: ShiftAndRescaleVMatrix.h,v 1.2 2003/08/08 20:45:54 yoshua Exp $
    ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file PLearn/plearn/vmat/ShiftAndRescaleVMatrix.h */
 
 #ifndef ShiftAndRescaleVMatrix_INC
 #define ShiftAndRescaleVMatrix_INC
@@ -56,15 +56,20 @@ using namespace std;
 */
 class ShiftAndRescaleVMatrix: public VMatrix
 {
-protected:
-  VMat distr;
+  DECLARE_NAME_AND_DEEPCOPY(ShiftAndRescaleVMatrix);
+  typedef VMatrix inherited;
 
 public:
   //!  x'_i = (x_i+shift_i)*scale_i
+  VMat vm;
   Vec shift; 
   Vec scale; 
+  bool automatic; // find shift and scale automatically?
+  int n_train; // when automatic, use the n_train first examples to estimate shift and scale
+  int n_inputs; // when automatic, 
 
   //! For all constructors, the original VMFields are copied upon construction
+  ShiftAndRescaleVMatrix();
   ShiftAndRescaleVMatrix(VMat underlying_distr, Vec the_shift, Vec the_scale);
   ShiftAndRescaleVMatrix(VMat underlying_distr, int n_inputs);
   ShiftAndRescaleVMatrix(VMat underlying_distr, int n_inputs, int n_train);
@@ -73,12 +78,31 @@ public:
   virtual void getSubRow(int i, int j, Vec v) const;
   virtual void reset_dimensions() 
     { 
-      distr->reset_dimensions(); 
-      length_=distr->length();
-      if (width_!=distr->width())
+      if (width_>0 && width_!=vm->width())
         PLERROR("ShiftAndRescaleVMatrix: can't change width"); 
+      inherited::reset_dimensions();
     }
+private: 
+  //! This does the actual building. 
+  // (Please implement in .cc)
+  void build_();
+
+protected: 
+  //! Declares this class' options
+  // (Please implement in .cc)
+  static void declareOptions(OptionList& ol);
+
+public:
+  // simply calls inherited::build() then build_() 
+  virtual void build();
+
+  //! Provides a help message describing this class
+  static string help();
+
 };
+
+// Declares a few other classes and functions related to this class
+DECLARE_OBJECT_PTR(ShiftAndRescaleVMatrix);
 
 %> // end of namespcae PLearn
 #endif

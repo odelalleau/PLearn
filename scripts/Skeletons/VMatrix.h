@@ -3,6 +3,14 @@
 
 #include "VMat.h"
 
+// **********************************************************
+// **                    W A R N I N G                     **
+// **********************************************************
+// **   MOST NEW VMatrix SUBCLASSES SHOULD BE WRITTEN AS   **
+// **   SUBCLASSES OF RowBufferedVMatrix INSTEAD.          **
+// **   Make sure your REALLY want to subclass VMatrix!!!  **
+// **********************************************************
+
 namespace PLearn <%
 using namespace std;
 

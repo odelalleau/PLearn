@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConstantRegressor.cc,v 1.1 2003/08/04 21:28:48 yoshua Exp $ 
+   * $Id: ConstantRegressor.cc,v 1.2 2003/08/08 20:45:54 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file ConstantRegressor.cc */
@@ -89,7 +89,6 @@ ConstantRegressor::ConstantRegressor()
 
   void ConstantRegressor::build_()
   {
-    constant_output.resize(outputsize());
   }
 
   // ### Nothing to add here, simply calls build_
@@ -130,6 +129,7 @@ void ConstantRegressor::train()
   input.resize(inputsize());    // the train_set's inputsize()
   target.resize(targetsize());  // the train_set's targetsize()
   sum_of_weighted_targets.resize(targetsize());  // the running sum of weighted targets
+  constant_output.resize(targetsize());
 
   if(!train_stats)  // make a default stats collector, in case there's none
     train_stats = new VecStatsCollector();

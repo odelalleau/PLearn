@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.15 2003/08/04 21:38:39 chapados Exp $
+   * $Id: TMat_maths_impl.h,v 1.16 2003/08/08 20:45:54 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -5188,6 +5188,48 @@ template<class T>
   inline TMat<T> grep(TMat<T> data, int col, T value, bool exclude=false)
   { return grep(data,col,TVec<T>(1,value),exclude); }
 
+template<class T>
+void addIfNonMissing(const TVec<T>& source, const TVec<int>& nnonmissing, TVec<T> destination)
+{
+#ifdef BOUNDCHECK
+  if (source.length()!=nnonmissing.length() || source.length()!=destination.length())
+    PLERROR("addIfNonMissing: all arguments should have the same length, got %d,%d,%d\n",
+            source.length(),nnonmissing.length(),destination.length());
+#endif
+  T* s=source.data();
+  T* d=destination.data();
+  int* n=nnonmissing.data();
+  int size=source.length();
+  for (int i=0;i<size;i++)
+    if (finite(s[i]))
+      {
+        d[i] += s[i];
+        n[i]++;
+      }
+}
+
+template<class T>
+void addXandX2IfNonMissing(const TVec<T>& source, const TVec<int>& nnonmissing, TVec<T> somme, TVec<T> somme2)
+{
+#ifdef BOUNDCHECK
+  if (source.length()!=nnonmissing.length() || source.length()!=somme.length() || source.length()!=somme2.length())
+    PLERROR("addIfNonMissing: all arguments should have the same length, got %d,%d,%d,%d\n",
+            source.length(),nnonmissing.length(),somme.length(),somme2.length());
+#endif
+  T* s=source.data();
+  T* s1=somme.data();
+  T* s2=somme.data();
+  int* n=nnonmissing.data();
+  int size=source.length();
+  for (int i=0;i<size;i++)
+    if (finite(s[i]))
+      {
+        s1[i] += s[i];
+        s2[i] += s[i]*s[i];
+        n[i]++;
+      }
+}
+
 %> // end of namespace PLearn
  
 
@@ -5202,6 +5244,7 @@ struct hash<PLearn::TVec<T> >
 {
   size_t operator()(PLearn::TVec<T> v) const { return hash<T>()(sumsquare(v));} 
 };
+
 
 %> // end of namespace std
 

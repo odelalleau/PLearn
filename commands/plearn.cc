@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.33 2003/07/10 18:22:50 ducharme Exp $
+   * $Id: plearn.cc,v 1.34 2003/08/08 20:45:53 yoshua Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -83,6 +83,7 @@
 // New generation system
 #include "PTester.h"
 #include "NNet.h"
+#include "ConstantRegressor.h"
 #include "GenerateDecisionPlot.h"
 
 #include "HyperLearner.h"

@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: StatsIterator.cc,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: StatsIterator.cc,v 1.2 2003/08/08 20:45:54 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -95,18 +95,19 @@ void MeanStatsIterator::init(int inputsize)
   // We do not use resize on purpose, so 
   // that the previous result Vec does not get overwritten
   result = Vec(inputsize);
-  nsamples = 0;
+  nsamples.resize(inputsize);
+  nsamples.clear();
 } 
 
 void MeanStatsIterator::update(const Vec& input)
 { 
-  result += input; 
-  nsamples++;
+  addIfNonMissing(input,nsamples,result);
 }
 
 bool MeanStatsIterator::finish()
 {
-  result /= nsamples;
+  for (int i=0;i<result.length();i++)
+    result[i] /= nsamples[i];
   return true;
 }
 
@@ -146,18 +147,19 @@ void ExpMeanStatsIterator::init(int inputsize)
   // We do not use resize on purpose, so 
   // that the previous result Vec does not get overwritten
   result = Vec(inputsize);
-  nsamples = 0;
+  nsamples.resize(inputsize);
+  nsamples.clear();
 } 
 
 void ExpMeanStatsIterator::update(const Vec& input)
 { 
-  result += input; 
-  nsamples++;
+  addIfNonMissing(input,nsamples,result);
 }
 
 bool ExpMeanStatsIterator::finish()
 {
-  result = exp(result/nsamples);
+  for (int i=0;i<result.length();i++)
+    result[i] = exp(result[i]/nsamples[i]);
   return true;
 }
 
@@ -204,20 +206,22 @@ void StddevStatsIterator::init(int inputsize)
   // that the previous result Vec does not get overwritten
   meansquared = Vec(inputsize);
   mean = Vec(inputsize);
-  nsamples = 0;
+  nsamples.resize(inputsize);
+  nsamples.clear();
 } 
 
 void StddevStatsIterator::update(const Vec& input)
 { 
-  mean += input;
-  squareAcc(meansquared, input);
-  nsamples++;
+  addXandX2IfNonMissing(input,nsamples,mean,meansquared);
 }
 
 bool StddevStatsIterator::finish()
 {
-  mean /= nsamples;
-  meansquared /= nsamples-1;
+  for (int i=0;i<mean.length();i++)
+  {
+    mean[i] /= nsamples[i];
+    meansquared[i] /= nsamples[i]-1;
+  }
   squareSubtract(meansquared, mean);
   result = sqrt(meansquared);
   return true;
@@ -276,20 +280,22 @@ void StderrStatsIterator::init(int inputsize)
   // that the previous result Vec does not get overwritten
   meansquared = Vec(inputsize);
   mean = Vec(inputsize);
-  nsamples = 0;
+  nsamples.resize(inputsize);
+  nsamples.clear();
 } 
 
 void StderrStatsIterator::update(const Vec& input)
 { 
-  mean += input;
-  squareAcc(meansquared, input);
-  nsamples++;
+  addXandX2IfNonMissing(input,nsamples,mean,meansquared);
 }
 
 bool StderrStatsIterator::finish()
 {
-  mean /= nsamples;
-  meansquared /= (nsamples-1);
+  for (int i=0;i<mean.length();i++)
+    {
+      mean[i] /= nsamples[i];
+      meansquared[i] /= nsamples-1;
+    }
   squareSubtract(meansquared, mean);
   result = sqrt(meansquared/nsamples);
   return true;
