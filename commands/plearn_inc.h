@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.44 2005/01/06 02:09:03 plearner Exp $ 
+   * $Id: plearn_inc.h,v 1.45 2005/01/07 17:52:16 chrish42 Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -105,7 +105,7 @@
  ************/
 
 // Classifiers
-#include <plearn_learners/classifiers/AdaBoost.h>
+#include <plearn_learners/meta/AdaBoost.h>
 #include <plearn_learners/classifiers/BinaryStump.h>
 #include <plearn_learners/classifiers/ClassifierFromDensity.h>
 #include <plearn_learners/classifiers/KNNClassifier.h>
