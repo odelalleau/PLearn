@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.15 2003/05/01 22:39:14 plearner Exp $
+* $Id: VMatrix.cc,v 1.16 2003/05/12 20:04:15 ducharme Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -435,7 +435,7 @@ void VMatrix::loadStringMapping(int col)
   }
   
   // smap file exists, open it
-  PIFStream f(fname.c_str());
+  PIFStream f(fname);
   if(!f)
     PLERROR( string("File "+fname+" cannot be opened.").c_str());
 
