@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedSumOfVariable.h,v 1.5 2004/02/20 21:11:54 chrish42 Exp $
+   * $Id: UnfoldedSumOfVariable.h,v 1.6 2004/03/09 18:33:50 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -62,8 +62,8 @@ public:
   Func f;
   int max_bag_size;
 
-  TVec<VarArray> inputs; // all the input Var's
-  TVec<Var> outputs; // and the corresponding output Var's, 
+  TVec<VarArray> inputs;  // all the input Var's
+  VarArray outputs;       // and the corresponding output Var's, 
   TVec<VarArray> f_paths; // the duplicates of f prop. path for each input/output pair: inputs[i]->outputs[i]
 
 public:
