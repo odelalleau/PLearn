@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOverBagsVariable.cc,v 1.11 2004/02/25 21:38:08 tihocan Exp $
+   * $Id: SumOverBagsVariable.cc,v 1.12 2004/02/26 03:01:13 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -316,6 +316,7 @@ void SumOverBagsVariable::fbprop()
         // can't be propagated correctly.
         PLERROR("In SumOverBagsVariable::fbprop - If you want to get the average, you must tell me the number of bags in n_samples > 0, because I'm too dumb to guess it.");
       }
+      curpos = 0;
       do {
         fpropOneBag(true);
       }
