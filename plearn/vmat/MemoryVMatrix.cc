@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MemoryVMatrix.cc,v 1.18 2004/07/02 13:21:01 tihocan Exp $
+   * $Id: MemoryVMatrix.cc,v 1.19 2004/07/09 21:36:54 monperrm Exp $
    ******************************************************* */
 
 #include "MemoryVMatrix.h"
@@ -55,6 +55,9 @@ PLEARN_IMPLEMENT_OBJECT(MemoryVMatrix,
 
 MemoryVMatrix::MemoryVMatrix() : data(Mat())
 {}
+
+MemoryVMatrix::MemoryVMatrix(int l, int w) : VMatrix(l, w)
+{data.resize(l,w);}
 
 MemoryVMatrix::MemoryVMatrix(const Mat& the_data)
   :VMatrix(the_data.length(), the_data.width()), data(the_data)
