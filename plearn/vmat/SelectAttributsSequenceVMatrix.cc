@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SelectAttributsSequenceVMatrix.cc,v 1.4 2004/09/14 16:04:39 chrish42 Exp $ 
+   * $Id: SelectAttributsSequenceVMatrix.cc,v 1.5 2004/10/01 22:11:27 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -74,8 +74,10 @@ void SelectAttributsSequenceVMatrix::getNewRow(int i, const Vec& v) const
   
   int target = indices[i];
 
-  // If the target element is a delimiter, do nothing
+  
+  // If the target element is a delimiter, do nothing: Hugo: may not be a good thing!
   source->getRow(target,target_element);
+  /*
   if(is_true(delimiters,target_element))
   {
     v.fill(MISSING_VALUE);
@@ -89,6 +91,7 @@ void SelectAttributsSequenceVMatrix::getNewRow(int i, const Vec& v) const
     }
     return;
   }
+  */
 
   int left_added_elements = 0;
   int right_added_elements = 0;
@@ -98,7 +101,6 @@ void SelectAttributsSequenceVMatrix::getNewRow(int i, const Vec& v) const
   int p = 0;
 
   bool to_add = false;
-  bool not_delimiter = false;
 
   int this_lower_bound = target;
   int this_upper_bound = target;
@@ -118,7 +120,7 @@ void SelectAttributsSequenceVMatrix::getNewRow(int i, const Vec& v) const
   while(n_left_context < 0 || left_added_elements < n_left_context)
   {
     to_add = false;
-    not_delimiter = false;
+    
 
     p = target-left_pos;
 
@@ -135,7 +137,6 @@ void SelectAttributsSequenceVMatrix::getNewRow(int i, const Vec& v) const
         if(position != current_target_pos || !is_true(ignored_context,element))
         {
           to_add = true;
-          not_delimiter = true;
         }
       }
       else
@@ -151,7 +152,7 @@ void SelectAttributsSequenceVMatrix::getNewRow(int i, const Vec& v) const
         to_add = true;  
     }
     
-    if(!not_delimiter && is_true(delimiters,element)) break;
+    if(is_true(delimiters,element)) break;
 
     if(to_add)
     {
@@ -177,7 +178,6 @@ void SelectAttributsSequenceVMatrix::getNewRow(int i, const Vec& v) const
   while(n_right_context < 0 || right_added_elements < n_right_context)
   {
     to_add = false;
-    not_delimiter = false;
 
     p = target+right_pos;
 
@@ -194,7 +194,6 @@ void SelectAttributsSequenceVMatrix::getNewRow(int i, const Vec& v) const
         if(position != current_target_pos || !is_true(ignored_context,element))
         {
           to_add = true;
-          not_delimiter = true;
         }
       }
       else
@@ -210,7 +209,7 @@ void SelectAttributsSequenceVMatrix::getNewRow(int i, const Vec& v) const
         to_add = true;  
     }
     
-    if(!not_delimiter && is_true(delimiters,element)) break;
+    if(is_true(delimiters,element)) break;
 
     if(to_add)
     {
