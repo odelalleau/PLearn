@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KFoldSplitter.cc,v 1.9 2004/04/05 22:56:43 morinf Exp $ 
+   * $Id: KFoldSplitter.cc,v 1.10 2004/04/26 13:11:49 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file SequentialSplitter.cc */
@@ -49,17 +49,21 @@ KFoldSplitter::KFoldSplitter(int k)
     : K(k),append_train(0)
 {};
 
-PLEARN_IMPLEMENT_OBJECT(KFoldSplitter, "ONE LINE DESCR", 
-                        "KFoldSplitter implements K splits of the dataset into a training-set and a test-set");
+PLEARN_IMPLEMENT_OBJECT(KFoldSplitter,
+    "K-fold cross-validation splitter.", 
+    "KFoldSplitter implements K splits of the dataset into a training-set and a test-set.\n"
+    "If the number of splits is higher than the number of examples, leave-one-out cross-validation\n"
+    "will be performed."
+);
 
 void KFoldSplitter::declareOptions(OptionList& ol)
 {
     declareOption(ol, "K", &KFoldSplitter::K, OptionBase::buildoption,
-                  "split dataset in K parts");
+                  "Split dataset in K parts.");
 
     declareOption(ol, "append_train", &KFoldSplitter::append_train, OptionBase::buildoption,
-                  "if set to 1, the trainset will be appended after the test set (thus each split"
-                  " will contain three sets");
+                  "If set to 1, the trainset will be appended after the test set (thus each split\n"
+                  "will contain three sets.");
 
     inherited::declareOptions(ol);
 }
@@ -99,10 +103,9 @@ TVec<VMat> KFoldSplitter::getSplit(int k)
         test_fraction = 1; // leave-one-out cross-validation
 
     TVec<VMat> split_(2);
-    split(dataset, test_fraction, split_[0], split_[1], k);
+    split(dataset, test_fraction, split_[0], split_[1], k, true);
     if (append_train) {
-      split_.resize(3);
-      split_[2] = split_[0];
+      split_.append(split_[0]);
     }
     return split_;
 }
