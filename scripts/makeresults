@@ -37,7 +37,8 @@ TEMPLATEMAT="$1"
 shift
 
 # Make the .vmat.
-echo "<SOURCES>" > $MATNAME.vmat
+echo "# Wrapper to visualize the results stored in $MATNAME.amat." > $MATNAME.vmat
+echo "<SOURCES>" >> $MATNAME.vmat
 echo "@" >> $MATNAME.vmat
 echo "SortRowsVMatrix(" >> $MATNAME.vmat
 echo "  distr =" >> $MATNAME.vmat
