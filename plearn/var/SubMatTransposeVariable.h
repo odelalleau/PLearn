@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubMatTransposeVariable.h,v 1.5 2004/04/27 16:03:35 morinf Exp $
+   * $Id: SubMatTransposeVariable.h,v 1.6 2004/05/26 20:14:26 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,13 +51,19 @@ using namespace std;
 
 class SubMatTransposeVariable: public UnaryVariable
 {
+
+private:
+
   typedef UnaryVariable inherited;
 
 protected:
+
   int startk;
   int length_, width_;
   int i_, j_;
+
 public:
+
   //!  Default constructor for persistence
   SubMatTransposeVariable() : startk(), length_(), width_() {}
   SubMatTransposeVariable(Variable* v, int i, int j, int the_length, int the_width);
@@ -73,8 +79,10 @@ public:
   virtual void symbolicBprop();
   virtual void rfprop();
 
-protected:
+private:
+
     void build_();
+
 };
 
 DECLARE_OBJECT_PTR(SubMatTransposeVariable);
