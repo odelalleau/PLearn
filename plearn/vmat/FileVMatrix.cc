@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.25 2004/09/14 16:04:39 chrish42 Exp $
+   * $Id: FileVMatrix.cc,v 1.26 2004/11/18 14:28:38 tihocan Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -47,19 +47,31 @@ using namespace std;
 
 /** FileVMatrix **/
 
-PLEARN_IMPLEMENT_OBJECT(FileVMatrix, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(FileVMatrix,
+    "Saves and reads '.pmat' files.",
+    "The 'track_ref' option can be used to count how many FileVMatrix are\n"
+    "accessing a given file. This can be useful to remove the '.pmat' file\n"
+    "only when nobody else accesses it."
+);
 
 /////////////////
 // FileVMatrix //
 /////////////////
 FileVMatrix::FileVMatrix()
-  :filename_(""), f(0), build_new_file(false)
+: filename_(""), f(0), build_new_file(false),
+  old_filename(""),
+  remove_when_done(false),
+  track_ref(false)
+
 {
   writable=true;
 }
 
 FileVMatrix::FileVMatrix(const string& filename, bool writable_)
-  :filename_(abspath(filename)), f(0), build_new_file(!isfile(filename))
+: filename_(abspath(filename)), f(0), build_new_file(!isfile(filename)),
+  old_filename(""),
+  remove_when_done(false),
+  track_ref(false)
 {
   writable = writable_;
   build_();
@@ -74,7 +86,10 @@ static int strlen(char* s) {
 
 FileVMatrix::FileVMatrix(const string& filename, int the_length, int the_width)
 : inherited(the_length, the_width), filename_(abspath(filename)), f(0),
-  build_new_file(true)
+  build_new_file(true),
+  old_filename(""),
+  remove_when_done(false),
+  track_ref(false)
 {
   writable = true;
   build_();
@@ -82,7 +97,10 @@ FileVMatrix::FileVMatrix(const string& filename, int the_length, int the_width)
 
 FileVMatrix::FileVMatrix(const string& filename, int the_length, const TVec<string>& fieldnames)
 : inherited(the_length, fieldnames.length()), filename_(abspath(filename)), f(0),
-  build_new_file(true)
+  build_new_file(true),
+  old_filename(""),
+  remove_when_done(false),
+  track_ref(false)
 {
   writable = true;
   build_();
@@ -112,6 +130,9 @@ void FileVMatrix::build_()
   // Since we are going to re-create it, we can close the current f.
   if (f) {
     fclose(f);
+  }
+  if (track_ref && old_filename != "") {
+    count_refs[old_filename]--;
   }
 
   char header[DATAFILE_HEADERLENGTH];
@@ -226,6 +247,30 @@ void FileVMatrix::build_()
   if (width_ >= 0) {
     getFieldInfos();
   }
+
+  if (track_ref) {
+    if (count_refs.find(filename_) != count_refs.end())
+      count_refs[filename_]++;
+    else
+      count_refs[filename_] = 1;
+    old_filename = filename_;
+  } else {
+    old_filename = "";
+  }
+}
+
+////////////////
+// count_refs //
+////////////////
+map<string, int> FileVMatrix::count_refs;
+
+///////////////
+// countRefs //
+///////////////
+int FileVMatrix::countRefs(const string& filename) {
+  if (count_refs.find(filename) == count_refs.end())
+    return 0;
+  return count_refs[filename];
 }
 
 ////////////////////
@@ -234,6 +279,13 @@ void FileVMatrix::build_()
 void FileVMatrix::declareOptions(OptionList & ol)
 {
   declareOption(ol, "filename", &FileVMatrix::filename_, OptionBase::buildoption, "Filename of the matrix");
+
+  declareOption(ol, "remove_when_done", &FileVMatrix::remove_when_done, OptionBase::buildoption,
+      "If set to 1, the file 'filename' will be deleted when this object is deleted\n"
+      "(and we think no other FileVMatrix is accessing it.");
+
+  declareOption(ol, "track_ref", &FileVMatrix::track_ref, OptionBase::buildoption,
+      "If set to 1, will be counted in the FileVMatrix that access 'filename', which may prevent conflicts.");
 
   inherited::declareOptions(ol);
 }
@@ -258,6 +310,7 @@ void FileVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   PLWARNING("FileVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 
   f = 0;   // Because we will open again the file (f should not be shared).
+  old_filename = ""; // Because build() has not yet been called for this FileVMatrix.
   build(); // To open the file.
 }
 
@@ -271,6 +324,13 @@ FileVMatrix::~FileVMatrix()
     fclose(f); 
     // TODO Shouldn't we also delete f ?
   }
+  if (track_ref)
+    count_refs[filename_]--;
+
+  if (remove_when_done && filename_ != "")
+    if (!track_ref || count_refs[filename_] == 0) {
+      rm(filename_);
+    }
 }
 
 ///////////////

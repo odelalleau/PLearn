@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.h,v 1.15 2004/09/14 16:04:39 chrish42 Exp $
+   * $Id: FileVMatrix.h,v 1.16 2004/11/18 14:28:38 tihocan Exp $
    ******************************************************* */
 
 
@@ -69,6 +69,10 @@ private:
 
   bool build_new_file;
 
+  //! Used to remember which file we were accessing before build was called for
+  //! the last time.
+  string old_filename;
+
 public:
 
   FileVMatrix();
@@ -83,6 +87,11 @@ protected:
 
 public:
 
+  // Options.
+
+  bool remove_when_done;
+  bool track_ref;
+
   //! Re-write the header with all current field values.
   virtual void updateHeader();
 
@@ -92,6 +101,9 @@ public:
   virtual void flush();
 
   virtual void build();
+
+  //! Return count_refs[filename].
+  static int countRefs(const string& filename);
 
   PLEARN_DECLARE_OBJECT(FileVMatrix);
 
@@ -104,6 +116,13 @@ public:
 private:
 
   void build_();
+
+private:
+
+  //! Maps a filename to the number of FileVMatrix that currently read it and
+  //! have the 'track_ref' option set to 1.
+  static map<string, int> count_refs;
+
 };
 
 DECLARE_OBJECT_PTR(FileVMatrix);
