@@ -287,6 +287,15 @@ public:
     return *this; 
   }
 
+  inline PStream& read(string& s, streamsize n) 
+  {
+    char* buf = new char(n+10);
+    read(buf, n);
+    string dummy(buf,n);
+    s = dummy;
+    return *this;
+  }
+
   //! Reads characters into buf until n characters have been read, or end-of-file has been reached, 
   //! or the next character in the stream is the stop_char.
   //! Returns the total number of characters put into buf.
