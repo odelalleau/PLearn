@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.14 2004/02/01 03:27:47 tihocan Exp $
+   * $Id: Kernel.h,v 1.15 2004/02/10 16:19:24 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -117,6 +117,9 @@ public:
 
   //! Return true iif there is a data matrix set for this kernel.
   bool hasData();
+
+  //! Return the data matrix set for this kernel.
+  inline VMat getData() {return this->data;}
 
   //!  Returns a Mat m such that m(i,j) is the index of jth closest neighbour of input i, 
   //!  according to the "distance" measures given by D(i,j)
