@@ -1,16 +1,24 @@
-This directory contains the definition/implementation/building-facility for pylearn, the python-plearn interface. It is built using boost-python.
+This directory contains the definition/implementation/building-facility for
+pylearn, the python-plearn interface. It is built using boost-python and
+pyste.
 
-Look at the Makefile 
-It calls pymake -so pylearn.cc
-In pymake_config_model, I've added a trigger for boost/python.hpp and links with what is needed 
-(hopefully, but does not work for Lisa currently, as boost-python is not correctly installed/located).
+Short summary: type "make" to build, and "make install" to install.
 
-pymake -so pylearn.cc creates a OBJS/linux-i386__g++_dbg_double_throwerrors_blas/libpylearn.so
-But python expects a .so with the *same* basename as that given in BOOST_PYTHON_MODULE(...) i.e. "pylearn.so"
+The Makefile calls pyste to generate the pylearn.cpp file. It then calls
+pymake -so pylearn.cpp. In pymake_config_model, a trigger was added for
+boost/python.hpp and links with what is needed (hopefully, but does not
+work for Lisa currently, as boost-python is not correctly
+installed/located).
 
-Thus OBJS/linux-i386__g++_dbg_double_throwerrors_blas/libpylearn.so is copied as pylearn.so in 
-PLearn/scripts/plearn_modules/ which should be in the PYTHONPATH
+pymake -so pylearn.cpp creates a
+OBJS/linux-i386__g++_dbg_double_throwerrors_blas/libpylearn.so But python
+expects a .so with the *same* basename as that given in
+BOOST_PYTHON_MODULE(...) i.e. "pylearn.so"
+
+Thus OBJS/linux-i386__g++_dbg_double_throwerrors_blas/libpylearn.so is
+symlinked to pylearn.so in PLearn/pylearn. The make install target copies
+it to PLearn/scripts/plearn_modules which should be in the PYTHONPATH
 
 All you have to do is then to type 'import pylearn' in python.
 
--- Pascal
+-- Pascal, Christian

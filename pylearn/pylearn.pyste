@@ -1,0 +1,30 @@
+p_vmat = Class('PLearn::VMat', 'plearn/vmat/VMat.h')
+# We exclude the operator<< and operator>> because wrapping them using
+# Boost.Python triggers a compiler bug.
+exclude(p_vmat.operator['<<'])
+exclude(p_vmat.operator['>>'])
+
+Class('PLearn::PPointable', 'plearn/base/PP.h')
+p_object = Class('PLearn::Object', 'plearn/base/Object.h')
+
+set_policy(p_object.deepCopy, return_value_policy(manage_new_object))
+set_policy(p_object.getOptionList, return_value_policy(reference_existing_object))
+set_policy(p_object._getOptionList_, return_value_policy(reference_existing_object))
+set_policy(p_object._new_instance_for_typemap_, return_value_policy(manage_new_object))
+
+exclude(p_object.operator['<<'])
+exclude(p_object.operator['>>'])
+
+# Remove deprecated methods
+exclude(p_object.load)
+exclude(p_object.save)
+exclude(p_object.read)
+exclude(p_object.write)
+exclude(p_object.oldread)
+
+set_policy(Function('PLearn::newObject', 'plearn/base/Object.h'), return_value_policy(manage_new_object))
+set_policy(Function('PLearn::macroLoadObject', 'plearn/base/Object.h'), return_value_policy(manage_new_object))
+set_policy(Function('PLearn::loadObject', 'plearn/base/Object.h'), return_value_policy(manage_new_object))
+
+Function('PLearn::getDataSetHelp', 'plearn/db/getDataSet.h')
+Function('PLearn::getDataSet', 'plearn/db/getDataSet.h')
