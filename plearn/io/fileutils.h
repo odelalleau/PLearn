@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.h,v 1.14 2004/04/23 14:14:17 plearner Exp $
+   * $Id: fileutils.h,v 1.15 2004/08/26 21:03:51 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -88,30 +88,30 @@ using namespace std;
   //! returns the time of last modification of file (or 0 if file does not exist).
   time_t mtime(const string& path);
 
-/*!     Returns a list of all entries in the given directory (omitting entries "." and "..")
-    If the direcotry cannot be opened an error is issued.
+  /*! Returns a list of all entries in the given directory (omitting entries "." and "..")
+    If the directory cannot be opened an error is issued.
     The returned entries are not full paths.
-*/
+  */
   vector<string> lsdir(const string& dirpath);
 
   //!  Same as lsdir, except dirpath is prepended to the entries' names.
   vector<string> lsdir_fullpath(const string& dirpath);
 
-/*!     Forces directory creation if it doesn't already exist. 
+  /*!     Forces directory creation if it doesn't already exist. 
     (also creates any missing directory along its path)
     Return value indicates success (true) or failure (false).
     If the directory already exists, true is returned.
-*/
+  */
   bool force_mkdir(const string& dirname);
+  
+  //! Extracts the directory part of the filepath and calls force_mkdir
+  //! Calls PLERROR in case of failure.
+  void force_mkdir_for_file(const string& filepath);
 
-//! Extracts the directory part of the filepath and calls force_mkdir
-//! Calls PLERROR in case of failure.
-void force_mkdir_for_file(const string& filepath);
-
-/*!     Forces removal of directory and all its content
+  /*!     Forces removal of directory and all its content
     Return value indicates success (true) or failure (false)
     If the directory does not exist, false is returned.
-*/
+  */
   bool force_rmdir(const string& dirname);
 
   //! Returns the length of a file, measured in bytes.
@@ -188,23 +188,31 @@ void force_mkdir_for_file(const string& filepath);
   //! Also every $INCLUDE{filepath} will be replaced in place by the text of the file it includes
   string readAndMacroProcess(istream& in, map<string, string>& variables);
 
-//! Same as readAndMacroProcess, but takes a filename instead of an istream
-//! The following variables are automatically set from the filepath: FILEPATH DIRPATH FILENAME FILEBASE FILEEXT 
-/*! Ex: if the absolute path to filepath is /home/me/foo.plearn
+  /*! Given a filename, generates the standard PLearn variables FILEPATH,
+      DIRPATH, FILENAME, FILEBASE, FILEEXT, DATE, TIME and DATETIME and
+      adds them to the map of variables passed as an argument
+  */
+  void addFileAndDateVariables(const string& filepath, map<string, string>& variables);
+    
+  //! Same as readAndMacroProcess, but takes a filename instead of a string.
+  //! The following variables are automatically set from the filepath: FILEPATH DIRPATH FILENAME FILEBASE FILEEXT 
+  /*! Ex: if the absolute path to filepath is /home/me/foo.plearn
   Then we'll get:
   FILEPATH = "/home/me/foo.plearn"
   DIRPATH  = "/home/me"
   FILENAME = "foo.plearn"
   FILEBASE = "foo"
   FILEEXT  = ".plearn"
-*/
-string readFileAndMacroProcess(const string& filepath, map<string, string>& variables);
+  
+  Variables for the date and time (DATE, TIME, DATETIME) are also defined.
+  */
+  string readFileAndMacroProcess(const string& filepath, map<string, string>& variables);
 
-inline string readFileAndMacroProcess(const string& filepath)
-{
-  map<string, string> variables;
-  return readFileAndMacroProcess(filepath, variables);
-}
+  inline string readFileAndMacroProcess(const string& filepath)
+  {
+    map<string, string> variables;
+    return readFileAndMacroProcess(filepath, variables);
+  }
 
 #ifdef WIN32
 #undef stat

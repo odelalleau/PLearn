@@ -34,15 +34,15 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunCommand.cc,v 1.8 2004/08/26 18:43:06 chrish42 Exp $ 
+   * $Id: RunCommand.cc,v 1.9 2004/08/26 21:03:50 chrish42 Exp $ 
    ******************************************************* */
 
 /*! \file RunCommand.cc */
 #include "RunCommand.h"
 #include <plearn/base/general.h>
-#include <plearn/io/fileutils.h>      //!< For readFileAndMacroProcess.
+#include <plearn/io/fileutils.h>
 #include <plearn/base/plerror.h>
-#include <plearn/base/stringutils.h>    //!< For split_on_first, extract_extension
+#include <plearn/base/stringutils.h>
 #include <plearn/base/Object.h>
 #include <plearn/sys/Popen.h>
 
@@ -75,18 +75,22 @@ void RunCommand::run(const vector<string>& args)
   if (extension == ".pyplearn")
     {
       const string command = "pyplearn_driver.py \"" + scriptfile + '\"';
-      Popen popen(command, true);
+      Popen popen(command);
+      string script_before_preprocessing;
       while (!popen.in.eof())
 	{
 	  char c;
 	  popen.in.get(c);
-	  script += c;
-	} 
+	  script_before_preprocessing += c;
+	}
+
+      istringstream is(script_before_preprocessing);
+      addFileAndDateVariables(scriptfile, vars);
+      script = readAndMacroProcess(is, vars);
     }
   else
     {
       script = readFileAndMacroProcess(scriptfile, vars);
-      // cerr << script << endl;
     }
 
   PIStringStream in(script);

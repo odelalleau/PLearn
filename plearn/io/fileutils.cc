@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.47 2004/07/21 16:30:51 chrish42 Exp $
+   * $Id: fileutils.cc,v 1.48 2004/08/26 21:03:51 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -582,19 +582,10 @@ string makeExplicitPath(const string& filename)
 }
   
 
-string readFileAndMacroProcess(const string& filepath, map<string, string>& variables)
+void addFileAndDateVariables(const string& filepath, map<string, string>& variables)
 {
-  // Save old variables (to allow recursive calls)
-  const char* OldVariables[] = {
-    "FILEPATH", "DIRPATH", "FILENAME", "FILEBASE", "FILEEXT", "DATE", "TIME", "DATETIME"
-  };
-  const int num_old = sizeof(OldVariables) / sizeof(OldVariables[0]);
-  map<string,string> old_vars;
-  for (int i=0; i<num_old; ++i)
-    old_vars[OldVariables[i]] = variables[OldVariables[i]];
-  
   // Define new local variables
-  string fpath = abspath(filepath);
+  const string fpath = abspath(filepath);
   variables["FILEPATH"] = fpath;
   variables["DIRPATH"] = remove_trailing_slash(extract_directory(fpath));
   variables["FILENAME"] = extract_filename(fpath);
@@ -613,10 +604,26 @@ string readFileAndMacroProcess(const string& filepath, map<string, string>& vari
   variables["DATE"] = time_buffer;
   strftime(time_buffer,SIZE,"%H%M%S",broken_down_time);
   variables["TIME"] = time_buffer;
+}
+
+string readFileAndMacroProcess(const string& filepath, map<string, string>& variables)
+{
+  // Save old variables (to allow recursive calls)
+  const char* OldVariables[] = {
+    "FILEPATH", "DIRPATH", "FILENAME", "FILEBASE", "FILEEXT", "DATE", "TIME", "DATETIME"
+  };
+  const int num_old = sizeof(OldVariables) / sizeof(OldVariables[0]);
+  map<string,string> old_vars;
+  for (int i=0; i<num_old; ++i)
+    old_vars[OldVariables[i]] = variables[OldVariables[i]];
+
+  // Add the new file and date variables
+  addFileAndDateVariables(filepath, variables);
 
   // Perform actual parsing and macro processing...
+  const string fpath = abspath(filepath);  
   ifstream in(fpath.c_str());
-  if(!in)
+  if (!in)
     PLERROR("In readFileAndMacroProcess, could not open file %s for reading", fpath.c_str());
   string text = readAndMacroProcess(in, variables);
 
