@@ -69,7 +69,7 @@ void DERIVEDCLASS::build_()
 ///////////////
 // getNewRow //
 ///////////////
-void DERIVEDCLASS::getNewRow(int i, Vec& v) const
+void DERIVEDCLASS::getNewRow(int i, const Vec& v) const
 {
   // ...
 }

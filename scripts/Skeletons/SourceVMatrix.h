@@ -53,11 +53,11 @@ protected:
   // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
 
-public:
-
   //! Fill the vector 'v' with the content of the i-th row.
   //! v is assumed to be the right size.
-  virtual void getNewRow(int i, Vec& v) const;
+  virtual void getNewRow(int i, const Vec& v) const;
+
+public:
 
   // Simply calls inherited::build() then build_().
   virtual void build();
