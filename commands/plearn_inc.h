@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.27 2004/08/26 21:03:46 chrish42 Exp $ 
+   * $Id: plearn_inc.h,v 1.28 2004/09/07 20:53:46 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -90,16 +90,17 @@
 /************
  * PLearner *
  ************/
-#include <plearn_learners/generic/AddCostToLearner.h>
-#include <plearn_learners/regressors/ConstantRegressor.h>
 #include <plearn_learners/classifiers/ClassifierFromDensity.h>
-#include <plearn_learners/regressors/LinearRegressor.h>
 #include <plearn_learners/classifiers/MultiInstanceNNet.h>
+#include <plearn_learners/generic/AddCostToLearner.h>
+#include <plearn_learners/generic/AddLayersNNet.h>
 #include <plearn_learners/generic/NNet.h>
-#include <plearn_learners/unsupervised/PCA.h>
-#include <plearn_learners/regressors/PLS.h>
 #include <plearn_learners/generic/StackedLearner.h>
 #include <plearn_learners/generic/TestingLearner.h>
+#include <plearn_learners/regressors/ConstantRegressor.h>
+#include <plearn_learners/regressors/LinearRegressor.h>
+#include <plearn_learners/regressors/PLS.h>
+#include <plearn_learners/unsupervised/PCA.h>
 // Distribution (deprecated)
 #include <plearn_learners/distributions/LocallyWeightedDistribution.h>
 // EmbeddedLearner
@@ -148,6 +149,7 @@
 #include <plearn/vmat/CompressedVMatrix.h>
 #include <plearn/vmat/CumVMatrix.h>
 #include <plearn/vmat/DatedJoinVMatrix.h>
+#include <plearn/vmat/DictionaryVMatrix.h>
 #include <plearn/vmat/FilteredVMatrix.h>
 #include <plearn/vmat/FinancePreprocVMatrix.h>
 #include <plearn/vmat/GeneralizedOneHotVMatrix.h>
@@ -164,14 +166,13 @@
 #include <plearn/vmat/ProcessingVMatrix.h>
 #include <plearn/vmat/RegularGridVMatrix.h>
 #include <plearn/vmat/RemoveDuplicateVMatrix.h>
+#include <plearn/vmat/SelectAttributsSequenceVMatrix.h>
 #include <plearn/vmat/SortRowsVMatrix.h>
 #include <plearn/vmat/SparseVMatrix.h>
 #include <plearn/vmat/SubInputVMatrix.h>
 #include <plearn/vmat/ThresholdVMatrix.h>
 #include <plearn/vmat/TransposeVMatrix.h>
-//#include <plearn_learners/language/TextSenseSequenceVMatrix.h>
-//#include <plearn/vmat/DictionaryVMatrix.h>
-#include <plearn/vmat/SelectAttributsSequenceVMatrix.h>
+#include <plearn_learners/language/TextSenseSequenceVMatrix.h>
 
 #endif
 
