@@ -5,7 +5,7 @@ submodule. If a considerable number of functions contained in this
 module seems to manage similar tasks, it is probably time to create a
 I{similar_tasks.py} L{utilities} submodule to move those functions to.
 """
-__cvs_id__ = "$Id: toolkit.py,v 1.18 2004/12/21 15:31:50 dorionc Exp $"
+__cvs_id__ = "$Id: toolkit.py,v 1.19 2004/12/22 20:40:31 dorionc Exp $"
 import inspect, os, popen2, random, string, sys, time, types
 
 __epydoc_is_available = None
@@ -57,6 +57,23 @@ def centered_square(s, width, ldelim='[', rdelim=']'):
     return ldelim+" " + string.center(s, width) + " "+rdelim 
 
 def command_output(command):
+    """Returns the output lines of a shell command.    
+    
+    The U{commands<http://docs.python.org/lib/module-commands.html>} module
+    provides a similar function, getoutput(), that returns a single
+    string. Since the
+    U{commands<http://docs.python.org/lib/module-commands.html>} module
+    relies on U{popen<http://docs.python.org/lib/module-popen2.html>}
+    objects, it is more efficient to use directly
+    U{popen<http://docs.python.org/lib/module-popen2.html>} here that
+    splitting the results of the commands.getoutput() in lines.
+
+    @param command: The shell command to execute.
+    @type command: String
+
+    @return: Output lines.
+    @rtype:  Array of strings.
+    """
     process = popen2.Popen4( command )
     process.wait()
     return process.fromchild.readlines()
