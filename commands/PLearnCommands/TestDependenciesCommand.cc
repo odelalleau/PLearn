@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TestDependenciesCommand.cc,v 1.1 2004/01/11 03:05:55 yoshua Exp $ 
+   * $Id: TestDependenciesCommand.cc,v 1.2 2004/01/11 21:49:45 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file TestDependenciesCommand.cc */
@@ -66,6 +66,28 @@ void TestDependenciesCommand::run(const vector<string>& args)
     x = VMat(x.toMat());
   Mat r(x.width(),y.width());
   testSpearmanRankCorrelation(x,y,r);
+  Mat scores(inputsize,2);
+  for (int i=0;i<inputsize;i++)
+  {
+    Vec r_i = r(i);
+    scores(i,0) = min(r_i);
+    scores(i,1) = i;
+  }
+  sortRows(scores);
+  for (int k=0;k<inputsize;k++)
+  {
+    int i = int(scores(k,1));
+    real s = scores(k,0);
+    cout << k << "-th best variable is " << data->fieldName(i)
+         << " with min p-value = " << s << endl;
+    if (targetsize>1)
+    {
+      cout << "p-values for individual targets: ";
+      for (int j=0;j<targetsize;j++)
+        cout << r(i,j) << " ";
+      cout << endl;
+    }
+  }
 }
 
 %> // end of namespace PLearn
