@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatColumnsVMatrix.cc,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: ConcatColumnsVMatrix.cc,v 1.2 2003/03/19 23:15:21 jkeable Exp $
    ******************************************************* */
 
 #include "ConcatColumnsVMatrix.h"
@@ -136,6 +136,19 @@ string ConcatColumnsVMatrix::getValString(int col, real val) const
       k++;
     }
   return array[k]->getValString(pos+col,val);
+}
+
+const map<string,real>& ConcatColumnsVMatrix::getStringMapping(int col) const
+{
+  if(col>=width_)
+    PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
+  int pos=0,k=0;
+  while(col>=pos+array[k]->width())
+    {
+      pos += array[k]->width();
+      k++;
+    }
+  return array[k]->getStringToRealMapping(pos+col);
 }
 
 string ConcatColumnsVMatrix::getString(int row, int col) const

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVMatrix.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: ConcatRowsVMatrix.h,v 1.2 2003/03/19 23:15:22 jkeable Exp $
    ******************************************************* */
 
 
@@ -76,6 +76,9 @@ class ConcatRowsVMatrix: public VMatrix
   virtual real getStringVal(int col, const string & str) const;
   virtual string getValString(int col, real val) const;
   virtual string getString(int row,int col) const;
+  // this function does not really makes sense since there could be as much mapping as the number of VMatrices composing this ConcatRowsVMatrix
+  // It will return the first's mapping
+  const map<string,real>& getStringToRealMapping(int col) const;
 
   virtual void reset_dimensions() 
     { 

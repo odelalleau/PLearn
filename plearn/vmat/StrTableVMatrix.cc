@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StrTableVMatrix.cc,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: StrTableVMatrix.cc,v 1.2 2003/03/19 23:15:25 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -40,33 +40,21 @@
 namespace PLearn <%
 using namespace std;
 
-/* This constructor is used by the ascii2vmat program
+StrTableVMatrix::StrTableVMatrix()
+{}
 
-StrTableVMatrix::StrTableVMatrix(int length, int width,const vector<bool> & hasreal):MemoryVMatrix(Mat(length,width))
-{
-//  for(
-}
-
-
-
-real StrTableVMatrix::declareNewString(int col,string str)
-{
-  real r=map_sr[col].size();
-  map_sr[col][str]=r;
-  map_rs[col][r]=str;
-  return r;
-}
-*/
 
 /* This contructor takes a StringTable (which is simply a matrix of string) and converts it to a matrix of reals
    using real->string and string->real maps
 */
 StrTableVMatrix::StrTableVMatrix(const StringTable & st):MemoryVMatrix(Mat(st.length(),st.width()))
 {
-  hash_map<string,real>::iterator it;
+  map<string,real>::iterator it;
   double dbl;
   TVec<int> mapnum(st.width(),0);
   TVec<string> vec(st.width());
+  TVec<bool> hasreal;
+  Vec colmax;
   hasreal.resize(st.width());
   colmax.resize(st.width());
   
@@ -120,32 +108,6 @@ StrTableVMatrix::StrTableVMatrix(const StringTable & st):MemoryVMatrix(Mat(st.le
   
 }
 
-string StrTableVMatrix::getString(int row,int col) const
-{
-  real val=data(row,col);
-  if(hasreal[col] && val<=colmax[col] || is_missing(val))
-    return tostring(val);
-  hash_map<real,string>::const_iterator it=map_rs[col].find(val);
-  if(it==map_rs[col].end())
-    PLERROR("Cannot find val on col=%i row=%i in hash_map.. This shoudn't happen",col,row);
-  return it->second;
-}
-
-real StrTableVMatrix::getStringVal(int col,const string & str) const
-{
-  hash_map<string,real>::const_iterator it=map_sr[col].find(str);
-  if(it==map_sr[col].end())
-    return MISSING_VALUE;
-  return it->second;
-} 
-
-string StrTableVMatrix::getValString(int col, real val) const
-{
-  hash_map<real,string>::const_iterator it=map_rs[col].find(val);
-  if(it==map_rs[col].end())
-    return "";
-  return it->second;
-}
-
+IMPLEMENT_NAME_AND_DEEPCOPY(StrTableVMatrix);
 
 %> // end of namespace PLearn

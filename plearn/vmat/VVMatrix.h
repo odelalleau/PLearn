@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: VVMatrix.h,v 1.2 2003/03/19 23:15:34 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,8 +54,13 @@ protected:
   string code;
   VMat the_mat;
 
-  //! loads a .vmat
+  //! loads a .vmat file and return the VMat object built from it
+  // returns the precomputed version if it can
   static VMat createPreproVMat(const string & filename);
+
+  // generate a file (ivfname) containing indexes of rows of 'source' that remain after filtering with 
+  // the *every* possible step that changes the index of rows (i.e : prefilter, shuffle.. postfiltering)
+  // -- Not optimal, since it will first *precompute* if any postfilter is required
   static void generateVMatIndex(VMat source, const string& meta_data_dir,
                                 const string & filename, time_t date_of_code,const string & in, 
                                 unsigned int idx_prefilter,unsigned int cidx_prefilter,
@@ -63,8 +68,11 @@ protected:
                                 unsigned int idx_process,unsigned int cidx_process,
                                 unsigned int idx_shuffle,unsigned int cidx_shuffle,
                                 unsigned int idx_join,unsigned int cidx_join);
+// returns the result from the join operation
   static void processJoinSection(const vector<string> & code, VMat & tmpsource);
+  // returns a 2d-array that contains the structure of the source datasets that will be concatenated
   static vector<vector<string> > extractSourceMatrix(const string & str,const string& filename);
+  // generate a file (ivfname) containing indexes of rows of 'source' that remain after filtering with 'code'
   static void generateFilterIndexFile(VMat source, const string & code, const string& ivfname);
   
 public:
@@ -81,9 +89,10 @@ public:
   //! its date is > the latest date of all files (code + all its dependencies)
   static VMat buildFilteredVMatFromVPL(VMat source, const string & code, const string& ivfname, time_t date_of_code);
   
-  //! tells if the .vmat is precomputed and if that precomputed data is more recent than the .vmat file
+  //! returns true if the .vmat is precomputed *and* if that precomputed data is more recent than the .vmat file
   bool isPrecomputedAndUpToDate();
 
+  // returns a filename for the precomputed dataset (which you could load for example with getDataSet)
   string getPrecomputedDataName();
 
   VVMatrix(const string& filename_):the_filename(filename_){build_();}
@@ -93,9 +102,13 @@ public:
   // POSSIBLE "cache" IMPROVEMENT.. need to check it out with pascal
   // would it be a good idea to systematically wrap "the_mat" with a RowBufferedVMatrix  ?
 
-  virtual string getValString(int col, real val) const;
-  virtual real getStringVal(int col, const string & str) const;
-  virtual string getString(int row,int col) const;
+// string maps are those loaded from the .vmat metadatadir, not those of the source vmatrix anymore
+// could be changed..
+
+//   virtual string getValString(int col, real val) const;
+//   virtual real getStringVal(int col, const string & str) const;
+//   virtual string getString(int row,int col) const;
+//   virtual const hash_map<string,real>& getStringToRealMapping(int col) const;
 
   virtual real get(int i, int j) const {return the_mat->get(i,j);}
   virtual void getSubRow(int i, int j, Vec v) const {the_mat->getSubRow(i,j,v);}

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsFileIndexVMatrix.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: SelectRowsFileIndexVMatrix.h,v 1.2 2003/03/19 23:15:25 jkeable Exp $
    ******************************************************* */
 
 
@@ -75,6 +75,7 @@ public:
   virtual real getStringVal(int col, const string & str) const;
   virtual string getValString(int col, real val) const;
   virtual string getString(int row,int col) const;
+  virtual const map<string,real>& getStringToRealMapping(int col) const;
 
   virtual real dot(int i1, int i2, int inputsize) const;
   virtual real dot(int i, const Vec& v) const;

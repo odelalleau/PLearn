@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatColumnsVMatrix.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: ConcatColumnsVMatrix.h,v 1.2 2003/03/19 23:15:22 jkeable Exp $
    ******************************************************* */
 
 
@@ -64,6 +64,8 @@ class ConcatColumnsVMatrix: public RowBufferedVMatrix
   ConcatColumnsVMatrix(VMat d1, VMat d2) : array(d1, d2) { build_(); };
   virtual void getRow(int i, Vec samplevec) const; 
   virtual real getStringVal(int col, const string & str) const;
+  //! returns the whole string->value mapping
+  const map<string,real>& getStringMapping(int col) const;
   virtual string getValString(int col, real val) const;
   virtual string getString(int row,int col) const;
   virtual void reset_dimensions() { PLERROR("ConcatColumnsVMatrix::reset_dimensions() not implemented"); }

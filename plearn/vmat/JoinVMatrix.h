@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: JoinVMatrix.h,v 1.3 2002/10/03 07:35:28 plearner Exp $
+   * $Id: JoinVMatrix.h,v 1.4 2003/03/19 23:15:24 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -42,12 +42,7 @@
 
 #include "RowBufferedVMatrix.h"
 #include "VMat.h"
-
-#if __GNUC__ < 3
-#  include <hash_map>
-#else
-#  include <ext/hash_map>
-#endif
+#include <map>
 
 #include <vector>
 
@@ -55,7 +50,8 @@ namespace PLearn <%
 using namespace std;
 
 
-struct JoinFieldStat {
+struct JoinFieldStat 
+{
   enum statType { COUNT, NNONMISSING, NMISSING, SUM, SUMSQUARE, 
                   MEAN, VARIANCE, STDDEV, STDERR,
                   MIN, MAX };
@@ -66,6 +62,10 @@ struct JoinFieldStat {
     : from(f), to(t), stat(st)
       {}
 };
+
+/* TODO : preserve string mappings for fields that remain
+ */
+
 
 class JoinVMatrix : public RowBufferedVMatrix
 { 
@@ -84,6 +84,13 @@ public:
   void addStatField(const string & statis,const string & namefrom,const string & nameto);
   virtual void getRow(int idx, Vec v) const;
   DECLARE_NAME_AND_DEEPCOPY(JoinVMatrix);
+
+  virtual string getValString(int col, real val) const;
+  virtual const map<string,real>& getStringToRealMapping(int col) const;
+  virtual const map<real,string>& getRealToStringMapping(int col) const;
+  virtual real getStringVal(int col, const string & str) const;
+  virtual string getString(int row,int col) const;
+
 };
 
 %> // end of namespace PLearn

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsFileIndexVMatrix.cc,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: SelectRowsFileIndexVMatrix.cc,v 1.2 2003/03/19 23:15:25 jkeable Exp $
    ******************************************************* */
 
 #include "SelectRowsFileIndexVMatrix.h"
@@ -69,5 +69,7 @@ string SelectRowsFileIndexVMatrix::getValString(int col, real val) const
 string SelectRowsFileIndexVMatrix::getString(int row, int col) const
 { return distr->getString(indices[row], col); }
 
+const map<string,real>& SelectRowsFileIndexVMatrix::getStringToRealMapping(int col) const
+{ return distr->getStringToRealMapping(col);}
 
 %> // end of namespcae PLearn

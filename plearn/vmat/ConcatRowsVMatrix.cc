@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVMatrix.cc,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: ConcatRowsVMatrix.cc,v 1.2 2003/03/19 23:15:22 jkeable Exp $
    ******************************************************* */
 
 #include "ConcatRowsVMatrix.h"
@@ -100,6 +100,13 @@ string ConcatRowsVMatrix::getString(int row, int col) const
   int whichvm, rowofvm;
   getpositions(row,whichvm,rowofvm);
   return array[whichvm]->getString(rowofvm,col);
+}
+
+// this function does not really makes sense since there could be as much mapping as the number of VMatrices composing this ConcatRowsVMatrix
+// It will return the first's mapping
+const map<string,real>& ConcatRowsVMatrix::getStringToRealMapping(int col) const
+{
+  return array[0]->getStringToRealMapping(col);
 }
 
 

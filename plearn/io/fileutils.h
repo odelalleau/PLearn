@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.h,v 1.3 2003/01/29 04:27:00 plearner Exp $
+   * $Id: fileutils.h,v 1.4 2003/03/19 23:15:10 jkeable Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -122,6 +122,8 @@ using namespace std;
   // will not prompt before overwriting
   void mvforce(const string& file);
 
+  // trivial unix touch
+  void touch(const string& file);
 
 //! Reads while the characters read exactly match those in s
 //! Will throw a PLERROR exception as soon as it doesn't match
@@ -158,6 +160,9 @@ void readWhileMatches(istream& in, const string& s);
 
   string makeFileNameValid(const string& filename);
 
+// returns "./"+filename if filename is relative to current dir
+  string makeExplicitPath(const string& filename);
+
 //! Will return the text, macro processed, with each instance of ${varname} in the text that corresponds to a key in the given map 
 //! replaced by its associated value. 
 //! Also every $DEFINE{varname=... } in the text will add a new varname entry in the map.  (The DEFINE macro will be discarded)
@@ -166,7 +171,6 @@ string readAndMacroProcess(istream& in, map<string, string>& variables);
 
 //! Same as readAndMacroProcess, but takes a filename instead of an istream
 string readFileAndMacroProcess(const string& fname, map<string, string>& variables);
-
 
 %> // end of namespace PLearn
 

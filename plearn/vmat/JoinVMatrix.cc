@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: JoinVMatrix.cc,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * $Id: JoinVMatrix.cc,v 1.2 2003/03/19 23:15:24 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,7 +49,7 @@ JoinVMatrix::JoinVMatrix(VMat mas,VMat sla,TVec<int> mi,TVec<int> si)
   :RowBufferedVMatrix(mas.length(),mas.width()),master(mas),slave(sla),master_idx(mi),slave_idx(si)
 {
   if(master_idx.size()!=slave_idx.size())
-    PLERROR("master and slave field correspondance don't have same dimensions ");
+    PLERROR("JoinVMatrix : master and slave field correspondance don't have same dimensions ");
 
   for(int j=0;j<width();j++)
       declareField(j,mas->fieldName(j), VMField::UnknownType);
@@ -104,6 +104,7 @@ void JoinVMatrix::getRow(int idx, Vec v) const
   real nonmiss;
   master->getRow(idx,v.subVec(0,master.width()));
   
+  // build a key used to search in the slave matrix
   for(int j=0;j<master_idx.size();j++)
     tempkey[j]=v[master_idx[j]];
   Maptype::const_iterator it,low,upp; 
@@ -174,10 +175,51 @@ void JoinVMatrix::getRow(int idx, Vec v) const
         case JoinFieldStat::MAX:
           popo[i]=max[i];
           break;
-        default:PLERROR("???");
+        default:PLERROR("Unknown statistic in JoinVMatrix!");
         }
     }
 }
 
+string JoinVMatrix::getValString(int col, real val) const
+{
+  if(col<master.width())
+    return master->getValString(col,val);
+  else 
+    return slave->getValString(col,val);
+}
+
+real JoinVMatrix::getStringVal(int col, const string & str) const
+{
+  if(col<master.width())
+    return master->getStringVal(col,str);
+  else 
+    return slave->getStringVal(col,str);
+}
+
+const map<string,real>& JoinVMatrix::getStringToRealMapping(int col) const
+{
+  if(col<master.width())
+    return master->getStringToRealMapping(col);
+  else 
+    return slave->getStringToRealMapping(col);
+
+}
+
+const map<real,string>& JoinVMatrix::getRealToStringMapping(int col) const
+{
+  if(col<master.width())
+    return master->getRealToStringMapping(col);
+  else 
+    return slave->getRealToStringMapping(col);
+}
+
+
+string JoinVMatrix::getString(int row,int col) const
+{
+  if(col<master.width())
+    return master->getString(row,col);
+  else 
+    return slave->getString(row,col);
+}
 
 %> // end of namespace PLearn

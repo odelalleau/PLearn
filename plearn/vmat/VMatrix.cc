@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.9 2003/03/10 01:51:18 yoshua Exp $
+* $Id: VMatrix.cc,v 1.10 2003/03/19 23:15:32 jkeable Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -238,25 +238,172 @@ void VMatrix::readFieldInfos(istream& in)
     {
       vector<string> v(split(pgetline(in)));
       switch(v.size())
-	{
-	case 1: declareField(i, v[0]); break;
-	case 2: declareField(i, v[0], VMField::FieldType(toint(v[1]))); break;
-	default: PLERROR("In VMatrix::readFieldInfos Format not recognized.  Each line should be '<name> {<type>}'.");
-	}
+      {
+      case 1: declareField(i, v[0]); break;
+      case 2: declareField(i, v[0], VMField::FieldType(toint(v[1]))); break;
+      default: PLERROR("In VMatrix::readFieldInfos Format not recognized.  Each line should be '<name> {<type>}'.");
+      }
     }
 }
 
+
+void VMatrix::setNotesFName(int col, string name)
+{
+  string normalfname = getMetaDataDir()+"FieldInfo/"+fieldName(col)+".notes";
+  rm(normalfname+".lnk");
+  if(name==normalfname || name=="")
+  {
+    rm(normalfname+".lnk");
+    return;
+  }
+  
+  ofstream o((normalfname+".lnk").c_str());
+  o<<name<<endl;
+}
+
+string VMatrix::getNotesFName(int col)
+{
+  string target = makeFileNameValid(fieldName(col)+".notes");
+  string normalfname = getMetaDataDir()+"FieldInfo/"+target;
+  string defaultlinkfname = getMetaDataDir()+"FieldInfo/__default.lnk";
+  if(isfile(normalfname))
+    return normalfname;
+  else if(isfile(normalfname+".lnk"))
+    return resolveFieldInfoLink(target, normalfname+".lnk");
+  else if(isfile(defaultlinkfname))
+    return resolveFieldInfoLink(target, defaultlinkfname);
+  // assume target is here, but file is empty thus inexistant
+  else return normalfname;
+}
+
+bool VMatrix::isNotesFNameDirect(int col)
+{
+  string target = makeFileNameValid(fieldName(col)+".notes");
+  string normalfname = getMetaDataDir()+"FieldInfo/"+target;
+  return getNotesFName(col) == normalfname;
+}
+
+
+void VMatrix::setSMapFName(int col, string name)
+{
+  string normalfname = getMetaDataDir()+"FieldInfo/"+fieldName(col)+".smap";
+  rm(normalfname+".lnk");
+  if(name==normalfname || name=="")
+  {
+    rm(normalfname+".lnk");
+    return;
+  }
+  
+  ofstream o((normalfname+".lnk").c_str());
+  o<<name<<endl;
+}
+
+// comments: see .h
+string VMatrix::resolveFieldInfoLink(string target, string source)
+{
+  string contents = removeblanks(loadFileAsString(source));
+  if(contents==source)
+    return "ERROR";
+  if(isdir(contents))
+  {
+    //just in case it lacks a slash..
+    contents+="/";
+    if(isfile(contents+target+".lnk"))
+      return resolveFieldInfoLink(target,contents+target+".lnk");
+    else if(isfile(contents+target))
+      return contents+target;
+    else if(isfile(contents+"/__default.lnk"))
+      return resolveFieldInfoLink(target,contents+"/__default.lnk");
+    // assume target is there, but file is empty thus inexistant
+    else return contents+target;
+  }
+  else if(contents.substr(contents.size()-4,4)==".lnk")
+    return resolveFieldInfoLink(target,contents);
+  else return contents;
+}
+      
+string VMatrix::getSMapFName(int col)
+{
+  string target = makeFileNameValid(fieldName(col)+".smap");
+  string normalfname = getMetaDataDir()+"FieldInfo/"+target;
+  string defaultlinkfname = getMetaDataDir()+"FieldInfo/__default.lnk";
+  if(isfile(normalfname+".lnk"))
+    return resolveFieldInfoLink(target, normalfname+".lnk");
+  else if(isfile(normalfname))
+    return normalfname;
+  else if(isfile(defaultlinkfname))
+    return resolveFieldInfoLink(target, defaultlinkfname);
+  // assume target is here, but file is empty thus inexistant
+  else return normalfname;
+}
+
+bool VMatrix::isSMapFNameDirect(int col)
+{
+  string target = makeFileNameValid(fieldName(col)+".smap");
+  string normalfname = getMetaDataDir()+"FieldInfo/"+target;
+  return getSMapFName(col) == normalfname;
+}
+
+//! adds a string<->real mapping
+void VMatrix::addStringMapping(int col, string str, real val)
+{
+  map_sr[col][str]=val;
+  map_rs[col][val]=str;
+}
+
+//! removes a string mapping
+void VMatrix::removeStringMapping(int col, string str)
+{
+  map<string,real>::iterator sriterator;
+// check if the mapping ractually exists
+  if((sriterator = map_sr[col].find(str)) == map_sr[col].end())
+    return;
+  real val = map_sr[col][str];
+  map_sr[col].erase(sriterator);
+  map_rs[col].erase(map_rs[col].find(val));
+}
+
+//! overwrite the string<->real mapping with this one (and build the reverse mapping)
+void VMatrix::setStringMapping(int col, const map<string,real> & zemap)
+{
+  map_sr[col]=zemap;
+  map_rs[col].clear();
+  for(map<string,real>::iterator it = map_sr[col].begin();it!=map_sr[col].end();++it)
+    map_rs[col][it->second]=it->first;
+}
+
+//! deletes all string mapping for column i
+void VMatrix::deleteStringMapping(int col)
+{
+  if(col>=map_sr.size() ||
+     col>=map_rs.size())
+    PLERROR("deleteStringMapping : out of bounds for col=%i in string mapping array (size=%i).\n Current VMatrix\nclass"\
+            "is '%s' (or maybe derivated class?). be sure to set\n map_sr(rs) to appropriate sizes as soon as you know the width of the matrix\n"\
+            "(in constructor or elsewhere)",col,map_sr.size(),classname().c_str());
+  map_sr[col].clear();
+  map_rs[col].clear();
+}
+
 string VMatrix::getValString(int col, real val) const
-{ return ""; }
+{ 
+  if(map_rs[col].find(val)==map_rs[col].end())
+    return "";
+  else return map_rs[col][val];
+}
 
 real VMatrix::getStringVal(int col,const string & str) const
 {
-  return MISSING_VALUE;
+  if(map_sr[col].find(str)==map_sr[col].end())
+    return MISSING_VALUE;
+  else return map_sr[col][str];
 }
 
 string VMatrix::getString(int row,int col) const
 {
-  return tostring(get(row,col));
+  real val = get(row,col);
+  if(map_rs[col].find(val)==map_rs[col].end())
+    return tostring(val);
+  else return map_rs[col][val];
 }
 
 void VMatrix::setMetaDataDir(const string& the_metadatadir) 
@@ -267,6 +414,58 @@ void VMatrix::setMetaDataDir(const string& the_metadatadir)
   metadatadir = abspath(metadatadir);
 }
 
+void VMatrix::loadAllStringMappings()
+{
+  // if this is a StrTableVMatrix, smap are already created
+  if(classname()=="StrTableVMatrix")
+    return;
+  cout<<"load all string mapping"<<endl;
+  for(int i=0;i<width();i++)
+    loadStringMapping(i);
+}
+
+// loads the appropriate string map file for column 'col'
+void VMatrix::loadStringMapping(int col)
+{
+  string fname = getSMapFName(col);
+  force_mkdir(getMetaDataDir()+"FieldInfo/");
+  deleteStringMapping(col);
+  if(!isfile(fname))
+  {
+    // try to create empty file to check consistency of path
+    ofstream o(fname.c_str());
+    if(o.bad())
+      PLERROR( string("\nEmpty new file "+fname+" could not be created.\n (This is ony done to check consistency of path. File is deleted afterward.)").c_str());
+    // call rmquotes so fieldnames weird characters pass
+    rm(fname);
+    return;
+  }
+  
+  // smap file exists, open it
+  PIFStream f(fname.c_str());
+  if(!f)
+    PLERROR( string("File "+fname+" cannot be opened.").c_str());
+
+/*  string pref;
+  f>>pref;
+  if(string(pref)!="#SMAP")
+    PLERROR( string("File "+fname+" is not a valid String mapping file.\nShould start with #SMAP on first line (this is to prevent inopportunely overwritting another type of file)").c_str());
+*/
+  while(f)
+  {
+    string s;
+    f >> s;
+    real val;
+    f >> val;
+    if(f) 
+    {
+      map_sr[col][s]= val;
+      map_rs[col][val]=s;
+    }
+  }
+}
+
+
 //! returns the unconditonal statistics for the given field
 TVec<StatsCollector> VMatrix::getStats()
 {
@@ -275,6 +474,8 @@ TVec<StatsCollector> VMatrix::getStats()
     string statsfile = getMetaDataDir() + "/stats.psave";
     if (isfile(statsfile) && getMtime()<mtime(statsfile))
     {
+      if(getMtime()==0)
+        PLWARNING("Warning: using a saved stat file (%s) but mtime is 0.\n(cannot be sure file is up to date)",statsfile.c_str());
       PLearn::load(statsfile, field_stats);
     }
     else
@@ -523,13 +724,6 @@ void VMatrix::saveDMAT(const string& dmatdir) const
     vm.appendRow(v);
     pb(i);
     //cerr<<i<<" "<<flush;
-  }
-
-  //save field names
-  if (fieldinfos.size() > 0)
-  {
-    string fieldinfosfname = dmatdir+"/fieldnames";
-    saveFieldInfos(fieldinfosfname);  
   }
 }
 

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: DiskVMatrix.cc,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: DiskVMatrix.cc,v 1.2 2003/03/19 23:15:22 jkeable Exp $
    ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -115,6 +115,10 @@ void DiskVMatrix::build_()
     current_row.resize(width_);
     other_row_index = -1;
     other_row.resize(width_);
+
+    //resize the string mappings
+    map_sr = TVec<map<string,real> >(width_);
+    map_rs = TVec<map<real,string> >(width_);
 
     string fieldinfosfname = dirname+"/fieldnames";
     if(isfile(fieldinfosfname))

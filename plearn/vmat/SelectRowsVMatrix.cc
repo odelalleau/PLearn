@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsVMatrix.cc,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: SelectRowsVMatrix.cc,v 1.2 2003/03/19 23:15:25 jkeable Exp $
    ******************************************************* */
 
 #include "SelectRowsVMatrix.h"
@@ -68,6 +68,12 @@ string SelectRowsVMatrix::getValString(int col, real val) const
 
 string SelectRowsVMatrix::getString(int row, int col) const
 { return distr->getString(row,col); }
+
+const map<string,real>& SelectRowsVMatrix::getStringToRealMapping(int col) const
+{ return distr->getStringToRealMapping(col);}
+
+const map<real,string>& SelectRowsVMatrix::getRealToStringMapping(int col) const
+{ return distr->getRealToStringMapping(col);}
 
 void SelectRowsVMatrix::declareOptions(OptionList &ol)
 {

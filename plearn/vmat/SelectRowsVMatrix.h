@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsVMatrix.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: SelectRowsVMatrix.h,v 1.2 2003/03/19 23:15:25 jkeable Exp $
    ******************************************************* */
 
 
@@ -87,6 +87,10 @@ public:
   virtual real getStringVal(int col, const string & str) const;
   virtual string getValString(int col, real val) const;
   virtual string getString(int row,int col) const;
+  //! returns the whole string->value mapping
+  virtual const map<string,real>& getStringToRealMapping(int col) const;
+  virtual const map<real,string>& getRealToStringMapping(int col) const;
+
   virtual void reset_dimensions() { distr->reset_dimensions(); width_=distr->width(); }
   virtual real dot(int i1, int i2, int inputsize) const;
   virtual real dot(int i, const Vec& v) const;

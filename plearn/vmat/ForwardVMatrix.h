@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: ForwardVMatrix.h,v 1.2 2002/10/21 01:21:53 plearner Exp $
+   * $Id: ForwardVMatrix.h,v 1.3 2003/03/19 23:15:23 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -75,6 +75,9 @@ public:
 
   //! returns element as a string, even if its a number (which is always the case unless class is StrTableVMatrix
   virtual string getString(int row,int col) const;
+
+  //! returns the whole string->value mapping
+  map<string,real> getStringMapping(int col) const;
 
   virtual void computeStats(); 
 

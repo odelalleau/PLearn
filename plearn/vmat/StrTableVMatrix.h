@@ -31,7 +31,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StrTableVMatrix.h,v 1.4 2002/10/03 07:35:28 plearner Exp $
+   * $Id: StrTableVMatrix.h,v 1.5 2003/03/19 23:15:26 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -40,39 +40,22 @@
 
 #include "StringTable.h"
 #include "MemoryVMatrix.h"
-#if __GNUC__ < 3
-#  include <hash_map>
-#else
-#  include <ext/hash_map>
-#endif
 
 namespace PLearn <%
 using namespace std;
 
-
 class StrTableVMatrix: public MemoryVMatrix
 {
-protected:
-  //! tells if a column has real values in it (because if so, we store them as real, not string)
-  TVec<bool> hasreal; 
-  //! max value of all real numbers in columns
-  Vec colmax; 
-
-  vector<hash_map<string,real> > map_sr; 
-  vector<hash_map<real,string> > map_rs; 
-
 public:
   StrTableVMatrix(const StringTable & st);
-  
-  //! return value associated with a string. Nan if not found
-  virtual real getStringVal(int col, const string & str) const; 
-  virtual string getValString(int col, real val) const;
-  
-  //! returns element as a string, even if its a number
-  virtual string getString(int row,int col) const;
+  StrTableVMatrix();
+  DECLARE_NAME_AND_DEEPCOPY(StrTableVMatrix);
 };
 
+DECLARE_OBJECT_PTR(StrTableVMatrix);
+
 %> // end of namespace PLearn
+
 
 
 #endif // StrTableVMatrix_H

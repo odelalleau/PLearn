@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMatLanguage.cc,v 1.3 2002/08/21 18:40:42 jkeable Exp $
+   * $Id: VMatLanguage.cc,v 1.4 2003/03/19 23:15:31 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,7 +51,7 @@ using namespace std;
   
   bool VMatLanguage::output_preproc=false;
 
-  // returns oldest modification date of a file searching recursively every
+  // returns oldest modification date of a file containing VPL code, searching recursively every
   // file placed after a INCLUDE token
   time_t getDateOfCode(const string& codefile)
   {
@@ -78,6 +78,8 @@ using namespace std;
 
   map<string, int> VMatLanguage::opcodes;
 
+  // this function (that really should be sliced to to smaller pieces someday) takes raw VPL code and 
+  // returns the preprocessed sourcecode along with the defines and the fieldnames it generated
   void VMatLanguage::preprocess(istream& in, map<string, string>& defines,  string& processed_sourcecode, vector<string>& fieldnames)
   {
     char buf[500];
@@ -88,18 +90,23 @@ using namespace std;
       {
         pos=defines.find(token);
 
+        // are we sitting on a mapping declaration?
         if(token[0]=='{')
           {
             //skip mapping to avoid brackets conflicts with fieldcopy macro syntax
             char car;
             processed_sourcecode+=token;
+            // if the token is only a part of the mapping...
             if(token.find("}")==string::npos)
               {
+                // just eat till the end of the mapping
                 while((car=in.get())!='}' && !in.eof())
                   processed_sourcecode+=car;
                 processed_sourcecode+="}";
               }
           }
+        // did we find a fieldName declaration?
+        // format is either :myField or :myField:a:b
         else if(token[0]==':')
           {
             if(isBlank(token.substr(1)))
@@ -129,11 +136,13 @@ using namespace std;
               fieldnames.push_back(token.substr(1));
             else PLERROR("Strange fieldname format (multiple declaration format is :label:0:10");
           }
+        // did we find a fieldcopy macro?
         else if(token[0]=='[')
           {
             vector<string> parts=split(token.substr(1),":]");
 
-            // fieldcopy, type  : [start,end]
+            // fieldcopy macro type is [start,end]
+            // fields can be refered to as %number or @name
             if(parts.size()==2)
               {
                 string astr=parts[0].substr(1);
@@ -171,7 +180,7 @@ using namespace std;
                     fieldnames.push_back(vmsource->fieldName(i));
                   }
               }
-            // fieldcopy, type  : [field]
+            // fieldcopy macro type is [field]
             else if(parts.size()==1)
             {
               string astr=parts[0].substr(1);
@@ -192,13 +201,18 @@ using namespace std;
             else PLERROR("Strange fieldcopy format. e.g : [%0:%5]. Found parts %s",join(parts," ").c_str());
           }
 
+        // did we find a comment?
         else if(token[0]=='#')
           skipRestOfLine(in);
+
+        // include declaration
         else if(token=="INCLUDE")
           { 
             in >> token;
             // Try to be intelligent and find out if the file belongs directly to another .?mat (the case of a 
             // stats file for example) and warn if the file is out of date
+
+            // Mhhh.. is this still pertinent? This "stats" and "bins" thing is semi-standard I think
             unsigned int idx_meta  =  token.find(".metadata");
             unsigned int idx_stats =  token.find("stats.");
             unsigned int idx_bins  =  token.find("bins.");
@@ -212,9 +226,12 @@ using namespace std;
             ifstream incfile(token.c_str());
             if(incfile.bad())
               PLERROR("Cannot open file %s\n",token.c_str());
+            // process recursively this included file
+            // **POSSIBLE DRAWBACK : defines done in this file will be used in the next recursion level
             preprocess(incfile,defines, processed_sourcecode,fieldnames);
 	    
           }
+        // define declaration
         else if(token=="DEFINE")
           {
             in >> token;
@@ -224,6 +241,7 @@ using namespace std;
         else if(pos!=defines.end())
           {
             // the token is a macro (define) so we process it recursively until it's stable
+            // (necessary since the define macro can use defines recursively)
             string oldstr=pos->second,newstr;
             bool unstable=true;
             while(unstable)
@@ -237,11 +255,15 @@ using namespace std;
               }
             processed_sourcecode+=newstr + " ";
           }
+        // did we find a reference to a string value of a VMatrix that has overloaded getStringVal(..) e.g.:StrTableVMatrix
+        // In VPL, you can push on the stack the value of a string according to the string map of a particular column
+        // e.g. : to push value of string "WBush" from field MostSuspectAmericanPresidents, write @MostSuspectsAmericanPresidents."WBush"
         else if ((token[0]=='@' || token[0]=='%') && token[token.length()-1]=='"' && (spos=token.find(".\""))!=string::npos)
-          // assume its a reference to a string value of a VMatrix that has overloaded getStringVal(..) e.g.:StrTableVMatrix
+          
           {
             string colname=token.substr(1,spos-1);
             string str=token.substr(spos+2,token.length()-spos-3);
+            // do we have a named field reference?
             if(token[0]=='@')
               {
                 pos=defines.find(string("@")+colname);                
@@ -259,6 +281,7 @@ using namespace std;
       }
   }
 
+  //  generate bytecode from preprocessed sourcecode
   void VMatLanguage::generateCode(istream& processed_sourcecode)
   {
     char car;
@@ -330,6 +353,9 @@ using namespace std;
     map<string,string> defines;
     string processed_sourcecode;
 
+    program.resize(0);
+    mappings.resize(0);
+    
     for(int i=0;i<vmsource.width();i++)
       {
         // first warn for duplicate fieldnames
@@ -395,6 +421,9 @@ using namespace std;
         opcodes["julian2date"] = 40; // nb. days -> CYYMMDD  
         opcodes["min"] = 41; // a b -> (a<b? a : b)
         opcodes["max"] = 42; // a b -> (a<b? b : a)
+        opcodes["sqrt"] = 43; 
+        opcodes["^"] = 44; 
+        opcodes["mod"] = 45;
       }
   }
 
@@ -587,15 +616,29 @@ using namespace std;
             pstack.push(date_to_float(PDate((int)pstack.pop())));
             break;
           case 41: //min
-	    a= pstack.pop();
-	    b= pstack.pop();
+            a= pstack.pop();
+            b= pstack.pop();
             pstack.push(a<b? a : b);
             break;
           case 42: //max
-	    a= pstack.pop();
-	    b= pstack.pop();
+            a= pstack.pop();
+            b= pstack.pop();
             pstack.push(a<b? b : a);
             break;
+          case 43: // sqrt
+            pstack.push(sqrt(pstack.pop()));
+            break;
+          case 44: // ^
+            a= pstack.pop();
+            b= pstack.pop();
+            pstack.push(pow(a,b));
+            break;
+          case 45: // mod
+            a= pstack.pop();
+            b= pstack.pop();
+            pstack.push((int)b % (int)a);
+            break;
+
           default:
             PLERROR("BUG IN PreproInterpretor::run while running program: invalid opcode: %d", op);
           }

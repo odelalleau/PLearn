@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat.cc,v 1.6 2002/10/03 07:35:28 plearner Exp $
+* $Id: VMat.cc,v 1.7 2003/03/19 23:15:27 jkeable Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat.h"
@@ -98,6 +98,7 @@ VMat loadAsciiAsVMat(const string& filename)
   TVec<string> fn;
   loadAscii(filename,m,fn);
   VMat vm= new MemoryVMatrix(m);
+  vm->setMtime(mtime(filename));
   for(int i=0;i<fn.size();i++)
     vm->declareField(i, fn[i]);
   return vm;

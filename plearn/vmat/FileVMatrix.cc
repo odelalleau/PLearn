@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.2 2003/02/13 21:45:28 ducharme Exp $
+   * $Id: FileVMatrix.cc,v 1.3 2003/03/19 23:15:23 jkeable Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -157,6 +157,10 @@ void FileVMatrix::build_()
     file_is_float = false;
   else
     PLERROR("In FileVMatrix constructor, wrong header for PLearn binary matrix format. Please use checkheader (in PLearn/Scripts) to check the file.(3)");
+
+  //resize the string mappings
+  map_sr = TVec<map<string,real> >(width_);
+  map_rs = TVec<map<real,string> >(width_);
 
   string fieldinfosfname = filename_+".fieldnames";
   if(isfile(fieldinfosfname))

@@ -1,5 +1,4 @@
 // -*- C++ -*-
-
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999-2001 Pascal Vincent, Yoshua Bengio, Rejean Ducharme and University of Montreal
@@ -35,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.7 2003/03/10 01:51:18 yoshua Exp $
+   * $Id: VMatrix.h,v 1.8 2003/03/19 23:15:33 jkeable Exp $
    ******************************************************* */
 
 
@@ -84,8 +83,13 @@ protected:
   // New set of statistics fields:
   TVec<StatsCollector> field_stats;  //!< stats[i] contains stats for field #i 
 
+  // the string mapping for each fields, in both directions
+  TVec<map<string,real> > map_sr; 
+  TVec<map<real,string> > map_rs; 
+  
+
 public:
-  mutable Array<VMField> fieldinfos; // don't use this directly (deprecated...) call getFieldInfos() instead
+  mutable Array<VMField> fieldinfos; // don't use this directly (deprecated...) call getieldInfos() instead
     Array<VMFieldStat> fieldstats;
 
   VMatrix()
@@ -94,7 +98,10 @@ public:
 
   VMatrix(int the_length, int the_width)
     :length_(the_length), width_(the_width), mtime_(0), 
-      writable(false),fieldstats(0)
+     writable(false),
+     map_sr(TVec<map<string,real> >(the_width)),
+     map_rs(TVec<map<real,string> >(the_width)),
+     fieldstats(0)
       {}
 
   static void declareOptions(OptionList & ol);
@@ -109,33 +116,73 @@ public:
 
   VMField::FieldType fieldType(int fieldindex) const { return getFieldInfos(fieldindex).fieldtype; } 
   VMField::FieldType fieldType(const string& fieldname) const { return fieldType(fieldIndex(fieldname)); } 
-    const VMFieldStat& fieldStat(int j) const { return fieldstats[j]; } 
-    const VMFieldStat& fieldStat(const string& fieldname) const { return fieldStat(fieldIndex(fieldname)); }
+  const VMFieldStat& fieldStat(int j) const { return fieldstats[j]; } 
+  const VMFieldStat& fieldStat(const string& fieldname) const { return fieldStat(fieldIndex(fieldname)); }
 
-    void printFields(ostream& out) const;
-    string fieldheader(int elementcharwidth=8);
+  void printFields(ostream& out) const;
+  string fieldheader(int elementcharwidth=8);
 
   void saveFieldInfos(const string& filename) const;
   void loadFieldInfos(const string& filename);
   void writeFieldInfos(ostream& out) const;
   void readFieldInfos(istream& in);
   
+  // leave name to "" to reset to default notes filename for this field
+  void setNotesFName(int col, string name="");
+  string getNotesFName(int col);
+  bool isNotesFNameDirect(int col);
+
+  // leave name to "" to reset to default string map filename for this field
+  void setSMapFName(int col, string name="");
+  string getSMapFName(int col);
+  // returns whether pokpok
+  bool isSMapFNameDirect(int col);
+
+  // string mapping stuff
+  ///////////////////////
+
+  //! adds a string<->real mapping
+  void addStringMapping(int col, string str, real val);
+
+  //! removes a string mapping
+  void removeStringMapping(int col, string str);
+
+  //! overwrite the string<->real mapping with this one (and build the reverse mapping)
+  void setStringMapping(int col, const map<string,real>& zemap);
+
+  //! voids string mapping for column i
+  void deleteStringMapping(int col);
+
+  //! loads the appropriate string map file for column 'col'
+  void loadStringMapping(int col);
+
+  //! loads the appropriate string map file for every column
+  void loadAllStringMappings();
+
   //! returns the string associated with value val 
   //! for field# col. Or returns "" if no string is associated.
   virtual string getValString(int col, real val) const;
-  
-  //! return value associated with a string. Default returns NaN
+
+  //! returns the string->value mapping for field 'fld'
+  virtual const map<string,real>& getStringToRealMapping(int col) const {return map_sr[col];}
+
+  //! returns the value->string mapping for field 'fld'
+  virtual const map<real,string>& getRealToStringMapping(int col) const {return map_rs[col];}
+
+  //! returns value associated with a string.
   virtual real getStringVal(int col, const string & str) const;
 
-  //! returns element as a string, even if its a number (which is always the case unless class is StrTableVMatrix
+  //! returns element as a string, even if value doesn't map to a string, in which case tostring(value) is returned
   virtual string getString(int row,int col) const;
 
-    virtual void computeStats(); 
-    bool hasStats() const { return fieldstats.size()>0; }
-    void writeStats(ostream& out) const;
-    void readStats(istream& in);
-    void saveStats(const string& filename) const;
-    void loadStats(const string& filename);
+  ////////////////////////
+  
+  virtual void computeStats(); 
+  bool hasStats() const { return fieldstats.size()>0; }
+  void writeStats(ostream& out) const;
+  void readStats(istream& in);
+  void saveStats(const string& filename) const;
+  void loadStats(const string& filename);
 
   void setMetaDataDir(const string& the_metadatadir);
   string getMetaDataDir() const { return metadatadir; }
@@ -169,6 +216,20 @@ public:
   inline int length() const { return length_; }
 
   inline bool isWritable() const { return writable; }
+
+  // this function (used with .vmat datasets), is used to return the filename of fieldInfo files (string maps (.smap) and notes (.notes))
+  // Ir recursively navigates through links until it finds a suitable file (.smap or .notes)
+  // Idea : a .metadata/FieldInfo can contain one of these files :
+  // (the order show here is the one used by the function to searches the file)
+
+  // fieldName.smap.lnk : containing the actual path+target OR another .lnk file
+  // fieldName.smap : the target (the actual string map or comment file)
+  // __default.lnk : contains another FieldInfo directory to look for target (typically the 
+
+  // ** Note 1: that target is assumed to be an inexistant file in the directory where none of the previous 3 can be found (since the file exists only when non-empty)
+  // ** Note 2: source may not be target
+  string resolveFieldInfoLink(string target, string source);
+
 
   //! Return the time of "last modification" associated with this matrix
   //! The result returned is typically based on mtime of the files contianing 
@@ -223,7 +284,7 @@ public:
 */
   virtual Mat toMat() const;
 
-  //!  The default implementation of this method does nothing
+  //!  The default implementation of this methodoes nothing
   //!  But subclasses may overload it to reallocate memory to exactly what is needed and no more.
   virtual void compacify();
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VMatLanguage.h,v 1.3 2002/10/03 07:35:28 plearner Exp $
+   * $Id: VMatLanguage.h,v 1.4 2003/03/19 23:15:32 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,6 +48,14 @@
 namespace PLearn <%
 using namespace std;
 
+/* The VMatLanguage object contains a VPL bytecode program that can be applied to a row of a VMat.
+   
+   The VPL Language is described somewhere. 
+
+   By the way, the define statements in the VPL language can be recursive. Cool!
+
+*/
+
   class VMatLanguage: public Object
   {
   private:
@@ -56,13 +64,18 @@ using namespace std;
     TVec<RealMapping> mappings;
     mutable Vec pstack;
 
+    // maps opcodes strings to opcodes numbers
     static map<string, int> opcodes;
-
     
-    //! builds the map if it does not already exist
+    //! builds the opcodes map if it does not already exist
     static void build_opcodes_map();
+
+    // generates bytecode from a preprocessed text sourcecode
     void generateCode(const string& processed_sourcecode);
     void generateCode(istream& processed_sourcecode);
+
+    // this function takes raw VPL code and returns the preprocessed sourcecode 
+    // along with the defines and the fieldnames it generated
     void preprocess(istream& in, map<string, string>& defines, string& processed_sourcecode,
                            vector<string>& fieldnames);
     
@@ -73,6 +86,10 @@ public:
 
     void run(int rowindex, const Vec& result) const;
 
+    // from the outside, use the next 3 high-level functions
+    /////////////////////////////////////////////////////////
+
+    // takes a string, filename, or istream and generate the bytecode from it
     //! On exit, fieldnames will contain fieldnames of the resulting matrix
     void compileStream(istream &in, vector<string>& fieldnames);
     void compileString(const string & code, vector<string>& fieldnames);
@@ -80,8 +97,14 @@ public:
     
     int pstackSize() const {return pstack.size();}
 
+    // set this to true when debugging. Will dump the preprocessed code when you call compilexxxx
     static bool output_preproc;
   };
+
+/*
+  PreprocessingVMatrix : a VMatLanguage derivated product, a la sauce VMat.
+  Construct a PreprocessingVMatrix by specifying the source VMat and a string containing the VPL code to process each row
+*/
 
   class PreprocessingVMatrix: public RowBufferedVMatrix
   {

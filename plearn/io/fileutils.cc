@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.7 2003/03/18 18:29:56 ducharme Exp $
+   * $Id: fileutils.cc,v 1.8 2003/03/19 23:15:10 jkeable Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -191,6 +191,7 @@ int chdir(const string& path)
   // If the directory does not exist, false is returned.
   bool force_rmdir(const string& dirname)
   {
+    system("pwd");
     if(!isdir(dirname))
       return false;
     vector<string> entries = lsdir_fullpath(dirname);
@@ -418,6 +419,7 @@ string makeFileNameValid(const string& path)
   string dirname = extract_directory(path);
   string filename = extract_filename_without_extension(path);
   string ext= extract_extension(path);
+  string ret=path;
   if(filename.length() + ext.length() > 256)
     {
       int j= 0;
@@ -442,9 +444,30 @@ string makeFileNameValid(const string& path)
 	} while(pathexists(dirname + filename + ext));
       PLWARNING("makeFileNameValid: Filename '%s' changed to '%s'.", 
 		path.c_str(), (dirname + filename + ext).c_str());
-      return dirname + filename + ext;
+      ret= dirname + filename + ext;
     }
-  return path;
+  
+  // replace illegal characters
+  char illegal[]="*?'\"${}[]@ ,()";
+  for(int i=0;i<(signed)ret.size();i++)
+    for(int j=0;j<15;j++)
+      if(ret[i]==illegal[j])
+        ret[i]='_';
+  return ret;
+}
+
+void touch(const string& file)
+{
+  string command = "touch "+file;
+  system(command.c_str());
+} 
+
+string makeExplicitPath(const string& filename)
+{
+  string fn = removeblanks(filename);
+  if(fn!="" && fn[0]!='/' && fn[0]!='.')
+    return "./"+fn;
+  return fn;
 }
   
 
