@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.43 2003/10/15 20:39:06 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.44 2003/10/15 20:40:37 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -69,7 +69,7 @@ ConjGradientOptimizer::ConjGradientOptimizer(
   epsilon(the_epsilon),
   sigma(the_sigma), rho(the_rho), fmax(the_fmax),
   stop_epsilon(the_stop_epsilon), tau1(the_tau1), tau2(the_tau2),
-  tau3(the_tau3), max_steps(5), initial_step(0.01), low_enough(0.000001)  {}
+  tau3(the_tau3), max_steps(5), initial_step(0.01), low_enough(1e-6)  {}
 
 ConjGradientOptimizer::ConjGradientOptimizer(
     VarArray the_params, 
@@ -216,7 +216,7 @@ void ConjGradientOptimizer::declareOptions(OptionList& ol)
                   "    Newton line search specific option : value of the first step.\n \
            This options controls the size of the first step made in the search direction.\n");
 
-    declareOption(ol, "low_enough", &ConjGradientOptimizer::initial_step, OptionBase::buildoption, 
+    declareOption(ol, "low_enough", &ConjGradientOptimizer::low_enough, OptionBase::buildoption, 
                   "    Newton line search specific option : stopping criterion for the gradient.\n \
            We say the minimum has been found if we have abs(gradient) < low_enough.\n");
 
