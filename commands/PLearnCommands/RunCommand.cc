@@ -34,14 +34,15 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunCommand.cc,v 1.5 2004/02/20 21:11:40 chrish42 Exp $ 
+   * $Id: RunCommand.cc,v 1.6 2004/03/04 14:51:05 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file RunCommand.cc */
 #include "RunCommand.h"
 #include "general.h"
-//#include "fileutils.h"
+#include "fileutils.h"      //!< For readFileAndMacroProcess.
 #include "plerror.h"
+#include "stringutils.h"    //!< For split_on_first.
 #include "Object.h"
 
 namespace PLearn {
