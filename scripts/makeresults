@@ -1,0 +1,54 @@
+#! /bin/sh
+# This script will make a .vmat and .amat to visualize and store the results of PLearn experiments.
+
+if [ "$2" = "" ]; then
+  echo "Usage: makeresults <matrix_name> <template_mat> <parameter1> ... <parameterN>"
+  exit 127
+fi
+
+MATNAME="$1"
+shift
+
+# Don't do anything if files already exist.
+if [ -f $MATNAME.amat ] && [ -f $MATNAME.vmat ] && [ -d $MATNAME.amat.metadata ]; then
+  exit 0
+fi
+
+# But if they don't all exist, none should be there!
+if [ -f $MATNAME.amat ] || [ -f $MATNAME.vmat ] || [ -d $MATNAME.amat.metadata ]; then
+  echo "In makeresults script: one of the following files already exist:"
+  echo "  $MATNAME.amat"
+  echo "  $MATNAME.vmat"
+  echo "  $MATNAME.amat.metadata"
+  exit 127
+fi
+
+TEMPLATEMAT="$1"
+shift
+
+# Make the .vmat.
+echo "<SOURCES>" > $MATNAME.vmat
+echo "@" >> $MATNAME.vmat
+echo "SortRowsVMatrix(" >> $MATNAME.vmat
+echo "  distr =" >> $MATNAME.vmat
+echo "    AutoVMatrix(specification = \"$MATNAME.amat\")" >> $MATNAME.vmat
+echo "    sort_columns = [ ]" >> $MATNAME.vmat
+echo ")" >> $MATNAME.vmat
+echo "</SOURCES>" >> $MATNAME.vmat
+
+# Make the .amat and its metadata.
+mkdir $MATNAME.amat.metadata
+touch $MATNAME.amat.metadata/fieldnames
+echo "# Data collected from PLearn experiments" > $MATNAME.amat
+echo "# Below are the fieldnames, to put in $MATNAME.amat.metadata/fieldnames if it ever gets deleted" >>  $MATNAME.amat
+echo "# (to get back the stats names, use 'vmat fields' on a sample stats file)." >>  $MATNAME.amat
+for PARAM in $@; do
+  echo "#$PARAM 0" >> $MATNAME.amat
+  echo "$PARAM 0" >> $MATNAME.amat.metadata/fieldnames
+done
+
+# Now uses the template matrix to complete the field names.
+plearn vmat fields $TEMPLATEMAT name_only >> $MATNAME.amat.metadata/fieldnames
+
+# Display exit message.
+echo "Files $MATNAME.vmat and $MATNAME.amat successfully created"
