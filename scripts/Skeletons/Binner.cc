@@ -14,7 +14,7 @@ DERIVEDCLASS::DERIVEDCLASS()
   }
 
 
-  IMPLEMENT_NAME_AND_DEEPCOPY(DERIVEDCLASS);
+PLEARN_IMPLEMENT_OBJECT_METHODS(DERIVEDCLASS, "DERIVEDCLASS", Binner);
 
   void DERIVEDCLASS::declareOptions(OptionList& ol)
   {
@@ -30,7 +30,7 @@ DERIVEDCLASS::DERIVEDCLASS()
     // ...
 
     // Now call the parent class' declareOptions
-    inherited::declareOptions(ol);
+    parentclass::declareOptions(ol);
   }
 
   string DERIVEDCLASS::help()
@@ -55,7 +55,7 @@ DERIVEDCLASS::DERIVEDCLASS()
   // ### Nothing to add here, simply calls build_
   void DERIVEDCLASS::build()
   {
-    inherited::build();
+    parentclass::build();
     build_();
   }
 

@@ -18,7 +18,7 @@ protected:
     
 public:
 
-  typedef PLearner inherited;
+  
 
   // ************************
   // * public build options *
@@ -56,7 +56,7 @@ public:
   // **** Object methods ****
   // ************************
 
-  //! simply calls inherited::build() then build_() 
+  //! simply calls parentclass::build() then build_() 
   virtual void build();
 
   //! Provides a help message describing this class

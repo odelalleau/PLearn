@@ -5,7 +5,7 @@ using namespace std;
 
 
 DERIVEDCLASS::DERIVEDCLASS()
-  :inherited()
+  :parentclass()
   /* ### Initialise all fields to their default value */
 {
   // ...
@@ -14,7 +14,7 @@ DERIVEDCLASS::DERIVEDCLASS()
   // build_();
 }
 
-IMPLEMENT_NAME_AND_DEEPCOPY(DERIVEDCLASS);
+PLEARN_IMPLEMENT_OBJECT_METHODS(DERIVEDCLASS, "DERIVEDCLASS", RowBufferedVMatrix);
 
 void DERIVEDCLASS::getRow(int i, Vec v) const
 {
@@ -35,7 +35,7 @@ void DERIVEDCLASS::declareOptions(OptionList& ol)
   // ...
 
   // Now call the parent class' declareOptions
-  inherited::declareOptions(ol);
+  parentclass::declareOptions(ol);
 }
 
 string DERIVEDCLASS::help()
@@ -60,13 +60,13 @@ void DERIVEDCLASS::build_()
 // ### Nothing to add here, simply calls build_
 void DERIVEDCLASS::build()
 {
-  inherited::build();
+  parentclass::build();
   build_();
 }
 
 void DERIVEDCLASS::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
-  inherited::makeDeepCopyFromShallowCopy(copies);
+  parentclass::makeDeepCopyFromShallowCopy(copies);
 
   // ### Call deepCopyField on all "pointer-like" fields 
   // ### that you wish to be deepCopied rather than 

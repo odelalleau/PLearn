@@ -15,7 +15,7 @@ protected:
 
 public:
 
-  typedef RowBufferedVMatrix inherited;
+  
 
   // ************************
   // * public build options *
@@ -50,7 +50,7 @@ public:
   //!  This is the only method requiring implementation
   virtual void getRow(int i, Vec v) const;
 
-  // simply calls inherited::build() then build_() 
+  // simply calls parentclass::build() then build_() 
   virtual void build();
 
   //! Provides a help message describing this class
@@ -60,7 +60,7 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(DERIVEDCLASS);
+  PLEARN_DECLARE_OBJECT_METHODS(DERIVEDCLASS, "DERIVEDCLASS", RowBufferedVMatrix);
 
 };
 

@@ -18,7 +18,7 @@ protected:
     
 public:
 
-  typedef Binner inherited;
+  
 
   // ************************
   // * public build options *
@@ -51,7 +51,7 @@ protected:
   static void declareOptions(OptionList& ol);
 
 public:
-  // simply calls inherited::build() then build_() 
+  // simply calls parentclass::build() then build_() 
   virtual void build();
 
   //! Provides a help message describing this class
@@ -61,7 +61,7 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(DERIVEDCLASS);
+  PLEARN_DECLARE_OBJECT_METHODS(DERIVEDCLASS, "DERIVEDCLASS", Binner);
 
   // ******************
   // * Binner methods *

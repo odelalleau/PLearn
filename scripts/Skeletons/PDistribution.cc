@@ -28,7 +28,7 @@ DERIVEDCLASS::DERIVEDCLASS()
     // ...
 
     // Now call the parent class' declareOptions
-    inherited::declareOptions(ol);
+    parentclass::declareOptions(ol);
   }
 
   string DERIVEDCLASS::help()
@@ -52,13 +52,13 @@ DERIVEDCLASS::DERIVEDCLASS()
   // ### Nothing to add here, simply calls build_
   void DERIVEDCLASS::build()
   {
-    inherited::build();
+    parentclass::build();
     build_();
   }
 
   void DERIVEDCLASS::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   {
-    inherited::makeDeepCopyFromShallowCopy(copies);
+    parentclass::makeDeepCopyFromShallowCopy(copies);
 
     // ### Call deepCopyField on all "pointer-like" fields 
     // ### that you wish to be deepCopied rather than 

@@ -18,8 +18,6 @@ protected:
     
 public:
 
-  typedef Object inherited;
-
   // ************************
   // * public build options *
   // ************************
@@ -51,7 +49,7 @@ protected:
   static void declareOptions(OptionList& ol);
 
 public:
-  // simply calls inherited::build() then build_() 
+  // simply calls parentclass::build() then build_() 
   virtual void build();
 
   //! Provides a help message describing this class
