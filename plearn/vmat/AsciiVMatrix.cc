@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AsciiVMatrix.cc,v 1.3 2003/02/20 21:49:32 ducharme Exp $ 
+   * $Id: AsciiVMatrix.cc,v 1.4 2003/02/21 21:26:37 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file AsciiVMatrix.cc */
@@ -216,7 +216,6 @@ void AsciiVMatrix::build_()
     {
       *file >> ws;
       if (file->peek()!='#' && file->peek()!=EOF) pos_rows.push_back(file->tellg());
-      cout << file->peek() << endl;
       string line;
       getline(*file, line);
     }
@@ -283,7 +282,7 @@ string AsciiVMatrix::help() const
 {
   // ### Provide some useful description of what the class is ...
   return 
-    "AsciiVMatrix implements a ..."
+    "AsciiVMatrix implements a file in ascii format"
     + optionHelp();
 }
 
@@ -293,5 +292,5 @@ AsciiVMatrix::~AsciiVMatrix()
   delete file;
 }
 
-%> // end of namespcae PLearn
+%> // end of namespace PLearn
 

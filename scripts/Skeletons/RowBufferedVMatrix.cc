@@ -78,5 +78,5 @@ void DERIVEDCLASS::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   PLERROR("DERIVEDCLASS::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
-%> // end of namespcae PLearn
+%> // end of namespace PLearn
 
