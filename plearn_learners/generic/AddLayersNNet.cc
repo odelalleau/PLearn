@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddLayersNNet.cc,v 1.2 2004/09/07 20:34:28 tihocan Exp $ 
+   * $Id: AddLayersNNet.cc,v 1.3 2004/09/09 14:15:38 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -54,6 +54,7 @@ using namespace std;
 // AddLayersNNet //
 //////////////////
 AddLayersNNet::AddLayersNNet() 
+: added_hidden_transfer_func("tanh")
 {}
 
 PLEARN_IMPLEMENT_OBJECT(AddLayersNNet,
@@ -89,6 +90,9 @@ void AddLayersNNet::declareOptions(OptionList& ol)
 
   declareOption(ol, "add_hidden", &AddLayersNNet::add_hidden, OptionBase::buildoption,
       "Specify for each part how many hidden units we want to add.");
+
+  declareOption(ol, "added_hidden_transfer_func", &AddLayersNNet::added_hidden_transfer_func, OptionBase::buildoption,
+      "The transfer function for the added hidden layers.");
 
   // Learnt options.
 
@@ -191,7 +195,7 @@ void AddLayersNNet::build_()
   for (int i = 0; i < n_parts; i++) {
     if (add_hidden[i] > 0) {
       Var weights = Var(1 + real_parts_size[i], add_hidden[i], ("w_added_" + tostring(i)).c_str());
-      hidden_layers[i] = hiddenLayer(input_parts[i], weights);
+      hidden_layers[i] = hiddenLayer(input_parts[i], weights, added_hidden_transfer_func);
       hidden_weights[i] = weights;
       params.append(hidden_weights[i]);
     } else {

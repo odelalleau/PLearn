@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddLayersNNet.h,v 1.2 2004/09/07 20:34:28 tihocan Exp $ 
+   * $Id: AddLayersNNet.h,v 1.3 2004/09/09 14:15:38 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -77,6 +77,7 @@ public:
   // ************************
 
   TVec<int> add_hidden;
+  string added_hidden_transfer_func;
   TVec<int> parts_size;
 
   // ****************
