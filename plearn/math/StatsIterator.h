@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: StatsIterator.h,v 1.2 2002/09/17 01:27:33 zouave Exp $
+   * $Id: StatsIterator.h,v 1.3 2003/03/18 18:29:56 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -367,13 +367,13 @@ public:
   StatsItArray(Array<StatsIt>& va): Array<StatsIt>(va) {}
   StatsItArray(const StatsItArray& va): Array<StatsIt>(va) {}
   StatsItArray& operator&=(const StatsIt& v) 
-  { Array<StatsIt>::operator&=(v); return *this;}
+  { PLearn::operator&=(*this,v); return *this;}
   StatsItArray& operator&=(const StatsItArray& va) 
-  { Array<StatsIt>::operator&=(va); return *this; }
+  { PLearn::operator&=(*this,va); return *this; }
   StatsItArray operator&(const StatsIt& v) const 
-  { return Array<StatsIt>::operator&(v); }
+  { return PLearn::operator&(*this,v); }
   StatsItArray operator&(const StatsItArray& va) const 
-  { return Array<StatsIt>::operator&(va); }
+  { return PLearn::operator&(*this,va); }
 
   void init(int inputsize);
   void update(const Vec& input);

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.9 2002/12/05 21:11:05 jauvinc Exp $
+   * $Id: TMat.h,v 1.10 2003/03/18 18:29:56 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -52,8 +52,8 @@
 #include "general.h"
 #include "Storage.h"
 #include "Range.h"
-#include "Array.h"
 #include "plstreams.h"
+//#include "Array.h"
 
 namespace PLearn <%
 using namespace std;
@@ -67,9 +67,9 @@ template <class T> class TMat;
 // **** TVec ****
 // **************
 
- template <class T>
-   class TVec
-  {
+template <class T>
+class TVec
+{
     friend class TMat<T>;
 
     friend class Variable; //!<  for makeShared hack... (to be cleaned)
@@ -99,7 +99,7 @@ template <class T> class TMat;
 
       inline iterator begin() const 
       { 
-        if(!storage) return 0;
+        if (storage.isNull()) return 0;
         return storage->data+offset_; 
       }
 
@@ -109,11 +109,10 @@ template <class T> class TMat;
     inline TVec(const vector<T> & vec)
       :length_(vec.size()), offset_(0),
        storage(new Storage<T>(vec.size()))
-    {
-      for(int i=0;i<length_;i++)
-        (*this)[i]=vec[i];
-    }
-      
+       {
+         for(int i=0;i<length_;i++)
+           (*this)[i]=vec[i];
+       }
 
       inline TVec() 
         :length_(0),offset_(0)
@@ -168,6 +167,7 @@ template <class T> class TMat;
 
     inline int size() const { return length_; }
     inline int length() const { return length_; }
+    inline int capacity() const { return storage.isNotNull() ? storage->length()-offset_ : 0; }
     inline int offset() const { return offset_; }
 
     inline PP< Storage<T> > getStorage() const { return storage; }
@@ -176,11 +176,11 @@ template <class T> class TMat;
     void compact()
     {
       if(storage->length() != length())
-        {
-          if(storage->usage()>1)
-            PLERROR("IN Mat::compact() compact operation not allowed when matrix storage is shared (for obvious reasons)");
-          operator=(copy());
-        }
+      {
+        if(storage->usage()>1)
+          PLERROR("IN Mat::compact() compact operation not allowed when matrix storage is shared (for obvious reasons)");
+        operator=(copy());
+      }
     }
 
       //!  used by Hash  (VERY DIRTY: TO BE REMOVED [Pascal])
@@ -196,10 +196,10 @@ template <class T> class TMat;
       inline void resize(int newlength, int extrabytes=0)
       {
 #ifdef BOUNDCHECK
-        if (newlength < 0)
+        if (newlength<0 || extrabytes<0)
           PLERROR("IN TVec::resize(int newlength)\nInvalid argument (<0)");
 #endif
-        if (!storage && newlength>0)
+        if (storage.isNull() && newlength>0)
         {
           offset_ = 0;
           length_ = newlength;
@@ -208,7 +208,7 @@ template <class T> class TMat;
         }
         else
         {
-          if (storage && (offset_ + newlength > storage->length()))
+          if (storage.isNotNull() && (newlength > capacity()))
             storage->resize (offset_ + newlength + extrabytes);
           length_ = newlength;
         }
@@ -240,7 +240,7 @@ template <class T> class TMat;
     {
       TVec<T>& v = *this; // simple alias
       switch(in.inmode)
-        {
+      {
         case PStream::raw_ascii:
         case PStream::raw_binary:      
           readSequence(in, v);
@@ -253,27 +253,27 @@ template <class T> class TMat;
             if(c!='T') // implicit storage
               readSequence(in,v);
             else // explicit storage
-              {
-                char word[6];
-                // !!!! BUG: For some reason, this hangs!!!
-                // in.read(word,5);
-                for(int i=0; i<5; i++)
-                  in.get(word[i]);
-                word[5]='\0';
-                if(strcmp(word,"TVec(")!=0)
-                  PLERROR("In operator>>(PStream&, TVec&) '%s' not a proper header for a TVec!",word);
-                // v.storage = 0;
-                in.skipBlanksAndCommentsAndSeparators();
-                in >> v.length_;
-                in.skipBlanksAndCommentsAndSeparators();
-                in >> v.offset_;
-                in.skipBlanksAndCommentsAndSeparators();
-                in >> v.storage;
-                in.skipBlanksAndCommentsAndSeparators();
-                int c = in.get(); // skip ')'
-                if(c!=')')
-                  PLERROR("In operator>>(PStream&, TVec&) expected a closing parenthesis, found '%c'",c);
-              }
+            {
+              char word[6];
+              // !!!! BUG: For some reason, this hangs!!!
+              // in.read(word,5);
+              for(int i=0; i<5; i++)
+                in.get(word[i]);
+              word[5]='\0';
+              if(strcmp(word,"TVec(")!=0)
+                PLERROR("In operator>>(PStream&, TVec&) '%s' not a proper header for a TVec!",word);
+              // v.storage = 0;
+              in.skipBlanksAndCommentsAndSeparators();
+              in >> v.length_;
+              in.skipBlanksAndCommentsAndSeparators();
+              in >> v.offset_;
+              in.skipBlanksAndCommentsAndSeparators();
+              in >> v.storage;
+              in.skipBlanksAndCommentsAndSeparators();
+              int c = in.get(); // skip ')'
+              if(c!=')')
+                PLERROR("In operator>>(PStream&, TVec&) expected a closing parenthesis, found '%c'",c);
+            }
           }
           break;
       
@@ -313,7 +313,7 @@ template <class T> class TMat;
 #ifdef BOUNDCHECK
         if(newstart+newlength>length() || newlength<0)
           PLERROR("TVec::subVec(int newstart, int newlength) OUT OF BOUNDS OR <0 length()"
-		  " length()=%d; newstart=%d; newlength=%d.", length(), newstart, newlength);
+              " length()=%d; newstart=%d; newlength=%d.", length(), newstart, newlength);
 #endif
         TVec<T> subv = *this;
         subv.length_ = newlength;
@@ -434,9 +434,13 @@ template <class T> class TMat;
       bool operator!() const
       { return storage==0; }
 
-    //! Fills the vector with the given value
-    inline void fill(const T& value) const
-    { fill_n(data(), length(), value); }
+      // for compatibility with Array
+      TVec<T>* operator->()
+      { return this; }
+
+      //! Fills the vector with the given value
+      inline void fill(const T& value) const
+      { fill_n(data(), length(), value); }
 
       //! Fills the vector, putting startval in its first element
       //! and increments of step in subsequent elements
@@ -489,8 +493,7 @@ template <class T> class TMat;
  
         T* v = data();
  
-        // WARNING Someone please implement a real dichotomy search some day...
- 
+        // WARNING Someone please implement a real dichotomy search some day!
         int i=0;
         while(i<length() && v[i]<value)
           i++;
@@ -516,6 +519,25 @@ template <class T> class TMat;
     {
       resize(length()+1);
       lastElement() = newval;
+    }
+
+    //! for compatibility with Array
+    void append(const vector<T>& newvec)
+    {
+      T* v = data();
+      int currentsize = length();
+      resize(currentsize + newvec.size());
+      for (int i=0; i<newvec.size(); ++i)
+        v[currentsize+i] = newvec[i];
+    }
+
+    //! for compatibility with Array
+    inline void appendIfNotThereAlready(const T& newval)
+    {
+      T* v = data();
+      for (int i=0;i<length();i++)
+        if (newval==v[i]) return;
+      append(newval);
     }
 
     //! stl compatibility
@@ -569,6 +591,10 @@ template <class T> class TMat;
     inline T& front() const { return firstElement(); }
     inline T& back() const { return lastElement(); }
 
+    // for compatibility with Array
+    inline T& first() const { return firstElement(); }
+    inline T& last() const { return lastElement(); }
+
 
     //! Deprecated: use the select function instead
     template<class I>
@@ -582,18 +608,18 @@ template <class T> class TMat;
 */
     template<class I>
     inline TVec<T> operator()(const TVec<I>& indices) const
-      {
-        TVec<T> result(indices.length());
-        selectElements(*this, indices, result);
-        return result;
-      }
+    {
+      TVec<T> result(indices.length());
+      selectElements(*this, indices, result);
+      return result;
+    }
 
       //!  Returns a pointer to the beginning of the TVector data
       inline T* data() const
       {
 #ifdef BOUNDCHECK
-        if(!storage)
-          PLERROR("IN TVec::operator()\nAttempted to get a pointer to the data of an empty TVector");
+        if(storage.isNull())
+          PLERROR("IN TVec::operator()\nAttempted to get a pointer to the data of an empty TVec");
 #endif
         return storage->data+offset_; 
       }
@@ -616,7 +642,6 @@ template <class T> class TMat;
         {
           if ((*this)[i] == value) r[i] = true;
         }
-
         return r;
       }
 
@@ -630,7 +655,7 @@ template <class T> class TMat;
           if (x[i]!=y[i]) return false;
         return true;
       }
-      bool operator==(TVec<T>& value)
+      bool operator==(TVec<T>& value) const
       {
         if (value.length()!=length()) return false;
         T* x=data();
@@ -642,13 +667,12 @@ template <class T> class TMat;
       bool operator!=(const TVec<T>& value) const { return !((*this)==value); }
 
       //!  return true if element is in the TVec and false otherwise.
-      bool contains(const T& element)
+      bool contains(const T& element) const
       {
         if (length()==0) return false;
-        int i=0;
         bool contained=false;
         T *v = data(); //!<  get start of data
-        for (;i<length() && !contained;i++)
+        for (int i=0; i<length() && !contained; i++)
           if (v[i]==element)
             contained=true;
         return contained;
@@ -671,7 +695,8 @@ template <class T> class TMat;
         T *v = data();
         for (int i=0; i<length(); i++)
           for (int j=0, m=elements.length(); j<m; j++)
-            if (v[i] == elements[j]){
+            if (v[i] == elements[j])
+            {
               indices.append(i);
               break;
             }
@@ -680,11 +705,11 @@ template <class T> class TMat;
  
       //!  Returns the position of the first occurence of element
       //!  in the vector or -1 if it never occurs
-      int find(const T& element) const
+      int find(const T& element, int start=0) const
       {
         if (length()==0) return -1;
         T *v = data();
-        for (int i=0; i<length(); i++)
+        for (int i=start; i<length(); i++)
           if(v[i]==element)
             return i;
         return -1;
@@ -697,7 +722,8 @@ template <class T> class TMat;
         T *v = data();
         for (int i=0, m=elements.length(); i<m; i++)
           for (int j=0; j<length(); j++)
-            if (v[j] == elements[i]){
+            if (v[j] == elements[i])
+            {
               indices[i] = j;
               break;
             }
@@ -718,7 +744,7 @@ template <class T> class TMat;
         input(in);
       }
 
-  };
+};
 
 
 
@@ -758,10 +784,10 @@ public:
   { 
     ++ptr;
     if(ptr==rowend)
-      {
-        ptr += mod_minus_width;
-        rowend = ptr+width; 
-      }
+    {
+      ptr += mod_minus_width;
+      rowend = ptr+width; 
+    }
     return *this;
   }
 
@@ -770,18 +796,18 @@ public:
     TMatElementIterator<T> prev(*this);
     ++ptr;
     if(ptr==rowend)
-      {
-        ptr += mod_minus_width;
-        rowend = ptr+width; 
-      }
+    {
+      ptr += mod_minus_width;
+      rowend = ptr+width; 
+    }
     return prev;
   }
 
   inline T* operator->() const
-    { return ptr; }
+  { return ptr; }
   
   inline T& operator*() const
-    { return *ptr; }
+  { return *ptr; }
 
   inline bool operator==(const TMatElementIterator& other)
   { return ptr==other.ptr; }
@@ -795,8 +821,8 @@ template <class T>
 class TMat
 {
   friend class TVec<T>;
-    friend class Variable; //!<  for makeShared hack... (to be cleaned)
-    friend class VarArray; //!<  for makeShared hack... (to be cleaned)
+  friend class Variable; //!<  for makeShared hack... (to be cleaned)
+  friend class VarArray; //!<  for makeShared hack... (to be cleaned)
 
 protected:
   int offset_; /*!<  the displacement to do with respect to storage->data  */
@@ -908,7 +934,7 @@ public:
       PLERROR("IN TMat::resize(int newlength, int newwidth)\nInvalid arguments (<0)");
 #endif
     if (newlength==length_ && newwidth==width_) return;
-    if(!storage)
+    if(storage.isNull())
     {
       offset_ = 0;
       length_ = newlength;
@@ -932,7 +958,7 @@ public:
   }
 
   inline int length() const
-    { return length_; }
+  { return length_; }
 
   inline int width() const
   { return width_; }
@@ -963,7 +989,7 @@ public:
   inline T* data() const
   {
 #ifdef BOUNDCHECK
-    if(!storage)
+    if(storage.isNull())
       PLERROR("IN TMat::data()\nAttempted to get a pointer to the data of an empty matrix");
 #endif
     return storage->data+offset_; 
@@ -986,7 +1012,7 @@ public:
 #ifdef BOUNDCHECK
     if(rownum<0 || rownum>=length() || colnum<0 || colnum>=width())
       PLERROR("OUT OF BOUND ACCESS IN TMat::operator()(int rownum, int colnum)"
-	      " width=%d; length=%d; colnum=%d; rownum=%d;", width(), length(), colnum, rownum);
+          " width=%d; length=%d; colnum=%d; rownum=%d;", width(), length(), colnum, rownum);
 #endif
     return storage->data[offset_ + mod()*rownum + colnum];
   }
@@ -1000,18 +1026,18 @@ public:
   {
     T* ptr = data();
     switch(out.outmode)
-      {
+    {
       case PStream::raw_ascii:      
       case PStream::pretty_ascii:
         for(int i=0; i<length_; i++, ptr+=mod_)
+        {
+          for(int j=0; j<width_; j++)
           {
-            for(int j=0; j<width_; j++)
-              {
-                out << ptr[j];
-                out.put('\t');
-              }
-            out.put('\n');
+            out << ptr[j];
+            out.put('\t');
           }
+          out.put('\n');
+        }
         break;
         
       case PStream::raw_binary:
@@ -1022,64 +1048,64 @@ public:
       case PStream::plearn_ascii:
         {
           if(!out.implicit_storage)
-            {
-              out.write("TMat("); 
-              out << length_ << width_ << mod_ << offset_ << storage;
-              out.write(")\n");
-            }
+          {
+            out.write("TMat("); 
+            out << length_ << width_ << mod_ << offset_ << storage;
+            out.write(")\n");
+          }
           else // implicit storage
+          {
+            out << length_;
+            out.put(' ');
+            out << width_;
+            out.write(" [ \n");
+            for(int i=0; i<length_; i++, ptr+=mod_)
             {
-              out << length_;
-              out.put(' ');
-              out << width_;
-              out.write(" [ \n");
-              for(int i=0; i<length_; i++, ptr+=mod_)
-                {
-                  for(int j=0; j<width_; j++)
-                    {
-                      out << ptr[j];
-                      out.put('\t');
-                    }
-                  out.put('\n');
-                }
-              out.write("]\n");
+              for(int j=0; j<width_; j++)
+              {
+                out << ptr[j];
+                out.put('\t');
+              }
+              out.put('\n');
             }
+            out.write("]\n");
+          }
         }
         break;
 
       case PStream::plearn_binary:
         {
           if(!out.implicit_storage)
-            {
-              out.write("TMat("); 
-              out << length_ << width_ << mod_ << offset_ << storage;
-              out.write(")\n");
-            }
+          {
+            out.write("TMat("); 
+            out << length_ << width_ << mod_ << offset_ << storage;
+            out.write(")\n");
+          }
           else // implicit storage
+          {
+            unsigned char typecode;
+            if(byte_order()==LITTLE_ENDIAN_ORDER)
             {
-              unsigned char typecode;
-              if(byte_order()==LITTLE_ENDIAN_ORDER)
-                {
-                  out.put(0x14); // 2D little-endian 
-                  typecode = TypeTraits<T>::little_endian_typecode();
-                }
-              else
-                {
-                  out.put(0x15); // 2D big-endian
-                  typecode = TypeTraits<T>::big_endian_typecode();
-                }
-              
-              // write typecode
-              out.put(typecode);
-              
-              // write length and width in raw_binary 
-              out.write((char*)&length_, sizeof(length_));
-              out.write((char*)&width_, sizeof(width_));
-              
-              // write the data
-              for(int i=0; i<length_; i++, ptr+=mod_)
-                binwrite_(out, ptr, width_);
+              out.put(0x14); // 2D little-endian 
+              typecode = TypeTraits<T>::little_endian_typecode();
             }
+            else
+            {
+              out.put(0x15); // 2D big-endian
+              typecode = TypeTraits<T>::big_endian_typecode();
+            }
+              
+            // write typecode
+            out.put(typecode);
+              
+            // write length and width in raw_binary 
+            out.write((char*)&length_, sizeof(length_));
+            out.write((char*)&width_, sizeof(width_));
+              
+            // write the data
+            for(int i=0; i<length_; i++, ptr+=mod_)
+              binwrite_(out, ptr, width_);
+          }
         }
         break;
       
@@ -1096,7 +1122,7 @@ public:
   void read(PStream& in)
   {
     switch(in.inmode)
-      {
+    {
       case PStream::raw_ascii:
       case PStream::raw_binary:
         {
@@ -1113,71 +1139,71 @@ public:
           in.skipBlanksAndComments();
           int c = in.peek();
           if(c=='T') // explicit storage
-              {
-                char word[6];
-                // !!!! BUG: For some reason, this hangs!!!
-                // in.read(word,5);
-		 
-                for(int i=0; i<5; i++)
-                  in.get(word[i]);
-		 
-                word[5]='\0';
-                if(strcmp(word,"TMat(")!=0)
-                  PLERROR("In operator>>(PStream&, TMat&) '%s' not a proper header for a TMat!",word);
-                // v.storage = 0;
-                in >> length_ >> width_ >> mod_ >> offset_;
-		in >> storage;
-                in.skipBlanksAndCommentsAndSeparators();
-                int c = in.get(); // skip ')'
-                if(c!=')')
-                  PLERROR("In operator>>(PStream&, TMat&) expected a closing parenthesis, found '%c'",c);
-              }
+          {
+            char word[6];
+            // !!!! BUG: For some reason, this hangs!!!
+            // in.read(word,5);
+
+            for(int i=0; i<5; i++)
+              in.get(word[i]);
+
+            word[5]='\0';
+            if(strcmp(word,"TMat(")!=0)
+              PLERROR("In operator>>(PStream&, TMat&) '%s' not a proper header for a TMat!",word);
+            // v.storage = 0;
+            in >> length_ >> width_ >> mod_ >> offset_;
+            in >> storage;
+            in.skipBlanksAndCommentsAndSeparators();
+            int c = in.get(); // skip ')'
+            if(c!=')')
+              PLERROR("In operator>>(PStream&, TMat&) expected a closing parenthesis, found '%c'",c);
+          }
           else // implicit storage
+          {
+            if(isdigit(c)) // ascii mode with length and width given  
             {
-              if(isdigit(c)) // ascii mode with length and width given  
+              int l,w;
+              in >> l >> w;
+              in.skipBlanksAndComments();
+              c = in.get();
+              if(c!='[')
+                PLERROR("Error in TMat::read(PStream& in), expected '[', read '%c'",c);
+              in.skipBlanksAndCommentsAndSeparators();
+              resize(l,w);
+              T* ptr = data();
+              for(int i=0; i<length_; i++, ptr+=mod_)
+                for(int j=0; j<width_; j++)
                 {
-                  int l,w;
-                  in >> l >> w;
-                  in.skipBlanksAndComments();
-                  c = in.get();
-                  if(c!='[')
-                    PLERROR("Error in TMat::read(PStream& in), expected '[', read '%c'",c);
                   in.skipBlanksAndCommentsAndSeparators();
-                  resize(l,w);
-                  T* ptr = data();
-                  for(int i=0; i<length_; i++, ptr+=mod_)
-                    for(int j=0; j<width_; j++)
-                      {
-                        in.skipBlanksAndCommentsAndSeparators();
-                        in >> ptr[j];
-                      }
-                  in.skipBlanksAndCommentsAndSeparators();
-                  c = in.get();
-                  if(c!=']')
-                    PLERROR("Error in TMat::read(PStream& in), expected ']', read '%c'",c);
+                  in >> ptr[j];
                 }
-              else if(c==0x14 || c==0x15) // it's a binary 2D sequence
-                {
-                  in.get(); // eat c
-                  unsigned char typecode = in.get(); 
-                  int l, w;                  
-                  in.read((char*)&l,sizeof(l));
-                  in.read((char*)&w,sizeof(w));
-                  bool inverted_byte_order = (    (c==0x14 && byte_order()==BIG_ENDIAN_ORDER) 
-                                                  || (c==0x15 && byte_order()==LITTLE_ENDIAN_ORDER) );
-                  if(inverted_byte_order)
-                    {
-                      endianswap(&l);
-                      endianswap(&w);
-                    }
-                  resize(l,w);
-                  T* ptr = data();
-                  for(int i=0; i<length_; i++, ptr+=mod_)                    
-                    binread_(in, ptr, width_, typecode);
-                }
-              else
-                PLERROR("In TMat::read(PStream& in) Char with ascii code %d not a proper first character in the header of a TMat!",c);
+              in.skipBlanksAndCommentsAndSeparators();
+              c = in.get();
+              if(c!=']')
+                PLERROR("Error in TMat::read(PStream& in), expected ']', read '%c'",c);
             }
+            else if(c==0x14 || c==0x15) // it's a binary 2D sequence
+            {
+              in.get(); // eat c
+              unsigned char typecode = in.get(); 
+              int l, w;                  
+              in.read((char*)&l,sizeof(l));
+              in.read((char*)&w,sizeof(w));
+              bool inverted_byte_order = ((c==0x14 && byte_order()==BIG_ENDIAN_ORDER) 
+                  || (c==0x15 && byte_order()==LITTLE_ENDIAN_ORDER) );
+              if(inverted_byte_order)
+              {
+                endianswap(&l);
+                endianswap(&w);
+              }
+              resize(l,w);
+              T* ptr = data();
+              for(int i=0; i<length_; i++, ptr+=mod_)                    
+                binread_(in, ptr, width_, typecode);
+            }
+            else
+              PLERROR("In TMat::read(PStream& in) Char with ascii code %d not a proper first character in the header of a TMat!",c);
+          }
         }
         break;
       
@@ -1290,8 +1316,8 @@ public:
     if(rowstart<0 || newlength<0 || rowstart+newlength>length()
         || colstart<0 || newwidth<0 || colstart+newwidth>width())
       PLERROR("Mat::subMat(int rowstart, int colstart, int newlength, int newwidth) OUT OF BOUNDS"
-	      "  rowstart=%d colstart=%d newlength=%d newwidth=%d length()=%d width()=%d",
-	      rowstart, colstart, newlength, newwidth, length(), width());
+          "  rowstart=%d colstart=%d newlength=%d newwidth=%d length()=%d width()=%d",
+          rowstart, colstart, newlength, newwidth, length(), width());
 #endif
     TMat<T> subm = *this;
     subm.length_ = newlength;
@@ -1383,15 +1409,15 @@ public:
     if(isCompact())
       fill_n(data(),size(),value); 
     else
+    {
+      int l = length();
+      T* ptr = data();
+      while(l--)
       {
-        int l = length();
-        T* ptr = data();
-        while(l--)
-          {
-            fill_n(ptr, width(), value);
-            ptr += mod();
-          }
+        fill_n(ptr, width(), value);
+        ptr += mod();
       }
+    }
   }
   
   inline void operator=(const T& f) const
@@ -1402,15 +1428,15 @@ public:
     if(isCompact())
       clear_n(data(),size()); 
     else
+    {
+      int l = length();
+      T* ptr = data();
+      while(l--)
       {
-        int l = length();
-        T* ptr = data();
-        while(l--)
-          {
-            clear_n(ptr, width());
-            ptr += mod();
-          }
+        clear_n(ptr, width());
+        ptr += mod();
       }
+    }
   }
 
   //!  swap the contents of row i and row j
@@ -1556,11 +1582,6 @@ template<class T, class U>
 inline void operator>>(const TVec<T>& m1, const TVec<U>& m2)
 { m2 << m1; }
 
-
-//!  This will allow a convenient way of building arrays of Matrices by writing ex: m1&m2&m3
-template<class T>
-inline Array< TVec<T> > operator&(const TVec<T>& m1, const TVec<T>& m2) { return Array< TVec<T> >(m1,m2); } 
-
 // old .pvec format
 template<class T>
 void savePVec(const string& filename, const TVec<T>& vec)
@@ -1588,7 +1609,6 @@ PStream & operator>>(PStream &in, TVec<T> &v)
   v.read(in);
   return in;
 }
-
 
 
 template<class T>      
@@ -1676,8 +1696,8 @@ void elementsEqualTo(const TVec<T>& source, const T& value, const TVec<T>& desti
 template<class T>
 TVec<T> concat(const TVec<T>& v1, const TVec<T>& v2);
 
-template<class T>
-TVec<T> concat(const Array< TVec<T> >& varray);
+//template<class T>
+//TVec<T> concat(const Array< TVec<T> >& varray);
 
 //! if the element to remove is the first or the last one, 
 //! then a submatrix (a view) of m will be returned (for efficiency)
@@ -1690,32 +1710,34 @@ TVec<T> removeElement(const TVec<T>& v, int elemnum);
 // **** Fonctions pour TMat ****
 // *****************************
 
-template <class T> inline TMat<T> deepCopy(const TMat<T> source) {
+template <class T> inline TMat<T> deepCopy(const TMat<T> source)
+{
   CopiesMap copies; //!< create empty map
-  return deepCopy(source, copies); }
+  return deepCopy(source, copies);
+}
 
 template <class T> inline TMat<T>
-deepCopy(const TMat<T> source, CopiesMap copies) {
-  return source.deepCopy(copies); }
+deepCopy(const TMat<T> source, CopiesMap copies)
+{ return source.deepCopy(copies); }
 
 
 template<class T>
 void clear(const TMat<T>& x)
 { 
   if(x.isCompact())
-    {
-      typename TMat<T>::compact_iterator it = x.compact_begin();
-      typename TMat<T>::compact_iterator itend = x.compact_end();
-      for(; it!=itend; ++it)
-        clear(*it);
-    }
+  {
+    typename TMat<T>::compact_iterator it = x.compact_begin();
+    typename TMat<T>::compact_iterator itend = x.compact_end();
+    for(; it!=itend; ++it)
+      clear(*it);
+  }
   else
-    {
-      typename TMat<T>::iterator it = x.begin();
-      typename TMat<T>::iterator itend = x.end();
-      for(; it!=itend; ++it)
-        clear(*it);
-    }
+  {
+    typename TMat<T>::iterator it = x.begin();
+    typename TMat<T>::iterator itend = x.end();
+    for(; it!=itend; ++it)
+      clear(*it);
+  }
 }
 
 template<class T>
@@ -1854,6 +1876,7 @@ void selectColumns(const TMat<T>& source, const TVec<I>& column_indices, TMat<T>
 template <class T>
 void select(const TMat<T>& source, const TVec<T>& row_indices, const TVec<T>& column_indices, TMat<T>& destination);
 
+/*
 //!  Vertical concatenation (all Mats must have the same width())
 template<class T>
 TMat<T> vconcat(const Array< TMat<T> >& ar);
@@ -1867,6 +1890,11 @@ TMat<T> hconcat(const Array< TMat<T> >& ar);
 
 template<class T>
 inline TMat<T> hconcat(const TMat<T>& m1, const TMat<T>& m2) { return hconcat(Array< TMat<T> >(m1,m2)); }
+
+//!  This will allow a convenient way of building arrays of Matrices by writing ex: m1&m2&m3
+template<class T>
+inline Array< TMat<T> > operator&(const TMat<T>& m1, const TMat<T>& m2) { return Array< TMat<T> >(m1,m2); } 
+*/
 
 //! returns a new mat which is m with the given row removed
 //! if the row to remove is the first or the last one, 
@@ -1882,10 +1910,6 @@ TMat<T> removeRow(const TMat<T>& m, int rownum);
 template<class T>
 TMat<T> removeColumn(const TMat<T>& m, int colnum);
 
-
-//!  This will allow a convenient way of building arrays of Matrices by writing ex: m1&m2&m3
-template<class T>
-inline Array< TMat<T> > operator&(const TMat<T>& m1, const TMat<T>& m2) { return Array< TMat<T> >(m1,m2); } 
 
 template<class T>
 TMat<T> diagonalmatrix(const TVec<T>& v);

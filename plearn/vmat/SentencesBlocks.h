@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SentencesBlocks.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: SentencesBlocks.h,v 1.2 2003/03/18 18:29:56 ducharme Exp $
    ******************************************************* */
 
 
@@ -45,19 +45,20 @@
 #define SentencesBlocks_INC
 
 #include "VMat.h"
-#include "Array.h"
+#include "TVec.h"
 
 namespace PLearn <%
 using namespace std;
  
 
 
-/*!   Build an array of distributions which are SubRowDistributions of
+/*!   Build a vector of distributions which are SubRowDistributions of
   a given distribution, made up of consecutive blocks of approximately
   the same type, but where each block is a sequence of items terminating
   by a special "separator" value.
 */
-class SentencesBlocks : public Array<VMat> {
+class SentencesBlocks : public TVec<VMat>
+{
 public:
   SentencesBlocks(int n_blocks, VMat d, Vec separator);
 };

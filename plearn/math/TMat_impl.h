@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_impl.h,v 1.1 2002/11/22 19:40:18 ducharme Exp $
+   * $Id: TMat_impl.h,v 1.2 2003/03/18 18:29:56 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -221,6 +221,7 @@ TVec<T> concat(const TVec<T>& v1, const TVec<T>& v2)
   return result;
 }
 
+/*  NOW IN Array.h
 template<class T>
 TVec<T> concat(const Array< TVec<T> >& varray)
 {
@@ -240,6 +241,7 @@ TVec<T> concat(const Array< TVec<T> >& varray)
     }
   return result;
 }
+*/
 
 //! if the element to remove is the first or the last one, 
 //! then a submatrix (a view) of m will be returned (for efficiency)
@@ -477,6 +479,7 @@ void select(const TMat<T>& source, const TVec<I>& row_indices, const TVec<I>& co
   }
 }
 
+/* NOW IN Array.h
 template<class T>
 TMat<T> vconcat(const Array< TMat<T> >& ar)
 {
@@ -518,6 +521,7 @@ TMat<T> hconcat(const Array< TMat<T> >& ar)
     }
   return result;
 }
+*/
 
 template<class T>
 TMat<T> removeRow(const TMat<T>& m, int rownum)

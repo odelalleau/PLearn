@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.h,v 1.4 2002/10/25 03:21:00 plearner Exp $
+   * $Id: VarArray.h,v 1.5 2003/03/18 18:29:56 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -56,7 +56,9 @@ using namespace std;
 
 class VarArray: public Array<Var>
 {
- public:
+public:
+
+  typedef Var* iterator;
 
   VarArray();
   explicit VarArray(int n,int n_extra=10);
@@ -76,16 +78,20 @@ class VarArray: public Array<Var>
   void deepRead(istream& in, DeepReadMap& old2new);
 
   operator Var()
-    { 
-      if(size()!=1)
-        PLERROR("Cannot cast VarArray containing more than one variable to Var");
-      return operator[](0);
-    }
+  { 
+    if(size()!=1)
+      PLERROR("Cannot cast VarArray containing more than one variable to Var");
+    return operator[](0);
+  }
 
-  VarArray& operator&=(const Var& v) { Array<Var>::operator&=(v); return *this;}
-  VarArray& operator&=(const VarArray& va) { Array<Var>::operator&=(va); return *this; }
-  VarArray operator&(const Var& v) const { return Array<Var>::operator&(v); }
-  VarArray operator&(const VarArray& va) const { return Array<Var>::operator&(va); }
+  VarArray& operator&=(const Var& v) { PLearn::operator&=(*this,v); return *this;}
+  VarArray& operator&=(const VarArray& va) { PLearn::operator&=(*this,va); return *this; }
+  VarArray operator&(const Var& v) const { return PLearn::operator&(*this,v); }
+  VarArray operator&(const VarArray& va) const { return PLearn::operator&(*this,va); }
+  //VarArray& operator&=(const Var& v) { Array<Var>::operator&=(v); return *this;}
+  //VarArray& operator&=(const VarArray& va) { Array<Var>::operator&=(va); return *this; }
+  //VarArray operator&(const Var& v) const { return Array<Var>::operator&(v); }
+  //VarArray operator&(const VarArray& va) const { return Array<Var>::operator&(va); }
 
   int nelems() const;
   int sumOfLengths() const;
@@ -199,11 +205,12 @@ class VarArray: public Array<Var>
   void write(ostream& out) const;
   void printNames()const;
   void printInfo(bool print_gradient=false)
-    {
-      for (int i=0;i<size();i++)
-        if (!array[i].isNull())
-          array[i]->printInfo(print_gradient);
-    }
+  {
+    iterator array = data();
+    for (int i=0;i<size();i++)
+      if (!array[i].isNull())
+        array[i]->printInfo(print_gradient);
+  }
 
   Var operator[](Var index);
   inline Var& operator[](int i) { return Array<Var>::operator[](i); }
@@ -213,6 +220,7 @@ class VarArray: public Array<Var>
 
 inline void VarArray::updateAndClear()
 {
+  iterator array = data();
   for(int i=0; i<size(); i++)
     array[i]->updateAndClear();
 }

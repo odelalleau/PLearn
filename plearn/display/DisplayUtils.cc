@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: DisplayUtils.cc,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: DisplayUtils.cc,v 1.2 2003/03/18 18:29:55 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -181,7 +181,7 @@ void displayVarGraph(const VarArray& outputs, bool display_values, real boxwidth
   else
   {
     TmpFilenames tmpnam;
-    strcpy(filename, tmpnam.newFile());
+    strcpy(filename, tmpnam.addFilename().c_str());
   }
   
   multimap<real,Var> layers; 
@@ -418,7 +418,7 @@ void OldDisplayVarGraph(const VarArray& outputs, bool display_values, real boxwi
   else
   {
     TmpFilenames tmpnam;
-    strcpy(filename, tmpnam.newFile());
+    strcpy(filename, tmpnam.addFilename().c_str());
   }
   
   Mat center(Variable::nvars+1,2);

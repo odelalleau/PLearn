@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.cc,v 1.7 2003/03/10 01:51:23 yoshua Exp $
+   * $Id: Learner.cc,v 1.8 2003/03/18 18:29:56 ducharme Exp $
    ******************************************************* */
 
 #include "Learner.h"
@@ -651,7 +651,7 @@ Vec Learner::test(VMat test_set, const string& save_test_outputs, const string& 
     TmpFilenames tmpfile(1);
     bool save_on_file = ncostfuncs*test_set.length() > use_file_if_bigger;
     if (save_on_file)
-      costs = new FileVMatrix(tmpfile.newFile(),test_set.length(),ncostfuncs);
+      costs = new FileVMatrix(tmpfile.addFilename(),test_set.length(),ncostfuncs);
     else
       costs = Mat(test_set.length(),ncostfuncs);
   }

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.6 2003/01/29 04:27:00 plearner Exp $
+   * $Id: fileutils.cc,v 1.7 2003/03/18 18:29:56 ducharme Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -408,7 +408,7 @@ string newFilename(const string directory, const string prefix, bool is_director
       mkdir(tmpfilename, mode);
   }
   if(!tmpfilename)
-    PLERROR("In newFile : could not make a new temporary filename");
+    PLERROR("In newFilename : could not make a new temporary filename");
   return tmpfilename;
 #endif
 }

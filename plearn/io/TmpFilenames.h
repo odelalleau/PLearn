@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TmpFilenames.h,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: TmpFilenames.h,v 1.2 2003/03/18 18:29:56 ducharme Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -49,7 +49,7 @@
 #define TmpFilenames_INC
 
 #include "general.h"
-#include "Array.h"
+#include "TVec.h"
 #include "stringutils.h"
 #include "PP.h"
 
@@ -57,7 +57,7 @@ namespace PLearn <%
 using namespace std;
 
 
-  class TmpFilenames: public Array<string>, public PPointable
+  class TmpFilenames: public TVec<string>, public PPointable
   {
     public:
       
@@ -71,8 +71,6 @@ using namespace std;
       
       //!  DEPRECATED : please use above method instead (addFilename)
       char* newFile(const string directory="/tmp/", const string prefix="");
-      
-      ~TmpFilenames();
   };
   
 %> // end of namespace PLearn

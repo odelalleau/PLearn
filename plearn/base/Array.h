@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array.h,v 1.9 2002/12/05 21:11:17 jauvinc Exp $
+   * $Id: Array.h,v 1.10 2003/03/18 18:29:37 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,295 +54,137 @@
 #include "TypeTraits.h"
 #include "general.h"
 #include "fileutils.h"
+#include "TMat.h"
 
-//#include "/home/morinf/PLearn/UserExp/morinf/pl_streams.h"
 
 
 namespace PLearn <%
 using namespace std;
 
 
-  template <class T> 
-    class Array
+template <class T> 
+class Array: public TVec<T>
+{
+  public:
+
+    typedef T* iterator;
+
+    explicit Array<T>(int the_size=0, int extra_space = 10)
+      : TVec<T>(the_size+extra_space)
+      { length_ = the_size; }
+
+    Array<T>(const T& elem1)
+      : TVec<T>(1)
+      { (*this)[0] = elem1; }
+
+    Array<T>(const T& elem1, const T& elem2)
+      : TVec<T>(2)
+      {
+        (*this)[0] = elem1;
+        (*this)[1] = elem2;
+      }
+
+    Array<T>(const Array& other)
+      : TVec<T>(other.storage->size())
+      {
+        length_ = other.size();
+        offset_ = other.offset();
+        iterator array = data();
+        for(int i=0; i<length_; i++)
+          array[i] = other[i];
+      }
+
+    Array<T>(const vector<T> &other)
+      : TVec<T>(other.size())
+      {
+        iterator array = data();
+        for (int i = 0; i < length_; ++i)
+          array[i] = other[i];
+      }
+
+    //!  To allow if(v) statements
+    operator bool() const
+    { return length_>0; }
+
+    //!  To allow if(!v) statements
+    bool operator!() const
+    { return length_==0; }
+
+    Array<T> subArray(int start, int len)
     {
-protected:
-  T* array;
-  int array_size;
-  int array_capacity;
-
-public:
-      typedef T value_type;
-      typedef int size_type;
-      typedef T* iterator;
-      typedef const T* const_iterator;
-      
-      inline T* begin() const
-      { return array; }
-
-      inline T* end() const
-      { return array+array_size; }
-
-  void increaseCapacity(int increase = 10)
-  {
-    T* newarray = new T[array_capacity+increase];
-    for(int i=0; i<array_size; i++)
-      newarray[i] = array[i];
-    delete[] array;
-    array = newarray;
-    array_capacity += increase;
-  }
-
-  explicit Array<T>(int the_size=0, int extra_space = 10)
-    :array_size(the_size), array_capacity(the_size+extra_space)
-    {
-      array = new T[array_capacity];
-    }
-
-  Array<T>(const T& elem1)
-    :array_size(1), array_capacity(1)
-    {
-      array = new T[array_capacity];
-      array[0] = elem1;
-    }
-
-  Array<T>(const T& elem1, const T& elem2)
-    :array_size(2), array_capacity(2)
-    {
-      array = new T[array_capacity];
-      array[0] = elem1;
-      array[1] = elem2;
-    }
-
-  Array<T>(const Array& other)
-    :array_size(other.size()), array_capacity(other.size())
-    {
-      array = new T[array_capacity];
-      for(int i=0; i<array_size; i++)
-        array[i] = other[i];
-    }
-
-  Array<T>(const vector<T> &other)
-    : array_size(other.size()), array_capacity(other.size())
-    {
-        array = new T[array_capacity];
-        for (int i = 0; i < array_size; ++i)
-            array[i] = other[i];
-    }
-
-      //!  To allow if(v) statements
-      operator bool() const
-      { return array_size>0; }
-      
-
-      //!  To allow if(!v) statements
-      bool operator!() const
-      { return array_size==0; }
-
-
-  Array<T>* operator->()
-    { return this; }
-  
-  Array<T>& operator&=(const T& elem)
-    { append(elem); return *this; }
-
-  Array<T>& operator&=(const Array<T>& ar)
-    { append(ar); return *this; }
-
-  Array<T>& operator&=(const vector<T> &ar)
-    { append(ar); return *this; };
-
-  Array<T> operator&(const T& elem) const
-    {
-      Array<T> newarray(array_size, array_size+1);
-      newarray = *this;
-      newarray.append(elem);
-      return newarray;
-    }
-
-  Array<T> operator&(const Array<T>& ar) const
-    {
-      Array<T> newarray(array_size, array_size+ar.size());
-      newarray = *this;
-      newarray.append(ar);
-      return newarray;
-    }
-
-  Array<T> operator&(const vector<T> &ar) const
-    {
-        Array<T> newarray(array_size, array_size + ar.size());
-        newarray = *this;
-        newarray.append(ar);
-        return newarray;
-    }
-
-  Array<T> subArray(int start, int len)
-    {
-      if (start+len>array_size)
-        PLERROR("Array::subArray start(%d)+len(%d)>size(%d)",
-              start,len,array_size);
+      if (start+len>length_)
+        PLERROR("Array::subArray start(%d)+len(%d)>size(%d)", start,len,length_);
       Array<T> newarray(len);
+      iterator new_ar = newarray.data();
+      iterator array = data();
       for (int i=0;i<len;i++)
-        newarray[i]=array[start+i];
+        new_ar[i] = array[start+i];
       return newarray;
     }
 
-  int size() const
-    { return array_size; }
+    void clear()
+    { length_ = 0; }
 
-  int length() const
-    { return array_size; }
-
-  int capacity() const
-    { return array_capacity; } 
-
-  void resize(int new_size, int extra_space=0)
-    {
-      if(new_size>array_capacity)
-        {
-          array_capacity = new_size+extra_space;
-          T* new_array = new T[array_capacity];
-          if(array)
-          {
-            for(int i=0; i<array_size; i++)
-              new_array[i] = array[i];
-            delete[] array;
-          }
-          array = new_array;
-        }
-      array_size = new_size;
-    }
-
-  void clear()
-    { array_size = 0; }
-
-  void operator=(const Array& other)
+    void operator=(const Array& other)
     {
       resize(other.size());
-      for(int i=0; i<array_size; i++)
+      iterator array = data();
+      for(int i=0; i<length_; i++)
         array[i] = other[i];
     }
 
-  void operator=(const vector<T> &other)
+    void operator=(const vector<T> &other)
     {
-        resize(other.size());
-        for(int i = 0; i < array_size; ++i)
-            array[i] = other[i];
-    }
-
-  void fill(const T& elem)
-    {
-       for(int i=0; i<array_size; i++)
-         array[i] = elem;
-    }
-
-  bool operator==(const Array& other) const
-    {
-      if (other.size() != array_size) 
-         return false;
-      for(int i=0; i<array_size; i++)
-	  if (array[i] != other[i]) return false;
-      return true;
-    }
-
-  bool operator!=(const Array& other)
-    { return !((*this)==other); }
-
-  void append(const T& element)
-  {
-    resize(array_size+1, array_size);
-    array[array_size-1] = element;
-  }
-
-  inline void push_back(const T& element)
-      { append(element); }
-
-  void appendIfNotThereAlready(const T& element)
-  {
-    for (int i=0;i<array_size;i++)
-      if (element==array[i]) return;
-    resize(array_size+1, array_size);
-    array[array_size-1] = element;
-  }
-
-  void append(const Array<T>& ar)
-    {
-      int currentsize = size();
-      resize(currentsize+ar.size());
-      for(int i=0; i<ar.size(); i++)
-        array[currentsize+i] = ar[i];
-    }
-
-  void append(const vector<T> &ar)
-    {
-        int current_size = size();
-        resize(currentsize + ar.size());
-        for (int i = 0; i < ar.size(); ++i)
-            array[currentsize + 1] = ar[i];
-    }
-
-  //!  These functions call operator[] to ensure they are bounds-checked
-  T& last() { return (*this)[array_size-1]; }
-  const T& last() const { return (*this)[array_size-1]; }
-
-  T& first() { return (*this)[0]; }
-  const T& first() const { return (*this)[0]; }
-
-  bool contains(const T& element) const
-    {
-      bool is_contained = false;
-      for (int i=0;i<array_size && !is_contained;i++)
-        is_contained = ( element == array[i] );
-      return is_contained;
-    }
-
-  // search for element from 'start'. Returns index or -1 if not found
-  int find(const T& element,int start=0)
-    {
-      for (int i=start;i<array_size;i++)
-        if(element==array[i])
-          return i;
-      return -1;
-    }
-    
-  T& operator[](int i) const
-    { 
-      #ifdef BOUNDCHECK
-      if(i<0 || i>=array_size)
-        PLERROR("In Array<T>::operator[] OUT OF BOUND ACCESS : %d",i);
-      #endif
-      return array[i]; 
+      resize(other.size());
+      iterator array = data();
+      for(int i = 0; i < length_; ++i)
+        array[i] = other[i];
     }
 
     void print(ostream& out) const
     {
-      for(int i=0; i<array_size; i++)
+      iterator array = data();
+      for(int i=0; i<length_; i++)
         out << array[i] << endl;
     }
 
-      // DEPRECATED! Call PStream& << arr instead (This is for backward compatibility only)
+    // DEPRECATED! Call PStream& << arr instead (This is for backward compatibility only)
     void write(ostream &out_) const
     {
-        PStream out(&out_);
-        out << *this;
+      PStream out(&out_);
+      out << *this;
     }
 
-      /*
-       * NOTE: FIX_ME
-       * If newread changes the state of the stream (e.g. eof), 
-       * the original stream will NOT reflect this state... 
-       * 'in' will have it's state changed, but not 'in_'.
-       * This can be a major problem w/ 'asignstreams'...
-       *                            - xsm
-       */
+    /*
+     * NOTE: FIX_ME
+     * If newread changes the state of the stream (e.g. eof), 
+     * the original stream will NOT reflect this state... 
+     * 'in' will have it's state changed, but not 'in_'.
+     * This can be a major problem w/ 'asignstreams'...
+     *                            - xsm
+     */
 
-      // DEPRECATED! Call PStream& >> arr instead (This is for backward compatibility only)
+    // DEPRECATED! Call PStream& >> arr instead (This is for backward compatibility only)
     void read(istream &in_)
     {
-        PStream in(&in_);
-        in >> *this;
+      PStream in(&in_);
+      in >> *this;
     }
 
-    void deepWrite(ostream& out, DeepWriteSet& already_saved) const
+/*  PAS UTILISE
+    void increaseCapacity(int increase = 10)
+    {
+      T* newarray = new T[array_capacity+increase];
+      for(int i=0; i<length_; i++)
+        newarray[i] = array[i];
+      delete[] array;
+      array = newarray;
+      array_capacity += increase;
+    }
+*/
+
+/*
+   void deepWrite(ostream& out, DeepWriteSet& already_saved) const
     {
       writeHeader(out, "Array");
       PLearn::deepWrite(out, already_saved, array_size);
@@ -365,49 +207,78 @@ public:
 
     void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
     {
-      for (int i=0; i<array_size; i++)
+      for (int i=0; i<length_; i++)
         deepCopyField(array[i], copies);
     }
-
-    ~Array()
-    {
-      delete[] array;
-    }
-
+*/
 };
 
 
-template <class T> inline PStream &
-operator>>(PStream &in, Array<T> &a)
+template <class T>
+inline PStream & operator>>(PStream &in, Array<T> &a)
 { readSequence(in, a); return in; }
 
-template <class T> inline PStream &
-operator<<(PStream &out, const Array<T> &a)
+template <class T>
+inline PStream & operator<<(PStream &out, const Array<T> &a)
 { writeSequence(out, a); return out; };
 
-template <class T>
-  void deepWrite(ostream& out, DeepWriteSet& already_saved, const Array<T>& a)
-  { a.deepWrite(out, already_saved); }
+template<class T>
+ostream& operator<<(ostream& out, const Array<T>& a)
+{ a.print(out); return out; }
 
 template <class T>
-  void deepRead(istream& in, DeepReadMap& old2new, Array<T>& a)
-  { a.deepRead(in, old2new); }
+void deepWrite(ostream& out, DeepWriteSet& already_saved, const Array<T>& a)
+{ a.deepWrite(out, already_saved); }
+
+template <class T>
+void deepRead(istream& in, DeepReadMap& old2new, Array<T>& a)
+{ a.deepRead(in, old2new); }
 
 template <class T>
 inline void deepCopyField(Array<T>& field, CopiesMap& copies)
-{
-  field.makeDeepCopyFromShallowCopy(copies);
-}
+{ field.makeDeepCopyFromShallowCopy(copies); }
 
 template<class T>
 Array<T> operator&(const T& elem, const Array<T>& a)
 { return Array<T>(elem) & a; }
 
 template<class T>
-ostream& operator<<(ostream& out, const Array<T>& a)
-{ 
-  a.print(out);
-  return out;
+Array<T>& operator&=(Array<T>& a, const T& elem)
+{ a.append(elem); return a; }
+
+template<class T>
+Array<T>& operator&=(Array<T>& a, const Array<T>& ar)
+{ a.append(ar); return a; }
+
+template<class T>
+Array<T>& operator&=(Array<T>& a, const vector<T> &ar)
+{ a.append(ar); return a; }
+
+template<class T>
+Array<T> operator&(const Array<T>& a, const T& elem)
+{
+  Array<T> newarray(a.size(), a.size()+1);
+  newarray = a;
+  newarray.append(elem);
+  return newarray;
+}
+
+template<class T>
+Array<T> operator&(const Array<T>& a, const Array<T>& ar)
+{
+  Array<T> newarray(a.size(), a.size()+ar.size());
+  newarray = a;
+  newarray.append(ar);
+  return newarray;
+}
+
+template<class T>
+Array<T> operator&(const Array<T>& a, const vector<T> &ar)
+{
+  Array<T> newarray(a.size(), a.size() + ar.size());
+  newarray = a;
+  newarray.append(ar);
+  return newarray;
 }
 
 inline string join(const Array<string>& s, const string& separator)
@@ -422,7 +293,84 @@ inline string join(const Array<string>& s, const string& separator)
   return result;
 }
 
+//!  This will allow a convenient way of building arrays of Matrices by writing ex: m1&m2&m3
 template<class T>
+inline Array< TVec<T> > operator&(const TVec<T>& m1, const TVec<T>& m2) { return Array< TVec<T> >(m1,m2); } 
+
+template<class T>
+TVec<T> concat(const Array< TVec<T> >& varray)
+{
+  int l = 0;
+  for(int k=0; k<varray.size(); k++)
+    l += varray[k].length();
+ 
+  TVec<T> result(l);
+  real* resdata = result.data();
+  for(int k=0; k<varray.size(); k++)
+  {
+    const TVec<T>& v = varray[k];
+    real* vdata = varray[k].data();
+    for(int i=0; i<v.length(); i++)
+      resdata[i] = vdata[i];
+    resdata += v.length();
+  }
+  return result;
+}
+
+template<class T>
+TMat<T> vconcat(const Array< TMat<T> >& ar)
+{
+  int l = 0;
+  int w = ar[0].width();
+  for(int n=0; n<ar.size(); n++)
+  {
+    if(ar[n].width() != w)
+      PLERROR("In Mat vconcat(Array<Mat> ar) all Mats do not have the same width()!");
+    l += ar[n].length();
+  }
+  TMat<T> result(l, w);
+  int pos = 0;
+  for(int n=0; n<ar.size(); n++)
+  {
+    result.subMatRows(pos, ar[n].length()) << ar[n];
+    pos+=ar[n].length();  // do not put this line after the n++ in the for loop, or it will cause a bug!
+  }
+  return result;
+}
+
+template<class T>
+TMat<T> hconcat(const Array< TMat<T> >& ar)
+{
+  int w = 0;
+  int l = ar[0].length();
+  for(int n=0; n<ar.size(); n++)
+  {
+    if(ar[n].length() != l)
+      PLERROR("In Mat hconcat(Array<Mat> ar) all Mats do not have the same length()!");
+    w += ar[n].width();
+  }
+  TMat<T> result(l, w);
+  int pos = 0;
+  for(int n=0; n<ar.size(); n++)
+  {
+    result.subMatColumns(pos, ar[n].width()) << ar[n];
+    pos+=ar[n].width(); // do not put this line after the n++ in the for loop, or it will cause a bug!
+  }
+  return result;
+}
+
+template<class T>
+inline TMat<T> vconcat(const TMat<T>& m1, const TMat<T>& m2) { return vconcat(Array< TMat<T> >(m1,m2)); }
+
+template<class T>
+inline TMat<T> hconcat(const TMat<T>& m1, const TMat<T>& m2) { return hconcat(Array< TMat<T> >(m1,m2)); }
+
+//!  This will allow a convenient way of building arrays of Matrices by writing ex: m1&m2&m3
+template<class T>
+inline Array< TMat<T> > operator&(const TMat<T>& m1, const TMat<T>& m2) { return Array< TMat<T> >(m1,m2); } 
+template<class T>
+
+
 class TypeTraits< Array<T> >
 {
 public:

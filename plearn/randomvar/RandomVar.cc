@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: RandomVar.cc,v 1.2 2003/01/08 21:34:35 ducharme Exp $
+   * $Id: RandomVar.cc,v 1.3 2003/03/18 18:29:56 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -209,12 +209,9 @@ RandomVar RandomVariable::subVec(int start, int length) {
 }
 
 real RandomVariable::EM(const RVArray& parameters_to_learn,
-                         VarArray& prop_path, 
-			 VarArray& observedVars, 
-			 VMat distr, int n_samples, 
-			 int max_n_iterations, 
-			 real relative_improvement_threshold,
-                         bool accept_worsening_likelihood)
+    VarArray& prop_path, VarArray& observedVars, VMat distr, int n_samples, 
+    int max_n_iterations, real relative_improvement_threshold,
+    bool accept_worsening_likelihood)
 {
   real avgnegloglik = 0;
   real previous_nll=FLT_MAX, nll_change;
@@ -308,18 +305,18 @@ void RandomVariable::clearEMmarks()
 void RandomVariable::setKnownValues()
 {
   if (!pmark && !marked)
+  {
+    pmark=true;
+    bool all_parents_marked=true;
+    for (int i=0;i<parents.size();i++)
     {
-      pmark=true;
-      bool all_parents_marked=true;
-      for (int i=0;i<parents.size();i++)
-	{
-	  parents[i]->setKnownValues();
-	  all_parents_marked &= parents[i]->isMarked();
-	}
-      setValueFromParentsValue();
-      if (all_parents_marked)
-        marked=true;
+      parents[i]->setKnownValues();
+      all_parents_marked &= parents[i]->isMarked();
     }
+    setValueFromParentsValue();
+    if (all_parents_marked)
+      marked=true;
+  }
 }
 
 void RandomVariable::EMUpdate()
@@ -382,7 +379,8 @@ RandomVariable::~RandomVariable()
 { if (learn_the_parameters) delete learn_the_parameters; }
 
 Var RandomVariable::ElogP(const Var& obs, RVArray& parameters_to_learn, 
-				  const RVInstanceArray& RHS) {
+    const RVInstanceArray& RHS)
+{
   PLERROR("ElogP not implemented for this class (%s)",classname());
   return Var(0);
 }
@@ -391,28 +389,26 @@ Var RandomVariable::ElogP(const Var& obs, RVArray& parameters_to_learn,
 
 RandomVar operator*(RandomVar a, RandomVar b)
 {
-  if (a->isScalar() || b->isScalar()) // scalar times something
-    return new ProductRandomVariable(a,b);
+  if (a->isScalar() || b->isScalar()); // scalar times something
   else if (a->isVec() && b->isVec()) // vec times vec
-    {
-      if (a->length()*a->width() != b->length()*b->width())
-        PLERROR("In RandomVar operator*(RandomVar a, RandomVar b) cannot do a dot product between 2 vecs with different sizes");
-      return new ProductRandomVariable(a,b);
-    }
+  {
+    if (a->length()*a->width() != b->length()*b->width())
+      PLERROR("In RandomVar operator*(RandomVar a, RandomVar b) cannot do a dot product between 2 vecs with different sizes");
+  }
   else if (a->isRowVec()) // rowvec times mat
-    {
-      if (a->length() != b->width())
-        PLERROR("In RandomVar operator*(RandomVar a, RandomVar b) in case rowvec times mat: a->length() != b->width()");
-      return new ProductRandomVariable(a,b);      
-    }
+  {
+    if (a->length() != b->width())
+      PLERROR("In RandomVar operator*(RandomVar a, RandomVar b) in case rowvec times mat: a->length() != b->width()");
+  }
   else if (b->isRowVec()) // mat times rowvec
-    {
-      if (b->length() != a->width())
-        PLERROR("In RandomVar operator*(RandomVar a, RandomVar b) in case mat times rowvec: b->length() != a->width()");
-      return new ProductRandomVariable(a,b);
-    }
+  {
+    if (b->length() != a->width())
+      PLERROR("In RandomVar operator*(RandomVar a, RandomVar b) in case mat times rowvec: b->length() != a->width()");
+  }
   else
     PLERROR("In RandomVar operator*(RandomVar a, RandomVar b) This case is not handled (but maybe it should be...)");
+
+  return new ProductRandomVariable(a,b);
 }
 
 RandomVar operator+(RandomVar a, RandomVar b)
@@ -444,11 +440,11 @@ RandomVar hconcat(const RVArray& a)
 
 
 real EM(ConditionalExpression conditional_expression,
-         RVArray parameters_to_learn,
-	 VMat distr, int n_samples, int max_n_iterations, 
-	 real relative_improvement_threshold,
-         bool accept_worsening_likelihood,
-         bool compute_final_train_NLL)
+    RVArray parameters_to_learn,
+    VMat distr, int n_samples, int max_n_iterations, 
+    real relative_improvement_threshold,
+    bool accept_worsening_likelihood,
+    bool compute_final_train_NLL)
 {
   // assign the value fields of the RV's to those provided by user
   RandomVar& LHS=conditional_expression.LHS.V;
@@ -481,10 +477,10 @@ real EM(ConditionalExpression conditional_expression,
 }
 
 real EM(ConditionalExpression conditional_expression,
-         RVArray parameters_to_learn,
-	 VMat distr, int n_samples, int max_n_iterations, 
-	 real relative_improvement_threshold,
-         bool compute_final_train_NLL)
+    RVArray parameters_to_learn,
+    VMat distr, int n_samples, int max_n_iterations, 
+    real relative_improvement_threshold,
+    bool compute_final_train_NLL)
 {
   // assign the value fields of the RV's to those provided by user
   RandomVar& LHS=conditional_expression.LHS.V;
@@ -594,7 +590,7 @@ Var P(ConditionalExpression conditional_expression,
 }
 
 Var logP(ConditionalExpression conditional_expression, bool clearMarksUponReturn,
-	 RVInstanceArray* parameters_to_learn) 
+    RVInstanceArray* parameters_to_learn) 
 {
   RandomVar& LHS = conditional_expression.LHS.V;
   RVInstanceArray& RHS = conditional_expression.RHS;
@@ -620,11 +616,11 @@ Var logP(ConditionalExpression conditional_expression, bool clearMarksUponReturn
 }
 
 Var ElogP(ConditionalExpression conditional_expression, 
-	  RVInstanceArray& parameters_to_learn,
-	  bool clearMarksUponReturn)
+    RVInstanceArray& parameters_to_learn,
+    bool clearMarksUponReturn)
 { 
   return logP(conditional_expression,clearMarksUponReturn,&parameters_to_learn);
- }
+}
 
 
 // integrate the RV over the given hiddenRV
@@ -831,7 +827,8 @@ RVArray RVInstanceArray::random_variables() const {
 
 RVInstanceArray RVInstanceArray::operator&&(RVInstance rvi)
 {
- return this->operator&((RVInstanceArray)rvi);
+ return PLearn::operator&(*this,(RVInstanceArray)rvi);
+ //return this->operator&((RVInstanceArray)rvi);
 }
 
 ConditionalExpression RVInstanceArray::operator|(RVInstanceArray RHS)
@@ -848,7 +845,9 @@ int RVInstanceArray::compareRVnumbers(const RVInstance* rvi1,
 
 // sorts in-place the elements by V->rv_number (topological order of 
 // the graphical model) (in the order: ancestors -> descendants)
-void RVInstanceArray::sort() {
+void RVInstanceArray::sort()
+{
+  RVInstance* array = data();
   qsort(array,size(),sizeof(RVInstance),(compare_function)compareRVnumbers);
 }
 
@@ -885,14 +884,16 @@ RVArray::RVArray(const RandomVar& v1, const RandomVar& v2, const RandomVar& v3,
   (*this)[2] = v3; 
 }
 
-int RVArray::length() const {
+int RVArray::length() const
+{
   int l=0;
   for (int i=0;i<size();i++)
     l += (*this)[i]->length();
   return l;
 }
 
-VarArray RVArray::values() const {
+VarArray RVArray::values() const
+{
   VarArray vals(size());
   for (int i=0;i<size();i++)
     vals[i]=(*this)[i]->value;
@@ -909,7 +910,9 @@ int RVArray::compareRVnumbers(const RandomVar* v1, const RandomVar* v2)
 
 // sorts in-place the elements by rv_number (topological order of 
 // the graphical model) (in the order: ancestors -> descendants)
-void RVArray::sort() {
+void RVArray::sort()
+{
+  RandomVar* array = data();
   qsort(array,size(),sizeof(RandomVar),(compare_function)compareRVnumbers);
 }
 
@@ -967,7 +970,7 @@ FunctionalRandomVariable::FunctionalRandomVariable(const RVArray& the_parents,
   :RandomVariable(the_parents,length,width) {}
 
 Var FunctionalRandomVariable::logP(const Var& obs, const RVInstanceArray& RHS,
-				   RVInstanceArray* parameters_to_learn)
+    RVInstanceArray* parameters_to_learn)
 {
   // gather the unobserved parents
   int np=parents.size();
@@ -978,54 +981,51 @@ Var FunctionalRandomVariable::logP(const Var& obs, const RVInstanceArray& RHS,
   // simplest case first
   int nup = unobserved_parents.size();
   if (nup==0)
-    {
-      if (isDiscrete())
-        return isequal(value,obs);
-      // else
-      return isequal(value,obs)*FLT_MAX;
-    }
+  {
+    if (isDiscrete())
+      return isequal(value,obs);
+    // else
+    return isequal(value,obs)*FLT_MAX;
+  }
   // else
   Var *JacobianCorrection=0;
   if (invertible(obs,unobserved_parents,&JacobianCorrection))
+  {
+    Var logp(1);
+    // sort the unobserved parents in topological order of graph
+    unobserved_parents.sort();
+    bool first = true;
+    RVInstanceArray RHS(0,RHS.size()+unobserved_parents.size());
+    RVInstanceArray xRHS(RHS);
+    for (int i=0;i<nup;i++)
     {
-      Var logp(1);
-      // sort the unobserved parents in topological order of graph
-      unobserved_parents.sort();
-      bool first = true;
-      RVInstanceArray RHS(0,RHS.size()+unobserved_parents.size());
-      RVInstanceArray xRHS(RHS);
-      for (int i=0;i<nup;i++)
-        {
-	  // note these are still symbolic computations to build Var logp
-	  if (first)
-	    logp = unobserved_parents[i].V->logP(unobserved_parents[i].v,xRHS,
-						 parameters_to_learn);
-	  else
-	    logp = logp + 
-	      unobserved_parents[i].V->logP(unobserved_parents[i].v,xRHS,
-					    parameters_to_learn);
-          first = false;
-          // add the visited parents to the RHS, e.g. to compute
-	  //   P(P1=p1,P2=p2,P3=p3) = P(P1=p1)*P(P2=p2|P1=p1)*P(P3=p3|P2=p2,P1=p1)
-	  //
-          xRHS &= unobserved_parents[i];
-        }
-      if (JacobianCorrection)
-        return logp + *JacobianCorrection;
-      return logp;
+      // note these are still symbolic computations to build Var logp
+      if (first)
+        logp = unobserved_parents[i].V->logP(unobserved_parents[i].v,xRHS,
+            parameters_to_learn);
+      else
+        logp = logp + 
+          unobserved_parents[i].V->logP(unobserved_parents[i].v,xRHS,
+              parameters_to_learn);
+      first = false;
+      // add the visited parents to the RHS, e.g. to compute
+      //   P(P1=p1,P2=p2,P3=p3) = P(P1=p1)*P(P2=p2|P1=p1)*P(P3=p3|P2=p2,P1=p1)
+      //
+      xRHS &= unobserved_parents[i];
     }
+    if (JacobianCorrection)
+      return logp + *JacobianCorrection;
+    return logp;
+  }
   // else
   return 
     PLearn::logP(ConditionalExpression
-	   (RVInstance(marginalize(this,
-				   unobserved_parents.random_variables()), obs),
-	    RHS),true,parameters_to_learn);
+        (RVInstance(marginalize(this, unobserved_parents.random_variables()), obs),
+         RHS),true,parameters_to_learn);
 }
 
-bool FunctionalRandomVariable::
-invertible(const Var& obs, 
-           RVInstanceArray& unobserved_parents,
-           Var** JacobianCorrection)
+bool FunctionalRandomVariable::invertible(const Var& obs, 
+    RVInstanceArray& unobserved_parents, Var** JacobianCorrection)
 {
   PLERROR("FunctionalRandomVariable::invertible() should not be called\n"
         "Either the sub-class should re-implement logP() or re-define\n"
@@ -1086,8 +1086,7 @@ void JointRandomVariable::setValueFromParentsValue()
 }
 
 bool JointRandomVariable::invertible(const Var& obs, 
-                                        RVInstanceArray& unobserved_parents,
-                                        Var** JacobianCorrection)
+    RVInstanceArray& unobserved_parents, Var** JacobianCorrection)
 {
   int p=0;
   int j=0;
@@ -1152,7 +1151,7 @@ void RandomElementOfRandomVariable::EMBprop(const Vec obs, real posterior)
 
 RVArrayRandomElementRandomVariable::
 RVArrayRandomElementRandomVariable(const RVArray& table, const RandomVar& index)
-  :FunctionalRandomVariable(table&index,table[0]->length())
+  :FunctionalRandomVariable((RVArray)(table&index),table[0]->length())
 { 
   int l=table[0]->length();
   for (int i=1;i<table.size();i++)
@@ -1461,39 +1460,39 @@ void MinusRandomVariable::EMEpochInitialize()
 void MinusRandomVariable::EMBprop(const Vec obs, real posterior)
 {
   if (learn_something)
+  {
+    if (learn_X0())
+      // numerator += posterior * (obs + other_parent->value->value);
+      add(obs,other_parent->value->value,difference);
+    else
+      // numerator += posterior * (other_parent->value->value - obs);
+      substract(other_parent->value->value,obs,difference);
+
+    multiplyAcc(numerator, difference,posterior);
+    denom += posterior;
+    if (!other_parent->isConstant())
     {
+      // propagate to other parent
       if (learn_X0())
-	// numerator += posterior * (obs + other_parent->value->value);
-	add(obs,other_parent->value->value,difference);
+        add(obs,parent_to_learn->value->value,difference);
       else
-	// numerator += posterior * (other_parent->value->value - obs);
-	substract(other_parent->value->value,obs,difference);
-	
-      multiplyAcc(numerator, difference,posterior);
-      denom += posterior;
-      if (!other_parent->isConstant())
-        {
-	  // propagate to other parent
-	  if (learn_X0())
-	    add(obs,parent_to_learn->value->value,difference);
-	  else
-	    substract(parent_to_learn->value->value,obs,difference);
-          other_parent->EMBprop(difference,posterior);
-        }
+        substract(parent_to_learn->value->value,obs,difference);
+      other_parent->EMBprop(difference,posterior);
     }
+  }
   else
+  {
+    if (!X1()->isConstant())
     {
-      if (!X1()->isConstant())
-        {
-          substract(X0()->value->value,obs,difference);
-          X1()->EMBprop(difference,posterior);
-        }
-      if (!X0()->isConstant())
-        {
-          add(obs,X1()->value->value,difference);
-          X0()->EMBprop(difference,posterior);
-        }
+      substract(X0()->value->value,obs,difference);
+      X1()->EMBprop(difference,posterior);
     }
+    if (!X0()->isConstant())
+    {
+      add(obs,X1()->value->value,difference);
+      X0()->EMBprop(difference,posterior);
+    }
+  }
 }
 
 void MinusRandomVariable::EMUpdate()
@@ -1839,34 +1838,33 @@ DiagonalNormalRandomVariable::DiagonalNormalRandomVariable
 }
 
 Var DiagonalNormalRandomVariable::logP(const Var& obs, 
-                                       const RVInstanceArray& RHS,
-				       RVInstanceArray* parameters_to_learn)
+    const RVInstanceArray& RHS, RVInstanceArray* parameters_to_learn)
 {
   if (mean()->isMarked() && log_variance()->isMarked())
-    {
-      if (log_variance()->value->getName()[0]=='#') 
-	log_variance()->value->setName("log_variance");
-      if (mean()->value->getName()[0]=='#') 
-	mean()->value->setName("mean");
-      Var variance = minimum_variance+exp(log_variance()->value);
-      variance->setName("variance");
-      if (shared_variance)
-        return (-0.5)*(sum(square(obs-mean()->value))/variance+
-                       (mean()->length())*log(variance) + normfactor);
-      else
+  {
+    if (log_variance()->value->getName()[0]=='#') 
+      log_variance()->value->setName("log_variance");
+    if (mean()->value->getName()[0]=='#') 
+      mean()->value->setName("mean");
+    Var variance = minimum_variance+exp(log_variance()->value);
+    variance->setName("variance");
+    if (shared_variance)
+      return (-0.5)*(sum(square(obs-mean()->value))/variance+
+          (mean()->length())*log(variance) + normfactor);
+    else
       return (-0.5)*(sum(square(obs-mean()->value)/variance)+
-                     sum(log(variance))+ normfactor);
-    }
+          sum(log(variance))+ normfactor);
+  }
   // else
   // probably not feasible..., but try in case we know a trick
   if (mean()->isMarked())
     return 
       PLearn::logP(ConditionalExpression(RVInstance(marginalize(this,
-							  log_variance()),
-					      obs),RHS),true,parameters_to_learn); 
+                log_variance()),
+              obs),RHS),true,parameters_to_learn); 
   else
     return PLearn::logP(ConditionalExpression(RVInstance(marginalize(this,mean()),
-						   obs),RHS),true,parameters_to_learn); 
+            obs),RHS),true,parameters_to_learn); 
 }
 
 void DiagonalNormalRandomVariable::setValueFromParentsValue()
@@ -2003,14 +2001,14 @@ MixtureRandomVariable::MixtureRandomVariable
 }
 
 Var MixtureRandomVariable::logP(const Var& obs, const RVInstanceArray& RHS,
-				RVInstanceArray* parameters_to_learn)
+    RVInstanceArray* parameters_to_learn)
 {
   if (parameters_to_learn!=0) return ElogP(obs,*parameters_to_learn,RHS);
   if (log_weights()->isMarked())
     {
       int n=posteriors.length();
       if (log_weights()->value->getName()[0]=='#') 
-	log_weights()->value->setName("log_weights");
+        log_weights()->value->setName("log_weights");
       Var weights = softmax(log_weights()->value);
       weights->setName("weights");
       lw = log(weights);
@@ -2077,8 +2075,8 @@ Var MixtureRandomVariable::ElogP(const Var& obs,
   // else
   // probably not feasible..., but try in case we know a trick
   return PLearn::logP(ConditionalExpression
-		(RVInstance(marginalize(this,log_weights()),obs),
-		 RHS),true,&parameters_to_learn);
+      (RVInstance(marginalize(this,log_weights()),obs),
+       RHS),true,&parameters_to_learn);
 }
 
 void MixtureRandomVariable::setValueFromParentsValue()
@@ -2217,15 +2215,15 @@ MultinomialRandomVariable(const RandomVar& log_probabilities)
 }
 
 Var MultinomialRandomVariable::logP(const Var& obs, const RVInstanceArray& RHS,
-				    RVInstanceArray* parameters_to_learn)
+    RVInstanceArray* parameters_to_learn)
 {
   if (log_probabilities()->isMarked())
     return log(softmax(log_probabilities()->value))[obs];
   // else
   // probably not feasible..., but try in case we know a trick
   return PLearn::logP(ConditionalExpression
-                (RVInstance(marginalize(this,log_probabilities()),obs),
-		 RHS),true,parameters_to_learn); 
+      (RVInstance(marginalize(this,log_probabilities()),obs),
+       RHS),true,parameters_to_learn); 
 }
 
 void MultinomialRandomVariable::EMEpochInitialize()

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************
-   * $Id: MatlabInterface.h,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: MatlabInterface.h,v 1.2 2003/03/18 18:29:56 ducharme Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -48,7 +48,6 @@
 
 #include <stdlib.h>
 #include "stringutils.h"
-#include "TmpFilenames.h"
 #include "Popen.h"
 #include "RowMapSparseMatrix.h"
 

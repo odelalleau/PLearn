@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: RandomVar.h,v 1.3 2003/01/08 21:34:35 ducharme Exp $
+   * $Id: RandomVar.h,v 1.4 2003/03/18 18:29:56 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -171,7 +171,7 @@
    // "sampled" from the given empirical distribution.
    Var totalcost = meanOf(cost,x&y,VMat(observed_xy_matrix),
                           observed_xy_matrix.length(),
-			  params);
+                          params);
    // construct an optimizer that optimizes totalcost by varying params
    ConjugateGradientOptimizer opt(params,totalcost, 1e-5, 1e-3, 100);
    // do the actual optimization
@@ -701,7 +701,7 @@ protected:
     proper massaging of the network before and after this call.
 */
   virtual Var logP(const Var& obs, const RVInstanceArray& RHS,
-		   RVInstanceArray* parameters_to_learn=0) = 0;
+      RVInstanceArray* parameters_to_learn=0) = 0;
   virtual Var P(const Var& obs, const RVInstanceArray& RHS);
 
 /*!     the latter is like logP but it represents the expected log-probability
@@ -734,7 +734,7 @@ protected:
   ///////////////////////////////////////////////////////////!<  
   virtual real EM(const RVArray& parameters_to_learn,
                    VarArray& prop_path, 
-		   VarArray& observedVars, 
+                   VarArray& observedVars, 
                    VMat distr, int n_samples, 
                    int max_n_iterations, 
                    real relative_improvement_threshold,
@@ -820,23 +820,23 @@ RandomVar hconcat(const RVArray& a);
 //real EMbyEMBprop(ConditionalExpression conditional_expression, 
 real EM(ConditionalExpression conditional_expression, 
          RVArray parameters_to_learn,
-	 VMat distr, int n_samples, int max_n_iterations=1, 
-	 real relative_improvement_threshold=0.001,
+         VMat distr, int n_samples, int max_n_iterations=1, 
+         real relative_improvement_threshold=0.001,
          bool accept_worsening_likelihood=false,
          bool compute_final_train_NLL=true);
 
 real oEM(ConditionalExpression conditional_expression,
          RVArray parameters_to_learn,
-	 VMat distr, int n_samples, int max_n_iterations, 
-	 real relative_improvement_threshold=0.001,
+         VMat distr, int n_samples, int max_n_iterations, 
+         real relative_improvement_threshold=0.001,
          bool compute_final_train_NLL=true);
 
 real oEM(ConditionalExpression conditional_expression,
          RVArray parameters_to_learn,
-	 VMat distr, int n_samples, 
+         VMat distr, int n_samples, 
          Optimizer& MStepOptimizer,
          int max_n_iterations,
-	 real relative_improvement_threshold=0.001,
+         real relative_improvement_threshold=0.001,
          bool compute_final_train_NLL=true);
 
 /*!   Construct a Var that computes logP(RandomVariable == value | RHS )
@@ -850,7 +850,7 @@ real oEM(ConditionalExpression conditional_expression,
 */
 Var logP(ConditionalExpression conditional_expression, 
          bool clearMarksUponReturn=true,
-	 RVInstanceArray* parameters_to_learn=0);
+         RVInstanceArray* parameters_to_learn=0);
 
 /*!   Construct a Var that computes P(LHS == observation | RHS == values )
   in terms of the Var observation and the Vars in the RHS,
@@ -870,8 +870,8 @@ Var P(ConditionalExpression conditional_expression,
   the parameters_to_learn.
 */
 Var ElogP(ConditionalExpression conditional_expression, 
-	  RVInstanceArray& parameters_to_learn,
-	  bool clearMarksUponReturn=true);
+    RVInstanceArray& parameters_to_learn,
+    bool clearMarksUponReturn=true);
 
 /*!   integrate the RV over the given hiddenRV
   and return the resulting new RandomVariable. This 
@@ -1016,7 +1016,7 @@ class FunctionalRandomVariable: public RandomVariable {
   //!  redefine RandomVariable functions
 
   virtual Var logP(const Var& obs, const RVInstanceArray& RHS,
-		   RVInstanceArray* parameters_to_learn);
+      RVInstanceArray* parameters_to_learn);
 
   //!  a Functional RV may be non-random if all its ancestors are non-random
   bool isNonRandom();
@@ -1154,7 +1154,7 @@ class RVArrayRandomElementRandomVariable: public FunctionalRandomVariable
 
   void setValueFromParentsValue();
   virtual Var logP(const Var& obs, const RVInstanceArray& RHS,
-		   RVInstanceArray* parameters_to_learn=0);
+      RVInstanceArray* parameters_to_learn=0);
   void EMBprop(const Vec obs, real post);
 
   //!  convenience inlines
@@ -1221,7 +1221,7 @@ class DiagonalNormalRandomVariable: public StochasticRandomVariable
   virtual char* classname() { return "DiagonalNormalRandomVariable"; }
 
   Var logP(const Var& obs, const RVInstanceArray& RHS,
-	   RVInstanceArray* parameters_to_learn);
+      RVInstanceArray* parameters_to_learn);
   void setValueFromParentsValue();
   void EMUpdate();
   void EMBprop(const Vec obs, real posterior);
@@ -1258,9 +1258,9 @@ class MixtureRandomVariable: public StochasticRandomVariable
   inline bool& learn_the_weights() { return learn_the_parameters[0]; }
 
   virtual Var logP(const Var& obs, const RVInstanceArray& RHS,
-		   RVInstanceArray* parameters_to_learn);
+      RVInstanceArray* parameters_to_learn);
   virtual Var ElogP(const Var& obs, RVInstanceArray& parameters_to_learn,
-		    const RVInstanceArray& RHS);
+      const RVInstanceArray& RHS);
 
   virtual void setValueFromParentsValue();
   virtual void EMUpdate();
@@ -1483,7 +1483,7 @@ class MultinomialRandomVariable: public StochasticRandomVariable
   virtual char* classname() { return "MultinomialRandomVariable"; }
 
   Var logP(const Var& obs, const RVInstanceArray& RHS, 
-	   RVInstanceArray* parameters_to_learn);
+      RVInstanceArray* parameters_to_learn);
   void setValueFromParentsValue(); //!<  sampling algorithm
   void EMUpdate();
   void EMBprop(const Vec obs, real posterior);
@@ -1680,4 +1680,3 @@ class RandomVarVMatrix: public VMatrix
    
  */
 
-          

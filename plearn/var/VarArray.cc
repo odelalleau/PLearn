@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.cc,v 1.3 2002/10/25 03:21:00 plearner Exp $
+   * $Id: VarArray.cc,v 1.4 2003/03/18 18:29:56 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -57,6 +57,7 @@ VarArray::VarArray(int n, int n_extra)
 VarArray::VarArray(int n, int initial_length, int n_extra)
   : Array<Var>(n,n_extra) 
 {
+  iterator array = data();
   for (int i=0;i<n;i++)
     array[i]=Var(initial_length);
 }
@@ -64,6 +65,7 @@ VarArray::VarArray(int n, int initial_length, int n_extra)
 VarArray::VarArray(int n, int initial_length, int initial_width, int n_extra)
   : Array<Var>(n,n_extra) 
 {
+  iterator array = data();
   for (int i=0;i<n;i++)
     array[i]=Var(initial_length,initial_width);
 }
@@ -128,6 +130,7 @@ void VarArray::copyFrom(const Vec& datavec)
 
 void VarArray::copyFrom(const real* data, int n)
 {
+  iterator array = this->data();
   int ncopied=0; // number of elements copied so far
   for(int i=0; i<size(); i++)
     {
@@ -150,6 +153,7 @@ void VarArray::copyFrom(const real* data, int n)
 
 void VarArray::makeSharedValue(real* data, int n)
 {
+  iterator array = this->data();
   int ncopied=0; // number of elements copied so far
   for(int i=0; i<size(); i++)
     {
@@ -169,6 +173,7 @@ void VarArray::makeSharedValue(real* data, int n)
 
 void VarArray::makeSharedValue(PP<Storage<real> > storage, int offset_) 
 {
+  iterator array = data();
   int ncopied=0; // number of elements copied so far
   for(int i=0; i<size(); i++)
     {
@@ -194,6 +199,7 @@ void VarArray::makeSharedRValue(Vec& v, int offset_)
 
 void VarArray::makeSharedGradient(PP<Storage<real> > storage, int offset_) 
 {
+  iterator array = data();
   int ncopied=0; // number of elements copied so far
   for(int i=0; i<size(); i++)
     {
@@ -217,6 +223,7 @@ void VarArray::makeSharedValue(Vec& v, int offset_)
 
 void VarArray::makeSharedGradient(real* data, int n)
 {
+  iterator array = this->data();
   int ncopied=0; // number of elements copied so far
   for(int i=0; i<size(); i++)
     {
@@ -246,6 +253,7 @@ void VarArray::accumulateTo(const Vec& datavec) const
 
 void VarArray::copyTo(real* data, int n) const
 {
+  iterator array = this->data();
   int ncopied=0; // number of elements copied so far
   for(int i=0; i<size(); i++)
     {
@@ -267,6 +275,7 @@ void VarArray::copyTo(real* data, int n) const
 
 void VarArray::accumulateTo(real* data, int n) const
 {
+  iterator array = this->data();
   int ncopied=0; // number of elements copied so far
   for(int i=0; i<size(); i++)
     {
@@ -298,6 +307,7 @@ void VarArray::accumulateGradientFrom(const Vec& datavec)
 
 void VarArray::copyGradientFrom(const real* data, int n)
 {
+  iterator array = this->data();
   int ncopied=0; // number of elements copied so far
   for(int i=0; i<size(); i++)
     {
@@ -319,6 +329,7 @@ void VarArray::copyGradientFrom(const real* data, int n)
 
 void VarArray::accumulateGradientFrom(const real* data, int n)
 {
+  iterator array = this->data();
   int ncopied=0; // number of elements copied so far
   for(int i=0; i<size(); i++)
     {
@@ -345,6 +356,7 @@ void VarArray::copyGradientTo(const Vec& datavec)
 
 void VarArray::copyGradientTo(real* data, int n)
 {
+  iterator array = this->data();
   int ncopied=0; // number of elements copied so far
   for(int i=0; i<size(); i++)
     {
@@ -371,6 +383,7 @@ void VarArray::accumulateGradientTo(const Vec& datavec)
 
 void VarArray::accumulateGradientTo(real* data, int n)
 {
+  iterator array = this->data();
   int ncopied=0; // number of elements copied so far
   for(int i=0; i<size(); i++)
     {
@@ -397,6 +410,7 @@ void VarArray::copyMinValueTo(const Vec& datavec)
 
 void VarArray::copyMinValueTo(real* data, int n)
 {
+  iterator array = this->data();
   int ncopied=0; // number of elements copied so far
   for(int i=0; i<size(); i++)
     {
@@ -423,6 +437,7 @@ void VarArray::copyMaxValueTo(const Vec& datavec)
 
 void VarArray::copyMaxValueTo(real* data, int n)
 {
+  iterator array = this->data();
   int ncopied=0; // number of elements copied so far
   for(int i=0; i<size(); i++)
     {
@@ -444,6 +459,7 @@ void VarArray::copyMaxValueTo(real* data, int n)
 
 void VarArray::makeSharedRValue(PP<Storage<real> > storage, int offset_) 
 {
+  iterator array = data();
   int ncopied=0; // number of elements copied so far
   for(int i=0; i<size(); i++)
     {
@@ -460,6 +476,7 @@ void VarArray::makeSharedRValue(PP<Storage<real> > storage, int offset_)
 
 void VarArray::copyRValueTo(real* data, int n)
 {
+  iterator array = this->data();
   int ncopied=0; // number of elements copied so far
   for(int i=0; i<size(); i++)
     {
@@ -483,6 +500,7 @@ void VarArray::copyRValueTo(real* data, int n)
 
 void VarArray::copyRValueFrom(const real* data, int n)
 {
+  iterator array = this->data();
   int ncopied=0; // number of elements copied so far
   for(int i=0; i<size(); i++)
     {
@@ -515,6 +533,7 @@ void VarArray::copyRValueFrom(const Vec& datavec)
 
 int VarArray::nelems() const
 {
+  iterator array = data();
   int totallength = 0;
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
@@ -524,6 +543,7 @@ int VarArray::nelems() const
 
 void VarArray::resizeRValue()
 {
+  iterator array = data();
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
       array[i]->resizeRValue();
@@ -531,6 +551,7 @@ void VarArray::resizeRValue()
 
 int VarArray::sumOfLengths() const
 {
+  iterator array = data();
   int totallength = 0;
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
@@ -540,6 +561,7 @@ int VarArray::sumOfLengths() const
 
 int VarArray::sumOfWidths() const
 {
+  iterator array = data();
   int totalwidth = 0;
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
@@ -549,6 +571,7 @@ int VarArray::sumOfWidths() const
 
 int VarArray::maxWidth() const
 {
+  iterator array = data();
   int maxwidth = 0;
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
@@ -562,6 +585,7 @@ int VarArray::maxWidth() const
 
 int VarArray::maxLength() const
 {
+  iterator array = data();
   int maxlength = 0;
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
@@ -577,6 +601,7 @@ VarArray VarArray::nonNull() const
 {
   VarArray results(0, size());
 
+  iterator array = data();
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
       results.append(array[i]);
@@ -590,6 +615,7 @@ VarArray& VarArray::subVarArray(int start,int len) const
     PLERROR("Error in :subVarArray(int start,int len), start+len>=nelems");
   VarArray* results=new VarArray(0, len);
   
+  iterator array = data();
   for(int i=start; i<start+len; i++)
     if (!array[i].isNull())
       results->append(array[i]);
@@ -601,14 +627,15 @@ void VarArray::copyFrom(int start,int len,const VarArray& from)
   int max_position=start+len-1;
   if (max_position>size())
     PLERROR("VarArray is to short");
+  iterator array = data();
   for(int i=0; i<len; i++)
     if (!from[i].isNull())
       array[i+start]=from[i];
 }
 void VarArray::setMark() const
 {
-  int i;
-  for(i=0; i<size(); i++)
+  iterator array = data();
+  for(int i=0; i<size(); i++)
     if (!array[i].isNull())
       array[i]->setMark();
   //cout << "on la fait " << i << " fois " << endl;
@@ -616,6 +643,7 @@ void VarArray::setMark() const
 
 void VarArray::clearMark() const
 {
+  iterator array = data();
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
       array[i]->clearMark();
@@ -623,6 +651,7 @@ void VarArray::clearMark() const
 
 void VarArray::markPath() const
 {
+  iterator array = data();
   for(int i=0; i<size(); i++)
     if (!array[i].isNull()){
       array[i]->markPath();
@@ -632,6 +661,7 @@ void VarArray::markPath() const
 
 void VarArray::buildPath(VarArray& path) const
 {
+  iterator array = data();
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
       array[i]->buildPath(path);
@@ -639,6 +669,7 @@ void VarArray::buildPath(VarArray& path) const
 
 void VarArray::fprop()
 {
+  iterator array = data();
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
       array[i]->fprop();
@@ -646,6 +677,7 @@ void VarArray::fprop()
 
 void VarArray::sizeprop()
 {
+  iterator array = data();
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
       array[i]->sizeprop();
@@ -653,6 +685,7 @@ void VarArray::sizeprop()
 
 void VarArray::sizefprop()
 {
+  iterator array = data();
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
       array[i]->sizefprop();
@@ -660,6 +693,7 @@ void VarArray::sizefprop()
 
 void VarArray::bprop()
 {
+  iterator array = data();
   for(int i=size()-1; i>=0; i--)
     if (!array[i].isNull())
       array[i]->bprop();
@@ -667,6 +701,7 @@ void VarArray::bprop()
 
 void VarArray::bbprop()
 {
+  iterator array = data();
   for(int i=size()-1; i>=0; i--)
     if (!array[i].isNull())
       array[i]->bbprop();
@@ -674,6 +709,7 @@ void VarArray::bbprop()
 
 void VarArray::rfprop()
 {
+  iterator array = data();
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
       array[i]->rfprop();
@@ -683,6 +719,7 @@ void VarArray::rfprop()
 // Now work properly if VarArray has size 0
 void VarArray::fbprop()
 {
+  iterator array = data();
   for(int i=0; i<size()-1; i++)
     if (!array[i].isNull())
       array[i]->fprop();
@@ -698,6 +735,7 @@ void VarArray::fbprop()
 
 void VarArray::fbbprop()
 {
+  iterator array = data();
   for(int i=0; i<size()-1; i++)
     if (!array[i].isNull())
       array[i]->fprop();
@@ -717,6 +755,7 @@ void VarArray::fbbprop()
 
 void VarArray::symbolicBprop()
 {
+  iterator array = data();
   for(int i=size()-1; i>=0; i--)
     if (!array[i].isNull())
       array[i]->symbolicBprop();
@@ -724,6 +763,7 @@ void VarArray::symbolicBprop()
 
 VarArray VarArray::symbolicGradient()
 {
+  iterator array = data();
   VarArray symbolic_gradients(size());
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
@@ -733,6 +773,7 @@ VarArray VarArray::symbolicGradient()
 
 void VarArray::clearSymbolicGradient()
 {
+  iterator array = data();
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
       array[i]->clearSymbolicGradient();  
@@ -740,6 +781,7 @@ void VarArray::clearSymbolicGradient()
  
 void VarArray::fillGradient(real value)
 {
+  iterator array = data();
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
       array[i]->fillGradient(value);
@@ -747,6 +789,7 @@ void VarArray::fillGradient(real value)
 
 void VarArray::clearGradient()
 {
+  iterator array = data();
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
       array[i]->clearGradient();
@@ -754,6 +797,7 @@ void VarArray::clearGradient()
 
 void VarArray::clearDiagHessian()
 {
+  iterator array = data();
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
       array[i]->clearDiagHessian();
@@ -762,6 +806,7 @@ void VarArray::clearDiagHessian()
 
 void VarArray::setDontBpropHere(bool val)
 {
+  iterator array = data();
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
       array[i]->setDontBpropHere(val);
@@ -772,6 +817,7 @@ bool VarArray::update(real step_size, Vec direction)
 {
   bool hit = false;
   int pos=0;
+  iterator array = data();
   for(int i=0; i<size(); pos+=array[i++]->nelems())
     if (!array[i].isNull())
       hit = hit || 
@@ -783,6 +829,7 @@ real VarArray::maxUpdate(Vec direction)
 {
   real max_step_size = FLT_MAX;
   int pos=0;
+  iterator array = data();
   for(int i=0; i<size(); pos+=array[i++]->nelems())
     if (!array[i].isNull())
       max_step_size = MIN(max_step_size,
@@ -793,6 +840,7 @@ real VarArray::maxUpdate(Vec direction)
 bool VarArray::update(real step_size)
 {
   bool hit = false;
+  iterator array = data();
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
       hit = hit || array[i]->update(step_size);
@@ -803,6 +851,7 @@ bool VarArray::update(Vec new_value)
 {
   bool hit = false;
   int pos=0;
+  iterator array = data();
   for(int i=0; i<size(); pos+=array[i++]->nelems())
     if (!array[i].isNull())
       hit = hit || 
@@ -812,6 +861,7 @@ bool VarArray::update(Vec new_value)
 
 void VarArray::read(istream& in)
 {
+  iterator array = data();
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
       array[i]->read(in);
@@ -819,6 +869,7 @@ void VarArray::read(istream& in)
 
 void VarArray::write(ostream& out) const
 {
+  iterator array = data();
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
       array[i]->write(out);
@@ -832,6 +883,7 @@ Var VarArray::operator[](Var index)
 VarArray VarArray::sources() const
 {
   VarArray a;
+  iterator array = data();
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
       a &= array[i]->sources();
@@ -841,6 +893,7 @@ VarArray VarArray::sources() const
 VarArray VarArray::ancestors() const
 {
   VarArray a;
+  iterator array = data();
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
       a &= array[i]->ancestors();
@@ -849,6 +902,7 @@ VarArray VarArray::ancestors() const
 
 void VarArray::unmarkAncestors() const
 {
+  iterator array = data();
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
       array[i]->unmarkAncestors();
@@ -859,6 +913,7 @@ VarArray VarArray::parents() const
   setMark();
   VarArray all_parents;
   VarArray parents_i; 
+  iterator array = data();
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
     {

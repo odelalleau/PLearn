@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TmpFilenames.cc,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: TmpFilenames.cc,v 1.2 2003/03/18 18:29:56 ducharme Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -75,25 +75,9 @@ string TmpFilenames::addFilename(const string directory, const string prefix)
 
 char* TmpFilenames::newFile(const string directory, const string prefix)
 {
-  string tmpfilename = newFilename(directory,prefix);
-  char* newfilename = new char[tmpfilename.length()+1];
-  strcpy(newfilename,tmpfilename.c_str());
-  return newfilename;
+  PLERROR("TmpFilenames::newFile : DEPRECATED method.  Use addFilename instead.");
+  char* dummy; return dummy;  // for return compatibility
 }
-
-
-TmpFilenames::~TmpFilenames()
-{
-//  for(int k=0; k<size(); k++)
-//    {
-//      remove((*this)[k]);
-//      delete (*this)[k];
-//    }    
-}
-
-
-
-
 
 
 %> // end of namespace PLearn
