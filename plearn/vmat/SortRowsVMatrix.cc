@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SortRowsVMatrix.cc,v 1.11 2005/03/03 19:17:22 tihocan Exp $
+   * $Id: SortRowsVMatrix.cc,v 1.12 2005/03/25 16:04:58 tihocan Exp $
    ******************************************************* */
 
 #include "SortRowsVMatrix.h"
@@ -72,7 +72,8 @@ void SortRowsVMatrix::declareOptions(OptionList &ol)
 
     redeclareOption(ol, "indices", &SortRowsVMatrix::indices, OptionBase::nosave,
         "The indices are computed at build time.");
-
+    redeclareOption(ol, "indices_vmat", &SortRowsVMatrix::indices_vmat, OptionBase::nosave,
+        "Unused.");
 }
 
 void SortRowsVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)

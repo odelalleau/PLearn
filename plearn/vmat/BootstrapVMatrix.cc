@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BootstrapVMatrix.cc,v 1.12 2005/02/02 14:16:54 tihocan Exp $
+   * $Id: BootstrapVMatrix.cc,v 1.13 2005/03/25 16:04:58 tihocan Exp $
    ******************************************************* */
 
 #include "BootstrapVMatrix.h"
@@ -86,7 +86,8 @@ void BootstrapVMatrix::declareOptions(OptionList &ol)
     inherited::declareOptions(ol);
 
     // Hide the 'indices' option, because it will be overridden at build time.
-    redeclareOption(ol, "indices", &SelectRowsVMatrix::indices, OptionBase::nosave,"");
+    redeclareOption(ol, "indices", &BootstrapVMatrix::indices, OptionBase::nosave,"");
+    redeclareOption(ol, "indices_vmat", &BootstrapVMatrix::indices_vmat, OptionBase::nosave,"");
 }
 
 ///////////

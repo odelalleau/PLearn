@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RemoveDuplicateVMatrix.cc,v 1.5 2005/02/04 15:08:50 tihocan Exp $ 
+   * $Id: RemoveDuplicateVMatrix.cc,v 1.6 2005/03/25 16:04:58 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -87,6 +87,8 @@ void RemoveDuplicateVMatrix::declareOptions(OptionList& ol)
 
   redeclareOption(ol, "indices", &RemoveDuplicateVMatrix::indices, OptionBase::nosave,
       "The indices will be computed at build time.");
+  redeclareOption(ol, "indices_vmat", &RemoveDuplicateVMatrix::indices_vmat, OptionBase::nosave,
+      "Unused.");
 }
 
 ///////////
