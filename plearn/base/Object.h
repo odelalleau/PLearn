@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.29 2004/05/25 17:48:40 tatien Exp $
+   * $Id: Object.h,v 1.30 2004/05/26 17:23:51 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -589,7 +589,7 @@ template<class T> Object *toIndexedObjectPtr(const T&, int) // Never to be calle
       appropriate calls of the object's setOption() followed by its build().
     - load( filepath ) will call loadObject
 */
-  Object *readObject(PStream &in, unsigned int id = LONG_MAX);
+  Object *readObject(PStream &in, unsigned int id = UINT_MAX);
   inline Object *readObject(istream &in_)
       { PStream in(&in_); return readObject(in); }
 
