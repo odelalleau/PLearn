@@ -135,7 +135,8 @@ optionalLibrary( name = 'wordnet',
 
 optionalLibrary( name = 'boost',
                  triggers = 'boost/*',
-                 includedirs = '/u/lisa/local/linux-i386/Install/Boost/current/boost',
+#                 includedirs = '/u/lisa/local/linux-i386/Install/Boost/current/boost',
+                 includedirs = '/FW30/NicolasStuff/boost-1.30.2',
                  linkeroptions = ''
                  )
 
@@ -159,7 +160,7 @@ options_choices = [
 pymakeOption( name = 'g++',
               description = 'compiling with g++, with no MPI support',
               compiler = 'g++',
-              compileroptions = '-Wno-deprecated -pedantic -DUSING_MPI=0 ',
+              compileroptions = '-Wno-deprecated -pedantic -DUSING_MPI=0 -Wno-long-long -Wno-long-double',
               linker = 'g++' )
 
 pymakeOption( name = 'g++3',
