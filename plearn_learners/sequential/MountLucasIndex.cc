@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.cc,v 1.20 2003/10/20 21:08:19 ducharme Exp $ 
+   * $Id: MountLucasIndex.cc,v 1.21 2003/10/21 20:47:35 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.cc */
@@ -49,8 +49,9 @@ PLEARN_IMPLEMENT_OBJECT(MountLucasIndex, "ONE LINE DESCR", "NO HELP");
 
 MountLucasIndex::MountLucasIndex()
   : last_day_of_month_column("is_last_day_of_month"), julian_day_column("Date"),
-    risk_free_rate_column("risk_free_rate"), moving_average_window(12),
-    current_month(0), build_complete(false)
+    risk_free_rate_column("risk_free_rate"), sp500_column("S&P500:close:level"),
+    moving_average_window(12), positive_rebalance_threshold(1.2),
+    negative_rebalance_threshold(0.8), current_month(0), build_complete(false)
 {
 }
 
@@ -80,6 +81,7 @@ void MountLucasIndex::build_()
   last_month_next_to_last_price.resize(nb_commodities);
   last_tradable_price.resize(nb_commodities);
   next_to_last_tradable_price.resize(nb_commodities);
+  last_month_portfolio.resize(nb_commodities);
 
   if (train_set)
   {
@@ -89,6 +91,7 @@ void MountLucasIndex::build_()
     last_day_of_month_index = train_set->fieldIndex(last_day_of_month_column);
     julian_day_index = train_set->fieldIndex(julian_day_column);
     risk_free_rate_index = train_set->fieldIndex(risk_free_rate_column);
+    sp500_index = train_set->fieldIndex(sp500_column);
     build_complete = true;
   }
 
@@ -99,13 +102,16 @@ void MountLucasIndex::forget()
 {
   inherited::forget();
 
-  position.fill(1); // default value is long position
+  position.fill(0); // default value is long position
   tradable_commodity.fill(false);
   next_to_last_unit_asset_value.fill(MISSING_VALUE);
   unit_asset_value.fill(MISSING_VALUE);
   index_value.fill(MISSING_VALUE);
   last_tradable_price.fill(MISSING_VALUE);
   next_to_last_tradable_price.fill(MISSING_VALUE);
+  last_month_portfolio.fill(MISSING_VALUE);
+
+  last_sp500 = MISSING_VALUE, last_month_sp500 = MISSING_VALUE;
 
   current_month = 0;
   index_value[0] = 1000.0;
@@ -128,6 +134,15 @@ void MountLucasIndex::declareOptions(OptionList& ol)
   declareOption(ol, "risk_free_rate_column", &MountLucasIndex::risk_free_rate_column,
     OptionBase::buildoption, "The risk free rate column (in the input data) \n");
 
+  declareOption(ol, "sp500_column", &MountLucasIndex::sp500_column,
+    OptionBase::buildoption, "The S&P500 column (in the input data) \n");
+
+  declareOption(ol, "positive_rebalance_threshold", &MountLucasIndex::positive_rebalance_threshold,
+    OptionBase::buildoption, "For positive returns (>1), the threshold over which we don't rebalance the asset. \n");
+
+  declareOption(ol, "negative_rebalance_threshold", &MountLucasIndex::negative_rebalance_threshold,
+    OptionBase::buildoption, "For negative returns (<1), the threshold under which we don't rebalance the asset. \n");
+
   declareOption(ol, "transaction_multiplicative_cost", &MountLucasIndex::transaction_multiplicative_cost,
     OptionBase::buildoption, "transaction_multiplicative_cost \n");
 
@@ -147,6 +162,7 @@ void MountLucasIndex::train()
     last_day_of_month_index = train_set->fieldIndex(last_day_of_month_column);
     julian_day_index = train_set->fieldIndex(julian_day_column);
     risk_free_rate_index = train_set->fieldIndex(risk_free_rate_column);
+    sp500_index = train_set->fieldIndex(sp500_column);
     build_complete = true;
   }
 
@@ -198,6 +214,7 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
   Vec rate_return(nb_commodities);
   int julian_day = (int)input[julian_day_index];
   real risk_free_rate = input[risk_free_rate_index];
+  real sp500 = input[sp500_index];
   int n_traded=0;
   int cost_name_pos = 0;
 
@@ -209,6 +226,7 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
       last_tradable_price[i] = price[i];
     }
   }
+  if (!is_missing(sp500)) last_sp500 = sp500;
 
   if (is_last_day_of_month)
   {
@@ -218,6 +236,8 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
     //int this_day = julian_date.day;
     real risk_free_rate_return=0;
     real monthly_return = MISSING_VALUE;
+    real sp500_log_return = MISSING_VALUE;
+    Vec no_rebalancing_assets; // empty for the moment
     if (current_month == 0)
     {
       // next-to-last trading day of the month
@@ -262,7 +282,11 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
       {
         risk_free_rate_return = exp(log(last_month_risk_free_rate + 1.0)/12.0) - 1.0;
         monthly_return = mean_with_missing(rate_return) + risk_free_rate_return;
-        if (is_missing(monthly_return)) PLWARNING("monthly_return=nan"); //monthly_return = 0.0; // first year
+        // ajouter une methode qui calcule
+        // monthly_return = sum_i (w_i * r_i) / sum_i (w_i)
+        // monthly_return = computeMonthlyReturn(rate_return,last_month_portfolio);
+        if (is_missing(monthly_return)) PLWARNING("monthly_return=nan");
+        sp500_log_return = log(last_sp500/last_month_sp500);
         index_value[current_month] = index_value[current_month-1]*(1.0 + monthly_return);
       }
       else 
@@ -271,9 +295,15 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
       }
       last_month_risk_free_rate = risk_free_rate;
     }
+    real log_return = log(1.0+monthly_return);
+    real tbill_log_return = log(1.0+risk_free_rate_return);
     errors(t,cost_name_pos++) = index_value[current_month];
     errors(t,cost_name_pos++) = monthly_return;
-    errors(t,cost_name_pos++) = log(1.0+monthly_return);
+    errors(t,cost_name_pos++) = log_return;
+    errors(t,cost_name_pos++) = tbill_log_return;
+    errors(t,cost_name_pos++) = sp500_log_return;
+    errors(t,cost_name_pos++) = log_return - tbill_log_return;
+    errors(t,cost_name_pos++) = log_return - sp500_log_return;
     for (int i=0; i<nb_commodities; i++)
     {
       errors(t,cost_name_pos++) = log(1.0+rate_return[i]);
@@ -287,6 +317,7 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
         predictions(t,i) = 0.0;
       }
     }
+    last_month_sp500 = last_sp500;
     ++current_month;
     
     // at the end of the year, choose which commodity will be included in the index the next year
@@ -305,6 +336,10 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
     errors(t,cost_name_pos++) = errors(t-1,0);
     errors(t,cost_name_pos++) = MISSING_VALUE;
     errors(t,cost_name_pos++) = MISSING_VALUE;
+    errors(t,cost_name_pos++) = MISSING_VALUE;
+    errors(t,cost_name_pos++) = MISSING_VALUE;
+    errors(t,cost_name_pos++) = MISSING_VALUE;
+    errors(t,cost_name_pos++) = MISSING_VALUE;
     for (int i=0; i<nb_commodities; i++)
       errors(t,cost_name_pos++) = MISSING_VALUE;
   }
@@ -312,6 +347,10 @@ void MountLucasIndex::TrainTestCore(const Vec& input, int t, VMat testoutputs, V
   {
     predictions(0) = 0.0;
     errors(0,cost_name_pos++) = 1000.0;
+    errors(0,cost_name_pos++) = MISSING_VALUE;
+    errors(0,cost_name_pos++) = MISSING_VALUE;
+    errors(0,cost_name_pos++) = MISSING_VALUE;
+    errors(0,cost_name_pos++) = MISSING_VALUE;
     errors(0,cost_name_pos++) = MISSING_VALUE;
     errors(0,cost_name_pos++) = MISSING_VALUE;
     for (int i=0; i<nb_commodities; i++)
@@ -358,6 +397,10 @@ TVec<string> MountLucasIndex::getTrainCostNames() const
   TVec<string> cost_names(1, "MLM_Index_Value");
   cost_names.append("MLM_monthly_return");     // r
   cost_names.append("MLM_monthly_log_return"); // log(1+r)
+  cost_names.append("TBill_monthly_log_return");
+  cost_names.append("SP500_monthly_log_return");
+  cost_names.append("TBill_relative_monthly_log_return");
+  cost_names.append("SP500_relative_monthly_log_return");
   //! The individual returns
   for (int i=0; i<nb_commodities; i++)
   {
@@ -382,6 +425,11 @@ void MountLucasIndex::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(unit_asset_value, copies);
   deepCopyField(index_value, copies);
   deepCopyField(commodity_price_index, copies);
+  deepCopyField(last_month_last_price, copies);
+  deepCopyField(last_month_next_to_last_price, copies);
+  deepCopyField(last_tradable_price, copies);
+  deepCopyField(next_to_last_tradable_price, copies);
+  deepCopyField(last_month_portfolio, copies);
 }
 
 %> // end of namespace PLearn

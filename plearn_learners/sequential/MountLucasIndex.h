@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.h,v 1.14 2003/10/20 21:08:19 ducharme Exp $ 
+   * $Id: MountLucasIndex.h,v 1.15 2003/10/21 20:47:35 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.h */
@@ -59,10 +59,18 @@ class MountLucasIndex: public FinancialAdvisor
     string last_day_of_month_column; // the last_day_of_month column in the input data
     string julian_day_column; // the julian day number column in the input data
     string risk_free_rate_column; // the risk free rate column in the input data
-    //string sp500_column;
+    string sp500_column;
     real transaction_multiplicative_cost;
 
     int moving_average_window; // default=12 (1 year)
+
+    // In the rebalancing phase.
+    // We don't rebalance asset k if the relative return is greater than
+    // positive_rebalance_threshold or if it is lower than
+    // positive_rebalance_threshold.  In all case, this is subject to
+    // the condition that position[t] == position[t-1].
+    real positive_rebalance_threshold;
+    real negative_rebalance_threshold;
 
   protected:
     TVec<int> position; // long=1, short=-1, no position=0
@@ -77,14 +85,17 @@ class MountLucasIndex: public FinancialAdvisor
     int last_day_of_month_index; // the index corresponding to last_day_of_month_column
     int julian_day_index; // the index corresponding to julian_day_column
     int risk_free_rate_index; // the index corresponding to risk_free_rate_column
-    //int sp500_index;
+    int sp500_index;
     bool build_complete;
 
     Vec last_month_last_price;
     Vec last_month_next_to_last_price;
     Vec last_tradable_price;
     Vec next_to_last_tradable_price;
+    Vec last_month_portfolio;
+
     mutable real last_month_risk_free_rate;
+    mutable real last_sp500, last_month_sp500;
 
   private:
     //! This does the actual building
