@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NGramDistribution.h,v 1.2 2004/10/12 18:25:20 larocheh Exp $ 
+   * $Id: NGramDistribution.h,v 1.3 2004/10/20 14:55:11 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -54,6 +54,7 @@
 namespace PLearn {
 using namespace std;
 
+//! This class implements an ngram distribution for symbol sequence modeling
 class NGramDistribution: public PDistribution
 {
 
@@ -67,9 +68,6 @@ protected:
   // * protected options *
   // *********************
 
-  // ### Declare protected option fields (such as learnt parameters) here.
-  // ...
-
   int voc_size;
     
 public:
@@ -78,23 +76,33 @@ public:
   // * public build options *
   // ************************
 
+  //! Replace nan values with -1 
   bool nan_replace;
 
+  //! A in NGram
   int n;
+
+  //! Additive constant for Add-delta smoothing
   real additive_constant;
+
+  //! Discount constant for absolute discounting smoothing
   real discount_constant;
+  
+  //! Proportion of the training set used for validation
   real validation_proportion;
 
+  //! Smoothing parameter
   string smoothing;
+
+  //! Lambda estimation technique
   string lambda_estimation;
 
+  //! Lambdas for Jelinek-Mercer smoothing
   Vec lambdas;  
 
+  //! NGram tree
   PP<NGramTree> tree;
   
-  TVec<hash_map<int,int> > counts_map;
-  hash_map<int,int> n_1_plus_star_word;
-  int n_1_plus_star_star;
 
   // ****************
   // * Constructors *

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: NGramDistribution.cc,v 1.4 2004/10/13 20:27:05 larocheh Exp $ 
+   * $Id: NGramDistribution.cc,v 1.5 2004/10/20 14:55:11 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -89,7 +89,7 @@ void NGramDistribution::declareOptions(OptionList& ol)
   declareOption(ol, "additive_constant", &NGramDistribution::additive_constant, OptionBase::buildoption,
                 "Additive constant for add-delta smoothing");
   declareOption(ol, "discount_constant", &NGramDistribution::discount_constant, OptionBase::buildoption,
-                "Discount constant for absolut discounting and  Kneser-Ney smoothing"); 
+                "Discount constant for absolut discounting smoothing"); 
   declareOption(ol, "validation_proportion", &NGramDistribution::validation_proportion, OptionBase::buildoption,
                 "Proportion of the training set used for validation (EM)"); 
   declareOption(ol, "smoothing", &NGramDistribution::smoothing, OptionBase::buildoption,
@@ -98,7 +98,7 @@ void NGramDistribution::declareOptions(OptionList& ol)
                 "add-delta\n"                
                 "jelinek-mercer\n"
                 "witten-bell\n"
-                "kneser-ney\n"
+                "absolute-discounting\n"
     );
   declareOption(ol, "lambda_estimation", &NGramDistribution::lambda_estimation, OptionBase::buildoption,
                 "Lambdas estimation method. Choose among:\n"
@@ -149,6 +149,7 @@ void NGramDistribution::build_()
   // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
   // ### You should assume that the parent class' build_() has already been called.
 
+  // Conditional flags are set automatically
   conditional_flags.resize(n);
   conditional_flags.fill(1);
   conditional_flags[n-1] = 2;
@@ -157,10 +158,6 @@ void NGramDistribution::build_()
   {
     if(inputsize() != n) PLERROR("In NGramDistribution:build_() : input size should be n=%d", n);
 
-    counts_map.resize(n);
-
-    // Conditional flags are set automatically
-
     inherited::build();
 
     voc_size = train_set->getDimension(0,n-1);
@@ -168,17 +165,15 @@ void NGramDistribution::build_()
 
     if(nan_replace) voc_size++;
 
-    if(smoothing == "kneser-ney")
+    if(smoothing == "absolute-discounting")
     {
       if(discount_constant < 0 || discount_constant > 1)
         PLERROR("In NGramDistribution:build_() : discount constant should be in [0,1]");
     }
-
-    n_1_plus_star_star = 0;
   }
 
   // ### If the distribution is conditional, you should finish build_() by:
-   PDistribution::finishConditionalBuild();
+  PDistribution::finishConditionalBuild();
 }
 
 /////////
@@ -197,7 +192,7 @@ void NGramDistribution::expectation(Vec& mu) const
   PLERROR("expectation not implemented for NGramDistribution");
 }
 
-// ### Remove this method if your distribution does not implement it.
+
 ////////////
 // forget //
 ////////////
@@ -211,7 +206,7 @@ void NGramDistribution::forget()
 //////////////
 void NGramDistribution::generate(Vec& y) const
 {
-  //TODO... 
+
   PLERROR("generate not implemented for NGramDistribution");
 }
 
@@ -264,8 +259,7 @@ real NGramDistribution::density(const Vec& y) const
     normalization = tree->normalization(ngram);
     real ret = 1.0/voc_size*lambdas[0];
     real norm = lambdas[0]; // For ngram smaller than n...
-    //real ret = 0;
-    //real norm = 0;
+
     for(int j=0; j<ngram_length;j++)
     {
       if(normalization[j] != 0)
@@ -276,7 +270,7 @@ real NGramDistribution::density(const Vec& y) const
     }
     return ret/norm;
   }
-  else if(smoothing == "kneser-ney")
+  else if(smoothing == "absolute-discounting")
   {
     freq = tree->freq(ngram);
     normalization = tree->normalization(ngram);
@@ -333,7 +327,6 @@ void NGramDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 void NGramDistribution::resetGenerator(long g_seed) const
 {
   manual_seed(g_seed);
-  //PLERROR("resetGenerator not implemented for NGramDistribution");
 }
 
 //////////////
@@ -341,7 +334,6 @@ void NGramDistribution::resetGenerator(long g_seed) const
 //////////////
 void NGramDistribution::setInput(const Vec& input) const {
   input_part << input;
-  //PLERROR("setInput not implemented for NGramDistribution");
 }
 
 /////////////////
@@ -424,42 +416,18 @@ void NGramDistribution::train()
   else
     contexts_train = train_set;
 
-  hash_map<string,bool> detect_n_1_plus_star_star;
-  hash_map<string,bool> detect_n_1_plus_star_word;
-  
   //Putting ngrams in the tree
   Vec row(n);
   TVec<int> int_row(n);
-  TVec<int> inverted_int_row(n);
-  TVec<int> kneser_ney_int_row(n);
+
+
   ProgressBar* pb =  new ProgressBar("Inserting ngrams in NGramTree", contexts_train->length());
   for(int i=0; i<contexts_train->length(); i++)
   {
     contexts_train->getRow(i,row);
     getNGrams(row,int_row);
     tree->add(int_row);
-    /*
-    // Kneser-ney statistics N_+1(**) and N_+1(*w_i)
-    if(int_row.length() >= 2)
-    {
-      string star_star = tostring(int_row[int_row.length()-2]) + " " + tostring(int_row[int_row.length()-1]);
-      string star_word = tostring(int_row[int_row.length()-2]);
-      if(detect_n_1_plus_star_star.find(star_star) == detect_n_1_plus_star_star.end())
-      {
-        detect_n_1_plus_star_star[star_star] = true;
-        n_1_plus_star_star++;
-      }
-      
-      if(detect_n_1_plus_star_word.find(star_word) == detect_n_1_plus_star_word.end())
-      {
-        detect_n_1_plus_star_word[star_word] = true;
-        if(n_1_plus_star_word.find(int_row[int_row.length()-2]) == n_1_plus_star_word.end())
-          n_1_plus_star_word[int_row[int_row.length()-2]] = 1;
-        else
-          n_1_plus_star_word[int_row[int_row.length()-2]] = n_1_plus_star_word[int_row[int_row.length()-2]] + 1;
-      } 
-    }
-    */
+
     pb->update(i+1);
   }
 
@@ -551,95 +519,6 @@ void NGramDistribution::train()
 
   }
 
-  // Sum to one test
-  
-  real sum = 0;
-  int non_zero=0;
-
-  Vec this_output(outputs_def.length());
-  contexts_train->getRow(1,row);
-  for(int w=0; w<voc_size; w++)
-  {
-    row[n-1] = w;
-    computeOutput(row,this_output);
-    sum += this_output[1];
-    if(this_output[1]!=0 && non_zero < 20)
-    {
-      cout << "w=" << w << " : " << this_output[1] << endl;
-      non_zero++;
-    }
-  }
-
-  cout << "row: " << row << " sum: " << sum << endl;
-    
-  sum = 0;
-  non_zero=0;
-  contexts_train->getRow(2,row);
-  for(int w=0; w<voc_size; w++)
-  {
-    row[n-1] = w;
-    computeOutput(row,this_output);
-    sum += this_output[1];
-    if(this_output[1]!=0 && non_zero < 20)
-    {
-      cout << "w=" << w << " : " << this_output[1] << endl;
-      non_zero++;
-    }
-  }
-
-  cout << "row: " << row << " sum: " << sum << endl;
-    
-  sum = 0;
-  non_zero=0;
-  contexts_train->getRow(3,row);
-  for(int w=0; w<voc_size; w++)
-  {
-    row[n-1] = w;
-    computeOutput(row,this_output);
-    sum += this_output[1];
-    if(this_output[1]!=0 && non_zero < 20)
-    {
-      cout << "w=" << w << " : " << this_output[1] << endl;
-      non_zero++;
-    }
-  }
-
-  cout << "row: " << row << " sum: " << sum << endl;
-
-  sum = 0;
-  non_zero=0;
-  contexts_train->getRow(4,row);
-  for(int w=0; w<voc_size; w++)
-  {
-    row[n-1] = w;
-    computeOutput(row,this_output);
-    sum += this_output[1];
-    if(this_output[1]!=0 && non_zero < 20)
-    {
-      cout << "w=" << w << " : " << this_output[1] << endl;
-      non_zero++;
-    }
-  }
-
-  cout << "row: " << row << " sum: " << sum << endl;
-  
-  sum = 0;
-  non_zero=0;
-  contexts_train->getRow(5,row);
-  for(int w=0; w<voc_size; w++)
-  {
-    row[n-1] = w;
-    computeOutput(row,this_output);
-    sum += this_output[1];
-    if(this_output[1]!=0 && non_zero < 20)
-    {
-      cout << "w=" << w << " : " << this_output[1] << endl;
-      non_zero++;
-    }
-  }
-
-  cout << "row: " << row << " sum: " << sum << endl;
-  
 }
 
 } // end of namespace PLearn
