@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SelectAttributsSequenceVMatrix.h,v 1.8 2004/10/06 21:12:26 larocheh Exp $ 
+   * $Id: SelectAttributsSequenceVMatrix.h,v 1.9 2004/10/08 20:39:44 lamblin Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -156,6 +156,8 @@ public:
   // Default constructor, make sure the implementation in the .cc
   // initializes all fields to reasonable default values.
   SelectAttributsSequenceVMatrix();
+
+  SelectAttributsSequenceVMatrix::SelectAttributsSequenceVMatrix(VMat s, int l_context,int r_context);
 
   // ******************
   // * Object methods *
