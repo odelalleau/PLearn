@@ -53,7 +53,7 @@ def mail():
     #                      # ( see end of pytest() )
         
 def pytest_version():
-    version_str = '$Id: pytest,v 1.22 2004/10/31 00:56:29 dorionc Exp $'
+    version_str = '$Id: pytest,v 1.23 2004/12/01 17:49:35 dorionc Exp $'
 
     bflag = "pytest,v"
     the_year = time.localtime()[0]
@@ -77,6 +77,13 @@ parser.add_option( '-v', "--verbosity",
 
 parser.add_option("--mail", default=None,
                   help='Not supported yet.')
+
+parser.add_option( '--traceback',
+                   action="store_true",
+                   help="This flag triggers routines to report the traceback of "
+                   "PyTestUsageError. By default, only the class's name and meesage "
+                   "are reported.",
+                   default = False )
 
 modes.add_supported_modes( parser )
 
