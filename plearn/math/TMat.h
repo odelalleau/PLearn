@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.22 2003/08/13 08:13:17 plearner Exp $
+   * $Id: TMat.h,v 1.23 2003/08/19 19:55:21 chapados Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -61,7 +61,11 @@ using namespace std;
 template <class T> class TVec;
 template <class T> class TMat;
 
-
+// Fix name injection problems into namespace PLearn
+class Variable;
+class VarArray;
+class QRchunker;
+class QCchunker;
 
 // **************
 // **** TVec ****
