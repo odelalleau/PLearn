@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.7 2003/11/19 15:07:08 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.8 2003/11/21 00:00:38 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -230,7 +230,7 @@ ConditionalDensityNet::ConditionalDensityNet()
       if (nhidden==-1) 
         // special code meaning that the inputs should be ignored, only use biases
       {
-        wout = Var(n_output_parameters, 1, "wout");
+        wout = Var(1, n_output_parameters, "wout");
         output = wout;
       }
       // output layer before transfer function
@@ -262,11 +262,11 @@ ConditionalDensityNet::ConditionalDensityNet()
       
       int i=0;
       a = output[i++];
-      b = new SubMatVariable(output,i,0,n_output_density_terms,1);
+      b = new SubMatVariable(output,0,i,1,n_output_density_terms);
       i+=n_output_density_terms;
-      c = new SubMatVariable(output,i,0,n_output_density_terms,1);
+      c = new SubMatVariable(output,0,i,1,n_output_density_terms);
       i+=n_output_density_terms;
-      mu = new SubMatVariable(output,i,0,n_output_density_terms,1);
+      mu = new SubMatVariable(output,0,i,1,n_output_density_terms);
 
       /*
        * output density
@@ -277,24 +277,29 @@ ConditionalDensityNet::ConditionalDensityNet()
       Var pos_a = softplus(a);
       Var pos_b = softplus(b);
       Var pos_c = softplus(c);
-      Var steps, steps_M, steps_gradient, steps_primitive;
+      Var steps, steps_M, steps_gradient, steps_integral;
       if (steps_type=="sigmoid_steps")
       {
         steps = sigmoid(pos_c*centers);
         steps_M = sigmoid(pos_c*centers_M);
         steps_gradient = steps*(1-steps);
-        steps_primitive = softplus(pos_c*centers);
+        steps_integral = softplus(pos_c*centers_M) - softplus(-pos_c*mu);
       }
       else if (steps_type=="sloped_steps")
       {
-        Var next_centers = vconcat(new SubMatVariable(centers,1,0,n_output_density_terms,1) & (target-max_y));
+        Var next_centers = vconcat(new SubMatVariable(centers,0,1,1,n_output_density_terms) & (target-max_y));
+        Var next_centers_M = vconcat(new SubMatVariable(centers_M,0,1,1,n_output_density_terms) & var(0.0));
         Var scaled_centers = -pos_c*centers;
         Var scaled_next_centers = -pos_c*next_centers;
+        Var scaled_centers_M = -pos_c*centers_M;
+        Var scaled_next_centers_M = -pos_c*next_centers_M;
+        Var scaled_mu = pos_c*mu;
+        // Var scaled_next_mu = pos_c*mu; ?
         steps = softplus(scaled_centers) - softplus(scaled_next_centers);
-        Var next_centers_M = vconcat(new SubMatVariable(centers_M,1,0,n_output_density_terms,1) & var(0.0));
         steps_M = softplus(-pos_c*centers_M) - softplus(-pos_c*next_centers_M);
-        //steps_primitive = -dilogarithm(-exp(scaled_centers)) +
-        //  dilogarithm(-exp(scaled_next_centers));
+        //steps_integral = -dilogarithm(-exp(scaled_centers_M)) + dilogarithm(-exp(scaled_next_centers_M));
+        //                 +dilogarithm(-exp(scaled_mu)) + dilogarithm(-exp(scaled_next_centers_M));
+        // A REVOIR COMPLETEMENT
       }
       else PLERROR("ConditionalDensityNet::build, steps_type option value unknown: %s",steps_type.c_str());
 
@@ -303,7 +308,7 @@ ConditionalDensityNet::ConditionalDensityNet()
       Var cum_numerator = pos_a + dot(pos_b,steps);
       cumulative = cum_numerator * inverse_denominator;
       density = density_numerator * inverse_denominator;
-      expected_value = (1 - pos_a*inverse_denominator)*max_y - dot(pos_b/pos_c,steps_primitive)*inverse_denominator;
+      expected_value = (1 - pos_a*inverse_denominator)*max_y - dot(pos_b/pos_c,steps_integral)*inverse_denominator;
 
       /*
        * cost functions:
@@ -405,9 +410,16 @@ ConditionalDensityNet::ConditionalDensityNet()
         invars.push_back(sampleweight);
       }
 
-      target_dependent_outputs.resize(test_costs->size()+2);
-      f = Func(input, expected_value);
-      test_costf = Func(testinvars, expected_value&test_costs&density&cumulative);
+      if (outputs_def=="e")
+        outputs = expected_value;
+      else if (outputs_def=="S")
+      {
+        // ???
+      }
+
+      //? target_dependent_outputs.resize(test_costs->size()+2);
+      f = Func(input, outputs);
+      test_costf = Func(testinvars, outputs&test_costs);
       test_costf->recomputeParents();
       output_and_target_to_cost = Func(outvars, test_costs&density&cumulative); 
       output_and_target_to_cost->recomputeParents();
@@ -426,8 +438,16 @@ ConditionalDensityNet::ConditionalDensityNet()
     }
   }
 
-int ConditionalDensityNet::outputsize() const
-{ return 1; }
+void ConditionalDensityNet::computeOutput(const Vec& inputv, Vec& outputv) const
+{
+  f->fprop(inputv,outputv);
+}
+
+void ConditionalDensityNet::computeOutputAndCosts(const Vec& inputv, const Vec& targetv, 
+                                 Vec& outputv, Vec& costsv) const
+{
+  test_costf->fprop(inputv&targetv, outputv&costsv);
+}
 
 TVec<string> ConditionalDensityNet::getTrainCostNames() const
 {
@@ -469,6 +489,7 @@ TVec<string> ConditionalDensityNet::getTestCostNames() const
   deepCopyField(wout, copies);
   deepCopyField(wdirect, copies);
   deepCopyField(output, copies);
+  deepCopyField(outputs, copies);
   deepCopyField(costs, copies);
   deepCopyField(penalties, copies);
   deepCopyField(training_cost, copies);

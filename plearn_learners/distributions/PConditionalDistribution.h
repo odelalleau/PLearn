@@ -48,6 +48,9 @@ using namespace std;
 
 class PConditionalDistribution: public PDistribution
 {
+public:
+  typedef PDistribution inherited;  
+
 protected:
   // *********************
   // * protected options *

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.6 2003/11/19 15:07:08 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.7 2003/11/21 00:00:39 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -71,6 +71,7 @@ protected:
     Var wdirect; // bias and weights for direct in-to-out connection
 
     Var output; // output layer contains the parameters of the distribution:
+  Var outputs; // contains the result of computeOutput, e.g. expectation, or cdf curve
   Var a; // output parameter, scalar constant part
   Var b; // output parameters, step height parameters
   Var c; // output parameters, step smoothing parameters
@@ -247,7 +248,11 @@ public:
   //! You may remove this method if your distribution does not implement it
   virtual void train();
 
-  virtual int outputsize() const;
+  virtual void computeOutput(const Vec& input, Vec& output) const;
+
+  virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
+                                     Vec& output, Vec& costs) const;
+
   virtual TVec<string> getTrainCostNames() const;
   virtual TVec<string> getTestCostNames() const;
 };
