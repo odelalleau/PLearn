@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LinearRegressor.cc,v 1.13 2004/10/21 18:22:45 chapados Exp $
+   * $Id: LinearRegressor.cc,v 1.14 2004/12/14 21:55:39 chapados Exp $
    ******************************************************* */
 
 /*! \file LinearRegressor.cc */
@@ -137,13 +137,9 @@ void LinearRegressor::declareOptions(OptionList& ol)
 
 void LinearRegressor::build_()
 {
-  // ### This method should do the real building of the object,
-  // ### according to set 'options', in *any* situation. 
-  // ### Typical situations include:
-  // ###  - Initial building of an object from a few user-specified options
-  // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-  // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-  // ### You should assume that the parent class' build_() has already been called.
+  // This resets various accumulators to speed up successive iterations of
+  // training in the case the training set has not changed.
+  forget();
 }
 
 // ### Nothing to add here, simply calls build_
