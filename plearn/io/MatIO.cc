@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatIO.cc,v 1.11 2004/07/09 18:16:42 tihocan Exp $
+   * $Id: MatIO.cc,v 1.12 2004/07/14 22:43:48 mariusmuja Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -1054,7 +1054,7 @@ static int compare_string_pointers(const void *ts1, const void *ts2)
 
 
 // UCI machine-learning-database format
-Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols, TVec<int>* the_max_in_col)
+Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols, TVec<int>* the_max_in_col, TVec<string>* header_columns)
 {
   FILE *f = fopen(filename.c_str(),"r");
   int n_rows= -1, n_cols=1, i,j;
@@ -1075,19 +1075,28 @@ Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols,
     PLERROR("In loadUCIMLDB, to_symbols and to_nsymbols must both be provided (non-null), or both be 0");
 
   /*  first figure out number of columns and number of rows  */
-  
+  int skip_header;
+  if (header_columns) {
+    skip_header = true;
+  }
   while (!feof(f))
   {
-    fgets(buffer,convert_UCIMLDB_BUF_LEN,f);
-    if (n_rows == -1) {
-      /*  read number of columns  */
-      while ((cp=strchr(cp,',')))
-      {
-        cp++;
-        n_cols++;
+    do {
+      fgets(buffer,convert_UCIMLDB_BUF_LEN,f);
+    } while (!feof(f) && (strcmp(buffer,"\n")==0 || strncmp(buffer,";;;",3)==0));
+    if (skip_header) {
+      skip_header = false;
+    } else {
+      if (n_rows == -1) {
+        /*  read number of columns  */
+        while ((cp=strchr(cp,',')))
+        {
+          cp++;
+          n_cols++;
+        }
       }
+      n_rows++;
     }
-    n_rows++;
   }
 
   fclose(f);
@@ -1110,9 +1119,31 @@ Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols,
     *to_n_symbols = n_symbols;
   }
   f = fopen(filename.c_str(),"r");
+
+  
+  /* read header columns */
+  if (header_columns) {
+    do {
+      fgets(buffer,convert_UCIMLDB_BUF_LEN,f);
+    } while (!feof(f) && (strcmp(buffer,"\n")==0 || strncmp(buffer,";;;",3)==0));
+
+    cp=word=buffer;
+
+    while ((cp=strchr(cp,','))) {
+      *cp=0;
+      header_columns->append(word);
+      cp++;
+      word=cp;
+    }
+    header_columns->append(word);
+  }
+
   for (i=0;i<n_rows;i++)
   {
-    fgets(buffer,convert_UCIMLDB_BUF_LEN,f);
+    do {
+      fgets(buffer,convert_UCIMLDB_BUF_LEN,f);
+    } while (!feof(f) && (strcmp(buffer,"\n")==0 || strncmp(buffer,";;;",3)==0));
+
     line_len=strlen(buffer);
     cp=word=buffer;
     for (j=0;j<n_cols;j++)
@@ -1131,8 +1162,8 @@ Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols,
           /*  we already had found symbols in this column  */
           int w=0;
           while (symbols[j][w] &&  /*  look for this symbol  */
-                 strcmp(symbols[j][w],word)!=0 &&
-                 w<n_symbols[j]) w++;
+              strcmp(symbols[j][w],word)!=0 &&
+              w<n_symbols[j]) w++;
           if (w==n_rows)
             PLERROR("logic error in loadUCIMLDB");
           if (!symbols[j][w])
@@ -1170,16 +1201,27 @@ Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols,
   for (j=0;j<n_cols;j++)
     if (symbols[j]) /*  it has symbols  */
       qsort(symbols[j],n_symbols[j],sizeof(char *),compare_string_pointers);
-      
+
   Mat mat(n_rows,n_cols);
   /*  NOW actually READ the data  */
   {
     p = mat.data();
     f = fopen(filename.c_str(),"r");
+
+    // skip one line if header present
+    if (header_columns) {
+      do {
+        fgets(buffer,convert_UCIMLDB_BUF_LEN,f);
+      } while (!feof(f) && (strcmp(buffer,"\n")==0 || strncmp(buffer,";;;",3)==0));
+    }
+
     for (i=0;i<n_rows;i++)
     {
       /*  read a row  */
-      fgets(buffer,convert_UCIMLDB_BUF_LEN,f);
+      do {
+        fgets(buffer,convert_UCIMLDB_BUF_LEN,f);
+      } while (!feof(f) && (strcmp(buffer,"\n")==0 || strncmp(buffer,";;;",3)==0));
+
       line_len=strlen(buffer);
       cp=word=buffer;
       /*  interpret a row  */
@@ -1198,8 +1240,8 @@ Mat loadUCIMLDB(const string& filename, char ****to_symbols, int **to_n_symbols,
             /*  Try to read symbolic data  */
             int w=0;
             while (symbols[j][w] && /*  look for this symbol  */
-                   strcmp(symbols[j][w],word)!=0 &&
-                   w<n_symbols[j]) w++;
+                strcmp(symbols[j][w],word)!=0 &&
+                w<n_symbols[j]) w++;
             if (w != n_rows && symbols[j][w]) {
               // The symbol does exist.
               is_symbolic = true;
@@ -1255,15 +1297,15 @@ Mat loadSTATLOG(const string& filename, char ****to_symbols, int **to_n_symbols)
   char *cp2;
   real *p;
   int line_len;
-  
+
   if (!f) 
     PLERROR("In loadSTATLOG, could not open file %s for reading",filename.c_str());
-  
+
   if((to_symbols && !to_n_symbols) || (!to_symbols && to_n_symbols))
     PLERROR("In loadUCIMLDB, to_symbols and to_nsymbols must both be provided (non-null), or both be 0");
 
   /*  first figure out number of columns and number of rows  */
-   
+
   while (!feof(f))
   {
     fgets(buffer,convert_STATLOG_BUF_LEN,f);
@@ -1325,8 +1367,8 @@ Mat loadSTATLOG(const string& filename, char ****to_symbols, int **to_n_symbols)
           /*  we already had found symbols in this column  */
           int w=0;
           while (symbols[j][w] &&  /*  look for this symbol  */
-                 strcmp(symbols[j][w],word)!=0 &&
-                 w<n_symbols[j]) w++;
+              strcmp(symbols[j][w],word)!=0 &&
+              w<n_symbols[j]) w++;
           if (w==n_rows)
             PLERROR("logic error in loadSTATLOG");
           if (!symbols[j][w])
@@ -1388,8 +1430,8 @@ Mat loadSTATLOG(const string& filename, char ****to_symbols, int **to_n_symbols)
             /*  read symbolic data  */
             int w=0;
             while (symbols[j][w] && /*  look for this symbol  */
-                   strcmp(symbols[j][w],word)!=0 &&
-                   w<n_symbols[j]) w++;
+                strcmp(symbols[j][w],word)!=0 &&
+                w<n_symbols[j]) w++;
             if (w==n_rows || !symbols[j][w])
               PLERROR("logic error in loadSTATLOG");
             *p = w;
@@ -1433,7 +1475,7 @@ void loadJPEGrgb(const string& jpeg_filename, Mat& rgbmat, int& row_size, int sc
   string tmpfile = jpeg_filename + ".pnm";
   char command[1000];
   sprintf(command,"djpeg -pnm -scale 1/%d %s > %s",
-          scale,jpeg_filename.c_str(),tmpfile.c_str());
+      scale,jpeg_filename.c_str(),tmpfile.c_str());
   system(command);
   FILE* fp = fopen(tmpfile.c_str(),"r");
   if (!fp)
@@ -1464,7 +1506,7 @@ void parseSizeFromRemainingLines(const string& filename, ifstream& in, bool& cou
     could_be_old_amat=false; 
     return; 
   }
-  
+
   int nfields1 = int(split(line).size()); 
   getNextNonBlankLine(in,line);
   if(line=="") // There is only one line
@@ -1488,20 +1530,20 @@ void parseSizeFromRemainingLines(const string& filename, ifstream& in, bool& cou
 
   if(!could_be_old_amat || nfields1!=2) 
     return;  // could not be an old .amat with first 2 numbers being length width
-    
+
   // Get to the beggining of the file
   in.seekg(0);
   in.clear();
-  
+
   // Reread the first line as to real numbers
   real a = -1.0, b = -1.0;
   in >> a >> b;
-  
-    
+
+
   if(guesslength == int(a)+1                   // +1 since the size line was counted in guesslength but should not
-     && real(int(a))==a && real(int(b))==b     //  Sizes must be integers and
-     && a>0 && b>0                             //   positive
-     && int(b)==nfields2 )                     // The first row of values has the expected width
+      && real(int(a))==a && real(int(b))==b     //  Sizes must be integers and
+      && a>0 && b>0                             //   positive
+      && int(b)==nfields2 )                     // The first row of values has the expected width
   {
     // We assume we have an old style .amat
     length = int(a);

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: MatIO.h,v 1.18 2004/07/09 18:16:42 tihocan Exp $
+   * $Id: MatIO.h,v 1.19 2004/07/14 22:43:54 mariusmuja Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -161,8 +161,10 @@ Vec loadADVec(const string& filename);
       Additionally, if provided, the 'max_in_col' vector will contain
       the (rounded to lowest integer) value of the maxium in each column
       (this will be -1 if there is no numerical value in the column).
+      Also, if 'header_columns' vector is provided, the first line is considered
+      to be the header and the vector will contain the column names.
 */
-Mat loadUCIMLDB(const string& filename, char ****to_symbols=0, int **to_n_symbols=0, TVec<int>* max_in_col = 0);
+Mat loadUCIMLDB(const string& filename, char ****to_symbols=0, int **to_n_symbols=0, TVec<int>* max_in_col = 0, TVec<string>* header_columns = 0);
 
 /*!     STATLOG machine-learning-database-format
       Format used for most of the STATLOG machine-learning-database.
