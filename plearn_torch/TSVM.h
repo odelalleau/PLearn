@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TSVM.h,v 1.2 2005/02/23 16:37:37 tihocan Exp $ 
+   * $Id: TSVM.h,v 1.3 2005/02/24 14:11:42 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -44,6 +44,7 @@
 #ifndef TSVM_INC
 #define TSVM_INC
 
+#include <plearn/vmat/VMat.h>
 #include <plearn_torch/TQCMachine.h>
 #include <torch/SVM.h>
 
@@ -62,8 +63,18 @@ private:
 
 protected:
 
-   //! The underlying Torch SVM object.
-   Torch::SVM* svm;
+  //! The underlying Torch SVM object.
+  Torch::SVM* svm;
+
+  //! Contains sv_sequences_vmat->toMat()
+  Mat sv_sequences_mat;
+
+  //! Contains the indices of each sv_sequence:
+  //! sv_sequences_index[i] = sv_sequences_mat[i]
+  TVec<real*> sv_sequences_index;
+
+  //! Contains pointers to each sequence (= support vector).
+  TVec< Torch::Sequence* > sv_sequences_torch;
 
   // *********************
   // * protected options *
@@ -74,6 +85,7 @@ protected:
   int n_support_vectors_bound;
   TVec<int> support_vectors;
   TVec< PP<TSequence> > sv_sequences;
+  VMat sv_sequences_vmat;
 
 public:
 
@@ -83,6 +95,7 @@ public:
 
   real b;
   PP<TKernel> kernel;
+  string sv_save;
 
   // ****************
   // * Constructors *
