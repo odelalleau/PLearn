@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.71 2005/02/18 17:12:51 tihocan Exp $
+   * $Id: fileutils.cc,v 1.72 2005/03/07 20:43:03 chrish42 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -76,6 +76,29 @@ using namespace std;
 // TODO-PPath: there are a few things to fix to make it fully PPath-compliant.
 // TODO-PStream: this file is PStream-compliant
 
+
+/**
+ * Workaround for the fact that on Windows the PR_GetFileInfo function
+ * does a wildcard expansion of the filename before returning the file stats,
+ * which slows down (for example) lookups of the modification times for a
+ * number of files by a big factor on Windows.
+ *
+ * Use this function instead of PR_GetFileInfo{,64} in fileutils.cc for
+ * functions that deal with files only. (This function doesn't work portably 
+ * with directories.)
+ */
+static PRStatus PR_GetFileInfo64_NoWildcards(const char *fn, 
+                                             PRFileInfo64 *info)
+{
+  PRFileDesc* f = PR_Open(fn, PR_RDONLY, 0);
+  if (!f)
+    return PR_FAILURE;
+
+  PRStatus status = PR_GetOpenFileInfo64(f, info);
+  PR_Close(f);
+  return status;
+}
+  
 ///////////
 // chdir //
 ///////////
@@ -92,9 +115,9 @@ int chdir(const PPath& path)
 ////////////////
 bool pathexists(const PPath& path)
 {
-  PRFileInfo fi;
+  PRFileInfo64 fi;
 
-  if (PR_GetFileInfo(path.absolute().c_str(), &fi) != PR_SUCCESS)
+  if (PR_GetFileInfo64(path.absolute().c_str(), &fi) != PR_SUCCESS)
     return false;
   else
     return fi.type == PR_FILE_FILE || fi.type == PR_FILE_DIRECTORY;
@@ -105,9 +128,9 @@ bool pathexists(const PPath& path)
 ///////////
 bool isdir(const PPath& path)
 {
-  PRFileInfo fi;
+  PRFileInfo64 fi;
 
-  if (PR_GetFileInfo(path.absolute().c_str(), &fi) != PR_SUCCESS)
+  if (PR_GetFileInfo64(path.absolute().c_str(), &fi) != PR_SUCCESS)
     return false;
   else
     return fi.type == PR_FILE_DIRECTORY;
@@ -118,9 +141,9 @@ bool isdir(const PPath& path)
 ////////////
 bool isfile(const PPath& path)
 {
-  PRFileInfo fi;
+  PRFileInfo64 fi;
 
-  if (PR_GetFileInfo(path.absolute().c_str(), &fi) != PR_SUCCESS)
+  if (PR_GetFileInfo64(path.absolute().c_str(), &fi) != PR_SUCCESS)
     return false;
   else
     return fi.type == PR_FILE_FILE;
@@ -131,9 +154,9 @@ bool isfile(const PPath& path)
 ///////////
 time_t mtime(const PPath& path)
 {
-  PRFileInfo fi;
+  PRFileInfo64 fi;
 
-  if (PR_GetFileInfo(path.absolute().c_str(), &fi) != PR_SUCCESS)
+  if (PR_GetFileInfo64_NoWildcards(path.absolute().c_str(), &fi) != PR_SUCCESS)
     return 0;
   else {
     // The NSPR PRTime is number of microseconds since the epoch, while
@@ -269,7 +292,7 @@ bool force_rmdir(const PPath& dirname)
 long filesize(const PPath& filename)
 {
   PRFileInfo64 inf;
-  if (PR_GetFileInfo64(filename.absolute().c_str(), &inf) != PR_SUCCESS)
+  if (PR_GetFileInfo64_NoWildcards(filename.absolute().c_str(), &inf) != PR_SUCCESS)
     PLERROR("In filesize: error getting file info for %s: %s.",
         filename.absolute().c_str(), getPrErrorString().c_str());
   return inf.size;
