@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.18 2004/07/15 12:56:56 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.19 2004/07/16 13:07:37 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -75,7 +75,9 @@
 #include "DotProductKernel.h"
 #include "GaussianKernel.h"
 #include "GeodesicDistanceKernel.h"
+#include "LLEKernel.h"
 #include "NegOutputCostFunction.h"
+#include "ReconstructionWeightsKernel.h"
 
 /*************
  * Optimizer *
@@ -103,6 +105,7 @@
 // KernelProjection
 #include "Isomap.h"
 #include "KernelPCA.h"
+#include "LLE.h"
 #include "SpectralClustering.h"
 // PDistribution
 #include "ConditionalDensityNet.h"
