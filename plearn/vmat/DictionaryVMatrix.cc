@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DictionaryVMatrix.cc,v 1.3 2004/08/25 21:40:11 kermorvc Exp $ 
+   * $Id: DictionaryVMatrix.cc,v 1.4 2004/09/08 23:39:32 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Christopher Kermorvant
@@ -89,12 +89,6 @@ real DictionaryVMatrix::getStringVal(int col, const string & str) const
     return dictionaries[col].getId(str);
   }
   return 1.0;//avoid compilation warning
-}
-
-//! returns element as a string, even if value doesn't map to a string, in which case tostring(value) is returned                               
-string DictionaryVMatrix::getString(int row, int col) const
-{
-  return dictionaries[col].getSymbol((int)data(row,col));
 }
 
 string DictionaryVMatrix::getValString(int col, real val) const
