@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TObject.h,v 1.2 2005/02/23 16:36:18 tihocan Exp $ 
+   * $Id: TObject.h,v 1.3 2005/02/23 21:50:50 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -46,6 +46,46 @@
 
 #include <plearn/base/Object.h>
 #include <torch/Object.h>
+
+// Define macros to ease the task of writing updateFromPLearn() and updateFromTorch()
+
+#define FROM_P_BASIC(OPTION, MEMBER, TORCH_OBJECT, TORCH_MEMBER)      \
+    if (options[#OPTION]) TORCH_OBJECT->TORCH_MEMBER = this->MEMBER;
+    
+#define FROM_T_BASIC(OPTION, MEMBER, TORCH_OBJECT, TORCH_MEMBER)      \
+    if (options[#OPTION]) this->MEMBER = TORCH_OBJECT->TORCH_MEMBER;
+
+#define FROM_P_TVEC(OPTION, TVEC, TORCH_OBJECT, TORCH_PTR, TORCH_LENGTH)  \
+    if (options[#OPTION]) {                                               \
+      TORCH_OBJECT->TORCH_PTR    = this->TVEC ? this->TVEC->data() : 0;   \
+      TORCH_OBJECT->TORCH_LENGTH = this->TVEC.length();                   \
+    }
+        
+#define FROM_T_TVEC(OPTION, TVEC, TORCH_OBJECT, TORCH_PTR, TORCH_LENGTH)          \
+    if (options[#OPTION]) {                                                       \
+      if (TORCH_OBJECT->TORCH_PTR) {                                              \
+        this->TVEC.resize(TORCH_OBJECT->TORCH_LENGTH);                            \
+        this->TVEC.copyFrom(TORCH_OBJECT->TORCH_PTR, TORCH_OBJECT->TORCH_LENGTH); \
+      } else                                                                      \
+        this->TVEC.resize(0);                                                     \
+    }
+
+#define FROM_P_OBJ(OPTION, OBJ, OBJ_PTR, OBJ_CLASS, TORCH_OBJECT, TORCH_PTR)  \
+    if (options[#OPTION])                                                     \
+      TORCH_OBJECT->TORCH_PTR = this->OBJ ? this->OBJ->OBJ_PTR : 0;
+
+#define FROM_T_OBJ(OPTION, OBJ, OBJ_PTR, OBJ_CLASS, TORCH_OBJECT, TORCH_PTR)                              \
+    if (options[#OPTION])  {                                                                              \
+      if (TORCH_OBJECT->TORCH_PTR != (this->OBJ ? this->OBJ->OBJ_PTR : 0)) {                              \
+        TObjectMap::const_iterator it = torch_objects.find(TORCH_OBJECT->TORCH_PTR);                      \
+        if (it == torch_objects.end())                                                                    \
+          PLERROR("In FROM_T_OBJ - Could not find the associated TObject - I currently prefer to crash"); \
+        this->OBJ = (OBJ_CLASS*) it->second;                                                              \
+      }                                                                                                   \
+      if (this->OBJ)                                                                                      \
+        this->OBJ->updateFromTorch();                                                                     \
+    }
+
 
 namespace PLearn {
 
