@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Distribution.cc,v 1.2 2002/10/22 04:49:19 plearner Exp $ 
+   * $Id: Distribution.cc,v 1.3 2002/10/22 05:00:19 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Distribution.cc */
@@ -127,22 +127,22 @@ void Distribution::use(const Vec& input, Vec& output)
       switch(use_returns_what[i])
         {
         case 'l':
-          output[i] = log_density(input);
+          output[i] = (real) log_density(input);
           break;
         case 'd':
-          output[i] = density(input);
+          output[i] = (real) density(input);
           break;
         case 'c':
-          output[i] = cdf(input);
+          output[i] = (real) cdf(input);
           break;
         case 's':
-          output[i] = survival_fn(input);
+          output[i] = (real) survival_fn(input);
           break;
         case 'e':
-          output[i] = expectation();
+          output[i] = (real) expectation();
           break;
         case 'v':
-          output[i] = variance();
+          output[i] = (real) variance();
           break;
         default:
           PLERROR("In Distribution::use unknown use_returns_what character");
@@ -155,22 +155,22 @@ void Distribution::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   Learner::makeDeepCopyFromShallowCopy(copies);
 }
 
-real Distribution::log_density(Vec x) const
+double Distribution::log_density(const Vec& x) const
 { PLERROR("density not implemented for this Distribution"); return 0; }
 
-real Distribution::density(Vec x) const
+double Distribution::density(const Vec& x) const
 { return exp(log_density(x)); }
   
-real Distribution::survival_fn(Vec x) const
+double Distribution::survival_fn(const Vec& x) const
 { PLERROR("survival_fn not implemented for this Distribution"); return 0; }
 
-real Distribution::cdf(Vec x) const
+double Distribution::cdf(const Vec& x) const
 { PLERROR("cdf not implemented for this Distribution"); return 0; }
 
-real Distribution::expectation() const
+double Distribution::expectation() const
 { PLERROR("expectation not implemented for this Distribution"); return 0; }
 
-real Distribution::variance() const
+double Distribution::variance() const
 { PLERROR("variance not implemented for this Distribution"); return 0; }
 
 

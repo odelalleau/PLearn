@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyWeightedDistribution.cc,v 1.1 2002/10/22 04:49:19 plearner Exp $ 
+   * $Id: LocallyWeightedDistribution.cc,v 1.2 2002/10/22 05:00:19 plearner Exp $ 
    ******************************************************* */
 
 /*! \file LocallyWeightedDistribution.cc */
@@ -111,7 +111,7 @@ void LocallyWeightedDistribution::build()
   }
 
 
-real LocallyWeightedDistribution::log_density(Vec x) const
+double LocallyWeightedDistribution::log_density(const Vec& x) const
 {
   int l = train_set.length();
   int w = train_set.width();
@@ -128,20 +128,6 @@ real LocallyWeightedDistribution::log_density(Vec x) const
   localdistr->train(weighted_trainset);
   return localdistr->log_density(x);
 }
-
-/*
-real LocallyWeightedDistribution::survival_fn(Vec x) const;
-{ PLERROR("survival_fn not implemented for this LocallyWeightedDistribution"); }
-
-real LocallyWeightedDistribution::cdf(Vec x) const;
-{ PLERROR("cdf not implemented for this LocallyWeightedDistribution"); }
-
-real LocallyWeightedDistribution::expectation() const;
-{ PLERROR("expectation not implemented for this LocallyWeightedDistribution"); }
-
-real LocallyWeightedDistribution::variance() const;
-{ PLERROR("variance not implemented for this LocallyWeightedDistribution"); }
-*/
 
 
 %> // end of namespace PLearn

@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyWeightedDistribution.h,v 1.1 2002/10/22 04:49:19 plearner Exp $ 
+   * $Id: LocallyWeightedDistribution.h,v 1.2 2002/10/22 05:00:19 plearner Exp $ 
    ******************************************************* */
 
 /*! \file LocallyWeightedDistribution.h */
@@ -114,22 +114,7 @@ public:
   virtual void use(const Vec& input, Vec& output);
 
   //! return log of probability density log(p(x))
-  virtual real log_density(Vec x) const;
-
-
-  /*
-  //! return survival fn = P(X>x)
-  virtual real survival_fn(Vec x) const;
-
-  //! return survival fn = P(X<x)
-  virtual real cdf(Vec x) const;
-
-  //! return E[X] 
-  virtual real expectation() const;
-
-  //! return Var[X]
-  virtual real variance() const;
-  */
+  virtual double log_density(const Vec& x) const;
    
 };
 

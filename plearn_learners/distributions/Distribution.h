@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Distribution.h,v 1.2 2002/10/22 04:49:19 plearner Exp $ 
+   * $Id: Distribution.h,v 1.3 2002/10/22 05:00:19 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Distribution.h */
@@ -119,23 +119,23 @@ public:
 
 
   //! return log of probability density log(p(x))
-  virtual real log_density(Vec x) const;
+  virtual double log_density(const Vec& x) const;
 
   //! return probability density p(x)
   //! [ default version returns exp(log_density(x)) ]
-  virtual real density(Vec x) const;
+  virtual double density(const Vec& x) const;
   
   //! return survival fn = P(X>x)
-  virtual real survival_fn(Vec x) const;
+  virtual double survival_fn(const Vec& x) const;
 
   //! return survival fn = P(X<x)
-  virtual real cdf(Vec x) const;
+  virtual double cdf(const Vec& x) const;
 
   //! return E[X] 
-  virtual real expectation() const;
+  virtual double expectation() const;
 
   //! return Var[X]
-  virtual real variance() const;
+  virtual double variance() const;
    
 };
 
