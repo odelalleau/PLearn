@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.19 2004/01/06 13:51:17 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.20 2004/01/10 19:06:01 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -989,6 +989,8 @@ void ConditionalDensityNet::train()
       optimizer->early_stop = false;
       early_stop = optimizer->optimizeN(*train_stats);
 
+      if (verify_gradient)
+        optimizer->verifyGradient(verify_gradient);
       if (display_graph)
         displayFunction(f,true);
       if (display_graph)

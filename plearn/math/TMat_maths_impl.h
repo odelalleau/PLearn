@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.28 2004/01/08 18:55:27 plearner Exp $
+   * $Id: TMat_maths_impl.h,v 1.29 2004/01/10 19:05:58 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -5207,6 +5207,15 @@ TMat<T> sqrt(const TMat<T>& m)
 }
 
 template<class T>
+inline void affineMatrixInitialize(TMat<T> W, bool output_on_columns=true, real scale=1.0)
+{
+  int n_inputs = output_on_columns?W.width():W.length();
+  real delta = scale/n_inputs;
+  fill_random_uniform(W,-delta,delta);
+  W(0).clear();
+}
+
+template<class T>
 TMat<T> grep(TMat<T> data, int col, TVec<T> values, bool exclude=false)
 {
   TMat<T> result(data.length(),data.width());
@@ -5376,7 +5385,6 @@ template<class T>
 inline TMat<T> operator/(const TMat<T>& m1, const TMat<T>& m2)
 { TMat<T> res = m1.copy(); res/=m2; return res; }
 
- 
 template<class T>
 inline void choleskySolve(const TMat<T>& L, TVec<T> b, TVec<T> x) //!<  So that y be optional
 { TVec<T> y; choleskySolve(L,b,x,y); }

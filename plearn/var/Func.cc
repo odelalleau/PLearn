@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Func.cc,v 1.10 2003/12/16 17:44:52 plearner Exp $
+   * $Id: Func.cc,v 1.11 2004/01/10 19:06:01 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -502,14 +502,15 @@ void Function::verifyHessian(const Vec& input, real step)
 void Function::verifyGradient(const Vec& input, real step)
 {
   if(outputsize!=1)
-    PLERROR("In Function::verifyGradient(...) Can verify gradient only for output of size 1");
-  Vec output(1);
-  Vec output_gradient(1,1.0);
+    PLWARNING("In Function::verifyGradient(...) Will verify gradient only for the first output");
+  Vec output(outputsize);
+  Vec output_gradient(outputsize);
+  output_gradient[0]=1.0;
   Vec gradient(inputsize);
   fbprop(input, output, gradient,output_gradient);
   cerr << "** Verifying gradient computation **" << endl;
   cerr << "Input:                " << input << endl;
-  cerr << "Output:               " << output << endl;
+  cerr << "Output:               " << output[0] << endl;
   cerr << "Computed  gradient:   " << gradient << endl;
   // Now computing the gradient by finite difference
   Vec newinput = input.copy();
