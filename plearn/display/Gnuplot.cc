@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Gnuplot.cc,v 1.6 2003/02/03 00:39:45 plearner Exp $
+   * $Id: Gnuplot.cc,v 1.7 2003/02/04 23:15:21 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -447,6 +447,17 @@ void Gnuplot::plotdensity(const Array<Vec>& vecarray, const Array<string>& title
       tognuplot << ", ";
   }
 }
+
+
+void Gnuplot::export_ps(string psfname, string psoptions)
+{
+  tognuplot << "set terminal postscript " << psoptions << "\n"
+            << "set output '" << psfname << "'\n"
+            << "replot\n"
+            << "set terminal x11" << endl;
+}
+  
+
 
 %> // end of namespace PLearn
 

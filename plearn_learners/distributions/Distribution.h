@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Distribution.h,v 1.4 2002/12/18 21:56:54 zouave Exp $ 
+   * $Id: Distribution.h,v 1.5 2003/02/04 23:15:32 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file Distribution.h */
@@ -139,7 +139,9 @@ public:
 
   //! return a pseudo-random sample generated from the distribution.
   virtual void generate(Vec& x) const;
-   
+
+  //! for CONDITIONAL distributions, set the input part before calling one of the above methods
+  virtual void setInput(const Vec& input) const;
 };
 
 // Declares a few other classes and functions related to this class

@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Distribution.cc,v 1.6 2003/01/10 17:09:05 zouave Exp $ 
+   * $Id: Distribution.cc,v 1.7 2003/02/04 23:15:32 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file Distribution.cc */
@@ -174,6 +174,9 @@ double Distribution::variance() const
 
 void Distribution::generate(Vec& x) const
 { PLERROR("generate not implemented for this Distribution"); }
+
+void Distribution::setInput(const Vec& input) const
+{ PLERROR("setInput not implemented for this Distribution"); }
 
 
 

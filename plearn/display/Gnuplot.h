@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Gnuplot.h,v 1.6 2003/02/03 00:39:45 plearner Exp $
+   * $Id: Gnuplot.h,v 1.7 2003/02/04 23:15:21 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -126,6 +126,9 @@ class Gnuplot
       featureplot(dataset.subMatColumns(0,dataset.width()-1),
                   dataset.lastColumn().toVecCopy(), withwhat);
     }
+
+    // export as postscript file
+    void export_ps(string psfname, string psoptions="eps color");
   
 };
 
