@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelPCA.cc,v 1.4 2004/05/17 13:12:24 tihocan Exp $ 
+   * $Id: KernelPCA.cc,v 1.5 2004/06/10 20:10:20 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -56,7 +56,6 @@ KernelPCA::KernelPCA()
 {
   // Usually, one will want only positive eigenvalues.
   min_eigenvalue = 0;
-  kernel = 0; // When created, there exists no normalized kernel.
 }
 
 PLEARN_IMPLEMENT_OBJECT(KernelPCA,
