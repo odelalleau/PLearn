@@ -10,7 +10,7 @@ guides.all: guides.html guides.pdf guides.ps
 
 doxygen:
 
-guides.html: users_guide.html programmers_guide.html tools_guide.html
+guides.html: users_guide programmers_guide tools_guide
 
 guides.pdf: users_guide.pdf programmers_guide.pdf tools_guide.pdf
 
