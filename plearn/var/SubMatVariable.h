@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubMatVariable.h,v 1.5 2004/04/27 16:03:35 morinf Exp $
+   * $Id: SubMatVariable.h,v 1.6 2004/05/26 20:07:43 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,14 +50,19 @@ using namespace std;
 
 class SubMatVariable: public UnaryVariable
 {
+
+private:
+
   typedef UnaryVariable inherited;
 
 protected:
+
   int startk;
   int length_, width_;
   int i_, j_;
 
 public:
+
   //!  Default constructor for persistence
   SubMatVariable() : startk () {}
   SubMatVariable(Variable* v, int i, int j, int the_length, int the_width);
@@ -73,14 +78,16 @@ public:
   virtual void symbolicBprop();
   virtual void rfprop();
 
-protected:
-    void build_();
+private:
+
+  void build_();
+
 };
 
 DECLARE_OBJECT_PTR(SubMatVariable);
 
 inline Var subMat(Var v, int i, int j, int l, int w) {
-    return new SubMatVariable(v, i, j, l, w);
+  return new SubMatVariable(v, i, j, l, w);
 }
 
 } // end of namespace PLearn
