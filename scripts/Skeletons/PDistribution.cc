@@ -86,6 +86,9 @@ void DERIVEDCLASS::expectation(Vec& mu) const
 void DERIVEDCLASS::variance(Mat& covar) const
 { PLERROR("variance not implemented for DERIVEDCLASS"); }
 
+void DERIVEDCLASS::resetGenerator(long g_seed) const
+{ PLERROR("resetGenerator not implemented for DERIVEDCLASS"); }
+
 void DERIVEDCLASS::generate(Vec& x) const
 { PLERROR("generate not implemented for DERIVEDCLASS"); }
 

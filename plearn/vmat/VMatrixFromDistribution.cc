@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: VMatrixFromDistribution.cc,v 1.1 2003/06/04 02:56:32 plearner Exp $ 
+ * $Id: VMatrixFromDistribution.cc,v 1.2 2003/06/04 21:21:17 plearner Exp $ 
  ******************************************************* */
 
 /*! \file VMatrixFromDistribution.cc */
@@ -44,7 +44,7 @@ namespace PLearn <%
 using namespace std;
 
 VMatrixFromDistribution::VMatrixFromDistribution() 
-  :seed(0), nsamples(0)
+  :generator_seed(0), nsamples(0)
   /* ### Initialise all fields to their default value */
 {
   // ...
@@ -60,8 +60,8 @@ void VMatrixFromDistribution::declareOptions(OptionList& ol)
   declareOption(ol, "distr", &VMatrixFromDistribution::distr, OptionBase::buildoption,
                 "The distribution to draw from\n");
 
-  declareOption(ol, "seed", &VMatrixFromDistribution::seed, OptionBase::buildoption,
-                "The initial seed to initialize the distribution");
+  declareOption(ol, "generator_seed", &VMatrixFromDistribution::generator_seed, OptionBase::buildoption,
+                "The initial generator_seed to initialize the distribution's generator");
 
   declareOption(ol, "nsamples", &VMatrixFromDistribution::nsamples, OptionBase::buildoption,
                 "number of samples to draw");
@@ -80,11 +80,10 @@ void VMatrixFromDistribution::build_()
 {
   if(distr)
     {
-      distr->seed = seed;
-      distr->forget();    
       length_ = nsamples;
       width_ = distr->inputsize();
       data.resize(length_, width_);
+      distr->resetGenerator(generator_seed);
       distr->generateN(data);
     }
 }

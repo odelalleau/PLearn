@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.cc,v 1.1 2003/06/04 02:56:37 plearner Exp $ 
+   * $Id: PDistribution.cc,v 1.2 2003/06/04 21:21:20 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.cc */
@@ -123,6 +123,9 @@ void PDistribution::expectation(Vec& mu) const
 
 void PDistribution::variance(Mat& covar) const
 { PLERROR("variance not implemented for this PDistribution"); }
+
+void PDistribution::resetGenerator(long g_seed) const
+{ PLERROR("resetGenerator not implemented for this PDistribution"); }
 
 void PDistribution::generate(Vec& x) const
 { PLERROR("generate not implemented for this PDistribution"); }

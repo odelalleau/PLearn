@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMatrixFromDistribution.h,v 1.1 2003/06/04 02:56:32 plearner Exp $ 
+   * $Id: VMatrixFromDistribution.h,v 1.2 2003/06/04 21:21:17 plearner Exp $ 
    ******************************************************* */
 
 /*! \file VMatrixFromDistribution.h */
@@ -63,7 +63,7 @@ public:
   // ************************
 
   PP<PDistribution> distr; // the distribution
-  long seed; // the seed to initialize the distribution
+  long generator_seed; // the generator_seed to initialize the distribution
   int nsamples; // number of samples to draw
 
   // ****************

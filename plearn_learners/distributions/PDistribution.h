@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.h,v 1.1 2003/06/04 02:56:37 plearner Exp $ 
+   * $Id: PDistribution.h,v 1.2 2003/06/04 21:21:20 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.h */
@@ -148,8 +148,15 @@ public:
   //! return Var[X]
   virtual void variance(Mat& cov) const;
 
+  //! Resets the random number generator used by generate using the given seed
+  virtual void resetGenerator(long g_seed) const;
+  
   //! return a pseudo-random sample generated from the distribution.
   virtual void generate(Vec& x) const;
+
+  //! X must be a N x inputsize() matrix. that will be filled
+  //! This will call generate N times to fill the N rows of the matrix. 
+  void generateN(const Mat& X) const;
 
   //! Produces outputs according to what is specified in outputs_def
   virtual void computeOutput(const Vec& input, Vec& output) const;
@@ -164,10 +171,6 @@ public:
 
   //! Returns [ "NLL" ]
   virtual TVec<string> getTrainCostNames() const;
-
-  //! X must be a N x inputsize() matrix. that will be filled
-  //! This will call generate N times to fill the N rows of the matrix. 
-  void generateN(const Mat& X) const;
 
 };
 
