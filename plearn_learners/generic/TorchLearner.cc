@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TorchLearner.cc,v 1.1 2005/02/23 01:28:40 tihocan Exp $ 
+   * $Id: TorchLearner.cc,v 1.2 2005/02/23 16:32:46 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -118,6 +118,11 @@ void TorchLearner::build_()
   }
   if (machine && machine->outputs)
     outputsize_ = machine->outputs->frame_size;
+  // Initialize the inputs sequence.
+  if (inputsize_ >= 0 && (!inputs || inputs->frame_size != inputsize_)) {
+    allocator->free(inputs); // Free old input sequence.
+    inputs = new(allocator) Torch::Sequence(1, inputsize_);
+  }
 }
 
 /////////////////////////////
@@ -191,9 +196,10 @@ int TorchLearner::outputsize() const
 {
   // Compute and return the size of this learner's output, (which typically
   // may depend on its inputsize(), targetsize() and set options).
-  if (!machine)
-    PLERROR("In TorchLearner::outputsize - Cannot return the outputsize without setting "
-            "the 'machine' option");
+  assert( machine );
+  assert( outputsize_ >= 0 || machine->outputs );
+  if (outputsize_ >=0)
+    return outputsize_;
   return machine->outputs->frame_size;
 }
 
@@ -203,10 +209,6 @@ int TorchLearner::outputsize() const
 void TorchLearner::setTrainingSet(VMat training_set, bool call_forget) {
   inherited::setTrainingSet(training_set, call_forget);
   torch_train_set = new TTorchDataSetFromVMat(training_set);
-  pout << "Yo: " << torch_train_set->dataset->n_examples << endl;
-  pout << "Yo: " << torch_train_set->dataset->n_real_examples << endl;
-  pout << "Yo: " << torch_train_set->torch_dataset_from_vmat->n_examples << endl;
-  pout << "Yo: " << torch_train_set->torch_dataset_from_vmat->n_real_examples << endl;
   allocator->free(inputs); // Free old input sequence.
   inputs = new(allocator) Torch::Sequence(1, training_set->inputsize());
 }
@@ -223,10 +225,6 @@ void TorchLearner::train()
   if (!trainer || !machine)
     PLERROR("In TorchLearner::train - You must set both the 'trainer' and 'machine' options "
             "before calling train()");
-  pout << torch_train_set->dataset->n_examples << endl;
-  pout << torch_train_set->dataset->n_real_examples << endl;
-  pout << torch_train_set->torch_dataset_from_vmat->n_examples << endl;
-  pout << torch_train_set->torch_dataset_from_vmat->n_real_examples << endl;
   trainer->train((TTorchDataSetFromVMat*) torch_train_set);
   if (machine->outputs)
     // Update outputsize_
