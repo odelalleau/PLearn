@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsVMatrix.cc,v 1.13 2004/04/05 23:04:24 morinf Exp $
+   * $Id: SelectRowsVMatrix.cc,v 1.14 2004/06/10 16:11:50 tihocan Exp $
    ******************************************************* */
 
 #include "SelectRowsVMatrix.h"
@@ -46,61 +46,60 @@ using namespace std;
 
 /** SelectRowsVMatrix **/
 
-PLEARN_IMPLEMENT_OBJECT(SelectRowsVMatrix, "ONE LINE DESCR",
-"    VMat class that selects samples from a sub-distribution\n\
-    according to given vector of indices.\n");
+PLEARN_IMPLEMENT_OBJECT(SelectRowsVMatrix,
+    "VMat class that selects samples from a source matrix according to given vector of indices.",
+    ""
+);
 
 SelectRowsVMatrix::SelectRowsVMatrix() 
 {
 }
 
-SelectRowsVMatrix::SelectRowsVMatrix(VMat the_distr, TVec<int> the_indices)
-  : inherited(the_indices.length(),the_distr->width()),
-    distr(the_distr),indices(the_indices)
+SelectRowsVMatrix::SelectRowsVMatrix(VMat the_source, TVec<int> the_indices)
+: indices(the_indices)
 {
+  source = the_source;
   build_();
 }
 
 //! Here the indices will be copied locally into an integer vector
-SelectRowsVMatrix::SelectRowsVMatrix(VMat the_distr, Vec the_indices)
-  : inherited(the_indices.length(),the_distr->width()),
-    distr(the_distr),indices(the_indices.length())
+SelectRowsVMatrix::SelectRowsVMatrix(VMat the_source, Vec the_indices)
 {
+  source = the_source;
+  indices.resize(the_indices.length());
   indices << the_indices; // copy to integer indices
   build_();
 }
 
 real SelectRowsVMatrix::get(int i, int j) const
-{ return distr->get(indices[i], j); }
+{ return source->get(indices[i], j); }
 
 void SelectRowsVMatrix::getSubRow(int i, int j, Vec v) const
-{ distr->getSubRow(indices[i], j, v); }
+{ source->getSubRow(indices[i], j, v); }
 
 real SelectRowsVMatrix::dot(int i1, int i2, int inputsize) const
-{ return distr->dot(int(indices[i1]), int(indices[i2]), inputsize); }
+{ return source->dot(int(indices[i1]), int(indices[i2]), inputsize); }
 
 real SelectRowsVMatrix::dot(int i, const Vec& v) const
-{ return distr->dot(indices[i],v); }
+{ return source->dot(indices[i],v); }
 
 real SelectRowsVMatrix::getStringVal(int col, const string & str) const
-{ return distr->getStringVal(col, str); }
+{ return source->getStringVal(col, str); }
 
 string SelectRowsVMatrix::getValString(int col, real val) const
-{ return distr->getValString(col,val); }
+{ return source->getValString(col,val); }
 
 string SelectRowsVMatrix::getString(int row, int col) const
-{ return distr->getString(row,col); }
+{ return source->getString(row,col); }
 
 const map<string,real>& SelectRowsVMatrix::getStringToRealMapping(int col) const
-{ return distr->getStringToRealMapping(col);}
+{ return source->getStringToRealMapping(col);}
 
 const map<real,string>& SelectRowsVMatrix::getRealToStringMapping(int col) const
-{ return distr->getRealToStringMapping(col);}
+{ return source->getRealToStringMapping(col);}
 
 void SelectRowsVMatrix::declareOptions(OptionList &ol)
 {
-    declareOption(ol, "distr", &SelectRowsVMatrix::distr, OptionBase::buildoption,
-        "    The matrix viewed by the SelectRowsVMatrix");
     declareOption(ol, "indices", &SelectRowsVMatrix::indices, OptionBase::buildoption, 
         "    The array of row indices to extract");
     inherited::declareOptions(ol);
@@ -109,7 +108,6 @@ void SelectRowsVMatrix::declareOptions(OptionList &ol)
 void SelectRowsVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(distr, copies);
   deepCopyField(indices, copies);
 }
 
@@ -128,12 +126,12 @@ void SelectRowsVMatrix::build()
 void SelectRowsVMatrix::build_()
 {
   length_ = indices.length();
-  if (distr) {
-    width_ = distr->width();
-    inputsize_ = distr->inputsize();
-    targetsize_ = distr->targetsize();
-    weightsize_ = distr->weightsize();
-    fieldinfos = distr->fieldinfos;
+  if (source) {
+    width_ = source->width();
+    inputsize_ = source->inputsize();
+    targetsize_ = source->targetsize();
+    weightsize_ = source->weightsize();
+    fieldinfos = source->fieldinfos;
   }
 }
 

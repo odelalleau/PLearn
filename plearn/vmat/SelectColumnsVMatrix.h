@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectColumnsVMatrix.h,v 1.6 2004/04/05 23:03:28 morinf Exp $
+   * $Id: SelectColumnsVMatrix.h,v 1.7 2004/06/10 16:12:40 tihocan Exp $
    ******************************************************* */
 
 
@@ -45,34 +45,37 @@
 #ifndef SelectColumnsVMatrix_INC
 #define SelectColumnsVMatrix_INC
 
-#include "VMat.h"
+#include "SourceVMatrix.h"
 
 namespace PLearn {
 using namespace std;
  
-//!  selects variables (columns) from a sub-distribution
+//!  selects variables (columns) from a source matrix
 //!  according to given vector of indices.  NC: removed the unused field
 //!  raw_sample.
-class SelectColumnsVMatrix: public VMatrix
+class SelectColumnsVMatrix: public SourceVMatrix
 {
- typedef VMatrix inherited;
+  
+private:
+    
+ typedef SourceVMatrix inherited;
   
 public:
 
   //! Public build options
-  VMat distr;
   TVec<int> indices;
 
 public:
 
-  SelectColumnsVMatrix() {}
+  //! Default constructor.
+  SelectColumnsVMatrix();
   
   //! The appropriate fieldinfos are copied upon construction
   //! Here the indices will be shared for efficiency. But you should not modify them afterwards!
-  SelectColumnsVMatrix(VMat the_distr, TVec<int> the_indices);
+  SelectColumnsVMatrix(VMat the_source, TVec<int> the_indices);
 
   //! Here the indices will be copied locally into an integer vector
-  SelectColumnsVMatrix(VMat the_distr, Vec the_indices);
+  SelectColumnsVMatrix(VMat the_source, Vec the_indices);
 
   PLEARN_DECLARE_OBJECT(SelectColumnsVMatrix);
 
@@ -82,13 +85,14 @@ public:
 
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;
+  void getRow(int i, Vec v) const { getSubRow(i, 0, v); }
   virtual void reset_dimensions() 
   { 
-    distr->reset_dimensions(); length_=distr->length(); 
+    source->reset_dimensions(); length_=source->length(); 
     for (int i=0;indices.length();i++)
-      if (indices[i]>=distr->width())
-        PLERROR("SelectColumnsVMatrix::reset_dimensions, underlying distr not wide enough (%d>=%d)",
-            indices[i],distr->width());
+      if (indices[i]>=source->width())
+        PLERROR("SelectColumnsVMatrix::reset_dimensions, underlying source not wide enough (%d>=%d)",
+            indices[i],source->width());
   }
 
 private:

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectColumnsVMatrix.cc,v 1.5 2004/04/05 23:03:28 morinf Exp $
+   * $Id: SelectColumnsVMatrix.cc,v 1.6 2004/06/10 16:12:40 tihocan Exp $
    ******************************************************* */
 
 #include "SelectColumnsVMatrix.h"
@@ -46,51 +46,41 @@ using namespace std;
 
 /** SelectColumnsVMatrix **/
 
-PLEARN_IMPLEMENT_OBJECT(SelectColumnsVMatrix, "ONE LINE DESCR",
-                        "    VMat class that selects variables from a sub-distribution\n"
-                        "according to given vector of indices.\n");
+PLEARN_IMPLEMENT_OBJECT(SelectColumnsVMatrix,
+    "Selects variables from a source matrix according to given vector of indices.",
+    ""
+);
 
+SelectColumnsVMatrix::SelectColumnsVMatrix()
+{}
 
-SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_distr, TVec<int> the_indices)
-  : VMatrix(the_distr->length(), the_indices.length()),
-    distr(the_distr), indices(the_indices)
+SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source, TVec<int> the_indices)
+: indices(the_indices)
 {
-  //! Copy the appropriate VMFields
-  int len = the_indices.length();
-  fieldinfos.resize(len);
-  if (distr->getFieldInfos().size() > 0)
-    for (int i=0; i<len; ++i)
-      fieldinfos[i] = distr->getFieldInfos()[indices[i]];
+  source = the_source;
+  build_();
 }
 
-SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_distr, Vec the_indices)
-  : VMatrix(the_distr->length(), the_indices.length()),
-    distr(the_distr), indices(the_indices.length())
+SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source, Vec the_indices)
 {
+  source = the_source;
+  indices.resize(the_indices.length());
   // copy the real the_indices into the integer indices
   indices << the_indices;
-
-  //! Copy the appropriate VMFields
-  int len = the_indices.length();
-  fieldinfos.resize(len);
-  if (distr->getFieldInfos().size() > 0)
-    for (int i=0; i<len; ++i)
-      fieldinfos[i] = distr->getFieldInfos()[indices[i]];
+  build_();
 }
 
 real SelectColumnsVMatrix::get(int i, int j) const
-{ return distr->get(i, indices[j]); }
+{ return source->get(i, indices[j]); }
 
 void SelectColumnsVMatrix::getSubRow(int i, int j, Vec v) const
 {
   for(int jj=0; jj<v.length(); jj++)
-    v[jj] = distr->get(i, indices[j+jj]); 
+    v[jj] = source->get(i, indices[j+jj]); 
 }
 
 void SelectColumnsVMatrix::declareOptions(OptionList &ol)
 {
-  declareOption(ol, "distr", &SelectColumnsVMatrix::distr, OptionBase::buildoption,
-      "    The matrix viewed by the SelectColumnsVMatrix");
   declareOption(ol, "indices", &SelectColumnsVMatrix::indices, OptionBase::buildoption,
       "    The array of column indices to extract");
   inherited::declareOptions(ol);
@@ -99,7 +89,6 @@ void SelectColumnsVMatrix::declareOptions(OptionList &ol)
 void SelectColumnsVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(distr, copies);
   deepCopyField(indices, copies);
 }
 
@@ -118,13 +107,13 @@ void SelectColumnsVMatrix::build()
 void SelectColumnsVMatrix::build_()
 {
   width_ = indices.length();
-  if (distr) {
-    length_ = distr->length();
+  if (source) {
+    length_ = source->length();
     // Copy the appropriate VMFields
     fieldinfos.resize(width());
-    if (distr->getFieldInfos().size() > 0)
+    if (source->getFieldInfos().size() > 0)
       for (int i=0; i<width(); ++i)
-        fieldinfos[i] = distr->getFieldInfos()[indices[i]];
+        fieldinfos[i] = source->getFieldInfos()[indices[i]];
   }
 }
 

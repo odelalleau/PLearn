@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsVMatrix.h,v 1.8 2004/04/05 23:04:24 morinf Exp $
+   * $Id: SelectRowsVMatrix.h,v 1.9 2004/06/10 16:11:50 tihocan Exp $
    ******************************************************* */
 
 
@@ -45,21 +45,23 @@
 #ifndef SelectRowsVMatrix_INC
 #define SelectRowsVMatrix_INC
 
-#include "VMat.h"
+#include "SourceVMatrix.h"
 
 namespace PLearn {
 using namespace std;
  
-//!  selects samples from a sub-distribution
+//!  selects samples from a source matrix
 //!  according to given vector of indices
-class SelectRowsVMatrix: public VMatrix
+class SelectRowsVMatrix: public SourceVMatrix
 {
-  typedef VMatrix inherited;
+
+private:
+
+  typedef SourceVMatrix inherited;
 
 public:
 
   //! Public build options
-  VMat distr;
   TVec<int> indices;
 
 public:
@@ -70,10 +72,10 @@ public:
 
   //! Also copies the original fieldinfos upon construction
   //! Here the indices will be shared for efficiency. But you should not modify them afterwards!
-  SelectRowsVMatrix(VMat the_distr, TVec<int> the_indices);
+  SelectRowsVMatrix(VMat the_source, TVec<int> the_indices);
   
   //! Here the indices will be copied locally into an integer vector
-  SelectRowsVMatrix(VMat the_distr, Vec the_indices);
+  SelectRowsVMatrix(VMat the_source, Vec the_indices);
   
     PLEARN_DECLARE_OBJECT(SelectRowsVMatrix);
 
@@ -84,6 +86,7 @@ public:
 
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;
+  void getRow(int i, Vec v) const { getSubRow(i, 0, v); }
   virtual real getStringVal(int col, const string & str) const;
   virtual string getValString(int col, real val) const;
   virtual string getString(int row,int col) const;
@@ -91,7 +94,7 @@ public:
   virtual const map<string,real>& getStringToRealMapping(int col) const;
   virtual const map<real,string>& getRealToStringMapping(int col) const;
 
-  virtual void reset_dimensions() { distr->reset_dimensions(); width_=distr->width(); }
+  virtual void reset_dimensions() { source->reset_dimensions(); width_=source->width(); }
   virtual real dot(int i1, int i2, int inputsize) const;
   virtual real dot(int i, const Vec& v) const;
 
