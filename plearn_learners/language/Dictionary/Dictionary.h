@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Dictionary.h,v 1.2 2004/09/14 16:04:57 chrish42 Exp $ 
+   * $Id: Dictionary.h,v 1.3 2004/09/14 18:52:56 kermorvc Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
@@ -52,6 +52,8 @@
 #define UPDATE 1
 // Default mode for the dicionary
 #define DEFAULT_UPDATE 0
+
+#define OOV_TAG "<oov>"
 
 namespace PLearn {
 using namespace std;
@@ -123,21 +125,21 @@ public:
 
   //! Gives the id of a symbol in the dictionary
   //! If the symbol is not in the dictionary, 
-  //! returns -1 if update_mode = NO_UPDATE.
+  //! returns the index of oov if update_mode = NO_UPDATE.
   //! Insert the new word otherwise and return its index
   //! When a symbol is added to the dictionary, the following fields
   //! are updated: string_to_int, int_to_string, values
   //! Options can be specified ...
-  int getId(string symbol, TVec<string> options = TVec<string>(0));
+virtual  int getId(string symbol, TVec<string> options = TVec<string>(0));
 
   //! Const version. Do not insert unknown words
   //! Options can be specified ...
-  int getId(string symbol, TVec<string> options = TVec<string>(0))const;
+virtual  int getId(string symbol, TVec<string> options = TVec<string>(0))const;
   
   //! Gives the symbol from an id of the dictionary
   //! If the id is invalid, the string returned is ""
   //! Options can be specified ...
-  string getSymbol(int id, TVec<int> options = TVec<int>(0))const;
+virtual  string getSymbol(int id, TVec<int> options = TVec<int>(0))const;
   
   //! Get dimension of the dictionary (number of differents values in the dictionary)
   //! Options can be specified to restrict the number of possible values. 

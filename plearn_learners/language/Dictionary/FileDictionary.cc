@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FileDictionary.cc,v 1.2 2004/09/14 16:04:57 chrish42 Exp $ 
+   * $Id: FileDictionary.cc,v 1.3 2004/09/14 18:52:56 kermorvc Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
@@ -85,7 +85,10 @@ void FileDictionary::build_()
       getId(removeblanks(line));
     }
     ifs.close();
-  
+    if(saved_up_mode==NO_UPDATE){
+      // the dictionary must contain oov
+      getId(OOV_TAG);
+    }
     // restore update mode;
     update_mode=saved_up_mode;
   }

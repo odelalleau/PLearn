@@ -33,22 +33,25 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: WordNetSenseDictionary.h,v 1.2 2004/09/14 16:04:57 chrish42 Exp $ 
+   * $Id: WordNetSenseDictionary.h,v 1.3 2004/09/14 18:52:56 kermorvc Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
 
-/*! \file WordNetDictionary.h */
+/*! \file WordNetSenseDictionary.h */
 
 
-#ifndef WordNetDictionary_INC
-#define WordNetDictionary_INC
+#ifndef WordSenseNetDictionary_INC
+#define WordSenseNetDictionary_INC
 #include "Dictionary.h"
 #include <plearn_learners/language/WordNet/WordNetOntology.h>
 
-#define NO_STEM 0
-#define STEM 1
-
+//for WordNet senses only
+// No sense exists for this word
+#define NO_SENSE -1
+#define NO_SENSE_TAG "no_sense"
+// Sense exists but is hidden (un-known)
+#define HIDDEN_SENSE 0
 namespace PLearn {
 using namespace std;
 
@@ -57,7 +60,7 @@ using namespace std;
   The symbols in the instantiated dictionary are senses (not words!).
 */
 
-class WordNetDictionary: public Dictionary
+class WordNetSenseDictionary: public Dictionary
 {
 
 private:
@@ -90,19 +93,18 @@ public:
   // ****************
 
   //! Default constructor.
-  WordNetDictionary();
+  WordNetSenseDictionary();
 
   //! Destructor
-  ~WordNetDictionary();
+  ~WordNetSenseDictionary();
 
   //! Constructor
   /*!
     \param 
     \param up_mode update mode : NO_UPDATE, UPDATE
-    \param stem use word stemming : NO_STEM/STEM 
-   */
-  WordNetDictionary(string ontology_name,bool up_mode=DEFAULT_UPDATE, bool stem =NO_STEM);
-    
+  */
+  WordNetSenseDictionary(string ontology_name,bool up_mode=DEFAULT_UPDATE);
+  
   
   // ******************
   // * Object methods *
@@ -122,19 +124,19 @@ protected:
 
 public:
   // Declares other standard object methods.
-  PLEARN_DECLARE_OBJECT(WordNetDictionary);
+  PLEARN_DECLARE_OBJECT(WordNetSenseDictionary);
 
   //! Gives the id of a symbol in the dictionary
   //! If the symbol is not in the dictionary, 
   //! returns index of OOV_TAG if update_mode = NO_UPDATE
   //! insert the new word otherwise and return its index
-  int getId(string symbol);
+  int getId(string symbol, TVec<string> options = TVec<string>(0));
 
   //! Const version. Do not insert unknown words
-  int getId(string symbol)const;
+  int getId(string symbol, TVec<string> options = TVec<string>(0))const;
   
   //! Gives the symbol from an id of the dictionary
-  string getSymbol(int id)const;
+  string getSymbol(int id, TVec<string> options = TVec<string>(0))const;
 
   // simply calls inherited::build() then build_() 
   virtual void build();
@@ -145,7 +147,7 @@ public:
 };
 
 // Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(WordNetDictionary);
+DECLARE_OBJECT_PTR(WordNetSenseDictionary);
   
 } // end of namespace PLearn
 

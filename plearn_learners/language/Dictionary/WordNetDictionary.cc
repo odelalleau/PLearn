@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: WordNetDictionary.cc,v 1.3 2004/09/14 16:04:57 chrish42 Exp $ 
+   * $Id: WordNetDictionary.cc,v 1.4 2004/09/14 18:52:56 kermorvc Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
@@ -46,32 +46,32 @@
 namespace PLearn {
 using namespace std;
   
-  WordNetDictionary::WordNetDictionary()
-    :
-    inherited(),
-    stem_mode(NO_STEM),
-    ontology_file_name("default")
-  {
-    // ### You may or may not want to call build_() to finish building the object
-    // build_();
-  }
-
-  WordNetDictionary::~WordNetDictionary()
-  {
-    if(wno)
+WordNetDictionary::WordNetDictionary()
+  :
+  inherited(),
+  stem_mode(NO_STEM),
+  ontology_file_name("default")
+{
+  // ### You may or may not want to call build_() to finish building the object
+  // build_();
+}
+  
+WordNetDictionary::~WordNetDictionary()
+{
+  if(wno)
     {
       wno->finalize();
       wno->save(ontology_file_name + ".voc");
       wno->save(ontology_file_name + ".synsets", ontology_file_name + ".ontology", ontology_file_name + ".sense_key");
     }
-  }
+}
 
-  WordNetDictionary::WordNetDictionary(string ontology_name,bool up_mode, bool stem)
-  {
-    setStemMode(stem);
-    setUpdateMode(up_mode);
-    ontology_file_name=ontology_name;
-  }
+WordNetDictionary::WordNetDictionary(string ontology_name,bool up_mode, bool stem)
+{
+  setStemMode(stem);
+  setUpdateMode(up_mode);
+  ontology_file_name=ontology_name;
+}
 
   
 
@@ -89,38 +89,29 @@ void WordNetDictionary::declareOptions(OptionList& ol)
 
 void WordNetDictionary::build_()
 {
-  //initial building
-  
   // Loading ontology...
   string voc_file = ontology_file_name + ".voc";
   string synset_file = ontology_file_name + ".synsets";
   string ontology_file = ontology_file_name + ".ontology";
   string sense_key_file = ontology_file_name + ".sense_key";
-
   wno = new WordNetOntology(voc_file, synset_file, ontology_file, sense_key_file, false, false);
   wno->fillTempWordToSensesTVecMap();
   wno->getWordSenseUniqueIdSize();
-
   string_to_int = wno->getWordsId();
   int_to_string = wno->getWords();
- 
   // save update mode for later
   int saved_up_mode=update_mode;
   // set the dictionary in update mode to insert the words
   update_mode =  UPDATE;
   
-  // Add OOV if necessary  HUGO: I don't think it's necessary...
-  /*
+  // Add OOV if necessary  HUGO: I don't think it's necessary... CK: Yes, it is
   if (update_mode==NO_UPDATE){
     if (!wno->containsWord(OOV_TAG)){
       wno->extractWord(OOV_TAG, ALL_WN_TYPE, true, true, false);
     }
   }
-  */
-
   // restore update mode;
   update_mode=saved_up_mode;
-  
 }
 
 // ### Nothing to add here, simply calls build_
@@ -146,7 +137,7 @@ int WordNetDictionary::getId(string symbol, TVec<string> options)
   
   if(stem_mode)
     symbol = stemWord(symbol);
-
+  int oov_index = string_to_int[OOV_TAG];
   int index;
   if(update_mode== UPDATE){
     if(!wno->containsWord(symbol)){
@@ -164,14 +155,16 @@ int WordNetDictionary::getId(string symbol, TVec<string> options)
   }else{
     // NO update mode
     if(string_to_int.find(symbol) == string_to_int.end()){
-      if(!wno->containsWord(symbol)) return -1;
+      
       index = wno->getWordId(symbol);
-      // word not found in the map, but found in wno, store it
-      string_to_int[symbol] = index;
-      int_to_string[index] = symbol;
+      if(index!=oov_index){
+	// word not found in the map, but found in wno, store it
+	string_to_int[symbol] = index;
+	int_to_string[index] = symbol;
+      }
+      return index;
     }
     return string_to_int[symbol];
-    
   }
   return -1;  
 }

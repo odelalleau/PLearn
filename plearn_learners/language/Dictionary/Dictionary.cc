@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Dictionary.cc,v 1.2 2004/09/14 16:04:56 chrish42 Exp $ 
+   * $Id: Dictionary.cc,v 1.3 2004/09/14 18:52:56 kermorvc Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
@@ -69,13 +69,23 @@ PLEARN_IMPLEMENT_OBJECT(Dictionary,
 
 void Dictionary::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "update_mode", &Dictionary::update_mode, OptionBase::buildoption, "update_mode : 0(no_update)/1(update). Default is no_update");
+  declareOption(ol, "update_mode", &Dictionary::update_mode, OptionBase::buildoption, "update_mode : 0(no_update)/1(update). Default is update");
   declareOption(ol, "string_to_int", &Dictionary::string_to_int, OptionBase::buildoption, "string to int mapping");
   declareOption(ol, "int_to_string", &Dictionary::int_to_string, OptionBase::buildoption, "int to string mapping");
   inherited::declareOptions(ol);
 }
 
-void Dictionary::build_(){}
+void Dictionary::build_(){
+  
+  if(classname()=="Dictionary"){
+    if(update_mode==NO_UPDATE){
+      update_mode = UPDATE;
+      // the dictionary must contain oov
+      getId(OOV_TAG);
+      update_mode = NO_UPDATE;
+    }
+  }
+}
 
 // ### Nothing to add here, simply calls build_
 void Dictionary::build()
@@ -96,6 +106,7 @@ int Dictionary::getId(string symbol, TVec<string> options)
   // returns index of OOV_TAG if update_mode = NO_UPDATE,
   // insert the new word otherwise and return its index
   int index;
+  int oov_index = string_to_int[OOV_TAG];
   if(update_mode== UPDATE)
   {
     if(string_to_int.find(symbol) == string_to_int.end()){
@@ -111,12 +122,11 @@ int Dictionary::getId(string symbol, TVec<string> options)
     // NO update mode
     if(string_to_int.find(symbol) == string_to_int.end()){
       // word not found, return oov
-      return -1;
+      return oov_index;
     }else{
       return string_to_int[symbol];
     }
   }
-
   return -1; 
 }
 
@@ -129,7 +139,7 @@ int Dictionary::getId(string symbol, TVec<string> options)const
 
   if(string_to_int.find(symbol) == string_to_int.end()){
     // word not found, return oov
-    return -1;
+    return string_to_int.find(OOV_TAG)->second;
   }else{
     return string_to_int.find(symbol)->second;
   }

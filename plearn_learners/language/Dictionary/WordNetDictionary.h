@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: WordNetDictionary.h,v 1.2 2004/09/14 16:04:57 chrish42 Exp $ 
+   * $Id: WordNetDictionary.h,v 1.3 2004/09/14 18:52:56 kermorvc Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
@@ -101,7 +101,7 @@ public:
     \param up_mode update mode : NO_UPDATE, UPDATE
     \param stem use word stemming : NO_STEM/STEM 
    */
-  WordNetDictionary(string ontology_name,bool up_mode=DEFAULT_UPDATE, bool stem =NO_STEM);
+  WordNetDictionary(string ontology_name,bool up_mode=DEFAULT_UPDATE,bool stem= NO_STEM);
     
   
   // ******************
