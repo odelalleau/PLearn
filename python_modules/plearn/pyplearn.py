@@ -40,38 +40,36 @@ class UnknownAgrumentError(Exception):
     def __str__(self):
         return "Unknown pyplearn argument: '%s'." % self.arg_name
 
-class plearn_ref(object):
-    """This class keeps in memory all the bindings done by bind. An
-    instance of this class represents a specific binding."""
 
-    _bindings = {}
-    _bindings_referenced = {}
-    _last_binding_index = 0
+_name_to_id = {}
+_id_to_binding = {}
+_last_binding_index = 0
     
-    def bind(cls, name, x):
-        if name in cls._bindings:
-            raise DuplicateBindingError(name)
-        cls._bindings[name] = x
-    bind = classmethod(bind)
 
-    def __init__(self, name):
-        self.name = name
+def bind(name, x):
+    """Binds name to the PLearn expression contained in value."""
+    global _last_binding_index
+    if name in _name_to_id:
+        raise DuplicateBindingError(name)
+    _id_to_binding[_last_binding_index+1] = x
+    _name_to_id[name] = _last_binding_index + 1
+    binding_id = _last_binding_index + 1
+    _last_binding_index +=1
 
-    def value(self):
-        """Called by _plearn_repr to return the PLearn representation
-           of the variable binding. On the first call, it will return something
-           like *1 -> PLearnStuff(blah). On subsequent calls it will return
-           only a PLearn reference: *1;
-        """
-        name = self.name
-        x = self._bindings[name]
-        if name in self._bindings_referenced:
-            binding_id = self._bindings_referenced[name]
-            return '*' + _plearn_repr(binding_id) + ';'
-        else:
-            self._bindings_referenced[name] = self._last_binding_index + 1
-            self._last_binding_index += 1
-            return '*' + _plearn_repr(self._last_binding_index) + ' -> ' + _plearn_repr(x)
+def ref(name):
+    """Makes a reference (with "*1;") to the value
+       associated with name by a previous bind call."""
+    return plearn_snippet('*' + _plearn_repr(_name_to_id[name]) + ';')
+
+def _postprocess_refs(s):
+    """Must be called with the *complete* string of the generated .plearn.
+       Finds the first instance of each PLearn reference (eg. *1;) and
+       replaces it by the correct definition (eg. *1 -> foo(blah...)."""
+    for i in range(1, _last_binding_index+1):
+        s = s.replace("*%d;" % i,
+                      "*%d -> %s" % (i, _plearn_repr(_id_to_binding[i])), 1)
+    return s
+    
 
 def _plearn_repr(x):
     """Returns a string that is the PLearn representation
@@ -92,23 +90,12 @@ def _plearn_repr(x):
         return  _plearn_repr(x[0]) + ':' + _plearn_repr(x[1])
     elif isinstance(x, plearn_snippet):
         return x.s
-    elif isinstance(x, plearn_ref):
-        return x.value()
     elif x is None:
         return "*0;"
     elif hasattr(x, 'plearn_repr') and callable(getattr(x, 'plearn_repr')):
         return _plearn_repr(x.plearn_repr())
     else:
         raise TypeError('Does not know how to handle type %s' % type(x))
-
-def bind(name, value):
-    """Binds name to the PLearn expression contained in value."""
-    plearn_ref.bind(name, value)
-
-def ref(name):
-    """Makes a reference (either "*1 -> foo" or "*1;") to the value
-       associated with name by a previous bind call."""
-    return plearn_ref(name)
 
 def TMat(num_rows, num_cols, mat_contents):
     """Instances of this class represent a PLearn TMat.
