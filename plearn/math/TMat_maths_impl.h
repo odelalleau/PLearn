@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.62 2004/12/04 00:20:17 chapados Exp $
+   * $Id: TMat_maths_impl.h,v 1.63 2004/12/21 07:11:38 chapados Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -734,10 +734,12 @@ T powdistance(const TVec<T>& vec1, const TVec<T>& vec2, double n)
   if(vec1.length() != vec2.length())
     PLERROR("In weighted_powdistance: vec1, vec2 should have the same length");
 #endif
+  int length = vec1.length();
+  if (length == 0)
+    return 0.0;
   result = 0.0;
   T* v1 = vec1.data();
   T* v2 = vec2.data();
-  int length = vec1.length();
   if(n==1.0) // L1 distance
     {
       for(int i=0; i<length; i++)
