@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ExplicitSplitter.cc,v 1.7 2004/04/05 23:14:13 morinf Exp $ 
+   * $Id: ExplicitSplitter.cc,v 1.8 2004/04/15 21:27:50 lheureup Exp $ 
    ******************************************************* */
 
 /*! \file ExplicitSplitter.cc */
@@ -49,7 +49,7 @@ ExplicitSplitter::ExplicitSplitter()
 
 
 PLEARN_IMPLEMENT_OBJECT(ExplicitSplitter, "ONE LINE DESCR",
-    "ExplicitSplitter allows you to define a 'splitter' by giving eplicitly the datasets for each split\n"
+    "ExplicitSplitter allows you to define a 'splitter' by giving explicitly the datasets for each split\n"
     "as a matrix VMatrices.\n"
     "(This splitter in effect ignores the 'dataset' it is given with setDataSet) \n");
 
