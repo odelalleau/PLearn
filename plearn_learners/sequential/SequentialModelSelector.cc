@@ -47,7 +47,6 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(SequentialModelSelector, "ONE LINE DESCR", "NO HELP");
 
 SequentialModelSelector::SequentialModelSelector(): 
-  init_train_size(1), 
   stepwise_save(true),
   comparison_type(1),
   comparison_window(-1)
@@ -55,13 +54,20 @@ SequentialModelSelector::SequentialModelSelector():
 
 void SequentialModelSelector::setExperimentDirectory(const string& _expdir)
 {
+  int nb_models = models.length();
+
+  int nb_names = model_names.length();
+  bool names = (nb_names != 0);
+  if( names && nb_names != nb_models )
+    PLERROR("Names must be provided for all models (%d = nb_names != nb_models = %d).", nb_names, nb_models);
+
   PLearner::setExperimentDirectory(_expdir);
   string model_m;
-  for(int m=0; m < models.size(); m++)
+  for(int m=0; m < nb_models; m++)
   {
     model_m = models[m]->getExperimentDirectory();
     if(model_m == "")
-      model_m = "Model_" + tostring(m);
+      model_m = (names ? model_names[m] : ("Model_" + tostring(m)));
     models[m]->setExperimentDirectory(append_slash(_expdir)+ model_m);
   }
 }
@@ -84,22 +90,19 @@ void SequentialModelSelector::build_()
   int nb_models = models.length();
   if(nb_models < 1)
     PLERROR("The 'models' option is mandatory in a SequentialModelSelector.");
-
+      
   int nb_common_costs = common_costs.length();
   if(nb_common_costs < 1)
     PLERROR("The 'common_costs' requires at least 1 cost from which models will\n"
             "be compared to choose the best model.");  
 
-  common_costs_index.resize(nb_models, nb_common_costs); 
+  common_cost_indices.resize(nb_models, nb_common_costs); 
   for(int m=0; m < nb_models; m++)
     for(int c=0; c < nb_common_costs; c++) 
-      common_costs_index(m, c) = models[m]->getTestCostIndex( common_costs[c] );
+      common_cost_indices(m, c) = models[m]->getTestCostIndex( common_costs[c] );
   
   best_model.resize(max_seq_len);
   sequence_costs.resize(nb_models);
-
-  for (int i=0; i<models.size(); i++)
-    models[i]->horizon = horizon;
 
   forget();
 }
@@ -112,15 +115,15 @@ void SequentialModelSelector::build()
 
 void SequentialModelSelector::declareOptions(OptionList& ol)
 {    
-  declareOption(ol, "init_train_size", &SequentialModelSelector::init_train_size,
-                OptionBase::buildoption, "Size of first training set.\n");
-
   declareOption(ol, "stepwise_save", &SequentialModelSelector::stepwise_save, OptionBase::buildoption,
                 "Does the model selector hass to save errors at each step.\n"
                 "Default: true.");
 
   declareOption(ol, "models", &SequentialModelSelector::models,
                 OptionBase::buildoption, "List of all the models.\n");
+
+  declareOption(ol, "model_names", &SequentialModelSelector::model_names, OptionBase::buildoption,
+                "If the user desires to provide a name for each model instead of model_i.");
 
   declareOption(ol, "common_costs", &SequentialModelSelector::common_costs, OptionBase::buildoption,
                 "The names of costs that are common to all models and that the user wishes the model\n"
@@ -173,9 +176,26 @@ real SequentialModelSelector::sequenceCost(const Vec& sequence_errors)
   return MISSING_VALUE;
 }
 
+real SequentialModelSelector::paired_t_test(const int& m1, const int& m2, int cc /*0*/) const
+{
+  Vec u = remove_missing(models[m1]->errors.column( common_cost_indices(m1, cc) ).toVecCopy());
+  Vec v = remove_missing(models[m2]->errors.column( common_cost_indices(m2, cc) ).toVecCopy());
+
+  int n = u.length();
+  if( v.length() != n )
+    PLERROR("SequentialModelSelector::paired_t_test -- Can't make a paired t-test on to unequally lengthed vectors (%d != %d).",
+            n, v.length());
+  
+  real ubar = mean(u);
+  real vbar = mean(v);
+  Vec u2 = u - ubar;
+  Vec v2 = v - vbar;
+
+  return (ubar - vbar) * sqrt( n*(n-1) / sumsquare(u2-v2));
+}
+
 void SequentialModelSelector::forget()
 {
-  last_train_t = init_train_size;
   best_model.resize(max_seq_len);
   best_model.fill(-1);  // by default
   for (int i=0; i<models.size(); i++)
@@ -186,6 +206,22 @@ void SequentialModelSelector::forget()
 
 void SequentialModelSelector::train()
 {  
+  /*!
+    First call to train: if the 
+      models[i]->init_train_size = init_train_size-horizon;
+    statement was done during the build and if init_train_size was modified afterwards
+    (e.g. by SequentialValidation) the models would not have been updated properly.
+    
+    Note also that the sublearners are provided init_train_size-horizon since the model 
+    selector needs to go horizon time steps back in time.
+  */
+  if(last_call_train_t == -1) 
+    for (int i=0; i<models.size(); i++)
+    {
+      models[i]->horizon = horizon;
+      models[i]->init_train_size = init_train_size-horizon;
+    }
+
   last_call_train_t = train_set.length()-1;
 
   // The init_train_size option is the train_set size at which we should start training.
@@ -228,13 +264,13 @@ void SequentialModelSelector::train()
       models[i]->train();
       models[i]->test(sub_test, dummy_stats[i]); // last cost computed goes at t-1, last prediction at t-1-horizon
       
-      Vec sequence_errors = remove_missing(models[i]->errors.column( common_costs_index(i, 0) ).toVecCopy());
+      Vec sequence_errors = remove_missing(models[i]->errors.column( common_cost_indices(i, 0) ).toVecCopy());
       
 #ifdef DEBUG
-      cout << "models["<<i<<"]->getTestCostNames()[common_costs_index(i, 0)]: " 
-           << models[i]->getTestCostNames()[common_costs_index(i, 0)] << endl;
-      PLWARNING("models[%d]->errors.subMat(0,%d,%d,1)", i, common_costs_index(i, 0), t);
-      cout << remove_missing( models[i]->errors.subMat(0,common_costs_index(i,0),set_length,1).toVecCopy() ) << endl;
+      cout << "models["<<i<<"]->getTestCostNames()[common_cost_indices(i, 0)]: " 
+           << models[i]->getTestCostNames()[common_cost_indices(i, 0)] << endl;
+      PLWARNING("models[%d]->errors.subMat(0,%d,%d,1)", i, common_cost_indices(i, 0), t);
+      cout << remove_missing( models[i]->errors.subMat(0,common_cost_indices(i,0),set_length,1).toVecCopy() ) << endl;
       cout << "---\nOR\n---\n" << sequence_errors << endl; 
 #endif
       
@@ -267,30 +303,23 @@ void SequentialModelSelector::train()
   
   // Now train with everything that is available -- last training pair is (t-horizon,t)
   Vec best_model_costs; 
-  Vec models_update;
   for (int i=0; i<models.size(); i++)
   {
     models[i]->setTrainingSet(train_set, false);
     models[i]->train();
     
     if(i == best_model[last_call_train_t])
-    {
       best_model_costs = models[i]->errors(last_call_train_t);
-      models_update.append( best_model_costs );
-    }
-    else
-      models_update.append( models[i]->errors(last_call_train_t) );
   }
-  Vec update = best_model_costs( common_costs_index(best_model[last_call_train_t]) );
-  update.append(models_update);
-  if(train_stats) train_stats->update(models_update);
+
+  if(train_stats)
+  {
+    Vec update = best_model_costs( common_cost_indices(best_model[last_call_train_t]) );
+    train_stats->update( update );
+  }
 
   predictions(last_call_train_t) << models[ best_model[last_call_train_t] ]->predictions(last_call_train_t);
-  errors(last_call_train_t) << update;
-#ifdef DEBUG
-  cout << "update " << last_call_train_t << ": " << update << endl;
-#endif
-
+  
   if(pb)
     pb->close();
 
@@ -354,7 +383,7 @@ void SequentialModelSelector::test(VMat test_set, PP<VecStatsCollector> test_sta
     }
     
     // The update is composed of the common_costs and the modelwise costs
-    Vec update = best_model_costs( common_costs_index(best_model[last_train_t]) );
+    Vec update = best_model_costs( common_cost_indices(best_model[last_train_t]) );
     update.append(models_update);
     
     test_stats->update( update );
@@ -363,6 +392,11 @@ void SequentialModelSelector::test(VMat test_set, PP<VecStatsCollector> test_sta
     errors(t) << update;
     if (testoutputs) testoutputs->appendRow( predictions(t) );
     if (testcosts) testcosts->appendRow(update);
+
+#ifdef DEBUG
+    cout << "predictions(" << t << "): " << predictions(t) << endl
+         << "errors(" << t << "): " << errors(t) << endl;
+#endif
 
     if(pb)
       pb->update(t);
@@ -415,30 +449,24 @@ TVec<string> SequentialModelSelector::getTestCostNames() const
   TVec<string> tcnames = common_costs;
   
   int nb_models = models.length();
+
+  int nb_names = model_names.length();
+  if( nb_names != 0 && 
+      nb_names != nb_models )
+    PLERROR("Names must be provided for all models (%d = nb_names != nb_models = %d).", nb_names, nb_models);
+
   for(int m=0; m < nb_models; m++)
   {
     TVec<string> tcm = models[m]->getTestCostNames();
     for(int c=0; c < tcm.length(); c++)
-      tcnames.append("model" + tostring(m) + "::" + tcm[c]);
+      tcnames.append( ((nb_names == 0) ? ("Model_"+tostring(m)) : model_names[m]) + "::" + tcm[c]);
   }
 
   return tcnames;
 }
 
 TVec<string> SequentialModelSelector::getTrainCostNames() const
-{
-  TVec<string> tcnames;
-  
-  int nb_models = models.length();
-  for(int m=0; m < nb_models; m++)
-  {
-    TVec<string> tcm = models[m]->getTrainCostNames();
-    for(int c=0; c < tcm.length(); c++)
-      tcnames.append("model" + tostring(m) + "::" + tcm[c]);
-  }
-  
-  return tcnames;
-}
+{ return common_costs; }
 
 void SequentialModelSelector::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
@@ -446,6 +474,45 @@ void SequentialModelSelector::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(models, copies);
   //deepCopyField(mean_costs, copies);
 } 
+
+void SequentialModelSelector::matlabSave(const string& matlab_subdir)
+{
+  string save_dir = append_slash(getExperimentDirectory()) + matlab_subdir;
+  Vec dummy, add(1); add[0] = 0;
+  
+  TVec<string> legend(1, "ModelSelector");
+  legend.append(model_names);
+  
+  int nb_models = models.length();
+  int nb_common_costs = common_costs.length();
+  for(int g=0; g < nb_common_costs; g++)
+  {
+    Vec cs;
+
+    Array<Mat> columns(nb_models+1);
+    cs = getCostSequence(g);
+
+    // Since the model selector first runs tests in its train method, the models' sequence
+    //  length will probably be to long...
+    int msel_cs_len = cs.length(); 
+
+    columns[0] = Mat(cs.length(), 1, cs);
+    for(int m=0; m < nb_models; m++)
+    {
+      cs = models[m]->getCostSequence( common_cost_indices(m, g) );
+      cs = cs.subVec(cs.length() - msel_cs_len, msel_cs_len); //... length correction (see the comment above)
+      columns[m+1] = Mat(cs.length(), 1, cs);
+    }
+    
+    Mat concat = hconcat(columns);
+    PLearn::matlabSave( save_dir, common_costs[g], 
+                        concat,
+                        add, dummy, legend);
+  }
+  
+  for(int m=0; m < nb_models; m++)
+    models[m]->matlabSave(matlab_subdir);
+}
 
 } // end of namespace PLearn
 

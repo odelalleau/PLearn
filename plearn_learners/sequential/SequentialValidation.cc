@@ -48,7 +48,7 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(SequentialValidation, "ONE LINE DESCR", "NO HELP");
 
 SequentialValidation::SequentialValidation()
-  : init_train_size(1),
+  : init_train_size(-1),
     expdir(""),
     report_stats(true),
     save_final_model(true),
@@ -70,6 +70,9 @@ void SequentialValidation::build_()
     if(!force_mkdir(expdir))
       PLERROR("Could not create experiment directory %s", expdir.c_str());
   }
+
+  if(init_train_size == -1)
+    PLERROR("The init_train_size option is mandatory in a SequentialValidation object.");
 }
 
 void SequentialValidation::build()
@@ -144,17 +147,14 @@ void SequentialValidation::run()
   if (!learner)
     PLERROR("No learner specified for SequentialValidation.");
 
-  if(provide_learner_expdir)
-    learner->setExperimentDirectory(append_slash(expdir)+"Model");
-
   // This is to set inputsize() and targetsize()
   learner->setTrainingSet(dataset, false);
 
-  string dir = append_slash(expdir);
+  setExperimentDirectory( append_slash(expdir) );
 
   // Save this experiment description in the expdir (buildoptions only)
   if (save_initial_seqval)
-    PLearn::save(dir+"sequential_validation.psave", *this);
+    PLearn::save(expdir+"sequential_validation.psave", *this);
 
   TVec<string> testcostnames = learner->getTestCostNames();
   TVec<string> traincostnames = learner->getTrainCostNames();
@@ -190,15 +190,15 @@ void SequentialValidation::run()
 
   if (report_stats)
   {
-    saveStringInFile(dir+"train_cost_names.txt", join(traincostnames,"\n")+"\n");
-    saveStringInFile(dir+"test_cost_names.txt", join(testcostnames,"\n")+"\n");
+    saveStringInFile(expdir+"train_cost_names.txt", join(traincostnames,"\n")+"\n");
+    saveStringInFile(expdir+"test_cost_names.txt", join(testcostnames,"\n")+"\n");
 
-    global_stats_vm = new FileVMatrix(dir+"global_stats.pmat", 0, nstats);
+    global_stats_vm = new FileVMatrix(expdir+"global_stats.pmat", 0, nstats);
     for(int k=0; k<nstats; k++)
       global_stats_vm->declareField(k,statspecs[k].statName());
     global_stats_vm->saveFieldInfos();
 
-    split_stats_vm = new FileVMatrix(dir+"sequence_stats.pmat", 0, 1+nstats);
+    split_stats_vm = new FileVMatrix(expdir+"sequence_stats.pmat", 0, 1+nstats);
     split_stats_vm->declareField(0,"splitnum");
     for(int k=0; k<nstats; k++)
       split_stats_vm->declareField(k+1,statspecs[k].setname + "." + statspecs[k].intstatname);
@@ -207,7 +207,8 @@ void SequentialValidation::run()
 
   // the learner horizon
   int horizon = learner->horizon;
- 
+  learner->init_train_size = init_train_size;
+  
   int splitnum = 0;
   for (int t=init_train_size; t<=dataset.length()-horizon; t++, splitnum++)
   {
@@ -217,7 +218,7 @@ void SequentialValidation::run()
     VMat sub_train = dataset.subMatRows(0,t); // excludes t, last training pair is (t-1-horizon,t-1)
     VMat sub_test = dataset.subMatRows(0, t+horizon);
 
-    string splitdir = dir+"train_t="+tostring(t)+"/";
+    string splitdir = expdir+"train_t="+tostring(t)+"/";
     if (save_data_sets || save_initial_model)
       force_mkdir(splitdir);
     if (save_data_sets)
@@ -281,14 +282,25 @@ void SequentialValidation::run()
 
   if (global_stats_vm)
     global_stats_vm->appendRow(global_result);
+  
+  reportStats(global_result);
+}
 
-  if (report_stats)
-  {
-    PLearn::save(dir+"global_result.avec", global_result);
-    PLearn::save(dir+"predictions.amat", learner->predictions);
-    PLearn::save(dir+"errors.amat", learner->errors);
-  }
+void SequentialValidation::setExperimentDirectory(const string& _expdir)
+{
+  expdir = _expdir;
+  if(provide_learner_expdir)
+    learner->setExperimentDirectory(append_slash(expdir)+"Model");
+}
 
+void SequentialValidation::reportStats(const Vec& global_result)
+{
+  if (!report_stats)
+    return;
+  
+  saveAscii(expdir+"global_result.avec", global_result);
+  saveAscii(expdir+"predictions.amat", learner->predictions);
+  saveAscii(expdir+"errors.amat", learner->errors);
 }
 
 } // end of namespace PLearn

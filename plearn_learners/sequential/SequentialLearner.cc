@@ -45,7 +45,7 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(SequentialLearner, "ONE LINE DESCR", "NO HELP")
 
 SequentialLearner::SequentialLearner()
   : last_train_t(-1), last_call_train_t(-1), last_test_t(-1),
-    max_seq_len(-1), max_train_len(-1), train_step(1), horizon(1),
+    init_train_size(1), max_seq_len(-1), max_train_len(-1), train_step(1), horizon(1),
     outputsize_(1)
 {}
 
@@ -82,6 +82,10 @@ void SequentialLearner::build()
 
 void SequentialLearner::declareOptions(OptionList& ol)
 {
+  declareOption(ol, "init_train_size", &SequentialLearner::init_train_size, OptionBase::buildoption,
+                "Before the length of train_set reaches init_train_size, train doesn't do anything.\n"
+                "Default: 1.");
+
   declareOption(ol, "max_seq_len", &SequentialLearner::max_seq_len,
     OptionBase::buildoption, "max length of the training matrice \n");
 
@@ -132,6 +136,24 @@ void SequentialLearner::computeOutput(const Vec& input, Vec& output) const
 void SequentialLearner::computeCostsFromOutputs(const Vec& input,
     const Vec& output, const Vec& target, Vec& costs) const
 { PLERROR("The method computeCostsFromOutputs is not defined for this SequentialLearner"); }
+
+Vec SequentialLearner::getCostSequence(int cost_index, int start/*=0*/, int stop/*=-1*/)
+{
+  if(start < 0) start = init_train_size-1;
+  if(stop < 0)  stop  = last_test_t;
+  int len = stop - start + 1;
+  return remove_missing( errors.subMat(start, cost_index, len, 1).toVecCopy() );
+}
+
+void SequentialLearner::matlabSave(const string& matlab_subdir)
+{
+  string save_dir = append_slash(getExperimentDirectory()) + matlab_subdir;
+  Vec dummy, add(1); add[0] = 0;
+
+  TVec<string> cost_names = getTestCostNames();  
+  for(int g=0; g < cost_names.length(); g++)
+    PLearn::matlabSave(save_dir, cost_names[g], getCostSequence(g), add, dummy);       
+}
 
 } // end of namespace PLearn
 

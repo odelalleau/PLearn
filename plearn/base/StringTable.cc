@@ -30,7 +30,12 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
+<<<<<<< StringTable.cc
+#include "stringutils.h"
+#include "fileutils.h"
+=======
 #include "fileutils.h"      //!< For countNonBlankLinesOfFile.
+>>>>>>> 1.7
 #include "StringTable.h"
 #include "stringutils.h"    //!< For left.
 
@@ -47,8 +52,8 @@ ostream& operator<<(ostream& out,const StringTable& st)
     {
       TVec<string> row=st.data(j);      
       for(int i=0;i<st.width();i++)
-          if((unsigned int)row[i].length() > colsiz[i])
-            colsiz[i]=(int)row[i].length();
+        if((unsigned int)row[i].length() > colsiz[i])
+          colsiz[i]=(int)row[i].length();
     }
   for(int i=0;i<st.width();i++)
     if(st.fieldnames[i].length() > colsiz[i])

@@ -67,7 +67,7 @@ protected:
   // *********************
   
   //! See common_costs options for details. Row index: model. Column index: common_cost.
-  TMat<int> common_costs_index;
+  TMat<int> common_cost_indices;
   TVec<int> best_model; // best model selected at time t
   Vec sequence_costs;  // the costs of each model on the training set
   
@@ -85,8 +85,6 @@ public:
   // * public options    *
   // *********************
 
-  int init_train_size;  //!< size of first training set
-
   /*! 
     Does the model selector hass to save errors at each step. 
     Default: true.
@@ -95,6 +93,9 @@ public:
 
   //! List of all the models.
   TVec< PP<SequentialLearner> > models;  
+
+  //! If the user desires to provide a name for each model instead of model_i
+  TVec< string > model_names;
 
   /*!
     The names of costs that are common to all models and that the user wishes the model
@@ -134,6 +135,9 @@ public:
   //! compute the cost of the given sequence of errors (based on the cost_type)
   real sequenceCost(const Vec& sequence_errors);
   
+  //! Computes a paired t-test between common_cost[cc] series of models m1 and m2
+  real paired_t_test(const int& m1, const int& m2, int cc=0) const;
+
   //! simply calls inherited::build() then build_()
   virtual void build();
 
@@ -144,7 +148,7 @@ public:
  
   virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
         VMat testoutputs=0, VMat testcosts=0) const;
-  
+
   virtual void computeOutput(const Vec& input, Vec& output) const;
   
   virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
@@ -154,7 +158,9 @@ public:
                                      Vec& output, Vec& costs) const;
   
   virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
-  
+
+  virtual void matlabSave(const string& matlab_subdir);
+
   //! This should return the names of the costs computed by computeCostsFromOutputs
   virtual TVec<string> getTestCostNames() const;
   

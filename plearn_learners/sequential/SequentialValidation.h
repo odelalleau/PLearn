@@ -49,51 +49,80 @@ using namespace std;
 
 class SequentialValidation: public Object
 {
-  public:
+private:
+  // *********************
+  // * private members   *
+  // *********************
 
-    int init_train_size; // size of first training set
-    VMat dataset; // the training/test set
-    PP<SequentialLearner> learner; // the SequentialLearner that will be tested
-    TVec<string> statnames;
-    string expdir; // the directory where everything will be saved
-    bool report_stats;
-    bool save_final_model;
-    bool save_initial_model;
-    bool save_initial_seqval;
-    bool save_data_sets;
-    bool save_test_outputs;
-    bool save_test_costs;
-    bool save_stat_collectors;
-  bool provide_learner_expdir; /* =true */
+  // *********************
+  // * private methods   *
+  // *********************
 
-  private:
-    //! This does the actual building
-    void build_();
+  //! This does the actual building
+  void build_();
+  
+protected:
+  
+  // *********************
+  // * protected options *
+  // *********************
+  
+  // *********************
+  // * protected members *
+  // *********************
 
-  protected:
-    //! Declare this class' options
-    static void declareOptions(OptionList& ol);
+  // *********************
+  // * protected methods *
+  // *********************
+  
+  //! Declare this class' options
+  static void declareOptions(OptionList& ol);  
+  virtual void reportStats(const Vec& global_result);
 
-  public:
-
-    //! Default constructor
-    SequentialValidation();
-
-    //! Simply calls inherited::build() then build_()
-    virtual void build();
-
-    //! Provides a help message describing this class
-    static string help();
-
-    //! The main method;  runs the experiment
-    virtual void run();
+public:
+  
+  // *********************
+  // * public options    *
+  // *********************
     
-    //!  Does the necessary operations to transform a shallow copy (this)
-    //!  into a deep copy by deep-copying all the members that need to be.
-    typedef Object inherited;
-    PLEARN_DECLARE_OBJECT(SequentialValidation);
-};
+  int init_train_size; // size of first training set
+  VMat dataset; // the training/test set
+  PP<SequentialLearner> learner; // the SequentialLearner that will be tested
+  TVec<string> statnames;
+  string expdir; // the directory where everything will be saved
+  bool report_stats;
+  bool save_final_model;
+  bool save_initial_model;
+  bool save_initial_seqval;
+  bool save_data_sets;
+  bool save_test_outputs;
+  bool save_test_costs;
+  bool save_stat_collectors;
+  bool provide_learner_expdir; /* =true */
+  
+  // *********************
+  // * protected methods *
+  // *********************
+  
+  //! Default constructor
+  SequentialValidation();
+  
+  //! Simply calls inherited::build() then build_()
+  virtual void build();
+  
+  //! Provides a help message describing this class
+  static string help();
 
+  virtual void setExperimentDirectory(const string& _expdir);
+
+  //! The main method;  runs the experiment
+  virtual void run();
+  
+  //!  Does the necessary operations to transform a shallow copy (this)
+  //!  into a deep copy by deep-copying all the members that need to be.
+  PLEARN_DECLARE_OBJECT(SequentialValidation);
+};
+  
 //! Declares a few other classes and functions related to this class
 DECLARE_OBJECT_PTR(SequentialValidation);
 

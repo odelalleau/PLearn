@@ -71,10 +71,15 @@ public:
   
 public:
   
-  int max_seq_len; // max length of the VMat that train can contain = max de t ci-haut
-  int max_train_len; // max nb of (input,target) pairs actually used for training
-  int train_step; // how often we have to re-train a model, (default = 1 = after every time step)
-  int horizon; // by how much to offset the target columns wrt the input columns (default = 1)
+  /*! 
+    Before the length of train_set reaches init_train_size, train doesn't do anything.
+    Default: 1.
+  */
+  int init_train_size;
+  int max_seq_len;    //!< max length of the VMat that train can contain = max de t ci-haut
+  int max_train_len;  //!< max nb of (input,target) pairs actually used for training
+  int train_step;     //!< how often we have to re-train a model, (default = 1 = after every time step)
+  int horizon;        //!< by how much to offset the target columns wrt the input columns (default = 1)
   int outputsize_;
   
   // these two fields are used by other classes such as SequentialModelSelector
@@ -134,6 +139,29 @@ protected:
 
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
         const Vec& target, Vec& costs) const;
+
+  /*!
+    The getCostSequence method returns the sequence of the cost 
+    at index 'cost_index' or named 'cname' 
+    from start (if negative then init_train_size-1 will be used)
+    to stop (if negative then last_test_t will be used) 
+    REMOVING MISSING VALUES. 
+    If some derived learner have some costs with particular 'behaviour', 
+    it may then overload getCostSequence for it to return the proper Vec.
+    
+    IMPORTANT: User should note that the length of the returned Vec may not be
+    equal to (stop - start + 1).
+  */
+  virtual Vec getCostSequence(int cost_index, int start=-1, int stop=-1);
+  virtual Vec getCostSequence(string cname, int start=-1, int stop=-1)
+    { return getCostSequence(getTestCostIndex(cname), start, stop); }
+
+  /*!
+    Any SequentialLearner will have the possiblity to save some data in a 
+    matlab 'readable' format. The data will be saved in expdir/matlab_subdir
+    through the global matlabSave function (MatIO.h).
+  */
+  virtual void matlabSave(const string& matlab_subdir);
   
     virtual void forget();
 
