@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.h,v 1.10 2002/12/05 21:13:18 jauvinc Exp $
+   * $Id: WordNetOntology.h,v 1.11 2003/01/30 22:22:40 morinf Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -124,6 +124,7 @@ struct Node
   bool is_unknown;
   //int level;
   bool visited;
+  long key;
 };
 
 class WordNetOntology
@@ -274,7 +275,7 @@ public:
   void reducePolysemy(int level);
   void extractPredominentSyntacticClasses();
   int extractWordHighLevelSenses(int noun_depth, int verb_depth, int adj_depth, int adv_depth, int unk_depth);
-
+  
   // integrity verifications
   void detectWordsWithoutOntology();
   void lookForSpecialTags();
@@ -282,11 +283,14 @@ public:
   void extract(string voc_file, int wn_pos_type);
   void extractWord(string original_word, int wn_pos_type, bool trim_word, bool stem_word, bool remove_underscores);
   bool extractSenses(string original_word, string processed_word, int wn_pos_type);
+  int extractFrequencies(string word, int sense, int wn_pos_type);
   Node* extractOntology(SynsetPtr ssp);
   void extractAncestors(int threshold, bool cut_with_word_coverage = true);
   void extractAncestors(Node* node, Set ancestors, int level, int level_threshold);
   void extractAncestors(Node* node, Set ancestors, int word_coverage_threshold);
+protected:
   void extractDescendants(Node* node, Set sense_descendants, Set word_descendants);
+private:
   void extractDescendants();
 
   void init(bool differentiate_unknown_words = true);

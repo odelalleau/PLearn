@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.cc,v 1.10 2002/12/10 06:35:25 jauvinc Exp $
+   * $Id: WordNetOntology.cc,v 1.11 2003/01/30 22:22:40 morinf Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -42,6 +42,9 @@
 
 namespace PLearn {
   using namespace std;
+
+
+#define FRED_MODIF
 
 WordNetOntology::WordNetOntology()
 {
@@ -261,6 +264,37 @@ void WordNetOntology::extract(string voc_file, int wn_pos_type)
   progress.done();
   finalize();
   input_if.close();
+
+  // FRED: Some code to check uniqueness of the potential keys I want to use
+#ifdef FRED_MODIF
+  for (map<int, Node *>::iterator it = synsets.begin(); it != synsets.end(); ++it) {
+      if (it->second->types.size() > 1)
+          cout << "node " << it->second->ss_id << " has more than 1 type"
+               << endl;
+  }
+
+  map<long, long> keys;
+  int duplicates = 0;
+  for (map<int, Node *>::iterator it = synsets.begin(); it != synsets.end(); ++it) {
+      long key = it->second->key;
+      if (keys.find(key) != keys.end()) {
+          ++duplicates;
+          cout << "key " << key << " is duplicate (ss_id = "
+               << it->second->ss_id << ")" << endl;
+          int type = *(it->second->types.begin());
+          // Print synset associated with duplicate
+          cout << "The following synsets are duplicates: " << endl;
+          for (map<int, Node *>::iterator i = synsets.begin();
+               i != synsets.end(); ++i) {
+              if (i->second->key == key && *(i->second->types.begin()) == type)
+                  printSynset(i->second->ss_id);
+          }
+      } else
+          keys[key] = key;
+  }
+  cout << "duplicates = " << duplicates << endl;
+  cout << "out of " << synsets.size() << " synsets" << endl;
+#endif // FRED_MODIF
 }
 
 bool WordNetOntology::isInWordNet(string word, bool trim_word, bool stem_word, bool remove_undescores)
@@ -317,7 +351,7 @@ bool WordNetOntology::hasSenseInWordNet(string word, int wn_pos_type)
   //char* cword = const_cast<char*>(word.c_str());
   char* cword = cstr(word);
   SynsetPtr ssp = NULL;
-  
+
   switch (wn_pos_type)
   {
   case NOUN_TYPE:
@@ -436,6 +470,36 @@ void WordNetOntology::extractWord(string original_word, int wn_pos_type, bool tr
 
 }
 
+int WordNetOntology::extractFrequencies(string word, int whichsense, int dbase)
+{
+    IndexPtr idx;
+    SynsetPtr cursyn;
+    int freq = 0;
+    char *searchstr = cstr(word);
+    char *cpstring = searchstr;
+    wnresults.numforms = wnresults.printcnt = 0;
+
+    // TODO: I don't know why but sometimes I get a segmentation fault in
+    //       getindex(). So to avoid the problem I first check with
+    //       findtheinfo_ds() to see if there's something to be queried.
+    if (findtheinfo_ds(cpstring, dbase, -HYPERPTR, whichsense) != NULL) {
+        while ((idx = getindex(cpstring, dbase)) != NULL) {
+            cpstring = NULL;
+            if ((whichsense + 1) <= idx->tagged_cnt) {
+                if ((cursyn = read_synset(dbase, idx->offset[whichsense], idx->wd)) != NULL) {
+                    if ((whichsense < idx->off_cnt) && (idx->tagged_cnt != -1))
+                        freq = GetTagcnt(idx, whichsense + 1);
+                    wnresults.OutSenseCount[wnresults.numforms]++;
+                    free_synset(cursyn);
+                }
+            }
+            wnresults.numforms++;
+            free_index(idx);
+        }
+    }
+    return freq;
+}
+
 bool WordNetOntology::extractSenses(string original_word, string processed_word, int wn_pos_type)
 {
   //char* cword = const_cast<char*>(processed_word.c_str());
@@ -482,7 +546,6 @@ bool WordNetOntology::extractSenses(string original_word, string processed_word,
     // extract all senses for a given word
     while (ssp != NULL)
     {
-    
       Node* node = checkForAlreadyExtractedSynset(ssp);
 
       if (node == NULL) // not found
@@ -506,7 +569,6 @@ bool WordNetOntology::extractSenses(string original_word, string processed_word,
 
         // create a new sense (1rst-level synset Node)
         node = extractOntology(ssp);
-        
       }
 
       int word_id = words_id[original_word];
@@ -552,6 +614,7 @@ Node* WordNetOntology::extractOntology(SynsetPtr ssp)
   removeDelimiters(defn, '|', '/');
   node->gloss = defn;
   node->is_unknown = false;
+  node->key = ssp->hereiam;
   synsets[node->ss_id] = node;
 
   ssp = ssp->ptrlist;
@@ -563,6 +626,7 @@ Node* WordNetOntology::extractOntology(SynsetPtr ssp)
     if (parent_node == NULL) // create new synset Node
     {
       parent_node = extractOntology(ssp);
+      parent_node->key = ssp->hereiam;
     }
     
     node->parents.insert(parent_node->ss_id);
@@ -570,9 +634,7 @@ Node* WordNetOntology::extractOntology(SynsetPtr ssp)
     
     ssp = ssp->nextss;
   }
-
   return node;
-
 }
 
 bool WordNetOntology::catchSpecialTags(string word)
@@ -979,6 +1041,9 @@ void WordNetOntology::save(string synset_file, string ontology_file)
     {
       of_synsets << *iit << "|";
     }
+#ifdef FRED_MODIF
+    of_synsets << "*|" << node->key << "|";
+#endif
     of_synsets << endl;
   }
   of_synsets.close();
@@ -1047,13 +1112,14 @@ void WordNetOntology::load(string voc_file, string synset_file, string ontology_
     if (line == "") continue;
     if (line[0] == '#') continue;
     vector<string> tokens = split(line, "*");
-    if (tokens.size() != 3)
+    if (tokens.size() != 4)
     { 
       PLERROR("the synset file has not the expected format, line = '%s'", line.c_str());
     }
     int ss_id = toint(tokens[0]);
     vector<string> type_tokens = split(tokens[1], "|");
     vector<string> ss_tokens = split(tokens[2], "|");
+    vector<string> key_token = split(tokens[3], "|");
     Node* node = new Node(ss_id);
     for (unsigned int i = 0; i < type_tokens.size(); i++)
     {
@@ -1064,6 +1130,10 @@ void WordNetOntology::load(string voc_file, string synset_file, string ontology_
     {
       node->syns.push_back(ss_tokens[i]);
     }
+    if (key_token.size() == 1)
+      node->key = toint(key_token[0]);
+    else
+      node->key = -1;
     synsets[node->ss_id] = node;
   }
   if_synsets.close();
@@ -2096,6 +2166,7 @@ void WordNetOntology::detectWordsWithoutOntology()
 
 int WordNetOntology::getMaxSynsetId()
 {
+/* No need for that, indexes are ordered!
   int max_id = -1;
   for (map<int, Node*>::iterator it = synsets.begin(); it != synsets.end(); ++it)
   {
@@ -2104,6 +2175,8 @@ int WordNetOntology::getMaxSynsetId()
       max_id = id;
   }
   return max_id;
+*/
+  return synsets.rbegin()->first;
 }
 
 Set WordNetOntology::getSyntacticClassesForWord(int word_id)
