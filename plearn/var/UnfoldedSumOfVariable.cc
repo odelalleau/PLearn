@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedSumOfVariable.cc,v 1.1 2004/02/16 14:38:11 yoshua Exp $
+   * $Id: UnfoldedSumOfVariable.cc,v 1.2 2004/02/16 16:25:40 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -62,7 +62,7 @@ UnfoldedSumOfVariable::UnfoldedSumOfVariable(VMat the_distr, Func the_f, int max
   :NaryVariable(nonInputParentsOfPath(the_f->inputs,the_f->outputs), 
                 the_f->outputs[0]->length(), 
                 the_f->outputs[0]->width()),
-   distr(the_distr), f(the_f), max_bag_size(max_bagsize), curpos(0)
+   distr(the_distr), f(the_f), max_bag_size(max_bagsize), curpos(0), bag_size(0)
 {
   build();
 }
@@ -78,20 +78,19 @@ void UnfoldedSumOfVariable::build_()
   input_value.resize(distr->width());
   input_value.resize(distr->inputsize()+distr->targetsize()+distr->weightsize());
   target = input_value.subVec(distr->inputsize(),distr->targetsize());
-  input_values.resize(max_n_samples,distr->inputsize()+distr->targetsize()+distr->weightsize());
-  input_gradients.resize(max_n_samples,distr->inputsize()+distr->targetsize()+distr->weightsize());
-  output_values.resize(max_n_samples,f->outputs[0]->size());
+  input_values.resize(max_bag_size,distr->inputsize()+distr->targetsize()+distr->weightsize());
+  output_values.resize(max_bag_size,f->outputs[0]->size());
   if(f->outputs.size()!=1)
     PLERROR("In UnfoldedSumOfVariable: function must have a single variable output (maybe you can vconcat the vars into a single one prior to calling sumOf, if this is really what you want)");
   f->inputs.setDontBpropHere(true);
-  inputs.resize(max_n_samples);
-  outputs.resize(max_n_samples);
-  unfolded_f.resize(max_n_samples);
-  for (int i=0;i<max_n_samples;i++)
+  inputs.resize(max_bag_size);
+  outputs.resize(max_bag_size);
+  f_paths.resize(max_bag_size);
+  for (int i=0;i<max_bag_size;i++)
   {
     inputs[i].resize(f->inputs.size());
     outputs[i] = f(inputs[i]);
-    unfolded_f[i] = Func(inputs[i],outputs[i]);
+    f_paths[i] = propagationPath(inputs[i],outputs[i]);
   }
 }
 
@@ -121,7 +120,7 @@ void UnfoldedSumOfVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>&
   deepCopyField(f, copies);
   deepCopyField(inputs, copies);
   deepCopyField(outputs, copies);
-  deepCopyField(unfolded_f, copies);
+  deepCopyField(f_paths, copies);
 }
 
 
@@ -130,177 +129,45 @@ void UnfoldedSumOfVariable::fprop()
   value.clear();
   bool not_reached_end_of_bag=true;
   
-  for (int i=0;not_reached_end_of_bag;i++)
+  for (bag_size=0;not_reached_end_of_bag;bag_size++)
     {
-      input_value.resize(distr->width());
+      if (bag_size>=max_bag_size)
+        PLERROR("UnfoldedSumOfVariable: bag size=%d > expected max. bag size(%d)",
+                bag_size,max_bag_size);
+      input_value = input_values(bag_size);
       distr->getRow(curpos, input_value);
       input_value.resize(distr->inputsize()+distr->targetsize()+distr->weightsize());
       not_reached_end_of_bag = target.hasMissing();
-      unfolded_f[i]->fprop(input_value, output_value);
+      Vec output_value = output_values(bag_size);
+      inputs[bag_size] << input_value;
+      f_paths[bag_size].fprop();
+      outputs[bag_size] >> output_value;
       value += output_value;
       if(++curpos == distr->length())
         curpos = 0;
     }
-  }
 }
 
 
 void UnfoldedSumOfVariable::bprop()
 { 
-}
-
-
-void UnfoldedSumOfVariable::fbprop()
-{
-  f->recomputeParents();
-  
-  if(nsamples==1)
-  {
-    input_value.resize(distr->width());
-    distr->getRow(curpos, input_value);
-    input_value.resize(distr->inputsize()+distr->targetsize()+distr->weightsize());
-    //displayFunction(f, true, false, 250);
-    f->fbprop(input_value, value, input_gradient, gradient);
-    //displayFunction(f, true, false, 250);
-    if(++curpos == distr->length()) 
-      curpos = 0;
-  }
-  else
-  {
-    value.clear();
-#if USING_MPI
-    if (nsamples > distr->length())
-      PLERROR("In UnfoldedSumOfVariable::fbprop, the case where nsamples is greater than distr->length is not supported in parallel computation");
-    int nb_sample = nsamples/PLMPI::size;
-    int start_pos = PLMPI::rank * nb_sample;
-    int end_pos = (PLMPI::rank==PLMPI::size-1) ? nsamples : start_pos + nb_sample;
-    Vec dummy_value(value.length());
-    for(int i=start_pos; i<end_pos; i++)
+  for (int i=0;i<bag_size;i++)
     {
-      input_value.resize(distr->width());
-      distr->getRow(i, input_value);
-      input_value.resize(distr->inputsize()+distr->targetsize()+distr->weightsize());
-      f->fbprop(input_value, output_value, input_gradient, gradient);
-      dummy_value += output_value;
+      f_paths[bag_size].clearGradient();
+      outputs[bag_size].copyGradientFrom(gradient);
+      f_paths[bag_size].bprop();
     }
-    MPI_Allreduce(dummy_value.data(), value.data(), value.length(), PLMPI_REAL, MPI_SUM, MPI_COMM_WORLD);
-    VarArray params = f->parameters;
-    for (int i=0; i<params->length(); i++)
-    {
-      Vec buffer(params[i]->size());
-      MPI_Reduce(params[i]->gradientdata, buffer.data(), buffer.length(), PLMPI_REAL, MPI_SUM, 0, MPI_COMM_WORLD);
-      buffer >> params[i]->gradient;
-      MPI_Bcast(params[i]->gradientdata, buffer.length(), PLMPI_REAL, 0, MPI_COMM_WORLD);
-    }
-#else
-    for(int i=0; i<nsamples; i++)
-    {
-      input_value.resize(distr->width());
-      distr->getRow(curpos, input_value);
-      input_value.resize(distr->inputsize()+distr->targetsize()+distr->weightsize());
-      static bool display_fn=false;
-      if (display_fn)
-        displayFunction(f, true, false, 250);
-      f->fbprop(input_value, output_value, input_gradient, gradient);
-      value += output_value;
-      if(++curpos == distr->length()) 
-        curpos = 0;
-    }
-#endif
-  }
-}
-
-
-void UnfoldedSumOfVariable::symbolicBprop()
-{
-  /*
-  // f is a function of its inputs, what we want is a function of the parameters of f (which are in the inputs field of this UnfoldedSumOfVariable)
-  VarArray& params = varray; 
-  int nparams = params.size();
-  f->bproppath.symbolicBprop();
-
-  VarArray dparams(nparams);    
-  for(int i=0; i<nparams; i++)
-    dparams[i] = params[i]->g;
-
-  Var dparams_concat = new ConcatElementsVariable(dparams);
-  Var dparams_sum = new UnfoldedSumOfVariable(distr, Func(params,dparams_concat), nsamples);
-
-  for(int i=0; i<nparams; i++)
-    params[i]->g += dparams_sum.sub(...)
-  */
-}
-
-
-void UnfoldedSumOfVariable::rfprop()
-{
-  if (rValue.length()==0) resizeRValue();
-  // TODO... (we will need a rfprop() in Func)
-  
-//    f->recomputeParents();
-  
-//    if(nsamples==1)
-//    {
-//      distr->getRow(curpos, input_value);
-//      f->fprop(input_value, value);
-//      if(++curpos == distr->length())
-//        curpos = 0;
-//    }
-//    else
-//    {
-//      value.clear();
-//  #if USING_MPI
-//      if (nsamples > distr->length())
-//        PLERROR("In UnfoldedSumOfVariable::fprop, the case where nsamples is greater than distr->length is not supported in parallel computation");
-//      int nb_sample = nsamples/PLMPI::size;
-//      int start_pos = PLMPI::rank * nb_sample;
-//      int end_pos = (PLMPI::rank==PLMPI::size-1) ? nsamples : start_pos + nb_sample;
-//      Vec dummy_value(value.length());
-//      for(int i=start_pos; i<end_pos; i++)
-//      {
-//        distr->getRow(i, input_value);
-//        f->fprop(input_value, output_value);
-//        dummy_value += output_value;
-//      }
-//      MPI_Allreduce(dummy_value.data(), value.data(), value.length(), PLMPI_REAL, MPI_SUM, MPI_COMM_WORLD);
-//  #else
-//      for(int i=0; i<nsamples; i++)
-//      {
-//        distr->getRow(curpos, input_value);
-//        f->fprop(input_value, output_value);
-//        value += output_value;
-//        if(++curpos == distr->length())
-//          curpos = 0;
-//      }
-//  #endif
-//    }
 }
 
 
 void UnfoldedSumOfVariable::printInfo(bool print_gradient)
 {
-  Vec input_value(distr->width());
-  Vec input_gradient(distr->width());
-  Vec output_value(nelems());
-
-  f->recomputeParents();
-  value.clear();
-
-  for(int i=0; i<nsamples; i++)
-  {
-    input_value.resize(distr->width());
-    distr->getRow(curpos++,input_value);
-    input_value.resize(distr->inputsize()+distr->targetsize()+distr->weightsize());
-    if (print_gradient)
-      f->fbprop(input_value, output_value, input_gradient, gradient);
-    else
-      f->fprop(input_value, output_value);
-    value += output_value;
-    if(curpos>=distr->length())
-      curpos = 0;
-    f->fproppath.printInfo(print_gradient);
-  }
-  cout << info() << " : " << getName() << " = " << value;
+  cout << info() << value;
+  for (int i=0;i<bag_size;i++)
+    f_paths[i].printInfo(print_gradient);
+  cout << info() << " : " << getName() << "(bag_size=" << bag_size << ", ";
+  for(int i=0; i<bag_size; i++) cout << (void*)outputs[i] << " ";
+  cout << ") = " << value;
   if (print_gradient) cout << " gradient=" << gradient;
   cout << endl; 
 }

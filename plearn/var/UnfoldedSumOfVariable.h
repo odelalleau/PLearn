@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedSumOfVariable.h,v 1.1 2004/02/16 14:38:11 yoshua Exp $
+   * $Id: UnfoldedSumOfVariable.h,v 1.2 2004/02/16 16:25:40 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -66,12 +66,12 @@ class UnfoldedSumOfVariable: public NaryVariable
   Vec input_value;
   Vec target;
     Mat input_values;
-    Mat input_gradients;
     Mat output_values;
+  int bag_size;
 
   TVec<VarArray> inputs; // all the input Var's
   TVec<VarArray> outputs; // and the corresponding output Var's, 
-  TVec<Func> unfolded_f; // the duplicates of f for each input/output pair
+  TVec<VarArray> f_paths; // the duplicates of f prop. path for each input/output pair: inputs[i]->outputs[i]
 
   public:
     //!  Sum_{consecutive inputs \in distr until one has non-missing end_of_bag field} f(inputs)
@@ -84,9 +84,6 @@ class UnfoldedSumOfVariable: public NaryVariable
     virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
     virtual void fprop();
     virtual void bprop();
-    virtual void fbprop();
-    virtual void symbolicBprop();
-    virtual void rfprop();
     
     void printInfo(bool print_gradient);
 
