@@ -1,6 +1,6 @@
 
 /* *******************************************************      
-   * $Id: test_PP.cc,v 1.4 2004/07/21 16:31:00 chrish42 Exp $
+   * $Id: test_PP.cc,v 1.5 2004/10/25 15:06:24 dorionc Exp $
    * AUTHORS: Kim Levy & Christian Dorion
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -12,7 +12,7 @@
 #ifndef TEST_PP_CC
 #define TEST_PP_CC
 
-#include "t_general.h"
+#include "../t_general.h"
 #include <plearn/base/PP.h>
 
 #define MAX_SIZE 11
