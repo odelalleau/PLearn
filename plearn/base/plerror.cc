@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: plerror.cc,v 1.2 2002/08/07 16:54:21 morinf Exp $
+   * $Id: plerror.cc,v 1.3 2002/11/27 19:42:40 jkeable Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -73,7 +73,7 @@ void send_file_line(char *file, int line)
 void clear_warning()
 { error_status = ERROR_STATUS_NO_ERROR; }
 
-void throw_exception(char *msg, int exception_type)
+void throw_exception(const char *msg, int exception_type)
 {
     switch (exception_type) {
     case FATAL_ERROR_EXCEPTION:

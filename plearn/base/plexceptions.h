@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: plexceptions.h,v 1.1 2002/11/22 16:59:37 ducharme Exp $
+   * $Id: plexceptions.h,v 1.2 2002/11/27 19:45:14 jkeable Exp $
    * AUTHOR: Frederic Morin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -68,7 +68,7 @@ extern char *error_file;
 extern int error_line;
 
 void clear_warning();	//!<  Reset error_status to ERROR_STATUS_NO_ERROR
-void throw_exception(char *msg, int exception_type); //!<  Throw an exception
+void throw_exception(const char *msg, int exception_type); //!<  Throw an exception
 
 
 //!  Error status
