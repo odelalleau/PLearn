@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DeepNNet.cc,v 1.5 2005/01/21 20:26:15 yoshua Exp $ 
+   * $Id: DeepNNet.cc,v 1.6 2005/01/21 21:16:12 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -385,10 +385,11 @@ void DeepNNet::train()
 
       for (int l=n_layers-1;l>=0;l--)
       {
-        int n_u = n_units_per_layer[l];
         Vec biases_l = biases[l];
         Vec next_layer = activations[l+1];
         Vec previous_layer = activations[l];
+        int n_next = next_layer.length();
+        int n_previous = previous_layer.length();
         Vec next_layer_gradient = activations_gradients[l];
         Vec previous_layer_gradient;
         if (l>0) 
@@ -396,7 +397,7 @@ void DeepNNet::train()
           previous_layer_gradient = activations_gradients[l-1];
           previous_layer_gradient.clear();
         }
-        for (int i=0;i<n_u;i++)
+        for (int i=0;i<n_next;i++)
         {
           TVec<int> sources_i = sources[l][i];
           Vec weights_i = weights[l][i];
@@ -413,10 +414,10 @@ void DeepNNet::train()
           }
         }
         if (l>0)
-          for (int i=0;i<n_u;i++) 
+          for (int j=0;j<n_previous;j++) 
           {
-            real a = previous_layer[i];
-            previous_layer_gradient[i] = previous_layer_gradient[i] * (1 - a*a);
+            real a = previous_layer[j];
+            previous_layer_gradient[j] = previous_layer_gradient[j] * (1 - a*a);
           }
       }
 

@@ -146,7 +146,7 @@ learner =
               oracle = ExplicitListOracle( 
                        option_names = ["nhidden", "optimizer.start_learning_rate"];
                        option_values = 1 2 [ 
-                                             10 1.5e-3;
+                                             50 1.5e-3;
                                            ] )
   
               # bool: If this is true, a new evaluation will be performed after executing the sub-strategy,
