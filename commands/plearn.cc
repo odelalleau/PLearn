@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.45 2004/02/21 14:59:15 yoshua Exp $
+   * $Id: plearn.cc,v 1.46 2004/02/25 03:16:53 yoshua Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -78,7 +78,7 @@
 
 // #include "ParzenDensity.h"
 // #include "ParzenRegressor.h"
-// #include "ManifoldParzenDensity.h"
+// #include "ManinnnnnnfoldParzenDensity.h"
 
 #include "Experiment.h"
 
@@ -87,6 +87,8 @@
 #include "NNet.h"
 #include "Grapher.h"
 #include "ConstantRegressor.h"
+#include "MultiInstanceNNet.h"
+#include "MultiInstanceVMatrix.h"
 
 // Distributions
 #include "SpiralDistribution.h"
