@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.48 2004/04/13 00:44:17 yoshua Exp $
+   * $Id: NNet.cc,v 1.49 2004/04/21 15:03:51 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -102,7 +102,8 @@ NNet::NNet() // DEFAULT VALUES FOR ALL OPTIONS
    output_transfer_func(""),
    hidden_transfer_func("tanh"),
    interval_minval(0), interval_maxval(1),
-   batch_size(1)
+   batch_size(1),
+   initialization_method("normal_linear")
 {}
 
 NNet::~NNet()
@@ -205,6 +206,11 @@ void NNet::declareOptions(OptionList& ol)
   declareOption(ol, "batch_size", &NNet::batch_size, OptionBase::buildoption, 
                 "    how many samples to use to estimate the avergage gradient before updating the weights\n"
                 "    0 is equivalent to specifying training_set->length() \n");
+
+  declareOption(ol, "initialization_method", &NNet::initialization_method, OptionBase::buildoption, 
+                "    The method used to initialize the weights:\n"
+                "     - normal_linear = a normal law with variance 1 / n_inputs\n"
+                "     - normal_sqrt   = a normal law with variance 1 / sqrt(n_inputs)\n");
 
   declareOption(ol, "paramsvalues", &NNet::paramsvalues, OptionBase::learntoption, 
                 "    The learned parameter vector\n");
@@ -624,7 +630,15 @@ void NNet::initializeParams()
     PLearn::seed();
 
   //real delta = 1./sqrt(inputsize());
-  real delta = 1./inputsize();
+  real delta = 0;
+  if (initialization_method == "normal_linear") {
+    delta = 1.0 / inputsize();
+  } else if (initialization_method == "normal_sqrt") {
+    delta = 1.0 / sqrt(real(inputsize()));
+  } else {
+    PLERROR("In NNet::initializeParams - Unknown value for 'initialization_method'");
+  }
+
   /*
   if(direct_in_to_out)
     {
@@ -636,7 +650,6 @@ void NNet::initializeParams()
   if(nhidden>0)
     {
       //fill_random_uniform(w1->value, -delta, +delta);
-      //delta = 1./sqrt(nhidden);
       fill_random_normal(w1->value, 0, delta);
       if(direct_in_to_out)
       {
@@ -644,15 +657,22 @@ void NNet::initializeParams()
         fill_random_normal(wdirect->value, 0, 0.01*delta);
         wdirect->matValue(0).clear();
       }
-      delta = 1./nhidden;
+      if (initialization_method == "normal_linear") {
+        delta = 1.0 / real(nhidden);
+      } else if (initialization_method == "normal_sqrt") {
+        delta = 1.0 / sqrt(real(nhidden));
+      }
       w1->matValue(0).clear();
     }
   if(nhidden2>0)
     {
       //fill_random_uniform(w2->value, -delta, +delta);
-      //delta = 1./sqrt(nhidden2);
       fill_random_normal(w2->value, 0, delta);
-      delta = 1./nhidden2;
+      if (initialization_method == "normal_linear") {
+        delta = 1.0 / real(nhidden2);
+      } else if (initialization_method == "normal_sqrt") {
+        delta = 1.0 / sqrt(real(nhidden2));
+      }
       w2->matValue(0).clear();
     }
   if (fixed_output_weights)

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.h,v 1.16 2004/04/12 00:36:31 yoshua Exp $
+   * $Id: NNet.h,v 1.17 2004/04/21 15:04:45 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -122,6 +122,9 @@ using namespace std;
     int batch_size; // how many samples to use to estimate gradient before an update
                     // 0 means the whole training set (default: 1)
 
+    string initialization_method;
+
+
   private:
     void build_();
 
@@ -153,7 +156,6 @@ using namespace std;
 
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                          const Vec& target, Vec& costs) const;
-
 
     virtual void makeDeepCopyFromShallowCopy(CopiesMap &copies);
 
