@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: AffineTransformWeightPenalty.cc,v 1.7 2004/04/27 15:59:16 morinf Exp $
+   * $Id: AffineTransformWeightPenalty.cc,v 1.8 2004/04/28 18:42:20 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -92,16 +92,18 @@ void AffineTransformWeightPenalty::bprop()
     if (!input->matGradient.isCompact())
       PLERROR("AffineTransformWeightPenalty::bprop, L1 penalty currently not handling non-compact weight matrix");
     int n=input->width();
-    real *d_w = input->matGradient[1];
-    real *w = input->matValue[1];
     if (weight_decay_!=0)
     {
-      for (int j=0;j<l;j++)
-        for (int i=0;i<n;i++)
-          if (w[i]>0)
-            d_w[i] += weight_decay_*gradientdata[0];
-          else if (w[i]<0)
-            d_w[i] -= weight_decay_*gradientdata[0];
+      real delta = weight_decay_ * gradientdata[0];
+      real* w = input->matValue[n];
+      real* d_w = input->matGradient[n];
+      int tot = l * n; // Number of weights to update.
+      for (int i = 0; i < tot; i++) {
+        if (w[i] > 0)
+          d_w[i] += delta;
+        else if (w[i] < 0)
+          d_w[i] -= delta;
+      }
     }
     if(bias_decay_!=0)
     {
