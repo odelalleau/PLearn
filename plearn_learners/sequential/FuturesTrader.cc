@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.cc,v 1.4 2003/09/22 18:34:21 ducharme Exp $ 
+   * $Id: FuturesTrader.cc,v 1.5 2003/09/22 20:15:24 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.cc */
@@ -44,9 +44,17 @@ namespace PLearn <%
 using namespace std;
 
 
-PLEARN_IMPLEMENT_OBJECT(FuturesTrader, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(FuturesTrader, "A meta-sequential learner trading futures", 
+                        "The FuturesTrader class is meant to replicate as realisticly as possible\n"
+                        "the market trading of futures. The learner relies on an *advisor* sequential\n"
+                        "learner for the training part. The advisor can be any model that suggests an ideal\n"
+                        "portfolio given the historical data. In the test part, the FuturesTrader ask the\n"
+                        "advisor for his recommendation and faces it to the market friction, additive and\n"
+                        "multiplicative transaction cost, and implements some classical trading mechanism\n"
+                        "such as a basic stop loss.");
 
 FuturesTrader::FuturesTrader():
+  build_complete(false),
   nb_assets(0),
   very_first_test_t(-1),
   first_asset_is_cash(true), risk_free_rate("risk_free_rate"),
@@ -54,8 +62,7 @@ FuturesTrader::FuturesTrader():
   additive_cost(0.0), multiplicative_cost(0.0),
   rebalancing_threshold(0.0), 
   stop_loss_active(false), stop_loss_horizon(-1), stop_loss_threshold(-INFINITY),
-  sp500(""), assets_names(TVec<string>()), deduce_assets_names(false),
-  build_complete(false)
+  sp500(""), assets_names(TVec<string>()), deduce_assets_names(false)
 {}
 
 void FuturesTrader::setTrainingSet(VMat training_set, bool call_forget/*=true*/)
@@ -287,7 +294,7 @@ void FuturesTrader::train()
   if( is_missing( advisor->state(last_call_train_t, 0) ) )
     PLERROR("The advisior->train method is assumed to compute and set the advisor->state up to the\n\t" 
             "(last_call_train_t)^th row. If (last_train_t < last_call_train_t), the\n\t"
-            "advisor should have copy state[last_train_t] to the\n\t"
+            "advisor should have copied state[last_train_t] to the\n\t"
             "(last_call_train_t - last_train_t) following lines\n\t");
 }
 
@@ -357,7 +364,7 @@ void FuturesTrader::test(VMat testset, PP<VecStatsCollector> test_stats,
     // Calling the advisor one row at the time ensures us that the state of 
     //  the advisor is updated properly by the delta and stop_loss methods 
     //  before advisor goes forward
-    // In the length position of the subMat, we use t+1 because we want the
+    // In the length position of the subMatRows, we use t+1 because we want the
     //  matrix to contain info at times 0, ..., t; these are on t+1 rows
     advisor->test(testset.subMatRows(0, t+1), test_stats, testoutputs, testcosts);
     if( is_missing(advisor->state(t, 0)) )
@@ -389,6 +396,10 @@ void FuturesTrader::test(VMat testset, PP<VecStatsCollector> test_stats,
 #ifdef VERBOSE 
     cout << "R" << t << ": " << Rt << endl; 
 #endif
+
+    // Should there be a reinvestment procedure alike:
+    // test_weights(k,t+1) += Rt;                                     ???
+
 
     // AM I SURE: For now I assume that the first test portfolio is the last train pf. See delta comments.
     // The following four lines should be resumed to the last one as soon as possible! 
@@ -431,6 +442,8 @@ void FuturesTrader::test(VMat testset, PP<VecStatsCollector> test_stats,
 #endif
 }
 
+//TBAdded: Somewhere after stop_loss, a check_if_roll_over => on vend tout test_weights(k, t) et 
+//           on achete tout test_weights(k, t+1)!!!
 real FuturesTrader::delta(int k, int t) const
 {
   // Should not be called on the cash
@@ -451,7 +464,7 @@ real FuturesTrader::delta(int k, int t) const
     test_weights(k, t+1) = current_wkt;             // Rebalancing isn't needed
     if(first_asset_is_cash){
       // Since we didn't follow the recommendation of the advisor (sell or buy), the cash position 
-      //  will be affected. Didn't buy: delta_>0; didn't sell: delta_<0.
+      //  will be affected. Didn't buy (delta_>0) we saved money; didn't sell (delta_<0), did not gain the expected money.
       test_weights(0, t+1) += delta_ * price(k, t); 
     }
     return 0.0;

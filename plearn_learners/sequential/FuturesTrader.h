@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.h,v 1.4 2003/09/22 18:34:21 ducharme Exp $ 
+   * $Id: FuturesTrader.h,v 1.5 2003/09/22 20:15:25 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.h */
@@ -52,6 +52,7 @@ protected:
   // *********************
   // * protected options *
   // *********************
+  bool build_complete;
   
   int nb_assets;               //!< Simply assets_names.length()
   
@@ -165,14 +166,11 @@ public:
   TVec<string> assets_names;
 
   /*!
-    If true, the assets_names will be deduced by parsing by the
+    If true, the assets_names will be deduce by parsing by the
     assets_info method.
     Default: false
   */
   bool deduce_assets_names;
-
-private:
-  bool build_complete;
 
   //**************
   // Methods     *   

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdvisorTutorial.cc,v 1.1 2003/09/17 15:48:00 dorionc Exp $ 
+   * $Id: AdvisorTutorial.cc,v 1.2 2003/09/22 20:15:24 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -55,8 +55,8 @@ PLEARN_IMPLEMENT_OBJECT(AdvisorTutorial, "Tutorial to write a FuturesTrader advi
 
 /*!
   FuturesTrader assumes advisior's train method computes and sets the advisor state up to the 
-   (last_call_train_t+horizon)^th row. If (last_train_t < last_call_train_t), the 
-   advisor should have copy state[last_train_t+horizon] to the 
+   (last_call_train_t)^th row. If (last_train_t < last_call_train_t), the 
+   advisor should copy state[last_train_t] to the 
    (last_call_train_t - last_train_t) following lines
 */
 void AdvisorTutorial::train()
@@ -67,7 +67,7 @@ void AdvisorTutorial::train()
   {
     for(int t = last_train_t+1; t <= last_call_train_t; t++)
       for(int k=0; k < state.width(); t++)
-        state(t+horizon, k) = state(last_train_t+horizon, k);
+        state(t, k) = state(last_train_t, k);
     return;
   }
   
@@ -76,9 +76,9 @@ void AdvisorTutorial::train()
   // The very first portfolio  
   if(last_train_t == -1)
   {
-    state(horizon, 0) = initial_cash;
+    state(0, 0) = initial_cash;
     for(int k=1; k < state.width(); k++)
-      state(horizon, k) = 0;
+      state(0, k) = 0;
     last_train_t++;
   }
 
@@ -86,9 +86,9 @@ void AdvisorTutorial::train()
   real dummy_asset_price = 1.0;
   for(int t=last_train_t+1; t < train_set.length(); t++)
   {
-    state(t+horizon, 0) = state(t+horizon-1, 0) - (state.width()-1)*dummy_asset_price;
+    state(t, 0) = state(t-1, 0) - (state.width()-1)*dummy_asset_price;
     for(int k=1; k < state.width(); k++)
-      state(t+horizon, k) = state(t+horizon-1,k) + 1.0;
+      state(t, k) = state(t-1,k) + 1.0;
   }
   
   last_train_t = last_call_train_t; // Updating because we have trained
@@ -96,7 +96,7 @@ void AdvisorTutorial::train()
 
 /*!
   FuturesTrader assumes the advisior test method computes and sets the advisor state up to its 
-  (last_test_t+horizon)^th row.
+  (last_test_t)^th row.
 */
 void AdvisorTutorial::test(VMat testset, PP<VecStatsCollector> test_stats,
                            VMat testoutputs, VMat testcosts) const
@@ -114,9 +114,9 @@ void AdvisorTutorial::test(VMat testset, PP<VecStatsCollector> test_stats,
   real dummy_asset_price = 1.0;
   for(int t=last_test_t+1; t < testset.length(); t++)
   {
-    state(t+horizon, 0) = state(t+horizon-1, 0) - (state.width()-1)*dummy_asset_price;
+    state(t, 0) = state(t-1, 0) - (state.width()-1)*dummy_asset_price;
     for(int k=1; k < state.width(); k++)
-      state(t+horizon, k) = state(t+horizon-1,k) + 1.0;
+      state(t, k) = state(t-1,k) + 1.0;
   }
   
   last_test_t = testset.length()-1;
