@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.26 2004/05/26 18:38:44 tihocan Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.27 2004/05/26 21:21:55 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -45,7 +45,6 @@
 #define ConditionalDensityNet_INC
 
 #include "PConditionalDistribution.h"
-//#include "Var_all.h"
 #include "Optimizer.h"
 
 namespace PLearn {
@@ -53,7 +52,9 @@ using namespace std;
 
 class ConditionalDensityNet: public PConditionalDistribution
 {
-public:
+
+private:
+
   typedef PConditionalDistribution inherited;  
 
 protected:
@@ -62,15 +63,15 @@ protected:
   // *********************
 
   // ### declare protected option fields (such as learnt parameters) here
-    Var input;  // Var(inputsize())
-    Var target; // Var(targetsize()-weightsize())
-    Var sampleweight; // Var(1) if train_set->hasWeights()
-    Var w1; // bias and weights of first hidden layer
-    Var w2; // bias and weights of second hidden layer
-    Var wout; // bias and weights of output layer
-    Var wdirect; // bias and weights for direct in-to-out connection
+  Var input;  // Var(inputsize())
+  Var target; // Var(targetsize()-weightsize())
+  Var sampleweight; // Var(1) if train_set->hasWeights()
+  Var w1; // bias and weights of first hidden layer
+  Var w2; // bias and weights of second hidden layer
+  Var wout; // bias and weights of output layer
+  Var wdirect; // bias and weights for direct in-to-out connection
 
-    Var output; // output layer contains the parameters of the distribution:
+  Var output; // output layer contains the parameters of the distribution:
   Var outputs; // contains the result of computeOutput, e.g. expectation, or cdf curve
   Var a, pos_a; // output parameter, scalar constant part
   Var b, pos_b; // output parameters, step height parameters
@@ -79,16 +80,18 @@ protected:
   Var cumulative;
   Var expected_value;
 
-    VarArray costs; // all costs of interest
-    VarArray penalties;
-    Var training_cost; // weighted scalar costs[0] including penalties
-    Var test_costs; // hconcat(costs)
+  VarArray costs; // all costs of interest
+  VarArray penalties;
+  Var training_cost; // weighted scalar costs[0] including penalties
+  Var test_costs; // hconcat(costs)
 
-      VarArray invars;
-    VarArray params;  // all arameter input vars
+  VarArray invars;
+  VarArray params;  // all arameter input vars
 
 public :
+  
   Vec paramsvalues; // values of all parameters
+   
 protected:
 
    Var centers, centers_M, steps, steps_M, steps_0, steps_gradient, steps_integral, delta_steps, cum_numerator, cum_denominator;
@@ -111,9 +114,9 @@ public:
 
   VarArray y_values; // values at which output probability curve is sampled
   Var mu; // output parameters, step location parameters
-    mutable Func f; // input -> output
-    mutable Func test_costf; // input & target -> output & test_costs
-    mutable Func output_and_target_to_cost; // output & target -> cost
+  mutable Func f; // input -> output
+  mutable Func test_costf; // input & target -> output & test_costs
+  mutable Func output_and_target_to_cost; // output & target -> cost
 
   mutable Func cdf_f; // target -> cumulative
   mutable Func mean_f; // output -> expected value
@@ -132,27 +135,27 @@ public:
   // ***** OPTIONS PASTED FROM NNET ************** 
 
   // ### declare public option fields (such as build options) here
-    int nhidden;    // number of hidden units in first hidden layer (default:0)
-    int nhidden2;   // number of hidden units in second hidden layer (default:0)
+  int nhidden;    // number of hidden units in first hidden layer (default:0)
+  int nhidden2;   // number of hidden units in second hidden layer (default:0)
 
-    real weight_decay; // default: 0
-    real bias_decay;   // default: 0 
-    real layer1_weight_decay; // default: MISSING_VALUE
-    real layer1_bias_decay;   // default: MISSING_VALUE
-    real layer2_weight_decay; // default: MISSING_VALUE
-    real layer2_bias_decay;   // default: MISSING_VALUE
-    real output_layer_weight_decay; // default: MISSING_VALUE
-    real output_layer_bias_decay;   // default: MISSING_VALUE
-    real direct_in_to_out_weight_decay; // default: MISSING_VALUE
+  real weight_decay; // default: 0
+  real bias_decay;   // default: 0 
+  real layer1_weight_decay; // default: MISSING_VALUE
+  real layer1_bias_decay;   // default: MISSING_VALUE
+  real layer2_weight_decay; // default: MISSING_VALUE
+  real layer2_bias_decay;   // default: MISSING_VALUE
+  real output_layer_weight_decay; // default: MISSING_VALUE
+  real output_layer_bias_decay;   // default: MISSING_VALUE
+  real direct_in_to_out_weight_decay; // default: MISSING_VALUE
 
-    bool L1_penalty; // default: false
-    bool direct_in_to_out; // should we include direct input to output connecitons? default: false
+  bool L1_penalty; // default: false
+  bool direct_in_to_out; // should we include direct input to output connecitons? default: false
 
-    // Build options related to the optimization:
-    PP<Optimizer> optimizer; // the optimizer to use (no default)
+  // Build options related to the optimization:
+  PP<Optimizer> optimizer; // the optimizer to use (no default)
 
-    int batch_size; // how many samples to use to estimate gradient before an update
-                    // 0 means the whole training set (default: 1)
+  int batch_size; // how many samples to use to estimate gradient before an update
+  // 0 means the whole training set (default: 1)
 
   // ***** OPTIONS SPECIFIC TO CONDITIONALDENSITYNET ************** 
 
@@ -211,13 +214,13 @@ public:
   // ******************
 
 private: 
+
   //! This does the actual building. 
-  // (Please implement in .cc)
   void build_();
 
 protected: 
+
   //! Declares this class' options
-  // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
 
 public:
@@ -236,7 +239,6 @@ public:
   //  If your class is not instantiatable (it has pure virtual methods)
   // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
   PLEARN_DECLARE_OBJECT(ConditionalDensityNet);
-
 
   // **************************
   // **** PConditionalDistribution methods ****
@@ -295,7 +297,9 @@ public:
   //! You may remove this method if your distribution does not implement it
   virtual void train();
 
+  /*
   virtual void computeOutput(const Vec& input, Vec& output) const;
+  */
 
   virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
                                      Vec& output, Vec& costs) const;
@@ -305,7 +309,7 @@ public:
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(ConditionalDensityNet);
+DECLARE_OBJECT_PTR(ConditionalDensityNet);
   
 } // end of namespace PLearn
 
