@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LLC.cc,v 1.1 2005/03/03 20:09:45 tihocan Exp $ 
+   * $Id: LLC.cc,v 1.2 2005/03/08 16:53:30 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -56,6 +56,7 @@ LLC::LLC()
 : sum_of_dim(-1),
   knn(5),
   n_comp(1),
+  regularization(0),
   train_mixture(true)
 {}
 
@@ -85,6 +86,9 @@ void LLC::declareOptions(OptionList& ol)
 
   declareOption(ol, "n_comp", &LLC::n_comp, OptionBase::buildoption,
       "Number of components computed.");
+
+  declareOption(ol, "regularization", &LLC::regularization, OptionBase::buildoption,
+      "A regularization coefficient (to use if crash in the eigensystem, but assume the consequences).");
 
   declareOption(ol, "train_mixture", &LLC::train_mixture, OptionBase::buildoption,
       "Whether the mixture should be trained or not.");
@@ -264,6 +268,8 @@ void LLC::train()
     pout << "Solving the generalized eigensystem" << endl;
   Vec eigen_val;
   Mat eigen_vec;
+  if (regularization > 0)
+    regularizeMatrix(B, regularization);
   generalizedEigenVecOfSymmMat(A, B, 1, n_comp + 1, eigen_val, eigen_vec);
   // Ignore the smallest eigenvalue (should be 0).
   if (verbosity >= 5)

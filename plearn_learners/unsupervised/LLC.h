@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LLC.h,v 1.1 2005/03/03 20:09:45 tihocan Exp $ 
+   * $Id: LLC.h,v 1.2 2005/03/08 16:53:30 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -75,6 +75,7 @@ public:
   int knn;
   PP<PLearner> mixture;
   int n_comp;
+  real regularization;
   bool train_mixture;
 
   // ****************
