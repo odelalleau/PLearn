@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.h,v 1.7 2003/03/10 01:51:23 yoshua Exp $
+   * $Id: Learner.h,v 1.8 2003/04/06 23:22:39 plearner Exp $
    ******************************************************* */
 
 
@@ -50,6 +50,7 @@
 
 #include "Measurer.h"
 #include "Kernel.h"
+#include "VecStatsCollector.h"
 #include "StatsIterator.h"
 #include "VVec.h"
 //#include "TimeMeasurer.h"
@@ -77,6 +78,14 @@ using namespace std;
     // EN FAIRE UN POINTEUR AUSSI
     ofstream* train_objective_stream; //!< file stream where to save objecties and costs during training 
     Array<ofstream*> test_results_streams; //!< opened streams where to save test results
+
+  private:
+
+    static Vec tmp_input; // temporary input vec
+    static Vec tmp_target; // temporary target vec
+    static Vec tmp_weight; // temporary example weight vec
+    static Vec tmp_output; // temporary output vec
+    static Vec tmp_costs; // temporary costs vec
 
   protected:
 
@@ -249,8 +258,8 @@ using namespace std;
     */
 
     //! Declare the train_set
-    inline void setTrainingSet(VMat training_set) { train_set = training_set; }
-    inline VMat getTrainingSet(VMat training_set) { return train_set; }
+    virtual void setTrainingSet(VMat training_set) { train_set = training_set; }
+    inline VMat getTrainingSet() { return train_set; }
 
 /*!       *** SUBCLASS WRITING: ***
       Does the actual training. Subclasses must implement this method.  
@@ -260,6 +269,18 @@ using namespace std;
 */
     virtual void train(VMat training_set) =0; 
 
+
+    /*! *** SUBCLASS WRITING: ***
+      Should do the actual training until epoch==nepochs 
+      and should call update on the stats with training costs measured on-line
+    */
+    virtual void newtrain(VecStatsCollector& train_stats);
+
+
+    //! Should perform test on testset, updating test cost statistics,
+    //! and optionally filling testoutputs and testcosts
+    virtual void newtest(VMat testset, VecStatsCollector& test_stats, 
+                         VMat testoutputs=0, VMat testcosts=0);
 
     /*
       virtual void useAndCost(Vec input, Vec target, Vec output, Vec cost)
@@ -295,9 +316,37 @@ using namespace std;
       }
     }
 
-      //! **Next generation** learners allow inputs to be anything, not just Vec
-      Vec vec_input;
-      virtual void computeOutput(const VVec& input, Vec& output);
+    //! **Next generation** learners allow inputs to be anything, not just Vec
+    Vec vec_input;
+
+    //! *** SUBCLASS WRITING: ***
+    //! This should be overloaded in subclasses to compute the output from the input
+    // NOTE: For backward compatibility, default version currently calls
+    // deprecated method use which should ultimately be removed...
+    virtual void computeOutput(const VVec& input, Vec& output);
+
+    //! *** SUBCLASS WRITING: ***
+    //! This should be overloaded in subclasses to compute the weighted costs from
+    //! already computed output.
+    // NOTE: For backward compatibility, default version currently calls the
+    // deprecated method computeCost which should ultimately be removed...
+    virtual void computeCostsFromOutputs(const VVec& input, const Vec& output, 
+                                         const VVec& target, const VVec& weight,
+                                         Vec& costs);
+
+                                
+    //! Default calls computeOutput and computeCostsFromOutputs
+    //! You may overload this if you have a more efficient way to 
+    //! compute both output and weighted costs at the same time.
+    virtual void computeOutputAndCosts(const VVec& input, VVec& target, const VVec& weight,
+                                       Vec& output, Vec& costs);
+
+    //! Default calls computeOutputAndCosts
+    //! This may be overloaded if there is a more efficient way to compute the costs
+    //! directly, without computing the whole output vector.
+    virtual void computeCosts(const VVec& input, VVec& target, VVec& weight, 
+                              Vec& costs);
+    
 
 /*!       ** DEPRECATED ** Do not use! 
       use the setOption and build methods instead
@@ -357,11 +406,11 @@ using namespace std;
     virtual void stop_if_wanted();
 
     //!  Simple accessor methods: (do NOT overload! Set inputsize_ and outputsize_ instead)
-    int inputsize() const { return inputsize_; }
-    int targetsize() const { return targetsize_; }
-    int outputsize() const { return outputsize_; }
-    int weightsize() const { return weightsize_; }
-    int epoch() const { return epoch_; }
+    inline int inputsize() const { return inputsize_; }
+    inline int targetsize() const { return targetsize_; }
+    inline int outputsize() const { return outputsize_; }
+    inline int weightsize() const { return weightsize_; }
+    inline int epoch() const { return epoch_; }
 
     //!  **** SUBCLASS WRITING:
     //!  should be re-defined if user re-defines computeCost

@@ -1,7 +1,8 @@
 // -*- C++ -*-
-// VecStatsCollector.h
+
+// SetOption.h
 // 
-// Copyright (C) 2002 Pascal Vincent
+// Copyright (C) 2003 Pascal Vincent
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -32,22 +33,28 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.h,v 1.3 2003/04/06 23:22:38 plearner Exp $ 
+   * $Id: SetOption.h,v 1.1 2003/04/06 23:22:14 plearner Exp $ 
    ******************************************************* */
 
-/*! \file VecStatsCollector.h */
-#ifndef VecStatsCollector_INC
-#define VecStatsCollector_INC
+/*! \file SetOption.h */
+#ifndef SetOption_INC
+#define SetOption_INC
 
 #include "Object.h"
-#include "TMat.h"
-#include "StatsCollector.h"
 
 namespace PLearn <%
 using namespace std;
 
-class VecStatsCollector: public Object
-{    
+class SetOption: public Object
+{
+protected:
+  // *********************
+  // * protected options *
+  // *********************
+
+  // ### declare protected option fields (such as learnt parameters) here
+  // ...
+    
 public:
 
   typedef Object inherited;
@@ -56,21 +63,16 @@ public:
   // * public build options *
   // ************************
 
-  //! maximum number of different values to keep track of for each element
-  int maxnvalues; //! (default: 0, meaning we only keep track of global statistics)
-
-  //! Should we compute and keep X'.X ?
-  bool compute_covariance; //! (default false)
-
-  // * "learnt" options *
-  TVec<StatsCollector> stats; // the stats for each element
-  Mat cov; // the uncentered covariance matrix (mean not subtracted: X'.X)
+  string name; // name of option
+  string value; // value of option (as a string)
 
   // ****************
   // * Constructors *
   // ****************
 
-  VecStatsCollector();
+  // Default constructor, make sure the implementation in the .cc
+  // initializes all fields to reasonable default values.
+  SetOption();
 
 
   // ******************
@@ -84,44 +86,12 @@ private:
 
 protected: 
   //! Declares this class' options
+  // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
 
 public:
-  
-  //! clears all previously accumulated statistics
-  void forget();
-
-  //! updates the statistics when seeing x
-  void update(const Vec& x);
-  
-  //! finishes whatever computation are needed after all updates have been made
-  void finalize();
-
-  //! returns statistics for element i
-  const StatsCollector& getStats(int i) const 
-  { return stats[i]; }
-
-  //! returns the empirical mean (sample average) vec
-  Vec getMean() const;
-
-  //! returns the empirical variance vec
-  Vec getVariance() const;
-
-  //! returns the empirical standard deviation vec
-  Vec getStdDev() const;
-
-  //! returns the empirical standard deviation vec
-  Vec getStdError() const;
-
-  //! returns uncentered covariance matrix (mean not subtracted X'.X)
-  const Mat& getXtX() const
-  { return cov; }
-
-  //! returns centered covariance matrix (mean subtracted)
-  Mat getCovariance() const;
-  
-  //! returns correlation matrix
-  Mat getCorrelation() const;
+  // simply calls inherited::build() then build_() 
+  virtual void build();
 
   //! Provides a help message describing this class
   virtual string help() const;
@@ -129,12 +99,21 @@ public:
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
+  //! Will call obj->setOption(name, value)
+  inline void apply(PP<Object> obj)
+  { obj->setOption(name, value); }
+
+  //! Will call obj->setOption(name, value); or if name is a key in aliases,
+  //! it will call obj->setOption(aliases[name], value)
+  void apply(PP<Object> obj, const map<string, string>& aliases);
+
   //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(VecStatsCollector);
+  DECLARE_NAME_AND_DEEPCOPY(SetOption);
+
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(VecStatsCollector);
+  DECLARE_OBJECT_PTR(SetOption);
   
 %> // end of namespace PLearn
 

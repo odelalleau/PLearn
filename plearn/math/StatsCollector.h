@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.7 2003/03/26 20:45:45 jkeable Exp $
+   * $Id: StatsCollector.h,v 1.8 2003/04/06 23:22:38 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -127,12 +127,15 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
     real variance() const { return real((sumsquare_ - square(sum_)/nnonmissing_)/(nnonmissing_-1)); }
     real stddev() const { return sqrt(variance()); }
     real stderror() const { return sqrt(variance()/nnonmissing()); }
-      
-    //! update statistics with next value val of sequence 
-    void update(real val);
-    
+          
     //! clears all statistics, allowing to restart collecting them
     void forget();
+
+    //! update statistics with next value val of sequence 
+    void update(real val);
+
+    //! finishes whatever computation are needed after all updates have been made
+    void finalize() {}
 
     map<real,StatsCollectorCounts> * getCounts(){return &counts;}
     int getMaxNValues(){return maxnvalues;}

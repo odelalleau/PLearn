@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.2 2003/03/19 23:04:00 jkeable Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.3 2003/04/06 23:22:38 plearner Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -128,6 +128,13 @@ void VecStatsCollector::forget()
 {
   stats.resize(0);
   cov.resize(0,0);
+}
+
+void VecStatsCollector::finalize()
+{
+  int n = stats.size();
+  for(int i=0; i<n; i++)
+    stats[i].finalize();
 }
 
 //! returns the empirical mean (sample average) vec

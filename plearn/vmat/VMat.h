@@ -37,9 +37,9 @@
  
 
 /* *******************************************************      
-   * $Id: VMat.h,v 1.9 2002/10/25 23:16:09 plearner Exp $
+   * $Id: VMat.h,v 1.10 2003/04/06 23:22:38 plearner Exp $
    * This file is part of the PLearn library.
-   ******************************************************* */
+z   ******************************************************* */
 
 
 /*! \file PLearnLibrary/PLearnCore/VMat.h */
@@ -52,6 +52,7 @@
 #include "TMat.h"
 #include "VMField.h"
 #include "VMatrix.h"
+#include "VVec.h"
 
 namespace PLearn <%
 using namespace std;
@@ -70,12 +71,17 @@ public:
   int width() const { return ptr->width(); }
 
   real operator()(int i, int j) const { return ptr->get(i,j); }
-  Vec operator()(int i) const { Vec v(ptr->width()); ptr->getRow(i,v); return v; }
+  VVec operator()(int i) const { return VVec(*this, i); }
   Vec getColumn(int i) const { Vec v(ptr->length()); ptr->getColumn(i,v); return v; }
 
   VMat subMat(int i, int j, int l, int w) const { return ptr->subMat(i,j,l,w); }
   VMat subMatRows(int i, int l) const { return ptr->subMat(i,0,l,width()); }
   VMat subMatColumns(int j, int w) const { return ptr->subMat(0,j,length(),w); }
+
+  //! Gets sample #i (simply sets VVecs to look at input, target and weight part of row i)
+  //! uses inputsize_, targetsize_ and weightsize_ fields to fill the VVecs, 
+  //! so make sure they have been correctly defined (possibly by calling VMatrix::defineSizes(...)
+  void getSample(int i, VVec& input, VVec& target, VVec& weight);
 
   VMat row(int i) const { return subMatRows(i,1); }
   VMat firstRow() const { return row(0); }

@@ -1,10 +1,9 @@
 // -*- C++ -*-
 
-// PLearn (A C++ Machine Learning Library)
-// Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
-//
-
+// SetOption.cc
+// 
+// Copyright (C) 2003 Pascal Vincent 
+// 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -33,22 +32,65 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
- 
-/*
-* $Id: VVec.cc,v 1.5 2003/04/06 23:22:39 plearner Exp $
-******************************************************* */
+/* *******************************************************      
+   * $Id: SetOption.cc,v 1.1 2003/04/06 23:22:13 plearner Exp $ 
+   ******************************************************* */
 
-
-#include "VVec.h"
-#include "MemoryVMatrix.h"
+/*! \file SetOption.cc */
+#include "SetOption.h"
 
 namespace PLearn <%
+using namespace std;
 
-VVec::VVec(const Vec& v)
-  :data(new MemoryVMatrix(rowmatrix(v))),
-   row_index(0), col_index(0), length_(v.length())
-{}
+SetOption::SetOption() 
+  :Object()
+  {}
 
-IMPLEMENT_NAME_AND_DEEPCOPY(VVec);
+
+  IMPLEMENT_NAME_AND_DEEPCOPY(SetOption);
+
+  void SetOption::declareOptions(OptionList& ol)
+  {
+    declareOption(ol, "name", &SetOption::name, OptionBase::buildoption,
+                  "name of the option to be set");
+    declareOption(ol, "value", &SetOption::value, OptionBase::buildoption,
+                  "value of the option to be set");
+    inherited::declareOptions(ol);
+  }
+
+  string SetOption::help() const
+  {
+    // ### Provide some useful description of what the class is ...
+    return 
+      "SetOption is an object containing a name and a value of an option \n"
+      "to be set on another object."
+      + optionHelp();
+  }
+
+  void SetOption::build_()
+  {}
+
+  // ### Nothing to add here, simply calls build_
+  void SetOption::build()
+  {
+    inherited::build();
+    build_();
+  }
+
+
+  void SetOption::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+  {
+    Object::makeDeepCopyFromShallowCopy(copies);
+  }
+
+void SetOption::apply(PP<Object> obj, const map<string, string>& aliases)
+{
+  map<string, string>::const_iterator it = aliases.find(name);
+  if(it!=aliases.end())
+    obj->setOption(it->second, value);
+  else 
+    obj->setOption(name, value);    
+}
+
 
 %> // end of namespace PLearn

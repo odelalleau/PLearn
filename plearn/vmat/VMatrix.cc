@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.10 2003/03/19 23:15:32 jkeable Exp $
+* $Id: VMatrix.cc,v 1.11 2003/04/06 23:22:39 plearner Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -584,6 +584,17 @@ void VMatrix::appendRow(Vec v)
 {
   PLERROR("This method (appendRow) not implemented by VMatrix subclass!");
 }
+
+void VMatrix::putOrAppendRow(int i, Vec v)
+{
+  if(i==length())
+    appendRow(v);
+  else if(i<length())
+    putRow(i,v);
+  else
+    PLERROR("In putOrAppendRow, index %d out of range",i);
+}
+
 
 void VMatrix::getMat(int i, int j, Mat m) const
 {

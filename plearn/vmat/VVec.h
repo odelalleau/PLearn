@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: VVec.h,v 1.4 2003/03/10 01:51:18 yoshua Exp $
+   * $Id: VVec.h,v 1.5 2003/04/06 23:22:39 plearner Exp $
    ******************************************************* */
 
 
@@ -45,30 +45,88 @@
 #define VVec_INC
 
 #include "Object.h"
-#include "VMat.h"
+#include "VMatrix.h"
 
 namespace PLearn <%
 
-/*! ** Vvector ** */
-//! A VVec represents an abstract notion of "sample" or "example"
-//! which will allow us to generalize VMatrices to handle objects
-//! that are not conveniently representable with ordinary vectors.
+//! A VVec is a reference to a row or part of a row (a subrow) of a VMatrix
 
 class VVec : public Object
 {
   public:
 
   // We leave the actual representation choice to some
-  // underlying virtual matrix:
-  VMat data;
+  // underlying virtual matrix. A VVec simply references a subRow of a VMatrix
+  PP<VMatrix> data;
   int row_index;
+  int col_index; 
+  int length_;
+
+  VVec()
+    :row_index(0), col_index(0), length_(0) {}
+
+  VVec(const PP<VMatrix>& m, int i)
+    :data(m), row_index(i), col_index(0), length_(m->width()) {}
+
+  VVec(const PP<VMatrix>& m, int i, int j, int l)
+    :data(m), row_index(i), col_index(j), length_(l) {}
+
+  //! constructor from Vec
+  //! Will build a MemoryVMatrix containing a view of v as its single row
+  //! and have the VVec point to it. So data will be shared with v.
+  VVec(const Vec& v);
+
+  inline int length() const { return length_; }
+  inline int size() const { return length_; }
 
   // to keep compatibility with most current code,
   // VVec's can be converted to Vec's
-  virtual void toVec(Vec row_vec) const { data->getRow(row_index,row_vec); }
-  virtual int length() const { return data->width(); }
+  inline void toVec(const Vec& v) const 
+  { 
+#ifdef BOUNDCHECK
+    if(v.length()!=length_)
+      PLERROR("In VVec::toVec length of Vec and VVec differ!");
+#endif
+    data->getSubRow(row_index,col_index,v); 
+  }
+
+  //! copies v into into this VVec 
+  inline void copyFrom(const Vec& v) const 
+  { 
+#ifdef BOUNDCHECK
+    if(v.length()!=length_)
+      PLERROR("In VVec::copyFrom length of Vec and VVec differ!");
+#endif
+    data->putSubRow(row_index,col_index,v); 
+  }
+
+
+  inline VVec subVec(int j, int len)
+  { return VVec(data, row_index, col_index+j, len); }
+
+  //! conversion to Vec 
+  operator Vec() const
+  {
+    Vec v(length_);
+    data->getSubRow(row_index,col_index,v); 
+    return v;
+  }
+
   DECLARE_NAME_AND_DEEPCOPY(VVec);
 };
+
+inline void operator<<(const VVec& vv, const Vec& v)
+{ vv.toVec(v); }
+
+inline void operator>>(const VVec& vv, const Vec& v)
+{ vv.copyFrom(v); }
+
+inline void operator>>(const Vec& v, const VVec& vv)
+{ vv.toVec(v); }
+
+inline void operator<<(const Vec& v, const VVec& vv)
+{ vv.copyFrom(v); }
+
 
 %> // end of namespace PLearn
 

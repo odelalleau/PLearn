@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat.cc,v 1.7 2003/03/19 23:15:27 jkeable Exp $
+* $Id: VMat.cc,v 1.8 2003/04/06 23:22:38 plearner Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat.h"
@@ -58,6 +58,13 @@ VMat::VMat(VMatrix* d): PP<VMatrix>(d) {}
 VMat::VMat(const VMat& d) :PP<VMatrix>(d) {}
 VMat::VMat(const Mat& datamat): PP<VMatrix>(new MemoryVMatrix(datamat)) {}
 VMat::~VMat() {}
+
+void VMat::getSample(int i, VVec& input, VVec& target, VVec& weight)
+{
+  input = VVec(ptr, i, 0, ptr->inputsize_);
+  target = VVec(ptr, i, ptr->inputsize_, ptr->targetsize_);
+  weight = VVec(ptr, i, ptr->inputsize_+ptr->targetsize_, ptr->weightsize_);
+}
 
 VMat VMat::rows(TVec<int> rows_indices) const
 { return new SelectRowsVMatrix(*this, rows_indices); }

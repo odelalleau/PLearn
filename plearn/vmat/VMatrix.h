@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.8 2003/03/19 23:15:33 jkeable Exp $
+   * $Id: VMatrix.h,v 1.9 2003/04/06 23:22:39 plearner Exp $
    ******************************************************* */
 
 
@@ -65,10 +65,21 @@ class Func;
 
 class VMatrix: public Object
 {
+  friend class VMat;
+
 protected:
   int length_;
   int width_;
   time_t mtime_; // time of "last modification" of files containing the data
+
+  // For training/testing data sets we assume each row is composed of 3 parts
+  // An input part, a target part, and a weight part
+  // These fields give those parts' lengths
+  // They are used by method VMat::
+
+  int inputsize_;
+  int targetsize_;
+  int weightsize_;
 
   // are write operations tolerated?
   bool writable;
@@ -106,6 +117,15 @@ public:
 
   static void declareOptions(OptionList & ol);
 
+  // Sample parts sizes
+  inline void defineSizes(int inputsize, int targetsize, int weightsize)
+  { inputsize_ = inputsize, targetsize_ = targetsize, weightsize_ = weightsize; }
+  
+  inline int inputsize() { return inputsize_; }
+  inline int targetsize() { return targetsize_; }
+  inline int weightsize() { return weightsize_; }
+
+  // Field types...
   Array<VMField>& getFieldInfos() const;
   VMField& getFieldInfos(int fieldindex) const { return getFieldInfos()[fieldindex]; }
   void declareField(int fieldindex, const string& fieldname, VMField::FieldType fieldtype=VMField::UnknownType)
@@ -261,6 +281,9 @@ public:
     
   //!  This method must be implemented for matrices that are allowed to grow
   virtual void appendRow(Vec v);
+
+  //! will call putRow if i<length() and appendRow if i==length()
+  void putOrAppendRow(int i, Vec v);
 
   //!  These methods do not usually need to be overridden in subclasses
   //!  (default versions call getSubRow, which should do just fine)

@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.cc,v 1.8 2003/03/18 18:29:56 ducharme Exp $
+   * $Id: Learner.cc,v 1.9 2003/04/06 23:22:39 plearner Exp $
    ******************************************************* */
 
 #include "Learner.h"
@@ -53,6 +53,12 @@
 
 namespace PLearn <%
 using namespace std;
+
+Vec Learner::tmp_input; // temporary input vec
+Vec Learner::tmp_target; // temporary target vec
+Vec Learner::tmp_weight; // temporary weight vec
+Vec Learner::tmp_output; // temporary output vec
+Vec Learner::tmp_costs; // temporary costs vec
 
 PStream& /*oassignstream&*/ Learner::default_vlog()
 {
@@ -603,11 +609,6 @@ void Learner::apply(const VMat& data, VMat outputs)
     return concat(test_statistics.computeStats(costs));
   }
 
-  void Learner::computeOutput(const VVec& input, Vec& output) {
-    vec_input.resize(input.length());
-    input.toVec(vec_input);
-    use(vec_input,output);
-  }
 
 // [PASCAL TODO:] 
 // 1) Handle weights properly
@@ -932,6 +933,98 @@ Array<string> Learner::trainObjectiveNames() const
     }
   }
 
+
+// NOTE: For backward compatibility, default version currently calls the
+// deprecated method use which should ultimately be removed...
+void Learner::computeOutput(const VVec& input, Vec& output) 
+{
+  tmp_input.resize(input.length());
+  tmp_input << input;
+  use(tmp_input,output);
+}
+
+
+// NOTE: For backward compatibility, default version currently calls the
+// deprecated method computeCost which should ultimately be removed...
+void Learner::computeCostsFromOutputs(const VVec& input, const Vec& output, 
+                                         const VVec& target, const VVec& weight,
+                                         Vec& costs)
+{
+  tmp_input.resize(input.length());
+  tmp_input << input;
+  tmp_target.resize(target.length());
+  tmp_target << target;
+  computeCost(input, target, output, costs);
+
+  int nw = weight.length();
+  if(nw>0)
+    {
+      tmp_weight.resize(nw);
+      tmp_weight << weight;
+      if(nw==1)  // a single scalar weight
+        costs *= tmp_weight[0];
+      else if(nw==costs.length()) // one weight per cost element
+        costs *= tmp_weight;
+      else 
+        PLERROR("In computeCostsFromOutputs: don't know how to handle cost-weight vector of length %d while output vector has length %d", nw, output.length());
+    }
+}
+
+                                
+void Learner::computeOutputAndCosts(const VVec& input, VVec& target, const VVec& weight,
+                           Vec& output, Vec& costs)
+{
+  computeOutput(input, output);
+  computeCostsFromOutputs(input, output, target, weight, costs);
+}
+
+void Learner::computeCosts(const VVec& input, VVec& target, VVec& weight, 
+                  Vec& costs)
+{
+  tmp_output.resize(outputsize());
+  computeOutputAndCosts(input, target, weight, tmp_output, costs);
+}
+
+
+void Learner::newtrain(VecStatsCollector& stats)
+{ PLERROR("newtrain not yet implemented for this learner"); }
+
+
+void Learner::newtest(VMat testset, VecStatsCollector& test_stats, 
+             VMat testoutputs, VMat testcosts)
+{
+  int l = testset.length();
+  VVec input;
+  VVec target;
+  VVec weight;
+
+  Vec output(testoutputs ?outputsize() :0);
+  Vec costs(costsize());
+
+  testset->defineSizes(inputsize(),targetsize(),weightsize());
+
+  test_stats.forget();
+
+  for(int i=0; i<l; i++)
+    {
+      testset.getSample(i, input, target, weight);
+
+      if(testoutputs)
+        {
+          computeOutputAndCosts(input, target, weight, output, costs);
+          testoutputs->putOrAppendRow(i,output);
+        }
+      else // no need to compute outputs
+        computeCosts(input, target, weight, costs);
+
+      if(testcosts)
+        testcosts->putOrAppendRow(i, costs);
+
+      test_stats.update(costs);
+    }
+
+  test_stats.finalize();
+}
 
 
 %> // end of namespace PLearn
