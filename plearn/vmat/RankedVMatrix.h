@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RankedVMatrix.h,v 1.1 2004/10/26 20:17:32 tihocan Exp $ 
+   * $Id: RankedVMatrix.h,v 1.2 2004/10/29 21:16:09 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -84,6 +84,9 @@ public:
 
   //! Default constructor.
   RankedVMatrix();
+
+  //! Convenient constructor.
+  RankedVMatrix(VMat source, PP<RankedVMatrix> reference = 0);
 
   // ******************
   // * Object methods *

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RankedVMatrix.cc,v 1.1 2004/10/26 20:17:29 tihocan Exp $ 
+   * $Id: RankedVMatrix.cc,v 1.2 2004/10/29 21:16:09 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -46,11 +46,18 @@
 namespace PLearn {
 using namespace std;
 
-//////////////////
+///////////////////
 // RankedVMatrix //
-//////////////////
+///////////////////
 RankedVMatrix::RankedVMatrix()
 {}
+
+RankedVMatrix::RankedVMatrix(VMat the_source, PP<RankedVMatrix> the_reference)
+: reference(the_reference)
+{
+  source = the_source;
+  build();
+}
 
 PLEARN_IMPLEMENT_OBJECT(RankedVMatrix,
     "Replaces the target of a source VMat with its rank.",
@@ -60,7 +67,7 @@ PLEARN_IMPLEMENT_OBJECT(RankedVMatrix,
     " 2. Use the rank of the input corresponding to this target.\n"
     " 3. If there is no such target, use the maximum rank + 1\n"
     "If no reference is given, then the target is just the rank in the source\n"
-    "VMat's sorted targets.\n"
+    "VMat's sorted targets, starting from 0.\n"
 );
 
 ////////////////////
