@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
- * $Id: TVec_decl.h,v 1.17 2004/09/14 16:04:37 chrish42 Exp $
+ * $Id: TVec_decl.h,v 1.18 2004/10/13 01:15:58 chapados Exp $
  * AUTHORS: Pascal Vincent & Yoshua Bengio
  * This file is part of the PLearn library.
  ******************************************************* */
@@ -213,11 +213,11 @@ public:
       if (newlength<0 || extrabytes<0)
         PLERROR("IN TVec::resize(int newlength)\nInvalid argument (<0)");
 #endif
-      if (newlength == length_) {
+      if (newlength == length_ && extrabytes == 0) {
         // No need to do anything.
         return;
       }
-      if (storage.isNull() && newlength>0)
+      if (storage.isNull() && (newlength>0 || extrabytes>0))
       {
         offset_ = 0;
         length_ = newlength;
@@ -536,7 +536,7 @@ public:
       int currentsize = length();
       if (currentsize + newvec.size() == 0)
         return;
-      resize(currentsize + newvec.size());
+      resize(currentsize + newvec.size(), currentsize + newvec.size());
       T* v = data();
       for (unsigned int i=0; i<newvec.size(); ++i)
         v[currentsize+i] = newvec[i];
@@ -577,7 +577,7 @@ public:
       int oldLength = length();
       if (values.length() == 0)
         return;
-      resize(oldLength+values.length());
+      resize(oldLength+values.length(), oldLength+values.length());
       T* v = data()+oldLength;
       T* newv = values.data();
       for(int i=0; i<values.length(); i++)
