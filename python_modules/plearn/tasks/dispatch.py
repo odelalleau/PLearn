@@ -1,4 +1,6 @@
 #!/usr/bin/env python2.3
+__cvs_id__ = "$Id: dispatch.py,v 1.5 2004/12/21 15:31:50 dorionc Exp $"
+
 
 from threading                      import *
 from Task                           import *

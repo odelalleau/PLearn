@@ -5,6 +5,7 @@ submodule. If a considerable number of functions contained in this
 module seems to manage similar tasks, it is probably time to create a
 I{similar_tasks.py} L{utilities} submodule to move those functions to.
 """
+__cvs_id__ = "$Id: toolkit.py,v 1.18 2004/12/21 15:31:50 dorionc Exp $"
 import inspect, os, popen2, random, string, sys, time, types
 
 __epydoc_is_available = None
@@ -152,6 +153,11 @@ def is_recursively_empty(directory):
             return False
     return True
 
+def keep_a_timed_version( path ):
+    backup = "%s.%s" % ( path, date_time_string() )
+    os.system( 'mv %s %s' % ( path, backup ) ) 
+    return backup
+
 def lines_to_file(lines, filepath):
     """Print the lines in a file named I{filepath}.
 
@@ -229,11 +235,6 @@ def quote_if(s):
 def short_doc(obj):
     return doc(obj, True)
 
-def timed_version_backup( path ):
-    backup = "%s.%s" % ( path, date_time_string() )
-    os.system( 'mv %s %s' % ( path, backup ) ) 
-    return backup
-
 def left_from_right(get):
     def get_attr(self, rop_name):
         if not rop_name in default_roperators._rop_names:
@@ -306,4 +307,23 @@ if __name__ == "__main__":
             return lop( self.val + val )
 
     lop.test()
+
+## def delayed_removal(path, delay=5):
+##     timed = "%s.%s" % ( path, date_time_string() )
+##     os.system( 'mv %s %s' % ( path, timed ) )
+
+##     dirpath = os.dirname(path)
+##     dirlist = os.listdir(dirpath)
+##     delayed = {}
+##     for fname in dirlist:
+##         match = re.search("\.\d\d\d\d_\d\d_\d\d.*", fname)
+##         start = match.start()
+##         if start >= 0:
+##             base = fname[:start]
+##             if delayed.has_key( base ):
+##                 delayed[base].extend( fname )
+##             else:
+##                 delayed[base] = [ fname ]
+        
+##     return timed
 

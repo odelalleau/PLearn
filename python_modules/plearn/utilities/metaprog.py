@@ -1,6 +1,8 @@
 """Metaprogramming tools.
 
 """
+__cvs_id__ = "$Id: metaprog.py,v 1.2 2004/12/21 15:31:50 dorionc Exp $"
+
 import inspect, string, types
 import plearn.utilities.toolkit   as     toolkit
 

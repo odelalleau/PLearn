@@ -1,10 +1,17 @@
-import os, sys, shutil, string, traceback
+__cvs_id__ = "$Id: Task.py,v 1.5 2004/12/21 15:31:50 dorionc Exp $"
+
+import os, sys, string, traceback
 
 from threading                      import *
 from plearn.utilities.verbosity     import *
 from plearn.utilities.FrozenObject  import *
 
 __all__ = [ 'TaskStatus', 'Task', 'TaskDefaults', 'task_name_from_int' ]
+
+import plearn.utilities.versionning as     versionning
+versionning.declare_module( __name__,
+    "$Id: Task.py,v 1.5 2004/12/21 15:31:50 dorionc Exp $"
+    )
 
 def task_name_from_int(number):
     name = ''

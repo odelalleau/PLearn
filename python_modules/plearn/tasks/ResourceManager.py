@@ -1,3 +1,5 @@
+__cvs_id__ = "$Id: ResourceManager.py,v 1.2 2004/12/21 15:31:50 dorionc Exp $"
+
 
 import os, shelve, time
 

@@ -1,4 +1,6 @@
 #!/usr/bin/env python2.3
+__cvs_id__ = "$Id: ModeAndOptionParser.py,v 1.8 2004/12/21 15:31:49 dorionc Exp $"
+
 
 import inspect, os, string, sys, types
 
@@ -7,10 +9,10 @@ from   threading                     import Thread
 import plearn.utilities.toolkit      as     toolkit
 from   plearn.utilities.FrozenObject import *
 
-import plearn.utilities.versionning        as     versionning
-versionning.project_module( "PyTest", __name__,
-                            "$Id: ModeAndOptionParser.py,v 1.7 2004/12/15 13:51:07 dorionc Exp $"
-                            )
+import plearn.utilities.versionning  as     versionning
+versionning.declare_module( __name__,
+    "$Id: ModeAndOptionParser.py,v 1.8 2004/12/21 15:31:49 dorionc Exp $"
+    )
 
 __all__ = [ 'OptionGroup',
             'ModeDefaults', 'Mode',

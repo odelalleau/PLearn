@@ -1,4 +1,6 @@
 """ALL DOCUMENTATION IN THIS MODULE MUST BE REVISED!!!"""
+__cvs_id__ = "$Id: PyPLearnObject.py,v 1.5 2004/12/21 15:31:15 dorionc Exp $"
+
 import inspect, types
 
 from   pyplearn                   import *

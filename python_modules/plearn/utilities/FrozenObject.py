@@ -1,3 +1,5 @@
+__cvs_id__ = "$Id: FrozenObject.py,v 1.7 2004/12/21 15:31:50 dorionc Exp $"
+
 import inspect, string, types
 import plearn.utilities.toolkit as toolkit
 

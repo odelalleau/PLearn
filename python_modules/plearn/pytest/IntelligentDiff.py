@@ -1,3 +1,5 @@
+__cvs_id__ = "$Id: IntelligentDiff.py,v 1.10 2004/12/21 15:31:49 dorionc Exp $"
+
 
 import copy, os, string
 
@@ -8,9 +10,9 @@ import plearn.utilities.toolkit      as     toolkit
 from   plearn.utilities.verbosity    import *
 
 import plearn.utilities.versionning  as     versionning
-versionning.project_module( "PyTest", __name__,
-                            "$Id: IntelligentDiff.py,v 1.9 2004/12/20 23:16:50 dorionc Exp $"
-                            )
+versionning.declare_module( __name__,
+    "$Id: IntelligentDiff.py,v 1.10 2004/12/21 15:31:49 dorionc Exp $"
+    )
 
 class Resources:
     md5_mappings    = {}

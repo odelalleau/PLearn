@@ -1,4 +1,13 @@
+__cvs_id__ = "$Id: PLTask.py,v 1.3 2004/12/21 15:31:50 dorionc Exp $"
+
+import shutil
 from Task import *
+
+import plearn.utilities.versionning as     versionning
+versionning.declare_module( __name__,
+    "$Id: PLTask.py,v 1.3 2004/12/21 15:31:50 dorionc Exp $"
+    )
+
 
 class AbsPathTask(Task):
     """Task that must be provided absolute paths.

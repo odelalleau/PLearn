@@ -1,5 +1,7 @@
-import os, shutil, string
-import plearn.utilities.toolkit as toolkit
+__cvs_id__ = "$Id: verbosity.py,v 1.5 2004/12/21 15:31:50 dorionc Exp $"
+
+import os, string
+import plearn.utilities.toolkit     as toolkit
 
 class VerbosityPrint:
     def __init__(self, verbosity, default_priority=0 ):

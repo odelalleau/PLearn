@@ -1,3 +1,5 @@
+__cvs_id__ = "$Id: cvs.py,v 1.2 2004/12/21 15:31:50 dorionc Exp $"
+
 import os, popen2, string, types
 
 from plearn.utilities.plpath    import cvs_directory

@@ -493,6 +493,8 @@ U{Epytext Markup Language Manual<http://epydoc.sourceforge.net/epytext.html>}
 should not take you more than 15 minutes and you will be ready to document your
 code.
 """
+__cvs_id__ = "$Id: pyplearn.py,v 1.13 2004/12/21 15:31:15 dorionc Exp $"
+
 import types
 import plearn.utilities.metaprog as metaprog
 

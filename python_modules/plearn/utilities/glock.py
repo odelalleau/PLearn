@@ -22,6 +22,8 @@ means 2 directories are created.
 The unlock operation does not raise exceptions. This means it is safe to
 attempt to unlock even if you do not have the lock.
 """
+__cvs_id__ = "$Id: glock.py,v 1.2 2004/12/21 15:31:50 dorionc Exp $"
+
 import os,time
 
 class lock:

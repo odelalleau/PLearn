@@ -1,3 +1,4 @@
+__cvs_id__ = "$Id: test_and_routines.py,v 1.17 2004/12/21 15:31:49 dorionc Exp $"
 
 import os, string
 
@@ -13,11 +14,6 @@ from   plearn.utilities.FrozenObject  import *
 from   programs                       import *
 from   BasicStats                     import BasicStats
 from   IntelligentDiff                import *          
-
-import plearn.utilities.versionning   as     versionning
-versionning.project_module( "PyTest", __name__,
-                            "$Id: test_and_routines.py,v 1.16 2004/12/20 23:16:51 dorionc Exp $"
-                            )
 
 __all__ = [
     ## Functions
@@ -187,8 +183,8 @@ class Test(FrozenObject):
             if os.path.exists( os.path.join(results, plpath.cvs_directory) ):
                 answer = None
                 while not answer in ['yes', 'no']:
-                    answer = raw_input( "Results %s already exists! Are you sure you want to "
-                                        "generate new results (yes or no)? " % results )
+                    answer = raw_input( "Results %s already are under version control! Are you sure\n"
+                                        "you want to generate new results (yes or no)? " % results )
 
                 if answer == 'no':
                     raise PyTestUsageError("Results creation interrupted by user")
@@ -198,10 +194,10 @@ class Test(FrozenObject):
                 cvs.commit( '.',
                             'Removal of %s for new results creation.'
                             % results )                
-            backup = toolkit.timed_version_backup( results )
+            shutil.rmtree( results )
 
+        ## Make a fresh directory
         os.makedirs( results )
-        return backup
 
     def formatted_description(self):
         fdesc = [ "In %s"%self.test_directory, "" ]

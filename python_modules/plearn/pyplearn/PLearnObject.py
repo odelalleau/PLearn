@@ -5,6 +5,8 @@ X{Tutorial: Using PLearnObject}
 
 Coming soon...
 """
+__cvs_id__ = "$Id: PLearnObject.py,v 1.5 2004/12/21 15:31:15 dorionc Exp $"
+
 from pyplearn import *
 from plearn.utilities.FrozenObject import *
 

@@ -27,6 +27,7 @@ more than a clean hack} since clean modularization should be such that
 all modules define the variable they need, letting a main module link
 the components altogether...
 """
+__cvs_id__ = "$Id: global_variables.py,v 1.3 2004/12/21 15:31:50 dorionc Exp $"
 
 class __global_variables:
     """An empty class creating a scope for global variables."""

@@ -61,6 +61,8 @@ test results. [Special directory]
 considered to be internal to specific PLearn (or related)
 applications. 
 """
+__cvs_id__ = "$Id: plpath.py,v 1.11 2004/12/21 15:31:50 dorionc Exp $"
+
 import os, string
 
 home                   = os.getenv('HOME')

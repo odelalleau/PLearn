@@ -1,3 +1,5 @@
+__cvs_id__ = "$Id: modes.py,v 1.14 2004/12/21 15:31:49 dorionc Exp $"
+
 import copy
 import plearn.utilities.cvs                as     cvs
 import plearn.utilities.plpath             as     plpath
@@ -13,10 +15,9 @@ from   plearn.utilities.verbosity          import *
 from   plearn.utilities.global_variables   import *
 
 import plearn.utilities.versionning        as     versionning
-versionning.project_module( "PyTest", __name__,
-                            "$Id: modes.py,v 1.13 2004/12/15 13:51:07 dorionc Exp $"
-                            )
-
+versionning.declare_module( __name__,
+    "$Id: modes.py,v 1.14 2004/12/21 15:31:49 dorionc Exp $"
+    )
 
 current_mode    = None
 
@@ -313,10 +314,7 @@ class FamilyConfigMode( PyTestMode ):
         for (family, tests) in Test.families_map.iteritems():
             config_path  = config_file_path( family )
             if os.path.exists( config_path ):
-                os.system( "cp %s %s.%s"
-                           % ( config_path, config_path,
-                               toolkit.date_time_string())
-                           )
+                toolkit.keep_a_timed_version( config_path )
 
             config_file  = open(config_path, 'w')
 
