@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Var.h,v 1.3 2002/09/11 04:16:23 morinf Exp $
+   * $Id: Var.h,v 1.4 2002/09/11 19:23:41 wangxian Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -115,7 +115,11 @@ inline Var onehot_squared_loss(Var network_output, Var classnum, real coldval=0.
 }
 
 inline Var classification_loss(Var network_output, Var classnum)
-{ return new ClassificationLossVariable(network_output, classnum); }
+{ 
+  if(classnum->isScalar())
+    return new ClassificationLossVariable(network_output, classnum); 
+  else return new MiniBatchClassificationLossVariable(network_output, classnum); 
+}
 
 inline Var multiclass_loss(Var network_output, Var targets)
 { return new MulticlassLossVariable(network_output, targets); }
@@ -442,7 +446,9 @@ inline Var old_softmax(Var input)
 // Now we have a special box!
 inline Var softmax(Var v)
 {
-  return new SoftmaxVariable(v);
+ if(v->isVec()) 
+   return new SoftmaxVariable(v);
+ else return new MatrixSoftmaxVariable(v);
 }
 
 // Double special box!
@@ -470,9 +476,15 @@ inline Var softmax(Var input, Var index)
   else return new MatrixSoftmaxLossVariable(input, index);
 }
 
+inline Var miniBatchIndex(Var mat, Var index)
+{
+  return new IndexVariable(mat,index);
+}
+
 inline Var neg_log_pi(Var p, Var index)
 {
-  return -log(p[index]);
+  if(index->isScalar())  return -log(p[index]);
+  else return -log(miniBatchIndex(p,index));
 }
 
 inline Var softmax(Var input, int index)
