@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedFuncVariable.cc,v 1.5 2004/02/24 21:12:18 tihocan Exp $
+   * $Id: UnfoldedFuncVariable.cc,v 1.6 2004/02/24 22:35:26 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -162,7 +162,12 @@ void UnfoldedFuncVariable::bprop()
   for (int i=0;i<n_unfold;i++)
     {
       f_paths[i].clearGradient();
-      outputs[i]->gradient << transpose ? matGradient.column(i) : matGradient(i);
+      if (transpose) {
+        Vec tmp = matGradient.column(i).toVecCopy(); // TODO more efficient + check while it compiled without tmp = toVecCopy
+        outputs[i]->gradient << tmp;
+      } else {
+        outputs[i]->gradient << matGradient(i);
+      }
       f_paths[i].bprop();
     }
 }
