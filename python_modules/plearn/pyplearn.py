@@ -130,6 +130,8 @@ and include it in the python fashion
                           learner = pl.SomeLearnerClassTakingNoOption();
                           ) # end of PTester
  ## end of final_script.pyplearn
+
+Note that the include(filename) function defined below does not act exactly
    
 Bindings
 ---------
@@ -151,6 +153,10 @@ class plearn_snippet:
     def __str__(self):
         return self.s
 
+    def __add__(self, snippet):
+        if not isinstance(snippet, plearn_snippet):
+            raise TypeError("plearn_snippet.__add__ expects a plearn_snippet instance")
+        self.s += snippet.s
 
 class DuplicateBindingError(Exception):
     """This exception is raised when attemping to bind more than one PLearn
@@ -161,7 +167,7 @@ class DuplicateBindingError(Exception):
     def __str__(self):
         return "Binding '%s' already defined." % self.binding_name
 
-class UnknownAgrumentError(Exception):
+class UnknownArgumentError(Exception):
     """This exception is raised when attempting to use a PLearn argument that
     was not defined, either on the command-line or with plarg_defaults."""
     def __init__(self, arg_name):
@@ -174,7 +180,6 @@ class UnknownAgrumentError(Exception):
 _name_to_id = {}
 _id_to_binding = {}
 _last_binding_index = 0
-    
 
 def bind(name, x):
     """Binds name to the PLearn expression contained in value."""
@@ -190,6 +195,9 @@ def ref(name):
     """Makes a reference (with "*1;") to the value
        associated with name by a previous bind call."""
     return plearn_snippet('*' + _plearn_repr(_name_to_id[name]) + ';')
+
+def plvar(variable_name):
+    return plearn_snippet('${%s}' % variable_name)
 
 def _postprocess_refs(s):
     """Must be called with the *complete* string of the generated .plearn.
@@ -265,7 +273,7 @@ class _plargs_storage_readonly:
         try:
             return getattr(plarg_defaults, k)
         except AttributeError:
-            raise UnknownAgrumentError(k)
+            raise UnknownArgumentError(k)
 plargs = _plargs_storage_readonly()
 
 def _parse_plargs(args):
