@@ -37,7 +37,7 @@
 
 
 /* *******************************************************      
-   * $Id: GradientAdaboostCostVariable.cc,v 1.1 2004/11/12 20:02:52 larocheh Exp $
+   * $Id: GradientAdaboostCostVariable.cc,v 1.2 2004/12/07 22:41:06 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -84,7 +84,9 @@ GradientAdaboostCostVariable::build_()
 
 void
 GradientAdaboostCostVariable::declareOptions(OptionList &ol)
-{}
+{
+  inherited::declareOptions(ol);
+}
 
 ///////////////////
 // recomputeSize //
