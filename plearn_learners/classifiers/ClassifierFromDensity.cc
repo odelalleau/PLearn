@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ClassifierFromDensity.cc,v 1.15 2005/02/04 15:08:51 tihocan Exp $ 
+   * $Id: ClassifierFromDensity.cc,v 1.16 2005/03/07 15:38:48 chapados Exp $ 
    ******************************************************* */
 
 /*! \file ClassifierFromDensity.cc */
@@ -55,10 +55,14 @@ ClassifierFromDensity::ClassifierFromDensity()
   normalize_probabilities(true)
 {}
 
-PLEARN_IMPLEMENT_OBJECT(ClassifierFromDensity, "A classifier built from density estimators using Bayes' rule.", 
-    "ClassifierFromDensity allows to build a classifier\n"
-    "by building one density estimator for each class, \n"
-    "and using Bayes rule to combine them. \n");
+PLEARN_IMPLEMENT_OBJECT(
+  ClassifierFromDensity,
+  "A classifier built from density estimators using Bayes' rule.", 
+  "ClassifierFromDensity allows to build a classifier\n"
+  "by building one density estimator for each class, \n"
+  "and using Bayes rule to combine them. It is assumed that the target\n"
+  "variable in the training set represents the class number, coded as\n"
+  "an integer from 0 to nclasses-1.");
 
 ////////////////////
 // declareOptions //
@@ -198,13 +202,19 @@ void ClassifierFromDensity::train()
 void ClassifierFromDensity::computeOutput(const Vec& input, Vec& output) const
 {
   output.resize(nclasses);
-  real logprob;
   double log_of_sumprob = 0.;
 
   for(int c=0; c<nclasses; c++)
   {
-    logprob = estimators[c]->log_density(input);
-    double logprob_c = logprob + log_priors[c]; // multiply p by the prior
+    // Be slightly careful in the case were the log_prior is -Inf, i.e.
+    // no observation of the current class appears in the training set.
+    // Don't call the estimator in that case, since its output might be
+    // ill-defined (NaN or some such), thereby polluting the rest of the
+    // output computation
+    double logprob_c = log_priors[c];
+    if (! isinf(log_priors[c]))
+      logprob_c += estimators[c]->log_density(input);  // multiply p by the prior
+
     output[c] = logprob_c;
     if (normalize_probabilities)
     {
