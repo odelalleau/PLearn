@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
- * $Id: ProjectionErrorVariable.cc,v 1.11 2004/07/21 16:30:54 chrish42 Exp $
+ * $Id: ProjectionErrorVariable.cc,v 1.12 2004/07/31 13:36:55 larocheh Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -243,7 +243,7 @@ namespace PLearn {
         fw -= Tu;
         cost = pownorm(fw);
       }
-    else
+    else // PART THAT IS REALLY USED STARTS HERE
       {
         static Mat F_copy;
         F_copy.resize(F.length(),F.width());
@@ -271,14 +271,14 @@ namespace PLearn {
           {
             Vec tj = TT(j);
             Vec wj = w(j);
-            product(wj, B, tj); // w_j = B * t_j
-            transposeProduct(fw, F, wj); // fw = sum_i w_ji f_i 
+            product(wj, B, tj); // w_j = B * t_j = projection weights for neighbor j
+            transposeProduct(fw, F, wj); // fw = sum_i w_ji f_i = z_m
             Vec fw_minus_tj = fw_minus_t(j);
-            substract(fw,tj,fw_minus_tj);
-            if (normalize_by_neighbor_distance)
+            substract(fw,tj,fw_minus_tj); // -z_n = z_m - z
+            if (normalize_by_neighbor_distance) // THAT'S THE ONE WHICH WORKS WELL:
               {
-                one_over_norm_T[j] = 1.0/pownorm(tj);
-                cost += sumsquare(fw_minus_tj)*one_over_norm_T[j];
+                one_over_norm_T[j] = 1.0/pownorm(tj); // = 1/||z||
+                cost += sumsquare(fw_minus_tj)*one_over_norm_T[j]; // = ||z_n||^2 / ||z||^2
               }
             else
                 cost += sumsquare(fw_minus_tj);
