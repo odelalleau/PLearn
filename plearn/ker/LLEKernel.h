@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LLEKernel.h,v 1.3 2004/07/20 13:00:26 tihocan Exp $ 
+   * $Id: LLEKernel.h,v 1.4 2004/07/20 19:27:46 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -131,7 +131,7 @@ public:
   // **************************
 
   //! Overridden for efficiency purpose.
-//  virtual void computeGramMatrix(Mat K) const;
+  virtual void computeGramMatrix(Mat K) const;
 
   //! Compute K(x1,x2).
   virtual real evaluate(const Vec& x1, const Vec& x2) const;

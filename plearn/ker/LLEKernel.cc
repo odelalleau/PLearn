@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LLEKernel.cc,v 1.4 2004/07/20 13:00:26 tihocan Exp $ 
+   * $Id: LLEKernel.cc,v 1.5 2004/07/20 19:27:46 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -122,7 +122,6 @@ void LLEKernel::build_()
 ///////////////////////
 // computeGramMatrix //
 ///////////////////////
-/*
 void LLEKernel::computeGramMatrix(Mat K) const {
   reconstruct_ker->computeLLEMatrix(K);
   if (reconstruct_coeff != 0) {
@@ -131,7 +130,6 @@ void LLEKernel::computeGramMatrix(Mat K) const {
     }
   }
 }
-*/
 
 //////////////
 // evaluate //
@@ -156,7 +154,6 @@ real LLEKernel::evaluate_i_j(int i, int j) const {
       reconstruct_ker->evaluate_i_j(i,j) -
       reconstruct_ker->evaluate_sum_k_i_k_j(i,j);
   }
-
 }
 
 //////////////////
