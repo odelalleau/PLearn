@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HTMLHelpCommand.cc,v 1.3 2004/12/06 16:34:08 chapados Exp $ 
+   * $Id: HTMLHelpCommand.cc,v 1.4 2004/12/06 16:39:32 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -249,6 +249,7 @@ void HTMLHelpCommand::helpClasses()
   os << "</table>" << endl
      << "</div>" << endl;
 
+  os << generated_by() << endl;
   copySnippet(os, config->html_epilog_document);
 }
 
@@ -505,7 +506,7 @@ string HTMLHelpCommand::generated_by() const
     strftime(time_buffer,SIZE,"%Y/%m/%d %H:%M:%S",broken_down_time);
 
     return string("<p>&nbsp;</p>"
-                  "<address>Generated on " ) + time_buffer + " by $Id: HTMLHelpCommand.cc,v 1.3 2004/12/06 16:34:08 chapados Exp $</address>";
+                  "<address>Generated on " ) + time_buffer + " by $Id: HTMLHelpCommand.cc,v 1.4 2004/12/06 16:39:32 chapados Exp $</address>";
 }
 
 
