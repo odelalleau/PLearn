@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.31 2004/05/27 13:08:02 tihocan Exp $
+   * $Id: PLearner.cc,v 1.32 2004/05/27 15:31:43 tihocan Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -101,6 +101,10 @@ void PLearner::declareOptions(OptionList& ol)
                 "It is the role of forget() to bring it back to 0,\n"
                 "and the role of train() to bring it up to 'nstages'...");
 
+  declareOption(ol, "n_examples", &PLearner::n_examples, OptionBase::learntoption, 
+                "The number of samples in the training set.\n"
+                "Obtained from training set with setTrainingSet.");
+
   declareOption(ol, "inputsize", &PLearner::inputsize_, OptionBase::learntoption, 
                 "The number of input columns in the data sets."
                 "Obtained from training set with setTrainingSet.");
@@ -157,6 +161,7 @@ void PLearner::setTrainingSet(VMat training_set, bool call_forget)
     targetsize_ = train_set->targetsize();
     weightsize_ = train_set->weightsize();
   }
+  n_examples = train_set->length();
   if (training_set_has_changed || call_forget)
     build(); // MODIF FAITE PAR YOSHUA: sinon apres un setTrainingSet le build n'est pas complete dans un NNet train_set = training_set;
   if (call_forget)
@@ -180,8 +185,8 @@ int PLearner::inputsize() const
 
 int PLearner::targetsize() const 
 { 
-  if(!targetsize_) 
-    PLERROR("In PLearner::targetsize - 'targetsize_' is 0, this should not happen"); 
+  if(targetsize_ == -1) 
+    PLERROR("In PLearner::targetsize - 'targetsize_' is -1, either no training set has beeen specified or its sizes were not set properly");
   return targetsize_; 
 }
 
