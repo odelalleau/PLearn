@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.h,v 1.6 2003/04/25 20:40:51 tihocan Exp $
+   * $Id: Variable.h,v 1.7 2003/07/24 15:03:36 larocheh Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -261,7 +261,21 @@ public:
   bool isMarked() { return marked; }
 
   void fillGradient(real value) { gradient.fill(value); }
-  void clearGradient() { if(!allows_partial_update) gradient.clear(); }
+  void clearGradient() 
+    { 
+      if(!allows_partial_update) 
+        gradient.clear(); 
+      else
+      {
+        for (int r=0;r<rows_to_update.length();r++)
+          {
+            int row = rows_to_update[r];
+            matGradient.row(row).clear();
+          }
+          rows_to_update.resize(0);
+          gradient_status=0;
+      }
+    }
   void clearDiagHessian(); 
   void clearSymbolicGradient() { g = Var(); }
 

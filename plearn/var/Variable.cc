@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.cc,v 1.4 2003/04/25 20:40:49 tihocan Exp $
+   * $Id: Variable.cc,v 1.5 2003/07/24 15:03:36 larocheh Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -433,6 +433,8 @@ void Variable::verifyGradient(real step)
 
 bool Variable::update(real step_size, Vec direction_vec)
 {
+  if(allows_partial_update)
+    PLWARNING("Warning in Variable::update(real,Vec): will update every elements of the Variable");
   bool hit=false;
   if(min_value>-FLT_MAX || max_value<FLT_MAX)
     // constrained update
@@ -467,6 +469,8 @@ bool Variable::update(real step_size, Vec direction_vec)
 
 bool Variable::update(Vec step_sizes, Vec direction_vec)
 {
+  if(allows_partial_update)
+    PLWARNING("Warning in Variable::update(Vec,Vec): will update every elements of the Variable");
   bool hit=false;
   real* direction = direction_vec.data();
   real* step = step_sizes.data();
@@ -523,12 +527,12 @@ bool Variable::update(real step_size)
                 params[i]=max_value;
                 hit = true;
               }
-              if (allows_partial_update)
-                direction[i]=0;
+              //if (allows_partial_update)
+              //  direction[i]=0;
             }
           }
-          rows_to_update.resize(0);
-          gradient_status=0;
+          //rows_to_update.resize(0);
+          //gradient_status=0;
         }
     }
     else for (int row=0;row<length();row++)
@@ -548,8 +552,8 @@ bool Variable::update(real step_size)
                 params[i]=max_value;
                 hit = true;
               }
-            if (allows_partial_update)
-              direction[i]=0;
+            //if (allows_partial_update)
+            //  direction[i]=0;
           }
       }
     }
@@ -568,11 +572,11 @@ bool Variable::update(real step_size)
             for(int i=0; i<width(); i++)
             {
               params[i] += step_size*direction[i];      
-              direction[i] = 0;
+              //direction[i] = 0;
             }
           }
-          rows_to_update.resize(0);
-          gradient_status=0;
+          //rows_to_update.resize(0);
+          //gradient_status=0;
         }
     }
     else for (int row=0;row<length();row++)
@@ -633,6 +637,8 @@ bool Variable::update(real step_size)
 // return true if box constraints have been hit with the update
 bool Variable::update(Vec new_value)
 {
+  if(allows_partial_update)
+    PLWARNING("Warning in Variable::update(Vec): will update every elements of the Variable");
   bool hit=false;
   if(min_value>-FLT_MAX || max_value<FLT_MAX)
     // constrained update
