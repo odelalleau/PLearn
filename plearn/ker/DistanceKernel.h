@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DistanceKernel.h,v 1.1 2003/12/15 22:08:32 dorionc Exp $
+   * $Id: DistanceKernel.h,v 1.2 2004/01/21 14:16:43 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,9 +48,6 @@
 
 namespace PLearn <%
 using namespace std;
-
-
-DECLARE_OBJECT_PP(Ker, Kernel);
 
 //! This class implements an Ln distance (defaults to L2 i.e. euclidean distance).
 class DistanceKernel: public Kernel
