@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.cc,v 1.16 2005/02/17 04:45:59 tihocan Exp $ 
+   * $Id: PPath.cc,v 1.17 2005/02/17 14:27:06 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -632,23 +632,27 @@ string PPath::canonical() const
   map<string, PPath>::const_iterator end = metaprotocol_to_metapath.end();
 
   string metaprotocol;
-  string metapath;
+  string metapath;      // Used to store the longest metapath found so far.
   while ( it != end )
   {      
-    size_t begpath = canonic_path.find(it->second);
-    // TODO Be more efficient.
-
-    // The path does not start with the current candidate or is shorter
-    // than the previous metapath found.
-    if ( begpath != 0 || it->second.length() < metapath.length() )
+    const string& candidate = it->second;
+    if ( candidate.length() < metapath.length() )
     {
-      DBG_LOG << "Invalid or shorter:\n\t"
-        << it->first << " -> " << it->second.c_str() << endl;
+      // The candidate is shorter, we are not interested.
+      DBG_LOG << "Shorter:\n\t"
+        << it->first << " -> " << candidate.c_str() << endl;
+      ++it;
+      continue;
+    }
+    if ( !startsWith(canonic_path, candidate) ) {
+      // No match.
+      DBG_LOG << "No match:\n\t"
+        << it->first << " -> " << candidate.c_str() << endl;
       ++it;
       continue;
     }
 
-    size_t endpath = it->second.length();
+    size_t endpath = candidate.length();
 
     // The current candidate is only a subtring of the canonic path.
     // Ex:
@@ -659,7 +663,7 @@ string PPath::canonical() const
     // with a slash, in which case this cannot happen.
     if ( endpath != canonic_path.length()     &&
          canonic_path[endpath] != _slash_char &&
-         !endsWith(it->second, _slash_char) )
+         !endsWith(candidate, _slash_char) )
     {
       DBG_LOG << "Substring:\n\t" 
         << it->first << " -> " << it->second.c_str() << endl;
@@ -669,15 +673,13 @@ string PPath::canonical() const
 
     // The current candidate is indeed a subpath of canonic_path.
     metaprotocol = it->first;
-    metapath     = it->second;
+    metapath     = candidate;
     DBG_LOG << "Kept:\n\t" 
-      << it->first << " -> " << it->second.c_str() << endl;
+      << it->first << " -> " << candidate.c_str() << endl;
 #ifdef __INTEL_COMPILER
 #pragma warning(default:279)
 #endif
-    ++it; // TODO Why do it more than once ? What if more than one metaprotocol ?
-    // Probably to find the longest one.
-    // But is it really the longest one ?
+    ++it; // We iterate to find the longest matching candidate.
   }
 
   // If any metapath was found, it must be replaced by its metaprotocol
