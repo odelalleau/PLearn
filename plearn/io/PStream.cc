@@ -481,7 +481,13 @@ void PStream::readAsciiNum(double &x)
       else
         PLERROR("Bug while reading file and expecting a double");
       break;
-
+    case 'i':
+    case 'I':
+      if (get()=='n' && get()=='f')
+        x = 1.0/0.0;
+      else
+        PLERROR("Bug while reading file and expecting a double");
+      break ; 
     default:
       while(isdigit(c) || c=='-' || c=='+' || c=='.' || c=='e' || c=='E')
         {
