@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.h,v 1.16 2004/02/20 21:14:50 chrish42 Exp $ 
+ * $Id: Trader.h,v 1.17 2004/02/24 18:48:50 dorionc Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -288,6 +288,7 @@ public:
   //! Returns the price of the S&P500 at a given time. 
   real sp500_price(int t) const;
 
+  const VMat viewInternal(){ return internal_data_set; }
   VMat getPricesSubMat() const { return internal_data_set.columns(assets_price_indices); }
   
   //******************

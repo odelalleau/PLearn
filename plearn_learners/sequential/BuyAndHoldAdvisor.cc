@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BuyAndHoldAdvisor.cc,v 1.4 2004/02/20 21:14:49 chrish42 Exp $ 
+   * $Id: BuyAndHoldAdvisor.cc,v 1.5 2004/02/24 18:48:50 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -50,7 +50,7 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(BuyAndHoldAdvisor, "ONE LINE DESCR", "NO HELP");
 
 BuyAndHoldAdvisor::BuyAndHoldAdvisor():
-  first_non_null_position(true)
+  bought(-1)
 {}
 
 void BuyAndHoldAdvisor::build()
@@ -82,63 +82,64 @@ void BuyAndHoldAdvisor::declareOptions(OptionList& ol)
                 " If the underlying FinancialAdvisor is null, the positions will be only ones.\n"
                 "If not, the positions will be setted to the first test positions of the\n"
                 "underlying advisors. ");
-
-  declareOption(ol, "first_non_null_position", &BuyAndHoldAdvisor::first_non_null_position, OptionBase::buildoption,
-                "If the BuyAndHoldAdvisor is based on an underlying advisor, this boolean specifies\n"
-                "if the BuyAndHoldAdvisor follows the first non-null position (true) or simply the\n"
-                "first position.\n"
-                "Default: true.");
-
+  
   inherited::declareOptions(ol);
 }
 
 void BuyAndHoldAdvisor::build_from_train_set()
 {
   int t = train_set.length()-1;
-  last_call_train_t = t-train_step;
+#ifdef DEBUG
+  cout << "BuyAndHoldAdvisor::build_from_train_set -- t = " << t << endl;
+#endif
+
+  predictions.subMatRows(0, t).fill(0.0);
 
   // Buy
   if(underlying.isNull())
   {
-    predictions.subMatRows(0, t).fill(0.0);
     predictions(t).fill(1.0);
-  }
-  else
-  {
-    underlying->setTrainingSet(train_set, false);
-    underlying->train();
-    predictions.subMatRows(0, t) << underlying->predictions.subMatRows(0, t);
-    predictions(t) << underlying->predictions(t);
-    errors(t) << underlying->errors(t);
-    
-    if(first_non_null_position)
-    {
-      int c=0;
-      while(c < predictions.width())
-      {
-        if( predictions(t, c) != 0 )
-          break;
-        c++;
-      }  
-      if(c == predictions.width()) return; // The position is the null vector
-    }  
+    bought = t;
+    errors(t, 0) = bought;
   }
 
-  // The model did buy it's position and will now only hold it
+  last_train_t = t-train_step;
   build_complete = true;
-
-  // Hold
-  for(int tt = t+1; tt < predictions.length(); tt++)
-    predictions(tt) << predictions(t);  
 }
 
 void BuyAndHoldAdvisor::train_test_core(const Vec& input, int t, VMat testoutputs, VMat testcosts) const
-{}
+{
+  if(bought >= 0)
+  {
+    // Hold
+    predictions(t) << predictions(t-1);
+    return;
+  }
+    
+  // We have an underlying which did not provide any position yet.
+  if(trader->monthly_version() && !trader->is_last_day_of_month(t))
+  {
+    predictions(t).fill(0.0);
+    return;
+  }
+  
+  // We have an underlying which is ready to take a position.
+  underlying->setTrainingSet( trader->viewInternal(), false );
+  underlying->train();
+  predictions(t) << underlying->predictions(t);
+  errors(t) << underlying->errors(t);
+  bought = t;
+  
+#ifdef DEBUG
+  cout << "BuyAndHoldAdvisor::train_test_core -- t = " << t << endl;
+  cout << predictions(t) << endl << endl;
+#endif
+}
 
 TVec<string> BuyAndHoldAdvisor::getTrainCostNames() const
 {
   if(underlying.isNull())
-    return TVec<string>(1, "BidCost");
+    return TVec<string>(1, "Bought");
   return underlying->getTrainCostNames();
 }
 

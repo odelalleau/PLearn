@@ -48,70 +48,127 @@ using namespace std;
 
 class SequentialModelSelector: public SequentialLearner
 {
-  protected:
- 
-    //Mat mean_costs; // [time_index,model_index], contains mean of model.errors[.,cost_index] over interval [max(0,time_index-max_train_len),time_index) of non-missing values
-    TVec<int> best_model; // best model selected at time t
-    Vec sequence_costs;  // the costs of each model on the training set
+private:
+  // *********************
+  // * private members   *
+  // *********************
 
-  public:
+  //! This does the actual building
+  void build_();
 
-    TVec< PP<SequentialLearner> > models;  // list of all the models
-    int init_train_size; // size of first training set
-    int cost_index; // which element of costs vector is used to select best model
-    string cost_type; // the type of cost to be used to select the best model
+protected:
 
-  private:
-    //! This does the actual building
-    void build_();
+  // *********************
+  // * protected options *
+  // *********************
+  
+  // *********************
+  // * protected members *
+  // *********************
+  
+  //! See common_costs options for details. Row index: model. Column index: common_cost.
+  TMat<int> common_costs_index;
+  TVec<int> best_model; // best model selected at time t
+  Vec sequence_costs;  // the costs of each model on the training set
+  
 
-  protected:
-    //! Declare this class' options
-    static void declareOptions(OptionList& ol);
+  // *********************
+  // * protected methods *
+  // *********************
+  
+  //! Declare this class' options
+  static void declareOptions(OptionList& ol);
+  
+public:
 
-  public:
+  // *********************
+  // * public options    *
+  // *********************
 
-    //! Constructor
-    SequentialModelSelector();
+  int init_train_size;  //!< size of first training set
 
-    //! compute the cost of the given sequence of errors (based on the cost_type)
-    real sequenceCost(const Vec& sequence_errors);
+  /*! 
+    Does the model selector hass to save errors at each step. 
+    Default: true.
+  */
+  bool stepwise_save;
 
-    //! simply calls inherited::build() then build_()
-    virtual void build();
+  //! List of all the models.
+  TVec< PP<SequentialLearner> > models;  
+
+  /*!
+    The names of costs that are common to all models and that the user wishes the model
+    selector to keep track of. The first one is considered to be the main cost, the one
+    from which models will be compared to choose the best model.
+   */
+  TVec<string> common_costs;
+  
+  /*!
+    From the common_costs list, the first cost is the one from which models will be compared 
+    to choose the best model. But should the best model be chosen according to the
+    
+    max/min
+      +/-   1: Mean
+      +/-   2: Mean / Variance
+      +/-   3: more to come.
+
+    of the cost realizations. 
+    Default: 1.
+   */
+  int comparison_type;
+
+  /*!
+    If positive, the comparison performed on the basis of common_cost[0] will be applyed only
+    the comparison_window last elements of the cost sequence.
+    Default: -1. (No window)
+  */
+  int comparison_window;
+
+  // *********************
+  // * public methods    *
+  // *********************
+
+  //! Constructor
+  SequentialModelSelector();
+
+  //! compute the cost of the given sequence of errors (based on the cost_type)
+  real sequenceCost(const Vec& sequence_errors);
+  
+  //! simply calls inherited::build() then build_()
+  virtual void build();
 
   //! Redefines so that it ALSO calls the method on all the learners in the TVec models
   virtual void setExperimentDirectory(const string& _expdir);
-
-    virtual void train();
+  
+  virtual void train();
  
-    virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
+  virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
         VMat testoutputs=0, VMat testcosts=0) const;
+  
+  virtual void computeOutput(const Vec& input, Vec& output) const;
+  
+  virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
+                                       const Vec& target, Vec& costs) const;
+  
+  virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
+                                     Vec& output, Vec& costs) const;
+  
+  virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
+  
+  //! This should return the names of the costs computed by computeCostsFromOutputs
+  virtual TVec<string> getTestCostNames() const;
+  
+  //! This should return the names of the objective costs that the train method
+  //! computes and for which it updates the VecStatsCollector train_stats
+  virtual TVec<string> getTrainCostNames() const;
 
-    virtual void computeOutput(const Vec& input, Vec& output) const;
-
-   virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
-        const Vec& target, Vec& costs) const;
-
-    virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
-        Vec& output, Vec& costs) const;
- 
-    virtual void computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const;
-
-    //! This should return the names of the costs computed by computeCostsFromOutputs
-    virtual TVec<string> getTestCostNames() const;
-
-    //! This should return the names of the objective costs that the train method
-    //! computes and for which it updates the VecStatsCollector train_stats
-    virtual TVec<string> getTrainCostNames() const;
-
-    virtual void forget();
-
-    //!  Does the necessary operations to transform a shallow copy (this)
-    //!  into a deep copy by deep-copying all the members that need to be.
-    typedef SequentialLearner inherited;
-    PLEARN_DECLARE_OBJECT(SequentialModelSelector);
-    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+  virtual void forget();
+  
+  //!  Does the necessary operations to transform a shallow copy (this)
+  //!  into a deep copy by deep-copying all the members that need to be.
+  typedef SequentialLearner inherited;
+  PLEARN_DECLARE_OBJECT(SequentialModelSelector);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 };
 
 //! Declares a few other classes and functions related to this class
