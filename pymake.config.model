@@ -235,7 +235,7 @@ pymakeOption( name = 'dbg',
 if usingIntelCompiler:
     pymakeOption( name = 'opt',
                   description = 'optimized for intel compiler',
-                  compileroptions = '-Wall -O3 -funroll-loops' )
+                  compileroptions = '-Wall -O3' )
 else:
     pymakeOption( name = 'opt',
                   description = 'optimized mode',
