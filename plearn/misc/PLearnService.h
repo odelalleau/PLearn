@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// PLearnServer.h
+// PLearnService.h
 //
 // Copyright (C) 2005 Pascal Vincent 
 // 
@@ -33,48 +33,53 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnServer.h,v 1.3 2005/01/07 18:18:14 plearner Exp $ 
+   * $Id: PLearnService.h,v 1.1 2005/01/07 18:18:14 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
 
-/*! \file PLearnServer.h */
+/*! \file PLearnService.h */
 
-#include <plearn/io/PStream.h>
-#include <plearn/base/Object.h>
-#include <map>
 
-#ifndef PLearnServer_INC
-#define PLearnServer_INC
+#ifndef PLearnService_INC
+#define PLearnService_INC
 
-// Put includes here
+#include <plearn/base/PP.h>
+#include <set>
 
 namespace PLearn {
 
-// Put global function declarations here
+  class RemotePLearnServer;
 
-class PLearnServer
+class PLearnService: public PPointable
 {
-private:
-  static inline void prepareToSendResults(PStream& out, int nres)
-  { out.write("R "); out << nres; }
-
-  void callFunction(const string& name, int nargs);
-  void printHelp();
-
-
-protected:
-  typedef map<int, PP<Object> > ObjMap;
-
-  PStream io;
-  ObjMap objmap;
-
 public:
-  PLearnServer(const PStream& input_output);
-  
-  void run();
-};
+  friend class RemotePLearnServer;
 
+  //! Returns single instance of PLearnService
+  static PLearnService& instance();
+
+  //! returns the number of available processing ressources
+  int availableServers() const;
+
+  //! Attempts to reserve a remote processing ressource. 
+  //! If sucessful retrns a pointer to a new RemotePLearnServer
+  //! If no server could be successfully reserved, returns 0.
+  RemotePLearnServer* newServer();
+
+private:
+  PLearnService();
+
+  std::set< RemotePLearnServer* > reserved_servers;
+
+  //! Frees a previously reserved processing ressource.
+  /*! This is called automatically by the RemotePLearnServer's destructor
+    and is meant to allow you to do some bookkeeping and cleaning
+    in the PLearnService object, when the server is freed.
+  */
+  void freeServer(RemotePLearnServer* remoteserv);
+
+};
 
 } // end of namespace PLearn
 

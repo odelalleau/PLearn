@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// PLearnServer.h
+// PLearnService.cc
 //
 // Copyright (C) 2005 Pascal Vincent 
 // 
@@ -33,49 +33,59 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnServer.h,v 1.3 2005/01/07 18:18:14 plearner Exp $ 
+   * $Id: PLearnService.cc,v 1.1 2005/01/07 18:18:14 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
 
-/*! \file PLearnServer.h */
+/*! \file PLearnService.cc */
 
-#include <plearn/io/PStream.h>
-#include <plearn/base/Object.h>
-#include <map>
 
-#ifndef PLearnServer_INC
-#define PLearnServer_INC
-
-// Put includes here
+#include "PLearnService.h"
+#include "RemotePLearnServer.h"
+#include "plearn/io/PStream.h"
 
 namespace PLearn {
+using namespace std;
 
-// Put global function declarations here
-
-class PLearnServer
-{
-private:
-  static inline void prepareToSendResults(PStream& out, int nres)
-  { out.write("R "); out << nres; }
-
-  void callFunction(const string& name, int nargs);
-  void printHelp();
+  PLearnService& PLearnService::instance()
+  {
+    static PP<PLearnService> inst;
+    if(inst.isNull())
+      inst = new PLearnService();
+    return *inst;
+  }
 
 
-protected:
-  typedef map<int, PP<Object> > ObjMap;
+  PLearnService::PLearnService() 
+  {
+  }
 
-  PStream io;
-  ObjMap objmap;
 
-public:
-  PLearnServer(const PStream& input_output);
-  
-  void run();
-};
+  int PLearnService::availableServers() const
+  {
+    return 0;
+  }
+
+  RemotePLearnServer* PLearnService::newServer()
+  {
+    // search for a free processing ressource
+
+    // open an io channel to a plearn server running on found ressource 
+    PStream io;
+
+    // return RemotePLearnServer object controlling the remote processing ressource
+    RemotePLearnServer* serv = new RemotePLearnServer(io);
+    
+    reserved_servers.insert(serv);
+    return serv;
+  }
+
+  void PLearnService::freeServer(RemotePLearnServer* remoteserv)
+  {
+    if(reserved_servers.erase(remoteserv)!=1)
+      PLERROR("In PLearnService::freeServer, no such registered server. This should not happen!");
+  }
 
 
 } // end of namespace PLearn
-
-#endif

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnServer.cc,v 1.2 2005/01/06 02:40:49 plearner Exp $ 
+   * $Id: PLearnServer.cc,v 1.3 2005/01/07 18:18:14 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -55,9 +55,49 @@ using namespace std;
     
   }
 
+  void PLearnServer::callFunction(const string& name, int nargs)
+  {
+    if(name=="cd")
+      {
+        string path;
+        io >> path;
+        chdir(path);
+        prepareToSendResults(io,0);
+      }
+    else
+      PLERROR("In PLearnServer::callFunction Invalid function name %s",name.c_str());
+
+    io << endl;
+  }
+
+
+  void PLearnServer::printHelp()
+  {
+    io.write(
+             "Summary of commands:\n"
+             "  ?                                 # print this help message \n"
+             "  F functionname nargs arg1 ...     # calls a supported function.\n"
+             "  N objid object_specification      # creates new object.\n"
+             "  M objid methodname nargs arg1 ... # calls method on object objid. Returns: R <nreturn> ret1 ... \n"
+             "  D objid                   # deletes object objid. Returns: R 0 \n"
+             "  Z                         # delete all objects. Returns: R 0 \n"
+             "  Q                         # Quit. Returns nothing. \n"
+             "\n"
+             "Except for ? and Q, all commands upon success return: \n"
+             "  R n_retutn_args arg1 ... \n"
+             "If an error or exception occurs, the following is returned: \n"
+             "  E \"errormsg\" \n"
+             "\n"
+             "Summary of currently supported functions:\n"
+             "  F cd 1 \"path\" \n"
+             "\n"
+             );
+    io << endl;
+  }
+
   void PLearnServer::run()
   {
-    unsigned int obj_id;
+    int obj_id;
     Object* obj;
     ObjMap::iterator found;
     string method_name;
@@ -73,10 +113,12 @@ using namespace std;
           {
             switch(command)
               {
-              case '>': // cd "dirpath"
-                io >> dirpath;
-                chdir(dirpath);
-                io.write("R 0");
+              case '?':
+                printHelp();
+
+              case 'F': // call function 
+                io >> method_name >> n_args;
+                callFunction(method_name, n_args);
                 io << endl;
                 break;
 
@@ -116,6 +158,7 @@ using namespace std;
                 break;
 
               case 'Q': // quit
+              case EOF:
                 return;
 
               default:
