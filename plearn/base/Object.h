@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.21 2003/08/13 08:13:16 plearner Exp $
+   * $Id: Object.h,v 1.22 2003/09/17 15:27:29 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -527,13 +527,21 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
     DerivedClass* implementDeepCopy(CopiesMap& copies) const
     {
       CopiesMap::iterator it = copies.find(this);
+      //cout << "deep copy of object " << this << " of class " << classname();
       if (it != copies.end())
-        return static_cast<DerivedClass*>(it->second);
+        {
+          //cout << "found in the table, so return " << it->second << endl;
+          return static_cast<DerivedClass*>(it->second);
+        }
     
       DerivedClass* deep_copy =
         new DerivedClass(dynamic_cast<const DerivedClass&>(*this));
+      //cout << "not found in the table, so create a new one at " << deep_copy << " and call makedeepcopyfromshallowcopy" << endl;
       if (usage() > 1)
+      {
+        //cout << "put this->deep_copy in the table" << endl;
         copies[this] = deep_copy;
+      } // else cout << "this object does not seem to have multiple pointers to it" << endl;
       deep_copy->makeDeepCopyFromShallowCopy(copies);
       return deep_copy;
     }

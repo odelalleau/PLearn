@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.10 2003/08/20 19:18:59 yoshua Exp $
+   * $Id: NNet.cc,v 1.11 2003/09/17 15:27:30 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -48,7 +48,6 @@
 
 namespace PLearn <%
 using namespace std;
-
 
 PLEARN_IMPLEMENT_OBJECT(NNet, "ONE LINE DESCR", "NO HELP");
 

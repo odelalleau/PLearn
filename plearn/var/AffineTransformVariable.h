@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: AffineTransformVariable.h,v 1.2 2003/08/13 08:13:17 plearner Exp $
+   * $Id: AffineTransformVariable.h,v 1.3 2003/09/17 15:27:30 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -67,6 +67,7 @@ public:
                    vec->isRowVec()?1:transformation->width(),
                    vec->isColumnVec()?1:transformation->width())
   {
+    cout << "building AffineTransformVariable at input address " << vec->valuedata << endl;
     if(!vec->isVec())
       PLERROR("In AffineTransformVariable: expecting a vector Var (row or column) as first argument");
   }

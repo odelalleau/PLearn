@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Var.cc,v 1.3 2003/01/08 21:33:09 ducharme Exp $
+   * $Id: Var.cc,v 1.4 2003/09/17 15:27:30 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,8 +47,17 @@
 namespace PLearn <%
 using namespace std;
 
-template <>
+/*template <> // not called when compiled in -opt, compiler bug
 void deepCopyField(Var& field, CopiesMap& copies)
+{
+  cout << "in deepCopyField(Var,.) for Var at " << (void*)field << endl;
+  if (field)
+    field = field->deepCopy(copies);
+  else cout << "empty var!" << endl;
+}  
+*/
+
+void varDeepCopyField(Var& field, CopiesMap& copies)
 {
   if (field)
     field = field->deepCopy(copies);

@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_specialisation.h,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: TMat_maths_specialisation.h,v 1.2 2003/09/17 15:27:30 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -286,7 +286,19 @@ inline void productTransposeAcc(const TMat<double>& mat, const TMat<double>& m1,
     int lda = A.mod();
     int m = A.width();
     int n = A.length();
+    static int ndbg=0;
+    extern bool debug_;
+    if (debug_ && ndbg<3)
+      {
+        cout << "A=" << A << " * " << x << " ==> " << y << endl;
+        ndbg++;
+      }
     sgemv_(&trans, &m, &n, &alpha, A.data(), &lda, x.data(), &one, &beta, y.data(), &one);
+    if (debug_ && ndbg<3)
+      {
+        cout << "A=" << A << " * " << x << " ==> " << y << endl;
+        ndbg++;
+      }
   }
 
   //! A <- A + alpha x.y'

@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.cc,v 1.7 2003/08/13 08:13:17 plearner Exp $
+   * $Id: VarArray.cc,v 1.8 2003/09/17 15:27:30 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -93,13 +93,14 @@ VarArray::VarArray(Variable*  v1, Variable*  v2)
 }
 
 // This is really EXTERN!  Don't try to define it...
-template<>
-extern void deepCopyField(Var& field, CopiesMap& copies);
+//template<>
+//extern void deepCopyField(Var& field, CopiesMap& copies);
+extern void varDeepCopyField(Var& field, CopiesMap& copies); // a cause d'une bug du compilateur
 
 void VarArray::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   for(int i=0; i<size(); i++)
-    deepCopyField((*this)[i], copies);
+    varDeepCopyField((*this)[i], copies);
 }
 
 
@@ -621,7 +622,6 @@ void VarArray::setMark() const
   for(int i=0; i<size(); i++)
     if (!array[i].isNull())
       array[i]->setMark();
-  //cout << "on la fait " << i << " fois " << endl;
 }
 
 void VarArray::clearMark() const
@@ -654,8 +654,10 @@ void VarArray::fprop()
 {
   iterator array = data();
   for(int i=0; i<size(); i++)
+  {
     if (!array[i].isNull())
       array[i]->fprop();
+  }
 }
 
 void VarArray::sizeprop()

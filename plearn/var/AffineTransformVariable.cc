@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: AffineTransformVariable.cc,v 1.3 2003/08/13 08:13:17 plearner Exp $
+   * $Id: AffineTransformVariable.cc,v 1.4 2003/09/17 15:27:30 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,7 +48,9 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(AffineTransformVariable, "ONE LINE DESCR", "NO HELP");
 
 void AffineTransformVariable::recomputeSize(int& l, int& w) const
-{ l=input1->isRowVec()?1:input2->width(); w=input1->isColumnVec()?1:input2->width(); }
+{ 
+  l=input1->isRowVec()?1:input2->width(); w=input1->isColumnVec()?1:input2->width(); 
+}
 
 
 void AffineTransformVariable::fprop()

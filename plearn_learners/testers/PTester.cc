@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.6 2003/09/14 21:51:34 yoshua Exp $ 
+   * $Id: PTester.cc,v 1.7 2003/09/17 15:27:31 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -296,6 +296,10 @@ Vec PTester::perform(bool call_forget)
             test_costs = new FileVMatrix(splitdir+setname+"_costs.pmat",0,testcostsize);
 
           test_stats->forget();
+          
+          Vec r(testset->width());
+          testset->getRow(0,r);
+          testset->getRow(1,r);
           learner->test(testset, test_stats, test_outputs, test_costs);      
           test_stats->finalize();
           if(splitdir != "" && save_stat_collectors)
@@ -324,6 +328,7 @@ Vec PTester::perform(bool call_forget)
   for(int k=0; k<nstats; k++)
     global_result[k] = global_statscol->getStats(k).getStat(statspecs[k].extstat);
   
+
   if(global_stats_vm)
     global_stats_vm->appendRow(global_result);
 

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.cc,v 1.8 2003/08/13 08:13:46 plearner Exp $ 
+   * $Id: EmbeddedLearner.cc,v 1.9 2003/09/17 15:27:30 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.cc */
@@ -42,7 +42,6 @@
 
 namespace PLearn <%
 using namespace std;
-
 
 // ###### EmbeddedLearner ######################################################
 
@@ -99,15 +98,21 @@ void EmbeddedLearner::train()
 
 
 void EmbeddedLearner::computeOutput(const Vec& input, Vec& output) const
-{ learner_->computeOutput(input, output); }
+{ 
+  learner_->computeOutput(input, output); 
+}
 
 void EmbeddedLearner::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                               const Vec& target, Vec& costs) const
-{ learner_->computeCostsFromOutputs(input, output, target, costs); }
+{ 
+  learner_->computeCostsFromOutputs(input, output, target, costs); 
+}
                                                       
 void EmbeddedLearner::computeOutputAndCosts(const Vec& input, const Vec& target,
                                        Vec& output, Vec& costs) const
-{ learner_->computeOutputAndCosts(input, target, output, costs); }
+{ 
+  learner_->computeOutputAndCosts(input, target, output, costs); 
+}
 
 void EmbeddedLearner::computeCostsOnly(const Vec& input, const Vec& target, Vec& costs) const
 { learner_->computeCostsOnly(input, target, costs); }
