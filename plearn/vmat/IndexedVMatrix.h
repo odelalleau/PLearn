@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: IndexedVMatrix.h,v 1.1 2003/05/13 20:02:57 tihocan Exp $
+   * $Id: IndexedVMatrix.h,v 1.2 2003/05/15 13:00:59 tihocan Exp $
    ******************************************************* */
 
 
@@ -61,7 +61,6 @@ public:
 
 
   IndexedVMatrix() {}
-//  IndexedVMatrix(VMat m); TODO Remove ?
 
   PLEARN_DECLARE_OBJECT_METHODS(IndexedVMatrix, "IndexedVMatrix", VMatrix);
 
