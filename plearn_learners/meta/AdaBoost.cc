@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdaBoost.cc,v 1.4 2005/01/28 00:24:23 dorionc Exp $
+   * $Id: AdaBoost.cc,v 1.5 2005/02/23 18:08:35 lheureup Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -316,7 +316,7 @@ void AdaBoost::train()
         if(conf_rated_adaboost)
         {          
           examples_error[i] = 2*(f_i+y_i-2*f_i*y_i);
-          learners_error[stage] += example_weights[i]*examples_error[i];
+          learners_error[stage] += example_weights[i]*examples_error[i]/2;
         }
         else
         {
