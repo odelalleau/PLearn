@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array.h,v 1.4 2002/09/17 01:27:33 zouave Exp $
+   * $Id: Array.h,v 1.5 2002/09/18 23:38:53 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -274,6 +274,15 @@ public:
       return is_contained;
     }
 
+  // search for element from 'start'. Returns index or -1 if not found
+  int find(const T& element,int start=0)
+    {
+      for (int i=start;i<array_size;i++)
+        if(element==array[i])
+          return i;
+      return -1;
+    }
+    
   T& operator[](int i) const
     { 
       #ifdef BOUNDCHECK
