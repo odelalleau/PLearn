@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.36 2004/07/26 14:34:14 tihocan Exp $ 
+   * $Id: PTester.cc,v 1.37 2004/07/26 20:15:02 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -175,10 +175,12 @@ void PTester::build_()
       expdir = abspath(expdir);
     }
 
+  statnames_processed.resize(statnames.length());
+  statnames_processed << statnames;
   if (statmask) {
     TVec< TVec<string> > temp(2);
     int d = 0;
-    temp[d] = statnames.copy();
+    temp[d] = statnames_processed;
     for (int i=0;i<statmask.length();i++) {
       temp[1-d].resize(temp[d].length() * statmask[i].length());      
       
@@ -205,8 +207,6 @@ void PTester::build_()
       d = 1-d;
     }
     statnames_processed = temp[d];
-  } else {
-    statnames_processed = statnames.copy();
   }
 }
 
@@ -432,6 +432,9 @@ Vec PTester::perform(bool call_forget)
 }
 
 
+//////////////////
+// getStatNames //
+//////////////////
 TVec<string> PTester::getStatNames()
 {
   return statnames_processed;
@@ -538,5 +541,22 @@ void StatSpec::parseStatname(const string& statname)
     PLERROR("In parseStatname: parse error for %s",statname.c_str());
 }
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
+void PTester::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies) {
+  inherited::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(statnames_processed, copies);
+  deepCopyField(dataset, copies);
+  deepCopyField(final_commands, copies);
+  deepCopyField(global_template_stats_collector, copies);
+  deepCopyField(learner, copies);
+  deepCopyField(splitter, copies);
+  deepCopyField(statmask, copies);
+  deepCopyField(template_stats_collector, copies);
+  deepCopyField(statnames, copies);
+
+
+}
 
 } // end of namespace PLearn
