@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.32 2004/01/29 18:13:03 plearner Exp $
+   * $Id: VMatrix.h,v 1.33 2004/02/20 13:53:23 tihocan Exp $
    ******************************************************* */
 
 
@@ -128,6 +128,10 @@ public:
 
   inline void defineSizes(int inputsize, int targetsize, int weightsize=0)
   { inputsize_ = inputsize, targetsize_ = targetsize, weightsize_ = weightsize; }
+
+  //! Copy the values of inputsize, targetsize and weightsize from the source
+  //! matrix m.
+  void copySizesFrom(VMat m);
   
   inline int inputsize() const { return inputsize_; }
   inline int targetsize() const { return targetsize_; }

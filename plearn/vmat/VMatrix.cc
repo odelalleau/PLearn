@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.41 2004/02/12 22:15:09 ducharme Exp $
+* $Id: VMatrix.cc,v 1.42 2004/02/20 13:53:23 tihocan Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -611,6 +611,13 @@ void VMatrix::setMetaDataDir(const string& the_metadatadir)
   if(!force_mkdir(metadatadir))
     PLERROR("In VMatrix::setMetadataDir could not create directory %s",metadatadir.c_str());
   metadatadir = abspath(metadatadir);
+}
+
+///////////////////
+// copySizesFrom //
+///////////////////
+void VMatrix::copySizesFrom(VMat m) {
+  defineSizes(m->inputsize(), m->targetsize(), m->weightsize());
 }
 
 string getHost()
