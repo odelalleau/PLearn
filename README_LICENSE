@@ -1,0 +1,67 @@
+***************************** README_LICENCE **********************
+
+The files contained in this directory and all its subdirectories are part
+of the PLearn library or are applications built on top of the PLearn
+library.  The source code files are copyrighted under the Gnu General
+Public License (GPL) with a special exception that makes it possible to
+compile and link with non-GPL code if allowed by Pascal Vincent (primary
+author) or Yoshua Bengio or the University of Montreal.
+
+These files can be freely redistributed and modified according to the terms
+of the GPL license (see the accompanying license text in GPL.txt). Each of
+the GPL'ed source code file contains a header with an appropriate copyright
+notice referring to the GPL and the exception.
+
+If you modify a file, you should clearly state so (in the place you
+added/modified things), and add your name in the list of contributors for
+that file. You should also add your name (or the name of your employer, if
+intellectual property of your work is by default assigned to your employer)
+to the list of copyright holders at the top of the file. Alternatively,
+you can, if you so wish, assign your copyright to us (Pascal Vincent and/or
+Yoshua Bengio).
+
+PLEASE COPY THE FOLLOWING HEADER WITH THE GPL COPYRIGHT NOTICE AND THE
+EXCEPTION TO ANY NEW FILE YOU CONTRIBUTE TO THE LIBRARY.
+
+-------------------
+
+// -*- C++ -*-
+
+// PLearn (A C++ Machine Learning Library)
+// Copyright (C) 1998 Pascal Vincent
+// Copyright (C) 1999,2000 Pascal Vincent, Yoshua Bengio and University of Montreal
+//
+// This file is part of the PLearn Library. This library is free
+// software; you can redistribute it and/or modify it under the
+// terms of the GNU General Public License as published by the
+// Free Software Foundation, version 2.
+// 
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with this library; see the file GPL.txt  If not, write to the Free
+// Software Foundation, 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+//
+// As a special exception, you may compile and link this library with files
+// not covered by the GNU General Public License, and distribute the resulting
+// executable file under the terms of your choice, without the requirement to
+// distribute the complete corresponding source code, provided you have
+// obtained explicit written permission to do so from Pascal Vincent (primary
+// author of the library) or Yoshua Bengio or the University of Montreal.
+// This exception does not however invalidate any other reasons why the
+// executable file might be covered by the GNU General Public License.
+//
+// See the following URL for more information on PLearn:
+// http://plearn.sourceforge.net 
+
+/* *******************************************************      
+   * $Id: README_LICENSE,v 1.1 2002/03/18 23:28:17 plearner Exp $
+   * INITIAL AUTHOR: ........
+   * CONTRIBUTORS: .....
+   * This file is part of the PLearn library.
+   ******************************************************* */
+
+
