@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussMix.h,v 1.8 2004/02/20 21:14:46 chrish42 Exp $ 
+   * $Id: GaussMix.h,v 1.9 2004/04/26 19:50:21 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file GaussMix.h */
@@ -164,7 +164,7 @@ public:
   // a length=sum_Ks vector (only used for general gaussians) lambda[ V_idx[l] ] up to lambda[ V_idx[l] + Ks[l] ] are eigenvalus of the l-th gaussian
   Vec lambda;
 
-  //! how much gaussians the mixture contains
+  //! how many gaussians the mixture contains
   int L;
 
   //! the feature space dimension
@@ -173,6 +173,8 @@ public:
   // used if type=="General". Number of components and lambda0 used to perform EM training.
   int EM_ncomponents;
   real EM_lambda0;
+
+  real relativ_change_stop_value;
 
   // ****************
   // * Constructors *
@@ -295,9 +297,6 @@ public:
   // simply calls inherited::build() then build_() 
   virtual void build();
 
-  //! Provides a help message describing this class
-  static string help();
-
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
@@ -309,7 +308,7 @@ public:
   // *******************
 
   //! trains the model
-  virtual void train(VMat training_set); 
+  virtual void train();
 
   real NLL(VMat set);
 

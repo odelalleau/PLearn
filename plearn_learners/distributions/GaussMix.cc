@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.12 2004/02/20 21:14:46 chrish42 Exp $ 
+ * $Id: GaussMix.cc,v 1.13 2004/04/26 19:50:21 yoshua Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -53,7 +53,22 @@ GaussMix::GaussMix()
 }
 
 
-PLEARN_IMPLEMENT_OBJECT(GaussMix, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(GaussMix, "Gaussian Mixture, either set non-parametrically or trained by EM", 
+                        "GaussMix implements a mixture of gaussians, for which \n"
+                        "L : number of gaussians\n"
+                        "D : number of dimensions in the feature space\n"
+                        "2 parameters are common to all 4 types :\n"
+                        "alpha : the ponderation factor of that gaussian\n"
+                        "mu : its center\n"
+                        "There are 4 possible parametrization types.:\n"
+                        "Spherical : gaussians have covar matrix = diag(sigma). parameter used : sigma.\n"
+                        "Diagonal : gaussians have covar matrix = diag(sigma_i). parameters used : diags.\n"
+                        "General : gaussians have an unconstrained covariance matrix. User provides the K<=D greatest eigenvalues\n"
+                        "          (thru parameter lambda) and their corresponding eigenvectors (thru matrix V)\n"
+                        "          of the covariance matrix. For the remaining D-K eigenvectors, a user-given eigenvalue (thru sigma) is assumed\n"
+                        "Factor : as in the general case, the gaussians are defined with K<=D vectors (thru KxD matrix 'V'), but these need not be orthogonal/orthonormal.\n"
+                        "         The covariance matrix used will be V(t)V + psi with psi a D-vector (thru parameter diags).\n");
+
 
 void GaussMix::declareOptions(OptionList& ol)
 {
@@ -181,26 +196,6 @@ void GaussMix::kmeans(VMat samples, int nclust, TVec<int> & clust_idx, Mat & clu
   
   fill_random_normal(clust);
 
-}
-
-string GaussMix::help()
-{
-  // ### Provide some useful description of what the class is ...
-  return 
-    "GaussMix implements a mixture of gaussians, for which \n"\
-    "L : number of gaussians\n"\
-    "D : number of dimensions in the feature space\n"\
-    "2 parameters are common to all 4 types :\n"\
-    "alpha : the ponderation factor of that gaussian\n"\
-    "mu : its center\n"\
-    "There are 4 possible parametrization types.:\n"\
-    "Spherical : gaussians have covar matrix = diag(sigma). parameter used : sigma.\n"\
-    "Diagonal : gaussians have covar matrix = diag(sigma_i). parameters used : diags.\n"\
-    "General : gaussians have an unconstrained covariance matrix. User provides the K<=D greatest eigenvalues\n"
-    "          (thru parameter lambda) and their corresponding eigenvectors (thru matrix V)\n"\
-    "          of the covariance matrix. For the remaining D-K eigenvectors, a user-given eigenvalue (thru sigma) is assumed\n"\
-    "Factor : as in the general case, the gaussians are defined with K<=D vectors (thru KxD matrix 'V'), but these need not be orthogonal/orthonormal.\n"\
-    "         The covariance matrix used will be V(t)V + psi with psi a D-vector (thru parameter diags).\n" + optionHelp();
 }
 
 void GaussMix::setMixtureTypeSpherical(int _L, int _D)
@@ -689,8 +684,11 @@ Lh=randn(D*M,K)*sqrt(scale/K);
 
 }
 
-void GaussMix::EM(VMat samples, real relativ_change_stop_value)
+//void GaussMix::EM(VMat samples, real relativ_change_stop_value)
+void GaussMix::train()
 {
+  VMat samples = train_set;
+  real relativ_change_stop_value
   if(type=="Factor")
   {
     EMFactorAnalyser(samples,relativ_change_stop_value);
@@ -879,14 +877,6 @@ void GaussMix::build()
 {
   inherited::build();
   build_();
-}
-
-void GaussMix::train(VMat training_set)
-{ 
-  if(training_set->width() != inputsize()+targetsize())
-    PLERROR("In GaussMix::train(VMat training_set) training_set->width() != inputsize()+targetsize()");
-
-  setTrainingSet(training_set);
 }
 
 void GaussMix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
