@@ -447,7 +447,7 @@ if 'clean' in optionargs:
     if len(optionargs)!=1 or len(otherargs)==0:
         print 'BAD ARGUMENTS: with -clean, specify one or more directories to clean, but no other -option'
     else:
-        print '>> Removing following OBJS directorires: '
+        print '>> Removing the following OBJS directories: '
         for dirname in otherargs:
             os.path.walk(dirname,rmOBJS,'')
     sys.exit()
