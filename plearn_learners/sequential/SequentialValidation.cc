@@ -302,7 +302,7 @@ void SequentialValidation::reportStats(const Vec& global_result)
   
   saveAscii(expdir+"global_result.avec", global_result);
   saveAscii(expdir+"predictions.amat", learner->predictions);
-  saveAscii(expdir+"errors.amat", learner->errors);
+  saveAscii(expdir+"errors.amat", learner->errors, learner->getTestCostNames());
 
   if(matlab_subdir != "")
     learner->matlabSave(matlab_subdir);
