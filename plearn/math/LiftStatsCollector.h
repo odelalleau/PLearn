@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.h,v 1.6 2003/11/20 15:31:27 tihocan Exp $
+ * $Id: LiftStatsCollector.h,v 1.7 2003/11/21 16:26:17 tihocan Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -78,6 +78,9 @@ protected:
   //! Number of examples to keep (nsamples * lift_fraction).
   int n_samples_to_keep;
 
+  //! Index of the output column.
+  int output_column_index;
+
 public:
 
   // ************************
@@ -86,7 +89,7 @@ public:
 
   real lift_fraction;
   int opposite_lift;
-  int output_column;
+  string output_column;
   int sign_trick;
   int target_column;
   int verbosity;

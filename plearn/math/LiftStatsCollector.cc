@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.cc,v 1.7 2003/11/20 15:31:27 tihocan Exp $
+ * $Id: LiftStatsCollector.cc,v 1.8 2003/11/21 16:26:17 tihocan Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -56,9 +56,10 @@ LiftStatsCollector::LiftStatsCollector()
   nstored(0),
   nsamples(0),
   npos(0),
+  output_column_index(0),
   lift_fraction(0.1),
   opposite_lift(0),
-  output_column(0),
+  output_column(""),
   sign_trick(0),
   target_column(1),
   verbosity(0)
@@ -82,14 +83,14 @@ PLEARN_IMPLEMENT_OBJECT(
   "- change the template_stats_collector of your PTester:\n"
   "    template_stats_collector =\n"
   "      LiftStatsCollector (\n"
-  "        output_column = 1 ; # lift_output\n"
+  "        output_column = \"lift_output\" ;\n"
   "        opposite_lift = 1 ; # if you want to optimize the lift\n"
   "        sign_trick = 1 ;\n"
   "      )\n"
   "- add the lift to its statnames:\n"
   "    statnames = [ \"E[train.E[stable_cross_entropy]]\",\"E[test.E[stable_cross_entropy]]\",\n"
   "                  \"E[train.LIFT]\", \"E[test.LIFT]\" ]\n"
-  "- change which_cost in your HyperOptimize strategy.\n"
+  "- maybe also change which_cost in your HyperOptimize strategy.\n"
 
   );
 
@@ -103,7 +104,7 @@ void LiftStatsCollector::declareOptions(OptionList& ol)
       "    if set to 1, the LIFT stat will return -LIFT, so that it can be considered as a cost (default = 0)\n");
 
   declareOption(ol, "output_column", &LiftStatsCollector::output_column, OptionBase::buildoption,
-      "    the column in which is the output value (default = 0)\n");
+      "    the name of the column in which is the output value (the default value, \"\", assumes it is the first column))\n");
 
   declareOption(ol, "sign_trick", &LiftStatsCollector::sign_trick, OptionBase::buildoption,
       "    if set to 1, then you won't have to specify a target column: if the output is\n"
@@ -136,6 +137,17 @@ void LiftStatsCollector::build()
 ////////////
 void LiftStatsCollector::build_()
 {
+  if (output_column != "") {
+    int i = this->getFieldNum(output_column);
+    if (i >= 0) {
+      output_column_index = i;
+    } else {
+      // Not found.
+      output_column_index = 0;
+    }
+  } else {
+    output_column_index = 0;
+  }
 }
 
 /////////////////
@@ -272,7 +284,7 @@ void LiftStatsCollector::update(const Vec& x, real w)
   if (nstored == n_first_updates.length()) {
     n_first_updates.resize(MAX(1000,10*n_first_updates.length()), 2);
   }
-  real output_val = x[output_column];
+  real output_val = x[output_column_index];
   real target = -1;
   switch(sign_trick) {
     case 0:
@@ -284,7 +296,7 @@ void LiftStatsCollector::update(const Vec& x, real w)
       // Sign trick.
       n_first_updates(nstored, 0) = FABS(output_val);
       if (output_val <= 0) {
-        x[output_column] = -output_val;
+        x[output_column_index] = -output_val;
         target = 0;
       } else {
         target = 1;
