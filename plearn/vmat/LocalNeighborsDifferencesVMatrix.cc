@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocalNeighborsDifferencesVMatrix.cc,v 1.7 2004/08/02 16:17:29 monperrm Exp $ 
+   * $Id: LocalNeighborsDifferencesVMatrix.cc,v 1.8 2004/08/03 18:18:41 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus
@@ -49,7 +49,7 @@ using namespace std;
 
 
 LocalNeighborsDifferencesVMatrix::LocalNeighborsDifferencesVMatrix()
-  :inherited(), n_neighbors(-1), concat_neighbors(false)
+  :inherited(), n_neighbors(-1), concat_neighbors(false), append_indexes(false)
   /* ### Initialise all fields to their default value */
 {
 }
@@ -79,6 +79,12 @@ PLEARN_IMPLEMENT_OBJECT(LocalNeighborsDifferencesVMatrix,
         // on renvoie la valeur
         substract(neighbor_row,ith_row, diff_k);
 
+        if(append_indexes)
+        {
+          v[source->width()] = i;
+          v[source->width()+1] = neighbors(i,n_neighbors-1); 
+        }
+
       }
     else
       {
@@ -95,7 +101,15 @@ PLEARN_IMPLEMENT_OBJECT(LocalNeighborsDifferencesVMatrix,
             // normalize result
             // now it's done in ProjectionErrorVariable diff_k /= norm(diff_k);
           }
+        
+        if(append_indexes)
+        {
+          v[n_neighbors*source->width()] = i;
+          for(int k=0; k<n_neighbors; k++)
+            v[n_neighbors*source->width()+k+1] = neighbors(i,k); 
+        }
       }
+
   }
 
 void LocalNeighborsDifferencesVMatrix::declareOptions(OptionList& ol)
@@ -105,6 +119,10 @@ void LocalNeighborsDifferencesVMatrix::declareOptions(OptionList& ol)
                 "is source->width() * n_neighbors.\n");
   declareOption(ol, "concat_neighbors", &LocalNeighborsDifferencesVMatrix::concat_neighbors, OptionBase::buildoption,
                 "If true, returns the concatenation of nearest neighbors(x) -x  from 1 to n_neighbors , else, returns the n_neighbor nearest neighbor(x) - x");
+  declareOption(ol, "append_indexes", &LocalNeighborsDifferencesVMatrix::append_indexes, OptionBase::buildoption,
+                "Indication that the indexes of the current data point and of the k nearest neighbors\n" 
+                "should be appended to the row of the VMatrix.\n");
+
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
 }
@@ -116,10 +134,16 @@ void LocalNeighborsDifferencesVMatrix::build_()
       // will not work if source is changed but has the same dimensions
   {
     if (concat_neighbors)
+    {
       width_ = source->width();      
+      if(append_indexes) width_ += 2;
+    }
     else
+    {
       width_ = source->width()*n_neighbors;
-      
+      if(append_indexes) width_ += n_neighbors+1;
+    }
+
     length_ = source->length();
     neighbors.resize(source->length(),n_neighbors);
     a_row.resize(source->width());
