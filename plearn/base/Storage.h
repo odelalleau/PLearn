@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Storage.h,v 1.12 2004/05/13 20:22:16 nova77 Exp $
+   * $Id: Storage.h,v 1.13 2004/07/07 14:56:16 ducharme Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -53,6 +53,7 @@
 #include "MemoryMap.h"
 #include "PP.h"
 #include "PStream.h"
+//#include "Object.h"
 
 namespace PLearn {
 using namespace std;
@@ -305,7 +306,7 @@ public:
         deepCopyField(deep_copy->data[i], copies);
       }
       //!  Put the copy in the map
-      if (usage() > 1)
+      //if (usage() > 1)
         copies[this] = deep_copy;
       //!  return the completed deep_copy
       return deep_copy;

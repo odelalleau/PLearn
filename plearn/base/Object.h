@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.33 2004/06/26 00:24:12 plearner Exp $
+   * $Id: Object.h,v 1.34 2004/07/07 14:56:16 ducharme Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -119,7 +119,13 @@ using namespace std;
         bool CLASSTYPE::_isa_(Object* o)                                      \
           { return dynamic_cast<CLASSTYPE*>(o) != 0; }                        \
         CLASSTYPE* CLASSTYPE::deepCopy(CopiesMap& copies) const	              \
-          { return implementDeepCopy<CLASSTYPE>(copies); }                    \
+          { CopiesMap::iterator it = copies.find(this);                       \
+            if (it != copies.end())                                           \
+              return static_cast<CLASSTYPE*>(it->second);                     \
+            CLASSTYPE* deep_copy = new CLASSTYPE(dynamic_cast<const CLASSTYPE&>(*this));\
+            copies[this] = deep_copy;                                         \
+            deep_copy->makeDeepCopyFromShallowCopy(copies);                   \
+            return deep_copy; }                                               \
         void CLASSTYPE::_static_initialize_()                                 \
           { TypeFactory::register_type( \
             #CLASSTYPE,  \
@@ -235,8 +241,7 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
           if (it != copies.end())                             \
             return static_cast<CLASSTYPE*>(it->second);       \
           CLASSTYPE* deep_copy = new CLASSTYPE(dynamic_cast<const CLASSTYPE&>(*this)); \
-          if (usage() > 1)                                                             \
-            copies[this] = deep_copy;                                                  \
+          copies[this] = deep_copy;                                                  \
           deep_copy->makeDeepCopyFromShallowCopy(copies);                              \
           return deep_copy;                                                            \
         }                                                                              \
@@ -539,34 +544,6 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
     virtual void load(const string& filename);
 
     virtual ~Object();
-
-  protected:
-/*!       This is a 'default' implementation of deepCopy; provided for helping
-      derived classes; for some reason I don't understand with the
-      compiler (EGCS), this currently has to be inline (NC 2000/12/12)
-*/
-    template <class DerivedClass>
-    DerivedClass* implementDeepCopy(CopiesMap& copies) const
-    {
-      CopiesMap::iterator it = copies.find(this);
-      //cout << "deep copy of object " << this << " of class " << classname();
-      if (it != copies.end())
-        {
-          //cout << "found in the table, so return " << it->second << endl;
-          return static_cast<DerivedClass*>(it->second);
-        }
-    
-      DerivedClass* deep_copy =
-        new DerivedClass(dynamic_cast<const DerivedClass&>(*this));
-      //cout << "not found in the table, so create a new one at " << deep_copy << " and call makedeepcopyfromshallowcopy" << endl;
-      if (usage() > 1)
-      {
-        //cout << "put this->deep_copy in the table" << endl;
-        copies[this] = deep_copy;
-      } // else cout << "this object does not seem to have multiple pointers to it" << endl;
-      deep_copy->makeDeepCopyFromShallowCopy(copies);
-      return deep_copy;
-    }
   };
 
   //! The toObjectPtr functions attempt to return a pointer to Object 
@@ -632,16 +609,6 @@ Object* macroLoadObject(const string &filename);
 
   inline ostream& operator<<(ostream& out, const Object& obj)
     { obj.print(out); return out; }
-
-  //!  The following functions are used to help you write the function
-  //!  makeDeepCopyFromShallowCopy()
-
-  //!  Any type derived from Object: call makeDeepCopyFromShallowCopy
-  template <>
-  inline void deepCopyField(Object& field, CopiesMap& copies)
-  {
-    field.makeDeepCopyFromShallowCopy(copies);
-  }
 
   inline PStream &operator>>(PStream &in, Object &o)
     { o.newread(in); return in; }
