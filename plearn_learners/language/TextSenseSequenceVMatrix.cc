@@ -2,7 +2,7 @@
 
 #include "TextSenseSequenceVMatrix.h"
 
-namespace PLearn <%
+namespace PLearn {
 using namespace std;
 
 
@@ -498,5 +498,5 @@ void TextSenseSequenceVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void
   //PLERROR("TextSenseSequenceVMatrix::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
-%> // end of namespace PLearn
+} // end of namespace PLearn
 
