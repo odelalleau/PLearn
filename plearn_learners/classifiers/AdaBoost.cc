@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdaBoost.cc,v 1.6 2004/09/18 16:36:01 larocheh Exp $
+   * $Id: AdaBoost.cc,v 1.7 2004/11/12 20:08:35 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -44,6 +44,7 @@
 #include <plearn/math/pl_math.h>
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
 #include <plearn/vmat/SelectRowsVMatrix.h>
+#include <plearn/vmat/MemoryVMatrix.h>
 #include <plearn/math/random.h>
 
 namespace PLearn {
@@ -51,7 +52,7 @@ using namespace std;
 
 AdaBoost::AdaBoost()
   : target_error(0.5), output_threshold(0.5), compute_training_error(1), 
-    pseudo_loss_adaboost(1), weight_by_resampling(1), early_stopping(1),
+    pseudo_loss_adaboost(1), conf_rated_adaboost(0), weight_by_resampling(1), early_stopping(1),
     save_often(0)
   { }
 
@@ -79,6 +80,10 @@ void AdaBoost::declareOptions(OptionList& ol)
                 "Weights given to the weak learners (their output is linearly combined with these weights\n"
                 "to form the output of the AdaBoost learner).\n");
 
+  declareOption(ol, "sum_voting_weights", &AdaBoost::sum_voting_weights,
+                OptionBase::learntoption,
+                "Sum of the weak learners voting weights.\n");
+  
   declareOption(ol, "initial_sum_weights", &AdaBoost::initial_sum_weights,
                 OptionBase::learntoption,
                 "Initial sum of weights on the examples. Do not temper with.\n");
@@ -96,6 +101,11 @@ void AdaBoost::declareOptions(OptionList& ol)
                 OptionBase::buildoption,
                 "Whether to use a variant of AdaBoost which is appropriate for soft classifiers\n"
                 "whose output is between 0 and 1 rather than being either 0 or 1.\n");
+
+  declareOption(ol, "conf_rated_adaboost", &AdaBoost::conf_rated_adaboost,
+                OptionBase::buildoption,
+                "Whether to use a version of Adaboost appropriate for weak learners that can\n"
+                "give a confidence rate to their predictions.\n");
 
   declareOption(ol, "weight_by_resampling", &AdaBoost::weight_by_resampling,
                 OptionBase::buildoption,
@@ -126,6 +136,8 @@ void AdaBoost::declareOptions(OptionList& ol)
 
 void AdaBoost::build_()
 {
+  if(conf_rated_adaboost && pseudo_loss_adaboost)
+    PLERROR("In Adaboost:build_(): conf_rated_adaboost and pseudo_loss_adaboost cannot both be true, a choice must be made");
 }
 
 // ### Nothing to add here, simply calls build_
@@ -202,15 +214,17 @@ void AdaBoost::train()
     example_weights.resize(n);
     if (train_set->weightsize()>0)
     {
-      ProgressBar pb("AdaBoost round " + tostring(stage) +
+      ProgressBar *pb;
+      if(report_progress) pb = new ProgressBar("AdaBoost round " + tostring(stage) +
                      ": extracting initial weights", n);
       initial_sum_weights=0;
       for (int i=0; i<n; ++i) {
-        pb.update(i);
+        if(report_progress) pb->update(i);
         train_set->getExample(i, input, target, weight);
         example_weights[i]=weight;
         initial_sum_weights += weight;
       }
+      if(report_progress) delete(pb);
       example_weights *= 1.0/initial_sum_weights;
     }
     else 
@@ -228,8 +242,9 @@ void AdaBoost::train()
   for ( ; stage < nstages ; ++stage)
   {
     VMat weak_learner_training_set;
-    {
-      ProgressBar pb("AdaBoost round " + tostring(stage) +
+    { 
+      ProgressBar *pb;
+      if(report_progress) pb = new ProgressBar("AdaBoost round " + tostring(stage) +
                      ": making training set for weak learner", n);
       // We shall now construct a training set for the new weak learner:
       if (weight_by_resampling)
@@ -238,7 +253,7 @@ void AdaBoost::train()
         // with the probabilities given by example_weights.
         map<real,int> indices;
         for (int i=0; i<n; ++i) {
-          pb.update(i);
+          if(report_progress) pb->update(i);
           real p_i = example_weights[i];
           int n_samples_of_row_i = int(rint(gaussian_mu_sigma(n*p_i,sqrt(n*p_i*(1-p_i))))); // randomly choose how many repeats of example i
           for (int j=0;j<n_samples_of_row_i;j++)
@@ -252,6 +267,7 @@ void AdaBoost::train()
             }
           }
         }
+        if(report_progress) delete(pb);
         train_indices.resize(0,n);
         map<real,int>::iterator it = indices.begin();
         map<real,int>::iterator last = indices.end();
@@ -274,7 +290,11 @@ void AdaBoost::train()
     PP<PLearner> new_weak_learner = ::PLearn::deepCopy(weak_learner_template);
     new_weak_learner->setTrainingSet(weak_learner_training_set);
     new_weak_learner->setTrainStatsCollector(new VecStatsCollector);
-
+    /*
+    string file = "train_" + tostring(stage);
+    MemoryVMatrix *temp_train_set = new MemoryVMatrix(weak_learner_training_set);
+    PLearn::save(file,temp_train_set->data);
+    */
     if(expdir!="" && provide_learner_expdir)
       new_weak_learner->setExperimentDirectory(append_slash(expdir+"WeakLearner" + tostring(stage) + "Expdir"));
 
@@ -282,40 +302,50 @@ void AdaBoost::train()
 
     // calculate its weighted training error 
     {
-      ProgressBar pb("computing weighted training error of weak learner",n);
+      ProgressBar *pb;
+      if(report_progress) pb = new ProgressBar("computing weighted training error of weak learner",n);
       learners_error[stage] = 0;
       for (int i=0; i<n; ++i) {
-        pb.update(i);
+        if(report_progress) pb->update(i);
         train_set->getExample(i, input, target, weight);
         new_weak_learner->computeOutput(input,output);
         real y_i=target[0];
         real f_i=output[0];
-        if (pseudo_loss_adaboost) // an error between 0 and 1 (before weighting)
-        {
-          examples_error[i] = 0.5*(f_i+y_i-2*f_i*y_i);
+        if(conf_rated_adaboost)
+        {          
+          examples_error[i] = 2*(f_i+y_i-2*f_i*y_i);
           learners_error[stage] += example_weights[i]*examples_error[i];
         }
         else
         {
-          if (y_i==1)
+          if (pseudo_loss_adaboost) // an error between 0 and 1 (before weighting)
           {
-            if (f_i<output_threshold)
-            {
-              learners_error[stage] += example_weights[i];
-              examples_error[i]=1;
-            }
-            else examples_error[i] = 0;
+            examples_error[i] = 0.5*(f_i+y_i-2*f_i*y_i);  
+            learners_error[stage] += example_weights[i]*examples_error[i];
           }
           else
           {
-            if (f_i>=output_threshold) {
-              learners_error[stage] += example_weights[i];
-              examples_error[i]=1;
+            if (y_i==1)
+            {
+              if (f_i<output_threshold)
+              {
+                learners_error[stage] += example_weights[i];
+                examples_error[i]=1;
+              }
+              else examples_error[i] = 0;
             }
-            else examples_error[i]=0;
+            else
+            {
+              if (f_i>=output_threshold) {
+                learners_error[stage] += example_weights[i];
+                examples_error[i]=1;
+              }
+              else examples_error[i]=0;
+            }
           }
         }
       }
+      if(report_progress) delete(pb);
     }
 
     if (verbosity>1)
@@ -336,10 +366,118 @@ void AdaBoost::train()
       
     // compute the new learner's weight
 
-    voting_weights.push_back(safeflog(((1-learners_error[stage])*target_error)/(learners_error[stage]*(1-target_error))));
-    sum_voting_weights += fabs(voting_weights[stage]);
+    if(conf_rated_adaboost)
+    {
+      // Find optimal weight with line search, blame Norman if this doesn't work ;) 
+      
+      real ax = -10;
+      real bx = 1;
+      real cx = 100;
+      real xmin;
+      real tolerance = 0.001;
+      int itmax = 100000;
 
-    // update the example weights
+      int iter;
+      real xtmp;
+      real fa, fb, fc, ftmp;
+
+      // compute function for fa, fb and fc
+
+      fa = 0;
+      fb = 0;
+      fc = 0;
+
+      for (int i=0; i<n; ++i) {
+        train_set->getExample(i, input, target, weight);
+        new_weak_learner->computeOutput(input,output);
+        real y_i=(2*target[0]-1);
+        real f_i=(2*output[0]-1);
+        fa += example_weights[i]*exp(-1*ax*f_i*y_i);
+        fb += example_weights[i]*exp(-1*bx*f_i*y_i);
+        fc += example_weights[i]*exp(-1*cx*f_i*y_i);
+      }
+
+        
+      for(iter=1;iter<=itmax;iter++)
+      {
+        if(verbosity>4)
+          cout << "iteration " << iter << ": fx = " << fb << endl;
+        if (abs(cx-ax) <= tolerance)
+        {
+          xmin=bx;
+          if(verbosity>3)
+          {
+            cout << "nIters for minimum: " << iter << endl;
+            cout << "xmin = " << xmin << endl;
+            cout << "fx = " << fb << endl;
+          }
+          break;
+        }
+        if (abs(bx-ax) > abs(bx-cx)) 
+        {
+          xtmp = (bx + ax) * 0.5;
+
+          ftmp = 0;
+          for (int i=0; i<n; ++i) {
+            train_set->getExample(i, input, target, weight);
+            new_weak_learner->computeOutput(input,output);
+            real y_i=(2*target[0]-1);
+            real f_i=(2*output[0]-1);
+            ftmp += example_weights[i]*exp(-1*xtmp*f_i*y_i);
+          }
+
+          if (ftmp > fb)
+          {
+            ax = xtmp;
+            fa = ftmp;
+          }
+          else
+          {
+            cx = bx;
+            fc = fb;
+            bx = xtmp;
+            fb = ftmp;
+          }
+        }
+        else
+        {
+          xtmp = (bx + cx) * 0.5;
+          ftmp = 0;
+          for (int i=0; i<n; ++i) {
+            train_set->getExample(i, input, target, weight);
+            new_weak_learner->computeOutput(input,output);
+            real y_i=(2*target[0]-1);
+            real f_i=(2*output[0]-1);
+            ftmp += example_weights[i]*exp(-1*xtmp*f_i*y_i);
+          }
+
+          if (ftmp > fb)
+          {
+            cx = xtmp;
+            fc = ftmp;
+          }
+          else
+          {
+            ax = bx;
+            fa = fb;
+            bx = xtmp;
+            fb = ftmp;
+          }
+        }
+      }
+      if(verbosity>3)
+      {
+        cout << "Too many iterations in Brent" << endl;
+      }
+      xmin=bx;
+      voting_weights.push_back(xmin);
+      sum_voting_weights += abs(voting_weights[stage]);
+    }
+    else
+    {
+      voting_weights.push_back(0.5*safeflog(((1-learners_error[stage])*target_error)/(learners_error[stage]*(1-target_error))));
+      sum_voting_weights += abs(voting_weights[stage]);
+    }
 
     real sum_w=0;
     for (int i=0;i<n;i++)
@@ -352,16 +490,18 @@ void AdaBoost::train()
     if (compute_training_error)
     {
       {
-        ProgressBar pb("computing weighted training error of whole model",n);
+        ProgressBar *pb;
+        if(report_progress) pb = new ProgressBar("computing weighted training error of whole model",n);
         train_stats->forget();
         static Vec err(1);
         for (int i=0;i<n;i++)
         {
-          pb.update(i);
+          if(report_progress) pb->update(i);
           train_set->getExample(i, input, target, weight);
           computeCostsOnly(input,target,err);
           train_stats->update(err);
         }
+        if(report_progress) delete(pb);
         train_stats->finalize();
       }
       if (verbosity>2)
@@ -380,7 +520,7 @@ void AdaBoost::computeOutput(const Vec& input, Vec& output) const
   for (int i=0;i<voting_weights.length();i++)
   {
     weak_learners[i]->computeOutput(input,weak_learner_output);
-    if(!pseudo_loss_adaboost)
+    if(!pseudo_loss_adaboost && !conf_rated_adaboost)
       sum_out += (weak_learner_output[0] < output_threshold ? 0 : 1) *voting_weights[i];
     else
       sum_out += weak_learner_output[0]*voting_weights[i];
@@ -416,7 +556,7 @@ TVec<string> AdaBoost::getTestCostNames() const
 TVec<string> AdaBoost::getTrainCostNames() const
 {
   TVec<string> costs(1);
-  costs[0] = "class_error";
+  costs[0] = "binary_class_error";
   return costs;
 }
 

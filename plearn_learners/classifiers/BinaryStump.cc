@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: BinaryStump.cc,v 1.1 2004/09/22 20:15:45 larocheh Exp $ 
+   * $Id: BinaryStump.cc,v 1.2 2004/11/12 20:08:35 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -299,7 +299,7 @@ TVec<string> BinaryStump::getTestCostNames() const
 TVec<string> BinaryStump::getTrainCostNames() const
 {
   TVec<string> costs(1);
-  costs[0] = "class_error";
+  costs[0] = "binary_class_error";
   return costs;
 }
 

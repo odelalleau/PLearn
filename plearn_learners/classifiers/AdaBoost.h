@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdaBoost.h,v 1.5 2004/09/14 16:04:40 chrish42 Exp $
+   * $Id: AdaBoost.h,v 1.6 2004/11/12 20:08:35 larocheh Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -100,6 +100,9 @@ public:
 
   // use more refined training criterion when weak classifier is soft
   bool pseudo_loss_adaboost;
+
+  // use confidence-rated adaboost
+  bool conf_rated_adaboost;
 
   // use resampling (vs weighting) to train the underlying classifier
   bool weight_by_resampling;
