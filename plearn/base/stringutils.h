@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.19 2004/02/20 21:11:43 chrish42 Exp $
+   * $Id: stringutils.h,v 1.20 2004/03/10 23:40:00 nova77 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -60,8 +60,9 @@
 
 namespace PLearn {
 using namespace std;
-  
-#if defined(_MINGW_) || defined(WIN32)
+
+// THIS slash CHAR HAS TO GO AWAY!!!!
+#if defined(_MINGW_)
 #define slash "\\"
 #define slash_char '\\'
 #else
