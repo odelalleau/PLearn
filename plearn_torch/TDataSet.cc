@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TDataSet.cc,v 1.2 2005/02/23 18:03:39 tihocan Exp $ 
+   * $Id: TDataSet.cc,v 1.3 2005/02/23 21:48:06 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -132,40 +132,41 @@ void TDataSet::updateFromPLearn(Torch::Object* ptr) {
     PLERROR("In TDataSet::updateFromPLearn - Torch::DataSet is an abstract class "
             "and cannot be instantiated");
 
-  if (options["n_real_examples"]) dataset->n_real_examples  = n_real_examples;
-  if (options["select_examples"]) dataset->select_examples  = select_examples;
-  if (options["n_inputs"])        dataset->n_inputs         = n_inputs;
-  if (options["n_targets"])       dataset->n_targets        = n_targets;
-  if (options["real_current_example_index"])
-              dataset->real_current_example_index = real_current_example_index;
+  FROM_P_BASIC(n_real_examples,            n_real_examples,            dataset, n_real_examples           );
+  FROM_P_BASIC(select_examples,            select_examples,            dataset, select_examples           );
+  FROM_P_BASIC(n_inputs,                   n_inputs,                   dataset, n_inputs                  );
+  FROM_P_BASIC(n_targets,                  n_targets,                  dataset, n_targets                 );
+  FROM_P_BASIC(real_current_example_index, real_current_example_index, dataset, real_current_example_index);
+
   // We assume an empty 'selected_examples' vector means we select them all
   // (not to waste space when saving this object).
-  if (options["selected_examples"]) {
-    if (selected_examples.isEmpty())
-      selected_examples = TVec<int>(0, n_real_examples - 1, 1);
-    dataset->selected_examples = selected_examples ? selected_examples.data() : 0;
-    dataset->n_examples        = selected_examples.length();
-  }
+  // TODO Find a cleaner way to do this.
+  if (selected_examples.isEmpty())
+    selected_examples = TVec<int>(0, n_real_examples - 1, 1);
+  FROM_P_TVEC(selected_examples, selected_examples, dataset, selected_examples, n_examples);
+  
   inherited::updateFromPLearn(dataset);
+  // NB: not updating subsets, n_examples_subsets, n_subsets, pushed_examples,
+  //                  inputs, targets
 }
 
 /////////////////////
 // updateFromTorch //
 /////////////////////
 void TDataSet::updateFromTorch() {
-  n_real_examples             = dataset->n_real_examples;
-  select_examples             = dataset->select_examples;
+  FROM_T_BASIC(n_real_examples,            n_real_examples,            dataset, n_real_examples           );
+  FROM_T_BASIC(select_examples,            select_examples,            dataset, select_examples           );
+  FROM_T_BASIC(n_inputs,                   n_inputs,                   dataset, n_inputs                  );
+  FROM_T_BASIC(n_targets,                  n_targets,                  dataset, n_targets                 );
+  FROM_T_BASIC(real_current_example_index, real_current_example_index, dataset, real_current_example_index);
+
   if (dataset->n_examples == 0)
     PLERROR("In TDataSet::updateFromTorch - No selected examples is currently not supported");
-  if (dataset->n_examples == n_real_examples)
+
+  if (dataset->n_examples == n_real_examples && options["selected_examples"])
     selected_examples.resize(0);
-  else {
-    selected_examples.resize(dataset->n_examples);
-    selected_examples.copyFrom(dataset->selected_examples, dataset->n_examples);
-  }
-  n_inputs                    = dataset->n_inputs;
-  n_targets                   = dataset->n_targets;
-  real_current_example_index  = dataset->real_current_example_index;
+  else
+    FROM_T_TVEC(selected_examples, selected_examples, dataset, selected_examples, n_examples);
 
   inherited::updateFromTorch();
 }
