@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PPath.cc,v 1.21 2005/02/24 16:20:14 dorionc Exp $ 
+   * $Id: PPath.cc,v 1.22 2005/03/01 22:17:54 ducharme Exp $ 
    ******************************************************* */
 
 // Authors: Christian Dorion
@@ -66,15 +66,6 @@
 
 namespace PLearn {
 using namespace std;
-
-//TMP!!! TODO Remove ?
-static string left(const string& s, size_t width, char padding=' ')
-{ 
-  if(s.length()>width)
-    return s;
-  else
-    return s+string(width-s.length(),padding);
-}  
 
 ////////////////////////////////////////////////////////
 //  Stringutils.h         //////////////////////////////
@@ -386,15 +377,6 @@ void PPath::expandMetaprotocols()
       *this = it->second / after_colon;
     }
   }
-
-#ifdef __INTEL_COMPILER
-#pragma warning(disable:279)  // Get rid of compiler warning.
-#endif
-  EXTREME_LOG << left("c_str(): ", 20) << c_str() << endl;
-#ifdef __INTEL_COMPILER
-#pragma warning(default:279)
-#endif
-
 }
 
 ///////////////////////
@@ -587,15 +569,6 @@ void PPath::parseProtocol()
     else
       _protocol = "";
   }
-
-#ifdef __INTEL_COMPILER
-#pragma warning(disable:279)  // Get rid of compiler warning.
-#endif
-  EXTREME_LOG << left("_protocol: ", 20) << _protocol << endl;
-#ifdef __INTEL_COMPILER
-#pragma warning(default:279)
-#endif
-
 }
 
 //////////////
