@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HelpCommand.cc,v 1.4 2003/08/13 08:13:16 plearner Exp $ 
+   * $Id: HelpCommand.cc,v 1.5 2003/10/08 23:27:04 plearner Exp $ 
    ******************************************************* */
 
 /*! \file HelpCommand.cc */
@@ -77,7 +77,16 @@ void HelpCommand::helpScripts()
     "ex: $DEFINE{toto}{[1,2,3,4]}  ${toto}  $INCLUDE{otherfile.pscript} \n"
     "Macro variable definitions can also be provided on the command line in the form \n"
     "varname=varvalue with each such pair separated by a blank, thus\n"
-    "allowing for scripts with arguments\n\n"
+    "allowing for scripts with arguments\n"
+    "In addition, the following variables are automatically defined from the script's filepath: \n"
+    "FILEPATH DIRPATH FILENAME FILEBASE FILEEXT \n" 
+    "Ex: if the absolute path to the script file is /home/me/foo.plearn \n"
+    " Then we'll get: \n"
+    "FILEPATH = /home/me/foo.plearn \n"
+    "DIRPATH  = /home/me \n"
+    "FILENAME = foo.plearn \n"
+    "FILEBASE = foo \n"
+    "FILEEXT  = .plearn \n"
        << endl;
 }
 
