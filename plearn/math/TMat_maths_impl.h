@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.41 2004/02/29 02:06:19 nova77 Exp $
+   * $Id: TMat_maths_impl.h,v 1.42 2004/03/13 20:54:56 yoshua Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -1828,8 +1828,10 @@ int binary_search(const TMat<T>& src, int c, T x)
 template<class T>
 T estimatedCumProb(T x, TVec<T> bins)
 {
-  const int nbins = bins.length();
-  const T one_over_nbins = 1.0/(T)nbins;
+  const int nbins = bins.length()-1;
+  if (nbins<1) PLERROR("estimatedCumProb:: there should be at least two elements in the bins vector");
+  // +0.5 because we allocate mass 0.25 at the left and 0.25 at the right of the interval (bins(0),bins(nbins))
+  const T one_over_nbins = 1.0/(T)(nbins+0.5);
 
   int k = binary_search(bins, x);
 
@@ -1838,9 +1840,9 @@ T estimatedCumProb(T x, TVec<T> bins)
   else if (k == nbins-1)
     return 1.0 - 0.25*one_over_nbins;
   else if (bins[k] != bins[k+1])
-    return one_over_nbins*(0.5 + k + (x-bins[k])/(bins[k+1]-bins[k]));
+    return one_over_nbins*(0.25 + k + (x-bins[k])/(bins[k+1]-bins[k]));
   else
-    return one_over_nbins*(0.5 + k);
+    return one_over_nbins*(0.75 + k);
 }
 
 // returns the index of the kth ordered element of v
