@@ -223,7 +223,7 @@ public:
   // This implementation does not seem to work: commented out [Pascal]
   // inline operator bool() { return (!pin || *pin) && (!pout || *pout) && (pin || pout); }
   // This is a temporary fix [Pascal]
-  inline operator bool() { return pin && pin->good(); }
+  inline operator bool() { return pin && pin->good() || pout && pout->good(); }
 
   inline bool eof() const { return pin->eof(); }
   inline bool good() const { return pin->good() && pout->good(); }

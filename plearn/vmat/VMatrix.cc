@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.26 2003/09/09 22:50:54 plearner Exp $
+* $Id: VMatrix.cc,v 1.27 2003/09/15 12:34:25 plearner Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -444,8 +444,8 @@ void VMatrix::saveStringMappings(int col,string fname)
     rm(fname);
     return;
   }
+  force_mkdir_for_file(fname);
   POFStream o(fname.c_str());
-  // force_mkdir_for_file(fname);
   // ofstream o(fname.c_str());
   if(!o)
     PLERROR( "File %s can't be opened",fname.c_str());
@@ -491,6 +491,8 @@ void VMatrix::deleteStringMapping(int col)
 
 string VMatrix::getValString(int col, real val) const
 { 
+  if(is_missing(val))
+    return "";
   if(map_rs[col].find(val)==map_rs[col].end())
     return "";
   else return map_rs[col][val];
