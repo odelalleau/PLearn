@@ -44,6 +44,7 @@
 #define pl_streambuf_INC
 
 #include <iosfwd>
+#include <iostream>
 #include "plerror.h"
 #include "PP.h"
 

@@ -44,6 +44,7 @@
 #include <vector>
 #include <iostream>
 #include <iomanip>
+#include <stdexcept>         //!< for logic_error
 #include <typeinfo>
 #include <algorithm>
 

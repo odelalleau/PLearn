@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.22 2004/02/27 21:14:49 nova77 Exp $
+   * $Id: fileutils.cc,v 1.23 2004/02/28 18:02:19 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -67,6 +67,8 @@
 #endif // WIN32
 
 #include <sstream>
+#include <strstream>
+
 #include "fileutils.h"
 #include "stringutils.h"
 #include "plerror.h"

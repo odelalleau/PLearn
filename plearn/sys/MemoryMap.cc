@@ -8,6 +8,8 @@
 
 #include "MemoryMap.h"
 #include "general.h"
+#include <fcntl.h>
+
 
 #if !defined(_MSC_VER) && !defined(_MINGW_)
 
