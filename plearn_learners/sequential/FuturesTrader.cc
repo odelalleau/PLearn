@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.cc,v 1.25 2003/11/25 20:54:42 dorionc Exp $ 
+   * $Id: FuturesTrader.cc,v 1.26 2003/11/28 21:15:34 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.cc */
@@ -172,7 +172,9 @@ void FuturesTrader::trader_test(int t, VMat testset, PP<VecStatsCollector> test_
 
   transaction_costs[t] = transaction_cost;
   absolute_return_t += previous_value_t*daily_risk_free_return - transaction_cost;
-  real relative_return_t = daily_risk_free_return + (relative_sum-transaction_cost)/previous_value_t;
+  real relative_return_t = daily_risk_free_return;
+  if(previous_value_t != 0.0)
+    relative_return_t += (relative_sum-transaction_cost)/previous_value_t;
 
   real monthly_turnover = sum(transaction_costs,true)/(sum(portfolio_value,true)/12.0);
   Vec update = advisor->errors(t).copy();
