@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.26 2003/11/20 15:37:04 tihocan Exp $
+   * $Id: NNet.cc,v 1.27 2003/11/21 16:19:29 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -328,23 +328,25 @@ void NNet::build_()
 
       test_costs = hconcat(costs);
 
-      // apply penalty to cost
+      // Apply penalty to cost.
+      // If there is no penalty, we still add costs[0] as the first cost, in
+      // order to keep the same number of costs as if there was a penalty.
       if(penalties.size() != 0) {
-        // only multiply by sampleweight if there are weights
         if (train_set->hasWeights()) {
+        // only multiply by sampleweight if there are weights
           training_cost = hconcat(sampleweight*sum(hconcat(costs[0] & penalties))
                                   & (test_costs*sampleweight));
         }
         else {
           training_cost = hconcat(sum(hconcat(costs[0] & penalties)) & test_costs);
         }
-      }
+      } 
       else {
-        // only multiply by sampleweight if there are weights
         if(train_set->hasWeights()) {
-          training_cost = test_costs*sampleweight;
+        // only multiply by sampleweight if there are weights
+          training_cost = hconcat(costs[0]*sampleweight & test_costs*sampleweight);
         } else {
-          training_cost = test_costs;
+          training_cost = hconcat(costs[0] & test_costs);
         }
       }
       
@@ -401,6 +403,7 @@ void NNet::build_()
           optimizer->setToOptimize(params, totalcost);  
           optimizer->build();
         }
+
     }
 }
 
@@ -409,10 +412,7 @@ int NNet::outputsize() const
 
 TVec<string> NNet::getTrainCostNames() const
 {
-  if (penalties.size() > 0)
-    return (cost_funcs[0]+"+penalty") & cost_funcs;
-  else
-    return cost_funcs;
+  return (cost_funcs[0]+"+penalty") & cost_funcs;
 }
 
 TVec<string> NNet::getTestCostNames() const
