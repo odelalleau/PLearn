@@ -34,10 +34,11 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.cc,v 1.19 2004/06/01 13:17:37 tihocan Exp $ 
+   * $Id: PDistribution.cc,v 1.20 2004/06/21 14:56:02 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.cc */
+
 #include "PDistribution.h"
 
 namespace PLearn {
@@ -61,14 +62,14 @@ PLEARN_IMPLEMENT_OBJECT(PDistribution,
     "PDistributions derive from PLearner (as some of them may be fitted to data with train()),\n"
     "but they have additional methods allowing for ex. to compute density or generate data points.\n"
     "The default implementations of the learner-type methods for computing outputs and costs work as follows:\n"
-    "  - the outputs_def option allows to choose what outputs are produced\n"
-    "  - cost is a vector of size 1 containing only the negative log-likelihood (NLL) i.e. -log_density).\n"
+    "  - the outputs_def option allows to choose which outputs are produced\n"
+    "  - cost is a vector of size 1 containing only the negative log-likelihood (NLL), i.e. -log_density.\n"
     "A PDistribution may be conditional P(Y|X), if the option 'conditional_flags' is set. If it is the case,\n"
     "the input should always be made of both the 'input' part (X) and the 'target' part (Y), even if the\n"
     "output may not need to use the Y part. The exception is when computeOutput() needs to be called\n"
     "successively with the same value of X: in this case, after a first call with both X and Y, one may\n"
     "only provide Y as input, and X will be assumed to be unchanged.\n"
-    );
+);
 
 ////////////////////
 // declareOptions //
@@ -79,19 +80,21 @@ void PDistribution::declareOptions(OptionList& ol)
   // Build options.
 
   declareOption(ol, "outputs_def", &PDistribution::outputs_def, OptionBase::buildoption,
-      "A string where the characters have the following meaning: \n"
+      "Defines what will be given in output. This is a string where the characters\n"
+      "have the following meaning:\n"
       "'l'-> log_density, 'd' -> density, 'c' -> cdf, 's' -> survival_fn,\n"
       "'e' -> expectation, 'v' -> variance.\n"
       "In lower case they give the value associated with a given observation.\n"
       "In upper case, a curve is evaluated at regular intervals and produced in\n"
       "output (as a histogram). For 'L', 'D', 'C', 'S', it is the target part that\n"
-      "varies, while for 'E' and 'V' it is the input part.\n"
+      "varies, while for 'E' and 'V' it is the input part (for conditional distributions).\n"
       "The number of curve points is determined by the 'n_curve_points' option.\n"
-      "Note that these options upper case letters) only work for SCALAR variables."
+      "Note that the upper case letters only work for SCALAR variables."
       );
 
   declareOption(ol, "conditional_flags", &PDistribution::conditional_flags, OptionBase::buildoption,
-      "Indicates what each input variable corresponds to:\n"
+      "This vector should be set for conditional distributions. It indicates what\n"
+      "each input variable corresponds to:\n"
       " - 0 = it is marginalized (it does not appear in the distribution Y|X)\n"
       " - 1 = it is an input (the X in Y|X)\n"
       " - 2 = it is a target (the Y in Y|X)\n"
@@ -100,11 +103,12 @@ void PDistribution::declareOptions(OptionList& ol)
       );
 
   declareOption(ol, "provide_input", &PDistribution::provide_input, OptionBase::buildoption,
-      "If provided, then setInput() will be called at build time with this input.");
+      "If provided, then setInput() will be called at build time with this input\n"
+      "(this defines the input part for conditional distributions).");
 
   declareOption(ol, "n_curve_points", &PDistribution::n_curve_points, OptionBase::buildoption,
-      "The number of points for which the distribution is evaluated when outputs_defs\n"
-      "is upper case (produce a histogram).\n"
+      "The number of points for which the output is evaluated when outputs_defs\n"
+      "is upper case (produces a histogram).\n"
       "The lower_bound and upper_bound options specify where the curve begins and ends.\n"
       "Note that these options (upper case letters) only work for SCALAR variables."
       );
@@ -123,15 +127,15 @@ void PDistribution::declareOptions(OptionList& ol)
       "A vector containing the indices of the variables, so that they are ordered like\n"
       "this: input, target, margin.");
 
-  declareOption(ol, "n_margin",  &PDistribution::n_margin, OptionBase::learntoption,
-      "The size of the variables that are marginalized in p(y|x). E.g., if the whole\n"
-      "input contains (x,y,z), and we want to compute p(y|x), then n_margin = z.length().");
-      
   declareOption(ol, "n_input",  &PDistribution::n_input, OptionBase::learntoption,
       "The size of the input x in p(y|x).");
 
   declareOption(ol, "n_target",  &PDistribution::n_target, OptionBase::learntoption,
       "The size of the target y in p(y|x).");
+      
+  declareOption(ol, "n_margin",  &PDistribution::n_margin, OptionBase::learntoption,
+      "The size of the variables that are marginalized in p(y|x). E.g., if the whole\n"
+      "input contains (x,y,z), and we want to compute p(y|x), then n_margin = z.length().");
       
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -204,6 +208,8 @@ void PDistribution::computeOutput(const Vec& input, Vec& output) const
       case 'V':
         if (n_target > 1)
           PLERROR("In PDistribution::computeOutput - Can only plot histogram of expectation or variance for one-dimensional target");
+        if (n_target == 0)
+          PLERROR("In PDistribution::computeOutput - Cannot plot histogram of expectation or variance for unconditional distributions");
       case 'L':
       case 'D':
       case 'C':
@@ -238,6 +244,7 @@ void PDistribution::computeOutput(const Vec& input, Vec& output) const
               break;
             default:
               PLERROR("In PDistribution::computeOutput - This should never happen");
+              t = 0; // To make the compiler happy.
           }
           output[j + k] = t;
           y[0] += delta_curve;
@@ -315,14 +322,15 @@ TVec<string> PDistribution::getTrainCostNames() const
 ///////////////
 // generateN //
 ///////////////
-void PDistribution::generateN(const Mat& X) const
+void PDistribution::generateN(const Mat& Y) const
 {
-  if(X.width()!=inputsize())
-    PLERROR("In PDistribution::generateN  matrix width (%d) differs from inputsize() (%d)", X.width(), inputsize());
-  int N = X.length();  
+  static Vec v;
+  if (Y.width()!=inputsize())
+    PLERROR("In PDistribution::generateN  matrix width (%d) differs from inputsize() (%d)", Y.width(), inputsize());
+  int N = Y.length();  
   for(int i=0; i<N; i++)
   {
-    Vec v = X(i);
+    v = Y(i);
     generate(v);
   }
 }
@@ -412,7 +420,7 @@ void PDistribution::setConditionalFlagsWithoutUpdate(TVec<int>& flags) {
           target.append(i);
           break;
         default:
-          PLERROR("In PDistribution::setConditionalFlags - Unknown flag value");
+          PLERROR("In PDistribution::setConditionalFlagsWithoutUpdate - Unknown flag value");
       }
     }
   }
@@ -562,16 +570,16 @@ void PDistribution::forget() {
   PLERROR("forget not implemented for this PDistribution");
 }
 
-real PDistribution::log_density(const Vec& x) const
+real PDistribution::log_density(const Vec& y) const
 { PLERROR("density not implemented for this PDistribution"); return 0; }
 
-real PDistribution::density(const Vec& x) const
-{ return exp(log_density(x)); }
+real PDistribution::density(const Vec& y) const
+{ return exp(log_density(y)); }
 
-real PDistribution::survival_fn(const Vec& x) const
+real PDistribution::survival_fn(const Vec& y) const
 { PLERROR("survival_fn not implemented for this PDistribution"); return 0; }
 
-real PDistribution::cdf(const Vec& x) const
+real PDistribution::cdf(const Vec& y) const
 { PLERROR("cdf not implemented for this PDistribution"); return 0; }
 
 void PDistribution::expectation(Vec& mu) const
@@ -583,7 +591,7 @@ void PDistribution::variance(Mat& covar) const
 void PDistribution::resetGenerator(long g_seed) const
 { PLERROR("resetGenerator not implemented for this PDistribution"); }
 
-void PDistribution::generate(Vec& x) const
+void PDistribution::generate(Vec& y) const
 { PLERROR("generate not implemented for this PDistribution"); }
 
 void PDistribution::train()

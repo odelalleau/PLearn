@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PDistribution.h,v 1.14 2004/06/01 13:17:37 tihocan Exp $ 
+   * $Id: PDistribution.h,v 1.15 2004/06/21 14:56:02 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PDistribution.h */
@@ -98,22 +98,9 @@ public:
   // ************************
 
   TVec<int> conditional_flags;
-
-  // Interval of values for computing histrogram output (upper case outputs_def).
   real lower_bound, upper_bound; 
-
-  // TODO
-  // number of (histogram) curve points if outputs_def is upper case.
   int n_curve_points;
-
-  /* TODO
-  //! A string where the characters have the following meaning:
-  //! 'l'->log_density, 'd' -> density, 'c' -> cdf, 's' -> survival_fn
-  //! (subclasses may define more uses, such as: 'e' -> expectation, 'v' -> variance)
-  //! Upper case produces the whole curve in output.
-  */
   string outputs_def;
-
   Vec provide_input;
 
   // ****************
@@ -156,7 +143,7 @@ public:
   // **** PLearner methods ****
   // **************************
 
-  //! returned value depends on outputs_def
+  //! Returned value depends on outputs_def.
   virtual int outputsize() const;
 
   //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
@@ -167,7 +154,7 @@ public:
   //! updating the train_stats collector with training costs measured on-line in the process.
   virtual void train();
 
-  //! Produces outputs according to what is specified in outputs_def
+  //! Produce outputs according to what is specified in outputs_def.
   virtual void computeOutput(const Vec& input, Vec& output) const;
 
   //! Computes negative log likelihood (NLL) 
@@ -184,17 +171,11 @@ private:
   //! Set the conditional flags, but does not call updateFromConditionalSorting().
   //! This method is called at build time so that flags information is available
   //! to subclasses during their build. The updateFromConditionalSorting() method
-  //! should then be called when the subclass' build ends.
+  //! should then be called when the subclass' build ends (this will be done in
+  //! finishConditionalBuild()).
   void setConditionalFlagsWithoutUpdate(TVec<int>& flags);
 
 protected:
-
-  //! Finish the build of a conditional distribution. This method should be called
-  //! at the end of the build_() method in a subclass.
-  //! It will call updateFromConditionalSorting() and setInput() (if necessary).
-  void finishConditionalBuild();
-
-public:
 
   //! If the full joint distribution was already the one computed, return
   //! false and old_flags is of length 0.
@@ -202,20 +183,13 @@ public:
   //! the full joint distribution), with a backup in old_flags.
   bool ensureFullJointDistribution(TVec<int>& old_flags);
 
+  //! Finish the build of a conditional distribution. This method should be called
+  //! at the end of the build_() method in a subclass.
+  //! It will call updateFromConditionalSorting() and setInput() (if necessary).
+  void finishConditionalBuild();
+
   //! Resize input_part and target_part according to n_input and n_target.
   void resizeParts();
-
-  //! Set the conditional flags.
-  void setConditionalFlags(TVec<int>& flags);
-
-  //! Set the value for the input part of a conditional probability.
-  //! This needs to be implemented in subclasses if there is something
-  //! special to do (like precomputing some stuff).
-  virtual void setInput(const Vec& input) const;
-
-  //! Overridden so that some stuff is updated according to the conditional
-  //! flags when the training set is set.
-  virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
   //! Sort a vector or a matrix according to the conditional flags currently
   //! defined. The indices are sorted as follows: input, target, margin.
@@ -236,40 +210,54 @@ public:
   //! should be implemented in each conditional subclass.
   virtual void updateFromConditionalSorting();
 
-  //! Returns [ "NLL" ]
+public:
+
+  //! Set the conditional flags.
+  void setConditionalFlags(TVec<int>& flags);
+
+  //! Set the value for the input part of a conditional probability.
+  //! This needs to be implemented in subclasses if there is something
+  //! special to do (like precomputing some stuff).
+  virtual void setInput(const Vec& input) const;
+
+  //! Overridden so that some stuff is updated according to the conditional
+  //! flags when the training set is set.
+  virtual void setTrainingSet(VMat training_set, bool call_forget=true);
+
+  //! Return [ "NLL" ].
   virtual TVec<string> getTestCostNames() const;
 
-  //! Returns [ "NLL" ]
+  //! Return [ ].
   virtual TVec<string> getTrainCostNames() const;
 
-  //! return log of probability density log(p(x))
-  virtual real log_density(const Vec& x) const;
+  //! Return log of probability density log(p(y | x)).
+  virtual real log_density(const Vec& y) const;
 
-  //! return probability density p(x)
-  //! [ default version returns exp(log_density(x)) ]
-  virtual real density(const Vec& x) const;
+  //! Return probability density p(y | x)
+  //! (default version returns exp(log_density(y))).
+  virtual real density(const Vec& y) const;
   
-  //! return survival function: P(X>x)
-  virtual real survival_fn(const Vec& x) const;
+  //! Return survival function: P(Y>y | x).
+  virtual real survival_fn(const Vec& y) const;
 
-  //! return cdf: P(X<x)
-  virtual real cdf(const Vec& x) const;
+  //! Return cdf: P(Y<y | x).
+  virtual real cdf(const Vec& y) const;
 
-  //! return E[X] 
+  //! Return E[Y | x].
   virtual void expectation(Vec& mu) const;
 
-  //! return Var[X]
+  //! Return Var[Y | x].
   virtual void variance(Mat& cov) const;
 
-  //! Resets the random number generator used by generate using the given seed
+  //! Reset the random number generator used by generate() using the given seed.
   virtual void resetGenerator(long g_seed) const;
   
-  //! return a pseudo-random sample generated from the distribution.
-  virtual void generate(Vec& x) const;
+  //! Return a pseudo-random sample generated from the distribution.
+  virtual void generate(Vec& y) const;
 
-  //! X must be a N x inputsize() matrix. that will be filled
+  //! X must be a N x inputsize() matrix. that will be filled.
   //! This will call generate N times to fill the N rows of the matrix. 
-  void generateN(const Mat& X) const;
+  void generateN(const Mat& Y) const;
 
 };
 
