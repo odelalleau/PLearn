@@ -719,7 +719,10 @@ class FileInfo:
             linkeroptions = linkeroptions + optlib.linkeroptions + ' '
 
         if useqt:
-            linkeroptions = linkeroptions + '-L'+qtdir + 'lib/ -lqt'
+            if os.path.exists(qtdir + 'lib/libqt.so'):
+                linkeroptions = linkeroptions + '-L'+qtdir + 'lib/ -lqt'
+            else:
+                linkeroptions = linkeroptions + '-L'+qtdir + 'lib/ -lqt-mt'
             
         return linkeroptions
         
