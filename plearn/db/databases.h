@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: databases.h,v 1.7 2004/07/21 16:30:51 chrish42 Exp $
+   * $Id: databases.h,v 1.8 2004/08/02 21:02:49 mariusmuja Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -107,6 +107,8 @@ VMat loadHousing(bool normalize=true);
 void loadUCI(VMat& trainset, VMat& testset, VMat& allset, string db_spec, string id, bool &normalize);
 //! Load a specific UCI dataset in the given VMatrix.
 void loadUCISet(VMat& data, string file, PP<UCISpecification> uci_spec);
+//! Load a AMAT format UCI dataset in the given VMatrix
+void loadUCIAMat(VMat& data, string file, PP<UCISpecification> uci_spec);
 
 
 /*!   This will return a VMat with a target in the last column in {0,..,nclasses-1} (for binary classification possible values are 0 and 1 (not -1)). 

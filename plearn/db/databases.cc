@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: databases.cc,v 1.15 2004/07/22 12:58:04 tihocan Exp $
+   * $Id: databases.cc,v 1.16 2004/08/02 21:02:35 mariusmuja Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -876,7 +876,7 @@ void loadUCI(VMat& trainset, VMat& testset, VMat& allset, string db_spec, string
     if (uci_spec->format=="UCI") {
       loadUCISet(trainset, db_dir + "/" + uci_spec->file_train, uci_spec);
     } else if (uci_spec->format=="AMAT") {
-      trainset=loadAsciiAsVMat(db_dir + "/" + uci_spec->file_train);
+      loadUCIAMat(trainset,db_dir + "/" + uci_spec->file_train, uci_spec);
     } else {
       PLERROR("In loadUCI: Format '%s' unsupported",uci_spec->format.c_str());
     }
@@ -885,7 +885,7 @@ void loadUCI(VMat& trainset, VMat& testset, VMat& allset, string db_spec, string
     if (uci_spec->format=="UCI") {
       loadUCISet(testset, db_dir + "/" + uci_spec->file_test, uci_spec);
     } else if (uci_spec->format=="AMAT") {
-      testset=loadAsciiAsVMat(db_dir + "/" + uci_spec->file_test);
+      loadUCIAMat(testset,db_dir + "/" + uci_spec->file_test, uci_spec);
     } else {
       PLERROR("In loadUCI: Format '%s' unsupported",uci_spec->format.c_str());
     }
@@ -894,7 +894,7 @@ void loadUCI(VMat& trainset, VMat& testset, VMat& allset, string db_spec, string
     if (uci_spec->format=="UCI") {
       loadUCISet(allset, db_dir + "/" + uci_spec->file_all, uci_spec);
     } else if (uci_spec->format=="AMAT") {
-      allset=loadAsciiAsVMat(db_dir + "/" + uci_spec->file_all);
+      loadUCIAMat(allset, db_dir + "/" + uci_spec->file_all, uci_spec);
     } else {
       PLERROR("In loadUCI: Format '%s' unsupported",uci_spec->format.c_str());
     }
@@ -921,6 +921,55 @@ void loadUCI(VMat& trainset, VMat& testset, VMat& allset, string db_spec, string
   }
 }
 
+
+
+/////////////////
+// loadUCIAMat //
+/////////////////
+void loadUCIAMat(VMat& data, string file, PP<UCISpecification> uci_spec) 
+{
+  data = loadAsciiAsVMat(file); 
+  
+  if (uci_spec->target_is_first) {
+    // We need to move the target to the last columns.
+    int ts = uci_spec->targetsize;
+    if (ts == -1) {
+      PLERROR("In loadUCIAMat - We don't know how many columns to move");
+    }
+    if (uci_spec->weightsize > 0) {
+      PLERROR("In loadUCIAMat - Damnit, I don't like weights");
+    }
+    Vec row;
+    Vec target;
+
+    target.resize(ts);
+    for (int i = 0; i < data.length(); i++) {
+      row = data(i);
+      target << row.subVec(0,ts);
+      row.subVec(0, data.width() - ts ) << row.subVec(ts, data.width() - ts);
+      row.subVec(data.width() - ts , ts) << target;
+      data->putRow(i,row);
+    }
+
+    // now, move the symbols
+    TVec<map<string,real> > sym;
+    int is = data.width()-ts;
+    sym.resize(ts);
+    for (int i=0;i<ts;i++) {
+      sym[i] = data->getStringToRealMapping(i);
+    }
+    for(int i=0;i<is; i++) {
+      data->setStringMapping(i, data->getStringToRealMapping(i+ts));
+    }
+    for(int i=is;i<is+ts;i++) {
+      data->setStringMapping(i,sym[i-is]);
+    }
+    
+    
+  }
+}
+
+
 ////////////////
 // loadUCISet //
 ////////////////
@@ -935,7 +984,7 @@ void loadUCISet(VMat& data, string file, PP<UCISpecification> uci_spec) {
   } else {
     the_data = loadUCIMLDB(file, &to_symbols, &to_n_symbols, &max_in_col);
   }
-    if (uci_spec->target_is_first) {
+  if (uci_spec->target_is_first) {
     // We need to move the target to the last columns.
     int ts = uci_spec->targetsize;
     if (ts == -1) {
