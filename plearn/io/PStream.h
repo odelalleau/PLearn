@@ -362,7 +362,6 @@ public:
   PStream& operator<<(unsigned long x);
   PStream& operator<<(short x);
   PStream& operator<<(unsigned short x);
-  PStream& operator<<(bool x);
   PStream& operator<<(pl_pstream_manip func) { return (*func)(*this); }
  
   //! returns the markable input buffer
@@ -532,6 +531,46 @@ using std::ws;
     out << const_cast<const T * &>(ptr);
     return out;
   }
+
+  template <class T> 
+  inline PStream& operator<<(PStream& out, T*& ptr)
+  {
+    out << const_cast<const T * &>(ptr);
+    return out;
+  }
+
+inline PStream& operator<<(PStream& out, bool x) 
+{ 
+  switch(out.outmode)
+  {
+    case PStream::raw_binary:
+    case PStream::raw_ascii:
+    case PStream::pretty_ascii:
+      if(x) 
+        out.put('1'); 
+      else 
+        out.put('0');
+      break;
+    case PStream::plearn_ascii:
+      if(x) 
+        out.put('1'); 
+      else 
+        out.put('0');
+      out.put(' ');
+      break;
+    case PStream::plearn_binary:
+      out.put((char)0x12);
+      if(x) 
+        out.put('1'); 
+      else 
+        out.put('0');
+      break;
+    default:
+      PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");
+      break;
+  }
+  return out;
+}
 
   
 

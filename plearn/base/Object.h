@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.28 2004/05/21 04:02:14 yoshua Exp $
+   * $Id: Object.h,v 1.29 2004/05/25 17:48:40 tatien Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -253,8 +253,9 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
         inline PStream &operator>>(PStream &in, CLASSTYPE &o)              \
           { o.newread(in); return in; }                                    \
         inline PStream &operator>>(PStream &in, CLASSTYPE * &o)            \
-          { if (o) o->newread(in);                                         \
-            else o = static_cast<CLASSTYPE *>(readObject(in));             \
+          { Object *ptr = o;                                               \
+            in >> ptr;                                                     \
+            o = dynamic_cast<CLASSTYPE *>(ptr);                            \
             return in; }                                                   \
         inline PStream &operator<<(PStream &out, const CLASSTYPE &o)       \
           { o.newwrite(out); return out; }                                 \
