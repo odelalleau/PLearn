@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.cc,v 1.12 2003/05/21 09:53:50 plearner Exp $
+   * $Id: Optimizer.cc,v 1.13 2003/05/21 13:40:14 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -249,6 +249,8 @@ void Optimizer::collectGradientStats(Vec gradient) {
   static VMat sign_grad_var;
   static VMat sign_mean_grad;
   static VMat tmp_mat;
+  static VMat tmp_mat2;
+  static VMat tmp_mat3;
   static VMat change_sign_grad_mean;
   static bool first_time = true;
 
@@ -305,16 +307,26 @@ void Optimizer::collectGradientStats(Vec gradient) {
     sign_mean_grad->appendRow(temp_grad);
     
     // Compare two consecutive updates
-    tmp_mat = sign_mean_grad.row(sign_mean_grad.length()-2);
+    int k = sign_mean_grad.length();
+    int nb_consec = 0;
+    int nb_change = 0;
+    tmp_mat = sign_mean_grad.row(k-2);
+    tmp_mat2 = sign_mean_grad.row(k-3);
+    tmp_mat3 = sign_mean_grad.row(k-4);
     for (int i=0; i<gradient.length(); i++) {
-      if (i==0 || tmp_mat(0,i) == temp_grad[i]) {
+      if (k<=1 || tmp_mat(0,i) == temp_grad[i]) {
         // Same direction
         temp_grad[i] = 0;
       } else {
         // Opposite direction
+        nb_change++;
         temp_grad[i] = 1;
+        if (k > 3 && (tmp_mat(0,i) != tmp_mat2(0,i) || tmp_mat2(0,i) != tmp_mat3(0,i))) {
+          nb_consec++;
+        }
       }
     }
+    cout << "Sign changes : " << nb_change << "  among them " << nb_consec << " follow a previous change" << endl;
     change_sign_grad.update(temp_grad);
     change_sign_grad_mean->appendRow(change_sign_grad.getMean());
 
