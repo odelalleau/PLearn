@@ -17,7 +17,7 @@ f = open(res_file);
 l = f.readlines();
 f.close();
 res = string.join(l,'');
-machines_lisa= re.findall('([a-z]{4}\d{2}) => { groupe => \'lisa\'.* panne => 0', res);
+machines_lisa= re.findall('([a-z]{4}\d{2}) => { panne => 0, groupe => \'lisa\'.*', res);
 
 
 # lecture des machines reservees
@@ -31,7 +31,6 @@ f=open(sys.argv[1], 'w');
 
 
 for x in machines_lisa[:]:
-
 	s2 = re.findall(x,machines_reservees);
 	if len(s2) == 0: # si la machine n'est pas dans les reservations du cluster
 		print >>f, x
