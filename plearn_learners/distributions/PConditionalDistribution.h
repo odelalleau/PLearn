@@ -1,12 +1,8 @@
-
-
 // -*- C++ -*-
 
 // PConditionalDistribution.h
 // 
-// Copyright (C) *YEAR* *AUTHOR(S)* 
-// ...
-// Copyright (C) *YEAR* *AUTHOR(S)* 
+// Copyright (C) 2004 Université de Montréal
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -40,7 +36,6 @@
 #ifndef PConditionalDistribution_INC
 #define PConditionalDistribution_INC
 
-#include "Learner.h"
 #include "PDistribution.h"
 
 namespace PLearn {
@@ -48,10 +43,13 @@ using namespace std;
 
 class PConditionalDistribution: public PDistribution
 {
-public:
+
+private:
+
   typedef PDistribution inherited;  
 
 protected:
+
   // *********************
   // * protected options *
   // *********************
@@ -61,15 +59,15 @@ protected:
     
 public:
 
-    // the part of the PLearner's inputsize() that corresponds to the size
-    // of the conditioning variable. It should be < inputsize().
+  // the part of the PLearner's inputsize() that corresponds to the size
+  // of the conditioning variable. It should be < inputsize().
   int input_part_size;
 
 private: 
+
   //! This does the actual building. 
   // (Please implement in .cc)
   void build_();
-
 
 protected: 
   //! Declares this class' options
@@ -77,22 +75,21 @@ protected:
   static void declareOptions(OptionList& ol);
 
 public:
+
   // ****************
   // * Constructors *
   // ****************
 
-  // Default constructor, make sure the implementation in the .cc
-  // initializes all fields to reasonable default values.
+  //! Default constructor.
   PConditionalDistribution();
 
-
-  //! simply calls inherited::build() then build_() 
+  //! Simply calls inherited::build() then build_() 
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
-  //! Set the input part before using the inherited methods
+  //! Set the input part before using the inherited methods.
   virtual void setInput(const Vec& input) const;
 
   virtual void computeOutput(const Vec& input, Vec& output) const;
