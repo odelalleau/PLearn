@@ -22,6 +22,8 @@ else:
 # (no need to include the current directory, it is implicit)
 sourcedirs =   lsdirs(os.path.join(plearndir,'plearn/')) \
              + lsdirs(os.path.join(plearndir,'plearn_learners/')) \
+             + lsdirs(os.path.join(plearndir,'../LisaPLearn/PLearnLibrary/')) \
+             + lsdirs('/u/lisa/local/linux-i386/lib/apstatsoft/apstatlib/') \
              + lsdirs(os.path.join(plearndir,'commands/'))[1:] 
 
 # will be added as list of includes (-I...) to all compilations
