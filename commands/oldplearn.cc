@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: oldplearn.cc,v 1.2 2002/10/25 03:20:55 plearner Exp $
+   * $Id: oldplearn.cc,v 1.3 2002/10/25 03:47:23 plearner Exp $
    ******************************************************* */
 
 #include "old_plearn_main.h"
@@ -74,6 +74,6 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
-  return plearnmain(argc, argv);
+  return old_plearn_main(argc, argv);
 }
 

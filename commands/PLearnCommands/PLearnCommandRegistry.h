@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: PLearnCommandRegistry.h,v 1.1 2002/10/22 09:35:54 plearner Exp $
+   * $Id: PLearnCommandRegistry.h,v 1.2 2002/10/25 03:47:25 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -56,7 +56,9 @@ class PLearnCommandRegistry
 {
 protected:
   typedef map<string, PLearnCommand*> command_map;
-  static command_map commands;
+
+  //! Returns a reference to the unique command map
+  static command_map& commands();
 
   //! Issues a "bad command" message
   static void badcommand(const string& commandname);

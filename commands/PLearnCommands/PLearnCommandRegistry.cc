@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: PLearnCommandRegistry.cc,v 1.2 2002/10/23 21:11:09 plearner Exp $
+   * $Id: PLearnCommandRegistry.cc,v 1.3 2002/10/25 03:47:25 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,19 +44,23 @@ namespace PLearn <%
 using namespace std;
 
 
-PLearnCommandRegistry::command_map PLearnCommandRegistry::commands;
+PLearnCommandRegistry::command_map& PLearnCommandRegistry::commands()
+{
+  static PLearnCommandRegistry::command_map commands_;
+  return commands_;
+}
 
 
-  void PLearnCommandRegistry::do_register(PLearnCommand* command)
-  { commands[command->name] = command; }
+void PLearnCommandRegistry::do_register(PLearnCommand* command)
+{ commands()[command->name] = command; }
 
   bool PLearnCommandRegistry::is_registered(const string& commandname)
-  { return commands.find(commandname)!=commands.end(); }
+  { return commands().find(commandname)!=commands().end(); }
   
   void PLearnCommandRegistry::print_command_summary(ostream& out)
   {
-    command_map::iterator it = commands.begin();
-    command_map::iterator itend = commands.end();
+    command_map::iterator it = commands().begin();
+    command_map::iterator itend = commands().end();
     while(it!=itend)
       {
         out << it->first << "\t:  " << it->second->description << endl;
@@ -76,8 +80,8 @@ PLearnCommandRegistry::command_map PLearnCommandRegistry::commands;
 
   void PLearnCommandRegistry::run(const string& commandname, const vector<string>& args)
   { 
-    command_map::iterator it = commands.find(commandname);
-    if(it==commands.end())
+    command_map::iterator it = commands().find(commandname);
+    if(it==commands().end())
       badcommand(commandname);
     else
       it->second->run(args);
@@ -85,8 +89,8 @@ PLearnCommandRegistry::command_map PLearnCommandRegistry::commands;
   
   void PLearnCommandRegistry::help(const string& commandname, ostream& out)
   { 
-    command_map::iterator it = commands.find(commandname);
-    if(it==commands.end())
+    command_map::iterator it = commands().find(commandname);
+    if(it==commands().end())
       badcommand(commandname);
     else
       {

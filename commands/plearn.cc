@@ -33,8 +33,11 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.7 2002/10/25 03:20:55 plearner Exp $
+   * $Id: plearn.cc,v 1.8 2002/10/25 03:47:23 plearner Exp $
    ******************************************************* */
+
+#include "plearn_main.h"
+
 
 // Available Splitters:
 #include "TrainTestSplitter.h"
@@ -62,16 +65,15 @@
 
 #include "EnsembleLearner.h"
 
-#include "SVM.h"
+// #include "SVM.h"
 
 #include "ParzenDensity.h"
 #include "ParzenRegressor.h"
 #include "ManifoldParzenDensity.h"
 
-#include "ViewCommand.h"
+// #include "ViewCommand.h"
 #include "Experiment.h"
 
-#include "plearn_main.h"
 
 using namespace PLearn;
 
