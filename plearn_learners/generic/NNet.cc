@@ -35,18 +35,20 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.30 2003/11/27 14:47:24 lheureup Exp $
+   * $Id: NNet.cc,v 1.31 2003/12/05 18:58:58 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
 
 
-#include "NNet.h"
+#include "ConcatColumnsVMatrix.h"
 #include "DisplayUtils.h"
-#include "random.h"
 #include "GradientOptimizer.h"
-#include "NegCrossEntropySigmoidVariable.h"
 #include "LiftOutputVariable.h"
+#include "NegCrossEntropySigmoidVariable.h"
+#include "NNet.h"
+#include "random.h"
+#include "SubVMatrix.h"
 
 namespace PLearn <%
 using namespace std;
@@ -182,6 +184,22 @@ void NNet::build_()
 
   if(train_set)  
     {
+
+      // Reduce the train_set to the used data.
+      if (train_set->target_is_last) {
+        int useless_size = train_set.width() - targetsize() - inputsize();
+        if (useless_size > 0) {
+          int is = inputsize();
+          int ts = targetsize();
+          int ws = train_set->weightsize();
+          VMat train_input = new SubVMatrix(train_set, 0, 0, train_set.length(), inputsize());
+          VMat train_target = new SubVMatrix(train_set, 0, train_set.width() - targetsize(), train_set.length(), targetsize());
+          train_set = new ConcatColumnsVMatrix(train_input, train_target);
+          train_set->defineSizes(is, ts, ws);
+          train_set->build();
+        }
+      }
+      
       // init. basic vars
       input = Var(inputsize(), "input");
       output = input;
