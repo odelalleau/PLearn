@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.41 2003/10/14 19:18:17 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.42 2003/10/15 20:13:35 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -240,6 +240,16 @@ void ConjGradientOptimizer::computeCostAndDerivative(
     cost = opt->cost->value[0];
     derivative = -dot(opt->search_direction, opt->current_opp_gradient);
   } else {
+  opt->params.copyTo(opt->tmp_storage);
+  opt->params.update(alpha, opt->search_direction);
+  opt->proppath.clearGradient();
+  opt->params.clearGradient();
+  opt->cost->gradient[0] = 1;
+  opt->proppath.fbprop();
+  opt->params.copyGradientTo(opt->delta);
+  cost = opt->cost->value[0];
+  derivative = dot(opt->search_direction, opt->delta);
+  opt->params.copyFrom(opt->tmp_storage);
   }
 }
 
@@ -427,33 +437,33 @@ real ConjGradientOptimizer::findMinWithCubicInterpol (
 real ConjGradientOptimizer::findMinWithQuadInterpol(
     int q, real sum_x, real sum_x_2, real sum_x_3, real sum_x_4,
     real sum_c_x_2, real sum_g_x, real sum_c_x, real sum_c, real sum_g) {
+
+  real q2 = q*q;
+  // TODO Optimize this a bit to make it faster
+  real denom = 
+    (-4*q2*sum_x_2 - 3*q*sum_x_2*sum_x_2 + sum_x_2*sum_x_2*sum_x_2 + 
+     q*sum_x_3*sum_x_3 - q2*sum_x_4 - q*sum_x_2*sum_x_4 + 4*q*sum_x_3*sum_x - 
+     2*sum_x_2*sum_x_3*sum_x + 4*q*sum_x*sum_x + sum_x_4*sum_x*sum_x);
+
   real a =
-    -(q*sum_c_x_2 + 2*q*sum_g_x - sum_c*sum_x_2 + 
+    -(q2*sum_c_x_2 + 2*q2*sum_g_x - q*sum_c*sum_x_2 + 
       q*sum_c_x_2*sum_x_2 + 2*q*sum_g_x*sum_x_2 - sum_c*sum_x_2*sum_x_2 - 
       q*sum_c_x*sum_x_3 - q*sum_g*sum_x_3 - 2*q*sum_c_x*sum_x - 
       2*q*sum_g*sum_x + sum_c_x*sum_x_2*sum_x + sum_g*sum_x_2*sum_x + 
       sum_c*sum_x_3*sum_x + 2*sum_c*sum_x*sum_x - sum_c_x_2*sum_x*sum_x - 
-      2*sum_g_x*sum_x*sum_x) / 
-    (-4*q*sum_x_2 + sum_x_2*sum_x_2 - 
-     4*q*sum_x_2*sum_x_2 + sum_x_2*sum_x_2*sum_x_2 + q*sum_x_3*sum_x_3 - q*sum_x_4 - 
-     q*sum_x_2*sum_x_4 + 4*q*sum_x_3*sum_x - 2*sum_x_2*sum_x_3*sum_x + 
-     4*q*sum_x*sum_x + sum_x_4*sum_x*sum_x);
+      2*sum_g_x*sum_x*sum_x) / denom;
   
-  // TODO finish !
+  real b =
+    -(4*q*sum_c_x*sum_x_2 + 4*q*sum_g*sum_x_2 - 
+      sum_c_x*sum_x_2*sum_x_2 - sum_g*sum_x_2*sum_x_2 - q*sum_c_x_2*sum_x_3 - 
+      2*q*sum_g_x*sum_x_3 + sum_c*sum_x_2*sum_x_3 + q*sum_c_x*sum_x_4 + 
+      q*sum_g*sum_x_4 - 2*q*sum_c_x_2*sum_x - 4*q*sum_g_x*sum_x - 
+      2*sum_c*sum_x_2*sum_x + sum_c_x_2*sum_x_2*sum_x + 
+      2*sum_g_x*sum_x_2*sum_x - sum_c*sum_x_4*sum_x) / denom;
 
-  /*
-  b -> \(-\(\((4\ q\ sum_c_x\ sum_x_2 + 4\ q\ sum_g\ sum_x_2 - 
-            sum_c_x\ sum_x_2\^2 - sum_g\ sum_x_2\^2 - q\ sum_c_x_2\ sum_x_3 - 
-            2\ q\ sum_g_x\ sum_x_3 + sum_c\ sum_x_2\ sum_x_3 + q\ sum_c_x\ sum_x_4 + 
-            q\ sum_g\ sum_x_4 - 2\ q\ sum_c_x_2\ sum_x - 4\ q\ sum_g_x\ sum_x - 
-            2\ sum_c\ sum_x_2\ sum_x + sum_c_x_2\ sum_x_2\ sum_x + 
-            2\ sum_g_x\ sum_x_2\ sum_x - 
-            sum_c\ sum_x_4\ sum_x)\)/\((\(-4\)\ q\ sum_x_2 + sum_x_2\^2 - 
-              4\ q\ sum_x_2\^2 + sum_x_2\^3 + q\ sum_x_3\^2 - q\ sum_x_4 - 
-              q\ sum_x_2\ sum_x_4 + 4\ q\ sum_x_3\ sum_x - 2\ sum_x_2\ sum_x_3\ sum_x + 
-              4\ q\ sum_x\^2 + sum_x_4\ sum_x\^2)\)\)\), \) */
+  real xmin = -b / (2*a);
+  return xmin;
 
-    return 0;
 }
 
 ////////////////////
@@ -705,6 +715,9 @@ bool ConjGradientOptimizer::lineSearch() {
     case 2:
       step = gSearch(computeOppositeGradient);
       break;
+    case 3:
+      step = newtonSearch(5, 0.01, 1e-6);
+      break;
     default:
       cout << "Warning ! Invalid conjugate gradient line search algorithm !" << endl;
       step = 0;
@@ -852,7 +865,7 @@ real ConjGradientOptimizer::newtonSearch(
     sum_c_x += c[i] * x[i];
     sum_c += c[i];
     sum_g += g[i];
-    step = findMinWithQuadInterpol(i, sum_x, sum_x_2, sum_x_3, sum_x_4, sum_c_x_2, sum_g_x, sum_c_x, sum_c, sum_g);
+    step = findMinWithQuadInterpol(i+1, sum_x, sum_x_2, sum_x_3, sum_x_4, sum_c_x_2, sum_g_x, sum_c_x, sum_c, sum_g);
   }
   cout << "Warning : minimum not reached, is the cost really quadratic ?" << endl;
   return step;
