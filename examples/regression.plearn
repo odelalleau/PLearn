@@ -1,0 +1,41 @@
+PTester( 
+
+learner = NNet
+    (
+    nhidden =  10 ;
+    noutputs = 1 ;
+    output_transfer_func = "";
+    hidden_transfer_func = "tanh"  ;
+    cost_funcs = 1 [ mse ]  ;
+    optimizer = GradientOptimizer(
+                    start_learning_rate = .01;
+                    decrease_constant = 0;
+                    )
+    batch_size = 1  ;
+    initialization_method = "normal_sqrt"  ;
+    nstages = 500 ;
+    verbosity = 3;
+    );
+
+expdir = "tutorial_task2"  ;
+
+splitter = ExplicitSplitter(splitsets = 1 2 [
+    AutoVMatrix(
+        specification = "reg_train.amat"
+        inputsize = 1
+        targetsize = 1
+        weightsize = 0
+    ) 
+    AutoVMatrix(
+        specification = "reg_test.amat"
+        inputsize = 1
+        targetsize = 1
+        weightsize = 0
+    )
+    ]
+) ;
+
+statnames = ["E[E[train.mse]]" "E[E[test.mse]]" ];
+
+);
+

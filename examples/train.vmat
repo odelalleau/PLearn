@@ -1,0 +1,6 @@
+AutoVMatrix(
+	specification = "train.amat"
+	inputsize = 2
+	targetsize = 1
+	weightsize = 0
+)
