@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.cc,v 1.16 2004/04/05 23:11:57 morinf Exp $
+   * $Id: VVMatrix.cc,v 1.17 2004/04/10 01:27:18 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -381,7 +381,7 @@ VMat VVMatrix::createPreproVMat(const string & filename)
     {
       // precomputed version exist in pmat format,
       // so we use it *if it is up to date*
-      if(mtime(meta_data_dir+slash+"precomputed.pmat") > date_of_code)
+      // if(mtime(meta_data_dir+slash+"precomputed.pmat") > date_of_code)
         {
           source=new FileVMatrix(meta_data_dir+slash+"precomputed.pmat");
           source->setMetaDataDir(meta_data_dir);
