@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.4 2004/06/26 15:04:08 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.5 2004/06/28 21:10:24 lapalmej Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -108,13 +108,6 @@
 #include "ManifoldParzen2.h"
 #include "SpiralDistribution.h"
 #include "UniformDistribution.h"
-// SequencePLearner
-#include "BPTT.h"
-
-/***********
- * PTester *
- ***********/
-#include "VarLengthPTester.h"
 
 /************
  * Splitter *
@@ -143,7 +136,6 @@
 #include "BootstrapVMatrix.h"
 #include "CenteredVMatrix.h"
 #include "CumVMatrix.h"
-#include "DelaySequenceVMatrix.h"
 #include "FilteredVMatrix.h"
 #include "IndexedVMatrix.h"
 #include "LocalNeighborsDifferencesVMatrix.h"
@@ -151,11 +143,9 @@
 #include "PrecomputedVMatrix.h"
 #include "ProcessingVMatrix.h"
 #include "RegularGridVMatrix.h"
-#include "SequenceVMatrix.h"
 #include "SortRowsVMatrix.h"
 #include "SubInputVMatrix.h"
 #include "VMatrixFromDistribution.h"
-#include "XORSequenceVMatrix.h"
 
 #endif
 
