@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.cc,v 1.18 2004/09/22 16:32:40 tihocan Exp $
+   * $Id: StackedLearner.cc,v 1.19 2004/09/28 02:00:29 lamblin Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -84,11 +84,24 @@ StackedLearner::StackedLearner()
                   "A set of 1st level base learners that are independently trained (here or elsewhere)\n"
                   "and whose outputs will serve as inputs to the combiner (2nd level learner)");
 
-    declareOption(ol, "combiner", &StackedLearner::combiner, OptionBase::buildoption,
-                  "A learner that is trained (possibly on a data set different from the one used to train\n"
-                  "the base_learners) using the outputs of the base_learners as inputs. If it is not\n"
-                  "provided, then the StackedLearner simply AVERAGES the outputs of the base_learners\n");
-    
+    declareOption
+      (
+       ol, "combiner", &StackedLearner::combiner, OptionBase::buildoption,
+       "A learner that is trained (possibly on a data set different from the\n"
+       "one used to train the base_learners) using the outputs of the\n"
+       "base_learners as inputs. If it is not provided, then the StackedLearner\n"
+       "simply performs \"default_operation\" on the outputs of the base_learners\n"
+       );
+
+    declareOption
+      (
+       ol, "default_operation", &StackedLearner::default_operation,
+       OptionBase::buildoption,
+       "If no combiner is provided, simple operation to be performed\n"
+       "on the outputs of the base_learners.\n"
+       "Supported: mean (default), min, max, variance, sum, sumofsquares\n"
+      );
+
     declareOption(ol, "splitter", &StackedLearner::splitter, OptionBase::buildoption,
                   "A Splitter used to select which data subset(s) goes to training the base_learners\n"
                   "and which data subset(s) goes to training the combiner. If not provided then the\n"
@@ -153,6 +166,7 @@ StackedLearner::StackedLearner()
     if (splitter && splitter->nSetsPerSplit()!=2)
       PLERROR("StackedLearner: the Splitter should produce only two sets per split, got %d",splitter->nSetsPerSplit());
     resizeBaseLearnersOutputs();
+    default_operation = lowerstring( default_operation );
   }
 
   // ### Nothing to add here, simply calls build_
@@ -288,9 +302,26 @@ void StackedLearner::computeOutput(const Vec& input, Vec& output) const
   }
   if (combiner)
     combiner->computeOutput(base_learners_outputs.toVec(),output);
-  else // just do a simple average of the outputs
-    columnMean(base_learners_outputs,output);
-}    
+  else // just performs default_operation on the outputs
+  {
+    if( default_operation == "min" )
+      columnMin(base_learners_outputs, output);
+    else if( default_operation == "max" )
+      columnMax(base_learners_outputs, output);
+    else if( default_operation == "sum" )
+      columnSum(base_learners_outputs, output);
+    else if( default_operation == "sumofsquares" )
+      columnSumOfSquares(base_learners_outputs, output);
+    else if( default_operation == "variance" )
+    {
+      Vec mean;
+      columnMean(base_learners_outputs, mean);
+      columnVariance(base_learners_outputs, output, mean);
+    }
+    else // if( default_operation == "mean" )
+      columnMean(base_learners_outputs,output);
+  }
+}
 
 void StackedLearner::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                              const Vec& target, Vec& costs) const

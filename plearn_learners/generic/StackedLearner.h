@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.h,v 1.13 2004/09/22 16:32:40 tihocan Exp $
+   * $Id: StackedLearner.h,v 1.14 2004/09/28 02:00:29 lamblin Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -80,6 +80,11 @@ public:
   //! one used to train the base_learners) using the outputs of the base_learners
   //! as inputs.
   PP<PLearner> combiner;
+
+  //! if no combiner is provided, simple operation to be performed 
+  //! on the outputs of the base_learners.
+  //! Supported: mean (default), min, max, variance, sum, sumofsquares
+  string default_operation;
 
   //! This can be 
   //! and which data subset(s) goes to training the combiner.
