@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.4 2002/10/22 08:46:07 plearner Exp $
+   * $Id: plearn.cc,v 1.5 2002/10/23 21:11:08 plearner Exp $
    ******************************************************* */
 
 #include "plearnmain.h"
@@ -68,11 +68,14 @@
 #include "ParzenRegressor.h"
 #include "ManifoldParzenDensity.h"
 
+#include "ViewCommand.h"
+
+#include "plearn_main.h"
 
 using namespace PLearn;
 
 int main(int argc, char** argv)
 {
-  return plearnmain(argc, argv);
+  return plearn_main(argc, argv);
 }
 

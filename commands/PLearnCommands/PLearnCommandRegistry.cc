@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: PLearnCommandRegistry.cc,v 1.1 2002/10/22 09:35:54 plearner Exp $
+   * $Id: PLearnCommandRegistry.cc,v 1.2 2002/10/23 21:11:09 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -43,6 +43,8 @@
 namespace PLearn <%
 using namespace std;
 
+
+PLearnCommandRegistry::command_map PLearnCommandRegistry::commands;
 
 
   void PLearnCommandRegistry::do_register(PLearnCommand* command)
