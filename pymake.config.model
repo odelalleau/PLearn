@@ -283,7 +283,7 @@ pymakeOption( name = 'purify',
 
 pymakeOption( name = 'dbg',
               description = 'debug mode',
-              compileroptions = '-Wall -g -DBOUNDCHECK' )
+              compileroptions = '-Wall -g -O0 -DBOUNDCHECK' )
 
 #pymakeOption( name = 'wx',
 #              description = 'wxWindos support',
