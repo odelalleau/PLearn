@@ -37,7 +37,7 @@ a:hover   { color: #CDC5FF; background-color: #005676; }
 /* CSS2 selector not understood by old IE versions */
 html>#wrapper	   { width: 800px }
 
-#banner             { background: url(../plearn.jpg) no-repeat; margin: 0; padding: 0;
+#banner             { background: url(plearn.jpg) no-repeat; margin: 0; padding: 0;
                       border-style: solid; border-width: 1px 0px 1px 0px; border-color: #809FFF; 
                       position: relative; width: 800px; height: 100px }
 
