@@ -36,26 +36,17 @@
 
 
 /* *******************************************************      
-   * $Id: ClassMarginCostFunction.cc,v 1.3 2004/04/02 19:56:53 tihocan Exp $
+   * $Id: ClassMarginCostFunction.cc,v 1.4 2004/04/07 23:15:58 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "ClassMarginCostFunction.h"
 
-// From Old Kernel.cc: all includes are putted in every file.
-// To be revised manually 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
 
 PLEARN_IMPLEMENT_OBJECT(ClassMarginCostFunction, "ONE LINE DESCR", "NO HELP");
-string ClassMarginCostFunction::info() const { return "class_margin"; }
 
 real ClassMarginCostFunction::evaluate(const Vec& output, const Vec& target) const
 {
@@ -88,37 +79,10 @@ real ClassMarginCostFunction::evaluate(const Vec& output, const Vec& target) con
   return -margin;
 }
 
-
-void ClassMarginCostFunction::write(ostream& out) const
-{
-  writeHeader(out,"ClassMarginCostFunction");
-  writeField(out,"binary_target_is_01",binary_target_is_01);
-  writeField(out,"output_is_positive",output_is_positive);
-  writeFooter(out,"ClassMarginCostFunction");
-}
-
-void ClassMarginCostFunction::oldread(istream& in)
-{
-  readHeader(in,"ClassMarginCostFunction");
-  readField(in,"binary_target_is_01",binary_target_is_01);
-  readField(in,"output_is_positive",output_is_positive);
-  readFooter(in,"ClassMarginCostFunction");
-}
-// recognized option is "norm_to_use"
-
-/*
-void ClassMarginCostFunction::readOptionVal(istream& in, const string& optionname)
-{
-  if (optionname=="binary_target_is_01")
-    PLearn::read(in,binary_target_is_01);
-  else
-    inherited::readOptionVal(in, optionname);  
-}
-*/
 void ClassMarginCostFunction::declareOptions(OptionList &ol)
 {
-    declareOption(ol, "binary_target_is_01", &ClassMarginCostFunction::binary_target_is_01, OptionBase::buildoption,
-                  "TODO: Some comments");
+    declareOption(ol, "binary_target_is_01", &ClassMarginCostFunction::binary_target_is_01, OptionBase::buildoption, "");
+    declareOption(ol, "output_is_positive", &ClassMarginCostFunction::output_is_positive, OptionBase::buildoption, "");
     inherited::declareOptions(ol);
 }
 

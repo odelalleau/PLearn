@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: CompactVMatrixGaussianKernel.cc,v 1.3 2004/02/20 21:11:45 chrish42 Exp $
+   * $Id: CompactVMatrixGaussianKernel.cc,v 1.4 2004/04/07 23:15:58 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,6 +47,7 @@ using namespace std;
 // ** CompactVMatrixGaussianKernel **
 
 PLEARN_IMPLEMENT_OBJECT(CompactVMatrixGaussianKernel, "ONE LINE DESCR", "NO HELP");
+
 real CompactVMatrixGaussianKernel::evaluate(const Vec& x1, const Vec& x2) const
 { 
   // return exp(-powdistance(x1, x2, 2.0)/(sigma*sigma)); 
@@ -79,34 +80,11 @@ void CompactVMatrixGaussianKernel::setParameters(Vec paramvec)
 { sigma = paramvec[0]; }
 
 
-void CompactVMatrixGaussianKernel::write(ostream& out) const
-{
-  writeHeader(out,"CompactVMatrixGaussianKernel");
-  inherited::oldwrite(out);
-  writeField(out,"sigma",sigma);
-  writeFooter(out,"CompactVMatrixGaussianKernel");
-}
-void CompactVMatrixGaussianKernel::oldread(istream& in)
-{
-  readHeader(in,"CompactVMatrixGaussianKernel");
-  inherited::oldread(in);
-  readField(in,"sigma",sigma);
-  readFooter(in,"CompactVMatrixGaussianKernel");
-}
-// recognized option is "sigma"
-/*
-void CompactVMatrixGaussianKernel::readOptionVal(istream& in, const string& optionname)
-{
-  if (optionname=="sigma")
-    PLearn::read(in, sigma);
-  else
-    inherited::readOptionVal(in, optionname);  
-}
-*/
 void CompactVMatrixGaussianKernel::declareOptions(OptionList &ol)
 {
     declareOption(ol, "sigma", &CompactVMatrixGaussianKernel::sigma, OptionBase::buildoption,
                   "TODO: Some comments");
+    declareOption(ol, "m", &CompactVMatrixGaussianKernel::m, OptionBase::buildoption, "");
     inherited::declareOptions(ol);
 }
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectedOutputCostFunction.h,v 1.3 2004/04/05 19:15:27 tihocan Exp $
+   * $Id: SelectedOutputCostFunction.h,v 1.4 2004/04/07 23:15:58 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,32 +54,30 @@ using namespace std;
 //!  of a larger output vector, rather than on the whole vector
 class SelectedOutputCostFunction: public Kernel
 {
-
-private:
-
-  typedef Kernel inherited;
+    typedef Kernel inherited;
 		
- protected:
-   SelectedOutputCostFunction() : costfunc(), outputindex() {}
-  protected:
+protected:
   Ker costfunc;
   int outputindex;
 
-  public:
+public:
+    SelectedOutputCostFunction() : costfunc(), outputindex() {}
     SelectedOutputCostFunction(Ker the_costfunc, int the_outputindex)
-      :costfunc(the_costfunc), outputindex(the_outputindex) {}
+        : costfunc(the_costfunc), outputindex(the_outputindex) {}
 
-  PLEARN_DECLARE_OBJECT(SelectedOutputCostFunction);
+    PLEARN_DECLARE_OBJECT(SelectedOutputCostFunction);
+
+  virtual string info() const
+        { return "selected_output[" + tostring(outputindex) + "] "+costfunc->info(); }
+
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
-  virtual string info() const;
   virtual real evaluate(const Vec& output, const Vec& target) const; 
-    //virtual void readOptionVal(istream& in, const string& optionname);
+
+protected:
+    //!  recognized option are "outputindex" and "costfunc"
     static void declareOptions(OptionList &ol);
-  virtual void write(ostream& out) const;
-  virtual void oldread(istream& in);
-  //!  recognized option is "outputindex"
-       
 };
+
 DECLARE_OBJECT_PTR(SelectedOutputCostFunction);
 
 } // end of namespace PLearn

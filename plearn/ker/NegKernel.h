@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: NegKernel.h,v 1.2 2004/02/20 21:11:45 chrish42 Exp $
+   * $Id: NegKernel.h,v 1.3 2004/04/07 23:15:58 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,20 +52,25 @@ using namespace std;
 
 class NegKernel: public Kernel
 {
-		typedef Kernel inherited;
-		
- protected:
-  NegKernel() : ker() {}
+    typedef Kernel inherited;
+
  protected:
   Ker ker;
  public:
-  NegKernel(const Ker& the_ker): ker(the_ker) {}
+  NegKernel()
+      : ker() {}
+  NegKernel(const Ker& the_ker)
+      : ker(the_ker) {}
+
   PLEARN_DECLARE_OBJECT(NegKernel);
+
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
   virtual real evaluate(const Vec& x1, const Vec& x2) const;
-  virtual void write(ostream& out) const;
-  virtual void oldread(istream& in);
+
+protected:
+    static void declareOptions(OptionList &ol);
 };
+
 DECLARE_OBJECT_PTR(NegKernel);
 
 inline Ker operator-(const Ker& k)

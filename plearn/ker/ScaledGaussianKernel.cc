@@ -36,23 +36,18 @@
 
 
 /* *******************************************************      
-   * $Id: ScaledGaussianKernel.cc,v 1.3 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: ScaledGaussianKernel.cc,v 1.4 2004/04/07 23:15:58 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "ScaledGaussianKernel.h"
 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
 
 PLEARN_IMPLEMENT_OBJECT(ScaledGaussianKernel, "ONE LINE DESCR", "NO HELP");
+
 void ScaledGaussianKernel::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   Kernel::makeDeepCopyFromShallowCopy(copies);
@@ -62,43 +57,13 @@ void ScaledGaussianKernel::makeDeepCopyFromShallowCopy(map<const void*, void*>& 
 real ScaledGaussianKernel::evaluate(const Vec& x1, const Vec& x2) const
 { return exp(-weighted_powdistance(x1, x2, real(2.0), phi)/square(sigma)); }
 
-
-void ScaledGaussianKernel::write(ostream& out) const
-{
-  writeHeader(out,"ScaledGaussianKernel");
-  inherited::oldwrite(out);
-  writeField(out,"sigma",sigma);
-  writeField(out,"phi",phi);
-  writeFooter(out,"ScaledGaussianKernel");
-}
-
-void ScaledGaussianKernel::oldread(istream& in)
-{
-  readHeader(in,"ScaledGaussianKernel");
-  inherited::oldread(in);
-  readField(in,"sigma",sigma);
-  readField(in,"phi",phi);
-  readFooter(in,"ScaledGaussianKernel");
-}
-// recognized option is "sigma"
-
-/*
-void ScaledGaussianKernel::readOptionVal(istream& in, const string& optionname)
-{
-  if (optionname=="sigma")
-    PLearn::read(in, sigma);
-  else
-    inherited::readOptionVal(in, optionname);  
-}
-*/
 void ScaledGaussianKernel::declareOptions(OptionList &ol)
 {
     declareOption(ol, "sigma", &ScaledGaussianKernel::sigma, OptionBase::buildoption,
                   "TODO: Some comments");
+    declareOption(ol, "phi", &ScaledGaussianKernel::phi, OptionBase::buildoption, "");
     inherited::declareOptions(ol);
 }
-
-
 
 } // end of namespace PLearn
 

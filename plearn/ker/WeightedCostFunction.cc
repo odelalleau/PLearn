@@ -36,49 +36,33 @@
 
 
 /* *******************************************************      
-   * $Id: WeightedCostFunction.cc,v 1.3 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: WeightedCostFunction.cc,v 1.4 2004/04/07 23:15:58 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "WeightedCostFunction.h"
 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
 
 PLEARN_IMPLEMENT_OBJECT(WeightedCostFunction, "ONE LINE DESCR", "NO HELP");
+
 void WeightedCostFunction::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   Kernel::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(costfunc, copies);
 }
 
-string WeightedCostFunction::info() const { return "weighted "+costfunc->info(); }
-
 real WeightedCostFunction::evaluate(const Vec& output, const Vec& target) const
 { return target[target.length()-1] * costfunc(output,target.subVec(0,target.length()-1)); }
 
-
-void WeightedCostFunction::write(ostream& out) const
+void
+WeightedCostFunction::declareOptions(OptionList &ol)
 {
-  writeHeader(out,"WeightedCostFunction"); 
-  writeField(out,"costfunc",costfunc);
-  writeFooter(out,"WeightedCostFunction");
+    declareOption(ol, "costfunc", &WeightedCostFunction::costfunc, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
 }
-
-void WeightedCostFunction::oldread(istream& in)
-{
-  readHeader(in,"WeightedCostFunction");
-  readField(in,"costfunc",costfunc);
-  readFooter(in,"WeightedCostFunction");
-}
-
 
 
 } // end of namespace PLearn

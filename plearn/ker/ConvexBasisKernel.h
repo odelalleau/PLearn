@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConvexBasisKernel.h,v 1.2 2004/02/20 21:11:45 chrish42 Exp $
+   * $Id: ConvexBasisKernel.h,v 1.3 2004/04/07 23:15:58 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,25 +54,27 @@ using namespace std;
 //!  NOTE: IT IS NOT SYMMETRIC!
 class ConvexBasisKernel: public Kernel
 {
-		typedef Kernel inherited;
-		
- protected:
-   ConvexBasisKernel() : inherited(false), c() {}
- protected:
-  real c; //!<  smoothing constant
- public:
-  ConvexBasisKernel(real the_c): inherited(false), c(the_c) {}
-  PLEARN_DECLARE_OBJECT(ConvexBasisKernel);
-  virtual real evaluate(const Vec& x1, const Vec& x2) const;
-    //virtual void readOptionVal(istream& in, const string& optionname);
-    static void declareOptions(OptionList &ol);
-  virtual void write(ostream& out) const;
-  virtual void oldread(istream& in);
-  //!  recognized option is "c"
-  
-};
-DECLARE_OBJECT_PTR(ConvexBasisKernel);
+    typedef Kernel inherited;
 
+protected:
+    real c; //!<  smoothing constant
+
+public:
+    ConvexBasisKernel()
+        : inherited(false), c() {}
+    ConvexBasisKernel(real the_c)
+        : inherited(false), c(the_c) {}
+
+    PLEARN_DECLARE_OBJECT(ConvexBasisKernel);
+
+    virtual real evaluate(const Vec& x1, const Vec& x2) const;
+
+protected:
+    //!  recognized option is "c"
+    static void declareOptions(OptionList &ol);
+};
+
+DECLARE_OBJECT_PTR(ConvexBasisKernel);
 
 } // end of namespace PLearn
 

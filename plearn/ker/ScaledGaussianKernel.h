@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ScaledGaussianKernel.h,v 1.2 2004/02/20 21:11:45 chrish42 Exp $
+   * $Id: ScaledGaussianKernel.h,v 1.3 2004/04/07 23:15:58 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,31 +54,30 @@ using namespace std;
 //!  returns exp(-sum_i[(phi_i*(x1_i - x2_i))^2]/sigma^2)
 class ScaledGaussianKernel: public Kernel
 {
-		typedef Kernel inherited;
+    typedef Kernel inherited;
 		
- protected:
-  ScaledGaussianKernel() : sigma(), phi() {}
- protected:
-  real sigma;
-  Vec phi;
- public:
-  ScaledGaussianKernel(real the_sigma, Vec the_phi)
-    :sigma(the_sigma), phi(the_phi)
-  {}
+protected:
+    real sigma;
+    Vec phi;
 
-  PLEARN_DECLARE_OBJECT(ScaledGaussianKernel);
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
-  virtual real evaluate(const Vec& x1, const Vec& x2) const;
-    //virtual void readOptionVal(istream& in, const string& optionname);
+public:
+    ScaledGaussianKernel()
+        : sigma(), phi() {}
+    ScaledGaussianKernel(real the_sigma, Vec the_phi)
+        :sigma(the_sigma), phi(the_phi)
+        {}
+    
+    PLEARN_DECLARE_OBJECT(ScaledGaussianKernel);
+    
+    virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+    virtual real evaluate(const Vec& x1, const Vec& x2) const;
+
+protected:
+    //!  recognized option is "sigma"
     static void declareOptions(OptionList &ol);
-  virtual void write(ostream& out) const;
-  virtual void oldread(istream& in);
-  //!  recognized option is "sigma"
-  
-  
 };
-DECLARE_OBJECT_PTR(ScaledGaussianKernel);
 
+DECLARE_OBJECT_PTR(ScaledGaussianKernel);
 
 } // end of namespace PLearn
 

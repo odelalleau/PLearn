@@ -36,23 +36,25 @@
 
 
 /* *******************************************************      
-   * $Id: NegKernel.cc,v 1.3 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: NegKernel.cc,v 1.4 2004/04/07 23:15:58 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "NegKernel.h"
 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
 
 PLEARN_IMPLEMENT_OBJECT(NegKernel, "ONE LINE DESCR", "NO HELP");
+
+void
+NegKernel::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "ker", &NegKernel::ker, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
+
 void NegKernel::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   Kernel::makeDeepCopyFromShallowCopy(copies);
@@ -61,25 +63,6 @@ void NegKernel::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 
 real NegKernel::evaluate(const Vec& x1, const Vec& x2) const
 { return -ker->evaluate(x1, x2); }
-
-
-void NegKernel::write(ostream& out) const
-{
-  writeHeader(out,"NegKernel");
-  inherited::oldwrite(out);
-  writeField(out,"ker", ker);
-  writeFooter(out,"NegKernel");
-}
-
-void NegKernel::oldread(istream& in)
-{
-  readHeader(in,"NegKernel");
-  inherited::oldread(in);
-  readField(in,"ker", ker);
-  readFooter(in,"NegKernel");
-}
-
-
 
 } // end of namespace PLearn
 

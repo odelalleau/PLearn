@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CompactVMatrixGaussianKernel.h,v 1.4 2004/04/05 19:15:27 tihocan Exp $
+   * $Id: CompactVMatrixGaussianKernel.h,v 1.5 2004/04/07 23:15:58 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -58,28 +58,26 @@ using namespace std;
 */
 class CompactVMatrixGaussianKernel: public Kernel
 {
-
-private:
-
   typedef Kernel inherited;
 
  protected:
-  CompactVMatrixGaussianKernel() : sigma(), m(0) {}
- protected:
   real sigma;
   PP<CompactVMatrix> m;
+
  public:
+  CompactVMatrixGaussianKernel()
+    : sigma(), m(0) {}
   CompactVMatrixGaussianKernel(real the_sigma,PP<CompactVMatrix>& vm)
     : sigma(the_sigma), m(vm) {}
+
   PLEARN_DECLARE_OBJECT(CompactVMatrixGaussianKernel);
+
   virtual real evaluate(const Vec& x1, const Vec& x2) const;
   virtual void setParameters(Vec paramvec);
-    //virtual void readOptionVal(istream& in, const string& optionname);
-    static void declareOptions(OptionList &ol);
-  virtual void write(ostream& out) const;
-  virtual void oldread(istream& in);
-  //!  recognized option is "sigma"
-  
+
+protected:
+  //!  recognized option are "sigma" and "m"
+  static void declareOptions(OptionList &ol);
 };
 
 DECLARE_OBJECT_PTR(CompactVMatrixGaussianKernel);

@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: CompactVMatrixPolynomialKernel.cc,v 1.3 2004/02/20 21:11:45 chrish42 Exp $
+   * $Id: CompactVMatrixPolynomialKernel.cc,v 1.4 2004/04/07 23:15:58 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,6 +45,7 @@ namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(CompactVMatrixPolynomialKernel, "ONE LINE DESCR", "NO HELP");
+
 real CompactVMatrixPolynomialKernel::evaluate(const Vec& x1, const Vec& x2) const
 { // return ipow(beta*dot(x1,x2)+1.0, n);
   real dot_product=0;
@@ -55,40 +56,13 @@ real CompactVMatrixPolynomialKernel::evaluate(const Vec& x1, const Vec& x2) cons
   return ipow(beta*dot_product+1.0, n);
 }
 
-void CompactVMatrixPolynomialKernel::write(ostream& out) const
-{
-  writeHeader(out,"CompactVMatrixPolynomialKernel");
-  inherited::oldwrite(out);
-  writeField(out,"n",n);
-  writeField(out,"beta",beta);
-  writeFooter(out,"CompactVMatrixPolynomialKernel");
-}
-void CompactVMatrixPolynomialKernel::oldread(istream& in)
-{
-  readHeader(in,"CompactVMatrixPolynomialKernel");
-  inherited::oldread(in);
-  readField(in,"n",n);
-  readField(in,"beta",beta);
-  readFooter(in,"CompactVMatrixPolynomialKernel");
-}
-// recognized options are "n" and "beta"
-/*
-void CompactVMatrixPolynomialKernel::readOptionVal(istream& in, const string& optionname)
-{
-  if (optionname=="n")
-    PLearn::read(in,n);
-  if (optionname=="beta")
-    PLearn::read(in,beta);
-  else
-    inherited::readOptionVal(in, optionname);  
-}
-*/
 void CompactVMatrixPolynomialKernel::declareOptions(OptionList &ol)
 {
     declareOption(ol, "n", &CompactVMatrixPolynomialKernel::n, OptionBase::buildoption,
                   "TODO: Some comments");
     declareOption(ol, "beta", &CompactVMatrixPolynomialKernel::beta, OptionBase::buildoption,
                   "TODO: Some comments");
+    declareOption(ol, "m", &CompactVMatrixPolynomialKernel::m, OptionBase::buildoption, "");
     inherited::declareOptions(ol);
 }
 

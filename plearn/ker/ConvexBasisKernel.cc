@@ -36,20 +36,12 @@
 
 
 /* *******************************************************      
-   * $Id: ConvexBasisKernel.cc,v 1.3 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: ConvexBasisKernel.cc,v 1.4 2004/04/07 23:15:58 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "ConvexBasisKernel.h"
 
-// From Old Kernel.cc: all includes are putted in every file.
-// To be revised manually 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
@@ -67,33 +59,6 @@ real ConvexBasisKernel::evaluate(const Vec& x1, const Vec& x2) const
   return p;
 }
 
-
-void ConvexBasisKernel::write(ostream& out) const
-{
-  writeHeader(out,"ConvexBasisKernel");
-  inherited::oldwrite(out);
-  writeField(out,"c",c);
-  writeFooter(out,"ConvexBasisKernel");
-}
-
-void ConvexBasisKernel::oldread(istream& in)
-{
-  readHeader(in,"ConvexBasisKernel");
-  inherited::oldread(in);
-  readField(in,"c",c);
-  readFooter(in,"ConvexBasisKernel");
-}
-// recognized option is "c"
-
-/*
-void ConvexBasisKernel::readOptionVal(istream& in, const string& optionname)
-{
-  if (optionname=="c")
-    PLearn::read(in,c);
-  else
-    inherited::readOptionVal(in, optionname);  
-}
-*/
 void ConvexBasisKernel::declareOptions(OptionList &ol)
 {
     declareOption(ol, "c", &ConvexBasisKernel::c, OptionBase::buildoption,

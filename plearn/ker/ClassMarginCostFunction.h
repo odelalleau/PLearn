@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: ClassMarginCostFunction.h,v 1.3 2004/04/05 19:15:27 tihocan Exp $
+   * $Id: ClassMarginCostFunction.h,v 1.4 2004/04/07 23:15:58 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -69,9 +69,6 @@ using namespace std;
 */
 class ClassMarginCostFunction: public Kernel
 {
-
-private:
-
   typedef Kernel inherited;
 
  public:
@@ -81,16 +78,18 @@ private:
                           bool out_is_positive=false)
     : binary_target_is_01(the_binary_target_is_01), 
     output_is_positive(out_is_positive) {}
+
   PLEARN_DECLARE_OBJECT(ClassMarginCostFunction);
-  virtual string info() const;
+
+  virtual string info() const
+    { return "class_margin"; }
   virtual real evaluate(const Vec& output, const Vec& target) const;  
-    //virtual void readOptionVal(istream& in, const string& optionname);
-    static void declareOptions(OptionList &ol);
-  virtual void write(ostream& out) const;
-  virtual void oldread(istream& in);
-  //!  recognized option is "binary_target_is_01"
-  
+
+protected:
+  //!  recognized option are "binary_target_is_01" and "output_is_positive"
+  static void declareOptions(OptionList &ol);  
 };
+
 DECLARE_OBJECT_PTR(ClassMarginCostFunction);
 
 //!  difference between correct class score and max of other class' scores

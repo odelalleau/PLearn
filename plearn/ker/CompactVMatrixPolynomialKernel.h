@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CompactVMatrixPolynomialKernel.h,v 1.4 2004/04/05 19:15:27 tihocan Exp $
+   * $Id: CompactVMatrixPolynomialKernel.h,v 1.5 2004/04/07 23:15:58 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -58,32 +58,28 @@ using namespace std;
 */
 class CompactVMatrixPolynomialKernel: public Kernel
 {
-
-private:
-
   typedef Kernel inherited;
 		
- protected:
-  CompactVMatrixPolynomialKernel() : n(), beta() {}
-  protected:
+protected:
     int n; //!<  degree of polynomial
     real beta; //!<  a normalization constant for numerical stability
     PP<CompactVMatrix> m;
-  public:
+public:
+    CompactVMatrixPolynomialKernel()
+        : n(), beta() {}
     CompactVMatrixPolynomialKernel(int degree, PP<CompactVMatrix>& vm, real the_beta=1.0)
-      : n(degree), beta(the_beta), m(vm) {}
+        : n(degree), beta(the_beta), m(vm) {}
+
     PLEARN_DECLARE_OBJECT(CompactVMatrixPolynomialKernel);
+
     virtual real evaluate(const Vec& x1, const Vec& x2) const;    
-    //virtual void readOptionVal(istream& in, const string& optionname);
+
+protected:
+    //!  recognized options are "n", "beta" and "m"
     static void declareOptions(OptionList &ol);
-    virtual void write(ostream& out) const;
-    virtual void oldread(istream& in);
-    //!  recognized options are "n"  and "beta"
-    
 };
 
 DECLARE_OBJECT_PTR(CompactVMatrixPolynomialKernel);
-
 
 } // end of namespace PLearn
 

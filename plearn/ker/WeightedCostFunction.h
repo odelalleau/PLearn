@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: WeightedCostFunction.h,v 1.3 2004/04/05 19:15:27 tihocan Exp $
+   * $Id: WeightedCostFunction.h,v 1.4 2004/04/07 23:15:58 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,33 +54,34 @@ using namespace std;
 //!  Returns target.lastElement() * costfunc(output,target.subVec(0,target.length()-1));
 class WeightedCostFunction: public Kernel
 {
-
-private:
-
-  typedef Kernel inherited;
+    typedef Kernel inherited;
 		
- protected:
-   WeightedCostFunction() : costfunc() {}
-  protected:
+protected:
     Ker costfunc;
 
   public:
+    WeightedCostFunction() : costfunc() {}
     WeightedCostFunction(Ker the_costfunc)
       :costfunc(the_costfunc) {}
 
-  PLEARN_DECLARE_OBJECT(WeightedCostFunction);
-  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
-  virtual string info() const;
-  virtual real evaluate(const Vec& output, const Vec& target) const;
-  virtual void write(ostream& out) const;
-  virtual void oldread(istream& in);   
+    PLEARN_DECLARE_OBJECT(WeightedCostFunction);
+
+    virtual string info() const
+        { return "weighted "+costfunc->info(); }
+
+    virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+
+    virtual real evaluate(const Vec& output, const Vec& target) const;
+
+protected:
+    static void declareOptions(OptionList &ol);
 };
+
 DECLARE_OBJECT_PTR(WeightedCostFunction);
 
 //!  reweighting
 inline CostFunc weighted_costfunc(CostFunc costfunc)
 { return new WeightedCostFunction(costfunc); }
-
 
 } // end of namespace PLearn
 

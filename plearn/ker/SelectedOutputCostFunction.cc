@@ -36,71 +36,35 @@
 
 
 /* *******************************************************      
-   * $Id: SelectedOutputCostFunction.cc,v 1.3 2004/04/02 19:56:54 tihocan Exp $
+   * $Id: SelectedOutputCostFunction.cc,v 1.4 2004/04/07 23:15:58 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "SelectedOutputCostFunction.h"
 
-/*#include <cmath>
-#include "stringutils.h"
-#include "Kernel.h"
-#include "TMat_maths.h"
-#include "PLMPI.h"*/
-//////////////////////////
 namespace PLearn {
 using namespace std;
 
 
 
 PLEARN_IMPLEMENT_OBJECT(SelectedOutputCostFunction, "ONE LINE DESCR", "NO HELP");
+
 void SelectedOutputCostFunction::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   Kernel::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(costfunc, copies);
 }
 
-string SelectedOutputCostFunction::info() const { return "selected_output[" + tostring(outputindex) + "] "+costfunc->info(); }
-
 real SelectedOutputCostFunction::evaluate(const Vec& output, const Vec& target) const
 { return costfunc(output.subVec(outputindex,1),target.subVec(outputindex,1)); }
-
-
-void SelectedOutputCostFunction::write(ostream& out) const
-{
-  writeHeader(out,"SelectedOutputCostFunction");
-  writeField(out,"outputindex",outputindex);
-  writeField(out,"costfunc",costfunc);
-  writeFooter(out,"SelectedOutputCostFunction");
-}
-
-void SelectedOutputCostFunction::oldread(istream& in)
-{
-  readHeader(in,"SelectedOutputCostFunction");
-  readField(in,"outputindex",outputindex);
-  readField(in,"costfunc",costfunc);
-  readFooter(in,"SelectedOutputCostFunction");
-}
-// recognized option is "norm_to_use"
-
-/*
-void SelectedOutputCostFunction::readOptionVal(istream& in, const string& optionname)
-{
-  if (optionname=="outputindex")
-    PLearn::read(in,outputindex);
-  else
-    inherited::readOptionVal(in, optionname);  
-}
-*/
 
 void SelectedOutputCostFunction::declareOptions(OptionList &ol)
 {
     declareOption(ol, "outputindex", &SelectedOutputCostFunction::outputindex, OptionBase::buildoption,
                   "TODO: Some comments");
+    declareOption(ol, "costfunc", &SelectedOutputCostFunction::costfunc, OptionBase::buildoption, "");
     inherited::declareOptions(ol);
 }
-
-
 
 } // end of namespace PLearn
 
