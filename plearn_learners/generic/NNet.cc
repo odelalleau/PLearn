@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.42 2004/02/29 16:44:06 nova77 Exp $
+   * $Id: NNet.cc,v 1.43 2004/03/10 20:13:36 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -589,21 +589,24 @@ void NNet::forget()
   stage = 0;
 }
 
+//! To use varDeepCopyField.
+extern void varDeepCopyField(Var& field, CopiesMap& copies);
+
 void NNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
-  deepCopyField(input, copies);
-  deepCopyField(target, copies);
-  deepCopyField(sampleweight, copies);
-  deepCopyField(w1, copies);
-  deepCopyField(w2, copies);
-  deepCopyField(wout, copies);
-  deepCopyField(wdirect, copies);
-  deepCopyField(output, copies);
+  varDeepCopyField(input, copies);
+  varDeepCopyField(target, copies);
+  varDeepCopyField(sampleweight, copies);
+  varDeepCopyField(w1, copies);
+  varDeepCopyField(w2, copies);
+  varDeepCopyField(wout, copies);
+  varDeepCopyField(wdirect, copies);
+  varDeepCopyField(output, copies);
   deepCopyField(costs, copies);
   deepCopyField(penalties, copies);
-  deepCopyField(training_cost, copies);
-  deepCopyField(test_costs, copies);
+  varDeepCopyField(training_cost, copies);
+  varDeepCopyField(test_costs, copies);
   deepCopyField(invars, copies);
   deepCopyField(params, copies);
   deepCopyField(paramsvalues, copies);
