@@ -14,7 +14,10 @@ exclude_list = [ 'begin', 'end', 'top', 'firstElement', 'lastElement',
                  'makeDeepCopyFromShallowCopy', 'deepCopy',
                  # Exclude this for now, because otherwise
                  # we get a Python exception when importing pylearn.
-                 '_static_initializer_'
+                 '_static_initializer_',
+                 # Exclude this because there are two overloaded versions,
+                 # one which requires a policy and the other which does not.
+                 'getStats'
                  ]
 
 # We exclude the operator<< and operator>> because wrapping them using
@@ -43,6 +46,12 @@ def set_our_policy(c):
     for attr, pol in policy_mapping.iteritems():
         set_policy(getattr(c, attr), pol)
 
+
+# Additional includes
+
+declaration_code('''#include <plearn/ker/Kernel.h>
+#include <plearn/var/Func.h>
+''')
 
 # PLearn base classes...
 
@@ -77,9 +86,9 @@ exclude_stuff(p_vmat)
 # VMatrix.h only includes forward declarations for PLearn::Ker
 # and PLearn::Func, but that isn't enough to get
 # the Pyste-generated wrapper to compile. Disabled for now.
-#p_vmatrix = Class('PLearn::VMatrix', 'plearn/vmat/VMatrix.h')
-#exclude_stuff(p_vmatrix)
-#set_our_policy(p_vmatrix)
+p_vmatrix = Class('PLearn::VMatrix', 'plearn/vmat/VMatrix.h')
+exclude_stuff(p_vmatrix)
+set_our_policy(p_vmatrix)
 
 
 # Learners...
