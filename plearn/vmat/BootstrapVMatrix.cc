@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: BootstrapVMatrix.cc,v 1.6 2004/04/20 14:01:07 tihocan Exp $
+   * $Id: BootstrapVMatrix.cc,v 1.7 2004/06/10 16:15:04 tihocan Exp $
    ******************************************************* */
 
 #include "BootstrapVMatrix.h"
@@ -49,7 +49,7 @@ PLEARN_IMPLEMENT_OBJECT(BootstrapVMatrix,
     "A VMatrix that sees a bootstrap subset of its parent VMatrix.\n"
     "This is not a real bootstrap since a sample can only appear once."
     , 
-    "The only option to specify is \"distr\"(and possibly \"frac\" and \"shuffle\")."
+    "The only option to specify is \"source\"(and possibly \"frac\" and \"shuffle\")."
     // TODO Hide the useless options.
 );
 
@@ -64,7 +64,7 @@ BootstrapVMatrix::BootstrapVMatrix()
 BootstrapVMatrix::BootstrapVMatrix(VMat m, real frac, bool shuffle)
 {
   this->frac = frac;
-  this->distr = m;
+  this->source = m;
   this->shuffle = shuffle;
   build();
 }
@@ -97,10 +97,10 @@ void BootstrapVMatrix::build()
 ////////////
 void BootstrapVMatrix::build_()
 {
-  if (distr) {
-    indices = TVec<int>(0, distr.length()-1, 1); // Range-vector
+  if (source) {
+    indices = TVec<int>(0, source.length()-1, 1); // Range-vector
     shuffleElements(indices);
-    indices = indices.subVec(0,int(frac * distr.length()));
+    indices = indices.subVec(0,int(frac * source.length()));
     if (!shuffle) {
       sortElements(indices);
     }
