@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.28 2004/03/04 15:08:04 tihocan Exp $
+   * $Id: fileutils.cc,v 1.29 2004/03/10 18:22:40 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -664,26 +664,124 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
               }
               break;
 
-            case 'I': // it's an INCLUDE{filepath}
+            case 'E': // it's an ECHO{expression}
               {
-                string includefilepath; // path of the file in a $INCLUDE{...} directive
-                readWhileMatches(in, "INCLUDE");
+                string expr;
+                readWhileMatches(in, "ECHO");
+                bool syntax_ok = true;
                 int c = in.get();
-                if(c=='<')
-                  smartReadUntilNext(in, ">", includefilepath);
-                else if(c=='{')
-                  smartReadUntilNext(in, "}", includefilepath);
+                if(c == '{')
+                  smartReadUntilNext(in, "}", expr);
                 else
-                  PLERROR("$INCLUDE must be followed immediately by a { or <");
-                istringstream pathin(includefilepath);
-                includefilepath = readAndMacroProcess(pathin,variables);
-                includefilepath = removeblanks(includefilepath);
-                string dirname = extract_directory(includefilepath);
-                string filename = extract_filename(includefilepath);
-                string olddir = getcwd();
-                chdir(dirname);
-                text += readFileAndMacroProcess(filename, variables);
-                chdir(olddir);
+                  syntax_ok = false;
+                if (!syntax_ok)
+                  PLERROR("$ECHO syntax is: $ECHO{expr}");
+                istrstream expr_stream(expr.c_str());
+                cout << readAndMacroProcess(expr_stream, variables) << endl;
+              }
+              break;
+
+            case 'I':
+              {
+                int next = in.get();
+                next = in.peek();   // Next character.
+                switch(next) {
+
+                  case 'F': // it's an IF{cond}{expr_cond_true}{expr_cond_false}
+                    {
+                      string cond, expr_cond_true, expr_cond_false, expr_evaluated;
+                      readWhileMatches(in, "F");
+                      bool syntax_ok = true;
+                      int c = in.get();
+                      if(c == '{')
+                        smartReadUntilNext(in, "}", cond);
+                      else
+                        syntax_ok = false;
+                      if (syntax_ok) {
+                        c = in.get();
+                        if(c == '{')
+                          smartReadUntilNext(in, "}", expr_cond_true);
+                        else
+                          syntax_ok = false;
+                      }
+                      if (syntax_ok) {
+                        c = in.get();
+                        if(c == '{')
+                          smartReadUntilNext(in, "}", expr_cond_false);
+                        else
+                          syntax_ok = false;
+                      }
+                      if (!syntax_ok)
+                        PLERROR("$IF syntax is: $IF{cond}{expr_cond_true}{expr_cond_false}");
+
+                      istrstream cond_stream(cond.c_str());
+                      string evaluate_cond = readAndMacroProcess(cond_stream, variables);
+                      if (evaluate_cond == "1" ) {
+                        expr_evaluated = expr_cond_true;
+                      } else if (evaluate_cond == "0") {
+                        expr_evaluated = expr_cond_false;
+                      } else {
+                        PLERROR("$IF condition should be 0 or 1, but is %c", evaluate_cond.c_str());
+                      }
+                      istrstream expr_stream(expr_evaluated.c_str());
+                      text += readAndMacroProcess(expr_stream, variables);
+                    }
+                    break;
+
+                  case 'N': // it's an INCLUDE{filepath}
+                    {
+                      string includefilepath; // path of the file in a $INCLUDE{...} directive
+                      readWhileMatches(in, "NCLUDE");
+                      int c = in.get();
+                      if(c=='<')
+                        smartReadUntilNext(in, ">", includefilepath);
+                      else if(c=='{')
+                        smartReadUntilNext(in, "}", includefilepath);
+                      else
+                        PLERROR("$INCLUDE must be followed immediately by a { or <");
+                      istringstream pathin(includefilepath);
+                      includefilepath = readAndMacroProcess(pathin,variables);
+                      includefilepath = removeblanks(includefilepath);
+                      string dirname = extract_directory(includefilepath);
+                      string filename = extract_filename(includefilepath);
+                      string olddir = getcwd();
+                      chdir(dirname);
+                      text += readFileAndMacroProcess(filename, variables);
+                      chdir(olddir);
+                    }
+                    break;
+
+                  case 'S': // it's an ISEQUAL{expr1}{expr2}
+                    {
+                      string expr1, expr2;
+                      readWhileMatches(in, "SEQUAL");
+                      bool syntax_ok = true;
+                      int c = in.get();
+                      if(c == '{')
+                        smartReadUntilNext(in, "}", expr1);
+                      else
+                        syntax_ok = false;
+                      if (syntax_ok) {
+                        c = in.get();
+                        if(c == '{')
+                          smartReadUntilNext(in, "}", expr2);
+                        else
+                          syntax_ok = false;
+                      }
+                      if (!syntax_ok)
+                        PLERROR("$ISEQUAL syntax is: $ISEQUAL{expr1}{expr2}");
+                      istrstream expr1_stream(expr1.c_str());
+                      istrstream expr2_stream(expr2.c_str());
+                      string expr1_eval = readAndMacroProcess(expr1_stream, variables);
+                      string expr2_eval = readAndMacroProcess(expr2_stream, variables);
+                      if (expr1_eval == expr2_eval) {
+                        text += "1";
+                      } else {
+                        text += "0";
+                      }
+                    }
+                    break;
+                }
               }
               break;
 
@@ -704,7 +802,7 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
 
             default:
               PLERROR("In readAndMacroProcess: only supported macro commands are \n"
-                      "$DEFINE{varname=...} $INCLUDE{filepath} and ${varname} for macro expansion."
+                      "${varname}, $DEFINE, $ECHO, $IF, $INCLUDE, $ISEQUAL."
                       "But I read $%c !!",c);
             }
         }
