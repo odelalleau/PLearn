@@ -14,6 +14,11 @@ def make_usr_structure(prefixdir):
         d = os.path.join(prefixdir,name)
         if not os.path.isdir(d): os.makedirs(d)
 
+def invoke(command):
+    (child_stdin, child_stdout_and_stderr) = os.popen4(command)
+    output = child_stdout_and_stderr.readlines()
+    return output
+
 def system(command):
     print ">>> EXECUTING " + command
     os.system(command)
@@ -71,16 +76,19 @@ def chdir(dirpath):
     
 def locate_lib(libname):
     """Looks for that library in the following standard directories:
-    /lib /usr/lib /usr/local/lib $LD_LIBRARY_PATH $LIBRARY_PATH
-    If found, returns the path of the directory containing the library.
+    /lib /usr/lib $LD_LIBRARY_PATH $LIBRARY_PATH
+    If found, returns the full path of the library file.
     If not found, returns the empty string."""
 
-    libdirs = ['/lib','/usr/lib','/usr/local/lib'] + string.split(os.getenv('LD_LIBRARY_PATH',''),':') + string.split(os.getenv('LIBRARY_PATH',''),':')
+    libdirs = ['/lib','/usr/lib'] + string.split(os.getenv('LD_LIBRARY_PATH',''),':') + string.split(os.getenv('LIBRARY_PATH',''),':')
     libdirs = [ d for d in libdirs if d!='' ] 
     for dirpath in libdirs:
-        if (   os.path.isfile(os.path.join(dirpath,'lib'+libname+'.a'))
-            or os.path.isfile(os.path.join(dirpath,'lib'+libname+'.so')) ):
-            return dirpath
+        filepath = os.path.join(dirpath,'lib'+libname+'.so')
+        if(os.path.isfile(filepath)):
+            return filepath
+        filepath = os.path.join(dirpath,'lib'+libname+'.a')
+        if(os.path.isfile(filepath)):
+            return filepath
     return ''                                                     
 
 def locate_include(includename):
@@ -93,19 +101,52 @@ def locate_include(includename):
     includedirs = ['/usr/include','/usr/local/include'] + string.split(os.getenv('C_INCLUDE_PATH',''),':') + string.split(os.getenv('CPLUS_INCLUDE_PATH',''),':')
     includedirs = [ d for d in includedirs if d!='' ] 
     for dirpath in includedirs:
-        if os.path.isfile(os.path.join(dirpath,includename)):
-            return dirpath
+        filepath = os.path.join(dirpath,includename)
+        if os.path.isfile(filepath):
+            return filepath
     return ''
 
 def locate_bin(binname):
     """Looks for file binname in the following standard directories:
     /bin /usr/bin /usr/local/bin $PATH
-    If found, returns the path of the directory containing the file.
+    If found, returns the full path of the the file.
     If not found, returns the empty string."""
 
     bindirs = ['/bin','/usr/bin','/usr/local/bin'] + string.split(os.getenv('PATH',''),':')
     bindirs = [ d for d in bindirs if d!='' ] 
     for dirpath in bindirs:
-        if os.path.isfile(os.path.join(dirpath,binname)):
-            return dirpath
+        filepath = os.path.join(dirpath,binname)
+        if os.path.isfile(filepath):
+            return filepath
     return ''
+
+def get_package(packagename):
+    exec 'import upackages.'+packagename
+    exec 'package = upackages.'+packagename
+    return package
+
+
+# def requires(packagename, required_version_list):
+#     """Checks if the specified package is installed with a version that is in the given version_list.
+#     If not, proposes installing it (the first version of the list).
+#     The call returns the first version of the list that appears to be installed."""
+#     package = get_package(packagename)
+#     installed_versions = package.get_installed_versions()
+#     ret_version = ''
+#     for ver in required_version_list:
+#         if ver in installed_versions:
+#             ret_version = ver
+#             break
+#     if ret_version=='':
+#         print 'Package '+packagename+' is required in one of the following versions: ', string.join(required_version_list,' ')
+#         if installed_versions==[]:
+#             print 'But it appears not to be installed.'
+#         else:
+#             print 'But it appears to be installed with the following versions: ', string.join(installed_versions,' ')
+
+#         print """If you have administrative rights on your system, and a
+#         corresponding package exists in your O.S. distributions packaging
+#         format, you may want to install it on all relevant machines using
+#         your O.S. distribution's packaging system...
+#         If you do not have administrative rights or no such ready-made
+#         package exists for your distribution.
