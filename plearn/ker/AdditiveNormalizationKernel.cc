@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdditiveNormalizationKernel.cc,v 1.8 2004/07/09 22:29:10 monperrm Exp $ 
+   * $Id: AdditiveNormalizationKernel.cc,v 1.9 2004/07/21 17:04:44 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -153,14 +153,13 @@ void AdditiveNormalizationKernel::build_()
 // computeAverage //
 ////////////////////
 real AdditiveNormalizationKernel::computeAverage(const Vec& x, bool on_row, real squared_norm_of_x) const {
-  static Vec k_x;
-  k_x.resize(n_examples);
+  all_k_x.resize(n_examples);
   if (is_symmetric || !on_row) {
-    source_kernel->evaluate_all_i_x(x, k_x, squared_norm_of_x);
+    source_kernel->evaluate_all_i_x(x, all_k_x, squared_norm_of_x);
   } else {
-    source_kernel->evaluate_all_x_i(x, k_x, squared_norm_of_x);
+    source_kernel->evaluate_all_x_i(x, all_k_x, squared_norm_of_x);
   }
-  return sum(k_x) / real(n_examples);
+  return sum(all_k_x) / real(n_examples);
 }
 
 ///////////////////////
@@ -175,7 +174,6 @@ void AdditiveNormalizationKernel::computeGramMatrix(Mat K) const {
 // evaluate //
 //////////////
 real AdditiveNormalizationKernel::evaluate(const Vec& x1, const Vec& x2) const {
-  // ### Evaluate the kernel on a pair of points.
   real avg_1 = computeAverage(x1, true);
   real avg_2 = computeAverage(x2, false);
   if (remove_bias || !remove_bias_in_evaluate) {

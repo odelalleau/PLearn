@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AdditiveNormalizationKernel.h,v 1.5 2004/06/11 13:22:06 tihocan Exp $ 
+   * $Id: AdditiveNormalizationKernel.h,v 1.6 2004/07/21 17:04:44 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -55,6 +55,9 @@ class AdditiveNormalizationKernel: public SourceKernel
 private:
 
   typedef SourceKernel inherited;
+
+  //! Used to store the values of the source kernel.
+  mutable Vec all_k_x;
   
 protected:
 
