@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: AdaptGradientOptimizer.cc,v 1.5 2003/05/22 18:26:45 tihocan Exp $
+   * $Id: AdaptGradientOptimizer.cc,v 1.6 2003/05/26 13:22:15 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -142,6 +142,10 @@ void AdaptGradientOptimizer::declareOptions(OptionList& ol)
 
 IMPLEMENT_NAME_AND_DEEPCOPY(AdaptGradientOptimizer);
 
+static Vec old_meancost;
+static Vec old_mean_gradient;
+static Vec old_old_mean_gradient;
+
 ////////////
 // build_ //
 ////////////
@@ -161,6 +165,9 @@ void AdaptGradientOptimizer::build_(){
     oldgradientlocations.resize(params.size());
     meancost.resize(cost->size());
     meancost.clear();
+    old_meancost.resize(cost->size());
+    old_mean_gradient.resize(params.nelems());
+    old_old_mean_gradient.resize(params.nelems());
     learning_rates.fill(start_learning_rate);
     switch (learning_rate_adaptation) {
       case 0:
@@ -204,7 +211,6 @@ void AdaptGradientOptimizer::adaptLearningRateALAP1(
 }
 
 static bool first_time = true;
-static Vec old_mean_gradient;
 static VecStatsCollector store_gradient;
 // TODO Remove later (?)
 
@@ -219,8 +225,7 @@ void AdaptGradientOptimizer::adaptLearningRateBasic(
 //  static VMat lrates;
   if (first_time) {
     first_time = false;
-    old_mean_gradient.resize(params.nelems());
- //   lrates = new AsciiVMatrix("lrates.amat", params.nelems());
+//    lrates = new AsciiVMatrix("lrates.amat", params.nelems());
   }
 //  lrates->appendRow(learning_rates);
   Var* array = params->data();
@@ -229,13 +234,17 @@ void AdaptGradientOptimizer::adaptLearningRateBasic(
   int nb_min = 0;
   int nb_max = 0;
   int nb_moy = 0;
+  int nb_changes = 0;
   real u;
   real lr_min = 0;
   real lr_moy = 0;
   real lr_max = 0;
   real lr_mean = 0;
+  real mean_lr = 0;
+//  Vec diff_params(params.nelems());
   Vec tmp_grad_stuff(params.nelems());
-  tmp_grad_stuff << old_mean_gradient;
+//  tmp_grad_stuff << old_mean_gradient;
+//  old_old_mean_gradient << old_mean_gradient;
 //  old_mean_gradient << store_gradient.getMean();
 //  store_gradient.forget();
   for (int i=0; i<params.size(); i++) {
@@ -249,6 +258,7 @@ void AdaptGradientOptimizer::adaptLearningRateBasic(
       if (g2 == g1)
         cout << "Warning ! g2 == g1 !" << endl; */
       real diff = array[i]->valuedata[j-k] - old_params[j];
+ //     diff_params[j] = array[i]->valuedata[j-k] - old_params[j]- learning_rates[j] * old_mean_gradient[j] * 20000;
       if (diff > 0) {
         // the parameter has increased
         if (u > 0) {
@@ -277,6 +287,7 @@ void AdaptGradientOptimizer::adaptLearningRateBasic(
 //        if (g2 * g1 >0)
 //          cout << "Warning ! g2 and g1 have same sign !" << endl;
         learning_rates[j] -= learning_rates[j] * adapt_coeff2;
+        nb_changes++;
 //        array[i]->valuedata[j-k] = old_params[j];
 //        old_evol[j] = 0;
       }
@@ -300,6 +311,7 @@ void AdaptGradientOptimizer::adaptLearningRateBasic(
         lr_moy += abs(array[i]->valuedata[j-k]);
       }
       lr_mean += abs(array[i]->valuedata[j-k]);
+      mean_lr += learning_rates[j];
       // cout << learning_rates[j] << "  ";
       if (mini_batch > 0 && (stage / nstages_per_epoch) % mini_batch == 0) {
         // The next stage will examine a different mini-batch, so we need to
@@ -315,7 +327,12 @@ void AdaptGradientOptimizer::adaptLearningRateBasic(
   if (nb_moy > 0) lr_moy /= real(nb_moy);
   if (nb_max > 0) lr_max /= real(nb_max);
   cout << "nb_min = " << nb_min << "  --  nb_max = " << nb_max << "  --  nb_moy = " << nb_moy << endl;
-  cout << "w_lr_min = " << lr_min << "  --  w_lr_max = " << lr_max << " --  w_lr_moy = " << lr_moy << "  --  w_lr_mean = " << lr_mean/real(nb_min+nb_moy+nb_max) << endl; 
+  cout << "mean_lr = " << mean_lr / int(params.nelems()) << "  -- nb_changes " << nb_changes << endl;
+//  cout << "Norm(diff_params)^2 = " << pownorm(diff_params) << endl;
+//  cout << "c(t1) = " << meancost[0]/real(stage-cost_stage) << " -- c(t0) + (t1-t0).grad(t0) = " << old_meancost[0] - dot(diff_params, old_old_mean_gradient) << " -- diff = " << abs(meancost[0]/real(stage-cost_stage) - old_meancost[0] + dot(diff_params, old_old_mean_gradient)) << endl;
+//  cout << "c(t1) = " << meancost[0]/real(stage-cost_stage) << " -- c(t0) + (t1-t0).grad(t1) = " << old_meancost[0] - dot(diff_params, old_mean_gradient) << " -- diff = " << abs(meancost[0]/real(stage-cost_stage) - old_meancost[0] + dot(diff_params, old_mean_gradient)) << endl;
+//  cout << "c(t1) = " << meancost[0]/real(stage-cost_stage) << " -- c(t0) + (t1-t0).grad(tx) = " << old_meancost[0] - dot(diff_params, (old_mean_gradient + old_old_mean_gradient) /2) << " -- diff = " << abs(meancost[0]/real(stage-cost_stage) - old_meancost[0] + dot(diff_params, (old_old_mean_gradient+old_mean_gradient) / 2)) << endl;
+//  cout << "w_lr_min = " << lr_min << "  --  w_lr_max = " << lr_max << " --  w_lr_moy = " << lr_moy << "  --  w_lr_mean = " << lr_mean/real(nb_min+nb_moy+nb_max) << endl; 
   // cout << endl;
 }
 
@@ -326,6 +343,7 @@ void AdaptGradientOptimizer::computeCost() {
   meancost /= real(stage - cost_stage);
   cout << stage << " : " << meancost << endl;
   early_stop = measure(stage,meancost);
+  old_meancost << meancost;
   meancost.clear();
   cost_stage = stage;
 }
