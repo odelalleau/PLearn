@@ -17,17 +17,15 @@ int main(int argc, char** argv)
   if (load)
   {
     ontology = new WordNetOntology(voc_file, synset_file, ontology_file, false, true);
-    ontology->printStats();
-    ontology->detectWordsWithoutOntology();
   } else
   {
-    ontology = new WordNetOntology(voc_file, diff_unk, false, false, pos_type);
+    ontology = new WordNetOntology(voc_file, diff_unk, false, true, pos_type);
     ontology->save(synset_file, ontology_file);
   }
 
   ontology->detectWordsWithoutOntology();
 
-  ontology->extractWordHighLevelSenses(1, 1, 0, 0, 0);
+  //ontology->extractWordHighLevelSenses(1, 1, 0, 0, 0);
 
   if (print)
     ontology->print(true);
