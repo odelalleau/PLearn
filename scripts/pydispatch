@@ -1,0 +1,334 @@
+#!/usr/bin/env python2.3
+import select
+from popen2 import *
+
+from dispatch import *
+from ModeAndOptionParser import *
+
+number_of_defines = -1
+sort_criterion_cost_index = ""
+
+experiment_number = 0
+bugs_list = 'buggedExp.amat'
+sort_file = ""
+sort_file_base = "pydispatch_writeExpdir_sort_file.vmat"
+keyed_log_file = ""
+
+dispatch = None
+def default_mode():
+    global dispatch
+    dispatch = Dispatch()
+    dispatch.set_option('localhost', options.localhost)
+    dispatch.set_option('nb_hosts', options.hosts)
+
+    if isinstance(current.dictionary_for_experiments, type('')):
+        current.dictionary_for_experiments = eval(current.dictionary_for_experiments)
+        
+    if not isinstance(current.dictionary_for_experiments, type({})):
+        raise TypeError("The dictionary_for_experiments must be a dictionnary. Currently is %s\n"
+                        "of type %s\n" "(Config file or target 2)"
+                        % (str(current.dictionary_for_experiments),
+                           type(current.dictionary_for_experiments)) )
+
+    assert( os.path.exists( current.script ),
+            "%s does not appear to be a valid plearn script." % current.script )
+
+    ## Loading the old number of experiments
+    nbExp_file = os.path.join(options.expdir,'.pydispatch_number_of_exp_done')
+    if os.path.exists( nbExp_file ):
+        execfile(nbExp_file)
+        print
+        print '+++ Experiments done yet:',experiment_number
+        print
+
+    #############################################################
+    ## The dispatch.run() method is the core this whole program
+    generate_experiments( current.to_execute, current.script,
+                          current.dictionary_for_experiments )
+    dispatch.run()
+    #############################################################
+        
+    if sort_file != '':
+        os.system('rm -Rf '+sort_file+'*')
+
+    ## Saving the new number of experiments
+    if os.path.exists( nbExp_file ):
+        os.remove(nbExp_file)
+    nbExp = open(nbExp_file, 'w')
+    nbExp.write("experiment_number = " + str(experiment_number) + "\n")
+    nbExp.close()
+
+def expdir_preprocessing():
+    assert(options.expdir, "The options.expdir should never be empty.")
+    assert(number_of_defines != -1, "Must preprocess defines first.")
+
+    global sort_criterion_cost_index
+    ## The one comes from the Experiment number added before the defines
+    sort_criterion_cost_index = str( 1 + number_of_defines + options.sort_criterion_cost_index )
+    
+    klf = options.keyed_log_file
+    if klf[-5:] != '.amat':
+        raise ValueError("The keyed_log_file must be an amat.")
+
+    global keyed_log_file
+    keyed_log_file = os.path.join(os.getcwd(), options.expdir, options.keyed_log_file)
+        
+    if not os.path.exists(options.expdir):
+        os.mkdir(options.expdir)
+        
+    if int(options.keep_only_n) > 0:
+        global sort_file
+        sort_file = os.path.join(options.expdir,sort_file_base)
+        writeVmat(sort_file)
+
+def free():
+    user = os.getenv("USER")
+    cl = command_output("cluster --list"
+                        " | grep " + user +
+                        " | grep -v cpu")
+    for line in cl:
+        print line
+
+        the_id = -1
+        try:
+            the_id = str( int(line[0:5]) )
+            os.system("cluster --libere --id="+the_id)
+        except ValueError:
+            pass        
+    sys.exit()
+
+def generate_experiments(to_exec, plscript, dico):
+    global experiment_number
+    
+    global number_of_defines
+    number_of_defines = len(dico.keys())
+
+    expdir_preprocessing()
+
+    exp = []
+    arg_sets = []
+    parse_args(dico, arg_sets)
+
+    if options.count:
+        raw_input(options.count)
+        print len(arg_sets),"Experiments would be launched."
+        sys.exit()
+
+    for set in arg_sets:
+        index = 0
+###        defines = ""
+        defines = {}
+        for key in dico.keys() :
+###            defines += (" " + string.join([key, "=", str(set[index]) ], ""))
+            defines[key] = set[index]
+            index += 1
+
+        experiment_number += 1
+        newExperiment = PLTask(dispatch, experiment_number, to_exec, plscript, defines)
+        newExperiment.setOptions( options.expdir, keyed_log_file,
+                                  options.global_stats, options.keep_only_n,
+                                  bugs_list )
+        newExperiment.set_option('log_file', 'log_file.txt')
+##        newExperiment.setSharedFilesSemaphore(shared_files_access)
+        newExperiment.setWriteVmat(writeVmat)
+        newExperiment.build()
+
+        dispatch.add_task( newExperiment )
+                        
+def parse_args(dico, arg_sets, curr=[]):
+    keys = dico.keys()
+    depth = len(curr)
+    
+    if depth == len(keys):
+        arg_sets.append(curr)
+        return
+    
+    k = keys[depth]
+    if isinstance(dico[k], type([])):
+        for val in dico[k]:
+            new = cp_array(curr)
+            new.append(val)
+            parse_args(dico, arg_sets, new)    
+    else:
+        new = cp_array(curr)
+        new.append( dico[k] )
+        parse_args(dico, arg_sets, new) 
+
+def rmbug():
+    if ( len(targets) != 0 or
+         not os.path.exists(bugs_list) or
+         not os.path.exists('Experiments') ):
+        ERROR("Must be in the bugs list directory. Do not provide targets.")
+        
+    bugs = command_output("plearn vmat cat " + bugs_list)
+
+    for line in bugs:
+        l = string.split(line)
+        bug_id = l[0]
+        RMDIR( "Experiments/" + bug_id )
+
+    sys.exit()
+#END rmbug (mode)
+def RMDIR(to_remove):
+    os.system('rm -Rf ' + to_remove)
+
+def target_usage_str():
+    return (
+        """pydispatch config <filename>
+* filename: The base name of the config file to be generated.
+
+Pydispatch will generate a file named <filename>.config we're the dictionary of arguments
+and default values for options can be redefined for user. The content of the file will be:
+
+""" + DEFAULT_VALUES
+        )
+
+def help():
+    print(
+        """(1) pydispatch <exec> <script.plearn> <dico> OR filename.config> [-option [option_value]]{1, n}
+(2) pydispatch <exec> <filename.config> [-option [option_value]]{1, n}
+        
+* exec: the program to run
+
+* script: the script file WITHOUT definitions for the defines in dictionary. If using a config file (2),
+          the script must be passed through the 'script_file' variable within <filename.config>.          
+          NOTE: The file must MUST HAVE EXTENSION '.plearn'.
+   
+* dico: "{'key1':array1 [, 'key2':array2, ..., 'key_n':array_n]}"
+    where array must have the form [val_1 ,..., val_m], m=1, 2, ...
+    example: {'MONTHLY':[0,1], 'SIGNAL_INDICATOR':[1,2,3]}       
+
+* filename: File that should have been generated by Syntax (3): pydispatch config <filename>.
+            The file must MUST HAVE EXTENSION '.config'.
+
+Say you launch
+
+   pydispatch plearn sc.plearn "{'BLA':[1, 2, 3]}"
+
+then the following experiments will be launched in parallel
+
+   plearn sc.plearn BLA=1
+   plearn sc.plearn BLA=2
+   plearn sc.plearn BLA=3
+
+=====
+
+Under Syntax (1) and (2), the possible options are
+
+-expdir (Default: '""" + default_expdir + """')
+   If the expdir option is not '', the script will define the EXPDIR macro for each experiment
+   launched. Say you launch
+
+      pydispatch plearn sc.plearn "{'BLA':[1, 2, 3]}" -expdir Results
+
+   then the following experiments will be launched in parallel
+
+      plearn sc.plearn BLA=1 EXPDIR=Results/plearn_sc.plearn_BLA=1
+      plearn sc.plearn BLA=2 EXPDIR=Results/plearn_sc.plearn_BLA=2
+      plearn sc.plearn BLA=3 EXPDIR=Results/plearn_sc.plearn_BLA=3
+
+   and the results from the EXPDIR/vmat named
+
+   -global_stats: (Default: '""" + default_global_stats + """')
+
+   will be appended to the value of option
+
+   -keyed_log_file (Default: '""" + default_keyed_log_file + """', MUST BE an amat)
+
+   in the expdir. If you set the
+
+   -keep_only_n (Default: '""" + default_keep_only_n + """')
+
+   option to a positive value, the script will automatically erase results directory of experiments
+   that did not make it to the top 'keep_only_n' experiments, sorted according to the 'global_stats'
+   column provided in
+
+   -sort_criterion_cost_index (Default: '""" + default_sort_criterion_cost_index + """')
+
+-help
+   Prints complete help message.
+
+-hosts (Default: '""" + default_hosts + """')
+   The maximum number of concurrent hosts to be used by script.
+
+-localhost
+   The tasks are going to be queued on the local host and output will be in shell.
+   """)
+
+## def usage():
+##     usage_str =(
+##         """Syntax (1) pydispatch <exec> <script.plearn> <dico> [-option [option_value]]{1, n}
+## Syntax (2) pydispatch <exec> <filename.config> [-option [option_value]]{1, n}
+##  Enter 'pydispatch -help' to get help with these syntaxes.
+ 
+## * OR *
+        
+## Syntax (3) pydispatch config <filename>
+##  Enter 'pydispatch config' to get help with this syntax."""
+##         )
+##     print usage_str
+
+def writeVmat(vmat_file):
+    ### Make the .amat
+    amat = open(vmat_file, 'w')
+    amat.write("# Wrapper to visualize the results stored in " + keyed_log_file + "\n")
+    amat.write("<SOURCES>\n")
+    amat.write("@SortRowsVMatrix(" + "\n")
+    amat.write("  distr =" + "\n")
+    amat.write("    AutoVMatrix(specification = \"" + keyed_log_file + "\")" + "\n")
+    amat.write("    sort_columns = [ " + sort_criterion_cost_index + " ]  # Add here the columns you want to get sorted" + "\n")
+
+    if options.sort_order == "increasing":
+        amat.write("    increasing_order = 1 \n")
+    elif options.sort_order == "decreasing":
+        amat.write("    increasing_order = 0 \n")
+    
+    amat.write(")" + "\n")
+    amat.write("</SOURCES>\n")
+    amat.close()
+
+##################################################################
+# Main
+try:
+    parser = ModeAndOptionParser( usage = "%prog [mode] [options] target+" ) 
+
+    parser.add_mode( 'free', free,
+                     "Frees all cluster task of the $USER." )
+
+    parser.add_mode( 'rmbug', rmbug,
+                     help='Removes all directories associated with an experiment that was\n'
+                     'logged in the '+ bugs_list + ' file.' )
+
+    ## Default Mode
+    def_mode_options = OptionGroup( parser, "Default mode options",
+                                    "These are options available only under the default mode." )
+    def_mode_options.add_option('--count', action='store_true', default=False)
+    def_mode_options.add_option('--expdir', default="Results")
+    def_mode_options.add_option('--keyed-log-file', default="KeyedLog.amat")
+    def_mode_options.add_option('--sort-order', choices=['increasing', 'decreasing'], default='decreasing')
+    def_mode_options.add_option('--global-stats', default='global_stats.pmat')
+    def_mode_options.add_option('--keep-only-n', default=-1)
+    def_mode_options.add_option('--sort-criterion-cost-index', default=0)
+    
+    def_mode_options.add_option('-l', '--localhost', action='store_true',
+                                help='This flag triggers a dispatch using only the local host.',
+                                default=False)
+    
+    def_mode_options.add_option( '-n', '--hosts', 
+                                 help='The maximum nuber of hosts to use simultaneously.',
+                                 default=10 )
+
+    expected_targets = ['to_execute', 'script', 'dictionary_for_experiments']
+    parser.add_mode( Mode.DEFAULT, default_mode,
+                     help="Runs the experiments parsed from dictionnary_for_experiments.",
+                     option_groups = [def_mode_options],
+                     expected_targets = expected_targets )    
+
+    ## The actual option parsing
+    options, targets = parser.parse_args()
+    current = parser.selected_mode()
+
+    parser.launch_selected_mode()
+    
+except KeyboardInterrupt: 
+    print 'Pydispatch interupted by user. Bailing out.'
