@@ -1,0 +1,192 @@
+// -*- C++ -*-
+
+// PLearn (A C++ Machine Learning Library)
+// Copyright (C) 1998 Pascal Vincent
+// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
+//
+
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+// 
+//  1. Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+// 
+//  2. Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//     documentation and/or other materials provided with the distribution.
+// 
+//  3. The name of the authors may not be used to endorse or promote
+//     products derived from this software without specific prior written
+//     permission.
+// 
+// THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+// NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+// TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// 
+// This file is part of the PLearn library. For more information on the PLearn
+// library, go to the PLearn Web site at www.plearn.org
+
+
+ 
+
+/* *******************************************************      
+   * $Id: Func.h,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * AUTHORS: Pascal Vincent & Yoshua Bengio
+   * This file is part of the PLearn library.
+   ******************************************************* */
+
+
+/*! \file PLearnLibrary/PLearnCore/Func.h */
+
+#ifndef FUNCTION_INC
+#define FUNCTION_INC
+
+#include "general.h"
+#include "PP.h"
+#include "Mat.h"
+#include "VMat.h"
+#include "Variable.h"
+#include "VarArray.h"
+
+namespace PLearn <%
+using namespace std;
+
+
+class Function;
+class Func: public PP<Function>
+{
+public:
+  Func();
+
+  Func(Function* f);
+ 
+  Func(const VarArray& the_inputs, const VarArray& the_outputs);
+
+  Func(const VarArray& the_inputs, const VarArray& parameters_to_optimize,const VarArray& the_outputs);
+
+  Vec operator()(const Vec& input);
+
+  real operator()(const Vec& input1, const Vec& input2);
+
+/*!     builds a whole new Var graph modeled after the current one
+    but starting from new_inputs (instead of inputs) 
+    the resulting new_outputs var array is returned by the call
+*/
+  VarArray operator()(const VarArray& new_inputs);
+};
+
+inline pl_istream &operator>>(pl_istream &in, Func &o)
+{ in >> static_cast<PP<Function> &>(o); return in; };
+
+inline pl_ostream &operator<<(pl_ostream &out, const Func &o)
+{ out << static_cast<const PP<Function> &>(o); return out; };
+
+class Function: public Object
+{
+protected:
+  //!  Default constructor for persistence
+  Function() {}
+
+public:
+  int inputsize;
+  int outputsize;
+  VarArray inputs;
+  VarArray outputs;
+  VarArray parameters;  //!< nonInputSources
+  VarArray fproppath;
+  VarArray bproppath;
+  VarArray parentspath; //!<  path on which to do a fprop to update the values of all the non-input direct parents on the fproppath (this will be called by method recomputeParents() )
+
+  Func df; //!<  remembers the symbolic derivative
+
+ public:
+  Function(const VarArray& the_inputs, const VarArray& the_outputs);
+  Function(const VarArray& the_inputs, const VarArray& parameters_to_optimize,const VarArray& the_outputs);
+  //void bprop(VarArray& parameters_to_optimize);
+
+  DECLARE_NAME_AND_DEEPCOPY(Function);
+  virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
+  virtual void deepRead(istream& in, DeepReadMap& old2new);
+  virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
+
+  void fprop(const Vec& in, const Vec& out);
+  void fprop(const Array<Vec>& in, const Array<Vec>& out);
+
+/*!   when put_gradient_on_first_element_only, a gradient of 1 is put
+      in only the first element of the output gradient this is a hack
+      that is useful for having a SumOfVariable computing several
+      costs in parallel, but backpropagating only through the first
+*/
+  void fbprop(const Vec& in, const Vec& out, const Vec& input_gradient, const Vec& output_gradient);
+
+  //!  given input, compute output, gradient (=doutput/dinput) and hessian (=d^2output/dinput^2)
+  void fbbprop(const Vec& in, const Vec& out, const Vec& gradient, const Mat& hessian);
+  //!  same thing but accumulate output, gradient and hessian
+  void fbbpropAcc(const Vec& in, const Vec& out, const Vec& gradient, const Mat& hessian);
+  
+  void rfprop(const Vec& in, const Vec& out, const Vec& input_rvalue, const Vec& output_rvalue, bool do_fprop=true);
+  
+  void recomputeParents(); //!<  recomputes the value of all the vars that influence the output but do not depend on the declared inputs (shared parameters for instance...)
+
+/*!     Returns a Func that will compute the derivative of this function's output 
+    (expected to be a scalar) relative to the given input (of length inputsize)
+    The computed derivative has (logically) also a length of inputsize. 
+    (This call uses symbolic gradient computation)
+*/
+  Func differentiate();
+
+  Vec operator()(const Vec& input);
+  real operator()(const Vec& input1, const Vec& input2);
+
+/*!       builds a whole new Var graph modeled after the current one but
+      starting from new_inputs (instead of inputs) the resulting
+      new_outputs var array is returned by the call All variables on the
+      direct path from inputs to outputs are cloned but the parents of the
+      cloned variables are the same as the originals (parents of the
+      variables in the path are shared).
+*/
+
+  VarArray operator()(const VarArray& new_inputs);
+
+  //!  take the values given in the in Vec
+  void verifyGradient(const Vec& in, real step=0.01);
+
+  void verifyHessian(const Vec& in, real step=0.01);
+
+  //!  take the values randomly between minval and maxval
+  void verifyGradient(real minval, real maxval, real step=0.01);
+
+  //!  take the current values of the inputs variables
+  void verifyGradient(real step=0.01);  
+
+/*!     Checks that the gradient computed by a bprop on the function 
+    and the gradient computed by a fprop on the symbolic derivative
+    of the function give the same results
+*/
+  void verifySymbolicGradient(const Vec& in);
+
+  // This is developed to make sure that the code of rfprop is correct.
+  // The value of H * r computed by rfprop or Hessian should be the same.
+  void verifyrfprop(const Vec& in, real step=0.01);
+};
+
+inline void deepRead(istream& in, DeepReadMap& old2new, Func& f)
+{ Object* f_ptr; deepRead(in, old2new, f_ptr); f = (Function*)f_ptr; }
+
+inline void deepWrite(ostream& out, DeepWriteSet& already_saved, const Func& f)
+{ deepWrite(out, already_saved, (Object*)f); }
+
+Func operator/(Func f, real value);
+
+template <> void deepCopyField(Func& field, CopiesMap& copies);
+
+%> // end of namespace PLearn
+
+#endif

@@ -1,0 +1,5005 @@
+// -*- C++ -*-
+
+// PLearn (A C++ Machine Learning Library)
+// Copyright (C) 1998 Pascal Vincent
+// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
+//
+
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+// 
+//  1. Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+// 
+//  2. Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//     documentation and/or other materials provided with the distribution.
+// 
+//  3. The name of the authors may not be used to endorse or promote
+//     products derived from this software without specific prior written
+//     permission.
+// 
+// THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+// NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+// TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// 
+// This file is part of the PLearn library. For more information on the PLearn
+// library, go to the PLearn Web site at www.plearn.org
+
+
+ 
+
+/* *******************************************************      
+   * $Id: TMat_maths_impl.h,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
+   * This file is part of the PLearn library.
+   ******************************************************* */
+
+/*! \file PLearnLibrary/PLearnCore/TMat_maths_impl.h */
+
+#ifndef TMat_maths_impl_H
+#define TMat_maths_impl_H
+
+namespace PLearn <%
+using namespace std;
+
+template <class T> 
+T max(const TVec<T>& vec)
+{
+#ifdef BOUNDCHECK
+  if(vec.length()==0)
+    PLERROR("IN max(const NumericVec& vec) TVec has zero length()");
+#endif
+  T* pv = vec.data();
+  T maxval = *pv++;
+  int n = vec.length();
+  while(--n)
+    {
+      if(*pv>maxval)
+        maxval = *pv;
+      ++pv;
+    }
+  return maxval;
+}
+
+  //! y = softmax(x)
+template <class T> 
+void softmax(const TVec<T>& x, TVec<T>& y)
+{  
+  int n = x.length();
+  if (n>0)
+  {
+    T* yp = y.data();
+    T* xp = x.data();
+    T maxx = max(x);
+    real s = 0;
+    for (int i=0;i<n;i++)
+      s += (yp[i] = safeexp(xp[i]-maxx));
+    if (s == 0) PLERROR("trying to divide by 0 in softmax");
+    s = 1.0 / s;
+    for (int i=0;i<n;i++)
+      yp[i] *= s;
+  }
+}
+
+//! computes y <- exp(x)
+template <class T> 
+void exp(const TVec<T>& x, TVec<T>& y)
+{  
+  y.resize(x.length());
+  int n = x.length();
+  T* xp = x.data();
+  T* yp = y.data();
+  while(n--)
+    *yp++ = exp(*xp++);
+}
+
+//! returns the sum of squared elements
+template<class T> 
+T sumsquare(const TVec<T>& x)
+{
+  T* v = x.data();
+  T res = square(v[0]);
+  int l = x.length();
+  for(int i=1; i<l; i++)
+    res += square(v[i]);
+  return res;
+}
+
+//! squares the elements of x in place
+template<class T>
+void squareElements(const TVec<T>& x)
+{
+  T* ptr = x.data();
+  int l = x.length();
+  while(l--)
+    {
+      *ptr *= *ptr;
+      ++ptr;
+    }
+}
+
+//! returns the sum of squared elements
+template<class T> 
+T sumsquare(const TMat<T>& m)
+{  
+  if(m.isCompact())
+    {
+      TMat<T>::compact_iterator it = m.compact_begin();
+      TMat<T>::compact_iterator itend = m.compact_end();
+      T res = square(*it);
+      ++it;
+      for(; it!=itend; ++it)
+        res += square(*it);
+      return res;
+    }
+  else
+    {
+      TMat<T>::iterator it = m.begin();
+      TMat<T>::iterator itend = m.end();
+      T res = square(*it);
+      ++it;
+      for(; it!=itend; ++it)
+        res += square(*it);
+      return res;
+    }
+}
+
+
+//! destination = source1*source2
+template <class T>
+inline void multiply(const TVec<T>& source1, T source2, TVec<T>& destination)
+{
+  int n=source1.length();
+  if (n!=destination.length())
+    destination.resize(n);
+  T* s1=source1.data();
+  T* d=destination.data();
+  for (int i=0;i<n;i++)
+    d[i] = s1[i]*source2;
+}
+
+
+//------- These were previously in Vec_maths
+
+template<class T>
+T sum(const TVec<T>& vec)
+{
+  double res = 0.0;
+  T* v = vec.data();
+  for(int i=0; i<vec.length(); i++)
+    res += v[i];
+  return T(res);
+}
+
+//! returns the sum of the log of the elements
+//! (this is also the log of the product of the elements
+//! but is more stable if you have very small elements).
+template<class T>
+T sum_of_log(const TVec<T>& vec)
+{
+  double res = 0.0;
+  T* v = vec.data();
+  for(int i=0; i<vec.length(); i++)
+    res += log(v[i]);
+  return T(res);
+}
+
+template<class T>
+T product(const TVec<T>& vec)
+{
+  double res = 1.0;
+  T* v = vec.data();
+  for(int i=0; i<vec.length(); i++)
+    res *= v[i];
+  return T(res);
+}
+
+template<class T>
+T mean(const TVec<T>& vec)
+{
+  #ifdef BOUNDCHECK
+  if(vec.length()==0)
+    PLERROR("IN T mean(const TVec<T>& vec) vec has zero length");
+  #endif
+  double res = 0.0;
+  T* v = vec.data();
+  for(int i=0; i<vec.length(); i++)
+    res += v[i];
+  return T(res/vec.length());
+}
+
+template<class T>
+T avgdev(const TVec<T>& vec, T meanval)
+{
+  #ifdef BOUNDCHECK
+  if(vec.length()==0)
+    PLERROR("IN T avgdev(const TVec<T>& vec, T meanval) vec has zero length");
+  #endif
+  double res = 0.0;
+  T* v = vec.data();
+  for(int i=0; i<vec.length(); i++)
+      res += fabs(v[i]-meanval);
+  return res/vec.length();
+}
+
+template<class T>
+T geometric_mean(const TVec<T>& vec)
+{
+  #ifdef BOUNDCHECK
+  if(vec.length()==0)
+    PLERROR("IN T geometric_mean(const TVec<T>& vec) vec has zero length");
+  #endif
+  double res = 0.0;
+  T* v = vec.data();
+  for(int i=0; i<vec.length(); i++)
+  {
+    T vi = v[i];
+    if (vi<=0)
+      PLERROR("geometric_mean(TVec<T>): argument %g <=0 at position [%d]",
+            vi,i);
+    res += v[i];
+  }
+  return T(exp(res/vec.length()));
+}
+
+template<class T>
+T weighted_mean(const TVec<T>& vec, const TVec<T>& weights)
+{
+  #ifdef BOUNDCHECK
+  if(vec.length()!=weights.length() || vec.length() == 0)
+    PLERROR("IN T weighted_mean(const TVec<T>& vec, const TVec<T>& weights) vec and weights must have equal (non-zero) lengths");
+  #endif
+  double res = 0.0;
+  T* v = vec.data();
+  T* w = weights.data();
+  for(int i=0; i<vec.length(); i++)
+    res += v[i] * w[i];
+  T sum_weights = sum(weights);
+  if (sum_weights == 0)
+    PLERROR("IN T weighted_mean(const TVec<T>& vec, const TVec<T>& weights) sum(weights) == 0");
+  return T(res/sum_weights);
+}
+
+template<class T>
+T variance(const TVec<T>& vec, T meanval)
+{
+  #ifdef BOUNDCHECK
+  if(vec.length()<=1)
+    PLERROR("IN T variance(const TVec<T>& vec, T meanval) vec length must be more than one");
+  #endif
+  double res = 0.0;
+  T* v = vec.data();
+  for(int i=0; i<vec.length(); i++)
+    {
+      double diff = v[i]-meanval;
+      res += diff*diff;
+    }
+  return res/(vec.length()-1);
+}
+
+template<class T>
+T covariance(const TVec<T>& vec1, const TVec<T>& vec2, T mean1, T mean2)
+{
+  #ifdef BOUNDCHECK
+  if(vec1.length()<=1)
+    PLERROR("IN T covariance(const TVec<T>& vec1, const TVec<T>& vec2, T mean1, T mean2) vec1's length must be more than one");
+  if(vec2.length()<=1)
+    PLERROR("IN T covariance(const TVec<T>& vec1, const TVec<T>& vec2, T mean1, T mean2) vec2's length must be more than one");
+  #endif
+  if(vec1.length() != vec2.length())
+    PLERROR("IN T covariance(const TVec<T>& vec1, const TVec<T>& vec2, T mean1, T mean2) the lengths of vec1 and vec2 must be same");
+  int length = vec1.length();
+  double res = 0.0;
+  T* v1 = vec1.data();
+  T* v2 = vec2.data();
+  for(int i=0; i<length; i++)
+    {
+      double temp = (v1[i]-mean1)*(v2[i]-mean2);
+      res += temp;
+    }
+  return res/(length - 1);
+}
+
+template<class T>
+T weighted_variance(const TVec<T>& vec, const TVec<T>& weights, T no_weighted_mean, T weighted_mean)
+{
+  #ifdef BOUNDCHECK
+  if(vec.length()!=weights.length() || vec.length()==0)
+    PLERROR("IN T weighted_variance(const TVec<T>& vec, const TVec<T>& weights, T no_weighted_mean, T weighted_mean) vec and weights must have equal (non-zero) lengths");
+  #endif
+  double res = 0.0;
+  T* v = vec.data();
+  T* w = weights.data();
+  for(int i=0; i<vec.length(); i++)
+    res += v[i] * v[i] * w[i];
+  T sum_weights = sum(weights);
+  if (sum_weights == 0)
+    PLERROR("IN T weighted_variance(const TVec<T>& vec, const TVec<T>& weights, T no_weighted_mean, T weighted_mean) sum(weights) == 0");
+  return (res/sum_weights - no_weighted_mean * (2*weighted_mean - no_weighted_mean))*vec.length()/(vec.length()-1);
+}
+
+template<class T>
+TVec<T> histogram(const TVec<T>& vec, T minval, T maxval, int nbins)
+{
+  TVec<T> histo(nbins);
+  T deltaval = maxval-minval + 1e-6;
+  for(int i=0; i<vec.length(); i++)
+    {
+      T val = vec[i];
+      int binpos = int((val-minval)/deltaval*nbins);
+      if(binpos>=0 && binpos<nbins)
+        histo[binpos]++;
+    }
+  return histo;
+}
+
+
+template<class T>
+T min(const TVec<T>& vec)
+{
+  #ifdef BOUNDCHECK
+  if(vec.length()==0)
+    PLERROR("IN T min(const TVec<T>& vec) vec has zero length");
+  #endif
+  T* v = vec.data();
+  T minval = v[0];
+  for(int i=1; i<vec.length(); i++)
+    if(v[i]<minval)
+      minval = v[i];
+  return minval;
+}
+
+template<class T>
+T maxabs(const TVec<T>& vec)
+{
+  #ifdef BOUNDCHECK
+  if(vec.length()==0)
+    PLERROR("IN T maxabs(const TVec<T>& vec) vec has zero length");
+  #endif
+  T* v = vec.data();
+  T maxval = fabs(v[0]);
+  for(int i=1; i<vec.length(); i++)
+    {
+      T a=fabs(v[i]);
+      if(a>maxval)
+        maxval = a;
+    }
+  return maxval;
+}
+
+template<class T>
+T minabs(const TVec<T>& vec)
+{
+  #ifdef BOUNDCHECK
+  if(vec.length()==0)
+    PLERROR("IN T minabs(const TVec<T>& vec) vec has zero length");
+  #endif
+  T* v = vec.data();
+  T minval = fabs(v[0]);
+  for(int i=1; i<vec.length(); i++)
+    {
+      T a=fabs(v[i]);
+      if(a<minval)
+        minval = a;
+    }
+  return minval;
+}
+
+template<class T>
+int argmax(const TVec<T>& vec)
+{
+  #ifdef BOUNDCHECK
+  if(vec.length()==0)
+    PLERROR("IN int argmax(const TVec<T>& vec) vec has zero length");
+  #endif
+  T* v = vec.data();
+  int indexmax = 0;
+  T maxval = v[0];
+  for(int i=1; i<vec.length(); i++)
+    if(v[i]>maxval)
+      {
+        maxval = v[i];
+        indexmax = i;
+      }
+  return indexmax;
+}
+
+template<class T>
+int argmin(const TVec<T>& vec)
+{
+  #ifdef BOUNDCHECK
+  if(vec.length()==0)
+    PLERROR("IN int argmin(const TVec<T>& vec) vec has zero length");
+  #endif
+  T* v = vec.data();
+  int indexmin = 0;
+  T minval = v[0];
+  for(int i=1; i<vec.length(); i++)
+    if(v[i]<minval)
+      {
+        minval = v[i];
+        indexmin = i;
+      }
+  return indexmin;
+}
+
+template<class T>
+T pownorm(const TVec<T>& vec, double n)
+{
+  double result = 0.0;
+  T* v = vec.data();
+  if(n==1.0)
+    {
+      for(int i=0; i<vec.length(); i++)
+        {
+          T val = v[i];
+          if(val>=0)
+            result += val;
+          else
+            result -= val;
+        }
+    }
+  else if(n==2.0)
+    {
+      for(int i=0; i<vec.length(); i++)
+        {
+          T val = v[i];
+          result += val*val;
+        }
+    }
+  else if(n==0)
+    { result = vec.length(); }
+  else
+    {
+      for(int i=0; i<vec.length(); i++)
+        result += mypow(fabs(v[i]),n);
+    }
+  return result;
+}
+
+template<class T>
+inline T pownorm(const TVec<T>& vec) { return pownorm(vec,T(2.0)); }
+
+template<class T>
+T norm(const TVec<T>& vec, double n)
+{
+  if(n==T(1.0))
+    return pownorm(vec, T(1.0));
+  else if(n==T(2.0))
+    return sqrt(pownorm(vec,T(2.0)));
+  else
+    return mypow(pownorm(vec,n), T(1.0)/n);
+}
+
+template<class T>
+inline T norm(const TVec<T>& vec) { return norm(vec,T(2.0)); }
+
+template<class T>
+void normalize(const TVec<T>& vec, double n) 
+{ vec /= norm(vec,n); }
+
+template<class T>
+T powdistance(const TVec<T>& vec1, const TVec<T>& vec2, double n)
+{
+#ifdef BOUNDCHECK
+  if(vec1.length() != vec2.length())
+    PLERROR("In weighted_powdistance: vec1, vec2 should have the same length");
+#endif
+  T result = 0.0;
+  T* v1 = vec1.data();
+  T* v2 = vec2.data();
+  int length = vec1.length();
+  if(n==1.0) // L1 distance
+    {
+      for(int i=0; i<length; i++)
+        {
+          T diff = v1[i]-v2[i];
+          if(diff>=0)
+            result += diff;
+          else
+            result -= diff;
+        }
+    }
+  else if(n==2.0)
+    {
+      for(int i=0; i<length; i++)
+        {
+          T diff = v1[i]-v2[i];
+          result += diff*diff;
+        }
+    }
+  else
+    {
+      for(int i=0; i<length; i++)
+        {
+          T diff = v1[i]-v2[i];
+          if(diff<0)
+            diff = -diff;
+          result += mypow(diff,n);
+        }
+    }
+  return result;
+}
+
+template<class T>
+inline T powdistance(const TVec<T>& vec1, const TVec<T>& vec2)
+{ return powdistance(vec1, vec2, 2.0); }
+
+template<class T>
+T dist(const TVec<T>& vec1, const TVec<T>& vec2, double n)
+{
+  if(n==T(1.0))
+    return powdistance(vec1, vec2, T(1.0));
+  else if(n==T(2.0))
+    return sqrt(powdistance(vec1, vec2, T(2.0)));
+  else
+    return mypow(powdistance(vec1, vec2, n), T(1.0)/n);
+}
+
+template<class T>
+inline T L2distance(const TVec<T>& vec1, const TVec<T>& vec2) 
+{ return dist(vec1, vec2, 2.0); }
+
+template<class T>
+inline T L1distance(const TVec<T>& vec1, const TVec<T>& vec2) 
+{ return dist(vec1, vec2, 1.0); }
+
+
+template<class T>
+T weighted_powdistance(const TVec<T>& vec1, const TVec<T>& vec2, double n, const TVec<T>& weights)
+{
+#ifdef BOUNDCHECK
+  if(vec1.length() != weights.length() || vec2.length()!=weights.length())
+    PLERROR("In weighted_powdistance: vec1, vec2 and weights vector should have the same length");
+#endif
+  T result = 0.0;
+  T* v1 = vec1.data();
+  T* v2 = vec2.data();
+  T* w = weights.data();
+  int length = vec1.length();
+  if(n==1.0) // L1 distance
+    {
+      for(int i=0; i<length; i++)
+        {
+          T diff = w[i]*(v1[i]-v2[i]);
+          if(diff>=0)
+            result += diff;
+          else
+            result -= diff;
+        }
+    }
+  else if(n==2.0)
+    {
+      for(int i=0; i<length; i++)
+        {
+          T diff = w[i]*(v1[i]-v2[i]);
+          result += diff*diff;
+        }
+    }
+  else
+    {
+      for(int i=0; i<length; i++)
+        {
+          T diff = w[i]*(v1[i]-v2[i]);
+          if(diff<0)
+            diff = -diff;
+          result += mypow(diff,n);
+        }
+    }
+  return result;
+}
+
+template<class T>
+T weighted_distance(const TVec<T>& vec1, const TVec<T>& vec2, double n, const TVec<T>& weights)
+{
+  if(n==1.0)
+    return weighted_powdistance(vec1, vec2, 1.0, weights);
+  else if(n==2.0)
+    return sqrt(weighted_powdistance(vec1, vec2, 2.0, weights));
+  else
+    return mypow(weighted_powdistance(vec1, vec2, n, weights), 1.0/n);
+}
+
+
+template<class T>
+void operator-=(const TVec<T>& vec1, const TVec<T>& vec2)
+{
+  T* v1 = vec1.data();
+  T* v2 = vec2.data();
+  for(int i=0; i<vec1.length(); i++)
+    v1[i] -= v2[i];
+}
+
+template<class T>
+void operator*=(const TVec<T>& vec1, const TVec<T>& vec2)
+{
+  T* v1 = vec1.data();
+  T* v2 = vec2.data();
+  for(int i=0; i<vec1.length(); i++)
+    v1[i] *= v2[i];
+}
+
+template<class T>
+inline void operator/=(const TVec<T>& vec, T scalar) 
+{ vec *= T(1.0)/scalar; }
+
+template<class T>
+inline void operator/=(const TVec<T>& vec, int scalar)
+{ vec /= T(scalar); }
+
+template<class T>
+void compute_log(const TVec<T>& src, const TVec<T>& dest)
+{
+#ifdef BOUNDCHECK
+  if(src.length()!=dest.length())
+    PLERROR("In log, src and dest vectors must have the same length");
+#endif
+  T* ps = src.data();
+  T* pd = dest.data();
+  int n = src.length();
+  for(int i=0; i<n; i++)
+    *pd++ = log(*ps++);
+}
+
+template<class T>
+inline TVec<T> log(const TVec<T>& src)
+{ TVec<T> dest(src.length()); compute_log(src,dest); return dest; }
+
+template<class T>
+void compute_sqrt(const TVec<T>& src, const TVec<T>& dest)
+{
+#ifdef BOUNDCHECK
+  if(src.length()!=dest.length())
+    PLERROR("In sqrt, src and dest vectors must have the same length");
+#endif
+  T* ps = src.data();
+  T* pd = dest.data();
+  int n = src.length();
+  for(int i=0; i<n; i++)
+    *pd++ = sqrt(*ps++);
+}
+
+template<class T>
+inline TVec<T> sqrt(const TVec<T>& src)
+{ TVec<T> dest(src.length()); compute_sqrt(src,dest); return dest; }
+
+template<class T>
+void compute_safelog(const TVec<T>& src, const TVec<T>& dest)
+{
+#ifdef BOUNDCHECK
+  if(src.length()!=dest.length())
+    PLERROR("In safelog, src and dest vectors must have the same length");
+#endif
+  T* ps = src.data();
+  T* pd = dest.data();
+  int n = src.length();
+  for(int i=0; i<n; i++)
+    *pd++ = safelog(*ps++);
+}
+
+template<class T>
+inline TVec<T> safelog(const TVec<T>& src)
+{ TVec<T> dest(src.length()); compute_safelog(src,dest); return dest; }
+
+template<class T>
+void operator/=(const TVec<T>& vec1, const TVec<T>& vec2)
+{
+  T* v1 = vec1.data();
+  T* v2 = vec2.data();
+  for(int i=0; i<vec1.length(); i++)
+    v1[i] /= v2[i];
+}
+
+template<class T>
+void compute_tanh(const TVec<T>& src, const TVec<T>& dest)
+{
+#ifdef BOUNDCHECK
+  if(src.length()!=dest.length())
+    PLERROR("In tanh, src and dest vectors must have the same length");
+#endif
+  T* ps = src.data();
+  T* pd = dest.data();
+  int n = src.length();
+  for(int i=0; i<n; i++)
+    *pd++ = tanh(*ps++);
+}
+
+template<class T>
+inline TVec<T> tanh(const TVec<T>& src)
+{ TVec<T> dest(src.length()); compute_tanh(src,dest); return dest; }
+
+
+template<class T>
+void compute_fasttanh(const TVec<T>& src, const TVec<T>& dest)
+{
+#ifdef BOUNDCHECK
+  if(src.length()!=dest.length())
+    PLERROR("In fasttanh, src and dest vectors must have the same length");
+#endif
+  T* ps = src.data();
+  T* pd = dest.data();
+  int n = src.length();
+  for(int i=0; i<n; i++)
+    *pd++ = fasttanh(*ps++);
+}
+
+template<class T>
+inline TVec<T> fasttanh(const TVec<T>& src)
+{ TVec<T> dest(src.length()); compute_fasttanh(src,dest); return dest; }
+
+template<class T>
+void compute_sigmoid(const TVec<T>& src, const TVec<T>& dest)
+{
+#ifdef BOUNDCHECK
+  if(src.length()!=dest.length())
+    PLERROR("In sigmoid, src and dest vectors must have the same length");
+#endif
+  T* ps = src.data();
+  T* pd = dest.data();
+  int n = src.length();
+  for(int i=0; i<n; i++)
+    *pd++ = sigmoid(*ps++);
+}
+
+template<class T>
+inline TVec<T> sigmoid(const TVec<T>& src)
+{ TVec<T> dest(src.length()); compute_sigmoid(src,dest); return dest; }
+
+
+template<class T>
+void compute_fastsigmoid(const TVec<T>& src, const TVec<T>& dest)
+{
+#ifdef BOUNDCHECK
+  if(src.length()!=dest.length())
+    PLERROR("In fastsigmoid, src and dest vectors must have the same length");
+#endif
+  T* ps = src.data();
+  T* pd = dest.data();
+  int n = src.length();
+  for(int i=0; i<n; i++)
+    *pd++ = fastsigmoid(*ps++);
+}
+
+template<class T>
+inline TVec<T> fastsigmoid(const TVec<T>& src)
+{ TVec<T> dest(src.length()); compute_fastsigmoid(src,dest); return dest; }
+
+template<class T>
+void compute_inverse_sigmoid(const TVec<T>& src, const TVec<T>& dest)
+{
+#ifdef BOUNDCHECK
+  if(src.length()!=dest.length())
+    PLERROR("In inverse_sigmoid, src and dest vectors must have the same length");
+#endif
+  T* ps = src.data();
+  T* pd = dest.data();
+  int n = src.length();
+  for(int i=0; i<n; i++)
+    *pd++ = inverse_sigmoid(*ps++);
+}
+
+template<class T>
+inline TVec<T> inverse_sigmoid(const TVec<T>& src)
+{ TVec<T> dest(src.length()); compute_inverse_sigmoid(src,dest); return dest; }
+
+
+template<class T>
+void negateElements(const TVec<T>& vec)
+{
+  T* v = vec.data();
+  for(int i=0; i<vec.length(); i++)
+    v[i] = -v[i];
+}
+
+template<class T>
+void invertElements(const TVec<T>& vec)
+{
+  T* v = vec.data();
+  for(int i=0; i<vec.length(); i++)
+    v[i] = 1.0/v[i];
+}
+
+template<class T>
+void operator+=(const TVec<T>& vec, T scalar)
+{
+  T* v = vec.data();
+  for(int i=0; i<vec.length(); i++)
+    v[i] += scalar;
+}
+
+template<class T>
+void operator-=(const TVec<T>& vec, T scalar)
+{ vec += -scalar; }
+
+template<class T>
+TVec<T> operator-(TVec<T> vec)
+{
+  TVec<T> opposite(vec.length());
+  T *v=vec.data();
+  T *o=opposite.data();
+  for (int i=0;i<vec.length();i++)
+    o[i] = - v[i];
+  return opposite;
+}
+
+template<class T>
+T dot(const TVec<T>& vec1, const TVec<T>& vec2)
+{
+  #ifdef BOUNDCHECK
+  if(vec1.length()!=vec2.length())
+    PLERROR("In T operator*(const TVec<T>& vec1, const TVec<T>& vec2) (dot product) the 2 vecs must have the same length.");
+  #endif
+
+  T res = 0;
+  T* v1 = vec1.data();
+  T* v2 = vec2.data();
+  for(int i=0; i<vec1.length(); i++)
+    res += v1[i]*v2[i];
+  return res;
+}
+
+template<class T>
+TVec<T> operator-(const TVec<T>& v1, const TVec<T>& v2)
+{
+  if (v1.length() != v2.length())
+    PLERROR("TVec<T> - TVec<T>: different lengths %d and %d",
+          v1.length(), v2.length());
+  TVec<T> v(v1.length());
+  v << v1;
+  v-=v2;
+  return v;
+}
+
+template<class T>
+TVec<T> operator-(T v1, const TVec<T>& v2)
+{
+  TVec<T> v(v2.length());
+  v = -v2;
+  v += v1;
+  return v;
+}
+
+template<class T>
+TVec<T> operator-(const TVec<T>& v1, T v2)
+{
+  TVec<T> v(v1.length());
+  substract(v1,v2,v);
+  return v;
+}
+
+template<class T>
+TVec<T> operator+(const TVec<T>& v1, const TVec<T>& v2)
+{
+  if (v1.length() != v2.length())
+    PLERROR("TVec<T> + TVec<T>: different lengths %d and %d",
+          v1.length(), v2.length());
+  TVec<T> v(v1.length());
+  v << v1;
+  v+=v2;
+  return v;
+}
+
+template<class T>
+TVec<T> operator+(T v1, const TVec<T>& v2)
+{
+  TVec<T> v(v2.length());
+  add(v2,v1,v);
+  return v;
+}
+
+template<class T>
+TVec<T> operator+(const TVec<T>& v1, T v2)
+{
+  TVec<T> v(v1.length());
+  add(v1,v2,v);
+  return v;
+}
+
+template<class T>
+TVec<T> operator%(const TVec<T>& v1, const TVec<T>& v2)
+{
+  if (v1.length() != v2.length())
+    PLERROR("TVec<T> + TVec<T>: different lengths %d and %d",
+          v1.length(), v2.length());
+  TVec<T> v(v1.length());
+  v << v1;
+  v*=v2;
+  return v;
+}
+
+template<class T>
+TVec<T> operator*(T scalar, const TVec<T>& v)
+{
+  TVec<T> result(v.length());
+  multiply(v,scalar,result);
+  return result;
+}
+
+template<class T>
+TVec<T> operator*(const TVec<T>& v1, T v2)
+{
+  TVec<T> v(v1.length());
+  multiply(v1,v2,v);
+  return v;
+}
+
+template<class T>
+TVec<T> operator/(const TVec<T>& v1, const TVec<T>& v2)
+{
+  if (v1.length() != v2.length())
+    PLERROR("TVec<T> + TVec<T>: different lengths %d and %d",
+          v1.length(), v2.length());
+  TVec<T> v(v1.length());
+  v << v1;
+  v/=v2;
+  return v;
+}
+
+template<class T>
+TVec<T> operator/(T v1, const TVec<T>& v2)
+{
+  int n=v2.length();
+  TVec<T> v(n);
+  T* s2=v2.data();
+  T* d=v.data();
+  for (int i=0;i<n;i++)
+    d[i] = v1/s2[i];
+  return v;
+}
+
+template<class T>
+TVec<T> operator/(const TVec<T>& v1, T scalar)
+{
+  TVec<T> v(v1.length());
+  multiply(v1,T(1.0)/scalar,v);
+  return v;
+}
+
+template<class T>
+inline TVec<T> operator/(const TVec<T>& v1, int scalar)
+{ return v1/T(scalar); }
+
+template<class T>
+T logadd(const TVec<T>& vec) 
+{
+  T *p_x = vec.data();
+  T sum = LOG_INIT;
+  for (int i=0; i<vec.length(); i++, p_x++)
+    sum = logadd(sum, *p_x);
+  return sum;
+}
+
+template<class T>
+T output_margin(const TVec<T>& class_scores, int correct_class)
+{
+  T maxother = -FLT_MAX;
+  for(int i=0; i<class_scores.length(); i++)
+    {
+      if(i!=correct_class && class_scores[i]>maxother)
+        maxother = class_scores[i];
+    }
+  return class_scores[correct_class]-maxother;
+}
+
+template<class T>
+void fill_one_hot(const TVec<T>& vec, int hotpos, T coldvalue, T hotvalue)
+{
+#ifdef BOUNDCHECK
+  if(!vec)
+    PLERROR("In fill_one_hot given vec must have the correct size");
+  if(hotpos<0 || (vec.length()==1 && hotpos>1) || (vec.length()>1 && hotpos>=vec.length()))
+    PLERROR("In fill_one_hot given hotpos out of vec range");
+#endif
+  if(vec.length()==1)
+    vec[0] = (hotpos==0 ?coldvalue :hotvalue);
+  else
+    {
+      vec.fill(coldvalue);
+      vec[hotpos] = hotvalue;
+    }
+}
+
+template<class T>
+TVec<T> one_hot(int length, int hotpos, T coldvalue, T hotvalue)
+{
+  TVec<T> result(length);
+  fill_one_hot(result, hotpos, coldvalue, hotvalue);
+  return result;
+}
+
+template<class T>
+TVec<T> square(const TVec<T>& vec)
+{
+  int n = vec.length();
+  TVec<T> result(n);
+  T* v = vec.data();
+  T* r = result.data();
+  for(int i=0; i<n; i++)
+    r[i] = v[i]*v[i];
+  return result;
+}
+
+template<class T>
+TVec<T> squareroot(const TVec<T>& vec)
+{
+  int n = vec.length();
+  TVec<T> result(n);
+  T* v = vec.data();
+  T* r = result.data();
+  for(int i=0; i<n; i++)
+    r[i] = sqrt(v[i]);
+  return result;
+}
+
+template<class T>
+TVec<T> remove_missing(const TVec<T>& vec)
+{
+  int n = vec.length();
+  int n_non_missing = 0;
+  TVec<T> result(n);
+  T* v = vec.data();
+  T* r = result.data();
+  for(int i=0; i<n; i++) {
+    if (!is_missing(v[i]))
+      r[n_non_missing++] = v[i];
+  }
+  result.resize(n_non_missing);
+  return result;
+}
+
+template<class T>
+TVec<T> apply(const TVec<T>& vec, T (*func)(T))
+{
+  TVec<T> destination(vec.length());
+  apply(vec,destination,func);
+  return destination;
+}
+
+template<class T>
+void apply(const TVec<T>& source, TVec<T>& destination, T (*func)(T))
+{
+  int n=source.length();
+  if (n!=destination.length())
+    PLERROR("apply: source(%d) and destination(%d) TVec<T>'s must have same length",
+        n,destination.length());
+  T* s = source.data();
+  T* d = destination.data();
+  for(int i=0; i<n; i++)
+    d[i]=func(s[i]);
+}
+
+template<class T>
+void apply(const TVec<T>& src1,const TVec<T>& src2,TVec<T>& dest,T (*func)(T,T))
+{
+  int n=src1.length();
+  if (n!=dest.length() || n!=src2.length())
+    PLERROR("apply: src1, src2 and destination TVec<T>'s must have same length");
+  T* s1 = src1.data();
+  T* s2 = src2.data();
+  T* d = dest.data();
+  for(int i=0; i<n; i++)
+    d[i]=func(s1[i],s2[i]);
+}
+
+
+// Efficient mathematical operations (without memory allocation)
+
+// destination[i] = source1[i]*source2[i]
+template<class T>
+void multiply(const TVec<T>& source1, const TVec<T>& source2, TVec<T>& destination)
+{
+  int n=source1.length();
+  if (n!=source2.length())
+    PLERROR("multiply: two sources (l=%d and %d) must have same length",
+          n,source2.length());
+  if (n!=destination.length())
+    destination.resize(n);
+  T* s1=source1.data();
+  T* s2=source2.data();
+  T* d=destination.data();
+  for (int i=0;i<n;i++)
+    d[i] = s1[i]*s2[i];
+}
+
+// destination[i] = source1[i] + source2[i]*source3
+template<class T>
+void multiplyAdd(const TVec<T>& source1, const TVec<T>& source2, 
+                 T source3, TVec<T>& destination)
+{
+  int n=source1.length();
+  if (n!=source2.length())
+    PLERROR("multiply: two sources (l=%d and %d) must have same length",
+          n,source2.length());
+  if (n!=destination.length())
+    destination.resize(n);
+  T* s1=source1.data();
+  T* s2=source2.data();
+  T* d=destination.data();
+  for (int i=0;i<n;i++)
+    d[i] = s1[i]+s2[i]*source3;
+}
+
+// destination[i] = source1[i]+source2[i]
+template<class T>
+void add(const TVec<T>& source1, const TVec<T>& source2, TVec<T>& destination)
+{
+  int n=source1.length();
+  if (n!=source2.length())
+    PLERROR("add: two sources (l=%d and %d) must have same length",
+          n,source2.length());
+  if (n!=destination.length())
+    destination.resize(n);
+  T* s1=source1.data();
+  T* s2=source2.data();
+  T* d=destination.data();
+  for (int i=0;i<n;i++)
+    d[i] = s1[i]+s2[i];
+}
+
+// destination[i] = source1[i]+source2
+template<class T>
+void add(const TVec<T>& source1, T source2, TVec<T>& destination)
+{
+  int n=source1.length();
+  if (n!=destination.length())
+    destination.resize(n);
+  T* s1=source1.data();
+  T* d=destination.data();
+  for (int i=0;i<n;i++)
+    d[i] = s1[i]+source2;
+}
+
+template<class T>
+inline void substract(const TVec<T>& source1, T source2, TVec<T>& destination)
+{ add(source1,-source2,destination); }
+
+// destination[i] = source1[i]-source2[i]
+template<class T>
+void substract(const TVec<T>& source1, const TVec<T>& source2, TVec<T>& destination)
+{
+  int n=source1.length();
+  if (n!=source2.length())
+    PLERROR("substract: two sources (l=%d and %d) must have same length",
+          n,source2.length());
+  if (n!=destination.length())
+    destination.resize(n);
+  T* s1=source1.data();
+  T* s2=source2.data();
+  T* d=destination.data();
+  for (int i=0;i<n;i++)
+    d[i] = s1[i]-s2[i];
+}
+
+template<class T>
+inline void divide(const TVec<T>& source1, T source2, TVec<T>& destination)
+{ multiply(source1,1.0/source2,destination); }
+
+// destination[i] = source1[i]/source2[i]
+template<class T>
+void divide(const TVec<T>& source1, const TVec<T>& source2, TVec<T>& destination)
+{
+  int n=source1.length();
+  if (n!=source2.length())
+    PLERROR("divide: two sources (l=%d and %d) must have same length",
+          n,source2.length());
+  if (n!=destination.length())
+    destination.resize(n);
+  T* s1=source1.data();
+  T* s2=source2.data();
+  T* d=destination.data();
+  for (int i=0;i<n;i++)
+    d[i] = s1[i]/s2[i];
+}
+
+// destination[i] = source1/source2[i]
+template<class T>
+void divide(T source1, const TVec<T>& source2, TVec<T>& destination)
+{
+  int n=source2.length();
+  if (n!=destination.length())
+    destination.resize(n);
+  T* s2=source2.data();
+  T* d=destination.data();
+  for (int i=0;i<n;i++)
+    d[i] = source1/s2[i];
+}
+
+// destination[i] = max(source1[i],source2[i])
+template<class T>
+void max(const TVec<T>& source1, const TVec<T>& source2, TVec<T>& destination)
+{
+  int n=source1.length();
+  if (n!=source2.length())
+    PLERROR("max: two sources (l=%d and %d) must have same length",
+          n,source2.length());
+  if (n!=destination.length())
+    destination.resize(n);
+  T* s1=source1.data();
+  T* s2=source2.data();
+  T* d=destination.data();
+  for (int i=0;i<n;i++)
+    d[i] = MAX(s1[i],s2[i]);
+}
+
+// destination[i] = max(source1[i],source2)
+template<class T>
+void max(const TVec<T>& source1, T source2, TVec<T>& destination)
+{
+  int n=source1.length();
+  if (n!=destination.length())
+    destination.resize(n);
+  T* s1=source1.data();
+  T* d=destination.data();
+  for (int i=0;i<n;i++)
+    d[i] = MAX(s1[i],source2);
+}
+
+
+// destination[i] = min(source1[i],source2[i])
+template<class T>
+void min(const TVec<T>& source1, const TVec<T>& source2, TVec<T>& destination)
+{
+  int n=source1.length();
+  if (n!=source2.length())
+    PLERROR("min: two sources (l=%d and %d) must have same length",
+          n,source2.length());
+  if (n!=destination.length())
+    destination.resize(n);
+  T* s1=source1.data();
+  T* s2=source2.data();
+  T* d=destination.data();
+  for (int i=0;i<n;i++)
+    d[i] = MIN(s1[i],s2[i]);
+}
+
+// destination[i] = min(source1[i],source2)
+template<class T>
+void min(const TVec<T>& source1, T source2, TVec<T>& destination)
+{
+  int n=source1.length();
+  if (n!=destination.length())
+    destination.resize(n);
+  T* s1=source1.data();
+  T* d=destination.data();
+  for (int i=0;i<n;i++)
+    d[i] = MIN(s1[i],source2);
+}
+
+
+template<class T>
+TVec<T> softmax(const TVec<T>& x)
+{
+  TVec<T> y(x.length());
+  softmax(x,y);
+  return y;
+}
+
+template<class T>
+void tanh(const TVec<T>& x, TVec<T>& y)
+{
+  int n = x.length();
+#ifdef BOUNDCHECK
+  if (y.length()!=n)
+    PLERROR("tanh(TVec<T>,TVec<T>), second argument of length %d, first of length %d, should be =",
+          n,y.length());
+#endif
+  if (n>0)
+    {
+      T* yp = y.data();
+      T* xp = x.data();
+      for (int i=0;i<n;i++)
+        yp[i] = tanh(xp[i]);
+    }
+}
+
+template<class T>
+TVec<T> exp(TVec<T> vec) { return apply(vec,safeexp); }
+
+// return indices of non-zero elements
+template<class T>
+TVec<T> nonZeroIndices(TVec<T> v)
+{
+  int n=v.length();
+  TVec<T> indices(n);
+  int ni=0;
+  T* val = v.data();
+  T* indx= indices.data();
+  for (int i=0;i<n;i++)
+    if (val[i]!=0)
+      indx[ni++]=i;
+  indices.resize(ni);
+  return indices;
+}
+        
+// return indices of non-zero elements
+template<class T>
+TVec<T> nonZeroIndices(TVec<bool> v)
+{
+  int n=v.length();
+  TVec<T> indices(n);
+  int ni=0;
+  bool* val = v.data();
+  T* indx= indices.data();
+  for (int i=0;i<n;i++)
+    if (val[i])
+      indx[ni++]=i;
+  indices.resize(ni);
+  return indices;
+}
+
+// Set the complement indices, i.e. if 0<=i<n is not an element
+// of the indices vector it is put in the complement_indices vector.
+template<class T>
+void complement_indices(TVec<T>& indices, int n, 
+                        TVec<T>& complement_indices,
+                        TVec<T>& buffer)
+{
+  int ni=indices.length();
+  T* ind = indices.data();
+  T* cind = complement_indices.data();
+  buffer.resize(n);
+  buffer.fill(0);
+  T* buf=buffer.data();
+  for (int i=0;i<ni;i++)
+    buf[(int)ind[i]]=1.0;
+  for (int i=0,j=0;i<n;i++)
+    if (buf[i]==0.0)
+      cind[j++]=i;
+}
+
+// dest[i] = 1 if src[i]==v, 0 otherwise
+template<class T>
+void equals(const TVec<T>& src, T v, TVec<T>& dest)
+{
+  T* s=src.data();
+  T* d=dest.data();
+  int n=src.length();
+#ifdef BOUNDCHECK
+  if (n!=dest.length())
+    PLERROR("equals(TVec<T>(%d),T,TVec<T>(%d)) args of unequal lengths",
+          n,dest.length());
+#endif
+  for (int i=0;i<n;i++)
+    if (s[i]==v) d[i]=1.0; else d[i]=0.0;
+}
+
+// dest[i] = 1 if first[i] > second[i], 0 otherwise
+template<class T>
+void isLargerThan(const TVec<T>& first, const TVec<T>& second, TVec<T>& dest)
+{
+  T* f=first.data();
+  T* s=second.data();
+  T* d=dest.data();
+  int n=first.length();
+  if(n!=second.length() || n!=dest.length())
+    PLERROR("isLargerThan(TVec<T>(%d), TVec<T>(%d), TVec<T>(%d)) args of unequal length", 
+          n, second.length(), dest.length());
+  for (int i=0; i<n; i++)
+    d[i] = f[i] > s[i];
+}
+
+// dest[i] = 1 if first[i] >= second[i], 0 otherwise
+template<class T>
+void isLargerThanOrEqualTo(const TVec<T>& first, const TVec<T>& second, TVec<T>& dest)
+{
+  T* f=first.data();
+  T* s=second.data();
+  T* d=dest.data();
+  int n=first.length();
+  if(n!=second.length() || n!=dest.length())
+    PLERROR("isLargerThan(TVec<T>(%d), TVec<T>(%d), TVec<T>(%d)) args of unequal length", 
+          n, second.length(), dest.length());
+  for (int i=0; i<n; i++)
+    d[i] = f[i] >= s[i];
+}
+
+// dest[i] = 1 if first[i] < second[i], 0 otherwise
+template<class T>
+void isSmallerThan(const TVec<T>& first, const TVec<T>& second, TVec<T>& dest)
+{
+  T* f=first.data();
+  T* s=second.data();
+  T* d=dest.data();
+  int n=first.length();
+  if(n!=second.length() || n!=dest.length())
+    PLERROR("isLargerThan(TVec<T>(%d), TVec<T>(%d), TVec<T>(%d)) args of unequal length", 
+          n, second.length(), dest.length());
+  for (int i=0; i<n; i++)
+    d[i] = f[i] < s[i];
+}
+  
+// dest[i] = 1 if first[i] <= second[i], 0 otherwise
+template<class T>
+void isSmallerThanOrEqualTo(const TVec<T>& first, const TVec<T>& second, TVec<T>& dest)
+{
+  T* f=first.data();
+  T* s=second.data();
+  T* d=dest.data();
+  int n=first.length();
+  if(n!=second.length() || n!=dest.length())
+    PLERROR("isLargerThan(TVec<T>(%d), TVec<T>(%d), TVec<T>(%d)) args of unequal length", 
+          n, second.length(), dest.length());
+  for (int i=0; i<n; i++)
+    d[i] = f[i] <= s[i];
+}
+
+// dest[i] = if_vec[i] ? then_vec[i] : else_vec[i];
+template<class T>
+void ifThenElse(const TVec<T>& if_vec, const TVec<T>& then_vec, const TVec<T>& else_vec, TVec<T>& dest)
+{
+  T* i_=if_vec.data();
+  T* t_=then_vec.data();
+  T* e_=else_vec.data();
+  T* d_=dest.data();  
+  int n=if_vec.length(); 
+  if (n!=then_vec.length() || n!=else_vec.length())
+    PLERROR("ifThenElse(TVec<T>(%d), TVec<T>(%d), TVec<T>(%d), TVec<T>(%d)) args of unequal lengths", 
+          n, then_vec.length(), else_vec.length(), dest.length());
+  for (int i=0;i<n;i++)
+    d_[i] = i_[i] ? t_[i] : e_[i];
+}
+
+// returns the number of times that src[i] == value
+template<class T>
+int vec_counts(const TVec<T>& src, T value)
+{
+  int len = src.length();
+  int n = 0;
+  T *p = src.data();
+  for (int i=0; i<len; i++, p++)
+    if (*p == value)
+      n++;
+  return n;
+}
+
+// returns the position of f in src (-1 if f is not found)
+template<class T>
+int vec_find(const TVec<T>& src, T f)
+{
+  int len = src.length();
+  T *p = src.data();
+  for (int i=0; i<len; i++, p++)
+    if (*p == f)
+      return(i);
+  return -1;
+}
+
+// returns the position k of x in src such that src[k] <= x < src[k+1]
+// (returns -1 if x < src[0]  or  N-1 if x >= src[N-1])
+// BE CAREFULL: src must be sort BEFORE the fonction binary_search is called
+template<class T>
+int binary_search(const TVec<T>& src, T x)
+{
+  const int len = src.length();
+
+  if (x < src[0]) return -1;
+  else if (x >= src[len-1]) return len-1;
+
+  int start = 0;
+  int end = len-1;
+  for (;;) {
+    int k = (start+end)/2;
+    if (x >= src[k]  &&  x < src[k+1]) {
+      if (src[k] == src[k+1]) {
+        start = k;
+        end = k+1;
+        while (start>0  &&  src[start-1]==src[start]) start--;
+        while (end<len-1  &&  src[end]==src[end+1]) end++;
+        k = (start+end)/2;
+      }
+      return k;
+    }
+    else if (x > src[k])
+      start = k+1;
+    else
+      end = k;
+  }
+}
+
+template<class T>
+T estimatedCumProb(T x, TVec<T> bins)
+{
+  const int nbins = bins.length();
+  const T one_over_nbins = 1.0/(T)nbins;
+
+  int k = binary_search(bins, x);
+
+  if (k == -1)
+    return 0.25*one_over_nbins;
+  else if (k == nbins-1)
+    return 1.0 - 0.25*one_over_nbins;
+  else if (bins[k] != bins[k+1])
+    return one_over_nbins*(0.5 + k + (x-bins[k])/(bins[k+1]-bins[k]));
+  else
+    return one_over_nbins*(0.5 + k);
+}
+
+// returns the index of the kth ordered element of v
+// (dumb algorithm, takes time in k*n )
+template<class T>
+int positionOfkthOrderedElement(const TVec<T>& vec, int k)
+{
+#ifdef BOUNDCHECK
+  if(k<0 || k>=vec.length())
+    PLERROR("In positionOfkthOrderedElement, k out of bounds");
+#endif
+  
+  T* v = vec.data();
+
+  T minval = -FLT_MAX;
+  int pos = -1;
+  int l=0;
+
+  while(l<=k)
+    {
+      int nelements_equal_to_newminval = 0;
+      T newminval = FLT_MAX;
+      for(int i=0; i<vec.length(); i++)
+        {
+          if(v[i]>minval)
+            {
+              if(v[i]<newminval)
+                {
+                  newminval = v[i];
+                  nelements_equal_to_newminval = 1;
+                  pos = i;
+                }
+              else if(v[i]==newminval)
+                nelements_equal_to_newminval++;
+            }
+        }
+      l += nelements_equal_to_newminval;
+      minval = newminval;
+    }
+
+  return pos;
+}
+
+//!  returns the value of the kth ordered element of v
+//!  k can take values 0 to vec.length()-1
+template<class T>
+inline T kthOrderedElement(const TVec<T>& vec, int k) 
+{ return vec[positionOfkthOrderedElement(vec,k)]; }
+
+//!  returns the median value of vec
+template<class T>
+inline T median(const TVec<T>& vec)
+{ return kthOrderedElement(vec, (vec.length()-1)/2); } 
+
+
+//-------------- These were previouslty methods of TVec ----------------------------------
+
+
+  //! Sorts the elements of vec in place
+  template<class T>
+  inline void sortElements(const TVec<T>& vec) 
+  { sort(vec.begin(),vec.end()); }
+
+  //!  find the element at position pos that would result from a sort
+  //!  and put all elements (not in order!) lower than v[pos] in v[i<pos].
+  template<class T>
+  T selectAndOrder(const TVec<T>& vec, int pos)
+  {
+        if (pos<0 || pos>=vec.length()) PLERROR("Bad position (%d)", pos);
+ 
+        int l=0;
+        int h=vec.length()-1;
+        T* v = vec.data();
+ 
+        while (l<h)
+        {
+          T p = v[(l+h)/2];
+          int x = l;
+          int y = h;
+ 
+          do
+          {
+            while (v[x]<p) x++;
+            while (p<v[y]) y--;
+            if (x<=y)
+            {
+              PLearn::swap(v[x],v[y]);
+              x++;
+              y--;
+            }
+          } while (x<=y);
+ 
+          if (pos>=x) l=x;
+          else h=x-1;
+        }
+ 
+        return v[l];
+    }
+
+    /*!     returns a vector of length q+1 that contains the q quantiles
+      of the sorted vector v and the last value corresponds
+      to the last value of the vector vec.
+     */
+  template<class T>
+    TVec<T> getQuantiles(const TVec<T>& vec, int q)
+    {
+      int l = vec.length();
+      T* v = vec.data();
+      TVec<T> w(q+1);
+      T linvq = T(l)/q;
+      for(int i=0;i<q;i++) w[i] = v[int(linvq*i)];
+      w[q]=v[l-1];
+      return w;
+    }
+
+    //!  returns a vector composed of the values of v that are different
+    //!  from 0;
+  template<class T>
+    TVec<T> nonZero(const TVec<T>& vec)
+    {
+      T *v =vec.data();
+      int n=0;
+      for(int i=0;i<vec.length(); i++) if (v[i]!=0) n++;
+      TVec<T> w(n);
+      int j=0;
+      for(int i=0;i<vec.length(); i++) if (v[i]!=0) w[j++]=v[i];
+      return(w);
+    }
+
+    //!  returns a vector composed of the values of v that are greater
+    //!  than 0;
+  template<class T>
+    TVec<T> positiveValues(const TVec<T>& vec)
+    {
+      T *v =vec.data();
+      int n=0;
+      for(int i=0;i<vec.length(); i++) if (v[i]>0) n++;
+      TVec<T> w(n);
+      int j=0;
+      for(int i=0;i<vec.length(); i++) if (v[i]>0) w[j++]=v[i];
+      return(w);
+    }
+ 
+    /*!  returns the position of the element in the vector that is closest to value
+      If is_sorted_vec is true the procedure assumes the vector's elements
+      are sorted in ascending order and uses a dichotomy search.
+    */
+  template<class T>
+    int positionOfClosestElement(const TVec<T>& vec, const T& value, bool is_sorted_vec=false)
+    {
+      T* v = vec.data();
+      if (is_sorted_vec) // dichotomy search
+      {
+        int pos = binary_search(vec, value);
+        if (pos == -1) return 0;
+        else if (pos == vec.length()-1) return pos;
+        T dist1 = fabs(v[pos]-value);
+        T dist2 = fabs(v[pos+1]-value);
+        if (dist1 <= dist2) return pos;
+        else return pos+1;
+      }
+      else // linear search
+      {
+        int pos_of_closest = 0;
+        T dist_to_closest = fabs(v[0]-value);
+        for(int i=1; i<vec.length(); i++)
+        {
+          T dist = fabs(v[i]-value);
+          if(dist<dist_to_closest)
+          {
+            pos_of_closest = i;
+            dist_to_closest = dist;
+          }
+        }
+        return pos_of_closest;
+      }
+    }
+
+
+/*!  project the Vec x on the linear subspace ORTHOGONAL to the
+  subspace defined by the rows of the orthonormal_subspace matrix, 
+  which are ASSUMED to be ORTHORNORMAL. The method is
+  based on substracting for each row v of the matrix
+  the quantity v * x . v.
+ */
+template <class T>
+void projectOnOrthogonalSubspace(const TVec<T>& vec, const TMat<T>& orthonormal_subspace)
+{
+  for (int i=0;i<orthonormal_subspace.length();i++)
+  {
+    TVec<T> vi = orthonormal_subspace(i);
+    T dp = dot(vec,vi);
+    multiplyAcc(vec, vi,-dp);
+  }
+}
+
+  template<class T>
+  void operator*=(const TVec<T>& vec, T factor)
+  {
+    T* p = vec.data();
+    int l = vec.length();
+    for (int i=0;i<l;i++) 
+      *p++ *= factor;
+  }
+
+//!  element-wise +
+template<class T>
+inline void operator+=(const TVec<T>& vec1, const TVec<T>& vec2)
+{
+  T* v1 = vec1.data();
+  T* v2 = vec2.data();
+  int l = vec1.length();
+  for(int i=0; i<l; i++)
+    *v1++ += *v2++;
+}
+
+
+    //!  vec[i] += x[i]*scale;
+  template<class T>
+    void multiplyAcc(const TVec<T>& vec, const TVec<T>& x, T scale)
+    {
+      int n=x.length();
+      if (vec.length()!=n)
+        PLERROR("TVec::multiplyAcc this has length_=%d and x has length_=%d", vec.length(),n);
+      T* p=vec.data();
+      T* xp=x.data();
+      for (int i=0;i<n;i++)
+        *p++ += scale * *xp++;
+    }
+
+  //!  TVec[i] = (1-alpha)*TVec[i]+x[i]*alpha;
+  template<class T>
+  void exponentialMovingAverageUpdate(const TVec<T>& vec, const TVec<T>& x, T alpha)
+     {
+       int n=x.length();
+       if (vec.length()!=n)
+         PLERROR("TVec::exponentialMovingAverageUpdate length_=%d and x has length_=%d",
+             vec.length(),n);
+       T* p=vec.data();
+       T* xp=x.data();
+       T one_minus_alpha = 1-alpha;
+       for (int i=0;i<n;i++)
+         p[i] = one_minus_alpha*p[i] + alpha*xp[i];
+     }
+
+    //!  TVec[i] = (1-alpha)*TVec[i]+(x[i]-mu[i])^2*alpha;
+  template<class T>
+    void exponentialMovingVarianceUpdate(const TVec<T>& vec, const TVec<T>& x, const TVec<T>& mu, T alpha)
+    {
+      int n=x.length();
+      if (vec.length()!=n || vec.length()!=mu.length())
+        PLERROR("TVec::exponentialVarianceAverageUpdate length_=%d and"
+            "x has length_=%d, mu has length() %d",
+            vec.length(),n,mu.length());
+      T* p=vec.data();
+      T* xp=x.data();
+      T* mp=mu.data();
+      T one_minus_alpha = 1-alpha;
+      for (int i=0;i<n;i++)
+      {
+        T dif = (xp[i]-mp[i]);
+        p[i] = one_minus_alpha*p[i] + alpha*dif*dif;
+      }
+    }
+
+
+    //!  TVec[i] = (1-alpha)*TVec[i]+x[i]^2*alpha;
+  template<class T>
+    void exponentialMovingSquareUpdate(const TVec<T>& vec, const TVec<T>& x, T alpha)
+    {
+      int n=x.length();
+      if (vec.length()!=n)
+        PLERROR("TVec::exponentialMovingAverageUpdate length_=%d and x has length_=%d",
+            vec.length(),n);
+      T* p=vec.data();
+      T* xp=x.data();
+      T one_minus_alpha = 1-alpha;
+      for (int i=0;i<n;i++)
+      {
+        T xpi = xp[i];
+        p[i] = one_minus_alpha*p[i] + alpha*xpi*xpi;
+      }
+    }
+
+    //!  TVec[i] += x[i]*y[i];
+  template<class T>
+    void multiplyAcc(const TVec<T>& vec, const TVec<T>& x, const TVec<T>& y)
+    {
+      int n=x.length();
+      if (vec.length()!=n || y.length()!=n)
+        PLERROR("TVec::multiplyAcc, this+=x*y: length_=%d, x.length_=%d, y.length_=%d",
+            vec.length(),n,y.length());
+      T* p=vec.data();
+      T* xp=x.data();
+      T* yp=y.data();
+      for (int i=0;i<n;i++)
+        p[i] += xp[i] * yp[i];
+    }
+
+    //!  TVec[i] += x[i]*x[i]*scale;
+  template<class T>
+    void squareMultiplyAcc(const TVec<T>& vec, const TVec<T>& x, T scale)
+    {
+      int n=x.length();
+      if (vec.length()!=n)
+        PLERROR("TVec::squareMultiplyAcc this has length_=%d and x has length_=%d", vec.length(),n);
+      T* p=vec.data();
+      T* xp=x.data();
+      for (int i=0;i<n;i++)
+      {
+        T xpi = xp[i];
+        p[i] += scale * xpi * xpi;
+      }
+    }
+
+    //!  TVec[i] += x[i]*x[i];
+  template<class T>
+    void squareAcc(const TVec<T>& vec, const TVec<T>& x)
+    {
+      int n=x.length();
+      if (vec.length()!=n)
+        PLERROR("TVec::squareAcc this has length_=%d and x has length_=%d", vec.length(),n);
+      T* p=vec.data();
+      T* xp=x.data();
+      for (int i=0;i<n;i++)
+      {
+        T xpi = xp[i];
+        p[i] += xpi * xpi;
+      }
+    }
+
+    //!  Tvec[i] -= x[i]*x[i];
+  template<class T>
+    void squareSubtract(const TVec<T>& vec, const TVec<T>& x)
+    {
+      int n=x.length();
+      if (vec.length()!=n)
+        PLERROR("TVec::squareDiff this has length_=%d and x has length_=%d", vec.length(),n);
+      T* p=vec.data();
+      T* xp=x.data();
+      for (int i=0;i<n;i++)
+      {
+        T xpi = xp[i];
+        p[i] -= xpi * xpi;
+      }
+    }
+
+    //!  TVec[i] += (x[i]-y[i])^2*scale;
+  template<class T>
+    void diffSquareMultiplyAcc(const TVec<T>& vec, const TVec<T>& x, const TVec<T>& y, T scale)
+    {
+      int n=x.length();
+      if (vec.length()!=n || y.length()!=n)
+        PLERROR("TVec::diffSquareMultiplyAcc this.length_=%d, x.length_=%d, y.length_=%d",
+            vec.length(),n,y.length());
+      T* p=vec.data();
+      T* xp=x.data();
+      T* yp=y.data();
+      for (int i=0;i<n;i++)
+      {
+        T diff = xp[i]-yp[i];
+        p[i] += scale * diff * diff;
+      }
+    }
+
+
+//!  result[i] = sum_j m[i,j] * v[j]
+template <class T>
+void product(const TVec<T>& vec, const TMat<T>& m, const TVec<T>& v)
+{
+  int l=m.width();
+  if (l!=v.length() || m.length()!=vec.length())
+    PLERROR("product(TVec, TMat,TVec), incompatible arguments %dx%d times %d -> %d",
+        m.length(),m.width(), v.length(),vec.length());
+  T *rp = vec.data();
+  T *vp = v.data();
+  for (int i=0;i<vec.length();i++)
+  {
+    const T* mi = m[i];
+    T s = 0;
+    for (int j=0;j<l;j++)
+      s += mi[j] * vp[j];
+    rp[i] = s;
+  }
+}
+
+//!  result[i] += sum_j m[i,j] * v[j]
+template <class T>
+void productAcc(const TVec<T>& vec, const TMat<T>& m, const TVec<T>& v)
+{
+  int l = m.length();
+  int w = m.width();
+#ifdef BOUNDCHECK
+  if (w!=v.length() || l!=vec.length())
+    PLERROR("TVec::productAcc(TMat,TVec), incompatible arguments %dx%d times %d -> %d",
+        m.length(),m.width(), v.length(),vec.length());
+#endif
+  T* rp = vec.data();
+  T* mp = m.data();
+  T* vdata = v.data();
+  int deltam = m.mod()-m.width();
+  for (int i=0;i<l;i++)
+  {
+    T *vp = vdata;
+    T s = *rp;
+    for (int j=0;j<w;j++)
+      s += *mp++ * *vp++;
+    *rp++ = s;
+    mp += deltam;
+  }
+}
+
+//! vec[i] = sum_i m[j,i] * v[j]
+//! Equivalently: rowvec(vec) = rowvec(v) . m
+//! Equivalently: columnvec(vec) = transpose(m).columnvec(v)
+template <class T>
+void transposeProduct(const TVec<T>& vec, const TMat<T>& m, const TVec<T>& v)
+{
+  int l=m.length();
+  if (l!=v.length() || m.width()!=vec.length())
+    PLERROR("TVec::transposeProduct(TMat,TVec), incompatible arguments %dx%d' times %d -> %d",
+        m.length(),m.width(), v.length(),vec.length());
+  T *rp = vec.data();
+  T *vp = v.data();
+  vec.clear();
+  for (int j=0;j<l;j++)
+  {
+    const T* mj = m[j];
+    T vj = vp[j];
+    for (int i=0;i<vec.length();i++)
+      rp[i] += mj[i] * vj;
+  }
+}
+
+//!  result[i] += sum_j m[j,i] * v[j]
+template <class T>
+void transposeProductAcc(const TVec<T>& vec, const TMat<T>& m, const TVec<T>& v)
+{
+  int l=m.length();
+  int w=m.width();
+  if (l!=v.length() || w!=vec.length())
+    PLERROR("TVec::transposeProductAcc(TMat,TVec), incompatible arguments %dx%d' times %d -> %d",
+        m.length(),m.width(), v.length(),vec.length());
+  T* vecdata = vec.data();
+  T* vp = v.data();
+  T* mp = m.data();
+  int deltam = m.mod()-m.width();
+  for (int j=0;j<l;j++)
+  {
+    T vj = *vp++;
+    
+    /*
+    T* rp = vecdata;
+    for (int i=0;i<w;i++)
+      *rp++ += vj * *mp++;
+    mp += deltam;
+    */
+    
+    if(vj!=0)
+      {
+        if(vj==1)
+          {
+            T* rp = vecdata;
+            for (int i=0;i<w;i++)
+              *rp++ += *mp++;
+            mp += deltam;
+          }
+        else
+          {
+            T* rp = vecdata;
+            for (int i=0;i<w;i++)
+              *rp++ += vj * *mp++;
+            mp += deltam;
+          }
+      }
+    else mp += w + deltam;
+  }
+}
+
+template <class T>
+void compressedTransposeProductAcc(const TVec<T>& vec, const TMat<T>& m, char* comprbufvec)
+{
+  cout<<"using kasjdlkadja"<<endl;
+  union { double d; char c[8]; } uni;
+  int l=m.length(),n, idx=0;
+  unsigned char mode;
+  cout<<"l="<<l<<endl;
+  for(int i=0;i<l;i++)
+    cout<<i<<":"<<char(comprbufvec[i])<<endl;
+  while(l>0)
+    {
+      read_compr_mode_and_size_ptr(comprbufvec, mode, n);
+      if(mode==0 || mode==1)
+        {
+          idx+=n;
+          cout<<"0x"<<n<<" ";
+          l-=n;
+          if(mode==1)
+            {         
+              --l; 
+              vec+=m(idx++); // !!!!!!
+              cout<<"1 ";
+            }
+        }
+      else if(mode==2)
+        {
+          while(n--)
+            {
+              cout<<double(*comprbufvec)<<" "<<endl;
+                vec+= m(idx++) * double(*comprbufvec++); // !!!!!!
+
+              --l;
+            }
+        }
+      else if(mode==3)
+        {
+          while(n--)
+            {
+              memcpy(uni.c,comprbufvec,sizeof(double));
+              cout<<double(uni.d)<<" "<<endl;
+              comprbufvec+=8;
+              vec+= m(idx++) * uni.d; // !!!!!!!
+              --l;
+            }
+        }
+      else 
+        PLERROR("BUG IN binread_compressed: mode is only 2 bits, so how can it be other than 0,1,2,3 ?");
+    }
+
+  if(l!=0)
+    PLERROR("In compressed_dot_product : l is not 0 at exit of function, wrong data?");
+}
+
+
+
+// ---------- these were previously methods of TMat ---------------
+
+//! return dot product of i-th row with vector v
+template<class T>
+T matRowDotVec(const TMat<T>& mat, int i, const TVec<T> v)
+{
+#ifdef BOUNDCHECK
+  if (v.length()!=mat.width())
+    PLERROR("dotRow(%d,v), v.length_=%d != matrix width_=%d",
+        i,v.length(),mat.width());
+#endif
+  T s = 0;
+  T* rowi = rowdata(i);
+  T* v_=v.data();
+  for (int j=0;j<mat.width();j++)
+    s += rowi[j] * v_[j];
+  return s;
+}
+
+//! return dot product of j-th column with vector v
+template<class T>
+T matColumnDotVec(const TMat<T>& mat, int j, const TVec<T> v)
+{
+#ifdef BOUNDCHECK
+  if (v.length()!=mat.length())
+    PLERROR("dotColumn(%d,v), v.length_=%d != matrix length_=%d",
+        j,v.length(),mat.length());
+#endif
+  T s = 0;
+  T* colj = mat.data()+j;
+  T* v_=v.data();
+  for (int i=0;i<mat.length();i++, colj+=mat.mod())
+    s += *colj * v_[i];
+  return s;
+}
+
+//! return dot products of i-th row of A with i-th row of B in vector v
+template<class T>
+void matRowsDots(TVec<T> v, const TMat<T>& A, const TMat<T>& B)
+{
+#ifdef BOUNDCHECK
+  if (A.length()!=v.length())
+    PLERROR("matRowDotsVec(v,A,B): v.length_=%d != A.length_=%d",
+            v.length(),A.length());
+  if (A.length()!=B.length())
+    PLERROR("matRowDotsVec(v,A,B): A.length_=%d != B.length_=%d",
+            A.length(),B.length());
+  if (A.width()!=B.width())
+    PLERROR("matRowDotsVec(v,A,B): A.width_=%d != B.width_=%d",
+            A.width(),B.width());
+#endif
+  int l=A.length(), w=A.width();
+  T* vi = v.data();
+  for (int i=0;i<l;i++)
+  {
+    T s = 0;
+    T* Aij = A[i];
+    T* Bij = B[i];
+    for (int j=0;j<w;j++)
+      s += *Aij++ * *Bij++;
+    *vi++ = s;
+  }
+}
+
+//! return dot products of i-th row of A with i-th row of B in vector v
+template<class T>
+void matRowsDotsAcc(TVec<T> v, const TMat<T>& A, const TMat<T>& B)
+{
+#ifdef BOUNDCHECK
+  if (A.length()!=v.length())
+    PLERROR("matRowDotsVec(v,A,B): v.length_=%d != A.length_=%d",
+            v.length(),A.length());
+  if (A.length()!=B.length())
+    PLERROR("matRowDotsVec(v,A,B): A.length_=%d != B.length_=%d",
+            A.length(),B.length());
+  if (A.width()!=B.width())
+    PLERROR("matRowDotsVec(v,A,B): A.width_=%d != B.width_=%d",
+            A.width(),B.width());
+#endif
+  int l=A.length(), w=A.width();
+  T* vi = v.data();
+  for (int i=0;i<l;i++)
+  {
+    T s = 0;
+    T* Aij = A[i];
+    T* Bij = B[i];
+    for (int j=0;j<w;j++)
+      s += *Aij++ * *Bij++;
+    *vi++ += s;
+  }
+}
+
+template<class T>
+  void makeItSymmetric(const TMat<T>& mat, T max_dif)
+  {
+    if (!mat.isSquare())
+      PLERROR("at void makeItSymmetric, the matrix is not even square\n");
+    T dif;
+    T value;
+    bool warning_flag = false;
+    for (int i=0; i<mat.length()-1 ; i++)
+      for (int j=i+1; j<mat.width(); j++)
+      {
+        dif = std::abs(mat[i][j] - mat[j][i]);
+        if (dif > max_dif)
+        {
+          max_dif = dif;
+          warning_flag = true;
+        }
+        value = (mat[i][j] + mat[j][i])/2;
+        mat[i][j] = value; mat[j][i] = value; 
+      }
+    if (warning_flag)
+      PLWARNING("At void makeItSymmetric, the maximum difference %f is not affordable\n", max_dif);
+  }
+
+// y[i] = sum_j A[i,j] x[j]
+
+template<class T>
+void product(const TMat<T>& mat, const TVec<T>& x, TVec<T>& y)
+{
+#ifdef BOUNDCHECK
+  if (mat.length()!=y.length() || mat.width()!=x.length())
+    PLERROR("TMat(%d,%d)::product(TVec& x(%d),TVec& y(%d)), incompatible arguments",
+          mat.length(),mat.width(),x.length(),y.length());
+#endif
+  T* x_=x.data();
+  T* y_=y.data();
+  for (int i=0;i<mat.length();i++)
+  {
+    T* Ai = mat[i];
+    T yi = 0;
+    for (int j=0;j<mat.width();j++)
+      yi += Ai[j] * x_[j];
+    y_[i]=yi;
+  }
+}
+
+  // result[i,j] = sum_k m1[i,k] * m2[k,j]
+template<class T>
+  void product(const TMat<T>& mat, const TMat<T>& m1, const TMat<T>& m2)
+  {
+#ifdef BOUNDCHECK
+    if (m1.width()!=m2.length() || mat.length()!=m1.length() || mat.width()!=m2.width())
+      PLERROR("product(Mat,Mat), incompatible arguments %dx%d= %dx%d times %dx%d",
+          mat.length(),mat.width(),m1.length(),m1.width(), m2.length(),m2.width());
+#endif
+    int n=m1.length();
+    int m=m1.width();
+    int l=m2.width();
+    for (int i=0;i<n;i++)
+    {
+      const T* m1i = m1[i];
+      T* mi = mat[i];
+      for (int j=0;j<l;j++)
+      {
+        T s=0;
+        const T* m2kj = m2.data()+j;
+        for (int k=0;k<m;k++,m2kj+=m2.mod())
+          s += m1i[k] * (*m2kj);
+        mi[j] = s;
+      }
+    }
+  }
+
+  // result[i,j] += sum_k m1[i,k] * m2[k,j]
+template<class T>
+  void productAcc(const TMat<T>& mat, const TMat<T>& m1, const TMat<T>& m2)
+  {
+#ifdef BOUNDCHECK
+    if (m1.width()!=m2.length() || mat.length()!=m1.length() || mat.width()!=m2.width())
+      PLERROR("productAcc(Mat,Mat), incompatible arguments %dx%d= %dx%d times %dx%d",
+          mat.length(),mat.width(),m1.length(),m1.width(), m2.length(),m2.width());
+#endif
+    int n=m1.length();
+    int m=m1.width();
+    int l=m2.width();
+    for (int i=0;i<n;i++)
+    {
+      const T* m1i = m1[i];
+      T* mi = mat[i];
+      for (int j=0;j<l;j++)
+      {
+        T s=0;
+        T* m2kj = m2.data()+j;
+        for (int k=0;k<m;k++,m2kj+=m2.mod())
+          s += m1i[k] * (*m2kj);
+        mi[j] += s;
+      }
+    }
+  }
+
+  // result[i,j] += sum_k m1[i,k] * m2[k,j]^2
+template<class T>
+  void product2Acc(const TMat<T>& mat, const TMat<T>& m1, const TMat<T>& m2)
+  {
+#ifdef BOUNDCHECK
+    if (m1.width()!=m2.length() || mat.length()!=m1.length() || mat.width()!=m2.width())
+      PLERROR("product2Acc(Mat,Mat), incompatible arguments %dx%d= %dx%d times %dx%d",
+          mat.length(),mat.width(),m1.length(),m1.width(), m2.length(),m2.width());
+#endif
+    int n=m1.length();
+    int m=m1.width();
+    int l=m2.width();
+    for (int i=0;i<n;i++)
+    {
+      const T* m1i = m1[i];
+      T* mi = mat[i];
+      for (int j=0;j<l;j++)
+      {
+        T s=0;
+        T* m2kj = m2.data()+j;
+        for (int k=0;k<m;k++,m2kj+=m2.mod())
+          s += m1i[k] * (*m2kj) * (*m2kj);
+        mi[j] += s;
+      }
+    }
+  }
+
+  // result[i,j] += sum_k m1[i,k]^2 * m2[k,j]
+template<class T>
+  void squareProductAcc(const TMat<T>& mat, const TMat<T>& m1, const TMat<T>& m2)
+  {
+#ifdef BOUNDCHECK
+    if (m1.width()!=m2.length() || mat.length()!=m1.length() || mat.width()!=m2.width())
+      PLERROR("squareProductAcc(Mat,Mat), incompatible arguments %dx%d= %dx%d times %dx%d",
+          mat.length(),mat.width(),m1.length(),m1.width(), m2.length(),m2.width());
+#endif
+    int n=m1.length();
+    int m=m1.width();
+    int l=m2.width();
+    for (int i=0;i<n;i++)
+    {
+      const T* m1i = m1[i];
+      T* mi = mat[i];
+      for (int j=0;j<l;j++)
+      {
+        T s=0;
+        T* m2kj = m2.data()+j;
+        for (int k=0;k<m;k++,m2kj+=m2.mod())
+        {
+          T m1ik=m1i[k];
+          s += m1ik*m1ik * (*m2kj);
+        }
+        mi[j] += s;
+      }
+    }
+  }
+
+// result[i][j] = v1[i] * v2[j]
+
+template<class T>
+void externalProduct(const TMat<T>& mat, const TVec<T>& v1, const TVec<T>& v2)
+{
+#ifdef BOUNDCHECK
+  if (v1.length()!=mat.length() || mat.width()!=v2.length())
+    PLERROR("externalProduct(Vec,Vec), incompatible arguments %dx%d= %d times %d",
+        mat.length(),mat.width(),v1.length(), v2.length());
+#endif
+  const T* v_1=v1.data();
+  const T* v_2=v2.data();
+  for (int i=0;i<mat.length();i++)
+  {
+    T* mi = mat[i];
+    T v1i = v_1[i];
+    for (int j=0;j<mat.width();j++)
+      mi[j] = v1i * v_2[j];
+  }
+}
+
+// result[i][j] += v1[i] * v2[j]
+
+template<class T>
+void externalProductAcc(const TMat<T>& mat, const TVec<T>& v1, const TVec<T>& v2)
+{
+#ifdef BOUNDCHECK
+  if (v1.length()!=mat.length() || mat.width()!=v2.length())
+    PLERROR("externalProductAcc(Vec,Vec), incompatible arguments %dx%d= %d times %d",
+        mat.length(),mat.width(),v1.length(), v2.length());
+#endif
+
+  T* v_1=v1.data();
+  T* v_2=v2.data();
+  T* mp = mat.data();
+  int l = mat.length();
+  int w = mat.width();
+
+  if(mat.isCompact())
+    {
+      T* pv1 = v_1;
+      for(int i=0; i<l; i++)
+        {
+          T* pv2 = v_2;
+          T val = *pv1++;
+          for(int j=0; j<w; j++)
+            *mp++ += val * *pv2++;
+        }
+    }
+  else
+    {
+      cerr << "!";
+      for (int i=0;i<l;i++)
+        {
+          T* mi = mat[i];
+          T v1i = v_1[i];
+          for (int j=0;j<w;j++)
+            mi[j] += v1i * v_2[j];
+        }
+    }
+}
+
+// result[i][j] += gamma * v1[i] * v2[j]
+
+template<class T>
+void externalProductScaleAcc(const TMat<T>& mat, const TVec<T>& v1, const TVec<T>& v2, T gamma)
+{
+#ifdef BOUNDCHECK
+  if (v1.length()!=mat.length() || mat.width()!=v2.length())
+    PLERROR("externalProductScaleAcc(Vec,Vec), incompatible arguments %dx%d= %d times %d",
+        mat.length(),mat.width(),v1.length(), v2.length());
+#endif
+  const T* v_1=v1.data();
+  const T* v_2=v2.data();
+  for (int i=0;i<mat.length();i++)
+  {
+    T* mi = mat[i];
+    T v1i = v_1[i];
+    for (int j=0;j<mat.width();j++)
+      mi[j] += gamma * v1i * v_2[j];
+  }
+}
+
+  // result[i,j] = sum_k m1[i,k] * m2[j,k]
+template<class T>
+  void productTranspose(const TMat<T>& mat, const TMat<T>& m1, const TMat<T>& m2)
+  {
+#ifdef BOUNDCHECK
+    if (m1.width()!=m2.width() || mat.length()!=m1.length() || mat.width()!=m2.length())
+      PLERROR("productTranspose(Mat,Mat), incompatible arguments %dx%d= %dx%d times %dx%d'",
+          mat.length(),mat.width(),m1.length(),m1.width(), m2.length(),m2.width());
+#endif
+    int n=m1.length();
+    int m=m1.width();
+    int l=m2.length();
+    for (int i=0;i<n;i++)
+    {
+      const T* m1i = m1[i];
+      T* mi = mat[i];
+      for (int j=0;j<l;j++)
+      {
+        T s=0;
+        const T* m2j = m2[j];
+        for (int k=0;k<m;k++)
+          s += m1i[k] * m2j[k];
+        mi[j] = s;
+      }
+    }
+  }
+
+  // result[i,j] = sum_k m1[i,k]^2 * m2[j,k]
+template<class T>
+  void squareProductTranspose(const TMat<T>& mat, const TMat<T>& m1, const TMat<T>& m2)
+  {
+#ifdef BOUNDCHECK
+    if (m1.width()!=m2.width() || mat.length()!=m1.length() || mat.width()!=m2.length())
+      PLERROR("squareProductTranspose(Mat,Mat), incompatible arguments %dx%d= %dx%d times %dx%d'",
+          mat.length(),mat.width(),m1.length(),m1.width(), m2.length(),m2.width());
+#endif
+    int n=m1.length();
+    int m=m1.width();
+    int l=m2.length();
+    for (int i=0;i<n;i++)
+    {
+      const T* m1i = m1[i];
+      T* mi = mat[i];
+      for (int j=0;j<l;j++)
+      {
+        T s=0;
+        const T* m2j = m2[j];
+        for (int k=0;k<m;k++)
+        {
+          T m1ik=m1i[k];
+          s += m1ik*m1ik * m2j[k];
+        }
+        mi[j] = s;
+      }
+    }
+  }
+  
+  // result[i,j] = sum_k m1[i,k] * m2[j,k]^2
+template<class T>
+  void product2Transpose(const TMat<T>& mat, const TMat<T>& m1, const TMat<T>& m2)
+  {
+#ifdef BOUNDCHECK
+    if (m1.width()!=m2.width() || mat.length()!=m1.length() || mat.width()!=m2.length())
+      PLERROR("product2Transpose(Mat,Mat), incompatible arguments %dx%d= %dx%d times %dx%d'",
+          mat.length(),mat.width(),m1.length(),m1.width(), m2.length(),m2.width());
+#endif
+    int n=m1.length();
+    int m=m1.width();
+    int l=m2.length();
+    for (int i=0;i<n;i++)
+    {
+      const T* m1i = m1[i];
+      T* mi = mat[i];
+      for (int j=0;j<l;j++)
+      {
+        T s=0;
+        const T* m2j = m2[j];
+        for (int k=0;k<m;k++)
+        {
+          T m2jk=m2j[k];
+          s += m1i[k] * m2jk*m2jk;
+        }
+        mi[j] = s;
+      }
+    }
+  }
+
+  // result[i,j] += sum_k m1[i,k] * m2[j,k]
+template<class T>
+  void productTransposeAcc(const TMat<T>& mat, const TMat<T>& m1, const TMat<T>& m2)
+  {
+#ifdef BOUNDCHECK
+    if (m1.width()!=m2.width() || mat.length()!=m1.length() || mat.width()!=m2.length())
+      PLERROR("productTransposeAcc(Mat,Mat), incompatible arguments %dx%d= %dx%d times %dx%d'",
+          mat.length(),mat.width(),m1.length(),m1.width(), m2.length(),m2.width());
+#endif
+    int n=m1.length();
+    int m=m1.width();
+    int l=m2.length();
+    for (int i=0;i<n;i++)
+    {
+      const T* m1i = m1[i];
+      T* mi = mat[i];
+      for (int j=0;j<l;j++)
+      {
+        T s=0;
+        const T* m2j = m2[j];
+        for (int k=0;k<m;k++)
+          s += m1i[k] * m2j[k];
+        mi[j] += s;
+      }
+    }
+  }
+
+  // result[i,j] += sum_k m1[i,k] * m2[j,k]^2
+template<class T>
+  void product2TransposeAcc(const TMat<T>& mat, const TMat<T>& m1, const TMat<T>& m2)
+  {
+#ifdef BOUNDCHECK
+    if (m1.width()!=m2.width() || mat.length()!=m1.length() || mat.width()!=m2.length())
+      PLERROR("product2TransposeAcc(Mat,Mat), incompatible arguments %dx%d= %dx%d times %dx%d'",
+          mat.length(),mat.width(),m1.length(),m1.width(), m2.length(),m2.width());
+#endif
+    int n=m1.length();
+    int m=m1.width();
+    int l=m2.length();
+    for (int i=0;i<n;i++)
+    {
+      const T* m1i = m1[i];
+      T* mi = mat[i];
+      for (int j=0;j<l;j++)
+      {
+        T s=0;
+        const T* m2j = m2[j];
+        for (int k=0;k<m;k++)
+        {
+          T m2jk=m2j[k];
+          s += m1i[k] * m2jk*m2jk;
+        }
+        mi[j] += s;
+      }
+    }
+  }
+
+  // result[i,j] += sum_k m1[i,k]^2 * m2[j,k]
+template<class T>
+  void squareProductTransposeAcc(const TMat<T>& mat, const TMat<T>& m1, const TMat<T>& m2)
+  {
+#ifdef BOUNDCHECK
+    if (m1.width()!=m2.width() || mat.length()!=m1.length() || mat.width()!=m2.length())
+      PLERROR("squareProductTransposeAcc(Mat,Mat), incompatible arguments %dx%d= %dx%d times %dx%d'",
+          mat.length(),mat.width(),m1.length(),m1.width(), m2.length(),m2.width());
+#endif
+    int n=m1.length();
+    int m=m1.width();
+    int l=m2.length();
+    for (int i=0;i<n;i++)
+    {
+      const T* m1i = m1[i];
+      T* mi = mat[i];
+      for (int j=0;j<l;j++)
+      {
+        T s=0;
+        const T* m2j = m2[j];
+        for (int k=0;k<m;k++)
+        {
+          T m1ik=m1i[k];
+          s += m1ik*m1ik * m2j[k];
+        }
+        mi[j] += s;
+      }
+    }
+  }
+
+  // result[i,j] = sum_k m1[k,i] * m2[k,j]
+template<class T>
+  void transposeProduct(const TMat<T>& mat, const TMat<T>& m1, const TMat<T>& m2)
+  {
+    int n=m1.width();
+    int m=m1.length();
+    int l=m2.width();
+#ifdef BOUNDCHECK
+    if (m!=m2.length() || mat.length()!=n || mat.width()!=l)
+      PLERROR("transposeProduct(Mat,Mat), incompatible arguments "
+          "%dx%d' times %dx%d into %dx%d",
+          m1.length(),m1.width(), m2.length(),m2.width(), mat.length(), mat.width());
+#endif
+    mat.clear();
+    for (int i=0;i<n;i++)
+    {
+      T* m1ki = m1.data()+i;
+      T* mi = mat[i];
+      for (int k=0;k<m;k++,m1ki+=m1.mod())
+      {
+        const T* m2k = m2[k];
+        T m1_ki = *m1ki;
+        for (int j=0;j<l;j++)
+          mi[j] += m1_ki * m2k[j];
+      }
+    }
+  }
+
+  // result[i,j] = sum_k m1[k,i] * m2[k,j]^2
+template<class T>
+  void transposeProduct2(const TMat<T>& mat, const TMat<T>& m1, const TMat<T>& m2)
+  {
+    int n=m1.width();
+    int m=m1.length();
+    int l=m2.width();
+#ifdef BOUNDCHECK
+    if (m!=m2.length() || mat.length()!=n || mat.width()!=l)
+      PLERROR("transposeProduct2(Mat,Mat), incompatible arguments "
+          "%dx%d' times %dx%d into %dx%d",
+          m1.length(),m1.width(), m2.length(),m2.width(), mat.length(), mat.width());
+#endif
+    mat.clear();
+    for (int i=0;i<n;i++)
+    {
+      T* m1ki = m1.data()+i;
+      T* mi = mat[i];
+      for (int k=0;k<m;k++,m1ki+=m1.mod())
+      {
+        const T* m2k = m2[k];
+        T m1_ki = *m1ki;
+        for (int j=0;j<l;j++)
+        {
+          T m2kj=m2k[j];
+          mi[j] += m1_ki * m2kj*m2kj;
+        }
+      }
+    }
+  }
+
+  // result[i,j] += sum_k m1[k,i] * m2[k,j]
+template<class T>
+  void transposeProductAcc(const TMat<T>& mat, const TMat<T>& m1, const TMat<T>& m2)
+  {
+    int n=m1.width();
+    int m=m1.length();
+    int l=m2.width();
+#ifdef BOUNDCHECK
+    if (m!=m2.length() || mat.length()!=n || mat.width()!=l)
+      PLERROR("transposeProductAcc(Mat,Mat), incompatible arguments "
+          "%dx%d' times %dx%d into %dx%d",
+          m1.length(),m1.width(), m2.length(),m2.width(), mat.length(), mat.width());
+#endif
+    for (int i=0;i<n;i++)
+    {
+      T* m1ki = m1.data()+i;
+      T* mi = mat[i];
+      for (int k=0;k<m;k++,m1ki+=m1.mod())
+      {
+        const T* m2k = m2[k];
+        T m1_ki = *m1ki;
+        for (int j=0;j<l;j++)
+          mi[j] += m1_ki * m2k[j];
+      }
+    }
+  }
+
+  // result[i,j] += sum_k m1[k,i] * m2[k,j]^2
+template<class T>
+  void transposeProduct2Acc(const TMat<T>& mat, const TMat<T>& m1, const TMat<T>& m2)
+  {
+    int n=m1.width();
+    int m=m1.length();
+    int l=m2.width();
+#ifdef BOUNDCHECK
+    if (m!=m2.length() || mat.length()!=n || mat.width()!=l)
+      PLERROR("transposeProduct2Acc(Mat,Mat), incompatible arguments "
+          "%dx%d' times %dx%d into %dx%d",
+          m1.length(),m1.width(), m2.length(),m2.width(), mat.length(), mat.width());
+#endif
+    for (int i=0;i<n;i++)
+    {
+      T* m1ki = m1.data()+i;
+      T* mi = mat[i];
+      for (int k=0;k<m;k++,m1ki+=m1.mod())
+      {
+        const T* m2k = m2[k];
+        T m1_ki = *m1ki;
+        for (int j=0;j<l;j++)
+        {
+          T m2kj = m2k[j];
+          mi[j] += m1_ki * m2kj * m2kj;
+        }
+      }
+    }
+  }
+
+  // result[i,j] = sum_k m1[k,i] * m2[j,k]
+template<class T>
+  void transposeTransposeProduct(const TMat<T>& mat, const TMat<T>& m1, const TMat<T>& m2)
+  {
+#ifdef BOUNDCHECK
+    if (m1.length()!=m2.width())
+      PLERROR("transposeTransposeProduct(Mat,Mat), incompatible arguments %dx%d' times %dx%d'",
+          m1.length(),m1.width(), m2.length(),m2.width());
+#endif
+    int n=m1.width();
+    int m=m1.length();
+    int l=m2.length();
+    for (int i=0;i<n;i++)
+    {
+      T* m1ki0 = m1.data()+i;
+      T* mi = mat[i];
+      for (int j=0;j<l;j++)
+      {
+        T s=0;
+        const T* m2j = m2[j];
+        T* m1ki = m1ki0;
+        for (int k=0;k<m;k++,m1ki+=m1.mod())
+          s += (*m1ki) * m2j[k];
+        mi[j] = s;
+      }
+    }
+  }
+
+  // result[i,j] += sum_k m1[k,i] * m2[j,k]
+template<class T>
+  void transposeTransposeProductAcc(const TMat<T>& mat, const TMat<T>& m1, const TMat<T>& m2)
+  {
+    if (m1.length()!=m2.width())
+      PLERROR("transposeTransposeProductAcc(Mat,Mat), incompatible arguments %dx%d' times %dx%d",
+          m1.length(),m1.width(), m2.length(),m2.width());
+    int n=m1.width();
+    int m=m1.length();
+    int l=m2.width();
+    for (int i=0;i<n;i++)
+    {
+      T* m1ki0 = m1.data()+i;
+      T* mi = mat[i];
+      for (int j=0;j<l;j++)
+      {
+        T s=0;
+        const T* m2j = m2[j];
+        T* m1ki = m1ki0;
+        for (int k=0;k<m;k++,m1ki+=m1.mod())
+          s += (*m1ki) * m2j[k];
+        mi[j] += s;
+      }
+    }
+  }
+
+template<class T>
+  T trace(const TMat<T>& mat)
+  {
+    if (!mat.isSquare())
+      PLERROR( "In trace()\nThe matrix must be square." );
+    T tr = mat.firstElement();
+    for ( int i = 1; i < mat.length(); i++ )
+      tr += mat(i,i);
+    return tr;
+  }
+
+  //!  Applies a regularizer : diag(A) .* (tolerance * trace(A))
+template<class T>
+  void regularizeMatrix(const TMat<T>& mat, T tolerance)
+  {
+    T reg = tolerance * trace(mat);
+    for (int i = 0; i < mat.length(); i++)
+      mat(i, i) += reg;
+  }
+
+
+template<class T>
+void makeRowsSumTo1(const TMat<T>& mat)
+{
+  for (int i = 0; i < mat.length(); i++)
+  {
+    TVec<T> row_i = mat(i);
+    divide(row_i, sum(row_i), row_i);
+  }
+}
+
+  // This implementation should be very efficient,
+  // but it does two memory allocation: a first one of mat.length()*(sizeof(real)+sizeof(int))
+  // and a second one of mat.length()*sizeof(int)
+template<class T>
+  void sortRows(const TMat<T>& mat, int col=0, bool increasing_order=true)
+  {
+    vector< pair<T,int> > order(mat.length());
+    typename vector< pair<T,int> >::iterator it = order.begin();
+    T* ptr = mat.data()+col;
+    for(int i=0; i<mat.length(); ++i, ptr+=mat.mod(), ++it)
+    {
+      it->first = *ptr;
+      it->second = i;
+    }
+    if(increasing_order)
+      sort(order.begin(),order.end());
+    else // decreasing order
+      sort(order.begin(), order.end(), greater< pair<T,int> >() );
+
+    // Build the new destination position array
+    // (destpos is the inverse map of order.second)
+    vector<int> destpos(mat.length());  
+    for(int i=0; i<mat.length(); ++i)
+      destpos[order[i].second] = i;
+
+    // Now put the full rows in order...
+    for(int startpos = 0; startpos<mat.length(); startpos++)
+    {
+      int dest = destpos[startpos];      
+      if(dest!=-1)
+      {
+        while(dest!=startpos)
+        {
+          mat.swapRows(startpos,dest);
+          int newdest = destpos[dest];
+          destpos[dest] = -1;
+          dest = newdest;
+        }
+        destpos[startpos] = -1;
+      }
+    }
+  }
+
+  /*   Not taken from Numerical Recipies: This is a quickly written and hihghly unefficient algorithm!   */
+  /*   Sorts the columns of the given matrix, in ascending order of its rownum row's elements   */
+template<class T>
+  void sortColumns(const TMat<T>& mat, int rownum)
+  {
+    int j,jj,i;
+    T min;
+    T tmp;
+    int mincol;
+  
+    if(rownum>=mat.length())
+      PLERROR("In sortColumns: no rownumumn %d in matrix (%dx%d)",rownum,mat.width(),mat.length());
+
+    for(j=0; j<mat.width(); j++)
+    {
+      // look, starting from col j, for the col with the minimum rownum element
+      mincol = j;
+      min = mat(rownum,j);
+      for(jj=j; jj<mat.width(); jj++)
+      {
+        if(mat(rownum,jj)<min)
+        {
+          min = mat(rownum,jj);
+          mincol = jj;
+        }
+      }
+      if(mincol>j) /*   Found a col with inferior value   */
+      {
+        /*   So let's exchange cols j and mincol   */
+        for(i=0; i<mat.length(); i++)
+        {
+          tmp = mat(i,j);
+          mat(i,j) = mat(i,mincol);
+          mat(i,mincol) = tmp;
+        }
+      }
+    }
+  }
+
+
+  // result[i,j] = x[i,j]*scale;
+template<class T>
+  void multiply(const TMat<T>& result, const TMat<T>& x, T scale)
+  {
+#ifdef BOUNDCHECK
+    if (result.length()!=x.length() || result.width()!=x.width())
+      PLERROR("multiply incompatible dimensions: %dx%d <- %dx%d",
+              result.length(),result.width(),x.length(),x.width());
+#endif
+    if(result.isCompact() && x.isCompact())
+      {
+        TMat<T>::compact_iterator itm = result.compact_begin();
+        TMat<T>::compact_iterator itmend = result.compact_end();
+        TMat<T>::compact_iterator itx = x.compact_begin();
+        for(; itm!=itmend; ++itm, ++itx)
+          *itm = *itx * scale;
+      }
+    else // use non-compact iterators
+      {
+        TMat<T>::iterator itm = result.begin();
+        TMat<T>::iterator itmend = result.end();
+        TMat<T>::iterator itx = x.begin();
+        for(; itm!=itmend; ++itm, ++itx)
+          *itm = *itx * scale;
+      }
+  }
+
+template<class T>
+inline TMat<T> operator*(const TMat<T>& m, const T& scalar)
+{
+  TMat<T> result(m.length(),m.width());
+  multiply(result, m, scalar);
+  return result;
+}
+
+template<class T>
+inline TMat<T> operator*(const T& scalar, const TMat<T>& m)
+{ return m * scalar;}
+
+// Will not work properly for integers...
+template<class T>
+inline TMat<T> operator/(const TMat<T>& m, const T& scalar)
+{ return m * (T(1)/scalar); }
+
+  // result[i,j] += x[i,j]*scale;
+template<class T>
+  void multiplyAcc(const TMat<T>& mat, const TMat<T>& x, T scale)
+  {
+#ifdef BOUNDCHECK
+    if (mat.length()!=x.length() || mat.width()!=x.width())
+      PLERROR("multiplyAcc incompatible dimensions: %dx%d <- %dx%d",
+              mat.length(),mat.width(),x.length(),x.width());
+#endif
+    if(mat.isCompact() && x.isCompact())
+      {
+        TMat<T>::compact_iterator itm = mat.compact_begin();
+        TMat<T>::compact_iterator itmend = mat.compact_end();
+        TMat<T>::compact_iterator itx = x.compact_begin();
+        for(; itm!=itmend; ++itm, ++itx)
+          *itm += *itx * scale;
+      }
+    else // use non-compact iterators
+      {
+        TMat<T>::iterator itm = mat.begin();
+        TMat<T>::iterator itmend = mat.end();
+        TMat<T>::iterator itx = x.begin();
+        for(; itm!=itmend; ++itm, ++itx)
+          *itm += *itx * scale;
+      }
+  }
+
+  // result[i,j] += x[i,j]*y[i,j];
+template<class T>
+  void multiplyAcc(const TMat<T>& mat, const TMat<T>& x, const TMat<T>& y)
+  {
+    int n=mat.length()*mat.width();
+    if (mat.length()!=x.length() || mat.width()!=x.width() || y.length()!=mat.length() || y.width()!=mat.width())
+      PLERROR("multiplyAcc this has size=%dx%d, x is %dx%d, y is %dx%d",
+          mat.length(),mat.width(),x.length(),x.width(),y.length(),y.width());
+    T* p=mat.data();
+    T* xp=x.data();
+    T* yp=y.data();
+    for (int i=0;i<n;i++)
+      p[i] += xp[i] * yp[i];
+  }
+
+  // result[i,j] += x[i,j]*x[i,j]*scale;
+template<class T>
+  void squareMultiplyAcc(const TMat<T>& mat, const TMat<T>& x, T scale)
+  {
+    int n=x.length()*x.width();
+    if (mat.length()*mat.width()!=n)
+      PLERROR("squareMultiplyAcc this has size=%d and x has size=%d",
+          mat.width()*mat.length(),n);
+    T* p=mat.data();
+    T* xp=x.data();
+    for (int i=0;i<n;i++)
+    {
+      T xpi = xp[i];
+      p[i] += scale * xpi * xpi;
+    }
+  }
+
+  // result[i,j] += (x[i,j]-y[i,j])^2*scale;
+template<class T>
+  void diffSquareMultiplyAcc(const TMat<T>& mat, const TMat<T>& x, const TMat<T>& y, T scale)
+  {
+    int n=x.length()*x.width();
+    if (mat.length()*mat.width()!=n)
+      PLERROR("diffSquareMultiplyAcc this has size=%d and x has size=%d",
+          mat.width()*mat.length(),n);
+    T* p=mat.data();
+    T* xp=x.data();
+    T* yp=y.data();
+    for (int i=0;i<n;i++)
+    {
+      T diff = (xp[i]-yp[i]);
+      p[i] += scale * diff * diff;
+    }
+  }
+
+
+
+template<class T>
+TVec<T> selectAndOrder(const TMat<T>& mat, int pos, int colnum=0)
+{
+#ifdef BOUNDCHECK
+  if (colnum<0 || colnum>=mat.width()) PLERROR("Bad column number (%d)", colnum);
+  if (pos<0 || pos>=mat.length()) PLERROR("Bad position (%d)", pos);
+#endif
+
+  int l=0;
+  int h=mat.length()-1;
+  TMat<T> v = mat.column(colnum);
+
+  while (l<h)
+  {
+    T p = v((l+h)/2,0);
+    int x = l;
+    int y = h;
+ 
+    do
+    {
+      while (v(x,0)<p) x++;
+      while (p<v(y,0)) y--;
+      if (x<=y)
+      {
+        mat.swapRows(x,y);
+        x++;
+        y--;
+      }
+    } while (x<=y);
+
+    if (pos>=x) l=x;
+    else h=x-1;
+  }
+ 
+  return mat(l);
+}
+
+
+  // result[i,i] += lambda
+template<class T>
+  void addToDiagonal(const TMat<T>& mat, T lambda)
+  {
+    T *d = mat.data();
+    for (int i=0;i<mat.length();i++,d+=mat.mod()+1) *d+=lambda;
+  }
+
+
+
+// result[i,i] += lambda[i]
+
+template<class T>
+void addToDiagonal(const TMat<T>& mat, const TVec<T>& lambda)
+{
+#ifdef BOUNDCHECK
+  if (lambda.length()!=mat.length())
+    PLERROR("Mat(%d)::addToDiagonal(Vec(%d)) inconsistent lengths",
+        mat.length(), lambda.length());
+#endif
+  T *l = lambda.data();
+  T *d = mat.data();
+  for (int i=0;i<mat.length();i++,d+=mat.mod()+1,l++) *d += *l;
+}
+
+
+template<class T>
+void diag(const TMat<T>& mat, const TVec<T>& d)
+{
+  T* d_ = d.data();
+  for (int i=0;i<mat.length();i++)
+    d_[i] = mat(i,i);
+}
+
+template<class T>
+TVec<T> diag(const TMat<T>& mat)
+{
+  TVec<T> d(mat.length());
+  diag(mat, d);
+  return d;
+}
+
+template<class T>
+void diagonalOfSquare(const TMat<T>& mat, const TVec<T>& d)
+{
+  T* d_=d.data();
+  for (int i=0;i<mat.length();i++)
+    d_[i]=pownorm(mat(i));
+}
+
+
+template<class T>
+void projectOnOrthogonalSubspace(const TMat<T>& mat, TMat<T> orthonormal_subspace)
+{
+  for (int i=0;i<mat.length();i++)
+  {
+    TVec<T> row_i = mat(i);
+    projectOnOrthogonalSubspace(row_i, orthonormal_subspace);
+  }
+}
+
+
+template<class T>
+void averageAcrossRowsAndColumns(const TMat<T>& mat, TVec<T>& avg_across_rows, TVec<T>& avg_across_columns, bool ignored)
+{
+  avg_across_rows.resize(mat.width());
+  avg_across_columns.resize(mat.length());
+  avg_across_rows.clear();
+  avg_across_columns.clear();
+  T* row_i=mat.data();
+  for (int i=0;i<mat.length();i++)
+  {
+    T& avg_cols_i=avg_across_columns[i];
+    T* avg_rows = avg_across_rows.data();
+    for (int j=0;j<mat.width();j++)
+    {
+      T row_ij=row_i[j];
+      avg_cols_i += row_ij;
+      avg_rows[j] += row_ij;
+    }
+    row_i+=mat.mod();
+  }
+  avg_across_rows /= mat.length();
+  avg_across_columns /= mat.width();
+}
+
+
+template<class T>
+void addToRows(const TMat<T>& mat, const TVec<T> row, bool ignored)
+{
+  for (int i=0;i<mat.length();i++)
+  {
+    TVec<T> row_i = mat(i);
+    row_i += row;
+  }
+}
+
+
+template<class T>
+void addToColumns(const TMat<T>& mat, const TVec<T> col, bool ignored)
+{
+  T* row_i=mat.data();
+  for (int i=0;i<mat.length();i++)
+  {
+    T col_i=col[i];
+    for (int j=0;j<mat.width();j++)
+      row_i[j] += col_i;
+    row_i+=mat.mod();
+  }
+}
+
+template<class T>
+void substractFromRows(const TMat<T>& mat, const TVec<T> row, bool ignored)
+{
+  for (int i=0;i<mat.length();i++)
+  {
+    TVec<T> row_i = mat(i);
+    row_i -= row;
+  }
+}
+
+
+
+// Probably bugged!!!
+template<class T>
+void substractFromColumns(const TMat<T>& mat, const TVec<T> col, bool ignored)
+{
+  T* row_i=mat.data();
+  for (int i=0;i<mat.length();i++)
+  {
+    T col_i=col[i];
+    for (int j=0;j<mat.width();j++)
+      row_i[j] -= col_i;
+    row_i+=mat.mod();
+  }
+}
+
+
+template<class T>
+void addToMat(const TMat<T>& mat, T scalar, bool ignored)
+{ mat += scalar; }
+
+
+// -------------- taken and adapted from Mat_maths.cc ------------------
+
+template<class T>
+T sum(const TMat<T>& mat)
+{
+  double res = 0.0;
+  T* m_i = mat.data();
+  for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
+    for(int j=0; j<mat.width(); j++)
+      res += m_i[j];
+  return T(res);
+}
+
+template<class T>
+T product(const TMat<T>& mat)
+{
+  double res = 1.0;
+  T* m_i = mat.data();
+  for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
+    for(int j=0; j<mat.width(); j++)
+      res *= m_i[j];
+  return T(res);
+}
+
+template<class T>
+T sum_of_squares(const TMat<T>& mat)
+{
+  double res = 0.0;
+  T* m_i = mat.data();
+  for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
+    for(int j=0; j<mat.width(); j++)
+      {
+        T v = m_i[j];
+        res += v*v;
+      }
+  return T(res);
+}
+
+template<class T>
+T mean(const TMat<T>& mat)
+{
+  #ifdef BOUNDCHECK
+  if(mat.length()==0 || mat.width()==0)
+    PLERROR("IN T mean(const TMat<T>& mat) mat has 0 size");
+  #endif
+  double res = 0.0;
+  T* m_i = mat.data();
+  for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
+    for(int j=0; j<mat.width(); j++)
+      res += m_i[j];
+  return T(res/(mat.length()*mat.width()));
+}
+
+template<class T>
+T geometric_mean(const TMat<T>& mat)
+{
+  #ifdef BOUNDCHECK
+  if(mat.length()==0 || mat.width()==0)
+    PLERROR("IN T geometric_mean(const TMat<T>& mat) mat has 0 size");
+  #endif
+  double res = 0.0;
+  T* m_i = mat.data();
+  for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
+    for(int j=0; j<mat.width(); j++)
+    {
+      T mij = m_i[j];
+      if (mij<=0)
+        PLERROR("geometric_mean(TMat<T>): argument %g <=0 at position (%d,%d)",
+              mij,i,j);
+      res += log(m_i[j]);
+    }
+  return T(exp(res/(mat.length()*mat.width())));
+}
+
+template<class T>
+T variance(const TMat<T>& mat, T meanval)
+{
+  #ifdef BOUNDCHECK
+  if(mat.length()==0 || mat.width()==0)
+    PLERROR("IN T variance(const TMat<T>& mat, T meanval) mat has 0 size");
+  #endif
+  double res = 0.0;
+  T* m_i = mat.data();
+  for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
+    for(int j=0; j<mat.width(); j++)
+      {
+        double diff = m_i[j]-meanval;
+        res += diff*diff;
+      }
+  return res/(mat.length()*mat.width()-1);
+}
+
+template<class T>
+T min(const TMat<T>& mat)
+{
+  #ifdef BOUNDCHECK
+  if(mat.length()==0 || mat.width()==0)
+    PLERROR("IN T min(const TMat<T>& mat) mat has 0 size");
+  #endif
+  T* m_i = mat.data();
+  double minval = m_i[0];
+  for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
+    for(int j=0; j<mat.width(); j++)
+      if(m_i[j]<minval)
+        minval = m_i[j];
+  return minval;
+}
+
+template<class T>
+T max(const TMat<T>& mat)
+{
+  #ifdef BOUNDCHECK
+  if(mat.length()==0 || mat.width()==0)
+    PLERROR("IN T max(const TMat<T>& mat) mat has 0 size");
+  #endif
+  T* m_i = mat.data();
+  double maxval = m_i[0];
+  for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
+    for(int j=0; j<mat.width(); j++)
+      if(m_i[j]>maxval)
+        maxval = m_i[j];
+  return maxval;
+}
+
+//! Stores the position of the min in the 'mini' & 'minj' arg.
+template<class T>
+void argmin(const TMat<T>& mat, int& mini, int& minj)
+{
+  #ifdef BOUNDCHECK
+  if(mat.length()==0 || mat.width()==0)
+    PLERROR("IN void argmin(const TMat<T>& mat, int& mini, iny& minj) mat has 0 size");
+  #endif
+  T* m_i = mat.data();
+  mini=0;
+  minj=0;
+  double minval = m_i[0];
+  for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
+    for(int j=0; j<mat.width(); j++)
+      if(m_i[j]<minval)
+        {
+          minval = m_i[j];
+          mini = i;
+          minj = j;
+        }
+}
+
+// Same as above with the max.
+template<class T>
+void argmax(const TMat<T>& mat, int& maxi, int& maxj)
+{
+  #ifdef BOUNDCHECK
+  if(mat.length()==0 || mat.width()==0)
+    PLERROR("IN void argmax(const TMat<T>& mat, int& maxi, iny& maxj) mat has 0 size");
+  #endif
+  T* m_i = mat.data();
+  maxi=0;
+  maxj=0;
+  double maxval = m_i[0];
+  for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
+    for(int j=0; j<mat.width(); j++)
+      if(m_i[j]>maxval)
+        {
+          maxval = m_i[j];
+          maxi = i;
+          maxj = j;
+        }
+}
+
+//!  return mini*width+minj
+template<class T>
+int argmin(const TMat<T>& m)
+{
+  int imin, jmin;
+  argmin(m,imin,jmin);
+  return (imin*m.width()+jmin);
+}
+
+//!  return maxi*width+maxj
+template<class T>
+int argmax(const TMat<T>& m)
+{
+  int imax, jmax;
+  argmax(m,imax,jmax);
+  return (imax*m.width()+jmax);
+}
+
+/*!   all the operations below result in a column vector
+  and are obtained by iterating (e.g. summing) over the column index,
+  e.g. yielding the sum of each row in the result.
+*/
+
+template<class T>
+void rowSum(const TMat<T>& mat, const TMat<T>& singlecolumn)
+{
+  #ifdef BOUNDCHECK
+  if(singlecolumn.length()!=mat.length() || singlecolumn.width() != 1)
+    PLERROR("IN void rowSum(const TMat<T>& mat, TMat<T>& singlecolumn) singlecolumn must be a mat.length() x 1 matrix");
+  #endif
+  for(int i=0; i<mat.length(); i++)
+    singlecolumn(i,0) = sum(mat(i));
+}
+
+template<class T>
+void rowMean(const TMat<T>& mat, const TMat<T>& singlecolumn)
+{
+  #ifdef BOUNDCHECK
+  if(singlecolumn.length()!=mat.length() || singlecolumn.width()!=1 || mat.width()==0)
+    PLERROR("IN void rowMean(const TMat<T>& mat, TMat<T>& singlecolumn) singlecolumn must be a mat.length() x 1 matrix, and mat must have non-zero width");
+  #endif
+  for(int i=0; i<mat.length(); i++)
+    singlecolumn(i,0) = mean(mat(i));
+}
+
+template<class T>
+void rowVariance(const TMat<T>& mat, const TMat<T>& singlecolumn, const TMat<T>& rowmean)
+{
+  #ifdef BOUNDCHECK
+  if(singlecolumn.length()!=mat.length() || singlecolumn.width()!=1 || rowmean.length()!=mat.length() || rowmean.width()!=1 || mat.width()==0)
+    PLERROR("IN void rowVariance(const TMat<T>& mat, TMat<T>& singlecolumn, const TMat<T>& rowmean) singlecolumn and rowmean must be mat.length() x 1 matrices, mat must have non-zero width");
+  #endif
+  for(int i=0; i<mat.length(); i++)
+    singlecolumn(i,0) = variance(mat(i),rowmean(i,0));
+}
+
+template<class T>
+void rowSumOfSquares(const TMat<T>& mat, const TMat<T>& singlecolumn)
+{
+  #ifdef BOUNDCHECK
+  if(singlecolumn.length()!=mat.length() || singlecolumn.width()!=1)
+    PLERROR("IN void rowSumOfSquares(const TMat<T>& mat, TMat<T>& singlecolumn) singlecolumn must be a mat.length() x 1 matrix");
+  #endif
+  for (int i=0;i<mat.length();i++)
+    {
+      T ss=0;
+      T* mi=mat[i];
+      for (int j=0;j<mat.width();j++) { T mij=mi[j]; ss+=mij*mij; }
+      singlecolumn(i,0)=ss;
+    }
+}
+
+template<class T>
+void rowMax(const TMat<T>& mat, const TMat<T>& singlecolumn)
+{
+  #ifdef BOUNDCHECK
+  if(singlecolumn.length()!=mat.length() || singlecolumn.width()!=1 || mat.width()==0)
+    PLERROR("IN void rowMax(const TMat<T>& mat, TMat<T>& singlecolumn) singlecolumn must be a mat.length() x 1 matrix, and mat must have non-zero width");
+  #endif
+  for(int i=0; i<mat.length(); i++)
+    singlecolumn(i,0) = max(mat(i));
+}
+
+template<class T>
+void rowMin(const TMat<T>& mat, const TMat<T>& singlecolumn)
+{
+  #ifdef BOUNDCHECK
+  if(singlecolumn.length()!=mat.length() || singlecolumn.width()!=1 || mat.width()==0)
+    PLERROR("IN void rowMin(const TMat<T>& mat, TMat<T>& singlecolumn) singlecolumn must be a mat.length() x 1 matrix, and mat must have non-zero width");
+  #endif
+  for(int i=0; i<mat.length(); i++)
+    singlecolumn(i,0) = min(mat(i));
+}
+
+template<class T>
+void rowArgmax(const TMat<T>& mat, const TMat<T>& singlecolumn)
+{
+  #ifdef BOUNDCHECK
+  if(singlecolumn.length()!=mat.length() || singlecolumn.width()!=1 || mat.width()==0)
+    PLERROR("IN void rowMax(const TMat<T>& mat, TMat<T>& singlecolumn) singlecolumn must be a mat.length() x 1 matrix, and mat must have non-zero width");
+  #endif
+  for(int i=0; i<mat.length(); i++)
+    singlecolumn(i,0) = argmax(mat(i));
+}
+
+template<class T>
+void rowArgmin(const TMat<T>& mat, const TMat<T>& singlecolumn)
+{
+  #ifdef BOUNDCHECK
+  if(singlecolumn.length()!=mat.length() || singlecolumn.width()!=1 || mat.width()==0)
+    PLERROR("IN void rowMax(const TMat<T>& mat, TMat<T>& singlecolumn) singlecolumn must be a mat.length() x 1 matrix, and mat must have non-zero width");
+  #endif
+  for(int i=0; i<mat.length(); i++)
+    singlecolumn(i,0) = argmin(mat(i));
+}
+
+/*!   all the operations below result in a row vector
+  and are obtained by iterating (e.g. summing) over the row index,
+  e.g. yielding the sum of each column in the result.
+*/
+
+template<class T>
+void columnSum(const TMat<T>& mat, TVec<T>& result)
+{
+  #ifdef BOUNDCHECK
+  if(result.length()!=mat.width())
+    PLERROR("IN void columnSum(const TMat<T>& mat, TVec<T>& result) the length of result must equal the width of mat");
+  #endif
+  int l = mat.length();
+  result << mat(0);
+  for(int j=1; j<l; j++)
+    result += mat(j);
+}
+
+template<class T>
+void columnSumOfSquares(const TMat<T>& mat, TVec<T>& result)
+{
+  #ifdef BOUNDCHECK
+  if(result.length()!=mat.width())
+    PLERROR("IN void columnSumOfSquares(const TMat<T>& mat, TVec<T>& result) the length of result must equal the width of mat");
+  #endif
+  for(int j=0; j<mat.width(); j++)
+    result[j] = sum_of_squares(mat.column(j));
+}
+
+template<class T>
+void columnMean(const TMat<T>& mat, TVec<T>& result)
+{
+  #ifdef BOUNDCHECK
+  if(result.length()!=mat.width() || mat.length()==0)
+    PLERROR("IN void columnMean(const TMat<T>& mat, TVec<T>& result) the length of result must equal the width of mat and mat must have non-zero length");
+  #endif
+  columnSum(mat,result);
+  result /= real(mat.length());
+}
+
+template<class T>
+void columnWeightedMean(const TMat<T>& mat, TVec<T>& result)
+{
+  #ifdef BOUNDCHECK
+  if(result.length()!=mat.width()-1 || mat.length()<=1)
+    PLERROR("IN void columnWeightedMean(const TMat<T>& mat, TVec<T>& result) the length of result must equal the width - 1 of mat and mat must have at least 1 length");
+  #endif
+  TVec<T> column_j_vec(mat.length()), weights_vec(mat.length()); 
+  TMat<T> column_j_mat(mat.length(), 1), weights_mat(mat.length(), 1); 
+  for(int j=0; j<mat.width()-1; j++){
+    column_j_mat = mat.column(j); 
+    weights_mat = mat.column(mat.width()-1); 
+    column_j_vec = column_j_mat.toVecCopy();
+    weights_vec = weights_mat.toVecCopy();
+    result[j] = weighted_mean(column_j_vec, weights_vec);
+  }
+}
+
+template<class T>
+void columnVariance(const TMat<T>& mat, TVec<T>& result, const TVec<T>& columnmean)
+{
+  #ifdef BOUNDCHECK
+  if(result.length()!=mat.width() || columnmean.length()!=mat.width() || mat.length()==0)
+    PLERROR("IN void columnVariance(const TMat<T>& mat, TVec<T>& result, const TVec<T>& columnmean) the length of result and columnmean must equal the width of mat and mat must have non-zero length");
+  #endif
+  for(int j=0; j<mat.width(); j++)
+    result[j] = variance(mat.column(j),columnmean[j]);
+}
+
+template<class T>
+void columnWeightedVariance(const TMat<T>& mat, TVec<T>& result, const TVec<T>& column_weighted_mean)
+{
+  #ifdef BOUNDCHECK
+  if(result.length()!=mat.width()-1 || column_weighted_mean.length()!=mat.width()-1 || mat.length()<=1)
+    PLERROR("IN void columnWeightedVariance(const TMat<T>& mat, TVec<T>& result, const TVec<T>& column_weighted_mean) the length of result and column_weighted_mean must equal the width - 1 of mat and mat must have at least 1 length");
+  #endif
+  T column_no_weighted_mean_j;
+  TVec<T> column_j_vec(mat.length()), weights_vec(mat.length()); 
+  TMat<T> column_j_mat(mat.length(), 1), weights_mat(mat.length(), 1); 
+  for(int j=0; j<mat.width()-1; j++){
+    column_j_mat = mat.column(j); 
+    weights_mat = mat.column(mat.width()-1); 
+    column_j_vec = column_j_mat.toVecCopy();
+    weights_vec = weights_mat.toVecCopy();
+    column_no_weighted_mean_j = mean(mat.column(j));
+    result[j] = weighted_variance(column_j_vec, weights_vec, column_no_weighted_mean_j, column_weighted_mean[j]);
+  }
+}
+
+template<class T>
+void columnMax(const TMat<T>& mat, TVec<T>& result)
+{
+  #ifdef BOUNDCHECK
+  if(result.length()!=mat.width() || mat.length()==0)
+    PLERROR("IN void columnMax(const TMat<T>& mat, TVec<T>& result) the length of result must equal the width of mat and mat must have non-zero length");
+  #endif
+  for(int j=0; j<mat.width(); j++)
+    result[j] = max(mat.column(j));
+}
+
+template<class T>
+void columnMin(const TMat<T>& mat, TVec<T>& result)
+{
+  #ifdef BOUNDCHECK
+  if(result.length()!=mat.width() || mat.length()==0)
+    PLERROR("IN void columnMax(const TMat<T>& mat, TVec<T>& result) the length of result must equal the width of mat and mat must have non-zero length");
+  #endif
+  for(int j=0; j<mat.width(); j++)
+    result[j] = min(mat.column(j));
+}
+
+template<class T>
+void columnArgmax(const TMat<T>& mat, TVec<T>& result)
+{
+  #ifdef BOUNDCHECK
+  if(result.length()!=mat.width() || mat.length()==0)
+    PLERROR("IN void columnMax(const TMat<T>& mat, TVec<T>& result) the length of result must equal the width of mat and mat must have non-zero length");
+  #endif
+  int imax, jmax;
+  for(int j=0; j<mat.width(); j++)
+    {
+      argmax(mat.column(j), imax, jmax);
+      result[j] = imax;
+    }
+}
+
+template<class T>
+void columnArgmin(const TMat<T>& mat, TVec<T>& result)
+{
+  #ifdef BOUNDCHECK
+  if(result.length()!=mat.width() || mat.length()==0)
+    PLERROR("IN void columnMax(const TMat<T>& mat, TVec<T>& result) the length of result must equal the width of mat and mat must have non-zero length");
+  #endif
+  int imin, jmin;
+  for(int j=0; j<mat.width(); j++)
+    {
+      argmin(mat.column(j), imin, jmin);
+      result[j] = imin;
+    }
+}
+
+template<class T>
+T mahalanobis_distance(const TVec<T>& input, const TVec<T>& meanvec, const
+                            TMat<T>& inversecovmat)
+{
+  TVec<T> diff = input-meanvec;
+  return dot(diff,product(inversecovmat,diff));
+}
+
+//!  compute the mean of the rows of m (looping over columns)
+template<class T>
+inline void computeMean(const TMat<T>& m, TVec<T>& meanvec) { columnMean(m,meanvec); }
+
+//!  compute the mean and variance of the rows of m (looping over columns)
+template<class T>
+void computeMeanAndVariance(const TMat<T>& m, TVec<T>& meanvec, TVec<T>& variancevec)
+{
+  columnMean(m,meanvec);
+  columnVariance(m,variancevec,meanvec);
+}
+
+template<class T>
+void computeCovar(const TMat<T>& m, const TVec<T>& meanvec, TMat<T>& covarmat)
+{  
+  int n = m.width();
+  covarmat.resize(n,n);
+  transposeProduct(covarmat,m,m);
+  covarmat /= T(m.length());
+  externalProductScaleAcc(covarmat,meanvec,meanvec,T(-1));
+}
+
+template<class T>
+void computeMeanAndCovar(const TMat<T>& m, TVec<T>& meanvec, TMat<T>& covarmat)
+{  
+  int n = m.width();
+  meanvec.resize(n);
+  covarmat.resize(n,n);
+  columnMean(m,meanvec);
+
+  transposeProduct(covarmat,m,m);
+  covarmat /= T(m.length());
+  externalProductScaleAcc(covarmat,meanvec,meanvec,T(-1));
+
+  /*
+  Mat mm = m.copy();
+  mm -= meanvec;
+  transposeProduct(covarmat,mm,mm);  
+  covarmat /= T(m.length());
+  */
+}
+
+//!  compute the mean and standard deviations of the rows of m (looping over columns)
+template<class T>
+void computeMeanAndStddev(const TMat<T>& m, TVec<T>& meanvec, TVec<T>& stddevvec)
+{
+  columnMean(m,meanvec);
+  columnVariance(m,stddevvec,meanvec);
+  for(int i=0; i<stddevvec.length(); i++)
+    stddevvec[i] = sqrt(stddevvec[i]);
+}
+
+
+//!  compute the mean and standard deviations of the colums of m (looping over s)
+//!  (the result is stored in column vectors meanvec and stddevvec)
+template<class T>
+void computeColumnsMeanAndStddev(const TMat<T>& m, TMat<T>& meanvec, TMat<T>& stddevvec)
+{
+  rowMean(m,meanvec);
+  rowVariance(m,stddevvec,meanvec);
+  for(int i=0; i<stddevvec.length(); i++)
+    stddevvec[i][0] = sqrt(stddevvec[i][0]);
+}
+
+//! substract mean, and divide by stddev (these are estimated globally)
+template<class T>
+void normalize(TMat<T>& m) 
+{
+    TVec<T> meanvec(m.width());
+    TVec<T> stddevvec(m.width());
+    computeMeanAndStddev(m,meanvec,stddevvec);
+    m -= meanvec;
+    m /= stddevvec;
+}
+
+//! divide each row by its n norm 
+template<class T>
+void normalize(TMat<T>& m, double n) 
+{
+    for(int i=0; i<m.length(); i++)
+      {
+        TVec<T> m_i = m(i);
+        normalize(m_i,n);
+      }
+}
+
+template<class T>
+void operator+=(const TMat<T>& m, T scalar)
+{
+  T* m_i = m.data();
+  for(int i=0; i<m.length(); i++, m_i+=m.mod())
+    for(int j=0; j<m.width(); j++)
+      m_i[j] += scalar;
+}
+
+template<class T>
+void operator*=(const TMat<T>& m, T scalar)
+{
+  T* m_i = m.data();
+  for(int i=0; i<m.length(); i++, m_i+=m.mod())
+    for(int j=0; j<m.width(); j++)
+      m_i[j] *= scalar;
+}
+
+template<class T>
+inline void operator-=(const TMat<T>& m, T scalar) { m += (-scalar); }
+
+template<class T>
+inline void operator/=(const TMat<T>& m, T scalar) { m *= (T(1)/scalar); }
+
+template<class T>
+inline void operator/=(const TMat<T>& m, int scalar) { m *= (T(1)/scalar); }
+
+
+//!  adds v to every row
+template<class T>
+void operator+=(const TMat<T>& m, const TVec<T>& v)
+{
+  #ifdef BOUNDCHECK
+  if(m.width()!=v.length())
+    PLERROR("IN operator+=(const TMat<T>& m, const TVec<T>& v) v must be as long as m is wide");
+  #endif
+  T* m_i = m.data();
+  T* vv = v.data();
+  for(int i=0; i<m.length(); i++, m_i+=m.mod())
+    for(int j=0; j<m.width(); j++)
+      m_i[j] += vv[j];
+}
+
+//!  subtracts v from every row
+template<class T>
+void operator-=(const TMat<T>& m, const TVec<T>& v)
+{
+  #ifdef BOUNDCHECK
+  if(m.width()!=v.length())
+    PLERROR("IN operator-=(const TMat<T>& m, const TVec<T>& v) v must be as long as m is wide");
+  #endif
+  T* m_i = m.data();
+  T* vv = v.data();
+  for(int i=0; i<m.length(); i++, m_i+=m.mod())
+    for(int j=0; j<m.width(); j++)
+      m_i[j] -= vv[j];
+}
+
+//! does an elementwise multiplication of every row by v
+template<class T>
+void operator*=(const TMat<T>& m, const TVec<T>& v)
+{
+  #ifdef BOUNDCHECK
+  if(m.width()!=v.length())
+    PLERROR("IN operator*=(const TMat<T>& m, const TVec<T>& v) v must be as long as m is wide");
+  #endif
+  T* m_i = m.data();
+  T* vv = v.data();
+  for(int i=0; i<m.length(); i++, m_i+=m.mod())
+    for(int j=0; j<m.width(); j++)
+      m_i[j] *= vv[j];
+}
+
+//!  does an elementwise multiplication
+template<class T>
+void operator*=(const TMat<T>& m1, const TMat<T>& m2)
+{
+  int n=m1.length();
+  int l=m1.width();
+  #ifdef BOUNDCHECK
+  if(l!=m2.width() || n!=m2.length())
+    PLERROR("IN operator*=(const TMat<T>& m1(%d,%d), const TMat<T>& m2(%d,%d)) sizes differ",
+          m1.length(),m1.width(),m2.length(),m2.width());
+  #endif
+  T* m1_i = m1.data();
+  T* m2_i = m2.data();
+  for(int i=0; i<n; i++, m1_i+=m1.mod(),m2_i+=m2.mod())
+    for(int j=0; j<l; j++)
+      m1_i[j] *= m2_i[j];
+}
+
+//!<  does an elementwise division of every row by v
+template<class T>
+void operator/=(const TMat<T>& m, const TVec<T>& v)
+{
+#ifdef BOUNDCHECK
+  if(m.width()!=v.length())
+    PLERROR("IN operator/=(const TMat<T>& m, const TVec<T>& v) v must be as long as m is wide");
+#endif
+  T* m_i = m.data();
+  T* vv = v.data();
+  for(int i=0; i<m.length(); i++, m_i+=m.mod())
+    for(int j=0; j<m.width(); j++)
+      m_i[j] /= vv[j];
+}
+
+//! does an elementwise division
+template<class T>
+void operator/=(const TMat<T>& m1, const TMat<T>& m2)
+{
+  int n=m1.length();
+  int l=m1.width();
+  #ifdef BOUNDCHECK
+  if(l!=m2.width() || n!=m2.length())
+    PLERROR("IN operator/=(const TMat<T>& m1(%d,%d), const TMat<T>& m2(%d,%d)) sizes differ",
+          m1.length(),m1.width(),m2.length(),m2.width());
+  #endif
+  T* m1_i = m1.data();
+  T* m2_i = m2.data();
+  for(int i=0; i<n; i++, m1_i+=m1.mod(),m2_i+=m2.mod())
+    for(int j=0; j<l; j++)
+      m1_i[j] /= m2_i[j];
+}
+
+template<class T>
+void operator+=(const TMat<T>& m1, const TMat<T>& m2)
+{
+  int n=m1.length();
+  int l=m1.width();
+#ifdef BOUNDCHECK
+  if(m1.width()!=m2.width() || m1.length()!=m2.length())
+    PLERROR("IN operator+=(const TMat<T>& m1(%d,%d), const TMat<T>& m2(%d,%d)): m1 and m2 must have same dimensions",
+          m1.length(),m1.width(),m2.length(),m2.width());
+#endif
+  T* m1_i = m1.data();
+  T* m2_i = m2.data();
+  for(int i=0; i<n; i++, m1_i+=m1.mod(),m2_i+=m2.mod())
+    for(int j=0; j<l; j++)
+      m1_i[j] += m2_i[j];
+}
+
+template<class T>
+void operator-=(const TMat<T>& m1, const TMat<T>& m2)
+{
+  int n=m1.length();
+  int l=m1.width();
+#ifdef BOUNDCHECK
+  if(m1.width()!=m2.width() || m1.length()!=m2.length())
+    PLERROR("IN operator+=(const TMat<T>& m1(%d,%d), const TMat<T>& m2(%d,%d)): m1 and m2 must have same dimensions",
+          m1.length(),m1.width(),m2.length(),m2.width());
+#endif
+  T* m1_i = m1.data();
+  T* m2_i = m2.data();
+  for(int i=0; i<n; i++, m1_i+=m1.mod(),m2_i+=m2.mod())
+    for(int j=0; j<l; j++)
+      m1_i[j] -= m2_i[j];
+}
+
+template<class T>
+TMat<T> operator-(const TMat<T>& m1, const TMat<T>& m2)
+{
+    TMat<T> result(m1.length(), m1.width());
+    substract(m1,m2,result);
+    return result;
+}
+
+template<class T>
+TMat<T> operator+(const TMat<T>& m1, const TMat<T>& m2)
+{
+    TMat<T> result(m1.length(), m1.width());
+    add(m1,m2,result);
+    return result;
+}
+
+template<class T>
+void substract(const TMat<T>& m1, const TMat<T>& m2, TMat<T>& destination)
+{
+#ifdef BOUNDCHECK
+  if(m1.width()!=m2.width() || m1.length()!=m2.length()
+     || m1.width()!=destination.width() || m1.length()!=destination.length())
+    PLERROR("IN substract(m1(%d,%d), m2(%d,%d), dest(%d,%d)): args must have same dimensions",
+          m1.length(),m1.width(),m2.length(),m2.width(),destination.length(),
+          destination.width());
+#endif
+  T* m1_i = m1.data();
+  T* m2_i = m2.data();
+  T* d_i = destination.data();
+  int m1_mod = m1.mod();
+  int m2_mod = m2.mod();
+  int d_mod = destination.mod();
+  int w = m1.width();
+  for (int i=0;i<m1.length();i++,m1_i+=m1_mod,m2_i+=m2_mod,d_i+=d_mod) 
+    for (int j=0;j<w;j++)
+     d_i[j] = m1_i[j] - m2_i[j];
+}
+
+template<class T>
+void add(const TMat<T>& m1, const TMat<T>& m2, TMat<T>& destination)
+{
+#ifdef BOUNDCHECK
+  if(m1.width()!=m2.width() || m1.length()!=m2.length()
+     || m1.width()!=destination.width() || m1.length()!=destination.length())
+    PLERROR("IN substract(m1(%d,%d), m2(%d,%d), dest(%d,%d)): args must have same dimensions",
+          m1.length(),m1.width(),m2.length(),m2.width(),destination.length(),
+          destination.width());
+#endif
+  T* m1_i = m1.data();
+  T* m2_i = m2.data();
+  T* d_i = destination.data();
+  int m1_mod = m1.mod();
+  int m2_mod = m2.mod();
+  int d_mod = destination.mod();
+  int w = m1.width();
+  for (int i=0;i<m1.length();i++,m1_i+=m1_mod,m2_i+=m2_mod,d_i+=d_mod) 
+    for (int j=0;j<w;j++)
+     d_i[j] = m1_i[j] + m2_i[j];
+}
+
+//! return a negated copy of m
+template<class T>
+TMat<T> operator-(const TMat<T>& m)
+{
+  TMat<T> opposite(m.length(),m.width());
+  T *m_i=m.data();
+  T *o_i=opposite.data();
+  for (int i=0;i<m.length();i++,m_i+=m.mod(),o_i+=opposite.mod())
+    for (int j=0;j<m.width();j++)
+      o_i[j] = - m_i[j];
+  return opposite;
+}
+
+//! x'_ij = -x_ij;
+template<class T>
+void negateElements(const TMat<T>& m)
+{
+  T* m_i = m.data();
+  for(int i=0; i<m.length(); i++, m_i+=m.mod())
+    for(int j=0; j<m.width(); j++)
+      m_i[j] = -m_i[j];
+}
+
+//! x'_ij = 1.0/x_ij;
+template<class T>
+void invertElements(const TMat<T>& m)
+{
+  T* m_i = m.data();
+  for(int i=0; i<m.length(); i++, m_i+=m.mod())
+    for(int j=0; j<m.width(); j++)
+      m_i[j] = 1.0/m_i[j];
+}
+  
+// result * m = identity
+// (works only if m.length()>=m.width())
+template<class T>
+TMat<T> leftPseudoInverse(TMat<T>& m)
+{
+  TMat<T> inv(m.width(), m.length());
+  leftPseudoInverse(m,inv);
+  return inv;
+}
+
+// result * m = identity
+// (works only if m.length()>=m.width())
+template<class T>
+void leftPseudoInverse(const TMat<T>& m, TMat<T>& inv)
+{
+  if (m.length()==m.width())
+    inverse(m,inv);
+  if (m.length()<m.width())
+    PLERROR("leftPseudoInverse: matrix length(%d) must be >= width(%d)",
+          m.length(), m.width());
+  PLERROR("SVD not implemented yet");
+}
+
+// m * result = identity
+// (works only if m.length()<=m.width())
+template<class T>
+TMat<T> rightPseudoInverse(TMat<T>& m)
+{
+  TMat<T> inv(m.width(), m.length());
+  rightPseudoInverse(m,inv);
+  return inv;
+}
+
+// m * result = identity
+// (works only if m.length()<=m.width())
+template<class T>
+void rightPseudoInverse(const TMat<T>& m, TMat<T>& inv)
+{
+  if (m.length()==m.width())
+    inverse(m,inv);
+  if (m.length()>m.width())
+    PLERROR("rightPseudoInverse: matrix length(%d) must be <= width(%d)",
+          m.length(), m.width());
+  PLERROR("SVD not implemented yet");
+}
+
+// find and return inv s.t. m * inv = inv * m = I = identity
+// (m must be square)
+template<class T>
+TMat<T> inverse(TMat<T>& m)
+{
+  TMat<T> inv(m.length(),m.length());
+  inverse(m,inv);
+  return inv;
+}
+
+// find inv s.t. m * inv = inv * m = I = identity
+// (m must be square)
+template<class T>
+void inverse(const TMat<T>& m, TMat<T>& inv)
+{
+  int n=m.length();
+  if (m.width()!=n)
+    PLERROR("inverse(TMat<T>,TMat<T>): argument(%d,%d) must be square matrix",
+          m.width(), n);
+  inv.resize(n,n);
+  if (n==1)
+    inv.data()[0]=1.0/m.data()[0];
+  else
+    PLERROR("matrix inverse not implemented yet");
+}
+
+// for square positive definite symmetric matrices A,
+//     find X(n,m) s.t. A(n,n) X(n,m) = B(n,m).
+// This is obtained by doing a Cholesky decomposition
+//  A = L L', with L lower diagonal, thus to solve
+//      L L' X = B.
+// We use the CholeskySolve function which solves for x_i in L L' x_i = b_i
+// (on the columns x_i and b_i of X and B respectively).
+// Optionally provide pointers to the temporary matrix L(n,n) and vector y(n)
+// to avoid memory allocations.
+template<class T>
+void solveLinearSystemByCholesky(const TMat<T>& A, const TMat<T>& B, TMat<T>& X, TMat<T>* pL=0, TVec<T>* py=0)
+{
+  int n=A.length();
+  int m=X.width();
+  if (X.length()!=n || A.width()!=n || B.length()!=n || B.width()!=m)
+    PLERROR("solveLinearSystemByCholesky:  A(%d,%d) * X(%d,%d) == B(%d,%d), incompatible",
+          n,A.width(),X.length(),m,B.length(),B.width());
+  TMat<T>* L;
+  TVec<T>* y;
+  if (pL) L=pL; else L = new TMat<T>(n,n);
+  if (py) y=py; else y = new TVec<T>(n);
+  choleskyDecomposition(A,*L);
+  choleskySolve(*L,B,X,*y);
+  if (!pL) delete L;
+  if (!py) delete y;
+}
+
+// for square positive definite symmetric matrices A,
+//     find X(n,m) s.t. X(n,m) A(m,m) = B(n,m).
+// This is obtained by doing a Cholesky decomposition
+//  A = L L', with L lower diagonal, thus to solve
+//      X L L' = B.
+// We use the CholeskySolve function which solves for x_i in L L' x_i = b_i:
+//      L L' X' = B'
+// is solved on the rows of X (x_i) and the columns of B (b_i).
+// Optionally provide pointers to the temporary matrices L and y
+// to avoid memory allocations.
+template<class T>
+void solveTransposeLinearSystemByCholesky(const TMat<T>& A, const TMat<T>& B, TMat<T>& X,TMat<T>* pL=0, TVec<T>* py=0)
+{
+  int n=X.length();
+  int m=X.width();
+  if (A.length()!=m || A.width()!=m || B.length()!=n || B.width()!=m)
+    PLERROR("solveTransposeLinearSystemByCholesky: X(%d,%d) * A(%d,%d) == B(%d,%d), incompatible",
+          n,m,A.length(),A.width(),B.length(),B.width());
+  TMat<T>* L;
+  TVec<T>* y;
+  if (pL) L=pL; else L = new TMat<T>(m,m);
+  if (py) y=py; else y = new TVec<T>(m);
+  choleskyDecomposition(A,*L);
+  for (int i=0;i<n;i++)
+    choleskySolve(*L,B(i),X(i),*y);
+  if (!pL) delete L;
+  if (!py) delete y;
+}
+
+/*  Perform a Cholesky decomposition of nxn symmetric positive definite
+   matrix A, i.e., decompose it into
+      A = L L'
+   where L is a lower diagonal matrix (with zeros above the diagonal). 
+   L be used to solve a linear system A x = b, i.e., LL'x=b, with choleskySolve(L,b,x). 
+   See choleskySolve(TMat<T>*,TVec<T>*) for an example of use.
+
+   From the above equation, one obtains
+
+   for i=0..n-1
+     L[i][i] = sqrt(A[i][i] - sum_{k=0}^{i-1} L[i][k]^2)
+     for j=i+1... n-1
+       L[j][i] = (1/L[i][i]) ( A[i][j] - sum_{k=0}^{i-1} L[i][k] L[j][k] )
+
+ */
+template<class T>
+void  choleskyDecomposition(const TMat<T>& A, TMat<T>& L)
+{
+  int n = A.length();
+  if (n!=A.width())
+    PLERROR("choleskyDecomposition: non-square matrix %dx%d\n",n,A.width());
+  L.resize(n,n);
+  int i,j,k;
+  T sum;
+  bool restart=false;
+  do 
+    {
+      restart=false;
+      for (i=0;i<n;i++)
+        {
+          const T* Ai = A[i];
+          T* Li = L[i];
+          T Lii=0;
+          for (j=i;j<n;j++)
+            {
+              T* Lj = L[j];
+              for (sum=Ai[j],k=i-1;k>=0;k--) sum -= Li[k] * Lj[k];
+              if (i==j)
+                {
+                  if (sum <= 0.0)
+                    {
+                      T eps = -1.1*sum;
+                      PLWARNING("Cholesky decomposition would fail: add %f to diagonal",eps);
+                      T* Aii=A.data();
+                      int addm=A.mod()+1;
+                      for (int ii=0;ii<n;ii++,Aii+=addm) *Aii += eps;
+                      restart=true;
+                      break;
+                    }
+                  Lii = sqrt(sum);
+                }
+              else Lj[i] = sum/Lii;
+            }
+          if (restart) break;
+          Li[i] = Lii;
+        }
+    }
+  while (restart);
+  
+}
+
+/*  Back-propagate through the call to choleskyDecomposition(A,L).
+   The argument A holds the original symmetric positive definite
+   matrix while is the lower diagonal matrix with L L' = A.
+   Given the derivative of C wrt L, fill the derivative
+   of C wrt A. dC_dA must have been cleared beforehand.
+   We are given A, L, dC_dL, and write into dC_dA.
+   Note that dC_dL is modified after the call
+   because of the internal dependencies between the L's.
+
+   for i=n-1..0
+     for j=n-1..i+1
+       dC_dL[i][i] -= dC_dL[j][i] L[j][i] / L[i][i]
+       dC_dA[i][j] += dC_dL[j][i] / L[i][i]
+       for k=0..i-1
+         dC_dL[i][k] -= dC_dL[j][i] L[j][k] / L[i][i]
+         dC_dL[j][k] -= dC_dL[j][i] L[i][k] / L[i][i]
+     dC_dA[i][i] += 0.5 * dC_dL[i][i] / L[i][i]
+     for k=0..i-1
+       dC_dL[i][k] -= dC_dL[i][i] L[i][k] / L[i][i]
+
+ */
+template<class T>
+void  bpropCholeskyDecomposition(const TMat<T>& A, const TMat<T>& L, 
+                                 TMat<T>& dC_dA, TMat<T>& dC_dL)
+{
+  int n = A.length();
+  if (dC_dA)
+  dC_dA.resize(n,n);
+  int i,j,k;
+  for (i=n-1;i>=0;i--)
+    {
+      const T* Li = L[i];
+      T* dC_dLi = dC_dL[i];
+      T* dC_dAi = dC_dA[i];
+      T invLii = 1.0/Li[i];
+      for (j=n-1;j>i;j--)
+        {
+          const T* Lj = L[j];
+          T* dC_dLj = dC_dL[j];
+          T dC_dLji = dC_dLj[i];
+          dC_dLi[i] -= dC_dLji * Lj[i] * invLii;
+          dC_dAi[j] += dC_dLji * invLii;
+          for (k=0;k<i;k++)
+            {
+              dC_dLi[k] -= dC_dLji * Lj[k] * invLii;
+              dC_dLj[k] -= dC_dLji * Li[k] * invLii;
+            }
+        }
+      T dC_dLii = dC_dLi[i];
+      dC_dAi[i] += 0.5 * dC_dLii * invLii;
+      for (k=0;k<i;k++)
+        dC_dLi[k] -= dC_dLii * Li[k] * invLii;
+    }
+}
+
+/*  Solve the linear system A x = L L' x = b using a Cholesky decomposition
+   of A into L L' performed with a prior call to choleskyDecomposition(A,L)
+   (which on return has the matrix L, that is lower diagonal, and A = L L').
+   The solution of the linear system L L' x = b will be in x. 
+   See choleskySolve(TMat<T>*,TVec<T>*) for an example of use.
+   The algorithm is first to solve L y = b, and then L' x = y.
+   The argument y is optional and can be used to hold the intermediate
+   solution to L y = b.
+
+   The solution to L L' x = b is obtained as follows:
+
+   * Solve L y = b by iterating once through the rows of L
+   (store result in x):
+      y[i] = (b[i] - sum_{k<i} L[i][k] y[k])/L[i][i]
+
+   * Solve L' x = y by iterating once (backwards) through the rows of L.
+      x[i] = (y[i] - sum_{k>i} L[k][i] x[k])/L[i][i]
+   
+ */
+template<class T>
+void  choleskySolve(const TMat<T>& L, TVec<T> b, TVec<T> x, TVec<T>& y)
+{
+  int i,k;
+  T sum;
+  int n = L.length();
+  if (L.width()!=n)
+    PLERROR("choleskySolve: matrix L (%d x %d) is not square!",
+          n, L.width());
+  if (b.length()!=n || x.length()!=n)
+    PLERROR("choleskySolve: RHS vector b(%d) or unknown x(%d) incompatiable with L(%d,%d)",
+          b.length(),x.length(),n,n);
+
+  T* bp = b.data();
+  T* xp = x.data();
+  T* yp = y.data();
+
+  // solve L y = b (in variable x if y=0):
+  // for i=0..n-1
+  //   y[i] = (b[i] - sum_{k<i} L[i][k] y[k])/L[i][i]
+  for (i=0;i<n;i++)
+    {
+      const T* Li = L[i];
+      for (sum=bp[i],k=i-1;k>=0;k--) sum -= Li[k] * yp[k];
+      yp[i] = sum / Li[i];
+    }
+  // solve L' x = y 
+  // for i=n-1..0
+  //   x[i] = (y[i] - sum_{k>i} L[k][i] x[k])/L[i][i]
+  for (i=n-1;i>=0;i--)
+    {
+      for (sum=yp[i],k=i+1;k<n;k++) sum -= L[k][i] * xp[k];
+      xp[i] = sum / L[i][i];
+    }
+}
+
+// same as the previous choleskySolve but do it m times on the columns
+// of nxm matrices X and B.
+template<class T>
+void  choleskySolve(const TMat<T>& L, const TMat<T>& B, TMat<T>& X, TVec<T>& y)
+{
+  int i,k;
+  T sum;
+  int n = L.length();
+  int m = X.width();
+  if (L.width()!=n)
+    PLERROR("choleskySolve: matrix L (%d x %d) is not square!",
+          n, L.width());
+  if (B.length()!=n || B.width() !=m)
+    PLERROR("choleskySolve: RHS matrix B(%d,%d) instead of (%d,%d) like X",
+          B.length(),B.width(), n, m);
+  if (X.length()!=n)
+    PLERROR("choleskySolve: X(%d,%d) not compatible with L(%d,%d)",
+          X.length(),m,n,n);
+  if (y.length()!=n)
+    PLERROR("choleskySolve: y(%d) not compatible with L(%d,%d)",
+          y.length(),n,n);
+  int bmod = B.mod();
+  int xmod = X.mod();
+  // loop over columns b and x of B and X
+  for (int j=0;j<m;j++)
+    {
+      T* bp = B.data()+j;
+      T* yp = y.data();
+      // solve L y = b (in variable x if y=0):
+      // for i=0..n-1
+      //   y[i] = (b[i] - sum_{k<i} L[i][k] y[k])/L[i][i]
+      for (i=0;i<n;i++,bp+=bmod)
+        {
+          const T* Li = L[i];
+          for (sum = *bp,k=i-1;k>=0;k--) sum -= Li[k] * yp[k];
+          yp[i] = sum / Li[i];
+        }
+      // solve L' x = y 
+      // for i=n-1..0
+      //   x[i] = (y[i] - sum_{k>i} L[k][i] x[k])/L[i][i]
+      for (i=n-1;i>=0;i--)
+        {
+          sum=yp[i]; 
+          if (i+1<n)
+            {
+              T* xp = &X(i+1,j);
+              for (k=i+1;k<n;k++,xp+=xmod) sum -= L[k][i] * *xp;
+            }
+          X(i,j) = sum / L[i][i];
+        }
+    }
+}
+
+/* 
+  Back-propagate through the CholeskySolve(L,b,x,y) operation
+  (the optional argument y of this call must have been provided).
+
+  dC_dL and dC_db must have been cleared beforehand.
+  dC_dx will be modified (because of the dependencies between the x's.
+
+  (1) back-prop through step L' x = y:
+   for i=0..n-1
+     dC_dy[i] = dC_dx[i] / L[i][i]
+     dC_dL[i][i] -= dC_dx[i] x[i] / L[i][i]
+     for k=i+1..n
+       dC_dx[k]    -= dC_dx[i] L[k][i] / L[i][i]
+       dC_dL[k][i] -= dC_dx[i] x[k] / L[i][i]
+
+  (2) back-prop through step L y = b:
+   for i=n-1..0
+     dC_db[i] = dC_dy[i] / L[i][i]
+     dC_dL[i][i] -= dC_dy[i] y[i] / L[i][i]
+     for k=0..i-1
+       dC_dy[k]    -= dC_dy[i] L[i][k] / L[i][i]
+       dC_dL[i][k] -= dC_dy[i] * y[k] / L[i][i]
+ */
+template<class T>
+void  bpropCholeskySolve(const TMat<T>& L, const TVec<T>& x, const TVec<T>& y,
+                         TMat<T>& dC_dL, TVec<T>& dC_db, TVec<T>& dC_dx)
+{
+  int n = L.length();
+  int i,k;
+  TVec<T> dC_dy(n);
+  const T *xp = x.data();
+  const T *yp = y.data();
+  T *dC_dbp = dC_db.data();
+  T *dC_dxp = dC_dx.data();
+  T* dC_dyp = dC_dy.data();
+
+  // (1) back-prop through step L' x = y:
+  for (i=0;i<n;i++)
+    {
+      const T* Li = L[i];
+      T invLii = 1.0 / Li[i];
+      dC_dyp[i] = dC_dxp[i] * invLii;
+      T dC_dxi = dC_dxp[i];
+      dC_dL[i][i] -= dC_dxp[i] * xp[i] * invLii;
+      for (k=i+1;k<n;k++)
+        {
+          dC_dxp[k] -= dC_dxi * L[k][i] * invLii;
+          dC_dL[k][i] -= dC_dxi * xp[k] * invLii;
+        }
+    }
+
+  // (2) back-prop through step L y = b:
+  for (i=n-1;i>=0;i--)
+    {
+      const T* Li = L[i];
+      T* dC_dLi = dC_dL[i];
+      T invLii = 1.0 / Li[i];
+      T dC_dyi = dC_dyp[i];
+      T dC_dyi_over_Lii = dC_dyi * invLii;
+      dC_dbp[i] += dC_dyi_over_Lii;
+      dC_dLi[i] -= dC_dyi_over_Lii * yp[i];
+      for (k=0;k<i;k++)
+        {
+          dC_dyp[k] -= dC_dyi_over_Lii * Li[k];
+          dC_dLi[k]  -= dC_dyi_over_Lii * yp[k];
+        }
+    };
+}
+
+/*  Use Cholesky decomposition to invert symmetric
+   positive definite matrix A.
+   Also returns the log of the determinant of A
+
+   We have L L' = A, and we want to solve L L' Ainv = I.
+
+   1) solve L Linv = I, i.e., invert L
+
+     for j=0..n-1
+       Linv[j][j] = 1 / L[j][j]
+       for i=j+1..n-1
+         Linv[i][j] = - sum_{j<=k<i} L[i][k] Linv[k][j] / L[i][i]
+     and 0 elsewhere (Linv is lower diagonal)
+
+   2) solve L' Ainv = Linv
+
+     for j=0..n-1
+       for i=n-1..0
+          Ainv[i][j] = (Linv[i][j] - sum_{k>i} L[k][i] Ainv[k][j])/L[i][i]
+
+ */
+template<class T>
+real choleskyInvert(const TMat<T>& A, TMat<T>& Ainv)
+{
+  int n= A.length();
+  TMat<T> L(n,n);
+  if (Ainv)
+  Ainv.resize(n,n);
+
+  choleskyDecomposition(A,L);
+  // now L L' = A
+
+  real logdet = log(fabs(L(0,0)));
+  for(int i=1; i<n; i++)
+    logdet += log(fabs(L(i,i)));
+  logdet *= 2;
+
+  // Compute Linv and put its transpose above L's diagonal.
+  // and put Linv[i][i] = 1 / L[i][i] in L's diagonal.
+  int i,j;
+  T *Lii = L.data();
+  for (i=0;i<n;i++,Lii+=1+n)
+    *Lii = 1.0 / *Lii;
+
+  for (j=0;j<n;j++)
+    {
+      T *Linv_xj = L[j]; // Linv' in L's upper triangle
+      for (i=j+1;i<n;i++)
+        {
+          T sum=0.0;
+          T* Li = L[i];
+          int k;
+          for (k=j;k<i;k++) sum -= Li[k] * Linv_xj[k];
+          Linv_xj[i] = sum * Li[i]; // * not / because inverse already done above
+        }
+    }
+  // recall: now Linv above and on diagonal of L, L below it, 
+
+  // compute A's inverse
+  for (j=0;j<n;j++)
+    {
+      T* Linv_xj = L[j];
+      for (i=n-1;i>=j;i--)
+        {
+          T sum = Linv_xj[i]; // this is Linv[i][j]
+          int k;
+          for (k=i+1;k<n;k++) 
+            sum -= L[k][i] * Ainv[k][j];
+          Ainv[i][j] = sum * L[i][i];
+        }
+      for (i=j-1;i>=0;i--) // symmetric part
+        Ainv[i][j] = Ainv[j][i];
+    };
+
+  return logdet;
+}
+
+/*  Solve a linear system of equations A x = b, when A is
+   symmetric positive definite. Return x.  */
+template<class T>
+TVec<T> choleskySolve(const TMat<T>& A, const TVec<T>& b)
+{
+  int n = A.length();
+  TMat<T> L(n,n);
+  TVec<T> x(n);
+  choleskyDecomposition(A,L);
+  choleskySolve(L,b,x);
+  return x;
+}
+
+/*  return inverse of positive definite matrix A 
+   using Cholesky decomposition. No side-effect on A.  */
+template<class T>
+TMat<T> choleskyInvert(const TMat<T>& A)
+{
+  int n=A.length();
+  TMat<T> Ainv(n,n);
+  choleskyInvert(A,Ainv);
+  return Ainv;
+}
+
+template<class T>
+void LU_decomposition(TMat<T>& A, TVec<T>& Trow, int& detsign, TVec<T>* p=0)
+{
+  int n=A.length();
+  if (n!=A.width())
+    PLERROR("LU_decomposition: matrix A(%d,%d) should be square", n,A.width());
+  TVec<T>* pivot = (p==0)?new TVec<T>(n):p;
+  T* pv = pivot->data();
+  detsign = 1;
+  for (int i=0;i<n;i++)
+    {
+      T max_abs = maxabs(A(i));
+      if (max_abs==0)
+        PLERROR("LU_decomposition: %d-th row has only zeros",i);
+      pv[i] = 1.0 / max_abs;
+    }
+  int mod = A.mod();
+  for (int j=0;j<n;j++)
+    {
+      for (int i=0;i<j;i++)
+        {
+          T* Ai = A[i];
+          T* Akj = A.data()+j;
+          T Uij = Ai[j];
+          for (int k=0;k<i;k++,Akj+=mod)
+            Uij -= Ai[k] * *Akj;
+          Ai[j] = Uij;
+        }
+      T max_abs = 0;
+      int maxi = 0;
+      for (int i=j;i<n;i++)
+        {
+          T* Ai = A[i];
+          T* Akj = A.data()+j;
+          T Lij = Ai[j];
+          for (int k=0;k<j;k++,Akj+=mod)
+            Lij -= Ai[k] * *Akj;
+          Ai[j] = Lij;
+          T piv = fabs(Lij) * pv[i];
+          if (piv >= max_abs)
+            {
+              maxi = i;
+              max_abs = piv;
+            }
+        }
+      if (j!=maxi)
+        // swap row j and row maxi
+        {
+          A.swapRows(j,maxi);
+          pv[maxi]=pv[j];
+          detsign = -detsign;
+        }
+      Trow[j] = maxi;
+      T& Ajj = A(j,j);
+      if (Ajj==0) Ajj=1e-20; // some regularization of singular matrices
+      if (j<n-1)
+        {
+          T denom = 1.0/Ajj;
+          T* Aij = &A(j+1,j);
+          for (int i=j+1;i<n;i++, Aij+=mod)
+            *Aij *= denom;
+        }
+    }
+  if (p!=0) delete pivot;
+}
+   
+// return the determinant of A, using LU_decomposition   
+template<class T>
+T det(const TMat<T>& A)
+{
+  int n = A.length();
+  if (n!=A.width())
+    PLERROR("det(const TMat<T>& A): A(%d,%d) is not square!",n,A.width());
+  for (int i=0;i<n;i++)
+    {
+      T max_abs = maxabs(A(i));
+      if (max_abs==0)
+        return 0.0;
+    }
+  TMat<T> LU(A.copy());
+  TVec<T> Trow(n);
+  TVec<T> p(n);
+  int detsign;
+  LU_decomposition(LU, Trow, detsign);
+  return det(LU,detsign);
+}
+
+// return the determinant of A, whose LU decomposition is given
+// (detsign is as set by LU_decomposition)
+template<class T>
+T det(const TMat<T>& LU, int detsign)
+{
+  T determinant = detsign;
+  int mod = LU.mod();
+  int n = LU.width();
+  if (n!=LU.width())
+    PLERROR("det(const TMat<T>& LU, int detsign): LU(%d,%d) is not square!",n,LU.width());
+  T* LUii = LU.data();
+  for (int i=0;i<n;i++, LUii+=1+mod)
+    determinant *= *LUii;
+  return determinant;
+}
+
+// dest[i,j] = 1 if src[i,j]==v, 0 otherwise
+template<class T>
+void equals(const TMat<T>& src, T v, TMat<T>& dest)
+{
+  int l=src.length();
+  int w=src.width();
+#ifdef BOUNDCHECK
+  if (l!=dest.length() || w!=dest.width())
+    PLERROR("equals(TMat<T>(%d,%d),T,TMat<T>(%d,%d)) args of unequal dimensions",
+          src.length(),src.width(),dest.length(),dest.width());
+#endif
+  for (int i=0;i<l;i++)
+    {
+      const T* s=src[i];
+      T* d=dest[i];
+      for (int j=0;j<w;j++)
+        if (s[j]==v) d[j]=1.0; else d[j]=0.0;
+    }
+}
+
+// dest[i,j] = src[i,j]
+template<class T>
+void transpose(const TMat<T> src, TMat<T> dest)
+{
+  int l=src.length();
+  int w=src.width();
+#ifdef BOUNDCHECK
+  if (w!=dest.length() || l!=dest.width())
+    PLERROR("tranpose(TMat<T>(%d,%d),T,TMat<T>(%d,%d)) args of unequal dimensions",
+          src.length(),src.width(),dest.length(),dest.width());
+#endif
+  int dmod=dest.mod();
+  for (int i=0;i<l;i++)
+    {
+      const T* si=src[i];
+      T* dji= &dest(0,i);
+      for (int j=0;j<w;j++,dji+=dmod)
+        *dji = si[j];
+    }
+}
+
+// res[i,j] = src[i,j]
+template<class T>
+TMat<T> transpose(const TMat<T>& src)
+{
+  TMat<T> res(src.width(),src.length());
+  transpose(src,res);
+  return res;
+}
+
+// Apply a vector operation to each row of matrices, result in rows of a matrix
+template<class T>
+void apply(T (*func)(const TVec<T>&), const TMat<T>& m, TMat<T>& dest)
+{
+  if (dest.length()!=m.length())
+    PLERROR("apply: m.length_=%d, dest.length_=%d",
+          m.length(),dest.length());
+  for (int i=0;i<m.length();i++)
+    dest(i,0)=func(m(i));
+}
+
+template<class T>
+void apply(T (*func)(const TVec<T>&,const TVec<T>&), const TMat<T>& m1, const TMat<T>& m2, 
+           TMat<T>& dest)
+{
+  if (dest.length()!=m1.length() || m1.length()!=m2.length())
+    PLERROR("apply: m1.length_=%d, m2.length_=%d, dest.length_=%d",
+          m1.length(),m2.length(),dest.length());
+  for (int i=0;i<m1.length();i++)
+    dest(i,0)=func(m1(i),m2(i));
+}
+
+// Perform a traditional linear regression (but with weight decay),
+// without bias term. i.e. find weights such that:
+//
+//   norm(weights*inputs - outputs) + weight_decay*norm(weights)
+//
+// is minimized, 
+//
+// This is achieved by solving the following linear system:
+//
+//   (X' X + weight_decay I) * weights = X' outputs
+
+template<class T>
+void linearRegressionNoBias(TMat<T> inputs, TMat<T> outputs, T weight_decay,
+                            TMat<T> weights)
+{
+  int inputsize = inputs.width();
+  int outputsize = outputs.width();
+  int l = inputs.length();
+  if(outputs.length()!=l)
+    PLERROR("In linearRegressionNoBias: inputs and outputs should have the same length");
+  if(weights.length()!=inputsize || weights.width()!=outputsize)
+    PLERROR("In linearRegressionNoBias: weights should be a (inputsize x outputsize) matrix (%d x %d)",inputsize,outputsize);
+  TMat<T> XtX(inputsize,inputsize);
+  transposeProduct(XtX, inputs,inputs);
+  TMat<T> XtY(inputsize,outputsize);
+  transposeProduct(XtY, inputs,outputs);
+  for(int i=0; i<inputsize; i++)
+    XtX(i,i) += weight_decay;
+  solveLinearSystemByCholesky(XtX,XtY,weights);
+}
+
+
+// Perform a traditional linear regression (but with weight decay),
+// i.e. find bias and weights such that
+//
+//   norm(bias + weights*inputs - outputs) + weight_decay*norm(weights)
+//
+// is minimized, where theta'=(biases;weights') {biases in first row}
+//
+// This is achieved by solving the following linear system:
+//
+//   (X' X + weight_decay I) * theta = X' outputs
+//
+// where X = augmented inputs, i.e. X(t) = (1,inputs(t))
+//
+template<class T>
+void linearRegression(TMat<T> inputs, TMat<T> outputs, T weight_decay,
+                       TMat<T> theta_t)
+{
+  int l = inputs.length();
+  int n_inputs = inputs.width();
+  int n_outputs = outputs.width();
+  if (outputs.length()!=l)
+    PLERROR("linearRegression: inputs.length_=%d while outputs.length_=%d",
+          l,outputs.length());
+  if (theta_t.length()!=n_inputs+1 || theta_t.width()!=n_outputs)
+    PLERROR("linearRegression: theta_t(%d,%d) should be (n_inputs(%d)+1)xn_outputs(%d)",
+          theta_t.length(),theta_t.width(),n_inputs,n_outputs);
+
+  int n=n_inputs+1;
+
+  TMat<T> XtX(n,n);
+  TMat<T> XtY(n,n_outputs);
+  // compute X' X and X'Y: 
+  // XtX(i,j) = sum_t X[t,i]*X[t,j] (with X[t,0]=1, X[t,i+1]=inputs[t,i])
+  // YtY(i,j) = sum_t X[t,i]*Y[t,j]
+  // 
+  int xmod=inputs.mod();
+  int ymod=outputs.mod();
+  T *xt = inputs.data();
+  T *yt = outputs.data();
+  XtX(0,0) = l; // we know the answer ahead of time for element (0,0)
+  for (int t=0;t<l;t++,xt+=xmod,yt+=ymod)
+    {
+      T* xx0 = XtX.data();
+      T* xy0 = XtY.data();
+      for (int j=0;j<n_outputs;j++)
+        xy0[j] += yt[j];
+      T *xxi = xx0+n; // start the inner matrix at (1,0)
+      T *xyi = xy0+n_outputs; // start xy at (1,0)
+      for (int i=0;i<n_inputs;i++,xxi+=n,xyi+=n_outputs)
+        {
+          T xti = xt[i];
+          xxi[0]+=xti;
+          T *xxip=xxi+1;
+          for (int j=0;j<i;j++)
+            xxip[j] += xti*xt[j];
+          xxip[i]+=xti*xti;
+          for (int j=0;j<n_outputs;j++)
+            xyi[j] += xti * yt[j];
+        }
+    }
+  // now do the symmetric part of XtX
+  T* xx = XtX.data();
+  T* xxi = xx+n;
+  for (int i=1;i<n;i++,xxi+=n)
+    {
+      T *xx_i=xx+i;
+      for (int j=0;j<i;j++,xx_i+=n)
+           *xx_i = xxi[j];
+    }
+
+  // add weight_decay on the diagonal of XX' (except for the bias)
+  T* xxii = &XtX(1,1);
+  for (int i=0;i<n_inputs;i++,xxii+=1+n)
+    *xxii += weight_decay;
+
+  // now solve by Cholesky decomposition
+  solveLinearSystemByCholesky(XtX,XtY,theta_t);
+}
+
+// Compute a linear fitting of 2 dimensional data resulting
+// in parameters m et b for y = mx + b
+//                         1                                    1
+// Cost function used: C = - Sum[t] { (m * x_t + b - y_t)^2 } + - weight_decay * m^2
+//                         2                                    2
+
+template<class T>
+void linearRegression(TVec<T> inputs, TVec<T> outputs, T weight_decay, TVec<T> theta_t)
+{
+  int npts = inputs.length();
+
+  if (outputs.length()!=npts)
+    PLERROR("linearRegression: inputs.length_=%d while outputs.length_=%d",
+          inputs.length(),outputs.length());
+  if (theta_t.length()!=2)
+    PLERROR("linearRegression: theta_t(%d) should be 2", theta_t.length());
+
+  T sum_x = 0, sum_y = 0, sum_xy = 0, sum_x2 = 0, sum2_x = 0, sum2_y = 0;
+
+  for (int i = 0; i < npts; ++i) {
+    sum_x += inputs[i];
+    sum_y += outputs[i];
+    sum_xy += inputs[i] * outputs[i];
+    sum_x2 += inputs[i] * inputs[i];
+  }
+  sum2_x = sum_x * sum_x;
+  sum2_y = sum_y * sum_y;
+
+  // m
+  theta_t[1] = (sum_xy - (sum_x * sum_y) / npts) / (sum_x2 + weight_decay - sum2_x / npts);
+  // b
+  theta_t[0] = (sum_y - theta_t[1] * sum_x) / npts; 
+}
+
+
+template<class T>
+TMat<T> smooth(TMat<T> data, int windowsize)
+{
+  TVec<T> sumvec(data.width());
+  TMat<T> result(data.length(), data.width());
+  int currentwindowsize = windowsize/2;
+  for(int k=0; k<currentwindowsize; k++)
+    sumvec += data(k);
+  result(0) << sumvec;
+  //result(0) /= (T)currentwindowsize;
+  TVec<T> res0 = result(0);
+  res0 /= (T)currentwindowsize;
+  result(0) << res0;
+
+  for(int i=0; i<data.length(); i++)
+    {
+      int lowi = i-(windowsize-1)/2; // lowest index of window rows (inclusive)
+      int highi = i+windowsize/2; // highest index of window rows (inclusive)
+      if(lowi-1>=0) // remove row lowi-1 if it exists
+        {
+          sumvec -= data(lowi-1);
+          currentwindowsize--;
+        }
+      if(highi<data.length()) // add row highi if it exists
+        {
+          sumvec += data(highi);
+          currentwindowsize++;
+        }
+      result(i) << sumvec;
+      //result(i) /= (T)currentwindowsize;
+      TVec<T> resi = result(i);
+      resi /= (T)currentwindowsize;
+      result(i) << resi;
+    }
+
+
+  return result;
+}
+
+
+template<class T>
+TMat<T> square(const TMat<T>& m)
+{
+  TMat<T> res(m.length(), m.width());
+  for(int i=0; i<m.length(); i++)
+    for(int j=0; j<m.width(); j++)
+      res(i,j) = square(m(i,j));
+  return res;
+}
+
+template<class T>
+TMat<T> sqrt(const TMat<T>& m)
+{
+  TMat<T> res(m.length(), m.width());
+  for(int i=0; i<m.length(); i++)
+    for(int j=0; j<m.width(); j++)
+      res(i,j) = sqrt(m(i,j));
+  return res;
+}
+
+template<class T>
+TMat<T> grep(TMat<T> data, int col, TVec<T> values, bool exclude=false)
+{
+  TMat<T> result(data.length(),data.width());
+  int length=0;
+    
+  for(int i=0; i<data.length(); i++)
+  {
+    bool contains = values.contains(data(i,col));
+    if( (!exclude && contains) || (exclude && !contains) )
+      result(length++) << data(i);
+  }
+  result.resize(length,result.width());
+  result.compact(); // use less memory
+  return result;
+}
+
+
+template<class T>
+void convolve(TMat<T> m, TMat<T> mask, TMat<T> result)
+{
+  if(result.length() != m.length()-mask.length()+1 || result.width() != m.width()-mask.width()+1)
+    PLERROR("In convolve(TMat<T> m, TMat<T> mask, TMat<T> result), result does not have the appropriate dimensions");
+  T sum;
+  for(int i=0; i<result.length(); i++)
+    for(int j=0; j<result.width(); j++)
+      {
+        T* maskptr = mask.data();
+        T* mptr = m[i]+j;
+        sum = 0.0;
+        for(int l=0; l<mask.length(); l++, maskptr += mask.mod(), mptr += m.mod())
+          for(int c=0; c<mask.width(); c++)
+            sum += maskptr[c] * mptr[c];
+        result(i,j) = sum;
+      }
+}
+
+template<class T>
+void subsample(TMat<T> m, int thesubsamplefactor, TMat<T> result)
+{
+  T sum;
+  int norm = thesubsamplefactor * thesubsamplefactor;
+  for(int i=0; i<result.length(); i++)
+    for(int j=0; j<result.width(); j++)
+      {
+        T* mptr = m[thesubsamplefactor*i]+thesubsamplefactor*j;
+        sum = 0.0;
+        for(int l=0; l<thesubsamplefactor; l++, mptr += m.mod())
+          for(int c=0; c<thesubsamplefactor; c++)
+            sum += mptr[c];
+        result(i,j) = sum/norm;
+      }
+}
+
+
+template<class T>
+void classification_confusion_matrix(TMat<T> outputs, TMat<T> target_classes, TMat<T> confusion_matrix)
+{
+  int argmax, target;
+  T v_max, tmp;
+
+  for (int i=0; i<outputs.length(); i++) {
+    // Find argmax(outputs)
+    v_max = outputs(i,0);
+    argmax = 0;
+    for (int j=1; j<outputs.width(); ++j) {
+      tmp = outputs(i,j);
+      if (tmp > v_max) {
+        argmax = j;
+        v_max = tmp;
+      }
+    }
+    // Update confusion matrix
+    target = (int) target_classes(i,0);
+    confusion_matrix(argmax, target) ++;
+  }
+}
+
+// Orthonormalize in-place the rows of the given matrix, using successive
+// projections on the orthogonal subspace of the previously found
+// basis. The resulting matrix has the following properties:
+//  - its rows spans the same space as A
+//  - its rows are orthogonal (dot product = 0)
+//  - its rows are of norm 1
+// However, it may happen that the original rows of A were not linearly
+// independent. In that case the, algorithm returns the number of rows
+// that were successfully obtained (and the user should probably 
+// then do A = A.subMatRows(0,result) to obtain the basis).
+// The tolerance argument is the minimum value of the norm
+// of a row when projected orthogonal to the previous ones for this row
+// to contribute to the basis.
+template<class T>
+int GramSchmidtOrthogonalization(TMat<T> A, T tolerance)
+{
+  int n_basis = 0;
+  for (int i=0;i<A.length();i++)
+  {
+    TVec<T> Ai=A(i);
+    if (n_basis!=i)
+    {
+      TVec<T> Ab = A(n_basis);
+      Ab << Ai;
+      Ai=Ab;
+    }
+    if (i>0)
+      projectOnOrthogonalSubspace(Ai, A.subMatRows(0,n_basis));
+    T normAi = norm(Ai);
+    if (normAi>1e-6)
+    {
+      if (normAi!=1)
+        Ai/=normAi;
+      n_basis++;
+    }
+    // else ignore row i
+  }
+  return n_basis;
+}
+
+//!  products
+template<class T>
+  inline TVec<T> product(const TMat<T>& m, const TVec<T>& v)
+  { TVec<T> res(m.length()); product(res, m,v); return res; }
+
+template<class T>
+  inline TVec<T> transposeProduct(const TMat<T>& m, const TVec<T>& v)
+  { TVec<T> res(m.width()); transposeProduct(res, m,v); return res; }
+
+template<class T>
+  inline TMat<T> product(const TMat<T>& m1, const TMat<T>& m2)
+  { TMat<T> res(m1.length(),m2.width()); product(res, m1,m2); return res; }
+
+template<class T>
+  inline TMat<T> transposeProduct(const TMat<T>& m1, const TMat<T>& m2)
+  { TMat<T> res(m1.width(),m2.width()); transposeProduct(res, m1,m2); return res; }
+
+template<class T>
+  inline TMat<T> productTranspose(const TMat<T>& m1, const TMat<T>& m2)
+  { TMat<T> res(m1.length(),m2.length()); productTranspose(res, m1,m2); return res; }
+
+template<class T>
+inline TMat<T> operator+(const TMat<T>& m, const TVec<T>& v)
+{ TMat<T> res = m.copy(); res+=v; return res; }
+
+template<class T>
+inline TMat<T> operator-(const TMat<T>& m, const TVec<T>& v)
+{ TMat<T> res = m.copy(); res-=v; return res; }
+
+//!  does an elementwise multiplication of every row by v
+template<class T>
+inline TMat<T> operator*(const TMat<T>& m, const TVec<T>& v)
+{ TMat<T> res = m.copy(); res*=v; return res; }
+
+//!  elementwise division of every row by v
+template<class T>
+inline TMat<T> operator/(const TMat<T>& m, const TVec<T>& v)
+{ TMat<T> res = m.copy(); res/=v; return res; }
+
+template<class T>
+inline void choleskySolve(const TMat<T>& L, TVec<T> b, TVec<T> x) //!<  So that y be optional
+{ TVec<T> y; choleskySolve(L,b,x,y); }
+
+//!  Same as above, but with a single value argument
+template<class T>
+  inline TMat<T> grep(TMat<T> data, int col, T value, bool exclude=false)
+  { return grep(data,col,TVec<T>(1,value),exclude); }
+
+%> // end of namespace PLearn
+ 
+
+namespace std <%
+
+template<class T>
+struct hash<PLearn::TVec<T> >
+{
+  size_t operator()(PLearn::TVec<T> v) const { return hash<T>()(sumsquare(v));} 
+};
+
+%> // end of namespace std
+
+
+#endif // TMat_maths_impl_H

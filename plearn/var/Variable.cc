@@ -1,0 +1,788 @@
+// -*- C++ -*-
+
+// PLearn (A C++ Machine Learning Library)
+// Copyright (C) 1998 Pascal Vincent
+// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
+//
+
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+// 
+//  1. Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+// 
+//  2. Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//     documentation and/or other materials provided with the distribution.
+// 
+//  3. The name of the authors may not be used to endorse or promote
+//     products derived from this software without specific prior written
+//     permission.
+// 
+// THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+// NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+// TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// 
+// This file is part of the PLearn library. For more information on the PLearn
+// library, go to the PLearn Web site at www.plearn.org
+
+
+ 
+
+/* *******************************************************      
+   * $Id: Variable.cc,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * This file is part of the PLearn library.
+   ******************************************************* */
+
+/** Variable **/
+
+#include "Var.h"
+#include "VarArray.h"
+#include "Func.h"
+
+namespace PLearn <%
+using namespace std;
+
+
+/** Var **/
+
+Var::Var() :PP<Variable>(0) {}
+Var::Var(Variable* v) :PP<Variable>(v) {}
+Var::Var(Variable* v, const char* name) :PP<Variable>(v) { ptr->setName(name); }
+Var::Var(const Var& other) :PP<Variable>(other) {}
+Var::Var(const Var& other, const char* name) :PP<Variable>(other) { ptr->setName(name); }
+
+Var::Var(int the_length, const char* name) 
+  :PP<Variable>(new SourceVariable(the_length,1)) 
+{ ptr->setName(name); }
+
+Var::Var(int the_length, int the_width)
+  :PP<Variable>(new SourceVariable(the_length,the_width)) {}
+
+Var::Var(int the_length, int the_width, const char* name)
+  :PP<Variable>(new SourceVariable(the_length,the_width)) { ptr->setName(name); }
+
+Var::Var(const Vec& v, bool vertical) 
+  :PP<Variable>(new SourceVariable(v,vertical)) 
+{}
+
+Var::Var(const Mat& m) 
+  :PP<Variable>(new SourceVariable(m))
+{}
+
+int Var::length() const
+{ return (*this)->length(); }
+
+int Var::width() const
+{ return (*this)->width(); }
+
+Var Var::operator[](int i) const
+{
+  if(width()==1)
+    return operator()(i,0);
+  else if(length()==1)
+    return operator()(0,i);
+  PLERROR("You shouldnt use operator[](int i) to access a matrix variable, consider using operator() instead");
+  return Var();
+}
+
+Var Var::operator[](Var index) const
+{ 
+  if(width()!=1)
+    PLERROR("You shouldnt use operator[](Var index) to get the row of a matrix var but operator()(Var index)");
+  return new VarElementVariable(*this,index); 
+}
+
+Var Var::subMat(int i, int j, int sublength, int subwidth, bool do_transpose) const
+{ 
+  if(do_transpose)
+    return new SubMatTransposeVariable(*this, i, j, sublength, subwidth);
+  else 
+    return new SubMatVariable(*this, i, j, sublength, subwidth);
+}
+
+Var Var::subVec(int start, int len, bool transpose) const
+{
+  if(width()==1)
+    return subMat(start,0,len,1,transpose);
+  else if(length()==1)
+    return subMat(0,start,1,len,transpose);
+
+  PLERROR("In Variable::subVec variable is not a vec (single column or single row)");
+  return Var();
+}
+
+Var Var::operator()(Var index) const
+{ return new VarRowVariable(*this,index); }
+
+Var Var::operator()(Var i, Var j) const
+{ return new VarElementVariable(*this, new PlusScalarVariable(j, new TimesConstantVariable(i,(real)width()))); }
+
+void Var::operator=(real f)
+{ 
+  if (!isNull())
+    (*this)->value.fill(f);
+  else
+    PLERROR("Var::operator= called on null Var");
+}
+
+void Var::operator=(const Vec& v)
+{ 
+  if (!isNull())
+    (*this)->value << v;
+  else
+    PLERROR("Var::operator= called on null Var");
+}
+
+void Var::operator=(const Mat& m)
+{ 
+  if (!isNull())
+    (*this)->matValue << m;
+  else
+    PLERROR("Var::operator= called on null Var");
+}
+
+void deepRead(istream& in, DeepReadMap& old2new, Var& v)
+{ Object* v_ptr; deepRead(in, old2new, v_ptr); v = (Variable*)v_ptr; }
+
+void deepWrite(ostream& out, DeepWriteSet& already_saved, const Var& v)
+{ deepWrite(out, already_saved, (Object*)v); }
+
+
+int Variable::nvars = 0;
+
+Variable::Variable(int thelength, int thewidth)
+  :varnum(++nvars), marked(false), varname(""),  
+  allows_partial_update(false), gradient_status(0),
+  matValue(thelength,thewidth), matGradient(thelength,thewidth), 
+  min_value(-FLT_MAX), max_value(FLT_MAX), diaghessiandata(0), rvaluedata(0),
+  dont_bprop_here(false)
+{
+  value = matValue.toVec();
+  gradient = matGradient.toVec();
+  valuedata = value.data();
+  gradientdata = gradient.data();
+}
+
+Variable::Variable(const Mat& m)
+  :varnum(++nvars), marked(false), varname(""),  
+  allows_partial_update(false), gradient_status(0),
+  matValue(m), matGradient(m.length(),m.width()), 
+  min_value(-FLT_MAX), max_value(FLT_MAX), diaghessiandata(0), rvaluedata(0),
+  dont_bprop_here(false)
+{
+  if(!m.isCompact())
+    PLERROR("To be able to construct a Var that views the same data as a Mat m, the Mat must be compact (width()==mod()). Maybe you can use m.copy() instead of m?");
+  value = matValue.toVec();
+  gradient = matGradient.toVec();
+  valuedata = value.data();
+  gradientdata = gradient.data();
+}
+
+// shallow copy (same as default copy constructor, except varnum is set to ++nvars.
+Variable::Variable(const Variable& v)
+  :varnum(++nvars), marked(false), varname(v.getName()), 
+  value(v.value), gradient(v.gradient), 
+  matValue(v.matValue),matGradient(v.matGradient),
+  valuedata(v.valuedata), gradientdata(v.gradientdata),
+  min_value(v.min_value),max_value(v.max_value),
+  g(v.g), diaghessian(v.diaghessian), diaghessiandata(v.diaghessiandata),
+  rvaluedata(v.rvaluedata), dont_bprop_here(v.dont_bprop_here)
+{}
+
+
+void Variable::build_()
+{ 
+  int l, w;
+  recomputeSize(l, w); 
+}
+
+void Variable::build()
+{
+  inherited::build();
+  build_();
+}
+
+
+void Variable::recomputeSize(int& l, int& w) const
+{ l = length(); w = width(); }
+
+void Variable::resize(int l, int w)
+{
+  value = Vec(); 
+  matValue.resize(l,w);
+  value = matValue.toVec();
+  valuedata = value.data();
+
+  gradient = Vec();
+  matGradient.resize(l,w);
+  gradient = matGradient.toVec();
+  gradientdata = gradient.data();
+}
+  
+void Variable::sizeprop()
+{
+  int l,w;
+  recomputeSize(l,w);
+  resize(l,w);
+}
+
+Mat Variable::defineGradientLocation(const Mat& m)
+{
+  if(!m.isCompact())
+    PLERROR("In Variable::setGradientMatrix, Variables require compact matrices");
+  Mat oldm = matGradient;
+  matGradient = m;
+  gradient  = m.toVec();
+  gradientdata = gradient.data();
+  return oldm;
+}
+
+void Variable::print(ostream& out) const
+{ 
+  // This is just to strip "Variable" out of the class name (as they all
+  // end in "Variable")
+  string cn=info();
+  int len = cn.length();
+  if (len >= 9 && cn.substr(len-8,8) == "Variable")
+      out << cn.substr(0,len-8) << endl;
+  else
+      out << cn << endl;
+}
+
+IMPLEMENT_ABSTRACT_NAME_AND_DEEPCOPY(Variable);
+
+void Variable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+{
+  Object::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(value, copies);
+  deepCopyField(gradient, copies);
+  deepCopyField(matValue, copies);
+  deepCopyField(matGradient, copies);
+  valuedata = value.data();
+  gradientdata = gradient.data();
+  deepCopyField(g, copies);
+}
+
+void Variable::clearDiagHessian() 
+{ 
+  if(!diaghessian) 
+    resizeDiagHessian();
+  diaghessian.clear();
+}
+
+
+void Variable::fbprop()
+{
+  fprop();
+  bprop();
+}
+
+void Variable::fbbprop()
+{
+  fprop();
+  bprop();
+  bbprop();
+}
+
+void Variable::bbprop()
+{ PLERROR("bbprop not implemented for this variable (%s)",classname().c_str()); }
+
+void Variable::symbolicBprop()
+{ PLERROR("symbolicBprop not implemented for this variable (%s)",classname().c_str()); }
+
+void Variable::rfprop()
+{ PLERROR("rfprop not implmented for this variable (%s)",classname().c_str()); }
+
+void Variable::setName(const string& the_name)
+{ varname = the_name; }
+
+string Variable::getName() const
+{
+  if (varname.size() == 0)
+    return "#" + tostring(varnum);
+
+  return varname;
+}
+
+void Variable::oldread(istream& in)
+{ PLearn::read(in, value); }; //value.read(in); }
+
+void Variable::write(ostream& out)
+{ PLearn::write(out, value); }; //value.write(out); }
+
+void Variable::deepRead(istream& in, DeepReadMap& old2new)
+{
+  readHeader(in, "Variable");
+  PLearn::deepRead(in, old2new, marked);
+  PLearn::deepRead(in, old2new, varname);
+  PLearn::deepRead(in, old2new, matValue);
+  PLearn::deepRead(in, old2new, matGradient);
+  PLearn::deepRead(in, old2new, matRValue);
+  readFooter(in, "Variable");
+
+  value = matValue.toVec();
+  gradient = matGradient.toVec();
+  valuedata = value.data();
+  gradientdata = gradient.data();
+}
+
+void Variable::deepWrite(ostream& out, DeepWriteSet& already_saved) const
+{
+  writeHeader(out, "Variable");
+  PLearn::deepWrite(out, already_saved, marked);
+  PLearn::deepWrite(out, already_saved, varname);
+  PLearn::deepWrite(out, already_saved, matValue);
+  PLearn::deepWrite(out, already_saved, matGradient);
+  PLearn::deepWrite(out, already_saved, matRValue);
+  writeFooter(out, "Variable");
+}
+
+Var Variable::subVec(int start, int len, bool transpose)
+{
+  if(isColumnVec())
+    return subMat(start,0,len,1,transpose);
+  else if(isRowVec())
+    return subMat(0,start,1,len,transpose);
+
+  PLERROR("In Variable::subVec variable is not a vec (single column or single row)");
+  return Var();
+}
+
+Var Variable::subMat(int i, int j, int sublength, int subwidth, bool do_transpose)
+{ 
+  if(do_transpose)
+    return new SubMatTransposeVariable(this, i, j, sublength, subwidth); 
+  else
+    return new SubMatVariable(this, i, j, sublength, subwidth); 
+}
+
+void Variable::fprop_from_all_sources() 
+{
+  VarArray all_sources = sources();
+  unmarkAncestors();
+  VarArray prop_path = propagationPath(all_sources,Var(this));
+  prop_path.fprop();
+}
+
+void Variable::printInfos(bool print_gradient)
+{
+  VarArray ancetres = ancestors();
+  unmarkAncestors();
+  ancetres.printInfo(print_gradient);
+}
+
+void Variable::accg(Var vg)
+{
+  if(g || (vg.length()==length() && vg.width()==width()))
+    g += vg;
+  else // g does not exist
+  {
+    g = Var(length(),width());
+    g += vg;
+  }
+}
+
+void Variable::verifyGradient(real step) 
+{ 
+  VarArray inputs = sources();
+  unmarkAncestors();
+  Func f(inputs,Var(this));
+  Vec p(inputs.nelems());
+  inputs >> p;
+  f->verifyGradient(p,step);
+}
+
+// set value = value + step_size * direction 
+// with step_size possibly scaled down s.t. box constraints are satisfied
+// return true if box constraints have been hit with the update
+
+bool Variable::update(real step_size, Vec direction_vec)
+{
+  bool hit=false;
+  if(min_value>-FLT_MAX || max_value<FLT_MAX)
+    // constrained update
+  {
+    real* direction = direction_vec.data();
+    for(int i=0; i<nelems(); i++)
+    {
+      valuedata[i] += step_size*direction[i];      
+      if(valuedata[i]<min_value)
+      {
+        valuedata[i]=min_value;
+        hit = true;
+      }
+      else if(valuedata[i]>max_value)
+      {
+        valuedata[i]=max_value;
+        hit = true;
+      }
+    }
+  }
+  else
+    // unconstrained update
+  {
+    real* direction = direction_vec.data();
+    for(int i=0; i<nelems(); i++)
+    {
+      valuedata[i] += step_size*direction[i];      
+    }
+  }
+  return hit;
+}
+
+bool Variable::update(real step_size)
+{
+  bool hit=false;
+  if(min_value>-FLT_MAX || max_value<FLT_MAX)
+    // constrained update
+  {
+    if (allows_partial_update && gradient_status!=2)
+    {
+        if (gradient_status!=0)
+        {
+          for (int r=0;r<rows_to_update.length();r++)
+          {
+            int row = rows_to_update[r];
+            real* direction = matGradient[row];
+            real* params = matValue[row];
+            for(int i=0; i<width(); i++)
+            {
+              params[i] += step_size*direction[i];      
+              if(params[i]<min_value)
+              {
+                params[i]=min_value;
+                hit = true;
+              }
+              else if(params[i]>max_value)
+              {
+                params[i]=max_value;
+                hit = true;
+              }
+              if (allows_partial_update)
+                direction[i]=0;
+            }
+          }
+          rows_to_update.resize(0);
+          gradient_status=0;
+        }
+    }
+    else for (int row=0;row<length();row++)
+    {
+        real* direction = matGradient[row];
+        real* params = matValue[row];
+        for(int i=0; i<width(); i++)
+          {
+            params[i] += step_size*direction[i];      
+            if(params[i]<min_value)
+              {
+                params[i]=min_value;
+                hit = true;
+              }
+            else if(params[i]>max_value)
+              {
+                params[i]=max_value;
+                hit = true;
+              }
+            if (allows_partial_update)
+              direction[i]=0;
+          }
+      }
+    }
+  else
+    // unconstrained update
+  {
+    if (allows_partial_update && gradient_status!=2)
+    {
+        if (gradient_status!=0)
+        {
+          for (int r=0;r<rows_to_update.length();r++)
+          {
+            int row = rows_to_update[r];
+            real* direction = matGradient[row];
+            real* params = matValue[row];
+            for(int i=0; i<width(); i++)
+            {
+              params[i] += step_size*direction[i];      
+              direction[i] = 0;
+            }
+          }
+          rows_to_update.resize(0);
+          gradient_status=0;
+        }
+    }
+    else for (int row=0;row<length();row++)
+    {
+      real* direction = matGradient[row];
+      real* params = matValue[row];      
+      for(int i=0; i<width(); i++)
+        params[i] += step_size*direction[i];      
+    }
+  }
+  return hit;
+}
+
+
+// set value = value + step_size * gradient
+// with step_size possibly scaled down s.t. box constraints are satisfied
+// return true if box constraints have been hit with the update
+
+/*
+bool Variable::update(real step_size)
+{
+  bool hit=false;
+  if(min_value>-FLT_MAX || max_value<FLT_MAX)
+    // constrained update
+    {
+      real* direction = gradient.data();
+      for(int i=0; i<nelems(); i++)
+        {
+          valuedata[i] += step_size*direction[i];      
+          if(valuedata[i]<min_value)
+            {
+              valuedata[i]=min_value;
+              hit = true;
+            }
+          else if(valuedata[i]>max_value)
+            {
+              valuedata[i]=max_value;
+              hit = true;
+            }
+        }
+    }
+  else
+    // unconstrained update
+    {
+      real* direction = gradient.data();
+      for(int i=0; i<nelems(); i++)
+        valuedata[i] += step_size*direction[i];      
+    }
+
+  return hit;
+}
+*/
+
+
+// set value = new_value
+// projected down in each direction independently  in the
+// subspace in which the box constraints are satisfied.
+// return true if box constraints have been hit with the update
+bool Variable::update(Vec new_value)
+{
+  bool hit=false;
+  if(min_value>-FLT_MAX || max_value<FLT_MAX)
+    // constrained update
+    {
+      real* new_v = new_value.data();
+      for(int i=0; i<nelems(); i++)
+        {
+          valuedata[i] = new_v[i];      
+          if(valuedata[i]<min_value)
+            {
+              valuedata[i]=min_value;
+              hit = true;
+            }
+          else if(valuedata[i]>max_value)
+            {
+              valuedata[i]=max_value;
+              hit = true;
+            }
+        }
+    }
+  else
+    // unconstrained update
+    {
+      real* new_v = new_value.data();
+      for(int i=0; i<nelems(); i++)
+        valuedata[i] = new_v[i];      
+    }
+  return hit;
+}
+
+// Using the box constraints on the values, return
+// the maximum allowable step_size in the given direction
+// i.e., argmax_{step_size} {new = value + step_size * direction, new in box}
+real Variable::maxUpdate(Vec direction) 
+{
+  real max_step_size=FLT_MAX;
+  if(min_value>-FLT_MAX || max_value<FLT_MAX)
+    // constrained update
+    {
+      real* dir = direction.data();
+      for(int i=0; i<nelems(); i++)
+        {
+          real v = valuedata[i];
+          if (v<min_value || v>max_value)
+            PLERROR("Variable::maxUpdate:current value %f already out of bounds (%f,%f)!",
+                  v,min_value,max_value);
+          if (dir[i]>0) // want to increase value: check max_value
+            {
+              if (max_value<FLT_MAX) 
+                {
+                  real maxstep = (max_value - v)/dir[i];
+                  if (maxstep < max_step_size) max_step_size = maxstep;
+                }
+            }
+          else if (dir[i]<0) // want to decrease value: check min_value
+            {
+              if (min_value > -FLT_MAX)
+                {
+                  real maxstep = (min_value - v)/dir[i];
+                  if (maxstep < max_step_size) max_step_size = maxstep;
+                }
+            }
+        }
+    }
+  // else unconstrained 
+
+  return max_step_size;
+}
+
+void Variable::makeSharedValue(real* x, int n)
+{
+  if (n!=nelems()) PLERROR("Variable::makeSharedValue, n(%d) inconsistent with nelems(%d)",
+                         n,nelems());
+  real* v=value.data();
+  valuedata=x;
+  if (x!=v)
+    for (int j=0;j<n;j++)
+      x[j]=v[j];
+  value.storage = new Storage<real>(n,x);
+  value.offset_ = 0;
+  matValue.storage = value.storage;
+  matValue.offset_ = 0;
+  matValue.mod_ = matValue.width();
+}
+
+void Variable::makeSharedValue(PP<Storage<real> > storage, int offset_)
+{
+  int n=nelems();
+  if (storage->length()<offset_+n) 
+    PLERROR("Variable::makeSharedValue, storage(%d) too small(<%d+%d)",
+          storage->length(),offset_,nelems());
+  real* v=value.data();
+  real* x=valuedata=storage->data+offset_;
+  if (x!=v)
+    for (int j=0;j<n;j++)
+      x[j]=v[j];
+  value.storage = storage;
+  value.offset_ = offset_;
+  matValue.storage = storage;
+  matValue.offset_ = offset_;
+  matValue.mod_ = matValue.width();
+}
+
+void Variable::makeSharedGradient(Vec& v, int offset_)
+{
+  makeSharedGradient(v.storage,v.offset_+offset_);
+}
+
+void Variable::makeSharedGradient(PP<Storage<real> > storage, int offset_)
+{
+  int n=nelems();
+  if (storage->length()<offset_+n) 
+    PLERROR("Variable::makeSharedGradient, storage(%d) too small(<%d+%d)",
+          storage->length(),offset_,nelems());
+  real* v=gradient.data();
+  real* x=gradientdata=storage->data+offset_;
+  if (x!=v)
+    for (int j=0;j<n;j++)
+      x[j]=v[j];
+  gradient.storage = storage;
+  gradient.offset_ = offset_;
+  matGradient.storage = storage;
+  matGradient.offset_ = offset_;
+  matGradient.mod_ = matGradient.width();
+}
+
+  
+void Variable::makeSharedGradient(real* x, int n)
+{
+  if (n!=nelems()) PLERROR("Variable::makeSharedGradient, n(%d) inconsistent with nelems(%d)",
+                         n,nelems());
+  real* v=gradient.data();
+  gradientdata=x;
+  if (x!=v)
+    for (int j=0;j<n;j++)
+      x[j]=v[j];
+  gradient.storage = new Storage<real>(n,x);
+  gradient.offset_ = 0;
+  matGradient.storage = gradient.storage;
+  matGradient.offset_ = 0;
+  matGradient.mod_ = matGradient.width();
+}
+
+void Variable::makeSharedValue(Vec& v, int offset_)
+{
+  makeSharedValue(v.storage,v.offset_+offset_);
+}
+
+void Variable::makeSharedRValue(PP<Storage<real> > storage, int offset_)
+{
+  resizeRValue();
+  int n=nelems();
+  if (storage->length()<offset_+n) 
+    PLERROR("Variable::makeSharedRValue, storage(%d) too small(<%d+%d)",
+          storage->length(),offset_,nelems());
+  real* v=rValue.data();
+  real* x=rvaluedata=storage->data+offset_;
+  if (x!=v)
+    for (int j=0;j<n;j++)
+      x[j]=v[j];
+  rValue.storage = storage;
+  rValue.offset_ = offset_;
+  matRValue.storage = storage;
+  matRValue.offset_ = offset_;
+  matRValue.mod_ = matRValue.width();
+}
+
+  
+void Variable::makeSharedRValue(real* x, int n)
+{
+  if (n!=nelems()) PLERROR("Variable::makeSharedRValue, n(%d) inconsistent with nelems(%d)",
+                         n,nelems());
+  resizeRValue();
+  real* v=rValue.data();
+  rvaluedata=x;
+  if (x!=v)
+    for (int j=0;j<n;j++)
+      x[j]=v[j];
+  rValue.storage = new Storage<real>(n,x);
+  rValue.offset_ = 0;
+  matRValue.storage = rValue.storage;
+  matRValue.offset_ = 0;
+  matRValue.mod_ = matRValue.width();
+}
+
+void Variable::makeSharedRValue(Vec& v, int offset_)
+{
+  makeSharedRValue(v.storage,v.offset_+offset_);
+}
+    
+void Variable::resizeDiagHessian()
+{
+  matDiagHessian.resize(length(),width());
+  diaghessian = matDiagHessian.toVec();
+  diaghessiandata = diaghessian.data();
+}
+
+void Variable::resizeRValue()
+{
+  if (!rvaluedata)
+  {
+    matRValue.resize(length(),width());
+    rValue = matRValue.toVec();
+    rvaluedata = rValue.data();
+  }
+}
+
+
+
+%> // end of namespace PLearn

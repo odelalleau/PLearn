@@ -1,0 +1,140 @@
+// -*- C++ -*-
+
+// PLearn (A C++ Machine Learning Library)
+// Copyright (C) 1998 Pascal Vincent
+// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
+//
+
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+// 
+//  1. Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+// 
+//  2. Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//     documentation and/or other materials provided with the distribution.
+// 
+//  3. The name of the authors may not be used to endorse or promote
+//     products derived from this software without specific prior written
+//     permission.
+// 
+// THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+// NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+// TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// 
+// This file is part of the PLearn library. For more information on the PLearn
+// library, go to the PLearn Web site at www.plearn.org
+
+
+ 
+
+/* *******************************************************      
+   * $Id: general.cc,v 1.1 2002/07/30 09:01:26 plearner Exp $
+   * AUTHORS: Pascal Vincent & Yoshua Bengio
+   * This file is part of the PLearn library.
+   ******************************************************* */
+
+#include "general.h"
+#ifdef _MSC_VER
+#include <io.h>
+#endif
+
+#include "H.h"
+#include "stringutils.h"
+
+namespace PLearn <%
+using namespace std;
+
+
+  bool swap_endians_on_read = false;
+
+
+int  file_size(const string& filename)
+{
+#ifdef _MSC_VER
+  struct _stat buf;
+  if (_stat(filename.c_str(),&buf)==0)
+#else
+  struct stat buf;
+  if (stat(filename.c_str(),&buf)==0)
+#endif
+  
+    return buf.st_size;
+  else
+    return -1;
+}
+
+
+char* strcopy(char* s)
+{
+  if (!s) return 0;
+  char* ss=new char[strlen(s)+1];
+  strcpy(ss,s);
+  return ss;
+}
+
+// print a number without unnecessary trailing zero's, into buffer
+void pretty_print_number(char* buffer, real number)
+{
+  char* t;
+  char* s;
+  double dnum = double(number);
+  sprintf(buffer,"%.15g",dnum);
+  for (s=buffer; *s!='\0'; s++)
+    if (*s == '.') break;
+  if (*s == '.')
+    {
+      for (t = s + 1; isdigit(*t); t++)
+      if (*t != '0')
+        s = t + 1;
+      for (;*t != '\0';) *s++ = *t++;
+      *s = '\0';
+    }   
+}
+
+bool file_exists(const string& filename)
+{
+  FILE* fp = fopen(filename.c_str(),"r");
+  if (fp)
+    {
+      fclose(fp);
+      return true;
+    }
+  return false;
+}
+
+
+bool isMapKeysAreInt(map<real,int>& m)
+{
+  map<real,int>::iterator it;
+  for (it = m.begin(); it!= m.end(); ++it)
+  {
+    real key_rvalue = it->first;
+    int key_ivalue = int(key_rvalue);
+    if (key_rvalue != key_ivalue) return false;
+  }
+  return true;
+}
+
+
+string hostname()
+{
+  char* h = getenv("HOSTNAME");
+  if (!h)
+    h = getenv("HOST");
+  if (!h)
+    PLERROR("hostname: could not find $HOSTNAME nor $HOST in environment!");
+  return h;
+}
+
+%> // end of namespace PLearn
+
+

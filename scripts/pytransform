@@ -412,7 +412,7 @@ def transformFile(filename, transformfunc):
     f = open(filename)
     text = f.read()
     f.close()
-    transformed_text = transformfunc(text)
+    transformed_text = transformfunc(filename, text)
     if transformed_text != text:
         print
         if mode=='-check':
@@ -475,9 +475,9 @@ if len(args)<3 or args[0] not in ['-check','-test','-replace']:
     print """
 Usage: pytransform [ -check | -test | -replace ] <transformfile> <list of files and directories>
 Where <transformfile> is the name of a file containing a python definition of
-the function transformfunc(text) which returns a transformed source code.
+the function transformfunc(filename, text) which returns a transformed source code.
 ex:
-def transformfunc(text):
+def transformfunc(filename, text):
     text = re.sub(r'#include\s+\"general\.h\"', '#include "PLearnCore/general.h"', text)
     text, commentlist, stringlist = hideCommentsAndStrings(text)
     text = transformDotMethodCall(text, 'accumulate', 1, '%0 += %1')

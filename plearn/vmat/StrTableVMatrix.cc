@@ -1,0 +1,151 @@
+// PLearn ("A C++ Machine Learning Library")
+// Copyright (C) 2002 Pascal Vincent and Julien Keable
+// 
+
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+// 
+//  1. Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+// 
+//  2. Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//     documentation and/or other materials provided with the distribution.
+// 
+//  3. The name of the authors may not be used to endorse or promote
+//     products derived from this software without specific prior written
+//     permission.
+// 
+// THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+// NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+// TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// 
+// This file is part of the PLearn library. For more information on the PLearn
+// library, go to the PLearn Web site at www.plearn.org
+ 
+/* *******************************************************      
+   * $Id: StrTableVMatrix.cc,v 1.1 2002/07/30 09:01:28 plearner Exp $
+   * This file is part of the PLearn library.
+   ******************************************************* */
+
+#include "StrTableVMatrix.h"
+
+namespace PLearn <%
+using namespace std;
+
+/* This constructor is used by the ascii2vmat program
+
+StrTableVMatrix::StrTableVMatrix(int length, int width,const vector<bool> & hasreal):MemoryVMatrix(Mat(length,width))
+{
+//  for(
+}
+
+
+
+real StrTableVMatrix::declareNewString(int col,string str)
+{
+  real r=map_sr[col].size();
+  map_sr[col][str]=r;
+  map_rs[col][r]=str;
+  return r;
+}
+*/
+
+/* This contructor takes a StringTable (which is simply a matrix of string) and converts it to a matrix of reals
+   using real->string and string->real maps
+*/
+StrTableVMatrix::StrTableVMatrix(const StringTable & st):MemoryVMatrix(Mat(st.length(),st.width()))
+{
+  hash_map<string,real>::iterator it;
+  double dbl;
+  TVec<int> mapnum(st.width(),0);
+  TVec<string> vec(st.width());
+  hasreal.resize(st.width());
+  colmax.resize(st.width());
+  
+  for(int j=0;j<st.width();j++)
+    {
+      hasreal[j]=false;
+      colmax[j]=0;
+    }
+
+  map_sr.resize(st.width());
+  map_rs.resize(st.width());
+
+  for(int j=0;j<st.width();j++)
+    declareField(j,st.getFieldName(j), VMField::UnknownType);
+
+  // 1st pass to detect maximums
+  for(int i=0;i<st.length();i++)
+    {
+      vec=st(i);
+      for(int j=0;j<st.width();j++)
+        if(pl_isnumber(vec[j],&dbl))
+          {
+            hasreal[j]=true;
+            if(!is_missing(dbl))
+              if(colmax[j]<dbl)
+                colmax[j]=dbl;
+          }
+    }
+
+  for(int j=0;j<st.width();j++)
+    if(hasreal[j])
+      mapnum[j]=(int)ceil((double)colmax[j])+1;
+    
+  for(int i=0;i<st.length();i++)
+    {
+      vec=st(i);
+      for(int j=0;j<st.width();j++)
+        if(!pl_isnumber(vec[j],&dbl))
+          {
+            if((it=map_sr[j].find(vec[j]))==map_sr[j].end())
+              {
+                data(i,j)=mapnum[j];
+                map_sr[j][vec[j]]=mapnum[j];
+                map_rs[j][mapnum[j]]=vec[j];
+                mapnum[j]++;
+              }      
+            else data(i,j)=it->second;
+          }
+        else data(i,j)=dbl;
+    }
+  
+}
+
+string StrTableVMatrix::getString(int row,int col) const
+{
+  real val=data(row,col);
+  if(hasreal[col] && val<=colmax[col] || is_missing(val))
+    return tostring(val);
+  hash_map<real,string>::const_iterator it=map_rs[col].find(val);
+  if(it==map_rs[col].end())
+    PLERROR("Cannot find val on col=%i row=%i in hash_map.. This shoudn't happen",col,row);
+  return it->second;
+}
+
+real StrTableVMatrix::getStringVal(int col,const string & str) const
+{
+  hash_map<string,real>::const_iterator it=map_sr[col].find(str);
+  if(it==map_sr[col].end())
+    return MISSING_VALUE;
+  return it->second;
+} 
+
+string StrTableVMatrix::getValString(int col, real val) const
+{
+  hash_map<real,string>::const_iterator it=map_rs[col].find(val);
+  if(it==map_rs[col].end())
+    return "";
+  return it->second;
+}
+
+
+%> // end of namespace PLearn

@@ -1,0 +1,337 @@
+// -*- C++ -*-
+
+// PLearn (A C++ Machine Learning Library)
+// Copyright (C) 1998 Pascal Vincent
+// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio, Rejean Ducharme and University of Montreal
+//
+
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+// 
+//  1. Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+// 
+//  2. Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//     documentation and/or other materials provided with the distribution.
+// 
+//  3. The name of the authors may not be used to endorse or promote
+//     products derived from this software without specific prior written
+//     permission.
+// 
+// THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+// NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+// TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// 
+// This file is part of the PLearn library. For more information on the PLearn
+// library, go to the PLearn Web site at www.plearn.org
+
+/* *******************************************************      
+   * $Id: plapack.h,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * This file is part of the PLearn library.
+   ******************************************************* */
+
+/*! \file PLearnLibrary/PLearnCore/plapack.h */
+
+#ifndef plapack_h
+#define plapack_h
+
+#include "Mat.h"
+#include "TMat_maths.h"
+#include "TMat.h"
+
+#include "lapack_proto.h"
+
+namespace PLearn <%
+using namespace std;
+
+
+/*!   This function compute some or all eigenvalues (and optionnaly the
+  corresponding eigenvectors) of a symmetric matrix. The eigenvectors
+  are returned in the ROWS of e_vector.
+  
+  Note1: If compute_all==true, then the field nb_eigen will not be used.
+  
+  Note2: Your input matrix `in' will be over-written
+  
+  Note3: If compute_all=false only some eigen-values (and optionally e-vectors)
+         are computed. This flag allows to select whether those largest in magnitude
+          (the default) or smallest in magnitude are selected.
+  
+  Note4: This function is slightly modified. Now, you do not have to check 
+         if your input matrix is symmetric or not. 
+  Note5: The vectors and eigenvalues seem to be sorted in increasing order (
+*/
+int eigen_SymmMat(Mat& in, Vec& e_value, Mat& e_vector, int& n_evalues_found, 
+                  bool compute_all, int nb_eigen, bool compute_vectors = true,
+                  bool largest_evalues=true);
+
+//!  same as the previous call, but eigenvalues/vectors are sorted by largest firat (in decreasing order)
+int eigen_SymmMat_decreasing(Mat& in, Vec& e_value, Mat& e_vector, int& n_evalues_found, 
+                  bool compute_all, int nb_eigen, bool compute_vectors = true,
+                  bool largest_evalues=true);
+
+//! Computes up to k eigen_values and corresponding eigen_vectors of symmetric matrix m. 
+//! Parameters eigen_values and eigen_vectors are resized accordingly and filled by the call.
+//! The eigenvalues are returned in decreasing order (largest first).
+//! The corresponding eigenvectors are in the *ROWS* of eigen_vectors
+//! WARNING: m is destroyed during the operation.
+void eigenVecOfSymmMat(Mat& m, int k, Vec& eigen_values, Mat& eigen_vectors);
+
+
+//!   Computes the eigenvalues and eigenvectors of a symmetric (NxN) matrix A.
+//!   BEWARE: The content of A is destroyed by the call.
+/*!   ATTENTION: uses TVec<double>::tmpvec1,2 don't use them in caller
+
+  Meaning of RANGE: 
+     'A': all eigenvalues will be found.
+     'V': all eigenvalues in the half-open interval (low,high] will be found. 
+     'I': will find eigenvals with indexes int(low) to int(high) included (smallest eigenval having index 0)
+
+  ABSTOL is the tolerance (see lapack doc for call dsyevr_ )
+
+  If you do not wish to compute eigenvectors, provide a null (empty) 'eigenvecs'.
+
+  Upon return, eigenvals will contain the M eigenvalues found 
+  in increasing order (it will be resized to M).
+  And eigenvecs (unless initially null) will be resized to an MxN matrix 
+  containing the corresponding M eigenvectors in its *rows*.
+*/
+void lapackEIGEN(const TMat<double>& A, TVec<double>& eigenvals, TMat<double>& eigenvecs, char RANGE='A', double low=0, double high=0, double ABSTOL=1e-6);
+
+/*! Performs the SVD decomposition A = U.S.Vt
+  See SVD(...) for more details.
+
+This is a straight forward call to the lapack function.
+As fortran uses column-major matrices, and we use row-major matrices,
+it's really as if we had to pass the transpose of A (denoted At) and 
+were getting back the transpose of U (Ut) and V.
+
+If you want a version without the funny transposes, look at SVD (which
+simply calls this one with a different order of parameters...)  
+*/
+void lapackSVD(const TMat<double>& At, TMat<double>& Ut, TVec<double>& S, TMat<double>& V, char JOBZ='A');
+
+//! Performs the SVD decomposition A = U.S.Vt
+//! Where U and Vt are orthonormal matrices.
+/*! 
+
+   A is an MxN matrix whose content is destroyed by the call.
+
+   S in the above formula is also an MxN matrix, with only its 
+   first min(M,N) diagonal elements are non-zero. The call fills a 
+   vector S with those elements: the singular values, in decreasing order.
+
+JOBZ has the following meaning:
+
+  'A': all M columns of U and all N rows of Vt are returned in the
+  arrays U and VT;
+  
+  'S': the first min(M,N) columns of U and the first min(M,N) rows of
+  Vt are returned in the arrays U and Vt;
+
+  'O': If M >= N, the first N columns of U are overwritten on the
+  array A and all rows of Vt are returned in the array VT; otherwise,
+  all columns of U are returned in the array U and the first M rows of
+  Vt are overwritten in the array VT; = 'N': no columns of U or rows
+  of Vt are computed.
+
+  'N': compute only the singular values (U and V are not computed)
+
+
+Relationships between SVD(A) and eigendecomposition of At.A and A.At
+  -> square(singular values) = eigenvalues
+  -> columns of V (rows of Vt) are the eigenvectors of At.A
+  -> columns of U are the eigenvectors of A.At
+*/
+inline void SVD(const TMat<double>& A, TMat<double>& U, TVec<double>& S, TMat<double>& Vt, char JOBZ='A')
+{
+  // A = U.S.Vt  -> At = V.S.Ut
+  lapackSVD(A,Vt,S,U,JOBZ);
+}
+
+//!  This function compute the inverse of a matrix.
+int matInvert(Mat& in, Mat& inverse);
+
+  //!  generate N vectors sampled from the normal with mean vector mu
+  //!  and covariance matrix A 
+  Mat multivariate_normal(const Vec& mu, const Mat& A, int N);
+
+  //!  generate a vector sampled from the normal with mean vector mu 
+  //!  and covariance matrix A
+  Vec multivariate_normal(const Vec& mu, const Mat& A);
+
+  //!  generate 1 vector sampled from the normal with mean mu 
+  //!  and covariance matrix A = evectors * diagonal(e_values) * evectors' 
+  Vec multivariate_normal(const Vec& mu, const Vec& e_values, const Mat& e_vectors);
+
+
+/*!   Solves AX = B
+  This is a simple wrapper over the lapack routine. It expects A and Bt (transpose of B) as input, 
+  as well as a pivots vector of ints of same length as A.
+  The call overwrites Bt, putting the transposed solution Xt in there,
+  and A is also overwritten to contain the factors L and U from the factorization A = P*L*U; 
+  (the unit diagonal elements of L  are  not stored).
+  The lapack status is returned:
+     = 0:  successful exit
+     < 0:  if INFO = -i, the i-th argument had an illegal value
+     > 0:  if INFO = i, U(i,i) is  exactly  zero.   The factorization has been completed, 
+           but the factor U is exactly singular, so the solution could not be computed.
+*/
+int lapackSolveLinearSystem(Mat& A, Mat& Bt, TVec<int>& pivots);
+
+/*!   Returns the solution X of AX = B
+  A and B are left intact, and the solution is returned.
+  This call does memory allocations/deallocations and transposed copies of matrices (contrary to the lower 
+  level lapackSolveLinearSystem call that you may consider using if efficiency is a concern).
+*/
+Mat solveLinearSystem(const Mat& A, const Mat& B);
+
+//!  Returns solution x of Ax = b
+//!  (same as above, except b and x are vectors)
+Vec solveLinearSystem(const Mat& A, const Vec& b);
+
+//!  for matrices A such that A.length() <= A.width(),
+//!  find X s.t. A X = Y
+void solveLinearSystem(const Mat& A, const Mat& Y, Mat& X);
+
+//!  for matrices A such that A.length() >= A.width(),
+//!  find X s.t. X A = Y
+void solveTransposeLinearSystem(const Mat& A, const Mat& Y, Mat& X);
+
+/*!   Returns w that minimizes ||X.w - Y||^2 + lambda.||w||^2
+  under constraint \sum w_i = 1
+  Xt is the transposed of the input matrix X; Y is the target vector.
+  This doesn't include any bias term.
+*/
+Vec constrainedLinearRegression(const Mat& Xt, const Vec& Y, real lambda=0.);
+
+//!  closest point to x on hyperplane that passes through all points (with weight decay)
+inline Vec closestPointOnHyperplane(const Vec& x, const Mat& points, real weight_decay = 0.)
+{ return transposeProduct(points, constrainedLinearRegression(points,x,weight_decay)); }
+
+//!  Distance between point x and closest point on hyperplane that passes through all points
+inline real hyperplaneDistance(const Vec& x, const Mat& points, real weight_decay = 0.)
+{ return L2distance(x, closestPointOnHyperplane(x,points,weight_decay)); }
+
+/*!   Diagonalize the sub-space spanned by the rows of X(mxn)
+  with respect to symmetric matrix A(nxn), m<=n. The eigenpairs will be put
+  in the evalues/evectors arguments (expressed in the basis of X),
+  and the corresponding basis in R^n will be put in the solutions(kxn) matrix.
+  
+  The function proceeds as follows: 
+  
+    GramSchmid orthornormalize X, so that X X' = I(mxm)
+    C(mxm) = X A X'
+    solve small eigensystem C = V' S V            (V = evectors, S = evalues)
+    solutions = V X
+  
+  Thus in the end we have
+  
+    solutions solutions' = V X X' V' = I if X was orthonormal to start with
+    solutions A solutions' = V X A X' V' = V C V' = S
+  
+*/
+template<class MatT>
+void diagonalizeSubspace(MatT& A, Mat& X, Vec& Ax, 
+                         Mat& solutions, Vec& evalues, Mat& evectors)
+{
+  int n_try=X.length();
+
+  n_try=GramSchmidtOrthogonalization(X);
+  X = X.subMatRows(0,n_try);
+
+  int n_soln=solutions.length();
+  //!  first collect C = X A X'
+  Mat C(n_try,n_try);
+  for (int i=0;i<n_try;i++)
+  {
+    real* Ci = C[i];
+    Vec x_i=X(i);
+    A.product(x_i,Ax);
+    for (int j=0;j<=i;j++)
+      Ci[j] = dot(X(j),Ax);
+  }
+  //!  symmetric part
+  for (int i=0;i<n_try;i++)
+  {
+    real* Ci = C[i];
+    for (int j=i+1;j<n_try;j++)
+      Ci[j] = C(j,i);
+  }
+
+  //!  then diagonalize C = evectors' * diag(evalues) * evectors
+  int n_evalues_found=0;
+  Mat CC=C.copy();
+  eigen_SymmMat(CC,evalues,evectors,n_evalues_found,true,n_try,true,true);
+  //!  the eigen-values should be in increasing order
+#if 0
+  //!  check that the eigen-decomposition has worked:
+  Vec Cv(n_try);
+  for (int i=0;i<n_try;i++)
+  {
+    Vec vi=evectors(i);
+    if (fabs(norm(vi)-1)>1e-5)
+    cout << "norm v[" << i << "] = " << norm(vi) << endl;
+    product(C, vi,Cv);
+    real ncv=norm(Cv);
+    if (fabs(ncv-evalues[i])>1e-5)
+    cout << "C v[" << i << "] = " << ncv << " but evalue = " << evalues[i] << endl;
+    real vcv = dot(vi,Cv);
+    if (fabs(vcv-evalues[i])>1e-5)
+      cout << "v' C v[" << i << "] = " << vcv << " but evalue = " << evalues[i] << endl;
+    for (int j=0;j<i;j++)
+    {
+      Vec vj=evectors(j);
+      real dij = dot(vi,vj);
+      if (fabs(dij)>1e-5)
+	cout << "v[" << i << "] . v[" << j << "] = " << dij << endl;
+    }
+  }
+#endif
+
+  //!  convert the eigenvectors corresponding to the smallest eigenvalues
+  for (int i=0;i<n_soln;i++)
+  {
+    Vec xi=solutions(i);
+    xi.clear(); //!<  already 0
+    for (int j=0;j<n_try;j++)
+      multiplyAcc(xi, X(j),evectors(i,j));
+  }
+#if 0
+  //!  CHECK RESULT
+  for (int i=0;i<n_soln;i++)
+  {
+    Vec xi=solutions(i);
+    real normxi=norm(xi);
+    if (fabs(normxi-1)>1e-5)
+      cout << "norm x[" << i << "]=" << normxi << endl;
+    product(A, xi,Ax); 
+    cout << "Ax[" << i << "]=" << norm(Ax) << endl;
+    real xAx = dot(Ax,xi);
+    real err=fabs(xAx-evalues[i]);
+    if (err>1e-5)
+      cout << "xAx [" << i << "]=" << xAx << " but evalue = " << evalues[i] << endl;
+    for (int j=0;j<i;j++)
+    {
+      Vec xj=solutions(j);
+      err = fabs(dot(xi,xj));
+      if (err>1e-5)
+	cout << "|x[" << i << "] . x[" << j << "]| = " << err << endl;
+    }
+  }
+#endif
+}
+
+%> // end of namespace PLearn
+
+
+#endif //!<  plapack_h
+
