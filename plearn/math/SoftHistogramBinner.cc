@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SoftHistogramBinner.cc,v 1.2 2004/11/04 14:55:46 tihocan Exp $ 
+   * $Id: SoftHistogramBinner.cc,v 1.3 2004/11/04 15:01:44 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -149,7 +149,7 @@ TVec< TVec<int> > SoftHistogramBinner::getBins(const Vec& v) const {
       min = k -1;
     else
       min = k;
-    bins[i].append(w(min, 1));
+    bins[i].append(int(w(min, 1)));
     // Expand to get n samples in the bin.
     int count = 1;
     int right = min;
@@ -179,7 +179,7 @@ TVec< TVec<int> > SoftHistogramBinner::getBins(const Vec& v) const {
         left--;
         to_add = left;
       }
-      bins[i].append(w(to_add, 1));
+      bins[i].append(int(w(to_add, 1)));
       count++;
     }
   }
