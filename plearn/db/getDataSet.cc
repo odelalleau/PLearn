@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.24 2004/07/21 16:30:51 chrish42 Exp $
+   * $Id: getDataSet.cc,v 1.25 2004/09/20 16:46:34 mariusmuja Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -69,7 +69,8 @@ string getDataSetHelp()
     " - the object specification of a VMatrix subclass \n"
     " - the specification of a preprogrammed dataset i.e. one of the datasetnames below,\n"
     "   followed by the word 'train' or 'test', optionally followed by the word 'normalize'\n"
-    + loadClassificationDatasetHelp() + "\n";
+    + loadClassificationDatasetHelp()  
+    + loadUCIDatasetsHelp();
 }
 
 time_t getDataSetDate(const string& datasetstring, const string& alias)
