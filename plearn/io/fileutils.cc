@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.31 2004/03/12 14:06:22 tihocan Exp $
+   * $Id: fileutils.cc,v 1.32 2004/03/12 23:32:36 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -736,7 +736,7 @@ string readAndMacroProcess(istream& in, map<string, string>& variables)
                       } else if (evaluate_cond == "0") {
                         expr_evaluated = expr_cond_false;
                       } else {
-                        PLERROR("$IF condition should be 0 or 1, but is %c", evaluate_cond.c_str());
+                        PLERROR("$IF condition should be 0 or 1, but is %s", evaluate_cond.c_str());
                       }
                       istrstream expr_stream(expr_evaluated.c_str());
                       text += readAndMacroProcess(expr_stream, variables);
