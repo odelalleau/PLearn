@@ -63,7 +63,7 @@ def cluster_command( raw_command, logdir_path = None, format = Cluster.Defaults.
         logfile_name = raw_command
         for s in [" ", ".", "/"]:
             logfile_name = logfile_name.replace(s, "_")
-        processed_cmd = "%s > %s" % (
+        processed_cmd = "%s >& %s" % (
             raw_command, os.path.join( logdir_path, logfile_name)
             )
 

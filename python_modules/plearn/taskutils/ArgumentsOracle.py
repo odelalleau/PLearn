@@ -114,8 +114,12 @@ class DirectorySplittedOracle( ArgumentsOracle ):
             regexp += "%s%s\S%s" % (param, nvjoin, self.ajoin)
         self.regexp = "(%s)"%regexp
 
+        self.creation_hook         = lambda : None
         self.created_directories   = []
         self.directory_when_called = os.getcwd()
+
+    def set_creation_hook( self, hook ):
+        self.creation_hook = hook
 
     def next( self ):
         _next   = self.underlying_oracle.next()
@@ -127,6 +131,7 @@ class DirectorySplittedOracle( ArgumentsOracle ):
             os.chdir( self.directory_when_called )
             os.mkdir( dirname )
             os.chdir( dirname )
+            self.creation_hook( )
             self.created_directories.append( dirname )
 
         return _next
