@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.cc,v 1.22 2003/10/20 21:08:19 ducharme Exp $ 
+   * $Id: FuturesTrader.cc,v 1.23 2003/10/27 05:14:34 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.cc */
@@ -54,6 +54,7 @@ PLEARN_IMPLEMENT_OBJECT(FuturesTrader, "A meta-sequential learner trading future
                         "such as a basic stop loss.");
 
 FuturesTrader::FuturesTrader():
+  rollover_tag("rollover"), 
   leverage(1.0), maintenance_margin_ratio(0.75)
 {}
 
@@ -65,12 +66,19 @@ void FuturesTrader::build()
 
 void FuturesTrader::build_()
 {
+  if(train_set.isNull())
+    return;
+
   margin_cash.resize(max_seq_len, nb_assets);
   margin_cash.fill(MISSING_VALUE);
 
   if(maintenance_margin_ratio < 0 || maintenance_margin_ratio > 1)
     PLERROR("The margin_call_ratio was set to %f but must be between 0 and 1", 
             maintenance_margin_ratio);
+  
+  if(assets_names.isEmpty())
+    return;
+  assets_info(assets_rollover_indices, rollover_tag);
 }
 
 void FuturesTrader::forget()
@@ -155,12 +163,7 @@ void FuturesTrader::trader_test(int t, VMat testset, PP<VecStatsCollector> test_
       real p_kt = price(k, t);
       portfolio_value[t] += abs(w_kt)*p_kt;
       if( delta_ != 0.0 ) //To change for 0 when will pass to units!!!
-      {
-        transaction_cost += additive_cost + multiplicative_cost[k]*fabs(delta_);
-
-        // Updating the margin, given the leverage
-        margin(k, t) += delta_*p_kt/leverage;
-      }
+        transaction_cost += additive_cost + multiplicative_cost[k]*delta_;
 
       // Checkout if a margin call is needed
       //check_margin(k, t); PAS D'APPELS DE MARGE POUR L'INSTANT!!!
@@ -194,6 +197,19 @@ void FuturesTrader::trader_test(int t, VMat testset, PP<VecStatsCollector> test_
   errors(t) << update;
 }
 
+real FuturesTrader::delta(int k, int t) const
+{
+  bool rollover = (bool)internal_data_set(t,assets_rollover_indices[k]);
+  if(!rollover)
+    return inherited::delta(k, t);
+  
+  // In the case of rollover:
+  real abs_curr = abs(weight(k, t));
+  if( stop_loss(k, t) )
+    return abs_curr;
+  return abs_curr + abs(weight(k, t+1));  
+}
+
 void FuturesTrader::check_margin(int k, int t) const
 {
   real v_kt = fabs(weight(k,t)) * price(k, t);
@@ -221,6 +237,12 @@ void FuturesTrader::check_margin(int k, int t) const
 
 void FuturesTrader::declareOptions(OptionList& ol)
 {
+  declareOption(ol, "rollover_tag", &FuturesTrader::rollover_tag,
+                OptionBase::buildoption,
+                "The string such that asset_name:rollover_tag is the field name\n"
+                "of the column containing the rollover information.\n"
+                "Default: \"rollover\"");
+
   declareOption(ol, "leverage", &FuturesTrader::leverage,
                 OptionBase::buildoption,
                 "The ratio between the value of the contracts we are in and the margin we have.\n"
@@ -276,6 +298,7 @@ void FuturesTrader::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   
+  deepCopyField(assets_rollover_indices, copies);
   deepCopyField(margin_cash, copies);
 } 
 %> // end of namespace PLearn

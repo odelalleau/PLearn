@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.h,v 1.10 2003/10/20 21:08:19 ducharme Exp $ 
+ * $Id: Trader.h,v 1.11 2003/10/27 05:14:34 dorionc Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -63,9 +63,6 @@ private:
   //! Time at which test was called the very first time
   mutable int very_first_test_t;
   
-  //! A reference to the largest of train_set/testset  
-  mutable VMat internal_data_set;   
-  
   //! The index of the risk_free_rate column in the internal_data_set
   int risk_free_rate_index;
   
@@ -85,14 +82,14 @@ private:
   //! List of indices associated with the tradable flag fields in the VMat
   TVec<int> assets_tradable_indices;
   
-  //! List of indices associated with the rollover flag fields in the VMat
-  TVec<int> assets_rollover_indices;
-  
   //! Will be used to keep track of the losses/gains
   Vec stop_loss_values;        
 
 protected:
-  
+
+  //! A reference to the largest of train_set/testset  
+  mutable VMat internal_data_set;   
+
   /*! 
     The portfolios matrix is used to store the positions (weights) in each asset. The portfolio 
      matrix will have a length of max_seq_len. Its r^th row will be initialized with the portfolio 
@@ -127,6 +124,18 @@ protected:
   //**************
   // Methods     *   
   //**************
+
+  /*!  
+    Returns |weight(k, t+1) - weight(k, t)| (if < rebalancing_threshold) 
+    or 0, otherwise.
+    
+    Also calls stop_loss
+  */
+  virtual real delta(int k, int t) const;
+  
+  //! Ensures a basic stop loss
+  virtual bool stop_loss(int k, int t) const;
+  
   
   /*! 
     SUBCLASS WRITING:
@@ -141,19 +150,19 @@ protected:
   //***********************
   // Abstract Methods     *   
   //***********************
-  
+
   /*! 
     SUBCLASS WRITING:
       Trader::test method SHOULD NOT BE OVERLOADED by ANY subclass!!! It does 
         some pre and postprocessing to the body of the test method.
-
+        
       The method to be overloaded is trader_test and it will be called by
         Trader::test for each of test's time step. The method must set the 
         absolute & relative returns on test period t.
   */
   virtual void trader_test(int t, VMat testset, PP<VecStatsCollector> test_stats,
       VMat testoutputs, VMat testcosts) const =0;
-
+  
 public:
   
   //! Constructor
@@ -183,14 +192,7 @@ public:
     Default: "is_tradable"
   */
   string tradable_tag;
-
-  /*! 
-    The string such that asset_name:rollover_tag is the field name
-     of the column containing the rollover information.
-    Default: "rollover"
-  */
-  string rollover_tag;
-
+  
   //! The fix cost of performing a trade. Default: 0
   real additive_cost;
 
@@ -226,7 +228,8 @@ public:
     assets_info method.
     Default: false
   */
-  bool deduce_assets_names;
+  bool deduce_assets_names_;
+  void deduce_assets_names();
 
   //**************
   // Methods     *  
@@ -234,12 +237,15 @@ public:
   
   //! This parses the train_set VMat to get the infos on the assets
   void assets_info();
-  
+  void assets_info(TVec<int>& info, const string& info_tag) const;
+
   //! Returns the price of the given asset at a given time. 
   real price(int k, int t) const;
   
   //! Returns the price of the S&P500 at a given time. 
   real sp500_price(int t) const;
+
+  VMat getPricesSubMat(){ return internal_data_set.columns(assets_price_indices); }
   
   //******************
   //! Returns the return on the given asset at a given time. 
@@ -253,18 +259,7 @@ public:
   //! Returns the price of the given asset at a given time. 
   inline bool is_tradable(int k, int t)
     { return train_set(t, assets_tradable_indices[k]); }
-  
-  /*!  
-    Returns [weight(k, t+1) - weight(k, t)] (if < rebalancing_threshold) 
-    or 0, otherwise.
-
-    Also calls stop_loss
-  */
-  real delta(int k, int t) const;
-
-  //! Ensures a basic stop loss
-  virtual bool stop_loss(int k, int t) const;
-  
+    
   //! Calls the inherited::setTrainingSet and the advisor one
   virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 

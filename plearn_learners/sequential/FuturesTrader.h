@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.h,v 1.11 2003/10/15 21:06:31 ducharme Exp $ 
+   * $Id: FuturesTrader.h,v 1.12 2003/10/27 05:14:34 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.h */
@@ -66,11 +66,30 @@ protected:
   //! Access the margin value on asset k at time t (see the margin_cash matrix) 
   real& margin(int k, int t) const { return margin_cash(t-horizon, k); }
 
+  //! List of indices associated with the rollover flag fields in the VMat
+  TVec<int> assets_rollover_indices;
+  
+  /*! 
+    The string such that asset_name:rollover_tag is the field name
+    of the column containing the rollover information.
+    Default: "rollover"
+  */
+  string rollover_tag;
 
-  // *********************
-  // * protected members *
-  // *********************
 
+  // ***********************
+  // * protected functions *
+  // ***********************
+    
+  /*!
+    Manages rollover and, as Trader::delta, returns 
+    |weight(k, t+1) - weight(k, t)|, if < rebalancing_threshold, or 0 otherwise.
+    
+    Also calls stop_loss
+  */
+  virtual real delta(int k, int t) const;
+
+  
   /*! 
     SUBCLASS WRITING:
       Trader::test method SHOULD NOT BE OVERLOADED by ANY subclass!!! It does 

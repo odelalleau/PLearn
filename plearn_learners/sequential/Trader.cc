@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.cc,v 1.16 2003/10/20 21:08:19 ducharme Exp $ 
+ * $Id: Trader.cc,v 1.17 2003/10/27 05:14:34 dorionc Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -53,9 +53,9 @@ Trader::Trader():
   build_complete(false), very_first_test_t(-1), nb_assets(0),
   risk_free_rate("risk_free_rate"),
   price_tag("close:level"), tradable_tag("is_tradable"),
-  rollover_tag("rollover"), additive_cost(0.0), rebalancing_threshold(0.0), 
+  additive_cost(0.0), rebalancing_threshold(0.0), 
   stop_loss_active(false), stop_loss_horizon(-1), stop_loss_threshold(-INFINITY),
-  sp500(""), assets_names(TVec<string>()), deduce_assets_names(false)
+  sp500(""), assets_names(TVec<string>()), deduce_assets_names_(false)
 {
   multiplicative_cost.resize(0);
 }
@@ -123,57 +123,51 @@ void Trader::build_()
   build_complete = true;
 }
 
+void Trader::deduce_assets_names()
+{
+  if(assets_names.isNotEmpty())
+    assets_names.clear();
+  
+  Array<VMField> finfo = internal_data_set->getFieldInfos();  
+  int pos=-1;
+  string current_name="";
+  for(int info=0; info < finfo.size(); info++)
+  {
+    pos = finfo[info].name.find_first_of(":");
+    if( pos == -1 )
+      continue;
+    
+    current_name = finfo[info].name.substr(0, pos);
+    if (assets_names.find(current_name) != -1) // already found
+      continue;
+    
+    assets_names.append(current_name);
+  }
+}
+
+void Trader::assets_info(TVec<int>& info, const string& info_tag) const
+{
+  info.resize(assets_names.length());
+  for(int asset_index=0; asset_index<assets_names.length(); asset_index++)
+    info[asset_index] = internal_data_set->fieldIndex(assets_names[asset_index]+":"+info_tag);
+}
+
 void Trader::assets_info()
 {
   if(internal_data_set.isNull())
     return;
-  
-  if(assets_names.isNotEmpty())
-  {
-    if (deduce_assets_names)
-      assets_names.clear();
-    assets_price_indices.clear();
-    assets_tradable_indices.clear();
-    assets_rollover_indices.clear();
-  }
-  
-  if(deduce_assets_names)
-  {
-    Array<VMField> finfo = internal_data_set->getFieldInfos();  
-    int pos=-1;
-    string current_name="";
-    for(int info=0; info < finfo.size(); info++)
-    {
-      pos = finfo[info].name.find_first_of(":");
-      if( pos == -1 )
-        continue;
 
-      current_name = finfo[info].name.substr(0, pos);
-      if (assets_names.find(current_name) != -1) // already found
-        continue;
-
-      assets_names.append(current_name);
-    }
-  }
+  if(deduce_assets_names_)
+    deduce_assets_names();
   else if (assets_names.isEmpty())
-    PLERROR("The field name 'assets_names' has not been set and 'deduce_assets_names' is false");
-  //cout << assets_names << endl; //TMP
+    PLERROR("The field name 'assets_names' has not been set and 'deduce_assets_names_' is false");
   
   outputsize_ = nb_assets = assets_names.length();
   if(nb_assets == 0)
-    PLERROR("Must provide a non empty TVec<string> assets_names");
-  
+    PLERROR("Must provide a non empty TVec<string> assets_names");  
 
-  // Building a list of the indices needed to access the prices in the VMat
-  assets_price_indices.resize(assets_names.length());
-  assets_tradable_indices.resize(assets_names.length());
-  assets_rollover_indices.resize(assets_names.length());
-  for(int asset_index=0; asset_index<assets_names.length(); asset_index++)
-  {
-    assets_price_indices[asset_index] = internal_data_set->fieldIndex(assets_names[asset_index]+":"+price_tag);
-    assets_tradable_indices[asset_index] = internal_data_set->fieldIndex(assets_names[asset_index]+":"+tradable_tag);
-    assets_rollover_indices[asset_index] = internal_data_set->fieldIndex(assets_names[asset_index]+":"+rollover_tag);
-  }
+  assets_info(assets_price_indices, price_tag);
+  assets_info(assets_tradable_indices, tradable_tag);
   risk_free_rate_index = internal_data_set->fieldIndex(risk_free_rate);    
 }
 
@@ -211,12 +205,6 @@ void Trader::declareOptions(OptionList& ol)
                 "The string such that asset_name:tradable_tag is the field name\n"
                 "of the column containing the tradable or not boolean.\n"
                 "Default: \"is_tradable\"");
-
-  declareOption(ol, "rollover_tag", &Trader::rollover_tag,
-                OptionBase::buildoption,
-                "The string such that asset_name:rollover_tag is the field name\n"
-                "of the column containing the rollover information.\n"
-                "Default: \"rollover\"");
 
   declareOption(ol, "additive_cost", &Trader::additive_cost,
                 OptionBase::buildoption,
@@ -260,7 +248,7 @@ void Trader::declareOptions(OptionList& ol)
                 OptionBase::buildoption,
                 "The name of all the assets");
 
-  declareOption(ol, "deduce_assets_names", &Trader::deduce_assets_names,
+  declareOption(ol, "deduce_assets_names", &Trader::deduce_assets_names_,
                 OptionBase::buildoption,
                 "Whether or not the assets names should be parse by the assets_info method");
   
@@ -448,8 +436,6 @@ void Trader::test(VMat testset, PP<VecStatsCollector> test_stats,
 }
 
 
-//TBAdded: Somewhere after stop_loss, a check_if_roll_over => on vend tout weight(k, t) et 
-//           on achete tout weight(k, t+1)!!!
 real Trader::delta(int k, int t) const
 {
   // Here we consider that the initial test portfolio is the last train portfolio. This assumption seems reasonable since, 
@@ -460,19 +446,14 @@ real Trader::delta(int k, int t) const
   
   // We are sure that the weight(k, t+1) is available since the advisor did set it predictions field up to last_test_t, if horizon is at least 1.
   if( stop_loss(k, t) )
-    return current_wkt;
+    return fabs(current_wkt);
 
-  real delta_ = next_wkt - current_wkt;
-
-  bool rollover = (bool)internal_data_set(t,assets_rollover_indices[k]);
-  if (rollover)
-    return abs(next_wkt) + abs(current_wkt);
-
-  if(fabs(delta_) < rebalancing_threshold){
+  real delta_ = fabs(next_wkt - current_wkt);
+  if(delta_ < rebalancing_threshold){
     weight(k, t+1) = current_wkt;             // Rebalancing isn't needed
     return 0.0;
   }
-  return delta_;  //here: abs(delta_) >= rebalancing_threshold
+  return delta_;
 }
 
 bool Trader::stop_loss(int k, int t) const
@@ -520,7 +501,6 @@ void Trader::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(last_valid_price, copies);
   deepCopyField(last_valid_sp500_price, copies);
   deepCopyField(assets_tradable_indices, copies);
-  deepCopyField(assets_rollover_indices, copies);
   deepCopyField(stop_loss_values, copies);
   deepCopyField(portfolios, copies);
   deepCopyField(advisor, copies);
