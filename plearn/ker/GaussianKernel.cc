@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianKernel.cc,v 1.5 2004/02/23 20:33:38 dorionc Exp $
+   * $Id: GaussianKernel.cc,v 1.6 2004/02/28 18:03:19 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -118,6 +118,9 @@ real GaussianKernel::evaluate(const Vec& x1, const Vec& x2) const
 }
 
 
+//////////////////
+// evaluate_i_j //
+//////////////////
 real GaussianKernel::evaluate_i_j(int i, int j) const
 { 
 #ifdef GK_DEBUG 
@@ -137,7 +140,6 @@ real GaussianKernel::evaluate_i_j(int i, int j) const
 #endif
   return evaluateFromDotAndSquaredNorm(squarednorms[i],data->dot(i,j,data_inputsize),squarednorms[j]); 
 }
-
 
 real GaussianKernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) const 
 { 
