@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedFuncVariable.cc,v 1.9 2004/03/03 14:14:36 tihocan Exp $
+   * $Id: UnfoldedFuncVariable.cc,v 1.10 2004/04/27 16:05:33 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -62,12 +62,12 @@ UnfoldedFuncVariable::UnfoldedFuncVariable()
   {}
 
 UnfoldedFuncVariable::UnfoldedFuncVariable(Var inputmatrix, Func the_f, bool the_transpose)
-  :NaryVariable(nonInputParentsOfPath(the_f->inputs,the_f->outputs) & inputmatrix, 
+  : inherited(nonInputParentsOfPath(the_f->inputs,the_f->outputs) & inputmatrix, 
                 the_transpose ? the_f->outputs[0]->length()*the_f->outputs[0]->width() : inputmatrix->length(),
                 the_transpose ? inputmatrix->width() : the_f->outputs[0]->length()*the_f->outputs[0]->width()),
-   input_matrix(inputmatrix), 
-   f(the_f),
-   transpose(the_transpose)
+    input_matrix(inputmatrix), 
+    f(the_f),
+    transpose(the_transpose)
 {
   build();
 }
@@ -80,22 +80,24 @@ void UnfoldedFuncVariable::build()
 
 void UnfoldedFuncVariable::build_()
 {
-  if(f->outputs.size()!=1)
-    PLERROR("In UnfoldedFuncVariable: function must have a single variable output (maybe you can vconcat the vars into a single one prior to calling sumOf, if this is really what you want)");
-  f->inputs.setDontBpropHere(true);
-  int n_unfold = transpose ? input_matrix->width() : input_matrix->length();
-  inputs.resize(n_unfold);
-  outputs.resize(n_unfold);
-  f_paths.resize(n_unfold);
-  for (int i=0;i<n_unfold;i++)
-  {
-    inputs[i].resize(f->inputs.size());
-    for (int j = 0; j < f->inputs.size(); j++) {
-      inputs[i][j] = Var(f->inputs[j]->length(), f->inputs[j]->width());
+    if (f) {
+        if(f->outputs.size()!=1)
+            PLERROR("In UnfoldedFuncVariable: function must have a single variable output (maybe you can vconcat the vars into a single one prior to calling sumOf, if this is really what you want)");
+        f->inputs.setDontBpropHere(true);
+        int n_unfold = transpose ? input_matrix->width() : input_matrix->length();
+        inputs.resize(n_unfold);
+        outputs.resize(n_unfold);
+        f_paths.resize(n_unfold);
+        for (int i=0;i<n_unfold;i++)
+        {
+            inputs[i].resize(f->inputs.size());
+            for (int j = 0; j < f->inputs.size(); j++) {
+                inputs[i][j] = Var(f->inputs[j]->length(), f->inputs[j]->width());
+            }
+            outputs[i] = f(inputs[i])[0];
+            f_paths[i] = propagationPath(inputs[i],outputs[i]);
+        }
     }
-    outputs[i] = f(inputs[i])[0];
-    f_paths[i] = propagationPath(inputs[i],outputs[i]);
-  }
 }
 
 void UnfoldedFuncVariable::declareOptions(OptionList& ol)
@@ -114,14 +116,18 @@ void UnfoldedFuncVariable::declareOptions(OptionList& ol)
 }
 
 
-void UnfoldedFuncVariable::recomputeSize(int& l, int& w) const {
-  w=f->outputs[0]->length()*f->outputs[0]->width();
-  if (transpose) {
-    l = w;
-    w = input_matrix->width();
-  } else {
-    l = input_matrix->length();
-  }
+void UnfoldedFuncVariable::recomputeSize(int& l, int& w) const
+{
+    if (f && f->outputs.size()) {
+        w = f->outputs[0]->length()*f->outputs[0]->width();
+        if (transpose) {
+            l = w;
+            w = input_matrix->width();
+        } else {
+            l = input_matrix->length();
+        }
+    } else
+        l = w = 0;
 }
 
 

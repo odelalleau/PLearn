@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedFuncVariable.h,v 1.6 2004/02/28 20:26:57 tihocan Exp $
+   * $Id: UnfoldedFuncVariable.h,v 1.7 2004/04/27 16:05:33 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,12 +51,10 @@ using namespace std;
 
 class UnfoldedFuncVariable: public NaryVariable
 {
-protected:
-    //!  protected default constructor for persistence
-  UnfoldedFuncVariable();
+  typedef NaryVariable inherited;
 
 public:
-  //protected:
+//protected:
   Var input_matrix;
   Func f;
   bool transpose;
@@ -66,11 +64,16 @@ public:
   TVec<VarArray> f_paths; // the duplicates of f prop. path for each input/output pair: inputs[i]->outputs[i]
 
 public:
+  //!  protected default constructor for persistence
+  UnfoldedFuncVariable();
   //! concatenate_{i=0 to n_unfold} f(i-th row of input_matrix)
   UnfoldedFuncVariable(Var inputmatrix, Func the_f, bool transpose);
     
   PLEARN_DECLARE_OBJECT(UnfoldedFuncVariable);
+  static void declareOptions(OptionList& ol);
+
   virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
   virtual void fprop();
@@ -78,11 +81,11 @@ public:
     
   void printInfo(bool print_gradient);
 
-  static void declareOptions(OptionList& ol);
-
-private:
+protected:
   void build_();
 };
+
+DECLARE_OBJECT_PTR(UnfoldedFuncVariable);
 
 inline Var unfoldedFunc(Var input_matrix, Func f, bool transpose = false)
 { return new UnfoldedFuncVariable(input_matrix, f, transpose); }

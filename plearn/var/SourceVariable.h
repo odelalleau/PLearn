@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: SourceVariable.h,v 1.4 2004/02/20 21:11:53 chrish42 Exp $
+   * $Id: SourceVariable.h,v 1.5 2004/04/27 16:05:33 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,11 +50,11 @@ using namespace std;
 
 class SourceVariable: public Variable
 {
-protected:
-  //!  Default constructor for persistence
-  SourceVariable() {}
+  typedef Variable inherited;
 
 public:
+  //!  Default constructor for persistence
+  SourceVariable() {}
   SourceVariable(int thelength, int thewidth);
   SourceVariable(const Vec& v, bool vertical=true);
   SourceVariable(const Mat& m);
@@ -89,6 +89,7 @@ public:
   }
 };
 
+DECLARE_OBJECT_PTR(SourceVariable);
 
 } // end of namespace PLearn
 

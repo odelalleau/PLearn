@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedSumOfVariable.cc,v 1.6 2004/03/09 18:33:50 tihocan Exp $
+   * $Id: UnfoldedSumOfVariable.cc,v 1.7 2004/04/27 16:05:33 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,8 +47,6 @@
 namespace PLearn {
 using namespace std;
 
-
-
 /** UnfoldedSumOfVariable **/
 
 PLEARN_IMPLEMENT_OBJECT(UnfoldedSumOfVariable, "Variable that sums the value of a Func evaluated on each row of a matrix.\n", 
@@ -58,11 +56,11 @@ PLEARN_IMPLEMENT_OBJECT(UnfoldedSumOfVariable, "Variable that sums the value of 
                         "fly by another input, the bag_size.\n");
 
 UnfoldedSumOfVariable::UnfoldedSumOfVariable(Var inputmatrix, Var bagsize, Func the_f, int max_bagsize)
-  :NaryVariable(nonInputParentsOfPath(the_f->inputs,the_f->outputs) & inputmatrix & bagsize, 
-                the_f->outputs[0]->length(), 
-                the_f->outputs[0]->width()),
-   input_matrix(inputmatrix), bag_size(bagsize),
-   f(the_f), max_bag_size(max_bagsize)
+  : inherited(nonInputParentsOfPath(the_f->inputs,the_f->outputs) & inputmatrix & bagsize, 
+              the_f->outputs[0]->length(), 
+              the_f->outputs[0]->width()),
+    input_matrix(inputmatrix), bag_size(bagsize),
+    f(the_f), max_bag_size(max_bagsize)
 {
   build();
 }
@@ -75,21 +73,23 @@ void UnfoldedSumOfVariable::build()
 
 void UnfoldedSumOfVariable::build_()
 {
-  if(f->outputs.size()!=1)
-    PLERROR("In UnfoldedSumOfVariable: function must have a single variable output (maybe you can vconcat the vars into a single one prior to calling sumOf, if this is really what you want)");
-  f->inputs.setDontBpropHere(true);
-  inputs.resize(max_bag_size);
-  outputs.resize(max_bag_size);
-  f_paths.resize(max_bag_size);
-  for (int i=0;i<max_bag_size;i++)
-  {
-    inputs[i].resize(f->inputs.size());
-    for (int j = 0; j < f->inputs.size(); j++) {
-      inputs[i][j] = Var(f->inputs[j]->length(), f->inputs[j]->width());
+    if (f) {
+        if(f->outputs.size()!=1)
+            PLERROR("In UnfoldedSumOfVariable: function must have a single variable output (maybe you can vconcat the vars into a single one prior to calling sumOf, if this is really what you want)");
+        f->inputs.setDontBpropHere(true);
+        inputs.resize(max_bag_size);
+        outputs.resize(max_bag_size);
+        f_paths.resize(max_bag_size);
+        for (int i=0;i<max_bag_size;i++)
+        {
+            inputs[i].resize(f->inputs.size());
+            for (int j = 0; j < f->inputs.size(); j++) {
+                inputs[i][j] = Var(f->inputs[j]->length(), f->inputs[j]->width());
+            }
+            outputs[i] = f(inputs[i])[0];
+            f_paths[i] = propagationPath(inputs[i],outputs[i]);
+        }
     }
-    outputs[i] = f(inputs[i])[0];
-    f_paths[i] = propagationPath(inputs[i],outputs[i]);
-  }
 }
 
 void UnfoldedSumOfVariable::declareOptions(OptionList& ol)
@@ -111,7 +111,13 @@ void UnfoldedSumOfVariable::declareOptions(OptionList& ol)
 }
 
 void UnfoldedSumOfVariable::recomputeSize(int& l, int& w) const
-{ l=f->outputs[0]->length(); w=f->outputs[0]->width(); }
+{
+    if (f && f->outputs.size()) {
+        l = f->outputs[0]->length();
+        w = f->outputs[0]->width();
+    } else
+        l = w = 0;
+}
 
 //! To use varDeepCopyField.
 extern void varDeepCopyField(Var& field, CopiesMap& copies);

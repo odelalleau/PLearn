@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: SourceVariable.cc,v 1.4 2004/02/20 21:11:53 chrish42 Exp $
+   * $Id: SourceVariable.cc,v 1.5 2004/04/27 16:05:33 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,26 +47,27 @@ using namespace std;
 
 /** SourceVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(SourceVariable,
+                        "ONE LINE DESCR",
+                        "NO HELP");
+
 SourceVariable::SourceVariable(int thelength, int thewidth)
-  :Variable(thelength,thewidth) {}
+  : inherited(thelength,thewidth)
+{}
 
 SourceVariable::SourceVariable(const Vec& v, bool vertical)
-  :Variable(vertical ?v.toMat(v.length(),1) :v.toMat(1,v.length())) {}
+  : inherited(vertical ?v.toMat(v.length(),1) :v.toMat(1,v.length()))
+{}
 
 SourceVariable::SourceVariable(const Mat& m)
-  :Variable(m) {}
+  : inherited(m)
+{}
 
 void SourceVariable::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   Variable::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(rows_to_update, copies);
 }
-
-PLEARN_IMPLEMENT_OBJECT(SourceVariable, "ONE LINE DESCR", "NO HELP");
-
-
-
-
 
 void SourceVariable::fprop() {} // No input: nothing to fprop
 void SourceVariable::bprop() {} // No input: nothing to bprop

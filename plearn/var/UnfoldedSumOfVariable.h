@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: UnfoldedSumOfVariable.h,v 1.6 2004/03/09 18:33:50 tihocan Exp $
+   * $Id: UnfoldedSumOfVariable.h,v 1.7 2004/04/27 16:05:34 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,9 +51,7 @@ using namespace std;
 
 class UnfoldedSumOfVariable: public NaryVariable
 {
-protected:
-    //!  protected default constructor for persistence
-  UnfoldedSumOfVariable() : max_bag_size(0) {}
+  typedef NaryVariable inherited;
 
 public:
   //protected:
@@ -67,11 +65,16 @@ public:
   TVec<VarArray> f_paths; // the duplicates of f prop. path for each input/output pair: inputs[i]->outputs[i]
 
 public:
+  //!  protected default constructor for persistence
+  UnfoldedSumOfVariable() : max_bag_size(0) {}
   //! Sum_{i=0 to bag_size} f(i-th row of input_matrix)
   UnfoldedSumOfVariable(Var inputmatrix, Var bagsize, Func the_f, int maxbagsize);
     
   PLEARN_DECLARE_OBJECT(UnfoldedSumOfVariable);
+  static void declareOptions(OptionList& ol);
+
   virtual void build();
+
   virtual void recomputeSize(int& l, int& w) const;
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
   virtual void fprop();
@@ -79,11 +82,11 @@ public:
     
   void printInfo(bool print_gradient);
 
-  static void declareOptions(OptionList& ol);
-
 private:
   void build_();
 };
+
+DECLARE_OBJECT_PTR(UnfoldedSumOfVariable);
 
 inline Var unfoldedSumOf(Var input_matrix, Var bag_size, Func f, int max_bag_size)
 { return new UnfoldedSumOfVariable(input_matrix,bag_size,f,max_bag_size); }
