@@ -27,7 +27,7 @@ class Cluster(PyPLearnObject):
             ## Building the raw command and, afterwards, the cluster command
             ## from the program_call and stringified arguments
             raw_command = self.join_prog_and_arguments( program_call, arguments )
-            cluster_cmd = command( raw_command, self.logdir_path, self.command_format )
+            cluster_cmd = cluster_command( raw_command, self.logdir_path, self.command_format )
 
             print "Launching %s on cluster" % raw_command
             os.system( cluster_cmd )
@@ -52,7 +52,7 @@ class Cluster(PyPLearnObject):
     def join_prog_and_arguments( self, program_call, arguments ):
         return " ".join([ program_call, arguments ])
     
-def command( raw_command, logdir_path = None, format = Cluster.Defaults.command_format ):
+def cluster_command( raw_command, logdir_path = None, format = Cluster.Defaults.command_format ):
     processed_cmd = raw_command
 
     ## Processing the raw command and piping the output in a logfile
