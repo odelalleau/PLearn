@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: lisaplearn.cc,v 1.23 2004/05/10 21:34:09 lheureup Exp $
+   * $Id: lisaplearn.cc,v 1.24 2004/05/11 20:51:27 tihocan Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -60,6 +60,10 @@
 #include "SubInputVMatrix.h"
 #include "VMatrixFromDistribution.h"
 
+// Available Kernels:
+#include "GaussianKernel.h"
+#include "DotProductKernel.h"
+
 // Hyper-learning:
 #include "CartesianProductOracle.h"
 #include "EarlyStoppingOracle.h"
@@ -79,6 +83,7 @@
 //#include "RegressorFromDensity.h"
 #include "Distribution.h"
 #include "GaussianDistribution.h"
+#include "KernelProjection.h"
 #include "LinearRegressor.h"
 #include "LocallyWeightedDistribution.h"
 #include "MultiInstanceNNet.h"
@@ -119,6 +124,7 @@
 
 // Distributions
 #include "SpiralDistribution.h"
+#include "NegOutputCostFunction.h"
 
 // SequentialLearner
 //#include "SequentialLearner.h"
