@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Splitter.cc,v 1.4 2003/08/13 08:13:46 plearner Exp $ 
+   * $Id: Splitter.cc,v 1.5 2003/11/04 14:42:23 chapados Exp $ 
    ******************************************************* */
 
 /*! \file Splitter.cc */
@@ -51,6 +51,11 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Splitter, "ONE LINE DESCR", "NO HELP");
 void Splitter::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
   deepCopyField(dataset, copies);
+}
+
+void Splitter::setDataSet(VMat the_dataset)
+{
+  dataset = the_dataset;
 }
 
 // Useful splitting functions

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.22 2003/10/29 16:55:49 plearner Exp $
+   * $Id: NNet.cc,v 1.23 2003/11/04 14:42:24 chapados Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -266,10 +266,15 @@ void NNet::build_()
             costs[k] = onehot_squared_loss(output, target);
           else if(cost_funcs[k]=="NLL") 
             {
-              if (output_transfer_func == "log_softmax")
-                costs[k] = -output[target];
-              else
-                costs[k] = neg_log_pi(output, target);
+              if (output->size() == 1) {
+                // Assume sigmoid output here!
+                costs[k] = cross_entropy(output, target);
+              } else {
+                if (output_transfer_func == "log_softmax")
+                  costs[k] = -output[target];
+                else
+                  costs[k] = neg_log_pi(output, target);
+              }
             } 
           else if(cost_funcs[k]=="class_error")
             costs[k] = classification_loss(output, target);

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConstantRegressor.cc,v 1.4 2003/08/20 19:18:59 yoshua Exp $ 
+   * $Id: ConstantRegressor.cc,v 1.5 2003/11/04 14:42:24 chapados Exp $ 
    ******************************************************* */
 
 /*! \file ConstantRegressor.cc */
@@ -43,62 +43,64 @@
 namespace PLearn <%
 using namespace std;
 
-ConstantRegressor::ConstantRegressor() 
-/* ### Initialise all fields to their default value here */
-  {
-    // ### You may or may not want to call build_() to finish building the object
-    // build_();
-  }
+ConstantRegressor::ConstantRegressor()
+  : weight_decay(0.0)
+{
+}
 
-  PLEARN_IMPLEMENT_OBJECT(ConstantRegressor, 
-                          "PLearner that outputs a constant (input-independent) vector.\n", 
-                          "ConstantRegressor is a PLearner that outputs a constant (input-independent\n"
-                          "but training-data-dependent) vector. It is a regressor (i.e. during training\n"
-                          "the constant vector is chosen to minimize the (possibly weighted) average\n"
-                          "of the training set targets. Let\n"
-                          "  N = number of training examples,\n"
-                          "  M = target size (= output size),\n"
-                          "  y_{ij} = the jth target value of the ith training example,\n"
-                          "  w_i  = weight associated to the ith training example,\n"
-                          "then the j-th component of the learned vector is\n"
-                          "  (sum_{i=1}^N w_i * y_ij) / (sum_{i=1}^N w_i)\n"
-                          "The output can also be set manually with the 'constant_output' vector option\n");
+PLEARN_IMPLEMENT_OBJECT(ConstantRegressor, 
+                        "PLearner that outputs a constant (input-independent) vector.\n", 
+                        "ConstantRegressor is a PLearner that outputs a constant (input-independent\n"
+                        "but training-data-dependent) vector. It is a regressor (i.e. during training\n"
+                        "the constant vector is chosen to minimize the (possibly weighted) average\n"
+                        "of the training set targets. Let\n"
+                        "  N = number of training examples,\n"
+                        "  M = target size (= output size),\n"
+                        "  y_{ij} = the jth target value of the ith training example,\n"
+                        "  w_i  = weight associated to the ith training example,\n"
+                        "then the j-th component of the learned vector is\n"
+                        "  (sum_{i=1}^N w_i * y_ij) / (sum_{i=1}^N w_i)\n"
+                        "The output can also be set manually with the 'constant_output' vector option\n");
 
-  void ConstantRegressor::declareOptions(OptionList& ol)
-  {
-    // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-    // ### OptionBase::tuningoption. Another possible flag to be combined with
-    // ### is OptionBase::nosave
+void ConstantRegressor::declareOptions(OptionList& ol)
+{
+  // ### Declare all of this object's options here
+  // ### For the "flags" of each option, you should typically specify  
+  // ### one of OptionBase::buildoption, OptionBase::learntoption or 
+  // ### OptionBase::tuningoption. Another possible flag to be combined with
+  // ### is OptionBase::nosave
 
-    // ### ex:
-    declareOption(ol, "constant_output", &ConstantRegressor::constant_output, 
-                  OptionBase::learntoption,
-                  "This is the learnt parameter, the constant output. During training\n"
-                  "It is set to the (possibly weighted) average of the targets.\n"
-      );
+  declareOption(ol, "weight_decay", &ConstantRegressor::weight_decay,
+                OptionBase::buildoption,
+                "Weight decay parameter. Default=0.  NOT CURRENTLY TAKEN INTO ACCOUNT!");
+  
+  // ### ex:
+  declareOption(ol, "constant_output", &ConstantRegressor::constant_output, 
+                OptionBase::learntoption,
+                "This is the learnt parameter, the constant output. During training\n"
+                "It is set to the (possibly weighted) average of the targets.\n"
+    );
 
-    // Now call the parent class' declareOptions
-    inherited::declareOptions(ol);
-  }
+  // Now call the parent class' declareOptions
+  inherited::declareOptions(ol);
+}
 
-  void ConstantRegressor::build_()
-  {
-  }
+void ConstantRegressor::build_()
+{
+}
 
-  // ### Nothing to add here, simply calls build_
-  void ConstantRegressor::build()
-  {
-    inherited::build();
-    build_();
-  }
+// ### Nothing to add here, simply calls build_
+void ConstantRegressor::build()
+{
+  inherited::build();
+  build_();
+}
 
 
-  void ConstantRegressor::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
-  {
-    inherited::makeDeepCopyFromShallowCopy(copies);
-  }
+void ConstantRegressor::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+{
+  inherited::makeDeepCopyFromShallowCopy(copies);
+}
 
 
 int ConstantRegressor::outputsize() const
@@ -140,7 +142,8 @@ void ConstantRegressor::train()
     multiplyAdd(sum_of_weighted_targets,target,weight,sum_of_weighted_targets);
     sum_of_weights += weight;
     multiply(sum_of_weighted_targets,1.0/sum_of_weights,constant_output);
-    train_costs[0] = weight*powdistance(constant_output,target);
+    train_costs[0] =
+      weight*powdistance(constant_output,target);
     train_stats->update(train_costs);
   }
   train_stats->finalize(); // finalize statistics for this one and only epoch

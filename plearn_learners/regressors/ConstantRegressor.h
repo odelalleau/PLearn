@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConstantRegressor.h,v 1.3 2003/08/20 19:18:59 yoshua Exp $ 
+   * $Id: ConstantRegressor.h,v 1.4 2003/11/04 14:42:24 chapados Exp $ 
    ******************************************************* */
 
 /*! \file ConstantRegressor.h */
@@ -58,7 +58,8 @@ protected:
     
 public:
 
-  
+  //! Weight decay; not usually useful but...
+  real weight_decay;
 
   // ************************
   // * public build options *

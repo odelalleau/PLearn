@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Splitter.h,v 1.5 2003/08/13 08:13:46 plearner Exp $ 
+   * $Id: Splitter.h,v 1.6 2003/11/04 14:42:23 chapados Exp $ 
    ******************************************************* */
 
 /*! \file Splitter.h */
@@ -82,8 +82,7 @@ public:
   Splitter() {};
 
   //! Sets the dataset on which the splits are to be based
-  void setDataSet(VMat the_dataset)
-  { dataset = the_dataset; }
+  virtual void setDataSet(VMat the_dataset);
 
   //! Returns the dataset given with setDataSet
   VMat getDataSet()

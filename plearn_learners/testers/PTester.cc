@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.13 2003/10/31 20:50:42 plearner Exp $ 
+   * $Id: PTester.cc,v 1.14 2003/11/04 14:42:24 chapados Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -339,9 +339,11 @@ Vec PTester::perform(bool call_forget)
         {
           StatSpec& sp = statspecs[k];
           if (sp.setnum>=stcol.length())
-            PLERROR("PTester::perform, trying to access a test set (test%d) beyond the last one (test%d)",
-                    sp.setnum, stcol.length()-1);
-          splitres[k+1] = stcol[sp.setnum]->getStat(sp.intstatname);
+            splitres[k+1] = MISSING_VALUE;
+//            PLERROR("PTester::perform, trying to access a test set (test%d) beyond the last one (test%d)",
+//                    sp.setnum, stcol.length()-1);
+          else
+            splitres[k+1] = stcol[sp.setnum]->getStat(sp.intstatname);
         }
 
       if(split_stats_vm)
