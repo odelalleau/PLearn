@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.h,v 1.13 2003/10/28 21:02:44 chapados Exp $ 
+   * $Id: VecStatsCollector.h,v 1.14 2003/11/04 18:12:53 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.h */
@@ -104,7 +104,7 @@ public:
   //! The weight applies to all elements of x
   virtual void update(const Vec& x, real weight = 1.0);
 
-  //! Decalres names for the columns of the vector passed to update
+  //! Declares names for the columns of the vector passed to update
   void setFieldNames(TVec<string> the_fieldnames)
   { fieldnames = the_fieldnames; }
   
