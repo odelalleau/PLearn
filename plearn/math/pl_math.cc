@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.cc,v 1.2 2003/09/26 00:57:10 yoshua Exp $
+   * $Id: pl_math.cc,v 1.3 2003/11/25 02:33:18 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -145,6 +145,60 @@ real  logsub(real log_a, real log_b)
     return log_a + log1p(-exp(negative_absolute_difference));
 }
 
+real small_dilogarithm(real x)
+{
+  real somme = x;
+  real prod = x;
+  int i=2;
+  for (;i<=999;i++)
+  {
+    real coef = (i-1.0)/i;
+    prod *= x*coef*coef;
+    somme += prod;
+    if (fabs(prod/somme)<1e-16) break; // tolerance
+  }
+  if (i==1000) PLWARNING("dilogarithm: insufficient precision");
+  return somme;
+}
 
+real positive_dilogarithm(real x)
+{
+  if (x<0.5)
+    return small_dilogarithm(x);
+  else if (x<1.0)
+    return Pi*Pi/6.0 - small_dilogarithm(1.0-x) - log(x)*log(1-x);
+  else if (x==1.0)
+    return Pi*Pi/6.0;
+  else if (x<=1.01)
+  {
+    real delta=x-1.0;
+    real log_delta=log(delta);
+    return Pi*Pi/6.0 + delta*(1-log_delta+delta*
+                              ((2*log_delta-1)/4 + delta*
+                               ((1-3*log_delta)/9 + delta*
+                                ((4*log_delta-1)/16 + delta*
+                                 ((1-5*log_delta)/25 + delta*
+                                  ((6*log_delta-1)/36 + delta*
+                                   ((1-7*log_delta)/49 + delta*
+                                    (8*log_delta-1)/64)))))));
+  }
+  else if (x<=2.0)
+  {
+    real logx = log(x);
+    return Pi*Pi/6.0 + small_dilogarithm(1.0-1.0/x) - logx*(0.5*logx+log(1-1/x));
+  } else 
+  {
+    real logx = log(x);
+    return Pi*Pi/3.0 - small_dilogarithm(1.0/x) - 0.5*logx*logx;
+  }
+}
+
+real dilogarithm(real x)
+{
+  if (x<0)
+    return -positive_dilogarithm(-x) + 0.5*positive_dilogarithm(x*x);
+  else
+    return positive_dilogarithm(x);
+}
 
 %> // end of namespace PLearn

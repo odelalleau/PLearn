@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.7 2003/11/21 00:00:39 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.8 2003/11/25 02:34:41 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -88,6 +88,12 @@ protected:
     VarArray params;  // all arameter input vars
 
     Vec paramsvalues; // values of all parameters
+
+   Var centers, centers_M, steps, steps_M, steps_gradient, steps_integral, delta_steps, cum_numerator, cum_denominator;
+
+  Var unconditional_cdf; // the cond. distribution step multiplicative parameters 
+  // are relative to the unconditional cdf step heights, at the mu positions, contained in this source var
+  // (computed at the beginning of training).
 
 public:
 
@@ -151,6 +157,9 @@ public:
   // approximate unconditional probability of Y=0 (mass point), used
   // to initialize the parameters
   real unconditional_p0;
+
+  // whether to learn the mu or keep them at their initial values
+  bool mu_is_fixed;
 
   // ****************
   // * Constructors *
@@ -242,6 +251,7 @@ public:
 
     
   void initializeParams();
+  void initialize_mu(Vec& mu_);
 
   //! The role of the train method is to bring the learner up to stage==nstages,
   //! updating the train_stats collector with training costs measured on-line in the process.

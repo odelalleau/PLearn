@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: pl_math.h,v 1.7 2003/11/19 15:13:40 yoshua Exp $
+   * $Id: pl_math.h,v 1.8 2003/11/25 02:33:18 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -336,7 +336,15 @@ inline real inverse_softplus(real y)
 //!  compute log(exp(log_a)-exp(log_b)) without losing too much precision
   real logsub(real log_a, real log_b);
 
+//! return the dilogarithm function dilogarithm(x)
+//!   = sum_{i=1}^{\infty} x^i/i^2 = int_{z=x}^0 log(1-z)/z dz
+//! It is also useful because -dilogarithm(-exp(x)) is the primitive of 
+//! the softplus function log(1+exp(x)).
+real dilogarithm(real x);
 
+inline real softplus_primitive(real x) {
+  return -dilogarithm(-exp(x));
+}
 
 %> // end of namespace PLearn
 
