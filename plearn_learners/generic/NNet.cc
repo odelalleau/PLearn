@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.59 2004/09/09 14:15:11 tihocan Exp $
+   * $Id: NNet.cc,v 1.60 2004/09/09 14:28:55 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -229,11 +229,11 @@ void NNet::declareOptions(OptionList& ol)
 
   declareOption(ol, "initialization_method", &NNet::initialization_method, OptionBase::buildoption, 
                 "    The method used to initialize the weights:\n"
-                "     - normal_linear = a normal law with variance 1/n_inputs\n"
-                "     - normal_sqrt   = a normal law with variance 1/sqrt(n_inputs)\n"
+                "     - normal_linear  = a normal law with variance 1/n_inputs\n"
+                "     - normal_sqrt    = a normal law with variance 1/sqrt(n_inputs)\n"
                 "     - uniform_linear = a uniform law in [-1/n_inputs, 1/n_inputs]\n"
                 "     - uniform_sqrt   = a uniform law in [-1/sqrt(n_inputs), 1/sqrt(n_inputs)]\n"
-                "     - zero          = all weights are set to 0\n");
+                "     - zero           = all weights are set to 0\n");
 
   declareOption(ol, "paramsvalues", &NNet::paramsvalues, OptionBase::learntoption, 
                 "    The learned parameter vector\n");
