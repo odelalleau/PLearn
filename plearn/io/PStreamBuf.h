@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PStreamBuf.h,v 1.16 2005/02/12 00:20:46 plearner Exp $ 
+   * $Id: PStreamBuf.h,v 1.17 2005/02/12 17:48:18 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PStreamBuf.h */
@@ -49,10 +49,11 @@ using namespace std;
 
 class PStreamBuf: public PPointable
 {    
+
+  typedef PPointable inherited;
+  
 public:
 
-  // typedef Object inherited;
-  typedef PPointable inherited;
   typedef size_t streamsize; 
   typedef off_t streampos; 
 
@@ -137,7 +138,7 @@ public:
       return -1;
   }
   
-  //! character c will be returned by the next get()
+  //! Character c will be returned by the next get()
   void putback(char c);
 
   int peek()
