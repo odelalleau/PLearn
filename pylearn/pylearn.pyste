@@ -1,3 +1,5 @@
+# -*-python-*-
+
 p_vmat = Class('PLearn::VMat', 'plearn/vmat/VMat.h')
 # We exclude the operator<< and operator>> because wrapping them using
 # Boost.Python triggers a compiler bug.
