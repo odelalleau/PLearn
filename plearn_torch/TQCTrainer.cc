@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TQCTrainer.cc,v 1.2 2005/02/23 21:52:14 tihocan Exp $ 
+   * $Id: TQCTrainer.cc,v 1.3 2005/02/24 14:14:01 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -96,7 +96,7 @@ void TQCTrainer::declareOptions(OptionList& ol)
 
   // Hide unused parent's options.
 
-  declareOption(ol, "machine", &TTrainer::machine, OptionBase::nosave,
+  redeclareOption(ol, "machine", &TTrainer::machine, OptionBase::nosave,
       "A QCTrainer only uses 'qc_machine'.");
 
 }
