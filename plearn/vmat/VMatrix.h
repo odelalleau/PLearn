@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.18 2003/06/03 14:52:10 plearner Exp $
+   * $Id: VMatrix.h,v 1.19 2003/07/04 18:21:06 jkeable Exp $
    ******************************************************* */
 
 
@@ -115,16 +115,13 @@ public:
   // Sample parts sizes
   
 
-  inline void defineSizes(int inputsize, int targetsize, int weightsize)
+  inline void defineSizes(int inputsize, int targetsize, int weightsize=0)
   { inputsize_ = inputsize, targetsize_ = targetsize, weightsize_ = weightsize; }
   
   inline int inputsize() const { return inputsize_; }
   inline int targetsize() const { return targetsize_; }
   inline int weightsize() const { return weightsize_; }
   inline bool hasWeights() const { return weightsize_>0; }
-
-  inline void setSizes(int the_inputsize, int the_targetsize, int the_weightsize=0)
-  { inputsize_=the_inputsize; targetsize_=the_targetsize; weightsize_=the_weightsize; }
 
   //! Default version calls getSubRow based on inputsize_ targetsize_ and weightsize_
   //! But exotic subclasses may construct, input, target and weight however they please.

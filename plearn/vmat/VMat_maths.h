@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat_maths.h,v 1.3 2003/05/26 04:12:43 plearner Exp $
+   * $Id: VMat_maths.h,v 1.4 2003/07/04 18:21:06 jkeable Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -94,6 +94,14 @@ void computeMeanAndVariance(VMat d, Vec& meanvec, Vec& variancevec);
 void computeMeanAndStddev(VMat d, Vec& meanvec, Vec& stddevvec);
 void computeMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat, ostream& logstream=cerr);
 void computeWeightedMeanAndCovar(Vec weights, VMat d, Vec& meanvec, Mat& covarmat);
+
+//! Computes the (possibly weighted) mean and covariance of the input part of the dataset.
+//! This will only call d->getExamplev
+void computeInputMean(VMat d, Vec& meanvec);
+void computeInputMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat);
+void computeInputMeanAndVariance(VMat d, Vec& meanvec, Vec& var);
+
+
 void computeRange(VMat d, Vec& minvec, Vec& maxvec);
 
 //! Last column of d is supposed to contain the weight for each sample

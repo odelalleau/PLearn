@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: VMatrixFromDistribution.cc,v 1.2 2003/06/04 21:21:17 plearner Exp $ 
+ * $Id: VMatrixFromDistribution.cc,v 1.3 2003/07/04 18:21:06 jkeable Exp $ 
  ******************************************************* */
 
 /*! \file VMatrixFromDistribution.cc */
@@ -44,10 +44,12 @@ namespace PLearn <%
 using namespace std;
 
 VMatrixFromDistribution::VMatrixFromDistribution() 
-  :generator_seed(0), nsamples(0)
+  :generator_seed(0), nsamples(0),density_mode(false),logdensity_mode(false)
   /* ### Initialise all fields to their default value */
 {
   // ...
+
+  samples_per_dim = 10;
 
   // ### You may or may not want to call build_() to finish building the object
   // build_();
@@ -66,6 +68,21 @@ void VMatrixFromDistribution::declareOptions(OptionList& ol)
   declareOption(ol, "nsamples", &VMatrixFromDistribution::nsamples, OptionBase::buildoption,
                 "number of samples to draw");
 
+  declareOption(ol, "density_mode", &VMatrixFromDistribution::density_mode, OptionBase::buildoption,
+                "if true, then the rows are the density sampled on a grid. Mutually exclusive to logdensity_mode");
+
+  declareOption(ol, "logdensity_mode", &VMatrixFromDistribution::logdensity_mode, OptionBase::buildoption,
+                "if true, then the rows are the logdensity sampled on a grid. Mutually exclusive to density_mode");
+
+  declareOption(ol, "samples_per_dim", &VMatrixFromDistribution::samples_per_dim, OptionBase::buildoption,
+                "number of samples on each dimensions of the grid");
+
+  declareOption(ol, "mins", &VMatrixFromDistribution::mins, OptionBase::buildoption,
+                "the minimum of the grid on each dimensions");
+
+  declareOption(ol, "maxs", &VMatrixFromDistribution::maxs, OptionBase::buildoption,
+                "the maximum of the grid on each dimensions");
+
   inherited::declareOptions(ol);
 }
 
@@ -80,11 +97,46 @@ void VMatrixFromDistribution::build_()
 {
   if(distr)
     {
-      length_ = nsamples;
-      width_ = distr->inputsize();
-      data.resize(length_, width_);
-      distr->resetGenerator(generator_seed);
-      distr->generateN(data);
+      if(!density_mode && !logdensity_mode)
+      {
+        length_ = nsamples;
+        width_ = distr->inputsize();
+        data.resize(length_, width_);
+        distr->resetGenerator(generator_seed);
+        distr->generateN(data);
+      }
+      else
+      {
+        length_ = (int)pow(samples_per_dim,distr->inputsize());
+        width_ = distr->inputsize()+1;
+        data.resize(length_, width_);
+        Vec v(data.width());
+        int k=0;
+        switch(distr->inputsize())
+        {
+        case 1:
+          for(int j=0;j<samples_per_dim;j++)
+          {
+            v[0] = mins[0] + ((real)j / samples_per_dim) * (maxs[0]-mins[0]);
+            v[1] = distr->density(v.subVec(0,1));
+            data(k++)<<v;
+          }
+          break;
+        case 2:
+          for(int i=0;i<samples_per_dim;i++)
+          {
+            v[0] = mins[0] + ((real)i / samples_per_dim) * (maxs[0]-mins[0]);
+            for(int j=0;j<samples_per_dim;j++)
+            {
+              v[1] = mins[1] + ((real)j / samples_per_dim) * (maxs[1]-mins[1]);
+              v[2] = distr->density(v.subVec(0,2));
+              data(k++)<<v;
+            }
+          }
+          break;
+        default : PLERROR("only distribution of dimension 1 nd 2 implemented");break;
+        }
+      }
     }
 }
 
@@ -99,7 +151,6 @@ void VMatrixFromDistribution::makeDeepCopyFromShallowCopy(map<const void*, void*
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
 }
-
 
 real VMatrixFromDistribution::get(int i, int j) const
 { return data(i,j); }

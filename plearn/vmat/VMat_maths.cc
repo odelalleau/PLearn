@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMat_maths.cc,v 1.4 2003/05/26 04:12:43 plearner Exp $
+* $Id: VMat_maths.cc,v 1.5 2003/07/04 18:21:06 jkeable Exp $
 * This file is part of the PLearn library.
 ******************************************************* */
 #include "VMat_maths.h"
@@ -313,6 +313,77 @@ void computeMeanAndVariance(VMat d, Vec& meanvec, Vec& variancevec)
   variancevec /= real(l-1);
   
 }
+
+void computeInputMean(VMat d, Vec& meanvec)
+{
+  static Vec input;
+  static Vec target;
+  real weight;
+  int l = d->length();
+  int n = d->inputsize();
+  double weightsum = 0;
+  meanvec.resize(n);  
+  meanvec.clear();
+  for(int i=0; i<l; i++)
+  {
+    d->getExample(i,input,target,weight);
+    weightsum += weight;
+    multiplyAcc(meanvec,input,weight);
+  }
+  meanvec /= weightsum;
+}
+
+void computeInputMeanAndCovar(VMat d, Vec& meanvec, Mat& covarmat)
+{
+  static Vec input;
+  static Vec target;
+  real weight;
+  int l = d->length();
+  int n = d->inputsize();
+  double weightsum = 0;
+  meanvec.resize(n);  
+  meanvec.clear();
+  covarmat.resize(n,n);
+  covarmat.clear();
+  for(int i=0; i<l; i++)
+  {
+    d->getExample(i,input,target,weight);
+    weightsum += weight;
+    multiplyAcc(meanvec,input,weight);
+    externalProductScaleAcc(covarmat, input, input, weight);
+  }
+  meanvec /= weightsum;
+  externalProductScaleAcc(covarmat, meanvec, meanvec, real(-1));
+}
+
+void computeInputMeanAndVariance(VMat d, Vec& meanvec, Vec& var)
+{
+  static Vec input;
+  static Vec target;
+  real weight;
+  int l = d->length();
+  int n = d->inputsize();
+  double weightsum = 0;
+  meanvec.resize(n);  
+  meanvec.clear();
+  var.resize(n);
+  var.clear();
+  for(int i=0; i<l; i++)
+  {
+    d->getExample(i,input,target,weight);
+    weightsum+=weight;
+    for(int i=0;i<input.size();i++)
+      var[i]+=weight*input[i]*input[i];
+    multiplyAcc(meanvec,input,weight);
+
+  }
+  meanvec /= weightsum;
+  var /= weightsum;
+  for(int i=0;i<input.size();i++)
+    var[i]-=meanvec[i]*meanvec[i];
+  
+}
+
 
 void computeWeightedMeanAndCovar(Vec weights, VMat d, Vec& meanvec, Mat& covarmat)
 {
