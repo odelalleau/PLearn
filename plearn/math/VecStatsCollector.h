@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.h,v 1.21 2004/10/15 15:57:00 chapados Exp $ 
+   * $Id: VecStatsCollector.h,v 1.22 2004/10/17 06:34:44 chapados Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.h */
@@ -182,6 +182,15 @@ public:
   //! Will throw an exception if statname is invalid
   int getIndexInAllStats(int fieldindex, const string& statname) const;
 
+  //! A little magic function that appends all the StatsCollectors of an
+  //! existing VecStatsCollector into this one.  A fieldname prefix can
+  //! be specified, in which case the prefix is contatenated to the
+  //! existing fieldnames.  Otherwise, a vector of new fieldnames can be
+  //! specified (overrides the prefix).  If compute_covariance=true,
+  //! a block-diagonal covariance matrix is computed.
+  void append(const VecStatsCollector& vsc, const string fieldname_prefix="",
+              const TVec<string>& new_fieldnames = TVec<string>() );
+  
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 

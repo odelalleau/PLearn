@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.23 2004/10/15 15:57:00 chapados Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.24 2004/10/17 06:34:44 chapados Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -264,6 +264,46 @@ Mat VecStatsCollector::getCorrelation() const
   Mat norm(cov.width(),cov.width());
   externalProduct(norm,getStdDev(),getStdDev());
   return getCovariance()/norm;
+}
+
+void VecStatsCollector::append(const VecStatsCollector& vsc,
+                               const string fieldname_prefix,
+                               const TVec<string>& new_fieldnames)
+{
+  // To avoid problems with fieldnames, ensure we don't start out with too
+  // many fieldnames, and pad nonexistent fieldnames in *this with ""
+  fieldnames.resize(stats.size());
+  for (int i=fieldnames.size(), n = stats.size() ; i<n ; ++i)
+    fieldnames.append("");
+  
+  stats.append(vsc.stats);
+
+  // Take care of field names
+  if (new_fieldnames.size() > 0) {
+    assert( new_fieldnames.size() == vsc.stats.size() );
+    fieldnames.append(new_fieldnames);
+  }
+  else {
+    const int n = vsc.stats.size();
+    assert (vsc.fieldnames.size() == n );
+    fieldnames.resize(fieldnames.size(), n);
+    for (int i=0 ; i<n ; ++i)
+      fieldnames.append(fieldname_prefix + vsc.fieldnames[i]);
+  }
+
+  // Take care of covariance matrix
+  if (compute_covariance) {
+    const int oldsize = cov.width();
+    const int vscsize = vsc.cov.width();
+    assert( oldsize == cov.length() && vscsize == vsc.cov.length() );
+    Mat newcov(stats.size(), stats.size(), 0.0);
+    newcov.subMat(0,0,oldsize,oldsize) << cov;
+    if (vsc.compute_covariance)
+      newcov.subMat(oldsize,oldsize,vscsize,vscsize) << vsc.cov;
+    else
+      newcov.subMat(oldsize,oldsize,vscsize,vscsize).fill(MISSING_VALUE);
+    cov = newcov;
+  }
 }
 
 void VecStatsCollector::makeDeepCopyFromShallowCopy(CopiesMap& copies)
