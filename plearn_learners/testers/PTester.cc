@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.15 2003/11/04 14:43:00 yoshua Exp $ 
+   * $Id: PTester.cc,v 1.16 2003/11/04 23:32:11 chapados Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -348,8 +348,10 @@ Vec PTester::perform(bool call_forget)
             splitres[k+1] = stcol[sp.setnum]->getStat(sp.intstatname);
         }
 
-      if(split_stats_vm)
+      if(split_stats_vm) {
         split_stats_vm->appendRow(splitres);
+        split_stats_vm->flush();
+      }
 
       global_statscol->update(splitres.subVec(1,nstats));
     }
