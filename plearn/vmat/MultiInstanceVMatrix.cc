@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MultiInstanceVMatrix.cc,v 1.4 2004/02/29 15:53:06 yoshua Exp $ 
+   * $Id: MultiInstanceVMatrix.cc,v 1.5 2004/03/04 14:43:17 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Norman Casagrande
@@ -192,10 +192,19 @@ void MultiInstanceVMatrix::build_()
       inFile >> inp_element;
       mat_i[i] = strtod(inp_element.c_str(), 0);
     }
-    mat_i[lastColumn] = bagType;
 
+    if (lineNum+1==nRows)
+      {
+        if (nComp > 1)
+          mat_i[lastColumn] = SumOverBagsVariable::TARGET_COLUMN_LAST;
+        else
+          mat_i[lastColumn] = SumOverBagsVariable::TARGET_COLUMN_SINGLE;
+      }
+    else
+      mat_i[lastColumn] = bagType;
   }
   
+
   //ofstream test("g:/test.txt");
   //test << data_;
   //test.close();
