@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StdPStreamBuf.h,v 1.3 2005/01/07 23:51:22 chrish42 Exp $ 
+   * $Id: StdPStreamBuf.h,v 1.4 2005/01/14 19:40:49 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -48,7 +48,17 @@
 #include "PStreamBuf.h"
 #include <iostream>
 
+// It seems we still need to use pl_streambuf hack, even with the new PLStreambuf version
+// as std streams not wrapped in a pl_streambuf appear to have unpredictable and buggy behaviour. 
+// (EOF showing up at unexpected times!)
+// #define DONT_USE_PLSTREAMBUF 0
+#define DONT_USE_PLSTREAMBUF 1
+
 #if STREAMBUFVER == 0
+#define DONT_USE_PLSTREAMBUF 0
+#endif 
+
+#if DONT_USE_PLSTREAMBUF == 0
 #include "pl_streambuf.h"
 #include "pl_fdstream.h"
 #endif
@@ -71,7 +81,7 @@ protected:
   ostream* pout; //<! underlying output stream
   bool own_pin, own_pout; //<! true if {pin|pout} was created internally
 
-#if STREAMBUFVER == 0
+#if DONT_USE_PLSTREAMBUF == 0
   PP<pl_streambuf> the_inbuf;   //<! markable input buffer
   PP<pl_fdstreambuf> the_fdbuf; //<! buffer on a POSIX file descriptor
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FdPStreamBuf.h,v 1.3 2005/01/07 23:51:22 chrish42 Exp $ 
+   * $Id: FdPStreamBuf.h,v 1.4 2005/01/14 19:40:49 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -71,8 +71,6 @@ public:
                bool own_in_=false, bool own_out_=false);
   virtual ~FdPStreamBuf();
 
-  virtual bool good() const;
-  
 protected:
 
   virtual streamsize read_(char* p, streamsize n);

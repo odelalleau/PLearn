@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnService.cc,v 1.1 2005/01/07 18:18:14 plearner Exp $ 
+   * $Id: PLearnService.cc,v 1.2 2005/01/14 19:40:50 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -44,9 +44,24 @@
 #include "PLearnService.h"
 #include "RemotePLearnServer.h"
 #include "plearn/io/PStream.h"
+#include "plearn/io/pl_log.h"
 
 namespace PLearn {
 using namespace std;
+
+
+  string PLearnService::service_launch_command;
+
+  void PLearnService::setServiceLaunchCommand(const string& command)
+  {
+    service_launch_command = command;
+  }
+
+  string PLearnService::getServiceLaunchCommand()
+  {
+    return service_launch_command;
+  }
+
 
   PLearnService& PLearnService::instance()
   {
@@ -63,19 +78,22 @@ using namespace std;
 
 
   int PLearnService::availableServers() const
-  {
+  {    
     return 0;
   }
 
   RemotePLearnServer* PLearnService::newServer()
   {
     // search for a free processing ressource
-
     // open an io channel to a plearn server running on found ressource 
-    PStream io;
+    string launch_command = "cldispatch "+service_launch_command;
+    DBG_LOG << "PLearnService::newServer launching: " << launch_command << endl;
+    PP<Popen> p = new Popen(launch_command);    
+    if(p->in.peek()==EOF)
+      return 0;
 
     // return RemotePLearnServer object controlling the remote processing ressource
-    RemotePLearnServer* serv = new RemotePLearnServer(io);
+    RemotePLearnServer* serv = new RemotePLearnServer(p);
     
     reserved_servers.insert(serv);
     return serv;

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrPStreamBuf.cc,v 1.4 2005/01/13 21:05:34 chrish42 Exp $ 
+   * $Id: PrPStreamBuf.cc,v 1.5 2005/01/14 19:40:49 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Christian Hudon
@@ -84,14 +84,4 @@ using namespace std;
       PLERROR("In PrPStreamBuf::write_ failed to write the requested number of bytes");
   }
   
-  bool PrPStreamBuf::good() const
-  {
-    if (!in && !out)
-      return false;
-    else if (!in && out)
-      return true;
-    else 
-      return !eof();
-  }
-
 } // end of namespace PLearn

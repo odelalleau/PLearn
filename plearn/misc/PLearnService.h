@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnService.h,v 1.1 2005/01/07 18:18:14 plearner Exp $ 
+   * $Id: PLearnService.h,v 1.2 2005/01/14 19:40:50 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -53,11 +53,17 @@ namespace PLearn {
 
 class PLearnService: public PPointable
 {
+private:
+  static string service_launch_command;
+
 public:
   friend class RemotePLearnServer;
 
   //! Returns single instance of PLearnService
   static PLearnService& instance();
+
+  static void setServiceLaunchCommand(const string& command);
+  static string getServiceLaunchCommand();
 
   //! returns the number of available processing ressources
   int availableServers() const;

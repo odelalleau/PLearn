@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ServerCommand.cc,v 1.3 2005/01/11 23:43:40 plearner Exp $ 
+   * $Id: ServerCommand.cc,v 1.4 2005/01/14 19:40:12 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -43,6 +43,9 @@
 
 #include "ServerCommand.h"
 #include "plearn/misc/PLearnServer.h"
+
+#include "plearn/io/StdPStreamBuf.h"
+#include "plearn/io/FdPStreamBuf.h"
 
 namespace PLearn {
 using namespace std;
@@ -73,7 +76,9 @@ ServerCommand::ServerCommand():
 void ServerCommand::run(const vector<string>& args)
 {
   cerr << "Type ? to get some help." << endl;
-  PStream io(&std::cin, &std::cout);
+  // PStream io(&std::cin, &std::cout);
+  PStream io(new StdPStreamBuf(&std::cin,&std::cout));
+  // PStream io(new FdPStreamBuf(0,1));
   PLearnServer server(io);
   server.run();
 }

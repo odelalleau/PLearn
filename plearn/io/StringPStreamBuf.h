@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StringPStreamBuf.h,v 1.2 2005/01/07 23:51:22 chrish42 Exp $ 
+   * $Id: StringPStreamBuf.h,v 1.3 2005/01/14 19:40:49 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -76,8 +76,6 @@ public:
 
   virtual ~StringPStreamBuf();
 
-  virtual bool good() const;
-  
 protected:
 
   virtual streamsize read_(char* p, streamsize n);

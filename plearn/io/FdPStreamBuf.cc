@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FdPStreamBuf.cc,v 1.3 2005/01/07 23:51:22 chrish42 Exp $ 
+   * $Id: FdPStreamBuf.cc,v 1.4 2005/01/14 19:40:49 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -55,6 +55,8 @@ using namespace std;
 
   FdPStreamBuf::~FdPStreamBuf()
   {
+    const bool in_and_out_equal = (in == out);
+
     flush();
     if(in>=0 && own_in)
       {
@@ -63,7 +65,8 @@ using namespace std;
       }
     if(out>=0 && own_out)
       {
-        ::close(out);
+        if (!in_and_out_equal)
+          ::close(out);
         out = -1;
       }
   }
@@ -79,15 +82,7 @@ using namespace std;
     streamsize nwritten = ::write(out, p, n);
     if(nwritten!=n)
       PLERROR("In FdPStreamBuf::write_ failed to write the requested number of bytes");
-    // fsync(out);
-  }
-
-  bool FdPStreamBuf::good() const
-  {
-    if (is_readable)
-      return !eof();
-    else
-      return is_writable;
+    fsync(out);
   }
   
 } // end of namespace PLearn

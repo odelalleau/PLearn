@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilePStreamBuf.cc,v 1.5 2005/01/07 23:51:22 chrish42 Exp $ 
+   * $Id: FilePStreamBuf.cc,v 1.6 2005/01/14 19:40:49 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -46,107 +46,42 @@
 namespace PLearn {
 using namespace std;
 
-  string FilePStreamBuf::getFilePathFromURL(string fileurl)
-  {    
-    return fileurl; // (for now. Will do sth more fancy later)
-  }
-
-FilePStreamBuf::FilePStreamBuf() 
-  : f(0)
-/* ### Initialise all fields to their default value */
-  {
-    // ...
-
-    // ### You may or may not want to call build_() to finish building the object
-    // build_();
-  }
+FilePStreamBuf::FilePStreamBuf(FILE* in_f, FILE* out_f, 
+                               bool own_in_, bool own_out_)
+  :PStreamBuf(in_f!=0, out_f!=0, 4096, 4096, default_ungetsize), 
+   in(in_f), out(out_f), own_in(own_in_), own_out(own_out_)
+  {}
 
   FilePStreamBuf::~FilePStreamBuf()
   {
+    const bool in_and_out_equal = (in == out);
+
     flush();
-    if(f)
-      fclose(f);      
-  }
-
-
-  PLEARN_IMPLEMENT_OBJECT(FilePStreamBuf, "ONE LINE DESCRIPTION", "MULTI LINE\nHELP");
-
-  void FilePStreamBuf::declareOptions(OptionList& ol)
-  {
-    declareOption(ol, "url", &FilePStreamBuf::url, OptionBase::buildoption,
-                  "Uniform resource location of file");
-
-    declareOption(ol, "openmode", &FilePStreamBuf::openmode, OptionBase::buildoption,
-                  "Uniform resource location of file");
-
-    // Now call the parent class' declareOptions
-    inherited::declareOptions(ol);
-  }
-
-  void FilePStreamBuf::build_()
-  {
-    string filepath = getFilePathFromURL(url);
-
-    is_random_accessible = true;
-    if(openmode=="r")
+    if(in && own_in)
       {
-        is_readable = true;
-        is_writable = false;
+        fclose(in);
+        in = 0;
       }
-    else if(openmode=="w" || openmode=="a")
+    if(out && own_out)
       {
-        is_readable = false;
-        is_writable = true;
-      }
-    else if(openmode=="r+" || openmode=="w+" || openmode=="a+")
-      {
-        is_readable = true;
-        is_writable = true;
-      }
-    else
-      PLERROR("In FilePStreamBuf::build Invalid openmode. Must be one of r, w, a, r+, w+, a+. The 'b' character is not used to denote 'binary mode'. All files are opened in binary mode anyway.");
-
-    string binaryopenmode = openmode+'b'; // binary for windows
-    f = fopen(filepath.c_str(), binaryopenmode.c_str());
-    if(!f)
-      PLERROR("Failed to open file %s in mode %s",filepath.c_str(), openmode.c_str());
-  }
-
-  // ### Nothing to add here, simply calls build_
-  void FilePStreamBuf::build()
-  {
-    inherited::build();
-    build_();
+        if (!in_and_out_equal)
+          fclose(out);
+        out = 0;
+      }        
   }
 
   FilePStreamBuf::streamsize FilePStreamBuf::read_(char* p, streamsize n)
   {
-    return fread(p, 1, n, f);
+    return fread(p, 1, n, in);
   }
 
   //! writes exactly n characters from p (unbuffered, must flush)
   void FilePStreamBuf::write_(const char* p, streamsize n)
   {
-    streamsize nwritten = fwrite(p, 1, n, f);
+    streamsize nwritten = fwrite(p, 1, n, out);
     if(nwritten!=n)
       PLERROR("In FilePStreamBuf::write_ failed to write the requested number of bytes");
-    fflush(f);
-  }
-
-  void FilePStreamBuf::makeDeepCopyFromShallowCopy(CopiesMap& copies)
-  {
-    inherited::makeDeepCopyFromShallowCopy(copies);
-    // deepCopyField(trainvec, copies);
-    f = 0;
-    build();
-  }
-
-  bool FilePStreamBuf::good() const
-  {
-    if (is_readable)
-      return !eof();
-    else
-      return is_writable;
+    fflush(out);
   }
   
 } // end of namespace PLearn

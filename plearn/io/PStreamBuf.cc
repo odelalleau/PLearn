@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PStreamBuf.cc,v 1.7 2004/12/22 19:38:14 chrish42 Exp $ 
+   * $Id: PStreamBuf.cc,v 1.8 2005/01/14 19:40:49 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PStreamBuf.cc */
@@ -230,5 +230,14 @@ void PStreamBuf::write(const char* p, streamsize n)
   else // unbuffered
     write_(p,n);
 }
+
+  bool PStreamBuf::good() const
+  {
+    if (is_readable)
+      return !eof();
+    else
+      return is_writable;
+  }
+
 
 } // end of namespace PLearn

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StdPStreamBuf.cc,v 1.4 2005/01/07 23:51:22 chrish42 Exp $ 
+   * $Id: StdPStreamBuf.cc,v 1.5 2005/01/14 19:40:49 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -50,7 +50,7 @@ using namespace std;
   StdPStreamBuf::StdPStreamBuf()
     :PStreamBuf(false,false),
      pin(0), pout(0), own_pin(false), own_pout(false)
-#if STREAMBUFVER == 0
+#if DONT_USE_PLSTREAMBUF == 0
     , original_bufin(0), original_bufout(0)
 #endif
   {}
@@ -59,11 +59,11 @@ using namespace std;
   StdPStreamBuf::StdPStreamBuf(istream* pin_, bool own_pin_)
     :PStreamBuf(true,false),
      pin(pin_), pout(0), own_pin(own_pin_), own_pout(false)
-#if STREAMBUFVER == 0
+#if DONT_USE_PLSTREAMBUF == 0
     , original_bufin(pin_->rdbuf()), original_bufout(0)
 #endif
   { 
-#if STREAMBUFVER == 0
+#if DONT_USE_PLSTREAMBUF == 0
     initInBuf(); 
 #endif
   }
@@ -72,7 +72,7 @@ using namespace std;
   StdPStreamBuf::StdPStreamBuf(ostream* pout_, bool own_pout_)
     :PStreamBuf(false,true),
      pin(0), pout(pout_), own_pin(false), own_pout(own_pout_)
-#if STREAMBUFVER == 0
+#if DONT_USE_PLSTREAMBUF == 0
     , original_bufin(0), original_bufout(pout_->rdbuf())
 #endif
   {}
@@ -81,11 +81,11 @@ using namespace std;
   StdPStreamBuf::StdPStreamBuf(iostream* pios_, bool own_pios_)
     :PStreamBuf(true,true),
      pin(pios_), pout(pios_), own_pin(own_pios_), own_pout(own_pios_)
-#if STREAMBUFVER == 0
+#if DONT_USE_PLSTREAMBUF == 0
     , original_bufin(pios_->rdbuf()), original_bufout(pios_->rdbuf())
 #endif
   { 
-#if STREAMBUFVER == 0
+#if DONT_USE_PLSTREAMBUF == 0
     initInBuf(); 
 #endif
   }
@@ -94,18 +94,18 @@ using namespace std;
   StdPStreamBuf::StdPStreamBuf(istream* pin_, ostream* pout_, bool own_pin_, bool own_pout_)
     :PStreamBuf(true,true),
      pin(pin_), pout(pout_), own_pin(own_pin_), own_pout(own_pout_)
-#if STREAMBUFVER == 0
+#if DONT_USE_PLSTREAMBUF == 0
     , original_bufin(pin_->rdbuf()), original_bufout(pout_->rdbuf())
 #endif
   { 
-#if STREAMBUFVER == 0
+#if DONT_USE_PLSTREAMBUF == 0
     initInBuf(); 
 #endif
   }
 
   StdPStreamBuf::~StdPStreamBuf()
   {
-#if STREAMBUFVER == 0
+#if DONT_USE_PLSTREAMBUF == 0
     // am I the only PStream using this buffer?
     if(the_inbuf && 1 == the_inbuf->usage())
       {// reset underlying streams's buffers before destroying the_inbuf
@@ -120,7 +120,7 @@ using namespace std;
       delete pout; // delete pout if we created it
   }
 
-#if STREAMBUFVER == 0
+#if DONT_USE_PLSTREAMBUF == 0
 void StdPStreamBuf::initInBuf()
   {
     if(pin)
@@ -136,7 +136,7 @@ void StdPStreamBuf::initInBuf()
 
   void StdPStreamBuf::setIn(istream* pin_, bool own_pin_)
   {
-#if STREAMBUFVER == 0
+#if DONT_USE_PLSTREAMBUF == 0
     if (pin && original_bufin)
       pin->rdbuf(original_bufin);
     if (own_pin)
@@ -162,7 +162,7 @@ void StdPStreamBuf::initInBuf()
 
   void StdPStreamBuf::setOut(ostream* pout_, bool own_pout_)
   {
-#if STREAMBUFVER == 0
+#if DONT_USE_PLSTREAMBUF == 0
     if (pout && original_bufout) pout->rdbuf(original_bufout);
     if (own_pout)
       delete pout;
@@ -209,7 +209,13 @@ void StdPStreamBuf::initInBuf()
   {
     if (pin==0)
       PLERROR("StdPStreamBuf::read_ with pin==0");
-    return pin->readsome(p,n);
+    streamsize nread = pin->readsome(p,n);
+    if(nread>0)      
+      return nread;
+
+    // if nread==0 maybe it's because no chars were available now (non-blocking readsome)
+    pin->read(p,1);
+    return pin->gcount();
   }
 
   //! writes exactly n characters from p (unbuffered, must flush)

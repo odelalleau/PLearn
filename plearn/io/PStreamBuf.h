@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PStreamBuf.h,v 1.11 2005/01/10 20:09:17 chrish42 Exp $ 
+   * $Id: PStreamBuf.h,v 1.12 2005/01/14 19:40:49 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PStreamBuf.h */
@@ -182,10 +182,10 @@ public:
   void write(const char* p, streamsize n);
 
   /// Checks if the streambuf is valid and can be written to or read from.
-  virtual bool good() const =0;
+  virtual bool good() const;
 
   /// Checks if we reached the end of the file.
-  virtual bool eof() const
+  bool eof() const
   {
     return const_cast<PStreamBuf*>(this)->peek() == EOF;
   }

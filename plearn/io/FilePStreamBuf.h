@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilePStreamBuf.h,v 1.4 2005/01/07 23:51:22 chrish42 Exp $ 
+   * $Id: FilePStreamBuf.h,v 1.5 2005/01/14 19:40:49 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -60,63 +60,28 @@ protected:
   // *********************
   // * protected options *
   // *********************
-  FILE* f;
+  FILE* in;  //<! input FILE (0 if no input)
+  FILE* out; //<! output FILE (0 if no output)
+  bool own_in, own_out; //<! true if {in|out} should be closed by this object upon destruction.
 
 public:
 
-  // ************************
-  // * public build options *
-  // ************************
-  string url;    
-  string openmode;
-
   // Default constructor, make sure the implementation in the .cc
   // initializes all fields to reasonable default values.
-  FilePStreamBuf();
+  FilePStreamBuf(FILE* in_f=0, FILE* out_f=0, 
+                 bool own_in=false, bool own_out=false);
 
   virtual ~FilePStreamBuf();
 
-  static string getFilePathFromURL(string fileurl);
-
-  // ******************
-  // * Object methods *
-  // ******************
-
-private: 
-  //! This does the actual building. 
-  // (PLEASE IMPLEMENT IN .cc)
-  void build_();
-
 protected: 
-  //! Declares this class' options
-  // (PLEASE IMPLEMENT IN .cc)
-  static void declareOptions(OptionList& ol);
 
   virtual streamsize read_(char* p, streamsize n);
 
   //! writes exactly n characters from p (unbuffered, must flush)
   virtual void write_(const char* p, streamsize n);
 
-
-public:
-  // Declares other standard object methods
-  //  If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
-  PLEARN_DECLARE_OBJECT(FilePStreamBuf);
-
-  // simply calls inherited::build() then build_() 
-  virtual void build();
-
-  //! Transforms a shallow copy into a deep copy
-  // (PLEASE IMPLEMENT IN .cc)
-  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
-
-  virtual bool eof() const;
 };
 
-// Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(FilePStreamBuf);
-  
 } // end of namespace PLearn
 
 #endif
