@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: JoinVMatrix.cc,v 1.4 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: JoinVMatrix.cc,v 1.5 2004/02/29 16:44:06 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -114,7 +114,7 @@ void JoinVMatrix::getRow(int idx, Vec v) const
   
   Vec popo(v.subVec(master.width(),width()-master.width()));
 
-  int sz=fld.size();
+  int sz=(int)fld.size();
   Vec count(sz,0.0),nmissing(sz,0.0),sum(sz,0.0),sumsquare(sz,0.0),min(sz,FLT_MAX),max(sz,-FLT_MAX);
   real val;  
   if(low!=mp.end())

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: DisplayUtils.cc,v 1.4 2004/02/26 04:08:34 nova77 Exp $
+   * $Id: DisplayUtils.cc,v 1.5 2004/02/29 16:44:05 nova77 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -284,7 +284,7 @@ void displayVarGraph(const VarArray& outputs, bool display_values, real boxwidth
   for (real y=boxheight;y<=topy;y+=deltay)
   {
     pair<mmit,mmit> range = layers.equal_range(y);
-    int nvars = distance(range.first,range.second);
+    int nvars = (int)distance(range.first,range.second);
     if (maxvarsperlevel < nvars)
       maxvarsperlevel = nvars;
   }
@@ -305,7 +305,7 @@ void displayVarGraph(const VarArray& outputs, bool display_values, real boxwidth
   for (real y=boxheight;y<=topy;y+=deltay)
   {
     pair<mmit,mmit> range = layers.equal_range(y);
-    int nvars = distance(range.first,range.second);
+    int nvars = (int)distance(range.first,range.second);
     real deltax = usewidth/(nvars+1);
     real x = deltax;
     for (mmit it = range.first; it != range.second; it++, x+=deltax)
@@ -328,7 +328,7 @@ void displayVarGraph(const VarArray& outputs, bool display_values, real boxwidth
   for (real y=boxheight;y<=topy;y+=deltay)
   {
     pair<mmit,mmit> range = layers.equal_range(y);
-    int nvars = distance(range.first,range.second);
+    int nvars = (int)distance(range.first,range.second);
     real deltax = usewidth/(nvars+1);
     real x = deltax;
     for (mmit it = range.first; it != range.second; it++, x+=deltax)

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AutoRunCommand.cc,v 1.4 2004/02/26 18:22:42 nova77 Exp $ 
+   * $Id: AutoRunCommand.cc,v 1.5 2004/02/29 16:44:04 nova77 Exp $ 
    ******************************************************* */
 
 /*! \file AutoRunCommand.cc */
@@ -60,7 +60,7 @@ PLearnCommandRegistry AutoRunCommand::reg_(new AutoRunCommand);
 void AutoRunCommand::run(const vector<string>& args)
 {
   string scriptname = args[0];
-  int nargs = args.size();
+  int nargs = (int)args.size();
 
   vector<string> runargs(1);
   runargs[0] = scriptname;

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.23 2004/02/28 18:02:19 tihocan Exp $
+   * $Id: fileutils.cc,v 1.24 2004/02/29 16:44:05 nova77 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -383,7 +383,7 @@ void readWhileMatches(istream& in, const string& s){
   int i = 0;
   int c;
   c = in.get();
-  int n = s.length();
+  int n = (int)s.length();
   while(c!=EOF)
     {
       if(s[i]!=c)
@@ -435,7 +435,7 @@ void getNextNonBlankLine(istream& in, string& line)
         line="";
         return;
       }
-      int l = line.length();
+      int l = (int)line.length();
       for(int i=0; i<l; i++)
         {
           char c = line[i];

@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.cc,v 1.16 2004/02/26 18:07:52 nova77 Exp $
+   * $Id: Learner.cc,v 1.17 2004/02/29 16:44:06 nova77 Exp $
    ******************************************************* */
 
 #include "Learner.h"
@@ -574,7 +574,7 @@ void Learner::apply(const VMat& data, VMat outputs)
   void Learner::computeLeaveOneOutCosts(const VMat& data, VMat costsmat, CostFunc costf)
   {
     // norman: added parenthesis to clarify precendence
-    if( (costsmat.length() != data.length()) | costsmat.width()!=1)
+    if( (costsmat.length() != data.length()) | (costsmat.width()!=1))
       PLERROR("In Learner::computeLeaveOneOutCosts bad dimensions for costsmat VMat");
     Vec testsample(inputsize()+targetsize());
     Vec testinput = testsample.subVec(0,inputsize());

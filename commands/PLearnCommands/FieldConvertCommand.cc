@@ -117,7 +117,7 @@ void FieldConvertCommand::run(const vector<string> & args)
     beta_hat=0;
     string message;
     int action = 0;
-    int count = sc[i].getCounts()->size()-1; // Number of unique values.
+    int count = (int)sc[i].getCounts()->size()-1; // Number of unique values.
 
     // is this field's type forced ?
     if(force.find(i) != force.end())

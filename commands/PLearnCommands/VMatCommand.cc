@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VMatCommand.cc,v 1.3 2004/02/20 21:11:40 chrish42 Exp $ 
+   * $Id: VMatCommand.cc,v 1.4 2004/02/29 16:44:04 nova77 Exp $ 
    ******************************************************* */
 
 /*! \file VMatCommand.cc */
@@ -100,7 +100,7 @@ void VMatCommand::run(const vector<string>& args)
   // Dirty hack to plug into old vmatmain code
   // Eventually, should get vmatmain code in here and clean
 
-  int argc = args.size()+1;
+  int argc = (int)args.size()+1;
   char** argv = new char*[argc];
   string commandname = "vmat";
   argv[0] = const_cast<char*>(commandname.c_str());

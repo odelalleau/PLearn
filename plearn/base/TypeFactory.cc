@@ -138,22 +138,22 @@ void displayObjectHelp(ostream& out, const string& classname)
   out << classname + "( \n";
   OptionList& options = (*entry.getoptionlist_method)();    
 
-  for( OptionList::iterator it = options.begin(); it!=options.end(); ++it )
+  for( OptionList::iterator olIt = options.begin(); olIt!=options.end(); ++olIt )
     {
-      OptionBase::flag_t flags = (*it)->flags();
+      OptionBase::flag_t flags = (*olIt)->flags();
       if(flags & OptionBase::buildoption)
         {
-          string descr = (*it)->description();
-          string optname = (*it)->optionname();
-          string opttype = (*it)->optiontype();
+          string descr = (*olIt)->description();
+          string optname = (*olIt)->optionname();
+          string opttype = (*olIt)->optiontype();
           string defaultval = "?";
           if(obj) // it's an instantiable class
             {
-              defaultval = (*it)->defaultval(); 
+              defaultval = (*olIt)->defaultval(); 
               if(defaultval=="")
-                defaultval = (*it)->writeIntoString(obj);
+                defaultval = (*olIt)->writeIntoString(obj);
             }
-          // string holderclass = (*it)->optionHolderClassName(this);
+          // string holderclass = (*olIt)->optionHolderClassName(this);
           out << addprefix("# ", opttype + ": " + descr);
           out << optname + " = " + defaultval + " ;\n\n";
         }

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CompactVMatrix.cc,v 1.4 2004/02/27 21:12:25 nova77 Exp $
+   * $Id: CompactVMatrix.cc,v 1.5 2004/02/29 16:44:06 nova77 Exp $
    ******************************************************* */
 
 #include "CompactVMatrix.h"
@@ -122,7 +122,7 @@ CompactVMatrix::CompactVMatrix(VMat m, int keep_last_variables_last, bool onehot
   for (int i=0;i<m->width();i++)
   {
     VMFieldStat& stat = m->fieldstats[i];
-    int n_values = stat.counts.size(); // 0 means "continuous"
+    int n_values = (int)stat.counts.size(); // 0 means "continuous"
     bool counts_look_continuous = !isMapKeysAreInt(stat.counts);
     if (n_values == 0 || counts_look_continuous || i>=m->width()-keep_last_variables_last)
     {

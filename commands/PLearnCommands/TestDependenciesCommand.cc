@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TestDependenciesCommand.cc,v 1.6 2004/02/26 21:59:43 nova77 Exp $ 
+   * $Id: TestDependenciesCommand.cc,v 1.7 2004/02/29 16:44:04 nova77 Exp $ 
    ******************************************************* */
 
 /*! \file TestDependenciesCommand.cc */
@@ -75,7 +75,7 @@ void TestDependenciesCommand::run(const vector<string>& args)
   MEMORYSTATUS stat;
   GlobalMemoryStatus (&stat);
   // Total available memory in bytes
-  int memory_size = stat.dwAvailVirtual;
+  int memory_size = (int)stat.dwAvailVirtual;
 #else
   int memory_size = getSystemTotalMemory();
 #endif 

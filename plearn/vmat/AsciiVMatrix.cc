@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AsciiVMatrix.cc,v 1.9 2004/02/20 21:14:29 chrish42 Exp $ 
+   * $Id: AsciiVMatrix.cc,v 1.10 2004/02/29 16:44:06 nova77 Exp $ 
    ******************************************************* */
 
 /*! \file AsciiVMatrix.cc */
@@ -135,7 +135,7 @@ void AsciiVMatrix::build_()
       streampos old_pos = file->tellg();
       getline(*file, line);
       could_be_old_amat = false;  
-      unsigned int pos=line.find(":");
+      unsigned int pos=(unsigned int)line.find(":");
       if (pos!=string::npos)
       {
         string sub=line.substr(0,pos);
@@ -162,7 +162,7 @@ void AsciiVMatrix::build_()
           // we set length_max
           int width_ndigits = (int)log(real(width)) + 1;
           string remain = removenewline(line.substr(pos+1));
-          int length_ndigits = remain.length() - width_ndigits - 1;
+          int length_ndigits = (int)remain.length() - width_ndigits - 1;
           length_max = (int)pow(10.0,double(length_ndigits)) - 1;
         }
       }
@@ -173,7 +173,7 @@ void AsciiVMatrix::build_()
     {
       string line;
       getNextNonBlankLine(*file,line);
-      int nfields1 = split(line).size();
+      int nfields1 = (int)split(line).size();
       getNextNonBlankLine(*file,line);
       if (line=="") // only one line, no length nor width info
       {
@@ -182,7 +182,7 @@ void AsciiVMatrix::build_()
         rewrite_length = false;
         could_be_old_amat = false;
       }
-      int nfields2 = split(line).size();
+      int nfields2 = (int)split(line).size();
       int guesslength = countNonBlankLinesOfFile(filename);
       real a, b;
       if (could_be_old_amat && nfields1==2) // could be an old .amat with first 2 numbers being length width
@@ -199,7 +199,7 @@ void AsciiVMatrix::build_()
           file->seekg(vmatlength_pos);
           getline(*file, line);
           int width_ndigits = (int)log(real(width)) + 1;
-          int max_length_ndigits = line.length() - width_ndigits - 1;
+          int max_length_ndigits = (int)line.length() - width_ndigits - 1;
           length_max = (int)pow(10.0,double(max_length_ndigits)) - 1;
         }
       }

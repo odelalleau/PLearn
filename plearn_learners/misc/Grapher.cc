@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Grapher.cc,v 1.4 2004/02/20 21:14:48 chrish42 Exp $ 
+   * $Id: Grapher.cc,v 1.5 2004/02/29 16:44:06 nova77 Exp $ 
    ******************************************************* */
 
 /*! \file Grapher.cc */
@@ -262,12 +262,12 @@ void computeXYPositions(VMat dataset, int nx, int ny, Vec& X, Vec& Y, real extra
   for(int j=0; j<ny; j++, y+=deltay)
     ypos.insert(y);
   set<real>::iterator it;
-  X.resize(xpos.size());
+  X.resize((int)xpos.size());
   real* xptr = X.data();
   it = xpos.begin();
   while(it!=xpos.end())
     *xptr++ = *it++;
-  Y.resize(ypos.size());
+  Y.resize((int)ypos.size());
   real* yptr = Y.data();
   it = ypos.begin();
   while(it!=ypos.end())
@@ -407,8 +407,8 @@ void DX_create_grid_outputs_file(const string& filename, PP<PLearner> learner, V
         }
     }
 
-  nx = xpos.size();
-  ny = ypos.size();
+  nx = (int)xpos.size();
+  ny = (int)ypos.size();
   set<real>::iterator itx;
   set<real>::iterator ity;
 

@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Distribution.cc,v 1.13 2004/02/20 21:14:46 chrish42 Exp $ 
+   * $Id: Distribution.cc,v 1.14 2004/02/29 16:44:06 nova77 Exp $ 
    ******************************************************* */
 
 /*! \file Distribution.cc */
@@ -124,7 +124,7 @@ void Distribution::declareOptions(OptionList& ol)
 
 void Distribution::use(const Vec& input, Vec& output)
 {
-  int l = use_returns_what.length();
+  int l = (int)use_returns_what.length();
   for(int i=0; i<l; i++)
     {
       switch(use_returns_what[i])

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.41 2004/02/26 20:29:23 nova77 Exp $
+   * $Id: NNet.cc,v 1.42 2004/02/29 16:44:06 nova77 Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -268,9 +268,9 @@ void NNet::build_()
             output = log_softmax(output);
           else if ((p=output_transfer_func.find("interval"))!=string::npos)
           {
-            unsigned int q = output_transfer_func.find(",");
+            unsigned int q = (unsigned int)output_transfer_func.find(",");
             interval_minval = atof(output_transfer_func.substr(p+1,q-(p+1)).c_str());
-            unsigned int r = output_transfer_func.find(")");
+            unsigned int r = (unsigned int)output_transfer_func.find(")");
             interval_maxval = atof(output_transfer_func.substr(q+1,r-(q+1)).c_str());
             output = interval_minval + (interval_maxval - interval_minval)*sigmoid(output);
           }

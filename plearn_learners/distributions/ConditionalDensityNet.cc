@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.35 2004/02/26 18:04:45 nova77 Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.36 2004/02/29 16:44:06 nova77 Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -945,6 +945,7 @@ void ConditionalDensityNet::forget()
 //! Remove this method, if your distribution does not implement it
 void ConditionalDensityNet::train()
 {
+  int i=0, j=0;
   if(!train_set)
     PLERROR("In ConditionalDensityNet::train, you did not setTrainingSet");
     
@@ -988,7 +989,7 @@ void ConditionalDensityNet::train()
           sc.build();
           sc.forget();
         }
-      for (int i=0;i<l;i++)
+      for (i=0;i<l;i++)
         {
           train_set->getExample(i,input->value,target->value,weight);
           real y = target->valuedata[0];
@@ -1035,16 +1036,16 @@ void ConditionalDensityNet::train()
             }
         }
       else
-        for (int j=0;j<n_output_density_terms;j++)
+        for (j=0;j<n_output_density_terms;j++)
           unconditional_cdf[j] *= 1.0/sum_w;
 
       unconditional_delta_cdf->valuedata[0]=unconditional_cdf[0]-unconditional_p0;
-      for (int i=1;i<n_output_density_terms;i++)
+      for (i=1;i<n_output_density_terms;i++)
         unconditional_delta_cdf->valuedata[i]=unconditional_cdf[i]-unconditional_cdf[i-1];
 
       // initialize biases based on unconditional distribution
       Vec output_biases = wout->matValue(0);
-      int i=0;
+      i=0;
       Vec a_ = output_biases.subVec(i++,1);
       Vec b_ = output_biases.subVec(i,n_output_density_terms); i+=n_output_density_terms;
       Vec c_ = output_biases.subVec(i,n_output_density_terms); i+=n_output_density_terms;
@@ -1056,7 +1057,7 @@ void ConditionalDensityNet::train()
         mu_ = output_biases.subVec(i,n_output_density_terms); i+=n_output_density_terms;
       b_.fill(inverse_softplus(1.0));
       initialize_mu(mu_);
-      for (int i=0;i<n_output_density_terms;i++)
+      for (i=0;i<n_output_density_terms;i++)
         {
           real prev_mu = i==0?0:mu_[i-1];
           real delta = mu_[i]-prev_mu;
@@ -1075,10 +1076,10 @@ void ConditionalDensityNet::train()
         {
           real s=0;
           if (steps_type=="sigmoid_steps")
-            for (int i=0;i<n_output_density_terms;i++)
+            for (i=0;i<n_output_density_terms;i++)
               s+=dcdf[i]*(unconditional_p0*sigmoid(s_c[i]*(maxY-mu_[i]))-sigmoid(-s_c[i]*mu_[i]));
           else
-            for (int i=0;i<n_output_density_terms;i++)
+            for (i=0;i<n_output_density_terms;i++)
               {
                 real prev_mu = i==0?0:mu_[i-1];
                 real ss1 = soft_slope(maxY,s_c[i],prev_mu,mu_[i]);

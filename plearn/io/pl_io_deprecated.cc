@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io_deprecated.cc,v 1.3 2004/02/26 06:54:40 nova77 Exp $
+   * $Id: pl_io_deprecated.cc,v 1.4 2004/02/29 16:44:05 nova77 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -66,9 +66,9 @@ int readHeader(istream& in, const string& classname)
                 // but if it's not there, it won't work (Hint: Microsoft conspiracy)
 #endif
   in >> header;
-  int headerlen = header.length();
+  int headerlen = (int)header.length();
   in.get(); // consume newline
-  int classnamelen = classname.length();
+  int classnamelen = (int)classname.length();
   if (   headerlen<classnamelen+2 
          || header[0]!='<' || header.substr(1,classnamelen)!=classname
          || (header[1+classnamelen]!='>' && header[1+classnamelen]!=':') )

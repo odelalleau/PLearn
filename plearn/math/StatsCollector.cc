@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.31 2004/02/20 21:11:46 chrish42 Exp $
+   * $Id: StatsCollector.cc,v 1.32 2004/02/29 16:44:05 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -204,7 +204,7 @@ RealMapping StatsCollector::getBinMapping(double discrete_mincount,
   RealMapping mapping;
   mapping.setMappingForOther(-1);
   map<real,StatsCollectorCounts>::const_iterator it = counts.begin();
-  int nleft = counts.size()-1; // loop on all but last
+  int nleft = (int)counts.size()-1; // loop on all but last
 
   if(fcount)
   {
@@ -371,7 +371,7 @@ RealMapping StatsCollector::getAllValuesMapping(TVec<bool>* to_be_included,
 
 Mat StatsCollector::cdf(bool normalized) const
 {
-  int l = 2*counts.size();
+  int l = 2*(int)counts.size();
 
   Mat xy(l+1,2);
   int i=0;

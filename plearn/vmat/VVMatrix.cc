@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.cc,v 1.12 2004/02/26 17:58:33 nova77 Exp $
+   * $Id: VVMatrix.cc,v 1.13 2004/02/29 16:44:06 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -114,7 +114,7 @@ vector<vector<string> > VVMatrix::extractSourceMatrix(const string & str,const s
           if(srcstr[0]!=slash_char)
             {
               string potential_dir = extract_directory(filename);
-              unsigned int p = srcstr.find(":");
+              unsigned int p = (unsigned int )srcstr.find(":");
               string potential_path = potential_dir + srcstr.substr(0,p);
               if(file_exists(potential_path))              
                 srcstr=potential_dir+srcstr;
@@ -127,7 +127,7 @@ vector<vector<string> > VVMatrix::extractSourceMatrix(const string & str,const s
 time_t VVMatrix::getDateOfVMat(const string& filename)
 {
   string in=readFileAndMacroProcess(filename);
-  unsigned int idx_source = in.find("<SOURCES>");
+  unsigned int idx_source = (unsigned int)in.find("<SOURCES>");
   unsigned int cidx_source;
 
   time_t latest = getDateOfCode(filename),tmp;
@@ -329,13 +329,13 @@ string VVMatrix::getPrecomputedDataName()
 VMat VVMatrix::createPreproVMat(const string & filename)
 {
   string in=readFileAndMacroProcess(filename);
-  unsigned int idx_source  =  in.find("<SOURCES>");
-  unsigned int idx_prefilter= in.find("<PREFILTER>");
-  unsigned int idx_postfilter=in.find("<POSTFILTER>");
-  unsigned int idx_process =  in.find("<PROCESSING>");
-  unsigned int idx_shuffle =  in.find("<SHUFFLE>");
-  unsigned int idx_join    =  in.find("<JOIN>");
-  unsigned int idx_precompute =  in.find("<PRECOMPUTE>");
+  unsigned int idx_source  =  (unsigned int)in.find("<SOURCES>");
+  unsigned int idx_prefilter= (unsigned int)in.find("<PREFILTER>");
+  unsigned int idx_postfilter=(unsigned int)in.find("<POSTFILTER>");
+  unsigned int idx_process =  (unsigned int)in.find("<PROCESSING>");
+  unsigned int idx_shuffle =  (unsigned int)in.find("<SHUFFLE>");
+  unsigned int idx_join    =  (unsigned int)in.find("<JOIN>");
+  unsigned int idx_precompute =  (unsigned int)in.find("<PRECOMPUTE>");
   unsigned int cidx_source=0, cidx_prefilter=0, cidx_postfilter=0, cidx_process=0, cidx_shuffle=0,cidx_precompute=0,cidx_join=0;
   string precomp;
   VMat source;

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatIO.cc,v 1.3 2004/02/20 21:11:44 chrish42 Exp $
+   * $Id: MatIO.cc,v 1.4 2004/02/29 16:44:05 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -173,7 +173,7 @@ void savePVec(const string& filename, const TVec<float>& vec)
 #endif
 
   // Pad the header with whites and terminate it with '\n'
-  for(int pos=strlen(header); pos<DATAFILE_HEADERLENGTH; pos++)
+  for(int pos=(int)strlen(header); pos<DATAFILE_HEADERLENGTH; pos++)
     header[pos] = ' ';
   header[DATAFILE_HEADERLENGTH-1] = '\n';
 
@@ -206,7 +206,7 @@ void savePVec(const string& filename, const TVec<double>& vec)
 #endif
 
   // Pad the header with whites and terminate it with '\n'
-  for(int pos=strlen(header); pos<DATAFILE_HEADERLENGTH; pos++)
+  for(int pos=(int)strlen(header); pos<DATAFILE_HEADERLENGTH; pos++)
     header[pos] = ' ';
   header[DATAFILE_HEADERLENGTH-1] = '\n';
 
@@ -342,7 +342,7 @@ void savePMat(const string& filename, const TMat<float>& mat)
 #endif
 
   // Pad the header with whites and terminate it with '\n'
-  for(int pos=strlen(header); pos<DATAFILE_HEADERLENGTH; pos++)
+  for(int pos=(int)strlen(header); pos<DATAFILE_HEADERLENGTH; pos++)
     header[pos] = ' ';
   header[DATAFILE_HEADERLENGTH-1] = '\n';
 
@@ -374,7 +374,7 @@ void savePMat(const string& filename, const TMat<double>& mat)
 #endif
 
   // Pad the header with whites and terminate it with '\n'
-  for(int pos=strlen(header); pos<DATAFILE_HEADERLENGTH; pos++)
+  for(int pos=(int)strlen(header); pos<DATAFILE_HEADERLENGTH; pos++)
     header[pos] = ' ';
   header[DATAFILE_HEADERLENGTH-1] = '\n';
 

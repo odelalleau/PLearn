@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: SDBWithStats.h,v 1.2 2004/02/20 21:11:43 chrish42 Exp $
+   * $Id: SDBWithStats.h,v 1.3 2004/02/29 16:44:05 nova77 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -79,7 +79,7 @@ using namespace std;
     //!  For symbolic values
     map<string,int> symbolcount;
     mutable map<string,int> symbolid; //!<  an int between 1 and nsymbols associated to each symbol
-    int nsymbols() { return symbolcount.size(); }
+    int nsymbols() { return (int)symbolcount.size(); }
     static int max_nsymbols; //!<  stop remembering symbols above this number...
 
     FieldStat()
@@ -107,7 +107,7 @@ using namespace std;
   {
   public:
     vector<FieldStat> fieldstat;
-    int nfields() { return getSchema().size(); }
+    int nfields() { return (int)getSchema().size(); }
     string fieldname(int i) { return getSchema()[i].name; }
 
   public:

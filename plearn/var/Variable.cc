@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.cc,v 1.11 2004/02/28 15:55:08 yoshua Exp $
+   * $Id: Variable.cc,v 1.12 2004/02/29 16:44:06 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -275,7 +275,7 @@ void Variable::print(ostream& out) const
   // This is just to strip "Variable" out of the class name (as they all
   // end in "Variable")
   string cn=info();
-  int len = cn.length();
+  int len = (int)cn.length();
   if (len >= 9 && cn.substr(len-8,8) == "Variable")
       out << cn.substr(0,len-8) << endl;
   else

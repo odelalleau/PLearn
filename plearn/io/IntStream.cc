@@ -254,7 +254,7 @@ FilesIntStream* word_sequences2files_int_stream(const char* word_sequences_file)
   char buffer[1000];
   while (!feof(word_sequences_fp)) {
     if (!fgets(buffer,1000,word_sequences_fp)) break;
-    int l=strlen(buffer);
+    int l=(int)strlen(buffer);
     if (buffer[l-1]=='\n') buffer[l-1]='\0';
     word_sequences[n_word_sequences]=tostring(buffer).c_str();
     n_word_sequences++;

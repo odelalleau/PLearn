@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ProcessingVMatrix.cc,v 1.4 2004/02/20 21:14:44 chrish42 Exp $ 
+   * $Id: ProcessingVMatrix.cc,v 1.5 2004/02/29 16:44:06 nova77 Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -78,7 +78,7 @@ void ProcessingVMatrix::build_()
   vector<string> fieldnames;
   program.setSource(source);
   program.compileString(prg,fieldnames); 
-  int nfields = fieldnames.size();
+  int nfields = (int)fieldnames.size();
   width_ = nfields;
 
   fieldinfos.resize(nfields);
