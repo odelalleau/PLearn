@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.cc,v 1.13 2004/02/23 14:36:29 tihocan Exp $
+   * $Id: StackedLearner.cc,v 1.14 2004/03/01 20:39:10 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -198,7 +198,6 @@ void StackedLearner::forget()
     
 void StackedLearner::setTrainingSet(VMat training_set, bool call_forget)
 { 
-  train_set = training_set;
   if (splitter)
   {
     splitter->setDataSet(training_set);
@@ -232,6 +231,7 @@ void StackedLearner::setTrainingSet(VMat training_set, bool call_forget)
       base_learners[i]->setTrainingSet(base_train_splitter->getSplit(i)[0],call_forget && train_base_learners);
     }
   }
+  inherited::setTrainingSet(training_set, call_forget);
 }
 
 void StackedLearner::train()
