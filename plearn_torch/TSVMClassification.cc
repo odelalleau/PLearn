@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TSVMClassification.cc,v 1.1 2005/02/23 01:31:19 tihocan Exp $ 
+   * $Id: TSVMClassification.cc,v 1.2 2005/02/23 17:26:36 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -44,6 +44,7 @@
 #include "TSVMClassification.h"
 #include <plearn_torch/TDataSet.h>
 #include <plearn_torch/TKernel.h>
+#include <plearn_torch/TSequence.h>
 #include <torch/SVMClassification.h>
 
 namespace PLearn {
@@ -76,6 +77,13 @@ void TSVMClassification::declareOptions(OptionList& ol)
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
+
+  // Hide some parent's options.
+
+  declareOption(ol, "sv_sequences", &TSVMClassification::sv_sequences, OptionBase::nosave,
+      "This is just a subset of the dataset. Thus we do not need to save it explicitely,\n"
+      "since it can be constructed from 'data' and 'support_vectors'.");
+
 }
 
 void TSVMClassification::build_()
@@ -124,6 +132,28 @@ void TSVMClassification::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     if (options["cache_size"])  svm_class->cache_size_in_megs = cache_size;
     if (options["C"])           svm_class->C_cst              = C;
     if (options["C_j"])         svm_class->Cuser              = C_j ? C_j.data() : 0;
+    if (options["data"] && options["support_vectors"] && data) {
+      // Build sv_sequences.
+      int n = support_vectors.length();
+      // TODO Could have to free memory ?
+      svm_class->sv_sequences =
+        (Torch::Sequence **)allocator->alloc(sizeof(Torch::Sequence *)*n);
+      Torch::DataSet* dat = data->dataset;
+      int frame_buf_size = 0;
+      for (int i = 0; i < n; i++) {
+        dat->setExample(support_vectors[i]);
+        frame_buf_size += dat->inputs->getFramesSpace();
+      }
+      int seq_size = dat->inputs->getSequenceSpace();
+      char* seq_buf    = (char*) allocator->alloc(seq_size * n  );
+      char* frames_buf = (char*) allocator->alloc(frame_buf_size);
+      for (int i = 0; i < n; i++) {
+        dat->setExample(support_vectors[i]);
+        svm_class->sv_sequences[i] = dat->inputs->clone(allocator, seq_buf, frames_buf);
+        seq_buf += seq_size;
+        frames_buf += dat->inputs->getFramesSpace();
+      }
+    }
 
     inherited::updateFromPLearn(svm_class);
   }
