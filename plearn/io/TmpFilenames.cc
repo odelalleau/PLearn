@@ -37,13 +37,13 @@
  
 
 /* *******************************************************      
-   * $Id: TmpFilenames.cc,v 1.4 2004/02/20 21:11:44 chrish42 Exp $
+   * $Id: TmpFilenames.cc,v 1.5 2004/03/04 15:07:37 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "TmpFilenames.h"
-#include "fileutils.h"
+#include "fileutils.h"      //!< For newFilename.
 
 namespace PLearn {
 using namespace std;
