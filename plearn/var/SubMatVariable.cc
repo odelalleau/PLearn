@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubMatVariable.cc,v 1.6 2004/04/27 16:03:35 morinf Exp $
+   * $Id: SubMatVariable.cc,v 1.7 2004/05/26 20:07:58 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -55,20 +55,23 @@ PLEARN_IMPLEMENT_OBJECT(SubMatVariable,
                         "NO HELP");
 
 SubMatVariable::SubMatVariable(Variable* v, int i, int j, int the_length, int the_width)
-  : inherited(v, the_length, the_width), startk(i*v->width()+j), length_(the_length), width_(the_width)
+: inherited(v, the_length, the_width),
+  startk(i*v->width()+j),
+  length_(the_length),
+  width_(the_width),
+  i_(i),
+  j_(j)
 {
     build_();
 }
 
-void
-SubMatVariable::build()
+void SubMatVariable::build()
 {
     inherited::build();
     build_();
 }
 
-void
-SubMatVariable::build_()
+void SubMatVariable::build_()
 {
     if (input) {
         // input is v from constructor
