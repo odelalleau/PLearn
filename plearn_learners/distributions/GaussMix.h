@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GaussMix.h,v 1.21 2004/05/21 14:51:00 tihocan Exp $ 
+   * $Id: GaussMix.h,v 1.22 2004/05/21 17:19:33 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file GaussMix.h */
@@ -113,7 +113,7 @@ protected:
   virtual void computeMeansAndCovariances();
 
   //! Compute P(x | j), where j < L is the index of a component of the mixture.
-  virtual real computeLogLikelihood(Vec& x, int j);
+  virtual real computeLogLikelihood(const Vec& x, int j) const;
 
   //! Compute the posteriors P(j | x_i) for each sample point and each Gaussian.
   virtual void computePosteriors();

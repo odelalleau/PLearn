@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: GaussMix.cc,v 1.32 2004/05/21 16:06:01 tihocan Exp $ 
+ * $Id: GaussMix.cc,v 1.33 2004/05/21 17:19:33 yoshua Exp $ 
  ******************************************************* */
 
 /*! \file GaussMix.cc */
@@ -235,7 +235,7 @@ void GaussMix::computeMeansAndCovariances() {
 //////////////////////////
 // computeLogLikelihood //
 //////////////////////////
-real GaussMix::computeLogLikelihood(Vec& x, int j) {
+real GaussMix::computeLogLikelihood(const Vec& x, int j) const {
   if (type == "spherical") {
     real p = 0.0;
     for (int k = 0; k < D; k++) {
@@ -529,11 +529,11 @@ void GaussMix::precomputeStuff() {
     for (int j = 0; j < L; j++) {
       real log_det = 0;
       for (int k = 0; k < n_eigen_computed; k++) {
-#ifdef BOUNDCHECK
-        if (var_min<epsilon && eigenvalues(j,k) < epsilon) {
-          PLWARNING("In GaussMix::precomputeStuff - An eigenvalue is near zero");
-        }
-#endif
+        #ifdef BOUNDCHECK
+                if (var_min<epsilon && eigenvalues(j,k) < epsilon) {
+                  PLWARNING("In GaussMix::precomputeStuff - An eigenvalue is near zero");
+                }
+        #endif
         log_det += log(max(var_min,eigenvalues(j,k)));
       }
       if(D - n_eigen_computed > 0) {
@@ -709,8 +709,18 @@ void GaussMix::updateSampleWeights() {
 
 real GaussMix::log_density(const Vec& x) const
 { 
-  PLERROR("In GaussMix::log_density - Not implemented");
-  return 0;
+  static Vec log_likelihood;
+  log_likelihood.resize(L);
+  // First we need to compute the likelihood P(x | j).
+  for (int j = 0; j < L; j++) {
+    log_likelihood[j] = computeLogLikelihood(x, j) + log(alpha[j]);
+#ifdef BOUNDCHECK
+    if (isnan(log_likelihood[j])) {
+      PLWARNING("In GaussMix::log_density - computeLogLikelihood returned nan");
+    }
+#endif
+  }
+  return logadd(log_likelihood);
 }
 
 real GaussMix::survival_fn(const Vec& x) const
