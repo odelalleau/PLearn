@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.39 2005/02/04 15:09:13 tihocan Exp $
+   * $Id: Object.h,v 1.40 2005/03/09 20:01:26 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -344,6 +344,10 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
 
   class Object: public PPointable
   {
+
+    // Hack:
+    typedef Object inherited;
+
   protected:
 
     //! redefine this in subclasses: call declareOption(...) for each
@@ -366,8 +370,6 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
 
   public:
 
-    // hack:
-    typedef Object inherited;
     PLEARN_DECLARE_OBJECT(Object);
 
     //! SUBCLASS WRITING 
