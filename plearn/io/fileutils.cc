@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.1 2002/07/30 09:01:27 plearner Exp $
+   * $Id: fileutils.cc,v 1.2 2002/08/05 23:00:15 jkeable Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -317,9 +317,9 @@ int countNonBlankLinesOfFile(const string& filename)
   int c = in.get();
   while(c!=EOF)
     {
-      while(c==' ' || c=='\t' || c=='\r')
+      while(c=='\n' || c==' ' || c=='\t' || c=='\r')
         c = in.get();
-      if(c!='#' && c!=EOF) // We've found a non-blank, non-comment char.
+      if(c!='\n' && c!='#' && c!=EOF) // We've found a non-blank, non-comment char.
         ++count;
       while(c!='\n' && c!=EOF) // read until end of line
         c = in.get();
