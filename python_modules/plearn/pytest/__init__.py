@@ -1,15 +1,25 @@
 
-import modes, os, string, time
-from   ModeAndOptionParser           import ModeAndOptionParser, OptionGroup
-import plearn.utilities.toolkit      as     toolkit
-
+### As the versionning is used by some of the modules imported, this chunk
+### of code *MUST* be executed prior to any other imports
 import plearn.utilities.versionning  as     versionning
 versionning.declare_project( "PyTest" )
 versionning.project_module ( "PyTest", __name__,
-                             "$Id: __init__.py,v 1.8 2004/12/15 13:51:07 dorionc Exp $"
+                             "$Id: __init__.py,v 1.9 2004/12/15 14:29:38 dorionc Exp $"
                              )
+
+### When an official build will be ready...
+## versionning.official_build( "PyTest",
+##                             build_version = [1, 0],
+##                             fixlevels     = [0, 5, 27, 87]
+##                             )
+                            
+### The versionning tools are now properly enabled.
+import modes
+from   ModeAndOptionParser           import ModeAndOptionParser, OptionGroup
+import plearn.utilities.toolkit      as     toolkit
+
 def declare_pytest_cvs_id( script_cvs_id ):
-    versionning.declare_module("PyTest", "__pytest_script__", script_cvs_id)
+    versionning.project_module("PyTest", "__pytest_script__", script_cvs_id)
     
 def pytest_version(  ):
     return versionning.project_version("PyTest")
