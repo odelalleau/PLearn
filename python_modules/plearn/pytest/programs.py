@@ -1,4 +1,4 @@
-__cvs_id__ = "$Id: programs.py,v 1.9 2005/01/25 03:15:57 dorionc Exp $"
+__cvs_id__ = "$Id: programs.py,v 1.10 2005/02/15 15:08:34 dorionc Exp $"
 
 import os, string, types
 import plearn.utilities.ppath          as     ppath
@@ -19,7 +19,7 @@ from   plearn.utilities.FrozenObject   import FrozenObject
 ## (plpath). It may well be inappropriate: rethink all this when the
 ## branches will be moved to a config file.
 plbranches = []
-for mpath in ["PLEARNDIR", "APSTATDIR", "LISAPLEARNDIR"]:
+for mpath in ["PLEARNDIR", "APSTATSOFTDIR", "LISAPLEARNDIR"]:
     try:
         plbranches.append( ppath.ppath(mpath) )
     except:

@@ -1,4 +1,4 @@
-__cvs_id__ = "$Id: IntelligentDiff.py,v 1.12 2005/01/25 03:15:56 dorionc Exp $"
+__cvs_id__ = "$Id: IntelligentDiff.py,v 1.13 2005/02/15 15:08:34 dorionc Exp $"
 
 import copy, os, string
 
@@ -167,6 +167,10 @@ class IntelligentDiff:
             self.diff(bf, of)
 
     def diff_files(self, bench, other):
+        if bench.endswith( 'metainfos.txt' ):
+            vprint('Skipping metainfos.txt comparison', 2)
+            return
+            
         if bench.endswith('.psave'):
             self.diff_psave_files(bench, other)
             return

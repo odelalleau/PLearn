@@ -2,7 +2,7 @@
 
 Note that including this package simply includes the pyplearn module it contains.
 """
-__cvs_id__ = "$Id: __init__.py,v 1.6 2005/02/11 09:32:23 dorionc Exp $"
+__cvs_id__ = "$Id: __init__.py,v 1.7 2005/02/15 15:08:33 dorionc Exp $"
 
 import new, string
 from pyplearn        import *
@@ -43,11 +43,25 @@ class PyPLearnScript( PyPLearnObject ):
 
     def get_metainfos(self):
         import inspect
+        def parse( obj ):
+            return [ (attr_name, attr_val)
+                     for (attr_name, attr_val)
+                     in inspect.getmembers( obj )
+                     if public_attribute_predicate(attr_name, attr_val) ]
+        
+        plarg_attrs = dict(parse( plarg_defaults ))
+        plarg_attrs.update( dict(parse( plargs )) )
+        
+        ## Alphabetical iteration
+        keys = plarg_attrs.keys()
+        keys.sort()
+        
         pretty            = lambda attr_name: string.ljust(attr_name, 30)
-        attribute_strings = [ '%s = %s' % ( pretty(attr_name), attr_val) 
-                              for (attr_name, attr_val)
-                              in inspect.getmembers( plargs )
-                              if public_attribute_predicate(attr_name, attr_val)
+        attribute_strings = [ '%s = %s'
+                              % ( pretty(attr_name), plarg_attrs[attr_name] ) 
+                              for attr_name in keys
+                              if public_attribute_predicate(attr_name, plarg_attrs[attr_name])
                               ]
         return "\n".join( attribute_strings )
 
+        ## plarg_defaults

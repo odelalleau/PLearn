@@ -493,7 +493,7 @@ U{Epytext Markup Language Manual<http://epydoc.sourceforge.net/epytext.html>}
 should not take you more than 15 minutes and you will be ready to document your
 code.
 """
-__cvs_id__ = "$Id: pyplearn.py,v 1.18 2005/02/11 09:16:54 dorionc Exp $"
+__cvs_id__ = "$Id: pyplearn.py,v 1.19 2005/02/15 15:08:33 dorionc Exp $"
 
 import string, types
 import plearn.utilities.metaprog as metaprog
@@ -762,8 +762,14 @@ class _plargs_storage_fallback:
     """A singleton instance of this class is instanciated by the package
     to store the default values for PLearn command-line variables."""
     def __init__( self ):
-        from plearn.utilities.toolkit import date_time_string
-        self.__dict__['expdir'] = 'expdir_%s' % date_time_string()
+        expdir = 'expdir'
+
+        import os
+        if os.getenv('PyTest', '') != 'Running':
+            from plearn.utilities.toolkit import date_time_string
+            expdir = 'expdir_%s' % date_time_string()
+        
+        self.__dict__['expdir'] = expdir
 
     def __setattr__(self, k, v):
         if k == 'expdir':

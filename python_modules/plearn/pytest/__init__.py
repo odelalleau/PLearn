@@ -1,4 +1,4 @@
-__cvs_id__ = "$Id: __init__.py,v 1.14 2005/02/04 19:09:00 dorionc Exp $"
+__cvs_id__ = "$Id: __init__.py,v 1.15 2005/02/15 15:08:34 dorionc Exp $"
                             
 ### The versionning tools are now properly enabled.
 import os, sys, time
@@ -51,6 +51,8 @@ def mail():
 ###################################################################################
 ## MAIN PROGRAM
 def main( pytest_version ):
+    os.environ['PyTest'] = 'Running'
+    
     parser = ModeAndOptionParser( usage = "%prog mode [options] target*",
                                   version = "%prog " + pytest_version()   )
     

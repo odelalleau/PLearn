@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.31 2005/01/28 17:43:03 plearner Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.32 2005/02/15 15:08:10 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -173,14 +173,6 @@ void VecStatsCollector::update(const Vec& x, real weight)
   }
        
   if(compute_covariance)
-/*    if(has_missing)
-    {
-      for(int i=0;i<n;i++)
-        for(int j=0;j<n;j++)
-          if(!is_missing(x[i]) && !is_missing(x[j]))
-            cov(i,j)+=x[i]*x[j];
-    }
-    else*/ 
     externalProductScaleAcc(cov, x, x, weight);
 }
 
@@ -198,8 +190,9 @@ void VecStatsCollector::remove_observation(const Vec& x, real weight)
   for(int k=0; k<n; k++)
     stats[k].remove_observation(x[k], weight);
   
-  if(compute_covariance)
-    PLERROR("The remove_observation mecanism does not manage the covariance computation yet.");
+  // This removes the observation x contribution to the covariance matrix
+  if( compute_covariance )
+    externalProductScaleAcc(cov, x, x, -weight);  
 }
 
 

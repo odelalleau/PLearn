@@ -143,7 +143,7 @@ or private '__').
         public2                        = "public again"
         )
 """
-__cvs_id__ = "$Id: PyPLearnObject.py,v 1.11 2005/02/11 09:32:23 dorionc Exp $"
+__cvs_id__ = "$Id: PyPLearnObject.py,v 1.12 2005/02/15 15:08:33 dorionc Exp $"
 
 import inspect, string, types
 
@@ -349,7 +349,11 @@ class _manage_attributes:
         element.  The class will be instanciated with the rest of the tuple
         as __init__ arguments.
         """
-        assert not inspect.isroutine(attribute_value)
+        if inspect.isroutine(attribute_value):
+            raise TypeError( "Routine types are not supported as PyPLearnObject attribute "
+                             "values (for %s, value is %s)."
+                             % ( attribute_name, attribute_value )
+                             )
 
         ## See the method docstring for the class management protocol.
         internal_class = False

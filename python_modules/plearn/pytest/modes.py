@@ -1,4 +1,4 @@
-__cvs_id__ = "$Id: modes.py,v 1.17 2005/02/10 21:17:34 dorionc Exp $"
+__cvs_id__ = "$Id: modes.py,v 1.18 2005/02/15 15:08:34 dorionc Exp $"
 
 import copy, shutil
 import plearn.utilities.version_control    as     version_control
@@ -224,7 +224,7 @@ class list(PyTestMode):
                     )
 
             if formatted_strings:
-                vprint( "In %s:\n    %s\n"
+                vprint( "In %s\n    %s\n"
                         % ( family, string.join(formatted_strings, '\n    ') )
                         )    
         
