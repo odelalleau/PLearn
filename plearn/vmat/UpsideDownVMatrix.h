@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UpsideDownVMatrix.h,v 1.4 2004/03/23 23:08:09 morinf Exp $ 
+   * $Id: UpsideDownVMatrix.h,v 1.5 2004/04/05 23:09:23 morinf Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -96,6 +96,8 @@ public:
   PLEARN_DECLARE_OBJECT(UpsideDownVMatrix);
 
 };
+
+DECLARE_OBJECT_PTR(UpsideDownVMatrix);
 
 } // end of namespace PLearn
 #endif

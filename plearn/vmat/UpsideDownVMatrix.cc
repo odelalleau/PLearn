@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UpsideDownVMatrix.cc,v 1.3 2004/02/20 21:14:44 chrish42 Exp $ 
+   * $Id: UpsideDownVMatrix.cc,v 1.4 2004/04/05 23:09:23 morinf Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -71,7 +71,8 @@ void UpsideDownVMatrix::declareOptions(OptionList& ol)
 
 void UpsideDownVMatrix::build_()
 {
-  setMetaInfoFromSource();
+  if (source)
+    setMetaInfoFromSource();
 }
 
 // ### Nothing to add here, simply calls build_
