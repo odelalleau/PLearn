@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.29 2004/06/03 13:48:49 tihocan Exp $
+   * $Id: Kernel.h,v 1.30 2004/07/19 13:25:31 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -158,6 +158,18 @@ public:
 
   //! Return the data matrix set for this kernel.
   inline VMat getData() {return this->data;}
+
+  //! Return true iff the point x is in the kernel dataset.
+  //! If provided, i will be filled with the index of the point if it is in
+  //! the dataset, and with -1 otherwise.
+  bool isInData(const Vec& x, int* i = 0) const;
+
+  //! Fill 'k_xi_x_sorted' with the distances from x to the training points
+  //! in the first column (with the knn first ones being the distances to
+  //! the nearest neighbors of x), and with the indices of the corresponding
+  //! neighbors in the second column.
+  //! The distance between x and x_i is assumed to be K(x_i, x).
+  void computeNearestNeighbors(const Vec& x, Mat& k_xi_x_sorted, int knn) const;
 
   //!  Returns a Mat m such that m(i,j) is the index of jth closest neighbour of input i, 
   //!  according to the "distance" measures given by D(i,j).

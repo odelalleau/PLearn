@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.30 2004/07/02 13:20:11 tihocan Exp $
+   * $Id: Kernel.cc,v 1.31 2004/07/19 13:25:31 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -212,6 +212,30 @@ void Kernel::evaluate_all_x_i(const Vec& x, Vec& k_x_xi, real squared_norm_of_x,
   for (int i = istart + 1; i < i_max; i++) {
     k_x_xi[i] = evaluate_x_i_again(x, i, squared_norm_of_x);
   }
+}
+
+//////////////
+// isInData //
+//////////////
+bool Kernel::isInData(const Vec& x, int* i) const {
+  return data->find(x, 1e-8, i);
+}
+
+/////////////////////////////
+// computeNearestNeighbors //
+/////////////////////////////
+void Kernel::computeNearestNeighbors(const Vec& x, Mat& k_xi_x_sorted, int knn) const {
+  static Vec k_xi_x;
+  k_xi_x.resize(n_examples);
+  k_xi_x_sorted.resize(n_examples, 2);
+  // Compute the distance from x to all training points.
+  evaluate_all_i_x(x, k_xi_x);
+  // Find the knn nearest neighbors.
+  for (int i = 0; i < n_examples; i++) {
+    k_xi_x_sorted(i,0) = k_xi_x[i];
+    k_xi_x_sorted(i,1) = real(i);
+  }
+  partialSortRows(k_xi_x_sorted, knn);
 }
 
 ///////////////////////
@@ -483,7 +507,9 @@ Mat Kernel::computeNeighbourMatrixFromDistanceMatrix(const Mat& D, bool insure_s
   return neighbours;
 }
 
-
+////////////////////////
+// estimateHistograms //
+////////////////////////
 Mat Kernel::estimateHistograms(VMat d, real sameness_threshold, real minval, real maxval, int nbins) const
 {
   real binwidth = (maxval-minval)/nbins;
@@ -595,6 +621,9 @@ Kernel::oldread(istream& in)
 }
 */
 
+//////////////////////////////////////
+// findClosestPairsOfDifferentClass //
+//////////////////////////////////////
 // last column of data is supposed to be a classnum
 // returns a matrix of (index1, index2, distance)
 Mat findClosestPairsOfDifferentClass(int k, VMat data, Ker dist)
