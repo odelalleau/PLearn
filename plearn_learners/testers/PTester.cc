@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.53 2005/02/09 00:57:29 tihocan Exp $ 
+   * $Id: PTester.cc,v 1.54 2005/02/21 15:27:50 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -263,6 +263,10 @@ void PTester::build_()
     }
     TVec< TVec<string> > temp(2);
     int d = 0;
+    if (statnames.isEmpty())
+      PLERROR("In PTester::build_ - If you use 'statmask' then 'statnames' cannot "
+              "be empty (use statnames = [ \"\" ] if you want to specify all "
+              "statistics through statmask)");
     temp[d] = statnames_processed;
     for (int i=0;i<sm.length();i++) {
       temp[1-d].resize(temp[d].length() * sm[i].length());      
@@ -272,7 +276,6 @@ void PTester::build_()
         size_t pos;
         if ((pos=mask.find('*'))==string::npos) {
           // This may actually be useful, if we want to force a value.
-//            PLWARNING("In PTester::build_ : the %s element of statmask does not contain a '*'",mask.c_str());
           for (int k = 0; k < temp[d].length(); k++) {
             temp[1-d][j + k * sm[i].length()] = mask;
           }
