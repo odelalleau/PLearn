@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KFoldSplitter.cc,v 1.12 2004/09/27 20:19:27 plearner Exp $ 
+   * $Id: KFoldSplitter.cc,v 1.13 2004/11/17 14:09:05 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file SequentialSplitter.cc */
@@ -63,7 +63,7 @@ void KFoldSplitter::declareOptions(OptionList& ol)
 
     declareOption(ol, "append_train", &KFoldSplitter::append_train, OptionBase::buildoption,
                   "If set to 1, the trainset will be appended after the test set (thus each split\n"
-                  "will contain three sets.");
+                  "will contain three sets).");
 
     inherited::declareOptions(ol);
 }
