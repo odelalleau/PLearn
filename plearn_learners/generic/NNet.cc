@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.25 2003/11/20 15:32:32 tihocan Exp $
+   * $Id: NNet.cc,v 1.26 2003/11/20 15:37:04 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -287,7 +287,7 @@ void NNet::build_()
           else if(cost_funcs[k]=="cross_entropy")
             costs[k] = cross_entropy(output, target);
           else if (cost_funcs[k]=="stable_cross_entropy")
-            costs[k] = stable_cross_entropy(before_transfer_func, target, false);
+            costs[k] = stable_cross_entropy(before_transfer_func, target);
           else if (cost_funcs[k]=="lift_output")
             costs[k] = lift_output(output, target);
           else  // Assume we got a Variable name and its options
