@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilteredVMatrix.h,v 1.8 2004/06/29 19:51:32 tihocan Exp $ 
+   * $Id: FilteredVMatrix.h,v 1.9 2004/07/07 17:30:48 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -99,10 +99,10 @@ protected:
   // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
 
-public:
-
   //!  This is the only method requiring implementation
-  virtual void getNewRow(int i, Vec& v) const;
+  virtual void getNewRow(int i, const Vec& v) const;
+
+public:
 
   // simply calls inherited::build() then build_() 
   virtual void build();

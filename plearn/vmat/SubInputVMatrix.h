@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SubInputVMatrix.h,v 1.3 2004/06/29 19:55:54 tihocan Exp $ 
+   * $Id: SubInputVMatrix.h,v 1.4 2004/07/07 17:30:48 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -90,10 +90,10 @@ protected:
   //! Declares this class' options
   static void declareOptions(OptionList& ol);
 
-public:
-
   //! This is the only method requiring implementation.
-  virtual void getNewRow(int i, Vec& v) const;
+  virtual void getNewRow(int i, const Vec& v) const;
+
+public:
 
   // Simply calls inherited::build() then build_().
   virtual void build();

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DatedJoinVMatrix.h,v 1.10 2004/06/29 19:51:31 tihocan Exp $
+   * $Id: DatedJoinVMatrix.h,v 1.11 2004/07/07 17:30:48 tihocan Exp $
    ******************************************************* */
 
 // Authors: *Yoshua Bengio*
@@ -113,14 +113,14 @@ private:
   void build_();
 
 protected: 
+
   //! Declares this class' options
-  // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
 
-public:
-
   //!  This is the only method requiring implementation
-  virtual void getNewRow(int i, Vec& v) const;
+  virtual void getNewRow(int i, const Vec& v) const;
+
+public:
 
   // simply calls inherited::build() then build_() 
   virtual void build();

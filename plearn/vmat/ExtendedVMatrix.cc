@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ExtendedVMatrix.cc,v 1.5 2004/06/29 19:51:32 tihocan Exp $
+   * $Id: ExtendedVMatrix.cc,v 1.6 2004/07/07 17:30:48 tihocan Exp $
    ******************************************************* */
 
 #include "ExtendedVMatrix.h"
@@ -87,7 +87,7 @@ ExtendedVMatrix::build_()
 {
 }
 
-void ExtendedVMatrix::getNewRow(int i, Vec& v) const
+void ExtendedVMatrix::getNewRow(int i, const Vec& v) const
 {
 #ifdef BOUNDCHECK
   if(i<0 || i>=length())

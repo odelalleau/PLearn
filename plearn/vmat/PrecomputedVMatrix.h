@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PrecomputedVMatrix.h,v 1.6 2004/06/29 19:54:43 tihocan Exp $ 
+   * $Id: PrecomputedVMatrix.h,v 1.7 2004/07/07 17:30:48 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -77,22 +77,20 @@ public:
 
 private: 
   //! This does the actual building. 
-  // (Please implement in .cc)
   void build_();
   
   void usePrecomputed();
 
 protected: 
   //! Declares this class' options
-  // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
+
+  //!  This is the only method requiring implementation
+  virtual void getNewRow(int i, const Vec& v) const;
 
 public:
 
   virtual void setMetaDataDir(const string& the_metadatadir);
-
-  //!  This is the only method requiring implementation
-  virtual void getNewRow(int i, Vec& v) const;
 
   // simply calls inherited::build() then build_() 
   virtual void build();

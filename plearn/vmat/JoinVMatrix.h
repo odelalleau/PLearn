@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: JoinVMatrix.h,v 1.9 2004/06/29 19:52:56 tihocan Exp $
+   * $Id: JoinVMatrix.h,v 1.10 2004/07/07 17:30:48 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -80,16 +80,23 @@ class JoinVMatrix : public RowBufferedVMatrix
   TVec<int> master_idx;
   TVec<int> slave_idx;
   Maptype mp;
+
 public:
+
   JoinVMatrix(){};
   JoinVMatrix(VMat mas,VMat sla,TVec<int> mi, TVec<int> si);
   void addStatField(const string & statis,const string & namefrom,const string & nameto);
-  virtual void getNewRow(int idx, Vec& v) const;
 
   PLEARN_DECLARE_OBJECT(JoinVMatrix);
   static void declareOptions(OptionList &ol);
     
   virtual void build();
+
+protected:
+
+  virtual void getNewRow(int idx, const Vec& v) const;
+
+public:
 
   virtual string getValString(int col, real val) const;
   virtual const map<string,real>& getStringToRealMapping(int col) const;

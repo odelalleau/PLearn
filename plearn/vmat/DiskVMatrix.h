@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: DiskVMatrix.h,v 1.11 2004/06/29 19:51:32 tihocan Exp $
+   * $Id: DiskVMatrix.h,v 1.12 2004/07/07 17:30:48 tihocan Exp $
    ******************************************************* */
 
 
@@ -88,16 +88,21 @@ public:
 */
   DiskVMatrix(const string& the_dirname, int the_width, bool write_double_as_float=false);
 
-  virtual void getNewRow(int i, Vec& v) const;
   virtual void putRow(int i, Vec v);
   virtual void appendRow(Vec v);
   virtual void flush();
 
   virtual void build();
 
+protected:
+
+  virtual void getNewRow(int i, const Vec& v) const;
+  static void declareOptions(OptionList & ol);
+
+public:
+
   PLEARN_DECLARE_OBJECT(DiskVMatrix);
 
-  static void declareOptions(OptionList & ol);
   
   virtual ~DiskVMatrix();
 private:

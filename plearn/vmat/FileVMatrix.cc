@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.21 2004/06/29 19:51:32 tihocan Exp $
+   * $Id: FileVMatrix.cc,v 1.22 2004/07/07 17:30:48 tihocan Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -276,7 +276,7 @@ FileVMatrix::~FileVMatrix()
 ///////////////
 // getNewRow //
 ///////////////
-void FileVMatrix::getNewRow(int i, Vec& v) const
+void FileVMatrix::getNewRow(int i, const Vec& v) const
 {
   if(file_is_float)
   {

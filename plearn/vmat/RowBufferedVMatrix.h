@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: RowBufferedVMatrix.h,v 1.9 2004/07/02 13:21:23 tihocan Exp $
+   * $Id: RowBufferedVMatrix.h,v 1.10 2004/07/07 17:30:48 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -66,13 +66,13 @@ protected:
   mutable int other_row_index; //!<  used by dot
   mutable Vec other_row;
 
+  //! This is the only method requiring implementation in subclasses.
+  virtual void getNewRow(int i, const Vec& v) const = 0;
+
 public:
 
   RowBufferedVMatrix();
   RowBufferedVMatrix(int the_length, int the_width);
-
-  //! This is the only method requiring implementation.
-  virtual void getNewRow(int i, Vec& v) const = 0;
 
   //! These methods are implemented by buffering calls to getNewRow.
   virtual real get(int i, int j) const; //!<  returns element (i,j)

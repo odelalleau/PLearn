@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MultiInstanceVMatrix.cc,v 1.13 2004/06/29 19:54:43 tihocan Exp $ 
+   * $Id: MultiInstanceVMatrix.cc,v 1.14 2004/07/07 17:30:48 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Norman Casagrande
@@ -83,7 +83,7 @@ PLEARN_IMPLEMENT_OBJECT(MultiInstanceVMatrix, "Virtual Matrix for a multi instan
                         "since the bag_signal is included (appended) in the target vector\n"
                         );
 
-void MultiInstanceVMatrix::getNewRow(int i, Vec& v) const
+void MultiInstanceVMatrix::getNewRow(int i, const Vec& v) const
 {
   v << data_(i);
 }

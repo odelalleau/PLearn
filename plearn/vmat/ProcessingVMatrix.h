@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ProcessingVMatrix.h,v 1.6 2004/06/29 19:54:43 tihocan Exp $ 
+   * $Id: ProcessingVMatrix.h,v 1.7 2004/07/07 17:30:48 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -93,10 +93,10 @@ protected:
   // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
 
-public:
   //!  This is the only method requiring implementation
-  virtual void getNewRow(int i, Vec& v) const;
+  virtual void getNewRow(int i, const Vec& v) const;
 
+public:
   // simply calls inherited::build() then build_() 
   virtual void build();
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MultiInstanceVMatrix.h,v 1.7 2004/06/29 19:54:43 tihocan Exp $ 
+   * $Id: MultiInstanceVMatrix.h,v 1.8 2004/07/07 17:30:48 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Norman Casagrande
@@ -92,8 +92,9 @@ protected:
 
   static void declareOptions(OptionList& ol);
 
+  virtual void getNewRow(int i, const Vec& v) const;
+
 public:
-  virtual void getNewRow(int i, Vec& v) const;
 
   virtual void build();
 

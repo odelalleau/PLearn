@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.h,v 1.12 2004/06/29 19:51:32 tihocan Exp $
+   * $Id: FileVMatrix.h,v 1.13 2004/07/07 17:30:48 tihocan Exp $
    ******************************************************* */
 
 
@@ -76,7 +76,12 @@ public:
   FileVMatrix(const string& filename, int the_length, int the_width); //!<  create a new matrix file
   FileVMatrix(const string& filename, int the_length, const TVec<string>& fieldnames); //!<  create a new matrix file
 
-  virtual void getNewRow(int i, Vec& v) const;
+protected:
+
+  static void declareOptions(OptionList & ol);
+  virtual void getNewRow(int i, const Vec& v) const;
+
+public:
 
   //! Re-write the header with all current field values.
   virtual void updateHeader();
@@ -90,7 +95,6 @@ public:
 
   PLEARN_DECLARE_OBJECT(FileVMatrix);
 
-  static void declareOptions(OptionList & ol);
 
   //! Transform a shallow copy into a deep copy.
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);

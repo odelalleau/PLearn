@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocalNeighborsDifferencesVMatrix.h,v 1.2 2004/06/29 19:52:56 tihocan Exp $ 
+   * $Id: LocalNeighborsDifferencesVMatrix.h,v 1.3 2004/07/07 17:30:48 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Martin Monperrus & Yoshua Bengio
@@ -97,10 +97,10 @@ protected:
   // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
 
-public:
   //!  This is the only method requiring implementation
-  virtual void getNewRow(int i, Vec& v) const;
+  virtual void getNewRow(int i, const Vec& v) const;
 
+public:
   // simply calls inherited::build() then build_() 
   virtual void build();
 

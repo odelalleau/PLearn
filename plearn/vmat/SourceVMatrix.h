@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrix.h,v 1.8 2004/06/29 19:57:21 tihocan Exp $ 
+   * $Id: SourceVMatrix.h,v 1.9 2004/07/07 17:30:48 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -120,6 +120,9 @@ protected:
    */
   void setMetaInfoFromSource();
 
+  //! Must be implemented in subclasses: default version returns an error.
+  virtual void getNewRow(int i, const Vec& v) const;
+
 public:
 
   //! Also sets the source's meta-data dir if it's not already set
@@ -127,9 +130,6 @@ public:
     but the source has those files for a field with the same name, then those of
     the source will be set also for this vmatrix. */
   virtual void setMetaDataDir(const string& the_metadatadir);
-
-  //! Must be implemented in subclasses: default version returns an error.
-  virtual void getNewRow(int i, Vec& v) const;
 
   // simply calls inherited::build() then build_() 
   virtual void build();

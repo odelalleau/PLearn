@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: DiskVMatrix.cc,v 1.16 2004/06/29 19:51:32 tihocan Exp $
+   * $Id: DiskVMatrix.cc,v 1.17 2004/07/07 17:30:48 tihocan Exp $
    ******************************************************* */
 
 #include <errno.h>
@@ -230,7 +230,7 @@ void DiskVMatrix::declareOptions(OptionList &ol)
   inherited::declareOptions(ol);
 }
 
-void DiskVMatrix::getNewRow(int i, Vec& v) const
+void DiskVMatrix::getNewRow(int i, const Vec& v) const
 { 
 #ifdef BOUNDCHECK
   if(i<0 || i>length())

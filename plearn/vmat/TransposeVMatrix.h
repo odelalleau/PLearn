@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TransposeVMatrix.h,v 1.1 2004/07/06 13:01:25 tihocan Exp $ 
+   * $Id: TransposeVMatrix.h,v 1.2 2004/07/07 17:30:48 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -96,11 +96,11 @@ protected:
   // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
 
-public:
-
   //! Fill the vector 'v' with the content of the i-th row.
   //! v is assumed to be the right size.
-  virtual void getNewRow(int i, Vec& v) const;
+  virtual void getNewRow(int i, const Vec& v) const;
+
+public:
 
   // Simply calls inherited::build() then build_().
   virtual void build();

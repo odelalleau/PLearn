@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VMatLanguage.h,v 1.14 2004/06/29 19:55:55 tihocan Exp $
+   * $Id: VMatLanguage.h,v 1.15 2004/07/07 17:30:48 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -146,12 +146,16 @@ DECLARE_OBJECT_PTR(VMatLanguage);
     PreprocessingVMatrix(VMat the_source, const string& program_string);
 
     PLEARN_DECLARE_OBJECT(PreprocessingVMatrix);
-    static void declareOptions(OptionList &ol);
 
     virtual void build();
 
-    virtual void getNewRow(int i, Vec& v) const;
   protected:
+
+    virtual void getNewRow(int i, const Vec& v) const;
+    static void declareOptions(OptionList &ol);
+
+  private:
+
       void build_();
   };
 

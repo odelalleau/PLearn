@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KNNVMatrix.cc,v 1.10 2004/06/29 19:58:17 tihocan Exp $ 
+   * $Id: KNNVMatrix.cc,v 1.11 2004/07/07 17:30:48 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -300,7 +300,7 @@ int KNNVMatrix::getSourceIndexOf(int i, int& i_ref, int& i_n) const {
 ///////////////
 // getNewRow //
 ///////////////
-void KNNVMatrix::getNewRow(int i, Vec& v) const {
+void KNNVMatrix::getNewRow(int i, const Vec& v) const {
   static Vec w;
   w.resize(source->width());
   int i_n;

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectRowsVMatrix.h,v 1.10 2004/06/29 19:55:53 tihocan Exp $
+   * $Id: SelectRowsVMatrix.h,v 1.11 2004/07/07 17:30:48 tihocan Exp $
    ******************************************************* */
 
 
@@ -84,9 +84,14 @@ public:
   virtual void build();
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
+protected:
+
+  void getNewRow(int i, const Vec& v) const { getSubRow(i, 0, v); }
+
+public:
+
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;
-  void getNewRow(int i, Vec& v) const { getSubRow(i, 0, v); }
   virtual real getStringVal(int col, const string & str) const;
   virtual string getValString(int col, real val) const;
   virtual string getString(int row,int col) const;

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: TransposeVMatrix.cc,v 1.1 2004/07/06 13:01:25 tihocan Exp $ 
+   * $Id: TransposeVMatrix.cc,v 1.2 2004/07/07 17:30:48 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -113,7 +113,7 @@ void TransposeVMatrix::build_()
 ///////////////
 // getNewRow //
 ///////////////
-void TransposeVMatrix::getNewRow(int i, Vec& v) const
+void TransposeVMatrix::getNewRow(int i, const Vec& v) const
 {
   source->getColumn(i, v);
 }

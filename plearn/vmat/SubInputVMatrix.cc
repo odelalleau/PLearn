@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SubInputVMatrix.cc,v 1.3 2004/06/29 19:55:54 tihocan Exp $ 
+   * $Id: SubInputVMatrix.cc,v 1.4 2004/07/07 17:30:48 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -109,7 +109,7 @@ void SubInputVMatrix::build_()
 ///////////////
 // getNewRow //
 ///////////////
-void SubInputVMatrix::getNewRow(int i, Vec& v) const
+void SubInputVMatrix::getNewRow(int i, const Vec& v) const
 {
   // First fill the input part.
   source->getSubRow(i, j_start, v.subVec(0, n_inputs));

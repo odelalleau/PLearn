@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatColumnsVMatrix.h,v 1.8 2004/06/29 19:50:35 tihocan Exp $
+   * $Id: ConcatColumnsVMatrix.h,v 1.9 2004/07/07 17:30:48 tihocan Exp $
    ******************************************************* */
 
 
@@ -67,7 +67,13 @@ class ConcatColumnsVMatrix: public RowBufferedVMatrix
   ConcatColumnsVMatrix(Array<VMat> the_array=Array<VMat>());
   ConcatColumnsVMatrix(VMat d1, VMat d2);
 
-  virtual void getNewRow(int i, Vec& samplevec) const; 
+ protected:
+
+  static void declareOptions(OptionList &ol);
+  virtual void getNewRow(int i, const Vec& samplevec) const; 
+
+ public:
+
   virtual real getStringVal(int col, const string & str) const;
   //! returns the whole string->value mapping
   const map<string,real>& getStringMapping(int col) const;
@@ -78,7 +84,6 @@ class ConcatColumnsVMatrix: public RowBufferedVMatrix
   virtual real dot(int i, const Vec& v) const;
 
   PLEARN_DECLARE_OBJECT(ConcatColumnsVMatrix);
-  static void declareOptions(OptionList &ol);
   virtual void build();
 private:
   void build_();
