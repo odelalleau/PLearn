@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.cc,v 1.11 2004/02/20 21:14:46 chrish42 Exp $ 
+   * $Id: EmbeddedLearner.cc,v 1.12 2004/06/26 00:24:15 plearner Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.cc */
@@ -45,7 +45,10 @@ using namespace std;
 
 // ###### EmbeddedLearner ######################################################
 
-PLEARN_IMPLEMENT_OBJECT(EmbeddedLearner, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(EmbeddedLearner, "Wraps an underlying learner", 
+                        "EmbeddedLearner implements nothing but forwarding \n"
+                        "calls to an underlying learner. It is typically used as\n"
+                        "baseclass for learners that are built on top of another learner");
 
 EmbeddedLearner::EmbeddedLearner()
 {}
@@ -55,15 +58,6 @@ void EmbeddedLearner::declareOptions(OptionList& ol)
   declareOption(ol, "learner", &EmbeddedLearner::learner_, OptionBase::buildoption,
                 "The embedded learner");
   inherited::declareOptions(ol);
-}
-
-string EmbeddedLearner::help()
-{
-    return 
-        "EmbeddedLearner implements nothing but forwarding \n"
-        "calls to an underlying learner. It is typically used as\n"
-      "baseclass for learners that are built on top of another learner"
-      + optionHelp();
 }
 
 void EmbeddedLearner::build_()

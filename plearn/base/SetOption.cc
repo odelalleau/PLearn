@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SetOption.cc,v 1.4 2004/02/20 21:11:42 chrish42 Exp $ 
+   * $Id: SetOption.cc,v 1.5 2004/06/26 00:24:12 plearner Exp $ 
    ******************************************************* */
 
 /*! \file SetOption.cc */
@@ -47,7 +47,9 @@ SetOption::SetOption()
   {}
 
 
-  PLEARN_IMPLEMENT_OBJECT(SetOption, "ONE LINE DESCR", "NO HELP");
+  PLEARN_IMPLEMENT_OBJECT(SetOption, "Sets the option of another object", 
+      "SetOption is an object containing a name and a value of an option \n"
+      "to be set on another object.");
 
   void SetOption::declareOptions(OptionList& ol)
   {
@@ -56,15 +58,6 @@ SetOption::SetOption()
     declareOption(ol, "value", &SetOption::value, OptionBase::buildoption,
                   "value of the option to be set");
     inherited::declareOptions(ol);
-  }
-
-  string SetOption::help()
-  {
-    // ### Provide some useful description of what the class is ...
-    return 
-      "SetOption is an object containing a name and a value of an option \n"
-      "to be set on another object."
-      + optionHelp();
   }
 
   void SetOption::build_()

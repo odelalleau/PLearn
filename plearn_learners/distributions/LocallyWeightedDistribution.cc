@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyWeightedDistribution.cc,v 1.6 2004/02/20 21:14:46 chrish42 Exp $ 
+   * $Id: LocallyWeightedDistribution.cc,v 1.7 2004/06/26 00:24:15 plearner Exp $ 
    ******************************************************* */
 
 /*! \file LocallyWeightedDistribution.cc */
@@ -59,14 +59,6 @@ LocallyWeightedDistribution::LocallyWeightedDistribution()
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
-  }
-
-  string LocallyWeightedDistribution::help()
-  {
-    // ### Provide some useful description of what the class is ...
-    return 
-      "LocallyWeightedDistribution implements a ..."
-      + optionHelp();
   }
 
   void LocallyWeightedDistribution::build_()

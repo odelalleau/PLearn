@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// TinyVector.h: Definition of a tensor
+// TTensor.h: Definition of a tensor
 // Copyright (c) 2002 by Julien Keable and Pascal Vincent
 
 // Redistribution and use in source and binary forms, with or without
@@ -170,7 +170,7 @@ namespace PLearn {
   (that needs to be implemented, the default constructor is currently pointless)
   You can extract a subTensor by specifying two vectors : one for the start 
   indices and one for the widths of the subTensor on each dimensions.
-  Dimensions with width == 1 are not 'dimensions' anymore. E.g: a(x,y) plane 
+  Dimensions with width == 0 are not 'dimensions' anymore. E.g: a(x,y) plane 
   extracted from a 3d tensor (x,y,z) has only 2 dimensions.
 */
  
@@ -238,7 +238,9 @@ namespace PLearn {
     int ndims() const { return width_.size();}
 
     IVec width() const {return width_;}
-    
+    IVec sizes() const {return width_;}
+    int size(int k) const { return width_[k]; }
+
     int totalElements() const 
       {
         if(ndims()==0)
@@ -267,12 +269,40 @@ namespace PLearn {
     
       
     // extract a sub tensor from this one. 'from' is a vector of start indices in each dimension, len is the length of each new dimension
+    // Any dimension of length 0 will not be considered as a dimension anymore (we'll keep a slice at the particular position given by from).
+    // i.e. : a subTensor extracted from a 3d tensor (x,y,z) with the len of the z dimension set to 0 will be a 2d tensor
+    TTensor<T> subTensor(const IVec& from, const IVec& len)
+      {
+        TTensor<T> subt = *this;
+        subt.width_ = len;
+        subt.offset_ = linearIndex(from);
+        
+        IVec idx;
+        for(int i=0;i<ndims();i++)
+        {
+          if(from[i]<0 || from[i]+len[i]>width_[i] || len[i]<0)
+            PLERROR("TTensor::subTensor : at index %i : from, len, width = %i %i %i",i,from[i],len[i],width_[i]);
+          if(len[i]>0) // skip the 0 dimensions
+            idx.push_back(i);      
+        }
+        // if idx is empty, it is because all lengths are 0: we have a scalar
+        if(idx.empty())
+          idx.push_back(0);
+        subt.selectDimensions(idx);
+        return subt;
+      }
+
+
+
+    // NOTE: (Pascal) This call has been deprecated because the throw_useless_dimension behaviour is unsatisfactory and a potential for nasty bugs. 
+    // I've rewritten another subTensor method with a clearer semantic: a len of 1 means keep that dimension (as a single element with that particular value)
+    // and a len of 0 means throw away that dimension.
+    // extract a sub tensor from this one. 'from' is a vector of start indices in each dimension, len is the length of each new dimension
     // ** NOTE :
     // If 'throw_useless_dimensions' == true, any dimension of length 1 will not be considered as a dimension anymore
     // i.e. : a subTensor extracted from a 3d matrix (x,y,z) with a fixed z value will be a 2d matrix rather than a 3d matrix 
     // with a width of one in the 'z' dimension
-
-    TTensor<T> subTensor(const IVec& from, const IVec& len, bool throw_useless_dimensions=true)
+    TTensor<T> DEPRECATEDsubTensor(const IVec& from, const IVec& len, bool throw_useless_dimensions=true)
       {
         TTensor<T> subt = *this;
         subt.width_ = len;
@@ -294,6 +324,19 @@ namespace PLearn {
         return subt;
       }
 
+    TTensor<T> operator[](int i)
+    {
+      IVec from;
+      IVec len;
+      from.push_back(i);
+      len.push_back(0);
+      for(int k=1; k<ndims(); k++)
+        {
+        from.push_back(0);
+        len.push_back(size(k));
+        }
+      return subTensor(from,len);
+    }
 
     void selectDimensions(const IVec& dim)
       {
@@ -305,7 +348,7 @@ namespace PLearn {
         }
         stride_=newstride;
         width_=newwidth;
-      }        
+      }
    
     T& operator()(const IVec& pos) const {return (*storage)[linearIndex(pos)];}
     T& operator()(const vector<int>& pos) const {return (*storage)[linearIndex(pos)];}

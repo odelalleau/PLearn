@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GenerateDecisionPlot.cc,v 1.6 2004/02/20 21:14:48 chrish42 Exp $ 
+   * $Id: GenerateDecisionPlot.cc,v 1.7 2004/06/26 00:24:15 plearner Exp $ 
    ******************************************************* */
 
 /*! \file GenerateDecisionPlot.cc */
@@ -504,13 +504,6 @@ GenerateDecisionPlot::GenerateDecisionPlot()
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
-  }
-
-  string GenerateDecisionPlot::help()
-  {
-    // ### Provide some useful description of what the class is ...
-    return 
-      "GenerateDecisionPlot implements a ...\n";
   }
 
   void GenerateDecisionPlot::build_()

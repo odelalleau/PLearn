@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Distribution.cc,v 1.16 2004/06/21 14:54:03 tihocan Exp $ 
+   * $Id: Distribution.cc,v 1.17 2004/06/26 00:24:15 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Distribution.cc */
@@ -56,8 +56,7 @@ Distribution::Distribution()
 
 PLEARN_IMPLEMENT_OBJECT(Distribution,
     "This class is deprecated, use PDistribution instead.",
-    "NO HELP"
-);
+    "NO HELP");
 
 void Distribution::declareOptions(OptionList& ol)
 {
@@ -74,14 +73,6 @@ void Distribution::declareOptions(OptionList& ol)
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
 }
-
-  string Distribution::help()
-  {
-    // ### Provide some useful description of what the class is ...
-    return 
-      "Distribution is the base class for distributions."
-      + optionHelp();
-  }
 
   void Distribution::build_()
   {

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Grapher.h,v 1.3 2004/02/20 21:14:48 chrish42 Exp $ 
+   * $Id: Grapher.h,v 1.4 2004/06/26 00:24:15 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Grapher.h */
@@ -107,9 +107,6 @@ public:
 
   // simply calls inherited::build() then build_() 
   virtual void build();
-
-  //! Provides a help message describing this class
-  static string help();
 
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);

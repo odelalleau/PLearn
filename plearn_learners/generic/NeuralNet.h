@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeuralNet.h,v 1.8 2004/02/20 21:14:47 chrish42 Exp $
+   * $Id: NeuralNet.h,v 1.9 2004/06/26 00:24:15 plearner Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeuralNet.h */
@@ -131,7 +131,6 @@ using namespace std;
     PLEARN_DECLARE_OBJECT(NeuralNet);
 
     // Learner methods
-    static string help();
 
     virtual void build();
     virtual void forget(); // simply calls initializeParams()

@@ -116,9 +116,6 @@ public:
   //! Simply calls inherited::build() then build_()
   virtual void build();
   
-  //! Provides a help message describing this class
-  static string help();
-
   virtual void setExperimentDirectory(const string& _expdir);
 
   //! The main method;  runs the experiment

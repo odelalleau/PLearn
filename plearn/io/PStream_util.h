@@ -51,10 +51,6 @@ using namespace std;
 //! for the new setOption, which calls readOptionVal ... which may call read(istream&, string&)...
 static const string wordseparators(" \t\n\r)]};,:|#"); 
 
-//!the following typedef should be equivalent to OptionBase::flag_t
-typedef unsigned int OBflag_t;
-const OBflag_t dft_option_flag= 1 | 1<<1 | 1<<2;//!< buildoption | learntoption | tuningoption
-
 /*
 //format fags available for PStreams
 enum pl_flags { plf_plain,
@@ -74,18 +70,11 @@ enum pl_flags { plf_plain,
 // Define some useful shortcuts
 class pl_stream_raw {};
 class pl_stream_clear_flags {};
-class pl_stream_option_flags {
-public:
-    OBflag_t flags;
-    pl_stream_option_flags &operator()(OBflag_t flags_)
-        { flags = flags_; return *this; };
-};
 class pl_stream_initiate {};
 
 
 extern pl_stream_raw raw;
 extern pl_stream_clear_flags clear_flags;
-extern pl_stream_option_flags option_flags;
 extern pl_stream_initiate initiate;
 
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ManualBinner.cc,v 1.6 2004/02/20 21:11:46 chrish42 Exp $ 
+   * $Id: ManualBinner.cc,v 1.7 2004/06/26 00:24:14 plearner Exp $ 
    ******************************************************* */
 
 /*! \file ManualBinner.cc */
@@ -58,7 +58,10 @@ ManualBinner::ManualBinner(Vec bin_positions_)
   }
 
 
-  PLEARN_IMPLEMENT_OBJECT(ManualBinner, "ONE LINE DESCR", "NO HELP");
+  PLEARN_IMPLEMENT_OBJECT(ManualBinner, "Binner with predefined cut-points.", 
+      "ManualBinner implements a Binner for which cutpoints are predefined.  "
+      "It's getBinning function doesn't have to look at the data; it simply "
+      "builds a RealMapping from the supplied bin_positions.");
 
   void ManualBinner::declareOptions(OptionList& ol)
   {
@@ -70,16 +73,6 @@ ManualBinner::ManualBinner(Vec bin_positions_)
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
-  }
-
-  string ManualBinner::help()
-  {
-    // ### Provide some useful description of what the class is ...
-    return 
-      "ManualBinner implements a Binner for which cutpoints are predefined.  "
-      "It's getBinning function doesn't have to look at the data; it simply "
-      "builds a RealMapping from the supplied bin_positions."
-      + optionHelp();
   }
 
   void ManualBinner::build_()

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: OptionBase.cc,v 1.2 2004/02/20 21:11:42 chrish42 Exp $
+   * $Id: OptionBase.cc,v 1.3 2004/06/26 00:24:12 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -50,6 +50,12 @@ const OptionBase::flag_t OptionBase::buildoption = 1;
 const OptionBase::flag_t OptionBase::learntoption = 1<<1;
 const OptionBase::flag_t OptionBase::tuningoption = 1<<2;
 const OptionBase::flag_t OptionBase::nosave = 1<<4; 
+
+
+bool OptionBase::shouldBeSkipped() const
+{
+  return (flags() & (buildoption | learntoption | tuningoption)) == 0;
+}
 
 string OptionBase::writeIntoString(const Object* o) const
   {

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PExperiment.cc,v 1.9 2004/02/20 21:14:48 chrish42 Exp $ 
+   * $Id: PExperiment.cc,v 1.10 2004/06/26 00:24:15 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -81,7 +81,13 @@ PTester::PTester()
     provide_learner_expdir(false)
 {}
 
-  PLEARN_IMPLEMENT_OBJECT(PTester, "ONE LINE DESCR", "NO HELP");
+  PLEARN_IMPLEMENT_OBJECT(PTester, "Evaluates the performance of a PLearner", 
+      "The PTester class allows you to describe a typical learning experiment that you wish to perform, \n"
+      "as a training/testing of a learning algorithm on a particular dataset.\n"
+      "The splitter is used to obtain one or several (such as for k-fold) splits of the dataset \n"
+      "and training/testing is performed on each split. \n"
+      "Requested statistics are computed, and all requested results are written in an appropriate \n"
+      "file inside the specified experiment directory. \n");
 
   void PTester::declareOptions(OptionList& ol)
   {
@@ -127,17 +133,6 @@ PTester::PTester()
     declareOption(ol, "provide_learner_expdir", &PTester::provide_learner_expdir, OptionBase::buildoption,
                   "If true, each learner to be trained will have its experiment directory set to Split#k/LearnerExpdir/");
     inherited::declareOptions(ol);
-  }
-
-  string PTester::help()
-  {
-    return 
-      "The PTester class allows you to describe a typical learning experiment that you wish to perform, \n"
-      "as a training/testing of a learning algorithm on a particular dataset.\n"
-      "The splitter is used to obtain one or several (such as for k-fold) splits of the dataset \n"
-      "and training/testing is performed on each split. \n"
-      "Requested statistics are computed, and all requested results are written in an appropriate \n"
-      "file inside the specified experiment directory. \n";
   }
 
 void PTester::build_()

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.h,v 1.11 2004/03/20 21:00:24 yoshua Exp $
+   * $Id: MultiInstanceNNet.h,v 1.12 2004/06/26 00:24:14 plearner Exp $
    ******************************************************* */
 
 /*! \file PLearn/plearn_learners/classifiers/MultiInstanceNNet.h */
@@ -133,10 +133,6 @@ using namespace std;
     PLEARN_DECLARE_OBJECT(MultiInstanceNNet);
 
     // PLearner methods
-    /*
-    static string help();
-    virtual string getOptionsToSave() const;
-    */
 
     virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 

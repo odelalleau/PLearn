@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Binner.cc,v 1.6 2004/02/20 21:11:46 chrish42 Exp $ 
+   * $Id: Binner.cc,v 1.7 2004/06/26 00:24:14 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Binner.cc */
@@ -74,14 +74,6 @@ Binner::Binner()
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
-  }
-
-  string Binner::help()
-  {
-    // ### Provide some useful description of what the class is ...
-    return 
-      "Binner implements a ..."
-      + optionHelp();
   }
 
   void Binner::build_()

@@ -33,14 +33,6 @@ PLEARN_IMPLEMENT_OBJECT(DERIVEDCLASS, "ONE LINE DESCR", "NO HELP");
     inherited::declareOptions(ol);
   }
 
-  string DERIVEDCLASS::help()
-  {
-    // ### Provide some useful description of what the class is ...
-    return 
-      "DERIVEDCLASS implements a ..."
-      + optionHelp();
-  }
-
   void DERIVEDCLASS::build_()
   {
     // ### This method should do the real building of the object,

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Grapher.cc,v 1.6 2004/04/03 20:30:48 plearner Exp $ 
+   * $Id: Grapher.cc,v 1.7 2004/06/26 00:24:15 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Grapher.cc */
@@ -543,13 +543,6 @@ void Grapher::declareOptions(OptionList& ol)
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
-}
-
-string Grapher::help()
-{
-  // ### Provide some useful description of what the class is ...
-  return 
-    "Grapher implements a ...\n";
 }
 
 void Grapher::build_()

@@ -1,8 +1,8 @@
 // -*- C++ -*-
 
-// SetOption.h
-// 
-// Copyright (C) 2003 Pascal Vincent
+// FilePStreamBuf.h
+//
+// Copyright (C) 2004 Pascal Vincent 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,47 +33,50 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SetOption.h,v 1.5 2004/06/26 00:24:12 plearner Exp $ 
+   * $Id: FilePStreamBuf.h,v 1.1 2004/06/26 00:24:14 plearner Exp $ 
    ******************************************************* */
 
-/*! \file SetOption.h */
-#ifndef SetOption_INC
-#define SetOption_INC
+// Authors: Pascal Vincent
 
-#include "Object.h"
+/*! \file FilePStreamBuf.h */
+
+
+#ifndef FilePStreamBuf_INC
+#define FilePStreamBuf_INC
+
+#include "PStreamBuf.h"
 
 namespace PLearn {
 using namespace std;
 
-class SetOption: public Object
+class FilePStreamBuf: public PStreamBuf
 {
+
+private:
+  
+  typedef PStreamBuf inherited;
+
 protected:
   // *********************
   // * protected options *
   // *********************
+  FILE* f;
 
-  // ### declare protected option fields (such as learnt parameters) here
-  // ...
-    
 public:
-
-  typedef Object inherited;
 
   // ************************
   // * public build options *
   // ************************
-
-  string name; // name of option
-  string value; // value of option (as a string)
-
-  // ****************
-  // * Constructors *
-  // ****************
+  string url;    
+  string openmode;
 
   // Default constructor, make sure the implementation in the .cc
   // initializes all fields to reasonable default values.
-  SetOption();
+  FilePStreamBuf();
 
+  virtual ~FilePStreamBuf();
+
+  static string getFilePathFromURL(string fileurl);
 
   // ******************
   // * Object methods *
@@ -81,36 +84,46 @@ public:
 
 private: 
   //! This does the actual building. 
-  // (Please implement in .cc)
+  // (PLEASE IMPLEMENT IN .cc)
   void build_();
 
 protected: 
   //! Declares this class' options
-  // (Please implement in .cc)
+  // (PLEASE IMPLEMENT IN .cc)
   static void declareOptions(OptionList& ol);
 
+  virtual streamsize read_(char* p, streamsize n);
+
+  //! writes exactly n characters from p (unbuffered, must flush)
+  virtual void write_(char* p, streamsize n);
+
+  //! should change the position of the next read/write (seek)
+  //! Default version issues a PLERROR
+  virtual void setpos_(streampos pos);
+  
+  //! should return the position of the next read/write in 
+  //! number of bytes from start of file.
+  //! Default version issues a PLERROR
+  virtual streampos getpos_();
+
+
 public:
+  // Declares other standard object methods
+  //  If your class is not instantiatable (it has pure virtual methods)
+  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
+  PLEARN_DECLARE_OBJECT(FilePStreamBuf);
+
   // simply calls inherited::build() then build_() 
   virtual void build();
 
   //! Transforms a shallow copy into a deep copy
+  // (PLEASE IMPLEMENT IN .cc)
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
-
-  //! Will call obj->setOption(name, value)
-  inline void apply(PP<Object> obj)
-  { obj->setOption(name, value); }
-
-  //! Will call obj->setOption(name, value); or if name is a key in aliases,
-  //! it will call obj->setOption(aliases[name], value)
-  void apply(PP<Object> obj, const map<string, string>& aliases);
-
-  //! Declares name and deepCopy methods
-  PLEARN_DECLARE_OBJECT(SetOption);
 
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(SetOption);
+  DECLARE_OBJECT_PTR(FilePStreamBuf);
   
 } // end of namespace PLearn
 

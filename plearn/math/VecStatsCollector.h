@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.h,v 1.16 2004/02/20 21:11:46 chrish42 Exp $ 
+   * $Id: VecStatsCollector.h,v 1.17 2004/06/26 00:24:14 plearner Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.h */
@@ -172,9 +172,6 @@ public:
   //! Currently available names are E (mean) V (variance) STDDEV MIN MAX
   //! Will throw an exception if statname is invalid
   int getIndexInAllStats(int fieldindex, const string& statname) const;
-
-  //! Provides a help message describing this class
-  static string help();
 
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);

@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SpiralDistribution.cc,v 1.8 2004/05/26 16:06:12 tihocan Exp $ 
+   * $Id: SpiralDistribution.cc,v 1.9 2004/06/26 00:24:15 plearner Exp $ 
    ******************************************************* */
 
 /*! \file SpiralDistribution.cc */
@@ -56,16 +56,11 @@ SpiralDistribution::SpiralDistribution()
     // build_();
   }
 
-  PLEARN_IMPLEMENT_OBJECT(SpiralDistribution, "ONE LINE DESCR", "NO HELP");
-
-  string SpiralDistribution::help()
-  {
-    return 
+  PLEARN_IMPLEMENT_OBJECT(SpiralDistribution, "Generates samples drawn from a 2D spiral", 
       "SpiralDistribution is a generative model that generates 2D (x,y) samples in the following manner:\n"
       " t ~ uniform([tmin, tmax])^uniformity \n"
       " x = lambda*t*sin(alpha*t) + N(0,sigma) \n"
-      " y = lambda*t*cos(alpha*t) + N(0,sigma) \n";
-  }
+      " y = lambda*t*cos(alpha*t) + N(0,sigma) \n");
 
   void SpiralDistribution::declareOptions(OptionList& ol)
   {

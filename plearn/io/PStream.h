@@ -43,14 +43,19 @@
 #include <sstream>
 #include "pl_hash_fun.h"
 //#include "PP.h"
-#include "pl_streambuf.h"
-#include "pl_fdstream.h"
 #include "PStream_util.h"
 #include "plerror.h"
 #include <fstream>
 //#include "TypeTraits.h"
 #include "byte_order.h"
 #include "fileutils.h"
+#include "PStreamBuf.h"
+#include "StdPStreamBuf.h"
+
+// OLD MARKABLE STREAM HACK
+// #include "pl_streambuf.h"
+// #include "pl_fdstream.h"
+
 
 namespace PLearn {
 
@@ -113,27 +118,32 @@ public:
 
   
 protected:
+  /* OLD MARKABLE STREAM HACK
   PP<pl_streambuf> the_inbuf;   //<! markable input buffer
   PP<pl_fdstreambuf> the_fdbuf; //<! buffer on a POSIX file descriptor
-  
+
   istream* pin;  //<! underlying input stream
   ostream* pout; //<! underlying output stream
   bool own_pin, own_pout; //<! true if {pin|pout} was created internally
+  */
+
+  PP<StdPStreamBuf> pstreambuf;
+
 
 public:  
-  OBflag_t option_flags_in;   //<! option flags for input
   mode_t inmode;              //<! mode for input formatting
   // bitset<32> pl_stream_flags_in;  //<! format flags for input
   map<unsigned int, void *> copies_map_in; //<! copies map for input
-  OBflag_t option_flags_out; //<! option flags for output
   mode_t outmode;            //<! mode for output formatting
   // bitset<32> pl_stream_flags_out; //<! format flags for output
   map<void *, unsigned int> copies_map_out; //<! copies map for output
 
 protected:
+  /* OLD MARKABLE STREAM HACK
   //! ptrs. to the original buffers;  used to 'reset' the underlying
   //! streams to a valid state when the PStream is destroyed.
   streambuf* original_bufin, * original_bufout;
+  */
 
 private:
   static char tmpbuf[100];
@@ -151,19 +161,18 @@ public:
   PStream();
 
   //! ctor. from an istream (I)
-  PStream(istream* pin_);
+  PStream(istream* pin_, bool own_pin_=false);
 
   //! ctor. from an ostream (O)
-  PStream(ostream* pout_);
+  PStream(ostream* pout_, bool own_pout_=false);
 
   //! ctor. from an iostream (IO)
-  PStream(iostream* pios_);
+  PStream(iostream* pios_, bool own_pios_=false);
 
   //! ctor. from an istream and an ostream (IO)
-  PStream(istream* pin_, ostream* pout_);
+  PStream(istream* pin_, ostream* pout_, bool own_pin_=false, bool own_pout_=false);
 
-  //! copy ctor.
-  PStream(const PStream& pios);
+  //! Default copy ctor. should be fine now.
 
   //! dtor.
   virtual ~PStream();
@@ -178,16 +187,25 @@ public:
 
 public:
   //op()'s: re-init with different underlying stream(s)
-  PStream& operator()(istream* pin_);
-  PStream& operator()(ostream* pout_);
-  PStream& operator()(iostream* pios_);
-  PStream& operator()(istream* pin_, ostream* pout_);
-  PStream& operator()(const PStream& pios);
+  inline PStream& operator()(istream* pin)
+  { pstreambuf->setIn(pin); return *this; }
 
-  inline PStream& operator=(istream* pin_) { return operator()(pin_); }
-  inline PStream& operator=(ostream* pout_)  { return operator()(pout_); }
-  inline PStream& operator=(iostream* pios_)  { return operator()(pios_); }
-  inline PStream& operator=(const PStream& pios)  { return operator()(pios); }
+  inline PStream& operator()(ostream* pout)
+  { pstreambuf->setOut(pout);  return *this; }
+
+  inline PStream& operator()(iostream* pios)
+  { pstreambuf->setIn(pios); pstreambuf->setOut(pios);  return *this; }
+
+  inline PStream& operator()(istream* pin, ostream* pout)
+  { pstreambuf->setIn(pin); pstreambuf->setOut(pout);  return *this; }
+
+  PStream& operator=(const PStream& pios);
+
+  inline PStream& operator=(istream* pin) { return operator()(pin); }
+  inline PStream& operator=(ostream* pout)  { return operator()(pout); }
+  inline PStream& operator=(iostream* pios)  { return operator()(pios); }
+
+  inline PStream& operator()(const PStream& pios)  { return operator=(pios); }
 
 
   void writeAsciiNum(char x);
@@ -221,42 +239,42 @@ public:
   // This implementation does not seem to work: commented out [Pascal]
   // inline operator bool() { return (!pin || *pin) && (!pout || *pout) && (pin || pout); }
   // This is a temporary fix [Pascal]
-  inline operator bool() { return pin && pin->good() || pout && pout->good(); }
+  inline operator bool() { return pstreambuf->rawin() && pstreambuf->rawin()->good() || pstreambuf->rawout() && pstreambuf->rawout()->good(); }
 
-  inline bool eof() const { return pin->eof(); }
-  inline bool good() const { return pin->good() && pout->good(); }
+  inline bool eof() const { return pstreambuf->rawin()->eof(); }
+  inline bool good() const { return pstreambuf->rawin()->good() && pstreambuf->rawout()->good(); }
 
-  inline istream& _do_not_use_this_method_rawin_() { return *pin; }   //<! access to underlying istream
+  inline istream& _do_not_use_this_method_rawin_() { return *pstreambuf->rawin(); }   //<! access to underlying istream
   
   /******
    * The folowing methods are 'forwarded' from {i|o}stream.
    */
-  inline int get() { return pin->get(); }
-  inline PStream& get(char& c) { pin->get(c); return *this; }
+  inline int get() { return pstreambuf->rawin()->get(); }
+  inline PStream& get(char& c) { pstreambuf->rawin()->get(c); return *this; }
 
   inline PStream& getline(string& line, char delimitor='\n')
-  { std::getline(*pin, line, delimitor); return *this; }
+  { std::getline(*pstreambuf->rawin(), line, delimitor); return *this; }
 
   inline string getline()
   { string s; getline(s); return s; }
 
-  //   inline int peek() { return pin->peek(); }
+  //   inline int peek() { return pstreambuf->rawin()->peek(); }
   // The previous implementation does not seem to work, so we use this [Pascal]:
   
   inline int peek() 
   { 
-    int c = pin->get(); 
-    pin->unget(); 
+    int c = pstreambuf->rawin()->get(); 
+    pstreambuf->rawin()->unget(); 
     return c; 
   }
   
 
-  inline PStream& putback(char c) { pin->putback(c); return *this; }
-  inline PStream& unget() { pin->unget(); return *this; }
+  inline PStream& putback(char c) { pstreambuf->rawin()->putback(c); return *this; }
+  inline PStream& unget() { pstreambuf->rawin()->unget(); return *this; }
   inline PStream& read(char* s, streamsize n) 
   { 
     // The following line does not Work!!!! [Pascal]
-    //    pin->read(s,n);
+    //    pstreambuf->rawin()->read(s,n);
     // So it's temporarily replaced by this (ugly and slow):
 
     int c = get();
@@ -281,20 +299,21 @@ public:
   //! The stopping character met is not extracted from the stream.
   streamsize readUntil(char* buf, streamsize n, const char* stop_chars);
 
-  inline PStream& write(const char* s, streamsize n) { pout->write(s,n); return *this; }
-  inline PStream& put(char c) { pout->put(c); return *this; }
+  inline PStream& write(const char* s, streamsize n) { pstreambuf->rawout()->write(s,n); return *this; }
+  inline PStream& put(char c) { pstreambuf->rawout()->put(c); return *this; }
   inline PStream& put(unsigned char c) { write(reinterpret_cast<char *>(&c), sizeof(c)); return *this; }
   inline PStream& put(int x) { return put((char)x); }
-  inline PStream& flush() { pout->flush(); return *this; }
-  inline PStream& endl() { pout->put('\n'); pout->flush(); return *this; }
+  inline PStream& flush() { pstreambuf->rawout()->flush(); return *this; }
+  inline PStream& endl() { pstreambuf->rawout()->put('\n'); pstreambuf->rawout()->flush(); return *this; }
   /******/
 
   // These are convenient method for writing raw strings (whatever the outmode):
-  inline PStream& write(const char* s) { (*pout) << s; return *this; }
-  inline PStream& write(const string& s) { (*pout) << s; return *this; }
+  inline PStream& write(const char* s) { (*pstreambuf->rawout()) << s; return *this; }
+  inline PStream& write(const string& s) { (*pstreambuf->rawout()) << s; return *this; }
 
   //! attach this stream to a POSIX file descriptor.
-  void attach(int fd);
+  inline void attach(int fd)
+  { pstreambuf->attach(fd); }
 
 
   // Useful skip functions
@@ -364,62 +383,12 @@ public:
   PStream& operator<<(unsigned short x);
   PStream& operator<<(pl_pstream_manip func) { return (*func)(*this); }
  
+#ifdef MARKABLE_STREAM_HACK
   //! returns the markable input buffer
   //! DEPRECATED: TO BE REMOVED SOON, DO NOT USE!
-  inline pl_streambuf* pl_rdbuf() { return the_inbuf; }
+  inline pl_streambuf* pl_rdbuf() { return pstreambuf->pl_rdbuf(); }
+#endif
 
-  
-  //! ALL FOLLOWING OLD METHODS THAT EXPOSED std::stream INTERNALS OR FORWARDED CALLS TO THEM 
-  //! ARE NO LONGER SUPPORTED, AS PSTREAMS SOON WON'T BE BUILT ON TOP OF std::stream ANY MORE.
-
-  /*****
-   * DEPRECATED  operator<<'s and operator>>'s to set flags, etc.
-   */
-  /*
-  inline PStream& operator>>(pl_stream_clear_flags& flags_) { option_flags_in= 0; return *this; }
-  inline PStream& operator<<(const pl_stream_clear_flags& flags_) { option_flags_out= 0; return *this; }
-  inline PStream& operator>>(pl_stream_option_flags& flags_) { option_flags_in= flags_.flags; return *this; }
-  inline PStream& operator<<(pl_stream_option_flags& flags_) { option_flags_out= flags_.flags; return *this; }
-  inline PStream& operator>>(pl_stream_initiate& initiate_) { copies_map_in.clear(); return *this; }
-  inline PStream& operator<<(const pl_stream_initiate& initiate_) { copies_map_out.clear(); return *this; }
-  inline PStream& operator>>(pl_pstream_manip func) { return (*func)(*this); }
-  inline PStream& operator<<(const pl_pstream_manip func) { return (*func)(*this); }
-  inline PStream& operator>>(pl_istream_manip_compat func) { (*func)(*pin); return *this; }
-  inline PStream& operator<<(const pl_ostream_manip_compat func) { (*func)(*pout); return *this; }
-  */
-
-  /******
-   * The folowing methods are 'forwarded' from ios;  Two versions of each method
-   * are provided so that input and output behaviour may be different.
-   */
-  /* DEPRECATED
-  inline ios_base::fmtflags flags_in() const { return pin->flags(); }
-  inline ios_base::fmtflags flags_out() const { return pout->flags(); }
-  inline ios_base::fmtflags flags_in(ios_base::fmtflags ff) { return pin->flags(ff); }
-  inline ios_base::fmtflags flags_out(ios_base::fmtflags ff) { return pout->flags(ff); }
-  // NOTE: setf_{in|out} also exist in 'PLearn::pl_flags' version... see below 
-
-  inline ios_base::fmtflags setf_in(ios_base::fmtflags ff) { return pin->setf(ff); }
-  inline ios_base::fmtflags setf_out(ios_base::fmtflags ff) { return pout->setf(ff); }
-  inline ios_base::fmtflags setf_in(ios_base::fmtflags ff, ios_base::fmtflags mask)
-  { return pin->setf(ff,mask); }
-  inline ios_base::fmtflags setf_out(ios_base::fmtflags ff, ios_base::fmtflags mask)
-  { return pout->setf(ff,mask); }
-  inline void unsetf_in(ios_base::fmtflags mask) { pin->unsetf(mask); }
-  inline void unsetf_out(ios_base::fmtflags mask) { pout->unsetf(mask); }
-  inline char fill_in() const { return pin->fill(); }
-  inline char fill_out() const { return pout->fill(); }
-  inline char fill_in(char c) { return pin->fill(c); }
-  inline char fill_out(char c) { return pout->fill(c); }
-  inline streamsize width_in() const { return pin->width(); }
-  inline streamsize width_out() const { return pout->width(); }
-  inline streamsize width_in(streamsize w) { return pin->width(w); }
-  inline streamsize width_out(streamsize w) { return pout->width(w); }
-  */
-
-protected:
-  //! initInBuf: called by ctors. to ensure that pin's buffer is markable
-  void initInBuf();
 };
 
 
@@ -1134,16 +1103,16 @@ class PIFStream: public PStream
 {
 public:
   PIFStream(const string& fname, ios_base::openmode m = ios_base::in)
-    :PStream(new ifstream(fname.c_str())) 
-  { own_pin = true; }
+    :PStream(new ifstream(fname.c_str()),true) 
+  {}
 };
 
 class POFStream: public PStream
 {
 public:
   POFStream(const string& fname, ios_base::openmode m = ios_base::out | ios_base::trunc)
-    :PStream(new ofstream(fname.c_str())) 
-  { own_pout = true; }
+    :PStream(new ofstream(fname.c_str()),true) 
+  {}
 };
 
 

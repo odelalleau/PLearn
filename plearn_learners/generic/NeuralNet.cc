@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
- * $Id: NeuralNet.cc,v 1.20 2004/02/26 18:07:52 nova77 Exp $
+ * $Id: NeuralNet.cc,v 1.21 2004/06/26 00:24:15 plearner Exp $
  ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeuralNet.h */
@@ -79,7 +79,7 @@ namespace PLearn {
 using namespace std;
 
 
-PLEARN_IMPLEMENT_OBJECT(NeuralNet, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(NeuralNet, "DEPRECATED: Use NNet instead", "NO HELP");
 
 NeuralNet::NeuralNet()
   :nhidden(0),
@@ -104,11 +104,6 @@ NeuralNet::NeuralNet()
 
 NeuralNet::~NeuralNet()
 {
-}
-
-string NeuralNet::help()
-{
-  return "Basic Multilayer perceptron class";
 }
 
 void NeuralNet::declareOptions(OptionList& ol)

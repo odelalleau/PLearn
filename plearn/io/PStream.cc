@@ -70,80 +70,48 @@ PStream& ws(PStream& in)
 
   //! default ctor: the stream is unusable ...
 PStream::PStream()
-    :pin(0), pout(0), own_pin(false), own_pout(false), 
-     option_flags_in(dft_option_flag), inmode(plearn_ascii), 
-     option_flags_out(dft_option_flag), outmode(plearn_ascii), 
-     original_bufin(0), original_bufout(0), 
+    :pstreambuf(new StdPStreamBuf),
+     inmode(plearn_ascii), 
+     outmode(plearn_ascii), 
      implicit_storage(true), compression_mode(compr_none)
   {}
   //! ctor. from an istream (I)
-PStream::PStream(istream* pin_)
-    :pin(pin_), pout(0), own_pin(false), own_pout(false), 
-     option_flags_in(dft_option_flag), inmode(plearn_ascii), 
-     option_flags_out(dft_option_flag), outmode(plearn_ascii),
-     original_bufin(pin_->rdbuf()), original_bufout(0), 
+PStream::PStream(istream* pin_, bool own_pin_)
+    :pstreambuf(new StdPStreamBuf(pin_,own_pin_)),
+     inmode(plearn_ascii), 
+     outmode(plearn_ascii),
      implicit_storage(true), compression_mode(compr_none)
-  { initInBuf(); }
+  {}
   //! ctor. from an ostream (O)
 
-PStream::PStream(ostream* pout_)
-    :pin(0), pout(pout_), own_pin(false), own_pout(false), 
-     option_flags_in(dft_option_flag), inmode(plearn_ascii), 
-     option_flags_out(dft_option_flag), outmode(plearn_ascii),
-     original_bufin(0), original_bufout(pout_->rdbuf()), 
+PStream::PStream(ostream* pout_, bool own_pout_)
+    :pstreambuf(new StdPStreamBuf(pout_,own_pout_)),
+     inmode(plearn_ascii), 
+     outmode(plearn_ascii),
      implicit_storage(true), compression_mode(compr_none)
   {}
 
   //! ctor. from an iostream (IO)
-PStream::PStream(iostream* pios_)
-    :pin(pios_), pout(pios_), own_pin(false), own_pout(false), 
-     option_flags_in(dft_option_flag), inmode(plearn_ascii), 
-     option_flags_out(dft_option_flag), outmode(plearn_ascii),
-     original_bufin(pios_->rdbuf()), original_bufout(pios_->rdbuf()),
+PStream::PStream(iostream* pios_, bool own_pios_)
+    :pstreambuf(new StdPStreamBuf(pios_,own_pios_)),
+     inmode(plearn_ascii), 
+     outmode(plearn_ascii),
      implicit_storage(true), compression_mode(compr_none)
-  { initInBuf(); }
+  {}
 
   //! ctor. from an istream and an ostream (IO)
-  PStream::PStream(istream* pin_, ostream* pout_)
-    :pin(pin_), pout(pout_), own_pin(false), own_pout(false), 
-     option_flags_in(dft_option_flag), inmode(plearn_ascii), 
-     option_flags_out(dft_option_flag), outmode(plearn_ascii),
-     original_bufin(pin_->rdbuf()), original_bufout(pout_->rdbuf())
-  { initInBuf(); }
-
-//! copy ctor.
-  PStream::PStream(const PStream& pios)
-    :the_inbuf(pios.the_inbuf), the_fdbuf(pios.the_fdbuf),
-     pin(pios.pin), pout(pios.pout), own_pin(false), own_pout(false), 
-     option_flags_in(pios.option_flags_in), inmode(pios.inmode), 
-     option_flags_out(pios.option_flags_out), outmode(pios.outmode), 
-     original_bufin(pios.original_bufin), original_bufout(pios.original_bufout)
+PStream::PStream(istream* pin_, ostream* pout_, bool own_pin_, bool own_pout_)
+    :pstreambuf(new StdPStreamBuf(pin_,pout_,own_pin_,own_pout_)),
+     inmode(plearn_ascii), 
+     outmode(plearn_ascii),
+     implicit_storage(true), compression_mode(compr_none)
   {}
 
 //! dtor.
 PStream::~PStream()
   {
-    // am I the only PStream using this buffer?
-    if(the_inbuf && 1 == the_inbuf->usage())
-      {// reset underlying streams's buffers before destroying the_inbuf
-        if(pin) pin->rdbuf(original_bufin);
-        if(pout) pout->rdbuf(original_bufout);
-      }
-    if(own_pin && pin) delete pin; // delete pin if we created it
-    if(own_pout && pout) delete pout; // delete pout if we created it
   }
   
-void PStream::initInBuf()
-  {
-    if(pin)
-      {
-        the_inbuf= dynamic_cast<pl_streambuf*>(pin->rdbuf());
-        if(the_inbuf.isNull())
-          the_inbuf= new pl_streambuf(*pin->rdbuf());
-        pin->rdbuf(the_inbuf);
-      }
-  }
-
 streamsize PStream::readUntil(char* buf, streamsize n, char stop_char)
   {
     streamsize nread = 0;
@@ -501,110 +469,16 @@ void PStream::readAsciiNum(double &x)
     }
 }
 
-PStream& PStream::operator()(istream* pin_)
-{ 
-  if(pin && original_bufin) pin->rdbuf(original_bufin);
-  if(pin && original_bufout) pin->rdbuf(original_bufout);
-  if(own_pin) delete pin;
-  if(own_pout) delete pout;
-  pin= pin_;
-  pout= 0;
-  own_pin= false;
-  own_pout= false;
-  option_flags_in= dft_option_flag;
-  inmode = plearn_ascii; 
-  option_flags_out= dft_option_flag;
-  outmode = plearn_ascii; 
-  the_fdbuf= 0;
-  original_bufin= pin->rdbuf();
-  original_bufout= 0;
-  initInBuf(); 
-  return *this;
-}
 
-PStream& PStream::operator()(ostream* pout_)
-{ 
-  if(pin && original_bufin) pin->rdbuf(original_bufin);
-  if(pin && original_bufout) pin->rdbuf(original_bufout);
-  if(own_pin) delete pin;
-  if(own_pout) delete pout;
-  pin= 0;
-  pout= pout_;
-  own_pin= false;
-  own_pout= false;
-  option_flags_in= dft_option_flag;
-  inmode = plearn_ascii; 
-  option_flags_out= dft_option_flag;
-  outmode = plearn_ascii; 
-  the_fdbuf= 0;
-  the_inbuf= 0;
-  original_bufin= 0;
-  original_bufout= pout->rdbuf();
-  return *this;
-}
-
-PStream& PStream::operator()(iostream* pios_)
-{ 
-  if(pin && original_bufin) pin->rdbuf(original_bufin);
-  if(pin && original_bufout) pin->rdbuf(original_bufout);
-  if(own_pin) delete pin;
-  if(own_pout) delete pout;
-  pin= pios_;
-  pout= pios_;
-  own_pin= false;
-  own_pout= false;
-  option_flags_in= dft_option_flag;
-  inmode = plearn_ascii; 
-  option_flags_out= dft_option_flag;
-  outmode = plearn_ascii; 
-  the_fdbuf= 0;
-  original_bufin= pin->rdbuf();
-  original_bufout= pout->rdbuf();
-  initInBuf(); 
-  return *this;
-}
-
-PStream& PStream::operator()(istream* pin_, ostream* pout_)
-{ 
-  if(pin && original_bufin) pin->rdbuf(original_bufin);
-  if(pin && original_bufout) pin->rdbuf(original_bufout);
-  if(own_pin) delete pin;
-  if(own_pout) delete pout;
-  pin= pin_;
-  pout= pout_;
-  own_pin= false;
-  own_pout= false;
-  option_flags_in= dft_option_flag;
-  inmode = plearn_ascii; 
-  option_flags_out= dft_option_flag;
-  outmode = plearn_ascii; 
-  the_fdbuf= 0;
-  original_bufin= pin->rdbuf();
-  original_bufout= pout->rdbuf();
-  initInBuf(); 
-  return *this;
-}
-
-PStream& PStream::operator()(const PStream& pios)
+PStream& PStream::operator=(const PStream& pios)
 { 
   if(this != &pios)
     {
-      if(pin && original_bufin) pin->rdbuf(original_bufin);
-      if(pout && original_bufout) pout->rdbuf(original_bufout);
-      if(own_pin) delete pin;
-      if(own_pout) delete pout;
-      pin= pios.pin;
-      pout= pios.pout;
-      own_pin= false;
-      own_pout= false;
-      option_flags_in= pios.option_flags_in;
-      inmode= pios.inmode;
-      option_flags_out= pios.option_flags_out;
-      outmode= pios.outmode;
-      the_inbuf= pios.the_inbuf;
-      the_fdbuf= pios.the_fdbuf;
-      original_bufin= pios.original_bufin;
-      original_bufout= pios.original_bufout;
+      pstreambuf = pios.pstreambuf;
+      inmode = pios.inmode;
+      outmode = pios.outmode;
+      implicit_storage = pios.implicit_storage;
+      compression_mode = pios.compression_mode;
     }
   return *this;
 }
@@ -1480,28 +1354,6 @@ PStream& PStream::operator<<(double x)
       break;
   }
   return *this;
-}
-
-
-//! attach: "attach" the PStream to a POSIX file descriptor.
-void PStream::attach(int fd)
-{
-  the_fdbuf= new pl_fdstreambuf(fd, pl_dftbuflen);
-  the_inbuf= new pl_streambuf(*the_fdbuf);
-  if(pin)
-    pin->rdbuf(the_inbuf);
-  else
-    {
-      own_pin= true;
-      pin= new istream(the_inbuf);
-    }
-  if(pout) 
-    pout->rdbuf(the_fdbuf);
-  else
-    {
-      own_pout= true;
-      pout= new ostream(the_fdbuf);
-    }
 }
 
 

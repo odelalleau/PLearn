@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Smoother.cc,v 1.4 2004/02/20 21:11:46 chrish42 Exp $ 
+   * $Id: Smoother.cc,v 1.5 2004/06/26 00:24:14 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Smoother.cc */
@@ -70,14 +70,6 @@ Smoother::Smoother()
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
-  }
-
-  string Smoother::help()
-  {
-    // ### Provide some useful description of what the class is ...
-    return 
-      "Smoother implements a ..."
-      + optionHelp();
   }
 
   void Smoother::build_()

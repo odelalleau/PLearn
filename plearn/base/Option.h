@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Option.h,v 1.4 2004/05/07 19:03:31 tihocan Exp $
+   * $Id: Option.h,v 1.5 2004/06/26 00:24:12 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -101,7 +101,7 @@ public:
 //! OptionBase::buildoption, OptionBase::learntoption or OptionBase::tuningoption
 //! If the option is not to be serialized, you can additionally specify 
 //! OptionBase::nosave
-/*! The "type" printed in optionHelp() is given by TypeTraits<OptionType>::name().
+/*! The "type" printed in the help is given by TypeTraits<OptionType>::name().
     The "default value" printed in optionHelp() will be a serialization of 
     the value of the field in a default constructed instance, (which should be ok in most cases),
     unless you explicitly specify it as the last argument here (It is recomended that you *don't*

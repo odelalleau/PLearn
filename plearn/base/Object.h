@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.32 2004/06/16 18:19:06 dorionc Exp $
+   * $Id: Object.h,v 1.33 2004/06/26 00:24:12 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -373,15 +373,6 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
     //! Completing the actual building of the object is left to the build_() and build() methods (see below).
     Object();
 
-    //! redefine this in subclasses
-    //! Should return a multiline string with a short description of what this
-    //! object does, as well as a description of available build-options
-    //! (and their default value)
-    static string help();
-
-    
-
-
   private:
 /*! This method should be redefined in subclasses and 
     do the actual building of the object according to
@@ -430,9 +421,6 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
 */
     virtual void print(ostream& out) const; 
 
-    // For temporary backward compatibility. To be removed ultimately. This simply returns an empty string now...
-    static string optionHelp();
-
     //! Reads and sets the value for the specified option from the specified stream
     void readOptionVal(PStream &in, const string &optionname);
     
@@ -454,8 +442,10 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
 
 /*!       This is a generic method to be able to set an option in an object in
       the most generic manner value is a string representation of the
-      value to be set.  Object::setOption causes an "Unknown option"
-      runtime error.
+      value to be set. It should only be called for initial construction or 
+      reloading of an object, prior to calling build();
+      To modify the options of an already built object, call changeOptions or changeOption instead. 
+      If no option with that name exists, it causes an "Unknown option" runtime error.
 */
     // This calls readOptionVal on a stringstream built from value
     void setOption(const string& optionname, const string& value);
@@ -467,6 +457,17 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
 */
     // This calls writeOptionVal into a string stream
     string getOption(const string &optionname) const;
+
+    /*! This method should be used, rather than setOption, when modifying 
+      some options of an already built object. 
+      Default version simply calls setOption, but subclasses should override it
+      to execute any code required to put the object in a consistent state.
+      If the set of options would put the object in an inconsistent state, a runtime error
+      should be issued. */
+    virtual void changeOptions(const map<string,string>& name_value);
+
+    //! Non-virtual method calls virtual changeOptions
+    void changeOption(const string& optionname, const string& value);
     
 /*!   DEPRECATED (use the declareOption / build_ mecanism instead, that provides automatic serialization)
   The write method should write a complete description of the object to the given

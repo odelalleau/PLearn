@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.28 2004/05/26 17:57:52 nova77 Exp $
+   * $Id: Object.cc,v 1.29 2004/06/26 00:24:12 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -56,25 +56,17 @@ using namespace std;
 Object::Object()
 {}
 
-PLEARN_IMPLEMENT_OBJECT(Object, "ONE LINE DESCR", "NO HELP");   
+PLEARN_IMPLEMENT_OBJECT(Object, "Base class for PLearn Objects", "NO HELP");   
 
 // by default, do nothing...
 void Object::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {}
-
-string Object::optionHelp() 
-{ return ""; }
 
 void Object::setOption(const string& optionname, const string& value)
 {
     istrstream in_(value.c_str());
     PStream in(&in_);
     readOptionVal(in, optionname);
-}
-
-string Object::help()
-{
-  return "Base class for PLearn Objects";
 }
 
 string Object::getOption(const string &optionname) const
@@ -87,6 +79,24 @@ string Object::getOption(const string &optionname) const
   string s(buf,n);
   out_.freeze(false); // return ownership to the stream, so that it may free it...
   return removeblanks(s);
+}
+
+void Object::changeOptions(const map<string,string>& name_value)
+{
+  map<string,string>::const_iterator it = name_value.begin();
+  map<string,string>::const_iterator itend = name_value.end();
+  while(it!=itend)
+    {
+      setOption(it->first, it->second);
+      ++it;
+    }
+}
+
+void Object::changeOption(const string& optionname, const string& value)
+{
+  map<string,string> name_value;
+  name_value[optionname] = value;
+  changeOptions(name_value);
 }
 
 void Object::build_()
@@ -253,7 +263,8 @@ void Object::newread(PStream &in)
           OptionList &options = getOptionList();
           OptionList::iterator it = find_if(options.begin(), options.end(),
                                             bind2nd(mem_fun(&OptionBase::isOptionNamed), optionname));
-          if (it != options.end() && ((*it)->flags() & in.option_flags_in) == 0)
+          // if (it != options.end() && ((*it)->flags() & in.option_flags_in) == 0)
+          if (it!=options.end() && (*it)->shouldBeSkipped() )
             (*it)->read_and_discard(in);
           else
             readOptionVal(in, optionname);

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PStreamBuf.cc,v 1.3 2004/02/20 21:11:44 chrish42 Exp $ 
+   * $Id: PStreamBuf.cc,v 1.4 2004/06/26 00:24:14 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PStreamBuf.cc */
@@ -42,15 +42,18 @@
 namespace PLearn {
 using namespace std;
 
-PStreamBuf::PStreamBuf(streamsize inbuf_capacity, streamsize outbuf_capacity, streamsize unget_capacity) 
+PStreamBuf::PStreamBuf(streamsize inbuf_capacity, streamsize outbuf_capacity, 
+                       streamsize unget_capacity)
   :ungetsize(unget_capacity),
    inbuf_chunksize(inbuf_capacity),
    inbuf(0), inbuf_p(0), inbuf_end(0),
-   readpos(0),
    outbuf_chunksize(outbuf_capacity),
    outbuf(0), outbuf_p(0), outbuf_end(0),
-   writepos(0)
+   is_readable(false),
+   is_writable(false),
+   is_random_accessible(false)
   {
+    build_();
   }
 
 PStreamBuf::~PStreamBuf() 
@@ -63,29 +66,6 @@ PStreamBuf::~PStreamBuf()
       delete[] outbuf;
     }
 }
-
-
-PLEARN_IMPLEMENT_ABSTRACT_OBJECT(PStreamBuf, "ONE LINE DESCR", "NO HELP");
-
-  void PStreamBuf::declareOptions(OptionList& ol)
-  {
-    declareOption(ol, "inbuf_capacity", &PStreamBuf::inbuf_chunksize, OptionBase::buildoption,
-                  "The capacity of the input buffer");
-    declareOption(ol, "outbuf_capacity", &PStreamBuf::outbuf_chunksize, OptionBase::buildoption,
-                  "The capacity of the output buffer");
-    declareOption(ol, "unget_capacity", &PStreamBuf::ungetsize, OptionBase::buildoption,
-                  "Maximum number of characters that are guaranteed you can unget");
-
-    // Now call the parent class' declareOptions
-    inherited::declareOptions(ol);
-  }
-
-  string PStreamBuf::help()
-  {
-    // ### Provide some useful description of what the class is ...
-    return 
-      "PStreamBuf is the base class for plearn stream buffers";
-  }
 
   void PStreamBuf::build_()
   {
@@ -111,6 +91,71 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(PStreamBuf, "ONE LINE DESCR", "NO HELP");
       }
   }
 
+ PStreamBuf::streamsize PStreamBuf::read_(char* p, streamsize n)
+ {
+   PLERROR("read_ not implemented for this PStremBuf");
+   return 0;
+ }
+
+  //! writes exactly n characters from p (unbuffered, must flush)
+  //! Default version issues a PLERROR
+ void PStreamBuf::write_(char* p, streamsize n)
+ {
+   PLERROR("write_ not implemented for this PStremBuf");
+ }
+
+  //! should change the position of the next read/write (seek)
+  //! Default version issues a PLERROR
+ void PStreamBuf::setpos_(streampos pos)
+ {
+   PLERROR("setpos_ not implemented for this PStremBuf");
+ }
+  
+  //! should return the position of the next read/write in 
+  //! number of bytes from start of file.
+  //! Default version issues a PLERROR
+ PStreamBuf::streampos PStreamBuf::getpos_()
+ {
+   PLERROR("getpos_ not implemented for this PStremBuf");
+   return 0;
+ }
+
+
+
+
+  /*
+
+ // Initially I planned to derive this class from Object. 
+ // But when attempting compilation I found out  back in include hell!!!
+ // (Object needs PStream which needs PStremBuf which needs Object)
+ // Getting out of this mess would not be easy: we need efficiency, so many of 
+ // the concerned calls really should stay inline (hence in the .h).
+ // Finally I opted to have it derive from PPoitable rather than Object.
+ // That's why all typical Object stuff are commented out.
+ // (Pascal)
+
+ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(PStreamBuf, "Base class for PLearn strem-buffers", "");
+
+  void PStreamBuf::declareOptions(OptionList& ol)
+  {
+    declareOption(ol, "inbuf_capacity", &PStreamBuf::inbuf_chunksize, OptionBase::buildoption,
+                  "The capacity of the input buffer");
+    declareOption(ol, "outbuf_capacity", &PStreamBuf::outbuf_chunksize, OptionBase::buildoption,
+                  "The capacity of the output buffer");
+    declareOption(ol, "unget_capacity", &PStreamBuf::ungetsize, OptionBase::buildoption,
+                  "Maximum number of characters that are guaranteed you can unget");
+
+    declareOption(ol, "is_readable", &PStreamBuf::is_readable, OptionBase::buildoption,
+                  "Is this an input stream?");
+    declareOption(ol, "is_writable", &PStreamBuf::is_writable, OptionBase::buildoption,
+                  "Is this an output stream?");
+    declareOption(ol, "is_random_accessible", &PStreamBuf::is_random_accessible, OptionBase::buildoption,
+                  "Can we use getpos and setpos on this stream?");
+
+    // Now call the parent class' declareOptions
+    inherited::declareOptions(ol);
+  }
+
   // ### Nothing to add here, simply calls build_
   void PStreamBuf::build()
   {
@@ -118,10 +163,14 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(PStreamBuf, "ONE LINE DESCR", "NO HELP");
     build_();
   }
 
-
   void PStreamBuf::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   {
     inherited::makeDeepCopyFromShallowCopy(copies);
   }
+
+  */
+
+
+
 
 } // end of namespace PLearn

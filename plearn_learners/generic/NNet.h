@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.h,v 1.18 2004/04/23 02:53:33 yoshua Exp $
+   * $Id: NNet.h,v 1.19 2004/06/26 00:24:15 plearner Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -138,12 +138,6 @@ using namespace std;
     NNet();
     virtual ~NNet();
     PLEARN_DECLARE_OBJECT(NNet);
-
-    // PLearner methods
-    /*
-    static string help();
-    virtual string getOptionsToSave() const;
-    */
 
     virtual void build();
     virtual void forget(); // simply calls initializeParams()

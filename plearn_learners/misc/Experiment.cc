@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Experiment.cc,v 1.16 2004/04/02 20:00:53 tihocan Exp $ 
+   * $Id: Experiment.cc,v 1.17 2004/06/26 00:24:15 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Experiment.cc */
@@ -51,7 +51,7 @@ Experiment::Experiment()
    save_test_outputs(false), save_test_costs(false)
   {}
 
-  PLEARN_IMPLEMENT_OBJECT(Experiment, "ONE LINE DESCR", "NO HELP");
+  PLEARN_IMPLEMENT_OBJECT(Experiment, "DEPRECATED: use PTester instead", "");
 
   void Experiment::declareOptions(OptionList& ol)
   {
@@ -73,17 +73,6 @@ Experiment::Experiment()
     declareOption(ol, "save_test_costs", &Experiment::save_test_costs, OptionBase::buildoption,
                   "If true, the costs of the test for split #k will be saved in Split#k/test_costs.pmat");
     inherited::declareOptions(ol);
-  }
-
-  string Experiment::help()
-  {
-    return 
-      "The Experiment class allows you to describe a typical learning experiment that you wish to perform, \n"
-      "as a training/testing of a learning algorithm on a particular dataset.\n"
-      "Detailed results for each split #k will be saved in sub-directory Split#k of the experiment directory. \n"
-      "Final results for each split and basic statistics across all splits will be saved in the results.summary \n"
-      "file in the experiment directory.\n"
-      + optionHelp();
   }
 
   void Experiment::build_()

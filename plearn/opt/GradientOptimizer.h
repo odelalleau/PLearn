@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.h,v 1.15 2004/02/20 21:11:48 chrish42 Exp $
+   * $Id: GradientOptimizer.h,v 1.16 2004/06/26 00:24:14 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -108,8 +108,8 @@ using namespace std;
     
   public:
 
-    virtual void oldwrite(ostream& out) const;
-    virtual void oldread(istream& in);
+    // virtual void oldwrite(ostream& out) const;
+    // virtual void oldread(istream& in);
     virtual real optimize();
     virtual bool optimizeN(VecStatsCollector& stats_coll);
 

@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.h,v 1.13 2004/02/20 21:14:46 chrish42 Exp $
+   * $Id: Learner.h,v 1.14 2004/06/26 00:24:15 plearner Exp $
    ******************************************************* */
 
 
@@ -249,13 +249,6 @@ using namespace std;
     //!  **** SUBCLASS WRITING: ****
     //! This method should be redefined in subclasses, to just call inherited::build() and then build_()
     virtual void build();
-
-    /* // All these have been replaced by the declareOptions system.
-    static string help();
-    virtual string getOptionsToSave() const;
-    virtual void readOptionVal(istream& in, const string& optionname);    
-    virtual void writeOptionVal(ostream& out, const string& optionname) const;
-    */
 
     //! Declare the train_set
     virtual void setTrainingSet(VMat training_set) { train_set = training_set; }

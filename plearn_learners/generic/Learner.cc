@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.cc,v 1.18 2004/05/13 20:23:45 nova77 Exp $
+   * $Id: Learner.cc,v 1.19 2004/06/26 00:24:15 plearner Exp $
    ******************************************************* */
 
 #include "Learner.h"
@@ -85,7 +85,7 @@ Learner::Learner(int the_inputsize, int the_targetsize, int the_outputsize)
   setTestStatistics(mean_stats() & stderr_stats());
 }
 
-PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Learner, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Learner, "DEPRECATED CLASS: Derive from PLearner instead", "NO HELP");
 void Learner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   Object::makeDeepCopyFromShallowCopy(copies);

@@ -45,7 +45,7 @@ namespace PLearn {
 using namespace std;
 
 
-PLEARN_IMPLEMENT_OBJECT(SequentialValidation, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(SequentialValidation, "The SequentialValidation class allows you to describe a typical sequential validation experiment that you wish to perform.", "NO HELP");
 
 SequentialValidation::SequentialValidation()
   : init_train_size(-1),
@@ -139,14 +139,6 @@ void SequentialValidation::declareOptions(OptionList& ol)
                 "Default: \"\".");
 
   inherited::declareOptions(ol);
-}
-
-string SequentialValidation::help()
-{
-  return
-    "The SequentialValidation class allows you to describe a typical sequential \n"
-    "validation experiment that you wish to perform........."
-    + optionHelp();
 }
 
 void SequentialValidation::run()

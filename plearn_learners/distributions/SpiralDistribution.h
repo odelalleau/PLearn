@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SpiralDistribution.h,v 1.7 2004/06/21 14:56:32 tihocan Exp $ 
+   * $Id: SpiralDistribution.h,v 1.8 2004/06/26 00:24:15 plearner Exp $ 
    ******************************************************* */
 
 /*! \file SpiralDistribution.h */
@@ -56,7 +56,7 @@ public:
   // * public build options *
   // ************************
 
-  // see implementation of help() and declareOptions() methods in .cc for description
+  // see implementation of and declareOptions() methods in .cc for description
   // of these options
   real lambda;
   real alpha;
@@ -96,9 +96,6 @@ public:
 
   //! simply calls inherited::build() then build_() 
   virtual void build();
-
-  //! Provides a help message describing this class
-  static string help();
 
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);

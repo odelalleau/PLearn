@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: OptionBase.h,v 1.6 2004/05/07 19:03:47 tihocan Exp $
+   * $Id: OptionBase.h,v 1.7 2004/06/26 00:24:12 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -62,7 +62,7 @@ class Object;
 class OptionBase: public PPointable
 {
 public:
-  typedef OBflag_t flag_t; // To change type of flag_t, change type of OBflag_t in pl_io.h instead
+  typedef unsigned int flag_t; // bit field
 
   //! 'buildoption' an option typically specified before calling the initial build 
   //! (semantically similat to a constructor parameter) ex: the number of hidden units in a neural net
@@ -97,6 +97,10 @@ public:
     description_(description) {}
 
   virtual void read(Object* o, PStream& in) const = 0;
+
+  //! Should this option be skipped upon reading it? (i.e. don't read it in any variable)
+  virtual bool shouldBeSkipped() const; 
+
   virtual void read_and_discard(PStream& in) const = 0;
   virtual void write(const Object* o, PStream& out) const = 0;
 

@@ -14,7 +14,11 @@ TextSenseSequenceVMatrix::TextSenseSequenceVMatrix()
   //build_();
 }
 
-PLEARN_IMPLEMENT_OBJECT(TextSenseSequenceVMatrix, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(TextSenseSequenceVMatrix,
+                        "VMat class that takes another VMat which contains a sequence (rows) "
+                        "of words/sense/POS triplets extracted from a corpus and implements a "
+                        "representation of a target word and its context.",
+                        "");
 
 void TextSenseSequenceVMatrix::getRow(int i, Vec v) const
 {
@@ -403,13 +407,6 @@ void TextSenseSequenceVMatrix::declareOptions(OptionList& ol)
   declareOption(ol, "dvm", &TextSenseSequenceVMatrix::dvm, OptionBase::buildoption,"VMatrix that contains the triplets word/sense/POS of a corpus");
   declareOption(ol, "rand_syn", &TextSenseSequenceVMatrix::rand_syn, OptionBase::buildoption,"Use same-sense random permutation of words");
   inherited::declareOptions(ol);
-}
-
-string TextSenseSequenceVMatrix::help()
-{
-  return 
-    "VMat class that takes another VMat which contains a sequence (rows) of words/sense/POS triplets extracted from a corpus and implements a representation of a target word and its context.\n"
-    + optionHelp();
 }
 
 void TextSenseSequenceVMatrix::build_()

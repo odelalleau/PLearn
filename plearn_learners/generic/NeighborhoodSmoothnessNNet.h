@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeighborhoodSmoothnessNNet.h,v 1.8 2004/02/28 20:28:28 tihocan Exp $
+   * $Id: NeighborhoodSmoothnessNNet.h,v 1.9 2004/06/26 00:24:15 plearner Exp $
    ******************************************************* */
 
 /*! \file PLearn/plearn_learners/classifiers/NeighborhoodSmoothnessNNet.h */
@@ -141,12 +141,6 @@ class NeighborhoodSmoothnessNNet: public PLearner
     NeighborhoodSmoothnessNNet();
     virtual ~NeighborhoodSmoothnessNNet();
     PLEARN_DECLARE_OBJECT(NeighborhoodSmoothnessNNet);
-
-    // PLearner methods
-    /*
-    static string help();
-    virtual string getOptionsToSave() const;
-    */
 
     virtual void build();
     virtual void forget(); // simply calls initializeParams()

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LimitedGaussianSmoother.cc,v 1.9 2004/02/20 21:11:46 chrish42 Exp $ 
+   * $Id: LimitedGaussianSmoother.cc,v 1.10 2004/06/26 00:24:14 plearner Exp $ 
    ******************************************************* */
 
 /*! \file LimitedGaussianSmoother.cc */
@@ -74,14 +74,6 @@ LimitedGaussianSmoother::LimitedGaussianSmoother(real window_size_wrt_sigma_, re
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
-  }
-
-  string LimitedGaussianSmoother::help()
-  {
-    // ### Provide some useful description of what the class is ...
-    return 
-      "LimitedGaussianSmoother implements a ... limited gaussian smoother."
-      + optionHelp();
   }
 
   void LimitedGaussianSmoother::build_()

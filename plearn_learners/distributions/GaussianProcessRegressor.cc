@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: GaussianProcessRegressor.cc,v 1.8 2004/02/20 21:14:46 chrish42 Exp $
+   * $Id: GaussianProcessRegressor.cc,v 1.9 2004/06/26 00:24:15 plearner Exp $
    ******************************************************* */
 
 #include "GaussianProcessRegressor.h"
@@ -51,7 +51,7 @@ GaussianProcessRegressor::GaussianProcessRegressor() :
   max_nb_evectors(-1)
 {}
 
-PLEARN_IMPLEMENT_OBJECT(GaussianProcessRegressor, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(GaussianProcessRegressor, "Basic version of Gaussian Process regression.", "NO HELP");
 
 void GaussianProcessRegressor::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
@@ -70,11 +70,6 @@ void GaussianProcessRegressor::makeDeepCopyFromShallowCopy(map<const void*, void
   deepCopyField(eigenvectors, copies);
   deepCopyField(eigenvalues, copies);
   deepCopyField(meanK, copies);
-}
-
-string GaussianProcessRegressor::help()
-{
-  return "Basic version of Gaussian Process regression.\n";
 }
 
 void GaussianProcessRegressor::setInput(const Vec& input)

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.cc,v 1.30 2004/03/09 22:20:54 chapados Exp $
+   * $Id: GradientOptimizer.cc,v 1.31 2004/06/26 00:24:14 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -99,49 +99,6 @@ void GradientOptimizer::declareOptions(OptionList& ol)
 }
 
   /*
-string GradientOptimizer::help()
-{
-  return 
-    "GradientOptimizer is the simple usual gradient descent algorithm \n"
-    " (the number of samples on which to estimate gradients before an \n"
-    "  update, which determines whether we are performing 'batch' \n"
-    "  'stochastic' or even 'minibatch', is currently specified outside \n"
-    "  this class, typically in the numer of s/amples of the meanOf function \n"
-    "  to be optimized, as its 'nsamples' parameter). \n"
-    "Options for GradientOptimizer are [ option_name: <type> (default) ]: \n"
-    "  - start_learning_rate: <real> (0.01) \n"
-    "    the initial learning rate \n"
-    "  - decrease_constant: <real> (0) \n"
-    "    the learning rate decrease constant \n"
-    "\n"
-    "GradientOptimizer derives form Optimizer. \n"
-    + Optimizer::help();
-}
-
-void GradientOptimizer::readOptionVal(istream& in, const string& optionname)
-{
-  if (optionname=="start_learning_rate") 
-    ::read(in, start_learning_rate);
-  else if (optionname=="decrease_constant")
-    ::read(in, decrease_constant);
-  else 
-    inherited::readOptionVal(in, optionname);
-}
-
-
-
-void GradientOptimizer::writeOptionVal(ostream& out, const string& optionname) const
-{
-  if (optionname=="start_learning_rate") 
-    ::write(out, start_learning_rate);
-  else if (optionname=="decrease_constant")
-    ::write(out, decrease_constant);
-  else 
-    inherited::writeOptionVal(out, optionname);  
-}
-*/
-
-//void GradientOptimizer::write(ostream& out) const
 void GradientOptimizer::oldwrite(ostream& out) const
 {
   writeHeader(out, "GradientOptimizer", 0);
@@ -161,9 +118,22 @@ void GradientOptimizer::oldread(istream& in)
   readField(in, "decrease_constant", decrease_constant);
   readFooter(in, "GradientOptimizer");
 }
+*/
 
-
-PLEARN_IMPLEMENT_OBJECT(GradientOptimizer, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(GradientOptimizer, "Optimization by gradient descent.", 
+    "GradientOptimizer is the simple usual gradient descent algorithm \n"
+    " (the number of samples on which to estimate gradients before an \n"
+    "  update, which determines whether we are performing 'batch' \n"
+    "  'stochastic' or even 'minibatch', is currently specified outside \n"
+    "  this class, typically in the numer of s/amples of the meanOf function \n"
+    "  to be optimized, as its 'nsamples' parameter). \n"
+    "Options for GradientOptimizer are [ option_name: <type> (default) ]: \n"
+    "  - start_learning_rate: <real> (0.01) \n"
+    "    the initial learning rate \n"
+    "  - decrease_constant: <real> (0) \n"
+    "    the learning rate decrease constant \n"
+    "\n"
+    "GradientOptimizer derives form Optimizer. \n");
 
 static bool displayvg=false;
 

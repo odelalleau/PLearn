@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.34 2004/04/14 16:30:15 plearner Exp $
+   * $Id: StatsCollector.cc,v 1.35 2004/06/26 00:24:14 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,10 @@
 namespace PLearn {
 using namespace std;
 
-  PLEARN_IMPLEMENT_OBJECT(StatsCollector, "ONE LINE DESCR", "NO HELP");
+  PLEARN_IMPLEMENT_OBJECT(StatsCollector, "Collects basic statistics",     "A StatsCollector allows to compute basic global statistics for a series of numbers,\n"
+    "as well as statistics within automatically determined ranges.\n"
+    "The first maxnvalues encountered values will be used as reference points to define\n"
+    "the ranges, so to get reasonable results, your sequence should be iid, and NOT sorted!");
 
   StatsCollector::StatsCollector(int the_maxnvalues)
     : maxnvalues(the_maxnvalues),
@@ -123,17 +126,6 @@ void StatsCollector::build()
 {
   inherited::build();
   build_();
-}
-
-string StatsCollector::help()
-{
-  // ### Provide some useful description of what the class is ...
-  return 
-    "A StatsCollector allows to compute basic global statistics for a series of numbers,\n"
-    "as well as statistics within automatically determined ranges.\n"
-    "The first maxnvalues encountered values will be used as reference points to define\n"
-    "the ranges, so to get reasonable results, your sequence should be iid, and NOT sorted!"
-  + optionHelp();
 }
 
 void StatsCollector::forget()

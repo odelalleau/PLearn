@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ManualBinner.h,v 1.6 2004/02/20 21:11:46 chrish42 Exp $ 
+   * $Id: ManualBinner.h,v 1.7 2004/06/26 00:24:14 plearner Exp $ 
    ******************************************************* */
 
 /*! \file ManualBinner.h */
@@ -93,9 +93,6 @@ protected:
 public:
   // simply calls inherited::build() then build_() 
   virtual void build();
-
-  //! Provides a help message describing this class
-  static string help();
 
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);

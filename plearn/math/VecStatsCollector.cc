@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.19 2004/03/09 22:20:48 chapados Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.20 2004/06/26 00:24:14 plearner Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -47,7 +47,10 @@ VecStatsCollector::VecStatsCollector()
   :maxnvalues(0), compute_covariance(false)
   {}
 
-PLEARN_IMPLEMENT_OBJECT(VecStatsCollector, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(VecStatsCollector, "Collects basic statistics on a vector", "VecStatsCollector allows to collect statistics on a series of vectors.\n"
+      "Individual vectors x are presented by calling update(x), and this class will\n"
+      "collect both individual statistics for each element (as a Vec<StatsCollector>)\n"
+      "as well as (optionally) compute the covariance matrix.");
 
 void VecStatsCollector::declareOptions(OptionList& ol)
 {
@@ -73,17 +76,6 @@ void VecStatsCollector::declareOptions(OptionList& ol)
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
   }
-
-string VecStatsCollector::help()
-{
-    // ### Provide some useful description of what the class is ...
-    return 
-      "VecStatsCollector allows to collect statistics on a series of vectors.\n"
-      "Individual vectors x are presented by calling update(x), and this class will\n"
-      "collect both individual statistics for each element (as a Vec<StatsCollector>)\n"
-      "as well as (optionally) compute the covariance matrix."
-      + optionHelp();
-}
 
 double VecStatsCollector::getStat(const string& statspec)
 {

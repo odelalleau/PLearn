@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ClassifierFromDensity.h,v 1.4 2004/05/25 01:17:39 yoshua Exp $ 
+   * $Id: ClassifierFromDensity.h,v 1.5 2004/06/26 00:24:14 plearner Exp $ 
    ******************************************************* */
 
 /*! \file ClassifierFromDensity.h */
@@ -93,9 +93,6 @@ public:
 
   //! simply calls inherited::build() then build_() 
   virtual void build();
-
-  //! Provides a help message describing this class
-  static string help();
 
   //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);

@@ -45,7 +45,6 @@ using namespace std;
 
 pl_stream_raw raw;
 pl_stream_clear_flags clear_flags;
-pl_stream_option_flags option_flags;
 pl_stream_initiate initiate;
 
 

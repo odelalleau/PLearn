@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ClassifierFromDensity.cc,v 1.9 2004/05/25 01:17:38 yoshua Exp $ 
+   * $Id: ClassifierFromDensity.cc,v 1.10 2004/06/26 00:24:14 plearner Exp $ 
    ******************************************************* */
 
 /*! \file ClassifierFromDensity.cc */
@@ -54,7 +54,10 @@ ClassifierFromDensity::ClassifierFromDensity()
     // build_();
   }
 
-  PLEARN_IMPLEMENT_OBJECT(ClassifierFromDensity, "ONE LINE DESCR", "NO HELP");
+  PLEARN_IMPLEMENT_OBJECT(ClassifierFromDensity, "A classifier built from density estimators using Bayes' rule.", 
+                          "ClassifierFromDensity allowd to build a classifier\n"
+                          "by building one density estimator for each class, \n"
+                          "and using Bayes rule to combine them. \n");
 
   void ClassifierFromDensity::declareOptions(OptionList& ol)
   {
@@ -72,13 +75,6 @@ ClassifierFromDensity::ClassifierFromDensity()
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
-  }
-
-  string ClassifierFromDensity::help()
-  {
-    return "ClassifierFromDensity allowd to build a classifier\n"
-      "by building one density estimator for each class, \n"
-      "and using Bayes rule to combine them. \n";
   }
 
   void ClassifierFromDensity::build_()

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Experiment.h,v 1.6 2004/02/20 21:14:48 chrish42 Exp $ 
+   * $Id: Experiment.h,v 1.7 2004/06/26 00:24:15 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Experiment.h */
@@ -95,9 +95,6 @@ protected:
 public:
   // simply calls inherited::build() then build_() 
   virtual void build();
-
-  //! Provides a help message describing this class
-  static string help();
 
   //! Declares name and deepCopy methods
   PLEARN_DECLARE_OBJECT(Experiment);

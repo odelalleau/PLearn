@@ -50,7 +50,9 @@ ConditionalGaussianDistribution::ConditionalGaussianDistribution()
 }
 
 
-PLEARN_IMPLEMENT_OBJECT(ConditionalGaussianDistribution, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(ConditionalGaussianDistribution,
+                        "ConditionalGaussianDistribution is a gaussian distribution "
+                        "in which the parameters could be learned or specified manually.", "");
 
 void ConditionalGaussianDistribution::declareOptions(OptionList& ol)
 {
@@ -71,16 +73,6 @@ void ConditionalGaussianDistribution::declareOptions(OptionList& ol)
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
 }
-
-  string ConditionalGaussianDistribution::help()
-  {
-    // ### Provide some useful description of what the class is ...
-    return 
-      "ConditionalGaussianDistribution is a gaussian distribution in which the \n."
-      "parameters could be learned or specified manually."
-      + optionHelp();
-  }
-
 
   void ConditionalGaussianDistribution::build()
   {
