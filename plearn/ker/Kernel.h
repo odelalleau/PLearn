@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.20 2004/03/12 19:03:47 dorionc Exp $
+   * $Id: Kernel.h,v 1.21 2004/04/02 19:56:54 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -45,7 +45,7 @@
 
 #include "Object.h"
 #include "VMat.h"
-#include "PLMPI.h"
+//#include "PLMPI.h"
 
 namespace PLearn {
 using namespace std;

@@ -36,19 +36,17 @@
 
 
 /* *******************************************************      
-   * $Id: NegOutputCostFunction.cc,v 1.2 2004/02/20 21:11:45 chrish42 Exp $
+   * $Id: NegOutputCostFunction.cc,v 1.3 2004/04/02 19:56:54 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "NegOutputCostFunction.h"
 
-// From Old Kernel.cc: all includes are putted in every file.
-// To be revised manually 
-#include <cmath>
+/*#include <cmath>
 #include "stringutils.h"
 #include "Kernel.h"
 #include "TMat_maths.h"
-#include "PLMPI.h"
+#include "PLMPI.h"*/
 //////////////////////////
 namespace PLearn {
 using namespace std;

@@ -36,20 +36,18 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.19 2004/03/12 19:11:08 dorionc Exp $
+   * $Id: Kernel.cc,v 1.20 2004/04/02 19:56:54 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "Kernel.h"
 #include "ProgressBar.h"
 
-// From Old Kernel.cc: all includes are putted in every file.
-// To be revised manually 
-#include <cmath>
+/*#include <cmath>
 #include "stringutils.h"
 #include "Kernel.h"
 #include "TMat_maths.h"
-#include "PLMPI.h"
+#include "PLMPI.h"*/
 //////////////////////////
 namespace PLearn {
 using namespace std;

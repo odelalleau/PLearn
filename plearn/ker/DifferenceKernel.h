@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DifferenceKernel.h,v 1.2 2004/02/20 21:11:45 chrish42 Exp $
+   * $Id: DifferenceKernel.h,v 1.3 2004/04/02 19:56:54 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -65,13 +65,7 @@ public:
 };
 DECLARE_OBJECT_PTR(DifferenceKernel);
 
-inline CostFunc output_minus_target(int singleoutputindex=-1)
-{
-  if(singleoutputindex>=0)
-    return new SelectedOutputCostFunction(new DifferenceKernel(),singleoutputindex); 
-  else
-    return new DifferenceKernel(); 
-}
+inline CostFunc output_minus_target(int singleoutputindex=-1);
 
 } // end of namespace PLearn
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DistanceKernel.h,v 1.3 2004/02/20 21:11:45 chrish42 Exp $
+   * $Id: DistanceKernel.h,v 1.4 2004/04/02 19:56:54 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,7 +44,6 @@
 #define DistanceKernel_INC
 
 #include "Kernel.h"
-#include "SelectedOutputCostFunction.h"
 
 namespace PLearn {
 using namespace std;
@@ -71,14 +70,7 @@ protected:
 };
 DECLARE_OBJECT_PTR(DistanceKernel);
 
-inline CostFunc absolute_deviation(int singleoutputindex=-1) 
-{ 
-  if(singleoutputindex>=0)
-    return new SelectedOutputCostFunction(new DistanceKernel(1.0),singleoutputindex); 
-  else
-    return new DistanceKernel(1.0); 
-}
-
+inline CostFunc absolute_deviation(int singleoutputindex=-1);
 
 } // end of namespace PLearn
 
