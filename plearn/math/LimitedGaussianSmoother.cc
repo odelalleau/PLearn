@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LimitedGaussianSmoother.cc,v 1.4 2002/11/20 17:05:05 zouave Exp $ 
+   * $Id: LimitedGaussianSmoother.cc,v 1.5 2002/12/02 22:10:58 zouave Exp $ 
    ******************************************************* */
 
 /*! \file LimitedGaussianSmoother.cc */
@@ -118,7 +118,7 @@ LimitedGaussianSmoother::LimitedGaussianSmoother(real window_size_wrt_sigma_, re
   }
 
 
-real LimitedGaussianSmoother::smooth(const Vec& source_function, Vec smoothed_function, 
+real LimitedGaussianSmoother::smooth(const Vec& source_function, Vec& smoothed_function, 
 				     Vec bin_positions, Vec dest_bin_positions) const
 {
   //parzen regressor?? kernel smoothing??
@@ -206,11 +206,11 @@ real LimitedGaussianSmoother::smooth(const Vec& source_function, Vec smoothed_fu
       
 
 
-	  /*
+	  / *
       int min_j= i-static_cast<int>(window_size), max_j= i+static_cast<int>(window_size);
       if(min_j < 0) min_j= 0;
       if(max_j > smoothed_function.length()) max_j= smoothed_function.length();
-      */
+      * /
       real sum_weights= 0.0;
       for(int j= min_j; j < max_j-1; ++j)
 	{

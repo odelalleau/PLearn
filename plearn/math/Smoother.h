@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Smoother.h,v 1.1 2002/11/05 16:34:32 zouave Exp $ 
+   * $Id: Smoother.h,v 1.2 2002/12/02 22:11:05 zouave Exp $ 
    ******************************************************* */
 
 /*! \file Smoother.h */
@@ -116,7 +116,7 @@ public:
   // the optional bin_positions vector has length 0, or 1 more than source_function.
   // By default (if not provided) the dest_bin_positions are assumed the same as the source bin_positions.
   // Returns integral(smoothed_function).
-  virtual real smooth(const Vec& source_function, Vec smoothed_function, 
+  virtual real smooth(const Vec& source_function, Vec& smoothed_function, 
 		      Vec bin_positions = Vec(), Vec dest_bin_positions = Vec()) const = 0;
 
   //   real smooth(const HistogramCDF& source_cdf, HistogramCDF& dest_cdf);

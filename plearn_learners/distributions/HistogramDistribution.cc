@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HistogramDistribution.cc,v 1.5 2002/11/18 15:59:34 zouave Exp $ 
+   * $Id: HistogramDistribution.cc,v 1.6 2002/12/02 22:11:08 zouave Exp $ 
    ******************************************************* */
 
 /*! \file HistogramDistribution.cc */
@@ -242,12 +242,23 @@ double HistogramDistribution::survival_fn(const Vec& x) const
   if(x.size() != 1)
     PLERROR("survival_fn implemented only for reals (vec size == 1).");
 
-  return survival_values[find_bin(x[0])];
+  int bin= find_bin(x[0]);
+  if(bin < 0)
+    if(x[0] < bin_positions[0])
+      return 1.0;
+    else
+      return 0.0;
+  
+  if(x[0] < bin_positions[bin] && bin >= 1)
+    return survival_values[bin-1] + (x[0] - bin_positions[bin-1]) * 
+      (survival_values[bin] - survival_values[bin-1]) / (bin_positions[bin] - bin_positions[bin-1]);
+  
+  return survival_values[bin];
 }
 
 double HistogramDistribution::cdf(const Vec& x) const
 { 
-  return 1-survival_fn(x);
+  return 1.0-survival_fn(x);
 }
 
 double HistogramDistribution::expectation() const
@@ -272,15 +283,23 @@ double HistogramDistribution::variance() const
   return abs(sumsq-(sum*sum)/n)/n;
 }
 
+double HistogramDistribution::prob_in_range(const Vec& x0, const Vec& x1) const
+{
+  return survival_fn(x0) - survival_fn(x1);
+}
+
+
 int HistogramDistribution::find_bin(real x) const
 {
-  int b= 0, e= bin_positions.length()-1, p= b+(e-b)/2;
+  int b= 0, e= bin_positions.length()-2, p= b+(e-b)/2;
 
-  if(x < bin_positions[b] || x >= bin_positions[e])
+  if(x < bin_positions[b] || x >= bin_positions[e+1])
     return -1;
 
   while(b < e)
     {
+      if(bin_positions[p] == x)
+	return p;
       if(bin_positions[p] > x)
 	e= p-1;
       else

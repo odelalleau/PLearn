@@ -1,8 +1,12 @@
+
+
 // -*- C++ -*-
 
-// LimitedGaussianSmoother.h
+// ConditionalCDFSmoother.h
 // 
-// Copyright (C) 2002 Xavier Saint-Mleux
+// Copyright (C) *YEAR* *AUTHOR(S)* 
+// ...
+// Copyright (C) *YEAR* *AUTHOR(S)* 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,37 +37,28 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LimitedGaussianSmoother.h,v 1.3 2002/12/02 22:10:58 zouave Exp $ 
+   * $Id: ConditionalCDFSmoother.h,v 1.1 2002/12/02 22:10:56 zouave Exp $ 
    ******************************************************* */
 
-/*! \file LimitedGaussianSmoother.h */
-#ifndef LimitedGaussianSmoother_INC
-#define LimitedGaussianSmoother_INC
+/*! \file ConditionalCDFSmoother.h */
+#ifndef ConditionalCDFSmoother_INC
+#define ConditionalCDFSmoother_INC
 
+#include "HistogramDistribution.h"
 #include "Smoother.h"
-#include <cmath>
 
 namespace PLearn <%
 using namespace std;
 
-
-// smoothed_function[k] = sum_{j=max(0,k-window_size)}^{min(l-1,k+window_size)} w_{k,j} source_function[j]
-//                        / sum_{j=max(0,k-window_size)}^{min(l-1,k+window_size)} w_{k,j} 
-// with w_{k,j} = phi(bin_positions[j+1];mu_k,sigma_k)-phi(bin_positions[j];mu_k,sigma_k)
-// where mu_k = 0.5*(bin_positions[k+1]+bin_positions[k]),
-//       sigma_k = bin_positions[k+window_size]-bin_positions[k]
-// where phi(x;mu,sigma) = cdf of normal(mu,sigma) at x,
-// window_size = window_size_wrt_sigma * sigma_bin
-
-class LimitedGaussianSmoother: public Smoother
+class ConditionalCDFSmoother: public Smoother
 {
 protected:
   // *********************
   // * protected options *
   // *********************
 
-  real window_size_wrt_sigma, sigma_bin;
-
+  // ### declare protected option fields (such as learnt parameters) here
+  // ...
     
 public:
 
@@ -73,8 +68,7 @@ public:
   // * public build options *
   // ************************
 
-  // ### declare public option fields (such as build options) here
-  // ...
+  PP<HistogramDistribution> prior_cdf;
 
   // ****************
   // * Constructors *
@@ -82,11 +76,8 @@ public:
 
   // Default constructor, make sure the implementation in the .cc
   // initializes all fields to reasonable default values.
-  LimitedGaussianSmoother();
-
-
-  LimitedGaussianSmoother(real window_size_wrt_sigma_, real sigma_bin_);
-
+  ConditionalCDFSmoother();
+  ConditionalCDFSmoother(PP<HistogramDistribution>& prior_cdf_);
 
   // ******************
   // * Object methods *
@@ -113,22 +104,30 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
-  DECLARE_NAME_AND_DEEPCOPY(LimitedGaussianSmoother);
+  DECLARE_NAME_AND_DEEPCOPY(ConditionalCDFSmoother);
 
 
   /****
-   * Smoother methods
+   * ConditionalCDFSmoother methods
    */
 
  public:
+  // The source function is either f(i) = source_function[i] as a function of i
+  // or if bin_positions is provided (non-zero length), 
+  //    f(x) = source_function[i]
+  //      where i is s.t. bin_positions[i]>x>=bin_positions[i+1]
+  // the optional bin_positions vector has length 0, or 1 more than source_function.
+  // By default (if not provided) the dest_bin_positions are assumed the same as the source bin_positions.
+  // Returns integral(smoothed_function).
   virtual real smooth(const Vec& source_function, Vec& smoothed_function, 
 		      Vec bin_positions = Vec(), Vec dest_bin_positions = Vec()) const;
 
+  //   real smooth(const HistogramCDF& source_cdf, HistogramCDF& dest_cdf);
 
 };
 
 // Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(LimitedGaussianSmoother);
+  DECLARE_OBJECT_PTR(ConditionalCDFSmoother);
   
 %> // end of namespace PLearn
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HistogramDistribution.h,v 1.5 2002/11/20 17:05:11 zouave Exp $ 
+   * $Id: HistogramDistribution.h,v 1.6 2002/12/02 22:11:09 zouave Exp $ 
    ******************************************************* */
 
 /*! \file HistogramDistribution.h */
@@ -50,11 +50,11 @@ using namespace std;
 class HistogramDistribution: public Distribution
 {
 protected:
-public: //TEMP!!! s/b protected -xsm  
   // *********************
   // * protected options *
   // *********************
-
+    
+public:
   //! there is one more bin position than number of bins, all the bins are supposed adjacent
   Vec bin_positions;
 
@@ -73,8 +73,6 @@ public: //TEMP!!! s/b protected -xsm
 
   bool smooth_density; //if false, smoothing is done on survival
 
-    
-public:
 
   typedef Distribution inherited;
 
@@ -157,10 +155,12 @@ public:
   //! return Var[X]
   virtual double variance() const;
 
+  //! return P(x0 < X < x1)
+  virtual double prob_in_range(const Vec& x0, const Vec& x1) const;
 
-protected:
+  //protected:
   //the following methods are used internally by HistogramDistribution
-
+public:
   //! Find the bin where x belongs; -1 if x is out of range.
   int find_bin(real x) const;
 

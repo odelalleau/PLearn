@@ -17,7 +17,7 @@ DERIVEDCLASS::DERIVEDCLASS()
 
   IMPLEMENT_NAME_AND_DEEPCOPY(DERIVEDCLASS);
 
-  void DERIVECLASS::declareOptions(OptionList& ol)
+  void DERIVEDCLASS::declareOptions(OptionList& ol)
   {
     // ### Declare all of this object's options here
     // ### For the "flags" of each option, you should typically specify  
@@ -34,11 +34,11 @@ DERIVEDCLASS::DERIVEDCLASS()
     inherited::declareOptions(ol);
   }
 
-  string DERIVECLASS::help() const
+  string DERIVEDCLASS::help() const
   {
     // ### Provide some useful description of what the class is ...
     return 
-      "DERIVECLASS implements a ..."
+      "DERIVEDCLASS implements a ..."
       + optionHelp();
   }
 
@@ -76,7 +76,7 @@ DERIVEDCLASS::DERIVEDCLASS()
   }
 
 
-real DERIVEDCLAS::smooth(const Vec& source_function, Vec smoothed_function, 
+real DERIVEDCLASS::smooth(const Vec& source_function, Vec smoothed_function, 
 		      Vec bin_positions = Vec(), Vec dest_bin_positions = Vec()) const
 {
   PLERROR("smooth not implemented for DERIVEDCLASS.");
