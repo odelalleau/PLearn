@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectColumnsVMatrix.cc,v 1.10 2004/09/14 16:04:39 chrish42 Exp $
+   * $Id: SelectColumnsVMatrix.cc,v 1.11 2004/10/26 14:19:00 tihocan Exp $
    ******************************************************* */
 
 #include "SelectColumnsVMatrix.h"
@@ -48,30 +48,36 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(SelectColumnsVMatrix,
     "Selects variables from a source matrix according to given vector of indices.",
-    "Alternatively, the variables can be given by their names."
+    "Alternatively, the variables can be given by their names. In this case, if a\n"
+    "field does not exist and the 'extend_with_missing' option is set to 'true',\n"
+    "the field will be added and filled with missing values.\n"
 );
 
 //////////////////////////
 // SelectColumnsVMatrix //
 //////////////////////////
 SelectColumnsVMatrix::SelectColumnsVMatrix()
+: extend_with_missing(false)
 {}
 
-SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source, TVec<string> the_fields)
-: fields(the_fields)
+SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source, TVec<string> the_fields, bool the_extend_with_missing)
+: extend_with_missing(the_extend_with_missing),
+  fields(the_fields)
 {
   source = the_source;
   build_();
 }
 
 SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source, TVec<int> the_indices)
-: indices(the_indices)
+: extend_with_missing(false),
+  indices(the_indices)
 {
   source = the_source;
   build_();
 }
 
 SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source, Vec the_indices)
+: extend_with_missing(false)
 {
   source = the_source;
   indices.resize(the_indices.length());
@@ -80,15 +86,35 @@ SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source, Vec the_indices)
   build_();
 }
 
-real SelectColumnsVMatrix::get(int i, int j) const
-{ return source->get(i, indices[j]); }
-
-void SelectColumnsVMatrix::getSubRow(int i, int j, Vec v) const
-{
-  for(int jj=0; jj<v.length(); jj++)
-    v[jj] = source->get(i, indices[j+jj]); 
+/////////
+// get //
+/////////
+real SelectColumnsVMatrix::get(int i, int j) const {
+  static int col;
+  col = indices[j];
+  if (col == -1)
+    return MISSING_VALUE;
+  return source->get(i, col);
 }
 
+///////////////
+// getSubRow //
+///////////////
+void SelectColumnsVMatrix::getSubRow(int i, int j, Vec v) const
+{
+  static int col;
+  for(int jj=0; jj<v.length(); jj++) {
+    col = indices[j+jj];
+    if (col == -1)
+      v[jj] = MISSING_VALUE;
+    else
+    v[jj] = source->get(i, col); 
+  }
+}
+
+////////////////////
+// declareOptions //
+////////////////////
 void SelectColumnsVMatrix::declareOptions(OptionList &ol)
 {
   declareOption(ol, "fields", &SelectColumnsVMatrix::fields, OptionBase::buildoption,
@@ -97,13 +123,21 @@ void SelectColumnsVMatrix::declareOptions(OptionList &ol)
   declareOption(ol, "indices", &SelectColumnsVMatrix::indices, OptionBase::buildoption,
       "The array of column indices to extract.");
 
+  declareOption(ol, "extend_with_missing", &SelectColumnsVMatrix::extend_with_missing, OptionBase::buildoption,
+      "If set to 1, then fields specified in the 'fields' option that do not exist\n"
+      "in the source VMatrix will be filled with missing values.");
+
   inherited::declareOptions(ol);
 }
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void SelectColumnsVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(indices, copies);
+  deepCopyField(fields, copies);
 }
 
 ///////////
@@ -123,19 +157,35 @@ void SelectColumnsVMatrix::build_()
   if (source) {
     if (fields.isNotEmpty()) {
       // Find out the indices from the fields.
-      indices.clear();
+      indices.resize(0);
       for (int i = 0; i < fields.length(); i++) {
         string the_field = fields[i];
-        indices.append(source->getFieldIndex(the_field));
+        int the_index = source->fieldIndex(the_field);
+        if (!extend_with_missing && the_index == -1)
+          // This field does not exist in the source VMat.
+          PLERROR("In SelectColumnsVMatrix::build_ - Unknown field (%s) in source VMat (you may want to use the 'extend_with_missing' option)", the_field.c_str());
+        indices.append(the_index);
       }
     }
     width_ = indices.length();
     length_ = source->length();
     // Copy the appropriate VMFields
     fieldinfos.resize(width());
-    if (source->getFieldInfos().size() > 0)
-      for (int i=0; i<width(); ++i)
-        fieldinfos[i] = source->getFieldInfos()[indices[i]];
+    if (source->getFieldInfos().size() > 0) {
+      for (int i=0; i<width(); ++i) {
+        int col = indices[i];
+        if (col == -1) {
+          if (extend_with_missing)
+            // This must be because it is a field that did not exist in
+            // the source VMat.
+            fieldinfos[i] = VMField(fields[i]);
+          else
+            PLERROR("In SelectColumnsVMatrix::build_ - '-1' is not a valid value in indices");
+        } else {
+          fieldinfos[i] = source->getFieldInfos(col);
+        }
+      }
+    }
   }
 }
 
@@ -143,29 +193,46 @@ void SelectColumnsVMatrix::build_()
 // getStringToRealMapping //
 ////////////////////////////
 const map<string,real>& SelectColumnsVMatrix::getStringToRealMapping(int col) const {
-  return source->getStringToRealMapping(indices[col]);
+  static int the_col;
+  static map<string, real> empty_mapping;
+  the_col = indices[col];
+  if (the_col == -1)
+    return empty_mapping;
+  return source->getStringToRealMapping(the_col);
 }
 
 //////////////////
 // getStringVal //
 //////////////////
 real SelectColumnsVMatrix::getStringVal(int col, const string & str) const {
-  return source->getStringVal(indices[col], str);
+  static int the_col;
+  the_col = indices[col];
+  if (the_col == -1)
+    return MISSING_VALUE;
+  return source->getStringVal(the_col, str);
 }
-
 
 ////////////////////////////
 // getRealToStringMapping //
 ////////////////////////////
 const map<real,string>& SelectColumnsVMatrix::getRealToStringMapping(int col) const {
-  return source->getRealToStringMapping(indices[col]);
+  static int the_col;
+  static map<real, string> empty_mapping;
+  the_col = indices[col];
+  if (the_col == -1)
+    return empty_mapping;
+  return source->getRealToStringMapping(the_col);
 }
 
 //////////////////
 // getValString //
 //////////////////
 string SelectColumnsVMatrix::getValString(int col, real val) const {
-  return source->getValString(indices[col], val);
+  static int the_col;
+  the_col = indices[col];
+  if (the_col == -1)
+    return "";
+  return source->getValString(the_col, val);
 }
 
 } // end of namespcae PLearn

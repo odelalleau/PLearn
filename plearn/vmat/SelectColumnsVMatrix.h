@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectColumnsVMatrix.h,v 1.13 2004/09/14 16:04:39 chrish42 Exp $
+   * $Id: SelectColumnsVMatrix.h,v 1.14 2004/10/26 14:19:00 tihocan Exp $
    ******************************************************* */
 
 
@@ -63,6 +63,7 @@ private:
 public:
 
   //! Public build options
+  bool extend_with_missing;
   TVec<int> indices;
   TVec<string> fields;
 
@@ -73,7 +74,7 @@ public:
   
   //! The appropriate fieldinfos are copied upon construction.
   //! Here the indices will be shared for efficiency. But you should not modify them afterwards!
-  SelectColumnsVMatrix(VMat the_source, TVec<string> the_fields);
+  SelectColumnsVMatrix(VMat the_source, TVec<string> the_fields, bool the_extend_with_missing = false);
 
   //! The appropriate fieldinfos are copied upon construction
   //! Here the indices will be shared for efficiency. But you should not modify them afterwards!
