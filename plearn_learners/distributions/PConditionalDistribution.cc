@@ -44,7 +44,7 @@ PConditionalDistribution::PConditionalDistribution()
 }
 
 PLEARN_IMPLEMENT_OBJECT(PConditionalDistribution, 
-                        "Conditional distribution or conditional density model P(Y|X)",
+                        "(THIS CLASS IS DEPRECATED, use PDistribution instead). Conditional distribution or conditional density model P(Y|X)",
                         "Abstract superclass for conditional distribution classes.\n"
                         "It is a subclass of PDistribution, with the added method\n"
                         "   setInput(Vec& input)\n"

@@ -37,7 +37,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Distribution.cc,v 1.15 2004/05/11 20:55:32 tihocan Exp $ 
+   * $Id: Distribution.cc,v 1.16 2004/06/21 14:54:03 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file Distribution.cc */
@@ -54,8 +54,10 @@ Distribution::Distribution()
   setTestCostFunctions(neg_output_costfunc());
 }
 
-
-PLEARN_IMPLEMENT_OBJECT(Distribution, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(Distribution,
+    "This class is deprecated, use PDistribution instead.",
+    "NO HELP"
+);
 
 void Distribution::declareOptions(OptionList& ol)
 {
