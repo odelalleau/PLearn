@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.16 2003/05/22 21:56:27 plearner Exp $
+   * $Id: Object.h,v 1.17 2003/05/27 04:03:56 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -330,7 +330,8 @@ using namespace std;
     // This calls writeOptionVal into a string stream
     string getOption(const string &optionname) const;
     
-/*!       The write method should write a complete description of the object to the given
+/*!   DEPRECATED (use the declareOption / build_ mecanism instead, that provides automatic serialization)
+  The write method should write a complete description of the object to the given
       stream, that should be enough to later reconstruct it.  (a somewhat
       human-readable ascii format is usually preferred).
       The new default version simply calls newwrite(...) which simply
@@ -341,7 +342,8 @@ using namespace std;
 */
     virtual void write(ostream& out) const;
 
-/*!       The read method is the counterpart of the write method. It should be
+/*!     DEPRECATED (use the declareOption / build_ mecanism instead, that provides automatic serialization)
+      The read method is the counterpart of the write method. It should be
       able to reconstruct an object that has been previously written with
       the write method. The current implementation automatically decides whether 
       to call newread() (which is based on the new declareOptions/build mechanism)
@@ -375,11 +377,11 @@ using namespace std;
     //! Overload this for runnable objects (default method issues a runtime error)
     virtual void run();
 
-    //! For backward compatibility with old saved object
+    //! DEPRECATED For backward compatibility with old saved object
     virtual void oldread(istream& in);
 
 
-    // Deprecated methods: do not use, ignore them, use the 
+    // Deprecated methods: do not use, ignore them.  
     virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
     virtual void deepRead(istream& in, DeepReadMap& old2new);
 

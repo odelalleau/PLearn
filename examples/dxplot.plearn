@@ -1,19 +1,19 @@
 
 GenerateDecisionPlot( 
     # string: Name of the .dx data file to generate
-    dxfilename = "decisionsurf.dx"  ;
+    dxfilename = "dxplot.dx"  ;
 
     # VMat: Dataset to train the learner on, and to include in the generated file
-    dataset = AutoVMatrix(specification = "circles.amat") ;
+    dataset = AutoVMatrix(specification = "data/circles.amat") ;
     
     # int: Number of x sample coordinates (grid)
-    nx = 200  ;
+    nx = 10  ;
 
     # int: Number of y sample coordinates (grid)
-    ny = 200  ;
+    ny = 10  ;
 
     # string: (Optionally) save trained learner in this file (.psave)
-    save_learner_as = "nnet.psave"  ;
+    save_learner_as = "dxplot.psave"  ;
     
     # PP< PLearner >: The learner to train/test
     learner = NNet( 
@@ -63,7 +63,7 @@ GenerateDecisionPlot(
     seed = 0  ;
 
     # int: Stage until which train() should train this learner and return.
-    nstages = 10000  ;
+    nstages = 100 ;
 
     verbosity = 2;
     );

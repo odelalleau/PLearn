@@ -1,6 +1,6 @@
 #!/bin/sh
-# rmi, a smart rm command
-# Copyright (C) 1998 Pascal Vincent
+# superkill, a dangerous but useful kill command
+# Copyright (C) 2003 Pascal Vincent
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are met:
@@ -28,25 +28,25 @@
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 if [ $# -eq 0 ]; then 
-   echo "Usage: rmi [ file1 ] [ file2 ] ... [ filen ]"
-   echo "If there's only one argument, it does not ask confirmation."
-   echo "If there's more than one argument, it prints the whole list,"
-   echo "and asks confirmation once for the whole list."
+   echo "Usage: superkill pattern [kill options]"
+   echo "Will fetch all processes in the ps listing"
+   echo "that match the given grep pattern and show them."
+   echo "It will ask confirmation *once* to kill the whole batch"
+   echo "kill options are passed to the kill command (ex: -9)"
+   echo "Ex: superkill '\bps\b' -9"
    exit
-fi
-if [ $# -le 1 ];
-  then /bin/rm $*;
 else
-  echo "-> rm $*";
-  echo -n "Are you sure (y/n)? ";
+  pattern=$1
+  shift
+  echo ------------------------------------
+  ps aux --cols=1000 | grep -e $pattern | grep -v -e '\bsuperkill\b' | grep -v -e '\bgrep\b'
+  echo ------------------------------------
+  echo -n "ARE YOU SURE YOU WANT TO kill $* THEM ALL (y/n)? "
   read answer;
-  if [ "$answer" != "" ] && [ "$answer" = "y" ] || [ "$answer" = "yes" ] || [ "$answer" = "Y" ] || [ "$answer" = "YES" ]; 
-    then /bin/rm $*;
+  if [ "$answer" != "" ] && [ "$answer" = "y" ] || [ "$answer" = "yes" ] || [ "$answer" = "Y" ] || [ "$answer" = "YES" ]; then 
+    ps aux --cols=1000 | grep -e $pattern | grep -v -e '\bsuperkill\b' | grep -v -e '\bgrep\b' | awk '{ print $2 }' | xargs kill $*
     echo "Done."
   else 
     echo "Aborted!";
   fi
 fi
-
-
-

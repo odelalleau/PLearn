@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GenerateDecisionPlot.cc,v 1.1 2003/05/26 04:12:43 plearner Exp $ 
+   * $Id: GenerateDecisionPlot.cc,v 1.2 2003/05/27 04:03:56 plearner Exp $ 
    ******************************************************* */
 
 /*! \file GenerateDecisionPlot.cc */
@@ -98,14 +98,18 @@ void DX_write_2D_fields(ostream& out, const string& basename, TVec<Mat> fields, 
   int nx = fields[0].length();
   int ny = fields[0].width();
 
-  out << "object \"" << basename << "_gridpos\" class gridpositions counts " << nx << " " << ny << "\n"
+  string posname = string("\"") + basename + "_gridpos\"";
+
+  out << "object " << posname << " class gridpositions counts " << nx << " " << ny << "\n"
       << "origin  " << x0 << " " << y0 << "\n"
       << "delta   " << deltax << " 0 \n"
       << "delta    0 " << deltay << " \n\n\n";
 
-  out << "object \"" << basename << "_gridcon\" class gridconnections counts " << nx << " " << ny << "\n"
+  string conname = string("\"") + basename + "_gridcon\"";
+
+  out << "object " << conname << " class gridconnections counts " << nx << " " << ny << "\n"
       << "attribute \"element type\" string \"cubes\" \n"
-      << "attribute \"ref\" string \"positions\" \n\n\n";
+      << "attribute \"ref\" string " << posname << " \n\n\n";
 
   for(int k=0; k<nfields; k++)
     {
@@ -114,30 +118,28 @@ void DX_write_2D_fields(ostream& out, const string& basename, TVec<Mat> fields, 
       if(fieldnames)
         fieldname = fieldnames[k];
 
-      string dataname = basename + "_" + fieldname + "_data";
+      string dataname = string("\"") + basename + "_" + fieldname + "_data\"";
 
-      out << "object \"" << dataname << "\" class array type float rank 0 items " << nx*ny << " data follows \n";
+      out << "object " << dataname << " class array type float rank 0 items " << nx*ny << " data follows \n";
       for(int i=0; i<nx; i++)
         {
           for(int j=0; j<ny; j++)
             out << m(i,j) << " ";
           out << "\n";
         }
-      out << "attribute \"dep\" string \"positions\" \n\n\n";
+      out << "attribute \"dep\" string " << posname << " \n\n\n";
 
       out << "object \"" << fieldname << "\" class field \n"
-          << "component \"positions\" \"" << basename << "_gridpos\" \n"
-          << "component \"connections\" \"" << basename << "_gridcon\" \n"
-          << "component \"data\" \"" << dataname << "\" \n\n\n";
+          << "component \"positions\" " << posname << " \n"
+          << "component \"connections\" " << conname << " \n"
+          << "component \"data\" " << dataname << " \n\n\n";
     }
 }
 
 TVec<Mat> computeOutputFields(PP<PLearner> learner, int nx, int ny, real x0, real y0, real deltax, real deltay)
 {
   int noutputs = learner->outputsize();
-  int nfields = 1;
-  if(noutputs>1)  // make additional first 2 fields: argmax and max
-    nfields = 2+noutputs;
+  int nfields = noutputs;
 
   TVec<Mat> fields(nfields);
   for(int k=0; k<nfields; k++)
@@ -157,15 +159,8 @@ TVec<Mat> computeOutputFields(PP<PLearner> learner, int nx, int ny, real x0, rea
         input[1] = y;
         learner->computeOutput(input,output);
         // cerr << "in: " << input << " out: " << output << endl;
-        if(noutputs==1)
-          fields[0](i,j) = output[0];
-        else
-          {            
-            fields[0](i,j) = argmax(output);
-            fields[1](i,j) = max(output);
-            for(int k=0; k<noutputs; k++)
-              fields[2+k](i,j) = output[k];
-          }
+        for(int k=0; k<noutputs; k++)
+          fields[k](i,j) = output[k];
         pb.update(i*nx+j);
       }
 
@@ -207,21 +202,14 @@ void DX_create_decision_data_file(const string& filename, PP<PLearner> learner, 
       Vec output = row.subVec(w,outputsize);
       learner->computeOutput(input, output);
     }
-  DX_write_2D_data(out, "dset", data);
+  // DX_write_2D_data(out, "dset", data);
 
   real x0, y0, deltax, deltay;
   TVec<Mat> fields = computeOutputFieldsAutoRange(learner, dataset, nx, ny, x0, y0, deltax, deltay);
   int nfields = fields.length();
   TVec<string> fieldnames(nfields);
-  if(nfields==1)
-    fieldnames[0] = "output";
-  else 
-    {
-      fieldnames[0] = "argmax";
-      fieldnames[1] = "max";
-      for(int k=2; k<nfields; k++)
-        fieldnames[k] = "output" + tostring(k-2);
-    }
+  for(int k=2; k<nfields; k++)
+    fieldnames[k] = "output" + tostring(k-2);
 
   DX_write_2D_fields(out, "decision", fields, x0, y0, deltax, deltay, fieldnames);
   out << "end" << endl;
