@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PCA.cc,v 1.14 2004/07/21 20:28:33 tihocan Exp $ 
+   * $Id: PCA.cc,v 1.15 2004/08/12 12:59:32 tihocan Exp $ 
    ******************************************************* */
 
 /*! \file PCA.cc */
@@ -201,6 +201,8 @@ void PCA::train()
   {
     ProgressBar* pb = 0;
     if (algo == "classical") {
+      if (ncomponents > train_set->inputsize())
+        PLERROR("In PCA::train - You asked for %d components, but the training set inputsize is only %d", ncomponents, train_set->inputsize());
       if (report_progress) {
         pb = new ProgressBar("Training PCA", 2);
       }
