@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.cc,v 1.9 2003/05/13 15:15:18 tihocan Exp $
+   * $Id: Optimizer.cc,v 1.10 2003/05/13 15:51:05 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -304,7 +304,7 @@ void Optimizer::collectGradientStats(Vec gradient) {
     // Compare two consecutive updates
     tmp_mat = sign_mean_grad.row(sign_mean_grad.length()-2);
     for (int i=0; i<gradient.length(); i++) {
-      if (tmp_mat(0,i) == temp_grad[i]) {
+      if (i==0 || tmp_mat(0,i) == temp_grad[i]) {
         // Same direction
         temp_grad[i] = 0;
       } else {
