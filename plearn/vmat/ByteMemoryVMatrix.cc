@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ByteMemoryVMatrix.cc,v 1.3 2004/03/23 23:08:08 morinf Exp $
+   * $Id: ByteMemoryVMatrix.cc,v 1.4 2004/04/05 22:48:12 morinf Exp $
    ******************************************************* */
 
 #include "ByteMemoryVMatrix.h"
@@ -43,19 +43,17 @@
 namespace PLearn {
 using namespace std;
 
+PLEARN_IMPLEMENT_OBJECT(ByteMemoryVMatrix, "ONE_LINE_DESCR", "ONE LINE HELP");
 
 /** ByteMemoryVMatrix **/
 
-ByteMemoryVMatrix::
-ByteMemoryVMatrix()
-    : data(0)
+ByteMemoryVMatrix::ByteMemoryVMatrix()
+  : data(0)
 {
 }
 
-ByteMemoryVMatrix::
-ByteMemoryVMatrix(unsigned char* the_data,int the_length,int the_width, Vec the_scale)
-  :inherited(the_length, the_width), data(the_data), 
-   scale(the_scale), offset_(the_scale.length())
+ByteMemoryVMatrix::ByteMemoryVMatrix(unsigned char* the_data,int the_length,int the_width, Vec the_scale)
+  :inherited(the_length, the_width), data(the_data), scale(the_scale), offset_(the_scale.length())
 {
   if (the_scale.length() != width_)
     PLERROR("ByteMemoryVMatrix: inconsistent arguments (scale(%d),n_col(%d))",
@@ -75,9 +73,10 @@ ByteMemoryVMatrix(unsigned char* the_data,int the_length,int the_width,
 
 ByteMemoryVMatrix::ByteMemoryVMatrix(unsigned char* the_data,int the_length,int the_width,
                             double the_scaling_factor,double the_offset)
-  :VMatrix(the_length, the_width), data(the_data), 
+  : VMatrix(the_length, the_width), data(the_data), 
    scale(the_width, the_scaling_factor), offset_(the_width, the_offset)
-{}
+{
+}
 
 real ByteMemoryVMatrix::get(int i, int j) const
 {

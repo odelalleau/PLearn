@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ByteMemoryVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
+   * $Id: ByteMemoryVMatrix.h,v 1.4 2004/04/05 22:48:12 morinf Exp $
    ******************************************************* */
 
 
@@ -68,9 +68,16 @@ class ByteMemoryVMatrix: public VMatrix
   ByteMemoryVMatrix(unsigned char* data,int the_length,int the_width, double scaling_factor=1.0, double offset_=0.0);
   ByteMemoryVMatrix(unsigned char* data,int the_length,int the_width, Vec scale);
   ByteMemoryVMatrix(unsigned char* data,int the_length,int the_width, Vec scale, Vec offset_);
+
+  PLEARN_DECLARE_OBJECT(ByteMemoryVMatrix);
+
   virtual real get(int i, int j) const;
   virtual void getSubRow(int i, int j, Vec v) const;
+
+private:
 };
+
+DECLARE_OBJECT_PTR(ByteMemoryVMatrix);
 
 } // end of namespcae PLearn
 #endif

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CompressedVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
+   * $Id: CompressedVMatrix.h,v 1.4 2004/04/05 22:49:18 morinf Exp $
    ******************************************************* */
 
 
@@ -98,6 +98,8 @@ using namespace std;
 */
     CompressedVMatrix(VMat v, size_t memory_alloc=0);
 
+    PLEARN_DECLARE_OBJECT(CompressedVMatrix);
+
     virtual ~CompressedVMatrix();
     virtual void getRow(int i, Vec v) const;
     virtual void appendRow(Vec v);
@@ -111,6 +113,8 @@ using namespace std;
     //!  This will reallocate the data chunk to be exactly of the needed size, so that no memory will be wasted.
     virtual void compacify();
 };
+
+DECLARE_OBJECT_PTR(CompressedVMatrix);
 
 } // end of namespcae PLearn
 #endif

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CompressedVMatrix.cc,v 1.3 2004/03/23 23:08:08 morinf Exp $
+   * $Id: CompressedVMatrix.cc,v 1.4 2004/04/05 22:49:18 morinf Exp $
    ******************************************************* */
 
 #include "VecCompressor.h"
@@ -47,6 +47,8 @@ using namespace std;
 
 // ************************
 // ** CompressedVMatrix **
+
+PLEARN_IMPLEMENT_OBJECT(CompressedVMatrix, "ONE LINE DESCR", "ONE LINE HELP");
 
 CompressedVMatrix::CompressedVMatrix()
     : data(0), rowstarts(0), dataend(0), curpos(0)
