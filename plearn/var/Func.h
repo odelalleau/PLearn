@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Func.h,v 1.3 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: Func.h,v 1.4 2003/07/03 23:31:41 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -84,15 +84,15 @@ public:
 
 class Function: public Object
 {
-protected:
-  //!  Default constructor for persistence
-  Function() {}
-
 public:
-  int inputsize;
-  int outputsize;
+
+  // Build options:
   VarArray inputs;
   VarArray outputs;
+
+  // Other variables
+  int inputsize;
+  int outputsize;
   VarArray parameters;  //!< nonInputSources
   VarArray fproppath;
   VarArray bproppath;
@@ -100,15 +100,49 @@ public:
 
   Func df; //!<  remembers the symbolic derivative
 
+private: 
+  //! This does the actual building. 
+  // (Please implement in .cc)
+  void build_();
+
+protected: 
+  //! Declares this class' options
+  // (Please implement in .cc)
+  static void declareOptions(OptionList& ol);
+
+
  public:
+  Function();
   Function(const VarArray& the_inputs, const VarArray& the_outputs);
+
+  //! DEPRECATED Please avoid using this constructor.
   Function(const VarArray& the_inputs, const VarArray& parameters_to_optimize,const VarArray& the_outputs);
   //void bprop(VarArray& parameters_to_optimize);
 
-  DECLARE_NAME_AND_DEEPCOPY(Function);
+public:
+
+  // ************************
+  // **** Object methods ****
+  // ************************
+
+  //! simply calls inherited::build() then build_() 
+  virtual void build();
+
+  //! Provides a help message describing this class
+  static string help();
+
+  //! Transforms a shallow copy into a deep copy
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
-  virtual void deepRead(istream& in, DeepReadMap& old2new);
-  virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
+
+  // Declares other standard object methods
+  //  If your class is not instantiatable (it has pure virtual methods)
+  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
+  PLEARN_DECLARE_OBJECT_METHODS(Function, "Function", Object);
+
+  
+  // **************************
+  // **** Function methods ****
+  // **************************
 
   void fprop(const Vec& in, const Vec& out);
   void fprop(const Array<Vec>& in, const Array<Vec>& out);
@@ -173,13 +207,6 @@ public:
 
 DECLARE_OBJECT_PTR(Function);
 DECLARE_OBJECT_PP(Func, Function);
-
-
-inline void deepRead(istream& in, DeepReadMap& old2new, Func& f)
-{ Object* f_ptr; deepRead(in, old2new, f_ptr); f = (Function*)f_ptr; }
-
-inline void deepWrite(ostream& out, DeepWriteSet& already_saved, const Func& f)
-{ deepWrite(out, already_saved, (Object*)f); }
 
 Func operator/(Func f, real value);
 

@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.30 2003/07/01 18:43:37 ducharme Exp $
+   * $Id: plearn.cc,v 1.31 2003/07/03 23:31:37 plearner Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -80,14 +80,17 @@
 
 #include "Experiment.h"
 
+
 // New generation system
 #include "PTester.h"
-#include "GenerateDecisionPlot.h"
 #include "NNet.h"
-//#include "HyperLearner.h"
-//#include "HOpt.h"
-// #include "TryAll.h"
-// #include "EarlyStop.h"
+#include "GenerateDecisionPlot.h"
+
+#include "HyperLearner.h"
+#include "HyperOptimize.h"
+#include "OptionsOracle.h"
+#include "ExplicitListOracle.h"
+#include "EarlyStoppingOracle.h"
 
 // SequentialLearner
 #include "SequentialLearner.h"

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Object.h,v 1.19 2003/06/06 05:23:38 plearner Exp $
+   * $Id: Object.h,v 1.20 2003/07/03 23:31:41 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -88,9 +88,10 @@ using namespace std;
 // CLASSNAME should be that same type name, but as a string
 // PARENTTYPE should be the type of the parent class of that subclass.
 // Ex: PLEARN_DECLARE_OBJECT_METHODS(NeuralNet, "NeuralNet", Learner)
-
+// Among other things this makes a typedef 'parentclass'
 #define PLEARN_DECLARE_OBJECT_METHODS(CLASSTYPE, CLASSNAME, PARENTTYPE)    \
         public:                                                            \
+        typedef PARENTTYPE parentclass;                                    \
         static string _classname_();                                       \
         virtual string classname() const;                                  \
         static OptionList& _getOptionList_();                              \
@@ -125,6 +126,7 @@ using namespace std;
 
 #define PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS(CLASSTYPE, CLASSNAME, PARENTTYPE)    \
         public:                                                            \
+        typedef PARENTTYPE parentclass;                                    \
         static string _classname_();                                       \
         static OptionList& _getOptionList_();                              \
         static bool _isa_(Object* o);                                      \
@@ -148,7 +150,7 @@ using namespace std;
           { PLERROR("deepCopy called on an abstract class..."); return 0; }
 
 
-// old macros for backward compatibility
+// DEPRECATED old macros for backward compatibility
 
 #define DECLARE_NAME_AND_DEEPCOPY(CLASSTYPE) PLEARN_DECLARE_OBJECT_METHODS(CLASSTYPE, #CLASSTYPE, Object)
 #define IMPLEMENT_NAME_AND_DEEPCOPY(CLASSTYPE) PLEARN_IMPLEMENT_OBJECT_METHODS(CLASSTYPE, #CLASSTYPE, Object)
@@ -204,14 +206,14 @@ using namespace std;
   protected:
 
     //! redefine this in subclasses: call declareOption(...) for each
-    //! option, and then call inherited::declareOptions(options)
+    //! option, and then call parentclass::declareOptions(options)
     //! ( see the declareOption function further down)
     /*! ex: 
     static void declareOptions(OptionList& ol)
     {
       declareOption(ol, "inputsize", &MyObject::inputsize_, OptionBase::buildoption, "the size of the input\n it must be provided");
       declareOption(ol, "weights", &MyObject::weights, OptionBase::learntoption, "the learnt model weights");
-      inherited::declareOptions(ol);
+      parentclass::declareOptions(ol);
     }
     */
 
@@ -225,10 +227,6 @@ using namespace std;
 
     PLEARN_DECLARE_OBJECT_METHODS(Object, "Object", Object);   
 
-    // SUBCLASS WRITINGL
-    // You should define 'inherited' (with a typedef) as the parent class of your class. 
-    // Ex: typedef Object inherited; 
-    
     //! SUBCLASS WRITING 
     //! Note: all subclasses should define a default constructor (one that can be called without arguments),
     //! whose main role is to give a reasonable default value to all build options (see declareOptions).
@@ -257,7 +255,7 @@ using namespace std;
     void build_();
 
   public:
-    //! Should call simply inherited::build(), then this class's build_()
+    //! Should call simply parentclass::build(), then this class's build_()
     /*! This method should be callable again at later times,
       after modifying some option fields to change the "architecture" of
       the object. */
@@ -361,7 +359,7 @@ using namespace std;
       Here is what such a method should do:
          1) Determine from the methodname what actual method to call.
             If the given methodname is none of those supported by your call method,
-            call the parent's "call" Ex: inherited::call(methodname, nargs, in_parameters, out_results)
+            call the parent's "call" Ex: parentclass::call(methodname, nargs, in_parameters, out_results)
          2) The number of arguments nargs may also influence what version of the method you want to call
          3) read the narg arguments from in_parameters Ex: in_parameters >> age >> length >> n; 
          4) call the actual associated method
@@ -385,7 +383,7 @@ using namespace std;
     virtual void oldread(istream& in);
 
 
-    // Deprecated methods: do not use, ignore them.  
+    //! DEPRECATED methods: do not use, ignore them.  
     virtual void deepWrite(ostream& out, DeepWriteSet& already_saved) const;
     virtual void deepRead(istream& in, DeepReadMap& old2new);
 

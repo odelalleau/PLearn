@@ -37,16 +37,16 @@
  
 
 /* *******************************************************      
-   * $Id: Func.cc,v 1.3 2002/10/23 23:32:34 dorionc Exp $
+   * $Id: Func.cc,v 1.4 2003/07/03 23:31:41 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "Func.h"
 #include "random.h"
 #include "TMat_maths.h"
-#include "DisplayUtils.h" ////////// to remove
 #include "Var.h"
 #include "TimesConstantVariable.h"
+#include "DisplayUtils.h" ////////// to remove
 
 namespace PLearn <%
 using namespace std;
@@ -97,16 +97,58 @@ Func operator/(Func f, real value)
 
 /** Function **/
 
+Function::Function()
+  :inputsize(-1), outputsize(-1)
+{}
+
+
 Function::Function(const VarArray& the_inputs, const VarArray& the_outputs)
-  :inputsize(the_inputs.nelems()), outputsize(the_outputs.nelems()), 
-   inputs(the_inputs), outputs(the_outputs)
+  :inputs(the_inputs), outputs(the_outputs)
 {  
+  build_();
+}
+
+Function::Function(const VarArray& the_inputs, const VarArray& parameters_to_optimize,const VarArray& the_outputs)
+  : inputs(the_inputs), outputs(the_outputs), parameters(parameters_to_optimize)
+{
+  build_();
+}
+
+/*void Function::bprop(VarArray& parameters_to_optimize)
+{
+  //bproppath = propagationPath(inputs, parameters_to_optimize,outputs);
+}
+*/
+
+PLEARN_IMPLEMENT_OBJECT_METHODS(Function, "Function", Object);
+
+void Function::declareOptions(OptionList& ol)
+{
+  declareOption(ol, "inputs", &Function::inputs, OptionBase::buildoption,
+                "The list of input variabes of this function");
+  declareOption(ol, "outputs", &Function::outputs, OptionBase::buildoption,
+                "The list of output variabes of this function");
+  
+  // Now call the parent class' declareOptions
+  parentclass::declareOptions(ol);
+}
+
+string Function::help()
+{
+  return 
+    "Function implements a function as a var graph\n";
+}
+
+void Function::build_()
+{
+  inputsize = inputs.nelems();
+  outputsize = outputs.nelems(); 
   fproppath = propagationPath(inputs, outputs);
   bproppath = propagationPath(inputs, outputs);
   parentspath = propagationPathToParentsOfPath(inputs, outputs);
-  parameters = nonInputSources(inputs, outputs);
 
-  
+  if(parameters.isEmpty())
+    parameters = nonInputSources(inputs, outputs);
   
   //parameters_to_optimize.printNames();
   //cout<<"**************Func::printInfo(inputs, outputs);"<<endl;
@@ -115,43 +157,24 @@ Function::Function(const VarArray& the_inputs, const VarArray& the_outputs)
   //printInfo(parameters_to_optimize,outputs);
   //displayVarGraph(fproppath,true, 333, "ffpp", false);
   //displayVarGraph(bproppath,true, 333, "fbpp", false);
-  
-
+    
+    
   // Let's see if getting everything in a single chunk of memory will improve efficiency...
   // Hmm, doesn't seem to.
   /*
-  VarArray criticalvars = the_inputs & fproppath;
-  int n = criticalvars.nelems();
-  Vec data(2*n);
-  criticalvars.makeSharedValue(data);
-  criticalvars.makeSharedGradient(data,n);
+    VarArray criticalvars = the_inputs & fproppath;
+    int n = criticalvars.nelems();
+    Vec data(2*n);
+    criticalvars.makeSharedValue(data);
+    criticalvars.makeSharedGradient(data,n);
   */
 }
 
-Function::Function(const VarArray& the_inputs, const VarArray& parameters_to_optimize,const VarArray& the_outputs)
-  :inputsize(the_inputs.nelems()), outputsize(the_outputs.nelems()), 
-   inputs(the_inputs), outputs(the_outputs), parameters(parameters_to_optimize)
+void Function::build()
 {
-  fproppath = propagationPath(inputs, outputs);
-  bproppath = propagationPath(parameters_to_optimize,outputs);
-  /*
-  parameters_to_optimize.printNames();
-  cout<<"**************Func::printInfo(inputs, outputs);"<<endl;
-  printInfo(inputs, outputs);
-  cout<<"**************Func::printInfo(parameters_to_optimize, outputs);"<<endl;
-  printInfo(parameters_to_optimize,outputs);
-  displayVarGraph(fproppath,true);
-  displayVarGraph(bproppath,true);
-  */
-  parentspath = propagationPathToParentsOfPath(inputs, outputs);
+  parentclass::build();
+  build_();
 }
-
-/*void Function::bprop(VarArray& parameters_to_optimize)
-{
-  //bproppath = propagationPath(inputs, parameters_to_optimize,outputs);
-}
-*/
-IMPLEMENT_NAME_AND_DEEPCOPY(Function);
 
 void Function::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
@@ -162,29 +185,6 @@ void Function::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   deepCopyField(bproppath, copies);
   deepCopyField(parentspath, copies);
   deepCopyField(df, copies);
-}
-
-void Function::deepRead(istream& in, DeepReadMap& old2new)
-{
-  readHeader(in, "Function");
-  PLearn::deepRead(in, old2new, inputs);
-  PLearn::deepRead(in, old2new, outputs);
-  readFooter(in, "Function");
-
-  inputsize = inputs.nelems();
-  outputsize = outputs.nelems();
-  parameters = nonInputSources(inputs, outputs);
-  fproppath = propagationPath(inputs, outputs);
-  bproppath = propagationPath(inputs, outputs);
-  parentspath = propagationPathToParentsOfPath(inputs, outputs);
-}
-
-void Function::deepWrite(ostream& out, DeepWriteSet& already_saved) const
-{
-  writeHeader(out, "Function");
-  PLearn::deepWrite(out, already_saved, inputs);
-  PLearn::deepWrite(out, already_saved, outputs);
-  writeFooter(out, "Function");
 }
 
 void Function::fprop(const Vec& in, const Vec& out)

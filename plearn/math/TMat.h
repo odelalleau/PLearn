@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.18 2003/06/06 05:23:52 plearner Exp $
+   * $Id: TMat.h,v 1.19 2003/07/03 23:31:41 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -191,7 +191,7 @@ class TVec
     }
 
       //!  used by Hash  (VERY DIRTY: TO BE REMOVED [Pascal])
-      inline operator char*() const { if(isEmpty()) return 0; else return (char*)data(); }
+      inline operator char*() const { if(isNull()) return 0; else return (char*)data(); }
 
       inline const size_t byteLength() const { return length()*sizeof(T); }
 
@@ -426,21 +426,25 @@ class TVec
         storage->pointTo(n,x);
       }
 
-      bool isEmpty() const
-      { return storage==0; }
+  bool isNull() const 
+  { return storage.isNull(); }
 
-      bool isNotEmpty() const
-      { return storage!=0; }
+  bool isNotNull() const
+  { return storage.isNotNull(); }
 
+  bool isEmpty() const
+  { return length_==0; }
+
+  bool isNotEmpty() const
+  { return length_!=0; }
       
-      //!  To allow if(v) statements
-      operator bool() const
-      { return storage!=0; }
+  //!  To allow if(v) statements
+  operator bool() const
+  { return isNotEmpty(); }
       
-
-      //!  To allow if(!v) statements
-      bool operator!() const
-      { return storage==0; }
+  //!  To allow if(!v) statements
+  bool operator!() const
+  { return isEmpty(); }
 
       // for compatibility with Array
       TVec<T>* operator->()
@@ -465,7 +469,7 @@ class TVec
       { fill(f); }
   
       inline void clear() const
-      { if(data()) clear_n(data(),length()); }
+      { if(!isNull()) clear_n(data(),length()); }
 
       //!  inserts element at position (actually between values at position-1 and posiion). Length is increased by 1.
       inline void insert(int position, T value)
@@ -1391,19 +1395,25 @@ public:
   //!  Views same data (not always possible)
   TVec<T> toVec() const;
 
-  inline bool isEmpty() const
-  { return storage==0; }
+  bool isNull() const 
+  { return storage.isNull(); }
 
-  inline bool isNotEmpty() const
-  { return storage!=0; }
+  bool isNotNull() const
+  { return storage.isNotNull(); }
+
+  bool isEmpty() const
+  { return length_==0; }
+
+  bool isNotEmpty() const
+  { return length_!=0; }
 
   //!  To allow if(m) statements
-  inline operator void*() const
-  { return storage; }
+  inline operator bool() const
+  { return isNotEmpty(); }
 
   //!  To allow if(!m) statements
   inline bool operator!() const
-  { return storage==0; }
+  { return isEmpty(); }
 
   void fill(const T& value) const
   {
