@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: FileVMatrix.cc,v 1.18 2004/04/28 14:33:05 tihocan Exp $
+   * $Id: FileVMatrix.cc,v 1.19 2004/05/24 07:33:55 chapados Exp $
    ******************************************************* */
 
 #include "FileVMatrix.h"
@@ -166,6 +166,9 @@ void FileVMatrix::build_()
     else
       f = fopen(filename_.c_str(), "rb");
 
+    if (! f)
+      PLERROR("FileVMatrix::build: could not open file %s", filename_.c_str());
+    
     fread(header,DATAFILE_HEADERLENGTH,1,f);
     if(header[DATAFILE_HEADERLENGTH-1]!='\n')
       PLERROR("In FileVMatrix constructor, wrong header for PLearn binary matrix format. Please use checkheader (in PLearn/Scripts) to check the file.(0)");
