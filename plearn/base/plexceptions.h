@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: plexceptions.h,v 1.2 2002/11/27 19:45:14 jkeable Exp $
+   * $Id: plexceptions.h,v 1.3 2003/03/15 00:04:22 plearner Exp $
    * AUTHOR: Frederic Morin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -48,62 +48,21 @@
 #ifndef pexceptions_INC
 #define pexceptions_INC
 
-#define ERROR_MSG_SIZE               2048
-
-#ifdef USE_EXCEPTIONS
-
 #include <string>
-#include "plerror.h"
 
 namespace PLearn <%
 using namespace std;
 
-// externally declared variable, please use PLearnError()'s interface
-// instead of using them directly. Direct access can be justified but
-// not in YOUR case.
-extern char error_msg[ERROR_MSG_SIZE];
-extern int error_status;
-extern bool may_continue;
-extern char *error_file;
-extern int error_line;
-
-void clear_warning();	//!<  Reset error_status to ERROR_STATUS_NO_ERROR
-void throw_exception(const char *msg, int exception_type); //!<  Throw an exception
-
-
-//!  Error status
-#define ERROR_STATUS_NO_ERROR           0
-#define ERROR_STATUS_WARNING            1
-#define ERROR_STATUS_FATAL_ERROR        100
-
-//!  Exception types (these are bit testable)
-#define FATAL_ERROR_EXCEPTION           (1)
-#define WARNING_EXCEPTION               (2)
-#define IMMINENT_EXIT_EXCEPTION         (4)
-#define RECUPERABLE_ERROR_EXCEPTION     (8)
-#define DEPRECATED_EXCEPTION            (16)
-
-
 class PLearnError {
+private:
+  string msg;
+
 public:
-    PLearnError() {};
-    virtual ~PLearnError() {};
-
-    virtual string message() const { return string(error_msg); }; // Return error message
-    virtual int status() const { return error_status; };          // Return status of error
-    virtual string file() const { return string(error_file); };   // Return filename in which error occured
-    virtual int line() const { return error_line; };              // Return line number of error (in file)
-
-    bool isRecuperable() const { return (error_status & RECUPERABLE_ERROR_EXCEPTION); };
-    bool clear() { error_status = ERROR_STATUS_NO_ERROR; return true; };
-
-    // Use only with RECUPERABLE errors
-    void dealtWith() { clear_warning(); may_continue = true; };
+    PLearnError(const string& the_message): msg(the_message) {}
+    string message() const { return msg; }; // Return error message
 };
 
 %> // end of namespace PLearn
 //!<  USENAMESPACE
-
-#endif //!<  USE_EXCEPTIONS
 
 #endif //!<  pexceptions_INC

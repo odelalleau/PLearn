@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_main.cc,v 1.8 2003/02/28 22:47:56 plearner Exp $
+   * $Id: plearn_main.cc,v 1.9 2003/03/15 00:04:20 plearner Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -57,6 +57,8 @@ using namespace std;
 
 int plearn_main(int argc, char** argv)
 {
+  try {
+
   PLMPI::init(&argc, &argv);
 
   seed();
@@ -160,6 +162,12 @@ int plearn_main(int argc, char** argv)
 
 
   PLMPI::finalize();
+
+  } // end of try
+  catch(const PLearnError& e)
+    {
+      cerr << "FATAL ERROR: " << e.message() << endl;
+    }
   return 0;
 }
 

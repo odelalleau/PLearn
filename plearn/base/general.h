@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: general.h,v 1.5 2002/12/02 08:46:51 plearner Exp $
+   * $Id: general.h,v 1.6 2003/03/15 00:04:20 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -152,12 +152,38 @@ using std::max;
     return res;
   }
 
-  //! clears the range
+
+//! clearing an element (that's called by clear_n...)
+//! Default implementation for clearing any type 
+/*! (will work for objects, but not for base types like int, because the default 
+  "constructor" for int leaves it uninitialised... Hence the specialisations below */
+
+template<class T>
+inline void clear_1(T& x)
+{ x = T(); }
+
+inline void clear_1(char& x) { x = 0; }
+inline void clear_1(unsigned char& x) { x = 0; }
+inline void clear_1(signed char& x) { x = 0; }
+inline void clear_1(short& x) { x = 0; }
+inline void clear_1(unsigned short& x) { x = 0; }
+inline void clear_1(int& x) { x = 0; }
+inline void clear_1(unsigned int& x) { x = 0; }
+inline void clear_1(long& x) { x = 0; }
+inline void clear_1(unsigned long& x) { x = 0; }
+inline void clear_1(float& x) { x = 0; }
+inline void clear_1(double& x) { x = 0; }
+inline void clear_1(bool& x) { x = false; }
+
+  //! clears n elements starting at iterator position begin 
   template<class For>
   inline void clear_n(For begin, int n)
   {
-    static typename iterator_traits<For>::value_type zero;
-    fill_n(begin, n, zero);
+    while(n--)
+      {
+        clear_1(*begin);
+        ++begin;
+      }
   }
 
   //! efficient specialisation for built-in types

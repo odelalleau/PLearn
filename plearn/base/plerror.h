@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: plerror.h,v 1.2 2002/08/07 16:54:21 morinf Exp $
+   * $Id: plerror.h,v 1.3 2003/03/15 00:04:21 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -58,31 +58,14 @@ using namespace std;
 
 #ifndef USE_EXCEPTIONS
 extern ostream* error_stream;
+#endif
 
-inline void send_file_line(char* file,int line) 
-{ *error_stream<<"At "<<file<<":"<<line; }
-
-#define PLERROR send_file_line(__FILE__,__LINE__),errormsg
-//#define PLFRIENDLYERROR - Doesn't make sense to define this if exceptions
-//                          are not used!
-#define PLWARNING send_file_line(__FILE__,__LINE__),warningmsg
-#define PLDEPRECATED send_file_line(__FILE__, __LINE__), deprecatedmsg
-
-#else
-
-void send_file_line(char *file, int line);
-
-#define PLERROR         send_file_line(__FILE__, __LINE__), errormsg
-#define PLFRIENDLYERROR send_file_line(__FILE__, __LINE__), friendlyerrormsg
-#define PLWARNING       send_file_line(__FILE__, __LINE__), warningmsg
-#define PLDEPRECATED    send_file_line(__FILE__, __LINE__), deprecatedmsg
-
-#endif //!<  USE_EXCEPTIONS
+#define PLERROR   errormsg
+#define PLWARNING warningmsg
 
 void errormsg(const char* msg, ...);
 void warningmsg(const char* msg, ...);
 void exitmsg(const char* msg, ...);
-void deprecatedmsg();
 
 %> // end of namespace PLearn
 

@@ -33,18 +33,15 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-
- 
-
 /* *******************************************************      
-   * $Id: plerror.cc,v 1.3 2002/11/27 19:42:40 jkeable Exp $
+   * $Id: plerror.cc,v 1.4 2003/03/15 00:04:21 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
 #include <cstdlib>
 
 #include "plerror.h"
-#include "general.h"
+// #include "general.h"
 
 #if USING_MPI
 #include "PLMPI.h"
@@ -56,82 +53,12 @@
 namespace PLearn <%
 using namespace std;
 
-#ifdef USE_EXCEPTIONS
-// We put the following variables as global to simplify things somewhat.
-char error_msg[ERROR_MSG_SIZE];
-int error_status = ERROR_STATUS_NO_ERROR;
-bool may_continue = false;
-char *error_file;
-int error_line;
-
-void send_file_line(char *file, int line)
-{
-    error_file = file;
-    error_line = line;
-}
-
-void clear_warning()
-{ error_status = ERROR_STATUS_NO_ERROR; }
-
-void throw_exception(const char *msg, int exception_type)
-{
-    switch (exception_type) {
-    case FATAL_ERROR_EXCEPTION:
-    case RECUPERABLE_ERROR_EXCEPTION:
-        // The difference between these two cases is that in the first case
-        // the caller will call exit() upon return of this function while in the
-        // second case it won't.
-        // NOTE: The RECUPERABLE_ERROR_EXCEPTION is not yet used. However, when
-        //       (if ever) it is, we should be able to detect if the exception has
-        //       been handled in some way by the user. If we detect that it has not
-        //       been, we should call exit() at some point.
-        //       The RECUPERABLE_ERROR_EXCEPTION is meant to deal with situations
-        //       where in-place fixes can be made between resuming executions.
-        //       Pratically, this implies user-intervention (human-interface related)
-        //       to provide some input has to what to do to able the program to
-        //       continue.
-        error_status = ERROR_STATUS_FATAL_ERROR;
-        strncpy(error_msg, msg, ERROR_MSG_SIZE);
-        throw PLearnError();
-        break;
-    case WARNING_EXCEPTION:
-        // We don't throw anything since we don't want
-        // to interrupt the program, it will be for the
-        // user to watch JULIEN KEABLE from time to time the value the 
-        // error_status variable and retrieve the error_msg
-        error_status = ERROR_STATUS_WARNING;
-        strncpy(error_msg, msg, ERROR_MSG_SIZE);
-        cerr << error_msg << endl; // Temporary, we will eventually throw something
-        break;
-    case IMMINENT_EXIT_EXCEPTION:
-        error_status = ERROR_STATUS_FATAL_ERROR;
-        strncpy(error_msg, msg, ERROR_MSG_SIZE);
-        throw PLearnError();
-        break;
-    case DEPRECATED_EXCEPTION:
-#ifdef FATAL_DEPRECATED
-        error_status = ERROR_STATUS_WARNING;
-        strncpy(error_msg, msg, ERROR_MSG_SIZE);
-        cerr << error_msg << endl; // Temporary, we will eventually throw something
-#else
-        error_status = ERROR_STATUS_FATAL_ERROR;
-        strncpy(error_msg, msg, ERROR_MSG_SIZE);
-        throw PLearnError();
-#endif
-    default:
-        strcpy(error_msg, "Unexpected error-handling behavior!, BAD BAD");
-        exit(1);
-    }
-}
-
-#else // !defined(USE_EXCEPTIONS)
-
 ostream* error_stream = &cerr;
 
-#endif // USE_EXCEPTIONS
+#define ERROR_MSG_SIZE 1024
 
 #ifndef USER_SUPPLIED_ERROR
-void  errormsg(const char* msg, ...)
+void errormsg(const char* msg, ...)
 {
   va_list args;
   va_start(args,msg);
@@ -153,33 +80,11 @@ void  errormsg(const char* msg, ...)
 #endif //USING_MPI
   exit(1);
 #else
-  throw_exception(message, FATAL_ERROR_EXCEPTION);
+  throw PLearnError(message);
 #endif
 }
 #endif
 
-#ifdef USE_EXCEPTIONS
-// Why "recuperable" == "friendly" because it implies human
-// intervention from the user.
-void friendlyerrormsg(const char *msg, ...)
-{
-  va_list args;
-  va_start(args, msg);
-  char message[ERROR_MSG_SIZE];
-
-#if !defined(ULTRIX) && !defined(_MINGW_)
-  vsnprintf(message, ERROR_MSG_SIZE, msg, args);
-#else
-  vsprintf(message, msg, args);
-#endif
-
-  va_end(args);
-
-  throw_exception(message, RECUPERABLE_ERROR_EXCEPTION);
-  if (!may_continue)
-    exit(1);
-}
-#endif // USE_EXCEPTIONS
 
 void  warningmsg(const char* msg, ...)
 {
@@ -195,11 +100,7 @@ void  warningmsg(const char* msg, ...)
 
   va_end(args);
 
-#ifndef USE_EXCEPTIONS
   *error_stream <<" WARNING: "<<message<<endl;
-#else
-  throw_exception(message, WARNING_EXCEPTION);
-#endif
 }
 
 void exitmsg(const char* msg, ...)
@@ -216,22 +117,9 @@ void exitmsg(const char* msg, ...)
 
   va_end(args);
 
-#ifndef USE_EXCEPTIONS
-  *error_stream <<message<<endl;
+  *error_stream << message << endl;
   exit(1);
-#else
-  throw_exception(message, IMMINENT_EXIT_EXCEPTION);
-  // Shouldn't there be an exit() call HERE???
-#endif
 }
 
-void deprecatedmsg()
-{
-#ifdef FATAL_DEPRECATED
-    errormsg("Entered deprecated code, please modify your code");
-#else
-    warningmsg("Entered deprecated code, you will eventually have to change your code, do it today!");
-#endif
-}
 
 %> // end of namespace PLearn
