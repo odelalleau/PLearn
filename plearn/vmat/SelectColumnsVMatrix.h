@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectColumnsVMatrix.h,v 1.8 2004/06/29 20:00:58 tihocan Exp $
+   * $Id: SelectColumnsVMatrix.h,v 1.9 2004/07/07 13:55:22 tihocan Exp $
    ******************************************************* */
 
 
@@ -64,6 +64,7 @@ public:
 
   //! Public build options
   TVec<int> indices;
+  TVec<string> fields;
 
 public:
 

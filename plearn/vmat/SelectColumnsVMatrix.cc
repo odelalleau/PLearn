@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SelectColumnsVMatrix.cc,v 1.6 2004/06/10 16:12:40 tihocan Exp $
+   * $Id: SelectColumnsVMatrix.cc,v 1.7 2004/07/07 13:55:22 tihocan Exp $
    ******************************************************* */
 
 #include "SelectColumnsVMatrix.h"
@@ -81,8 +81,12 @@ void SelectColumnsVMatrix::getSubRow(int i, int j, Vec v) const
 
 void SelectColumnsVMatrix::declareOptions(OptionList &ol)
 {
+  declareOption(ol, "fields", &SelectColumnsVMatrix::fields, OptionBase::buildoption,
+      "The names of the fields to extract (will override 'indices' if provided).");
+
   declareOption(ol, "indices", &SelectColumnsVMatrix::indices, OptionBase::buildoption,
-      "    The array of column indices to extract");
+      "The array of column indices to extract.");
+
   inherited::declareOptions(ol);
 }
 
@@ -106,8 +110,16 @@ void SelectColumnsVMatrix::build()
 ////////////
 void SelectColumnsVMatrix::build_()
 {
-  width_ = indices.length();
   if (source) {
+    if (fields.isNotEmpty()) {
+      // Find out the indices from the fields.
+      indices.clear();
+      for (int i = 0; i < fields.length(); i++) {
+        string the_field = fields[i];
+        indices.append(source->getFieldIndex(the_field));
+      }
+    }
+    width_ = indices.length();
     length_ = source->length();
     // Copy the appropriate VMFields
     fieldinfos.resize(width());
