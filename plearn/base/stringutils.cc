@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.cc,v 1.22 2004/08/19 17:23:33 tatien Exp $
+   * $Id: stringutils.cc,v 1.23 2004/11/24 18:17:53 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -206,6 +206,7 @@ string removeblanks(const string& s)
   size_t start=0;
   size_t end=0;
   size_t i;
+  int j;
   for(i=0; i<s.length(); i++)
     if(s[i]!=' ' && s[i]!='\t' && s[i]!='\n' && s[i]!='\r')
       break;
@@ -215,10 +216,10 @@ string removeblanks(const string& s)
   else
     start = i;
 
-  for(i=s.length()-1; i>=0; i--)
-    if(s[i]!=' ' && s[i]!='\t' && s[i]!='\n' && s[i]!='\r')
+  for(j=s.length()-1; j>=0; j--)
+    if(s[j]!=' ' && s[j]!='\t' && s[j]!='\n' && s[j]!='\r')
       break;
-  end = i;
+  end = size_t(j);
   return s.substr(start,end-start+1);
 }
 
@@ -237,7 +238,7 @@ string removeallblanks(const string& s)
 
 string removenewline(const string& s)
 {
-  size_t pos = s.length()-1;
+  int pos = s.length()-1;
   while(pos>=0 && (s[pos]=='\r' || s[pos]=='\n'))
     pos--;
   return s.substr(0,pos+1);
@@ -245,8 +246,8 @@ string removenewline(const string& s)
 
 string remove_trailing_slash(const string& s)
 {
-  size_t pos = s.length()-1;
-  while( s[pos]==slash_char && pos>=0 )
+  int pos = s.length()-1;
+  while(pos >= 0 && s[pos]==slash_char)
     pos--;
   return s.substr(0,pos+1);
 }
