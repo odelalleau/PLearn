@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.cc,v 1.10 2004/06/23 20:21:10 tihocan Exp $ 
+   * $Id: KernelProjection.cc,v 1.11 2004/07/09 22:21:08 monperrm Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -287,8 +287,13 @@ void KernelProjection::setTrainingSet(VMat training_set, bool call_forget) {
   n_examples = training_set->length();
   // Save the dataset in the kernel, because it may be needed after we reload
   // the learner.
-  kernel->specify_dataset = training_set;
-  kernel->build();
+  if (kernel)
+    {
+      kernel->specify_dataset = training_set;
+      kernel->build();  
+    }
+  else
+    PLERROR("KernelProjection::setTrainingSet: You cannot use setTrainingSet without a kernel set");
 }
 
 ///////////
