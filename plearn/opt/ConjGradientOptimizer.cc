@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.3 2003/04/14 20:21:56 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.4 2003/04/15 18:33:51 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -147,7 +147,7 @@ void ConjGradientOptimizer::computeOppositeGradient(
   proppath.fbprop();
   params.copyGradientTo(gradient);
 }
-
+  
 ///////////////
 // conjpomdp //
 ///////////////
@@ -156,18 +156,12 @@ bool ConjGradientOptimizer::conjpomdp (
     VarArray params,
     Var costs,
     VarArray proppath,
-    real starting_step_size,
     real epsilon,
     Vec g,
     Vec h,
-    Vec delta,
-    Vec tmp_storage) {
+    Vec delta) {
 
   int i;
-  // First perform a line search in the current search direction (h)
-  gSearch(grad, params, costs, proppath, h, 
-          starting_step_size, epsilon, tmp_storage);
-
   // delta = Gradient
   (*grad)(params, costs, proppath, delta);
   real norm_g = pownorm(g);
@@ -189,6 +183,55 @@ bool ConjGradientOptimizer::conjpomdp (
   // We want to stop when the norm of the gradient is small enough
   return (pownorm(g) < epsilon);
 };
+
+///////////////////
+// findDirection //
+///////////////////
+bool ConjGradientOptimizer::findDirection(
+    void (*grad)(VarArray, Var, VarArray, const Vec&),
+    VarArray params,
+    Var costs,
+    VarArray proppath,
+    real starting_step_size,
+    real epsilon,
+    Vec g,
+    Vec h,
+    Vec delta,
+    Vec tmp_storage) {
+  bool isFinished = false;
+  switch (isFinished) {
+    case true:
+      isFinished = conjpomdp(grad, params, costs, proppath,
+                             epsilon, g, h, delta);
+      break;
+    case false:
+      fletcherReeves(grad, params, costs, proppath,
+                                  g, h, delta);
+      break;
+  }
+  return isFinished;
+}
+
+////////////////////
+// fletcherReeves //
+////////////////////
+void ConjGradientOptimizer::fletcherReeves (
+    void (*grad)(VarArray, Var, VarArray, const Vec&),
+    VarArray params,
+    Var costs,
+    VarArray proppath,
+    Vec g,
+    Vec h,
+    Vec delta) {
+
+  // delta = Gradient
+  (*grad)(params, costs, proppath, delta);
+  real gamma = pownorm(delta) / pownorm(g);
+  for (int i=0; i<h.length(); i++) {
+    h[i] = delta[i] + gamma * h[i];
+  }
+  g << delta;
+}
 
 /////////////
 // gSearch //
@@ -250,6 +293,47 @@ void ConjGradientOptimizer::gSearch (
   params.update(step, search_direction);
 }
 
+/////////////////////
+// hestenesStiefel //
+/////////////////////
+void ConjGradientOptimizer::hestenesStiefel (
+    void (*grad)(VarArray, Var, VarArray, const Vec&),
+    VarArray params,
+    Var costs,
+    VarArray proppath,
+    Vec g,
+    Vec h,
+    Vec delta) {
+
+  int i;
+  // delta = Gradient
+  (*grad)(params, costs, proppath, delta);
+  for (i=0; i<g.length(); i++) {
+    g[i] = delta[i] - g[i];
+  }
+  real gamma = dot(delta, g) / dot(h, g);
+  for (i=0; i<h.length(); i++) {
+    h[i] = delta[i] + gamma * h[i];
+  }
+  g << delta;
+}
+
+////////////////
+// lineSearch //
+////////////////
+void ConjGradientOptimizer::lineSearch(
+    void (*grad)(VarArray, Var, VarArray, const Vec&),
+    VarArray params,
+    Var costs,
+    VarArray proppath,
+    Vec search_direction,
+    real starting_step_size,
+    real epsilon,
+    Vec tmp_storage) {
+  gSearch(grad, params, costs, proppath, search_direction,
+          starting_step_size, epsilon, tmp_storage);
+}
+  
 //////////////
 // optimize //
 //////////////
@@ -264,22 +348,26 @@ real ConjGradientOptimizer::optimize()
   Vec lastmeancost(cost->size());
   early_stop = false;
 
-  // Initiliazation of the structures for the CONJPOMDP algorithm
+  // Initiliazation of the structures
   Vec g(params.nelems());
   Vec h(params.nelems());
   Vec delta(params.nelems());
   Vec tmp_storage(params.nelems());
   computeOppositeGradient(params, cost, proppath, h); 
   g << h;
-  cout << "nupdates =" << nupdates << endl;
 
   // Loop through the epochs
   for (int t=0; !early_stop && t<nupdates; t++) {
 
-    // Make one iteration through the CONJPOMDP algorithm
-    cost->fprop();
+    cost->fprop(); // TODO Remove those 2 lines
     cout << "cost = " << cost->value[0] << " " << cost->value[1] << " " << cost->value[2] << endl;
-    early_stop = conjpomdp(
+    
+    // Make a line search along the current search direction (h)
+    lineSearch(computeOppositeGradient, params, cost, proppath, h, 
+               starting_step_size, epsilon, tmp_storage);
+    
+    // Find the new search direction
+    early_stop = findDirection(
         computeOppositeGradient, 
         params, 
         cost,
@@ -290,7 +378,6 @@ real ConjGradientOptimizer::optimize()
         h,
         delta,
         tmp_storage);
-//    early_stop = false; // TODO hack for test purpose
 
     // Display results TODO ugly copy/paste : to be cleaned ?
     meancost += cost->value;
@@ -313,6 +400,32 @@ real ConjGradientOptimizer::optimize()
     }
   }
   return lastmeancost[0];
+}
+
+//////////////////
+// polakRibiere //
+//////////////////
+void ConjGradientOptimizer::polakRibiere (
+    void (*grad)(VarArray, Var, VarArray, const Vec&),
+    VarArray params,
+    Var costs,
+    VarArray proppath,
+    Vec g,
+    Vec h,
+    Vec delta) {
+
+  int i;
+  // delta = Gradient
+  (*grad)(params, costs, proppath, delta);
+  real normg = pownorm(g);
+  for (i=0; i<h.length(); i++) {
+    g[i] = delta[i] - g[i];
+  }
+  real gamma = dot(g,delta) / normg;
+  for (int i=0; i<h.length(); i++) {
+    h[i] = delta[i] + gamma * h[i];
+  }
+  g << delta;
 }
 
 %> // end of namespace PLearn

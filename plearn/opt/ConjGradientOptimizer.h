@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.3 2003/04/14 20:21:57 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.4 2003/04/15 18:33:51 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -112,19 +112,37 @@ public:
   virtual void oldread(istream& in);
   virtual real optimize();
 
-
 protected:
   static void declareOptions(OptionList& ol);
 
 private:
 
-  // Given a propagation path and the parameters params,
-  // compute the opposite of the gradient and store it in the "gradient" Vec.
-  static void computeOppositeGradient(
+  // Find the new search direction for the line search algorithm
+  // and store it in h
+  bool findDirection(
+      void (*grad)(VarArray, Var, VarArray, const Vec&),
       VarArray params,
-      Var cost,
+      Var costs,
       VarArray proppath,
-      const Vec& gradient);
+      real starting_step_size,
+      real epsilon,
+      Vec g,
+      Vec h,
+      Vec delta,
+      Vec tmp_storage);
+
+  // Search the minimum in the given direction "search_direction"
+  void lineSearch(
+      void (*grad)(VarArray, Var, VarArray, const Vec&),
+      VarArray params,
+      Var costs,
+      VarArray proppath,
+      Vec search_direction,
+      real starting_step_size,
+      real epsilon,
+      Vec tmp_storage);
+
+  //----------------------- CONJUGATE GRADIENT FORMULAS ---------------------
 
   // The CONJPOMDP algorithm as described in
   // "Direct Gradient-Based Reinforcement Learning:
@@ -138,13 +156,47 @@ private:
       VarArray params,    // the current parameters of the model
       Var costs,          // the cost to optimize
       VarArray proppath,  // the propagation path from params to costs
-      real starting_step_size, // the initial step size for the line search
-      real epsilon,       // the gradient resolution (stop criterion)
-      Vec g,              // storage place, first initialized as the gradient
-      Vec h,              // same as g
-      Vec delta,          // storage place, size of params.elems()
-      Vec tmp_storage);   // same as delta
+      real epsilon,       // the gradient resolution
+      Vec g,              // the gradient
+      Vec h,              // the current search direction
+      Vec delta);         // storage place, size of params.elems()
 
+  // The Fletcher-Reeves formula used to find the new direction
+  // h(n) = -g(n) + norm2(g(n)) / norm2(g(n-1)) * h(n-1)
+  static void fletcherReeves (
+      void (*grad)(VarArray, Var, VarArray, const Vec&),
+      VarArray params,
+      Var costs,
+      VarArray proppath,
+      Vec g,
+      Vec h,
+      Vec delta);
+
+  // The Hestenes-Stiefel formula used to find the new direction
+  // h(n) = -g(n) + dot(g(n), g(n)-g(n-1)) / dot(h(n-1), g(n)-g(n-1)) * h(n-1)
+  static void hestenesStiefel (
+      void (*grad)(VarArray, Var, VarArray, const Vec&),
+      VarArray params,
+      Var costs,
+      VarArray proppath,
+      Vec g,
+      Vec h,
+      Vec delta);
+
+  // The Polak-Ribiere formula used to find the new direction
+  // h(n) = -g(n) + dot(g(n), g(n)-g(n-1)) / norm2(g(n-1)) * h(n-1)
+  static void polakRibiere (
+      void (*grad)(VarArray, Var, VarArray, const Vec&),
+      VarArray params,
+      Var costs,
+      VarArray proppath,
+      Vec g,
+      Vec h,
+      Vec delta);
+
+  //------------------------- LINE SEARCH ALGORITHMS -------------------------
+
+  // Performs a line search along the direction "search_direction"
   // The GSearch algorithm as described in
   // "Direct Gradient-Based Reinforcement Learning:
   // II. Gradient Ascent Algorithms and Experiments"
@@ -159,6 +211,17 @@ private:
       real starting_step_size,
       real epsilon,
       Vec tmp_storage);
+
+  //--------------------------- UTILITY FUNCTIONS ----------------------------
+  
+  // Given a propagation path and the parameters params,
+  // compute the opposite of the gradient and store it in the "gradient" Vec.
+  static void computeOppositeGradient(
+      VarArray params,
+      Var cost,
+      VarArray proppath,
+      const Vec& gradient);
+
 };
 
 %> // end of namespace PLearn
