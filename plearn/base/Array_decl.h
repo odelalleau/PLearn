@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Array_decl.h,v 1.2 2004/05/14 17:49:10 chrish42 Exp $
+   * $Id: Array_decl.h,v 1.3 2004/05/26 17:57:52 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -317,13 +317,6 @@ public:
 
 };
 
-template <class T> 
-struct hash_Array {
-  size_t operator()(const Array<T>& a) const
-  {
-    return hashbytes((char*)a.data(),a.size()*sizeof(T));
-  }
-};
 
 template <class T>
 class Array2ArrayMap : public PPointable
@@ -345,5 +338,17 @@ struct hash_to_multimapArray {
 
 
 } // end of namespace PLearn
+
+
+// define hash function (replace the below declaration)
+SET_HASH_FUNCTION(PLearn::Array<T>, T, a, PLearn::hashbytes((char*)a.data(),a.size()*sizeof(T)) )
+
+//template <class T> 
+//struct hash_Array {
+//  size_t operator()(const Array<T>& a) const
+//  {
+//    return hashbytes((char*)a.data(),a.size()*sizeof(T));
+//  }
+//};
 
 #endif

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TVec_decl.h,v 1.7 2004/05/19 17:24:33 tihocan Exp $
+   * $Id: TVec_decl.h,v 1.8 2004/05/26 17:59:26 nova77 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -780,6 +780,8 @@ public:
   { return 0xFF; }
 };
 
+
 } // end of namespace PLearn
+
 
 #endif

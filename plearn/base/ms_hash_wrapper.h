@@ -33,6 +33,10 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
+// Wrappers for the has functions. See below for instructions.
+// IMPORTANT: These macros MUST be outside of any namespace!!!!!!!!!
+
+
 #ifndef ms_hash_wrapper_H
 #define ms_hash_wrapper_H
 

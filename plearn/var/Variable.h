@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.h,v 1.12 2004/02/28 15:11:38 yoshua Exp $
+   * $Id: Variable.h,v 1.13 2004/05/26 17:59:27 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -346,7 +346,7 @@ public:
   virtual void buildPath(VarArray& proppath) =0;
 
   virtual void oldread(istream& in);
-  virtual void write(ostream& out);
+  virtual void write(ostream& out) const;
 
   
   

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.27 2004/05/04 21:15:53 nova77 Exp $
+   * $Id: Object.cc,v 1.28 2004/05/26 17:57:52 nova77 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -408,7 +408,7 @@ Object* readObject(PStream &in, unsigned int id)
         o->newread(in);
       }
        
-    if (id != LONG_MAX)
+    if (id != UINT_MAX)
       in.copies_map_in[id] = o;
     return o;
 }

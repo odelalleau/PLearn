@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.cc,v 1.15 2004/05/14 17:49:13 chrish42 Exp $
+   * $Id: Variable.cc,v 1.16 2004/05/26 17:59:27 nova77 Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -343,7 +343,7 @@ string Variable::getName() const
 void Variable::oldread(istream& in)
 { PLearn::read(in, value); }
 
-void Variable::write(ostream& out)
+void Variable::write(ostream& out) const
 { PLearn::write(out, value); }
 
 

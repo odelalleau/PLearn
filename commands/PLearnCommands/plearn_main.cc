@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn_main.cc,v 1.13 2004/02/20 21:11:40 chrish42 Exp $
+   * $Id: plearn_main.cc,v 1.14 2004/05/26 17:59:26 nova77 Exp $
    ******************************************************* */
 
 //#include "general.h"
@@ -67,10 +67,12 @@ int plearn_main(int argc, char** argv)
   else 
     {
       string command = argv[1];
+						
       if(PLearnCommandRegistry::is_registered(command))
         {
           vector<string> args = stringvector(argc-2, argv+2);
           PLearnCommandRegistry::run(command, args);
+
         }
       else if(file_exists(command))
         {

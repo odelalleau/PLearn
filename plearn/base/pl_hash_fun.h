@@ -117,6 +117,7 @@ SET_HASH_WITH_FUNCTION(float, x, PLearn::hashval(x))
 //  size_t operator()(float x) const { return PLearn::hashval(x); }
 //};
 
+
 #if defined(WIN32) & !defined(_MINGW_)
 
 using namespace stdext;

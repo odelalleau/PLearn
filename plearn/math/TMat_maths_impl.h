@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.47 2004/05/26 16:05:14 tihocan Exp $
+   * $Id: TMat_maths_impl.h,v 1.48 2004/05/26 17:59:26 nova77 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -5431,6 +5431,8 @@ void addXandX2IfNonMissing(const TVec<T>& source, const TVec<int>& nnonmissing, 
 
 // Norman: replaced the code below with this wrapper
 SET_HASH_FUNCTION(PLearn::TVec<T>, T, v, sumsquare(v))
+SET_HASH_WITH_FUNCTION(PLearn::Vec, v, sumsquare(v))
+
 //#if __GNUC__==3 && __GNUC_MINOR__>0
 //namespace __gnu_cxx {
 //#else

@@ -23,11 +23,12 @@
 #include <cstdlib>
 #include <dirent.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 using namespace std;
 
 bool isdir(const string& path);
-void makedir(string& dir);
+void makedir(const string& dir);
 int goAndCreateDir(string sourcedir, string destdir, string spc);
 void copyAndLinkObjs(string& sourceOBJdir, string& original_sourcedir, string& destOBJdir);
 
@@ -70,40 +71,69 @@ int goAndCreateDir(string sourcedir, string destdir, string spc)
       return 1;    
   }
   struct dirent* dent;
+
+  bool hasCode = false;
+	bool hasOBJS = false;
+		
   while( (dent = readdir(d)) != 0)
   {
      
-      string s = dent->d_name;
+    string s = dent->d_name;
 
-      if(s=="." || s=="..")
-        continue;
+    if(s=="." || s=="..")
+      continue;
 
-      if (!isdir(sourcedir + s))
-        continue;
+    if (!isdir(sourcedir + s))
+		{
+      if (s.rfind(".cc") != string::npos)
+        hasCode = true;
 
-      // ignore CVS dirs
-      if (s.rfind("CVS",0) != string::npos)
-        continue;
+      continue;
+		}
+
+  	if (s.find("OBJS") != string::npos)
+			hasOBJS = true;
+
+    // ignore CVS dirs
+    if (s.find("CVS") != string::npos)
+      continue;
         
-      newSourceDir = sourcedir + s + "/";
-      newDestDir = destdir + s + "/";
-      makedir(newDestDir);
+    newSourceDir = sourcedir + s + "/";
+    newDestDir = destdir + s + "/";
+    makedir(newDestDir);
 
-      if(s.rfind("OBJ",0) != string::npos)
-      {
-        // OBJ dir found!      
-        cout << spc << "-> Copying and creating link..";
-        cout.flush();
-        copyAndLinkObjs(newSourceDir, sourcedir, newDestDir);
-        cout << "done!" << endl;
-      }
-      else
-      {
-        // normal dir
-        goAndCreateDir(newSourceDir, newDestDir, spc);
-      }
+    if(s.find("OBJS") != string::npos)
+    {
+      // OBJ dir found!      
+      cout << spc << "-> Copying and creating link..";
+      cout.flush();
+      copyAndLinkObjs(newSourceDir, sourcedir, newDestDir);
+      cout << "done!" << endl;
+    }
+    else
+    {      
+      // normal dir
+      goAndCreateDir(newSourceDir, newDestDir, spc);
+    }
      
   }
+
+	if (hasCode && !hasOBJS)
+  {
+     cout << spc << "-> Creating OBJS dir and linking it..";
+  
+		 // checks if directory already exists in the destination
+		 
+		 if (!isdir(destdir + "OBJS"))
+		   makedir(destdir + "OBJS");
+			 
+     string command = "ln -s " + destdir + "OBJS " + sourcedir;
+     system(command.c_str());
+   
+	   cout << "done!" << endl;
+  }
+
+	
   closedir(d);
 
   return 0;
@@ -111,31 +141,30 @@ int goAndCreateDir(string sourcedir, string destdir, string spc)
 
 void copyAndLinkObjs(string& sourceOBJdir, string& original_sourcedir, string& destOBJdir)
 {
+  string command;
+
   // copy all the object files
-  ostringstream mvCommand(ostringstream::out);
-  mvCommand << "cp -R " << sourceOBJdir << "*" << " " << destOBJdir;
-  system(mvCommand.str().c_str());
+  command = "cp -R " + sourceOBJdir + "*" + " " + destOBJdir;
+  system(command.c_str());
 
   // delete the old OBJ directory  
-  ostringstream rmCommand(ostringstream::out);
-  rmCommand << "rm -R " << sourceOBJdir;
-  system(rmCommand.str().c_str());
+  command = "rm -R " + sourceOBJdir;
+  system(command.c_str());
   
   // make the symbolic link of the OBJ directory
-  ostringstream lnCommand(ostringstream::out); 
-  lnCommand << "ln -s " << destOBJdir << " " << original_sourcedir;
-  system(lnCommand.str().c_str());
+  command = "ln -s " + destOBJdir + " " + original_sourcedir;
+  system(command.c_str());
 
 }
 
 
-void makedir(string& dir)
+void makedir(const string& dir)
 {
   // directory already exists!!
   if (isdir(dir))
     return;
 
-  // make the symbolic link of the OBJ directory
+  // make the symbolic link of the OBJS directory
   ostringstream mkdirCommand(ostringstream::out); 
   mkdirCommand << "mkdir " << dir;
   system(mkdirCommand.str().c_str());
@@ -143,11 +172,24 @@ void makedir(string& dir)
 
 bool isdir(const string& path)
 {
-  DIR *dfp = NULL;
-  dfp = opendir(path.c_str());
-  if (dfp != NULL)
-    return true;
-  else
-    return false;
+	struct stat statusinfo;
+	int status;
+
+	status = lstat(path.c_str(), &statusinfo);
+		
+	if (status != 0)
+		return false;
+	
+	if (S_ISDIR(statusinfo.st_mode))
+		return true;
+	else if (S_ISLNK(statusinfo.st_mode))
+	{
+	  // if it is a link is better to delete it.
+	  string command = "rm  " + path;
+    system(command.c_str());
+		return false;
+	}
+	else
+		return false;
 }
 
