@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.cc,v 1.3 2002/10/21 20:43:34 jauvinc Exp $
+   * $Id: WordNetOntology.cc,v 1.4 2002/11/05 20:40:35 jauvinc Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -75,15 +75,6 @@ WordNetOntology::WordNetOntology(string voc_file,
   init();
   //createBaseSynsets();
   load(voc_file, synset_file, ontology_file);
-
-//   cerr << "process " << PLMPI::rank << " trying to open " << voc_file << endl;
-//   ifstream if_voc(voc_file.c_str());
-//   if (!if_voc) PLERROR("can't open %s", voc_file.c_str());
-//   ifstream if_synsets(synset_file.c_str());
-//   if (!if_synsets) PLERROR("can't open %s", synset_file.c_str());
-//   ifstream if_ontology(ontology_file.c_str());
-//   if (!if_ontology) PLERROR("can't open %s", ontology_file.c_str());
-  
   if (pre_compute_descendants)
     extractDescendants();
   if (pre_compute_ancestors)
@@ -154,7 +145,7 @@ void  WordNetOntology::createBaseSynsets()
   oov_node->parents.insert(SUPER_UNKNOWN_SS_ID);
   unk_node->children.insert(OOV_SS_ID);
 
-  // create PROPER_NOUN, NUMERIC, PUNCTUATION and STOP synsets
+  // create PROPER_NOUN, NUMERIC, PUNCTUATION, BOS, EOS and STOP synsets
   Node* proper_node = new Node(PROPER_NOUN_SS_ID);
   proper_node->syns.push_back("PROPER NOUN");
   proper_node->types.insert(UNDEFINED_TYPE);
@@ -182,6 +173,18 @@ void  WordNetOntology::createBaseSynsets()
   stop_node->gloss = "(stop)";
   synsets[STOP_SS_ID] = stop_node;
 
+  Node* bos_node = new Node(BOS_SS_ID);
+  bos_node->syns.push_back("BOS");
+  bos_node->types.insert(UNDEFINED_TYPE);
+  bos_node->gloss = "(BOS)";
+  synsets[BOS_SS_ID] = bos_node;
+
+  Node* eos_node = new Node(EOS_SS_ID);
+  eos_node->syns.push_back("EOS");
+  eos_node->types.insert(UNDEFINED_TYPE);
+  eos_node->gloss = "(eos)";
+  synsets[EOS_SS_ID] = eos_node;
+
   // link them <-> SUPER-UNKNOWN
   proper_node->parents.insert(SUPER_UNKNOWN_SS_ID);
   unk_node->children.insert(PROPER_NOUN_SS_ID);
@@ -191,6 +194,10 @@ void  WordNetOntology::createBaseSynsets()
   unk_node->children.insert(PUNCTUATION_SS_ID);
   stop_node->parents.insert(SUPER_UNKNOWN_SS_ID);
   unk_node->children.insert(STOP_SS_ID);
+  bos_node->parents.insert(SUPER_UNKNOWN_SS_ID);
+  unk_node->children.insert(BOS_SS_ID);
+  eos_node->parents.insert(SUPER_UNKNOWN_SS_ID);
+  unk_node->children.insert(EOS_SS_ID);
 
   // create NOUN, VERB, ADJECTIVE and ADVERB synsets
   Node* noun_node = new Node(NOUN_SS_ID);
@@ -593,6 +600,16 @@ bool WordNetOntology::catchSpecialTags(string word)
   {
     word_to_senses[word_id].insert(STOP_SS_ID);
     sense_to_words[STOP_SS_ID].insert(word_id);
+    return true;
+  } else if (word == BOS_TAG)
+  {
+    word_to_senses[word_id].insert(BOS_SS_ID);
+    sense_to_words[BOS_SS_ID].insert(word_id);
+    return true;
+  } else if (word == EOS_TAG)
+  {
+    word_to_senses[word_id].insert(EOS_SS_ID);
+    sense_to_words[EOS_SS_ID].insert(word_id);
     return true;
   }
   return false;
@@ -1793,6 +1810,23 @@ void WordNetOntology::getCategoriesUnderLevel(int ss_id, int cur_level, int targ
   }  
 }
 
+void WordNetOntology::getDescendantCategoriesAtLevel(int ss_id, int cur_level, int target_level, Set categories)
+{
+  Node* node = synsets[ss_id];
+  if (cur_level == target_level)
+    categories.insert(ss_id);
+  else
+  {
+    if (node->children.isEmpty())
+      categories.insert(ss_id);
+    else
+    {
+      for (SetIterator it = node->children.begin(); it != node->children.end(); ++it)
+        getDescendantCategoriesAtLevel(*it, cur_level + 1, target_level, categories);
+    }
+  }  
+}
+
 void WordNetOntology::reducePolysemy(int level)
 {
   ShellProgressBar progress(0, words.size() - 1, "reducing polysemy", 50);
@@ -2197,7 +2231,8 @@ bool WordNetOntology::isTopLevelCategory(int ss_id)
           ss_id == ADJ_SS_ID || ss_id == ADV_SS_ID ||
           ss_id == OOV_SS_ID || ss_id == PROPER_NOUN_SS_ID ||
           ss_id == NUMERIC_SS_ID || ss_id == PUNCTUATION_SS_ID ||
-          ss_id == STOP_SS_ID || ss_id == UNDEFINED_SS_ID);
+          ss_id == STOP_SS_ID || ss_id == UNDEFINED_SS_ID ||
+          ss_id == BOS_SS_ID || ss_id == EOS_SS_ID);
 }
 
 // {non-letters}word{non-letters} -> word

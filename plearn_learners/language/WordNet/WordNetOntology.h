@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.h,v 1.4 2002/10/21 20:43:34 jauvinc Exp $
+   * $Id: WordNetOntology.h,v 1.5 2002/11/05 20:40:35 jauvinc Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -68,6 +68,8 @@
 #define NUMERIC_SS_ID 8
 #define PUNCTUATION_SS_ID 9
 #define STOP_SS_ID 10
+#define BOS_SS_ID 11
+#define EOS_SS_ID 12
 
 #define NULL_TAG "<null>"
 
@@ -76,6 +78,8 @@
 #define NUMERIC_TAG "<numeric>"
 #define PUNCTUATION_TAG "<punctuation>"
 #define STOP_TAG "<stop>"
+#define BOS_TAG "<s>"
+#define EOS_TAG "</s>"
 
 #define VERB_TAG "<verb>"
 #define NOUN_TAG "<noun>"
@@ -303,6 +307,7 @@ private:
   //void getCategoriesAtLevel(int ss_id, int level, set<int>& categories);
   void getCategoriesAtLevel(int ss_id, int cur_level, int target_level, set<int>& categories);
   void getCategoriesUnderLevel(int ss_id, int cur_level, int target_level, set<int>& categories);
+  void getDescendantCategoriesAtLevel(int ss_id, int cur_level, int target_level, Set categories);
   void removeNonReachableSynsets();
   void visitUpward(Node* node);
 
