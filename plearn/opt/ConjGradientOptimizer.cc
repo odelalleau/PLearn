@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.33 2003/08/13 08:13:17 plearner Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.34 2003/10/03 12:52:14 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -584,16 +584,17 @@ real ConjGradientOptimizer::gSearch (void (*grad)(Optimizer*, const Vec&)) {
   params.copyTo(tmp_storage);
 
   params.update(step, search_direction);
+  real old_pos = step;
   (*grad)(this, delta);
   real prod = dot(delta, search_direction);
-
   if (prod < 0) {
     // Step back to bracket the maximum
     do {
       sp = step;
       pp = prod;
       step = step / 2;
-      params.update(-step, search_direction);
+      params.update(-old_pos+step, search_direction);
+      old_pos = step;
       (*grad)(this, delta);
       prod = dot(delta, search_direction);
     } while (prod < -epsilon);
@@ -605,7 +606,8 @@ real ConjGradientOptimizer::gSearch (void (*grad)(Optimizer*, const Vec&)) {
     do {
       sm = step;
       pm = prod;
-      params.update(step, search_direction);
+      params.update(-old_pos+step, search_direction);
+      old_pos = step;
       (*grad)(this, delta);
       prod = dot(delta, search_direction);
       step = step * 2;
