@@ -163,9 +163,10 @@ optionalLibrary( name = 'X',
                  includedirs = '?',
                  linkeroptions = '-L/usr/X11R6/lib/ -lXi -lXext -lX11'
 )
+
 optionalLibrary( name='boost',
                  triggers = 'boost*',
-                 includedirs = libdir + '/../include',
+#                 includedirs = libdir + '/../include',  ## You don't need it if you set CPATH environment 
                  linkeroptions = '-L'+libdir )
 
 optionalLibrary( name='boost_date_time',
