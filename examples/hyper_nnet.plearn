@@ -11,9 +11,42 @@ provide_learner_expdir = 1;
 dataset = AutoVMatrix(specification="letters all");
 
 # PP< Splitter >: The splitter to use to generate one or several train/test pairs.
-splitter = TrainTestSplitter(test_fraction=.10) ;
+splitter =
+# TrainTestSplitter(test_fraction=.10) ;
 
-statnames = ["E[E[test1.class_error]]", "E[STDDEV[test1.class_error]]", "E[E[test1.NLL]]", "E[STDDEV[test1.NLL]]"];
+TrainValidTestSplitter(
+# bool: If set to 1, the train set will be appended to each split, after the test set
+# (the train set means the first n_train samples).
+append_train = 1  ;
+
+# bool: If set to 1, the validation set will be appended to each split, after the test set
+# (or the train set if append_train is also set to 1).
+append_valid = 1  ;
+
+# int: The number of splits we want (mostly useful if shuffle_valid_and_test == 1).
+n_splits = 3  ;
+
+# int: The number of samples that define the train set, assumed to be at the beginning
+# of the dataset.
+n_train = 16200  ;
+
+# int: The number of samples that define the validation set (they are taken among
+# the samples after the n_train first ones).
+n_valid = 1800  ;
+
+# bool: If set to 1, then the part of the dataset after the first n_train ones will
+# be shuffled before taking the validation and test sets. Note that if you want
+# to set it to 0, then using a TrainTestSplitter is probably more appropriate.
+shuffle_valid_and_test = 1  ;
+
+);
+
+
+statnames = [
+"E[E[test1.class_error]]", "E[STDDEV[test1.class_error]]", "E[E[test1.NLL]]", "E[STDDEV[test1.NLL]]"
+"E[E[test2.class_error]]", "E[STDDEV[test2.class_error]]", "E[E[test2.NLL]]", "E[STDDEV[test2.NLL]]"
+"E[E[test3.class_error]]", "E[STDDEV[test3.class_error]]", "E[E[test3.NLL]]", "E[STDDEV[test3.NLL]]"
+];
 
 save_test_outputs = 1;
 
