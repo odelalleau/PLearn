@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.14 2003/05/21 09:53:50 plearner Exp $
+   * $Id: VMatrix.h,v 1.15 2003/05/21 19:27:32 tihocan Exp $
    ******************************************************* */
 
 
@@ -100,7 +100,7 @@ protected:
   
 
 public:
-  mutable Array<VMField> fieldinfos; // don't use this directly (deprecated...) call getieldInfos() instead
+  mutable Array<VMField> fieldinfos; // don't use this directly (deprecated...) call getFieldInfos() instead
     Array<VMFieldStat> fieldstats;
 
   VMatrix()
