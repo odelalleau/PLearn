@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SparseVMatrix.h,v 1.3 2004/03/23 23:08:08 morinf Exp $
+   * $Id: SparseVMatrix.h,v 1.4 2004/04/05 23:05:54 morinf Exp $
    ******************************************************* */
 
 
@@ -90,12 +90,12 @@ public:
   SparseVMatrix(VMat m);
     
   //!  This reloads a previously saved sparse VMatrix
-  SparseVMatrix(const string& filename):
-    nelements(0),
-    positions(0),
-    values(0),
-    rows(0)  
-  { load(filename); } 
+  SparseVMatrix(const string& filename);
+
+  PLEARN_DECLARE_OBJECT(SparseVMatrix);
+  static void declareOptions(OptionList &ol);
+
+  virtual void build();
 
   virtual void getRow(int i, Vec v) const;
   virtual real dot(int i1, int i2, int inputsize) const;
@@ -107,8 +107,11 @@ public:
     //virtual void oldread(istream& in);
   	
   virtual ~SparseVMatrix();
+private:
+    void build_();
 };
 
+DECLARE_OBJECT_PTR(SparseVMatrix);
 
 } // end of namespcae PLearn
 #endif

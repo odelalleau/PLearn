@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SparseVMatrix.cc,v 1.3 2004/03/23 23:08:08 morinf Exp $
+   * $Id: SparseVMatrix.cc,v 1.4 2004/04/05 23:05:54 morinf Exp $
    ******************************************************* */
 
 #include "SparseVMatrix.h"
@@ -45,6 +45,14 @@ using namespace std;
 
 
 /** SparseVMatrix **/
+
+PLEARN_IMPLEMENT_OBJECT(SparseVMatrix, "ONE LINE DESC", "NO HELP");
+
+SparseVMatrix::SparseVMatrix(const string& filename)
+  : nelements(0), positions(0), values(0), rows(0)  
+{
+  load(filename);
+}
 
 SparseVMatrix::SparseVMatrix(VMat m)
   : inherited(m.length(),m.width()), nelements(0), positions(0), values(0), rows(0)
@@ -105,7 +113,26 @@ SparseVMatrix::SparseVMatrix(VMat m)
         }
     }
 }
-    
+
+void
+SparseVMatrix::build()
+{
+    inherited::build();
+    build_();
+}
+
+void
+SparseVMatrix::build_()
+{
+    // TODO
+}
+
+void
+SparseVMatrix::declareOptions(OptionList &ol)
+{
+    inherited::declareOptions(ol);
+}
+
 void SparseVMatrix::getRow(int i, Vec v) const
 {
 #ifdef BOUNDCHECK
