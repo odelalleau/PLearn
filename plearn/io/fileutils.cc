@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.54 2005/01/18 18:45:11 chrish42 Exp $
+   * $Id: fileutils.cc,v 1.55 2005/01/19 14:02:10 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -420,7 +420,7 @@ void readWhileMatches(istream& in, const string& s){
   PLERROR("In readWhileMatches, met EOF while matching %s", s.c_str());
 }
 
-/// Reads everything until '\n' (also consumes the '\n')
+//! Reads everything until '\n' (also consumes the '\n')
 void skipRestOfLine(istream& in)
 {
   int c=in.get();
