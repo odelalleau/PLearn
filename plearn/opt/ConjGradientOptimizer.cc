@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.8 2003/04/23 14:51:47 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.9 2003/04/23 15:08:50 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -228,10 +228,9 @@ real ConjGradientOptimizer::computeDerivative(
     ConjGradientOptimizer* opt) {
   opt->params.copyTo(opt->tmp_storage);
   opt->params.update(alpha, opt->search_direction);
-  Vec gradient(opt->params.nelems());
-  computeGradient(opt, gradient);
+  computeGradient(opt, opt->delta);
   opt->params.copyFrom(opt->tmp_storage);
-  return dot(opt->search_direction, gradient);
+  return dot(opt->search_direction, opt->delta);
 }
 
 /////////////////////
@@ -393,10 +392,9 @@ void ConjGradientOptimizer::fletcherReeves (
 // fletcherSearch //
 ////////////////////
 void ConjGradientOptimizer::fletcherSearch (real mu) {
-  // The value of alpha1 below is suggested by Fletcher
   real df = max (last_improvement, 10*stop_epsilon);
-  real alpha1 = -2*df / computeDerivative(0, this);
-  // TODO Get the derivative from somewhere ?
+  // This value of alpha1 is suggested by Fletcher
+  real alpha1 = 2*df / dot(search_direction, current_opp_gradient);
   real alpha = fletcherSearchMain (
       computeCostValue,
       computeDerivative,
