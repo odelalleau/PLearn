@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ConcatRowsVMatrix.cc,v 1.12 2004/10/26 14:22:49 tihocan Exp $
+   * $Id: ConcatRowsVMatrix.cc,v 1.13 2004/10/26 16:25:39 tihocan Exp $
    ******************************************************* */
 
 #include "ConcatRowsVMatrix.h"
@@ -203,12 +203,6 @@ void ConcatRowsVMatrix::ensureMappingsConsistency() {
     for (int i = 1; i < to_concat.length(); i++) {
       other_map = to_concat[i]->getStringToRealMapping(j);
       for(it = other_map.begin(); it != other_map.end(); it++) {
-        /*
-        for (jt = cur_map.begin(); jt != cur_map.end(); jt++) {
-          cout << jt->first << " <-> " << jt->second << endl;
-        }
-        cout << it->first << endl;
-        cout << it->second << endl;*/
         find_map = cur_map->find(it->first);
         if (find_map != cur_map->end()) {
           // The string mapped in VMat 'i' is also mapped in our current mapping.
@@ -232,17 +226,12 @@ void ConcatRowsVMatrix::ensureMappingsConsistency() {
             fixed_mappings.resize(to_concat.length(), width());
             // We pick for the number the maximum of the current mapped numbers, +1.
             max++;
-            /*cout << it->first << endl;
-            cout << it->second << endl;
-            cout << max << endl;*/
             fixed_mappings(i, j)[it->second] = max;
             new_map_val = max;
           } else {
             // There is no mapping to this real number, it is thus ok to add it.
             if (new_map_val > max)
               max = new_map_val;
-            /*cout << it->first << endl;
-            cout << it->second << endl;*/
           }
           addStringMapping(j, it->first, new_map_val);
         }
@@ -298,28 +287,6 @@ void ConcatRowsVMatrix::findAllFields() {
   for (int i = 0; i < array.length(); i++) {
     to_concat[i] = new SelectColumnsVMatrix(array[i], fnames, true);
   }
-
-  /*
-  // Now fill 'to_concat' with the corresponding VMats.
-  to_concat.resize(array.length());
-  for (int i = 0; i < array.length(); i++) {
-    other_fields = array[i]->getFieldInfos();
-    string prg = "";
-    for (int k = 0; k < fieldinfos.length(); k++) {
-      bool is_in_vmat_i = false;
-      for (int j = 0; !is_in_vmat_i && j < other_fields.length(); j++)
-        if (fieldinfos[k].name == other_fields[j].name)
-          is_in_vmat_i = true;
-      if (is_in_vmat_i) {
-        prg += " @" + fieldinfos[k].name;
-      } else {
-        prg += " missing";
-      }
-      prg += " :" + fieldinfos[k].name;
-    }
-    to_concat[i] = new ProcessingVMatrix(array[i], prg);
-  }
-  */
 }
 
 //////////////////////
