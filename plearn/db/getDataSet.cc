@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: getDataSet.cc,v 1.27 2004/11/18 14:30:28 tihocan Exp $
+   * $Id: getDataSet.cc,v 1.28 2004/11/24 18:19:27 tihocan Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -212,7 +212,13 @@ VMat getDataSet(const string& datasetstring, const string& alias)
         else 
           PLERROR("In getDataSet specification of predefined dataset: expecting second word to be 'train' or 'test' or 'all' not %s ...",dsetspec[1].c_str());
         vm->defineSizes(inputsize, 1);
-        vm->setMetaDataDir("/u/lisa/db/metadata/" + datasetstring);
+        // Set metadatadir depending on the METADATADIR variable.
+#ifdef METADATADIR
+        string mdir = METADATADIR;
+#else
+        string mdir = "/u/lisa/db/metadata/";
+#endif
+        vm->setMetaDataDir(append_slash(mdir) + datasetstring);
       }
     catch(const PLearnError& e)  // OK, it wasn't a preprogrammed dataset, let's try with a VMatrix object
       {
