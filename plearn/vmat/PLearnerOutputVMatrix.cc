@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.cc,v 1.8 2004/03/29 18:41:56 tihocan Exp $
+   * $Id: PLearnerOutputVMatrix.cc,v 1.9 2004/03/30 20:09:05 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -74,6 +74,13 @@ PLEARN_IMPLEMENT_OBJECT(PLearnerOutputVMatrix,
 void PLearnerOutputVMatrix::getRow(int i, Vec v) const
 {
   int c=0;
+  if (learners_need_train) {
+    // We need to train the learners first.
+    for (int i = 0; i < learners.length(); i++) {
+      learners[i]->train();
+    }
+    learners_need_train = false;
+  }
   data->getRow(i,row);
   for (int j=0;j<learners.length();j++)
   {
@@ -118,12 +125,13 @@ void PLearnerOutputVMatrix::build_()
   if (data && learners.length()>0 && learners[0])
   {
     if (train_learners) {
-      // First train the learners.
+      // Set the learners' training set.
       for (int i = 0; i < learners.length(); i++) {
         learners[i]->setTrainingSet(data);
-        learners[i]->train();
       }
+      // Note that the learners will be train only if we actually call getRow().
     }
+    learners_need_train = train_learners;
     row.resize(data->width());
     learner_input = row.subVec(0,data->inputsize());
     learner_target = row.subVec(data->inputsize(),data->targetsize());

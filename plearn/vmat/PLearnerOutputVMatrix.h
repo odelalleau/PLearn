@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.h,v 1.5 2004/03/29 18:41:56 tihocan Exp $
+   * $Id: PLearnerOutputVMatrix.h,v 1.6 2004/03/30 20:09:05 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -67,6 +67,7 @@ protected:
   mutable Mat learners_output;
   mutable Vec learner_target;
   mutable Vec non_input_part_of_data_row;
+  mutable bool learners_need_train;  //!< Used to keep track of whether learners need training or not.
 
 public:
   // ************************
