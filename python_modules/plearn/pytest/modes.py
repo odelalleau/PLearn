@@ -1,4 +1,4 @@
-__cvs_id__ = "$Id: modes.py,v 1.20 2005/03/11 03:08:04 dorionc Exp $"
+__cvs_id__ = "$Id: modes.py,v 1.21 2005/03/17 14:24:49 dorionc Exp $"
 
 import copy, shutil
 import plearn.utilities.version_control as version_control
@@ -423,7 +423,7 @@ class RoutineBasedMode( PyTestMode ):
                                 Test._instances_map[ options.test_name ]
                                 )]
 
-            Test.statistics.restrict( options.test_name )
+            Test._statistics.restrict( options.test_name )
             
         else:
             test_instances = Test._instances_map.items()

@@ -1,4 +1,6 @@
 import os, shutil, signal, sys, time
+import plearn.xperiments.Xperiment as Xperiment
+
 from popen2                          import Popen4
 from ArgumentsOracle                 import *
 from plearn.utilities.toolkit        import command_output 
@@ -14,23 +16,11 @@ class Cluster(PyPLearnObject):
         wait_for_expdir_creation = True
         popen_instances          = list
 
-## Currently doesn't work
-##     def free( self ):
-##         sys.stderr.write("Freeing all tasks.")
-##         for task in self.popen_instances:
-##             try:
-##                 os.kill( task.pid, signal.SIGTERM )
-##                 sys.stderr.write(".")
-##             except OSError:
-##                 pass
-##         sys.stderr.write("\nDone.\n")
-
     def dispatch( self, program_call, arguments_oracle ):
         ## if not isinstance(arguments_oracle, ArgumentsOracle): raise TypeError
 
-        expdir_count = None
         if self.wait_for_expdir_creation:
-            expdir_count = count_expdirs( self.expdir_pattern )
+            Xperiment.log_generated_expdirs( enabled = True ) 
 
         ## Frees all tasks if a keyboard interrupt is caught
         try:
@@ -44,6 +34,7 @@ class Cluster(PyPLearnObject):
                 ## This hack is a turnaround to the cluster command bug of
                 ## possibly returning before the task is actually launched
                 if self.wait_for_expdir_creation:
+                    Xperiment.wait_for_expdir_creation( 2, lambda : sys.stderr.write(".") )
                     current_count = count_expdirs( self.expdir_pattern )
                     while current_count == expdir_count:
                         sys.stderr.write(".")
@@ -72,6 +63,9 @@ class Cluster(PyPLearnObject):
             sys.stderr.write("\nInterrupted by user.\n")
             cluster_free()
 
+        if self.wait_for_expdir_creation:
+            Xperiment.log_generated_expdirs( enabled = False )
+            
     def dispatch_task( self, program_call, arguments ):
         """Using the arguments to build the cluster command and launch the process.
 
