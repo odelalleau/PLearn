@@ -1,0 +1,85 @@
+PTester(
+expdir = "$RESULTS/KNN_CLASSIFIER_TESTER_GAUSSIAN_SIGMA1_2004_12_24_14:21:58/knn_classifier_data=data_train.amat_kernel=GaussianKernel_sigma=1_kmin=15_kmult=0/" ;
+dataset = *1 ->AutoVMatrix(
+specification = "$RESOURCES{$PLEARNDIR/test_suite/data/eslt_mixture/data_train.amat}" ;
+writable = 0 ;
+length = 200 ;
+width = 3 ;
+inputsize = 2 ;
+targetsize = 1 ;
+weightsize = 0 ;
+metadatadir = "$RESOURCES{$RESOURCES{$PLEARNDIR/test_suite/data/eslt_mixture/data_train.amat}.metadata}/"  )
+;
+splitter = *2 ->FractionSplitter(
+round_to_closest = 0 ;
+splits = 1  2  [ 
+0 : 1  	0 : 1  	
+]
+ )
+;
+statnames = 2 [ "E[test.E[class_error]]" "E[test.E[neglogprob]]" ] ;
+statmask = TVec(0 0 *0 )
+;
+learner = *3 ->KNNClassifier(
+knn = *4 ->ExhaustiveNearestNeighbors(
+training_mat = 0  0  [ 
+]
+;
+kernel = *5 ->GaussianKernel(
+sigma = 1 ;
+scale_by_sigma = 0 ;
+is_symmetric = 1 ;
+report_progress = 0 ;
+specify_dataset = *0 ;
+data_inputsize = -1 ;
+n_examples = -1  )
+;
+kernel_is_pseudo_distance = 0 ;
+num_neighbors = 1 ;
+copy_input = 0 ;
+copy_target = 1 ;
+copy_weight = 1 ;
+copy_index = 0 ;
+expdir = "" ;
+seed = -1 ;
+stage = 0 ;
+n_examples = -1 ;
+inputsize = -1 ;
+targetsize = -1 ;
+weightsize = -1 ;
+nstages = 1 ;
+report_progress = 1 ;
+verbosity = 1  )
+;
+nclasses = 2 ;
+kmin = 15 ;
+kmult = 0 ;
+kpow = 0.5 ;
+use_knn_costs_as_weights = 1 ;
+kernel = *0 ;
+expdir = "" ;
+seed = -1 ;
+stage = 0 ;
+n_examples = -1 ;
+inputsize = -1 ;
+targetsize = -1 ;
+weightsize = -1 ;
+nstages = 1 ;
+report_progress = 1 ;
+verbosity = 1  )
+;
+report_stats = 1 ;
+save_initial_tester = 1 ;
+save_stat_collectors = 1 ;
+save_learners = 1 ;
+save_initial_learners = 0 ;
+save_data_sets = 0 ;
+save_test_outputs = 1 ;
+save_test_costs = 1 ;
+provide_learner_expdir = 1 ;
+train = 1 ;
+template_stats_collector = *0 ;
+global_template_stats_collector = *0 ;
+final_commands = TVec(0 0 *0 )
+;
+save_test_confidence = 0  )
