@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelPCA.cc,v 1.5 2004/06/10 20:10:20 tihocan Exp $ 
+   * $Id: KernelPCA.cc,v 1.6 2004/07/19 13:32:29 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -88,9 +88,13 @@ void KernelPCA::declareOptions(OptionList& ol)
   redeclareOption(ol, "kernel", &KernelPCA::kpca_kernel, OptionBase::buildoption,
       "The kernel used to (implicitly) project the data in feature space.");
   
+  redeclareOption(ol, "ignore_n_first", &KernelPCA::ignore_n_first, OptionBase::nosave,
+      "In KernelPCA, no eigenvector is ignored.");
+
   // And declare the normalized kernel so that it can be saved.
   declareOption(ol, "normalized_kernel", &KernelProjection::kernel, OptionBase::learntoption,
       "The normalized kernel.");
+
 }
 
 ///////////

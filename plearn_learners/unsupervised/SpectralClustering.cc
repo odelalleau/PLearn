@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SpectralClustering.cc,v 1.1 2004/06/10 20:07:10 tihocan Exp $ 
+   * $Id: SpectralClustering.cc,v 1.2 2004/07/19 13:32:29 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -77,7 +77,10 @@ void SpectralClustering::declareOptions(OptionList& ol)
   // Redirect the 'kernel' option toward sc_kernel.
   redeclareOption(ol, "kernel", &SpectralClustering::sc_kernel, OptionBase::buildoption,
       "The kernel used to (implicitly) project the data in feature space.");
-  
+
+  redeclareOption(ol, "ignore_n_first", &SpectralClustering::ignore_n_first, OptionBase::nosave,
+      "In Spectral clustering, no eigenvector is ignored.");
+
   // And declare the normalized kernel so that it can be saved.
   declareOption(ol, "normalized_kernel", &KernelProjection::kernel, OptionBase::learntoption,
       "The normalized kernel.");
