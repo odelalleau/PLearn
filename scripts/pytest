@@ -175,9 +175,10 @@ def commitMode(arg, directory, dirlist):
     toCommit = []
 
     os.chdir(pytest_dir)
-    tprint('Pytest examines ' + pytest_paths_file,
+    paths_file_name = os.path.basename(pytest_paths_file)
+    tprint('Pytest examines ' + paths_file_name,
            priority = 'q')
-    cvs_add(pytest_paths_file)
+    cvs_add(paths_file_name)
     # toCommit.append(pytest_paths_file) ## Now committed separatly due to the new path
 
     # Getting in the test_suite
@@ -216,7 +217,7 @@ def commitMode(arg, directory, dirlist):
     # Finally, committing changes
     cvs_commit(toCommit)
     os.chdir(pytest_dir)
-    cvs_commit(pytest_paths_file)
+    cvs_commit(paths_file_name)
         
     # 'Locking' back the results
     os.chdir(directory)
