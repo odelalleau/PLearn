@@ -49,7 +49,7 @@ def install(packagename, version='', prefixdir=''):
             print i+1,':',prefixes[i]
         i = input('Which one to use? ')
         print '\n\n'
-        prefixdir=prefixes[i]
+        prefixdir=prefixes[i-1]
 
     dependencies = package.get_dependencies(version)
     for (depname, desired_versions) in dependencies:
