@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.28 2003/11/24 16:29:23 tihocan Exp $
+   * $Id: NNet.cc,v 1.29 2003/11/24 20:43:04 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -67,6 +67,7 @@ NNet::NNet()
    output_layer_weight_decay(0),
    output_layer_bias_decay(0),
    direct_in_to_out_weight_decay(0),
+   classification_regularizer(0),
    L1_penalty(false),
    direct_in_to_out(false),
    output_transfer_func(""),
