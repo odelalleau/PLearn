@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: JulianizeVMatrix.h,v 1.4 2003/08/13 08:13:46 plearner Exp $ 
+   * $Id: JulianizeVMatrix.h,v 1.5 2003/08/13 15:24:40 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file JulianizeVMatrix.h */
@@ -140,6 +140,7 @@ public:
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
   //! Declares name and deepCopy methods
+  typedef RowBufferedVMatrix inherited;
   PLEARN_DECLARE_OBJECT(JulianizeVMatrix);
 
 protected:
