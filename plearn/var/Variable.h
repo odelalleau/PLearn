@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Variable.h,v 1.11 2004/02/20 21:11:54 chrish42 Exp $
+   * $Id: Variable.h,v 1.12 2004/02/28 15:11:38 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -104,9 +104,9 @@ public:
 
 protected:
   //!  Default constructor for persistence
-  Variable() : varnum(++nvars), marked(), varname(), allows_partial_update(),
-               gradient_status(), valuedata(), gradientdata(), min_value(),
-               max_value(), dont_bprop_here(false) {}
+  Variable() : varnum(++nvars), marked(false), varname(), allows_partial_update(false),
+               gradient_status(0), valuedata(0), gradientdata(0), min_value(-FLT_MAX),
+               max_value(FLT_MAX), dont_bprop_here(false) {}
 
   static void declareOptions(OptionList & ol);
   
