@@ -129,7 +129,7 @@ def locate_header_file():
         if os.path.isfile(modelpath):
             return modelpath
         directory = abspath(os.path.join(directory,'..'))
-    return os.path.join(plpath.plearn_scripts,'.pyskeleton_header')
+    return os.path.join(plpath.plearn_scripts, skeldir, '.pyskeleton_header')
 
 
 def fingername():
