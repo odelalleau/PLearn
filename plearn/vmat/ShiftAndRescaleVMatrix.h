@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: ShiftAndRescaleVMatrix.h,v 1.6 2004/04/05 23:05:10 morinf Exp $
+   * $Id: ShiftAndRescaleVMatrix.h,v 1.7 2004/06/26 15:11:15 tihocan Exp $
    ******************************************************* */
 
 
@@ -85,12 +85,10 @@ public:
     }
 private: 
   //! This does the actual building. 
-  // (Please implement in .cc)
   void build_();
 
 protected: 
   //! Declares this class' options
-  // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
 
 public:
