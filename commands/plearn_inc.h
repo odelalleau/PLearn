@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.42 2004/12/21 07:15:37 chapados Exp $ 
+   * $Id: plearn_inc.h,v 1.43 2004/12/27 00:16:42 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -121,6 +121,7 @@
 
 // Regressors
 #include <plearn_learners/regressors/ConstantRegressor.h>
+#include <plearn_learners/regressors/KNNRegressor.h>
 #include <plearn_learners/regressors/LinearRegressor.h>
 #include <plearn_learners/regressors/PLS.h>
 #include <plearn_learners/regressors/RankLearner.h>
