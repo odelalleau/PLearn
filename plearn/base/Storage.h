@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Storage.h,v 1.14 2004/07/21 16:30:50 chrish42 Exp $
+   * $Id: Storage.h,v 1.15 2004/07/27 16:37:30 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -83,8 +83,7 @@ public:
         if(!data)
           PLERROR("OUT OF MEMORY (new returned NULL) in copy constructor of storage, trying to allocate %d elements",length());
         //memcpy(data,other.data,length()*sizeof(T));
-	copy(other.data, other.data+length(), data);
-
+        copy(other.data, other.data+length(), data);
       }
       catch(...)
       {
@@ -256,11 +255,11 @@ public:
             if(data)
             {
               // memcpy(newdata,data,length()*sizeof(T));
-	      copy(data,data+length(),newdata);
+              copy(data,data+length(),newdata);
               delete[] data;
             }
             // memset(&newdata[length()],0,(newlength-length())*sizeof(T));
-	    clear_n(newdata+length(),newlength-length());
+            clear_n(newdata+length(),newlength-length());
             length_ = newlength;
             data = newdata;
           }
@@ -270,27 +269,27 @@ public:
           }
         }
       else //!<  newlength<length() (shrinking)
-        {
-          try 
-          { 
-            T* newdata = new T[newlength];
-            if(!newdata)
-              PLERROR("OUT OF MEMORY (new returned NULL) in copy constructor of storage, trying to allocate %d elements",length());
+      {
+        try 
+        { 
+          T* newdata = new T[newlength];
+          if(!newdata)
+            PLERROR("OUT OF MEMORY (new returned NULL) in copy constructor of storage, trying to allocate %d elements",length());
 
-            if(data)
-            {
-              //memcpy(newdata,data,newlength*sizeof(T));
-	      copy(data,data+newlength,newdata);
-              delete[] data;
-            }
-            length_ = newlength;
-            data = newdata;          
-          }
-          catch(...)
+          if(data)
           {
-            PLERROR("OUT OF MEMORY in copy constructor of storage, trying to allocate %d elements",length());
+            //memcpy(newdata,data,newlength*sizeof(T));
+            copy(data,data+newlength,newdata);
+            delete[] data;
           }
+          length_ = newlength;
+          data = newdata;          
         }
+        catch(...)
+        {
+          PLERROR("OUT OF MEMORY in copy constructor of storage, trying to allocate %d elements",length());
+        }
+      }
     }
 
     //!  Deep copying
