@@ -49,6 +49,77 @@ PPath('foo/bar/').dirname() == 'foo/bar'                    True
 PPath('foo/bar/hi.cc').dirname() == 'foo/bar'               True
 
 
+#####  Canonical paths  ###################################################
+
+./foo                                                       foo
+
+./                                                          ./
+
+.                                                           .
+
+/.                                                          /
+
+/./                                                         /
+
+/./foo                                                      /foo
+
+foo/.                                                       foo
+
+foo/./                                                      foo/
+
+foo/./bar                                                   foo/bar
+
+foo/.bar                                                    foo/.bar
+
+foo./bar                                                    foo./bar
+
+/..                                                         FATAL ERROR: In PPath::resolveDots - '/..' is invalid
+
+/../foo                                                     FATAL ERROR: In PPath::resolveDots - '/../foo' is invalid
+
+../foo                                                      ../foo
+
+foo/..                                                      .
+
+foo/../                                                     ./
+
+/foo/..                                                     /
+
+/foo/../                                                    /
+
+foo/../bar                                                  bar
+
+/foo/../bar                                                 /bar
+
+/..foo                                                      /..foo
+
+foo../                                                      foo../
+
+../../../foo                                                ../../../foo
+
+foo/../../..                                                ../..
+
+.././../foo/./bar/../foobar                                 ../../foo/foobar
+
+foo/bar/foobar/.././../../foobi/../foobo/../..              ..
+
+foo/bar/foobar/.././../../foobi/../foobo/                   foobo/
+
+/foo/bar/foobar/.././../../foobi/../                        /
+
+PLEARNDIR:                                                  PLEARNDIR:
+
+PLEARNDIR:/.                                                PLEARNDIR:
+
+PLEARNDIR:/                                                 PLEARNDIR:/
+
+PLEARNDIR:/foo                                              PLEARNDIR:foo
+
+PLEARNDIR:/foo/                                             PLEARNDIR:foo/
+
+PLEARNDIR:/foo/../                                          PLEARNDIR:/
+
+
 #####  Platform dependent tests.  #########################################
 
 PPath('./foo//bar\toto')

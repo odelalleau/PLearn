@@ -181,6 +181,58 @@ void someAsserts()
            PPath("foo/bar/hi.cc").dirname() == "foo/bar" );
 }
 
+void canonical()
+{
+  MAND_LOG << plhead("Canonical paths") << endl;
+
+  // Single dots.
+
+  PRINT_TEST("./foo", PPath("./foo").canonical())
+  PRINT_TEST("./", PPath("./").canonical())
+  PRINT_TEST(".", PPath(".").canonical())
+  PRINT_TEST("/.", PPath("/.").canonical())
+  PRINT_TEST("/./", PPath("/./").canonical())
+  PRINT_TEST("/./foo", PPath("/./foo").canonical())
+  PRINT_TEST("foo/.", PPath("foo/.").canonical())
+  PRINT_TEST("foo/./", PPath("foo/./").canonical())
+  PRINT_TEST("foo/./bar", PPath("foo/./bar").canonical())
+  PRINT_TEST("foo/.bar", PPath("foo/.bar").canonical())
+  PRINT_TEST("foo./bar", PPath("foo./bar").canonical())
+
+  // Double dots.
+
+  PRINT_TEST("/..", PPath("/..").canonical())
+  PRINT_TEST("/../foo", PPath("/../foo").canonical())
+  PRINT_TEST("../foo", PPath("../foo").canonical())
+  PRINT_TEST("foo/..", PPath("foo/..").canonical())
+  PRINT_TEST("foo/../", PPath("foo/../").canonical())
+  PRINT_TEST("/foo/..", PPath("/foo/..").canonical())
+  PRINT_TEST("/foo/../", PPath("/foo/../").canonical())
+  PRINT_TEST("foo/../bar", PPath("foo/../bar").canonical())
+  PRINT_TEST("/foo/../bar", PPath("/foo/../bar").canonical())
+  PRINT_TEST("/..foo", PPath("/..foo").canonical())
+  PRINT_TEST("foo../", PPath("foo../").canonical())
+  PRINT_TEST("../../../foo", PPath("../../../foo").canonical())
+  PRINT_TEST("foo/../../..", PPath("foo/../../..").canonical())
+
+  // Mixing them all.
+
+  PRINT_TEST(".././../foo/./bar/../foobar", PPath(".././../foo/./bar/../foobar").canonical())
+  PRINT_TEST("foo/bar/foobar/.././../../foobi/../foobo/../..", PPath("foo/bar/foobar/.././../../foobi/../foobo/../..").canonical())
+  PRINT_TEST("foo/bar/foobar/.././../../foobi/../foobo/", PPath("foo/bar/foobar/.././../../foobi/../foobo/").canonical())
+  PRINT_TEST("/foo/bar/foobar/.././../../foobi/../", PPath("/foo/bar/foobar/.././../../foobi/../").canonical())
+
+  // Some metaprotocols tests.
+
+  PPath plearn_dir = PPath("PLEARNDIR:").absolute();
+  PRINT_TEST("PLEARNDIR:", plearn_dir.canonical())
+  PRINT_TEST("PLEARNDIR:/.", (plearn_dir / ".").canonical())
+  PRINT_TEST("PLEARNDIR:/", (plearn_dir / "").canonical())
+  PRINT_TEST("PLEARNDIR:/foo", (plearn_dir / "foo").canonical())
+  PRINT_TEST("PLEARNDIR:/foo/", (plearn_dir / "foo/").canonical())
+  PRINT_TEST("PLEARNDIR:/foo/../", (plearn_dir / "foo/../").canonical())
+
+}
 //!< void relativePathAsserts();
 //!< {
 //!<   PPath home_ = PPath::home();
@@ -226,6 +278,7 @@ int main()
   PL_Log::instance().outmode( PStream::raw_ascii );
 
   someAsserts();
+  canonical();    // Display some canonical paths.
 
   MAND_LOG << plhead("Platform dependent tests.") << endl;
 
