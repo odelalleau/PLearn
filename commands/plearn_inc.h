@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.28 2004/09/07 20:53:46 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.29 2004/09/13 20:03:07 larocheh Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -90,8 +90,10 @@
 /************
  * PLearner *
  ************/
+#include <plearn_learners/classifiers/AdaBoost.h>
 #include <plearn_learners/classifiers/ClassifierFromDensity.h>
 #include <plearn_learners/classifiers/MultiInstanceNNet.h>
+#include <plearn_learners/classifiers/OverlappingAdaBoost.h>
 #include <plearn_learners/generic/AddCostToLearner.h>
 #include <plearn_learners/generic/AddLayersNNet.h>
 #include <plearn_learners/generic/NNet.h>
@@ -162,6 +164,7 @@
 #include <plearn/vmat/MultiInstanceVMatrix.h>
 #include <plearn/vmat/OneHotVMatrix.h>
 #include <plearn/vmat/PairsVMatrix.h>
+#include <plearn/vmat/PLearnerOutputVMatrix.h>
 #include <plearn/vmat/PrecomputedVMatrix.h>
 #include <plearn/vmat/ProcessingVMatrix.h>
 #include <plearn/vmat/RegularGridVMatrix.h>
@@ -173,6 +176,19 @@
 #include <plearn/vmat/ThresholdVMatrix.h>
 #include <plearn/vmat/TransposeVMatrix.h>
 #include <plearn_learners/language/TextSenseSequenceVMatrix.h>
+#include <plearn/vmat/SelectAttributsSequenceVMatrix.h>
+#include <plearn/vmat/DictionaryVMatrix.h>
+
+/**************
+ * Dictionary *
+ **************/
+
+#include <plearn_learners/language/Dictionary/Dictionary.h>
+#include <plearn_learners/language/Dictionary/FileDictionary.h>
+#include <plearn_learners/language/Dictionary/VecDictionary.h>
+#include <plearn_learners/language/Dictionary/WordNetDictionary.h>
+
+
 
 #endif
 
