@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.h,v 1.4 2004/05/13 13:12:57 tihocan Exp $ 
+   * $Id: KernelProjection.h,v 1.5 2004/06/23 20:21:10 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -82,6 +82,7 @@ public:
   // * public build options *
   // ************************
 
+  bool compute_costs;
   bool free_extra_components;
   Ker kernel;
   real min_eigenvalue;
@@ -96,7 +97,6 @@ public:
   // Default constructor, make sure the implementation in the .cc
   // initializes all fields to reasonable default values.
   KernelProjection();
-
 
   // ********************
   // * PLearner methods *
@@ -130,7 +130,6 @@ public:
   // Declares other standard object methods.
   PLEARN_DECLARE_OBJECT(KernelProjection);
 
-
   // **************************
   // **** PLearner methods ****
   // **************************
@@ -163,7 +162,6 @@ public:
 
   //! Overridden to forward to the kernel.
   virtual void setTrainingSet(VMat training_set, bool call_forget=true);
-
 
   // *** SUBCLASS WRITING: ***
   // While in general not necessary, in case of particular needs 

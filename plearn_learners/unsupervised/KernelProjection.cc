@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: KernelProjection.cc,v 1.9 2004/05/14 02:16:05 tihocan Exp $ 
+   * $Id: KernelProjection.cc,v 1.10 2004/06/23 20:21:10 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -52,6 +52,7 @@ using namespace std;
 KernelProjection::KernelProjection() 
 : n_comp_kept(-1),
   first_output(true),
+  compute_costs(false),
   free_extra_components(true),
   min_eigenvalue(-REAL_MAX),
   n_comp(1),
@@ -86,6 +87,9 @@ void KernelProjection::declareOptions(OptionList& ol)
 
   declareOption(ol, "min_eigenvalue", &KernelProjection::min_eigenvalue, OptionBase::buildoption,
       "Any component associated with an eigenvalue <= min_eigenvalue will be discarded.");
+
+  declareOption(ol, "compute_costs", &KernelProjection::compute_costs, OptionBase::buildoption,
+      "Whether we should compute costs or not.");
 
   declareOption(ol, "n_comp_for_cost", &KernelProjection::n_comp_for_cost, OptionBase::buildoption,
       "The number of components considered when computing a cost (default = -1 means n_comp).");
@@ -139,6 +143,8 @@ void KernelProjection::build_()
 void KernelProjection::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                            const Vec& target, Vec& costs) const
 {
+  if (!compute_costs)
+    return;
   // fs_squared_norm_reconstruction_error (see getTestCostNames).
   real k_x_x = kernel->evaluate(input, input);
   real fs_norm;
@@ -228,6 +234,8 @@ void KernelProjection::forget()
 TVec<string> KernelProjection::getTestCostNames() const
 {
   TVec<string> t;
+  if (!compute_costs)
+    return t;
   // Feature space squared norm reconstruction error:
   // | K(x,x) - ||output||^2 |
   t.append("fs_squared_norm_reconstruction_error");
