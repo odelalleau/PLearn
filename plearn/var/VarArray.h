@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.h,v 1.15 2004/05/14 17:49:13 chrish42 Exp $
+   * $Id: VarArray.h,v 1.16 2004/05/27 15:02:16 monperrm Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -97,6 +97,7 @@ public:
   void copyFrom(int start,int len,const VarArray& from);//copy Var of from in courant VarArray 
   void copyFrom(int start,const VarArray& from){copyFrom(start,from.size(),from);}
   void copyFrom(const Vec& datavec);
+  void copyValuesFrom(const VarArray& from);
   void copyTo(const Vec& datavec) const;
   void accumulateTo(const Vec& datavec) const;
   void copyGradientFrom(const Vec& datavec);

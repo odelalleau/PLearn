@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Func.cc,v 1.16 2004/03/08 18:29:28 tihocan Exp $
+   * $Id: Func.cc,v 1.17 2004/05/27 15:02:07 monperrm Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -132,7 +132,7 @@ void Function::declareOptions(OptionList& ol)
   declareOption(ol, "parameters", &Function::parameters, OptionBase::buildoption,
                 "The list of parameters to optimize");
   declareOption(ol, "outputs", &Function::outputs, OptionBase::buildoption,
-                "The list of output variabes of this function");
+                "The list of output variables of this function");
   
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);

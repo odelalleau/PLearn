@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.54 2004/05/21 02:18:52 yoshua Exp $
+   * $Id: NNet.cc,v 1.55 2004/05/27 15:02:27 monperrm Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -684,19 +684,19 @@ void NNet::initializeParams()
   /*
   if(direct_in_to_out)
     {
-      //fill_random_uniform(wdirect->value, -delta, +delta);
-      fill_random_normal(wdirect->value, 0, delta);
+      fill_random_uniform(wdirect->value, -delta, +delta);
+      //fill_random_normal(wdirect->value, 0, delta);
       //wdirect->matValue(0).clear();
     }
   */
   if(nhidden>0)
     {
-      //fill_random_uniform(w1->value, -delta, +delta);
-      fill_random_normal(w1->value, 0, delta);
+      fill_random_uniform(w1->value, -delta, +delta);
+      //fill_random_normal(w1->value, 0, delta);
       if(direct_in_to_out)
       {
-        //fill_random_uniform(wdirect->value, -delta, +delta);
-        fill_random_normal(wdirect->value, 0, 0.01*delta);
+        fill_random_uniform(wdirect->value, -delta, +delta);
+        //fill_random_normal(wdirect->value, 0, 0.01*delta);
         wdirect->matValue(0).clear();
       }
       if (initialization_method == "normal_linear") {
@@ -708,8 +708,8 @@ void NNet::initializeParams()
     }
   if(nhidden2>0)
     {
-      //fill_random_uniform(w2->value, -delta, +delta);
-      fill_random_normal(w2->value, 0, delta);
+      fill_random_uniform(w2->value, -delta, +delta);
+      //fill_random_normal(w2->value, 0, delta);
       if (initialization_method == "normal_linear") {
         delta = 1.0 / real(nhidden2);
       } else if (initialization_method == "normal_sqrt") {

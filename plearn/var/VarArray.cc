@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: VarArray.cc,v 1.13 2004/02/25 04:00:59 yoshua Exp $
+   * $Id: VarArray.cc,v 1.14 2004/05/27 15:02:08 monperrm Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -104,6 +104,14 @@ void VarArray::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 }
 
 
+void VarArray::copyValuesFrom(const VarArray& from)
+{
+  if (size()!=from.size())
+    PLERROR("VarArray::copyValuesFrom(a): a does not have the same size (%d) as this (%d)\n",
+	    from.size(),size());
+  for (int i=0;i<size();i++)
+    (*this)[i]->value << from[i]->value;
+}
 
 
 
