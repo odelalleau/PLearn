@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.55 2005/03/08 16:20:54 chapados Exp $
+   * $Id: StatsCollector.cc,v 1.56 2005/03/14 18:48:35 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -808,6 +808,7 @@ real StatsCollector::getStat(const string& statname) const
     statistics["NNONMISSING"] = STATFUN(&StatsCollector::nnonmissing);
     statistics["SHARPERATIO"] = STATFUN(&StatsCollector::sharperatio);
     statistics["EoverSKEW"]   = STATFUN(&StatsCollector::mean_over_skewness);
+    statistics["EoverSKEWms"] = STATFUN(&StatsCollector::mean_over_skewness_ms);
     statistics["EoverKURT"]   = STATFUN(&StatsCollector::mean_over_kurtosis);
     statistics["ZSTAT"]       = STATFUN(&StatsCollector::zstat);
     statistics["PZ1t"]        = STATFUN(&StatsCollector::zpr1t);
