@@ -2,9 +2,7 @@
 
 // AsciiVMatrix.cc
 // 
-// Copyright (C) 2003 Rejean Ducharme
-// ...
-// Copyright (C) 2003 Rejean Ducharme
+// Copyright (C) 2003 Rejean Ducharme, Pascal Vincent
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -35,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AsciiVMatrix.cc,v 1.4 2003/02/21 21:26:37 ducharme Exp $ 
+   * $Id: AsciiVMatrix.cc,v 1.5 2003/02/27 09:22:11 plearner Exp $ 
    ******************************************************* */
 
 /*! \file AsciiVMatrix.cc */
@@ -47,18 +45,63 @@ using namespace std;
 
 IMPLEMENT_NAME_AND_DEEPCOPY(AsciiVMatrix);
 
+AsciiVMatrix::AsciiVMatrix()
+  :readwritemode(false), newfile(false),
+   rewrite_length(true)
+{}
+
 AsciiVMatrix::AsciiVMatrix(const string& fname, bool readwrite)
-  :inherited(), filename(fname), readwritemode(readwrite), newfile(false),
+  :filename(fname), readwritemode(readwrite), newfile(false),
    rewrite_length(true)
 {
   build();
 }
 
-AsciiVMatrix::AsciiVMatrix(const string& fname, int the_width, const vector<string>& the_comments)
-  :inherited(0,the_width), filename(fname), comments(the_comments),
+AsciiVMatrix::AsciiVMatrix(const string& fname, int the_width, 
+               const TVec<string>& the_fieldnames, 
+               const string& comment)
+  :inherited(0,the_width), filename(fname), 
    readwritemode(true), newfile(true), rewrite_length(true)
 {
-  build();
+  inherited::build();
+
+  if (isfile(filename))
+    PLERROR("In AsciiVMatrix constructor: filename %s already exists",filename.c_str());
+  file = new fstream();
+  file->open(filename.c_str(), fstream::in | fstream::out | fstream::trunc);
+  if (!file->is_open())
+    PLERROR("In AsciiVMatrix constructor: could not open file %s for reading",filename.c_str());
+  
+  *file << "#size: ";
+  vmatlength_pos = file->tellp();
+  length_max = 9999999;  // = 10 000 000 - 1
+  *file << "0 " << width() << "      " << endl;
+
+  
+  if(the_fieldnames.length()>0)
+    {
+      if(the_fieldnames.length()!=the_width)
+        PLERROR("In AsciiVMatrix constructor: number of given fieldnames (%d) differs from given width (%d)",
+                the_fieldnames.length(), the_width);
+      *file << "#: ";
+      for(int k=0; k<the_width; k++)
+        {
+          string field_k = space_to_underscore(the_fieldnames[k]);
+          declareField(k, field_k);
+          *file << field_k << ' ';
+        }
+      *file << endl;
+    }
+
+  if(comment!="")
+    {
+      if(comment[0]!='#')
+        PLERROR("In AsciiVMatrix constructor: comment must start with a #");
+      *file << comment;
+      if(comment[comment.length()-1]!='\n')
+        *file << endl;
+    }
+
 }
 
 void AsciiVMatrix::build()
@@ -71,29 +114,7 @@ void AsciiVMatrix::build_()
 {
   //setMtime(mtime(filename));
 
-  if (newfile)
-  {
-    if (isfile(filename))
-      PLERROR("In AsciiVMatrix constructor: filename %s already exists",filename.c_str());
-    file = new fstream();
-    file->open(filename.c_str(), fstream::in | fstream::out | fstream::trunc);
-  if (!file->is_open())
-    PLERROR("In AsciiVMatrix constructor: could not open file %s for reading",filename.c_str());
-
-    *file << "#size: ";
-    vmatlength_pos = file->tellp();
-    length_max = 9999999;  // = 10 000 000 - 1
-    *file << "0 " << width() << "      " << endl;
-    for (vector<string>::iterator it = comments.begin(); it != comments.end(); ++it)
-    {
-      *file << "# " << *it << endl;
-    }
-
-    string field_infos = filename+".fieldnames";
-    if (isfile(field_infos))
-      loadFieldInfos(field_infos);
-  }
-  else  // open old file
+  if(!newfile)  // open old file
   {
     if (!isfile(filename))
       PLERROR("In AsciiVMatrix constructor (with specified width), filename %s does not exists",filename.c_str());
@@ -241,28 +262,31 @@ void AsciiVMatrix::getRow(int i, Vec v) const
 
 void AsciiVMatrix::appendRow(Vec v)
 {
+  if(v.length()!=width())
+    PLERROR("In AsciiVMatrix::appendRow, length of Vec to append (%d) differs from width of matrix (%d)",v.length(), width());
+
   if (length() == length_max)
     PLERROR("AsciiVMatrix::appendRow aborted: the matrix has reach its maximum length.");
 
-  if (readwritemode)
-  {
-    // write the Vec at the end of the file
-    file->seekp(0,fstream::end);
-    pos_rows.push_back(file->tellg());
-    for (int i=0; i<v.length(); i++)
-      *file << v[i] << " ";
-    *file << endl;
+  if(!readwritemode)
+    PLERROR("AsciiVMatrix::appendRow aborted: the vmat was opened in read only format.");
 
-    // update the length
-    length_++;
-    if (rewrite_length)
+  // write the Vec at the end of the file
+  file->seekp(0,fstream::end);
+  pos_rows.push_back(file->tellg());
+
+  file->precision(15);
+  for (int i=0; i<v.length(); i++)
+    *file << v[i] << ' ';
+  *file << endl;
+
+  // update the length
+  length_++;
+  if (rewrite_length)
     {
       file->seekp(vmatlength_pos);
       *file << length() << " " << width();
     }
-  }
-  else
-    PLERROR("AsciiVMatrix::appendRow aborted: the vmat has been open in read only format.");
 }
 
 void AsciiVMatrix::put(int i, int j, real value)
@@ -275,6 +299,7 @@ void AsciiVMatrix::putRow(int i, Vec v)
 void AsciiVMatrix::declareOptions(OptionList& ol)
 {
   declareOption(ol, "filename", &AsciiVMatrix::filename, OptionBase::buildoption, "Filename of the matrix");
+  declareOption(ol, "readwritemode", &AsciiVMatrix::readwritemode, OptionBase::buildoption, "Is the file to be opened in read/write mode");
   inherited::declareOptions(ol);
 }
 

@@ -2,16 +2,25 @@
 
 Experiment( 
 # string: Path of this experiment's directory in which to save all experiment results (will be created if it does not already exist)
-expdir = "mlp";
+expdir = "mlp_kfold";
 
 # VMat: The dataset to use for training/testing (will be split according to what is specified in the testmethod)
 dataset = AutoVMatrix(specification="letters all normalize");
 
 # PP< Splitter >: The splitter to use to generate one or several train/test pairs.
-splitter = TrainTestSplitter(test_fraction=.10) ;
+splitter = KFoldSplitter(K=3) ;
 
 # bool: If false, the models won't be saved.
 save_models = 1  ;
+
+# bool: If true, the initial model#k (just after forget() has been called) will be saved in Splits#k/initial.psave
+save_initial_models=1;
+
+# bool: If true, the outputs of the test for split #k will be saved in Splits#k/test_outputs.pmat
+save_test_outputs = 1  ;
+
+# bool: If true, the costs of the test for split #k will be saved in Splits#k/test_costs.pmat
+save_test_costs = 1  ;
 
 # PP< Learner >: The learner to train/test
 learner = 

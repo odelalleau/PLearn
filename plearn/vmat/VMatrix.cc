@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.4 2002/11/11 14:52:45 ducharme Exp $
+* $Id: VMatrix.cc,v 1.5 2003/02/27 09:22:12 plearner Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -535,29 +535,34 @@ void VMatrix::saveDMAT(const string& dmatdir) const
 
 void VMatrix::saveAMAT(const string& amatfile) const
 {
+  int l = length();
+  int w = width();
+
   ofstream out(amatfile.c_str());
   if (!out)
    PLERROR("In saveAscii could not open file %s for writing",amatfile.c_str());
 
-  out << "#size: "<< length() << ' ' << width() << endl;
+  out << "#size: "<< l << ' ' << w << endl;
   out.precision(15);
-  if(width()>0)
+  if(w>0)
     {
       out << "#: ";
-      for(int k=0; k<width(); k++)
-	//there must not be any space in a field name...
+      for(int k=0; k<w; k++)
+        //there must not be any space in a field name...
         out << space_to_underscore(fieldName(k)) << ' ';
       out << "\n";
     }
 
-  Vec v(width());
+  Vec v(w);
 
   ProgressBar pb(cout, "Saving to amat", length());
 
-  for(int i=0;i<length();i++)
+  for(int i=0;i<l;i++)
     {
       getRow(i,v);
-      out << v << "\n";
+      for(int j=0; j<w; j++)
+        out << v[j] << ' ';
+      out << "\n";
       pb(i);
     }
 }

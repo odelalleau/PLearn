@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Experiment.h,v 1.2 2002/09/26 05:06:53 plearner Exp $ 
+   * $Id: Experiment.h,v 1.3 2003/02/27 09:22:12 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Experiment.h */
@@ -57,6 +57,8 @@ public:
   // ************************
   // * public build options *
   // ************************
+  
+  // See declareOptions method in .cc for the role of these options.
 
   //! Path of this experiment's directory in which to save all experiment results (will be created if it does not already exist)
   string expdir;  
@@ -64,6 +66,9 @@ public:
   VMat dataset;
   PP<Splitter> splitter;
   bool save_models;
+  bool save_initial_models;
+  bool save_test_outputs;
+  bool save_test_costs;
 
   // ****************
   // * Constructors *

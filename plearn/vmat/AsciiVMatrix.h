@@ -2,9 +2,7 @@
 
 // AsciiVMatrix.h
 // 
-// Copyright (C) 2003 Rejean Ducharme
-// ...
-// Copyright (C) 2003 Rejean Ducharme
+// Copyright (C) 2003 Rejean Ducharme, Pascal Vincent
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -35,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AsciiVMatrix.h,v 1.3 2003/02/20 21:49:35 ducharme Exp $ 
+   * $Id: AsciiVMatrix.h,v 1.4 2003/02/27 09:22:12 plearner Exp $ 
    ******************************************************* */
 
 /*! \file AsciiVMatrix.h */
@@ -54,7 +52,6 @@ protected:
   string filename;
   mutable fstream* file;
   vector<streampos> pos_rows;
-  vector<string> comments;
   streampos vmatlength_pos;
   bool readwritemode;
   bool newfile;
@@ -68,7 +65,7 @@ public:
   // ******************
   // *  Constructors  *
   // ******************
-  AsciiVMatrix() : inherited() {}  //!<  default constructor (for consistency)
+  AsciiVMatrix(); //!<  default constructor (for automatic deserialization)
 
   // Open an existing file.
   // If readwrite==false, the appendRow method sends an error.
@@ -77,8 +74,12 @@ public:
 
   // Open a new file (in read/write mode).
   // If a file of the same name already exist, an error is sent!
-  // The width of the matrix to be writen must be set.
-  AsciiVMatrix(const string& fname, int the_width, const vector<string>& the_comment=vector<string>());
+  // The width of the matrix to be writen must be given.
+  // Optional fieldnames may be given (as many as width, blanks will be converted to underscore)
+  // Optional comment string (must start with a #, may be multiline with \n provided each line starts with a #).
+  AsciiVMatrix(const string& fname, int the_width, 
+               const TVec<string>& fieldnames = TVec<string>(), 
+               const string& the_comment="");
 
 private: 
   //! This does the actual building. 

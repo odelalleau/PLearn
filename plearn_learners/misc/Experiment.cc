@@ -33,19 +33,21 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Experiment.cc,v 1.6 2002/12/02 08:46:51 plearner Exp $ 
+   * $Id: Experiment.cc,v 1.7 2003/02/27 09:22:12 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Experiment.cc */
 #include "Experiment.h"
 #include "pl_io.h"
 #include "VecStatsCollector.h"
+#include "AsciiVMatrix.h"
 
 namespace PLearn <%
 using namespace std;
 
 Experiment::Experiment() 
-  :save_models(true)
+  :save_models(true), save_initial_models(false),
+   save_test_outputs(false), save_test_costs(false)
   {}
 
   IMPLEMENT_NAME_AND_DEEPCOPY(Experiment);
@@ -62,7 +64,13 @@ Experiment::Experiment()
     declareOption(ol, "splitter", &Experiment::splitter, OptionBase::buildoption,
                   "The splitter to use to generate one or several train/test pairs from the dataset.");
     declareOption(ol, "save_models", &Experiment::save_models, OptionBase::buildoption,
-                  "If false, the models won't be saved.");
+                  "If true, the final model#k will be saved in Split#k/final.psave");
+    declareOption(ol, "save_initial_models", &Experiment::save_initial_models, OptionBase::buildoption,
+                  "If true, the initial model#k (just after forget() has been called) will be saved in Split#k/initial.psave");
+    declareOption(ol, "save_test_outputs", &Experiment::save_test_outputs, OptionBase::buildoption,
+                  "If true, the outputs of the test for split #k will be saved in Split#k/test_outputs.pmat");
+    declareOption(ol, "save_test_costs", &Experiment::save_test_costs, OptionBase::buildoption,
+                  "If true, the costs of the test for split #k will be saved in Split#k/test_costs.pmat");
     inherited::declareOptions(ol);
   }
 
@@ -71,7 +79,7 @@ Experiment::Experiment()
     return 
       "The Experiment class allows you to describe a typical learning experiment that you wish to perform, \n"
       "as a training/testing of a learning algorithm on a particular dataset.\n"
-      "Detailed results for each split #i will be saved in sub-directory Splits/#i of the experiment directory. \n"
+      "Detailed results for each split #k will be saved in sub-directory Split#k of the experiment directory. \n"
       "Final results for each split and basic statistics across all splits will be saved in the results.summary \n"
       "file in the experiment directory.\n"
       + optionHelp();
@@ -107,23 +115,39 @@ void Experiment::run()
         PLERROR("Could not create experiment directory %s", expdir.c_str());
 
       // Save this experiment description in the expdir (buildoptions only)
-      PLearn::save(append_slash(expdir)+"experiment.plearn", *this, OptionBase::buildoption);
+      PLearn::save(append_slash(expdir)+"experiment.psave", *this, OptionBase::buildoption);
     }
 
   int nsplits = splitter->nsplits();
   Array<string> testresnames = learner->testResultsNames();
-  int ntestcosts = testresnames.size();
+  int ntestres = testresnames.size();
   VecStatsCollector teststats;
+
+  // the vmat in which to save results
+  VMat results;
 
   if(PLMPI::rank==0)
     {
-      POFStream resout(append_slash(expdir)+"results.summary");
-      resout.setMode(PStream::raw_ascii);
-      resout << "#: result_type ";
-      for(int k=0; k<ntestcosts; k++)
-        resout << testresnames[k] << "  ";
-      resout << endl;
+      // filename
+      string fname = append_slash(expdir)+"results.amat";
+
+      // fieldnames
+      TVec<string> fieldnames(1+ntestres);
+      fieldnames[0] = "splitnum";
+      for(int k=0; k<ntestres; k++)
+        fieldnames[k+1] = testresnames[k];
+
+      /*
+      cerr << "ntestres: " << ntestres << endl;
+      cerr << "testresnames: " << testresnames << endl;
+      cerr << "fieldnames: " << fieldnames << endl;
+      */
+
+      results = new AsciiVMatrix(fname, 1+ntestres, fieldnames, "# Special values for splitnum are: -1 -> MEAN; -2 -> STDERROR; -3 -> STDDEV");
     }
+
+  Vec resultrow(1+ntestres); // will hold splitnum and testresults for that split
+  Vec resultrow_sub = resultrow.subVec(1,ntestres); // the part containing the test results
 
   for(int k=0; k<nsplits; k++)
     {
@@ -134,24 +158,55 @@ void Experiment::run()
       VMat testset = train_test[1];
       string learner_expdir = append_slash(expdir)+"Split"+tostring(k);
       learner->setExperimentDirectory(learner_expdir);
+
       learner->forget();
+      if(save_initial_models)
+        PLearn::save(learner_expdir+"/initial.psave",learner);
+
       learner->train(trainset);
-      Vec testres = learner->test(testset);
-      if(PLMPI::rank==0)
-        {
-          POFStream resout(append_slash(expdir)+"results.summary", ios::out | ios::app);
-          resout << "Split_" << k << " ";
-          resout << testres << endl;
-        }
+      if(save_models)
+        PLearn::save(learner_expdir+"/final.psave",learner);
+
+      string test_outputs_fname = learner_expdir+"/test_outputs.pmat";
+      if(save_test_outputs)
+        test_outputs_fname = learner_expdir+"/test_outputs.pmat";
+      string test_costs_fname = learner_expdir+"/test_costs.pmat";
+      if(save_test_costs)
+        test_costs_fname = learner_expdir+"/test_costs.pmat";
+      Vec testres = learner->test(testset, test_outputs_fname, test_costs_fname);
+
+      testres.println(cout);
+
+      // PLWARNING("In Experiment: length of Vec returned by test = %d; number of names returned by testResultNames = %d",testres.length(), ntestres);
+      if(testres.length()!=ntestres)
+        PLERROR("In Experiment: length of Vec returned by test (%d) differs from number of names returned by testResultNames (%d)",
+                testres.length(), ntestres);
+
       teststats.update(testres);
+      if(PLMPI::rank==0) // write to file
+        {
+          resultrow[0] = k;
+          resultrow_sub << testres;
+          results->appendRow(resultrow);
+        }
     }
 
-  if(PLMPI::rank==0)
+  if(PLMPI::rank==0) // write global stats to file
     {
-      POFStream resout(append_slash(expdir)+"results.summary", ios::out | ios::app);
-      resout << "STDDEV   " << teststats.getStdDev() << endl;
-      resout << "STDERROR " << teststats.getStdError() << endl;
-      resout << "MEAN     " << teststats.getMean() << endl;
+      // MEAN
+      resultrow[0] = -1;
+      resultrow_sub << teststats.getMean();
+      results->appendRow(resultrow);
+
+      // STDERROR
+      resultrow[0] = -2;
+      resultrow_sub << teststats.getStdError();
+      results->appendRow(resultrow);
+
+      // STDDEV
+      resultrow[0] = -3;
+      resultrow_sub << teststats.getStdDev();
+      results->appendRow(resultrow);
     }
 }
 
