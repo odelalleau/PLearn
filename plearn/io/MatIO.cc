@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatIO.cc,v 1.8 2004/03/11 22:01:04 ducharme Exp $
+   * $Id: MatIO.cc,v 1.9 2004/03/24 20:18:44 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -1369,6 +1369,61 @@ void loadJPEGrgb(const string& jpeg_filename, Mat& rgbmat, int& row_size, int sc
   sprintf(command,"rm %s",tmpfile.c_str());
   system(command);
   row_size = w;
+}
+
+void parseSizeFromRemainingLines(const string& filename, ifstream& in, bool& could_be_old_amat, int& length, int& width)
+{
+  string line;
+  getNextNonBlankLine(in,line);
+  if(line=="") // There are no value lines
+  {
+    width=length=0;
+    could_be_old_amat=false; 
+    return; 
+  }
+  
+  int nfields1 = int(split(line).size()); 
+  getNextNonBlankLine(in,line);
+  if(line=="") // There is only one line
+  {
+    length               = 1;
+    width                = nfields1;
+    could_be_old_amat    = false; 
+    return; 
+  }
+
+  // The number of lines that seems to contain values  
+  int guesslength = countNonBlankLinesOfFile(filename);  
+
+  int nfields2 = int(split(line).size());                // The width of the second line.
+  if(nfields1==nfields2) // looks like a plain ascii file
+  {
+    length = guesslength;
+    width  = nfields1;
+    return;
+  }
+
+  if(!could_be_old_amat || nfields1!=2) 
+    return;  // could not be an old .amat with first 2 numbers being length width
+    
+  // Get to the beggining of the file
+  in.seekg(0);
+  in.clear();
+  
+  // Reread the first line as to real numbers
+  real a = -1.0, b = -1.0;
+  in >> a >> b;
+  
+    
+  if(guesslength == int(a)+1                   // +1 since the size line was counted in guesslength but should not
+     && real(int(a))==a && real(int(b))==b     //  Sizes must be integers and
+     && a>0 && b>0                             //   positive
+     && int(b)==nfields2 )                     // The first row of values has the expected width
+  {
+    // We assume we have an old style .amat
+    length = int(a);
+    width = int(b);
+  }
 }
 
 } // end of namespace PLearn

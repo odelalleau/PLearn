@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: MatIO.h,v 1.11 2004/03/08 20:58:54 dorionc Exp $
+   * $Id: MatIO.h,v 1.12 2004/03/24 20:18:44 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -78,16 +78,13 @@ void savePMat(const string& filename, const TMat<double>& mat);
 void loadPMat(const string& filename, TMat<float>& mat);
 void loadPMat(const string& filename, TMat<double>& mat);
 
-void matlabSave( const string& dir, const string& plot_title, const Vec& data, 
-                 const Vec& add_col, const Vec& bounds, string legend, bool save_plot);
-void matlabSave( const string& dir, const string& plot_title, const Mat& data, 
-                 const Vec& add_col, const Vec& bounds, TVec<string> legend, bool save_plot);
-
 //! WARNING: use only for float, double, and int types. Other type are not guaranteed to work
 
 //! intelligent functions that will load a file in almost all ascii formats that ever existed in this lab
 template<class T> void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames);
 template<class T> void loadAscii(const string& filename, TMat<T>& mat);
+
+void parseSizeFromRemainingLines(const string& filename, ifstream& in, bool& could_be_old_amat, int& length, int& width);
 
 // norman: added another function to solve the internal compiler error of .NET when using
 // default parameter with templates. See old declaration:
@@ -178,7 +175,7 @@ void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames)
   
   in >> ws;
   string line;
-
+  
   while(in.peek()=='#')
   {
     getline(in, line);
@@ -208,88 +205,40 @@ void loadAscii(const string& filename, TMat<T>& mat, TVec<string>& fieldnames)
   }
 
   if(length==-1)  // still looking for size info...
-  {
-    string line;
-    getNextNonBlankLine(in,line);
-    if(line=="")
-    {
-      width=length=0;
-      in.seekg(0);
-      in.clear();
-      could_be_old_amat=false; 
-    }
-	// norman: added explicit cast
-    int nfields1 = (int)split(line).size();
-    getNextNonBlankLine(in,line);
-    if(line=="")
-    {
-      length=1;
-      width=nfields1;
-      in.seekg(0);
-      in.clear();
-      could_be_old_amat=false; 
-    }
-
-	// norman: added explicit cast
-	int nfields2 = (int)split(line).size();
-    int guesslength = countNonBlankLinesOfFile(filename);    
-    real a = -1, b = -1;
-    if(could_be_old_amat && nfields1==2) // could be an old .amat with first 2 numbers being length width
-    {
-      in.seekg(0);
-      in.clear();
-      in >> a >> b;
-      if(guesslength == int(a)+1 && real(int(a))==a && real(int(b))==b && a>0 && b>0 && int(b)==nfields2) // it's clearly an old .amat
-      {
-        length = int(a);
-        width = int(b);
-      }
-    }
-
-    if(length==-1) // still don't know size info...
-    {
-      if(nfields1==nfields2) // looks like a plain ascii file
-      {
-        length=guesslength;
-        if(width!=-1 && width!=nfields1)
-        {
-          PLWARNING("In loadAscii:  Number of fieldnames and width mismatch in file %s.  "
-              "Replacing fieldnames by 'Field-0', 'Field-1', ...", filename.c_str());
-          fieldnames.resize(nfields1);
-          for(int i= 0; i < nfields1; ++i)
-            fieldnames[i]= string("Field-") + tostring(i);
-        }
-        width = nfields1;
-        in.seekg(0); 
-        in.clear();
-      }
-      else if (real(int(a))==a && real(int(b))==b && a>0 && b>0 && int(b)==nfields2)
-      {
-        length = int(a);
-        width = int(b);
-      }
-    }
-  }
+    parseSizeFromRemainingLines(filename, in, could_be_old_amat, length, width);
 
   if(length==-1)
     PLERROR("In loadAscii: trying to load but couldn't determine file format automatically for %s",filename.c_str());
 
+  if(width != -1 && width != fieldnames.length())
+  {
+    PLWARNING("In loadAscii:  Number of fieldnames (%d) and width (%d) mismatch in file %s.  "
+              "Replacing fieldnames by 'Field-0', 'Field-1', ...", 
+              fieldnames.length(), width, filename.c_str());
+    fieldnames.resize(width);
+    for(int i= 0; i < width; ++i)
+      fieldnames[i]= string("Field-") + tostring(i);
+  }
+  
   // We are now more careful about the possibility of the stream being in a
-  // bad state.
+  // bad state. The sequel in.seekg(0); in.clear(); did not seem to do the job.
+  in.close();
+  ifstream loadmat(filename.c_str());
+  
   mat.resize(length,width);
   string inp_element;
   for(int i=0; i<length; i++)
   {
     T* mat_i = mat[i];
-    skipBlanksAndComments(in);
+    skipBlanksAndComments(loadmat);
     for(int j=0; j<width; j++) {
       // C99 strtod handles NAN's and INF's.
-      if (in) {
-        in >> inp_element;
+      if (loadmat) {
+        loadmat >> inp_element;
         mat_i[j] = strtod(inp_element.c_str(), 0);
       }
-      if (!in) {
-        in.clear();
+      if (!loadmat) {
+        loadmat.clear();
         mat_i[j] = MISSING_VALUE;
       }
     }
