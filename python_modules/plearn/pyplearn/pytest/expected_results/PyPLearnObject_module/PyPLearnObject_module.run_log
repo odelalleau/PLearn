@@ -1,0 +1,151 @@
+
+**********************************************
+*                                            *
+*  PyPLearnObject.py builtin test/tutorial.  *
+*                                            *
+**********************************************
+
+
+The string representation of a PyPLearnObject simply looks like calling the
+constructor for this object. So that::
+
+    obj = PyPLearnObject()
+    print obj
+
+    ### Will print
+    PyPLearnObject( )
+    
+and::
+
+    obj = PyPLearnObject( foo='bar' )
+    print obj
+
+    ### Will print
+    PyPLearnObject(
+        foo                            = "bar"
+        )
+    
+
++++ The Defaults class:
+
+At init, the Defaults class is parsed and its attributes are used to set
+default attributes to the new instance. The current protocol is to
+instanciate any classes provided as attributes in Defaults or in
+overrides. The current version uses no arguments at instanciation.
+
+For instance, if::
+
+    class Dummy( PyPLearnObject ):
+        class Defaults:
+            hello = 'hello'
+then::
+
+    obj = Dummy()
+    print obj
+
+    ### Will print
+    Dummy(
+        hello                          = "hello"
+        )
+    
+
+Note that you could well derive from this default class and provide the
+derived class as an override to the embedded one. That is, if::
+
+    class SubDefaults( Dummy.Defaults ):
+        hi = 'hi'
+
+then::
+
+    obj = Dummy( Defaults = SubDefaults )
+    print obj
+
+    ### Will print
+    Dummy(
+        hello                          = "hello",
+        hi                             = "hi"
+        )
+    
+while::
+
+    obj = Dummy( Defaults = SubDefaults, hello = 'HELLO' )
+    print obj
+
+    ### Will print
+    Dummy(
+        hello                          = "HELLO",
+        hi                             = "hi"
+        )
+    
+The hello keyword argument in the above initialization is treated as an
+override to the default value of the hello attribute.
+
+The overrides may also contain attributes that have no default values::
+
+    obj = Dummy( Defaults = SubDefaults, kwarg = 'new_attr' )
+    print obj
+
+    ### Will print
+    Dummy(
+        hello                          = "hello",
+        hi                             = "hi",
+        kwarg                          = "new_attr"
+        )
+    
+
+Since instances of any PyPLearnObject's subclass may not be added new
+attributes after the instanciation, the above mecanism is a simple way to
+get an instance to have specific attributes. It is simpler than defining a
+Defaults subclass for a sinlge use::
+
+    ## Frozen test
+    try:
+        obj = Dummy() 
+        obj.add_member = "add"
+        return "obj._frozen is %s" % str(obj._frozen)
+        raise RuntimeError("Add succeeded on a frozen object!")
+    except AttributeError, e:
+        return "Add failed as expected."
+        
+    ## Will return        
+    Add failed as expected.
+An important method of the PyPLearnObject is the plearn_repr() method,
+which is recognized by the pyplearn._plearn_repr mecanism. The plearn
+representation is defined to be::
+
+    Classname(
+        plearn_option1 = option_value1,
+        plearn_option2 = option_value2,
+        ...
+        plearn_optionN = option_valueN
+        )
+
+where <Classname> is the name you give to the PyPLearnObject's
+subclass. That format is very alike the __str__ behavior except that the
+L{plearn_options()} are considered to be all attributes whose names do not
+start with an underscore. Those are said public, while any attribute
+starting with at least one underscore is considered internal (protected '_'
+or private '__').
+
+    obj = Dummy( _internal1 = "internal",
+                 _internal2 = "very internal",
+                 public1    = [1, 2, 3],
+                 public2    = "public again"
+                 )
+
+    ## str(obj) returns
+    Dummy(
+        _internal1                     = "internal",
+        _internal2                     = "very internal",
+        hello                          = "hello",
+        public1                        =  [1, 2, 3],
+        public2                        = "public again"
+        )
+
+    ## While obj.plearn_repr() returns
+    Dummy(
+        hello                          = "hello",
+        public1                        =  [1, 2, 3],
+        public2                        = "public again"
+        )
+    
