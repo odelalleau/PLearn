@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.21 2004/02/26 22:16:58 nova77 Exp $
+   * $Id: fileutils.cc,v 1.22 2004/02/27 21:14:49 nova77 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -179,7 +179,6 @@ int chdir(const string& path)
 
     WIN32_FIND_DATA fileData; 
     HANDLE hSearch; 
-    DWORD dwAttrs; 
     bool fFinished = false; 
     char oldpath[PL_MAX_FILE_SIZE];
 
