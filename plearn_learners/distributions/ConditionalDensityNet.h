@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.13 2003/12/02 14:02:02 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.14 2003/12/05 12:44:28 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -88,7 +88,7 @@ protected:
 
     Vec paramsvalues; // values of all parameters
 
-   Var centers, centers_M, steps, steps_M, steps_gradient, steps_integral, delta_steps, cum_numerator, cum_denominator;
+   Var centers, centers_M, steps, steps_M, steps_0, steps_gradient, steps_integral, delta_steps, cum_numerator, cum_denominator;
 
   // the cond. distribution step multiplicative parameters 
   // are relative to the unconditional cdf step heights, at the mu positions, contained in this source var
@@ -143,13 +143,16 @@ public:
 
   // ***** OPTIONS SPECIFIC TO CONDITIONALDENSITYNET ************** 
 
-  // maximum value that Y can take
+  // maximum value that Y can take (minimum value is 0 by default).
   real maxY;
 
   // this weight between 0 and 1 controls the balance of the cost function
   // between minimizing the negative log-likelihood and minimizing squared error
   // if 1 then perform maximum likelihood, if 0 then perform least square optimization
   real log_likelihood_vs_squared_error_balance; 
+
+  // whether to model the mass point with a separate parameter
+  bool separate_mass_point;
 
   // number of terms in the output density function
   int n_output_density_terms;

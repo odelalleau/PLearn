@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.16 2003/12/02 14:02:01 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.17 2003/12/05 12:44:27 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -89,32 +89,45 @@ ConditionalDensityNet::ConditionalDensityNet()
                           "  * 0 <= Y <= maxY, with maxY a known finite value\n"
                           "  * the density has a mass point at Y=0\n"
                           "  * the density is continuous for Y>0\n"
-                          "The form of the conditional cumulative of Y is the following:\n"
-                          "   P(Y<=y|theta) = (1/Z) (s(a) + sum_i s(b_i) g(y,theta,i))\n"
+                          "The form of the conditional cumulative of Y is the following (separate_mass_points=false):\n"
+                          "   P(Y<=y|theta) = (1/Z) (s(a) + sum_i u_i s(b_i) g(y,theta,i))\n"
+                          "or for separate_mass_point=true:\n"
+                          "   P(Y<=y|theta) = sigmoid(a) + (1-sigmoid(a))(sum_i u_i s(b_i) (g(y,theta,i)-g(0,theta,i))/Z\n"
                           "where s(z)=log(1+exp(z)) is the softplus function, and g is a monotonic function\n"
                           "in y whose first derivative and indefinite integral are known analytically.\n"
+                          "The u_i are fixed from the unconditional distribution, such that s(b_i)=1 gives\n"
+                          "approximately the right unconditional cumulative function (for infinite hardness):\n"
+                          "  u_i = P(mu_{i-1}<Y<=mu_i) [unconditional].\n"
                           "The parameters theta of Y's distribution are (a,b_1,b_2,...,c_1,c_2,...,mu_1,mu_2,...),\n"
                           "which are obtained as the unconstrained outputs (no output transfer function) of a neural network.\n"
-                          "The normalization constant Z is computed analytically easily:\n"
-                          "   Z = s(a) + sum_i s(b_i) g(y,theta,i)\n"
+                          "The normalization constant Z is computed analytically easily: (separate_mass_point=false)\n"
+                          "   Z = s(a) + sum_i u_i s(b_i) g(y,theta,i)\n"
+                          "or for separate_mass_point=true:\n"
+                          "   Z = sum_i s(b_i) (g(y,theta,i)-g(0,theta,i))\n"
                           "The current implementation considers two choices for g:\n"
-                          "  - sigmoid_steps: g(y,theta,i) = sigmoid(s(c_i)*(y-mu_i))\n"
-                          "  - sloped_steps: g(y,theta,i) = s(s(c_i)*(mu_i-y))-s(s(c_i)*(mu_i-y))\n"
+                          "  - sigmoid_steps: g(y,theta,i) = sigmoid(h*s(c_i)*(y-mu_i)/(mu_{i+1}-mu_i))\n"
+                          "  - sloped_steps: g(y,theta,i) = s(h*s(c_i)*(mu_i-y))-s(s(c_i)*(mu_i-y)/(mu_{i+1}-mu_i))\n"
+                          "where h is the 'initial_hardness' option.\n"
                           "The density is analytically obtained using the derivative g' of g and\n"
                           "expected value is analytically obtained using the primitive G of g.\n"
                           "For the mass point at the origin,\n"
                           "   P(Y=0|theta) = P(Y<=0|theta).\n"
-                          "For positive values of Y:\n"
-                          "   p(y|theta) = (1/Z) sum_i s(b_i) s(c_i) g'(y,theta,i).\n"
-                          "And the expected value of Y is obtained using the primitive:\n"
-                          "   E[Y|theta] = (1-s(a)/Z)*M - sum_i s(b_i)/(Z*s(c_i))*(G(M,theta,i)-G(0,theta,i))\n"
+                          "(which is simply sigmoid(a) if separate_mass_point).\n"
+                          "For positive values of Y: (separate_mass_point=false)\n"
+                          "   p(y|theta) = (1/Z) sum_i s(b_i) g'(y,theta,i).\n"
+                          "or for separate_mass_point=true:\n"
+                          "   p(y|theta) = (1-sigmoid(a)) (1/Z) sum_i s(b_i) g'(y,theta,i).\n"
+                          "And the expected value of Y is obtained using the primitive: (separate_mass_point=false)\n"
+                          "   E[Y|theta] = (1/Z)*s(a)*M + sum_i u_i s(b_i)(G(M,theta,i)-G(0,theta,i)))\n"
+                          "or for separate_mass_point=true:\n"
+                          "   E[Y|theta] = (sigmoid(a)-(1-sigmoid(a)*(1/Z)*sum_i u_i s(b_i)g(0,theta,i))*M + (1-sigmoid(a))*(1/Z)*sum_i u_i s(b_i)(G(M,theta,i)-G(0,theta,0))\n"
                           "Training the model can be done by maximum likelihood (minimizing the log of the\n"
                           "density) or by minimizing the average of squared error (y-E[Y|theta])^2\n"
                           "or a combination of the two (with the max_likelihood_vs_squared_error_balance option).\n"
                           "The step 'centers' mu_i are initialized according to some rule, in the interval [0,maxY]:\n"
                           " - uniform: at regular intervals in [0,maxY]\n"
                           " - log-scale: as the exponential of values at regular intervals in [0,log(1+maxY)], minus 1.\n"
-                          "The c_i are initialized to 2/(mu_{i+1}-mu_{i-1}), and a and b_i to 0.\n"
+                          "The c_i and b_i are initialized to inverse_softplus(1), and a using the empirical unconditional P(Y=0).\n"
                           "For the output curve options (outputs_def='L',D','C', or 'S'), the lower_bound and upper_bound\n"
                           "options of PDistribution are automatically set to 0 and maxY respectively.\n"
                           );
@@ -207,18 +220,20 @@ ConditionalDensityNet::ConditionalDensityNet()
   declareOption(ol, "mu_is_fixed", &ConditionalDensityNet::mu_is_fixed, OptionBase::buildoption, 
                 "    whether to keep the step centers (mu[i]) fixed or to learn them.\n");
 
+  declareOption(ol, "separate_mass_point", &ConditionalDensityNet::separate_mass_point, OptionBase::buildoption, 
+                "    whether to model separately the mass point at the origin.\n");
+
   declareOption(ol, "initial_hardness", &ConditionalDensityNet::initial_hardness, OptionBase::buildoption, 
-                "    initial value of softplus(c), only used during parameter initialization\n");
+                "    value that scales softplus(c).\n");
 
   declareOption(ol, "paramsvalues", &ConditionalDensityNet::paramsvalues, OptionBase::learntoption, 
                 "    The learned neural network parameter vector\n");
-
 
   declareOption(ol, "unconditional_cdf", &ConditionalDensityNet::unconditional_cdf, OptionBase::learntoption, 
                 "    Unconditional cumulative distribution function.\n");
 
   declareOption(ol, "unconditional_delta_cdf", &ConditionalDensityNet::unconditional_delta_cdf, OptionBase::learntoption, 
-                "    Variations of the cdf from one step center to the next.\n");
+                "    Variations of the cdf from one step center to the next (this is u_i in above eqns).\n");
 
   declareOption(ol, "mu", &ConditionalDensityNet::mu, OptionBase::learntoption, 
                 "    Step centers.\n");
@@ -324,65 +339,110 @@ ConditionalDensityNet::ConditionalDensityNet()
       /*
        * output density
        */
-      Var max_y = var(maxY); max_y->setName("maxY");
-      centers = target-mu; centers->setName("centers");
-      centers_M = max_y-mu; centers_M->setName("centers_M");
-      unconditional_cdf.resize(n_output_density_terms);
-      //unconditional_delta_cdf = Var(1,n_output_density_terms);
-      unconditional_delta_cdf = Var(n_output_density_terms,1);
+      Var nll; // negative log likelihood
+      Var max_y = var(maxY); 
       Var left_side = vconcat(var(0.0) & (new SubMatVariable(mu,0,0,n_output_density_terms-1,1)));
-      //Var left_side = hconcat(var(0.0) & (new SubMatVariable(mu,0,0,1,n_output_density_terms-1))); 
-      left_side->setName("left_side"); 
+      centers = target-mu; 
+      centers_M = max_y-mu;
+      unconditional_cdf.resize(n_output_density_terms);
+      unconditional_delta_cdf = Var(n_output_density_terms,1);
       initial_hardnesses = var(initial_hardness) / (mu - left_side);
-      pos_a = softplus(a); 
-      pos_a->setName("pos_a");
       pos_b = softplus(b)*unconditional_delta_cdf; 
-      pos_b->setName("pos_b");
       pos_c = softplus(c)*initial_hardnesses; 
-      pos_c->setName("pos_c");
       Var scaled_centers = pos_c*centers;
       // scaled centers evaluated at target = M
       Var scaled_centers_M = pos_c*centers_M;
       // scaled centers evaluated at target = 0
       Var scaled_centers_0 = -pos_c*mu;
-      if (steps_type=="sigmoid_steps")
+      Var lhopital, inverse_denominator, density_numerator;
+      if (separate_mass_point)
       {
-        steps = sigmoid(scaled_centers); 
-        // steps evaluated at target = M
-        steps_M = sigmoid(scaled_centers_M);
-        // derivative of steps wrt target
-        steps_gradient = pos_c*steps*(1-steps);
-        steps_integral = (softplus(scaled_centers_M) - softplus(scaled_centers_0))/pos_c;
-        delta_steps = centers_M*steps_M + mu*sigmoid(scaled_centers_0);
-      }
-      else if (steps_type=="sloped_steps")
-      {
-        steps = soft_slope(target, pos_c, left_side, mu);
-        steps_M = soft_slope(max_y, pos_c, left_side, mu);
-        steps_gradient = d_soft_slope(target, pos_c, left_side, mu);
-        steps_integral = soft_slope_integral(pos_c,left_side,mu,0.0,maxY);
-        delta_steps = soft_slope_limit(target, pos_c, left_side, mu);
-      }
-      else PLERROR("ConditionalDensityNet::build, steps_type option value unknown: %s",steps_type.c_str());
+        pos_a = sigmoid(a); 
+        if (steps_type=="sigmoid_steps")
+          {
+            steps = sigmoid(scaled_centers); 
+            // steps evaluated at target = M
+            steps_M = sigmoid(scaled_centers_M);
+            steps_0 = sigmoid(scaled_centers_0);
+            // derivative of steps wrt target
+            steps_gradient = pos_c*steps*(1-steps);
+            steps_integral = (softplus(scaled_centers_M) - softplus(scaled_centers_0))/pos_c;
+            delta_steps = centers_M*steps_M + mu*sigmoid(scaled_centers_0);
+          }
+        else if (steps_type=="sloped_steps")
+          {
+            steps = soft_slope(target, pos_c, left_side, mu);
+            steps_M = soft_slope(max_y, pos_c, left_side, mu);
+            steps_0 = soft_slope(var(0.0), pos_c, left_side, mu);
+            steps_gradient = d_soft_slope(target, pos_c, left_side, mu);
+            steps_integral = soft_slope_integral(pos_c,left_side,mu,0.0,maxY);
+            delta_steps = soft_slope_limit(target, pos_c, left_side, mu);
+          }
+        else PLERROR("ConditionalDensityNet::build, steps_type option value unknown: %s",steps_type.c_str());
 
+        density_numerator = dot(pos_b,steps_gradient);
+        cum_denominator = dot(pos_b,steps_M-steps_0);
+        inverse_denominator = 1.0/cum_denominator;
+        cum_numerator = dot(pos_b,(steps-steps_0));
+        cumulative = pos_a + (1-pos_a) * cum_numerator * inverse_denominator;
+        density = density_numerator * inverse_denominator; // this is the conditional density for Y>0
+        // apply l'hopital rule if pos_c --> 0 to avoid blow-up (N.B. lim_{pos_c->0} pos_b/pos_c*steps_integral = pos_b*delta_steps)
+        lhopital = ifThenElse(isAboveThreshold(pos_c,1e-20),steps_integral,delta_steps); 
+        expected_value = (pos_a-(1-pos_a)*inverse_denominator*dot(pos_b,steps_0))*max_y + 
+          (1-pos_a)*dot(pos_b,lhopital)*inverse_denominator;
+        nll = -log(ifThenElse(isAboveThreshold(target,0.0),density*(1-pos_a),pos_a));
+      }
+      else
+      {
+        pos_a = softplus(a); 
+        if (steps_type=="sigmoid_steps")
+          {
+            steps = sigmoid(scaled_centers); 
+            // steps evaluated at target = M
+            steps_M = sigmoid(scaled_centers_M);
+            // derivative of steps wrt target
+            steps_gradient = pos_c*steps*(1-steps);
+            steps_integral = (softplus(scaled_centers_M) - softplus(scaled_centers_0))/pos_c;
+            delta_steps = centers_M*steps_M + mu*sigmoid(scaled_centers_0);
+          }
+        else if (steps_type=="sloped_steps")
+          {
+            steps = soft_slope(target, pos_c, left_side, mu);
+            steps_M = soft_slope(max_y, pos_c, left_side, mu);
+            steps_gradient = d_soft_slope(target, pos_c, left_side, mu);
+            steps_integral = soft_slope_integral(pos_c,left_side,mu,0.0,maxY);
+            delta_steps = soft_slope_limit(target, pos_c, left_side, mu);
+          }
+        else PLERROR("ConditionalDensityNet::build, steps_type option value unknown: %s",steps_type.c_str());
+
+        density_numerator = dot(pos_b,steps_gradient);
+        cum_denominator = pos_a + dot(pos_b,steps_M); 
+        inverse_denominator = 1.0/cum_denominator;
+        cum_numerator = pos_a + dot(pos_b,steps);
+        cumulative = cum_numerator * inverse_denominator;
+        density = density_numerator * inverse_denominator;
+        // apply l'hopital rule if pos_c --> 0 to avoid blow-up (N.B. lim_{pos_c->0} pos_b/pos_c*steps_integral = pos_b*delta_steps)
+        lhopital = ifThenElse(isAboveThreshold(pos_c,1e-20),steps_integral,delta_steps); 
+        expected_value = pos_a*inverse_denominator*max_y + dot(pos_b,lhopital)*inverse_denominator;
+        nll = -log(ifThenElse(isAboveThreshold(target,0.0),density,cumulative));
+      }
+      max_y->setName("maxY");
+      left_side->setName("left_side"); 
+      pos_a->setName("pos_a");
+      pos_b->setName("pos_b");
+      pos_c->setName("pos_c");
       steps->setName("steps");
       steps_M->setName("steps_M");
       steps_integral->setName("steps_integral");
-      Var density_numerator = dot(pos_b,steps_gradient);
-      density_numerator->setName("density_numerator");
-      cum_denominator = pos_a + dot(pos_b,steps_M); cum_denominator->setName("cum_denominator");
-      Var inverse_denominator = 1.0/cum_denominator;
-      inverse_denominator->setName("inverse_denominator");
-      cum_numerator = pos_a + dot(pos_b,steps);
-      cum_numerator->setName("cum_numerator");
-      cumulative = cum_numerator * inverse_denominator;
-      cumulative->setName("cumulative");
-      density = density_numerator * inverse_denominator;
-      density->setName("density");
-      // apply l'hopital rule if pos_c --> 0 to avoid blow-up (N.B. lim_{pos_c->0} pos_b/pos_c*steps_integral = pos_b*delta_steps)
-      Var lhopital = ifThenElse(isAboveThreshold(pos_c,1e-20),pos_b*steps_integral,pos_b*delta_steps); lhopital->setName("lhopital");
-      expected_value = (1 - pos_a*inverse_denominator)*max_y - sum(lhopital)*inverse_denominator;
       expected_value->setName("expected_value");
+      density_numerator->setName("density_numerator");
+      cum_denominator->setName("cum_denominator");
+      inverse_denominator->setName("inverse_denominator");
+      cum_numerator->setName("cum_numerator");
+      cumulative->setName("cumulative");
+      density->setName("density");
+      lhopital->setName("lhopital");
+
       /*
        * cost functions:
        *   training_criterion = log_likelihood_vs_squared_error_balance*neg_log_lik
@@ -393,7 +453,7 @@ ConditionalDensityNet::ConditionalDensityNet()
        */
       costs.resize(3);
       
-      costs[1] = -log(ifThenElse(isAboveThreshold(target,0.0),density,cumulative));
+      costs[1] = nll;
       costs[2] = square(target-expected_value);
       if (log_likelihood_vs_squared_error_balance==1)
         costs[0] = costs[1];
