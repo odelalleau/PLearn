@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.3 2002/10/21 01:21:53 plearner Exp $
+* $Id: VMatrix.cc,v 1.4 2002/11/11 14:52:45 ducharme Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -495,13 +495,18 @@ void VMatrix::savePMAT(const string& pmatfile) const
   ProgressBar pb(cout, "Saving to pmat", nsamples);
 
   for(int i=0; i<nsamples; i++)
-    {
-      getRow(i,tmpvec);
-      m.putRow(i,tmpvec);
-      pb(i);
-    }
-  string fieldinfosfname = pmatfile+".fieldnames";
-  saveFieldInfos(fieldinfosfname);  
+  {
+    getRow(i,tmpvec);
+    m.putRow(i,tmpvec);
+    pb(i);
+  }
+
+  //save field names
+  if (fieldinfos.size() > 0)
+  {
+    string fieldinfosfname = pmatfile+".fieldnames";
+    saveFieldInfos(fieldinfosfname);  
+  }
 }
 
 void VMatrix::saveDMAT(const string& dmatdir) const
@@ -513,16 +518,19 @@ void VMatrix::saveDMAT(const string& dmatdir) const
   ProgressBar pb(cout, "Saving to dmat", length());
 
   for(int i=0;i<length();i++)
-    {
-      getRow(i,v);
-      vm.appendRow(v);
-      pb(i);
-      //cerr<<i<<" "<<flush;
-    }
+  {
+    getRow(i,v);
+    vm.appendRow(v);
+    pb(i);
+    //cerr<<i<<" "<<flush;
+  }
 
   //save field names
-  string fieldinfosfname = dmatdir+"/fieldnames";
-  saveFieldInfos(fieldinfosfname);  
+  if (fieldinfos.size() > 0)
+  {
+    string fieldinfosfname = dmatdir+"/fieldnames";
+    saveFieldInfos(fieldinfosfname);  
+  }
 }
 
 void VMatrix::saveAMAT(const string& amatfile) const
