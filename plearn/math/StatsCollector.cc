@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.53 2005/02/18 15:18:19 tihocan Exp $
+   * $Id: StatsCollector.cc,v 1.54 2005/02/21 03:34:41 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -79,6 +79,8 @@ PLEARN_IMPLEMENT_OBJECT(
   "  - NMISSING       Number of missing observations\n"
   "  - NNONMISSING    Number of non-missing observations\n"
   "  - SHARPERATIO    Mean divided by standard deviation\n"
+  "  - EoverSKEW      Mean divided by skewness\n"
+  "  - EoverKURT      Mean divided by kurtosis\n"
   "  - ZSTAT          Z-statistic of the sample mean estimator\n"
   "  - PZ1t           One-tailed probability of the Z-Statistic\n"
   "  - PZ2t           Two-tailed probability of the Z-Statistic\n"
@@ -800,6 +802,8 @@ real StatsCollector::getStat(const string& statname) const
     statistics["NMISSING"]    = STATFUN(&StatsCollector::nmissing);
     statistics["NNONMISSING"] = STATFUN(&StatsCollector::nnonmissing);
     statistics["SHARPERATIO"] = STATFUN(&StatsCollector::sharperatio);
+    statistics["EoverSKEW"]   = STATFUN(&StatsCollector::mean_over_skewness);
+    statistics["EoverKURT"]   = STATFUN(&StatsCollector::mean_over_kurtosis);
     statistics["ZSTAT"]       = STATFUN(&StatsCollector::zstat);
     statistics["PZ1t"]        = STATFUN(&StatsCollector::zpr1t);
     statistics["PZ2t"]        = STATFUN(&StatsCollector::zpr2t);

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.37 2005/02/08 21:38:29 tihocan Exp $
+   * $Id: StatsCollector.h,v 1.38 2005/02/21 03:34:41 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -152,29 +152,31 @@ public:
   StatsCollector(int the_maxnvalues=0);
       
   real n() const { return nmissing_ + nnonmissing_; } //!< number of samples seen with update (length of VMat for ex.)
-  real nmissing() const { return nmissing_; }
-  real nnonmissing() const { return nnonmissing_; }
-  real sum() const { return real(sum_+nnonmissing_*first_); }
+  real nmissing() const               { return nmissing_; }
+  real nnonmissing() const            { return nnonmissing_; }
+  real sum() const                    { return real(sum_+nnonmissing_*first_); }
   //real sumsquare() const { return real(sumsquare_); }
-  real sumsquare() const { return real(sumsquare_+2*first_*sum()-first_*first_*nnonmissing_); }
-  real min() const { return min_; }
-  real max() const { return max_; }
-  real range() const { return max_ - min_; }
-  real mean() const { return real(sum()/nnonmissing_); }
+  real sumsquare() const              { return real(sumsquare_+2*first_*sum()-first_*first_*nnonmissing_); }
+  real min() const                    { return min_; }
+  real max() const                    { return max_; }
+  real range() const                  { return max_ - min_; }
+  real mean() const                   { return real(sum()/nnonmissing_); }
   //real variance() const { return real((sumsquare_ - square(sum_)/nnonmissing_)/(nnonmissing_-1)); }
-  real variance() const { return real((sumsquare_ - square(sum_)/nnonmissing_)/(nnonmissing_-1)); }
-  real stddev() const { return sqrt(variance()); }
+  real variance() const               { return real((sumsquare_ - square(sum_)/nnonmissing_)/(nnonmissing_-1)); }
+  real stddev() const                 { return sqrt(variance()); }
   real skewness() const;
   real kurtosis() const;
-  real stderror() const { return sqrt(variance()/nnonmissing()); }
-  real first_obs() const { return first_; }
-  real last_obs() const { return last_; }
-  real sharperatio() const { return mean()/stddev(); }
-  real zstat() const { return mean()/stderror(); }
-  real zpr1t() const;                      //!< one-tailed P(zstat())
-  real zpr2t() const;                      //!< two-tailed P(zstat())
-  real iqr() const { return pseudo_quantile(0.75) - pseudo_quantile(0.25); }
-  real prr() const { return pseudo_quantile(0.99) - pseudo_quantile(0.01); }
+  real stderror() const               { return sqrt(variance()/nnonmissing()); }
+  real first_obs() const              { return first_; }
+  real last_obs() const               { return last_; }
+  real sharperatio() const            { return mean()/stddev(); }
+  real mean_over_skewness() const     { return mean()/skewness(); }
+  real mean_over_kurtosis() const     { return mean()/kurtosis(); }
+  real zstat() const                  { return mean()/stderror(); }
+  real zpr1t() const;                        //!< one-tailed P(zstat())
+  real zpr2t() const;                        //!< two-tailed P(zstat())
+  real iqr() const                    { return pseudo_quantile(0.75) - pseudo_quantile(0.25); }
+  real prr() const                    { return pseudo_quantile(0.99) - pseudo_quantile(0.01); }
   //! Return LIFT(k/n). 'n_pos_in_k' is filled with the number of positive examples
   //! in the first k examples. If provided, 'n_pos_in_k_minus_1' must be the number
   //! of positive examples in the first (k-1) examples. If provided, pos_fraction
@@ -191,6 +193,8 @@ public:
   //!   - FIRST, LAST
   //!   - N, NMISSING, NNONMISING
   //!   - SHARPERATIO
+  //!   - EoverSKEW
+  //!   - EoverKURT
   //!   - ZSTAT, PZ
   //!   - PSEUDOQ(q)    (q is a fraction between 0 and 1)
   //!   - IQR           (inter-quartile range)
