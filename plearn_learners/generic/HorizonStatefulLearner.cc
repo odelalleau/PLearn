@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HorizonStatefulLearner.cc,v 1.1 2004/10/18 14:05:35 chapados Exp $ 
+   * $Id: HorizonStatefulLearner.cc,v 1.2 2004/10/19 14:23:57 chapados Exp $ 
    ******************************************************* */
 
 // Authors: Réjean Ducharme
@@ -82,7 +82,10 @@ void HorizonStatefulLearner::declareOptions(OptionList& ol)
 }
 
 void HorizonStatefulLearner::build_()
-{}
+{
+  if (horizon < 0)
+    PLERROR("HorizonStatefulLearner::build_: horizon must be non-negative");
+}
 
 // ### Nothing to add here, simply calls build_
 void HorizonStatefulLearner::build()
