@@ -35,6 +35,12 @@
 #ifndef byte_order_INC
 #define byte_order_INC
 
+// norman:
+// If I don't add a definition of the namespace std .NET it does not compile (weird..)!
+#ifdef WIN32
+#include <string>
+#endif
+
 namespace PLearn {
 using namespace std;
 

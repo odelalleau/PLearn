@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plerror.cc,v 1.5 2004/02/20 21:11:43 chrish42 Exp $
+   * $Id: plerror.cc,v 1.6 2004/02/26 19:20:57 nova77 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -64,7 +64,7 @@ void errormsg(const char* msg, ...)
   va_start(args,msg);
   char message[ERROR_MSG_SIZE];
 
-#if !defined(ULTRIX) && !defined(_MINGW_)
+#if !defined(ULTRIX) && !defined(_MINGW_) && !defined(WIN32)
   vsnprintf(message, ERROR_MSG_SIZE,msg,args);
 #else
   vsprintf(message,msg,args);
@@ -92,7 +92,7 @@ void  warningmsg(const char* msg, ...)
   va_start(args,msg);
   char message[ERROR_MSG_SIZE];
 
-#if !defined(ULTRIX) && !defined(_MINGW_)
+#if !defined(ULTRIX) && !defined(_MINGW_) && !defined(WIN32)
   vsnprintf(message,ERROR_MSG_SIZE,msg,args);
 #else
   vsprintf(message,msg,args);
@@ -109,7 +109,7 @@ void exitmsg(const char* msg, ...)
   va_start(args,msg);
   char message[ERROR_MSG_SIZE];
 
-#if !defined(ULTRIX) && !defined(_MINGW_)
+#if !defined(ULTRIX) && !defined(_MINGW_) && !defined(WIN32)
   vsnprintf(message,ERROR_MSG_SIZE,msg,args);
 #else
   vsprintf(message,msg,args);
