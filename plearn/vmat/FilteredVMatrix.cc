@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilteredVMatrix.cc,v 1.13 2004/09/21 13:13:23 tihocan Exp $ 
+   * $Id: FilteredVMatrix.cc,v 1.14 2004/11/03 16:09:17 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -49,13 +49,15 @@ using namespace std;
 
 FilteredVMatrix::FilteredVMatrix()
   : inherited(),
-    build_complete(false)
+    build_complete(false),
+    report_progress(true)
 {
 }
 
-FilteredVMatrix::FilteredVMatrix(VMat the_source, const string& program_string, const string& the_metadatadir)
+FilteredVMatrix::FilteredVMatrix(VMat the_source, const string& program_string, const string& the_metadatadir, bool the_report_progress)
   : SourceVMatrix(the_source),
-    prg(program_string)
+    prg(program_string),
+    report_progress(the_report_progress)
 {
   metadatadir = append_slash(the_metadatadir);
   build_();
@@ -80,14 +82,19 @@ void FilteredVMatrix::openIndex()
       int l = source.length();
       Vec result(1);
       indexes.open(idxfname,true);
-      ProgressBar pb("Filtering source vmat", l);
+      ProgressBar* pb = 0;
+      if (report_progress)
+        pb = new ProgressBar("Filtering source vmat", l);
       for(int i=0; i<l; i++)
         {
-          pb.update(i);
+          if (report_progress)
+            pb->update(i);
           program.run(i,result);
           if(result[0]!=0)
             indexes.append(i);
         }
+      if (pb)
+        delete pb;
       indexes.close();
       indexes.open(idxfname);
     }
@@ -117,6 +124,9 @@ void FilteredVMatrix::declareOptions(OptionList& ol)
   declareOption(ol, "prg", &FilteredVMatrix::prg, OptionBase::buildoption,
                 "The VPL code that should produce a single scalar, indicating whether \n"
                 "we should keep the line (if the produced scalar is non zero) or throw it away (if it's zero)");
+
+  declareOption(ol, "report_progress", &FilteredVMatrix::report_progress, OptionBase::buildoption,
+      "Whether to report the filtering progress or not.");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);

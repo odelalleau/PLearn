@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FilteredVMatrix.h,v 1.11 2004/09/27 20:19:27 plearner Exp $ 
+   * $Id: FilteredVMatrix.h,v 1.12 2004/11/03 16:09:17 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -76,6 +76,7 @@ public:
   // * public build options *
   // ************************
 
+  bool report_progress;
   string prg;  // program string in VPL language
 
   // ****************
@@ -86,7 +87,8 @@ public:
   FilteredVMatrix();
 
   //! Convenience constructor.
-  FilteredVMatrix(VMat the_source, const string& program_string, const string& the_metadatadir = "");
+  FilteredVMatrix(VMat the_source, const string& program_string,
+                  const string& the_metadatadir = "", bool the_report_progress = true);
 
   virtual void setMetaDataDir(const string& the_metadatadir);
 
