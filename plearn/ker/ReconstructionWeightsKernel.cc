@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ReconstructionWeightsKernel.cc,v 1.2 2004/07/19 13:27:41 tihocan Exp $ 
+   * $Id: ReconstructionWeightsKernel.cc,v 1.3 2004/07/19 14:54:05 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -277,6 +277,7 @@ void ReconstructionWeightsKernel::reconstruct(const Vec& x, const TVec<int>& nei
     local_gram.resize(k_neighb, k_neighb);
     centered_neighborhood.no_scale = true;
     centered_neighborhood.negate_shift = true;
+    centered_neighborhood.automatic = false;
     centered_neighborhood.vm = (SelectRowsVMatrix*) sub_data;
   }
   // Center data on x.
