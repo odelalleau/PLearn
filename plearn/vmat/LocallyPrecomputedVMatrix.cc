@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: LocallyPrecomputedVMatrix.cc,v 1.4 2004/12/09 20:08:08 tihocan Exp $ 
+   * $Id: LocallyPrecomputedVMatrix.cc,v 1.5 2004/12/10 16:22:08 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -84,6 +84,9 @@ void LocallyPrecomputedVMatrix::declareOptions(OptionList& ol)
 
   declareOption(ol, "max_wait", &LocallyPrecomputedVMatrix::max_wait, OptionBase::buildoption,
       "Maximum wait time in minutes when 'sequential access' is set to 1 (see class help).");
+
+  declareOption(ol, "verbosity", &LocallyPrecomputedVMatrix::verbosity, OptionBase::buildoption,
+      "Controls the amount of displayed information.");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
