@@ -34,7 +34,9 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 #include "PStream.h"
+#include "PrPStreamBuf.h"
 #include <plearn/math/pl_math.h>
+#include <mozilla/nspr/prio.h>
 
 // norman:
 #ifdef WIN32
@@ -43,6 +45,70 @@
 
 namespace PLearn {
 using namespace std;
+
+// Initialization for pin, pout, ...
+
+PStream& get_pin()
+{
+  static bool initialized = false;
+  static PStream pin = new
+    PrPStreamBuf(PR_GetSpecialFD(PR_StandardInput),0);
+  if(!initialized)
+  {
+    pin.setMode(PStream::raw_ascii); // raw_ascii default mode
+    initialized = true;
+  }
+  return pin;
+}
+
+PStream pin = get_pin();
+
+PStream& get_pout()
+{
+  static bool initialized = false;
+  static PStream pout = new PrPStreamBuf(0,
+      PR_GetSpecialFD(PR_StandardOutput));
+  if(!initialized)
+  {
+    pout.setMode(PStream::raw_ascii); // raw_ascii default mode
+    initialized = true;
+  }
+  return pout;
+}
+
+PStream pout = get_pout();
+
+PStream& get_pio()
+{
+  static bool initialized = false;
+  static PStream pio = new
+    PrPStreamBuf(PR_GetSpecialFD(PR_StandardInput),
+        PR_GetSpecialFD(PR_StandardOutput));
+  if(!initialized)
+  {
+    pio.setMode(PStream::raw_ascii); // raw_ascii default mode
+    initialized = true;
+  }
+  return pio;
+}
+
+PStream pio = get_pio();
+
+PStream& get_perr()
+{
+  static bool initialized = false;
+  static PStream perr = new PrPStreamBuf(0,
+      PR_GetSpecialFD(PR_StandardOutput));
+  if(!initialized)
+  {
+    perr.setMode(PStream::raw_ascii); // raw_ascii default mode
+    initialized = true;
+    perr.setBufferCapacities(0,0,0);  // perr is unbuffered by default
+  }
+  return perr;
+}
+
+PStream perr = get_perr();
 
 char PStream::tmpbuf[100];
 
@@ -78,7 +144,8 @@ PStream::PStream()
      inmode(plearn_ascii), 
      outmode(plearn_ascii), 
      implicit_storage(true), compression_mode(compr_none)
-  {}
+  {
+  }
 #endif
 
 PStream::PStream(streambuftype* sb)
@@ -1203,8 +1270,10 @@ PStream& PStream::operator<<(int x)
       write(reinterpret_cast<char *>(&x), sizeof(int));
       break;
     case raw_ascii:
-    case plearn_ascii:
     case pretty_ascii:
+      writeAsciiNum(x);
+      break;
+    case plearn_ascii:
       writeAsciiNum(x);
       put(' ');
       break;
@@ -1231,8 +1300,10 @@ PStream& PStream::operator<<(unsigned int x)
       write(reinterpret_cast<char *>(&x), sizeof(unsigned int));
       break;
     case raw_ascii:
-    case plearn_ascii:
     case pretty_ascii:
+      writeAsciiNum(x);
+      break;
+    case plearn_ascii:
       writeAsciiNum(x);
       put(' ');
       break;
@@ -1259,8 +1330,10 @@ PStream& PStream::operator<<(long x)
       write(reinterpret_cast<char *>(&x), sizeof(long));
       break;
     case raw_ascii:
-    case plearn_ascii:
     case pretty_ascii:
+      writeAsciiNum(x);
+      break;
+    case plearn_ascii:
       writeAsciiNum(x);
       put(' ');
       break;
@@ -1287,8 +1360,10 @@ PStream& PStream::operator<<(unsigned long x)
       write(reinterpret_cast<char *>(&x), sizeof(unsigned long));
       break;
     case raw_ascii:
-    case plearn_ascii:
     case pretty_ascii:
+      writeAsciiNum(x);
+      break;
+    case plearn_ascii:
       writeAsciiNum(x);
       put(' ');
       break;
@@ -1315,8 +1390,10 @@ PStream& PStream::operator<<(short x)
       write(reinterpret_cast<char *>(&x), sizeof(short));
       break;
     case raw_ascii:
-    case plearn_ascii:
     case pretty_ascii:
+      writeAsciiNum(x);
+      break;
+    case plearn_ascii:
       writeAsciiNum(x);
       put(' ');
       break;
@@ -1343,8 +1420,10 @@ PStream& PStream::operator<<(unsigned short x)
       write(reinterpret_cast<char *>(&x), sizeof(unsigned short));
       break;
     case raw_ascii:
-    case plearn_ascii:
     case pretty_ascii:
+      writeAsciiNum(x);
+      break;
+    case plearn_ascii:
       writeAsciiNum(x);
       put(' ');
       break;
@@ -1371,8 +1450,10 @@ PStream& PStream::operator<<(float x)
       write(reinterpret_cast<char *>(&x), sizeof(float));
       break;
     case raw_ascii:
-    case plearn_ascii:
     case pretty_ascii:
+      writeAsciiNum(x);
+      break;
+    case plearn_ascii:
       writeAsciiNum(x);
       put(' ');
       break;
@@ -1399,8 +1480,10 @@ PStream& PStream::operator<<(double x)
       write(reinterpret_cast<char *>(&x), sizeof(double));
       break;
     case raw_ascii:
-    case plearn_ascii:
     case pretty_ascii:
+      writeAsciiNum(x);
+      break;
+    case plearn_ascii:
       writeAsciiNum(x);
       put(' ');
       break;

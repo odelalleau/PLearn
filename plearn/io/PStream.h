@@ -80,6 +80,8 @@ public:
   //! typedef's for PStream manipulators
   typedef PStream& (*pl_pstream_manip)(PStream&);
 
+private:
+
 #if STREAMBUFVER == 0
   typedef PP<StdPStreamBuf> inherited;
   typedef StdPStreamBuf streambuftype;
@@ -87,6 +89,8 @@ public:
   typedef PP<PStreamBuf> inherited;
   typedef PStreamBuf streambuftype;
 #endif
+
+public:
 
 // norman: check for win32
 #if __GNUC__ < 3 && !defined(WIN32)
@@ -155,7 +159,7 @@ public:
 
   //! Default copy ctor. should be fine now.
 
-  //! dtor.
+  //! Destructor.
   virtual ~PStream();
 
   inline void setBufferCapacities(streamsize inbuf_capacity, streamsize outbuf_capacity, streamsize unget_capacity)
@@ -543,6 +547,16 @@ public:
 
 };
 
+/*! PStream objects to replace the standard cout, cin, ... */
+PStream& get_pin();
+PStream& get_pout();
+PStream& get_pio();
+PStream& get_perr();
+
+extern PStream pin;
+extern PStream pout;
+extern PStream pio;
+extern PStream perr;
 
   // Simulation of <<flush <<endl and >>ws ...
 
