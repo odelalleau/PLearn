@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.16 2004/07/12 22:28:04 monperrm Exp $ 
+   * $Id: plearn_inc.h,v 1.17 2004/07/14 00:24:27 dorionc Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -93,7 +93,7 @@
 #include "LinearRegressor.h"
 #include "MultiInstanceNNet.h"
 #include "NNet.h"
-#include "PCA.h"
+//#include "PCA.h"
 #include "PLS.h"
 #include "StackedLearner.h"
 // Distribution (deprecated)
@@ -160,7 +160,7 @@
 #include "SortRowsVMatrix.h"
 #include "SparseVMatrix.h"
 #include "SubInputVMatrix.h"
-#include "TextSenseSequenceVMatrix.h"
+//#include "TextSenseSequenceVMatrix.h"
 #include "ThresholdVMatrix.h"
 #include "TransposeVMatrix.h"
 #include "VMatrixFromDistribution.h"

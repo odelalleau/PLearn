@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PCA.cc,v 1.11 2004/06/30 16:50:35 tihocan Exp $ 
+   * $Id: PCA.cc,v 1.12 2004/07/14 00:24:28 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file PCA.cc */
@@ -382,4 +382,3 @@ void PCA::reconstruct(const Vec& output, Vec& input) const
 }
 
 } // end of namespace PLearn
-

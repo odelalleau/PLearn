@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.22 2004/06/29 13:26:08 tihocan Exp $
+   * $Id: PLearner.h,v 1.23 2004/07/14 00:24:28 dorionc Exp $
    ******************************************************* */
 
 
@@ -334,6 +334,13 @@ public:
   //!  Does the necessary operations to transform a shallow copy (this)
   //!  into a deep copy by deep-copying all the members that need to be.
   PLEARN_DECLARE_ABSTRACT_OBJECT(PLearner);
+
+  /*!
+    Leads the PLearner to save some data in a matlab 'readable' format. 
+    The data will be saved in expdir/matlab_subdir
+    through the global matlabSave function (MatIO.h).
+  */
+  virtual void matlabSave(const string& matlab_subdir){}
 };
 
 DECLARE_OBJECT_PTR(PLearner);

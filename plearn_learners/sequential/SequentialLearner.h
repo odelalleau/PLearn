@@ -168,7 +168,6 @@ protected:
   //!  into a deep copy by deep-copying all the members that need to be.
   PLEARN_DECLARE_ABSTRACT_OBJECT(SequentialLearner);
   virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
-
 };
 
 //! Declares a few other classes and functions related to this class

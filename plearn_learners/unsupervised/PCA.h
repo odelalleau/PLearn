@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PCA.h,v 1.6 2004/06/29 13:28:11 tihocan Exp $ 
+   * $Id: PCA.h,v 1.7 2004/07/14 00:24:28 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file PCA.h */
@@ -154,7 +154,6 @@ public:
   // virtual void test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs=0, VMat testcosts=0) const;
   // virtual int nTestCosts() const;
   // virtual int nTrainCosts() const;
-
 };
 
 // Declares a few other classes and functions related to this class

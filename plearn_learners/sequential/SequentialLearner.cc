@@ -157,6 +157,8 @@ void SequentialLearner::computeCostsFromOutputs(const Vec& input,
 
 void SequentialLearner::matlabSave(const string& matlab_subdir)
 {
+  inherited::matlabSave(matlab_subdir);
+
   string save_dir = append_slash(getExperimentDirectory()) + matlab_subdir;
   Vec dummy, add(1); add[0] = 0;
 
