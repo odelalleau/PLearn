@@ -35,18 +35,32 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.34 2004/02/12 21:06:41 yoshua Exp $
+   * $Id: NNet.cc,v 1.35 2004/02/17 14:52:18 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
 
-
+#include "AffineTransformVariable.h"
 #include "BinaryClassificationLossVariable.h"
-#include "ConcatColumnsVMatrix.h"
-#include "DisplayUtils.h"
-#include "GradientOptimizer.h"
+#include "ConcatColumnsVariable.h"
+#include "CrossEntropyVariable.h"
+#include "ExpVariable.h"
 #include "LiftOutputVariable.h"
+#include "LogSoftmaxVariable.h"
 #include "NegCrossEntropySigmoidVariable.h"
+#include "OneHotSquaredLoss.h"
+#include "SigmoidVariable.h"
+#include "SoftmaxVariable.h"
+#include "SoftplusVariable.h"
+#include "SumSquareVariable.h"
+#include "TanhVariable.h"
+#include "TransposeProductVariable.h"
+#include "Var_operators.h"
+#include "Var_utils.h"
+
+#include "ConcatColumnsVMatrix.h"
+//#include "DisplayUtils.h"
+//#include "GradientOptimizer.h"
 #include "NNet.h"
 #include "random.h"
 #include "SubVMatrix.h"
