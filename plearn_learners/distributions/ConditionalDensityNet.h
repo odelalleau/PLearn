@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.31 2004/05/31 13:01:17 tihocan Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.32 2004/06/01 13:19:58 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -159,6 +159,8 @@ public:
 
   // ***** OPTIONS SPECIFIC TO CONDITIONALDENSITYNET ************** 
 
+  real c_penalization;
+
   // maximum value that Y can take (minimum value is 0 by default).
   real maxY;
 
@@ -252,7 +254,7 @@ public:
   // **************************
   // **** PDistribution methods ****
   // **************************
-
+ 
   //! return log of probability density log(p(x))
   virtual real log_density(const Vec& x) const;
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.43 2004/05/31 13:02:45 tihocan Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.44 2004/06/01 13:19:58 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -84,6 +84,7 @@ ConditionalDensityNet::ConditionalDensityNet()
   L1_penalty(false),
   direct_in_to_out(false),
   batch_size(1),
+  c_penalization(0),
   maxY(1), // if Y is normalized to be in interval [0,1], that would be OK
   thresholdY(0.1),
   log_likelihood_vs_squared_error_balance(1),
@@ -248,6 +249,9 @@ void ConditionalDensityNet::declareOptions(OptionList& ol)
   declareOption(ol, "initial_hardness", &ConditionalDensityNet::initial_hardness, OptionBase::buildoption, 
                 "    value that scales softplus(c).\n");
 
+  declareOption(ol, "c_penalization", &ConditionalDensityNet::c_penalization, OptionBase::buildoption, 
+                "    the penalization coefficient for the 'c' output of the neural network");
+
   declareOption(ol, "generate_precision", &ConditionalDensityNet::generate_precision, OptionBase::buildoption, 
                 "    precision when generating a new sample\n");
 
@@ -286,11 +290,11 @@ int ConditionalDensityNet::outputsize() const
 }
 */
 
+////////////
+// build_ //
+////////////
 void ConditionalDensityNet::build_()
 {
-  // Don't do anything if we don't have a train_set
-  // It's the only one who knows the inputsize and targetsize anyway...
-
   if(inputsize_>=0 && targetsize_>=0 && weightsize_>=0)
   {
     lower_bound = 0;
@@ -524,6 +528,9 @@ void ConditionalDensityNet::build_()
         costs[0] = costs[2];
       else costs[0] = log_likelihood_vs_squared_error_balance*costs[1]+
              (1-log_likelihood_vs_squared_error_balance)*costs[2];
+      if (c_penalization > 0) {
+        costs[0] = costs[0] + c_penalization * sumsquare(c);
+      }
     
       // for debugging
       //costs[0] = mass_cost + pos_y_cost;
@@ -682,8 +689,9 @@ void ConditionalDensityNet::build_()
 
       if (use_paramsvalues)
         test_costf->recomputeParents();
-    }
   }
+  PDistribution::finishConditionalBuild();
+}
 
 
 /* TODO Remove (?)
@@ -799,7 +807,6 @@ void ConditionalDensityNet::makeDeepCopyFromShallowCopy(map<const void*, void*>&
   deepCopyField(optimizer, copies);
 }
 
-
 void ConditionalDensityNet::setInput(const Vec& in) const
 {
 #ifdef BOUNDCHECK
@@ -811,15 +818,16 @@ void ConditionalDensityNet::setInput(const Vec& in) const
 
 real ConditionalDensityNet::log_density(const Vec& y) const
 { 
-  Vec d(1);
+  static Vec d;
+  d.resize(1);
   target->value << y;
-  density_f->fprop(output_and_target_values,d);
+  density_f->fprop(output_and_target_values, d);
   return log(d[0]);
 }
 
 real ConditionalDensityNet::survival_fn(const Vec& y) const
 { 
-  return 1-cdf(y);
+  return 1 - cdf(y);
 }
 
 // must be called after setInput
@@ -828,6 +836,10 @@ real ConditionalDensityNet::cdf(const Vec& y) const
   Vec cum(1);
   target->value << y;
   cdf_f->fprop(output_and_target_values,cum);
+#ifdef BOUNDCHECK
+  if (cum[0] < -1e-3)
+    PLERROR("In ConditionalDensityNet::cdf - The cdf is < 0");
+#endif
   return cum[0];
 }
 
@@ -860,11 +872,12 @@ void ConditionalDensityNet::generate(Vec& y) const
   real y0=0;
   real y2=maxY;
   real delta;
+  real p;
   do 
     {
       delta = y2 - y0;
       y[0] = y0 + delta*0.5;
-      real p = cdf(y);
+      p = cdf(y);
       if (p<u)
         // increase y
         y0 = y[0];
