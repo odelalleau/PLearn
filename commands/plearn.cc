@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.58 2004/05/07 19:02:48 tihocan Exp $
+   * $Id: plearn.cc,v 1.59 2004/05/11 13:05:28 tihocan Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -47,11 +47,12 @@
 
 // Available VMats:
 #include "AutoVMatrix.h"
-#include "IndexedVMatrix.h"
 #include "BatchVMatrix.h"
+#include "IndexedVMatrix.h"
 #include "RegularGridVMatrix.h"
-#include "VMatrixFromDistribution.h"
 #include "PrecomputedVMatrix.h"
+#include "SortRowsVMatrix.h"
+#include "VMatrixFromDistribution.h"
 
 // Available Kernels:
 #include "AdditiveNormalizationKernel.h"
