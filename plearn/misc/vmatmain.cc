@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: vmatmain.cc,v 1.17 2004/03/10 12:53:47 tihocan Exp $
+   * $Id: vmatmain.cc,v 1.18 2004/03/10 15:25:15 tihocan Exp $
    ******************************************************* */
 
 #include "vmatmain.h"
@@ -894,8 +894,9 @@ int vmatmain(int argc, char** argv)
     cerr << 
       "Usage: vmat info <dataset> \n"
       "       Will info about dataset (size, etc..)\n"
-      "   or: vmat fields <dataset> [name_only]\n"
-      "       To list the fields with their names (if 'name_only' is specified, the index won't be displayed)\n"
+      "   or: vmat fields <dataset> [name_only] [transpose]\n"
+      "       To list the fields with their names (if 'name_only' is specified, the indexes won't be displayed,\n"
+      "       and if 'transpose' is also added, the fields will be listed on a single line)\n"
       "   or: vmat fieldinfo <dataset> <fieldname_or_num>\n"
       "       To display statistics for that field \n"
       "   or: vmat cat <dataset> [<optional_vpl_filtering_code>]\n"
@@ -1000,19 +1001,35 @@ int vmatmain(int argc, char** argv)
   else if(command=="fields")
     {
       bool add_info = true;
+      bool transpose = false;
       if (argc >= 4) {
         add_info = !(string(argv[3]) == "name_only");
+      }
+      if (argc >= 5) {
+        transpose = (string(argv[4]) == "transpose");
       }
       string dbname = argv[2];
       VMat vm = getDataSet(dbname);
       if (add_info) {
-        cout<<"FieldNames: "<<endl;
+        cout<<"FieldNames: ";
+        if (!transpose) {
+          cout << endl;
+        }
       }
       for(int i=0;i<vm.width();i++) {
         if (add_info) {
           cout << i << ": ";
         }
-        cout << vm->fieldName(i) << endl;
+        cout << vm->fieldName(i);
+        if (transpose) {
+         cout << " ";
+        } else {
+           cout << endl;
+        }
+      }
+      if (transpose) {
+        // It misses a carriage return after everything is displayed.
+        cout << endl;
       }
     }
   else if(command=="fieldinfo")
