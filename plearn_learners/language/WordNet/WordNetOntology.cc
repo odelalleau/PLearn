@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.cc,v 1.18 2003/02/18 22:29:23 morinf Exp $
+   * $Id: WordNetOntology.cc,v 1.19 2003/02/24 19:45:12 morinf Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -504,6 +504,8 @@ WordNetOntology::extractTaggedWordFrequencies(map<int, map<int, int> > &word_sen
                                 wnresults.OutSenseCount[wnresults.numforms]++;
                                 // Find if synset is in ontology
                                 //if (freq) {
+                                // NOTE: We extract zero frequencies even though
+                                //       this is not useful...
                                 syns = getSynsetWords(cursyn);
                                 gloss = string(cursyn->defn);
                                 Node *node = findSynsetFromSynsAndGloss(syns, gloss);
