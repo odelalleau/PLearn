@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.22 2003/05/05 13:00:29 tihocan Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.23 2003/05/06 20:59:57 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -61,26 +61,20 @@ class ConjGradientOptimizer : public Optimizer {
 
   typedef Optimizer inherited;
 
-  // The various line search algorithms available
-/*  enum LineSearchType {
-    FletcherSearch,
-    GSearch
-  };
-
-  // The various formulas available to find the new search direction
-  enum FindNewDirectionType {
-    CONJPOMDP,
-    DaiYuan,
-    FletcherReeves,
-    HestenesStiefel,
-    PolakRibiere
-  };*/ // TODO Use the enums types : but must work with the .plearn parser !
-
 public:
 
   // General options (also available through setOption)
-  int line_search_algo; // the line search algorithm used
-  int find_new_direction_formula; // the formula used
+  //! The line search algorithm used
+  //! 1  : Fletcher line search
+  //! 2  : GSearch
+  int line_search_algo;
+  //! The formula used to find the new search direction
+  //! 1  : ConjPOMPD
+  //! 2  : Dai - Yuan
+  //! 3  : Fletcher - Reeves
+  //! 4  : Hestenes - Stiefel
+  //! 5  : Polak - Ribiere
+  int find_new_direction_formula;
   real starting_step_size;  // initial step for line search
   real restart_coeff;       // we restart when : 
                             // abs(g(n).g(n-1)) > restart_coeff*norm(g(n))^2
