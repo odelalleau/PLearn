@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.h,v 1.27 2003/10/05 16:59:42 yoshua Exp $
+   * $Id: ConjGradientOptimizer.h,v 1.28 2003/10/14 14:53:12 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -99,6 +99,7 @@ private:
   real last_improvement;     // cost improvement during the last iteration
   real last_cost;            // last cost computed
   real current_step_size;    // current step size for line search
+  Vec meancost;              // used to store the cost, for display purpose
   
 public:
 
