@@ -1,8 +1,11 @@
-
+#include <sys/types.h>
+#include <unistd.h>                          // for getpid
 #include <cstdio>
 #include <cstdlib>
+#include <iostream>
 #include "procinfo.h"
 #include <plearn/base/plerror.h>
+#include <plearn/base/stringutils.h>
 
 namespace PLearn {
 
@@ -17,6 +20,28 @@ int getSystemTotalMemory()
   else 
     PLERROR("getSystemTotalMemory: unknown memory units %s",units);
   pclose(p);
+  return memory_size;
+}
+
+int getProcessDataMemory()
+{
+  pid_t pid = getpid();
+  int memory_size=-1;
+  string file = "/proc/"+tostring(pid)+"/status";
+  ifstream ifs(file.c_str());
+  while (ifs) {
+    string line = pgetline(ifs);
+    if (line.substr(0,7) == "VmData:") {
+      vector<string> elements = split(line);
+      memory_size = toint(elements[1]);
+      if (elements[2] == "kB")
+        memory_size *= 1024;
+      else
+        PLERROR("getProcessDataMemory: unknown memory units '%s'",
+                elements[2].c_str());
+      break;
+    }
+  }
   return memory_size;
 }
 
