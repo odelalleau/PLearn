@@ -101,6 +101,8 @@ protected:
   
   //! Default behaviour: return train_set->targetsize()
   virtual int outputsize() const;
+
+  virtual void setTrainingSet(VMat training_set, bool call_forget=true);
   
 /*!       *** SUBCLASS WRITING: ***
       Does the actual training. Subclasses must implement this method.

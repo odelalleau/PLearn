@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.cc,v 1.21 2003/10/17 21:09:38 ducharme Exp $ 
+   * $Id: FuturesTrader.cc,v 1.22 2003/10/20 21:08:19 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.cc */
@@ -156,7 +156,7 @@ void FuturesTrader::trader_test(int t, VMat testset, PP<VecStatsCollector> test_
       portfolio_value[t] += abs(w_kt)*p_kt;
       if( delta_ != 0.0 ) //To change for 0 when will pass to units!!!
       {
-        transaction_cost += additive_cost + multiplicative_cost*fabs(delta_);
+        transaction_cost += additive_cost + multiplicative_cost[k]*fabs(delta_);
 
         // Updating the margin, given the leverage
         margin(k, t) += delta_*p_kt/leverage;
@@ -189,7 +189,9 @@ void FuturesTrader::trader_test(int t, VMat testset, PP<VecStatsCollector> test_
   test_stats->update(update);
 
   if (testoutputs) testoutputs->appendRow(portfolios(t));
+  predictions(t) << portfolios(t);
   if (testcosts) testcosts->appendRow(update);
+  errors(t) << update;
 }
 
 void FuturesTrader::check_margin(int k, int t) const

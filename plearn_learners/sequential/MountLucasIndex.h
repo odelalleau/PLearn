@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: MountLucasIndex.h,v 1.13 2003/10/17 21:09:38 ducharme Exp $ 
+   * $Id: MountLucasIndex.h,v 1.14 2003/10/20 21:08:19 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file MountLucasIndex.h */
@@ -65,7 +65,7 @@ class MountLucasIndex: public FinancialAdvisor
     int moving_average_window; // default=12 (1 year)
 
   protected:
-    TVec<bool> is_long_position; // long or short position (for this month)
+    TVec<int> position; // long=1, short=-1, no position=0
     TVec<bool> tradable_commodity; // is this commidity tradable for this year
     //Vec twelve_month_moving_average;
     Mat next_to_last_unit_asset_value;
@@ -86,11 +86,6 @@ class MountLucasIndex: public FinancialAdvisor
     Vec next_to_last_tradable_price;
     mutable real last_month_risk_free_rate;
 
-    //Vec tbill_return;
-    //mutable real s,s2,sf,sf2,sp,sp2;
-    //mutable int ns;
-    //mutable real last_sp500, last_month_sp500;
- 
   private:
     //! This does the actual building
     void build_();
@@ -110,7 +105,7 @@ class MountLucasIndex: public FinancialAdvisor
     //! simply calls inherited::build() then build_()
     virtual void build();
 
-    bool next_position(int pos, const Mat& unit_asset_value_) const;
+    int next_position(int pos, const Mat& unit_asset_value_) const;
 
     //! *** SUBCLASS WRITING: ***
     virtual void train();

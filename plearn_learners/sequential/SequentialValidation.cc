@@ -276,7 +276,11 @@ void SequentialValidation::run()
     global_stats_vm->appendRow(global_result);
 
   if (report_stats)
-    PLearn::save(dir+"global_result.pvec", global_result);
+  {
+    PLearn::save(dir+"global_result.avec", global_result);
+    PLearn::save(dir+"predictions.amat", learner->predictions);
+    PLearn::save(dir+"errors.amat", learner->errors);
+  }
 
 }
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.cc,v 1.15 2003/10/15 21:06:31 ducharme Exp $ 
+ * $Id: Trader.cc,v 1.16 2003/10/20 21:08:19 ducharme Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -52,16 +52,12 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Trader, "ONE LINE DESCR", "NO HELP");
 Trader::Trader():
   build_complete(false), very_first_test_t(-1), nb_assets(0),
   risk_free_rate("risk_free_rate"),
-  price_tag("close:level"), tradable_tag("is_tradable"), //return_type(1),
-  additive_cost(0.0), multiplicative_cost(0.0),
-  rebalancing_threshold(0.0), 
+  price_tag("close:level"), tradable_tag("is_tradable"),
+  rollover_tag("rollover"), additive_cost(0.0), rebalancing_threshold(0.0), 
   stop_loss_active(false), stop_loss_horizon(-1), stop_loss_threshold(-INFINITY),
   sp500(""), assets_names(TVec<string>()), deduce_assets_names(false)
 {
-  // ...
-  
-  // ### You may or may not want to call build_() to finish building the object
-  // build_();
+  multiplicative_cost.resize(0);
 }
 
 void Trader::build()
@@ -95,7 +91,6 @@ void Trader::build_()
   if(sp500 != "")
   {
     sp500_index = train_set->fieldIndex(sp500);
-    //internal_stats.compute_covariance = compute_covariance_with_sp500;
     last_valid_sp500_price.resize(max_seq_len);
     last_valid_sp500_price.fill(-1);
   }
@@ -104,6 +99,12 @@ void Trader::build_()
   portfolios.fill(MISSING_VALUE);
   portfolio_value.resize(max_seq_len);
   portfolio_value.fill(MISSING_VALUE);
+
+  if (multiplicative_cost.size() == 0)
+  {
+    multiplicative_cost.resize(nb_assets);
+    multiplicative_cost.fill(0.0);  // default value
+  }
 
   transaction_costs.resize(max_seq_len);
   transaction_costs.fill(MISSING_VALUE);
@@ -133,6 +134,7 @@ void Trader::assets_info()
       assets_names.clear();
     assets_price_indices.clear();
     assets_tradable_indices.clear();
+    assets_rollover_indices.clear();
   }
   
   if(deduce_assets_names)
@@ -165,10 +167,12 @@ void Trader::assets_info()
   // Building a list of the indices needed to access the prices in the VMat
   assets_price_indices.resize(assets_names.length());
   assets_tradable_indices.resize(assets_names.length());
+  assets_rollover_indices.resize(assets_names.length());
   for(int asset_index=0; asset_index<assets_names.length(); asset_index++)
   {
     assets_price_indices[asset_index] = internal_data_set->fieldIndex(assets_names[asset_index]+":"+price_tag);
     assets_tradable_indices[asset_index] = internal_data_set->fieldIndex(assets_names[asset_index]+":"+tradable_tag);
+    assets_rollover_indices[asset_index] = internal_data_set->fieldIndex(assets_names[asset_index]+":"+rollover_tag);
   }
   risk_free_rate_index = internal_data_set->fieldIndex(risk_free_rate);    
 }
@@ -183,8 +187,6 @@ void Trader::forget()
 
   if(stop_loss_active && internal_data_set.isNotNull())
     stop_loss_values.fill(0.0);
-
-  //internal_stats.forget();
 }
 
 void Trader::declareOptions(OptionList& ol)
@@ -210,6 +212,12 @@ void Trader::declareOptions(OptionList& ol)
                 "of the column containing the tradable or not boolean.\n"
                 "Default: \"is_tradable\"");
 
+  declareOption(ol, "rollover_tag", &Trader::rollover_tag,
+                OptionBase::buildoption,
+                "The string such that asset_name:rollover_tag is the field name\n"
+                "of the column containing the rollover information.\n"
+                "Default: \"rollover\"");
+
   declareOption(ol, "additive_cost", &Trader::additive_cost,
                 OptionBase::buildoption,
                 "The fix cost of performing a trade.\n"
@@ -217,7 +225,7 @@ void Trader::declareOptions(OptionList& ol)
   
   declareOption(ol, "multiplicative_cost", &Trader::multiplicative_cost,
                 OptionBase::buildoption,
-                "The cost of performing a unit trade\n"
+                "The cost (for each asset) of performing a unit trade\n"
                 "Default: 0");
   
   declareOption(ol, "rebalancing_threshold", &Trader::rebalancing_threshold,
@@ -431,48 +439,7 @@ void Trader::test(VMat testset, PP<VecStatsCollector> test_stats,
 
     if( is_missing(transaction_costs[t]) )
       PLERROR("SUBCLASS WRITING: the subclass trader_test method is expected to fill the transaction_costs vector");
- 
-/*
-    // The order of the 'append' statements is IMPORTANT! (enum stats_indices) 
-    Vec update;
-    update.append( absolute_Rt );
-    update.append( log(1.0 + relative_Rt) );
-    if(sp500 != "")
-      update.append( log(sp500_price(t)/sp500_price(t-horizon)) );
-    internal_stats.update(update);
-*/
-    
-    //cout << "(rt, log_rel_rt, log_sp)[" << t << "]: " << update << endl;
   }
-  
-/*
-  real average_absolute_Rt = internal_stats.stats[rt].mean();
-  real stddev_absolute_Rt = internal_stats.stats[rt].stddev();
-  real average_relative_Rt = internal_stats.stats[log_rel_rt].mean();
-  real stddev_relative_Rt = internal_stats.stats[log_rel_rt].stddev();
-
-  cout << "***** ***** *****" << endl
-#if defined(VERBOSE) || defined(VERBOSE_TEST)
-       << "Test: " << endl
-       << "\t weights:\n" << portfolios << endl
-#endif
-       ;
-       //<< "\t Average Absolute Return:\t" << average_absolute_Rt << endl
-       //<< "\t Empirical Variance:\t" << variance_absolute_Rt << endl
-       << "\t Average Annual Return:\t" << exp(252.0*average_relative_Rt) << endl
-       << "\t Sharpe Ratio of monthly log-returns:\t" << average_relative_Rt/stddev_relative_Rt << endl
-       << "\t Sharpe Ratio:\t\t" << average_absolute_Rt/stddev_absolute_Rt << endl;
-
-  if(sp500 != "")
-  {
-    real average_sp500 = internal_stats.stats[log_sp].mean();
-    real stddev_sp500 = internal_stats.stats[log_sp].stddev();
-    cout << "\t Average S&P500 Annual Return:\t" << exp(252.0*average_sp500) << endl
-         << "\t Sharpe Ratio of S&P500 monthly log-returns:\t" << average_sp500/stddev_sp500 << endl
-         << "\t Correlation with S&P500:\t"  << internal_stats.getCorrelation()(log_rel_rt, log_sp) << endl;
-  }
-  cout <<  "***** ***** *****" << endl;
-*/
 
   // Keeping track of the call
   last_test_t = advisor->get_last_test_t();
@@ -489,12 +456,18 @@ real Trader::delta(int k, int t) const
   //  if we sequentially train the model, we will always have, in practice, kept the previous portfolios... The only exception could be at the 
   //  very first time that test is called... For now it is neglected... 
   real current_wkt = weight(k, t);
+  real next_wkt = weight(k, t+1);
   
   // We are sure that the weight(k, t+1) is available since the advisor did set it predictions field up to last_test_t, if horizon is at least 1.
   if( stop_loss(k, t) )
     return current_wkt;
 
-  real delta_ = weight(k, t+1) - current_wkt;
+  real delta_ = next_wkt - current_wkt;
+
+  bool rollover = (bool)internal_data_set(t,assets_rollover_indices[k]);
+  if (rollover)
+    return abs(next_wkt) + abs(current_wkt);
+
   if(fabs(delta_) < rebalancing_threshold){
     weight(k, t+1) = current_wkt;             // Rebalancing isn't needed
     return 0.0;
@@ -547,6 +520,7 @@ void Trader::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(last_valid_price, copies);
   deepCopyField(last_valid_sp500_price, copies);
   deepCopyField(assets_tradable_indices, copies);
+  deepCopyField(assets_rollover_indices, copies);
   deepCopyField(stop_loss_values, copies);
   deepCopyField(portfolios, copies);
   deepCopyField(advisor, copies);

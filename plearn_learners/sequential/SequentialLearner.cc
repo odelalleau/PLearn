@@ -100,6 +100,12 @@ void SequentialLearner::declareOptions(OptionList& ol)
   inherited::declareOptions(ol);
 }
 
+void SequentialLearner::setTrainingSet(VMat training_set, bool call_forget)
+{
+  train_set = training_set;
+  if (call_forget) forget();
+}
+
 void SequentialLearner::forget()
 {
   if (predictions) predictions.fill(MISSING_VALUE);

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.h,v 1.9 2003/10/15 21:06:31 ducharme Exp $ 
+ * $Id: Trader.h,v 1.10 2003/10/20 21:08:19 ducharme Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -78,14 +78,15 @@ private:
   //! The index of the SP500 column in the vmat (if sp500 != ""; see below)
   int sp500_index;
   bool compute_covariance_with_sp500;
-  //mutable VecStatsCollector internal_stats; //log_returns; //!< If sp500 != ""; see below
-  //enum stats_indices { rt=0, log_rel_rt=1, log_sp=2 };
 
   //! Same thing s above, but for the S&P500
   TVec<int> last_valid_sp500_price;
   
   //! List of indices associated with the tradable flag fields in the VMat
   TVec<int> assets_tradable_indices;
+  
+  //! List of indices associated with the rollover flag fields in the VMat
+  TVec<int> assets_rollover_indices;
   
   //! Will be used to keep track of the losses/gains
   Vec stop_loss_values;        
@@ -152,9 +153,7 @@ protected:
   */
   virtual void trader_test(int t, VMat testset, PP<VecStatsCollector> test_stats,
       VMat testoutputs, VMat testcosts) const =0;
-  //virtual void trader_test(int t, VMat testset, 
-  //                         real& absolute_return_t, real& relative_return_t) const =0;
-  
+
 public:
   
   //! Constructor
@@ -185,11 +184,18 @@ public:
   */
   string tradable_tag;
 
+  /*! 
+    The string such that asset_name:rollover_tag is the field name
+     of the column containing the rollover information.
+    Default: "rollover"
+  */
+  string rollover_tag;
+
   //! The fix cost of performing a trade. Default: 0
   real additive_cost;
 
-  //! The cost of performing a unit trade. Default: 0
-  real multiplicative_cost;
+  //! The cost (for each asset) of performing a unit trade. Default: 0
+  Vec multiplicative_cost;
 
   //! The minimum amplitude for a transaction to be considered worthy. Default: 0
   // It could be interesting to rebal only after a given period of time...
