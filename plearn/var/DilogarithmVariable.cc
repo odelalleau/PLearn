@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DilogarithmVariable.cc,v 1.2 2003/12/08 03:46:31 yoshua Exp $
+   * $Id: DilogarithmVariable.cc,v 1.3 2004/01/16 02:07:59 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -57,7 +57,7 @@ PLEARN_IMPLEMENT_OBJECT(DilogarithmVariable,
                         "This Var computes the dilogarithm function", 
                         "The dilogarithm function is useful to compute the primitive of the softplus.\n"
                         "  dilogarithm(x) = sum_{k=1}^\\infty x^k/k^2\n"
-                        "so dilogarithm'(x) = -log(1-x), i.e. -dilogarithm'(-e^x)=log(1+e^x)=softplus(x)\n"
+                        "so dilogarithm'(x) = -(1/x)log(1-x), i.e. e^x dilogarithm'(-e^x)=log(1+e^x)=softplus(x)\n"
                         "and primitive(softplus)(x) = -dilogarithm(-e^x)\n");
 
 void DilogarithmVariable::recomputeSize(int& l, int& w) const
@@ -80,7 +80,11 @@ void DilogarithmVariable::fprop()
 void DilogarithmVariable::bprop()
 {
   for(int i=0; i<nelems(); i++)
-    input->gradientdata[i] -= gradientdata[i] * log1p(-input->valuedata[i]);
+  {
+    real xi = input->valuedata[i];
+    if (xi!=0)
+      input->gradientdata[i] -= gradientdata[i] * log1p(-xi)/xi;
+  }
 }
 
 
