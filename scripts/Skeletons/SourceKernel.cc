@@ -146,8 +146,10 @@ void DERIVEDCLASS::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
   PLERROR("DERIVEDCLASS::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
-/* This method may often need to be overridden in subclasses.
-   If it is not, then the call will be forwarded to 'source_kernel'.
+/* ### This method may often need to be overridden in subclasses.
+   ### If it is not, then the call will be forwarded to 'source_kernel'.
+   ### If you override it, be careful that it may be called BEFORE the build_()
+   ### method has been called, if the 'specify_dataset' option is used.
 ////////////////////////////
 // setDataForKernelMatrix //
 ////////////////////////////
