@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: random.cc,v 1.8 2004/07/21 16:30:53 chrish42 Exp $
+   * $Id: random.cc,v 1.9 2004/11/24 18:23:16 tihocan Exp $
    ******************************************************* */
 
 extern "C" {
@@ -705,8 +705,8 @@ double MAXLOG =  7.09782712893383996732E2;     /* log(MAXNUM) */
 double MINLOG = -7.451332191019412076235E2;     /* log(2**-1075) */
 double MACHEP =  1.11022302462515654042E-16;   /* 2**-53 */
 //double pseries( double a, double b, double x );
-double incbcf( double a, double b, double x );
-double incbd( double a, double b, double x );
+// double incbcf( double a, double b, double x ); // Does not seem to be used anymore.
+// double incbd( double a, double b, double x );  // Does not seem to be used anymore.
 double big = 4.503599627370496e15;
 double biginv =  2.22044604925031308085e-16;
 
@@ -900,6 +900,7 @@ return(ans);
  * for incomplete beta integral
  */
 
+/* Does not seem to be used anymore.
 double incbd( double a, double b, double x )
 {
 double xk, pk, pkm1, pkm2, qk, qkm1, qkm2;
@@ -985,6 +986,7 @@ while( ++n < 300 );
 cdone:
 return(ans);
 }
+*/
 
 /* Power series for incomplete beta integral.
    Use when b*x is small and x not too close to 1.  */
