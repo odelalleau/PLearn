@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.9 2003/10/12 14:53:21 yoshua Exp $ 
+   * $Id: PTester.cc,v 1.10 2003/10/18 22:46:03 yoshua Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -144,6 +144,9 @@ PTester::PTester()
     declareOption(ol, "train", &PTester::train, OptionBase::buildoption,
                   "If true, the learners are trained, otherwise only tested (in that case it is advised\n"
                   "to load an already trained learner in the 'learner' field");
+    declareOption(ol, "template_stats_collector", &PTester::template_stats_collector, OptionBase::buildoption,
+                  "If provided, this instance of a subclass of VecStatsCollector will be used as a template\n"
+                  "to build all the stats collector used during training and testing of the learner");
     inherited::declareOptions(ol);
   }
 
@@ -212,12 +215,29 @@ Vec PTester::perform(bool call_forget)
   // Stats collectors for individual sets of a split:
   TVec< PP<VecStatsCollector> > stcol(nsets);
   for(int setnum=0; setnum<nsets; setnum++)
-    stcol[setnum] = new VecStatsCollector();
+    if (template_stats_collector)
+    {
+      CopiesMap copies;
+      stcol[setnum] = template_stats_collector->deepCopy(copies);
+      stcol[setnum]->build();
+      stcol[setnum]->forget();
+    }
+    else
+      stcol[setnum] = new VecStatsCollector();
   PP<VecStatsCollector> train_stats = stcol[0];
   learner->setTrainStatsCollector(train_stats);
 
   // Global stats collector
-  PP<VecStatsCollector> global_statscol = new VecStatsCollector();
+  PP<VecStatsCollector> global_statscol;
+  if (template_stats_collector)
+  {
+    CopiesMap copies;
+    global_statscol = template_stats_collector->deepCopy(copies);
+    global_statscol->build();
+    global_statscol->forget();
+  }
+  else
+    global_statscol = new VecStatsCollector();
 
   // Stat specs
   TVec<StatSpec> statspecs(nstats);
