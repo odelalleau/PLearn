@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: EmbeddedLearner.cc,v 1.3 2003/05/03 05:02:18 plearner Exp $ 
+   * $Id: EmbeddedLearner.cc,v 1.4 2003/05/05 21:18:11 plearner Exp $ 
    ******************************************************* */
 
 /*! \file EmbeddedLearner.cc */
@@ -47,6 +47,9 @@ using namespace std;
 // ###### EmbeddedLearner ######################################################
 
 IMPLEMENT_NAME_AND_DEEPCOPY(EmbeddedLearner);
+
+EmbeddedLearner::EmbeddedLearner()
+{}
 
 void EmbeddedLearner::declareOptions(OptionList& ol)
 {
@@ -88,7 +91,7 @@ void EmbeddedLearner::build()
 { learner->forget(); }
 
  void EmbeddedLearner::train(VecStatsCollector& train_stats)
-{ learner->train(VecStatsCollector& train_stats); }
+{ learner->train(train_stats); }
     
  void EmbeddedLearner::computeOutput(const VVec& input, Vec& output)
 { learner->computeOutput(input, output); }
@@ -108,13 +111,13 @@ void EmbeddedLearner::build()
 { learner->computeCostsOnly(input, target, weight, costs); }
     
 void EmbeddedLearner::test(VMat testset, VecStatsCollector& test_stats, 
-                         VMat testoutputs=0, VMat testcosts=0)
+                         VMat testoutputs, VMat testcosts)
 { learner->test(testset, test_stats, testoutputs, testcosts); }
 
-EmbeddedLearner::TVec<string> getTestCostNames() const
+TVec<string> EmbeddedLearner::getTestCostNames() const
 { return learner->getTestCostNames(); }
 
-EmbeddedLearner::TVec<string> getTrainCostNames() const
+TVec<string> EmbeddedLearner::getTrainCostNames() const
 { return learner->getTrainCostNames(); }
 
 void EmbeddedLearner::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)

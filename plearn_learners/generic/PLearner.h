@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.2 2003/05/03 05:02:18 plearner Exp $
+   * $Id: PLearner.h,v 1.3 2003/05/05 21:18:14 plearner Exp $
    ******************************************************* */
 
 
@@ -51,7 +51,7 @@
 #include "Kernel.h"
 #include "VecStatsCollector.h"
 #include "VVec.h"
-//#include "TimeMeasurer.h"
+#include "Splitter.h"
 
 namespace PLearn <%
 using namespace std;
@@ -199,6 +199,15 @@ using namespace std;
   };
 
   DECLARE_OBJECT_PTR(PLearner);
+
+
+//! Parses a statname of the form "E[E[test1.class_error]]" or "V[ MIN [train.squared_error]]"
+//! If the external stat is omitted in statname, it will be assumed to be "E[...]"
+//! It will set extat and intstat to be for ex. "E"
+//! setnum will be 0 for "train" and 1 for "test1", 2 for "test2", ...
+void parse_statname(const string& statname, string& extstat, string& intstat, int& setnum, string& errorname);
+
+Vec trainTestLearner(PP<PLearner> learner, const VMat &dataset, PP<Splitter> splitter, TVec<string> statnames);
 
 
 %> // end of namespace PLearn

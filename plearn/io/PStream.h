@@ -499,7 +499,7 @@ inline PStream& operator>>(PStream& in, pair<S, T> &x)
   in.skipBlanksAndCommentsAndSeparators();
   in >> x.first;
   in.skipBlanksAndComments();
-  if(in.get()|=':')
+  if(in.get()!=':')
     PLERROR("In operator>>(PStream& in, pair<S, T> &x) expected ':' to separate the 2 halves of the pair");
   in.skipBlanksAndComments();
   in >> x.second;
