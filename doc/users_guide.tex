@@ -2,7 +2,7 @@
 %%
 %%  Copyright (c) 2002 by Pascal Vincent
 %%
-%%  $Id: users_guide.tex,v 1.1 2002/09/04 23:42:04 plearner Exp $
+%%  $Id: users_guide.tex,v 1.2 2002/10/21 01:21:53 plearner Exp $
 
 \documentclass[11pt]{book}
 \usepackage{t1enc}              % new font encoding  (hyphenate words w/accents)
@@ -381,6 +381,196 @@ correspond to the data-row number in train.objective and
 
 
 \end{verbatim}
+
+
+\chapter{File formats}
+
+\section{The .plearn and .psave format}
+
+\subsection{Generalities on mixing ascii and binary}
+
+The following characters are in many cases skipped before reading any
+element: space, tab, newline, carriage-return, comma and semicolon. They
+are essentially ignored. Binary serialized things should always start with
+a non-printable ascii character.
+
+\subsection{TVec and TMat}
+
+TVec and TMat will be serialized differently depending on the {\em
+implicit_storage} flag of the PStream they are being written to.
+
+If {\em implicit_storage} is set, then serialisation won't write the actual
+whole structure of the TVec or TMat, but will only save the size information
+and elements as a 1D or 2D {\em sequence} (see \ref{ascii_sequence} and
+\ref{binary_sequence}), ex:
+
+\begin{verbatim}
+4 [ 1.2 3.5 2.8 5.2 ]
+
+3 2 [
+0.1    0.2
+0.3    0.4
+0.5    0.6
+]
+\end{verbatim}
+
+If {\em implicit_storage} is false, then the complete structure of the
+TVec or TMat with the pointer to its storage (possibly shared with others)
+will be written explicitly. This corresponds to true, deep serialization.
+
+Ex:
+
+\begin{verbatim}
+
+TVec( 4 0 
+*1->Storage(4 [ 1.2 3.5 2.8 5.2 ]) )
+
+TMat( 3 2 2 0 
+*2->Storage(6 [ 0.1 0.2 0.3 0.4 0.5 0.6 ] ) )
+
+\end{verbatim}
+
+For TVec, we have {\em length offset} followed by the storage pointer.
+For TMat, we have {\em length width mod offset} followed by the storage pointer.
+
+This allows to keep structure. For example, if we had a submatrix viewing
+the second column of the previous TMat, we would have:
+
+\begin{verbatim}
+TMat( 3 1 2 1
+*2 )
+\end{verbatim}
+
+\subsection{Binary plearn format for base types}
+
+To allow mixing of ascii and binary in a file, a non-printable ascii
+character is used as a one-byte header to identify any binary portion.  In
+Table~\ref{tab:base-types} we give the header codes for all basic types
+
+Note that char is considered to be the same as signed char, and long is
+considered to be the same as int, i.e.: 4-bytes long, which is the case on
+current architectures.
+
+\begin{table}[h]
+\caption{ Binary-header codes for base types }
+\label{tab:base-types} }
+\begin{tabular}{|llcl|} \hline 
+Base type      & Byte order    & Header byte & Number of bytes to follow \\ \hline 
+char           & -             & 0x01        & 1 \\
+signed char    & -             & 0x01        & 1 \\
+unsigned char  & -             & 0x02        & 1 \\
+short          & little-endian & 0x03        & 2 \\
+short          & big-endian    & 0x04        & 2 \\
+unsigned short & little-endian & 0x05        & 2 \\
+unsigned short & big-endian    & 0x06        & 2 \\
+int            & little-endian & 0x07        & 4 \\
+int            & big-endian    & 0x08        & 4 \\
+unsigned int   & little-endian & 0x0B        & 4 \\
+unsigned int   & big-endian    & 0x0C        & 4 \\
+long           & little-endian & 0x07        & 4 \\
+long           & big-endian    & 0x08        & 4 \\
+unsigned long  & little-endian & 0x0B        & 4 \\
+unsigned long  & big-endian    & 0x0C        & 4 \\
+float          & little-endian & 0x0E        & 4 \\
+float          & big-endian    & 0x0F        & 4 \\
+double         & little-endian & 0x10        & 8 \\
+double         & big-endian    & 0x11        & 8 \\ \hline 
+\end{tabular}
+\begin{center}
+\end{center}
+\end{table}
+
+
+\begin{tabular}
+
+\subsection{Ascii plearn format for a sequence}
+\label{ascii_sequence}
+
+We consider both one-dimensional sequences ( array, vector, \ldots) which only have a length,
+and two-dimensional sequences which have a length and a width.
+
+Ascii-serialized one-dimensional sequences will have the following format:
+
+{\em length} \verb{[ ... ... ... ]}
+
+with the elements of the sequence separated by a single space.
+
+However, on reading, several variations of this format are recognized:
+\begin{itemize}
+\item The elements may be separated by any number of blanks (space, tab, newline) and/or commas or semicolons.
+\item The {\em length} may be omitted
+\end{itemize}
+
+Ascii-serialized two-dimensional sequences will have the following format:
+
+{\em length} {\em width} {\tt [} 
+\begin{verbatim}
+... ... ...
+... ... ... 
+]
+\end{verbatim}
+
+with the elements of each row separated by a tab, and the rows separated by a newline.
+
+However on reading, blanks, commas and semi-colons between elements are
+completely ignored (skipped), so you may format the data as you wish.
+
+2D Sequences are used exclusively for TMats.
+Notice that it's also possible to make a 1D sequence of 1D sequences, but that's different from a 2D sequence.
+
+
+
+
+\begin{itemize}
+\end{itemize}
+
+\subsection{Binary plearn format for a sequence}
+\label{binary_sequence}
+
+We consider both one-dimensional sequences ( array, vector, \ldots) which only have a length,
+and two-dimensional sequences which have a length and a width.
+
+The following table gives the corresponding header-byte:
+
+\begin{tabular}{|lll|}
+Type of sequence & byte-order    & Header byte \\ \hline
+one-dimensional  & little-endian & 0x12        \\ 
+one-dimensional  & big-endian    & 0x13        \\ 
+two-dimensional  & little-endian & 0x14        \\ 
+two-dimensional  & big-endian    & 0x15        \\ \hline
+\end{tabular}
+
+All that follows is supposed to be in the byte-order implied by the header-byte.
+
+The first header-byte is followed by an {\em element-type} byte giving the nature
+of the elements in the sequence.  It can be either the byte identifying a
+base-type given in Table~\ref{tab:base-types} (the endianness must match),
+or {\tt 0xFF} to indicate a {\em generic} sequence.
+
+The header bytes are followed by one (for 1D sequences) or two (for 2D)
+4-byte int to indicate the length (and possibly width) of the sequence.
+So the total header size for sequences is 6 bytes for 1D sequences and 10
+bytes for 2D seqences.
+
+This header is followed by a dump of the elements of the sequence (in
+row-major mode for 2D).  Notice that a sequence of a base type, may be
+saved as a {\em generic} sequence (with the {\em element-type} byte {\tt 0xFF})
+
+
+
+\begin{tabular}{|l|l|l|}
+Type of sequence         & Header byte & Followed by \\ \hline
+Generic on little-endian & 0x12        & size as 4-byte little-endian int, \\
+                         &             & then binary serialization of the elements \\ \hline
+Generic on big-endian    & 0x13        & size as 4-byte big-endian int, \\ 
+                         &             & then binary serialization of the elements \\ \hline
+Sequence of a base-type  & 0x14        & size as 4-byte little-endian int, \\ 
+on little-endian         &             & base-type given by header byte in previous \\
+                         &             & table, followed by binary dump of elements \\ \hline
+Sequence of a base-type  & 0x15        & size as 4-byte big-endian int, \\ 
+on big-endian            &             & base-type given by header byte in previous \\
+                         &             & table, followed by binary dump of elements \\ \hline
+\end{tabular}
 
 
 \chapter*{License}

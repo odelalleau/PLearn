@@ -34,7 +34,7 @@
  
 
 /* *******************************************************      
-   * $Id: ForwardVMatrix.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: ForwardVMatrix.h,v 1.2 2002/10/21 01:21:53 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -215,6 +215,8 @@ public:
   virtual void evaluateSumOfFbprop(Func f, Vec& output_result, Vec& output_gradient, int nsamples=-1);
  
 };
+
+DECLARE_OBJECT_PTR(ForwardVMatrix);
 
 %> // end of namespace PLearn
 

@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.2 2002/10/03 07:35:21 plearner Exp $
+   * $Id: plearn.cc,v 1.3 2002/10/21 01:21:50 plearner Exp $
    ******************************************************* */
 
 
@@ -42,6 +42,9 @@
 // Available Splitters:
 #include "TrainTestSplitter.h"
 #include "KFoldSplitter.h"
+
+// Available VMats:
+#include "AutoVMatrix.h"
 
 // All Available Learners: 
 #include "KNN.h"

@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearnmain.cc,v 1.4 2002/10/03 07:35:28 plearner Exp $
+   * $Id: plearnmain.cc,v 1.5 2002/10/21 01:21:53 plearner Exp $
    ******************************************************* */
 
 
@@ -578,6 +578,8 @@ int plearnmain(int argc, char** argv)
         displayRegisteredSubClassesOf<Kernel>("Kernel", cout);
       else if(aboutwhat=="Splitter")
         displayRegisteredSubClassesOf<Splitter>("Splitter", cout);
+      else if(aboutwhat=="VMatrix")
+        displayRegisteredSubClassesOf<VMatrix>("VMatrix", cout);
       else
         displayObjectHelp(cout, aboutwhat);
     }
@@ -609,7 +611,7 @@ int plearnmain(int argc, char** argv)
         {
           PP<Object> o = readObject(in);
           o->run();
-          in.skipBlanksAndComments();
+          in.skipBlanksAndCommentsAndSeparators();
         }
     }
 

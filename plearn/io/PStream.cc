@@ -47,7 +47,7 @@ PStream::PStream()
      option_flags_in(dft_option_flag), inmode(plearn_ascii), 
      option_flags_out(dft_option_flag), outmode(plearn_ascii), 
      original_bufin(0), original_bufout(0), 
-     implicit_storage(false), compression_mode(compr_none)
+     implicit_storage(true), compression_mode(compr_none)
   {}
   //! ctor. from an istream (I)
 PStream::PStream(istream* pin_)
@@ -55,7 +55,7 @@ PStream::PStream(istream* pin_)
      option_flags_in(dft_option_flag), inmode(plearn_ascii), 
      option_flags_out(dft_option_flag), outmode(plearn_ascii),
      original_bufin(pin_->rdbuf()), original_bufout(0), 
-     implicit_storage(false), compression_mode(compr_none)
+     implicit_storage(true), compression_mode(compr_none)
   { initInBuf(); }
   //! ctor. from an ostream (O)
 
@@ -64,7 +64,7 @@ PStream::PStream(ostream* pout_)
      option_flags_in(dft_option_flag), inmode(plearn_ascii), 
      option_flags_out(dft_option_flag), outmode(plearn_ascii),
      original_bufin(0), original_bufout(pout_->rdbuf()), 
-     implicit_storage(false), compression_mode(compr_none)
+     implicit_storage(true), compression_mode(compr_none)
   {}
 
   //! ctor. from an iostream (IO)
@@ -73,7 +73,7 @@ PStream::PStream(iostream* pios_)
      option_flags_in(dft_option_flag), inmode(plearn_ascii), 
      option_flags_out(dft_option_flag), outmode(plearn_ascii),
      original_bufin(pios_->rdbuf()), original_bufout(pios_->rdbuf()),
-     implicit_storage(false), compression_mode(compr_none)
+     implicit_storage(true), compression_mode(compr_none)
   { initInBuf(); }
 
   //! ctor. from an istream and an ostream (IO)
@@ -125,6 +125,15 @@ void PStream::skipRestOfLine()
     c=get();
 }
 
+void PStream::skipBlanks()
+{
+  int c = get();
+  while(c!=EOF && (c==' ' || c=='\t' || c=='\n' || c=='\r'))
+    c = get();
+  if(c!=EOF)
+    unget();
+}
+
 void PStream::skipBlanksAndComments()
 {
   int c = get();
@@ -147,7 +156,7 @@ void PStream::skipBlanksAndCommentsAndSeparators()
     { 
       if(c=='#')
         skipRestOfLine();     
-      else if(c!=' ' && c!='\t' && c!='\n' && c!='\r' && c!=';' && c!=',')
+      else if(c!=' ' && c!='\t' && c!='\n' && c!='\r' && c!=';' && c!=',' && c!=':')
         break;
       c = get();
     }
@@ -462,6 +471,7 @@ PStream& PStream::operator<<(char x)
   switch(outmode)
     {
     case PStream::raw_ascii:
+    case PStream::pretty_ascii:
       rawout() << x;
       break;
     case PStream::raw_binary:
@@ -483,6 +493,7 @@ PStream& PStream::operator<<(signed char x)
   switch(outmode)
     {
     case PStream::raw_ascii:
+    case PStream::pretty_ascii:
       rawout() << x;
       break;
     case PStream::raw_binary:
@@ -504,6 +515,7 @@ PStream& PStream::operator<<(unsigned char x)
   switch(outmode)
     {
     case PStream::raw_ascii:
+    case PStream::pretty_ascii:
       rawout() << x;
       break;
     case PStream::raw_binary:
@@ -531,6 +543,7 @@ PStream& PStream::operator<<(int x)
       write(reinterpret_cast<char *>(&x), sizeof(x));
       break;
     case PStream::plearn_ascii:
+    case PStream::pretty_ascii:
     case PStream::plearn_binary:
       rawout() << x << ' ';
       break;
@@ -552,6 +565,7 @@ PStream& PStream::operator<<(unsigned int x)
       write(reinterpret_cast<char *>(&x), sizeof(x));
       break;
     case PStream::plearn_ascii:
+    case PStream::pretty_ascii:
     case PStream::plearn_binary:
       rawout() << x << ' ';
       break;
@@ -562,7 +576,7 @@ PStream& PStream::operator<<(unsigned int x)
   return *this;
 }
 
-PStream& PStream::operator<<(long int x) 
+PStream& PStream::operator<<(long x) 
 { 
   switch(outmode)
     {
@@ -573,6 +587,7 @@ PStream& PStream::operator<<(long int x)
       write(reinterpret_cast<char *>(&x), sizeof(x));
       break;
     case PStream::plearn_ascii:
+    case PStream::pretty_ascii:
     case PStream::plearn_binary:
       rawout() << x << ' ';
       break;
@@ -594,6 +609,7 @@ PStream& PStream::operator<<(unsigned long x)
       write(reinterpret_cast<char *>(&x), sizeof(x));
       break;
     case PStream::plearn_ascii:
+    case PStream::pretty_ascii:
     case PStream::plearn_binary:
       rawout() << x << ' ';
       break;
@@ -604,7 +620,7 @@ PStream& PStream::operator<<(unsigned long x)
   return *this;
 }
 
-PStream& PStream::operator<<(short int x) 
+PStream& PStream::operator<<(short x) 
 { 
   switch(outmode)
     {
@@ -615,6 +631,7 @@ PStream& PStream::operator<<(short int x)
       write(reinterpret_cast<char *>(&x), sizeof(x));
       break;
     case PStream::plearn_ascii:
+    case PStream::pretty_ascii:
     case PStream::plearn_binary:
       rawout() << x << ' ';
       break;
@@ -636,6 +653,7 @@ PStream& PStream::operator<<(unsigned short x)
       write(reinterpret_cast<char *>(&x), sizeof(x));
       break;
     case PStream::plearn_ascii:
+    case PStream::pretty_ascii:
     case PStream::plearn_binary:
       rawout() << x << ' ';
       break;
@@ -655,6 +673,7 @@ PStream& PStream::operator<<(bool x)
       rawout() << (x?'1':'0');
       break;
     case plearn_ascii:
+    case pretty_ascii:
     case plearn_binary:
       rawout() << (x?'1':'0') << ' ';
       break;
@@ -758,7 +777,7 @@ PStream& PStream::operator>>(float &x)
     case PStream::plearn_ascii:
     case PStream::plearn_binary:
       {
-        rawin() >> ws;
+        skipBlanksAndComments();
         int c = get();
         if(c=='n' || c=='N')
           {
@@ -797,7 +816,7 @@ PStream& PStream::operator>>(double &x)
     case PStream::plearn_ascii:
     case PStream::plearn_binary:
       { 
-        rawin() >> ws;
+        skipBlanksAndComments();
         int c = peek();
         switch(c)
           {
@@ -816,7 +835,6 @@ PStream& PStream::operator>>(double &x)
           default:
             rawin() >> x; 
           }
-        rawin() >> ws;
       }
       break;
     default:
@@ -828,7 +846,7 @@ PStream& PStream::operator>>(double &x)
 }
 
 
-PStream& PStream::operator>>(char * &x)
+PStream& PStream::operator>>(char *x)
 {
   switch(inmode)
     {
@@ -839,29 +857,41 @@ PStream& PStream::operator>>(char * &x)
     case PStream::plearn_ascii:
     case PStream::plearn_binary:
       {
-        unsigned int l;
-        rawin() >> l;
-        if (l > 0)
+        if(!x)
+          PLERROR("In PStream::operator>>(char*) character array must already be allocated to put the read string in");
+        skipBlanksAndComments();
+        int c = peek();
+        int i=0; // pos within the string
+        if(c=='"') // it's a quoted string "..."
           {
-            get(); //skip space
-            if (x)
+            c = get(); // skip the quote
+            c = get(); // get the next character
+            while(c!='"' && c!=EOF)
               {
-                if (strlen(x)<l) 
-                  { 
-                    delete[] x; 
-                    x= new char[l+1]; 
-                  }
+                if(c=='\\') // escaped character
+                  c = get();
+                x[i++]= static_cast<char>(c);
+                c = get();
               }
-            else
-              x= new char[l+1];
-            read(x,l);
-            x[l]= '\0'; // terminate the string
+            if(c==EOF)
+              PLERROR("In read(istream&, string&) unterminated quoted string");
+            if(!isspace(c))
+              unget();
           }
-        else
-          x= 0;
-        get(); // skip newline
+        else // it's a single word without quotes
+          {
+            c= get();
+            while(c != EOF && wordseparators.find(c)==string::npos) // as long as we don't meet a wordseparator (or eof)...
+              {
+                x[i++]= static_cast<char>(c);
+                c= get();
+              }
+            if(!isspace(c))
+              unget();
+          }
       }
       break;
+
     default:
       PLERROR("In PStream::operator>>  unknown inmode!!!!!!!!!");
       break;
@@ -881,7 +911,7 @@ PStream& PStream::operator>>(string &x)
     case PStream::plearn_ascii:
     case PStream::plearn_binary:
       { 
-        rawin() >> ws;
+        skipBlanksAndComments();
         int c = peek();
         if(c=='"') // it's a quoted string "..."
           {
@@ -900,6 +930,7 @@ PStream& PStream::operator>>(string &x)
             if(!isspace(get())) // skip following blank if any
               unget();
           }
+        /* NO LONGER SUPPORTED
         else if(isdigit(c)) // format is the old <nchars> <stringval>
           {
             int l; 
@@ -911,6 +942,7 @@ PStream& PStream::operator>>(string &x)
             if(!isspace(get())) // skip following blank
               unget();
           }
+        */
         else // it's a single word without quotes
           {
             x.resize(0);      
@@ -949,6 +981,7 @@ PStream& PStream::operator<<(float x)
       write(reinterpret_cast<char *>(&x), sizeof(x));
       break;
     case PStream::plearn_ascii:
+    case PStream::pretty_ascii:
     case PStream::plearn_binary:
       { 
         if(is_missing(x))
@@ -976,6 +1009,7 @@ PStream& PStream::operator<<(double x)
       write(reinterpret_cast<char *>(&x), sizeof(x));
       break;
     case PStream::plearn_ascii:
+    case PStream::pretty_ascii:
     case PStream::plearn_binary:
       { 
         if(is_missing(x))
@@ -996,16 +1030,24 @@ PStream& PStream::operator<<(const char *x)
   switch(outmode)
     {
     case PStream::raw_ascii:
+    case PStream::pretty_ascii:
     case PStream::raw_binary:
       rawout() << x;
       break;
     case PStream::plearn_ascii:
     case PStream::plearn_binary:
       {
-        if (x)
-          rawout() << strlen(x) << ' ' << x << '\n';
-        else
-          rawout() << int(0) << "\n";
+        put('"');
+        int l = strlen(x);
+        for(int i=0; i<l; i++)
+          {
+            char c = x[i];
+            if(c=='"' || c=='\\') // escape quote and backslash
+              put('\\');
+            put(c);
+          }
+        put('"');
+        put(' ');
       }
       break;
     default:
@@ -1020,28 +1062,24 @@ PStream& PStream::operator<<(const string &x)
   switch(outmode)
     {
     case PStream::raw_ascii:
+    case PStream::pretty_ascii:
     case PStream::raw_binary:
       rawout() << x;
       break;
     case PStream::plearn_ascii:
     case PStream::plearn_binary:
       { 
-        if(x.length()>0 && !isdigit(x[0]) && x.find_first_of(wordseparators)==string::npos)
-          rawout() << x << ' ';
-        else
+        put('"');
+        int l = x.length();
+        for(int i=0; i<l; i++)
           {
-            put('"');
-            int l = x.length();
-            for(int i=0; i<l; i++)
-              {
-                char c = x[i];
-                if(c=='"' || c=='\\') // escape quote and backslash
-                  put('\\');
-                put(c);
-              }
-            put('"');
-            put(' ');
+            char c = x[i];
+            if(c=='"' || c=='\\') // escape quote and backslash
+              put('\\');
+            put(c);
           }
+        put('"');
+        put(' ');
       }
       break;
     default:
@@ -1050,5 +1088,130 @@ PStream& PStream::operator<<(const string &x)
     }
   return *this;
 }
+
+#define IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(BASETYPE)  \
+void binread_(PStream& in, BASETYPE* x,                \
+              unsigned int n, unsigned char typecode)  \
+{                                                      \
+  if(typecode==TypeTraits<BASETYPE>::little_endian_typecode()) \
+    {                                                  \
+      in.read((char*)x, n*sizeof(BASETYPE));           \
+      if(byte_order()==BIG_ENDIAN_ORDER)               \
+        endianswap(x,n);                               \
+    }                                                  \
+  else if(typecode==TypeTraits<BASETYPE>::big_endian_typecode()) \
+    {                                                  \
+      in.read((char*)x, n*sizeof(BASETYPE));           \
+      if(byte_order()==LITTLE_ENDIAN_ORDER)            \
+        endianswap(x,n);                               \
+    }                                                  \
+  else                                                 \
+    PLERROR("In binread_ incompatible typecode");      \
+}
+
+
+IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(char);
+IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(signed char);
+IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(unsigned char);
+IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(short);
+IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(unsigned short);
+IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(int);
+IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(unsigned int);
+IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(long);
+IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(unsigned long);
+
+//! The binread_ for float and double are special
+
+void binread_(PStream& in, double* x, unsigned int n, unsigned char typecode)
+{ 
+  if(typecode==TypeTraits<double>::little_endian_typecode())
+    {
+      in.read((char*)x, n*sizeof(double)); 
+#ifdef BIGENDIAN
+      endianswap(x,n); 
+#endif      
+    }
+  else if(typecode==TypeTraits<double>::big_endian_typecode())
+    {
+      in.read((char*)x, n*sizeof(double)); 
+#ifdef LITTLEENDIAN
+      endianswap(x,n); 
+#endif
+    }
+  else if(typecode==TypeTraits<float>::little_endian_typecode())
+    {    
+      float val;
+      while(n--)
+        {
+          in.read((char*)&val, sizeof(float));
+#ifdef BIGENDIAN
+          endianswap(&val);
+#endif
+          *x++ = double(val);
+        }
+    }
+  else if(typecode==TypeTraits<float>::big_endian_typecode())
+    {    
+      float val;
+      while(n--)
+        {
+          in.read((char*)&val, sizeof(float));
+#ifdef LITTLEENDIAN
+          endianswap(&val);
+#endif
+          *x++ = double(val);
+        }
+    }
+  else
+    PLERROR("In binread_ incompatible typecode");
+}
+
+
+
+void binread_(PStream& in, float* x, unsigned int n, unsigned char typecode)
+{ 
+  if(typecode==TypeTraits<float>::little_endian_typecode())
+    {
+      in.read((char*)x, n*sizeof(float)); 
+#ifdef BIGENDIAN
+      endianswap(x,n); 
+#endif      
+    }
+  else if(typecode==TypeTraits<float>::big_endian_typecode())
+    {
+      in.read((char*)x, n*sizeof(float)); 
+#ifdef LITTLEENDIAN
+      endianswap(x,n); 
+#endif
+    }
+  else if(typecode==TypeTraits<double>::little_endian_typecode())
+    {    
+      double val;
+      while(n--)
+        {
+          in.read((char*)&val, sizeof(double));
+#ifdef BIGENDIAN
+          endianswap(&val);
+#endif
+          *x++ = float(val);
+        }
+    }
+  else if(typecode==TypeTraits<double>::big_endian_typecode())
+    {    
+      double val;
+      while(n--)
+        {
+          in.read((char*)&val, sizeof(double));
+#ifdef LITTLEENDIAN
+          endianswap(&val);
+#endif
+          *x++ = float(val);
+        }
+    }
+  else
+    PLERROR("In binread_ incompatible typecode");
+}
+
+
 
 %> //end of namespace PLearn

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.7 2002/10/03 07:35:27 plearner Exp $
+   * $Id: Object.cc,v 1.8 2002/10/21 01:21:53 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -306,63 +306,57 @@ string Object::getOptionsToSave(OBflag_t option_flags) const
 
 void Object::newread(PStream &in)
 {
-    string cl;
-    getline(in.rawin(), cl, '(');
-    cl = removeblanks(cl);
-    if (cl != classname())
-        PLERROR("Object::newread() - Was expecting \"%s\", but read \"%s\"",
-                classname().c_str(), cl.c_str());
+  string cl;
+  getline(in.rawin(), cl, '(');
+  cl = removeblanks(cl);
+  if (cl != classname())
+    PLERROR("Object::newread() - Was expecting \"%s\", but read \"%s\"",
+            classname().c_str(), cl.c_str());
 
-    skipBlanksAndComments(in.rawin());
-    if (in.get() != ')') {
-        in.unget();
-        for (;;) {
-            // Read all specified options
-            string optionname;
-            getline(in.rawin(), optionname, '=');
-            optionname = removeblanks(optionname);
-            skipBlanksAndComments(in.rawin());
+  skipBlanksAndComments(in.rawin());
+  if (in.get() != ')') 
+    {
+      in.unget();
+      for (;;) 
+        {
+          // Read all specified options
+          string optionname;
+          getline(in.rawin(), optionname, '=');
+          optionname = removeblanks(optionname);
+          skipBlanksAndComments(in.rawin());
 
-            OptionList &options = getOptionList();
-            OptionList::iterator it = find_if(options.begin(), options.end(),
-                                              bind2nd(mem_fun(&OptionBase::isOptionNamed), optionname));
-            if (it != options.end() && ((*it)->flags() & in.option_flags_in) == 0)
-                (*it)->read_and_discard(in);
-            else
-                readOptionVal(in, optionname);
-            skipBlanksAndComments(in.rawin());
-            int c = in.get();
-            if (c == ')')
-                break;
-            else if (c == ';') {
-                skipBlanksAndComments(in.rawin());
-                if (in.peek() == ')') {
-                    in.get();
-                    break;
-                }
-            } else
-                PLERROR("Object::newread() - Expected field separator ';' "
-                        "or end of object ')' after option \"%s\" but read"
-                        " %c", optionname.c_str(), c);
+          OptionList &options = getOptionList();
+          OptionList::iterator it = find_if(options.begin(), options.end(),
+                                            bind2nd(mem_fun(&OptionBase::isOptionNamed), optionname));
+          if (it != options.end() && ((*it)->flags() & in.option_flags_in) == 0)
+            (*it)->read_and_discard(in);
+          else
+            readOptionVal(in, optionname);
+
+          skipBlanksAndCommentsAndSeparators(in.rawin());
+          if (in.peek() == ')') 
+            {
+              in.get();
+              break;
+            }
         }
     }
-    build(); // Build newly read Object
+  build(); // Build newly read Object
 }
 
-void
-Object::newwrite(PStream &out) const
+void Object::newwrite(PStream &out) const
 {
-    vector<string> optnames = split(getOptionsToSave(out.option_flags_out));
-    out << raw << classname() << "(\n";
-    for (unsigned int i = 0; i < optnames.size(); ++i) {
-        out << raw << optnames[i] << " = ";
-        writeOptionVal(out, optnames[i]);
-        if (i < optnames.size() - 1)
-            out << raw << ";\n";
+  vector<string> optnames = split(getOptionsToSave(out.option_flags_out));
+  out << raw << classname() << "(\n";
+  for (unsigned int i = 0; i < optnames.size(); ++i) 
+    {
+      out << raw << optnames[i] << " = ";
+      writeOptionVal(out, optnames[i]);
+      if (i < optnames.size() - 1)
+        out << raw << ";\n";
     }
-    out << raw << " )\n";
+  out << raw << " )\n";
 }
-
 
 
 void Object::write(ostream& out_) const

@@ -38,54 +38,9 @@
 #include "PStream_util.h"
 #include <iostream>
 
+
 namespace PLearn <%
 using namespace std;
-
-
-// *** LITTLE-ENDIAN / BIG-ENDIAN HELL... ***
-
-// Functions to swap representation in memory
-
-void endianswap2(void* ptr, int n)
-{
-  char *mptr = (char *) ptr;
-  char tmp;
-  while(n--)
-    {
-      tmp = mptr[0]; mptr[0]=mptr[1]; mptr[1]=tmp;
-      mptr+=2;
-    }
-}
-
-void endianswap4(void* ptr, int n)
-{
-  char *mptr = (char *) ptr;
-  char tmp;
-  while(n--)
-    {
-    tmp = mptr[0]; mptr[0]=mptr[3]; mptr[3]=tmp;
-    tmp = mptr[1]; mptr[1]=mptr[2]; mptr[2]=tmp;
-    mptr+=4;
-  }
-}
-
-void endianswap8(void* ptr, int n)
-{
-  char *mptr = (char *) ptr;
-  char tmp;
-  while(n--)
-    {
-      tmp = mptr[0]; mptr[0]=mptr[7]; mptr[7]=tmp;
-      tmp = mptr[1]; mptr[1]=mptr[6]; mptr[6]=tmp;
-      tmp = mptr[2]; mptr[2]=mptr[5]; mptr[5]=tmp;
-      tmp = mptr[3]; mptr[3]=mptr[4]; mptr[4]=tmp;
-      mptr+=8;
-    }
-}
-
-
-
-
 
 pl_stream_raw raw;
 pl_stream_clear_flags clear_flags;

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Storage.h,v 1.2 2002/08/07 16:54:21 morinf Exp $
+   * $Id: Storage.h,v 1.3 2002/10/21 01:21:53 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -60,6 +60,11 @@ using namespace std;
 template <class T>
 class Storage: public PPointable
 {
+public: // A few STL-like typedefs
+  typedef T value_type;
+  typedef int size_type;
+  typedef T* iterator;
+
 public:
   int length_;
   T* data;
@@ -90,8 +95,17 @@ public:
     {
     }
 
-  int length() const
+  inline int length() const
   { return length_; }
+
+  inline int size() const
+  { return length_; }
+
+  inline iterator begin() const
+  { return data; }
+
+  inline iterator end() const
+  { return data+length_; }
 
   //!  data is initially filled with zeros
   inline Storage(int the_length=0)
@@ -291,6 +305,13 @@ public:
       return deep_copy;
     }
 
+  inline void push_back(const T& x)
+  {
+    int n = size();
+    resize(n+1);
+    data[n] = x;
+  }
+
     void deepRead(istream& in, DeepReadMap& old2new)
     {
       readHeader(in, "Storage");
@@ -356,6 +377,22 @@ inline void deepRead(istream& in, DeepReadMap& old2new, PP< Storage<T> >& ptr)
   else
     ptr = 0;
 }
+
+template<class T>
+PStream& operator<<(PStream& out, const Storage<T>& seq)
+{
+  writeSequence(out, seq);
+  return out;
+}
+
+template<class T>
+PStream& operator>>(PStream& in, Storage<T>& seq)
+{
+  readSequence(in, seq);
+  return in;
+}
+
+
 
 %> // end of namespace PLearn
 

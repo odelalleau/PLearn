@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Experiment.cc,v 1.4 2002/10/03 07:35:28 plearner Exp $ 
+   * $Id: Experiment.cc,v 1.5 2002/10/21 01:21:53 plearner Exp $ 
    ******************************************************* */
 
 /*! \file Experiment.cc */
@@ -78,7 +78,7 @@ Experiment::Experiment()
 
   void Experiment::build_()
   {
-    // not much to build for now
+    splitter->setDataSet(dataset);
   }
 
   // ### Nothing to add here, simply calls build_
@@ -99,11 +99,14 @@ void Experiment::run()
   if(!splitter)
     PLERROR("No splitter specified for Experiment");
 
+  if(pathexists(expdir))
+    PLERROR("Directory (or file) %s already exists. First move it out of the way.",expdir.c_str());
+
   if(!force_mkdir(expdir))
     PLERROR("Could not create experiment directory %s", expdir.c_str());
 
   // Save this experiment description in the expdir (buildoptions only)
-  PLearn::save(append_slash(expdir)+"experiment.pexp", OptionBase::buildoption);
+  PLearn::save(append_slash(expdir)+"experiment.plearn", *this, OptionBase::buildoption);
 
   int nsplits = splitter->nsplits();
   Array<string> testresnames = learner->testResultsNames();
@@ -124,7 +127,7 @@ void Experiment::run()
         PLERROR("Splitter returned a split with %d subsets, instead of the expected 2: train&test",train_test.size());
       VMat trainset = train_test[0];
       VMat testset = train_test[1];
-      string learner_expdir = append_slash(expdir)+"Splits/"+tostring(k);
+      string learner_expdir = append_slash(expdir)+"Split"+tostring(k);
       learner->setExperimentDirectory(learner_expdir);
       learner->forget();
       learner->train(trainset);

@@ -34,7 +34,7 @@
 
  
 /* *******************************************************      
-   * $Id: TypeTraits.h,v 1.1 2002/09/05 05:43:39 plearner Exp $
+   * $Id: TypeTraits.h,v 1.2 2002/10/21 01:21:53 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -53,6 +53,16 @@
 namespace PLearn <%
 using namespace std;
 
+/*! TypeTraits<some_type> will deliver the following information on the type:
+  - its name() [ returned as a string ]
+  - the "typecode", which is the header-byte used to indicate type of an element to follow
+    in plearn_binary serialization. little_endian_typecode() and big_endian_typecode()
+    respectively return the code to designate little-endian or big-endian representation.
+    Only the very basic C++ types have specific typecodes. For all other more complex types,
+    these functions should always return 0xFF
+*/
+
+// The following template defines the TypeTraits for a generic unknown type
 
 template<class T>
 class TypeTraits
@@ -60,7 +70,16 @@ class TypeTraits
 public:
   static string name()
   { return "UNKNOWN_TYPE_NAME"; }
+
+  static unsigned char little_endian_typecode()
+  { return 0xFF; }
+
+  static unsigned char big_endian_typecode()
+  { return 0xFF; }
+
 };
+
+// Pointer type
 
 template<class T>
 class TypeTraits<T*>
@@ -68,27 +87,57 @@ class TypeTraits<T*>
 public:
   static string name() 
   { return TypeTraits<T>::name()+"*"; }
+
+  static unsigned char little_endian_typecode()
+  { return 0xFF; }
+
+  static unsigned char big_endian_typecode()
+  { return 0xFF; }
 };
 
-#define DECLARE_TYPE_TRAITS(T) \
-template<>                     \
-class TypeTraits<T>            \
-{                              \
-public:                        \
-  static inline string name()  \
-  { return #T; }               \
+#define DECLARE_TYPE_TRAITS_FOR_BASETYPE(T,LITTLE_ENDIAN_TYPECODE,BIG_ENDIAN_TYPECODE) \
+template<>                                       \
+class TypeTraits<T>                              \
+{                                                \
+public:                                          \
+  static inline string name()                    \
+  { return #T; }                                 \
+                                                 \
+  static unsigned char little_endian_typecode()  \
+  { return LITTLE_ENDIAN_TYPECODE; }             \
+                                                 \
+  static unsigned char big_endian_typecode()     \
+  { return BIG_ENDIAN_TYPECODE; }                \
 }
 
-DECLARE_TYPE_TRAITS(bool);
-DECLARE_TYPE_TRAITS(char);
-DECLARE_TYPE_TRAITS(unsigned char);
-DECLARE_TYPE_TRAITS(signed char);
-DECLARE_TYPE_TRAITS(int);
-DECLARE_TYPE_TRAITS(unsigned int);
-DECLARE_TYPE_TRAITS(long);
-DECLARE_TYPE_TRAITS(unsigned long);
-DECLARE_TYPE_TRAITS(float);
-DECLARE_TYPE_TRAITS(double);
+#define DECLARE_TYPE_TRAITS(T)                   \
+template<>                                       \
+class TypeTraits<T>                              \
+{                                                \
+public:                                          \
+  static inline string name()                    \
+  { return #T; }                                 \
+                                                 \
+  static unsigned char little_endian_typecode()  \
+  { return 0xFF; }                               \
+                                                 \
+  static unsigned char big_endian_typecode()     \
+  { return 0xFF; }                               \
+}
+
+// DECLARE_TYPE_TRAITS_FOR_BASETYPE(bool, ??, ??);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(char, 0x01, 0x01);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(signed char, 0x01, 0x01);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned char, 0x02, 0x02);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(short, 0x03, 0x04);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned short, 0x05, 0x06);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(int, 0x07, 0x08);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned int, 0x0B, 0x0C);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(long, 0x07, 0x08);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned long, 0x0B, 0x0C);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(float, 0x0E, 0x0F);
+DECLARE_TYPE_TRAITS_FOR_BASETYPE(double, 0x10, 0x11);
+
 DECLARE_TYPE_TRAITS(string);
 
 template<class T>
@@ -97,6 +146,12 @@ class TypeTraits< vector<T> >
 public:
   static inline string name()
   { return string("vector< ") + TypeTraits<T>::name()+" >"; }
+
+  static unsigned char little_endian_typecode()
+  { return 0xFF; }
+
+  static unsigned char big_endian_typecode()
+  { return 0xFF; }
 };
 
 template<class T>
@@ -105,6 +160,12 @@ class TypeTraits< list<T> >
 public:
   static inline string name()
   { return string("list< ") + TypeTraits<T>::name()+" >"; }
+
+  static unsigned char little_endian_typecode()
+  { return 0xFF; }
+
+  static unsigned char big_endian_typecode()
+  { return 0xFF; }
 };
 
 template<class T, class U>
@@ -113,6 +174,12 @@ class TypeTraits< pair<T,U> >
 public:
   static inline string name()
   { return string("pair< ") + TypeTraits<T>::name()+", " + TypeTraits<U>::name()+" >"; }
+
+  static unsigned char little_endian_typecode()
+  { return 0xFF; }
+
+  static unsigned char big_endian_typecode()
+  { return 0xFF; }
 };
 
 template<class T, class U>
@@ -121,6 +188,12 @@ class TypeTraits< map<T,U> >
 public:
   static inline string name()
   { return string("map< ") + TypeTraits<T>::name()+", " + TypeTraits<U>::name()+" >"; }
+
+  static unsigned char little_endian_typecode()
+  { return 0xFF; }
+
+  static unsigned char big_endian_typecode()
+  { return 0xFF; }
 };
 
 %> // end of namespace PLearn

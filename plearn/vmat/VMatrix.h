@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.1 2002/10/03 07:35:28 plearner Exp $
+   * $Id: VMatrix.h,v 1.2 2002/10/21 01:21:53 plearner Exp $
    ******************************************************* */
 
 
@@ -259,7 +259,7 @@ public:
   virtual void oldwrite(ostream& out) const;
   virtual void oldread(istream& in);
 
-  DECLARE_NAME_AND_DEEPCOPY(VMatrix);
+  DECLARE_ABSTRACT_NAME_AND_DEEPCOPY(VMatrix);
   void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
 
@@ -321,6 +321,7 @@ public:
   virtual ~VMatrix();
 };
 
+DECLARE_OBJECT_PTR(VMatrix);
 
 %> // end of namespace PLearn
 

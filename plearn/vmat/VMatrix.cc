@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.2 2002/10/17 15:22:54 ducharme Exp $
+* $Id: VMatrix.cc,v 1.3 2002/10/21 01:21:53 plearner Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -70,7 +70,7 @@ using namespace std;
 
 /** VMatrix **/
 
-IMPLEMENT_NAME_AND_DEEPCOPY(VMatrix);
+IMPLEMENT_ABSTRACT_NAME_AND_DEEPCOPY(VMatrix);
 
 void VMatrix::declareOptions(OptionList & ol)
 {

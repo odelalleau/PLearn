@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: general.cc,v 1.2 2002/09/04 23:44:39 plearner Exp $
+   * $Id: general.cc,v 1.3 2002/10/21 01:21:53 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,14 +46,10 @@
 #include <io.h>
 #endif
 
-#include "H.h"
 #include "stringutils.h"
 
 namespace PLearn <%
 using namespace std;
-
-
-  bool swap_endians_on_read = false;
 
 
 int  file_size(const string& filename)

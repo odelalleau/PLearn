@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: general.h,v 1.3 2002/10/18 21:02:53 ducharme Exp $
+   * $Id: general.h,v 1.4 2002/10/21 01:21:53 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -97,7 +97,6 @@
 #define DATAFILE_HEADERLENGTH 64
 
 namespace std <%
-
   
   //! efficient specialisations of std::copy for built-in types
 

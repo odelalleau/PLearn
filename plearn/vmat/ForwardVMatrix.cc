@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
- * $Id: ForwardVMatrix.cc,v 1.1 2002/10/03 07:35:28 plearner Exp $
+ * $Id: ForwardVMatrix.cc,v 1.2 2002/10/21 01:21:53 plearner Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -57,14 +57,23 @@ ForwardVMatrix::ForwardVMatrix()
 
 void ForwardVMatrix::setVMat(VMat the_vm)
 {
-  vm = the_vm;
-  length_ = vm->length();
-  width_ = vm->width();
-  writable = vm->isWritable();
-  setMtime(vm->getMtime());
-  setMetaDataDir(vm->getMetaDataDir());
-  setAlias(vm->getAlias());
-  //  field_stats = vm->field_stats;
+  if(the_vm)
+    {
+      vm = the_vm;
+      length_ = vm->length();
+      width_ = vm->width();
+      writable = vm->isWritable();
+      setMtime(vm->getMtime());
+      setMetaDataDir(vm->getMetaDataDir());
+      setAlias(vm->getAlias());
+      //  field_stats = vm->field_stats;
+    }
+  else
+    {
+      vm = VMat();
+      length_ = 0;
+      width_ = 0;
+    }
 }
 
 string ForwardVMatrix::getValString(int col, real val) const
@@ -140,6 +149,8 @@ void ForwardVMatrix::reset_dimensions()
   width_ = vm->width();
 }
 
+VMat ForwardVMatrix::subMat(int i, int j, int l, int w)
+{ return vm->subMat(i,j,l,w); }
 
 real ForwardVMatrix::dot(int i1, int i2, int inputsize) const
 { return vm->dot(i1, i2, inputsize); }
@@ -209,6 +220,12 @@ void ForwardVMatrix::evaluateSumOfFprop(Func f, Vec& output_result, int nsamples
 void ForwardVMatrix::evaluateSumOfFbprop(Func f, Vec& output_result, Vec& output_gradient, int nsamples)
 { vm->evaluateSumOfFbprop(f, output_result, output_gradient, nsamples); }
  
+void ForwardVMatrix::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
+{
+  VMatrix::makeDeepCopyFromShallowCopy(copies);
+  deepCopyField(vm, copies);
+}
+
 %> 
 
 

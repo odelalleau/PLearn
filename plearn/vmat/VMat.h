@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: VMat.h,v 1.7 2002/10/03 07:35:28 plearner Exp $
+   * $Id: VMat.h,v 1.8 2002/10/21 01:21:53 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -120,7 +120,6 @@ public:
   ~VMat();
 };
 
-DECLARE_OBJECT_PTR(VMatrix);
 DECLARE_TYPE_TRAITS(VMat);
 DECLARE_OBJECT_PP(VMat, VMatrix);
 

@@ -45,46 +45,11 @@
 namespace PLearn <%
 using namespace std;
 
-
-//!  *** LITTLE-ENDIAN / BIG-ENDIAN HELL... ***
-
-  // This is initially set to false.  This flag is useful for reading data
-  // that has been written on an architecture with a different endianness
-  // than the current architecture. If set to true, then the binread
-  // operations will call endianswap after reading their data.  The
-  // principle is that binwrite always writes the data as it has it in
-  // memory (i.e. with the endianness of the architecture that writes it).
-  // save/load will typically store/use endianness information in the file
-  // header (typically 'ABCD' for big endian 'DCBA' for little endian), so
-  // that load can possibly set swap_endians_on_read before calling read
-  extern bool swap_endians_on_read; 
-
-  //! swaps endians for n 2-byte elements (such as short)
-  void endianswap2(void* ptr, int n);
-  //! swaps endians for n 4-byte elements (such as int or float)
-  void endianswap4(void* ptr, int n);
-  //! swaps endians for n 8-byte elements (such as double)
-  void endianswap8(void* ptr, int n);
-
-  // Versions for short, int, float and double
-  inline void endianswap(short* ptr, int n=1) { endianswap2(ptr,n); }
-  inline void endianswap(unsigned short* ptr, int n=1) { endianswap2(ptr,n); }
-  inline void endianswap(int* ptr, int n=1) { endianswap4(ptr,n); }
-  inline void endianswap(unsigned int* ptr, int n=1) { endianswap4(ptr,n); }
-  inline void endianswap(float* ptr, int n=1) { endianswap4(ptr,n); }
-  inline void endianswap(double* ptr, int n=1) { endianswap8(ptr,n); }
-
-
-
 //! List of characters considered to mark a separation between "words"; 
 //! This is a fairly restricted list, meaning that many things can be part of a "word"
 //! in this sense (for ex: "this-is_a+single@wor'd"), this is to insure a smooth transition
 //! for the new setOption, which calls readOptionVal ... which may call read(istream&, string&)...
 static const string wordseparators(" \t\n\r)]};,|#"); 
-
-
-
-
 
 //!the following typedef should be equivalent to OptionBase::flag_t
 typedef unsigned int OBflag_t;

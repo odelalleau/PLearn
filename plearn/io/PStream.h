@@ -48,10 +48,14 @@
 #include "PStream_util.h"
 #include "plerror.h"
 #include <fstream>
+#include "TypeTraits.h"
+#include "byte_order.h"
 
 namespace PLearn <%
 
 using namespace std;
+
+
 
 /*!
  * PStream:
@@ -161,6 +165,9 @@ public:
   inline void setOutMode(mode_t m) { outmode = m; }
   inline void setMode(mode_t m) { inmode = m; outmode = m; }
 
+  PStream& operator>>(mode_t m) { inmode = m; return *this; }
+  PStream& operator<<(mode_t m) { outmode = m; return *this; }
+
 public:
   //op()'s: re-init with different underlying stream(s)
   PStream& operator()(istream* pin_);
@@ -187,14 +194,26 @@ public:
    */
   inline int get() { return pin->get(); }
   inline PStream& get(char& c) { pin->get(c); return *this; }
-  inline int peek() { return pin->peek(); }
+
+  // inline int peek() { return pin->peek(); }
+  // The previous implementation does not seem to work, so we use this [Pascal]:
+  inline int peek() { int c = pin->get(); pin->unget(); return c; }
+
   inline PStream& putback(char c) { pin->putback(c); return *this; }
   inline PStream& unget() { pin->unget(); return *this; }
-  inline PStream& read(char* s, streamsize n) { pin->read(s,n); return *this; }
+  inline PStream& read(char* s, streamsize n) 
+  { 
+    pin->read(s,n); 
+    return *this; 
+  }
   inline PStream& put(char c) { pout->put(c); return *this; }
   inline PStream& write(const char* s, streamsize n) { pout->write(s,n); return *this; }
   inline PStream& flush() { pout->flush(); return *this; }
   /******/
+
+  // These are convenient method for writing raw strings (whatever the outmode):
+  inline PStream& write(const char* s) { (*pout) << s; return *this; }
+  inline PStream& write(const string& s) { (*pout) << s; return *this; }
 
   //! attach this stream to a POSIX file descriptor.
   void attach(int fd);
@@ -205,18 +224,21 @@ public:
   //! reads everything until '\n' (also consumes the '\n')
   void skipRestOfLine();
 
+  //! skips any blanks (space, tab, newline)
+  void skipBlanks();
+
   //! skips any blanks (space, tab, newline) and comments starting with #
   void skipBlanksAndComments();
 
-  //! skips any blanks, # comments, and separators (',' and ';')
+  //! skips any blanks, # comments, and separators (',' and ';' and ':')
   void skipBlanksAndCommentsAndSeparators();
 
   // operator>>'s for base types
   PStream& operator>>(bool &x);
   PStream& operator>>(float &x);
   PStream& operator>>(double &x);
-  PStream& operator>>(char * &x);
   PStream& operator>>(string &x);
+  PStream& operator>>(char* x); // read string in already allocated char[]
   PStream& operator>>(char &x); 
   PStream& operator>>(signed char &x);
   PStream& operator>>(unsigned char &x);
@@ -230,8 +252,16 @@ public:
   // operator<<'s for base types
   PStream& operator<<(float x);
   PStream& operator<<(double x);
+
+  //! Warning: string output will be formatted according to outmode
+  //! (if you want to output a raw string use the write method instead)
   PStream& operator<<(const char *x);
+
+  //! Warning: string output will be formatted according to outmode
+  //! (if you want to output a raw string use the write method instead)
+  //! (unless you're in raw_ascii or raw_binary mode!)
   PStream& operator<<(const string &x);
+
   PStream& operator<<(char x); 
   PStream& operator<<(signed char x);
   PStream& operator<<(unsigned char x);
@@ -418,7 +448,289 @@ protected:
 };
 
 
+/** Serialization of sequences **/
+/* These methods are there only to simplify the writing of operator<< and operator>> and
+   should not be called by user code directly */
 
+template<class Iterator>
+void binwrite_(PStream& out, Iterator& it, unsigned int n)
+{
+  PStream::mode_t outmode = out.outmode; // store previous outmode
+  if(outmode!=PStream::raw_binary && outmode!=PStream::plearn_binary)
+    out.outmode = PStream::plearn_binary;
+  while(n--)
+    {
+      out << *it;
+      ++it;
+    }
+  out.outmode = outmode; // restore previous outmode 
+}
+
+inline void binwrite_(PStream& out, const char* x, unsigned int n) 
+{ out.write((char*)x, n*sizeof(char)); }
+inline void binwrite_(PStream& out, char* x, unsigned int n) 
+{ out.write((char*)x, n*sizeof(char)); }
+
+inline void binwrite_(PStream& out, const signed char* x, unsigned int n) 
+{ out.write((char*)x, n*sizeof(signed char)); }
+inline void binwrite_(PStream& out, signed char* x, unsigned int n) 
+{ out.write((char*)x, n*sizeof(signed char)); }
+
+inline void binwrite_(PStream& out, const unsigned char* x, unsigned int n) 
+{ out.write((char*)x, n*sizeof(unsigned char)); }
+inline void binwrite_(PStream& out, unsigned char* x, unsigned int n) 
+{ out.write((char*)x, n*sizeof(unsigned char)); }
+
+inline void binwrite_(PStream& out, const short* x, unsigned int n) 
+{ out.write((char*)x, n*sizeof(short)); }
+inline void binwrite_(PStream& out, short* x, unsigned int n) 
+{ out.write((char*)x, n*sizeof(short)); }
+
+inline void binwrite_(PStream& out, const unsigned short* x, unsigned int n) 
+{ out.write((char*)x, n*sizeof(unsigned short)); }
+inline void binwrite_(PStream& out, unsigned short* x, unsigned int n) 
+{ out.write((char*)x, n*sizeof(unsigned short)); }
+
+inline void binwrite_(PStream& out, const int* x, unsigned int n) 
+{ out.write((char*)x, n*sizeof(int)); }
+inline void binwrite_(PStream& out, int* x, unsigned int n) 
+{ out.write((char*)x, n*sizeof(int)); }
+
+inline void binwrite_(PStream& out, const unsigned int* x, unsigned int n) 
+{ out.write((char*)x, n*sizeof(unsigned int)); }
+inline void binwrite_(PStream& out, unsigned int* x, unsigned int n) 
+{ out.write((char*)x, n*sizeof(unsigned int)); }
+
+inline void binwrite_(PStream& out, const long* x, unsigned int n) 
+{ out.write((char*)x, n*sizeof(long)); }
+inline void binwrite_(PStream& out, long* x, unsigned int n) 
+{ out.write((char*)x, n*sizeof(long)); }
+
+inline void binwrite_(PStream& out, const unsigned long* x, unsigned int n) 
+{ out.write((char*)x, n*sizeof(unsigned long)); }
+inline void binwrite_(PStream& out, unsigned long* x, unsigned int n) 
+{ out.write((char*)x, n*sizeof(unsigned long)); }
+
+inline void binwrite_(PStream& out, const float* x, unsigned int n) 
+{ out.write((char*)x, n*sizeof(float)); }
+inline void binwrite_(PStream& out, float* x, unsigned int n) 
+{ out.write((char*)x, n*sizeof(float)); }
+
+inline void binwrite_(PStream& out, const double* x, unsigned int n) 
+{ out.write((char*)x, n*sizeof(double)); }
+inline void binwrite_(PStream& out, double* x, unsigned int n) 
+{ out.write((char*)x, n*sizeof(double)); }
+
+// The typecode indicates the type and format of the elements in the stream
+
+template<class Iterator>
+void binread_(PStream& in, Iterator& it, unsigned int n, unsigned char typecode)
+{
+  if(typecode!=0xFF)
+    PLERROR("In binread_ : bug! A specialised binread_ should have been called for a typecode other than the 'generic' 0xFF");
+
+  while(n--)
+    {
+      in >> *it;
+      ++it;
+    }
+}
+
+void binread_(PStream& in, char* x, unsigned int n, unsigned char typecode);
+void binread_(PStream& in, signed char* x, unsigned int n, unsigned char typecode);
+void binread_(PStream& in, unsigned char* x, unsigned int n, unsigned char typecode);
+void binread_(PStream& in, short* x, unsigned int n, unsigned char typecode);
+void binread_(PStream& in, unsigned short* x, unsigned int n, unsigned char typecode);
+void binread_(PStream& in, int* x, unsigned int n, unsigned char typecode);
+void binread_(PStream& in, unsigned int* x, unsigned int n, unsigned char typecode);
+void binread_(PStream& in, long* x, unsigned int n, unsigned char typecode);
+void binread_(PStream& in, unsigned long* x, unsigned int n, unsigned char typecode);
+void binread_(PStream& in, float* x, unsigned int n, unsigned char typecode);
+void binread_(PStream& in, double* x, unsigned int n, unsigned char typecode);
+
+
+template<class SequenceType>
+void writeSequence(PStream& out, const SequenceType& seq)
+{
+  unsigned int n = seq.size();
+  typename SequenceType::iterator it = seq.begin();
+  
+  switch(out.outmode)
+    {
+    case PStream::raw_ascii:      
+      while(n--)
+        {
+          out << *it;
+          out.put(' ');
+          ++it;
+        }
+      break;
+      
+    case PStream::pretty_ascii:
+      out.write("[ ");
+      while(n--)
+        {
+          out << *it;
+          if(n>0)
+            out.write(", ");
+          ++it;
+        }
+      out.write(" ] ");
+      break;
+
+    case PStream::raw_binary: 
+      binwrite_(out, it, n);
+      break;
+
+    case PStream::plearn_ascii:
+      out << n;
+      out.write("[ ");
+      while(n--)
+        {
+          out << *it;
+          ++it;
+        }
+      out.write("] ");
+      break;
+
+    case PStream::plearn_binary:
+      {
+        unsigned char typecode;
+        if(byte_order()==LITTLE_ENDIAN_ORDER)
+          {
+            out.put(0x12); // 1D little-endian 
+            typecode = TypeTraits<typename SequenceType::value_type>::little_endian_typecode();
+          }
+        else
+          {
+            out.put(0x13); // 1D big-endian
+            typecode = TypeTraits<typename SequenceType::value_type>::big_endian_typecode();
+          }
+
+        // write typecode
+        out.put(typecode);
+        
+        // write length in raw_binary 
+        out.write((char*)&n, sizeof(n));
+        
+        // write the data
+        binwrite_(out, it, n);
+      }
+      break;
+      
+    default:
+      PLERROR("In PStream::writeSequence(Iterator& it, int n)  unknown outmode!!!!!!!!!");
+      break;
+    }
+}
+
+
+//! This reads into a sequence
+/*! For this to work with the current implementation, the SequenceType must have:
+  - typedefs defining (SequenceType::...) value_type, size_type, iterator 
+  - a begin() method that returns a proper iterator,
+  - a size_type size() method returning the size of the current container
+  - a resize(size_type n) method that allows to change the size of the container
+  (which should also work with resize(0) )
+  - a push_back(const value_type& x) method that appends the element x at the end
+*/
+template<class SequenceType>
+void readSequence(PStream& in, SequenceType& seq)
+{
+  switch(in.inmode)
+    {
+    case PStream::raw_ascii:
+      {
+        int n = seq.size();
+        typename SequenceType::iterator it = seq.begin();
+        while(n--)
+          {
+            in >> *it; 
+            in.skipBlanks();
+            ++it;
+          }
+      }
+      break;
+    case PStream::raw_binary:
+      {
+        int n = seq.size();
+        typename SequenceType::iterator it = seq.begin();
+        while(n--)
+          {
+            in >> *it; 
+            ++it;
+          }
+      }
+      break;
+
+    case PStream::plearn_ascii:
+    case PStream::plearn_binary:
+      {
+        in.skipBlanksAndComments();
+        int c = in.peek();
+        if(c=='[') // read until ']'
+          {
+            in.get(); // skip '['
+            in.skipBlanksAndCommentsAndSeparators();
+            seq.resize(0);
+            typename SequenceType::value_type x;
+            while(in.peek()!=']')
+              {
+                in >> x;
+                seq.push_back(x);
+                in.skipBlanksAndCommentsAndSeparators();
+              }
+            in.get(); // skip ']'
+          }
+        else if(isdigit(c))
+          {
+            unsigned int n;
+            in >> n;
+            in.skipBlanksAndComments();
+            c = in.get();
+            if(c!='[')
+              PLERROR("Error in readSequence(SequenceType& seq), expected '[', read '%c'",c);
+            in.skipBlanksAndCommentsAndSeparators();
+            seq.resize((typename SequenceType::size_type) n);
+            typename SequenceType::iterator it = seq.begin();
+            while(n--)
+              {
+                in >> *it;
+                in.skipBlanksAndCommentsAndSeparators();
+                ++it;
+              }
+            c = in.get();
+            if(c!=']')
+              PLERROR("Error in readSequence(SequenceType& seq), expected ']', read '%c'",c);
+
+          }
+        else if(c==0x12 || c==0x13) // it's a generic binary 1D sequence
+          {
+            in.get(); // eat c
+            unsigned char typecode = in.get(); 
+            unsigned int l;
+            in.read((char*)&l,sizeof(l));
+
+            bool inverted_byte_order = (    (c==0x12 && byte_order()==BIG_ENDIAN_ORDER) 
+                                         || (c==0x13 && byte_order()==LITTLE_ENDIAN_ORDER) );
+
+            if(inverted_byte_order)
+              endianswap(&l);
+            seq.resize((typename SequenceType::size_type) l);
+
+            binread_(in, seq.begin(), l, typecode);
+          }
+        else
+          PLERROR("In readSequence(SequenceType& seq) '%c' not a proper first character in the header of a sequence!",c);
+      }
+      break;
+
+    default:
+      PLERROR("In PStream::operator>>  unknown inmode!!!!!!!!!");
+      break;
+    }
+    
+}
 
 // Default behavior for write() and read() is
 // to call corresponding operator<<() or operator>>()

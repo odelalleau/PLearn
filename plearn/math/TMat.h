@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat.h,v 1.3 2002/10/18 21:03:04 ducharme Exp $
+   * $Id: TMat.h,v 1.4 2002/10/21 01:21:53 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -92,7 +92,9 @@ template <class T> class TMat;
     static TVec<T> tmpvec3;
     static TVec<T> tmpvec4;
 
-      typedef T* iterator;
+    typedef T value_type;
+    typedef int size_type;
+    typedef T* iterator;
 
       inline iterator begin() const 
       { 
@@ -163,9 +165,11 @@ template <class T> class TMat;
       return false;
     }
 
-      inline int size() const { return length_; }
-      inline int length() const { return length_; }
-      inline int offset() const { return offset_; }
+    inline int size() const { return length_; }
+    inline int length() const { return length_; }
+    inline int offset() const { return offset_; }
+
+    inline PP< Storage<T> > getStorage() const { return storage; }
 
     //!  Makes sure the allocated memory for this vector is exactly length()
     void compact()
@@ -209,10 +213,77 @@ template <class T> class TMat;
         }
       }
 
+    //! writes the Vec to the PStream:
+    //! Note that users should rather use the form out << v;
+    void write(PStream& out) const
+    {
+      const TVec<T>& v = *this; // simple alias
+      if(out.implicit_storage 
+         || out.outmode==PStream::raw_ascii
+         || out.outmode==PStream::raw_binary
+         || out.outmode==PStream::pretty_ascii )
+        writeSequence(out,v);
+      else // explicit storage
+        {
+          out.write("TVec("); 
+          out << v.length();
+          out << v.offset();
+          out << v.getStorage();
+          out.write(")\n");
+        }
+    }
+
+    //! reads the Vec from the PStream:
+    //! Note that users should rather use the form in >> v;
+    void read(PStream& in)
+    {
+      TVec<T>& v = *this; // simple alias
+      switch(in.inmode)
+        {
+        case PStream::raw_ascii:
+        case PStream::raw_binary:      
+          readSequence(in, v);
+
+        case PStream::plearn_ascii:
+        case PStream::plearn_binary:
+          {
+            in.skipBlanksAndComments();
+            int c = in.peek();
+            if(c!='T') // implicit storage
+              readSequence(in,v);
+            else // explicit storage
+              {
+                char word[6];
+                // !!!! BUG: For some reason, this hangs!!!
+                // in.read(word,5);
+                for(int i=0; i<5; i++)
+                  in.get(word[i]);
+                word[5]='\0';
+                if(strcmp(word,"TVec(")!=0)
+                  PLERROR("In operator>>(PStream&, TVec&) '%s' not a proper header for a TVec!",word);
+                // v.storage = 0;
+                in.skipBlanksAndCommentsAndSeparators();
+                in >> v.length_;
+                in.skipBlanksAndCommentsAndSeparators();
+                in >> v.offset_;
+                in.skipBlanksAndCommentsAndSeparators();
+                in >> v.storage;
+                in.skipBlanksAndCommentsAndSeparators();
+                int c = in.get(); // skip ')'
+                if(c!=')')
+                  PLERROR("In operator>>(PStream&, TVec&) expected a closing parenthesis, found '%c'",c);
+              }
+          }
+          break;
+      
+        default:
+          PLERROR("In TVec<T>::read(PStream& in)  unknown inmode!!!!!!!!!");
+          break;
+        }
+    }
+
     // The following methods are deprecated, and just call corresponding functions.
     // Please call those functions directly in new code
-//    void write(ostream& out) const { PLearn::write(out, *this); }
-//    void read(istream& in) { PLearn::read(in, *this); }
     void save(const string& filename) const { savePVec(filename, *this); }
     void load(const string& filename) { loadPVec(filename, *this); }
     
@@ -673,6 +744,7 @@ public:
 
   typedef forward_iterator_tag iterator_category;
   typedef T value_type;
+  typedef int size_type;
   typedef ptrdiff_t difference_type;
   typedef T* pointer;
   typedef T& reference;
@@ -733,6 +805,7 @@ protected:
   PP< Storage<T> > storage; /*!<  where the data is really kept  */
 
 public:
+
   //!  for template compatibility with other types of matrices
   int nrows() const { return length_; }
   int ncols() const { return width_; }
@@ -746,6 +819,8 @@ public:
     static TMat<T> tmpmat3;
     static TMat<T> tmpmat4;
 
+  typedef T value_type;
+  typedef int size_type;
   typedef TMatElementIterator<T> iterator; // iterator over elements
   typedef T* compact_iterator; // super-efficient iterator over elements but works reliably only for compact matrices
   typedef T* rowelements_iterator; // iterator over elements of a particular row
@@ -866,6 +941,9 @@ public:
   inline int mod() const
   { return mod_; }
 
+  inline PP< Storage<T> > getStorage() const 
+  { return storage; }
+
   inline bool isSquare() const
   { return length() == width(); }
 
@@ -914,13 +992,203 @@ public:
   inline TVec<T> operator()(int rownum) const;
 
 
+  //! writes the Mat to the PStream:
+  //! Note that users should rather use the form out << m;
+  void write(PStream& out) const
+  {
+    T* ptr = data();
+    switch(out.outmode)
+      {
+      case PStream::raw_ascii:      
+      case PStream::pretty_ascii:
+        for(int i=0; i<length_; i++, ptr+=mod_)
+          {
+            for(int j=0; j<width_; j++)
+              {
+                out << ptr[j];
+                out.put('\t');
+              }
+            out.put('\n');
+          }
+        break;
+        
+      case PStream::raw_binary:
+        for(int i=0; i<length_; i++, ptr+=mod_)
+          binwrite_(out, ptr, width_);
+        break;
+        
+      case PStream::plearn_ascii:
+        {
+          if(!out.implicit_storage)
+            {
+              out.write("TMat("); 
+              out << length_ << width_ << mod_ << offset_ << storage;
+              out.write(")\n");
+            }
+          else // implicit storage
+            {
+              out << length_;
+              out.put(' ');
+              out << width_;
+              out.write(" [ \n");
+              for(int i=0; i<length_; i++, ptr+=mod_)
+                {
+                  for(int j=0; j<width_; j++)
+                    {
+                      out << ptr[j];
+                      out.put('\t');
+                    }
+                  out.put('\n');
+                }
+              out.write("]\n");
+            }
+        }
+        break;
+
+      case PStream::plearn_binary:
+        {
+          if(!out.implicit_storage)
+            {
+              out.write("TMat("); 
+              out << length_ << width_ << mod_ << offset_ << storage;
+              out.write(")\n");
+            }
+          else // implicit storage
+            {
+              unsigned char typecode;
+              if(byte_order()==LITTLE_ENDIAN_ORDER)
+                {
+                  out.put(0x14); // 2D little-endian 
+                  typecode = TypeTraits<T>::little_endian_typecode();
+                }
+              else
+                {
+                  out.put(0x15); // 2D big-endian
+                  typecode = TypeTraits<T>::big_endian_typecode();
+                }
+              
+              // write typecode
+              out.put(typecode);
+              
+              // write length and width in raw_binary 
+              out.write((char*)&length_, sizeof(length_));
+              out.write((char*)&width_, sizeof(width_));
+              
+              // write the data
+              for(int i=0; i<length_; i++, ptr+=mod_)
+                binwrite_(out, ptr, width_);
+            }
+        }
+        break;
+      
+      default:
+        PLERROR("In TMat::write(PStream& out)  unknown outmode!!!!!!!!!");
+        break;
+      }
+  }
+
+
+
+  //! reads the Mat from the PStream:
+  //! Note that users should rather use the form in >> m;
+  void read(PStream& in)
+  {
+    switch(in.inmode)
+      {
+      case PStream::raw_ascii:
+      case PStream::raw_binary:
+        {
+          T* ptr = data();
+          for(int i=0; i<length_; i++, ptr+=mod_)
+            for(int j=0; j<width_; j++)
+              in >> ptr[j];
+        }
+        break;
+
+      case PStream::plearn_ascii:
+      case PStream::plearn_binary:
+        {
+          in.skipBlanksAndComments();
+          int c = in.peek();
+          if(c=='T') // explicit storage
+              {
+                char word[6];
+                // !!!! BUG: For some reason, this hangs!!!
+                // in.read(word,5);
+                for(int i=0; i<5; i++)
+                  in.get(word[i]);
+                word[5]='\0';
+                if(strcmp(word,"TMat(")!=0)
+                  PLERROR("In operator>>(PStream&, TMat&) '%s' not a proper header for a TMat!",word);
+                // v.storage = 0;
+                in >> length_ >> width_ >> mod_ >> offset_ >> storage;
+                in.skipBlanksAndCommentsAndSeparators();
+                int c = in.get(); // skip ')'
+                if(c!=')')
+                  PLERROR("In operator>>(PStream&, TMat&) expected a closing parenthesis, found '%c'",c);
+              }
+          else // implicit storage
+            {
+              if(isdigit(c)) // ascii mode with length and width given  
+                {
+                  int l,w;
+                  in >> l >> w;
+                  in.skipBlanksAndComments();
+                  c = in.get();
+                  if(c!='[')
+                    PLERROR("Error in TMat::read(PStream& in), expected '[', read '%c'",c);
+                  in.skipBlanksAndCommentsAndSeparators();
+                  resize(l,w);
+                  T* ptr = data();
+                  for(int i=0; i<length_; i++, ptr+=mod_)
+                    for(int j=0; j<width_; j++)
+                      {
+                        in.skipBlanksAndCommentsAndSeparators();
+                        in >> ptr[j];
+                      }
+                  in.skipBlanksAndCommentsAndSeparators();
+                  c = in.get();
+                  if(c!=']')
+                    PLERROR("Error in TMat::read(PStream& in), expected ']', read '%c'",c);
+                }
+              else if(c==0x14 || c==0x15) // it's a binary 2D sequence
+                {
+                  in.get(); // eat c
+                  unsigned char typecode = in.get(); 
+                  int l, w;                  
+                  in.read((char*)&l,sizeof(l));
+                  in.read((char*)&w,sizeof(w));
+                  bool inverted_byte_order = (    (c==0x14 && byte_order()==BIG_ENDIAN_ORDER) 
+                                                  || (c==0x15 && byte_order()==LITTLE_ENDIAN_ORDER) );
+                  if(inverted_byte_order)
+                    {
+                      endianswap(&l);
+                      endianswap(&w);
+                    }
+                  resize(l,w);
+                  T* ptr = data();
+                  for(int i=0; i<length_; i++, ptr+=mod_)                    
+                    binread_(in, ptr, width_, typecode);
+                }
+              else
+                PLERROR("In TMat::read(PStream& in) Char with ascii code %d not a proper first character in the header of a TMat!",c);
+            }
+        }
+        break;
+      
+      default:
+        PLERROR("In TMat<T>::read(PStream& in)  unknown inmode!!!!!!!!!");
+        break;
+      }
+  }
+
     // The following methods are deprecated, and just call corresponding functions.
     // Please call those functions directly in new code
     //void write(ostream& out) const { PLearn::write(out, *this); }
     //void read(istream& in) { PLearn::read(in, *this); }
     void save(const string& filename) const { savePMat(filename, *this); }
     void load(const string& filename) { loadPMat(filename, *this); }
-
+    
   void deepRead(istream& in, DeepReadMap& old2new)
   {
     readHeader(in, "TMat");
@@ -1300,71 +1568,24 @@ void loadPVec(const string& filename, TVec<float>& vec)
 
 //!  Read and Write from C++ stream:
 //!  write saves length and read resizes accordingly
+//! (the raw modes don't write any size information)
 
 template <class T> inline PStream &
 operator<<(PStream &out, const TVec<T> &v)
-{
-    int l = v.length();
-    out << l;
-    if (out.outmode==PStream::raw_binary) {
-        if (l < 200000)
-            PLearn::binwrite(out.rawout(), v.data(), l);
-        else for (int i = 0; i < l; i += 200000)
-            PLearn::binwrite(out.rawout(), &v[i], std::min(200000, l - i));
-    } else { // plf_plain
-        out << raw << '\n';
-        for (int i = 0; i < v.length(); ++i)
-            out << v[i];
-        if (l)
-            out << raw << '\n';
-    }
-    return out;
+{ 
+  v.write(out); 
+  return out;
 }
 
-template <class T> inline PStream &
-operator>>(PStream &in, TVec<T> &v)
+template <class T> 
+PStream & operator>>(PStream &in, TVec<T> &v)
 {
-    int l;
-    in >> l;
-    v.resize(l);
-    if (in.inmode==PStream::raw_binary) {
-        if (l < 200000) {
-            PLearn::binread(in.rawin(), v.data(), l);
-        } else for (int i = 0; i < l; i += 200000)
-            PLearn::binread(in.rawin(), &v[i], std::min(200000, l - i));
-    } else { // plf_plain
-        in >> ws;
-        for (int i = 0; i < l; ++i)
-            in >> v[i];
-        if (isspace(in.peek()))
-            in.get();
-    }
-    return in;
+  v.read(in);
+  return in;
 }
+
 
 /*
-template<class T>
-void write(ostream& out, const TVec<T>& v) 
-{
-  write(out,v.length());
-  out << '\n';
-  for(int i=0; i<v.length(); i++)
-    write(out,v[i]);
-  out << '\n';
-}
-
-template<class T>
-void read(istream& in, TVec<T>& v)
-{
-  int l;
-  read(in,l); 
-  in.get();
-  v.resize(l);
-  for(int i=0; i<l; i++)
-    read(in,v[i]);
-  //  in.get();
-  in >> ws;
-}
 
 template<class T>      
 void binwrite(ostream& out, const TVec<T>& v)
@@ -1679,45 +1900,22 @@ void loadPMat(const string& filename, TMat<float>& mat)
 //!  Read and Write from C++ stream:
 //!  write saves length() and width(), and read resizes accordingly
 
-template <class T> PStream &
+//!  Read and Write from C++ stream:
+//!  write saves length and read resizes accordingly
+//! (the raw modes don't write any size information)
+
+template <class T> inline PStream &
 operator<<(PStream &out, const TMat<T> &m)
-{
-    out << m.length();
-    out << m.width();
-    if (out.outmode==PStream::raw_binary) {
-        for (int i= 0; i < m.length(); ++i)
-            binwrite(out.rawout(), m[i], m.width());
-    } else {
-        out << raw << '\n';
-        for (int i = 0; i < m.length(); ++i) {
-            for (int j = 0; j < m.width(); ++j)
-                out << m(i,j);
-            out << raw << '\n';
-        }
-    }
-    return out;
+{ 
+  m.write(out); 
+  return out;
 }
 
-template <class T> PStream &
-operator>>(PStream &in, TMat<T> &m)
+template <class T> 
+PStream & operator>>(PStream &in, TMat<T> &m)
 {
-    int l, w;
-    in >> l;
-    in >> w;
-    m.resize(l, w);
-    if (in.inmode==PStream::raw_binary) {
-        for (int i = 0; i < l; ++i)
-            binread(in.rawin(), m[i], w);
-    } else {
-        in >> ws;
-        for (int i = 0; i < l; ++i) {
-            for (int j = 0; j < w; ++j)
-                in >> m(i, j);
-            if (isspace(in.peek()))
-                in.get();
-        }
-    }
-    return in;
+  m.read(in);
+  return in;
 }
 
 /*^*************************************^*/
@@ -1725,36 +1923,6 @@ operator>>(PStream &in, TMat<T> &m)
 
 
 /*
-template<class T>
-void write(ostream& out, const TMat<T>& m)
-{
-  write(out,m.length());
-  write(out,m.width());
-  out << '\n';
-  for(int i=0; i<m.length(); i++)
-    {
-      for(int j=0; j<m.width(); j++)
-        write(out,m(i,j));
-      out << '\n';
-    }
-}
-
-template<class T>
-void read(istream& in, TMat<T>& m)
-{
-  int l,w;
-  read(in,l);
-  read(in,w);
-  in.get(); 
-  m.resize(l,w);
-  for(int i=0; i<l; i++)
-    {
-      for(int j=0; j<w; j++)
-        read(in,m(i,j));
-      in.get();
-    }
-}
-
 
 template<class T>
 void binwrite(ostream& out, const TMat<T>& m)

@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: pl_io.h,v 1.1 2002/09/26 05:06:53 plearner Exp $
+   * $Id: pl_io.h,v 1.2 2002/10/21 01:21:53 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -84,17 +84,6 @@ inline void read(istream& in, T& x) { PStream myin(&in); myin >> x; }
 
 /*
 //!  *** LITTLE-ENDIAN / BIG-ENDIAN HELL... ***
-
-  // This is initially set to false.  This flag is useful for reading data
-  // that has been written on an architecture with a different endianness
-  // than the current architecture. If set to true, then the binread
-  // operations will call endianswap after reading their data.  The
-  // principle is that binwrite always writes the data as it has it in
-  // memory (i.e. with the endianness of the architecture that writes it).
-  // save/load will typically store/use endianness information in the file
-  // header (typically 'ABCD' for big endian 'DCBA' for little endian), so
-  // that load can possibly set swap_endians_on_read before calling read
-  extern bool swap_endians_on_read; 
 
   //! swaps endians for n 2-byte elements (such as short)
   void endianswap2(void* ptr, int n);
@@ -261,49 +250,49 @@ inline void binread(istream& in, pair<A,B>& x)
   inline void binwrite(ostream& out, unsigned char x) { out.put(x); }
   inline void binread(istream& in, unsigned char& x) { in.get((char&)x); }
   inline void binwrite(ostream& out, int x) { out.write((char*)&x,sizeof(int)); }
-  inline void binread(istream& in, int& x) { in.read((char*)&x,sizeof(int)); if(swap_endians_on_read) endianswap(&x); }
+  inline void binread(istream& in, int& x) { in.read((char*)&x,sizeof(int));  }
   inline void binwrite(ostream& out, unsigned int x) { out.write((char*)&x,sizeof(unsigned int)); }
-  inline void binread(istream& in, unsigned int& x) { in.read((char*)&x,sizeof(unsigned int)); if(swap_endians_on_read) endianswap(&x); }
+  inline void binread(istream& in, unsigned int& x) { in.read((char*)&x,sizeof(unsigned int));  }
   inline void binwrite(ostream& out, short x) { out.write((char*)&x,sizeof(short)); }
-  inline void binread(istream& in, short& x) { in.read((char*)&x,sizeof(short)); if(swap_endians_on_read) endianswap(&x); }
+  inline void binread(istream& in, short& x) { in.read((char*)&x,sizeof(short));  }
   inline void binwrite(ostream& out, unsigned short x) { out.write((char*)&x,sizeof(unsigned short)); }
-  inline void binread(istream& in, unsigned short& x) { in.read((char*)&x,sizeof(unsigned short)); if(swap_endians_on_read) endianswap(&x); }
+  inline void binread(istream& in, unsigned short& x) { in.read((char*)&x,sizeof(unsigned short));  }
   //!  note that bool are saved as unsigned short
   inline void binwrite(ostream& out, bool x) { binwrite(out,(unsigned short)x); }
   inline void binread(istream& in, bool& x) { unsigned short u; binread(in,u); x=u; }
 
 // The following read/write floats (4 bytes) on disk, regardless of whether the memory-elements are float or double
   inline void binwrite(ostream& out, float x) { out.write((char*)&x,sizeof(float)); }
-  inline void binread(istream& in, float& x) { in.read((char*)&x,sizeof(float)); if(swap_endians_on_read) endianswap(&x); }
+  inline void binread(istream& in, float& x) { in.read((char*)&x,sizeof(float));  }
   inline void binwrite(ostream& out, double x) { binwrite(out, float(x)); }
   inline void binread(istream& in, double& x) { float f; binread(in,f); x = double(f); }
 
 // The following read/write doubles (8 bytes) on disk, regardless of whether the memory-elements are float or double
   inline void binwrite_double(ostream& out, double x) { out.write((char*)&x,sizeof(double)); }
-  inline void binread_double(istream& in, double& x) { in.read((char*)&x,sizeof(double)); if(swap_endians_on_read) endianswap(&x); }
+  inline void binread_double(istream& in, double& x) { in.read((char*)&x,sizeof(double));  }
   inline void binwrite_double(ostream& out, float x) { binwrite_double(out, double(x)); }
   inline void binread_double(istream& in, float& x) { double d; binread_double(in,d); x = float(d); }
 
 
   //!  multi-element versions, giving address and number of elements
   inline void binwrite(ostream& out, const int* x, int n) { out.write((char*)x, n*sizeof(int)); }
-  inline void binread(istream& in, int* x, int n) { in.read((char*)x, n*sizeof(int)); if(swap_endians_on_read) endianswap(x,n); }
+  inline void binread(istream& in, int* x, int n) { in.read((char*)x, n*sizeof(int));  }
   inline void binwrite(ostream& out, const unsigned int* x, int n) { out.write((char*)x, n*sizeof(unsigned int)); }
-  inline void binread(istream& in, unsigned int* x, int n)  { in.read((char*)x, n*sizeof(unsigned int)); if(swap_endians_on_read) endianswap(x,n); }
+  inline void binread(istream& in, unsigned int* x, int n)  { in.read((char*)x, n*sizeof(unsigned int));  }
   inline void binwrite(ostream& out, const short* x, int n) { out.write((char*)x, n*sizeof(short)); }
-  inline void binread(istream& in, short* x, int n) { in.read((char*)x, n*sizeof(short)); if(swap_endians_on_read) endianswap(x,n); }
+  inline void binread(istream& in, short* x, int n) { in.read((char*)x, n*sizeof(short));  }
   inline void binwrite(ostream& out, const unsigned short* x, int n) { out.write((char*)x, n*sizeof(unsigned short)); }
-  inline void binread(istream& in, unsigned short* x, int n) { in.read((char*)x, n*sizeof(unsigned short)); if(swap_endians_on_read) endianswap(x,n); }
+  inline void binread(istream& in, unsigned short* x, int n) { in.read((char*)x, n*sizeof(unsigned short));  }
 
 // The followind read/write 4-byte-floats on disk (whether we pass them a float* or a double*)
   inline void binwrite(ostream& out, const float *x, int n) { out.write((char*)x, n*sizeof(float)); }
-  inline void binread(istream& in, float* x, int n) { in.read((char*)x, n*sizeof(float)); if(swap_endians_on_read) endianswap(x,n); }
+  inline void binread(istream& in, float* x, int n) { in.read((char*)x, n*sizeof(float));  }
   inline void binwrite(ostream& out, const double* x, int n) { for(int i=0; i<n; i++) binwrite(out,x[i]); }
   inline void binread(istream& in, double* x, int n) { for(int i=0; i<n; i++) binread(in,x[i]); }
 
 // The followind read/write 8-byte-doubles on disk (whether we pass them a float* or a double*)
   inline void binwrite_double(ostream& out, const double *x, int n) { out.write((char*)x, n*sizeof(double)); }
-  inline void binread_double(istream& in, double* x, int n) { in.read((char*)x, n*sizeof(double)); if(swap_endians_on_read) endianswap(x,n); }
+  inline void binread_double(istream& in, double* x, int n) { in.read((char*)x, n*sizeof(double));  }
   inline void binwrite_double(ostream& out, const float* x, int n) { for(int i=0; i<n; i++) binwrite(out,x[i]); }
   inline void binread_double(istream& in, float* x, int n) { for(int i=0; i<n; i++) binread(in,x[i]); }
 
@@ -920,33 +909,10 @@ inline void load(const string& filename, T& x, OBflag_t option_flag= dft_option_
   ifstream in(filename.c_str()); 
   if(!in)
     PLERROR("could not open file %s for reading",filename.c_str());
-  // store endianswap status
-  bool old_swap_endians_on_read = swap_endians_on_read;
-  int c = in.peek();
-  if(c=='~') // File is big endian
-    {
-      in.get();
-#ifdef BIGENDIAN
-          swap_endians_on_read = false;
-#else
-          swap_endians_on_read = true;
-#endif
-    }
-  else // File is little endian
-    {
-#ifdef LITTLEENDIAN
-          swap_endians_on_read = false;
-#else
-          swap_endians_on_read = true;
-#endif
-    }
 
   // For now
   SerialOptions opts(option_flag);
   read(in, x, opts); 
-
-  // restore endianswap status
-  swap_endians_on_read = old_swap_endians_on_read;
 }
 */
 
