@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: VVMatrix.cc,v 1.13 2004/02/29 16:44:06 nova77 Exp $
+   * $Id: VVMatrix.cc,v 1.14 2004/03/12 21:29:57 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -336,7 +336,11 @@ VMat VVMatrix::createPreproVMat(const string & filename)
   unsigned int idx_shuffle =  (unsigned int)in.find("<SHUFFLE>");
   unsigned int idx_join    =  (unsigned int)in.find("<JOIN>");
   unsigned int idx_precompute =  (unsigned int)in.find("<PRECOMPUTE>");
-  unsigned int cidx_source=0, cidx_prefilter=0, cidx_postfilter=0, cidx_process=0, cidx_shuffle=0,cidx_precompute=0,cidx_join=0;
+  //TODO Document the use of <SIZES>
+  unsigned int idx_sizes   =  (unsigned int)in.find("<SIZES>");
+  unsigned int cidx_source  = 0, cidx_prefilter = 0,  cidx_postfilter = 0,
+               cidx_process = 0, cidx_shuffle   = 0,  cidx_precompute = 0,
+               cidx_join    = 0, cidx_sizes     = 0;
   string precomp;
   VMat source;
 
@@ -353,6 +357,27 @@ VMat VVMatrix::createPreproVMat(const string & filename)
   // remove pollution : all stuff that has possibly been interrupted during computation
   rm (meta_data_dir+slash+"incomplete.*");
 
+  bool sizes_spec = false;
+  int inputsize = -1;
+  int targetsize = -1;
+  int weightsize = -1;
+  // Check if sizes are specified.
+  if(idx_sizes != string::npos)
+    {
+      sizes_spec = true;
+      idx_sizes += 7;
+      cidx_sizes = in.find("</SIZES>");
+      if(cidx_sizes == string::npos)
+        PLERROR("Cannot find closing tag </SIZES>. File is %s",filename.c_str());
+      vector<string> sizes = split(in.substr(idx_sizes, cidx_sizes - idx_sizes),"\n");
+      if (sizes.size() != 3) {
+        PLERROR("You should specify exactly 3 sizes between <SIZES> and </SIZES> (file is %s)", filename.c_str());
+      }
+      inputsize = toint(sizes[0]);
+      targetsize = toint(sizes[1]);
+      weightsize = toint(sizes[2]);
+    }
+
   if(isfile(meta_data_dir+slash+"precomputed.pmat"))
     {
       // precomputed version exist in pmat format,
@@ -362,6 +387,7 @@ VMat VVMatrix::createPreproVMat(const string & filename)
           source=new FileVMatrix(meta_data_dir+slash+"precomputed.pmat");
           source->setMetaDataDir(meta_data_dir);
           source->setMtime(date_of_code);
+          source->defineSizes(inputsize, targetsize, weightsize);
           return source;
         }
     }
@@ -375,6 +401,7 @@ VMat VVMatrix::createPreproVMat(const string & filename)
           source = new DiskVMatrix(meta_data_dir+slash+"precomputed.dmat"+slash);
           source->setMetaDataDir(meta_data_dir);
           source->setMtime(date_of_code);
+          source->defineSizes(inputsize, targetsize, weightsize);
           return source;
         }
     }
@@ -542,6 +569,9 @@ VMat VVMatrix::createPreproVMat(const string & filename)
   VMatLanguage::output_preproc=olddebugval;
   source->setMetaDataDir(meta_data_dir);
   source->setMtime(date_of_code);
+  if (sizes_spec) {
+    source->defineSizes(inputsize, targetsize, weightsize);
+  }
   return source;
 }
 
@@ -570,6 +600,9 @@ void VVMatrix::build_()
   setMtime(the_mat->getMtime());
   length_ = the_mat.length();
   width_ = the_mat.width();
+
+  // Copy the sizes.
+  copySizesFrom(the_mat);
 
   //resize the string mappings
   map_sr = TVec<map<string,real> >(width_);
