@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Gnuplot.h,v 1.8 2004/02/20 21:11:44 chrish42 Exp $
+   * $Id: Gnuplot.h,v 1.9 2004/03/04 14:57:03 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -48,10 +48,10 @@
 #ifndef GNUPLOT_INC
 #define GNUPLOT_INC
 
-#include "general.h"
-#include <cstdio>
-#include <fstream>
-#include "pl_io.h"
+//#include "general.h"
+//#include <cstdio>
+//#include <fstream>
+//#include "pl_io.h"
 #include "Mat.h"
 #include "TmpFilenames.h"
 #include "Array.h"

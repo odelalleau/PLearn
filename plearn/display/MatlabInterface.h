@@ -35,7 +35,7 @@
 
 
 /* *******************************************************
-   * $Id: MatlabInterface.h,v 1.3 2004/02/20 21:11:44 chrish42 Exp $
+   * $Id: MatlabInterface.h,v 1.4 2004/03/04 14:57:03 tihocan Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -46,8 +46,8 @@
 #ifndef MATLAB_INTERFACE_INC
 #define MATLAB_INTERFACE_INC
 
-#include <stdlib.h>
-#include "stringutils.h"
+//#include <stdlib.h>
+//#include "stringutils.h"
 #include "Popen.h"
 #include "RowMapSparseMatrix.h"
 

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GhostScript.h,v 1.8 2004/02/26 06:44:09 nova77 Exp $
+   * $Id: GhostScript.h,v 1.9 2004/03/04 14:57:03 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -48,10 +48,10 @@
 #ifndef GHOSTSCRIPT_INC
 #define GHOSTSCRIPT_INC
 
-#include "general.h"
-#include <cstdio>
-#include <fstream>
-#include "pl_io.h"
+//#include "general.h"
+//#include <cstdio>
+//#include <fstream>
+//#include "pl_io.h"
 #include "Mat.h"
 
 namespace PLearn {
