@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.h,v 1.29 2004/05/27 18:40:12 tihocan Exp $ 
+   * $Id: ConditionalDensityNet.h,v 1.30 2004/05/28 12:39:28 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -309,7 +309,7 @@ public:
   */
 
   virtual TVec<string> getTrainCostNames() const;
-  virtual TVec<string> getTestCostNames() const;
+  // virtual TVec<string> getTestCostNames() const;
 };
 
 // Declares a few other classes and functions related to this class

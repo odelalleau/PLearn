@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.41 2004/05/27 18:40:10 tihocan Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.42 2004/05/28 12:39:28 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -708,6 +708,7 @@ TVec<string> ConditionalDensityNet::getTrainCostNames() const
   else return getTestCostNames();
 }
 
+/*
 TVec<string> ConditionalDensityNet::getTestCostNames() const
 { 
   TVec<string> cost_funcs(3);
@@ -716,6 +717,7 @@ TVec<string> ConditionalDensityNet::getTestCostNames() const
   cost_funcs[2]="mse";
   return cost_funcs;
 }
+*/
 
 // ### Nothing to add here, simply calls build_
 void ConditionalDensityNet::build()
