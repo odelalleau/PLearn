@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: old_plearn_main.cc,v 1.3 2004/02/20 21:11:40 chrish42 Exp $
+   * $Id: old_plearn_main.cc,v 1.4 2004/07/09 19:40:48 tihocan Exp $
    ******************************************************* */
 
 
@@ -49,6 +49,8 @@
 #include "Kernel.h"
 #include "Experiment.h"
 #include "FileVMatrix.h"
+#include "SquaredErrorCostFunction.h"
+#include "PLMPI.h"
 
 namespace PLearn {
 using namespace std;
