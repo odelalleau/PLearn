@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: CompactVMatrix.h,v 1.4 2004/03/23 23:08:08 morinf Exp $
+   * $Id: CompactVMatrix.h,v 1.5 2004/04/05 22:48:54 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -195,6 +195,7 @@ class CompactVMatrix : public RowBufferedVMatrix
     Vec row_norms; //!<  to cache the norms of the rows for squareDifference method
 };
 
+DECLARE_OBJECT_PTR(CompactVMatrix);
 
 } // end of namespace PLearn
 #endif

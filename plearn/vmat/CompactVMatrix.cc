@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: CompactVMatrix.cc,v 1.7 2004/03/23 23:08:08 morinf Exp $
+   * $Id: CompactVMatrix.cc,v 1.8 2004/04/05 22:48:54 morinf Exp $
    ******************************************************* */
 
 #include "CompactVMatrix.h"
@@ -77,7 +77,7 @@ void CompactVMatrix::set_n_bits_in_byte()
 PLEARN_IMPLEMENT_OBJECT(CompactVMatrix, "ONE LINE DESCR", "NO HELP");
 
 CompactVMatrix::CompactVMatrix()
-  : n_symbols(0), n_fixedpoint(0), n_variables(0), one_hot_encoding(0), n_symbol_values(0),
+  : n_symbols(0), n_fixedpoint(0), n_variables(0), one_hot_encoding(true), n_symbol_values(0),
     fixedpoint_min(0), fixedpoint_max(0), delta(0), variables_permutation(0)
 {
 }
