@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.49 2004/04/20 20:42:45 tihocan Exp $
+* $Id: VMatrix.cc,v 1.50 2004/05/14 02:35:33 tihocan Exp $
 ******************************************************* */
 
 #include "DiskVMatrix.h"
@@ -597,6 +597,22 @@ string VMatrix::getString(int row,int col) const
   if(map_rs[col].find(val)==map_rs[col].end())
     return tostring(val);
   else return map_rs[col][val];
+}
+
+////////////////////////////
+// getStringToRealMapping //
+////////////////////////////
+const map<string,real>& VMatrix::getStringToRealMapping(int col) const {
+  init_map_sr();
+  return map_sr[col];
+}
+
+////////////////////////////
+// getRealToStringMapping //
+////////////////////////////
+const map<real,string>& VMatrix::getRealToStringMapping(int col) const {
+  init_map_sr();
+  return map_rs[col];
 }
 
 void VMatrix::setMetaDataDir(const string& the_metadatadir) 

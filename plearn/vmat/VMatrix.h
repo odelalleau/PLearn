@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.39 2004/04/20 20:42:46 tihocan Exp $
+   * $Id: VMatrix.h,v 1.40 2004/05/14 02:35:33 tihocan Exp $
    ******************************************************* */
 
 
@@ -102,8 +102,8 @@ protected:
   mutable TVec<StatsCollector> field_stats;  //!< stats[i] contains stats for field #i 
 
   // the string mapping for each fields, in both directions
-  TVec<map<string,real> > map_sr; 
-  TVec<map<real,string> > map_rs; 
+  mutable TVec<map<string,real> > map_sr; 
+  mutable TVec<map<real,string> > map_rs; 
   
 private: 
   //! This does the actual building. 
@@ -123,7 +123,7 @@ public:
 
   static void declareOptions(OptionList & ol);
 
-  void init_map_sr() { if (map_sr.length()==0) { map_sr.resize(width()); map_rs.resize(width()); } }
+  void init_map_sr() const { if (map_sr.length()==0) { map_sr.resize(width()); map_rs.resize(width()); } }
 
   // Data-set info
   // Sample parts sizes
@@ -267,10 +267,10 @@ public:
   virtual string getValString(int col, real val) const;
 
   //! returns the string->value mapping for field 'fld'
-  virtual const map<string,real>& getStringToRealMapping(int col) const {return map_sr[col];}
+  virtual const map<string,real>& getStringToRealMapping(int col) const;
 
   //! returns the value->string mapping for field 'fld'
-  virtual const map<real,string>& getRealToStringMapping(int col) const {return map_rs[col];}
+  virtual const map<real,string>& getRealToStringMapping(int col) const;
 
   //! returns value associated with a string (or MISSING_VALUE if there's no association for this string)
   virtual real getStringVal(int col, const string & str) const;
