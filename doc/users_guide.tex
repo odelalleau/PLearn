@@ -2,7 +2,7 @@
 %%
 %%  Copyright (c) 2002 by Pascal Vincent
 %%
-%%  $Id: users_guide.tex,v 1.4 2003/01/31 19:34:13 ducharme Exp $
+%%  $Id: users_guide.tex,v 1.5 2003/01/31 21:00:29 ducharme Exp $
 
 \documentclass[11pt]{book}
 \usepackage{t1enc}              % new font encoding  (hyphenate words w/accents)
@@ -573,6 +573,30 @@ on big-endian            &             & base-type given by header byte in previ
                          &             & table, followed by binary dump of elements \\ \hline
 \end{tabular}
 
+
+\chapter{Installation and Setup}
+\label{chap:label}
+
+In order to install the PLearn software library and tools on your machine,
+you must make sure that cvs (http://www.cvshome.org) is already installed.
+(For a quick tutorial on how to use cvs, see
+http://plearn.sourceforge.net/plearncvs.html).
+
+You then can download the PLearn library through anonymous (pserver) cvs
+using the following instructions :
+
+\begin{itemize}
+\item cvs -d:pserver:anonymous@cvs.plearn.sourceforge.net:/cvsroot/plearn login
+\item press the [enter] key when asked for a password
+\item cvs -d:pserver:anonymous@cvs.plearn.sourceforge.net:/cvsroot/plearn co PLearn
+\end{itemize}
+
+The PLearn library should now be installed.  If you want to use use
+(which should be the case!), a few things need to be set.  First, you
+should add the following lines to your .cshrc file :
+
+setenv PLEARNDIR \$HOME/PLearn \\
+set path = ( \$path \$PLEARNDIR/scripts \$PLEARNDIR/commands )
 
 \chapter*{License}
 
