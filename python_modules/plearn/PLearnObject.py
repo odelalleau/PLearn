@@ -1,14 +1,27 @@
 """Contains the PLearnObject class from which to derive python objects that emulate PLearn ones."""
 import inspect
 
+##########################################
+### Helper functions 
+##########################################
+
+def frozen(set):
+    "Raise an error when trying to set an undeclared name."
+    def set_attr(self,name,value):
+        if not self._frozen or hasattr(self,name):
+            set(self,name,value) 
+        else:
+            raise AttributeError("You cannot add attributes to %s" % self)
+    return set_attr
+
 class PLearnObject:
     """Class from which to derive python objects that emulate PLearn ones.
 
     This abstract class is to be the superclass of any python object
     that has a plearn representation, which is managed through
     plearn_repr().
-    
-    This class sets the basics for managing classes defining default
+
+    This class also sets the basics for managing classes defining default
     values for PLearnObject fields. It also provides, through
     plearn_options(), an easy way to retreive all attributes to be forwarded
     to the plearn snippet through the 'pl' object (see plearn_repr()).
@@ -16,12 +29,22 @@ class PLearnObject:
     IMPORTANT: Subclasses of PLearnObject MUST declare any internal
     member, i.e. *any member that SHOULD NOT be considered by plearn_options*,
     with a name that starts with at least one underscore '_'.
+
+    NOTE that ALL INTERNAL VARIABLES must be set throught the
+    _set_attribute() method, the default values class or by the
+    'override' dictionnary argument passed to the PLearnObject ctor.
+    Indeed, out of this method, the PLearnObject are frozen to avoid
+    accidental external manipulations.
     """
+    _frozen = True
+    
     def __init__(self, defaults=None, overrides=None):
         """Sets, if any, the default field values provided through 'defaults'
 
         defaults <- Class
         """
+        self._frozen = False
+
         if defaults is not None:
             defaults_dict = dict( [(x,y) for (x,y) in inspect.getmembers(defaults)
                                    if not(x[0:2] == "__" and x[-2:]=="__")        ] )
@@ -30,6 +53,17 @@ class PLearnObject:
         if overrides is not None:
             self.__dict__.update( overrides )
 
+        self._frozen = True
+
+    __setattr__=frozen(object.__setattr__)
+    class __metaclass__(type):
+        __setattr__=frozen(type.__setattr__)
+
+    def _set_attribute(self, key, value):
+        self._frozen = False
+        setattr(self, key, value)
+        self._frozen = True
+        
     def plearn_options(self):
         """Return a dictionnary of all members of this instance that are considered to be plearn options.
 
