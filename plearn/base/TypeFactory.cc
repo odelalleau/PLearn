@@ -175,8 +175,10 @@ void displayObjectHelp(ostream& out, const string& classname)
       if(e.constructor && it->first!=classname)
         {
           Object* o = (*e.constructor)();
-          if( (*entry.isa_method)(o) )
-            out << it->first << " ";
+          if( (*entry.isa_method)(o) ) {
+            out.width(30);
+            out << it->first << " - " << e.one_line_descr << endl;
+          }
           if(o)
             delete o;
         }
