@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
- * $Id: ForwardVMatrix.cc,v 1.3 2003/03/19 23:15:23 jkeable Exp $
+ * $Id: ForwardVMatrix.cc,v 1.4 2003/03/22 04:37:00 plearner Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -87,9 +87,13 @@ real ForwardVMatrix::getStringVal(int col, const string& str) const
 string ForwardVMatrix::getString(int row,int col) const
 { return vm->getString(row,col); }
 
-map<string,real> getStringMapping(int col) const;
+map<string,real> ForwardVMatrix::getStringMapping(int col) const
 {
-  return vm->getStringMapping(col); 
+  PLERROR("ForwardVMatrix::getStringMapping not implemented yet");
+  // making the compiler happy: 
+  return map<string,real>();
+
+  //  return vm->getStringMapping(col); 
 }
 
 void ForwardVMatrix::computeStats()
