@@ -1,0 +1,5 @@
+HTMLHelpConfig(
+    output_dir = "doc",
+    html_prolog_document = "prolog.html",
+    html_epilog_document = "epilog.html"
+    )
