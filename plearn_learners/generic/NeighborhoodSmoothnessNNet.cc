@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.9 2004/02/24 19:32:42 yoshua Exp $
+   * $Id: NeighborhoodSmoothnessNNet.cc,v 1.10 2004/02/24 21:20:46 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NeighborhoodSmoothnessNNet.h */
@@ -134,9 +134,6 @@ void NeighborhoodSmoothnessNNet::declareOptions(OptionList& ol)
 
   declareOption(ol, "sne_weight", &NeighborhoodSmoothnessNNet::sne_weight, OptionBase::buildoption, 
                 "    The weight of the SNE cost in the total cost optimized.");
-
-  declareOption(ol, "kernel_input", &NeighborhoodSmoothnessNNet::kernel_input, OptionBase::buildoption, 
-                "    The kernel used to compute the similarity between inputs.");
 
   declareOption(ol, "sigma_hidden", &NeighborhoodSmoothnessNNet::sigma_hidden, OptionBase::buildoption, 
                 "    The bandwidth of the Gaussian kernel used to compute the similarity\n"
@@ -247,7 +244,9 @@ void NeighborhoodSmoothnessNNet::build_()
 
     // init. basic vars
     int true_inputsize = inputsize(); // inputsize is now true inputsize 
-    Var input_and_pij = Var(inputsize()+1, "input_and_pij");
+    bag_inputs = Var(inputsize() + 1, max_n_instances);
+    // The input (with pij) is the first column of the bag inputs.
+    Var input_and_pij = subMat(bag_inputs, 0, 0, bag_inputs->length(), 1);
     input = subMat(input_and_pij, 0, 0, true_inputsize, 1);
     output = input;
     params.resize(0);
@@ -369,7 +368,6 @@ void NeighborhoodSmoothnessNNet::build_()
        * costfuncs
        */
 
-      bag_inputs = Var(inputsize(), max_n_instances);
       bag_size = Var(1,1);
       bag_hidden = unfoldedFuncOf(subMat(bag_inputs, 0, 0, true_inputsize, bag_inputs.width()), f_input_to_hidden, true);
       p_ij = subMat(bag_inputs, true_inputsize, 1, 1, bag_inputs->width() - 1);
@@ -690,7 +688,8 @@ void NeighborhoodSmoothnessNNet::initializeParams()
   else
     PLearn::seed();
 
-  real delta = 1. / (inputsize()-1);
+  real delta = 1. / inputsize();
+
   /*
   if(direct_in_to_out)
     {
