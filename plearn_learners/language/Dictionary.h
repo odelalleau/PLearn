@@ -2,7 +2,7 @@
 
 // Dictionary.h
 //
-// Copyright (C) 2004 Hugo Larochelle 
+// Copyright (C) 2004 Hugo Larochelle Christopher Kermorvant
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,17 +33,17 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Dictionary.h,v 1.1 2004/08/03 21:17:33 larocheh Exp $ 
+   * $Id: Dictionary.h,v 1.2 2004/08/13 15:16:34 kermorvc Exp $ 
    ******************************************************* */
 
-// Authors: Hugo Larochelle
+// Authors: Hugo Larochelle, Christopher Kermorvant
 
 /*! \file Dictionary.h */
 
 
 #ifndef Dictionary_INC
 #define Dictionary_INC
-
+#include <plearn/base/stringutils.h>
 #include <plearn/base/Object.h>
 #include <map>
 #include <string>
@@ -51,8 +51,23 @@
 
 #define VECTOR_DICTIONARY   1
 #define FILE_DICTIONARY     2
-#define WORDNET_DICTIONARY  3
+#define WORDNET_WORD_DICTIONARY  3
+#define WORDNET_SENSE_DICTIONARY 4
 
+#define NO_UPDATE 0
+#define UPDATE 1
+#define DEFAULT_UPDATE 0
+
+// For words only
+#define NO_STEM 0
+#define STEM 1
+#define OOV_TAG "<oov>"
+
+//for WordNet senses only
+// No sense exists for this word
+#define NO_SENSE -1
+// Sense exists but is hidden (un-known)
+#define HIDDEN_SENSE 0
 
 namespace PLearn {
 using namespace std;
@@ -86,14 +101,10 @@ public:
   WordNetOntology *wno;
   //! type of the dictionary
   int dict_type;
-  //! path of voc file
-  string voc_path;
-  //! path of synset file
-  string synset_path;
-  //! path of sense key file
-  string sense_key_path;
-  //! path of ontology file
-  string ontology_path;
+  //! update mode update/no update 
+  int update_mode;
+  //! Stem word before including in dictionary STEM/NO_STEM (ontology only)
+  int stem_mode;
   //! file_name of dictionary
   string file_name_dict;
   //! Vector of dictionary
@@ -116,24 +127,22 @@ public:
   /*!
     \param file_name file containing the symbols of the dictionary
    */
-  Dictionary(string file_name);
+  Dictionary(string file_name,bool up_mode=DEFAULT_UPDATE);
 
   //! Constructor
   /*!
     \param symbols vector of the symbols of the dictionary
    */
-  Dictionary(TVec<string> symbols);
+  Dictionary(TVec<string> symbols,bool up_mode=DEFAULT_UPDATE);
   
   //! Constructor
   /*!
-    \param voc_path path of voc file
-    \param synset_path path of synset file
-    \param ontology_path path of ontology file
-    \param sense_key_path path of sense key file
+    \param up_mode update mode : NO_UPDATE, UPDATE
+    \param stem use word stemming : NO_STEM/STEM 
    */
-  Dictionary(string voc, string synset, string ontology, string sense_key);
-
-
+  Dictionary(WordNetOntology *ont,int ontology_type,bool up_mode=DEFAULT_UPDATE, bool stem =NO_STEM);
+    
+  
   // ******************
   // * Object methods *
   // ******************
@@ -155,22 +164,25 @@ public:
   //! Gives the size of the dictionary
   int size();
 
+  //! Set update dictionary mode : UPDATE/NO_UPDATE.
+  void  setUpdateMode(bool up_mode);
+
+  //! Set stem mode NO_STEM/STEM
+  void  setStemMode(bool stem);
+    
+  //! Set the type of dictionary :  
+  //! VECTOR_DICTIONARY,FILE_DICTIONARY,WORDNET_WORD_DICTIONARY,WORDNET_SENSE_DICTIONARY
+  void  setDictionaryType(int type);
+
   //! Gives the id of a symbol in the dictionary
+  //! If the symbol is not in the dictionary, 
+  //! returns index of OOV_TAG if update_mode = NO_UPDATE
+  //! insert the new word otherwise and return its index
   int getId(string symbol);
   
   //! Gives the symbol from an id of the dictionary
   string getSymbol(int id);
-
-  //! Sets the dictionary mapping and the type to FILE_DICTIONARY
-  void setDictionary(string file_name);
   
-  //! Sets the dictionary mapping and the type to VECTOR_DICTIONARY
-  void setDictionary(TVec<string> symbols);
-  
-  //! Sets the dictionary mapping and the type to WORDNET_DICTIONARY
-  void setDictionary(string voc, string synset, string ontology, string sense_key);
-
-
   // simply calls inherited::build() then build_() 
   virtual void build();
 

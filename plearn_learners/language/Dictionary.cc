@@ -2,7 +2,7 @@
 
 // Dictionary.cc
 //
-// Copyright (C) 2004 Hugo Larochelle 
+// Copyright (C) 2004 Hugo Larochelle, Christopher Kermorvant
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -33,10 +33,10 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: Dictionary.cc,v 1.1 2004/08/03 21:17:33 larocheh Exp $ 
+   * $Id: Dictionary.cc,v 1.2 2004/08/13 15:16:34 kermorvc Exp $ 
    ******************************************************* */
 
-// Authors: Hugo Larochelle
+// Authors: Hugo Larochelle, Christopher Kermorvant
 
 /*! \file Dictionary.cc */
 
@@ -47,31 +47,44 @@ namespace PLearn {
 using namespace std;
   
   Dictionary::Dictionary()
-    :dict_type(-1)
+    :
+    dict_type(-1),
+    update_mode(0),
+    stem_mode(0),
+    file_name_dict("")
   {
     // ### You may or may not want to call build_() to finish building the object
     // build_();
   }
 
-  Dictionary::Dictionary(string file_name)
+  Dictionary::Dictionary(string file_name, bool up_mode)
   {
-    setDictionary(file_name);
+    setStemMode(NO_STEM);
+    setUpdateMode(up_mode);
+    setDictionaryType(FILE_DICTIONARY);
+    file_name_dict=file_name;
   }
 
-  Dictionary::Dictionary(TVec<string> symbols)
+  Dictionary::Dictionary(TVec<string> symbols, bool up_mode)
   {
-    setDictionary(symbols);
+    setStemMode(NO_STEM);
+    setUpdateMode(up_mode);
+    setDictionaryType(VECTOR_DICTIONARY);
+    vector_dict=symbols;
   }
 
-  Dictionary::Dictionary(string voc, string synset, string ontology, string sense_key)
+  Dictionary::Dictionary(WordNetOntology *ont,int ontology_type,bool up_mode, bool stem)
   {
-    setDictionary(voc, synset, ontology, sense_key);
+    setStemMode(stem);
+    setUpdateMode(up_mode);
+    setDictionaryType(ontology_type);
+    wno=ont;
   }
 
   
 
 PLEARN_IMPLEMENT_OBJECT(Dictionary,
-    "ONE LINE DESCRIPTION",
+    "Mapping string->int and int->string",
     "MULTI LINE\nHELP"
 );
 
@@ -90,13 +103,10 @@ void Dictionary::declareOptions(OptionList& ol)
 
   // Now call the parent class' declareOptions
 
-  declareOption(ol, "voc_path", &Dictionary::voc_path, OptionBase::buildoption, "path of voc file");
-  declareOption(ol, "synset_path", &Dictionary::synset_path, OptionBase::buildoption, "path of synset file");
-  declareOption(ol, "ontology_path", &Dictionary::ontology_path, OptionBase::buildoption, "path of ontology file");
-  declareOption(ol, "sense_key_path", &Dictionary::sense_key_path, OptionBase::buildoption, "path of sense key file");
   declareOption(ol, "dict_type", &Dictionary::dict_type, OptionBase::buildoption, "type of the dictionary");
   declareOption(ol, "file_name_dict", &Dictionary::file_name_dict, OptionBase::buildoption, "file name for the dictionary");
   declareOption(ol, "vector_dict", &Dictionary::vector_dict, OptionBase::buildoption, "vector for the dictionary");
+  declareOption(ol, "update_mode", &Dictionary::update_mode, OptionBase::buildoption, "update_mode : 0(no_update)/1(update)");
   
 
   inherited::declareOptions(ol);
@@ -112,25 +122,45 @@ void Dictionary::build_()
   // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
   // ### You should assume that the parent class' build_() has already been called.
   
-  if(dict_type == FILE_DICTIONARY)
-  {
-    setDictionary(file_name_dict);
-    return;
-  }
+  // save update mode for later
+  int saved_up_mode=update_mode;
+  // set the dictionary in update mode to insert the words
+  update_mode =  UPDATE;
+  string line;
   
-  if(dict_type == VECTOR_DICTIONARY)
-  {
-    setDictionary(vector_dict);
-    return;
-  }
 
-  if(dict_type == WORDNET_DICTIONARY)
-  {
-    setDictionary(voc_path, synset_path, ontology_path, sense_key_path);
-    return;
+  if(dict_type == FILE_DICTIONARY){
+    ifstream ifs(file_name_dict.c_str());
+    if (!ifs) PLERROR("Cannot open file %s", file_name_dict.c_str());
+    while(!ifs.eof()){
+      getline(ifs, line, '\n');
+      if(line == "") continue;
+      getId(line);
+      }
+    ifs.close();
+  }else if(dict_type == VECTOR_DICTIONARY){
+    for(int i=0; i<vector_dict.size(); i++){
+      getId(vector_dict[i]);
+    }
+  }else  if(dict_type == WORDNET_WORD_DICTIONARY){
+    // Add OOV if necessary
+    if (update_mode==NO_UPDATE){
+      if (!wno->containsWord(OOV_TAG)){
+	wno->extractWord(OOV_TAG, ALL_WN_TYPE, true, true, false);
+      }
+    }
+  }else{
+    PLERROR("Bad dictionary type %d",dict_type);
   }
   
-  PLERROR("Dictionary is of incorrect type %d", dict_type);
+  // restore update mode;
+  update_mode=saved_up_mode;
+  if(update_mode==NO_UPDATE){
+    // the dictionary must contain oov
+    getId(OOV_TAG);
+  }
+  
+
 }
 
 // ### Nothing to add here, simply calls build_
@@ -147,7 +177,7 @@ int Dictionary::size()
     return int_to_string.size();
   }
 
-  if(dict_type == WORDNET_DICTIONARY)
+  if(dict_type == WORDNET_WORD_DICTIONARY)
   {
     return wno->getVocSize();
   }
@@ -156,35 +186,92 @@ int Dictionary::size()
   return -1;
 }
 
+void  Dictionary::setUpdateMode(bool up_mode)
+{
+  update_mode =up_mode;
+}
+
+void  Dictionary::setStemMode(bool stem)
+{
+  stem_mode =stem;
+}
+
+void  Dictionary::setDictionaryType(int type)
+{
+  dict_type=type;
+}
+
+
+
 int Dictionary::getId(string symbol)
 {
-  if(dict_type == VECTOR_DICTIONARY || dict_type == FILE_DICTIONARY)
-  {
-    if(string_to_int.find(symbol) == string_to_int.end())
-      PLERROR("Could not find symbol %c", symbol.c_str());
-    return string_to_int[symbol];
-  }
+  // Gives the id of a symbol in the dictionary
+  // If the symbol is not in the dictionary, 
+  // returns index of OOV_TAG if update_mode = NO_UPDATE
+  // insert the new word otherwise and return its index
 
-  if(dict_type == WORDNET_DICTIONARY)
-  {
-    return wno->getWordId(symbol);
-  }
+  if(update_mode== UPDATE){
+    if(dict_type == VECTOR_DICTIONARY || dict_type == FILE_DICTIONARY)
+      {
+	if(string_to_int.find(symbol) == string_to_int.end()){
+	  // word not found, add it
+	  int index=string_to_int.size();
+	  string_to_int[symbol] = index;
+	  int_to_string[index] = symbol;
+	  cout << "add "<< symbol <<endl;
+	}
 
-  PLERROR("Dictionary is of incorrect type %d", dict_type);
-  return -1;
+	return string_to_int[symbol];
+      }
+
+    if(dict_type == WORDNET_WORD_DICTIONARY){
+      if(!wno->containsWord(symbol)){
+	wno->extractWord(symbol, ALL_WN_TYPE, true, true, false);
+	}
+      return wno->getWordId(symbol);
+    }
+    if(dict_type == WORDNET_SENSE_DICTIONARY){
+      vector<string> tokens = split(symbol, "/");
+      if(tokens.size()!=2)PLERROR("Badly formed word for sense extraction %s",symbol.c_str());
+      if(!wno->containsWord(tokens[0])){
+	wno->extractWord(symbol, ALL_WN_TYPE, true, true, false);
+      }
+      return wno->getSynsetIDForSenseKey( wno->getWordId(tokens[0]),tokens[1]);
+    }
+    PLERROR(" Dictionary::getId : bad dictionary type %d",dict_type);
+  }else{
+    if(dict_type == VECTOR_DICTIONARY || dict_type == FILE_DICTIONARY){
+      if(string_to_int.find(symbol) == string_to_int.end()){
+	// word not found, return oov
+	return string_to_int[OOV_TAG];
+      }else{
+	return string_to_int[symbol];
+      }
+    }
+    if(dict_type == WORDNET_WORD_DICTIONARY){
+      return wno->getWordId(symbol);
+    }
+    if(dict_type == WORDNET_SENSE_DICTIONARY){
+      vector<string> tokens = split(symbol, "/");
+      if(tokens.size()!=2)PLERROR("Badly formed word for sense extraction %s",symbol.c_str());
+      return wno->getSynsetIDForSenseKey( wno->getWordId(tokens[0]),tokens[1]);
+    }
+    PLERROR(" Dictionary::getId : bad dictionary type %d",dict_type);
+  }
+  return 1;  
 }
 
 string Dictionary::getSymbol(int id)
 {
   if(dict_type == VECTOR_DICTIONARY || dict_type == FILE_DICTIONARY)
   {
-    if(id >= 0 && id < int_to_string.size())
+    if(id >= 0 && id < (int)int_to_string.size())
       return int_to_string[id];
     else
       PLERROR("Entry id is doesn't satisfy 0 <= %d < %d", id, int_to_string.size());
   }
 
-  if(dict_type == WORDNET_DICTIONARY)
+  if(dict_type == WORDNET_WORD_DICTIONARY)
   {
     return wno->getWord(id);
   }
@@ -193,56 +280,7 @@ string Dictionary::getSymbol(int id)
   return "";
 }
 
-void Dictionary::setDictionary(string file_name)
-{
-  dict_type = FILE_DICTIONARY;
-  file_name_dict = file_name;
 
-  int i=0;
-  string line;
-
-  ifstream ifs(file_name.c_str());
-  while(!ifs.eof())
-  {
-    getline(ifs, line, '\n');
-    if(line == "") continue;
-    string_to_int[line] = i;
-    int_to_string[i] = line;
-    i++;
-  }
-
-  if(string_to_int.size() != int_to_string.size()) PLERROR("There is a symbol that occurs more than one time in the dictionary");
-  ifs.close();
-}
-  
-void Dictionary::setDictionary(TVec<string> symbols)
-{
-  vector_dict = symbols;
-  dict_type = VECTOR_DICTIONARY;
-
-  for(int i=0; i<symbols.size(); i++)
-  {
-    string_to_int[symbols[i]] = i;
-    int_to_string[i] = symbols[i];
-  }
-
-  if(string_to_int.size() != int_to_string.size()) PLERROR("There is a symbol that occurs more than one time in the dictionary");
-  
-}
-
-void Dictionary::setDictionary(string voc, string synset, string ontology, string sense_key)
-{
-  dict_type = WORDNET_DICTIONARY;
-
-  voc_path = voc;
-  synset_path = synset;
-  ontology_path = ontology;
-  sense_key_path = sense_key;
-
-  wno = new WordNetOntology(voc_path, synset_path, ontology_path, sense_key_path, false, false);
-  wno->fillTempWordToSensesTVecMap();
-  wno->getWordSenseUniqueIdSize();
-}
 
 void Dictionary::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
