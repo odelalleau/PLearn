@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.19 2004/02/20 21:14:47 chrish42 Exp $
+   * $Id: PLearner.h,v 1.20 2004/05/06 21:22:25 ducharme Exp $
    ******************************************************* */
 
 
@@ -173,6 +173,10 @@ using namespace std;
     //!  **** SUBCLASS WRITING: ****
     //! This method should be redefined in subclasses, to just call inherited::build() and then build_()
     virtual void build();
+
+  protected:
+    //! Building part of the PLearn that needs the train_set
+    virtual void build_from_train_set() {}
 
   private:
     /*!       **** SUBCLASS WRITING: ****

@@ -5,6 +5,7 @@
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999,2000 Pascal Vincent, Yoshua Bengio and University of Montreal
 // Copyright (C) 2002 Frederic Morin
+// Copyright (C) 2004 Rejean Ducharme
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -35,7 +36,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SequentialSplitter.h,v 1.7 2004/04/05 23:04:46 morinf Exp $ 
+   * $Id: SequentialSplitter.h,v 1.8 2004/05/06 21:22:12 ducharme Exp $ 
    ******************************************************* */
 
 /*! \file SequentialSplitter.h */
@@ -51,21 +52,14 @@ class SequentialSplitter: public Splitter
 {
     typedef Splitter inherited;
 
-protected:
-    // *********************
-    // * protected options *
-    // *********************
-
-    // ### declare protected option fields (such as learnt parameters) here
-    // ...
-    
 public:
     // ************************
     // * public build options *
     // ************************
 
-    int train_step;
-    int min_train;
+    int horizon;
+    int init_train_size;
+    bool return_entire_vmat; //! if true, the test set (split[1]) will start at t=0
 
     // ****************
     // * Constructors *
@@ -73,7 +67,7 @@ public:
 
     // Default constructor, make sure the implementation in the .cc
     // initializes all fields to reasonable default values.
-    SequentialSplitter(int train_step_ = 0, int min_train_ = 0);
+    SequentialSplitter(int horizon_=1, int init_train_size_=1, bool return_entire_vmat_=true);
 
   // ******************
   // * Object methods *
