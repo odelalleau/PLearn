@@ -33,14 +33,14 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DeepNNet.cc,v 1.10 2005/01/28 18:03:47 yoshua Exp $ 
+   * $Id: DeepNNet.cc,v 1.11 2005/01/28 18:15:09 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
 
 /*! \file DeepNNet.cc */
 
-
+#include <time.h>                 //!< For clock().
 #include "DeepNNet.h"
 #include <plearn/math/random.h>
 #include <plearn/math/pl_math.h>
@@ -50,7 +50,8 @@ using namespace std;
 
 DeepNNet::DeepNNet() 
 /* ### Initialize all fields to their default value here */
-  : n_layers(3),
+:   training_time(0),
+    n_layers(3),
     n_outputs(1),
     default_n_units_per_hidden_layer(10),
     L1_regularizer(1e-5),
@@ -153,6 +154,9 @@ void DeepNNet::declareOptions(OptionList& ol)
 
   declareOption(ol, "layerwise_gradient_norm_ma", &DeepNNet::layerwise_gradient_norm_ma, OptionBase::learntoption, 
                 "The (moving) average of squared gradients at each layer");
+
+  declareOption(ol, "training_time", &DeepNNet::training_time, OptionBase::learntoption, 
+                "The time spent during training (in seconds)");
 
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
@@ -334,6 +338,7 @@ void DeepNNet::forget()
 {
   if (train_set) initializeParams();
   stage = 0;
+  training_time = 0;
 }
 
 void DeepNNet::fprop() const
@@ -368,6 +373,7 @@ void DeepNNet::train()
 {
   // The role of the train method is to bring the learner up to stage==nstages,
   // updating train_stats with training costs measured on-line in the process.
+  clock_t start_train = clock();
   static Vec target;
   static Vec train_costs;
   target.resize(targetsize());
@@ -382,6 +388,12 @@ void DeepNNet::train()
 
   if(nstages<stage) // asking to revert to a previous stage!
     forget();  // reset the learner to stage=0
+  int initial_stage = stage;
+
+  ProgressBar* pb = 0;
+  if (report_progress) {
+    pb = new ProgressBar("Training " + classname() + " from stage " + tostring(stage) + " to " + tostring(nstages), nstages - stage);
+  }
 
   int n_examples = train_set->length();
 
@@ -454,9 +466,9 @@ void DeepNNet::train()
           previous_layer_gradient = activations_gradients[l-1];
           previous_layer_gradient.clear();
         }
-	real layer_learning_rate = learning_rate;
-	if (layerwise_learning_rate_adaptation>0)
-	  layer_learning_rate *= layerwise_lr_factor[l];
+        real layer_learning_rate = learning_rate;
+        if (layerwise_learning_rate_adaptation>0)
+          layer_learning_rate *= layerwise_lr_factor[l];
 
         for (int i=0;i<n_next;i++)
         {
@@ -470,48 +482,53 @@ void DeepNNet::train()
             real w = weights_i[k];
             int j=sources_i[k];
             real sign_w = (w>0)?1:-1;
-	    real grad = g_i * previous_layer[j];
+            real grad = g_i * previous_layer[j];
             weights_i[k] -= layer_learning_rate * (grad + L1_regularizer*sign_w);
             if (l>0)   // THE IF COULD BE FACTORED OUT (more ugly but more efficient)
-	      previous_layer_gradient[j] += g_i * w;
-	    if (layerwise_learning_rate_adaptation>0 && !normalize_activations)  // THE IF COULD BE FACTORED OUT (more ugly but more efficient)
-	      {
-		if (normalize_percentage)
-		  layerwise_gradient_norm[l] += grad*grad/(w*w);
-		else
-		  layerwise_gradient_norm[l] += grad*grad;
-	      }
+              previous_layer_gradient[j] += g_i * w;
+            if (layerwise_learning_rate_adaptation>0 && !normalize_activations)  // THE IF COULD BE FACTORED OUT (more ugly but more efficient)
+            {
+              if (normalize_percentage)
+                layerwise_gradient_norm[l] += grad*grad/(w*w);
+              else
+                layerwise_gradient_norm[l] += grad*grad;
+            }
           }
         }
         if (l>0)
           for (int j=0;j<n_previous;j++) 
           {
             real a = previous_layer[j];
-	    real& g = previous_layer_gradient[j];
+            real& g = previous_layer_gradient[j];
             g *= (1 - a*a);
-	    if (layerwise_learning_rate_adaptation>0 && normalize_activations)
-	      layerwise_gradient_norm[l-1] += g*g;
+            if (layerwise_learning_rate_adaptation>0 && normalize_activations)
+              layerwise_gradient_norm[l-1] += g*g;
           }
       }
       if (layerwise_learning_rate_adaptation>0)
       {
-	for (int l=0;l<n_layers;l++)
-	{
-	  if (normalize_activations || normalize_per_unit)
-	    layerwise_gradient_norm[l] /= n_units_per_layer[l]; // maybe we want larger weights, hence larger gradients where there are less terms in the sum, i.e. less weights
-	  else // normalize per weight
-	    layerwise_gradient_norm[l] /= n_weights_of_layer[l];
-	  layerwise_gradient_norm_ma[l] = (1-learning_rate) * layerwise_gradient_norm_ma[l] + learning_rate * layerwise_gradient_norm[l];
-	  layerwise_lr_factor[l] = pow(layerwise_gradient_norm_ma[n_layers-1]/layerwise_gradient_norm_ma[l],
-				       0.5*layerwise_learning_rate_adaptation);
-	}
+        for (int l=0;l<n_layers;l++)
+        {
+          if (normalize_activations || normalize_per_unit)
+            layerwise_gradient_norm[l] /= n_units_per_layer[l]; // maybe we want larger weights, hence larger gradients where there are less terms in the sum, i.e. less weights
+          else // normalize per weight
+            layerwise_gradient_norm[l] /= n_weights_of_layer[l];
+          layerwise_gradient_norm_ma[l] = (1-learning_rate) * layerwise_gradient_norm_ma[l] + learning_rate * layerwise_gradient_norm[l];
+          layerwise_lr_factor[l] = pow(layerwise_gradient_norm_ma[n_layers-1]/layerwise_gradient_norm_ma[l],
+              0.5*layerwise_learning_rate_adaptation);
+        }
       }
       train_stats->update(train_costs);
     }
 
     ++stage;
     train_stats->finalize(); // finalize statistics for this epoch
+    if (report_progress)
+      pb->update(stage - initial_stage);
   }
+  if (pb)
+    delete pb;
+  training_time += real(clock() - start_train) / real(CLOCKS_PER_SEC);
 }
 
 
@@ -526,37 +543,38 @@ void DeepNNet::computeOutput(const Vec& input, Vec& output) const
 void DeepNNet::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                        const Vec& target, Vec& costs) const
 {
+  costs.resize(0);
   if (output_cost == "mse")
   {
-    costs.resize(1);
-    costs[0] = powdistance(output,target);
+    costs.append(powdistance(output,target));
   }
   else if (output_cost == "NLL")
   {
-    costs.resize(2);
     int target_class = int(target[0]);
     real p_target = output[target_class];
-    costs[0] = -safelog(p_target);
+    costs.append(-safelog(p_target));
     int recognized_class = argmax(output);
-    costs[1] = recognized_class!=target_class;
+    costs.append(recognized_class!=target_class);
   }
   else PLERROR("DeepNNet: unknown output_cost = %s, expected mse or NLL",output_cost.c_str());
+  costs.append(real(nstages));
+  costs.append(training_time);
 }                                
 
 TVec<string> DeepNNet::getTestCostNames() const
 {
+  TVec<string> names;
   if (output_cost == "mse")
   {
-    TVec<string> names(1);
-    names[0] = "mse";
-    return names;
+    names.append("mse");
   } else // "NLL"
   {
-    TVec<string> names(2);
-    names[0] = "NLL";
-    names[1] = "class_error";
-    return names;
+    names.append("NLL");
+    names.append("class_error");
   }
+  names.append("nstages");
+  names.append("training_time");
+  return names;
 }
 
 TVec<string> DeepNNet::getTrainCostNames() const

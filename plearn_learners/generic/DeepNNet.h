@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DeepNNet.h,v 1.8 2005/01/28 18:03:47 yoshua Exp $ 
+   * $Id: DeepNNet.h,v 1.9 2005/01/28 18:15:09 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -67,6 +67,7 @@ protected:
   TVec<TVec<Vec > > weights; // at [l][i] input weight vector of neuron i of layer l
   TVec<Vec> biases; // at [l][i] bias of neuron i of layer l
   Vec layerwise_lr_factor; // at [l] the multiplicative factor on the weights
+  real training_time;
   
   // temporary 
   mutable TVec<Vec> activations; // at [l] output of non-linearity of layer l, including the input AND the output layer
