@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: GenericNearestNeighbors.cc,v 1.4 2004/12/28 15:49:39 tihocan Exp $ 
+   * $Id: GenericNearestNeighbors.cc,v 1.5 2005/01/25 17:57:51 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -92,7 +92,7 @@ GenericNearestNeighbors::GenericNearestNeighbors()
   : num_neighbors(1),
     copy_input(false),
     copy_target(true),
-    copy_weight(true),
+    copy_weight(false),
     copy_index(false)
 { }
 
@@ -165,8 +165,10 @@ void GenericNearestNeighbors::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 int GenericNearestNeighbors::outputsize() const
 {
+  if (!train_set)
+    // We do not have a training set yet.
+    return -1;
   int base_outputsize = 0;
-  assert( train_set );
   if (copy_input)
     base_outputsize += train_set->inputsize();
   if (copy_target)
