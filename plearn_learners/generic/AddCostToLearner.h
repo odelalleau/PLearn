@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.h,v 1.8 2004/09/27 20:19:29 plearner Exp $ 
+   * $Id: AddCostToLearner.h,v 1.9 2004/10/26 20:45:20 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -43,6 +43,7 @@
 #ifndef AddCostToLearner_INC
 #define AddCostToLearner_INC
 
+#include "EmbeddedLearner.h"
 #include "PLearner.h"
 #include <plearn/var/VarArray.h>
 #include <plearn/var/Var.h>
@@ -50,12 +51,12 @@
 namespace PLearn {
 using namespace std;
 
-class AddCostToLearner: public PLearner
+class AddCostToLearner: public EmbeddedLearner
 {
 
 private:
 
-  typedef PLearner inherited;
+  typedef EmbeddedLearner inherited;
 
   //! Global storage to save memory allocations.
   mutable Vec combined_output;
@@ -68,7 +69,7 @@ protected:
 
   // Fields below are not options.
 
-  //! Used to store the outputs of the sub_learner for each sample in a bag.
+  //! Used to store the outputs of the sub-learner for each sample in a bag.
   mutable Mat bag_outputs;
 
   //! Used to count the number of instances in a bag.
@@ -93,10 +94,10 @@ protected:
   //! Its value is sub_learner_output[0].
   Var output_var;
   
-  //! Used to store the sub_learner_output.
+  //! Used to store the sub-learner output.
   Vec sub_learner_output;
 
-  //! Used to store the input given to the sub_learner, when it needs to be
+  //! Used to store the input given to the sub-learner, when it needs to be
   //! copied in a separate place.
   mutable Vec sub_input;
 
@@ -118,7 +119,6 @@ public:
   real from_min;
   bool rescale_output;
   bool rescale_target;
-  PP<PLearner> sub_learner;
   real to_max;
   real to_min;
 
@@ -162,20 +162,9 @@ public:
   // **** PLearner methods ****
   // **************************
 
-  //! Returns the size of this learner's output, (which typically
-  //! may depend on its inputsize(), targetsize() and set options)
-  virtual int outputsize() const;
-
   //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
   //! And sets 'stage' back to 0   (this is the stage of a fresh learner!).
   virtual void forget();
-
-  //! The role of the train method is to bring the learner up to stage==nstages,
-  //! updating the train_stats collector with training costs measured on-line in the process.
-  virtual void train();
-
-  //! Computes the output from the input.
-  virtual void computeOutput(const Vec& input, Vec& output) const;
 
   //! Computes the costs from already computed output. 
   virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
@@ -188,14 +177,8 @@ public:
   //! for which it updates the VecStatsCollector train_stats.
   virtual TVec<string> getTrainCostNames() const;
 
-  //! Overrridden to forward to the sub_learner.
-  virtual void setExperimentDirectory(const string& the_expdir) {
-    sub_learner->setExperimentDirectory(the_expdir);
-  }
+  //! Overridden because of the specific bag behavior.
   virtual void setTrainingSet(VMat training_set, bool call_forget=true);
-  virtual void setTrainStatsCollector(PP<VecStatsCollector> statscol) {
-    sub_learner->setTrainStatsCollector(statscol);
-  }
 
 };
 

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.cc,v 1.13 2004/09/14 16:04:56 chrish42 Exp $ 
+   * $Id: AddCostToLearner.cc,v 1.14 2004/10/26 20:45:18 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -101,13 +101,13 @@ void AddCostToLearner::declareOptions(OptionList& ol)
       "computation, but is also safer.");
 
   declareOption(ol, "combine_bag_outputs_method", &AddCostToLearner::combine_bag_outputs_method, OptionBase::buildoption,
-      "The method used to combine the individual outputs of the sub_learner to\n"
+      "The method used to combine the individual outputs of the learner_ to\n"
       "obtain a global output on the bag (irrelevant if 'compute_costs_on_bags' == 0):\n"
       " - 1 : o = 1 - (1 - o_1) * (1 - o_2) * .... * (1 - o_n)\n"
       " - 2 : o = max(o_1, o_2, ..., o_n)");
 
   declareOption(ol, "compute_costs_on_bags", &AddCostToLearner::compute_costs_on_bags, OptionBase::buildoption,
-      "If set to 1, then the costs will be computed on bags, but the sub_learner will\n"
+      "If set to 1, then the costs will be computed on bags, but the learner_ will\n"
       "be trained without the bag information (see SumOverBagsVariable for info on bags).");
 
   declareOption(ol, "costs", &AddCostToLearner::costs, OptionBase::buildoption,
@@ -142,7 +142,7 @@ void AddCostToLearner::declareOptions(OptionList& ol)
   declareOption(ol, "to_min", &AddCostToLearner::to_min, OptionBase::buildoption,
       "Lower bound of the destination interval [to_min, to_max] (used in rescaling).");
 
-  declareOption(ol, "sub_learner", &AddCostToLearner::sub_learner, OptionBase::buildoption,
+  declareOption(ol, "learner_", &AddCostToLearner::learner_, OptionBase::buildoption,
       "The learner to which we add the costs.");
 
   // Now call the parent class' declareOptions
@@ -169,7 +169,7 @@ void AddCostToLearner::build_()
   int n = costs.length();
   int min_verb = 2;
   bool display = (verbosity >= min_verb);
-  int os = sub_learner->outputsize();
+  int os = learner_->outputsize();
   sub_learner_output.resize(os);
   desired_target.resize(os);
   if (rescale_output || rescale_target) {
@@ -216,13 +216,13 @@ void AddCostToLearner::build_()
 void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                            const Vec& target, Vec& costs) const
 {
-  int n_original_costs = sub_learner->nTestCosts();
-  // We give only costs.subVec to the sub_learner because it may want to resize it.
+  int n_original_costs = learner_->nTestCosts();
+  // We give only costs.subVec to the learner_ because it may want to resize it.
   Vec sub_costs = costs.subVec(0, n_original_costs);
   if (compute_costs_on_bags) {
-    sub_learner->computeCostsFromOutputs(input, output, target.subVec(0, target.length() - 1), sub_costs);
+    learner_->computeCostsFromOutputs(input, output, target.subVec(0, target.length() - 1), sub_costs);
   } else {
-    sub_learner->computeCostsFromOutputs(input, output, target, sub_costs);
+    learner_->computeCostsFromOutputs(input, output, target, sub_costs);
   }
 
   if (compute_costs_on_bags) {
@@ -271,8 +271,8 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
         default:
           PLERROR("In AddCostToLearner::computeCostsFromOutputs - Unknown value for 'combine_bag_outputs_method'");
       }
-      // We re-compute the sub_learner's costs with the brand new combined bag output.
-      sub_learner->computeCostsFromOutputs(input, combined_output, target.subVec(0, target.length() - 1), sub_costs);
+      // We re-compute the learner_'s costs with the brand new combined bag output.
+      learner_->computeCostsFromOutputs(input, combined_output, target.subVec(0, target.length() - 1), sub_costs);
     } else {
       costs.fill(MISSING_VALUE);
       return;
@@ -374,20 +374,12 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
   }
 }                                
 
-///////////////////
-// computeOutput //
-///////////////////
-void AddCostToLearner::computeOutput(const Vec& input, Vec& output) const
-{
-  sub_learner->computeOutput(input, output);
-}    
-
 ////////////
 // forget //
 ////////////
 void AddCostToLearner::forget()
 {
-  sub_learner->forget();
+  inherited::forget();
   bag_size = 0;
 }
     
@@ -396,10 +388,7 @@ void AddCostToLearner::forget()
 //////////////////////
 TVec<string> AddCostToLearner::getTestCostNames() const
 {
-  // Return the names of the costs computed by computeCostsFromOutpus
-  // (these may or may not be exactly the same as what's returned by getTrainCostNames)
-  // ...
-  TVec<string> sub_costs = sub_learner->getTestCostNames();
+  TVec<string> sub_costs = learner_->getTestCostNames();
   for (int i = 0; i < this->costs.length(); i++) {
     sub_costs.append(costs[i]);
   }
@@ -411,8 +400,8 @@ TVec<string> AddCostToLearner::getTestCostNames() const
 ///////////////////////
 TVec<string> AddCostToLearner::getTrainCostNames() const
 {
-  // The lift is only a test cost.
-  return sub_learner->getTrainCostNames();
+  // The added costs are only test costs.
+  return learner_->getTrainCostNames();
 }
 
 //! To use varDeepCopyField.
@@ -434,15 +423,6 @@ void AddCostToLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(sub_input, copies);
   varDeepCopyField(target_var, copies);
   deepCopyField(costs, copies);
-  deepCopyField(sub_learner, copies);
-}
-
-////////////////
-// outputsize //
-////////////////
-int AddCostToLearner::outputsize() const
-{
-  return sub_learner->outputsize();
 }
 
 ////////////////////
@@ -466,19 +446,11 @@ void AddCostToLearner::setTrainingSet(VMat training_set, bool call_forget) {
       sub_training_set = new SubVMatrix(training_set, 0, 0, training_set->length(), training_set->width() - 1);
     }
     sub_training_set->defineSizes(training_set->inputsize(), training_set->targetsize() - 1, training_set->weightsize());
-    sub_learner->setTrainingSet(sub_training_set, call_forget);
+    learner_->setTrainingSet(sub_training_set, call_forget);
   } else {
-    sub_learner->setTrainingSet(training_set, call_forget);
+    learner_->setTrainingSet(training_set, call_forget);
   }
-  inherited::setTrainingSet(training_set, call_forget);
-}
-
-///////////
-// train //
-///////////
-void AddCostToLearner::train()
-{
-  sub_learner->train();
+  PLearner::setTrainingSet(training_set, call_forget);
 }
 
 } // end of namespace PLearn
