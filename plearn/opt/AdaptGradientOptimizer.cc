@@ -38,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: AdaptGradientOptimizer.cc,v 1.7 2003/05/27 14:22:14 tihocan Exp $
+   * $Id: AdaptGradientOptimizer.cc,v 1.8 2003/05/28 14:58:42 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -151,12 +151,14 @@ static int nb_avg = 2;    // the number of exponential averages
 static int time_constant = 5800;
 static Mat arithm_average;
 static Mat arithm_sum;
-static int arithm_last = 0;
+// static int arithm_last = 0;
 static Vec sum1;
 static Vec sum2;
 static Vec c1;
 static Vec c2;
+static Vec c3;
 static Mat last_grad;
+static real alpha = 0.99988;
 
 ////////////
 // build_ //
@@ -201,6 +203,8 @@ void AdaptGradientOptimizer::build_(){
         c1.clear();
         c2.resize(n);
         c2.clear();
+        c3.resize(n);
+        c3.clear();
         last_grad.resize(n,4);
         last_grad.clear();
 //        arithm_average.resize(n, 2*time_constant);
@@ -444,9 +448,9 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
     real min_lr = min_learning_rate / (1 + stage * decrease_constant);
     real max_lr = max_learning_rate / (1 + stage * decrease_constant);
     bool adapt_t = (stage % time_constant == 0 && stage > 2 * time_constant);
-    int k = 0;
-    if (adapt_t)
-      k = (stage / time_constant) % 4;
+//    int k = 0;
+/*    if (adapt_t)
+      k = (stage / time_constant) % 4; */
     // TODO Remove all the above stuff later
     switch (learning_rate_adaptation) {
       case 0:
@@ -462,7 +466,8 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
 //        int k = (arithm_last + time_constant) % time_constant;
         for (int i=0; i<gradient.length(); i++) {
           d = gradient[i]; // * learning_rates[i];
-          sum1[i] += d;
+//          sum1[i] += d;
+          sum1[i] = alpha*sum1[i] + (1-alpha)*d;
           /*          for (int j=0; j<nb_avg; j++) {
             exp_average(i,j) = 
             memory_coeff[j] * exp_average(i,j) + (1-memory_coeff[j]) * d;
@@ -480,7 +485,7 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
               if (last_grad(i,j) == 1)
                 nbp++;
             }
-              if (nbp == 2)  */
+              if (nbp == 2) */
             if (sum1[i] >=  0)
               if (sum2[i] >= 0)
                 c1[i] = 0;
@@ -501,7 +506,7 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
               //            learning_rates[i] = min_lr;
               nb_changes++;
             } else if (c1[i] == 0 && c2[i] == 0) {
-//            } else if (nbp == 4 || nbp == 0) {
+//             } else if (nbp == 4 || nbp == 0) {
               learning_rates[i] += learning_rates[i] * adapt_coeff1;
               nb_non_changes++;
             }
@@ -516,12 +521,108 @@ bool AdaptGradientOptimizer::optimizeN(VecStatsCollector& stats_coll) {
             }
             sum2[i] = sum1[i];
             sum1[i] = 0;
+            c3[i] = c2[i];
             c2[i] = c1[i];
           }
         }
 /*        //        arithm_last++;
         if (arithm_last >= time_constant)
           arithm_last = 0; */
+        if (adapt_t) {
+          real lr_min = 1000;
+          real lr_max = 0;
+          bool alea = true;
+          int n = learning_rates.length();
+          Vec high_or_low(n);
+          for (int i=0; i<n; i++) {
+            if (learning_rates[i] < lr_min)
+              lr_min = learning_rates[i];
+            else if (learning_rates[i] > lr_max)
+              lr_max = learning_rates[i];
+          }
+          real sum_l = 0, sum_h = 0;
+          int nb_l = 0, nb_h = 0;
+          real d = 0;
+          for (int i=0; i<n; i++) {
+            d = log(learning_rates[i]) - log(lr_min) - log(lr_max) + log(learning_rates[i]);
+            if (d < 0) {
+              sum_l += learning_rates[i];
+              nb_l ++;
+              high_or_low[i] = 0;
+            } else if (d > 0) {
+              sum_h += learning_rates[i];
+              nb_h ++;
+              high_or_low[i] = 1;
+            } else {
+              if (alea) {
+                sum_l += learning_rates[i];
+                nb_l ++;
+                high_or_low[i] = 0;
+                alea = false;
+              }
+              else {
+                sum_h += learning_rates[i];
+                nb_h ++;
+                high_or_low[i] = 1;
+                alea = true;
+              }
+            }
+          }
+          sum_l /= real(nb_l);
+          sum_h /= real(nb_h);
+          real m = exp((log(sum_l) + log(sum_h)) / 2) ;
+          cout << m << endl;
+          cout << "lr_min = " << lr_min << " -- lr_max = " << lr_max << " -- nb_l = " << nb_l << " -- nb_h = " << nb_h << " -- sum_l = " << sum_l << " -- sum_h = " << sum_h << endl;
+          real c = nb_l / real(nb_h);
+/*          if (c < 0.1) {
+            // much more high learning rates than low ones
+            adapt_coeff1 /= 2;
+            cout << "Much more high learning rates than low ones" << endl;
+            for (int i=0; i<n; i++) {
+              if (high_or_low[i] == 1) {
+                if (learning_rates[i] > sum_h)
+                  learning_rates[i] = sum_h;
+                else
+                  learning_rates[i] = m;
+              }
+            }
+          } else if (c > 10) {
+            // much more low learning rates than high ones
+            adapt_coeff2 /= 2;
+            cout << " Much more low learning rates than high ones" << endl;
+            for (int i=0; i<n; i++) {
+              if (high_or_low[i] == 0) {
+                if (learning_rates[i] < sum_l)
+                  learning_rates[i] = sum_l;
+                else
+                  learning_rates[i] = m;
+              }
+            }
+          } */
+          c = sum_l / lr_max;
+/*          if (c < 0.01) {
+            adapt_coeff1 /= 2;
+            adapt_coeff2 /= 2;
+            cout << "Low and high are very different" << endl;
+            for (int i=0; i<n; i++) {
+              if (high_or_low[i] == 1) {
+                if (learning_rates[i] > sum_h)
+                  learning_rates[i] = sum_h;
+                else
+                  learning_rates[i] = m;
+               } else {
+                 if (learning_rates[i] < sum_l)
+                  learning_rates[i] = sum_l;
+                else
+                  learning_rates[i] = m;
+               }
+            }
+          } else if (c > 0.1) {
+            adapt_coeff1 *= 2;
+            adapt_coeff2 *= 2;
+            cout << "Low and high are pretty close" << endl;
+          }*/
+        }
         if (adapt_t) {
           cout << "nb_min = " << nb_min << "  --  nb_max = " << nb_max << "  --  nb_moy = " << nb_moy << endl;
           cout << "nb_changes = " << nb_changes << " -- nb_non_changes = " << nb_non_changes << endl;
