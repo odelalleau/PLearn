@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Storage.h,v 1.8 2004/02/20 21:11:42 chrish42 Exp $
+   * $Id: Storage.h,v 1.9 2004/02/26 06:21:52 nova77 Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -231,7 +231,7 @@ public:
 #endif
       if (newlength==length())
         return;
-#if defined(_MINGW_)
+#if defined(_MINGW_) || defined(WIN32)
       else if(fd>0 || dont_delete_data) //!<  we are using a memory-mapped file
 #else
       else if(fd>=0 || dont_delete_data) //!<  we are using a memory-mapped file
