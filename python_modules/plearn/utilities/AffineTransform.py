@@ -1,3 +1,4 @@
+import operator
 from   plearn.pyplearn.PyPLearnObject import *
 
 __all__ = [ "AffineTransform" ]
