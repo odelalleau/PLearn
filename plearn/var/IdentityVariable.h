@@ -55,6 +55,7 @@ public:
   virtual void bbprop();
   virtual void symbolicBprop();
   virtual void rfprop();
+  inline void setInput(Var the_input){ input = the_input;}
 };
 
 DECLARE_OBJECT_PTR(IdentityVariable);
