@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalDensityNet.cc,v 1.22 2004/01/17 02:03:57 yoshua Exp $ 
+   * $Id: ConditionalDensityNet.cc,v 1.23 2004/01/17 20:01:46 yoshua Exp $ 
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -460,15 +460,12 @@ ConditionalDensityNet::ConditionalDensityNet()
       costs[1] = nll;
       costs[2] = square(target-expected_value);
       // for debugging gradient computation error
-      costs[0] = sum(output);
-#if 0 
       if (log_likelihood_vs_squared_error_balance==1)
         costs[0] = costs[1];
       else if (log_likelihood_vs_squared_error_balance==0)
         costs[0] = costs[2];
       else costs[0] = log_likelihood_vs_squared_error_balance*costs[1]+
              (1-log_likelihood_vs_squared_error_balance)*costs[2];
-#endif
 
       // for debugging
       //costs[0] = mass_cost + pos_y_cost;
@@ -538,6 +535,10 @@ ConditionalDensityNet::ConditionalDensityNet()
 
       debug_f = Func(params,sum(output));
 
+      cdf_f = Func(target,cumulative);
+      mean_f = Func(output,expected_value);
+      density_f = Func(target,density);
+
       // Funcs
       VarArray invars;
       VarArray outvars;
@@ -602,6 +603,8 @@ ConditionalDensityNet::ConditionalDensityNet()
       else
         f = Func(input, params, outputs);
       f->recomputeParents();
+
+      in2distr_f = Func(input,output);
 
       if (mu_is_fixed)
         test_costf = Func(testinvars, params&mu, outputs&test_costs);
@@ -694,30 +697,36 @@ TVec<string> ConditionalDensityNet::getTestCostNames() const
 
 void ConditionalDensityNet::setInput(const Vec& in) const
 {
-  input->value << in;
+#ifdef BOUNDCHECK
+  if (!f)
+    PLERROR("ConditionalDensityNet:setInput: build was not completed (maybe because training set was not provided)!");
+#endif
+  f->fprop(in,output->value);
 }
 
 double ConditionalDensityNet::log_density(const Vec& y) const
 { 
-  test_costf->fprop(input->value & y,target_dependent_outputs);
-  return -target_dependent_outputs[1];
+  Vec d(1);
+  density_f->fprop(y,d);
+  return log(d[0]);
 }
 
 double ConditionalDensityNet::survival_fn(const Vec& y) const
 { 
-  test_costf->fprop(input->value & y,target_dependent_outputs);
-  return 1-target_dependent_outputs[target_dependent_outputs.length()-1];
+  return 1-cdf(y);
 }
 
+// must be called after setInput
 double ConditionalDensityNet::cdf(const Vec& y) const
 { 
-  test_costf->fprop(input->value & y,target_dependent_outputs);
-  return target_dependent_outputs[target_dependent_outputs.length()-1];
+  Vec cum(1);
+  cdf_f->fprop(y,cum);
+  return cum[0];
 }
 
 void ConditionalDensityNet::expectation(Vec& mu) const
 { 
-  f->fprop(input->value,mu);
+  mean_f->fprop(output->value,mu);
 }
 
 void ConditionalDensityNet::variance(Mat& covar) const
@@ -727,12 +736,31 @@ void ConditionalDensityNet::variance(Mat& covar) const
 
 void ConditionalDensityNet::resetGenerator(long g_seed) const
 { 
-  PLERROR("resetGenerator not implemented for ConditionalDensityNet"); 
+  manual_seed(g_seed);
 }
 
-void ConditionalDensityNet::generate(Vec& x) const
+void ConditionalDensityNet::generate(Vec& y) const
 { 
-  PLERROR("generate not implemented for ConditionalDensityNet"); 
+  Vec out(outputsize());
+  f->fprop(input->value,out);  
+  real u = uniform_sample();
+  // then find y s.t. P(Y<y|x) = u by binary search
+  real y0=0;
+  real y2=maxY;
+  real delta;
+  do 
+    {
+      delta = y2 - y0;
+      y[0] = y0 + delta*0.5;
+      real p = cdf(y);
+      if (p<u)
+        // increase y
+        y0 = y[0];
+      else
+        // decrease y
+        y2 = y[0];
+    }
+  while (delta>0.001*maxY);
 }
 
 
@@ -1001,8 +1029,11 @@ void ConditionalDensityNet::train()
       {
         cout << "DEBUG_F" << endl;
         debug_f->verifyGradient(0.001);
-        cout << "OPTIMIZER" << endl;
-        optimizer->verifyGradient(0.001);
+        if (batch_size == 0)
+        {
+          cout << "OPTIMIZER" << endl;
+          optimizer->verifyGradient(0.001);
+        }
       }
       if (display_graph)
         displayFunction(f,true);

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Func.cc,v 1.12 2004/01/17 02:03:57 yoshua Exp $
+   * $Id: Func.cc,v 1.13 2004/01/17 20:01:46 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -512,21 +512,25 @@ void Function::verifyGradient(const Vec& input, real step)
   cerr << "Input:                " << input << endl;
   cerr << "Output:               " << output[0] << endl;
   cerr << "Computed  gradient:   " << gradient << endl;
+  //displayFunction(this,true);
   // Now computing the gradient by finite difference
   Vec newinput = input.copy();
   Vec finitediffgradient(inputsize);
   double doublestep = step+step;
   for(int i=0; i<inputsize; i++)
     {
-      newinput[i] = input[i]+step;
+      real in = input[i];
+      newinput[i] = in+step;
       fprop(newinput,output);
       real out1 = output[0];
-      newinput[i] = input[i]-step;
+      newinput[i] = in-step;
       fprop(newinput,output);
       real out2 = output[0];
       finitediffgradient[i] = (out1-out2)/doublestep;
-      newinput[i] = input[i];
+      newinput[i] = input[i] = in;
     }
+  // copy the original input into the VarArray
+  fprop(newinput,output);
   cerr << "Estimated gradient:   " << finitediffgradient;
   cerr << "-------------------" << endl;
   

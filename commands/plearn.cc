@@ -33,7 +33,7 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.41 2003/11/27 15:04:34 lheureup Exp $
+   * $Id: plearn.cc,v 1.42 2004/01/17 20:01:41 yoshua Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
@@ -100,6 +100,7 @@
 #include "AutoRunCommand.h"
 #include "VMatCommand.h"
 #include "KolmogorovSmirnovCommand.h"
+#include "TestDependenciesCommand.h"
 #include "ReadAndWriteCommand.h"
 #include "JulianDateCommand.h"
 
