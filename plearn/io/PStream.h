@@ -203,7 +203,11 @@ public:
   inline PStream& unget() { pin->unget(); return *this; }
   inline PStream& read(char* s, streamsize n) 
   { 
-    pin->read(s,n); 
+    // The following line does not Work!!!! [Pascal]
+    // pin->read(s,n);
+    // So it's temporarily replaced by this (ugly and slow):
+    for(streamsize i=0; i<n; i++)
+      s[i] = (char) get();
     return *this; 
   }
   inline PStream& put(char c) { pout->put(c); return *this; }

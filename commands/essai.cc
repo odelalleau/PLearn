@@ -3,7 +3,7 @@
 using namespace PLearn;
 
 
-int main()
+int nomain()
 {
   Vec v(5);
   v << "1 2 3 4 5";
@@ -65,7 +65,7 @@ int main()
 
 
 
-int nomain()
+int main()
 {
   Mat m(3,2);
   m << 
