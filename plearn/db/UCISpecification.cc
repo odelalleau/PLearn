@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UCISpecification.cc,v 1.2 2004/07/13 20:59:27 tihocan Exp $ 
+   * $Id: UCISpecification.cc,v 1.3 2004/07/14 22:37:59 mariusmuja Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -47,9 +47,12 @@ namespace PLearn {
 using namespace std;
 
 UCISpecification::UCISpecification() 
-: file_all(""),
+: header_exists(0),
+  header_fields(0),
+  file_all(""),
   file_test(""),
   file_train(""),
+  format("UCI"),
   inputsize(-1),
   targetsize(-1),
   weightsize(-1),
@@ -73,6 +76,12 @@ void UCISpecification::declareOptions(OptionList& ol)
   // ### OptionBase::tuningoption. Another possible flag to be combined with
   // ### is OptionBase::nosave
 
+  declareOption(ol, "header_exists", &UCISpecification::header_exists, OptionBase::buildoption,
+      "Specifies if there is a header for the dataset");
+
+  declareOption(ol, "header_fields", &UCISpecification::header_fields, OptionBase::buildoption,
+      "The fields that are present in the header");
+
   declareOption(ol, "file_all", &UCISpecification::file_all, OptionBase::buildoption,
       "The filename for the whole dataset");
 
@@ -81,6 +90,9 @@ void UCISpecification::declareOptions(OptionList& ol)
 
   declareOption(ol, "file_test", &UCISpecification::file_test, OptionBase::buildoption,
       "The filename for the test data.");
+
+  declareOption(ol, "format", &UCISpecification::format, OptionBase::buildoption,
+      "The format of the dataset file.");
 
   declareOption(ol, "inputsize", &UCISpecification::inputsize, OptionBase::buildoption,
       "Input size of the data");

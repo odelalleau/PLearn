@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UCISpecification.h,v 1.1 2004/07/09 13:03:42 tihocan Exp $ 
+   * $Id: UCISpecification.h,v 1.2 2004/07/14 22:37:28 mariusmuja Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -69,10 +69,13 @@ public:
   // ************************
   // * public build options *
   // ************************
-
+ 
+  bool header_exists;
+  TVec<pair<int,int> > header_fields;
   string file_all;
   string file_test;
   string file_train;
+  string format;
   int inputsize;
   int targetsize;
   int weightsize;
