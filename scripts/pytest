@@ -20,20 +20,7 @@ globalvars.dispatch                       = None
 globalvars.options                        = None
 globalvars.targets                        = None
 globalvars.current_mode                   = None
-
-## ## Should be moved to a field in a Mode's subclass.
-## globalvars.modes_with_config = {
-##     'compile':CompileTest,
-##     'results':ResultsTest,
-##     'run':RunTest,
-##     'sync':SyncTest
-##     }
-
-## globalvars.management_modes = {
-##     'add': add_test, ##AddTest,
-##     'disable' : disable_test,
-##     'enable' : enable_test
-##     }
+globalvars.test_name_default              = '<MANDATORY_TEST_NAME>'
 
 mode_routine_mappings = {
     'add'     : AddTestRoutine, ##add_test,
@@ -60,7 +47,6 @@ def build_tests(mode_name, directory, dirlist):
     if mode_name == "add":
         Test( name    = globalvars.options.test_name,
               program = GlobalCompilableProgram( name = "plearn")  )        
-
 
 def check_directory(dirc):
     absdir = os.path.abspath(dirc)
@@ -120,7 +106,16 @@ def dispatch_targets():
         else:
             build_tests(globalvars.current_mode.name, target, os.listdir(target))
 
-    for (test_name, test) in Test.instances_map.iteritems():
+    test_instances = None
+    if ( globalvars.options.test_name != globalvars.test_name_default
+         or globalvars.current_mode.name == 'add' ):
+        test_instances = [( globalvars.options.test_name,
+                            Test.instances_map[globalvars.options.test_name]
+                            )]
+    else:
+        test_instances = Test.instances_map.items()
+    
+    for (test_name, test) in test_instances:
         RoutineType = mode_routine_mappings[globalvars.current_mode.name]
         globalvars.dispatch.add_task( RoutineType(test) )
     globalvars.dispatch.run()
@@ -159,7 +154,7 @@ def mail():
     #                      # ( see end of pytest() )
 
 def pytest_version():
-    version_str = '$Id: pytest,v 1.18 2004/10/24 22:57:55 dorionc Exp $'
+    version_str = '$Id: pytest,v 1.19 2004/10/24 23:24:21 dorionc Exp $'
 
     bflag = "pytest,v"
     the_year = time.localtime()[0]
@@ -218,7 +213,7 @@ def testing_options():
     
     testing_options.add_option( '-n', '--test-name',
                                 help='Restricts the current mode to the named test.',
-                                default='' )
+                                default=globalvars.test_name_default )
     
     testing_options.add_option( '-v', "--verbosity",
                                 choices=["0", "1", "2"], default="1",
