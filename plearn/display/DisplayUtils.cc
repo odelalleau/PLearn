@@ -38,12 +38,13 @@
  
 
 /* *******************************************************      
-   * $Id: DisplayUtils.cc,v 1.7 2004/10/07 20:55:26 plearner Exp $
+   * $Id: DisplayUtils.cc,v 1.8 2005/02/04 15:09:33 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "DisplayUtils.h"
+#include <plearn/io/openString.h>
 #include <plearn/io/TmpFilenames.h>
 #include <strstream>
 
@@ -471,15 +472,14 @@ void displayVarGraph(const VarArray& outputs, bool display_values, real boxwidth
       char nameline[100];
       sprintf(nameline,"%s (%d,%d)",v->getName().c_str(), v->matValue.length(), v->matValue.width());
       
-      char buf[200];
-      ostrstream descr(buf,200);
-      v->print(descr);
-      descr << ends;
+      string descr;
+      PStream str_descr = openString(descr, PStream::raw_ascii, "w");
+      str_descr << v;
 
       if(display_values && v->size() <= 16)
         {
           gs.usefont("Times-Bold", 11.0);
-          gs.centerShow(my_x, my_y+boxheight/4, descr.str());
+          gs.centerShow(my_x, my_y+boxheight/4, descr.c_str());
           gs.usefont("Times-Roman", 10.0);
           gs.centerShow(my_x, my_y, nameline);
           gs.usefont("Courrier", 6.0);
@@ -495,7 +495,7 @@ void displayVarGraph(const VarArray& outputs, bool display_values, real boxwidth
             gs.centerShow(my_x, my_y-boxheight/2.5, v->gradient);
           }
           /*
-          cout << descr.str() << " " << nameline << " (" << v->value.length() << ")" << endl;
+          cout << descr << " " << nameline << " (" << v->value.length() << ")" << endl;
           cout << "value:    " << v->value << endl;
           cout << "gradient: " << v->gradient << endl;
           */
@@ -503,7 +503,7 @@ void displayVarGraph(const VarArray& outputs, bool display_values, real boxwidth
       else
         {
           gs.usefont("Times-Bold", 12.0);
-          gs.centerShow(my_x, my_y+boxheight/4, descr.str());
+          gs.centerShow(my_x, my_y+boxheight/4, descr.c_str());
           gs.usefont("Times-Roman", 11.0);
           gs.centerShow(my_x, my_y-boxheight/4, nameline);
         }
@@ -685,15 +685,14 @@ void OldDisplayVarGraph(const VarArray& outputs, bool display_values, real boxwi
       char nameline[100];
       sprintf(nameline,"%s (%d,%d)",v->getName().c_str(), v->matValue.length(), v->matValue.width());
 
-      char buf[200];
-      ostrstream descr(buf,200);
-      v->print(descr);
-      descr << ends;
+      string descr;
+      PStream str_descr = openString(descr, PStream::raw_ascii, "w");
+      str_descr << v;
 
       if(display_values)
         {
           gs.usefont("Times-Bold", 11.0);
-          gs.centerShow(my_x, my_y+boxheight/4, descr.str());
+          gs.centerShow(my_x, my_y+boxheight/4, descr.c_str());
           gs.usefont("Times-Roman", 10.0);
           gs.centerShow(my_x, my_y, nameline);
           gs.usefont("Courrier", 6.0);
@@ -703,7 +702,7 @@ void OldDisplayVarGraph(const VarArray& outputs, bool display_values, real boxwi
       else
         {
           gs.usefont("Times-Bold", 12.0);
-          gs.centerShow(my_x, my_y+boxheight/4, descr.str());
+          gs.centerShow(my_x, my_y+boxheight/4, descr.c_str());
           gs.usefont("Times-Roman", 11.0);
           gs.centerShow(my_x, my_y-boxheight/4, nameline);
         }
