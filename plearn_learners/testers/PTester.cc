@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.30 2004/07/19 13:29:29 tihocan Exp $ 
+   * $Id: PTester.cc,v 1.31 2004/07/19 22:48:02 mariusmuja Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -69,16 +69,19 @@ template<class T> TVec<T> operator&(const T& x, const TVec<T>& v)
   return res;
 }
 
+
+
 PTester::PTester() 
-  : report_stats(true),
-    save_initial_tester(true),
-    save_stat_collectors(true),
-    save_learners(true),
-    save_initial_learners(false),
+ :  provide_learner_expdir(false),
+    report_stats(true),
     save_data_sets(false),
-    save_test_outputs(false),
+    save_initial_learners(false),
+    save_initial_tester(true),
+    save_learners(true),
+    save_stat_collectors(true),
     save_test_costs(false),
-    provide_learner_expdir(false),
+    save_test_outputs(false),
+    statsmask(0),
     train(true)
 {}
 
@@ -116,7 +119,14 @@ PTester::PTester()
                   "  - cost_name is one of the training or test cost names (depending on dataset) understood \n"
                   "    by the underlying learner (see its getTrainCostNames and getTestCostNames methods) \n" 
                   "  - S1 and S2 are a statistic, i.e. one of: E (expectation), V(variance), MIN, MAX, STDDEV, ... \n"
-                  "    S2 is computed over the samples of a given dataset split. S1 is over the splits. \n");
+                  "    S2 is computed over the samples of a given dataset split. S1 is over the splits. \n"); 
+    declareOption(ol, "statsmask", &PTester::statsmask, OptionBase::buildoption,
+                  "A list of lists of masks. If provided, each of the lists is used to compose the statnames_from_mask."
+                  "If not provided the statnames are those in the 'statnames' list. \n"
+                  "For example if statsmask = [ [\"E[train.*]\" \"E[test1.*]\"] ] and statnames = [ \"E[func1]\" \"E[func2]\" \n"
+                  "then the resulting statnames list will be [ \"E[train.E[func1]]\", \"E[train.E[func2]]\", \"E[test1.E[func1]]\", \"E[test1.E[func2]]\" ].");
+    declareOption(ol, "statnames_from_mask", &PTester::statnames_from_mask, OptionBase::learntoption,
+                  "This vector will contain the statnames if mask is provided.");
     declareOption(ol, "learner", &PTester::learner, OptionBase::buildoption,
                   "The learner to train/test.\n");
     declareOption(ol, "report_stats", &PTester::report_stats, OptionBase::buildoption,
@@ -165,6 +175,37 @@ void PTester::build_()
         PLERROR("In PTester Could not create experiment directory %s",expdir.c_str());
       expdir = abspath(expdir);
     }
+
+  TVec<string> temp[2];
+
+  int d = 0;
+  temp[d] = statnames;
+  if (statsmask) {
+    for (int i=0;i<statsmask.length();i++) {
+      temp[1-d].resize(0);      
+      
+      for (int j=0;j<statsmask[i].length();j++) {
+        string mask = statsmask[i][j];
+        uint pos;
+        if ((pos=mask.find('*'))==string::npos) {
+          PLWARNING("In PTester::build_ : the %s element of statsmask does not contain a '*'",mask.c_str());
+        } else {
+          for (int k=0;k<temp[d].length();k++) {
+            if (temp[d][k].find('*')!=string::npos) {
+              PLERROR("In PTester::build_ : elements of statnames cannot contain the '*' character");
+            }
+            string elem = mask;
+            elem.replace(pos,1,temp[d][k]);
+            temp[1-d].append(elem);
+          }
+        }
+      }
+      d = 1-d;
+    }
+    
+    statnames_from_mask.resize(temp[d].size());
+    statnames_from_mask = temp[d];
+  }
 }
 
   // ### Nothing to add here, simply calls build_
@@ -198,7 +239,12 @@ Vec PTester::perform(bool call_forget)
   if(!splitter)
     PLERROR("No splitter specified for PTester");
 
-  int nstats = statnames.length();
+  int nstats;
+  if (statsmask) {
+    nstats = statnames_from_mask.length();
+  } else {
+    nstats = statnames.length();
+  }
   Vec global_result(nstats);
 
   {
@@ -259,8 +305,13 @@ Vec PTester::perform(bool call_forget)
 
   // Stat specs
   TVec<StatSpec> statspecs(nstats);
-  for(int k=0; k<nstats; k++)
-    statspecs[k].init(statnames[k]);
+  for(int k=0; k<nstats; k++) {
+    if (statsmask) {
+      statspecs[k].init(statnames_from_mask[k]);
+    } else {
+      statspecs[k].init(statnames[k]);
+    }
+  }
   
   // int traincostsize = traincostnames.size();
   int testcostsize = testcostnames.size();
@@ -385,6 +436,18 @@ Vec PTester::perform(bool call_forget)
 
   return global_result;
 }
+
+
+TVec<string> PTester::getStatNames()
+{
+  if (statsmask) {
+    return statnames_from_mask;
+  } else {
+    return statnames;
+  }
+}
+
+
 
 void StatSpec::init(const string& statname)
   {

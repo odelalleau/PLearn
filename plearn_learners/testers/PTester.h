@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.h,v 1.9 2004/02/20 21:14:50 chrish42 Exp $ 
+   * $Id: PTester.h,v 1.10 2004/07/19 22:48:06 mariusmuja Exp $ 
    ******************************************************* */
 
 /*! \file PTester.h */
@@ -50,6 +50,11 @@ using namespace std;
 
 class PTester: public Object
 {    
+protected:
+
+  TVec<string> statnames_from_mask;
+    
+  
 public:
 
   typedef Object inherited;
@@ -61,24 +66,25 @@ public:
   // See declareOptions method in .cc for the role of these options.
 
   //! Path of this tester's experiment directory in which to save all tester results (will be created if it does not already exist)
-  string expdir;  
-  PP<PLearner> learner;
   VMat dataset;
+  string expdir;  
+  TVec<string> final_commands;
+  PP<VecStatsCollector> global_template_stats_collector;
+  PP<PLearner> learner;
+  bool provide_learner_expdir;
+  bool report_stats;
+  bool save_data_sets;
+  bool save_initial_learners;
+  bool save_initial_tester;
+  bool save_learners;
+  bool save_stat_collectors;
+  bool save_test_costs;
+  bool save_test_outputs;
   PP<Splitter> splitter;
   TVec<string> statnames;
-  bool report_stats;
-  bool save_initial_tester;
-  bool save_stat_collectors;
-  bool save_learners;
-  bool save_initial_learners;
-  bool save_data_sets;
-  bool save_test_outputs;
-  bool save_test_costs;
-  bool provide_learner_expdir;
-  bool train; // whether or not to train or just test
+  TVec<TVec<string> > statsmask;
   PP<VecStatsCollector> template_stats_collector;
-  PP<VecStatsCollector> global_template_stats_collector;
-  TVec<string> final_commands;
+  bool train; // whether or not to train or just test
 
   // ****************
   // * Constructors *
@@ -117,7 +123,10 @@ public:
   
   //! This returns the currently set expdir (see setExperimentDirectory)
   string getExperimentDirectory() const { return expdir; }
-  
+
+
+  TVec<string> getStatNames();
+    
 
 
   //! runs the tester
