@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.h,v 1.10 2003/05/13 15:15:18 tihocan Exp $
+   * $Id: Optimizer.h,v 1.11 2003/05/21 09:53:50 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -121,8 +121,10 @@ using namespace std;
 
   private:
     void build_();
-    
+
   public:
+
+    virtual void reset(); 
 
       virtual void setToOptimize(VarArray the_params, Var the_cost);
       
@@ -141,8 +143,8 @@ using namespace std;
       virtual real optimize() = 0;
 
       //!  sub-classes should define this, which is the new main method
-      virtual bool optimizeN(VecStatsCollector& stats_coll) = 0;
-      /* while (stage < nstages) {
+      virtual bool optimizeN(VecStatsCollector& stats_coll) =0;
+      /* while (stage <= nstages) {
        *   params.update(..)
        *   stats_coll.update(cost)
        *   stage++

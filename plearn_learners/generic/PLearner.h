@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.h,v 1.3 2003/05/05 21:18:14 plearner Exp $
+   * $Id: PLearner.h,v 1.4 2003/05/21 09:53:50 plearner Exp $
    ******************************************************* */
 
 
@@ -74,13 +74,18 @@ using namespace std;
     typedef Object inherited;
     
     // Build options
-    int inputsize_;  //!<  The data VMat's are assumed to be formed of inputsize()
+    //! Data-sets are seen as matrices whose columns or fields are layed out as
+    //! follows: a number of input fields, followed by (optional) target fields, 
+    //! followed by (optional) weight fields (to weigh each example).
+    int inputsize_;  //!<  number of input fields in the dataset 
     int targetsize_; //!<  columns followed by targetsize() columns.
+    int weightsize_; //<!  number of weight fields (typically 0 or 1)
     int outputsize_; //!<  the use() method produces an output vector of size outputsize().
-    int weightsize_; //<! number of weight fields in the target vec (all_targets = actual_target & weights)
-    long seed;
+    long seed;   //!< the seed used for the random number generator in initializing the learner (see forget() method).
     int stage;
     int nstages;
+    bool report_progress; //!< should progress in learning and testing be reported in a ProgressBar
+    int verbosity; //! Level of verbosity. If 0 you should not write anything on cerr. If >0 you may write some info on the steps performed
 
   public:
 
@@ -88,14 +93,12 @@ using namespace std;
     virtual ~PLearner();
 
     //! The experiment directory is the directory in which files 
-    //! related to this model are to be saved. 
-    /*! Typically, the following files will be saved in that directory:
-      model.psave  (saved best model)
-      model#.psave (model saved after epoch #)
-      model#.<trainset_alias>.objective (training objective and costs after each epoch)
-      model#.<testset_alias>.results  (test results after each epoch)
-    */
-    virtual void setExperimentDirectory(const string& the_expdir);
+    //! related to this model are to be saved.     
+    //! If it is an empty string, it is understood to mean that the 
+    //! user doesn't want any file created by this learner.
+    void setExperimentDirectory(const string& the_expdir);
+
+    //! This returns the currently set expdir (see setExperimentDirectory)
     string getExperimentDirectory() const { return expdir; }
 
     //!  Does the necessary operations to transform a shallow copy (this)
@@ -116,6 +119,10 @@ using namespace std;
     void build_();
     
   public:
+
+    //! Provides a help message describing this class
+    static string help();
+
     //!  **** SUBCLASS WRITING: ****
     //! This method should be redefined in subclasses, to just call inherited::build() and then build_()
     virtual void build();

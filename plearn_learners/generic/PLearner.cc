@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.4 2003/05/20 15:42:13 plearner Exp $
+   * $Id: PLearner.cc,v 1.5 2003/05/21 09:53:50 plearner Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -55,8 +55,14 @@ namespace PLearn <%
 using namespace std;
 
 PLearner::PLearner()
-  :inputsize_(0), targetsize_(0), outputsize_(0), weightsize_(0), 
-   seed(0), stage(0), nstages(1)
+  :inputsize_(0), 
+   targetsize_(0), 
+   weightsize_(0), 
+   outputsize_(0), 
+   seed(0), 
+   stage(0), nstages(1),
+   report_progress(true),
+   verbosity(1)
 {}
 
 IMPLEMENT_ABSTRACT_NAME_AND_DEEPCOPY(PLearner);
@@ -67,21 +73,29 @@ void PLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   //deepCopyField(measurers, copies);
 }
 
+string PLearner::help()
+{
+  return "The base class for learning algorithms, which should be the main 'products' of PLearn.\n"
+    "Data-sets are seen as matrices whose columns or fields are layed out as \n"
+    "follows: a number of input fields, followed by (optional) target fields, \n"
+    "followed by (optional) weight fields (to weigh each example).\n";
+}
+
 void PLearner::declareOptions(OptionList& ol)
 {
   declareOption(ol, "inputsize", &PLearner::inputsize_, OptionBase::buildoption, 
                 "dimensionality of input vector \n");
 
-  declareOption(ol, "outputsize", &PLearner::outputsize_, OptionBase::buildoption, 
-                "dimensionality of output \n");
-
   declareOption(ol, "targetsize", &PLearner::targetsize_, OptionBase::buildoption, 
                 "dimensionality of target \n");
 
   declareOption(ol, "weightsize", &PLearner::weightsize_, OptionBase::buildoption, 
-                "Number of weights within target.  The last 'weightsize' fields of the target vector will be used as cost weights.\n"
+                "dimensionality of weights \n"
                 "This is usually 0 (no weight) or 1 (1 weight per sample). Special loss functions may be able to give a meaning\n"
                 "to weightsize>1. Not all learners support weights.");
+
+  declareOption(ol, "outputsize", &PLearner::outputsize_, OptionBase::buildoption, 
+                "dimensionality of output \n");
 
   declareOption(ol, "seed", &PLearner::seed, OptionBase::buildoption, 
                 "The initial seed for the random number generator used to initialize this learner's parameters\n"
@@ -95,22 +109,25 @@ void PLearner::declareOptions(OptionList& ol)
   declareOption(ol, "nstages", &PLearner::nstages, OptionBase::buildoption, 
                 "Stage until which train() should train this learner and return.\n");
 
+  declareOption(ol, "report_progress", &PLearner::report_progress, OptionBase::buildoption, 
+                "should progress in learning and testing be reported in a ProgressBar.\n");
+  declareOption(ol, "verbosity", &PLearner::verbosity, OptionBase::buildoption, 
+                "Level of verbosity. If 0 should not write anything on cerr. If >0 may write some info on the steps performed\n");
+
   inherited::declareOptions(ol);
 }
 
 
 void PLearner::setExperimentDirectory(const string& the_expdir) 
 { 
-#if USING_MPI
-  if(PLMPI::rank==0) {
-#endif
-  if(!force_mkdir(the_expdir))
-  {
-    PLERROR("In PLearner::setExperimentDirectory Could not create experiment directory %s",the_expdir.c_str());}
-#if USING_MPI
-  }
-#endif
-  expdir = abspath(the_expdir);
+  if(the_expdir=="")
+    expdir = "";
+  else
+    {
+      if(!force_mkdir(the_expdir))
+        PLERROR("In PLearner::setExperimentDirectory Could not create experiment directory %s",the_expdir.c_str());
+      expdir = abspath(the_expdir);
+    }
 }
 
 void PLearner::build_()
@@ -180,6 +197,11 @@ void PLearner::test(VMat testset, VecStatsCollector& test_stats,
 
   test_stats.forget();
 
+  ProgressBar* pb;
+  if(report_progress)
+    pb = new ProgressBar("Testing learner",l);
+
+
   for(int i=0; i<l; i++)
     {
       testset.getSample(i, input, target, weight);
@@ -196,9 +218,16 @@ void PLearner::test(VMat testset, VecStatsCollector& test_stats,
         testcosts->putOrAppendRow(i, costs);
 
       test_stats.update(costs);
+
+      if(pb)
+        pb->update(i);
     }
 
   test_stats.finalize();
+
+  if(pb)
+    delete pb;
+
 }
 
 
@@ -287,10 +316,12 @@ Vec trainTestLearner(PP<PLearner> learner, const VMat &dataset, PP<Splitter> spl
       stats.resize(split.size());
 
       // train
+      VMat trainset = split[0];
       VecStatsCollector& st = stats[0];
-      learner->setTrainingSet(split[0]);
       st.forget();
-      learner->train(st);
+      learner->setTrainingSet(trainset);
+      if(trainset.length()>0)
+        learner->train(st);
       st.finalize();
 
       // tests
@@ -299,12 +330,19 @@ Vec trainTestLearner(PP<PLearner> learner, const VMat &dataset, PP<Splitter> spl
           VMat testset = split[m];
           VecStatsCollector& st = stats[m];
           st.forget();
-          learner->test(testset,st);
+          if(testset.length()>0)
+            learner->test(testset,st);
           st.finalize();
         }
 
       for(int i=0; i<nst; i++)
-        results[i] = stats[setnum[i]].getStats(costindex[i]).getStat(intstat[i]);
+        {
+          int setn = setnum[i];
+          if(setn>=stats.size() || stats[setn].size()==0)
+            results[i] = MISSING_VALUE;
+          else
+            results[i] = stats[setn].getStats(costindex[i]).getStat(intstat[i]);
+        }
 
       globalstats.update(results);
     }

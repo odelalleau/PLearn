@@ -1,0 +1,129 @@
+#!plearn
+
+PExperiment(
+# string: Path of this experiment's directory in which to save all experiment results (will be created if it does not already exist)
+expdir = "hyper";
+
+# VMat: The dataset to use for training/testing (will be split according to what is specified in the testmethod)
+dataset = AutoVMatrix(specification="letters all normalize");
+
+# PP< Splitter >: The splitter to use to generate one or several train/test pairs.
+splitter = TrainTestSplitter(test_fraction=.10) ;
+
+# bool: If false, the models won't be saved.
+save_models = 1  ;
+
+learner = 
+  HyperLearner(
+
+  # bool: should results be reported in expdir/hlearner.pmat
+  report_results = 1  ;
+
+  # TVec< string >: learner option names to be reported in results table
+  option_fields = [ "nstages" "nhidden" "weight_decay" "optimizer.start_learning_rate" ];
+
+  # TVec< string >: cost stats to be reported in results table
+  cost_fields = [ "E[E[train.NLL]]" "E[E[train.class_error]]" "E[E[test.NLL]]" "E[E[test.class_error]]"]  ;
+
+  # TVec< PP< Splitter > >: a list of splitters to define train/test sequences
+  splitters = [ FractionSplitter(fractions = [[.80 .20]]),  # splitter 0 is train/test, and will be used to choose nhidden on the test error 
+                FractionSplitter(fractions = [[.10 0]])                   # splitter 1 gives a small training set, and will be used to choose learning rate and early stopping 
+              ]  ;
+
+  # TVec< PP< HOpt > >: a list of hyper-optimizers to call one after the other
+  strategy = [ 
+    TryAll(
+      # TVec< pair< string, TVec< string > > >: A list of pairs of optionname : list_of_values for the learner.
+      # All combinations of option and value will be tried
+      options = [ nhidden: [50 100], weight_decay: [0 0.1 1] ]  ;
+
+      # TVec< PP< HOpt > >: If present, run the substrategy for each combination o option/value.
+      substrategy = 0 [ ]  ;
+
+      # int: index of current splitter (in hlearner's splitters list) to use
+      which_splitter = 0  ;
+
+      # int: which objective to optimize (index in hlearner's cost_fields)
+      which_objective = 2  ;  # test NLL
+
+      # bool: should build be called on the learner every time we change an option
+      call_build = 1  ;
+
+      # bool: should forget be called on the learner every time we change an option
+      call_forget = 1  ;
+
+      remember_best = 1;
+
+      save_all_models = 0;
+      provide_learner_expdir = 0;
+
+      substrategy = [ EarlyStop( option = nstages; range=[ 0 100 10 ]; which_splitter=1; which_objective=0; remember_best=1) ]
+      )
+    ]  ;
+
+  # PP< PLearner >: The underlying learner
+  learner = 
+         NNet(
+          # int: dimensionality of input vector
+          inputsize = 16;
+
+          # int: dimensionality of output
+          # (for classification the output is typically a vector of class scores
+          # so this is the number of classes)
+          outputsize = 26;  # 26 letters
+
+          # int: dimensionality of target
+          # (here target is simply the class number between 0 and 9)
+          targetsize = 1;
+
+          # int: number of hidden units in first hidden layer (0 means no hidden layer)
+          nhidden = 100;
+
+          # double: global weight decay for all layers
+          weight_decay = 0;
+
+          # string: what transfer function to use for ouput layer?
+          # one of: tanh, sigmoid, exp, softmax
+          # an empty string means no output transfer function
+          output_transfer_func = "softmax"  ;
+
+          # Array< string >:     a list of cost functions to use
+          # in the form "[ cf1; cf2; cf3; ... ]" where each function is one of:
+          #   mse (for regression)
+          #   mse_onehot (for classification)
+          #   NLL (negative log likelihood -log(p[c]) for classification)
+          #   class_error (classification error)
+          # The first function of the list will be used as
+          # the objective function to optimize
+          # (possibly with an added weight decay penalty)
+          cost_funcs = [ "NLL", "class_error" ];
+
+          # PP< Optimizer >:     specify the optimizer to use
+          optimizer = GradientOptimizer(
+                      # double: the initial learning rate
+                      start_learning_rate = 0.01  ;
+
+                      # double: the learning rate decrease constant
+                      decrease_constant = 0  ;
+                      )
+
+          # int: how many samples to use to estimate the avergage gradient before updating the weights
+          # 0 is equivalent to specifying training_set->length()
+          # NOTE: this overrides the optimizer s 'n_updates' and 'every_iterations'.
+          batch_size = 1;
+
+          # long: The initial seed for the random number generator used to initialize this learner's parameters
+          # as typically done in the forget() method...
+          # With a given seed, forget() should always initialize the parameters to the same values.
+          seed = 0  ;
+
+          # int: how many times the optimizer gets to see the whole training set.
+          nstages = 3;
+
+          )  ;
+
+  ) # end of HyperLearner
+
+
+);
+

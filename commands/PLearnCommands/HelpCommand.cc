@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: HelpCommand.cc,v 1.2 2003/05/13 05:55:28 plearner Exp $ 
+   * $Id: HelpCommand.cc,v 1.3 2003/05/21 09:53:50 plearner Exp $ 
    ******************************************************* */
 
 /*! \file HelpCommand.cc */
@@ -41,16 +41,7 @@
 #include <iostream>
 
 #include "general.h"
-
-// Things to get help on
 #include "getDataSet.h"
-#include "Learner.h"
-#include "Splitter.h"
-#include "VMatrix.h"
-#include "Optimizer.h"
-#include "Kernel.h"
-#include "Variable.h"
-
 
 namespace PLearn <%
 using namespace std;

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Optimizer.cc,v 1.11 2003/05/15 17:14:35 tihocan Exp $
+   * $Id: Optimizer.cc,v 1.12 2003/05/21 09:53:50 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -93,6 +93,11 @@ void Optimizer::build_()
 /*    same_sign.resize(params.nelems());
     same_sign.clear();*/
   }
+  //  stage = 0;  // Pose probleme. Peut-etre faudrait-il une methode reset plutot
+}
+
+void Optimizer::reset()
+{
   stage = 0;
 }
 

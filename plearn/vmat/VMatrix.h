@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.13 2003/05/14 21:15:32 jkeable Exp $
+   * $Id: VMatrix.h,v 1.14 2003/05/21 09:53:50 plearner Exp $
    ******************************************************* */
 
 
@@ -317,6 +317,11 @@ public:
 
   //! will call putRow if i<length() and appendRow if i==length()
   void putOrAppendRow(int i, Vec v);
+
+  //! will call putRow if i<length()
+  //! if i>= length(), it will call appendRow with 0 filled rows as many times as necessary before 
+  //! it can append row i 
+  void forcePutRow(int i, Vec v);
 
   //!  These methods do not usually need to be overridden in subclasses
   //!  (default versions call getSubRow, which should do just fine)

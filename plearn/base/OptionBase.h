@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: OptionBase.h,v 1.1 2003/05/07 05:39:16 plearner Exp $
+   * $Id: OptionBase.h,v 1.2 2003/05/21 09:53:50 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -125,6 +125,33 @@ public:
 };
 
 typedef vector< PP<OptionBase> > OptionList;
+
+
+
+//! A generic deep_copy function based on serialization
+//! (this does not use the deepCopy method mechanism, and may currently work 
+//! better for a number of classes, as the makeDeepCopyFromShallowCopy methods are 
+//! not properly implemented everywhere...)
+
+template<class T>
+T deep_copy(const T& x)
+{
+  ostrstream out_;
+  PStream out(&out_);
+  out << x;
+  char* buf = out_.str();
+  int n = out_.pcount();
+  string s(buf,n);
+  out_.freeze(false); // return ownership to the stream, so that it may free it...
+
+  T y;
+  istrstream in_(s.c_str());
+  PStream in(&in_);
+  in >> option_flags(dft_option_flag | OptionBase::nosave);
+  in >> y; 
+  return y;
+}
+
 
 %> // end of namespace PLearn
 

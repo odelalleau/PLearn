@@ -33,13 +33,14 @@
 
 
 /* *******************************************************      
-   * $Id: plearn.cc,v 1.24 2003/05/20 15:45:07 plearner Exp $
+   * $Id: plearn.cc,v 1.25 2003/05/21 09:53:43 plearner Exp $
    ******************************************************* */
 
 #include "plearn_main.h"
 
 // Available Splitters:
 #include "ExplicitSplitter.h"
+#include "FractionSplitter.h"
 #include "TrainTestSplitter.h"
 #include "KFoldSplitter.h"
 
@@ -52,6 +53,7 @@
 #include "NNet.h"
 #include "HyperLearner.h"
 #include "TryAll.h"
+#include "EarlyStop.h"
 
 // All Available Learners: 
 // #include "KNN.h"

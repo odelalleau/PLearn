@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.2 2003/05/03 05:02:18 plearner Exp $
+   * $Id: NNet.cc,v 1.3 2003/05/21 09:53:50 plearner Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -363,12 +363,22 @@ void NNet::train(VecStatsCollector& train_stats)
   // number of optimiser stages corresponding to one learner stage (one epoch)
   int optstage_per_lstage = l/nsamples;
 
+  ProgressBar* pb = 0;
+  if(report_progress)
+    pb = new ProgressBar("Training NNet from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
+
+  int initial_stage = stage;
   while(stage<nstages)
     {
       optimizer->nstages = stage*optstage_per_lstage;
       optimizer->optimizeN(train_stats);
       ++stage;
+      if(pb)
+        pb->update(stage-initial_stage);
     }
+
+  if(pb)
+    delete pb;
 
   output_and_target_to_cost->recomputeParents();
   costf->recomputeParents();
@@ -448,6 +458,8 @@ void NNet::forget()
 {
   inherited::forget();
   initializeParams();
+  if(optimizer)
+    optimizer->reset();
 }
 
 void NNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)

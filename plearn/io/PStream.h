@@ -904,9 +904,9 @@ void readSequence(PStream& in, SequenceType& seq)
             in.get(); // skip '['
             in.skipBlanksAndCommentsAndSeparators();
             seq.resize(0);
-            typename SequenceType::value_type x;
             while(in.peek()!=']')
               {
+                typename SequenceType::value_type x;
                 in >> x;
                 seq.push_back(x);
                 in.skipBlanksAndCommentsAndSeparators();
@@ -1077,6 +1077,7 @@ public:
   PIStringStream(const string& s)
     :PStream(new istrstream(s.c_str())) {}
 };
+
 
 %> // namespace PLearn
 

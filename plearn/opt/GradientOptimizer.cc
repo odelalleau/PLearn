@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.cc,v 1.18 2003/05/20 15:42:12 plearner Exp $
+   * $Id: GradientOptimizer.cc,v 1.19 2003/05/21 09:53:50 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -228,17 +228,11 @@ real GradientOptimizer::optimize()
 
 bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll) 
 {
-  Vec meancost(cost->size());
-  Vec lastmeancost(cost->size());
-  early_stop = false;
-
-
   // Big hack for the special case of stochastic gradient, to avoid doing an explicit update
   // (temporarily change the gradient fields of the parameters to point to the parameters themselves,
   // so that gradients are "accumulated" directly in the parameters, thus updating them!
   SumOfVariable* sumofvar = dynamic_cast<SumOfVariable*>((Variable*)cost);
   Array<Mat> oldgradientlocations;
-  // bool stochastic_hack = false;
   bool stochastic_hack = sumofvar!=0 && sumofvar->nsamples==1;
   // stochastic_hack=false;
   if(stochastic_hack)
@@ -251,7 +245,7 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll)
   else
     params.clearGradient();
 
-  while (stage < nstages) 
+  while (stage <= nstages) 
     {
       learning_rate = start_learning_rate/(1.0+decrease_constant*stage);
       proppath.clearGradient();

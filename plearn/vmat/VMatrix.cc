@@ -36,7 +36,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.17 2003/05/14 21:15:32 jkeable Exp $
+* $Id: VMatrix.cc,v 1.18 2003/05/21 09:53:50 plearner Exp $
 ******************************************************* */
 
 #include "VMatrix.h"
@@ -640,6 +640,19 @@ void VMatrix::putOrAppendRow(int i, Vec v)
     PLERROR("In putOrAppendRow, index %d out of range",i);
 }
 
+void VMatrix::forcePutRow(int i, Vec v)
+{
+  static Vec emptyrow;
+  if(i<length())
+    putRow(i,v);
+  else 
+    {
+      emptyrow.resize(width());
+      while(length()<i)
+        appendRow(emptyrow);
+      appendRow(v);
+    }
+}
 
 void VMatrix::getMat(int i, int j, Mat m) const
 {

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: stringutils.h,v 1.11 2003/04/29 21:33:38 plearner Exp $
+   * $Id: stringutils.h,v 1.12 2003/05/21 09:53:50 plearner Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -305,6 +305,8 @@ public:
   // moves the progressbar up to position newpos
   void operator()(int newpos){plugin->update(this,newpos);}
  
+  void update(int newpos){plugin->update(this,newpos);}
+
   // this function assumes plugin is always a valid object (it is created statically in the .cc)
   static void setPlugin(ProgressBarPlugin * _plugin){delete plugin;plugin=_plugin;}
 
