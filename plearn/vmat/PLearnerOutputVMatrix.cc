@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLearnerOutputVMatrix.cc,v 1.6 2004/02/20 21:14:44 chrish42 Exp $
+   * $Id: PLearnerOutputVMatrix.cc,v 1.7 2004/03/17 14:21:24 tihocan Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -124,6 +124,15 @@ void PLearnerOutputVMatrix::build_()
     weightsize_ = data->weightsize();
     length_ = data->length();
     width_ = data->width() - data->inputsize() + inputsize_;
+
+    // Set field info.
+    fieldinfos.resize(width_);
+    if (data->getFieldInfos().size() >= data->inputsize() + data->targetsize()) {
+      // We can retrieve the information for the target columns.
+      for (int i = 0; i < data->targetsize(); i++) {
+        fieldinfos[i + this->inputsize()] = data->getFieldInfos()[i + data->inputsize()];
+      }
+    }
   }
 }
 
