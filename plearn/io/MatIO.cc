@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatIO.cc,v 1.15 2004/08/02 21:04:00 mariusmuja Exp $
+   * $Id: MatIO.cc,v 1.16 2004/08/17 19:19:43 tatien Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -87,46 +87,72 @@ the same place, to allow memory-mapping on different platforms)
 
 void loadMat(const string& file_name, TMat<float>& mat)
 {
-  string ext = extract_extension(file_name);
+  string tmp_file_name = file_name;
+  bool load_remote =
+    string_begins_with(file_name, "https:") ||
+    string_begins_with(file_name, "http:") || 
+    string_begins_with(file_name, "ftp:");
+  if(load_remote)
+  {
+    tmp_file_name = "/tmp/" + extract_filename(file_name);
+    string command = "curl --silent " + file_name + " > " + tmp_file_name;
+    system(command.c_str());
+  }
+  string ext = extract_extension(tmp_file_name);
   // See if we know the extension...
   if(ext==".amat")
-    loadAscii(file_name, mat);
+    loadAscii(tmp_file_name, mat);
   else if (ext==".pmat" || ext==".lpmat" || ext==".bpmat")
-    loadPMat(file_name,mat);
+    loadPMat(tmp_file_name,mat);
   else // try to guess the format from the header
   {
-    ifstream in(file_name.c_str());
+    ifstream in(tmp_file_name.c_str());
     if(!in)
-      PLERROR("In loadMat: could not open file %s",file_name.c_str());      
+      PLERROR("In loadMat: could not open file %s",tmp_file_name.c_str());      
     char c = in.get();
     in.close();
     if(c=='M') // it's most likely a .pmat format
-      loadPMat(file_name,mat);
+      loadPMat(tmp_file_name,mat);
     else 
-      loadAscii(file_name,mat);
+      loadAscii(tmp_file_name,mat);
   }
+  if (load_remote)
+    rm(tmp_file_name);
 }
 
 void loadMat(const string& file_name, TMat<double>& mat)
 {
-  string ext = extract_extension(file_name);
+  string tmp_file_name = file_name;
+  bool load_remote =
+    string_begins_with(file_name, "https:") ||
+    string_begins_with(file_name, "http:") || 
+    string_begins_with(file_name, "ftp:");
+  if(load_remote)
+  {
+    tmp_file_name = "/tmp/" + extract_filename(file_name);
+    string command = "curl --silent " + file_name + " > " + tmp_file_name;
+    system(command.c_str());
+  }
+  string ext = extract_extension(tmp_file_name);
   // See if we know the extension...
   if(ext==".amat")
-    loadAscii(file_name, mat);
+    loadAscii(tmp_file_name, mat);
   else if (ext==".pmat" || ext==".lpmat" || ext==".bpmat")
-    loadPMat(file_name,mat);
+    loadPMat(tmp_file_name,mat);
   else // try to guess the format from the header
   {
-    ifstream in(file_name.c_str());
+    ifstream in(tmp_file_name.c_str());
     if(!in)
-      PLERROR("In loadMat: could not open file %s",file_name.c_str());      
+      PLERROR("In loadMat: could not open file %s",tmp_file_name.c_str());      
     char c = in.get();
     in.close();
     if(c=='M') // it's most likely a .pmat format
-      loadPMat(file_name,mat);
+      loadPMat(tmp_file_name,mat);
     else 
-      loadAscii(file_name,mat);
+      loadAscii(tmp_file_name,mat);
   }
+  if (load_remote)
+    rm(tmp_file_name);
 }
 
 
