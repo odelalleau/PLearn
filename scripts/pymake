@@ -765,7 +765,7 @@ class FileInfo:
             else:
                 linkeroptions = linkeroptions + '-L'+qtdir + 'lib/ -lqt-mt'
             
-        return linkeroptions
+        return linkeroptions + ' -L/usr/X11R6/lib/ -lXi -lXext -lX11'
         
     def get_depmtime(self):
         "returns the single latest last modification time of"

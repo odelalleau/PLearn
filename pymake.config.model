@@ -110,7 +110,7 @@ optionalLibrary( name = 'lapack',
 
 optionalLibrary( name = 'opengl',
                  triggers = 'GL/gl.h',
-                 linkeroptions = '-lGL -lGLU -lglut -L/usr/X11R6/lib/'
+                 linkeroptions = '-lGL -lGLU -lglut'
                  )
 
 
