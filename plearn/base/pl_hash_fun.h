@@ -121,7 +121,7 @@ SET_HASH_WITH_FUNCTION(float, x, PLearn::hashval(x))
 
 using namespace stdext;
 
-#if defined(__INTEL_COMPILER) && 
+#if defined(__INTEL_COMPILER)
 // because Intel compiler (in WIN32 only!!) defines hash_map and hash_table both in stdext and std
 // if we set that we use both (with "using namespace") it will have an ambiguity.
 // To solve this, I force hash_map, hash_multimap and hash_table to be explicit.
