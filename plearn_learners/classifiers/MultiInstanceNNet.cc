@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.cc,v 1.23 2004/03/06 14:41:15 yoshua Exp $
+   * $Id: MultiInstanceNNet.cc,v 1.24 2004/03/09 16:49:33 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/MultiInstanceNNet.h */
@@ -296,8 +296,6 @@ void MultiInstanceNNet::build_()
           params.append(wdirect);
         }
 
-      Var before_transfer_func = output;
-   
       // the output transfer function is FIXED: it must be a sigmoid (0/1 probabilistic classification)
 
       output = sigmoid(output);
