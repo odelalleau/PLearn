@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.h,v 1.14 2004/09/28 02:00:29 lamblin Exp $
+   * $Id: StackedLearner.h,v 1.15 2005/03/08 22:19:49 chapados Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -183,6 +183,12 @@ public:
                                        const Vec& target, Vec& costs) const;
                                 
 
+  //! Forwarded to combiner after passing input vector through baselearners
+  virtual
+  bool computeConfidenceFromOutput(const Vec& input, const Vec& output,
+                                   real probability,
+                                   TVec< pair<real,real> >& intervals) const;
+  
   //! Returns the names of the costs computed by computeCostsFromOutpus (and thus the test method)
   virtual TVec<string> getTestCostNames() const;
 

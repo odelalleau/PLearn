@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StackedLearner.cc,v 1.25 2005/01/28 00:24:23 dorionc Exp $
+   * $Id: StackedLearner.cc,v 1.26 2005/03/08 22:19:49 chapados Exp $
    ******************************************************* */
 
 // Authors: Yoshua Bengio
@@ -336,6 +336,24 @@ void StackedLearner::computeCostsFromOutputs(const Vec& input, const Vec& output
   else // cheat
     base_learners[0]->computeCostsFromOutputs(input,output,target,costs);
 }                                
+
+bool StackedLearner::computeConfidenceFromOutput(const Vec& input, const Vec& output,
+                                                 real probability,
+                                                 TVec< pair<real,real> >& intervals) const
+{
+  if (! combiner)
+    PLERROR("StackedLearner::computeConfidenceFromOutput: a 'combiner' must be specified "
+            "in order to compute confidence intervals.");
+  for (int i=0;i<base_learners.length();i++)
+  {
+    Vec out_i = base_learners_outputs(i);
+    if (!base_learners[i])
+      PLERROR("StackedLearner::computeOutput: base learners have not been created!");
+    base_learners[i]->computeOutput(input,out_i);
+  }
+  return combiner->computeConfidenceFromOutput(base_learners_outputs.toVec(), output,
+                                               probability, intervals);
+}
 
 TVec<string> StackedLearner::getTestCostNames() const
 {
