@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.h,v 1.3 2003/09/28 21:40:46 dorionc Exp $ 
+ * $Id: Trader.h,v 1.4 2003/09/30 19:49:57 ducharme Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -80,6 +80,9 @@ protected:
 
   //! The k element is the last time at which asset k had a non-missing price
   TMat<int> last_valid_price;
+  
+  //! Same thing s above, but for the S&P500
+  TVec<int> last_valid_sp500_price;
   
   //! List of indices associated with the tradable flag fields in the VMat
   TVec<int> assets_tradable_indices;
@@ -203,6 +206,9 @@ public:
   
   //! Returns the price of the given asset at a given time. 
   real price(int k, int t) const;
+  
+  //! Returns the price of the S&P500 at a given time. 
+  real sp500_price(int t) const;
   
   //******************
   //! Returns the return on the given asset at a given time. 

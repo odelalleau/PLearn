@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.cc,v 1.4 2003/09/29 21:02:47 ducharme Exp $ 
+ * $Id: Trader.cc,v 1.5 2003/09/30 19:49:57 ducharme Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -76,9 +76,13 @@ void Trader::build_()
 {
   if(train_set.isNull())
     return;
-  
+
+  if (max_seq_len == -1)
+    PLERROR("The field name 'max_seq_len' has not been set");
+
   // Gestion of the list of names
   assets_info();
+
   last_valid_price.resize(max_seq_len, assets_names.length());
   last_valid_price.fill(-1);
   
@@ -94,15 +98,12 @@ void Trader::build_()
   {
     sp500_index = train_set->fieldIndex(sp500);
     internal_stats.compute_covariance = true;
+    last_valid_sp500_price.resize(max_seq_len);
+    last_valid_sp500_price.fill(-1);
   }
 
-  if (max_seq_len == -1)
-    PLERROR("The field name 'max_seq_len' has not been set");
-  else
-  {
-    portfolios.resize(max_seq_len, nb_assets);
-    portfolios.fill(MISSING_VALUE);
-  }
+  portfolios.resize(max_seq_len, nb_assets);
+  portfolios.fill(MISSING_VALUE);
 
   // Sync with the advisor
   advisor->trader = this;
@@ -291,6 +292,33 @@ real Trader::price(int k, int t) const
   return price_;
 }
 
+real Trader::sp500_price(int t) const
+{ 
+  real price_ = internal_data_set(t, sp500_index);
+  if(is_missing(price_))
+  {
+    // This test also ensures an end the recursive call that may follow...
+    if(t==0)
+      PLERROR("sp500_price(%d): The model tries to trade on S&P500 for which we had no valid price yet", t);
+
+    // The method price was not called at t-1
+    // The call to 'sp500_price(t-1)' ensures that the last_valid_sp500_price vector is properly filled
+    if( last_valid_sp500_price[t-1] == -1 )
+      price_ = sp500_price(t-1);
+    else
+      price_ = internal_data_set(last_valid_sp500_price[t-1], sp500_index);
+
+    // Update the field last_valid_sp500_price with the last one
+    last_valid_sp500_price[t] = last_valid_sp500_price[t-1];
+  }
+  else
+  {
+    // The price is valid and we must update
+    last_valid_sp500_price[t] = t;
+  }
+  return price_;
+}
+
 void Trader::setTrainingSet(VMat training_set, bool call_forget/*=true*/)
 {
   // This affectation must come before the call to inherited::setTrainingSet 
@@ -401,7 +429,7 @@ void Trader::test(VMat testset, PP<VecStatsCollector> test_stats,
     update.append( absolute_Rt );
     update.append( log(relative_Rt) );
     if(sp500 != "")
-      update.append( log(testset(t,sp500_index)/testset(t-horizon,sp500_index)) );
+      update.append( log(sp500_price(t)/sp500_price(t-horizon)) );
     internal_stats.update(update);
     
 //#ifdef VERBOSE 
@@ -511,6 +539,7 @@ void Trader::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(internal_stats, copies);
   deepCopyField(assets_price_indices, copies);
   deepCopyField(last_valid_price, copies);
+  deepCopyField(last_valid_sp500_price, copies);
   deepCopyField(assets_tradable_indices, copies);
   deepCopyField(stop_loss_values, copies);
   deepCopyField(portfolios, copies);
