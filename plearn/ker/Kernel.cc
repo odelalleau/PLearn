@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.cc,v 1.21 2004/04/07 23:15:17 morinf Exp $
+   * $Id: Kernel.cc,v 1.22 2004/04/20 20:41:03 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -94,6 +94,9 @@ void Kernel::build_() {
   }
 }
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void Kernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
@@ -150,6 +153,40 @@ real Kernel::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x) const
     return evaluate_i_x(i,x,squared_norm_of_x);
   else
     return evaluate(x,data.getSubRow(i,data_inputsize));
+}
+
+real Kernel::evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x, bool first_time) {
+  return evaluate_i_x(i, x, squared_norm_of_x);
+}
+
+real Kernel::evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x, bool first_time) {
+  return evaluate_x_i(x, i, squared_norm_of_x);
+}
+
+//////////////////////
+// evaluate_all_i_x //
+//////////////////////
+Vec Kernel::evaluate_all_i_x(const Vec& x, real squared_norm_of_x) {
+  int l = data->length();
+  Vec k_xi_x(l);
+  k_xi_x[0] = evaluate_i_x_again(0, x, squared_norm_of_x, true);
+  for (int i = 1; i < l; i++) {
+    k_xi_x[i] = evaluate_i_x_again(i, x, squared_norm_of_x);
+  }
+  return k_xi_x;
+}
+
+//////////////////////
+// evaluate_all_x_i //
+//////////////////////
+Vec Kernel::evaluate_all_x_i(const Vec& x, real squared_norm_of_x) {
+  int l = data->length();
+  Vec k_x_xi(l);
+  k_x_xi[0] = evaluate_x_i_again(x, 0, squared_norm_of_x, true);
+  for (int i = 1; i < l; i++) {
+    k_x_xi[i] = evaluate_x_i_again(x, i, squared_norm_of_x);
+  }
+  return k_x_xi;
 }
 
 ///////////////////////

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.23 2004/04/07 23:15:17 morinf Exp $
+   * $Id: Kernel.h,v 1.24 2004/04/20 20:41:19 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -92,8 +92,8 @@ public:
   /*!
     This method is meant to be used any time the data matrix
     is appended a new row by an outer instance (e.g. SequentialKernel).
-    Through this method, the kernel must update any data dependant internal 
-    structure. The internal structures should have consistant length with 
+    Through this method, the kernel must update any data dependent internal 
+    structure. The internal structures should have consistent length with 
     the data matrix, assuming a sequential growing of the vmat.
   */
   virtual void addDataForKernelMatrix(const Vec& newRow);
@@ -115,6 +115,12 @@ public:
   //!  kernel is_symmetric]
   virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const; 
 
+  //! Return evaluate(data(i),x), where x is the same as in the precedent call
+  //! to this same function (except if 'first_time' is true). This can be used to speed
+  //! up successive computations of K(x_i, x) (default version just calls evaluate_i_x).
+  virtual real evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x=-1, bool first_time = false);
+  virtual real evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x=-1, bool first_time = false);
+
   //! Call evaluate_i_j to fill each of the entries (i,j) of symmetric matrix K.
   virtual void computeGramMatrix(Mat K) const;
 
@@ -129,6 +135,12 @@ public:
   Mat apply(VMat m1, VMat m2) const; //!<  same as above, but returns the result mat instead
   void apply(VMat m, const Vec& x, Vec& result) const; //!<  result[i]=K(m[i],x)
   void apply(Vec x, VMat m, Vec& result) const; //!<  result[i]=K(x,m[i])
+
+  //! Return a vector whose i-th entry is K(x_i, x), for all i.
+  Vec evaluate_all_i_x(const Vec& x, real squared_norm_of_x=-1);
+
+  //! Return a vector whose i-th entry is K(x, x_i), for all i.
+  Vec evaluate_all_x_i(const Vec& x, real squared_norm_of_x=-1);
 
   inline real operator()(const Vec& x1, const Vec& x2) const
     { return evaluate(x1,x2); }
