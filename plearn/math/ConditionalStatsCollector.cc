@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConditionalStatsCollector.cc,v 1.5 2004/03/02 22:48:00 plearner Exp $ 
+   * $Id: ConditionalStatsCollector.cc,v 1.6 2004/03/03 01:31:23 plearner Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -122,7 +122,8 @@ ConditionalStatsCollector::ConditionalStatsCollector()
 
   void ConditionalStatsCollector::build_()
   {
-    forget();
+    if(counts.size()==0)
+      forget();
   }
 
   // ### Nothing to add here, simply calls build_
