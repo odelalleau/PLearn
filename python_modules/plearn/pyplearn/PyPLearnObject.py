@@ -1,7 +1,7 @@
 """ALL DOCUMENTATION IN THIS MODULE MUST BE REVISED!!!"""
-__cvs_id__ = "$Id: PyPLearnObject.py,v 1.7 2005/02/04 22:37:30 chapados Exp $"
+__cvs_id__ = "$Id: PyPLearnObject.py,v 1.8 2005/02/07 21:20:05 dorionc Exp $"
 
-import inspect, types
+import inspect, string, types
 
 from   pyplearn                   import *
 from   plearn.utilities.toolkit   import no_none
@@ -14,9 +14,18 @@ __all__ = [ "PyPLearnObject", "PyPLearnList", "frozen_metaclass" ]
 ##########################################
 
 def builtin_predicate( name ):
+    """Is I{name} a builtin-like name.
+
+    @returns: name.startswith('__') and name.endswith('__')
+    """
     return name.startswith('__') and name.endswith('__')
 
 def public_attribute_predicate( name, value ):
+    """Return wether or not attribute name is considered a public attribute.
+
+    Are consider public attributes whose I{name} does not an underscore and
+    I{value} is not a method, a function or a class.
+    """
     return not ( name.startswith("_")
                  or inspect.ismethod(value)
                  or inspect.isfunction(value)
@@ -35,6 +44,54 @@ def frozen(set):
 ##########################################
 ### Helper classes
 ##########################################
+class InstancePrinter:
+    """This class manages pretty formatting of plearn representations."""
+    indent_level   = 0
+
+    def format( openstr, attribute_strings, closestr ):
+        separator = ( '\n%s'
+                      % string.ljust('', 4*InstancePrinter.indent_level)
+                      )
+                      
+        stringnified_attributes = ' '
+        if len(attribute_strings) > 0:
+            stringnified_attributes = "%s%s%s" % (
+                separator,
+                string.join( attribute_strings, ',%s'%separator ),
+                separator
+                )
+
+        ## Indent level goes down 1
+        InstancePrinter.indent_level -= 1
+
+        return ( "%s%s%s" % ( openstr, stringnified_attributes, closestr ) )
+    format = staticmethod( format )
+
+    def list_plearn_repr( list_of_attributes ):
+        ## Indent level goes up 1
+        InstancePrinter.indent_level += 1
+        
+        attribute_strings = [ _plearn_repr(attr)
+                              for attr in list_of_attributes ]
+        
+        return InstancePrinter.format( "[ ", attribute_strings, " ]" )
+    list_plearn_repr = staticmethod( list_plearn_repr )
+        
+    def plearn_repr( classname, attribute_pairs ):
+        ## Indent level goes up 1
+        InstancePrinter.indent_level += 1
+
+        pretty    = lambda attr_name: string.ljust(attr_name, 30)
+        attribute_strings = [ '%s = %s' % ( pretty(attr),
+                                            _plearn_repr(val) )
+                              for (attr, val) in attribute_pairs ]
+
+        return InstancePrinter.format( "%s("%classname,
+                                       attribute_strings,
+                                       ")"
+                                       )
+    plearn_repr = staticmethod( plearn_repr )
+
 class frozen_metaclass( type ):
     _frozen     = True
     __setattr__ = frozen(type.__setattr__)
@@ -43,9 +100,9 @@ class frozen_metaclass( type ):
         cls.__setattr__ = frozen(object.__setattr__)
  
 class _manage_attributes:
-    """
+    """Attributes management for PyPLearnObject.
 
-    ATTRIBUTES SHOULD EXCLUDE function and classes!!!
+    This class encapsulates
     """
     __metaclass__ = frozen_metaclass
 
@@ -60,12 +117,16 @@ class _manage_attributes:
             self.Defaults = overrides.pop( "Defaults" )
             assert inspect.isclass( self.Defaults )
 
-        ## Managing the attribute ordering protocol 
+        ## Managing the attribute ordering protocol
         self._list_of_attributes = []
         if overrides.has_key('__ordered_attr__'):
             self._list_of_attributes.extend( overrides['__ordered_attr__'] )
         elif hasattr(self.Defaults, '__ordered_attr__'):
             self._list_of_attributes.extend( self.Defaults.__ordered_attr__ )
+
+        ## The current length of the attribute list is the length of the
+        ## __ordered_attr__ list, if any. Otherwise, it's 0.
+        self._ordered_len        = len(self._list_of_attributes)
 
         ## Attributes defined in default
         default_attributes = inspect.getmembers( self.Defaults )
@@ -84,14 +145,17 @@ class _manage_attributes:
             ## Do not use __set_attribute__ in __init__!
             self._init_attribute_protocol( attribute_name, attribute_value )
 
-        ## Ensure that the length of ordered attributes list is
-        ## either zero or equal to the number of attributes
-        assert (len(self.__ordered_attr__) == 0 or
-                len(self.__ordered_attr__) == len(self._list_of_attributes))
-
         ## Overrides may still contain pairs -- attributes with no default
         ## values.
-        self.__dict__.update(overrides)
+        for (attribute_name, attribute_value) in overrides.iteritems():
+            ## Do not use __set_attribute__ in __init__!
+            self._init_attribute_protocol( attribute_name, attribute_value )
+            
+        ## Ensure that the length of ordered attributes list is
+        ## either zero or equal to the number of attributes
+        assert ( self._ordered_len == 0 or
+                 self._ordered_len == len(self._list_of_attributes)
+                 )
 
         ## Managing frozen behavior
         self._frozen = self.__class__._frozen
@@ -108,7 +172,7 @@ class _manage_attributes:
         as __init__ arguments.
         """
         assert not inspect.isroutine(attribute_value)
-        if len(self.__ordered_attr__) == 0:
+        if self._ordered_len == 0:
             self._list_of_attributes.append(attribute_name)
             self._list_of_attributes.sort()
         
@@ -118,25 +182,45 @@ class _manage_attributes:
         self.__dict__[attribute_name] = attribute_value        
             
     def attribute_pairs(self):
+        """Returns the list of (name, value) pairs for all attributes."""
         return [ ( att_name, getattr(self, att_name) )
                  for att_name in self._list_of_attributes
                  ]
 
     def attribute_names( self ):
-        return copy.deepcopy( self._list_of_attributes )
-        
+        """Returns the list of names of all attributes."""
+        return copy.deepcopy( self._list_of_attributes )        
 
     def public_attribute_pairs(self):
+        """Returns the list of (name, value) pairs for public attributes.
+
+        Are considered public the attributes whose names does not start
+        with an underscore.
+        """
         return [ ( att_name, getattr(self, att_name) )
                  for att_name in self._list_of_attributes
                  if not att_name.startswith('_')
                  ]
 
     def public_attribute_names( self ):
+        """Returns the list of names of public attributes.
+
+        Are considered public the attributes whose names does not start
+        with an underscore.
+        """
         return [ att_name
                  for att_name in self._list_of_attributes
                  if not att_name.startswith('_')
                  ]
+
+    def __str__(self):
+        """Prints all attributes pair, not just public ones."""
+        return InstancePrinter.plearn_repr( self.classname(), self.attribute_pairs() ) 
+
+    def __repr__(self):
+        """Simply returns str(self)."""
+        return str(self)
+    
             
 ##########################################
 ### Main class
@@ -208,7 +292,7 @@ class PyPLearnObject( _manage_attributes ):
         declaration AND the forwarding.  Also, the I{defaults}
         argument takes I{None} as default instead of a classname.
         """
-        _manage_attributes.__init__(self, _str_spacer = ' ', **overrides)
+        _manage_attributes.__init__(self, **overrides)
 
     def set_attribute(self, key, value):
         raise DeprecationWarning
@@ -219,7 +303,7 @@ class PyPLearnObject( _manage_attributes ):
     ###########################################################
     ### PyPLearnObject feature: As a cousin of a PLearn object
     def plearn_options(self):
-        """Returns a dictionnary of all members of this instance that are considered to be plearn options.
+        """Returns a list of pairs of all members of this instance that are considered to be plearn options.
 
         B{IMPORTANT}: Subclasses of PLearnObject MUST declare any
         internal member, i.e. B{any member that SHOULD NOT be
@@ -231,10 +315,10 @@ class PyPLearnObject( _manage_attributes ):
         underscore. Note, however, that no given order may be assumed
         in the members dictionnary returned.
 
-        @return: Dictionnary of all members of this instance that are
+        @return: List of pairs of all members of this instance that are
         considered to be plearn options.
         """
-        return metaprog.public_members( self )
+        return self.public_attribute_pairs()
         
     def plearn_repr(self):
         """Any object overloading this method will be recognized by the pyplearn_driver
@@ -246,19 +330,7 @@ class PyPLearnObject( _manage_attributes ):
 
         and that is what this default version does.
         """
-        return eval("pl.%s( **self.plearn_options() )" % self.classname())
-
-    ###########################################################
-    def __str__(self):
-        return metaprog.instance_to_string(self, dict(self.attribute_pairs()), self._str_spacer) 
-
-    def __repr__(self):
-        return str(self)
-    
-    def set_str_spacer(self, sp):
-        self._str_spacer = sp
-
-    ###########################################################                
+        return InstancePrinter.plearn_repr( self.classname(), self.plearn_options() )
 
     def __lshift__(self, other):
         cls = self.__class__
@@ -346,11 +418,10 @@ class PyPLearnList( PyPLearnObject ):
         return self._iterator( self.public_attribute_pairs() )
         
     def plearn_repr(self):
-        return self.to_list()
+        return InstancePrinter.list_plearn_repr( self.to_list() )
 
     def to_list(self):
         return no_none([ elem for elem in iter(self) ])
-
 
 ##########################################
 ### Embedded test/tutorial

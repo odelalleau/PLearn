@@ -493,14 +493,15 @@ U{Epytext Markup Language Manual<http://epydoc.sourceforge.net/epytext.html>}
 should not take you more than 15 minutes and you will be ready to document your
 code.
 """
-__cvs_id__ = "$Id: pyplearn.py,v 1.14 2005/02/04 19:08:06 dorionc Exp $"
+__cvs_id__ = "$Id: pyplearn.py,v 1.15 2005/02/07 21:20:05 dorionc Exp $"
 
 import types
 import plearn.utilities.metaprog as metaprog
 
 __all__ = [ 'PyPlearnError', 'ref', 'bind', 'bindref', 'plvar', 'TMat',
             'plargs', 'plarg_defaults', 'bind_plargs',
-            'pl', 'include']
+            '_plearn_repr', ## 'pl',            
+            'include']
 
 class plearn_snippet:
     """Objects of this class are used to wrap the parts of the Python code
@@ -512,6 +513,9 @@ class plearn_snippet:
         self.s = s
 
     def __str__(self):
+        return self.s
+
+    def __repr__(self):
         return self.s
 
     def __add__(self, o):
@@ -598,7 +602,12 @@ def _postprocess_refs(s):
 def _plearn_repr(x):
     """Returns a string that is the PLearn representation
     of the corresponding Python object."""
-    if isinstance(x, float):
+
+    if hasattr(x, 'plearn_repr') and callable(getattr(x, 'plearn_repr')):
+        ## return _plearn_repr(x.plearn_repr())
+        return x.plearn_repr()
+
+    elif isinstance(x, float):
         # Don't use repr, so we don't get 0.20000000000000001 for 0.2
         return str(x)
     elif isinstance(x, int):
@@ -622,8 +631,6 @@ def _plearn_repr(x):
         return x.s
     elif x is None:
         return "*0;"
-    elif hasattr(x, 'plearn_repr') and callable(getattr(x, 'plearn_repr')):
-        return _plearn_repr(x.plearn_repr())
     else:
         raise TypeError( 'Does not know how to handle type %s (x = %s)'
                          % ( type(x), str(x) )
@@ -788,52 +795,54 @@ def bind_plargs(obj, field_names = None, plarg_names = None):
         cast = type(default_value)
         setattr(obj, field, cast(provided_value))
 
-class _pyplearn_magic_module:
-    """An instance of this class (instanciated as pl) is used to provide
-    the magic behavior whereas bits of Python code like:
-    pl.SequentialAdvisorSelector(comparison_type='foo', etc.) become
-    a string that can be fed to PLearn instead of a .plearn file."""
-    indent = ' ' * 4
+## This was moved to the __init__.py file
+##         
+## class _pyplearn_magic_module:
+##     """An instance of this class (instanciated as pl) is used to provide
+##     the magic behavior whereas bits of Python code like:
+##     pl.SequentialAdvisorSelector(comparison_type='foo', etc.) become
+##     a string that can be fed to PLearn instead of a .plearn file."""
+##     indent = ' ' * 4
     
-    def add_indent(self, s):
-        """Adds a level of indentation to the (potentially multi-line) strings
-        passed as s."""
-        s = s.strip()
-        if not '\n' in s:
-            # Single-line expression, no need to add any indentation
-            return s
+##     def add_indent(self, s):
+##         """Adds a level of indentation to the (potentially multi-line) strings
+##         passed as s."""
+##         s = s.strip()
+##         if not '\n' in s:
+##             # Single-line expression, no need to add any indentation
+##             return s
 
-        lines = s.split('\n')
-        # Add a leading indentation to all lines except the first one
-        for i in range(1, len(lines)):
-            lines[i] = self.indent + lines[i]
-        return '\n'.join(lines)
+##         lines = s.split('\n')
+##         # Add a leading indentation to all lines except the first one
+##         for i in range(1, len(lines)):
+##             lines[i] = self.indent + lines[i]
+##         return '\n'.join(lines)
 
-    def __getattr__(self, name):
-        if name.startswith('__'):
-           raise AttributeError
+##     def __getattr__(self, name):
+##         if name.startswith('__'):
+##            raise AttributeError
        
-        def printfunc(**kwargs):
-            s = [name, '(\n']
+##         def printfunc(**kwargs):
+##             s = [name, '(\n']
 
-            num_args_printed = 0
-            num_args = len(kwargs)
+##             num_args_printed = 0
+##             num_args = len(kwargs)
             
-            for key, value in kwargs.iteritems():
-                s.append(self.indent)
-                s.append(key)
-                s.append(' = ')
-                value_repr = _plearn_repr(value)
-                s.append(self.add_indent(value_repr))
-                if num_args_printed != num_args - 1:
-                    # Add a comma after every arg except the last one.
-                    s.append(',')
-                s.append('\n')
-                num_args_printed += 1
-            s.append(self.indent + ')\n')
-            return plearn_snippet(''.join(s))
+##             for key, value in kwargs.iteritems():
+##                 s.append(self.indent)
+##                 s.append(key)
+##                 s.append(' = ')
+##                 value_repr = _plearn_repr(value)
+##                 s.append(self.add_indent(value_repr))
+##                 if num_args_printed != num_args - 1:
+##                     # Add a comma after every arg except the last one.
+##                     s.append(',')
+##                 s.append('\n')
+##                 num_args_printed += 1
+##             s.append(self.indent + ')\n')
+##             return plearn_snippet(''.join(s))
         
-        return printfunc
+##         return printfunc
 
-pl = _pyplearn_magic_module()
+## pl = _pyplearn_magic_module()
 
