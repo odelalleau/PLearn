@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plearn_inc.h,v 1.46 2005/01/11 20:09:46 tihocan Exp $ 
+   * $Id: plearn_inc.h,v 1.47 2005/01/12 14:45:15 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -59,19 +59,21 @@
 /***********
  * Command *
  ***********/
-#include "PLearnCommands/AutoRunCommand.h"
-#include "PLearnCommands/FieldConvertCommand.h"
-#include "PLearnCommands/HelpCommand.h"
-#include "PLearnCommands/HTMLHelpCommand.h"
-#include "PLearnCommands/JulianDateCommand.h"
-#include "PLearnCommands/KolmogorovSmirnovCommand.h"
-#include "PLearnCommands/LearnerCommand.h"
-#include "PLearnCommands/ReadAndWriteCommand.h"
-#include "PLearnCommands/RunCommand.h"
-#include "PLearnCommands/ServerCommand.h"
-#include "PLearnCommands/TestDependenciesCommand.h"
-#include "PLearnCommands/TestDependencyCommand.h"
-#include "PLearnCommands/VMatCommand.h"
+#include <commands/PLearnCommands/AutoRunCommand.h>
+#include <commands/PLearnCommands/FieldConvertCommand.h>
+#include <commands/PLearnCommands/HelpCommand.h>
+#include <commands/PLearnCommands/HTMLHelpCommand.h>
+#include <commands/PLearnCommands/JulianDateCommand.h>
+#include <commands/PLearnCommands/KolmogorovSmirnovCommand.h>
+#include <commands/PLearnCommands/LearnerCommand.h>
+#include <commands/PLearnCommands/ReadAndWriteCommand.h>
+#include <commands/PLearnCommands/RunCommand.h>
+#include <commands/PLearnCommands/ServerCommand.h>
+#include <commands/PLearnCommands/TestDependenciesCommand.h>
+#include <commands/PLearnCommands/TestDependencyCommand.h>
+#include <commands/PLearnCommands/VMatCommand.h>
+//#include <commands/PLearnCommands/TxtmatCommand.h>
+
 
 /**************
  * Dictionary *
@@ -79,6 +81,12 @@
 #include <plearn_learners/language/Dictionary/Dictionary.h>
 #include <plearn_learners/language/Dictionary/FileDictionary.h>
 #include <plearn_learners/language/Dictionary/VecDictionary.h>
+
+/****************
+ * HyperCommand *
+ ****************/
+#include <plearn_learners/hyper/HyperOptimize.h>
+#include <plearn_learners/hyper/HyperRetrain.h>
 
 /**********
  * Kernel *
@@ -100,6 +108,14 @@
 #include <plearn/opt/ConjGradientOptimizer.h>
 #include <plearn/opt/GradientOptimizer.h>
 
+/****************
+ * OptionOracle *
+ ****************/
+#include <plearn_learners/hyper/CartesianProductOracle.h>
+#include <plearn_learners/hyper/EarlyStoppingOracle.h>
+#include <plearn_learners/hyper/ExplicitListOracle.h>
+#include <plearn_learners/hyper/OptimizeOptionOracle.h>
+
 /************
  * PLearner *
  ************/
@@ -119,6 +135,9 @@
 #include <plearn_learners/generic/SelectInputSubsetLearner.h>
 #include <plearn_learners/generic/StackedLearner.h>
 #include <plearn_learners/generic/TestingLearner.h>
+
+// Hyper
+#include <plearn_learners/hyper/HyperLearner.h>
 
 // Regressors
 #include <plearn_learners/regressors/ConstantRegressor.h>
