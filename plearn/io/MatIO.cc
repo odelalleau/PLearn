@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MatIO.cc,v 1.6 2004/03/04 15:05:42 tihocan Exp $
+   * $Id: MatIO.cc,v 1.7 2004/03/05 21:32:03 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -662,6 +662,95 @@ void loadGnuplot(const string& filename, Mat& mat)
       inputline >> mat(i,j);
   }
   in.close();
+}
+
+void matlabSave( const string& dir, const string& plot_title, const Vec& data, 
+                 const Vec& add_col, const Vec& bounds, string legend, bool save_plot)
+{
+  Mat mat(data.length(), 1);
+  mat << data;
+  TVec<string> legd;
+  if(legend != "")
+    legd.append(legend);
+  matlabSave(dir, plot_title, mat, add_col, bounds, legd, save_plot);
+}
+
+void matlabSave( const string& dir, const string& plot_title, const Mat& data, 
+                 const Vec& add_col, const Vec& bounds, TVec<string> legend, bool save_plot)
+{
+  force_mkdir(dir);  
+  string directory = append_slash(abspath(dir));
+  force_mkdir(directory+"Images/");
+  
+  int w = data.width();
+  
+  ofstream out;
+  string vec_fname = directory + plot_title + ".mmat";
+  out.open(vec_fname.c_str(), ofstream::out | ofstream::trunc);
+  for(int d = 0; d < data.length(); d++)
+  {
+    out << d << "\t";
+    
+    for(int col=0; col < w; col++)
+      out << data(d, col) << "\t";
+    
+    for(int add=0; add < add_col.length(); add++)
+      out << add_col[add] << "\t";
+    out << endl;
+  }
+  out.close();
+  
+  string m_fname = directory + plot_title + ".m";
+  out.open(m_fname.c_str(), ofstream::out | ofstream::trunc);
+  out << "load " << vec_fname << " -ascii"   << endl
+      << "h = plot(" << plot_title << "(:,2:" << (1+w) << "));"  << endl
+      << "set(h, 'LineWidth', 1.0)" << endl
+      << "set(gcf, 'Position', [0, 0, 1000, 750])" << endl
+      << "hold on" << endl;
+  
+  if(legend.isNotEmpty())
+  {
+    int leg = legend.length();
+    int wid = data.width();
+    if(leg != wid)
+    {
+      if(legend[0] == "Numbers")
+      {
+        legend.resize(wid);
+        for(int c=0; c < wid; c++)
+          legend[c] = tostring(c);
+      }
+      else
+        PLERROR("TimeSeriesAnalysis::matlab_save: legend.length() = %d != %d = data.width()",
+                leg, wid);
+    }
+    out << "legend(h";
+    for(int l=0; l < leg; l++)
+    {
+      legend[l] = underscore_to_space(legend[l]);
+      out << ", '" << legend[l] << "'"; 
+    }
+    out << ");" << endl;
+  }
+  
+  for(int add=0; add < add_col.length(); add++)
+    out << "g = plot(" << plot_title 
+        << "(:," << (2+w+add) << "));"
+        << endl
+        << "set(g, 'Color', [0.5 0.5 0.5])" << endl;
+  
+  if(bounds.isNotEmpty())
+    out << "xlim([" << bounds[0] << ", " << bounds[1] << "])" << endl
+        << "ylim([" << bounds[2] << ", " << bounds[3] << "])" << endl;
+  
+  out << "title('" << underscore_to_space(plot_title) << "')" << endl;
+  
+  if(save_plot)
+    out << "print('-dpsc2', '" 
+        << (directory+"Images/")
+        << plot_title << ".eps')" << endl;
+  
+  out.close();
 }
 
 // Ascii without size
