@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.22 2003/10/30 04:34:40 jkeable Exp $
+   * $Id: StatsCollector.cc,v 1.23 2003/11/19 19:03:57 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -312,8 +312,14 @@ RealMapping StatsCollector::getBinMapping(double discrete_mincount,
 
 RealMapping StatsCollector::getAllValuesMapping(TVec<double> * fcount) const
 {
+  return getAllValuesMapping(0,fcount);
+}
+
+RealMapping StatsCollector::getAllValuesMapping(TVec<bool>* to_be_included,
+                                                TVec<double>* fcount) const {
   RealMapping mapping;
-  int i=0;
+  int i = 0;
+  int k = 0;
   if(fcount)
   {
     (*fcount) = TVec<double>();
@@ -325,12 +331,22 @@ RealMapping StatsCollector::getAllValuesMapping(TVec<double> * fcount) const
   double count=0;
     
   for(map<real,StatsCollectorCounts>::const_iterator it = counts.begin() ;
-      it!=counts.end(); ++it, ++i)
+      it!=counts.end(); ++it)
   {
 //    cout<<it->first<<" "<<FLT_MAX<<endl;
 
-    if(it->first!=FLT_MAX)
-      mapping.addMapping(RealRange('[',it->first,it->first,']'),i);
+    if(it->first!=FLT_MAX) {
+      if (!to_be_included) {
+          mapping.addMapping(RealRange('[',it->first,it->first,']'),i);
+      } else {
+        // Must make sure this range is to be included.
+        if ((*to_be_included)[i]) {
+          mapping.addMapping(RealRange('[',it->first,it->first,']'),k);
+          k++;
+        }
+      }
+      i++;
+    }
     if(fcount)
     {
       count += it->second.n;       

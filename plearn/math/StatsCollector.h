@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
  
 /* *******************************************************      
-   * $Id: StatsCollector.h,v 1.21 2003/10/30 04:42:49 jkeable Exp $
+   * $Id: StatsCollector.h,v 1.22 2003/11/19 19:03:57 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -189,6 +189,9 @@ inline PStream& operator<<(PStream& out, const StatsCollectorCounts& c)
                               TVec<double>* fcount=0) const;
 
     RealMapping getAllValuesMapping(TVec<double>* fcount=0) const;
+    // Same as above, except we can specify a bool vector, that indicates
+    // whether the k-th range should be included or not.
+    RealMapping getAllValuesMapping(TVec<bool>* to_be_included, TVec<double>* fcount=0) const;
 
     virtual void oldwrite(ostream& out) const;
     virtual void oldread(istream& in);
