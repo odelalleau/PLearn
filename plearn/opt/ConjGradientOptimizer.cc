@@ -36,7 +36,7 @@
  
 
 /* *******************************************************      
-   * $Id: ConjGradientOptimizer.cc,v 1.13 2003/04/24 15:41:37 tihocan Exp $
+   * $Id: ConjGradientOptimizer.cc,v 1.14 2003/04/24 18:03:42 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -356,10 +356,13 @@ bool ConjGradientOptimizer::findDirection() {
   }
   if (abs(dot(delta, current_opp_gradient)) > restart_coeff * pownorm(delta)) {
     cout << "Restart triggered !" << endl;
+    cout << "grad_norm = " << pownorm(delta) << endl;
     gamma = 0;
   }
   updateSearchDirection(gamma);
-  return isFinished; // TODO Should stop if gradient is small enough ?
+  // If the gradient is very small, we can stop !
+  isFinished = pownorm(current_opp_gradient) < 0.0000001;
+  return isFinished;
 }
 
 //////////////////////////////
@@ -486,8 +489,10 @@ real ConjGradientOptimizer::fletcherSearchMain (
       return alpha1;
     }
     f_1 = (*f)(alpha1, opt);
-    if (f_1 <= fmax)
+    if (f_1 <= fmax) {
+      // cout << "fmax reached !" << endl;
       return alpha1;
+    }
     if (f_1 > f0 + alpha1 * rho * g0 || f_1 > f_0) {
       // NB: in Fletcher's book, there is a typo in the test above
       a1 = alpha0;
@@ -497,7 +502,7 @@ real ConjGradientOptimizer::fletcherSearchMain (
     } else {
       g_1 = (*g)(alpha1, opt);
       if (abs(g_1) < -sigma * g0) {
-        // cout << "Low gradient : g=" << abs(g1) << " < " << (-sigma * g0) << endl;
+        // cout << "Low gradient : g=" << abs(g_1) << " < " << (-sigma * g0) << endl;
         return alpha1;
       }
       if (g_1 >= 0) {
@@ -772,6 +777,8 @@ real ConjGradientOptimizer::optimize()
     
     // Find the new search direction
     early_stop = findDirection();
+    if (early_stop)
+      cout << "Gradient is almost 0, we can stop" << endl;
 
     last_improvement = last_cost - current_cost;
     last_cost = current_cost;
