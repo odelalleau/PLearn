@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: WordNetSenseDictionary.h,v 1.3 2004/09/14 18:52:56 kermorvc Exp $ 
+   * $Id: WordNetSenseDictionary.h,v 1.4 2004/10/06 21:27:47 kermorvc Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
@@ -49,7 +49,7 @@
 //for WordNet senses only
 // No sense exists for this word
 #define NO_SENSE -1
-#define NO_SENSE_TAG "no_sense"
+//#define NO_SENSE_TAG "no_sense"
 // Sense exists but is hidden (un-known)
 #define HIDDEN_SENSE 0
 namespace PLearn {

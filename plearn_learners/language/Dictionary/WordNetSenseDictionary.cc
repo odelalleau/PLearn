@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: WordNetSenseDictionary.cc,v 1.3 2004/09/14 18:52:56 kermorvc Exp $ 
+   * $Id: WordNetSenseDictionary.cc,v 1.4 2004/10/06 21:27:46 kermorvc Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
@@ -54,15 +54,17 @@ WordNetSenseDictionary::WordNetSenseDictionary()
 
 WordNetSenseDictionary::~WordNetSenseDictionary()
 {
-    wno->finalize();
-    wno->save(ontology_file_name + ".voc");
-    wno->save(ontology_file_name + ".synsets", ontology_file_name + ".ontology", ontology_file_name + ".sense_key");
+    if(wno || wno->getVocSize()!=1){
+      wno->finalize();
+      wno->save(ontology_file_name + ".voc");
+      wno->save(ontology_file_name + ".synsets", ontology_file_name + ".ontology", ontology_file_name + ".sense_key");
+    }
 }
   
 WordNetSenseDictionary::WordNetSenseDictionary(string ontology_name,bool up_mode)
 {
   setUpdateMode(up_mode);
-  ontology_file_name=ontology_name;
+  ontology_file_name=abspath(ontology_name);
 }
 
   
@@ -89,11 +91,9 @@ void WordNetSenseDictionary::build_()
   wno->fillTempWordToSensesTVecMap();
   wno->getWordSenseUniqueIdSize();
   
-  // Add NO_SENSE if necessary
-  if (update_mode==NO_UPDATE){
-    string_to_int[NO_SENSE_TAG] = NO_SENSE;
-    int_to_string[NO_SENSE] = NO_SENSE_TAG;
-  }
+  // Add OOV 
+  string_to_int[OOV_TAG] = NO_SENSE;
+  int_to_string[NO_SENSE] = OOV_TAG;
 }
 
 // ### Nothing to add here, simply calls build_
@@ -114,35 +114,36 @@ int WordNetSenseDictionary::getId(string symbol, TVec<string> options)
   if(!wno) PLERROR("WordNetSenseDictionary::getId : wno is not instantiated. build() should be called");
   int index;
   if(update_mode== UPDATE){
-    if(options.length()!=1)PLERROR("WordNetSenseDictionary: need word to get id of a sense - You must specify the position of the word attribute with option_fields ");
-    //  word not found in the ontology, add it
-    if(!wno->containsWord(options[0])){
-      wno->extractWord(options[0], ALL_WN_TYPE, true, true, false);
-    }
+    //  word not found in the ontology, add it and extract its senses
     if(string_to_int.find(symbol) == string_to_int.end()){
+      if(options.length()!=1)PLERROR("WordNetSenseDictionary: need word to get id of a sense - You must specify the position of the word attribute with option_fields ");
+      if(!wno->containsWord(options[0])){
+	wno->extractWord(options[0], ALL_WN_TYPE, true, true, false);
+      }
       // sense not found in the map, store it
       index =wno->getSynsetIDForSenseKey(wno->getWordId(options[0]),symbol);
-      string_to_int[symbol] = index;
-      int_to_string[index] = symbol;
-      // TODO : values -----
-      
+      if(index!=NO_SENSE){
+	string_to_int[symbol] = index;
+	int_to_string[index] = symbol;
+	// TODO : values ----- 
+      }
+    }else{
+      index = string_to_int[symbol];
     }
-    return index;
-    
   }else{
-    if(options.length()!=1)PLERROR("WordNetSenseDictionary: need word to get id of a sense");
     if(string_to_int.find(symbol) == string_to_int.end()){
+      if(options.length()!=1)PLERROR("WordNetSenseDictionary: need word to get id of a sense");
       // sense not found in the map, store it
       index =wno->getSynsetIDForSenseKey( wno->getWordId(options[0]),symbol);
       if(index!=NO_SENSE){
 	string_to_int[symbol] = index;
 	int_to_string[index] = symbol;
       }
-      return index;
+    }else{
+      index = string_to_int[symbol];
     }
-    return string_to_int[symbol];
   }
-  return -1;  
+  return index;;  
 }
 
 int WordNetSenseDictionary::getId(string symbol, TVec<string> options)const

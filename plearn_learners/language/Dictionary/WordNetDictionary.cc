@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: WordNetDictionary.cc,v 1.5 2004/10/01 20:07:05 kermorvc Exp $ 
+   * $Id: WordNetDictionary.cc,v 1.6 2004/10/06 21:27:47 kermorvc Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle, Christopher Kermorvant
@@ -58,7 +58,7 @@ WordNetDictionary::WordNetDictionary()
   
 WordNetDictionary::~WordNetDictionary()
 {
-  if(wno)
+  if(wno || wno->getVocSize()!=1)
     {
       wno->finalize();
       wno->save(ontology_file_name + ".voc");
@@ -89,6 +89,10 @@ void WordNetDictionary::declareOptions(OptionList& ol)
 
 void WordNetDictionary::build_()
 {
+  // save update mode for later
+  int saved_up_mode=update_mode;
+  // set the dictionary in update mode to insert the words
+  update_mode =  UPDATE; 
   // Loading ontology...
   string voc_file = ontology_file_name + ".voc";
   string synset_file = ontology_file_name + ".synsets";
@@ -99,18 +103,13 @@ void WordNetDictionary::build_()
   wno->getWordSenseUniqueIdSize();
   string_to_int = wno->getWordsId();
   int_to_string = wno->getWords();
-  // save update mode for later
-  int saved_up_mode=update_mode;
-  // set the dictionary in update mode to insert the words
-  update_mode =  UPDATE;
-  
+
+
   // Add OOV if necessary  HUGO: I don't think it's necessary... CK: Yes, it is
-  if (update_mode==NO_UPDATE){
-    if (!wno->containsWord(OOV_TAG)){
-      wno->extractWord(OOV_TAG, ALL_WN_TYPE, true, true, false);
-    }
+  if (saved_up_mode==NO_UPDATE){
+    getId(OOV_TAG);
   }
-  // restore update mode;
+  // restore updates mode;
   update_mode=saved_up_mode;
 }
 
