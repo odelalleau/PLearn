@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.26 2004/11/16 22:45:32 dorionc Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.27 2004/12/04 00:11:42 chapados Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -296,6 +296,15 @@ Mat VecStatsCollector::getCorrelation() const
   Mat norm(cov.width(),cov.width());
   externalProduct(norm,getStdDev(),getStdDev());
   return getCovariance()/norm;
+}
+
+Vec VecStatsCollector::getAllStats(const string& statname) const
+{
+  const int n = stats.size();
+  Vec r(n);
+  for (int i=0; i<n; ++i)
+    r[i] = getStats(i).getStat(statname);
+  return r;
 }
 
 void VecStatsCollector::append(const VecStatsCollector& vsc,
