@@ -35,7 +35,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_specialisation.h,v 1.3 2003/11/19 18:56:20 ducharme Exp $
+   * $Id: TMat_maths_specialisation.h,v 1.4 2003/11/20 14:05:07 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -281,13 +281,13 @@ inline void productTransposeAcc(const TMat<double>& mat, const TMat<double>& m1,
       }
 #endif
 
-    int one = 1;
+/*    int one = 1;
     char trans = transposeA ?'N' :'T';
     int lda = A.mod();
     int m = A.width();
     int n = A.length();
     static int ndbg=0;
-/*
+
     extern bool debug_;
     if (debug_ && ndbg<3)
       {
