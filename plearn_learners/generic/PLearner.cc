@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: PLearner.cc,v 1.37 2004/09/16 21:00:26 chapados Exp $
+   * $Id: PLearner.cc,v 1.38 2004/09/20 20:20:17 tihocan Exp $
    ******************************************************* */
 
 #include "PLearner.h"
@@ -69,8 +69,9 @@ void PLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(tmp_output, copies);
-  //deepCopyField(train_set, copies);
-  //deepCopyField(validation_set, copies);
+  // TODO What's wrong with this?
+  deepCopyField(train_set, copies);
+  deepCopyField(validation_set, copies);
   deepCopyField(train_stats, copies);
 }
 
@@ -307,7 +308,7 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
   Vec target;
   real weight;
 
-  Vec output(testoutputs ?outputsize() :0);
+  Vec output(outputsize());
 
   Vec costs(nTestCosts());
 
