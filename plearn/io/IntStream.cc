@@ -128,7 +128,7 @@ FilesIntStream::FilesIntStream(int nfiles, const char* files[])
   sizes=(int*)calloc(n_files,sizeof(int));
   total_size=0;
   for (int i=0;i<n_files;i++) {
-    fp[i]=fopen(file_names[i],"r");
+    fp[i]=fopen(file_names[i],"rb");
     if (!fp[i]) 
       PLERROR("FilesIntStream::FilesIntStream, can't open file %s\n",file_names[i]);
     if (fseek(fp[i],0,SEEK_END))
@@ -143,7 +143,7 @@ void FilesIntStream::reopen()
 {
   // re-open all the file pointers
   for (int i=0;i<n_files;i++) {
-    fp[i]=fopen(file_names[i],"r");
+    fp[i]=fopen(file_names[i],"rb");
     if (!fp[i]) 
       PLERROR("FilesIntStream::reopen, can't open file %s\n",file_names[i]);
     fseek(fp[i],0,SEEK_SET);
@@ -246,7 +246,7 @@ FilesIntStream::~FilesIntStream()
 // convert <word_sequences> filename into a FilesIntStream stream
 FilesIntStream* word_sequences2files_int_stream(const char* word_sequences_file)
 {
-  FILE* word_sequences_fp=fopen(word_sequences_file,"r");
+  FILE* word_sequences_fp=fopen(word_sequences_file,"rb");
   if (!word_sequences_fp)
     PLERROR("word_sequences2files_int_stream: can't open file %s",word_sequences_file);
   typedef const char* cstring;

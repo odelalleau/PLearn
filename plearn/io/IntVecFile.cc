@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: IntVecFile.cc,v 1.7 2004/11/24 18:20:57 tihocan Exp $
+   * $Id: IntVecFile.cc,v 1.8 2005/03/02 17:36:40 ducharme Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -75,13 +75,13 @@ void IntVecFile::open(const string& the_filename, bool readwrite)
   bool file_exists = isfile(filename);
   if(readwrite)
   {
-    f = fopen(filename.c_str(),"a+");
+    f = fopen(filename.c_str(),"a+b");
     if(!f)
       PLERROR("Couldn't open file %s for read/write",filename.c_str());
   }
   else
   {
-    f = fopen(filename.c_str(),"r");
+    f = fopen(filename.c_str(),"rb");
     if(!f)
       PLERROR("Couldn't open file %s for reading",filename.c_str());
   }
