@@ -39,7 +39,7 @@
 #define SEQUENTIAL_VALIDATION
 
 #include "Object.h"
-#include "SequentialLearner.h"
+#include "StatefulLearner.h"
 #include "VMat.h"
 #include "PP.h"
 
@@ -49,35 +49,7 @@ using namespace std;
 
 class SequentialValidation: public Object
 {
-private:
-  // *********************
-  // * private members   *
-  // *********************
-
-  // *********************
-  // * private methods   *
-  // *********************
-
-  //! This does the actual building
-  void build_();
-  
-protected:
-  
-  // *********************
-  // * protected options *
-  // *********************
-  
-  // *********************
-  // * protected members *
-  // *********************
-
-  // *********************
-  // * protected methods *
-  // *********************
-  
-  //! Declare this class' options
-  static void declareOptions(OptionList& ol);  
-  virtual void reportStats(const Vec& global_result);
+  typedef Object inherited;
 
 public:
   
@@ -85,11 +57,24 @@ public:
   // * public options    *
   // *********************
     
-  int init_train_size; // size of first training set
-  VMat dataset; // the training/test set
-  PP<SequentialLearner> learner; // the SequentialLearner that will be tested
+  //! Size of first training set (default: 1)
+  int init_train_size;
+
+  //! The training/test set
+  VMat dataset;
+
+  //! The StatefulLearner that will be tested
+  PP<StatefulLearner> learner;
+
+  //! Global statistics or split statistics to be computed
   TVec<string> statnames;
-  string expdir; // the directory where everything will be saved
+
+  //! Timewise statistics to be computed
+  TVec<string> timewise_statnames;
+
+  //! the directory where everything will be saved
+  string expdir;
+  
   bool report_stats;
   bool save_final_model;
   bool save_initial_model;
@@ -100,16 +85,19 @@ public:
   bool save_stat_collectors;
   bool provide_learner_expdir; /* =true */
 
-  /*!
-    If not empty, the learner matlabSave method will be called with that matlab_subdir at the end of the experiment.
-    Default: "".
-  */
-  string matlab_subdir;
-  
-  // *********************
-  // * protected methods *
-  // *********************
-  
+private:
+
+  //! This does the actual building
+  void build_();
+
+protected:
+
+  //! Declare this class' options
+  static void declareOptions(OptionList& ol);  
+  virtual void reportStats(const Vec& global_result);
+
+public:
+
   //! Default constructor
   SequentialValidation();
   
