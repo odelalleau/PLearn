@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianKernel.cc,v 1.7 2004/04/07 23:15:17 morinf Exp $
+   * $Id: GaussianKernel.cc,v 1.8 2004/05/11 20:53:37 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,19 +49,61 @@ using namespace std;
 
 // ** GaussianKernel **
 
-PLEARN_IMPLEMENT_OBJECT(GaussianKernel, "ONE LINE DESCR", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(GaussianKernel,
+    "The good old Gaussian kernel.",
+    "");
 
+////////////////////
+// GaussianKernel //
+////////////////////
+GaussianKernel::GaussianKernel()
+: scale_by_sigma(false),
+  sigma(1)
+{}
+
+GaussianKernel::GaussianKernel(real the_sigma)
+: scale_by_sigma(false),
+  sigma(the_sigma)
+{
+  build_();
+}
+
+////////////////////
+// declareOptions //
+////////////////////
 void GaussianKernel::declareOptions(OptionList& ol)
 {
   declareOption(ol, "sigma", &GaussianKernel::sigma, OptionBase::buildoption,
-                "The width of the Gaussian");
+                "The width of the Gaussian.");
+
+  declareOption(ol, "scale_by_sigma", &GaussianKernel::scale_by_sigma, OptionBase::buildoption,
+                "If set to 1, the kernel will be scaled by sigma^2 / 2");
+
   inherited::declareOptions(ol);
+}
+
+///////////
+// build //
+///////////
+void GaussianKernel::build()
+{
+  inherited::build();
+  build_();
+}
+
+////////////
+// build_ //
+////////////
+void GaussianKernel::build_()
+{
+  minus_one_over_sigmasquare = -1.0/square(sigma);
+  sigmasquare_over_two = square(sigma) / 2.0;
 }
 
 
 void GaussianKernel::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
-  Kernel::makeDeepCopyFromShallowCopy(copies);
+  inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(squarednorms,copies);
 }
 
@@ -95,10 +137,22 @@ void GaussianKernel::addDataForKernelMatrix(const Vec& newRow)
   squarednorms.lastElement() = pownorm(newRow, 2); 
 }
 
+/////////////////////////////////////////
+// evaluateFromSquaredNormOfDifference //
+/////////////////////////////////////////
 inline real GaussianKernel::evaluateFromSquaredNormOfDifference(real sqnorm_of_diff) const
-{ return exp(sqnorm_of_diff*minus_one_over_sigmasquare); }
+{
+  if (scale_by_sigma) {
+    return exp(sqnorm_of_diff*minus_one_over_sigmasquare) * sigmasquare_over_two;
+  } else {
+    return exp(sqnorm_of_diff*minus_one_over_sigmasquare);
+  }
+}
 
 
+//////////////
+// evaluate //
+//////////////
 real GaussianKernel::evaluate(const Vec& x1, const Vec& x2) const
 {
 #ifdef BOUNDCHECK
@@ -141,6 +195,9 @@ real GaussianKernel::evaluate_i_j(int i, int j) const
   return evaluateFromDotAndSquaredNorm(squarednorms[i],data->dot(i,j,data_inputsize),squarednorms[j]); 
 }
 
+//////////////////
+// evaluate_i_x //
+//////////////////
 real GaussianKernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) const 
 { 
   if(squared_norm_of_x<0.)
@@ -164,6 +221,9 @@ real GaussianKernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) c
 }
 
 
+//////////////////
+// evaluate_x_i //
+//////////////////
 real GaussianKernel::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x) const
 { 
   if(squared_norm_of_x<0.)
@@ -172,6 +232,9 @@ real GaussianKernel::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x) c
 }
 
 
+///////////////////
+// setParameters //
+///////////////////
 void GaussianKernel::setParameters(Vec paramvec)
 { 
   PLWARNING("In GaussianKernel: setParameters is deprecated, use setOption instead");
@@ -179,18 +242,6 @@ void GaussianKernel::setParameters(Vec paramvec)
   minus_one_over_sigmasquare = -1.0/(sigma*sigma);
 }
 
-
-void GaussianKernel::build_()
-{
-  minus_one_over_sigmasquare = -1.0/square(sigma);
-}
-
-
-void GaussianKernel::build()
-{
-  inherited::build();
-  build_();
-}
 
 } // end of namespace PLearn
 

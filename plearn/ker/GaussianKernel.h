@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: GaussianKernel.h,v 1.6 2004/04/07 23:15:17 morinf Exp $
+   * $Id: GaussianKernel.h,v 1.7 2004/05/11 20:53:48 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -53,20 +53,32 @@ using namespace std;
 //!  returns exp(-norm_2(x1-x2)^2/sigma^2)
 class GaussianKernel: public Kernel
 {
+
+private:
+
   typedef Kernel inherited;
 		
 public:
+
   //! Build options below.
+  bool scale_by_sigma;
   real sigma;
+
 protected:
-  real minus_one_over_sigmasquare;
+
+  real minus_one_over_sigmasquare;  //!< -1 / sigma^2
+  real sigmasquare_over_two;        //!<  sigma^2 / 2
+
   //! Learnt options below.
   Vec squarednorms; //!<  squarednorms of the rows of the data VMat (data is a member of Kernel)
 	 
  public:
-  GaussianKernel(real the_sigma=1)
-    : sigma(the_sigma)
-  { build_(); }
+
+  //! Default constructor.
+  GaussianKernel();
+  
+  //! Convenient constructor.
+  GaussianKernel(real the_sigma);
 
   PLEARN_DECLARE_OBJECT(GaussianKernel);
 
