@@ -100,6 +100,21 @@ public:
   //! (if available).  This is only supported on Linux at the moment.
   //! (Default = false)
   bool report_memory_usage;
+
+  /**
+   * List of options to "measure" AFTER training at each timestep, but
+   * BEFORE testing.  The options are specified as a list of pairs
+   * 'option':'filename', where the option is measured with respect to the
+   * sequential validation object itself.  Hence, if the learner contains
+   * an option 'advisor' that you want to save at each time step, you would
+   * write ["learner.advisor":"advisor.psave"].  The files are saved in the
+   * splitdir directory, which is unique for each timestep.
+   */
+  TVec< pair<string,string> > measure_after_train;
+
+  //! List of options to "measure" AFTER test, in the same format as
+  //! 'measure_after_test'.
+  TVec< pair<string,string> > measure_after_test;
   
 private:
 
@@ -127,6 +142,11 @@ protected:
 
   //! Utility method to return the highest possible timestep plus 1
   virtual int maxTimeStep() const;
+
+  //! Utility function to measure a list of options and save them
+  //! in the specified directory
+  virtual void measureOptions(const TVec< pair<string,string> >& options,
+                              PPath where_to_save);
   
 public:
 

@@ -195,6 +195,18 @@ void SequentialValidation::declareOptions(OptionList& ol)
     "both the /proc/PID/status method, and the 'mem_usage PID' method\n"
     "(if available).  This is only supported on Linux at the moment.\n"
     "(Default = false)");
+
+  declareOption(
+    ol, "measure_after_train",
+    &SequentialValidation::measure_after_train,
+    OptionBase::buildoption,
+    "List of options to \"measure\" AFTER training at each timestep, but\n"
+    "BEFORE testing.  The options are specified as a list of pairs\n"
+    "'option':'filename', where the option is measured with respect to the\n"
+    "sequential validation object itself.  Hence, if the learner contains\n"
+    "an option 'advisor' that you want to save at each time step, you would\n"
+    "write [\"learner.advisor\":\"advisor.psave\"].  The files are saved in the\n"
+    "splitdir directory, which is unique for each timestep.");
   
   inherited::declareOptions(ol);
 }
@@ -327,14 +339,18 @@ void SequentialValidation::run()
     // it's a complicated structure that cannot co-exist with an
     // instantiated training set
     VMat sub_train = trainVMat(t);
-    string splitdir = expdir+"train_t="+tostring(t)+"/";
-    if (save_data_sets || save_initial_model || save_stat_collectors ||
-        save_final_model)
+    PPath splitdir = expdir / "train_t="+tostring(t);
+    if (save_data_sets                 ||
+        save_initial_model             ||
+        save_stat_collectors           ||
+        save_final_model               ||
+        measure_after_train.size() > 0 ||
+        measure_after_test.size()  > 0  )
       force_mkdir(splitdir);
     if (save_data_sets)
-      PLearn::save(splitdir+"training_set.psave", sub_train);
+      PLearn::save(splitdir / "training_set.psave", sub_train);
     if (save_initial_model)
-      PLearn::save(splitdir+"initial_learner.psave",learner);
+      PLearn::save(splitdir / "initial_learner.psave",learner);
 
     // TRAIN
     train_stats->forget();
@@ -342,10 +358,12 @@ void SequentialValidation::run()
     learner->train();
     train_stats->finalize();
 
+    // Save post-train stuff
     if (save_stat_collectors)
-      PLearn::save(splitdir+"train_stats.psave",train_stats);
+      PLearn::save(splitdir / "train_stats.psave",train_stats);
     if (save_final_model)
-      PLearn::save(splitdir+"final_learner.psave",learner);
+      PLearn::save(splitdir / "final_learner.psave",learner);
+    measureOptions(measure_after_train, splitdir);
 
     // TEST: simply use computeOutputAndCosts for 1 observation in this
     // implementation
@@ -359,13 +377,14 @@ void SequentialValidation::run()
 
     // Save what is required from the test run
     if (save_data_sets)
-      PLearn::save(splitdir+"test_set.psave", sub_test);
+      PLearn::save(splitdir / "test_set.psave", sub_test);
     if (test_outputs)
       test_outputs->appendRow(output);
     if (test_costs)
       test_costs->appendRow(costs);
     if (save_stat_collectors)
-      PLearn::save(splitdir+"test_stats.psave",test_stats);
+      PLearn::save(splitdir / "test_stats.psave",test_stats);
+    measureOptions(measure_after_test, splitdir);
 
     Vec splitres(1+nstats);
     splitres[0] = splitnum;
@@ -466,6 +485,18 @@ VMat SequentialValidation::testVMat(int t)
 int SequentialValidation::maxTimeStep() const
 {
   return dataset.length();
+}
+
+void SequentialValidation::measureOptions(
+  const TVec< pair<string,string> >& options, PPath where_to_save)
+{
+  for (int i=0, n=options.size() ; i<n ; ++i) {
+    const string& optionname = options[i].first;
+    PPath filename = where_to_save / options[i].second;
+    string optvalue = getOption(optionname);
+    PStream out = openFile(filename, PStream::raw_ascii, "w");
+    out << optvalue;
+  }
 }
 
 } // end of namespace PLearn
