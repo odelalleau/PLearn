@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DistanceKernel.h,v 1.5 2004/04/07 23:15:17 morinf Exp $
+   * $Id: DistanceKernel.h,v 1.6 2004/06/16 18:24:45 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,14 +51,22 @@ using namespace std;
 //! This class implements an Ln distance (defaults to L2 i.e. euclidean distance).
 class DistanceKernel: public Kernel
 {
+
+private:
+
     typedef Kernel inherited;
 
 protected:
+
     real n;  //!<  1 for L1, 2 for L2, etc...
+    //! Used to store the squared norm of the input data.
+    Vec squarednorms;
+
 public:
 
-    DistanceKernel(real the_Ln=2)
-        : n(the_Ln) {}
+    bool pow_distance;
+
+    DistanceKernel(real the_Ln=2);
     
     PLEARN_DECLARE_OBJECT(DistanceKernel);
 
@@ -66,6 +74,12 @@ public:
         { return "L"+tostring(n); }
 
     virtual real evaluate(const Vec& x1, const Vec& x2) const;
+    virtual real evaluate_i_j(int i, int j) const;
+
+    //!  This method precomputes the squared norm for all the data to
+    //! later speed up evaluate methods, if n == 2.
+    virtual void setDataForKernelMatrix(VMat the_data);
+
 protected:
     static void declareOptions(OptionList& ol);
 };

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DistanceKernel.cc,v 1.4 2004/04/07 23:15:17 morinf Exp $
+   * $Id: DistanceKernel.cc,v 1.5 2004/06/16 18:24:45 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,17 +49,72 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(DistanceKernel, "ONE LINE DESCR", "NO HELP");
 
-real DistanceKernel::evaluate(const Vec& x1, const Vec& x2) const
-{ return dist(x1, x2, n); }
+////////////////////
+// DistanceKernel //
+////////////////////
+DistanceKernel::DistanceKernel(real the_Ln)
+: n(the_Ln),
+  pow_distance(false)
+{}
 
-
+////////////////////
+// declareOptions //
+////////////////////
 void DistanceKernel::declareOptions(OptionList& ol)
 {
+
   declareOption(ol, "n", &DistanceKernel::n, OptionBase::buildoption, 
-                "This class implements a Ln distance (L2, the default is the usual euclidean distance)");
+      "This class implements a Ln distance (L2, the default is the usual euclidean distance).");
+
+  declareOption(ol, "pow_distance", &DistanceKernel::pow_distance, OptionBase::buildoption, 
+      "If set to 1, the distance computed will be elevated to power n.");
+
   inherited::declareOptions(ol);
 }
 
+//////////////
+// evaluate //
+//////////////
+real DistanceKernel::evaluate(const Vec& x1, const Vec& x2) const {
+  if (pow_distance) {
+    return powdistance(x1, x2, n);
+  } else {
+    return dist(x1, x2, n);
+  }
+}
+
+//////////////////
+// evaluate_i_j //
+//////////////////
+real DistanceKernel::evaluate_i_j(int i, int j) const {
+  static real d;
+  if (n == 2.0) {
+    d = squarednorms[i] + squarednorms[j] - 2 * data->dot(i, j, data_inputsize);
+    if (pow_distance)
+      return d;
+    else
+      return sqrt(d);
+  } else {
+    return inherited::evaluate_i_j(i,j);
+  }
+}
+
+////////////////////////////
+// setDataForKernelMatrix //
+////////////////////////////
+void DistanceKernel::setDataForKernelMatrix(VMat the_data)
+{
+  inherited::setDataForKernelMatrix(the_data);
+  if (n == 2.0) {
+    squarednorms.resize(data.length());
+    for(int index=0; index<data.length(); index++)
+      squarednorms[index] = data->dot(index, index, data_inputsize);
+  }
+}
+
+////////////////////////
+// absolute_deviation //
+////////////////////////
 CostFunc absolute_deviation(int singleoutputindex)
 { 
   if(singleoutputindex>=0)
