@@ -3,6 +3,7 @@
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
+// Copyright (C) 2004 ApSTAT Technologies Inc.
 //
 
 // Redistribution and use in source and binary forms, with or without
@@ -37,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: DisplayUtils.h,v 1.5 2004/07/21 16:30:51 chrish42 Exp $
+   * $Id: DisplayUtils.h,v 1.6 2004/10/07 20:55:26 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -56,6 +57,31 @@
 
 namespace PLearn {
 using namespace std;
+
+
+
+  /*! scores is a (nsamples x nclasses) matrix with rows containing scores
+  for each class.  winners is a (nsamples x 3) matrix with rows containing
+  the winning class (argmax), its winning score (max), and the difference
+  to the second best class (margin)
+  */
+
+  void scores_to_winners(Mat scores, Mat& winners);
+
+  void color_luminance_to_rgb(int colornum, real luminance, real& r, real& g, real& b);
+
+  real color_luminance_to_rgbreal(int colornum, real luminance);
+
+  void color_luminance_to_rgbreal(Vec colornum, Vec luminance, Vec& rgbreal);
+    
+  void transform_perclass_values_into_luminance(Vec classnums, const Vec& values, int ndiscretevals);
+
+  void regulargrid_x_y_rgbreal_to_bitmap(Mat& regulargrid_x_y_rgbreal, 
+                                         Mat& bm, real& xlow, real& xhigh, real& ylow, real& yhigh);
+
+  void regulargrid_x_y_outputs_to_bitmap(Mat regulargrid_x_y_outputs, bool output_margin, int ndiscretevals,
+                                         Mat& bm, real& xlow, real& xhigh, real& ylow, real& yhigh);
+
 
 
 /*!   Display a histogram of the density of the data column.

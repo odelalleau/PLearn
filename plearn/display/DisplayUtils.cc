@@ -3,6 +3,7 @@
 // PLearn (A C++ Machine Learning Library)
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
+// Copyright (C) 2004 ApSTAT Technologies Inc.
 //
 
 // Redistribution and use in source and binary forms, with or without
@@ -37,7 +38,7 @@
  
 
 /* *******************************************************      
-   * $Id: DisplayUtils.cc,v 1.6 2004/07/21 16:30:51 chrish42 Exp $
+   * $Id: DisplayUtils.cc,v 1.7 2004/10/07 20:55:26 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -53,6 +54,134 @@
 
 namespace PLearn {
 using namespace std;
+
+
+  /*! scores is a (nsamples x nclasses) matrix with rows containing scores
+  for each class.  winners is a (nsamples x 3) matrix with rows containing
+  the winning class (argmax), its winning score (max), and the difference
+  to the second best class (margin)
+  */
+
+  void scores_to_winners(Mat scores, Mat& winners)
+  {
+    int l = scores.length();
+    winners.resize(l,3);
+    for(int i=0; i<l; i++)
+      {
+        Vec scorerow = scores(i);
+        int maxpos = argmax(scorerow);
+        real maxval = scorerow[maxpos];
+        scorerow[maxpos] = -FLT_MAX;
+        real maxval2 = max(scorerow);
+        scorerow[maxpos] = maxval;
+        winners(i,0) = maxpos;
+        winners(i,1) = maxval;
+        winners(i,2) = maxval-maxval2;
+      }
+  }
+
+
+  void color_luminance_to_rgb(int colornum, real luminance, real& r, real& g, real& b)
+  {
+    if(luminance<0 || luminance>1)
+      PLERROR("In color_luminance_to_rgb luminance %f outside of range [0,1]",luminance);    
+  }
+
+  real color_luminance_to_rgbreal(int colornum, real luminance)
+  {
+    real r,g,b;
+    color_luminance_to_rgb(colornum, luminance, r, g, b);
+    return rgb2real(r,g,b);
+  }
+
+  void color_luminance_to_rgbreal(Vec colornum, Vec luminance, Vec& rgbreal)
+  {
+    int l = colornum.length();
+    rgbreal.resize(l);
+    for(int i=0; i<l; i++)
+      rgbreal[i] = color_luminance_to_rgbreal((int)colornum[i],luminance[i]);
+  }
+    
+  void transform_perclass_values_into_luminance(Vec classnums, const Vec& values, int ndiscretevals)
+  {
+    int l = classnums.length();
+    int nclasses = (int)max(classnums);
+    Vec minval(nclasses,FLT_MAX);
+    Vec maxval(nclasses,-FLT_MAX);
+    for(int i=0; i<l; i++)
+      {
+        int c = int(classnums[i]);
+        real val = values[i];
+        if(val<minval[c])
+          minval[c] = val;
+        if(val>maxval[c])
+          maxval[c] = val;        
+      }
+
+    for(int i=0; i<l; i++)
+      {
+        int c = int(classnums[i]);
+        real val = values[i];
+        // rescale it between 0 and 1
+        val = (val-minval[c])/(maxval[c]-minval[c]);
+        if(ndiscretevals>1) // discretize it
+          val = floor(val*ndiscretevals+0.5)/ndiscretevals;
+        values[i] = val;
+      }
+  }
+
+
+  void regulargrid_x_y_rgbreal_to_bitmap(Mat& regulargrid_x_y_rgbreal, 
+                                         Mat& bm, real& xlow, real& xhigh, real& ylow, real& yhigh)
+  {
+    TVec<int> key_columns(2);
+    key_columns[0] = 0;
+    key_columns[1] = 1;
+    sortRows(regulargrid_x_y_rgbreal, key_columns);
+    int l = regulargrid_x_y_rgbreal.length();
+    xlow = regulargrid_x_y_rgbreal(0,0);
+    xhigh = regulargrid_x_y_rgbreal(l-1,0);
+    ylow = regulargrid_x_y_rgbreal(0,1);
+    yhigh = regulargrid_x_y_rgbreal(l-1,1);
+    int ny=1;
+    while(regulargrid_x_y_rgbreal(ny,1)!=ylow)
+      ++ny;
+
+    int nx = l/ny;
+    if(nx*ny!=l)
+      PLERROR("Problem in regulargrid_x_y_rgbreal_to_rgbimage : estimated_nx * estimated_ny != l (%d*%d!=%d)",nx,ny,l);
+
+    bm.resize(ny,nx);    
+    int k = 0;
+    for(int j=0; j<nx; j++)
+      for(int i=ny-1; i>=0; i--)
+        bm(i,j) = regulargrid_x_y_rgbreal(k++,2);
+  }
+
+
+  void regulargrid_x_y_outputs_to_bitmap(Mat regulargrid_x_y_outputs, bool output_margin, int ndiscretevals,
+                                         Mat& bm, real& xlow, real& xhigh, real& ylow, real& yhigh)
+
+  {
+    int l = regulargrid_x_y_outputs.length();
+    int outputsize = regulargrid_x_y_outputs.width()-2;
+    Mat regulargrid_x_y = regulargrid_x_y_outputs.subMatColumns(0,2);
+    Mat outputs = regulargrid_x_y_outputs.subMatColumns(2,outputsize);
+    Mat winners;
+    scores_to_winners(outputs, winners);
+    Vec classnums(l);
+    Vec values(l);
+    classnums << winners.column(0);
+    values << winners.column(output_margin ?2 :1);
+    transform_perclass_values_into_luminance(classnums, values, ndiscretevals);
+    Vec rgbreal;
+    color_luminance_to_rgbreal(classnums, values, rgbreal);
+    Mat regulargrid_x_y_rgbreal(l,3);
+    regulargrid_x_y_rgbreal.subMatColumns(0,2) << regulargrid_x_y;
+    regulargrid_x_y_rgbreal.column(2) << rgbreal;    
+    regulargrid_x_y_rgbreal_to_bitmap(regulargrid_x_y_rgbreal, 
+                                      bm, xlow, xhigh, ylow, yhigh);  
+  }
 
 void displayHistogram(Gnuplot& gp, Mat dataColumn,
 		      int n_bins, Vec* pbins, 
