@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: MultiInstanceNNet.cc,v 1.14 2004/02/25 18:09:52 nova77 Exp $
+   * $Id: MultiInstanceNNet.cc,v 1.15 2004/02/25 19:22:22 yoshua Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/MultiInstanceNNet.h */
@@ -421,8 +421,9 @@ void MultiInstanceNNet::train()
     int tag_column = train_set->inputsize() + train_set->targetsize() - 1;
     for (int i=0;i<l;i++) {
       train_set->getRow(i,row);
-      if (row[tag_column] == 1) {
-        // 1 indicates the beginning of a new bag.
+      int tag = (int)row[tag_column];
+      if (tag & SumOverBagsVariable::TARGET_COLUMN_FIRST) {
+        // indicates the beginning of a new bag.
         n_bags++;
       }
       if(pb)

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SumOverBagsVariable.cc,v 1.8 2004/02/25 04:00:59 yoshua Exp $
+   * $Id: SumOverBagsVariable.cc,v 1.9 2004/02/25 19:22:15 yoshua Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -297,7 +297,7 @@ void SumOverBagsVariable::fbprop()
     {
       curpos=0;
       do 
-        fpropOneBag();
+        fpropOneBag(true);
       while (curpos>0);
     }
   else 
