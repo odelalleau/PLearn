@@ -40,3 +40,10 @@ vbox.pack_start(toolbar, gtk.FALSE, gtk.FALSE)
 
 win.show_all()
 gtk.main()
+
+
+def DataSet:
+    def __init__():
+        
+
+def train_and_apply(modelfilename, trainset, 

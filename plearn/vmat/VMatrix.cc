@@ -37,7 +37,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.80 2004/12/22 19:38:15 chrish42 Exp $
+* $Id: VMatrix.cc,v 1.81 2005/01/04 21:29:47 plearner Exp $
 ******************************************************* */
 
 #include <plearn/io/load_and_save.h>
@@ -907,6 +907,19 @@ TVec<StatsCollector> VMatrix::getStats() const
     }
   }
   return field_stats;
+}
+
+TVec< pair<real,real> > VMatrix::getBoundingBox(real extra_percent) const
+{
+  TVec<StatsCollector> stats = getStats();
+  int n = stats.length();
+  TVec< pair<real,real> > bbox(n);
+  for(int k=0; k<n; k++)
+    {
+      StatsCollector& st = stats[k];
+      bbox[k] = pair<real,real>(st.min()-extra_percent*st.range(), st.max()+extra_percent*st.range());
+    }
+  return bbox;
 }
 
 ///////////////

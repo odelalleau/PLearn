@@ -34,7 +34,7 @@
 
 
 /* *******************************************************      
-   * $Id: VMatrix.h,v 1.62 2004/12/09 20:03:43 tihocan Exp $
+   * $Id: VMatrix.h,v 1.63 2005/01/04 21:29:48 plearner Exp $
    ******************************************************* */
 
 
@@ -342,6 +342,13 @@ public:
   
   StatsCollector& getStats(int fieldnum) const
   { return getStats()[fieldnum]; }
+
+
+  //! Returns the bounding box of the data, as a vector of min:max pairs. 
+  //! If extra_percent is non 0, then the box is enlarged in both ends of every direction by 
+  //! the given percentage (ex: if the data's x lies within [0,100] and extra_percent is 0.03
+  //! then the returned bound pair will be -3:103 )
+  TVec< pair<real,real> > getBoundingBox(real extra_percent=0.00) const;
 
   //! returns the ranges as defined in the ranges.psave file (for all fields)
   //! (if the ranges.psave file does not exist, a reasonable default version is created )
