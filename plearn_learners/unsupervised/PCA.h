@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PCA.h,v 1.11 2005/02/14 14:40:39 dorionc Exp $ 
+   * $Id: PCA.h,v 1.12 2005/03/03 23:50:14 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file PCA.h */
@@ -54,7 +54,17 @@ protected:
 
   // Cache for incremental_algo()
   VecStatsCollector _incremental_stats;  
+  
+  /*! Incremental algo:
+    The first time values are fed to _incremental_stats, we must remember
+    the first observation in order not to remove observation that never
+    contributed to the covariance matrix.
 
+    Initialized to -1;
+   */
+  int _oldest_observation;
+
+  
   // The following methods correspond to the algo option choices
   void classical_algo   ( );
   void incremental_algo ( );

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PCA.cc,v 1.20 2005/03/02 18:18:26 dorionc Exp $ 
+   * $Id: PCA.cc,v 1.21 2005/03/03 23:50:14 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file PCA.cc */
@@ -48,7 +48,8 @@ namespace PLearn {
 using namespace std;
 
 PCA::PCA() 
-: algo("classical"),
+: _oldest_observation(-1),
+  algo("classical"),
   _horizon(-1),
   ncomponents(2),
   sigmasq(0),
@@ -116,6 +117,15 @@ void PCA::declareOptions(OptionList& ol)
   
   // Now call the parent class' declareOptions
   inherited::declareOptions(ol);
+
+  declareOption( ol, "oldest_observation", &PCA::_oldest_observation,
+                 OptionBase::learntoption,
+                 "Incremental algo:\n"
+                 "The first time values are fed to _incremental_stats, we must remember\n"
+                 "the first observation in order not to remove observation that never\n"
+                 "contributed to the covariance matrix.\n"
+                 "\n"
+                 "Initialized to -1;" );
 }
 
 ///////////
@@ -137,7 +147,7 @@ void PCA::build_()
         "and set the 'normalize_warning' option to 0 to remove this warning");
 
   if ( algo == "incremental" )
-  {
+  {    
     _incremental_stats.compute_covariance  = true;
     _incremental_stats.no_removal_warnings = true;
   }
@@ -205,7 +215,10 @@ void PCA::forget()
   stage           = 0;
 
   if ( algo == "incremental" )
+  {
     _incremental_stats.forget();
+    _oldest_observation = -1;
+  }
 }
 
 //////////////////////
@@ -289,6 +302,17 @@ void PCA::incremental_algo()
     int window_start = train_set.length() - _horizon;
     start = window_start > 0 ? window_start : 0;
   }
+
+  /*
+    The first time values are fed to _incremental_stats, we must remember
+    the first observation in order not to remove observation that never
+    contributed to the covariance matrix.
+
+    See the following 'if ( old >= oldest_observation )' statement.
+   */
+  if ( _oldest_observation == -1 )
+    _oldest_observation = start;
+  assert( _horizon <= 0 || (start-_horizon) <= _oldest_observation ); 
   
   Vec observation;
   for ( int obs=start; obs < train_set.length(); obs++ )
@@ -301,14 +325,15 @@ void PCA::incremental_algo()
     // This adds the contribution of the new observation
     _incremental_stats.update( observation );
       
-    int old = _horizon > 0 ? obs - _horizon : _horizon;
-    if ( old >= 0 )
+    if ( _horizon > 0 &&
+         (obs - _horizon) == _oldest_observation )
     {
       // Stores the old observation
-      observation << train_set( old );
+      observation << train_set( _oldest_observation );
         
       // This removes the contribution of the old observation
       _incremental_stats.remove_observation( observation );
+      _oldest_observation++;
     }
   }
 
