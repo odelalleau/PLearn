@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: fileutils.cc,v 1.20 2004/02/26 03:56:19 nova77 Exp $
+   * $Id: fileutils.cc,v 1.21 2004/02/26 22:16:58 nova77 Exp $
    * AUTHORS: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -58,10 +58,13 @@
 #define PL_MAX_FILE_SIZE 1000
 #define chdir _chdir
 #define stat _stat
+#include <Windows.h>
+
 #else
 #include <dirent.h>
 #include <unistd.h>
-#endif
+
+#endif // WIN32
 
 #include <sstream>
 #include "fileutils.h"
@@ -172,53 +175,50 @@ int chdir(const string& path)
     // norman: added check
 #ifdef WIN32
 
-    PLERROR("lsdir: this function is not supported in win32");
+    // norman: Experimental version of directory listing for WIN32
 
-    // norman: Not working because of the "microsoft language extension - disabled"
-    //         problem. To be fixed with an external library!
+    WIN32_FIND_DATA fileData; 
+    HANDLE hSearch; 
+    DWORD dwAttrs; 
+    bool fFinished = false; 
+    char oldpath[PL_MAX_FILE_SIZE];
 
-    //WIN32_FIND_DATA fileData; 
-    //HANDLE hSearch; 
-    //DWORD dwAttrs; 
-    //bool fFinished = false; 
-    //char oldpath[PL_MAX_FILE_SIZE];
+    GetCurrentDirectory(FILENAME_MAX, oldpath);
 
-    //GetCurrentDirectory(FILENAME_MAX, oldpath);
+    if (! SetCurrentDirectory(dirpath.c_str()) )
+    {
+      SetCurrentDirectory(oldpath);
+      PLERROR("In lsdir: could not open directory %s",dirpath.c_str());
+    }
 
-    //if (! SetCurrentDirectory(dirpath.c_str()) )
-    //{
-    //  SetCurrentDirectory(oldpath);
-    //  PLERROR("In lsdir: could not open directory %s",dirpath.c_str());
-    //}
+    hSearch = FindFirstFile("*", &fileData); 
+    if (hSearch == INVALID_HANDLE_VALUE) 
+    {
+      SetCurrentDirectory(oldpath);
+      PLERROR("In lsdir: could not open directory %s. Invalid Handle Value.",dirpath.c_str());
+    }
 
-    //hSearch = FindFirstFile("*", &fileData); 
-    //if (hSearch == INVALID_HANDLE_VALUE) 
-    //{
-    //  SetCurrentDirectory(oldpath);
-    //  PLERROR("In lsdir: could not open directory %s. Invalid Handle Value.",dirpath.c_str());
-    //}
+    while (!fFinished) 
+    { 
+      string s = fileData.cFileName;
+      if(s!="." && s!="..")
+        list.push_back(s);
 
-    //while (!fFinished) 
-    //{ 
-    //  string s = fileData.cFileName;
-    //  if(s!="." && s!="..")
-    //    list.push_back(s);
+      if (!FindNextFile(hSearch, &fileData)) 
+      {
+        if (GetLastError() == ERROR_NO_MORE_FILES) 
+        { 
+          fFinished = true; 
+        } 
+        else 
+        { 
+          printf("Couldn't find next file."); 
+          // strange problem! :)
+        } 
+      }
+    }
 
-    //  if (!FindNextFile(hSearch, &fileData)) 
-    //  {
-    //    if (GetLastError() == ERROR_NO_MORE_FILES) 
-    //    { 
-    //      fFinished = true; 
-    //    } 
-    //    else 
-    //    { 
-    //      printf("Couldn't find next file."); 
-    //      // strange problem! :)
-    //    } 
-    //  }
-    //}
-
-    // SetCurrentDirectory(oldpath);
+     SetCurrentDirectory(oldpath);
 
 #else
 
