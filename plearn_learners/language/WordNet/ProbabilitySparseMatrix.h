@@ -394,7 +394,7 @@ public:
 
 };
 
-void samePos(ProbabilitySparseMatrix& m1, ProbabilitySparseMatrix& m2, string m1name, string m2name)
+inline void samePos(ProbabilitySparseMatrix& m1, ProbabilitySparseMatrix& m2, string m1name, string m2name)
 {
   for (SetIterator yit = m1.Y.begin(); yit != m1.Y.end(); ++yit)
   {
@@ -409,7 +409,7 @@ void samePos(ProbabilitySparseMatrix& m1, ProbabilitySparseMatrix& m2, string m1
   }
 }
 
-void check_prob(ProbabilitySparseMatrix& pYX, string Yname, string Xname)
+inline void check_prob(ProbabilitySparseMatrix& pYX, string Yname, string Xname)
 {
   bool failed = false;
   real sum_pY = 0.0;
@@ -433,7 +433,7 @@ void check_prob(ProbabilitySparseMatrix& pYX, string Yname, string Xname)
     PLERROR("check_prob failed for %s -> %s (sum of a column = %g)", Xname.c_str(), Yname.c_str(), sum_pY);
 }
 
-void check_prob(Set Y, const map<int, real>& pYx)
+inline void check_prob(Set Y, const map<int, real>& pYx)
 {
   real sum_y=0;
   for (map<int,real>::const_iterator y_it=pYx.begin();y_it!=pYx.end();++y_it)
