@@ -495,7 +495,7 @@ code.
 """
 import types
 
-__all__ = [ 'ref', 'bind', 'plvar', 'TMat',
+__all__ = [ 'PyPlearnError', 'ref', 'bind', 'plvar', 'TMat',
             'plargs', 'plarg_defaults', 'bind_plargs',
             'pl', 'include']
 
@@ -522,7 +522,11 @@ class plearn_snippet:
         self.s += snippet.s
         return self
 
-class DuplicateBindingError(Exception):
+class PyPlearnError(Exception):
+    """For unexpected or incorrect use of some pyplearn mecanism."""
+    pass
+
+class DuplicateBindingError(PyPlearnError):
     """This exception is raised when attemping to bind more than one PLearn
     expression to the same variable name."""
     def __init__(self, binding_name):
@@ -531,7 +535,7 @@ class DuplicateBindingError(Exception):
     def __str__(self):
         return "Binding '%s' already defined." % self.binding_name
 
-class UnknownArgumentError(Exception):
+class UnknownArgumentError(PyPlearnError):
     """This exception is raised when attempting to use a PLearn argument that
     was not defined, either on the command-line or with plarg_defaults."""
     def __init__(self, arg_name):
