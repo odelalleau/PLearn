@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_impl.h,v 1.9 2004/06/15 19:04:04 dpopovici Exp $
+   * $Id: TMat_impl.h,v 1.10 2004/06/15 19:31:41 dpopovici Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -311,7 +311,12 @@ void TMat<T>::appendRow(const TVec<T>& newrow)
   if(newrow.length()!=width() && width() > 0)
     PLERROR("In TMat::appendRow newrow vector should be as long as the matrix is wide");
 #endif
-  resize(length()+1, newrow.length(), storage->length());
+  if (storage) {
+    resize(length()+1, newrow.length(), storage->length());
+  } else {
+    // This Mat is empty: it has no storage, so using storage would crash.
+    resize(length()+1, newrow.length());
+  }
   (*this)(length()-1) << newrow;
 }
 
