@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.h,v 1.21 2004/02/20 21:14:48 chrish42 Exp $
+   * $Id: WordNetOntology.h,v 1.22 2004/04/02 19:27:57 kermorvc Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -252,6 +252,7 @@ public:
 
   void save(string synset_file, string ontology_file);
   void save(string voc_file);
+  void saveVocInWordnet(string voc_file);
   void save(string synset_file, string ontology_file, string sense_key_file);
   void load(string voc_file, string synset_file, string ontology_file);
   void load(string voc_file, string synset_file, string ontology_file, string sense_key_file);
@@ -275,6 +276,7 @@ public:
   Set getWordAdvSenses(int id);
   Set getWordsForSense(int id);
   Set getSynsetAncestors(int id, int max_level = -1);
+  Set getSynsetParents(int id);
   Set getWordAncestors(int id, int max_level = -1);
   Set getSynsetSenseDescendants(int id);
   Set getSynsetWordDescendants(int id);
@@ -292,13 +294,14 @@ public:
   int getPredominentSyntacticClassForWord(int word_id);
   void getDescendantCategoriesAtLevel(int ss_id, int cur_level, int target_level, Set categories);
   void getDownToUpParentCategoriesAtLevel(int ss_id, int target_level, Set categories, int cur_level = 0);
-
+  
+  
   bool isWord(int id);
   bool isWord(string word);
-  bool isSense(int id); // is a synset but not a category
-  bool isPureSense(int id);
-  bool isCategory(int id); // is a synset but not a sense
-  bool isPureCategory(int id);
+  bool isSense(int id); // is a correct sens id
+  bool isPureSense(int id);// is a synset but not a category
+  bool isCategory(int id); // = isSynset
+  bool isPureCategory(int id);// is a synset but not a sense 
   bool isSynset(int id); // is a synset (sense or category)
   bool isWordUnknown(string word);
   bool isWordUnknown(int id);
@@ -312,9 +315,11 @@ public:
 
   Node *findSynsetFromSynsAndGloss(const vector<string> &syns, const string &gloss, const long offset, const int fnum);
   void removeNonReachableSynsets();
+  void removeWord(int id);
 
   void print(bool print_ontology = true);
   void printSynset(int ss_id, int indent_level = 0);
+  void printSynset(int ss_id, ostream& sout, int indent_level = 0);
   void printStats();
   void printSynsetAncestors();
   void printWordAncestors();
@@ -346,6 +351,7 @@ public:
   void extractAncestors(Node* node, Set ancestors, int level, int level_threshold);
   void extractAncestors(Node* node, Set ancestors, int word_coverage_threshold);
   void extractDescendants(Node* node, Set sense_descendants, Set word_descendants);
+  void extractStrictDescendants(Node* node, Set sense_descendants, Set word_descendants);
   void extractDescendants();
   void computeWordSenseUniqueIds();
   void init(bool differentiate_unknown_words = true);

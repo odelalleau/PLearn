@@ -33,7 +33,7 @@
  
 
 /* *******************************************************      
-   * $Id: WordNetOntology.cc,v 1.28 2004/03/04 15:00:01 tihocan Exp $
+   * $Id: WordNetOntology.cc,v 1.29 2004/04/02 19:27:56 kermorvc Exp $
    * AUTHORS: Christian Jauvin
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -1130,6 +1130,22 @@ void WordNetOntology::printSynset(int ss_id, int indent_level)
 //   }
 //   cout << "}" << endl;
 }
+void WordNetOntology::printSynset(int ss_id,ostream& sout, int indent_level)
+{
+  for (int i = 0; i < indent_level; i++) sout << "    "; // indent
+  sout << "=> ";
+
+  for (vector<string>::iterator it = synsets[ss_id]->syns.begin(); it != synsets[ss_id]->syns.end(); ++it)
+  {
+    sout << *it << ", ";
+  }
+  sout << " (" << ss_id << ")" << endl;
+
+  for (int i = 0; i < indent_level; i++) cout << "    "; // indent
+  sout << "gloss = " << synsets[ss_id]->gloss << endl;
+
+}
+
 
 void WordNetOntology::printStats()
 {
@@ -1219,6 +1235,21 @@ void WordNetOntology::save(string voc_file)
   of_voc.close();
 }
 
+
+void WordNetOntology::saveVocInWordnet(string voc_file)
+{
+  ofstream of_voc(voc_file.c_str());
+  for (map<int, string>::iterator it = words.begin(); it != words.end(); ++it)
+  {
+    if (word_is_in_wn[it->first] == false)continue;
+    of_voc << it->second << endl;
+  }
+  of_voc.close();
+}
+
+
+
+
 void WordNetOntology::save(string synset_file, string ontology_file, string sense_key_file)
 {
   save(synset_file, ontology_file);
@@ -1230,6 +1261,7 @@ void WordNetOntology::save(string synset_file, string ontology_file, string sens
   }
   of_voc.close();
 }
+
 
 void WordNetOntology::load(string voc_file, string synset_file, string ontology_file)
 {
@@ -1521,6 +1553,11 @@ Set WordNetOntology::getSynsetAncestors(int id, int max_level)
   }
 }
 
+Set  WordNetOntology::getSynsetParents(int id)
+{
+  return  synsets[id]->parents;
+}
+
 Set WordNetOntology::getWordAncestors(int id, int max_level)
 {
   if (are_ancestors_extracted)
@@ -1809,6 +1846,22 @@ void WordNetOntology::extractDescendants(Node* node, Set sense_descendants, Set 
     extractDescendants(synsets[*it], sense_descendants, word_descendants);
   }
 }
+
+// Extract descendant but does not include itself in the sense descendant
+void WordNetOntology::extractStrictDescendants(Node* node, Set sense_descendants, Set word_descendants)
+{
+  int ss_id = node->ss_id;
+  if (isSense(ss_id)){ // is a sense
+    for (SetIterator it = sense_to_words[ss_id].begin(); it != sense_to_words[ss_id].end(); ++it){
+      int word_id = *it;
+      word_descendants.insert(word_id);
+    }
+  } 
+  for (SetIterator it = node->children.begin(); it != node->children.end(); ++it){
+    extractDescendants(synsets[*it], sense_descendants, word_descendants);
+  }
+}
+
 
 Set WordNetOntology::getSynsetSenseDescendants(int id)
 {
@@ -2364,6 +2417,26 @@ void WordNetOntology::removeNonReachableSynsets()
 
   unvisitAll();
 }
+
+void WordNetOntology::removeWord(int id)
+{
+  string word_string = words[id];
+  words.erase(id);
+  word_to_senses.erase(id);
+  word_to_noun_senses.erase(id);
+  word_to_verb_senses.erase(id);
+  word_to_adj_senses.erase(id);
+  word_to_adv_senses.erase(id);
+  words_id.erase(word_string);
+  word_to_noun_wnsn.erase(id);
+  word_to_verb_wnsn.erase(id);
+  word_to_adj_wnsn.erase(id);
+  word_to_adv_wnsn.erase(id);
+  word_to_predominent_pos.erase(id);
+  //  word_is_in_wn[id]=0 Should I do that ?
+ word_to_high_level_senses.erase(id);
+}
+
 
 void WordNetOntology::visitUpward(Node* node)
 {
