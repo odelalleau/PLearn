@@ -37,7 +37,7 @@
 
  
 /*
-* $Id: VMatrix.cc,v 1.87 2005/01/26 16:32:27 dorionc Exp $
+* $Id: VMatrix.cc,v 1.88 2005/01/28 17:43:03 plearner Exp $
 ******************************************************* */
 
 #include <plearn/io/load_and_save.h>
@@ -47,7 +47,6 @@
 #include "SubVMatrix.h"
 #include "VMat_computeStats.h"
 #include <plearn/math/random.h>  //!< For uniform_multinomial_sample()
-
 #include <plearn/base/stringutils.h> // REMOVE as soon as possible
 
 
@@ -569,7 +568,7 @@ void VMatrix::saveStringMappings(int col,string fname)
     return;
   }
   force_mkdir_for_file(fname);
-  POFStream o(fname.c_str());
+  PStream o = openFile(fname,PStream::plearn_ascii,"w");
   // ofstream o(fname.c_str());
   if(!o)
     PLERROR( "File %s can't be opened",fname.c_str());
@@ -863,7 +862,7 @@ void VMatrix::loadStringMapping(int col)
   deleteStringMapping(col);
 
   // smap file exists, open it
-  PIFStream f(fname);
+  PStream f = openFile(fname,PStream::plearn_ascii);
   if(!f)
     PLERROR( string("File "+fname+" cannot be opened.").c_str());
 

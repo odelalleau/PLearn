@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.30 2005/01/25 21:59:20 chapados Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.31 2005/01/28 17:43:03 plearner Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -40,6 +40,7 @@
 #include "TMat_maths.h"
 #include <assert.h>
 #include <plearn/base/stringutils.h>    //!< For pl_isnumber.
+#include <plearn/io/openString.h>
 
 namespace PLearn {
 using namespace std;
@@ -99,7 +100,7 @@ void VecStatsCollector::declareOptions(OptionList& ol)
 
 double VecStatsCollector::getStat(const string& statspec)
 {
-  PIStringStream in(statspec);
+  PStream in = openString(statspec,PStream::plearn_ascii);
   string statname;
   in.smartReadUntilNext("[", statname);
   string fieldname;

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: plerror.h,v 1.6 2004/10/14 21:23:27 ducharme Exp $
+   * $Id: plerror.h,v 1.7 2005/01/28 17:43:02 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -58,9 +58,11 @@ extern ostream* error_stream;
 
 #define PLERROR   errormsg
 #define PLWARNING warningmsg
+#define PLDEPRECATED deprecationmsg
 
 void errormsg(const char* msg, ...);
 void warningmsg(const char* msg, ...);
+void deprecationmsg(const char* msg, ...);
 void exitmsg(const char* msg, ...);
 
 } // end of namespace PLearn

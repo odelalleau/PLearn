@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ReadAndWriteCommand.cc,v 1.7 2004/12/22 16:23:23 chrish42 Exp $ 
+   * $Id: ReadAndWriteCommand.cc,v 1.8 2005/01/28 17:42:35 plearner Exp $ 
    ******************************************************* */
 
 /*! \file ReadAndWriteCommand.cc */
@@ -42,6 +42,8 @@
 #include <plearn/base/stringutils.h>      //!< For extract_extension.
 #include <plearn/io/fileutils.h>        //!< For readFileAndMacroProcess.
 #include <plearn/io/load_and_save.h>
+#include <plearn/io/openFile.h>
+#include <plearn/io/openString.h>
 
 namespace PLearn {
 using namespace std;
@@ -80,11 +82,11 @@ void ReadAndWriteCommand::run(const vector<string>& args)
     {
       map<string, string> vars;
       string script = readFileAndMacroProcess(source, vars);
-      PIStringStream in(script);
+      PStream in = openString(script,PStream::plearn_ascii);
       o = readObject(in);
     }
 
-  POFStream out(dest);
+  PStream out = openFile(dest,PStream::plearn_ascii,"w");
   if(!out)
     PLERROR("Could not open file %s for writing",dest.c_str());
   out << *o;

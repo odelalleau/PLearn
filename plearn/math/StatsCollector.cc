@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: StatsCollector.cc,v 1.47 2005/01/28 02:45:43 chapados Exp $
+   * $Id: StatsCollector.cc,v 1.48 2005/01/28 17:43:03 plearner Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,6 +44,7 @@
 #include "TMat_maths.h"
 #include "pl_erf.h"
 #include <assert.h>
+#include <plearn/io/openString.h>
 
 
 namespace PLearn {
@@ -784,7 +785,7 @@ real StatsCollector::getStat(const string& statname) const
 
   // Special case :: interpret the PSEUDOQ(xx) and LIFT(xxx) forms
   if (statname.substr(0,7) == "PSEUDOQ") {
-    PIStringStream in(statname);
+    PStream in = openString(statname, PStream::plearn_ascii);
     string dummy;
     in.smartReadUntilNext("(", dummy);
     string quantile_str;
@@ -792,7 +793,7 @@ real StatsCollector::getStat(const string& statname) const
     real q = toreal(quantile_str);
     return pseudo_quantile(q);
   } else if (statname.substr(0, 5) == "LIFT(") {
-    PIStringStream in(statname);
+    PStream in = openString(statname, PStream::plearn_ascii);
     string dummy;
     in.smartReadUntilNext("(", dummy);
     string fraction_str;

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: AutoSDBVMatrix.h,v 1.9 2004/07/21 16:30:51 chrish42 Exp $
+   * $Id: AutoSDBVMatrix.h,v 1.10 2005/01/28 17:43:02 plearner Exp $
    * AUTHOR: Pascal Vincent
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -51,6 +51,7 @@
 #include "SimpleDB.h"
 #include <plearn/vmat/VMat.h>
 #include <plearn/vmat/RowBufferedVMatrix.h>
+#include <plearn/io/openFile.h>
 //#include <map>
 
 namespace PLearn {
@@ -72,7 +73,7 @@ public:
   StringFieldMapping(string filename_, real dft_val_= MISSING_VALUE)
     :dft_val(dft_val_), mapping()
   {
-    /*ifstream*/ PIFStream f(filename_.c_str());
+    /*ifstream*/ PStream f = openFile(filename_.c_str(),PStream::plearn_ascii);
     while(f)
       {
 	string s;

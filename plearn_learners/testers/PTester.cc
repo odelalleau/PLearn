@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PTester.cc,v 1.50 2005/01/25 03:15:55 dorionc Exp $ 
+   * $Id: PTester.cc,v 1.51 2005/01/28 17:43:04 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PTester.cc */
@@ -595,62 +595,9 @@ void StatSpec::init(const string& statname)
     parseStatname(statname);
   }
 
-/* Old parseStatname
 void StatSpec::parseStatname(const string& statname)
 {
-  string name1=removeallblanks(statname);
-  size_t p = name1.find("[");
-  if (p==string::npos)
-    PLERROR("StatSpec::parseStatname(%s): can't find left bracket!",statname.c_str());
-  // get first statistic name, which is anything before the [
-  extstat = name1.substr(0,p);
-  string n1 = name1.substr(p+1);
-  PIStringStream ss1(n1);
-  string name2="";
-  int closing_symbol = ss1.smartReadUntilNext("]", name2);
-  if (closing_symbol!=']')
-    PLERROR("StatSpec::parseStatname(%s): can't find right bracket corresponding to the first [!",statname.c_str());
-  p = name2.find("[");
-  if (p==string::npos)
-    PLERROR("StatSpec::parseStatname(%s): can't find 2nd left bracket!",statname.c_str());
-  intstat = name2.substr(0,p);
-  string n2 = name2.substr(p+1);
-  PIStringStream ss2(n2);
-  string set_and_cost="";
-  closing_symbol = ss2.smartReadUntilNext("]", set_and_cost);
-  if (closing_symbol!=']')
-    PLERROR("StatSpec::parseStatname(%s): can't find right bracket corresponding to the 2nd [!",statname.c_str());
-
-  if(set_and_cost.length()<5)
-    PLERROR("In parse_statname: parse error for %s",statname.c_str());
-
-  split_on_first(set_and_cost,".", setname, costname);
-  
-  if(setname=="train")
-    setnum = 0;
-  else if(setname=="test")
-    setnum = 1;
-  else if(setname.substr(0,4)=="test")
-    {
-      setnum = toint(setname.substr(4));
-      if(setnum==0)
-        PLERROR("In parse_statname: use the name train instead of test0.\n"
-                "The first set of a split is the training set. The following are test sets named test1 test2 ..."); 
-      if(setnum<=0)
-        PLERROR("In parse_statname: parse error for %s",statname.c_str());        
-    }
-  else
-    PLERROR("In parse_statname: parse error for %s",statname.c_str());
-}
-*/
-
-void StatSpec::parseStatname(const string& statname)
-{
-#if STREAMBUFVER == 1
   PStream in = openString(statname, PStream::plearn_ascii);
-#else
-  PIStringStream in(removeblanks(statname));
-#endif
   if(in.smartReadUntilNext("[", extstat)==EOF)
     PLERROR("No opening bracket found in statname %s", statname.c_str());
   string token;

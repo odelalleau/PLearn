@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: RunCommand.cc,v 1.16 2005/01/13 14:21:31 tihocan Exp $ 
+   * $Id: RunCommand.cc,v 1.17 2005/01/28 17:42:35 plearner Exp $ 
    ******************************************************* */
 
 /*! \file RunCommand.cc */
@@ -46,6 +46,7 @@
 #include <plearn/base/Object.h>
 #include <plearn/sys/Popen.h>
 #include <plearn/io/PyPlearnDriver.h>
+#include <plearn/io/openString.h>
 
 namespace PLearn {
 using namespace std;
@@ -90,7 +91,7 @@ void RunCommand::run(const vector<string>& args)
       script = readFileAndMacroProcess(scriptfile, vars);
     }
 
-  PIStringStream in(script);
+  PStream in = openString(script,PStream::plearn_ascii);
 
   while(in)
     {

@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: Object.cc,v 1.38 2005/01/26 16:31:37 dorionc Exp $
+   * $Id: Object.cc,v 1.39 2005/01/28 17:43:02 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -47,6 +47,7 @@
 #include <plearn/io/fileutils.h>
 #include <plearn/io/load_and_save.h>
 #include <plearn/io/openFile.h>
+#include <plearn/io/openString.h>
 #include "TypeFactory.h"
 
 #include <algorithm>
@@ -416,7 +417,7 @@ Object* loadObject(const PPath &filename)
 Object* macroLoadObject(const PPath &filename, map<string, string>& vars)
 {
   string script = readFileAndMacroProcess(filename, vars);
-  PIStringStream sin(script);
+  PStream sin = openString(script,PStream::plearn_ascii);
   Object* o = readObject(sin);
   o->build();
   return o;

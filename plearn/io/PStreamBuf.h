@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PStreamBuf.h,v 1.12 2005/01/14 19:40:49 plearner Exp $ 
+   * $Id: PStreamBuf.h,v 1.13 2005/01/28 17:43:03 plearner Exp $ 
    ******************************************************* */
 
 /*! \file PStreamBuf.h */
@@ -55,13 +55,6 @@ public:
   typedef PPointable inherited;
   typedef size_t streamsize; 
   typedef off_t streampos; 
-
-  // ************************
-  // * public build options *
-  // ************************
-
-  // ### declare public option fields (such as build options) here
-  // ...
 
   // ****************
   // * Constructors *
@@ -104,7 +97,7 @@ private:
   char* outbuf_p; //!< position of next character to be written
   char* outbuf_end; //!< one after last reserved character in outbuf
 
- 
+protected:
   //! reads up to n characters into p
   //! You should override this call in subclasses. 
   //! Default version issues a PLERROR

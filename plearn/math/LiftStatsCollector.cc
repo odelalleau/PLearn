@@ -35,7 +35,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: LiftStatsCollector.cc,v 1.17 2004/11/23 21:31:15 tihocan Exp $
+ * $Id: LiftStatsCollector.cc,v 1.18 2005/01/28 17:43:03 plearner Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -44,6 +44,7 @@
 #include "LiftStatsCollector.h"
 #include "TMat_maths.h"
 #include <plearn/base/stringutils.h>
+#include <plearn/io/openString.h>
 
 namespace PLearn {
 using namespace std;
@@ -371,7 +372,7 @@ void LiftStatsCollector::forget()
 /////////////
 double LiftStatsCollector::getStat(const string& statspec)
 {
-  PIStringStream str(statspec);
+  PStream str = openString(statspec,PStream::plearn_ascii);
   string parsed;
   str.smartReadUntilNext("(",parsed);
   if (parsed == "LIFT") {

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: StepwiseSelectionOracle.cc,v 1.1 2005/01/11 23:22:44 plearner Exp $
+   * $Id: StepwiseSelectionOracle.cc,v 1.2 2005/01/28 17:43:03 plearner Exp $
    ******************************************************* */
 
 /*! \file StepwiseSelectionOracle.cc */
@@ -41,6 +41,7 @@
 #include <algorithm>
 #include "StepwiseSelectionOracle.h"
 #include <plearn/base/stringutils.h>
+#include <plearn/io/openString.h>
 
 namespace PLearn {
 using namespace std;
@@ -154,7 +155,7 @@ void StepwiseSelectionOracle::generateNewSearchset()
   if (combination_performance.size() > 0) {
     const pair<real,string>& min_objective = combination_performance.top();
     const string& option = min_objective.second;
-    PIStringStream option_stream(option);
+    PStream option_stream = openString(option,PStream::plearn_ascii);
     option_stream >> base_selected_variables;
   }
   else {

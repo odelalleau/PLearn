@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: plerror.cc,v 1.8 2004/07/21 16:30:51 chrish42 Exp $
+   * $Id: plerror.cc,v 1.9 2005/01/28 17:43:02 plearner Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -104,6 +104,23 @@ void  warningmsg(const char* msg, ...)
   va_end(args);
 
   *error_stream <<" WARNING: "<<message<<endl;
+}
+
+void  deprecationmsg(const char* msg, ...)
+{
+  va_list args;
+  va_start(args,msg);
+  char message[ERROR_MSG_SIZE];
+
+#if !defined(ULTRIX) && !defined(_MINGW_) && !defined(WIN32)
+  vsnprintf(message,ERROR_MSG_SIZE,msg,args);
+#else
+  vsprintf(message,msg,args);
+#endif
+
+  va_end(args);
+
+  *error_stream <<" DEPRECATION_WARNING: "<<message<<endl;
 }
 
 void exitmsg(const char* msg, ...)

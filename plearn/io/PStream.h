@@ -45,6 +45,7 @@
 #include <plearn/base/plerror.h>
 #include <plearn/base/byte_order.h>
 #include "fileutils.h"
+#include "PStreamFormat.h"
 #include "PStreamBuf.h"
 #include "StdPStreamBuf.h"
 
@@ -95,6 +96,7 @@ public:
   typedef ios ios_base;
 #endif
 
+  // inject some PStreamFormat types (for backward compatibility and convenience)
   enum mode_t 
     {
       plearn_ascii,    //<! PLearn ascii serialization format (can be mixed with plearn_binary)
@@ -1222,7 +1224,9 @@ class PIFStream: public PStream
 public:
   PIFStream(const string& fname, ios_base::openmode m = ios_base::in)
     :PStream(new ifstream(fname.c_str()),true) 
-  {}
+  {
+    PLDEPRECATED("PIFStream is deprecated. Use the openFile function instead.");
+  }
 };
 
 /// @deprecated Use openFile instead.
@@ -1231,7 +1235,9 @@ class POFStream: public PStream
 public:
   POFStream(const string& fname, ios_base::openmode m = ios_base::out | ios_base::trunc)
     :PStream(new ofstream(fname.c_str()),true) 
-  {}
+  {
+    PLDEPRECATED("POFStream is deprecated. Use the openFile function instead.");
+  }
 };
 
 
@@ -1240,7 +1246,10 @@ class PIStringStream: public PStream
 {
 public:
   PIStringStream(const string& s)
-    :PStream(new istringstream(s), true /* own it */) {}
+    :PStream(new istringstream(s), true /* own it */) 
+  {
+    PLDEPRECATED("PIStringStream is deprecated. Use the openString function instead.");
+  }
 };
 
 
