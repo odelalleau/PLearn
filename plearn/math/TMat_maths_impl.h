@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: TMat_maths_impl.h,v 1.63 2004/12/21 07:11:38 chapados Exp $
+   * $Id: TMat_maths_impl.h,v 1.64 2005/03/03 20:24:07 tihocan Exp $
    * AUTHORS: Pascal Vincent & Yoshua Bengio & Rejean Ducharme
    * This file is part of the PLearn library.
    ******************************************************* */
@@ -259,8 +259,10 @@ inline void multiply(const TVec<T>& source1, T source2, TVec<T>& destination)
 
 //------- These were previously in Vec_maths
 
+//! Sum of elements of a vector, which handles missing values.
+//! Should only be called with T = double or float.
 template<class T>
-T sum(const TVec<T>& vec, bool ignore_missing=false)
+T sum(const TVec<T>& vec, bool ignore_missing)
 {
   double res = 0.0;
   T* v = vec.data();
@@ -272,7 +274,19 @@ T sum(const TVec<T>& vec, bool ignore_missing=false)
   return T(res);
 }
 
-//! returns the sum of the log of the elements
+//! Sum of elements of a vector, which assumes all elements are non-missing
+//! (will return NAN if T = float or double and there is a missing value).
+template<class T>
+T sum(const TVec<T>& vec)
+{
+  T res = T(0);
+  T* v = vec.data();
+  for(int i=0; i<vec.length(); i++)
+    res += v[i];
+  return res;
+}
+
+//! Returns the sum of the log of the elements
 //! (this is also the log of the product of the elements
 //! but is more stable if you have very small elements).
 template<class T>
@@ -474,7 +488,7 @@ T weighted_variance(const TVec<T>& vec, const TVec<T>& weights, T no_weighted_me
   T* w = weights.data();
   for(int i=0; i<vec.length(); i++)
     res += v[i] * v[i] * w[i];
-  T sum_weights = sum(weights);
+  T sum_weights = sum(weights, false);
   if (sum_weights == 0)
     PLERROR("IN T weighted_variance(const TVec<T>& vec, const TVec<T>& weights, T no_weighted_mean, T weighted_mean) sum(weights) == 0");
   return (res/sum_weights - no_weighted_mean * (2*weighted_mean - no_weighted_mean))*vec.length()/(vec.length()-1);
@@ -3789,8 +3803,10 @@ void addToMat(const TMat<T>& mat, T scalar, bool ignored)
 
 // -------------- taken and adapted from Mat_maths.cc ------------------
 
+//! Sum of elements of a matrix, which handles missing values.
+//! Should only be called with T = double or float.
 template<class T>
-T sum(const TMat<T>& mat, bool ignore_missing=false)
+T sum(const TMat<T>& mat, bool ignore_missing)
 {
   double res = 0.0;
   T* m_i = mat.data();
@@ -3803,6 +3819,19 @@ T sum(const TMat<T>& mat, bool ignore_missing=false)
     }
   }
   return T(res);
+}
+
+//! Sum of elements of a matrix, which assumes all elements are non-missing
+//! (will return NAN if T = float or double and there is a missing value).
+template<class T>
+T sum(const TMat<T>& mat)
+{
+  T res = T(0);
+  T* m_i = mat.data();
+  for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
+    for(int j=0; j<mat.width(); j++)
+      res += m_i[j];
+  return res;
 }
 
 template<class T>
