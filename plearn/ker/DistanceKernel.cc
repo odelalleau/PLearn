@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: DistanceKernel.cc,v 1.11 2004/12/20 15:50:49 chapados Exp $
+   * $Id: DistanceKernel.cc,v 1.12 2004/12/20 20:04:06 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,9 +52,9 @@ PLEARN_IMPLEMENT_OBJECT(
   "Implements an Ln distance (defaults to L2 i.e. euclidean distance).",
   "Output is as follows:\n"
   "- If option 'pow_distance' = 1,\n"
-  "     k(x1,x2) = \sum_i |x1[i]-x2[i]|^n\n"
+  "     k(x1,x2) = \\sum_i |x1[i]-x2[i]|^n\n"
   "- If option 'pow_distance' = 0,\n"
-  "     k(x1,x2) = (\sum_i |x1[i]-x2[i]|^2)^(1/n)");
+  "     k(x1,x2) = (\\sum_i |x1[i]-x2[i]|^2)^(1/n)");
 
 ////////////////////
 // DistanceKernel //
