@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org 
 
 /* *******************************************************      
-   * $Id: RealMapping.cc,v 1.7 2003/04/10 18:04:59 jkeable Exp $
+   * $Id: RealMapping.cc,v 1.8 2003/05/13 18:06:57 dorionc Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -255,7 +255,7 @@ bool RealMapping::checkConsistency()
     if(it->second <0 || it->second - (int)it->second > 0)
       return false;
     if(max < it->second)
-      max = it->second;
+      max = (int)it->second;
   }
   TVec<int> v(max+1,0);
 
