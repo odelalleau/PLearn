@@ -52,7 +52,7 @@ private:
 
 protected: 
   
-  //! Declares this class' options
+  //! Declares this class' options.
   // (Please implement in .cc)
   static void declareOptions(OptionList& ol);
 
@@ -62,15 +62,15 @@ public:
   // **** Object methods ****
   // ************************
 
-  //! simply calls inherited::build() then build_() 
+  //! Simply calls inherited::build() then build_().
   virtual void build();
 
-  //! Transforms a shallow copy into a deep copy
+  //! Transforms a shallow copy into a deep copy.
   virtual void makeDeepCopyFromShallowCopy(map<const void*, void*>& copies);
 
-  // Declares other standard object methods
-  //  If your class is not instantiatable (it has pure virtual methods)
-  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS 
+  // Declares other standard object methods.
+  // If your class is not instantiatable (it has pure virtual methods)
+  // you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS.
   PLEARN_DECLARE_OBJECT(DERIVEDCLASS);
 
 
@@ -78,13 +78,13 @@ public:
   // **** PLearner methods ****
   // **************************
 
-  //! returns the size of this learner's output, (which typically
-  //! may depend on its inputsize(), targetsize() and set options)
+  //! Returns the size of this learner's output, (which typically
+  //! may depend on its inputsize(), targetsize() and set options).
   // (PLEASE IMPLEMENT IN .cc)
   virtual int outputsize() const;
 
   //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
-  //! And sets 'stage' back to 0   (this is the stage of a fresh learner!)
+  //! And sets 'stage' back to 0 (this is the stage of a fresh learner!).
   // (PLEASE IMPLEMENT IN .cc)
   virtual void forget();
 
@@ -95,7 +95,7 @@ public:
   virtual void train();
 
 
-  //! Computes the output from the input
+  //! Computes the output from the input.
   // (PLEASE IMPLEMENT IN .cc)
   virtual void computeOutput(const Vec& input, Vec& output) const;
 
@@ -105,12 +105,12 @@ public:
                                        const Vec& target, Vec& costs) const;
                                 
 
-  //! Returns the names of the costs computed by computeCostsFromOutpus (and thus the test method)
+  //! Returns the names of the costs computed by computeCostsFromOutpus (and thus the test method).
   // (PLEASE IMPLEMENT IN .cc)
   virtual TVec<string> getTestCostNames() const;
 
   //! Returns the names of the objective costs that the train method computes and 
-  //! for which it updates the VecStatsCollector train_stats
+  //! for which it updates the VecStatsCollector train_stats.
   // (PLEASE IMPLEMENT IN .cc)
   virtual TVec<string> getTrainCostNames() const;
 
@@ -127,8 +127,8 @@ public:
 
 };
 
-// Declares a few other classes and functions related to this class
-  DECLARE_OBJECT_PTR(DERIVEDCLASS);
+// Declares a few other classes and functions related to this class.
+DECLARE_OBJECT_PTR(DERIVEDCLASS);
   
 %> // end of namespace PLearn
 
