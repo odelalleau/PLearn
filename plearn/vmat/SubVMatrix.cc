@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.cc,v 1.17 2004/10/06 21:12:26 larocheh Exp $
+   * $Id: SubVMatrix.cc,v 1.18 2005/02/04 15:10:42 tihocan Exp $
    ******************************************************* */
 
 #include "SubVMatrix.h"
@@ -253,7 +253,7 @@ Vec SubVMatrix::getValues(int row, int col) const
   return parent->getValues(row+istart,col+jstart);
 }
 
-Vec SubVMatrix::getValues(Vec input, int col) const
+Vec SubVMatrix::getValues(const Vec& input, int col) const
 {
   #ifdef BOUNDCHECK
   if(col<0 || col>width())

@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: SubVMatrix.h,v 1.13 2004/10/06 21:12:26 larocheh Exp $
+   * $Id: SubVMatrix.h,v 1.14 2005/02/04 15:10:42 tihocan Exp $
    ******************************************************* */
 
 
@@ -97,7 +97,7 @@ public:
   virtual Vec getValues(int row, int col) const;
 
   //! Gives the possible values of a certain field (column) given the input
-  virtual Vec getValues(Vec input, int col) const;
+  virtual Vec getValues(const Vec& input, int col) const;
 
 protected:
 

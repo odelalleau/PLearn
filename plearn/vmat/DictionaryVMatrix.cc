@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: DictionaryVMatrix.cc,v 1.9 2004/10/06 21:12:26 larocheh Exp $ 
+   * $Id: DictionaryVMatrix.cc,v 1.10 2005/02/04 15:10:42 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Christopher Kermorvant
@@ -111,7 +111,7 @@ Vec DictionaryVMatrix::getValues(int row, int col) const
   return  dictionaries[col]->getValues(options);
 }
 
-Vec DictionaryVMatrix::getValues(Vec input, int col) const
+Vec DictionaryVMatrix::getValues(const Vec& input, int col) const
 {
   if(col < 0 || col >= length_) PLERROR("In DictionaryVMatrix::getValues() : invalid col %d, width()=%d", col, width_);
   TVec<int> options(option_fields[col].length());

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SourceVMatrix.cc,v 1.17 2005/01/25 03:15:47 dorionc Exp $ 
+   * $Id: SourceVMatrix.cc,v 1.18 2005/02/04 15:10:42 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Pascal Vincent
@@ -155,7 +155,7 @@ Vec SourceVMatrix::getValues(int row, int col) const
   return source->getValues(row,col);
 }
 
-Vec SourceVMatrix::getValues(Vec input, int col) const
+Vec SourceVMatrix::getValues(const Vec& input, int col) const
 {
   return source->getValues(input,col);
 }

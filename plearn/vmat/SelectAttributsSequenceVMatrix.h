@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: SelectAttributsSequenceVMatrix.h,v 1.10 2004/10/12 17:33:13 tihocan Exp $ 
+   * $Id: SelectAttributsSequenceVMatrix.h,v 1.11 2005/02/04 15:10:42 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Hugo Larochelle
@@ -282,7 +282,7 @@ public:
       return Vec(0);
     }
 
-  virtual Vec getValues(Vec input, int col) const
+  virtual Vec getValues(const Vec& input, int col) const
     {
       if(col < 0 || col >= length_) PLERROR("In SelectAttributsSequenceVMatrix::getValues() : invalid col %d, width()=%d", col, width_);
       if(source)
