@@ -10,7 +10,7 @@ def official_build(project_name, build_version, fixlevels):
     PROJECTS[project_name].official_build(build_version, fixlevels)
 
 def declare_module(module_name, cvs_id):
-    """cvs_id = \"$Id: versionning.py,v 1.1 2004/12/22 20:40:31 dorionc Exp $\"
+    """cvs_id = \"$Id: versionning.py,v 1.2 2005/01/05 19:23:21 dorionc Exp $\"
     """
     ## print "declare_module: %s" % module_name
     for project in PROJECTS.itervalues():
@@ -35,7 +35,7 @@ __builtin__.__import__ = versionned_import
 __all__ = [ "declare_project", "official_build", "project_version", 
             ]
 
-declare_module( __name__, "$Id: versionning.py,v 1.1 2004/12/22 20:40:31 dorionc Exp $" )
+declare_module( __name__, "$Id: versionning.py,v 1.2 2005/01/05 19:23:21 dorionc Exp $" )
 
 class PythonProject:
     def __init__(self, name):
@@ -53,12 +53,20 @@ class PythonProject:
         the_year = time.localtime()[0]
 
         begin = string.find(cvs_id, bflag) + len(bflag)
-        end = string.find(cvs_id, str(the_year))
-
         if begin == -1:
             raise ValueError( "%s - %s: CVS Id string %s is invalid."
                               % (self.name, module_name, cvs_id)
                              )
+
+        end = string.find(cvs_id, str(the_year))
+        while end == -1:
+            the_year -= 1
+            end       = string.find(cvs_id, str(the_year))
+            if the_year == 2003: ## The python_modules were added in PLearn in 2004!
+                raise ValueError( "The module's cvs_id does not appear "
+                                  "to contain any date (%s)."
+                                  % cvs_id
+                                  )
 
         version_tuple = [ int(s)
                           for s in string.split(string.strip( cvs_id[begin:end] ), '.') ]
