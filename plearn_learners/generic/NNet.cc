@@ -35,7 +35,7 @@
 
 
 /* *******************************************************      
-   * $Id: NNet.cc,v 1.19 2003/10/10 17:18:56 yoshua Exp $
+   * $Id: NNet.cc,v 1.20 2003/10/21 19:58:08 tihocan Exp $
    ******************************************************* */
 
 /*! \file PLearnLibrary/PLearnAlgo/NNet.h */
@@ -307,9 +307,9 @@ void NNet::build_()
       if(wdirect && (direct_in_to_out_weight_decay + weight_decay) != 0)
       {
         if (L1_penalty)
-          penalties.append(sumsquare(wdirect)*(direct_in_to_out_weight_decay + weight_decay));
-        else
           penalties.append(sumabs(wdirect)*(direct_in_to_out_weight_decay + weight_decay));
+        else
+          penalties.append(sumsquare(wdirect)*(direct_in_to_out_weight_decay + weight_decay));
       }
 
       test_costs = hconcat(costs);
