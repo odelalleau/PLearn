@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.cc,v 1.7 2003/10/03 21:23:16 ducharme Exp $ 
+ * $Id: Trader.cc,v 1.8 2003/10/07 15:45:17 dorionc Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -102,9 +102,10 @@ void Trader::build_()
 
   portfolios.resize(max_seq_len, nb_assets);
   portfolios.fill(MISSING_VALUE);
-  margin_cash.resize(max_seq_len, nb_assets);
-  margin_cash.fill(MISSING_VALUE);
 
+  transaction_costs.resize(max_seq_len);
+  transaction_costs.fill(MISSING_VALUE);
+  
   // Sync with the advisor
   advisor->trader = this;
   if (horizon!=advisor->horizon && advisor->horizon!=1)
@@ -178,9 +179,6 @@ void Trader::forget()
   if(portfolios) 
     portfolios.fill(MISSING_VALUE);
 
-  if(margin_cash) 
-    margin_cash.fill(MISSING_VALUE);
-
   if(stop_loss_active && internal_data_set.isNotNull())
     stop_loss_values.fill(0.0);
 
@@ -217,7 +215,7 @@ void Trader::declareOptions(OptionList& ol)
   
   declareOption(ol, "multiplicative_cost", &Trader::multiplicative_cost,
                 OptionBase::buildoption,
-                "The cost of performing a 1$ value trade\n"
+                "The cost of performing a unit trade\n"
                 "Default: 0");
   
   declareOption(ol, "rebalancing_threshold", &Trader::rebalancing_threshold,
@@ -341,29 +339,11 @@ void Trader::train()
   last_train_t = advisor->get_last_train_t();
   if(last_call_train_t != train_set.length()-1)
     PLERROR("The FuturesTrader::advisor did not set its last_call_train_t properly.");
-  if( is_missing( advisor->predictions(last_call_train_t, 0) ) )
-    PLERROR("The advisior->train method is assumed to compute and set the advisor->predictions up to the\n\t" 
-            "(last_call_train_t)^th row. If (last_train_t < last_call_train_t), the\n\t"
-            "advisor should have copied portfolios[last_train_t] to the\n\t"
-            "(last_call_train_t - last_train_t) following lines\n\t");
   
+  // Update of portfolios
   if(last_test_t == -1)
   {
     portfolios.subMatRows(0, last_call_train_t+1) << advisor->predictions.subMatRows(0, last_call_train_t+1);
-
-    // initialization of the margin cash
-    Vec margin_cash_t = margin_cash(t);
-    for (int k=0; k<nb_assets; k++)
-    {
-      real w_kt = weight(k,t);
-      if (!is_missing(w_kt) && w_kt!=0)
-      {
-        real p_kt = price(k,t);
-        margin_cash_t[k] = w_kt*p_kt;
-      }
-      else
-        margin_cash_t[k] = 0.0;
-    }
   }
   else
   {
@@ -386,17 +366,24 @@ void Trader::test(VMat testset, PP<VecStatsCollector> test_stats,
       testset.length()-1 <= last_call_train_t )
     return;
   
-  if(very_first_test_t == -1){
+  if(very_first_test_t == -1)
+  {
+    build_test();
+
+    // Since we reached that point, we know we are going to test. Therefore, there is no arm
+    //  in modifying directly last_test_t.
+    last_test_t = last_call_train_t;
+    
     // Will be used in stop_loss
     very_first_test_t = testset.length()-1;
   }
   
-  // Since we reached that point, we know we are going to test. Therefore, there is no arm
-  //  in modifying directly last_test_t. If we retrained the model after the last test, there is
-  //  no need for doing the computation twice and that why:
+  // E.g. the margin_cash field in FuturesTrader would not be available at time 
+  //  t = (testset.length()-1) - 1 
   if(last_test_t < last_call_train_t)
-    last_test_t = last_call_train_t;
-  
+    PLERROR("The last_test_t (%d) is smaller than the last_call_train_t (%d): management not supported yet", 
+            last_test_t, last_call_train_t);
+
   // Keeping references for easy access to internal_data_set
   internal_data_set = testset;
   //------------------------------------------------
@@ -417,18 +404,19 @@ void Trader::test(VMat testset, PP<VecStatsCollector> test_stats,
     //  matrix to contain info at times 0, ..., t; these are on t+1 rows
     advisor->test(testset.subMatRows(0, t+1), test_stats, testoutputs, testcosts);
     if( is_missing(advisor->predictions(t, 0)) )
-      PLERROR("The advisior->test method is assumed to compute and set the advisor->predictions up to its\n\t"
+      PLERROR("The advisor->test method is assumed to compute and set the advisor->predictions up to its\n\t"
               "(last_test_t)^th row.");
     portfolios.subMatRows(t, 1) << advisor->predictions.subMatRows(t, 1);
         
-
-    
     //**************************************************************
     //*** Body of the test which is specific to the type of Trader
     real absolute_Rt, relative_Rt;
     trader_test(t, testset, absolute_Rt, relative_Rt);    
     //**************************************************************   
 
+    if( is_missing(transaction_costs[t]) )
+      PLERROR("SUBCLASS WRITING: the subclass trader_test method is expected to fill the transaction_costs vector");
+ 
     // The order of the 'append' statements is IMPORTANT! (enum stats_indices) 
     Vec update;
     update.append( absolute_Rt );
@@ -484,14 +472,9 @@ real Trader::delta(int k, int t) const
   real delta_ = weight(k, t+1) - current_wkt;
   if(fabs(delta_) < rebalancing_threshold){
     weight(k, t+1) = current_wkt;             // Rebalancing isn't needed
-    // Since we didn't follow the recommendation of the advisor (sell or buy), the cash position 
-    //  will be affected. Didn't buy (delta_>0) we saved money; didn't sell (delta_<0), did not gain the expected money.
-    //weight(0, t+1) += delta_ * price(k, t); 
-    //weight(k, t+1) += delta_ * price(k, t); 
-
     return 0.0;
   }
-  return fabs(delta_);  //else: delta_ >= rebalancing_threshold
+  return delta_;  //here: abs(delta_) >= rebalancing_threshold
 }
 
 bool Trader::stop_loss(int k, int t) const
@@ -505,11 +488,6 @@ bool Trader::stop_loss(int k, int t) const
   
   if( stop_loss_values[k]/stop_loss_horizon < stop_loss_threshold )
   {
-    // Since we didn't follow the recommendation of the advisor (sell or buy), the cash position 
-    //  will be affected. Didn't buy: delta_>0; didn't sell: delta_<0.
-    //weight(0, t+1) += weight(k,t+1) * price(k, t); 
-    margin_cash(k, t+1) += weight(k,t+1) * price(k, t); // ??? CHRISTIAN!!
-    weight(k, t+1) = 0.0;             // Selling or covering short sales.
     // Une autre question... Idealement il faudrait  avoir une facon de determiner pendant combien
     // de temps on n'echange plus sur un asset suite a un stop_loss..
     stop_loss_values[k] = -INFINITY;      // This way: pi >= t ==> weight(k, pi) = 0 
@@ -546,7 +524,6 @@ void Trader::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(assets_tradable_indices, copies);
   deepCopyField(stop_loss_values, copies);
   deepCopyField(portfolios, copies);
-  deepCopyField(margin_cash, copies);
   deepCopyField(advisor, copies);
   deepCopyField(assets_names, copies);
 } 

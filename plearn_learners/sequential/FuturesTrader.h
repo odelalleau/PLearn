@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: FuturesTrader.h,v 1.8 2003/09/29 21:02:47 ducharme Exp $ 
+   * $Id: FuturesTrader.h,v 1.9 2003/10/07 15:45:17 dorionc Exp $ 
    ******************************************************* */
 
 /*! \file FuturesTrader.h */
@@ -56,12 +56,31 @@ protected:
   // * protected options *
   // *********************
 
+  /*!
+    margin_cash(t) contains the cash position of each asset.
+    It has a length of max_seq_len and is initialize after the first
+    init_train_size train steps.
+  */
+  mutable Mat margin_cash;
+
+  //! Access the margin value on asset k at time t (see the margin_cash matrix) 
+  real& margin(int k, int t) const { return margin_cash(t-horizon, k); }
+
 
   // *********************
   // * protected members *
-  // * SUBCLASS WRITING  *
   // *********************
 
+  /*! 
+    SUBCLASS WRITING:
+      Trader::test method SHOULD NOT BE OVERLOADED by ANY subclass!!! It does 
+        some pre and postprocessing to the body of the test method.
+        
+      However, it is well understood that a specific trader may have specific
+        field to set entering the first test.
+  */
+  virtual void build_test() const;
+  
   /*! 
     SUBCLASS WRITING:
       Trader::test method SHOULD NOT BE OVERLOADED by ANY subclass!!! It does 
@@ -74,13 +93,26 @@ protected:
   virtual void trader_test(int t, VMat testset, 
                            real& absolute_return_t, real& relative_return_t) const;
   
+  //! Checkout if a margin call is needed
+  void check_margin(int k, int t) const;
+
 public:
   
   //**************
   // Constructor *
   //**************  
   FuturesTrader();
+
+  //**************
+  // Members     *   
+  //**************
   
+  //! The ratio between the value of the contracts we are in and the margin we have. Default: 1
+  real leverage;
+  
+  //! The ratio of the initial margin at which the clearinghouse will proceed to a margin call
+  real maintenance_margin_ratio;
+
   //**************
   // Methods     *   
   //**************
@@ -91,13 +123,15 @@ private:
   
 protected:
   //! Declare this class' options
-  //static void declareOptions(OptionList& ol);
+  static void declareOptions(OptionList& ol);
   
 public:
   
   //! simply calls inherited::build() then build_()
   virtual void build();
-    
+
+  virtual void forget();
+  
   virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
                                      Vec& output, Vec& costs) const;
   
@@ -112,6 +146,7 @@ public:
   //!  Does the necessary operations to transform a shallow copy (this)
   //!  into a deep copy by deep-copying all the members that need to be.
   PLEARN_DECLARE_OBJECT(FuturesTrader);
+  virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 };
 
 //! Declares a few other classes and functions related to this class

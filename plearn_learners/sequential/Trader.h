@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: Trader.h,v 1.5 2003/10/03 21:23:16 ducharme Exp $ 
+ * $Id: Trader.h,v 1.6 2003/10/07 15:45:17 dorionc Exp $ 
  ******************************************************* */
 
 // Authors: Christian Dorion
@@ -62,56 +62,76 @@ private:
   
   //! Time at which test was called the very first time
   mutable int very_first_test_t;
-
+  
+  //! A reference to the largest of train_set/testset  
+  mutable VMat internal_data_set;   
+  
+  //! The index of the risk_free_rate column in the internal_data_set
+  int risk_free_rate_index;
+  
+  //! List of indices associated with the price fields in the VMat
+  TVec<int> assets_price_indices;
+  
+  //! The k element is the last time at which asset k had a non-missing price
+  TMat<int> last_valid_price;
+  
   //! The index of the SP500 column in the vmat (if sp500 != ""; see below)
   int sp500_index;
   mutable VecStatsCollector internal_stats; //log_returns; //!< If sp500 != ""; see below
   enum stats_indices { rt=0, log_rel_rt=1, log_sp=2 };
-  
-  mutable VMat internal_data_set;                 //!< A reference to the largest of train_set/testset  
-  
-  
-protected:
-  
-  int nb_assets;               //!< Simply assets_names.length()
-  
-  //! List of indices associated with the price fields in the VMat
-  TVec<int> assets_price_indices;
-  int risk_free_rate_index;
 
-  //! The k element is the last time at which asset k had a non-missing price
-  TMat<int> last_valid_price;
-  
   //! Same thing s above, but for the S&P500
   TVec<int> last_valid_sp500_price;
   
   //! List of indices associated with the tradable flag fields in the VMat
   TVec<int> assets_tradable_indices;
-
-  //Dans le stats collector mutable Vec test_Rt;                 //!< The return on each test period
-  mutable Vec stop_loss_values;        //!< Will be used to keep track of the losses/gains
-
   
-  /*! The portfolios matrix is used to store the positions (weights) in each asset under the 
-        convention that, if needed, the first asset is the margin account position. The portfolio 
-        matrix will have a length of max_seq_len. Its r^th row will be initialized with the portfolio 
-        predicted by the advisor at time r, therefor corresponding to the ideal portfolio at time
-        t=r+horizon given the information at time r. 
-
-      The ideal portfolios suggested by the advisor will then by faced to market reality of corrected 
-        directly in the portfolios matrix.
+  /*! 
+    The portfolios matrix is used to store the positions (weights) in each asset. The portfolio 
+     matrix will have a length of max_seq_len. Its r^th row will be initialized with the portfolio 
+     predicted by the advisor at time r, therefore corresponding to the ideal portfolio at time
+     t=r+horizon given the information at time r. 
+     
+     The ideal portfolios suggested by the advisor will then by faced to market reality of corrected 
+      directly in the portfolios matrix.
   */
   mutable Mat portfolios;
-
-  /*!
-    margin_cash(t) contains the cash position of each asset.
-    It has a length of max_seq_len and is initialize after the first
-    init_train_size train steps.
-   */
-  mutable Mat margin_cash;
   
+  //! Will be used to keep track of the losses/gains
+  mutable Vec stop_loss_values;        
+
+protected:
+  
+  //! Simply assets_names.length()
+  int nb_assets;               
+
+  /*! 
+    Sum of transaction costs payed index by time
+    SUBCLASS WRITING: 
+      The subclass trader_test method is expected to fill the transaction_costs vector.
+   */
+  Vec transaction_costs;   
+
+  
+  //! An accessor to the risk_free_rate at time t
+  real risk_free(int t) const { return internal_data_set(t,risk_free_rate_index); }  
+
   //! Access the portfolio weight k at time t (see the portfolios matrix comment) 
   real& weight(int k, int t) const { return portfolios(t-horizon, k); }
+
+  //**************
+  // Methods     *   
+  //**************
+  
+  /*! 
+    SUBCLASS WRITING:
+      Trader::test method SHOULD NOT BE OVERLOADED by ANY subclass!!! It does 
+        some pre and postprocessing to the body of the test method.
+        
+      However, it is well understood that a specific trader may have specific
+        field to set entering the first test.
+  */
+  virtual void build_test() const {}
 
   //***********************
   // Abstract Methods     *   
@@ -162,7 +182,7 @@ public:
   //! The fix cost of performing a trade. Default: 0
   real additive_cost;
 
-  //! The cost of performing a 1$ value trade. Default: 0
+  //! The cost of performing a unit trade. Default: 0
   real multiplicative_cost;
 
   //! The minimum amplitude for a transaction to be considered worthy. Default: 0
@@ -220,14 +240,10 @@ public:
   
   //! Returns the price of the given asset at a given time. 
   inline bool is_tradable(int k, int t)
-    { 
-      if(first_asset_is_cash && k==0) 
-        return true;
-      return train_set(t, assets_tradable_indices[k]); 
-    }
+    { return train_set(t, assets_tradable_indices[k]); }
   
   /*!  
-    Returns |weight(k, t) - weight(k, t+1)| (if < rebalancing_threshold) 
+    Returns [weight(k, t) - weight(k, t+1)] (if < rebalancing_threshold) 
     or 0, otherwise.
 
     Also calls stop_loss
