@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UniformDistribution.cc,v 1.6 2004/09/14 16:04:56 chrish42 Exp $ 
+   * $Id: UniformDistribution.cc,v 1.7 2004/11/12 16:33:53 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -50,6 +50,8 @@ using namespace std;
 // UniformDistribution //
 /////////////////////////
 UniformDistribution::UniformDistribution() 
+: counter(0),
+  mesh_size(-1)
 {
   // Default = generate points uniformly in [0,1].
   min.resize(1);
@@ -76,6 +78,13 @@ void UniformDistribution::declareOptions(OptionList& ol)
 
   declareOption(ol, "max", &UniformDistribution::max, OptionBase::buildoption,
       "The superior bound for all intervals.");
+
+  declareOption(ol, "mesh_size", &UniformDistribution::mesh_size, OptionBase::buildoption,
+      "If set to a value > 0, this distribution will generate points deterministically\n"
+      "so as to form a mesh of 'mesh_size'^d points equally spaced.");
+
+  declareOption(ol, "counter", &UniformDistribution::counter, OptionBase::learntoption,
+      "Counts the number of points generated (necessary when 'mesh_size' is used).");
 
   // Now call the parent class' declareOptions().
   inherited::declareOptions(ol);
@@ -107,7 +116,7 @@ void UniformDistribution::build_()
   if (min.length() != max.length()) {
     PLERROR("In UniformDistribution::build_ - 'min' and 'max' should have the same size");
   }
-  int n_dim = min.length();
+  n_dim = min.length();
   for (int i = 0; i < n_dim; i++) {
     if (min[i] > max[i]) {
       PLERROR("In UniformDistribution::build_ - 'min' should be always <= 'max'");
@@ -136,9 +145,20 @@ void UniformDistribution::expectation(Vec& mu) const
 //////////////
 void UniformDistribution::generate(Vec& x) const
 {
-  x.resize(min.length());
-  for (int i = 0; i < min.length(); i++) {
-    x[i] = bounded_uniform(min[i], max[i]);
+  x.resize(n_dim);
+  if (mesh_size > 0) {
+    int val = counter;
+    int coord;
+    for (int i = 0; i < n_dim; i++) {
+      coord = val % mesh_size;
+      val /= mesh_size;
+      x[i] = min[i] + (max[i] - min[i]) * coord / real(mesh_size) + (max[i] - min[i]) / (2 * real(mesh_size));
+    }
+    counter++;
+  } else {
+    for (int i = 0; i < n_dim; i++) {
+      x[i] = bounded_uniform(min[i], max[i]);
+    }
   }
 }
 
@@ -180,6 +200,7 @@ void UniformDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 void UniformDistribution::resetGenerator(long g_seed) const
 {
   manual_seed(g_seed);
+  counter = 0;
 }
 
 /////////////////

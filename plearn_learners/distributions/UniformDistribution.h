@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: UniformDistribution.h,v 1.5 2004/09/14 16:04:56 chrish42 Exp $ 
+   * $Id: UniformDistribution.h,v 1.6 2004/11/12 16:33:53 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -61,6 +61,13 @@ protected:
   // *********************
   // * protected options *
   // *********************
+
+  mutable int counter;
+  
+  // Fields below are not options.
+
+  //! The dimension of points generated.
+  int n_dim;
     
 public:
 
@@ -70,6 +77,7 @@ public:
 
   Vec max;
   Vec min;
+  int mesh_size;
 
   // ****************
   // * Constructors *
