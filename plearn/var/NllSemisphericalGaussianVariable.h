@@ -43,11 +43,15 @@
 namespace PLearn {
 using namespace std;
 
-//! This class implements the negative log-likelihood cost on a 
-//! Gaussian that uses a tangent plane, two variances,
+//! This class implements the negative log-likelihood cost of a Markov chain that
+//! uses semispherical gaussian transition probabilities. The parameters of the
+//! semispherical gaussians are a tangent plane, two variances,
 //! one mean and the distance of the point with its nearest neighbors.
 //! The two variances correspond to the shared variance of every manifold directions
-//! and of every noise directions.
+//! and of every noise directions. 
+//! This variable is used to do gradient descent on the parameters, but
+//! not to estimate de likelihood of the Markov chain a some point, which is
+//! more complex to estimate.
 
 class NllSemisphericalGaussianVariable: public NaryVariable
 {
@@ -56,17 +60,18 @@ class NllSemisphericalGaussianVariable: public NaryVariable
 public:
   int n; // dimension of the vectors
   bool use_subspace_distance; // use subspace distance instead of distance to targets
+  bool use_noise;          // Indication that noise on the data should be used to learn the mu parameter
   real epsilon; // cut-off of singular values to regularize linear system solution
   int n_dim; // nb of vectors in f
   int n_neighbors; // nb of neighbors
-  Vec mu, sm, sn, S;
-  Mat F, diff_y_x, z, B, Ut, V, zn, zm;
+  Vec mu, sm, sn, S, noise, mu_noisy; 
+  Mat F, diff_y_x, z, B, Ut, V, zn, zm, z_noisy, zn_noisy, zm_noisy;
   Vec p_neighbors, p_target;
   Mat w; // weights in the above minimization, in each row for each t_j
 
   //!  Default constructor for persistence
   NllSemisphericalGaussianVariable() {}
-  NllSemisphericalGaussianVariable(const VarArray& the_varray, real theepsilon);
+  NllSemisphericalGaussianVariable(const VarArray& the_varray, bool that_use_noise, real theepsilon);
 
   PLEARN_DECLARE_OBJECT(NllSemisphericalGaussianVariable);
 
@@ -84,9 +89,9 @@ protected:
   DECLARE_OBJECT_PTR(NllSemisphericalGaussianVariable);
 
   inline Var nll_semispherical_gaussian(Var tangent_plane_var, Var mu_var, Var sm_var, Var sn_var, Var neighbors_dist_var, 
-                                                 Var p_target_var, Var p_neighbors_var, real epsilon=1e-6)
+                                                 Var p_target_var, Var p_neighbors_var, Var noise, Var mu_noisy, bool use_noise=false, real epsilon=1e-6)
   {
-    return new NllSemisphericalGaussianVariable(tangent_plane_var & mu_var & sm_var & sn_var & neighbors_dist_var & p_target_var & p_neighbors_var,epsilon);
+    return new NllSemisphericalGaussianVariable(tangent_plane_var & mu_var & sm_var & sn_var & neighbors_dist_var & p_target_var & p_neighbors_var & noise & mu_noisy,use_noise, epsilon);
   }
 
                             

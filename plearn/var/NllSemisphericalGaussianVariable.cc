@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
- * $Id: NllSemisphericalGaussianVariable.cc,v 1.1 2004/08/06 14:34:16 larocheh Exp $
+ * $Id: NllSemisphericalGaussianVariable.cc,v 1.2 2004/08/17 15:37:05 larocheh Exp $
  * This file is part of the PLearn library.
  ******************************************************* */
 
@@ -53,11 +53,18 @@ namespace PLearn {
 
   PLEARN_IMPLEMENT_OBJECT(NllSemisphericalGaussianVariable,
                           "Computes the negative log-likelihood of a Gaussian on some data point, depending on the nearest neighbors.",
-                          "The Gaussian also depends on the variance of the manifold directions, the variance of the noise directions,\n"
-                          "the mean of the Gaussian and the tangent at the data point.\n");
+                          " This class implements the negative log-likelihood cost of a Markov chain that\n"
+                          " uses semispherical gaussian transition probabilities. The parameters of the\n"
+                          " semispherical gaussians are a tangent plane, two variances,\n"
+                          " one mean and the distance of the point with its nearest neighbors.\n"
+                          " The two variances correspond to the shared variance of every manifold directions\n"
+                          " and of every noise directions. \n"
+                          " This variable is used to do gradient descent on the parameters, but\n"
+                          " not to estimate de likelihood of the Markov chain a some point, which is\n"
+                          " more complex to estimate.\n");
   
-  NllSemisphericalGaussianVariable::NllSemisphericalGaussianVariable(const VarArray& the_varray, real theepsilon) : inherited(the_varray,the_varray[4]->length(),1), 
-                                                                                  n(varray[0]->width()), epsilon(theepsilon), n_dim(varray[0]->length()),
+  NllSemisphericalGaussianVariable::NllSemisphericalGaussianVariable(const VarArray& the_varray, bool that_use_noise, real theepsilon) : inherited(the_varray,the_varray[4]->length(),1), 
+                                                                                  n(varray[0]->width()), use_noise(that_use_noise),epsilon(theepsilon), n_dim(varray[0]->length()),
                                                                                   n_neighbors(varray[4]->length())
     {
       build_();
@@ -83,27 +90,33 @@ namespace PLearn {
     //    - varray[4] = neighbor_distances (n_neighbors x n)
     //    - varray[5] = p_target (1 x 1)
     //    - varray[6] = p_neighbors (n_neighbors x 1)
+    //    - varray[7] = noisy x (n x 1)
  
-    if(varray.length() != 7)
+    if(varray.length() != 9)
       PLERROR("In NllSemisphericalGaussianVariable constructor: varray is of length %d but should be of length %d", varray.length(), 7);
     
     if(varray[1]->length() != n || varray[1]->width() != 1) PLERROR("In NllSemisphericalGaussianVariable constructor: varray[1] is of size (%d,%d), but should be of size (%d,%d)",
                                                                     varray[1]->length(), varray[1]->width(),
                                                                         n_dim, 1);
     if(varray[2]->length() != 1 || varray[2]->width() != 1) PLERROR("In NllSemisphericalGaussianVariable constructor: varray[2] is of size (%d,%d), but should be of size (%d,%d)",
-                                                                    varray[1]->length(), varray[1]->width(),
+                                                                    varray[2]->length(), varray[2]->width(),
                                                                     1, 1);
     if(varray[3]->length() != 1 || varray[3]->width() != 1) PLERROR("In NllSemisphericalGaussianVariable constructor: varray[3] is of size (%d,%d), but should be of size (%d,%d)",
-                                                                    varray[1]->length(), varray[1]->width(),
+                                                                    varray[3]->length(), varray[3]->width(),
                                                                     1, 1);
     if(varray[4]->width() != n) PLERROR("In NllSemisphericalGaussianVariable constructor: varray[4] is of size (%d,%d), but should be of size (%d,%d)",
-                                        varray[1]->length(), varray[1]->width(),
+                                        varray[4]->length(), varray[4]->width(),
                                         n_neighbors, n);
     if(varray[5]->length() != 1 || varray[5]->width() != 1) PLERROR("In NllSemisphericalGaussianVariable constructor: varray[5] is of size (%d,%d), but should be of size (%d,%d)",
-                                                                    varray[1]->length(), varray[1]->width(),
+                                                                    varray[5]->length(), varray[5]->width(),
                                                                     1, 1);
     if(varray[6]->length() != n_neighbors || varray[6]->width() != 1) PLERROR("In NllSemisphericalGaussianVariable constructor: varray[6] is of size (%d,%d), but should be of size (%d,%d)",
-                                                                              varray[1]->length(), varray[1]->width(), n_neighbors, 1);
+                                                                              varray[6]->length(), varray[6]->width(), n_neighbors, 1);
+    if(varray[7]->length() != n || varray[7]->width() != 1) PLERROR("In NllSemisphericalGaussianVariable constructor: varray[7] is of size (%d,%d), but should be of size (%d,%d)",
+                                                                              varray[7]->length(), varray[7]->width(), n, 1);
+    if(varray[8]->length() != n || varray[8]->width() != 1) PLERROR("In NllSemisphericalGaussianVariable constructor: varray[8] is of size (%d,%d), but should be of size (%d,%d)",
+                                                                              varray[8]->length(), varray[8]->width(), n, 1);
+
 
     F = varray[0]->matValue;
     mu = varray[1]->value;
@@ -114,6 +127,9 @@ namespace PLearn {
     z.resize(n_neighbors,n);
     zm.resize(n_neighbors,n);
     zn.resize(n_neighbors,n);
+    z_noisy.resize(n_neighbors,n);
+    zm_noisy.resize(n_neighbors,n);
+    zn_noisy.resize(n_neighbors,n);
     B.resize(n_dim,n);
     Ut.resize(n,n);
     V.resize(n_dim,n_dim);
@@ -121,6 +137,8 @@ namespace PLearn {
 
     p_target = varray[5]->value;
     p_neighbors = varray[6]->value;
+    noise = varray[7]->value;
+    mu_noisy = varray[8]->value;
   }
 
 
@@ -169,10 +187,19 @@ namespace PLearn {
     }
 
     //  now that we have B, we can compute the w's and the nll for every neighbors
-
+    /*
+    Vec mean_diff(n); mean_diff.clear();
+    for(int j=0; j<n_neighbors;j++)
+    {
+      mean_diff += diff_y_x(j);
+    }
+    
+    mean_diff /= n_neighbors;
+    */
     for(int j=0; j<n_neighbors;j++)
     {
       Vec zj = z(j);
+      //substract(diff_y_x(j),mean_diff,zj); // z = y - x - mean_diff
       substract(diff_y_x(j),mu,zj); // z = y - x - mu(x)
       Vec zmj = zm(j);
       Vec znj = zn(j);
@@ -183,31 +210,29 @@ namespace PLearn {
       value[j] = 0.5*(pownorm(zmj,2)/sm[0] + pownorm(znj,2)/sn[0] + n_dim*log(sm[0]) + (n-n_dim)*log(sn[0])) + n/2.0 * Log2Pi; // This value is not really -log(p(y))
     }
      
+    // and we can make the noisy zm and zn
+
+    for(int j=0; j<n_neighbors;j++)
+    {
+      Vec zj_noisy = z_noisy(j);
+      Vec diff_noisy(n);
+      substract(diff_y_x(j),noise,diff_noisy); 
+      substract(diff_noisy,mu_noisy,zj_noisy); // z = y - x - mu(x)
+      Vec zmj_noisy = zm_noisy(j);
+      Vec znj_noisy = zn_noisy(j);
+      Vec wj_noisy(n_dim);
+      product(wj_noisy, B, zj_noisy); // w = B * z = projection weights for neighbor j
+      transposeProduct(zmj_noisy, F, wj_noisy); // F' w = z_m
+      substract(zj_noisy,zmj_noisy,znj_noisy); // z_n = z - zm
+    }
+     
     
   }
 
 
   void NllSemisphericalGaussianVariable::bprop()
   {
-    // calcule dcost/F et incremente input1->matGadient avec cette valeur
-    // keeping w fixed
-    // 
-    // IF use_subspace_distance
-    //   dcost/dF = w (F'w - T'u)'
-    //
-    // ELSE
-    //   dcost/dfw = 2 (fw - t_j)/||t_j||
-    //   dfw/df_i = w_i 
-    //  so 
-    //   dcost/df_i = sum_j 2(fw - t_j) w_i/||t_j||
-    //
-    // IF norm_penalization>0
-    //   add the following to the gradient of f_i:
-    //     norm_penalization*2*(||f_i||^2 - 1)*f_i
-    // N.B. WE CONSIDER THE input2 (t_j's) TO BE FIXED AND DO NOT 
-    // COMPUTE THE GRADIENT WRT to input2. IF THE USE OF THIS
-    // OBJECT CHANGES THIS MAY HAVE TO BE REVISED.
-    //
+    
 
     for(int neighbor=0; neighbor<n_neighbors; neighbor++)
     {
@@ -217,23 +242,27 @@ namespace PLearn {
       for(int i=0; i<F.length(); i++)
         for(int j=0; j<F.width(); j++)
           varray[0]->matGradient(i,j) += gradient[neighbor]*exp(-1.0*value[neighbor])*p_target[0]/p_neighbors[neighbor] * (1/sm[0] - 1/sn[0]) * w(neighbor,i) * zn(neighbor,j);
-      //varray[0]->matGradient(i,j) += gradient[neighbor]*p_target[0]/p_neighbors[neighbor] * (1/sm[0] - 1/sn[0]) * w(neighbor,i) * zn(neighbor,j);
       
       // dNLL/dmu
-
-      for(int i=0; i<mu.length(); i++)
-        varray[1]->gradient[i] -= gradient[neighbor]*exp(-1.0*value[neighbor])*p_target[0]/p_neighbors[neighbor] * ( 1/sm[0] * zm(neighbor,i) + 1/sn[0] * zn(neighbor,i));
-      //varray[1]->gradient[i] -= gradient[neighbor]*p_target[0]/p_neighbors[neighbor] * ( 1/sm[0] * zm(neighbor,i) + 1/sn[0] * zn(neighbor,i));
+      if(!use_noise)
+      {
+        for(int i=0; i<mu.length(); i++)
+          varray[1]->gradient[i] -= gradient[neighbor]*exp(-1.0*value[neighbor])*p_target[0]/p_neighbors[neighbor] * ( 1/sm[0] * zm(neighbor,i) + 1/sn[0] * zn(neighbor,i));
+      }
+      else
+      {
+      // dNLL/dmu with noisy data
       
+        for(int i=0; i<mu_noisy.length(); i++)
+          varray[8]->gradient[i] -= gradient[neighbor]*exp(-1.0*value[neighbor])*p_target[0]/p_neighbors[neighbor] * ( 1/sm[0] * zm_noisy(neighbor,i) + 1/sn[0] * zn_noisy(neighbor,i));
+      }
       // dNLL/dsm
 
       varray[2]->gradient[0] += gradient[neighbor]*exp(-1.0*value[neighbor])*p_target[0]/p_neighbors[neighbor] * (0.5 * n_dim/sm[0] - pownorm(zm(neighbor),2)/(sm[0]*sm[0]));
-      //varray[2]->gradient[0] += gradient[neighbor]*p_target[0]/p_neighbors[neighbor] * (0.5 * n_dim/sm[0] - 0.5*pownorm(zm(neighbor),2)/(sm[0]*sm[0]));
       
       // dNLL/dsn
 
       varray[3]->gradient[0] += gradient[neighbor]*exp(-1.0*value[neighbor])*p_target[0]/p_neighbors[neighbor] * (0.5 * (n-n_dim)/sn[0] - pownorm(zn(neighbor),2)/(sn[0]*sn[0]));
-      //varray[3]->gradient[0] += gradient[neighbor]*p_target[0]/p_neighbors[neighbor] * (0.5 * (n-n_dim)/sn[0] - 0.5*pownorm(zn(neighbor),2)/(sn[0]*sn[0]));
     }
 
   }
