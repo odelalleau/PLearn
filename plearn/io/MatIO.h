@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: MatIO.h,v 1.23 2005/02/08 21:34:59 tihocan Exp $
+   * $Id: MatIO.h,v 1.24 2005/02/22 13:29:32 lheureup Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -250,7 +250,7 @@ void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, TV
   
   // We are now more careful about the possibility of the stream being in a
   // bad state. The sequel in.seekg(0); in.clear(); did not seem to do the job.
-  in = 0; // Close file.
+  in = PStream(); // Close file.
   PStream loadmat = openFile(filename, PStream::raw_ascii, "r");
   
   mat.resize(length,width);
