@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: Kernel.h,v 1.24 2004/04/20 20:41:19 tihocan Exp $
+   * $Id: Kernel.h,v 1.25 2004/04/21 17:23:38 tihocan Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -136,11 +136,11 @@ public:
   void apply(VMat m, const Vec& x, Vec& result) const; //!<  result[i]=K(m[i],x)
   void apply(Vec x, VMat m, Vec& result) const; //!<  result[i]=K(x,m[i])
 
-  //! Return a vector whose i-th entry is K(x_i, x), for all i.
-  Vec evaluate_all_i_x(const Vec& x, real squared_norm_of_x=-1);
+  //! Fill k_xi_x with K(x_i, x), for all i from 0 to k_xi_x.length().
+  void evaluate_all_i_x(const Vec& x, Vec& k_xi_x, real squared_norm_of_x=-1);
 
-  //! Return a vector whose i-th entry is K(x, x_i), for all i.
-  Vec evaluate_all_x_i(const Vec& x, real squared_norm_of_x=-1);
+  //! Fill k_x_xi with K(x, x_i), for all i from 0 to k_x_xi.length().
+  void evaluate_all_x_i(const Vec& x, Vec& k_x_xi, real squared_norm_of_x=-1);
 
   inline real operator()(const Vec& x1, const Vec& x2) const
     { return evaluate(x1,x2); }
