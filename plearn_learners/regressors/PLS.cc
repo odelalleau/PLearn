@@ -33,16 +33,18 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLS.cc,v 1.8 2004/04/22 20:58:17 tihocan Exp $ 
+   * $Id: PLS.cc,v 1.9 2004/04/27 13:05:14 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
 
 /*! \file PLS.cc */
 
+#include "plapack.h"
 #include "PLS.h"
 #include "ShiftAndRescaleVMatrix.h"
 #include "SubVMatrix.h"
+#include "TMat_maths_impl.h"    //!< For dist.
 #include "VMat_maths.h"
 
 namespace PLearn {
@@ -52,6 +54,7 @@ PLS::PLS()
 : m(-1),
   p(-1),
   k(1),
+  method("kernel"),
   precision(1e-6),
   output_the_score(0),
   output_the_target(1)
@@ -68,6 +71,25 @@ PLEARN_IMPLEMENT_OBJECT(PLS,
   "Q and P are seeked. It is then possible to compute the prediction y for\n"
   "a new input x, as well as its score vector t (its representation in\n"
   "lower-dimensional coordinates).\n"
+  "The available algorithms to perform PLS (chosen by the 'method' option) are:\n"
+  "\n"
+  " ====  PLS1  ====\n"
+  "The classical PLS algorithm, suitable only for a 1-dimensional target. The\n"
+  "following algorithm is taken from 'Factor Analysis in Chemistry', with an\n"
+  "additional loop that (I believe) was missing:\n"
+  " (1) Let X (n x p) = the centered and normalized input data\n"
+  "     Let y (n x 1) = the centered and normalized target data\n"
+  "     Let k be the number of components extracted\n"
+  " (2) s = y\n"
+  " (3) lx' = s' X, s = X lx (normalized)\n"
+  " (4) If s has changed by more than 'precision', loop to (3)\n"
+  " (5) ly = s' y\n"
+  " (6) lx' = s' X\n"
+  " (7) Store s, lx and ly in the columns of respectively T, P and Q\n"
+  " (8) X = X - s lx', y = y - s ly, loop to (2) k times\n"
+  " (9) Set W = (T P')^(+) T, where the ^(+) is the right pseudoinverse\n"
+  "\n"
+  " ==== Kernel ====\n"
   "The code implements a NIPALS-PLS-like algorithm, which is a so-called\n"
   "'kernel' algorithm (faster than more classical implementations).\n"
   "The algorithm, inspired from 'Factor Analysis in Chemistry' and above all\n"
@@ -77,13 +99,13 @@ PLEARN_IMPLEMENT_OBJECT(PLS,
   "     Let k be the number of components extracted\n"
   " (2) Initialize A_0 = X'Y, M_0 = X'X, C_0 = Identity(p), and h = 0\n"
   " (3) q_h = largest eigenvector of B_h = A_h' A_h, found by the NIPALS method:\n"
-  "       (a) q_h = a (normalized) randomn column of B_h\n"
-  "       (b) q_h = B_h q_h\n"
-  "       (c) normalize q_h\n"
-  "       (d) if q_h has changed by more than 'precision', go to (b)\n"
+  "       (3.a) q_h = a (normalized) randomn column of B_h\n"
+  "       (3.b) q_h = B_h q_h\n"
+  "       (3.c) normalize q_h\n"
+  "       (3.d) if q_h has changed by more than 'precision', go to (b)\n"
   " (4) w_h = C_h A_h q_h, normalize w_h and store it in a column of W (p x k)\n"
   " (5) p_h = M_h w_h, c_h = w_h' p_h, p_h = p_h / c_h and store it in a column\n"
-  "     of P (p x c)\n"
+  "     of P (p x k)\n"
   " (6) q_h = A_h' w_h / c_h, and store it in a column of Q (m x k)\n"
   " (7) A_h+1 = A_h - c_h p_h q_h'\n"
   "     M_h+1 = M_h - c_h p_h p_h',\n"
@@ -103,11 +125,26 @@ PLEARN_IMPLEMENT_OBJECT(PLS,
 ////////////////////
 void PLS::declareOptions(OptionList& ol)
 {
-  declareOption(ol, "B", &PLS::B, OptionBase::learntoption,
-      "The regression matrix in Y = X.B + E.");
+  // Build options.
 
   declareOption(ol, "k", &PLS::k, OptionBase::buildoption,
       "The number of components (factors) computed.");
+
+  declareOption(ol, "method", &PLS::method, OptionBase::buildoption,
+      "The PLS algorithm used ('pls1' or 'kernel', see help for more details).\n");
+
+  declareOption(ol, "output_the_score", &PLS::output_the_score, OptionBase::buildoption,
+      "If set to 1, then the score (the low-dimensional representation of the input)\n"
+      "will be included in the output (before the target).");
+
+  declareOption(ol, "output_the_target", &PLS::output_the_target, OptionBase::buildoption,
+      "If set to 1, then (the prediction of) the target will be included in the\n"
+      "output (after the score).");
+
+  // Learnt options.
+
+  declareOption(ol, "B", &PLS::B, OptionBase::learntoption,
+      "The regression matrix in Y = X.B + E.");
 
   declareOption(ol, "m", &PLS::m, OptionBase::learntoption,
       "Used to store the target size.");
@@ -117,14 +154,6 @@ void PLS::declareOptions(OptionList& ol)
 
   declareOption(ol, "mean_target", &PLS::mean_target, OptionBase::learntoption,
       "The mean of the target data Y.");
-
-  declareOption(ol, "output_the_score", &PLS::output_the_score, OptionBase::buildoption,
-      "If set to 1, then the score (the low-dimensional representation of the input)\n"
-      "will be included in the output (before the target).");
-
-  declareOption(ol, "output_the_target", &PLS::output_the_target, OptionBase::buildoption,
-      "If set to 1, then (the prediction of) the target will be included in the\n"
-      "output (after the score).");
 
   declareOption(ol, "p", &PLS::p, OptionBase::learntoption,
       "Used to store the input size.");
@@ -168,6 +197,17 @@ void PLS::build_()
     stddev_target.resize(m);
     if (train_set->weightsize() > 0) {
       PLWARNING("In PLS::build_ - The train set has weights, but the optimization algorithm won't use them");
+    }
+    // Check method consistency.
+    if (method == "pls1") {
+      // Make sure the target is 1-dimensional.
+      if (m != 1) {
+        PLERROR("In PLS::build_ - With the 'pls1' method, target should be 1-dimensional");
+      }
+    } else if (method == "kernel") {
+      // Everything should be ok.
+    } else {
+      PLERROR("In PLS::build_ - Unknown value for option 'method'");
     }
   }
   if (!output_the_score && !output_the_target) {
@@ -225,8 +265,9 @@ void PLS::computeOutput(const Vec& input, Vec& output) const
 void PLS::forget()
 {
   stage = 0;
-  B.resize(0,0);
-  W.resize(0,0);
+  // Free memory.
+  B = Mat();
+  W = Mat();
 }
 
 //////////////////////
@@ -347,75 +388,150 @@ void PLS::train()
   negateElements(mean_target);
   invertElements(stddev_target);
 
-  // Initialize the various coefficients.
-  if (verbosity >= 2) {
-    cout << " Initialization of the coefficients" << endl;
-  }
-  int c = this->k;
-  Vec ph(p);
-  Mat P(p, c);
-  Vec qh(m);
-  Mat Q(m, c);
-  Vec wh(p);
-  Vec tmp(p);
-  W.resize(p, c);
-  real ch;
+  // Some common initialization.
+  W.resize(p, k);
+  Mat P(p, k);
+  Mat Q(m, k);
+  int n = X_vmat->length();
   VMat X_vmatrix = static_cast<ShiftAndRescaleVMatrix*>(X_vmat);
   VMat Y_vmatrix = static_cast<ShiftAndRescaleVMatrix*>(Y_vmat);
-  Mat Ah = transposeProduct(X_vmatrix, Y_vmatrix);
-  Mat Mh = transposeProduct(X_vmatrix, X_vmatrix);
-  Mat Ch(p,p);    // Initialized to Identity(p).
-  Mat Ah_t_Ah;
-  Mat update_Ah(p,m);
-  Mat update_Mh(p,p);
-  Mat update_Ch(p,p);
-  for (int i = 0; i < p; i++) {
-    for (int j = i+1; j < p; j++) {
-      Ch(i,j) = Ch(j,i) = 0;
-    }
-    Ch(i,i) = 1;
-  }
 
-  // Iterate k times to find the k first factors.
-  ProgressBar* pb = 0;
-  if(report_progress) {
-    pb = new ProgressBar("Computing the components", k);
-  }
-  for (int h = 0; h < this->k; h++) {
-    Ah_t_Ah = transposeProduct(Ah,Ah);
-    if (m == 1) {
-      // No need to compute the eigenvector.
-      qh[0] = 1;
-    } else {
-      NIPALSEigenvector(Ah_t_Ah, qh, precision);
+  if (method == "kernel") {
+    // Initialize the various coefficients.
+    if (verbosity >= 2) {
+      cout << " Initialization of the coefficients" << endl;
     }
-    product(tmp, Ah, qh);
-    product(wh, Ch, tmp);
-    normalize(wh, 2.0);
-    W.column(h) << wh;
-    product(ph, Mh, wh);
-    ch = dot(wh, ph);
-    ph /= ch;
-    P.column(h) << ph;
-    transposeProduct(qh, Ah, wh);
-    qh /= ch;
-    Q.column(h) << qh;
-    Mat ph_mat(p, 1, ph);
-    Mat qh_mat(m, 1, qh);
-    Mat wh_mat(p, 1, wh);
-    update_Ah = productTranspose(ph_mat, qh_mat);
-    update_Ah *= ch;
-    Ah -= update_Ah;
-    update_Mh = productTranspose(ph_mat, ph_mat);
-    update_Mh *= ch;
-    Mh -= update_Mh;
-    update_Ch = productTranspose(wh_mat, ph_mat);
-    Ch -= update_Ch;
-    if (pb) pb->update(h + 1);
+    Vec ph(p);
+    Vec qh(m);
+    Vec wh(p);
+    Vec tmp(p);
+    real ch;
+    Mat Ah = transposeProduct(X_vmatrix, Y_vmatrix);
+    Mat Mh = transposeProduct(X_vmatrix, X_vmatrix);
+    Mat Ch(p,p);    // Initialized to Identity(p).
+    Mat Ah_t_Ah;
+    Mat update_Ah(p,m);
+    Mat update_Mh(p,p);
+    Mat update_Ch(p,p);
+    for (int i = 0; i < p; i++) {
+      for (int j = i+1; j < p; j++) {
+        Ch(i,j) = Ch(j,i) = 0;
+      }
+      Ch(i,i) = 1;
+    }
+
+    // Iterate k times to find the k first factors.
+    ProgressBar* pb = 0;
+    if(report_progress) {
+      pb = new ProgressBar("Computing the components", k);
+    }
+    for (int h = 0; h < this->k; h++) {
+      Ah_t_Ah = transposeProduct(Ah,Ah);
+      if (m == 1) {
+      // No need to compute the eigenvector.
+        qh[0] = 1;
+      } else {
+        NIPALSEigenvector(Ah_t_Ah, qh, precision);
+      }
+      product(tmp, Ah, qh);
+      product(wh, Ch, tmp);
+      normalize(wh, 2.0);
+      W.column(h) << wh;
+      product(ph, Mh, wh);
+      ch = dot(wh, ph);
+      ph /= ch;
+      P.column(h) << ph;
+      transposeProduct(qh, Ah, wh);
+      qh /= ch;
+      Q.column(h) << qh;
+      Mat ph_mat(p, 1, ph);
+      Mat qh_mat(m, 1, qh);
+      Mat wh_mat(p, 1, wh);
+      update_Ah = productTranspose(ph_mat, qh_mat);
+      update_Ah *= ch;
+      Ah -= update_Ah;
+      update_Mh = productTranspose(ph_mat, ph_mat);
+      update_Mh *= ch;
+      Mh -= update_Mh;
+      update_Ch = productTranspose(wh_mat, ph_mat);
+      Ch -= update_Ch;
+      if (pb)
+        pb->update(h + 1);
+    }
+    if (pb)
+      delete pb;
+  } else if (method == "pls1") {
+    Vec s(n);
+    Vec old_s(n);
+    Vec y(n);
+    Vec lx(p);
+    Vec ly(1);
+    Mat T(n,k);
+    Mat X = X_vmatrix->toMat();
+    y << Y_vmatrix->toMat();
+    ProgressBar* pb = 0;
+    if(report_progress) {
+      pb = new ProgressBar("Computing the components", k);
+    }
+    for (int h = 0; h < k; h++) {
+      s << y;
+      normalize(s, 2.0);
+      bool finished = false;
+      while (!finished) {
+        old_s << s;
+        transposeProduct(lx, X, s);
+        product(s, X, lx);
+        normalize(s, 2.0);
+        if (dist(old_s, s, 2) < precision) {
+          finished = true;
+        }
+      }
+      ly[0] = dot(s, y);
+      transposeProduct(lx, X, s);
+      T.column(h) << s;
+      P.column(h) << lx;
+      Q.column(h) << ly;
+      // X = X - s lx'
+      // y = y - s ly
+      for (int i = 0; i < n; i++) {
+        for (int j = 0; j < p; j++) {
+          X(i,j) -= s[i] * lx[j];
+        }
+        y[i] -= s[i] * ly[0];
+      }
+      if (report_progress)
+        pb->update(h);
+    }
+    if (pb)
+      delete pb;
+    if (verbosity >= 2) {
+      cout << " Computation of the corresponding coefficients" << endl;
+    }
+    Mat tmp(n, p);
+    productTranspose(tmp, T, P);
+    Mat U, Vt;
+    Vec D;
+    real safeguard = 1.1; // Because the SVD may crash otherwise.
+    SVD(tmp, U, D, Vt, 'A', safeguard);
+    for (int i = 0; i < D.length(); i++) {
+      if (abs(D[i]) < precision) {
+        D[i] = 0;
+      } else {
+        D[i] = 1.0 / D[i];
+      }
+    }
+    Mat tmp2(n,p);
+    tmp2.fill(0);
+    for (int i = 0; i < D.length(); i++) {
+      if (D[i] != 0) {
+       tmp2(i) << D[i] * Vt(i);
+      }
+    }
+    product(tmp, U, tmp2);
+    transposeProduct(W, tmp, T);
   }
   B.resize(p,m);
   productTranspose(B, W, Q);
-  if (pb) delete pb;
   if (verbosity >= 1) {
     cout << "PLS training ended" << endl;
   }

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: PLS.h,v 1.2 2004/03/05 20:07:28 tihocan Exp $ 
+   * $Id: PLS.h,v 1.3 2004/04/27 13:05:14 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -77,6 +77,7 @@ public:
   // ************************
 
   int k;
+  string method;
   real precision;
   bool output_the_score;
   bool output_the_target;
