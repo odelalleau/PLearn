@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: AddCostToLearner.cc,v 1.18 2004/11/04 16:38:12 tihocan Exp $ 
+   * $Id: AddCostToLearner.cc,v 1.19 2004/11/16 19:59:30 tihocan Exp $ 
    ******************************************************* */
 
 // Authors: Olivier Delalleau
@@ -83,6 +83,7 @@ AddCostToLearner::AddCostToLearner()
   check_output_consistency(1),
   combine_bag_outputs_method(1),
   compute_costs_on_bags(0),
+  force_output_to_target_interval(0),
   from_max(1),
   from_min(-1),
   rescale_output(0),
