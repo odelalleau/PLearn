@@ -31,16 +31,11 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************
- * $Id: FieldConvertCommand.cc,v 1.26 2004/03/29 23:22:25 tihocan Exp $
+ * $Id: FieldConvertCommand.cc,v 1.27 2004/06/10 20:08:05 tihocan Exp $
  ******************************************************* */
 
 #include "FieldConvertCommand.h"
 #include "getDataSet.h"
-//#include "/u/delallea/LisaPLearn/UserExp/delallea/not-in-cvs/TextFilesVMatrix.h"
-//#include "TextFilesVMatrix.h"
-//#include "VVMatrix.h"
-//#include <fstream.h>
-//#include "ProgressBar.h"
 #include "pl_erf.h"       //!< For gauss_01_quantile.
 #include "random.h"
 #include "stringutils.h"
@@ -91,13 +86,18 @@ FieldConvertCommand::FieldConvertCommand()
                   "        *target                = [field index of target]\n"
                   "         force                 = [force file]\n"
                   "         report                = [report file] (default = 'FieldConvertReport.txt')\n"
-                  "         fraction              = [if number of unique values is > than 'fraction' * NonMISSING -> the field is continuous] (default = 0.3)\n"
+                  "         fraction              = [if number of unique values is > than 'fraction' * NonMISSING -> the field is continuous]\n"
+                  "                                 (default = 0.3)\n"
                   "         max_pvalue            = [maximum pvalue to assume correlation with target] (default = 0.025)\n"
-                  "         frac_missing_to_skip  = [if MISSING >= 'frac_missing_to_skip * number of samples then this field is skipped] (default = 1.0)\n"
-                  "         frac_enough           = [if a field is discrete, only values represented by at least frac_enough * nSamples elements will be kept] (default = 0.005)\n"
+                  "         frac_missing_to_skip  = [if MISSING >= 'frac_missing_to_skip * number of samples then this field is skipped]\n"
+                  "                                 (default = 1.0)\n"
+                  "         frac_enough           = [if a field is discrete, only values represented by at least frac_enough * nSamples\n"
+                  "                                 elements will be kept] (default = 0.005)\n"
                   "         precompute            = [none | pmat | ... : possibly add a <PRECOMPUTE> tag in the destination] (default = none)\n"
-                  "         discrete_tolerance    = [if a discrete field has float values, its one hot mapping will be enlarged according to this factor] (default = 0.001)\n"
-                  "         uniformize            = [0 | 1 : whether fields obviously not following a normal distribution should be uniformized] (default = 0)\n"
+                  "         discrete_tolerance    = [if a discrete field has float values, its one hot mapping will be enlarged according to\n"
+                  "                                 this factor] (default = 0.001)\n"
+                  "         uniformize            = [0 | 1 | 2: whether fields should be uniformized, 2 meaning all fields and 1 meaning only\n"
+                  "                                 fields obviously not following a normal distribution] (default = 0)\n"
                   "\n"
                   "where fields with asterix * are not optional\n"
                   ) 
@@ -117,7 +117,7 @@ void FieldConvertCommand::run(const vector<string> & args)
   target = -1;
   report_fn="FieldConvertReport.txt";
   precompute = "none";
-  bool uniformize = false;
+  int uniformize = 0;
     
   for(int i=0;i<(signed)args.size();i++)
   {
@@ -212,7 +212,7 @@ void FieldConvertCommand::run(const vector<string> & args)
   ofstream* out;
   ofstream* out_uni;
   string filename_non_uni = desti_fn + ".non_uniformized.vmat";
-  if (uniformize) {
+  if (uniformize > 0) {
     // We write two files: the one with the preprocessing and another one with
     // the uniformization.
     out = new ofstream(filename_non_uni.c_str());
@@ -493,11 +493,13 @@ void FieldConvertCommand::run(const vector<string> & args)
         *out << "isnan " << missingval << " @" << vm->fieldName(i) << " ifelse ";
       }
 
+      // Uniformize all fields when 'uniformize' is set to 2.
+      bool to_uniformize = (uniformize == 2);
       // If this field violates the normal assumption, and the user set the
       // 'uniformize' option to 1, then we should keep this field intact, and
       // remember it will need to be uniformized in the final vmat.
       bool apply_normalization = true;
-      if (uniformize) {
+      if (uniformize == 1) {
         real max = sc[i].max();
         real min = sc[i].min();
         real mu = sc[i].mean();
@@ -507,12 +509,15 @@ void FieldConvertCommand::run(const vector<string> & args)
         real alpha = gauss_01_quantile(pow((1 - confidence), 1 / real(nsamp)));
         if ( (max - mu) / sigma > alpha  || (min - mu) / sigma < - alpha) {
           // Normal assumption violated.
-          action ^= NORMALIZE;    // Remove the 'normalize' action.
-          action |= UNIFORMIZE;   // And add the 'uniformize' one.
-          apply_normalization = false;
-          *out << ":" << vm->fieldName(i) << endl;
-          need_to_be_uniformized.append(inputsize);
+          to_uniformize = true;
         }
+      }
+      if (to_uniformize) {
+        action ^= NORMALIZE;    // Remove the 'normalize' action.
+        action |= UNIFORMIZE;   // And add the 'uniformize' one.
+        apply_normalization = false;
+        *out << ":" << vm->fieldName(i) << endl;
+        need_to_be_uniformized.append(inputsize);
       }
 
       // And apply normalization if we still need to do it.
@@ -604,7 +609,7 @@ void FieldConvertCommand::run(const vector<string> & args)
                 << "</SIZES>" << endl;
 
   // Now build the uniformized VMatrix if 'uniformize' has been set.
-  if (uniformize) {
+  if (uniformize > 0) {
     // Prepare the 'shift' and 'scale' vectors to map uniformized fields to
     // [-1,1] instead of default [0,1].
     Vec shift(inputsize + 1);  // +1 because of the target.
@@ -646,7 +651,7 @@ void FieldConvertCommand::run(const vector<string> & args)
   // Possibly add the <PRECOMPUTE> tag.
   if (precompute != "none") {
     *out << endl << "<PRECOMPUTE>" << endl << precompute << endl << "</PRECOMPUTE>" << endl;
-    if (uniformize) {
+    if (uniformize > 0) {
       *out_uni << endl << "<PRECOMPUTE>" << endl << precompute << endl << "</PRECOMPUTE>" << endl;
     }
   }
@@ -654,7 +659,7 @@ void FieldConvertCommand::run(const vector<string> & args)
   // Free stuff.
   out->close();
   delete out;
-  if (uniformize) {
+  if (uniformize > 0) {
     out_uni->close();
     delete out_uni;
   }
