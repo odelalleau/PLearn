@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
- * $Id: VMatrixFromDistribution.cc,v 1.3 2003/07/04 18:21:06 jkeable Exp $ 
+ * $Id: VMatrixFromDistribution.cc,v 1.4 2003/07/25 21:40:15 lheureup Exp $ 
  ******************************************************* */
 
 /*! \file VMatrixFromDistribution.cc */
@@ -107,7 +107,7 @@ void VMatrixFromDistribution::build_()
       }
       else
       {
-        length_ = (int)pow(samples_per_dim,distr->inputsize());
+        length_ = (int)pow(double(samples_per_dim),double(distr->inputsize()));
         width_ = distr->inputsize()+1;
         data.resize(length_, width_);
         Vec v(data.width());
