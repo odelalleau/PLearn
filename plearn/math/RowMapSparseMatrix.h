@@ -67,8 +67,9 @@ using namespace std;
 
   template <class T>
   class RowMapSparseMatrix {
-    protected:
+    public:
     vector< map<int,T> > rows;
+    protected:
     int _width;
 
     public:
@@ -543,6 +544,22 @@ using namespace std;
         avg_across_rows[j] /= column_counts[j];
     }
 
+/*!       average across rows on one hand, and in parallel average across columns
+      (thus getting two averages). The boolean argument specifies whether
+      the average is across the explicit elements (the non-zeros) or
+      across everything (currently unsupported).
+*/
+      real sumRow(int i)
+      {
+        real s=0;
+        map<int,T>& row_i = rows[i];
+        typename map<int,T>::const_iterator it = row_i.begin();
+        typename map<int,T>::const_iterator end = row_i.end();
+        for (;it!=end;++it)
+          s += it->second;
+        return s;
+      }
+
 
     //!  multiply each (non-zero) element
     void operator*=(real scalar)
@@ -768,6 +785,9 @@ using namespace std;
     }
 
   };
+
+template <class T>
+void product(RowMapSparseMatrix<T>& M, const Vec& x, Vec& y) { M.product(x,y); }
 
 %> // end of namespace PLearn
 
