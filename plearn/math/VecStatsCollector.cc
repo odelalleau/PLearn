@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: VecStatsCollector.cc,v 1.18 2004/03/04 14:59:06 tihocan Exp $ 
+   * $Id: VecStatsCollector.cc,v 1.19 2004/03/09 22:20:48 chapados Exp $ 
    ******************************************************* */
 
 /*! \file VecStatsCollector.cc */
@@ -95,6 +95,13 @@ double VecStatsCollector::getStat(const string& statspec)
   int fieldnum = getFieldNum(fieldname);  
   if(fieldnum<0)
     PLERROR("In VecStatsCollector::getStat invalid fieldname: %s",fieldname.c_str());
+
+  // It could be that nothing was accumulated into the stats collector,
+  // which is different from accessing the "wrong" field.  In the first
+  // case, return MISSING_VALUE
+  if (stats.length() == 0)
+    return MISSING_VALUE;
+  
   return getStats(fieldnum).getStat(statname);
 }
 

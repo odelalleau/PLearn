@@ -34,7 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 /* *******************************************************      
-   * $Id: ConstantRegressor.h,v 1.5 2004/02/20 21:14:49 chrish42 Exp $ 
+   * $Id: ConstantRegressor.h,v 1.6 2004/03/09 22:20:54 chapados Exp $ 
    ******************************************************* */
 
 /*! \file ConstantRegressor.h */
@@ -48,6 +48,9 @@ using namespace std;
 
 class ConstantRegressor: public PLearner
 {
+private:
+  typedef PLearner inherited;
+  
 protected:
   // *********************
   // * protected options *

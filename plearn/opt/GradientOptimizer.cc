@@ -37,7 +37,7 @@
  
 
 /* *******************************************************      
-   * $Id: GradientOptimizer.cc,v 1.29 2004/02/28 16:01:39 yoshua Exp $
+   * $Id: GradientOptimizer.cc,v 1.30 2004/03/09 22:20:54 chapados Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -292,6 +292,13 @@ bool GradientOptimizer::optimizeN(VecStatsCollector& stats_coll)
       static bool display_var_graph=false;
       if (display_var_graph)
         displayVarGraph(proppath, true, 333);
+
+//       // Debugging of negative NLL bug...
+//       if (cost->value[0] <= 0) {
+//         displayVarGraph(proppath, true, 333);
+//         cerr << "Negative NLL cost vector = " << cost << endl;
+//         PLERROR("Negative NLL encountered in optimization");
+//       }
 
       // set params += -learning_rate * params.gradient
       if(!stochastic_hack)
