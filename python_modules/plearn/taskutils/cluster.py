@@ -1,4 +1,4 @@
-import os, shutil, time
+import os, shutil, sys, time
 
 from ArgumentsOracle                 import *
 from plearn.utilities.toolkit        import command_output 
@@ -38,14 +38,15 @@ class Cluster(PyPLearnObject):
             if self.wait_for_expdir_creation:
                 current_count = count_expdirs( self.expdir_pattern )
                 while current_count == expdir_count:
-                    print ".",
+                    sys.stderr.write(".")
                     time.sleep(2)
                     current_count = count_expdirs( self.expdir_pattern )
                 print
+                expdir_count = current_count
 
             message = "Using %d machines or more; waiting ." % self.max_nmachines
             while ( machines_used_by_user() >= self.max_nmachines ):
-                print message,
+                sys.stderr.write(message)
                 message = "."
                 time.sleep( self.sleep_time )
             print
