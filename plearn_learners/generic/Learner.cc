@@ -39,7 +39,7 @@
  
 
 /* *******************************************************      
-   * $Id: Learner.cc,v 1.9 2003/04/06 23:22:39 plearner Exp $
+   * $Id: Learner.cc,v 1.10 2003/05/08 15:56:58 tihocan Exp $
    ******************************************************* */
 
 #include "Learner.h"
@@ -200,11 +200,11 @@ void Learner::declareOptions(OptionList& ol)
                 "mean_stats() & stderr_stats()");
 
   declareOption(ol, "test_every", &Learner::test_every, OptionBase::buildoption, 
-                "????");
+                "   Compute cost on the test set every <test_every> steps (if 0, then no test is done during training\n");
 
   declareOption(ol, "minibatch_size", &Learner::minibatch_size, 
                 OptionBase::buildoption, 
-                "size of blocks over which to perform tests, calling 'apply' if >1, otherwise caling 'use'\n");
+                "   size of blocks over which to perform tests, calling 'apply' if >1, otherwise caling 'use'\n");
 
   inherited::declareOptions(ol);
 }
@@ -401,7 +401,7 @@ bool Learner::measure(int step, const Vec& costs)
       vlog << " >> Saving model in " << fname << endl;
       PLearn::save(fname, *this);
     }
-  if (step%test_every==0)
+  if ((test_every != 0) && (step%test_every==0))
   {
     int ntestsets = test_sets.size();
     Array<Vec> test_results(ntestsets);
