@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: IsMissingVariable.h,v 1.3 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: IsMissingVariable.h,v 1.4 2004/04/27 15:59:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -52,23 +52,29 @@ using namespace std;
 //!  A scalar var;  equal 1 if input1!=c, 0 otherwise
 class IsMissingVariable: public UnaryVariable
 {
+  typedef UnaryVariable inherited;
+
 protected:
-    typedef UnaryVariable inherited;
-  //!  Default constructor for persistence
-  IsMissingVariable() {}
   bool parallel; // if true then output 1 value per input, otherwise output 1 if ANY of the inputs is missing
 
 public:
-  virtual string info() const; 
-
-public:
+  //!  Default constructor for persistence
+  IsMissingVariable() {}
   IsMissingVariable(Variable* input1, bool parallel=0);
+
   PLEARN_DECLARE_OBJECT(IsMissingVariable);
+  static void declareOptions(OptionList &ol);
+
+  virtual string info() const
+    { return string("IsMissingVariable ()"); }
+
   virtual void recomputeSize(int& l, int& w) const;
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
 };
+
+DECLARE_OBJECT_PTR(IsMissingVariable);
 
 inline Var isMissing(Var x) { return new IsMissingVariable(x); }
 

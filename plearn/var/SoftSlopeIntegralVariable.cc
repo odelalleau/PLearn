@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SoftSlopeIntegralVariable.cc,v 1.4 2004/04/16 17:37:55 yoshua Exp $
+   * $Id: SoftSlopeIntegralVariable.cc,v 1.5 2004/04/27 15:59:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,35 +49,45 @@ using namespace std;
 
 /** SoftSlopeIntegralVariable **/
 
-SoftSlopeIntegralVariable::  SoftSlopeIntegralVariable(Variable* smoothness, Variable* left, Variable* right, real a_, real b_, bool tabulated_)
-  :NaryVariable(VarArray(smoothness) & Var(left) & Var(right), 
-                smoothness->length()<left->length()?left->length():smoothness->length(), 
-                smoothness->width()<left->width()?left->width():smoothness->width()),
-   a(a_), b(b_), tabulated(tabulated_)
-{}
-
 
 PLEARN_IMPLEMENT_OBJECT(SoftSlopeIntegralVariable, 
                         "This Var computes the integral of the soft_slope function in an interval.", 
                         "Compute the integral of soft_slope(x,s,l,r) over x from a to b\n");
 
+SoftSlopeIntegralVariable::  SoftSlopeIntegralVariable(Variable* smoothness, Variable* left, Variable* right, real a_, real b_, bool tabulated_)
+  : inherited(VarArray(smoothness) & Var(left) & Var(right), 
+              smoothness->length()<left->length()?left->length():smoothness->length(), 
+              smoothness->width()<left->width()?left->width():smoothness->width()),
+    a(a_), b(b_), tabulated(tabulated_)
+{}
+
+void
+SoftSlopeIntegralVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "a", &SoftSlopeIntegralVariable::a, OptionBase::buildoption, "");
+    declareOption(ol, "b", &SoftSlopeIntegralVariable::b, OptionBase::buildoption, "");
+    declareOption(ol, "tabulated", &SoftSlopeIntegralVariable::tabulated, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
+
 void SoftSlopeIntegralVariable::recomputeSize(int& l, int& w) const
 { 
-  l=0; 
-  w=0;
-  for (int i=0;i<3;i++)
-  {
-    if (varray[i]->length()>l) l=varray[i]->length();
-    if (varray[i]->width()>w) w=varray[i]->width();
-  }
-  for (int i=0;i<3;i++)
-  {
-    if (varray[i]->length()!=l || varray[i]->width()!=w)
-    {
-      if (varray[i]->length()!=1 || varray[i]->width()!=1)
-        PLERROR("Each argument of SoftSlopeIntegralVariable should either have the same length/width as the others or length 1");
+    l=0; 
+    w=0;
+    if (varray.size() && varray[0] && varray[1] && varray[2]) {
+        for (int i = 0; i < 3; i++) {
+            if (varray[i]->length() > l)
+                l = varray[i]->length();
+            if (varray[i]->width() > w)
+                w = varray[i]->width();
+        }
+        for (int i = 0; i < 3; i++) {
+            if (varray[i]->length() != l || varray[i]->width() != w) {
+              if (varray[i]->length() != 1 || varray[i]->width() != 1)
+                  PLERROR("Each argument of SoftSlopeIntegralVariable should either have the same length/width as the others or length 1");
+            }
+        }
     }
-  }
 }
 
 

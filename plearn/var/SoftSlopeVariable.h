@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SoftSlopeVariable.h,v 1.6 2004/04/16 17:37:55 yoshua Exp $
+   * $Id: SoftSlopeVariable.h,v 1.7 2004/04/27 15:59:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -46,8 +46,6 @@
 #include "NaryVariable.h"
 #include "SigmoidVariable.h"
 #include "Var_operators.h"
-//#include "pl_math.h"
-//#include "Var_utils.h"
 
 namespace PLearn {
 using namespace std;
@@ -59,22 +57,26 @@ using namespace std;
 // It is always monotonically increasing wrt x (positive derivative in x).
 class SoftSlopeVariable: public NaryVariable
 {
+  typedef NaryVariable inherited;
+
 protected:
-    typedef NaryVariable inherited;
   bool tabulated;
-  //!  Default constructor for persistence
-  SoftSlopeVariable() {}
 
 public:
+  //!  Default constructor for persistence
+  SoftSlopeVariable() {}
   SoftSlopeVariable(Variable* x, Variable* smoothness, Variable* left, Variable* right, bool tabulated=true);
+
   PLEARN_DECLARE_OBJECT(SoftSlopeVariable);
+  static void declareOptions(OptionList &ol);
+
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
 };
+
+DECLARE_OBJECT_PTR(SoftSlopeVariable);
 
 inline Var soft_slope(Var x, Var smoothness, Var left, Var right)
 { return new SoftSlopeVariable(x,smoothness,left,right); }

@@ -36,12 +36,11 @@
 
 
 /* *******************************************************      
-   * $Id: PlusConstantVariable.cc,v 1.5 2004/03/04 14:59:35 tihocan Exp $
+   * $Id: PlusConstantVariable.cc,v 1.6 2004/04/27 15:59:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "PlusConstantVariable.h"
-#include "stringutils.h"      //!< For tostring.
 
 namespace PLearn {
 using namespace std;
@@ -49,26 +48,30 @@ using namespace std;
 
 /** PlusConstantVariable **/
 
-string PlusConstantVariable::info() const
-{ return string("PlusConstant (+ ")+tostring(cst)+")"; }
-
+PLEARN_IMPLEMENT_OBJECT(PlusConstantVariable,
+                        "Adds a scalar constant to a matrix var",
+                        "NO HELP");
 
 PlusConstantVariable::PlusConstantVariable(Variable* input, real c)
-  :UnaryVariable(input, input->length(), input->width()), cst(c) 
+  : inherited(input, input->length(), input->width()), cst(c) 
 {}
 
 
-PLEARN_IMPLEMENT_OBJECT(PlusConstantVariable, "ONE LINE DESCR", "NO HELP");
+void
+PlusConstantVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "cst", &PlusConstantVariable::cst, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 void PlusConstantVariable::recomputeSize(int& l, int& w) const
-{ l=input->length(); w=input->width(); }
-
-
-
-
-
-
-
+{
+    if (input) {
+        l = input->length();
+        w = input->width();
+    } else
+        l = w = 0;
+}
 
 void PlusConstantVariable::fprop()
 {

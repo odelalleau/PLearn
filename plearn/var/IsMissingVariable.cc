@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: IsMissingVariable.cc,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: IsMissingVariable.cc,v 1.5 2004/04/27 15:59:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,20 +48,29 @@ using namespace std;
 
 /** IsMissingVariable **/
 
-string IsMissingVariable::info() const
-{ return string("IsMissingVariable ()"); }
-
+PLEARN_IMPLEMENT_OBJECT(IsMissingVariable,
+                        "ONE LINE DESCR",
+                        "NO HELP");
 
 IsMissingVariable::IsMissingVariable(Variable* input1, bool parall)
-    : UnaryVariable(input1, parall?input1->length():1, parall?input1->width():1), parallel(parall)
+    : inherited(input1, parall?input1->length():1, parall?input1->width():1), parallel(parall)
 {}
 
-  
-PLEARN_IMPLEMENT_OBJECT(IsMissingVariable, "ONE LINE DESCR", "NO HELP");
+void
+IsMissingVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "parallel", &IsMissingVariable::parallel, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 void IsMissingVariable::recomputeSize(int& l, int& w) const
-{ l=input->length(); w=parallel?input->width():1; }
-
+{
+    if (input) {
+        l = input->length();
+        w = parallel ? input->width() : 1;
+    } else
+        l = w = 0;
+}
 
 void IsMissingVariable::fprop()
 {

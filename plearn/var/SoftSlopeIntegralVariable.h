@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SoftSlopeIntegralVariable.h,v 1.3 2004/04/16 17:37:55 yoshua Exp $
+   * $Id: SoftSlopeIntegralVariable.h,v 1.4 2004/04/27 15:59:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,23 +54,28 @@ using namespace std;
 // Integral wrt x, from a to b, of SoftSlopeVariable(x,smoothness,left,right)
 class SoftSlopeIntegralVariable: public NaryVariable
 {
-protected:
-    typedef NaryVariable inherited;
-  //!  Default constructor for persistence
-  SoftSlopeIntegralVariable() {}
+  typedef NaryVariable inherited;
 
 public:
+//protected:
   real a,b;
   bool tabulated;
+
+public:
+  //!  Default constructor for persistence
+  SoftSlopeIntegralVariable() {}
   SoftSlopeIntegralVariable(Variable* smoothness, Variable* left, Variable* right, real a_=0, real b_=1, bool tabulated=true);
+
   PLEARN_DECLARE_OBJECT(SoftSlopeIntegralVariable);
+  static void declareOptions(OptionList &ol);
+
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
 };
+
+DECLARE_OBJECT_PTR(SoftSlopeIntegralVariable);
 
 inline Var soft_slope_integral(Var smoothness, Var left, Var right, real a=0, real b=1)
 {

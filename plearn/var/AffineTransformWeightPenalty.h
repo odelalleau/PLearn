@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: AffineTransformWeightPenalty.h,v 1.5 2004/02/20 21:11:49 chrish42 Exp $
+   * $Id: AffineTransformWeightPenalty.h,v 1.6 2004/04/27 15:59:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,28 +49,33 @@ namespace PLearn {
 using namespace std;
 
 
-//! weight decay terms for affine transforms
+//! Weight decay terms for affine transforms
 class AffineTransformWeightPenalty: public UnaryVariable
-  {
-  protected:
+{
     typedef UnaryVariable inherited;
-    //!  Default constructor for persistence
-    AffineTransformWeightPenalty() {}
-    
+
+  protected:    
     real weight_decay_;
     real bias_decay_;
     bool L1_penalty_;
 
   public:
-    PLEARN_DECLARE_OBJECT(AffineTransformWeightPenalty);
-    AffineTransformWeightPenalty(Variable* affinetransform, real weight_decay, real bias_decay=0., bool L1_penalty=false) 
-      :UnaryVariable(affinetransform, 1,1),weight_decay_(weight_decay),bias_decay_(bias_decay),L1_penalty_(L1_penalty)
+    //!  Default constructor for persistence
+    AffineTransformWeightPenalty()
+      : weight_decay_(0.0), bias_decay_(0.0), L1_penalty_(false)
     {}
-  virtual void recomputeSize(int& l, int& w) const;    
+    AffineTransformWeightPenalty(Variable* affinetransform, real weight_decay, real bias_decay=0., bool L1_penalty=false) 
+      : inherited(affinetransform, 1,1),weight_decay_(weight_decay),bias_decay_(bias_decay),L1_penalty_(L1_penalty)
+    {}
+    PLEARN_DECLARE_OBJECT(AffineTransformWeightPenalty);
+    static void declareOptions(OptionList &ol);
+
+    virtual void recomputeSize(int& l, int& w) const;    
     virtual void fprop();
     virtual void bprop();
 };
 
+DECLARE_OBJECT_PTR(AffineTransformWeightPenalty);
 
 //! weight decay and bias decay terms
 //! This has not been tested yet [Pascal: a tester].

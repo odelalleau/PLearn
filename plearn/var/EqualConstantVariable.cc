@@ -36,12 +36,11 @@
 
 
 /* *******************************************************      
-   * $Id: EqualConstantVariable.cc,v 1.5 2004/03/04 14:59:35 tihocan Exp $
+   * $Id: EqualConstantVariable.cc,v 1.6 2004/04/27 15:59:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "EqualConstantVariable.h"
-#include "stringutils.h"    //!< For tostring.
 
 namespace PLearn {
 using namespace std;
@@ -49,27 +48,29 @@ using namespace std;
 
 /** EqualConstantVariable **/
 
-string EqualConstantVariable::info() const
-{ return string("EqualConstant (== ")+tostring(eqv)+")"; }
-
+PLEARN_IMPLEMENT_OBJECT(EqualConstantVariable,
+                        "A scalar var;  equal 1 if input1==input2, 0 otherwise",
+                        "NO HELP");
 
 EqualConstantVariable::EqualConstantVariable(Variable* input1, real input2)
-  : UnaryVariable(input1, input1->length(), input1->width()), eqv(input2)
+  : inherited(input1, input1->length(), input1->width()), eqv(input2)
 {}
 
-  
-PLEARN_IMPLEMENT_OBJECT(EqualConstantVariable, "ONE LINE DESCR", "NO HELP");
+void
+EqualConstantVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "eqv", &EqualConstantVariable::eqv, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 void EqualConstantVariable::recomputeSize(int& l, int& w) const
-{ l=input->length(); w=input->width(); }
-
-
-
-
-
-
-
-
+{
+    if (input) {
+        l = input->length();
+        w = input->width();
+    } else
+        l = w = 0;
+}
 
 void EqualConstantVariable::fprop()
 {

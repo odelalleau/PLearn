@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: IsAboveThresholdVariable.h,v 1.5 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: IsAboveThresholdVariable.h,v 1.6 2004/04/27 15:59:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -54,26 +54,28 @@ using namespace std;
 // according to the 'strict' field.
 class IsAboveThresholdVariable: public UnaryVariable
 {
-protected:
-    typedef UnaryVariable inherited;
-  //!  Default constructor for persistence
-  IsAboveThresholdVariable() : threshold(), truevalue(), falsevalue() {}
+  typedef UnaryVariable inherited;
 
 protected:
   real threshold, truevalue, falsevalue;
-public:
   bool strict;
+
+public:
+  //!  Default constructor for persistence
+  IsAboveThresholdVariable() : threshold(), truevalue(), falsevalue() {}
   IsAboveThresholdVariable(Variable* input, real the_threshold, real the_truevalue, real the_falsevalue, bool strict=false);
+
   PLEARN_DECLARE_OBJECT(IsAboveThresholdVariable);
+  static void declareOptions(OptionList &ol);
+
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
   virtual void rfprop();
 };
 
+DECLARE_OBJECT_PTR(IsAboveThresholdVariable);
 
 inline Var isAboveThreshold(Var v, real threshold=0, real truevalue=1, real falsevalue=0, bool strict=false)
 { return new IsAboveThresholdVariable(v,threshold,truevalue,falsevalue,strict); }

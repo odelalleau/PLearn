@@ -36,14 +36,13 @@
 
 
 /* *******************************************************      
-   * $Id: CutBelowThresholdVariable.cc,v 1.5 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: CutBelowThresholdVariable.cc,v 1.6 2004/04/27 15:59:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "CutBelowThresholdVariable.h"
 #include "IsAboveThresholdVariable.h"
 #include "Var_operators.h"
-//#include "Var_utils.h"
 
 namespace PLearn {
 using namespace std;
@@ -51,22 +50,30 @@ using namespace std;
 
 /** CutBelowThresholdVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(CutBelowThresholdVariable,
+                        "ONE LINE DESCR",
+                        "NO HELP");
+
 CutBelowThresholdVariable::CutBelowThresholdVariable(Variable* input, real the_threshold)
-  :UnaryVariable(input, input->length(), input->width()), threshold(the_threshold) 
+  : inherited(input, input->length(), input->width()), threshold(the_threshold) 
 {}
 
 
-PLEARN_IMPLEMENT_OBJECT(CutBelowThresholdVariable, "ONE LINE DESCR", "NO HELP");
-
 void CutBelowThresholdVariable::recomputeSize(int& l, int& w) const
-{ l=input->length(); w=input->width(); }
+{
+    if (input) {
+        l = input->length();
+        w = input->width();
+    } else
+        l = w = 0;
+}
 
-
-
-
-
-
-
+void
+CutBelowThresholdVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "threshold", &CutBelowThresholdVariable::threshold, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 void CutBelowThresholdVariable::fprop()
 {

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: SoftSlopeVariable.cc,v 1.7 2004/04/16 17:37:55 yoshua Exp $
+   * $Id: SoftSlopeVariable.cc,v 1.8 2004/04/27 15:59:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -49,12 +49,6 @@ using namespace std;
 
 /** SoftSlopeVariable **/
 
-SoftSlopeVariable::  SoftSlopeVariable(Variable* x, Variable* smoothness, Variable* left, Variable* right, bool tabulated_)
-  :NaryVariable(VarArray(x,smoothness) & Var(left) & Var(right), 
-                x->length()<left->length()?left->length():x->length(), 
-                x->width()<left->width()?left->width():x->width()), tabulated(tabulated_)
-{}
-
 
 PLEARN_IMPLEMENT_OBJECT(SoftSlopeVariable, 
                         "This Var computes the soft_slope function", 
@@ -64,23 +58,37 @@ PLEARN_IMPLEMENT_OBJECT(SoftSlopeVariable,
                         "It is always monotonically increasing wrt x (positive derivative in x).\n"
                         "If the arguments are vectors than the operation is performed element by element on all of them.\n");
 
+SoftSlopeVariable::  SoftSlopeVariable(Variable* x, Variable* smoothness, Variable* left, Variable* right, bool tabulated_)
+  : inherited(VarArray(x,smoothness) & Var(left) & Var(right), 
+                x->length()<left->length()?left->length():x->length(), 
+                x->width()<left->width()?left->width():x->width()), tabulated(tabulated_)
+{}
+
+void
+SoftSlopeVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "tabulated", &SoftSlopeVariable::tabulated, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
+
 void SoftSlopeVariable::recomputeSize(int& l, int& w) const
 { 
-  l=0; 
-  w=0;
-  for (int i=0;i<4;i++)
-  {
-    if (varray[i]->length()>l) l=varray[i]->length();
-    if (varray[i]->width()>w) w=varray[i]->width();
-  }
-  for (int i=0;i<4;i++)
-  {
-    if (varray[i]->length()!=l || varray[i]->width()!=w)
-    {
-      if (varray[i]->length()!=1 || varray[i]->width()!=1)
-        PLERROR("Each argument of SoftSlopeVariable should either have the same length/width as the others or length 1");
+    l = 0; 
+    w = 0;
+    if (varray.size() == 4 && varray[0] && varray[1] && varray[2] && varray[3]) {
+        for (int i = 0; i < 4; i++) {
+            if (varray[i]->length() > l)
+                l = varray[i]->length();
+            if (varray[i]->width() > w)
+                w = varray[i]->width();
+        }
+        for (int i = 0; i < 4; i++) {
+            if (varray[i]->length() != l || varray[i]->width() != w) {
+                if (varray[i]->length() != 1 || varray[i]->width() != 1)
+                    PLERROR("Each argument of SoftSlopeVariable should either have the same length/width as the others or length 1");
+            }
+        }
     }
-  }
 }
 
 

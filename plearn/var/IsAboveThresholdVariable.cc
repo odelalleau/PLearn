@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: IsAboveThresholdVariable.cc,v 1.5 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: IsAboveThresholdVariable.cc,v 1.6 2004/04/27 15:59:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -48,18 +48,35 @@ using namespace std;
 
 /** IsAboveThresholdVariable **/
 
-IsAboveThresholdVariable::
-IsAboveThresholdVariable(Variable* input, real the_threshold, real the_truevalue, real the_falsevalue, bool the_strict)
-  :UnaryVariable(input, input->length(), input->width()),
-   threshold(the_threshold), truevalue(the_truevalue), falsevalue(the_falsevalue), strict(the_strict)
+PLEARN_IMPLEMENT_OBJECT(IsAboveThresholdVariable,
+                        "ONE LINE DESCR",
+                        "NO HELP");
+
+IsAboveThresholdVariable::IsAboveThresholdVariable(Variable* input, real the_threshold, 
+                                                   real the_truevalue, real the_falsevalue,
+                                                   bool the_strict)
+  : inherited(input, input->length(), input->width()),
+    threshold(the_threshold), truevalue(the_truevalue), falsevalue(the_falsevalue), strict(the_strict)
 {}
 
-
-PLEARN_IMPLEMENT_OBJECT(IsAboveThresholdVariable, "ONE LINE DESCR", "NO HELP");
+void
+IsAboveThresholdVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "threshold", &IsAboveThresholdVariable::threshold, OptionBase::buildoption, "");
+    declareOption(ol, "truevalue", &IsAboveThresholdVariable::truevalue, OptionBase::buildoption, "");
+    declareOption(ol, "falsevalue", &IsAboveThresholdVariable::falsevalue, OptionBase::buildoption, "");
+    declareOption(ol, "strict", &IsAboveThresholdVariable::strict, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 void IsAboveThresholdVariable::recomputeSize(int& l, int& w) const
-{ l=input->length(); w=input->width(); }
-
+{
+    if (input) {
+        l = input->length();
+        w = input->width();
+    } else
+        l = w = 0;
+}
 
 void IsAboveThresholdVariable::fprop()
 {

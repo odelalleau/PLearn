@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PlusConstantVariable.h,v 1.4 2004/02/20 21:11:52 chrish42 Exp $
+   * $Id: PlusConstantVariable.h,v 1.5 2004/04/27 15:59:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,6 +44,7 @@
 #define PlusConstantVariable_INC
 
 #include "UnaryVariable.h"
+#include "stringutils.h"      //!< For tostring.
 
 namespace PLearn {
 using namespace std;
@@ -55,27 +56,31 @@ using namespace std;
 //!  adds a scalar constant to a matrix var
 class PlusConstantVariable: public UnaryVariable
 {
-protected:
-    typedef UnaryVariable inherited;
-  //!  Default constructor for persistence
-  PlusConstantVariable() : cst() {}
+  typedef UnaryVariable inherited;
 
 public:
-  virtual string info() const;
-
-public:
+//protected:
   real cst; //!<  The constant
 
+public:
+  //!  Default constructor for persistence
+  PlusConstantVariable() : cst() {}
   PlusConstantVariable(Variable* input, real c);
+
   PLEARN_DECLARE_OBJECT(PlusConstantVariable);
+  static void declareOptions(OptionList &ol);
+
+  virtual string info() const
+    { return string("PlusConstant (+ ")+tostring(cst)+")"; }
+
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
   virtual void rfprop();
 };
+
+DECLARE_OBJECT_PTR(PlusConstantVariable);
 
 } // end of namespace PLearn
 

@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: PowVariable.cc,v 1.5 2004/02/20 21:11:52 chrish42 Exp $
+   * $Id: PowVariable.cc,v 1.6 2004/04/27 15:59:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -50,22 +50,29 @@ using namespace std;
 
 /** PowVariable **/
 
+PLEARN_IMPLEMENT_OBJECT(PowVariable,
+                        "Elementwise pow (returns 0 wherever input is negative)",
+                        "NO HELP");
+
 PowVariable::PowVariable(Variable* input, real the_power)
-  :UnaryVariable(input, input->length(), input->width()), power(the_power) 
+  : inherited(input, input->length(), input->width()), power(the_power) 
 {}
 
-
-PLEARN_IMPLEMENT_OBJECT(PowVariable, "ONE LINE DESCR", "NO HELP");
+void
+PowVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "power", &PowVariable::power, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 void PowVariable::recomputeSize(int& l, int& w) const
-{ l=input->length(); w=input->width(); }
-
-
-
-
-
-
-
+{
+    if (input) {
+        l = input->length();
+        w = input->width();
+    } else
+        l = w = 0;
+}
 
 void PowVariable::fprop()
 {

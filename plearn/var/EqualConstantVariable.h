@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: EqualConstantVariable.h,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: EqualConstantVariable.h,v 1.5 2004/04/27 15:59:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -44,6 +44,7 @@
 #define EqualConstantVariable_INC
 
 #include "UnaryVariable.h"
+#include "stringutils.h"    //!< For tostring.
 
 namespace PLearn {
 using namespace std;
@@ -52,26 +53,29 @@ using namespace std;
 //!  A scalar var;  equal 1 if input1==input2, 0 otherwise
 class EqualConstantVariable: public UnaryVariable
 {
-protected:
-    typedef UnaryVariable inherited;
-  //!  Default constructor for persistence
-  EqualConstantVariable() : eqv() {}
-
-public:
-  virtual string info() const; 
+  typedef UnaryVariable inherited;
 
 protected:
   real eqv;
+
 public:
+  //!  Default constructor for persistence
+  EqualConstantVariable() : eqv() {}
   EqualConstantVariable(Variable* input1, real input2);
+
   PLEARN_DECLARE_OBJECT(EqualConstantVariable);
+  static void declareOptions(OptionList &ol);
+
+  virtual string info() const
+    { return string("EqualConstant (== ") + tostring(eqv) + ")"; }
+
   virtual void recomputeSize(int& l, int& w) const;
-  
-  
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
 };
+
+DECLARE_OBJECT_PTR(EqualConstantVariable);
 
 //!  result[i] = 1 if v1[i]==cte, 0 otherwise
 inline Var operator==(Var v1, real cte)

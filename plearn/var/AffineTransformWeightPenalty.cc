@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: AffineTransformWeightPenalty.cc,v 1.6 2004/02/20 21:11:49 chrish42 Exp $
+   * $Id: AffineTransformWeightPenalty.cc,v 1.7 2004/04/27 15:59:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -47,13 +47,19 @@ namespace PLearn {
 using namespace std;
 
 
-PLEARN_IMPLEMENT_OBJECT(AffineTransformWeightPenalty, "ONE LINE DESCR", "NO HELP");
-
-
+PLEARN_IMPLEMENT_OBJECT(AffineTransformWeightPenalty, "Affine transformation with Weight decay terms", "NO HELP");
 
 void AffineTransformWeightPenalty::recomputeSize(int& l, int& w) const
 { l=1; w=1; }
 
+void
+AffineTransformWeightPenalty::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "weight_decay_", &AffineTransformWeightPenalty::weight_decay_, OptionBase::buildoption, "");
+    declareOption(ol, "bias_decay_", &AffineTransformWeightPenalty::bias_decay_, OptionBase::buildoption, "");
+    declareOption(ol, "L1_penalty_", &AffineTransformWeightPenalty::L1_penalty_, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 void AffineTransformWeightPenalty::fprop()
 {

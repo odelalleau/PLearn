@@ -36,7 +36,7 @@
 
 
 /* *******************************************************      
-   * $Id: CutBelowThresholdVariable.h,v 1.4 2004/02/20 21:11:50 chrish42 Exp $
+   * $Id: CutBelowThresholdVariable.h,v 1.5 2004/04/27 15:59:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
@@ -51,23 +51,27 @@ using namespace std;
 
 class CutBelowThresholdVariable: public UnaryVariable
 {
-protected:
-    typedef UnaryVariable inherited;
-  //!  Default constructor for persistence
-  CutBelowThresholdVariable() : threshold() {}
+  typedef UnaryVariable inherited;
 
 protected:
   real threshold;
+
 public:
+  //!  Default constructor for persistence
+  CutBelowThresholdVariable() : threshold() {}
   CutBelowThresholdVariable(Variable* input, real the_threshold);
+
   PLEARN_DECLARE_OBJECT(CutBelowThresholdVariable);
+  static void declareOptions(OptionList &ol);
+
   virtual void recomputeSize(int& l, int& w) const;
-  
   
   virtual void fprop();
   virtual void bprop();
   virtual void symbolicBprop();
 };
+
+DECLARE_OBJECT_PTR(CutBelowThresholdVariable);
 
 inline Var cutBelowThreshold(Var v, real threshold)
 { return new CutBelowThresholdVariable(v,threshold); }

@@ -36,12 +36,11 @@
 
 
 /* *******************************************************      
-   * $Id: UnequalConstantVariable.cc,v 1.5 2004/03/04 14:59:35 tihocan Exp $
+   * $Id: UnequalConstantVariable.cc,v 1.6 2004/04/27 15:59:16 morinf Exp $
    * This file is part of the PLearn library.
    ******************************************************* */
 
 #include "UnequalConstantVariable.h"
-#include "stringutils.h"    //!< For tostring.
 
 namespace PLearn {
 using namespace std;
@@ -49,27 +48,29 @@ using namespace std;
 
 /** UnequalConstantVariable **/
 
-string UnequalConstantVariable::info() const
-{ return string("EqualConstantVariable (!= ")+tostring(c)+")"; }
-
+PLEARN_IMPLEMENT_OBJECT(UnequalConstantVariable,
+                        "A scalar var;  equal 1 if input1!=c, 0 otherwise",
+                        "NO HELP");
 
 UnequalConstantVariable::UnequalConstantVariable(Variable* input1, real c_)
-  : UnaryVariable(input1, input1->length(), input1->width()), c(c_)
+  : inherited(input1, input1->length(), input1->width()), c(c_)
 {}
 
-  
-PLEARN_IMPLEMENT_OBJECT(UnequalConstantVariable, "ONE LINE DESCR", "NO HELP");
+void
+UnequalConstantVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "c", &UnequalConstantVariable::c, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
 
 void UnequalConstantVariable::recomputeSize(int& l, int& w) const
-{ l=input->length(); w=input->width(); }
-
-
-
-
-
-
-
-
+{
+    if (input) {
+        l = input->length();
+        w = input->width();
+    } else
+        l = w = 0;
+}
 
 void UnequalConstantVariable::fprop()
 {
